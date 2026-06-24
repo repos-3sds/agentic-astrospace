@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AstroSpace — AI-Powered Astrology Engine</title>
+<link rel="stylesheet" href="style.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+</head>
+<body>
+<canvas id="starfield"></canvas>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <a class="logo" href="#hero">✦ AstroSpace</a>
+    <ul>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#zodiac">Zodiac</a></li>
+      <li><a href="#demo">Demo</a></li>
+      <li><a href="#api-ref">API</a></li>
+      <li><a class="btn-nav" href="https://github.com/repos-3sds/agentic-astrospace" target="_blank">GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">✦ Powered by Claude AI &amp; Swiss Ephemeris</p>
+    <h1 class="hero-title">Astro<span class="gold">Space</span></h1>
+    <p class="hero-sub">The most powerful AI-powered astrology engine.<br/>Birth charts, readings, horoscopes &amp; compatibility — all with autonomous agents.</p>
+    <div class="hero-btns">
+      <a class="btn-primary" href="#demo">Try Demo</a>
+      <a class="btn-ghost" href="#features">Explore Features</a>
+    </div>
+    <div class="hero-badges">
+      <span>Python 3.11+</span>
+      <span>Claude AI</span>
+      <span>Swiss Ephemeris</span>
+      <span>FastAPI</span>
+    </div>
+  </div>
+  <div class="hero-orb orb1"></div>
+  <div class="hero-orb orb2"></div>
+  <div class="hero-orb orb3"></div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-inner">
+    <h2 class="section-title">What AstroSpace Can Do</h2>
+    <p class="section-sub">Six powerful modules, all driven by AI agents and real astrological data.</p>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feat-icon">🌟</div>
+        <h3>Birth Chart Engine</h3>
+        <p>Complete natal chart calculations — all 10 planets, 12 houses, and aspects via Swiss Ephemeris. Accurate to the second.</p>
+        <code>POST /api/v1/chart</code>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">🔮</div>
+        <h3>AI Natal Readings</h3>
+        <p>Claude AI interprets your complete chart — Big Three, dominant themes, soul purpose, major aspects, and life path.</p>
+        <code>POST /api/v1/reading</code>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">📅</div>
+        <h3>Daily Horoscopes</h3>
+        <p>Horoscopes generated from real current transits — not generic text. Love, Career, Wellbeing + Power Affirmation.</p>
+        <code>POST /api/v1/horoscope</code>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">💞</div>
+        <h3>Compatibility Analysis</h3>
+        <p>Full synastry chart between two people. AI identifies soul connections, Venus-Mars links, karmic ties, and growth challenges.</p>
+        <code>POST /api/v1/compatibility</code>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">🪐</div>
+        <h3>Transit Tracking</h3>
+        <p>See how current planetary movements interact with your natal chart. 30-day forecast with opportunities and power periods.</p>
+        <code>POST /api/v1/transits</code>
+      </div>
+      <div class="feature-card">
+        <div class="feat-icon">🤖</div>
+        <h3>Autonomous Agents</h3>
+        <p>Four Claude-powered agents with tool use — they call astrological functions autonomously to answer any question.</p>
+        <code>4 specialized agents</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ZODIAC EXPLORER -->
+<section id="zodiac">
+  <div class="section-inner">
+    <h2 class="section-title">Zodiac Explorer</h2>
+    <p class="section-sub">Click any sign to explore its archetype, element, and traits.</p>
+    <div class="zodiac-grid" id="zodiacGrid"></div>
+    <div class="zodiac-detail" id="zodiacDetail" style="display:none">
+      <button class="close-detail" onclick="closeDetail()">✕</button>
+      <div class="detail-inner" id="detailInner"></div>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO -->
+<section id="demo">
+  <div class="section-inner">
+    <h2 class="section-title">Try the API</h2>
+    <p class="section-sub">Run AstroSpace locally and connect it here, or browse the sample responses below.</p>
+
+    <div class="demo-tabs">
+      <button class="tab active" onclick="switchTab('horoscope')">Daily Horoscope</button>
+      <button class="tab" onclick="switchTab('chart')">Birth Chart</button>
+      <button class="tab" onclick="switchTab('compat')">Compatibility</button>
+    </div>
+
+    <!-- Horoscope tab -->
+    <div class="demo-panel active" id="tab-horoscope">
+      <div class="demo-form">
+        <label>Your Sun Sign</label>
+        <select id="horoSign">
+          <option>Aries</option><option>Taurus</option><option>Gemini</option>
+          <option>Cancer</option><option>Leo</option><option>Virgo</option>
+          <option>Libra</option><option>Scorpio</option><option selected>Sagittarius</option>
+          <option>Capricorn</option><option>Aquarius</option><option>Pisces</option>
+        </select>
+        <label>Backend URL (optional)</label>
+        <input type="text" id="apiUrl" placeholder="http://localhost:8000" value=""/>
+        <button class="btn-primary" onclick="fetchHoroscope()">Get Horoscope</button>
+      </div>
+      <div class="demo-output" id="horoOutput">
+        <div class="sample-label">Sample output ↓</div>
+        <div class="reading-card">
+          <h4>✦ Sagittarius — Daily Horoscope</h4>
+          <p><strong>Overview:</strong> Jupiter, your ruling planet, aligns harmoniously with the Sun today, flooding your world with expansive optimism. This is a day to dream bigger than usual — the cosmos are conspiring in your favour.</p>
+          <p><strong>Love &amp; Relationships:</strong> Venus in Gemini sparks electric conversations with someone intriguing. If you're partnered, share a bold idea together — it deepens intimacy. Singles: a chance encounter at an unconventional place holds promise.</p>
+          <p><strong>Career &amp; Finances:</strong> Mercury trine your natal Mars sharpens your strategic mind. Present your ideas boldly — decision-makers are receptive to your vision today. A financial opportunity may arrive through an international connection.</p>
+          <p><strong>Health &amp; Wellbeing:</strong> Your energy is high, but Mars square Neptune urges caution with physical limits. Channel vitality into outdoor movement; time in nature restores your spirit.</p>
+          <div class="affirmation">✨ Power Affirmation: "I expand beyond what I thought possible and trust the journey."</div>
+          <div class="lucky">🍀 Lucky Element: Turquoise</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart tab -->
+    <div class="demo-panel" id="tab-chart">
+      <div class="demo-form">
+        <div class="form-row">
+          <div><label>Name</label><input type="text" id="chartName" placeholder="Your name" value="Cosmos Walker"/></div>
+          <div><label>City</label><input type="text" id="chartCity" placeholder="Birth city" value="New York"/></div>
+        </div>
+        <div class="form-row">
+          <div><label>Date</label><input type="date" id="chartDate" value="1990-06-21"/></div>
+          <div><label>Time</label><input type="time" id="chartTime" value="14:30"/></div>
+        </div>
+        <button class="btn-primary" onclick="fetchChart()">Calculate Chart</button>
+      </div>
+      <div class="demo-output" id="chartOutput">
+        <div class="sample-label">Sample birth chart ↓</div>
+        <div class="chart-viz">
+          <svg id="chartSvg" viewBox="0 0 400 400" width="300" height="300"></svg>
+          <div class="chart-legend" id="chartLegend">
+            <div class="legend-item"><span class="planet-dot sun"></span>Sun in Gemini — 1st House</div>
+            <div class="legend-item"><span class="planet-dot moon"></span>Moon in Scorpio — 5th House</div>
+            <div class="legend-item"><span class="planet-dot asc"></span>Ascendant: Gemini</div>
+            <div class="legend-item"><span class="planet-dot venus"></span>Venus in Taurus — 12th House</div>
+            <div class="legend-item"><span class="planet-dot mars"></span>Mars in Leo — 3rd House</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Compatibility tab -->
+    <div class="demo-panel" id="tab-compat">
+      <div class="demo-form">
+        <label>Person 1 Sign</label>
+        <select id="sign1">
+          <option selected>Scorpio</option><option>Aries</option><option>Taurus</option>
+          <option>Gemini</option><option>Cancer</option><option>Leo</option>
+          <option>Virgo</option><option>Libra</option><option>Sagittarius</option>
+          <option>Capricorn</option><option>Aquarius</option><option>Pisces</option>
+        </select>
+        <label>Person 2 Sign</label>
+        <select id="sign2">
+          <option>Aries</option><option>Taurus</option><option>Gemini</option>
+          <option>Cancer</option><option>Leo</option><option>Virgo</option>
+          <option>Libra</option><option>Scorpio</option><option>Sagittarius</option>
+          <option>Capricorn</option><option>Aquarius</option><option selected>Pisces</option>
+        </select>
+        <button class="btn-primary" onclick="checkCompat()">Check Compatibility</button>
+      </div>
+      <div class="demo-output" id="compatOutput">
+        <div class="sample-label">Sample compatibility ↓</div>
+        <div class="compat-card">
+          <div class="compat-score">
+            <div class="score-circle">
+              <svg viewBox="0 0 100 100" width="120" height="120">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#1a0a3a" stroke-width="10"/>
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#9B59B6" stroke-width="10"
+                  stroke-dasharray="237.6" stroke-dashoffset="28.5" stroke-linecap="round"
+                  transform="rotate(-90 50 50)"/>
+              </svg>
+              <div class="score-num">88</div>
+            </div>
+            <div>
+              <h4>Scorpio ♏ + Pisces ♓</h4>
+              <p class="compat-summary">A profound water sign union — deep emotional resonance, intuitive understanding, and transformative love.</p>
+            </div>
+          </div>
+          <div class="compat-details">
+            <div class="compat-row positive">💫 <strong>Soul Connection:</strong> Neptune–Pluto trine creates a karmic, almost psychic bond</div>
+            <div class="compat-row positive">❤️ <strong>Love:</strong> Venus–Mars sextile — magnetic attraction meets tender devotion</div>
+            <div class="compat-row positive">🌙 <strong>Emotion:</strong> Water-Water harmony; you feel each other without words</div>
+            <div class="compat-row challenge">⚡ <strong>Challenge:</strong> Both can become lost in intensity — boundaries and lightness are key</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- API REFERENCE -->
+<section id="api-ref">
+  <div class="section-inner">
+    <h2 class="section-title">API Reference</h2>
+    <p class="section-sub">Run locally with <code class="inline">python main.py</code>. Interactive docs at <code class="inline">localhost:8000/docs</code>.</p>
+    <div class="api-table-wrap">
+      <table class="api-table">
+        <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method post">POST</span></td><td>/api/v1/chart</td><td>Calculate natal birth chart</td></tr>
+          <tr><td><span class="method post">POST</span></td><td>/api/v1/reading</td><td>Full AI natal chart reading</td></tr>
+          <tr><td><span class="method post">POST</span></td><td>/api/v1/horoscope</td><td>Daily or weekly horoscope</td></tr>
+          <tr><td><span class="method post">POST</span></td><td>/api/v1/compatibility</td><td>Synastry compatibility reading</td></tr>
+          <tr><td><span class="method post">POST</span></td><td>/api/v1/transits</td><td>Personal transit reading</td></tr>
+          <tr><td><span class="method get">GET</span></td><td>/api/v1/transits/current</td><td>Current sky positions</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="code-block">
+      <div class="code-header"><span>Quick Start</span><button onclick="copyCode(this)">Copy</button></div>
+      <pre><code># Install dependencies
+pip install -r requirements.txt
+
+# Configure API key
+cp .env.example .env
+echo "ANTHROPIC_API_KEY=your_key_here" >> .env
+
+# Run the server
+python main.py
+# → API live at http://localhost:8000
+
+# Example: Get a natal chart
+curl -X POST http://localhost:8000/api/v1/chart \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Elon Musk",
+    "year": 1971, "month": 6, "day": 28,
+    "hour": 7, "minute": 30,
+    "city": "Pretoria", "nation": "ZA"
+  }'</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">✦ AstroSpace</div>
+    <p class="footer-sub">AI-Powered Astrology Engine · Built with Python &amp; Claude AI</p>
+    <div class="footer-links">
+      <a href="https://github.com/repos-3sds/agentic-astrospace" target="_blank">GitHub</a>
+      <a href="https://github.com/repos-3sds/agentic-astrospace/blob/main/README.md" target="_blank">Docs</a>
+    </div>
+    <p class="footer-copy">© 2026 AstroSpace. The stars guide, but you decide.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
