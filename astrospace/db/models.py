@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Optional, List
 from sqlalchemy import String, Text, DateTime, JSON, ForeignKey
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from .database import Base
@@ -22,15 +23,15 @@ class Kundli(Base):
     birth_minute: Mapped[int] = mapped_column(default=0)
     birth_city: Mapped[str] = mapped_column(String, nullable=False)
     birth_nation: Mapped[str] = mapped_column(String, default="US")
-    sun_sign: Mapped[str | None] = mapped_column(String)
-    moon_sign: Mapped[str | None] = mapped_column(String)
-    ascendant: Mapped[str | None] = mapped_column(String)
-    chart_data: Mapped[dict | None] = mapped_column(JSON)
-    notes: Mapped[str | None] = mapped_column(Text)
+    sun_sign: Mapped[Optional[str]] = mapped_column(String)
+    moon_sign: Mapped[Optional[str]] = mapped_column(String)
+    ascendant: Mapped[Optional[str]] = mapped_column(String)
+    chart_data: Mapped[Optional[dict]] = mapped_column(JSON)
+    notes: Mapped[Optional[str]] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    readings: Mapped[list["Reading"]] = relationship(
+    readings: Mapped[List["Reading"]] = relationship(
         "Reading", back_populates="kundli", cascade="all, delete-orphan",
         order_by="Reading.generated_at.desc()"
     )
@@ -42,7 +43,7 @@ class Reading(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
     kundli_id: Mapped[str] = mapped_column(String, ForeignKey("kundlis.id"), nullable=False)
     reading_type: Mapped[str] = mapped_column(String, nullable=False)
-    period_label: Mapped[str | None] = mapped_column(String)
+    period_label: Mapped[Optional[str]] = mapped_column(String)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     generated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

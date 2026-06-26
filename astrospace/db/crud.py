@@ -1,3 +1,4 @@
+from typing import Optional, List
 from sqlalchemy.orm import Session
 from .models import Kundli, Reading
 
@@ -12,15 +13,15 @@ def create_kundli(db: Session, data: dict) -> Kundli:
     return k
 
 
-def get_kundli(db: Session, kundli_id: str) -> Kundli | None:
+def get_kundli(db: Session, kundli_id: str) -> Optional[Kundli]:
     return db.query(Kundli).filter(Kundli.id == kundli_id).first()
 
 
-def list_kundlis(db: Session) -> list[Kundli]:
+def list_kundlis(db: Session) -> List[Kundli]:
     return db.query(Kundli).order_by(Kundli.name).all()
 
 
-def update_kundli(db: Session, kundli_id: str, data: dict) -> Kundli | None:
+def update_kundli(db: Session, kundli_id: str, data: dict) -> Optional[Kundli]:
     k = get_kundli(db, kundli_id)
     if not k:
         return None
@@ -52,14 +53,14 @@ def save_reading(db: Session, kundli_id: str, reading_type: str,
     return r
 
 
-def get_readings(db: Session, kundli_id: str, reading_type: str = None) -> list[Reading]:
+def get_readings(db: Session, kundli_id: str, reading_type: str = None) -> List[Reading]:
     q = db.query(Reading).filter(Reading.kundli_id == kundli_id)
     if reading_type:
         q = q.filter(Reading.reading_type == reading_type)
     return q.order_by(Reading.generated_at.desc()).limit(20).all()
 
 
-def get_latest_reading(db: Session, kundli_id: str, reading_type: str) -> Reading | None:
+def get_latest_reading(db: Session, kundli_id: str, reading_type: str) -> Optional[Reading]:
     return (db.query(Reading)
             .filter(Reading.kundli_id == kundli_id, Reading.reading_type == reading_type)
             .order_by(Reading.generated_at.desc())
