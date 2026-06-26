@@ -1,3 +1,6 @@
+/* ── Utility ── */
+.hidden { display: none !important; }
+
 /* ── Reset & Base ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 

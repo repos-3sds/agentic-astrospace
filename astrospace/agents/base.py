@@ -10,7 +10,13 @@ class BaseAstroAgent:
     tools = []
 
     def __init__(self, api_key: str = None):
-        self.client = anthropic.Anthropic(api_key=api_key or os.getenv("ANTHROPIC_API_KEY"))
+        from dotenv import load_dotenv
+        load_dotenv()
+        key = api_key or os.getenv("ANTHROPIC_API_KEY", "")
+        if key.startswith("sk-ant-si"):
+            self.client = anthropic.Anthropic(auth_token=key)
+        else:
+            self.client = anthropic.Anthropic(api_key=key or None)
 
     def run(self, user_input: str) -> str:
         messages = [{"role": "user", "content": user_input}]

@@ -95,7 +95,6 @@ async function selectKundli(id) {
 
   // update UI shell
   document.getElementById('empty-state').classList.add('hidden');
-  document.getElementById('panel-overview').classList.remove('hidden');
   document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
   document.getElementById('tabs').style.display = '';
   document.getElementById('topbar-actions').style.display = '';
