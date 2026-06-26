@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AstroSpace — AI Astrology Engine</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+</head>
+<body>
+
+<div id="app">
+  <!-- ── Sidebar ── -->
+  <nav id="sidebar">
+    <div class="sidebar-header">
+      <a class="logo" href="#">
+        <span class="logo-icon">✦</span>
+        <span class="logo-text">AstroSpace</span>
+      </a>
+      <button class="btn-add" onclick="openAddModal()">
+        <span>+</span><span>Add Kundli</span>
+      </button>
+    </div>
+    <div class="sidebar-search">
+      <input type="text" placeholder="🔍 Search..." id="search-input" oninput="filterKundlis(this.value)">
+    </div>
+    <div class="kundli-list" id="kundli-list">
+      <!-- populated by JS -->
+    </div>
+    <div class="sidebar-footer">AstroSpace v2.0 · AI Astrology</div>
+  </nav>
+
+  <!-- ── Main Content ── -->
+  <div id="main">
+    <!-- top bar -->
+    <div class="topbar" id="topbar">
+      <div>
+        <div class="topbar-title" id="topbar-title">Welcome to AstroSpace</div>
+        <div class="topbar-sub" id="topbar-sub">Select or add a kundli to begin</div>
+      </div>
+      <div class="topbar-actions" id="topbar-actions" style="display:none">
+        <button class="btn-icon" onclick="openEditModal()">✏️ Edit</button>
+        <button class="btn-icon btn-danger" onclick="confirmDelete()">🗑 Delete</button>
+      </div>
+    </div>
+
+    <!-- tabs -->
+    <div class="tabs" id="tabs" style="display:none">
+      <button class="tab-btn active" data-tab="overview"  onclick="switchTab('overview')">🌟 Overview</button>
+      <button class="tab-btn"        data-tab="chart"     onclick="switchTab('chart')">🪐 Chart</button>
+      <button class="tab-btn"        data-tab="readings"  onclick="switchTab('readings')">📖 Readings</button>
+      <button class="tab-btn"        data-tab="compat"    onclick="switchTab('compat')">💞 Compatibility</button>
+      <button class="tab-btn"        data-tab="notes"     onclick="switchTab('notes')">📝 Notes</button>
+    </div>
+
+    <!-- content panels -->
+    <div class="content" id="content">
+      <!-- empty state -->
+      <div class="empty-state" id="empty-state">
+        <div class="es-icon">✦</div>
+        <h2>Your Cosmic Family Awaits</h2>
+        <p>Add kundlis for yourself, family, and friends to unlock AI-powered astrological readings, birth charts, and compatibility analyses.</p>
+        <button class="btn-primary" style="max-width:200px;margin:0 auto;display:block" onclick="openAddModal()">✨ Add First Kundli</button>
+      </div>
+
+      <!-- panels (hidden until kundli selected) -->
+      <div id="panel-overview"  class="panel hidden"></div>
+      <div id="panel-chart"     class="panel hidden"></div>
+      <div id="panel-readings"  class="panel hidden"></div>
+      <div id="panel-compat"    class="panel hidden"></div>
+      <div id="panel-notes"     class="panel hidden"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add/Edit Modal ── -->
+<div class="modal-overlay hidden" id="kundli-modal">
+  <div class="modal">
+    <h2 id="modal-title">✨ Add Kundli</h2>
+    <div class="form-group">
+      <label class="form-label">Full Name *</label>
+      <input class="form-input" id="f-name" type="text" placeholder="e.g. Priya Sharma">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Relation</label>
+      <select class="form-select" id="f-relation">
+        <option value="self">Myself</option>
+        <option value="spouse">Spouse / Partner</option>
+        <option value="parent">Parent</option>
+        <option value="sibling">Sibling</option>
+        <option value="child">Child</option>
+        <option value="friend" selected>Friend</option>
+        <option value="colleague">Colleague</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Birth Date *</label>
+      <div class="form-row-3">
+        <input class="form-input" id="f-year"  type="number" placeholder="Year"  min="1900" max="2024">
+        <input class="form-input" id="f-month" type="number" placeholder="Month" min="1"    max="12">
+        <input class="form-input" id="f-day"   type="number" placeholder="Day"   min="1"    max="31">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Birth Time (24h) <span style="color:var(--muted);font-weight:400">(approximate is ok)</span></label>
+      <div class="form-row">
+        <input class="form-input" id="f-hour"   type="number" placeholder="Hour (0-23)"   min="0" max="23" value="12">
+        <input class="form-input" id="f-minute" type="number" placeholder="Minute (0-59)" min="0" max="59" value="0">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Birth City *</label>
+      <input class="form-input" id="f-city" type="text" placeholder="e.g. Mumbai, New York, London">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Country Code</label>
+      <input class="form-input" id="f-nation" type="text" placeholder="US / IN / GB / AU..." value="US" maxlength="2">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes (optional)</label>
+      <textarea class="form-input" id="f-notes" rows="2" placeholder="Any notes about this person..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveKundli()" id="modal-save-btn">Save Kundli</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ── -->
+<div id="toast" class="hidden"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
