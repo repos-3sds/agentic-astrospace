@@ -1,0 +1,54 @@
+.form {
+  display: grid;
+  gap: 14px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+
+  label {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--as-muted);
+  }
+
+  .hint {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  input,
+  textarea {
+    width: 100%;
+  }
+}
+
+.row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.4fr;
+  gap: 10px;
+}
+
+:host ::ng-deep {
+  .p-select {
+    width: 100%;
+  }
+
+  .p-inputnumber {
+    width: 100%;
+
+    input {
+      width: 100%;
+    }
+  }
+}

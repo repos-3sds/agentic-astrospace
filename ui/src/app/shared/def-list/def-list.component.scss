@@ -1,0 +1,35 @@
+.def-list {
+  margin: 0;
+  display: grid;
+}
+
+.def-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--as-border);
+  font-size: 13px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  dt {
+    color: var(--as-muted);
+    flex-shrink: 0;
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 500;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+}
+
+:host ::ng-deep .p-tag {
+  font-size: 10.5px;
+  padding: 1px 8px;
+}

@@ -1,0 +1,19 @@
+<section class="card">
+  <header class="card-head">
+    <div class="card-heading">
+      @if (icon()) {
+        <lucide-icon [name]="icon()!" [size]="15" [strokeWidth]="2" />
+      }
+      <h3>{{ title() }}</h3>
+      @if (subtitle()) {
+        <span class="card-subtitle">{{ subtitle() }}</span>
+      }
+    </div>
+    <div class="card-actions">
+      <ng-content select="[card-actions]" />
+    </div>
+  </header>
+  <div class="card-body">
+    <ng-content />
+  </div>
+</section>

@@ -1,0 +1,15 @@
+.notes-area {
+  width: 100%;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.btn-label {
+  margin-left: 8px;
+}

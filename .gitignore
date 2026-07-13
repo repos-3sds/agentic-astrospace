@@ -14,3 +14,9 @@ env/
 .vscode/
 *.log
 .DS_Store
+astrospace.db
+cache/
+.claude/
+
+# Angular build output
+frontend/dist/

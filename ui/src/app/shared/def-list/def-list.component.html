@@ -1,0 +1,16 @@
+<dl class="def-list">
+  @for (row of rows(); track row.label) {
+    <div class="def-row">
+      <dt>{{ row.label }}</dt>
+      <dd>
+        @if (row.value !== null && row.value !== undefined && row.value !== '') {
+          <span class="as-num">{{ row.value }}</span>
+        } @else if (row.unverified) {
+          <p-tag severity="warn" value="unverified" />
+        } @else {
+          <span class="as-muted">—</span>
+        }
+      </dd>
+    </div>
+  }
+</dl>

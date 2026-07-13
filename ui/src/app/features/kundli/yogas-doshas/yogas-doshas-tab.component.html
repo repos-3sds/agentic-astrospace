@@ -1,0 +1,128 @@
+@if (loading()) {
+  <div class="as-panel">
+    <p-skeleton height="140px" borderRadius="18px" />
+    <p-skeleton height="420px" borderRadius="18px" />
+  </div>
+} @else if (error()) {
+  <app-section-card icon="alert-triangle" title="Yogas unavailable">
+    <p class="error-copy">{{ error() }}</p>
+  </app-section-card>
+} @else if (data(); as yd) {
+  <div class="as-panel">
+    <section class="as-tab-hero">
+      <div>
+        <span class="as-hero-eyebrow">Yogas & Doshas · {{ yd.yogas.lagna }} lagna</span>
+        <h2>Deterministic chart signatures.</h2>
+        <p>
+          Active yogas and caution flags are calculated from the chart first.
+          AI can explain these later, but the triggers shown here are rule-based.
+        </p>
+      </div>
+      <div class="as-hero-stats">
+        <article>
+          <span>Active yogas</span>
+          <strong>{{ yd.yogas.active_count }}</strong>
+          <small>of {{ yd.yogas.total }} checked</small>
+        </article>
+        <article>
+          <span>Manglik</span>
+          <strong>{{ yd.doshas.manglik.severity }}</strong>
+          <small>{{ yd.doshas.manglik.active ? 'active' : 'not active' }}</small>
+        </article>
+      </div>
+    </section>
+
+    <div class="category-strip">
+      @for (cat of categories(); track cat.label) {
+        <article>
+          <span>{{ cat.label }}</span>
+          <strong>{{ cat.count }}</strong>
+        </article>
+      } @empty {
+        <article>
+          <span>Categories</span>
+          <strong>0</strong>
+        </article>
+      }
+    </div>
+
+    <app-section-card icon="sparkles" title="Supportive yogas" subtitle="active rule matches">
+      <div class="yoga-grid">
+        @for (yoga of supportiveYogas(); track yoga.name + yoga.rule) {
+          <article class="yoga-card">
+            <header>
+              <div>
+                <span>{{ yoga.category }}</span>
+                <h3>{{ yoga.name }}</h3>
+              </div>
+              <p-tag [severity]="tagSeverity(yoga)" [value]="yoga.verified ? yoga.strength : 'verify'" />
+            </header>
+            <p>{{ yoga.rule }}</p>
+            <div class="trigger-list">
+              @for (trigger of yoga.triggers; track trigger) {
+                <span>{{ trigger }}</span>
+              }
+            </div>
+            @if (yoga.notes?.length) {
+              <small class="as-muted">{{ yoga.notes?.[0] }}</small>
+            }
+          </article>
+        } @empty {
+          <p class="as-muted empty">No supportive yogas active in the current rule set.</p>
+        }
+      </div>
+    </app-section-card>
+
+    <div class="as-grid-2">
+      <app-section-card icon="alert-triangle" title="Caution flags" subtitle="dosha-style signals">
+        <div class="yoga-grid single">
+          @for (yoga of cautionYogas(); track yoga.name) {
+            <article class="yoga-card caution">
+              <header>
+                <div>
+                  <span>{{ yoga.category }}</span>
+                  <h3>{{ yoga.name }}</h3>
+                </div>
+                <p-tag severity="warn" [value]="yoga.verified ? yoga.strength : 'verify'" />
+              </header>
+              <p>{{ yoga.rule }}</p>
+              <div class="trigger-list">
+                @for (trigger of yoga.triggers; track trigger) {
+                  <span>{{ trigger }}</span>
+                }
+              </div>
+            </article>
+          } @empty {
+            <p class="as-muted empty">No caution yogas active in the current rule set.</p>
+          }
+        </div>
+      </app-section-card>
+
+      <app-section-card icon="flame" title="Manglik / Kuja dosha" subtitle="{{ yd.doshas.manglik.rule }}">
+        <div class="manglik-head" [class.active]="yd.doshas.manglik.active">
+          <strong>{{ yd.doshas.manglik.severity }}</strong>
+          <span>{{ yd.doshas.manglik.active_references.join(', ') || 'No active references' }}</span>
+        </div>
+        <div class="check-list">
+          @for (check of yd.doshas.manglik.checks; track check.reference) {
+            <div class="check-row" [class.active]="check.active">
+              <span>{{ check.reference }}</span>
+              <strong>H{{ check.house }}</strong>
+              <small>{{ check.mars_sign }} from {{ check.reference_sign }}</small>
+            </div>
+          }
+        </div>
+        @if (yd.doshas.manglik.notes?.length) {
+          <p class="as-muted note">{{ yd.doshas.manglik.notes?.[0] }}</p>
+        }
+      </app-section-card>
+    </div>
+
+    <app-section-card icon="info" title="Rule conventions">
+      <div class="convention-list">
+        <span>Association: {{ yd.yogas.conventions?.['association'] }}</span>
+        <span>Status: {{ yd.yogas.conventions?.['status'] }}</span>
+      </div>
+    </app-section-card>
+  </div>
+}

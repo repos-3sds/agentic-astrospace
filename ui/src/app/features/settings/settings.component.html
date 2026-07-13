@@ -1,0 +1,182 @@
+<div class="settings-page as-panel">
+  <section class="settings-hero">
+    <div>
+      <span class="eyebrow">Workspace settings</span>
+      <h2>Account, appearance and data</h2>
+      <p class="as-muted">
+        Manage your AstroSpace account, appearance and saved Kundli workspace.
+      </p>
+    </div>
+
+    <div class="hero-actions">
+      <p-button severity="secondary" [outlined]="true" routerLink="/app">
+        <lucide-icon name="home" [size]="15" />
+        <span>Home</span>
+      </p-button>
+      <p-button (onClick)="theme.toggle()">
+        <lucide-icon [name]="theme.dark() ? 'sun' : 'moon-star'" [size]="15" />
+        <span>{{ theme.dark() ? 'Light mode' : 'Dark mode' }}</span>
+      </p-button>
+    </div>
+  </section>
+
+  <div class="settings-grid">
+    <app-section-card icon="user" title="Account">
+      <app-def-list [rows]="accountRows()" />
+      <div class="card-note">
+        Authentication is handled by Supabase. Password resets and profile editing
+        can be added here next.
+      </div>
+    </app-section-card>
+
+    <app-section-card icon="settings" title="Preferences">
+      <div class="preference-stack">
+        <div class="preference-row">
+          <div>
+            <strong>Default chart style</strong>
+            <span class="as-muted">Used by Varga, Dasha drilldown and Compatibility charts.</span>
+          </div>
+          <p-selectbutton
+            [options]="chartStyleOptions"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="prefs.chartStyle()"
+            (ngModelChange)="setChartStyle($any($event))"
+            [allowEmpty]="false"
+          />
+        </div>
+
+        <div class="preference-row">
+          <div>
+            <strong>Ayanamsha</strong>
+            <span class="as-muted">Sent to Vedic chart, dasha, transit and compatibility calculations.</span>
+          </div>
+          <p-selectbutton
+            [options]="ayanamshaOptions"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="prefs.ayanamsha()"
+            (ngModelChange)="setAyanamsha($any($event))"
+            [allowEmpty]="false"
+          />
+        </div>
+
+        <div class="preference-row">
+          <div>
+            <strong>Node type</strong>
+            <span class="as-muted">Choose mean or true Rahu/Ketu for Vedic calculations.</span>
+          </div>
+          <p-selectbutton
+            [options]="nodeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="prefs.nodeType()"
+            (ngModelChange)="setNodeType($any($event))"
+            [allowEmpty]="false"
+          />
+        </div>
+
+        <div class="preference-row">
+          <div>
+            <strong>Timezone behavior</strong>
+            <span class="as-muted">Calendar and panchanga display can follow browser or default place.</span>
+          </div>
+          <p-selectbutton
+            [options]="timezoneOptions"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="prefs.timezoneMode()"
+            (ngModelChange)="setTimezoneMode($any($event))"
+            [allowEmpty]="false"
+          />
+        </div>
+
+        <div class="preference-row place-row">
+          <div>
+            <strong>Default panchanga place</strong>
+            <span class="as-muted">Used by Calendar and dashboard intelligence unless changed there.</span>
+          </div>
+          <p-select
+            [options]="cityOptions()"
+            optionLabel="label"
+            placeholder="Use browser timezone place"
+            [ngModel]="selectedPlace()"
+            (ngModelChange)="setPanchangaPlace($event)"
+            [showClear]="true"
+            [filter]="true"
+            filterBy="label,city,nation,timezone"
+            filterPlaceholder="Search city or timezone"
+            appendTo="body"
+            styleClass="settings-place-select"
+          />
+        </div>
+
+        <div class="preference-row">
+          <div>
+            <strong>Appearance</strong>
+            <span class="as-muted">Choose the calmer reading mode for this device.</span>
+          </div>
+          <p-button severity="secondary" [outlined]="true" (onClick)="theme.toggle()">
+            {{ theme.dark() ? 'Use light' : 'Use dark' }}
+          </p-button>
+        </div>
+
+        <div class="preference-actions">
+          <p-button severity="secondary" [text]="true" (onClick)="resetPreferences()">
+            Reset preferences
+          </p-button>
+        </div>
+      </div>
+    </app-section-card>
+
+    <app-section-card icon="info" title="Calculation defaults">
+      <app-def-list [rows]="preferenceRows()" />
+      <div class="card-note">
+        These defaults are saved on this device and sent with Vedic calculations.
+      </div>
+    </app-section-card>
+
+    <app-section-card icon="layout-grid" title="Data">
+      <app-def-list [rows]="dataRows()" />
+      <div class="card-note">
+        Kundlis and readings are managed from each person’s page. Deleting a
+        kundli removes its readings too.
+      </div>
+    </app-section-card>
+
+    <app-section-card icon="database" title="Import local workspace">
+      @if (auth.enabled() && auth.session()) {
+        <p class="session-copy as-muted">
+          Move the kundlis, generated readings, ratings and feedback created in
+          local mode into this signed-in account.
+        </p>
+        @if (migrationMessage()) {
+          <div class="migration-note">{{ migrationMessage() }}</div>
+        }
+        @if (migrationError()) {
+          <div class="migration-error">{{ migrationError() }}</div>
+        }
+        <p-button
+          severity="secondary"
+          [outlined]="true"
+          [disabled]="migrationLoading() || !localKundlis()"
+          (onClick)="claimLocalData()"
+        >
+          <lucide-icon name="cloud-download" [size]="15" />
+          <span>{{ migrationLoading() ? 'Importing…' : 'Import local data' }}</span>
+        </p-button>
+      } @else {
+        <p class="session-copy as-muted">
+          Sign in with Google first, then return here to import local workspace data.
+        </p>
+      }
+    </app-section-card>
+
+    <app-section-card icon="log-out" title="Session">
+      <p class="session-copy as-muted">
+        Logout is available from the sidebar footer and ends the current
+        Supabase session on this device.
+      </p>
+    </app-section-card>
+  </div>
+</div>

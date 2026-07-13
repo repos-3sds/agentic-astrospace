@@ -2,7 +2,6 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -12,6 +11,10 @@ from astrospace.db.database import init_db
 from astrospace.api.routes import router as core_router
 from astrospace.api.kundli_routes import router as kundli_router
 from astrospace.api.reading_routes import router as reading_router
+from astrospace.api.vedic_routes import router as vedic_router
+from astrospace.api.panchanga_routes import router as panchanga_router
+from astrospace.api.ask_routes import router as ask_router
+from astrospace.api.auth_routes import router as auth_router
 
 app = FastAPI(
     title="AstroSpace",
@@ -29,21 +32,38 @@ app.add_middleware(
 
 # API routers
 app.include_router(core_router)
+app.include_router(auth_router)
 app.include_router(kundli_router)
 app.include_router(reading_router)
+app.include_router(vedic_router)
+app.include_router(panchanga_router)
+app.include_router(ask_router)
 
-# Serve frontend static files
-FRONTEND = Path(__file__).parent / "frontend"
-if FRONTEND.exists():
-    app.mount("/static", StaticFiles(directory=str(FRONTEND)), name="static")
+# Serve the built Angular SPA (ui/ workspace builds into frontend/dist/browser)
+DIST = Path(__file__).parent / "frontend" / "dist" / "browser"
 
-    @app.get("/", response_class=FileResponse)
-    async def serve_ui():
-        return str(FRONTEND / "index.html")
 
-    @app.get("/app", response_class=FileResponse)
-    async def serve_app():
-        return str(FRONTEND / "index.html")
+class SPAStaticFiles(StaticFiles):
+    """Static files with SPA fallback: unknown paths serve index.html so
+    client-side routes like /kundli/:id survive a full page load."""
+
+    async def get_response(self, path, scope):
+        from fastapi import HTTPException
+        from starlette.exceptions import HTTPException as StarletteHTTPException
+
+        try:
+            response = await super().get_response(path, scope)
+        except (HTTPException, StarletteHTTPException) as exc:
+            if exc.status_code == 404:
+                return await super().get_response("index.html", scope)
+            raise
+        if response.status_code == 404:
+            response = await super().get_response("index.html", scope)
+        return response
+
+
+if DIST.exists():
+    app.mount("/", SPAStaticFiles(directory=str(DIST), html=True), name="spa")
 else:
     @app.get("/")
     async def root():

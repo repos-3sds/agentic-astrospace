@@ -1,0 +1,173 @@
+<div class="as-panel chart-page">
+  <section class="as-tab-hero">
+    <div>
+      <span class="as-hero-eyebrow">Natal wheel · aspect map</span>
+      <h2>Visual structure of the birth chart.</h2>
+      <p>
+        Use the wheel to inspect planetary clustering, element balance, focused
+        houses, and the strongest major aspects in the profile.
+      </p>
+    </div>
+    <div class="as-hero-stats">
+      <article>
+        <span>Dominant element</span>
+        <strong>{{ dominantElement() }}</strong>
+        <small>{{ wheelPoints().length }} planets placed</small>
+      </article>
+      <article>
+        <span>Major aspects</span>
+        <strong>{{ aspectLines().length }}</strong>
+        <small>{{ retrogrades().length }} retrograde</small>
+      </article>
+    </div>
+  </section>
+
+  <app-section-card icon="orbit" title="Natal chart workspace" subtitle="birth chart structure">
+    <div card-actions class="chart-actions">
+      <button type="button" class="tool-btn" [class.active]="showAspects()" (click)="toggleAspects()">
+        Aspects
+      </button>
+      <button type="button" class="tool-btn" [class.active]="showRetrogrades()" (click)="toggleRetrogrades()">
+        Retrogrades
+      </button>
+    </div>
+
+    @if (wheelPoints().length) {
+      <div class="chart-workspace">
+        <div class="wheel-stage">
+          <svg class="natal-wheel" viewBox="0 0 500 500" role="img" aria-label="Natal chart wheel">
+            <title>Natal chart wheel</title>
+            <circle class="wheel-bg" cx="250" cy="250" r="224" />
+            <circle class="wheel-band" cx="250" cy="250" r="186" />
+            <circle class="wheel-inner" cx="250" cy="250" r="92" />
+
+            @for (sign of signMarkers(); track sign.sign) {
+              <line
+                class="sign-spoke"
+                [attr.x1]="sign.x1"
+                [attr.y1]="sign.y1"
+                [attr.x2]="sign.x2"
+                [attr.y2]="sign.y2"
+              />
+              <text
+                class="sign-label"
+                [attr.x]="sign.labelX"
+                [attr.y]="sign.labelY"
+                [attr.fill]="sign.color"
+              >
+                {{ sign.label }}
+              </text>
+            }
+
+            @if (showAspects()) {
+              @for (line of aspectLines(); track line.a + line.b + line.type) {
+                <line
+                  class="aspect-line"
+                  [class.soft]="line.tone === 'soft'"
+                  [class.hard]="line.tone === 'hard'"
+                  [class.neutral]="line.tone === 'neutral'"
+                  [attr.x1]="line.x1"
+                  [attr.y1]="line.y1"
+                  [attr.x2]="line.x2"
+                  [attr.y2]="line.y2"
+                />
+              }
+            }
+
+            @for (p of wheelPoints(); track p.name) {
+              <g class="planet" [attr.transform]="'translate(' + p.x + ' ' + p.y + ')'">
+                <circle r="13" />
+                <text x="0" y="1">{{ p.glyph }}</text>
+                @if (showRetrogrades() && p.retrograde) {
+                  <text class="retro-mark" x="14" y="-10">R</text>
+                }
+              </g>
+            }
+
+            <text class="wheel-center" x="250" y="246">Natal</text>
+            <text class="wheel-sub" x="250" y="266">chart</text>
+          </svg>
+        </div>
+
+        <aside class="chart-rail">
+          <div class="rail-block">
+            <h4>Element Balance</h4>
+            @for (item of elementBalance(); track item.label) {
+              <div class="bar-row">
+                <span>{{ item.label }}</span>
+                <div class="bar"><span [style.width.%]="item.pct"></span></div>
+                <strong>{{ item.value }}</strong>
+              </div>
+            }
+          </div>
+
+          <div class="rail-block">
+            <h4>Modality</h4>
+            @for (item of modalityBalance(); track item.label) {
+              <div class="bar-row">
+                <span>{{ item.label }}</span>
+                <div class="bar"><span [style.width.%]="item.pct"></span></div>
+                <strong>{{ item.value }}</strong>
+              </div>
+            }
+          </div>
+
+          <div class="rail-block">
+            <h4>Focused Houses</h4>
+            @if (houseFocus().length) {
+              <app-def-list [rows]="houseFocus()" />
+            } @else {
+              <p class="as-muted empty">No house placements available.</p>
+            }
+          </div>
+        </aside>
+      </div>
+    } @else {
+      <p class="as-muted empty">Chart data not available for this kundli.</p>
+    }
+  </app-section-card>
+
+  <div class="as-grid-2">
+    <app-section-card icon="list" title="Planet placements">
+      @if (planetRows().length) {
+        <app-def-list [rows]="planetRows()" />
+      } @else {
+        <p class="as-muted empty">Planet data not available.</p>
+      }
+    </app-section-card>
+
+    <app-section-card icon="sparkles" title="Major aspects">
+      @if (aspectLines().length) {
+        <div class="aspect-list">
+          @for (a of aspectLines(); track a.a + a.b + a.type) {
+            <div class="aspect-row" [class]="a.tone">
+              <span>{{ a.a }} - {{ a.b }}</span>
+              <strong>{{ a.type }}</strong>
+              <em>{{ a.orb.toFixed(1) }}deg orb</em>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="as-muted empty">No major aspects within 6deg orb.</p>
+      }
+    </app-section-card>
+  </div>
+
+  <div class="as-grid-2">
+    <app-section-card icon="layout-grid" title="House cusps">
+      @if (houseRows().length) {
+        <app-def-list [rows]="houseRows()" />
+      } @else {
+        <p class="as-muted empty">House data not available.</p>
+      }
+    </app-section-card>
+
+    <app-section-card icon="rotate-ccw" title="Retrogrades">
+      @if (retrogrades().length) {
+        <app-def-list [rows]="retrogrades()" />
+      } @else {
+        <p class="as-muted empty">No retrograde planets in this chart.</p>
+      }
+    </app-section-card>
+  </div>
+</div>

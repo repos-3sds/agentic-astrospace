@@ -1,0 +1,93 @@
+<div class="as-panel">
+  <section class="as-tab-hero">
+    <div>
+      <span class="as-hero-eyebrow">Ask AI · chart-grounded</span>
+      <h2>Question {{ kundli()?.name || 'this chart' }} directly.</h2>
+      <p>
+        The assistant answers through computed Vedic tools first, then explains
+        the reasoning in plain language.
+      </p>
+    </div>
+    <div class="as-hero-stats">
+      <article>
+        <span>Conversation</span>
+        <strong>{{ messages().length }}</strong>
+        <small>messages in this profile</small>
+      </article>
+      <article>
+        <span>Starter prompts</span>
+        <strong>{{ suggestions.length }}</strong>
+        <small>ready questions</small>
+      </article>
+    </div>
+  </section>
+
+<app-section-card icon="message-circle" title="Ask AI about {{ kundli()?.name }}">
+  <div class="chat">
+    <div class="messages" #scroller>
+      @if (!messages().length) {
+        <div class="intro">
+          <div class="intro-mark">
+            <lucide-icon name="sparkles" [size]="22" [strokeWidth]="1.75" />
+          </div>
+          <div class="intro-title">Ask about {{ kundli()?.name }}'s chart</div>
+          <p class="as-muted">
+            Answers are grounded in the computed Vedic charts — every claim cites its placements.
+          </p>
+          <div class="suggestions">
+            @for (q of suggestions; track q) {
+              <button type="button" class="suggestion" (click)="send(q)">{{ q }}</button>
+            }
+          </div>
+        </div>
+      }
+
+      @for (m of messages(); track $index) {
+        @if (m.role === 'user') {
+          <div class="msg-row user">
+            <div class="bubble user">{{ m.content }}</div>
+          </div>
+        } @else {
+          <div class="msg-row assistant">
+            <div class="bubble assistant">
+              <div class="as-prose" [innerHTML]="m.content | markdown"></div>
+              @if (m.tools?.length) {
+                <div class="tools">
+                  <span class="as-muted">grounded on</span>
+                  @for (t of m.tools; track t) {
+                    <span class="tool-chip">{{ toolLabel(t) }}</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      }
+
+      @if (askSvc.pending()) {
+        <div class="msg-row assistant">
+          <div class="bubble assistant thinking">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="as-muted">Consulting the charts…</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <form class="composer" (ngSubmit)="send()">
+      <input
+        pInputText
+        type="text"
+        name="question"
+        [(ngModel)]="draft"
+        [disabled]="askSvc.pending()"
+        placeholder="e.g. Is this week good for a job change?"
+        autocomplete="off"
+      >
+      <p-button type="submit" [disabled]="askSvc.pending() || !draft.trim()">
+        <lucide-icon name="send" [size]="15" />
+      </p-button>
+    </form>
+  </div>
+</app-section-card>
+</div>

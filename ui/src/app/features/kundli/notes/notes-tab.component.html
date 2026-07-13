@@ -1,0 +1,40 @@
+<div class="as-panel">
+  <section class="as-tab-hero">
+    <div>
+      <span class="as-hero-eyebrow">Notes · private workspace</span>
+      <h2>Observations for {{ kundli()?.name || 'this profile' }}.</h2>
+      <p>
+        Keep human context beside the computed chart: life events, validation
+        notes, and patterns you want to remember.
+      </p>
+    </div>
+    <div class="as-hero-stats">
+      <article>
+        <span>Note length</span>
+        <strong>{{ notes.length }}</strong>
+        <small>characters</small>
+      </article>
+      <article>
+        <span>Status</span>
+        <strong>{{ saving() ? 'Saving' : 'Ready' }}</strong>
+        <small>profile notes</small>
+      </article>
+    </div>
+  </section>
+
+<app-section-card icon="notebook-pen" title="Personal notes">
+  <textarea
+    pTextarea
+    class="notes-area"
+    rows="9"
+    [(ngModel)]="notes"
+    placeholder="Add personal notes about {{ kundli()?.name }}…"
+  ></textarea>
+  <div class="actions">
+    <p-button [disabled]="saving()" (onClick)="save()">
+      <lucide-icon name="save" [size]="15" />
+      <span class="btn-label">{{ saving() ? 'Saving…' : 'Save notes' }}</span>
+    </p-button>
+  </div>
+</app-section-card>
+</div>

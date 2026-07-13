@@ -1,0 +1,69 @@
+<p-dialog
+  [visible]="store.dialogOpen()"
+  (visibleChange)="!$event && store.closeDialog()"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '480px', maxWidth: '94vw' }"
+  [header]="store.editing() ? 'Edit kundli' : 'Add kundli'"
+>
+  <form class="form" [formGroup]="form" (ngSubmit)="save()">
+    <div class="field">
+      <label for="f-name">Full name</label>
+      <input pInputText id="f-name" formControlName="name" placeholder="e.g. Priya Sharma" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label for="f-relation">Relation</label>
+      <p-select
+        inputId="f-relation"
+        formControlName="relation"
+        [options]="relations"
+        optionLabel="label"
+        optionValue="value"
+        appendTo="body"
+      />
+    </div>
+
+    <div class="field">
+      <label>Birth date <span class="hint">day / month / year</span></label>
+      <div class="row-3">
+        <p-inputnumber formControlName="birth_day" placeholder="DD" [min]="1" [max]="31" [useGrouping]="false" />
+        <p-inputnumber formControlName="birth_month" placeholder="MM" [min]="1" [max]="12" [useGrouping]="false" />
+        <p-inputnumber formControlName="birth_year" placeholder="YYYY" [min]="1900" [max]="2026" [useGrouping]="false" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Birth time <span class="hint">24h — approximate is fine</span></label>
+      <div class="row-2">
+        <p-inputnumber formControlName="birth_hour" placeholder="Hour" [min]="0" [max]="23" [useGrouping]="false" />
+        <p-inputnumber formControlName="birth_minute" placeholder="Minute" [min]="0" [max]="59" [useGrouping]="false" />
+      </div>
+    </div>
+
+    <div class="row-2">
+      <div class="field">
+        <label for="f-city">Birth city</label>
+        <input pInputText id="f-city" formControlName="birth_city" placeholder="e.g. Mumbai" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="f-nation">Country code</label>
+        <input pInputText id="f-nation" formControlName="birth_nation" placeholder="IN / US / GB" maxlength="2" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="f-notes">Notes <span class="hint">optional</span></label>
+      <textarea pTextarea id="f-notes" formControlName="notes" rows="2" placeholder="Anything worth remembering"></textarea>
+    </div>
+  </form>
+
+  <ng-template #footer>
+    <p-button label="Cancel" severity="secondary" [outlined]="true" (onClick)="store.closeDialog()" />
+    <p-button
+      [label]="saving() ? 'Saving…' : store.editing() ? 'Update' : 'Save kundli'"
+      [disabled]="saving()"
+      (onClick)="save()"
+    />
+  </ng-template>
+</p-dialog>

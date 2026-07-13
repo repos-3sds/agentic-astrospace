@@ -1,0 +1,262 @@
+.big-three {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  background: var(--as-surface);
+  border: 1px solid var(--as-border);
+  border-radius: var(--as-radius);
+}
+
+.stat-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--as-muted);
+}
+
+.stat-value {
+  font-family: var(--as-font-display);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.empty {
+  margin: 0;
+  font-size: 13px;
+}
+
+.today-intel {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.today-lead,
+.signal-card {
+  border: 1px solid var(--as-border);
+  background: var(--as-raised);
+}
+
+.today-lead {
+  position: relative;
+  min-height: 184px;
+  display: grid;
+  align-content: end;
+  gap: 8px;
+  padding: 22px;
+  border-radius: 22px;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--as-accent) 20%, transparent), transparent 34%),
+      linear-gradient(145deg, color-mix(in srgb, var(--as-accent) 10%, transparent), transparent 52%);
+    pointer-events: none;
+  }
+
+  &.supportive {
+    border-color: color-mix(in srgb, var(--as-good) 34%, var(--as-border));
+  }
+
+  &.challenging {
+    border-color: color-mix(in srgb, var(--as-warn) 38%, var(--as-border));
+  }
+
+  span,
+  h3,
+  p,
+  strong {
+    position: relative;
+  }
+
+  span {
+    color: var(--as-muted);
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  h3 {
+    max-width: 420px;
+    font-size: 24px;
+    font-weight: 850;
+    line-height: 1.08;
+  }
+
+  p {
+    margin: 0;
+    color: var(--as-muted);
+    font-size: 13px;
+  }
+
+  strong {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    color: var(--as-accent-strong);
+    font-size: 30px;
+    line-height: 1;
+  }
+}
+
+.signal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.signal-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border-radius: 16px;
+
+  &.supportive {
+    box-shadow: inset 3px 0 0 var(--as-good);
+  }
+
+  &.challenging {
+    box-shadow: inset 3px 0 0 var(--as-warn);
+  }
+
+  span,
+  strong,
+  small {
+    display: block;
+  }
+
+  span {
+    color: var(--as-muted);
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  strong {
+    margin-top: 4px;
+    font-size: 14px;
+    line-height: 1.2;
+  }
+
+  small {
+    margin-top: 5px;
+    color: var(--as-muted);
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  b {
+    flex: 0 0 auto;
+    color: var(--as-accent-strong);
+    font-size: 17px;
+  }
+}
+
+.transit-link {
+  grid-column: 2;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 2px;
+  color: var(--as-accent-strong);
+  font-size: 13px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.today-loading {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+
+  span {
+    height: 112px;
+    border-radius: 18px;
+    background: linear-gradient(
+      90deg,
+      var(--as-raised),
+      color-mix(in srgb, var(--as-accent) 10%, var(--as-raised)),
+      var(--as-raised)
+    );
+    background-size: 240% 100%;
+    animation: as-shimmer 1.2s ease-in-out infinite;
+  }
+}
+
+@keyframes as-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}
+
+.cta-copy {
+  margin: 0 0 14px;
+  font-size: 13px;
+}
+
+.cta-label {
+  margin-left: 8px;
+}
+
+:host ::ng-deep {
+  .cell-glyph {
+    display: inline-block;
+    width: 18px;
+    color: var(--as-gold);
+    font-weight: 600;
+  }
+
+  .cell-retro {
+    color: var(--as-bad);
+    font-weight: 500;
+  }
+}
+
+@media (max-width: 980px) {
+  .today-intel,
+  .transit-link {
+    grid-template-columns: 1fr;
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .signal-grid,
+  .today-loading {
+    grid-template-columns: 1fr;
+  }
+
+  .today-lead strong {
+    position: static;
+  }
+}

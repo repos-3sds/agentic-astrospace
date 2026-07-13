@@ -1,0 +1,95 @@
+<main class="auth-page">
+  <section class="auth-panel">
+    <div class="brand-lockup">
+      <span class="brand-mark">
+        <lucide-icon name="orbit" [size]="26" [strokeWidth]="1.5" />
+      </span>
+      <div>
+        <span class="eyebrow">AstroSpace</span>
+        <h1>{{ mode === 'signin' ? 'Welcome back' : 'Create your account' }}</h1>
+      </div>
+    </div>
+
+    <p class="as-muted">
+      Sign in to keep Kundlis, readings, prediction ratings and feedback tied to
+      your private workspace.
+    </p>
+
+    @if (!auth.enabled()) {
+      <div class="notice">
+        Supabase is not configured yet. The app will continue in local workspace mode.
+      </div>
+    }
+
+    @if (notice()) {
+      <div class="notice">{{ notice() }}</div>
+    }
+
+    @if (error()) {
+      <div class="error">{{ error() }}</div>
+    }
+
+    <form class="auth-form" (ngSubmit)="submit()">
+      @if (mode === 'signup') {
+        <label>
+          <span>Name</span>
+          <input pInputText name="name" [(ngModel)]="name" autocomplete="name" required>
+        </label>
+      }
+
+      <label>
+        <span>Email</span>
+        <input pInputText name="email" type="email" [(ngModel)]="email" autocomplete="email" required>
+      </label>
+
+      <label>
+        <span>Password</span>
+        <p-password
+          name="password"
+          [(ngModel)]="password"
+          [feedback]="mode === 'signup'"
+          [toggleMask]="true"
+          autocomplete="current-password"
+          required
+        />
+      </label>
+
+      <p-button
+        type="submit"
+        [disabled]="loading() || !auth.enabled()"
+        styleClass="submit-btn"
+      >
+        <lucide-icon [name]="mode === 'signin' ? 'log-out' : 'user'" [size]="15" />
+        <span>{{ loading() ? 'Please wait' : mode === 'signin' ? 'Sign in' : 'Sign up' }}</span>
+      </p-button>
+    </form>
+
+    <div class="auth-divider"><span>or</span></div>
+
+    <div class="provider-actions">
+      <button
+        class="provider-btn"
+        type="button"
+        [disabled]="googleLoading() || !auth.enabled()"
+        (click)="signInWithGoogle()"
+      >
+        <lucide-icon name="globe" [size]="15" />
+        {{ googleLoading() ? 'Opening Google…' : 'Continue with Google' }}
+      </button>
+
+      <button
+        class="provider-btn"
+        type="button"
+        [disabled]="magicLoading() || !auth.enabled()"
+        (click)="sendMagicLink()"
+      >
+        <lucide-icon name="mail" [size]="15" />
+        {{ magicLoading() ? 'Sending…' : 'Email me a magic link' }}
+      </button>
+    </div>
+
+    <button class="mode-switch" type="button" (click)="mode = mode === 'signin' ? 'signup' : 'signin'">
+      {{ mode === 'signin' ? 'Need an account? Sign up' : 'Already have an account? Sign in' }}
+    </button>
+  </section>
+</main>

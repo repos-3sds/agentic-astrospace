@@ -1,0 +1,96 @@
+:host {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+}
+
+.kundli-chart {
+  margin: 0;
+  width: 100%;
+  color: var(--as-text);
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    overflow: visible;
+  }
+}
+
+.chart-fill {
+  fill: color-mix(in srgb, var(--as-surface) 92%, var(--as-gold-soft));
+}
+
+.chart-line {
+  fill: none;
+  stroke: color-mix(in srgb, var(--as-border) 82%, var(--as-text));
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.4;
+
+  &.strong {
+    stroke: color-mix(in srgb, var(--as-border) 58%, var(--as-text));
+    stroke-width: 1.7;
+  }
+}
+
+.house {
+  pointer-events: none;
+  text {
+    text-anchor: middle;
+    dominant-baseline: middle;
+  }
+}
+
+.south-cell {
+  pointer-events: none;
+
+  text {
+    text-anchor: middle;
+    dominant-baseline: middle;
+  }
+}
+
+.house-number {
+  fill: var(--as-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.sign-label {
+  font-family: var(--as-font-display);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.corner-label {
+  dominant-baseline: middle;
+
+  &.top-left {
+    text-anchor: start;
+  }
+
+  &.bottom-right {
+    text-anchor: end;
+  }
+}
+
+.south-cell .corner-label {
+  dominant-baseline: middle;
+
+  &.top-left {
+    text-anchor: start;
+  }
+
+  &.bottom-right {
+    text-anchor: end;
+  }
+}
+
+.planet-line {
+  fill: var(--as-text);
+  font-size: 10.8px;
+  font-weight: 650;
+}

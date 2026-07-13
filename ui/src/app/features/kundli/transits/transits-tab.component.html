@@ -1,0 +1,120 @@
+@if (loading()) {
+  <div class="as-panel">
+    <p-skeleton height="140px" borderRadius="18px" />
+    <p-skeleton height="420px" borderRadius="18px" />
+  </div>
+} @else if (error()) {
+  <app-section-card icon="alert-triangle" title="Transits unavailable">
+    <p class="error-copy">{{ error() }}</p>
+  </app-section-card>
+} @else if (data(); as t) {
+  <div class="as-panel transits-page">
+    <section class="as-tab-hero">
+      <div>
+        <span class="as-hero-eyebrow">Transits · {{ t.natal.moon_sign }} Moon · {{ t.natal.lagna_sign }} Lagna</span>
+        <h2>Current sky activating the natal chart.</h2>
+        <p>
+          Gochara rules, transit-to-natal aspects, and near-term movement are calculated from
+          sidereal positions first. This becomes the backbone for alerts and calendar intelligence.
+        </p>
+      </div>
+      <div class="as-hero-stats">
+        <article>
+          <span>Active rules</span>
+          <strong>{{ activeRules().length }}</strong>
+          <small>{{ t.gochara.sade_sati.active ? 'Sade Sati active' : 'Sade Sati clear' }}</small>
+        </article>
+        <article>
+          <span>Strongest aspect</span>
+          <strong>{{ strongest()?.strength ?? 0 }}%</strong>
+          <small>{{ aspectTitle(strongest()) }}</small>
+        </article>
+      </div>
+    </section>
+
+    <div class="as-grid-2 overview-grid">
+      <app-section-card icon="orbit" title="Current gochara" subtitle="houses counted from natal lagna and Moon">
+        <div class="gochara-grid">
+          @for (planet of gocharaPlanets(); track planet.planet) {
+            <article class="planet-row" [class.retro]="planet.retrograde">
+              <div>
+                <strong>{{ planet.planet }}</strong>
+                <span>{{ planet.sign }} {{ planet.dms }}</span>
+              </div>
+              <div class="house-pair">
+                <span>L{{ planet.house_from_lagna }}</span>
+                <span>M{{ planet.house_from_moon }}</span>
+              </div>
+              <small>{{ planet.nakshatra }} P{{ planet.nakshatra_pada }}</small>
+            </article>
+          }
+        </div>
+      </app-section-card>
+
+      <app-section-card icon="radar" title="Rule triggers" subtitle="classical gochara signals">
+        <div class="rule-list">
+          @for (rule of t.gochara.rules; track rule.name) {
+            <article class="rule-row" [class.active]="rule.active" [class.supportive]="rule.severity === 'supportive'">
+              <div>
+                <strong>{{ rule.name }}</strong>
+                <span>{{ rule.trigger }}</span>
+              </div>
+              <small>{{ rule.active ? rule.severity : 'inactive' }}</small>
+            </article>
+          }
+        </div>
+      </app-section-card>
+    </div>
+
+    <app-section-card icon="activity" title="Major transit aspects" subtitle="orb-weighted sidereal contacts">
+      <div class="aspect-grid">
+        @for (aspect of majorAspects(); track aspect.transit_planet + aspect.natal_planet + aspect.aspect) {
+          <article class="aspect-card" [class]="toneClass(aspect.tone)">
+            <header>
+              <div>
+                <span>{{ aspect.transit_planet }} → natal {{ aspect.natal_planet }}</span>
+                <h3>{{ aspect.aspect }}</h3>
+              </div>
+              <strong>{{ aspect.strength }}%</strong>
+            </header>
+            <p>{{ aspect.transit_sign }} to {{ aspect.natal_sign }} · orb {{ aspect.orb }}°</p>
+          </article>
+        } @empty {
+          <p class="as-muted empty">No major active transit aspects inside the current orb limits.</p>
+        }
+      </div>
+    </app-section-card>
+
+    <app-section-card icon="calendar-days" title="Transit timeline" subtitle="next notable movements">
+      <div class="timeline-toolbar">
+        <div>
+          <strong>{{ formatDateTime(t.as_of) }}</strong>
+          <span>{{ t.system }} · {{ t.ayanamsha }} ayanamsha</span>
+        </div>
+        <div class="segmented">
+          <button type="button" [class.active]="timelineMode() === 'seven'" (click)="timelineMode.set('seven')">
+            7 days
+          </button>
+          <button type="button" [class.active]="timelineMode() === 'thirty'" (click)="timelineMode.set('thirty')">
+            30 days
+          </button>
+        </div>
+      </div>
+
+      <div class="timeline-list">
+        @for (event of timelineEvents(); track eventTrack(event)) {
+          <article class="timeline-event" [class]="toneClass(event.tone)">
+            <time>{{ formatDate(event.date) }}</time>
+            <div>
+              <strong>{{ event.title }}</strong>
+              <span>{{ event.detail }}</span>
+            </div>
+            <small>{{ event.strength }}%</small>
+          </article>
+        } @empty {
+          <p class="as-muted empty">No major timeline events detected for this window.</p>
+        }
+      </div>
+    </app-section-card>
+  </div>
+}

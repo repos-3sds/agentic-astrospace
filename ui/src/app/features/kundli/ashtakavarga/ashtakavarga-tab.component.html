@@ -1,0 +1,232 @@
+@if (loading()) {
+  <div class="as-panel">
+    <p-skeleton height="140px" borderRadius="18px" />
+    <p-skeleton height="420px" borderRadius="18px" />
+  </div>
+} @else if (error()) {
+  <app-section-card icon="alert-triangle" title="Ashtakavarga failed">
+    <p class="error-copy">{{ error() }}</p>
+  </app-section-card>
+} @else if (data(); as av) {
+  <div class="as-panel">
+    <section class="av-hero">
+      <div>
+        <span class="eyebrow">Ashtakavarga · classical SAV {{ av.totals.sav }}</span>
+        <h2>Bindu strength, reductions, and Pinda in one workspace.</h2>
+        <p>
+          Bhinna Ashtakavarga is calculated for Sun through Saturn with Lagna as
+          a contributing source. Shodhana and Shodhya Pinda are derived from the
+          same raw bindu grid.
+        </p>
+      </div>
+      <div class="summary-grid">
+        <article>
+          <span>Strongest</span>
+          <strong>{{ strongest()[0]?.sign || '—' }}</strong>
+          <small>{{ strongest()[0]?.sav || 0 }} bindus</small>
+        </article>
+        <article>
+          <span>Weakest</span>
+          <strong>{{ weakest()[0]?.sign || '—' }}</strong>
+          <small>{{ weakest()[0]?.sav || 0 }} bindus</small>
+        </article>
+        <article>
+          <span>Top Pinda</span>
+          <strong>{{ av.pinda_rank?.[0]?.planet || '—' }}</strong>
+          <small>{{ av.pinda_rank?.[0]?.shodhya_pinda || 0 }} points</small>
+        </article>
+      </div>
+    </section>
+
+    <div class="av-toolbar">
+      <div class="mode-pills" aria-label="Ashtakavarga views">
+        @for (item of modes; track item.id) {
+          <button type="button" [class.active]="mode() === item.id" (click)="mode.set(item.id)">
+            {{ item.label }}
+          </button>
+        }
+      </div>
+      @if (mode() === 'shodhana' || mode() === 'prastara') {
+        <label class="planet-select">
+          Planet
+          <select [value]="selectedPlanet()" (change)="selectedPlanet.set($any($event.target).value)">
+            @for (planet of av.planets; track planet) {
+              <option [value]="planet">{{ planet }}</option>
+            }
+          </select>
+        </label>
+      }
+    </div>
+
+    @switch (mode()) {
+      @case ('sav') {
+        <app-section-card icon="activity" title="Sarvashtakavarga" subtitle="bindu heatmap">
+          <div class="sav-grid">
+            @for (s of av.signs; track s.sign) {
+              <article class="sav-tile" [style.--heat]="heat(s.sav)">
+                <span>{{ s.sign }}</span>
+                <strong>{{ s.sav }}</strong>
+              </article>
+            }
+          </div>
+        </app-section-card>
+      }
+
+      @case ('bav') {
+        <app-section-card icon="table-2" title="Bhinna Ashtakavarga" subtitle="planet contributions by rashi">
+          <div class="table-wrap">
+            <table class="av-table">
+              <thead>
+                <tr>
+                  <th>Rashi</th>
+                  @for (planet of av.planets; track planet) {
+                    <th>{{ planet }}</th>
+                  }
+                  <th>SAV</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of av.signs; track s.sign) {
+                  <tr>
+                    <td><strong>{{ s.sign }}</strong></td>
+                    @for (planet of av.planets; track planet) {
+                      <td class="as-num">{{ s.bav[planet] }}</td>
+                    }
+                    <td class="as-num total-cell">{{ s.sav }}</td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th>Total</th>
+                  @for (planet of av.planets; track planet) {
+                    <th class="as-num">{{ av.totals.bav[planet] }}</th>
+                  }
+                  <th class="as-num">{{ av.totals.sav }}</th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </app-section-card>
+      }
+
+      @case ('shodhana') {
+        <app-section-card icon="list" title="Shodhana" subtitle="Trikona and Ekadhipatya reductions">
+          @if (selectedShodhana(); as sh) {
+            <div class="shodhana-layout">
+              <div class="shodhana-score">
+                <span>{{ selectedPlanet() }}</span>
+                <strong>{{ sh.total_after_ekadhipatya }}</strong>
+                <small>after both reductions from raw {{ planetTotal(selectedPlanet()) }}</small>
+              </div>
+              <div class="table-wrap">
+                <table class="av-table">
+                  <thead>
+                    <tr>
+                      <th>Stage</th>
+                      @for (s of av.signs; track s.sign) {
+                        <th>{{ s.sign }}</th>
+                      }
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Raw BAV</strong></td>
+                      @for (score of av.bav[selectedPlanet()]; track $index) {
+                        <td class="as-num">{{ score }}</td>
+                      }
+                      <td class="as-num total-cell">{{ planetTotal(selectedPlanet()) }}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Trikona</strong></td>
+                      @for (score of sh.trikona; track $index) {
+                        <td class="as-num">{{ score }}</td>
+                      }
+                      <td class="as-num total-cell">{{ sh.total_after_trikona }}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Ekadhipatya</strong></td>
+                      @for (score of sh.ekadhipatya; track $index) {
+                        <td class="as-num">{{ score }}</td>
+                      }
+                      <td class="as-num total-cell">{{ sh.total_after_ekadhipatya }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+        </app-section-card>
+      }
+
+      @case ('pinda') {
+        <app-section-card icon="award" title="Shodhya Pinda" subtitle="Rashi Pinda plus Graha Pinda after Shodhana">
+          <div class="table-wrap">
+            <table class="av-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Planet</th>
+                  <th>Rashi Pinda</th>
+                  <th>Graha Pinda</th>
+                  <th>Shodhya Pinda</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of av.pinda_rank ?? []; track row.planet; let i = $index) {
+                  <tr>
+                    <td>{{ i + 1 }}</td>
+                    <td><strong>{{ row.planet }}</strong></td>
+                    <td class="as-num">{{ row.rashi_pinda }}</td>
+                    <td class="as-num">{{ row.graha_pinda }}</td>
+                    <td class="as-num total-cell">{{ row.shodhya_pinda }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </app-section-card>
+      }
+
+      @case ('prastara') {
+        <app-section-card icon="layout-grid" title="Prastara Ashtakavarga" subtitle="source-wise bindu contribution">
+          @if (selectedPrastara(); as prastara) {
+            <div class="table-wrap">
+              <table class="av-table">
+                <thead>
+                  <tr>
+                    <th>Source</th>
+                    @for (s of av.signs; track s.sign) {
+                      <th>{{ s.sign }}</th>
+                    }
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (source of av.sources; track source) {
+                    <tr>
+                      <td><strong>{{ source }}</strong></td>
+                      @for (score of prastara[source]; track $index) {
+                        <td class="as-num">{{ score }}</td>
+                      }
+                      <td class="as-num total-cell">{{ sourceTotal(prastara[source]) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </app-section-card>
+      }
+    }
+
+    @if (mode() !== 'pinda' && selectedPinda(); as pinda) {
+      <div class="mini-pinda">
+        <span>{{ selectedPlanet() }} Shodhya Pinda</span>
+        <strong>{{ pinda.shodhya_pinda }}</strong>
+        <small>Rashi {{ pinda.rashi_pinda }} · Graha {{ pinda.graha_pinda }}</small>
+      </div>
+    }
+  </div>
+}

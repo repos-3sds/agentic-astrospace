@@ -1,0 +1,237 @@
+.trio {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  padding: 18px 20px;
+  background: var(--as-surface);
+  border: 1px solid var(--as-border);
+  border-radius: var(--as-radius);
+}
+
+.stat-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.stat-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--as-muted);
+}
+
+.stat-value {
+  font-family: var(--as-font-display);
+  font-size: 18px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 40px;
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.error-copy {
+  margin: 0;
+  color: var(--as-bad);
+  font-size: 13.5px;
+}
+
+.page-subtabs {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px;
+  border: 1px solid var(--as-border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--as-surface) 86%, transparent);
+  backdrop-filter: blur(14px);
+
+  button {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    border: 0;
+    border-radius: 999px;
+    padding: 9px 14px;
+    background: transparent;
+    color: var(--as-muted);
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 850;
+    cursor: pointer;
+
+    &.active {
+      color: var(--as-accent-contrast);
+      background: var(--as-accent);
+      box-shadow: 0 10px 24px color-mix(in srgb, var(--as-accent) 22%, transparent);
+    }
+  }
+}
+
+.strength-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(280px, 1.1fr);
+  gap: 18px;
+  align-items: start;
+  margin-bottom: 18px;
+
+  p {
+    margin: 5px 0 0;
+    font-size: 13px;
+  }
+}
+
+.strength-provenance {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+
+  span {
+    padding: 6px 9px;
+    border: 1px solid color-mix(in srgb, var(--as-good) 30%, var(--as-border));
+    border-radius: 999px;
+    color: var(--as-good);
+    background: var(--as-good-soft);
+    font-size: 11px;
+    font-weight: 850;
+    text-transform: capitalize;
+
+    &.approx {
+      border-color: color-mix(in srgb, var(--as-warn) 35%, var(--as-border));
+      color: var(--as-warn);
+      background: var(--as-warn-soft);
+    }
+  }
+}
+
+.strength-note {
+  margin: 12px 0 0;
+  font-size: 12px;
+}
+
+/* varga section */
+:host ::ng-deep .varga-select {
+  display: flex;
+  flex-wrap: wrap;
+
+  .p-togglebutton {
+    padding: 7px 12px;
+    font-size: 12.5px;
+  }
+}
+
+.varga-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 22px 0 14px;
+
+  .varga-title {
+    display: block;
+    font-family: var(--as-font-display);
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .varga-sub {
+    font-size: 12.5px;
+  }
+}
+
+.varga-table-wrap {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.varga-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--as-muted);
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--as-border);
+  }
+
+  td {
+    padding: 10px;
+    border-bottom: 1px solid var(--as-border);
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.vargottama {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--as-gold);
+  background: var(--as-gold-soft);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+:host ::ng-deep {
+  .cell-glyph {
+    display: inline-block;
+    width: 18px;
+    color: var(--as-gold);
+    font-weight: 600;
+  }
+
+  .cell-retro {
+    color: var(--as-bad);
+    font-weight: 600;
+    font-size: 11px;
+  }
+
+  .strength-total {
+    color: var(--as-accent-strong);
+    font-weight: 850;
+  }
+}
+
+@media (max-width: 800px) {
+  .strength-intro {
+    grid-template-columns: 1fr;
+  }
+
+  .strength-provenance {
+    justify-content: flex-start;
+  }
+}

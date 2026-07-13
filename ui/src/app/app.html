@@ -1,0 +1,93 @@
+@if (publicOnly()) {
+  <router-outlet />
+} @else {
+  <div class="shell">
+    <app-sidebar />
+
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <div class="topbar-titles">
+            <h1>{{ title() }}</h1>
+            <p class="as-muted">{{ subtitle() }}</p>
+          </div>
+
+          <div class="profile-switcher">
+            <lucide-icon name="users" [size]="15" />
+            <p-select
+              [options]="profileOptions()"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select profile"
+              [ngModel]="store.activeId()"
+              (ngModelChange)="selectProfile($event)"
+              [filter]="true"
+              filterBy="label,sublabel"
+              filterPlaceholder="Search profiles"
+              appendTo="body"
+              styleClass="profile-select"
+            >
+              <ng-template #selectedItem let-profile>
+                @if (profile) {
+                  <span class="profile-selected">{{ profile.label }}</span>
+                }
+              </ng-template>
+              <ng-template #item let-profile>
+                <div class="profile-option">
+                  <strong>{{ profile.label }}</strong>
+                  <small>{{ profile.sublabel }}</small>
+                </div>
+              </ng-template>
+            </p-select>
+            <p-button
+              size="small"
+              styleClass="profile-add-btn"
+              (onClick)="store.openAdd()"
+              pTooltip="Add kundli"
+              tooltipPosition="bottom"
+            >
+              <lucide-icon name="plus" [size]="14" />
+              <span>Add</span>
+            </p-button>
+          </div>
+
+          <div class="topbar-actions">
+            @if (store.active(); as active) {
+              <p-button
+                severity="secondary"
+                [outlined]="true"
+                size="small"
+                (onClick)="edit()"
+                pTooltip="Edit birth details"
+                tooltipPosition="bottom"
+              >
+                <lucide-icon name="pencil" [size]="14" />
+                <span class="btn-label">Edit</span>
+              </p-button>
+              <p-button
+                severity="danger"
+                [outlined]="true"
+                size="small"
+                (onClick)="confirmDelete()"
+                pTooltip="Delete kundli"
+                tooltipPosition="bottom"
+              >
+                <lucide-icon name="trash-2" [size]="14" />
+              </p-button>
+            }
+          </div>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="content-inner">
+          <router-outlet />
+        </div>
+      </main>
+    </div>
+  </div>
+}
+
+<app-kundli-dialog />
+<p-toast position="bottom-right" />
+<p-confirmdialog [style]="{ width: '420px' }" />

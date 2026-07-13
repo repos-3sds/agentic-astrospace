@@ -1,0 +1,112 @@
+<div class="home-page as-panel">
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="hero-mark">
+        <lucide-icon name="orbit" [size]="28" [strokeWidth]="1.5" />
+      </div>
+      <span class="eyebrow">Vedic astrology workspace</span>
+      <h2>Charts for the people who matter</h2>
+      <p>
+        Add kundlis for yourself, family and friends to get computed Vedic charts,
+        daily panchanga and AI readings grounded in real placements.
+      </p>
+      <div class="hero-actions">
+        <p-button size="large" (onClick)="store.openAdd()">
+          <lucide-icon name="plus" [size]="16" />
+          <span class="cta-label">
+            {{ store.kundlis().length ? 'Add another kundli' : 'Add your first kundli' }}
+          </span>
+        </p-button>
+        <p-button severity="secondary" [outlined]="true" size="large" routerLink="/settings">
+          <lucide-icon name="settings" [size]="16" />
+          <span class="cta-label">Settings</span>
+        </p-button>
+      </div>
+    </div>
+
+    <div class="home-summary">
+      <div class="summary-row">
+        <span class="summary-label">Kundlis</span>
+        <strong class="as-num">{{ store.kundlis().length }}</strong>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Relations</span>
+        <strong class="as-num">{{ relationCount() }}</strong>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Engine</span>
+        <strong>Vedic</strong>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Alerts today</span>
+        <strong class="as-num">{{ alertCount() }}</strong>
+      </div>
+    </div>
+  </section>
+
+  @if (store.kundlis().length) {
+    <app-section-card icon="radar" title="Today across profiles" subtitle="ranked by dasha, transit, and panchanga signals">
+      @if (insightLoading()) {
+        <div class="insight-loading">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      } @else if (topInsights().length) {
+        <div class="insight-grid">
+          @for (row of topInsights(); track row.kundli.id) {
+            <a
+              class="insight-card"
+              [class]="toneClass(row.topEvent)"
+              [routerLink]="['/kundli', row.kundli.id, 'calendar']"
+            >
+              <div class="insight-person">
+                <app-glyph-badge [sign]="row.kundli.sun_sign" [size]="40" />
+                <span>
+                  <strong>{{ row.kundli.name }}</strong>
+                  <small>{{ row.kundli.relation }} · {{ row.payload.current.panchanga?.nakshatra || 'Today' }}</small>
+                </span>
+              </div>
+              <div class="insight-main">
+                <span>{{ row.topEvent?.category || 'calendar' }}</span>
+                <strong>{{ row.topEvent?.title || 'No urgent signal' }}</strong>
+                <small>{{ row.topEvent?.detail || 'Open Calendar for the full day view.' }}</small>
+              </div>
+              <div class="insight-foot">
+                <span>{{ row.payload.current.dasha.mahadasha?.lord || '—' }} / {{ row.payload.current.dasha.antardasha?.lord || '—' }}</span>
+                <b>{{ row.score }}</b>
+              </div>
+            </a>
+          }
+        </div>
+        @if (insightError()) {
+          <p class="insight-note as-muted">{{ insightError() }}</p>
+        }
+      } @else {
+        <p class="empty-copy as-muted">Today intelligence will appear here after profiles finish loading.</p>
+      }
+    </app-section-card>
+
+    <app-section-card icon="users" title="Recent kundlis" subtitle="quick access">
+      <div class="recent-grid">
+        @for (k of recent(); track k.id) {
+          <a class="recent-person" [routerLink]="['/kundli', k.id]">
+            <app-glyph-badge [sign]="k.sun_sign" [size]="42" />
+            <span>
+              <strong>{{ k.name }}</strong>
+              <small>{{ k.sun_sign || 'Unknown sign' }} · {{ k.relation }}</small>
+            </span>
+            <lucide-icon name="chevron-right" [size]="16" />
+          </a>
+        }
+      </div>
+    </app-section-card>
+  } @else if (store.loaded()) {
+    <app-section-card icon="layout-grid" title="Start your workspace">
+      <p class="empty-copy as-muted">
+        Your dashboard will show recent kundlis, daily panchanga shortcuts and
+        reading activity after you add the first person.
+      </p>
+    </app-section-card>
+  }
+</div>

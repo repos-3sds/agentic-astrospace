@@ -139,7 +139,10 @@ class PeriodAgent(BaseAstroAgent):
         city: str,
         nation: str = "US",
     ) -> str:
-        now = datetime.now(timezone.utc)
+        from zoneinfo import ZoneInfo
+        from ..core.cities import lookup_city
+        geo = lookup_city(city, nation)
+        now = datetime.now(ZoneInfo(geo[2])) if geo else datetime.now(timezone.utc)
         period_labels = {
             "daily":     f"today {now.strftime('%B %d, %Y')}",
             "weekly":    f"the week of {now.strftime('%B %d, %Y')}",

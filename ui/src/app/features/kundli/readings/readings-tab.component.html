@@ -1,0 +1,222 @@
+<div class="as-panel">
+  <section class="as-tab-hero">
+    <div>
+      <span class="as-hero-eyebrow">AI readings · {{ period }}</span>
+      <h2>Generated predictions with version history.</h2>
+      <p>
+        Each reading is saved by generated date and version, so you can return
+        later, compare deviation, and rate prediction accuracy.
+      </p>
+    </div>
+    <div class="as-hero-stats">
+      <article>
+        <span>Saved versions</span>
+        <strong>{{ history().length }}</strong>
+        <small>{{ period }} readings</small>
+      </article>
+      <article>
+        <span>Current version</span>
+        <strong>v{{ reading()?.version || 0 }}</strong>
+        <small>{{ reading()?.generated_local_date || 'not generated' }}</small>
+      </article>
+      <article>
+        <span>Accuracy</span>
+        <strong>{{ validationStats().percent == null ? '—' : validationStats().percent + '%' }}</strong>
+        <small>{{ validationStats().reviewed }} reviewed · {{ validationStats().applicable }} applicable</small>
+      </article>
+    </div>
+  </section>
+
+<app-section-card icon="book-open" title="AI readings">
+  <p-button
+    card-actions
+    severity="secondary"
+    [outlined]="true"
+    size="small"
+    [disabled]="loading()"
+    (onClick)="generate(true)"
+  >
+    <lucide-icon name="refresh-cw" [size]="13" />
+    <span class="btn-label">New version</span>
+  </p-button>
+
+  <p-selectbutton
+    [options]="periods"
+    optionLabel="label"
+    optionValue="value"
+    [ngModel]="period"
+    (ngModelChange)="onPeriodChange($event)"
+    [allowEmpty]="false"
+  />
+
+  <div class="reading-area">
+    @if (loading()) {
+      <div class="loading">
+        <p-skeleton height="14px" width="70%" />
+        <p-skeleton height="14px" width="94%" />
+        <p-skeleton height="14px" width="88%" />
+        <p-skeleton height="14px" width="60%" />
+        <span class="as-muted loading-note">Consulting the stars — this can take up to a minute…</span>
+      </div>
+    } @else if (error()) {
+      <p class="error-copy">Failed to generate reading: {{ error() }}</p>
+    } @else if (reading(); as r) {
+      <div class="reading-layout">
+        <aside class="reading-history">
+          <div class="history-head">
+            <strong>Saved versions</strong>
+            <span class="as-muted as-num">{{ history().length }}</span>
+          </div>
+          @for (item of history(); track item.id) {
+            <button
+              type="button"
+              class="history-item"
+              [class.active]="selectedId() === item.id"
+              (click)="select(item)"
+            >
+              <span>
+                <strong>{{ readingTitle(item) }}</strong>
+                <small class="as-num">{{ generatedAt(item) }}</small>
+              </span>
+              <p-tag
+                [severity]="item.deviation_score == null ? 'secondary' : 'warn'"
+                [value]="deviationLabel(item)"
+              />
+              <span class="validation-pill" [class]="validationClass(item.user_rating)">
+                {{ validationLabel(item) }}
+              </span>
+            </button>
+          }
+        </aside>
+
+        <section class="reading-current">
+          <div class="reading-meta">
+            <div>
+              <strong>{{ readingTitle(r) }}</strong>
+              <span class="as-muted as-num">Generated {{ generatedAt(r) }}</span>
+            </div>
+            <div class="meta-tags">
+              <p-tag
+                [severity]="r.cached ? 'secondary' : 'success'"
+                [value]="r.cached ? 'cached' : 'fresh'"
+              />
+              <p-tag
+                [severity]="r.deviation_score == null ? 'secondary' : 'warn'"
+                [value]="deviationLabel(r)"
+              />
+              <span class="validation-pill" [class]="validationClass(r.user_rating)">
+                {{ validationLabel(r) }}
+              </span>
+            </div>
+          </div>
+
+          @if (r.deviation_summary && r.deviation_score != null) {
+            <div class="deviation-box">
+              <strong>Deviation quotient: {{ r.deviation_score }}%</strong>
+              <span class="as-muted">
+                Similarity {{ r.deviation_summary.similarity }}%.
+                New emphasis:
+                {{ (r.deviation_summary.added_terms || []).slice(0, 6).join(', ') || 'none' }}.
+              </span>
+            </div>
+          }
+
+          <div class="as-prose reading-body" [innerHTML]="r.content | markdown"></div>
+
+          <div class="claims-box">
+            <div class="claims-head">
+              <div>
+                <strong>Prediction claims</strong>
+                <p class="as-muted">
+                  Validate each concrete claim when the target window passes.
+                </p>
+              </div>
+              <span class="as-num">{{ selectedClaims().length }} claims</span>
+            </div>
+
+            <div class="claim-list">
+              @for (claim of selectedClaims(); track claim.id) {
+                <article class="claim-card">
+                  <div class="claim-main">
+                    <div class="claim-meta">
+                      <span>{{ claim.category }}</span>
+                      <span class="as-num">{{ claimWindow(claim) }}</span>
+                      @if (claim.confidence != null) {
+                        <span class="as-num">{{ (claim.confidence * 100) | number: '1.0-0' }}% confidence</span>
+                      }
+                    </div>
+                    <p>{{ claim.claim_text }}</p>
+                    <span class="validation-pill" [class]="claimStatusClass(claim.status)">
+                      {{ claimStatusLabel(claim.status) }}
+                    </span>
+                  </div>
+                  <div class="claim-review">
+                    <div class="rating-row compact" aria-label="Claim validation">
+                      @for (option of claimStatusOptions; track option.value) {
+                        <button
+                          type="button"
+                          class="rating-btn"
+                          [class]="option.className"
+                          [class.active]="claim.status === option.value"
+                          [disabled]="savingFeedback()"
+                          (click)="updateClaim(claim, option.value)"
+                        >
+                          {{ option.label }}
+                        </button>
+                      }
+                    </div>
+                    <textarea
+                      rows="2"
+                      placeholder="Optional evidence for this claim"
+                      [(ngModel)]="claimFeedbackDrafts[claim.id]"
+                    ></textarea>
+                  </div>
+                </article>
+              } @empty {
+                <p class="as-muted empty">
+                  No individual claims have been extracted for this reading yet. Generate a new version to create them.
+                </p>
+              }
+            </div>
+          </div>
+
+          <div class="feedback-box">
+            <div>
+              <strong>Validate this prediction</strong>
+              <p class="as-muted">
+                Come back after the date passes, rate the accuracy and leave notes.
+              </p>
+            </div>
+            <div class="rating-row" aria-label="Prediction validation">
+              @for (option of validationOptions; track option.value) {
+                <button
+                  type="button"
+                  class="rating-btn"
+                  [class]="option.className"
+                  [class.active]="ratingDraft() === option.value"
+                  (click)="ratingDraft.set(option.value)"
+                >
+                  {{ option.label }}
+                </button>
+              }
+            </div>
+            <textarea
+              rows="4"
+              placeholder="What matched? What missed? Add specific evidence here."
+              [(ngModel)]="feedbackDraft"
+            ></textarea>
+            <p-button
+              size="small"
+              [disabled]="savingFeedback()"
+              (onClick)="saveFeedback()"
+            >
+              <lucide-icon name="save" [size]="13" />
+              <span class="btn-label">{{ savingFeedback() ? 'Saving' : 'Save feedback' }}</span>
+            </p-button>
+          </div>
+        </section>
+      </div>
+    }
+  </div>
+</app-section-card>
+</div>

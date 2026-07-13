@@ -1,0 +1,169 @@
+.error-copy {
+  margin: 0;
+  color: var(--as-bad);
+  font-size: 13.5px;
+}
+
+:host ::ng-deep .varga-dropdown {
+  width: 180px;
+  max-width: 100%;
+}
+
+.chart-controls {
+  display: grid;
+  grid-template-columns: minmax(160px, 220px) auto auto;
+  gap: 18px;
+  align-items: start;
+}
+
+.control-group {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.control-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--as-muted);
+}
+
+:host ::ng-deep .view-select,
+:host ::ng-deep .style-select {
+  display: flex;
+
+  .p-togglebutton {
+    padding: 7px 12px;
+    font-size: 12.5px;
+  }
+}
+
+.chart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 22px 0 18px;
+}
+
+.chart-title {
+  display: block;
+  font-family: var(--as-font-display);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.chart-sub {
+  font-size: 12.5px;
+}
+
+.chart-layout {
+  display: grid;
+  grid-template-columns: minmax(440px, 0.95fr) minmax(620px, 1.05fr);
+  gap: 24px;
+  align-items: start;
+
+  &.chart-only,
+  &.table-only {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-stage {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--as-border);
+  border-radius: var(--as-radius);
+  background: color-mix(in srgb, var(--as-bg) 70%, var(--as-surface));
+}
+
+.table-wrap {
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.varga-table {
+  width: max(100%, 760px);
+  border-collapse: collapse;
+  font-size: 12.5px;
+
+  th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--as-muted);
+    padding: 9px 8px;
+    border-bottom: 1px solid var(--as-border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--as-border);
+    white-space: nowrap;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.cell-glyph {
+  display: inline-block;
+  width: 18px;
+  color: var(--as-gold);
+  font-weight: 600;
+}
+
+.planet-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 148px;
+}
+
+.retrograde {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  color: var(--as-accent-strong);
+  background: var(--as-accent-soft);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.vargottama {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--as-gold);
+  background: var(--as-gold-soft);
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+
+@media (max-width: 700px) {
+  .chart-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-stage {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 1180px) {
+  .chart-controls,
+  .chart-layout {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,146 @@
+@if (loading()) {
+  <div class="as-panel">
+    <p-skeleton height="110px" borderRadius="8px" />
+    <p-skeleton height="520px" borderRadius="8px" />
+  </div>
+} @else if (error()) {
+  <app-section-card icon="alert-triangle" title="Varga charts failed">
+    <p class="error-copy">{{ error() }}</p>
+  </app-section-card>
+} @else {
+  <div class="as-panel">
+    @if (currentVarga(); as d) {
+      <section class="as-tab-hero">
+        <div>
+          <span class="as-hero-eyebrow">Divisional chart · {{ varga() }}</span>
+          <h2>{{ d.name }} for {{ d.signifies }}.</h2>
+          <p>
+            Compare the square chart and precise placements for the selected
+            varga. South Indian style remains the default chart language.
+          </p>
+        </div>
+        <div class="as-hero-stats">
+          <article>
+            <span>Lagna</span>
+            <strong>{{ d.lagna.sign }}</strong>
+            <small>{{ chartStyle() === 'south' ? 'South Indian' : 'North Indian' }} view</small>
+          </article>
+          <article>
+            <span>Vargottama</span>
+            <strong>{{ vargottamaCount() }}</strong>
+            <small>{{ d.verified_rule ? 'verified rule' : 'rule needs validation' }}</small>
+          </article>
+        </div>
+      </section>
+    }
+
+    <app-section-card icon="layout-grid" title="Varga charts" subtitle="divisional square charts">
+      <div class="chart-controls">
+        <div class="control-group">
+          <span class="control-label">Division</span>
+          <p-select
+            [options]="vargaOptions"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="varga()"
+            (ngModelChange)="onVargaChange($event)"
+            appendTo="body"
+            styleClass="varga-dropdown"
+          />
+        </div>
+
+        <div class="control-group view-group">
+          <span class="control-label">View</span>
+          <p-selectbutton
+            [options]="viewOptions"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="view()"
+            (ngModelChange)="onViewChange($event)"
+            [allowEmpty]="false"
+            styleClass="view-select"
+          />
+        </div>
+
+        <div class="control-group style-group">
+          <span class="control-label">Chart style</span>
+          <p-selectbutton
+            [options]="styleOptions"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="chartStyle()"
+            (ngModelChange)="onStyleChange($event)"
+            [allowEmpty]="false"
+            styleClass="style-select"
+          />
+        </div>
+      </div>
+
+      @if (currentVarga(); as d) {
+        <div class="chart-head">
+          <div>
+            <span class="chart-title">{{ varga() }} — {{ d.name }}</span>
+            <span class="as-muted chart-sub">
+              {{ d.signifies }} · Lagna <strong>{{ d.lagna.sign }}</strong>
+            </span>
+          </div>
+          @if (!d.verified_rule) {
+            <p-tag severity="warn" value="rule unverified" />
+          }
+        </div>
+
+        <div class="chart-layout" [class.chart-only]="view() === 'chart'" [class.table-only]="view() === 'placements'">
+          @if (view() === 'both' || view() === 'chart') {
+            <div class="chart-stage">
+              <app-kundli-chart [chart]="d" [chartStyle]="chartStyle()" />
+            </div>
+          }
+
+          @if (view() === 'both' || view() === 'placements') {
+            <div class="table-wrap">
+              <table class="varga-table">
+                <thead>
+                  <tr>
+                    <th>Planet</th>
+                    <th>Degree</th>
+                    <th>Rashi</th>
+                    <th>Nakshatra</th>
+                    <th>Paada</th>
+                    <th>RL</th>
+                    <th>NL</th>
+                    <th>SL</th>
+                    <th>SSl</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of rows(); track row.planet) {
+                    <tr>
+                      <td class="planet-cell">
+                        <span class="cell-glyph">{{ row.glyph }}</span>
+                        <span>{{ row.planet }}</span>
+                        @if (row.retrograde) {
+                          <span class="retrograde">R</span>
+                        }
+                        @if (row.vargottama) {
+                          <span class="vargottama">Vargottama</span>
+                        }
+                      </td>
+                      <td class="as-num">{{ row.degree }}</td>
+                      <td>{{ row.rashi }}</td>
+                      <td>{{ row.nakshatra }}</td>
+                      <td class="as-num">{{ row.paada }}</td>
+                      <td>{{ row.rashiLord }}</td>
+                      <td>{{ row.nakshatraLord }}</td>
+                      <td>{{ row.subLord }}</td>
+                      <td>{{ row.subSubLord }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      }
+    </app-section-card>
+  </div>
+}

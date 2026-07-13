@@ -1,0 +1,210 @@
+@if (loading()) {
+  <div class="as-panel">
+    <p-skeleton height="140px" borderRadius="18px" />
+    <p-skeleton height="420px" borderRadius="18px" />
+  </div>
+} @else if (error()) {
+  <app-section-card icon="alert-triangle" title="Dashas failed">
+    <p class="error-copy">{{ error() }}</p>
+  </app-section-card>
+} @else if (data(); as d) {
+  <div class="as-panel">
+    <section class="dasha-hero">
+      <div>
+        <span class="eyebrow">{{ d.system }} · {{ d.cycle_years }} year cycle</span>
+        <h2>Timing backbone from the Moon's birth nakshatra.</h2>
+        <p>
+          Born in <strong>{{ d.birth_nakshatra.name }}</strong>,
+          pada {{ d.birth_nakshatra.pada }}. Balance at birth:
+          <strong>{{ d.birth_nakshatra.balance_years | number: '1.2-2' }} years</strong>
+          of {{ d.birth_nakshatra.lord }}.
+        </p>
+      </div>
+      <div class="current-stack">
+        <article>
+          <span>Mahadasha</span>
+          <strong>{{ activeMahadasha()?.lord || '—' }}</strong>
+          <small>
+            {{ activeMahadasha()?.start | date: 'mediumDate' }} –
+            {{ activeMahadasha()?.end | date: 'mediumDate' }}
+          </small>
+        </article>
+        <article>
+          <span>Antardasha</span>
+          <strong>{{ activeAntardasha()?.lord || '—' }}</strong>
+          <small>
+            {{ activeAntardasha()?.start | date: 'mediumDate' }} –
+            {{ activeAntardasha()?.end | date: 'mediumDate' }}
+          </small>
+        </article>
+        <article>
+          <span>Pratyantar</span>
+          <strong>{{ activePratyantardasha()?.lord || '—' }}</strong>
+          <small>
+            {{ activePratyantardasha()?.start | date: 'mediumDate' }} –
+            {{ activePratyantardasha()?.end | date: 'mediumDate' }}
+          </small>
+        </article>
+      </div>
+    </section>
+
+    <div class="dasha-explorer">
+      <aside class="dasha-navigator">
+        <section class="period-panel">
+          <header><span>01</span><strong>Mahadasha</strong></header>
+          <div class="period-list">
+            @for (p of d.mahadashas; track p.start + p.lord) {
+              <button
+                type="button"
+                class="period-row"
+                [class.active-row]="p.active"
+                [class.selected-row]="periodKey(p) === selectedMahadashaKey()"
+                (click)="selectMahadasha(p)"
+              >
+                <strong>{{ p.lord }}</strong>
+                <span>{{ p.start | date: 'MMM y' }} – {{ p.end | date: 'MMM y' }}</span>
+                <em>{{ p.years | number: '1.2-2' }}y</em>
+                @if (p.active) { <small>Current</small> }
+              </button>
+            }
+          </div>
+        </section>
+
+        <section class="period-panel">
+          <header><span>02</span><strong>Antardasha</strong></header>
+          <div class="period-list">
+            @for (p of selectedAntardashas(); track p.start + p.lord) {
+              <button
+                type="button"
+                class="period-row"
+                [class.active-row]="p.active"
+                [class.selected-row]="periodKey(p) === selectedAntardashaKey()"
+                (click)="selectAntardasha(p)"
+              >
+                <strong>{{ p.lord }}</strong>
+                <span>{{ p.start | date: 'MMM y' }} – {{ p.end | date: 'MMM y' }}</span>
+                <em>{{ p.years | number: '1.2-2' }}y</em>
+                @if (p.active) { <small>Current</small> }
+              </button>
+            }
+          </div>
+        </section>
+
+        <section class="period-panel">
+          <header><span>03</span><strong>Pratyantar</strong></header>
+          <div class="period-list">
+            @for (p of selectedPratyantardashas(); track p.start + p.lord) {
+              <article class="period-row" [class.active-row]="p.active">
+                <strong>{{ p.lord }}</strong>
+                <span>{{ p.start | date: 'MMM d, y' }} – {{ p.end | date: 'MMM d, y' }}</span>
+                <em>{{ p.years | number: '1.2-2' }}y</em>
+                @if (p.active) { <small>Current</small> }
+              </article>
+            }
+          </div>
+        </section>
+      </aside>
+
+      @if (transit(); as t) {
+        <section class="detail-panel">
+          <header class="detail-header">
+            <div>
+              <span class="eyebrow">Selected period</span>
+              <h3>{{ activeSelection().path || '—' }}</h3>
+              <p>
+                {{ activeSelection().period?.start | date: 'mediumDate' }} –
+                {{ activeSelection().period?.end | date: 'mediumDate' }}
+              </p>
+            </div>
+            <div class="detail-tabs">
+              @for (mode of detailModes; track mode.value) {
+                <button
+                  type="button"
+                  [class.active]="detailMode() === mode.value"
+                  (click)="detailMode.set(mode.value)"
+                >
+                  {{ mode.label }}
+                </button>
+              }
+            </div>
+          </header>
+
+          @if (detailMode() === 'summary') {
+            <div class="summary-detail">
+              <article class="lord-focus">
+                <span>Focus lord</span>
+                <strong>{{ selectedLord() || '—' }}</strong>
+                <small>Selected from the deepest active Dasha level.</small>
+              </article>
+              <div class="lord-grid">
+                <article>
+                  <span>Natal Rashi</span>
+                  <strong>{{ selectedNatalRashi()?.sign || '—' }}</strong>
+                  <small>House {{ selectedNatalRashi()?.house || '—' }}</small>
+                </article>
+                <article>
+                  <span>Natal Navamsha</span>
+                  <strong>{{ selectedNatalNavamsha()?.sign || '—' }}</strong>
+                  <small>House {{ selectedNatalNavamsha()?.house || '—' }}</small>
+                </article>
+                <article>
+                  <span>Transit</span>
+                  <strong>{{ selectedTransit()?.sign || '—' }}</strong>
+                  <small>
+                    H{{ selectedTransit()?.house_from_lagna || '—' }} from Lagna ·
+                    H{{ selectedTransit()?.house_from_moon || '—' }} from Moon
+                  </small>
+                </article>
+                <article>
+                  <span>Sade Sati</span>
+                  <strong>{{ t.sade_sati.active ? 'Active' : 'No' }}</strong>
+                  <small>Saturn H{{ t.sade_sati.saturn_house_from_moon }} from Moon</small>
+                </article>
+              </div>
+            </div>
+          } @else if (detailMode() === 'natal') {
+            <div class="chart-stack">
+              <article>
+                <header><span>N</span><strong>Rashi</strong></header>
+                <app-kundli-chart [chart]="t.natal.rashi" [chartStyle]="prefs.chartStyle()" />
+              </article>
+              <article>
+                <header><span>N</span><strong>Navamsha</strong></header>
+                <app-kundli-chart [chart]="t.natal.navamsha" [chartStyle]="prefs.chartStyle()" />
+              </article>
+            </div>
+          } @else if (detailMode() === 'transit') {
+            <div class="chart-stack">
+              <article>
+                <header><span>T</span><strong>Rashi</strong></header>
+                <app-kundli-chart [chart]="t.transit.rashi" [chartStyle]="prefs.chartStyle()" />
+              </article>
+              <article>
+                <header><span>T</span><strong>Navamsha</strong></header>
+                <app-kundli-chart [chart]="t.transit.navamsha" [chartStyle]="prefs.chartStyle()" />
+              </article>
+            </div>
+          } @else {
+            <div class="timeline-detail">
+              <article>
+                <span>Mahadasha</span>
+                <strong>{{ selectedMahadasha()?.lord || '—' }}</strong>
+                <small>{{ selectedMahadasha()?.start | date: 'mediumDate' }} – {{ selectedMahadasha()?.end | date: 'mediumDate' }}</small>
+              </article>
+              <article>
+                <span>Antardasha</span>
+                <strong>{{ selectedAntardasha()?.lord || '—' }}</strong>
+                <small>{{ selectedAntardasha()?.start | date: 'mediumDate' }} – {{ selectedAntardasha()?.end | date: 'mediumDate' }}</small>
+              </article>
+              <article>
+                <span>Current Pratyantar</span>
+                <strong>{{ activePratyantardasha()?.lord || '—' }}</strong>
+                <small>{{ activePratyantardasha()?.start | date: 'mediumDate' }} – {{ activePratyantardasha()?.end | date: 'mediumDate' }}</small>
+              </article>
+            </div>
+          }
+        </section>
+      }
+    </div>
+  </div>
+}

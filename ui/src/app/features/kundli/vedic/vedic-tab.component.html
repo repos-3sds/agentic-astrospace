@@ -1,0 +1,225 @@
+@if (loading()) {
+  <div class="as-panel">
+    <p-skeleton height="120px" borderRadius="8px" />
+    <p-skeleton height="280px" borderRadius="8px" />
+    <p-skeleton height="280px" borderRadius="8px" />
+  </div>
+} @else if (error()) {
+  <app-section-card icon="alert-triangle" title="Vedic calculation failed">
+    <p class="error-copy">{{ error() }}</p>
+  </app-section-card>
+} @else if (data(); as v) {
+  <div class="as-panel">
+    <section class="as-tab-hero">
+      <div>
+        <span class="as-hero-eyebrow">Vedic core · {{ v.meta.ayanamsha.name }}</span>
+        <h2>Sidereal birth framework for {{ kundli()?.name || 'this chart' }}.</h2>
+        <p>
+          This tab anchors the profile with Avkahada, Ghatak, favourable points,
+          graha positions, and the divisional chart summary.
+        </p>
+      </div>
+      <div class="as-hero-stats">
+        <article>
+          <span>Lagna</span>
+          <strong>{{ v.avkahada['lagna'] || '—' }}</strong>
+          <small>{{ v.avkahada['lagna_lord'] || '—' }} lord</small>
+        </article>
+        <article>
+          <span>Moon</span>
+          <strong>{{ v.avkahada['rashi'] || '—' }}</strong>
+          <small>{{ v.avkahada['nakshatra'] || '—' }} · p{{ v.avkahada['charan'] || '—' }}</small>
+        </article>
+        <article>
+          <span>Strongest graha</span>
+          <strong>{{ strongestGraha()?.planet || '—' }}</strong>
+          <small>{{ strongestGraha()?.score || 0 }} Shadbala v1</small>
+        </article>
+      </div>
+    </section>
+
+    <div class="trio">
+      @for (item of trio(); track item.label) {
+        <div class="stat">
+          <app-glyph-badge [sign]="item.sign" [size]="46" />
+          <div class="stat-text">
+            <span class="stat-label">{{ item.label }}</span>
+            <span class="stat-value">{{ item.value }}</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <nav class="page-subtabs" aria-label="Vedic sections">
+      <button type="button" [class.active]="section() === 'summary'" (click)="section.set('summary')">
+        <lucide-icon name="compass" [size]="15" /> Summary
+      </button>
+      <button type="button" [class.active]="section() === 'grahas'" (click)="section.set('grahas')">
+        <lucide-icon name="orbit" [size]="15" /> Grahas
+      </button>
+      <button type="button" [class.active]="section() === 'strength'" (click)="section.set('strength')">
+        <lucide-icon name="shield-check" [size]="15" /> Strength
+      </button>
+      <button type="button" [class.active]="section() === 'vargas'" (click)="section.set('vargas')">
+        <lucide-icon name="boxes" [size]="15" /> Vargas
+      </button>
+    </nav>
+
+    @if (section() === 'summary') {
+      <app-section-card icon="compass" title="Birth details" subtitle="sidereal">
+        <div class="meta-grid">
+          <app-def-list [rows]="meta().slice(0, 4)" />
+          <app-def-list [rows]="meta().slice(4)" />
+        </div>
+      </app-section-card>
+
+      <div class="as-grid-2">
+        <app-section-card icon="star" title="Avkahada chakra">
+          <app-def-list [rows]="avkahada()" />
+        </app-section-card>
+
+        <div class="as-panel">
+          <app-section-card icon="alert-triangle" title="Ghatak" subtitle="malefics">
+            <app-def-list [rows]="ghatak()" />
+          </app-section-card>
+          <app-section-card icon="gem" title="Favourable points">
+            <app-def-list [rows]="favourable()" />
+          </app-section-card>
+        </div>
+      </div>
+    }
+
+    @if (section() === 'grahas') {
+      <app-section-card icon="orbit" title="Graha positions" subtitle="sidereal longitudes">
+        <ag-grid-angular
+          class="as-grid"
+          domLayout="autoHeight"
+          [theme]="gridTheme()"
+          [rowData]="grahaRows()"
+          [columnDefs]="grahaColumns"
+          [suppressCellFocus]="true"
+        />
+      </app-section-card>
+    }
+
+    @if (section() === 'strength') {
+      @if (v.shadbala; as s) {
+        <app-section-card icon="shield-check" title="Shadbala v1" subtitle="planetary strength · normalized 0-100">
+          <div class="strength-intro">
+            <div>
+              <strong>{{ s.system }}</strong>
+              <p class="as-muted">
+                Six-source graha strength with condition modifiers. Base score is adjusted for combustion, avastha, retrograde strength, and planetary war.
+              </p>
+            </div>
+            <div class="strength-provenance">
+              @for (item of s.provenance; track item.component) {
+                <span [class.approx]="item.status === 'approximation'">
+                  {{ item.component.replace('_', ' ') }} · {{ item.status }}
+                </span>
+              }
+            </div>
+          </div>
+
+          <ag-grid-angular
+            class="as-grid"
+            domLayout="autoHeight"
+            [theme]="gridTheme()"
+            [rowData]="shadbalaRows()"
+            [columnDefs]="shadbalaColumns"
+            [suppressCellFocus]="true"
+          />
+
+          <p class="strength-note as-muted">
+            {{ s.excluded['Rahu'] }} Kala, Cheshta, and Drik Bala are approximation-labelled until golden-chart validation.
+          </p>
+        </app-section-card>
+      }
+
+      @if (conditionRows().length) {
+        <app-section-card icon="flame" title="Planetary conditions" subtitle="combustion · avastha · war · retrograde">
+          <div class="strength-intro conditions-intro">
+            <div>
+              <strong>{{ v.planetary_conditions?.system || 'Planetary Conditions v1' }}</strong>
+              <p class="as-muted">
+                These modifiers explain why adjusted strength can differ from the base Shadbala score.
+              </p>
+            </div>
+            <div class="strength-provenance">
+              <span>Combustion · implemented</span>
+              <span>Avastha · implemented</span>
+              <span>Retrograde · implemented</span>
+              <span class="approx">War winner · proxy</span>
+            </div>
+          </div>
+
+          <ag-grid-angular
+            class="as-grid"
+            domLayout="autoHeight"
+            [theme]="gridTheme()"
+            [rowData]="conditionRows()"
+            [columnDefs]="conditionColumns"
+            [suppressCellFocus]="true"
+          />
+
+          <p class="strength-note as-muted">
+            Planetary war uses apparent-speed proxy until latitude is added to the ephemeris payload.
+          </p>
+        </app-section-card>
+      }
+    }
+
+    @if (section() === 'vargas') {
+      <app-section-card icon="boxes" title="Divisional charts" subtitle="varga">
+      <p-selectbutton
+        [options]="vargaOptions"
+        [ngModel]="varga"
+        (ngModelChange)="onVargaChange($event)"
+        [allowEmpty]="false"
+        styleClass="varga-select"
+      />
+
+      @if (currentVarga(); as d) {
+        <div class="varga-head">
+          <div>
+            <span class="varga-title">{{ varga }} — {{ d.name }}</span>
+            <span class="as-muted varga-sub">
+              {{ d.signifies }} · Lagna <strong>{{ d.lagna.sign }}</strong>
+            </span>
+          </div>
+          @if (!d.verified_rule) {
+            <p-tag severity="warn" value="rule unverified" />
+          }
+        </div>
+
+        <div class="varga-table-wrap">
+          <table class="varga-table">
+            <thead>
+              <tr>
+                <th>Graha</th>
+                <th>Sign</th>
+                <th>House</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of vargaRows(); track row.planet) {
+                <tr>
+                  <td><span class="cell-glyph">{{ row.glyph }}</span> {{ row.planet }}</td>
+                  <td>{{ row.sign }}</td>
+                  <td class="as-num">H{{ row.house }}</td>
+                  <td>
+                    @if (row.vargottama) {
+                      <span class="vargottama">Vargottama</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      </app-section-card>
+    }
+  </div>
+}

@@ -1,0 +1,167 @@
+<main class="landing-page">
+  <nav class="landing-nav" aria-label="AstroSpace">
+    <a class="brand" routerLink="/">
+      <span class="brand-mark">AS</span>
+      <span>AstroSpace</span>
+    </a>
+    <div class="nav-links">
+      <a href="#features">Guidance</a>
+      <a href="#workflow">How it works</a>
+      <a href="#trust">Why trust it</a>
+    </div>
+    <div class="nav-actions">
+      <button
+        class="theme-toggle"
+        type="button"
+        (click)="theme.toggle()"
+        [attr.aria-label]="theme.dark() ? 'Switch to light mode' : 'Switch to dark mode'"
+      >
+        <lucide-icon [name]="theme.dark() ? 'sun' : 'moon-star'" [size]="16" />
+      </button>
+      <a class="nav-cta" [routerLink]="appLink()">{{ auth.session() ? 'Open app' : 'Sign in' }}</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="hero-kicker">
+        <span class="pulse-dot"></span>
+        Personal Vedic guidance for life, love and timing
+      </div>
+      <h1>
+        Understand your chart. Know your timing. Move with more clarity.
+      </h1>
+      <p>
+        AstroSpace helps you read your kundli in a simple, human way:
+        your personality, strengths, relationships, career direction, daily timing
+        and the planetary periods shaping your life right now.
+      </p>
+      <div class="hero-actions">
+        <a class="primary-cta" [routerLink]="appLink()">
+          {{ appCta() }}
+          <lucide-icon name="arrow-right" [size]="18" />
+        </a>
+        <a class="secondary-cta" href="#product">
+          See how it feels
+        </a>
+      </div>
+      <div class="proof-strip" aria-label="Product capabilities">
+        <span>Kundli insights</span>
+        <span>Daily panchanga</span>
+        <span>Dasha & transit guidance</span>
+      </div>
+    </div>
+
+    <div class="hero-visual" id="product" aria-label="AstroSpace product preview">
+      <div class="orbital-card chart-card">
+        <div class="card-top">
+          <span>D1 Rasi</span>
+          <strong>South Indian</strong>
+        </div>
+        <div class="chart-grid" aria-hidden="true">
+          @for (cell of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]; track cell) {
+            <div>
+              <small>H{{ cell }}</small>
+              @if (cell === 3) { <strong>Ve</strong> }
+              @if (cell === 6) { <strong>Su<br />Mo</strong> }
+              @if (cell === 10) { <strong>Ra</strong> }
+              <em>{{ ['Ari', 'Tau', 'Gem', 'Can', 'Leo', 'Vir', 'Lib', 'Sco', 'Sag', 'Cap', 'Aqu', 'Pis'][cell - 1] }}</em>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="orbital-card reading-card">
+        <div class="reading-head">
+          <lucide-icon name="message-square-text" [size]="17" />
+          <span>Today’s Guidance</span>
+          <strong>Dasha</strong>
+        </div>
+        <div class="reading-lines">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <div class="deviation">
+          <span>Best focus</span>
+          <strong>Reflect</strong>
+        </div>
+      </div>
+
+      <div class="orbit-ring ring-one"></div>
+      <div class="orbit-ring ring-two"></div>
+      <div class="floating-chip chip-one">Moon in focus</div>
+      <div class="floating-chip chip-two">Auspicious window</div>
+    </div>
+  </section>
+
+  <section class="metric-band" id="trust">
+    <article>
+      <span>For self understanding</span>
+      <strong>your chart</strong>
+      <p>See your lagna, moon sign, nakshatra and planetary patterns without getting lost in jargon.</p>
+    </article>
+    <article>
+      <span>For daily life</span>
+      <strong>your timing</strong>
+      <p>Use panchanga, dashas and transits to understand when to act, pause, plan or review.</p>
+    </article>
+    <article>
+      <span>For real trust</span>
+      <strong>your memory</strong>
+      <p>Save readings and come back later to see what matched your experience.</p>
+    </article>
+  </section>
+
+  <section class="section" id="features">
+    <div class="section-heading">
+      <span>Astrology that feels useful</span>
+      <h2>Ancient timing, explained for normal life.</h2>
+      <p>
+        You do not need to know every Sanskrit term to benefit from your chart.
+        AstroSpace keeps the calculations deep and the explanations grounded.
+      </p>
+    </div>
+
+    <div class="feature-grid">
+      @for (feature of features; track feature.title) {
+        <article class="feature-card">
+          <div class="feature-icon">
+            <lucide-icon [name]="feature.icon" [size]="20" />
+          </div>
+          <h3>{{ feature.title }}</h3>
+          <p>{{ feature.body }}</p>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="workflow-section" id="workflow">
+    <div class="workflow-copy">
+      <span>How it works</span>
+      <h2>Start with your birth details. Let the chart open up slowly.</h2>
+      <p>
+        Create your kundli, explore the big picture, then return for daily guidance
+        when you need perspective on decisions, emotions, relationships or timing.
+      </p>
+    </div>
+
+    <div class="workflow-list">
+      @for (item of workflow; track item; let i = $index) {
+        <article>
+          <span>{{ i + 1 }}</span>
+          <p>{{ item }}</p>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="final-cta">
+    <span>Begin gently</span>
+    <h2>Your chart has patterns. Start learning how they speak.</h2>
+    <a class="primary-cta" [routerLink]="appLink()">
+      {{ appCta() }}
+      <lucide-icon name="arrow-right" [size]="18" />
+    </a>
+  </section>
+</main>

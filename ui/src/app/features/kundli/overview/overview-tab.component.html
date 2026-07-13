@@ -1,0 +1,123 @@
+<div class="as-panel">
+  <section class="as-tab-hero">
+    <div>
+      <span class="as-hero-eyebrow">Overview · {{ kundli()?.relation || 'Profile' }}</span>
+      <h2>{{ kundli()?.name || 'Kundli' }} at a glance.</h2>
+      <p>
+        Start with the big three, birth context, and the raw planetary positions
+        used throughout the rest of the workspace.
+      </p>
+    </div>
+    <div class="as-hero-stats">
+      <article>
+        <span>Birth place</span>
+        <strong>{{ kundli()?.birth_city || '—' }}</strong>
+        <small>{{ kundli()?.birth_nation || '—' }}</small>
+      </article>
+      <article>
+        <span>Planets loaded</span>
+        <strong>{{ planetRows().length }}</strong>
+        <small>profile chart snapshot</small>
+      </article>
+    </div>
+  </section>
+
+  <div class="big-three">
+    @for (item of bigThree(); track item.label) {
+      <div class="stat">
+        <app-glyph-badge [sign]="item.sign" [size]="46" />
+        <div class="stat-text">
+          <span class="stat-label">{{ item.label }}</span>
+          <span class="stat-value">{{ item.sign || '—' }}</span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <app-section-card icon="radar" title="What matters today" subtitle="live transit intelligence">
+    @if (transitLoading()) {
+      <div class="today-loading">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    } @else if (transitError()) {
+      <p class="as-muted empty">{{ transitError() }}</p>
+    } @else if (transits(); as t) {
+      <div class="today-intel">
+        <article class="today-lead" [class]="toneClass(strongestTransit()?.tone || 'neutral')">
+          <span>Strongest active transit</span>
+          <h3>{{ aspectLabel(strongestTransit()) }}</h3>
+          <p>
+            {{ strongestTransit()?.transit_sign || t.natal.moon_sign }}
+            @if (strongestTransit()) {
+              to {{ strongestTransit()?.natal_sign }} · orb {{ strongestTransit()?.orb }}°
+            } @else {
+              Moon focus
+            }
+          </p>
+          <strong>{{ strongestTransit()?.strength ?? 0 }}%</strong>
+        </article>
+
+        <div class="signal-grid">
+          @for (signal of todaySignals(); track signal.title + signal.detail) {
+            <article class="signal-card" [class]="toneClass(signal.tone)">
+              <div>
+                <span>{{ signal.label }}</span>
+                <strong>{{ signal.title }}</strong>
+                <small>{{ signal.detail }}</small>
+              </div>
+              <b>{{ signal.strength }}</b>
+            </article>
+          } @empty {
+            <article class="signal-card neutral">
+              <div>
+                <span>Quiet window</span>
+                <strong>No urgent transit alert</strong>
+                <small>Open Transits for the full gochara and timeline view.</small>
+              </div>
+              <b>0</b>
+            </article>
+          }
+        </div>
+
+        <a class="transit-link" routerLink="../transits">
+          <span>Open full transits</span>
+          <lucide-icon name="arrow-right" [size]="15" />
+        </a>
+      </div>
+    }
+  </app-section-card>
+
+  <div class="as-grid-2">
+    <app-section-card icon="calendar-days" title="Birth details">
+      <app-def-list [rows]="birthRows()" />
+    </app-section-card>
+
+    <app-section-card icon="sparkles" title="AI reading">
+      <p class="as-muted cta-copy">
+        Generate a personalised reading for today, this week or the year ahead —
+        grounded in the computed chart.
+      </p>
+      <p-button routerLink="../readings">
+        <lucide-icon name="book-open" [size]="15" />
+        <span class="cta-label">Open readings</span>
+      </p-button>
+    </app-section-card>
+  </div>
+
+  <app-section-card icon="orbit" title="Planetary positions">
+    @if (planetRows().length) {
+      <ag-grid-angular
+        class="as-grid"
+        domLayout="autoHeight"
+        [theme]="gridTheme()"
+        [rowData]="planetRows()"
+        [columnDefs]="columns"
+        [suppressCellFocus]="true"
+      />
+    } @else {
+      <p class="as-muted empty">Chart data not available for this kundli.</p>
+    }
+  </app-section-card>
+</div>

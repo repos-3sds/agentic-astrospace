@@ -1,0 +1,287 @@
+@if (loading()) {
+  <div class="as-panel">
+    <p-skeleton height="140px" borderRadius="18px" />
+    <p-skeleton height="420px" borderRadius="18px" />
+  </div>
+} @else if (error()) {
+  <app-section-card icon="alert-triangle" title="Calendar unavailable">
+    <p class="error-copy">{{ error() }}</p>
+  </app-section-card>
+} @else if (data(); as c) {
+  <div class="as-panel calendar-page">
+    <section class="as-tab-hero">
+      <div>
+        <span class="as-hero-eyebrow">Calendar · {{ c.profile.name }} · {{ c.timezone }}</span>
+        <h2>What matters across time.</h2>
+        <p>
+          Panchanga, active dasha, and transit alerts are merged into one dated intelligence feed.
+          This is the foundation for prediction validation and reminders.
+        </p>
+      </div>
+      <div class="as-hero-stats">
+        <article>
+          <span>Active dasha</span>
+          <strong>{{ dashaPath(c) }}</strong>
+          <small>Vimshottari stack</small>
+        </article>
+        <article>
+          <span>Today</span>
+          <strong>{{ c.current.panchanga?.nakshatra || '—' }}</strong>
+          <small>{{ c.current.panchanga?.tithi || '—' }} · {{ c.current.panchanga?.moon_rashi || '—' }}</small>
+        </article>
+        <article>
+          <span>Validation</span>
+          <strong>{{ pendingValidationCount() }}</strong>
+          <small>saved predictions pending review</small>
+        </article>
+      </div>
+    </section>
+
+    <nav class="page-subtabs" aria-label="Calendar sections">
+      <button type="button" [class.active]="section() === 'panchanga'" (click)="section.set('panchanga')">
+        <lucide-icon name="sun" [size]="15" /> Panchanga
+      </button>
+      <button type="button" [class.active]="section() === 'signals'" (click)="section.set('signals')">
+        <lucide-icon name="activity" [size]="15" /> Signals
+      </button>
+      <button type="button" [class.active]="section() === 'timeline'" (click)="section.set('timeline')">
+        <lucide-icon name="clock" [size]="15" /> Timeline
+      </button>
+      <button type="button" [class.active]="section() === 'feed'" (click)="section.set('feed')">
+        <lucide-icon name="calendar-range" [size]="15" /> Feed
+      </button>
+    </nav>
+
+    @if (todayData(); as p) {
+      @if (section() === 'panchanga') {
+        <app-section-card icon="sun" title="Today's panchanga" subtitle="{{ p.place.city }} · {{ p.place.timezone || browserTimezone }}">
+          <div card-actions class="place-picker">
+            <label>
+              Panchanga place
+              <p-select
+                [options]="cityOptions()"
+                optionLabel="label"
+                placeholder="Use browser timezone place"
+                [ngModel]="selectedPlace()"
+                (ngModelChange)="onPlaceChange($event)"
+                [showClear]="true"
+                [filter]="true"
+                filterBy="label,city,nation,timezone"
+                filterPlaceholder="Search city or timezone"
+                appendTo="body"
+                styleClass="place-select"
+              />
+            </label>
+          </div>
+
+          <div class="day-meta as-muted">
+            <span><lucide-icon name="map-pin" [size]="12" /> {{ p.place.city }}</span>
+            <span>{{ p.place.timezone || browserTimezone }}</span>
+            <span>{{ p.vara.name }}</span>
+            <span><lucide-icon name="sunrise" [size]="12" /> {{ p.sunrise }}</span>
+            <span><lucide-icon name="sunset" [size]="12" /> {{ p.sunset }}</span>
+          </div>
+
+          <div class="chips">
+            @for (chip of chips(); track chip.label) {
+              <div class="chip">
+                <span class="chip-label">{{ chip.label }}</span>
+                <span class="chip-name">{{ chip.name }}</span>
+                @if (chip.upto) {
+                  <span class="chip-upto as-num">upto {{ chip.upto }}</span>
+                }
+                @if (chip.next) {
+                  <span class="chip-next">then {{ chip.next }}</span>
+                }
+              </div>
+            }
+          </div>
+        </app-section-card>
+
+        @if (pills().length) {
+          <app-section-card
+            icon="user"
+            title="Personal day checks"
+            subtitle="janma {{ p.personal!.janma.nakshatra }}, {{ p.personal!.janma.rashi }}"
+          >
+            <div class="pills">
+              @for (pill of pills(); track pill.text) {
+                <span class="pill" [class.good]="pill.ok" [class.bad]="!pill.ok">
+                  <lucide-icon [name]="pill.ok ? 'check' : 'alert-triangle'" [size]="12" />
+                  {{ pill.text }}
+                </span>
+              }
+            </div>
+          </app-section-card>
+        }
+      }
+
+      @if (section() === 'signals') {
+        <div class="today-grid">
+        <app-section-card icon="activity" title="Today's strongest signals" subtitle="dasha + transit + panchanga">
+          <div class="mini-events">
+            @for (event of todayEvents().slice(0, 5); track event.category + event.title + event.detail) {
+              <article [class]="toneClass(event.tone)">
+                <span>{{ event.category }}</span>
+                <strong>{{ event.title }}</strong>
+                <small>{{ event.detail }}</small>
+              </article>
+            } @empty {
+              <p class="as-muted empty">No major signals for today.</p>
+            }
+          </div>
+        </app-section-card>
+
+        <app-section-card icon="book-check" title="Saved predictions today" subtitle="versions and validation status">
+          <div class="reading-stack">
+            @for (reading of todayReadings(); track reading.id) {
+              <article class="reading-card">
+                <div>
+                  <span>{{ readingTitle(reading) }}</span>
+                  <strong>{{ reading.period_label || 'Generated prediction' }}</strong>
+                  <small>{{ readingMeta(reading) }}</small>
+                </div>
+                <a [routerLink]="['../readings']">Review</a>
+              </article>
+            } @empty {
+              <p class="as-muted empty">
+                No AI predictions saved for today yet. Generate one from Readings, then validate it here later.
+              </p>
+              <a class="empty-link" [routerLink]="['../readings']">Open readings</a>
+            }
+          </div>
+        </app-section-card>
+
+        <app-section-card icon="sun-moon" title="Day choghadiya">
+          <div class="chogha">
+            @for (slot of p.choghadiya.day; track slot.name + slot.start) {
+              <div class="chogha-cell" [class]="slot.kind">
+                <span class="chogha-name">{{ slot.name }}</span>
+                <span class="chogha-time as-num">{{ slot.start }}</span>
+              </div>
+            }
+          </div>
+          <p class="legend as-muted">
+            Green favourable · grey neutral · red avoid. Night choghadiya and horas available via API.
+          </p>
+        </app-section-card>
+      </div>
+      }
+
+      @if (section() === 'timeline') {
+        <app-section-card icon="clock" title="Day timeline" subtitle="auspicious and avoid windows">
+        <div class="timeline-ruler as-num">
+          @for (tick of timelineTicks(); track tick.left + tick.label) {
+            <span class="tick" [class.major]="tick.major" [style.left.%]="tick.left">
+              @if (tick.major) {
+                <span class="tick-label">{{ tick.label }}</span>
+              }
+            </span>
+          }
+          @for (marker of timelineMarkers(); track marker.kind) {
+            <span class="sun-marker" [class]="marker.kind" [style.left.%]="marker.left">
+              <span class="marker-line"></span>
+              <span class="marker-label">{{ marker.label }}</span>
+            </span>
+          }
+        </div>
+
+        <div class="lane-label good-label">Auspicious</div>
+        <div class="lane">
+          @for (b of goodBlocks(); track b.name + b.left) {
+            <div
+              class="block good"
+              [class.compact]="b.compact"
+              [style.left.%]="b.left"
+              [style.width.%]="b.width"
+              [title]="b.name + ' ' + b.time"
+            >
+              <span class="block-name">{{ b.name }}</span>
+              @if (!b.compact) {
+                <span class="block-time as-num">{{ b.time }}</span>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="lane-label bad-label">Avoid</div>
+        <div class="lane">
+          @for (b of badBlocks(); track b.name + b.left) {
+            <div
+              class="block bad"
+              [class.compact]="b.compact"
+              [style.left.%]="b.left"
+              [style.width.%]="b.width"
+              [title]="b.name + ' ' + b.time"
+            >
+              <span class="block-name">{{ b.name }}</span>
+              @if (!b.compact) {
+                <span class="block-time as-num">{{ b.time }}</span>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="windows">
+          <div>
+            <div class="win-title good-label">Good windows</div>
+            @for (w of p.windows.auspicious; track w.name + w.start) {
+              <div class="win-row">
+                <span>{{ w.name }}@if (w.note) {<span class="as-muted"> ({{ w.note }})</span>}</span>
+                <span class="as-num">{{ w.start }}–{{ w.end }}</span>
+              </div>
+            }
+          </div>
+          <div>
+            <div class="win-title bad-label">Avoid windows</div>
+            @for (w of p.windows.inauspicious; track w.name + w.start) {
+              <div class="win-row">
+                <span>{{ w.name }}@if (w.note) {<span class="as-muted"> ({{ w.note }})</span>}</span>
+                <span class="as-num">{{ w.start }}–{{ w.end }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </app-section-card>
+      }
+    }
+
+    @if (section() === 'feed') {
+      <app-section-card icon="calendar-range" title="Dated intelligence feed" subtitle="dasha + transit + panchanga signals">
+      <div card-actions class="feed-actions">
+        <div class="segmented" aria-label="Intelligence feed range">
+          <button type="button" [class.active]="mode() === 'today'" (click)="mode.set('today')">Today</button>
+          <button type="button" [class.active]="mode() === 'seven'" (click)="mode.set('seven')">7 days</button>
+          <button type="button" [class.active]="mode() === 'thirty'" (click)="mode.set('thirty')">30 days</button>
+        </div>
+        <div class="count-strip">
+          @for (row of categoryCounts(); track row.category) {
+            <span>{{ row.category }} <strong>{{ row.count }}</strong></span>
+          }
+        </div>
+      </div>
+      <div class="event-timeline">
+        @for (group of groupedEvents(); track group.date) {
+          <section class="day-group">
+            <time>{{ formatDate(group.date) }}</time>
+            <div class="event-list">
+              @for (event of group.events; track event.category + event.title + event.detail) {
+                <article class="event-row" [class]="toneClass(event.tone)">
+                  <div>
+                    <span>{{ event.category }}</span>
+                    <strong>{{ event.title }}</strong>
+                    <small>{{ event.detail }}</small>
+                  </div>
+                  <b>{{ event.strength }}</b>
+                </article>
+              }
+            </div>
+          </section>
+        } @empty {
+          <p class="as-muted empty">No events in this window.</p>
+        }
+      </div>
+    </app-section-card>
+    }
+  </div>
+}

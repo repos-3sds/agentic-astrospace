@@ -1,0 +1,140 @@
+<nav class="sidebar" [class.collapsed]="collapsed()">
+  <div class="brand-row">
+    <button class="brand" type="button" (click)="goHome()" [title]="collapsed() ? 'AstroSpace home' : null">
+      <span class="brand-mark">
+        <lucide-icon name="orbit" [size]="18" [strokeWidth]="1.75" />
+      </span>
+      <span class="brand-text">
+        <span class="brand-name">AstroSpace</span>
+        <span class="brand-tag">Vedic astrology, computed</span>
+      </span>
+    </button>
+
+    <button class="collapse-btn" type="button" (click)="toggle()" [title]="toggleLabel()">
+      <lucide-icon [name]="collapsed() ? 'chevron-right' : 'chevron-left'" [size]="16" />
+    </button>
+  </div>
+
+  <div class="rail-nav" aria-label="App navigation">
+    <a
+      class="rail-item home-item"
+      [routerLink]="['/app']"
+      (click)="goHome()"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      [title]="collapsed() ? 'Home' : null"
+    >
+      <lucide-icon name="layout-dashboard" [size]="18" />
+      <span>Home</span>
+    </a>
+
+    @if (store.activeId()) {
+      <div class="nav-section">
+        <span class="nav-label">Kundli</span>
+        @for (tab of tabs; track tab.route) {
+          <a
+            class="rail-item"
+            [routerLink]="tabLink(tab.route)"
+            routerLinkActive="active"
+            [title]="collapsed() ? tab.label : null"
+          >
+            <lucide-icon [name]="tab.icon" [size]="18" />
+            <span>{{ tab.label }}</span>
+          </a>
+        }
+      </div>
+
+      <a
+        class="rail-item ai-item"
+        [routerLink]="tabLink(aiTab.route)"
+        routerLinkActive="active"
+        [title]="collapsed() ? aiTab.label : null"
+      >
+        <lucide-icon [name]="aiTab.icon" [size]="18" />
+        <span>{{ aiTab.label }}</span>
+      </a>
+    } @else {
+      <button class="profile-chooser" type="button" (click)="openProfileOverlay()" [title]="collapsed() ? 'Choose profile' : null">
+        <span class="chooser-icon">
+          <lucide-icon name="users" [size]="18" />
+        </span>
+        <span class="chooser-copy">
+          <strong>Choose profile</strong>
+          <small>{{ store.kundlis().length }} saved kundlis</small>
+        </span>
+      </button>
+    }
+  </div>
+
+  <footer class="sidebar-foot">
+    <a class="foot-action" routerLink="/settings" routerLinkActive="active" [title]="collapsed() ? 'Settings' : null">
+      <lucide-icon name="settings" [size]="17" />
+      <span>Settings</span>
+    </a>
+    <button
+      class="foot-action"
+      type="button"
+      (click)="theme.toggle()"
+      [title]="theme.dark() ? 'Switch to light mode' : 'Switch to dark mode'"
+    >
+      <lucide-icon [name]="theme.dark() ? 'sun' : 'moon-star'" [size]="17" />
+      <span>{{ theme.dark() ? 'Light mode' : 'Dark mode' }}</span>
+    </button>
+    <button class="foot-action danger" type="button" (click)="confirmLogout()" [title]="collapsed() ? 'Logout' : null">
+      <lucide-icon name="log-out" [size]="17" />
+      <span>Logout</span>
+    </button>
+  </footer>
+</nav>
+
+@if (profileOverlayOpen()) {
+  <div class="profile-overlay-backdrop" (click)="closeProfileOverlay()">
+    <section class="profile-overlay" role="dialog" aria-modal="true" aria-label="Choose profile" (click)="$event.stopPropagation()">
+      <div class="profile-overlay-head">
+        <div>
+          <span class="overlay-eyebrow">Kundli profiles</span>
+          <h3>Choose profile</h3>
+        </div>
+        <button type="button" class="overlay-close" (click)="closeProfileOverlay()" aria-label="Close profile chooser">
+          <lucide-icon name="x" [size]="17" />
+        </button>
+      </div>
+
+      <label class="profile-search">
+        <lucide-icon name="search" [size]="16" />
+        <input
+          type="search"
+          placeholder="Search name, sign, city, relation..."
+          [ngModel]="profileQuery()"
+          (ngModelChange)="profileQuery.set($event)"
+          autofocus
+        />
+      </label>
+
+      <div class="profile-list">
+        @for (profile of filteredProfiles(); track profile.id) {
+          <button type="button" class="profile-card" (click)="selectProfile(profile.id)">
+            <span class="profile-avatar">{{ profile.name.slice(0, 1) }}</span>
+            <span class="profile-info">
+              <strong>{{ profile.name }}</strong>
+              <small>
+                {{ profile.relation }} · {{ profile.sun_sign || 'Unknown sign' }} · {{ profile.birth_city }}
+              </small>
+            </span>
+            <lucide-icon name="chevron-right" [size]="16" />
+          </button>
+        } @empty {
+          <div class="profile-empty">
+            <strong>No matching profiles</strong>
+            <span>Try a different search or add a new kundli.</span>
+          </div>
+        }
+      </div>
+
+      <button type="button" class="overlay-add" (click)="addProfile()">
+        <lucide-icon name="plus" [size]="15" />
+        Add Kundli
+      </button>
+    </section>
+  </div>
+}
