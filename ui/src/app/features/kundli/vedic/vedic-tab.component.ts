@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef } from 'ag-grid-community';
@@ -49,6 +50,21 @@ interface ConditionRow {
   modifier: number;
 }
 
+interface ClassicalRow {
+  planet: string;
+  sthana: number;
+  dig: number;
+  kala: number;
+  cheshta: number;
+  naisargika: number;
+  drik: number;
+  totalVirupas: number;
+  rupas: number;
+  requiredRupas: number;
+  ratio: number;
+  sufficient: boolean;
+}
+
 const VARGA_LIST = [
   'D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10',
   'D11', 'D12', 'D16', 'D20', 'D24', 'D27', 'D30', 'D40', 'D45', 'D60',
@@ -58,6 +74,7 @@ const VARGA_LIST = [
   selector: 'app-vedic-tab',
   imports: [
     AgGridAngular,
+    DecimalPipe,
     FormsModule,
     LucideAngularModule,
     SelectButton,
@@ -114,6 +131,21 @@ export class VedicTabComponent {
       { label: 'Sidereal time', value: m.sidereal_time },
       { label: 'Local mean time', value: m.local_mean_time },
       { label: 'Node type', value: m.node_type },
+    ];
+  });
+
+  protected readonly provenanceRows = computed<DefRow[]>(() => {
+    const p = this.data()?.provenance;
+    if (!p) return [];
+    return [
+      { label: 'Engine', value: p.engine },
+      { label: 'Zodiac', value: p.zodiac },
+      { label: 'House system', value: p.house_system },
+      { label: 'Lagna method', value: p.lagna_method },
+      { label: 'Timezone', value: p.timezone },
+      { label: 'Position confidence', value: p.confidence['planetary_positions'] || 'computed' },
+      { label: 'Varga confidence', value: p.confidence['vargas'] || 'mixed' },
+      { label: 'Interpretation layer', value: p.confidence['yogas_doshas'] || 'rule-based' },
     ];
   });
 
@@ -208,6 +240,41 @@ export class VedicTabComponent {
   });
 
   protected readonly strongestGraha = computed(() => this.data()?.shadbala?.ranking?.[0] ?? null);
+
+  protected readonly showV1 = signal(false);
+
+  protected readonly classical = computed(() => {
+    const c = this.data()?.shadbala?.classical;
+    return c?.available ? c : null;
+  });
+
+  protected readonly classicalRows = computed<ClassicalRow[]>(() => {
+    const c = this.classical();
+    if (!c) return [];
+    return c.ranking.map((rank) => {
+      const row = c.rows[rank.planet];
+      const comp = row.components;
+      return {
+        planet: rank.planet,
+        sthana: comp['sthana_bala']?.virupas ?? 0,
+        dig: comp['dig_bala']?.virupas ?? 0,
+        kala: comp['kala_bala']?.virupas ?? 0,
+        cheshta: comp['cheshta_bala']?.virupas ?? 0,
+        naisargika: comp['naisargika_bala']?.virupas ?? 0,
+        drik: comp['drik_bala']?.virupas ?? 0,
+        totalVirupas: row.total_virupas,
+        rupas: row.rupas,
+        requiredRupas: row.required_rupas,
+        ratio: row.ratio,
+        sufficient: row.sufficient,
+      };
+    });
+  });
+
+  protected ratioWidth(ratio: number): number {
+    // 1.0 = required minimum; scale so the bar caps at 2x required.
+    return Math.max(4, Math.min(100, (ratio / 2) * 100));
+  }
 
   protected readonly shadbalaRows = computed<ShadbalaRow[]>(() => {
     const shadbala = this.data()?.shadbala;

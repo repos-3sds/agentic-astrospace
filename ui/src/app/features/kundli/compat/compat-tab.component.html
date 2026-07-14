@@ -124,11 +124,11 @@
         <div class="chart-pair">
           <article>
             <h4>{{ kundli()?.name }}</h4>
-            <app-kundli-chart [chart]="av.vargas['D1']" [chartStyle]="prefs.chartStyle()" />
+            <app-kundli-chart [chart]="av.vargas['D1']" [chartStyle]="prefs.chartStyle()" [annotations]="av.planet_annotations || {}" />
           </article>
           <article>
             <h4>{{ partner()?.name }}</h4>
-            <app-kundli-chart [chart]="pv.vargas['D1']" [chartStyle]="prefs.chartStyle()" />
+            <app-kundli-chart [chart]="pv.vargas['D1']" [chartStyle]="prefs.chartStyle()" [annotations]="pv.planet_annotations || {}" />
           </article>
         </div>
       </app-section-card>
@@ -137,11 +137,11 @@
         <div class="chart-pair">
           <article>
             <h4>{{ kundli()?.name }}</h4>
-            <app-kundli-chart [chart]="av.vargas['D9']" [chartStyle]="prefs.chartStyle()" />
+            <app-kundli-chart [chart]="av.vargas['D9']" [chartStyle]="prefs.chartStyle()" [annotations]="av.planet_annotations || {}" />
           </article>
           <article>
             <h4>{{ partner()?.name }}</h4>
-            <app-kundli-chart [chart]="pv.vargas['D9']" [chartStyle]="prefs.chartStyle()" />
+            <app-kundli-chart [chart]="pv.vargas['D9']" [chartStyle]="prefs.chartStyle()" [annotations]="pv.planet_annotations || {}" />
           </article>
         </div>
       </app-section-card>

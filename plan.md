@@ -355,11 +355,64 @@ All 6 pre-existing bugs fixed before release.
 
 ### 4.4 Deployment
 
-- Dockerise: `Dockerfile` + `docker-compose.yml`
-- Deploy to Railway or Render (single service)
-- Environment: `ANTHROPIC_API_KEY`, `SECRET_KEY`, `DATABASE_URL`
-- Rate limiting on AI endpoints (max 10 readings/hour per user)
-- Production SQLite → PostgreSQL migration path
+- Deploy as a split product, not a single monolith:
+  - Angular UI on Cloudflare Pages.
+  - FastAPI deterministic astrology engine on Render Free during beta, then Render Starter / Railway / Fly / VPS for production.
+  - Supabase for Auth, Postgres, Storage, and row-level security.
+  - Future Express.js context engine for memory, profile context assembly, AI prompt routing, version diffing, and orchestration.
+  - Future Dify agents for fast no-code/low-code AI workflows; LangChain/LangGraph only when custom agent control is needed.
+- Keep the calculation boundary strict:
+  - FastAPI calculates astrology.
+  - Express assembles context and routes workflows.
+  - Dify / LangChain explains, summarizes, and personalizes.
+  - Supabase persists users, kundlis, readings, prediction claims, gocharam periods, settings, and feedback.
+- Environment:
+  - Frontend: `API_BASE_URL`, Supabase public URL/key.
+  - FastAPI: `DATABASE_URL`, Supabase JWT settings, AI provider keys only for legacy/internal routes.
+  - Express context engine: Supabase service credentials, AI provider keys, Dify/LangGraph workflow secrets.
+- Rate limiting on AI/context endpoints.
+- Production database remains Supabase Postgres; local SQLite is development-only.
+
+## Target Tech Stack And Hosting
+
+### Current / Free Beta Stack
+
+| Layer | Technology | Hosting |
+|-------|------------|---------|
+| Frontend | Angular + PrimeNG/Tailwind-style app theme | Cloudflare Pages |
+| Deterministic astrology API | FastAPI + Python + Swiss Ephemeris | Render Free Web Service |
+| Auth + database | Supabase Auth + Postgres + RLS | Supabase Free |
+| Static public landing page | Angular route / static build | Cloudflare Pages |
+
+Notes:
+- Render Free is acceptable for beta, but it sleeps after inactivity. First request after idle can be slow.
+- Cloudflare Pages is preferred over GitHub Pages because SPA routing, redirects, custom domains, preview deploys, and CDN controls are smoother.
+- GitHub Pages remains acceptable for static frontend-only demos, but it cannot run FastAPI and needs SPA fallback handling.
+
+### Future Product Stack
+
+| Layer | Technology | Hosting Direction |
+|-------|------------|-------------------|
+| Frontend | Angular | Cloudflare Pages |
+| Core astrology engine | FastAPI Python | Render Starter / Railway / Fly / VPS |
+| Context engine | Express.js / Node.js | Render / Railway / Fly / VPS |
+| Agent workflows | Dify first; LangChain/LangGraph for custom control | Dify Cloud/self-hosted or dedicated service |
+| Auth/database/storage | Supabase | Supabase Pro when usage requires it |
+| Background jobs | FastAPI worker or Node worker | Same backend platform or queue worker |
+
+### Architecture Principle
+
+AstroSpace should keep deterministic astrology separate from AI:
+
+```
+Angular UI
+  -> FastAPI core astrology engine
+  -> Supabase auth/database
+  -> Express context engine
+  -> Dify / LangGraph AI workflows
+```
+
+FastAPI is the source of truth for charts, dashas, gocharam, yogas, doshas, compatibility, panchanga, and validation-grade calculations. AI agents should never invent astrology results; they should explain and personalize the computed payload.
 
 ---
 

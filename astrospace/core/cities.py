@@ -1,5 +1,9 @@
 """Offline city lookup with common cities, falls back to None (online GeoNames)."""
 
+from __future__ import annotations
+
+import re
+
 # (city_lower, nation_lower) -> (lat, lng, timezone)
 _CITIES: dict[tuple[str, str], tuple[float, float, str]] = {
     ("new york", "us"): (40.7128, -74.0060, "America/New_York"),
@@ -147,15 +151,150 @@ _CITIES: dict[tuple[str, str], tuple[float, float, str]] = {
     ("colombo", "lk"): (6.9271, 79.8612, "Asia/Colombo"),
 }
 
+_INDIA_EXPANSION: dict[str, tuple[float, float]] = {
+    "adoni": (15.6322, 77.2728),
+    "agartala": (23.8315, 91.2868),
+    "aizawl": (23.7271, 92.7176),
+    "ajmer": (26.4499, 74.6399),
+    "akola": (20.7002, 77.0082),
+    "alappuzha": (9.4981, 76.3388),
+    "aligarh": (27.8974, 78.0880),
+    "alwar": (27.5530, 76.6346),
+    "ambala": (30.3782, 76.7767),
+    "anantapur": (14.6819, 77.6006),
+    "asansol": (23.6739, 86.9524),
+    "ayodhya": (26.7922, 82.1998),
+    "bareilly": (28.3670, 79.4304),
+    "bathinda": (30.2110, 74.9455),
+    "belagavi": (15.8497, 74.4977),
+    "belgaum": (15.8497, 74.4977),
+    "bellary": (15.1394, 76.9214),
+    "berhampur": (19.3149, 84.7941),
+    "bhagalpur": (25.2425, 86.9842),
+    "bharatpur": (27.2152, 77.5030),
+    "bhavnagar": (21.7645, 72.1519),
+    "bhilai": (21.1938, 81.3509),
+    "bhilwara": (25.3407, 74.6313),
+    "bhiwandi": (19.2813, 73.0483),
+    "bikaner": (28.0229, 73.3119),
+    "bilaspur": (22.0797, 82.1409),
+    "bokaro": (23.6693, 86.1511),
+    "burdwan": (23.2324, 87.8615),
+    "chandrapur": (19.9705, 79.3036),
+    "cochin": (9.9312, 76.2673),
+    "davanagere": (14.4644, 75.9218),
+    "dhanbad": (23.7957, 86.4304),
+    "dharamshala": (32.2190, 76.3234),
+    "dibrugarh": (27.4728, 94.9120),
+    "dindigul": (10.3673, 77.9803),
+    "durgapur": (23.5204, 87.3119),
+    "eluru": (16.7107, 81.0952),
+    "erode": (11.3410, 77.7172),
+    "firozabad": (27.1592, 78.3957),
+    "gandhinagar": (23.2156, 72.6369),
+    "gangtok": (27.3314, 88.6138),
+    "gorakhpur": (26.7606, 83.3732),
+    "gulbarga": (17.3297, 76.8343),
+    "kalaburagi": (17.3297, 76.8343),
+    "guntur": (16.3067, 80.4365),
+    "hisar": (29.1492, 75.7217),
+    "hosur": (12.7409, 77.8253),
+    "howrah": (22.5958, 88.2636),
+    "imphal": (24.8170, 93.9368),
+    "itanagar": (27.0844, 93.6053),
+    "jhansi": (25.4484, 78.5685),
+    "jalandhar": (31.3260, 75.5762),
+    "jalgaon": (21.0077, 75.5626),
+    "jamnagar": (22.4707, 70.0577),
+    "jharsuguda": (21.8554, 84.0062),
+    "jorhat": (26.7509, 94.2037),
+    "kadapa": (14.4673, 78.8242),
+    "cuddapah": (14.4673, 78.8242),
+    "kannur": (11.8745, 75.3704),
+    "karimnagar": (18.4386, 79.1288),
+    "karnal": (29.6857, 76.9905),
+    "karur": (10.9601, 78.0766),
+    "khammam": (17.2473, 80.1514),
+    "kolhapur": (16.7050, 74.2433),
+    "kollam": (8.8932, 76.6141),
+    "korba": (22.3595, 82.7501),
+    "kota": (25.2138, 75.8648),
+    "kozhikode": (11.2588, 75.7804),
+    "calicut": (11.2588, 75.7804),
+    "latur": (18.4088, 76.5604),
+    "madgaon": (15.2832, 73.9862),
+    "margao": (15.2832, 73.9862),
+    "malappuram": (11.0510, 76.0711),
+    "mathura": (27.4924, 77.6737),
+    "moradabad": (28.8386, 78.7733),
+    "muzaffarpur": (26.1209, 85.3647),
+    "nadiad": (22.6916, 72.8634),
+    "nagercoil": (8.1833, 77.4119),
+    "nanded": (19.1383, 77.3210),
+    "navi mumbai": (19.0330, 73.0297),
+    "nizamabad": (18.6725, 78.0941),
+    "ongole": (15.5057, 80.0499),
+    "ooty": (11.4102, 76.6950),
+    "udhagamandalam": (11.4102, 76.6950),
+    "palakkad": (10.7867, 76.6548),
+    "pali": (25.7711, 73.3234),
+    "panipat": (29.3909, 76.9635),
+    "patiala": (30.3398, 76.3869),
+    "pondicherry": (11.9416, 79.8083),
+    "puducherry": (11.9416, 79.8083),
+    "porbandar": (21.6417, 69.6293),
+    "port blair": (11.6234, 92.7265),
+    "raichur": (16.2076, 77.3463),
+    "rajapalayam": (9.4515, 77.5544),
+    "ramagundam": (18.7638, 79.4750),
+    "rourkela": (22.2604, 84.8536),
+    "saharanpur": (29.9680, 77.5552),
+    "sambalpur": (21.4669, 83.9812),
+    "satara": (17.6805, 74.0183),
+    "satna": (24.6005, 80.8322),
+    "secunderabad": (17.4399, 78.4983),
+    "shimla": (31.1048, 77.1734),
+    "shivamogga": (13.9299, 75.5681),
+    "shimoga": (13.9299, 75.5681),
+    "sikar": (27.6094, 75.1399),
+    "solan": (30.9045, 77.0967),
+    "sonipat": (28.9931, 77.0151),
+    "sri ganganagar": (29.9094, 73.8800),
+    "srikakulam": (18.2969, 83.8974),
+    "surendranagar": (22.7201, 71.6495),
+    "tenali": (16.2430, 80.6400),
+    "thanjavur": (10.7870, 79.1378),
+    "thoothukudi": (8.7642, 78.1348),
+    "tuticorin": (8.7642, 78.1348),
+    "thrissur": (10.5276, 76.2144),
+    "tirunelveli": (8.7139, 77.7567),
+    "tiruppur": (11.1085, 77.3411),
+    "tumakuru": (13.3409, 77.1010),
+    "tumkur": (13.3409, 77.1010),
+    "ujjain": (23.1765, 75.7885),
+    "vapi": (20.3893, 72.9106),
+    "vellore": (12.9165, 79.1325),
+    "vijayanagaram": (18.1067, 83.3956),
+    "vizianagaram": (18.1067, 83.3956),
+    "yamunanagar": (30.1290, 77.2674),
+}
+
+for _city, (_lat, _lng) in _INDIA_EXPANSION.items():
+    _CITIES.setdefault((_city, "in"), (_lat, _lng, "Asia/Kolkata"))
+
+
+def _normalize(value: str) -> str:
+    return re.sub(r"\s+", " ", value.strip().lower().replace(".", "")).strip()
+
 
 def lookup_city(city: str, nation: str = "US") -> tuple[float, float, str] | None:
     """Return (lat, lng, tz_str) for a city or None if not found offline."""
-    key = (city.strip().lower(), nation.strip().lower())
+    key = (_normalize(city), _normalize(nation))
     result = _CITIES.get(key)
     if result:
         return result
     # Try city-only match (first nation that matches)
-    city_lower = city.strip().lower()
+    city_lower = _normalize(city)
     for (c, n), v in _CITIES.items():
         if c == city_lower:
             return v
@@ -172,12 +311,26 @@ def city_for_timezone(tz_str: str) -> tuple[str, str, float, float, str] | None:
 
 def search_cities(query: str = "", limit: int = 80) -> list[dict]:
     """Search offline city entries for UI selectors."""
-    q = query.strip().lower()
+    q = _normalize(query)
+    matches = []
+    for (city, nation), geo in _CITIES.items():
+        tz = geo[2]
+        haystack = f"{city} {nation} {tz.lower()}"
+        if q and q not in haystack:
+            continue
+        score = 3
+        if q:
+            if city == q or nation == q:
+                score = 0
+            elif city.startswith(q):
+                score = 1
+            elif any(part.startswith(q) for part in city.split()):
+                score = 2
+        matches.append((score, city, nation, geo))
+
     rows = []
     seen = set()
-    for (city, nation), (lat, lng, tz) in sorted(_CITIES.items()):
-        if q and q not in city and q not in nation and q not in tz.lower():
-            continue
+    for _, city, nation, (lat, lng, tz) in sorted(matches, key=lambda item: (item[0], item[2] != "in", item[1], item[2])):
         key = (city, nation)
         if key in seen:
             continue

@@ -89,3 +89,18 @@ class PredictionClaim(Base):
 
     kundli: Mapped["Kundli"] = relationship("Kundli", back_populates="prediction_claims")
     reading: Mapped["Reading"] = relationship("Reading", back_populates="claims")
+
+
+class UserSettings(Base):
+    __tablename__ = "user_settings"
+
+    user_id: Mapped[str] = mapped_column(String, primary_key=True)
+    chart_style: Mapped[str] = mapped_column(String, default="south")
+    ayanamsha: Mapped[str] = mapped_column(String, default="lahiri")
+    node_type: Mapped[str] = mapped_column(String, default="mean")
+    timezone_mode: Mapped[str] = mapped_column(String, default="browser")
+    panchanga_place: Mapped[dict | None] = mapped_column(JSON)
+    language: Mapped[str] = mapped_column(String, default="en")
+    regional_format: Mapped[str] = mapped_column(String, default="en-IN")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

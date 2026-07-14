@@ -1,7 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 
 import { SIGN_ORDER, signMeta } from '../../core/glyphs';
-import { VargaChart } from '../../core/models';
+import { PlanetConditionAnnotation, PlanetConditionCode, VargaChart } from '../../core/models';
 
 export type KundliChartStyle = 'north' | 'south';
 
@@ -15,7 +15,7 @@ interface HouseView extends HousePoint {
   sign: string;
   signLabel: string;
   signColor: string;
-  entries: string[];
+  entries: PlanetEntry[];
 }
 
 interface SouthCell {
@@ -25,7 +25,13 @@ interface SouthCell {
   house: number;
   x: number;
   y: number;
-  entries: string[];
+  entries: PlanetEntry[];
+}
+
+interface PlanetEntry {
+  key: string;
+  label: string;
+  annotations: PlanetConditionAnnotation[];
 }
 
 const HOUSE_POINTS: HousePoint[] = [
@@ -66,16 +72,16 @@ const SOUTH_SIGN_POINTS: Record<string, { col: number; row: number }> = {
 export class KundliChartComponent {
   readonly chart = input<VargaChart | null>(null);
   readonly chartStyle = input<KundliChartStyle>('north');
+  readonly annotations = input<Record<string, PlanetConditionAnnotation[]>>({});
 
   protected readonly houses = computed<HouseView[]>(() => {
     const chart = this.chart();
     if (!chart) return [];
 
-    const planetsByHouse = new Map<number, string[]>();
+    const planetsByHouse = new Map<number, PlanetEntry[]>();
     for (const [planet, position] of Object.entries(chart.planets)) {
       const house = position.house;
-      const label = this.planetShortName(planet);
-      planetsByHouse.set(house, [...(planetsByHouse.get(house) ?? []), label]);
+      planetsByHouse.set(house, [...(planetsByHouse.get(house) ?? []), this.entryForPlanet(planet)]);
     }
 
     const lagnaIndex = SIGN_ORDER.indexOf(chart.lagna.sign);
@@ -83,7 +89,7 @@ export class KundliChartComponent {
       const sign = this.signForHouse(lagnaIndex, chart.lagna.sign, point.house);
       const meta = signMeta(sign);
       const planets = point.house === 1
-        ? ['Lagna', ...(planetsByHouse.get(point.house) ?? [])]
+        ? [this.lagnaEntry(), ...(planetsByHouse.get(point.house) ?? [])]
         : (planetsByHouse.get(point.house) ?? []);
       return {
         ...point,
@@ -99,10 +105,9 @@ export class KundliChartComponent {
     const chart = this.chart();
     if (!chart) return [];
 
-    const planetsBySign = new Map<string, string[]>();
+    const planetsBySign = new Map<string, PlanetEntry[]>();
     for (const [planet, position] of Object.entries(chart.planets)) {
-      const label = this.planetShortName(planet);
-      planetsBySign.set(position.sign, [...(planetsBySign.get(position.sign) ?? []), label]);
+      planetsBySign.set(position.sign, [...(planetsBySign.get(position.sign) ?? []), this.entryForPlanet(planet)]);
     }
 
     const lagnaIndex = SIGN_ORDER.indexOf(chart.lagna.sign);
@@ -110,7 +115,7 @@ export class KundliChartComponent {
       const point = SOUTH_SIGN_POINTS[sign];
       const meta = signMeta(sign);
       const planets = sign === chart.lagna.sign
-        ? ['Lagna', ...(planetsBySign.get(sign) ?? [])]
+        ? [this.lagnaEntry(), ...(planetsBySign.get(sign) ?? [])]
         : (planetsBySign.get(sign) ?? []);
       return {
         sign,
@@ -151,6 +156,38 @@ export class KundliChartComponent {
       Pluto: 'Pl',
     };
     return names[planet] ?? planet.slice(0, 2);
+  }
+
+  private entryForPlanet(planet: string): PlanetEntry {
+    const chartPlanet = this.chart()?.planets[planet];
+    const automatic: PlanetConditionAnnotation[] = [];
+    if (chartPlanet?.retrograde) {
+      automatic.push({ code: 'retrograde', symbol: '↺', label: 'Retrograde', tone: 'neutral' });
+    }
+    if (chartPlanet?.vargottama) {
+      automatic.push({ code: 'vargottama', symbol: '✦', label: 'Vargottama', tone: 'good' });
+    }
+    return {
+      key: planet,
+      label: this.planetShortName(planet),
+      annotations: this.mergeAnnotations(automatic, this.annotations()[planet] ?? []),
+    };
+  }
+
+  private lagnaEntry(): PlanetEntry {
+    return { key: 'Lagna', label: 'Lagna', annotations: [] };
+  }
+
+  private mergeAnnotations(
+    first: PlanetConditionAnnotation[],
+    second: PlanetConditionAnnotation[],
+  ): PlanetConditionAnnotation[] {
+    const seen = new Set<PlanetConditionCode>();
+    return [...first, ...second].filter((item) => {
+      if (seen.has(item.code)) return false;
+      seen.add(item.code);
+      return true;
+    });
   }
 
   private signShortName(sign: string): string {

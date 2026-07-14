@@ -15,6 +15,7 @@ from astrospace.api.vedic_routes import router as vedic_router
 from astrospace.api.panchanga_routes import router as panchanga_router
 from astrospace.api.ask_routes import router as ask_router
 from astrospace.api.auth_routes import router as auth_router
+from astrospace.api.settings_routes import router as settings_router
 
 app = FastAPI(
     title="AstroSpace",
@@ -33,6 +34,7 @@ app.add_middleware(
 # API routers
 app.include_router(core_router)
 app.include_router(auth_router)
+app.include_router(settings_router)
 app.include_router(kundli_router)
 app.include_router(reading_router)
 app.include_router(vedic_router)

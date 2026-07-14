@@ -51,6 +51,21 @@
   gap: 16px;
 }
 
+.sync-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  margin-bottom: 16px;
+  padding: 7px 10px;
+  border: 1px solid color-mix(in srgb, var(--as-good) 34%, transparent);
+  border-radius: 999px;
+  color: var(--as-good);
+  background: color-mix(in srgb, var(--as-good) 10%, transparent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .preference-row {
   display: flex;
   align-items: center;

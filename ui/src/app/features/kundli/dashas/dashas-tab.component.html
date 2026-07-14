@@ -45,6 +45,26 @@
             {{ activePratyantardasha()?.end | date: 'mediumDate' }}
           </small>
         </article>
+        @if (data()?.current?.sookshmadasha; as sookshma) {
+          <article>
+            <span>Sookshma</span>
+            <strong>{{ sookshma.lord }}</strong>
+            <small>
+              {{ sookshma.start | date: 'mediumDate' }} –
+              {{ sookshma.end | date: 'mediumDate' }}
+            </small>
+          </article>
+        }
+        @if (data()?.current?.pranadasha; as prana) {
+          <article>
+            <span>Prana</span>
+            <strong>{{ prana.lord }}</strong>
+            <small>
+              {{ prana.start | date: 'shortDate' }} {{ prana.start | date: 'HH:mm' }} –
+              {{ prana.end | date: 'shortDate' }} {{ prana.end | date: 'HH:mm' }}
+            </small>
+          </article>
+        }
       </div>
     </section>
 
@@ -166,22 +186,22 @@
             <div class="chart-stack">
               <article>
                 <header><span>N</span><strong>Rashi</strong></header>
-                <app-kundli-chart [chart]="t.natal.rashi" [chartStyle]="prefs.chartStyle()" />
+                <app-kundli-chart [chart]="t.natal.rashi" [chartStyle]="prefs.chartStyle()" [annotations]="t.planet_annotations?.natal || {}" />
               </article>
               <article>
                 <header><span>N</span><strong>Navamsha</strong></header>
-                <app-kundli-chart [chart]="t.natal.navamsha" [chartStyle]="prefs.chartStyle()" />
+                <app-kundli-chart [chart]="t.natal.navamsha" [chartStyle]="prefs.chartStyle()" [annotations]="t.planet_annotations?.natal || {}" />
               </article>
             </div>
           } @else if (detailMode() === 'transit') {
             <div class="chart-stack">
               <article>
                 <header><span>T</span><strong>Rashi</strong></header>
-                <app-kundli-chart [chart]="t.transit.rashi" [chartStyle]="prefs.chartStyle()" />
+                <app-kundli-chart [chart]="t.transit.rashi" [chartStyle]="prefs.chartStyle()" [annotations]="t.planet_annotations?.transit || {}" />
               </article>
               <article>
                 <header><span>T</span><strong>Navamsha</strong></header>
-                <app-kundli-chart [chart]="t.transit.navamsha" [chartStyle]="prefs.chartStyle()" />
+                <app-kundli-chart [chart]="t.transit.navamsha" [chartStyle]="prefs.chartStyle()" [annotations]="t.planet_annotations?.transit || {}" />
               </article>
             </div>
           } @else {

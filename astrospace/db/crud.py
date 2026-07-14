@@ -1,6 +1,6 @@
 from datetime import datetime
 from sqlalchemy.orm import Session
-from .models import Kundli, PredictionClaim, Reading
+from .models import Kundli, PredictionClaim, Reading, UserSettings
 
 
 # ── Kundli ────────────────────────────────────────────────────────────────────
@@ -95,12 +95,15 @@ def save_reading(
 def get_readings(
     db: Session,
     kundli_id: str,
+    user_id: str | None = None,
     reading_type: str = None,
     period_label: str = None,
     generated_local_date: str = None,
     limit: int = 50,
 ) -> list[Reading]:
     q = db.query(Reading).filter(Reading.kundli_id == kundli_id)
+    if user_id is not None:
+        q = q.join(Kundli).filter(Kundli.user_id == user_id)
     if reading_type:
         q = q.filter(Reading.reading_type == reading_type)
     if period_label:
@@ -113,55 +116,73 @@ def get_readings(
 def get_readings_for_calendar(
     db: Session,
     kundli_id: str,
+    user_id: str | None,
     start_date: str,
     end_date: str,
     limit: int = 200,
 ) -> list[Reading]:
+    q = db.query(Reading).filter(Reading.kundli_id == kundli_id)
+    if user_id is not None:
+        q = q.join(Kundli).filter(Kundli.user_id == user_id)
     return (
-        db.query(Reading)
-        .filter(Reading.kundli_id == kundli_id)
-        .filter(Reading.generated_local_date >= start_date)
-        .filter(Reading.generated_local_date <= end_date)
-        .order_by(Reading.generated_local_date.asc(), Reading.version.desc(), Reading.generated_at.desc())
-        .limit(limit)
-        .all()
+        q.filter(Reading.generated_local_date >= start_date)
+         .filter(Reading.generated_local_date <= end_date)
+         .order_by(Reading.generated_local_date.asc(), Reading.version.desc(), Reading.generated_at.desc())
+         .limit(limit)
+         .all()
     )
 
 
-def get_reading(db: Session, kundli_id: str, reading_id: str) -> Reading | None:
-    return (db.query(Reading)
-            .filter(Reading.kundli_id == kundli_id, Reading.id == reading_id)
-            .first())
+def get_reading(
+    db: Session,
+    kundli_id: str,
+    reading_id: str,
+    user_id: str | None = None,
+) -> Reading | None:
+    q = db.query(Reading).filter(Reading.kundli_id == kundli_id, Reading.id == reading_id)
+    if user_id is not None:
+        q = q.join(Kundli).filter(Kundli.user_id == user_id)
+    return q.first()
 
 
-def get_latest_reading(db: Session, kundli_id: str, reading_type: str) -> Reading | None:
-    return (db.query(Reading)
-            .filter(Reading.kundli_id == kundli_id, Reading.reading_type == reading_type)
-            .order_by(Reading.generated_at.desc())
-            .first())
+def get_latest_reading(
+    db: Session,
+    kundli_id: str,
+    reading_type: str,
+    user_id: str | None = None,
+) -> Reading | None:
+    q = db.query(Reading).filter(Reading.kundli_id == kundli_id, Reading.reading_type == reading_type)
+    if user_id is not None:
+        q = q.join(Kundli).filter(Kundli.user_id == user_id)
+    return q.order_by(Reading.generated_at.desc()).first()
 
 
 def get_latest_period_reading(
-    db: Session, kundli_id: str, reading_type: str, period_label: str
+    db: Session,
+    kundli_id: str,
+    reading_type: str,
+    period_label: str,
+    user_id: str | None = None,
 ) -> Reading | None:
-    return (db.query(Reading)
-            .filter(
-                Reading.kundli_id == kundli_id,
-                Reading.reading_type == reading_type,
-                Reading.period_label == period_label,
-            )
-            .order_by(Reading.version.desc(), Reading.generated_at.desc())
-            .first())
+    q = db.query(Reading).filter(
+        Reading.kundli_id == kundli_id,
+        Reading.reading_type == reading_type,
+        Reading.period_label == period_label,
+    )
+    if user_id is not None:
+        q = q.join(Kundli).filter(Kundli.user_id == user_id)
+    return q.order_by(Reading.version.desc(), Reading.generated_at.desc()).first()
 
 
 def update_reading_feedback(
     db: Session,
     kundli_id: str,
     reading_id: str,
+    user_id: str | None,
     rating: int | None,
     feedback: str | None,
 ) -> Reading | None:
-    r = get_reading(db, kundli_id, reading_id)
+    r = get_reading(db, kundli_id, reading_id, user_id)
     if not r:
         return None
     r.user_rating = rating
@@ -178,8 +199,21 @@ def replace_prediction_claims(
     db: Session,
     reading_id: str,
     claims: list[dict],
+    user_id: str | None = None,
 ) -> list[PredictionClaim]:
-    db.query(PredictionClaim).filter(PredictionClaim.reading_id == reading_id).delete()
+    if user_id is not None:
+        reading = (
+            db.query(Reading)
+            .join(Kundli)
+            .filter(Reading.id == reading_id, Kundli.user_id == user_id)
+            .first()
+        )
+        if not reading:
+            return []
+    q = db.query(PredictionClaim).filter(PredictionClaim.reading_id == reading_id)
+    if user_id is not None:
+        q = q.filter(PredictionClaim.user_id == user_id)
+    q.delete()
     rows = [PredictionClaim(**claim) for claim in claims]
     for row in rows:
         db.add(row)
@@ -252,3 +286,21 @@ def update_prediction_claim_feedback(
     db.commit()
     db.refresh(claim)
     return claim
+
+
+# ── User Settings ─────────────────────────────────────────────────────────────
+
+def get_user_settings(db: Session, user_id: str) -> UserSettings | None:
+    return db.query(UserSettings).filter(UserSettings.user_id == user_id).first()
+
+
+def upsert_user_settings(db: Session, user_id: str, data: dict) -> UserSettings:
+    settings = get_user_settings(db, user_id)
+    if not settings:
+        settings = UserSettings(user_id=user_id)
+        db.add(settings)
+    for key, value in data.items():
+        setattr(settings, key, value)
+    db.commit()
+    db.refresh(settings)
+    return settings

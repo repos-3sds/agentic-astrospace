@@ -59,11 +59,41 @@ export interface VargaChart {
   name: string;
   signifies: string;
   verified_rule: boolean;
+  provenance?: CalculationProvenance;
   lagna: { sign: string };
   planets: Record<
     string,
     { sign: string; sign_index?: number; house: number; retrograde?: boolean; vargottama?: boolean }
   >;
+}
+
+export interface CalculationProvenance {
+  context: string;
+  engine: string;
+  zodiac: string;
+  ayanamsha: string;
+  node_type: string;
+  house_system: string;
+  lagna_method: string;
+  timezone: string;
+  calculation_place?: {
+    city?: string;
+    latitude?: number;
+    longitude?: number;
+  };
+  panchanga_place?: { city: string; nation: string; timezone: string };
+  confidence: Record<string, string>;
+  notes: string[];
+  [key: string]: unknown;
+}
+
+export type PlanetConditionCode = 'exalted' | 'debilitated' | 'retrograde' | 'combust' | 'vargottama';
+
+export interface PlanetConditionAnnotation {
+  code: PlanetConditionCode;
+  symbol: string;
+  label: string;
+  tone: 'good' | 'bad' | 'neutral' | 'warn';
 }
 
 export interface VedicAll {
@@ -79,21 +109,136 @@ export interface VedicAll {
     local_mean_time: string;
     node_type: string;
   };
+  provenance?: CalculationProvenance;
   avkahada: Record<string, any>;
   ghatak: Record<string, any>;
   favourable: Record<string, any>;
   planets: Record<string, VedicPlanet>;
   dignities: Record<string, { dignity?: string }>;
   planetary_conditions?: PlanetaryConditionsPayload;
+  planet_annotations?: Record<string, PlanetConditionAnnotation[]>;
   shadbala?: ShadbalaPayload;
   vargas: Record<string, VargaChart>;
   dashas?: DashaPayload;
   ashtakavarga?: AshtakavargaPayload;
   yogas?: YogasPayload;
   doshas?: DoshasPayload;
+  jaimini?: JaiminiPayload;
+  special_lagnas?: SpecialLagnasPayload;
+  masa?: MasaPayload;
+}
+
+/* ── Jaimini payload ────────────────────────────────────────────────── */
+
+export interface JaiminiKaraka {
+  code?: string;
+  planet: string;
+  karaka: string;
+  degree_in_sign: number;
+  effective_degree: number;
+  longitude: number;
+}
+
+export interface ArudhaPada {
+  house: number;
+  house_sign: number;
+  house_sign_name: string;
+  lord: string;
+  lord_sign: number;
+  lord_sign_name: string;
+  count: number;
+  raw_sign: number;
+  raw_sign_name: string;
+  exception_applied: boolean;
+  sign: number;
+  sign_name: string;
+}
+
+export interface JaiminiPayload {
+  chara_karakas: {
+    scheme: string;
+    karakas: Record<string, JaiminiKaraka>;
+    ordered: (JaiminiKaraka & { code: string })[];
+  };
+  arudha_lagna: ArudhaPada;
+  upapada: ArudhaPada;
+  arudha_padas: { padas: Record<string, ArudhaPada> };
+}
+
+export interface SpecialLagnaPoint {
+  longitude: number;
+  sign: number;
+  sign_name: string;
+  dms: string;
+}
+
+export interface SpecialLagnasPayload {
+  hours_since_sunrise?: number;
+  ghatis_since_sunrise?: number;
+  bhava_lagna?: SpecialLagnaPoint;
+  hora_lagna?: SpecialLagnaPoint;
+  ghati_lagna?: SpecialLagnaPoint;
+  lagna?: SpecialLagnaPoint;
+  notes?: string[];
+  error?: string;
+}
+
+/* ── Masa / Kaala payload ───────────────────────────────────────────── */
+
+export interface MasaPayload {
+  name: string;
+  name_index: number;
+  adhika: boolean;
+  paksha: string;
+  month_start_jd?: number;
+  month_end_jd?: number;
+  purnimanta_name?: string;
+  samvatsara?: {
+    name: string;
+    index: number;
+    number: number;
+    shaka_year: number;
+    source_status?: string;
+  };
+  ritu?: string;
+  ayana?: string;
+}
+
+/* ── Yogini dasha payload ───────────────────────────────────────────── */
+
+export interface YoginiDashaPeriod {
+  yogini: string;
+  planet: string;
+  lord: string;
+  start: string;
+  end: string;
+  years: number;
+  active: boolean;
+  antardashas?: YoginiDashaPeriod[];
+}
+
+export interface YoginiDashaPayload {
+  system: string;
+  cycle_years: number;
+  birth_nakshatra: {
+    name: string;
+    number: number;
+    starting_yogini: string;
+    starting_planet: string;
+    pada: number;
+    elapsed_fraction: number;
+    balance_years: number;
+  };
+  as_of: string;
+  mahadashas: YoginiDashaPeriod[];
+  current: {
+    mahadasha?: YoginiDashaPeriod | null;
+    antardasha?: YoginiDashaPeriod | null;
+  };
 }
 
 export interface YogaResult {
+  rule_id?: string;
   name: string;
   category: string;
   active: boolean;
@@ -102,6 +247,9 @@ export interface YogaResult {
   triggers: string[];
   planets: string[];
   verified: boolean;
+  source_status?: 'verified_common' | 'convention_dependent' | 'needs_review' | string;
+  implementation?: 'computed' | 'partial' | 'not_implemented' | string;
+  source_refs?: { source: string; detail: string }[];
   notes?: string[];
 }
 
@@ -115,10 +263,20 @@ export interface YogasPayload {
   conventions?: Record<string, string>;
 }
 
+export interface ManglikException {
+  rule: string;
+  applies: boolean;
+  detail: string;
+  source_status?: string;
+}
+
 export interface ManglikPayload {
+  rule_id?: string;
   name: string;
   active: boolean;
   severity: string;
+  net_severity?: string;
+  exceptions?: ManglikException[];
   active_references: string[];
   checks: {
     reference: string;
@@ -129,11 +287,63 @@ export interface ManglikPayload {
   }[];
   rule: string;
   verified: boolean;
+  source_status?: 'verified_common' | 'convention_dependent' | 'needs_review' | string;
+  implementation?: 'computed' | 'partial' | 'not_implemented' | string;
+  source_refs?: { source: string; detail: string }[];
+  notes?: string[];
+}
+
+export interface GandantaHit {
+  body: string;
+  junction: string;
+  signs: string;
+  side: string;
+  degrees_from_junction: number;
+  severity: string;
+  abhukta_mula: boolean;
+}
+
+export interface GandantaPayload {
+  rule_id?: string;
+  name: string;
+  active: boolean;
+  severity: string;
+  hits: GandantaHit[];
+  bodies_checked?: string[];
+  rule: string;
+  verified: boolean;
+  source_status?: string;
+  implementation?: string;
+  source_refs?: { source: string; detail: string }[];
+  notes?: string[];
+}
+
+export interface GrahanHit {
+  luminary: string;
+  node: string;
+  sign: string;
+  orb: number;
+  severity: string;
+}
+
+export interface GrahanPayload {
+  rule_id?: string;
+  name: string;
+  active: boolean;
+  severity: string;
+  hits: GrahanHit[];
+  rule: string;
+  verified: boolean;
+  source_status?: string;
+  implementation?: string;
+  source_refs?: { source: string; detail: string }[];
   notes?: string[];
 }
 
 export interface DoshasPayload {
   manglik: ManglikPayload;
+  gandanta?: GandantaPayload;
+  grahan?: GrahanPayload;
 }
 
 export interface YogasDoshasPayload {
@@ -168,6 +378,10 @@ export interface DashaPayload {
     antardasha?: DashaPeriod | null;
     pratyantardasha?: DashaPeriod | null;
     pratyantardashas: DashaPeriod[];
+    sookshmadasha?: DashaPeriod | null;
+    sookshmadashas?: DashaPeriod[];
+    pranadasha?: DashaPeriod | null;
+    pranadashas?: DashaPeriod[];
   };
 }
 
@@ -225,9 +439,36 @@ export interface ShadbalaComponent {
   [key: string]: unknown;
 }
 
+export interface ShadbalaClassicalComponent {
+  virupas: number;
+  sub?: Record<string, number>;
+  [key: string]: unknown;
+}
+
+export interface ShadbalaClassicalRow {
+  components: Record<string, ShadbalaClassicalComponent>;
+  total_virupas: number;
+  rupas: number;
+  required_rupas: number;
+  ratio: number;
+  sufficient: boolean;
+}
+
+export interface ShadbalaClassicalPayload {
+  system: string;
+  scale: string;
+  available: boolean;
+  rows: Record<string, ShadbalaClassicalRow>;
+  ranking: { planet: string; ratio: number; rupas: number; sufficient: boolean }[];
+  required_minima_rupas?: Record<string, number>;
+  day_context?: Record<string, unknown>;
+  notes?: string[];
+}
+
 export interface ShadbalaPayload {
   system: string;
   scale: string;
+  classical?: ShadbalaClassicalPayload;
   planets: string[];
   excluded: Record<string, string>;
   components: string[];
@@ -297,6 +538,11 @@ export interface TransitContextPayload {
     birth_time: string;
     timezone: string;
   };
+  provenance?: CalculationProvenance;
+  planet_annotations?: {
+    natal: Record<string, PlanetConditionAnnotation[]>;
+    transit: Record<string, PlanetConditionAnnotation[]>;
+  };
   natal: {
     rashi: VargaChart;
     navamsha: VargaChart;
@@ -351,14 +597,44 @@ export interface TransitAspect {
   natal_sign: string;
 }
 
+export interface AvContext {
+  bindus: number;
+  bav_support: string;
+  sav: number;
+  sav_support: string;
+}
+
 export interface TransitRule {
   name: string;
   planet: string;
   active: boolean;
   severity: string;
+  effective_severity?: string;
+  av_context?: AvContext;
   trigger: string;
   note: string;
+  explanation: string;
   verified: boolean;
+}
+
+export interface AshtakavargaTransitPlanet {
+  planet: string;
+  transit_sign: string;
+  transit_sign_index: number;
+  bindus: number;
+  bav_support: string;
+  sav: number;
+  sav_support: string;
+  kakshya?: {
+    kakshya_index: number;
+    kakshya_lord: string;
+    bindu_given: boolean;
+  } | null;
+}
+
+export interface AshtakavargaTransitPayload {
+  planets: Record<string, AshtakavargaTransitPlanet>;
+  note?: string;
 }
 
 export interface TransitTimelineEvent {
@@ -370,6 +646,61 @@ export interface TransitTimelineEvent {
   tone: 'neutral' | 'supportive' | 'challenging' | 'hard';
   strength: number;
   aspect?: TransitAspect;
+  rule?: string;
+  transition?: string;
+}
+
+export interface GocharaActiveWindow {
+  rule: string;
+  rule_id?: string;
+  planet: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  tone: 'neutral' | 'supportive' | 'challenging' | 'hard';
+  trigger: string;
+  summary: string;
+}
+
+export interface GocharaRuleTimeline {
+  active_windows: GocharaActiveWindow[];
+  previous_365_days: TransitTimelineEvent[];
+  next_365_days: TransitTimelineEvent[];
+  scan_days: number;
+}
+
+export interface GocharaCoreReadingBlock {
+  title: string;
+  tone: 'neutral' | 'supportive' | 'challenging' | 'hard' | 'mixed';
+  rationale: string;
+  reading: string;
+  timing_summary: string;
+}
+
+export interface GocharamPeriod extends GocharaActiveWindow {
+  status: 'past' | 'current' | 'future' | string;
+  strength: number;
+  rationale: string;
+  reading: string;
+  validation_prompt: string;
+}
+
+export interface GocharamProfilePayload {
+  system: string;
+  as_of: string;
+  ayanamsha: string;
+  node_type: string;
+  natal: {
+    lagna_sign: string;
+    moon_sign: string;
+  };
+  gochara: TransitAnalysisPayload['gochara'];
+  periods: GocharamPeriod[];
+  coverage: {
+    past_days: number;
+    future_days: number;
+    strategy: string;
+  };
+  notes: string[];
 }
 
 export interface TransitAnalysisPayload {
@@ -385,12 +716,29 @@ export interface TransitAnalysisPayload {
     planets: Record<string, TransitPlanetDetail>;
     rules: TransitRule[];
     active_rules: TransitRule[];
+    core_reading: {
+      title: string;
+      tone: 'neutral' | 'supportive' | 'challenging' | 'mixed';
+      rationale: string;
+      reading: string;
+      timing_summary: string;
+      next: GocharaCoreReadingBlock;
+      previous: GocharaCoreReadingBlock;
+      sentences?: string[];
+      active_rule_count: number;
+      supportive_rule_count: number;
+      challenging_rule_count: number;
+    };
+    timeline: GocharaRuleTimeline;
     sade_sati: {
       active: boolean;
       phase?: string | null;
       saturn_house_from_moon: number;
     };
   };
+  gocharam_periods?: GocharamPeriod[];
+  gocharam_coverage?: GocharamProfilePayload['coverage'];
+  ashtakavarga_transit?: AshtakavargaTransitPayload;
   aspects: TransitAspect[];
   active_aspects: TransitAspect[];
   strongest_aspect?: TransitAspect | null;
@@ -444,6 +792,7 @@ export interface CalendarReadingMarker {
 export interface CalendarIntelligencePayload {
   system: string;
   profile: { name: string; janma_nakshatra: string };
+  provenance?: CalculationProvenance;
   start_date: string;
   end_date: string;
   timezone: string;

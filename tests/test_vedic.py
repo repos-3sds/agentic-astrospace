@@ -29,6 +29,7 @@ from astrospace.core.vedic.compatibility import gun_milan
 from astrospace.core.vedic.dashas import vimshottari_dasha
 from astrospace.core.vedic.doshas import manglik_dosha
 from astrospace.core.vedic.transits import gochara_rules, transit_analysis, transit_aspects
+from astrospace.core.vedic.gocharam import gocharam_profile
 from astrospace.core.vedic.yogas import yoga_summary
 from astrospace.core.vedic.nakshatra import nakshatra_of
 from astrospace.core.vedic.panchanga import tithi_of, yoga_of, karana_of, vara_of
@@ -317,6 +318,12 @@ class TestTransitContext:
         result = gochara_rules(positions, ARIES, ARIES)
         assert result["sade_sati"]["active"]
         assert any(rule["name"] == "Sade Sati" for rule in result["active_rules"])
+        assert result["core_reading"]["active_rule_count"] >= 1
+        assert len(result["core_reading"]["sentences"]) == 4
+        assert result["core_reading"]["rationale"]
+        assert result["core_reading"]["reading"]
+        assert result["core_reading"]["timing_summary"]
+        assert all(rule["explanation"].count(".") >= 3 for rule in result["rules"])
 
     def test_transit_analysis_contains_timeline_and_active_rules(self):
         chart = VedicChart("Transit", 1990, 1, 1, 12, 0, **DELHI)
@@ -330,7 +337,32 @@ class TestTransitContext:
         assert result["system"] == "Vedic Gochara / Sidereal Transits"
         assert "planets" in result["gochara"]
         assert "Saturn" in result["gochara"]["planets"]
+        assert "timeline" in result["gochara"]
+        assert result["gochara"]["core_reading"]["rationale"]
+        assert result["gochara"]["core_reading"]["reading"]
+        assert result["gochara"]["core_reading"]["next"]["timing_summary"]
+        assert result["gochara"]["core_reading"]["previous"]["timing_summary"]
+        assert "active_windows" in result["gochara"]["timeline"]
+        assert "previous_365_days" in result["gochara"]["timeline"]
+        assert "next_365_days" in result["gochara"]["timeline"]
         assert "next_7_days" in result["timeline"]
+
+    def test_gocharam_profile_generates_profile_timeline_readings(self):
+        chart = VedicChart("Gocharam", 1990, 1, 1, 12, 0, **DELHI)
+        result = gocharam_profile(
+            chart.positions,
+            chart.lagna_lon,
+            datetime(2026, 7, 14, 12, 0, tzinfo=timezone.utc),
+            chart.ayanamsha,
+            chart.node_type,
+            past_days=90,
+            future_days=90,
+        )
+        assert result["system"] == "South Indian Gocharam"
+        assert result["coverage"]["strategy"].startswith("pre-generated")
+        assert result["gochara"]["core_reading"]["next"]["reading"]
+        assert result["gochara"]["core_reading"]["previous"]["reading"]
+        assert "periods" in result
 
     def test_calendar_intelligence_merges_core_signal_families(self):
         chart = VedicChart("Calendar", 1990, 1, 1, 12, 0, **DELHI)
@@ -351,6 +383,22 @@ class TestTransitContext:
 
 
 class TestCompatibility:
+    class StubChart:
+        def __init__(self, name: str, av: dict, moon_nakshatra: str = "Ashwini", moon_sign: str = "Aries"):
+            self.name = name
+            self._av = av
+            self._moon_nakshatra = moon_nakshatra
+            self._moon_sign = moon_sign
+
+        def avkahada(self):
+            return self._av
+
+        def planet_details(self):
+            return {"Moon": {"nakshatra": self._moon_nakshatra, "sign": self._moon_sign}}
+
+    def _row(self, result: dict, label: str) -> dict:
+        return next(row for row in result["rows"] if row["label"] == label)
+
     def test_gun_milan_returns_eight_kootas_and_bounded_total(self):
         a = VedicChart("A", 1990, 1, 1, 12, 0, **DELHI)
         b = VedicChart("B", 1992, 6, 15, 8, 30, **DELHI)
@@ -369,6 +417,57 @@ class TestCompatibility:
         assert result["profiles"]["person2"]["name"] == "B"
         assert all("verified" in row for row in result["rows"])
 
+    def test_tara_scores_janma_and_parama_mitra_as_favourable(self):
+        base = {
+            "varna": "Brahmin", "vashya": "Manava", "yoni": "Horse (M)",
+            "rashi_lord": "Mars", "gana": "Deva", "nadi": "Aadi",
+        }
+        janma = gun_milan(
+            self.StubChart("A", base, "Ashwini"),
+            self.StubChart("B", base, "Ashwini"),
+        )
+        parama = gun_milan(
+            self.StubChart("A", base, "Ashwini"),
+            self.StubChart("B", base, "Ashlesha"),
+        )
+        assert self._row(janma, "Tara")["points"] == 3
+        assert self._row(parama, "Tara")["points"] == 3
+
+    def test_yoni_enemy_pair_scores_zero(self):
+        a = self.StubChart("A", {
+            "varna": "Brahmin", "vashya": "Manava", "yoni": "Serpent (M)",
+            "rashi_lord": "Mars", "gana": "Deva", "nadi": "Aadi",
+        })
+        b = self.StubChart("B", {
+            "varna": "Brahmin", "vashya": "Manava", "yoni": "Mongoose (M)",
+            "rashi_lord": "Mars", "gana": "Deva", "nadi": "Madhya",
+        })
+        assert self._row(gun_milan(a, b), "Yoni")["points"] == 0
+
+    def test_gana_manushya_rakshasa_scores_zero(self):
+        a = self.StubChart("A", {
+            "varna": "Brahmin", "vashya": "Manava", "yoni": "Horse (M)",
+            "rashi_lord": "Mars", "gana": "Manushya", "nadi": "Aadi",
+        })
+        b = self.StubChart("B", {
+            "varna": "Brahmin", "vashya": "Manava", "yoni": "Horse (F)",
+            "rashi_lord": "Mars", "gana": "Rakshasa", "nadi": "Madhya",
+        })
+        assert self._row(gun_milan(a, b), "Gana")["points"] == 0
+
+    def test_varna_is_binary_and_graha_maitri_uses_lookup(self):
+        a = self.StubChart("A", {
+            "varna": "Vaishya", "vashya": "Manava", "yoni": "Horse (M)",
+            "rashi_lord": "Sun", "gana": "Deva", "nadi": "Aadi",
+        })
+        b = self.StubChart("B", {
+            "varna": "Brahmin", "vashya": "Manava", "yoni": "Horse (F)",
+            "rashi_lord": "Venus", "gana": "Deva", "nadi": "Madhya",
+        })
+        result = gun_milan(a, b)
+        assert self._row(result, "Varna")["points"] == 0
+        assert self._row(result, "Graha Maitri")["points"] == 0
+
 
 class TestDoshas:
     def test_manglik_dosha_checks_lagna_moon_and_venus(self):
@@ -382,6 +481,9 @@ class TestDoshas:
         assert dosha["severity"] == "strong"
         assert {row["reference"] for row in dosha["checks"]} == {"Lagna", "Moon", "Venus"}
         assert all(row["active"] for row in dosha["checks"])
+        assert dosha["rule_id"] == "manglik_dosha"
+        assert dosha["source_status"] == "verified_common"
+        assert dosha["source_refs"]
 
     def test_full_payload_contains_doshas(self):
         chart = VedicChart("Dosha", 1990, 1, 1, 12, 0, **DELHI)
@@ -409,12 +511,52 @@ class TestYogas:
         assert "Budhaditya Yoga" in active_names
         assert result["active_count"] >= 2
         assert result["conventions"]["association"]
+        assert result["conventions"]["rules_kb"] == "astrospace/knowledge/vedic_rules"
+        assert all(row["rule_id"] for row in result["all"])
+        assert all(row["source_status"] in {"verified_common", "convention_dependent", "needs_review"} for row in result["all"])
+        assert all(isinstance(row["source_refs"], list) for row in result["all"])
+
+    def test_pancha_mahapurusha_yogas_are_detected_from_kendras(self):
+        positions = {
+            "Sun": {"lon": 20.0},
+            "Moon": {"lon": 50.0},
+            "Mars": {"lon": 5.0},       # Aries own sign, 1st from Aries lagna
+            "Mercury": {"lon": 75.0},
+            "Jupiter": {"lon": 95.0},
+            "Venus": {"lon": 145.0},
+            "Saturn": {"lon": 185.0},   # Libra exaltation, 7th from Aries lagna
+            "Rahu": {"lon": 250.0},
+            "Ketu": {"lon": 70.0},
+        }
+        result = yoga_summary(positions, 0.0)
+        active_names = {row["name"] for row in result["active"]}
+        assert "Ruchaka Yoga" in active_names
+        assert "Sasa Yoga" in active_names
+        assert any(row["rule_id"] == "ruchaka_yoga" for row in result["active"])
+
+    def test_raja_yoga_detects_parivartana_exchange(self):
+        positions = {
+            "Sun": {"lon": 15.0},
+            "Moon": {"lon": 45.0},
+            "Mars": {"lon": 75.0},
+            "Mercury": {"lon": 105.0},
+            "Jupiter": {"lon": 275.0},  # Capricorn, ruled by Saturn
+            "Venus": {"lon": 145.0},
+            "Saturn": {"lon": 245.0},   # Sagittarius, ruled by Jupiter
+            "Rahu": {"lon": 20.0},
+            "Ketu": {"lon": 200.0},
+        }
+        result = yoga_summary(positions, 0.0)
+        raja = [row for row in result["active"] if row["rule_id"] == "raja_yoga"]
+        assert any(set(row["planets"]) == {"Jupiter", "Saturn"} for row in raja)
+        assert any("parivartana exchange" in " ".join(row["triggers"]) for row in raja)
 
     def test_full_payload_contains_yogas(self):
         chart = VedicChart("Yoga", 1990, 1, 1, 12, 0, **DELHI)
         payload = chart.to_dict()
         assert "yogas" in payload
         assert "active_count" in payload["yogas"]
+        assert payload["yogas"]["conventions"]["rules_kb"] == "astrospace/knowledge/vedic_rules"
 
 
 # ── Panchanga ────────────────────────────────────────────────────────────────

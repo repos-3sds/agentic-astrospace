@@ -1,0 +1,26 @@
+{
+  "sources": {
+    "bphs": {
+      "title": "Brihat Parashara Hora Shastra",
+      "tradition": "Parashari",
+      "url": "https://archive.org/details/brihat-parashar-hora-shastra",
+      "notes": "Primary Parashari reference. Chapter/verse mapping varies by edition and translation."
+    },
+    "phaladeepika": {
+      "title": "Phaladeepika",
+      "author": "Mantreswara",
+      "url": "https://archive.org/details/in.gov.ignca.6945",
+      "notes": "Classical yoga and result reference. Use edition-specific chapter/verse before marking rules externally verified."
+    },
+    "saravali": {
+      "title": "Saravali",
+      "author": "Kalyana Varma",
+      "url": "https://archive.org/details/saravaliofkalyanavarmasanthanamr.astrology_202003_28_Z",
+      "notes": "Classical cross-check for yoga definitions and phala language."
+    },
+    "internal": {
+      "title": "AstroSpace deterministic implementation",
+      "notes": "Used for implementation status and test coverage; not a textual authority."
+    }
+  }
+}

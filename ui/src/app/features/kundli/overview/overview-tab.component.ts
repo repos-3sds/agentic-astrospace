@@ -8,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { planetGlyph } from '../../../core/glyphs';
 import { KundliStore } from '../../../core/kundli.store';
 import {
+  MasaPayload,
   TransitAnalysisPayload,
   TransitAspect,
   TransitRule,
@@ -58,6 +59,7 @@ export class OverviewTabComponent {
   protected readonly kundli = this.store.active;
   protected readonly transits = signal<TransitAnalysisPayload | null>(null);
   protected readonly transitError = signal<string | null>(null);
+  protected readonly masa = signal<MasaPayload | null>(null);
   protected readonly transitLoading = computed(
     () => !this.transits() && !this.transitError() && !!this.store.activeId(),
   );
@@ -111,16 +113,40 @@ export class OverviewTabComponent {
 
   protected readonly strongestTransit = computed(() => this.transits()?.strongest_aspect ?? null);
 
+  protected readonly masaRows = computed<DefRow[]>(() => {
+    const m = this.masa();
+    if (!m) return [];
+    const rows: DefRow[] = [
+      { label: 'Masa (amanta)', value: m.name },
+      { label: 'Paksha', value: m.paksha },
+    ];
+    if (m.samvatsara) {
+      rows.push({
+        label: 'Samvatsara',
+        value: `${m.samvatsara.name} · Shaka ${m.samvatsara.shaka_year}`,
+        unverified: m.samvatsara.source_status === 'convention_dependent',
+      });
+    }
+    if (m.ritu) rows.push({ label: 'Ritu', value: m.ritu });
+    if (m.ayana) rows.push({ label: 'Ayana', value: m.ayana });
+    return rows;
+  });
+
   constructor() {
     effect(() => {
       const id = this.store.activeId();
       this.transits.set(null);
       this.transitError.set(null);
+      this.masa.set(null);
       if (!id) return;
       this.vedic
         .transits(id)
         .then((payload) => this.transits.set(payload))
         .catch((e) => this.transitError.set((e as Error).message));
+      this.vedic
+        .masa(id)
+        .then((payload) => this.masa.set(payload))
+        .catch(() => this.masa.set(null));
     });
   }
 
@@ -158,7 +184,7 @@ export class OverviewTabComponent {
 
   protected toneClass(tone: string): string {
     if (tone === 'supportive') return 'supportive';
-    if (tone === 'challenging' || tone === 'hard' || tone === 'high' || tone === 'medium') {
+    if (tone === 'challenging' || tone === 'hard' || tone === 'high' || tone === 'medium' || tone === 'mixed') {
       return 'challenging';
     }
     return 'neutral';

@@ -1,0 +1,191 @@
+@if (loading()) {
+  <div class="as-panel">
+    <p-skeleton height="140px" borderRadius="18px" />
+    <p-skeleton height="420px" borderRadius="18px" />
+  </div>
+} @else if (error()) {
+  <app-section-card icon="alert-triangle" title="Jaimini unavailable">
+    <p class="error-copy">{{ error() }}</p>
+  </app-section-card>
+} @else if (data(); as j) {
+  <div class="as-panel">
+    <section class="as-tab-hero">
+      <div>
+        <span class="as-hero-eyebrow">Jaimini · Chara karakas &amp; Arudhas</span>
+        <h2>Soul-level significators for {{ kundli()?.name || 'this chart' }}.</h2>
+        <p>
+          Chara karakas are ranked by degree within sign (Rahu counted from the end of
+          its sign). Arudha padas project each house through its lord, with the classical
+          same-sign / seventh-sign exceptions applied.
+        </p>
+      </div>
+      <div class="as-hero-stats">
+        <article>
+          <span>Atmakaraka</span>
+          <strong>{{ charaKarakas()[0]?.planet || '—' }}</strong>
+          <small>{{ charaKarakas()[0]?.degree_in_sign | number: '1.2-2' }}° in sign</small>
+        </article>
+        <article>
+          <span>Arudha Lagna</span>
+          <strong>{{ j.arudha_lagna.sign_name || '—' }}</strong>
+          <small>via {{ j.arudha_lagna.lord }} in {{ j.arudha_lagna.lord_sign_name }}</small>
+        </article>
+      </div>
+    </section>
+
+    <div class="arudha-highlights">
+      <article class="highlight-card">
+        <span>Arudha Lagna (AL)</span>
+        <strong>{{ j.arudha_lagna.sign_name }}</strong>
+        <small>
+          {{ j.arudha_lagna.house_sign_name }} lagna → lord {{ j.arudha_lagna.lord }} in
+          {{ j.arudha_lagna.lord_sign_name }} · count {{ j.arudha_lagna.count }}
+        </small>
+        @if (j.arudha_lagna.exception_applied) {
+          <em>exception applied</em>
+        }
+      </article>
+      <article class="highlight-card">
+        <span>Upapada (UL · A12)</span>
+        <strong>{{ j.upapada.sign_name }}</strong>
+        <small>
+          12th house {{ j.upapada.house_sign_name }} → lord {{ j.upapada.lord }} in
+          {{ j.upapada.lord_sign_name }} · count {{ j.upapada.count }}
+        </small>
+        @if (j.upapada.exception_applied) {
+          <em>exception applied</em>
+        }
+      </article>
+    </div>
+
+    <app-section-card icon="users" title="Chara karakas" subtitle="movable significators · AK to DK">
+      <div class="karaka-table-wrap">
+        <table class="karaka-table">
+          <thead>
+            <tr>
+              <th>Karaka</th>
+              <th>Name</th>
+              <th>Planet</th>
+              <th class="as-num">Degree in sign</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (k of charaKarakas(); track k.code) {
+              <tr>
+                <td><span class="karaka-code">{{ k.code }}</span></td>
+                <td>{{ k.karaka }}</td>
+                <td><strong>{{ k.planet }}</strong></td>
+                <td class="as-num">
+                  {{ k.effective_degree | number: '1.4-4' }}°
+                  @if (k.effective_degree !== k.degree_in_sign) {
+                    <small class="as-muted">(raw {{ k.degree_in_sign | number: '1.2-2' }}°)</small>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </app-section-card>
+
+    <div class="as-grid-2">
+      <app-section-card icon="grid-3x3" title="Arudha padas" subtitle="A1 – A12 projections">
+        <div class="pada-grid">
+          @for (cell of arudhaGrid(); track cell.code) {
+            <article
+              class="pada-cell"
+              [class.al]="cell.code === 'A1'"
+              [class.ul]="cell.code === 'A12'"
+            >
+              <span>{{ cell.code }}</span>
+              <strong>{{ cell.pada.sign_name }}</strong>
+              <small>{{ cell.pada.lord }}</small>
+            </article>
+          } @empty {
+            <p class="as-muted empty">Arudha padas not available for this chart.</p>
+          }
+        </div>
+      </app-section-card>
+
+      <app-section-card icon="sunrise" title="Special lagnas" subtitle="sunrise-anchored reference points">
+        @if (specialLagnas(); as s) {
+          @if (s.error) {
+            <p class="as-muted empty">{{ s.error }}</p>
+          } @else {
+            <div class="lagna-list">
+              @for (row of specialLagnaRows(); track row.label) {
+                <div class="lagna-row">
+                  <span>{{ row.label }}</span>
+                  <strong>{{ row.point?.sign_name }}</strong>
+                  <small class="as-num">{{ row.point?.dms }}</small>
+                </div>
+              }
+            </div>
+            @if (s.notes?.length) {
+              <p class="as-muted note">{{ s.notes?.[0] }}</p>
+            }
+          }
+        } @else {
+          <p class="as-muted empty">Special lagnas not available for this chart.</p>
+        }
+      </app-section-card>
+    </div>
+
+    @if (yogini(); as y) {
+      <app-section-card
+        icon="calendar-clock"
+        title="Yogini dasha"
+        subtitle="{{ y.cycle_years }} year cycle · from {{ y.birth_nakshatra.name }}"
+      >
+        <div class="yogini-current">
+          <article>
+            <span>Current Yogini</span>
+            <strong>{{ activeYoginiMahadasha()?.yogini || '—' }}</strong>
+            <small>lord {{ activeYoginiMahadasha()?.lord || '—' }}</small>
+          </article>
+          <article>
+            <span>Antardasha</span>
+            <strong>{{ y.current.antardasha?.yogini || '—' }}</strong>
+            <small>lord {{ y.current.antardasha?.lord || '—' }}</small>
+          </article>
+          <article>
+            <span>Balance at birth</span>
+            <strong>{{ y.birth_nakshatra.balance_years | number: '1.2-2' }}y</strong>
+            <small>of {{ y.birth_nakshatra.starting_yogini }}</small>
+          </article>
+        </div>
+
+        <div class="period-list">
+          @for (p of y.mahadashas; track periodKey(p)) {
+            <div class="period-block">
+              <button
+                type="button"
+                class="period-row"
+                [class.active-row]="p.active"
+                [class.selected-row]="periodKey(p) === expandedMahadashaKey()"
+                (click)="toggleMahadasha(p)"
+              >
+                <strong>{{ p.yogini }} · {{ p.lord }}</strong>
+                <span>{{ p.start | date: 'MMM y' }} – {{ p.end | date: 'MMM y' }}</span>
+                <em>{{ p.years | number: '1.2-2' }}y</em>
+                @if (p.active) { <small>Current</small> }
+              </button>
+              @if (periodKey(p) === expandedMahadashaKey() && p.antardashas?.length) {
+                <div class="antardasha-list">
+                  @for (a of p.antardashas; track periodKey(a)) {
+                    <article class="period-row sub" [class.active-row]="a.active">
+                      <strong>{{ a.yogini }} · {{ a.lord }}</strong>
+                      <span>{{ a.start | date: 'MMM d, y' }} – {{ a.end | date: 'MMM d, y' }}</span>
+                      <em>{{ a.years | number: '1.2-2' }}y</em>
+                      @if (a.active) { <small>Current</small> }
+                    </article>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </app-section-card>
+    }
+  </div>
+}

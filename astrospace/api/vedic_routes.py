@@ -112,6 +112,7 @@ def _attach_readings_to_calendar(payload: dict, db: Session, kundli_id: str, use
     readings = crud.get_readings_for_calendar(
         db,
         kundli_id,
+        user_id,
         payload["start_date"],
         payload["end_date"],
     )
@@ -307,6 +308,50 @@ def yogas_doshas(
     return {"yogas": chart.yogas(), "doshas": chart.doshas()}
 
 
+@router.get("/{kundli_id}/jaimini")
+def jaimini(
+    kundli_id: str,
+    user: CurrentUser,
+    ayanamsha: str = "lahiri",
+    node_type: str = "mean",
+    db: Session = Depends(get_db),
+):
+    return _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).jaimini()
+
+
+@router.get("/{kundli_id}/special-lagnas")
+def special_lagnas(
+    kundli_id: str,
+    user: CurrentUser,
+    ayanamsha: str = "lahiri",
+    node_type: str = "mean",
+    db: Session = Depends(get_db),
+):
+    return _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).special_lagnas()
+
+
+@router.get("/{kundli_id}/masa")
+def masa(
+    kundli_id: str,
+    user: CurrentUser,
+    ayanamsha: str = "lahiri",
+    node_type: str = "mean",
+    db: Session = Depends(get_db),
+):
+    return _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).masa()
+
+
+@router.get("/{kundli_id}/yogini-dashas")
+def yogini_dashas(
+    kundli_id: str,
+    user: CurrentUser,
+    ayanamsha: str = "lahiri",
+    node_type: str = "mean",
+    db: Session = Depends(get_db),
+):
+    return _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).yogini_dashas()
+
+
 @router.get("/{kundli_id}/transit-context")
 def transit_context(
     kundli_id: str,
@@ -327,6 +372,17 @@ def transits(
     db: Session = Depends(get_db),
 ):
     return _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).transits()
+
+
+@router.get("/{kundli_id}/gocharam")
+def gocharam(
+    kundli_id: str,
+    user: CurrentUser,
+    ayanamsha: str = "lahiri",
+    node_type: str = "mean",
+    db: Session = Depends(get_db),
+):
+    return _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).gocharam()
 
 
 @router.get("/{kundli_id}/calendar-intelligence")

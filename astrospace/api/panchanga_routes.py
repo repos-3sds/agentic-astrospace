@@ -41,7 +41,7 @@ def _validate_timezone(tz_str: Optional[str], fallback: str) -> str:
 
 
 @router.get("/cities")
-def panchanga_cities(q: str = "", limit: int = Query(80, ge=1, le=200)):
+def panchanga_cities(q: str = "", limit: int = Query(200, ge=1, le=300)):
     return search_cities(q, limit)
 
 

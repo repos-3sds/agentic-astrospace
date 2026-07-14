@@ -33,6 +33,8 @@ export class YogasDoshasTabComponent {
       .sort((a, b) => b[1] - a[1])
       .map(([label, count]) => ({ label, count })),
   );
+  protected readonly gandanta = computed(() => this.data()?.doshas.gandanta ?? null);
+  protected readonly grahan = computed(() => this.data()?.doshas.grahan ?? null);
 
   constructor() {
     effect(() => {
@@ -48,7 +50,25 @@ export class YogasDoshasTabComponent {
   }
 
   protected tagSeverity(yoga: YogaResult): 'success' | 'warn' | 'secondary' {
-    if (!yoga.verified) return 'warn';
+    if (yoga.source_status === 'needs_review') return 'secondary';
+    if (yoga.source_status === 'convention_dependent' || !yoga.verified) return 'warn';
     return yoga.category.toLowerCase().includes('caution') ? 'warn' : 'success';
+  }
+
+  protected statusLabel(row: YogaResult | { source_status?: string; implementation?: string; verified?: boolean }): string {
+    if (row.source_status === 'verified_common') return 'Verified';
+    if (row.source_status === 'convention_dependent') return 'Convention';
+    if (row.source_status === 'needs_review') return 'Review';
+    return row.verified ? 'Verified' : 'Review';
+  }
+
+  protected statusDetail(row: YogaResult | { source_status?: string; implementation?: string }): string {
+    return [row.source_status?.replace('_', ' '), row.implementation].filter(Boolean).join(' · ');
+  }
+
+  protected strengthClass(strength?: string): string {
+    if (strength === 'strong') return 'strong';
+    if (strength === 'weak') return 'weak';
+    return 'moderate';
   }
 }

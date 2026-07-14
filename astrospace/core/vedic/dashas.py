@@ -92,6 +92,26 @@ def vimshottari_dasha(moon_lon: float, birth_dt: datetime,
         active_ad = next((p for p in active_md["antardashas"] if p["active"]), None)
         if active_ad:
             pratyantardashas = active_ad["pratyantardashas"]
+    active_pd = next((p for p in pratyantardashas if p["active"]), None)
+
+    # Sookshma (4th) and prana (5th) levels only along the active chain —
+    # expanding the full tree to five levels would explode the payload.
+    sookshmadashas = []
+    active_sd = None
+    pranadashas = []
+    active_prd = None
+    if active_pd:
+        sookshmadashas = _sub_periods(
+            active_pd["lord"], datetime.fromisoformat(active_pd["start"]),
+            active_pd["years"], as_of,
+        )
+        active_sd = next((p for p in sookshmadashas if p["active"]), None)
+        if active_sd:
+            pranadashas = _sub_periods(
+                active_sd["lord"], datetime.fromisoformat(active_sd["start"]),
+                active_sd["years"], as_of,
+            )
+            active_prd = next((p for p in pranadashas if p["active"]), None)
 
     return {
         "system": "Vimshottari",
@@ -109,6 +129,10 @@ def vimshottari_dasha(moon_lon: float, birth_dt: datetime,
             "mahadasha": active_md,
             "antardasha": active_ad,
             "pratyantardashas": pratyantardashas,
-            "pratyantardasha": next((p for p in pratyantardashas if p["active"]), None),
+            "pratyantardasha": active_pd,
+            "sookshmadashas": sookshmadashas,
+            "sookshmadasha": active_sd,
+            "pranadashas": pranadashas,
+            "pranadasha": active_prd,
         },
     }

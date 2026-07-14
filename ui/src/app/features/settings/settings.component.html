@@ -30,6 +30,15 @@
     </app-section-card>
 
     <app-section-card icon="settings" title="Preferences">
+      @if (prefs.cloudReady()) {
+        <div class="sync-note">
+          <lucide-icon name="cloud" [size]="14" />
+          <span>{{ prefs.cloudSaving() ? 'Saving settings…' : 'Settings saved to your account' }}</span>
+        </div>
+      }
+      @if (prefs.cloudError()) {
+        <div class="migration-error">{{ prefs.cloudError() }}</div>
+      }
       <div class="preference-stack">
         <div class="preference-row">
           <div>
@@ -121,6 +130,38 @@
           </p-button>
         </div>
 
+        <div class="preference-row">
+          <div>
+            <strong>Language</strong>
+            <span class="as-muted">Interpretation language for future report localization.</span>
+          </div>
+          <p-select
+            [options]="languageOptions"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="prefs.language()"
+            (ngModelChange)="setLanguage($any($event))"
+            appendTo="body"
+            styleClass="settings-place-select"
+          />
+        </div>
+
+        <div class="preference-row">
+          <div>
+            <strong>Regional format</strong>
+            <span class="as-muted">Used for date, place and reporting defaults.</span>
+          </div>
+          <p-select
+            [options]="regionalOptions"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="prefs.regionalFormat()"
+            (ngModelChange)="setRegionalFormat($any($event))"
+            appendTo="body"
+            styleClass="settings-place-select"
+          />
+        </div>
+
         <div class="preference-actions">
           <p-button severity="secondary" [text]="true" (onClick)="resetPreferences()">
             Reset preferences
@@ -132,7 +173,7 @@
     <app-section-card icon="info" title="Calculation defaults">
       <app-def-list [rows]="preferenceRows()" />
       <div class="card-note">
-        These defaults are saved on this device and sent with Vedic calculations.
+        These defaults are saved to your account when signed in and sent with Vedic calculations.
       </div>
     </app-section-card>
 

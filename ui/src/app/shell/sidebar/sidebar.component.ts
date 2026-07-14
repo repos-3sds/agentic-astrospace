@@ -21,6 +21,8 @@ const KUNDLI_TABS: NavTab[] = [
   { route: 'vedic', label: 'Vedic', icon: 'sparkles' },
   { route: 'varga-charts', label: 'Varga Charts', icon: 'boxes' },
   { route: 'dashas', label: 'Dashas', icon: 'calendar-clock' },
+  { route: 'jaimini', label: 'Jaimini', icon: 'compass' },
+  { route: 'gocharam', label: 'Gocharam', icon: 'orbit' },
   { route: 'transits', label: 'Transits', icon: 'radar' },
   { route: 'calendar', label: 'Calendar', icon: 'calendar-days' },
   { route: 'ashtakavarga', label: 'Ashtakavarga', icon: 'grid-3x3' },

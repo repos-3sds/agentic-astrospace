@@ -92,7 +92,7 @@
         <div class="chart-layout" [class.chart-only]="view() === 'chart'" [class.table-only]="view() === 'placements'">
           @if (view() === 'both' || view() === 'chart') {
             <div class="chart-stage">
-              <app-kundli-chart [chart]="d" [chartStyle]="chartStyle()" />
+              <app-kundli-chart [chart]="d" [chartStyle]="chartStyle()" [annotations]="planetAnnotations()" />
             </div>
           }
 

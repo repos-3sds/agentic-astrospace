@@ -267,7 +267,7 @@ def generate_reading(
     target_start_date, target_end_date = _period_window(body.period, now_local)
 
     if not body.force_refresh:
-        latest = crud.get_latest_period_reading(db, kundli_id, body.period, label)
+        latest = crud.get_latest_period_reading(db, kundli_id, body.period, label, user.id)
         if latest:
             if body.period == "daily":
                 # a daily reading is stale as soon as the local date changes
@@ -297,7 +297,7 @@ def generate_reading(
         nation=k.birth_nation,
     )
 
-    previous = crud.get_latest_period_reading(db, kundli_id, body.period, label)
+    previous = crud.get_latest_period_reading(db, kundli_id, body.period, label, user.id)
     next_version = (previous.version or 1) + 1 if previous else 1
     deviation_score, deviation_summary = _deviation(previous.content if previous else None, content)
     r = crud.save_reading(
@@ -323,7 +323,7 @@ def generate_reading(
         target_start_date=target_start_date,
         target_end_date=target_end_date,
     )
-    crud.replace_prediction_claims(db, r.id, claims)
+    crud.replace_prediction_claims(db, r.id, claims, user.id)
     return {"cached": False, **_reading_to_dict(r)}
 
 
@@ -342,6 +342,7 @@ def list_readings(
     readings = crud.get_readings(
         db,
         kundli_id,
+        user.id,
         period,
         period_label=period_label,
         generated_local_date=generated_date,
@@ -360,7 +361,7 @@ def update_feedback(
     k = crud.get_kundli(db, kundli_id, user.id)
     if not k:
         raise HTTPException(status_code=404, detail="Kundli not found")
-    r = crud.update_reading_feedback(db, kundli_id, reading_id, body.rating, body.feedback)
+    r = crud.update_reading_feedback(db, kundli_id, reading_id, user.id, body.rating, body.feedback)
     if not r:
         raise HTTPException(status_code=404, detail="Reading not found")
     return _reading_to_dict(r)
@@ -424,7 +425,7 @@ def latest_reading(kundli_id: str, period: str, user: CurrentUser, db: Session =
     k = crud.get_kundli(db, kundli_id, user.id)
     if not k:
         raise HTTPException(status_code=404, detail="Kundli not found")
-    r = crud.get_latest_reading(db, kundli_id, period)
+    r = crud.get_latest_reading(db, kundli_id, period, user.id)
     if not r:
         raise HTTPException(status_code=404, detail="No reading found for this period")
     return _reading_to_dict(r)

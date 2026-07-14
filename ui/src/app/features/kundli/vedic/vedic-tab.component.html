@@ -73,6 +73,20 @@
         </div>
       </app-section-card>
 
+      <app-section-card icon="shield-check" title="Calculation conventions" subtitle="trust layer">
+        <div class="meta-grid">
+          <app-def-list [rows]="provenanceRows().slice(0, 4)" />
+          <app-def-list [rows]="provenanceRows().slice(4)" />
+        </div>
+        @if (v.provenance?.notes?.length) {
+          <div class="provenance-notes">
+            @for (note of v.provenance?.notes; track note) {
+              <span>{{ note }}</span>
+            }
+          </div>
+        }
+      </app-section-card>
+
       <div class="as-grid-2">
         <app-section-card icon="star" title="Avkahada chakra">
           <app-def-list [rows]="avkahada()" />
@@ -103,7 +117,79 @@
     }
 
     @if (section() === 'strength') {
+      @if (classical(); as c) {
+        <app-section-card icon="shield-check" title="Shadbala (classical)" subtitle="{{ c.scale }}">
+          <div class="strength-intro">
+            <div>
+              <strong>{{ c.system }}</strong>
+              <p class="as-muted">
+                BPHS six-fold strength in virupas. Rupas are compared against each graha's
+                classical required minimum; ratio ≥ 1 means the planet meets its threshold.
+              </p>
+            </div>
+          </div>
+
+          <div class="classical-table-wrap">
+            <table class="classical-table">
+              <thead>
+                <tr>
+                  <th>Graha</th>
+                  <th class="as-num">Sthana</th>
+                  <th class="as-num">Dig</th>
+                  <th class="as-num">Kala</th>
+                  <th class="as-num">Cheshta</th>
+                  <th class="as-num">Naisargika</th>
+                  <th class="as-num">Drik</th>
+                  <th class="as-num">Virupas</th>
+                  <th class="as-num">Rupas</th>
+                  <th class="as-num">Required</th>
+                  <th>Ratio</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of classicalRows(); track row.planet) {
+                  <tr>
+                    <td><strong>{{ row.planet }}</strong></td>
+                    <td class="as-num">{{ row.sthana | number: '1.0-0' }}</td>
+                    <td class="as-num">{{ row.dig | number: '1.0-0' }}</td>
+                    <td class="as-num">{{ row.kala | number: '1.0-0' }}</td>
+                    <td class="as-num">{{ row.cheshta | number: '1.0-0' }}</td>
+                    <td class="as-num">{{ row.naisargika | number: '1.0-0' }}</td>
+                    <td class="as-num">{{ row.drik | number: '1.0-0' }}</td>
+                    <td class="as-num"><strong>{{ row.totalVirupas | number: '1.0-0' }}</strong></td>
+                    <td class="as-num">{{ row.rupas | number: '1.2-2' }}</td>
+                    <td class="as-num">{{ row.requiredRupas | number: '1.1-1' }}</td>
+                    <td class="ratio-cell">
+                      <div class="ratio-bar" [class.short]="!row.sufficient">
+                        <span [style.width.%]="ratioWidth(row.ratio)"></span>
+                        <b>{{ row.ratio | number: '1.2-2' }}</b>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="sufficient-badge" [class.ok]="row.sufficient" [class.low]="!row.sufficient">
+                        {{ row.sufficient ? 'Sufficient' : 'Below minimum' }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (c.notes?.length) {
+            <p class="strength-note as-muted">{{ c.notes?.[0] }}</p>
+          }
+        </app-section-card>
+      }
+
       @if (v.shadbala; as s) {
+        @if (classical()) {
+          <button type="button" class="v1-toggle" (click)="showV1.set(!showV1())">
+            {{ showV1() ? 'Hide' : 'Show' }} Shadbala v1 (normalized 0-100)
+          </button>
+        }
+        @if (!classical() || showV1()) {
         <app-section-card icon="shield-check" title="Shadbala v1" subtitle="planetary strength · normalized 0-100">
           <div class="strength-intro">
             <div>
@@ -134,6 +220,7 @@
             {{ s.excluded['Rahu'] }} Kala, Cheshta, and Drik Bala are approximation-labelled until golden-chart validation.
           </p>
         </app-section-card>
+        }
       }
 
       @if (conditionRows().length) {

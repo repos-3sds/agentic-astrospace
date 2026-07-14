@@ -64,6 +64,14 @@ export class SettingsComponent {
     { label: 'Browser timezone', value: 'browser' },
     { label: 'Panchanga place', value: 'panchanga_place' },
   ];
+  protected readonly languageOptions = [
+    { label: 'English', value: 'en' },
+  ];
+  protected readonly regionalOptions = [
+    { label: 'India format', value: 'en-IN' },
+    { label: 'US format', value: 'en-US' },
+    { label: 'Singapore format', value: 'en-SG' },
+  ];
 
   protected readonly accountRows = computed<DefRow[]>(() => [
     { label: 'Account', value: this.auth.email() },
@@ -73,6 +81,7 @@ export class SettingsComponent {
     { label: 'Chart style', value: this.prefs.chartStyle() === 'south' ? 'South Indian' : 'North Indian' },
     { label: 'Ayanamsha', value: this.prefs.ayanamsha() },
     { label: 'Node type', value: this.prefs.nodeType() },
+    { label: 'Regional format', value: this.prefs.regionalFormat() },
   ]);
 
   protected readonly dataRows = computed<DefRow[]>(() => [
@@ -86,10 +95,17 @@ export class SettingsComponent {
     { label: 'Node type', value: this.prefs.nodeType() },
     { label: 'Timezone', value: this.prefs.effectiveTimezone() },
     { label: 'Panchanga place', value: this.prefs.panchangaPlace()?.label ?? 'Browser timezone place' },
+    { label: 'Language', value: this.prefs.language() },
+    { label: 'Regional format', value: this.prefs.regionalFormat() },
   ]);
 
   constructor() {
     this.refreshMigrationStatus();
+    void this.loadPreferences();
+  }
+
+  private async loadPreferences(): Promise<void> {
+    if (this.auth.enabled() && this.auth.session()) await this.prefs.syncCloud();
     this.panchanga
       .cities()
       .then((cities) => {
@@ -123,6 +139,14 @@ export class SettingsComponent {
   protected setPanchangaPlace(place: PanchangaCity | null): void {
     this.selectedPlace.set(place);
     this.prefs.setPanchangaPlace(place);
+  }
+
+  protected setLanguage(value: string): void {
+    this.prefs.language.set(value);
+  }
+
+  protected setRegionalFormat(value: string): void {
+    this.prefs.regionalFormat.set(value);
   }
 
   protected resetPreferences(): void {

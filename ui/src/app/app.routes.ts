@@ -59,10 +59,24 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'jaimini',
+        loadComponent: () =>
+          import('./features/kundli/jaimini/jaimini-tab.component').then(
+            (m) => m.JaiminiTabComponent,
+          ),
+      },
+      {
         path: 'transits',
         loadComponent: () =>
           import('./features/kundli/transits/transits-tab.component').then(
             (m) => m.TransitsTabComponent,
+          ),
+      },
+      {
+        path: 'gocharam',
+        loadComponent: () =>
+          import('./features/kundli/gocharam/gocharam-tab.component').then(
+            (m) => m.GocharamTabComponent,
           ),
       },
       {

@@ -215,6 +215,18 @@ class TestAPI:
         assert rows[0]["city"] == "Singapore"
         assert rows[0]["timezone"] == "Asia/Singapore"
 
+    def test_india_city_coverage_and_aliases(self):
+        from astrospace.core.cities import lookup_city, search_cities
+
+        assert lookup_city("Navi Mumbai", "IN") is not None
+        assert lookup_city("Puducherry", "IN") == lookup_city("Pondicherry", "IN")
+        assert lookup_city("Kalaburagi", "IN") == lookup_city("Gulbarga", "IN")
+
+        rows = search_cities("tiru", limit=20)
+        names = {row["city"] for row in rows}
+        assert {"Tirupati", "Tirunelveli", "Tiruppur"} <= names
+        assert all(row["timezone"] == "Asia/Kolkata" for row in rows if row["nation"] == "IN")
+
     def test_bad_timezone_400(self):
         from fastapi.testclient import TestClient
         from main import app

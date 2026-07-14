@@ -6,9 +6,14 @@ import {
   CalendarIntelligencePayload,
   CompatibilityPayload,
   DashaPayload,
+  GocharamProfilePayload,
+  JaiminiPayload,
+  MasaPayload,
+  SpecialLagnasPayload,
   TransitAnalysisPayload,
   TransitContextPayload,
   VedicAll,
+  YoginiDashaPayload,
   YogasDoshasPayload,
 } from './models';
 import { PreferencesService } from './preferences.service';
@@ -36,6 +41,22 @@ export class VedicService {
     return this.api.get<DashaPayload>(`/vedic/${kundliId}/dashas?${this.calcParams()}`);
   }
 
+  yoginiDashas(kundliId: string): Promise<YoginiDashaPayload> {
+    return this.api.get<YoginiDashaPayload>(`/vedic/${kundliId}/yogini-dashas?${this.calcParams()}`);
+  }
+
+  jaimini(kundliId: string): Promise<JaiminiPayload> {
+    return this.api.get<JaiminiPayload>(`/vedic/${kundliId}/jaimini?${this.calcParams()}`);
+  }
+
+  specialLagnas(kundliId: string): Promise<SpecialLagnasPayload> {
+    return this.api.get<SpecialLagnasPayload>(`/vedic/${kundliId}/special-lagnas?${this.calcParams()}`);
+  }
+
+  masa(kundliId: string): Promise<MasaPayload> {
+    return this.api.get<MasaPayload>(`/vedic/${kundliId}/masa?${this.calcParams()}`);
+  }
+
   ashtakavarga(kundliId: string): Promise<AshtakavargaPayload> {
     return this.api.get<AshtakavargaPayload>(`/vedic/${kundliId}/ashtakavarga?${this.calcParams()}`);
   }
@@ -46,6 +67,10 @@ export class VedicService {
 
   transits(kundliId: string): Promise<TransitAnalysisPayload> {
     return this.api.get<TransitAnalysisPayload>(`/vedic/${kundliId}/transits?${this.calcParams()}`);
+  }
+
+  gocharam(kundliId: string): Promise<GocharamProfilePayload> {
+    return this.api.get<GocharamProfilePayload>(`/vedic/${kundliId}/gocharam?${this.calcParams()}`);
   }
 
   calendarIntelligence(

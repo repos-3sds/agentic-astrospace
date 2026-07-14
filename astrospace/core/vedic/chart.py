@@ -9,7 +9,7 @@ from .positions import (
     birth_moment, sidereal_positions, sidereal_lagna, tropical_sun,
     ayanamsha_value, local_mean_time, local_sidereal_time, obliquity,
     sign_index, sign_name, sign_name_sanskrit, sign_lord, degree_in_sign,
-    to_dms, house_from_lagna,
+    to_dms, house_from_lagna, sunrise_jd,
 )
 from .nakshatra import nakshatra_of
 from .panchanga import panchanga_of
@@ -23,7 +23,12 @@ from .ashtakavarga import ashtakavarga
 from .doshas import dosha_summary
 from .yogas import yoga_summary
 from .transits import transit_analysis
+from .gocharam import gocharam_profile
 from .calendar import calendar_intelligence
+from .jaimini import chara_karakas, arudha_padas, arudha_lagna, upapada
+from .special_lagnas import special_lagnas as special_lagnas_of
+from .yogini import yogini_dasha
+from .masa import amanta_masa, samvatsara, ritu, ayana
 
 
 class VedicChart:
@@ -72,6 +77,37 @@ class VedicChart:
             "local_mean_time": lmt.strftime("%H:%M:%S"),
             "sidereal_time": f"{lst_h}:{lst_m:02d}:{lst_s:02d}",
             "obliquity": round(obliquity(m.jd_ut), 4),
+        }
+
+    def provenance(self, context: str = "natal") -> dict:
+        """Calculation conventions and trust status for downstream display."""
+        return {
+            "context": context,
+            "engine": "Swiss Ephemeris via pyswisseph",
+            "zodiac": "sidereal",
+            "ayanamsha": self.ayanamsha,
+            "node_type": self.node_type,
+            "house_system": "whole-sign houses from sidereal lagna",
+            "lagna_method": "Swiss Ephemeris sidereal ascendant",
+            "timezone": self.moment.tz_str,
+            "calculation_place": {
+                "city": self.city,
+                "latitude": self.moment.lat,
+                "longitude": self.moment.lng,
+            },
+            "confidence": {
+                "planetary_positions": "computed",
+                "panchanga": "computed",
+                "dashas": "computed from Moon nakshatra",
+                "vargas": "mixed: classical vargas verified; rare vargas flagged",
+                "yogas_doshas": "rule-based interpretation",
+                "strength": "v1 approximation where marked",
+            },
+            "notes": [
+                "Planetary longitudes are sidereal degrees.",
+                "Houses are counted whole-sign from the lagna sign.",
+                "Interpretive rules may vary by parampara; convention-dependent items are flagged.",
+            ],
         }
 
     def planet_details(self) -> dict:
@@ -130,6 +166,10 @@ class VedicChart:
             "varga": varga,
             **VARGA_INFO[varga],
             "verified_rule": varga not in UNVERIFIED_VARGAS,
+            "provenance": {
+                **self.provenance(f"varga:{varga}"),
+                "varga_rule_status": "verified" if varga not in UNVERIFIED_VARGAS else "needs source verification",
+            },
             "lagna": {
                 "sign": sign_name(lagna_sign),
                 "sign_sanskrit": sign_name_sanskrit(lagna_sign),
@@ -155,16 +195,84 @@ class VedicChart:
         return all_dignities(self.positions)
 
     def shadbala(self) -> dict:
-        return shadbala(self.positions, self.lagna_lon)
+        return shadbala(
+            self.positions,
+            self.lagna_lon,
+            moment=self.moment,
+            ayanamsha_val=ayanamsha_value(self.moment.jd_ut, self.ayanamsha),
+        )
 
     def planetary_conditions(self) -> dict:
         return planetary_conditions(self.positions)
+
+    def planet_annotations(self) -> dict:
+        dignities = self.dignities()
+        conditions = self.planetary_conditions()["rows"]
+        annotations = {}
+        for planet, position in self.positions.items():
+            rows = []
+            dignity = dignities.get(planet, {}).get("dignity")
+            if dignity == "Exalted":
+                rows.append({"code": "exalted", "symbol": "↑", "label": "Exalted", "tone": "good"})
+            elif dignity == "Debilitated":
+                rows.append({"code": "debilitated", "symbol": "↓", "label": "Debilitated", "tone": "bad"})
+            if position.get("retrograde"):
+                rows.append({"code": "retrograde", "symbol": "↺", "label": "Retrograde", "tone": "neutral"})
+            if conditions.get(planet, {}).get("combustion", {}).get("active"):
+                rows.append({"code": "combust", "symbol": "☼", "label": "Combust", "tone": "warn"})
+            annotations[planet] = rows
+        return annotations
 
     def dashas(self) -> dict:
         as_of = datetime.now(self.moment.dt_local.tzinfo)
         return vimshottari_dasha(
             self.positions["Moon"]["lon"], self.moment.dt_local, as_of,
         )
+
+    def yogini_dashas(self) -> dict:
+        as_of = datetime.now(self.moment.dt_local.tzinfo)
+        return yogini_dasha(
+            self.positions["Moon"]["lon"], self.moment.dt_local, as_of,
+        )
+
+    def jaimini(self) -> dict:
+        lagna_sign = sign_index(self.lagna_lon)
+        return {
+            "chara_karakas": chara_karakas(self.positions),
+            "arudha_lagna": arudha_lagna(lagna_sign, self.positions),
+            "upapada": upapada(lagna_sign, self.positions),
+            "arudha_padas": arudha_padas(lagna_sign, self.positions),
+        }
+
+    def _vedic_day_sunrise_jd(self) -> float | None:
+        """Sunrise (UT jd) of the Vedic day containing the birth: the last
+        sunrise at or before the birth instant."""
+        m = self.moment
+        rise = sunrise_jd(m.jd_ut - 1.5, m.lat, m.lng)
+        if rise is None or rise > m.jd_ut:
+            return None
+        while True:
+            nxt = sunrise_jd(rise + 0.01, m.lat, m.lng)
+            if nxt is None or nxt > m.jd_ut:
+                return rise
+            rise = nxt
+
+    def special_lagnas(self) -> dict:
+        rise = self._vedic_day_sunrise_jd()
+        if rise is None:
+            return {"error": "Sunrise undefined at this latitude/date (circumpolar)."}
+        sun_at_rise = sidereal_positions(rise, self.ayanamsha, self.node_type)["Sun"]["lon"]
+        return special_lagnas_of(self.moment.jd_ut, rise, sun_at_rise, self.lagna_lon)
+
+    def masa(self) -> dict:
+        jd = self.moment.jd_ut
+        m = amanta_masa(jd)
+        return {
+            **m,
+            "samvatsara": samvatsara(jd),
+            "ritu": ritu(m["name_index"]),
+            "ayana": ayana(jd),
+        }
 
     def ashtakavarga(self) -> dict:
         return ashtakavarga(self.positions, self.lagna_lon)
@@ -178,6 +286,16 @@ class VedicChart:
     def transits(self) -> dict:
         as_of = datetime.now(self.moment.dt_local.tzinfo)
         return transit_analysis(
+            self.positions,
+            self.lagna_lon,
+            as_of,
+            self.ayanamsha,
+            self.node_type,
+        )
+
+    def gocharam(self) -> dict:
+        as_of = datetime.now(self.moment.dt_local.tzinfo)
+        return gocharam_profile(
             self.positions,
             self.lagna_lon,
             as_of,
@@ -240,6 +358,11 @@ class VedicChart:
         saturn_house = gochara["Saturn"]["house_from_moon"]
         return {
             "as_of": transit.meta(),
+            "provenance": self.provenance("transit-context"),
+            "planet_annotations": {
+                "natal": self.planet_annotations(),
+                "transit": transit.planet_annotations(),
+            },
             "natal": {
                 "rashi": self.varga_chart("D1"),
                 "navamsha": self.varga_chart("D9"),
@@ -259,6 +382,7 @@ class VedicChart:
     def to_dict(self) -> dict:
         return {
             "meta": self.meta(),
+            "provenance": self.provenance("natal"),
             "lagna": self.lagna_details(),
             "planets": self.planet_details(),
             "panchanga": self.panchanga,
@@ -267,8 +391,12 @@ class VedicChart:
             "favourable": self.favourable(),
             "dignities": self.dignities(),
             "planetary_conditions": self.planetary_conditions(),
+            "planet_annotations": self.planet_annotations(),
             "shadbala": self.shadbala(),
             "vargas": self.all_varga_charts(),
             "doshas": self.doshas(),
             "yogas": self.yogas(),
+            "jaimini": self.jaimini(),
+            "special_lagnas": self.special_lagnas(),
+            "masa": self.masa(),
         }

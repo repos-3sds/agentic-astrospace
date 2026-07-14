@@ -32,6 +32,88 @@
       </div>
     </section>
 
+    <app-section-card icon="sparkles" title="Core Gocharam reading" subtitle="deterministic rule engine, no AI">
+      <article class="core-reading" [class]="toneClass(t.gochara.core_reading.tone)">
+        <header>
+          <div>
+            <span>Current judgement</span>
+            <h3>{{ t.gochara.core_reading.title }}</h3>
+          </div>
+          <strong>{{ t.gochara.core_reading.active_rule_count }}</strong>
+        </header>
+        <div class="core-copy">
+          <section>
+            <span>Why this judgement</span>
+            <p>{{ t.gochara.core_reading.rationale }}</p>
+          </section>
+          <section>
+            <span>Plain reading</span>
+            <p>{{ t.gochara.core_reading.reading }}</p>
+          </section>
+        </div>
+        <div class="core-counts">
+          <span>{{ t.gochara.core_reading.timing_summary }}</span>
+          <span>{{ t.gochara.core_reading.supportive_rule_count }} supportive</span>
+          <span>{{ t.gochara.core_reading.challenging_rule_count }} caution</span>
+        </div>
+      </article>
+    </app-section-card>
+
+    <app-section-card icon="history" title="Gocharam timing" subtitle="active windows, what changed before, and what is coming next">
+      <div class="timeline-toolbar gochara-toolbar">
+        <div>
+          <strong>Rule timeline scan</strong>
+          <span>Past and future {{ t.gochara.timeline.scan_days }} days · calculated from sign-based rule transitions</span>
+        </div>
+        <div class="segmented">
+          <button type="button" [class.active]="gocharaTimelineMode() === 'active'" (click)="gocharaTimelineMode.set('active')">
+            Active now
+          </button>
+          <button type="button" [class.active]="gocharaTimelineMode() === 'next'" (click)="gocharaTimelineMode.set('next')">
+            What next
+          </button>
+          <button type="button" [class.active]="gocharaTimelineMode() === 'past'" (click)="gocharaTimelineMode.set('past')">
+            Earlier
+          </button>
+        </div>
+      </div>
+
+      @if (gocharaTimelineMode() === 'active') {
+        <div class="window-list">
+          @for (window of t.gochara.timeline.active_windows; track window.rule + window.start_date + window.end_date) {
+            <article class="window-card" [class]="toneClass(window.tone)">
+              <header>
+                <div>
+                  <span>{{ window.planet }}</span>
+                  <strong>{{ window.rule }}</strong>
+                </div>
+                <time>{{ formatRange(window.start_date, window.end_date) }}</time>
+              </header>
+              <p>{{ window.summary }}</p>
+              <small>{{ window.trigger }}</small>
+            </article>
+          } @empty {
+            <p class="as-muted empty">No major Gocharam rule is active right now. Use What next to see upcoming starts and endings.</p>
+          }
+        </div>
+      } @else {
+        <div class="timeline-list">
+          @for (event of gocharaTimelineEvents(); track eventTrack(event)) {
+            <article class="timeline-event" [class]="toneClass(event.tone)">
+              <time>{{ formatDate(event.date) }}</time>
+              <div>
+                <strong>{{ event.title }}</strong>
+                <span>{{ event.detail }}</span>
+              </div>
+              <small>{{ event.transition || event.strength + '%' }}</small>
+            </article>
+          } @empty {
+            <p class="as-muted empty">No Gocharam rule transitions found in this scan window.</p>
+          }
+        </div>
+      }
+    </app-section-card>
+
     <div class="as-grid-2 overview-grid">
       <app-section-card icon="orbit" title="Current gochara" subtitle="houses counted from natal lagna and Moon">
         <div class="gochara-grid">
@@ -55,16 +137,56 @@
         <div class="rule-list">
           @for (rule of t.gochara.rules; track rule.name) {
             <article class="rule-row" [class.active]="rule.active" [class.supportive]="rule.severity === 'supportive'">
-              <div>
-                <strong>{{ rule.name }}</strong>
-                <span>{{ rule.trigger }}</span>
-              </div>
-              <small>{{ rule.active ? rule.severity : 'inactive' }}</small>
+              <header>
+                <div>
+                  <strong>{{ rule.name }}</strong>
+                  <span>{{ rule.trigger }}</span>
+                </div>
+                <small>{{ ruleSeverityLabel(rule) }}</small>
+              </header>
+              <p>{{ rule.explanation }}</p>
+              @if (rule.av_context; as av) {
+                <div class="av-context">
+                  <span class="av-chip" [class]="bindusClass(av.bindus)">BAV {{ av.bindus }}/8</span>
+                  <span class="av-chip">SAV {{ av.sav }}</span>
+                  <span class="av-support">{{ av.bav_support }} BAV · {{ av.sav_support }} SAV support</span>
+                </div>
+              }
             </article>
           }
         </div>
       </app-section-card>
     </div>
+
+    @if (avTransit(); as av) {
+      <app-section-card icon="grid-3x3" title="Ashtakavarga support" subtitle="bindu backing for each transit sign">
+        <div class="av-grid">
+          @for (planet of avPlanets(); track planet.planet) {
+            <article class="av-card">
+              <header>
+                <strong>{{ planet.planet }}</strong>
+                <span>{{ planet.transit_sign }}</span>
+              </header>
+              <div class="av-scores">
+                <span class="av-chip" [class]="bindusClass(planet.bindus)">BAV {{ planet.bindus }}/8</span>
+                <span class="av-chip">SAV {{ planet.sav }}</span>
+              </div>
+              <small>{{ planet.bav_support }} BAV · {{ planet.sav_support }} SAV</small>
+              @if (planet.kakshya; as k) {
+                <div class="kakshya-line">
+                  <i class="bindu-dot" [class.given]="k.bindu_given"></i>
+                  <span>Kakshya {{ k.kakshya_index }} · {{ k.kakshya_lord }}</span>
+                  <em>{{ k.bindu_given ? 'bindu given' : 'no bindu' }}</em>
+                </div>
+              }
+            </article>
+          }
+        </div>
+        @if (av.note) {
+          <p class="as-muted av-note">{{ av.note }}</p>
+        }
+      </app-section-card>
+    }
 
     <app-section-card icon="activity" title="Major transit aspects" subtitle="orb-weighted sidereal contacts">
       <div class="aspect-grid">

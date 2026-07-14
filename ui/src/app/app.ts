@@ -12,6 +12,7 @@ import { filter } from 'rxjs';
 
 import { AuthService } from './core/auth.service';
 import { KundliStore } from './core/kundli.store';
+import { PreferencesService } from './core/preferences.service';
 import { KundliDialogComponent } from './shell/kundli-dialog/kundli-dialog.component';
 import { SidebarComponent } from './shell/sidebar/sidebar.component';
 
@@ -35,6 +36,7 @@ import { SidebarComponent } from './shell/sidebar/sidebar.component';
 export class App implements OnInit {
   protected readonly store = inject(KundliStore);
   protected readonly auth = inject(AuthService);
+  private prefs = inject(PreferencesService);
   private confirmation = inject(ConfirmationService);
   private messages = inject(MessageService);
   private router = inject(Router);
@@ -68,6 +70,7 @@ export class App implements OnInit {
     try {
       await this.auth.init();
       if (this.auth.isAuthenticated()) {
+        if (this.auth.enabled() && this.auth.session()) await this.prefs.syncCloud();
         await this.store.load();
       }
     } catch (e) {

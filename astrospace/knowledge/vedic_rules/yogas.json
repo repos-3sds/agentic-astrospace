@@ -1,0 +1,324 @@
+{
+  "rules": {
+    "gaja_kesari_yoga": {
+      "name": "Gajakesari Yoga",
+      "category": "Mind / Wisdom",
+      "rule": "Jupiter in a kendra from Moon.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Yoga chapters; edition-specific verse pending" },
+        { "source": "phaladeepika", "detail": "Yoga chapter cross-reference pending" }
+      ],
+      "notes": ["Strength should consider Jupiter dignity, Moon strength, aspects, and affliction."]
+    },
+    "chandra_mangal_yoga": {
+      "name": "Chandra-Mangal Yoga",
+      "category": "Wealth / Drive",
+      "rule": "Moon and Mars conjoin or mutually oppose.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "phaladeepika", "detail": "Yoga chapter cross-reference pending" },
+        { "source": "saravali", "detail": "Yoga chapter cross-reference pending" }
+      ],
+      "notes": ["Result language varies by dignity, house, and benefic/malefic influence."]
+    },
+    "budhaditya_yoga": {
+      "name": "Budhaditya Yoga",
+      "category": "Intellect / Status",
+      "rule": "Sun and Mercury in the same sign.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Commonly cited Parashari yoga; exact edition reference pending" }
+      ],
+      "notes": ["Combustion and Mercury dignity should temper strength."]
+    },
+    "kemadruma_yoga": {
+      "name": "Kemadruma Yoga",
+      "category": "Caution / Mind",
+      "rule": "Moon lacks classical support in adjacent signs and kendras from Moon.",
+      "status": "convention_dependent",
+      "implementation": "partial",
+      "source_refs": [
+        { "source": "bphs", "detail": "Kemadruma and cancellation rules vary by edition" },
+        { "source": "phaladeepika", "detail": "Cancellation rules cross-reference pending" }
+      ],
+      "notes": ["Cancellation rules vary; AstroSpace currently uses a conservative simplified flag."]
+    },
+    "neecha_bhanga_raja_yoga": {
+      "name": "Neecha Bhanga Raja Yoga",
+      "category": "Correction / Strength",
+      "rule": "Debilitated planet receives cancellation through debilitation sign lord or related kendra conditions.",
+      "status": "convention_dependent",
+      "implementation": "partial",
+      "source_refs": [
+        { "source": "bphs", "detail": "Neecha Bhanga conditions; complete exception set pending" },
+        { "source": "phaladeepika", "detail": "Cross-check pending" }
+      ],
+      "notes": ["Current implementation checks debilitation sign lord in kendra from Lagna or Moon only."]
+    },
+    "raja_yoga": {
+      "name": "Raja Yoga",
+      "category": "Power / Career",
+      "rule": "Kendra and trikona lords associate.",
+      "status": "convention_dependent",
+      "implementation": "partial",
+      "source_refs": [
+        { "source": "bphs", "detail": "Kendra-trikona lord association rules" }
+      ],
+      "notes": ["Implementation includes conjunction, opposition, parivartana exchange, and special graha drishti for Mars/Jupiter/Saturn; full strength assessment pending."]
+    },
+    "dhana_yoga": {
+      "name": "Dhana Yoga",
+      "category": "Wealth",
+      "rule": "Wealth-house lords associate.",
+      "status": "convention_dependent",
+      "implementation": "partial",
+      "source_refs": [
+        { "source": "bphs", "detail": "Dhana yoga combinations; edition references pending" },
+        { "source": "phaladeepika", "detail": "Wealth yogas cross-reference pending" }
+      ],
+      "notes": ["Implementation includes conjunction, opposition, parivartana exchange, and special graha drishti for wealth-house lords; full strength assessment pending."]
+    },
+    "ruchaka_yoga": {
+      "name": "Ruchaka Yoga",
+      "category": "Pancha Mahapurusha",
+      "rule": "Mars in own or exaltation sign while in a kendra from Lagna.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Pancha Mahapurusha yogas; exact edition reference pending" },
+        { "source": "phaladeepika", "detail": "Cross-check pending" }
+      ],
+      "notes": ["Strength should consider combustion, aspects, house condition, and divisional support."]
+    },
+    "bhadra_yoga": {
+      "name": "Bhadra Yoga",
+      "category": "Pancha Mahapurusha",
+      "rule": "Mercury in own or exaltation sign while in a kendra from Lagna.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Pancha Mahapurusha yogas; exact edition reference pending" },
+        { "source": "phaladeepika", "detail": "Cross-check pending" }
+      ],
+      "notes": ["Strength should consider combustion, aspects, house condition, and divisional support."]
+    },
+    "hamsa_yoga": {
+      "name": "Hamsa Yoga",
+      "category": "Pancha Mahapurusha",
+      "rule": "Jupiter in own or exaltation sign while in a kendra from Lagna.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Pancha Mahapurusha yogas; exact edition reference pending" },
+        { "source": "phaladeepika", "detail": "Cross-check pending" }
+      ],
+      "notes": ["Strength should consider aspects, house condition, and divisional support."]
+    },
+    "malavya_yoga": {
+      "name": "Malavya Yoga",
+      "category": "Pancha Mahapurusha",
+      "rule": "Venus in own or exaltation sign while in a kendra from Lagna.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Pancha Mahapurusha yogas; exact edition reference pending" },
+        { "source": "phaladeepika", "detail": "Cross-check pending" }
+      ],
+      "notes": ["Strength should consider combustion, aspects, house condition, and divisional support."]
+    },
+    "sasa_yoga": {
+      "name": "Sasa Yoga",
+      "category": "Pancha Mahapurusha",
+      "rule": "Saturn in own or exaltation sign while in a kendra from Lagna.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Pancha Mahapurusha yogas; exact edition reference pending" },
+        { "source": "phaladeepika", "detail": "Cross-check pending" }
+      ],
+      "notes": ["Strength should consider retrogression, aspects, house condition, and divisional support."]
+    },
+    "viparita_raja_yoga": {
+      "name": "Vipareeta Raja Yoga",
+      "category": "Resilience / Reversal",
+      "rule": "Dusthana lord placed in a dusthana.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Dusthana lord reversal combinations; exact verse pending" },
+        { "source": "phaladeepika", "detail": "Cross-check pending" }
+      ],
+      "notes": ["Strength depends on involved house, dignity, and affliction."]
+    },
+    "sunapha_yoga": {
+      "name": "Sunapha Yoga",
+      "category": "Lunar Support",
+      "rule": "A planet other than Sun, Moon, Rahu, Ketu occupies the 2nd sign from Moon.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Chandra yogas; exact edition reference pending" },
+        { "source": "phaladeepika", "detail": "Chandra yoga chapter cross-reference pending" }
+      ],
+      "notes": ["Reported alongside Anapha; subsumed note added when Durudhara is present."]
+    },
+    "anapha_yoga": {
+      "name": "Anapha Yoga",
+      "category": "Lunar Support",
+      "rule": "A planet other than Sun, Moon, Rahu, Ketu occupies the 12th sign from Moon.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Chandra yogas; exact edition reference pending" },
+        { "source": "phaladeepika", "detail": "Chandra yoga chapter cross-reference pending" }
+      ],
+      "notes": ["Reported alongside Sunapha; subsumed note added when Durudhara is present."]
+    },
+    "durudhara_yoga": {
+      "name": "Durudhara Yoga",
+      "category": "Lunar Support",
+      "rule": "Planets other than Sun, Moon, Rahu, Ketu occupy both the 2nd and 12th signs from Moon.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Chandra yogas; exact edition reference pending" },
+        { "source": "phaladeepika", "detail": "Chandra yoga chapter cross-reference pending" }
+      ],
+      "notes": ["When active, Sunapha and Anapha are still reported with a subsumed note."]
+    },
+    "vesi_yoga": {
+      "name": "Vesi Yoga",
+      "category": "Solar Support",
+      "rule": "A planet other than Moon, Rahu, Ketu occupies the 2nd sign from Sun.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Surya yogas; exact edition reference pending" },
+        { "source": "phaladeepika", "detail": "Surya yoga chapter cross-reference pending" }
+      ],
+      "notes": ["Subsumed note added when Ubhayachari is present."]
+    },
+    "vosi_yoga": {
+      "name": "Vosi Yoga",
+      "category": "Solar Support",
+      "rule": "A planet other than Moon, Rahu, Ketu occupies the 12th sign from Sun.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Surya yogas; exact edition reference pending" },
+        { "source": "phaladeepika", "detail": "Surya yoga chapter cross-reference pending" }
+      ],
+      "notes": ["Subsumed note added when Ubhayachari is present."]
+    },
+    "ubhayachari_yoga": {
+      "name": "Ubhayachari Yoga",
+      "category": "Solar Support",
+      "rule": "Planets other than Moon, Rahu, Ketu occupy both the 2nd and 12th signs from Sun.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Surya yogas; exact edition reference pending" },
+        { "source": "phaladeepika", "detail": "Surya yoga chapter cross-reference pending" }
+      ],
+      "notes": ["When active, Vesi and Vosi are still reported with a subsumed note."]
+    },
+    "adhi_yoga": {
+      "name": "Adhi Yoga",
+      "category": "Lunar Support",
+      "rule": "Natural benefics (Jupiter, Venus, Mercury) occupy the 6th, 7th, and 8th signs from Moon.",
+      "status": "convention_dependent",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Adhi yoga from Moon; exact edition reference pending" },
+        { "source": "phaladeepika", "detail": "Cross-check pending" }
+      ],
+      "notes": ["Convention: AstroSpace activates with two of the three houses occupied (moderate) and grades all three as strong; some texts require all three."]
+    },
+    "amala_yoga": {
+      "name": "Amala Yoga",
+      "category": "Reputation / Career",
+      "rule": "A natural benefic (Jupiter, Venus, Mercury) occupies the 10th from Lagna or the 10th from Moon.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Amala yoga; exact edition reference pending" },
+        { "source": "phaladeepika", "detail": "Cross-check pending" }
+      ],
+      "notes": ["Anchor (Lagna and/or Moon) is reported in the result notes."]
+    },
+    "saraswati_yoga": {
+      "name": "Saraswati Yoga",
+      "category": "Learning / Wisdom",
+      "rule": "Jupiter, Venus, and Mercury each in a kendra, trikona, or the 2nd house from Lagna, with Jupiter in own, exaltation, or a friendly sign.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Saraswati yoga; exact edition reference pending" },
+        { "source": "phaladeepika", "detail": "Cross-check pending" }
+      ],
+      "notes": ["Friendly sign judged by natural friendship of the sign lord toward Jupiter (Sun, Moon, Mars per BPHS ch.3)."]
+    },
+    "shubha_kartari_yoga": {
+      "name": "Shubha Kartari Yoga",
+      "category": "Support / Protection",
+      "rule": "Natural benefics occupy both the 12th and 2nd signs from the anchor (Lagna or Moon), with no malefic in either.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "phaladeepika", "detail": "Kartari yogas; cross-reference pending" },
+        { "source": "bphs", "detail": "Cross-check pending" }
+      ],
+      "notes": ["Evaluated separately from Lagna and from Moon; each anchor is reported as its own entry."]
+    },
+    "papa_kartari_yoga": {
+      "name": "Papa Kartari Yoga",
+      "category": "Caution / Affliction",
+      "rule": "Natural malefics (Sun, Mars, Saturn, Rahu, Ketu) occupy both the 12th and 2nd signs from the anchor (Lagna or Moon), with no benefic in either.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "phaladeepika", "detail": "Kartari yogas; cross-reference pending" },
+        { "source": "bphs", "detail": "Cross-check pending" }
+      ],
+      "notes": ["Evaluated separately from Lagna and from Moon; each anchor is reported as its own entry."]
+    },
+    "shakata_yoga": {
+      "name": "Shakata Yoga",
+      "category": "Caution / Mind",
+      "rule": "Moon in the 6th, 8th, or 12th from Jupiter; cancelled when Moon is in a kendra from Lagna.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Shakata yoga and kendra cancellation; exact edition reference pending" },
+        { "source": "phaladeepika", "detail": "Cross-check pending" }
+      ],
+      "notes": ["Cancellation reported as inactive with an explanatory note."]
+    },
+    "guru_chandala_yoga": {
+      "name": "Guru-Chandala Yoga",
+      "category": "Caution / Beliefs",
+      "rule": "Jupiter conjunct Rahu in the same sign; Jupiter conjunct Ketu reported as a milder variant.",
+      "status": "convention_dependent",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "internal", "detail": "Jupiter-Rahu form is the commonly cited definition; Jupiter-Ketu extension is convention-dependent" }
+      ],
+      "notes": ["Jupiter-Ketu same-sign conjunction is reported as a milder variant with a note."]
+    },
+    "kalasarpa_flag": {
+      "name": "Kalasarpa Flag",
+      "category": "Caution / Karmic",
+      "rule": "All seven classical planets fall within one side of the Rahu-Ketu axis.",
+      "status": "convention_dependent",
+      "implementation": "partial",
+      "source_refs": [
+        { "source": "internal", "detail": "Modern/convention-dependent flag; classical source review required" }
+      ],
+      "notes": ["Shown as a flag only, not a deterministic dosha judgement."]
+    }
+  }
+}

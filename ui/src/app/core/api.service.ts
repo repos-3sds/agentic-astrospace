@@ -18,6 +18,10 @@ export class ApiService {
     return this.unwrap(firstValueFrom(this.http.post<T>(BASE + path, body, await this.options())));
   }
 
+  async put<T>(path: string, body: unknown): Promise<T> {
+    return this.unwrap(firstValueFrom(this.http.put<T>(BASE + path, body, await this.options())));
+  }
+
   async patch<T>(path: string, body: unknown): Promise<T> {
     return this.unwrap(firstValueFrom(this.http.patch<T>(BASE + path, body, await this.options())));
   }

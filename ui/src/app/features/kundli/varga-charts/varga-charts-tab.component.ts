@@ -152,6 +152,7 @@ export class VargaChartsTabComponent {
     const v = this.data();
     return v?.vargas[this.varga()] ?? null;
   });
+  protected readonly planetAnnotations = computed(() => this.data()?.planet_annotations ?? {});
 
   protected readonly rows = computed<VargaRow[]>(() => {
     const d = this.currentVarga();

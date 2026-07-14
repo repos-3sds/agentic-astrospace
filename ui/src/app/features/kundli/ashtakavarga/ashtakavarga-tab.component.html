@@ -46,7 +46,7 @@
           </button>
         }
       </div>
-      @if (mode() === 'shodhana' || mode() === 'prastara') {
+      @if (mode() === 'bav' || mode() === 'shodhana' || mode() === 'prastara') {
         <label class="planet-select">
           Planet
           <select [value]="selectedPlanet()" (change)="selectedPlanet.set($any($event.target).value)">
@@ -60,20 +60,60 @@
 
     @switch (mode()) {
       @case ('sav') {
-        <app-section-card icon="activity" title="Sarvashtakavarga" subtitle="bindu heatmap">
-          <div class="sav-grid">
-            @for (s of av.signs; track s.sign) {
-              <article class="sav-tile" [style.--heat]="heat(s.sav)">
-                <span>{{ s.sign }}</span>
-                <strong>{{ s.sav }}</strong>
-              </article>
-            }
+        <app-section-card icon="activity" title="Sarvashtakavarga" subtitle="South Indian rashi bindu chart">
+          <div class="av-chart-shell">
+            <div class="south-av-chart" aria-label="Sarvashtakavarga South Indian chart">
+              <div class="chart-center">
+                <span>SAV</span>
+                <strong>{{ av.totals.sav }}</strong>
+                <small>Total bindus</small>
+              </div>
+              @for (cell of savCells(); track cell.sign) {
+                <article
+                  class="av-chart-cell"
+                  [style.grid-column]="cell.col"
+                  [style.grid-row]="cell.row"
+                  [style.--heat]="cell.heat"
+                >
+                  <span class="cell-house">{{ cell.signLabel }}</span>
+                  <strong>{{ cell.value }}</strong>
+                  <small>{{ cell.sign }}</small>
+                </article>
+              }
+            </div>
           </div>
         </app-section-card>
       }
 
       @case ('bav') {
-        <app-section-card icon="table-2" title="Bhinna Ashtakavarga" subtitle="planet contributions by rashi">
+        <app-section-card icon="table-2" title="Bhinna Ashtakavarga" subtitle="planet bindus by rashi">
+          <div class="av-chart-shell bav-stage">
+            <div>
+              <span class="stage-label">{{ selectedPlanet() }} BAV</span>
+              <p class="as-muted">
+                Bhinna bindus for the selected graha. The same values remain auditable in the table below.
+              </p>
+            </div>
+            <div class="south-av-chart compact" aria-label="Bhinna Ashtakavarga South Indian chart">
+              <div class="chart-center">
+                <span>{{ selectedPlanet() }}</span>
+                <strong>{{ planetTotal(selectedPlanet()) }}</strong>
+                <small>BAV total</small>
+              </div>
+              @for (cell of bavCells(); track cell.sign) {
+                <article
+                  class="av-chart-cell"
+                  [style.grid-column]="cell.col"
+                  [style.grid-row]="cell.row"
+                  [style.--heat]="cell.heat"
+                >
+                  <span class="cell-house">{{ cell.signLabel }}</span>
+                  <strong>{{ cell.value }}</strong>
+                  <small>{{ cell.sign }}</small>
+                </article>
+              }
+            </div>
+          </div>
           <div class="table-wrap">
             <table class="av-table">
               <thead>
@@ -120,6 +160,41 @@
                 <small>after both reductions from raw {{ planetTotal(selectedPlanet()) }}</small>
               </div>
               <div class="table-wrap">
+                <div class="shodhana-charts">
+                  <div>
+                    <span class="stage-label">Raw BAV</span>
+                    <div class="south-av-chart mini" aria-label="Raw BAV South Indian chart">
+                      @for (cell of shodhanaRawCells(); track cell.sign) {
+                        <article class="av-chart-cell" [style.grid-column]="cell.col" [style.grid-row]="cell.row" [style.--heat]="cell.heat">
+                          <span class="cell-house">{{ cell.signLabel }}</span>
+                          <strong>{{ cell.value }}</strong>
+                        </article>
+                      }
+                    </div>
+                  </div>
+                  <div>
+                    <span class="stage-label">Trikona</span>
+                    <div class="south-av-chart mini" aria-label="Trikona Shodhana South Indian chart">
+                      @for (cell of shodhanaTrikonaCells(); track cell.sign) {
+                        <article class="av-chart-cell" [style.grid-column]="cell.col" [style.grid-row]="cell.row" [style.--heat]="cell.heat">
+                          <span class="cell-house">{{ cell.signLabel }}</span>
+                          <strong>{{ cell.value }}</strong>
+                        </article>
+                      }
+                    </div>
+                  </div>
+                  <div>
+                    <span class="stage-label">Ekadhipatya</span>
+                    <div class="south-av-chart mini" aria-label="Ekadhipatya Shodhana South Indian chart">
+                      @for (cell of shodhanaEkadhipatyaCells(); track cell.sign) {
+                        <article class="av-chart-cell" [style.grid-column]="cell.col" [style.grid-row]="cell.row" [style.--heat]="cell.heat">
+                          <span class="cell-house">{{ cell.signLabel }}</span>
+                          <strong>{{ cell.value }}</strong>
+                        </article>
+                      }
+                    </div>
+                  </div>
+                </div>
                 <table class="av-table">
                   <thead>
                     <tr>

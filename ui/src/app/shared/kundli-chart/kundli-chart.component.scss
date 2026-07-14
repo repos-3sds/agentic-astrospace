@@ -91,6 +91,49 @@
 
 .planet-line {
   fill: var(--as-text);
-  font-size: 10.8px;
+  font-size: 10.4px;
   font-weight: 650;
+}
+
+.condition-symbol {
+  font-size: 9px;
+  font-weight: 900;
+
+  &.good {
+    fill: var(--as-good);
+  }
+
+  &.bad {
+    fill: var(--as-bad);
+  }
+
+  &.warn {
+    fill: var(--as-warn);
+  }
+
+  &.neutral {
+    fill: var(--as-accent-strong);
+  }
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 10px;
+  margin-top: 10px;
+  color: var(--as-muted);
+  font-size: 10.8px;
+  line-height: 1.3;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  b {
+    color: var(--as-text);
+    font-size: 11px;
+  }
 }

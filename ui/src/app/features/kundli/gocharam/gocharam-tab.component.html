@@ -1,0 +1,132 @@
+@if (loading()) {
+  <div class="as-panel">
+    <p-skeleton height="150px" borderRadius="18px" />
+    <p-skeleton height="520px" borderRadius="18px" />
+  </div>
+} @else if (error()) {
+  <app-section-card icon="alert-triangle" title="Gocharam unavailable">
+    <p class="error-copy">{{ error() }}</p>
+  </app-section-card>
+} @else if (data(); as t) {
+  <div class="as-panel gocharam-page">
+    <section class="as-tab-hero">
+      <div>
+        <span class="as-hero-eyebrow">Gocharam · {{ t.natal.moon_sign }} Moon · {{ t.natal.lagna_sign }} Lagna</span>
+        <h2>Transit phases in plain language.</h2>
+        <p>
+          Current, upcoming, and past Gocharam windows are calculated from sidereal transit signs.
+          The reading below is deterministic and written for validation, not AI storytelling.
+        </p>
+      </div>
+      <div class="as-hero-stats">
+        <article>
+          <span>Active windows</span>
+          <strong>{{ t.gochara.timeline.active_windows.length }}</strong>
+          <small>{{ t.gochara.core_reading.timing_summary }}</small>
+        </article>
+        <article>
+          <span>Scan range</span>
+          <strong>{{ t.gochara.timeline.scan_days }}</strong>
+          <small>days backward and forward</small>
+        </article>
+      </div>
+    </section>
+
+    <div class="reading-stack">
+      @for (block of readingBlocks(); track block.title) {
+        <article class="reading-card" [class]="toneClass(block.tone)">
+          <header>
+            <div>
+              <span>Core reading</span>
+              <h3>{{ block.title }}</h3>
+            </div>
+            <small>{{ block.timing_summary }}</small>
+          </header>
+          <section>
+            <b>Why this judgement</b>
+            <p>{{ block.rationale }}</p>
+          </section>
+          <section class="plain-reading">
+            <b>Plain reading</b>
+            <p>{{ block.reading }}</p>
+          </section>
+        </article>
+      }
+    </div>
+
+    <app-section-card icon="list" title="Generated Gocharam periods" subtitle="precomputed readings for the profile timeline">
+      <div class="period-list">
+        @for (period of t.periods; track periodTrack(period)) {
+          <article class="period-card" [class]="toneClass(period.tone)">
+            <header>
+              <div>
+                <span>{{ period.status }} · {{ period.planet }}</span>
+                <strong>{{ period.rule }}</strong>
+              </div>
+              <time>{{ formatRange(period) }}</time>
+            </header>
+            <p>{{ period.reading }}</p>
+            <small>{{ period.validation_prompt }}</small>
+          </article>
+        } @empty {
+          <p class="as-muted empty">No generated Gocharam periods were found for this profile timeline.</p>
+        }
+      </div>
+    </app-section-card>
+
+    <app-section-card icon="history" title="Gocharam validation trail" subtitle="active now, what next, and what happened before">
+      <div class="timeline-toolbar">
+        <div>
+          <strong>Rule windows</strong>
+          <span>Use these dates to validate whether the Gocharam phase matched real experience.</span>
+        </div>
+        <div class="segmented">
+          <button type="button" [class.active]="detailMode() === 'active'" (click)="detailMode.set('active')">
+            Active now
+          </button>
+          <button type="button" [class.active]="detailMode() === 'next'" (click)="detailMode.set('next')">
+            What next
+          </button>
+          <button type="button" [class.active]="detailMode() === 'past'" (click)="detailMode.set('past')">
+            Earlier
+          </button>
+        </div>
+      </div>
+
+      @if (detailMode() === 'active') {
+        <div class="window-list">
+          @for (window of activeWindows(); track window.rule + window.start_date + window.end_date) {
+            <article class="window-card" [class]="toneClass(window.tone)">
+              <header>
+                <div>
+                  <span>{{ window.planet }}</span>
+                  <strong>{{ window.rule }}</strong>
+                </div>
+                <time>{{ formatRange(window) }}</time>
+              </header>
+              <p>{{ window.summary }}</p>
+              <small>{{ window.trigger }}</small>
+            </article>
+          } @empty {
+            <p class="as-muted empty">No major Gocharam rule window is active right now.</p>
+          }
+        </div>
+      } @else {
+        <div class="event-list">
+          @for (event of detailEvents(); track eventTrack(event)) {
+            <article class="event-row" [class]="toneClass(event.tone)">
+              <time>{{ formatDate(event.date) }}</time>
+              <div>
+                <strong>{{ event.title }}</strong>
+                <span>{{ event.detail }}</span>
+              </div>
+              <small>{{ event.transition || event.strength + '%' }}</small>
+            </article>
+          } @empty {
+            <p class="as-muted empty">No Gocharam rule transitions found in this scan window.</p>
+          }
+        </div>
+      }
+    </app-section-card>
+  </div>
+}

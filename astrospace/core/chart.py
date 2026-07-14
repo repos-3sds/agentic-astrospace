@@ -47,7 +47,7 @@ def _make_subject(name, year, month, day, hour, minute, city, nation="US",
             name=name, year=year, month=month, day=day, hour=hour, minute=minute,
             lng=lng, lat=lat, tz_str=tz_str, online=False,
         )
-    geo = lookup_city(city)
+    geo = lookup_city(city, nation)
     if geo:
         lat, lng, tz = geo
         return AstrologicalSubject(

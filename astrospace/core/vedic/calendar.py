@@ -178,6 +178,15 @@ def calendar_intelligence(
     return {
         "system": "AstroSpace Calendar Intelligence",
         "profile": {"name": chart.name, "janma_nakshatra": janma_nak["name"]},
+        "provenance": {
+            **chart.provenance("calendar-intelligence"),
+            "timezone": display_tz_str,
+            "panchanga_place": {"city": city, "nation": nation, "timezone": tz_str},
+            "confidence": {
+                **chart.provenance("calendar-intelligence")["confidence"],
+                "calendar_feed": "computed aggregation of dasha, panchanga, and transit signals",
+            },
+        },
         "start_date": start_date,
         "end_date": end_dt.date().isoformat(),
         "timezone": display_tz_str,

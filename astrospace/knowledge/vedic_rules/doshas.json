@@ -1,0 +1,69 @@
+{
+  "rules": {
+    "manglik_dosha": {
+      "name": "Manglik / Kuja Dosha",
+      "category": "Marriage / Caution",
+      "rule": "Mars in houses 1, 2, 4, 7, 8, or 12 from Lagna, Moon, or Venus.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Kuja/Manglik placement rules; exact verse pending" },
+        { "source": "phaladeepika", "detail": "Marriage caution combinations cross-reference pending" }
+      ],
+      "notes": [
+        "Widely published exception rules (Mars own/exalted sign, Jupiter drishti on Mars, Mars-Moon conjunction) are applied as convention-dependent weakening factors in 'net_severity'; raw 'severity' is unchanged.",
+        "Use this as a deterministic flag, not a final marriage judgement."
+      ]
+    },
+    "gandanta_dosha": {
+      "name": "Gandanta Dosha",
+      "category": "Junction / Caution",
+      "rule": "Moon, Lagna, or Sun within one pada (3°20') of a water→fire sign junction: Ashlesha–Magha (Cancer/Leo), Jyeshtha–Moola (Scorpio/Sagittarius), Revati–Ashwini (Pisces/Aries).",
+      "status": "convention_dependent",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Rashi/nakshatra sandhi affliction; exact verse pending" },
+        { "source": "internal", "detail": "One-pada zone width and 0°48'/1°40' severity bands follow the common software convention; golden-chart validation pending" }
+      ],
+      "notes": [
+        "Zone width (one pada on each side) and severity orbs are convention-dependent; some traditions use different spans for Moon vs Lagna.",
+        "Jyeshtha–Moola gandanta (Abhukta Mula) is traditionally treated as the most intense junction."
+      ]
+    },
+    "grahan_dosha": {
+      "name": "Grahan (Eclipse) Dosha",
+      "category": "Karmic / Caution",
+      "rule": "Sun or Moon in the same sign as Rahu or Ketu; severity graded by orb (<5° strong, <10° moderate, else mild).",
+      "status": "convention_dependent",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "internal", "detail": "Same-sign conjunction definition with orb grading follows the common software convention; classical texts grade by eclipse proximity at birth" }
+      ],
+      "notes": [
+        "Orb thresholds are convention-dependent; some traditions require birth near an actual eclipse rather than any luminary-node conjunction."
+      ]
+    },
+    "pitru_dosha": {
+      "name": "Pitru Dosha",
+      "category": "Ancestral / Caution",
+      "rule": "Popular modern definitions vary heavily.",
+      "status": "needs_review",
+      "implementation": "not_implemented",
+      "source_refs": [
+        { "source": "internal", "detail": "Awaiting preferred tradition/source before implementation" }
+      ],
+      "notes": ["Not displayed as active until a source-backed rule is selected."]
+    },
+    "sarpa_dosha": {
+      "name": "Sarpa Dosha",
+      "category": "Karmic / Caution",
+      "rule": "Definitions vary by tradition.",
+      "status": "needs_review",
+      "implementation": "not_implemented",
+      "source_refs": [
+        { "source": "internal", "detail": "Awaiting preferred tradition/source before implementation" }
+      ],
+      "notes": ["Not displayed as active until a source-backed rule is selected."]
+    }
+  }
+}

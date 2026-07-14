@@ -56,6 +56,7 @@
               Moon focus
             }
           </p>
+          <p class="core-gochara-line">{{ t.gochara.core_reading.title }}</p>
           <strong>{{ strongestTransit()?.strength ?? 0 }}%</strong>
         </article>
 
@@ -93,6 +94,19 @@
     <app-section-card icon="calendar-days" title="Birth details">
       <app-def-list [rows]="birthRows()" />
     </app-section-card>
+
+    @if (masa(); as m) {
+      <app-section-card icon="moon-star" title="Masa / Kaala" subtitle="lunar month at birth">
+        <div class="masa-chips">
+          <span class="masa-chip primary">{{ m.name }}</span>
+          @if (m.adhika) {
+            <span class="masa-chip adhika">Adhika</span>
+          }
+          <span class="masa-chip">{{ m.paksha }} paksha</span>
+        </div>
+        <app-def-list [rows]="masaRows()" />
+      </app-section-card>
+    }
 
     <app-section-card icon="sparkles" title="AI reading">
       <p class="as-muted cta-copy">

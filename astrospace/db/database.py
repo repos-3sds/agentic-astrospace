@@ -3,11 +3,23 @@ from sqlalchemy import inspect, text
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-# SQLite by default; swap to Supabase with DATABASE_URL=postgresql://...
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "sqlite:////home/user/agentic-astrospace/astrospace.db"
-)
+def _database_url() -> str:
+    """Return the SQLAlchemy database URL.
+
+    DATABASE_URL remains the primary app setting. SUPABASE_DB_URL is accepted as
+    a clearer alias for cloud deployments. Plain postgres:// and postgresql://
+    URLs are normalized to the psycopg SQLAlchemy driver.
+    """
+    url = os.getenv("DATABASE_URL") or os.getenv("SUPABASE_DB_URL")
+    url = url or "sqlite:////home/user/agentic-astrospace/astrospace.db"
+    if url.startswith("postgres://"):
+        url = "postgresql+psycopg://" + url[len("postgres://"):]
+    elif url.startswith("postgresql://"):
+        url = "postgresql+psycopg://" + url[len("postgresql://"):]
+    return url
+
+
+DATABASE_URL = _database_url()
 
 # SQLite needs check_same_thread=False
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
@@ -21,7 +33,7 @@ class Base(DeclarativeBase):
 
 
 def init_db():
-    from .models import Kundli, PredictionClaim, Reading  # noqa: F401
+    from .models import Kundli, PredictionClaim, Reading, UserSettings  # noqa: F401
     Base.metadata.create_all(bind=engine)
     _migrate_sqlite_kundlis()
     _migrate_sqlite_readings()

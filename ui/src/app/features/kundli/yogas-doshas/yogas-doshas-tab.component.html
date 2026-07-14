@@ -55,8 +55,19 @@
                 <span>{{ yoga.category }}</span>
                 <h3>{{ yoga.name }}</h3>
               </div>
-              <p-tag [severity]="tagSeverity(yoga)" [value]="yoga.verified ? yoga.strength : 'verify'" />
+              <div class="tag-stack">
+                <p-tag [severity]="tagSeverity(yoga)" [value]="statusLabel(yoga)" />
+                @if (yoga.strength) {
+                  <span class="strength-chip" [class]="strengthClass(yoga.strength)">{{ yoga.strength }}</span>
+                }
+              </div>
             </header>
+            <div class="source-line">
+              <span>{{ statusDetail(yoga) }}</span>
+              @if (yoga.rule_id) {
+                <code>{{ yoga.rule_id }}</code>
+              }
+            </div>
             <p>{{ yoga.rule }}</p>
             <div class="trigger-list">
               @for (trigger of yoga.triggers; track trigger) {
@@ -64,7 +75,11 @@
               }
             </div>
             @if (yoga.notes?.length) {
-              <small class="as-muted">{{ yoga.notes?.[0] }}</small>
+              <div class="note-list">
+                @for (note of yoga.notes; track note) {
+                  <small class="as-muted">{{ note }}</small>
+                }
+              </div>
             }
           </article>
         } @empty {
@@ -83,14 +98,32 @@
                   <span>{{ yoga.category }}</span>
                   <h3>{{ yoga.name }}</h3>
                 </div>
-                <p-tag severity="warn" [value]="yoga.verified ? yoga.strength : 'verify'" />
+                <div class="tag-stack">
+                  <p-tag [severity]="tagSeverity(yoga)" [value]="statusLabel(yoga)" />
+                  @if (yoga.strength) {
+                    <span class="strength-chip" [class]="strengthClass(yoga.strength)">{{ yoga.strength }}</span>
+                  }
+                </div>
               </header>
+              <div class="source-line">
+                <span>{{ statusDetail(yoga) }}</span>
+                @if (yoga.rule_id) {
+                  <code>{{ yoga.rule_id }}</code>
+                }
+              </div>
               <p>{{ yoga.rule }}</p>
               <div class="trigger-list">
                 @for (trigger of yoga.triggers; track trigger) {
                   <span>{{ trigger }}</span>
                 }
               </div>
+              @if (yoga.notes?.length) {
+                <div class="note-list">
+                  @for (note of yoga.notes; track note) {
+                    <small class="as-muted">{{ note }}</small>
+                  }
+                </div>
+              }
             </article>
           } @empty {
             <p class="as-muted empty">No caution yogas active in the current rule set.</p>
@@ -101,7 +134,11 @@
       <app-section-card icon="flame" title="Manglik / Kuja dosha" subtitle="{{ yd.doshas.manglik.rule }}">
         <div class="manglik-head" [class.active]="yd.doshas.manglik.active">
           <strong>{{ yd.doshas.manglik.severity }}</strong>
+          @if (yd.doshas.manglik.net_severity && yd.doshas.manglik.net_severity !== yd.doshas.manglik.severity) {
+            <span class="net-severity">net {{ yd.doshas.manglik.net_severity }} after exceptions</span>
+          }
           <span>{{ yd.doshas.manglik.active_references.join(', ') || 'No active references' }}</span>
+          <small>{{ statusLabel(yd.doshas.manglik) }} · {{ statusDetail(yd.doshas.manglik) }}</small>
         </div>
         <div class="check-list">
           @for (check of yd.doshas.manglik.checks; track check.reference) {
@@ -112,16 +149,93 @@
             </div>
           }
         </div>
+        @if (yd.doshas.manglik.exceptions?.length) {
+          <div class="exception-list">
+            <span class="exception-title">Exception rules (convention-dependent)</span>
+            @for (exception of yd.doshas.manglik.exceptions; track exception.rule) {
+              <div class="exception-row" [class.applies]="exception.applies">
+                <i class="exception-dot"></i>
+                <div>
+                  <strong>{{ exception.rule }}</strong>
+                  <small>{{ exception.detail }}</small>
+                </div>
+                <em>{{ exception.applies ? 'applies' : 'no' }}</em>
+              </div>
+            }
+          </div>
+        }
         @if (yd.doshas.manglik.notes?.length) {
           <p class="as-muted note">{{ yd.doshas.manglik.notes?.[0] }}</p>
         }
       </app-section-card>
     </div>
 
+    @if (gandanta() || grahan()) {
+      <div class="as-grid-2">
+        @if (gandanta(); as g) {
+          <app-section-card icon="alert-triangle" title="Gandanta dosha" subtitle="water → fire junction points">
+            <div class="manglik-head" [class.active]="g.active">
+              <strong>{{ g.severity }}</strong>
+              <span>{{ g.active ? 'Junction affliction found' : 'No body in a gandanta zone' }}</span>
+              <small>{{ statusLabel(g) }} · {{ statusDetail(g) }}</small>
+            </div>
+            @if (g.hits.length) {
+              <div class="check-list">
+                @for (hit of g.hits; track hit.body + hit.junction) {
+                  <div class="check-row active">
+                    <span>{{ hit.body }}</span>
+                    <strong>{{ hit.severity }}</strong>
+                    <small>
+                      {{ hit.junction }} ({{ hit.signs }}) · {{ hit.side }} ·
+                      {{ hit.degrees_from_junction }}° from junction
+                    </small>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="as-muted empty">
+                Checked: {{ g.bodies_checked?.join(', ') }}. None falls within one pada of a junction.
+              </p>
+            }
+            @if (g.notes?.length) {
+              <p class="as-muted note">{{ g.notes?.[0] }}</p>
+            }
+          </app-section-card>
+        }
+
+        @if (grahan(); as gr) {
+          <app-section-card icon="sun-moon" title="Grahan (eclipse) dosha" subtitle="luminary–node conjunctions">
+            <div class="manglik-head" [class.active]="gr.active">
+              <strong>{{ gr.severity }}</strong>
+              <span>{{ gr.active ? 'Luminary conjunct a node' : 'Sun and Moon clear of Rahu/Ketu' }}</span>
+              <small>{{ statusLabel(gr) }} · {{ statusDetail(gr) }}</small>
+            </div>
+            @if (gr.hits.length) {
+              <div class="check-list">
+                @for (hit of gr.hits; track hit.luminary + hit.node) {
+                  <div class="check-row active">
+                    <span>{{ hit.luminary }}–{{ hit.node }}</span>
+                    <strong>{{ hit.severity }}</strong>
+                    <small>same sign ({{ hit.sign }}) · orb {{ hit.orb }}°</small>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="as-muted empty">{{ gr.rule }}</p>
+            }
+            @if (gr.notes?.length) {
+              <p class="as-muted note">{{ gr.notes?.[0] }}</p>
+            }
+          </app-section-card>
+        }
+      </div>
+    }
+
     <app-section-card icon="info" title="Rule conventions">
       <div class="convention-list">
         <span>Association: {{ yd.yogas.conventions?.['association'] }}</span>
         <span>Status: {{ yd.yogas.conventions?.['status'] }}</span>
+        <span>Rules KB: {{ yd.yogas.conventions?.['rules_kb'] }}</span>
       </div>
     </app-section-card>
   </div>

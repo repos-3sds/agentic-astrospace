@@ -1,0 +1,85 @@
+{
+  "charts": [
+    {
+      "id": "rajahmundry_internal_smoke",
+      "status": "internal_smoke",
+      "source": "AstroSpace generated baseline; replace with externally verified chart before treating as authoritative.",
+      "birth": {
+        "name": "Internal Smoke",
+        "year": 1993,
+        "month": 7,
+        "day": 20,
+        "hour": 11,
+        "minute": 28,
+        "city": "Rajahmundry",
+        "nation": "IN"
+      },
+      "conventions": {
+        "ayanamsha": "lahiri",
+        "node_type": "mean",
+        "house_system": "whole-sign"
+      },
+      "expected": {
+        "lagna_sign": "Virgo",
+        "moon": {
+          "sign": "Cancer",
+          "nakshatra": "Pushya",
+          "pada": 4
+        },
+        "panchanga": {
+          "vara": "Tuesday"
+        },
+        "dasha": {
+          "birth_nakshatra_lord": "Saturn"
+        }
+      }
+    },
+    {
+      "id": "amitabh_bachchan_astrosage",
+      "status": "verified_external",
+      "source": "AstroSage Celebrity Kundli, https://celebrity.astrosage.com/amitabh-bachchan-birth-chart.asp (accessed 2026-07-14). Page states: born Oct 11, 1942, 16:00:00, Allahabad (81E50, 25N57, TZ 5.5); Ascendant Aquarius; Moon in Libra, Swati nakshatra pada 2; Sun Virgo; Mars Virgo; Mercury Virgo (retrograde, exalted); Jupiter Cancer (exalted); Venus Virgo (debilitated); Saturn Taurus (retrograde); Balance of Dasha RAHU 12Y 3M 8D. Source rating on page: 'Accurate (A)' from Kundli Sangraha (Bhat). AstroSage charts use Lahiri ayanamsha.",
+      "notes": "Known deviation, deliberately NOT asserted: AstroSage computes with a fixed UTC+5:30, but the IANA tzdb (which this engine uses) applies Indian WWII war time (UTC+6:30) on 1942-10-11, shifting the birth instant by 1h of UT. All sign/nakshatra/pada-level values above still agree, but the Vimshottari balance differs (AstroSage Rahu 12y3m8d vs engine ~13.07y), so the dasha balance is only asserted at lord level. Vara (Sunday) is a civil-calendar fact for 1942-10-11, not stated on the source page.",
+      "birth": {
+        "name": "Amitabh Bachchan",
+        "year": 1942,
+        "month": 10,
+        "day": 11,
+        "hour": 16,
+        "minute": 0,
+        "city": "Allahabad",
+        "nation": "IN"
+      },
+      "conventions": {
+        "ayanamsha": "lahiri",
+        "node_type": "mean",
+        "house_system": "whole-sign"
+      },
+      "expected": {
+        "lagna_sign": "Aquarius",
+        "moon": {
+          "sign": "Libra",
+          "nakshatra": "Swati",
+          "pada": 2
+        },
+        "planet_signs": {
+          "Sun": "Virgo",
+          "Mars": "Virgo",
+          "Mercury": "Virgo",
+          "Jupiter": "Cancer",
+          "Venus": "Virgo",
+          "Saturn": "Taurus"
+        },
+        "retrograde": {
+          "Mercury": true,
+          "Saturn": true
+        },
+        "panchanga": {
+          "vara": "Sunday"
+        },
+        "dasha": {
+          "birth_nakshatra_lord": "Rahu"
+        }
+      }
+    }
+  ]
+}

@@ -15,13 +15,18 @@
             <text class="sign-label" x="0" y="-7" [attr.fill]="house.signColor">
               {{ house.signLabel }}
             </text>
-            @for (entry of house.entries; track entry; let i = $index) {
+            @for (entry of house.entries; track entry.key; let i = $index) {
               <text
                 class="planet-line"
                 x="0"
                 [attr.y]="10 + i * 13"
               >
-                {{ entry }}
+                <tspan>{{ entry.label }}</tspan>
+                @for (annotation of entry.annotations; track annotation.code) {
+                  <tspan [attr.class]="'condition-symbol ' + annotation.tone" dx="3">
+                    {{ annotation.symbol }}
+                  </tspan>
+                }
               </text>
             }
           </g>
@@ -40,13 +45,18 @@
             [attr.transform]="'translate(' + (cell.x + 50) + ' ' + (cell.y + 50) + ')'"
           >
             <text class="house-number corner-label top-left" x="-42" y="-36">H{{ cell.house }}</text>
-            @for (entry of cell.entries; track entry; let i = $index) {
+            @for (entry of cell.entries; track entry.key; let i = $index) {
               <text
                 class="planet-line"
                 x="0"
                 [attr.y]="-12 + i * 12"
               >
-                {{ entry }}
+                <tspan>{{ entry.label }}</tspan>
+                @for (annotation of entry.annotations; track annotation.code) {
+                  <tspan [attr.class]="'condition-symbol ' + annotation.tone" dx="3">
+                    {{ annotation.symbol }}
+                  </tspan>
+                }
               </text>
             }
             <text class="sign-label corner-label bottom-right" x="38" y="32" [attr.fill]="cell.signColor">
@@ -57,4 +67,11 @@
       </svg>
     }
   </figure>
+  <div class="chart-legend" aria-label="Planet condition legend">
+    <span><b>↑</b> Exalted</span>
+    <span><b>↓</b> Debilitated</span>
+    <span><b>↺</b> Retrograde</span>
+    <span><b>☼</b> Combust</span>
+    <span><b>✦</b> Vargottama</span>
+  </div>
 }
