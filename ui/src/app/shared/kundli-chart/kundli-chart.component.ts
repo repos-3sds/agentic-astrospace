@@ -71,6 +71,18 @@ const SOUTH_SIGN_POINTS: Record<string, { col: number; row: number }> = {
   Virgo: { col: 3, row: 3 },
 };
 
+/**
+ * Eastern chart geometry. Grid: 400×400, thirds at 133.33/266.67; corner
+ * cells split by diagonals through the outer corners (TL/BR on x=y-style
+ * lines, TR/BL on x+y=400-style lines).
+ *
+ * Per zone: (x, y) anchors the planet stack — the stack is VERTICALLY
+ * CENTERED on this point (see easternCells) so stelliums stay inside their
+ * triangle; (labelX, labelY) pins the two-line H#/sign label block into the
+ * zone's outer pocket, ≥8px inside the viewBox so nothing clips. Anchors
+ * were chosen so a 5-planet stack stays on the correct side of each
+ * diagonal (planet row height 13, half-width ≈16 at middle anchor).
+ */
 const EASTERN_SIGN_POINTS: Record<string, {
   x: number;
   y: number;
@@ -79,18 +91,26 @@ const EASTERN_SIGN_POINTS: Record<string, {
   labelAlign: 'start' | 'middle' | 'end';
   planetAlign: 'start' | 'middle' | 'end';
 }> = {
-  Pisces: { x: 92, y: 34, labelX: 16, labelY: 18, labelAlign: 'start', planetAlign: 'middle' },
-  Aries: { x: 76, y: 90, labelX: 16, labelY: 114, labelAlign: 'start', planetAlign: 'middle' },
-  Taurus: { x: 200, y: 36, labelX: 144, labelY: 18, labelAlign: 'start', planetAlign: 'middle' },
-  Gemini: { x: 334, y: 34, labelX: 276, labelY: 18, labelAlign: 'start', planetAlign: 'middle' },
-  Cancer: { x: 324, y: 96, labelX: 384, labelY: 114, labelAlign: 'end', planetAlign: 'middle' },
-  Leo: { x: 296, y: 176, labelX: 276, labelY: 150, labelAlign: 'start', planetAlign: 'start' },
-  Virgo: { x: 312, y: 282, labelX: 276, labelY: 318, labelAlign: 'start', planetAlign: 'start' },
-  Libra: { x: 316, y: 348, labelX: 384, labelY: 370, labelAlign: 'end', planetAlign: 'middle' },
-  Scorpio: { x: 200, y: 286, labelX: 144, labelY: 318, labelAlign: 'start', planetAlign: 'middle' },
-  Sagittarius: { x: 76, y: 346, labelX: 16, labelY: 370, labelAlign: 'start', planetAlign: 'middle' },
-  Capricorn: { x: 56, y: 286, labelX: 16, labelY: 318, labelAlign: 'start', planetAlign: 'start' },
-  Aquarius: { x: 56, y: 176, labelX: 16, labelY: 150, labelAlign: 'start', planetAlign: 'start' },
+  // Top-left corner: Pisces upper-right triangle, Aries lower-left.
+  Pisces: { x: 98, y: 60, labelX: 126, labelY: 16, labelAlign: 'end', planetAlign: 'middle' },
+  Aries: { x: 36, y: 82, labelX: 8, labelY: 110, labelAlign: 'start', planetAlign: 'middle' },
+  // Top edge.
+  Taurus: { x: 200, y: 72, labelX: 140, labelY: 16, labelAlign: 'start', planetAlign: 'middle' },
+  // Top-right corner: Gemini upper-left triangle, Cancer lower-right.
+  Gemini: { x: 302, y: 58, labelX: 274, labelY: 16, labelAlign: 'start', planetAlign: 'middle' },
+  Cancer: { x: 364, y: 74, labelX: 392, labelY: 110, labelAlign: 'end', planetAlign: 'middle' },
+  // Right edge.
+  Leo: { x: 334, y: 205, labelX: 392, labelY: 149, labelAlign: 'end', planetAlign: 'middle' },
+  // Bottom-right corner: Virgo upper-right triangle, Libra lower-left.
+  Virgo: { x: 366, y: 324, labelX: 392, labelY: 282, labelAlign: 'end', planetAlign: 'middle' },
+  Libra: { x: 300, y: 338, labelX: 274, labelY: 370, labelAlign: 'start', planetAlign: 'middle' },
+  // Bottom edge.
+  Scorpio: { x: 200, y: 330, labelX: 140, labelY: 358, labelAlign: 'start', planetAlign: 'middle' },
+  // Bottom-left corner: Sagittarius lower-right triangle, Capricorn upper-left.
+  Sagittarius: { x: 100, y: 340, labelX: 126, labelY: 370, labelAlign: 'end', planetAlign: 'middle' },
+  Capricorn: { x: 36, y: 324, labelX: 8, labelY: 282, labelAlign: 'start', planetAlign: 'middle' },
+  // Left edge.
+  Aquarius: { x: 66, y: 205, labelX: 8, labelY: 149, labelAlign: 'start', planetAlign: 'middle' },
 };
 
 @Component({
@@ -176,7 +196,9 @@ export class KundliChartComponent {
         signColor: meta.color,
         house: this.houseForSign(lagnaIndex, sign),
         x: point.x,
-        y: point.y,
+        // Center the planet stack vertically on the zone anchor so large
+        // stelliums stay inside their (triangular) zone.
+        y: point.y - ((planets.length - 1) * 13) / 2 + 4,
         labelX: point.labelX,
         labelY: point.labelY,
         labelAlign: point.labelAlign,
