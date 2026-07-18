@@ -56,7 +56,6 @@
   pointer-events: none;
 
   text {
-    text-anchor: middle;
     dominant-baseline: middle;
   }
 }
@@ -96,6 +95,15 @@
   &.bottom-right {
     text-anchor: end;
   }
+}
+
+.eastern-house {
+  dominant-baseline: middle;
+}
+
+.eastern-sign {
+  dominant-baseline: middle;
+  font-size: 9.8px;
 }
 
 .planet-line {

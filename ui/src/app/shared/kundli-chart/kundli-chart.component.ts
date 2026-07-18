@@ -29,8 +29,9 @@ interface SouthCell {
 }
 
 interface EasternCell extends SouthCell {
-  anchorX: number;
-  anchorY: number;
+  labelX: number;
+  labelY: number;
+  align: 'start' | 'middle' | 'end';
 }
 
 interface PlanetEntry {
@@ -69,19 +70,19 @@ const SOUTH_SIGN_POINTS: Record<string, { col: number; row: number }> = {
   Virgo: { col: 3, row: 3 },
 };
 
-const EASTERN_SIGN_POINTS: Record<string, { x: number; y: number; anchorX: number; anchorY: number }> = {
-  Aries: { x: 200, y: 52, anchorX: 38, anchorY: -30 },
-  Taurus: { x: 118, y: 84, anchorX: -34, anchorY: -26 },
-  Gemini: { x: 54, y: 150, anchorX: -34, anchorY: -26 },
-  Cancer: { x: 54, y: 250, anchorX: -34, anchorY: 26 },
-  Leo: { x: 118, y: 316, anchorX: -34, anchorY: 30 },
-  Virgo: { x: 200, y: 348, anchorX: 38, anchorY: 30 },
-  Libra: { x: 282, y: 316, anchorX: 34, anchorY: 30 },
-  Scorpio: { x: 346, y: 250, anchorX: 34, anchorY: 26 },
-  Sagittarius: { x: 346, y: 150, anchorX: 34, anchorY: -26 },
-  Capricorn: { x: 282, y: 84, anchorX: 34, anchorY: -26 },
-  Aquarius: { x: 154, y: 200, anchorX: -38, anchorY: 30 },
-  Pisces: { x: 246, y: 200, anchorX: 38, anchorY: 30 },
+const EASTERN_SIGN_POINTS: Record<string, { x: number; y: number; labelX: number; labelY: number; align: 'start' | 'middle' | 'end' }> = {
+  Aries: { x: 32, y: 96, labelX: 12, labelY: 112, align: 'start' },
+  Taurus: { x: 150, y: 36, labelX: 142, labelY: 18, align: 'start' },
+  Gemini: { x: 276, y: 34, labelX: 272, labelY: 18, align: 'start' },
+  Cancer: { x: 328, y: 96, labelX: 388, labelY: 112, align: 'start' },
+  Leo: { x: 276, y: 164, labelX: 272, labelY: 150, align: 'start' },
+  Virgo: { x: 296, y: 278, labelX: 272, labelY: 284, align: 'start' },
+  Libra: { x: 294, y: 348, labelX: 388, labelY: 382, align: 'start' },
+  Scorpio: { x: 150, y: 284, labelX: 142, labelY: 284, align: 'start' },
+  Sagittarius: { x: 74, y: 348, labelX: 12, labelY: 382, align: 'end' },
+  Capricorn: { x: 32, y: 278, labelX: 12, labelY: 284, align: 'start' },
+  Aquarius: { x: 28, y: 164, labelX: 12, labelY: 150, align: 'start' },
+  Pisces: { x: 92, y: 34, labelX: 12, labelY: 18, align: 'end' },
 };
 
 @Component({
@@ -159,7 +160,7 @@ export class KundliChartComponent {
       const point = EASTERN_SIGN_POINTS[sign];
       const meta = signMeta(sign);
       const planets = sign === chart.lagna.sign
-        ? [this.lagnaEntry(), ...(planetsBySign.get(sign) ?? [])]
+        ? [this.lagnaEntry('As'), ...(planetsBySign.get(sign) ?? [])]
         : (planetsBySign.get(sign) ?? []);
       return {
         sign,
@@ -168,8 +169,9 @@ export class KundliChartComponent {
         house: this.houseForSign(lagnaIndex, sign),
         x: point.x,
         y: point.y,
-        anchorX: point.anchorX,
-        anchorY: point.anchorY,
+        labelX: point.labelX,
+        labelY: point.labelY,
+        align: point.align,
         entries: planets,
       };
     });
@@ -228,8 +230,8 @@ export class KundliChartComponent {
     };
   }
 
-  private lagnaEntry(): PlanetEntry {
-    return { key: 'Lagna', label: 'Lagna', annotations: [] };
+  private lagnaEntry(label = 'Lagna'): PlanetEntry {
+    return { key: 'Lagna', label, annotations: [] };
   }
 
   private mergeAnnotations(
