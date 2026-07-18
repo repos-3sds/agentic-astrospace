@@ -1,0 +1,54 @@
+{
+  "notes": [
+    "Seed references — proves the retrieval path end to end.",
+    "The real corpus lands here (or in a semantic backend) as structured rules with citations.",
+    "statement is a paraphrased rule, never copied translation text."
+  ],
+  "references": [
+    {
+      "ref_id": "uk4_tenth_bhava_scope",
+      "domains": ["career"],
+      "subdomains": ["job_vs_business", "fame_status"],
+      "statement": "The 10th bhava governs livelihood, rank, honour, authority and karma; its lord's strength and placement set the career's trajectory.",
+      "source": {"text_key": "uttara_kalamrita", "location": "Kanda 4 (10th bhava significations)"},
+      "tags": ["house:10"],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_d10_career",
+      "domains": ["career"],
+      "subdomains": ["field_selection"],
+      "statement": "The dashamsha (D10) refines the 10th-house promise: planets strong in D10 mark the arenas where public action succeeds.",
+      "source": {"text_key": "bphs", "location": "Shodashavarga adhyaya (D10)"},
+      "tags": ["varga:D10"],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_seventh_kalatra",
+      "domains": ["marriage"],
+      "subdomains": ["spouse_nature", "harmony_discord"],
+      "statement": "The 7th bhava and its lord, together with Venus as kalatra karaka, govern the spouse and the quality of the union; the navamsha (D9) confirms or withholds the rashi promise.",
+      "source": {"text_key": "bphs", "location": "7th bhava adhyaya"},
+      "tags": ["house:7", "varga:D9", "planet:Venus"],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "pm_disease_sixth",
+      "domains": ["health", "litigation"],
+      "subdomains": ["chronic_disease", "court_cases"],
+      "statement": "The 6th bhava carries disease, debt and enemies together; afflictions to the 6th and its lord activate all three significations and must be separated by karaka and context.",
+      "source": {"text_key": "prasna_marga", "location": "roga/prasna chapters"},
+      "tags": ["house:6"],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "jaimini_ak_soul",
+      "domains": ["spirituality"],
+      "subdomains": ["spiritual_inclination", "moksha"],
+      "statement": "The Atmakaraka (highest-degree graha) shows the soul's desire; its navamsha position (Karakamsha) frames the spiritual path and final direction.",
+      "source": {"text_key": "jaimini_sutras", "location": "Ch. 1 (chara karakas, karakamsha)"},
+      "tags": ["karaka:AK", "varga:D9"],
+      "status": "verified_common"
+    }
+  ]
+}

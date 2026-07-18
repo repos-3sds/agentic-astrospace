@@ -15,6 +15,7 @@ from astrospace.api.vedic_routes import router as vedic_router
 from astrospace.api.panchanga_routes import router as panchanga_router
 from astrospace.api.ask_routes import router as ask_router
 from astrospace.api.auth_routes import router as auth_router
+from astrospace.api.context_routes import router as context_router
 from astrospace.api.settings_routes import router as settings_router
 
 app = FastAPI(
@@ -40,6 +41,7 @@ app.include_router(reading_router)
 app.include_router(vedic_router)
 app.include_router(panchanga_router)
 app.include_router(ask_router)
+app.include_router(context_router)
 
 # Serve the built Angular SPA (ui/ workspace builds into frontend/dist/browser)
 DIST = Path(__file__).parent / "frontend" / "dist" / "browser"

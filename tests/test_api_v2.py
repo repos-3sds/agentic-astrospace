@@ -213,3 +213,36 @@ class TestPublicChartEndpoint:
         d = r.json()
         for key in ("jaimini", "special_lagnas", "masa"):
             assert key in d
+
+
+class TestContextEngineEndpoint:
+    def test_context_routes_question_to_domains(self, client_and_kundli):
+        client, kid = client_and_kundli
+        r = client.post(f"/api/v1/context/{kid}", json={
+            "question": "Will I settle abroad after marriage?",
+            "include_gochara": False,
+        })
+        assert r.status_code == 200
+        d = r.json()
+        assert d["routing"]["primary"] in {"marriage", "foreign"}
+        domains = [row["domain"] for row in d["bundle"]["domains"]]
+        assert {"marriage", "foreign"} <= set(domains)
+        assert d["bundle"]["provenance"]["assembly"].startswith("deterministic")
+
+    def test_context_accepts_explicit_domains(self, client_and_kundli):
+        client, kid = client_and_kundli
+        r = client.post(f"/api/v1/context/{kid}", json={
+            "domains": ["career"],
+            "include_gochara": False,
+        })
+        assert r.status_code == 200
+        d = r.json()
+        assert d["routing"]["method"] == "explicit"
+        assert d["bundle"]["domains"][0]["domain"] == "career"
+        assert d["bundle"]["domains"][0]["vargas"]["D10"]["tier"] == "primary"
+
+    def test_context_rejects_unknown_domain(self, client_and_kundli):
+        client, kid = client_and_kundli
+        r = client.post(f"/api/v1/context/{kid}", json={"domains": ["lottery"]})
+        assert r.status_code == 400
+        assert "Unknown context domains" in r.json()["detail"]
