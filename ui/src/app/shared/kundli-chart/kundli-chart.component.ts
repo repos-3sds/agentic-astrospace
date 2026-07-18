@@ -31,7 +31,8 @@ interface SouthCell {
 interface EasternCell extends SouthCell {
   labelX: number;
   labelY: number;
-  align: 'start' | 'middle' | 'end';
+  labelAlign: 'start' | 'middle' | 'end';
+  planetAlign: 'start' | 'middle' | 'end';
 }
 
 interface PlanetEntry {
@@ -70,19 +71,26 @@ const SOUTH_SIGN_POINTS: Record<string, { col: number; row: number }> = {
   Virgo: { col: 3, row: 3 },
 };
 
-const EASTERN_SIGN_POINTS: Record<string, { x: number; y: number; labelX: number; labelY: number; align: 'start' | 'middle' | 'end' }> = {
-  Aries: { x: 32, y: 96, labelX: 12, labelY: 112, align: 'start' },
-  Taurus: { x: 150, y: 36, labelX: 142, labelY: 18, align: 'start' },
-  Gemini: { x: 276, y: 34, labelX: 272, labelY: 18, align: 'start' },
-  Cancer: { x: 328, y: 96, labelX: 388, labelY: 112, align: 'start' },
-  Leo: { x: 276, y: 164, labelX: 272, labelY: 150, align: 'start' },
-  Virgo: { x: 296, y: 278, labelX: 272, labelY: 284, align: 'start' },
-  Libra: { x: 294, y: 348, labelX: 388, labelY: 382, align: 'start' },
-  Scorpio: { x: 150, y: 284, labelX: 142, labelY: 284, align: 'start' },
-  Sagittarius: { x: 74, y: 348, labelX: 12, labelY: 382, align: 'end' },
-  Capricorn: { x: 32, y: 278, labelX: 12, labelY: 284, align: 'start' },
-  Aquarius: { x: 28, y: 164, labelX: 12, labelY: 150, align: 'start' },
-  Pisces: { x: 92, y: 34, labelX: 12, labelY: 18, align: 'end' },
+const EASTERN_SIGN_POINTS: Record<string, {
+  x: number;
+  y: number;
+  labelX: number;
+  labelY: number;
+  labelAlign: 'start' | 'middle' | 'end';
+  planetAlign: 'start' | 'middle' | 'end';
+}> = {
+  Pisces: { x: 92, y: 34, labelX: 16, labelY: 18, labelAlign: 'start', planetAlign: 'middle' },
+  Aries: { x: 76, y: 90, labelX: 16, labelY: 114, labelAlign: 'start', planetAlign: 'middle' },
+  Taurus: { x: 200, y: 36, labelX: 144, labelY: 18, labelAlign: 'start', planetAlign: 'middle' },
+  Gemini: { x: 334, y: 34, labelX: 276, labelY: 18, labelAlign: 'start', planetAlign: 'middle' },
+  Cancer: { x: 324, y: 96, labelX: 384, labelY: 114, labelAlign: 'end', planetAlign: 'middle' },
+  Leo: { x: 296, y: 176, labelX: 276, labelY: 150, labelAlign: 'start', planetAlign: 'start' },
+  Virgo: { x: 312, y: 282, labelX: 276, labelY: 318, labelAlign: 'start', planetAlign: 'start' },
+  Libra: { x: 316, y: 348, labelX: 384, labelY: 370, labelAlign: 'end', planetAlign: 'middle' },
+  Scorpio: { x: 200, y: 286, labelX: 144, labelY: 318, labelAlign: 'start', planetAlign: 'middle' },
+  Sagittarius: { x: 76, y: 346, labelX: 16, labelY: 370, labelAlign: 'start', planetAlign: 'middle' },
+  Capricorn: { x: 56, y: 286, labelX: 16, labelY: 318, labelAlign: 'start', planetAlign: 'start' },
+  Aquarius: { x: 56, y: 176, labelX: 16, labelY: 150, labelAlign: 'start', planetAlign: 'start' },
 };
 
 @Component({
@@ -171,7 +179,8 @@ export class KundliChartComponent {
         y: point.y,
         labelX: point.labelX,
         labelY: point.labelY,
-        align: point.align,
+        labelAlign: point.labelAlign,
+        planetAlign: point.planetAlign,
         entries: planets,
       };
     });

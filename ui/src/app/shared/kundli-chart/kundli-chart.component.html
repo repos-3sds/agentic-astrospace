@@ -50,7 +50,7 @@
                 class="planet-line"
                 x="0"
                 [attr.y]="i * 13"
-                [attr.text-anchor]="cell.align"
+                [attr.text-anchor]="cell.planetAlign"
               >
                 <tspan>{{ entry.label }}</tspan>
                 @for (annotation of entry.annotations; track annotation.code) {
@@ -61,10 +61,10 @@
               </text>
             }
           </g>
-          <text class="house-number eastern-house" [attr.x]="cell.labelX" [attr.y]="cell.labelY" [attr.text-anchor]="cell.align">
+          <text class="house-number eastern-house" [attr.x]="cell.labelX" [attr.y]="cell.labelY" [attr.text-anchor]="cell.labelAlign">
             H{{ cell.house }}
           </text>
-          <text class="sign-label eastern-sign" [attr.x]="cell.labelX" [attr.y]="cell.labelY + 14" [attr.text-anchor]="cell.align" [attr.fill]="cell.signColor">
+          <text class="sign-label eastern-sign" [attr.x]="cell.labelX" [attr.y]="cell.labelY + 14" [attr.text-anchor]="cell.labelAlign" [attr.fill]="cell.signColor">
             {{ cell.signLabel }}
           </text>
         }
