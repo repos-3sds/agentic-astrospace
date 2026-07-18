@@ -62,10 +62,22 @@ export class KundliDialogComponent {
     notes: [''],
   });
 
+  // Edge-triggered form reset: only when the dialog transitions closed->open
+  // or the edit target changes — never on spurious effect re-runs (PrimeNG
+  // overlay interactions inside the modal can re-schedule effects without a
+  // dependency change, which used to wipe the form mid-entry).
+  private lastResetKey: string | null = null;
+
   constructor() {
     effect(() => {
-      if (!this.store.dialogOpen()) return;
+      if (!this.store.dialogOpen()) {
+        this.lastResetKey = null;
+        return;
+      }
       const editing = this.store.editing();
+      const resetKey = editing ? `edit:${editing.id}` : 'add';
+      if (resetKey === this.lastResetKey) return;
+      this.lastResetKey = resetKey;
       if (editing) {
         this.form.reset({
           name: editing.name,
