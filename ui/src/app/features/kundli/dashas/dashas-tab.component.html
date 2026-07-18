@@ -114,12 +114,18 @@
           <header><span>03</span><strong>Pratyantar</strong></header>
           <div class="period-list">
             @for (p of selectedPratyantardashas(); track p.start + p.lord) {
-              <article class="period-row" [class.active-row]="p.active">
+              <button
+                type="button"
+                class="period-row"
+                [class.active-row]="p.active"
+                [class.selected-row]="periodKey(p) === selectedPratyantardashaKey()"
+                (click)="selectPratyantardasha(p)"
+              >
                 <strong>{{ p.lord }}</strong>
                 <span>{{ p.start | date: 'MMM d, y' }} – {{ p.end | date: 'MMM d, y' }}</span>
                 <em>{{ p.years | number: '1.2-2' }}y</em>
                 @if (p.active) { <small>Current</small> }
-              </article>
+              </button>
             }
           </div>
         </section>
@@ -154,7 +160,7 @@
               <article class="lord-focus">
                 <span>Focus lord</span>
                 <strong>{{ selectedLord() || '—' }}</strong>
-                <small>Selected from the deepest active Dasha level.</small>
+                <small>Selected from the deepest chosen Dasha level.</small>
               </article>
               <div class="lord-grid">
                 <article>
@@ -217,9 +223,15 @@
                 <small>{{ selectedAntardasha()?.start | date: 'mediumDate' }} – {{ selectedAntardasha()?.end | date: 'mediumDate' }}</small>
               </article>
               <article>
-                <span>Current Pratyantar</span>
-                <strong>{{ activePratyantardasha()?.lord || '—' }}</strong>
-                <small>{{ activePratyantardasha()?.start | date: 'mediumDate' }} – {{ activePratyantardasha()?.end | date: 'mediumDate' }}</small>
+                <span>Pratyantar</span>
+                <strong>{{ selectedPratyantardasha()?.lord || '—' }}</strong>
+                <small>
+                  @if (selectedPratyantardasha(); as pd) {
+                    {{ pd.start | date: 'mediumDate' }} – {{ pd.end | date: 'mediumDate' }}
+                  } @else {
+                    Select a pratyantar period
+                  }
+                </small>
               </article>
             </div>
           }

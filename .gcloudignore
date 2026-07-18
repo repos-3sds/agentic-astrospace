@@ -1,0 +1,24 @@
+# Uploaded to Cloud Build for `gcloud run deploy --source .`
+# Keep in sync with .dockerignore (the Dockerfile builds the UI itself,
+# so ui/ sources must be INCLUDED here, only its artifacts excluded).
+.git
+.venv
+venv
+__pycache__
+**/__pycache__
+*.py[cod]
+.env
+.env.*
+!.env.example
+astrospace.db
+cache/
+frontend/dist
+ui/node_modules
+ui/.angular
+tests/
+docs/
+.claude/
+.idea
+.vscode
+*.log
+.DS_Store

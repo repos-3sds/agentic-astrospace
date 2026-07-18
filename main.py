@@ -1,3 +1,5 @@
+import os
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,9 +26,17 @@ app = FastAPI(
     version="2.0.0",
 )
 
+# In production the SPA is served same-origin, so CORS only matters for local
+# dev (ng serve on :4200) and any extra origins listed in ALLOWED_ORIGINS.
+_default_origins = "http://localhost:4200,http://localhost:8000"
+_origins = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", _default_origins).split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -78,10 +88,17 @@ else:
         }
 
 
+@app.get("/api/health")
+async def health():
+    return {"status": "ok", "version": app.version}
+
+
 @app.on_event("startup")
 def on_startup():
     init_db()
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.getenv("PORT", "8000"))
+    uvicorn.run("main:app", host="0.0.0.0", port=port,
+                reload=os.getenv("PORT") is None)

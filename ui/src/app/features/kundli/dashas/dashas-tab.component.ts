@@ -25,6 +25,7 @@ export class DashasTabComponent {
   protected readonly error = signal<string | null>(null);
   protected readonly selectedMahadashaKey = signal<string | null>(null);
   protected readonly selectedAntardashaKey = signal<string | null>(null);
+  protected readonly selectedPratyantardashaKey = signal<string | null>(null);
   protected readonly detailMode = signal<'summary' | 'natal' | 'transit' | 'timeline'>('summary');
   protected readonly detailModes = [
     { label: 'Summary', value: 'summary' as const },
@@ -73,12 +74,19 @@ export class DashasTabComponent {
     return p?.pratyantardashas ?? [];
   });
 
+  protected readonly selectedPratyantardasha = computed<DashaPeriod | null>(() => {
+    const periods = this.selectedPratyantardashas();
+    return periods.find((p) => this.periodKey(p) === this.selectedPratyantardashaKey()) ?? null;
+  });
+
   protected readonly selectedLord = computed(
     () => this.activeSelection().lord ?? this.selectedAntardasha()?.lord ?? this.selectedMahadasha()?.lord ?? null,
   );
 
+  // The header reflects the deepest level the user has actually selected:
+  // pratyantar if clicked, else the selected antardasha, else the mahadasha.
   protected readonly activeSelection = computed(() => {
-    const pd = this.activePratyantardasha();
+    const pd = this.selectedPratyantardasha();
     const ad = this.selectedAntardasha();
     const md = this.selectedMahadasha();
     return {
@@ -118,8 +126,10 @@ export class DashasTabComponent {
           this.data.set(d);
           const md = d.current.mahadasha ?? d.mahadashas[0] ?? null;
           const ad = d.current.antardasha ?? md?.antardashas?.[0] ?? null;
+          const pd = d.current.pratyantardasha ?? null;
           this.selectedMahadashaKey.set(md ? this.periodKey(md) : null);
           this.selectedAntardashaKey.set(ad ? this.periodKey(ad) : null);
+          this.selectedPratyantardashaKey.set(pd ? this.periodKey(pd) : null);
         })
         .catch((e) => this.error.set((e as Error).message));
       this.vedic
@@ -133,10 +143,18 @@ export class DashasTabComponent {
     this.selectedMahadashaKey.set(this.periodKey(period));
     const ad = period.active ? this.activeAntardasha() : period.antardashas?.[0];
     this.selectedAntardashaKey.set(ad ? this.periodKey(ad) : null);
+    const pd = ad?.active ? this.activePratyantardasha() : null;
+    this.selectedPratyantardashaKey.set(pd ? this.periodKey(pd) : null);
   }
 
   protected selectAntardasha(period: DashaPeriod): void {
     this.selectedAntardashaKey.set(this.periodKey(period));
+    const pd = period.active ? this.activePratyantardasha() : null;
+    this.selectedPratyantardashaKey.set(pd ? this.periodKey(pd) : null);
+  }
+
+  protected selectPratyantardasha(period: DashaPeriod): void {
+    this.selectedPratyantardashaKey.set(this.periodKey(period));
   }
 
   protected periodKey(period: DashaPeriod): string {

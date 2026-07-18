@@ -11,7 +11,9 @@ def _database_url() -> str:
     URLs are normalized to the psycopg SQLAlchemy driver.
     """
     url = os.getenv("DATABASE_URL") or os.getenv("SUPABASE_DB_URL")
-    url = url or "sqlite:////home/user/agentic-astrospace/astrospace.db"
+    # Local-dev fallback only: SQLite in the working directory. Cloud Run's
+    # filesystem is ephemeral — production must set DATABASE_URL to Postgres.
+    url = url or "sqlite:///./astrospace.db"
     if url.startswith("postgres://"):
         url = "postgresql+psycopg://" + url[len("postgres://"):]
     elif url.startswith("postgresql://"):

@@ -8,10 +8,14 @@ setup(
     python_requires=">=3.11",
     install_requires=[
         "kerykeion>=4.0.0",
+        "pyswisseph>=2.10.0",
         "anthropic>=0.34.0",
         "fastapi>=0.104.0",
         "uvicorn>=0.24.0",
         "python-dotenv>=1.0.0",
         "pydantic>=2.0.0",
+        "requests>=2.31.0",
+        "psycopg[binary]>=3.2.0",
+        "sqlalchemy>=2.0.0",
     ],
 )

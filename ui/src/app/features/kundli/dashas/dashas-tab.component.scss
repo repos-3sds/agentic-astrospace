@@ -71,15 +71,18 @@
 
 .dasha-explorer {
   display: grid;
-  grid-template-columns: minmax(360px, 0.82fr) minmax(520px, 1.18fr);
+  grid-template-columns: 1fr;
   gap: 24px;
   align-items: start;
 }
 
+// Maha / Antar / Pratyantar side by side; detail panel flows below full-width.
 .dasha-navigator {
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   min-width: 0;
+  align-items: start;
 }
 
 .period-panel {
@@ -311,7 +314,7 @@ button.period-row {
 
 .chart-stack {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
 
   article {
@@ -353,6 +356,8 @@ button.period-row {
   }
 
   .dasha-explorer,
+  .dasha-navigator,
+  .chart-stack,
   .detail-header {
     grid-template-columns: 1fr;
   }
