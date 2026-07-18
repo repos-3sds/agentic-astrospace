@@ -1,8 +1,22 @@
-"""Offline city lookup with common cities, falls back to None (online GeoNames)."""
+"""Offline city lookup with common cities, falls back to None (online GeoNames).
+
+In addition to the curated worldwide table below, a complete GeoNames-derived
+populated-places dataset for selected Indian states (currently Andhra Pradesh
+and Telangana, ~36k villages/towns) is loaded lazily from
+data/state_places.json.gz — regenerate with scripts/build_state_places.py.
+"""
 
 from __future__ import annotations
 
+import gzip
+import json
 import re
+import unicodedata
+from functools import lru_cache
+from pathlib import Path
+
+_STATE_PLACES_PATH = Path(__file__).parent / "data" / "state_places.json.gz"
+_STATE_NAMES = {"AP": "Andhra Pradesh", "TS": "Telangana"}
 
 # (city_lower, nation_lower) -> (lat, lng, timezone)
 _CITIES: dict[tuple[str, str], tuple[float, float, str]] = {
@@ -284,7 +298,39 @@ for _city, (_lat, _lng) in _INDIA_EXPANSION.items():
 
 
 def _normalize(value: str) -> str:
-    return re.sub(r"\s+", " ", value.strip().lower().replace(".", "")).strip()
+    # Fold diacritics (GeoNames uses e.g. "Pithāpuram") so ASCII input matches.
+    folded = unicodedata.normalize("NFKD", value)
+    folded = "".join(ch for ch in folded if not unicodedata.combining(ch))
+    return re.sub(r"\s+", " ", folded.strip().lower().replace(".", "")).strip()
+
+
+@lru_cache(maxsize=1)
+def _state_places() -> list[list]:
+    """[name, lat, lng, district, state, population, alternates] rows,
+    population-sorted."""
+    if not _STATE_PLACES_PATH.exists():
+        return []
+    with gzip.open(_STATE_PLACES_PATH, "rt", encoding="utf-8") as fh:
+        return json.load(fh)["places"]
+
+
+@lru_cache(maxsize=1)
+def _state_places_index() -> dict[str, tuple[float, float, str]]:
+    """normalized name/alternate -> (lat, lng, tz); most populous wins."""
+    index: dict[str, tuple[float, float, str]] = {}
+    for row in _state_places():
+        name, lat, lng = row[0], row[1], row[2]
+        geo = (lat, lng, "Asia/Kolkata")
+        index.setdefault(_normalize(name), geo)
+        for alt in (row[6] if len(row) > 6 else []):
+            index.setdefault(_normalize(alt), geo)
+    return index
+
+
+@lru_cache(maxsize=1)
+def _state_places_keys() -> list[str]:
+    """Index keys in population order, for prefix fallback in lookups."""
+    return list(_state_places_index().keys())
 
 
 def lookup_city(city: str, nation: str = "US") -> tuple[float, float, str] | None:
@@ -298,6 +344,24 @@ def lookup_city(city: str, nation: str = "US") -> tuple[float, float, str] | Non
     for (c, n), v in _CITIES.items():
         if c == city_lower:
             return v
+    # Complete state-level dataset (AP/TS villages and towns).
+    if _normalize(nation) in ("in", ""):
+        index = _state_places_index()
+        exact = index.get(city_lower)
+        if exact:
+            return exact
+        # Telugu transliteration tolerance: trailing y<->i (Kamareddy/Kamareddi,
+        # Metpally/Metpalli).
+        if city_lower[-1:] in ("y", "i"):
+            swapped = city_lower[:-1] + ("i" if city_lower.endswith("y") else "y")
+            hit = index.get(swapped)
+            if hit:
+                return hit
+        # Then accept a prefix match (e.g. "Sangareddy" -> "Sangareddypeta").
+        if len(city_lower) >= 5:
+            for key in _state_places_keys():
+                if key.startswith(city_lower):
+                    return index[key]
     return None
 
 
@@ -345,4 +409,43 @@ def search_cities(query: str = "", limit: int = 80) -> list[dict]:
         })
         if len(rows) >= limit:
             break
+
+    if q and len(rows) < limit:
+        rows.extend(_search_state_places(q, limit - len(rows),
+                                         exclude={(r["city"].lower(), r["nation"].lower()) for r in rows}))
     return rows
+
+
+def _search_state_places(q: str, limit: int, exclude: set) -> list[dict]:
+    """Prefix/substring search over the state-level dataset. Entries are
+    population-sorted, so bigger towns surface first; district + state in the
+    label disambiguates same-named villages."""
+    exact, prefix, contains = [], [], []
+    for row in _state_places():
+        name, lat, lng, district, state = row[0], row[1], row[2], row[3], row[4]
+        alternates = row[6] if len(row) > 6 else []
+        name_l = _normalize(name)
+        alt_l = [_normalize(alt) for alt in alternates]
+        if name_l == q or q in alt_l:
+            bucket = exact
+        elif name_l.startswith(q) or any(alt.startswith(q) for alt in alt_l):
+            bucket = prefix
+        elif q in name_l or any(q in alt for alt in alt_l):
+            bucket = contains
+        else:
+            continue
+        if (name_l, "in") in exclude:
+            continue
+        state_name = _STATE_NAMES.get(state, state)
+        where = f"{district}, {state_name}" if district else state_name
+        bucket.append({
+            "city": name,
+            "nation": "IN",
+            "timezone": "Asia/Kolkata",
+            "lat": lat,
+            "lng": lng,
+            "label": f"{name} · {where}",
+        })
+        if len(exact) + len(prefix) >= limit and bucket is not contains:
+            break
+    return (exact + prefix + contains)[:limit]
