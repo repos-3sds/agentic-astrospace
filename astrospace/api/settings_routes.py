@@ -19,7 +19,7 @@ class PanchangaPlace(BaseModel):
 
 
 class UserSettingsPayload(BaseModel):
-    chart_style: Literal["south", "north"] = "south"
+    chart_style: Literal["south", "north", "eastern"] = "south"
     ayanamsha: Literal["lahiri", "raman", "krishnamurti"] = "lahiri"
     node_type: Literal["mean", "true"] = "mean"
     timezone_mode: Literal["browser", "panchanga_place"] = "browser"

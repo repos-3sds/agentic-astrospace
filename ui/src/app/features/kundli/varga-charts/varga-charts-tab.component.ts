@@ -47,8 +47,9 @@ const VIEW_OPTIONS: { label: string; value: ChartView }[] = [
 ];
 
 const STYLE_OPTIONS: { label: string; value: KundliChartStyle }[] = [
-  { label: 'North Indian', value: 'north' },
   { label: 'South Indian', value: 'south' },
+  { label: 'North Indian', value: 'north' },
+  { label: 'Eastern', value: 'eastern' },
 ];
 
 const PLANET_ORDER = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
@@ -209,5 +210,11 @@ export class VargaChartsTabComponent {
   protected onStyleChange(value: KundliChartStyle): void {
     this.prefs.chartStyle.set(value);
     this.chartStyle.set(value);
+  }
+
+  protected chartStyleLabel(value: KundliChartStyle): string {
+    if (value === 'south') return 'South Indian';
+    if (value === 'north') return 'North Indian';
+    return 'Eastern';
   }
 }

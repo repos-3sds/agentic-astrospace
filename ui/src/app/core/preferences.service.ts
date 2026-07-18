@@ -3,7 +3,7 @@ import { Injectable, effect, inject, signal } from '@angular/core';
 import { ApiService } from './api.service';
 import { PanchangaCity } from './models';
 
-export type DefaultChartStyle = 'south' | 'north';
+export type DefaultChartStyle = 'south' | 'north' | 'eastern';
 export type DefaultAyanamsha = 'lahiri' | 'raman' | 'krishnamurti';
 export type DefaultNodeType = 'mean' | 'true';
 export type TimezoneMode = 'browser' | 'panchanga_place';

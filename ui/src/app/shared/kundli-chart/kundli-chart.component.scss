@@ -52,6 +52,15 @@
   }
 }
 
+.eastern-cell {
+  pointer-events: none;
+
+  text {
+    text-anchor: middle;
+    dominant-baseline: middle;
+  }
+}
+
 .house-number {
   fill: var(--as-muted);
   font-size: 10.5px;

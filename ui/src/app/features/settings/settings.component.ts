@@ -50,6 +50,7 @@ export class SettingsComponent {
   protected readonly chartStyleOptions = [
     { label: 'South Indian', value: 'south' },
     { label: 'North Indian', value: 'north' },
+    { label: 'Eastern', value: 'eastern' },
   ];
   protected readonly ayanamshaOptions = [
     { label: 'Lahiri', value: 'lahiri' },
@@ -78,7 +79,7 @@ export class SettingsComponent {
     { label: 'Session', value: this.auth.enabled() ? 'Supabase Auth' : 'Local workspace' },
     { label: 'Saved kundlis', value: this.store.kundlis().length },
     { label: 'Theme', value: this.theme.dark() ? 'Dark' : 'Light' },
-    { label: 'Chart style', value: this.prefs.chartStyle() === 'south' ? 'South Indian' : 'North Indian' },
+    { label: 'Chart style', value: this.chartStyleLabel(this.prefs.chartStyle()) },
     { label: 'Ayanamsha', value: this.prefs.ayanamsha() },
     { label: 'Node type', value: this.prefs.nodeType() },
     { label: 'Regional format', value: this.prefs.regionalFormat() },
@@ -90,7 +91,7 @@ export class SettingsComponent {
     { label: 'Chart engine', value: 'Vedic + Swiss Ephemeris' },
   ]);
   protected readonly preferenceRows = computed<DefRow[]>(() => [
-    { label: 'Chart style', value: this.prefs.chartStyle() === 'south' ? 'South Indian' : 'North Indian' },
+    { label: 'Chart style', value: this.chartStyleLabel(this.prefs.chartStyle()) },
     { label: 'Ayanamsha', value: this.prefs.ayanamsha() },
     { label: 'Node type', value: this.prefs.nodeType() },
     { label: 'Timezone', value: this.prefs.effectiveTimezone() },
@@ -118,8 +119,14 @@ export class SettingsComponent {
       .catch(() => this.cityOptions.set([]));
   }
 
-  protected setChartStyle(value: 'south' | 'north'): void {
+  protected setChartStyle(value: 'south' | 'north' | 'eastern'): void {
     this.prefs.chartStyle.set(value);
+  }
+
+  private chartStyleLabel(value: 'south' | 'north' | 'eastern'): string {
+    if (value === 'south') return 'South Indian';
+    if (value === 'north') return 'North Indian';
+    return 'Eastern';
   }
 
   protected setAyanamsha(value: 'lahiri' | 'raman' | 'krishnamurti'): void {

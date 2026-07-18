@@ -3,7 +3,7 @@ import { Component, computed, input } from '@angular/core';
 import { SIGN_ORDER, signMeta } from '../../core/glyphs';
 import { PlanetConditionAnnotation, PlanetConditionCode, VargaChart } from '../../core/models';
 
-export type KundliChartStyle = 'north' | 'south';
+export type KundliChartStyle = 'north' | 'south' | 'eastern';
 
 interface HousePoint {
   house: number;
@@ -26,6 +26,11 @@ interface SouthCell {
   x: number;
   y: number;
   entries: PlanetEntry[];
+}
+
+interface EasternCell extends SouthCell {
+  anchorX: number;
+  anchorY: number;
 }
 
 interface PlanetEntry {
@@ -62,6 +67,21 @@ const SOUTH_SIGN_POINTS: Record<string, { col: number; row: number }> = {
   Scorpio: { col: 1, row: 3 },
   Libra: { col: 2, row: 3 },
   Virgo: { col: 3, row: 3 },
+};
+
+const EASTERN_SIGN_POINTS: Record<string, { x: number; y: number; anchorX: number; anchorY: number }> = {
+  Aries: { x: 200, y: 52, anchorX: 38, anchorY: -30 },
+  Taurus: { x: 118, y: 84, anchorX: -34, anchorY: -26 },
+  Gemini: { x: 54, y: 150, anchorX: -34, anchorY: -26 },
+  Cancer: { x: 54, y: 250, anchorX: -34, anchorY: 26 },
+  Leo: { x: 118, y: 316, anchorX: -34, anchorY: 30 },
+  Virgo: { x: 200, y: 348, anchorX: 38, anchorY: 30 },
+  Libra: { x: 282, y: 316, anchorX: 34, anchorY: 30 },
+  Scorpio: { x: 346, y: 250, anchorX: 34, anchorY: 26 },
+  Sagittarius: { x: 346, y: 150, anchorX: 34, anchorY: -26 },
+  Capricorn: { x: 282, y: 84, anchorX: 34, anchorY: -26 },
+  Aquarius: { x: 154, y: 200, anchorX: -38, anchorY: 30 },
+  Pisces: { x: 246, y: 200, anchorX: 38, anchorY: 30 },
 };
 
 @Component({
@@ -128,6 +148,40 @@ export class KundliChartComponent {
       };
     });
   });
+
+  protected readonly easternCells = computed<EasternCell[]>(() => {
+    const chart = this.chart();
+    if (!chart) return [];
+
+    const planetsBySign = this.planetsBySign(chart);
+    const lagnaIndex = SIGN_ORDER.indexOf(chart.lagna.sign);
+    return SIGN_ORDER.map((sign) => {
+      const point = EASTERN_SIGN_POINTS[sign];
+      const meta = signMeta(sign);
+      const planets = sign === chart.lagna.sign
+        ? [this.lagnaEntry(), ...(planetsBySign.get(sign) ?? [])]
+        : (planetsBySign.get(sign) ?? []);
+      return {
+        sign,
+        signLabel: this.signShortName(sign),
+        signColor: meta.color,
+        house: this.houseForSign(lagnaIndex, sign),
+        x: point.x,
+        y: point.y,
+        anchorX: point.anchorX,
+        anchorY: point.anchorY,
+        entries: planets,
+      };
+    });
+  });
+
+  private planetsBySign(chart: VargaChart): Map<string, PlanetEntry[]> {
+    const planetsBySign = new Map<string, PlanetEntry[]>();
+    for (const [planet, position] of Object.entries(chart.planets)) {
+      planetsBySign.set(position.sign, [...(planetsBySign.get(position.sign) ?? []), this.entryForPlanet(planet)]);
+    }
+    return planetsBySign;
+  }
 
   private signForHouse(lagnaIndex: number, fallback: string, house: number): string {
     if (lagnaIndex < 0) return fallback;

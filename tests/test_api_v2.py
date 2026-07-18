@@ -246,3 +246,25 @@ class TestContextEngineEndpoint:
         r = client.post(f"/api/v1/context/{kid}", json={"domains": ["lottery"]})
         assert r.status_code == 400
         assert "Unknown context domains" in r.json()["detail"]
+
+
+class TestSettingsEndpoint:
+    def test_accepts_eastern_chart_style(self, client_and_kundli):
+        client, _ = client_and_kundli
+        payload = {
+            "chart_style": "eastern",
+            "ayanamsha": "lahiri",
+            "node_type": "mean",
+            "timezone_mode": "browser",
+            "panchanga_place": None,
+            "language": "en",
+            "regional_format": "en-IN",
+        }
+
+        r = client.put("/api/v1/settings", json=payload)
+        assert r.status_code == 200
+        assert r.json()["chart_style"] == "eastern"
+
+        saved = client.get("/api/v1/settings")
+        assert saved.status_code == 200
+        assert saved.json()["chart_style"] == "eastern"

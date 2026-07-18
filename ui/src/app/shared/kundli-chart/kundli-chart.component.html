@@ -32,6 +32,41 @@
           </g>
         }
       </svg>
+    } @else if (chartStyle() === 'eastern') {
+      <svg viewBox="0 0 400 400" role="img">
+        <title>{{ c.name }} eastern Indian chart</title>
+        <path class="chart-fill" d="M20 20H380V380H20Z" />
+        <path class="chart-line strong" d="M20 20H380V380H20Z" />
+        <path class="chart-line strong" d="M200 20L380 200L200 380L20 200Z" />
+        <path class="chart-line" d="M20 20L200 200L380 20M380 380L200 200L20 380" />
+        <path class="chart-line" d="M200 20V380M20 200H380" />
+
+        @for (cell of easternCells(); track cell.sign) {
+          <g
+            class="eastern-cell"
+            [attr.transform]="'translate(' + cell.x + ' ' + cell.y + ')'"
+          >
+            <text class="house-number corner-label" [attr.x]="cell.anchorX" [attr.y]="cell.anchorY">H{{ cell.house }}</text>
+            <text class="sign-label" x="0" y="-13" [attr.fill]="cell.signColor">
+              {{ cell.signLabel }}
+            </text>
+            @for (entry of cell.entries; track entry.key; let i = $index) {
+              <text
+                class="planet-line"
+                x="0"
+                [attr.y]="2 + i * 12"
+              >
+                <tspan>{{ entry.label }}</tspan>
+                @for (annotation of entry.annotations; track annotation.code) {
+                  <tspan [attr.class]="'condition-symbol ' + annotation.tone" dx="3">
+                    {{ annotation.symbol }}
+                  </tspan>
+                }
+              </text>
+            }
+          </g>
+        }
+      </svg>
     } @else {
       <svg viewBox="0 0 400 400" role="img">
         <title>{{ c.name }} south Indian chart</title>
