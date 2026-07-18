@@ -44,7 +44,19 @@
     <div class="row-2">
       <div class="field">
         <label for="f-city">Birth city</label>
-        <input pInputText id="f-city" formControlName="birth_city" placeholder="e.g. Mumbai" autocomplete="off">
+        <p-autocomplete
+          inputId="f-city"
+          formControlName="birth_city"
+          [suggestions]="citySuggestions()"
+          (completeMethod)="searchCities($event)"
+          (onSelect)="onCitySelect($event)"
+          optionLabel="label"
+          placeholder="Type to search, e.g. Mumbai"
+          [minLength]="2"
+          [delay]="200"
+          appendTo="body"
+          styleClass="city-autocomplete"
+        />
       </div>
       <div class="field">
         <label for="f-nation">Country code</label>

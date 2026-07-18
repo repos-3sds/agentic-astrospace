@@ -2,6 +2,7 @@ import { Component, effect, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
+import { AutoComplete, AutoCompleteCompleteEvent, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -10,7 +11,8 @@ import { Select } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 
 import { KundliStore } from '../../core/kundli.store';
-import { KundliPayload } from '../../core/models';
+import { KundliPayload, PanchangaCity } from '../../core/models';
+import { PanchangaService } from '../../core/panchanga.service';
 
 const RELATIONS = [
   { label: 'Myself', value: 'self' },
@@ -27,6 +29,7 @@ const RELATIONS = [
   selector: 'app-kundli-dialog',
   imports: [
     ReactiveFormsModule,
+    AutoComplete,
     Dialog,
     ButtonModule,
     InputTextModule,
@@ -43,8 +46,11 @@ export class KundliDialogComponent {
   private messages = inject(MessageService);
   private router = inject(Router);
 
+  private panchanga = inject(PanchangaService);
+
   protected readonly relations = RELATIONS;
   protected readonly saving = signal(false);
+  protected readonly citySuggestions = signal<PanchangaCity[]>([]);
 
   protected form = this.fb.nonNullable.group({
     name: ['', Validators.required],
@@ -108,6 +114,29 @@ export class KundliDialogComponent {
     });
   }
 
+  protected async searchCities(event: AutoCompleteCompleteEvent): Promise<void> {
+    const q = event.query?.trim() ?? '';
+    if (q.length < 2) {
+      this.citySuggestions.set([]);
+      return;
+    }
+    try {
+      this.citySuggestions.set(await this.panchanga.cities(q));
+    } catch {
+      this.citySuggestions.set([]);
+    }
+  }
+
+  protected onCitySelect(event: AutoCompleteSelectEvent): void {
+    const city = event.value as PanchangaCity;
+    // The autocomplete sets the control to the selected object; normalize it
+    // back to the plain city string and auto-fill the country code.
+    this.form.patchValue({
+      birth_city: city.city,
+      birth_nation: city.nation,
+    });
+  }
+
   protected async save(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -120,6 +149,10 @@ export class KundliDialogComponent {
     }
 
     const v = this.form.getRawValue();
+    // If the user typed a city without picking a suggestion the control holds
+    // a string; if a stray object survived, unwrap it defensively.
+    const rawCity = v.birth_city as unknown;
+    const cityText = typeof rawCity === 'string' ? rawCity : (rawCity as PanchangaCity)?.city ?? '';
     const payload: KundliPayload = {
       name: v.name.trim(),
       relation: v.relation,
@@ -128,7 +161,7 @@ export class KundliDialogComponent {
       birth_year: v.birth_year!,
       birth_hour: v.birth_hour ?? 12,
       birth_minute: v.birth_minute ?? 0,
-      birth_city: v.birth_city.trim(),
+      birth_city: cityText.trim(),
       birth_nation: v.birth_nation.trim().toUpperCase(),
       notes: v.notes.trim(),
     };
