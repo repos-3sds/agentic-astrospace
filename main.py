@@ -53,6 +53,13 @@ app.include_router(panchanga_router)
 app.include_router(ask_router)
 app.include_router(context_router)
 
+# Registered before the "/" SPA mount — Starlette matches in registration
+# order, so anything defined after the mount is unreachable.
+@app.get("/api/health")
+async def health():
+    return {"status": "ok", "version": app.version}
+
+
 # Serve the built Angular SPA (ui/ workspace builds into frontend/dist/browser)
 DIST = Path(__file__).parent / "frontend" / "dist" / "browser"
 
@@ -86,11 +93,6 @@ else:
             "version": "2.0.0",
             "docs": "/docs",
         }
-
-
-@app.get("/api/health")
-async def health():
-    return {"status": "ok", "version": app.version}
 
 
 @app.on_event("startup")
