@@ -9,12 +9,14 @@ dist/
 .env
 venv/
 .venv/
+.venv312/
 env/
 .idea/
 .vscode/
 *.log
 .DS_Store
 astrospace.db
+astrospace_local.db
 cache/
 .claude/
 

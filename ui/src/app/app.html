@@ -5,6 +5,26 @@
     <app-sidebar />
 
     <div class="main">
+      <header class="mobile-appbar">
+        @if (inProfileWorkspace()) {
+          <button type="button" class="icon-action home-action" (click)="goHome()" aria-label="Back to home">
+            <lucide-icon name="chevron-left" [size]="19" />
+          </button>
+        }
+        <div class="mobile-title-block">
+          <span class="mobile-route">{{ mobileTitle() }}</span>
+          <button
+            type="button"
+            class="mobile-profile-trigger"
+            (click)="openProfileSheet()"
+            [attr.aria-label]="store.active() ? 'Change active kundli profile' : 'Choose kundli profile'"
+          >
+            <lucide-icon name="users" [size]="14" />
+            <span>{{ mobileProfileLabel() }}</span>
+          </button>
+        </div>
+      </header>
+
       <header class="topbar">
         <div class="topbar-inner">
           <div class="topbar-titles">
@@ -85,7 +105,220 @@
         </div>
       </main>
     </div>
+
+    <nav class="mobile-bottom-nav" aria-label="Primary navigation">
+      @for (item of mobilePrimaryNav(); track item.route) {
+        <button
+          type="button"
+          class="mobile-nav-item"
+          [class.active]="routeActive(item.route)"
+          (click)="goMobile(item.route)"
+          [attr.aria-label]="item.label"
+          [attr.aria-current]="routeActive(item.route) ? 'page' : null"
+        >
+          <lucide-icon [name]="item.icon" [size]="18" />
+          <span class="mobile-nav-label">{{ item.label }}</span>
+        </button>
+      }
+      <button
+        type="button"
+        class="mobile-nav-item"
+        [class.active]="moreActive()"
+        (click)="openMore()"
+        aria-label="More"
+        [attr.aria-expanded]="moreOpen()"
+      >
+        <span class="hamburger-glyph" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+        <span class="mobile-nav-label">More</span>
+      </button>
+    </nav>
   </div>
+
+  @if (moreOpen()) {
+    <div class="sheet-backdrop" (click)="closeMore()">
+      <section
+        class="mobile-sheet more-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-label="More navigation"
+        cdkTrapFocus
+        [cdkTrapFocusAutoCapture]="true"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="sheet-grabber" aria-hidden="true"></div>
+        <div class="sheet-head">
+          <div>
+            <span class="sheet-eyebrow">Navigation</span>
+            <h2>More</h2>
+          </div>
+          <button type="button" class="icon-action" (click)="closeMore()" aria-label="Close more navigation">
+            <lucide-icon name="x" [size]="18" />
+          </button>
+        </div>
+
+        <div class="sheet-content">
+          @if (activeProfileForSheet()) {
+            <div class="sheet-section">
+              <span class="sheet-section-label">Profile</span>
+              <div class="sheet-list">
+                <button type="button" class="sheet-row" (click)="editActiveDetails()" aria-label="Edit Details">
+                  <span class="sheet-row-icon">
+                    <lucide-icon name="pencil" [size]="18" />
+                  </span>
+                  <span>Edit Details</span>
+                  <lucide-icon name="chevron-right" [size]="16" />
+                </button>
+              </div>
+            </div>
+          }
+
+          <div class="sheet-section">
+            <span class="sheet-section-label">Kundli modules</span>
+            <div class="sheet-list">
+              @for (item of moreNav(); track item.route) {
+                <button
+                  type="button"
+                  class="sheet-row"
+                  [class.active]="routeActive(item.route)"
+                  (click)="goMobile(item.route)"
+                >
+                  <span class="sheet-row-icon">
+                    <lucide-icon [name]="item.icon" [size]="18" />
+                  </span>
+                  <span>{{ item.label }}</span>
+                  <lucide-icon name="chevron-right" [size]="16" />
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="sheet-section">
+            <span class="sheet-section-label">Account</span>
+            <div class="sheet-list">
+              @for (item of accountNav(); track item.route) {
+                <button
+                  type="button"
+                  class="sheet-row"
+                  [class.active]="routeActive(item.route)"
+                  (click)="goMobile(item.route)"
+                >
+                  <span class="sheet-row-icon">
+                    <lucide-icon [name]="item.icon" [size]="18" />
+                  </span>
+                  <span>{{ item.label }}</span>
+                  <lucide-icon name="chevron-right" [size]="16" />
+                </button>
+              }
+              <button type="button" class="sheet-row" (click)="theme.toggle()">
+                <span class="sheet-row-icon">
+                  <lucide-icon [name]="theme.dark() ? 'sun' : 'moon-star'" [size]="18" />
+                </span>
+                <span>{{ theme.dark() ? 'Light mode' : 'Dark mode' }}</span>
+              </button>
+              <button type="button" class="sheet-row danger" (click)="confirmLogout()">
+                <span class="sheet-row-icon">
+                  <lucide-icon name="log-out" [size]="18" />
+                </span>
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (profileSheetOpen()) {
+    <div class="sheet-backdrop" (click)="closeProfileSheet()">
+      <section
+        class="mobile-sheet profile-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Choose profile"
+        cdkTrapFocus
+        [cdkTrapFocusAutoCapture]="true"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="sheet-grabber" aria-hidden="true"></div>
+        <div class="sheet-head">
+          <div>
+            <span class="sheet-eyebrow">Kundli profiles</span>
+            <h2>Choose profile</h2>
+          </div>
+          <div class="sheet-head-actions">
+            <button type="button" class="icon-action" (click)="closeProfileSheet()" aria-label="Close profile chooser">
+              <lucide-icon name="x" [size]="18" />
+            </button>
+          </div>
+        </div>
+
+        <label class="mobile-search">
+          <lucide-icon name="search" [size]="16" />
+          <input
+            type="search"
+            placeholder="Search name, sign, city, relation..."
+            [ngModel]="profileQuery()"
+            (ngModelChange)="profileQuery.set($event)"
+            autofocus
+          />
+        </label>
+
+        @if (activeProfileForSheet(); as active) {
+          <section class="active-profile-card" aria-label="Active profile actions">
+            <span class="profile-avatar">{{ active.name.slice(0, 1) }}</span>
+            <span class="profile-info">
+              <strong>{{ active.name }}</strong>
+              <small>{{ active.relation }} · {{ active.sun_sign || 'Unknown sign' }} · {{ active.birth_city }}</small>
+            </span>
+            <button
+              type="button"
+              class="profile-edit-action"
+              (click)="editProfileFromSheet(active)"
+              aria-label="Edit profile"
+            >
+              <lucide-icon name="pencil" [size]="15" />
+              <span>Edit profile</span>
+            </button>
+          </section>
+        }
+
+        <div class="profile-sheet-list">
+          @for (profile of filteredProfiles(); track profile.id) {
+            <div class="profile-sheet-row" [class.active]="store.activeId() === profile.id">
+              <button type="button" class="profile-pick" (click)="selectProfile(profile.id)">
+                <span class="profile-avatar">{{ profile.name.slice(0, 1) }}</span>
+                <span class="profile-info">
+                  <strong>{{ profile.name }}</strong>
+                  <small>
+                    {{ profile.relation }} · {{ profile.sun_sign || 'Unknown sign' }} · {{ profile.birth_city }}
+                  </small>
+                </span>
+                @if (store.activeId() === profile.id) {
+                  <lucide-icon name="check" [size]="17" />
+                } @else {
+                  <lucide-icon name="chevron-right" [size]="16" />
+                }
+              </button>
+            </div>
+          } @empty {
+            <div class="profile-empty">
+              <strong>No matching profiles</strong>
+              <span>Try a different search or add a new kundli.</span>
+            </div>
+          }
+        </div>
+
+        <button type="button" class="sheet-primary-action" (click)="addProfileFromSheet()">
+          <lucide-icon name="plus" [size]="16" />
+          Add Kundli
+        </button>
+      </section>
+    </div>
+  }
 }
 
 <app-kundli-dialog />

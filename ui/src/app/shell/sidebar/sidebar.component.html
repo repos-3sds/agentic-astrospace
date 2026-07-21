@@ -1,4 +1,4 @@
-<nav class="sidebar" [class.collapsed]="collapsed()">
+<nav class="sidebar" [class.collapsed]="collapsed()" aria-label="App navigation">
   <div class="brand-row">
     <button class="brand" type="button" (click)="goHome()" [title]="collapsed() ? 'AstroSpace home' : null">
       <span class="brand-mark">
@@ -15,7 +15,7 @@
     </button>
   </div>
 
-  <div class="rail-nav" aria-label="App navigation">
+  <div class="rail-nav">
     <a
       class="rail-item home-item"
       [routerLink]="['/app']"
