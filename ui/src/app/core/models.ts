@@ -231,11 +231,27 @@ export interface DailyGuidancePayload {
   do_today: DailyActionRow[];
   avoid_today: DailyActionRow[];
   lucky_signature: {
-    number: number;
     gem: string;
     metal: string;
     direction: string;
     days: string[];
+  };
+  lucky_numbers: {
+    numerology: {
+      number: number;
+      ruling_planet: string;
+      good_numbers: number[];
+      evil_numbers: number[];
+      source: string;
+    };
+    astrological: {
+      number: number;
+      planet: string;
+      source: string;
+      witnesses: { label: string; planet: string; number: number }[];
+      confirmed_by: string[];
+      confirmation_count: number;
+    };
   };
   context: {
     route_domain: string;

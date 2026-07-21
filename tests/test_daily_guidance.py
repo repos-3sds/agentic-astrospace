@@ -79,8 +79,33 @@ class TestDoAvoidAndContext:
 
     def test_lucky_signature_is_birth_constant(self, guidance):
         sig = guidance["lucky_signature"]
-        assert 1 <= sig["number"] <= 9
         assert sig["gem"] and sig["metal"] and sig["direction"]
+
+    def test_numerology_lucky_number(self, guidance):
+        num = guidance["lucky_numbers"]["numerology"]
+        assert 1 <= num["number"] <= 9
+        assert num["ruling_planet"]
+        assert "moolank" in num["source"]
+
+    def test_astrological_lucky_number_from_lagna_lord(self, guidance):
+        astro = guidance["lucky_numbers"]["astrological"]
+        assert 1 <= astro["number"] <= 9
+        assert astro["planet"]
+        assert "Lagna lord" in astro["source"]
+        assert len(astro["witnesses"]) == 4
+        assert astro["witnesses"][0]["label"] == "Lagna lord"
+        # confirmation_count only counts the OTHER three witnesses, never itself
+        assert astro["confirmation_count"] == len(astro["confirmed_by"])
+        assert astro["confirmation_count"] <= 3
+
+    def test_astrological_number_independent_of_calendar_date(self):
+        chart = VedicChart("StableAstro", 1990, 1, 1, 12, 0, **DELHI)
+        d1 = daily_guidance(chart, relation="self",
+                            as_of=datetime(2026, 7, 20, 10, tzinfo=ZoneInfo("Asia/Kolkata")))
+        d2 = daily_guidance(chart, relation="self",
+                            as_of=datetime(2026, 7, 21, 10, tzinfo=ZoneInfo("Asia/Kolkata")))
+        assert d1["lucky_numbers"]["astrological"] == d2["lucky_numbers"]["astrological"]
+        assert d1["lucky_numbers"]["numerology"] == d2["lucky_numbers"]["numerology"]
 
 
 class TestScoring:

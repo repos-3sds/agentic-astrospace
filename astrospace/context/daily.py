@@ -17,7 +17,9 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from ..core.vedic.constants import PLANET_COLORS, PLANET_NUMBER
-from ..core.vedic.favourable import digital_root, favourable_points
+from ..core.vedic.favourable import (
+    astrological_lucky_number, digital_root, favourable_points,
+)
 from ..core.vedic.nakshatra import nakshatra_of
 from ..core.vedic.panchanga_day import daily_panchanga, personal_panchanga
 from ..core.vedic.positions import sign_index
@@ -345,6 +347,10 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
 
     lagna_sign = sign_index(chart.lagna_lon)
     favourable = favourable_points(chart.birth_day_of_month, lagna_sign)
+    atmakaraka = chart.jaimini()["chara_karakas"]["karakas"]["AK"]["planet"]
+    astro_number = astrological_lucky_number(
+        lagna_sign, janma_rashi, janma_nak["lord"], atmakaraka,
+    )
 
     verdict = _verdict(chart, relation or "", day_payload, personal, ctx)
     do_today, avoid_today = _do_and_avoid(day_payload, personal, ctx, words)
@@ -369,11 +375,20 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
         "do_today": do_today,
         "avoid_today": avoid_today,
         "lucky_signature": {
-            "number": favourable["lucky_number"],
             "gem": favourable["lucky_stone"],
             "metal": favourable["lucky_metal"],
             "direction": favourable["lucky_direction"],
             "days": favourable["lucky_days"],
+        },
+        "lucky_numbers": {
+            "numerology": {
+                "number": favourable["lucky_number"],
+                "ruling_planet": favourable["ruling_planet"],
+                "good_numbers": favourable["good_numbers"],
+                "evil_numbers": favourable["evil_numbers"],
+                "source": "digital root of birth day-of-month (moolank)",
+            },
+            "astrological": astro_number,
         },
         "context": {
             "route_domain": ctx["route_domain"],

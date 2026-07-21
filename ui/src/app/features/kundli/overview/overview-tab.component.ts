@@ -196,6 +196,19 @@ export class OverviewTabComponent {
     return `${who} · ${d.vara}`;
   }
 
+  protected numbersAgree(d: DailyGuidancePayload): boolean {
+    return d.lucky_numbers.numerology.number === d.lucky_numbers.astrological.number;
+  }
+
+  protected luckyNumberCaption(d: DailyGuidancePayload): string {
+    const n = d.lucky_numbers.numerology;
+    const a = d.lucky_numbers.astrological;
+    if (n.number === a.number) {
+      return `Birth date and Lagna lord (${a.planet}) agree on ${n.number}.`;
+    }
+    return `${n.number} from birth date · ${a.number} from Lagna lord (${a.planet}).`;
+  }
+
   protected contextDashaLabel(d: DailyGuidancePayload): string {
     return d.context.dasha_chain.map((row) => row.lord).join(' / ') || '—';
   }
