@@ -17,9 +17,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from ..core.vedic.constants import PLANET_COLORS, PLANET_NUMBER
-from ..core.vedic.favourable import (
-    astrological_lucky_number, digital_root, favourable_points,
-)
+from ..core.vedic.favourable import digital_root, favourable_points
 from ..core.vedic.nakshatra import nakshatra_of
 from ..core.vedic.panchanga_day import daily_panchanga, personal_panchanga
 from ..core.vedic.positions import sign_index
@@ -346,11 +344,13 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
     challenging_planet = ctx["challenging_rules"][0]["planet"] if ctx["challenging_rules"] else None
 
     lagna_sign = sign_index(chart.lagna_lon)
-    favourable = favourable_points(chart.birth_day_of_month, lagna_sign)
     atmakaraka = chart.jaimini()["chara_karakas"]["karakas"]["AK"]["planet"]
-    astro_number = astrological_lucky_number(
-        lagna_sign, janma_rashi, janma_nak["lord"], atmakaraka,
+    favourable = favourable_points(
+        chart.birth_day_of_month, lagna_sign,
+        moon_sign=janma_rashi, nakshatra_lord=janma_nak["lord"],
+        atmakaraka=atmakaraka,
     )
+    astro_number = favourable["astrological_number"]
 
     verdict = _verdict(chart, relation or "", day_payload, personal, ctx)
     do_today, avoid_today = _do_and_avoid(day_payload, personal, ctx, words)

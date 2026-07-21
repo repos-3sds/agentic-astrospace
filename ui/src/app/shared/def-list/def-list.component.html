@@ -3,12 +3,20 @@
     <div class="def-row">
       <dt>{{ row.label }}</dt>
       <dd>
-        @if (row.value !== null && row.value !== undefined && row.value !== '') {
-          <span class="as-num">{{ row.value }}</span>
-        } @else if (row.unverified) {
-          <p-tag severity="warn" value="unverified" />
-        } @else {
-          <span class="as-muted">—</span>
+        <div class="def-value">
+          @if (row.swatch) {
+            <i class="def-swatch" [style.background]="row.swatch"></i>
+          }
+          @if (row.value !== null && row.value !== undefined && row.value !== '') {
+            <span class="as-num">{{ row.value }}</span>
+          } @else if (row.unverified) {
+            <p-tag severity="warn" value="unverified" />
+          } @else {
+            <span class="as-muted">—</span>
+          }
+        </div>
+        @if (row.hint) {
+          <small class="def-hint">{{ row.hint }}</small>
         }
       </dd>
     </div>

@@ -189,7 +189,15 @@ class VedicChart:
         return ghatak_of(sign_index(self.positions["Moon"]["lon"]))
 
     def favourable(self) -> dict:
-        return favourable_points(self.birth_day_of_month, sign_index(self.lagna_lon))
+        lagna_sign = sign_index(self.lagna_lon)
+        moon_lon = self.positions["Moon"]["lon"]
+        nak = nakshatra_of(moon_lon)
+        atmakaraka = self.jaimini()["chara_karakas"]["karakas"]["AK"]["planet"]
+        return favourable_points(
+            self.birth_day_of_month, lagna_sign,
+            moon_sign=sign_index(moon_lon), nakshatra_lord=nak["lord"],
+            atmakaraka=atmakaraka,
+        )
 
     def dignities(self) -> dict:
         return all_dignities(self.positions)

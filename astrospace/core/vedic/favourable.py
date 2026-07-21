@@ -1,17 +1,22 @@
 """
-Favourable points — lucky numbers, days, planets, gem, metal, direction.
+Favourable points — lucky numbers, days, planets, gem, metal, direction, colour.
 
 Derivations:
 - Lucky/root number: digital root of the birth day-of-month; good/evil
-  numbers from the numerology table (VERIFY — convention-dependent).
+  numbers from the numerology table (VERIFY — convention-dependent). This is
+  the numerology *moolank* — distinct from the chart-derived number below.
+- Astrological lucky number: the lagna lord's ruling number, cross-checked
+  against the rashi lord, nakshatra lord and Jaimini Atmakaraka. See
+  astrological_lucky_number(). Only included when the caller supplies the
+  moon sign / nakshatra lord / Atmakaraka (chart.favourable() always does).
 - Good years: calendar ages whose digital root equals the root number.
 - Good/evil planets: functional benefics/malefics for the lagna
   (Parashari house-lordship principles, VERIFY).
 - Lucky days: weekdays of the good planets.
-- Gem/metal/direction/time: associations of the lagna lord.
+- Gem/metal/direction/time/colour: associations of the lagna lord.
 """
 from .constants import (
-    NUMEROLOGY, FUNCTIONAL_BY_LAGNA, PLANET_DAYS, PLANET_GEMS,
+    NUMEROLOGY, FUNCTIONAL_BY_LAGNA, PLANET_COLORS, PLANET_DAYS, PLANET_GEMS,
     PLANET_METALS, PLANET_DIRECTIONS, PLANET_NUMBER, SIGN_LORDS, OWN_SIGNS,
 )
 from .positions import sign_name
@@ -23,7 +28,10 @@ def digital_root(n: int) -> int:
     return n
 
 
-def favourable_points(birth_day: int, lagna_sign: int) -> dict:
+def favourable_points(birth_day: int, lagna_sign: int, *,
+                      moon_sign: int | None = None,
+                      nakshatra_lord: str | None = None,
+                      atmakaraka: str | None = None) -> dict:
     root = digital_root(birth_day)
     num = NUMEROLOGY[root]
     functional = FUNCTIONAL_BY_LAGNA[lagna_sign % 12]
@@ -36,8 +44,9 @@ def favourable_points(birth_day: int, lagna_sign: int) -> dict:
     friendly_signs = sorted({
         sign_name(s) for p in good_planets for s in OWN_SIGNS.get(p, [])
     })
+    color_name, color_hex = PLANET_COLORS[lagna_lord]
 
-    return {
+    result = {
         "lucky_number": root,
         "ruling_planet": num["planet"],
         "good_numbers": num["good"],
@@ -52,7 +61,16 @@ def favourable_points(birth_day: int, lagna_sign: int) -> dict:
         "lucky_stone": PLANET_GEMS[lagna_lord],
         "lucky_direction": PLANET_DIRECTIONS[lagna_lord],
         "lucky_time": f"Hora of {lagna_lord}" + (" (sunrise)" if lagna_lord == "Sun" else ""),
+        "lucky_color": {
+            "name": color_name, "hex": color_hex, "planet": lagna_lord,
+            "source": f"colour of {lagna_lord}, the Lagna lord",
+        },
     }
+    if moon_sign is not None and nakshatra_lord and atmakaraka:
+        result["astrological_number"] = astrological_lucky_number(
+            lagna_sign, moon_sign, nakshatra_lord, atmakaraka,
+        )
+    return result
 
 
 def astrological_lucky_number(lagna_sign: int, moon_sign: int,

@@ -209,8 +209,21 @@ export class VedicTabComponent {
     const f = this.data()?.favourable;
     if (!f) return [];
     const join = (v: unknown) => (Array.isArray(v) ? v.join(', ') : (v as string));
-    return [
-      { label: 'Lucky number', value: f['lucky_number'] },
+
+    const rows: DefRow[] = [
+      { label: 'Lucky number (birth date)', value: f['lucky_number'], hint: 'Numerology moolank — digital root of the birth day' },
+    ];
+    const astro = f['astrological_number'];
+    if (astro) {
+      rows.push({
+        label: 'Lucky number (Lagna lord)',
+        value: `${astro.number} · ${astro.planet}`,
+        hint: astro.confirmed_by?.length
+          ? `Also confirmed by: ${astro.confirmed_by.join(', ')}`
+          : 'Ascendant ruler — the chart’s primary identity indicator',
+      });
+    }
+    rows.push(
       { label: 'Good numbers', value: join(f['good_numbers']) },
       { label: 'Evil numbers', value: join(f['evil_numbers']) },
       { label: 'Good years', value: join(f['good_years']) },
@@ -223,7 +236,12 @@ export class VedicTabComponent {
       { label: 'Lucky stone', value: f['lucky_stone'] },
       { label: 'Lucky direction', value: f['lucky_direction'] },
       { label: 'Lucky time', value: f['lucky_time'] },
-    ];
+    );
+    const color = f['lucky_color'];
+    if (color) {
+      rows.push({ label: 'Lucky colour', value: color.name, swatch: color.hex, hint: color.source });
+    }
+    return rows;
   });
 
   protected readonly grahaRows = computed<GrahaRow[]>(() => {
