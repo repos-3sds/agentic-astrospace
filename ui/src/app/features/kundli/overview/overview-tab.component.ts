@@ -189,6 +189,13 @@ export class OverviewTabComponent {
     },
   ];
 
+  protected dailyEyebrow(d: DailyGuidancePayload): string {
+    const rel = this.kundli()?.relation;
+    const name = this.kundli()?.name ?? 'This profile';
+    const who = rel === 'self' ? 'Your day' : `${name}’s day`;
+    return `${who} · ${d.vara}`;
+  }
+
   protected contextDashaLabel(d: DailyGuidancePayload): string {
     return d.context.dasha_chain.map((row) => row.lord).join(' / ') || '—';
   }

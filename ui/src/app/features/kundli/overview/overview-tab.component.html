@@ -37,53 +37,55 @@
   <app-section-card icon="radar" title="What matters today" subtitle="computed daily guidance">
     @if (daily(); as d) {
       <div class="daily-guidance">
-        <article class="daily-verdict" [class]="toneClass(d.verdict.tone)">
-          <header>
-            <span class="daily-eyebrow">Today for {{ kundli()?.relation === 'self' ? 'you' : kundli()?.name }} · {{ d.vara }}</span>
-            <h3>{{ d.verdict.headline }}</h3>
-          </header>
-          <p class="daily-verdict-text">{{ d.verdict.text }}</p>
-          <div class="daily-star-row">
-            <span>Moon in <strong>{{ d.star_of_day.nakshatra }}</strong></span>
-            <span>Tara <strong>{{ d.tarabala.tara }}</strong></span>
-            <span>Tithi <strong>{{ d.star_of_day.tithi }}</strong></span>
-          </div>
-        </article>
-
-        <div class="daily-almanac">
-          <article class="almanac-card color">
-            <span class="almanac-label">Colour of the day</span>
-            <div class="color-row">
-              <i class="color-swatch" [style.background]="d.color.hex"></i>
-              <strong>{{ d.color.name }}</strong>
+        <div class="daily-top">
+          <article class="daily-verdict" [class]="toneClass(d.verdict.tone)">
+            <header>
+              <span class="daily-eyebrow">{{ dailyEyebrow(d) }}</span>
+              <h3>{{ d.verdict.headline }}</h3>
+            </header>
+            <p class="daily-verdict-text">{{ d.verdict.text }}</p>
+            <div class="daily-star-row">
+              <span>Moon in <strong>{{ d.star_of_day.nakshatra }}</strong></span>
+              <span>Tara <strong>{{ d.tarabala.tara }}</strong></span>
+              <span>Tithi <strong>{{ d.star_of_day.tithi }}</strong></span>
             </div>
-            <small>{{ d.color.source }}</small>
-            @if (d.color.power_color; as pc) {
-              <div class="color-row power">
-                <i class="color-swatch" [style.background]="pc.hex"></i>
-                <span>Power colour: {{ pc.name }}</span>
+          </article>
+
+          <div class="daily-almanac">
+            <article class="almanac-card color">
+              <span class="almanac-label">Colour of the day</span>
+              <div class="color-row">
+                <i class="color-swatch" [style.background]="d.color.hex"></i>
+                <strong>{{ d.color.name }}</strong>
               </div>
-            }
-          </article>
+              <small>{{ d.color.source }}</small>
+              @if (d.color.power_color; as pc) {
+                <div class="color-row power">
+                  <i class="color-swatch" [style.background]="pc.hex"></i>
+                  <span>Power colour: {{ pc.name }}</span>
+                </div>
+              }
+            </article>
 
-          <article class="almanac-card number" [class]="'fit-' + d.number.fit">
-            <span class="almanac-label">Number of the day</span>
-            <div class="number-row">
-              <b>{{ d.number.value }}</b>
-              <span class="number-fit">{{ d.number.fit }}</span>
-            </div>
-            <small>Ruled by {{ d.number.ruling_planet }} ({{ d.number.ruling_number }}) · {{ d.number.source }}</small>
-          </article>
+            <article class="almanac-card number" [class]="'fit-' + d.number.fit">
+              <span class="almanac-label">Number of the day</span>
+              <div class="number-row">
+                <b>{{ d.number.value }}</b>
+                <span class="number-fit">{{ d.number.fit }}</span>
+              </div>
+              <small>Ruled by {{ d.number.ruling_planet }} ({{ d.number.ruling_number }}) · {{ d.number.source }}</small>
+            </article>
 
-          <article class="almanac-card lucky">
-            <span class="almanac-label">Your lucky signature</span>
-            <ul class="lucky-list">
-              <li><span>Number</span><strong>{{ d.lucky_signature.number }}</strong></li>
-              <li><span>Gem</span><strong>{{ d.lucky_signature.gem }}</strong></li>
-              <li><span>Metal</span><strong>{{ d.lucky_signature.metal }}</strong></li>
-              <li><span>Direction</span><strong>{{ d.lucky_signature.direction }}</strong></li>
-            </ul>
-          </article>
+            <article class="almanac-card lucky">
+              <span class="almanac-label">Lucky signature</span>
+              <ul class="lucky-list">
+                <li><span>Number</span><strong>{{ d.lucky_signature.number }}</strong></li>
+                <li><span>Gem</span><strong>{{ d.lucky_signature.gem }}</strong></li>
+                <li><span>Metal</span><strong>{{ d.lucky_signature.metal }}</strong></li>
+                <li><span>Direction</span><strong>{{ d.lucky_signature.direction }}</strong></li>
+              </ul>
+            </article>
+          </div>
         </div>
 
         <div class="daily-actions">

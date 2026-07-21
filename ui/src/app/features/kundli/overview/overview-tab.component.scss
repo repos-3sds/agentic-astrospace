@@ -49,6 +49,15 @@
   margin-bottom: 22px;
 }
 
+// Verdict fills the wide left column; the almanac cards use the right rail
+// (no dead whitespace) and drop below the verdict on narrow screens.
+.daily-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(224px, 0.82fr);
+  gap: 16px;
+  align-items: start;
+}
+
 .daily-verdict {
   position: relative;
   padding: 20px 22px;
@@ -93,7 +102,6 @@
     position: relative;
     line-height: 1.62;
     color: var(--as-text);
-    max-width: 68ch;
   }
 }
 
@@ -110,7 +118,9 @@
 
 .daily-almanac {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  // In the right rail this is one column; when the top stacks on mobile the
+  // rail widens and the cards flow into a row.
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
 }
 
@@ -499,6 +509,10 @@
   .transit-link {
     grid-template-columns: 1fr;
     grid-column: auto;
+  }
+
+  .daily-top {
+    grid-template-columns: 1fr;
   }
 }
 
