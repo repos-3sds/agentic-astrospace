@@ -226,6 +226,28 @@ PLANET_DAYS = {
     "Jupiter": "Thursday", "Venus": "Friday", "Saturn": "Saturday",
 }
 
+# Traditional colour association per graha (name, hex for the swatch).
+# Used for the "colour of the day", keyed to the weekday (vara) lord and the
+# day's supportive/challenging transiting graha.
+PLANET_COLORS = {
+    "Sun": ("Deep Orange", "#E8632A"),
+    "Moon": ("Pearl White", "#EDE6D6"),
+    "Mars": ("Coral Red", "#D0342C"),
+    "Mercury": ("Emerald Green", "#2F8F5B"),
+    "Jupiter": ("Golden Yellow", "#D8A128"),
+    "Venus": ("Blush Pink", "#E58BA6"),
+    "Saturn": ("Deep Blue", "#365B9E"),
+    "Rahu": ("Smoky Grey", "#6B6E76"),
+    "Ketu": ("Earth Brown", "#8A5A34"),
+}
+
+# Numerology number ruled by each graha — the inverse of NUMEROLOGY below.
+# (Sun 1, Moon 2, Jupiter 3, Rahu 4, Mercury 5, Venus 6, Ketu 7, Saturn 8, Mars 9.)
+PLANET_NUMBER = {
+    "Sun": 1, "Moon": 2, "Jupiter": 3, "Rahu": 4, "Mercury": 5,
+    "Venus": 6, "Ketu": 7, "Saturn": 8, "Mars": 9,
+}
+
 # ── Functional benefics/malefics per lagna (Parashari) ───────────────────────
 # VERIFY: standard published lists; yogakaraka noted separately.
 

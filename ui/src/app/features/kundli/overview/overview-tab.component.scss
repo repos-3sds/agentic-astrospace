@@ -42,6 +42,223 @@
   font-size: 13px;
 }
 
+// ── Daily guidance (computed "Today for You") ────────────────────────────────
+.daily-guidance {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.daily-verdict {
+  position: relative;
+  padding: 20px 22px;
+  border: 1px solid var(--as-border);
+  border-radius: 22px;
+  background: var(--as-raised);
+  overflow: hidden;
+  display: grid;
+  gap: 12px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 12% 16%, color-mix(in srgb, var(--as-accent) 16%, transparent), transparent 40%);
+    pointer-events: none;
+  }
+
+  &.supportive { border-color: color-mix(in srgb, var(--as-good) 40%, var(--as-border)); }
+  &.challenging { border-color: color-mix(in srgb, var(--as-warn) 42%, var(--as-border)); }
+
+  header {
+    display: grid;
+    gap: 3px;
+    position: relative;
+  }
+
+  .daily-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--as-muted);
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 20px;
+  }
+
+  .daily-verdict-text {
+    margin: 0;
+    position: relative;
+    line-height: 1.62;
+    color: var(--as-text);
+    max-width: 68ch;
+  }
+}
+
+.daily-star-row {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 12.5px;
+  color: var(--as-muted);
+
+  strong { color: var(--as-text); }
+}
+
+.daily-almanac {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.almanac-card {
+  padding: 14px 16px;
+  border: 1px solid var(--as-border);
+  border-radius: 18px;
+  background: var(--as-raised);
+  display: grid;
+  gap: 8px;
+  align-content: start;
+
+  .almanac-label {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--as-muted);
+  }
+
+  small { color: var(--as-muted); font-size: 11px; line-height: 1.4; }
+}
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  strong { font-size: 15px; }
+  &.power { font-size: 12px; color: var(--as-muted); }
+}
+
+.color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 7px;
+  border: 1px solid color-mix(in srgb, var(--as-ink) 22%, transparent);
+  flex: none;
+}
+
+.number-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+
+  b { font-size: 30px; font-weight: 800; line-height: 1; }
+}
+
+.number-fit {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: capitalize;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--as-control);
+  color: var(--as-muted);
+}
+
+.almanac-card.fit-favourable .number-fit {
+  color: var(--as-good);
+  background: var(--as-good-soft);
+}
+
+.almanac-card.fit-challenging .number-fit {
+  color: var(--as-warn);
+  background: var(--as-warn-soft);
+}
+
+.lucky-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 5px;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 12.5px;
+
+    span { color: var(--as-muted); }
+    strong { color: var(--as-text); }
+  }
+}
+
+.daily-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.action-col {
+  padding: 14px 16px;
+  border: 1px solid var(--as-border);
+  border-radius: 18px;
+  background: var(--as-raised);
+
+  .action-head {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--as-muted);
+    margin-bottom: 8px;
+  }
+
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13px;
+    line-height: 1.42;
+
+    lucide-icon { margin-top: 2px; flex: none; }
+  }
+
+  &.do {
+    border-color: color-mix(in srgb, var(--as-good) 30%, var(--as-border));
+    li lucide-icon { color: var(--as-good); }
+  }
+
+  &.avoid {
+    border-color: color-mix(in srgb, var(--as-warn) 32%, var(--as-border));
+    li lucide-icon { color: var(--as-warn); }
+  }
+}
+
+.daily-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  font-size: 12px;
+  color: var(--as-muted);
+
+  strong { color: var(--as-text); font-weight: 600; }
+  .daily-provenance { font-style: italic; opacity: 0.85; }
+}
+
+.today-subhead {
+  margin: 4px 0 12px;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--as-muted);
+}
+
 .today-intel {
   display: grid;
   grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);

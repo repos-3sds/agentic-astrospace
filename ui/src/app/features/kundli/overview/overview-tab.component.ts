@@ -8,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { planetGlyph } from '../../../core/glyphs';
 import { KundliStore } from '../../../core/kundli.store';
 import {
+  DailyGuidancePayload,
   MasaPayload,
   TransitAnalysisPayload,
   TransitAspect,
@@ -60,6 +61,7 @@ export class OverviewTabComponent {
   protected readonly transits = signal<TransitAnalysisPayload | null>(null);
   protected readonly transitError = signal<string | null>(null);
   protected readonly masa = signal<MasaPayload | null>(null);
+  protected readonly daily = signal<DailyGuidancePayload | null>(null);
   protected readonly transitLoading = computed(
     () => !this.transits() && !this.transitError() && !!this.store.activeId(),
   );
@@ -138,6 +140,7 @@ export class OverviewTabComponent {
       this.transits.set(null);
       this.transitError.set(null);
       this.masa.set(null);
+      this.daily.set(null);
       if (!id) return;
       this.vedic
         .transits(id)
@@ -147,6 +150,10 @@ export class OverviewTabComponent {
         .masa(id)
         .then((payload) => this.masa.set(payload))
         .catch(() => this.masa.set(null));
+      this.vedic
+        .dailyGuidance(id)
+        .then((payload) => this.daily.set(payload))
+        .catch(() => this.daily.set(null));
     });
   }
 
@@ -181,6 +188,14 @@ export class OverviewTabComponent {
         p.value ? '<span class="cell-retro">Retrograde</span>' : 'Direct',
     },
   ];
+
+  protected contextDashaLabel(d: DailyGuidancePayload): string {
+    return d.context.dasha_chain.map((row) => row.lord).join(' / ') || '—';
+  }
+
+  protected contextGocharaLabel(d: DailyGuidancePayload): string {
+    return d.context.active_gochara.map((row) => row.name).join(', ');
+  }
 
   protected toneClass(tone: string): string {
     if (tone === 'supportive') return 'supportive';

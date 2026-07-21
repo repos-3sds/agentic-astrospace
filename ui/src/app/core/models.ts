@@ -185,6 +185,71 @@ export interface SpecialLagnasPayload {
 
 /* ── Masa / Kaala payload ───────────────────────────────────────────── */
 
+export interface DailyColorSwatch {
+  name: string;
+  hex: string;
+  planet: string;
+  source: string;
+}
+
+export interface DailyActionRow {
+  text: string;
+  source: string;
+  window?: string;
+}
+
+export interface DailyGuidancePayload {
+  system: string;
+  as_of: string;
+  date: string;
+  subject: string;
+  relation?: string;
+  vara: string;
+  verdict: {
+    tone: 'supportive' | 'positive' | 'mixed' | 'caution';
+    score: number;
+    headline: string;
+    text: string;
+    word_count: number;
+  };
+  color: DailyColorSwatch & {
+    power_color?: DailyColorSwatch;
+    caution_color?: DailyColorSwatch;
+  };
+  number: {
+    value: number;
+    fit: 'favourable' | 'challenging' | 'neutral';
+    ruling_planet: string;
+    ruling_number: number;
+    personal_good: number[];
+    personal_evil: number[];
+    source: string;
+  };
+  tarabala: { tara: string; count: number; favourable: boolean; note?: string | null };
+  chandrabala: { house_from_rashi: number; favourable: boolean; chandrashtama: boolean };
+  star_of_day: { nakshatra: string; moon_rashi: string; tithi: string };
+  do_today: DailyActionRow[];
+  avoid_today: DailyActionRow[];
+  lucky_signature: {
+    number: number;
+    gem: string;
+    metal: string;
+    direction: string;
+    days: string[];
+  };
+  context: {
+    route_domain: string;
+    dasha_chain: { level: string; lord: string }[];
+    references: { statement: string; source_text_key: string; source_location: string }[];
+    active_gochara: { name: string; planet: string; severity?: string }[];
+  };
+  provenance: {
+    engine: string;
+    place: { city: string; nation: string; timezone: string };
+    note: string;
+  };
+}
+
 export interface MasaPayload {
   name: string;
   name_index: number;

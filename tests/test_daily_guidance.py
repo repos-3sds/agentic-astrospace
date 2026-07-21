@@ -1,0 +1,97 @@
+"""CE-wired daily guidance: computed, rule-based, non-generic."""
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+import pytest
+
+from astrospace.context import daily_guidance
+from astrospace.context.daily import _score_day, _subject_words
+from astrospace.core.vedic.chart import VedicChart
+
+DELHI = {"city": "New Delhi", "nation": "IN"}
+
+
+@pytest.fixture(scope="module")
+def guidance():
+    chart = VedicChart("Daily", 1990, 1, 1, 12, 0, **DELHI)
+    as_of = datetime(2026, 7, 21, 10, 0, tzinfo=ZoneInfo("Asia/Kolkata"))
+    return daily_guidance(chart, relation="self", as_of=as_of)
+
+
+class TestVerdict:
+    def test_verdict_is_substantial_and_toned(self, guidance):
+        v = guidance["verdict"]
+        assert v["word_count"] >= 100
+        assert v["tone"] in ("supportive", "positive", "mixed", "caution")
+        assert v["text"].count(".") >= 3  # multi-sentence
+
+    def test_verdict_names_real_signals(self, guidance):
+        text = guidance["verdict"]["text"]
+        # The star of the day and the tara must appear — proof it's computed,
+        # not generic boilerplate.
+        assert guidance["star_of_day"]["nakshatra"] in text
+        assert guidance["tarabala"]["tara"] in text
+
+    def test_pronoun_grammar_for_self_and_other(self):
+        assert _subject_words("self")["you"] == "you"
+        assert _subject_words("parent")["you"] == "them"
+
+
+class TestColorAndNumber:
+    def test_color_from_weekday_lord(self, guidance):
+        c = guidance["color"]
+        assert c["hex"].startswith("#")
+        assert c["planet"] in (
+            "Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"
+        )
+        assert "vara" in c["source"]
+
+    def test_number_computed_and_personalized(self, guidance):
+        n = guidance["number"]
+        assert 1 <= n["value"] <= 9
+        assert n["fit"] in ("favourable", "challenging", "neutral")
+        assert 1 <= n["ruling_number"] <= 9
+
+    def test_color_and_number_change_by_day(self):
+        chart = VedicChart("Drift", 1990, 1, 1, 12, 0, **DELHI)
+        d1 = daily_guidance(chart, relation="self",
+                            as_of=datetime(2026, 7, 20, 10, tzinfo=ZoneInfo("Asia/Kolkata")))
+        d2 = daily_guidance(chart, relation="self",
+                            as_of=datetime(2026, 7, 21, 10, tzinfo=ZoneInfo("Asia/Kolkata")))
+        # Different weekdays => different day colour (Mon vs Tue lords differ).
+        assert d1["color"]["planet"] != d2["color"]["planet"]
+
+
+class TestDoAvoidAndContext:
+    def test_do_avoid_carry_sources(self, guidance):
+        for row in guidance["do_today"] + guidance["avoid_today"]:
+            assert row["source"] in ("tarabala", "chandrabala", "gochara", "muhurta", "ghatak")
+
+    def test_rahu_kalam_window_present_in_avoid(self, guidance):
+        assert any("Rahu Kalam" in row["text"] for row in guidance["avoid_today"])
+
+    def test_ce_context_is_wired(self, guidance):
+        ctx = guidance["context"]
+        assert ctx["route_domain"] in ("health", "wealth", "career")
+        assert isinstance(ctx["dasha_chain"], list) and ctx["dasha_chain"]
+        assert isinstance(ctx["references"], list)
+        assert "active_gochara" in ctx
+
+    def test_lucky_signature_is_birth_constant(self, guidance):
+        sig = guidance["lucky_signature"]
+        assert 1 <= sig["number"] <= 9
+        assert sig["gem"] and sig["metal"] and sig["direction"]
+
+
+class TestScoring:
+    def test_chandrashtama_drags_score_down(self):
+        base_personal = {
+            "tarabala": {"tara": "Sampat"},
+            "chandrabala": {"favourable": True, "chandrashtama": False},
+            "ghatak_alerts": [],
+        }
+        ctx = {"supportive_rules": [], "challenging_rules": []}
+        good = _score_day(base_personal, ctx)[0]
+        base_personal["chandrabala"] = {"favourable": False, "chandrashtama": True}
+        bad = _score_day(base_personal, ctx)[0]
+        assert bad < good

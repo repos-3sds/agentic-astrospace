@@ -5,6 +5,7 @@ import {
   AshtakavargaPayload,
   CalendarIntelligencePayload,
   CompatibilityPayload,
+  DailyGuidancePayload,
   DashaPayload,
   GocharamProfilePayload,
   JaiminiPayload,
@@ -55,6 +56,10 @@ export class VedicService {
 
   masa(kundliId: string): Promise<MasaPayload> {
     return this.api.get<MasaPayload>(`/vedic/${kundliId}/masa?${this.calcParams()}`);
+  }
+
+  dailyGuidance(kundliId: string): Promise<DailyGuidancePayload> {
+    return this.api.get<DailyGuidancePayload>(`/context/${kundliId}/daily?${this.calcParams()}`);
   }
 
   ashtakavarga(kundliId: string): Promise<AshtakavargaPayload> {

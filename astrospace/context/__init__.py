@@ -8,6 +8,7 @@ Public surface:
     build_reading_graph                      — optional LangGraph orchestration
 """
 from .assembler import assemble, assemble_domain
+from .daily import assemble_daily_context, daily_guidance
 from .graph import ReadingState, build_reading_graph
 from .kb import JsonKnowledgeBase, Reference, get_knowledge_base, set_knowledge_base
 from .router import KeywordRouter, LLMRouter, RoutingDecision
@@ -15,6 +16,7 @@ from .taxonomy import DomainSpec, TaxonomyError, domain_ids, get_domain, taxonom
 
 __all__ = [
     "assemble", "assemble_domain",
+    "assemble_daily_context", "daily_guidance",
     "JsonKnowledgeBase", "Reference", "get_knowledge_base", "set_knowledge_base",
     "KeywordRouter", "LLMRouter", "RoutingDecision",
     "ReadingState", "build_reading_graph",
