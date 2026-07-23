@@ -5,6 +5,11 @@ export interface AppNavItem {
   requiresProfile?: boolean;
 }
 
+export interface AppNavGroup {
+  label: string;
+  items: AppNavItem[];
+}
+
 export const GLOBAL_PRIMARY_NAV: AppNavItem[] = [
   { route: 'home', label: 'Home', icon: 'layout-dashboard' },
   { route: 'profiles', label: 'Profiles', icon: 'users' },
@@ -19,18 +24,36 @@ export const PROFILE_PRIMARY_NAV: AppNavItem[] = [
   { route: 'ask', label: 'Ask', icon: 'message-circle', requiresProfile: true },
 ];
 
-export const KUNDLI_MORE_NAV: AppNavItem[] = [
-  { route: 'vedic', label: 'Vedic Details', icon: 'sparkles', requiresProfile: true },
-  { route: 'varga-charts', label: 'Varga Charts', icon: 'layout-dashboard', requiresProfile: true },
-  { route: 'calendar', label: 'Calendar & Panchanga', icon: 'calendar-days', requiresProfile: true },
-  { route: 'jaimini', label: 'Jaimini', icon: 'sparkles', requiresProfile: true },
-  { route: 'transits', label: 'Transits', icon: 'sparkles', requiresProfile: true },
-  { route: 'gocharam', label: 'Gocharam', icon: 'sparkles', requiresProfile: true },
-  { route: 'ashtakavarga', label: 'Ashtakavarga', icon: 'layout-dashboard', requiresProfile: true },
-  { route: 'yogas-doshas', label: 'Yogas & Doshas', icon: 'sparkles', requiresProfile: true },
-  { route: 'compat', label: 'Compatibility', icon: 'users', requiresProfile: true },
-  { route: 'readings', label: 'Readings', icon: 'message-circle', requiresProfile: true },
-  { route: 'notes', label: 'Notes', icon: 'message-circle', requiresProfile: true },
+export const KUNDLI_MORE_GROUPS: AppNavGroup[] = [
+  {
+    label: 'Insights',
+    items: [
+      { route: 'readings', label: 'Readings', icon: 'message-circle', requiresProfile: true },
+      { route: 'notes', label: 'Notes', icon: 'message-circle', requiresProfile: true },
+    ],
+  },
+  {
+    label: 'Charts',
+    items: [
+      { route: 'vedic', label: 'Vedic Details', icon: 'sparkles', requiresProfile: true },
+      { route: 'varga-charts', label: 'Varga Charts', icon: 'layout-dashboard', requiresProfile: true },
+      { route: 'ashtakavarga', label: 'Ashtakavarga', icon: 'layout-dashboard', requiresProfile: true },
+      { route: 'jaimini', label: 'Jaimini', icon: 'sparkles', requiresProfile: true },
+      { route: 'yogas-doshas', label: 'Yogas & Doshas', icon: 'sparkles', requiresProfile: true },
+    ],
+  },
+  {
+    label: 'Timing',
+    items: [
+      { route: 'calendar', label: 'Calendar & Panchanga', icon: 'calendar-days', requiresProfile: true },
+      { route: 'transits', label: 'Transits', icon: 'sparkles', requiresProfile: true },
+      { route: 'gocharam', label: 'Gocharam', icon: 'sparkles', requiresProfile: true },
+    ],
+  },
+  {
+    label: 'Compatibility',
+    items: [{ route: 'compat', label: 'Compatibility', icon: 'users', requiresProfile: true }],
+  },
 ];
 
 export const ACCOUNT_NAV: AppNavItem[] = [

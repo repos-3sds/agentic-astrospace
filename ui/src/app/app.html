@@ -176,25 +176,27 @@
             </div>
           }
 
-          <div class="sheet-section">
-            <span class="sheet-section-label">Kundli modules</span>
-            <div class="sheet-list">
-              @for (item of moreNav(); track item.route) {
-                <button
-                  type="button"
-                  class="sheet-row"
-                  [class.active]="routeActive(item.route)"
-                  (click)="goMobile(item.route)"
-                >
-                  <span class="sheet-row-icon">
-                    <lucide-icon [name]="item.icon" [size]="18" />
-                  </span>
-                  <span>{{ item.label }}</span>
-                  <lucide-icon name="chevron-right" [size]="16" />
-                </button>
-              }
+          @for (group of moreNavGroups(); track group.label) {
+            <div class="sheet-section">
+              <span class="sheet-section-label">{{ group.label }}</span>
+              <div class="sheet-list">
+                @for (item of group.items; track item.route) {
+                  <button
+                    type="button"
+                    class="sheet-row"
+                    [class.active]="routeActive(item.route)"
+                    (click)="goMobile(item.route)"
+                  >
+                    <span class="sheet-row-icon">
+                      <lucide-icon [name]="item.icon" [size]="18" />
+                    </span>
+                    <span>{{ item.label }}</span>
+                    <lucide-icon name="chevron-right" [size]="16" />
+                  </button>
+                }
+              </div>
             </div>
-          </div>
+          }
 
           <div class="sheet-section">
             <span class="sheet-section-label">Account</span>

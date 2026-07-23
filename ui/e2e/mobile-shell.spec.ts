@@ -116,7 +116,14 @@ test.describe('phone shell', () => {
     await page.getByRole('button', { name: 'More', exact: true }).click();
 
     const dialog = page.getByRole('dialog', { name: 'More navigation' });
+    const sectionLabels = dialog.locator('.sheet-section-label');
     await expect(dialog).toBeVisible();
+    await expect(sectionLabels.filter({ hasText: 'Profile' })).toBeVisible();
+    await expect(sectionLabels.filter({ hasText: 'Insights' })).toBeVisible();
+    await expect(sectionLabels.filter({ hasText: 'Charts' })).toBeVisible();
+    await expect(sectionLabels.filter({ hasText: 'Timing' })).toBeVisible();
+    await expect(sectionLabels.filter({ hasText: 'Compatibility' })).toBeVisible();
+    await expect(sectionLabels.filter({ hasText: 'Account' })).toBeVisible();
     await expect(dialog.getByRole('button', { name: 'Edit Details' })).toBeVisible();
     await expect(dialog.getByRole('button', { name: 'Vedic Details', exact: true })).toBeVisible();
     await expect(dialog.getByRole('button', { name: 'Varga Charts', exact: true })).toBeVisible();

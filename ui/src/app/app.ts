@@ -17,7 +17,7 @@ import { Kundli } from './core/models';
 import { PreferencesService } from './core/preferences.service';
 import { ThemeService } from './core/theme.service';
 import { KundliDialogComponent } from './shell/kundli-dialog/kundli-dialog.component';
-import { ACCOUNT_NAV, GLOBAL_PRIMARY_NAV, KUNDLI_MORE_NAV, PROFILE_PRIMARY_NAV, ROUTE_TITLES } from './shell/mobile-nav';
+import { ACCOUNT_NAV, GLOBAL_PRIMARY_NAV, KUNDLI_MORE_GROUPS, PROFILE_PRIMARY_NAV, ROUTE_TITLES } from './shell/mobile-nav';
 import { SidebarComponent } from './shell/sidebar/sidebar.component';
 
 const SELECTED_PROFILE_STORAGE_KEY = 'astrospace:selected-profile';
@@ -53,7 +53,8 @@ export class App implements OnInit {
   protected readonly mobilePrimaryNav = computed(() =>
     this.store.activeId() ? this.profilePrimaryNav() : this.globalPrimaryNav(),
   );
-  protected readonly moreNav = signal(KUNDLI_MORE_NAV);
+  protected readonly moreNavGroups = signal(KUNDLI_MORE_GROUPS);
+  protected readonly moreNavItems = computed(() => this.moreNavGroups().flatMap((group) => group.items));
   protected readonly accountNav = signal(ACCOUNT_NAV);
   protected readonly moreOpen = signal(false);
   protected readonly profileSheetOpen = signal(false);
@@ -90,7 +91,7 @@ export class App implements OnInit {
   protected readonly moreActive = computed(() => {
     const section = this.currentSection();
     const visibleInPrimaryNav = this.mobilePrimaryNav().some((item) => item.route === section);
-    return this.moreOpen() || (!visibleInPrimaryNav && this.moreNav().some((item) => item.route === section));
+    return this.moreOpen() || (!visibleInPrimaryNav && this.moreNavItems().some((item) => item.route === section));
   });
   protected readonly filteredProfiles = computed(() => {
     const q = this.profileQuery().trim().toLowerCase();
