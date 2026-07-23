@@ -168,13 +168,25 @@ test.describe('phone shell', () => {
 
     await expect(page.getByRole('button', { name: 'Back to home' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Today' })).toHaveAttribute('aria-current', 'page');
-    await expect(page.getByRole('button', { name: 'Chart' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Timeline' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Charts' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Ask' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'More', exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: 'Back to home' }).click();
     await expect(page).toHaveURL(/\/app$/);
+  });
+
+  test('Charts primary tab opens the chart toolbox hub', async ({ page }, testInfo) => {
+    skipUnlessPhone(testInfo);
+    await page.goto('/kundli/profile-1/overview');
+
+    await page.getByRole('button', { name: 'Charts' }).click();
+    await expect(page).toHaveURL(/\/kundli\/profile-1\/chart$/);
+    await expect(page.getByRole('heading', { name: 'Choose the chart layer you need.' })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Life phase/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Varga charts/ })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
   });
 
   test('profile edit lives inside the profile sheet', async ({ page }, testInfo) => {

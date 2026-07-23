@@ -19,8 +19,8 @@ export const GLOBAL_PRIMARY_NAV: AppNavItem[] = [
 
 export const PROFILE_PRIMARY_NAV: AppNavItem[] = [
   { route: 'overview', label: 'Today', icon: 'layout-dashboard', requiresProfile: true },
-  { route: 'chart', label: 'Chart', icon: 'sparkles', requiresProfile: true },
   { route: 'dashas', label: 'Timeline', icon: 'calendar-days', requiresProfile: true },
+  { route: 'chart', label: 'Charts', icon: 'sparkles', requiresProfile: true },
   { route: 'ask', label: 'Ask', icon: 'message-circle', requiresProfile: true },
 ];
 
@@ -35,10 +35,11 @@ export const KUNDLI_MORE_GROUPS: AppNavGroup[] = [
   {
     label: 'Charts',
     items: [
-      { route: 'vedic', label: 'Vedic Details', icon: 'sparkles', requiresProfile: true },
+      { route: 'chart', label: 'Charts Hub', icon: 'sparkles', requiresProfile: true },
       { route: 'varga-charts', label: 'Varga Charts', icon: 'layout-dashboard', requiresProfile: true },
       { route: 'ashtakavarga', label: 'Ashtakavarga', icon: 'layout-dashboard', requiresProfile: true },
       { route: 'jaimini', label: 'Jaimini', icon: 'sparkles', requiresProfile: true },
+      { route: 'vedic', label: 'Vedic Details', icon: 'sparkles', requiresProfile: true },
       { route: 'yogas-doshas', label: 'Yogas & Doshas', icon: 'sparkles', requiresProfile: true },
     ],
   },
@@ -73,7 +74,7 @@ export const ROUTE_TITLES: Record<string, string> = {
   calendar: 'Calendar',
   ashtakavarga: 'Ashtakavarga',
   'yogas-doshas': 'Yogas & Doshas',
-  chart: 'Chart',
+  chart: 'Charts',
   readings: 'Readings',
   compat: 'Compatibility',
   notes: 'Notes',

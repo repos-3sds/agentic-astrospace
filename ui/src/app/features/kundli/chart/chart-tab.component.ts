@@ -1,4 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 
 import { planetGlyph, SIGN_ORDER, signMeta } from '../../../core/glyphs';
 import { KundliStore } from '../../../core/kundli.store';
@@ -48,6 +50,14 @@ interface BalanceItem {
   pct: number;
 }
 
+interface ChartHubItem {
+  route: string;
+  icon: string;
+  label: string;
+  summary: string;
+  badge: string;
+}
+
 const ELEMENTS: Record<string, string> = {
   Aries: 'Fire',
   Leo: 'Fire',
@@ -88,7 +98,7 @@ const ASPECTS = [
 
 @Component({
   selector: 'app-chart-tab',
-  imports: [SectionCardComponent, DefListComponent],
+  imports: [RouterLink, LucideAngularModule, SectionCardComponent, DefListComponent],
   templateUrl: './chart-tab.component.html',
   styleUrl: './chart-tab.component.scss',
 })
@@ -97,6 +107,50 @@ export class ChartTabComponent {
 
   protected readonly showAspects = signal(true);
   protected readonly showRetrogrades = signal(true);
+  protected readonly chartHubItems: ChartHubItem[] = [
+    {
+      route: '../dashas',
+      icon: 'calendar-days',
+      label: 'Life phase',
+      summary: 'Current life period, upcoming changes, and timing shifts.',
+      badge: 'Start here',
+    },
+    {
+      route: '../varga-charts',
+      icon: 'boxes',
+      label: 'Varga charts',
+      summary: 'D9 and divisional charts for deeper life areas.',
+      badge: 'Divisions',
+    },
+    {
+      route: '../ashtakavarga',
+      icon: 'grid-3x3',
+      label: 'Ashtakavarga',
+      summary: 'Bindu strength and transit support by sign.',
+      badge: 'Strength',
+    },
+    {
+      route: '../vedic',
+      icon: 'sparkles',
+      label: 'Birth chart details',
+      summary: 'Planets, houses, strengths, and raw Vedic tables.',
+      badge: 'Foundation',
+    },
+    {
+      route: '../jaimini',
+      icon: 'compass',
+      label: 'Jaimini',
+      summary: 'Karaks, special lagnas, and alternate chart logic.',
+      badge: 'Advanced',
+    },
+    {
+      route: '../yogas-doshas',
+      icon: 'badge-alert',
+      label: 'Yogas & doshas',
+      summary: 'Named combinations and caution markers.',
+      badge: 'Patterns',
+    },
+  ];
 
   protected readonly planets = computed(() => this.store.active()?.chart_data?.planets ?? {});
 
