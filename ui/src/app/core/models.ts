@@ -212,6 +212,19 @@ export interface DailyGuidancePayload {
     text: string;
     word_count: number;
   };
+  reading: {
+    summary: string;
+    focus: string;
+    best_for: string[];
+    avoid: string[];
+    energy: 'low' | 'moderate' | 'steady' | 'high';
+    relationship_tone: string;
+    money_tone: string;
+    work_tone: string;
+    timing_note: string;
+    plain_why: string[];
+    technical_why: string[];
+  };
   color: DailyColorSwatch & {
     power_color?: DailyColorSwatch;
     caution_color?: DailyColorSwatch;

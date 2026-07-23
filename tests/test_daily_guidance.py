@@ -19,18 +19,33 @@ def guidance():
 
 
 class TestVerdict:
-    def test_verdict_is_substantial_and_toned(self, guidance):
+    def test_verdict_is_plain_and_toned(self, guidance):
         v = guidance["verdict"]
-        assert v["word_count"] >= 100
+        assert 40 <= v["word_count"] <= 130
         assert v["tone"] in ("supportive", "positive", "mixed", "caution")
         assert v["text"].count(".") >= 3  # multi-sentence
 
-    def test_verdict_names_real_signals(self, guidance):
+    def test_reading_is_practical_before_technical(self, guidance):
+        reading = guidance["reading"]
+        assert reading["summary"]
+        assert reading["focus"]
+        assert reading["energy"] in ("low", "moderate", "steady", "high")
+        assert reading["best_for"]
+        assert reading["avoid"]
+        assert reading["work_tone"]
+        assert reading["money_tone"]
+        assert reading["relationship_tone"]
+        assert reading["plain_why"]
+        assert reading["technical_why"]
+
+    def test_technical_why_names_real_signals(self, guidance):
         text = guidance["verdict"]["text"]
-        # The star of the day and the tara must appear — proof it's computed,
-        # not generic boilerplate.
-        assert guidance["star_of_day"]["nakshatra"] in text
-        assert guidance["tarabala"]["tara"] in text
+        technical = " ".join(guidance["reading"]["technical_why"])
+        # Technical proof stays available, but no longer pollutes the common-user
+        # reading by forcing Sanskrit labels into the main verdict.
+        assert guidance["star_of_day"]["nakshatra"] in technical
+        assert guidance["tarabala"]["tara"] in technical
+        assert guidance["star_of_day"]["nakshatra"] not in text
 
     def test_pronoun_grammar_for_self_and_other(self):
         assert _subject_words("self")["you"] == "you"
@@ -68,7 +83,8 @@ class TestDoAvoidAndContext:
             assert row["source"] in ("tarabala", "chandrabala", "gochara", "muhurta", "ghatak")
 
     def test_rahu_kalam_window_present_in_avoid(self, guidance):
-        assert any("Rahu Kalam" in row["text"] for row in guidance["avoid_today"])
+        assert any(row["source"] == "muhurta" and row.get("window") for row in guidance["avoid_today"])
+        assert any("Rahu Kalam" in row for row in guidance["reading"]["technical_why"])
 
     def test_ce_context_is_wired(self, guidance):
         ctx = guidance["context"]

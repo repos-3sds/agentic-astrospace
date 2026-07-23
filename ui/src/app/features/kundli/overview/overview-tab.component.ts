@@ -196,6 +196,19 @@ export class OverviewTabComponent {
     return `${who} · ${d.vara}`;
   }
 
+  protected dailyHeroText(d: DailyGuidancePayload): string {
+    const text = d.reading?.summary?.trim() || d.verdict.text.trim();
+    const firstSentence = text.match(/^.*?[.!?](?:\s|$)/)?.[0]?.trim();
+    const summary = firstSentence && firstSentence.length <= 190 ? firstSentence : text;
+    if (summary.length <= 190) return summary;
+    return `${summary.slice(0, 184).trimEnd()}...`;
+  }
+
+  protected timingChip(d: DailyGuidancePayload): string {
+    const window = d.avoid_today.find((row) => row.source === 'muhurta' && row.window)?.window;
+    return window ? `Routine ${window}` : 'Check windows';
+  }
+
   protected numbersAgree(d: DailyGuidancePayload): boolean {
     return d.lucky_numbers.numerology.number === d.lucky_numbers.astrological.number;
   }

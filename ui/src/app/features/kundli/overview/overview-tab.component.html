@@ -1,58 +1,108 @@
 <div class="as-panel">
-  <section class="as-tab-hero">
-    <div>
-      <span class="as-hero-eyebrow">Overview · {{ kundli()?.relation || 'Profile' }}</span>
-      <h2>{{ kundli()?.name || 'Kundli' }} at a glance.</h2>
-      <p>
-        Start with the big three, birth context, and the raw planetary positions
-        used throughout the rest of the workspace.
-      </p>
-    </div>
-    <div class="as-hero-stats">
-      <article>
-        <span>Birth place</span>
-        <strong>{{ kundli()?.birth_city || '—' }}</strong>
-        <small>{{ kundli()?.birth_nation || '—' }}</small>
-      </article>
-      <article>
-        <span>Planets loaded</span>
-        <strong>{{ planetRows().length }}</strong>
-        <small>profile chart snapshot</small>
-      </article>
-    </div>
-  </section>
-
-  <div class="big-three">
-    @for (item of bigThree(); track item.label) {
-      <div class="stat">
-        <app-glyph-badge [sign]="item.sign" [size]="46" />
-        <div class="stat-text">
-          <span class="stat-label">{{ item.label }}</span>
-          <span class="stat-value">{{ item.sign || '—' }}</span>
+  <section class="as-tab-hero today-hero">
+    @if (daily(); as d) {
+      <div>
+        <span class="as-hero-eyebrow">{{ dailyEyebrow(d) }}</span>
+        <h2>{{ d.verdict.headline }}</h2>
+        <p>{{ dailyHeroText(d) }}</p>
+        <div class="daily-star-row hero-star-row">
+          <span>Energy <strong>{{ d.reading.energy }}</strong></span>
+          <span>Timing <strong>{{ timingChip(d) }}</strong></span>
         </div>
       </div>
+      <div class="as-hero-stats">
+        <article>
+          <span>Current backdrop</span>
+          <strong>{{ contextDashaLabel(d) }}</strong>
+          <small>life-period cycle</small>
+        </article>
+        <article [class]="'fit-' + d.number.fit">
+          <span>Number today</span>
+          <strong>{{ d.number.value }}</strong>
+          <small>{{ d.number.fit }} · {{ d.number.ruling_planet }}</small>
+        </article>
+        <article>
+          <span>Lucky colour</span>
+          <strong>{{ d.color.name }}</strong>
+          <small>{{ d.lucky_signature.direction }}</small>
+        </article>
+      </div>
+    } @else {
+      <div>
+        <span class="as-hero-eyebrow">Today · {{ kundli()?.relation || 'Profile' }}</span>
+        <h2>{{ kundli()?.name || 'Kundli' }} daily view.</h2>
+        <p>
+          Daily guidance, transits, and profile context will appear here when
+          the computed readings are ready.
+        </p>
+      </div>
+      <div class="as-hero-stats">
+        <article>
+          <span>Birth place</span>
+          <strong>{{ kundli()?.birth_city || '—' }}</strong>
+          <small>{{ kundli()?.birth_nation || '—' }}</small>
+        </article>
+        <article>
+          <span>Planets loaded</span>
+          <strong>{{ planetRows().length }}</strong>
+          <small>profile chart snapshot</small>
+        </article>
+      </div>
     }
-  </div>
+  </section>
 
-  <app-section-card icon="radar" title="What matters today" subtitle="computed daily guidance">
+  <app-section-card icon="radar" title="Today's plan" subtitle="daily guidance and live signals">
     @if (daily(); as d) {
       <div class="daily-guidance">
-        <article class="daily-verdict" [class]="toneClass(d.verdict.tone)">
+        <article class="daily-verdict compact" [class]="toneClass(d.verdict.tone)">
           <header>
-            <span class="daily-eyebrow">{{ dailyEyebrow(d) }}</span>
+            <span class="daily-eyebrow">What this means</span>
             <h3>{{ d.verdict.headline }}</h3>
           </header>
-          <p class="daily-verdict-text">{{ d.verdict.text }}</p>
-          <div class="daily-star-row">
-            <span>Moon in <strong>{{ d.star_of_day.nakshatra }}</strong></span>
-            <span>Tara <strong>{{ d.tarabala.tara }}</strong></span>
-            <span>Tithi <strong>{{ d.star_of_day.tithi }}</strong></span>
-          </div>
+          <p class="daily-verdict-text">{{ d.reading.focus }}</p>
         </article>
+
+        <div class="daily-life-grid">
+          <article>
+            <span>Work</span>
+            <p>{{ d.reading.work_tone }}</p>
+          </article>
+          <article>
+            <span>Money</span>
+            <p>{{ d.reading.money_tone }}</p>
+          </article>
+          <article>
+            <span>People</span>
+            <p>{{ d.reading.relationship_tone }}</p>
+          </article>
+        </div>
+
+        <div class="daily-actions">
+          @if (d.reading.best_for.length) {
+            <article class="action-col do">
+              <span class="action-head">Good for today</span>
+              <ul>
+                @for (row of d.reading.best_for; track row) {
+                  <li><lucide-icon name="check" [size]="14" /> {{ row }}</li>
+                }
+              </ul>
+            </article>
+          }
+          @if (d.reading.avoid.length) {
+            <article class="action-col avoid">
+              <span class="action-head">Go gentle / avoid</span>
+              <ul>
+                @for (row of d.reading.avoid; track row) {
+                  <li><lucide-icon name="alert-triangle" [size]="14" /> {{ row }}</li>
+                }
+              </ul>
+            </article>
+          }
+        </div>
 
         <div class="daily-almanac">
           <article class="almanac-card color">
-            <span class="almanac-label">Colour of the day</span>
+            <span class="almanac-label">Colour</span>
             <div class="color-row">
               <i class="color-swatch" [style.background]="d.color.hex"></i>
               <strong>{{ d.color.name }}</strong>
@@ -61,22 +111,22 @@
             @if (d.color.power_color; as pc) {
               <div class="color-row power">
                 <i class="color-swatch" [style.background]="pc.hex"></i>
-                <span>Power colour: {{ pc.name }}</span>
+                <span>Power: {{ pc.name }}</span>
               </div>
             }
           </article>
 
           <article class="almanac-card number" [class]="'fit-' + d.number.fit">
-            <span class="almanac-label">Number of the day</span>
+            <span class="almanac-label">Number</span>
             <div class="number-row">
               <b>{{ d.number.value }}</b>
               <span class="number-fit">{{ d.number.fit }}</span>
             </div>
-            <small>Ruled by {{ d.number.ruling_planet }} ({{ d.number.ruling_number }}) · fit checked against your numerology</small>
+            <small>Ruled by {{ d.number.ruling_planet }} ({{ d.number.ruling_number }})</small>
           </article>
 
           <article class="almanac-card lucky-number">
-            <span class="almanac-label">Your lucky number</span>
+            <span class="almanac-label">Lucky number</span>
             <div class="lucky-number-row">
               <div class="lucky-number-pill" [class.match]="numbersAgree(d)">
                 <b>{{ d.lucky_numbers.numerology.number }}</b>
@@ -84,7 +134,7 @@
               </div>
               <div class="lucky-number-pill" [class.match]="numbersAgree(d)">
                 <b>{{ d.lucky_numbers.astrological.number }}</b>
-                <span>{{ d.lucky_numbers.astrological.planet }} (Lagna)</span>
+                <span>{{ d.lucky_numbers.astrological.planet }}</span>
               </div>
             </div>
             <small>{{ luckyNumberCaption(d) }}</small>
@@ -101,40 +151,21 @@
           </div>
         </div>
 
-        <div class="daily-actions">
-          @if (d.do_today.length) {
-            <article class="action-col do">
-              <span class="action-head">Good for today</span>
-              <ul>
-                @for (row of d.do_today; track row.text) {
-                  <li><lucide-icon name="check" [size]="14" /> {{ row.text }}</li>
-                }
-              </ul>
-            </article>
-          }
-          @if (d.avoid_today.length) {
-            <article class="action-col avoid">
-              <span class="action-head">Go gentle / avoid</span>
-              <ul>
-                @for (row of d.avoid_today; track row.text) {
-                  <li><lucide-icon name="alert-triangle" [size]="14" /> {{ row.text }}</li>
-                }
-              </ul>
-            </article>
-          }
-        </div>
-
         <div class="daily-context">
-          <span>Running dasha:
-            <strong>{{ contextDashaLabel(d) }}</strong>
-          </span>
-          @if (d.context.active_gochara.length) {
-            <span>Active gochara:
-              <strong>{{ contextGocharaLabel(d) }}</strong>
-            </span>
+          @for (why of d.reading.plain_why; track why) {
+            <span>{{ why }}</span>
           }
           <span class="daily-provenance">{{ d.provenance.note }}</span>
         </div>
+
+        <details class="daily-proof">
+          <summary>Why this is calculated</summary>
+          <ul>
+            @for (why of d.reading.technical_why; track why) {
+              <li>{{ why }}</li>
+            }
+          </ul>
+        </details>
       </div>
     }
 
@@ -192,6 +223,20 @@
         </a>
       </div>
     }
+  </app-section-card>
+
+  <app-section-card icon="sparkles" title="Profile foundation" subtitle="birth chart snapshot">
+    <div class="big-three">
+      @for (item of bigThree(); track item.label) {
+        <div class="stat">
+          <app-glyph-badge [sign]="item.sign" [size]="46" />
+          <div class="stat-text">
+            <span class="stat-label">{{ item.label }}</span>
+            <span class="stat-value">{{ item.sign || '—' }}</span>
+          </div>
+        </div>
+      }
+    </div>
   </app-section-card>
 
   <div class="as-grid-2">

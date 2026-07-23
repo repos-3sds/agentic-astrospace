@@ -42,7 +42,31 @@
   font-size: 13px;
 }
 
-// ── Daily guidance (computed "Today for You") ────────────────────────────────
+.today-hero {
+  align-items: stretch;
+
+  .as-hero-stats {
+    align-content: stretch;
+  }
+
+  .as-hero-stats article {
+    display: grid;
+    align-content: center;
+
+    &.fit-favourable {
+      border-color: color-mix(in srgb, var(--as-good) 34%, var(--as-border));
+    }
+
+    &.fit-challenging {
+      border-color: color-mix(in srgb, var(--as-warn) 38%, var(--as-border));
+    }
+  }
+}
+
+.hero-star-row {
+  margin-top: 18px;
+}
+
 .daily-guidance {
   display: grid;
   gap: 16px;
@@ -104,11 +128,15 @@
   font-size: 12.5px;
   color: var(--as-muted);
 
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
   strong { color: var(--as-text); }
 }
 
-// Three cards, identical anatomy (label + hero row + one caption line) so
-// they land the same height by construction — no filler gaps to fake it.
 .daily-almanac {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -202,8 +230,6 @@
   }
 }
 
-// Compact reference bar for the birth-constant lucky signature — a single
-// row, not a card, so it never competes for height with the almanac trio.
 .daily-strip {
   display: flex;
   flex-wrap: wrap;
@@ -253,6 +279,7 @@
   border: 1px solid var(--as-border);
   border-radius: 18px;
   background: var(--as-raised);
+  min-height: 100%;
 
   .action-head {
     display: block;
@@ -277,11 +304,19 @@
 
   &.do {
     border-color: color-mix(in srgb, var(--as-good) 30%, var(--as-border));
+    background:
+      linear-gradient(145deg, color-mix(in srgb, var(--as-good) 8%, transparent), transparent 54%),
+      var(--as-raised);
+
     li lucide-icon { color: var(--as-good); }
   }
 
   &.avoid {
     border-color: color-mix(in srgb, var(--as-warn) 32%, var(--as-border));
+    background:
+      linear-gradient(145deg, color-mix(in srgb, var(--as-warn) 9%, transparent), transparent 54%),
+      var(--as-raised);
+
     li lucide-icon { color: var(--as-warn); }
   }
 }
@@ -548,14 +583,9 @@
   }
 
   .daily-almanac,
-  .daily-actions {
+  .daily-actions,
+  .daily-life-grid {
     grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 640px) {
-  .lucky-number-row {
-    flex-direction: column;
   }
 }
 
@@ -565,12 +595,33 @@
     grid-template-columns: 1fr;
   }
 
+  .lucky-number-row {
+    flex-direction: column;
+  }
+
   .today-lead strong {
     position: static;
   }
 }
 
 @media (max-width: 599px) {
+  .today-hero .as-hero-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    article:first-child {
+      grid-column: 1 / -1;
+    }
+
+    article {
+      min-height: 86px;
+    }
+
+    strong {
+      font-size: 17px;
+      white-space: normal;
+    }
+  }
+
   .big-three {
     gap: 10px;
   }
@@ -632,6 +683,8 @@
 
   .almanac-card,
   .action-col,
+  .daily-life-grid article,
+  .daily-proof,
   .daily-strip,
   .today-lead,
   .signal-card {
@@ -665,6 +718,7 @@
   }
 
   .daily-actions,
+  .daily-life-grid,
   .today-intel {
     gap: 10px;
   }

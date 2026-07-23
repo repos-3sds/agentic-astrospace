@@ -245,6 +245,62 @@ h4 {
   }
 }
 
+.daily-life-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+
+  article {
+    min-width: 0;
+    padding: 14px 16px;
+    border: 1px solid var(--as-border);
+    border-radius: 18px;
+    background: var(--as-raised);
+  }
+
+  span {
+    display: block;
+    color: var(--as-muted);
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  p {
+    margin: 7px 0 0;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+}
+
+.daily-proof {
+  border: 1px solid var(--as-border);
+  border-radius: 18px;
+  background: var(--as-raised);
+
+  summary {
+    min-height: var(--as-touch-target);
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    color: var(--as-accent-strong);
+    font-size: 12px;
+    font-weight: 850;
+    cursor: pointer;
+  }
+
+  ul {
+    display: grid;
+    gap: 7px;
+    margin: 0;
+    padding: 0 14px 14px 30px;
+    color: var(--as-muted);
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+}
+
 @media (max-width: 900px) {
   .as-tab-hero {
     grid-template-columns: 1fr;

@@ -183,68 +183,39 @@ def _score_day(personal: dict, ctx: dict) -> tuple[int, str, str]:
 def _verdict(chart, relation: str, day_payload: dict, personal: dict,
              ctx: dict) -> dict:
     words = _subject_words(relation)
-    you, poss = words["you"], words["poss"]
     score, tone, headline = _score_day(personal, ctx)
 
     subject = "you" if words["who"] == "you" else chart.name
     tara = personal.get("tarabala", {})
     tara_name = tara.get("tara", "")
-    nak_name = day_payload["elements"]["nakshatra"][0]["name"]
-    meaning = TARABALA_MEANING.get(tara_name, "a neutral star for the day").format(
-        you=you, poss=poss)
-
-    sentences: list[str] = []
-    sentences.append(
-        f"Today looks like {headline} for {subject}. The Moon travels through "
-        f"{nak_name}, which counts as {tara_name} from {poss} birth star — {meaning}."
-    )
-
     chandra = personal.get("chandrabala", {})
-    chandra_clause = ""
+    sentences: list[str] = [f"Today looks like {headline} for {subject}."]
+
+    if tara_name in _FAVOURABLE_TARAS:
+        sentences.append("It is better for steady progress, useful conversations and meaningful follow-through.")
+    elif tara_name and tara_name != "Janma":
+        sentences.append("It is better to be selective today and avoid taking on more than necessary.")
+    else:
+        sentences.append("It is a reflective day, so routine work and review are safer than rushing into something new.")
+
     if chandra.get("chandrashtama"):
-        chandra_clause = (
-            f"The Moon also sits in {poss} eighth from the birth sign (chandrashtama), "
-            "so energy and mood may dip — go gently and avoid forcing big decisions"
-        )
+        sentences.append("Energy and mood may feel uneven, so keep the schedule lighter and avoid forcing big decisions.")
     elif chandra.get("favourable"):
-        chandra_clause = (
-            f"The Moon rides a comfortable house from {poss} sign, keeping the "
-            "emotional tone steady and cooperative"
-        )
+        sentences.append("The emotional tone is reasonably steady, which helps cooperation and calm planning.")
     else:
-        chandra_clause = (
-            f"The Moon sits in a mildly draining house from {poss} sign, so it helps "
-            "to keep the day light rather than overcommitted"
-        )
+        sentences.append("The day can feel mildly draining, so protect time and avoid overcommitting.")
 
-    gochara_clause = ""
     if ctx["supportive_rules"]:
-        r = ctx["supportive_rules"][0]
-        gochara_clause = (
-            f"On the transit side, {r['name']} is active, which softens pressure and "
-            "makes guidance, planning and recovery easier to reach"
-        )
+        sentences.append("A supportive longer-term influence is active, so guidance, planning and recovery are easier to reach.")
     elif ctx["challenging_rules"]:
-        r = ctx["challenging_rules"][0]
-        gochara_clause = (
-            f"On the transit side, {r['name']} is running, so expect a slower, more "
-            "demanding background that asks for patience over speed"
-        )
+        sentences.append("A heavier longer-term influence is active, so patience matters more than speed.")
     else:
-        gochara_clause = (
-            "No major slow-planet transit rule is active, so daily choices and the "
-            "Moon's movement matter more than big gochara pressure right now"
-        )
-    sentences.append(f"{chandra_clause}. {gochara_clause}.")
+        sentences.append("No major slow-moving pressure is active, so daily choices matter more than background intensity.")
 
-    dasha_clause = ""
-    if ctx["dasha_chain"]:
-        path = " / ".join(d["lord"] for d in ctx["dasha_chain"])
-        dasha_clause = f"The running dasha is {path}, the backdrop these themes play out against"
     rahu = _find_window(day_payload["windows"]["inauspicious"], "Rahu Kalam")
     rahu_time = _window_time(rahu)
     caution_clause = (
-        f"keep the {rahu_time} window (Rahu Kalam) for routine work rather than fresh starts"
+        f"Keep {rahu_time} for routine work rather than fresh starts"
         if rahu_time else "watch the daily inauspicious windows before starting anything major"
     )
     closing = {
@@ -253,9 +224,7 @@ def _verdict(chart, relation: str, day_payload: dict, personal: dict,
         "mixed": "pick your moments, keep commitments realistic, and avoid overreach",
         "caution": "slow down, protect your energy, and postpone anything that can wait",
     }[tone]
-    tail = f"{dasha_clause}; {caution_clause}. Overall, {closing}." if dasha_clause \
-        else f"Practically, {caution_clause}. Overall, {closing}."
-    sentences.append(tail)
+    sentences.append(f"Practically, {caution_clause}. Overall, {closing}.")
 
     text = " ".join(sentences)
     return {
@@ -267,6 +236,115 @@ def _verdict(chart, relation: str, day_payload: dict, personal: dict,
     }
 
 
+def _plain_why(day_payload: dict, personal: dict, ctx: dict, words: dict) -> list[str]:
+    poss = words["poss"]
+    tara = personal.get("tarabala", {})
+    chandra = personal.get("chandrabala", {})
+    why: list[str] = []
+
+    tara_name = tara.get("tara")
+    if tara_name in _FAVOURABLE_TARAS:
+        why.append("The day has a supportive personal timing marker, so important work can move with less resistance.")
+    elif tara_name and tara_name != "Janma":
+        why.append("The day has a cautionary personal timing marker, so it is better to reduce risk and avoid rushing.")
+    else:
+        why.append("The day points more toward reflection and routine than high-pressure new beginnings.")
+
+    if chandra.get("chandrashtama"):
+        why.append("The Moon is in a sensitive position for this profile, so energy and mood need extra care.")
+    elif chandra.get("favourable"):
+        why.append(f"The Moon is in a comfortable position from {poss} birth sign, helping emotional steadiness.")
+    else:
+        why.append("The Moon is not in its easiest position today, so pacing matters.")
+
+    if ctx["supportive_rules"]:
+        why.append("At least one longer-term transit is supportive, which helps planning, learning and recovery.")
+    elif ctx["challenging_rules"]:
+        why.append("At least one longer-term transit is demanding, so patient choices are safer.")
+    else:
+        why.append("There is no major slow-moving transit alert, so the day depends more on timing and choices.")
+    return why
+
+
+def _technical_why(day_payload: dict, personal: dict, ctx: dict) -> list[str]:
+    nak_name = day_payload["elements"]["nakshatra"][0]["name"]
+    tithi_name = day_payload["elements"]["tithi"][0]["name"]
+    tara = personal.get("tarabala", {})
+    chandra = personal.get("chandrabala", {})
+    rows = [
+        f"Nakshatra: {nak_name}",
+        f"Tithi: {tithi_name}",
+        f"Tarabala: {tara.get('tara', '—')} ({tara.get('count', '—')}/9)",
+        f"Chandrabala: house {chandra.get('house_from_rashi', '—')} from natal Moon",
+    ]
+    if ctx["dasha_chain"]:
+        rows.append("Dasha: " + " / ".join(d["lord"] for d in ctx["dasha_chain"]))
+    for rule in ctx["gochara"].get("active_rules", [])[:3]:
+        rows.append(f"Transit rule: {rule['name']} ({rule.get('severity', 'neutral')})")
+    rahu = _find_window(day_payload["windows"]["inauspicious"], "Rahu Kalam")
+    if rahu:
+        rows.append(f"Rahu Kalam: {_window_time(rahu)}")
+    return rows
+
+
+def _reading(chart, relation: str, day_payload: dict, personal: dict, ctx: dict,
+             verdict: dict, do_today: list[dict], avoid_today: list[dict]) -> dict:
+    words = _subject_words(relation)
+    subject = "you" if words["who"] == "you" else chart.name
+    tone = verdict["tone"]
+    rahu = _find_window(day_payload["windows"]["inauspicious"], "Rahu Kalam")
+    rahu_time = _window_time(rahu)
+
+    energy = {
+        "supportive": "steady",
+        "positive": "steady",
+        "mixed": "moderate",
+        "caution": "low",
+    }[tone]
+    focus = {
+        "supportive": "Use today for work that deserves momentum. Start with the important task, then use the easier windows for follow-up and planning.",
+        "positive": "Move forward, but keep the day simple. This is useful for steady progress, practical decisions and conversations that need calm timing.",
+        "mixed": "Treat today as a measured day. Make progress, but avoid stacking too many commitments or forcing a result before it is ready.",
+        "caution": "Keep today lighter and more deliberate. Focus on maintenance, recovery and decisions that do not need immediate pressure.",
+    }[tone]
+    summary = {
+        "supportive": f"Today supports meaningful progress for {subject}.",
+        "positive": f"Today is useful for steady forward movement for {subject}.",
+        "mixed": f"Today rewards a measured, realistic approach for {subject}.",
+        "caution": f"Today is better for patience, review and a lighter schedule for {subject}.",
+    }[tone]
+    timing_note = (
+        f"Use {rahu_time} for routine work, review or cleanup. Keep fresh starts outside that window."
+        if rahu_time else "Check the caution windows before beginning anything important."
+    )
+
+    return {
+        "summary": summary,
+        "focus": focus,
+        "best_for": [row["text"] for row in do_today[:4]],
+        "avoid": [row["text"] for row in avoid_today[:4]],
+        "energy": energy,
+        "relationship_tone": (
+            "Good for cooperative conversations; avoid pushing people for instant agreement."
+            if tone in ("supportive", "positive", "mixed")
+            else "Keep conversations soft and practical; do not force emotional closure today."
+        ),
+        "money_tone": (
+            "Good for planning, comparing options and measured spending."
+            if tone != "caution" else
+            "Avoid impulsive spending; review commitments before saying yes."
+        ),
+        "work_tone": (
+            "Best for focused progress, follow-ups and finishing useful work."
+            if tone in ("supportive", "positive") else
+            "Best for planning, cleanup, documentation and realistic commitments."
+        ),
+        "timing_note": timing_note,
+        "plain_why": _plain_why(day_payload, personal, ctx, words),
+        "technical_why": _technical_why(day_payload, personal, ctx),
+    }
+
+
 def _do_and_avoid(day_payload: dict, personal: dict, ctx: dict,
                   words: dict) -> tuple[list[dict], list[dict]]:
     poss = words["poss"]
@@ -275,35 +353,35 @@ def _do_and_avoid(day_payload: dict, personal: dict, ctx: dict,
 
     tara = personal.get("tarabala", {})
     if tara.get("tara") in _FAVOURABLE_TARAS:
-        do.append({"text": f"Favourable star day ({tara['tara']}) — good for meaningful starts",
+        do.append({"text": "Good for meaningful starts, follow-through and important conversations",
                    "source": "tarabala"})
     elif tara.get("tara") and tara.get("tara") != "Janma":
-        avoid.append({"text": f"{tara['tara']} star — hold off on major new commitments",
+        avoid.append({"text": "Hold off on major new commitments unless they are necessary",
                       "source": "tarabala"})
 
     if personal.get("chandrabala", {}).get("chandrashtama"):
-        avoid.append({"text": "Chandrashtama — postpone big decisions and travel if you can",
+        avoid.append({"text": "Postpone big decisions and travel if you can",
                       "source": "chandrabala"})
 
     for rule in ctx["supportive_rules"]:
-        do.append({"text": f"{rule['name']} is supporting you — plan, learn, seek guidance",
+        do.append({"text": "Plan, learn, seek guidance or ask for help from the right person",
                    "source": "gochara"})
     for rule in ctx["challenging_rules"]:
-        avoid.append({"text": f"{rule['name']} is active — avoid rushed or risky moves",
+        avoid.append({"text": "Avoid rushed, risky or ego-driven moves",
                       "source": "gochara"})
 
     abhijit = _find_window(day_payload["windows"]["auspicious"], "Abhijit")
     if abhijit:
-        do.append({"text": f"Best window {_window_time(abhijit)} (Abhijit Muhurta)",
+        do.append({"text": f"Use {_window_time(abhijit)} for your most important start or decision",
                    "source": "muhurta", "window": _window_time(abhijit)})
     rahu = _find_window(day_payload["windows"]["inauspicious"], "Rahu Kalam")
     if rahu:
-        avoid.append({"text": f"Avoid new starts {_window_time(rahu)} (Rahu Kalam)",
+        avoid.append({"text": f"Keep {_window_time(rahu)} for routine work, not fresh starts",
                       "source": "muhurta", "window": _window_time(rahu)})
 
     for alert in personal.get("ghatak_alerts", []):
         if alert.get("matched"):
-            avoid.append({"text": f"Ghatak {alert['type']} match ({alert['ghatak_value']}) — a traditionally tricky marker",
+            avoid.append({"text": "Treat the day as sensitive; avoid unnecessary risk or confrontation",
                           "source": "ghatak"})
     return do, avoid
 
@@ -354,6 +432,8 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
 
     verdict = _verdict(chart, relation or "", day_payload, personal, ctx)
     do_today, avoid_today = _do_and_avoid(day_payload, personal, ctx, words)
+    reading = _reading(chart, relation or "", day_payload, personal, ctx,
+                       verdict, do_today, avoid_today)
 
     return {
         "system": "AstroSpace Daily Guidance",
@@ -363,6 +443,7 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
         "relation": relation,
         "vara": day_payload["vara"]["name"],
         "verdict": verdict,
+        "reading": reading,
         "color": _day_color(vara_lord, supportive_planet, challenging_planet),
         "number": _day_number(as_of, vara_lord, favourable),
         "tarabala": personal["tarabala"],
