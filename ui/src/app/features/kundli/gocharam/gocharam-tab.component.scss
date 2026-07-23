@@ -55,9 +55,9 @@
 
   h3 {
     margin-top: 4px;
-    font-size: clamp(21px, 2vw, 30px);
+    font-size: 26px;
     font-weight: 900;
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
   }
 
   header small {
@@ -87,6 +87,39 @@
   .plain-reading p {
     font-size: 15px;
     font-weight: 650;
+  }
+}
+
+@media (max-width: 599px) {
+  .gocharam-page {
+    gap: 16px;
+  }
+
+  .reading-card {
+    gap: 12px;
+    padding: 14px;
+    border-radius: 18px;
+
+    header {
+      gap: 10px;
+      flex-direction: column;
+    }
+
+    h3 {
+      font-size: 21px;
+      line-height: 1.16;
+    }
+
+    header small {
+      max-width: 100%;
+      border-radius: 14px;
+      text-align: left;
+    }
+
+    .plain-reading p {
+      font-size: 13.5px;
+      line-height: 1.55;
+    }
   }
 }
 

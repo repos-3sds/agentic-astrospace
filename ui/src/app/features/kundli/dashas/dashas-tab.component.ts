@@ -26,7 +26,14 @@ export class DashasTabComponent {
   protected readonly selectedMahadashaKey = signal<string | null>(null);
   protected readonly selectedAntardashaKey = signal<string | null>(null);
   protected readonly selectedPratyantardashaKey = signal<string | null>(null);
+  protected readonly mobileLevel = signal<'maha' | 'antar' | 'pratyantar' | 'details'>('maha');
   protected readonly detailMode = signal<'summary' | 'natal' | 'transit' | 'timeline'>('summary');
+  protected readonly mobileLevels = [
+    { label: 'Maha', value: 'maha' as const },
+    { label: 'Antar', value: 'antar' as const },
+    { label: 'Pratyantar', value: 'pratyantar' as const },
+    { label: 'Details', value: 'details' as const },
+  ];
   protected readonly detailModes = [
     { label: 'Summary', value: 'summary' as const },
     { label: 'Natal', value: 'natal' as const },
@@ -119,6 +126,8 @@ export class DashasTabComponent {
       this.error.set(null);
       this.selectedMahadashaKey.set(null);
       this.selectedAntardashaKey.set(null);
+      this.selectedPratyantardashaKey.set(null);
+      this.mobileLevel.set('maha');
       if (!id) return;
       this.vedic
         .dashas(id)
@@ -145,16 +154,19 @@ export class DashasTabComponent {
     this.selectedAntardashaKey.set(ad ? this.periodKey(ad) : null);
     const pd = ad?.active ? this.activePratyantardasha() : null;
     this.selectedPratyantardashaKey.set(pd ? this.periodKey(pd) : null);
+    this.mobileLevel.set('antar');
   }
 
   protected selectAntardasha(period: DashaPeriod): void {
     this.selectedAntardashaKey.set(this.periodKey(period));
     const pd = period.active ? this.activePratyantardasha() : null;
     this.selectedPratyantardashaKey.set(pd ? this.periodKey(pd) : null);
+    this.mobileLevel.set('pratyantar');
   }
 
   protected selectPratyantardasha(period: DashaPeriod): void {
     this.selectedPratyantardashaKey.set(this.periodKey(period));
+    this.mobileLevel.set('details');
   }
 
   protected periodKey(period: DashaPeriod): string {

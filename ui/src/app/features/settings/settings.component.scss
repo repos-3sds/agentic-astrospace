@@ -11,7 +11,7 @@
 
   h2 {
     margin-top: 6px;
-    font-size: clamp(28px, 4vw, 40px);
+    font-size: 36px;
     line-height: 1.1;
   }
 
@@ -164,5 +164,39 @@ app-section-card p-button {
 
   :host ::ng-deep .settings-place-select {
     width: 100%;
+  }
+}
+
+@media (max-width: 599px) {
+  .settings-page {
+    max-width: 100%;
+  }
+
+  .settings-hero {
+    gap: 14px;
+    padding: 4px 0;
+
+    h2 {
+      font-size: 22px;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin-top: 8px;
+      font-size: 13.5px;
+      line-height: 1.55;
+    }
+  }
+
+  .hero-actions,
+  .preference-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .preference-row {
+    gap: 10px;
   }
 }

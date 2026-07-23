@@ -51,7 +51,7 @@
 
   h3 {
     margin: 6px 0 8px;
-    font-size: clamp(26px, 4vw, 42px);
+    font-size: 36px;
     line-height: 1;
   }
 
@@ -273,6 +273,22 @@
     grid-template-columns: 1fr;
   }
 
+  .score-hero {
+    gap: 14px;
+    padding: 16px;
+    border-radius: 20px;
+
+    h3 {
+      font-size: 22px;
+      line-height: 1.14;
+    }
+
+    p {
+      font-size: 13.5px;
+      line-height: 1.55;
+    }
+  }
+
   .score-grid {
     grid-template-columns: 1fr;
   }
@@ -283,6 +299,10 @@
   }
 
   .score-ring {
-    width: 112px;
+    width: 96px;
+
+    strong {
+      font-size: 30px;
+    }
   }
 }

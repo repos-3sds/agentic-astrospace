@@ -18,6 +18,21 @@
   }
 }
 
+@media (max-width: 599px) {
+  :host {
+    max-width: min(100%, 360px);
+    margin-inline: auto;
+  }
+
+  .house-sign {
+    font-size: 9.5px;
+  }
+
+  .planet-label {
+    font-size: 10px;
+  }
+}
+
 .chart-fill {
   fill: color-mix(in srgb, var(--as-surface) 92%, var(--as-gold-soft));
 }

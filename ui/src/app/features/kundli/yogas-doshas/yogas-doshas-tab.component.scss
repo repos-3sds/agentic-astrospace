@@ -340,3 +340,30 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 599px) {
+  .category-strip article,
+  .yoga-card {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .category-strip strong {
+    font-size: 22px;
+    line-height: 1.12;
+  }
+
+  .yoga-card h3 {
+    font-size: 16px;
+    line-height: 1.25;
+  }
+
+  .check-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+
+    small {
+      white-space: normal;
+    }
+  }
+}

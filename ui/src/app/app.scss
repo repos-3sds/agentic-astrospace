@@ -219,19 +219,19 @@
   background: var(--as-border-strong);
 }
 
-.sheet-head {
+  .sheet-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding-top: 2px;
 
-  h2 {
-    margin-top: 2px;
-    font-size: 22px;
-    font-weight: 850;
+    h2 {
+      margin-top: 2px;
+      font-size: 18px;
+      font-weight: 850;
+    }
   }
-}
 
 .sheet-head-actions {
   display: flex;
@@ -595,7 +595,7 @@
     min-width: 0;
     overflow: hidden;
     color: var(--as-text);
-    font-size: 17px;
+    font-size: 15.5px;
     font-weight: 850;
     line-height: 1.2;
     text-overflow: ellipsis;

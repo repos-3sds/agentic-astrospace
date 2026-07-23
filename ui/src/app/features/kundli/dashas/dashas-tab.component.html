@@ -68,6 +68,108 @@
       </div>
     </section>
 
+    <section class="mobile-dasha-flow">
+      <article class="mobile-current-card">
+        <span class="eyebrow">Current timing</span>
+        <h3>{{ activeSelection().path || '—' }}</h3>
+        <p>
+          {{ activeSelection().period?.start | date: 'mediumDate' }} –
+          {{ activeSelection().period?.end | date: 'mediumDate' }}
+        </p>
+        <small class="mobile-birth-copy">
+          {{ d.system }} from {{ d.birth_nakshatra.name }}, pada {{ d.birth_nakshatra.pada }}
+        </small>
+        <div class="mobile-path-stack">
+          <button type="button" (click)="mobileLevel.set('maha')">
+            <span>Mahadasha</span>
+            <strong>{{ selectedMahadasha()?.lord || '—' }}</strong>
+          </button>
+          <button type="button" (click)="mobileLevel.set('antar')">
+            <span>Antardasha</span>
+            <strong>{{ selectedAntardasha()?.lord || '—' }}</strong>
+          </button>
+          <button type="button" (click)="mobileLevel.set('pratyantar')">
+            <span>Pratyantar</span>
+            <strong>{{ selectedPratyantardasha()?.lord || 'Choose' }}</strong>
+          </button>
+        </div>
+      </article>
+
+      <nav class="mobile-level-tabs" aria-label="Dasha level">
+        @for (level of mobileLevels; track level.value) {
+          <button
+            type="button"
+            [class.active]="mobileLevel() === level.value"
+            (click)="mobileLevel.set(level.value)"
+          >
+            {{ level.label }}
+          </button>
+        }
+      </nav>
+
+      @if (mobileLevel() === 'maha') {
+        <section class="period-panel mobile-period-panel">
+          <header><span>01</span><strong>Choose Mahadasha</strong></header>
+          <div class="period-list">
+            @for (p of d.mahadashas; track p.start + p.lord) {
+              <button
+                type="button"
+                class="period-row"
+                [class.active-row]="p.active"
+                [class.selected-row]="periodKey(p) === selectedMahadashaKey()"
+                (click)="selectMahadasha(p)"
+              >
+                <strong>{{ p.lord }}</strong>
+                <span>{{ p.start | date: 'MMM y' }} – {{ p.end | date: 'MMM y' }}</span>
+                <em>{{ p.years | number: '1.1-1' }}y</em>
+                @if (p.active) { <small>Current</small> }
+              </button>
+            }
+          </div>
+        </section>
+      } @else if (mobileLevel() === 'antar') {
+        <section class="period-panel mobile-period-panel">
+          <header><span>02</span><strong>Choose Antardasha</strong></header>
+          <div class="period-list">
+            @for (p of selectedAntardashas(); track p.start + p.lord) {
+              <button
+                type="button"
+                class="period-row"
+                [class.active-row]="p.active"
+                [class.selected-row]="periodKey(p) === selectedAntardashaKey()"
+                (click)="selectAntardasha(p)"
+              >
+                <strong>{{ p.lord }}</strong>
+                <span>{{ p.start | date: 'MMM y' }} – {{ p.end | date: 'MMM y' }}</span>
+                <em>{{ p.years | number: '1.1-1' }}y</em>
+                @if (p.active) { <small>Current</small> }
+              </button>
+            }
+          </div>
+        </section>
+      } @else if (mobileLevel() === 'pratyantar') {
+        <section class="period-panel mobile-period-panel">
+          <header><span>03</span><strong>Choose Pratyantar</strong></header>
+          <div class="period-list">
+            @for (p of selectedPratyantardashas(); track p.start + p.lord) {
+              <button
+                type="button"
+                class="period-row"
+                [class.active-row]="p.active"
+                [class.selected-row]="periodKey(p) === selectedPratyantardashaKey()"
+                (click)="selectPratyantardasha(p)"
+              >
+                <strong>{{ p.lord }}</strong>
+                <span>{{ p.start | date: 'MMM d' }} – {{ p.end | date: 'MMM d, y' }}</span>
+                <em>{{ p.years | number: '1.2-2' }}y</em>
+                @if (p.active) { <small>Current</small> }
+              </button>
+            }
+          </div>
+        </section>
+      }
+    </section>
+
     <div class="dasha-explorer">
       <aside class="dasha-navigator">
         <section class="period-panel">
@@ -132,7 +234,7 @@
       </aside>
 
       @if (transit(); as t) {
-        <section class="detail-panel">
+        <section class="detail-panel" [class.mobile-hidden]="mobileLevel() !== 'details'">
           <header class="detail-header">
             <div>
               <span class="eyebrow">Selected period</span>

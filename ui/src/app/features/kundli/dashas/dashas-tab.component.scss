@@ -18,10 +18,10 @@
   h2 {
     max-width: 760px;
     margin-top: 10px;
-    font-size: clamp(30px, 4vw, 54px);
+    font-size: 46px;
     line-height: 1;
     font-weight: 800;
-    letter-spacing: -0.035em;
+    letter-spacing: 0;
   }
 
   p {
@@ -74,6 +74,10 @@
   grid-template-columns: 1fr;
   gap: 24px;
   align-items: start;
+}
+
+.mobile-dasha-flow {
+  display: none;
 }
 
 // Maha / Antar / Pratyantar side by side; detail panel flows below full-width.
@@ -213,10 +217,10 @@ button.period-row {
 
   h3 {
     margin-top: 4px;
-    font-size: clamp(26px, 4vw, 44px);
+    font-size: 38px;
     line-height: 1;
     font-weight: 800;
-    letter-spacing: -0.03em;
+    letter-spacing: 0;
   }
 
   p {
@@ -353,6 +357,11 @@ button.period-row {
   .dasha-hero {
     grid-template-columns: 1fr;
     padding: 22px;
+
+    h2 {
+      font-size: 26px;
+      line-height: 1.12;
+    }
   }
 
   .dasha-explorer,
@@ -372,6 +381,164 @@ button.period-row {
 }
 
 @media (max-width: 620px) {
+  .dasha-hero {
+    display: none;
+  }
+
+  .current-stack {
+    display: none;
+  }
+
+  .mobile-dasha-flow {
+    display: grid;
+    gap: 12px;
+  }
+
+  .mobile-current-card {
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid var(--as-border);
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--as-glass) 88%, transparent);
+    box-shadow: 0 16px 42px rgba(65, 42, 20, 0.08);
+    backdrop-filter: blur(18px) saturate(126%);
+
+    h3 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.18;
+      font-weight: 850;
+    }
+
+    p {
+      margin: 0;
+      color: var(--as-muted);
+      font-size: 12.5px;
+    }
+  }
+
+  .mobile-birth-copy {
+    color: var(--as-muted);
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+
+  .mobile-path-stack {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+
+    button {
+      min-width: 0;
+      min-height: 64px;
+      display: grid;
+      align-content: center;
+      gap: 3px;
+      padding: 10px;
+      border: 1px solid var(--as-border);
+      border-radius: 16px;
+      color: inherit;
+      background: var(--as-raised);
+      font: inherit;
+      text-align: left;
+    }
+
+    span {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--as-muted);
+      font-size: 10.5px;
+      font-weight: 800;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    strong {
+      min-width: 0;
+      overflow: hidden;
+      font-size: 15px;
+      line-height: 1.15;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .mobile-level-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    padding: 6px;
+    border: 1px solid var(--as-border);
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--as-surface) 96%, transparent);
+    backdrop-filter: blur(18px) saturate(126%);
+
+    button {
+      min-width: 0;
+      min-height: 38px;
+      border: 1px solid transparent;
+      border-radius: 14px;
+      color: var(--as-muted);
+      background: transparent;
+      font: inherit;
+      font-size: 11.5px;
+      font-weight: 850;
+    }
+
+    button.active {
+      border-color: color-mix(in srgb, var(--as-accent) 32%, var(--as-border));
+      color: var(--as-active-text);
+      background: var(--as-active-bg);
+    }
+  }
+
+  .dasha-explorer {
+    gap: 12px;
+  }
+
+  .dasha-navigator {
+    display: none;
+  }
+
+  .mobile-period-panel {
+    display: grid;
+    gap: 10px;
+  }
+
+  .period-panel,
+  .detail-panel {
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .detail-panel.mobile-hidden {
+    display: none;
+  }
+
+  .period-list {
+    max-height: none;
+  }
+
+  .period-row {
+    min-height: 48px;
+    grid-template-columns: minmax(58px, 0.46fr) minmax(0, 1fr) auto;
+    padding: 10px;
+  }
+
+  .detail-header {
+    gap: 12px;
+    margin-bottom: 14px;
+
+    h3 {
+      font-size: 22px;
+      line-height: 1.14;
+    }
+  }
+
   .lord-grid {
     grid-template-columns: 1fr;
   }

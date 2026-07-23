@@ -29,6 +29,21 @@
   }
 }
 
+@media (max-width: 599px) {
+  .def-row {
+    display: grid;
+    gap: 4px;
+    padding: 10px 0;
+    font-size: 12.5px;
+  }
+
+  .def-row dd,
+  .def-value {
+    justify-content: flex-start;
+    text-align: left;
+  }
+}
+
 .def-value {
   display: flex;
   align-items: center;

@@ -159,3 +159,34 @@ input,
   color: var(--as-bad);
   background: var(--as-bad-soft);
 }
+
+@media (max-width: 599px) {
+  .auth-page {
+    min-height: 100dvh;
+    padding: max(16px, var(--as-safe-top)) 14px max(16px, var(--as-safe-bottom));
+    place-items: stretch;
+  }
+
+  .auth-panel {
+    align-self: center;
+    gap: 16px;
+    padding: 18px;
+    border-radius: 22px;
+    background: var(--as-glass);
+    backdrop-filter: blur(20px) saturate(128%);
+  }
+
+  .brand-lockup {
+    gap: 12px;
+
+    h1 {
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+  }
+
+  .provider-btn {
+    min-height: var(--as-touch-target);
+    border-radius: 999px;
+  }
+}
