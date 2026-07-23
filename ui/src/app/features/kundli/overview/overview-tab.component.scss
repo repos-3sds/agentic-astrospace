@@ -569,3 +569,129 @@
     position: static;
   }
 }
+
+@media (max-width: 599px) {
+  .big-three {
+    gap: 10px;
+  }
+
+  .stat {
+    min-height: 64px;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--as-glass) 86%, transparent);
+    backdrop-filter: blur(16px) saturate(124%);
+  }
+
+  .stat-label {
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+  }
+
+  .stat-value {
+    font-size: 17px;
+    line-height: 1.2;
+  }
+
+  .daily-guidance {
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .daily-verdict {
+    gap: 10px;
+    padding: 16px;
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--as-glass) 88%, transparent);
+    backdrop-filter: blur(18px) saturate(128%);
+  }
+
+  .daily-verdict h3 {
+    font-size: 18px;
+    line-height: 1.18;
+  }
+
+  .daily-verdict .daily-verdict-text {
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+
+  .daily-star-row {
+    gap: 8px;
+
+    span {
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--as-control);
+    }
+  }
+
+  .almanac-card,
+  .action-col,
+  .daily-strip,
+  .today-lead,
+  .signal-card {
+    background: color-mix(in srgb, var(--as-glass) 84%, transparent);
+    backdrop-filter: blur(14px) saturate(122%);
+  }
+
+  .almanac-card,
+  .action-col {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .daily-strip {
+    align-items: flex-start;
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .daily-strip-label,
+  .lucky-chips {
+    width: 100%;
+  }
+
+  .lucky-chips {
+    gap: 6px;
+  }
+
+  .lucky-chip {
+    min-height: 32px;
+  }
+
+  .daily-actions,
+  .today-intel {
+    gap: 10px;
+  }
+
+  .today-lead {
+    min-height: auto;
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .today-lead h3 {
+    font-size: 20px;
+    line-height: 1.12;
+  }
+
+  .signal-card {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .transit-link {
+    width: 100%;
+    min-height: var(--as-touch-target);
+    justify-content: center;
+    padding: 0 14px;
+    border: 1px solid var(--as-border);
+    border-radius: 999px;
+    background: var(--as-control);
+  }
+}

@@ -252,6 +252,63 @@ h4 {
   }
 }
 
+@media (max-width: 599px) {
+  body {
+    background:
+      linear-gradient(180deg, var(--as-bg) 0%, #fbf5ea 48%, #f4eadb 100%);
+  }
+
+  :root.app-dark body {
+    background: linear-gradient(180deg, #15110d 0%, #19120d 58%, #120d09 100%);
+  }
+
+  .as-panel {
+    gap: 16px;
+  }
+
+  .as-tab-hero {
+    gap: 16px;
+    padding: 16px;
+    border-radius: 22px;
+    background: var(--as-glass);
+    box-shadow: 0 16px 42px rgba(65, 42, 20, 0.08);
+    backdrop-filter: blur(20px) saturate(128%);
+
+    h2 {
+      margin-top: 7px;
+      font-size: 24px;
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin-top: 10px;
+      font-size: 13.5px;
+      line-height: 1.55;
+    }
+  }
+
+  .as-hero-eyebrow {
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+  }
+
+  .as-hero-stats {
+    gap: 8px;
+
+    article {
+      padding: 12px;
+      border-radius: 16px;
+      background: color-mix(in srgb, var(--as-glass) 88%, transparent);
+      backdrop-filter: blur(16px);
+    }
+
+    strong {
+      font-size: 18px;
+    }
+  }
+}
+
 /* markdown output (AI readings, ask answers) */
 .as-prose {
   line-height: 1.7;

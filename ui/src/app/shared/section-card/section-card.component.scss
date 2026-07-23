@@ -60,3 +60,37 @@
     border-radius: 20px;
   }
 }
+
+@media (max-width: 599px) {
+  .card {
+    padding: 16px;
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--as-glass) 88%, transparent);
+    backdrop-filter: blur(18px) saturate(126%);
+  }
+
+  .card-head {
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .card-heading h3 {
+    font-size: 11.5px;
+    line-height: 1.25;
+    letter-spacing: 0.07em;
+    white-space: normal;
+  }
+
+  .card-subtitle {
+    line-height: 1.35;
+    white-space: normal;
+  }
+
+  .card-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}

@@ -580,8 +580,8 @@
       8px
       max(var(--as-mobile-gutter), var(--as-safe-left));
     border-bottom: 1px solid var(--as-border);
-    background: var(--as-glass);
-    backdrop-filter: blur(18px);
+    background: color-mix(in srgb, var(--as-glass) 92%, transparent);
+    backdrop-filter: blur(22px) saturate(132%);
   }
 
   .mobile-title-block {
@@ -663,13 +663,14 @@
       calc(6px + var(--as-safe-bottom))
       max(6px, var(--as-safe-left));
     border-top: 1px solid var(--as-border);
-    background: var(--as-glass);
-    backdrop-filter: blur(18px);
+    background: color-mix(in srgb, var(--as-surface) 98%, var(--as-bg));
+    box-shadow: 0 -18px 44px color-mix(in srgb, var(--as-bg) 72%, transparent);
+    backdrop-filter: blur(22px) saturate(132%);
   }
 
   .mobile-nav-item {
     min-width: 0;
-    min-height: 54px;
+    min-height: 56px;
     display: grid;
     grid-template-rows: 22px 14px;
     align-content: center;
@@ -685,7 +686,8 @@
     &.active {
       border-color: color-mix(in srgb, var(--as-accent) 32%, var(--as-border));
       color: var(--as-active-text);
-      background: var(--as-active-bg);
+      background: color-mix(in srgb, var(--as-active-bg) 86%, transparent);
+      backdrop-filter: blur(12px) saturate(122%);
     }
   }
 

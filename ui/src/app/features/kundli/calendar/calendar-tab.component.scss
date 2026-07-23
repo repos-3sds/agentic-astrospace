@@ -628,3 +628,176 @@
     text-align: left;
   }
 }
+
+@media (max-width: 599px) {
+  .calendar-page {
+    gap: 16px;
+  }
+
+  .feed-actions {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .page-subtabs {
+    top: calc(var(--as-mobile-appbar-h) + var(--as-safe-top));
+    gap: 6px;
+    margin-inline: -2px;
+    padding: 6px;
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--as-glass) 92%, transparent);
+    backdrop-filter: blur(20px) saturate(128%);
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    button {
+      min-height: 40px;
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+  }
+
+  .segmented {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--as-glass) 86%, transparent);
+
+    button {
+      min-height: 38px;
+      padding: 8px;
+      font-size: 11.5px;
+    }
+  }
+
+  .count-strip {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    span {
+      min-width: 0;
+      padding: 7px 9px;
+      text-align: center;
+    }
+  }
+
+  .place-picker {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .day-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+
+    span {
+      min-width: 0;
+      padding: 7px 9px;
+      border-radius: 999px;
+      background: var(--as-control);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .chips,
+  .today-grid,
+  .windows {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .chip,
+  .reading-card,
+  .mini-events article,
+  .event-row {
+    background: color-mix(in srgb, var(--as-glass) 86%, transparent);
+    backdrop-filter: blur(14px) saturate(122%);
+  }
+
+  .chip {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .reading-card {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .reading-card a,
+  .empty-link {
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .timeline-ruler {
+    height: 50px;
+    margin-bottom: 14px;
+  }
+
+  .tick-label,
+  .marker-label {
+    font-size: 9px;
+  }
+
+  .lane {
+    height: 42px;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--as-glass) 86%, transparent);
+    backdrop-filter: blur(14px) saturate(122%);
+  }
+
+  .block {
+    padding-inline: 4px;
+  }
+
+  .block-name {
+    font-size: 9.5px;
+  }
+
+  .block-time {
+    font-size: 8.5px;
+  }
+
+  .chogha {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chogha-cell {
+    min-height: 54px;
+    border-radius: 16px;
+  }
+
+  .day-group {
+    gap: 8px;
+  }
+
+  .day-group time {
+    width: fit-content;
+    padding: 8px 10px;
+    border-radius: 999px;
+  }
+
+  .event-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .win-row {
+    gap: 10px;
+  }
+}
