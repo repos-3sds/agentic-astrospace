@@ -88,11 +88,11 @@ export class App implements OnInit {
     const inWorkspace = this.inProfileWorkspace() || browserPath.startsWith('/kundli/');
     return snapshot && inWorkspace ? snapshot : null;
   }
-  protected readonly moreActive = computed(() => {
-    const section = this.currentSection();
+  protected moreActive(): boolean {
+    const section = this.visibleSection();
     const visibleInPrimaryNav = this.mobilePrimaryNav().some((item) => item.route === section);
     return this.moreOpen() || (!visibleInPrimaryNav && this.moreNavItems().some((item) => item.route === section));
-  });
+  }
   protected readonly filteredProfiles = computed(() => {
     const q = this.profileQuery().trim().toLowerCase();
     if (!q) return this.store.kundlis();
@@ -182,14 +182,14 @@ export class App implements OnInit {
     if (!id) {
       this.store.activeId.set(null);
       this.clearSelectedProfile();
-      this.router.navigate(['/app']);
+      void this.navigateMobile(['/app']);
       return;
     }
     const selected = this.store.kundlis().find((profile) => profile.id === id) ?? null;
     if (selected) this.rememberSelectedProfile(selected);
     this.profileSheetOpen.set(false);
     this.moreOpen.set(false);
-    this.router.navigate(['/kundli', id]);
+    void this.navigateMobile(['/kundli', id]);
   }
 
   protected openProfileSheet(): void {
@@ -216,7 +216,7 @@ export class App implements OnInit {
   protected goMobile(route: string): void {
     if (route === 'home') {
       this.moreOpen.set(false);
-      this.router.navigate(['/app']);
+      void this.navigateMobile(['/app']);
       return;
     }
 
@@ -227,7 +227,7 @@ export class App implements OnInit {
 
     if (route === 'settings') {
       this.moreOpen.set(false);
-      this.router.navigate(['/settings']);
+      void this.navigateMobile(['/settings']);
       return;
     }
 
@@ -237,7 +237,7 @@ export class App implements OnInit {
       return;
     }
     this.moreOpen.set(false);
-    this.router.navigate(['/kundli', id, route]);
+    void this.navigateMobile(['/kundli', id, route]);
   }
 
   protected addProfileFromSheet(): void {
@@ -247,7 +247,8 @@ export class App implements OnInit {
   }
 
   protected routeActive(route: string): boolean {
-    return this.currentSection() === route || (route === 'home' && this.currentSection() === 'home');
+    const section = this.visibleSection();
+    return section === route || (route === 'home' && section === 'home');
   }
 
   protected goHome(): void {
@@ -255,7 +256,7 @@ export class App implements OnInit {
     this.profileSheetOpen.set(false);
     this.store.activeId.set(null);
     this.clearSelectedProfile();
-    this.router.navigate(['/app']);
+    void this.navigateMobile(['/app']);
   }
 
   protected confirmLogout(): void {
@@ -270,7 +271,7 @@ export class App implements OnInit {
         this.store.kundlis.set([]);
         this.store.activeId.set(null);
         this.messages.add({ severity: 'success', summary: 'Logged out' });
-        this.router.navigate(['/']);
+        void this.navigateMobile(['/']);
       },
     });
   }
@@ -287,7 +288,7 @@ export class App implements OnInit {
         try {
           await this.store.remove(active.id);
           this.messages.add({ severity: 'success', summary: 'Kundli deleted' });
-          this.router.navigate(['/app']);
+          void this.navigateMobile(['/app']);
         } catch (e) {
           this.messages.add({
             severity: 'error',
@@ -306,6 +307,21 @@ export class App implements OnInit {
     const kundliMatch = path.match(/^\/kundli\/[^/]+(?:\/([^/]+))?/);
     if (kundliMatch) return kundliMatch[1] ?? 'overview';
     return 'home';
+  }
+
+  private browserPath(): string {
+    return typeof location === 'undefined' ? '' : location.pathname;
+  }
+
+  private visibleSection(): string {
+    const currentUrl = this.currentUrl();
+    return this.sectionFromUrl(this.browserPath() || currentUrl);
+  }
+
+  private async navigateMobile(commands: unknown[]): Promise<void> {
+    this.url.set(this.router.serializeUrl(this.router.createUrlTree(commands)));
+    await this.router.navigate(commands);
+    this.url.set(this.router.url);
   }
 
   private profileIdFromUrl(url: string): string | null {
