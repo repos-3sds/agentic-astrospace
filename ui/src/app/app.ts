@@ -89,7 +89,8 @@ export class App implements OnInit {
   }
   protected readonly moreActive = computed(() => {
     const section = this.currentSection();
-    return this.moreNav().some((item) => item.route === section) || section === 'settings';
+    const visibleInPrimaryNav = this.mobilePrimaryNav().some((item) => item.route === section);
+    return this.moreOpen() || (!visibleInPrimaryNav && this.moreNav().some((item) => item.route === section));
   });
   protected readonly filteredProfiles = computed(() => {
     const q = this.profileQuery().trim().toLowerCase();

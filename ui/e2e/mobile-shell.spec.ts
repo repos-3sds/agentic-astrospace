@@ -129,6 +129,15 @@ test.describe('phone shell', () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test('does not keep More selected when a visible tab is active', async ({ page }, testInfo) => {
+    skipUnlessPhone(testInfo);
+    await page.goto('/settings');
+
+    const bottomNav = page.getByRole('navigation', { name: 'Primary navigation' });
+    await expect(bottomNav.getByRole('button', { name: 'Settings' })).toHaveAttribute('aria-current', 'page');
+    await expect(bottomNav.getByRole('button', { name: 'More', exact: true })).not.toHaveClass(/active/);
+  });
+
   test('profile sheet supports search and profile selection', async ({ page }, testInfo) => {
     skipUnlessPhone(testInfo);
     await page.goto('/app');
