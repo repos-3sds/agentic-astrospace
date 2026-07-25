@@ -143,5 +143,20 @@ export const routes: Routes = [
       },
     ],
   },
+  // Native app screens (Figma RRhuTcaKIhqILZW7JUKFzI). Namespaced under /m so
+  // the existing web routes are untouched and both can ship from one bundle.
+  {
+    path: 'm',
+    loadComponent: () =>
+      import('./features/mobile/shell/mobile-shell.component').then((m) => m.MobileShellComponent),
+    children: [
+      { path: '', redirectTo: 'today', pathMatch: 'full' },
+      {
+        path: 'today',
+        loadComponent: () =>
+          import('./features/mobile/today/today.component').then((m) => m.TodayComponent),
+      },
+    ],
+  },
   { path: '**', redirectTo: '' },
 ];

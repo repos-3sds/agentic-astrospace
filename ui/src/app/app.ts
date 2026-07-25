@@ -19,6 +19,7 @@ import { ThemeService } from './core/theme.service';
 import { KundliDialogComponent } from './shell/kundli-dialog/kundli-dialog.component';
 import { ACCOUNT_NAV, GLOBAL_PRIMARY_NAV, KUNDLI_MORE_GROUPS, PROFILE_PRIMARY_NAV, ROUTE_TITLES } from './shell/mobile-nav';
 import { SidebarComponent } from './shell/sidebar/sidebar.component';
+import { Capacitor } from '@capacitor/core';
 
 const SELECTED_PROFILE_STORAGE_KEY = 'astrospace:selected-profile';
 
@@ -48,6 +49,17 @@ export class App implements OnInit {
   private confirmation = inject(ConfirmationService);
   private messages = inject(MessageService);
   private router = inject(Router);
+
+  constructor() {
+    // A native launch belongs in the app shell, not on the marketing landing
+    // page. Web is untouched: isNativePlatform() is false in every browser.
+    if (Capacitor.isNativePlatform()) {
+      const path = this.router.url.split('?')[0];
+      if (path === '/' || path === '') {
+        void this.router.navigateByUrl('/m');
+      }
+    }
+  }
   protected readonly globalPrimaryNav = signal(GLOBAL_PRIMARY_NAV);
   protected readonly profilePrimaryNav = signal(PROFILE_PRIMARY_NAV);
   protected readonly mobilePrimaryNav = computed(() =>
@@ -114,7 +126,10 @@ export class App implements OnInit {
   protected readonly title = computed(() => this.store.active()?.name ?? 'AstroSpace');
   protected readonly publicOnly = computed(() => {
     const path = this.currentUrl().split('?')[0].split('#')[0];
-    return path === '/' || path.startsWith('/auth') || path.startsWith('/admin');
+    // /m is the native app shell — it renders its own app bar and tab bar,
+    // so the web chrome must not wrap it.
+    return path === '/' || path.startsWith('/auth') || path.startsWith('/admin')
+      || path.startsWith('/m');
   });
 
   protected readonly subtitle = computed(() => {

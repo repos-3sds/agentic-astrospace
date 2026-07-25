@@ -1,0 +1,42 @@
+// Native app design tokens (Figma RRhuTcaKIhqILZW7JUKFzI).
+//
+// Global on purpose: Angular's emulated view encapsulation rewrites selectors
+// in component SCSS, so a `.as-mobile` rule declared inside a child component
+// never matches the shell host and every var() silently falls back.
+//
+// Every value is stated literally rather than aliased to the shared --as-*
+// tokens. Those flip with the web app's theme, and mixing them with the fixed
+// surfaces below produced light cards carrying dark-theme text — invisible.
+// The mobile palette owns both halves of its own light/dark pair, so it stays
+// internally consistent whatever the web app's theme is doing.
+
+.as-mobile {
+  --m-bg: #faf7f0;
+  --m-surface: #fffcf6;
+  --m-raised: #ffffff;
+  --m-border: #e6dccd;
+  --m-border-strong: #d5c6b4;
+
+  --m-text: #201a14;
+  --m-muted: #756b5e;
+  --m-on-ink: #fff8ec;
+
+  --m-accent: #b13f2e;
+  --m-accent-strong: #8f2f22;
+  --m-accent-soft: #f4e6e2;
+
+  --m-good: #2f7d57;
+  --m-good-soft: #e6efe9;
+  --m-bad: #a33a3a;
+  --m-bad-soft: #f4e6e4;
+  --m-warn: #b86f19;
+  --m-warn-soft: #f4ead7;
+
+  --m-shadow-card: 0 10px 30px rgba(65, 42, 20, 0.07);
+
+  // styles.scss has defined these since the mobile UX pass but nothing consumed
+  // them, which is why the status bar and home indicator rendered as bare white
+  // bands in the simulator — the WebView's background showing, not the app's.
+  --m-safe-top: var(--as-safe-top);
+  --m-safe-bottom: var(--as-safe-bottom);
+}

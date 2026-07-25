@@ -1,0 +1,72 @@
+@let v = view();
+
+<header class="appbar">
+  <div class="identity">
+    <div class="avatar" aria-hidden="true">{{ v.initial }}</div>
+    <div class="who">
+      <p class="name">{{ greeting() }}</p>
+      <p class="date">{{ v.dateLabel }}</p>
+    </div>
+  </div>
+  <a class="iconbtn" href="#" aria-label="Settings">
+    <img src="mobile/settings.svg" alt="" aria-hidden="true" />
+  </a>
+</header>
+
+<div class="body">
+  <section class="card">
+    <div class="card-head">
+      <p class="eyebrow">WHAT MATTERS TODAY</p>
+      <p class="place">{{ v.place }}</p>
+    </div>
+
+    <div class="verdict-row">
+      <as-day-gauge [score]="v.score" [label]="v.scoreLabel" [attr.data-band]="v.band" />
+      <div class="verdict">
+        <p class="headline">{{ v.verdict }}</p>
+        <p class="detail">{{ v.detail }}</p>
+      </div>
+    </div>
+
+    <button class="listen" type="button">
+      <img src="mobile/play.svg" alt="" aria-hidden="true" />
+      <span>Listen to your day</span>
+    </button>
+  </section>
+
+  <div class="advice">
+    <article class="advice-card do">
+      <div class="advice-head">
+        <img src="mobile/do.svg" alt="" aria-hidden="true" />
+        <p class="eyebrow">DO</p>
+      </div>
+      <p class="advice-body">{{ v.doItem }}</p>
+    </article>
+    <article class="advice-card avoid">
+      <div class="advice-head">
+        <img src="mobile/avoid.svg" alt="" aria-hidden="true" />
+        <p class="eyebrow">AVOID</p>
+      </div>
+      <p class="advice-body">{{ v.avoidItem }}</p>
+    </article>
+  </div>
+
+  <button class="why" type="button">
+    <span class="why-left">
+      <img src="mobile/why.svg" alt="" aria-hidden="true" />
+      <span class="why-label">Why this reading?</span>
+    </span>
+    <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
+  </button>
+
+  <section class="window">
+    <div class="window-icon" aria-hidden="true">
+      <img src="mobile/clock.svg" alt="" />
+    </div>
+    <div class="window-text">
+      <p class="eyebrow warn">{{ v.nextWindowLabel }}</p>
+      <p class="window-value">{{ v.nextWindowValue }}</p>
+    </div>
+    <p class="window-in">{{ v.nextWindowIn }}</p>
+  </section>
+</div>

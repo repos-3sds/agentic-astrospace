@@ -1,0 +1,44 @@
+// Design tokens for the native app screens.
+//
+// The web app's surfaces are translucent glass over a warm background. The
+// mobile designs use solid fills instead — on a phone the glass reads as muddy
+// and costs compositing on scroll — so the opaque values from the Figma file
+// are defined here rather than changing the shared tokens and disturbing web.
+//
+// Values taken from the Figma variable collection (file RRhuTcaKIhqILZW7JUKFzI).
+// Anything that already matches a shared --as-* token is aliased, not restated,
+// so a change to the palette still propagates.
+
+
+// Type ramp, named after the Figma text styles so the mapping is checkable.
+@mixin m-eyebrow {
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: 1.1px;
+}
+@mixin m-h2 {
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 1.22;
+}
+@mixin m-body-strong {
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.4;
+}
+@mixin m-body-small {
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.5;
+}
+@mixin m-caption {
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.4;
+}
+@mixin m-button {
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.2;
+}
