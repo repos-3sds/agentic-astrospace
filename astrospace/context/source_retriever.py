@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import os
 from dataclasses import asdict, dataclass
 from functools import lru_cache
@@ -29,6 +30,28 @@ class SourcePassage:
         return asdict(self)
 
 
+# pgvector's cosine distance is undefined against a zero-magnitude embedding
+# and comes back as NaN. Postgres then sorts NaN as *greater* than every real
+# value, so under `order by ... desc` those rows take the whole top of the
+# ranking — for every query, whatever was asked. Guarding the score at 0 keeps
+# a chunk with no usable embedding reachable lexically without letting it
+# outrank a genuine semantic match.
+_SEMANTIC = "coalesce(nullif(1 - (c.embedding <=> %s::extensions.vector), 'NaN'::float8), 0)"
+
+
+def _finite(value) -> float:
+    """Coerce a score to a finite float, defaulting to 0.
+
+    `float(value or 0)` is not enough — NaN is truthy, so it passes straight
+    through and then fails JSON encoding with a 500.
+    """
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return 0.0
+    return number if math.isfinite(number) else 0.0
+
+
 class NullSourceRetriever:
     def retrieve(self, query: str, domains: list[str], limit: int = 8) -> list[SourcePassage]:
         return []
@@ -52,7 +75,7 @@ class PostgresSourceRetriever:
                       c.id, s.source_key, s.title, s.edition, c.title, c.content,
                       c.page_labels, c.domains, c.source_domains, c.topics,
                       ts_rank_cd(c.search_vector, websearch_to_tsquery('english', %s))::real,
-                      (1 - (c.embedding <=> %s::extensions.vector))::real
+                      """ + _SEMANTIC + """::real
                     from public.knowledge_chunks c
                     join public.knowledge_sources s on s.id = c.source_id
                     where c.quality_status = 'published'
@@ -64,7 +87,7 @@ class PostgresSourceRetriever:
                       )
                     order by (
                       ts_rank_cd(c.search_vector, websearch_to_tsquery('english', %s)) * 0.55
-                      + (1 - (c.embedding <=> %s::extensions.vector)) * 0.45
+                      + """ + _SEMANTIC + """ * 0.45
                     ) desc
                     limit %s
                 """, (query, embedding, domains or None, domains or None,
@@ -82,8 +105,8 @@ class PostgresSourceRetriever:
                 domains=tuple(row[7] or []),
                 source_domains=tuple(row[8] or []),
                 topics=tuple(row[9] or []),
-                lexical_score=float(row[10] or 0),
-                semantic_score=float(row[11] or 0),
+                lexical_score=_finite(row[10]),
+                semantic_score=_finite(row[11]),
             )
             for row in rows
         ]
@@ -143,8 +166,8 @@ class SupabaseSourceRetriever:
                 domains=tuple(row.get("domains") or []),
                 source_domains=tuple(row.get("source_domains") or []),
                 topics=tuple(row.get("topics") or []),
-                lexical_score=float(row.get("lexical_score") or 0),
-                semantic_score=float(row.get("semantic_score") or 0),
+                lexical_score=_finite(row.get("lexical_score")),
+                semantic_score=_finite(row.get("semantic_score")),
             )
             for row in rows
         ]

@@ -152,3 +152,54 @@ class TestGraphIntegration:
         from astrospace.context.graph import ReadingState, build_reading_graph
         assert build_reading_graph is not None
         assert "question" in ReadingState.__annotations__
+
+
+class TestSourceRetrieverScores:
+    """Regression: NaN scores from pgvector broke retrieval, not just JSON.
+
+    A chunk whose embedding is all zeros (the feature-hash embedder produces
+    that for text with no Latin words, e.g. Devanagari verses) makes the cosine
+    distance undefined. Postgres returns NaN and sorts it as *greater* than
+    every real value, so under `order by ... desc` those chunks took the entire
+    top of the ranking for every query — and then failed JSON encoding with a
+    500 on the way out.
+    """
+
+    def test_non_finite_scores_are_clamped_to_zero(self):
+        from astrospace.context.source_retriever import _finite
+
+        assert _finite(float("nan")) == 0.0
+        assert _finite(float("inf")) == 0.0
+        assert _finite(float("-inf")) == 0.0
+
+    def test_ordinary_scores_pass_through(self):
+        from astrospace.context.source_retriever import _finite
+
+        assert _finite(0.87) == 0.87
+        assert _finite(0) == 0.0
+        assert _finite(None) == 0.0
+        assert _finite("0.5") == 0.5
+
+    def test_truthiness_guard_would_not_have_caught_nan(self):
+        """Documents why `float(value or 0)` was insufficient."""
+        nan = float("nan")
+        assert bool(nan) is True          # NaN is truthy...
+        assert (nan or 0) is nan          # ...so `or 0` never fires
+        from astrospace.context.source_retriever import _finite
+        assert _finite(nan) == 0.0        # the guard has to test finiteness
+
+    def test_query_guards_the_semantic_term_everywhere_it_appears(self):
+        """Both the projected score and the ORDER BY must be guarded.
+
+        Guarding only the projection would fix the 500 while leaving the
+        ranking hijacked, which is the more damaging half of the bug.
+        """
+        import inspect
+
+        from astrospace.context import source_retriever as sr
+
+        sql = inspect.getsource(sr.PostgresSourceRetriever.retrieve)
+        assert sql.count("_SEMANTIC") == 2
+        assert "nullif" in sr._SEMANTIC and "'NaN'::float8" in sr._SEMANTIC
+        # the raw, unguarded expression must not survive anywhere
+        assert "(1 - (c.embedding <=>" not in sql
