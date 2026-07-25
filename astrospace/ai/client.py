@@ -11,7 +11,7 @@ class AstroClient:
             self.client = anthropic.Anthropic(auth_token=key)
         else:
             self.client = anthropic.Anthropic(api_key=key or None)
-        self.model = "claude-opus-4-8"
+        self.model = "claude-opus-5"
 
     def chat(self, messages: list, system: str = "", tools: Optional[list] = None,
              max_tokens: int = 4096):
