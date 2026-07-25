@@ -56,11 +56,51 @@ class TestQATools:
 
 
 class TestAskRoute:
+    """Route validation only — the agent itself is covered above.
+
+    Both `current_user` and `get_db` are overridden. Without the first, these
+    tests pass or fail depending on whether the developer happens to have
+    SUPABASE_* in a .env, since main.py calls load_dotenv() at import and the
+    route then demands a bearer token. Without the second, they run against
+    whatever DATABASE_URL points at — in practice, production.
+    """
+
     @pytest.fixture(scope="class")
     def client(self):
         from fastapi.testclient import TestClient
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+        from sqlalchemy.pool import StaticPool
+
         from main import app
-        return TestClient(app)
+        from astrospace.api.auth import AuthUser, current_user
+        from astrospace.db import get_db
+        from astrospace.db.database import Base
+
+        engine = create_engine(
+            "sqlite:///:memory:",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
+        Base.metadata.create_all(bind=engine)
+        TestingSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+        def override_get_db():
+            db = TestingSession()
+            try:
+                yield db
+            finally:
+                db.close()
+
+        app.dependency_overrides[get_db] = override_get_db
+        app.dependency_overrides[current_user] = lambda: AuthUser(
+            id="test-user-ask", email="test@astrospace.dev", role="dev"
+        )
+        try:
+            yield TestClient(app)
+        finally:
+            app.dependency_overrides.pop(get_db, None)
+            app.dependency_overrides.pop(current_user, None)
 
     def test_unknown_kundli_404(self, client):
         r = client.post("/api/v1/ask/nonexistent-id", json={"question": "hi"})
