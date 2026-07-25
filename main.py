@@ -33,9 +33,19 @@ app = FastAPI(
     version="2.0.0",
 )
 
-# In production the SPA is served same-origin, so CORS only matters for local
-# dev (ng serve on :4200) and any extra origins listed in ALLOWED_ORIGINS.
-_default_origins = "http://localhost:4200,http://localhost:8000"
+# The web SPA is served same-origin, so CORS only matters for local dev
+# (ng serve on :4200) and for the native apps.
+#
+# A Capacitor WebView is a genuine cross-origin caller: it serves the bundle
+# from https://localhost, so every API request is cross-origin and is blocked
+# without this entry. Omitting it fails at runtime on device only, which is an
+# expensive place to discover a CORS list.
+_default_origins = ",".join([
+    "http://localhost:4200",   # ng serve
+    "http://localhost:8000",   # local FastAPI
+    "https://localhost",       # Capacitor iOS and Android
+    "capacitor://localhost",   # older Capacitor iOS scheme
+])
 _origins = [
     origin.strip()
     for origin in os.getenv("ALLOWED_ORIGINS", _default_origins).split(",")

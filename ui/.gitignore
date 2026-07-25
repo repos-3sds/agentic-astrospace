@@ -43,3 +43,20 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Capacitor
+# The native projects are committed — they hold real configuration (bundle id,
+# permissions, icons) that must be reviewable. Their build output and the
+# synced web bundle are not: `npx cap sync` regenerates those from
+# ../frontend/dist on every build, so committing them only creates conflicts.
+/android/app/src/main/assets/public
+/android/app/build
+/android/build
+/android/.gradle
+/android/local.properties
+/android/capacitor-cordova-android-plugins
+/ios/App/App/public
+/ios/App/build
+/ios/App/Pods
+/ios/App/output
+/ios/capacitor-cordova-ios-plugins

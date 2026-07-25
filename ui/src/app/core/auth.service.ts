@@ -1,6 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { createClient, Session, SupabaseClient, User } from '@supabase/supabase-js';
+import { apiUrl } from './api-origin';
 
 interface AuthConfig {
   enabled: boolean;
@@ -28,7 +29,7 @@ export class AuthService {
   }
 
   private async load(): Promise<void> {
-    const res = await fetch('/api/v1/auth/config');
+    const res = await fetch(apiUrl('/api/v1/auth/config'));
     if (!res.ok) throw new Error('Could not load auth configuration');
     const config = (await res.json()) as AuthConfig;
     this.enabled.set(!!config.enabled);

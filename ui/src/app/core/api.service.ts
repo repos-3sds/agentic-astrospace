@@ -2,8 +2,11 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from './auth.service';
+import { apiUrl } from './api-origin';
 
-const BASE = '/api/v1';
+// Relative on web (the SPA is served same-origin by FastAPI); absolute in a
+// Capacitor WebView, where a relative path resolves inside the app bundle.
+const BASE = () => apiUrl('/api/v1');
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -11,23 +14,23 @@ export class ApiService {
   private auth = inject(AuthService);
 
   async get<T>(path: string): Promise<T> {
-    return this.unwrap(firstValueFrom(this.http.get<T>(BASE + path, await this.options())));
+    return this.unwrap(firstValueFrom(this.http.get<T>(BASE() + path, await this.options())));
   }
 
   async post<T>(path: string, body: unknown): Promise<T> {
-    return this.unwrap(firstValueFrom(this.http.post<T>(BASE + path, body, await this.options())));
+    return this.unwrap(firstValueFrom(this.http.post<T>(BASE() + path, body, await this.options())));
   }
 
   async put<T>(path: string, body: unknown): Promise<T> {
-    return this.unwrap(firstValueFrom(this.http.put<T>(BASE + path, body, await this.options())));
+    return this.unwrap(firstValueFrom(this.http.put<T>(BASE() + path, body, await this.options())));
   }
 
   async patch<T>(path: string, body: unknown): Promise<T> {
-    return this.unwrap(firstValueFrom(this.http.patch<T>(BASE + path, body, await this.options())));
+    return this.unwrap(firstValueFrom(this.http.patch<T>(BASE() + path, body, await this.options())));
   }
 
   async delete(path: string): Promise<void> {
-    return this.unwrap(firstValueFrom(this.http.delete<void>(BASE + path, await this.options())));
+    return this.unwrap(firstValueFrom(this.http.delete<void>(BASE() + path, await this.options())));
   }
 
   private async options(): Promise<{ headers?: Record<string, string> }> {
