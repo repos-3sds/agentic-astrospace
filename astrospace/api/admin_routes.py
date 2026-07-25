@@ -865,7 +865,7 @@ async def upload_source(
             "source_key": source_key,
             "status": "queued",
             "requested_by": user.id if user.auth_enabled else None,
-            "analyzer_model": "claude-opus-4-8",
+            "analyzer_model": "claude-opus-5",
             "start_section": start_section,
             "max_sections": max_sections,
         })[0]
@@ -920,7 +920,7 @@ def reprocess_source(
             "source_key": source["source_key"],
             "status": "queued",
             "requested_by": user.id if user.auth_enabled else None,
-            "analyzer_model": "claude-opus-4-8",
+            "analyzer_model": "claude-opus-5",
             "start_section": start_section,
             "max_sections": max_sections,
         })[0]

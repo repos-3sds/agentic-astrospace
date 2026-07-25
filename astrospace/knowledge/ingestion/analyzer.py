@@ -36,7 +36,7 @@ class AnthropicChunkAnalyzer:
             self.client = anthropic.Anthropic(auth_token=key)
         else:
             self.client = anthropic.Anthropic(api_key=key or None)
-        self.model = model or os.getenv("KNOWLEDGE_INGESTION_MODEL", "claude-opus-4-8")
+        self.model = model or os.getenv("KNOWLEDGE_INGESTION_MODEL", "claude-opus-5")
 
     def analyze(self, blocks: list[TextBlock]) -> list[ChunkPlan]:
         catalog = {

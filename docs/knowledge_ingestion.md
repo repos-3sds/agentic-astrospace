@@ -302,7 +302,7 @@ Ordinary Admin PDF/EPUB ingestion uses `AnthropicChunkAnalyzer`, configured by:
 
 ```bash
 ANTHROPIC_API_KEY=...
-KNOWLEDGE_INGESTION_MODEL=claude-opus-4-8
+KNOWLEDGE_INGESTION_MODEL=claude-opus-5
 ```
 
 The analyzer receives:
