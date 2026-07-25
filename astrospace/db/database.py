@@ -45,6 +45,7 @@ def init_db():
     _migrate_sqlite_kundlis()
     _migrate_sqlite_readings()
     _migrate_sqlite_prediction_claims()
+    _migrate_sqlite_user_settings()
 
 
 def _migrate_sqlite_kundlis():
@@ -54,14 +55,58 @@ def _migrate_sqlite_kundlis():
     if "kundlis" not in inspector.get_table_names():
         return
     existing = {col["name"] for col in inspector.get_columns("kundlis")}
+    # Mirrors the ALTERs in 20260725120000_create_mobile_app_schema.sql, so a
+    # local SQLite database created before that migration keeps working.
+    additions = {
+        "birth_latitude": "FLOAT",
+        "birth_longitude": "FLOAT",
+        "birth_timezone": "VARCHAR",
+        "birth_state": "VARCHAR",
+        "birth_time_accuracy": "VARCHAR DEFAULT 'exact'",
+        "kind": "VARCHAR DEFAULT 'profile'",
+        "archived_at": "DATETIME",
+    }
     with engine.begin() as conn:
         if "user_id" not in existing:
             conn.execute(text("ALTER TABLE kundlis ADD COLUMN user_id VARCHAR DEFAULT 'local-dev-user'"))
+        for column, ddl in additions.items():
+            if column not in existing:
+                conn.execute(text(f"ALTER TABLE kundlis ADD COLUMN {column} {ddl}"))
         conn.execute(text("""
             UPDATE kundlis
             SET user_id = 'local-dev-user'
             WHERE user_id IS NULL OR user_id = ''
         """))
+        conn.execute(text("UPDATE kundlis SET kind = 'profile' WHERE kind IS NULL"))
+        conn.execute(text(
+            "UPDATE kundlis SET birth_time_accuracy = 'exact' WHERE birth_time_accuracy IS NULL"
+        ))
+
+
+def _migrate_sqlite_user_settings():
+    """Additive columns for experience mode / tone on local SQLite."""
+    if not DATABASE_URL.startswith("sqlite"):
+        return
+    inspector = inspect(engine)
+    if "user_settings" not in inspector.get_table_names():
+        return
+    existing = {col["name"] for col in inspector.get_columns("user_settings")}
+    additions = {
+        "experience_mode": "VARCHAR DEFAULT 'balanced'",
+        "tone": "VARCHAR DEFAULT 'gentle'",
+        "large_tap_mode": "BOOLEAN DEFAULT 0",
+        "audio_enabled": "BOOLEAN DEFAULT 1",
+        "reduce_motion": "BOOLEAN DEFAULT 0",
+        "onboarding_completed_at": "DATETIME",
+    }
+    with engine.begin() as conn:
+        for column, ddl in additions.items():
+            if column not in existing:
+                conn.execute(text(f"ALTER TABLE user_settings ADD COLUMN {column} {ddl}"))
+        conn.execute(text(
+            "UPDATE user_settings SET experience_mode = 'balanced' WHERE experience_mode IS NULL"
+        ))
+        conn.execute(text("UPDATE user_settings SET tone = 'gentle' WHERE tone IS NULL"))
 
 
 def _migrate_sqlite_readings():
@@ -73,6 +118,7 @@ def _migrate_sqlite_readings():
         return
     existing = {col["name"] for col in inspector.get_columns("readings")}
     additions = {
+        "language": "VARCHAR DEFAULT 'en'",
         "generated_local_date": "VARCHAR",
         "version": "INTEGER DEFAULT 1",
         "parent_reading_id": "VARCHAR",
