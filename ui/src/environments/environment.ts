@@ -10,7 +10,9 @@ import type { AppEnvironment } from './environment.model';
 export const environment: AppEnvironment = {
   production: false,
 
-  // A simulator can reach the host on http://localhost:8000; a physical device
-  // cannot and needs the machine's LAN address.
-  nativeApiOrigin: '',
+  // A simulator shares the host's network, so this reaches a local FastAPI.
+  // A physical device does not and needs the machine's LAN address instead.
+  // Cleartext is permitted for local networking only — see the ATS note in
+  // ios/App/App/Info.plist.
+  nativeApiOrigin: 'http://localhost:8000',
 };

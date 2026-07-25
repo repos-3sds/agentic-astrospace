@@ -47,5 +47,13 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- Allows cleartext to localhost and *.local only, so a simulator or
+		     device on the LAN can reach a development API. Arbitrary public
+		     HTTP remains blocked; production uses https. -->
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

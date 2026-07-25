@@ -12,7 +12,8 @@
     "e2e:report": "playwright show-report",
     "build:native": "ng build --configuration production && npx cap sync",
     "open:ios": "npx cap open ios",
-    "open:android": "npx cap open android"
+    "open:android": "npx cap open android",
+    "build:native:dev": "ng build --configuration development && npx cap sync"
   },
   "prettier": {
     "printWidth": 100,

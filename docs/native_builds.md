@@ -61,6 +61,31 @@ origin. `main.py` includes `https://localhost` and `capacitor://localhost` in
 the defaults. Any deployment that overrides `ALLOWED_ORIGINS` must keep them,
 or the native apps will fail on device only.
 
+## Host requirements
+
+Building for a simulator needs Xcode's iOS **platform** component, which is a
+separate download from the SDK stubs. Without it every destination resolves to
+the "Any iOS Device" placeholder and xcodebuild reports:
+
+```text
+IDERunDestination: Supported platforms for the buildables in the current scheme is empty.
+error: iOS 26.5 is not installed. Please download and install the platform from
+       Xcode > Settings > Components.
+```
+
+Install it from **Xcode > Settings > Components**, or:
+
+```bash
+xcodebuild -downloadPlatform iOS
+```
+
+`xcodebuild -showsdks` listing an iOS SDK is not sufficient — the SDK stub and
+the platform component are tracked separately, so the SDK can appear installed
+while the platform is missing.
+
+Android likewise needs the Android SDK; `npx cap add android` warns
+`Unable to infer default Android SDK settings` when it is absent.
+
 ## Not yet done
 
 - Deep links and native OAuth return (M11-US02).
@@ -68,3 +93,6 @@ or the native apps will fail on device only.
 - Push notification registration (M11-US04).
 - Safe-area, splash screen and icon assets are Capacitor defaults so far.
 - The native projects are not in CI.
+- Neither app has been run on a simulator or device yet — see Host
+  requirements. The web bundle, sync, ATS and API-origin wiring are verified;
+  on-device behaviour is not.
