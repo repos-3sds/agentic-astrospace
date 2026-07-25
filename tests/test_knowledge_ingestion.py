@@ -59,6 +59,43 @@ class DynamicDomainAnalyzer:
         )]
 
 
+class _CleanAnalyzer:
+    """One high-confidence chunk with no notes, so the quality gate is the only
+    thing that can hold a passage back."""
+
+    def analyze(self, blocks):
+        return [ChunkPlan(
+            start_block_id=blocks[0].id,
+            end_block_id=blocks[-1].id,
+            title="Source passage",
+            confidence=0.95,
+        )]
+
+
+def _build_chunks(text: str):
+    """Run build_chunks over a synthetic one-block book."""
+    import hashlib
+
+    from astrospace.knowledge.ingestion.models import (
+        EpubBook, EpubSection, TextBlock,
+    )
+
+    block = TextBlock(id="b0", section_ordinal=0, block_ordinal=0,
+                      href="s0.xhtml", tag="p", text=text, page_label="1")
+    digest = hashlib.sha256(text.encode()).hexdigest()
+    section = EpubSection(ordinal=0, href="s0.xhtml", title="S", page_label="1",
+                          blocks=(block,), exact_text=text,
+                          text_sha256=digest, raw_xhtml_sha256=digest,
+                          extraction_method="epub_xhtml")
+    book = EpubBook(source_key="synthetic", title="Synthetic", author=None,
+                    language="sa", identifier=None, sha256=digest,
+                    sections=(section,))
+    return IngestionPipeline(
+        MemoryRepository(), analyzer=_CleanAnalyzer()
+    ).build_chunks(book)
+
+
+
 def test_epub_extractor_preserves_spine_and_hashes():
     book = EpubExtractor().extract(EPUB, max_sections=6)
     assert book.title
@@ -202,3 +239,56 @@ def test_mistral_high_confidence_chunks_are_auto_published():
         "PDF page evidence requires human verification" not in chunk.quality_notes
         for chunk in repository.chunks
     )
+
+
+class TestDegenerateEmbeddings:
+    """A chunk the embedder cannot represent must not reach retrieval unseen.
+
+    FeatureHashEmbedder tokenises on a Latin-initial pattern, so Devanagari-only
+    passages produce an all-zero vector. pgvector then reports NaN for cosine
+    distance and Postgres orders NaN above every real value, which put twelve
+    such chunks at the top of every search in the live corpus.
+    """
+
+    def test_devanagari_only_text_is_degenerate(self):
+        from astrospace.knowledge.ingestion.embeddings import (
+            FeatureHashEmbedder, is_degenerate,
+        )
+        embedder = FeatureHashEmbedder()
+        assert is_degenerate(embedder.embed("अथ राजयोगाध्यायः ॥४१॥"))
+        assert is_degenerate(embedder.embed("|  0, |  | 0, | 0, |  |"))
+        assert is_degenerate(embedder.embed(""))
+
+    def test_ordinary_english_is_not_degenerate(self):
+        from astrospace.knowledge.ingestion.embeddings import (
+            FeatureHashEmbedder, is_degenerate,
+        )
+        vector = FeatureHashEmbedder().embed(
+            "The lord of the ascendant in the tenth house gives high office."
+        )
+        assert not is_degenerate(vector)
+        assert abs(sum(v * v for v in vector) - 1.0) < 1e-9, "must stay normalised"
+
+    def test_degenerate_chunk_is_held_for_review(self):
+        """The gate that already exists does the work — no new mechanism."""
+        from astrospace.knowledge.ingestion.embeddings import is_degenerate
+
+        chunks = _build_chunks("॥ श्रीः ॥\n\nअथ राजयोगाध्यायः ॥४१॥")
+        degenerate = [c for c in chunks if is_degenerate(c.embedding)]
+        assert degenerate, "expected the Devanagari passage to be degenerate"
+        for chunk in degenerate:
+            assert chunk.quality_status == "needs_review"
+            assert any("no embedding signal" in n for n in chunk.quality_notes)
+
+    def test_normal_chunk_still_auto_publishes(self):
+        """The new note must not sweep up healthy passages."""
+        chunks = _build_chunks(
+            "Sloka 50. The person born with Jupiter in the ninth house "
+            "acquires learning, wealth and a reputation for fairness."
+        )
+        assert chunks
+        assert all(c.quality_status == "published" for c in chunks)
+        assert all(
+            not any("no embedding signal" in n for n in c.quality_notes)
+            for c in chunks
+        )

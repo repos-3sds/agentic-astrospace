@@ -4,7 +4,7 @@ import hashlib
 from pathlib import Path
 
 from .analyzer import AnthropicChunkAnalyzer, ChunkAnalyzer
-from .embeddings import FeatureHashEmbedder
+from .embeddings import FeatureHashEmbedder, is_degenerate
 from .epub import EpubExtractor
 from .models import EpubBook, KnowledgeChunk, TextBlock
 from .pdf import PdfExtractor
@@ -89,6 +89,16 @@ class IngestionPipeline:
                     notes.append("PDF page evidence requires human verification")
                 if extraction_confidence is not None and extraction_confidence < 0.90:
                     notes.append(f"source OCR confidence {extraction_confidence:.2f}")
+                embedding = self.embedder.embed(content)
+                if is_degenerate(embedding):
+                    # The chunk cannot be found semantically, so it must not
+                    # reach retrieval unreviewed. Raised as a quality note
+                    # rather than a new mechanism: the existing gate below
+                    # already routes any note to needs_review.
+                    notes.append(
+                        "no embedding signal; passage is not semantically "
+                        "retrievable with this embedder"
+                    )
                 content_sha256 = hashlib.sha256(content.encode()).hexdigest()
                 if (
                     book.metadata.get("ocr_provider") == "mistral"
@@ -132,7 +142,7 @@ class IngestionPipeline:
                     extraction_confidence=extraction_confidence,
                     quality_status=quality_status,
                     quality_notes=tuple(dict.fromkeys(notes)),
-                    embedding=self.embedder.embed(content),
+                    embedding=embedding,
                     embedding_provider=self.embedder.provider,
                     source_domains=plan.source_domains,
                     retrieval_scope=scope.scope,
