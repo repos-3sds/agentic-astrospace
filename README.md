@@ -39,6 +39,16 @@ AstroSpace is a full-stack astrology application that combines Swiss Ephemeris p
 
 ## Architecture
 
+Detailed operational documentation:
+
+- [Admin Console](docs/admin_console.md) - roles, APIs, workflows, audit,
+  Supabase objects, operations, and limitations.
+- [Knowledge Base Engine](docs/knowledge_ingestion.md) - source provenance,
+  OCR/EPUB ingestion, LLM boundaries, quality gates, retrieval scope, hybrid
+  search, and Context Engine integration.
+- [Context Engine Taxonomy](docs/context_engine_taxonomy.md) - domain routing
+  and context-assembly contract.
+
 ```
 Browser (SPA)
      │
