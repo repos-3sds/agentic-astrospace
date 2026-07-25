@@ -7,6 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 
 import { AuthService } from '../../core/auth.service';
+import { AdminService } from '../../core/admin.service';
 import { KundliStore } from '../../core/kundli.store';
 import { ThemeService } from '../../core/theme.service';
 
@@ -52,11 +53,13 @@ export class SidebarComponent {
   protected readonly store = inject(KundliStore);
   protected readonly theme = inject(ThemeService);
   private auth = inject(AuthService);
+  private admin = inject(AdminService);
   private confirmation = inject(ConfirmationService);
   private messages = inject(MessageService);
   private router = inject(Router);
 
   protected readonly collapsed = signal(localStorage.getItem('astrospace-sidebar') === 'collapsed');
+  protected readonly canAdmin = signal(false);
   protected readonly profileOverlayOpen = signal(false);
   protected readonly profileQuery = signal('');
   protected readonly tabs = KUNDLI_TABS;
@@ -86,6 +89,10 @@ export class SidebarComponent {
     effect(() => {
       localStorage.setItem('astrospace-sidebar', this.collapsed() ? 'collapsed' : 'expanded');
     });
+    void this.auth.init()
+      .then(() => this.admin.me())
+      .then(() => this.canAdmin.set(true))
+      .catch(() => this.canAdmin.set(false));
   }
 
   protected toggle(): void {

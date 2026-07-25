@@ -7,7 +7,9 @@ from .analyzer import AnthropicChunkAnalyzer, ChunkAnalyzer
 from .embeddings import FeatureHashEmbedder
 from .epub import EpubExtractor
 from .models import EpubBook, KnowledgeChunk, TextBlock
+from .pdf import PdfExtractor
 from .repository import KnowledgeRepository
+from .scope import classify_retrieval_scope
 
 
 class IngestionPipeline:
@@ -16,27 +18,32 @@ class IngestionPipeline:
                  extractor: EpubExtractor | None = None,
                  embedder: FeatureHashEmbedder | None = None,
                  max_window_chars: int = 16000,
-                 max_window_blocks: int = 12):
+                 max_window_blocks: int = 12,
+                 audit_sample_rate: float = 0.02):
         self.repository = repository
         self.analyzer = analyzer or AnthropicChunkAnalyzer()
-        self.extractor = extractor or EpubExtractor()
+        self.extractor = extractor
         self.embedder = embedder or FeatureHashEmbedder()
         self.max_window_chars = max_window_chars
         self.max_window_blocks = max_window_blocks
+        self.audit_sample_rate = max(0.0, min(1.0, audit_sample_rate))
 
     def ingest(self, epub_path: str | Path, *, storage_path: str,
                storage_bucket: str = "astro-knowledge-sources",
                source_key: str | None = None,
                start_section: int = 0,
                max_sections: int | None = None) -> dict:
-        book = self.extractor.extract(
+        extractor = self.extractor or (
+            PdfExtractor() if Path(epub_path).suffix.lower() == ".pdf" else EpubExtractor()
+        )
+        book = extractor.extract(
             epub_path, source_key=source_key, start_section=start_section,
             max_sections=max_sections,
         )
         chunks = self.build_chunks(book)
         source_id = self.repository.replace(
             book, chunks, storage_bucket=storage_bucket,
-            storage_path=storage_path, parser_version=self.extractor.parser_version,
+            storage_path=storage_path, parser_version=extractor.parser_version,
         )
         return {
             "source_id": source_id,
@@ -50,6 +57,10 @@ class IngestionPipeline:
     def build_chunks(self, book: EpubBook) -> list[KnowledgeChunk]:
         chunks = []
         ordinal = 0
+        extraction_methods = {
+            section.ordinal: section.extraction_method
+            for section in book.sections
+        }
         for window in self._windows(list(book.blocks)):
             plans = self._validated_plans(window)
             positions = {block.id: index for index, block in enumerate(window)}
@@ -65,8 +76,26 @@ class IngestionPipeline:
                 ]
                 extraction_confidence = min(extraction) if extraction else None
                 notes = list(plan.quality_notes)
-                if extraction_confidence is not None and extraction_confidence < 0.75:
+                notes.extend(
+                    note
+                    for block in selected
+                    for note in block.quality_notes
+                )
+                section_methods = {
+                    extraction_methods.get(block.section_ordinal)
+                    for block in selected
+                }
+                if "pdf_text_layer" in section_methods:
+                    notes.append("PDF page evidence requires human verification")
+                if extraction_confidence is not None and extraction_confidence < 0.90:
                     notes.append(f"source OCR confidence {extraction_confidence:.2f}")
+                content_sha256 = hashlib.sha256(content.encode()).hexdigest()
+                if (
+                    book.metadata.get("ocr_provider") == "mistral"
+                    and not notes
+                    and self._is_audit_sample(content_sha256)
+                ):
+                    notes.append("stratified automated audit sample")
                 fidelity_ok = all(block.text in content for block in selected)
                 quality_status = (
                     "published"
@@ -76,11 +105,17 @@ class IngestionPipeline:
                     and (extraction_confidence is None or extraction_confidence >= 0.75)
                     else "needs_review"
                 )
+                scope = classify_retrieval_scope(
+                    book.source_key,
+                    ordinal,
+                    plan.title,
+                    content,
+                )
                 chunks.append(KnowledgeChunk(
                     ordinal=ordinal,
                     title=plan.title,
                     content=content,
-                    content_sha256=hashlib.sha256(content.encode()).hexdigest(),
+                    content_sha256=content_sha256,
                     start_block_id=plan.start_block_id,
                     end_block_id=plan.end_block_id,
                     section_ordinals=tuple(dict.fromkeys(
@@ -99,9 +134,18 @@ class IngestionPipeline:
                     quality_notes=tuple(dict.fromkeys(notes)),
                     embedding=self.embedder.embed(content),
                     embedding_provider=self.embedder.provider,
+                    source_domains=plan.source_domains,
+                    retrieval_scope=scope.scope,
+                    retrieval_exclusion_reason=scope.reason,
+                    scope_confidence=scope.confidence,
+                    scope_classifier=scope.classifier,
                 ))
                 ordinal += 1
         return chunks
+
+    def _is_audit_sample(self, content_sha256: str) -> bool:
+        threshold = int(self.audit_sample_rate * (2 ** 32))
+        return int(content_sha256[:8], 16) < threshold
 
     def _validated_plans(self, blocks: list[TextBlock]):
         plans = self.analyzer.analyze(blocks)

@@ -12,8 +12,8 @@ from .repository import get_knowledge_repository
 
 def main():
     load_dotenv()
-    parser = argparse.ArgumentParser(description="Ingest an EPUB into AstroSpace knowledge")
-    parser.add_argument("epub")
+    parser = argparse.ArgumentParser(description="Ingest a PDF or EPUB into AstroSpace knowledge")
+    parser.add_argument("source")
     parser.add_argument("--storage-path", required=True)
     parser.add_argument("--source-key")
     parser.add_argument("--start-section", type=int, default=0)
@@ -26,7 +26,7 @@ def main():
         analyzer=HeuristicChunkAnalyzer() if args.heuristic else None,
     )
     result = pipeline.ingest(
-        args.epub,
+        args.source,
         storage_path=args.storage_path,
         source_key=args.source_key,
         start_section=args.start_section,

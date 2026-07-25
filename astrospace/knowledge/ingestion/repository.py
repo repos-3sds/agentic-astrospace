@@ -42,11 +42,12 @@ class PostgresKnowledgeRepository:
                       source_key, title, author, language, file_type,
                       storage_bucket, storage_path, sha256, parser_version, status, metadata
                     )
-                    values (%s, %s, %s, %s, 'epub', %s, %s, %s, %s, %s, %s::jsonb)
+                    values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
                     on conflict (source_key) do update set
                       title = excluded.title,
                       author = excluded.author,
                       language = excluded.language,
+                      file_type = excluded.file_type,
                       storage_bucket = excluded.storage_bucket,
                       storage_path = excluded.storage_path,
                       sha256 = excluded.sha256,
@@ -57,8 +58,12 @@ class PostgresKnowledgeRepository:
                     returning id
                 """, (
                     book.source_key, book.title, book.author, book.language,
+                    book.file_type,
                     storage_bucket, storage_path, book.sha256, parser_version,
-                    status, json.dumps({"identifier": book.identifier}),
+                    status, json.dumps({
+                        "identifier": book.identifier,
+                        **book.metadata,
+                    }),
                 ))
                 source_id = str(cursor.fetchone()[0])
                 cursor.execute("delete from public.knowledge_sections where source_id = %s", (source_id,))
@@ -66,34 +71,50 @@ class PostgresKnowledgeRepository:
                     cursor.execute("""
                         insert into public.knowledge_sections (
                           source_id, ordinal, href, title, page_label, exact_text,
-                          text_sha256, raw_xhtml_sha256, extraction_confidence
-                        ) values (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                          text_sha256, raw_xhtml_sha256, extraction_confidence,
+                          page_image_path, page_image_sha256, extraction_method,
+                          metadata
+                        ) values (
+                          %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                          %s::jsonb
+                        )
                     """, (
                         source_id, section.ordinal, section.href, section.title,
                         section.page_label, section.exact_text, section.text_sha256,
                         section.raw_xhtml_sha256, section.extraction_confidence,
+                        section.page_image_path, section.page_image_sha256,
+                        section.extraction_method,
+                        json.dumps(section.metadata),
                     ))
                 for chunk in chunks:
                     cursor.execute("""
                         insert into public.knowledge_chunks (
                           source_id, ordinal, title, content, content_sha256,
                           start_block_id, end_block_id, section_ordinals, page_labels,
-                          domains, subdomains, topics, content_types,
+                          domains, subdomains, topics, content_types, source_domains,
                           classification_confidence, extraction_confidence,
-                          quality_status, quality_notes, embedding, embedding_provider
+                          quality_status, quality_notes, embedding, embedding_provider,
+                          retrieval_scope, retrieval_exclusion_reason,
+                          scope_confidence, scope_classifier
                         ) values (
                           %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                          %s, %s, %s, %s, %s::extensions.vector, %s
+                          %s, %s, %s, %s, %s, %s::extensions.vector, %s,
+                          %s, %s, %s, %s
                         )
                     """, (
                         source_id, chunk.ordinal, chunk.title, chunk.content,
                         chunk.content_sha256, chunk.start_block_id, chunk.end_block_id,
                         list(chunk.section_ordinals), list(chunk.page_labels),
                         list(chunk.domains), list(chunk.subdomains), list(chunk.topics),
-                        list(chunk.content_types), chunk.classification_confidence,
+                        list(chunk.content_types), list(chunk.source_domains),
+                        chunk.classification_confidence,
                         chunk.extraction_confidence, chunk.quality_status,
                         list(chunk.quality_notes), _vector(chunk.embedding),
                         chunk.embedding_provider,
+                        chunk.retrieval_scope,
+                        chunk.retrieval_exclusion_reason,
+                        chunk.scope_confidence,
+                        chunk.scope_classifier,
                     ))
             connection.commit()
         return source_id
@@ -138,13 +159,16 @@ class SupabaseKnowledgeRepository:
             "title": book.title,
             "author": book.author,
             "language": book.language,
-            "file_type": "epub",
+            "file_type": book.file_type,
             "storage_bucket": storage_bucket,
             "storage_path": storage_path,
             "sha256": book.sha256,
             "parser_version": parser_version,
             "status": "processing",
-            "metadata": {"identifier": book.identifier},
+            "metadata": {
+                "identifier": book.identifier,
+                **book.metadata,
+            },
         }
         headers = {**self.headers, "Prefer": "resolution=merge-duplicates,return=representation"}
         response = requests.post(
@@ -160,6 +184,14 @@ class SupabaseKnowledgeRepository:
             params = {"source_id": f"eq.{source_id}"}
             self._request("DELETE", "knowledge_chunks", params=params)
             self._request("DELETE", "knowledge_sections", params=params)
+            for section in book.sections:
+                if section.page_image and section.page_image_path:
+                    self._upload_asset(
+                        storage_bucket,
+                        section.page_image_path,
+                        section.page_image,
+                        "image/jpeg",
+                    )
             sections = [{
                 "source_id": source_id,
                 "ordinal": section.ordinal,
@@ -170,6 +202,10 @@ class SupabaseKnowledgeRepository:
                 "text_sha256": section.text_sha256,
                 "raw_xhtml_sha256": section.raw_xhtml_sha256,
                 "extraction_confidence": section.extraction_confidence,
+                "page_image_path": section.page_image_path,
+                "page_image_sha256": section.page_image_sha256,
+                "extraction_method": section.extraction_method,
+                "metadata": section.metadata,
             } for section in book.sections]
             chunk_rows = [{
                 "source_id": source_id,
@@ -185,12 +221,17 @@ class SupabaseKnowledgeRepository:
                 "subdomains": list(chunk.subdomains),
                 "topics": list(chunk.topics),
                 "content_types": list(chunk.content_types),
+                "source_domains": list(chunk.source_domains),
                 "classification_confidence": chunk.classification_confidence,
                 "extraction_confidence": chunk.extraction_confidence,
                 "quality_status": chunk.quality_status,
                 "quality_notes": list(chunk.quality_notes),
                 "embedding": _vector(chunk.embedding),
                 "embedding_provider": chunk.embedding_provider,
+                "retrieval_scope": chunk.retrieval_scope,
+                "retrieval_exclusion_reason": chunk.retrieval_exclusion_reason,
+                "scope_confidence": chunk.scope_confidence,
+                "scope_classifier": chunk.scope_classifier,
             } for chunk in chunks]
             self._insert_batches("knowledge_sections", sections)
             self._insert_batches("knowledge_chunks", chunk_rows)
@@ -210,6 +251,26 @@ class SupabaseKnowledgeRepository:
             params={"id": f"eq.{source_id}"},
             json={"status": status},
         )
+
+    def _upload_asset(
+        self,
+        bucket: str,
+        path: str,
+        payload: bytes,
+        content_type: str,
+    ) -> None:
+        response = requests.post(
+            f"{self.url}/storage/v1/object/{bucket}/{path}",
+            headers={
+                "apikey": self.service_key,
+                "Authorization": f"Bearer {self.service_key}",
+                "Content-Type": content_type,
+                "x-upsert": "true",
+            },
+            data=payload,
+            timeout=120,
+        )
+        response.raise_for_status()
 
 
 def get_knowledge_repository() -> KnowledgeRepository:

@@ -67,6 +67,12 @@
   </div>
 
   <footer class="sidebar-foot">
+    @if (canAdmin()) {
+      <a class="foot-action" routerLink="/admin" [title]="collapsed() ? 'Admin Console' : null">
+        <lucide-icon name="database" [size]="17" />
+        <span>Admin Console</span>
+      </a>
+    }
     <a class="foot-action" routerLink="/settings" routerLinkActive="active" [title]="collapsed() ? 'Settings' : null">
       <lucide-icon name="settings" [size]="17" />
       <span>Settings</span>

@@ -4,7 +4,7 @@ from functools import lru_cache
 from typing import Annotated
 
 import requests
-from fastapi import Depends, Header, HTTPException
+from fastapi import Depends, Header, HTTPException, Request
 
 DEV_USER_ID = "local-dev-user"
 
@@ -18,6 +18,8 @@ class AuthUser:
 
 
 def supabase_configured() -> bool:
+    if os.getenv("ASTROSPACE_DEV_AUTH_BYPASS", "").lower() in {"1", "true", "yes"}:
+        return False
     return bool(os.getenv("SUPABASE_URL") and os.getenv("SUPABASE_ANON_KEY"))
 
 
@@ -31,10 +33,16 @@ def auth_config() -> dict:
 
 
 def current_user(
+    request: Request,
     authorization: Annotated[str | None, Header(alias="Authorization")] = None,
 ) -> AuthUser:
     if not supabase_configured():
-        return AuthUser(id=DEV_USER_ID, email="local@astrospace.dev", role="dev", auth_enabled=False)
+        user = AuthUser(
+            id=DEV_USER_ID, email="local@astrospace.dev",
+            role="dev", auth_enabled=False,
+        )
+        request.state.auth_user = user
+        return user
 
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(status_code=401, detail="Missing bearer token")
@@ -59,12 +67,14 @@ def current_user(
     user_id = payload.get("id")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid Supabase user payload")
-    return AuthUser(
+    user = AuthUser(
         id=user_id,
         email=payload.get("email"),
         role=payload.get("role"),
         auth_enabled=True,
     )
+    request.state.auth_user = user
+    return user
 
 
 CurrentUser = Annotated[AuthUser, Depends(current_user)]

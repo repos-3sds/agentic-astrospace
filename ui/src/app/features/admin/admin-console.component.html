@@ -1,0 +1,844 @@
+<div class="admin-shell">
+  <aside class="admin-rail">
+    <a class="admin-brand" routerLink="/app" aria-label="Return to AstroSpace">
+      <span class="brand-mark"><lucide-icon name="orbit" [size]="19" /></span>
+      <span>
+        <strong>AstroSpace</strong>
+        <small>Admin Console</small>
+      </span>
+    </a>
+
+    <nav aria-label="Admin Console">
+      @for (item of nav; track item.id) {
+        <button
+          type="button"
+          [class.active]="view() === item.id"
+          (click)="switchView(item.id)"
+        >
+          <lucide-icon [name]="item.icon" [size]="18" />
+          <span>{{ item.label }}</span>
+          @if (item.id === 'review' && queueCount()) {
+            <b>{{ queueCount() }}</b>
+          }
+        </button>
+      }
+    </nav>
+
+    <div class="rail-account">
+      <span class="admin-avatar">{{ (identity()?.email || 'A').slice(0, 1).toUpperCase() }}</span>
+      <span class="account-copy">
+        <strong>{{ identity()?.email || 'Administrator' }}</strong>
+        <small>{{ identity()?.role || 'Loading access' }}</small>
+      </span>
+      <button type="button" (click)="theme.toggle()" [title]="theme.dark() ? 'Light mode' : 'Dark mode'">
+        <lucide-icon [name]="theme.dark() ? 'sun' : 'moon-star'" [size]="17" />
+      </button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <header class="admin-topbar">
+      <div>
+        <span class="eyebrow">Administration</span>
+        <h1>
+          @switch (view()) {
+            @case ('overview') { AstroSpace operations }
+            @case ('users') { Users & access }
+            @case ('activity') { Product activity }
+            @case ('sources') { Source library }
+            @case ('review') { Review queue }
+            @case ('retrieval') { Retrieval lab }
+            @case ('audit') { Audit log }
+            @case ('system') { System health }
+          }
+        </h1>
+      </div>
+      <div class="top-actions">
+        <a routerLink="/app" class="button secondary">
+          <lucide-icon name="arrow-left" [size]="16" />
+          Open app
+        </a>
+        <button type="button" class="icon-button" (click)="signOut()" title="Log out">
+          <lucide-icon name="log-out" [size]="17" />
+        </button>
+      </div>
+    </header>
+
+    @if (error()) {
+      <div class="notice error">
+        <lucide-icon name="circle-alert" [size]="18" />
+        <span>{{ error() }}</span>
+        <button type="button" (click)="switchView(view())">Retry</button>
+      </div>
+    }
+
+    @if (loading()) {
+      <div class="loading-line" aria-label="Loading"></div>
+    }
+
+    <div class="admin-content">
+      @switch (view()) {
+        @case ('overview') {
+          @if (overview(); as data) {
+            <section class="metric-grid">
+              <article>
+                <span>Users</span>
+                <strong>{{ data.users['total'] || 0 }}</strong>
+                <small>{{ data.users['with_profiles'] || 0 }} with profiles</small>
+              </article>
+              <article>
+                <span>Kundli profiles</span>
+                <strong>{{ data.product['profiles'] || 0 }}</strong>
+                <small>active profiles</small>
+              </article>
+              <article>
+                <span>AI readings</span>
+                <strong>{{ data.product['readings'] || 0 }}</strong>
+                <small>{{ data.product['rated_readings'] || 0 }} rated</small>
+              </article>
+              <article>
+                <span>CE knowledge</span>
+                <strong>{{ data.chunks['retrievable'] || 0 }}</strong>
+                <small>{{ data.chunks['excluded'] || 0 }} excluded · {{ data.chunks['needs_review'] || 0 }} review</small>
+              </article>
+            </section>
+
+            <section class="overview-grid">
+              <article class="workspace-panel">
+                <div class="panel-head">
+                  <div>
+                    <span class="eyebrow">Current corpus</span>
+                    <h2>Source health</h2>
+                  </div>
+                  <button type="button" class="text-button" (click)="switchView('sources')">View all</button>
+                </div>
+                <div class="source-health">
+                  @for (source of data.recent_sources; track source.id) {
+                    <button type="button" (click)="openSource(source)">
+                      <span class="file-icon"><lucide-icon name="book-open" [size]="17" /></span>
+                      <span>
+                        <strong>{{ source.title }}</strong>
+                        <small>{{ source.source_key }}</small>
+                      </span>
+                      <span class="status" [attr.data-status]="source.status">
+                        {{ statusLabel(source.status) }}
+                      </span>
+                    </button>
+                  } @empty {
+                    <div class="empty-state">No knowledge sources have been ingested.</div>
+                  }
+                </div>
+              </article>
+
+              <article class="workspace-panel">
+                <div class="panel-head">
+                  <div>
+                    <span class="eyebrow">Traceability</span>
+                    <h2>Recent activity</h2>
+                  </div>
+                  <button type="button" class="text-button" (click)="switchView('audit')">Full log</button>
+                </div>
+                <div class="activity-list">
+                  @for (entry of data.recent_audit; track entry.id) {
+                    <div>
+                      <span class="activity-mark"></span>
+                      <span>
+                        <strong>{{ statusLabel(entry.action) }}</strong>
+                        <small>{{ auditDetail(entry) }}</small>
+                      </span>
+                      <time>{{ entry.created_at | date: 'MMM d, HH:mm' }}</time>
+                    </div>
+                  } @empty {
+                    <div class="empty-state">Review actions will appear here.</div>
+                  }
+                </div>
+              </article>
+            </section>
+
+            <section class="workflow-band">
+              <div>
+                <span class="eyebrow">Publishing rule</span>
+                <h2>No source enters CE without passing review</h2>
+                <p>Exact text is immutable. Metadata and publication state are versioned through the audit log.</p>
+              </div>
+              <button type="button" class="button primary" (click)="switchView('review')">
+                Review {{ data.chunks['needs_review'] || 0 }} passages
+                <lucide-icon name="arrow-right" [size]="16" />
+              </button>
+            </section>
+          }
+        }
+
+        @case ('users') {
+          <section class="toolbar">
+            <label class="search-field">
+              <lucide-icon name="search" [size]="16" />
+              <input
+                type="search"
+                [(ngModel)]="userQuery"
+                (keyup.enter)="loadUsers()"
+                placeholder="Search email, name, or user ID"
+              />
+            </label>
+            <button type="button" class="button secondary" (click)="loadUsers()">
+              <lucide-icon name="refresh-cw" [size]="15" /> Refresh
+            </button>
+          </section>
+
+          <section class="users-layout" [class.inspector-open]="selectedUser()">
+            <div class="user-table workspace-panel">
+              <div class="user-row user-head">
+                <span>User</span><span>Usage</span><span>Access</span><span>Last sign-in</span><span></span>
+              </div>
+              @for (user of users(); track user.id) {
+                <button type="button" class="user-row user-data" (click)="inspectUser(user)">
+                  <span class="user-identity">
+                    @if (user.avatar_url) {
+                      <img [src]="user.avatar_url" alt="" />
+                    } @else {
+                      <span class="user-initial">{{ (user.display_name || user.email || 'U').slice(0, 1).toUpperCase() }}</span>
+                    }
+                    <span>
+                      <strong>{{ user.display_name || 'Unnamed user' }}</strong>
+                      <small>{{ user.email || user.id }}</small>
+                    </span>
+                  </span>
+                  <span class="usage-cell">
+                    <b>{{ user.profile_count }}</b> profiles
+                    <small>{{ user.thread_count }} Ask threads · {{ user.device_count }} devices</small>
+                  </span>
+                  <span>
+                    @if (user.admin_active) {
+                      <span class="status" data-status="published">{{ user.admin_role }}</span>
+                    } @else {
+                      <span class="status">Member</span>
+                    }
+                    @if (user.banned_until) {
+                      <small class="suspended">Suspended</small>
+                    }
+                  </span>
+                  <time>{{ user.last_sign_in_at ? (user.last_sign_in_at | date: 'MMM d, y') : 'Never' }}</time>
+                  <lucide-icon name="chevron-right" [size]="16" />
+                </button>
+              } @empty {
+                <div class="empty-state large">
+                  <lucide-icon name="users" [size]="28" />
+                  <strong>No matching users</strong>
+                </div>
+              }
+            </div>
+
+            @if (selectedUser(); as selected) {
+              <aside class="user-inspector">
+                <header>
+                  <div>
+                    <span class="eyebrow">User account</span>
+                    <h2>{{ selected.display_name || selected.email }}</h2>
+                  </div>
+                  <button type="button" class="icon-button" (click)="closeUserInspector()">
+                    <lucide-icon name="x" [size]="17" />
+                  </button>
+                </header>
+                <div class="user-inspector-scroll">
+                  <section class="user-summary">
+                    <span class="large-avatar">{{ (selected.display_name || selected.email || 'U').slice(0, 1).toUpperCase() }}</span>
+                    <div>
+                      <strong>{{ selected.email }}</strong>
+                      <code>{{ selected.id }}</code>
+                      <small>{{ selected.providers.join(', ') || 'Email' }} · joined {{ selected.created_at | date: 'MMM d, y' }}</small>
+                    </div>
+                  </section>
+
+                  @if (userDetail(); as detail) {
+                    <section class="user-metrics">
+                      <article><strong>{{ detail['kundlis']?.length || 0 }}</strong><span>Profiles</span></article>
+                      <article><strong>{{ detail['readings']?.length || 0 }}</strong><span>Readings</span></article>
+                      <article><strong>{{ detail['ask_threads']?.length || 0 }}</strong><span>Ask threads</span></article>
+                      <article><strong>{{ detail['devices']?.length || 0 }}</strong><span>Devices</span></article>
+                    </section>
+
+                    <section class="account-section">
+                      <h3>Kundli profiles</h3>
+                      @for (profile of detail['kundlis']; track profile.id) {
+                        <div class="account-row">
+                          <span>
+                            <strong>{{ profile.name }}</strong>
+                            <small>{{ profile.relation }} · {{ profile.birth_city }}, {{ profile.birth_nation }}</small>
+                          </span>
+                          <span>{{ profile.sun_sign || 'No sign' }}</span>
+                        </div>
+                      } @empty {
+                        <p class="as-muted">No profiles created.</p>
+                      }
+                    </section>
+
+                    <section class="account-section">
+                      <h3>Preferences</h3>
+                      @if (detail['settings']) {
+                        <div class="preference-grid">
+                          <span><small>Chart</small><b>{{ detail['settings']['chart_style'] }}</b></span>
+                          <span><small>Ayanamsha</small><b>{{ detail['settings']['ayanamsha'] }}</b></span>
+                          <span><small>Language</small><b>{{ detail['settings']['language'] }}</b></span>
+                          <span><small>Mode</small><b>{{ detail['settings']['experience_mode'] || 'balanced' }}</b></span>
+                        </div>
+                      } @else {
+                        <p class="as-muted">Default preferences.</p>
+                      }
+                    </section>
+                  }
+
+                  <section class="account-controls">
+                    <h3>Administration</h3>
+                    <label>
+                      <span>Reason for access or account change</span>
+                      <textarea [(ngModel)]="userActionReason" rows="3"></textarea>
+                    </label>
+                    <div class="access-actions">
+                      <button type="button" class="button secondary" (click)="setAdminAccess('reviewer', true)">
+                        Make reviewer
+                      </button>
+                      <button type="button" class="button secondary" (click)="setAdminAccess('admin', true)">
+                        Make admin
+                      </button>
+                      @if (selected.admin_active) {
+                        <button type="button" class="button reject" (click)="setAdminAccess(selected.admin_role || 'reviewer', false)">
+                          Remove console access
+                        </button>
+                      }
+                    </div>
+                  </section>
+                </div>
+                <footer class="user-actions">
+                  @if (selected.banned_until) {
+                    <button type="button" class="button publish" (click)="setUserStatus('restore')">Restore account</button>
+                  } @else {
+                    <button type="button" class="button reject" (click)="setUserStatus('suspend')">
+                      <lucide-icon name="user-x" [size]="15" /> Suspend account
+                    </button>
+                  }
+                </footer>
+              </aside>
+            }
+          </section>
+        }
+
+        @case ('activity') {
+          @if (activity(); as data) {
+            <section class="metric-grid activity-metrics">
+              <article><span>Readings</span><strong>{{ data['counts']['readings'] }}</strong><small>{{ data['counts']['rated_readings'] }} rated</small></article>
+              <article><span>Ask conversations</span><strong>{{ data['counts']['ask_threads'] }}</strong><small>{{ data['counts']['ask_messages'] }} messages</small></article>
+              <article><span>Validated claims</span><strong>{{ data['counts']['validated_claims'] }}</strong><small>user feedback received</small></article>
+              <article><span>Active remedies</span><strong>{{ data['counts']['active_remedies'] }}</strong><small>{{ data['counts']['muhurta_requests'] }} muhurta requests</small></article>
+            </section>
+            <section class="activity-grid">
+              <article class="workspace-panel">
+                <div class="panel-head"><div><span class="eyebrow">AI output</span><h2>Recent readings</h2></div></div>
+                <div class="compact-list">
+                  @for (reading of data['readings']; track reading.id) {
+                    <div>
+                      <span class="file-icon"><lucide-icon name="book-open-check" [size]="16" /></span>
+                      <span><strong>{{ reading.reading_type }}</strong><small>{{ reading.period_label || 'No period' }} · version {{ reading.version }}</small></span>
+                      <span>{{ reading.generated_at | date: 'MMM d, HH:mm' }}</span>
+                    </div>
+                  } @empty { <div class="empty-state">No generated readings.</div> }
+                </div>
+              </article>
+              <article class="workspace-panel">
+                <div class="panel-head"><div><span class="eyebrow">Conversations</span><h2>Recent Ask threads</h2></div></div>
+                <div class="compact-list">
+                  @for (thread of data['ask_threads']; track thread.id) {
+                    <div>
+                      <span class="file-icon"><lucide-icon name="message-square-text" [size]="16" /></span>
+                      <span><strong>{{ thread.title || 'Untitled question' }}</strong><small>{{ thread.message_count }} messages</small></span>
+                      <span>{{ thread.last_message_at | date: 'MMM d, HH:mm' }}</span>
+                    </div>
+                  } @empty { <div class="empty-state">No Ask activity.</div> }
+                </div>
+              </article>
+            </section>
+          }
+        }
+
+        @case ('sources') {
+          <section class="toolbar">
+            <label class="search-field">
+              <lucide-icon name="search" [size]="16" />
+              <input
+                type="search"
+                [(ngModel)]="sourceQuery"
+                (keyup.enter)="loadSources()"
+                placeholder="Search title, author, or source key"
+              />
+            </label>
+            <select [(ngModel)]="sourceStatus" (change)="loadSources()" aria-label="Filter source status">
+              <option value="all">All statuses</option>
+              <option value="ready">Ready</option>
+              <option value="needs_review">Needs review</option>
+              <option value="processing">Processing</option>
+              <option value="failed">Failed</option>
+            </select>
+            <button type="button" class="button secondary" (click)="loadSources()">
+              <lucide-icon name="refresh-cw" [size]="15" /> Refresh
+            </button>
+            @if (identity()?.role === 'admin') {
+              <button type="button" class="button primary" (click)="uploadOpen.set(true)">
+                <lucide-icon name="upload" [size]="15" /> Upload EPUB
+              </button>
+            }
+          </section>
+
+          <section class="source-table workspace-panel">
+            <div class="table-head source-row">
+              <span>Source</span><span>Pipeline</span><span>Passages</span><span>Updated</span><span></span>
+            </div>
+            @for (source of sources(); track source.id) {
+              <button type="button" class="source-row data-row" (click)="openSource(source)">
+                <span class="source-title-cell">
+                  <span class="file-icon"><lucide-icon name="book-open" [size]="17" /></span>
+                  <span>
+                    <strong>{{ source.title }}</strong>
+                    <small>{{ source.author || 'Author not set' }} · {{ source.language || 'Unknown language' }}</small>
+                  </span>
+                </span>
+                <span>
+                  <span class="status" [attr.data-status]="source.status">{{ statusLabel(source.status) }}</span>
+                  <small>{{ source.parser_version }}</small>
+                </span>
+                <span class="chunk-stack">
+                  <b>{{ source.chunk_counts?.['retrievable'] || 0 }}</b> CE core
+                  <small>{{ source.chunk_counts?.['excluded'] || 0 }} excluded · {{ source.chunk_counts?.['needs_review'] || 0 }} pending</small>
+                </span>
+                <time>{{ source.updated_at | date: 'MMM d, y' }}</time>
+                <lucide-icon name="chevron-right" [size]="16" />
+              </button>
+            } @empty {
+              <div class="empty-state large">
+                <lucide-icon name="library" [size]="28" />
+                <strong>No matching sources</strong>
+                <span>Adjust the status or search filter.</span>
+              </div>
+            }
+          </section>
+        }
+
+        @case ('review') {
+          <section class="toolbar review-toolbar">
+            <label class="search-field">
+              <lucide-icon name="search" [size]="16" />
+              <input
+                type="search"
+                [(ngModel)]="chunkQuery"
+                (keyup.enter)="loadChunks()"
+                placeholder="Search titles or exact passage text"
+              />
+            </label>
+            <select [(ngModel)]="chunkStatus" (change)="loadChunks()" aria-label="Filter review status">
+              <option value="needs_review">Needs review</option>
+              <option value="published">Published</option>
+              <option value="rejected">Rejected</option>
+              <option value="all">All statuses</option>
+            </select>
+            <select [(ngModel)]="chunkScope" (change)="loadChunks()" aria-label="Filter retrieval scope">
+              <option value="all">All retrieval scopes</option>
+              <option value="core">CE core</option>
+              <option value="editorial">Editorial</option>
+              <option value="navigation">Contents and indexes</option>
+              <option value="publishing">Publishing material</option>
+              <option value="devotional">Devotional</option>
+              <option value="out_of_domain">Outside astrology</option>
+            </select>
+            @if (sourceFilter) {
+              <button type="button" class="filter-chip" (click)="sourceFilter = ''; loadChunks()">
+                Source filter <lucide-icon name="x" [size]="13" />
+              </button>
+            }
+            <button type="button" class="button secondary" (click)="loadChunks()">
+              <lucide-icon name="refresh-cw" [size]="15" /> Refresh
+            </button>
+          </section>
+
+          @if (selectedIds().size) {
+            <section class="bulk-bar">
+              <strong>{{ selectedIds().size }} selected</strong>
+              <input [(ngModel)]="reviewReason" placeholder="Reason for this bulk action" />
+              <button type="button" (click)="bulkReview('publish')">
+                <lucide-icon name="circle-check" [size]="15" /> Publish
+              </button>
+              <button type="button" class="danger" (click)="bulkReview('reject')">
+                <lucide-icon name="circle-x" [size]="15" /> Reject
+              </button>
+            </section>
+          }
+
+          <section class="review-layout" [class.inspector-open]="selectedChunk()">
+            <div class="review-list workspace-panel">
+              <div class="review-list-head">
+                <label>
+                  <input type="checkbox" [checked]="allSelected()" (change)="toggleAll()" />
+                  <span>{{ chunks().length }} passages</span>
+                </label>
+                <span>Exact source text</span>
+              </div>
+              @for (chunk of chunks(); track chunk.id) {
+                <article
+                  class="review-card"
+                  [class.active]="selectedChunk()?.id === chunk.id"
+                  (click)="inspectChunk(chunk)"
+                >
+                  <input
+                    type="checkbox"
+                    [checked]="selectedIds().has(chunk.id)"
+                    (click)="$event.stopPropagation()"
+                    (change)="toggleSelection(chunk.id)"
+                    [attr.aria-label]="'Select ' + chunk.title"
+                  />
+                  <div>
+                    <div class="review-card-top">
+                      <span>{{ chunk.source?.title || 'Unknown source' }}</span>
+                      <span class="status" [attr.data-status]="chunk.quality_status">
+                        {{ statusLabel(chunk.quality_status) }}
+                      </span>
+                      <span class="status" [attr.data-status]="chunk.retrieval_scope">
+                        {{ chunk.retrieval_scope === 'core' ? 'CE core' : statusLabel(chunk.retrieval_scope) }}
+                      </span>
+                    </div>
+                    <h3>{{ chunk.title || 'Untitled passage' }}</h3>
+                    <p>{{ chunk.content }}</p>
+                    <footer>
+                      <span>Pages {{ chunk.page_labels.join(', ') || 'unmarked' }}</span>
+                      <span>{{ confidence(chunk.classification_confidence) }} confidence</span>
+                      @if (chunk.source_domains.length) {
+                        <span>{{ chunk.source_domains.slice(0, 2).join(' · ') }}</span>
+                      }
+                      @if (chunk.quality_notes.length) {
+                        <span class="warning">{{ chunk.quality_notes.length }} warning(s)</span>
+                      }
+                    </footer>
+                  </div>
+                  <lucide-icon name="chevron-right" [size]="16" />
+                </article>
+              } @empty {
+                <div class="empty-state large">
+                  <lucide-icon name="clipboard-check" [size]="28" />
+                  <strong>Queue is clear</strong>
+                  <span>No passages match the current filters.</span>
+                </div>
+              }
+            </div>
+
+            @if (selectedChunk(); as chunk) {
+              <aside class="review-inspector">
+                <header>
+                  <div>
+                    <span class="eyebrow">Passage {{ chunk.ordinal + 1 }}</span>
+                    <h2>{{ chunk.source?.title }}</h2>
+                  </div>
+                  <button type="button" class="icon-button" (click)="closeInspector()">
+                    <lucide-icon name="x" [size]="17" />
+                  </button>
+                </header>
+
+                <div class="inspector-scroll">
+                  <section class="source-proof" [class.has-page-image]="chunk.page_assets?.length">
+                    <div class="proof-meta">
+                      <span>Pages {{ chunk.page_labels.join(', ') || 'unmarked' }}</span>
+                      <span>SHA {{ chunk.content_sha256.slice(0, 12) }}…</span>
+                    </div>
+                    @if (chunk.page_assets?.length) {
+                      <div class="page-switcher" aria-label="Source pages">
+                        @for (page of chunk.page_assets; track page.id; let index = $index) {
+                          <button
+                            type="button"
+                            [class.active]="selectedPageIndex === index"
+                            (click)="selectedPageIndex = index"
+                          >
+                            Page {{ page.page_label || page.ordinal + 1 }}
+                          </button>
+                        }
+                      </div>
+                    }
+                    <div class="proof-grid">
+                      @if (chunk.page_assets?.[selectedPageIndex]; as page) {
+                        @if (page.page_image_url) {
+                          <figure>
+                            <img
+                              [src]="page.page_image_url"
+                              [alt]="'Original scanned page ' + (page.page_label || page.ordinal + 1)"
+                            />
+                            <figcaption>
+                              Original page · {{ page.extraction_method || 'source scan' }}
+                            </figcaption>
+                          </figure>
+                        }
+                      }
+                      <div class="extracted-proof">
+                        <span>Extracted passage</span>
+                        <pre>{{ chunk.content }}</pre>
+                      </div>
+                    </div>
+                  </section>
+
+                  @if (chunk.quality_notes.length) {
+                    <section class="warning-box">
+                      <lucide-icon name="triangle-alert" [size]="17" />
+                      <div>
+                        <strong>Analyzer warnings</strong>
+                        @for (note of chunk.quality_notes; track note) { <p>{{ note }}</p> }
+                      </div>
+                    </section>
+                  }
+
+                  <section class="metadata-form">
+                    <label>
+                      <span>Retrieval scope</span>
+                      <select [(ngModel)]="editRetrievalScope">
+                        <option value="core">CE core</option>
+                        <option value="editorial">Editorial context</option>
+                        <option value="navigation">Contents or index</option>
+                        <option value="publishing">Publishing material</option>
+                        <option value="devotional">Devotional only</option>
+                        <option value="out_of_domain">Outside astrology</option>
+                      </select>
+                    </label>
+                    @if (editRetrievalScope !== 'core') {
+                      <label>
+                        <span>Exclusion reason</span>
+                        <input [(ngModel)]="editRetrievalExclusionReason" />
+                      </label>
+                    }
+                    <label>
+                      <span>Passage title</span>
+                      <input [(ngModel)]="editTitle" />
+                    </label>
+                    <label>
+                      <span>Discovered source domains <small>comma separated</small></span>
+                      <input
+                        [(ngModel)]="editSourceDomains"
+                        placeholder="planetary_strength, gulika_calculation"
+                      />
+                    </label>
+                    <label>
+                      <span>Topics <small>comma separated</small></span>
+                      <input [(ngModel)]="editTopics" />
+                    </label>
+                    <label>
+                      <span>Content types <small>comma separated</small></span>
+                      <input [(ngModel)]="editContentTypes" />
+                    </label>
+                    <fieldset>
+                      <legend>Mapped CE domains <small>optional controlled routing</small></legend>
+                      <div class="domain-grid">
+                        @for (domain of taxonomy(); track domain.id) {
+                          <label [title]="domain.description">
+                            <input
+                              type="checkbox"
+                              [checked]="domainSelected(domain.id)"
+                              (change)="toggleDomain(domain.id)"
+                            />
+                            <span>{{ domain.name }}</span>
+                          </label>
+                        }
+                      </div>
+                    </fieldset>
+                    <label>
+                      <span>Audit reason <b>required</b></span>
+                      <textarea
+                        [(ngModel)]="reviewReason"
+                        rows="3"
+                        placeholder="What did you verify or change?"
+                      ></textarea>
+                    </label>
+                    <button type="button" class="button secondary" (click)="saveMetadata()">
+                      <lucide-icon name="save" [size]="15" /> Save metadata
+                    </button>
+                  </section>
+                </div>
+
+                <footer class="review-actions">
+                  @if (chunk.quality_status !== 'rejected') {
+                    <button type="button" class="button reject" (click)="review('reject')">
+                      <lucide-icon name="circle-x" [size]="16" /> Reject
+                    </button>
+                  }
+                  @if (chunk.quality_status !== 'needs_review') {
+                    <button type="button" class="button secondary" (click)="review('requeue')">
+                      Requeue
+                    </button>
+                  }
+                  @if (chunk.quality_status !== 'published') {
+                    <button type="button" class="button publish" (click)="review('publish')">
+                      <lucide-icon name="circle-check" [size]="16" /> Publish
+                    </button>
+                  }
+                </footer>
+              </aside>
+            }
+          </section>
+        }
+
+        @case ('retrieval') {
+          <section class="retrieval-workspace">
+            <div class="retrieval-query workspace-panel">
+              <div class="panel-head">
+                <div>
+                  <span class="eyebrow">CE simulation</span>
+                  <h2>Test a real user question</h2>
+                </div>
+                <span class="published-only"><lucide-icon name="shield-check" [size]="15" /> Published only</span>
+              </div>
+              <textarea
+                [(ngModel)]="retrievalQuery"
+                rows="5"
+                placeholder="For example: How is the time of birth determined?"
+              ></textarea>
+              <fieldset>
+                <legend>Limit to CE domains</legend>
+                <div class="domain-grid">
+                  @for (domain of taxonomy(); track domain.id) {
+                    <label [title]="domain.description">
+                      <input
+                        type="checkbox"
+                        [checked]="retrievalDomains.includes(domain.id)"
+                        (change)="toggleRetrievalDomain(domain.id)"
+                      />
+                      <span>{{ domain.name }}</span>
+                    </label>
+                  }
+                </div>
+              </fieldset>
+              <button type="button" class="button primary" (click)="testRetrieval()" [disabled]="retrievalLoading()">
+                <lucide-icon name="search" [size]="16" />
+                {{ retrievalLoading() ? 'Searching…' : 'Run retrieval test' }}
+              </button>
+            </div>
+
+            <div class="retrieval-results">
+              @for (result of retrievalResults(); track result['chunk_id']; let rank = $index) {
+                <article class="result-card">
+                  <header>
+                    <span class="rank">{{ rank + 1 }}</span>
+                    <div>
+                      <strong>{{ result['title'] || 'Source passage' }}</strong>
+                      <small>{{ result['book'] }} · pages {{ result['page_labels']?.join(', ') || 'unmarked' }}</small>
+                    </div>
+                    <span class="score">{{ ((result['semantic_score'] || 0) * 100) | number: '1.0-0' }}%</span>
+                  </header>
+                  <p>{{ result['content'] }}</p>
+                  <footer>
+                    @for (topic of result['topics']; track topic) { <span>{{ topic }}</span> }
+                  </footer>
+                </article>
+              } @empty {
+                <div class="empty-state retrieval-empty">
+                  <lucide-icon name="flask-conical" [size]="34" />
+                  <strong>No test results yet</strong>
+                  <span>Run a question to inspect the passages CE would provide to an agent.</span>
+                </div>
+              }
+            </div>
+          </section>
+        }
+
+        @case ('audit') {
+          <section class="audit-summary">
+            <div>
+              <lucide-icon name="shield-check" [size]="19" />
+              <span>
+                <strong>Global append-only history</strong>
+                <small>User mutations and administrative decisions are recorded with request IDs.</small>
+              </span>
+            </div>
+            <button type="button" class="button secondary" (click)="loadAudit()">
+              <lucide-icon name="refresh-cw" [size]="15" /> Refresh
+            </button>
+          </section>
+          <section class="audit-table workspace-panel">
+            <div class="audit-row audit-head">
+              <span>Time</span><span>Actor</span><span>Action</span><span>Reason</span><span>Request</span>
+            </div>
+            @for (entry of audit(); track entry.id) {
+              <article class="audit-row">
+                <time>{{ entry.created_at | date: 'MMM d, y, HH:mm:ss' }}</time>
+                <span>
+                  <strong>{{ entry.actor_email || 'System' }}</strong>
+                  <small>{{ entry.actor_role || 'service' }}</small>
+                </span>
+                <span class="action-label">{{ statusLabel(entry.action) }}</span>
+                <span>{{ entry.reason || 'No reason recorded' }}</span>
+                <code>{{ entry.request_id.slice(0, 8) }}</code>
+              </article>
+            } @empty {
+              <div class="empty-state large">No administrative actions recorded yet.</div>
+            }
+          </section>
+        }
+
+        @case ('system') {
+          @if (system(); as data) {
+            <section class="system-banner" [attr.data-status]="data['status']">
+              <span class="system-icon"><lucide-icon name="server-cog" [size]="20" /></span>
+              <span>
+                <strong>{{ data['status'] === 'healthy' ? 'All systems operational' : 'Attention required' }}</strong>
+                <small>{{ data['database'] }} · taxonomy v{{ data['taxonomy_version'] }} · {{ data['failed_runs'] }} failed jobs</small>
+              </span>
+              <button type="button" class="button secondary" (click)="loadSystem()">
+                <lucide-icon name="refresh-cw" [size]="15" /> Refresh
+              </button>
+            </section>
+
+            <section class="system-grid">
+              <article class="workspace-panel">
+                <div class="panel-head"><div><span class="eyebrow">Data estate</span><h2>Record counts</h2></div></div>
+                <div class="count-grid">
+                  @for (entry of data['counts'] | keyvalue; track entry.key) {
+                    <div><span>{{ statusLabel(entry.key) }}</span><strong>{{ entry.value }}</strong></div>
+                  }
+                </div>
+              </article>
+              <article class="workspace-panel">
+                <div class="panel-head"><div><span class="eyebrow">Background work</span><h2>Ingestion runs</h2></div></div>
+                <div class="compact-list jobs-list">
+                  @for (run of data['ingestion_runs']; track run.id) {
+                    <div>
+                      <span class="job-dot" [attr.data-status]="run.status"></span>
+                      <span><strong>{{ run.source_key }}</strong><small>{{ run.sections_count || 0 }} sections · {{ run.chunks_count || 0 }} chunks</small></span>
+                      <span class="status" [attr.data-status]="run.status">{{ run.status }}</span>
+                    </div>
+                  } @empty { <div class="empty-state">No ingestion runs recorded.</div> }
+                </div>
+              </article>
+            </section>
+          }
+        }
+      }
+    </div>
+  </main>
+</div>
+
+@if (uploadOpen()) {
+  <div class="admin-modal-backdrop" (click)="uploadOpen.set(false)">
+    <section class="admin-modal" role="dialog" aria-modal="true" aria-label="Upload knowledge source" (click)="$event.stopPropagation()">
+      <header>
+        <div><span class="eyebrow">Knowledge ingestion</span><h2>Upload PDF or EPUB source</h2></div>
+        <button type="button" class="icon-button" (click)="uploadOpen.set(false)"><lucide-icon name="x" [size]="17" /></button>
+      </header>
+      <label class="file-drop">
+        <lucide-icon name="upload" [size]="24" />
+        <span><strong>{{ uploadFile?.name || 'Choose PDF or EPUB file' }}</strong><small>PDF recommended · private storage · maximum 100 MB</small></span>
+        <input type="file" accept=".pdf,.epub,application/pdf,application/epub+zip" (change)="onUploadFile($event)" />
+      </label>
+      <label><span>Stable source key</span><input [(ngModel)]="uploadSourceKey" placeholder="uttara-kalamritam" /></label>
+      <div class="modal-grid">
+        <label><span>Start page/section index</span><input type="number" min="0" [(ngModel)]="uploadStartSection" /></label>
+        <label><span>Maximum pages/sections <small>optional</small></span><input type="number" min="1" [(ngModel)]="uploadMaxSections" /></label>
+      </div>
+      <p>The original file stays private. Analyzer warnings automatically route passages to human review.</p>
+      <footer>
+        <button type="button" class="button secondary" (click)="uploadOpen.set(false)">Cancel</button>
+        <button type="button" class="button primary" (click)="uploadSource()">Upload and process</button>
+      </footer>
+    </section>
+  </div>
+}
+
+<p-toast position="bottom-right" />

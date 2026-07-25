@@ -20,6 +20,7 @@ class SourcePassage:
     content: str
     page_labels: tuple[str, ...]
     domains: tuple[str, ...]
+    source_domains: tuple[str, ...]
     topics: tuple[str, ...]
     lexical_score: float
     semantic_score: float
@@ -49,12 +50,13 @@ class PostgresSourceRetriever:
                 cursor.execute("""
                     select
                       c.id, s.source_key, s.title, s.edition, c.title, c.content,
-                      c.page_labels, c.domains, c.topics,
+                      c.page_labels, c.domains, c.source_domains, c.topics,
                       ts_rank_cd(c.search_vector, websearch_to_tsquery('english', %s))::real,
                       (1 - (c.embedding <=> %s::extensions.vector))::real
                     from public.knowledge_chunks c
                     join public.knowledge_sources s on s.id = c.source_id
                     where c.quality_status = 'published'
+                      and c.retrieval_scope = 'core'
                       and (
                         %s::text[] is null
                         or cardinality(c.domains) = 0
@@ -78,9 +80,10 @@ class PostgresSourceRetriever:
                 content=row[5],
                 page_labels=tuple(row[6] or []),
                 domains=tuple(row[7] or []),
-                topics=tuple(row[8] or []),
-                lexical_score=float(row[9] or 0),
-                semantic_score=float(row[10] or 0),
+                source_domains=tuple(row[8] or []),
+                topics=tuple(row[9] or []),
+                lexical_score=float(row[10] or 0),
+                semantic_score=float(row[11] or 0),
             )
             for row in rows
         ]
@@ -138,6 +141,7 @@ class SupabaseSourceRetriever:
                 content=row["content"],
                 page_labels=tuple(row.get("page_labels") or []),
                 domains=tuple(row.get("domains") or []),
+                source_domains=tuple(row.get("source_domains") or []),
                 topics=tuple(row.get("topics") or []),
                 lexical_score=float(row.get("lexical_score") or 0),
                 semantic_score=float(row.get("semantic_score") or 0),

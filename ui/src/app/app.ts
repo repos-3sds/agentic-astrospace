@@ -114,7 +114,7 @@ export class App implements OnInit {
   protected readonly title = computed(() => this.store.active()?.name ?? 'AstroSpace');
   protected readonly publicOnly = computed(() => {
     const path = this.currentUrl().split('?')[0].split('#')[0];
-    return path === '/' || path.startsWith('/auth');
+    return path === '/' || path.startsWith('/auth') || path.startsWith('/admin');
   });
 
   protected readonly subtitle = computed(() => {

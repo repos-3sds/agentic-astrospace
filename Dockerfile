@@ -15,7 +15,7 @@ WORKDIR /app
 # only; purge it afterwards to keep the runtime image slim.
 COPY requirements.txt ./
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential \
+    && apt-get install -y --no-install-recommends build-essential poppler-utils \
     && pip install --no-cache-dir -r requirements.txt \
     && apt-get purge -y build-essential \
     && apt-get autoremove -y \
