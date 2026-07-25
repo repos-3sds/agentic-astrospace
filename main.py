@@ -22,6 +22,8 @@ from astrospace.api.settings_routes import router as settings_router
 from astrospace.api.remedy_routes import router as remedy_router
 from astrospace.api.muhurta_routes import router as muhurta_router
 from astrospace.api.festival_routes import router as festival_router
+from astrospace.api.me_routes import router as me_router
+from astrospace.api.practice_routes import router as practice_router
 
 app = FastAPI(
     title="AstroSpace",
@@ -58,6 +60,8 @@ app.include_router(context_router)
 app.include_router(remedy_router)
 app.include_router(muhurta_router)
 app.include_router(festival_router)
+app.include_router(me_router)
+app.include_router(practice_router)
 
 # Registered before the "/" SPA mount — Starlette matches in registration
 # order, so anything defined after the mount is unreachable.
