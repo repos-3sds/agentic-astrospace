@@ -22,3 +22,10 @@ cache/
 
 # Angular build output
 frontend/dist/
+
+# Knowledge-base source texts (~318MB of PDFs/EPUBs).
+# These are ingestion inputs, not code — they live in Supabase storage
+# (see knowledge_sources.storage_bucket/storage_path). Keeping them out of
+# git history avoids permanently bloating the repo.
+Astro Space Knowledge Base/
+*.crdownload

@@ -35,7 +35,12 @@ class Base(DeclarativeBase):
 
 
 def init_db():
+    # Importing the module registers every model on Base.metadata; the explicit
+    # names keep the original four discoverable at a glance.
+    from . import models  # noqa: F401
     from .models import Kundli, PredictionClaim, Reading, UserSettings  # noqa: F401
+    # create_all uses checkfirst=True, so tables already created by the Supabase
+    # migrations are left untouched — this only fills gaps (e.g. local SQLite).
     Base.metadata.create_all(bind=engine)
     _migrate_sqlite_kundlis()
     _migrate_sqlite_readings()

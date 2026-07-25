@@ -205,7 +205,8 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
                     include_gochara: bool = True,
                     transit_positions: dict | None = None,
                     as_of: datetime | None = None,
-                    kb_limit: int = 12) -> dict:
+                    kb_limit: int = 12,
+                    question: str | None = None) -> dict:
     """Domain-scoped context for one domain. `chart` is a VedicChart."""
     spec = get_domain(domain_id)
     as_of = as_of or datetime.now(timezone.utc)
@@ -262,6 +263,19 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
         for ref in kb.retrieve([domain_id], subdomains=list(spec.subdomains),
                                limit=kb_limit)
     ]
+    source_passages = []
+    try:
+        from .source_retriever import get_source_retriever
+        retrieval_query = question or f"{spec.name}: {spec.description}"
+        source_passages = [
+            passage.to_dict()
+            for passage in get_source_retriever().retrieve(
+                retrieval_query, [domain_id], limit=min(kb_limit, 8),
+            )
+        ]
+    except Exception:
+        # The source corpus is additive; a retrieval outage must not break CE.
+        source_passages = []
 
     return {
         "domain": domain_id,
@@ -279,6 +293,7 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
         "gochara": (_gochara_for_domain(spec, chart, transit_positions, as_of)
                     if include_gochara else None),
         "references": references,
+        "source_passages": source_passages,
         "convention_flags": list(spec.convention_flags),
         "exclusions": list(spec.exclusions),
     }
@@ -304,6 +319,7 @@ def assemble(chart, domains: list[str], *, question: str | None = None,
             include_gochara=include_gochara,
             transit_positions=transit_positions,
             as_of=as_of,
+            question=question,
         ))
     lagna_sign = sign_index(chart.lagna_lon)
     moon_sign = sign_index(chart.positions["Moon"]["lon"])

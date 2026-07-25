@@ -1,4 +1,21 @@
--- AstroSpace Supabase/Postgres schema
+-- AstroSpace Supabase/Postgres schema  [SUPERSEDED — see note]
+--
+-- NOTE (2026-07-25): `supabase/migrations/` is now the source of truth for the
+-- schema. This file covers only the original 4 tables and does NOT include the
+-- 25 mobile-app tables added in 20260725120000_create_mobile_app_schema.sql.
+--
+-- Evidence suggests this file was never actually run against the linked project:
+-- applying that migration reported `constraint "user_settings_chart_style_check"
+-- ... does not exist, skipping`, i.e. the CHECK constraints defined below were
+-- absent. The tables most likely came from SQLAlchemy `Base.metadata.create_all()`,
+-- which creates tables but not CHECK constraints, RLS, or policies.
+--
+-- ⚠️ Consequence: the `enable row level security` + policy statements at the
+-- bottom of this file may never have been applied to kundlis / readings /
+-- prediction_claims / user_settings. Verify before relying on RLS — the Angular
+-- app ships @supabase/supabase-js, so the anon key reaches the browser.
+-- See the verification query in the migration notes.
+--
 -- Run this in Supabase SQL Editor before pointing DATABASE_URL at Supabase Postgres.
 -- The FastAPI backend enforces auth ownership using the Supabase bearer token.
 
