@@ -54,22 +54,12 @@
   </div>
 </div>
 
-<div class="composer">
-  <button class="mic" type="button" aria-label="Ask by voice">
-    <img src="mobile/mic.svg" alt="" aria-hidden="true" />
-  </button>
-  <input
-    class="field"
-    type="text"
-    placeholder="Ask a follow-up…"
-    aria-label="Your follow-up question"
-    [value]="draft()"
-    (input)="draft.set($any($event.target).value)"
-  />
-  <button class="send" type="button" aria-label="Send" [disabled]="!draft().trim()">
-    <img src="mobile/send.svg" alt="" aria-hidden="true" />
-  </button>
-</div>
+<as-ask-composer
+  [value]="draft()"
+  label="Your follow-up question"
+  (valueChange)="draft.set($event)"
+  (submitted)="askAgain($event)"
+/>
 
 @if (whyOpen()) {
   <as-why-reading-sheet

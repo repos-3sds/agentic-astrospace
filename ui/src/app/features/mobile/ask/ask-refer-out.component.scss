@@ -1,0 +1,110 @@
+@use '../mobile-tokens' as *;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+/* Back bar — node 27:84 */
+.appbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px 10px;
+}
+
+.back {
+  line-height: 0;
+  img { width: 24px; height: 24px; display: block; }
+}
+
+.crumb { @include m-body-strong; color: var(--m-muted); margin: 0; }
+
+/* Thread — node 27:88 */
+.body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 10px 20px 16px;
+}
+
+.asked { display: flex; justify-content: flex-end; }
+
+.bubble {
+  max-width: 260px;
+  margin: 0;
+  background: var(--m-ink);
+  color: var(--m-on-ink);
+  padding: 12px 16px;
+  border-radius: 18px 18px 6px 18px;
+  @include m-body;
+}
+
+/* Refer-out card — node 27:92 */
+.refer {
+  background: var(--m-gold-soft);
+  border: 1px solid var(--m-border);
+  border-radius: 22px;
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  // No card shadow, unlike the answer card. This is the app stepping back, not
+  // presenting a result, and lifting it off the page would say the opposite.
+}
+
+.refer-head { display: flex; align-items: center; gap: 12px; }
+
+.badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--m-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  img { width: 22px; height: 22px; display: block; }
+}
+
+.refer-title { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+
+.eyebrow { @include m-eyebrow; color: var(--m-accent); margin: 0; }
+.eyebrow.gold { color: var(--m-gold); }
+
+.headline { @include m-body-strong; color: var(--m-text); margin: 0; }
+.boundary { @include m-body; color: var(--m-text); margin: 0; }
+
+.rule { height: 1px; background: var(--m-border); }
+
+.offer { display: flex; flex-direction: column; gap: 6px; }
+.offer-text { @include m-body; color: var(--m-text); margin: 0; }
+
+.action {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid var(--m-border-strong);
+  border-radius: 999px;
+  background: none;
+  padding: 16px 24px;
+  cursor: pointer;
+  @include m-button;
+  color: var(--m-accent-strong);
+}
+
+/* Standing policy — node 27:109 */
+.policy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  @include m-caption;
+  color: var(--m-muted);
+  img { width: 16px; height: 16px; display: block; flex-shrink: 0; }
+}

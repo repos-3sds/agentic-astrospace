@@ -45,28 +45,14 @@
   and a reader who has scrolled the suggestions should not have to scroll back
   to type.
 -->
-<div class="composer">
-  <button class="mic" type="button" aria-label="Ask by voice" (click)="startListening()">
-    <img src="mobile/mic.svg" alt="" aria-hidden="true" />
-  </button>
-  <input
-    class="field"
-    type="text"
-    placeholder="Type your question…"
-    aria-label="Your question"
-    [value]="draft()"
-    (input)="draft.set($any($event.target).value)"
-  />
-  <button
-    class="send"
-    type="button"
-    aria-label="Send"
-    [disabled]="!draft().trim()"
-    (click)="ask(draft())"
-  >
-    <img src="mobile/send.svg" alt="" aria-hidden="true" />
-  </button>
-</div>
+<as-ask-composer
+  [inset]="true"
+  [value]="draft()"
+  placeholder="Type your question…"
+  (valueChange)="draft.set($event)"
+  (submitted)="ask($event)"
+  (voiceRequested)="startListening()"
+/>
 
 @if (listening()) {
   <as-voice-listening

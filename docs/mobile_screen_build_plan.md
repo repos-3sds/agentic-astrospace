@@ -113,7 +113,7 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `25:25` | 8 · Ask — Home | ✅ done |
 | `25:123` | 9 · Ask — Voice listening | ✅ done — overlay from Ask's mic |
 | `26:54` | 10 · Ask — Answer view | ✅ done |
-| `27:83` | 11 · Ask — Refer-out (safety) | ⬜ |
+| `27:83` | 11 · Ask — Refer-out (safety) | ✅ done — `?domain=health\|legal\|money\|death` |
 | `29:55` | 12 · Remedies — For You | ⬜ |
 | `29:109` | 13 · Remedy detail — Mantra tracker | ⬜ |
 | `30:56` | 14 · Muhurta — Choose a goal | ⬜ |
@@ -170,11 +170,20 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `118:239` | 33d · Ashtakavarga tables | ⬜ |
 | `118:383` | 33e · Favourable points | ⬜ |
 
+## Not yet wired
+
+Ask's composer routes every question to the answer view (26:54), including
+ones that must refer out. Choosing between 26:54 and 27:83 is the answer
+pipeline's call — classifying intent in the client would put the safety
+boundary somewhere that can be bypassed. Both screens exist and are routed;
+the decision lands with `/api/v1/ask`.
+
 ## Status
 
-3 of 70 built. The foundation (tokens, shell, tab bar, sheet primitive, gauge)
-is done and reusable, and the pipeline is proven end to end — Figma to browser
-to iOS simulator.
+9 of 70 built: M1's Today set and all of M3 Ask. The foundation (tokens, shell,
+tab bar, sheet primitive, gauge, Ask composer, evidence sheet) is done and
+reusable, and the pipeline is proven end to end — Figma to browser to iOS
+simulator.
 
 Remaining work is per-screen and largely mechanical, but it is not small: each
 screen needs its own design-context fetch, asset download, component, and

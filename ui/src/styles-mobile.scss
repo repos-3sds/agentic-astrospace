@@ -43,6 +43,11 @@
   --m-bad-soft: #f4e6e4;
   --m-warn: #b86f19;
   --m-warn-soft: #f4ead7;
+  // Gold is not warn. Warn marks a window to avoid — something the reading is
+  // telling you. Gold marks the app declining to answer at all, and the two
+  // must not be confusable.
+  --m-gold: #a06f22;
+  --m-gold-soft: #efe4cf;
 
   --m-shadow-card: 0 10px 30px rgba(65, 42, 20, 0.07);
   // Deeper and wider than the card shadow: it lifts a floating control clear of

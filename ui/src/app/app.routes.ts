@@ -166,6 +166,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/mobile/ask/ask-answer.component').then((m) => m.AskAnswerComponent),
       },
+      {
+        path: 'ask/refer',
+        loadComponent: () =>
+          import('./features/mobile/ask/ask-refer-out.component').then(
+            (m) => m.AskReferOutComponent,
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

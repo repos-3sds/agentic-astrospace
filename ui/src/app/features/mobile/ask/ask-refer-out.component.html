@@ -1,0 +1,51 @@
+@let c = copy();
+
+<header class="appbar">
+  <a class="back" [routerLink]="['/m', 'ask']" aria-label="Back to Ask">
+    <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  </a>
+  <p class="crumb">Ask</p>
+</header>
+
+<div class="body">
+  <div class="asked">
+    <p class="bubble">{{ question() }}</p>
+  </div>
+
+  <article class="refer">
+    <header class="refer-head">
+      <span class="badge" aria-hidden="true">
+        <img src="mobile/shield-alert.svg" alt="" />
+      </span>
+      <div class="refer-title">
+        <p class="eyebrow gold">NOT SOMETHING WE PREDICT</p>
+        <p class="headline">{{ c.headline }}</p>
+      </div>
+    </header>
+
+    <p class="boundary">{{ c.boundary }}</p>
+
+    <div class="rule"></div>
+
+    <div class="offer">
+      <p class="eyebrow">WHAT WE CAN OFFER</p>
+      <p class="offer-text">{{ c.offer }}</p>
+    </div>
+
+    @if (c.action) {
+      <button class="action" type="button">{{ c.action }}</button>
+    }
+  </article>
+
+  <p class="policy">
+    <img src="mobile/shield.svg" alt="" aria-hidden="true" />
+    <span>We keep this boundary for every health, legal, and money question — always.</span>
+  </p>
+</div>
+
+<as-ask-composer
+  [value]="draft()"
+  label="Your follow-up question"
+  (valueChange)="draft.set($event)"
+  (submitted)="askAgain($event)"
+/>

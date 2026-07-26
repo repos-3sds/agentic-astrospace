@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AskComposerComponent } from './ask-composer.component';
 import { VoiceListeningComponent } from './voice-listening.component';
 
 /** A subject the reader can scope a question to. */
@@ -38,7 +39,7 @@ export interface AskSuggestion {
   selector: 'as-ask-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [VoiceListeningComponent],
+  imports: [AskComposerComponent, VoiceListeningComponent],
   templateUrl: './ask-home.component.html',
   styleUrl: './ask-home.component.scss',
 })
@@ -109,6 +110,15 @@ export class AskHomeComponent {
    * The topic, when one is selected, rides along: it is the reader saying which
    * of several readings of an ambiguous question they meant, and dropping it
    * would make the chips decorative.
+   *
+   * Every question currently lands on the answer view, including ones that must
+   * refer out — a health question here still shows a career verdict. Which of
+   * the two screens a question belongs on is the answer pipeline's call, not
+   * the composer's: classifying intent in the client would put the safety
+   * boundary somewhere it can be skipped by anything that does not go through
+   * this button. The refer-out screen is built and routed; wiring it is part of
+   * connecting /api/v1/ask, and until then this is placeholder routing like the
+   * placeholder verdict it lands on.
    */
   protected ask(question: string): void {
     const q = question.trim();

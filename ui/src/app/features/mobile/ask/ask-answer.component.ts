@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AskComposerComponent } from './ask-composer.component';
 import {
   EvidenceRow,
   WhyReadingSheetComponent,
@@ -37,23 +39,27 @@ export interface AnswerView {
   selector: 'as-ask-answer',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, WhyReadingSheetComponent],
+  imports: [AskComposerComponent, RouterLink, WhyReadingSheetComponent],
   templateUrl: './ask-answer.component.html',
   styleUrl: './ask-answer.component.scss',
 })
 export class AskAnswerComponent {
-  private readonly route = inject(ActivatedRoute);
+  // The observable, not the snapshot: a follow-up re-enters this same route, and
+  // Angular reuses the component rather than rebuilding it — read once and the
+  // thread would answer the second question with the first one's text.
+  private readonly params = toSignal(inject(ActivatedRoute).queryParamMap, {
+    requireSync: true,
+  });
 
-  readonly view = signal<AnswerView>({
-    question:
-      this.route.snapshot.queryParamMap.get('q') ?? 'Is this a good time to change my job?',
+  readonly view = computed<AnswerView>(() => ({
+    question: this.params().get('q') ?? 'Is this a good time to change my job?',
     domain: 'CAREER',
     tone: 'good',
     verdict: 'Yes — the next 6 weeks favour a change.',
     whatToDo:
       'Start conversations and send applications this week — Thursday & Friday mornings are best. Wait to sign anything until after the 14th.',
     followUps: ['What about starting a business instead?'],
-  });
+  }));
 
   readonly draft = signal('');
 
@@ -76,4 +82,12 @@ export class AskAnswerComponent {
   ]);
 
   readonly conventions = signal(['Lahiri', 'Whole-sign', 'Vijayawada', 'High confidence']);
+
+  private readonly router = inject(Router);
+
+  /** A follow-up is a new question, so it re-enters through the same route. */
+  protected askAgain(question: string): void {
+    void this.router.navigate(['/m', 'ask', 'answer'], { queryParams: { q: question } });
+    this.draft.set('');
+  }
 }
