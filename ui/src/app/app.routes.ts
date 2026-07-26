@@ -173,6 +173,13 @@ export const routes: Routes = [
             (m) => m.AskReferOutComponent,
           ),
       },
+      {
+        path: 'remedies',
+        loadComponent: () =>
+          import('./features/mobile/remedies/remedies.component').then(
+            (m) => m.RemediesComponent,
+          ),
+      },
       // The tab bar has five tabs and three of them are not built yet. Without
       // this they fall through to the global '**' below and land on the web
       // app's marketing page — in the native build that reads as the app

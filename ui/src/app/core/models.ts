@@ -778,7 +778,60 @@ export interface GocharamPeriod extends GocharaActiveWindow {
   validation_prompt: string;
 }
 
+export interface GocharamDomainReading {
+  id: string;
+  title: string;
+  tone: 'neutral' | 'supportive' | 'challenging' | 'mixed';
+  balance_score: number;
+  score_note: string;
+  main_theme: string;
+  rationale: string;
+  reading: string;
+  strengths: string[];
+  challenges: string[];
+  actions: string[];
+  timing: {
+    current: string;
+    next?: TransitTimelineEvent | null;
+    previous?: TransitTimelineEvent | null;
+    active_windows: GocharaActiveWindow[];
+  };
+  leading_planets: string[];
+  evidence_ids: string[];
+  dasha_alignment: {
+    active_lords: string[];
+    domain_matches: string[];
+    status: string;
+  };
+}
+
+export interface GocharamInterpretation {
+  schema_version: string;
+  library_version: string;
+  mode: 'deterministic_non_ai' | string;
+  methodology: {
+    anchor_order: string[];
+    modifiers: string[];
+    calculation_rule: string;
+    interpretation_rule: string;
+  };
+  domains: GocharamDomainReading[];
+  planet_readings: Array<{
+    planet: string;
+    title: string;
+    tone: string;
+    main_theme: string;
+    rationale: string;
+    reading: string;
+    evidence_ids: string[];
+  }>;
+  evidence: Array<Record<string, unknown>>;
+  provenance: Record<string, string>;
+}
+
 export interface GocharamProfilePayload {
+  schema_version: string;
+  engine_version: string;
   system: string;
   as_of: string;
   ayanamsha: string;
@@ -788,6 +841,7 @@ export interface GocharamProfilePayload {
     moon_sign: string;
   };
   gochara: TransitAnalysisPayload['gochara'];
+  ashtakavarga_transit?: AshtakavargaTransitPayload;
   periods: GocharamPeriod[];
   coverage: {
     past_days: number;
@@ -824,6 +878,7 @@ export interface TransitAnalysisPayload {
       challenging_rule_count: number;
     };
     timeline: GocharaRuleTimeline;
+    interpretation: GocharamInterpretation;
     sade_sati: {
       active: boolean;
       phase?: string | null;

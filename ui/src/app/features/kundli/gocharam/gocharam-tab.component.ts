@@ -5,6 +5,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import {
   GocharaActiveWindow,
   GocharaCoreReadingBlock,
+  GocharamDomainReading,
   GocharamPeriod,
   GocharamProfilePayload,
   TransitTimelineEvent,
@@ -26,6 +27,7 @@ export class GocharamTabComponent {
   protected readonly error = signal<string | null>(null);
   protected readonly loading = computed(() => !this.data() && !this.error());
   protected readonly detailMode = signal<'active' | 'next' | 'past'>('active');
+  protected readonly domainId = signal('career');
 
   protected readonly currentReading = computed<GocharaCoreReadingBlock | null>(() => {
     const reading = this.data()?.gochara.core_reading;
@@ -56,6 +58,11 @@ export class GocharamTabComponent {
   });
 
   protected readonly activeWindows = computed(() => this.data()?.gochara.timeline.active_windows ?? []);
+  protected readonly domains = computed(() => this.data()?.gochara.interpretation?.domains ?? []);
+  protected readonly activeDomain = computed<GocharamDomainReading | null>(() => {
+    const domains = this.domains();
+    return domains.find((domain) => domain.id === this.domainId()) ?? domains[0] ?? null;
+  });
   protected readonly detailEvents = computed(() => {
     const timeline = this.data()?.gochara.timeline;
     if (!timeline) return [];

@@ -1,0 +1,44 @@
+<header class="appbar">
+  <a class="back" [routerLink]="['/m', 'today']" aria-label="Back">
+    <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  </a>
+  <h1 class="screen-title">What to do</h1>
+</header>
+
+<div class="body">
+  <p class="lede">
+    Practices for what’s active in your chart right now — never a substitute for
+    professional advice.
+  </p>
+
+  @for (card of cards(); track card.id) {
+    <article class="remedy">
+      <div class="remedy-head">
+        <p class="remedy-title">{{ card.title }}</p>
+        <span class="tag" [attr.data-tone]="card.tone">{{ card.tagLabel }}</span>
+      </div>
+
+      <p class="rationale">{{ card.rationale }}</p>
+
+      <ul class="practices">
+        @for (p of card.practices; track p.text) {
+          <li class="practice">
+            <img [src]="'mobile/remedy-' + p.icon + '.svg'" alt="" aria-hidden="true" />
+            <span>{{ p.text }}</span>
+          </li>
+        }
+      </ul>
+
+      <div class="rule"></div>
+
+      <!--
+        Printed here, not carried on the card, so no remedy can ship without it.
+        Remedies are traditional practice — never a fix sold as a cure.
+      -->
+      <div class="foot">
+        <p class="caveat">Traditional practice · not a guarantee</p>
+        <button class="cta" type="button">{{ card.ctaLabel }}</button>
+      </div>
+    </article>
+  }
+</div>

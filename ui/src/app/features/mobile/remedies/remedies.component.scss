@@ -1,0 +1,104 @@
+@use '../mobile-tokens' as *;
+
+:host { display: block; }
+
+/* Back bar — node 29:56 */
+.appbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px 10px;
+}
+
+.back {
+  line-height: 0;
+  img { width: 24px; height: 24px; display: block; }
+}
+
+.screen-title { @include m-title; color: var(--m-text); margin: 0; }
+
+/* Content column — node 29:60 */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 20px 24px;
+}
+
+.lede { @include m-body; color: var(--m-muted); margin: 0; }
+
+/* Remedy card — node 29:62 */
+.remedy {
+  background: var(--m-surface);
+  border: 1px solid var(--m-border);
+  border-radius: 22px;
+  box-shadow: var(--m-shadow-card);
+  padding: 17px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.remedy-head { display: flex; align-items: center; gap: 8px; }
+.remedy-title { @include m-body-strong; color: var(--m-text); margin: 0; flex: 1 1 0; min-width: 0; }
+
+// The tag names what in the chart this answers to, and takes that thing's own
+// tone. It is not a severity badge — a flag and a dasha are both just facts.
+.tag {
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-weight: 500;
+  font-size: 10.5px;
+  line-height: 1.4;
+  background: var(--m-warn-soft);
+  color: var(--m-warn);
+
+  &[data-tone='bad']  { background: var(--m-bad-soft);  color: var(--m-bad); }
+  &[data-tone='good'] { background: var(--m-good-soft); color: var(--m-good); }
+}
+
+.rationale { @include m-body-small; color: var(--m-muted); margin: 0; }
+
+/* Practices — node 29:68 */
+.practices {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.practice {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  @include m-body-small;
+  color: var(--m-text);
+  img { width: 17px; height: 17px; display: block; flex-shrink: 0; }
+}
+
+.rule { height: 1px; background: var(--m-border); }
+
+/* Caveat and action — node 29:84 */
+.foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+// Above the button, not beside it or after it: it has to be read before the
+// action, not discovered afterwards.
+.caveat { @include m-caption; color: var(--m-muted); margin: 0; text-align: center; }
+
+.cta {
+  border: 0;
+  border-radius: 999px;
+  background: var(--m-accent-soft);
+  color: var(--m-accent-strong);
+  padding: 9px 15px;
+  cursor: pointer;
+  @include m-body-strong;
+}

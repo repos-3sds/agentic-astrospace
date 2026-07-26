@@ -54,6 +54,100 @@
       }
     </div>
 
+    <app-section-card
+      icon="compass"
+      title="Life-domain explorer"
+      subtitle="Detailed non-AI interpretation composed from the same calculated evidence"
+    >
+      <nav class="domain-tabs" aria-label="Gocharam life domains">
+        @for (domain of domains(); track domain.id) {
+          <button
+            type="button"
+            [class.active]="domainId() === domain.id"
+            (click)="domainId.set(domain.id)"
+          >
+            {{ domain.title }}
+          </button>
+        }
+      </nav>
+
+      @if (activeDomain(); as domain) {
+        <article class="domain-reading" [class]="toneClass(domain.tone)">
+          <header>
+            <div>
+              <span>Main theme</span>
+              <h3>{{ domain.title }}</h3>
+              <p>{{ domain.main_theme }}</p>
+            </div>
+            <div class="domain-balance">
+              <strong>{{ domain.balance_score }}</strong>
+              <span>Current balance</span>
+              <small>{{ domain.score_note }}</small>
+            </div>
+          </header>
+
+          <div class="domain-copy">
+            <section>
+              <b>Why this judgement</b>
+              <p>{{ domain.rationale }}</p>
+            </section>
+            <section class="plain-reading">
+              <b>What this can mean in daily life</b>
+              <p>{{ domain.reading }}</p>
+            </section>
+          </div>
+
+          <div class="domain-columns">
+            <section>
+              <b>Constructive possibilities</b>
+              <ul>
+                @for (item of domain.strengths; track item) {
+                  <li>{{ item }}</li>
+                }
+              </ul>
+            </section>
+            <section>
+              <b>Watch carefully</b>
+              <ul>
+                @for (item of domain.challenges; track item) {
+                  <li>{{ item }}</li>
+                }
+              </ul>
+            </section>
+            <section>
+              <b>Practical focus</b>
+              <ul>
+                @for (item of domain.actions; track item) {
+                  <li>{{ item }}</li>
+                }
+              </ul>
+            </section>
+          </div>
+
+          <footer class="domain-timing">
+            <div>
+              <span>Timing</span>
+              <strong>{{ domain.timing.current }}</strong>
+            </div>
+            <div>
+              <span>Leading factors</span>
+              <strong>{{ domain.leading_planets.join(' · ') }}</strong>
+            </div>
+            <div>
+              <span>Dasha alignment</span>
+              <strong>
+                {{
+                  domain.dasha_alignment.domain_matches.length
+                    ? domain.dasha_alignment.domain_matches.join(' · ')
+                    : 'No direct repetition'
+                }}
+              </strong>
+            </div>
+          </footer>
+        </article>
+      }
+    </app-section-card>
+
     <app-section-card icon="list" title="Generated Gocharam periods" subtitle="precomputed readings for the profile timeline">
       <div class="period-list">
         @for (period of t.periods; track periodTrack(period)) {
