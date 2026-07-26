@@ -158,7 +158,7 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | Node | Screen | Status |
 | --- | --- | --- |
 | `4:2` | 1 · Landing | ✅ done — `/m/start` |
-| `5:2` | 2 · Login / Register | ⬜ |
+| `5:2` | 2 · Login / Register | ✅ done — `/m/auth` |
 | `6:2` | 3 · Welcome | ✅ done |
 | `7:2` | 4 · Info Carousel · Disclaimers | ✅ done |
 | `8:2` | 5 · Persona Type | ✅ done |
@@ -194,7 +194,7 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `60:257` | 23c · Strength & Advanced — Jaimini | ⬜ |
 | `61:88` | 20b · Divisional charts — D1 | ⬜ |
 | `61:195` | 20c · Divisional charts — D10 | ⬜ |
-| `62:88` | 2b · Register | ⬜ |
+| `62:88` | 2b · Register | ✅ done — `/m/auth?mode=register` |
 | `62:140` | 12b · Manglik cancellation detail | ⬜ |
 | `66:89` | 25 · Settings — Home | ⬜ |
 | `67:89` | 25b · Settings — Mode & Tone | ⬜ |
@@ -204,7 +204,7 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `69:117` | 25f · Settings — Conventions | ⬜ |
 | `69:180` | 25g · Settings — Account & Privacy | ⬜ |
 | `79:89` | 26 · Profile switcher sheet | ⬜ |
-| `82:96` | 2c · Choose Your Language | ⬜ |
+| `82:96` | 2c · Choose Your Language | ✅ done — `/m/language` |
 | `91:89` | 27 · Gochara (plain transits) | ⬜ |
 | `92:89` | 27b · Full Transits | ⬜ |
 | `93:89` | 28 · Calendar | ⬜ |
@@ -238,7 +238,7 @@ the decision lands with `/api/v1/ask`.
 
 ## Status
 
-27 of 70 built: M1's Today set, all of M3 Ask, M4 Remedies, M5 Muhurta and
+30 of 70 built: M1's Today set, the complete authentication/onboarding entrance, all of M3 Ask, M4 Remedies, M5 Muhurta and
 the M6 Chart flow (hub -> full render -> planet detail -> provenance -> divisional charts -> life periods). The foundation (tokens, shell,
 tab bar, sheet primitive, gauge, Ask composer, evidence sheet) is done and
 reusable, and the pipeline is proven end to end — Figma to browser to iOS

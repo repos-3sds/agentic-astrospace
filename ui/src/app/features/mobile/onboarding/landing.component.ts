@@ -32,10 +32,8 @@ import { RouterLink } from '@angular/router';
     </div>
 
     <div class="actions">
-      <a class="btn primary" [routerLink]="['/m', 'welcome']">Get started</a>
-      <!-- Sign-in (5:2) is not built yet, so this stays inert rather than
-           routing somewhere that is not the sign-in screen. -->
-      <button class="btn ghost" type="button">I already have a space</button>
+      <a class="btn primary" [routerLink]="['/m', 'auth']" [queryParams]="{ mode: 'register' }">Get started</a>
+      <a class="btn ghost" [routerLink]="['/m', 'auth']">I already have a space</a>
       <p class="assurance">Swiss Ephemeris · Classical rules · No fear, no upsell</p>
     </div>
   `,

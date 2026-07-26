@@ -1,0 +1,21 @@
+@use '../mobile-tokens' as *;
+
+:host { display: block; min-height: 100%; padding: 18px 24px 32px; box-sizing: border-box; }
+.topbar { height: 24px; a, img { display: block; width: 24px; height: 24px; } }
+main { display: flex; flex-direction: column; align-items: center; gap: 22px; padding-top: 22px; }
+.heading { text-align: center; h1 { @include m-h1; margin: 0 0 6px; } p { @include m-body; margin: 0; color: var(--m-muted); } }
+.switch { display: flex; width: 100%; gap: 4px; padding: 4px; border-radius: 999px; background: var(--m-accent-soft); box-sizing: border-box;
+  button { @include m-button; flex: 1; border: 0; border-radius: 999px; padding: 11px; background: none; color: var(--m-accent-strong); }
+  .is-on { background: var(--m-ink); color: var(--m-on-ink); box-shadow: var(--m-shadow-card); }
+}
+.google { @include m-button; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px; border: 1.5px solid var(--m-border-strong); border-radius: 999px; background: transparent; color: var(--m-text); img { width: 20px; height: 20px; } }
+.or { @include m-caption; width: 100%; display: flex; align-items: center; gap: 12px; color: var(--m-muted); em { font-style: normal; } span { flex: 1; height: 1px; background: var(--m-border); } }
+form { width: 100%; display: flex; flex-direction: column; gap: 14px; }
+label { @include m-caption; display: flex; flex-direction: column; gap: 8px; color: var(--m-muted); }
+input { @include m-body; width: 100%; box-sizing: border-box; padding: 15px 18px; border: 1.2px solid var(--m-border); border-radius: 999px; outline: 0; background: var(--m-surface); color: var(--m-text); }
+.password { position: relative; display: block; input { padding-right: 52px; } button { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); border: 0; padding: 4px; background: none; img { display: block; width: 20px; height: 20px; } } }
+.forgot { @include m-caption; align-self: flex-end; border: 0; padding: 0; background: none; color: var(--m-accent-strong); }
+.continue { @include m-button; width: 100%; padding: 16px; border: 0; border-radius: 999px; background: var(--m-ink); color: var(--m-on-ink); box-shadow: var(--m-shadow-card); &:disabled { opacity: .65; } }
+.magic { @include m-body-small; margin: -4px 0 0; color: var(--m-muted); button { @include m-body-strong; border: 0; padding: 0; background: none; color: var(--m-accent-strong); } }
+.terms { @include m-caption; margin: -12px 0 0; color: var(--m-muted); text-align: center; }
+.message { @include m-body-small; margin: -4px 0; color: var(--m-good); text-align: center; &.error { color: var(--m-bad); } }

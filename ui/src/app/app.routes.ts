@@ -156,6 +156,20 @@ export const routes: Routes = [
       import('./features/mobile/onboarding/landing.component').then((m) => m.LandingComponent),
   },
   {
+    path: 'm/auth',
+    canActivate: [nativeAppGuard],
+    loadComponent: () =>
+      import('./features/mobile/onboarding/mobile-auth.component').then(
+        (m) => m.MobileAuthComponent,
+      ),
+  },
+  {
+    path: 'm/language',
+    canActivate: [nativeAppGuard],
+    loadComponent: () =>
+      import('./features/mobile/onboarding/language.component').then((m) => m.LanguageComponent),
+  },
+  {
     path: 'm/welcome',
     canActivate: [nativeAppGuard],
     loadComponent: () =>

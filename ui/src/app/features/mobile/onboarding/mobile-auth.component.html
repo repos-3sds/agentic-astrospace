@@ -1,0 +1,42 @@
+<header class="topbar">
+  <a [routerLink]="['/m', 'start']" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
+</header>
+
+<main>
+  <div class="heading">
+    <h1>{{ mode() === 'signin' ? 'Welcome back' : 'Create your space' }}</h1>
+    <p>{{ mode() === 'signin' ? 'Sign in to keep your charts and daily guidance.' : 'Free to start — save your chart and daily guidance.' }}</p>
+  </div>
+
+  <div class="switch" role="tablist" aria-label="Account action">
+    <button type="button" role="tab" [class.is-on]="mode() === 'signin'" (click)="setMode('signin')">Sign in</button>
+    <button type="button" role="tab" [class.is-on]="mode() === 'register'" (click)="setMode('register')">Register</button>
+  </div>
+
+  <button class="google" type="button" (click)="google()">
+    <img src="mobile/google.svg" alt="" aria-hidden="true" /> Continue with Google
+  </button>
+
+  <div class="or"><span></span><em>or</em><span></span></div>
+
+  <form (ngSubmit)="submit()">
+    @if (mode() === 'register') {
+      <label>YOUR NAME<input name="name" [(ngModel)]="name" autocomplete="name" placeholder="Lakshmi" /></label>
+    }
+    <label>EMAIL<input name="email" [(ngModel)]="email" type="email" autocomplete="email" placeholder="lakshmi@email.com" /></label>
+    <label>
+      PASSWORD
+      <span class="password">
+        <input name="password" [(ngModel)]="password" [type]="showPassword() ? 'text' : 'password'" [autocomplete]="mode() === 'signin' ? 'current-password' : 'new-password'" [placeholder]="mode() === 'signin' ? '••••••••' : 'Create a password'" />
+        <button type="button" aria-label="Show password" (click)="showPassword.set(!showPassword())"><img src="mobile/eye.svg" alt="" /></button>
+      </span>
+    </label>
+    @if (mode() === 'signin') { <button class="forgot" type="button">Forgot password?</button> }
+    @if (error()) { <p class="message error" role="alert">{{ error() }}</p> }
+    @if (notice()) { <p class="message">{{ notice() }}</p> }
+    <button class="continue" type="submit" [disabled]="loading()">{{ loading() ? 'Please wait…' : mode() === 'signin' ? 'Continue' : 'Create account' }}</button>
+  </form>
+
+  <p class="magic">Prefer no password? <button type="button" (click)="magicLink()">Email me a magic link</button></p>
+  <p class="terms">By continuing you agree to our Terms &amp; Privacy Policy.</p>
+</main>

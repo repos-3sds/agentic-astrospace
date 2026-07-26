@@ -50,16 +50,21 @@ export class AuthService {
     this.ready.set(true);
   }
 
-  async signIn(email: string, password: string): Promise<void> {
+  async signIn(email: string, password: string, destination: string[] = ['/app']): Promise<void> {
     await this.init();
     if (!this.client) return;
     const { data, error } = await this.client.auth.signInWithPassword({ email, password });
     if (error) throw error;
     this.setSession(data.session);
-    await this.router.navigate(['/app']);
+    await this.router.navigate(destination);
   }
 
-  async signUp(email: string, password: string, name: string): Promise<void> {
+  async signUp(
+    email: string,
+    password: string,
+    name: string,
+    destination: string[] = ['/app'],
+  ): Promise<void> {
     await this.init();
     if (!this.client) return;
     const { data, error } = await this.client.auth.signUp({
@@ -69,28 +74,28 @@ export class AuthService {
     });
     if (error) throw error;
     this.setSession(data.session);
-    if (data.session) await this.router.navigate(['/app']);
+    if (data.session) await this.router.navigate(destination);
   }
 
-  async signInWithMagicLink(email: string): Promise<void> {
+  async signInWithMagicLink(email: string, destination = '/'): Promise<void> {
     await this.init();
     if (!this.client) return;
     const { error } = await this.client.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: new URL(destination, window.location.origin).toString(),
       },
     });
     if (error) throw error;
   }
 
-  async signInWithGoogle(): Promise<void> {
+  async signInWithGoogle(destination = '/'): Promise<void> {
     await this.init();
     if (!this.client) return;
     const { error } = await this.client.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin,
+        redirectTo: new URL(destination, window.location.origin).toString(),
       },
     });
     if (error) throw error;

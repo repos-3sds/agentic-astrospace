@@ -1,0 +1,14 @@
+<div class="top">
+  <div class="art"><img src="mobile/language.svg" alt="" aria-hidden="true" /></div>
+  <h1>Choose your language</h1>
+  <p>You can change this anytime in Settings.</p>
+  <div class="choices" role="radiogroup" aria-label="Language">
+    <button type="button" role="radio" [class.is-on]="language() === 'English'" [attr.aria-checked]="language() === 'English'" (click)="language.set('English')">
+      <span>English</span><span class="radio"><img [src]="language() === 'English' ? 'mobile/check-language.svg' : 'mobile/radio-language.svg'" alt="" /></span>
+    </button>
+    <button type="button" role="radio" [class.is-on]="language() === 'Telugu'" [attr.aria-checked]="language() === 'Telugu'" (click)="language.set('Telugu')">
+      <span><strong>తెలుగు</strong><small>Telugu</small></span><span class="radio"><img [src]="language() === 'Telugu' ? 'mobile/check-language.svg' : 'mobile/radio-language.svg'" alt="" /></span>
+    </button>
+  </div>
+</div>
+<a class="continue" [routerLink]="['/m', 'welcome']">Continue</a>
