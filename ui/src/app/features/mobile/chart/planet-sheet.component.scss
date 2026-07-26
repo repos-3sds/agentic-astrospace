@@ -1,0 +1,85 @@
+@use '../mobile-tokens' as *;
+
+.head { display: flex; align-items: center; gap: 14px; }
+
+.glyph {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: var(--m-accent-soft);
+  color: var(--m-accent-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  @include m-h2;
+}
+
+.head-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.title { @include m-h2; color: var(--m-text); margin: 0; }
+.position { @include m-body-small; color: var(--m-muted); margin: 0; }
+
+.reading { @include m-body; color: var(--m-text); margin: 0; }
+
+/* Technical disclosure — node 53:93 */
+.disclosure,
+.explain {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 11px 13px 11px 15px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.disclosure {
+  border: 1.2px solid var(--m-border-strong);
+  background: none;
+  @include m-body-strong;
+  color: var(--m-text);
+}
+
+.disclosure-left,
+.explain-left { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.disclosure-left img { width: 16px; height: 16px; display: block; flex-shrink: 0; }
+
+.caret {
+  width: 18px;
+  height: 18px;
+  display: block;
+  flex-shrink: 0;
+  transition: transform 160ms ease-out;
+  &.is-open { transform: rotate(180deg); }
+}
+
+.hint { @include m-caption; color: var(--m-muted); margin: 0; }
+
+/* Expanded technical rows. Same label/value shape as the provenance sheet, so
+   the two read as one kind of thing — inputs and conventions, not claims. */
+.technical { display: flex; flex-direction: column; gap: 8px; }
+
+.tech-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  @include m-body-small;
+  color: var(--m-muted);
+
+  span:last-child { @include m-body-strong; color: var(--m-text); text-align: right; }
+}
+
+/* House explainer — node 53:102 */
+.explain {
+  border: 0;
+  background: var(--m-accent-soft);
+  @include m-body-strong;
+  color: var(--m-accent-strong);
+  .explain-left img { width: 17px; height: 17px; display: block; flex-shrink: 0; }
+  .chevron { width: 18px; height: 18px; display: block; flex-shrink: 0; }
+}

@@ -170,10 +170,10 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `29:109` | 13 · Remedy detail — Mantra tracker | ✅ done — `/m/remedies/mantra` |
 | `30:56` | 14 · Muhurta — Choose a goal | ✅ done — `/m/muhurta` |
 | `31:57` | 15 · Muhurta — Results | ✅ done — `/m/muhurta/results` |
-| `35:57` | 16 · Chart Hub (You) | ⬜ |
-| `36:86` | 17 · Chart — Full render | ⬜ |
-| `36:201` | 18 · Planet detail sheet | ⬜ |
-| `36:247` | 19 · Provenance sheet | ⬜ |
+| `35:57` | 16 · Chart Hub (You) | ✅ done — `/m/chart` |
+| `36:86` | 17 · Chart — Full render | ✅ done — `/m/chart/full`, Eastern only |
+| `36:201` | 18 · Planet detail sheet | ✅ done |
+| `36:247` | 19 · Provenance sheet | ✅ done |
 | `39:87` | 20 · Divisional (Varga) Charts | ⬜ |
 | `40:87` | 21 · Life Periods (Dashas) | ⬜ |
 | `41:87` | 22 · Yogas & Doshas | ⬜ |
@@ -232,7 +232,8 @@ the decision lands with `/api/v1/ask`.
 
 ## Status
 
-13 of 70 built: M1's Today set, all of M3 Ask, M4 Remedies and M5 Muhurta. The foundation (tokens, shell,
+17 of 70 built: M1's Today set, all of M3 Ask, M4 Remedies, M5 Muhurta and
+the M6 Chart flow (hub -> full render -> planet detail -> provenance). The foundation (tokens, shell,
 tab bar, sheet primitive, gauge, Ask composer, evidence sheet) is done and
 reusable, and the pipeline is proven end to end — Figma to browser to iOS
 simulator.

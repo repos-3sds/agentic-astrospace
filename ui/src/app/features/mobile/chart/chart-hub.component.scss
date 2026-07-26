@@ -1,0 +1,194 @@
+@use '../mobile-tokens' as *;
+
+:host { display: block; }
+
+/* App bar — node 35:58 */
+.appbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px 8px;
+}
+
+.screen-title { @include m-title; color: var(--m-text); margin: 0; }
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px 6px 6px;
+  border: 1px solid var(--m-border);
+  border-radius: 999px;
+  background: var(--m-surface);
+  cursor: pointer;
+  flex-shrink: 0;
+  img { width: 14px; height: 14px; display: block; }
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--m-accent);
+  color: var(--m-on-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.profile-name { @include m-body-small; color: var(--m-text); }
+
+/* Content column — node 35:66 */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 6px 20px 20px;
+}
+
+.eyebrow { @include m-eyebrow; color: var(--m-accent); margin: 0; }
+.eyebrow.muted { color: var(--m-muted); }
+
+/* Signature — node 53:88 */
+.signature {
+  background: var(--m-accent-soft);
+  border-radius: 22px;
+  padding: 17px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.signature-headline { @include m-h2; color: var(--m-text); margin: 0; }
+.signature-detail { @include m-body-small; color: var(--m-muted); margin: 0; }
+
+/* Sun / Moon / Ascendant — node 35:67 */
+.angles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+
+.angle {
+  box-sizing: border-box;
+  background: var(--m-raised);
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+  // 13px all round in the design, whose 393pt frame leaves 85px of text width
+  // in a third-column cell. At 375 that drops to 79px and "ASCENDANT" breaks
+  // mid-word; trimming the sides restores the space the design allocated.
+  padding: 13px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.angle-sign { @include m-body-strong; color: var(--m-text); margin: 0; }
+.angle-degree { @include m-caption; color: var(--m-muted); margin: 0; }
+
+/* Rashi card — node 35:80 */
+.rashi {
+  background: var(--m-surface);
+  border: 1px solid var(--m-border);
+  border-radius: 24px;
+  box-shadow: var(--m-shadow-card);
+  padding: 17px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.rashi-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.style { @include m-caption; color: var(--m-muted); margin: 0; }
+
+.preview { width: 160px; align-self: center; }
+
+.open {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: var(--m-accent-soft);
+  padding: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  @include m-button;
+  color: var(--m-accent-strong);
+  img { width: 17px; height: 17px; display: block; }
+}
+
+/* Provenance row — node 35:109 */
+.provenance,
+.notes {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+  background: var(--m-raised);
+  cursor: pointer;
+  text-align: left;
+
+  .mark { width: 18px; height: 18px; display: block; flex-shrink: 0; }
+  .chevron { width: 16px; height: 16px; display: block; flex-shrink: 0; }
+}
+
+.provenance-text { @include m-body-small; color: var(--m-text); flex: 1 1 0; min-width: 0; }
+
+.notes { gap: 11px; padding: 13px 14px 13px 15px; }
+.notes-label { @include m-body-strong; color: var(--m-text); flex: 1 1 0; min-width: 0; }
+.notes-count { @include m-caption; color: var(--m-muted); flex-shrink: 0; }
+
+/* Explore grid — node 35:117. Two equal columns rather than the design's fixed
+   167px, for the same reason as Muhurta's goal cards: 167 is what fits 393. */
+.explore {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.explore-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--m-border);
+  border-radius: 18px;
+  background: var(--m-surface);
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+}
+
+.explore-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--m-accent-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  img { width: 20px; height: 20px; display: block; }
+}
+
+// Titles run to "Strength & Advanced"; the design's nowrap clips it at 375.
+.explore-title { @include m-body-strong; color: var(--m-text); }
+.explore-sub { @include m-caption; color: var(--m-muted); }

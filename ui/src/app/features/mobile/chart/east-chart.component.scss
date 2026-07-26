@@ -1,0 +1,57 @@
+@use '../mobile-tokens' as *;
+
+:host {
+  position: relative;
+  display: block;
+  // Square by construction. The frame is a square SVG and the cell positions
+  // are percentages of it, so anything non-square would slide them off centre.
+  aspect-ratio: 1;
+}
+
+.frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+// Anchored top-left, which is how the design places them — Figma's x/y is the
+// text block's corner. Centring instead would shift every block by half its own
+// width, which differs per cell ("Mo" against "Su · Me").
+.cell {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+  border: 0;
+  padding: 0;
+  background: none;
+  line-height: 1.4;
+}
+
+button.cell {
+  cursor: pointer;
+  // The glyphs are small; the tap target should not be. Padding would move the
+  // text, so the target is grown outward instead.
+  margin: -8px;
+  padding: 8px;
+}
+
+.sign {
+  font-weight: 500;
+  font-size: 8.5px;
+  color: var(--m-muted);
+}
+
+.planets {
+  font-weight: 500;
+  font-size: 9.5px;
+  color: var(--m-accent-strong);
+}
+
+// The full render is drawn larger, so its type steps up with it.
+:host(.is-full) {
+  .sign { font-size: 10px; }
+  .planets { font-weight: 600; font-size: 11px; }
+}

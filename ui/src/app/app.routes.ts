@@ -203,6 +203,20 @@ export const routes: Routes = [
             (m) => m.MuhurtaResultsComponent,
           ),
       },
+      {
+        path: 'chart',
+        loadComponent: () =>
+          import('./features/mobile/chart/chart-hub.component').then(
+            (m) => m.ChartHubComponent,
+          ),
+      },
+      {
+        path: 'chart/full',
+        loadComponent: () =>
+          import('./features/mobile/chart/chart-full.component').then(
+            (m) => m.ChartFullComponent,
+          ),
+      },
       // The tab bar has five tabs and three of them are not built yet. Without
       // this they fall through to the global '**' below and land on the web
       // app's marketing page — in the native build that reads as the app

@@ -1,0 +1,32 @@
+<as-sheet (dismissed)="dismissed.emit()">
+  <header class="head">
+    <p class="title">How this was computed</p>
+    <p class="sub">Full provenance for your chart — the calculation trail, on demand.</p>
+  </header>
+
+  <div class="trail">
+    @for (row of rows(); track row.label; let last = $last) {
+      <div class="row">
+        <p class="row-label">{{ row.label }}</p>
+        <p class="row-value">{{ row.value }}</p>
+      </div>
+      @if (!last) { <div class="rule"></div> }
+    }
+  </div>
+
+  <!--
+    Not a disclaimer. Two astrologers using different ayanamshas disagree about
+    the same birth, so naming the one used is what makes the reading checkable.
+  -->
+  <p class="disputed">
+    <img src="mobile/info-gold.svg" alt="" aria-hidden="true" />
+    <span>
+      Ayanamsha and house system are disputed conventions in the tradition — we
+      show which one we used, always.
+    </span>
+  </p>
+
+  <button class="settings" type="button" (click)="settingsRequested.emit()">
+    Change conventions in Settings
+  </button>
+</as-sheet>

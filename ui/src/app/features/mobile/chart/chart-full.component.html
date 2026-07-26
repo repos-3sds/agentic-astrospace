@@ -1,0 +1,57 @@
+<a class="appbar" [routerLink]="['/m', 'chart']">
+  <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  <span class="crumb">Your Chart</span>
+</a>
+
+<div class="body">
+  <!--
+    Which diagram a reader recognises depends on where they learned. The app
+    should not pick for them.
+  -->
+  <div class="styles" role="radiogroup" aria-label="Chart style">
+    @for (s of styles; track s) {
+      <button
+        class="style"
+        type="button"
+        role="radio"
+        [class.is-on]="s === style()"
+        [attr.aria-checked]="s === style()"
+        (click)="style.set(s)"
+      >{{ s }}</button>
+    }
+  </div>
+
+  <div class="chart-card">
+    @if (style() === 'Eastern') {
+      <as-east-chart
+        class="render"
+        size="full"
+        [cells]="cells()"
+        [interactive]="true"
+        (cellSelected)="openCell($event)"
+      />
+    } @else {
+      <!--
+        South and North are genuine redraws, not restyles of this frame — each
+        has its own export (56:88, 57:88). Saying so beats showing an Eastern
+        chart under a North label.
+      -->
+      <p class="pending">The {{ style() }} chart style is not built yet.</p>
+    }
+  </div>
+
+  <ul class="legend">
+    @for (item of legend; track item.abbr) {
+      <li class="legend-item">
+        <span class="legend-abbr">{{ item.abbr }}</span>
+        <span class="legend-name">{{ item.name }}</span>
+      </li>
+    }
+  </ul>
+
+  <p class="hint">Tap a planet to see details</p>
+</div>
+
+@if (selected(); as detail) {
+  <as-planet-sheet [detail]="detail" (dismissed)="selected.set(null)" />
+}

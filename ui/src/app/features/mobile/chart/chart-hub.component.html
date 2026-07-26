@@ -1,0 +1,82 @@
+<header class="appbar">
+  <h1 class="screen-title">Your Chart</h1>
+  <button class="profile" type="button" aria-label="Switch profile">
+    <span class="avatar" aria-hidden="true">{{ profileInitial() }}</span>
+    <span class="profile-name">{{ profileName() }}</span>
+    <img src="mobile/caret-down.svg" alt="" aria-hidden="true" />
+  </button>
+</header>
+
+<div class="body">
+  <!-- Plain language first. The diagram is below, the specialist areas below that. -->
+  <section class="signature">
+    <p class="eyebrow">YOUR SIGNATURE</p>
+    <p class="signature-headline">{{ signature().headline }}</p>
+    <p class="signature-detail">{{ signature().detail }}</p>
+  </section>
+
+  <div class="angles">
+    @for (a of angles(); track a.label) {
+      <div class="angle">
+        <p class="eyebrow muted">{{ a.label }}</p>
+        <p class="angle-sign">{{ a.sign }}</p>
+        <p class="angle-degree">{{ a.degree }}</p>
+      </div>
+    }
+  </div>
+
+  <section class="rashi">
+    <div class="rashi-head">
+      <p class="eyebrow">RASHI · D1 CHART</p>
+      <p class="style">{{ chartStyle() }}</p>
+    </div>
+
+    <as-east-chart class="preview" [cells]="cells()" />
+
+    <a class="open" [routerLink]="['/m', 'chart', 'full']">
+      <span>Open full chart</span>
+      <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
+    </a>
+  </section>
+
+  <!-- Directly under the diagram: this is where "where did this come from" gets asked. -->
+  <button class="provenance" type="button" (click)="provenanceOpen.set(true)">
+    <img class="mark" src="mobile/verified.svg" alt="" aria-hidden="true" />
+    <span class="provenance-text">Computed transparently — tap to see how.</span>
+    <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
+  </button>
+
+  <p class="eyebrow">EXPLORE YOUR CHART</p>
+  <div class="explore">
+    @for (card of explore(); track card.id) {
+      @if (card.route; as route) {
+        <a class="explore-card" [routerLink]="route">
+          <span class="explore-icon">
+            <img [src]="'mobile/' + card.icon + '.svg'" alt="" aria-hidden="true" />
+          </span>
+          <span class="explore-title">{{ card.title }}</span>
+          <span class="explore-sub">{{ card.subtitle }}</span>
+        </a>
+      } @else {
+        <button class="explore-card" type="button">
+          <span class="explore-icon">
+            <img [src]="'mobile/' + card.icon + '.svg'" alt="" aria-hidden="true" />
+          </span>
+          <span class="explore-title">{{ card.title }}</span>
+          <span class="explore-sub">{{ card.subtitle }}</span>
+        </button>
+      }
+    }
+  </div>
+
+  <button class="notes" type="button">
+    <img class="mark" src="mobile/notes.svg" alt="" aria-hidden="true" />
+    <span class="notes-label">Notes</span>
+    <span class="notes-count">{{ noteCount() }} lines</span>
+    <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
+  </button>
+</div>
+
+@if (provenanceOpen()) {
+  <as-provenance-sheet (dismissed)="provenanceOpen.set(false)" />
+}

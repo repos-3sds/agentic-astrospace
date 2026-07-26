@@ -1,0 +1,96 @@
+@use '../mobile-tokens' as *;
+
+:host { display: block; padding-bottom: 24px; }
+
+/* Back bar — node 36:87 */
+.appbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px 10px;
+  text-decoration: none;
+  img { width: 24px; height: 24px; display: block; }
+}
+
+.crumb { @include m-body-strong; color: var(--m-muted); }
+
+/* Content column — node 36:91 */
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 6px 20px 20px;
+}
+
+/* Style toggle — node 44:88 */
+.styles {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--m-accent-soft);
+}
+
+.style {
+  flex: 1 1 0;
+  min-width: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  padding: 10px;
+  cursor: pointer;
+  @include m-button;
+  color: var(--m-accent-strong);
+
+  &.is-on { background: var(--m-ink); color: var(--m-on-ink); }
+}
+
+/* Chart card — node 44:95 */
+.chart-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--m-surface);
+  border: 1px solid var(--m-border);
+  border-radius: 24px;
+  box-shadow: var(--m-shadow-card);
+  padding: 8px;
+}
+
+// The design draws this at 337 inside a 393pt frame; letting it fill the card
+// keeps it square and correct at any width rather than overflowing at 375.
+.render { width: 100%; }
+
+.pending {
+  @include m-body-small;
+  color: var(--m-muted);
+  margin: 0;
+  padding: 48px 16px;
+  text-align: center;
+}
+
+/* Legend — node 44:139 */
+.legend {
+  width: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+.legend-item { display: flex; align-items: center; gap: 5px; }
+
+.legend-abbr {
+  font-weight: 600;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--m-accent-strong);
+}
+
+.legend-name { @include m-caption; color: var(--m-muted); }
+
+.hint { @include m-caption; color: var(--m-muted); margin: 0; }

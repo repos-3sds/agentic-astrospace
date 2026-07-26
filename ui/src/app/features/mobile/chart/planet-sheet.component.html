@@ -1,0 +1,45 @@
+@let d = detail();
+
+<as-sheet (dismissed)="dismissed.emit()">
+  <header class="head">
+    <span class="glyph" aria-hidden="true">{{ d.abbr }}</span>
+    <div class="head-text">
+      <p class="title">{{ d.title }}</p>
+      <p class="position">{{ d.position }}</p>
+    </div>
+  </header>
+
+  <!-- Plain first. Everything technical is behind the disclosure below. -->
+  <p class="reading">{{ d.reading }}</p>
+
+  <button
+    class="disclosure"
+    type="button"
+    [attr.aria-expanded]="technicalOpen()"
+    (click)="toggleTechnical()"
+  >
+    <span class="disclosure-left">
+      <img src="mobile/collapse.svg" alt="" aria-hidden="true" />
+      <span>{{ technicalOpen() ? 'Hide technical detail' : 'Show technical detail' }}</span>
+    </span>
+    <img class="caret" [class.is-open]="technicalOpen()" src="mobile/caret-down.svg" alt="" aria-hidden="true" />
+  </button>
+
+  @if (technicalOpen()) {
+    <div class="technical">
+      <p class="tech-row"><span>Dignity</span><span>Neutral</span></p>
+      <p class="tech-row"><span>Nakshatra</span><span>Punarvasu · pada 3</span></p>
+      <p class="tech-row"><span>Lord of</span><span>4th house</span></p>
+    </div>
+  } @else {
+    <p class="hint">Dignity, nakshatra, and lordships — tap to expand</p>
+  }
+
+  <button class="explain" type="button" (click)="houseExplainerRequested.emit(d.house)">
+    <span class="explain-left">
+      <img src="mobile/why.svg" alt="" aria-hidden="true" />
+      <span>What does the {{ d.house }} mean?</span>
+    </span>
+    <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
+  </button>
+</as-sheet>
