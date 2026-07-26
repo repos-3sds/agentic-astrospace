@@ -1,0 +1,46 @@
+<a class="appbar" [routerLink]="['/m', 'muhurta']">
+  <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  <span class="crumb">Find the best time</span>
+</a>
+
+<div class="body">
+  <header class="intro">
+    <h1 class="title">{{ heading() }}</h1>
+    <p class="scope">{{ scope() }}</p>
+  </header>
+
+  @for (w of windows(); track w.rank) {
+    <article class="window" [class.is-top]="w.rank === 1">
+      <div class="window-head">
+        <div class="rank-row">
+          <span class="rank" [class.is-top]="w.rank === 1">#{{ w.rank }}</span>
+          <p class="date">{{ w.date }}</p>
+        </div>
+        <span class="quality" [attr.data-quality]="w.quality">
+          {{ w.quality === 'best' ? 'BEST' : 'GOOD' }}
+        </span>
+      </div>
+
+      <p class="time">{{ w.time }}</p>
+
+      <!-- The rule, named. See the class comment on why this is not a score. -->
+      <p class="reason">{{ w.reason }}</p>
+
+      <div class="actions">
+        <button class="chip" type="button">
+          <img src="mobile/calendar.svg" alt="" aria-hidden="true" />
+          <span>Add to calendar</span>
+        </button>
+        <button class="chip" type="button">
+          <img src="mobile/clock-dark.svg" alt="" aria-hidden="true" />
+          <span>Remind me</span>
+        </button>
+      </div>
+    </article>
+  }
+
+  <p class="footnote">
+    <img src="mobile/info.svg" alt="" aria-hidden="true" />
+    <span>Timing supports your intent — the decision and diligence are still yours.</span>
+  </p>
+</div>

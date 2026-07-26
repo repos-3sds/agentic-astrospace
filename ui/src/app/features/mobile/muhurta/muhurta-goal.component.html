@@ -1,0 +1,58 @@
+<a class="appbar" [routerLink]="['/m', 'remedies']">
+  <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  <span class="crumb">What to do</span>
+</a>
+
+<div class="body">
+  <header class="intro">
+    <h1 class="title">Find the best time</h1>
+    <p class="lede">
+      Pick what you’re planning — we’ll find windows that suit your chart.
+    </p>
+  </header>
+
+  <div class="goals" role="radiogroup" aria-label="What are you planning?">
+    @for (goal of goals(); track goal.id) {
+      <button
+        class="goal"
+        type="button"
+        role="radio"
+        [class.is-on]="goal.id === selectedGoal()"
+        [attr.aria-checked]="goal.id === selectedGoal()"
+        (click)="selectedGoal.set(goal.id)"
+      >
+        <span class="goal-icon">
+          <img [src]="'mobile/' + goal.icon + '.svg'" alt="" aria-hidden="true" />
+        </span>
+        <span class="goal-label">{{ goal.label }}</span>
+      </button>
+    }
+  </div>
+
+  <p class="eyebrow">WHEN</p>
+  <div class="ranges" role="radiogroup" aria-label="When">
+    @for (r of ranges; track r.id) {
+      <button
+        class="range"
+        type="button"
+        role="radio"
+        [class.is-on]="r.id === range()"
+        [attr.aria-checked]="r.id === range()"
+        (click)="range.set(r.id)"
+      >{{ r.label }}</button>
+    }
+  </div>
+
+  <!--
+    Stated, not assumed: a muhurta is sunrise-relative, so the same instant is a
+    different window in another city.
+  -->
+  <p class="place">
+    <img src="mobile/pin.svg" alt="" aria-hidden="true" />
+    <span>Using your current location · {{ place() }}</span>
+  </p>
+</div>
+
+<button class="find" type="button" [disabled]="!canSearch()" (click)="findWindows()">
+  Find windows
+</button>
