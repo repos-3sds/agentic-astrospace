@@ -92,27 +92,23 @@ fail with a misleading "no booted simulator".
 for a *simulator* build. One thing is still outstanding for a **production**
 one:
 
-**The deployed service rejects the Capacitor origin.** `ALLOWED_ORIGINS` is
-unset on Cloud Run, so the container falls back to `main.py`'s defaults — and
-the running image predates `https://localhost` being added to them. A device
-build pointed at production will be CORS-blocked on every request. Confirmed:
+**The deployed service rejects the Capacitor origin** — it is running an image
+built before `https://localhost` was allowed. Confirmed:
 
 ```
 OPTIONS https://agentic-astrospace-cwuqybpnzq-el.a.run.app/api/v1/auth/config
 Origin: https://localhost   ->   HTTP 400
 ```
 
-Either redeploy (picks up the new defaults) or set the env var without a
-rebuild:
+**The fix is a redeploy, and nothing else.** The native origins are no longer
+part of the configurable set: `main.py` always appends them, whatever
+`ALLOWED_ORIGINS` says. So any routine deploy resolves this permanently, and no
+future change to `ALLOWED_ORIGINS` can break native again.
 
-```bash
-gcloud run services update agentic-astrospace --region asia-south1 \
-  --project gen-lang-client-0058562386 \
-  --set-env-vars 'ALLOWED_ORIGINS=https://localhost,capacitor://localhost'
-```
-
-Note the env var *replaces* the defaults rather than adding to them, so it must
-list every origin the deployment needs.
+Do *not* work around it with `--set-env-vars`. That was the original trap:
+`ALLOWED_ORIGINS` replaces the dev defaults, so while the native origins lived
+alongside them, pointing it at a production domain silently dropped native
+support. `tests/test_cors_origins.py` pins this down.
 
 ## Figma access
 

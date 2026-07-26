@@ -38,19 +38,34 @@ app = FastAPI(
 #
 # A Capacitor WebView is a genuine cross-origin caller: it serves the bundle
 # from https://localhost, so every API request is cross-origin and is blocked
-# without this entry. Omitting it fails at runtime on device only, which is an
+# without these entries. The failure only appears on device, which is an
 # expensive place to discover a CORS list.
-_default_origins = ",".join([
-    "http://localhost:4200",   # ng serve
-    "http://localhost:8000",   # local FastAPI
+#
+# They are therefore always present and are NOT part of the configurable set.
+# ALLOWED_ORIGINS replaces the dev defaults, so folding these in with them
+# meant that pointing it at a production domain silently broke every native
+# build — and the app's own fallback made that look like a config problem
+# rather than a CORS one.
+_NATIVE_ORIGINS = (
     "https://localhost",       # Capacitor iOS and Android
     "capacitor://localhost",   # older Capacitor iOS scheme
-])
+)
+
+_DEV_ORIGINS = (
+    "http://localhost:4200",   # ng serve
+    "http://localhost:8000",   # local FastAPI
+)
+
+_configured = os.getenv("ALLOWED_ORIGINS")
 _origins = [
     origin.strip()
-    for origin in os.getenv("ALLOWED_ORIGINS", _default_origins).split(",")
+    for origin in (_configured.split(",") if _configured else _DEV_ORIGINS)
     if origin.strip()
 ]
+# dict.fromkeys rather than set(): order is stable, which keeps the resolved
+# list readable in logs and in tests.
+_origins = list(dict.fromkeys([*_origins, *_NATIVE_ORIGINS]))
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,
