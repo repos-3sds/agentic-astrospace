@@ -1,5 +1,13 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+  NavigationEnd,
+  Router,
+  RouterLink,
+  RouterLinkActive,
+  RouterOutlet,
+} from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map, startWith } from 'rxjs';
 
 /**
  * Native app shell: routed content plus the five-tab bar (Figma node 13:66).
@@ -19,6 +27,31 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   host: { class: 'as-mobile' },
 })
 export class MobileShellComponent {
+  private readonly router = inject(Router);
+
+  /**
+   * Tab roots keep the primary navigation; pushed detail screens do not. Route
+   * data makes that layout decision explicit instead of teaching every detail
+   * component how to cover or offset the shell.
+   */
+  protected readonly hideTabs = toSignal(
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      startWith(null),
+      map(() => {
+        // RouterStateSnapshot is immutable for this navigation. Walking the
+        // live ActivatedRoute tree here can race a redirect between reading
+        // firstChild and assigning it, leaving the leaf undefined.
+        let leaf = this.router.routerState.snapshot.root;
+        while (leaf.firstChild) {
+          leaf = leaf.firstChild;
+        }
+        return leaf.data['hideMobileTabs'] === true;
+      }),
+    ),
+    { initialValue: false },
+  );
+
   protected readonly tabs = [
     { path: 'today', label: 'Today', icon: 'nav-today' },
     { path: 'ask', label: 'Ask', icon: 'nav-ask' },

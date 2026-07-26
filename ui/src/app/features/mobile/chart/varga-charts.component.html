@@ -1,0 +1,53 @@
+<a class="appbar" [routerLink]="['/m', 'chart']">
+  <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  <span class="crumb">Your Chart</span>
+</a>
+
+<div class="body">
+  <header class="heading">
+    <h1>Divisional charts</h1>
+    <p>20 vargas, computed from your D1</p>
+  </header>
+
+  <div #vargaStrip class="varga-strip" aria-label="Divisional chart">
+    @for (varga of vargas; track varga.id) {
+      <button
+        class="varga"
+        type="button"
+        [class.is-on]="varga.id === selected()"
+        [attr.aria-current]="varga.id === selected() ? 'true' : null"
+      >
+        <span>{{ varga.id }}</span>
+        @if (varga.unverified) {
+          <img
+            class="unverified"
+            src="mobile/varga-unverified.svg"
+            alt=""
+            aria-hidden="true"
+          />
+        }
+      </button>
+    }
+  </div>
+
+  <div class="chart-title">
+    <span class="eyebrow">D9 · NAVAMSHA</span>
+    <span class="meaning">Marriage &amp; dharma</span>
+  </div>
+
+  <div class="chart-card">
+    <as-east-chart
+      class="render"
+      size="full"
+      [cells]="cells()"
+      label="D9 Navamsha chart, East Indian style"
+    />
+  </div>
+
+  <aside class="vargottama">
+    <img src="mobile/vargottama.svg" alt="" aria-hidden="true" />
+    <p>Your Moon is vargottama — same sign in D1 and D9, a classical strength marker.</p>
+  </aside>
+
+  <p class="hint">Tap a planet to see details</p>
+</div>

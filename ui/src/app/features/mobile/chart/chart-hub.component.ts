@@ -93,6 +93,7 @@ export class ChartHubComponent {
       title: 'Divisional charts',
       subtitle: 'D1–D60, all varga',
       icon: 'explore-varga',
+      route: ['/m', 'chart', 'vargas'],
     },
     { id: 'dasha', title: 'Life Periods', subtitle: 'Dashas & Yogini', icon: 'explore-dasha' },
     {

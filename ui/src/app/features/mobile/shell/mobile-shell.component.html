@@ -1,18 +1,20 @@
 <div class="shell">
   <main class="content"><router-outlet /></main>
 
-  <nav class="tabbar" aria-label="Primary">
-    @for (tab of tabs; track tab.path) {
-      <a
-        class="tab"
-        [routerLink]="['/m', tab.path]"
-        routerLinkActive="is-active"
-        #rla="routerLinkActive"
-        [attr.aria-current]="rla.isActive ? 'page' : null"
-      >
-        <img class="icon" [src]="'mobile/' + tab.icon + '.svg'" alt="" aria-hidden="true" />
-        <span class="label">{{ tab.label }}</span>
-      </a>
-    }
-  </nav>
+  @if (!hideTabs()) {
+    <nav class="tabbar" aria-label="Primary">
+      @for (tab of tabs; track tab.path) {
+        <a
+          class="tab"
+          [routerLink]="['/m', tab.path]"
+          routerLinkActive="is-active"
+          #rla="routerLinkActive"
+          [attr.aria-current]="rla.isActive ? 'page' : null"
+        >
+          <img class="icon" [src]="'mobile/' + tab.icon + '.svg'" alt="" aria-hidden="true" />
+          <span class="label">{{ tab.label }}</span>
+        </a>
+      }
+    </nav>
+  }
 </div>

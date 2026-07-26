@@ -180,7 +180,7 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `36:86` | 17 · Chart — Full render | ✅ done — `/m/chart/full`, Eastern only |
 | `36:201` | 18 · Planet detail sheet | ✅ done |
 | `36:247` | 19 · Provenance sheet | ✅ done |
-| `39:87` | 20 · Divisional (Varga) Charts | ⬜ |
+| `39:87` | 20 · Divisional (Varga) Charts | ✅ done — `/m/chart/vargas` |
 | `40:87` | 21 · Life Periods (Dashas) | ⬜ |
 | `41:87` | 22 · Yogas & Doshas | ⬜ |
 | `41:149` | 23 · Strength & Advanced | ⬜ |
@@ -238,8 +238,8 @@ the decision lands with `/api/v1/ask`.
 
 ## Status
 
-22 of 70 built: M1's Today set, all of M3 Ask, M4 Remedies, M5 Muhurta and
-the M6 Chart flow (hub -> full render -> planet detail -> provenance). The foundation (tokens, shell,
+23 of 70 built: M1's Today set, all of M3 Ask, M4 Remedies, M5 Muhurta and
+the M6 Chart flow (hub -> full render -> planet detail -> provenance -> divisional charts). The foundation (tokens, shell,
 tab bar, sheet primitive, gauge, Ask composer, evidence sheet) is done and
 reusable, and the pipeline is proven end to end — Figma to browser to iOS
 simulator.
