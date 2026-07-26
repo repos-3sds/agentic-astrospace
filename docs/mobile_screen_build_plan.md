@@ -63,10 +63,22 @@ fail with a misleading "no booted simulator".
 
 ## Traps already hit — do not rediscover
 
-- **Restart :8000 after any CORS change.** A Capacitor WebView calls from
-  `https://localhost`, so a backend started before that origin was allowed
-  rejects every request with a bare 400. The app then falls back to
-  "Supabase is not configured yet", which looks like success and is not.
+- **~~Restart :8000 after any CORS change.~~ Fixed structurally — no longer a
+  step.** A Capacitor WebView calls from `https://localhost`, so every API
+  request is cross-origin. This used to mean a backend started before that
+  origin was allowed rejected everything with a bare 400, which the app
+  reported as "Supabase is not configured yet" — a CORS failure wearing a
+  config failure's clothes. `main.py` now appends `_NATIVE_ORIGINS` after
+  `ALLOWED_ORIGINS` unconditionally (f73e882), so a production allowlist can no
+  longer drop them, and `tests/test_cors_origins.py` holds that. Restarting
+  proves nothing; if you suspect CORS, ask the running server:
+
+  ```bash
+  curl -s -D- -o /dev/null -H "Origin: https://localhost" http://127.0.0.1:8000/api/v1/health | grep -i access-control-allow-origin
+  ```
+
+  An `access-control-allow-origin: https://localhost` in the response means the
+  origin is live and the problem is somewhere else.
 - **`npx cap sync` copies whatever is already in `frontend/dist`.** Always
   build first, or the native app silently runs an old bundle.
 - **The browser preview caches.** Reload after rebuilding, or you will debug a
