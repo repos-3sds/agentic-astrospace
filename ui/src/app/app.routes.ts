@@ -173,6 +173,11 @@ export const routes: Routes = [
             (m) => m.AskReferOutComponent,
           ),
       },
+      // The tab bar has five tabs and three of them are not built yet. Without
+      // this they fall through to the global '**' below and land on the web
+      // app's marketing page — in the native build that reads as the app
+      // crashing out of itself, with no way back but force-quitting.
+      { path: '**', redirectTo: 'today' },
     ],
   },
   { path: '**', redirectTo: '' },
