@@ -156,6 +156,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/mobile/today/today.component').then((m) => m.TodayComponent),
       },
+      {
+        path: 'ask',
+        loadComponent: () =>
+          import('./features/mobile/ask/ask-home.component').then((m) => m.AskHomeComponent),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

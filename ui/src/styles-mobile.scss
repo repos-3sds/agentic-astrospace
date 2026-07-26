@@ -36,6 +36,9 @@
   --m-warn-soft: #f4ead7;
 
   --m-shadow-card: 0 10px 30px rgba(65, 42, 20, 0.07);
+  // Deeper and wider than the card shadow: it lifts a floating control clear of
+  // whatever is scrolling underneath it, rather than seating a card on the page.
+  --m-shadow-soft: 0 20px 60px rgba(65, 42, 20, 0.1);
 
   // styles.scss has defined these since the mobile UX pass but nothing consumed
   // them, which is why the status bar and home indicator rendered as bare white

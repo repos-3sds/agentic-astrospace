@@ -88,10 +88,10 @@
   <p class="eyebrow section-label">ASK ABOUT TODAY</p>
   <div class="suggestions">
     @for (q of askSuggestions(); track q) {
-      <button class="suggestion" type="button">
+      <a class="suggestion" [routerLink]="['/m', 'ask']" [queryParams]="{ q }">
         <span class="suggestion-text">{{ q }}</span>
         <img src="mobile/chevron-sm.svg" alt="" aria-hidden="true" />
-      </button>
+      </a>
     }
   </div>
 </div>

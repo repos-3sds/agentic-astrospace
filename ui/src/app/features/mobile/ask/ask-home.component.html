@@ -1,0 +1,63 @@
+<header class="appbar">
+  <h1 class="screen-title">Ask</h1>
+  <button class="iconbtn" type="button" aria-label="Past questions">
+    <img src="mobile/history.svg" alt="" aria-hidden="true" />
+  </button>
+</header>
+
+<div class="body">
+  <div class="intro">
+    <h2 class="ask-hero">{{ heading() }}</h2>
+    <p class="lede">
+      Ask anything — job, money, family, timing. You’ll get a plain answer,
+      computed from your chart.
+    </p>
+  </div>
+
+  <div class="topics" role="group" aria-label="Narrow your question">
+    @for (topic of topics(); track topic.id) {
+      <button
+        class="topic"
+        type="button"
+        [class.is-on]="topic.id === selectedTopic()"
+        [attr.aria-pressed]="topic.id === selectedTopic()"
+        (click)="toggleTopic(topic.id)"
+      >
+        <img [src]="'mobile/' + topic.icon + '.svg'" alt="" aria-hidden="true" />
+        <span>{{ topic.label }}</span>
+      </button>
+    }
+  </div>
+
+  <p class="eyebrow">SUGGESTED FOR YOU RIGHT NOW</p>
+  <div class="suggestions">
+    @for (s of suggestions(); track s.prompt) {
+      <button class="suggestion" type="button">
+        <span class="suggestion-text">{{ s.prompt }}</span>
+        <img src="mobile/chevron-md.svg" alt="" aria-hidden="true" />
+      </button>
+    }
+  </div>
+</div>
+
+<!--
+  Pinned, not scrolled: the composer is the screen's only unconditional action,
+  and a reader who has scrolled the suggestions should not have to scroll back
+  to type.
+-->
+<div class="composer">
+  <button class="mic" type="button" aria-label="Ask by voice">
+    <img src="mobile/mic.svg" alt="" aria-hidden="true" />
+  </button>
+  <input
+    class="field"
+    type="text"
+    placeholder="Type your question…"
+    aria-label="Your question"
+    [value]="draft()"
+    (input)="draft.set($any($event.target).value)"
+  />
+  <button class="send" type="button" aria-label="Send" [disabled]="!draft().trim()">
+    <img src="mobile/send.svg" alt="" aria-hidden="true" />
+  </button>
+</div>

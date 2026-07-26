@@ -210,6 +210,7 @@
 .suggestions { display: flex; flex-direction: column; gap: 9px; }
 
 .suggestion {
+  box-sizing: border-box;
   width: 100%;
   border: 0;
   border-radius: 999px;
@@ -220,6 +221,7 @@
   gap: 8px;
   cursor: pointer;
   text-align: left;
+  text-decoration: none;
   img { width: 16px; height: 16px; display: block; flex-shrink: 0; }
 }
 

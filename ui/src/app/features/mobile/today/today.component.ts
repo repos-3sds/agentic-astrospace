@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { DayGaugeComponent } from '../day-gauge/day-gauge.component';
 import { DayQualitySheetComponent, DaySignal } from './day-quality-sheet.component';
 import { ListenSheetComponent } from './listen-sheet.component';
@@ -65,6 +66,7 @@ export interface TodayView {
     DayGaugeComponent,
     DayQualitySheetComponent,
     ListenSheetComponent,
+    RouterLink,
     WhyReadingSheetComponent,
   ],
   templateUrl: './today.component.html',

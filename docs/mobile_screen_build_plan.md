@@ -66,9 +66,20 @@ fail with a misleading "no booted simulator".
   build first, or the native app silently runs an old bundle.
 - **The browser preview caches.** Reload after rebuilding, or you will debug a
   stale bundle.
-- **Everything compiles.** All three bugs found so far — silent token fallback,
-  invisible text, unconsumed safe areas — passed the build cleanly and were
-  only caught by screenshots. Verify visually, every screen.
+- **The web app's global CSS still matches mobile elements.** Angular's view
+  encapsulation scopes *your* rules; it does not stop a global rule in
+  `styles.scss` from matching your markup. `class="hero"` on Ask picked up the
+  web app's `@media (max-width: 599px)` glass card and rendered the heading on a
+  dark slab. Before naming a class, check it:
+
+  ```bash
+  grep -n '\.your-class\b' ui/src/styles.scss
+  ```
+
+- **Everything compiles.** All four bugs found so far — silent token fallback,
+  invisible text, unconsumed safe areas, and the global-class collision above —
+  passed the build cleanly and were only caught by screenshots. Verify visually,
+  every screen.
 
 ## Figma access
 
@@ -94,7 +105,7 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `21:22` | 7c · Day-quality detail | ✅ done |
 | `22:23` | 7d · Why this reading | ✅ done |
 | `23:25` | 7e · Listen (audio) | ✅ done — sheet over Today |
-| `25:25` | 8 · Ask — Home | ⬜ |
+| `25:25` | 8 · Ask — Home | ✅ done |
 | `25:123` | 9 · Ask — Voice listening | ⬜ |
 | `26:54` | 10 · Ask — Answer view | ⬜ |
 | `27:83` | 11 · Ask — Refer-out (safety) | ⬜ |

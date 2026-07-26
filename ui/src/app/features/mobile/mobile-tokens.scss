@@ -17,6 +17,11 @@
   line-height: 1.2;
   letter-spacing: 1.1px;
 }
+@mixin m-hero {
+  font-weight: 700;
+  font-size: 34px;
+  line-height: 1.06;
+}
 @mixin m-h2 {
   font-weight: 600;
   font-size: 21px;
@@ -31,6 +36,11 @@
   font-weight: 600;
   font-size: 15px;
   line-height: 1.4;
+}
+@mixin m-body {
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.52;
 }
 @mixin m-body-small {
   font-weight: 400;
