@@ -1,0 +1,99 @@
+@use '../mobile-tokens' as *;
+
+:host { display: block; padding-bottom: 24px; }
+
+.appbar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px 10px; text-decoration: none;
+  img { display: block; width: 24px; height: 24px; }
+}
+
+.crumb { @include m-body-strong; color: var(--m-muted); }
+
+.body {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
+  padding: 4px 20px 16px;
+}
+
+.heading {
+  width: 100%;
+  h1 { @include m-h1; margin: 0 0 3px; color: var(--m-text); }
+  p { @include m-body-small; margin: 0; color: var(--m-muted); }
+}
+
+.system, .levels {
+  width: 100%; box-sizing: border-box; display: flex; gap: 4px;
+  padding: 4px; border-radius: 999px;
+
+  button {
+    flex: 1 1 0; min-width: 0; border: 0; border-radius: 999px;
+    background: none; cursor: default; font-weight: 600;
+  }
+
+  button.is-on { background: var(--m-ink); color: var(--m-on-ink); }
+}
+
+.system {
+  background: var(--m-accent-soft);
+  button { @include m-button; padding: 10px; color: var(--m-accent-strong); }
+}
+
+.levels {
+  background: var(--m-raised); border: 1px solid var(--m-border);
+  button { padding: 11px 4px; font-size: 13.5px; line-height: 1.2; color: var(--m-muted); }
+}
+
+.gloss { @include m-caption; width: 100%; margin: 0; color: var(--m-muted); }
+
+.active-period {
+  width: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px;
+  padding: 17px 18px; border: 1.6px solid var(--m-accent);
+  border-radius: 22px; background: var(--m-surface); box-shadow: var(--m-shadow-card);
+
+  .eyebrow { @include m-eyebrow; margin: 0; color: var(--m-accent); }
+  h2 { @include m-h2; margin: 0; color: var(--m-text); }
+  p:last-child { @include m-body-small; margin: 0; color: var(--m-muted); }
+}
+
+.breadcrumb {
+  @include m-body-small; display: flex; align-items: center; gap: 6px;
+  width: 100%; margin: 0; color: var(--m-muted);
+  img { width: 15px; height: 15px; display: block; }
+}
+
+.period-list {
+  width: 100%; overflow: hidden; border: 1px solid var(--m-border);
+  border-radius: 18px; background: var(--m-raised);
+}
+
+.period {
+  @include m-body-strong;
+  width: 100%; box-sizing: border-box; display: flex; align-items: center;
+  justify-content: space-between; padding: 14px 16px; border: 0;
+  border-bottom: 1px solid var(--m-border); background: transparent;
+  color: var(--m-text); text-align: left; cursor: default;
+  &:last-child { border-bottom: 0; }
+  &.is-active { background: var(--m-accent-soft); color: var(--m-accent-strong); }
+}
+
+.period-name {
+  display: flex; align-items: center; gap: 10px;
+  img { width: 9px; height: 9px; display: block; }
+}
+
+.dates { @include m-body-small; color: var(--m-muted); }
+
+.hint {
+  @include m-caption; display: flex; align-items: flex-start; gap: 8px;
+  margin: 0; color: var(--m-muted);
+  img { width: 15px; height: 15px; display: block; flex: 0 0 auto; }
+}
+
+.cycle-title {
+  @include m-eyebrow;
+  width: 100%;
+  margin: 0;
+  color: var(--m-muted);
+}
+
+.text-only { display: block; }

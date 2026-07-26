@@ -1,0 +1,101 @@
+<a class="appbar" [routerLink]="['/m', 'chart']">
+  <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  <span class="crumb">Your Chart</span>
+</a>
+
+<div class="body">
+  <header class="heading">
+    <h1>Life Periods</h1>
+    <p>
+      @if (system() === 'yogini') {
+        Yogini dasha — an alternate 36-year period system
+      } @else {
+        Vimshottari dasha — five levels, computed from Moon
+      }
+    </p>
+  </header>
+
+  <div class="system" role="tablist" aria-label="Dasha system">
+    <button
+      type="button"
+      role="tab"
+      [class.is-on]="system() === 'vimshottari'"
+      [attr.aria-selected]="system() === 'vimshottari'"
+      (click)="chooseSystem('vimshottari')"
+    >Vimshottari</button>
+    <button
+      type="button"
+      role="tab"
+      [class.is-on]="system() === 'yogini'"
+      [attr.aria-selected]="system() === 'yogini'"
+      (click)="chooseSystem('yogini')"
+    >Yogini</button>
+  </div>
+
+  @if (system() === 'yogini') {
+    <p class="gloss">Yogini — a secondary system, computed the same way, useful as a cross-check.</p>
+    <section class="active-period">
+      <p class="eyebrow">ACTIVE NOW</p>
+      <h2>Sankata Yogini</h2>
+      <p>Since 2019 — a longer, effort-heavy stretch; steady pacing serves you best.</p>
+    </section>
+    <p class="cycle-title">FULL 36-YEAR CYCLE</p>
+  } @else {
+    <p class="gloss">Vimshottari — the primary period system used here.</p>
+    <section class="active-period">
+      <p class="eyebrow">ACTIVE NOW</p>
+      <h2>Venus → Saturn → Venus</h2>
+      <p>Pratyantar since Jan 2026 — steady effort favoured, avoid shortcuts.</p>
+    </section>
+
+    <div class="levels" role="tablist" aria-label="Dasha level">
+      @for (item of ['maha', 'antar', 'pratyantar']; track item) {
+        <button
+          type="button"
+          role="tab"
+          [class.is-on]="level() === item"
+          [attr.aria-selected]="level() === item"
+          (click)="chooseLevel($any(item))"
+        >{{ item === 'maha' ? 'Maha' : item === 'antar' ? 'Antar' : 'Pratyantar' }}</button>
+      }
+    </div>
+    <p class="gloss">Maha = main period · Antar = sub-period · Pratyantar = fine-grained period</p>
+
+    @if (level() === 'antar') {
+      <p class="breadcrumb">
+        <img src="mobile/dasha-crumb.svg" alt="" aria-hidden="true" />
+        <span>Within Venus maha dasha (2013–2033)</span>
+      </p>
+    } @else if (level() === 'pratyantar') {
+      <p class="breadcrumb">
+        <img src="mobile/dasha-crumb.svg" alt="" aria-hidden="true" />
+        <span>Within Venus–Saturn antar dasha (2025–2028)</span>
+      </p>
+    }
+  }
+
+  <div class="period-list">
+    @for (period of periods(); track period.name) {
+      <button class="period" type="button" [class.is-active]="period.active" (click)="drill(period)">
+        <span class="period-name">
+          <img
+            [src]="period.active ? 'mobile/dasha-dot-active.svg' : 'mobile/dasha-dot.svg'"
+            alt=""
+            aria-hidden="true"
+          />
+          <span>{{ period.name }}</span>
+        </span>
+        <span class="dates">{{ period.dates }}</span>
+      </button>
+    }
+  </div>
+
+  @if (system() === 'yogini') {
+    <p class="hint text-only">8 yoginis, 36-year cycle — repeats through life</p>
+  } @else if (level() !== 'pratyantar') {
+    <p class="hint">
+      <img src="mobile/info-period.svg" alt="" aria-hidden="true" />
+      <span>Tap a period to drill into {{ level() === 'maha' ? 'Antar' : 'Pratyantar' }}</span>
+    </p>
+  }
+</div>

@@ -262,6 +262,14 @@ export const routes: Routes = [
             (m) => m.VargaChartsComponent,
           ),
       },
+      {
+        path: 'chart/periods',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/chart/life-periods.component').then(
+            (m) => m.LifePeriodsComponent,
+          ),
+      },
       // The tab bar has five tabs and three of them are not built yet. Without
       // this they fall through to the global '**' below and land on the web
       // app's marketing page — in the native build that reads as the app

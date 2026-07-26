@@ -95,7 +95,13 @@ export class ChartHubComponent {
       icon: 'explore-varga',
       route: ['/m', 'chart', 'vargas'],
     },
-    { id: 'dasha', title: 'Life Periods', subtitle: 'Dashas & Yogini', icon: 'explore-dasha' },
+    {
+      id: 'dasha',
+      title: 'Life Periods',
+      subtitle: 'Dashas & Yogini',
+      icon: 'explore-dasha',
+      route: ['/m', 'chart', 'periods'],
+    },
     {
       id: 'yoga',
       title: 'Yogas & Doshas',
