@@ -45,7 +45,7 @@ From the repo root (Cloud Build builds the Dockerfile remotely — no local
 Docker needed):
 
 ```bash
-gcloud run deploy astrospace \
+gcloud run deploy agentic-astrospace \
   --source . \
   --region asia-south1 \
   --allow-unauthenticated \
@@ -58,7 +58,7 @@ Set the database URL as a secret rather than a plain env var:
 ```bash
 echo -n "postgresql://postgres.YOUR-REF:YOUR_DB_PASSWORD@aws-0-ap-south-1.pooler.supabase.com:6543/postgres" | \
   gcloud secrets create astrospace-database-url --data-file=-
-gcloud run services update astrospace --region asia-south1 \
+gcloud run services update agentic-astrospace --region asia-south1 \
   --set-secrets "DATABASE_URL=astrospace-database-url:latest"
 ```
 
@@ -97,4 +97,4 @@ Re-run the same `gcloud run deploy astrospace --source . --region asia-south1`
 - Scale-to-zero is default; free tier covers ~2M requests/month.
 - Set a budget alert: console → Billing → Budgets → e.g. $5 alert.
 - `--max-instances 2` caps the worst case:
-  `gcloud run services update astrospace --region asia-south1 --max-instances 2`
+  `gcloud run services update agentic-astrospace --region asia-south1 --max-instances 2`

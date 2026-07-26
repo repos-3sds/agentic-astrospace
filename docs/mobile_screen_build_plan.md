@@ -86,6 +86,34 @@ fail with a misleading "no booted simulator".
   passed the build cleanly and were only caught by screenshots. Verify visually,
   every screen.
 
+## Before a device build
+
+`nativeApiOrigin` is now set in both environments, so nothing is outstanding
+for a *simulator* build. One thing is still outstanding for a **production**
+one:
+
+**The deployed service rejects the Capacitor origin.** `ALLOWED_ORIGINS` is
+unset on Cloud Run, so the container falls back to `main.py`'s defaults — and
+the running image predates `https://localhost` being added to them. A device
+build pointed at production will be CORS-blocked on every request. Confirmed:
+
+```
+OPTIONS https://agentic-astrospace-cwuqybpnzq-el.a.run.app/api/v1/auth/config
+Origin: https://localhost   ->   HTTP 400
+```
+
+Either redeploy (picks up the new defaults) or set the env var without a
+rebuild:
+
+```bash
+gcloud run services update agentic-astrospace --region asia-south1 \
+  --project gen-lang-client-0058562386 \
+  --set-env-vars 'ALLOWED_ORIGINS=https://localhost,capacitor://localhost'
+```
+
+Note the env var *replaces* the defaults rather than adding to them, so it must
+list every origin the deployment needs.
+
 ## Figma access
 
 The working connector is the UUID-named MCP server, not `plugin:figma:figma`.
