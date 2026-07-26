@@ -6,6 +6,25 @@ import { EvidenceRow, WhyReadingSheetComponent } from './why-reading-sheet.compo
 /** Verdict bands. Named, not numeric, so tone rules can key off them. */
 export type DayBand = 'steady' | 'mixed' | 'tough';
 
+/** One labelled fact in the panchang grids below the fold. */
+export interface StatCell {
+  label: string;
+  value: string;
+}
+
+/**
+ * A labelled block of stat cells.
+ *
+ * `columns` is carried in the data rather than derived from the cell count
+ * because the design pairs panchang limbs two-per-row even though there are
+ * four of them — a wrapped three-column grid would regroup them wrongly.
+ */
+export interface StatSection {
+  eyebrow: string;
+  columns: 2 | 3;
+  cells: StatCell[];
+}
+
 export interface TodayView {
   greetingName: string;
   initial: string;
@@ -24,11 +43,14 @@ export interface TodayView {
 }
 
 /**
- * Today — the app's home (Figma node 13:2), per Epic C.
+ * Today — the app's home (Figma nodes 13:2 above the fold, 20:2 scrolled).
  *
  * C1 requires one viewport to carry a plain verdict, one thing to do, one to
  * avoid, and a day-quality indicator; everything deeper is a swipe away. The
  * order here follows the design exactly rather than being re-derived.
+ *
+ * 20:2 is the same screen scrolled, not a second one, so the stat grids and
+ * ask-suggestions below live here rather than on a route of their own.
  *
  * The copy below is the design's placeholder content. Wiring to
  * /api/v1/panchanga/{id}/today is the next step; the view model is already
@@ -107,5 +129,52 @@ export class TodayComponent {
   // the same chart under a different ayanamsa is a different answer.
   readonly conventions = signal([
     'Lahiri', 'Whole-sign', 'Vijayawada', 'High confidence',
+  ]);
+
+  /**
+   * Below the fold (20:2). Grouped by how often each fact changes, which is the
+   * design's own grouping: the panchang limbs, what turns over daily, and what
+   * is fixed by the natal chart. Readers who do not know the Sanskrit terms can
+   * still tell which numbers are about them and which are about the day.
+   *
+   * The limbs are convention-dependent — a purnimanta reader sees a different
+   * month name for the same tithi. The convention actually used is stated in
+   * the "Why this reading?" sheet rather than being implied away here.
+   */
+  readonly statSections = signal<StatSection[]>([
+    {
+      eyebrow: 'TODAY’S SKY · PANCHANG',
+      columns: 2,
+      cells: [
+        { label: 'TITHI', value: 'Dvitiya' },
+        { label: 'NAKSHATRA', value: 'Hasta' },
+        { label: 'YOGA', value: 'Shubha' },
+        { label: 'KARANA', value: 'Bava' },
+      ],
+    },
+    {
+      eyebrow: 'TODAY · CHANGES DAILY',
+      columns: 3,
+      cells: [
+        { label: 'COLOUR', value: 'Maroon' },
+        { label: 'NUMBER', value: '6' },
+        { label: 'TARABALA', value: 'Good' },
+      ],
+    },
+    {
+      eyebrow: 'ALWAYS · YOUR SIGNATURE',
+      columns: 3,
+      cells: [
+        { label: 'LUCKY NO.', value: '5' },
+        { label: 'GEM', value: 'Ruby' },
+        { label: 'DIRECTION', value: 'East' },
+      ],
+    },
+  ]);
+
+  /** Openers for Ask, seeded from the day so the tab is not a blank prompt. */
+  readonly askSuggestions = signal([
+    'Is today good to start new work?',
+    'Best time to travel this evening?',
   ]);
 }

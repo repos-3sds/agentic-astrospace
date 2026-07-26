@@ -168,3 +168,59 @@
 .window-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .window-value { @include m-body-strong; color: var(--m-text); margin: 0; }
 .window-in { @include m-body-strong; color: var(--m-warn); margin: 0; flex-shrink: 0; }
+
+/* Below the fold — node 20:2 */
+
+// Section headings are muted, not accent: the accent eyebrow inside the day
+// card is the one thing being pointed at, and repeating it four times down the
+// scroll would flatten that.
+.section-label { color: var(--m-muted); }
+
+/* Stat grids — nodes 20:103 / 20:121 / 20:132 */
+.stats {
+  display: grid;
+  gap: 10px;
+  &[data-columns='2'] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  &[data-columns='3'] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.stat {
+  height: 80px;
+  box-sizing: border-box;
+  background: var(--m-raised);
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+  padding: 13px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.stat-label { color: var(--m-muted); }
+// Values run to two words ("Lucky no." / "Dvitiya") in a third of the width, so
+// they are allowed to shrink rather than overflow the fixed-height cell.
+.stat-value {
+  @include m-title;
+  color: var(--m-text);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Ask suggestions — node 20:134 */
+.suggestions { display: flex; flex-direction: column; gap: 9px; }
+
+.suggestion {
+  width: 100%;
+  border: 0;
+  border-radius: 999px;
+  background: var(--m-accent-soft);
+  padding: 11px 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  text-align: left;
+  img { width: 16px; height: 16px; display: block; flex-shrink: 0; }
+}
+
+.suggestion-text { @include m-body-small; color: var(--m-accent-strong); flex: 1 1 0; min-width: 0; }

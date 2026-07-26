@@ -90,7 +90,7 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `8:2` | 5 · Persona Type | ⬜ |
 | `11:2` | 6 · Birth Details | ⬜ |
 | `13:2` | 7 · Today | ✅ done |
-| `20:2` | 7b · Today (full scroll) | ⬜ |
+| `20:2` | 7b · Today (full scroll) | ✅ done — same component as `13:2`, scrolled |
 | `21:22` | 7c · Day-quality detail | ✅ done |
 | `22:23` | 7d · Why this reading | ✅ done |
 | `23:25` | 7e · Listen (audio) | ⬜ |

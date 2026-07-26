@@ -72,6 +72,28 @@
     </div>
     <p class="window-in">{{ v.nextWindowIn }}</p>
   </section>
+
+  @for (section of statSections(); track section.eyebrow) {
+    <p class="eyebrow section-label">{{ section.eyebrow }}</p>
+    <div class="stats" [attr.data-columns]="section.columns">
+      @for (cell of section.cells; track cell.label) {
+        <div class="stat">
+          <p class="eyebrow stat-label">{{ cell.label }}</p>
+          <p class="stat-value">{{ cell.value }}</p>
+        </div>
+      }
+    </div>
+  }
+
+  <p class="eyebrow section-label">ASK ABOUT TODAY</p>
+  <div class="suggestions">
+    @for (q of askSuggestions(); track q) {
+      <button class="suggestion" type="button">
+        <span class="suggestion-text">{{ q }}</span>
+        <img src="mobile/chevron-sm.svg" alt="" aria-hidden="true" />
+      </button>
+    }
+  </div>
 </div>
 
 @if (openSheet() === 'quality') {
