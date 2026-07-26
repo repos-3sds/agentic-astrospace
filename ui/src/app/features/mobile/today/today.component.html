@@ -31,7 +31,7 @@
       </div>
     </div>
 
-    <button class="listen" type="button">
+    <button class="listen" type="button" (click)="openSheet.set('listen')">
       <img src="mobile/play.svg" alt="" aria-hidden="true" />
       <span>Listen to your day</span>
     </button>
@@ -101,6 +101,15 @@
     [score]="v.score"
     [signals]="signals()"
     [summary]="summary()"
+    (dismissed)="openSheet.set(null)"
+  />
+}
+
+@if (openSheet() === 'listen') {
+  <as-listen-sheet
+    [title]="'Your day · ' + v.dateLabel"
+    [language]="audioLanguage()"
+    (languageChanged)="audioLanguage.set($event)"
     (dismissed)="openSheet.set(null)"
   />
 }

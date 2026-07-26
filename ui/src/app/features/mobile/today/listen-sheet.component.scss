@@ -1,0 +1,108 @@
+@use '../mobile-tokens' as *;
+
+// The shared sheet spaces its children 16px apart; this one is drawn on an 18px
+// rhythm. Nesting the whole body in one child means the 2px only has to be made
+// up once, at the seam under the handle, instead of forking the primitive.
+.listen {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 2px;
+}
+
+/* Track header — node 23:30 */
+.head { display: flex; align-items: center; gap: 14px; }
+.art { width: 58px; height: 58px; display: block; flex-shrink: 0; }
+.head-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.title { @include m-body-strong; color: var(--m-text); margin: 0; }
+.sub { @include m-body-small; color: var(--m-muted); margin: 0; }
+
+/* Waveform — node 23:36 */
+.wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  // The tallest bar in the design; fixing the height keeps the strip from
+  // reflowing the sheet as the played/unplayed split moves.
+  height: 34px;
+}
+
+.bar {
+  width: 3px;
+  border-radius: 2px;
+  background: var(--m-border-strong);
+  flex-shrink: 0;
+  &.is-played { background: var(--m-accent); }
+}
+
+/* Timestamps — node 23:71 */
+.times { display: flex; align-items: flex-start; justify-content: space-between; }
+.time { @include m-caption; color: var(--m-muted); margin: 0; }
+
+/* Transport — node 23:74 */
+.transport { display: flex; align-items: center; justify-content: center; gap: 30px; }
+
+.skip {
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+  flex-shrink: 0;
+  img { width: 30px; height: 30px; display: block; }
+}
+
+.play {
+  width: 66px;
+  height: 66px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--m-ink);
+  box-shadow: var(--m-shadow-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  img { width: 26px; height: 26px; display: block; }
+}
+
+/* Language and speed — node 23:84 */
+.options { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+.langs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--m-accent-soft);
+}
+
+.lang {
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--m-accent-strong);
+
+  &.is-on {
+    background: var(--m-ink);
+    color: var(--m-on-ink);
+  }
+}
+
+.speed {
+  @include m-caption;
+  border: 1px solid var(--m-border);
+  border-radius: 999px;
+  background: var(--m-surface);
+  color: var(--m-text);
+  padding: 8px 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}

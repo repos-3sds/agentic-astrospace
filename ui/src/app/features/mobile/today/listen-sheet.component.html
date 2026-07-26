@@ -1,0 +1,59 @@
+<as-sheet (dismissed)="dismissed.emit()">
+  <div class="listen">
+    <header class="head">
+      <img class="art" src="mobile/audio-art.svg" alt="" aria-hidden="true" />
+      <div class="head-text">
+        <p class="title">{{ title() }}</p>
+        <p class="sub">{{ subtitle() }}</p>
+      </div>
+    </header>
+
+    <!-- Decorative: the timestamps below carry the same information as text. -->
+    <div class="wave" aria-hidden="true">
+      @for (height of bars; track $index) {
+        <span
+          class="bar"
+          [class.is-played]="$index < playedBars()"
+          [style.height.px]="height"
+        ></span>
+      }
+    </div>
+
+    <div class="times">
+      <p class="time">{{ elapsedLabel() }}</p>
+      <p class="time">{{ remainingLabel() }}</p>
+    </div>
+
+    <div class="transport">
+      <button class="skip" type="button" aria-label="Back 15 seconds">
+        <img src="mobile/rewind.svg" alt="" aria-hidden="true" />
+      </button>
+      <!--
+        Play only. The design specifies the paused frame and exports no pause
+        glyph; authoring one here would put an unreviewed icon in the app, so
+        the toggle waits for the export alongside real playback.
+      -->
+      <button class="play" type="button" aria-label="Play" (click)="playing.set(true)">
+        <img src="mobile/play-lg.svg" alt="" aria-hidden="true" />
+      </button>
+      <button class="skip" type="button" aria-label="Forward 15 seconds">
+        <img src="mobile/forward.svg" alt="" aria-hidden="true" />
+      </button>
+    </div>
+
+    <div class="options">
+      <div class="langs" role="group" aria-label="Audio language">
+        @for (lang of languages(); track lang) {
+          <button
+            class="lang"
+            type="button"
+            [class.is-on]="lang === language()"
+            [attr.aria-pressed]="lang === language()"
+            (click)="languageChanged.emit(lang)"
+          >{{ lang }}</button>
+        }
+      </div>
+      <button class="speed" type="button" aria-label="Playback speed">{{ speed() }}</button>
+    </div>
+  </div>
+</as-sheet>

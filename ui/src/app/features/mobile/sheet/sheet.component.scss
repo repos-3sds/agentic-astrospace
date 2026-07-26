@@ -10,7 +10,7 @@
 .scrim {
   position: absolute;
   inset: 0;
-  background: #20150e;          // --ink
+  background: var(--m-ink);
   opacity: 0.45;                // Figma node 21:23
   animation: scrim-in 180ms ease-out;
 }

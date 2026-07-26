@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { DayGaugeComponent } from '../day-gauge/day-gauge.component';
 import { DayQualitySheetComponent, DaySignal } from './day-quality-sheet.component';
+import { ListenSheetComponent } from './listen-sheet.component';
 import { EvidenceRow, WhyReadingSheetComponent } from './why-reading-sheet.component';
 
 /** Verdict bands. Named, not numeric, so tone rules can key off them. */
@@ -60,7 +61,12 @@ export interface TodayView {
   selector: 'as-today',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DayGaugeComponent, DayQualitySheetComponent, WhyReadingSheetComponent],
+  imports: [
+    DayGaugeComponent,
+    DayQualitySheetComponent,
+    ListenSheetComponent,
+    WhyReadingSheetComponent,
+  ],
   templateUrl: './today.component.html',
   styleUrl: './today.component.scss',
 })
@@ -112,7 +118,10 @@ export class TodayComponent {
   );
 
   /** Which sheet is showing, if any. One signal so two cannot stack. */
-  readonly openSheet = signal<'quality' | 'why' | null>(null);
+  readonly openSheet = signal<'quality' | 'why' | 'listen' | null>(null);
+
+  /** Audio language, chosen in the Listen sheet — see 23:25. */
+  readonly audioLanguage = signal('English');
 
   readonly plainWords = signal([
     'You’re in a supportive stretch for steady, everyday work.',
