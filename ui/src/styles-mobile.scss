@@ -59,4 +59,12 @@
   // bands in the simulator — the WebView's background showing, not the app's.
   --m-safe-top: var(--as-safe-top);
   --m-safe-bottom: var(--as-safe-bottom);
+
+  // Paint the ground, not just declare the palette. The shell did this on its
+  // own :host, so every screen inside it was fine — but a screen routed outside
+  // the shell (onboarding) inherited the web app's theme-reactive background
+  // and rendered --m-text, a near-black, on the dark theme's dark surface. The
+  // headline was invisible. Setting it here means carrying .as-mobile is enough.
+  background: var(--m-bg);
+  color: var(--m-text);
 }

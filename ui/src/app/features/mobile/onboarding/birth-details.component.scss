@@ -1,0 +1,137 @@
+@use '../mobile-tokens' as *;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 18px 24px 28px;
+  gap: 24px;
+}
+
+.top { display: flex; flex-direction: column; }
+
+.topbar { display: flex; align-items: center; justify-content: space-between; }
+
+.back {
+  line-height: 0;
+  img { width: 24px; height: 24px; display: block; }
+}
+
+.step { @include m-caption; color: var(--m-muted); margin: 0; }
+
+.headline { @include m-h1; color: var(--m-text); margin: 18px 0 7px; }
+.lede { @include m-body; color: var(--m-muted); margin: 0 0 20px; }
+
+.field-label {
+  @include m-caption;
+  color: var(--m-muted);
+  display: block;
+  margin-bottom: 8px;
+
+  // 13px between one field and the next label, per the design's spacers.
+  &:not(:first-of-type) { margin-top: 13px; }
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 15px 16px;
+  border: 1.2px solid var(--m-border);
+  border-radius: 16px;
+  background: var(--m-surface);
+
+  img { width: 20px; height: 20px; display: block; flex-shrink: 0; }
+
+  // The field being typed into takes the accent border, matching the design's
+  // active place field.
+  &.is-active { border: 2px solid var(--m-accent); }
+}
+
+.field input {
+  flex: 1 1 0;
+  min-width: 0;
+  border: 0;
+  background: none;
+  padding: 0;
+  @include m-body;
+  color: var(--m-text);
+  &:focus { outline: none; }
+}
+
+.approx {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 8px 0 0;
+  @include m-body-small;
+  color: var(--m-muted);
+}
+
+.approx-action {
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  @include m-body-strong;
+  color: var(--m-accent-strong);
+}
+
+/* Place typeahead — node 11:48 */
+.matches {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 6px 0;
+  border: 1.2px solid var(--m-border);
+  border-radius: 16px;
+  background: var(--m-raised);
+  box-shadow: var(--m-shadow-soft);
+  overflow: hidden;
+}
+
+.match {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 16px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+
+  img { width: 18px; height: 18px; display: block; flex-shrink: 0; }
+
+  // The first match is pre-highlighted, so hitting enter does the likely thing.
+  &.is-first {
+    background: var(--m-accent-soft);
+    .match-city { color: var(--m-accent-strong); }
+  }
+}
+
+.match-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.match-city { @include m-body-strong; color: var(--m-text); }
+.match-region { @include m-caption; color: var(--m-muted); }
+
+.btn {
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 999px;
+  background: var(--m-ink);
+  color: var(--m-on-ink);
+  box-shadow: var(--m-shadow-card);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  cursor: pointer;
+  text-decoration: none;
+  @include m-button;
+  img { width: 18px; height: 18px; display: block; }
+}

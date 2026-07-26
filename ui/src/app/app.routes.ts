@@ -146,6 +146,43 @@ export const routes: Routes = [
   },
   // Native app screens (Figma RRhuTcaKIhqILZW7JUKFzI). Namespaced under /m so
   // the existing web routes are untouched and both can ship from one bundle.
+  // Onboarding sits outside the shell — no tab bar until there is an app to
+  // navigate. These must precede the 'm' route below: that route's child '**'
+  // would otherwise swallow every path under /m and redirect it to today.
+  {
+    path: 'm/start',
+    canActivate: [nativeAppGuard],
+    loadComponent: () =>
+      import('./features/mobile/onboarding/landing.component').then((m) => m.LandingComponent),
+  },
+  {
+    path: 'm/welcome',
+    canActivate: [nativeAppGuard],
+    loadComponent: () =>
+      import('./features/mobile/onboarding/welcome.component').then((m) => m.WelcomeComponent),
+  },
+  {
+    path: 'm/disclaimers',
+    canActivate: [nativeAppGuard],
+    loadComponent: () =>
+      import('./features/mobile/onboarding/disclaimers.component').then(
+        (m) => m.DisclaimersComponent,
+      ),
+  },
+  {
+    path: 'm/persona',
+    canActivate: [nativeAppGuard],
+    loadComponent: () =>
+      import('./features/mobile/onboarding/persona.component').then((m) => m.PersonaComponent),
+  },
+  {
+    path: 'm/birth-details',
+    canActivate: [nativeAppGuard],
+    loadComponent: () =>
+      import('./features/mobile/onboarding/birth-details.component').then(
+        (m) => m.BirthDetailsComponent,
+      ),
+  },
   {
     path: 'm',
     canActivate: [nativeAppGuard],

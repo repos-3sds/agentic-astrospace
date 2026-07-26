@@ -1,0 +1,124 @@
+@use '../mobile-tokens' as *;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 18px 24px 32px;
+  gap: 24px;
+}
+
+.topbar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.back {
+  line-height: 0;
+  img { width: 24px; height: 24px; display: block; }
+}
+
+.skip { @include m-body-strong; color: var(--m-muted); text-decoration: none; }
+
+.top { width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+/* Hero panel — node 7:9 */
+.art {
+  width: 100%;
+  height: 190px;
+  margin-top: 18px;
+  border-radius: 28px;
+  background: linear-gradient(to right, #f4e6e2, #efe4cf);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.art-disc {
+  width: 84px;
+  height: 84px;
+  border-radius: 999px;
+  background: var(--m-surface);
+  box-shadow: var(--m-shadow-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  img { width: 40px; height: 40px; display: block; }
+}
+
+.eyebrow { @include m-eyebrow; color: var(--m-accent); margin: 22px 0 8px; }
+
+.headline {
+  @include m-h1;
+  color: var(--m-text);
+  text-align: center;
+  margin: 0 0 20px;
+}
+
+.vows {
+  width: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vow { display: flex; align-items: flex-start; gap: 13px; }
+
+// Each limit takes the tone of what it is about — the scope line is gold, the
+// same colour the refer-out screen uses when it declines to answer.
+.vow-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--m-accent-soft);
+  img { width: 20px; height: 20px; display: block; }
+
+  &[data-tone='gold'] { background: var(--m-gold-soft); }
+  &[data-tone='good'] { background: var(--m-good-soft); }
+}
+
+.vow-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.vow-title { @include m-body-strong; color: var(--m-text); }
+.vow-detail { @include m-body-small; color: var(--m-muted); }
+
+.actions { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+
+.dots { display: flex; align-items: center; gap: 7px; }
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--m-border-strong);
+
+  &.is-on { width: 22px; background: var(--m-accent); }
+}
+
+.btn {
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 999px;
+  background: var(--m-ink);
+  color: var(--m-on-ink);
+  box-shadow: var(--m-shadow-card);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  @include m-button;
+}

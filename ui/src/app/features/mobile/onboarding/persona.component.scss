@@ -1,0 +1,138 @@
+@use '../mobile-tokens' as *;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 18px 24px 32px;
+  gap: 24px;
+}
+
+.top { display: flex; flex-direction: column; }
+
+.topbar { display: flex; align-items: center; justify-content: space-between; }
+
+.back {
+  line-height: 0;
+  img { width: 24px; height: 24px; display: block; }
+}
+
+.step { @include m-caption; color: var(--m-muted); margin: 0; }
+
+.headline { @include m-h1; color: var(--m-text); margin: 20px 0 8px; }
+.lede { @include m-body; color: var(--m-muted); margin: 0 0 22px; }
+
+.options { display: flex; flex-direction: column; gap: 12px; }
+
+.option {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border: 1.2px solid var(--m-border);
+  border-radius: 20px;
+  background: var(--m-surface);
+  cursor: pointer;
+  text-align: left;
+
+  // Selected inverts the icon tile, thickens the border and swaps the radio for
+  // a filled tick — three signals, so the state survives greyscale.
+  &.is-on {
+    background: var(--m-accent-soft);
+    border: 2px solid var(--m-accent);
+    box-shadow: var(--m-shadow-card);
+    .option-icon { background: var(--m-surface); }
+  }
+}
+
+.option-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: var(--m-accent-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  img { width: 24px; height: 24px; display: block; }
+}
+
+.option-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.option-head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.option-title { @include m-body-strong; color: var(--m-text); }
+.option-detail { @include m-body-small; color: var(--m-muted); }
+
+.badge {
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-weight: 500;
+  font-size: 10.5px;
+  line-height: 1.4;
+  background: var(--m-gold-soft);
+  color: var(--m-gold);
+
+  &[data-tone='accent'] { background: var(--m-accent-soft); color: var(--m-accent-strong); }
+  &[data-tone='good']   { background: var(--m-good-soft);   color: var(--m-good); }
+}
+
+.radio { width: 24px; height: 24px; display: block; flex-shrink: 0; }
+
+.tick {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--m-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  img { width: 14px; height: 14px; display: block; }
+}
+
+.section { @include m-caption; color: var(--m-muted); margin: 22px 0 8px; }
+
+.tones {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--m-accent-soft);
+}
+
+.tone {
+  flex: 1 1 0;
+  min-width: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  padding: 10px;
+  cursor: pointer;
+  @include m-button;
+  color: var(--m-accent-strong);
+
+  &.is-on {
+    background: var(--m-ink);
+    color: var(--m-on-ink);
+    box-shadow: var(--m-shadow-card);
+  }
+}
+
+.btn {
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 999px;
+  background: var(--m-ink);
+  color: var(--m-on-ink);
+  box-shadow: var(--m-shadow-card);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  @include m-button;
+}

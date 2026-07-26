@@ -1,0 +1,92 @@
+@use '../mobile-tokens' as *;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 18px 24px 36px;
+  gap: 24px;
+}
+
+.top { width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+.orb { display: block; width: 96px; height: 96px; margin-top: 40px; }
+
+.greeting {
+  @include m-title;
+  color: var(--m-accent-strong);
+  text-align: center;
+  margin: 26px 0 10px;
+}
+
+.headline {
+  @include m-hero;
+  color: var(--m-text);
+  text-align: center;
+  margin: 0 0 14px;
+}
+
+.lede {
+  @include m-body-lg;
+  color: var(--m-muted);
+  text-align: center;
+  margin: 0 0 30px;
+}
+
+.promises {
+  width: 100%;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.promise { display: flex; align-items: center; gap: 14px; }
+
+.promise-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--m-surface);
+  border: 1px solid var(--m-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  img { width: 22px; height: 22px; display: block; }
+}
+
+.promise-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.promise-title { @include m-body-strong; color: var(--m-text); }
+.promise-detail { @include m-body-small; color: var(--m-muted); }
+
+.actions { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+.btn {
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 999px;
+  background: var(--m-ink);
+  color: var(--m-on-ink);
+  box-shadow: var(--m-shadow-card);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  @include m-button;
+}
+
+.skip {
+  @include m-body-small;
+  color: var(--m-muted);
+  text-decoration: none;
+  cursor: pointer;
+}

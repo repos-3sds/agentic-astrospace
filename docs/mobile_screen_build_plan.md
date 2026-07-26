@@ -109,6 +109,12 @@ fail with a misleading "no booted simulator".
   grep -n '\.your-class\b' ui/src/styles.scss
   ```
 
+- **A screen routed outside the shell paints nothing.** The shell set the
+  background on its own `:host`, so every screen inside it was fine — the first
+  screen routed outside it (onboarding) inherited the *web app's* theme-reactive
+  background and rendered `--m-text`, a near-black, on the dark theme. The
+  headline was invisible. `.as-mobile` now sets `background`/`color` itself, so
+  carrying the class is enough; keep it that way.
 - **Everything compiles.** All four bugs found so far — silent token fallback,
   invisible text, unconsumed safe areas, and the global-class collision above —
   passed the build cleanly and were only caught by screenshots. Verify visually,
@@ -151,12 +157,12 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 
 | Node | Screen | Status |
 | --- | --- | --- |
-| `4:2` | 1 · Landing | ⬜ |
+| `4:2` | 1 · Landing | ✅ done — `/m/start` |
 | `5:2` | 2 · Login / Register | ⬜ |
-| `6:2` | 3 · Welcome | ⬜ |
-| `7:2` | 4 · Info Carousel · Disclaimers | ⬜ |
-| `8:2` | 5 · Persona Type | ⬜ |
-| `11:2` | 6 · Birth Details | ⬜ |
+| `6:2` | 3 · Welcome | ✅ done |
+| `7:2` | 4 · Info Carousel · Disclaimers | ✅ done |
+| `8:2` | 5 · Persona Type | ✅ done |
+| `11:2` | 6 · Birth Details | ✅ done |
 | `13:2` | 7 · Today | ✅ done |
 | `20:2` | 7b · Today (full scroll) | ✅ done — same component as `13:2`, scrolled |
 | `21:22` | 7c · Day-quality detail | ✅ done |
@@ -232,7 +238,7 @@ the decision lands with `/api/v1/ask`.
 
 ## Status
 
-17 of 70 built: M1's Today set, all of M3 Ask, M4 Remedies, M5 Muhurta and
+22 of 70 built: M1's Today set, all of M3 Ask, M4 Remedies, M5 Muhurta and
 the M6 Chart flow (hub -> full render -> planet detail -> provenance). The foundation (tokens, shell,
 tab bar, sheet primitive, gauge, Ask composer, evidence sheet) is done and
 reusable, and the pipeline is proven end to end — Figma to browser to iOS

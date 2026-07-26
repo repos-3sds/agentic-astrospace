@@ -1,0 +1,25 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Frame">
+<circle id="Ellipse" cx="120" cy="120" r="75" fill="url(#paint0_radial_0_4)"/>
+<circle id="Ellipse_2" opacity="0.16" cx="80" cy="90" r="60" fill="#A06F22"/>
+<g id="Ellipse_3" opacity="0.5">
+<mask id="path-3-inside-1_0_4" fill="white">
+<path d="M235 120C235 183.513 183.513 235 120 235C56.4873 235 5 183.513 5 120C5 56.4873 56.4873 5 120 5C183.513 5 235 56.4873 235 120ZM6.725 120C6.725 182.56 57.4399 233.275 120 233.275C182.56 233.275 233.275 182.56 233.275 120C233.275 57.4399 182.56 6.725 120 6.725C57.4399 6.725 6.725 57.4399 6.725 120Z"/>
+</mask>
+<path d="M235 120C235 183.513 183.513 235 120 235C56.4873 235 5 183.513 5 120C5 56.4873 56.4873 5 120 5C183.513 5 235 56.4873 235 120ZM6.725 120C6.725 182.56 57.4399 233.275 120 233.275C182.56 233.275 233.275 182.56 233.275 120C233.275 57.4399 182.56 6.725 120 6.725C57.4399 6.725 6.725 57.4399 6.725 120Z" stroke="#A06F22" stroke-width="2.8" mask="url(#path-3-inside-1_0_4)"/>
+</g>
+<circle id="Ellipse_4" opacity="0.85" cx="32" cy="62" r="2" fill="#A06F22"/>
+<circle id="Ellipse_5" opacity="0.85" cx="212.5" cy="92.5" r="2.5" fill="#A06F22"/>
+<circle id="Ellipse_6" opacity="0.85" cx="191.5" cy="21.5" r="1.5" fill="#A06F22"/>
+<circle id="Ellipse_7" opacity="0.85" cx="62" cy="202" r="2" fill="#A06F22"/>
+<circle id="Ellipse_8" opacity="0.85" cx="16.5" cy="151.5" r="1.5" fill="#A06F22"/>
+<circle id="Ellipse_9" opacity="0.85" cx="222" cy="182" r="2" fill="#A06F22"/>
+</g>
+<defs>
+<radialGradient id="paint0_radial_0_4" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(120 120) scale(75)">
+<stop stop-color="#DE8766"/>
+<stop offset="0.6" stop-color="#B0402E"/>
+<stop offset="1" stop-color="#8F2E21"/>
+</radialGradient>
+</defs>
+</svg>
