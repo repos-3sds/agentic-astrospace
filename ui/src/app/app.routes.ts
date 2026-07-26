@@ -284,6 +284,14 @@ export const routes: Routes = [
             (m) => m.LifePeriodsComponent,
           ),
       },
+      {
+        path: 'chart/yogas',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/chart/yogas-doshas.component').then(
+            (m) => m.YogasDoshasComponent,
+          ),
+      },
       // The tab bar has five tabs and three of them are not built yet. Without
       // this they fall through to the global '**' below and land on the web
       // app's marketing page — in the native build that reads as the app

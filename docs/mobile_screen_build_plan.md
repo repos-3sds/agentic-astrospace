@@ -182,9 +182,9 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `36:247` | 19 · Provenance sheet | ✅ done |
 | `39:87` | 20 · Divisional (Varga) Charts | ✅ done — `/m/chart/vargas` |
 | `40:87` | 21 · Life Periods (Dashas) | ✅ done — `/m/chart/periods` |
-| `41:87` | 22 · Yogas & Doshas | ⬜ |
+| `41:87` | 22 · Yogas & Doshas | ✅ done — `/m/chart/yogas` |
 | `41:149` | 23 · Strength & Advanced | ⬜ |
-| `41:210` | 24 · Learning sheet — Gajakesari Yoga | ⬜ |
+| `41:210` | 24 · Learning sheet — Gajakesari Yoga | ✅ done |
 | `56:88` | 17b · Chart — Full render (South) | ⬜ |
 | `57:88` | 17c · Chart — Full render (North) | ⬜ |
 | `59:88` | 21b · Life Periods — Maha level | ✅ done — `/m/chart/periods` Maha tab |
@@ -195,7 +195,7 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `61:88` | 20b · Divisional charts — D1 | ⬜ |
 | `61:195` | 20c · Divisional charts — D10 | ⬜ |
 | `62:88` | 2b · Register | ✅ done — `/m/auth?mode=register` |
-| `62:140` | 12b · Manglik cancellation detail | ⬜ |
+| `62:140` | 12b · Manglik cancellation detail | ✅ done — shared from Chart and Remedies |
 | `66:89` | 25 · Settings — Home | ⬜ |
 | `67:89` | 25b · Settings — Mode & Tone | ⬜ |
 | `67:147` | 25c · Settings — Language & Audio | ⬜ |
@@ -238,7 +238,7 @@ the decision lands with `/api/v1/ask`.
 
 ## Status
 
-30 of 70 built: M1's Today set, the complete authentication/onboarding entrance, all of M3 Ask, M4 Remedies, M5 Muhurta and
+33 of 70 built: M1's Today set, the complete authentication/onboarding entrance, all of M3 Ask, M4 Remedies, M5 Muhurta and
 the M6 Chart flow (hub -> full render -> planet detail -> provenance -> divisional charts -> life periods). The foundation (tokens, shell,
 tab bar, sheet primitive, gauge, Ask composer, evidence sheet) is done and
 reusable, and the pipeline is proven end to end — Figma to browser to iOS

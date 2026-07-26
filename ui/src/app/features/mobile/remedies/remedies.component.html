@@ -40,9 +40,13 @@
         @if (card.ctaRoute; as route) {
           <a class="cta" [routerLink]="route">{{ card.ctaLabel }}</a>
         } @else {
-          <button class="cta" type="button">{{ card.ctaLabel }}</button>
+          <button class="cta" type="button" (click)="cancellationOpen.set(true)">{{ card.ctaLabel }}</button>
         }
       </div>
     </article>
   }
 </div>
+
+@if (cancellationOpen()) {
+  <as-manglik-cancellation-sheet (dismissed)="cancellationOpen.set(false)" />
+}

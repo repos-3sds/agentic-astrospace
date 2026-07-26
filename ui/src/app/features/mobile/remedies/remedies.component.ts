@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ManglikCancellationSheetComponent } from '../chart/manglik-cancellation-sheet.component';
 
 /** What kind of thing in the chart a remedy answers to. */
 export type RemedyTone = 'warn' | 'bad' | 'good';
@@ -20,9 +21,7 @@ export interface RemedyCard {
   practices: RemedyPractice[];
   ctaLabel: string;
   /**
-   * Where the action goes, when its screen exists. Absent leaves the button
-   * inert rather than routing somewhere plausible-looking — "View cancellation"
-   * belongs to 62:140, which is not built.
+   * Where the action goes when it is a route. Manglik opens its shared sheet.
    */
   ctaRoute?: string[];
 }
@@ -52,11 +51,12 @@ export interface RemedyCard {
   selector: 'as-remedies',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, ManglikCancellationSheetComponent],
   templateUrl: './remedies.component.html',
   styleUrl: './remedies.component.scss',
 })
 export class RemediesComponent {
+  readonly cancellationOpen = signal(false);
   readonly cards = signal<RemedyCard[]>([
     {
       id: 'saturn',

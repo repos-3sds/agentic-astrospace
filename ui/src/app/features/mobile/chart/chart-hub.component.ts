@@ -107,6 +107,7 @@ export class ChartHubComponent {
       title: 'Yogas & Doshas',
       subtitle: 'Strengths & flags',
       icon: 'explore-yoga',
+      route: ['/m', 'chart', 'yogas'],
     },
     {
       id: 'strength',

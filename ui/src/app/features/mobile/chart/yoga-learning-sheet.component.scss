@@ -1,0 +1,22 @@
+@use '../mobile-tokens' as *;
+
+:host { display: contents; }
+.head { display: flex; flex-direction: column; gap: 5px; }
+.eyebrow { @include m-eyebrow; margin: 0; color: var(--m-accent); }
+h2 { @include m-h2; margin: 0; color: var(--m-text); }
+.body { @include m-body; margin: 0; color: var(--m-text); }
+.source {
+  display: flex; flex-direction: column; gap: 8px; padding: 14px 15px;
+  border: 1px solid var(--m-border); border-radius: 16px; background: var(--m-raised);
+  p { @include m-body-small; margin: 0; color: var(--m-text); }
+  p:last-child { color: var(--m-accent-strong); font-weight: 600; }
+}
+.chart-fact {
+  @include m-body-small; margin: 0; padding: 14px 15px; border-radius: 16px;
+  color: var(--m-text); background: var(--m-accent-soft);
+}
+.got-it {
+  @include m-button; align-self: flex-start; border: 0; border-radius: 999px;
+  padding: 16px 24px; color: var(--m-on-ink); background: var(--m-ink);
+  box-shadow: 0 10px 15px rgba(65, 42, 20, 0.07); cursor: pointer;
+}

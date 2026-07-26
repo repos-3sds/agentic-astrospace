@@ -1,0 +1,41 @@
+<a class="appbar" [routerLink]="['/m', 'chart']">
+  <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  <span>Your Chart</span>
+</a>
+
+<main class="body">
+  <header class="heading">
+    <h1>Yogas &amp; Doshas</h1>
+    <p>Notable combinations found in your chart — strengths and flags</p>
+  </header>
+
+  <div class="filters" role="tablist" aria-label="Combination type">
+    @for (item of [{id: 'all', label: 'All'}, {id: 'yoga', label: 'Yogas'}, {id: 'dosha', label: 'Doshas'}]; track item.id) {
+      <button type="button" role="tab" [class.is-on]="filter() === item.id"
+        [attr.aria-selected]="filter() === item.id" (click)="filter.set($any(item.id))">{{ item.label }}</button>
+    }
+  </div>
+
+  <section class="cards">
+    @for (item of visibleItems(); track item.id) {
+      <article class="card">
+        <div class="card-head">
+          <h2>{{ item.title }}</h2>
+          <span class="tag" [attr.data-tone]="item.tone">{{ item.tag }}</span>
+        </div>
+        <p>{{ item.summary }}</p>
+        @if (item.cancelled) {
+          <div class="rule"></div>
+          <p class="cancelled"><img src="mobile/yoga-check.svg" alt="" aria-hidden="true" />{{ item.cancelled }}</p>
+        }
+        <button class="learn" type="button" (click)="learn(item)">
+          <span>{{ item.id === 'manglik' ? 'View cancellation' : 'Learn this yoga' }}</span>
+          <img src="mobile/yoga-chevron.svg" alt="" aria-hidden="true" />
+        </button>
+      </article>
+    }
+  </section>
+</main>
+
+@if (learningOpen()) { <as-yoga-learning-sheet (dismissed)="learningOpen.set(false)" /> }
+@if (cancellationOpen()) { <as-manglik-cancellation-sheet (dismissed)="cancellationOpen.set(false)" /> }
