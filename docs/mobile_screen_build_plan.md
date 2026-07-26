@@ -92,7 +92,7 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `13:2` | 7 · Today | ✅ done |
 | `20:2` | 7b · Today (full scroll) | ⬜ |
 | `21:22` | 7c · Day-quality detail | ✅ done |
-| `22:23` | 7d · Why this reading | ⬜ |
+| `22:23` | 7d · Why this reading | ✅ done |
 | `23:25` | 7e · Listen (audio) | ⬜ |
 | `25:25` | 8 · Ask — Home | ⬜ |
 | `25:123` | 9 · Ask — Voice listening | ⬜ |
@@ -156,7 +156,7 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 
 ## Status
 
-2 of 70 built. The foundation (tokens, shell, tab bar, sheet primitive, gauge)
+3 of 70 built. The foundation (tokens, shell, tab bar, sheet primitive, gauge)
 is done and reusable, and the pipeline is proven end to end — Figma to browser
 to iOS simulator.
 

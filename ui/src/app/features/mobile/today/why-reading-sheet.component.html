@@ -1,0 +1,36 @@
+<as-sheet (dismissed)="dismissed.emit()">
+  <header class="head">
+    <p class="title">Why this reading?</p>
+    <p class="sub">{{ mode() }}</p>
+  </header>
+
+  <p class="eyebrow">IN PLAIN WORDS</p>
+  @for (line of plainWords(); track line) {
+    <div class="bullet-row">
+      <img class="bullet" src="mobile/bullet.svg" alt="" aria-hidden="true" />
+      <p class="bullet-text">{{ line }}</p>
+    </div>
+  }
+
+  <p class="eyebrow">THE CALCULATION</p>
+  <div class="calc">
+    @for (row of calculation(); track row.label; let last = $last) {
+      <div class="calc-row">
+        <p class="calc-label">{{ row.label }}</p>
+        <p class="calc-value">{{ row.value }}</p>
+      </div>
+      @if (!last) { <div class="rule"></div> }
+    }
+  </div>
+
+  <div class="chips">
+    @for (chip of conventions(); track chip) {
+      <span class="chip">{{ chip }}</span>
+    }
+  </div>
+
+  <div class="actions">
+    <button class="btn ghost" type="button" (click)="learnTerms.emit()">Learn the terms</button>
+    <button class="btn ink" type="button" (click)="dismissed.emit()">Got it</button>
+  </div>
+</as-sheet>

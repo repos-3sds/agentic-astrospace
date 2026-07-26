@@ -21,7 +21,7 @@
     </div>
 
     <div class="verdict-row">
-      <button class="gauge-btn" type="button" (click)="sheetOpen.set(true)"
+      <button class="gauge-btn" type="button" (click)="openSheet.set('quality')"
               aria-label="Why today is a {{ v.score }}">
         <as-day-gauge [score]="v.score" [label]="v.scoreLabel" [attr.data-band]="v.band" />
       </button>
@@ -54,7 +54,7 @@
     </article>
   </div>
 
-  <button class="why" type="button" (click)="sheetOpen.set(true)">
+  <button class="why" type="button" (click)="openSheet.set('why')">
     <span class="why-left">
       <img src="mobile/why.svg" alt="" aria-hidden="true" />
       <span class="why-label">Why this reading?</span>
@@ -74,11 +74,20 @@
   </section>
 </div>
 
-@if (sheetOpen()) {
+@if (openSheet() === 'quality') {
   <as-day-quality-sheet
     [score]="v.score"
     [signals]="signals()"
     [summary]="summary()"
-    (dismissed)="sheetOpen.set(false)"
+    (dismissed)="openSheet.set(null)"
+  />
+}
+
+@if (openSheet() === 'why') {
+  <as-why-reading-sheet
+    [plainWords]="plainWords()"
+    [calculation]="calculation()"
+    [conventions]="conventions()"
+    (dismissed)="openSheet.set(null)"
   />
 }

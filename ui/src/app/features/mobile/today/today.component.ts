@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { DayGaugeComponent } from '../day-gauge/day-gauge.component';
 import { DayQualitySheetComponent, DaySignal } from './day-quality-sheet.component';
+import { EvidenceRow, WhyReadingSheetComponent } from './why-reading-sheet.component';
 
 /** Verdict bands. Named, not numeric, so tone rules can key off them. */
 export type DayBand = 'steady' | 'mixed' | 'tough';
@@ -37,7 +38,7 @@ export interface TodayView {
   selector: 'as-today',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DayGaugeComponent, DayQualitySheetComponent],
+  imports: [DayGaugeComponent, DayQualitySheetComponent, WhyReadingSheetComponent],
   templateUrl: './today.component.html',
   styleUrl: './today.component.scss',
 })
@@ -88,5 +89,23 @@ export class TodayComponent {
     'A steady, workable day — good for routine work, gentle on big commitments.',
   );
 
-  readonly sheetOpen = signal(false);
+  /** Which sheet is showing, if any. One signal so two cannot stack. */
+  readonly openSheet = signal<'quality' | 'why' | null>(null);
+
+  readonly plainWords = signal([
+    'You’re in a supportive stretch for steady, everyday work.',
+    'Money and legal commitments are better after midday.',
+  ]);
+
+  readonly calculation = signal<EvidenceRow[]>([
+    { label: 'Active period', value: 'Venus – Saturn' },
+    { label: 'Moon transiting', value: 'Hasta · 12th' },
+    { label: 'Key gochara', value: 'Saturn on 10th' },
+  ]);
+
+  // Always shown. A reading whose conventions are hidden is not reproducible —
+  // the same chart under a different ayanamsa is a different answer.
+  readonly conventions = signal([
+    'Lahiri', 'Whole-sign', 'Vijayawada', 'High confidence',
+  ]);
 }
