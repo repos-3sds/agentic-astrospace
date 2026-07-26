@@ -1,0 +1,57 @@
+<a class="appbar" [routerLink]="['/m', 'remedies']">
+  <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  <span class="crumb">What to do</span>
+</a>
+
+<div class="body">
+  <header class="intro">
+    <p class="eyebrow">{{ eyebrow() }}</p>
+    <h1 class="mantra">{{ mantra() }}</h1>
+  </header>
+
+  <p class="streak">
+    <img src="mobile/streak.svg" alt="" aria-hidden="true" />
+    <span>{{ streakLabel() }}</span>
+  </p>
+
+  <div class="ring">
+    <svg
+      [attr.viewBox]="'0 0 ' + SIZE + ' ' + SIZE"
+      [attr.width]="SIZE"
+      [attr.height]="SIZE"
+      role="img"
+      [attr.aria-label]="count() + ' of ' + target() + ' repetitions counted'"
+    >
+      <circle
+        class="track"
+        [attr.cx]="C" [attr.cy]="C" [attr.r]="R"
+        [attr.stroke-width]="STROKE" fill="none"
+      />
+      <circle
+        class="arc"
+        [attr.cx]="C" [attr.cy]="C" [attr.r]="R"
+        [attr.stroke-width]="STROKE" fill="none" stroke-linecap="butt"
+        [attr.stroke-dasharray]="CIRCUMFERENCE"
+        [attr.stroke-dashoffset]="dashOffset()"
+        [attr.transform]="'rotate(-90 ' + C + ' ' + C + ')'"
+      />
+    </svg>
+    <div class="readout" aria-hidden="true">
+      <span class="count">{{ count() }}</span>
+      <span class="of">of {{ target() }}</span>
+    </div>
+  </div>
+
+  <button class="count-btn" type="button" [disabled]="done()" (click)="tap()">
+    <img src="mobile/sparkle.svg" alt="" aria-hidden="true" />
+    <span>{{ done() ? 'Completed' : 'Tap to count' }}</span>
+  </button>
+
+  <!-- Said again here, at the point of practice, not only on the list screen. -->
+  <p class="caveat">
+    A traditional practice for this period — never a substitute for professional
+    advice.
+  </p>
+</div>
+
+<button class="reminder" type="button">Set a Saturday reminder</button>

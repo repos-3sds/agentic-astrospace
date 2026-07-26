@@ -19,6 +19,12 @@ export interface RemedyCard {
   rationale: string;
   practices: RemedyPractice[];
   ctaLabel: string;
+  /**
+   * Where the action goes, when its screen exists. Absent leaves the button
+   * inert rather than routing somewhere plausible-looking — "View cancellation"
+   * belongs to 62:140, which is not built.
+   */
+  ctaRoute?: string[];
 }
 
 /**
@@ -68,6 +74,7 @@ export class RemediesComponent {
         { icon: 'wear', text: 'Wear or hold something blue-black on tough days' },
       ],
       ctaLabel: 'Start streak',
+      ctaRoute: ['/m', 'remedies', 'mantra'],
     },
     {
       id: 'manglik',

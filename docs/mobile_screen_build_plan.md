@@ -151,7 +151,7 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `26:54` | 10 · Ask — Answer view | ✅ done |
 | `27:83` | 11 · Ask — Refer-out (safety) | ✅ done — `?domain=health\|legal\|money\|death` |
 | `29:55` | 12 · Remedies — For You | ✅ done — `/m/remedies` |
-| `29:109` | 13 · Remedy detail — Mantra tracker | ⬜ |
+| `29:109` | 13 · Remedy detail — Mantra tracker | ✅ done — `/m/remedies/mantra` |
 | `30:56` | 14 · Muhurta — Choose a goal | ⬜ |
 | `31:57` | 15 · Muhurta — Results | ⬜ |
 | `35:57` | 16 · Chart Hub (You) | ⬜ |
@@ -216,7 +216,7 @@ the decision lands with `/api/v1/ask`.
 
 ## Status
 
-9 of 70 built: M1's Today set and all of M3 Ask. The foundation (tokens, shell,
+11 of 70 built: M1's Today set and all of M3 Ask. The foundation (tokens, shell,
 tab bar, sheet primitive, gauge, Ask composer, evidence sheet) is done and
 reusable, and the pipeline is proven end to end — Figma to browser to iOS
 simulator.

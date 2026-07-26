@@ -22,6 +22,11 @@
   font-size: 34px;
   line-height: 1.06;
 }
+@mixin m-h1 {
+  font-weight: 700;
+  font-size: 27px;
+  line-height: 1.12;
+}
 @mixin m-h2 {
   font-weight: 600;
   font-size: 21px;

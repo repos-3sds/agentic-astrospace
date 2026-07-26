@@ -37,7 +37,11 @@
       -->
       <div class="foot">
         <p class="caveat">Traditional practice · not a guarantee</p>
-        <button class="cta" type="button">{{ card.ctaLabel }}</button>
+        @if (card.ctaRoute; as route) {
+          <a class="cta" [routerLink]="route">{{ card.ctaLabel }}</a>
+        } @else {
+          <button class="cta" type="button">{{ card.ctaLabel }}</button>
+        }
       </div>
     </article>
   }
