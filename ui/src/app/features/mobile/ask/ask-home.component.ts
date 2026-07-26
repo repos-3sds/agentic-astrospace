@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { VoiceListeningComponent } from './voice-listening.component';
 
 /** A subject the reader can scope a question to. */
@@ -99,5 +99,24 @@ export class AskHomeComponent {
 
   protected toggleTopic(id: string): void {
     this.selectedTopic.update((current) => (current === id ? null : id));
+  }
+
+  private readonly router = inject(Router);
+
+  /**
+   * Send the question on to the answer view (26:54).
+   *
+   * The topic, when one is selected, rides along: it is the reader saying which
+   * of several readings of an ambiguous question they meant, and dropping it
+   * would make the chips decorative.
+   */
+  protected ask(question: string): void {
+    const q = question.trim();
+    if (!q) {
+      return;
+    }
+    void this.router.navigate(['/m', 'ask', 'answer'], {
+      queryParams: { q, topic: this.selectedTopic() ?? undefined },
+    });
   }
 }

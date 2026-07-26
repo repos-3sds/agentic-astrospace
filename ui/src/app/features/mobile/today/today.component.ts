@@ -3,7 +3,10 @@ import { RouterLink } from '@angular/router';
 import { DayGaugeComponent } from '../day-gauge/day-gauge.component';
 import { DayQualitySheetComponent, DaySignal } from './day-quality-sheet.component';
 import { ListenSheetComponent } from './listen-sheet.component';
-import { EvidenceRow, WhyReadingSheetComponent } from './why-reading-sheet.component';
+import {
+  EvidenceRow,
+  WhyReadingSheetComponent,
+} from '../why-reading/why-reading-sheet.component';
 
 /** Verdict bands. Named, not numeric, so tone rules can key off them. */
 export type DayBand = 'steady' | 'mixed' | 'tough';

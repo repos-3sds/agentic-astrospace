@@ -90,7 +90,7 @@
     @for (q of askSuggestions(); track q) {
       <a class="suggestion" [routerLink]="['/m', 'ask']" [queryParams]="{ q }">
         <span class="suggestion-text">{{ q }}</span>
-        <img src="mobile/chevron-sm.svg" alt="" aria-hidden="true" />
+        <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
       </a>
     }
   </div>

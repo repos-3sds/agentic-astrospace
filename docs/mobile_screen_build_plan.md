@@ -25,6 +25,11 @@ anything.
   theme-reactive `--as-*` tokens; mixing produced invisible text once already.
 - **Assets live in `ui/public/mobile/`**, not `src/assets`, and are referenced
   as `mobile/<name>.svg`.
+- **One asset per glyph, not per size.** Figma exports a chevron at 16, 17, 18
+  and 20px as four files, but they are one vector scaled — path and stroke both
+  scale proportionally, and SVG scales losslessly. Diff a new export against the
+  one you have before adding it, and size the leaf in CSS. Different *colour* is
+  a different asset (`play.svg` vs `play-muted.svg`); different size is not.
 - **Sheets use `as-sheet`** for scrim, radius, handle and safe-area padding.
 - **Exported assets are used as-is.** The only exception so far is the day
   gauge, whose arc is data-driven and so is redrawn from the export's geometry.
@@ -107,7 +112,7 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `23:25` | 7e · Listen (audio) | ✅ done — sheet over Today |
 | `25:25` | 8 · Ask — Home | ✅ done |
 | `25:123` | 9 · Ask — Voice listening | ✅ done — overlay from Ask's mic |
-| `26:54` | 10 · Ask — Answer view | ⬜ |
+| `26:54` | 10 · Ask — Answer view | ✅ done |
 | `27:83` | 11 · Ask — Refer-out (safety) | ⬜ |
 | `29:55` | 12 · Remedies — For You | ⬜ |
 | `29:109` | 13 · Remedy detail — Mantra tracker | ⬜ |

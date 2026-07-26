@@ -10,6 +10,10 @@ export interface EvidenceRow {
 /**
  * "Why this reading?" (Figma node 22:23) — Epic J's evidence surface.
  *
+ * Shared, not Today's: the answer view (26:54) opens the same sheet from its
+ * own "Why this?" row, and every reading in the app owes the same account of
+ * itself. It lives outside both features so neither owns it.
+ *
  * The design's own subtitle states the rule this screen exists to enforce:
  * plain first, the calculation underneath. Plain-words bullets come before
  * THE CALCULATION, and the convention chips (ayanamsa, house system, place,

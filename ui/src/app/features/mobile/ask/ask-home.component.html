@@ -32,9 +32,9 @@
   <p class="eyebrow">SUGGESTED FOR YOU RIGHT NOW</p>
   <div class="suggestions">
     @for (s of suggestions(); track s.prompt) {
-      <button class="suggestion" type="button">
+      <button class="suggestion" type="button" (click)="ask(s.prompt)">
         <span class="suggestion-text">{{ s.prompt }}</span>
-        <img src="mobile/chevron-md.svg" alt="" aria-hidden="true" />
+        <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
       </button>
     }
   </div>
@@ -57,7 +57,13 @@
     [value]="draft()"
     (input)="draft.set($any($event.target).value)"
   />
-  <button class="send" type="button" aria-label="Send" [disabled]="!draft().trim()">
+  <button
+    class="send"
+    type="button"
+    aria-label="Send"
+    [disabled]="!draft().trim()"
+    (click)="ask(draft())"
+  >
     <img src="mobile/send.svg" alt="" aria-hidden="true" />
   </button>
 </div>

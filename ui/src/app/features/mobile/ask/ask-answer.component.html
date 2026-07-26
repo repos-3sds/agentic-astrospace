@@ -1,0 +1,81 @@
+@let v = view();
+
+<header class="appbar">
+  <a class="back" [routerLink]="['/m', 'ask']" aria-label="Back to Ask">
+    <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  </a>
+  <p class="crumb">Ask</p>
+</header>
+
+<div class="body">
+  <div class="asked">
+    <p class="bubble">{{ v.question }}</p>
+  </div>
+
+  <article class="answer">
+    <p class="verdict-label">
+      <span class="dot" [attr.data-tone]="v.tone" aria-hidden="true"></span>
+      <span class="eyebrow good">VERDICT · {{ v.domain }}</span>
+    </p>
+
+    <h1 class="verdict">{{ v.verdict }}</h1>
+
+    <div class="rule"></div>
+
+    <div class="todo">
+      <p class="eyebrow">WHAT TO DO</p>
+      <p class="todo-text">{{ v.whatToDo }}</p>
+    </div>
+
+    <button class="why" type="button" (click)="whyOpen.set(true)">
+      <span class="why-left">
+        <img src="mobile/why.svg" alt="" aria-hidden="true" />
+        <span class="why-label">Why this?</span>
+      </span>
+      <img class="why-chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
+    </button>
+
+    <div class="tools">
+      <button class="tool" type="button">
+        <img src="mobile/play-muted.svg" alt="" aria-hidden="true" />
+        <span>Listen</span>
+      </button>
+      <button class="tool" type="button">
+        <img src="mobile/share.svg" alt="" aria-hidden="true" />
+        <span>Share</span>
+      </button>
+    </div>
+  </article>
+
+  <div class="followups">
+    @for (f of v.followUps; track f) {
+      <button class="followup" type="button">{{ f }}</button>
+    }
+  </div>
+</div>
+
+<div class="composer">
+  <button class="mic" type="button" aria-label="Ask by voice">
+    <img src="mobile/mic.svg" alt="" aria-hidden="true" />
+  </button>
+  <input
+    class="field"
+    type="text"
+    placeholder="Ask a follow-up…"
+    aria-label="Your follow-up question"
+    [value]="draft()"
+    (input)="draft.set($any($event.target).value)"
+  />
+  <button class="send" type="button" aria-label="Send" [disabled]="!draft().trim()">
+    <img src="mobile/send.svg" alt="" aria-hidden="true" />
+  </button>
+</div>
+
+@if (whyOpen()) {
+  <as-why-reading-sheet
+    [plainWords]="plainWords()"
+    [calculation]="calculation()"
+    [conventions]="conventions()"
+    (dismissed)="whyOpen.set(false)"
+  />
+}
