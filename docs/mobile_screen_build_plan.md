@@ -16,6 +16,17 @@ anything.
 5. Re-verify natively: npm run build:native:dev, then rebuild in Xcode
 ```
 
+## The two front ends do not meet
+
+`/m/*` is guarded off the production web build by `nativeAppGuard`
+(`core/native-app.guard.ts`). A production web visitor who types `/m` is sent
+to `/`; native always passes, and so does any non-production build, which is
+what keeps the browser verification loop alive.
+
+This is a visibility boundary, not a security one — the mobile code still ships
+in the bundle. Excluding it outright means a second build configuration, which
+is a bigger change than the problem needs.
+
 ## Conventions already established
 
 - **Tokens are global.** `src/styles-mobile.scss` defines `.as-mobile`.
@@ -47,7 +58,7 @@ Two backends, and the difference matters:
 ```bash
 # browser (fastest loop) — serves the built SPA
 preview_start name=astrospace-debug     # -> http://localhost:8010/m/today
-cd ui && npm run build                  # rebuild before reloading; no HMR here
+cd ui && npm run build:dev              # rebuild before reloading; no HMR here
 
 # native
 cd ui && npm run build:native:dev       # dev config + cap sync
@@ -79,6 +90,11 @@ fail with a misleading "no booted simulator".
 
   An `access-control-allow-origin: https://localhost` in the response means the
   origin is live and the problem is somewhere else.
+- **Verify with `npm run build:dev`, not `npm run build`.** `ng build` defaults
+  to the *production* configuration, and `/m` is guarded off the production web
+  build (see below) — so a production build serves the web landing page at
+  `/m/today` and every screen looks deleted. Nothing is wrong; you built the
+  wrong config.
 - **`npx cap sync` copies whatever is already in `frontend/dist`.** Always
   build first, or the native app silently runs an old bundle.
 - **The browser preview caches.** Reload after rebuilding, or you will debug a

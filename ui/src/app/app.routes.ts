@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/auth.guard';
 import { adminGuard } from './core/admin.guard';
+import { nativeAppGuard } from './core/native-app.guard';
 
 export const routes: Routes = [
   {
@@ -147,6 +148,7 @@ export const routes: Routes = [
   // the existing web routes are untouched and both can ship from one bundle.
   {
     path: 'm',
+    canActivate: [nativeAppGuard],
     loadComponent: () =>
       import('./features/mobile/shell/mobile-shell.component').then((m) => m.MobileShellComponent),
     children: [
