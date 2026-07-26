@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { DayGaugeComponent } from '../day-gauge/day-gauge.component';
+import { DayQualitySheetComponent, DaySignal } from './day-quality-sheet.component';
 
 /** Verdict bands. Named, not numeric, so tone rules can key off them. */
 export type DayBand = 'steady' | 'mixed' | 'tough';
@@ -36,7 +37,7 @@ export interface TodayView {
   selector: 'as-today',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DayGaugeComponent],
+  imports: [DayGaugeComponent, DayQualitySheetComponent],
   templateUrl: './today.component.html',
   styleUrl: './today.component.scss',
 })
@@ -60,4 +61,32 @@ export class TodayComponent {
   });
 
   protected readonly greeting = computed(() => `Namaste, ${this.view().greetingName}`);
+
+  /** Contributors behind the score — C2 requires these be nameable, not opaque. */
+  readonly signals = signal<DaySignal[]>([
+    {
+      name: 'Tarabala',
+      verdict: 'FAVOURABLE',
+      tone: 'good',
+      explanation: 'Your star-count from the Moon supports the day.',
+    },
+    {
+      name: 'Chandrabala',
+      verdict: 'STRONG',
+      tone: 'good',
+      explanation: 'The Moon is well-placed from your sign.',
+    },
+    {
+      name: 'Saturn transit',
+      verdict: 'MILD FRICTION',
+      tone: 'warn',
+      explanation: 'Passing your 10th house — go steady at work.',
+    },
+  ]);
+
+  readonly summary = signal(
+    'A steady, workable day — good for routine work, gentle on big commitments.',
+  );
+
+  readonly sheetOpen = signal(false);
 }

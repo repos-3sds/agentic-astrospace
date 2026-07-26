@@ -1,0 +1,58 @@
+@use '../mobile-tokens' as *;
+
+:host { display: contents; }
+
+.head { display: flex; flex-direction: column; gap: 5px; }
+.title { @include m-h2; color: var(--m-text); margin: 0; }
+.sub { @include m-body-small; color: var(--m-muted); margin: 0; }
+
+.signal { display: flex; align-items: flex-start; gap: 12px; }
+
+.dot {
+  width: 11px;
+  height: 11px;
+  display: block;
+  flex-shrink: 0;
+  // Aligns the dot with the cap-height of the 15px label beside it rather than
+  // its line box, which otherwise sits it visibly high.
+  margin-top: 5px;
+}
+
+.signal-body { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.signal-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.signal-name { @include m-body-strong; color: var(--m-text); margin: 0; }
+.signal-text { @include m-body-small; color: var(--m-muted); margin: 0; }
+
+.pill {
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-weight: 500;
+  font-size: 10.5px;
+  line-height: 1.4;
+  white-space: nowrap;
+
+  &.good { background: var(--m-good-soft); color: var(--m-good); }
+  &.warn { background: var(--m-warn-soft); color: var(--m-warn); }
+  &.bad  { background: var(--m-bad-soft);  color: var(--m-bad); }
+}
+
+.summary {
+  @include m-body-small;
+  background: var(--m-accent-soft);
+  color: var(--m-accent-strong);
+  border-radius: 16px;
+  padding: 13px 15px;
+  margin: 0;
+}
+
+.cta {
+  width: 100%;
+  border: 0;
+  border-radius: 999px;
+  background: #20150e;               // --ink
+  color: var(--m-on-ink);
+  padding: 16px 24px;
+  cursor: pointer;
+  @include m-button;
+  box-shadow: 0 10px 15px rgba(65, 42, 20, 0.07);
+}

@@ -1,0 +1,24 @@
+<as-sheet (dismissed)="dismissed.emit()">
+  <header class="head">
+    <p class="title">Why today is a {{ score() }}</p>
+    <p class="sub">Your day-quality blends three computed signals.</p>
+  </header>
+
+  @for (signal of signals(); track signal.name) {
+    <div class="signal">
+      <img class="dot" [src]="'mobile/dot-' + (signal.tone === 'good' ? 'good' : 'warn') + '.svg'"
+           alt="" aria-hidden="true" />
+      <div class="signal-body">
+        <div class="signal-head">
+          <p class="signal-name">{{ signal.name }}</p>
+          <span class="pill" [class]="signal.tone">{{ signal.verdict }}</span>
+        </div>
+        <p class="signal-text">{{ signal.explanation }}</p>
+      </div>
+    </div>
+  }
+
+  <p class="summary">{{ summary() }}</p>
+
+  <button class="cta" type="button" (click)="dismissed.emit()">Got it</button>
+</as-sheet>
