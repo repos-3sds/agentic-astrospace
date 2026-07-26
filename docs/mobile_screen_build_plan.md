@@ -30,6 +30,55 @@ anything.
   gauge, whose arc is data-driven and so is redrawn from the export's geometry.
 - **Safe areas** are consumed by the shell; screens should not re-apply them.
 
+## Running and verifying
+
+Two backends, and the difference matters:
+
+| Port | Config | Auth | Use for |
+| --- | --- | --- | --- |
+| 8000 | `astrospace` | Supabase **enabled** — needs a bearer token | the native app |
+| 8010 | `astrospace-debug` | dev bypass, SQLite | browser verification |
+
+```bash
+# browser (fastest loop) — serves the built SPA
+preview_start name=astrospace-debug     # -> http://localhost:8010/m/today
+cd ui && npm run build                  # rebuild before reloading; no HMR here
+
+# native
+cd ui && npm run build:native:dev       # dev config + cap sync
+cd ui/ios/App && xcodebuild -project App.xcodeproj -scheme App \
+  -destination "platform=iOS Simulator,id=<udid>" \
+  -configuration Debug -skipMacroValidation -derivedDataPath /tmp/astrospace-dd build
+# then: control launch app_path=/tmp/astrospace-dd/Build/Products/Debug-iphonesimulator/App.app
+```
+
+The simulator needs device access granted once per session ("Let Claude use it"
+on the panel), otherwise screenshots and the build tool's device lookup both
+fail with a misleading "no booted simulator".
+
+## Traps already hit — do not rediscover
+
+- **Restart :8000 after any CORS change.** A Capacitor WebView calls from
+  `https://localhost`, so a backend started before that origin was allowed
+  rejects every request with a bare 400. The app then falls back to
+  "Supabase is not configured yet", which looks like success and is not.
+- **`npx cap sync` copies whatever is already in `frontend/dist`.** Always
+  build first, or the native app silently runs an old bundle.
+- **The browser preview caches.** Reload after rebuilding, or you will debug a
+  stale bundle.
+- **Everything compiles.** All three bugs found so far — silent token fallback,
+  invisible text, unconsumed safe areas — passed the build cleanly and were
+  only caught by screenshots. Verify visually, every screen.
+
+## Figma access
+
+The working connector is the UUID-named MCP server, not `plugin:figma:figma`.
+`get_design_context` requires the design-to-code skill to be loaded first:
+
+```
+get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
+```
+
 ## Screens
 
 | Node | Screen | Status |
