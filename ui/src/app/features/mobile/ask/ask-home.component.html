@@ -46,7 +46,7 @@
   to type.
 -->
 <div class="composer">
-  <button class="mic" type="button" aria-label="Ask by voice">
+  <button class="mic" type="button" aria-label="Ask by voice" (click)="startListening()">
     <img src="mobile/mic.svg" alt="" aria-hidden="true" />
   </button>
   <input
@@ -61,3 +61,11 @@
     <img src="mobile/send.svg" alt="" aria-hidden="true" />
   </button>
 </div>
+
+@if (listening()) {
+  <as-voice-listening
+    [transcript]="heard()"
+    (cancelled)="listening.set(false)"
+    (confirmed)="acceptSpeech($event)"
+  />
+}

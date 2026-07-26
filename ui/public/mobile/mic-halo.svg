@@ -1,0 +1,17 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Frame">
+<circle id="Ellipse" cx="90" cy="90" r="90" fill="#E04432" fill-opacity="0.14"/>
+<circle id="Ellipse_2" cx="90" cy="90" r="69" fill="#E04432" fill-opacity="0.22"/>
+<circle id="Ellipse_3" cx="90" cy="90" r="48" fill="url(#paint0_radial_0_7)"/>
+<g id="Frame_2">
+<path id="Vector" d="M94.25 81.5C94.25 79.1528 92.3472 77.25 90 77.25C87.6528 77.25 85.75 79.1528 85.75 81.5V88.5833C85.75 90.9305 87.6528 92.8333 90 92.8333C92.3472 92.8333 94.25 90.9305 94.25 88.5833V81.5Z" stroke="#FFF8EC" stroke-width="2.55"/>
+<path id="Vector_2" d="M81.5 88.5833C81.5 90.8377 82.3955 92.9997 83.9896 94.5937C85.5837 96.1878 87.7457 97.0833 90 97.0833M90 97.0833C92.2543 97.0833 94.4163 96.1878 96.0104 94.5937C97.6045 92.9997 98.5 90.8377 98.5 88.5833M90 97.0833V101.333" stroke="#FFF8EC" stroke-width="2.55" stroke-linecap="round"/>
+</g>
+</g>
+<defs>
+<radialGradient id="paint0_radial_0_7" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(90 90) scale(48)">
+<stop stop-color="#F5997A"/>
+<stop offset="1" stop-color="#BF4A36"/>
+</radialGradient>
+</defs>
+</svg>

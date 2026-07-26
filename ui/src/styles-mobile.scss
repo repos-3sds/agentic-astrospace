@@ -23,6 +23,15 @@
   // screen that must read as primary — the play button, the selected language.
   --m-ink: #20150e;
   --m-on-ink: #fff8ec;
+  // The ink ground needs its own muted and its own accent. --m-muted is 3.4:1
+  // against it and --m-accent nearly disappears; these are the values the
+  // design's own on-ink assets are drawn with.
+  --m-muted-on-ink: #b2a592;
+  --m-accent-on-ink: #e04432;
+  // Raised surfaces on ink are white at low alpha rather than a fixed colour, so
+  // they hold up over the halo's gradient as well as over flat ink.
+  --m-ink-raised: rgba(255, 255, 255, 0.08);
+  --m-ink-control: rgba(255, 255, 255, 0.1);
 
   --m-accent: #b13f2e;
   --m-accent-strong: #8f2f22;

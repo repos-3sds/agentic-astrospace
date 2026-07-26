@@ -1,0 +1,114 @@
+@use '../mobile-tokens' as *;
+
+// Fixed, not absolute: this has to cover the tab bar and the app bar whatever
+// the host screen's positioning happens to be.
+.veil {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--m-ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(40px, var(--m-safe-top)) 24px max(56px, var(--m-safe-bottom));
+  animation: veil-in 180ms ease-out;
+}
+
+.top { width: 100%; display: flex; justify-content: flex-end; }
+
+.close {
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+  img { width: 26px; height: 26px; display: block; }
+}
+
+/* Halo, status, meter, transcript — node 25:127 */
+.middle {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+.halo { width: 180px; height: 180px; display: block; }
+.status { @include m-h2; color: var(--m-on-ink); margin: 0; }
+
+.meter { display: flex; align-items: center; gap: 3px; height: 28px; }
+
+.tick {
+  width: 3px;
+  border-radius: 2px;
+  background: var(--m-accent-on-ink);
+  flex-shrink: 0;
+  transform-origin: center;
+  // A frozen meter under the word "Listening…" reads as a hung microphone. The
+  // design gives one frame of a live state; this is that state moving.
+  animation: tick 900ms ease-in-out infinite alternate;
+}
+
+.transcript {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--m-ink-raised);
+  border-radius: 20px;
+  padding: 16px 18px;
+}
+
+.transcript-text {
+  @include m-body;
+  color: var(--m-on-ink);
+  text-align: center;
+  margin: 0;
+}
+
+/* Language and actions — node 25:158 */
+.bottom {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.lang {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  @include m-caption;
+  // Not --m-muted, which the design tags here: on ink it lands at 3.4:1. This
+  // is the colour the globe icon shipping beside it is already drawn with.
+  color: var(--m-muted-on-ink);
+  img { width: 16px; height: 16px; display: block; }
+}
+
+.actions { width: 100%; display: flex; gap: 14px; }
+
+.btn {
+  flex: 1 1 0;
+  min-width: 0;
+  border: 0;
+  border-radius: 999px;
+  padding: 15px;
+  cursor: pointer;
+  @include m-button;
+  color: var(--m-on-ink);
+
+  &.ghost { background: var(--m-ink-control); }
+  &.go { background: var(--m-accent-on-ink); }
+  // Nothing has been heard yet, so there is nothing to hand to the composer.
+  &:disabled { opacity: 0.45; cursor: default; }
+}
+
+@keyframes veil-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes tick { from { transform: scaleY(0.45); } to { transform: scaleY(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .veil { animation: none; }
+  .tick { animation: none; }
+}

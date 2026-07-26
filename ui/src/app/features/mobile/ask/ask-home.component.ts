@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { VoiceListeningComponent } from './voice-listening.component';
 
 /** A subject the reader can scope a question to. */
 export interface AskTopic {
@@ -37,6 +38,7 @@ export interface AskSuggestion {
   selector: 'as-ask-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [VoiceListeningComponent],
   templateUrl: './ask-home.component.html',
   styleUrl: './ask-home.component.scss',
 })
@@ -75,6 +77,25 @@ export class AskHomeComponent {
    * typing.
    */
   readonly draft = signal(inject(ActivatedRoute).snapshot.queryParamMap.get('q') ?? '');
+
+  /**
+   * Whether the microphone overlay (25:123) is up.
+   *
+   * Placeholder transcript until speech recognition is wired: the screen has to
+   * be verifiable in both its states, and an always-empty one hides half of it.
+   */
+  readonly listening = signal(false);
+  readonly heard = signal('Is this a good time to change my job');
+
+  protected startListening(): void {
+    this.listening.set(true);
+  }
+
+  /** Voice fills the composer; it does not send. The reader still confirms. */
+  protected acceptSpeech(text: string): void {
+    this.draft.set(text);
+    this.listening.set(false);
+  }
 
   protected toggleTopic(id: string): void {
     this.selectedTopic.update((current) => (current === id ? null : id));

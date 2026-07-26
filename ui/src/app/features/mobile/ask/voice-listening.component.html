@@ -1,0 +1,45 @@
+<div class="veil" role="dialog" aria-modal="true" aria-label="Listening for your question">
+  <div class="top">
+    <button class="close" type="button" aria-label="Stop listening" (click)="cancelled.emit()">
+      <img src="mobile/close.svg" alt="" aria-hidden="true" />
+    </button>
+  </div>
+
+  <div class="middle">
+    <img class="halo" src="mobile/mic-halo.svg" alt="" aria-hidden="true" />
+    <p class="status" role="status">{{ status() }}</p>
+
+    <!-- Decorative: "Listening…" above already says this in words. -->
+    <div class="meter" aria-hidden="true">
+      @for (height of meter; track $index) {
+        <span class="tick" [style.height.px]="height" [style.animation-delay.ms]="$index * 70"></span>
+      }
+    </div>
+
+    <div class="transcript">
+      <p class="transcript-text">
+        @if (transcript()) {
+          “{{ transcript() }}…”
+        } @else {
+          Go ahead — ask your question.
+        }
+      </p>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <p class="lang">
+      <img src="mobile/globe.svg" alt="" aria-hidden="true" />
+      <span>Listening in {{ language() }}</span>
+    </p>
+    <div class="actions">
+      <button class="btn ghost" type="button" (click)="cancelled.emit()">Cancel</button>
+      <button
+        class="btn go"
+        type="button"
+        [disabled]="!transcript().trim()"
+        (click)="confirmed.emit(transcript())"
+      >Done</button>
+    </div>
+  </div>
+</div>

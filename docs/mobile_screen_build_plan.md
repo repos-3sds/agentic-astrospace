@@ -106,7 +106,7 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `22:23` | 7d · Why this reading | ✅ done |
 | `23:25` | 7e · Listen (audio) | ✅ done — sheet over Today |
 | `25:25` | 8 · Ask — Home | ✅ done |
-| `25:123` | 9 · Ask — Voice listening | ⬜ |
+| `25:123` | 9 · Ask — Voice listening | ✅ done — overlay from Ask's mic |
 | `26:54` | 10 · Ask — Answer view | ⬜ |
 | `27:83` | 11 · Ask — Refer-out (safety) | ⬜ |
 | `29:55` | 12 · Remedies — For You | ⬜ |
