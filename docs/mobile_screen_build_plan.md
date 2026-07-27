@@ -228,6 +228,39 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `118:239` | 33d · Ashtakavarga tables | ⬜ |
 | `118:383` | 33e · Favourable points | ⬜ |
 
+## New frames added 2026-07-27
+
+These frames were discovered in the updated Figma page after the original
+70-screen inventory. Full design context has been fetched for every node.
+
+| Node | Screen | Status | Workflow dependency |
+| --- | --- | --- | --- |
+| `206:160` | 2d · Forgot Password | ⬜ | US-N5 · replace the inline reset action with a complete request/success journey |
+| `206:190` | States · Chart Computing | ⬜ | US-N4 · show while the first chart or an expensive recalculation is running |
+| `206:223` | 10b · Ask — History | ⬜ | US-N2 · list and reopen persisted Ask threads |
+| `206:302` | 34 · Subscription | ⬜ | Product/StoreKit decision required before purchase wiring |
+| `206:354` | 35 · Notification Center | ⬜ | Notification persistence and deep-link destinations |
+| `206:493` | 6b · Edit Birth Details | ⬜ | US-N3 · edit active kundli and invalidate derived caches |
+| `206:550` | 27c · Transit Detail | ⬜ | US-N4 · open from Gochara/Full Transits using real transit evidence |
+| `206:591` | 36 · Search | ⬜ | Cross-module search API and result deep links |
+| `206:641` | 25h · Account Deletion | ⬜ | US-N5 · backend-owned confirmed deletion cascade |
+
+### Recommended implementation order
+
+1. **Ask History (`206:223`)** — it completes the active US-N2 thread journey
+   already supported by `/api/v1/ask/threads`.
+2. **Forgot Password (`206:160`)** and **Edit Birth Details (`206:493`)** —
+   close existing account/profile lifecycle gaps with APIs already present.
+3. **Chart Computing (`206:190`)** and **Transit Detail (`206:550`)** — state
+   and drill-down surfaces needed when US-N4 replaces fixtures with live data.
+4. **Account Deletion (`206:641`)** — build only with a confirmation-bound
+   backend cascade and tests; the screen must never delete locally by itself.
+5. **Notification Center (`206:354`)** and **Search (`206:591`)** — require
+   shared backend contracts and reliable deep links before UI implementation.
+6. **Subscription (`206:302`)** — defer until entitlement rules, App Store /
+   Play billing, restore-purchase behavior, pricing ownership, and premium
+   feature boundaries are approved.
+
 ## Not yet wired
 
 Ask's composer routes every question to the answer view (26:54), including
