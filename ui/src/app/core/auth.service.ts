@@ -56,7 +56,7 @@ export class AuthService {
     const { data, error } = await this.client.auth.signInWithPassword({ email, password });
     if (error) throw error;
     this.setSession(data.session);
-    await this.router.navigate(destination);
+    if (destination.length) await this.router.navigate(destination);
   }
 
   async signUp(

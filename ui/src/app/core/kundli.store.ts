@@ -55,6 +55,16 @@ export class KundliStore {
     return this.loadPromise;
   }
 
+  /** Drop every user-scoped value before another account can enter the shell. */
+  reset(): void {
+    this.kundlis.set([]);
+    this.activeId.set(null);
+    this.loaded.set(false);
+    this.loadPromise = null;
+    this.query.set('');
+    this.closeDialog();
+  }
+
   private async loadOnce(): Promise<void> {
     try {
       const kundlis = await this.api.get<Kundli[]>('/kundlis');

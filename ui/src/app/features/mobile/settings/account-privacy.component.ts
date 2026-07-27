@@ -44,6 +44,7 @@ export class AccountPrivacyComponent {
     this.busy.set(id);
     try {
       if (id === 'signout') {
+        this.kundlis.reset();
         await this.auth.signOut(['/m', 'start']);
         return;
       }

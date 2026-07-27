@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
+import { KundliStore } from '../../../core/kundli.store';
 
 @Component({
   selector: 'as-mobile-auth',
@@ -16,6 +17,7 @@ export class MobileAuthComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly kundlis = inject(KundliStore);
 
   protected readonly mode = signal<'signin' | 'register'>(
     this.route.snapshot.queryParamMap.get('mode') === 'register' ? 'register' : 'signin',
@@ -42,11 +44,21 @@ export class MobileAuthComponent {
     this.loading.set(true);
     this.error.set(null);
     try {
+      if (this.mode() === 'register') {
+        sessionStorage.setItem('astrospace.onboardingName', this.name.trim());
+      } else {
+        sessionStorage.removeItem('astrospace.onboardingName');
+      }
       await this.auth.init();
       if (!this.auth.enabled()) {
         await this.router.navigate(this.mode() === 'signin' ? ['/m', 'today'] : ['/m', 'language']);
       } else if (this.mode() === 'signin') {
-        await this.auth.signIn(this.email.trim(), this.password, ['/m', 'today']);
+        await this.auth.signIn(this.email.trim(), this.password, []);
+        this.kundlis.reset();
+        await this.kundlis.load();
+        await this.router.navigate(
+          this.kundlis.kundlis().length ? ['/m', 'today'] : ['/m', 'language'],
+        );
       } else {
         await this.auth.signUp(
           this.email.trim(),

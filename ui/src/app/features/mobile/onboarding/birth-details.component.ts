@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
 
 /** A place the typeahead offers for the birth location. */
@@ -123,11 +124,18 @@ interface PlaceMatch {
 })
 export class BirthDetailsComponent {
   private readonly kundlis = inject(KundliStore);
+  private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
-  readonly who = signal('Lakshmi  ·  Myself');
+  readonly who = signal(
+    `${
+      sessionStorage.getItem('astrospace.onboardingName')
+      || this.auth.user()?.user_metadata?.['name']
+      || 'My chart'
+    }  ·  Myself`,
+  );
   readonly date = signal('14 August 1991');
   readonly time = signal('06:12 AM');
 
@@ -202,6 +210,7 @@ export class BirthDetailsComponent {
         notes: this.timeIsApproximate() ? 'Birth time is approximate.' : undefined,
       });
       this.kundlis.setActive(created.id);
+      sessionStorage.removeItem('astrospace.onboardingName');
       await this.router.navigate(['/m', 'today']);
     } catch (error) {
       this.error.set((error as Error).message);
