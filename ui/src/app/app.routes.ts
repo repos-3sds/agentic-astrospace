@@ -231,6 +231,11 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'ask/loading',
+        data: { hideMobileTabs: true },
+        loadComponent: () => import('./features/mobile/ask/ask-loading.component').then((m) => m.AskLoadingComponent),
+      },
+      {
         path: 'ask/answer',
         loadComponent: () =>
           import('./features/mobile/ask/ask-answer.component').then((m) => m.AskAnswerComponent),

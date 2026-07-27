@@ -3,11 +3,12 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
+import { ChartComputingComponent } from '../states/chart-computing.component';
 
 @Component({
   selector: 'as-edit-birth-details',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, ChartComputingComponent],
   templateUrl: './edit-birth-details.component.html',
   styleUrl: './edit-birth-details.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

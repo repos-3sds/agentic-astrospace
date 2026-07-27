@@ -68,3 +68,27 @@
   background: var(--m-bg);
   color: var(--m-text);
 }
+
+:root.app-dark .as-mobile {
+  --m-bg: #15110d;
+  --m-surface: #1d1712;
+  --m-raised: #241d17;
+  --m-border: #3a332a;
+  --m-border-strong: #51473a;
+  --m-text: #f3eadc;
+  --m-muted: #b2a592;
+  --m-ink: #fff8ec;
+  --m-on-ink: #20150e;
+  --m-accent: #e0644f;
+  --m-accent-strong: #f08a76;
+  --m-accent-soft: #2b1811;
+  --m-good: #78b995;
+  --m-good-soft: #17281f;
+  --m-bad: #e77c7c;
+  --m-bad-soft: #301919;
+  --m-warn: #dda65d;
+  --m-warn-soft: #2d2417;
+  --m-gold: #d7a75c;
+  --m-gold-soft: #2d2417;
+  --m-shadow-card: 0 10px 30px rgba(0, 0, 0, 0.24);
+}

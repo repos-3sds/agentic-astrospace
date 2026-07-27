@@ -212,12 +212,12 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `97:119` | 30 · Compatibility Hub | ✅ done — `/m/compat` |
 | `97:144` | 30b · Add Prospect | ✅ done — `/m/compat/add` |
 | `98:119` | 30c · Gun Milan Results | ✅ done — `/m/compat/results` |
-| `108:92` | 7-dark · Today (Dark mode) | ⬜ |
-| `108:186` | 8-dark · Ask Home (Dark mode) | ⬜ |
-| `108:246` | 16-dark · Chart Hub (Dark mode) | ⬜ |
-| `108:417` | States · Ask — Loading (computing answer) | ⬜ |
+| `108:92` | 7-dark · Today (Dark mode) | ✅ done — shared dark mobile token mode |
+| `108:186` | 8-dark · Ask Home (Dark mode) | ✅ done — shared dark mobile token mode |
+| `108:246` | 16-dark · Chart Hub (Dark mode) | ✅ done — shared dark mobile token mode |
+| `108:417` | States · Ask — Loading (computing answer) | ✅ done — `/m/ask/loading`, wired during generation |
 | `110:121` | States · Compatibility — Empty (no checks yet) | ⬜ |
-| `110:153` | States · Generic — Something went wrong | ⬜ |
+| `110:153` | States · Generic — Something went wrong | ✅ done — reusable `as-generic-error` |
 | `113:122` | 31 · Readings & Accuracy | ✅ done — `/m/readings` |
 | `114:124` | 31b · Prediction Claims (accuracy) | ✅ done — `/m/readings/accuracy` |
 | `115:124` | 32 · Notes | ✅ done — `/m/notes` |
@@ -236,7 +236,7 @@ These frames were discovered in the updated Figma page after the original
 | Node | Screen | Status | Workflow dependency |
 | --- | --- | --- | --- |
 | `206:160` | 2d · Forgot Password | ✅ done — `/m/forgot-password` | US-N5 · request, non-enumerating confirmation, and return-to-sign-in journey |
-| `206:190` | States · Chart Computing | ⬜ | US-N4 · show while the first chart or an expensive recalculation is running |
+| `206:190` | States · Chart Computing | ✅ done — shown during birth-detail recalculation | US-N4 |
 | `206:223` | 10b · Ask — History | ✅ done — `/m/ask/history` | US-N2 · list, reopen, continue, and archive persisted Ask threads |
 | `206:302` | 34 · Subscription | ⬜ | Product/StoreKit decision required before purchase wiring |
 | `206:354` | 35 · Notification Center | ⬜ | Notification persistence and deep-link destinations |

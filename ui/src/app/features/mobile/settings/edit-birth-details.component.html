@@ -16,3 +16,4 @@
   }
 </main>
 <footer><button type="submit" form="edit-birth-form" [disabled]="loading() || saving()">{{ saving() ? 'Recalculating…' : 'Save Changes' }}</button></footer>
+@if (saving()) { <as-chart-computing /> }

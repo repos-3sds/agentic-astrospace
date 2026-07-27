@@ -3,9 +3,6 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AskComposerComponent } from './ask-composer.component';
 import { VoiceListeningComponent } from './voice-listening.component';
 import { KundliStore } from '../../../core/kundli.store';
-import { ApiService } from '../../../core/api.service';
-import { AskResponse } from '../../../core/models';
-import { MobileAskStateService } from './mobile-ask-state.service';
 
 /** A subject the reader can scope a question to. */
 export interface AskTopic {
@@ -49,8 +46,6 @@ export interface AskSuggestion {
 })
 export class AskHomeComponent {
   private readonly kundlis = inject(KundliStore);
-  private readonly api = inject(ApiService);
-  private readonly askState = inject(MobileAskStateService);
   readonly name = computed(() => this.kundlis.active()?.name ?? 'there');
   protected readonly heading = computed(() => `What’s on your mind, ${this.name()}?`);
 
@@ -138,42 +133,8 @@ export class AskHomeComponent {
     if (!q || this.submitting()) {
       return;
     }
-    this.submitting.set(true);
-    this.submitError.set(null);
-    try {
-      await this.kundlis.load();
-      const profile = this.kundlis.active();
-      if (!profile) {
-        this.submitError.set('Create a profile before asking a chart question.');
-        return;
-      }
-      const response = await this.api.post<AskResponse>(`/ask/${profile.id}`, {
-        question: q,
-        start_thread: true,
-        input_mode: 'text',
-      });
-      this.askState.remember(response);
-      if (response.refer_out_kind) {
-        await this.router.navigate(['/m', 'ask', 'refer'], {
-          queryParams: {
-            q,
-            domain: response.refer_out_kind,
-            thread: response.thread_id ?? undefined,
-          },
-        });
-      } else {
-        await this.router.navigate(['/m', 'ask', 'answer'], {
-          queryParams: {
-            q,
-            thread: response.thread_id ?? undefined,
-            topic: this.selectedTopic() ?? undefined,
-          },
-        });
-      }
-    } catch (error) {
-      this.submitError.set((error as Error).message);
-    } finally {
-      this.submitting.set(false);
-    }
+    await this.router.navigate(['/m', 'ask', 'loading'], {
+      queryParams: { q, topic: this.selectedTopic() ?? undefined },
+    });
   }
 }
