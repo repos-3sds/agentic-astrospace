@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ChartCell, EastChartComponent } from './east-chart.component';
 import { PlanetDetail, PlanetSheetComponent } from './planet-sheet.component';
+import { RegionalChartComponent } from './regional-chart.component';
 
 /** The three drawing conventions the app can render a chart in. */
 export type ChartStyle = 'Eastern' | 'South' | 'North';
@@ -90,7 +91,7 @@ const PLACEMENTS: Record<string, PlanetDetail> = {
   selector: 'as-chart-full',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [EastChartComponent, PlanetSheetComponent, RouterLink],
+  imports: [EastChartComponent, PlanetSheetComponent, RegionalChartComponent, RouterLink],
   templateUrl: './chart-full.component.html',
   styleUrl: './chart-full.component.scss',
 })

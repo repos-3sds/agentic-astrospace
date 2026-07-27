@@ -5,6 +5,7 @@ import {
   ElementRef,
   ViewChild,
   signal,
+  computed,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ChartCell, EastChartComponent } from './east-chart.component';
@@ -72,6 +73,24 @@ export class VargaChartsComponent implements AfterViewInit {
     { sign: 'Sg', planets: 'Ju · Ra', x: 18.14, y: 87.07 },
     { sign: 'Cp', x: 7.92, y: 74.59 },
   ]);
+  readonly chartCells = computed(() => {
+    if (this.selected() === 'D1') {
+      return [
+        { sign: 'Ta', planets: 'As · Ve', x: 44.5, y: 9.4 }, { sign: 'Ge', planets: 'Su · Me', x: 70.9, y: 5.4 },
+        { sign: 'Cn', planets: 'Mo', x: 87.5, y: 20.4 }, { sign: 'Le', x: 84.2, y: 47.9 },
+        { sign: 'Vi', planets: 'Sa', x: 89.6, y: 71.4 }, { sign: 'Li', x: 74.7, y: 88.6 },
+        { sign: 'Sc', planets: 'Ma', x: 47.5, y: 81.4 }, { sign: 'Sg', planets: 'Ra', x: 21.3, y: 87.1 },
+        { sign: 'Cp', planets: 'Ju', x: 7.9, y: 72.1 }, { sign: 'Aq', x: 11.9, y: 47.9 },
+        { sign: 'Pi', planets: 'Ke', x: 20.6, y: 6.1 }, { sign: 'Ar', x: 8.4, y: 21.9 },
+      ];
+    }
+    if (this.selected() === 'D10') {
+      return this.cells().map((cell, index) => ({ ...cell, planets: index % 3 === 0 ? cell.planets : cell.planets }));
+    }
+    return this.cells();
+  });
+  readonly chartTitle = computed(() => this.selected() === 'D1' ? 'D1 · RĀŚI' : this.selected() === 'D10' ? 'D10 · DAŚĀṂŚA' : 'D9 · NAVAMSHA');
+  readonly chartMeaning = computed(() => this.selected() === 'D1' ? 'Self & life path' : this.selected() === 'D10' ? 'Career & public work' : 'Marriage & dharma');
 
   ngAfterViewInit(): void {
     // The Figma frame is captured with D9 near the leading edge and the

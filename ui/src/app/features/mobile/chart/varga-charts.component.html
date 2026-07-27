@@ -16,6 +16,7 @@
         type="button"
         [class.is-on]="varga.id === selected()"
         [attr.aria-current]="varga.id === selected() ? 'true' : null"
+        (click)="selected.set(varga.id)"
       >
         <span>{{ varga.id }}</span>
         @if (varga.unverified) {
@@ -31,23 +32,23 @@
   </div>
 
   <div class="chart-title">
-    <span class="eyebrow">D9 · NAVAMSHA</span>
-    <span class="meaning">Marriage &amp; dharma</span>
+    <span class="eyebrow">{{ chartTitle() }}</span>
+    <span class="meaning">{{ chartMeaning() }}</span>
   </div>
 
   <div class="chart-card">
     <as-east-chart
       class="render"
       size="full"
-      [cells]="cells()"
-      label="D9 Navamsha chart, East Indian style"
+      [cells]="chartCells()"
+      [label]="chartTitle() + ' chart, East Indian style'"
     />
   </div>
 
-  <aside class="vargottama">
+  @if (selected() === 'D9') { <aside class="vargottama">
     <img src="mobile/vargottama.svg" alt="" aria-hidden="true" />
     <p>Your Moon is vargottama — same sign in D1 and D9, a classical strength marker.</p>
-  </aside>
+  </aside> }
 
   <p class="hint">Tap a planet to see details</p>
 </div>

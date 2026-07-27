@@ -30,13 +30,10 @@
         [interactive]="true"
         (cellSelected)="openCell($event)"
       />
+    } @else if (style() === 'South') {
+      <as-regional-chart chartStyle="South" [cells]="cells()" (cellSelected)="openCell($event)" />
     } @else {
-      <!--
-        South and North are genuine redraws, not restyles of this frame — each
-        has its own export (56:88, 57:88). Saying so beats showing an Eastern
-        chart under a North label.
-      -->
-      <p class="pending">The {{ style() }} chart style is not built yet.</p>
+      <as-regional-chart chartStyle="North" [cells]="cells()" (cellSelected)="openCell($event)" />
     }
   </div>
 

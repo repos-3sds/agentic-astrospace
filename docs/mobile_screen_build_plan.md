@@ -185,15 +185,15 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `41:87` | 22 · Yogas & Doshas | ✅ done — `/m/chart/yogas` |
 | `41:149` | 23 · Strength & Advanced | ✅ done — `/m/chart/strength` |
 | `41:210` | 24 · Learning sheet — Gajakesari Yoga | ✅ done |
-| `56:88` | 17b · Chart — Full render (South) | ⬜ |
-| `57:88` | 17c · Chart — Full render (North) | ⬜ |
+| `56:88` | 17b · Chart — Full render (South) | ✅ done — style toggle in `/m/chart/full` |
+| `57:88` | 17c · Chart — Full render (North) | ✅ done — style toggle in `/m/chart/full` |
 | `59:88` | 21b · Life Periods — Maha level | ✅ done — `/m/chart/periods` Maha tab |
 | `59:258` | 21c · Life Periods — Pratyantar level | ✅ done — `/m/chart/periods` Pratyantar tab |
 | `59:427` | 21d · Life Periods — Yogini system | ✅ done — `/m/chart/periods` Yogini tab |
 | `60:88` | 23b · Strength & Advanced — Ashtakavarga | ✅ done — Ashtakavarga tab |
 | `60:257` | 23c · Strength & Advanced — Jaimini | ✅ done — Jaimini tab |
-| `61:88` | 20b · Divisional charts — D1 | ⬜ |
-| `61:195` | 20c · Divisional charts — D10 | ⬜ |
+| `61:88` | 20b · Divisional charts — D1 | ✅ done — D1 selector in `/m/chart/vargas` |
+| `61:195` | 20c · Divisional charts — D10 | ✅ done — D10 selector in `/m/chart/vargas` |
 | `62:88` | 2b · Register | ✅ done — `/m/auth?mode=register` |
 | `62:140` | 12b · Manglik cancellation detail | ✅ done — shared from Chart and Remedies |
 | `66:89` | 25 · Settings — Home | ✅ done — `/m/settings`, the More tab |
