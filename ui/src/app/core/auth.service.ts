@@ -101,14 +101,23 @@ export class AuthService {
     if (error) throw error;
   }
 
-  async signOut(): Promise<void> {
+  async resetPassword(email: string, destination = '/m/auth'): Promise<void> {
+    await this.init();
+    if (!this.client) return;
+    const { error } = await this.client.auth.resetPasswordForEmail(email, {
+      redirectTo: new URL(destination, window.location.origin).toString(),
+    });
+    if (error) throw error;
+  }
+
+  async signOut(destination?: string[]): Promise<void> {
     await this.init();
     if (this.client) {
       const { error } = await this.client.auth.signOut({ scope: 'local' });
       if (error) throw error;
     }
     this.setSession(null);
-    await this.router.navigate(this.enabled() ? ['/auth'] : ['/']);
+    await this.router.navigate(destination ?? (this.enabled() ? ['/auth'] : ['/']));
   }
 
   async getAccessToken(): Promise<string | null> {

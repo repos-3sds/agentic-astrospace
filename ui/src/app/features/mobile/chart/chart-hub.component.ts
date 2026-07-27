@@ -121,18 +121,21 @@ export class ChartHubComponent {
       title: 'Transits & Gochara',
       subtitle: 'What’s moving now',
       icon: 'explore-transit',
+      route: ['/m', 'transits'],
     },
     {
       id: 'compat',
       title: 'Compatibility',
       subtitle: 'Gun Milan matching',
       icon: 'explore-compat',
+      route: ['/m', 'compat'],
     },
     {
       id: 'readings',
       title: 'Readings',
       subtitle: 'Predictions & track record',
       icon: 'explore-readings',
+      route: ['/m', 'readings'],
     },
     {
       id: 'reference',

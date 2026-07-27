@@ -19,6 +19,7 @@
   cursor: pointer;
   text-align: left;
   img { width: 16px; height: 16px; display: block; flex-shrink: 0; }
+  &:disabled { opacity: .55; cursor: wait; }
 
   // Outlined, never filled. A destructive action should be findable without
   // being the most prominent thing on the screen.
@@ -33,3 +34,5 @@
 .rule { height: 1px; background: var(--m-border); }
 
 .consequence { @include m-caption; color: var(--m-muted); margin: 0; }
+.status { @include m-caption; color: var(--m-good); margin: 0; }
+.status.error { color: var(--m-bad); }

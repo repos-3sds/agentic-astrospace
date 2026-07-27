@@ -69,12 +69,12 @@
     }
   </div>
 
-  <button class="notes" type="button">
+  <a class="notes" [routerLink]="['/m', 'notes']">
     <img class="mark" src="mobile/notes.svg" alt="" aria-hidden="true" />
     <span class="notes-label">Notes</span>
     <span class="notes-count">{{ noteCount() }} lines</span>
     <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
-  </button>
+  </a>
 </div>
 
 @if (provenanceOpen()) {

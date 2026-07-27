@@ -11,11 +11,13 @@
 
   <!-- Export first: data you cannot take with you is not yours. -->
   @for (action of actions; track action.id) {
-    <button class="action" type="button">
+    <button class="action" type="button" [disabled]="busy()" (click)="run(action.id)">
       <span class="action-label">{{ action.label }}</span>
       <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
     </button>
   }
+  @if (message()) { <p class="status" role="status">{{ message() }}</p> }
+  @if (error()) { <p class="status error" role="alert">{{ error() }}</p> }
 
   <div class="rule"></div>
 

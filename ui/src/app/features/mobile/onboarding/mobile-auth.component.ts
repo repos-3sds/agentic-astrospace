@@ -93,4 +93,18 @@ export class MobileAuthComponent {
     );
     this.notice.set('Magic link sent. Check your email and open it on this device.');
   }
+
+  protected async forgotPassword(): Promise<void> {
+    if (!this.email.trim()) {
+      this.error.set('Enter your email first, then reset your password.');
+      return;
+    }
+    this.error.set(null);
+    try {
+      await this.auth.resetPassword(this.email.trim(), '/m/auth');
+      this.notice.set('Password reset sent. Check your email.');
+    } catch (error) {
+      this.error.set((error as Error).message);
+    }
+  }
 }

@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/auth.service';
+import { KundliStore } from '../../../core/kundli.store';
 
 /** One settings row. `value` is the current state, shown without opening it. */
 export interface SettingRow {
@@ -35,13 +37,21 @@ export interface SettingGroup {
   styleUrl: './settings-home.component.scss',
 })
 export class SettingsHomeComponent {
-  readonly profile = signal({
-    initial: 'L',
-    name: 'Lakshmi',
-    email: 'lakshmi@email.com',
+  private readonly auth = inject(AuthService);
+  private readonly kundlis = inject(KundliStore);
+
+  readonly profile = computed(() => {
+    const name = this.kundlis.active()?.name
+      ?? this.auth.user()?.user_metadata?.['name']
+      ?? 'Your space';
+    return {
+      initial: name.slice(0, 1).toUpperCase(),
+      name,
+      email: this.auth.email(),
+    };
   });
 
-  readonly groups = signal<SettingGroup[]>([
+  readonly groups = computed<SettingGroup[]>(() => [
     {
       eyebrow: 'EXPERIENCE',
       rows: [
@@ -95,7 +105,12 @@ export class SettingsHomeComponent {
     {
       eyebrow: 'PROFILES',
       rows: [
-        { id: 'profiles', icon: 'set-profiles', label: 'Manage profiles', value: '2 profiles' },
+        {
+          id: 'profiles',
+          icon: 'set-profiles',
+          label: 'Manage profiles',
+          value: `${this.kundlis.kundlis().length} ${this.kundlis.kundlis().length === 1 ? 'profile' : 'profiles'}`,
+        },
       ],
     },
     {
@@ -111,4 +126,8 @@ export class SettingsHomeComponent {
       ],
     },
   ]);
+
+  constructor() {
+    if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
+  }
 }

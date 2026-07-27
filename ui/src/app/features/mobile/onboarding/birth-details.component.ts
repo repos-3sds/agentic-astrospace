@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { KundliStore } from '../../../core/kundli.store';
 
 /** A place the typeahead offers for the birth location. */
 interface PlaceMatch {
@@ -109,10 +110,11 @@ interface PlaceMatch {
       }
     </div>
 
-    <a class="btn" [routerLink]="['/m', 'today']">
+    @if (error()) { <p class="form-error" role="alert">{{ error() }}</p> }
+    <button class="btn" type="button" [disabled]="saving()" (click)="castChart()">
       <img src="mobile/cast.svg" alt="" aria-hidden="true" />
-      <span>Cast my chart</span>
-    </a>
+      <span>{{ saving() ? 'Casting your chart…' : 'Cast my chart' }}</span>
+    </button>
   `,
   styleUrl: './birth-details.component.scss',
   // Outside the shell, so the token host class must be applied here or every
@@ -120,6 +122,11 @@ interface PlaceMatch {
   host: { class: 'as-mobile' },
 })
 export class BirthDetailsComponent {
+  private readonly kundlis = inject(KundliStore);
+  private readonly router = inject(Router);
+
+  readonly saving = signal(false);
+  readonly error = signal<string | null>(null);
   readonly who = signal('Lakshmi  ·  Myself');
   readonly date = signal('14 August 1991');
   readonly time = signal('06:12 AM');
@@ -161,5 +168,45 @@ export class BirthDetailsComponent {
   protected useApproximate(): void {
     this.timeIsApproximate.set(true);
     this.time.set('06:00 AM (approx)');
+  }
+
+  protected async castChart(): Promise<void> {
+    const date = this.date().trim().match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
+    const time = this.time().trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    const place = this.chosenPlace() ?? this.places.find((p) => p.city === this.placeQuery().trim());
+    if (!date || !time || !place) {
+      this.error.set('Choose a valid date, time, and birth place.');
+      return;
+    }
+    const months = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+    const month = months.indexOf(date[2].toLowerCase()) + 1;
+    if (!month) {
+      this.error.set('Enter the birth date as day, month, and year.');
+      return;
+    }
+    let hour = Number(time[1]) % 12;
+    if (time[3].toUpperCase() === 'PM') hour += 12;
+    this.saving.set(true);
+    this.error.set(null);
+    try {
+      const created = await this.kundlis.create({
+        name: this.who().split('·')[0].trim(),
+        relation: 'self',
+        birth_year: Number(date[3]),
+        birth_month: month,
+        birth_day: Number(date[1]),
+        birth_hour: hour,
+        birth_minute: Number(time[2]),
+        birth_city: place.city,
+        birth_nation: 'IN',
+        notes: this.timeIsApproximate() ? 'Birth time is approximate.' : undefined,
+      });
+      this.kundlis.activeId.set(created.id);
+      await this.router.navigate(['/m', 'today']);
+    } catch (error) {
+      this.error.set((error as Error).message);
+    } finally {
+      this.saving.set(false);
+    }
   }
 }

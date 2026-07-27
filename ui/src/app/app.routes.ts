@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth.guard';
 import { adminGuard } from './core/admin.guard';
 import { nativeAppGuard } from './core/native-app.guard';
+import { mobileAuthGuard } from './core/mobile-auth.guard';
 
 export const routes: Routes = [
   {
@@ -199,7 +200,7 @@ export const routes: Routes = [
   },
   {
     path: 'm',
-    canActivate: [nativeAppGuard],
+    canActivate: [nativeAppGuard, mobileAuthGuard],
     loadComponent: () =>
       import('./features/mobile/shell/mobile-shell.component').then((m) => m.MobileShellComponent),
     children: [

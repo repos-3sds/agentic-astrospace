@@ -31,7 +31,7 @@
         <button type="button" aria-label="Show password" (click)="showPassword.set(!showPassword())"><img src="mobile/eye.svg" alt="" /></button>
       </span>
     </label>
-    @if (mode() === 'signin') { <button class="forgot" type="button">Forgot password?</button> }
+    @if (mode() === 'signin') { <button class="forgot" type="button" (click)="forgotPassword()">Forgot password?</button> }
     @if (error()) { <p class="message error" role="alert">{{ error() }}</p> }
     @if (notice()) { <p class="message">{{ notice() }}</p> }
     <button class="continue" type="submit" [disabled]="loading()">{{ loading() ? 'Please wait…' : mode() === 'signin' ? 'Continue' : 'Create account' }}</button>

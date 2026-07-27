@@ -134,4 +134,7 @@
   text-decoration: none;
   @include m-button;
   img { width: 18px; height: 18px; display: block; }
+  &:disabled { opacity: .65; cursor: wait; }
 }
+
+.form-error { @include m-caption; color: var(--m-bad); margin: 0; text-align: center; }
