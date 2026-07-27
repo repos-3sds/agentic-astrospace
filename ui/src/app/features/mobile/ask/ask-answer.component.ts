@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AskComposerComponent } from './ask-composer.component';
+import { ListenSheetComponent } from '../today/listen-sheet.component';
 import {
   EvidenceRow,
   WhyReadingSheetComponent,
@@ -42,7 +43,7 @@ export interface AnswerView {
   selector: 'as-ask-answer',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AskComposerComponent, RouterLink, WhyReadingSheetComponent],
+  imports: [AskComposerComponent, ListenSheetComponent, RouterLink, WhyReadingSheetComponent],
   templateUrl: './ask-answer.component.html',
   styleUrl: './ask-answer.component.scss',
 })
@@ -90,6 +91,25 @@ export class AskAnswerComponent {
   ]);
 
   readonly conventions = signal(['Lahiri', 'Whole-sign', 'Vijayawada', 'High confidence']);
+
+  /** Reuses Today's audio sheet — one player, not a second one for answers. */
+  readonly listenOpen = signal(false);
+
+  /**
+   * Hands the verdict to the OS share sheet where available. No fallback UI:
+   * on a platform without it, doing nothing is better than inventing a
+   * share dialog the design never specified.
+   */
+  protected async share(): Promise<void> {
+    const v = this.view();
+    if (typeof navigator !== 'undefined' && 'share' in navigator) {
+      try {
+        await navigator.share({ title: v.question, text: `${v.verdict}\n\n${v.whatToDo}` });
+      } catch {
+        // Cancelled by the reader; nothing to report.
+      }
+    }
+  }
 
   private readonly router = inject(Router);
   private readonly kundlis = inject(KundliStore);

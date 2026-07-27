@@ -36,11 +36,11 @@
     </button>
 
     <div class="tools">
-      <button class="tool" type="button">
+      <button class="tool" type="button" (click)="listenOpen.set(true)">
         <img src="mobile/play-muted.svg" alt="" aria-hidden="true" />
         <span>Listen</span>
       </button>
-      <button class="tool" type="button">
+      <button class="tool" type="button" (click)="share()">
         <img src="mobile/share.svg" alt="" aria-hidden="true" />
         <span>Share</span>
       </button>
@@ -73,5 +73,13 @@
     [calculation]="calculation()"
     [conventions]="conventions()"
     (dismissed)="whyOpen.set(false)"
+  />
+}
+
+@if (listenOpen()) {
+  <as-listen-sheet
+    [title]="'This answer'"
+    subtitle="Read aloud · gentle voice"
+    (dismissed)="listenOpen.set(false)"
   />
 }

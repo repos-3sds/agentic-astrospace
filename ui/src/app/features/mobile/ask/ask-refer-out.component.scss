@@ -87,6 +87,11 @@
 .offer-text { @include m-body; color: var(--m-text); margin: 0; }
 
 .action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-sizing: border-box;
   width: 100%;
   box-sizing: border-box;
   border: 1.5px solid var(--m-border-strong);

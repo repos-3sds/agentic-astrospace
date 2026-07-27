@@ -14,6 +14,12 @@ interface ReferCopy {
   offer: string;
   /** The one thing the app will still do. Omitted where nothing is on offer. */
   action?: string;
+  /**
+   * Where the offer goes. The health and legal/money offers land on the
+   * remedies list and the day's timings respectively — both are things the app
+   * *can* do, which is the point of offering them beside a refusal.
+   */
+  actionRoute?: string[];
 }
 
 const COPY: Record<ReferDomain, ReferCopy> = {
@@ -24,6 +30,7 @@ const COPY: Record<ReferDomain, ReferCopy> = {
     offer:
       'A gentle daily check-in, and — if it helps — a traditional wellbeing practice for this period. Never a substitute for medical care.',
     action: 'See a wellbeing practice',
+    actionRoute: ['/m', 'remedies'],
   },
   legal: {
     headline: 'This needs a lawyer, not an app',
@@ -32,6 +39,7 @@ const COPY: Record<ReferDomain, ReferCopy> = {
     offer:
       'Timing for the steps around it — when to have the conversation, when to file, which mornings are steadier. Never advice on the matter itself.',
     action: 'See timing for this week',
+    actionRoute: ['/m', 'muhurta'],
   },
   money: {
     headline: 'This needs a financial adviser, not an app',
@@ -40,6 +48,7 @@ const COPY: Record<ReferDomain, ReferCopy> = {
     offer:
       'Timing for decisions you have already made — which days are steadier for a conversation or a signature. Never a view on the decision itself.',
     action: 'See timing for this week',
+    actionRoute: ['/m', 'muhurta'],
   },
   death: {
     headline: 'This is not something we will answer',

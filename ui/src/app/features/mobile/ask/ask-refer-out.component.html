@@ -32,8 +32,12 @@
       <p class="offer-text">{{ c.offer }}</p>
     </div>
 
-    @if (c.action) {
-      <button class="action" type="button">{{ c.action }}</button>
+    <!--
+      The offer beside a refusal has to actually go somewhere, or declining to
+      answer reads as declining to help.
+    -->
+    @if (c.action && c.actionRoute; as route) {
+      <a class="action" [routerLink]="c.actionRoute">{{ c.action }}</a>
     }
   </article>
 
