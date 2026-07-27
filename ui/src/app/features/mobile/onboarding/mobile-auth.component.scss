@@ -14,7 +14,7 @@ form { width: 100%; display: flex; flex-direction: column; gap: 14px; }
 label { @include m-caption; display: flex; flex-direction: column; gap: 8px; color: var(--m-muted); }
 input { @include m-body; width: 100%; box-sizing: border-box; padding: 15px 18px; border: 1.2px solid var(--m-border); border-radius: 999px; outline: 0; background: var(--m-surface); color: var(--m-text); }
 .password { position: relative; display: block; input { padding-right: 52px; } button { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); border: 0; padding: 4px; background: none; img { display: block; width: 20px; height: 20px; } } }
-.forgot { @include m-caption; align-self: flex-end; border: 0; padding: 0; background: none; color: var(--m-accent-strong); }
+.forgot { @include m-caption; align-self: flex-end; color: var(--m-accent-strong); text-decoration: none; }
 .continue { @include m-button; width: 100%; padding: 16px; border: 0; border-radius: 999px; background: var(--m-ink); color: var(--m-on-ink); box-shadow: var(--m-shadow-card); &:disabled { opacity: .65; } }
 .magic { @include m-body-small; margin: -4px 0 0; color: var(--m-muted); button { @include m-body-strong; border: 0; padding: 0; background: none; color: var(--m-accent-strong); } }
 .terms { @include m-caption; margin: -12px 0 0; color: var(--m-muted); text-align: center; }
