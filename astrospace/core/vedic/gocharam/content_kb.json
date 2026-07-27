@@ -1,106 +1,2374 @@
 {
-  "schema_version": "gocharam.kb.v1",
+  "schema_version": "gocharam.kb.v2",
+  "library_version": "astrospace-gocharam-kb-2026.07.1",
+  "convention": {
+    "primary_anchor": "natal_moon",
+    "ayanamsha": "runtime_setting",
+    "node_treatment": "Rahu and Ketu use the Saturn favourable-house table by explicit South-Indian convention.",
+    "safety": "Traditional indications are contextual and must not be presented as guaranteed medical, legal, financial, longevity or death predictions."
+  },
+  "sources": [
+    {
+      "id": "phaladeepika_26_south_indian",
+      "work": "Phaladeepika",
+      "location": "chapter 26",
+      "scope": "favourable houses and vedha table for seven visible grahas",
+      "edition_status": "edition-neutral rule table; translation wording is not quoted"
+    },
+    {
+      "id": "south_indian_node_analogy",
+      "work": "South-Indian applied Gocharam convention",
+      "location": "configured project convention",
+      "scope": "Rahu and Ketu treated like Saturn for favourable houses and vedha",
+      "edition_status": "convention-dependent; not attributed to the Phaladeepika table"
+    },
+    {
+      "id": "south_indian_sade_sati",
+      "work": "South-Indian applied Gocharam convention",
+      "location": "configured project convention",
+      "scope": "Saturn in 12th, 1st and 2nd from natal Moon",
+      "edition_status": "traditional label; product wording is editorial"
+    },
+    {
+      "id": "south_indian_saturn_specials",
+      "work": "South-Indian applied Gocharam convention",
+      "location": "configured project convention",
+      "scope": "Saturn in 4th and 8th from natal Moon",
+      "edition_status": "traditional labels; product wording is editorial"
+    }
+  ],
   "rules": [
     {
-      "id": "saturn_moon_12_1_2",
+      "id": "baseline_sun_moon_1",
+      "kind": "baseline_placement",
+      "planet": "Sun",
+      "anchor": "moon",
+      "houses": [
+        1
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Sun in house 1 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for body, identity and immediate direction. Keep the focus on leadership or recognition; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Sun is in house 1 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects visibility, authority, vitality and purpose with body, identity and immediate direction. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Sun: 1 from Janma Chandra; base verdict=demanding. Interpretive domains: visibility, authority, vitality and purpose; bhava field: body, identity and immediate direction. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_sun_moon_2",
+      "kind": "baseline_placement",
+      "planet": "Sun",
+      "anchor": "moon",
+      "houses": [
+        2
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Sun in house 2 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for resources, speech, food and family continuity. Keep the focus on leadership or recognition; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Sun is in house 2 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects visibility, authority, vitality and purpose with resources, speech, food and family continuity. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Sun: 2 from Janma Chandra; base verdict=demanding. Interpretive domains: visibility, authority, vitality and purpose; bhava field: resources, speech, food and family continuity. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_sun_moon_3",
+      "kind": "baseline_placement",
+      "planet": "Sun",
+      "anchor": "moon",
+      "houses": [
+        3
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Sun in house 3 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for effort, courage, skills and short journeys. Keep the focus on leadership or recognition; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Sun is in house 3 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects visibility, authority, vitality and purpose with effort, courage, skills and short journeys. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Sun: 3 from Janma Chandra; base verdict=supportive. Interpretive domains: visibility, authority, vitality and purpose; bhava field: effort, courage, skills and short journeys. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_sun_moon_4",
+      "kind": "baseline_placement",
+      "planet": "Sun",
+      "anchor": "moon",
+      "houses": [
+        4
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Sun in house 4 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for home, emotional foundations, property and care. Keep the focus on leadership or recognition; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Sun is in house 4 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects visibility, authority, vitality and purpose with home, emotional foundations, property and care. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Sun: 4 from Janma Chandra; base verdict=demanding. Interpretive domains: visibility, authority, vitality and purpose; bhava field: home, emotional foundations, property and care. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_sun_moon_5",
+      "kind": "baseline_placement",
+      "planet": "Sun",
+      "anchor": "moon",
+      "houses": [
+        5
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Sun in house 5 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for learning, creativity, counsel and children. Keep the focus on leadership or recognition; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Sun is in house 5 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects visibility, authority, vitality and purpose with learning, creativity, counsel and children. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Sun: 5 from Janma Chandra; base verdict=demanding. Interpretive domains: visibility, authority, vitality and purpose; bhava field: learning, creativity, counsel and children. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_sun_moon_6",
+      "kind": "baseline_placement",
+      "planet": "Sun",
+      "anchor": "moon",
+      "houses": [
+        6
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Sun in house 6 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for workload, service, disputes, health routines and obstacles. Keep the focus on leadership or recognition; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Sun is in house 6 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects visibility, authority, vitality and purpose with workload, service, disputes, health routines and obstacles. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Sun: 6 from Janma Chandra; base verdict=supportive. Interpretive domains: visibility, authority, vitality and purpose; bhava field: workload, service, disputes, health routines and obstacles. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_sun_moon_7",
+      "kind": "baseline_placement",
+      "planet": "Sun",
+      "anchor": "moon",
+      "houses": [
+        7
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Sun in house 7 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for partnerships, agreements and public interaction. Keep the focus on leadership or recognition; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Sun is in house 7 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects visibility, authority, vitality and purpose with partnerships, agreements and public interaction. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Sun: 7 from Janma Chandra; base verdict=demanding. Interpretive domains: visibility, authority, vitality and purpose; bhava field: partnerships, agreements and public interaction. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_sun_moon_8",
+      "kind": "baseline_placement",
+      "planet": "Sun",
+      "anchor": "moon",
+      "houses": [
+        8
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Sun in house 8 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for shared resources, vulnerability, repair and discontinuity. Keep the focus on leadership or recognition; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Sun is in house 8 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects visibility, authority, vitality and purpose with shared resources, vulnerability, repair and discontinuity. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Sun: 8 from Janma Chandra; base verdict=demanding. Interpretive domains: visibility, authority, vitality and purpose; bhava field: shared resources, vulnerability, repair and discontinuity. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_sun_moon_9",
+      "kind": "baseline_placement",
+      "planet": "Sun",
+      "anchor": "moon",
+      "houses": [
+        9
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Sun in house 9 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for teachers, ethics, belief, study and long journeys. Keep the focus on leadership or recognition; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Sun is in house 9 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects visibility, authority, vitality and purpose with teachers, ethics, belief, study and long journeys. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Sun: 9 from Janma Chandra; base verdict=demanding. Interpretive domains: visibility, authority, vitality and purpose; bhava field: teachers, ethics, belief, study and long journeys. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_sun_moon_10",
+      "kind": "baseline_placement",
+      "planet": "Sun",
+      "anchor": "moon",
+      "houses": [
+        10
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Sun in house 10 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for work, responsibility, reputation and visible contribution. Keep the focus on leadership or recognition; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Sun is in house 10 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects visibility, authority, vitality and purpose with work, responsibility, reputation and visible contribution. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Sun: 10 from Janma Chandra; base verdict=supportive. Interpretive domains: visibility, authority, vitality and purpose; bhava field: work, responsibility, reputation and visible contribution. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_sun_moon_11",
+      "kind": "baseline_placement",
+      "planet": "Sun",
+      "anchor": "moon",
+      "houses": [
+        11
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Sun in house 11 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for gains, networks, fulfilment and longer-term aims. Keep the focus on leadership or recognition; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Sun is in house 11 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects visibility, authority, vitality and purpose with gains, networks, fulfilment and longer-term aims. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Sun: 11 from Janma Chandra; base verdict=supportive. Interpretive domains: visibility, authority, vitality and purpose; bhava field: gains, networks, fulfilment and longer-term aims. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_sun_moon_12",
+      "kind": "baseline_placement",
+      "planet": "Sun",
+      "anchor": "moon",
+      "houses": [
+        12
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Sun in house 12 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for expense, rest, retreat, release and distant places. Keep the focus on leadership or recognition; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Sun is in house 12 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects visibility, authority, vitality and purpose with expense, rest, retreat, release and distant places. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Sun: 12 from Janma Chandra; base verdict=demanding. Interpretive domains: visibility, authority, vitality and purpose; bhava field: expense, rest, retreat, release and distant places. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_moon_moon_1",
+      "kind": "baseline_placement",
+      "planet": "Moon",
+      "anchor": "moon",
+      "houses": [
+        1
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Moon in house 1 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for body, identity and immediate direction. Keep the focus on emotional steadiness; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Moon is in house 1 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects mood, responsiveness, care and daily rhythm with body, identity and immediate direction. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Moon: 1 from Janma Chandra; base verdict=supportive. Interpretive domains: mood, responsiveness, care and daily rhythm; bhava field: body, identity and immediate direction. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_moon_moon_2",
+      "kind": "baseline_placement",
+      "planet": "Moon",
+      "anchor": "moon",
+      "houses": [
+        2
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Moon in house 2 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for resources, speech, food and family continuity. Keep the focus on emotional steadiness; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Moon is in house 2 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects mood, responsiveness, care and daily rhythm with resources, speech, food and family continuity. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Moon: 2 from Janma Chandra; base verdict=demanding. Interpretive domains: mood, responsiveness, care and daily rhythm; bhava field: resources, speech, food and family continuity. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_moon_moon_3",
+      "kind": "baseline_placement",
+      "planet": "Moon",
+      "anchor": "moon",
+      "houses": [
+        3
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Moon in house 3 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for effort, courage, skills and short journeys. Keep the focus on emotional steadiness; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Moon is in house 3 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects mood, responsiveness, care and daily rhythm with effort, courage, skills and short journeys. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Moon: 3 from Janma Chandra; base verdict=supportive. Interpretive domains: mood, responsiveness, care and daily rhythm; bhava field: effort, courage, skills and short journeys. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_moon_moon_4",
+      "kind": "baseline_placement",
+      "planet": "Moon",
+      "anchor": "moon",
+      "houses": [
+        4
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Moon in house 4 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for home, emotional foundations, property and care. Keep the focus on emotional steadiness; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Moon is in house 4 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects mood, responsiveness, care and daily rhythm with home, emotional foundations, property and care. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Moon: 4 from Janma Chandra; base verdict=demanding. Interpretive domains: mood, responsiveness, care and daily rhythm; bhava field: home, emotional foundations, property and care. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_moon_moon_5",
+      "kind": "baseline_placement",
+      "planet": "Moon",
+      "anchor": "moon",
+      "houses": [
+        5
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Moon in house 5 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for learning, creativity, counsel and children. Keep the focus on emotional steadiness; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Moon is in house 5 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects mood, responsiveness, care and daily rhythm with learning, creativity, counsel and children. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Moon: 5 from Janma Chandra; base verdict=demanding. Interpretive domains: mood, responsiveness, care and daily rhythm; bhava field: learning, creativity, counsel and children. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_moon_moon_6",
+      "kind": "baseline_placement",
+      "planet": "Moon",
+      "anchor": "moon",
+      "houses": [
+        6
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Moon in house 6 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for workload, service, disputes, health routines and obstacles. Keep the focus on emotional steadiness; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Moon is in house 6 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects mood, responsiveness, care and daily rhythm with workload, service, disputes, health routines and obstacles. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Moon: 6 from Janma Chandra; base verdict=supportive. Interpretive domains: mood, responsiveness, care and daily rhythm; bhava field: workload, service, disputes, health routines and obstacles. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_moon_moon_7",
+      "kind": "baseline_placement",
+      "planet": "Moon",
+      "anchor": "moon",
+      "houses": [
+        7
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Moon in house 7 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for partnerships, agreements and public interaction. Keep the focus on emotional steadiness; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Moon is in house 7 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects mood, responsiveness, care and daily rhythm with partnerships, agreements and public interaction. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Moon: 7 from Janma Chandra; base verdict=supportive. Interpretive domains: mood, responsiveness, care and daily rhythm; bhava field: partnerships, agreements and public interaction. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_moon_moon_8",
+      "kind": "baseline_placement",
+      "planet": "Moon",
+      "anchor": "moon",
+      "houses": [
+        8
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Moon in house 8 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for shared resources, vulnerability, repair and discontinuity. Keep the focus on emotional steadiness; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Moon is in house 8 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects mood, responsiveness, care and daily rhythm with shared resources, vulnerability, repair and discontinuity. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Moon: 8 from Janma Chandra; base verdict=demanding. Interpretive domains: mood, responsiveness, care and daily rhythm; bhava field: shared resources, vulnerability, repair and discontinuity. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_moon_moon_9",
+      "kind": "baseline_placement",
+      "planet": "Moon",
+      "anchor": "moon",
+      "houses": [
+        9
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Moon in house 9 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for teachers, ethics, belief, study and long journeys. Keep the focus on emotional steadiness; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Moon is in house 9 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects mood, responsiveness, care and daily rhythm with teachers, ethics, belief, study and long journeys. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Moon: 9 from Janma Chandra; base verdict=demanding. Interpretive domains: mood, responsiveness, care and daily rhythm; bhava field: teachers, ethics, belief, study and long journeys. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_moon_moon_10",
+      "kind": "baseline_placement",
+      "planet": "Moon",
+      "anchor": "moon",
+      "houses": [
+        10
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Moon in house 10 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for work, responsibility, reputation and visible contribution. Keep the focus on emotional steadiness; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Moon is in house 10 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects mood, responsiveness, care and daily rhythm with work, responsibility, reputation and visible contribution. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Moon: 10 from Janma Chandra; base verdict=supportive. Interpretive domains: mood, responsiveness, care and daily rhythm; bhava field: work, responsibility, reputation and visible contribution. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_moon_moon_11",
+      "kind": "baseline_placement",
+      "planet": "Moon",
+      "anchor": "moon",
+      "houses": [
+        11
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Moon in house 11 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for gains, networks, fulfilment and longer-term aims. Keep the focus on emotional steadiness; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Moon is in house 11 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects mood, responsiveness, care and daily rhythm with gains, networks, fulfilment and longer-term aims. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Moon: 11 from Janma Chandra; base verdict=supportive. Interpretive domains: mood, responsiveness, care and daily rhythm; bhava field: gains, networks, fulfilment and longer-term aims. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_moon_moon_12",
+      "kind": "baseline_placement",
+      "planet": "Moon",
+      "anchor": "moon",
+      "houses": [
+        12
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Moon in house 12 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for expense, rest, retreat, release and distant places. Keep the focus on emotional steadiness; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Moon is in house 12 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects mood, responsiveness, care and daily rhythm with expense, rest, retreat, release and distant places. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Moon: 12 from Janma Chandra; base verdict=demanding. Interpretive domains: mood, responsiveness, care and daily rhythm; bhava field: expense, rest, retreat, release and distant places. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mars_moon_1",
+      "kind": "baseline_placement",
+      "planet": "Mars",
+      "anchor": "moon",
+      "houses": [
+        1
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mars in house 1 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for body, identity and immediate direction. Keep the focus on disciplined action; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mars is in house 1 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects effort, assertion, conflict and decisive action with body, identity and immediate direction. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mars: 1 from Janma Chandra; base verdict=demanding. Interpretive domains: effort, assertion, conflict and decisive action; bhava field: body, identity and immediate direction. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mars_moon_2",
+      "kind": "baseline_placement",
+      "planet": "Mars",
+      "anchor": "moon",
+      "houses": [
+        2
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mars in house 2 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for resources, speech, food and family continuity. Keep the focus on disciplined action; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mars is in house 2 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects effort, assertion, conflict and decisive action with resources, speech, food and family continuity. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mars: 2 from Janma Chandra; base verdict=demanding. Interpretive domains: effort, assertion, conflict and decisive action; bhava field: resources, speech, food and family continuity. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mars_moon_3",
+      "kind": "baseline_placement",
+      "planet": "Mars",
+      "anchor": "moon",
+      "houses": [
+        3
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mars in house 3 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for effort, courage, skills and short journeys. Keep the focus on disciplined action; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mars is in house 3 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects effort, assertion, conflict and decisive action with effort, courage, skills and short journeys. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mars: 3 from Janma Chandra; base verdict=supportive. Interpretive domains: effort, assertion, conflict and decisive action; bhava field: effort, courage, skills and short journeys. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mars_moon_4",
+      "kind": "baseline_placement",
+      "planet": "Mars",
+      "anchor": "moon",
+      "houses": [
+        4
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mars in house 4 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for home, emotional foundations, property and care. Keep the focus on disciplined action; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mars is in house 4 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects effort, assertion, conflict and decisive action with home, emotional foundations, property and care. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mars: 4 from Janma Chandra; base verdict=demanding. Interpretive domains: effort, assertion, conflict and decisive action; bhava field: home, emotional foundations, property and care. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mars_moon_5",
+      "kind": "baseline_placement",
+      "planet": "Mars",
+      "anchor": "moon",
+      "houses": [
+        5
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mars in house 5 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for learning, creativity, counsel and children. Keep the focus on disciplined action; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mars is in house 5 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects effort, assertion, conflict and decisive action with learning, creativity, counsel and children. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mars: 5 from Janma Chandra; base verdict=demanding. Interpretive domains: effort, assertion, conflict and decisive action; bhava field: learning, creativity, counsel and children. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mars_moon_6",
+      "kind": "baseline_placement",
+      "planet": "Mars",
+      "anchor": "moon",
+      "houses": [
+        6
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mars in house 6 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for workload, service, disputes, health routines and obstacles. Keep the focus on disciplined action; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mars is in house 6 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects effort, assertion, conflict and decisive action with workload, service, disputes, health routines and obstacles. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mars: 6 from Janma Chandra; base verdict=supportive. Interpretive domains: effort, assertion, conflict and decisive action; bhava field: workload, service, disputes, health routines and obstacles. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mars_moon_7",
+      "kind": "baseline_placement",
+      "planet": "Mars",
+      "anchor": "moon",
+      "houses": [
+        7
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mars in house 7 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for partnerships, agreements and public interaction. Keep the focus on disciplined action; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mars is in house 7 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects effort, assertion, conflict and decisive action with partnerships, agreements and public interaction. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mars: 7 from Janma Chandra; base verdict=demanding. Interpretive domains: effort, assertion, conflict and decisive action; bhava field: partnerships, agreements and public interaction. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mars_moon_8",
+      "kind": "baseline_placement",
+      "planet": "Mars",
+      "anchor": "moon",
+      "houses": [
+        8
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mars in house 8 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for shared resources, vulnerability, repair and discontinuity. Keep the focus on disciplined action; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mars is in house 8 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects effort, assertion, conflict and decisive action with shared resources, vulnerability, repair and discontinuity. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mars: 8 from Janma Chandra; base verdict=demanding. Interpretive domains: effort, assertion, conflict and decisive action; bhava field: shared resources, vulnerability, repair and discontinuity. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mars_moon_9",
+      "kind": "baseline_placement",
+      "planet": "Mars",
+      "anchor": "moon",
+      "houses": [
+        9
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mars in house 9 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for teachers, ethics, belief, study and long journeys. Keep the focus on disciplined action; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mars is in house 9 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects effort, assertion, conflict and decisive action with teachers, ethics, belief, study and long journeys. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mars: 9 from Janma Chandra; base verdict=demanding. Interpretive domains: effort, assertion, conflict and decisive action; bhava field: teachers, ethics, belief, study and long journeys. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mars_moon_10",
+      "kind": "baseline_placement",
+      "planet": "Mars",
+      "anchor": "moon",
+      "houses": [
+        10
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mars in house 10 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for work, responsibility, reputation and visible contribution. Keep the focus on disciplined action; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mars is in house 10 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects effort, assertion, conflict and decisive action with work, responsibility, reputation and visible contribution. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mars: 10 from Janma Chandra; base verdict=demanding. Interpretive domains: effort, assertion, conflict and decisive action; bhava field: work, responsibility, reputation and visible contribution. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mars_moon_11",
+      "kind": "baseline_placement",
+      "planet": "Mars",
+      "anchor": "moon",
+      "houses": [
+        11
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mars in house 11 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for gains, networks, fulfilment and longer-term aims. Keep the focus on disciplined action; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mars is in house 11 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects effort, assertion, conflict and decisive action with gains, networks, fulfilment and longer-term aims. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mars: 11 from Janma Chandra; base verdict=supportive. Interpretive domains: effort, assertion, conflict and decisive action; bhava field: gains, networks, fulfilment and longer-term aims. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mars_moon_12",
+      "kind": "baseline_placement",
+      "planet": "Mars",
+      "anchor": "moon",
+      "houses": [
+        12
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mars in house 12 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for expense, rest, retreat, release and distant places. Keep the focus on disciplined action; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mars is in house 12 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects effort, assertion, conflict and decisive action with expense, rest, retreat, release and distant places. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mars: 12 from Janma Chandra; base verdict=demanding. Interpretive domains: effort, assertion, conflict and decisive action; bhava field: expense, rest, retreat, release and distant places. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mercury_moon_1",
+      "kind": "baseline_placement",
+      "planet": "Mercury",
+      "anchor": "moon",
+      "houses": [
+        1
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mercury in house 1 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for body, identity and immediate direction. Keep the focus on clear communication; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mercury is in house 1 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects analysis, communication, trade and coordination with body, identity and immediate direction. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mercury: 1 from Janma Chandra; base verdict=demanding. Interpretive domains: analysis, communication, trade and coordination; bhava field: body, identity and immediate direction. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mercury_moon_2",
+      "kind": "baseline_placement",
+      "planet": "Mercury",
+      "anchor": "moon",
+      "houses": [
+        2
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mercury in house 2 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for resources, speech, food and family continuity. Keep the focus on clear communication; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mercury is in house 2 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects analysis, communication, trade and coordination with resources, speech, food and family continuity. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mercury: 2 from Janma Chandra; base verdict=supportive. Interpretive domains: analysis, communication, trade and coordination; bhava field: resources, speech, food and family continuity. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mercury_moon_3",
+      "kind": "baseline_placement",
+      "planet": "Mercury",
+      "anchor": "moon",
+      "houses": [
+        3
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mercury in house 3 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for effort, courage, skills and short journeys. Keep the focus on clear communication; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mercury is in house 3 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects analysis, communication, trade and coordination with effort, courage, skills and short journeys. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mercury: 3 from Janma Chandra; base verdict=demanding. Interpretive domains: analysis, communication, trade and coordination; bhava field: effort, courage, skills and short journeys. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mercury_moon_4",
+      "kind": "baseline_placement",
+      "planet": "Mercury",
+      "anchor": "moon",
+      "houses": [
+        4
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mercury in house 4 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for home, emotional foundations, property and care. Keep the focus on clear communication; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mercury is in house 4 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects analysis, communication, trade and coordination with home, emotional foundations, property and care. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mercury: 4 from Janma Chandra; base verdict=supportive. Interpretive domains: analysis, communication, trade and coordination; bhava field: home, emotional foundations, property and care. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mercury_moon_5",
+      "kind": "baseline_placement",
+      "planet": "Mercury",
+      "anchor": "moon",
+      "houses": [
+        5
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mercury in house 5 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for learning, creativity, counsel and children. Keep the focus on clear communication; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mercury is in house 5 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects analysis, communication, trade and coordination with learning, creativity, counsel and children. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mercury: 5 from Janma Chandra; base verdict=demanding. Interpretive domains: analysis, communication, trade and coordination; bhava field: learning, creativity, counsel and children. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mercury_moon_6",
+      "kind": "baseline_placement",
+      "planet": "Mercury",
+      "anchor": "moon",
+      "houses": [
+        6
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mercury in house 6 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for workload, service, disputes, health routines and obstacles. Keep the focus on clear communication; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mercury is in house 6 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects analysis, communication, trade and coordination with workload, service, disputes, health routines and obstacles. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mercury: 6 from Janma Chandra; base verdict=supportive. Interpretive domains: analysis, communication, trade and coordination; bhava field: workload, service, disputes, health routines and obstacles. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mercury_moon_7",
+      "kind": "baseline_placement",
+      "planet": "Mercury",
+      "anchor": "moon",
+      "houses": [
+        7
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mercury in house 7 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for partnerships, agreements and public interaction. Keep the focus on clear communication; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mercury is in house 7 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects analysis, communication, trade and coordination with partnerships, agreements and public interaction. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mercury: 7 from Janma Chandra; base verdict=demanding. Interpretive domains: analysis, communication, trade and coordination; bhava field: partnerships, agreements and public interaction. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mercury_moon_8",
+      "kind": "baseline_placement",
+      "planet": "Mercury",
+      "anchor": "moon",
+      "houses": [
+        8
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mercury in house 8 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for shared resources, vulnerability, repair and discontinuity. Keep the focus on clear communication; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mercury is in house 8 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects analysis, communication, trade and coordination with shared resources, vulnerability, repair and discontinuity. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mercury: 8 from Janma Chandra; base verdict=supportive. Interpretive domains: analysis, communication, trade and coordination; bhava field: shared resources, vulnerability, repair and discontinuity. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mercury_moon_9",
+      "kind": "baseline_placement",
+      "planet": "Mercury",
+      "anchor": "moon",
+      "houses": [
+        9
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mercury in house 9 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for teachers, ethics, belief, study and long journeys. Keep the focus on clear communication; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mercury is in house 9 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects analysis, communication, trade and coordination with teachers, ethics, belief, study and long journeys. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mercury: 9 from Janma Chandra; base verdict=demanding. Interpretive domains: analysis, communication, trade and coordination; bhava field: teachers, ethics, belief, study and long journeys. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mercury_moon_10",
+      "kind": "baseline_placement",
+      "planet": "Mercury",
+      "anchor": "moon",
+      "houses": [
+        10
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mercury in house 10 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for work, responsibility, reputation and visible contribution. Keep the focus on clear communication; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mercury is in house 10 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects analysis, communication, trade and coordination with work, responsibility, reputation and visible contribution. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mercury: 10 from Janma Chandra; base verdict=supportive. Interpretive domains: analysis, communication, trade and coordination; bhava field: work, responsibility, reputation and visible contribution. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mercury_moon_11",
+      "kind": "baseline_placement",
+      "planet": "Mercury",
+      "anchor": "moon",
+      "houses": [
+        11
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mercury in house 11 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for gains, networks, fulfilment and longer-term aims. Keep the focus on clear communication; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mercury is in house 11 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects analysis, communication, trade and coordination with gains, networks, fulfilment and longer-term aims. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mercury: 11 from Janma Chandra; base verdict=supportive. Interpretive domains: analysis, communication, trade and coordination; bhava field: gains, networks, fulfilment and longer-term aims. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_mercury_moon_12",
+      "kind": "baseline_placement",
+      "planet": "Mercury",
+      "anchor": "moon",
+      "houses": [
+        12
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Mercury in house 12 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for expense, rest, retreat, release and distant places. Keep the focus on clear communication; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Mercury is in house 12 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects analysis, communication, trade and coordination with expense, rest, retreat, release and distant places. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Mercury: 12 from Janma Chandra; base verdict=demanding. Interpretive domains: analysis, communication, trade and coordination; bhava field: expense, rest, retreat, release and distant places. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_jupiter_moon_1",
+      "kind": "baseline_placement",
+      "planet": "Jupiter",
+      "anchor": "moon",
+      "houses": [
+        1
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Jupiter in house 1 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for body, identity and immediate direction. Keep the focus on wise growth; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Jupiter is in house 1 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects learning, judgment, counsel and expansion with body, identity and immediate direction. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Jupiter: 1 from Janma Chandra; base verdict=demanding. Interpretive domains: learning, judgment, counsel and expansion; bhava field: body, identity and immediate direction. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_jupiter_moon_2",
+      "kind": "baseline_placement",
+      "planet": "Jupiter",
+      "anchor": "moon",
+      "houses": [
+        2
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Jupiter in house 2 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for resources, speech, food and family continuity. Keep the focus on wise growth; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Jupiter is in house 2 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects learning, judgment, counsel and expansion with resources, speech, food and family continuity. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Jupiter: 2 from Janma Chandra; base verdict=supportive. Interpretive domains: learning, judgment, counsel and expansion; bhava field: resources, speech, food and family continuity. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_jupiter_moon_3",
+      "kind": "baseline_placement",
+      "planet": "Jupiter",
+      "anchor": "moon",
+      "houses": [
+        3
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Jupiter in house 3 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for effort, courage, skills and short journeys. Keep the focus on wise growth; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Jupiter is in house 3 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects learning, judgment, counsel and expansion with effort, courage, skills and short journeys. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Jupiter: 3 from Janma Chandra; base verdict=demanding. Interpretive domains: learning, judgment, counsel and expansion; bhava field: effort, courage, skills and short journeys. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_jupiter_moon_4",
+      "kind": "baseline_placement",
+      "planet": "Jupiter",
+      "anchor": "moon",
+      "houses": [
+        4
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Jupiter in house 4 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for home, emotional foundations, property and care. Keep the focus on wise growth; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Jupiter is in house 4 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects learning, judgment, counsel and expansion with home, emotional foundations, property and care. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Jupiter: 4 from Janma Chandra; base verdict=demanding. Interpretive domains: learning, judgment, counsel and expansion; bhava field: home, emotional foundations, property and care. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_jupiter_moon_5",
+      "kind": "baseline_placement",
+      "planet": "Jupiter",
+      "anchor": "moon",
+      "houses": [
+        5
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Jupiter in house 5 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for learning, creativity, counsel and children. Keep the focus on wise growth; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Jupiter is in house 5 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects learning, judgment, counsel and expansion with learning, creativity, counsel and children. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Jupiter: 5 from Janma Chandra; base verdict=supportive. Interpretive domains: learning, judgment, counsel and expansion; bhava field: learning, creativity, counsel and children. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_jupiter_moon_6",
+      "kind": "baseline_placement",
+      "planet": "Jupiter",
+      "anchor": "moon",
+      "houses": [
+        6
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Jupiter in house 6 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for workload, service, disputes, health routines and obstacles. Keep the focus on wise growth; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Jupiter is in house 6 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects learning, judgment, counsel and expansion with workload, service, disputes, health routines and obstacles. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Jupiter: 6 from Janma Chandra; base verdict=demanding. Interpretive domains: learning, judgment, counsel and expansion; bhava field: workload, service, disputes, health routines and obstacles. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_jupiter_moon_7",
+      "kind": "baseline_placement",
+      "planet": "Jupiter",
+      "anchor": "moon",
+      "houses": [
+        7
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Jupiter in house 7 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for partnerships, agreements and public interaction. Keep the focus on wise growth; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Jupiter is in house 7 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects learning, judgment, counsel and expansion with partnerships, agreements and public interaction. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Jupiter: 7 from Janma Chandra; base verdict=supportive. Interpretive domains: learning, judgment, counsel and expansion; bhava field: partnerships, agreements and public interaction. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_jupiter_moon_8",
+      "kind": "baseline_placement",
+      "planet": "Jupiter",
+      "anchor": "moon",
+      "houses": [
+        8
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Jupiter in house 8 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for shared resources, vulnerability, repair and discontinuity. Keep the focus on wise growth; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Jupiter is in house 8 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects learning, judgment, counsel and expansion with shared resources, vulnerability, repair and discontinuity. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Jupiter: 8 from Janma Chandra; base verdict=demanding. Interpretive domains: learning, judgment, counsel and expansion; bhava field: shared resources, vulnerability, repair and discontinuity. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_jupiter_moon_9",
+      "kind": "baseline_placement",
+      "planet": "Jupiter",
+      "anchor": "moon",
+      "houses": [
+        9
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Jupiter in house 9 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for teachers, ethics, belief, study and long journeys. Keep the focus on wise growth; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Jupiter is in house 9 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects learning, judgment, counsel and expansion with teachers, ethics, belief, study and long journeys. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Jupiter: 9 from Janma Chandra; base verdict=supportive. Interpretive domains: learning, judgment, counsel and expansion; bhava field: teachers, ethics, belief, study and long journeys. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_jupiter_moon_10",
+      "kind": "baseline_placement",
+      "planet": "Jupiter",
+      "anchor": "moon",
+      "houses": [
+        10
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Jupiter in house 10 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for work, responsibility, reputation and visible contribution. Keep the focus on wise growth; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Jupiter is in house 10 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects learning, judgment, counsel and expansion with work, responsibility, reputation and visible contribution. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Jupiter: 10 from Janma Chandra; base verdict=demanding. Interpretive domains: learning, judgment, counsel and expansion; bhava field: work, responsibility, reputation and visible contribution. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_jupiter_moon_11",
+      "kind": "baseline_placement",
+      "planet": "Jupiter",
+      "anchor": "moon",
+      "houses": [
+        11
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Jupiter in house 11 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for gains, networks, fulfilment and longer-term aims. Keep the focus on wise growth; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Jupiter is in house 11 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects learning, judgment, counsel and expansion with gains, networks, fulfilment and longer-term aims. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Jupiter: 11 from Janma Chandra; base verdict=supportive. Interpretive domains: learning, judgment, counsel and expansion; bhava field: gains, networks, fulfilment and longer-term aims. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_jupiter_moon_12",
+      "kind": "baseline_placement",
+      "planet": "Jupiter",
+      "anchor": "moon",
+      "houses": [
+        12
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Jupiter in house 12 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for expense, rest, retreat, release and distant places. Keep the focus on wise growth; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Jupiter is in house 12 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects learning, judgment, counsel and expansion with expense, rest, retreat, release and distant places. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Jupiter: 12 from Janma Chandra; base verdict=demanding. Interpretive domains: learning, judgment, counsel and expansion; bhava field: expense, rest, retreat, release and distant places. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_venus_moon_1",
+      "kind": "baseline_placement",
+      "planet": "Venus",
+      "anchor": "moon",
+      "houses": [
+        1
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Venus in house 1 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for body, identity and immediate direction. Keep the focus on balanced relating; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Venus is in house 1 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects relationships, agreement, comfort and resources with body, identity and immediate direction. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Venus: 1 from Janma Chandra; base verdict=supportive. Interpretive domains: relationships, agreement, comfort and resources; bhava field: body, identity and immediate direction. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_venus_moon_2",
+      "kind": "baseline_placement",
+      "planet": "Venus",
+      "anchor": "moon",
+      "houses": [
+        2
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Venus in house 2 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for resources, speech, food and family continuity. Keep the focus on balanced relating; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Venus is in house 2 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects relationships, agreement, comfort and resources with resources, speech, food and family continuity. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Venus: 2 from Janma Chandra; base verdict=supportive. Interpretive domains: relationships, agreement, comfort and resources; bhava field: resources, speech, food and family continuity. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_venus_moon_3",
+      "kind": "baseline_placement",
+      "planet": "Venus",
+      "anchor": "moon",
+      "houses": [
+        3
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Venus in house 3 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for effort, courage, skills and short journeys. Keep the focus on balanced relating; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Venus is in house 3 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects relationships, agreement, comfort and resources with effort, courage, skills and short journeys. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Venus: 3 from Janma Chandra; base verdict=supportive. Interpretive domains: relationships, agreement, comfort and resources; bhava field: effort, courage, skills and short journeys. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_venus_moon_4",
+      "kind": "baseline_placement",
+      "planet": "Venus",
+      "anchor": "moon",
+      "houses": [
+        4
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Venus in house 4 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for home, emotional foundations, property and care. Keep the focus on balanced relating; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Venus is in house 4 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects relationships, agreement, comfort and resources with home, emotional foundations, property and care. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Venus: 4 from Janma Chandra; base verdict=supportive. Interpretive domains: relationships, agreement, comfort and resources; bhava field: home, emotional foundations, property and care. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_venus_moon_5",
+      "kind": "baseline_placement",
+      "planet": "Venus",
+      "anchor": "moon",
+      "houses": [
+        5
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Venus in house 5 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for learning, creativity, counsel and children. Keep the focus on balanced relating; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Venus is in house 5 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects relationships, agreement, comfort and resources with learning, creativity, counsel and children. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Venus: 5 from Janma Chandra; base verdict=supportive. Interpretive domains: relationships, agreement, comfort and resources; bhava field: learning, creativity, counsel and children. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_venus_moon_6",
+      "kind": "baseline_placement",
+      "planet": "Venus",
+      "anchor": "moon",
+      "houses": [
+        6
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Venus in house 6 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for workload, service, disputes, health routines and obstacles. Keep the focus on balanced relating; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Venus is in house 6 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects relationships, agreement, comfort and resources with workload, service, disputes, health routines and obstacles. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Venus: 6 from Janma Chandra; base verdict=demanding. Interpretive domains: relationships, agreement, comfort and resources; bhava field: workload, service, disputes, health routines and obstacles. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_venus_moon_7",
+      "kind": "baseline_placement",
+      "planet": "Venus",
+      "anchor": "moon",
+      "houses": [
+        7
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Venus in house 7 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for partnerships, agreements and public interaction. Keep the focus on balanced relating; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Venus is in house 7 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects relationships, agreement, comfort and resources with partnerships, agreements and public interaction. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Venus: 7 from Janma Chandra; base verdict=demanding. Interpretive domains: relationships, agreement, comfort and resources; bhava field: partnerships, agreements and public interaction. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_venus_moon_8",
+      "kind": "baseline_placement",
+      "planet": "Venus",
+      "anchor": "moon",
+      "houses": [
+        8
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Venus in house 8 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for shared resources, vulnerability, repair and discontinuity. Keep the focus on balanced relating; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Venus is in house 8 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects relationships, agreement, comfort and resources with shared resources, vulnerability, repair and discontinuity. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Venus: 8 from Janma Chandra; base verdict=supportive. Interpretive domains: relationships, agreement, comfort and resources; bhava field: shared resources, vulnerability, repair and discontinuity. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_venus_moon_9",
+      "kind": "baseline_placement",
+      "planet": "Venus",
+      "anchor": "moon",
+      "houses": [
+        9
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Venus in house 9 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for teachers, ethics, belief, study and long journeys. Keep the focus on balanced relating; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Venus is in house 9 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects relationships, agreement, comfort and resources with teachers, ethics, belief, study and long journeys. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Venus: 9 from Janma Chandra; base verdict=supportive. Interpretive domains: relationships, agreement, comfort and resources; bhava field: teachers, ethics, belief, study and long journeys. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_venus_moon_10",
+      "kind": "baseline_placement",
+      "planet": "Venus",
+      "anchor": "moon",
+      "houses": [
+        10
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Venus in house 10 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for work, responsibility, reputation and visible contribution. Keep the focus on balanced relating; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Venus is in house 10 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects relationships, agreement, comfort and resources with work, responsibility, reputation and visible contribution. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Venus: 10 from Janma Chandra; base verdict=demanding. Interpretive domains: relationships, agreement, comfort and resources; bhava field: work, responsibility, reputation and visible contribution. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_venus_moon_11",
+      "kind": "baseline_placement",
+      "planet": "Venus",
+      "anchor": "moon",
+      "houses": [
+        11
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Venus in house 11 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for gains, networks, fulfilment and longer-term aims. Keep the focus on balanced relating; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Venus is in house 11 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects relationships, agreement, comfort and resources with gains, networks, fulfilment and longer-term aims. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Venus: 11 from Janma Chandra; base verdict=supportive. Interpretive domains: relationships, agreement, comfort and resources; bhava field: gains, networks, fulfilment and longer-term aims. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_venus_moon_12",
+      "kind": "baseline_placement",
+      "planet": "Venus",
+      "anchor": "moon",
+      "houses": [
+        12
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Venus in house 12 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for expense, rest, retreat, release and distant places. Keep the focus on balanced relating; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Venus is in house 12 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects relationships, agreement, comfort and resources with expense, rest, retreat, release and distant places. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Venus: 12 from Janma Chandra; base verdict=supportive. Interpretive domains: relationships, agreement, comfort and resources; bhava field: expense, rest, retreat, release and distant places. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_saturn_moon_1",
+      "kind": "baseline_placement",
       "planet": "Saturn",
       "anchor": "moon",
-      "houses": [12, 1, 2],
-      "category": "general",
+      "houses": [
+        1
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Saturn in house 1 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for body, identity and immediate direction. Keep the focus on patient restructuring; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Saturn is in house 1 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects duty, delay, endurance and structure with body, identity and immediate direction. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Saturn: 1 from Janma Chandra; base verdict=demanding. Interpretive domains: duty, delay, endurance and structure; bhava field: body, identity and immediate direction. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_saturn_moon_2",
+      "kind": "baseline_placement",
+      "planet": "Saturn",
+      "anchor": "moon",
+      "houses": [
+        2
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Saturn in house 2 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for resources, speech, food and family continuity. Keep the focus on patient restructuring; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Saturn is in house 2 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects duty, delay, endurance and structure with resources, speech, food and family continuity. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Saturn: 2 from Janma Chandra; base verdict=demanding. Interpretive domains: duty, delay, endurance and structure; bhava field: resources, speech, food and family continuity. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_saturn_moon_3",
+      "kind": "baseline_placement",
+      "planet": "Saturn",
+      "anchor": "moon",
+      "houses": [
+        3
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Saturn in house 3 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for effort, courage, skills and short journeys. Keep the focus on patient restructuring; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Saturn is in house 3 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects duty, delay, endurance and structure with effort, courage, skills and short journeys. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Saturn: 3 from Janma Chandra; base verdict=supportive. Interpretive domains: duty, delay, endurance and structure; bhava field: effort, courage, skills and short journeys. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_saturn_moon_4",
+      "kind": "baseline_placement",
+      "planet": "Saturn",
+      "anchor": "moon",
+      "houses": [
+        4
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Saturn in house 4 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for home, emotional foundations, property and care. Keep the focus on patient restructuring; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Saturn is in house 4 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects duty, delay, endurance and structure with home, emotional foundations, property and care. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Saturn: 4 from Janma Chandra; base verdict=demanding. Interpretive domains: duty, delay, endurance and structure; bhava field: home, emotional foundations, property and care. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_saturn_moon_5",
+      "kind": "baseline_placement",
+      "planet": "Saturn",
+      "anchor": "moon",
+      "houses": [
+        5
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Saturn in house 5 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for learning, creativity, counsel and children. Keep the focus on patient restructuring; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Saturn is in house 5 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects duty, delay, endurance and structure with learning, creativity, counsel and children. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Saturn: 5 from Janma Chandra; base verdict=demanding. Interpretive domains: duty, delay, endurance and structure; bhava field: learning, creativity, counsel and children. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_saturn_moon_6",
+      "kind": "baseline_placement",
+      "planet": "Saturn",
+      "anchor": "moon",
+      "houses": [
+        6
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Saturn in house 6 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for workload, service, disputes, health routines and obstacles. Keep the focus on patient restructuring; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Saturn is in house 6 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects duty, delay, endurance and structure with workload, service, disputes, health routines and obstacles. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Saturn: 6 from Janma Chandra; base verdict=supportive. Interpretive domains: duty, delay, endurance and structure; bhava field: workload, service, disputes, health routines and obstacles. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_saturn_moon_7",
+      "kind": "baseline_placement",
+      "planet": "Saturn",
+      "anchor": "moon",
+      "houses": [
+        7
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Saturn in house 7 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for partnerships, agreements and public interaction. Keep the focus on patient restructuring; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Saturn is in house 7 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects duty, delay, endurance and structure with partnerships, agreements and public interaction. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Saturn: 7 from Janma Chandra; base verdict=demanding. Interpretive domains: duty, delay, endurance and structure; bhava field: partnerships, agreements and public interaction. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_saturn_moon_8",
+      "kind": "baseline_placement",
+      "planet": "Saturn",
+      "anchor": "moon",
+      "houses": [
+        8
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Saturn in house 8 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for shared resources, vulnerability, repair and discontinuity. Keep the focus on patient restructuring; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Saturn is in house 8 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects duty, delay, endurance and structure with shared resources, vulnerability, repair and discontinuity. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Saturn: 8 from Janma Chandra; base verdict=demanding. Interpretive domains: duty, delay, endurance and structure; bhava field: shared resources, vulnerability, repair and discontinuity. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_saturn_moon_9",
+      "kind": "baseline_placement",
+      "planet": "Saturn",
+      "anchor": "moon",
+      "houses": [
+        9
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Saturn in house 9 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for teachers, ethics, belief, study and long journeys. Keep the focus on patient restructuring; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Saturn is in house 9 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects duty, delay, endurance and structure with teachers, ethics, belief, study and long journeys. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Saturn: 9 from Janma Chandra; base verdict=demanding. Interpretive domains: duty, delay, endurance and structure; bhava field: teachers, ethics, belief, study and long journeys. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_saturn_moon_10",
+      "kind": "baseline_placement",
+      "planet": "Saturn",
+      "anchor": "moon",
+      "houses": [
+        10
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Saturn in house 10 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for work, responsibility, reputation and visible contribution. Keep the focus on patient restructuring; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Saturn is in house 10 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects duty, delay, endurance and structure with work, responsibility, reputation and visible contribution. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Saturn: 10 from Janma Chandra; base verdict=demanding. Interpretive domains: duty, delay, endurance and structure; bhava field: work, responsibility, reputation and visible contribution. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_saturn_moon_11",
+      "kind": "baseline_placement",
+      "planet": "Saturn",
+      "anchor": "moon",
+      "houses": [
+        11
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Saturn in house 11 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for gains, networks, fulfilment and longer-term aims. Keep the focus on patient restructuring; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Saturn is in house 11 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects duty, delay, endurance and structure with gains, networks, fulfilment and longer-term aims. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Saturn: 11 from Janma Chandra; base verdict=supportive. Interpretive domains: duty, delay, endurance and structure; bhava field: gains, networks, fulfilment and longer-term aims. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_saturn_moon_12",
+      "kind": "baseline_placement",
+      "planet": "Saturn",
+      "anchor": "moon",
+      "houses": [
+        12
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "phaladeepika_26_south_indian",
+      "source_status": "classical_table",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Saturn in house 12 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for expense, rest, retreat, release and distant places. Keep the focus on patient restructuring; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Saturn is in house 12 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects duty, delay, endurance and structure with expense, rest, retreat, release and distant places. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Saturn: 12 from Janma Chandra; base verdict=demanding. Interpretive domains: duty, delay, endurance and structure; bhava field: expense, rest, retreat, release and distant places. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_rahu_moon_1",
+      "kind": "baseline_placement",
+      "planet": "Rahu",
+      "anchor": "moon",
+      "houses": [
+        1
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Rahu in house 1 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for body, identity and immediate direction. Keep the focus on careful experimentation; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Rahu is in house 1 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects amplification, appetite, novelty and uncertainty with body, identity and immediate direction. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Rahu: 1 from Janma Chandra; base verdict=demanding. Interpretive domains: amplification, appetite, novelty and uncertainty; bhava field: body, identity and immediate direction. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_rahu_moon_2",
+      "kind": "baseline_placement",
+      "planet": "Rahu",
+      "anchor": "moon",
+      "houses": [
+        2
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Rahu in house 2 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for resources, speech, food and family continuity. Keep the focus on careful experimentation; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Rahu is in house 2 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects amplification, appetite, novelty and uncertainty with resources, speech, food and family continuity. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Rahu: 2 from Janma Chandra; base verdict=demanding. Interpretive domains: amplification, appetite, novelty and uncertainty; bhava field: resources, speech, food and family continuity. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_rahu_moon_3",
+      "kind": "baseline_placement",
+      "planet": "Rahu",
+      "anchor": "moon",
+      "houses": [
+        3
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Rahu in house 3 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for effort, courage, skills and short journeys. Keep the focus on careful experimentation; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Rahu is in house 3 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects amplification, appetite, novelty and uncertainty with effort, courage, skills and short journeys. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Rahu: 3 from Janma Chandra; base verdict=supportive. Interpretive domains: amplification, appetite, novelty and uncertainty; bhava field: effort, courage, skills and short journeys. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_rahu_moon_4",
+      "kind": "baseline_placement",
+      "planet": "Rahu",
+      "anchor": "moon",
+      "houses": [
+        4
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Rahu in house 4 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for home, emotional foundations, property and care. Keep the focus on careful experimentation; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Rahu is in house 4 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects amplification, appetite, novelty and uncertainty with home, emotional foundations, property and care. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Rahu: 4 from Janma Chandra; base verdict=demanding. Interpretive domains: amplification, appetite, novelty and uncertainty; bhava field: home, emotional foundations, property and care. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_rahu_moon_5",
+      "kind": "baseline_placement",
+      "planet": "Rahu",
+      "anchor": "moon",
+      "houses": [
+        5
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Rahu in house 5 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for learning, creativity, counsel and children. Keep the focus on careful experimentation; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Rahu is in house 5 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects amplification, appetite, novelty and uncertainty with learning, creativity, counsel and children. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Rahu: 5 from Janma Chandra; base verdict=demanding. Interpretive domains: amplification, appetite, novelty and uncertainty; bhava field: learning, creativity, counsel and children. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_rahu_moon_6",
+      "kind": "baseline_placement",
+      "planet": "Rahu",
+      "anchor": "moon",
+      "houses": [
+        6
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Rahu in house 6 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for workload, service, disputes, health routines and obstacles. Keep the focus on careful experimentation; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Rahu is in house 6 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects amplification, appetite, novelty and uncertainty with workload, service, disputes, health routines and obstacles. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Rahu: 6 from Janma Chandra; base verdict=supportive. Interpretive domains: amplification, appetite, novelty and uncertainty; bhava field: workload, service, disputes, health routines and obstacles. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_rahu_moon_7",
+      "kind": "baseline_placement",
+      "planet": "Rahu",
+      "anchor": "moon",
+      "houses": [
+        7
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Rahu in house 7 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for partnerships, agreements and public interaction. Keep the focus on careful experimentation; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Rahu is in house 7 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects amplification, appetite, novelty and uncertainty with partnerships, agreements and public interaction. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Rahu: 7 from Janma Chandra; base verdict=demanding. Interpretive domains: amplification, appetite, novelty and uncertainty; bhava field: partnerships, agreements and public interaction. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_rahu_moon_8",
+      "kind": "baseline_placement",
+      "planet": "Rahu",
+      "anchor": "moon",
+      "houses": [
+        8
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Rahu in house 8 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for shared resources, vulnerability, repair and discontinuity. Keep the focus on careful experimentation; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Rahu is in house 8 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects amplification, appetite, novelty and uncertainty with shared resources, vulnerability, repair and discontinuity. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Rahu: 8 from Janma Chandra; base verdict=demanding. Interpretive domains: amplification, appetite, novelty and uncertainty; bhava field: shared resources, vulnerability, repair and discontinuity. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_rahu_moon_9",
+      "kind": "baseline_placement",
+      "planet": "Rahu",
+      "anchor": "moon",
+      "houses": [
+        9
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Rahu in house 9 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for teachers, ethics, belief, study and long journeys. Keep the focus on careful experimentation; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Rahu is in house 9 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects amplification, appetite, novelty and uncertainty with teachers, ethics, belief, study and long journeys. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Rahu: 9 from Janma Chandra; base verdict=demanding. Interpretive domains: amplification, appetite, novelty and uncertainty; bhava field: teachers, ethics, belief, study and long journeys. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_rahu_moon_10",
+      "kind": "baseline_placement",
+      "planet": "Rahu",
+      "anchor": "moon",
+      "houses": [
+        10
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Rahu in house 10 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for work, responsibility, reputation and visible contribution. Keep the focus on careful experimentation; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Rahu is in house 10 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects amplification, appetite, novelty and uncertainty with work, responsibility, reputation and visible contribution. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Rahu: 10 from Janma Chandra; base verdict=demanding. Interpretive domains: amplification, appetite, novelty and uncertainty; bhava field: work, responsibility, reputation and visible contribution. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_rahu_moon_11",
+      "kind": "baseline_placement",
+      "planet": "Rahu",
+      "anchor": "moon",
+      "houses": [
+        11
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Rahu in house 11 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for gains, networks, fulfilment and longer-term aims. Keep the focus on careful experimentation; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Rahu is in house 11 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects amplification, appetite, novelty and uncertainty with gains, networks, fulfilment and longer-term aims. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Rahu: 11 from Janma Chandra; base verdict=supportive. Interpretive domains: amplification, appetite, novelty and uncertainty; bhava field: gains, networks, fulfilment and longer-term aims. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_rahu_moon_12",
+      "kind": "baseline_placement",
+      "planet": "Rahu",
+      "anchor": "moon",
+      "houses": [
+        12
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Rahu in house 12 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for expense, rest, retreat, release and distant places. Keep the focus on careful experimentation; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Rahu is in house 12 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects amplification, appetite, novelty and uncertainty with expense, rest, retreat, release and distant places. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Rahu: 12 from Janma Chandra; base verdict=demanding. Interpretive domains: amplification, appetite, novelty and uncertainty; bhava field: expense, rest, retreat, release and distant places. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_ketu_moon_1",
+      "kind": "baseline_placement",
+      "planet": "Ketu",
+      "anchor": "moon",
+      "houses": [
+        1
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Ketu in house 1 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for body, identity and immediate direction. Keep the focus on intentional simplification; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Ketu is in house 1 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects separation, simplification, scrutiny and inward focus with body, identity and immediate direction. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Ketu: 1 from Janma Chandra; base verdict=demanding. Interpretive domains: separation, simplification, scrutiny and inward focus; bhava field: body, identity and immediate direction. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_ketu_moon_2",
+      "kind": "baseline_placement",
+      "planet": "Ketu",
+      "anchor": "moon",
+      "houses": [
+        2
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Ketu in house 2 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for resources, speech, food and family continuity. Keep the focus on intentional simplification; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Ketu is in house 2 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects separation, simplification, scrutiny and inward focus with resources, speech, food and family continuity. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Ketu: 2 from Janma Chandra; base verdict=demanding. Interpretive domains: separation, simplification, scrutiny and inward focus; bhava field: resources, speech, food and family continuity. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_ketu_moon_3",
+      "kind": "baseline_placement",
+      "planet": "Ketu",
+      "anchor": "moon",
+      "houses": [
+        3
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Ketu in house 3 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for effort, courage, skills and short journeys. Keep the focus on intentional simplification; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Ketu is in house 3 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects separation, simplification, scrutiny and inward focus with effort, courage, skills and short journeys. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Ketu: 3 from Janma Chandra; base verdict=supportive. Interpretive domains: separation, simplification, scrutiny and inward focus; bhava field: effort, courage, skills and short journeys. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_ketu_moon_4",
+      "kind": "baseline_placement",
+      "planet": "Ketu",
+      "anchor": "moon",
+      "houses": [
+        4
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Ketu in house 4 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for home, emotional foundations, property and care. Keep the focus on intentional simplification; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Ketu is in house 4 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects separation, simplification, scrutiny and inward focus with home, emotional foundations, property and care. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Ketu: 4 from Janma Chandra; base verdict=demanding. Interpretive domains: separation, simplification, scrutiny and inward focus; bhava field: home, emotional foundations, property and care. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_ketu_moon_5",
+      "kind": "baseline_placement",
+      "planet": "Ketu",
+      "anchor": "moon",
+      "houses": [
+        5
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Ketu in house 5 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for learning, creativity, counsel and children. Keep the focus on intentional simplification; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Ketu is in house 5 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects separation, simplification, scrutiny and inward focus with learning, creativity, counsel and children. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Ketu: 5 from Janma Chandra; base verdict=demanding. Interpretive domains: separation, simplification, scrutiny and inward focus; bhava field: learning, creativity, counsel and children. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_ketu_moon_6",
+      "kind": "baseline_placement",
+      "planet": "Ketu",
+      "anchor": "moon",
+      "houses": [
+        6
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Ketu in house 6 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for workload, service, disputes, health routines and obstacles. Keep the focus on intentional simplification; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Ketu is in house 6 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects separation, simplification, scrutiny and inward focus with workload, service, disputes, health routines and obstacles. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Ketu: 6 from Janma Chandra; base verdict=supportive. Interpretive domains: separation, simplification, scrutiny and inward focus; bhava field: workload, service, disputes, health routines and obstacles. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_ketu_moon_7",
+      "kind": "baseline_placement",
+      "planet": "Ketu",
+      "anchor": "moon",
+      "houses": [
+        7
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Ketu in house 7 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for partnerships, agreements and public interaction. Keep the focus on intentional simplification; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Ketu is in house 7 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects separation, simplification, scrutiny and inward focus with partnerships, agreements and public interaction. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Ketu: 7 from Janma Chandra; base verdict=demanding. Interpretive domains: separation, simplification, scrutiny and inward focus; bhava field: partnerships, agreements and public interaction. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_ketu_moon_8",
+      "kind": "baseline_placement",
+      "planet": "Ketu",
+      "anchor": "moon",
+      "houses": [
+        8
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Ketu in house 8 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for shared resources, vulnerability, repair and discontinuity. Keep the focus on intentional simplification; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Ketu is in house 8 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects separation, simplification, scrutiny and inward focus with shared resources, vulnerability, repair and discontinuity. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Ketu: 8 from Janma Chandra; base verdict=demanding. Interpretive domains: separation, simplification, scrutiny and inward focus; bhava field: shared resources, vulnerability, repair and discontinuity. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_ketu_moon_9",
+      "kind": "baseline_placement",
+      "planet": "Ketu",
+      "anchor": "moon",
+      "houses": [
+        9
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Ketu in house 9 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for teachers, ethics, belief, study and long journeys. Keep the focus on intentional simplification; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Ketu is in house 9 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects separation, simplification, scrutiny and inward focus with teachers, ethics, belief, study and long journeys. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Ketu: 9 from Janma Chandra; base verdict=demanding. Interpretive domains: separation, simplification, scrutiny and inward focus; bhava field: teachers, ethics, belief, study and long journeys. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_ketu_moon_10",
+      "kind": "baseline_placement",
+      "planet": "Ketu",
+      "anchor": "moon",
+      "houses": [
+        10
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Ketu in house 10 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for work, responsibility, reputation and visible contribution. Keep the focus on intentional simplification; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Ketu is in house 10 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects separation, simplification, scrutiny and inward focus with work, responsibility, reputation and visible contribution. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Ketu: 10 from Janma Chandra; base verdict=demanding. Interpretive domains: separation, simplification, scrutiny and inward focus; bhava field: work, responsibility, reputation and visible contribution. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_ketu_moon_11",
+      "kind": "baseline_placement",
+      "planet": "Ketu",
+      "anchor": "moon",
+      "houses": [
+        11
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "supportive",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Ketu in house 11 from natal Moon",
+      "content": {
+        "guided_summary": "This is a supportive transit for gains, networks, fulfilment and longer-term aims. Keep the focus on intentional simplification; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Ketu is in house 11 from the natal Moon. In the configured Gocharam table this placement is supportive. It connects separation, simplification, scrutiny and inward focus with gains, networks, fulfilment and longer-term aims. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Ketu: 11 from Janma Chandra; base verdict=supportive. Interpretive domains: separation, simplification, scrutiny and inward focus; bhava field: gains, networks, fulfilment and longer-term aims. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "baseline_ketu_moon_12",
+      "kind": "baseline_placement",
+      "planet": "Ketu",
+      "anchor": "moon",
+      "houses": [
+        12
+      ],
+      "category": "baseline",
+      "duration": "transit_sign",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_node_analogy",
+      "source_status": "convention_dependent",
+      "claim_status": "classical_verdict_with_editorial_synthesis",
+      "rule_name": "Ketu in house 12 from natal Moon",
+      "content": {
+        "guided_summary": "This is a demanding transit for expense, rest, retreat, release and distant places. Keep the focus on intentional simplification; treat the indication as context, not a guaranteed event.",
+        "balanced_context": "Ketu is in house 12 from the natal Moon. In the configured Gocharam table this placement is demanding. It connects separation, simplification, scrutiny and inward focus with expense, rest, retreat, release and distant places. Natal strength, vedha, Ashtakavarga and the active dasha can modify the result.",
+        "practitioner_deep_dive": "Transit Ketu: 12 from Janma Chandra; base verdict=demanding. Interpretive domains: separation, simplification, scrutiny and inward focus; bhava field: expense, rest, retreat, release and distant places. This is an editorial synthesis of the configured classical verdict, not a verbatim textual quotation. Resolve vedha, BAV/SAV, kakshya, station/retrograde state, natal contacts and dasha concordance separately."
+      }
+    },
+    {
+      "id": "special_sade_sati",
+      "kind": "special_overlay",
+      "planet": "Saturn",
+      "anchor": "moon",
+      "houses": [
+        12,
+        1,
+        2
+      ],
+      "category": "long_cycle",
       "duration": "long_term",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_sade_sati",
+      "source_status": "traditional_practice",
+      "claim_status": "traditional_label_with_editorial_synthesis",
       "rule_name": "Sade Sati",
       "content": {
-        "guided_summary": "This is a slow responsibility period. It can feel like life is asking for maturity, patience, discipline, and cleaner choices rather than quick wins.",
-        "balanced_context": "You are in the Sade Sati period (Saturn transiting near your Moon). This long-term cycle tests endurance and restructures responsibilities.",
-        "practitioner_deep_dive": "Sade Sati phase active. Saturn transits the 12th, 1st, or 2nd from Natal Moon. Classical texts state this 7.5 year cycle brings structural life changes, increased mental pressure, and forces karmic maturity."
-      },
-      "mitigations": [
-        {
-          "condition": "ashtakavarga_strong",
-          "content": {
-            "guided_summary": "Because you have strong foundational support right now, the responsibilities will lead to solid achievements.",
-            "balanced_context": "Your chart shows high strength for this transit, meaning the pressure of Sade Sati will likely manifest as hard work that pays off well.",
-            "practitioner_deep_dive": "High BAV/SAV (Bindus > 4) in the transited sign mitigates the maleficence. Sade Sati yields constructive restructuring and disciplined success rather than mere suffering."
-          }
-        }
-      ]
+        "guided_summary": "A long responsibility cycle is active. Reduce avoidable pressure and favour patient, repeatable progress.",
+        "balanced_context": "Saturn is transiting the 12th, 1st or 2nd from the natal Moon, the traditional Sade Sati span. Read the phase together with Saturn's natal condition and Ashtakavarga support.",
+        "practitioner_deep_dive": "Sade Sati overlay active. Phase is determined by Saturn's house from Janma Chandra. Do not infer a fixed event: inspect BAV/SAV, kakshya, dasha concordance, natal Saturn and exact Moon contact."
+      }
     },
     {
-      "id": "saturn_moon_8",
+      "id": "special_ashtama_shani",
+      "kind": "special_overlay",
       "planet": "Saturn",
       "anchor": "moon",
-      "houses": [8],
-      "category": "health_and_obstacles",
+      "houses": [
+        8
+      ],
+      "category": "long_cycle",
       "duration": "long_term",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_saturn_specials",
+      "source_status": "traditional_practice",
+      "claim_status": "traditional_label_with_editorial_synthesis",
       "rule_name": "Ashtama Shani",
       "content": {
-        "guided_summary": "This can bring heavier inner pressure or sudden responsibilities. It is a period for caution, repair, and avoiding unnecessary risks.",
-        "balanced_context": "Saturn is transiting the 8th house from your Moon (Ashtama Shani). This phase asks you to focus on health, avoid speculation, and be prepared for sudden shifts.",
-        "practitioner_deep_dive": "Ashtama Shani active (Saturn 8th from Moon). Yields fatigue, sudden obstacles, and health sensitivity per classical rules. A period for profound internal transformation and strict adherence to duty."
+        "guided_summary": "A slower repair-oriented cycle is active. Leave margin for delays and avoid fear-based conclusions.",
+        "balanced_context": "Saturn is eighth from the natal Moon, traditionally called Ashtama Shani. Emphasize maintenance, resilience and risk controls.",
+        "practitioner_deep_dive": "Ashtama Shani overlay active: Saturn=8 from Janma Chandra. Weight by BAV/SAV, natal Saturn, dasha and exact contacts before judging intensity."
       }
     },
     {
-      "id": "saturn_moon_4",
+      "id": "special_ardhashtama_shani",
+      "kind": "special_overlay",
       "planet": "Saturn",
       "anchor": "moon",
-      "houses": [4],
-      "category": "domestic_peace",
+      "houses": [
+        4
+      ],
+      "category": "long_cycle",
       "duration": "long_term",
-      "rule_name": "Kantaka Shani (Ardhashtama)",
+      "base_verdict": "challenging",
+      "source_id": "south_indian_saturn_specials",
+      "source_status": "traditional_practice",
+      "claim_status": "traditional_label_with_editorial_synthesis",
+      "rule_name": "Ardhashtama Shani",
       "content": {
-        "guided_summary": "Home, emotional comfort, or property matters may need more patience. This asks for steadiness and fewer impulsive moves.",
-        "balanced_context": "Saturn transiting the 4th from your Moon (Ardhashtama Shani) brings focus and potential pressure to your home life, mother, or real estate.",
-        "practitioner_deep_dive": "Kantaka/Ardhashtama Shani active (Saturn 4th from Moon). Affects domestic peace, mother's health, and properties. Mental anxieties may increase; grounding practices are advised."
-      }
-    },
-    {
-      "id": "jupiter_moon_support",
-      "planet": "Jupiter",
-      "anchor": "moon",
-      "houses": [2, 5, 7, 9, 11],
-      "category": "growth",
-      "duration": "long_term",
-      "rule_name": "Guru Bala",
-      "content": {
-        "guided_summary": "This gives a highly helpful background for guidance, learning, family support, planning, and growth. Support is much easier to access now.",
-        "balanced_context": "Jupiter is transiting a highly favorable house from your Moon (Guru Bala), offering protection, financial ease, and opportunities for wisdom.",
-        "practitioner_deep_dive": "Guru Bala active. Jupiter transits 2nd, 5th, 7th, 9th, or 11th from Natal Moon. Bestows expansion, wealth, divine grace, and auspicious events (Vivaha/Santana) per Phaladeepika."
-      },
-      "mitigations": [
-        {
-          "condition": "vedha_active",
-          "content": {
-            "guided_summary": "However, some of these opportunities might be delayed or obstructed right now by other temporary factors.",
-            "balanced_context": "While Jupiter is favorable, another planetary transit is temporarily creating a 'Vedha' (obstruction), meaning the full benefits are slightly delayed.",
-            "practitioner_deep_dive": "Vedha is active on Jupiter's transit. The promised auspicious results are checked by an obstructing planet in the Vedha Sthana."
-          }
-        }
-      ]
-    },
-    {
-      "id": "saturn_over_natal_moon",
-      "planet": "Saturn",
-      "exact_natal_conjunction": "Moon",
-      "category": "health_and_obstacles",
-      "duration": "short_term",
-      "rule_name": "Saturn exact on Natal Moon",
-      "content": {
-        "guided_summary": "Saturn is crossing exactly over the degree of your Natal Moon. This is the absolute peak of the Sade Sati cycle, demanding profound emotional resilience and patience.",
-        "balanced_context": "The exact transit of Saturn over your Moon marks a critical peak in emotional and structural testing.",
-        "practitioner_deep_dive": "Saturn forms an exact conjunction (within 1° orb) of the Natal Moon. This pinpoint transit is the core intense phase of Janma Shani, triggering deep melancholy or major life restructuring."
-      }
-    },
-    {
-      "id": "jupiter_own_kakshya",
-      "planet": "Jupiter",
-      "kakshya_lord": "Jupiter",
-      "category": "growth",
-      "duration": "micro",
-      "rule_name": "Jupiter in Jupiter's Kakshya",
-      "content": {
-        "guided_summary": "Jupiter is currently moving through its most comfortable micro-zone, making its blessings especially pure and accessible right now.",
-        "balanced_context": "Jupiter traverses its own Kakshya (a 3.75 degree segment), amplifying its natural supportive and expansive qualities.",
-        "practitioner_deep_dive": "Jupiter is in the Kakshya of Jupiter. Classical texts state that a benefic transiting its own Kakshya yields undiluted positive results."
+        "guided_summary": "Home and emotional foundations may ask for steadier maintenance and clearer limits.",
+        "balanced_context": "Saturn is fourth from the natal Moon, traditionally called Ardhashtama or Kantaka Shani.",
+        "practitioner_deep_dive": "Ardhashtama Shani overlay active: Saturn=4 from Janma Chandra. Cross-check Lagna, fourth-house factors, BAV/SAV and dasha."
       }
     }
   ]
