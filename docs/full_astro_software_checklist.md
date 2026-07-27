@@ -14,12 +14,13 @@ empty, error, and return navigation have been exercised at 375 × 812.
 
 - [x] Load the authenticated user's kundlis when the `/m` shell starts.
 - [x] Restore the last valid active profile; otherwise select the first profile.
-- [ ] Show an intentional empty-profile state when no kundli exists.
+- [x] Show an intentional empty-profile state when no kundli exists.
 - [x] Replace fixture identity in Today, Chart, and Settings.
-- [ ] Replace fixture identity in Ask.
+- [x] Replace fixture identity in Ask.
 - [x] Load Today from `/api/v1/context/{kundli_id}/daily`.
-- [ ] Verify refresh/session continuity and profile isolation.
-- [ ] Verify loading, API failure, and retry at 375 × 812.
+- [x] Verify refresh continuity and rejection of a stale stored profile ID.
+- [ ] Verify authenticated cross-account profile isolation against port 8000.
+- [x] Verify loading, API failure, and retry at 375 × 812.
 
 ### US-N2 · User asks and receives a safe, persisted answer
 

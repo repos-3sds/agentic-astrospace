@@ -84,6 +84,7 @@ export class TodayComponent {
 
   readonly loading = signal(true);
   readonly loadError = signal<string | null>(null);
+  readonly emptyProfile = signal(false);
   readonly view = signal<TodayView>({
     greetingName: 'Lakshmi',
     initial: 'L',
@@ -207,11 +208,12 @@ export class TodayComponent {
   protected async loadToday(): Promise<void> {
     this.loading.set(true);
     this.loadError.set(null);
+    this.emptyProfile.set(false);
     try {
       await this.kundlis.load();
       const profile = this.kundlis.active();
       if (!profile) {
-        this.loadError.set('Create a profile to receive your daily guidance.');
+        this.emptyProfile.set(true);
         return;
       }
       const daily = await this.vedic.dailyGuidance(profile.id);

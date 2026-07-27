@@ -23,6 +23,14 @@
       <button type="button" (click)="loadToday()">Try again</button>
     </div>
   }
+  @if (emptyProfile()) {
+    <section class="mtoday-empty">
+      <span class="mtoday-empty-mark" aria-hidden="true">✦</span>
+      <h2>Create your first chart</h2>
+      <p>Your daily guidance needs a birth date, time, and place.</p>
+      <a [routerLink]="['/m', 'birth-details']">Add birth details</a>
+    </section>
+  } @else {
   <section class="card">
     <div class="card-head">
       <p class="eyebrow">WHAT MATTERS TODAY</p>
@@ -103,6 +111,7 @@
       </a>
     }
   </div>
+  }
 </div>
 
 @if (openSheet() === 'quality') {

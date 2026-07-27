@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { ActivatedRoute, Router } from '@angular/router';
 import { AskComposerComponent } from './ask-composer.component';
 import { VoiceListeningComponent } from './voice-listening.component';
+import { KundliStore } from '../../../core/kundli.store';
 
 /** A subject the reader can scope a question to. */
 export interface AskTopic {
@@ -44,7 +45,8 @@ export interface AskSuggestion {
   styleUrl: './ask-home.component.scss',
 })
 export class AskHomeComponent {
-  readonly name = signal('Lakshmi');
+  private readonly kundlis = inject(KundliStore);
+  readonly name = computed(() => this.kundlis.active()?.name ?? 'there');
   protected readonly heading = computed(() => `What’s on your mind, ${this.name()}?`);
 
   readonly topics = signal<AskTopic[]>([
@@ -87,6 +89,10 @@ export class AskHomeComponent {
    */
   readonly listening = signal(false);
   readonly heard = signal('Is this a good time to change my job');
+
+  constructor() {
+    if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
+  }
 
   protected startListening(): void {
     this.listening.set(true);
