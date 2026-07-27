@@ -95,7 +95,7 @@ export class AskReferOutComponent {
   private readonly router = inject(Router);
 
   protected askAgain(question: string): void {
-    void this.router.navigate(['/m', 'ask', 'answer'], { queryParams: { q: question } });
+    void this.router.navigate(['/m', 'ask'], { queryParams: { q: question } });
     this.draft.set('');
   }
 }

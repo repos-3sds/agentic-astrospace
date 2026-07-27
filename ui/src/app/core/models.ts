@@ -1090,4 +1090,7 @@ export interface AskMessage {
 export interface AskResponse {
   answer: string;
   tools_used: string[];
+  kundli_id?: string;
+  thread_id?: string | null;
+  refer_out_kind?: 'health' | 'legal' | 'money' | 'death' | null;
 }

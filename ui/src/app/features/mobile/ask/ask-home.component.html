@@ -13,6 +13,12 @@
       computed from your chart.
     </p>
   </div>
+  @if (submitting()) {
+    <p class="ask-state" role="status">Computing from your chart…</p>
+  }
+  @if (submitError()) {
+    <p class="ask-state is-error" role="alert">{{ submitError() }}</p>
+  }
 
   <div class="topics" role="group" aria-label="Narrow your question">
     @for (topic of topics(); track topic.id) {

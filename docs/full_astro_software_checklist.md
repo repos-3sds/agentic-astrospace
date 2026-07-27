@@ -27,11 +27,11 @@ empty, error, and return navigation have been exercised at 375 × 812.
 **Journey:** Today suggestion or Ask → backend classification → answer or refer-out
 → follow-up → history.
 
-- [ ] Send mobile questions through `/api/v1/ask/{kundli_id}`.
-- [ ] Let backend safety classification choose answer vs refer-out.
+- [x] Send mobile questions through `/api/v1/ask/{kundli_id}`.
+- [x] Let backend safety classification choose answer vs refer-out.
 - [ ] Wire loading, retry, copy, share, follow-up, and past-question actions.
 - [ ] Persist and reopen Ask threads for the active profile.
-- [ ] Test health, legal, money, death/longevity, and ordinary questions.
+- [x] Test health, legal, money, death/longevity, and ordinary questions.
 
 ### US-N3 · User switches and manages profiles
 

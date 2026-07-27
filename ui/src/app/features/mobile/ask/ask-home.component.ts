@@ -3,6 +3,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AskComposerComponent } from './ask-composer.component';
 import { VoiceListeningComponent } from './voice-listening.component';
 import { KundliStore } from '../../../core/kundli.store';
+import { ApiService } from '../../../core/api.service';
+import { AskResponse } from '../../../core/models';
+import { MobileAskStateService } from './mobile-ask-state.service';
 
 /** A subject the reader can scope a question to. */
 export interface AskTopic {
@@ -46,6 +49,8 @@ export interface AskSuggestion {
 })
 export class AskHomeComponent {
   private readonly kundlis = inject(KundliStore);
+  private readonly api = inject(ApiService);
+  private readonly askState = inject(MobileAskStateService);
   readonly name = computed(() => this.kundlis.active()?.name ?? 'there');
   protected readonly heading = computed(() => `What’s on your mind, ${this.name()}?`);
 
@@ -89,6 +94,8 @@ export class AskHomeComponent {
    */
   readonly listening = signal(false);
   readonly heard = signal('Is this a good time to change my job');
+  readonly submitting = signal(false);
+  readonly submitError = signal<string | null>(null);
 
   constructor() {
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
@@ -126,13 +133,47 @@ export class AskHomeComponent {
    * connecting /api/v1/ask, and until then this is placeholder routing like the
    * placeholder verdict it lands on.
    */
-  protected ask(question: string): void {
+  protected async ask(question: string): Promise<void> {
     const q = question.trim();
-    if (!q) {
+    if (!q || this.submitting()) {
       return;
     }
-    void this.router.navigate(['/m', 'ask', 'answer'], {
-      queryParams: { q, topic: this.selectedTopic() ?? undefined },
-    });
+    this.submitting.set(true);
+    this.submitError.set(null);
+    try {
+      await this.kundlis.load();
+      const profile = this.kundlis.active();
+      if (!profile) {
+        this.submitError.set('Create a profile before asking a chart question.');
+        return;
+      }
+      const response = await this.api.post<AskResponse>(`/ask/${profile.id}`, {
+        question: q,
+        start_thread: true,
+        input_mode: 'text',
+      });
+      this.askState.remember(response);
+      if (response.refer_out_kind) {
+        await this.router.navigate(['/m', 'ask', 'refer'], {
+          queryParams: {
+            q,
+            domain: response.refer_out_kind,
+            thread: response.thread_id ?? undefined,
+          },
+        });
+      } else {
+        await this.router.navigate(['/m', 'ask', 'answer'], {
+          queryParams: {
+            q,
+            thread: response.thread_id ?? undefined,
+            topic: this.selectedTopic() ?? undefined,
+          },
+        });
+      }
+    } catch (error) {
+      this.submitError.set((error as Error).message);
+    } finally {
+      this.submitting.set(false);
+    }
   }
 }

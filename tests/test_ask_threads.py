@@ -98,6 +98,48 @@ class TestStatelessIsUnchanged:
         assert client.get("/api/v1/ask/threads").json()["count"] == 0
 
 
+class TestStructuredSafetyRouting:
+    @pytest.mark.parametrize(("question", "kind"), [
+        ("When will I die?", "death"),
+        ("Will I recover from this illness?", "health"),
+        ("Will I win my court case?", "legal"),
+        ("Which stock should I buy?", "money"),
+    ])
+    def test_excluded_verdicts_skip_the_model(self, client, env, question, kind):
+        with patch("astrospace.agents.base.BaseAstroAgent.run_messages") as run:
+            body = client.post(f"/api/v1/ask/{env['kundli']}", json={
+                "question": question,
+            }).json()
+        assert body["refer_out_kind"] == kind
+        assert body["tools_used"] == []
+        run.assert_not_called()
+
+    @pytest.mark.parametrize("question", [
+        "What supports my wellbeing this week?",
+        "Is Thursday a steady time to discuss paperwork?",
+        "What does my chart say about my relationship with money?",
+    ])
+    def test_safe_tendency_and_timing_questions_remain_answerable(self, client, env, question):
+        with _reply() as run:
+            body = client.post(f"/api/v1/ask/{env['kundli']}", json={
+                "question": question,
+            }).json()
+        assert body["refer_out_kind"] is None
+        run.assert_called_once()
+
+    def test_refer_out_is_persisted_on_the_assistant_turn(self, client, env):
+        body = client.post(f"/api/v1/ask/{env['kundli']}", json={
+            "question": "Should I buy crypto?",
+            "start_thread": True,
+        }).json()
+        thread = client.get(f"/api/v1/ask/threads/{body['thread_id']}").json()
+        assert thread["messages"][1]["refer_out_kind"] == "money"
+        assert thread["messages"][1]["domain"] == "money"
+        assert thread["messages"][1]["evidence"] == {
+            "safety_policy": "excluded_verdict",
+        }
+
+
 class TestThreadPersistence:
     def test_start_thread_persists_both_turns(self, client, env):
         with _reply("Your Moon is in Pushya."):

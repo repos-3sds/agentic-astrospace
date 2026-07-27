@@ -6,6 +6,7 @@ import {
   EvidenceRow,
   WhyReadingSheetComponent,
 } from '../why-reading/why-reading-sheet.component';
+import { MobileAskStateService } from './mobile-ask-state.service';
 
 /**
  * How confidently the answer lands. Named, not a number: the point of the dot
@@ -44,6 +45,7 @@ export interface AnswerView {
   styleUrl: './ask-answer.component.scss',
 })
 export class AskAnswerComponent {
+  private readonly askState = inject(MobileAskStateService);
   // The observable, not the snapshot: a follow-up re-enters this same route, and
   // Angular reuses the component rather than rebuilding it — read once and the
   // thread would answer the second question with the first one's text.
@@ -55,9 +57,11 @@ export class AskAnswerComponent {
     question: this.params().get('q') ?? 'Is this a good time to change my job?',
     domain: 'CAREER',
     tone: 'good',
-    verdict: 'Yes — the next 6 weeks favour a change.',
-    whatToDo:
-      'Start conversations and send applications this week — Thursday & Friday mornings are best. Wait to sign anything until after the 14th.',
+    verdict: this.askState.answer(this.params().get('thread'))
+      ?? 'Yes — the next 6 weeks favour a change.',
+    whatToDo: this.askState.answer(this.params().get('thread'))
+      ? 'Use this as reflective guidance, then decide with the real-world information available to you.'
+      : 'Start conversations and send applications this week — Thursday & Friday mornings are best. Wait to sign anything until after the 14th.',
     followUps: ['What about starting a business instead?'],
   }));
 

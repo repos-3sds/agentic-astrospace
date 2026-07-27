@@ -52,6 +52,17 @@
 .ask-hero { @include m-hero; color: var(--m-text); margin: 0; }
 .lede { @include m-body; color: var(--m-muted); margin: 0; }
 
+.ask-state {
+  margin: 0;
+  padding: 11px 13px;
+  border: 1px solid var(--m-border);
+  border-radius: 13px;
+  background: var(--m-surface);
+  @include m-body-small;
+  color: var(--m-muted);
+  &.is-error { color: var(--m-bad); }
+}
+
 .eyebrow { @include m-eyebrow; color: var(--m-accent); margin: 0; }
 
 /* Topic chips — node 25:36 */

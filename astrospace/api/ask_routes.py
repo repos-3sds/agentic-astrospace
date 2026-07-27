@@ -15,6 +15,7 @@ request persists nothing and is safe to retry.
 """
 from datetime import datetime
 from time import perf_counter
+import re
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -31,6 +32,53 @@ router = APIRouter(prefix="/api/v1/ask", tags=["ask-ai"])
 
 MAX_HISTORY = 12
 MAX_QUESTION_CHARS = 2000
+
+_REFER_OUT_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("death", (
+        r"\bwhen (?:will|do) (?:i|we|he|she|they) die\b",
+        r"\b(?:predict|tell|calculate).{0,24}\b(?:death|lifespan|longevity)\b",
+        r"\bhow long (?:will|do) (?:i|we|he|she|they) live\b",
+    )),
+    ("health", (
+        r"\b(?:diagnose|diagnosis|medical advice|treatment plan)\b",
+        r"\b(?:do|could|might) i have\b.{0,48}\b(?:disease|cancer|illness|condition)\b",
+        r"\bwill (?:i|we|he|she|they) recover\b",
+        r"\bshould i (?:take|stop|change)\b.{0,36}\b(?:medicine|medication|dose|treatment)\b",
+        r"\bwill (?:the )?(?:surgery|operation|treatment) (?:work|succeed)\b",
+    )),
+    ("legal", (
+        r"\b(?:legal advice|should i sue|can i sue)\b",
+        r"\bwill (?:i|we|he|she|they) win\b.{0,36}\b(?:case|lawsuit|appeal)\b",
+        r"\bwhat will (?:the )?(?:judge|court|jury) decide\b",
+        r"\b(?:guilty|not guilty|convicted|acquitted)\b",
+    )),
+    ("money", (
+        r"\b(?:what|which) (?:stock|share|crypto|coin|fund) should i (?:buy|sell)\b",
+        r"\bshould i (?:buy|sell|invest in)\b.{0,48}\b(?:stock|shares|crypto|fund|property)\b",
+        r"\bwill (?:the )?(?:market|stock|share|crypto|bitcoin).{0,28}\b(?:rise|fall|go up|go down|crash)\b",
+        r"\b(?:guaranteed|risk[- ]free) (?:return|profit|investment)\b",
+    )),
+)
+
+_REFER_OUT_ANSWERS = {
+    "death": "AstroSpace does not predict death or lifespan, for anyone.",
+    "health": "AstroSpace cannot diagnose illness, predict medical outcomes, or recommend treatment. Please consult a qualified medical professional.",
+    "legal": "AstroSpace cannot predict legal outcomes or provide legal advice. Please consult a qualified legal professional.",
+    "money": "AstroSpace cannot recommend investments or predict markets. Please consult a qualified financial professional.",
+}
+
+
+def _refer_out_kind(question: str) -> str | None:
+    """Return a structured safety boundary before any model is invoked.
+
+    Ordinary questions about wellbeing, paperwork timing, or money timing stay
+    answerable. Only requests for a prohibited verdict or directive match.
+    """
+    normalized = " ".join(question.casefold().split())
+    for kind, patterns in _REFER_OUT_RULES:
+        if any(re.search(pattern, normalized) for pattern in patterns):
+            return kind
+    return None
 
 
 class HistoryTurn(BaseModel):
@@ -144,6 +192,34 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
         turns = [{"role": t.role, "content": t.content}
                  for t in (body.history or [])]
 
+    refer_out_kind = _refer_out_kind(body.question)
+    if refer_out_kind:
+        answer = _REFER_OUT_ANSWERS[refer_out_kind]
+        if thread is None and body.start_thread:
+            thread = cm.create_ask_thread(db, user.id, kundli_id)
+        if thread is not None:
+            cm.add_ask_message(
+                db, thread.id, "user", body.question,
+                language=body.language, input_mode=body.input_mode,
+                domain=refer_out_kind,
+            )
+            cm.add_ask_message(
+                db, thread.id, "assistant", answer,
+                language=body.language,
+                domain=refer_out_kind,
+                refer_out_kind=refer_out_kind,
+                evidence={"safety_policy": "excluded_verdict"},
+            )
+            db.refresh(thread)
+        return {
+            "answer": answer,
+            "tools_used": [],
+            "kundli_id": kundli_id,
+            "refer_out_kind": refer_out_kind,
+            "thread_id": thread.id if thread else None,
+            "thread": _thread(thread) if thread else None,
+        }
+
     try:
         agent = VedicQAAgent(k)
     except LocationError as e:
@@ -180,6 +256,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
         "answer": answer,
         "tools_used": sorted(set(tools_used)),
         "kundli_id": kundli_id,
+        "refer_out_kind": None,
         "thread_id": thread.id if thread else None,
         "thread": _thread(thread) if thread else None,
     }
