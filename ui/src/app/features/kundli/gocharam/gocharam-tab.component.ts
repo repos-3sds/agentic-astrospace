@@ -1,10 +1,11 @@
+import { TitleCasePipe } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { Skeleton } from 'primeng/skeleton';
 
 import { KundliStore } from '../../../core/kundli.store';
 import {
   GocharaActiveWindow,
-  GocharamDomainReading,
+  GocharamMatchedRule,
   GocharamPeriod,
   GocharamProfilePayload,
   TransitTimelineEvent,
@@ -12,7 +13,7 @@ import {
 import { VedicService } from '../../../core/vedic.service';
 import { SectionCardComponent } from '../../../shared/section-card/section-card.component';
 
-type WorkspaceView = 'summary' | 'domains' | 'planets' | 'timeline';
+type WorkspaceView = 'summary' | 'transits' | 'timeline';
 type ScanRangeDays = 30 | 90 | 365 | 1095;
 
 interface TimelineBar {
@@ -30,7 +31,7 @@ interface TimelineTrack {
 
 @Component({
   selector: 'app-gocharam-tab',
-  imports: [Skeleton, SectionCardComponent],
+  imports: [Skeleton, SectionCardComponent, TitleCasePipe],
   templateUrl: './gocharam-tab.component.html',
   styleUrl: './gocharam-tab.component.scss',
 })
@@ -45,8 +46,9 @@ export class GocharamTabComponent {
   protected readonly workspace = signal<WorkspaceView>('summary');
   protected readonly scanRangeDays = signal<ScanRangeDays>(90);
   protected readonly selectedDate = signal<string | null>(null);
-  protected readonly domainId = signal('career');
-  protected readonly planetId = signal('Saturn');
+  
+  protected readonly ruleId = signal<string | null>(null);
+
   protected readonly scanOptions: ReadonlyArray<{ days: ScanRangeDays; label: string }> = [
     { days: 30, label: '30 days' },
     { days: 90, label: '90 days' },
@@ -57,18 +59,19 @@ export class GocharamTabComponent {
   private requestedProfileId: string | null = null;
 
   protected readonly activeWindows = computed(() => this.data()?.gochara.timeline.active_windows ?? []);
-  protected readonly domains = computed(() => this.data()?.gochara.interpretation?.domains ?? []);
-  protected readonly activeDomain = computed<GocharamDomainReading | null>(() => {
-    const domains = this.domains();
-    return domains.find((domain) => domain.id === this.domainId()) ?? domains[0] ?? null;
+  
+  protected readonly matchedRules = computed(() => this.data()?.gochara.interpretation?.matched_rules ?? []);
+  
+  protected readonly activeRule = computed<GocharamMatchedRule | null>(() => {
+    const rules = this.matchedRules();
+    const id = this.ruleId();
+    if (id) {
+       const found = rules.find((rule) => rule.rule_id === id);
+       if (found) return found;
+    }
+    return rules[0] ?? null;
   });
-  protected readonly planets = computed(
-    () => this.data()?.gochara.interpretation?.planet_readings ?? [],
-  );
-  protected readonly activePlanet = computed(() => {
-    const planets = this.planets();
-    return planets.find((planet) => planet.planet === this.planetId()) ?? planets[0] ?? null;
-  });
+
   protected readonly scanRangeLabel = computed(
     () => this.scanOptions.find((option) => option.days === this.scanRangeDays())?.label ?? '',
   );
@@ -76,6 +79,7 @@ export class GocharamTabComponent {
     () => this.selectedDate() ?? this.data()?.as_of.slice(0, 10) ?? '',
   );
   protected readonly viewDateLabel = computed(() => this.formatDate(this.viewDate()));
+  
   protected readonly timelineBounds = computed(() => {
     const center = this.dayNumber(this.viewDate());
     if (center === null) return null;
@@ -87,18 +91,21 @@ export class GocharamTabComponent {
       endLabel: this.formatDate(this.dateFromDay(center + days)),
     };
   });
+  
   protected readonly nextEvent = computed(
     () =>
       this.data()?.gochara.timeline.next_365_days.find((event) =>
         this.isWithinScan(event.date, 'future'),
       ) ?? null,
   );
+  
   protected readonly previousEvent = computed(
     () =>
       this.data()?.gochara.timeline.previous_365_days.find((event) =>
         this.isWithinScan(event.date, 'past'),
       ) ?? null,
   );
+  
   protected readonly visiblePeriods = computed(() => {
     const periods = this.data()?.periods ?? [];
     return periods.filter((period) => {
@@ -108,6 +115,7 @@ export class GocharamTabComponent {
       return this.isWithinScan(date, period.status === 'past' ? 'past' : 'future');
     });
   });
+  
   protected readonly timelineTracks = computed<TimelineTrack[]>(() => {
     const bounds = this.timelineBounds();
     if (!bounds) return [];
@@ -137,6 +145,7 @@ export class GocharamTabComponent {
       a.planet.localeCompare(b.planet) || a.rule.localeCompare(b.rule),
     );
   });
+  
   protected readonly nearbyEvents = computed(() => {
     const center = this.dayNumber(this.viewDate());
     const timeline = this.data()?.gochara.timeline;
@@ -188,6 +197,12 @@ export class GocharamTabComponent {
   protected toneClass(tone?: string): string {
     if (tone === 'supportive') return 'supportive';
     if (tone === 'challenging' || tone === 'hard' || tone === 'mixed') return 'challenging';
+    return 'neutral';
+  }
+
+  protected categoryClass(category?: string): string {
+    if (category === 'growth' || category === 'auspicious') return 'supportive';
+    if (category === 'health_and_obstacles' || category === 'domestic_peace') return 'challenging';
     return 'neutral';
   }
 

@@ -780,78 +780,31 @@ export interface GocharamPeriod extends GocharaActiveWindow {
   validation_prompt: string;
 }
 
-export interface GocharamRangeOutlook {
-  days: number;
-  event_count: number;
-  supportive_count: number;
-  challenging_count: number;
-  tone: 'neutral' | 'supportive' | 'challenging' | 'mixed';
-  title: string;
-  reading: string;
-  highlights: TransitTimelineEvent[];
+export interface GocharamRuleContent {
+  guided_summary: string;
+  balanced_context: string;
+  practitioner_deep_dive: string;
 }
 
-export interface GocharamDomainReading {
-  id: string;
-  title: string;
-  tone: 'neutral' | 'supportive' | 'challenging' | 'mixed';
-  balance_score: number;
-  score_note: string;
-  main_theme: string;
-  rationale: string;
-  reading: string;
-  strengths: string[];
-  challenges: string[];
-  actions: string[];
-  timing: {
-    current: string;
-    next?: TransitTimelineEvent | null;
-    previous?: TransitTimelineEvent | null;
-    future_count: number;
-    previous_count: number;
-    active_windows: GocharaActiveWindow[];
-  };
-  range_outlook: GocharamRangeOutlook;
-  leading_planets: string[];
-  evidence_ids: string[];
-  dasha_alignment: {
-    active_lords: string[];
-    domain_matches: string[];
-    status: string;
-  };
+export interface GocharamMatchedRule {
+  rule_id: string;
+  rule_name: string;
+  planet: string;
+  category: string;
+  duration: string;
+  content: GocharamRuleContent;
 }
 
 export interface GocharamInterpretation {
   schema_version: string;
   library_version: string;
-  mode: 'deterministic_non_ai' | string;
+  mode: string;
   methodology: {
-    anchor_order: string[];
-    modifiers: string[];
     calculation_rule: string;
     interpretation_rule: string;
   };
-  domains: GocharamDomainReading[];
-  planet_readings: Array<{
-    planet: string;
-    title: string;
-    tone: string;
-    main_theme: string;
-    rationale: string;
-    reading: string;
-    timing: {
-      current: string;
-      next?: TransitTimelineEvent | null;
-      previous?: TransitTimelineEvent | null;
-      future_count: number;
-      previous_count: number;
-      active_windows: GocharaActiveWindow[];
-    };
-    range_outlook: GocharamRangeOutlook;
-    evidence_ids: string[];
-  }>;
+  matched_rules: GocharamMatchedRule[];
   evidence: Array<Record<string, unknown>>;
-  provenance: Record<string, string>;
 }
 
 export interface GocharamProfilePayload {

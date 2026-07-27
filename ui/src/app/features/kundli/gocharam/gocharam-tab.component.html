@@ -36,19 +36,11 @@
       </button>
       <button
         type="button"
-        [class.active]="workspace() === 'domains'"
-        (click)="selectWorkspace('domains')"
+        [class.active]="workspace() === 'transits'"
+        (click)="selectWorkspace('transits')"
       >
-        <span>Life areas</span>
-        <small>{{ domains().length }} focused readings</small>
-      </button>
-      <button
-        type="button"
-        [class.active]="workspace() === 'planets'"
-        (click)="selectWorkspace('planets')"
-      >
-        <span>Planets</span>
-        <small>{{ planets().length }} transit readings</small>
+        <span>Active Transits</span>
+        <small>{{ matchedRules().length }} triggered rules</small>
       </button>
       <button
         type="button"
@@ -139,7 +131,7 @@
           </header>
           <div class="window-list compact">
             @for (window of activeWindows(); track window.rule + window.start_date + window.end_date) {
-              <article class="window-card" [class]="toneClass(window.tone)">
+              <article class="window-card" [class]="categoryClass(window.tone)">
                 <div>
                   <span>{{ window.planet }}</span>
                   <strong>{{ window.rule }}</strong>
@@ -155,183 +147,58 @@
       </section>
     }
 
-    @if (workspace() === 'domains') {
+    @if (workspace() === 'transits') {
       <section class="explorer-workspace">
-        <aside class="explorer-rail" aria-label="Life area readings">
+        <aside class="explorer-rail planet-rail" aria-label="Active Transits">
           <div class="rail-heading">
-            <span>Life areas</span>
-            <strong>Choose one focus</strong>
+            <span>Active Transits</span>
+            <strong>Choose a rule</strong>
           </div>
           <nav>
-            @for (domain of domains(); track domain.id) {
+            @for (rule of matchedRules(); track rule.rule_id) {
               <button
                 type="button"
-                [class.active]="domainId() === domain.id"
-                (click)="domainId.set(domain.id)"
+                [class.active]="ruleId() === rule.rule_id"
+                (click)="ruleId.set(rule.rule_id)"
               >
-                <span>{{ domain.title }}</span>
-                <small>{{ domain.balance_score }}</small>
+                <span>{{ rule.rule_name }}</span>
+                <small [class]="categoryClass(rule.category)">{{ rule.planet }}</small>
               </button>
+            } @empty {
+               <p class="as-muted p-4">No major transits matched.</p>
             }
           </nav>
         </aside>
 
-        @if (activeDomain(); as domain) {
-          <article class="focus-reading" [class]="toneClass(domain.tone)">
+        @if (activeRule(); as rule) {
+          <article class="focus-reading planet-reading" [class]="categoryClass(rule.category)">
             <header>
               <div>
-                <span>Life-area reading</span>
-                <h3>{{ domain.title }}</h3>
-                <p>{{ domain.main_theme }}</p>
+                <span>{{ rule.planet }} Transit Rule</span>
+                <h3>{{ rule.rule_name }}</h3>
+                <p>{{ (rule.category || 'General') | titlecase }} · {{ (rule.duration || 'Short Term') | titlecase }}</p>
               </div>
-              <div class="balance-score">
-                <strong>{{ domain.balance_score }}</strong>
-                <span>Snapshot balance</span>
-              </div>
+              <span class="tone-badge" [class]="categoryClass(rule.category)">{{ rule.planet }}</span>
             </header>
-
-            <section class="range-reading" [class]="toneClass(domain.range_outlook.tone)">
+            
+            <section class="range-reading" [class]="categoryClass(rule.category)">
               <div class="range-reading-heading">
-                <span>{{ scanRangeLabel() }} life-area reading</span>
-                <small>
-                  {{ domain.range_outlook.supportive_count }} supportive ·
-                  {{ domain.range_outlook.challenging_count }} caution
-                </small>
+                <span>Guided Summary</span>
               </div>
-              <h4>{{ domain.range_outlook.title }}</h4>
-              <p>{{ domain.range_outlook.reading }}</p>
-              @if (domain.range_outlook.highlights.length) {
-                <div class="range-highlights">
-                  @for (event of domain.range_outlook.highlights; track eventTrack(event)) {
-                    <div>
-                      <time>{{ formatDate(event.date) }}</time>
-                      <strong>{{ event.title }}</strong>
-                    </div>
-                  }
-                </div>
-              }
+              <p>{{ rule.content.guided_summary }}</p>
+            </section>
+            
+            <section class="range-reading">
+              <div class="range-reading-heading">
+                <span>Balanced Context</span>
+              </div>
+              <p>{{ rule.content.balanced_context }}</p>
             </section>
 
-            <details class="reading-details">
-              <summary>Current snapshot and astrological rationale</summary>
-              <p>{{ domain.reading }}</p>
-              <p>{{ domain.rationale }}</p>
+            <details class="reading-details" open>
+              <summary>Practitioner Deep Dive (Astrological Rationale)</summary>
+              <p>{{ rule.content.practitioner_deep_dive }}</p>
             </details>
-
-            <div class="guidance-grid">
-              <section>
-                <span>Constructive possibilities</span>
-                <ul>
-                  @for (item of domain.strengths; track item) {
-                    <li>{{ item }}</li>
-                  }
-                </ul>
-              </section>
-              <section>
-                <span>Watch carefully</span>
-                <ul>
-                  @for (item of domain.challenges; track item) {
-                    <li>{{ item }}</li>
-                  }
-                </ul>
-              </section>
-              <section>
-                <span>Practical focus</span>
-                <ul>
-                  @for (item of domain.actions; track item) {
-                    <li>{{ item }}</li>
-                  }
-                </ul>
-              </section>
-            </div>
-
-            <footer class="evidence-strip">
-              <div>
-                <span>Timing</span>
-                <strong>{{ domain.timing.current }}</strong>
-              </div>
-              <div>
-                <span>Leading factors</span>
-                <strong>{{ domain.leading_planets.join(' · ') }}</strong>
-              </div>
-              <div>
-                <span>Dasha alignment</span>
-                <strong>
-                  {{
-                    domain.dasha_alignment.domain_matches.length
-                      ? domain.dasha_alignment.domain_matches.join(' · ')
-                      : 'No direct repetition'
-                  }}
-                </strong>
-              </div>
-            </footer>
-          </article>
-        }
-      </section>
-    }
-
-    @if (workspace() === 'planets') {
-      <section class="explorer-workspace">
-        <aside class="explorer-rail planet-rail" aria-label="Planet transit readings">
-          <div class="rail-heading">
-            <span>Planet transits</span>
-            <strong>Choose a planet</strong>
-          </div>
-          <nav>
-            @for (planet of planets(); track planet.planet) {
-              <button
-                type="button"
-                [class.active]="planetId() === planet.planet"
-                (click)="planetId.set(planet.planet)"
-              >
-                <span>{{ planet.planet }}</span>
-                <small [class]="toneClass(planet.tone)">{{ planet.tone }}</small>
-              </button>
-            }
-          </nav>
-        </aside>
-
-        @if (activePlanet(); as planet) {
-          <article class="focus-reading planet-reading" [class]="toneClass(planet.tone)">
-            <header>
-              <div>
-                <span>Planet reading</span>
-                <h3>{{ planet.title }}</h3>
-                <p>{{ planet.main_theme }}</p>
-              </div>
-              <span class="tone-badge" [class]="toneClass(planet.tone)">{{ planet.tone }}</span>
-            </header>
-            <section class="range-reading" [class]="toneClass(planet.range_outlook.tone)">
-              <div class="range-reading-heading">
-                <span>{{ scanRangeLabel() }} planet reading</span>
-                <small>{{ planet.range_outlook.event_count }} timed shifts</small>
-              </div>
-              <h4>{{ planet.range_outlook.title }}</h4>
-              <p>{{ planet.range_outlook.reading }}</p>
-            </section>
-            <details class="reading-details">
-              <summary>Current snapshot and calculated evidence</summary>
-              <p>{{ planet.reading }}</p>
-              <p>{{ planet.rationale }}</p>
-            </details>
-            <footer class="evidence-strip planet-timing">
-              <div>
-                <span>Current timing</span>
-                <strong>{{ planet.timing.current }}</strong>
-              </div>
-              @if (planet.timing.next; as next) {
-                <div>
-                  <span>Next change</span>
-                  <strong>{{ next.title }} · {{ formatDate(next.date) }}</strong>
-                </div>
-              }
-              @if (planet.timing.previous; as previous) {
-                <div>
-                  <span>Previous change</span>
-                  <strong>{{ previous.title }} · {{ formatDate(previous.date) }}</strong>
-                </div>
-              }
-            </footer>
           </article>
         }
       </section>
@@ -379,7 +246,7 @@
                     <button
                       type="button"
                       class="period-bar"
-                      [class]="toneClass(bar.period.tone)"
+                      [class]="categoryClass(bar.period.tone)"
                       [style.left.%]="bar.left"
                       [style.width.%]="bar.width"
                       [title]="bar.period.rule + ': ' + formatRange(bar.period)"
@@ -433,7 +300,7 @@
           <summary>Review all {{ visiblePeriods().length }} period readings</summary>
           <div class="period-list">
             @for (period of visiblePeriods(); track periodTrack(period)) {
-              <article class="period-card" [class]="toneClass(period.tone)">
+              <article class="period-card" [class]="categoryClass(period.tone)">
                 <header>
                   <div>
                     <span>{{ period.status }} · {{ period.planet }}</span>
