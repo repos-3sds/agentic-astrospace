@@ -7,6 +7,8 @@ import {
   WhyReadingSheetComponent,
 } from '../why-reading/why-reading-sheet.component';
 import { MobileAskStateService } from './mobile-ask-state.service';
+import { MobileAskThreadService } from './mobile-ask-thread.service';
+import { KundliStore } from '../../../core/kundli.store';
 
 /**
  * How confidently the answer lands. Named, not a number: the point of the dot
@@ -66,6 +68,8 @@ export class AskAnswerComponent {
   }));
 
   readonly draft = signal('');
+  readonly submitting = signal(false);
+  readonly submitError = signal<string | null>(null);
 
   /**
    * The same evidence sheet Today uses (22:23). An answer and a day-reading owe
@@ -88,10 +92,37 @@ export class AskAnswerComponent {
   readonly conventions = signal(['Lahiri', 'Whole-sign', 'Vijayawada', 'High confidence']);
 
   private readonly router = inject(Router);
+  private readonly kundlis = inject(KundliStore);
+  private readonly threadsApi = inject(MobileAskThreadService);
 
-  /** A follow-up is a new question, so it re-enters through the same route. */
-  protected askAgain(question: string): void {
-    void this.router.navigate(['/m', 'ask', 'answer'], { queryParams: { q: question } });
-    this.draft.set('');
+  /** Persists a follow-up in the open thread before displaying its answer. */
+  protected async askAgain(question: string): Promise<void> {
+    const q = question.trim();
+    const threadId = this.params().get('thread');
+    if (!q || !threadId || this.submitting()) return;
+
+    this.submitting.set(true);
+    this.submitError.set(null);
+    try {
+      await this.kundlis.load();
+      const profile = this.kundlis.active();
+      if (!profile) throw new Error('Select a profile before asking a follow-up.');
+
+      const response = await this.threadsApi.continue(profile.id, threadId, q);
+      this.askState.remember(response);
+      const destination = response.refer_out_kind ? 'refer' : 'answer';
+      await this.router.navigate(['/m', 'ask', destination], {
+        queryParams: {
+          q,
+          thread: response.thread_id ?? threadId,
+          domain: response.refer_out_kind ?? undefined,
+        },
+      });
+      this.draft.set('');
+    } catch (error) {
+      this.submitError.set((error as Error).message);
+    } finally {
+      this.submitting.set(false);
+    }
   }
 }

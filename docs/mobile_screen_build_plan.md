@@ -237,7 +237,7 @@ These frames were discovered in the updated Figma page after the original
 | --- | --- | --- | --- |
 | `206:160` | 2d · Forgot Password | ⬜ | US-N5 · replace the inline reset action with a complete request/success journey |
 | `206:190` | States · Chart Computing | ⬜ | US-N4 · show while the first chart or an expensive recalculation is running |
-| `206:223` | 10b · Ask — History | ⬜ | US-N2 · list and reopen persisted Ask threads |
+| `206:223` | 10b · Ask — History | ✅ done — `/m/ask/history` | US-N2 · list, reopen, continue, and archive persisted Ask threads |
 | `206:302` | 34 · Subscription | ⬜ | Product/StoreKit decision required before purchase wiring |
 | `206:354` | 35 · Notification Center | ⬜ | Notification persistence and deep-link destinations |
 | `206:493` | 6b · Edit Birth Details | ⬜ | US-N3 · edit active kundli and invalidate derived caches |

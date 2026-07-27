@@ -9,8 +9,12 @@ export class MobileAskStateService {
 
   remember(response: AskResponse): void {
     if (response.thread_id) {
-      sessionStorage.setItem(this.prefix + response.thread_id, response.answer);
+      this.rememberAnswer(response.thread_id, response.answer);
     }
+  }
+
+  rememberAnswer(threadId: string, answer: string): void {
+    sessionStorage.setItem(this.prefix + threadId, answer);
   }
 
   answer(threadId: string | null): string | null {

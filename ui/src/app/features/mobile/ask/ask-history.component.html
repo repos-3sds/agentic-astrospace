@@ -1,0 +1,54 @@
+<header class="askhist-appbar">
+  <a class="askhist-back" routerLink="/m/ask" aria-label="Back to Ask">
+    <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  </a>
+  <h1>Ask History</h1>
+  <span class="askhist-balance" aria-hidden="true"></span>
+</header>
+
+<main class="askhist-body">
+  @if (loading()) {
+    <p class="askhist-state" role="status">Loading your conversations…</p>
+  } @else if (error()) {
+    <div class="askhist-state is-error" role="alert">
+      <p>{{ error() }}</p>
+      <button type="button" (click)="load()">Try again</button>
+    </div>
+  } @else if (!threads().length) {
+    <div class="askhist-empty">
+      <p class="askhist-empty-title">No past questions yet</p>
+      <p>Your saved conversations will appear here.</p>
+      <a routerLink="/m/ask">Ask your first question</a>
+    </div>
+  } @else {
+    <div class="askhist-list">
+      @for (thread of threads(); track thread.id; let first = $first) {
+        <article
+          class="askhist-card"
+          [class.is-opening]="opening() === thread.id"
+          tabindex="0"
+          role="button"
+          (click)="open(thread)"
+          (keydown.enter)="open(thread)"
+        >
+          <div class="askhist-meta">
+            <span>{{ date(thread) }} · {{ thread.message_count }} messages</span>
+            <span class="askhist-badge">{{ first ? 'ACTIVE' : 'SAVED' }}</span>
+          </div>
+          <div class="askhist-question">
+            <h2>{{ thread.title }}</h2>
+            <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
+          </div>
+          <button
+            class="askhist-archive"
+            type="button"
+            [disabled]="archiving() === thread.id"
+            (click)="archive($event, thread)"
+          >
+            {{ archiving() === thread.id ? 'Archiving…' : 'Archive' }}
+          </button>
+        </article>
+      }
+    </div>
+  }
+</main>

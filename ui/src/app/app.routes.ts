@@ -216,6 +216,13 @@ export const routes: Routes = [
           import('./features/mobile/ask/ask-home.component').then((m) => m.AskHomeComponent),
       },
       {
+        path: 'ask/history',
+        loadComponent: () =>
+          import('./features/mobile/ask/ask-history.component').then(
+            (m) => m.AskHistoryComponent,
+          ),
+      },
+      {
         path: 'ask/answer',
         loadComponent: () =>
           import('./features/mobile/ask/ask-answer.component').then((m) => m.AskAnswerComponent),

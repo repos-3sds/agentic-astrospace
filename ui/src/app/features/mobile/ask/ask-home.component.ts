@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AskComposerComponent } from './ask-composer.component';
 import { VoiceListeningComponent } from './voice-listening.component';
 import { KundliStore } from '../../../core/kundli.store';
@@ -43,7 +43,7 @@ export interface AskSuggestion {
   selector: 'as-ask-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AskComposerComponent, VoiceListeningComponent],
+  imports: [AskComposerComponent, VoiceListeningComponent, RouterLink],
   templateUrl: './ask-home.component.html',
   styleUrl: './ask-home.component.scss',
 })

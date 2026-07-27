@@ -49,9 +49,15 @@
 
   <div class="followups">
     @for (f of v.followUps; track f) {
-      <button class="followup" type="button">{{ f }}</button>
+      <button class="followup" type="button" (click)="askAgain(f)">{{ f }}</button>
     }
   </div>
+  @if (submitting()) {
+    <p class="answer-state" role="status">Computing your follow-up…</p>
+  }
+  @if (submitError()) {
+    <p class="answer-state is-error" role="alert">{{ submitError() }}</p>
+  }
 </div>
 
 <as-ask-composer

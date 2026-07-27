@@ -133,4 +133,12 @@
   color: var(--m-accent-strong);
 }
 
+.answer-state {
+  margin: 0;
+  @include m-body-small;
+  color: var(--m-muted);
+
+  &.is-error { color: var(--m-bad); }
+}
+
 /* The composer (node 26:93) is as-ask-composer, shared with Ask Home. */
