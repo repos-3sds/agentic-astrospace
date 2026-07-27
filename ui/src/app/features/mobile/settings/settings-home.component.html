@@ -8,7 +8,7 @@
 </header>
 
 <div class="body">
-  <button class="account" type="button">
+  <button class="account" type="button" (click)="profileSwitcherOpen.set(true)">
     <span class="avatar" aria-hidden="true">{{ p.initial }}</span>
     <span class="account-text">
       <span class="account-name">{{ p.name }}</span>
@@ -53,3 +53,6 @@
     </div>
   }
 </div>
+@if (profileSwitcherOpen()) {
+  <as-profile-switcher (dismissed)="profileSwitcherOpen.set(false)" />
+}

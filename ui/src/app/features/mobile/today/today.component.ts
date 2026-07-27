@@ -10,6 +10,7 @@ import {
 import { KundliStore } from '../../../core/kundli.store';
 import { VedicService } from '../../../core/vedic.service';
 import { DailyGuidancePayload } from '../../../core/models';
+import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 
 /** Verdict bands. Named, not numeric, so tone rules can key off them. */
 export type DayBand = 'steady' | 'mixed' | 'tough';
@@ -74,6 +75,7 @@ export interface TodayView {
     ListenSheetComponent,
     RouterLink,
     WhyReadingSheetComponent,
+    ProfileSwitcherComponent,
   ],
   templateUrl: './today.component.html',
   styleUrl: './today.component.scss',
@@ -133,6 +135,7 @@ export class TodayComponent {
 
   /** Which sheet is showing, if any. One signal so two cannot stack. */
   readonly openSheet = signal<'quality' | 'why' | 'listen' | null>(null);
+  readonly profileSwitcherOpen = signal(false);
 
   /** Audio language, chosen in the Listen sheet — see 23:25. */
   readonly audioLanguage = signal('English');

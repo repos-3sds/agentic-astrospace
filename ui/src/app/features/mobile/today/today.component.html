@@ -1,13 +1,13 @@
 @let v = view();
 
 <header class="appbar">
-  <div class="identity">
+  <button class="identity" type="button" (click)="profileSwitcherOpen.set(true)" aria-label="Switch profile">
     <div class="avatar" aria-hidden="true">{{ v.initial }}</div>
     <div class="who">
       <p class="name">{{ greeting() }}</p>
       <p class="date">{{ v.dateLabel }}</p>
     </div>
-  </div>
+  </button>
   <a class="iconbtn" [routerLink]="['/m', 'settings']" aria-label="Settings">
     <img src="mobile/settings.svg" alt="" aria-hidden="true" />
   </a>
@@ -120,6 +120,13 @@
     [signals]="signals()"
     [summary]="summary()"
     (dismissed)="openSheet.set(null)"
+  />
+}
+
+@if (profileSwitcherOpen()) {
+  <as-profile-switcher
+    (dismissed)="profileSwitcherOpen.set(false)"
+    (selected)="loadToday()"
   />
 }
 

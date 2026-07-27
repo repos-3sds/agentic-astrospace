@@ -1,0 +1,18 @@
+<header class="editbd-appbar">
+  <a routerLink="/m/settings" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
+  <h1>Edit Birth Details</h1><span></span>
+</header>
+<main class="editbd-main">
+  <aside class="editbd-warning">Updating details will recalculate your entire chart. This impacts your current planetary periods and transit dashboards.</aside>
+  @if (loading()) { <p class="editbd-state">Loading profile…</p> } @else {
+    <form id="edit-birth-form" (ngSubmit)="save()">
+      <label>FULL NAME<input name="name" [(ngModel)]="name" autocomplete="name" /></label>
+      <label>DATE OF BIRTH<input name="date" [(ngModel)]="date" type="date" /></label>
+      <label>TIME OF BIRTH<input name="time" [(ngModel)]="time" type="time" /></label>
+      <label>PLACE OF BIRTH<input name="city" [(ngModel)]="city" autocomplete="address-level2" /></label>
+      <label>COUNTRY CODE<input name="nation" [(ngModel)]="nation" maxlength="2" autocomplete="country" /></label>
+      @if (error()) { <p class="editbd-error" role="alert">{{ error() }}</p> }
+    </form>
+  }
+</main>
+<footer><button type="submit" form="edit-birth-form" [disabled]="loading() || saving()">{{ saving() ? 'Recalculating…' : 'Save Changes' }}</button></footer>

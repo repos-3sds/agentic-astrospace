@@ -203,7 +203,7 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `69:89` | 25e · Settings — Location | ✅ done |
 | `69:117` | 25f · Settings — Conventions | ✅ done |
 | `69:180` | 25g · Settings — Account & Privacy | ✅ done |
-| `79:89` | 26 · Profile switcher sheet | ⬜ |
+| `79:89` | 26 · Profile switcher sheet | ✅ done — shared from Today and Settings |
 | `82:96` | 2c · Choose Your Language | ✅ done — `/m/language` |
 | `91:89` | 27 · Gochara (plain transits) | ✅ done — `/m/transits` |
 | `92:89` | 27b · Full Transits | ✅ done — `/m/transits/full` |
@@ -240,7 +240,7 @@ These frames were discovered in the updated Figma page after the original
 | `206:223` | 10b · Ask — History | ✅ done — `/m/ask/history` | US-N2 · list, reopen, continue, and archive persisted Ask threads |
 | `206:302` | 34 · Subscription | ⬜ | Product/StoreKit decision required before purchase wiring |
 | `206:354` | 35 · Notification Center | ⬜ | Notification persistence and deep-link destinations |
-| `206:493` | 6b · Edit Birth Details | ⬜ | US-N3 · edit active kundli and invalidate derived caches |
+| `206:493` | 6b · Edit Birth Details | ✅ done — `/m/settings/birth-details` | US-N3 · edit active kundli, recalculate chart, and invalidate derived caches |
 | `206:550` | 27c · Transit Detail | ⬜ | US-N4 · open from Gochara/Full Transits using real transit evidence |
 | `206:591` | 36 · Search | ⬜ | Cross-module search API and result deep links |
 | `206:641` | 25h · Account Deletion | ⬜ | US-N5 · backend-owned confirmed deletion cascade |

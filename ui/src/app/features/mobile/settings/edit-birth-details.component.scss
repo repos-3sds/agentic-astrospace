@@ -1,0 +1,14 @@
+@use '../mobile-tokens' as *;
+:host { height: 100%; display: flex; flex-direction: column; background: var(--m-bg); }
+.editbd-appbar { display:grid; grid-template-columns:36px 1fr 36px; align-items:center; padding:12px 20px;
+  a { width:36px;height:36px;border:1px solid var(--m-border);border-radius:999px;display:grid;place-items:center;background:var(--m-surface); }
+  img{width:16px;height:16px}.editbd-appbar{} h1{@include m-title;margin:0;text-align:center}
+}
+.editbd-main { flex:1; overflow:auto; padding:16px 24px; }
+.editbd-warning { @include m-body-small; padding:16px; border:1px solid var(--m-warn); border-radius:16px; background:var(--m-warn-soft); color:var(--m-warn); margin-bottom:16px; }
+form { display:flex;flex-direction:column;gap:16px; }
+label { @include m-caption; color:var(--m-muted); display:flex;flex-direction:column;gap:8px; }
+input { @include m-body; box-sizing:border-box;width:100%;padding:16px;border:1.2px solid var(--m-border);border-radius:16px;background:var(--m-surface);color:var(--m-text); }
+.editbd-error,.editbd-state{@include m-body-small;color:var(--m-bad)}
+footer { padding:12px 24px max(20px,var(--m-safe-bottom)); }
+footer button { @include m-button;width:100%;padding:16px;border:0;border-radius:999px;background:var(--m-accent);color:var(--m-on-ink); }

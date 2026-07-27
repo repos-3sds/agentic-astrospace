@@ -324,6 +324,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'settings/birth-details',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/settings/edit-birth-details.component').then(
+            (m) => m.EditBirthDetailsComponent,
+          ),
+      },
+      {
         path: 'settings/mode',
         loadComponent: () =>
           import('./features/mobile/settings/mode-tone.component').then(

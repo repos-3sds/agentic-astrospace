@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
+import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 
 /** One settings row. `value` is the current state, shown without opening it. */
 export interface SettingRow {
@@ -32,13 +33,14 @@ export interface SettingGroup {
   selector: 'as-settings-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, ProfileSwitcherComponent],
   templateUrl: './settings-home.component.html',
   styleUrl: './settings-home.component.scss',
 })
 export class SettingsHomeComponent {
   private readonly auth = inject(AuthService);
   private readonly kundlis = inject(KundliStore);
+  readonly profileSwitcherOpen = signal(false);
 
   readonly profile = computed(() => {
     const name = this.kundlis.active()?.name
@@ -110,6 +112,7 @@ export class SettingsHomeComponent {
           icon: 'set-profiles',
           label: 'Manage profiles',
           value: `${this.kundlis.kundlis().length} ${this.kundlis.kundlis().length === 1 ? 'profile' : 'profiles'}`,
+          route: ['/m', 'settings', 'birth-details'],
         },
       ],
     },
