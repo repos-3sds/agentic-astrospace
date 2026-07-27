@@ -226,3 +226,25 @@
 }
 
 .suggestion-text { @include m-body-small; color: var(--m-accent-strong); flex: 1 1 0; min-width: 0; }
+.mtoday-state {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--m-border);
+  border-radius: 14px;
+  background: var(--m-surface);
+  color: var(--m-muted);
+  font: inherit;
+
+  &.is-error { color: var(--m-bad); }
+  button {
+    border: 0;
+    background: none;
+    color: var(--m-accent-strong);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+}

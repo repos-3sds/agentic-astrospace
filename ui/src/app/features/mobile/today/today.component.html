@@ -14,6 +14,15 @@
 </header>
 
 <div class="body">
+  @if (loading()) {
+    <div class="mtoday-state" role="status">Loading your guidance…</div>
+  }
+  @if (loadError()) {
+    <div class="mtoday-state is-error" role="alert">
+      <span>{{ loadError() }}</span>
+      <button type="button" (click)="loadToday()">Try again</button>
+    </div>
+  }
   <section class="card">
     <div class="card-head">
       <p class="eyebrow">WHAT MATTERS TODAY</p>

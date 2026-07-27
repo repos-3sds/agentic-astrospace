@@ -17,6 +17,8 @@ export class KundliStore {
   readonly active = computed(
     () => this.kundlis().find((k) => k.id === this.activeId()) ?? null,
   );
+  private loadPromise: Promise<void> | null = null;
+  private readonly activeStorageKey = 'astrospace.activeKundliId';
 
   readonly filtered = computed(() => {
     const q = this.query().toLowerCase().trim();
@@ -48,13 +50,35 @@ export class KundliStore {
   }
 
   async load(): Promise<void> {
-    this.kundlis.set(await this.api.get<Kundli[]>('/kundlis'));
-    this.loaded.set(true);
+    if (this.loadPromise) return this.loadPromise;
+    this.loadPromise = this.loadOnce();
+    return this.loadPromise;
+  }
+
+  private async loadOnce(): Promise<void> {
+    try {
+      const kundlis = await this.api.get<Kundli[]>('/kundlis');
+      this.kundlis.set(kundlis);
+      const storedId = localStorage.getItem(this.activeStorageKey);
+      const selected = kundlis.find((kundli) => kundli.id === storedId) ?? kundlis[0] ?? null;
+      this.setActive(selected?.id ?? null);
+      this.loaded.set(true);
+    } catch (error) {
+      this.loadPromise = null;
+      throw error;
+    }
+  }
+
+  setActive(id: string | null): void {
+    this.activeId.set(id);
+    if (id) localStorage.setItem(this.activeStorageKey, id);
+    else localStorage.removeItem(this.activeStorageKey);
   }
 
   async create(payload: KundliPayload): Promise<Kundli> {
     const created = await this.api.post<Kundli>('/kundlis', payload);
     this.kundlis.update((list) => [...list, created]);
+    this.setActive(created.id);
     return created;
   }
 
@@ -69,6 +93,6 @@ export class KundliStore {
     await this.api.delete(`/kundlis/${id}`);
     this.kundlis.update((list) => list.filter((k) => k.id !== id));
     this.vedic.invalidate(id);
-    if (this.activeId() === id) this.activeId.set(null);
+    if (this.activeId() === id) this.setActive(this.kundlis()[0]?.id ?? null);
   }
 }

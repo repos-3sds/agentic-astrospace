@@ -2,6 +2,77 @@
 
 This checklist tracks the work needed to move AstroSpace from a strong prototype into a serious, deterministic astrology platform. AI should explain and personalize; the core astrology must be calculated, testable, and auditable.
 
+## Immediate Native-App Execution Plan
+
+Screen completion and workflow completion are tracked separately. A Figma screen
+is not considered product-complete until its controls, state, API, loading,
+empty, error, and return navigation have been exercised at 375 × 812.
+
+### US-N1 · Returning user gets the correct active profile
+
+**Journey:** Sign in → restore/select saved profile → Today loads real guidance.
+
+- [x] Load the authenticated user's kundlis when the `/m` shell starts.
+- [x] Restore the last valid active profile; otherwise select the first profile.
+- [ ] Show an intentional empty-profile state when no kundli exists.
+- [x] Replace fixture identity in Today, Chart, and Settings.
+- [ ] Replace fixture identity in Ask.
+- [x] Load Today from `/api/v1/context/{kundli_id}/daily`.
+- [ ] Verify refresh/session continuity and profile isolation.
+- [ ] Verify loading, API failure, and retry at 375 × 812.
+
+### US-N2 · User asks and receives a safe, persisted answer
+
+**Journey:** Today suggestion or Ask → backend classification → answer or refer-out
+→ follow-up → history.
+
+- [ ] Send mobile questions through `/api/v1/ask/{kundli_id}`.
+- [ ] Let backend safety classification choose answer vs refer-out.
+- [ ] Wire loading, retry, copy, share, follow-up, and past-question actions.
+- [ ] Persist and reopen Ask threads for the active profile.
+- [ ] Test health, legal, money, death/longevity, and ordinary questions.
+
+### US-N3 · User switches and manages profiles
+
+**Journey:** Profile trigger → switcher → select/add/edit/archive → all modules
+refresh to the selected kundli.
+
+- [ ] Build Figma node `79:89` using the shared sheet primitive.
+- [ ] Wire profile triggers in Chart and Settings.
+- [ ] Add create/edit/archive management with confirmation where destructive.
+- [ ] Invalidate profile-scoped calculation caches after a switch or edit.
+- [ ] Verify Today, Ask, Chart, Calendar, Transits, Readings, and Notes refresh.
+
+### US-N4 · Core astrology modules use real profile data
+
+- [ ] Wire Chart and its detail screens to deterministic Vedic APIs.
+- [ ] Wire Calendar and day detail to calendar intelligence.
+- [ ] Wire Transits/Gochara to the active profile.
+- [ ] Wire Compatibility prospect creation, scoring, and saved checks.
+- [ ] Wire Readings generation, saved versions, claims, and accuracy feedback.
+- [ ] Wire Notes persistence.
+- [ ] Add loading, empty, generic-error, and retry states to every module.
+
+### US-N5 · Account lifecycle is complete
+
+- [x] Register/sign in and protect the native shell.
+- [x] Create the first kundli during onboarding.
+- [x] Export account profile data.
+- [x] Sign out back to the native entrance.
+- [ ] Change email with re-authentication/confirmation handling.
+- [ ] Delete account through a backend-owned confirmed cascade.
+- [ ] Verify registration, email confirmation, reset, restart persistence, and
+  logout against Supabase on port 8000.
+
+### US-N6 · Native release candidate
+
+- [ ] Finish remaining Figma variants and practitioner-reference screens.
+- [ ] Build and sync with `npm run build:native:dev`.
+- [ ] Verify iOS session persistence, deep links, safe areas, keyboard, sharing,
+  downloads, and network failures.
+- [ ] Redeploy the production backend so the current Capacitor CORS fix is live.
+- [ ] Run the register-to-logout and returning-user stories on a simulator.
+
 ## 1. Core Calculation Authority
 
 - [x] Move compatibility scoring from frontend approximation to backend engine.

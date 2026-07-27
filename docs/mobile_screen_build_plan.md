@@ -236,6 +236,23 @@ pipeline's call — classifying intent in the client would put the safety
 boundary somewhere that can be bypassed. Both screens exist and are routed;
 the decision lands with `/api/v1/ask`.
 
+### Next implementation order
+
+The next milestone is workflow wiring, not another batch of isolated screens.
+Use `docs/full_astro_software_checklist.md` US-N1 through US-N6 as the ordered
+execution backlog:
+
+1. Restore a real active profile and load Today from the daily-context API.
+2. Complete the backend-owned Ask safety and history journey.
+3. Build and wire profile switching/management.
+4. Replace fixture data module-by-module, including loading/empty/error states.
+5. Finish account lifecycle against real Supabase.
+6. Complete remaining Figma variants and native release verification.
+
+For each story, verify the complete journey at 375 × 812 and commit the story
+as one coherent slice. Do not mark a screen's workflow complete merely because
+its static Figma implementation renders.
+
 ## Status
 
 36 of 70 built: M1's Today set, the complete authentication/onboarding entrance, all of M3 Ask, M4 Remedies, M5 Muhurta and

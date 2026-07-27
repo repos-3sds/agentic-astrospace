@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ChartCell, EastChartComponent } from './east-chart.component';
 import { ProvenanceSheetComponent } from './provenance-sheet.component';
+import { KundliStore } from '../../../core/kundli.store';
 
 /** One of the three placements the hub leads with. */
 export interface AnglePoint {
@@ -43,8 +44,9 @@ export interface ExploreCard {
   styleUrl: './chart-hub.component.scss',
 })
 export class ChartHubComponent {
-  readonly profileName = signal('Lakshmi');
-  readonly profileInitial = signal('L');
+  private readonly kundlis = inject(KundliStore);
+  readonly profileName = computed(() => this.kundlis.active()?.name ?? 'Choose profile');
+  readonly profileInitial = computed(() => this.profileName().slice(0, 1).toUpperCase());
 
   readonly signature = signal({
     headline: 'Warm, communicative, and grounded once you commit.',
@@ -149,4 +151,8 @@ export class ChartHubComponent {
 
   /** The provenance sheet (36:247), shared with the full render. */
   readonly provenanceOpen = signal(false);
+
+  constructor() {
+    if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
+  }
 }

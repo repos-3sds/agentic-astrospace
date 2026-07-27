@@ -201,7 +201,7 @@ export class BirthDetailsComponent {
         birth_nation: 'IN',
         notes: this.timeIsApproximate() ? 'Birth time is approximate.' : undefined,
       });
-      this.kundlis.activeId.set(created.id);
+      this.kundlis.setActive(created.id);
       await this.router.navigate(['/m', 'today']);
     } catch (error) {
       this.error.set((error as Error).message);

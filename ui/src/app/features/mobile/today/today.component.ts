@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DayGaugeComponent } from '../day-gauge/day-gauge.component';
 import { DayQualitySheetComponent, DaySignal } from './day-quality-sheet.component';
@@ -7,6 +7,9 @@ import {
   EvidenceRow,
   WhyReadingSheetComponent,
 } from '../why-reading/why-reading-sheet.component';
+import { KundliStore } from '../../../core/kundli.store';
+import { VedicService } from '../../../core/vedic.service';
+import { DailyGuidancePayload } from '../../../core/models';
 
 /** Verdict bands. Named, not numeric, so tone rules can key off them. */
 export type DayBand = 'steady' | 'mixed' | 'tough';
@@ -76,6 +79,11 @@ export interface TodayView {
   styleUrl: './today.component.scss',
 })
 export class TodayComponent {
+  private readonly kundlis = inject(KundliStore);
+  private readonly vedic = inject(VedicService);
+
+  readonly loading = signal(true);
+  readonly loadError = signal<string | null>(null);
   readonly view = signal<TodayView>({
     greetingName: 'Lakshmi',
     initial: 'L',
@@ -191,4 +199,111 @@ export class TodayComponent {
     'Is today good to start new work?',
     'Best time to travel this evening?',
   ]);
+
+  constructor() {
+    void this.loadToday();
+  }
+
+  protected async loadToday(): Promise<void> {
+    this.loading.set(true);
+    this.loadError.set(null);
+    try {
+      await this.kundlis.load();
+      const profile = this.kundlis.active();
+      if (!profile) {
+        this.loadError.set('Create a profile to receive your daily guidance.');
+        return;
+      }
+      const daily = await this.vedic.dailyGuidance(profile.id);
+      this.applyDaily(profile.name, profile.birth_city, daily);
+    } catch (error) {
+      this.loadError.set((error as Error).message);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  private applyDaily(name: string, city: string, daily: DailyGuidancePayload): void {
+    const band: DayBand = daily.verdict.tone === 'caution'
+      ? 'tough'
+      : daily.verdict.tone === 'mixed' ? 'mixed' : 'steady';
+    const dateLabel = new Intl.DateTimeFormat('en', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      timeZone: 'UTC',
+    }).format(new Date(`${daily.date}T00:00:00Z`));
+    this.view.set({
+      greetingName: name,
+      initial: name.slice(0, 1).toUpperCase(),
+      dateLabel,
+      place: daily.provenance.place.city || city,
+      score: Math.max(0, Math.min(100, daily.verdict.score)),
+      band,
+      scoreLabel: band === 'steady' ? 'Steady' : band === 'mixed' ? 'Mixed' : 'Take care',
+      verdict: daily.verdict.headline,
+      detail: daily.verdict.text,
+      doItem: daily.do_today[0]?.text ?? daily.reading.best_for[0] ?? daily.reading.focus,
+      avoidItem: daily.avoid_today[0]?.text ?? daily.reading.avoid[0] ?? daily.reading.timing_note,
+      nextWindowLabel: 'TIMING NOTE',
+      nextWindowValue: daily.reading.timing_note,
+      nextWindowIn: '',
+    });
+    this.signals.set([
+      {
+        name: 'Tarabala',
+        verdict: daily.tarabala.favourable ? 'FAVOURABLE' : 'CAUTION',
+        tone: daily.tarabala.favourable ? 'good' : 'warn',
+        explanation: daily.tarabala.note ?? `${daily.tarabala.tara} tara for today.`,
+      },
+      {
+        name: 'Chandrabala',
+        verdict: daily.chandrabala.favourable ? 'STRONG' : 'CAUTION',
+        tone: daily.chandrabala.favourable ? 'good' : 'warn',
+        explanation: `Moon is ${daily.chandrabala.house_from_rashi} houses from your natal Moon.`,
+      },
+      ...daily.context.active_gochara.slice(0, 1).map((transit) => ({
+        name: transit.planet,
+        verdict: (transit.severity ?? 'ACTIVE').toUpperCase(),
+        tone: transit.severity === 'high' ? 'warn' as const : 'good' as const,
+        explanation: transit.name,
+      })),
+    ]);
+    this.summary.set(daily.reading.summary);
+    this.plainWords.set(daily.reading.plain_why);
+    this.calculation.set(daily.reading.technical_why.map((value, index) => ({
+      label: `Signal ${index + 1}`,
+      value,
+    })));
+    this.statSections.set([
+      {
+        eyebrow: 'TODAY’S SKY · PANCHANG',
+        columns: 2,
+        cells: [
+          { label: 'TITHI', value: daily.star_of_day.tithi },
+          { label: 'NAKSHATRA', value: daily.star_of_day.nakshatra },
+          { label: 'VARA', value: daily.vara },
+          { label: 'MOON SIGN', value: daily.star_of_day.moon_rashi },
+        ],
+      },
+      {
+        eyebrow: 'TODAY · CHANGES DAILY',
+        columns: 3,
+        cells: [
+          { label: 'COLOUR', value: daily.color.name },
+          { label: 'NUMBER', value: String(daily.number.value) },
+          { label: 'TARABALA', value: daily.tarabala.favourable ? 'Good' : 'Caution' },
+        ],
+      },
+      {
+        eyebrow: 'ALWAYS · YOUR SIGNATURE',
+        columns: 3,
+        cells: [
+          { label: 'LUCKY NO.', value: String(daily.lucky_numbers.astrological.number) },
+          { label: 'GEM', value: daily.lucky_signature.gem },
+          { label: 'DIRECTION', value: daily.lucky_signature.direction },
+        ],
+      },
+    ]);
+  }
 }

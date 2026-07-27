@@ -8,6 +8,7 @@ import {
 } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
+import { KundliStore } from '../../../core/kundli.store';
 
 /**
  * Native app shell: routed content plus the five-tab bar (Figma node 13:66).
@@ -28,6 +29,11 @@ import { filter, map, startWith } from 'rxjs';
 })
 export class MobileShellComponent {
   private readonly router = inject(Router);
+  private readonly kundlis = inject(KundliStore);
+
+  constructor() {
+    if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
+  }
 
   /**
    * Tab roots keep the primary navigation; pushed detail screens do not. Route
