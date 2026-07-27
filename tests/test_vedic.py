@@ -315,7 +315,7 @@ class TestTransitContext:
             "Rahu": {"lon": 180.0},
             "Ketu": {"lon": 0.0},
         }
-        result = gochara_rules(positions, ARIES, ARIES)
+        result = gochara_rules(positions, positions, ARIES, ARIES)
         assert result["sade_sati"]["active"]
         assert any(rule["name"] == "Sade Sati" for rule in result["active_rules"])
         assert result["core_reading"]["active_rule_count"] >= 1
@@ -360,9 +360,21 @@ class TestTransitContext:
         )
         assert result["system"] == "South Indian Gocharam"
         assert result["coverage"]["strategy"].startswith("pre-generated")
+        assert result["coverage"]["past_days"] == 90
+        assert result["coverage"]["future_days"] == 90
+        assert result["gochara"]["timeline"]["scan_days"] == 90
         assert result["gochara"]["core_reading"]["next"]["reading"]
         assert result["gochara"]["core_reading"]["previous"]["reading"]
+        assert "90-day scan" in result["gochara"]["core_reading"]["next"]["reading"]
         assert "periods" in result
+
+    def test_gocharam_chart_recalculates_for_selected_date(self):
+        chart = VedicChart("Timeline snapshot", 1990, 1, 1, 12, 0, **DELHI)
+        selected = datetime(2027, 1, 15, 12, 0, tzinfo=timezone.utc)
+        result = chart.gocharam(scan_days=30, as_of=selected)
+        assert result["as_of"].startswith("2027-01-15")
+        assert result["coverage"]["past_days"] == 30
+        assert result["gochara"]["interpretation"]["schema_version"] == "gocharam.interpretation.v2"
 
     def test_calendar_intelligence_merges_core_signal_families(self):
         chart = VedicChart("Calendar", 1990, 1, 1, 12, 0, **DELHI)

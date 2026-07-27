@@ -74,8 +74,17 @@ export class VedicService {
     return this.api.get<TransitAnalysisPayload>(`/vedic/${kundliId}/transits?${this.calcParams()}`);
   }
 
-  gocharam(kundliId: string): Promise<GocharamProfilePayload> {
-    return this.api.get<GocharamProfilePayload>(`/vedic/${kundliId}/gocharam?${this.calcParams()}`);
+  gocharam(
+    kundliId: string,
+    scanDays = 90,
+    asOf?: string | null,
+  ): Promise<GocharamProfilePayload> {
+    const params = this.calcParams();
+    params.set('scan_days', String(scanDays));
+    if (asOf) params.set('as_of', asOf);
+    return this.api.get<GocharamProfilePayload>(
+      `/vedic/${kundliId}/gocharam?${params.toString()}`,
+    );
   }
 
   calendarIntelligence(

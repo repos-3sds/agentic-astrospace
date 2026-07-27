@@ -23,7 +23,7 @@ from .ashtakavarga import ashtakavarga
 from .doshas import dosha_summary
 from .yogas import yoga_summary
 from .transits import transit_analysis
-from .gocharam import gocharam_profile
+from .gocharam import gochara_rules, gocharam_profile
 from .calendar import calendar_intelligence
 from .jaimini import chara_karakas, arudha_padas, arudha_lagna, upapada
 from .special_lagnas import special_lagnas as special_lagnas_of
@@ -231,8 +231,8 @@ class VedicChart:
             annotations[planet] = rows
         return annotations
 
-    def dashas(self) -> dict:
-        as_of = datetime.now(self.moment.dt_local.tzinfo)
+    def dashas(self, as_of: datetime = None) -> dict:
+        as_of = as_of or datetime.now(self.moment.dt_local.tzinfo)
         return vimshottari_dasha(
             self.positions["Moon"]["lon"], self.moment.dt_local, as_of,
         )
@@ -293,22 +293,28 @@ class VedicChart:
 
     def transits(self) -> dict:
         as_of = datetime.now(self.moment.dt_local.tzinfo)
+        dasha_context = self.dashas().get("current")
         return transit_analysis(
             self.positions,
             self.lagna_lon,
             as_of,
             self.ayanamsha,
             self.node_type,
+            dasha_context=dasha_context,
         )
 
-    def gocharam(self) -> dict:
-        as_of = datetime.now(self.moment.dt_local.tzinfo)
+    def gocharam(self, scan_days: int = 90, as_of: datetime = None) -> dict:
+        as_of = as_of or datetime.now(self.moment.dt_local.tzinfo)
+        dasha_context = self.dashas(as_of=as_of).get("current")
         return gocharam_profile(
             self.positions,
             self.lagna_lon,
             as_of,
             self.ayanamsha,
             self.node_type,
+            past_days=scan_days,
+            future_days=scan_days,
+            dasha_context=dasha_context,
         )
 
     def calendar_intelligence(self, as_of: datetime = None,
@@ -347,23 +353,12 @@ class VedicChart:
         )
         natal_lagna_sign = sign_index(self.lagna_lon)
         natal_moon_sign = sign_index(self.positions["Moon"]["lon"])
-        gochara = {}
-        for planet, data in transit.positions.items():
-            s = sign_index(data["lon"])
-            nak = nakshatra_of(data["lon"])
-            gochara[planet] = {
-                "longitude": round(data["lon"], 4),
-                "sign": sign_name(s),
-                "degree_in_sign": round(degree_in_sign(data["lon"]), 4),
-                "dms": to_dms(degree_in_sign(data["lon"])),
-                "nakshatra": nak["name"],
-                "nakshatra_pada": nak["pada"],
-                "house_from_lagna": house_from_lagna(s, natal_lagna_sign),
-                "house_from_moon": house_from_lagna(s, natal_moon_sign),
-                "retrograde": data["retrograde"],
-            }
-
-        saturn_house = gochara["Saturn"]["house_from_moon"]
+        gochara_analysis = gochara_rules(
+            transit.positions,
+            self.positions,
+            natal_lagna_sign,
+            natal_moon_sign,
+        )
         return {
             "as_of": transit.meta(),
             "provenance": self.provenance("transit-context"),
@@ -379,12 +374,11 @@ class VedicChart:
                 "rashi": transit.varga_chart("D1"),
                 "navamsha": transit.varga_chart("D9"),
             },
-            "gochara": gochara,
-            "sade_sati": {
-                "active": saturn_house in (12, 1, 2),
-                "phase": {12: "first", 1: "second", 2: "third"}.get(saturn_house),
-                "saturn_house_from_moon": saturn_house,
-            },
+            # Keep the historical planet-map field while exposing the canonical
+            # rule payload for newer consumers.
+            "gochara": gochara_analysis["planets"],
+            "gochara_analysis": gochara_analysis,
+            "sade_sati": gochara_analysis["sade_sati"],
         }
 
     def to_dict(self) -> dict:

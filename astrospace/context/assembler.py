@@ -24,6 +24,10 @@ import swisseph as swe
 
 from ..core.vedic.constants import SIGN_LORDS
 from ..core.vedic.gocharam import gochara_rules
+from ..core.vedic.gocharam.strength import (
+    apply_ashtakavarga_context,
+    ashtakavarga_transit_support,
+)
 from ..core.vedic.nakshatra import nakshatra_of
 from ..core.vedic.positions import (
     degree_in_sign, house_from_lagna, sign_index, sign_name,
@@ -177,13 +181,17 @@ def _gochara_for_domain(spec: DomainSpec, chart, transit_positions: dict | None,
         )
     lagna_sign = sign_index(chart.lagna_lon)
     moon_sign = sign_index(chart.positions["Moon"]["lon"])
-    gochara = gochara_rules(transit_positions, lagna_sign, moon_sign)
+    gochara = gochara_rules(transit_positions, chart.positions, lagna_sign, moon_sign)
+    av_support = ashtakavarga_transit_support(chart.ashtakavarga(), transit_positions)
+    apply_ashtakavarga_context(gochara, av_support)
     planets = {
         planet: {
             "sign": row["sign"],
             "house_from_moon": row["house_from_moon"],
             "house_from_lagna": row["house_from_lagna"],
             "retrograde": row["retrograde"],
+            "classical": gochara["classical_gochara"].get(planet),
+            "ashtakavarga": av_support["planets"].get(planet),
         }
         for planet, row in gochara["planets"].items()
         if planet in spec.gochara_planets
@@ -191,14 +199,22 @@ def _gochara_for_domain(spec: DomainSpec, chart, transit_positions: dict | None,
     rules = [
         {
             "name": rule["name"],
+            "rule_id": rule["id"],
             "planet": rule["planet"],
             "active": rule["active"],
             "severity": rule.get("effective_severity", rule.get("severity")),
+            "trigger": rule["trigger"],
+            "source_status": rule["source_status"],
         }
         for rule in gochara["rules"]
         if rule["planet"] in spec.gochara_planets and rule["active"]
     ]
-    return {"as_of": as_of.isoformat(), "planets": planets, "active_rules": rules}
+    return {
+        "schema_version": "gocharam.ce-projection.v1",
+        "as_of": as_of.isoformat(),
+        "planets": planets,
+        "active_rules": rules,
+    }
 
 
 def assemble_domain(chart, domain_id: str, *, tier: str = "primary",

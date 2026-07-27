@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 import swisseph as swe
 
+from ..ashtakavarga import ashtakavarga
 from ..nakshatra import nakshatra_of
 from ..positions import (
     degree_in_sign,
@@ -15,7 +16,10 @@ from ..positions import (
     sign_name,
     to_dms,
 )
+from .kakshya import kakshya_of
+from .interpretation import compose_gocharam_interpretation
 from .rules import GocharaRuleDefinition, RULE_DEFINITIONS, classical_gochara_status
+from .strength import apply_ashtakavarga_context, ashtakavarga_transit_support
 
 TRANSIT_PLANETS = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"]
 GOCHARA_TIMELINE_RULE_DAYS = 365
@@ -30,11 +34,23 @@ def _jd_from_dt(dt: datetime) -> float:
     return swe.julday(dt_utc.year, dt_utc.month, dt_utc.day, hour)
 
 
-def _planet_snapshot(positions: dict, planet: str, natal_lagna_sign: int, natal_moon_sign: int) -> dict:
+def _planet_snapshot(positions: dict, planet: str, natal_positions: dict, natal_lagna_sign: int, natal_moon_sign: int) -> dict:
     data = positions[planet]
     lon = data["lon"]
     s = sign_index(lon)
     nak = nakshatra_of(lon)
+    
+    # Calculate exact conjunctions with natal planets (within 1 degree orb)
+    exact_conjunctions = []
+    for natal_planet, natal_data in natal_positions.items():
+        if natal_planet in ["Ascendant", "Midheaven"]:
+            continue
+        natal_lon = natal_data["lon"]
+        # Shortest distance on a circle
+        dist = abs((lon - natal_lon + 180) % 360 - 180)
+        if dist <= 1.0:
+            exact_conjunctions.append(natal_planet)
+            
     return {
         "planet": planet,
         "longitude": round(lon, 4),
@@ -44,16 +60,18 @@ def _planet_snapshot(positions: dict, planet: str, natal_lagna_sign: int, natal_
         "dms": to_dms(degree_in_sign(lon)),
         "nakshatra": nak["name"],
         "nakshatra_pada": nak["pada"],
+        "kakshya": kakshya_of(degree_in_sign(lon)),
         "house_from_lagna": house_from_lagna(s, natal_lagna_sign),
         "house_from_moon": house_from_lagna(s, natal_moon_sign),
         "retrograde": data.get("retrograde", False),
         "speed": round(data.get("speed", 0.0), 6),
+        "exact_natal_conjunctions": exact_conjunctions,
     }
 
 
-def _details(transit_positions: dict, natal_lagna_sign: int, natal_moon_sign: int) -> dict:
+def _details(transit_positions: dict, natal_positions: dict, natal_lagna_sign: int, natal_moon_sign: int) -> dict:
     return {
-        planet: _planet_snapshot(transit_positions, planet, natal_lagna_sign, natal_moon_sign)
+        planet: _planet_snapshot(transit_positions, planet, natal_positions, natal_lagna_sign, natal_moon_sign)
         for planet in TRANSIT_PLANETS
         if planet in transit_positions
     }
@@ -77,17 +95,16 @@ def _severity(rule: GocharaRuleDefinition, active: bool) -> str:
 
 def _explanation(rule: GocharaRuleDefinition, active: bool, trigger: str) -> str:
     state = "active" if active else "not active"
-    reading = rule.plain_when_active if active else rule.plain_when_inactive
+    reading = "This transit activates specific classical effects." if active else "No major classical effects are active for this transit."
     return (
         f"{trigger}, so {rule.name} is {state}. "
         f"South-Indian Gocharam practice reads this from {'Lagna' if rule.anchor == 'lagna' else 'Moon'} as the primary anchor for this rule. "
-        f"{rule.principle} "
         f"{reading}"
     )
 
 
-def gochara_rules(transit_positions: dict, natal_lagna_sign: int, natal_moon_sign: int) -> dict:
-    details = _details(transit_positions, natal_lagna_sign, natal_moon_sign)
+def gochara_rules(transit_positions: dict, natal_positions: dict, natal_lagna_sign: int, natal_moon_sign: int) -> dict:
+    details = _details(transit_positions, natal_positions, natal_lagna_sign, natal_moon_sign)
     classical = classical_gochara_status(
         {planet: snapshot["house_from_moon"] for planet, snapshot in details.items()}
     )
@@ -96,7 +113,7 @@ def gochara_rules(transit_positions: dict, natal_lagna_sign: int, natal_moon_sig
         house = _rule_house(definition, details)
         active = house in definition.active_houses
         trigger = _trigger(definition, house)
-        note = definition.principle
+        note = ""
         status = classical.get(definition.planet)
         obstructed = bool(
             active
@@ -143,21 +160,21 @@ def gochara_rules(transit_positions: dict, natal_lagna_sign: int, natal_moon_sig
     }
 
 
-def _rule_state(dt: datetime, natal_lagna_sign: int, natal_moon_sign: int, ayanamsha: str, node_type: str) -> dict[str, dict]:
+def _rule_state(dt: datetime, natal_positions: dict, natal_lagna_sign: int, natal_moon_sign: int, ayanamsha: str, node_type: str) -> dict[str, dict]:
     positions = sidereal_positions(_jd_from_dt(dt), ayanamsha, node_type)
-    return {rule["id"]: rule for rule in gochara_rules(positions, natal_lagna_sign, natal_moon_sign)["rules"]}
+    return {rule["id"]: rule for rule in gochara_rules(positions, natal_positions, natal_lagna_sign, natal_moon_sign)["rules"]}
 
 
-def _is_rule_active(dt: datetime, rule_id: str, natal_lagna_sign: int, natal_moon_sign: int, ayanamsha: str, node_type: str) -> bool:
-    return _rule_state(dt, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type)[rule_id]["active"]
+def _is_rule_active(dt: datetime, rule_id: str, natal_positions: dict, natal_lagna_sign: int, natal_moon_sign: int, ayanamsha: str, node_type: str) -> bool:
+    return _rule_state(dt, natal_positions, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type)[rule_id]["active"]
 
 
-def _active_rule_start(as_of: datetime, rule_id: str, natal_lagna_sign: int, natal_moon_sign: int, ayanamsha: str, node_type: str) -> str | None:
+def _active_rule_start(as_of: datetime, rule_id: str, natal_positions: dict, natal_lagna_sign: int, natal_moon_sign: int, ayanamsha: str, node_type: str) -> str | None:
     active_dt = as_of
     inactive_dt = None
     for days in range(7, GOCHARA_ACTIVE_WINDOW_DAYS + 1, 7):
         candidate = as_of - timedelta(days=days)
-        if not _is_rule_active(candidate, rule_id, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type):
+        if not _is_rule_active(candidate, rule_id, natal_positions, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type):
             inactive_dt = candidate
             break
         active_dt = candidate
@@ -165,18 +182,18 @@ def _active_rule_start(as_of: datetime, rule_id: str, natal_lagna_sign: int, nat
         return None
     cursor = inactive_dt + timedelta(days=1)
     while cursor <= active_dt + timedelta(days=7):
-        if _is_rule_active(cursor, rule_id, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type):
+        if _is_rule_active(cursor, rule_id, natal_positions, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type):
             return cursor.date().isoformat()
         cursor += timedelta(days=1)
     return active_dt.date().isoformat()
 
 
-def _active_rule_end(as_of: datetime, rule_id: str, natal_lagna_sign: int, natal_moon_sign: int, ayanamsha: str, node_type: str) -> str | None:
+def _active_rule_end(as_of: datetime, rule_id: str, natal_positions: dict, natal_lagna_sign: int, natal_moon_sign: int, ayanamsha: str, node_type: str) -> str | None:
     active_dt = as_of
     inactive_dt = None
     for days in range(7, GOCHARA_ACTIVE_WINDOW_DAYS + 1, 7):
         candidate = as_of + timedelta(days=days)
-        if not _is_rule_active(candidate, rule_id, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type):
+        if not _is_rule_active(candidate, rule_id, natal_positions, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type):
             inactive_dt = candidate
             break
         active_dt = candidate
@@ -185,7 +202,7 @@ def _active_rule_end(as_of: datetime, rule_id: str, natal_lagna_sign: int, natal
     cursor = active_dt
     last_active = active_dt
     while cursor <= inactive_dt:
-        if _is_rule_active(cursor, rule_id, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type):
+        if _is_rule_active(cursor, rule_id, natal_positions, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type):
             last_active = cursor
         else:
             break
@@ -266,6 +283,24 @@ def core_reading(
         "rationale": rationale,
         "reading": reading,
         "timing_summary": timing,
+        "sentences": [
+            (
+                f"The current judgement starts from natal Moon sign {sign_name(natal_moon_sign)} "
+                f"and then cross-checks natal Lagna sign {sign_name(natal_lagna_sign)}."
+            ),
+            (
+                f"The canonical rule engine found {active_names}; the result comes from sidereal "
+                "transit positions and named rules rather than generated AI claims."
+            ),
+            (
+                "Moon-based rules describe felt experience and mental pressure, while Lagna-based "
+                "rules help connect the same transit to visible and practical life areas."
+            ),
+            (
+                "Vedha, Ashtakavarga, retrograde motion, and the active Dasha are retained as "
+                "modifiers so a headline rule is never treated as the entire judgement."
+            ),
+        ],
         "active_rule_count": len(active_rules),
         "supportive_rule_count": len(supportive),
         "challenging_rule_count": len(challenging),
@@ -306,6 +341,7 @@ def _period_strength(rule: dict) -> int:
 
 def _timeline_events(
     as_of: datetime,
+    natal_positions: dict,
     natal_lagna_sign: int,
     natal_moon_sign: int,
     ayanamsha: str,
@@ -314,10 +350,10 @@ def _timeline_events(
     direction: int,
 ) -> list[dict]:
     events = []
-    previous_state = _rule_state(as_of, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type)
+    previous_state = _rule_state(as_of, natal_positions, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type)
     for offset in range(1, days + 1):
         day = as_of + timedelta(days=offset * direction)
-        state = _rule_state(day, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type)
+        state = _rule_state(day, natal_positions, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type)
         for rule_id, rule in state.items():
             was_active = previous_state[rule_id]["active"]
             is_active = rule["active"]
@@ -363,20 +399,25 @@ def _timeline_core_reading(events: list[dict], mode: str, scan_days: int) -> dic
     first = events[0]
     names = ", ".join(f"{event['title']} on {event['date']}" for event in events[:3])
     label = "What next" if mode == "next" else "What happened before"
+    direction = "ahead" if mode == "next" else "behind"
+    count = len(events)
+    change_label = "major rule change" if count == 1 else "major rule changes"
     return {
-        "title": f"{label}: {first['title']}",
+        "title": f"{label}: {count} {change_label} in {scan_days} days",
         "tone": first["tone"],
         "rationale": f"The {mode} Gocharam scan found {names}. These are deterministic dates where a rule changes active state.",
         "reading": (
-            f"Around {first['date']}, the background tone can shift. Use that date as a validation or planning marker, "
-            "not as a single isolated event."
+            f"The {scan_days}-day scan found {count} {change_label} {direction}. "
+            f"The first is {first['title']} around {first['date']}. Use these dates as validation or planning markers, "
+            "not as isolated guaranteed events."
         ),
-        "timing_summary": f"{first['title']} on {first['date']}.",
+        "timing_summary": f"{count} changes scanned; first is {first['title']} on {first['date']}.",
     }
 
 
 def gocharam_rule_timeline(
     as_of: datetime,
+    natal_positions: dict,
     natal_lagna_sign: int,
     natal_moon_sign: int,
     ayanamsha: str,
@@ -386,8 +427,8 @@ def gocharam_rule_timeline(
 ) -> dict:
     active_windows = []
     for rule in current_gochara["active_rules"]:
-        start = _active_rule_start(as_of, rule["id"], natal_lagna_sign, natal_moon_sign, ayanamsha, node_type)
-        end = _active_rule_end(as_of, rule["id"], natal_lagna_sign, natal_moon_sign, ayanamsha, node_type)
+        start = _active_rule_start(as_of, rule["id"], natal_positions, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type)
+        end = _active_rule_end(as_of, rule["id"], natal_positions, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type)
         active_windows.append({
             "rule": rule["name"],
             "rule_id": rule["id"],
@@ -399,8 +440,26 @@ def gocharam_rule_timeline(
             "summary": f"{rule['name']} is active now. It began {start or 'before the scan window'} and is estimated to remain active until {end or 'beyond the scan window'}.",
         })
 
-    previous_events = _timeline_events(as_of, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type, scan_days, -1)[:24]
-    next_events = _timeline_events(as_of, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type, scan_days, 1)[:36]
+    previous_events = _timeline_events(
+        as_of,
+        natal_positions,
+        natal_lagna_sign,
+        natal_moon_sign,
+        ayanamsha,
+        node_type,
+        scan_days,
+        -1,
+    )
+    next_events = _timeline_events(
+        as_of,
+        natal_positions,
+        natal_lagna_sign,
+        natal_moon_sign,
+        ayanamsha,
+        node_type,
+        scan_days,
+        1,
+    )
     return {
         "active_windows": active_windows,
         "previous_365_days": previous_events,
@@ -411,31 +470,61 @@ def gocharam_rule_timeline(
 
 def _periods_from_events(as_of: datetime, current_gochara: dict, timeline: dict, all_events: list[dict]) -> list[dict]:
     periods = []
+    seen = set()
     for window in timeline["active_windows"]:
         rule = next(rule for rule in current_gochara["rules"] if rule["id"] == window["rule_id"])
         reading = _period_reading(rule, window["start_date"], window["end_date"], "current")
+        seen.add((window["rule_id"], window["start_date"]))
         periods.append({
             **window,
             "status": "current",
             "strength": _period_strength(rule),
             **reading,
         })
-    for event in all_events:
+    chronological_events = sorted(
+        all_events,
+        key=lambda event: (event["date"], event["rule_id"], event["transition"]),
+    )
+    for event in chronological_events:
         if "starts" not in event["transition"] and event["transition"] != "started":
+            continue
+        if (event["rule_id"], event["date"]) in seen:
             continue
         rule = next((r for r in current_gochara["rules"] if r["id"] == event["rule_id"]), None)
         if not rule:
             continue
-        status = "future" if event["date"] >= as_of.date().isoformat() else "past"
-        reading = _period_reading(rule, event["date"], None, status)
+        end_event = next(
+            (
+                candidate
+                for candidate in chronological_events
+                if candidate["rule_id"] == event["rule_id"]
+                and candidate["date"] > event["date"]
+                and candidate["transition"] in {"ends", "ended"}
+            ),
+            None,
+        )
+        end_date = end_event["date"] if end_event else None
+        today = as_of.date().isoformat()
+        if event["date"] <= today and (not end_date or end_date >= today):
+            status = "current"
+        elif event["date"] > today:
+            status = "future"
+        else:
+            status = "past"
+        period_rule = {
+            **rule,
+            "tone": event["tone"],
+            "trigger": event["detail"],
+        }
+        reading = _period_reading(period_rule, event["date"], end_date, status)
         periods.append({
             "rule": rule["name"],
             "rule_id": rule["id"],
             "planet": rule["planet"],
             "start_date": event["date"],
-            "end_date": None,
-            "tone": rule["tone"],
-            "trigger": rule["trigger"],
+            "end_date": end_date,
+            "tone": event["tone"],
+            "trigger": event["detail"],
             "summary": event["title"],
             "status": status,
             "strength": _period_strength(rule),
@@ -453,13 +542,19 @@ def gocharam_profile(
     node_type: str,
     past_days: int = GOCHARA_PROFILE_PAST_DAYS,
     future_days: int = GOCHARA_PROFILE_FUTURE_DAYS,
+    dasha_context: dict | None = None,
 ) -> dict:
     natal_lagna_sign = sign_index(natal_lagna_lon)
     natal_moon_sign = sign_index(natal_positions["Moon"]["lon"])
     current_positions = sidereal_positions(_jd_from_dt(as_of), ayanamsha, node_type)
-    current = gochara_rules(current_positions, natal_lagna_sign, natal_moon_sign)
+    current = gochara_rules(current_positions, natal_positions, natal_lagna_sign, natal_moon_sign)
+    natal_av = ashtakavarga(natal_positions, natal_lagna_lon)
+    av_support = ashtakavarga_transit_support(natal_av, current_positions)
+    apply_ashtakavarga_context(current, av_support)
+    current["ashtakavarga"] = av_support
     timeline = gocharam_rule_timeline(
         as_of,
+        natal_positions,
         natal_lagna_sign,
         natal_moon_sign,
         ayanamsha,
@@ -477,14 +572,22 @@ def gocharam_profile(
     )
     current["core_reading"]["next"] = _timeline_core_reading(timeline["next_365_days"], "next", future_days)
     current["core_reading"]["previous"] = _timeline_core_reading(timeline["previous_365_days"], "previous", past_days)
+    current["interpretation"] = compose_gocharam_interpretation(
+        current,
+        timeline,
+        dasha_context=dasha_context,
+    )
     periods = _periods_from_events(as_of, current, timeline, timeline["previous_365_days"] + timeline["next_365_days"])
     return {
+        "schema_version": "gocharam.profile.v2",
+        "engine_version": "gocharam-canonical-2.0",
         "system": "South Indian Gocharam",
         "as_of": as_of.isoformat(),
         "ayanamsha": ayanamsha,
         "node_type": node_type,
         "natal": {"lagna_sign": sign_name(natal_lagna_sign), "moon_sign": sign_name(natal_moon_sign)},
         "gochara": current,
+        "ashtakavarga_transit": av_support,
         "periods": periods,
         "coverage": {
             "past_days": past_days,
@@ -493,6 +596,7 @@ def gocharam_profile(
         },
         "notes": [
             "Moon is the primary Gocharam anchor; Lagna is used as a practical cross-check.",
-            "Readings are deterministic text generated from rule windows, not AI.",
+            "Vedha, Ashtakavarga, retrograde state, and supplied Dasha context modify interpretation emphasis.",
+            "Readings are deterministic text composed from computed evidence, not AI.",
         ],
     }

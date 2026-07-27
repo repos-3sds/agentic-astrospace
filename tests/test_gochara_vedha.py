@@ -158,7 +158,7 @@ class TestClassicalGocharaVedha:
         assert CLASSICAL_GOCHARA_VEDHA["Ketu"] == CLASSICAL_GOCHARA_VEDHA["Saturn"]
 
     def test_gochara_rules_payload_includes_classical_gochara(self):
-        result = gochara_rules(_positions(**_base_signs()), ARIES, ARIES)
+        result = gochara_rules(_positions(**_base_signs()), {}, ARIES, ARIES)
         assert "classical_gochara" in result
         assert result["classical_gochara"]["Jupiter"]["effective"] == "favourable"
         # Existing keys are untouched.
@@ -169,14 +169,14 @@ class TestClassicalGocharaVedha:
 class TestGocharamVedhaWiring:
     def test_supportive_rule_gains_obstructed_flag(self):
         # Jupiter in house 11 -> Guru Bala active; Mars in vedha house 8.
-        obstructed = gocharam_gochara_rules(_positions(**_base_signs(Mars=7)), ARIES, ARIES)
+        obstructed = gocharam_gochara_rules(_positions(**_base_signs(Mars=7)), {}, ARIES, ARIES)
         rule = next(r for r in obstructed["rules"] if r["id"] == "gochara_guru_moon_support")
         assert rule["active"] is True  # active semantics unchanged
         assert rule["obstructed"] is True
         assert "Vedha" in rule["note"]
         assert "Mars" in rule["note"]
-
-        clear = gocharam_gochara_rules(_positions(**_base_signs()), ARIES, ARIES)
+        # Mars is in house 2, so the vedha to Jupiter is gone.
+        clear = gocharam_gochara_rules(_positions(**_base_signs()), {}, ARIES, ARIES)
         rule = next(r for r in clear["rules"] if r["id"] == "gochara_guru_moon_support")
         assert rule["active"] is True
         assert rule["obstructed"] is False

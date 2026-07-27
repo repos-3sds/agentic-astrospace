@@ -1,0 +1,107 @@
+{
+  "schema_version": "gocharam.kb.v1",
+  "rules": [
+    {
+      "id": "saturn_moon_12_1_2",
+      "planet": "Saturn",
+      "anchor": "moon",
+      "houses": [12, 1, 2],
+      "category": "general",
+      "duration": "long_term",
+      "rule_name": "Sade Sati",
+      "content": {
+        "guided_summary": "This is a slow responsibility period. It can feel like life is asking for maturity, patience, discipline, and cleaner choices rather than quick wins.",
+        "balanced_context": "You are in the Sade Sati period (Saturn transiting near your Moon). This long-term cycle tests endurance and restructures responsibilities.",
+        "practitioner_deep_dive": "Sade Sati phase active. Saturn transits the 12th, 1st, or 2nd from Natal Moon. Classical texts state this 7.5 year cycle brings structural life changes, increased mental pressure, and forces karmic maturity."
+      },
+      "mitigations": [
+        {
+          "condition": "ashtakavarga_strong",
+          "content": {
+            "guided_summary": "Because you have strong foundational support right now, the responsibilities will lead to solid achievements.",
+            "balanced_context": "Your chart shows high strength for this transit, meaning the pressure of Sade Sati will likely manifest as hard work that pays off well.",
+            "practitioner_deep_dive": "High BAV/SAV (Bindus > 4) in the transited sign mitigates the maleficence. Sade Sati yields constructive restructuring and disciplined success rather than mere suffering."
+          }
+        }
+      ]
+    },
+    {
+      "id": "saturn_moon_8",
+      "planet": "Saturn",
+      "anchor": "moon",
+      "houses": [8],
+      "category": "health_and_obstacles",
+      "duration": "long_term",
+      "rule_name": "Ashtama Shani",
+      "content": {
+        "guided_summary": "This can bring heavier inner pressure or sudden responsibilities. It is a period for caution, repair, and avoiding unnecessary risks.",
+        "balanced_context": "Saturn is transiting the 8th house from your Moon (Ashtama Shani). This phase asks you to focus on health, avoid speculation, and be prepared for sudden shifts.",
+        "practitioner_deep_dive": "Ashtama Shani active (Saturn 8th from Moon). Yields fatigue, sudden obstacles, and health sensitivity per classical rules. A period for profound internal transformation and strict adherence to duty."
+      }
+    },
+    {
+      "id": "saturn_moon_4",
+      "planet": "Saturn",
+      "anchor": "moon",
+      "houses": [4],
+      "category": "domestic_peace",
+      "duration": "long_term",
+      "rule_name": "Kantaka Shani (Ardhashtama)",
+      "content": {
+        "guided_summary": "Home, emotional comfort, or property matters may need more patience. This asks for steadiness and fewer impulsive moves.",
+        "balanced_context": "Saturn transiting the 4th from your Moon (Ardhashtama Shani) brings focus and potential pressure to your home life, mother, or real estate.",
+        "practitioner_deep_dive": "Kantaka/Ardhashtama Shani active (Saturn 4th from Moon). Affects domestic peace, mother's health, and properties. Mental anxieties may increase; grounding practices are advised."
+      }
+    },
+    {
+      "id": "jupiter_moon_support",
+      "planet": "Jupiter",
+      "anchor": "moon",
+      "houses": [2, 5, 7, 9, 11],
+      "category": "growth",
+      "duration": "long_term",
+      "rule_name": "Guru Bala",
+      "content": {
+        "guided_summary": "This gives a highly helpful background for guidance, learning, family support, planning, and growth. Support is much easier to access now.",
+        "balanced_context": "Jupiter is transiting a highly favorable house from your Moon (Guru Bala), offering protection, financial ease, and opportunities for wisdom.",
+        "practitioner_deep_dive": "Guru Bala active. Jupiter transits 2nd, 5th, 7th, 9th, or 11th from Natal Moon. Bestows expansion, wealth, divine grace, and auspicious events (Vivaha/Santana) per Phaladeepika."
+      },
+      "mitigations": [
+        {
+          "condition": "vedha_active",
+          "content": {
+            "guided_summary": "However, some of these opportunities might be delayed or obstructed right now by other temporary factors.",
+            "balanced_context": "While Jupiter is favorable, another planetary transit is temporarily creating a 'Vedha' (obstruction), meaning the full benefits are slightly delayed.",
+            "practitioner_deep_dive": "Vedha is active on Jupiter's transit. The promised auspicious results are checked by an obstructing planet in the Vedha Sthana."
+          }
+        }
+      ]
+    },
+    {
+      "id": "saturn_over_natal_moon",
+      "planet": "Saturn",
+      "exact_natal_conjunction": "Moon",
+      "category": "health_and_obstacles",
+      "duration": "short_term",
+      "rule_name": "Saturn exact on Natal Moon",
+      "content": {
+        "guided_summary": "Saturn is crossing exactly over the degree of your Natal Moon. This is the absolute peak of the Sade Sati cycle, demanding profound emotional resilience and patience.",
+        "balanced_context": "The exact transit of Saturn over your Moon marks a critical peak in emotional and structural testing.",
+        "practitioner_deep_dive": "Saturn forms an exact conjunction (within 1° orb) of the Natal Moon. This pinpoint transit is the core intense phase of Janma Shani, triggering deep melancholy or major life restructuring."
+      }
+    },
+    {
+      "id": "jupiter_own_kakshya",
+      "planet": "Jupiter",
+      "kakshya_lord": "Jupiter",
+      "category": "growth",
+      "duration": "micro",
+      "rule_name": "Jupiter in Jupiter's Kakshya",
+      "content": {
+        "guided_summary": "Jupiter is currently moving through its most comfortable micro-zone, making its blessings especially pure and accessible right now.",
+        "balanced_context": "Jupiter traverses its own Kakshya (a 3.75 degree segment), amplifying its natural supportive and expansive qualities.",
+        "practitioner_deep_dive": "Jupiter is in the Kakshya of Jupiter. Classical texts state that a benefic transiting its own Kakshya yields undiluted positive results."
+      }
+    }
+  ]
+}

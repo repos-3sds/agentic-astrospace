@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime, time
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -380,9 +380,21 @@ def gocharam(
     user: CurrentUser,
     ayanamsha: str = "lahiri",
     node_type: str = "mean",
+    scan_days: int = Query(90, ge=30, le=1095),
+    as_of: Optional[date] = Query(None, description="Timeline snapshot date"),
     db: Session = Depends(get_db),
 ):
-    return _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).gocharam()
+    chart = _chart_from_kundli(
+        _get_kundli(db, kundli_id, user.id),
+        ayanamsha,
+        node_type,
+    )
+    snapshot = (
+        datetime.combine(as_of, time(hour=12), tzinfo=chart.moment.dt_local.tzinfo)
+        if as_of
+        else None
+    )
+    return chart.gocharam(scan_days=scan_days, as_of=snapshot)
 
 
 @router.get("/{kundli_id}/calendar-intelligence")

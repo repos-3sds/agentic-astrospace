@@ -88,6 +88,9 @@ refresh to the selected kundli.
 - [x] Add Shadbala v1 / phased strength system with provenance labels.
 - [x] Add combustion, planetary war, avasthas, and retrograde strength handling.
 - [x] Add transit aspects and gochara impact engine.
+- [x] Consolidate Gocharam generation into one canonical Moon-first engine.
+- [x] Add deterministic domain-wise Gocharam interpretation with evidence, timing, AV, and Dasha alignment.
+- [ ] Complete external source and astrologer review of the Gocharam interpretation library.
 - [ ] Add purpose-based muhurta ranking.
 - [ ] Add remedial recommendation engine only after deterministic rules are verified.
 

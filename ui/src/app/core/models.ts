@@ -771,11 +771,24 @@ export interface GocharaCoreReadingBlock {
 }
 
 export interface GocharamPeriod extends GocharaActiveWindow {
+  rule_id: string;
+  start_date: string;
   status: 'past' | 'current' | 'future' | string;
   strength: number;
   rationale: string;
   reading: string;
   validation_prompt: string;
+}
+
+export interface GocharamRangeOutlook {
+  days: number;
+  event_count: number;
+  supportive_count: number;
+  challenging_count: number;
+  tone: 'neutral' | 'supportive' | 'challenging' | 'mixed';
+  title: string;
+  reading: string;
+  highlights: TransitTimelineEvent[];
 }
 
 export interface GocharamDomainReading {
@@ -794,8 +807,11 @@ export interface GocharamDomainReading {
     current: string;
     next?: TransitTimelineEvent | null;
     previous?: TransitTimelineEvent | null;
+    future_count: number;
+    previous_count: number;
     active_windows: GocharaActiveWindow[];
   };
+  range_outlook: GocharamRangeOutlook;
   leading_planets: string[];
   evidence_ids: string[];
   dasha_alignment: {
@@ -823,6 +839,15 @@ export interface GocharamInterpretation {
     main_theme: string;
     rationale: string;
     reading: string;
+    timing: {
+      current: string;
+      next?: TransitTimelineEvent | null;
+      previous?: TransitTimelineEvent | null;
+      future_count: number;
+      previous_count: number;
+      active_windows: GocharaActiveWindow[];
+    };
+    range_outlook: GocharamRangeOutlook;
     evidence_ids: string[];
   }>;
   evidence: Array<Record<string, unknown>>;

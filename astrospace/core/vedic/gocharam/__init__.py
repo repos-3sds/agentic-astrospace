@@ -5,6 +5,8 @@ module generates rule windows and plain-language readings without AI.
 """
 
 from .rules import CLASSICAL_GOCHARA_VEDHA, VEDHA_EXEMPT_PAIRS, classical_gochara_status
+from .interpretation import compose_gocharam_interpretation
+from .strength import ashtakavarga_transit_support
 from .timeline import gocharam_profile, gochara_rules, gocharam_rule_timeline
 
 __all__ = [
@@ -12,6 +14,8 @@ __all__ = [
     "gochara_rules",
     "gocharam_rule_timeline",
     "classical_gochara_status",
+    "compose_gocharam_interpretation",
+    "ashtakavarga_transit_support",
     "CLASSICAL_GOCHARA_VEDHA",
     "VEDHA_EXEMPT_PAIRS",
 ]

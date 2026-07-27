@@ -15,9 +15,6 @@ class GocharaRuleDefinition:
     severity: str
     tone: str
     source_status: str
-    principle: str
-    plain_when_active: str
-    plain_when_inactive: str
 
 
 RULE_DEFINITIONS = [
@@ -30,12 +27,6 @@ RULE_DEFINITIONS = [
         severity="high",
         tone="challenging",
         source_status="south_indian_common_practice",
-        principle="Saturn in 12th, 1st, or 2nd from natal Moon is treated as a long pressure cycle.",
-        plain_when_active=(
-            "This is a slow responsibility period. It can feel like life is asking for maturity, patience, discipline, "
-            "and cleaner choices rather than quick wins."
-        ),
-        plain_when_inactive="Sade Sati is not the main Gocharam background right now.",
     ),
     GocharaRuleDefinition(
         id="gochara_ashtama_shani",
@@ -46,12 +37,6 @@ RULE_DEFINITIONS = [
         severity="high",
         tone="challenging",
         source_status="south_indian_common_practice",
-        principle="Saturn in the 8th from natal Moon is treated as a caution period.",
-        plain_when_active=(
-            "This can bring heavier inner pressure, delays, health sensitivity, or sudden responsibilities. "
-            "It is a period for caution, repair, and avoiding avoidable risks."
-        ),
-        plain_when_inactive="Ashtama Shani is not active from the Moon.",
     ),
     GocharaRuleDefinition(
         id="gochara_kantaka_shani",
@@ -62,12 +47,6 @@ RULE_DEFINITIONS = [
         severity="medium",
         tone="challenging",
         source_status="south_indian_common_practice",
-        principle="Saturn in the 4th from natal Moon is treated as domestic, emotional, and stability pressure.",
-        plain_when_active=(
-            "Home, emotional comfort, property, mother-related matters, or peace of mind may need more patience. "
-            "This is not a panic signal; it asks for steadiness and fewer impulsive moves."
-        ),
-        plain_when_inactive="Kantaka Shani is not active from the Moon.",
     ),
     GocharaRuleDefinition(
         id="gochara_guru_moon_support",
@@ -78,12 +57,6 @@ RULE_DEFINITIONS = [
         severity="supportive",
         tone="supportive",
         source_status="south_indian_common_practice",
-        principle="Jupiter in 2, 5, 7, 9, or 11 from natal Moon is treated as supportive.",
-        plain_when_active=(
-            "This gives a more helpful background for guidance, learning, recovery, family support, planning, and growth. "
-            "It does not remove all problems, but it can make support easier to access."
-        ),
-        plain_when_inactive="Jupiter is not in a major supportive house from the Moon.",
     ),
     GocharaRuleDefinition(
         id="gochara_guru_lagna_support",
@@ -94,12 +67,6 @@ RULE_DEFINITIONS = [
         severity="supportive",
         tone="supportive",
         source_status="south_indian_common_practice",
-        principle="Jupiter in 2, 5, 7, 9, or 11 from Lagna is used as a practical-life cross-check.",
-        plain_when_active=(
-            "This supports visible progress, better advice, practical opportunities, agreements, education, and recovery. "
-            "It is especially useful when the Moon-based reading is mixed."
-        ),
-        plain_when_inactive="Jupiter is not giving a major Lagna-based support signal.",
     ),
     GocharaRuleDefinition(
         id="gochara_rahu_moon_caution",
@@ -110,12 +77,6 @@ RULE_DEFINITIONS = [
         severity="medium",
         tone="challenging",
         source_status="south_indian_common_practice",
-        principle="Rahu in sensitive houses from Moon is treated as a volatility marker.",
-        plain_when_active=(
-            "Rahu can amplify urgency, confusion, desire, experimentation, or sudden changes. "
-            "This is a good time to double-check decisions that feel emotionally charged."
-        ),
-        plain_when_inactive="Rahu is not in one of the sensitive Moon houses tracked by this module.",
     ),
     GocharaRuleDefinition(
         id="gochara_ketu_moon_caution",
@@ -126,12 +87,6 @@ RULE_DEFINITIONS = [
         severity="medium",
         tone="challenging",
         source_status="south_indian_common_practice",
-        principle="Ketu in sensitive houses from Moon is treated as detachment, uncertainty, or separation pressure.",
-        plain_when_active=(
-            "Ketu can create distance, doubt, spiritual focus, or loss of interest in ordinary outcomes. "
-            "This is useful for simplification, but not ideal for decisions made from confusion."
-        ),
-        plain_when_inactive="Ketu is not in one of the sensitive Moon houses tracked by this module.",
     ),
     GocharaRuleDefinition(
         id="gochara_mars_moon_trigger",
@@ -142,12 +97,6 @@ RULE_DEFINITIONS = [
         severity="medium",
         tone="challenging",
         source_status="south_indian_common_practice",
-        principle="Mars in pressure houses from Moon is treated as a short heat, conflict, or urgency trigger.",
-        plain_when_active=(
-            "Mars can make the period sharper, faster, and more reactive. "
-            "Use it for action and courage, but watch anger, haste, injuries, and conflict."
-        ),
-        plain_when_inactive="Mars is not in a major pressure house from the Moon.",
     ),
 ]
 

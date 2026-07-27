@@ -21,7 +21,12 @@ from ..core.vedic.favourable import digital_root, favourable_points
 from ..core.vedic.nakshatra import nakshatra_of
 from ..core.vedic.panchanga_day import daily_panchanga, personal_panchanga
 from ..core.vedic.positions import sign_index
-from ..core.vedic.transits import _jd_from_dt, gochara_rules
+from ..core.vedic.gocharam import gochara_rules
+from ..core.vedic.gocharam.strength import (
+    apply_ashtakavarga_context,
+    ashtakavarga_transit_support,
+)
+from ..core.vedic.transits import _jd_from_dt
 from ..core.vedic.positions import sidereal_positions
 from .kb import get_knowledge_base
 
@@ -111,7 +116,9 @@ def assemble_daily_context(chart, as_of: datetime, day_payload: dict,
     positions = sidereal_positions(_jd_from_dt(as_of), chart.ayanamsha, chart.node_type)
     lagna_sign = sign_index(chart.lagna_lon)
     moon_sign = sign_index(chart.positions["Moon"]["lon"])
-    gochara = gochara_rules(positions, lagna_sign, moon_sign)
+    gochara = gochara_rules(positions, chart.positions, lagna_sign, moon_sign)
+    av_support = ashtakavarga_transit_support(chart.ashtakavarga(), positions)
+    apply_ashtakavarga_context(gochara, av_support)
 
     dashas = chart.dashas()
     current = dashas.get("current", {})

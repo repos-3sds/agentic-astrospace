@@ -66,6 +66,7 @@ def calendar_intelligence(
         start_dt,
         chart.ayanamsha,
         chart.node_type,
+        dasha_context=dasha.get("current"),
     )
 
     events: list[dict] = []

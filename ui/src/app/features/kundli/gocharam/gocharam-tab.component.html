@@ -1,226 +1,458 @@
 @if (loading()) {
   <div class="as-panel">
-    <p-skeleton height="150px" borderRadius="18px" />
-    <p-skeleton height="520px" borderRadius="18px" />
+    <p-skeleton height="130px" borderRadius="8px" />
+    <p-skeleton height="500px" borderRadius="8px" />
   </div>
 } @else if (error()) {
   <app-section-card icon="alert-triangle" title="Gocharam unavailable">
     <p class="error-copy">{{ error() }}</p>
   </app-section-card>
 } @else if (data(); as t) {
-  <div class="as-panel gocharam-page">
-    <section class="as-tab-hero">
+  <div class="as-panel gocharam-page" [class.is-refreshing]="refreshing()" [attr.aria-busy]="refreshing()">
+    <section class="as-tab-hero gocharam-hero">
       <div>
-        <span class="as-hero-eyebrow">Gocharam · {{ t.natal.moon_sign }} Moon · {{ t.natal.lagna_sign }} Lagna</span>
-        <h2>Transit phases in plain language.</h2>
-        <p>
-          Current, upcoming, and past Gocharam windows are calculated from sidereal transit signs.
-          The reading below is deterministic and written for validation, not AI storytelling.
-        </p>
+        <span class="as-hero-eyebrow">
+          Gocharam · {{ viewDateLabel() }} · {{ t.natal.moon_sign }} Moon ·
+          {{ t.natal.lagna_sign }} Lagna
+        </span>
+        <h2>{{ t.gochara.core_reading.title }}</h2>
+        <p>{{ t.gochara.core_reading.reading }}</p>
       </div>
-      <div class="as-hero-stats">
-        <article>
-          <span>Active windows</span>
-          <strong>{{ t.gochara.timeline.active_windows.length }}</strong>
-          <small>{{ t.gochara.core_reading.timing_summary }}</small>
-        </article>
-        <article>
-          <span>Scan range</span>
-          <strong>{{ t.gochara.timeline.scan_days }}</strong>
-          <small>days backward and forward</small>
-        </article>
+      <div class="hero-status" [class]="toneClass(t.gochara.core_reading.tone)">
+        <span>Snapshot tone</span>
+        <strong>{{ t.gochara.core_reading.tone }}</strong>
+        <small>{{ t.gochara.timeline.active_windows.length }} active windows</small>
       </div>
     </section>
 
-    <div class="reading-stack">
-      @for (block of readingBlocks(); track block.title) {
-        <article class="reading-card" [class]="toneClass(block.tone)">
-          <header>
-            <div>
-              <span>Core reading</span>
-              <h3>{{ block.title }}</h3>
-            </div>
-            <small>{{ block.timing_summary }}</small>
-          </header>
-          <section>
-            <b>Why this judgement</b>
-            <p>{{ block.rationale }}</p>
-          </section>
-          <section class="plain-reading">
-            <b>Plain reading</b>
-            <p>{{ block.reading }}</p>
-          </section>
-        </article>
-      }
-    </div>
+    <nav class="workspace-tabs" aria-label="Gocharam sections">
+      <button
+        type="button"
+        [class.active]="workspace() === 'summary'"
+        (click)="selectWorkspace('summary')"
+      >
+        <span>Summary</span>
+        <small>What matters now</small>
+      </button>
+      <button
+        type="button"
+        [class.active]="workspace() === 'domains'"
+        (click)="selectWorkspace('domains')"
+      >
+        <span>Life areas</span>
+        <small>{{ domains().length }} focused readings</small>
+      </button>
+      <button
+        type="button"
+        [class.active]="workspace() === 'planets'"
+        (click)="selectWorkspace('planets')"
+      >
+        <span>Planets</span>
+        <small>{{ planets().length }} transit readings</small>
+      </button>
+      <button
+        type="button"
+        [class.active]="workspace() === 'timeline'"
+        (click)="selectWorkspace('timeline')"
+      >
+        <span>Timeline</span>
+        <small>Navigate by date</small>
+      </button>
+    </nav>
 
-    <app-section-card
-      icon="compass"
-      title="Life-domain explorer"
-      subtitle="Detailed non-AI interpretation composed from the same calculated evidence"
-    >
-      <nav class="domain-tabs" aria-label="Gocharam life domains">
-        @for (domain of domains(); track domain.id) {
+    <section class="scan-control" aria-label="Gocharam scan range">
+      <div>
+        <span>Timeline zoom</span>
+        <strong>± {{ scanRangeLabel() }} around {{ viewDateLabel() }}</strong>
+        <small>
+          @if (refreshing()) {
+            Recalculating Gocharam readings…
+          } @else {
+            Readings and dated changes are calculated for this horizon.
+          }
+        </small>
+      </div>
+      <div class="range-options">
+        @for (option of scanOptions; track option.days) {
           <button
             type="button"
-            [class.active]="domainId() === domain.id"
-            (click)="domainId.set(domain.id)"
+            [class.active]="scanRangeDays() === option.days"
+            (click)="setScanRange(option.days)"
           >
-            {{ domain.title }}
+            {{ option.label }}
           </button>
         }
-      </nav>
+      </div>
+    </section>
 
-      @if (activeDomain(); as domain) {
-        <article class="domain-reading" [class]="toneClass(domain.tone)">
+    @if (workspace() === 'summary') {
+      <section class="summary-workspace">
+        <article class="primary-reading" [class]="toneClass(t.gochara.core_reading.tone)">
           <header>
             <div>
-              <span>Main theme</span>
-              <h3>{{ domain.title }}</h3>
-              <p>{{ domain.main_theme }}</p>
+              <span>Snapshot reading · {{ viewDateLabel() }}</span>
+              <h3>{{ t.gochara.core_reading.title }}</h3>
             </div>
-            <div class="domain-balance">
-              <strong>{{ domain.balance_score }}</strong>
-              <span>Current balance</span>
-              <small>{{ domain.score_note }}</small>
-            </div>
+            <small>{{ t.gochara.core_reading.timing_summary }}</small>
           </header>
-
-          <div class="domain-copy">
-            <section>
-              <b>Why this judgement</b>
-              <p>{{ domain.rationale }}</p>
-            </section>
-            <section class="plain-reading">
-              <b>What this can mean in daily life</b>
-              <p>{{ domain.reading }}</p>
-            </section>
-          </div>
-
-          <div class="domain-columns">
-            <section>
-              <b>Constructive possibilities</b>
-              <ul>
-                @for (item of domain.strengths; track item) {
-                  <li>{{ item }}</li>
-                }
-              </ul>
-            </section>
-            <section>
-              <b>Watch carefully</b>
-              <ul>
-                @for (item of domain.challenges; track item) {
-                  <li>{{ item }}</li>
-                }
-              </ul>
-            </section>
-            <section>
-              <b>Practical focus</b>
-              <ul>
-                @for (item of domain.actions; track item) {
-                  <li>{{ item }}</li>
-                }
-              </ul>
-            </section>
-          </div>
-
-          <footer class="domain-timing">
-            <div>
-              <span>Timing</span>
-              <strong>{{ domain.timing.current }}</strong>
-            </div>
-            <div>
-              <span>Leading factors</span>
-              <strong>{{ domain.leading_planets.join(' · ') }}</strong>
-            </div>
-            <div>
-              <span>Dasha alignment</span>
-              <strong>
-                {{
-                  domain.dasha_alignment.domain_matches.length
-                    ? domain.dasha_alignment.domain_matches.join(' · ')
-                    : 'No direct repetition'
-                }}
-              </strong>
-            </div>
-          </footer>
+          <p class="lead-reading">{{ t.gochara.core_reading.reading }}</p>
+          <details class="reading-details">
+            <summary>Why this judgement</summary>
+            <p>{{ t.gochara.core_reading.rationale }}</p>
+          </details>
         </article>
-      }
-    </app-section-card>
 
-    <app-section-card icon="list" title="Generated Gocharam periods" subtitle="precomputed readings for the profile timeline">
-      <div class="period-list">
-        @for (period of t.periods; track periodTrack(period)) {
-          <article class="period-card" [class]="toneClass(period.tone)">
-            <header>
-              <div>
-                <span>{{ period.status }} · {{ period.planet }}</span>
-                <strong>{{ period.rule }}</strong>
-              </div>
-              <time>{{ formatRange(period) }}</time>
-            </header>
-            <p>{{ period.reading }}</p>
-            <small>{{ period.validation_prompt }}</small>
+        <div class="change-preview">
+          <article>
+            <span>Next {{ scanRangeLabel() }} reading</span>
+            @if (nextEvent()) {
+              <h4>{{ t.gochara.core_reading.next.title }}</h4>
+              <p>{{ t.gochara.core_reading.next.reading }}</p>
+              <small>{{ t.gochara.core_reading.next.timing_summary }}</small>
+            } @else {
+              <h4>No major rule change</h4>
+              <p>The current Gocharam background remains stable through this selected horizon.</p>
+              <small>Expand the range to look further ahead.</small>
+            }
           </article>
-        } @empty {
-          <p class="as-muted empty">No generated Gocharam periods were found for this profile timeline.</p>
-        }
-      </div>
-    </app-section-card>
-
-    <app-section-card icon="history" title="Gocharam validation trail" subtitle="active now, what next, and what happened before">
-      <div class="timeline-toolbar">
-        <div>
-          <strong>Rule windows</strong>
-          <span>Use these dates to validate whether the Gocharam phase matched real experience.</span>
+          <article>
+            <span>Previous {{ scanRangeLabel() }} reading</span>
+            @if (previousEvent()) {
+              <h4>{{ t.gochara.core_reading.previous.title }}</h4>
+              <p>{{ t.gochara.core_reading.previous.reading }}</p>
+              <small>{{ t.gochara.core_reading.previous.timing_summary }}</small>
+            } @else {
+              <h4>No major rule change</h4>
+              <p>No named Gocharam rule transition was found inside the selected past horizon.</p>
+              <small>Expand the range to review more history.</small>
+            }
+          </article>
         </div>
-        <div class="segmented">
-          <button type="button" [class.active]="detailMode() === 'active'" (click)="detailMode.set('active')">
-            Active now
-          </button>
-          <button type="button" [class.active]="detailMode() === 'next'" (click)="detailMode.set('next')">
-            What next
-          </button>
-          <button type="button" [class.active]="detailMode() === 'past'" (click)="detailMode.set('past')">
-            Earlier
-          </button>
-        </div>
-      </div>
 
-      @if (detailMode() === 'active') {
-        <div class="window-list">
-          @for (window of activeWindows(); track window.rule + window.start_date + window.end_date) {
-            <article class="window-card" [class]="toneClass(window.tone)">
-              <header>
+        <section class="active-section">
+          <header class="section-heading">
+            <div>
+              <span>Active now</span>
+              <h3>Current rule windows</h3>
+            </div>
+            <button type="button" (click)="selectWorkspace('timeline')">Open full timeline</button>
+          </header>
+          <div class="window-list compact">
+            @for (window of activeWindows(); track window.rule + window.start_date + window.end_date) {
+              <article class="window-card" [class]="toneClass(window.tone)">
                 <div>
                   <span>{{ window.planet }}</span>
                   <strong>{{ window.rule }}</strong>
+                  <small>{{ window.trigger }}</small>
                 </div>
                 <time>{{ formatRange(window) }}</time>
-              </header>
-              <p>{{ window.summary }}</p>
-              <small>{{ window.trigger }}</small>
-            </article>
-          } @empty {
-            <p class="as-muted empty">No major Gocharam rule window is active right now.</p>
-          }
-        </div>
-      } @else {
-        <div class="event-list">
-          @for (event of detailEvents(); track eventTrack(event)) {
-            <article class="event-row" [class]="toneClass(event.tone)">
-              <time>{{ formatDate(event.date) }}</time>
+              </article>
+            } @empty {
+              <p class="as-muted empty">No major Gocharam rule window is active right now.</p>
+            }
+          </div>
+        </section>
+      </section>
+    }
+
+    @if (workspace() === 'domains') {
+      <section class="explorer-workspace">
+        <aside class="explorer-rail" aria-label="Life area readings">
+          <div class="rail-heading">
+            <span>Life areas</span>
+            <strong>Choose one focus</strong>
+          </div>
+          <nav>
+            @for (domain of domains(); track domain.id) {
+              <button
+                type="button"
+                [class.active]="domainId() === domain.id"
+                (click)="domainId.set(domain.id)"
+              >
+                <span>{{ domain.title }}</span>
+                <small>{{ domain.balance_score }}</small>
+              </button>
+            }
+          </nav>
+        </aside>
+
+        @if (activeDomain(); as domain) {
+          <article class="focus-reading" [class]="toneClass(domain.tone)">
+            <header>
               <div>
-                <strong>{{ event.title }}</strong>
-                <span>{{ event.detail }}</span>
+                <span>Life-area reading</span>
+                <h3>{{ domain.title }}</h3>
+                <p>{{ domain.main_theme }}</p>
               </div>
-              <small>{{ event.transition || event.strength + '%' }}</small>
-            </article>
-          } @empty {
-            <p class="as-muted empty">No Gocharam rule transitions found in this scan window.</p>
+              <div class="balance-score">
+                <strong>{{ domain.balance_score }}</strong>
+                <span>Snapshot balance</span>
+              </div>
+            </header>
+
+            <section class="range-reading" [class]="toneClass(domain.range_outlook.tone)">
+              <div class="range-reading-heading">
+                <span>{{ scanRangeLabel() }} life-area reading</span>
+                <small>
+                  {{ domain.range_outlook.supportive_count }} supportive ·
+                  {{ domain.range_outlook.challenging_count }} caution
+                </small>
+              </div>
+              <h4>{{ domain.range_outlook.title }}</h4>
+              <p>{{ domain.range_outlook.reading }}</p>
+              @if (domain.range_outlook.highlights.length) {
+                <div class="range-highlights">
+                  @for (event of domain.range_outlook.highlights; track eventTrack(event)) {
+                    <div>
+                      <time>{{ formatDate(event.date) }}</time>
+                      <strong>{{ event.title }}</strong>
+                    </div>
+                  }
+                </div>
+              }
+            </section>
+
+            <details class="reading-details">
+              <summary>Current snapshot and astrological rationale</summary>
+              <p>{{ domain.reading }}</p>
+              <p>{{ domain.rationale }}</p>
+            </details>
+
+            <div class="guidance-grid">
+              <section>
+                <span>Constructive possibilities</span>
+                <ul>
+                  @for (item of domain.strengths; track item) {
+                    <li>{{ item }}</li>
+                  }
+                </ul>
+              </section>
+              <section>
+                <span>Watch carefully</span>
+                <ul>
+                  @for (item of domain.challenges; track item) {
+                    <li>{{ item }}</li>
+                  }
+                </ul>
+              </section>
+              <section>
+                <span>Practical focus</span>
+                <ul>
+                  @for (item of domain.actions; track item) {
+                    <li>{{ item }}</li>
+                  }
+                </ul>
+              </section>
+            </div>
+
+            <footer class="evidence-strip">
+              <div>
+                <span>Timing</span>
+                <strong>{{ domain.timing.current }}</strong>
+              </div>
+              <div>
+                <span>Leading factors</span>
+                <strong>{{ domain.leading_planets.join(' · ') }}</strong>
+              </div>
+              <div>
+                <span>Dasha alignment</span>
+                <strong>
+                  {{
+                    domain.dasha_alignment.domain_matches.length
+                      ? domain.dasha_alignment.domain_matches.join(' · ')
+                      : 'No direct repetition'
+                  }}
+                </strong>
+              </div>
+            </footer>
+          </article>
+        }
+      </section>
+    }
+
+    @if (workspace() === 'planets') {
+      <section class="explorer-workspace">
+        <aside class="explorer-rail planet-rail" aria-label="Planet transit readings">
+          <div class="rail-heading">
+            <span>Planet transits</span>
+            <strong>Choose a planet</strong>
+          </div>
+          <nav>
+            @for (planet of planets(); track planet.planet) {
+              <button
+                type="button"
+                [class.active]="planetId() === planet.planet"
+                (click)="planetId.set(planet.planet)"
+              >
+                <span>{{ planet.planet }}</span>
+                <small [class]="toneClass(planet.tone)">{{ planet.tone }}</small>
+              </button>
+            }
+          </nav>
+        </aside>
+
+        @if (activePlanet(); as planet) {
+          <article class="focus-reading planet-reading" [class]="toneClass(planet.tone)">
+            <header>
+              <div>
+                <span>Planet reading</span>
+                <h3>{{ planet.title }}</h3>
+                <p>{{ planet.main_theme }}</p>
+              </div>
+              <span class="tone-badge" [class]="toneClass(planet.tone)">{{ planet.tone }}</span>
+            </header>
+            <section class="range-reading" [class]="toneClass(planet.range_outlook.tone)">
+              <div class="range-reading-heading">
+                <span>{{ scanRangeLabel() }} planet reading</span>
+                <small>{{ planet.range_outlook.event_count }} timed shifts</small>
+              </div>
+              <h4>{{ planet.range_outlook.title }}</h4>
+              <p>{{ planet.range_outlook.reading }}</p>
+            </section>
+            <details class="reading-details">
+              <summary>Current snapshot and calculated evidence</summary>
+              <p>{{ planet.reading }}</p>
+              <p>{{ planet.rationale }}</p>
+            </details>
+            <footer class="evidence-strip planet-timing">
+              <div>
+                <span>Current timing</span>
+                <strong>{{ planet.timing.current }}</strong>
+              </div>
+              @if (planet.timing.next; as next) {
+                <div>
+                  <span>Next change</span>
+                  <strong>{{ next.title }} · {{ formatDate(next.date) }}</strong>
+                </div>
+              }
+              @if (planet.timing.previous; as previous) {
+                <div>
+                  <span>Previous change</span>
+                  <strong>{{ previous.title }} · {{ formatDate(previous.date) }}</strong>
+                </div>
+              }
+            </footer>
+          </article>
+        }
+      </section>
+    }
+
+    @if (workspace() === 'timeline') {
+      <section class="timeline-workspace">
+        <header class="timeline-header">
+          <div>
+            <span>Date navigator</span>
+            <h3>Gocharam through time</h3>
+            <p>Select any date to recalculate the complete Gocharam snapshot.</p>
+          </div>
+          <div class="date-navigator">
+            <button type="button" (click)="moveViewDate(-1)">Previous day</button>
+            <input
+              type="date"
+              aria-label="Gocharam snapshot date"
+              [value]="viewDate()"
+              (change)="setViewDate($event)"
+            />
+            <button type="button" (click)="moveViewDate(1)">Next day</button>
+            <button type="button" class="today-button" (click)="resetViewDate()">Today</button>
+          </div>
+        </header>
+
+        <section class="timeline-map" aria-label="Gocharam period timeline">
+          @if (timelineBounds(); as bounds) {
+            <div class="timeline-axis">
+              <span>{{ bounds.startLabel }}</span>
+              <strong>{{ viewDateLabel() }}</strong>
+              <span>{{ bounds.endLabel }}</span>
+            </div>
           }
+          <div class="timeline-track-list">
+            @for (track of timelineTracks(); track track.key) {
+              <div class="timeline-track">
+                <div class="track-label">
+                  <span>{{ track.planet }}</span>
+                  <strong>{{ track.rule }}</strong>
+                </div>
+                <div class="track-lane">
+                  <i class="snapshot-line" aria-hidden="true"></i>
+                  @for (bar of track.bars; track periodTrack(bar.period)) {
+                    <button
+                      type="button"
+                      class="period-bar"
+                      [class]="toneClass(bar.period.tone)"
+                      [style.left.%]="bar.left"
+                      [style.width.%]="bar.width"
+                      [title]="bar.period.rule + ': ' + formatRange(bar.period)"
+                      (click)="selectTimelineDate(bar.period.start_date)"
+                    >
+                      <span>{{ bar.period.rule }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
+            } @empty {
+              <p class="as-muted empty">No named Gocharam periods intersect this timeline window.</p>
+            }
+          </div>
+        </section>
+
+        <div class="timeline-reading-grid">
+          <article class="snapshot-reading" [class]="toneClass(t.gochara.core_reading.tone)">
+            <span>Reading for {{ viewDateLabel() }}</span>
+            <h4>{{ t.gochara.core_reading.title }}</h4>
+            <p>{{ t.gochara.core_reading.reading }}</p>
+            <small>{{ t.gochara.core_reading.timing_summary }}</small>
+            <details class="reading-details">
+              <summary>Why this judgement</summary>
+              <p>{{ t.gochara.core_reading.rationale }}</p>
+            </details>
+          </article>
+
+          <section class="nearby-events">
+            <header>
+              <span>Nearest transitions</span>
+              <strong>Jump to a change</strong>
+            </header>
+            <div>
+              @for (event of nearbyEvents(); track eventTrack(event)) {
+                <button type="button" (click)="selectTimelineDate(event.date)">
+                  <time>{{ formatDate(event.date) }}</time>
+                  <span>
+                    <strong>{{ event.title }}</strong>
+                    <small>{{ event.detail }}</small>
+                  </span>
+                </button>
+              } @empty {
+                <p class="as-muted empty">No nearby named transitions in this zoom range.</p>
+              }
+            </div>
+          </section>
         </div>
-      }
-    </app-section-card>
+
+        <details class="period-ledger">
+          <summary>Review all {{ visiblePeriods().length }} period readings</summary>
+          <div class="period-list">
+            @for (period of visiblePeriods(); track periodTrack(period)) {
+              <article class="period-card" [class]="toneClass(period.tone)">
+                <header>
+                  <div>
+                    <span>{{ period.status }} · {{ period.planet }}</span>
+                    <strong>{{ period.rule }}</strong>
+                  </div>
+                  <time>{{ formatRange(period) }}</time>
+                </header>
+                <p>{{ period.reading }}</p>
+                <small>{{ period.validation_prompt }}</small>
+                <button type="button" (click)="selectTimelineDate(period.start_date)">
+                  Open start-date snapshot
+                </button>
+              </article>
+            } @empty {
+              <p class="as-muted empty">No generated period readings were found.</p>
+            }
+          </div>
+        </details>
+      </section>
+    }
   </div>
 }
