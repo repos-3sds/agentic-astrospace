@@ -18,6 +18,7 @@
   background: var(--m-surface);
   cursor: pointer;
   text-align: left;
+  text-decoration: none;
   img { width: 16px; height: 16px; display: block; flex-shrink: 0; }
   &:disabled { opacity: .55; cursor: wait; }
 

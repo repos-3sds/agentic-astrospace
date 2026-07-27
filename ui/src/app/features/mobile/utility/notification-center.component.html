@@ -1,0 +1,2 @@
+<header class="util-appbar"><a routerLink="/m/settings"><img src="mobile/back.svg" alt="" /></a><h1>Notifications</h1><span></span></header><main>
+@if(loading()){<p class="util-empty">Loading notifications…</p>}@else if(error()){<p class="util-empty">{{error()}}</p>}@else{@for(a of alerts();track a.id){<button class="util-alert" [class.unread]="!a.read_at" type="button" (click)="open(a)"><span>{{a.category==='transit'?'🪐':'🌅'}}</span><span><b>{{a.title}}</b><small>{{a.body}}</small></span></button>}@empty{<p class="util-empty">You’re all caught up.</p>}}</main>

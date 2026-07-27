@@ -33,6 +33,13 @@ export class ApiService {
     return this.unwrap(firstValueFrom(this.http.delete<void>(BASE() + path, await this.options())));
   }
 
+  async deleteWithBody<T>(path: string, body: unknown): Promise<T> {
+    return this.unwrap(firstValueFrom(this.http.delete<T>(BASE() + path, {
+      ...(await this.options()),
+      body,
+    })));
+  }
+
   private async options(): Promise<{ headers?: Record<string, string> }> {
     const token = await this.auth.getAccessToken();
     return token ? { headers: { Authorization: `Bearer ${token}` } } : {};

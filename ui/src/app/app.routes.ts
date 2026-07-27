@@ -397,10 +397,42 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'settings/account/delete',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/settings/account-deletion.component').then(
+            (m) => m.AccountDeletionComponent,
+          ),
+      },
+      {
         path: 'settings/conventions',
         loadComponent: () =>
           import('./features/mobile/settings/conventions.component').then(
             (m) => m.ConventionsComponent,
+          ),
+      },
+      {
+        path: 'search',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/utility/search.component').then(
+            (m) => m.SearchComponent,
+          ),
+      },
+      {
+        path: 'notifications',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/utility/notification-center.component').then(
+            (m) => m.NotificationCenterComponent,
+          ),
+      },
+      {
+        path: 'subscription',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/utility/subscription.component').then(
+            (m) => m.SubscriptionComponent,
           ),
       },
       // Calendar, compatibility, transits, readings and notes are kept in one

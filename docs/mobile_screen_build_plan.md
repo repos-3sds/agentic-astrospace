@@ -238,12 +238,12 @@ These frames were discovered in the updated Figma page after the original
 | `206:160` | 2d · Forgot Password | ✅ done — `/m/forgot-password` | US-N5 · request, non-enumerating confirmation, and return-to-sign-in journey |
 | `206:190` | States · Chart Computing | ✅ done — shown during birth-detail recalculation | US-N4 |
 | `206:223` | 10b · Ask — History | ✅ done — `/m/ask/history` | US-N2 · list, reopen, continue, and archive persisted Ask threads |
-| `206:302` | 34 · Subscription | ⬜ | Product/StoreKit decision required before purchase wiring |
-| `206:354` | 35 · Notification Center | ⬜ | Notification persistence and deep-link destinations |
+| `206:302` | 34 · Subscription | ✅ screen — `/m/subscription`; purchasing intentionally disabled | StoreKit/Play entitlement contract still requires product approval |
+| `206:354` | 35 · Notification Center | ✅ done — `/m/notifications` | Real alert persistence, mark-read, and safe mobile deep links |
 | `206:493` | 6b · Edit Birth Details | ✅ done — `/m/settings/birth-details` | US-N3 · edit active kundli, recalculate chart, and invalidate derived caches |
 | `206:550` | 27c · Transit Detail | ✅ done — shared sheet from Gochara and Full Transits | US-N4 |
-| `206:591` | 36 · Search | ⬜ | Cross-module search API and result deep links |
-| `206:641` | 25h · Account Deletion | ⬜ | US-N5 · backend-owned confirmed deletion cascade |
+| `206:591` | 36 · Search | ✅ done — `/m/search` | Cross-module client index with working result deep links and recent searches |
+| `206:641` | 25h · Account Deletion | ✅ done — `/m/settings/account/delete` | Backend-confirmed user-scoped cascade with regression tests |
 
 ### Recommended implementation order
 
@@ -288,12 +288,8 @@ its static Figma implementation renders.
 
 ## Status
 
-36 of 70 built: M1's Today set, the complete authentication/onboarding entrance, all of M3 Ask, M4 Remedies, M5 Muhurta and
-the M6 Chart flow (hub -> full render -> planet detail -> provenance -> divisional charts -> life periods). The foundation (tokens, shell,
-tab bar, sheet primitive, gauge, Ask composer, evidence sheet) is done and
-reusable, and the pipeline is proven end to end — Figma to browser to iOS
-simulator.
-
-Remaining work is per-screen and largely mechanical, but it is not small: each
-screen needs its own design-context fetch, asset download, component, and
-verification pass.
+All 79 inventoried Figma frames are implemented and routed. Subscription is
+present as a faithful, explicitly disabled screen because pricing,
+entitlements, restore-purchase behavior, and StoreKit/Play ownership have not
+yet been approved; it must not simulate a purchase. Remaining work is workflow
+hardening and native release verification rather than missing-screen buildout.

@@ -10,13 +10,20 @@ delivery worker as well as from here, so the ownership check lives in this
 layer — see `_owned_push_token` and the live-activity handler.
 """
 from datetime import datetime, time as time_cls
+import os
+import requests
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from ..db import crud_mobile as cm, get_db
-from ..db.models import LiveActivity, PushToken
+from ..db.models import (
+    AskThread, AudioRender, CompatibilityCheck, DailyGuidanceCache, Kundli,
+    LiveActivity, MuhurtaRequest, NotificationJob, NotificationPreference,
+    PushToken, SavedMuhurta, ShareAsset, UserAlert, UserDevice, UserObservance,
+    UserProfile, UserRemedy, UserSettings, WidgetInstall,
+)
 from .auth import CurrentUser
 
 router = APIRouter(prefix="/api/v1/me", tags=["me"])
@@ -93,6 +100,10 @@ class WidgetInstallPayload(BaseModel):
     settings: dict | None = None
 
 
+class AccountDeletionPayload(BaseModel):
+    confirmation: str
+
+
 # ── Serialisers ──────────────────────────────────────────────────────────────
 
 def _profile(row) -> dict:
@@ -149,6 +160,69 @@ def patch_profile(payload: ProfileUpdate, user: CurrentUser,
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
     return _profile(cm.update_user_profile(db, user.id, data))
+
+
+@router.delete("")
+def delete_account(payload: AccountDeletionPayload, user: CurrentUser,
+                   db: Session = Depends(get_db)):
+    """Permanently remove the caller's app data and Supabase identity.
+
+    The typed confirmation is checked by the backend; a client cannot bypass
+    it by calling the endpoint directly. Auth deletion requires the service
+    role and is attempted before the database transaction commits.
+    """
+    if payload.confirmation.strip().casefold() != "delete":
+        raise HTTPException(status_code=400, detail="Type DELETE to confirm")
+    service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    if user.auth_enabled and not service_key:
+        raise HTTPException(status_code=503, detail="Account deletion is not configured")
+
+    kundli_ids = [row.id for row in db.query(Kundli).filter(Kundli.user_id == user.id)]
+
+    # Children before parents where the schema does not declare ON DELETE.
+    db.query(UserAlert).filter(UserAlert.user_id == user.id).delete(synchronize_session=False)
+    for row in db.query(NotificationJob).filter(NotificationJob.user_id == user.id).all():
+        db.delete(row)  # ORM cascade removes delivery attempts.
+    db.flush()
+    db.query(PushToken).filter(PushToken.user_id == user.id).delete(synchronize_session=False)
+    db.query(SavedMuhurta).filter(SavedMuhurta.user_id == user.id).delete(synchronize_session=False)
+    db.query(MuhurtaRequest).filter(MuhurtaRequest.user_id == user.id).delete(synchronize_session=False)
+    for row in db.query(AskThread).filter(AskThread.user_id == user.id).all():
+        db.delete(row)
+    for row in db.query(UserRemedy).filter(UserRemedy.user_id == user.id).all():
+        db.delete(row)
+
+    for model in (
+        CompatibilityCheck, UserObservance, WidgetInstall, LiveActivity,
+        AudioRender, ShareAsset, NotificationPreference,
+    ):
+        db.query(model).filter(model.user_id == user.id).delete(synchronize_session=False)
+    if kundli_ids:
+        db.query(DailyGuidanceCache).filter(
+            DailyGuidanceCache.kundli_id.in_(kundli_ids)
+        ).delete(synchronize_session=False)
+    for row in db.query(Kundli).filter(Kundli.user_id == user.id).all():
+        db.delete(row)
+    db.query(UserSettings).filter(UserSettings.user_id == user.id).delete(synchronize_session=False)
+    db.query(UserProfile).filter(UserProfile.user_id == user.id).delete(synchronize_session=False)
+    db.flush()
+    db.query(UserDevice).filter(UserDevice.user_id == user.id).delete(synchronize_session=False)
+
+    if user.auth_enabled:
+        try:
+            response = requests.delete(
+                f"{os.environ['SUPABASE_URL'].rstrip('/')}/auth/v1/admin/users/{user.id}",
+                headers={"apikey": service_key, "Authorization": f"Bearer {service_key}"},
+                timeout=8,
+            )
+        except requests.RequestException as error:
+            db.rollback()
+            raise HTTPException(status_code=503, detail=f"Auth deletion unavailable: {error}")
+        if response.status_code not in {200, 204}:
+            db.rollback()
+            raise HTTPException(status_code=502, detail="Could not delete authentication account")
+    db.commit()
+    return {"deleted": True}
 
 
 @router.put("/devices")

@@ -126,6 +126,27 @@ export class SettingsHomeComponent {
           value: 'Sign out, delete',
           route: ['/m', 'settings', 'account'],
         },
+        {
+          id: 'notification-center',
+          icon: 'set-notif',
+          label: 'Notification center',
+          value: 'Recent updates',
+          route: ['/m', 'notifications'],
+        },
+        {
+          id: 'search',
+          icon: 'set-conv',
+          label: 'Search AstroSpace',
+          value: 'Charts, readings, tools',
+          route: ['/m', 'search'],
+        },
+        {
+          id: 'subscription',
+          icon: 'set-account',
+          label: 'AstroSpace Plus',
+          value: 'View plans',
+          route: ['/m', 'subscription'],
+        },
       ],
     },
   ]);
