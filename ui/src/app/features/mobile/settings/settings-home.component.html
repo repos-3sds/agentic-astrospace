@@ -1,0 +1,55 @@
+@let p = profile();
+
+<header class="appbar">
+  <a class="back" [routerLink]="['/m', 'today']" aria-label="Back">
+    <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  </a>
+  <h1 class="screen-title">Settings</h1>
+</header>
+
+<div class="body">
+  <button class="account" type="button">
+    <span class="avatar" aria-hidden="true">{{ p.initial }}</span>
+    <span class="account-text">
+      <span class="account-name">{{ p.name }}</span>
+      <span class="account-email">{{ p.email }}</span>
+    </span>
+    <img class="chevron lg" src="mobile/chevron.svg" alt="" aria-hidden="true" />
+  </button>
+
+  @for (group of groups(); track group.eyebrow) {
+    <p class="eyebrow">{{ group.eyebrow }}</p>
+    <div class="group">
+      @for (row of group.rows; track row.id; let last = $last) {
+        @if (row.route; as route) {
+          <a class="row" [routerLink]="route">
+            <span class="row-left">
+              <span class="row-icon">
+                <img [src]="'mobile/' + row.icon + '.svg'" alt="" aria-hidden="true" />
+              </span>
+              <span class="row-label">{{ row.label }}</span>
+            </span>
+            <span class="row-right">
+              <span class="row-value">{{ row.value }}</span>
+              <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
+            </span>
+          </a>
+        } @else {
+          <button class="row" type="button">
+            <span class="row-left">
+              <span class="row-icon">
+                <img [src]="'mobile/' + row.icon + '.svg'" alt="" aria-hidden="true" />
+              </span>
+              <span class="row-label">{{ row.label }}</span>
+            </span>
+            <span class="row-right">
+              <span class="row-value">{{ row.value }}</span>
+              <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
+            </span>
+          </button>
+        }
+        @if (!last) { <div class="rule"></div> }
+      }
+    </div>
+  }
+</div>

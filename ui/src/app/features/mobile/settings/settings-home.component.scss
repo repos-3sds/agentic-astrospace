@@ -1,0 +1,122 @@
+@use '../mobile-tokens' as *;
+
+:host { display: block; }
+
+/* App bar — node 66:90 */
+.appbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px 10px;
+}
+
+.back {
+  line-height: 0;
+  img { width: 24px; height: 24px; display: block; }
+}
+
+.screen-title { @include m-title; color: var(--m-text); margin: 0; }
+
+/* Content column — node 66:94 */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 8px 20px 16px;
+}
+
+.eyebrow { @include m-eyebrow; color: var(--m-muted); margin: 0; }
+
+/* Account card — node 66:95 */
+.account {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 15px;
+  border: 1px solid var(--m-border);
+  border-radius: 18px;
+  background: var(--m-surface);
+  cursor: pointer;
+  text-align: left;
+}
+
+.avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  background: var(--m-accent);
+  color: var(--m-on-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  @include m-body-strong;
+}
+
+.account-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.account-name { @include m-body-strong; color: var(--m-text); }
+.account-email { @include m-caption; color: var(--m-muted); }
+
+/* Grouped rows — node 66:104 */
+.group {
+  border: 1px solid var(--m-border);
+  border-radius: 18px;
+  background: var(--m-surface);
+  overflow: hidden;
+}
+
+.row {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 13px 15px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+}
+
+.row-left { display: flex; align-items: center; gap: 11px; min-width: 0; }
+
+.row-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--m-accent-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  img { width: 17px; height: 17px; display: block; }
+}
+
+.row-label { @include m-body-strong; color: var(--m-text); }
+
+.row-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; min-width: 0; }
+
+// The current value, shown without opening the screen. It yields first when a
+// long label and a long value compete for the row.
+.row-value {
+  @include m-body-small;
+  color: var(--m-muted);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  width: 16px;
+  height: 16px;
+  display: block;
+  flex-shrink: 0;
+  &.lg { width: 18px; height: 18px; }
+}
+
+.rule { height: 1px; background: var(--m-border); }

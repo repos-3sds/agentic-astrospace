@@ -300,6 +300,13 @@ export const routes: Routes = [
             (m) => m.StrengthAdvancedComponent,
           ),
       },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./features/mobile/settings/settings-home.component').then(
+            (m) => m.SettingsHomeComponent,
+          ),
+      },
       // The tab bar has five tabs and three of them are not built yet. Without
       // this they fall through to the global '**' below and land on the web
       // app's marketing page — in the native build that reads as the app

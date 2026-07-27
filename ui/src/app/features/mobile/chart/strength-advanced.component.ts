@@ -41,17 +41,21 @@ export class StrengthAdvancedComponent {
 
   readonly planets = ['SAV', 'Su', 'Mo', 'Ma', 'Me', 'Ju', 'Ve', 'Sa'];
   readonly houses: HouseBindu[] = [
-    { house: '1st', sign: 'Taurus', short: 'Ta', value: 32, x: 50, y: 10 },
-    { house: '2nd', sign: 'Gemini', short: 'Ge', value: 28, x: 79, y: 7 },
-    { house: '3rd', sign: 'Cancer', short: 'Cn', value: 30, x: 93, y: 22 },
-    { house: '4th', sign: 'Leo', short: 'Le', value: 26, x: 88, y: 50 },
-    { house: '5th', sign: 'Virgo', short: 'Vi', value: 35, x: 93, y: 78 },
-    { house: '6th', sign: 'Libra', short: 'Li', value: 24, x: 78, y: 93 },
-    { house: '7th', sign: 'Scorpio', short: 'Sc', value: 33, x: 50, y: 88 },
-    { house: '8th', sign: 'Sagittarius', short: 'Sg', value: 22, x: 22, y: 93 },
-    { house: '9th', sign: 'Capricorn', short: 'Cp', value: 38, x: 7, y: 78 },
-    { house: '10th', sign: 'Aquarius', short: 'Aq', value: 27, x: 12, y: 50 },
-    { house: '11th', sign: 'Pisces', short: 'Pi', value: 36, x: 21, y: 7 },
+    // These sum to exactly 337, which is not a coincidence to preserve loosely:
+    // the Sarvashtakavarga total is fixed at 337 bindus in the classical scheme,
+    // so any twelve values that sum to anything else are not a chart. An earlier
+    // placeholder set summed to 356 while the header still claimed 337.
+    { house: '1st', sign: 'Taurus', short: 'Ta', value: 30, x: 50, y: 10 },
+    { house: '2nd', sign: 'Gemini', short: 'Ge', value: 26, x: 79, y: 7 },
+    { house: '3rd', sign: 'Cancer', short: 'Cn', value: 28, x: 93, y: 22 },
+    { house: '4th', sign: 'Leo', short: 'Le', value: 25, x: 88, y: 50 },
+    { house: '5th', sign: 'Virgo', short: 'Vi', value: 32, x: 93, y: 78 },
+    { house: '6th', sign: 'Libra', short: 'Li', value: 23, x: 78, y: 93 },
+    { house: '7th', sign: 'Scorpio', short: 'Sc', value: 31, x: 50, y: 88 },
+    { house: '8th', sign: 'Sagittarius', short: 'Sg', value: 21, x: 22, y: 93 },
+    { house: '9th', sign: 'Capricorn', short: 'Cp', value: 35, x: 7, y: 78 },
+    { house: '10th', sign: 'Aquarius', short: 'Aq', value: 26, x: 12, y: 50 },
+    { house: '11th', sign: 'Pisces', short: 'Pi', value: 35, x: 21, y: 7 },
     { house: '12th', sign: 'Aries', short: 'Ar', value: 25, x: 7, y: 21 },
   ];
   readonly displayedHouses = computed(() => {
@@ -62,10 +66,12 @@ export class StrengthAdvancedComponent {
       value: Math.max(2, Math.round((house.value + index + offset) / 5)),
     }));
   });
+  // Always summed from what is on screen, never asserted. A total that is
+  // stated independently of the cells is a total that can contradict them —
+  // and on a screen whose whole claim is "computed, not conjured", a header
+  // disagreeing with the grid beneath it is the worst possible bug.
   readonly totalBindus = computed(() =>
-    this.avPlanet() === 'SAV'
-      ? 337
-      : this.displayedHouses().reduce((total, house) => total + house.value, 0),
+    this.displayedHouses().reduce((total, house) => total + house.value, 0),
   );
 
   readonly karakas = [

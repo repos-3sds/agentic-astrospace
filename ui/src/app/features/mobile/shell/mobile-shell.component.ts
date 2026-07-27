@@ -57,6 +57,8 @@ export class MobileShellComponent {
     { path: 'ask', label: 'Ask', icon: 'nav-ask' },
     { path: 'chart', label: 'Chart', icon: 'nav-chart' },
     { path: 'calendar', label: 'Calendar', icon: 'nav-calendar' },
-    { path: 'more', label: 'More', icon: 'nav-more' },
+    // "More" lands on Settings (66:89). The designs have no separate More menu,
+    // and a tab that opens a list of one thing is a tab that wastes a tap.
+    { path: 'settings', label: 'More', icon: 'nav-more' },
   ];
 }
