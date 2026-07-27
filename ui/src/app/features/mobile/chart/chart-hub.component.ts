@@ -114,6 +114,7 @@ export class ChartHubComponent {
       title: 'Strength & Advanced',
       subtitle: 'Shadbala, AV, Jaimini',
       icon: 'explore-strength',
+      route: ['/m', 'chart', 'strength'],
     },
     {
       id: 'transit',

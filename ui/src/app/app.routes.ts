@@ -292,6 +292,14 @@ export const routes: Routes = [
             (m) => m.YogasDoshasComponent,
           ),
       },
+      {
+        path: 'chart/strength',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/chart/strength-advanced.component').then(
+            (m) => m.StrengthAdvancedComponent,
+          ),
+      },
       // The tab bar has five tabs and three of them are not built yet. Without
       // this they fall through to the global '**' below and land on the web
       // app's marketing page — in the native build that reads as the app

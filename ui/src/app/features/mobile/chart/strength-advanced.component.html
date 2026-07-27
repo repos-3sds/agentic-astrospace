@@ -1,0 +1,86 @@
+<a class="appbar" [routerLink]="['/m', 'chart']">
+  <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  <span>Your Chart</span>
+</a>
+
+<main class="body">
+  <header class="heading">
+    <h1>Strength &amp; Advanced</h1>
+    <p>Classical strength calculations, BPHS-sourced</p>
+  </header>
+
+  <nav class="tabs" aria-label="Strength calculation">
+    @for (item of [{id: 'shadbala', label: 'Shadbala'}, {id: 'ashtakavarga', label: 'Ashtakavarga'}, {id: 'jaimini', label: 'Jaimini'}]; track item.id) {
+      <button type="button" [class.is-on]="tab() === item.id" (click)="tab.set($any(item.id))">{{ item.label }}</button>
+    }
+  </nav>
+
+  @switch (tab()) {
+    @case ('shadbala') {
+      <p class="explainer"><img src="mobile/info.svg" alt="" aria-hidden="true" />Six-fold strength (virupa) vs. the classical required minimum.</p>
+      <section class="strength-list">
+        @for (planet of strengths; track planet.name) {
+          <article class="strength-card">
+            <div class="strength-head">
+              <h2>{{ planet.name }}</h2>
+              <span class="status" [class.low]="planet.virupa < planet.minimum">{{ planet.virupa >= planet.minimum ? 'MEETS MIN' : 'BELOW MIN' }}</span>
+              <strong>{{ planet.score }}%</strong>
+            </div>
+            <div class="meter"><span [class.low]="planet.virupa < planet.minimum" [style.width.%]="planet.score"></span></div>
+            <p>{{ planet.virupa }} virupa · needs {{ planet.minimum }}</p>
+          </article>
+        }
+      </section>
+    }
+    @case ('ashtakavarga') {
+      <p class="explainer"><img src="mobile/info.svg" alt="" aria-hidden="true" />Bindu points per house — the Sarvashtakavarga (SAV) total across all planets.</p>
+      <div class="planet-tabs">
+        @for (planet of planets; track planet) {
+          <button type="button" [class.is-on]="avPlanet() === planet" (click)="avPlanet.set(planet)">{{ planet }}</button>
+        }
+      </div>
+      <div class="section-line"><span>{{ avPlanet() }} · {{ avPlanet() === 'SAV' ? 'SARVASHTAKAVARGA' : 'BHINNASHTAKAVARGA' }}</span><small>{{ totalBindus() }} total bindus</small></div>
+      <div class="av-chart">
+        <img src="mobile/ashtakavarga-grid.svg" alt="" aria-hidden="true" />
+        @for (house of displayedHouses(); track house.house) {
+          <div class="chart-value" [style.left.%]="house.x" [style.top.%]="house.y">
+            <small>{{ house.short }}</small>
+            <strong [class.supportive]="house.value >= (avPlanet() === 'SAV' ? 30 : 5)">{{ house.value }}</strong>
+          </div>
+        }
+      </div>
+      <p class="list-title">SARVASHTAKAVARGA (SAV) BY HOUSE</p>
+      <section class="house-list">
+        @for (house of displayedHouses(); track house.house) {
+          <div class="house-row">
+            <span class="house-label"><b>{{ house.house }}</b> {{ house.sign }}</span>
+            <div class="house-meter"><span [class.supportive]="house.value >= (avPlanet() === 'SAV' ? 30 : 5)" [style.width.%]="avPlanet() === 'SAV' ? house.value / 44 * 100 : house.value / 8 * 100"></span></div>
+            <strong>{{ house.value }}</strong>
+          </div>
+        }
+      </section>
+      <div class="legend"><span><i class="good"></i>30+ · supportive</span><span><i></i>Below 30 · needs care</span></div>
+    }
+    @case ('jaimini') {
+      <p class="explainer"><img src="mobile/info.svg" alt="" aria-hidden="true" />A different analytical system — chara karakas and arudha padas, not Parashari.</p>
+      <p class="section-title">CHARA KARAKAS</p>
+      <section class="data-list">
+        @for (row of karakas; track row[0]) {
+          <div class="data-row"><span><b>{{ row[0] }}</b><small>{{ row[1] }}</small></span><em>{{ row[2] }}</em></div>
+        }
+      </section>
+      <p class="section-title">ARUDHA PADAS</p>
+      <section class="arudhas">
+        @for (row of arudhas; track row[0]) {
+          <article><small>{{ row[0] }}</small><strong>{{ row[1] }}</strong></article>
+        }
+      </section>
+      <p class="section-title">SPECIAL LAGNAS</p>
+      <section class="data-list">
+        @for (row of specialLagnas; track row[0]) {
+          <div class="data-row"><span><b>{{ row[0] }}</b><small>{{ row[1] }}</small></span><em class="accent">{{ row[2] }}</em></div>
+        }
+      </section>
+    }
+  }
+</main>
