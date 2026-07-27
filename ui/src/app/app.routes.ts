@@ -321,6 +321,87 @@ export const routes: Routes = [
             (m) => m.ConventionsComponent,
           ),
       },
+      // Calendar, compatibility, transits, readings and notes are kept in one
+      // contiguous ownership block so parallel feature work rebases cleanly.
+      {
+        path: 'calendar',
+        loadComponent: () =>
+          import('./features/mobile/calendar/calendar.component').then(
+            (m) => m.CalendarComponent,
+          ),
+      },
+      {
+        path: 'calendar/day',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/calendar/calendar-day.component').then(
+            (m) => m.CalendarDayComponent,
+          ),
+      },
+      {
+        path: 'compat',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/compat/compat-hub.component').then(
+            (m) => m.CompatHubComponent,
+          ),
+      },
+      {
+        path: 'compat/add',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/compat/add-prospect.component').then(
+            (m) => m.AddProspectComponent,
+          ),
+      },
+      {
+        path: 'compat/results',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/compat/compat-results.component').then(
+            (m) => m.CompatResultsComponent,
+          ),
+      },
+      {
+        path: 'transits',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/transits/gochara.component').then(
+            (m) => m.GocharaComponent,
+          ),
+      },
+      {
+        path: 'transits/full',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/transits/full-transits.component').then(
+            (m) => m.FullTransitsComponent,
+          ),
+      },
+      {
+        path: 'readings',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/readings/readings.component').then(
+            (m) => m.ReadingsComponent,
+          ),
+      },
+      {
+        path: 'readings/accuracy',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/readings/accuracy.component').then(
+            (m) => m.AccuracyComponent,
+          ),
+      },
+      {
+        path: 'notes',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/notes/notes.component').then(
+            (m) => m.NotesComponent,
+          ),
+      },
       // The tab bar has five tabs and three of them are not built yet. Without
       // this they fall through to the global '**' below and land on the web
       // app's marketing page — in the native build that reads as the app

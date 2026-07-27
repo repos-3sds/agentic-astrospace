@@ -1,0 +1,18 @@
+@use '../mobile-tokens' as *;
+:host { display: block; padding-bottom: 24px; }
+.mcald-back { @include m-body-strong; display: flex; align-items: center; gap: 12px; padding: 16px 20px 10px; color: var(--m-muted); text-decoration: none; img { width: 24px; height: 24px; } }
+.mcald-body { display: flex; flex-direction: column; gap: 14px; padding: 4px 20px 16px; }
+header { h1 { @include m-h1; margin: 0 0 3px; color: var(--m-text); } p { @include m-body-small; margin: 0; color: var(--m-muted); } }
+.mcald-quality { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 18px; background: var(--m-good-soft); }
+.mcald-quality > span { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--m-surface); img { width: 19px; height: 19px; } }
+.mcald-quality div { display: flex; flex-direction: column; gap: 2px; b { @include m-body-strong; color: var(--m-text); } small { @include m-caption; color: var(--m-muted); } }
+.mcald-title { @include m-eyebrow; margin: 0; color: var(--m-muted); &.accent { color: var(--m-accent); } }
+.mcald-list, .mcald-stack { border: 1px solid var(--m-border); border-radius: 18px; overflow: hidden; background: var(--m-raised); }
+.mcald-list > div { display: flex; align-items: center; gap: 12px; padding: 12px 15px; border-bottom: 1px solid var(--m-border); &:last-child { border: 0; } }
+.mcald-list i { width: 4px; height: 32px; border-radius: 999px; background: var(--m-good); }
+.mcald-list span { display: flex; flex: 1; flex-direction: column; b { @include m-body-strong; } small { @include m-caption; color: var(--m-muted); } }
+.mcald-list em { @include m-caption; padding: 3px 9px; border-radius: 999px; color: var(--m-good); background: var(--m-good-soft); font-size: 10.5px; font-style: normal; }
+.mcald-list .bad { i { background: var(--m-bad); } em { color: var(--m-bad); background: var(--m-bad-soft); } }
+.mcald-choghadiya { display: flex; flex-wrap: wrap; gap: 8px; }
+.mcald-choghadiya article { display: flex; flex-direction: column; gap: 2px; padding: 9px 12px; border-radius: 14px; background: var(--m-good-soft); b { font-size: 12.5px; color: var(--m-good); } small { font-size: 10px; color: var(--m-muted); } &[data-tone='bad'] { background: var(--m-bad-soft); b { color: var(--m-bad); } } &[data-tone='warn'] { background: var(--m-gold-soft); b { color: var(--m-gold); } } }
+.mcald-stack > div { display: flex; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid var(--m-border); &:last-child { border: 0; } small { @include m-caption; color: var(--m-muted); } b { @include m-body-strong; } }

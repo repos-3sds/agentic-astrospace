@@ -1,0 +1,36 @@
+@use '../mobile-tokens' as *;
+:host { display: block; }
+.mcal-top {
+  display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 8px;
+  h1 { @include m-title; margin: 0; color: var(--m-text); }
+  div { display: flex; align-items: center; gap: 10px; }
+  b { @include m-body-strong; color: var(--m-text); }
+  button { border: 0; padding: 0; background: none; }
+  img { width: 18px; height: 18px; display: block; }
+  .mcal-next img { transform: rotate(180deg); }
+}
+.mcal-body { display: flex; flex-direction: column; gap: 16px; padding: 6px 20px 24px; }
+.mcal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: 44px; align-items: center;
+  padding: 16px 14px 18px; border: 1px solid var(--m-border); border-radius: 22px;
+  background: var(--m-surface); box-shadow: var(--m-shadow-card);
+  > span, > a { @include m-body-small; display: flex; align-items: center; justify-content: center; height: 44px; color: var(--m-text); text-decoration: none; }
+  .mcal-weekday { @include m-caption; height: 20px; color: var(--m-muted); }
+  .mcal-selected { border-radius: 50%; color: var(--m-on-ink); background: var(--m-ink); }
+  .mcal-event { position: relative; }
+  .mcal-event::after { content: ''; position: absolute; bottom: 2px; width: 4px; height: 4px; border-radius: 50%; background: var(--m-accent); }
+}
+.mcal-eyebrow { @include m-eyebrow; margin: 0; color: var(--m-accent); }
+.mcal-observance {
+  display: flex; align-items: center; gap: 12px; width: 100%; box-sizing: border-box; padding: 13px 15px;
+  border: 1px solid var(--m-border); border-radius: 18px; text-align: left; background: var(--m-raised);
+  > span:last-child { display: flex; flex: 1 1 0; flex-direction: column; gap: 2px; }
+  > span:last-child b { @include m-body-strong; color: var(--m-text); }
+  > span:last-child small { @include m-caption; color: var(--m-muted); }
+  em { @include m-caption; color: var(--m-accent-strong); font-style: normal; }
+}
+.mcal-date-tile {
+  display: flex; flex: 0 0 auto; flex-direction: column; align-items: center; justify-content: center;
+  width: 46px; height: 46px; border-radius: 14px; background: var(--m-gold-soft); color: var(--m-gold);
+  b { @include m-body-strong; } small { font-size: 9px; }
+}

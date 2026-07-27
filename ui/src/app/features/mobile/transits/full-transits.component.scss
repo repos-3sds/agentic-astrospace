@@ -1,0 +1,12 @@
+@use '../mobile-tokens' as *;
+:host { display: block; padding-bottom: 24px; }
+.mtrf-back { @include m-body-strong; display: flex; align-items: center; gap: 12px; padding: 16px 20px 10px; color: var(--m-muted); text-decoration: none; img { width: 24px; height: 24px; } }
+.mtrf-body { display: flex; flex-direction: column; gap: 14px; padding: 4px 20px 16px; }
+header { h1 { @include m-h1; margin: 0 0 3px; } p { @include m-body-small; margin: 0; color: var(--m-muted); } }
+.mtrf-tabs { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--m-accent-soft); > * { @include m-button; flex: 1; padding: 10px; border-radius: 999px; text-align: center; text-decoration: none; } a { color: var(--m-accent-strong); } span { color: var(--m-on-ink); background: var(--m-ink); } }
+.mtrf-title { @include m-eyebrow; margin: 0; color: var(--m-muted); }
+.mtrf-list, .mtrf-copy, .mtrf-events { border: 1px solid var(--m-border); border-radius: 16px; overflow: hidden; background: var(--m-raised); }
+.mtrf-list > div { display: flex; align-items: center; gap: 8px; padding: 11px 14px; border-bottom: 1px solid var(--m-border); &:last-child { border: 0; } span { display: flex; flex: 1; flex-direction: column; } b { @include m-body-strong; } small { @include m-caption; color: var(--m-muted); } em { @include m-body-small; color: var(--m-muted); font-style: normal; } i { @include m-caption; padding: 3px 9px; border-radius: 999px; color: var(--m-bad); background: var(--m-bad-soft); font-size: 10.5px; font-style: normal; } }
+.mtrf-copy { display: flex; flex-direction: column; gap: 8px; padding: 13px 15px; p { @include m-body-small; margin: 0; } }
+.mtrf-events { display: flex; flex-direction: column; gap: 10px; padding: 13px 15px; }
+.mtrf-events div { display: flex; align-items: center; gap: 10px; i { width: 8px; height: 8px; border-radius: 50%; background: var(--m-good); } &[data-tone='bad'] i { background: var(--m-bad); } &[data-tone='warn'] i { background: var(--m-warn); } small { @include m-caption; width: 43px; color: var(--m-muted); } p { @include m-body-small; flex: 1; margin: 0; } }

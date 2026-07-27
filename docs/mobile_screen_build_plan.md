@@ -205,23 +205,23 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `69:180` | 25g · Settings — Account & Privacy | ⬜ |
 | `79:89` | 26 · Profile switcher sheet | ⬜ |
 | `82:96` | 2c · Choose Your Language | ✅ done — `/m/language` |
-| `91:89` | 27 · Gochara (plain transits) | ⬜ |
-| `92:89` | 27b · Full Transits | ⬜ |
-| `93:89` | 28 · Calendar | ⬜ |
-| `94:118` | 29 · Festival detail sheet | ⬜ |
-| `97:119` | 30 · Compatibility Hub | ⬜ |
-| `97:144` | 30b · Add Prospect | ⬜ |
-| `98:119` | 30c · Gun Milan Results | ⬜ |
+| `91:89` | 27 · Gochara (plain transits) | ✅ done — `/m/transits` |
+| `92:89` | 27b · Full Transits | ✅ done — `/m/transits/full` |
+| `93:89` | 28 · Calendar | ✅ done — `/m/calendar` |
+| `94:118` | 29 · Festival detail sheet | ✅ done — sheet from Calendar |
+| `97:119` | 30 · Compatibility Hub | ✅ done — `/m/compat` |
+| `97:144` | 30b · Add Prospect | ✅ done — `/m/compat/add` |
+| `98:119` | 30c · Gun Milan Results | ✅ done — `/m/compat/results` |
 | `108:92` | 7-dark · Today (Dark mode) | ⬜ |
 | `108:186` | 8-dark · Ask Home (Dark mode) | ⬜ |
 | `108:246` | 16-dark · Chart Hub (Dark mode) | ⬜ |
 | `108:417` | States · Ask — Loading (computing answer) | ⬜ |
 | `110:121` | States · Compatibility — Empty (no checks yet) | ⬜ |
 | `110:153` | States · Generic — Something went wrong | ⬜ |
-| `113:122` | 31 · Readings & Accuracy | ⬜ |
-| `114:124` | 31b · Prediction Claims (accuracy) | ⬜ |
-| `115:124` | 32 · Notes | ⬜ |
-| `116:124` | 28b · Calendar — Day detail (timing feed) | ⬜ |
+| `113:122` | 31 · Readings & Accuracy | ✅ done — `/m/readings` |
+| `114:124` | 31b · Prediction Claims (accuracy) | ✅ done — `/m/readings/accuracy` |
+| `115:124` | 32 · Notes | ✅ done — `/m/notes` |
+| `116:124` | 28b · Calendar — Day detail (timing feed) | ✅ done — `/m/calendar/day` |
 | `117:124` | 33 · Practitioner Reference | ⬜ |
 | `117:175` | 33b · Avkahada & Ghatak | ⬜ |
 | `118:124` | 33c · Graha positions & conditions | ⬜ |

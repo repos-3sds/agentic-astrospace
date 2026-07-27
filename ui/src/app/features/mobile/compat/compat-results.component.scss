@@ -1,0 +1,10 @@
+@use '../mobile-tokens' as *;
+:host { display: block; padding-bottom: 24px; }
+.mcor-back { @include m-body-strong; display: flex; gap: 12px; align-items: center; padding: 16px 20px 10px; color: var(--m-muted); text-decoration: none; img { width: 24px; height: 24px; } }
+.mcor-body { display: flex; flex-direction: column; gap: 14px; padding: 4px 20px 16px; }
+.mcor-score { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 22px 18px; border: 1.6px solid var(--m-accent); border-radius: 24px; background: var(--m-accent-soft); box-shadow: var(--m-shadow-card); > b { @include m-eyebrow; color: var(--m-accent); } div { display: flex; align-items: baseline; gap: 6px; } strong { font-size: 48px; line-height: 1; } div span, h1 { @include m-h2; } div span { color: var(--m-muted); } h1 { margin: 0; } p { @include m-body-small; margin: 0; text-align: center; } }
+.mcor-title { @include m-eyebrow; margin: 0; color: var(--m-muted); }
+.mcor-list { border: 1px solid var(--m-border); border-radius: 18px; overflow: hidden; background: var(--m-raised); }
+.mcor-list div { display: flex; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid var(--m-border); &:last-child { border: 0; } b { @include m-body-strong; } span { @include m-body-small; color: var(--m-muted); } }
+.mcor-flag { display: flex; flex-direction: column; gap: 6px; padding: 13px 15px; border: 1px solid var(--m-border); border-radius: 16px; background: var(--m-surface); div { display: flex; align-items: center; gap: 8px; } b { @include m-body-strong; flex: 1; } em { @include m-caption; padding: 3px 9px; border-radius: 999px; color: var(--m-good); background: var(--m-good-soft); font-size: 10.5px; font-style: normal; } p { @include m-body-small; margin: 0; color: var(--m-muted); } }
+.mcor-actions { display: flex; gap: 10px; > * { @include m-button; flex: 1; padding: 16px 8px; border-radius: 999px; text-align: center; text-decoration: none; } button { border: 1.5px solid var(--m-border-strong); color: var(--m-accent-strong); background: transparent; } a { color: var(--m-on-ink); background: var(--m-ink); } }
