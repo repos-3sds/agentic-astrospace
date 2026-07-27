@@ -8,3 +8,14 @@ header { h1 { @include m-h1; margin: 0 0 3px; } p { @include m-body-small; margi
 .mco-label { @include m-eyebrow; margin: 0; color: var(--m-muted); }
 .mco-recent { display: flex; align-items: center; gap: 12px; padding: 13px 15px; border: 1px solid var(--m-border); border-radius: 18px; background: var(--m-raised); text-decoration: none; > span:nth-child(2) { display: flex; flex: 1; flex-direction: column; gap: 2px; } b { @include m-body-strong; color: var(--m-text); } small { @include m-caption; color: var(--m-muted); } img { width: 18px; height: 18px; } }
 .mco-avatar { @include m-body-strong; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: var(--m-on-ink); background: var(--m-gold); }
+.mco-empty {
+  padding: 28px 20px;
+  border: 1px solid var(--m-border);
+  border-radius: 18px;
+  background: var(--m-surface);
+  text-align: center;
+  color: var(--m-muted);
+  div { width:64px;height:64px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:var(--m-accent-soft);color:var(--m-accent);font-size:30px; }
+  b { display:block;color:var(--m-text);margin-bottom:6px; }
+  p { margin:0;font-size:13px; }
+}

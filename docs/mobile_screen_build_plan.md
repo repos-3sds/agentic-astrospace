@@ -216,7 +216,7 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `108:186` | 8-dark · Ask Home (Dark mode) | ✅ done — shared dark mobile token mode |
 | `108:246` | 16-dark · Chart Hub (Dark mode) | ✅ done — shared dark mobile token mode |
 | `108:417` | States · Ask — Loading (computing answer) | ✅ done — `/m/ask/loading`, wired during generation |
-| `110:121` | States · Compatibility — Empty (no checks yet) | ⬜ |
+| `110:121` | States · Compatibility — Empty (no checks yet) | ✅ done — default state at `/m/compat` |
 | `110:153` | States · Generic — Something went wrong | ✅ done — reusable `as-generic-error` |
 | `113:122` | 31 · Readings & Accuracy | ✅ done — `/m/readings` |
 | `114:124` | 31b · Prediction Claims (accuracy) | ✅ done — `/m/readings/accuracy` |
@@ -241,7 +241,7 @@ These frames were discovered in the updated Figma page after the original
 | `206:302` | 34 · Subscription | ⬜ | Product/StoreKit decision required before purchase wiring |
 | `206:354` | 35 · Notification Center | ⬜ | Notification persistence and deep-link destinations |
 | `206:493` | 6b · Edit Birth Details | ✅ done — `/m/settings/birth-details` | US-N3 · edit active kundli, recalculate chart, and invalidate derived caches |
-| `206:550` | 27c · Transit Detail | ⬜ | US-N4 · open from Gochara/Full Transits using real transit evidence |
+| `206:550` | 27c · Transit Detail | ✅ done — shared sheet from Gochara and Full Transits | US-N4 |
 | `206:591` | 36 · Search | ⬜ | Cross-module search API and result deep links |
 | `206:641` | 25h · Account Deletion | ⬜ | US-N5 · backend-owned confirmed deletion cascade |
 
