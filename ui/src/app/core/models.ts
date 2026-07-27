@@ -788,11 +788,25 @@ export interface GocharamRuleContent {
 
 export interface GocharamMatchedRule {
   rule_id: string;
+  kind: 'baseline_placement' | 'special_overlay' | string;
   rule_name: string;
   planet: string;
+  anchor: string;
+  house: number;
   category: string;
   duration: string;
+  base_verdict: 'supportive' | 'challenging' | 'neutral';
+  effective_verdict: 'supportive' | 'challenging' | 'mixed' | 'neutral';
+  source_id: string;
+  source_status: string;
+  claim_status: string;
   content: GocharamRuleContent;
+  modifiers: Array<{
+    type: 'vedha' | 'ashtakavarga' | 'motion' | 'natal_contact' | 'dasha_concordance' | 'timing' | string;
+    effect: string;
+    label: string;
+    evidence: Record<string, unknown>;
+  }>;
 }
 
 export interface GocharamInterpretation {
@@ -802,6 +816,27 @@ export interface GocharamInterpretation {
   methodology: {
     calculation_rule: string;
     interpretation_rule: string;
+  };
+  convention: {
+    primary_anchor?: string;
+    ayanamsha?: string;
+    node_treatment?: string;
+    safety?: string;
+  };
+  sources: Array<{
+    id: string;
+    work: string;
+    location: string;
+    scope: string;
+    edition_status: string;
+  }>;
+  synthesis: {
+    tone: 'supportive' | 'challenging' | 'mixed' | 'neutral';
+    headline: string;
+    counts: { supportive: number; mixed: number; challenging: number };
+    guided_summary: string;
+    balanced_context: string;
+    practitioner_deep_dive: string;
   };
   matched_rules: GocharamMatchedRule[];
   evidence: Array<Record<string, unknown>>;

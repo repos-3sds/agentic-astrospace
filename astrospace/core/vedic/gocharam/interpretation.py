@@ -175,9 +175,9 @@ def _synthesis(rules: list[dict]) -> dict:
     supportive = [rule for rule in baseline if rule["effective_verdict"] == "supportive"]
     challenging = [rule for rule in baseline if rule["effective_verdict"] == "challenging"]
     mixed = [rule for rule in baseline if rule["effective_verdict"] == "mixed"]
-    if supportive and challenging:
+    if mixed or (supportive and challenging):
         tone = "mixed"
-        headline = "Support and pressure are active in different areas"
+        headline = "The transit picture is mixed after strength and obstruction checks"
     elif supportive:
         tone = "supportive"
         headline = "The transit background is broadly supportive"

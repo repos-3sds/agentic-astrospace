@@ -374,7 +374,7 @@ class TestTransitContext:
         result = chart.gocharam(scan_days=30, as_of=selected)
         assert result["as_of"].startswith("2027-01-15")
         assert result["coverage"]["past_days"] == 30
-        assert result["gochara"]["interpretation"]["schema_version"] == "gocharam.interpretation.v2"
+        assert result["gochara"]["interpretation"]["schema_version"] == "gocharam.interpretation.v3"
 
     def test_calendar_intelligence_merges_core_signal_families(self):
         chart = VedicChart("Calendar", 1990, 1, 1, 12, 0, **DELHI)

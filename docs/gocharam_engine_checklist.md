@@ -50,6 +50,8 @@ Acceptance criteria:
 - [x] Every planet includes houses from natal Moon and Lagna.
 - [x] Sade Sati, Ashtama Shani, Kantaka Shani, Guru Bala, node cautions, and Mars triggers use named rule IDs.
 - [x] Moon-first and Lagna-cross-check methodology is visible in provenance.
+- [x] All nine planets have one baseline record for every Moon house (108 unique placements).
+- [x] Baseline verdicts and special named overlays are separate rule kinds.
 - [ ] Externally review the rule catalogue against the preferred South Indian textual authority.
 
 ### US-GOC-004 - Vedha
@@ -122,6 +124,8 @@ Acceptance criteria:
 - [x] Supportive, challenging, obstructed, and mixed states remain distinct.
 - [x] Interpretations state that results are combinations rather than binary labels.
 - [x] Balance score is labelled as emphasis, not probability.
+- [x] Vedha, BAV/SAV, retrograde motion, exact natal contacts, Dasha concordance, and timing are retained as separate evidence-bearing modifiers.
+- [x] Base and effective verdicts are both retained; modifiers do not overwrite the base text.
 - [ ] Add a formal conflict matrix for Dasha, Gocharam, AV, and natal-promise disagreements.
 - [ ] Surface the strongest supporting and contradicting witness separately.
 
@@ -129,9 +133,10 @@ Acceptance criteria:
 
 Acceptance criteria:
 
-- [x] Interpretation provenance says authored v1 and requires external review.
+- [x] Interpretation provenance distinguishes a classical verdict from editorial synthesis.
 - [x] Calculation evidence retains classical versus convention-dependent status.
-- [ ] Store reviewed interpretation clauses as managed KB records rather than source-code constants.
+- [x] Store interpretation clauses as versioned KB records with source and claim status.
+- [x] Rahu/Ketu treatment is explicitly labelled as a configured convention rather than attributed to Phaladeepika.
 - [ ] Require reviewer, source reference, language, status, and effective version before publication.
 - [ ] Add admin preview, diff, approval, rollback, and audit log for Gocharam content.
 
@@ -170,6 +175,8 @@ Acceptance criteria:
 - [ ] Add planet explorer subtab.
 - [ ] Add chart and timeline synchronization.
 - [ ] Add print/PDF report layout.
+- [x] Web explorer separates nine current placements from named special overlays.
+- [x] Web explorer exposes modifier, source, convention, and claim provenance.
 
 ### US-GOC-015 - Shared consumers
 
@@ -179,6 +186,8 @@ Acceptance criteria:
 - [x] Calendar receives canonical Gocharam with Dasha context.
 - [x] Dasha transit context uses canonical planet snapshots and Sade Sati.
 - [x] CE and Daily guidance consume canonical rules.
+- [x] Native Gochara and Full Transits screens consume the live versioned Gocharam profile.
+- [x] Native copy adapts to Guided, Balanced, and Practitioner presentation modes.
 - [ ] Dashboard consumes a compact canonical domain projection.
 - [ ] Ask AI cites canonical evidence IDs and content sources.
 
@@ -192,6 +201,8 @@ Acceptance criteria:
 - [x] Existing Gocharam, Transit, Calendar, CE, and Daily tests remain green.
 - [x] Domain interpretation contract and minimum explanatory depth have tests.
 - [x] Compatibility entry point is tested against the canonical engine.
+- [x] Exhaustive test proves exactly one baseline record for every planet-house pair.
+- [x] Live API verification asserts nine placement matches and evidence-bearing modifiers.
 - [ ] Add golden charts approved by an astrologer.
 - [ ] Add exact station/ingress fixtures and timezone boundary cases.
 - [ ] Add performance budgets and persisted daily cache.

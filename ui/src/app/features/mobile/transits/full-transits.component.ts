@@ -1,5 +1,9 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
+import { KundliStore } from '../../../core/kundli.store';
+import { GocharamMatchedRule, GocharamProfilePayload } from '../../../core/models';
+import { VedicService } from '../../../core/vedic.service';
 import { TransitDetail, TransitDetailComponent } from './transit-detail.component';
 
 @Component({
@@ -10,22 +14,93 @@ import { TransitDetail, TransitDetailComponent } from './transit-detail.componen
   template: `
     <a class="mtrf-back" [routerLink]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
     <main class="mtrf-body">
-      <header><h1>Full Transits</h1><p>Gochara with vedha and Ashtakavarga transit weighting</p></header>
+      <header><h1>Full Transits</h1><p>Gochara with vedha, Ashtakavarga and evidence</p></header>
       <nav class="mtrf-tabs"><a [routerLink]="['/m','transits']">Gochara</a><span>Full Transits</span></nav>
-      <p class="mtrf-title">CURRENT POSITIONS · EFFECTIVE SEVERITY</p>
-      <section class="mtrf-list">@for (row of positions; track row[0]) { <button type="button" (click)="open(row)"><span><b>{{ row[0] }}</b><small>{{ row[1] }}</small></span><em>AV {{ row[2] }}</em>@if (row[3]) { <i>VEDHA</i> }</button> }</section>
-      <p class="mtrf-title">KEY ASPECTS</p>
-      <section class="mtrf-copy"><p>• Transit Saturn aspects natal Moon (3rd drishti) — steady but effortful.</p><p>• Transit Jupiter trines natal Sun — visibility and support.</p></section>
-      <p class="mtrf-title">NEXT 30 DAYS</p>
-      <section class="mtrf-events">@for (row of events; track row[0]) { <div [attr.data-tone]="row[2]"><i></i><small>{{ row[0] }}</small><p>{{ row[1] }}</p></div> }</section>
+      @if (loading()) {
+        <section class="mtrf-copy"><p>Calculating all nine placements…</p></section>
+      } @else if (error()) {
+        <section class="mtrf-copy"><p>{{ error() }}</p><button type="button" (click)="load()">Try again</button></section>
+      } @else if (data(); as payload) {
+        <p class="mtrf-title">CURRENT POSITIONS · EFFECTIVE VERDICT</p>
+        <section class="mtrf-list">
+          @for (rule of baselineRules(); track rule.rule_id) {
+            <button type="button" (click)="open(rule)">
+              <span><b>{{ rule.planet }}</b><small>{{ payload.gochara.planets[rule.planet].sign }} · house {{ rule.house }}</small></span>
+              <em>AV {{ av(rule)?.['bindus'] ?? '—' }}</em>
+              @if (hasVedha(rule)) { <i>VEDHA</i> }
+            </button>
+          }
+        </section>
+        <p class="mtrf-title">SPECIAL OVERLAYS</p>
+        <section class="mtrf-copy">
+          @for (rule of specialRules(); track rule.rule_id) {
+            <p><b>{{ rule.rule_name }}</b> — {{ rule.content.balanced_context }}</p>
+          } @empty {
+            <p>No named special overlay is active.</p>
+          }
+        </section>
+        <p class="mtrf-title">ACTIVE WINDOWS</p>
+        <section class="mtrf-events">
+          @for (window of payload.gochara.timeline.active_windows; track window.rule + window.start_date) {
+            <div [attr.data-tone]="window.tone === 'supportive' ? 'good' : 'warn'"><i></i><small>{{ window.planet }}</small><p>{{ window.rule }} · {{ window.start_date }} → {{ window.end_date }}</p></div>
+          }
+        </section>
+        <p class="mtrf-title">CONVENTION</p>
+        <section class="mtrf-copy"><p>{{ payload.gochara.interpretation.convention.node_treatment }}</p><p>{{ payload.gochara.interpretation.convention.safety }}</p></section>
+      }
     </main>
     @if(selected()){<as-transit-detail [detail]="selected()!" (dismissed)="selected.set(null)" />}
   `,
   styleUrl: './full-transits.component.scss',
 })
 export class FullTransitsComponent {
-  readonly positions = [['Saturn', 'Aquarius · 10th', '4', ''], ['Jupiter', 'Taurus · 1st', '6', ''], ['Rahu', 'Pisces · 11th', '3', 'vedha'], ['Ketu', 'Virgo · 5th', '5', '']];
-  readonly events = [['2 Aug', 'Moon transits natal 7th — relationship focus', 'bad'], ['14 Aug', 'Mercury turns retrograde — recheck contracts', 'warn'], ['29 Aug', 'Venus enters your 1st — a lighter, social stretch', 'good']];
-  readonly selected=signal<TransitDetail|null>(null);
-  protected open(row:string[]):void { this.selected.set({planet:`${row[0]} transit`,glyph:row[0].slice(0,2),position:row[1],period:'Current position',meaning:`${row[0]} is moving through ${row[1]}. Its current Ashtakavarga support is ${row[2]}.`,guidance:row[3]?'A vedha is active, so interpret the supportive score with restraint.':'No vedha is currently reducing this transit.',evidence:[`Ashtakavarga score ${row[2]}`,row[3]?'Vedha active':'No vedha','Sidereal · Lahiri · mean nodes']}); }
+  private readonly store = inject(KundliStore);
+  private readonly vedic = inject(VedicService);
+  readonly data = signal<GocharamProfilePayload | null>(null);
+  readonly selected = signal<TransitDetail | null>(null);
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
+  readonly profileId = computed(() => this.store.activeId());
+  readonly baselineRules = computed(() => this.data()?.gochara.interpretation.matched_rules.filter((rule) => rule.kind === 'baseline_placement') ?? []);
+  readonly specialRules = computed(() => this.data()?.gochara.interpretation.matched_rules.filter((rule) => rule.kind === 'special_overlay') ?? []);
+
+  constructor() {
+    effect(() => {
+      const id = this.profileId();
+      if (id) void this.load(id);
+    });
+  }
+
+  protected async load(id = this.profileId()): Promise<void> {
+    if (!id) return;
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      this.data.set(await this.vedic.gocharam(id, 90));
+    } catch (error) {
+      this.error.set((error as Error).message);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  protected av(rule: GocharamMatchedRule): Record<string, unknown> | null {
+    return rule.modifiers.find((row) => row.type === 'ashtakavarga')?.evidence ?? null;
+  }
+  protected hasVedha(rule: GocharamMatchedRule): boolean {
+    return rule.modifiers.some((row) => row.type === 'vedha');
+  }
+  protected open(rule: GocharamMatchedRule): void {
+    const payload = this.data();
+    if (!payload) return;
+    this.selected.set({
+      planet: `${rule.planet} transit`,
+      glyph: rule.planet.slice(0, 2),
+      position: `${payload.gochara.planets[rule.planet].sign} · house ${rule.house} from Moon`,
+      period: rule.duration.replaceAll('_', ' '),
+      meaning: rule.content.practitioner_deep_dive,
+      guidance: `Base ${rule.base_verdict}; effective ${rule.effective_verdict}.`,
+      evidence: rule.modifiers.map((row) => `${row.type}: ${row.label}`).concat(`${rule.source_id} · ${rule.source_status}`),
+    });
+  }
 }

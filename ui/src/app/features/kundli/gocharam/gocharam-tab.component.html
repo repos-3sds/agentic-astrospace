@@ -40,7 +40,7 @@
         (click)="selectWorkspace('transits')"
       >
         <span>Active Transits</span>
-        <small>{{ matchedRules().length }} triggered rules</small>
+        <small>{{ baselineRules().length }} placements · {{ specialRules().length }} overlays</small>
       </button>
       <button
         type="button"
@@ -79,6 +79,26 @@
 
     @if (workspace() === 'summary') {
       <section class="summary-workspace">
+        <article class="primary-reading" [class]="toneClass(t.gochara.interpretation.synthesis.tone)">
+          <header>
+            <div>
+              <span>Cited placement synthesis</span>
+              <h3>{{ t.gochara.interpretation.synthesis.headline }}</h3>
+            </div>
+            <small>
+              {{ t.gochara.interpretation.synthesis.counts.supportive }} supportive ·
+              {{ t.gochara.interpretation.synthesis.counts.mixed }} modified ·
+              {{ t.gochara.interpretation.synthesis.counts.challenging }} demanding
+            </small>
+          </header>
+          <p class="lead-reading">{{ t.gochara.interpretation.synthesis.balanced_context }}</p>
+          <details class="reading-details">
+            <summary>Convention and source boundary</summary>
+            <p>{{ t.gochara.interpretation.convention.node_treatment }}</p>
+            <p>{{ t.gochara.interpretation.convention.safety }}</p>
+          </details>
+        </article>
+
         <article class="primary-reading" [class]="toneClass(t.gochara.core_reading.tone)">
           <header>
             <div>
@@ -155,14 +175,26 @@
             <strong>Choose a rule</strong>
           </div>
           <nav>
-            @for (rule of matchedRules(); track rule.rule_id) {
+            @for (rule of specialRules(); track rule.rule_id) {
               <button
                 type="button"
                 [class.active]="ruleId() === rule.rule_id"
                 (click)="ruleId.set(rule.rule_id)"
               >
                 <span>{{ rule.rule_name }}</span>
-                <small [class]="categoryClass(rule.category)">{{ rule.planet }}</small>
+                <small [class]="categoryClass(rule.category)">SPECIAL · {{ rule.planet }}</small>
+              </button>
+            }
+            @for (rule of baselineRules(); track rule.rule_id) {
+              <button
+                type="button"
+                [class.active]="ruleId() === rule.rule_id"
+                (click)="ruleId.set(rule.rule_id)"
+              >
+                <span>{{ rule.rule_name }}</span>
+                <small [class]="categoryClass(rule.effective_verdict)">
+                  {{ rule.planet }} · {{ rule.effective_verdict }}
+                </small>
               </button>
             } @empty {
                <p class="as-muted p-4">No major transits matched.</p>
@@ -198,6 +230,19 @@
             <details class="reading-details" open>
               <summary>Practitioner Deep Dive (Astrological Rationale)</summary>
               <p>{{ rule.content.practitioner_deep_dive }}</p>
+            </details>
+            <section class="range-reading">
+              <div class="range-reading-heading"><span>Computed modifiers</span></div>
+              @for (modifier of rule.modifiers; track modifier.type + modifier.label) {
+                <p><strong>{{ modifier.type | titlecase }}:</strong> {{ modifier.label }}</p>
+              } @empty {
+                <p>No additional modifier is active.</p>
+              }
+            </section>
+            <details class="reading-details">
+              <summary>Source and claim status</summary>
+              <p>{{ rule.source_id }} · {{ rule.source_status }}</p>
+              <p>{{ rule.claim_status }}</p>
             </details>
           </article>
         }

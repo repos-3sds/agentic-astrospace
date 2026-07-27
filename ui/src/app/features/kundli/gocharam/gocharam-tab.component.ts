@@ -61,6 +61,12 @@ export class GocharamTabComponent {
   protected readonly activeWindows = computed(() => this.data()?.gochara.timeline.active_windows ?? []);
   
   protected readonly matchedRules = computed(() => this.data()?.gochara.interpretation?.matched_rules ?? []);
+  protected readonly baselineRules = computed(() =>
+    this.matchedRules().filter((rule) => rule.kind === 'baseline_placement'),
+  );
+  protected readonly specialRules = computed(() =>
+    this.matchedRules().filter((rule) => rule.kind === 'special_overlay'),
+  );
   
   protected readonly activeRule = computed<GocharamMatchedRule | null>(() => {
     const rules = this.matchedRules();
@@ -69,7 +75,7 @@ export class GocharamTabComponent {
        const found = rules.find((rule) => rule.rule_id === id);
        if (found) return found;
     }
-    return rules[0] ?? null;
+    return this.specialRules()[0] ?? this.baselineRules()[0] ?? null;
   });
 
   protected readonly scanRangeLabel = computed(
