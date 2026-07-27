@@ -1,20 +1,11 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-
-/** How much depth a reader wants. Drives disclosure, never content. */
-export type PersonaId = 'guided' | 'balanced' | 'practitioner';
-
-/** How the app words things when the reading is unwelcome. */
-export type ToneId = 'gentle' | 'direct';
-
-interface PersonaOption {
-  id: PersonaId;
-  icon: string;
-  title: string;
-  badge: string;
-  badgeTone: 'gold' | 'accent' | 'good';
-  detail: string;
-}
+import {
+  PersonaId,
+  PersonaOption,
+  PersonaPickerComponent,
+  ToneId,
+} from '../persona-picker/persona-picker.component';
 
 /**
  * Persona (Figma node 8:2) — step four of onboarding.
@@ -33,7 +24,7 @@ interface PersonaOption {
   selector: 'as-persona',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [PersonaPickerComponent, RouterLink],
   template: `
     <div class="top">
       <header class="topbar">
@@ -46,51 +37,11 @@ interface PersonaOption {
       <h1 class="headline">How do you like<br />your answers?</h1>
       <p class="lede">This tailors how much depth you see. You can change it anytime.</p>
 
-      <div class="options" role="radiogroup" aria-label="How much depth to show">
-        @for (o of options; track o.id) {
-          <button
-            class="option"
-            type="button"
-            role="radio"
-            [class.is-on]="o.id === persona()"
-            [attr.aria-checked]="o.id === persona()"
-            (click)="persona.set(o.id)"
-          >
-            <span class="option-icon">
-              <img [src]="'mobile/' + o.icon + '.svg'" alt="" aria-hidden="true" />
-            </span>
-            <span class="option-text">
-              <span class="option-head">
-                <span class="option-title">{{ o.title }}</span>
-                <span class="badge" [attr.data-tone]="o.badgeTone">{{ o.badge }}</span>
-              </span>
-              <span class="option-detail">{{ o.detail }}</span>
-            </span>
-            @if (o.id === persona()) {
-              <span class="tick" aria-hidden="true">
-                <img src="mobile/check.svg" alt="" />
-              </span>
-            } @else {
-              <img class="radio" src="mobile/radio-off.svg" alt="" aria-hidden="true" />
-            }
-          </button>
-        }
-      </div>
-
-      <p class="section">WHEN SOMETHING’S TOUGH</p>
-      <!-- Wording only. A flag is a flag in both tones — see the class comment. -->
-      <div class="tones" role="radiogroup" aria-label="Tone when a reading is tough">
-        @for (t of tones; track t.id) {
-          <button
-            class="tone"
-            type="button"
-            role="radio"
-            [class.is-on]="t.id === tone()"
-            [attr.aria-checked]="t.id === tone()"
-            (click)="tone.set(t.id)"
-          >{{ t.label }}</button>
-        }
-      </div>
+      <as-persona-picker
+        [options]="options"
+        [(persona)]="persona"
+        [(tone)]="tone"
+      />
     </div>
 
     <a class="btn" [routerLink]="['/m', 'birth-details']">Continue</a>
@@ -104,7 +55,7 @@ export class PersonaComponent {
   readonly persona = signal<PersonaId>('balanced');
   readonly tone = signal<ToneId>('gentle');
 
-  protected readonly options: PersonaOption[] = [
+  readonly options: PersonaOption[] = [
     {
       id: 'guided',
       icon: 'persona-guided',
@@ -129,10 +80,5 @@ export class PersonaComponent {
       badgeTone: 'good',
       detail: 'Full detail — charts, dashas, and the tools.',
     },
-  ];
-
-  protected readonly tones: { id: ToneId; label: string }[] = [
-    { id: 'gentle', label: 'Be gentle' },
-    { id: 'direct', label: 'Be direct' },
   ];
 }

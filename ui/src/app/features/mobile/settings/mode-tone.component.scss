@@ -1,0 +1,18 @@
+@use '../mobile-tokens' as *;
+@use './settings-shared' as shared;
+
+@include shared.settings-screen;
+
+// 14px here rather than the shared 16px: the picker's own cards already carry
+// 12px between them, and stacking both gaps opened a visible seam.
+.body { gap: 14px; }
+
+.boundary {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  @include m-caption;
+  color: var(--m-muted);
+  img { width: 16px; height: 16px; display: block; flex-shrink: 0; }
+}

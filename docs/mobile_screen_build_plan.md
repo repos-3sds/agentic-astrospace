@@ -197,7 +197,7 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `62:88` | 2b · Register | ✅ done — `/m/auth?mode=register` |
 | `62:140` | 12b · Manglik cancellation detail | ✅ done — shared from Chart and Remedies |
 | `66:89` | 25 · Settings — Home | ✅ done — `/m/settings`, the More tab |
-| `67:89` | 25b · Settings — Mode & Tone | ⬜ |
+| `67:89` | 25b · Settings — Mode & Tone | ✅ done |
 | `67:147` | 25c · Settings — Language & Audio | ⬜ |
 | `67:173` | 25d · Settings — Notifications | ⬜ |
 | `69:89` | 25e · Settings — Location | ⬜ |

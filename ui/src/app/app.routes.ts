@@ -308,6 +308,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'settings/mode',
+        loadComponent: () =>
+          import('./features/mobile/settings/mode-tone.component').then(
+            (m) => m.ModeToneComponent,
+          ),
+      },
+      {
         path: 'settings/conventions',
         loadComponent: () =>
           import('./features/mobile/settings/conventions.component').then(

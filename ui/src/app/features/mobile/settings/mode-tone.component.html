@@ -1,0 +1,25 @@
+<a class="appbar" [routerLink]="['/m', 'settings']">
+  <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  <span class="crumb">Settings</span>
+</a>
+
+<div class="body">
+  <header class="intro">
+    <h1 class="title">Mode &amp; tone</h1>
+    <p class="lede">Change anytime — this adjusts depth and delivery app-wide.</p>
+  </header>
+
+  <as-persona-picker [options]="options" [(persona)]="persona" [(tone)]="tone" />
+
+  <!--
+    The point of the screen. The refer-out boundary is not a preference, and
+    saying so here is cheaper than someone discovering it by hitting it.
+  -->
+  <p class="boundary">
+    <img src="mobile/info.svg" alt="" aria-hidden="true" />
+    <span>
+      Health, legal, and money guidance always refers you to a professional —
+      this setting never changes that.
+    </span>
+  </p>
+</div>
