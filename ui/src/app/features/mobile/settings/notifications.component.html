@@ -1,0 +1,30 @@
+<a class="appbar" [routerLink]="['/m', 'settings']">
+  <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  <span class="crumb">Settings</span>
+</a>
+
+<div class="body">
+  <header class="intro">
+    <h1 class="title">Notifications</h1>
+    <!-- The design rule, not a slogan. See the class comment. -->
+    <p class="lede">Opt-in, never fear-based — you choose what to hear.</p>
+  </header>
+
+  @for (pref of prefs(); track pref.id) {
+    <div class="toggle-row">
+      <span class="toggle-text">
+        <span class="toggle-title">{{ pref.title }}</span>
+        <span class="toggle-detail">{{ pref.detail }}</span>
+      </span>
+      <button
+        class="switch"
+        type="button"
+        role="switch"
+        [class.is-on]="pref.on"
+        [attr.aria-checked]="pref.on"
+        [attr.aria-label]="pref.title"
+        (click)="toggle(pref.id)"
+      ></button>
+    </div>
+  }
+</div>

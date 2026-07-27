@@ -34,6 +34,95 @@
   .eyebrow { @include m-eyebrow; color: var(--m-muted); margin: 0; }
 }
 
+// A row carrying a switch — used by Language & audio and Notifications.
+//
+// The switch is drawn rather than used from its export: it has two states and
+// animates between them, so a static SVG would need two files and still not
+// move. Same reasoning as the day gauge's arc.
+@mixin settings-switch {
+  .toggle-row {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 15px;
+    border: 1px solid var(--m-border);
+    border-radius: 16px;
+    background: var(--m-raised);
+    text-align: left;
+  }
+
+  .toggle-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .toggle-title { @include m-body-strong; color: var(--m-text); }
+  .toggle-detail { @include m-caption; color: var(--m-muted); }
+
+  .switch {
+    position: relative;
+    width: 44px;
+    height: 26px;
+    flex-shrink: 0;
+    border: 0;
+    padding: 0;
+    border-radius: 999px;
+    background: var(--m-border-strong);
+    cursor: pointer;
+    transition: background 160ms ease-out;
+
+    &.is-on { background: var(--m-accent); }
+  }
+
+  .switch::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background: var(--m-raised);
+    transition: transform 160ms ease-out;
+  }
+
+  .switch.is-on::after { transform: translateX(18px); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .switch, .switch::after { transition: none; }
+  }
+}
+
+// A segmented control — the ink-pill-in-soft-track used for language and tone.
+@mixin settings-segmented {
+  .segmented {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--m-accent-soft);
+  }
+
+  .segment {
+    flex: 1 1 0;
+    min-width: 0;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    padding: 11px;
+    cursor: pointer;
+    @include m-button;
+    color: var(--m-accent-strong);
+
+    &.is-on {
+      background: var(--m-ink);
+      color: var(--m-on-ink);
+      box-shadow: var(--m-shadow-card);
+    }
+  }
+}
+
 // One choice in a group. Selection is carried by fill, border weight, icon
 // colour *and* a tick — four signals, so the state survives greyscale and does
 // not depend on the accent alone.

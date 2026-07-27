@@ -198,11 +198,11 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `62:140` | 12b · Manglik cancellation detail | ✅ done — shared from Chart and Remedies |
 | `66:89` | 25 · Settings — Home | ✅ done — `/m/settings`, the More tab |
 | `67:89` | 25b · Settings — Mode & Tone | ✅ done |
-| `67:147` | 25c · Settings — Language & Audio | ⬜ |
-| `67:173` | 25d · Settings — Notifications | ⬜ |
-| `69:89` | 25e · Settings — Location | ⬜ |
+| `67:147` | 25c · Settings — Language & Audio | ✅ done |
+| `67:173` | 25d · Settings — Notifications | ✅ done |
+| `69:89` | 25e · Settings — Location | ✅ done |
 | `69:117` | 25f · Settings — Conventions | ✅ done |
-| `69:180` | 25g · Settings — Account & Privacy | ⬜ |
+| `69:180` | 25g · Settings — Account & Privacy | ✅ done |
 | `79:89` | 26 · Profile switcher sheet | ⬜ |
 | `82:96` | 2c · Choose Your Language | ✅ done — `/m/language` |
 | `91:89` | 27 · Gochara (plain transits) | ✅ done — `/m/transits` |

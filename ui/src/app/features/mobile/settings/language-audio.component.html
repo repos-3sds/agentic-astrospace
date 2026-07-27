@@ -1,0 +1,58 @@
+<a class="appbar" [routerLink]="['/m', 'settings']">
+  <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  <span class="crumb">Settings</span>
+</a>
+
+<div class="body">
+  <header class="intro">
+    <h1 class="title">Language &amp; audio</h1>
+    <p class="lede">English &amp; Telugu, read aloud if you like.</p>
+  </header>
+
+  <!-- Telugu is written in Telugu: a picker that names languages only in
+       English is useless to the reader most likely to need it. -->
+  <div class="segmented" role="radiogroup" aria-label="App language">
+    @for (l of languages; track l.id) {
+      <button
+        class="segment"
+        type="button"
+        role="radio"
+        [class.is-on]="l.id === language()"
+        [attr.aria-checked]="l.id === language()"
+        (click)="language.set(l.id)"
+      >{{ l.label }}</button>
+    }
+  </div>
+
+  <div class="toggle-row">
+    <span class="toggle-text">
+      <span class="toggle-title">Read guidance aloud</span>
+      <span class="toggle-detail">Adds a Listen button to your daily card</span>
+    </span>
+    <button
+      class="switch"
+      type="button"
+      role="switch"
+      [class.is-on]="readAloud()"
+      [attr.aria-checked]="readAloud()"
+      aria-label="Read guidance aloud"
+      (click)="toggleReadAloud()"
+    ></button>
+  </div>
+
+  <div class="toggle-row">
+    <span class="toggle-text">
+      <span class="toggle-title">Gentle voice tone</span>
+      <span class="toggle-detail">Matches your Gentle setting</span>
+    </span>
+    <button
+      class="switch"
+      type="button"
+      role="switch"
+      [class.is-on]="gentleVoice()"
+      [attr.aria-checked]="gentleVoice()"
+      aria-label="Gentle voice tone"
+      (click)="toggleGentleVoice()"
+    ></button>
+  </div>
+</div>

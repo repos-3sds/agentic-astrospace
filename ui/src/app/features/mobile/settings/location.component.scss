@@ -1,0 +1,17 @@
+@use '../mobile-tokens' as *;
+@use './settings-shared' as shared;
+
+@include shared.settings-screen;
+@include shared.settings-choice;
+
+.body { gap: 12px; }
+
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  @include m-caption;
+  color: var(--m-muted);
+  img { width: 16px; height: 16px; display: block; flex-shrink: 0; }
+}

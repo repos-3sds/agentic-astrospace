@@ -1,0 +1,35 @@
+@use '../mobile-tokens' as *;
+@use './settings-shared' as shared;
+
+@include shared.settings-screen;
+
+.body { gap: 14px; }
+
+.action {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 15px;
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+  background: var(--m-surface);
+  cursor: pointer;
+  text-align: left;
+  img { width: 16px; height: 16px; display: block; flex-shrink: 0; }
+
+  // Outlined, never filled. A destructive action should be findable without
+  // being the most prominent thing on the screen.
+  &.danger {
+    border: 1.4px solid var(--m-bad);
+    .action-label { color: var(--m-bad); }
+  }
+}
+
+.action-label { @include m-body-strong; color: var(--m-text); }
+
+.rule { height: 1px; background: var(--m-border); }
+
+.consequence { @include m-caption; color: var(--m-muted); margin: 0; }

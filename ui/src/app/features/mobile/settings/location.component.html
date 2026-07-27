@@ -1,0 +1,43 @@
+<a class="appbar" [routerLink]="['/m', 'settings']">
+  <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  <span class="crumb">Settings</span>
+</a>
+
+<div class="body">
+  <header class="intro">
+    <h1 class="title">Location</h1>
+    <p class="lede">Which place should today’s timings use?</p>
+  </header>
+
+  @for (p of places; track p.id) {
+    @let on = p.id === place();
+    <button
+      class="choice"
+      type="button"
+      role="radio"
+      [class.is-on]="on"
+      [attr.aria-checked]="on"
+      (click)="place.set(p.id)"
+    >
+      <span class="choice-left">
+        <img [src]="'mobile/' + p.icon + '.svg'" alt="" aria-hidden="true" />
+        <span class="choice-label">{{ p.label }}</span>
+      </span>
+      @if (on) {
+        <img class="choice-tick" src="mobile/check-accent.svg" alt="" aria-hidden="true" />
+      }
+    </button>
+  }
+
+  <!--
+    Load-bearing. Without it this reads as "recompute my chart for where I am",
+    which is wrong in a way people act on — see the class comment.
+  -->
+  <p class="note">
+    <img src="mobile/info.svg" alt="" aria-hidden="true" />
+    <span>
+      Your birth chart always stays birth-based — this only affects daily
+      panchang and windows.
+    </span>
+  </p>
+</div>

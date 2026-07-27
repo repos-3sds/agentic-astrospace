@@ -1,0 +1,7 @@
+@use './settings-shared' as shared;
+
+@include shared.settings-screen;
+@include shared.settings-segmented;
+@include shared.settings-switch;
+
+.body { gap: 14px; }

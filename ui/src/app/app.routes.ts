@@ -315,6 +315,34 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'settings/language',
+        loadComponent: () =>
+          import('./features/mobile/settings/language-audio.component').then(
+            (m) => m.LanguageAudioComponent,
+          ),
+      },
+      {
+        path: 'settings/notifications',
+        loadComponent: () =>
+          import('./features/mobile/settings/notifications.component').then(
+            (m) => m.NotificationsComponent,
+          ),
+      },
+      {
+        path: 'settings/location',
+        loadComponent: () =>
+          import('./features/mobile/settings/location.component').then(
+            (m) => m.LocationComponent,
+          ),
+      },
+      {
+        path: 'settings/account',
+        loadComponent: () =>
+          import('./features/mobile/settings/account-privacy.component').then(
+            (m) => m.AccountPrivacyComponent,
+          ),
+      },
+      {
         path: 'settings/conventions',
         loadComponent: () =>
           import('./features/mobile/settings/conventions.component').then(

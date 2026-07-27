@@ -1,0 +1,35 @@
+<a class="appbar" [routerLink]="['/m', 'settings']">
+  <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  <span class="crumb">Settings</span>
+</a>
+
+<div class="body">
+  <header class="intro">
+    <h1 class="title">Account &amp; privacy</h1>
+    <p class="lede">Your data, in your control.</p>
+  </header>
+
+  <!-- Export first: data you cannot take with you is not yours. -->
+  @for (action of actions; track action.id) {
+    <button class="action" type="button">
+      <span class="action-label">{{ action.label }}</span>
+      <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
+    </button>
+  }
+
+  <div class="rule"></div>
+
+  <!--
+    Not wired. The design has no confirmation step, and this destroys charts,
+    notes and history irreversibly — see the class comment.
+  -->
+  <button class="action danger" type="button">
+    <span class="action-label">Delete account</span>
+    <img src="mobile/chevron-bad.svg" alt="" aria-hidden="true" />
+  </button>
+
+  <p class="consequence">
+    Deleting your account permanently removes your charts, notes, and history.
+    This can’t be undone.
+  </p>
+</div>
