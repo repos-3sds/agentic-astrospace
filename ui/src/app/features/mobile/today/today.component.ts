@@ -12,6 +12,40 @@ import { VedicService } from '../../../core/vedic.service';
 import { DailyGuidancePayload } from '../../../core/models';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 
+/**
+ * Turns the engine's day score into a gauge position.
+ *
+ * `_score_day` in astrospace/context/daily.py returns an **unbounded signed
+ * integer** — tara contributes ±2, chandrabala −3…+1, and every supportive or
+ * challenging rule shifts it further. Its meaningful output is the *band*
+ * (supportive ≥3, positive ≥1, mixed ≥−1, else caution); the raw number is an
+ * internal tally, not a percentage.
+ *
+ * Clamping it into 0–100, which is what this used to do, meant a real day
+ * scoring −4 rendered as an empty ring reading 0, and even an excellent +5 day
+ * rendered as 5. The gauge was near-empty for every genuine reading.
+ *
+ * So the score is mapped through its own band into that band's slice of the
+ * dial. The number shown is a position on a four-band indicator, not a
+ * percentage of anything — and because it is derived from the same threshold
+ * that picks the label, the ring and the words can never disagree.
+ */
+export function gaugePositionFromScore(score: number): number {
+  // [lower score bound, gauge floor, gauge ceiling] per band, mirroring the
+  // thresholds in _score_day so the two stay in step.
+  const bands: [number, number, number][] = [
+    [3, 76, 100],   // supportive
+    [1, 51, 75],    // positive
+    [-1, 26, 50],   // mixed
+    [-Infinity, 1, 25], // caution
+  ];
+  const [lower, floor, ceiling] = bands.find(([min]) => score >= min)!;
+  // Spread the band across its slice, saturating four points beyond its start.
+  const span = Number.isFinite(lower) ? 4 : 4;
+  const within = Math.min(1, Math.max(0, (score - (Number.isFinite(lower) ? lower : -6)) / span));
+  return Math.round(floor + within * (ceiling - floor));
+}
+
 /** Verdict bands. Named, not numeric, so tone rules can key off them. */
 export type DayBand = 'steady' | 'mixed' | 'tough';
 
@@ -243,11 +277,15 @@ export class TodayComponent {
       initial: name.slice(0, 1).toUpperCase(),
       dateLabel,
       place: daily.provenance.place.city || city,
-      score: Math.max(0, Math.min(100, daily.verdict.score)),
+      score: gaugePositionFromScore(daily.verdict.score),
       band,
       scoreLabel: band === 'steady' ? 'Steady' : band === 'mixed' ? 'Mixed' : 'Take care',
       verdict: daily.verdict.headline,
-      detail: daily.verdict.text,
+      // reading.summary, not verdict.text. The card is designed for two lines
+      // (~90 chars) and verdict.text runs to ~470 — it pushed the Listen button
+      // down and shoved Do/Avoid off-screen entirely. The long form is not
+      // lost: it is what the "Why this reading?" sheet opens with.
+      detail: daily.reading.summary,
       doItem: daily.do_today[0]?.text ?? daily.reading.best_for[0] ?? daily.reading.focus,
       avoidItem: daily.avoid_today[0]?.text ?? daily.reading.avoid[0] ?? daily.reading.timing_note,
       nextWindowLabel: 'TIMING NOTE',
@@ -275,7 +313,9 @@ export class TodayComponent {
       })),
     ]);
     this.summary.set(daily.reading.summary);
-    this.plainWords.set(daily.reading.plain_why);
+    // The full narrative leads the evidence sheet, so nothing the engine wrote
+    // is dropped — it just stops overflowing the card it was never sized for.
+    this.plainWords.set([daily.verdict.text, ...daily.reading.plain_why]);
     this.calculation.set(daily.reading.technical_why.map((value, index) => ({
       label: `Signal ${index + 1}`,
       value,
