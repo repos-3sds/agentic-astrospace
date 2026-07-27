@@ -69,6 +69,13 @@
   color: var(--m-text);
 }
 
+// The shell already consumes the top safe area. Onboarding routes sit outside
+// it, so when the native WebView paints edge-to-edge they need the same inset
+// without duplicating it on every screen component.
+.as-mobile:not(as-mobile-shell) {
+  padding-top: var(--m-safe-top);
+}
+
 :root.app-dark .as-mobile {
   --m-bg: #15110d;
   --m-surface: #1d1712;

@@ -2,6 +2,7 @@
 /* ── AstroSpace design tokens ─────────────────────────────────────────── */
 
 :root {
+  color-scheme: light;
   /* light */
   --as-bg: #faf7f0;
   --as-surface: rgba(255, 252, 246, 0.78);
@@ -64,6 +65,7 @@
 }
 
 :root.app-dark {
+  color-scheme: dark;
   --as-bg: #15110d;
   --as-surface: rgba(31, 25, 20, 0.9);
   --as-raised: rgba(44, 36, 29, 0.9);

@@ -51,12 +51,13 @@ export class App implements OnInit {
   private router = inject(Router);
 
   constructor() {
-    // A native launch belongs in the app shell, not on the marketing landing
-    // page. Web is untouched: isNativePlatform() is false in every browser.
+    // Native boot starts on a route that does not depend on auth or the network.
+    // ngOnInit advances a restored session into the shell once auth resolves.
+    // Web is untouched: isNativePlatform() is false in every browser.
     if (Capacitor.isNativePlatform()) {
       const path = this.router.url.split('?')[0];
       if (path === '/' || path === '') {
-        void this.router.navigateByUrl('/m');
+        void this.router.navigateByUrl('/m/start');
       }
     }
   }
@@ -155,6 +156,12 @@ export class App implements OnInit {
     try {
       await this.auth.init();
       if (this.auth.isAuthenticated()) {
+        if (
+          Capacitor.isNativePlatform()
+          && this.router.url.split('?')[0] === '/m/start'
+        ) {
+          await this.router.navigateByUrl('/m');
+        }
         if (this.auth.enabled() && this.auth.session()) await this.prefs.syncCloud();
         await this.store.load();
       }

@@ -91,8 +91,20 @@ Android likewise needs the Android SDK; `npx cap add android` warns
 - Deep links and native OAuth return (M11-US02).
 - Android back-button and lifecycle handling (M11-US03).
 - Push notification registration (M11-US04).
-- Safe-area, splash screen and icon assets are Capacitor defaults so far.
+- Splash screen and icon assets are Capacitor defaults so far.
 - The native projects are not in CI.
-- Neither app has been run on a simulator or device yet — see Host
-  requirements. The web bundle, sync, ATS and API-origin wiring are verified;
-  on-device behaviour is not.
+- Android has not been run on a simulator or device yet.
+
+## Verified on iOS
+
+The development bundle has been built, synced, installed, and launched on
+iPhone 17 Pro simulators running iOS 26.2 and 26.5. The edge-to-edge WebView,
+status/home safe areas, unauthenticated landing bootstrap, and restored-session
+handoff into `/m` are verified.
+
+Local real-auth configuration is enabled and its API accepts the native
+`https://localhost` origin. The currently deployed Cloud Run API does not:
+its preflight for that origin returns HTTP 400. A production native login test
+therefore requires redeploying the current backend CORS configuration first.
+Email confirmation and password-reset testing also require a controlled test
+inbox; do not create disposable Supabase users without one.

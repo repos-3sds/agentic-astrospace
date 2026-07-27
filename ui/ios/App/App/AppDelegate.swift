@@ -7,7 +7,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Let the WebView paint behind the status bar. The Angular mobile shell
+        // consumes env(safe-area-inset-top), so UIKit applying its own inset
+        // leaves an unpainted white strip above dark-mode screens.
+        DispatchQueue.main.async { [weak self] in
+            guard let bridge = self?.window?.rootViewController as? CAPBridgeViewController else {
+                return
+            }
+            bridge.webView?.scrollView.contentInsetAdjustmentBehavior = .never
+        }
         return true
     }
 
