@@ -307,6 +307,13 @@ export const routes: Routes = [
             (m) => m.SettingsHomeComponent,
           ),
       },
+      {
+        path: 'settings/conventions',
+        loadComponent: () =>
+          import('./features/mobile/settings/conventions.component').then(
+            (m) => m.ConventionsComponent,
+          ),
+      },
       // The tab bar has five tabs and three of them are not built yet. Without
       // this they fall through to the global '**' below and land on the web
       // app's marketing page — in the native build that reads as the app

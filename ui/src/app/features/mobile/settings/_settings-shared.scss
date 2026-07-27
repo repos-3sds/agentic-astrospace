@@ -1,0 +1,65 @@
+// Shared layout for the settings sub-screens (67:89 through 69:180).
+//
+// All six are the same shape — back crumb, title, lede, then grouped rows —
+// so the chrome lives here rather than being retyped six times and drifting.
+// Screen-specific pieces stay in each screen's own SCSS.
+
+@use '../mobile-tokens' as *;
+
+@mixin settings-screen {
+  :host { display: block; padding-bottom: 24px; }
+
+  .appbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px 10px;
+    text-decoration: none;
+    img { width: 24px; height: 24px; display: block; }
+  }
+
+  .crumb { @include m-body-strong; color: var(--m-muted); }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 4px 20px 16px;
+  }
+
+  .intro { display: flex; flex-direction: column; gap: 3px; }
+  .title { @include m-h1; color: var(--m-text); margin: 0; }
+  .lede { @include m-body-small; color: var(--m-muted); margin: 0; }
+
+  .eyebrow { @include m-eyebrow; color: var(--m-muted); margin: 0; }
+}
+
+// One choice in a group. Selection is carried by fill, border weight, icon
+// colour *and* a tick — four signals, so the state survives greyscale and does
+// not depend on the accent alone.
+@mixin settings-choice {
+  .choice {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 13px 15px;
+    border: 1px solid var(--m-border);
+    border-radius: 16px;
+    background: var(--m-surface);
+    cursor: pointer;
+    text-align: left;
+
+    &.is-on {
+      background: var(--m-accent-soft);
+      border: 1.6px solid var(--m-accent);
+    }
+  }
+
+  .choice-left { display: flex; align-items: center; gap: 11px; min-width: 0; }
+  .choice-left img { width: 18px; height: 18px; display: block; flex-shrink: 0; }
+  .choice-label { @include m-body-strong; color: var(--m-text); }
+  .choice-tick { width: 18px; height: 18px; display: block; flex-shrink: 0; }
+}

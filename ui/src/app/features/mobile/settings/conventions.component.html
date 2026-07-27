@@ -1,0 +1,40 @@
+<a class="appbar" [routerLink]="['/m', 'settings']">
+  <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  <span class="crumb">Settings</span>
+</a>
+
+<div class="body">
+  <header class="intro">
+    <h1 class="title">Conventions</h1>
+    <!-- Not a recommendation. See the class comment: these are disputed, and
+         the app states its default rather than calling the others wrong. -->
+    <p class="lede">Calculation choices — change to match your practice.</p>
+  </header>
+
+  @for (group of groups; track group.key) {
+    <p class="eyebrow">{{ group.eyebrow }}</p>
+    @for (choice of group.choices; track choice.id) {
+      @let on = selected()[group.key] === choice.id;
+      <button
+        class="choice"
+        type="button"
+        role="radio"
+        [class.is-on]="on"
+        [attr.aria-checked]="on"
+        (click)="choose(group.key, choice.id)"
+      >
+        <span class="choice-left">
+          <img
+            [src]="'mobile/opt-' + group.glyph + (on ? '-on' : '') + '.svg'"
+            alt=""
+            aria-hidden="true"
+          />
+          <span class="choice-label">{{ choice.label }}</span>
+        </span>
+        @if (on) {
+          <img class="choice-tick" src="mobile/check-accent.svg" alt="" aria-hidden="true" />
+        }
+      </button>
+    }
+  }
+</div>

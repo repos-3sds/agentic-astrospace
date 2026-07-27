@@ -201,7 +201,7 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `67:147` | 25c · Settings — Language & Audio | ⬜ |
 | `67:173` | 25d · Settings — Notifications | ⬜ |
 | `69:89` | 25e · Settings — Location | ⬜ |
-| `69:117` | 25f · Settings — Conventions | ⬜ |
+| `69:117` | 25f · Settings — Conventions | ✅ done |
 | `69:180` | 25g · Settings — Account & Privacy | ⬜ |
 | `79:89` | 26 · Profile switcher sheet | ⬜ |
 | `82:96` | 2c · Choose Your Language | ✅ done — `/m/language` |

@@ -1,0 +1,4 @@
+@use './settings-shared' as shared;
+
+@include shared.settings-screen;
+@include shared.settings-choice;
