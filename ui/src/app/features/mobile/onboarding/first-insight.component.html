@@ -1,0 +1,43 @@
+<header class="insight-appbar">
+  <span>YOUR FIRST INSIGHT</span>
+  <em>{{ preferences.experienceMode() }}</em>
+</header>
+
+<main>
+  @switch (preferences.experienceMode()) {
+    @case ('guided') {
+      <p class="kicker">A SIMPLE START</p>
+      <h1>@if (name()) {<span>{{ name() }}, </span>}your chart combines warmth with steady resolve.</h1>
+      <p class="lede">{{ guidedLead() }}</p>
+      <section class="action">
+        <small>USE THIS TODAY</small>
+        <strong>Finish one delayed task before taking on another.</strong>
+      </section>
+      <a class="listen" routerLink="/m/today" [queryParams]="{ listen: 1 }">Listen to my first reading</a>
+    }
+    @case ('practitioner') {
+      <p class="kicker">WORKBENCH READY</p>
+      <h1>@if (name()) {<span>{{ name() }}’s</span>} @else {<span>Your</span>} computed chart is ready.</h1>
+      <as-east-chart [cells]="cells" />
+      <dl>
+        <div><dt>Lagna</dt><dd>Taurus · 11°02′</dd></div>
+        <div><dt>Moon</dt><dd>Cancer · Pushya 2</dd></div>
+        <div><dt>Active period</dt><dd>Venus · Saturn</dd></div>
+        <div><dt>Convention</dt><dd>Lahiri · whole-sign</dd></div>
+      </dl>
+      <a class="secondary" routerLink="/m/chart">Open workbench</a>
+    }
+    @default {
+      <p class="kicker">WHY THIS IS PERSONAL</p>
+      <h1>@if (name()) {<span>{{ name() }}, </span>}{{ balancedLead() }}</h1>
+      <p class="lede">Gemini Sun · Cancer Moon · Taurus rising</p>
+      <section class="action">
+        <small>TODAY’S PREVIEW</small>
+        <strong>A steady day for practical work and measured decisions.</strong>
+      </section>
+      <a class="secondary" routerLink="/m/chart">Preview my chart</a>
+    }
+  }
+</main>
+
+<footer><a routerLink="/m/today">Continue to Today</a></footer>

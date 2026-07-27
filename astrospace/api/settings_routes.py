@@ -26,6 +26,8 @@ class UserSettingsPayload(BaseModel):
     panchanga_place: Optional[PanchangaPlace] = None
     language: str = "en"
     regional_format: str = "en-IN"
+    experience_mode: Literal["guided", "balanced", "practitioner"] = "balanced"
+    tone: Literal["gentle", "direct"] = "gentle"
 
 
 def _settings_to_dict(settings) -> dict:
@@ -38,6 +40,8 @@ def _settings_to_dict(settings) -> dict:
         "panchanga_place": settings.panchanga_place,
         "language": settings.language,
         "regional_format": settings.regional_format,
+        "experience_mode": settings.experience_mode,
+        "tone": settings.tone,
         "created_at": settings.created_at.isoformat() if settings.created_at else None,
         "updated_at": settings.updated_at.isoformat() if settings.updated_at else None,
     }

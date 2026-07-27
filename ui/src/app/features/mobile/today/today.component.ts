@@ -11,6 +11,8 @@ import { KundliStore } from '../../../core/kundli.store';
 import { VedicService } from '../../../core/vedic.service';
 import { DailyGuidancePayload } from '../../../core/models';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
+import { PreferencesService } from '../../../core/preferences.service';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 /**
  * Turns the engine's day score into a gauge position.
@@ -110,6 +112,7 @@ export interface TodayView {
     RouterLink,
     WhyReadingSheetComponent,
     ProfileSwitcherComponent,
+    GenericErrorComponent,
   ],
   templateUrl: './today.component.html',
   styleUrl: './today.component.scss',
@@ -117,6 +120,12 @@ export interface TodayView {
 export class TodayComponent {
   private readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
+  protected readonly preferences = inject(PreferencesService);
+  protected readonly whyMode = computed(() => ({
+    guided: 'Guided view — the meaning first, with unfamiliar terms translated.',
+    balanced: 'Balanced view — plain first, the calculation underneath.',
+    practitioner: 'Practitioner view — exact factors, conventions, and evidence.',
+  })[this.preferences.experienceMode()]);
 
   readonly loading = signal(true);
   readonly loadError = signal<string | null>(null);

@@ -3,7 +3,7 @@
 
   @if (!hideTabs()) {
     <nav class="tabbar" aria-label="Primary">
-      @for (tab of tabs; track tab.path) {
+      @for (tab of tabs(); track tab.path) {
         <a
           class="tab"
           [routerLink]="['/m', tab.path]"

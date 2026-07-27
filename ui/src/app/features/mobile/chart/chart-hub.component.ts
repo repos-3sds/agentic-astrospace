@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { ChartCell, EastChartComponent } from './east-chart.component';
 import { ProvenanceSheetComponent } from './provenance-sheet.component';
 import { KundliStore } from '../../../core/kundli.store';
+import { PreferencesService } from '../../../core/preferences.service';
 
 /** One of the three placements the hub leads with. */
 export interface AnglePoint {
@@ -45,6 +46,12 @@ export interface ExploreCard {
 })
 export class ChartHubComponent {
   private readonly kundlis = inject(KundliStore);
+  protected readonly preferences = inject(PreferencesService);
+  protected readonly screenTitle = computed(() =>
+    this.preferences.experienceMode() === 'guided' ? 'Your Story'
+      : this.preferences.experienceMode() === 'practitioner' ? 'Chart Workbench'
+      : 'Your Chart',
+  );
   readonly profileName = computed(() => this.kundlis.active()?.name ?? 'Choose profile');
   readonly profileInitial = computed(() => this.profileName().slice(0, 1).toUpperCase());
 
@@ -149,6 +156,13 @@ export class ChartHubComponent {
   ]);
 
   readonly noteCount = signal(3);
+  protected readonly visibleExplore = computed(() => {
+    const cards = this.explore();
+    if (this.preferences.experienceMode() === 'guided') {
+      return cards.filter((card) => ['yoga', 'transit', 'compat', 'readings'].includes(card.id));
+    }
+    return cards;
+  });
 
   /** The provenance sheet (36:247), shared with the full render. */
   readonly provenanceOpen = signal(false);

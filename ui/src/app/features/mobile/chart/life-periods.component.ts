@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { PreferencesService } from '../../../core/preferences.service';
 
 interface Period {
   name: string;
@@ -25,6 +26,7 @@ interface Period {
 })
 export class LifePeriodsComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  protected readonly preferences = inject(PreferencesService);
 
   readonly system = signal<'vimshottari' | 'yogini'>('vimshottari');
   readonly level = signal<'maha' | 'antar' | 'pratyantar'>('antar');

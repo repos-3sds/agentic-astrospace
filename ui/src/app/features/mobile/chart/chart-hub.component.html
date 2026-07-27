@@ -1,5 +1,5 @@
 <header class="appbar">
-  <h1 class="screen-title">Your Chart</h1>
+  <h1 class="screen-title">{{ screenTitle() }}</h1>
   <button class="profile" type="button" aria-label="Switch profile">
     <span class="avatar" aria-hidden="true">{{ profileInitial() }}</span>
     <span class="profile-name">{{ profileName() }}</span>
@@ -7,7 +7,7 @@
   </button>
 </header>
 
-<div class="body">
+<div class="body" [attr.data-mode]="preferences.experienceMode()">
   <!-- Plain language first. The diagram is below, the specialist areas below that. -->
   <section class="signature">
     <p class="eyebrow">YOUR SIGNATURE</p>
@@ -20,11 +20,14 @@
       <div class="angle">
         <p class="eyebrow muted">{{ a.label }}</p>
         <p class="angle-sign">{{ a.sign }}</p>
-        <p class="angle-degree">{{ a.degree }}</p>
+        @if (preferences.experienceMode() !== 'guided') {
+          <p class="angle-degree">{{ a.degree }}</p>
+        }
       </div>
     }
   </div>
 
+  @if (preferences.experienceMode() !== 'guided') {
   <section class="rashi">
     <div class="rashi-head">
       <p class="eyebrow">RASHI · D1 CHART</p>
@@ -38,17 +41,22 @@
       <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
     </a>
   </section>
+  }
 
   <!-- Directly under the diagram: this is where "where did this come from" gets asked. -->
   <button class="provenance" type="button" (click)="provenanceOpen.set(true)">
     <img class="mark" src="mobile/verified.svg" alt="" aria-hidden="true" />
-    <span class="provenance-text">Computed transparently — tap to see how.</span>
+    <span class="provenance-text">
+      {{ preferences.experienceMode() === 'practitioner'
+        ? 'Lahiri · whole-sign · inspect provenance and inputs.'
+        : 'Computed transparently — tap to see how.' }}
+    </span>
     <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
   </button>
 
   <p class="eyebrow">EXPLORE YOUR CHART</p>
   <div class="explore">
-    @for (card of explore(); track card.id) {
+    @for (card of visibleExplore(); track card.id) {
       @if (card.route; as route) {
         <a class="explore-card" [routerLink]="route">
           <span class="explore-icon">

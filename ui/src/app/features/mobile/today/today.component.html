@@ -13,15 +13,17 @@
   </a>
 </header>
 
-<div class="body">
+<div class="body" [attr.data-mode]="preferences.experienceMode()">
   @if (loading()) {
     <div class="mtoday-state" role="status">Loading your guidance…</div>
   }
   @if (loadError()) {
-    <div class="mtoday-state is-error" role="alert">
-      <span>{{ loadError() }}</span>
-      <button type="button" (click)="loadToday()">Try again</button>
-    </div>
+    <as-generic-error
+      role="alert"
+      [message]="loadError()!"
+      [technicalDetail]="'GET /api/v1/daily-guidance · profile context unavailable'"
+      (retried)="loadToday()"
+    />
   }
   @if (emptyProfile()) {
     <section class="mtoday-empty">
@@ -90,6 +92,7 @@
     <p class="window-in">{{ v.nextWindowIn }}</p>
   </section>
 
+  @if (preferences.experienceMode() !== 'guided') {
   @for (section of statSections(); track section.eyebrow) {
     <p class="eyebrow section-label">{{ section.eyebrow }}</p>
     <div class="stats" [attr.data-columns]="section.columns">
@@ -97,6 +100,19 @@
         <div class="stat">
           <p class="eyebrow stat-label">{{ cell.label }}</p>
           <p class="stat-value">{{ cell.value }}</p>
+        </div>
+      }
+    </div>
+  }
+  }
+
+  @if (preferences.experienceMode() === 'practitioner') {
+    <p class="eyebrow section-label">ACTIVE TECHNICAL BASIS</p>
+    <div class="stats" data-columns="2">
+      @for (row of calculation(); track row.label) {
+        <div class="stat">
+          <p class="eyebrow stat-label">{{ row.label }}</p>
+          <p class="stat-value">{{ row.value }}</p>
         </div>
       }
     </div>
@@ -141,6 +157,7 @@
 
 @if (openSheet() === 'why') {
   <as-why-reading-sheet
+    [mode]="whyMode()"
     [plainWords]="plainWords()"
     [calculation]="calculation()"
     [conventions]="conventions()"

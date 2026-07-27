@@ -7,6 +7,8 @@ export type DefaultChartStyle = 'south' | 'north' | 'eastern';
 export type DefaultAyanamsha = 'lahiri' | 'raman' | 'krishnamurti';
 export type DefaultNodeType = 'mean' | 'true';
 export type TimezoneMode = 'browser' | 'panchanga_place';
+export type ExperienceMode = 'guided' | 'balanced' | 'practitioner';
+export type ReadingTone = 'gentle' | 'direct';
 
 export interface PreferencesState {
   chartStyle: DefaultChartStyle;
@@ -16,6 +18,8 @@ export interface PreferencesState {
   panchangaPlace: Pick<PanchangaCity, 'city' | 'nation' | 'timezone' | 'label'> | null;
   language: string;
   regionalFormat: string;
+  experienceMode: ExperienceMode;
+  tone: ReadingTone;
 }
 
 interface RemoteSettings {
@@ -27,6 +31,8 @@ interface RemoteSettings {
   panchanga_place: PreferencesState['panchangaPlace'];
   language: string;
   regional_format: string;
+  experience_mode: ExperienceMode;
+  tone: ReadingTone;
 }
 
 const STORAGE_KEY = 'astrospace-preferences';
@@ -38,6 +44,8 @@ const DEFAULTS: PreferencesState = {
   panchangaPlace: null,
   language: 'en',
   regionalFormat: 'en-IN',
+  experienceMode: 'balanced',
+  tone: 'gentle',
 };
 
 @Injectable({ providedIn: 'root' })
@@ -55,6 +63,8 @@ export class PreferencesService {
   );
   readonly language = signal(this.preferences().language);
   readonly regionalFormat = signal(this.preferences().regionalFormat);
+  readonly experienceMode = signal<ExperienceMode>(this.preferences().experienceMode);
+  readonly tone = signal<ReadingTone>(this.preferences().tone);
   readonly cloudReady = signal(false);
   readonly cloudSaving = signal(false);
   readonly cloudError = signal<string | null>(null);
@@ -73,6 +83,8 @@ export class PreferencesService {
         panchangaPlace: this.panchangaPlace(),
         language: this.language(),
         regionalFormat: this.regionalFormat(),
+        experienceMode: this.experienceMode(),
+        tone: this.tone(),
       };
       this.preferences.set(next);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -112,6 +124,8 @@ export class PreferencesService {
     this.panchangaPlace.set(DEFAULTS.panchangaPlace);
     this.language.set(DEFAULTS.language);
     this.regionalFormat.set(DEFAULTS.regionalFormat);
+    this.experienceMode.set(DEFAULTS.experienceMode);
+    this.tone.set(DEFAULTS.tone);
   }
 
   syncCloud(): Promise<void> {
@@ -157,6 +171,8 @@ export class PreferencesService {
       this.panchangaPlace.set(remote.panchanga_place ?? null);
       this.language.set(remote.language || DEFAULTS.language);
       this.regionalFormat.set(remote.regional_format || DEFAULTS.regionalFormat);
+      this.experienceMode.set(remote.experience_mode || DEFAULTS.experienceMode);
+      this.tone.set(remote.tone || DEFAULTS.tone);
     } finally {
       queueMicrotask(() => {
         this.applyingRemote = false;
@@ -191,6 +207,8 @@ export class PreferencesService {
       panchanga_place: state.panchangaPlace,
       language: state.language,
       regional_format: state.regionalFormat,
+      experience_mode: state.experienceMode,
+      tone: state.tone,
     };
   }
 }

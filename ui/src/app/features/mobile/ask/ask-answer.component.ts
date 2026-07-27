@@ -10,6 +10,7 @@ import {
 import { MobileAskStateService } from './mobile-ask-state.service';
 import { MobileAskThreadService } from './mobile-ask-thread.service';
 import { KundliStore } from '../../../core/kundli.store';
+import { PreferencesService } from '../../../core/preferences.service';
 
 /**
  * How confidently the answer lands. Named, not a number: the point of the dot
@@ -48,6 +49,7 @@ export interface AnswerView {
   styleUrl: './ask-answer.component.scss',
 })
 export class AskAnswerComponent {
+  protected readonly preferences = inject(PreferencesService);
   private readonly askState = inject(MobileAskStateService);
   // The observable, not the snapshot: a follow-up re-enters this same route, and
   // Angular reuses the component rather than rebuilding it — read once and the
@@ -91,6 +93,11 @@ export class AskAnswerComponent {
   ]);
 
   readonly conventions = signal(['Lahiri', 'Whole-sign', 'Vijayawada', 'High confidence']);
+  protected readonly whyMode = computed(() => ({
+    guided: 'Guided view — a short cause-and-effect explanation.',
+    balanced: 'Balanced view — plain first, the calculation underneath.',
+    practitioner: 'Practitioner view — scoped inputs, factors, and provenance.',
+  })[this.preferences.experienceMode()]);
 
   /** Reuses Today's audio sheet — one player, not a second one for answers. */
   readonly listenOpen = signal(false);

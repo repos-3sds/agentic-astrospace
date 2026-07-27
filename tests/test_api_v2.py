@@ -259,12 +259,17 @@ class TestSettingsEndpoint:
             "panchanga_place": None,
             "language": "en",
             "regional_format": "en-IN",
+            "experience_mode": "practitioner",
+            "tone": "direct",
         }
 
         r = client.put("/api/v1/settings", json=payload)
         assert r.status_code == 200
         assert r.json()["chart_style"] == "eastern"
+        assert r.json()["experience_mode"] == "practitioner"
+        assert r.json()["tone"] == "direct"
 
         saved = client.get("/api/v1/settings")
         assert saved.status_code == 200
         assert saved.json()["chart_style"] == "eastern"
+        assert saved.json()["experience_mode"] == "practitioner"

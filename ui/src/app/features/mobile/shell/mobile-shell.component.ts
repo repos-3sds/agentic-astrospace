@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import {
   NavigationEnd,
   Router,
@@ -9,6 +9,7 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
 import { KundliStore } from '../../../core/kundli.store';
+import { PreferencesService } from '../../../core/preferences.service';
 
 /**
  * Native app shell: routed content plus the five-tab bar (Figma node 13:66).
@@ -30,6 +31,7 @@ import { KundliStore } from '../../../core/kundli.store';
 export class MobileShellComponent {
   private readonly router = inject(Router);
   private readonly kundlis = inject(KundliStore);
+  protected readonly preferences = inject(PreferencesService);
 
   constructor() {
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
@@ -58,13 +60,35 @@ export class MobileShellComponent {
     { initialValue: false },
   );
 
-  protected readonly tabs = [
-    { path: 'today', label: 'Today', icon: 'nav-today' },
-    { path: 'ask', label: 'Ask', icon: 'nav-ask' },
-    { path: 'chart', label: 'Chart', icon: 'nav-chart' },
-    { path: 'calendar', label: 'Calendar', icon: 'nav-calendar' },
-    // "More" lands on Settings (66:89). The designs have no separate More menu,
-    // and a tab that opens a list of one thing is a tab that wastes a tap.
-    { path: 'settings', label: 'More', icon: 'nav-more' },
-  ];
+  protected readonly tabs = computed(() => {
+    const fixed = [
+      { path: 'today', label: 'Today', icon: 'nav-today' },
+    ];
+    const more = { path: 'settings', label: 'More', icon: 'nav-more' };
+    if (this.preferences.experienceMode() === 'guided') {
+      return [
+        ...fixed,
+        { path: 'ask', label: 'Ask', icon: 'nav-ask' },
+        { path: 'remedies', label: 'What to do', icon: 'nav-chart' },
+        { path: 'calendar', label: 'Calendar', icon: 'nav-calendar' },
+        more,
+      ];
+    }
+    if (this.preferences.experienceMode() === 'practitioner') {
+      return [
+        ...fixed,
+        { path: 'chart', label: 'Chart', icon: 'nav-chart' },
+        { path: 'chart/periods', label: 'Periods', icon: 'nav-ask' },
+        { path: 'transits', label: 'Transits', icon: 'nav-calendar' },
+        more,
+      ];
+    }
+    return [
+      ...fixed,
+      { path: 'ask', label: 'Ask', icon: 'nav-ask' },
+      { path: 'chart', label: 'Chart', icon: 'nav-chart' },
+      { path: 'calendar', label: 'Calendar', icon: 'nav-calendar' },
+      more,
+    ];
+  });
 }

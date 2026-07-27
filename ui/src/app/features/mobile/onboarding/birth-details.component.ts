@@ -211,7 +211,7 @@ export class BirthDetailsComponent {
       });
       this.kundlis.setActive(created.id);
       sessionStorage.removeItem('astrospace.onboardingName');
-      await this.router.navigate(['/m', 'today']);
+      await this.router.navigate(['/m', 'insight']);
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {

@@ -59,6 +59,8 @@ test('registers, creates the first chart, logs out, and restores it on return', 
   );
   await page.getByRole('textbox', { name: 'PLACE OF BIRTH' }).fill('Vijayawada');
   await page.getByRole('button', { name: 'Cast my chart' }).click();
+  await expect(page).toHaveURL(/\/m\/insight$/);
+  await page.getByRole('link', { name: 'Continue to Today' }).click();
   await expect(page).toHaveURL(/\/m\/today$/);
 
   await page.getByRole('link', { name: 'More' }).click();

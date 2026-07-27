@@ -215,6 +215,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'm/insight',
+    canActivate: [nativeAppGuard],
+    loadComponent: () =>
+      import('./features/mobile/onboarding/first-insight.component').then(
+        (m) => m.FirstInsightComponent,
+      ),
+  },
+  {
     path: 'm',
     canActivate: [nativeAppGuard, mobileAuthGuard],
     loadComponent: () =>

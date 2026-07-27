@@ -1,11 +1,10 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
-  PersonaId,
   PersonaOption,
   PersonaPickerComponent,
-  ToneId,
 } from '../persona-picker/persona-picker.component';
+import { PreferencesService } from '../../../core/preferences.service';
 
 /**
  * Settings — Mode & tone (Figma node 67:89).
@@ -28,8 +27,9 @@ import {
   styleUrl: './mode-tone.component.scss',
 })
 export class ModeToneComponent {
-  readonly persona = signal<PersonaId>('balanced');
-  readonly tone = signal<ToneId>('gentle');
+  private readonly preferences = inject(PreferencesService);
+  readonly persona = this.preferences.experienceMode;
+  readonly tone = this.preferences.tone;
 
   readonly options: PersonaOption[] = [
     {

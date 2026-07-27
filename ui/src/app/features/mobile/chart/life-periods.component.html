@@ -13,6 +13,11 @@
         Vimshottari dasha — five levels, computed from Moon
       }
     </p>
+    @if (preferences.experienceMode() === 'guided') {
+      <p>Your current chapter, explained without requiring the technical tables.</p>
+    } @else if (preferences.experienceMode() === 'practitioner') {
+      <p>Lahiri · sidereal Moon · exact period boundaries · five-level stack</p>
+    }
   </header>
 
   <div class="system" role="tablist" aria-label="Dasha system">
@@ -48,6 +53,7 @@
       <p>Pratyantar since Jan 2026 — steady effort favoured, avoid shortcuts.</p>
     </section>
 
+    @if (preferences.experienceMode() !== 'guided') {
     <div class="levels" role="tablist" aria-label="Dasha level">
       @for (item of ['maha', 'antar', 'pratyantar']; track item) {
         <button
@@ -60,6 +66,7 @@
       }
     </div>
     <p class="gloss">Maha = main period · Antar = sub-period · Pratyantar = fine-grained period</p>
+    }
 
     @if (level() === 'antar') {
       <p class="breadcrumb">

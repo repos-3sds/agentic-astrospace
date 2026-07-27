@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FestivalSheetComponent } from './festival-sheet.component';
+import { PreferencesService } from '../../../core/preferences.service';
 
 @Component({
   selector: 'as-mobile-calendar',
@@ -19,6 +20,9 @@ import { FestivalSheetComponent } from './festival-sheet.component';
         }
       </section>
       <p class="mcal-eyebrow">UPCOMING OBSERVANCES</p>
+      @if (preferences.experienceMode() === 'practitioner') {
+        <p class="mcal-eyebrow">LAHIRI · LOCAL TZ · AMANTA · SUNRISE CUT-OFF</p>
+      }
       <button class="mcal-observance" type="button" (click)="festivalOpen.set(true)">
         <span class="mcal-date-tile"><b>29</b><small>Jul</small></span>
         <span><b>Naga Panchami</b><small>Prep: temple visit, offerings at dawn</small><em>4 days away</em></span>
@@ -33,6 +37,7 @@ import { FestivalSheetComponent } from './festival-sheet.component';
   styleUrl: './calendar.component.scss',
 })
 export class CalendarComponent {
+  protected readonly preferences = inject(PreferencesService);
   readonly weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   readonly blanks = [0, 1, 2];
   readonly days = Array.from({ length: 31 }, (_, index) => index + 1);

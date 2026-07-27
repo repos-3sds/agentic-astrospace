@@ -1,11 +1,10 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
-  PersonaId,
   PersonaOption,
   PersonaPickerComponent,
-  ToneId,
 } from '../persona-picker/persona-picker.component';
+import { PreferencesService } from '../../../core/preferences.service';
 
 /**
  * Persona (Figma node 8:2) — step four of onboarding.
@@ -52,8 +51,9 @@ import {
   host: { class: 'as-mobile' },
 })
 export class PersonaComponent {
-  readonly persona = signal<PersonaId>('balanced');
-  readonly tone = signal<ToneId>('gentle');
+  private readonly preferences = inject(PreferencesService);
+  readonly persona = this.preferences.experienceMode;
+  readonly tone = this.preferences.tone;
 
   readonly options: PersonaOption[] = [
     {

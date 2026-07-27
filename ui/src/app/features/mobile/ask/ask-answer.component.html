@@ -7,7 +7,7 @@
   <p class="crumb">Ask</p>
 </header>
 
-<div class="body">
+<div class="body" [attr.data-mode]="preferences.experienceMode()">
   <div class="asked">
     <p class="bubble">{{ v.question }}</p>
   </div>
@@ -27,6 +27,16 @@
       <p class="todo-text">{{ v.whatToDo }}</p>
     </div>
 
+    @if (preferences.experienceMode() === 'practitioner') {
+      <div class="todo">
+        <p class="eyebrow">TECHNICAL BASIS</p>
+        @for (row of calculation(); track row.label) {
+          <p class="todo-text">{{ row.label }} · {{ row.value }}</p>
+        }
+        <p class="eyebrow">{{ conventions().join(' · ') }}</p>
+      </div>
+    }
+
     <button class="why" type="button" (click)="whyOpen.set(true)">
       <span class="why-left">
         <img src="mobile/why.svg" alt="" aria-hidden="true" />
@@ -40,10 +50,12 @@
         <img src="mobile/play-muted.svg" alt="" aria-hidden="true" />
         <span>Listen</span>
       </button>
+      @if (preferences.experienceMode() !== 'guided') {
       <button class="tool" type="button" (click)="share()">
         <img src="mobile/share.svg" alt="" aria-hidden="true" />
         <span>Share</span>
       </button>
+      }
     </div>
   </article>
 
@@ -69,6 +81,7 @@
 
 @if (whyOpen()) {
   <as-why-reading-sheet
+    [mode]="whyMode()"
     [plainWords]="plainWords()"
     [calculation]="calculation()"
     [conventions]="conventions()"
