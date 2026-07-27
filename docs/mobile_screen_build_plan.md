@@ -222,11 +222,11 @@ get_figma_skill(uri="skill://figma/figma-design-to-code/SKILL.md")
 | `114:124` | 31b · Prediction Claims (accuracy) | ✅ done — `/m/readings/accuracy` |
 | `115:124` | 32 · Notes | ✅ done — `/m/notes` |
 | `116:124` | 28b · Calendar — Day detail (timing feed) | ✅ done — `/m/calendar/day` |
-| `117:124` | 33 · Practitioner Reference | ⬜ |
-| `117:175` | 33b · Avkahada & Ghatak | ⬜ |
-| `118:124` | 33c · Graha positions & conditions | ⬜ |
-| `118:239` | 33d · Ashtakavarga tables | ⬜ |
-| `118:383` | 33e · Favourable points | ⬜ |
+| `117:124` | 33 · Practitioner Reference | ✅ done — `/m/chart/reference` |
+| `117:175` | 33b · Avkahada & Ghatak | ✅ done — `/m/chart/reference/avkahada` |
+| `118:124` | 33c · Graha positions & conditions | ✅ done — `/m/chart/reference/grahas` |
+| `118:239` | 33d · Ashtakavarga tables | ✅ done — `/m/chart/reference/ashtakavarga` |
+| `118:383` | 33e · Favourable points | ✅ done — `/m/chart/reference/favourable` |
 
 ## New frames added 2026-07-27
 

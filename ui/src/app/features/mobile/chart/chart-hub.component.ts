@@ -144,6 +144,7 @@ export class ChartHubComponent {
       title: 'Reference',
       subtitle: 'Avkahada, tables, points',
       icon: 'explore-reference',
+      route: ['/m', 'chart', 'reference'],
     },
   ]);
 

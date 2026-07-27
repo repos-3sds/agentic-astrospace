@@ -1,0 +1,12 @@
+@use '../mobile-tokens' as *;
+:host{display:block;min-height:100%;background:var(--m-bg)}
+.ref-appbar{display:flex;align-items:center;gap:12px;padding:16px 20px 12px;text-decoration:none;color:var(--m-muted);@include m-body-strong;
+ img{width:24px;height:24px}}
+main{padding:4px 20px 24px} header{margin-bottom:16px} h1{@include m-h1;margin:0 0 4px} header p{@include m-body-small;margin:0;color:var(--m-muted)}
+.ref-cards{display:flex;flex-direction:column;gap:10px}.ref-cards>a{display:flex;align-items:center;gap:12px;padding:16px;border:1px solid var(--m-border);border-radius:18px;background:var(--m-surface);text-decoration:none;color:var(--m-text);
+ >span{flex:1;display:flex;flex-direction:column;gap:4px}strong{@include m-body-strong}small{@include m-caption;color:var(--m-muted)}img{width:17px;height:17px}}
+.ref-table{border:1px solid var(--m-border);border-radius:18px;background:var(--m-surface);overflow:hidden}
+.ref-row,.ref-planet{padding:12px 16px;border-bottom:1px solid var(--m-border);&:last-child{border:0}}
+.ref-row{display:flex;justify-content:space-between;gap:16px;@include m-body-small;text-transform:capitalize;span{color:var(--m-muted)}strong{text-align:right;color:var(--m-text)}}
+.ref-planet{display:grid;grid-template-columns:1fr auto;gap:4px 12px;>span:first-child{display:flex;gap:8px;align-items:baseline}strong{@include m-body-strong}small{@include m-caption;color:var(--m-muted)}>.ref-value{@include m-body-strong;color:var(--m-accent-strong)}}
+.ref-state{@include m-body;padding:18px;color:var(--m-muted);background:var(--m-surface);border:1px solid var(--m-border);border-radius:18px}.error{color:var(--m-bad)}

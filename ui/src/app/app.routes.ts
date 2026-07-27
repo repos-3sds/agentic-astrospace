@@ -293,6 +293,31 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'chart/reference',
+        data: { hideMobileTabs: true, referenceMode: 'home' },
+        loadComponent: () => import('./features/mobile/chart/reference.component').then((m) => m.ReferenceComponent),
+      },
+      {
+        path: 'chart/reference/avkahada',
+        data: { hideMobileTabs: true, referenceMode: 'avkahada' },
+        loadComponent: () => import('./features/mobile/chart/reference.component').then((m) => m.ReferenceComponent),
+      },
+      {
+        path: 'chart/reference/grahas',
+        data: { hideMobileTabs: true, referenceMode: 'grahas' },
+        loadComponent: () => import('./features/mobile/chart/reference.component').then((m) => m.ReferenceComponent),
+      },
+      {
+        path: 'chart/reference/ashtakavarga',
+        data: { hideMobileTabs: true, referenceMode: 'ashtakavarga' },
+        loadComponent: () => import('./features/mobile/chart/reference.component').then((m) => m.ReferenceComponent),
+      },
+      {
+        path: 'chart/reference/favourable',
+        data: { hideMobileTabs: true, referenceMode: 'favourable' },
+        loadComponent: () => import('./features/mobile/chart/reference.component').then((m) => m.ReferenceComponent),
+      },
+      {
         path: 'chart/periods',
         data: { hideMobileTabs: true },
         loadComponent: () =>
