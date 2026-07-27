@@ -173,6 +173,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'm/reset-password',
+    canActivate: [nativeAppGuard],
+    loadComponent: () =>
+      import('./features/mobile/onboarding/reset-password.component').then(
+        (m) => m.ResetPasswordComponent,
+      ),
+  },
+  {
     path: 'm/language',
     canActivate: [nativeAppGuard],
     loadComponent: () =>

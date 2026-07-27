@@ -1,7 +1,13 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { App as CapacitorApp, URLOpenListenerEvent } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 import { createClient, Session, SupabaseClient, User } from '@supabase/supabase-js';
 import { apiUrl } from './api-origin';
+
+const NATIVE_AUTH_CALLBACK = 'app.astrospace.mobile://auth/callback';
+const NATIVE_AUTH_DESTINATION_KEY = 'astrospace.nativeAuthDestination';
 
 interface AuthConfig {
   enabled: boolean;
@@ -19,6 +25,7 @@ export class AuthService {
 
   private client: SupabaseClient | null = null;
   private initPromise: Promise<void> | null = null;
+  private nativeCallbackInstalled = false;
 
   constructor(private router: Router) {}
 
@@ -42,7 +49,13 @@ export class AuthService {
       throw new Error('Supabase auth is enabled but URL/anon key are missing');
     }
 
-    this.client = createClient(config.supabase_url, config.supabase_anon_key);
+    this.client = createClient(config.supabase_url, config.supabase_anon_key, {
+      auth: {
+        flowType: 'pkce',
+        detectSessionInUrl: !Capacitor.isNativePlatform(),
+      },
+    });
+    await this.installNativeAuthCallback();
     const { data, error } = await this.client.auth.getSession();
     if (error) throw error;
     this.setSession(data.session);
@@ -83,7 +96,7 @@ export class AuthService {
     const { error } = await this.client.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: new URL(destination, window.location.origin).toString(),
+        emailRedirectTo: this.authRedirect(destination),
       },
     });
     if (error) throw error;
@@ -92,21 +105,30 @@ export class AuthService {
   async signInWithGoogle(destination = '/'): Promise<void> {
     await this.init();
     if (!this.client) return;
-    const { error } = await this.client.auth.signInWithOAuth({
+    const { data, error } = await this.client.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: new URL(destination, window.location.origin).toString(),
+        redirectTo: this.authRedirect(destination),
+        skipBrowserRedirect: Capacitor.isNativePlatform(),
       },
     });
     if (error) throw error;
+    if (Capacitor.isNativePlatform() && data.url) await Browser.open({ url: data.url });
   }
 
   async resetPassword(email: string, destination = '/m/auth'): Promise<void> {
     await this.init();
     if (!this.client) return;
     const { error } = await this.client.auth.resetPasswordForEmail(email, {
-      redirectTo: new URL(destination, window.location.origin).toString(),
+      redirectTo: this.authRedirect(destination),
     });
+    if (error) throw error;
+  }
+
+  async updatePassword(password: string): Promise<void> {
+    await this.init();
+    if (!this.client) return;
+    const { error } = await this.client.auth.updateUser({ password });
     if (error) throw error;
   }
 
@@ -137,5 +159,61 @@ export class AuthService {
   private setSession(session: Session | null): void {
     this.session.set(session);
     this.user.set(session?.user ?? null);
+  }
+
+  private authRedirect(destination: string): string {
+    if (!Capacitor.isNativePlatform()) {
+      return new URL(destination, window.location.origin).toString();
+    }
+    localStorage.setItem(NATIVE_AUTH_DESTINATION_KEY, destination);
+    return NATIVE_AUTH_CALLBACK;
+  }
+
+  private async installNativeAuthCallback(): Promise<void> {
+    if (!Capacitor.isNativePlatform() || this.nativeCallbackInstalled) return;
+    this.nativeCallbackInstalled = true;
+    await CapacitorApp.addListener('appUrlOpen', (event: URLOpenListenerEvent) => {
+      void this.handleNativeAuthCallback(event.url).catch((error) => {
+        console.error('Native authentication callback failed', error);
+      });
+    });
+    const launch = await CapacitorApp.getLaunchUrl();
+    if (launch?.url) await this.handleNativeAuthCallback(launch.url);
+  }
+
+  private async handleNativeAuthCallback(url: string): Promise<void> {
+    if (!this.client || !url.startsWith(NATIVE_AUTH_CALLBACK)) return;
+    const parsed = new URL(url);
+    const fragment = new URLSearchParams(parsed.hash.replace(/^#/, ''));
+    const errorDescription =
+      parsed.searchParams.get('error_description') ?? fragment.get('error_description');
+    if (errorDescription) throw new Error(errorDescription);
+
+    let sessionEstablished = false;
+    const code = parsed.searchParams.get('code');
+    if (code) {
+      const { data, error } = await this.client.auth.exchangeCodeForSession(code);
+      if (error) throw error;
+      this.setSession(data.session);
+      sessionEstablished = !!data.session;
+    } else {
+      const accessToken = fragment.get('access_token');
+      const refreshToken = fragment.get('refresh_token');
+      if (accessToken && refreshToken) {
+        const { data, error } = await this.client.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (error) throw error;
+        this.setSession(data.session);
+        sessionEstablished = !!data.session;
+      }
+    }
+    if (!sessionEstablished) return;
+
+    await Browser.close().catch(() => undefined);
+    const destination = localStorage.getItem(NATIVE_AUTH_DESTINATION_KEY) || '/m/today';
+    localStorage.removeItem(NATIVE_AUTH_DESTINATION_KEY);
+    await this.router.navigateByUrl(destination);
   }
 }

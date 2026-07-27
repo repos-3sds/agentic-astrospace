@@ -88,12 +88,14 @@ Android likewise needs the Android SDK; `npx cap add android` warns
 
 ## Not yet done
 
-- Deep links and native OAuth return (M11-US02).
-- Android back-button and lifecycle handling (M11-US03).
+- Add `app.astrospace.mobile://auth/callback` to the Supabase Redirect URLs
+  allowlist before testing a real magic link, password recovery, or Google
+  return (M11-US02).
+- Complete the Android lifecycle matrix beyond launch, keyboard, route Back,
+  and callback-intent delivery (M11-US03).
 - Push notification registration (M11-US04).
 - Splash screen and icon assets are Capacitor defaults so far.
 - The native projects are not in CI.
-- Android has not been run on a simulator or device yet.
 
 ## Verified on iOS
 
@@ -103,8 +105,23 @@ status/home safe areas, unauthenticated landing bootstrap, and restored-session
 handoff into `/m` are verified.
 
 Local real-auth configuration is enabled and its API accepts the native
-`https://localhost` origin. The currently deployed Cloud Run API does not:
-its preflight for that origin returns HTTP 400. A production native login test
-therefore requires redeploying the current backend CORS configuration first.
-Email confirmation and password-reset testing also require a controlled test
-inbox; do not create disposable Supabase users without one.
+`https://localhost` origin. Cloud Run revision
+`agentic-astrospace-00024-5rf` was deployed with that configuration and serves
+100% of traffic; the production native preflight now returns HTTP 200.
+
+The iOS and Android projects register
+`app.astrospace.mobile://auth/callback`. OAuth launches in the system browser,
+PKCE callbacks are exchanged for a Supabase session, magic-link token
+callbacks are accepted, and password recovery lands on `/m/reset-password`.
+Supabase must allowlist the callback URL before those hosted flows can return
+to the app.
+
+The production Android bundle has also been built, installed, and launched on
+the API 36.1 `Medium_Phone` emulator. Landing rendering, keyboard resize, route
+Back, and callback-intent delivery are verified. Build Android with Android
+Studio's bundled JDK 21; the host's Java 25 is newer than this Gradle/Groovy
+toolchain supports.
+
+No controlled test inbox or test credentials are configured in the workspace,
+so email confirmation and password-reset delivery have not been exercised
+against a real account. Do not create disposable Supabase users without one.

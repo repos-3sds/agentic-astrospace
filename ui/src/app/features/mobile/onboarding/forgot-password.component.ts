@@ -32,7 +32,7 @@ export class ForgotPasswordComponent {
     this.loading.set(true);
     this.error.set(null);
     try {
-      await this.auth.resetPassword(email, '/m/auth');
+      await this.auth.resetPassword(email, '/m/reset-password');
       // The same state is shown whether or not an account exists. Supabase also
       // follows this rule, preventing this form from exposing registered users.
       this.sent.set(true);

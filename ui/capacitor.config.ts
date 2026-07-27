@@ -17,7 +17,8 @@ const config: CapacitorConfig = {
     iosScheme: 'https',
   },
 
-  ios: { contentInset: 'always' },
+  // Angular consumes env(safe-area-inset-*); UIKit must not add a second inset.
+  ios: { contentInset: 'never' },
 };
 
 export default config;
