@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from astrospace.knowledge.ingestion.analyzer import (
     AutomatedChunkAnalyzer,
     HeuristicChunkAnalyzer,
@@ -22,6 +24,23 @@ PDF = Path(
 MISTRAL_EXPORT = Path(
     "Astro Space Knowledge Base/ocr-playground-download-20260726T003631Z/"
     "Uttara kalamritam..pdf"
+)
+
+# These fixture files are the real ~318MB corpus (.gitignore'd: "ingestion
+# inputs, not code — they live in Supabase storage"), not something CI
+# checks out. Skip rather than fail red where they're absent; every test
+# below still runs locally against the real corpus, which is the only place
+# they can meaningfully exercise real EPUB/PDF/OCR extraction anyway — a
+# synthetic fixture would just be testing the parser against itself.
+_requires_epub = pytest.mark.skipif(
+    not EPUB.exists(), reason="requires the local knowledge-base corpus (not present in CI)"
+)
+_requires_pdf = pytest.mark.skipif(
+    not PDF.exists(), reason="requires the local knowledge-base corpus (not present in CI)"
+)
+_requires_mistral_export = pytest.mark.skipif(
+    not MISTRAL_EXPORT.exists(),
+    reason="requires the local knowledge-base corpus (not present in CI)",
 )
 
 
@@ -96,6 +115,7 @@ def _build_chunks(text: str):
 
 
 
+@_requires_epub
 def test_epub_extractor_preserves_spine_and_hashes():
     book = EpubExtractor().extract(EPUB, max_sections=6)
     assert book.title
@@ -108,12 +128,14 @@ def test_epub_extractor_preserves_spine_and_hashes():
     assert all(len(section.raw_xhtml_sha256) == 64 for section in book.sections)
 
 
+@_requires_epub
 def test_epub_extractor_can_skip_front_matter_without_changing_ordinals():
     book = EpubExtractor().extract(EPUB, start_section=15, max_sections=2)
     assert [section.ordinal for section in book.sections] == [15, 16]
     assert [section.page_label for section in book.sections] == ["14", "15"]
 
 
+@_requires_epub
 def test_pipeline_content_is_assembled_only_from_source_blocks():
     repository = MemoryRepository()
     pipeline = IngestionPipeline(
@@ -136,6 +158,7 @@ def test_pipeline_content_is_assembled_only_from_source_blocks():
         assert chunk.quality_status == "needs_review"
 
 
+@_requires_epub
 def test_analyzer_quality_warning_blocks_publication():
     repository = MemoryRepository()
     result = IngestionPipeline(repository, analyzer=WarningAnalyzer()).ingest(
@@ -148,6 +171,7 @@ def test_analyzer_quality_warning_blocks_publication():
     assert result["needs_review"] == 1
 
 
+@_requires_pdf
 def test_pdf_extractor_keeps_page_image_text_and_number_together():
     book = PdfExtractor().extract(
         PDF,
@@ -165,6 +189,7 @@ def test_pdf_extractor_keeps_page_image_text_and_number_together():
     assert section.extraction_method == "pdf_text_layer"
 
 
+@_requires_pdf
 def test_pdf_pipeline_discovers_domains_without_forcing_ce_mapping():
     repository = MemoryRepository()
     result = IngestionPipeline(
@@ -190,6 +215,7 @@ def test_pdf_pipeline_discovers_domains_without_forcing_ce_mapping():
     )
 
 
+@_requires_mistral_export
 def test_mistral_export_preserves_sanskrit_blocks_and_provenance():
     book = MistralOcrExtractor(
         source_path=PDF,
@@ -214,6 +240,7 @@ def test_mistral_export_preserves_sanskrit_blocks_and_provenance():
     assert section.metadata["blocks"]
 
 
+@_requires_mistral_export
 def test_mistral_high_confidence_chunks_are_auto_published():
     repository = MemoryRepository()
     extractor = MistralOcrExtractor(
