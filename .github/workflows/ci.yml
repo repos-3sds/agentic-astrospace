@@ -1,0 +1,57 @@
+name: CI
+
+# There was no CI on this repo before this workflow: 674+ backend tests and a
+# growing frontend suite ran only when someone remembered to run them
+# locally. Kept deliberately minimal for now — just the two suites that
+# already exist, gating every push and PR. Anything more (coverage
+# thresholds, lint, the data-contract budget tests) is a follow-up, once this
+# lands green.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend tests (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        # No DATABASE_URL / SUPABASE_* set on purpose: this is the same
+        # unconfigured-auth path astrospace/api/auth.py treats as local dev
+        # (falls back to SQLite, current_user resolves without a token).
+        # See tests/test_admin_auth_boundary.py for why that must never
+        # promote to admin outside that path.
+        run: python -m pytest tests/ -q
+
+  frontend:
+    name: Frontend tests (ng test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npx ng test --watch=false --browsers=ChromeHeadless
