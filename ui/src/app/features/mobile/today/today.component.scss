@@ -41,7 +41,16 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  img { width: 20px; height: 20px; display: block; }
+  color: var(--m-text);
+  svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
 }
 
 /* Content column — node 13:14 */
