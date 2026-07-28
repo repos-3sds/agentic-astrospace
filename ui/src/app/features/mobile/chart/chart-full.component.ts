@@ -1,15 +1,15 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ChartCell, EastChartComponent } from './east-chart.component';
+import { ChartCell, EastChartComponent, PlanetSelection } from './east-chart.component';
 import { PlanetDetail, PlanetSheetComponent } from './planet-sheet.component';
 import { RegionalChartComponent } from './regional-chart.component';
 
 /** The three drawing conventions the app can render a chart in. */
 export type ChartStyle = 'Eastern' | 'South' | 'North';
 
-/** Readings for the tappable placements, keyed by the glyph on the chart. */
+/** Readings for the tappable placements, keyed by each individual glyph. */
 const PLACEMENTS: Record<string, PlanetDetail> = {
-  'Su · Me': {
+  Su: {
     abbr: 'Su',
     title: 'Sun in Gemini',
     position: '23° 14’ · 3rd house',
@@ -17,13 +17,29 @@ const PLACEMENTS: Record<string, PlanetDetail> = {
     reading:
       'Your Sun sits in Gemini in the 3rd house — a curious, communicative core self that thinks by talking things through. This placement leans toward courage in small, steady steps rather than one big leap.',
   },
-  'As · Ve': {
+  Me: {
+    abbr: 'Me',
+    title: 'Mercury in Gemini',
+    position: '18° 42’ · 3rd house',
+    house: '3rd house',
+    reading:
+      'Mercury is in its own sign in Gemini in the 3rd house. This supports quick pattern recognition, flexible language and a mind that learns by comparing several viewpoints.',
+  },
+  Ve: {
     abbr: 'Ve',
     title: 'Venus with the Ascendant',
     position: '11° 02’ · 1st house',
     house: '1st house',
     reading:
       'Venus sits with your rising sign, which tends to soften first impressions — people usually read you as approachable before they read you as anything else.',
+  },
+  As: {
+    abbr: 'As',
+    title: 'Ascendant in Taurus',
+    position: '08° 36’ · 1st house',
+    house: '1st house',
+    reading:
+      'Taurus rising gives the chart a steady, embodied approach. You tend to trust what proves durable in practice and prefer changes that can be integrated at a measured pace.',
   },
   Mo: {
     abbr: 'Mo',
@@ -135,8 +151,8 @@ export class ChartFullComponent {
 
   readonly selected = signal<PlanetDetail | null>(null);
 
-  protected openCell(cell: ChartCell): void {
-    const detail = cell.planets ? PLACEMENTS[cell.planets] : undefined;
+  protected openPlanet(selection: PlanetSelection): void {
+    const detail = PLACEMENTS[selection.planet];
     if (detail) {
       this.selected.set(detail);
     }

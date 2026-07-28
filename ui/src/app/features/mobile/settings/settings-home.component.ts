@@ -143,13 +143,6 @@ export class SettingsHomeComponent {
           route: ['/m', 'notifications'],
         },
         {
-          id: 'search',
-          icon: 'set-conv',
-          label: 'Search AstroSpace',
-          value: 'Charts, readings, tools',
-          route: ['/m', 'search'],
-        },
-        {
           id: 'subscription',
           icon: 'set-account',
           label: 'AstroSpace Plus',

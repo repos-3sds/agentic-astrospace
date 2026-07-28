@@ -1,17 +1,20 @@
 @use '../mobile-tokens' as *;
 :host { display:block; width:100%; aspect-ratio:1; }
-button { border:0; background:transparent; color:var(--m-muted); }
+button { border:0; background:transparent; color:var(--m-accent-strong); cursor:pointer; }
 .south { position:relative; display:grid; grid-template-columns:repeat(4,1fr); width:100%; aspect-ratio:1; border:1.6px solid var(--m-border-strong); }
-.south button { position:relative; border:.8px solid var(--m-border-strong); padding:6px; text-align:left; @include m-caption;
-  strong { display:block;color:var(--m-accent-strong);text-align:center;margin-top:28px; }
+.south .regional-cell { position:relative; border:.8px solid var(--m-border-strong); padding:6px; text-align:left; @include m-caption;
+  strong { display:flex;justify-content:center;text-align:center;margin-top:20px; }
+  button { min-width:32px;min-height:34px;padding:7px 6px;@include m-caption;font-weight:600; }
+  button + button::before { content:'·';position:absolute;margin-left:-7px; }
 }
 .south-centre { position:absolute; inset:25%; display:grid;place-content:center;text-align:center;border:1.6px solid var(--m-border-strong);background:var(--m-surface);
   strong{@include m-h2}.south-centre{} span{@include m-caption;color:var(--m-muted)}
 }
 .north { position:relative;width:100%;aspect-ratio:1;
   > img{position:absolute;inset:0;width:100%;height:100%}
-  button{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;@include m-caption;white-space:nowrap;
-    strong{font-size:11px;color:var(--m-accent-strong)}
+  .regional-cell{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;@include m-caption;white-space:nowrap;
+    strong{display:flex}
+    button{min-width:32px;min-height:34px;padding:7px 6px;font-size:11px;font-weight:600}
+    button + button::before { content:'·';position:absolute;margin-left:-7px; }
   }
 }
-button.occupied { cursor:pointer; }

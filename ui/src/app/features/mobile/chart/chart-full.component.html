@@ -28,12 +28,12 @@
         size="full"
         [cells]="cells()"
         [interactive]="true"
-        (cellSelected)="openCell($event)"
+        (planetSelected)="openPlanet($event)"
       />
     } @else if (style() === 'South') {
-      <as-regional-chart chartStyle="South" [cells]="cells()" (cellSelected)="openCell($event)" />
+      <as-regional-chart chartStyle="South" [cells]="cells()" (planetSelected)="openPlanet($event)" />
     } @else {
-      <as-regional-chart chartStyle="North" [cells]="cells()" (cellSelected)="openCell($event)" />
+      <as-regional-chart chartStyle="North" [cells]="cells()" (planetSelected)="openPlanet($event)" />
     }
   </div>
 

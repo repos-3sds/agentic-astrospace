@@ -18,6 +18,11 @@ export interface ChartCell {
   y: number;
 }
 
+export interface PlanetSelection {
+  cell: ChartCell;
+  planet: string;
+}
+
 /**
  * East Indian rashi chart (Figma nodes 46:154 preview, 44:96 full).
  *
@@ -51,17 +56,23 @@ export interface ChartCell {
     />
     @for (cell of cells(); track cell.x + '/' + cell.y) {
       @if (interactive() && cell.planets) {
-        <button
-          class="cell"
-          type="button"
+        <span
+          class="cell interactive"
           [style.left.%]="cell.x"
           [style.top.%]="cell.y"
-          [attr.aria-label]="cell.planets + (cell.sign ? ' in ' + cell.sign : '')"
-          (click)="cellSelected.emit(cell)"
         >
           @if (cell.sign) { <span class="sign">{{ cell.sign }}</span> }
-          <span class="planets">{{ cell.planets }}</span>
-        </button>
+          <span class="planet-list">
+            @for (planet of planetGlyphs(cell.planets); track planet) {
+              <button
+                class="planet"
+                type="button"
+                [attr.aria-label]="planet + (cell.sign ? ' in ' + cell.sign : '')"
+                (click)="planetSelected.emit({ cell, planet })"
+              >{{ planet }}</button>
+            }
+          </span>
+        </span>
       } @else {
         <span class="cell" [style.left.%]="cell.x" [style.top.%]="cell.y">
           @if (cell.sign) { <span class="sign">{{ cell.sign }}</span> }
@@ -85,4 +96,9 @@ export class EastChartComponent {
   readonly label = input('Rashi chart, East Indian style');
 
   readonly cellSelected = output<ChartCell>();
+  readonly planetSelected = output<PlanetSelection>();
+
+  protected planetGlyphs(planets: string): string[] {
+    return planets.split('·').map((planet) => planet.trim()).filter(Boolean);
+  }
 }

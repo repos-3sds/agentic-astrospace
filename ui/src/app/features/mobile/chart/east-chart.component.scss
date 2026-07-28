@@ -30,12 +30,32 @@
   line-height: 1.4;
 }
 
-button.cell {
+.planet-list {
+  display: flex;
+  align-items: center;
+}
+
+.planet {
+  position: relative;
+  min-width: 32px;
+  min-height: 34px;
+  margin: -11px 0;
+  padding: 10px 6px;
+  border: 0;
+  background: none;
+  color: var(--m-accent-strong);
+  font: inherit;
+  font-weight: inherit;
+  line-height: 1;
   cursor: pointer;
-  // The glyphs are small; the tap target should not be. Padding would move the
-  // text, so the target is grown outward instead.
-  margin: -8px;
-  padding: 8px;
+
+  &:not(:last-child)::after {
+    content: '·';
+    position: absolute;
+    right: -2px;
+    color: var(--m-accent-strong);
+    pointer-events: none;
+  }
 }
 
 .sign {
@@ -54,4 +74,5 @@ button.cell {
 :host(.is-full) {
   .sign { font-size: 10px; }
   .planets { font-weight: 600; font-size: 11px; }
+  .planet { font-weight: 600; font-size: 11px; }
 }
