@@ -88,15 +88,23 @@ is intended for controlled initial setup. Once normal access records exist,
 manage authorization through `admin_users`.
 
 In local development, when application authentication is disabled, the current
-development user is promoted to the admin role. This behavior must not be used
-in a shared deployment.
+development user is promoted to the admin role. On Cloud Run this promotion is
+refused instead — `current_admin` checks for the `K_SERVICE` env var Cloud Run
+sets automatically, and returns 503 rather than granting admin, so a missing
+key there fails closed instead of opening the console to anyone.
 
 ## Required Configuration
 
-The backend requires:
+**All three of these are required together.** `SUPABASE_ANON_KEY` is easy to
+drop from a copy-paste of this block because the admin console itself doesn't
+call it directly — but it's what `SUPABASE_ANON_KEY`-gated app auth (and
+therefore the Cloud Run admin refusal above) is keyed on. Deploying with the
+service-role key but without the anon key does not narrow the console's
+access; it fails auth open instead.
 
 ```bash
 SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=...
 
 # SUPABASE_SECRET_KEY may be used instead of SUPABASE_SERVICE_ROLE_KEY.
@@ -115,7 +123,8 @@ Security requirements:
 - Never expose them in Angular environment files, browser code, or mobile apps.
 - Never commit real credentials.
 - Do not enable `ASTROSPACE_DEV_AUTH_BYPASS` in Cloud Run or another shared
-  environment.
+  environment. As of the K_SERVICE check above, setting it there no longer has
+  any effect — but treat that as a backstop, not a reason to set it.
 - Browser clients continue to use the public Supabase key.
 
 ## Console Areas

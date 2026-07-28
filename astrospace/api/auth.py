@@ -17,8 +17,21 @@ class AuthUser:
     auth_enabled: bool = False
 
 
+def running_on_cloud_run() -> bool:
+    """True when this process is a deployed Cloud Run service.
+
+    Cloud Run injects K_SERVICE automatically; nothing in this codebase or its
+    deploy docs sets it locally, so it reliably distinguishes production from
+    a developer's machine without a manual "prod" flag anyone could forget to
+    set. Used to refuse dev-only auth shortcuts outside local development,
+    regardless of how they were triggered — an explicit flag or a missing key.
+    """
+    return bool(os.getenv("K_SERVICE"))
+
+
 def supabase_configured() -> bool:
-    if os.getenv("ASTROSPACE_DEV_AUTH_BYPASS", "").lower() in {"1", "true", "yes"}:
+    bypass = os.getenv("ASTROSPACE_DEV_AUTH_BYPASS", "").lower() in {"1", "true", "yes"}
+    if bypass and not running_on_cloud_run():
         return False
     return bool(os.getenv("SUPABASE_URL") and os.getenv("SUPABASE_ANON_KEY"))
 
