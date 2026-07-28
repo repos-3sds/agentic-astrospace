@@ -385,6 +385,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'settings/appearance',
+        loadComponent: () =>
+          import('./features/mobile/settings/appearance.component').then(
+            (m) => m.AppearanceComponent,
+          ),
+      },
+      {
         path: 'settings/language',
         loadComponent: () =>
           import('./features/mobile/settings/language-audio.component').then(

@@ -1,0 +1,37 @@
+<a class="appbar" [routerLink]="['/m', 'settings']">
+  <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  <span class="crumb">Settings</span>
+</a>
+
+<main class="body">
+  <div class="intro">
+    <h1 class="title">Appearance</h1>
+    <p class="lede">Choose how AstroSpace looks on this device.</p>
+  </div>
+
+  <p class="eyebrow">THEME</p>
+  <div class="choices" role="radiogroup" aria-label="Theme">
+    @for (option of options; track option.id) {
+      <button
+        class="choice"
+        type="button"
+        role="radio"
+        [class.is-on]="theme.preference() === option.id"
+        [attr.aria-checked]="theme.preference() === option.id"
+        (click)="select(option.id)"
+      >
+        <span class="preview" [class]="'preview ' + option.id" aria-hidden="true">
+          <span class="preview-card"></span>
+          <span class="preview-line"></span>
+        </span>
+        <span class="choice-copy">
+          <span class="choice-label">{{ option.label }}</span>
+          <span class="choice-detail">{{ option.detail }}</span>
+        </span>
+        <span class="radio" aria-hidden="true"></span>
+      </button>
+    }
+  </div>
+
+  <p class="note">System follows your phone automatically when its appearance changes.</p>
+</main>

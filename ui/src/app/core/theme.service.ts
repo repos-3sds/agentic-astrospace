@@ -1,6 +1,7 @@
 import { Injectable, effect, signal } from '@angular/core';
 
 const STORAGE_KEY = 'astrospace-theme';
+export type ThemePreference = 'system' | 'light' | 'dark';
 
 function prefersDark(): boolean {
   return typeof matchMedia === 'function'
@@ -18,19 +19,19 @@ function prefersDark(): boolean {
  * Deferring to the device is the honest default: the reader has already told
  * their phone which they want.
  */
-function preferredTheme(): boolean {
+function storedPreference(): ThemePreference {
   const stored = localStorage.getItem(STORAGE_KEY);
-  return stored === 'dark' || stored === 'light' ? stored === 'dark' : prefersDark();
+  return stored === 'dark' || stored === 'light' ? stored : 'system';
 }
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
-  readonly dark = signal(preferredTheme());
+  readonly preference = signal<ThemePreference>(storedPreference());
+  readonly dark = signal(
+    this.preference() === 'system' ? prefersDark() : this.preference() === 'dark',
+  );
 
   constructor() {
-    // Applies the theme; deliberately does NOT persist. Storage holds explicit
-    // choices only — writing here would stamp the device's preference into
-    // storage on first paint and permanently detach the app from the device.
     effect(() => {
       document.documentElement.classList.toggle('app-dark', this.dark());
     });
@@ -38,7 +39,7 @@ export class ThemeService {
     // Follow the device until the reader overrides it.
     if (typeof matchMedia === 'function') {
       matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
-        if (!localStorage.getItem(STORAGE_KEY)) {
+        if (this.preference() === 'system') {
           this.dark.set(event.matches);
         }
       });
@@ -47,7 +48,16 @@ export class ThemeService {
 
   /** The only thing that writes storage: an explicit choice by the reader. */
   toggle(): void {
-    this.dark.update((v) => !v);
-    localStorage.setItem(STORAGE_KEY, this.dark() ? 'dark' : 'light');
+    this.setPreference(this.dark() ? 'light' : 'dark');
+  }
+
+  setPreference(preference: ThemePreference): void {
+    this.preference.set(preference);
+    this.dark.set(preference === 'system' ? prefersDark() : preference === 'dark');
+    if (preference === 'system') {
+      localStorage.removeItem(STORAGE_KEY);
+    } else {
+      localStorage.setItem(STORAGE_KEY, preference);
+    }
   }
 }

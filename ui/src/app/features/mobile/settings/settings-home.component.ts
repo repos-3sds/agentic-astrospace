@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
+import { ThemeService } from '../../../core/theme.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 
 /** One settings row. `value` is the current state, shown without opening it. */
@@ -40,6 +41,7 @@ export interface SettingGroup {
 export class SettingsHomeComponent {
   private readonly auth = inject(AuthService);
   private readonly kundlis = inject(KundliStore);
+  private readonly theme = inject(ThemeService);
   readonly profileSwitcherOpen = signal(false);
 
   readonly profile = computed(() => {
@@ -57,6 +59,13 @@ export class SettingsHomeComponent {
     {
       eyebrow: 'EXPERIENCE',
       rows: [
+        {
+          id: 'appearance',
+          icon: 'set-mode',
+          label: 'Appearance',
+          value: this.theme.preference()[0].toUpperCase() + this.theme.preference().slice(1),
+          route: ['/m', 'settings', 'appearance'],
+        },
         {
           id: 'mode',
           icon: 'set-mode',
