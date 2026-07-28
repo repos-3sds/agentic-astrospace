@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Debug-configuration only (see INFOPLIST_FILE for the Debug target in
+     App.xcodeproj/project.pbxproj) — identical to App/Info.plist except for
+     the NSAllowsLocalNetworking exception below, which lets a simulator or
+     a device on the LAN reach a development API over cleartext HTTP. Release
+     builds use App/Info.plist directly and never carry that exception. -->
 <plist version="1.0">
 <dict>
     <key>CAPACITOR_DEBUG</key>
@@ -58,5 +63,13 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- Allows cleartext to localhost and *.local only, so a simulator or
+		     device on the LAN can reach a development API. Arbitrary public
+		     HTTP remains blocked; production uses https. -->
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

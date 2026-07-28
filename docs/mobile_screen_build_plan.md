@@ -123,26 +123,29 @@ fail with a misleading "no booted simulator".
 ## Before a device build
 
 `nativeApiOrigin` is now set in both environments, so nothing is outstanding
-for a *simulator* build. One thing is still outstanding for a **production**
-one:
-
-**The deployed service rejects the Capacitor origin** — it is running an image
-built before `https://localhost` was allowed. Confirmed:
+for a *simulator* build, and nothing is outstanding for production either —
+**this was re-checked live on 2026-07-28 and is resolved.** The image running
+at the deployed URL now accepts the Capacitor origin:
 
 ```
 OPTIONS https://agentic-astrospace-cwuqybpnzq-el.a.run.app/api/v1/auth/config
-Origin: https://localhost   ->   HTTP 400
+Origin: https://localhost   ->   HTTP 200, access-control-allow-origin: https://localhost
 ```
 
-**The fix is a redeploy, and nothing else.** The native origins are no longer
-part of the configurable set: `main.py` always appends them, whatever
-`ALLOWED_ORIGINS` says. So any routine deploy resolves this permanently, and no
-future change to `ALLOWED_ORIGINS` can break native again.
+A prior note here said the deployed service was still running an image built
+before `https://localhost` was allowed and needed a redeploy — that image has
+since rolled forward. No redeploy is needed for this specifically. If a device
+build ever sees the CORS failure again, it means a *new* deploy regressed —
+check the origin list with the same `curl -X OPTIONS` probe before assuming
+the fix wore off.
 
-Do *not* work around it with `--set-env-vars`. That was the original trap:
-`ALLOWED_ORIGINS` replaces the dev defaults, so while the native origins lived
-alongside them, pointing it at a production domain silently dropped native
-support. `tests/test_cors_origins.py` pins this down.
+Do *not* work around a CORS failure with `--set-env-vars ALLOWED_ORIGINS=...`.
+That was the original trap: `ALLOWED_ORIGINS` replaces the dev defaults, so
+while the native origins lived alongside them, pointing it at a production
+domain silently dropped native support. The native origins are no longer part
+of the configurable set — `main.py` always appends them, whatever
+`ALLOWED_ORIGINS` says — so a routine deploy can't reintroduce this specific
+failure mode. `tests/test_cors_origins.py` pins that down.
 
 ## Figma access
 

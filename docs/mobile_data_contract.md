@@ -85,6 +85,19 @@ separate wirings produce four interpretations of the same payload.
 
 Owner A / B = the two agents. One endpoint, one owner, no overlap.
 
+**`/context/{id}/daily` recomputes on every call.** A `daily_guidance_cache`
+table exists (`astrospace/db/models.py:566`) with working read/write helpers
+— `get_cached_daily_guidance` / `put_cached_daily_guidance` in
+`astrospace/db/crud_mobile.py:642,659` — but `context_routes.py`'s `/daily`
+handler never calls either one. Checked 2026-07-28: the only matches for
+either function name anywhere in the codebase are their own definitions;
+zero callers. The table isn't a stale leftover from a removed feature; it's a
+finished cache with nothing plugged into it. Wiring it is a ~6-line change
+(check the cache keyed on kundli/date/conventions/language before computing,
+write through after) and is the highest-value caching fix on this endpoint
+given it's the highest-volume one — but it's a caching-architecture decision,
+not something to do incidentally while fixing something else.
+
 ## Measured budgets
 
 Taken from a live payload on :8010, profile `d6c3ccd9…`, 2026-07-27.
