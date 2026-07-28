@@ -12,7 +12,7 @@ The original audit was directionally right but mixed primary implementation stat
 
 Reconciled status: 112 relevant Figma nodes. 10 are complete under the strict screen definition, 75 are partial, and 27 are missing. These three counts add to 112. The other summary counts intentionally overlap: all 27 missing screens are also unreachable, 31 implemented screens use placeholder/static data, and 18 implemented screens contain broken, inert, or misleading interactions.
 
-The most serious implementation contract is not authentication. Current code supports mobile sign-in, registration, magic link, Google, native callback handling, and check-email messaging. The remaining auth gap is verification/configuration evidence and richer result states. The first remediation slice should instead address Notes and Readings data honesty, because these finished-looking screens make persistence and accuracy claims that are not backed by mobile data wiring.
+The most serious implementation contract is not authentication. Current code supports mobile sign-in, registration, magic link, Google, native callback handling, and check-email messaging. The remaining auth gap is verification/configuration evidence and richer result states. The first remediation slice should address immediate Notes data honesty and Readings API wiring, because these finished-looking screens make persistence and accuracy claims that are not backed by mobile data wiring.
 
 ## Reconciled Counts
 
@@ -87,8 +87,8 @@ There are no P0 findings after reclassification. P1 findings are below; every it
 | P1 | Placeholder/static data | `97:119`, `97:144`, `98:119`, `215:805` | `/m/compat`, `/m/compat/add`, `/m/compat/results` | [add-prospect.component.ts](/Users/vikramaditya/Documents/agentic-astrospace/ui/src/app/features/mobile/compat/add-prospect.component.ts:24) | Add/select person affects computed compatibility and detail. | Submitted values are ignored; result remains fixed; full detail screen missing. | Source + prior browser smoke. | `bypass-m-compat.png`, `bypass-m-compat-results.png` | Existing `/vedic/{id}/compatibility/{partner_id}` in [vedic.service.ts](/Users/vikramaditya/Documents/agentic-astrospace/ui/src/app/core/vedic.service.ts:107). |
 | P1 | Missing route/navigation | `216:415`, `216:483`, `216:543`, `216:615` | Expected `/m/settings/profiles/*` | [settings-home.component.ts](/Users/vikramaditya/Documents/agentic-astrospace/ui/src/app/features/mobile/settings/settings-home.component.ts:120) | Manage profiles opens create/switch/edit/delete lifecycle. | Settings `Manage profiles` routes to active birth-details edit screen. | Source verification. | none; route inspected in source | `/kundlis` exists in [kundli.store.ts](/Users/vikramaditya/Documents/agentic-astrospace/ui/src/app/core/kundli.store.ts:70). |
 | P1 | Placeholder/static data | `35:57`, `36:86`, `36:201`, `36:247`, `39:87`, `40:87`, `41:87`, `41:149` | `/m/chart*` | [chart-full.component.ts](/Users/vikramaditya/Documents/agentic-astrospace/ui/src/app/features/mobile/chart/chart-full.component.ts:10) | Chart modules use active kundli calculations. | Full chart/detail and deeper chart modules render fixed placements/text. | Source + prior browser smoke. | `bypass-m-chart-full.png` | Existing `/vedic/{id}/all`, dashas, yogas, ashtakavarga, jaimini endpoints in [vedic.service.ts](/Users/vikramaditya/Documents/agentic-astrospace/ui/src/app/core/vedic.service.ts:32). |
-| P1 | Placeholder/static data | `30:56`, `31:57` | `/m/muhurta`, `/m/muhurta/results` | [muhurta-results.component.ts](/Users/vikramaditya/Documents/agentic-astrospace/ui/src/app/features/mobile/muhurta/muhurta-results.component.ts:1) | Goal/date range drives computed windows and saved/reminder actions. | Results are fixture windows; add/remind controls do not persist. | Source + prior browser smoke. | `bypass-m-muhurta-results.png` | Backend capability not wired; muhurta endpoints referenced in docs/contracts. |
-| P1 | Placeholder/static data | `29:55`, `29:109` | `/m/remedies`, `/m/remedies/mantra` | [remedies.component.ts](/Users/vikramaditya/Documents/agentic-astrospace/ui/src/app/features/mobile/remedies/remedies.component.ts:1) | Remedies and practice progress reflect recommendations/completions. | Cards and mantra tracker are static/local, but look personalized. | Source + prior browser smoke. | `bypass-m-remedies.png` | Backend capability not wired; remedy/practice endpoints referenced in docs/contracts. |
+| P1 | Placeholder/static data | `30:56`, `31:57` | `/m/muhurta`, `/m/muhurta/results` | [muhurta-results.component.ts](/Users/vikramaditya/Documents/agentic-astrospace/ui/src/app/features/mobile/muhurta/muhurta-results.component.ts:1) | Goal/date range drives computed windows and saved/reminder actions. | Results are fixture windows; add/remind controls do not persist. | Source verification only. | none | Backend capability not wired; muhurta endpoints referenced in docs/contracts. |
+| P1 | Placeholder/static data | `29:55`, `29:109` | `/m/remedies`, `/m/remedies/mantra` | [remedies.component.ts](/Users/vikramaditya/Documents/agentic-astrospace/ui/src/app/features/mobile/remedies/remedies.component.ts:1) | Remedies and practice progress reflect recommendations/completions. | Cards and mantra tracker are static/local, but look personalized. | Source verification only. | none | Backend capability not wired; remedy/practice endpoints referenced in docs/contracts. |
 
 ## Persona Coverage
 
@@ -157,27 +157,37 @@ Exactly 27 canonical Figma nodes are missing from code:
 
 ## Recommended Execution Order
 
-### 1. Notes and Readings persistence/data honesty
+### 1. Immediate data-honesty and Readings
 
-User outcome: users never see false saved, account-stored, or accuracy claims.
+User outcome: users never see false persistence or accuracy claims.
 Routes/screens: `/m/notes`, `/m/readings`, `/m/readings/accuracy`; nodes `115:124`, `113:122`, `114:124`.
-Backend dependency: decide notes persistence contract; use `ReadingService` endpoints for readings and claims.
-Acceptance criteria: reload and sign-out/sign-in prove persistence or UI clearly says local draft; reading totals equal displayed backend claims; empty state when no readings.
-Loading/error/empty states: loading list, empty readings, no claims, save failure, offline draft.
-Browser/native verification: 375 x 812 light/dark, reload, switch profile, throttle/offline.
-Size: M. Dependencies: notes API decision.
+Backend dependency: `ReadingService` endpoints for readings and claims. Notes server persistence is explicitly out of scope for this slice.
+Acceptance criteria: Notes are labelled as a local draft and do not imply account or cross-device persistence; `/m/readings` loads real readings; `/m/readings/accuracy` loads real claims; accuracy totals derive from returned claims; empty/error states are honest.
+Loading/error/empty states: readings loading, readings empty, claims empty, API error, retry, notes local-draft state.
+Browser/native verification: 375 x 812 light/dark, reload, switch profile, logout/sign-in behavior.
+Size: M. Dependencies: none beyond existing `ReadingService`.
 
 ### 2. Profile management lifecycle
 
 User outcome: create, switch, edit, and delete profiles without editing the wrong profile.
 Routes/screens: `/m/settings/profiles`, add/edit/delete confirmation; nodes `216:415`, `216:483`, `216:543`, `216:615`, `79:89`, `215:241`.
 Backend dependency: `/kundlis` list/create/update/delete.
-Acceptance criteria: active profile persists; delete active profile chooses safe next profile; Today and Ask reload for selected profile.
+Acceptance criteria: Manage Profiles, Add Profile, Edit Profile and Delete Profile confirmation exist; active-profile switching persists; deleting the active profile is safe and switches to a valid next state; Today and Ask reload for the selected profile.
 Loading/error/empty states: loading profiles, zero profile after delete, API failure, delete confirmation, missing birth data.
 Browser/native verification: multi-profile flow at 375 x 812, light/dark, protected-route behavior after logout.
 Size: M. Dependencies: none beyond existing store.
 
-### 3. Calendar intelligence
+### 3. Notes persistence follow-up
+
+User outcome: Notes persistence behavior is deliberately owned, scoped, synced and private.
+Routes/screens: `/m/notes`; node `115:124`.
+Backend dependency: decision required between the existing kundli notes field, a dedicated Notes API, or intentionally local device storage.
+Acceptance criteria: ownership, profile scope, sync behavior and privacy behavior are documented; account persistence is implemented only after that decision; reload behavior matches the documented storage contract.
+Loading/error/empty states: save failure, offline draft, merge/conflict state where applicable.
+Browser/native verification: reload, profile switch, offline edit, sign out/in, light/dark.
+Size: S/M after contract decision. Dependencies: product/backend storage decision.
+
+### 4. Calendar intelligence
 
 User outcome: month/day/festival guidance reflects the active profile and selected date.
 Routes/screens: `/m/calendar`, `/m/calendar/day`; nodes `93:89`, `94:118`, `116:124`, `215:620`, `215:690`.
@@ -187,7 +197,7 @@ Loading/error/empty states: month loading, no observances, API error, offline/st
 Browser/native verification: July/August 2026, long festival names, light/dark.
 Size: L. Dependencies: profile lifecycle preferred.
 
-### 4. Compatibility end to end
+### 5. Compatibility end to end
 
 User outcome: add/select person and receive a computed, explainable compatibility result.
 Routes/screens: `/m/compat`, `/m/compat/add`, `/m/compat/results`, full detail; nodes `97:119`, `97:144`, `98:119`, `110:121`, `215:805`.
@@ -197,7 +207,7 @@ Loading/error/empty states: no checks, loading computation, partner missing data
 Browser/native verification: exact and approximate partner, empty hub, light/dark.
 Size: L. Dependencies: profile lifecycle.
 
-### 5. Chart real-data wiring
+### 6. Chart real-data wiring
 
 User outcome: chart, planets, vargas, dashas, yogas, doshas, strengths, and references reflect the active kundli.
 Routes/screens: `/m/chart`, `/m/chart/full`, `/m/chart/vargas`, `/m/chart/periods`, `/m/chart/yogas`, `/m/chart/strength`, reference routes; nodes `35:57`, `36:86`, `36:201`, `36:247`, `39:87`, `40:87`, `41:87`, `41:149`, `56:88`, `57:88`, `59:*`, `60:*`, `61:*`, `117:*`, `118:*`, `216:160`, `216:262`.
@@ -207,17 +217,17 @@ Loading/error/empty states: chart computing, partial calculation, unsupported co
 Browser/native verification: all chart styles, individual markers, long labels, dark mode.
 Size: L. Dependencies: profile lifecycle.
 
-### 6. Remedies and Muhurta
+### 7. Remedies and Muhurta
 
 User outcome: recommended actions and timing windows are computed, saveable, and honest.
 Routes/screens: `/m/remedies`, `/m/remedies/mantra`, `/m/muhurta`, `/m/muhurta/results`; nodes `29:55`, `29:109`, `30:56`, `31:57`, `215:156`.
 Backend dependency: remedy, practice, muhurta, saved/reminder APIs.
 Acceptance criteria: selected goal/range changes results; completions persist; add-to-calendar/remind has success/error feedback.
 Loading/error/empty states: no recommendations, no windows, save failure, notification permission denied.
-Browser/native verification: light/dark, reload, offline, permission denied.
+Browser/native verification: source verification first, then 375 x 812 light/dark once a development preview screenshot is captured.
 Size: L. Dependencies: notifications permission work for reminders.
 
-### 7. Missing platform and resilience states
+### 8. Missing platform and resilience states
 
 User outcome: native and degraded states are explicit instead of silent or blank.
 Routes/screens: widgets, lock screen, live activity, watch, push, share, offline/stale, partial calculation, notification denied; nodes `103:92`, `104:92`, `106:92`, `106:102`, `106:109`, `107:101`, `216:773`, `216:838`, `216:904`, `216:964`.
@@ -227,7 +237,7 @@ Loading/error/empty states: offline, stale, denied, partial, retry.
 Browser/native verification: browser responsive states plus real iOS/Android permission checks.
 Size: M/L. Dependencies: native build access.
 
-### 8. Persona-specific presentation refinement
+### 9. Persona-specific presentation refinement
 
 User outcome: Guided, Balanced, and Practitioner feel intentionally different without duplicating screens unnecessarily.
 Routes/screens: onboarding aha, Today, Ask, Chart, Calendar, What to do; nodes `212:*`, `214:155`, `215:*`.
@@ -236,6 +246,36 @@ Acceptance criteria: mode changes navigation, copy depth, default expansion, tec
 Loading/error/empty states: mode preference loading/sync failure, default fallback.
 Browser/native verification: switch modes, reload, sign out/in, light/dark.
 Size: M. Dependencies: data slices above.
+
+## Next approved implementation candidate
+
+User outcome: Users never see false persistence or accuracy claims.
+
+Routes: `/m/notes`, `/m/readings`, `/m/readings/accuracy`
+
+Figma nodes: `115:124`, `113:122`, `114:124`
+
+Implementation order:
+
+1. Relabel Notes as a local draft.
+2. Remove account-persistence language.
+3. Load real readings with `ReadingService`.
+4. Load real claims for the selected reading.
+5. Derive displayed totals from claims.
+6. Add loading, empty, error and retry states.
+7. Verify reload, profile switching and logout behavior.
+8. Verify at 375 x 812 in Light and Dark modes.
+
+Acceptance criteria:
+
+- Notes never claim server persistence unless server persistence succeeds.
+- No fixed reading dates, versions, counts or claim totals remain.
+- Summary totals exactly equal the displayed claim rows.
+- Empty API responses show honest empty states.
+- API failures show retryable errors.
+- Switching profiles cannot display another profile's readings.
+- Reload behavior matches the documented storage contract.
+- All buttons either work or are visibly disabled with explanation.
 
 ## Appendix: Canonical Figma Inventory
 

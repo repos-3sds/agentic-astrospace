@@ -6,14 +6,14 @@ This file did not exist at the start of the 2026-07-28 mobile UI audit. It was c
 
 Gap type legend: Missing screen; Missing route/navigation; Missing interaction; Missing backend capability; Existing backend not wired; Placeholder/static data; Missing loading/error/empty/offline state; Native-platform surface; Visual/accessibility defect; Verification/configuration gap.
 
-### 1. Notes and Readings persistence/data honesty
+### 1. Immediate data-honesty and Readings
 
-- [ ] P1: Placeholder/static data - make `/m/notes` persist private notes or label them as local drafts until saved.
-- [ ] P1: Missing backend capability - decide and document the mobile notes persistence contract if `/kundlis` notes are not the intended storage surface.
+- [ ] P1: Placeholder/static data - relabel `/m/notes` as a local draft while Notes remain local.
+- [ ] P1: Placeholder/static data - remove `Saved`, account-persistence and cross-device persistence language from Notes unless server persistence succeeds.
 - [ ] P1: Existing backend not wired - wire `/m/readings` to `ReadingService.list()` and remove fixed reading history.
 - [ ] P1: Existing backend not wired - wire `/m/readings/accuracy` to reading claims APIs and derive totals from returned claims.
-- [ ] P1: Missing loading/error/empty/offline state - add no-readings, no-claims, save-failed, retry and offline draft states.
-- [ ] P1: Missing interaction - make saved versions, generate new, and claim review actions produce persisted or explicitly local results.
+- [ ] P1: Missing loading/error/empty/offline state - add readings loading, no-readings, no-claims, API error and retry states.
+- [ ] P1: Missing interaction - make saved versions, generate new, and claim review actions real or visibly disabled/local with explanation.
 
 ### 2. Profile management lifecycle
 
@@ -22,9 +22,17 @@ Gap type legend: Missing screen; Missing route/navigation; Missing interaction; 
 - [ ] P1: Missing screen - build `screen-3-edit-profile` (`216:543`) for editing a selected profile.
 - [ ] P1: Missing screen - build `screen-4-delete-confirmation` (`216:615`) with destructive confirmation.
 - [ ] P1: Missing route/navigation - route Settings > Manage profiles to the profile-management flow, not `/m/settings/birth-details`.
+- [ ] P1: Missing interaction - persist active-profile switching and safely handle deletion of the active profile.
 - [ ] P1: Missing loading/error/empty/offline state - cover profile loading, zero profiles, API error, missing birth data, auth expired and delete failure.
 
-### 3. Calendar intelligence
+### 3. Notes persistence follow-up
+
+- [ ] P2: Missing backend capability - decide whether Notes use the existing kundli notes field, a dedicated Notes API, or intentionally local device storage.
+- [ ] P2: Missing backend capability - document Notes ownership, profile scope, sync behavior and privacy behavior.
+- [ ] P2: Existing backend not wired - implement account persistence only after the storage contract is decided.
+- [ ] P2: Missing loading/error/empty/offline state - add save failure, offline draft and conflict behavior where applicable.
+
+### 4. Calendar intelligence
 
 - [ ] P1: Existing backend not wired - wire `/m/calendar`, `/m/calendar/day` and festival detail to `/vedic/{id}/calendar-intelligence`.
 - [ ] P1: Placeholder/static data - remove hard-coded July 2026 observances and day content.
@@ -32,7 +40,7 @@ Gap type legend: Missing screen; Missing route/navigation; Missing interaction; 
 - [ ] P2: Missing loading/error/empty/offline state - add month loading, no observances, API error, offline/stale and unsupported convention states.
 - [ ] P2: Missing screen - implement Guided and Practitioner calendar-day presentation from `215:620` and `215:690` as mode-aware states.
 
-### 4. Compatibility end to end
+### 5. Compatibility end to end
 
 - [ ] P1: Existing backend not wired - wire add/select/results to real partner data and `/vedic/{id}/compatibility/{partner_id}`.
 - [ ] P1: Placeholder/static data - remove fixed Lakshmi x Ravi result and fixed Gun Milan totals.
@@ -40,7 +48,7 @@ Gap type legend: Missing screen; Missing route/navigation; Missing interaction; 
 - [ ] P1: Missing interaction - make approximate-time, form validation, result detail and share feedback real.
 - [ ] P2: Missing loading/error/empty/offline state - add no checks yet, loading computation, partner missing data, API error and offline states.
 
-### 5. Chart real-data wiring
+### 6. Chart real-data wiring
 
 - [ ] P1: Existing backend not wired - bind chart hub, full chart, planet detail and provenance to active kundli data from VedicService.
 - [ ] P2: Existing backend not wired - wire Varga charts to real divisional chart payloads.
@@ -51,7 +59,7 @@ Gap type legend: Missing screen; Missing route/navigation; Missing interaction; 
 - [ ] P2: Missing loading/error/empty/offline state - add chart computing, partial-calculation, unsupported convention, API error and offline/stale states.
 - [ ] P2: Missing screen - implement or explicitly defer practitioner Yantra, practitioner Charts and guided Your Story presentation.
 
-### 6. Remedies and Muhurta
+### 7. Remedies and Muhurta
 
 - [ ] P1: Existing backend not wired - wire Remedies and Mantra tracker to recommendation/practice APIs.
 - [ ] P1: Placeholder/static data - remove fixed remedy cards, local-only mantra progress and personalized-looking static trackers.
@@ -60,7 +68,7 @@ Gap type legend: Missing screen; Missing route/navigation; Missing interaction; 
 - [ ] P2: Missing loading/error/empty/offline state - add no recommendations, no windows, save failure, notification denied and offline states.
 - [ ] P2: Missing screen - implement Guided What to do (`215:156`) as the guided-mode remedies presentation.
 
-### 7. Missing platform and resilience states
+### 8. Missing platform and resilience states
 
 - [ ] P2: Native-platform surface - implement or product-defer Home Screen Widget (`103:92`).
 - [ ] P2: Native-platform surface - implement or product-defer Lock Screen context (`104:92`).
@@ -73,7 +81,7 @@ Gap type legend: Missing screen; Missing route/navigation; Missing interaction; 
 - [ ] P2: Missing loading/error/empty/offline state - identify and implement/defer `screen-3-unknown` (`216:904`).
 - [ ] P2: Missing loading/error/empty/offline state - build notification denied recovery (`216:964`).
 
-### 8. Persona-specific presentation refinement
+### 9. Persona-specific presentation refinement
 
 - [ ] P2: Missing screen - implement Guided, Balanced and Practitioner Aha states (`212:416`, `212:458`, `212:512`) without duplicating unnecessary components.
 - [ ] P2: Missing interaction - make persona mode affect navigation, copy/detail depth, default expanded/collapsed state and technical data visibility.
