@@ -156,8 +156,10 @@ class TestEndToEndOverHttp:
 
         app.dependency_overrides[get_db] = override_get_db
         try:
-            with TestClient(app) as test_client:
-                yield test_client
+            # Not `with TestClient(app) as client:` — that fires the real
+            # startup event (init_db() against the live DATABASE_URL from
+            # .env), same as every other test file in this suite avoids.
+            yield TestClient(app)
         finally:
             app.dependency_overrides.pop(get_db, None)
 
