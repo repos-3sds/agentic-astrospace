@@ -40,14 +40,16 @@
   gap: 2px;
   padding: 7px;
   background: var(--m-raised);
-  background: color-mix(in srgb, var(--m-raised) 74%, transparent);
+  // Low enough that cards and dividers remain visible underneath in the light
+  // theme; blur keeps that real transparency from becoming visual noise.
+  background: color-mix(in srgb, var(--m-raised) 40%, transparent);
   border: 1px solid color-mix(in srgb, var(--m-border) 86%, white 14%);
   border-radius: 24px;
   box-shadow:
     0 10px 28px rgba(32, 21, 14, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(18px) saturate(135%);
-  -webkit-backdrop-filter: blur(18px) saturate(135%);
+  backdrop-filter: blur(20px) saturate(125%);
+  -webkit-backdrop-filter: blur(20px) saturate(125%);
 }
 
 .tab {
