@@ -147,6 +147,59 @@ of the configurable set — `main.py` always appends them, whatever
 `ALLOWED_ORIGINS` says — so a routine deploy can't reintroduce this specific
 failure mode. `tests/test_cors_origins.py` pins that down.
 
+## Verify when credentials are available
+
+Work that was **mitigated, not closed**, because it needed something this
+environment didn't have (Supabase project credentials, a way to trigger a
+real email, or a deployed edge to probe). Each entry names the exact check
+that closes it.
+
+### Native auth callback: does the fragment path ever actually fire?
+
+`ui/src/app/core/auth.service.ts`'s `handleNativeAuthCallback` has two
+branches: a `?code=` exchange (PKCE-protected — safe on its own) and an
+`#access_token=`/`#refresh_token=` fragment fallback (not safe on its own,
+now gated behind a one-time state nonce — see the 2026-07-28 commit
+"gate the native auth callback's fragment-token branch on state").
+
+That gate is a mitigation, not proof the fragment path is dead. It was built
+on two claims, and only one is verified:
+
+- **Verified, from URL syntax alone, not from asking Supabase anything**: a
+  `#fragment` never alters the `?query` string it follows. So whichever shape
+  Supabase actually returns, a `state` param placed in the `redirectTo` query
+  string survives.
+- **Not verified**: whether *this Supabase project*, for the magic-link and
+  password-reset flows specifically, ever returns the fragment shape at all
+  (`flowType: 'pkce'` should make every flow return `?code=`, project-wide
+  settings and email template can still affect this) — or, separately,
+  whether the `?code=` redirect reliably preserves a pre-existing query
+  string the way the implicit fragment shape unambiguously does.
+
+**The check, exactly**: with Supabase credentials in hand —
+
+1. Trigger a real password reset (`AuthService.resetPassword`) or magic link
+   (`signInWithMagicLink`) from a native build (simulator is fine).
+2. Tap the email link, let it redirect into the app, and capture the full
+   URL `handleNativeAuthCallback` receives — log it once, temporarily, right
+   at the top of that method.
+3. Check: does it carry `?code=...`, or `#access_token=...&refresh_token=...`?
+4. Repeat for `signInWithGoogle` (OAuth) as a control — this one is expected
+   to always be `?code=`.
+
+**If every flow always returns `?code=`**: the fragment branch in
+`handleNativeAuthCallback`, `issueNativeAuthState`, `consumeNativeAuthState`,
+`NATIVE_AUTH_STATE_KEY`, and the `state` query param appended in
+`authRedirect` all become dead code for a vulnerability that can't occur —
+delete them, and delete the fragment-path tests in `auth.service.spec.ts`
+alongside them. Don't leave the nonce machinery in "just in case"; unused
+security code is a maintenance liability, and the code-branch tests already
+cover what's live.
+
+**If the fragment shape does occur for any flow**: the gate stays, and this
+section can be deleted — the assumption it now conditionally protects is
+confirmed, not held on faith.
+
 ## Figma access
 
 The working connector is the UUID-named MCP server, not `plugin:figma:figma`.
