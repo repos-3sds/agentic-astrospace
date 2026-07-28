@@ -3,6 +3,7 @@ import os
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 from dotenv import load_dotenv
@@ -74,6 +75,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(AppAuditMiddleware)
+# Outermost of the three (added last — Starlette wraps in reverse add order),
+# so it compresses the fully-formed response after CORS headers and the audit
+# log have already run, and after Starlette has served the static SPA bundle.
+# Nothing was compressed before this: neither the ~150 KB /vedic/{id}/all
+# JSON nor the ~340 KB main JS chunk, both served uncompressed to phones.
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # API routers
 app.include_router(core_router)
