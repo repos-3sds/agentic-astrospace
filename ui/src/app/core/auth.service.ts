@@ -8,6 +8,18 @@ import { apiUrl } from './api-origin';
 
 const NATIVE_AUTH_CALLBACK = 'app.astrospace.mobile://auth/callback';
 const NATIVE_AUTH_DESTINATION_KEY = 'astrospace.nativeAuthDestination';
+const NATIVE_AUTH_STATE_KEY = 'astrospace.nativeAuthState';
+// Long enough to survive a slow inbox check, short enough to bound how long a
+// captured callback URL stays redeemable.
+const NATIVE_AUTH_STATE_TTL_MS = 10 * 60 * 1000;
+
+/** crypto.randomUUID() is unavailable on some older WKWebView builds. */
+function randomNonce(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
 
 interface AuthConfig {
   enabled: boolean;
@@ -166,7 +178,38 @@ export class AuthService {
       return new URL(destination, window.location.origin).toString();
     }
     localStorage.setItem(NATIVE_AUTH_DESTINATION_KEY, destination);
-    return NATIVE_AUTH_CALLBACK;
+    const state = this.issueNativeAuthState();
+    // A query param survives on both the shapes Supabase returns: appended
+    // after with `&` for a PKCE `?code=`, and untouched by a `#fragment` for
+    // an implicit-flow token response, since a fragment never alters the
+    // query string it follows.
+    return `${NATIVE_AUTH_CALLBACK}?state=${encodeURIComponent(state)}`;
+  }
+
+  /**
+   * A random, one-time value bound to the auth flow this app instance just
+   * started. Every legitimate callback carries it back; a URL fired by
+   * another app or a tapped link has no way to know it, so anything without
+   * a match is forged input, not a session — see handleNativeAuthCallback.
+   */
+  private issueNativeAuthState(): string {
+    const nonce = randomNonce();
+    localStorage.setItem(NATIVE_AUTH_STATE_KEY, JSON.stringify({ nonce, issuedAt: Date.now() }));
+    return nonce;
+  }
+
+  /** One-time: consumed (and cleared) whether or not it matches. */
+  private consumeNativeAuthState(received: string | null): boolean {
+    const raw = localStorage.getItem(NATIVE_AUTH_STATE_KEY);
+    localStorage.removeItem(NATIVE_AUTH_STATE_KEY);
+    if (!raw || !received) return false;
+    try {
+      const { nonce, issuedAt } = JSON.parse(raw) as { nonce: string; issuedAt: number };
+      if (Date.now() - issuedAt > NATIVE_AUTH_STATE_TTL_MS) return false;
+      return nonce === received;
+    } catch {
+      return false;
+    }
   }
 
   private async installNativeAuthCallback(): Promise<void> {
@@ -192,6 +235,13 @@ export class AuthService {
     let sessionEstablished = false;
     const code = parsed.searchParams.get('code');
     if (code) {
+      // Already safe without a state check: exchanging a code for a session
+      // requires the verifier this app instance generated, so an
+      // intercepted or injected code is inert on its own. Left ungated
+      // deliberately — unlike the fragment branch below, there's no way to
+      // confirm from here whether Supabase preserves a redirectTo query
+      // string across every code-exchange path, and this branch doesn't
+      // need the extra check to be safe.
       const { data, error } = await this.client.auth.exchangeCodeForSession(code);
       if (error) throw error;
       this.setSession(data.session);
@@ -200,6 +250,15 @@ export class AuthService {
       const accessToken = fragment.get('access_token');
       const refreshToken = fragment.get('refresh_token');
       if (accessToken && refreshToken) {
+        // This branch has no code-verifier equivalent, so the state check is
+        // the only thing standing between it and anyone who can fire this
+        // custom scheme (another installed app, a tapped web link — it's
+        // registered BROWSABLE with autoVerify off) handing this app a
+        // session for an account they control.
+        const receivedState = parsed.searchParams.get('state') ?? fragment.get('state');
+        if (!this.consumeNativeAuthState(receivedState)) {
+          throw new Error('Sign-in link could not be verified. Please try again.');
+        }
         const { data, error } = await this.client.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,
