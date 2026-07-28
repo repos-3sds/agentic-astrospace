@@ -106,6 +106,8 @@ Acceptance criteria:
 - [x] Inner life and emotional balance reading.
 - [x] Every domain contains main theme, rationale, plain reading, strengths, challenges, actions, timing, and leading planets.
 - [x] Every domain reading is generated without an LLM.
+- [x] V3 exposes six evidence-backed domain projections from the same placement and modifier witnesses used by the planet explorer.
+- [x] Web and native Gocharam surfaces render the domain projection rather than reconstructing it locally.
 - [ ] Astrology reviewer approves the authored English clause library.
 
 ### US-GOC-009 - Planet-wise explanations
@@ -150,6 +152,8 @@ Acceptance criteria:
 - [x] Previous and next named-rule transitions are available.
 - [x] Domain readings filter timing to relevant planets.
 - [x] UI retains active/next/earlier validation views.
+- [x] Every requested 30/90/365/1095-day horizon returns its own event count, first/last change, previous count, highlights, and stable-window wording.
+- [x] Domain outlooks filter range events to planets relevant to that domain.
 - [ ] Replace daily stepping with exact ingress/root-finding for production-grade boundaries.
 - [ ] Add timezone-aware display and local-date boundary tests.
 

@@ -809,6 +809,38 @@ export interface GocharamMatchedRule {
   }>;
 }
 
+export interface GocharamRangeOutlook {
+  days: number;
+  event_count: number;
+  previous_event_count: number;
+  supportive_count: number;
+  challenging_count: number;
+  tone: 'neutral' | 'supportive' | 'challenging' | 'mixed';
+  title: string;
+  reading: string;
+  previous_title: string;
+  previous_reading: string;
+  first_change?: TransitTimelineEvent | null;
+  last_change?: TransitTimelineEvent | null;
+  highlights: TransitTimelineEvent[];
+  previous_highlights: TransitTimelineEvent[];
+}
+
+export interface GocharamDomainReading {
+  id: 'career' | 'money' | 'relationships' | 'health_energy' | 'learning_travel' | 'inner_life' | string;
+  title: string;
+  tone: 'neutral' | 'supportive' | 'challenging' | 'mixed';
+  main_theme: string;
+  rationale: string;
+  reading: string;
+  strengths: string[];
+  challenges: string[];
+  actions: string[];
+  leading_planets: string[];
+  evidence_ids: string[];
+  range_outlook: GocharamRangeOutlook;
+}
+
 export interface GocharamInterpretation {
   schema_version: string;
   library_version: string;
@@ -838,6 +870,8 @@ export interface GocharamInterpretation {
     balanced_context: string;
     practitioner_deep_dive: string;
   };
+  range_outlook: GocharamRangeOutlook;
+  domains: GocharamDomainReading[];
   matched_rules: GocharamMatchedRule[];
   evidence: Array<Record<string, unknown>>;
 }

@@ -7,6 +7,57 @@ from pathlib import Path
 
 INTERPRETATION_SCHEMA_VERSION = "gocharam.interpretation.v3"
 
+DOMAIN_DEFINITIONS = (
+    {
+        "id": "career",
+        "title": "Career and visible work",
+        "houses": {2, 6, 10, 11},
+        "planets": {"Sun", "Mars", "Mercury", "Jupiter", "Saturn", "Rahu"},
+        "theme": "responsibility, execution, reputation, gains and professional networks",
+        "action": "Prioritize work that can be completed and verified; document important decisions.",
+    },
+    {
+        "id": "money",
+        "title": "Money and resources",
+        "houses": {2, 5, 8, 11, 12},
+        "planets": {"Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"},
+        "theme": "income, savings, shared resources, speculation and expenditure",
+        "action": "Use written numbers and buffers; avoid treating a transit as financial advice.",
+    },
+    {
+        "id": "relationships",
+        "title": "Relationships and family",
+        "houses": {2, 4, 5, 7, 8, 11, 12},
+        "planets": {"Moon", "Mars", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"},
+        "theme": "partnership, family continuity, emotional availability and agreements",
+        "action": "Clarify expectations directly and allow extra time where the evidence is mixed.",
+    },
+    {
+        "id": "health_energy",
+        "title": "Energy and daily care",
+        "houses": {1, 6, 8, 12},
+        "planets": {"Sun", "Moon", "Mars", "Saturn", "Rahu", "Ketu"},
+        "theme": "energy, workload, recovery and sustainable routines",
+        "action": "Protect sleep and routine; use qualified medical care for symptoms or decisions.",
+    },
+    {
+        "id": "learning_travel",
+        "title": "Learning, travel and growth",
+        "houses": {3, 5, 9, 12},
+        "planets": {"Sun", "Mercury", "Jupiter", "Rahu", "Ketu"},
+        "theme": "study, mentors, communication, journeys and changes of perspective",
+        "action": "Verify logistics and use supportive periods for structured learning or planning.",
+    },
+    {
+        "id": "inner_life",
+        "title": "Inner life and emotional balance",
+        "houses": {1, 4, 8, 12},
+        "planets": {"Moon", "Jupiter", "Saturn", "Rahu", "Ketu"},
+        "theme": "emotional foundations, reflection, uncertainty, release and resilience",
+        "action": "Make room for reflection without converting a symbolic indication into a diagnosis.",
+    },
+)
+
 
 def load_knowledge_base() -> dict:
     path = Path(__file__).with_name("content_kb.json")
@@ -207,6 +258,151 @@ def _synthesis(rules: list[dict]) -> dict:
     }
 
 
+def _tone_for(rules: list[dict]) -> str:
+    verdicts = {rule["effective_verdict"] for rule in rules}
+    if "mixed" in verdicts or ({"supportive", "challenging"} <= verdicts):
+        return "mixed"
+    if "challenging" in verdicts:
+        return "challenging"
+    if "supportive" in verdicts:
+        return "supportive"
+    return "neutral"
+
+
+def _range_outlook(timeline: dict, planets: set[str] | None = None) -> dict:
+    days = int(timeline.get("scan_days", 0))
+    future = [
+        event
+        for event in timeline.get("next_365_days", [])
+        if not planets or event.get("planet") in planets
+    ]
+    previous = [
+        event
+        for event in timeline.get("previous_365_days", [])
+        if not planets or event.get("planet") in planets
+    ]
+    supportive = sum(event.get("tone") == "supportive" for event in future)
+    challenging = sum(event.get("tone") in {"challenging", "hard"} for event in future)
+    if supportive and challenging:
+        tone = "mixed"
+    elif challenging:
+        tone = "challenging"
+    elif supportive:
+        tone = "supportive"
+    else:
+        tone = "neutral"
+    if future:
+        first = future[0]
+        last = future[-1]
+        title = f"{len(future)} named change{'s' if len(future) != 1 else ''} in the next {days} days"
+        reading = (
+            f"This {days}-day horizon begins with {first['title']} on {first['date']} "
+            f"and extends through {last['title']} on {last['date']}. "
+            f"It contains {supportive} supportive and {challenging} caution transition"
+            f"{'s' if challenging != 1 else ''}."
+        )
+    else:
+        title = f"Stable named-rule background for the next {days} days"
+        reading = (
+            f"No supported named Gocharam rule starts or ends inside this specific {days}-day horizon. "
+            "The current placements and active windows still apply; shorter Moon movement, ingress, "
+            "stations and exact aspects are outside this named-rule summary."
+        )
+    if previous:
+        nearest_previous = previous[0]
+        previous_title = f"{len(previous)} named change{'s' if len(previous) != 1 else ''} in the previous {days} days"
+        previous_reading = (
+            f"The nearest earlier transition is {nearest_previous['title']} on {nearest_previous['date']}. "
+            f"The complete {days}-day backward scan contains {len(previous)} named change"
+            f"{'s' if len(previous) != 1 else ''}."
+        )
+    else:
+        previous_title = f"Stable named-rule background for the previous {days} days"
+        previous_reading = (
+            f"No supported named Gocharam rule started or ended in the previous {days} days. "
+            "Use exact aspects, ingress and the dasha timeline to investigate shorter-lived changes."
+        )
+    return {
+        "days": days,
+        "event_count": len(future),
+        "previous_event_count": len(previous),
+        "supportive_count": supportive,
+        "challenging_count": challenging,
+        "tone": tone,
+        "title": title,
+        "reading": reading,
+        "previous_title": previous_title,
+        "previous_reading": previous_reading,
+        "first_change": future[0] if future else None,
+        "last_change": future[-1] if future else None,
+        "highlights": future[:4],
+        "previous_highlights": previous[:3],
+    }
+
+
+def _domain_readings(rules: list[dict], timeline: dict) -> list[dict]:
+    baseline = [rule for rule in rules if rule["kind"] == "baseline_placement"]
+    domains = []
+    for definition in DOMAIN_DEFINITIONS:
+        relevant = [
+            rule
+            for rule in baseline
+            if rule["planet"] in definition["planets"] and rule["house"] in definition["houses"]
+        ]
+        if not relevant:
+            relevant = [rule for rule in baseline if rule["planet"] in definition["planets"]][:3]
+        supportive = [rule for rule in relevant if rule["effective_verdict"] == "supportive"]
+        challenging = [rule for rule in relevant if rule["effective_verdict"] == "challenging"]
+        mixed = [rule for rule in relevant if rule["effective_verdict"] == "mixed"]
+        leading = sorted(
+            relevant,
+            key=lambda rule: (
+                not any(mod["effect"] in {"intensifies", "strengthens", "weakens_support"} for mod in rule["modifiers"]),
+                rule["planet"],
+            ),
+        )[:4]
+        leading_text = ", ".join(
+            f"{rule['planet']} in {rule['house']} ({rule['effective_verdict']})" for rule in leading
+        )
+        tone = _tone_for(relevant)
+        if tone == "supportive":
+            main_theme = f"Current evidence is comparatively supportive for {definition['theme']}."
+        elif tone == "challenging":
+            main_theme = f"Current evidence asks for more care around {definition['theme']}."
+        elif tone == "mixed":
+            main_theme = f"Support and pressure coexist around {definition['theme']}."
+        else:
+            main_theme = f"No strong directional verdict dominates {definition['theme']}."
+        domains.append(
+            {
+                "id": definition["id"],
+                "title": definition["title"],
+                "tone": tone,
+                "main_theme": main_theme,
+                "rationale": (
+                    f"This domain projection uses {len(relevant)} current placement witnesses: {leading_text}. "
+                    "It retains each witness's base verdict and modifiers rather than assigning a new probability."
+                ),
+                "reading": (
+                    f"{main_theme} {definition['action']} "
+                    f"The current mix contains {len(supportive)} supportive, {len(mixed)} modified, "
+                    f"and {len(challenging)} demanding witnesses."
+                ),
+                "strengths": [
+                    rule["content"]["guided_summary"] for rule in supportive[:2]
+                ],
+                "challenges": [
+                    rule["content"]["guided_summary"] for rule in (challenging + mixed)[:2]
+                ],
+                "actions": [definition["action"]],
+                "leading_planets": [rule["planet"] for rule in leading],
+                "evidence_ids": [f"rule.{rule['rule_id']}" for rule in relevant],
+                "range_outlook": _range_outlook(timeline, definition["planets"]),
+            }
+        )
+    return domains
+
+
 def compose_gocharam_interpretation(
     gochara: dict,
     timeline: dict,
@@ -250,6 +446,8 @@ def compose_gocharam_interpretation(
             "interpretation_rule": "Classical verdicts and explicitly labelled editorial synthesis are composed deterministically; AI is not used at runtime.",
         },
         "synthesis": _synthesis(matched),
+        "range_outlook": _range_outlook(timeline),
+        "domains": _domain_readings(matched, timeline),
         "matched_rules": matched,
         "evidence": evidence,
     }

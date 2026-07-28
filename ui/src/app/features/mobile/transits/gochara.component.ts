@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { RouterLink } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
-import { GocharamMatchedRule, GocharamProfilePayload } from '../../../core/models';
+import { GocharamDomainReading, GocharamMatchedRule, GocharamProfilePayload } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { TransitDetail, TransitDetailComponent } from './transit-detail.component';
@@ -29,6 +29,17 @@ import { TransitDetail, TransitDetailComponent } from './transit-detail.componen
           <h2>{{ payload.gochara.interpretation.synthesis.headline }}</h2>
           <p>{{ summary() }}</p>
         </section>
+        <p class="mtr-title">LIFE DOMAINS · {{ payload.gochara.interpretation.range_outlook.days }}-DAY OUTLOOK</p>
+        @for (domain of domains(); track domain.id) {
+          <button type="button" class="mtr-card" (click)="openDomain(domain)">
+            <div>
+              <b>{{ domain.title }}</b>
+              <em [attr.data-tone]="domain.tone === 'supportive' ? 'good' : 'warn'">{{ domain.tone }}</em>
+            </div>
+            <small>{{ domain.range_outlook.title }}</small>
+            <p>{{ domain.reading }}</p>
+          </button>
+        }
         <p class="mtr-title">PLANET BY PLANET · {{ payload.natal.moon_sign }} MOON</p>
         @for (rule of baselineRules(); track rule.rule_id) {
           <button type="button" class="mtr-card" (click)="open(rule)">
@@ -61,6 +72,7 @@ export class GocharaComponent {
       (rule) => rule.kind === 'baseline_placement',
     ) ?? [],
   );
+  readonly domains = computed(() => this.data()?.gochara.interpretation.domains ?? []);
   readonly summary = computed(() => {
     const synthesis = this.data()?.gochara.interpretation.synthesis;
     if (!synthesis) return '';
@@ -112,6 +124,24 @@ export class GocharaComponent {
       evidence: [
         ...rule.modifiers.map((modifier) => `${modifier.type}: ${modifier.label}`),
         `${rule.source_id} · ${rule.claim_status}`,
+        `${payload.ayanamsha} · ${payload.node_type} nodes`,
+      ],
+    });
+  }
+
+  protected openDomain(domain: GocharamDomainReading): void {
+    const payload = this.data();
+    if (!payload) return;
+    this.selected.set({
+      planet: domain.title,
+      glyph: '✦',
+      position: domain.main_theme,
+      period: `${domain.range_outlook.days}-day domain outlook`,
+      meaning: domain.reading,
+      guidance: `${domain.range_outlook.title}. ${domain.range_outlook.reading}`,
+      evidence: [
+        `Leading planets: ${domain.leading_planets.join(', ')}`,
+        ...domain.evidence_ids,
         `${payload.ayanamsha} · ${payload.node_type} nodes`,
       ],
     });

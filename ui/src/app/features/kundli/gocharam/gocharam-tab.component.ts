@@ -5,6 +5,7 @@ import { Skeleton } from 'primeng/skeleton';
 import { KundliStore } from '../../../core/kundli.store';
 import {
   GocharaActiveWindow,
+  GocharamDomainReading,
   GocharamMatchedRule,
   GocharamPeriod,
   GocharamProfilePayload,
@@ -13,7 +14,7 @@ import {
 import { VedicService } from '../../../core/vedic.service';
 import { SectionCardComponent } from '../../../shared/section-card/section-card.component';
 
-type WorkspaceView = 'summary' | 'transits' | 'timeline';
+type WorkspaceView = 'summary' | 'domains' | 'transits' | 'timeline';
 type ScanRangeDays = 30 | 90 | 365 | 1095;
 
 interface TimelineBar {
@@ -46,6 +47,7 @@ export class GocharamTabComponent {
   protected readonly workspace = signal<WorkspaceView>('summary');
   protected readonly scanRangeDays = signal<ScanRangeDays>(90);
   protected readonly selectedDate = signal<string | null>(null);
+  protected readonly domainId = signal('career');
   
   protected readonly ruleId = signal<string | null>(null);
 
@@ -66,6 +68,10 @@ export class GocharamTabComponent {
   );
   protected readonly specialRules = computed(() =>
     this.matchedRules().filter((rule) => rule.kind === 'special_overlay'),
+  );
+  protected readonly domains = computed(() => this.data()?.gochara.interpretation?.domains ?? []);
+  protected readonly activeDomain = computed<GocharamDomainReading | null>(() =>
+    this.domains().find((domain) => domain.id === this.domainId()) ?? this.domains()[0] ?? null,
   );
   
   protected readonly activeRule = computed<GocharamMatchedRule | null>(() => {

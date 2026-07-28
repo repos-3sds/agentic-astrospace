@@ -67,6 +67,34 @@ def test_matched_rules_are_populated(profile):
     assert profile["gochara"]["interpretation"]["synthesis"]["counts"]
 
 
+def test_domain_readings_are_evidence_bearing(profile):
+    interpretation = profile["gochara"]["interpretation"]
+    domains = interpretation["domains"]
+    assert {row["id"] for row in domains} == {
+        "career",
+        "money",
+        "relationships",
+        "health_energy",
+        "learning_travel",
+        "inner_life",
+    }
+    assert all(row["reading"] and row["rationale"] for row in domains)
+    assert all(row["evidence_ids"] for row in domains)
+    assert all(row["range_outlook"]["days"] == 90 for row in domains)
+
+
+def test_range_outlook_changes_with_requested_horizon():
+    chart = VedicChart("Range-specific", 1990, 1, 1, 12, 0, **DELHI)
+    selected = datetime(2026, 7, 14, 12, tzinfo=timezone.utc)
+    short = chart.gocharam(scan_days=30, as_of=selected)["gochara"]["interpretation"]["range_outlook"]
+    long = chart.gocharam(scan_days=365, as_of=selected)["gochara"]["interpretation"]["range_outlook"]
+    assert short["days"] == 30
+    assert long["days"] == 365
+    assert short["title"] != long["title"]
+    assert short["reading"] != long["reading"]
+    assert long["event_count"] >= short["event_count"]
+
+
 def test_knowledge_base_has_every_planet_house_once():
     kb = build()
     validate(kb)

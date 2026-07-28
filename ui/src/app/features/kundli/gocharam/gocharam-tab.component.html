@@ -28,6 +28,14 @@
     <nav class="workspace-tabs" aria-label="Gocharam sections">
       <button
         type="button"
+        [class.active]="workspace() === 'domains'"
+        (click)="selectWorkspace('domains')"
+      >
+        <span>Life Domains</span>
+        <small>{{ domains().length }} evidence-backed readings</small>
+      </button>
+      <button
+        type="button"
         [class.active]="workspace() === 'summary'"
         (click)="selectWorkspace('summary')"
       >
@@ -117,27 +125,19 @@
         <div class="change-preview">
           <article>
             <span>Next {{ scanRangeLabel() }} reading</span>
-            @if (nextEvent()) {
-              <h4>{{ t.gochara.core_reading.next.title }}</h4>
-              <p>{{ t.gochara.core_reading.next.reading }}</p>
-              <small>{{ t.gochara.core_reading.next.timing_summary }}</small>
-            } @else {
-              <h4>No major rule change</h4>
-              <p>The current Gocharam background remains stable through this selected horizon.</p>
-              <small>Expand the range to look further ahead.</small>
-            }
+            <h4>{{ t.gochara.interpretation.range_outlook.title }}</h4>
+            <p>{{ t.gochara.interpretation.range_outlook.reading }}</p>
+            <small>
+              {{ t.gochara.interpretation.range_outlook.event_count }} future changes ·
+              {{ t.gochara.interpretation.range_outlook.supportive_count }} supportive ·
+              {{ t.gochara.interpretation.range_outlook.challenging_count }} caution
+            </small>
           </article>
           <article>
             <span>Previous {{ scanRangeLabel() }} reading</span>
-            @if (previousEvent()) {
-              <h4>{{ t.gochara.core_reading.previous.title }}</h4>
-              <p>{{ t.gochara.core_reading.previous.reading }}</p>
-              <small>{{ t.gochara.core_reading.previous.timing_summary }}</small>
-            } @else {
-              <h4>No major rule change</h4>
-              <p>No named Gocharam rule transition was found inside the selected past horizon.</p>
-              <small>Expand the range to review more history.</small>
-            }
+            <h4>{{ t.gochara.interpretation.range_outlook.previous_title }}</h4>
+            <p>{{ t.gochara.interpretation.range_outlook.previous_reading }}</p>
+            <small>{{ t.gochara.interpretation.range_outlook.previous_event_count }} earlier changes scanned</small>
           </article>
         </div>
 
@@ -164,6 +164,77 @@
             }
           </div>
         </section>
+      </section>
+    }
+
+    @if (workspace() === 'domains') {
+      <section class="explorer-workspace">
+        <aside class="explorer-rail planet-rail" aria-label="Life domains">
+          <div class="rail-heading">
+            <span>Domain readings</span>
+            <strong>Choose an area</strong>
+          </div>
+          <nav>
+            @for (domain of domains(); track domain.id) {
+              <button
+                type="button"
+                [class.active]="domainId() === domain.id"
+                (click)="domainId.set(domain.id)"
+              >
+                <span>{{ domain.title }}</span>
+                <small [class]="toneClass(domain.tone)">{{ domain.tone }}</small>
+              </button>
+            }
+          </nav>
+        </aside>
+
+        @if (activeDomain(); as domain) {
+          <article class="focus-reading planet-reading" [class]="toneClass(domain.tone)">
+            <header>
+              <div>
+                <span>Domain synthesis · {{ scanRangeLabel() }}</span>
+                <h3>{{ domain.title }}</h3>
+                <p>{{ domain.main_theme }}</p>
+              </div>
+              <span class="tone-badge" [class]="toneClass(domain.tone)">{{ domain.tone }}</span>
+            </header>
+
+            <section class="range-reading" [class]="toneClass(domain.range_outlook.tone)">
+              <div class="range-reading-heading">
+                <span>{{ domain.range_outlook.days }}-day outlook</span>
+                <small>{{ domain.range_outlook.event_count }} future changes</small>
+              </div>
+              <h4>{{ domain.range_outlook.title }}</h4>
+              <p>{{ domain.range_outlook.reading }}</p>
+            </section>
+
+            <section class="range-reading">
+              <div class="range-reading-heading"><span>Current interpretation</span></div>
+              <p>{{ domain.reading }}</p>
+              <p>{{ domain.rationale }}</p>
+            </section>
+
+            <div class="change-preview">
+              <article>
+                <span>Supportive witnesses</span>
+                @for (item of domain.strengths; track item) { <p>{{ item }}</p> }
+                @empty { <p>No unmodified supportive witness dominates this domain.</p> }
+              </article>
+              <article>
+                <span>Cautions and mixed witnesses</span>
+                @for (item of domain.challenges; track item) { <p>{{ item }}</p> }
+                @empty { <p>No demanding witness dominates this domain.</p> }
+              </article>
+            </div>
+
+            <details class="reading-details" open>
+              <summary>Practical focus and evidence</summary>
+              @for (action of domain.actions; track action) { <p>{{ action }}</p> }
+              <p>Leading planets: {{ domain.leading_planets.join(' · ') }}</p>
+              <p>Evidence: {{ domain.evidence_ids.join(' · ') }}</p>
+            </details>
+          </article>
+        }
       </section>
     }
 

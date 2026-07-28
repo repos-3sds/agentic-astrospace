@@ -21,6 +21,11 @@ import { TransitDetail, TransitDetailComponent } from './transit-detail.componen
       } @else if (error()) {
         <section class="mtrf-copy"><p>{{ error() }}</p><button type="button" (click)="load()">Try again</button></section>
       } @else if (data(); as payload) {
+        <p class="mtrf-title">{{ payload.gochara.interpretation.range_outlook.days }}-DAY RANGE</p>
+        <section class="mtrf-copy">
+          <p><b>{{ payload.gochara.interpretation.range_outlook.title }}</b></p>
+          <p>{{ payload.gochara.interpretation.range_outlook.reading }}</p>
+        </section>
         <p class="mtrf-title">CURRENT POSITIONS · EFFECTIVE VERDICT</p>
         <section class="mtrf-list">
           @for (rule of baselineRules(); track rule.rule_id) {
