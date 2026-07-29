@@ -3,6 +3,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AskComposerComponent } from './ask-composer.component';
 import { VoiceListeningComponent } from './voice-listening.component';
 import { KundliStore } from '../../../core/kundli.store';
+import { PreferencesService } from '../../../core/preferences.service';
 
 /** A subject the reader can scope a question to. */
 export interface AskTopic {
@@ -46,16 +47,28 @@ export interface AskSuggestion {
 })
 export class AskHomeComponent {
   private readonly kundlis = inject(KundliStore);
+  protected readonly preferences = inject(PreferencesService);
   readonly name = computed(() => this.kundlis.active()?.name ?? 'there');
   protected readonly heading = computed(() => `What’s on your mind, ${this.name()}?`);
+  protected readonly lede = computed(() => ({
+    guided: 'Ask in plain language. We keep the answer practical and explain unfamiliar terms.',
+    balanced: 'Ask anything — job, money, family, timing. You’ll get a plain answer, computed from your chart.',
+    practitioner: 'Ask with chart context. Answers include factors, conventions and provenance where available.',
+  })[this.preferences.experienceMode()]);
 
-  readonly topics = signal<AskTopic[]>([
+  private readonly allTopics: AskTopic[] = [
     { id: 'work', label: 'Work', icon: 'topic-work' },
     { id: 'marriage', label: 'Marriage', icon: 'topic-marriage' },
     { id: 'money', label: 'Money', icon: 'topic-money' },
     { id: 'child', label: 'My child', icon: 'topic-child' },
     { id: 'health', label: 'Health', icon: 'topic-health' },
-  ]);
+  ];
+  readonly topics = computed<AskTopic[]>(() => {
+    if (this.preferences.experienceMode() === 'guided') {
+      return this.allTopics.filter((topic) => ['work', 'marriage', 'child'].includes(topic.id));
+    }
+    return this.allTopics;
+  });
 
   readonly selectedTopic = signal<string | null>(null);
 
@@ -63,11 +76,32 @@ export class AskHomeComponent {
    * Seeded from the chart and the day, per the design's own heading — "right
    * now" is a claim, so these have to move when the dasha or the transit does.
    */
-  readonly suggestions = signal<AskSuggestion[]>([
-    { prompt: 'Your Saturn period is active — ask about work & patience' },
-    { prompt: 'Moon is in Hasta today — good for detail work' },
-    { prompt: 'Is this month good for a big purchase?' },
-  ]);
+  readonly suggestions = computed<AskSuggestion[]>(() => {
+    if (this.preferences.experienceMode() === 'guided') {
+      return [
+        { prompt: 'What should I focus on at work this week?', because: 'Plain-language starter' },
+        { prompt: 'What is one thing to avoid today?', because: 'Safety-first daily prompt' },
+        { prompt: 'How should I think about a family conversation?', because: 'Practical guidance' },
+      ];
+    }
+    if (this.preferences.experienceMode() === 'practitioner') {
+      return [
+        { prompt: 'Explain my current dasha with natal and transit factors', because: 'Technical depth' },
+        { prompt: 'Which transit rules are driving today’s reading?', because: 'Provenance check' },
+        { prompt: 'Compare D1 and D9 factors for this relationship question', because: 'Chart-layer prompt' },
+      ];
+    }
+    return [
+      { prompt: 'Your Saturn period is active — ask about work & patience' },
+      { prompt: 'Moon is in Hasta today — good for detail work' },
+      { prompt: 'Is this month good for a big purchase?' },
+    ];
+  });
+  protected readonly safetyLine = computed(() =>
+    this.preferences.experienceMode() === 'practitioner'
+      ? 'Safety boundary unchanged: medical, legal and financial verdicts still refer out.'
+      : 'For medical, legal or financial decisions, AstroSpace gives timing context only.',
+  );
 
   /**
    * The composer, pre-filled from `?q=` when the reader arrived by tapping a

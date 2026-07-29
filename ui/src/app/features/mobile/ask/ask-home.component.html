@@ -8,10 +8,8 @@
 <div class="body">
   <div class="intro">
     <h2 class="ask-hero">{{ heading() }}</h2>
-    <p class="lede">
-      Ask anything — job, money, family, timing. You’ll get a plain answer,
-      computed from your chart.
-    </p>
+    <p class="lede">{{ lede() }}</p>
+    <p class="safety">{{ safetyLine() }}</p>
   </div>
   @if (submitting()) {
     <p class="ask-state" role="status">Computing from your chart…</p>
@@ -39,7 +37,7 @@
   <div class="suggestions">
     @for (s of suggestions(); track s.prompt) {
       <button class="suggestion" type="button" (click)="ask(s.prompt)">
-        <span class="suggestion-text">{{ s.prompt }}</span>
+        <span class="suggestion-text">{{ s.prompt }} @if (s.because) { <small>{{ s.because }}</small> }</span>
         <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
       </button>
     }
