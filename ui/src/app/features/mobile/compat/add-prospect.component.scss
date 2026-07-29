@@ -1,11 +1,21 @@
 @use '../mobile-tokens' as *;
 :host { display: flex; min-height: 100%; flex-direction: column; }
 .mcof-back { @include m-body-strong; display: flex; align-items: center; gap: 12px; padding: 16px 20px 10px; color: var(--m-muted); text-decoration: none; img { width: 24px; height: 24px; } }
-.mcof-form { display: flex; flex: 1; flex-direction: column; gap: 14px; padding: 130px 20px 0; }
+.mcof-form { display: flex; flex: 1; flex-direction: column; gap: 14px; padding: 24px 20px 0; }
 header { h1 { @include m-h1; margin: 0 0 3px; } p { @include m-body-small; margin: 0; color: var(--m-muted); } }
 label { @include m-caption; display: flex; flex-direction: column; gap: 8px; color: var(--m-muted); }
 label > span { display: flex; align-items: center; gap: 11px; padding: 15px 16px; border: 1.2px solid var(--m-border); border-radius: 16px; background: var(--m-surface); img { width: 20px; height: 20px; } }
-input { @include m-body; min-width: 0; flex: 1; border: 0; outline: 0; color: var(--m-muted); background: transparent; }
+input { @include m-body; min-width: 0; flex: 1; border: 0; outline: 0; color: var(--m-text); background: transparent; }
 .mcof-approx { @include m-body-small; margin: 0; color: var(--m-muted); button { @include m-body-strong; border: 0; padding: 0; color: var(--m-accent-strong); background: transparent; } }
 .mcof-submit { @include m-button; width: calc(100% + 40px); margin: auto -20px 0; padding: 16px; border: 0; border-radius: 999px; color: var(--m-on-ink); background: var(--m-ink); }
-@media (max-height: 760px) { .mcof-form { padding-top: 30px; } }
+.mcof-submit:disabled { opacity: 0.54; }
+.mcof-error {
+  @include m-body-small;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--m-warn);
+  border-radius: 14px;
+  color: var(--m-warn);
+  background: var(--m-warn-soft);
+}
+@media (max-height: 760px) { .mcof-form { padding-top: 16px; } }

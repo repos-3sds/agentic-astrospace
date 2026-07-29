@@ -18,4 +18,25 @@ header { h1 { @include m-h1; margin: 0 0 3px; } p { @include m-body-small; margi
   div { width:64px;height:64px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:var(--m-accent-soft);color:var(--m-accent);font-size:30px; }
   b { display:block;color:var(--m-text);margin-bottom:6px; }
   p { margin:0;font-size:13px; }
+  a,
+  button {
+    @include m-body-strong;
+    display: inline-flex;
+    justify-content: center;
+    margin-top: 14px;
+    padding: 11px 16px;
+    border: 1px solid var(--m-border-strong);
+    border-radius: 999px;
+    color: var(--m-accent-strong);
+    background: transparent;
+    text-decoration: none;
+  }
+  button { cursor: pointer; }
+  &.error {
+    border-color: var(--m-warn);
+    div {
+      color: var(--m-warn);
+      background: var(--m-warn-soft);
+    }
+  }
 }
