@@ -32,31 +32,64 @@ router = APIRouter(prefix="/api/v1/ask", tags=["ask-ai"])
 
 MAX_HISTORY = 12
 MAX_QUESTION_CHARS = 2000
+# Refer-out matching is deliberately two-part: a prohibited SUBJECT plus a
+# VERDICT-SEEKING frame. Matching whole phrasings — the previous approach — let
+# 24 of 31 probe questions through, because an allowlist of sentences cannot
+# cover paraphrase. "when will i die" was caught; "how many years do i have
+# left" was not.
+#
+# The two-part rule is also what keeps ordinary questions answerable. The app's
+# own suggested prompt is "Is this month good for a big purchase?" — money
+# subject, timing frame, no verdict sought — and the refer-out screen explicitly
+# offers timing for decisions already made. Subject alone must never gate.
 
-_REFER_OUT_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
+_VERDICT_FRAMES = (
+    r"\bwill\b", r"\bwhen will\b", r"\bhow long\b", r"\bhow many\b",
+    r"\bwhat is my\b", r"\bwhat are my\b", r"\bdo i have\b", r"\bam i\b",
+    r"\bshould i\b", r"\bcan i\b", r"\bis it going to\b", r"\bgoing to\b",
+    r"\bpredict\b", r"\btell me\b", r"\bcalculate\b", r"\bchances? of\b",
+    r"\blikelihood\b", r"\bwhat will\b", r"\bwhen do i\b", r"\bhave left\b",
+    r"\bdiagnos", r"\bwhat does .{0,20}mean for my\b",
+)
+
+# Subjects the app must never issue a verdict on. Kept as word-stems so
+# inflections ("survive"/"survival") are covered without listing each form.
+_REFER_OUT_SUBJECTS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("death", (
-        r"\bwhen (?:will|do) (?:i|we|he|she|they) die\b",
-        r"\b(?:predict|tell|calculate).{0,24}\b(?:death|lifespan|longevity)\b",
-        r"\bhow long (?:will|do) (?:i|we|he|she|they) live\b",
+        r"\bdie\b", r"\bdeath\b", r"\bdying\b", r"\bdead\b",
+        r"\blifespan\b", r"\blongevity\b", r"\blife expectancy\b",
+        r"\bsurviv", r"\bpass away\b", r"\byears (?:do i|i) have\b",
+        r"\bhow long .{0,20}\blive\b", r"\bkill", r"\bfatal\b", r"\bterminal\b",
+        # Devanagari and Telugu death terms. NOT a substitute for review by a
+        # fluent speaker — see docs; these cover the literal words only.
+        r"मृत्यु", r"मौत", r"मरण", r"మరణ", r"చనిపో",
     )),
     ("health", (
-        r"\b(?:diagnose|diagnosis|medical advice|treatment plan)\b",
-        r"\b(?:do|could|might) i have\b.{0,48}\b(?:disease|cancer|illness|condition)\b",
-        r"\bwill (?:i|we|he|she|they) recover\b",
-        r"\bshould i (?:take|stop|change)\b.{0,36}\b(?:medicine|medication|dose|treatment)\b",
-        r"\bwill (?:the )?(?:surgery|operation|treatment) (?:work|succeed)\b",
+        r"\bdiagnos", r"\bmedical advice\b", r"\btreatment plan\b",
+        r"\bdisease\b", r"\bcancer\b", r"\bchemo", r"\btumou?r\b",
+        r"\billness\b", r"\bsick\b", r"\bsymptom", r"\bmedicine\b",
+        r"\bmedication\b", r"\binsulin\b", r"\bdose\b", r"\bdosage\b",
+        r"\bsurgery\b", r"\boperation\b", r"\brecover\b", r"\brecovery\b",
+        r"\bcure\b", r"\bcured\b", r"\bpregnan", r"\bmiscarriage\b",
+        r"\bdepress", r"\bsuicid", r"\bmental (?:health|illness)\b",
+        r"बीमारी", r"అనారోగ్య", r"వ్యాధి",
     )),
     ("legal", (
-        r"\b(?:legal advice|should i sue|can i sue)\b",
-        r"\bwill (?:i|we|he|she|they) win\b.{0,36}\b(?:case|lawsuit|appeal)\b",
-        r"\bwhat will (?:the )?(?:judge|court|jury) decide\b",
-        r"\b(?:guilty|not guilty|convicted|acquitted)\b",
+        r"\blegal advice\b", r"\bsue\b", r"\blawsuit\b", r"\bcourt\b",
+        r"\bjudge\b", r"\bjury\b", r"\bverdict\b", r"\bprison\b",
+        r"\bjail\b", r"\bconvict", r"\bacquit", r"\bguilty\b",
+        r"\bcase\b.{0,20}\b(?:win|lose|outcome)\b", r"\bbail\b",
+        r"\bcustody\b", r"\bdivorce settlement\b", r"\bvisa\b.{0,16}\b(?:approved|rejected)\b",
     )),
     ("money", (
-        r"\b(?:what|which) (?:stock|share|crypto|coin|fund) should i (?:buy|sell)\b",
-        r"\bshould i (?:buy|sell|invest in)\b.{0,48}\b(?:stock|shares|crypto|fund|property)\b",
-        r"\bwill (?:the )?(?:market|stock|share|crypto|bitcoin).{0,28}\b(?:rise|fall|go up|go down|crash)\b",
-        r"\b(?:guaranteed|risk[- ]free) (?:return|profit|investment)\b",
+        # Directive-seeking only. "Is this month good to buy property" is a
+        # timing question and stays answerable — see the note above.
+        r"\b(?:stock|share|crypto|coin|mutual fund|bitcoin)\b",
+        r"\bshould i (?:buy|sell|invest|trade)\b",
+        r"\bwhich .{0,16}\b(?:invest|fund|stock)\b",
+        r"\bmarket\b.{0,24}\b(?:rise|fall|crash|go up|go down)\b",
+        r"\bguaranteed (?:return|profit)\b", r"\brisk[- ]free\b",
+        r"\bwill i (?:become|be) rich\b", r"\bhow much money will\b",
     )),
 )
 
@@ -71,12 +104,47 @@ _REFER_OUT_ANSWERS = {
 def _refer_out_kind(question: str) -> str | None:
     """Return a structured safety boundary before any model is invoked.
 
-    Ordinary questions about wellbeing, paperwork timing, or money timing stay
-    answerable. Only requests for a prohibited verdict or directive match.
+    A question is referred out when it names a prohibited SUBJECT *and* seeks a
+    VERDICT about it. Both halves are required: "is this month good for a big
+    purchase?" names money but asks about timing, and the product explicitly
+    answers that. "which stock should i buy?" seeks a directive and does not.
+
+    Death is the exception — it is gated on subject alone. There is no framing
+    in which the app answers a question about when someone dies, so requiring a
+    verdict frame would only create a gap to phrase around.
     """
     normalized = " ".join(question.casefold().split())
-    for kind, patterns in _REFER_OUT_RULES:
-        if any(re.search(pattern, normalized) for pattern in patterns):
+    seeks_verdict = any(re.search(f, normalized) for f in _VERDICT_FRAMES)
+    for kind, subjects in _REFER_OUT_SUBJECTS:
+        if not any(re.search(pattern, normalized) for pattern in subjects):
+            continue
+        if kind == "death" or seeks_verdict:
+            return kind
+    return None
+
+
+# Output-side net. The input gate cannot catch every phrasing in every language,
+# and nothing previously checked what the model actually said — so a longevity
+# verdict produced anyway would have been returned verbatim. This is the second
+# layer, and it is why the input rules can stay conservative about false
+# positives: the boundary does not rest on them alone.
+_PROHIBITED_OUTPUT = (
+    (r"\byou (?:will|are going to) die\b", "death"),
+    (r"\byour (?:death|lifespan|life expectancy)\b", "death"),
+    (r"\byou (?:will|are likely to) live (?:until|to|for)\b", "death"),
+    (r"\byou have\b.{0,24}\b(?:years|months) (?:left|to live)\b", "death"),
+    (r"\byou (?:have|are suffering from)\b.{0,24}\b(?:cancer|disease|tumou?r)\b", "health"),
+    (r"\b(?:stop|start|change) (?:taking )?your (?:medication|medicine|insulin)\b", "health"),
+    (r"\byou will (?:win|lose) (?:the|your) (?:case|lawsuit|appeal)\b", "legal"),
+    (r"\byou (?:will|should) (?:buy|sell|invest in)\b.{0,24}\b(?:stock|share|crypto)\b", "money"),
+)
+
+
+def _prohibited_verdict(answer: str) -> str | None:
+    """Which boundary an answer crosses, if any. None means it is clean."""
+    normalized = " ".join(answer.casefold().split())
+    for pattern, kind in _PROHIBITED_OUTPUT:
+        if re.search(pattern, normalized):
             return kind
     return None
 
@@ -240,6 +308,16 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
         raise HTTPException(status_code=502, detail=f"AI generation failed: {e}")
     latency_ms = int((perf_counter() - started) * 1000)
 
+    # Second layer. The input gate runs before the model; this runs after it,
+    # because a prompt instruction is probabilistic and nothing previously
+    # checked what was actually said. If the model produced a prohibited
+    # verdict anyway, it is replaced by the refer-out — the reader gets the
+    # boundary rather than the verdict, and the turn is recorded as a refer-out
+    # so the rate is visible instead of silent.
+    crossed = _prohibited_verdict(answer)
+    if crossed:
+        answer = _REFER_OUT_ANSWERS[crossed]
+
     # Nothing is written until here — see the module docstring.
     if thread is None and body.start_thread:
         thread = cm.create_ask_thread(db, user.id, kundli_id)
@@ -256,7 +334,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
         "answer": answer,
         "tools_used": sorted(set(tools_used)),
         "kundli_id": kundli_id,
-        "refer_out_kind": None,
+        "refer_out_kind": crossed,
         "thread_id": thread.id if thread else None,
         "thread": _thread(thread) if thread else None,
     }

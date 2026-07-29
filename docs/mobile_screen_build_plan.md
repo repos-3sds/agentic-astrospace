@@ -147,6 +147,29 @@ of the configurable set — `main.py` always appends them, whatever
 `ALLOWED_ORIGINS` says — so a routine deploy can't reintroduce this specific
 failure mode. `tests/test_cors_origins.py` pins that down.
 
+## Needs a fluent Telugu speaker
+
+The refer-out boundary (`astrospace/api/ask_routes.py`) now matches on subject
+plus verdict-frame rather than whole English phrasings, which took the probe
+set from 7/31 gated to 26/26. It includes the literal Devanagari and Telugu
+words for death, illness and disease — but **literal words are not coverage**.
+
+A fluent speaker needs to review `_REFER_OUT_SUBJECTS` and answer:
+
+- Which everyday Telugu phrasings ask about death or illness *without* using
+  these words? Euphemism is exactly how this kind of rule gets walked around,
+  and it is culturally specific.
+- Do any of the added terms appear innocuously in ordinary questions, so that
+  the gate would refuse someone unfairly?
+
+Until that review happens, treat non-English coverage as partial. The
+output-side net (`_prohibited_verdict`) is the backstop, and it is
+English-only too — a Telugu-language verdict would pass it. That is the
+sharpest remaining edge of this boundary.
+
+`tests/test_refer_out_boundary.py` holds both directions: prohibited questions
+gated, ordinary ones answerable. Add cases there rather than loosening rules.
+
 ## Verify when credentials are available
 
 Work that was **mitigated, not closed**, because it needed something this
