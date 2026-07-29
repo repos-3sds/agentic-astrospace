@@ -49,8 +49,11 @@ test('registers, creates the first chart, logs out, and restores it on return', 
 
   await expect(page).toHaveURL(/\/m\/language$/);
   await page.getByRole('link', { name: 'Continue' }).click();
+  await expect(page).toHaveURL(/\/m\/welcome$/);
   await page.getByRole('link', { name: 'Continue' }).click();
+  await expect(page).toHaveURL(/\/m\/disclaimers$/);
   await page.getByRole('link', { name: 'I understand — continue' }).click();
+  await expect(page).toHaveURL(/\/m\/persona$/);
   await page.getByRole('link', { name: 'Continue' }).click();
 
   await expect(page).toHaveURL(/\/m\/birth-details$/);

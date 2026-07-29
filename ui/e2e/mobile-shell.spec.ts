@@ -138,10 +138,10 @@ test.describe('phone shell', () => {
 
   test('does not keep More selected when a visible tab is active', async ({ page }, testInfo) => {
     skipUnlessPhone(testInfo);
-    await page.goto('/settings');
+    await page.goto('/kundli/profile-1/chart');
 
     const bottomNav = page.getByRole('navigation', { name: 'Primary navigation' });
-    await expect(bottomNav.getByRole('button', { name: 'Settings' })).toHaveAttribute('aria-current', 'page');
+    await expect(bottomNav.getByRole('button', { name: 'Charts' })).toHaveAttribute('aria-current', 'page');
     await expect(bottomNav.getByRole('button', { name: 'More', exact: true })).not.toHaveClass(/active/);
   });
 
