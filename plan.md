@@ -1,5 +1,18 @@
 # AstroSpace — Product Plan
 
+> **Status: superseded, with one live exception.**
+>
+> Most of this is history — the native app is tracked in
+> [docs/mobile_screen_build_plan.md](docs/mobile_screen_build_plan.md) and the
+> product intent in [VISION.md](VISION.md).
+>
+> **Do not delete this file.** "Phase 1 Validation" below records an open,
+> unmet commitment: the Vedic engine has never been checked against a verified
+> reference chart, and `tests/test_vedic.py` cites this section as the reason
+> golden-chart tests do not exist. That obligation outlives the plan around it.
+> Delete this file only once a reference chart has been supplied and those
+> tests are written.
+
 ## Vision
 
 A Vedic astrology platform where users create an account, manage multiple personas (self, family, friends), and get accurate divisional charts (D1–D30), Avkahada Chakra details, and AI-powered readings — all grounded in correct Vedic calculations.

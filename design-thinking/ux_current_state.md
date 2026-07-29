@@ -66,7 +66,9 @@ date/time, **city autocomplete**, notes). Relation drives some copy (self vs. na
    users most want.
 5. **English-text-only.** No Telugu, no audio — a reach blocker for the core.
 6. **Nav labels are technical** (Dashas, Gocharam, Ashtakavarga) — opaque to believers.
-7. **Mobile still maturing** — some tabs are desktop-dense; see `mobile_app_plan.md`.
+7. **Mobile still maturing** — some tabs are desktop-dense. Superseded for the
+   native app: `/m/*` is a separate, purpose-built surface — see
+   `../docs/mobile_screen_build_plan.md`. This finding still stands for the web app.
 
 ## Where a redesign should start
 

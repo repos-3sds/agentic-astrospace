@@ -45,6 +45,21 @@ and §6:
 - Run the suite with `.venv/bin/python -m pytest tests/ -q` (650 passing).
   Frontend: `cd ui && npx ng test --watch=false --browsers=ChromeHeadless`.
 
+## Docs state their own status
+
+Every markdown file declares what it is in its first three lines — `canonical`,
+`source of truth`, `point-in-time audit`, or `superseded`. Without that, nobody
+can tell a live tracker from a finished audit, and both get half-trusted.
+
+Audits are dated and disposable: fold them into one log rather than adding a
+file per pass. Five audit documents in three days is how a repo stops being
+readable.
+
+Anything not reachable from this file is a candidate for deletion at the next
+sweep — but **check for inbound references first**. `docs/mobile_app_plan.md`
+looked dead by its date and was cited from three places; `plan.md` looks dead
+and holds an open validation commitment that `tests/test_vedic.py` points at.
+
 ## Verify visually, not just by build
 
 Every UI bug found while building the native screens compiled cleanly: CSS

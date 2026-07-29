@@ -14,7 +14,9 @@ exists, then deep reference.
 6. **context_engine_taxonomy.md** — the 10 life-domains the engine can speak to.
 7. **astrology_survey.md** — the research instrument that will replace the synthetic personas.
 8. **full_astro_software_checklist.md** — feature landscape (built vs not).
-9. **mobile_app_plan.md** — current-state mobile UX findings + prior mobile plan (implementation-heavy; skim).
+9. **../docs/mobile_screen_build_plan.md** — the live native-app build tracker
+   (supersedes the old mobile_app_plan.md, which described the mobile work as a
+   proposed backlog long after it shipped).
 
 ## What's in this folder vs. referenced
 
@@ -29,7 +31,7 @@ exists, then deep reference.
 - astrology_survey.md — the research instrument.
 - context_engine_taxonomy.md — the 10 life-domains.
 - full_astro_software_checklist.md — feature landscape.
-- mobile_app_plan.md — mobile UX findings + prior plan.
+- ../docs/mobile_screen_build_plan.md — the live native-app build tracker.
 
 > These four were not mirrored into this folder due to a transient file-read lock at
 > creation time; they live in `docs/` and can be copied here later. Nothing is lost.
