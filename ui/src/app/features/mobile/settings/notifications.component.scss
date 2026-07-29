@@ -4,3 +4,34 @@
 @include shared.settings-switch;
 
 .body { gap: 12px; }
+
+.delivery {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 14px 15px;
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+  background: var(--m-surface);
+  b { color: var(--m-good); }
+  p { margin: 0; color: var(--m-muted); }
+  button {
+    align-self: flex-start;
+    border: 1px solid var(--m-border-strong);
+    border-radius: 999px;
+    padding: 9px 13px;
+    color: var(--m-accent-strong);
+    background: transparent;
+  }
+}
+.delivery.warn {
+  border-color: var(--m-warn);
+  b { color: var(--m-warn); }
+}
+.local-note {
+  margin: 0;
+  color: var(--m-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}

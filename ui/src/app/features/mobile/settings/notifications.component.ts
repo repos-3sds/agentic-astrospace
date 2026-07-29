@@ -31,7 +31,8 @@ export interface NotificationPref {
   styleUrl: './notifications.component.scss',
 })
 export class NotificationsComponent {
-  readonly prefs = signal<NotificationPref[]>([
+  private readonly storageKey = 'astrospace.mobile.notificationPrefs';
+  private readonly defaults: NotificationPref[] = [
     { id: 'morning', title: 'Morning brief', detail: 'Your day, every morning', on: true },
     {
       id: 'windows',
@@ -51,7 +52,17 @@ export class NotificationsComponent {
       detail: 'For streaks and scheduled practices',
       on: false,
     },
-  ]);
+  ];
+
+  readonly prefs = signal<NotificationPref[]>(this.restorePrefs());
+  readonly permission = signal(this.notificationPermission());
+  readonly pushAvailable = computed(() => typeof Notification !== 'undefined');
+  readonly deliveryState = computed(() => {
+    if (!this.pushAvailable()) return 'Push notifications are not available in this browser preview.';
+    if (this.permission() === 'denied') return 'Notifications are blocked for this browser. Enable them in system or browser settings.';
+    if (this.permission() === 'granted') return 'Preferences are saved locally. Device-token delivery still requires the native push service.';
+    return 'Preferences are saved locally. Grant notification permission on a native build before delivery can start.';
+  });
 
   /** What the Settings hub reports as "N on" — derived, never stated twice. */
   readonly onCount = computed(() => this.prefs().filter((p) => p.on).length);
@@ -60,5 +71,28 @@ export class NotificationsComponent {
     this.prefs.update((prefs) =>
       prefs.map((p) => (p.id === id ? { ...p, on: !p.on } : p)),
     );
+    this.persist();
+  }
+
+  protected async requestPermission(): Promise<void> {
+    if (typeof Notification === 'undefined' || !Notification.requestPermission) return;
+    this.permission.set(await Notification.requestPermission());
+  }
+
+  private restorePrefs(): NotificationPref[] {
+    try {
+      const stored = JSON.parse(localStorage.getItem(this.storageKey) ?? '[]') as Partial<NotificationPref>[];
+      return this.defaults.map((pref) => ({ ...pref, on: stored.find((row) => row.id === pref.id)?.on ?? pref.on }));
+    } catch {
+      return this.defaults;
+    }
+  }
+
+  private persist(): void {
+    localStorage.setItem(this.storageKey, JSON.stringify(this.prefs().map(({ id, on }) => ({ id, on }))));
+  }
+
+  private notificationPermission(): NotificationPermission | 'unsupported' {
+    return typeof Notification === 'undefined' ? 'unsupported' : Notification.permission;
   }
 }

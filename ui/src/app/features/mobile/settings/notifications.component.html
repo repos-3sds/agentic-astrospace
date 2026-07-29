@@ -10,6 +10,14 @@
     <p class="lede">Opt-in, never fear-based — you choose what to hear.</p>
   </header>
 
+  <section class="delivery" [class.warn]="permission() !== 'granted'">
+    <b>{{ permission() === 'granted' ? 'Permission granted' : permission() === 'denied' ? 'Permission blocked' : 'Push not active yet' }}</b>
+    <p>{{ deliveryState() }}</p>
+    @if (pushAvailable() && permission() === 'default') {
+      <button type="button" (click)="requestPermission()">Request permission</button>
+    }
+  </section>
+
   @for (pref of prefs(); track pref.id) {
     <div class="toggle-row">
       <span class="toggle-text">
@@ -27,4 +35,6 @@
       ></button>
     </div>
   }
+
+  <p class="local-note">Notification choices persist on this device. Cross-device sync and push delivery depend on the native notification service.</p>
 </div>
