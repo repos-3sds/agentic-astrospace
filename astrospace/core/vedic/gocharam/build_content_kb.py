@@ -14,6 +14,12 @@ from pathlib import Path
 
 from .rules import CLASSICAL_GOCHARA_VEDHA
 
+RICH_CONTENT_PATH = Path(__file__).parent / "rich_gocharam_content.json"
+RICH_CONTENT = {}
+if RICH_CONTENT_PATH.exists():
+    with open(RICH_CONTENT_PATH, "r", encoding="utf-8") as f:
+        RICH_CONTENT = json.load(f)
+
 PLANETS = ("Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu")
 
 PLANET_DOMAINS = {
@@ -48,6 +54,10 @@ NODE_SOURCE_ID = "south_indian_node_analogy"
 
 
 def _content(planet: str, house: int, favourable: bool) -> dict[str, str]:
+    key = f"{planet}_{house}"
+    if key in RICH_CONTENT:
+        return RICH_CONTENT[key]
+        
     domain, action = PLANET_DOMAINS[planet]
     theme = HOUSE_THEMES[house]
     status = "supportive" if favourable else "demanding"
