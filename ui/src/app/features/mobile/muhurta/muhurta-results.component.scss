@@ -26,6 +26,36 @@
 .title { @include m-h2; color: var(--m-text); margin: 0; }
 .scope { @include m-body-small; color: var(--m-muted); margin: 0; }
 
+.muhurta-state {
+  display: flex;
+  min-height: 52vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 22px 18px;
+  border: 1px solid var(--m-border);
+  border-radius: 20px;
+  background: var(--m-surface);
+  text-align: center;
+  color: var(--m-muted);
+  b { @include m-h2; color: var(--m-text); }
+  p { @include m-body-small; margin: 0; }
+  a,
+  button {
+    @include m-body-strong;
+    display: inline-flex;
+    justify-content: center;
+    padding: 11px 16px;
+    border: 1px solid var(--m-border-strong);
+    border-radius: 999px;
+    color: var(--m-accent-strong);
+    background: transparent;
+    text-decoration: none;
+  }
+}
+.muhurta-state.error { border-color: var(--m-warn); b { color: var(--m-warn); } }
+
 /* Window card — node 31:66 */
 .window {
   background: var(--m-surface);
@@ -97,6 +127,10 @@
   @include m-caption;
   color: var(--m-text);
   img { width: 15px; height: 15px; display: block; flex-shrink: 0; }
+  &:disabled {
+    opacity: 0.58;
+    cursor: default;
+  }
 }
 
 /* Closing note — node 31:129 */

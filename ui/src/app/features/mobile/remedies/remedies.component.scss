@@ -27,6 +27,34 @@
 
 .lede { @include m-body; color: var(--m-muted); margin: 0; }
 
+.remedy-state {
+  display: flex;
+  min-height: 52vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 22px 18px;
+  border: 1px solid var(--m-border);
+  border-radius: 20px;
+  background: var(--m-surface);
+  text-align: center;
+  color: var(--m-muted);
+  b { @include m-h2; color: var(--m-text); }
+  p { @include m-body-small; margin: 0; }
+  button {
+    @include m-body-strong;
+    display: inline-flex;
+    justify-content: center;
+    padding: 11px 16px;
+    border: 1px solid var(--m-border-strong);
+    border-radius: 999px;
+    color: var(--m-accent-strong);
+    background: transparent;
+  }
+}
+.remedy-state.error { border-color: var(--m-warn); b { color: var(--m-warn); } }
+
 /* Remedy card — node 29:62 */
 .remedy {
   background: var(--m-surface);

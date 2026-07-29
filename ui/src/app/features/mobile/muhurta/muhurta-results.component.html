@@ -9,6 +9,13 @@
     <p class="scope">{{ scope() }}</p>
   </header>
 
+  @if (loading()) {
+    <section class="muhurta-state"><b>Finding windows</b><p>Checking panchanga windows for your selected range.</p></section>
+  } @else if (error()) {
+    <section class="muhurta-state error" role="alert"><b>Windows could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+  } @else if (searched() && !windows().length) {
+    <section class="muhurta-state"><b>No windows returned</b><p>No auspicious panchanga windows were available for this range.</p><a [routerLink]="['/m','muhurta']">Change search</a></section>
+  } @else {
   @for (w of windows(); track w.rank) {
     <article class="window" [class.is-top]="w.rank === 1">
       <div class="window-head">
@@ -27,16 +34,17 @@
       <p class="reason">{{ w.reason }}</p>
 
       <div class="actions">
-        <button class="chip" type="button">
+        <button class="chip" type="button" disabled>
           <img src="mobile/calendar.svg" alt="" aria-hidden="true" />
-          <span>Add to calendar</span>
+          <span>Calendar export not available yet</span>
         </button>
-        <button class="chip" type="button">
+        <button class="chip" type="button" disabled>
           <img src="mobile/clock-dark.svg" alt="" aria-hidden="true" />
-          <span>Remind me</span>
+          <span>Reminders need native support</span>
         </button>
       </div>
     </article>
+  }
   }
 
   <p class="footnote">

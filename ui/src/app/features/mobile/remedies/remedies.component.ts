@@ -1,6 +1,9 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ManglikCancellationSheetComponent } from '../chart/manglik-cancellation-sheet.component';
+import { KundliStore } from '../../../core/kundli.store';
+import { DashaPayload, YogasDoshasPayload } from '../../../core/models';
+import { VedicService } from '../../../core/vedic.service';
 
 /** What kind of thing in the chart a remedy answers to. */
 export type RemedyTone = 'warn' | 'bad' | 'good';
@@ -56,41 +59,102 @@ export interface RemedyCard {
   styleUrl: './remedies.component.scss',
 })
 export class RemediesComponent {
+  private readonly kundlis = inject(KundliStore);
+  private readonly vedic = inject(VedicService);
   readonly cancellationOpen = signal(false);
-  readonly cards = signal<RemedyCard[]>([
-    {
-      id: 'saturn',
-      title: 'For Saturn’s friction at work',
-      tagLabel: 'SATURN DASHA',
-      tone: 'warn',
-      rationale:
-        'Your Saturn period is highlighting patience and steady effort through October.',
-      practices: [
-        {
-          icon: 'chant',
-          text: 'Chant “Om Sham Shanaishcharaya Namah” · 108 times, Saturdays',
-        },
-        { icon: 'offer', text: 'Offer sesame oil or donate black sesame on Saturdays' },
-        { icon: 'wear', text: 'Wear or hold something blue-black on tough days' },
-      ],
-      ctaLabel: 'Start streak',
-      ctaRoute: ['/m', 'remedies', 'mantra'],
-    },
-    {
-      id: 'manglik',
-      title: 'For a gentle Manglik flag',
-      tagLabel: 'MARRIAGE · FLAG',
-      tone: 'bad',
-      rationale:
-        'A mild Manglik influence shows in your chart — this is common and has a traditional cancellation.',
-      practices: [
-        {
-          icon: 'rite',
-          text: 'Kumbh Vivah / Peepal puja before matching — many families already do this',
-        },
-        { icon: 'chant', text: 'Hanuman Chalisa on Tuesdays' },
-      ],
-      ctaLabel: 'View cancellation',
-    },
-  ]);
+  protected readonly dashas = signal<DashaPayload | null>(null);
+  protected readonly yogas = signal<YogasDoshasPayload | null>(null);
+  protected readonly loading = signal(true);
+  protected readonly error = signal<string | null>(null);
+  readonly cards = computed<RemedyCard[]>(() => {
+    const cards: RemedyCard[] = [];
+    const activeLord = this.dashas()?.current.antardasha?.lord ?? this.dashas()?.current.mahadasha?.lord;
+    if (activeLord) {
+      cards.push({
+        id: `dasha-${activeLord}`,
+        title: `For your active ${activeLord} period`,
+        tagLabel: `${activeLord.toUpperCase()} DASHA`,
+        tone: 'warn',
+        rationale: `${activeLord} is active in the returned dasha stack, so the practice is labelled as traditional support rather than a guaranteed fix.`,
+        practices: this.planetPractices(activeLord),
+        ctaLabel: 'Start local streak',
+        ctaRoute: ['/m', 'remedies', 'mantra'],
+      });
+    }
+    const manglik = this.yogas()?.doshas.manglik;
+    if (manglik) {
+      const exception = manglik.exceptions?.find((row) => row.applies);
+      cards.push({
+        id: 'manglik',
+        title: manglik.active ? 'For the Manglik flag' : 'Manglik check',
+        tagLabel: manglik.active ? 'MARRIAGE · FLAG' : 'NOT PRESENT',
+        tone: manglik.active ? 'bad' : 'good',
+        rationale: exception?.detail ?? manglik.rule,
+        practices: manglik.active
+          ? [
+              { icon: 'rite', text: 'Discuss the flag and any returned exceptions with a qualified family practitioner.' },
+              { icon: 'chant', text: 'Hanuman Chalisa on Tuesdays, if this is already part of your tradition.' },
+            ]
+          : [{ icon: 'offer', text: 'No Manglik-specific action is recommended by the returned calculation.' }],
+        ctaLabel: 'View cancellation',
+      });
+    }
+    return cards;
+  });
+
+  constructor() {
+    effect(() => {
+      const activeId = this.kundlis.activeId();
+      void this.load(activeId);
+    });
+  }
+
+  protected retry(): void {
+    void this.load(this.kundlis.activeId());
+  }
+
+  private async load(expectedActiveId: string | null): Promise<void> {
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      await this.kundlis.load();
+      const activeId = this.kundlis.activeId();
+      if (expectedActiveId && activeId !== expectedActiveId) return;
+      if (!activeId) {
+        this.dashas.set(null);
+        this.yogas.set(null);
+        return;
+      }
+      const [dashas, yogas] = await Promise.all([
+        this.vedic.dashas(activeId).catch(() => null),
+        this.vedic.yogasDoshas(activeId).catch(() => null),
+      ]);
+      this.dashas.set(dashas);
+      this.yogas.set(yogas);
+    } catch (error) {
+      this.error.set((error as Error).message);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  private planetPractices(planet: string): RemedyPractice[] {
+    const lower = planet.toLowerCase();
+    if (lower === 'saturn') return [
+      { icon: 'chant', text: 'Chant “Om Sham Shanaishcharaya Namah” · 108 times, Saturdays' },
+      { icon: 'offer', text: 'Offer sesame oil or donate black sesame on Saturdays' },
+    ];
+    if (lower === 'mars') return [
+      { icon: 'chant', text: 'Hanuman Chalisa on Tuesdays' },
+      { icon: 'offer', text: 'Donate red lentils or support service work on Tuesdays' },
+    ];
+    if (lower === 'moon') return [
+      { icon: 'chant', text: 'Chant “Om Som Somaya Namah” on Mondays' },
+      { icon: 'offer', text: 'Offer milk or rice as a traditional Monday practice' },
+    ];
+    return [
+      { icon: 'chant', text: `Use a traditional ${planet} mantra only if it belongs to your practice.` },
+      { icon: 'offer', text: 'Choose simple service or donation over paid “removal” claims.' },
+    ];
+  }
 }

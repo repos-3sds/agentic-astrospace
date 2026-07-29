@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { PreferencesService } from '../../../core/preferences.service';
 
 /** One thing someone might be planning. */
 export interface MuhurtaGoal {
@@ -56,7 +57,11 @@ export class MuhurtaGoalComponent {
    * rather than assumed, because a reader travelling would otherwise get
    * windows for the wrong place without being told.
    */
-  readonly place = signal('Vijayawada');
+  private readonly preferences = inject(PreferencesService);
+  readonly place = computed(() => {
+    const place = this.preferences.panchangaPlace();
+    return place ? `${place.city}, ${place.nation}` : 'your panchanga place';
+  });
 
   // Nothing can be computed for a purpose that has not been chosen.
   protected readonly canSearch = computed(() => this.selectedGoal().length > 0);

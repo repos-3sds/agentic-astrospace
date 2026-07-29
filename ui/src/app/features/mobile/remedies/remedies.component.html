@@ -11,6 +11,15 @@
     professional advice.
   </p>
 
+  @if (loading()) {
+    <section class="remedy-state"><b>Loading practices</b><p>Checking active dashas and dosha flags.</p></section>
+  } @else if (error()) {
+    <section class="remedy-state error" role="alert"><b>Practices could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+  } @else if (!dashas() && !yogas()) {
+    <section class="remedy-state"><b>No remedy inputs available</b><p>The backend does not currently return remedies directly, and chart inputs were unavailable.</p></section>
+  } @else if (!cards().length) {
+    <section class="remedy-state"><b>No specific action returned</b><p>No active dasha or dosha input produced a recommendation for this profile.</p></section>
+  } @else {
   @for (card of cards(); track card.id) {
     <article class="remedy">
       <div class="remedy-head">
@@ -44,6 +53,7 @@
         }
       </div>
     </article>
+  }
   }
 </div>
 
