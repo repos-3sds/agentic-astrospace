@@ -30,7 +30,7 @@ import { SheetComponent } from '../sheet/sheet.component';
             }
           </button>
         }
-        <a class="profile-add" routerLink="/m/birth-details">
+        <a class="profile-add" routerLink="/m/settings/profiles/new">
           <span class="profile-add-mark" aria-hidden="true">+</span>
           <strong>Add a profile</strong>
         </a>

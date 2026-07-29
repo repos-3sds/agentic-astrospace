@@ -121,7 +121,7 @@ export class SettingsHomeComponent {
           icon: 'set-profiles',
           label: 'Manage profiles',
           value: `${this.kundlis.kundlis().length} ${this.kundlis.kundlis().length === 1 ? 'profile' : 'profiles'}`,
-          route: ['/m', 'settings', 'birth-details'],
+          route: ['/m', 'settings', 'profiles'],
         },
       ],
     },

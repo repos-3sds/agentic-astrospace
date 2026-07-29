@@ -370,6 +370,38 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'settings/profiles',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/settings/profile-management.component').then(
+            (m) => m.ProfileManagementComponent,
+          ),
+      },
+      {
+        path: 'settings/profiles/new',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/settings/profile-form.component').then(
+            (m) => m.ProfileFormComponent,
+          ),
+      },
+      {
+        path: 'settings/profiles/:id/edit',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/settings/profile-form.component').then(
+            (m) => m.ProfileFormComponent,
+          ),
+      },
+      {
+        path: 'settings/profiles/:id/delete',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/settings/profile-delete.component').then(
+            (m) => m.ProfileDeleteComponent,
+          ),
+      },
+      {
         path: 'settings/birth-details',
         data: { hideMobileTabs: true },
         loadComponent: () =>
