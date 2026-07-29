@@ -1,20 +1,22 @@
 {
   "name": "ui",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "build:dev": "ng build --configuration development",
+    "version:sync": "node scripts/sync-version.mjs",
+    "version:check": "node scripts/sync-version.mjs --check",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "e2e": "playwright test",
     "e2e:headed": "playwright test --headed",
     "e2e:report": "playwright show-report",
-    "build:native": "ng build --configuration production && npx cap sync",
+    "build:native": "npm run version:sync && ng build --configuration production && npx cap sync",
     "open:ios": "npx cap open ios",
     "open:android": "npx cap open android",
-    "build:native:dev": "ng build --configuration development && npx cap sync"
+    "build:native:dev": "npm run version:sync && ng build --configuration development && npx cap sync"
   },
   "prettier": {
     "printWidth": 100,

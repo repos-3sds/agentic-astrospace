@@ -147,6 +147,33 @@ of the configurable set — `main.py` always appends them, whatever
 `ALLOWED_ORIGINS` says — so a routine deploy can't reintroduce this specific
 failure mode. `tests/test_cors_origins.py` pins that down.
 
+## Store submission
+
+**Privacy manifest** — `ui/ios/App/App/PrivacyInfo.xcprivacy`, wired into the
+Xcode project and verified present in a Release build (not just on disk).
+
+`NSPrivacyAccessedAPITypes` is **empty on purpose**. A security audit predicted
+a UserDefaults/CA92.1 declaration via Capacitor; grep found `UserDefaults` in
+neither Capacitor's Swift sources nor this app's native code, because the
+config loads only `AppPlugin` and `CAPBrowserPlugin`. Session state lives in
+WebView localStorage, which is not a required-reason API. **Adding a plugin —
+`@capacitor/preferences` most likely — means revisiting this file.**
+
+**Versions** now have one source. `ui/package.json` holds the marketing version;
+the build number is `git rev-list --count HEAD`, because Play rejects a
+`versionCode` that does not increase and a number someone must remember to bump
+is one that eventually is not bumped.
+
+```bash
+npm run version:sync     # write it into iOS + Android
+npm run version:check    # fail if drifted (this is the CI form)
+```
+
+`build:native` and `build:native:dev` run the sync first, so a bundle cannot be
+produced with a stale version. FastAPI's `version="2.0.0"` is deliberately left
+alone: that is the *API* version, and `/api/v1` routes served by a 2.0.0
+application is coherent rather than contradictory.
+
 ## Telugu is disabled — what shipping it actually needs
 
 The language controls show Telugu and refuse it. Before that, the toggle was
