@@ -8,6 +8,13 @@
 </header>
 
 <div class="body" [attr.data-mode]="preferences.experienceMode()">
+  @if (loading()) {
+    <section class="chart-state"><b>Computing chart</b><p>Loading your saved birth profile and Vedic chart payload.</p></section>
+  } @else if (error()) {
+    <section class="chart-state error" role="alert"><b>Chart could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+  } @else if (!chart()) {
+    <section class="chart-state"><b>No active profile</b><p>Add or select a profile before opening chart workbench.</p><a [routerLink]="['/m','settings','profiles']">Manage profiles</a></section>
+  } @else {
   <!-- Plain language first. The diagram is below, the specialist areas below that. -->
   <section class="signature">
     <p class="eyebrow">YOUR SIGNATURE</p>
@@ -83,8 +90,9 @@
     <span class="notes-count">{{ noteCount() }} lines</span>
     <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
   </a>
+  }
 </div>
 
 @if (provenanceOpen()) {
-  <as-provenance-sheet (dismissed)="provenanceOpen.set(false)" />
+  <as-provenance-sheet [rows]="provenanceRows()" (dismissed)="provenanceOpen.set(false)" />
 }

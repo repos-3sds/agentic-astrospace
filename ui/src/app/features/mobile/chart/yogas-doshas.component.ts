@@ -1,7 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ManglikCancellationSheetComponent } from './manglik-cancellation-sheet.component';
 import { YogaLearningSheetComponent } from './yoga-learning-sheet.component';
+import { KundliStore } from '../../../core/kundli.store';
+import { DoshasPayload, YogaResult, YogasDoshasPayload } from '../../../core/models';
+import { VedicService } from '../../../core/vedic.service';
 
 type Kind = 'yoga' | 'dosha';
 type Filter = 'all' | Kind;
@@ -26,38 +29,102 @@ interface Combination {
   styleUrl: './yogas-doshas.component.scss',
 })
 export class YogasDoshasComponent {
+  private readonly kundlis = inject(KundliStore);
+  private readonly vedic = inject(VedicService);
   readonly filter = signal<Filter>('all');
   readonly learningOpen = signal(false);
   readonly cancellationOpen = signal(false);
-  readonly items: Combination[] = [
-    {
-      id: 'gajakesari', kind: 'yoga', title: 'Gajakesari Yoga', tag: 'STRONG',
-      tone: 'good',
-      summary: 'Moon and Jupiter in mutual kendra (1-4-7-10) — a classical marker of wisdom and steady reputation.',
-    },
-    {
-      id: 'raja', kind: 'yoga', title: 'Raja Yoga', tag: 'PARIVARTANA',
-      tone: 'gold',
-      summary: 'Your 9th and 10th lords exchange signs — a supportive placement for career recognition over time.',
-    },
-    {
-      id: 'manglik', kind: 'dosha', title: 'Manglik Dosha', tag: 'FLAG · CANCELLED',
-      tone: 'bad',
-      summary: 'Mars in the 7th house — a commonly-flagged marriage placement.',
-      cancelled: 'Cancelled: Mars is in its own sign, a classical exception.',
-    },
-    {
-      id: 'kalasarpa', kind: 'dosha', title: 'Kalasarpa Dosha', tag: 'NOT PRESENT',
-      tone: 'neutral',
-      summary: 'All planets are not hemmed between Rahu and Ketu — this dosha does not apply to your chart.',
-    },
-  ];
+  protected readonly data = signal<YogasDoshasPayload | null>(null);
+  protected readonly loading = signal(true);
+  protected readonly error = signal<string | null>(null);
+  readonly items = computed<Combination[]>(() => [
+    ...((this.data()?.yogas.active ?? []).map((yoga) => this.yogaItem(yoga))),
+    ...this.doshaItems(this.data()?.doshas ?? null),
+  ]);
   readonly visibleItems = computed(() =>
-    this.filter() === 'all' ? this.items : this.items.filter((item) => item.kind === this.filter()),
+    this.filter() === 'all' ? this.items() : this.items().filter((item) => item.kind === this.filter()),
   );
+
+  constructor() {
+    effect(() => {
+      const activeId = this.kundlis.activeId();
+      void this.load(activeId);
+    });
+  }
 
   protected learn(item: Combination): void {
     if (item.id === 'manglik') this.cancellationOpen.set(true);
-    else if (item.id === 'gajakesari') this.learningOpen.set(true);
+    else this.learningOpen.set(true);
+  }
+
+  protected retry(): void {
+    void this.load(this.kundlis.activeId());
+  }
+
+  private async load(expectedActiveId: string | null): Promise<void> {
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      await this.kundlis.load();
+      const activeId = this.kundlis.activeId();
+      if (expectedActiveId && activeId !== expectedActiveId) return;
+      if (!activeId) {
+        this.data.set(null);
+        return;
+      }
+      this.data.set(await this.vedic.yogasDoshas(activeId));
+    } catch (error) {
+      this.error.set((error as Error).message);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  private yogaItem(yoga: YogaResult): Combination {
+    return {
+      id: yoga.rule_id ?? yoga.name,
+      kind: 'yoga',
+      title: yoga.name,
+      tag: yoga.strength || this.statusLabel(yoga),
+      tone: yoga.category.toLowerCase().includes('caution') ? 'bad' : yoga.verified ? 'good' : 'gold',
+      summary: yoga.rule || yoga.triggers.join(' · ') || 'Backend returned this yoga without additional detail.',
+      cancelled: yoga.notes?.[0],
+    };
+  }
+
+  private doshaItems(doshas: DoshasPayload | null): Combination[] {
+    if (!doshas) return [];
+    const items: Combination[] = [];
+    if (doshas.manglik) {
+      const exception = doshas.manglik.exceptions?.find((row) => row.applies);
+      items.push({
+        id: 'manglik',
+        kind: 'dosha',
+        title: doshas.manglik.name || 'Manglik Dosha',
+        tag: doshas.manglik.active ? `FLAG · ${doshas.manglik.net_severity ?? doshas.manglik.severity}` : 'NOT PRESENT',
+        tone: doshas.manglik.active ? 'bad' : 'neutral',
+        summary: doshas.manglik.rule,
+        cancelled: exception ? `Exception applies: ${exception.detail}` : doshas.manglik.notes?.[0],
+      });
+    }
+    for (const row of [doshas.gandanta, doshas.grahan].filter(Boolean)) {
+      items.push({
+        id: row!.rule_id ?? row!.name,
+        kind: 'dosha',
+        title: row!.name,
+        tag: row!.active ? `FLAG · ${row!.severity}` : 'NOT PRESENT',
+        tone: row!.active ? 'bad' : 'neutral',
+        summary: row!.rule,
+        cancelled: row!.notes?.[0],
+      });
+    }
+    return items;
+  }
+
+  private statusLabel(row: YogaResult): string {
+    if (row.source_status === 'verified_common') return 'VERIFIED';
+    if (row.source_status === 'convention_dependent') return 'CONVENTION';
+    if (row.source_status === 'needs_review') return 'REVIEW';
+    return row.verified ? 'VERIFIED' : 'REVIEW';
   }
 }

@@ -4,6 +4,13 @@
 </a>
 
 <div class="body">
+  @if (loading()) {
+    <section class="period-state"><b>Loading life periods</b><p>Computing dashas for the selected profile.</p></section>
+  } @else if (error()) {
+    <section class="period-state error" role="alert"><b>Life periods could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+  } @else if (!data()) {
+    <section class="period-state"><b>No active profile</b><p>Select a profile before opening life periods.</p><a [routerLink]="['/m','settings','profiles']">Manage profiles</a></section>
+  } @else {
   <header class="heading">
     <h1>Life Periods</h1>
     <p>
@@ -41,16 +48,16 @@
     <p class="gloss">Yogini — a secondary system, computed the same way, useful as a cross-check.</p>
     <section class="active-period">
       <p class="eyebrow">ACTIVE NOW</p>
-      <h2>Sankata Yogini</h2>
-      <p>Since 2019 — a longer, effort-heavy stretch; steady pacing serves you best.</p>
+      <h2>{{ activeYogini() }}</h2>
+      <p>Returned by the Yogini dasha endpoint for this profile.</p>
     </section>
     <p class="cycle-title">FULL 36-YEAR CYCLE</p>
   } @else {
     <p class="gloss">Vimshottari — the primary period system used here.</p>
     <section class="active-period">
       <p class="eyebrow">ACTIVE NOW</p>
-      <h2>Venus → Saturn → Venus</h2>
-      <p>Pratyantar since Jan 2026 — steady effort favoured, avoid shortcuts.</p>
+      <h2>{{ activePath() }}</h2>
+      <p>As of {{ data()?.as_of }} — computed from the Moon nakshatra balance.</p>
     </section>
 
     @if (preferences.experienceMode() !== 'guided') {
@@ -71,12 +78,12 @@
     @if (level() === 'antar') {
       <p class="breadcrumb">
         <img src="mobile/dasha-crumb.svg" alt="" aria-hidden="true" />
-        <span>Within Venus maha dasha (2013–2033)</span>
+        <span>Within {{ mahaCrumb() }} maha dasha</span>
       </p>
     } @else if (level() === 'pratyantar') {
       <p class="breadcrumb">
         <img src="mobile/dasha-crumb.svg" alt="" aria-hidden="true" />
-        <span>Within Venus–Saturn antar dasha (2025–2028)</span>
+        <span>Within {{ mahaCrumb() }}–{{ antarCrumb() }} antar dasha</span>
       </p>
     }
   }
@@ -104,5 +111,6 @@
       <img src="mobile/info-period.svg" alt="" aria-hidden="true" />
       <span>Tap a period to drill into {{ level() === 'maha' ? 'Antar' : 'Pratyantar' }}</span>
     </p>
+  }
   }
 </div>

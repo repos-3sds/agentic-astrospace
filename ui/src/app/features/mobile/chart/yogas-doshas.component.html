@@ -4,6 +4,13 @@
 </a>
 
 <main class="body">
+  @if (loading()) {
+    <section class="yd-state"><b>Loading combinations</b><p>Checking yogas and doshas for the selected profile.</p></section>
+  } @else if (error()) {
+    <section class="yd-state error" role="alert"><b>Combinations could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+  } @else if (!data()) {
+    <section class="yd-state"><b>No active profile</b><p>Select a profile before opening yogas and doshas.</p><a [routerLink]="['/m','settings','profiles']">Manage profiles</a></section>
+  } @else {
   <header class="heading">
     <h1>Yogas &amp; Doshas</h1>
     <p>Notable combinations found in your chart — strengths and flags</p>
@@ -33,8 +40,11 @@
           <img src="mobile/yoga-chevron.svg" alt="" aria-hidden="true" />
         </button>
       </article>
+    } @empty {
+      <p class="yd-empty">No {{ filter() === 'all' ? 'yogas or doshas' : filter() + 's' }} were returned for this profile.</p>
     }
   </section>
+  }
 </main>
 
 @if (learningOpen()) { <as-yoga-learning-sheet (dismissed)="learningOpen.set(false)" /> }

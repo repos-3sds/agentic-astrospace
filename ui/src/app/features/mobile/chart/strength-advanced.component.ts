@@ -1,5 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { SIGN_ORDER } from '../../../core/glyphs';
+import { KundliStore } from '../../../core/kundli.store';
+import { AshtakavargaPayload, VedicAll } from '../../../core/models';
+import { VedicService } from '../../../core/vedic.service';
+import { SIGN_SHORT } from './mobile-chart-data';
 
 type StrengthTab = 'shadbala' | 'ashtakavarga' | 'jaimini';
 
@@ -29,42 +34,54 @@ interface HouseBindu {
   styleUrl: './strength-advanced.component.scss',
 })
 export class StrengthAdvancedComponent {
+  private readonly kundlis = inject(KundliStore);
+  private readonly vedic = inject(VedicService);
   readonly tab = signal<StrengthTab>('shadbala');
   readonly avPlanet = signal('SAV');
+  protected readonly data = signal<VedicAll | null>(null);
+  protected readonly ashtakavarga = signal<AshtakavargaPayload | null>(null);
+  protected readonly loading = signal(true);
+  protected readonly error = signal<string | null>(null);
 
-  readonly strengths: PlanetStrength[] = [
-    { name: 'Jupiter', score: 82, virupa: 420, minimum: 380 },
-    { name: 'Moon', score: 68, virupa: 340, minimum: 360 },
-    { name: 'Sun', score: 74, virupa: 365, minimum: 300 },
-    { name: 'Saturn', score: 55, virupa: 275, minimum: 300 },
-  ];
-
-  readonly planets = ['SAV', 'Su', 'Mo', 'Ma', 'Me', 'Ju', 'Ve', 'Sa'];
-  readonly houses: HouseBindu[] = [
-    // These sum to exactly 337, which is not a coincidence to preserve loosely:
-    // the Sarvashtakavarga total is fixed at 337 bindus in the classical scheme,
-    // so any twelve values that sum to anything else are not a chart. An earlier
-    // placeholder set summed to 356 while the header still claimed 337.
-    { house: '1st', sign: 'Taurus', short: 'Ta', value: 30, x: 50, y: 10 },
-    { house: '2nd', sign: 'Gemini', short: 'Ge', value: 26, x: 79, y: 7 },
-    { house: '3rd', sign: 'Cancer', short: 'Cn', value: 28, x: 93, y: 22 },
-    { house: '4th', sign: 'Leo', short: 'Le', value: 25, x: 88, y: 50 },
-    { house: '5th', sign: 'Virgo', short: 'Vi', value: 32, x: 93, y: 78 },
-    { house: '6th', sign: 'Libra', short: 'Li', value: 23, x: 78, y: 93 },
-    { house: '7th', sign: 'Scorpio', short: 'Sc', value: 31, x: 50, y: 88 },
-    { house: '8th', sign: 'Sagittarius', short: 'Sg', value: 21, x: 22, y: 93 },
-    { house: '9th', sign: 'Capricorn', short: 'Cp', value: 35, x: 7, y: 78 },
-    { house: '10th', sign: 'Aquarius', short: 'Aq', value: 26, x: 12, y: 50 },
-    { house: '11th', sign: 'Pisces', short: 'Pi', value: 35, x: 21, y: 7 },
-    { house: '12th', sign: 'Aries', short: 'Ar', value: 25, x: 7, y: 21 },
-  ];
-  readonly displayedHouses = computed(() => {
-    if (this.avPlanet() === 'SAV') return this.houses;
-    const offset = this.planets.indexOf(this.avPlanet());
-    return this.houses.map((house, index) => ({
-      ...house,
-      value: Math.max(2, Math.round((house.value + index + offset) / 5)),
+  readonly strengths = computed<PlanetStrength[]>(() => {
+    const classical = this.data()?.shadbala?.classical;
+    if (classical?.ranking?.length) {
+      return classical.ranking.map((row) => ({
+        name: row.planet,
+        score: Math.round(row.ratio * 100),
+        virupa: Math.round(row.rupas * 60),
+        minimum: Math.round((classical.required_minima_rupas?.[row.planet] ?? (row.sufficient ? row.rupas / Math.max(row.ratio, 0.01) : row.rupas)) * 60),
+      }));
+    }
+    return (this.data()?.shadbala?.ranking ?? []).map((row) => ({
+      name: row.planet,
+      score: Math.round(row.score),
+      virupa: Math.round(row.score),
+      minimum: 100,
     }));
+  });
+
+  readonly planets = computed(() => ['SAV', ...(this.ashtakavarga()?.planets ?? [])]);
+  readonly houses = computed<HouseBindu[]>(() => {
+    const values = this.avPlanet() === 'SAV'
+      ? this.ashtakavarga()?.sav ?? []
+      : this.ashtakavarga()?.bav?.[this.avPlanet()] ?? [];
+    const anchors = [
+      { x: 50, y: 10 }, { x: 79, y: 7 }, { x: 93, y: 22 }, { x: 88, y: 50 },
+      { x: 93, y: 78 }, { x: 78, y: 93 }, { x: 50, y: 88 }, { x: 22, y: 93 },
+      { x: 7, y: 78 }, { x: 12, y: 50 }, { x: 21, y: 7 }, { x: 7, y: 21 },
+    ];
+    return SIGN_ORDER.map((sign, index) => ({
+      house: `${index + 1}`,
+      sign,
+      short: SIGN_SHORT[sign] ?? sign.slice(0, 2),
+      value: values[index] ?? 0,
+      x: anchors[index].x,
+      y: anchors[index].y,
+    }));
+  });
+  readonly displayedHouses = computed(() => {
+    return this.houses();
   });
   // Always summed from what is on screen, never asserted. A total that is
   // stated independently of the cells is a total that can contradict them —
@@ -74,18 +91,61 @@ export class StrengthAdvancedComponent {
     this.displayedHouses().reduce((total, house) => total + house.value, 0),
   );
 
-  readonly karakas = [
-    ['Atmakaraka', 'Saturn (self)', '27° 41’'],
-    ['Amatyakaraka', 'Jupiter (career)', '24° 03’'],
-    ['Bhratrikaraka', 'Mars (siblings)', '19° 55’'],
-    ['Matrikaraka', 'Moon (mother)', '04° 51’'],
-  ];
-  readonly arudhas = [
-    ['A1 · LAGNA', 'Leo'], ['A9', 'Aries'], ['A10', 'Gemini'], ['UPAPADA', 'Scorpio'],
-  ];
-  readonly specialLagnas = [
-    ['Bhava Lagna', 'Body & circumstance', 'Gemini 18° 40′'],
-    ['Hora Lagna', 'Wealth & resources', 'Leo 02° 15′'],
-    ['Ghati Lagna', 'Power & position', 'Libra 11° 05′'],
-  ];
+  readonly karakas = computed(() =>
+    (this.data()?.jaimini?.chara_karakas?.ordered ?? []).map((row) => [
+      row.karaka,
+      `${row.planet}${row.code ? ` (${row.code})` : ''}`,
+      `${row.degree_in_sign?.toFixed?.(2) ?? row.effective_degree?.toFixed?.(2) ?? '—'} deg`,
+    ]),
+  );
+  readonly arudhas = computed(() => {
+    const jaimini = this.data()?.jaimini;
+    const padas = jaimini?.arudha_padas?.padas ?? {};
+    return [
+      ['A1 · LAGNA', jaimini?.arudha_lagna?.sign_name ?? '—'],
+      ['UPAPADA', jaimini?.upapada?.sign_name ?? '—'],
+      ...Object.entries(padas).slice(0, 6).map(([key, row]) => [key, row.sign_name]),
+    ];
+  });
+  readonly specialLagnas = computed(() => {
+    const data = this.data()?.special_lagnas;
+    return [
+      ['Bhava Lagna', 'Body & circumstance', data?.bhava_lagna ? `${data.bhava_lagna.sign_name} ${data.bhava_lagna.dms}` : '—'],
+      ['Hora Lagna', 'Wealth & resources', data?.hora_lagna ? `${data.hora_lagna.sign_name} ${data.hora_lagna.dms}` : '—'],
+      ['Ghati Lagna', 'Power & position', data?.ghati_lagna ? `${data.ghati_lagna.sign_name} ${data.ghati_lagna.dms}` : '—'],
+    ];
+  });
+
+  constructor() {
+    effect(() => {
+      const activeId = this.kundlis.activeId();
+      void this.load(activeId);
+    });
+  }
+
+  protected retry(): void {
+    void this.load(this.kundlis.activeId());
+  }
+
+  private async load(expectedActiveId: string | null): Promise<void> {
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      await this.kundlis.load();
+      const activeId = this.kundlis.activeId();
+      if (expectedActiveId && activeId !== expectedActiveId) return;
+      if (!activeId) {
+        this.data.set(null);
+        this.ashtakavarga.set(null);
+        return;
+      }
+      const all = await this.vedic.all(activeId);
+      this.data.set(all);
+      this.ashtakavarga.set(all.ashtakavarga ?? await this.vedic.ashtakavarga(activeId));
+    } catch (error) {
+      this.error.set((error as Error).message);
+    } finally {
+      this.loading.set(false);
+    }
+  }
 }

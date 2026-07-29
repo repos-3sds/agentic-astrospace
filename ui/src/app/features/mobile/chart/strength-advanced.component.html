@@ -4,6 +4,13 @@
 </a>
 
 <main class="body">
+  @if (loading()) {
+    <section class="strength-state"><b>Loading strengths</b><p>Computing Shadbala, Ashtakavarga and Jaimini values.</p></section>
+  } @else if (error()) {
+    <section class="strength-state error" role="alert"><b>Strength data could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+  } @else if (!data()) {
+    <section class="strength-state"><b>No active profile</b><p>Select a profile before opening advanced chart data.</p><a [routerLink]="['/m','settings','profiles']">Manage profiles</a></section>
+  } @else {
   <header class="heading">
     <h1>Strength &amp; Advanced</h1>
     <p>Classical strength calculations, BPHS-sourced</p>
@@ -19,7 +26,7 @@
     @case ('shadbala') {
       <p class="explainer"><img src="mobile/info.svg" alt="" aria-hidden="true" />Six-fold strength (virupa) vs. the classical required minimum.</p>
       <section class="strength-list">
-        @for (planet of strengths; track planet.name) {
+        @for (planet of strengths(); track planet.name) {
           <article class="strength-card">
             <div class="strength-head">
               <h2>{{ planet.name }}</h2>
@@ -30,12 +37,13 @@
             <p>{{ planet.virupa }} virupa · needs {{ planet.minimum }}</p>
           </article>
         }
+        @empty { <p class="strength-empty">No Shadbala rows were returned for this profile.</p> }
       </section>
     }
     @case ('ashtakavarga') {
       <p class="explainer"><img src="mobile/info.svg" alt="" aria-hidden="true" />Bindu points per house — the Sarvashtakavarga (SAV) total across all planets.</p>
       <div class="planet-tabs">
-        @for (planet of planets; track planet) {
+        @for (planet of planets(); track planet) {
           <button type="button" [class.is-on]="avPlanet() === planet" (click)="avPlanet.set(planet)">{{ planet }}</button>
         }
       </div>
@@ -65,22 +73,23 @@
       <p class="explainer"><img src="mobile/info.svg" alt="" aria-hidden="true" />A different analytical system — chara karakas and arudha padas, not Parashari.</p>
       <p class="section-title">CHARA KARAKAS</p>
       <section class="data-list">
-        @for (row of karakas; track row[0]) {
+        @for (row of karakas(); track row[0]) {
           <div class="data-row"><span><b>{{ row[0] }}</b><small>{{ row[1] }}</small></span><em>{{ row[2] }}</em></div>
         }
       </section>
       <p class="section-title">ARUDHA PADAS</p>
       <section class="arudhas">
-        @for (row of arudhas; track row[0]) {
+        @for (row of arudhas(); track row[0]) {
           <article><small>{{ row[0] }}</small><strong>{{ row[1] }}</strong></article>
         }
       </section>
       <p class="section-title">SPECIAL LAGNAS</p>
       <section class="data-list">
-        @for (row of specialLagnas; track row[0]) {
+        @for (row of specialLagnas(); track row[0]) {
           <div class="data-row"><span><b>{{ row[0] }}</b><small>{{ row[1] }}</small></span><em class="accent">{{ row[2] }}</em></div>
         }
       </section>
     }
+  }
   }
 </main>

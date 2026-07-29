@@ -4,6 +4,13 @@
 </a>
 
 <div class="body">
+  @if (loading()) {
+    <section class="chart-state"><b>Computing chart</b><p>Loading the expanded chart from your profile.</p></section>
+  } @else if (error()) {
+    <section class="chart-state error" role="alert"><b>Chart could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+  } @else if (!chart()) {
+    <section class="chart-state"><b>No active profile</b><p>Select a profile before opening the full chart.</p><a [routerLink]="['/m','settings','profiles']">Manage profiles</a></section>
+  } @else {
   <!--
     Which diagram a reader recognises depends on where they learned. The app
     should not pick for them.
@@ -38,7 +45,7 @@
   </div>
 
   <ul class="legend">
-    @for (item of legend; track item.abbr) {
+    @for (item of legend(); track item.abbr) {
       <li class="legend-item">
         <span class="legend-abbr">{{ item.abbr }}</span>
         <span class="legend-name">{{ item.name }}</span>
@@ -47,6 +54,7 @@
   </ul>
 
   <p class="hint">Tap a planet to see details</p>
+  }
 </div>
 
 @if (selected(); as detail) {

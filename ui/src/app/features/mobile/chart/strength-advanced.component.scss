@@ -7,6 +7,41 @@
   img { width: 24px; height: 24px; display: block; }
 }
 .body { display: flex; flex-direction: column; gap: 14px; padding: 4px 20px 16px; }
+.strength-state,
+.strength-empty {
+  display: flex;
+  min-height: 54vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 22px 18px;
+  border: 1px solid var(--m-border);
+  border-radius: 20px;
+  background: var(--m-surface);
+  text-align: center;
+  color: var(--m-muted);
+  b { @include m-h2; color: var(--m-text); }
+  p { @include m-body-small; margin: 0; }
+  a,
+  button {
+    @include m-body-strong;
+    display: inline-flex;
+    justify-content: center;
+    padding: 11px 16px;
+    border: 1px solid var(--m-border-strong);
+    border-radius: 999px;
+    color: var(--m-accent-strong);
+    background: transparent;
+    text-decoration: none;
+  }
+}
+.strength-empty {
+  @include m-body-small;
+  min-height: 150px;
+  margin: 0;
+}
+.strength-state.error { border-color: var(--m-warn); b { color: var(--m-warn); } }
 .heading {
   h1 { @include m-h1; margin: 0 0 3px; color: var(--m-text); }
   p { @include m-body-small; margin: 0; color: var(--m-muted); }

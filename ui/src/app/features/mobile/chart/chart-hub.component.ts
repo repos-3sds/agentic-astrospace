@@ -1,9 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ChartCell, EastChartComponent } from './east-chart.component';
+import { EastChartComponent } from './east-chart.component';
 import { ProvenanceSheetComponent } from './provenance-sheet.component';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
+import { VedicAll } from '../../../core/models';
+import { VedicService } from '../../../core/vedic.service';
+import { buildChartAdapter } from './mobile-chart-data';
 
 /** One of the three placements the hub leads with. */
 export interface AnglePoint {
@@ -46,7 +49,11 @@ export interface ExploreCard {
 })
 export class ChartHubComponent {
   private readonly kundlis = inject(KundliStore);
+  private readonly vedic = inject(VedicService);
   protected readonly preferences = inject(PreferencesService);
+  protected readonly chart = signal<VedicAll | null>(null);
+  protected readonly loading = signal(true);
+  protected readonly error = signal<string | null>(null);
   protected readonly screenTitle = computed(() =>
     this.preferences.experienceMode() === 'guided' ? 'Your Story'
       : this.preferences.experienceMode() === 'practitioner' ? 'Chart Workbench'
@@ -54,17 +61,15 @@ export class ChartHubComponent {
   );
   readonly profileName = computed(() => this.kundlis.active()?.name ?? 'Choose profile');
   readonly profileInitial = computed(() => this.profileName().slice(0, 1).toUpperCase());
-
-  readonly signature = signal({
-    headline: 'Warm, communicative, and grounded once you commit.',
-    detail: 'Gemini Sun · Cancer Moon · Taurus rising — the detail is just below.',
+  protected readonly adapter = computed(() => {
+    const chart = this.chart();
+    return chart ? buildChartAdapter(chart, this.kundlis.active()) : null;
   });
-
-  readonly angles = signal<AnglePoint[]>([
-    { label: 'SUN', sign: 'Gemini', degree: '23° 14’' },
-    { label: 'MOON', sign: 'Cancer', degree: '04° 51’' },
-    { label: 'ASCENDANT', sign: 'Taurus', degree: '11° 02’' },
-  ]);
+  readonly signature = computed(() => this.adapter()?.signature ?? {
+    headline: 'Select a profile to compute your chart.',
+    detail: 'Planet placements will load from your saved birth details.',
+  });
+  readonly angles = computed<AnglePoint[]>(() => this.adapter()?.angles ?? []);
 
   /** Which drawing convention the diagram uses — see EastChartComponent. */
   readonly chartStyle = signal('Eastern');
@@ -76,20 +81,8 @@ export class ChartHubComponent {
    * the grid, not something to recompute per reading — only *which* planets
    * land in them changes.
    */
-  readonly cells = signal<ChartCell[]>([
-    { planets: 'Su·Me', x: 67.6, y: 5.9 },
-    { planets: 'As·Ve', x: 41.9, y: 12.6 },
-    { planets: 'Ke', x: 18.9, y: 6.6 },
-    { planets: 'Mo', x: 86.0, y: 21.9 },
-    { planets: 'Ju', x: 13.2, y: 45.9 },
-    { planets: 'Sa', x: 87.9, y: 71.9 },
-    { planets: 'Ma', x: 45.6, y: 79.3 },
-    { planets: 'Ra', x: 19.6, y: 87.6 },
-    { sign: 'Ar', x: 6.9, y: 20.25 },
-    { sign: 'Le', x: 80.2, y: 46.25 },
-    { sign: 'Cp', x: 20.25, y: 72.25 },
-    { sign: 'Li', x: 73.8, y: 86.9 },
-  ]);
+  readonly cells = computed(() => this.adapter()?.cells ?? []);
+  readonly provenanceRows = computed(() => this.adapter()?.provenance ?? []);
 
   /**
    * Routes are attached only where the screen exists. A card that navigates
@@ -155,7 +148,7 @@ export class ChartHubComponent {
     },
   ]);
 
-  readonly noteCount = signal(3);
+  readonly noteCount = signal(0);
   protected readonly visibleExplore = computed(() => {
     const cards = this.explore();
     if (this.preferences.experienceMode() === 'guided') {
@@ -168,6 +161,32 @@ export class ChartHubComponent {
   readonly provenanceOpen = signal(false);
 
   constructor() {
-    if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
+    effect(() => {
+      const activeId = this.kundlis.activeId();
+      void this.load(activeId);
+    });
+  }
+
+  protected retry(): void {
+    void this.load(this.kundlis.activeId());
+  }
+
+  private async load(expectedActiveId: string | null): Promise<void> {
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      await this.kundlis.load();
+      const activeId = this.kundlis.activeId();
+      if (expectedActiveId && activeId !== expectedActiveId) return;
+      if (!activeId) {
+        this.chart.set(null);
+        return;
+      }
+      this.chart.set(await this.vedic.all(activeId));
+    } catch (error) {
+      this.error.set((error as Error).message);
+    } finally {
+      this.loading.set(false);
+    }
   }
 }
