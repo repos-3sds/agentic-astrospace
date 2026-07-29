@@ -75,7 +75,10 @@ export class WelcomeComponent {
     {
       icon: 'promise-language',
       title: 'Your language',
-      detail: 'English & Telugu, read aloud if you like.',
+      // Was 'English & Telugu' — the app is not translated, so that promised
+      // something onboarding could not deliver on the very screen that asks
+      // for trust.
+      detail: 'English today, read aloud if you like. Telugu is on the way.',
     },
   ]);
 }

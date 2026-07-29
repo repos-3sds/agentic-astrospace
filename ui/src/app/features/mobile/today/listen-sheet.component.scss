@@ -94,6 +94,9 @@
     background: var(--m-ink);
     color: var(--m-on-ink);
   }
+
+  // No Telugu TTS yet — see the component's languages input.
+  &.is-soon { opacity: .45; cursor: default; }
 }
 
 .speed {

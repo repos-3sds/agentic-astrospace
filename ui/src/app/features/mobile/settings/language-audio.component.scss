@@ -5,3 +5,6 @@
 @include shared.settings-switch;
 
 .body { gap: 14px; }
+
+// Telugu, pending real localisation — see the component's class comment.
+.segment.is-soon { opacity: .5; cursor: default; }

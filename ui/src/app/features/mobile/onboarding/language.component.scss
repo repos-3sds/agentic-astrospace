@@ -13,3 +13,17 @@ p { @include m-body; margin: 0; color: var(--m-muted); text-align: center; }
 .is-on .radio { background: var(--m-accent); }
 .radio img { width: 26px; height: 26px; } .is-on .radio img { width: 15px; height: 15px; }
 .continue { @include m-button; display: block; width: 100%; box-sizing: border-box; padding: 16px; border-radius: 999px; background: var(--m-ink); color: var(--m-on-ink); text-align: center; text-decoration: none; box-shadow: var(--m-shadow-card); }
+
+// Telugu, pending real localisation. Dimmed rather than removed so the intent
+// stays visible to anyone reading the screen or the code.
+.choices button.is-soon {
+  opacity: .55;
+  cursor: default;
+}
+.choices .soon {
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--m-muted);
+  white-space: nowrap;
+}

@@ -6,8 +6,14 @@
     <button type="button" role="radio" [class.is-on]="language() === 'English'" [attr.aria-checked]="language() === 'English'" (click)="language.set('English')">
       <span>English</span><span class="radio"><img [src]="language() === 'English' ? 'mobile/check-language.svg' : 'mobile/radio-language.svg'" alt="" /></span>
     </button>
-    <button type="button" role="radio" [class.is-on]="language() === 'Telugu'" [attr.aria-checked]="language() === 'Telugu'" (click)="language.set('Telugu')">
-      <span><strong>తెలుగు</strong><small>Telugu</small></span><span class="radio"><img [src]="language() === 'Telugu' ? 'mobile/check-language.svg' : 'mobile/radio-language.svg'" alt="" /></span>
+    <!--
+      Telugu is disabled, not hidden. The app has no UI translation and never
+      tells the model which language to answer in, so the toggle changed
+      nothing — a control that silently does nothing is worse than one that
+      says it is not ready. See docs/mobile_screen_build_plan.md.
+    -->
+    <button type="button" class="is-soon" disabled aria-disabled="true">
+      <span><strong>తెలుగు</strong><small>Telugu</small></span><span class="soon">Coming soon</span>
     </button>
   </div>
 </div>

@@ -39,7 +39,15 @@ export class ListenSheetComponent {
   /** Seconds. Placeholder timings until the synthesised track is wired. */
   readonly elapsed = input(12);
   readonly duration = input(32);
-  readonly languages = input<string[]>(['తెలుగు', 'English']);
+  /**
+   * Audio languages. Telugu is shown but not selectable — there is no Telugu
+   * TTS and the reading itself is generated in English, so choosing it would
+   * have changed nothing audible.
+   */
+  readonly languages = input<{ label: string; ready: boolean }[]>([
+    { label: 'తెలుగు', ready: false },
+    { label: 'English', ready: true },
+  ]);
   readonly language = input('English');
   readonly speed = input('1.0×');
 

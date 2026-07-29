@@ -43,14 +43,17 @@
 
     <div class="options">
       <div class="langs" role="group" aria-label="Audio language">
-        @for (lang of languages(); track lang) {
+        @for (lang of languages(); track lang.label) {
           <button
             class="lang"
             type="button"
-            [class.is-on]="lang === language()"
-            [attr.aria-pressed]="lang === language()"
-            (click)="languageChanged.emit(lang)"
-          >{{ lang }}</button>
+            [class.is-on]="lang.label === language()"
+            [class.is-soon]="!lang.ready"
+            [disabled]="!lang.ready"
+            [attr.aria-pressed]="lang.label === language()"
+            [attr.aria-disabled]="!lang.ready"
+            (click)="lang.ready && languageChanged.emit(lang.label)"
+          >{{ lang.label }}</button>
         }
       </div>
       <button class="speed" type="button" aria-label="Playback speed">{{ speed() }}</button>

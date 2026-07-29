@@ -24,9 +24,22 @@ export type AppLanguage = 'en' | 'te';
   styleUrl: './language-audio.component.scss',
 })
 export class LanguageAudioComponent {
-  readonly languages: { id: AppLanguage; label: string }[] = [
-    { id: 'en', label: 'English' },
-    { id: 'te', label: 'తెలుగు' },
+  /**
+   * Telugu is listed but not selectable.
+   *
+   * The app has no UI translation, and `language` never reaches the agent — it
+   * is stored on the message row and used to filter the remedies table, and
+   * that is all. Offering the switch implied a translated app and Telugu
+   * answers; it delivered neither.
+   *
+   * Shipping it for real means UI localisation, passing the language through to
+   * generation, Telugu TTS for Listen, and extending the refer-out boundary,
+   * which is English-only on both the input and output side. Until then this
+   * says so rather than pretending.
+   */
+  readonly languages: { id: AppLanguage; label: string; ready: boolean }[] = [
+    { id: 'en', label: 'English', ready: true },
+    { id: 'te', label: 'తెలుగు', ready: false },
   ];
 
   readonly language = signal<AppLanguage>('en');

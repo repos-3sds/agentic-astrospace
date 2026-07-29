@@ -6,7 +6,7 @@
 <div class="body">
   <header class="intro">
     <h1 class="title">Language &amp; audio</h1>
-    <p class="lede">English &amp; Telugu, read aloud if you like.</p>
+    <p class="lede">English today. Telugu is on the way — the app is not translated yet.</p>
   </header>
 
   <!-- Telugu is written in Telugu: a picker that names languages only in
@@ -18,9 +18,12 @@
         type="button"
         role="radio"
         [class.is-on]="l.id === language()"
+        [class.is-soon]="!l.ready"
+        [disabled]="!l.ready"
         [attr.aria-checked]="l.id === language()"
-        (click)="language.set(l.id)"
-      >{{ l.label }}</button>
+        [attr.aria-disabled]="!l.ready"
+        (click)="l.ready && language.set(l.id)"
+      >{{ l.label }}{{ l.ready ? '' : ' · soon' }}</button>
     }
   </div>
 

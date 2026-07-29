@@ -147,7 +147,37 @@ of the configurable set — `main.py` always appends them, whatever
 `ALLOWED_ORIGINS` says — so a routine deploy can't reintroduce this specific
 failure mode. `tests/test_cors_origins.py` pins that down.
 
-## Needs a fluent Telugu speaker
+## Telugu is disabled — what shipping it actually needs
+
+The language controls show Telugu and refuse it. Before that, the toggle was
+live and changed **nothing**: there is no UI translation, and `language` is
+stored on the message row and used to filter the `remedies` table but is never
+passed to the agent, so answers came back in English either way. A control that
+silently does nothing is worse than one that says it is not ready — especially
+on the onboarding screen that asks for trust.
+
+Disabled in four places: `onboarding/language.component`,
+`settings/language-audio.component`, `today/listen-sheet.component` (audio), and
+the Welcome promise, which used to read "English & Telugu".
+
+Shipping it for real is a milestone, not a fix:
+
+1. **UI localisation** — ~70 mobile components, none of which use `$localize`.
+   `angular.json` has the `extract-i18n` builder from the default scaffold; no
+   locale files exist.
+2. **Pass `language` to generation** — it currently stops at the database.
+3. **Telugu TTS** for Listen, or the audio toggle is decorative again.
+4. **Extend the refer-out boundary.** This is the one with teeth. Both the
+   input gate and the output net are English-only, so a Telugu speaker asking
+   about death would clear the input rules, and a Telugu answer would clear the
+   output net — **both layers blind at once**, for exactly the users who were
+   promised the boundary in their own language. Regex cannot fix this; it needs
+   model-based intent classification, which is language-agnostic by
+   construction. `BaseAstroAgent` already holds an Anthropic client.
+
+Do these together. Shipping (1) without (4) is the dangerous ordering.
+
+## Needs a fluent Telugu speaker (when Telugu ships)
 
 The refer-out boundary (`astrospace/api/ask_routes.py`) now matches on subject
 plus verdict-frame rather than whole English phrasings, which took the probe
