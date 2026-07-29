@@ -6,6 +6,93 @@
 
 .body { gap: 12px; }
 
+.choice-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.choice-detail {
+  @include m-caption;
+  color: var(--m-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.place-search {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+
+  span {
+    @include m-eyebrow;
+    color: var(--m-muted);
+  }
+
+  input {
+    @include m-body;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 50px;
+    padding: 0 15px;
+    border: 1px solid var(--m-border);
+    border-radius: 16px;
+    color: var(--m-text);
+    background: var(--m-surface);
+    outline: none;
+  }
+
+  input:focus {
+    border-color: var(--m-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--m-accent) 14%, transparent);
+  }
+}
+
+.city-list {
+  overflow: hidden;
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+  background: var(--m-surface);
+}
+
+.city-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--m-border);
+  color: var(--m-text);
+  background: transparent;
+  text-align: left;
+
+  &:last-child { border-bottom: 0; }
+
+  span {
+    min-width: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  b { @include m-body-strong; }
+  small { @include m-caption; color: var(--m-muted); }
+  img { width: 16px; height: 16px; flex-shrink: 0; }
+}
+
+.search-note {
+  @include m-caption;
+  margin: 0;
+  color: var(--m-muted);
+
+  &.error { color: var(--m-bad); }
+}
+
 .note {
   display: flex;
   align-items: flex-start;

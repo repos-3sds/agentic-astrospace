@@ -4,6 +4,7 @@ import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { ThemeService } from '../../../core/theme.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
+import { PreferencesService } from '../../../core/preferences.service';
 
 /** One settings row. `value` is the current state, shown without opening it. */
 export interface SettingRow {
@@ -42,6 +43,7 @@ export class SettingsHomeComponent {
   private readonly auth = inject(AuthService);
   private readonly kundlis = inject(KundliStore);
   private readonly theme = inject(ThemeService);
+  private readonly preferences = inject(PreferencesService);
   readonly profileSwitcherOpen = signal(false);
 
   readonly profile = computed(() => {
@@ -68,9 +70,9 @@ export class SettingsHomeComponent {
         },
         {
           id: 'mode',
-          icon: 'set-mode',
+          icon: `persona-${this.preferences.experienceMode()}`,
           label: 'Mode & tone',
-          value: 'Balanced · Gentle',
+          value: `${this.modeLabel()} · ${this.toneLabel()}`,
           route: ['/m', 'settings', 'mode'],
         },
       ],
@@ -80,7 +82,7 @@ export class SettingsHomeComponent {
       rows: [
         {
           id: 'language',
-          icon: 'set-lang',
+          icon: 'language',
           label: 'Language & audio',
           value: 'English · Audio on',
           route: ['/m', 'settings', 'language'],
@@ -99,16 +101,16 @@ export class SettingsHomeComponent {
         },
         {
           id: 'location',
-          icon: 'set-loc',
+          icon: this.preferences.panchangaPlace() ? 'pin-accent' : 'loc-current',
           label: 'Location',
-          value: 'Birth place',
+          value: this.locationLabel(),
           route: ['/m', 'settings', 'location'],
         },
         {
           id: 'conventions',
-          icon: 'set-conv',
+          icon: 'chart-east',
           label: 'Conventions',
-          value: 'Lahiri · Eastern',
+          value: `${this.ayanamshaLabel()} · ${this.chartStyleLabel()}`,
           route: ['/m', 'settings', 'conventions'],
         },
       ],
@@ -130,7 +132,7 @@ export class SettingsHomeComponent {
       rows: [
         {
           id: 'account',
-          icon: 'set-account',
+          icon: 'shield',
           label: 'Account & privacy',
           value: 'Sign out, delete',
           route: ['/m', 'settings', 'account'],
@@ -144,7 +146,7 @@ export class SettingsHomeComponent {
         },
         {
           id: 'subscription',
-          icon: 'set-account',
+          icon: 'sparkle',
           label: 'AstroSpace Plus',
           value: 'View plans',
           route: ['/m', 'subscription'],
@@ -155,5 +157,34 @@ export class SettingsHomeComponent {
 
   constructor() {
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
+  }
+
+  private modeLabel(): string {
+    const mode = this.preferences.experienceMode();
+    return mode === 'guided' ? 'Guided' : mode === 'practitioner' ? 'Practitioner' : 'Balanced';
+  }
+
+  private toneLabel(): string {
+    return this.preferences.tone() === 'direct' ? 'Direct' : 'Gentle';
+  }
+
+  private locationLabel(): string {
+    const place = this.preferences.panchangaPlace();
+    if (place?.city) return place.city;
+    const timezone = this.preferences.browserTimezone().split('/').pop()?.replaceAll('_', ' ');
+    return timezone ? `Current · ${timezone}` : 'Current location';
+  }
+
+  private ayanamshaLabel(): string {
+    const value = this.preferences.ayanamsha();
+    if (value === 'krishnamurti') return 'KP';
+    return value.slice(0, 1).toUpperCase() + value.slice(1);
+  }
+
+  private chartStyleLabel(): string {
+    const value = this.preferences.chartStyle();
+    if (value === 'south') return 'South';
+    if (value === 'north') return 'North';
+    return 'Eastern';
   }
 }

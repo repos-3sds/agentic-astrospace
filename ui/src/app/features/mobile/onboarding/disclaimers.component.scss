@@ -7,7 +7,7 @@
   justify-content: space-between;
   min-height: 100%;
   box-sizing: border-box;
-  padding: 18px 24px 32px;
+  padding: 18px 24px calc(32px + var(--m-safe-bottom));
   gap: 24px;
 }
 

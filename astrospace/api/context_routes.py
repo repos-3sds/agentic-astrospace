@@ -2,11 +2,12 @@ from datetime import datetime
 from typing import Optional
 from zoneinfo import ZoneInfo
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from ..context import KeywordRouter, assemble, daily_guidance, domain_ids
+from ..core.cities import city_for_timezone, lookup_city
 from ..core.vedic import LocationError, VedicChart
 from ..db import crud, get_db
 from .auth import CurrentUser
@@ -43,6 +44,16 @@ def _chart_from_kundli(k, ayanamsha: str, node_type: str) -> VedicChart:
         raise HTTPException(status_code=422, detail=f"Invalid birth details: {e}")
 
 
+def _validate_timezone(tz_str: Optional[str], fallback: str) -> str:
+    if not tz_str:
+        return fallback
+    try:
+        ZoneInfo(tz_str)
+    except Exception:
+        raise HTTPException(status_code=400, detail="timezone must be a valid IANA timezone")
+    return tz_str
+
+
 @router.get("/{kundli_id}/daily")
 def daily(
     kundli_id: str,
@@ -51,15 +62,35 @@ def daily(
     ayanamsha: str = "lahiri",
     node_type: str = "mean",
     as_of: Optional[datetime] = None,
+    timezone: Optional[str] = Query(None, description="Viewer or selected panchanga timezone"),
+    city: Optional[str] = Query(None, description="Optional panchanga place override"),
+    nation: Optional[str] = None,
 ):
     kundli = crud.get_kundli(db, kundli_id, user.id)
     if not kundli:
         raise HTTPException(status_code=404, detail="Kundli not found")
     chart = _chart_from_kundli(kundli, ayanamsha, node_type)
+    display_tz = _validate_timezone(timezone, chart.moment.tz_str)
+    viewer_city = city_for_timezone(display_tz) if timezone and not city else None
+    loc_city = city or (viewer_city[0] if viewer_city else None)
+    loc_nation = nation or (viewer_city[1] if viewer_city else None)
+    loc_kwargs = {}
+    if loc_city:
+        geo = lookup_city(loc_city, loc_nation or kundli.birth_nation)
+        if not geo:
+            raise HTTPException(status_code=422, detail=f"City {loc_city!r} not in offline database.")
+        lat, lng, tz_str = geo
+        loc_kwargs = {
+            "city": loc_city,
+            "nation": loc_nation or kundli.birth_nation,
+            "lat": lat,
+            "lng": lng,
+            "tz_str": tz_str,
+        }
     if as_of and as_of.tzinfo is None:
-        as_of = as_of.replace(tzinfo=ZoneInfo(chart.moment.tz_str))
+        as_of = as_of.replace(tzinfo=ZoneInfo(loc_kwargs.get("tz_str", display_tz)))
     try:
-        return daily_guidance(chart, relation=kundli.relation, as_of=as_of)
+        return daily_guidance(chart, relation=kundli.relation, as_of=as_of, **loc_kwargs)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
 

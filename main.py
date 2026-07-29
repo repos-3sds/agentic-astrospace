@@ -67,6 +67,12 @@ _origins = [
 # list readable in logs and in tests.
 _origins = list(dict.fromkeys([*_origins, *_NATIVE_ORIGINS]))
 
+app.add_middleware(AppAuditMiddleware)
+# Compresses the fully-formed response after the audit log has run, and after
+# Starlette has served the static SPA bundle.
+# Nothing was compressed before this: neither the ~150 KB /vedic/{id}/all
+# JSON nor the ~340 KB main JS chunk, both served uncompressed to phones.
+app.add_middleware(GZipMiddleware, minimum_size=500)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,
@@ -74,13 +80,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(AppAuditMiddleware)
-# Outermost of the three (added last — Starlette wraps in reverse add order),
-# so it compresses the fully-formed response after CORS headers and the audit
-# log have already run, and after Starlette has served the static SPA bundle.
-# Nothing was compressed before this: neither the ~150 KB /vedic/{id}/all
-# JSON nor the ~340 KB main JS chunk, both served uncompressed to phones.
-app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # API routers
 app.include_router(core_router)

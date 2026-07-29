@@ -1,6 +1,6 @@
 @use '../mobile-tokens' as *;
 
-:host { display: block; min-height: 100%; padding: 18px 24px 32px; box-sizing: border-box; }
+:host { display: block; min-height: 100%; padding: 18px 24px calc(32px + var(--m-safe-bottom)); box-sizing: border-box; }
 .topbar { height: 24px; a, img { display: block; width: 24px; height: 24px; } }
 main { display: flex; flex-direction: column; align-items: center; gap: 22px; padding-top: 22px; }
 .heading { text-align: center; h1 { @include m-h1; margin: 0 0 6px; } p { @include m-body; margin: 0; color: var(--m-muted); } }

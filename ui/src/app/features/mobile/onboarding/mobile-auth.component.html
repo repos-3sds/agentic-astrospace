@@ -13,8 +13,9 @@
     <button type="button" role="tab" [class.is-on]="mode() === 'register'" (click)="setMode('register')">Register</button>
   </div>
 
-  <button class="google" type="button" (click)="google()">
-    <img src="mobile/google.svg" alt="" aria-hidden="true" /> Continue with Google
+  <button class="google" type="button" [disabled]="googleLoading()" (click)="google()">
+    <img src="mobile/google.svg" alt="" aria-hidden="true" />
+    {{ googleLoading() ? 'Opening Google…' : 'Continue with Google' }}
   </button>
 
   <div class="or"><span></span><em>or</em><span></span></div>

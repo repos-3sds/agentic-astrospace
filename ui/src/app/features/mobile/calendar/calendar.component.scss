@@ -27,13 +27,47 @@
 .mcal-observance {
   display: flex; align-items: center; gap: 12px; width: 100%; box-sizing: border-box; padding: 13px 15px;
   border: 1px solid var(--m-border); border-radius: 18px; text-align: left; background: var(--m-raised);
+  color: var(--m-text); text-decoration: none;
   > span:last-child { display: flex; flex: 1 1 0; flex-direction: column; gap: 2px; }
   > span:last-child b { @include m-body-strong; color: var(--m-text); }
   > span:last-child small { @include m-caption; color: var(--m-muted); }
   em { @include m-caption; color: var(--m-accent-strong); font-style: normal; }
+  &.festival { cursor: pointer; }
+  &.festival .mcal-date-tile { background: var(--m-gold-soft); color: var(--m-gold); }
 }
 .mcal-date-tile {
   display: flex; flex: 0 0 auto; flex-direction: column; align-items: center; justify-content: center;
   width: 46px; height: 46px; border-radius: 14px; background: var(--m-gold-soft); color: var(--m-gold);
   b { @include m-body-strong; } small { font-size: 9px; }
+}
+.mcal-skel-day,
+.mcal-skel-row .mcal-date-tile,
+.mcal-skel-row i {
+  display: block;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--m-raised), var(--m-accent-soft), var(--m-raised));
+  background-size: 220% 100%;
+  animation: mcal-shimmer 1.35s ease-in-out infinite;
+}
+.mcal-skeleton .mcal-skel-day {
+  width: 28px;
+  height: 28px;
+  place-self: center;
+}
+.mcal-skel-row {
+  pointer-events: none;
+  .mcal-date-tile { width: 46px; height: 46px; }
+  i { height: 10px; margin: 2px 0; }
+  i:nth-child(1) { width: 72%; }
+  i:nth-child(2) { width: 96%; }
+  i:nth-child(3) { width: 46%; }
+}
+@keyframes mcal-shimmer {
+  0% { background-position: 140% 0; }
+  100% { background-position: -80% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mcal-skel-day,
+  .mcal-skel-row .mcal-date-tile,
+  .mcal-skel-row i { animation: none; }
 }

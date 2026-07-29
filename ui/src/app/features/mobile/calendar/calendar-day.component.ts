@@ -1,16 +1,19 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
+import { FestivalService } from '../../../core/festival.service';
 import { KundliStore } from '../../../core/kundli.store';
-import { CalendarDaySummary, CalendarEvent, CalendarIntelligencePayload, PanchangaWindow } from '../../../core/models';
+import { CalendarDaySummary, CalendarEvent, CalendarIntelligencePayload, FestivalOccurrence, PanchangaWindow } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
+import { FestivalSheetComponent } from './festival-sheet.component';
+import { MobileSymbol, nakshatraSymbol, tithiSymbol } from '../symbols/mobile-symbols';
 
 @Component({
   selector: 'as-calendar-day',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [FestivalSheetComponent, RouterLink],
   template: `
     <a class="mcald-back" [routerLink]="['/m','calendar']"><img src="mobile/back.svg" alt="" /><span>Calendar</span></a>
     <main class="mcald-body">
@@ -45,8 +48,14 @@ import { VedicService } from '../../../core/vedic.service';
           @if (preferences.experienceMode() === 'practitioner') {
             <p class="mcald-title">PANCHANGA DETAIL</p>
             <section class="mcald-stack">
-              <div><small>TITHI</small><b>{{ summary.tithi }}</b></div>
-              <div><small>NAKSHATRA</small><b>{{ summary.nakshatra }}</b></div>
+              <div class="mcald-symbol-row">
+                <span class="mcald-symbol" data-kind="tithi" aria-hidden="true">{{ symbolForTithi(summary.tithi).glyph }}</span>
+                <span><small>TITHI</small><b>{{ summary.tithi }}</b></span>
+              </div>
+              <div class="mcald-symbol-row">
+                <span class="mcald-symbol" data-kind="nakshatra" aria-hidden="true">{{ symbolForNakshatra(summary.nakshatra).glyph }}</span>
+                <span><small>NAKSHATRA</small><b>{{ summary.nakshatra }}</b></span>
+              </div>
               <div><small>MOON RASHI</small><b>{{ summary.moon_rashi }}</b></div>
               <div><small>PLACE</small><b>{{ calendar.place.city }} · {{ calendar.timezone }}</b></div>
             </section>
@@ -58,10 +67,23 @@ import { VedicService } from '../../../core/vedic.service';
           </section>
         }
 
+        <p class="mcald-title accent">FESTIVALS</p>
+        <section class="mcald-stack">
+          @for (festival of dayFestivals(); track festival.slug + festival.occurs_on) {
+            <button class="festival-row" type="button" (click)="selectedFestival.set(festival)">
+              <small>{{ festival.regions.join(' · ') }}</small>
+              <b>{{ festival.name }}</b>
+              <p>{{ festival.description || festival.prep_guidance || 'Tap for observance details.' }}</p>
+            </button>
+          } @empty {
+            <div><small>NONE</small><b>No major festival returned for this date</b></div>
+          }
+        </section>
+
         <p class="mcald-title">RELATED SIGNALS</p>
         <section class="mcald-stack">
           @for (event of events(); track event.title + event.date) {
-            <div><small>{{ event.category }}</small><b>{{ event.title }}</b><p>{{ event.detail }}</p></div>
+            <div><small>{{ event.category }}</small><b>{{ event.title }}</b><p>{{ signalSummary(event) }}</p></div>
           } @empty {
             <div><small>NONE</small><b>No profile-specific events returned</b></div>
           }
@@ -73,6 +95,9 @@ import { VedicService } from '../../../core/vedic.service';
         </section>
       }
     </main>
+    @if (selectedFestival(); as festival) {
+      <as-festival-sheet [festival]="festival" (dismissed)="selectedFestival.set(null)" />
+    }
   `,
   styleUrl: './calendar-day.component.scss',
 })
@@ -80,12 +105,15 @@ export class CalendarDayComponent {
   protected readonly preferences = inject(PreferencesService);
   private readonly store = inject(KundliStore);
   private readonly vedic = inject(VedicService);
+  private readonly festivals = inject(FestivalService);
   private readonly route = inject(ActivatedRoute);
   private requestId = 0;
 
   protected readonly data = signal<CalendarIntelligencePayload | null>(null);
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly festivalRows = signal<FestivalOccurrence[]>([]);
+  protected readonly selectedFestival = signal<FestivalOccurrence | null>(null);
   protected readonly selectedDate = signal(this.route.snapshot.queryParamMap.get('date') ?? '');
   protected readonly activeId = computed(() => this.store.activeId());
   protected readonly activeName = computed(() => this.store.active()?.name ?? 'this profile');
@@ -96,6 +124,10 @@ export class CalendarDayComponent {
   protected readonly events = computed<CalendarEvent[]>(() => {
     const date = this.selectedDate() || this.data()?.start_date;
     return date ? this.data()?.by_date[date] ?? [] : [];
+  });
+  protected readonly dayFestivals = computed(() => {
+    const date = this.selectedDate() || this.data()?.start_date;
+    return date ? this.festivalRows().filter((festival) => festival.occurs_on === date) : [];
   });
 
   constructor() {
@@ -118,6 +150,14 @@ export class CalendarDayComponent {
     const day = this.day();
     if (!day) return 'No panchanga details returned';
     return `${day.tithi} · ${day.nakshatra} · ${day.vara}`;
+  }
+
+  protected symbolForTithi(value: string): MobileSymbol {
+    return tithiSymbol(value);
+  }
+
+  protected symbolForNakshatra(value: string): MobileSymbol {
+    return nakshatraSymbol(value);
   }
 
   protected qualityLabel(day: CalendarDaySummary): string {
@@ -155,10 +195,34 @@ export class CalendarDayComponent {
       if (request !== this.requestId || this.activeId() !== id) return;
       this.data.set(calendar);
       if (!this.selectedDate()) this.selectedDate.set(calendar.start_date);
+      void this.loadFestivals(calendar.start_date, 60);
     } catch (error) {
       if (request === this.requestId) this.error.set((error as Error).message);
     } finally {
       if (request === this.requestId) this.loading.set(false);
     }
+  }
+
+  private async loadFestivals(fromDate: string, days: number): Promise<void> {
+    const place = this.preferences.panchangaPlace();
+    const profile = this.store.active();
+    const city = place?.city || profile?.birth_city;
+    const nation = place?.nation || profile?.birth_nation || 'IN';
+    if (!city) return;
+    try {
+      const payload = await this.festivals.upcoming(city, nation, fromDate, days);
+      this.festivalRows.set(payload.festivals);
+    } catch {
+      this.festivalRows.set([]);
+    }
+  }
+
+  protected signalSummary(event: CalendarEvent): string {
+    if (this.preferences.experienceMode() === 'practitioner') return event.detail;
+    return event.tone === 'challenging' || event.tone === 'hard'
+      ? 'Use care around this timing.'
+      : event.tone === 'supportive'
+        ? 'Supportive timing marker.'
+        : 'Timing marker from your profile.';
   }
 }

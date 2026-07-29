@@ -1,10 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException
+from urllib.parse import urlencode
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from ..db import get_db, crud
 from .auth import DEV_USER_ID, CurrentUser, auth_config
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
+
+NATIVE_AUTH_CALLBACK = "app.astrospace.mobile://auth/callback"
 
 
 @router.get("/config")
@@ -15,6 +20,20 @@ def config():
         "supabase_url": cfg["url"],
         "supabase_anon_key": cfg["anon_key"],
     }
+
+
+@router.get("/native-callback")
+def native_callback(request: Request):
+    """Bridge Supabase's HTTPS OAuth callback into the native app scheme.
+
+    Some hosted auth/provider combinations accept the custom mobile scheme in
+    `redirectTo`, but others fall back to the Site URL unless the redirect is a
+    normal HTTPS URL. This route gives Supabase an allow-list friendly HTTPS
+    target, then immediately hands the PKCE code/error back to Capacitor.
+    """
+    query = urlencode(list(request.query_params.multi_items()))
+    destination = NATIVE_AUTH_CALLBACK + (f"?{query}" if query else "")
+    return RedirectResponse(destination, status_code=302)
 
 
 @router.get("/migration/local")

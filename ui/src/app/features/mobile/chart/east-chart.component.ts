@@ -58,6 +58,8 @@ export interface PlanetSelection {
       @if (interactive() && cell.planets) {
         <span
           class="cell interactive"
+          [class.edge-right]="cell.x >= 70"
+          [class.edge-bottom]="cell.y >= 80"
           [style.left.%]="cell.x"
           [style.top.%]="cell.y"
         >
@@ -74,7 +76,13 @@ export interface PlanetSelection {
           </span>
         </span>
       } @else {
-        <span class="cell" [style.left.%]="cell.x" [style.top.%]="cell.y">
+        <span
+          class="cell"
+          [class.edge-right]="cell.x >= 70"
+          [class.edge-bottom]="cell.y >= 80"
+          [style.left.%]="cell.x"
+          [style.top.%]="cell.y"
+        >
           @if (cell.sign) { <span class="sign">{{ cell.sign }}</span> }
           @if (cell.planets) { <span class="planets">{{ cell.planets }}</span> }
         </span>

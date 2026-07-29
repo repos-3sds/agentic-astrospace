@@ -46,6 +46,7 @@ export class VargaChartsComponent implements AfterViewInit {
   protected readonly data = signal<VedicAll | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
+  private renderedChartId: string | null = null;
   readonly vargas: VargaOption[] = [
     { id: 'D1' },
     { id: 'D2' },
@@ -114,7 +115,6 @@ export class VargaChartsComponent implements AfterViewInit {
   }
 
   private async load(expectedActiveId: string | null): Promise<void> {
-    this.loading.set(true);
     this.error.set(null);
     try {
       await this.kundlis.load();
@@ -122,9 +122,20 @@ export class VargaChartsComponent implements AfterViewInit {
       if (expectedActiveId && activeId !== expectedActiveId) return;
       if (!activeId) {
         this.data.set(null);
+        this.renderedChartId = null;
+        this.loading.set(false);
         return;
       }
+      const cached = this.vedic.cachedAll(activeId);
+      if (cached) {
+        this.data.set(cached);
+        this.renderedChartId = activeId;
+        this.loading.set(false);
+        return;
+      }
+      if (this.renderedChartId !== activeId) this.loading.set(true);
       this.data.set(await this.vedic.all(activeId));
+      this.renderedChartId = activeId;
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {

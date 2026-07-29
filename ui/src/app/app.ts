@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { A11yModule } from '@angular/cdk/a11y';
 import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
@@ -41,7 +41,7 @@ const SELECTED_PROFILE_STORAGE_KEY = 'astrospace:selected-profile';
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
-export class App implements OnInit {
+export class App implements OnInit, OnDestroy {
   protected readonly store = inject(KundliStore);
   protected readonly auth = inject(AuthService);
   protected readonly theme = inject(ThemeService);
@@ -49,6 +49,7 @@ export class App implements OnInit {
   private confirmation = inject(ConfirmationService);
   private messages = inject(MessageService);
   private router = inject(Router);
+  private removeViewportInsetObserver: (() => void) | null = null;
 
   constructor() {
     // Native boot starts on a route that does not depend on auth or the network.
@@ -150,6 +151,7 @@ export class App implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
+    this.removeViewportInsetObserver = this.installViewportInsetObserver();
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event) => this.url.set(event.urlAfterRedirects));
@@ -172,6 +174,44 @@ export class App implements OnInit {
         detail: (e as Error).message,
       });
     }
+  }
+
+  ngOnDestroy(): void {
+    this.removeViewportInsetObserver?.();
+  }
+
+  private installViewportInsetObserver(): () => void {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return () => undefined;
+    if (Capacitor.getPlatform() === 'android') {
+      document.documentElement.style.setProperty('--as-native-bottom', '48px');
+    }
+    const viewport = window.visualViewport;
+    if (!viewport) {
+      return () => {
+        document.documentElement.style.removeProperty('--as-native-bottom');
+      };
+    }
+    let frame = 0;
+    const update = () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        const bottomInset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+        document.documentElement.style.setProperty('--as-visual-bottom', `${Math.round(bottomInset)}px`);
+      });
+    };
+    update();
+    viewport.addEventListener('resize', update);
+    viewport.addEventListener('scroll', update);
+    window.addEventListener('orientationchange', update);
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      viewport.removeEventListener('resize', update);
+      viewport.removeEventListener('scroll', update);
+      window.removeEventListener('orientationchange', update);
+      document.documentElement.style.removeProperty('--as-native-bottom');
+      document.documentElement.style.removeProperty('--as-visual-bottom');
+    };
   }
 
   protected edit(): void {

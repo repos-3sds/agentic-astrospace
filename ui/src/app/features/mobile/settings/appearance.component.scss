@@ -35,8 +35,8 @@
   background: #faf7f0;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 
-  &.dark { background: #15110d; border-color: #51473a; }
-  &.system { background: linear-gradient(135deg, #faf7f0 0 49%, #15110d 51%); }
+  &.dark { background: #0f1117; border-color: #485064; }
+  &.system { background: linear-gradient(135deg, #faf7f0 0 49%, #0f1117 51%); }
 }
 
 .preview-card {
@@ -46,8 +46,8 @@
   background: #fff;
   box-shadow: 0 3px 8px rgba(32, 21, 14, 0.12);
 }
-.dark .preview-card { background: #2b231c; }
-.system .preview-card { background: linear-gradient(135deg, #fff 0 49%, #2b231c 51%); }
+.dark .preview-card { background: #202431; }
+.system .preview-card { background: linear-gradient(135deg, #fff 0 49%, #202431 51%); }
 
 .preview-line {
   position: absolute;

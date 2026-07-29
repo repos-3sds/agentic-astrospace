@@ -14,7 +14,7 @@
   @for (group of groups; track group.key) {
     <p class="eyebrow">{{ group.eyebrow }}</p>
     @for (choice of group.choices; track choice.id) {
-      @let on = selected()[group.key] === choice.id;
+      @let on = selected(group.key) === choice.id;
       <button
         class="choice"
         type="button"

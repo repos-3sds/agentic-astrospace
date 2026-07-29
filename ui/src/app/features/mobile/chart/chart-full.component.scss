@@ -126,3 +126,26 @@
 .legend-name { @include m-caption; color: var(--m-muted); }
 
 .hint { @include m-caption; color: var(--m-muted); margin: 0; }
+
+.chart-skeleton { pointer-events: none; }
+.skel {
+  display: block;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--m-raised), var(--m-accent-soft), var(--m-raised));
+  background-size: 220% 100%;
+  animation: chart-full-shimmer 1.35s ease-in-out infinite;
+}
+.style-skel { flex: 1 1 0; height: 40px; }
+.chart-box { width: 100%; aspect-ratio: 1; border-radius: 18px; }
+.legend-dot { width: 24px; height: 12px; }
+.legend-line { width: 62px; height: 12px; }
+
+@keyframes chart-full-shimmer {
+  0% { background-position: 140% 0; }
+  100% { background-position: -80% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skel { animation: none; }
+}

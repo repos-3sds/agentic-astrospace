@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { EastChartComponent } from './east-chart.component';
+import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { ProvenanceSheetComponent } from './provenance-sheet.component';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
@@ -43,7 +44,7 @@ export interface ExploreCard {
   selector: 'as-chart-hub',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [EastChartComponent, ProvenanceSheetComponent, RouterLink],
+  imports: [EastChartComponent, ProfileSwitcherComponent, ProvenanceSheetComponent, RouterLink],
   templateUrl: './chart-hub.component.html',
   styleUrl: './chart-hub.component.scss',
 })
@@ -72,7 +73,10 @@ export class ChartHubComponent {
   readonly angles = computed<AnglePoint[]>(() => this.adapter()?.angles ?? []);
 
   /** Which drawing convention the diagram uses — see EastChartComponent. */
-  readonly chartStyle = signal('Eastern');
+  readonly chartStyleLabel = computed(() => {
+    const style = this.preferences.chartStyle();
+    return style === 'south' ? 'South' : style === 'north' ? 'North' : 'Eastern';
+  });
 
   /**
    * Glyph placements, as percentages of the frame, taken from the design's own
@@ -159,6 +163,8 @@ export class ChartHubComponent {
 
   /** The provenance sheet (36:247), shared with the full render. */
   readonly provenanceOpen = signal(false);
+  readonly profileSwitcherOpen = signal(false);
+  private renderedChartId: string | null = null;
 
   constructor() {
     effect(() => {
@@ -172,7 +178,6 @@ export class ChartHubComponent {
   }
 
   private async load(expectedActiveId: string | null): Promise<void> {
-    this.loading.set(true);
     this.error.set(null);
     try {
       await this.kundlis.load();
@@ -180,9 +185,20 @@ export class ChartHubComponent {
       if (expectedActiveId && activeId !== expectedActiveId) return;
       if (!activeId) {
         this.chart.set(null);
+        this.renderedChartId = null;
+        this.loading.set(false);
         return;
       }
+      const cached = this.vedic.cachedAll(activeId);
+      if (cached) {
+        this.chart.set(cached);
+        this.renderedChartId = activeId;
+        this.loading.set(false);
+        return;
+      }
+      if (this.renderedChartId !== activeId) this.loading.set(true);
       this.chart.set(await this.vedic.all(activeId));
+      this.renderedChartId = activeId;
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {

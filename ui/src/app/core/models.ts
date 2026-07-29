@@ -664,6 +664,13 @@ export interface TransitContextPayload {
   };
 }
 
+export interface TransitDignity {
+  dignity: 'Exalted' | 'Moolatrikona' | 'Own' | 'Debilitated' | 'Neutral' | string;
+  score: number;
+  note?: string;
+  dispositor?: string;
+}
+
 export interface TransitPlanetDetail {
   planet: string;
   longitude: number;
@@ -677,6 +684,25 @@ export interface TransitPlanetDetail {
   house_from_moon: number;
   retrograde?: boolean;
   speed: number;
+  /** US-GOC-017: the transiting planet's own dignity in its transit sign. */
+  transit_dignity?: TransitDignity;
+  /** US-GOC-017: houses this planet classically aspects from here (BPHS ch.3 graha-drishti). */
+  special_aspect_houses_from_moon?: number[];
+}
+
+export interface ClassicalGocharaVedha {
+  obstructed: boolean;
+  by: string | null;
+  vedha_house: number | null;
+}
+
+/** Phaladeepika ch.26 favourable-house/Vedha status for one transit planet. */
+export interface ClassicalGocharaStatus {
+  house_from_moon: number;
+  favourable: boolean;
+  vedha: ClassicalGocharaVedha;
+  effective: 'favourable' | 'unfavourable' | 'obstructed' | string;
+  source_status: 'classical_table' | 'convention_dependent' | string;
 }
 
 export interface TransitAspect {
@@ -696,6 +722,11 @@ export interface AvContext {
   bav_support: string;
   sav: number;
   sav_support: string;
+  kakshya?: {
+    kakshya_index: number;
+    kakshya_lord: string;
+    bindu_given: boolean;
+  };
 }
 
 export interface TransitRule {
@@ -744,6 +775,12 @@ export interface TransitTimelineEvent {
   transition?: string;
 }
 
+export interface GocharaPass {
+  start: string | null;
+  end: string | null;
+  entry_type: 'first_entry' | 'retrograde_return' | 'final_exit' | 'continuing_before_horizon' | 'continuing_past_horizon' | string;
+}
+
 export interface GocharaActiveWindow {
   rule: string;
   rule_id?: string;
@@ -753,6 +790,8 @@ export interface GocharaActiveWindow {
   tone: 'neutral' | 'supportive' | 'challenging' | 'hard';
   trigger: string;
   summary: string;
+  /** US-GOC-025: every pass through this window (Saturn long-cycle rules only, else null). */
+  passes?: GocharaPass[] | null;
 }
 
 export interface GocharaRuleTimeline {
@@ -931,6 +970,10 @@ export interface TransitAnalysisPayload {
       phase?: string | null;
       saturn_house_from_moon: number;
     };
+    /** Phaladeepika ch.26 favourable/Vedha status per transit planet. */
+    classical_gochara?: Record<string, ClassicalGocharaStatus>;
+    /** Same object as the top-level ashtakavarga_transit, mirrored here by the backend. */
+    ashtakavarga?: AshtakavargaTransitPayload;
   };
   gocharam_periods?: GocharamPeriod[];
   gocharam_coverage?: GocharamProfilePayload['coverage'];
@@ -953,6 +996,26 @@ export interface CalendarEvent {
   tone: 'neutral' | 'supportive' | 'challenging' | 'hard' | string;
   strength: number;
   meta?: Record<string, unknown>;
+}
+
+export interface FestivalOccurrence {
+  slug: string;
+  name: string;
+  local_names?: Record<string, string>;
+  regions: string[];
+  description?: string | null;
+  prep_guidance?: string | null;
+  occurs_on: string;
+  observance_note?: string | null;
+  is_convention_dependent?: boolean;
+}
+
+export interface FestivalWindowPayload {
+  from_date: string;
+  to_date: string;
+  place: { city: string; nation: string };
+  count: number;
+  festivals: FestivalOccurrence[];
 }
 
 export interface CalendarDaySummary {

@@ -5,6 +5,7 @@ import { PlanetDetail, PlanetSheetComponent } from './planet-sheet.component';
 import { RegionalChartComponent } from './regional-chart.component';
 import { KundliStore } from '../../../core/kundli.store';
 import { VedicAll } from '../../../core/models';
+import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { buildChartAdapter, PLANET_NAME } from './mobile-chart-data';
 
@@ -33,9 +34,10 @@ export type ChartStyle = 'Eastern' | 'South' | 'North';
 })
 export class ChartFullComponent {
   private readonly kundlis = inject(KundliStore);
+  private readonly preferences = inject(PreferencesService);
   private readonly vedic = inject(VedicService);
   readonly styles: ChartStyle[] = ['Eastern', 'South', 'North'];
-  readonly style = signal<ChartStyle>('Eastern');
+  readonly style = signal<ChartStyle>(this.toChartStyle(this.preferences.chartStyle()));
   protected readonly chart = signal<VedicAll | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
@@ -53,6 +55,7 @@ export class ChartFullComponent {
   })));
 
   readonly selected = signal<PlanetDetail | null>(null);
+  private renderedChartId: string | null = null;
 
   constructor() {
     effect(() => {
@@ -65,6 +68,11 @@ export class ChartFullComponent {
     void this.load(this.kundlis.activeId());
   }
 
+  protected setStyle(style: ChartStyle): void {
+    this.style.set(style);
+    this.preferences.chartStyle.set(style.toLowerCase() as 'eastern' | 'south' | 'north');
+  }
+
   protected openPlanet(selection: PlanetSelection): void {
     const detail = this.adapter()?.details[selection.planet];
     if (detail) {
@@ -73,7 +81,6 @@ export class ChartFullComponent {
   }
 
   private async load(expectedActiveId: string | null): Promise<void> {
-    this.loading.set(true);
     this.error.set(null);
     try {
       await this.kundlis.load();
@@ -81,13 +88,28 @@ export class ChartFullComponent {
       if (expectedActiveId && activeId !== expectedActiveId) return;
       if (!activeId) {
         this.chart.set(null);
+        this.renderedChartId = null;
+        this.loading.set(false);
         return;
       }
+      const cached = this.vedic.cachedAll(activeId);
+      if (cached) {
+        this.chart.set(cached);
+        this.renderedChartId = activeId;
+        this.loading.set(false);
+        return;
+      }
+      if (this.renderedChartId !== activeId) this.loading.set(true);
       this.chart.set(await this.vedic.all(activeId));
+      this.renderedChartId = activeId;
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {
       this.loading.set(false);
     }
+  }
+
+  private toChartStyle(style: 'eastern' | 'south' | 'north'): ChartStyle {
+    return style === 'south' ? 'South' : style === 'north' ? 'North' : 'Eastern';
   }
 }

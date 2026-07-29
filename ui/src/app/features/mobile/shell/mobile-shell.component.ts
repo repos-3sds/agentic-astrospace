@@ -11,6 +11,12 @@ import { filter, map, startWith } from 'rxjs';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
 
+interface MobileTab {
+  commands: string[];
+  label: string;
+  icon: string;
+}
+
 /**
  * Native app shell: routed content plus the five-tab bar (Figma node 13:66).
  *
@@ -62,33 +68,39 @@ export class MobileShellComponent {
 
   protected readonly tabs = computed(() => {
     const fixed = [
-      { path: 'today', label: 'Today', icon: 'nav-today' },
+      { commands: ['today'], label: 'Today', icon: 'nav-today' },
     ];
-    const more = { path: 'settings', label: 'More', icon: 'nav-more' };
+    const more = { commands: ['settings'], label: 'More', icon: 'nav-more' };
     if (this.preferences.experienceMode() === 'guided') {
       return [
         ...fixed,
-        { path: 'ask', label: 'Ask', icon: 'nav-ask' },
-        { path: 'remedies', label: 'What to do', icon: 'nav-chart' },
-        { path: 'calendar', label: 'Calendar', icon: 'nav-calendar' },
+        { commands: ['ask'], label: 'Ask', icon: 'nav-ask' },
+        { commands: ['remedies'], label: 'What to do', icon: 'nav-chart' },
+        { commands: ['calendar'], label: 'Calendar', icon: 'nav-calendar' },
         more,
       ];
     }
     if (this.preferences.experienceMode() === 'practitioner') {
       return [
         ...fixed,
-        { path: 'chart', label: 'Chart', icon: 'nav-chart' },
-        { path: 'chart/periods', label: 'Periods', icon: 'nav-ask' },
-        { path: 'transits', label: 'Transits', icon: 'nav-calendar' },
+        { commands: ['chart'], label: 'Chart', icon: 'nav-chart' },
+        { commands: ['chart', 'periods'], label: 'Periods', icon: 'nav-ask' },
+        { commands: ['transits'], label: 'Transits', icon: 'nav-calendar' },
         more,
       ];
     }
     return [
       ...fixed,
-      { path: 'ask', label: 'Ask', icon: 'nav-ask' },
-      { path: 'chart', label: 'Chart', icon: 'nav-chart' },
-      { path: 'calendar', label: 'Calendar', icon: 'nav-calendar' },
+      { commands: ['ask'], label: 'Ask', icon: 'nav-ask' },
+      { commands: ['chart'], label: 'Chart', icon: 'nav-chart' },
+      { commands: ['calendar'], label: 'Calendar', icon: 'nav-calendar' },
       more,
-    ];
+    ] satisfies MobileTab[];
   });
+
+  protected readonly tabTrack = (_index: number, tab: MobileTab) => tab.commands.join('/');
+
+  protected tabLink(tab: MobileTab): string[] {
+    return ['/m', ...tab.commands];
+  }
 }

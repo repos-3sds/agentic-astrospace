@@ -22,7 +22,7 @@
   bottom: 0;
   background: var(--m-surface);
   border-radius: 28px 28px 0 0;
-  padding: 12px 24px max(34px, var(--m-safe-bottom));
+  padding: 12px 24px max(34px, calc(var(--m-safe-bottom) + 18px));
   display: flex;
   flex-direction: column;
   gap: 16px;

@@ -56,7 +56,9 @@
   --as-bp-tablet: 899px;
   --as-safe-top: env(safe-area-inset-top, 0px);
   --as-safe-right: env(safe-area-inset-right, 0px);
-  --as-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --as-native-bottom: 0px;
+  --as-visual-bottom: 0px;
+  --as-safe-bottom: max(env(safe-area-inset-bottom, 0px), min(max(var(--as-visual-bottom), var(--as-native-bottom)), 96px));
   --as-safe-left: env(safe-area-inset-left, 0px);
   --as-mobile-gutter: 14px;
   --as-mobile-appbar-h: 64px;

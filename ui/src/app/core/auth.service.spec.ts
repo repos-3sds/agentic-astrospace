@@ -65,12 +65,13 @@ describe('AuthService native auth callback', () => {
     return redirect;
   }
 
-  function stateFrom(redirectUrl: string): string {
-    return new URL(redirectUrl).searchParams.get('state')!;
+  function storedState(): string {
+    return JSON.parse(localStorage.getItem(STATE_KEY)!)?.nonce;
   }
 
   it('accepts a fragment-token callback that carries the state this app issued', async () => {
-    const state = stateFrom(issueCallbackUrl('/m/today'));
+    issueCallbackUrl('/m/today');
+    const state = storedState();
 
     await (service as any).handleNativeAuthCallback(
       `${CALLBACK_BASE}?state=${state}#access_token=abc&refresh_token=def`,
@@ -92,6 +93,12 @@ describe('AuthService native auth callback', () => {
 
     expect(client.auth.exchangeCodeForSession).toHaveBeenCalledWith('xyz');
     expect(service.session()).toBe(fakeSession);
+  });
+
+  it('keeps the native redirect URL fixed so Supabase allow-list matching is stable', () => {
+    expect(issueCallbackUrl('/m/today')).toContain(CALLBACK_BASE);
+    expect(localStorage.getItem(DESTINATION_KEY)).toBe('/m/today');
+    expect(storedState()).toBeTruthy();
   });
 
   it('rejects a callback with no state parameter at all', async () => {
@@ -132,7 +139,8 @@ describe('AuthService native auth callback', () => {
   });
 
   it('is single-use: replaying an already-consumed state is rejected', async () => {
-    const state = stateFrom(issueCallbackUrl());
+    issueCallbackUrl();
+    const state = storedState();
     const url = `${CALLBACK_BASE}?state=${state}#access_token=abc&refresh_token=def`;
 
     await (service as any).handleNativeAuthCallback(url);
@@ -145,7 +153,8 @@ describe('AuthService native auth callback', () => {
   });
 
   it('rejects a state that has passed its TTL', async () => {
-    const state = stateFrom(issueCallbackUrl());
+    issueCallbackUrl();
+    const state = storedState();
     const stored = JSON.parse(localStorage.getItem(STATE_KEY)!);
     stored.issuedAt = Date.now() - 11 * 60 * 1000; // 11 minutes ago, TTL is 10
     localStorage.setItem(STATE_KEY, JSON.stringify(stored));

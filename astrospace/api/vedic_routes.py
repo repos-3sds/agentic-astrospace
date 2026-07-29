@@ -79,7 +79,7 @@ def _reading_calendar_marker(r) -> dict:
     }
     return {
         "id": r.id,
-        "reading_type": r.reading_type,
+        "reading_type": r.reading_type or "reading",
         "period_label": r.period_label,
         "generated_local_date": r.generated_local_date,
         "version": r.version or 1,
@@ -96,14 +96,14 @@ def _claim_calendar_marker(c) -> dict:
     return {
         "id": c.id,
         "reading_id": c.reading_id,
-        "reading_type": c.reading_type,
+        "reading_type": c.reading_type or "reading",
         "period_label": c.period_label,
         "target_start_date": c.target_start_date,
         "target_end_date": c.target_end_date,
-        "category": c.category,
-        "claim_text": c.claim_text,
+        "category": c.category or "general",
+        "claim_text": c.claim_text or "",
         "confidence": c.confidence,
-        "status": c.status,
+        "status": c.status or "pending",
         "reviewed_at": c.reviewed_at.isoformat() if c.reviewed_at else None,
     }
 
@@ -124,10 +124,11 @@ def _attach_readings_to_calendar(payload: dict, db: Session, kundli_id: str, use
             continue
         marker = _reading_calendar_marker(reading)
         readings_by_date.setdefault(date, []).append(marker)
+        reading_type = marker["reading_type"]
         event = {
             "date": date,
             "category": "reading",
-            "title": f"{reading.reading_type.title()} reading v{reading.version or 1}",
+            "title": f"{reading_type.title()} reading v{reading.version or 1}",
             "detail": (
                 f"{reading.period_label or 'Generated AI prediction'} · "
                 f"{marker['feedback_status']}"
@@ -164,11 +165,13 @@ def _attach_readings_to_calendar(payload: dict, db: Session, kundli_id: str, use
             continue
         marker = _claim_calendar_marker(claim)
         claims_by_date.setdefault(date, []).append(marker)
+        category = marker["category"]
+        status = marker["status"]
         event = {
             "date": date,
             "category": "prediction",
-            "title": f"{claim.category.title()} claim · {claim.status.replace('_', ' ')}",
-            "detail": claim.claim_text[:140],
+            "title": f"{category.title()} claim · {status.replace('_', ' ')}",
+            "detail": marker["claim_text"][:140],
             "tone": "neutral",
             "strength": int((claim.confidence or 0.5) * 100),
             "meta": {

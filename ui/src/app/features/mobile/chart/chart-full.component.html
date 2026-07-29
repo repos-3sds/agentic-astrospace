@@ -5,7 +5,17 @@
 
 <div class="body">
   @if (loading()) {
-    <section class="chart-state"><b>Computing chart</b><p>Loading the expanded chart from your profile.</p></section>
+    <div class="styles chart-skeleton" role="status" aria-label="Loading chart style controls">
+      @for (_ of [1, 2, 3]; track _) { <span class="skel style-skel"></span> }
+    </div>
+    <div class="chart-card chart-skeleton">
+      <span class="skel chart-box"></span>
+    </div>
+    <ul class="legend chart-skeleton">
+      @for (_ of [1, 2, 3, 4, 5, 6]; track _) {
+        <li class="legend-item"><span class="skel legend-dot"></span><span class="skel legend-line"></span></li>
+      }
+    </ul>
   } @else if (error()) {
     <section class="chart-state error" role="alert"><b>Chart could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
   } @else if (!chart()) {
@@ -23,7 +33,7 @@
         role="radio"
         [class.is-on]="s === style()"
         [attr.aria-checked]="s === style()"
-        (click)="style.set(s)"
+        (click)="setStyle(s)"
       >{{ s }}</button>
     }
   </div>

@@ -1,5 +1,12 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import {
+  DefaultAyanamsha,
+  DefaultChartStyle,
+  DefaultNodeType,
+  PreferencesService,
+} from '../../../core/preferences.service';
+import { VedicService } from '../../../core/vedic.service';
 
 /** One selectable convention within a group. */
 export interface ConventionChoice {
@@ -42,6 +49,9 @@ export interface ConventionGroup {
   styleUrl: './conventions.component.scss',
 })
 export class ConventionsComponent {
+  protected readonly preferences = inject(PreferencesService);
+  private readonly vedic = inject(VedicService);
+
   readonly groups: ConventionGroup[] = [
     {
       key: 'ayanamsha',
@@ -50,7 +60,7 @@ export class ConventionsComponent {
       choices: [
         { id: 'lahiri', label: 'Lahiri' },
         { id: 'raman', label: 'Raman' },
-        { id: 'kp', label: 'KP' },
+        { id: 'krishnamurti', label: 'KP' },
       ],
     },
     {
@@ -74,14 +84,37 @@ export class ConventionsComponent {
     },
   ];
 
-  /** Current selection per group. Defaults match what provenance reports. */
-  readonly selected = signal<Record<ConventionGroup['key'], string>>({
-    ayanamsha: 'lahiri',
-    nodes: 'mean',
-    style: 'eastern',
-  });
-
   protected choose(key: ConventionGroup['key'], id: string): void {
-    this.selected.update((current) => ({ ...current, [key]: id }));
+    if (key === 'ayanamsha' && this.isAyanamsha(id)) {
+      this.preferences.ayanamsha.set(id);
+      this.vedic.invalidateAll();
+      return;
+    }
+    if (key === 'nodes' && this.isNodeType(id)) {
+      this.preferences.nodeType.set(id);
+      this.vedic.invalidateAll();
+      return;
+    }
+    if (key === 'style' && this.isChartStyle(id)) {
+      this.preferences.chartStyle.set(id);
+    }
+  }
+
+  protected selected(key: ConventionGroup['key']): string {
+    if (key === 'ayanamsha') return this.preferences.ayanamsha();
+    if (key === 'nodes') return this.preferences.nodeType();
+    return this.preferences.chartStyle();
+  }
+
+  private isAyanamsha(value: string): value is DefaultAyanamsha {
+    return value === 'lahiri' || value === 'raman' || value === 'krishnamurti';
+  }
+
+  private isNodeType(value: string): value is DefaultNodeType {
+    return value === 'mean' || value === 'true';
+  }
+
+  private isChartStyle(value: string): value is DefaultChartStyle {
+    return value === 'eastern' || value === 'south' || value === 'north';
   }
 }

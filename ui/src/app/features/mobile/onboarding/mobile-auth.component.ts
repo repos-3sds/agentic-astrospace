@@ -23,6 +23,7 @@ export class MobileAuthComponent {
     this.route.snapshot.queryParamMap.get('mode') === 'register' ? 'register' : 'signin',
   );
   protected readonly loading = signal(false);
+  protected readonly googleLoading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly notice = signal<string | null>(null);
   protected readonly showPassword = signal(false);
@@ -79,14 +80,23 @@ export class MobileAuthComponent {
   }
 
   protected async google(): Promise<void> {
-    await this.auth.init();
-    if (!this.auth.enabled()) {
-      await this.router.navigate(this.mode() === 'signin' ? ['/m', 'today'] : ['/m', 'language']);
-      return;
+    this.googleLoading.set(true);
+    this.error.set(null);
+    this.notice.set(null);
+    try {
+      await this.auth.init();
+      if (!this.auth.enabled()) {
+        await this.router.navigate(this.mode() === 'signin' ? ['/m', 'today'] : ['/m', 'language']);
+        return;
+      }
+      await this.auth.signInWithGoogle(
+        this.mode() === 'signin' ? '/m/today' : '/m/language',
+      );
+    } catch (error) {
+      this.error.set((error as Error).message || 'Could not open Google sign-in. Try again.');
+    } finally {
+      this.googleLoading.set(false);
     }
-    await this.auth.signInWithGoogle(
-      this.mode() === 'signin' ? '/m/today' : '/m/language',
-    );
   }
 
   protected async magicLink(): Promise<void> {

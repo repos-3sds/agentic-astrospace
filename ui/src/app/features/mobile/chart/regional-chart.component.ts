@@ -28,6 +28,8 @@ import { ChartCell, PlanetSelection } from './east-chart.component';
           <div
             class="regional-cell"
             [class.occupied]="cell.planets"
+            [class.edge-right]="cell.x >= 70"
+            [class.edge-bottom]="cell.y >= 80"
             [style.left.%]="cell.x"
             [style.top.%]="cell.y"
           ><span>{{ cell.sign }}</span>

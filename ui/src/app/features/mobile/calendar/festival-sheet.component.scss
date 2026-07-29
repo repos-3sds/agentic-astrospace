@@ -10,6 +10,10 @@
 h2 { @include m-h2; margin: 0; color: var(--m-text); }
 .mcal-festival-head p { @include m-body-small; margin: 0; color: var(--m-muted); }
 .mcal-festival-copy { @include m-body; margin: 0; color: var(--m-text); }
+.mcal-note {
+  @include m-body-small; margin: 0; padding: 11px 13px; border-radius: 14px;
+  color: var(--m-warn); background: var(--m-warn-soft);
+}
 .mcal-eyebrow { @include m-eyebrow; margin: 0; color: var(--m-accent); }
 .mcal-prepare {
   display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 13px 15px 13px 29px;
@@ -21,6 +25,17 @@ h2 { @include m-h2; margin: 0; color: var(--m-text); }
   @include m-body-small; display: flex; align-items: center; gap: 10px; margin: 0;
   padding: 12px 14px; border-radius: 16px; color: var(--m-accent-strong); background: var(--m-accent-soft);
   img { width: 17px; height: 17px; }
+}
+.mcal-mantra {
+  display: flex; flex-direction: column; gap: 5px; padding: 13px 15px;
+  border: 1px solid var(--m-border); border-radius: 16px; background: var(--m-gold-soft);
+  b { @include m-body-strong; color: var(--m-gold); }
+  p { @include m-body-small; margin: 0; color: var(--m-text); }
+}
+.mcal-how {
+  display: flex; flex-direction: column; gap: 9px; padding: 13px 15px;
+  border: 1px solid var(--m-border); border-radius: 16px; background: var(--m-surface);
+  p { @include m-body-small; margin: 0; color: var(--m-text); }
 }
 .mcal-remind {
   @include m-button; align-self: flex-start; padding: 16px 24px; border: 1.5px solid var(--m-border-strong);

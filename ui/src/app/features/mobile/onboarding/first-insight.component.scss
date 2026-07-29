@@ -15,5 +15,5 @@ dl { display:grid; gap:12px; }
 dl div { display:flex; justify-content:space-between; gap:12px; }
 dt { color:var(--m-muted); } dd { margin:0; font-weight:600; text-align:right; }
 .secondary,.listen { @include m-button; display:block; margin-top:20px; padding:15px; text-align:center; border:1px solid var(--m-border-strong); border-radius:999px; color:var(--m-accent-strong); text-decoration:none; }
-footer { padding:16px 24px max(24px,var(--m-safe-bottom)); }
+footer { padding:16px 24px max(24px, calc(var(--m-safe-bottom) + 16px)); }
 footer a { @include m-button; display:block; padding:17px; border-radius:999px; background:var(--m-ink); color:var(--m-on-ink); text-align:center; text-decoration:none; }

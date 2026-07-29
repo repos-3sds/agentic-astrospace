@@ -6,7 +6,7 @@
   justify-content: space-between;
   min-height: 100%;
   box-sizing: border-box;
-  padding: 18px 24px 28px;
+  padding: 18px 24px calc(28px + var(--m-safe-bottom));
   gap: 24px;
 }
 
@@ -78,6 +78,12 @@
   cursor: pointer;
   @include m-body-strong;
   color: var(--m-accent-strong);
+}
+
+.place-status {
+  @include m-caption;
+  color: var(--m-muted);
+  margin: 8px 0 0;
 }
 
 /* Place typeahead — node 11:48 */

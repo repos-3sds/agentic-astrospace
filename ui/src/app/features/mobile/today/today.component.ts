@@ -13,6 +13,15 @@ import { DailyGuidancePayload } from '../../../core/models';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { PreferencesService } from '../../../core/preferences.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { AudioReadingSection, buildTodayAudioScript } from './audio-reading-script';
+import {
+  MobileSymbol,
+  colorSymbol,
+  directionSymbol,
+  gemSymbol,
+  nakshatraSymbol,
+  tithiSymbol,
+} from '../symbols/mobile-symbols';
 
 /**
  * Turns the engine's day score into a gauge position.
@@ -55,6 +64,7 @@ export type DayBand = 'steady' | 'mixed' | 'tough';
 export interface StatCell {
   label: string;
   value: string;
+  symbol?: MobileSymbol;
 }
 
 /**
@@ -97,9 +107,9 @@ export interface TodayView {
  * 20:2 is the same screen scrolled, not a second one, so the stat grids and
  * ask-suggestions below live here rather than on a route of their own.
  *
- * The copy below is the design's placeholder content. Wiring to
- * /api/v1/panchanga/{id}/today is the next step; the view model is already
- * shaped for it so the template does not change when real data lands.
+ * The view model starts empty on purpose. Rendering placeholder astrology as if
+ * it were personalized is worse than a blank state; real cards appear only
+ * after the daily-guidance payload or an in-memory cached payload is applied.
  */
 @Component({
   selector: 'as-today',
@@ -130,51 +140,39 @@ export class TodayComponent {
   readonly loading = signal(true);
   readonly loadError = signal<string | null>(null);
   readonly emptyProfile = signal(false);
-  readonly view = signal<TodayView>({
-    greetingName: 'Lakshmi',
-    initial: 'L',
-    dateLabel: 'Friday, 25 July',
-    place: 'Vijayawada',
-    score: 72,
-    band: 'steady',
-    scoreLabel: 'Steady',
-    verdict: 'A steady, workable day',
-    detail:
-      'Good momentum for work and errands — keep big money calls for the afternoon.',
-    doItem: 'Start the work you’ve been delaying.',
-    avoidItem: 'Signing final papers before noon.',
-    nextWindowLabel: 'NEXT WINDOW TO AVOID',
-    nextWindowValue: 'Rahu Kalam · 4:30–6:00 PM',
-    nextWindowIn: 'in 2h',
+  readonly view = signal<TodayView | null>(null);
+
+  protected readonly headerInitial = computed(
+    () => this.view()?.initial ?? this.kundlis.active()?.name.slice(0, 1).toUpperCase() ?? 'A',
+  );
+  protected readonly headerName = computed(
+    () => this.view()?.greetingName ?? this.kundlis.active()?.name ?? 'AstroSpace',
+  );
+  protected readonly headerDate = computed(() => this.view()?.dateLabel ?? 'Today');
+  protected readonly greeting = computed(() => `Namaste, ${this.headerName()}`);
+  protected readonly listenScript = computed(() =>
+    this.audioSections().map((section) => section.text).join(' '),
+  );
+  private readonly loadedDaily = signal<{
+    name: string;
+    city: string;
+    dateLabel: string;
+    daily: DailyGuidancePayload;
+  } | null>(null);
+  protected readonly audioSections = computed<AudioReadingSection[]>(() => {
+    const loaded = this.loadedDaily();
+    if (!loaded) return [];
+    return buildTodayAudioScript({
+      ...loaded,
+      experienceMode: this.preferences.experienceMode(),
+      tone: this.preferences.tone(),
+    });
   });
 
-  protected readonly greeting = computed(() => `Namaste, ${this.view().greetingName}`);
-
   /** Contributors behind the score — C2 requires these be nameable, not opaque. */
-  readonly signals = signal<DaySignal[]>([
-    {
-      name: 'Tarabala',
-      verdict: 'FAVOURABLE',
-      tone: 'good',
-      explanation: 'Your star-count from the Moon supports the day.',
-    },
-    {
-      name: 'Chandrabala',
-      verdict: 'STRONG',
-      tone: 'good',
-      explanation: 'The Moon is well-placed from your sign.',
-    },
-    {
-      name: 'Saturn transit',
-      verdict: 'MILD FRICTION',
-      tone: 'warn',
-      explanation: 'Passing your 10th house — go steady at work.',
-    },
-  ]);
+  readonly signals = signal<DaySignal[]>([]);
 
-  readonly summary = signal(
-    'A steady, workable day — good for routine work, gentle on big commitments.',
-  );
+  readonly summary = signal('');
 
   /** Which sheet is showing, if any. One signal so two cannot stack. */
   readonly openSheet = signal<'quality' | 'why' | 'listen' | null>(null);
@@ -183,22 +181,13 @@ export class TodayComponent {
   /** Audio language, chosen in the Listen sheet — see 23:25. */
   readonly audioLanguage = signal('English');
 
-  readonly plainWords = signal([
-    'You’re in a supportive stretch for steady, everyday work.',
-    'Money and legal commitments are better after midday.',
-  ]);
+  readonly plainWords = signal<string[]>([]);
 
-  readonly calculation = signal<EvidenceRow[]>([
-    { label: 'Active period', value: 'Venus – Saturn' },
-    { label: 'Moon transiting', value: 'Hasta · 12th' },
-    { label: 'Key gochara', value: 'Saturn on 10th' },
-  ]);
+  readonly calculation = signal<EvidenceRow[]>([]);
 
   // Always shown. A reading whose conventions are hidden is not reproducible —
   // the same chart under a different ayanamsa is a different answer.
-  readonly conventions = signal([
-    'Lahiri', 'Whole-sign', 'Vijayawada', 'High confidence',
-  ]);
+  readonly conventions = signal<string[]>([]);
 
   /**
    * Below the fold (20:2). Grouped by how often each fact changes, which is the
@@ -210,58 +199,34 @@ export class TodayComponent {
    * month name for the same tithi. The convention actually used is stated in
    * the "Why this reading?" sheet rather than being implied away here.
    */
-  readonly statSections = signal<StatSection[]>([
-    {
-      eyebrow: 'TODAY’S SKY · PANCHANG',
-      columns: 2,
-      cells: [
-        { label: 'TITHI', value: 'Dvitiya' },
-        { label: 'NAKSHATRA', value: 'Hasta' },
-        { label: 'YOGA', value: 'Shubha' },
-        { label: 'KARANA', value: 'Bava' },
-      ],
-    },
-    {
-      eyebrow: 'TODAY · CHANGES DAILY',
-      columns: 3,
-      cells: [
-        { label: 'COLOUR', value: 'Maroon' },
-        { label: 'NUMBER', value: '6' },
-        { label: 'TARABALA', value: 'Good' },
-      ],
-    },
-    {
-      eyebrow: 'ALWAYS · YOUR SIGNATURE',
-      columns: 3,
-      cells: [
-        { label: 'LUCKY NO.', value: '5' },
-        { label: 'GEM', value: 'Ruby' },
-        { label: 'DIRECTION', value: 'East' },
-      ],
-    },
-  ]);
+  readonly statSections = signal<StatSection[]>([]);
 
   /** Openers for Ask, seeded from the day so the tab is not a blank prompt. */
-  readonly askSuggestions = signal([
-    'Is today good to start new work?',
-    'Best time to travel this evening?',
-  ]);
+  readonly askSuggestions = signal<string[]>([]);
 
   constructor() {
     void this.loadToday();
   }
 
   protected async loadToday(): Promise<void> {
-    this.loading.set(true);
     this.loadError.set(null);
     this.emptyProfile.set(false);
     try {
       await this.kundlis.load();
       const profile = this.kundlis.active();
       if (!profile) {
+        this.view.set(null);
+        this.loading.set(false);
         this.emptyProfile.set(true);
         return;
       }
+      const cached = this.vedic.cachedDailyGuidance(profile.id);
+      if (cached) {
+        this.applyDaily(profile.name, profile.birth_city, cached);
+        this.loading.set(false);
+        return;
+      }
+      this.loading.set(true);
       const daily = await this.vedic.dailyGuidance(profile.id);
       this.applyDaily(profile.name, profile.birth_city, daily);
     } catch (error) {
@@ -301,6 +266,12 @@ export class TodayComponent {
       nextWindowValue: daily.reading.timing_note,
       nextWindowIn: '',
     });
+    this.loadedDaily.set({
+      name,
+      dateLabel,
+      city: daily.provenance.place.city || city,
+      daily,
+    });
     this.signals.set([
       {
         name: 'Tarabala',
@@ -334,8 +305,8 @@ export class TodayComponent {
         eyebrow: 'TODAY’S SKY · PANCHANG',
         columns: 2,
         cells: [
-          { label: 'TITHI', value: daily.star_of_day.tithi },
-          { label: 'NAKSHATRA', value: daily.star_of_day.nakshatra },
+          { label: 'TITHI', value: daily.star_of_day.tithi, symbol: tithiSymbol(daily.star_of_day.tithi) },
+          { label: 'NAKSHATRA', value: daily.star_of_day.nakshatra, symbol: nakshatraSymbol(daily.star_of_day.nakshatra) },
           { label: 'VARA', value: daily.vara },
           { label: 'MOON SIGN', value: daily.star_of_day.moon_rashi },
         ],
@@ -344,7 +315,7 @@ export class TodayComponent {
         eyebrow: 'TODAY · CHANGES DAILY',
         columns: 3,
         cells: [
-          { label: 'COLOUR', value: daily.color.name },
+          { label: 'COLOUR', value: daily.color.name, symbol: colorSymbol(daily.color.name, daily.color.hex) },
           { label: 'NUMBER', value: String(daily.number.value) },
           { label: 'TARABALA', value: daily.tarabala.favourable ? 'Good' : 'Caution' },
         ],
@@ -354,8 +325,8 @@ export class TodayComponent {
         columns: 3,
         cells: [
           { label: 'LUCKY NO.', value: String(daily.lucky_numbers.astrological.number) },
-          { label: 'GEM', value: daily.lucky_signature.gem },
-          { label: 'DIRECTION', value: daily.lucky_signature.direction },
+          { label: 'GEM', value: daily.lucky_signature.gem, symbol: gemSymbol(daily.lucky_signature.gem) },
+          { label: 'DIRECTION', value: daily.lucky_signature.direction, symbol: directionSymbol(daily.lucky_signature.direction) },
         ],
       },
     ]);

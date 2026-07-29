@@ -50,18 +50,18 @@ export const PLANET_NAME: Record<string, string> = Object.fromEntries(
 );
 
 const EAST_ANCHORS: Record<string, { x: number; y: number }> = {
-  Taurus: { x: 44.5, y: 9.4 },
-  Gemini: { x: 70.9, y: 5.4 },
-  Cancer: { x: 87.5, y: 20.4 },
-  Leo: { x: 84.2, y: 47.9 },
-  Virgo: { x: 89.6, y: 71.4 },
-  Libra: { x: 74.7, y: 88.6 },
-  Scorpio: { x: 47.5, y: 81.4 },
-  Sagittarius: { x: 21.3, y: 87.1 },
-  Capricorn: { x: 7.9, y: 72.1 },
-  Aquarius: { x: 11.9, y: 47.9 },
-  Pisces: { x: 20.6, y: 6.1 },
-  Aries: { x: 8.4, y: 21.9 },
+  Taurus: { x: 50, y: 12 },
+  Gemini: { x: 70, y: 12 },
+  Cancer: { x: 86, y: 24 },
+  Leo: { x: 82, y: 48 },
+  Virgo: { x: 84, y: 72 },
+  Libra: { x: 70, y: 86 },
+  Scorpio: { x: 50, y: 80 },
+  Sagittarius: { x: 30, y: 86 },
+  Capricorn: { x: 14, y: 72 },
+  Aquarius: { x: 18, y: 48 },
+  Pisces: { x: 30, y: 12 },
+  Aries: { x: 14, y: 24 },
 };
 
 const PLANET_ORDER = ['Ascendant', 'Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];

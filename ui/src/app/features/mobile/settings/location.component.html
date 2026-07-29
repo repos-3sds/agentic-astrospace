@@ -6,7 +6,7 @@
 <div class="body">
   <header class="intro">
     <h1 class="title">Location</h1>
-    <p class="lede">Which place should today’s timings use?</p>
+    <p class="lede">Which place should Today, panchang and daily windows use?</p>
   </header>
 
   @for (p of places; track p.id) {
@@ -17,16 +17,50 @@
       role="radio"
       [class.is-on]="on"
       [attr.aria-checked]="on"
-      (click)="place.set(p.id)"
+      (click)="choosePlace(p.id)"
     >
       <span class="choice-left">
         <img [src]="'mobile/' + p.icon + '.svg'" alt="" aria-hidden="true" />
-        <span class="choice-label">{{ p.label }}</span>
+        <span class="choice-copy">
+          <span class="choice-label">{{ p.label }}</span>
+          <span class="choice-detail">
+            {{ p.id === 'current' ? currentTimezone() : selectedLabel() }}
+          </span>
+        </span>
       </span>
       @if (on) {
         <img class="choice-tick" src="mobile/check-accent.svg" alt="" aria-hidden="true" />
       }
     </button>
+  }
+
+  <label class="place-search">
+    <span>SELECT CITY</span>
+    <input
+      type="search"
+      autocomplete="off"
+      [ngModel]="query()"
+      (ngModelChange)="onQuery($any($event))"
+      placeholder="Search city or timezone"
+    />
+  </label>
+
+  @if (searching()) {
+    <p class="search-note">Searching cities…</p>
+  } @else if (searchError()) {
+    <p class="search-note error">{{ searchError() }}</p>
+  } @else if (suggestions().length) {
+    <div class="city-list">
+      @for (city of suggestions(); track city.city + city.nation + city.timezone) {
+        <button type="button" class="city-row" (click)="selectCity(city)">
+          <span>
+            <b>{{ city.city }}</b>
+            <small>{{ city.nation }} · {{ city.timezone }}</small>
+          </span>
+          <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
+        </button>
+      }
+    </div>
   }
 
   <!--

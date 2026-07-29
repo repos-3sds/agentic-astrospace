@@ -37,6 +37,16 @@
                     android:pathPrefix="/callback" />
             </intent-filter>
 
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="agentic-astrospace-cwuqybpnzq-el.a.run.app"
+                    android:pathPrefix="/api/v1/auth/native-callback" />
+            </intent-filter>
+
         </activity>
 
         <provider

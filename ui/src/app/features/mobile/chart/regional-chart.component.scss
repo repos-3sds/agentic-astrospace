@@ -12,8 +12,12 @@ button { border:0; background:transparent; color:var(--m-accent-strong); cursor:
 }
 .north { position:relative;width:100%;aspect-ratio:1;
   > img{position:absolute;inset:0;width:100%;height:100%}
-  .regional-cell{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;@include m-caption;white-space:nowrap;
-    strong{display:flex}
+  .regional-cell{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;max-width:30%;@include m-caption;white-space:nowrap;text-align:center;
+    &.edge-right{align-items:center;transform:translate(-50%,-50%);text-align:center}
+    &.edge-bottom{transform:translate(-50%,-50%)}
+    &.edge-right.edge-bottom{transform:translate(-50%,-50%)}
+    strong{display:flex;flex-wrap:wrap;justify-content:center;max-width:100%}
+    &.edge-right strong{justify-content:flex-end}
     button{min-width:32px;min-height:34px;padding:7px 6px;font-size:11px;font-weight:600}
     button + button::before { content:'·';position:absolute;margin-left:-7px; }
   }

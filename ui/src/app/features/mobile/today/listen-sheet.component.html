@@ -5,8 +5,21 @@
       <div class="head-text">
         <p class="title">{{ title() }}</p>
         <p class="sub">{{ subtitle() }}</p>
+        <p class="now">Now playing: {{ activeSectionLabel() }}</p>
       </div>
     </header>
+
+    <div class="chapters" role="group" aria-label="Reading sections">
+      @for (section of effectiveSections(); track section.label) {
+        <button
+          class="chapter"
+          type="button"
+          [class.is-on]="section.label === activeSectionLabel()"
+          [attr.aria-pressed]="section.label === activeSectionLabel()"
+          (click)="jumpToSection(section.label)"
+        >{{ section.label }}</button>
+      }
+    </div>
 
     <!-- Decorative: the timestamps below carry the same information as text. -->
     <div class="wave" aria-hidden="true">
@@ -25,21 +38,24 @@
     </div>
 
     <div class="transport">
-      <button class="skip" type="button" aria-label="Back 15 seconds">
+      <button class="skip" type="button" aria-label="Back one sentence" (click)="skip(-1)">
         <img src="mobile/rewind.svg" alt="" aria-hidden="true" />
       </button>
-      <!--
-        Play only. The design specifies the paused frame and exports no pause
-        glyph; authoring one here would put an unreviewed icon in the app, so
-        the toggle waits for the export alongside real playback.
-      -->
-      <button class="play" type="button" aria-label="Play" (click)="playing.set(true)">
-        <img src="mobile/play-lg.svg" alt="" aria-hidden="true" />
+      <button class="play" type="button" [attr.aria-label]="playing() ? 'Pause' : 'Play'" (click)="toggle()">
+        @if (playing()) {
+          <span class="pause-bars" aria-hidden="true"></span>
+        } @else {
+          <span class="play-triangle" aria-hidden="true"></span>
+        }
       </button>
-      <button class="skip" type="button" aria-label="Forward 15 seconds">
+      <button class="skip" type="button" aria-label="Forward one sentence" (click)="skip(1)">
         <img src="mobile/forward.svg" alt="" aria-hidden="true" />
       </button>
     </div>
+
+    @if (status(); as message) {
+      <p class="audio-status" role="status">{{ message }}</p>
+    }
 
     <div class="options">
       <div class="langs" role="group" aria-label="Audio language">
@@ -56,7 +72,7 @@
           >{{ lang.label }}</button>
         }
       </div>
-      <button class="speed" type="button" aria-label="Playback speed">{{ speed() }}</button>
+      <button class="speed" type="button" aria-label="Playback speed" (click)="cycleSpeed()">{{ speedLabel() }}</button>
     </div>
   </div>
 </as-sheet>

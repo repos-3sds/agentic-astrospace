@@ -1,13 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
+import { PanchangaCity } from '../../../core/models';
+import { PanchangaService } from '../../../core/panchanga.service';
 
 /** A place the typeahead offers for the birth location. */
-interface PlaceMatch {
-  city: string;
-  region: string;
-}
+type PlaceMatch = PanchangaCity;
 
 /**
  * Birth Details (Figma node 11:2) — the last step of onboarding.
@@ -51,13 +50,13 @@ interface PlaceMatch {
       <label class="field-label" for="bd-date">DATE OF BIRTH</label>
       <div class="field">
         <img src="mobile/field-date.svg" alt="" aria-hidden="true" />
-        <input id="bd-date" type="text" [value]="date()" (input)="date.set($any($event.target).value)" />
+        <input id="bd-date" type="date" [value]="date()" (input)="date.set($any($event.target).value)" />
       </div>
 
       <label class="field-label" for="bd-time">TIME OF BIRTH</label>
       <div class="field">
         <img src="mobile/field-time.svg" alt="" aria-hidden="true" />
-        <input id="bd-time" type="text" [value]="time()" (input)="time.set($any($event.target).value)" />
+        <input id="bd-time" type="time" [value]="time()" (input)="time.set($any($event.target).value)" />
       </div>
 
       <!--
@@ -81,15 +80,20 @@ interface PlaceMatch {
         <input
           id="bd-place"
           type="text"
-          autocomplete="off"
+          autocomplete="address-level2"
+          placeholder="Search city"
           [value]="placeQuery()"
           (input)="onPlaceInput($any($event.target).value)"
         />
       </div>
 
+      @if (placeLoading()) {
+        <p class="place-status" role="status">Searching places…</p>
+      }
+
       @if (matches().length > 0) {
         <ul class="matches" role="listbox" aria-label="Matching places">
-          @for (m of matches(); track m.city; let first = $first) {
+          @for (m of matches(); track m.label; let first = $first) {
             <li>
               <button
                 class="match"
@@ -102,7 +106,7 @@ interface PlaceMatch {
                 <img src="mobile/pin.svg" alt="" aria-hidden="true" />
                 <span class="match-text">
                   <span class="match-city">{{ m.city }}</span>
-                  <span class="match-region">{{ m.region }}</span>
+                  <span class="match-region">{{ m.label || (m.nation + ' · ' + m.timezone) }}</span>
                 </span>
               </button>
             </li>
@@ -126,6 +130,7 @@ export class BirthDetailsComponent {
   private readonly kundlis = inject(KundliStore);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly panchanga = inject(PanchangaService);
 
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
@@ -136,37 +141,48 @@ export class BirthDetailsComponent {
       || 'My chart'
     }  ·  Myself`,
   );
-  readonly date = signal('14 August 1991');
-  readonly time = signal('06:12 AM');
+  readonly date = signal('');
+  readonly time = signal('');
 
-  readonly placeQuery = signal('Vijaya');
+  readonly placeQuery = signal('');
   readonly chosenPlace = signal<PlaceMatch | null>(null);
+  readonly matches = signal<PlaceMatch[]>([]);
+  readonly placeLoading = signal(false);
 
   /** Whether the time was entered exactly or rounded — reported in provenance. */
   readonly timeIsApproximate = signal(false);
 
-  private readonly places: PlaceMatch[] = [
-    { city: 'Vijayawada', region: 'Andhra Pradesh, India' },
-    { city: 'Vijayapura', region: 'Karnataka, India' },
-    { city: 'Vizianagaram', region: 'Andhra Pradesh, India' },
-  ];
+  private placeSearchSeq = 0;
 
-  protected readonly matches = computed(() => {
-    const q = this.placeQuery().trim().toLowerCase();
-    if (!q || this.chosenPlace()) {
-      return [];
-    }
-    return this.places.filter((p) => p.city.toLowerCase().startsWith(q.slice(0, 2)));
-  });
-
-  protected onPlaceInput(value: string): void {
+  protected async onPlaceInput(value: string): Promise<void> {
     this.placeQuery.set(value);
     this.chosenPlace.set(null);
+    this.error.set(null);
+    const q = value.trim();
+    const seq = ++this.placeSearchSeq;
+    if (q.length < 2) {
+      this.matches.set([]);
+      this.placeLoading.set(false);
+      return;
+    }
+    this.placeLoading.set(true);
+    try {
+      const matches = await this.panchanga.cities(q);
+      if (seq === this.placeSearchSeq) this.matches.set(matches.slice(0, 8));
+    } catch {
+      if (seq === this.placeSearchSeq) {
+        this.matches.set([]);
+        this.error.set('Could not search places. Check your connection and try again.');
+      }
+    } finally {
+      if (seq === this.placeSearchSeq) this.placeLoading.set(false);
+    }
   }
 
   protected choosePlace(match: PlaceMatch): void {
     this.chosenPlace.set(match);
     this.placeQuery.set(match.city);
+    this.matches.set([]);
   }
 
   /**
@@ -175,38 +191,30 @@ export class BirthDetailsComponent {
    */
   protected useApproximate(): void {
     this.timeIsApproximate.set(true);
-    this.time.set('06:00 AM (approx)');
+    this.time.set(this.time() || '06:00');
   }
 
   protected async castChart(): Promise<void> {
-    const date = this.date().trim().match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
-    const time = this.time().trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-    const place = this.chosenPlace() ?? this.places.find((p) => p.city === this.placeQuery().trim());
-    if (!date || !time || !place) {
+    const [year, month, day] = this.date().split('-').map(Number);
+    const [hour, minute] = this.time().split(':').map(Number);
+    const place = this.chosenPlace();
+    if (!year || !month || !day || Number.isNaN(hour) || Number.isNaN(minute) || !place) {
       this.error.set('Choose a valid date, time, and birth place.');
       return;
     }
-    const months = ['january','february','march','april','may','june','july','august','september','october','november','december'];
-    const month = months.indexOf(date[2].toLowerCase()) + 1;
-    if (!month) {
-      this.error.set('Enter the birth date as day, month, and year.');
-      return;
-    }
-    let hour = Number(time[1]) % 12;
-    if (time[3].toUpperCase() === 'PM') hour += 12;
     this.saving.set(true);
     this.error.set(null);
     try {
       const created = await this.kundlis.create({
         name: this.who().split('·')[0].trim(),
         relation: 'self',
-        birth_year: Number(date[3]),
+        birth_year: year,
         birth_month: month,
-        birth_day: Number(date[1]),
+        birth_day: day,
         birth_hour: hour,
-        birth_minute: Number(time[2]),
+        birth_minute: minute,
         birth_city: place.city,
-        birth_nation: 'IN',
+        birth_nation: place.nation,
         notes: this.timeIsApproximate() ? 'Birth time is approximate.' : undefined,
       });
       this.kundlis.setActive(created.id);

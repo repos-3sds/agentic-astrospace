@@ -7,6 +7,7 @@ import { createClient, Session, SupabaseClient, User } from '@supabase/supabase-
 import { apiUrl } from './api-origin';
 
 const NATIVE_AUTH_CALLBACK = 'app.astrospace.mobile://auth/callback';
+const NATIVE_AUTH_BRIDGE_PATH = '/api/v1/auth/native-callback';
 const NATIVE_AUTH_DESTINATION_KEY = 'astrospace.nativeAuthDestination';
 const NATIVE_AUTH_STATE_KEY = 'astrospace.nativeAuthState';
 // Long enough to survive a slow inbox check, short enough to bound how long a
@@ -43,7 +44,10 @@ export class AuthService {
 
   init(): Promise<void> {
     if (this.initPromise) return this.initPromise;
-    this.initPromise = this.load();
+    this.initPromise = this.load().catch((error) => {
+      this.initPromise = null;
+      throw error;
+    });
     return this.initPromise;
   }
 
@@ -179,10 +183,6 @@ export class AuthService {
     }
     localStorage.setItem(NATIVE_AUTH_DESTINATION_KEY, destination);
     const state = this.issueNativeAuthState();
-    // A query param survives on both the shapes Supabase returns: appended
-    // after with `&` for a PKCE `?code=`, and untouched by a `#fragment` for
-    // an implicit-flow token response, since a fragment never alters the
-    // query string it follows.
     return `${NATIVE_AUTH_CALLBACK}?state=${encodeURIComponent(state)}`;
   }
 
@@ -225,7 +225,8 @@ export class AuthService {
   }
 
   private async handleNativeAuthCallback(url: string): Promise<void> {
-    if (!this.client || !url.startsWith(NATIVE_AUTH_CALLBACK)) return;
+    if (!this.client || !this.isNativeAuthCallback(url)) return;
+    await this.closeNativeAuthBrowser();
     const parsed = new URL(url);
     const fragment = new URLSearchParams(parsed.hash.replace(/^#/, ''));
     const errorDescription =
@@ -274,5 +275,17 @@ export class AuthService {
     const destination = localStorage.getItem(NATIVE_AUTH_DESTINATION_KEY) || '/m/today';
     localStorage.removeItem(NATIVE_AUTH_DESTINATION_KEY);
     await this.router.navigateByUrl(destination);
+  }
+
+  private isNativeAuthCallback(url: string): boolean {
+    return url.startsWith(NATIVE_AUTH_CALLBACK) || url.startsWith(apiUrl(NATIVE_AUTH_BRIDGE_PATH));
+  }
+
+  private async closeNativeAuthBrowser(): Promise<void> {
+    try {
+      await Browser.close();
+    } catch {
+      // Android Custom Tabs may already be gone when the app receives the URL.
+    }
   }
 }

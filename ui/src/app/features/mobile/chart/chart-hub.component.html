@@ -1,6 +1,6 @@
 <header class="appbar">
   <h1 class="screen-title">{{ screenTitle() }}</h1>
-  <button class="profile" type="button" aria-label="Switch profile">
+  <button class="profile" type="button" aria-label="Switch profile" (click)="profileSwitcherOpen.set(true)">
     <span class="avatar" aria-hidden="true">{{ profileInitial() }}</span>
     <span class="profile-name">{{ profileName() }}</span>
     <img src="mobile/caret-down.svg" alt="" aria-hidden="true" />
@@ -9,7 +9,26 @@
 
 <div class="body" [attr.data-mode]="preferences.experienceMode()">
   @if (loading()) {
-    <section class="chart-state"><b>Computing chart</b><p>Loading your saved birth profile and Vedic chart payload.</p></section>
+    <section class="signature chart-skeleton" role="status" aria-label="Loading chart">
+      <span class="skel line w-34"></span>
+      <span class="skel line w-88"></span>
+      <span class="skel line w-64"></span>
+    </section>
+    <div class="angles chart-skeleton">
+      @for (_ of [1, 2, 3]; track _) {
+        <div class="angle"><span class="skel line w-54"></span><span class="skel line w-72"></span></div>
+      }
+    </div>
+    <section class="rashi chart-skeleton">
+      <div class="rashi-head"><span class="skel line w-38"></span><span class="skel line w-22"></span></div>
+      <span class="skel chart-box"></span>
+      <span class="skel pill"></span>
+    </section>
+    <div class="explore chart-skeleton">
+      @for (_ of [1, 2, 3, 4]; track _) {
+        <div class="explore-card"><span class="skel icon"></span><span class="skel line w-74"></span><span class="skel line w-58"></span></div>
+      }
+    </div>
   } @else if (error()) {
     <section class="chart-state error" role="alert"><b>Chart could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
   } @else if (!chart()) {
@@ -38,7 +57,7 @@
   <section class="rashi">
     <div class="rashi-head">
       <p class="eyebrow">RASHI · D1 CHART</p>
-      <p class="style">{{ chartStyle() }}</p>
+      <p class="style">{{ chartStyleLabel() }}</p>
     </div>
 
     <as-east-chart class="preview" [cells]="cells()" />
@@ -95,4 +114,10 @@
 
 @if (provenanceOpen()) {
   <as-provenance-sheet [rows]="provenanceRows()" (dismissed)="provenanceOpen.set(false)" />
+}
+
+@if (profileSwitcherOpen()) {
+  <as-profile-switcher
+    (dismissed)="profileSwitcherOpen.set(false)"
+  />
 }

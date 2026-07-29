@@ -1,11 +1,9 @@
-@let v = view();
-
 <header class="appbar">
   <button class="identity" type="button" (click)="profileSwitcherOpen.set(true)" aria-label="Switch profile">
-    <div class="avatar" aria-hidden="true">{{ v.initial }}</div>
+    <div class="avatar" aria-hidden="true">{{ headerInitial() }}</div>
     <div class="who">
       <p class="name">{{ greeting() }}</p>
-      <p class="date">{{ v.dateLabel }}</p>
+      <p class="date">{{ headerDate() }}</p>
     </div>
   </button>
   <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search AstroSpace">
@@ -18,24 +16,49 @@
 
 <div class="body" [attr.data-mode]="preferences.experienceMode()">
   @if (loading()) {
-    <div class="mtoday-state" role="status">Loading your guidance…</div>
-  }
-  @if (loadError()) {
+    <section class="card skeleton-card" role="status" aria-label="Loading your guidance">
+      <div class="card-head">
+        <span class="skel line w-38"></span>
+        <span class="skel line w-24"></span>
+      </div>
+      <div class="verdict-row">
+        <span class="skel circle gauge-skel"></span>
+        <span class="skel-stack">
+          <span class="skel line w-90"></span>
+          <span class="skel line w-70"></span>
+          <span class="skel line w-48"></span>
+        </span>
+      </div>
+      <span class="skel pill"></span>
+    </section>
+    <div class="advice">
+      <article class="advice-card skeleton-card"><span class="skel line w-28"></span><span class="skel line w-88"></span><span class="skel line w-56"></span></article>
+      <article class="advice-card skeleton-card"><span class="skel line w-32"></span><span class="skel line w-82"></span><span class="skel line w-52"></span></article>
+    </div>
+    <section class="window skeleton-card">
+      <span class="skel circle icon-skel"></span>
+      <span class="skel-stack"><span class="skel line w-42"></span><span class="skel line w-76"></span></span>
+    </section>
+    <div class="stats" data-columns="3">
+      @for (_ of [1, 2, 3]; track _) {
+        <div class="stat skeleton-card"><span class="skel line w-48"></span><span class="skel line w-64"></span></div>
+      }
+    </div>
+  } @else if (loadError()) {
     <as-generic-error
       role="alert"
       [message]="loadError()!"
       [technicalDetail]="'GET /api/v1/daily-guidance · profile context unavailable'"
       (retried)="loadToday()"
     />
-  }
-  @if (emptyProfile()) {
+  } @else if (emptyProfile()) {
     <section class="mtoday-empty">
       <span class="mtoday-empty-mark" aria-hidden="true">✦</span>
       <h2>Create your first chart</h2>
       <p>Your daily guidance needs a birth date, time, and place.</p>
       <a [routerLink]="['/m', 'birth-details']">Add birth details</a>
     </section>
-  } @else {
+  } @else if (view(); as v) {
   <section class="card">
     <div class="card-head">
       <p class="eyebrow">WHAT MATTERS TODAY</p>
@@ -100,9 +123,22 @@
     <p class="eyebrow section-label">{{ section.eyebrow }}</p>
     <div class="stats" [attr.data-columns]="section.columns">
       @for (cell of section.cells; track cell.label) {
-        <div class="stat">
-          <p class="eyebrow stat-label">{{ cell.label }}</p>
-          <p class="stat-value">{{ cell.value }}</p>
+        <div class="stat" [class.has-symbol]="cell.symbol">
+          <span class="stat-copy">
+            <p class="eyebrow stat-label">{{ cell.label }}</p>
+            <p class="stat-value">{{ cell.value }}</p>
+          </span>
+          @if (cell.symbol; as symbol) {
+            <span
+              class="stat-symbol"
+              [attr.data-kind]="symbol.kind"
+              [style.--symbol-color]="symbol.color ?? null"
+              [style.--symbol-rotate]="(symbol.angle ?? 0) + 'deg'"
+              [attr.aria-label]="symbol.label"
+            >
+              <span class="symbol-glyph" aria-hidden="true">{{ symbol.glyph }}</span>
+            </span>
+          }
         </div>
       }
     </div>
@@ -130,10 +166,17 @@
       </a>
     }
   </div>
+  } @else if (!loading() && !loadError()) {
+    <section class="mtoday-empty">
+      <span class="mtoday-empty-mark" aria-hidden="true">✦</span>
+      <h2>No guidance loaded yet</h2>
+      <p>Pulling your daily reading from the live calculation service.</p>
+      <button type="button" (click)="loadToday()">Retry</button>
+    </section>
   }
 </div>
 
-@if (openSheet() === 'quality') {
+@if (openSheet() === 'quality' && view(); as v) {
   <as-day-quality-sheet
     [score]="v.score"
     [signals]="signals()"
@@ -149,9 +192,11 @@
   />
 }
 
-@if (openSheet() === 'listen') {
+@if (openSheet() === 'listen' && view(); as v) {
   <as-listen-sheet
     [title]="'Your day · ' + v.dateLabel"
+    [script]="listenScript()"
+    [sections]="audioSections()"
     [language]="audioLanguage()"
     (languageChanged)="audioLanguage.set($event)"
     (dismissed)="openSheet.set(null)"
