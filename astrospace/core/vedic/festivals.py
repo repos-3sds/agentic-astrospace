@@ -346,7 +346,8 @@ FESTIVALS: list[dict] = [
        regions=[NORTH], local_names={"hi": "होली"},
        description="Festival of colours, the day after Holika Dahan.",
        observance_note="Chaitra Krishna Pratipada (purnimanta) — under amanta "
-                       "reckoning the same day is Phalguna Krishna Pratipada."),
+                       "reckoning the same day is Phalguna Krishna Pratipada.",
+       convention_dependent=True),
     # ── Regional and secondary observances ───────────────────────────────────
     # A second block so the primary list above stays scannable; `occurrences`
     # sorts by date, so ordering here has no effect on output.
@@ -427,7 +428,8 @@ FESTIVALS: list[dict] = [
        _lunar("Bhadrapada", "Krishna", 1), regions=[PAN],
        description="Fortnight of ancestral offerings, ending at Mahalaya Amavasya.",
        observance_note="Ashwina Krishna Pratipada under purnimanta reckoning "
-                       "— the same day, a different name."),
+                       "— the same day, a different name.",
+       convention_dependent=True),
     _f("vishwakarma_puja", "Vishwakarma Puja", _solar(5), regions=[NORTH],
        description="Kanya Sankranti; tools and machinery are honoured."),
 

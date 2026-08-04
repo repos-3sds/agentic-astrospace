@@ -203,6 +203,15 @@ class TestCatalog:
                 assert festival["observance_note"], festival["slug"]
                 assert festival["is_convention_dependent"], festival["slug"]
 
+    def test_amanta_purnimanta_ambiguity_is_flagged(self):
+        """A note that names a naming split across the two lunar-month
+        reckonings is, by definition, more than one defensible answer — the
+        convention flag must say so, not just the prose."""
+        for festival in F.FESTIVALS:
+            note = (festival["observance_note"] or "").lower()
+            if "amanta" in note and "purnimanta" in note:
+                assert festival["is_convention_dependent"], festival["slug"]
+
     def test_catalog_rows_match_the_festivals_table(self):
         rows = F.catalog()
         assert len(rows) == len(F.FESTIVALS)

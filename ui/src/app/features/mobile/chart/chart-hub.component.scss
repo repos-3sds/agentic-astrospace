@@ -235,7 +235,7 @@
   background: var(--yantra-red-soft);
   b { font-weight: 700; }
   &.is-active {
-    color: #fff8ec;
+    color: var(--m-on-ink);
     background: var(--yantra-red);
   }
 }
