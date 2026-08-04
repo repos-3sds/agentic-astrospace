@@ -10,8 +10,10 @@ import {
 import { KundliStore } from '../../../core/kundli.store';
 import { VedicService } from '../../../core/vedic.service';
 import { DailyGuidancePayload } from '../../../core/models';
+import { FestivalService } from '../../../core/festival.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { PreferencesService } from '../../../core/preferences.service';
+import { HapticsService } from '../../../core/haptics.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { AudioReadingSection, buildTodayAudioScript } from './audio-reading-script';
 import {
@@ -22,6 +24,14 @@ import {
   nakshatraSymbol,
   tithiSymbol,
 } from '../symbols/mobile-symbols';
+
+/** Figma 212:751's dasha-chain chips ("Moon Mahā › Rahu Antar › Jup Prat › Ven Sookshma"). */
+const DASHA_LEVEL_SHORT: Record<string, string> = {
+  mahadasha: 'Mahā',
+  antardasha: 'Antar',
+  pratyantardasha: 'Prat',
+  sookshmadasha: 'Sookshma',
+};
 
 /**
  * Turns the engine's day score into a gauge position.
@@ -124,17 +134,22 @@ export interface TodayView {
     ProfileSwitcherComponent,
     GenericErrorComponent,
   ],
+  host: {
+    '[attr.data-band]': 'view()?.band || "steady"',
+  },
   templateUrl: './today.component.html',
   styleUrl: './today.component.scss',
 })
 export class TodayComponent {
   private readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
+  private readonly festivals = inject(FestivalService);
   protected readonly preferences = inject(PreferencesService);
+  private readonly haptics = inject(HapticsService);
   protected readonly whyMode = computed(() => ({
-    guided: 'Guided view — the meaning first, with unfamiliar terms translated.',
-    balanced: 'Balanced view — plain first, the calculation underneath.',
-    practitioner: 'Practitioner view — exact factors, conventions, and evidence.',
+    guided: 'Guided view - the life guidance first, with unfamiliar terms translated.',
+    balanced: 'Balanced view - guidance first, the calculation underneath.',
+    practitioner: 'Practitioner view - exact factors, conventions, and evidence.',
   })[this.preferences.experienceMode()]);
 
   readonly loading = signal(true);
@@ -146,7 +161,7 @@ export class TodayComponent {
     () => this.view()?.initial ?? this.kundlis.active()?.name.slice(0, 1).toUpperCase() ?? 'A',
   );
   protected readonly headerName = computed(
-    () => this.view()?.greetingName ?? this.kundlis.active()?.name ?? 'AstroSpace',
+    () => this.view()?.greetingName ?? this.kundlis.active()?.name ?? 'there',
   );
   protected readonly headerDate = computed(() => this.view()?.dateLabel ?? 'Today');
   protected readonly greeting = computed(() => `Namaste, ${this.headerName()}`);
@@ -177,6 +192,19 @@ export class TodayComponent {
   /** Which sheet is showing, if any. One signal so two cannot stack. */
   readonly openSheet = signal<'quality' | 'why' | 'listen' | null>(null);
   readonly profileSwitcherOpen = signal(false);
+  readonly detailsOpen = signal(false);
+
+  /**
+   * Open a sheet with a confirming tap.
+   *
+   * Only on the way *in*. Dismissal already has three affordances (scrim,
+   * Escape, the sheet's own button) and buzzing on each would make closing
+   * something feel like a consequence.
+   */
+  protected showSheet(kind: 'quality' | 'why' | 'listen'): void {
+    this.haptics.tap();
+    this.openSheet.set(kind);
+  }
 
   /** Audio language, chosen in the Listen sheet — see 23:25. */
   readonly audioLanguage = signal('English');
@@ -184,6 +212,16 @@ export class TodayComponent {
   readonly plainWords = signal<string[]>([]);
 
   readonly calculation = signal<EvidenceRow[]>([]);
+
+  /**
+   * Practitioner Board (Figma 212:751) — the dedicated dense dashboard for
+   * practitioner mode, distinct from the Guided/Balanced Today layout rather
+   * than a relabeled version of it.
+   */
+  protected readonly dashaChain = signal<{ level: string; lord: string; short: string }[]>([]);
+  protected readonly panchangaDetails = signal<DailyGuidancePayload['panchanga_details'] | null>(null);
+  protected readonly criticalTransits = signal<DailyGuidancePayload['context']['active_gochara']>([]);
+  protected readonly muhurtaWindows = signal<DailyGuidancePayload['muhurta_windows']>([]);
 
   // Always shown. A reading whose conventions are hidden is not reproducible —
   // the same chart under a different ayanamsa is a different answer.
@@ -224,11 +262,13 @@ export class TodayComponent {
       if (cached) {
         this.applyDaily(profile.name, profile.birth_city, cached);
         this.loading.set(false);
+        void this.prefetchCalendar(profile.id);
         return;
       }
       this.loading.set(true);
       const daily = await this.vedic.dailyGuidance(profile.id);
       this.applyDaily(profile.name, profile.birth_city, daily);
+      void this.prefetchCalendar(profile.id);
     } catch (error) {
       this.loadError.set((error as Error).message);
     } finally {
@@ -300,6 +340,13 @@ export class TodayComponent {
       label: `Signal ${index + 1}`,
       value,
     })));
+    this.dashaChain.set(daily.context.dasha_chain.map((level) => ({
+      ...level,
+      short: DASHA_LEVEL_SHORT[level.level] ?? level.level,
+    })));
+    this.panchangaDetails.set(daily.panchanga_details);
+    this.criticalTransits.set(daily.context.active_gochara);
+    this.muhurtaWindows.set(daily.muhurta_windows);
     this.statSections.set([
       {
         eyebrow: 'TODAY’S SKY · PANCHANG',
@@ -330,5 +377,18 @@ export class TodayComponent {
         ],
       },
     ]);
+  }
+
+  private async prefetchCalendar(profileId: string): Promise<void> {
+    try {
+      const calendar = await this.vedic.calendarIntelligence(profileId, 45);
+      const place = this.preferences.panchangaPlace();
+      const profile = this.kundlis.active();
+      const city = place?.city || profile?.birth_city;
+      const nation = place?.nation || profile?.birth_nation || 'IN';
+      if (city) void this.festivals.upcoming(city, nation, calendar.start_date, 60);
+    } catch {
+      // Today should stay usable even if Calendar cannot be warmed in the background.
+    }
   }
 }

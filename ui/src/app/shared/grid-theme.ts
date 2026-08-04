@@ -2,7 +2,7 @@ import { AllCommunityModule, ModuleRegistry, themeQuartz } from 'ag-grid-communi
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-/** AG Grid Quartz theme bound to the AstroSpace tokens. */
+/** AG Grid Quartz theme bound to the SIDDHA tokens. */
 export const darkGridTheme = themeQuartz.withParams({
   backgroundColor: '#1d1712',
   foregroundColor: '#f3eadc',

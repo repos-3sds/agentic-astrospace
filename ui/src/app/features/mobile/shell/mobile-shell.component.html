@@ -1,15 +1,15 @@
-<div class="shell">
+<div class="shell" [@routeTransition]="getRouteAnimationData()">
   <main class="content"><router-outlet /></main>
 
-  @if (!hideTabs()) {
+  @if (!hideTabs() && !overlay.open()) {
     <nav class="tabbar" aria-label="Primary">
       @for (tab of tabs(); track tabTrack($index, tab)) {
         <a
           class="tab"
           [routerLink]="tabLink(tab)"
-          routerLinkActive="is-active"
-          #rla="routerLinkActive"
-          [attr.aria-current]="rla.isActive ? 'page' : null"
+          (click)="onTabClick()"
+          [class.is-active]="tabActive(tab)"
+          [attr.aria-current]="tabActive(tab) ? 'page' : null"
         >
           <span
             class="icon"

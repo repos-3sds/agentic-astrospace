@@ -40,15 +40,21 @@ export class LifePeriodsComponent {
   protected readonly error = signal<string | null>(null);
 
   readonly system = signal<'vimshottari' | 'yogini'>('vimshottari');
-  readonly level = signal<'maha' | 'antar' | 'pratyantar'>('antar');
+  readonly level = signal<'maha' | 'antar' | 'pratyantar' | 'sookshma' | 'prana'>('antar');
 
   readonly selectedMaha = signal<DashaPeriod | null>(null);
   readonly selectedAntar = signal<DashaPeriod | null>(null);
 
+  // Sookshma/Prana are only computed along the *active* chain
+  // (astrospace/core/vedic/dashas.py — a full 5-level tree for every branch
+  // would be prohibitively large), so unlike Maha/Antar/Pratyantar these two
+  // levels have no drill-into-an-arbitrary-period state of their own.
   readonly periods = computed(() => {
     if (this.system() === 'yogini') return (this.yogini()?.mahadashas ?? []).map((period) => this.toPeriod(period));
     if (this.level() === 'maha') return (this.data()?.mahadashas ?? []).map((period) => this.toPeriod(period));
     if (this.level() === 'pratyantar') return (this.selectedAntar()?.pratyantardashas ?? this.data()?.current.pratyantardashas ?? []).map((period) => this.toPeriod(period));
+    if (this.level() === 'sookshma') return (this.data()?.current.sookshmadashas ?? []).map((period) => this.toPeriod(period));
+    if (this.level() === 'prana') return (this.data()?.current.pranadashas ?? []).map((period) => this.toPeriod(period));
     return (this.selectedMaha()?.antardashas ?? this.data()?.current.mahadasha?.antardashas ?? []).map((period) => this.toPeriod(period));
   });
   readonly activePath = computed(() => {
@@ -58,6 +64,16 @@ export class LifePeriodsComponent {
   readonly activeYogini = computed(() => this.yogini()?.current.mahadasha?.lord ?? this.yogini()?.mahadashas.find((period) => period.active)?.lord ?? 'No active Yogini');
   readonly mahaCrumb = computed(() => this.selectedMaha()?.lord ?? this.data()?.current.mahadasha?.lord ?? 'selected maha');
   readonly antarCrumb = computed(() => this.selectedAntar()?.lord ?? this.data()?.current.antardasha?.lord ?? 'selected antar');
+  readonly pratyantarCrumb = computed(() => this.data()?.current.pratyantardasha?.lord ?? 'selected pratyantar');
+  readonly sookshmaCrumb = computed(() => this.data()?.current.sookshmadasha?.lord ?? 'selected sookshma');
+
+  // Sookshma/Prana are Practitioner-only — Balanced keeps the three-level
+  // stack it already had; only Practitioner gets the full five.
+  readonly levelTabs = computed(() =>
+    this.preferences.experienceMode() === 'practitioner'
+      ? (['maha', 'antar', 'pratyantar', 'sookshma', 'prana'] as const)
+      : (['maha', 'antar', 'pratyantar'] as const),
+  );
 
   constructor() {
     effect(() => {
@@ -71,7 +87,7 @@ export class LifePeriodsComponent {
     this.resetScroll();
   }
 
-  protected chooseLevel(level: 'maha' | 'antar' | 'pratyantar'): void {
+  protected chooseLevel(level: 'maha' | 'antar' | 'pratyantar' | 'sookshma' | 'prana'): void {
     this.system.set('vimshottari');
     this.level.set(level);
     this.resetScroll();

@@ -29,6 +29,7 @@ export class VedicService {
   private dailyValues = new Map<string, DailyGuidancePayload>();
   private calendarCache = new Map<string, Promise<CalendarIntelligencePayload>>();
   private calendarValues = new Map<string, CalendarIntelligencePayload>();
+  private readonly calendarStoragePrefix = 'astrospace.calendar-intelligence:v1:';
 
   all(kundliId: string): Promise<VedicAll> {
     const cacheKey = `${kundliId}:${this.prefs.ayanamsha()}:${this.prefs.nodeType()}`;
@@ -126,10 +127,19 @@ export class VedicService {
     const { cacheKey, params } = this.calendarParams(kundliId, days, place);
     let cached = this.calendarCache.get(cacheKey);
     if (!cached) {
+      const stored = this.readStoredCalendar(cacheKey);
+      if (stored) {
+        this.calendarValues.set(cacheKey, stored);
+        cached = Promise.resolve(stored);
+        this.calendarCache.set(cacheKey, cached);
+      }
+    }
+    if (!cached) {
       cached = this.api.get<CalendarIntelligencePayload>(
         `/vedic/${kundliId}/calendar-intelligence?${params.toString()}`,
       ).then((value) => {
         this.calendarValues.set(cacheKey, value);
+        this.writeStoredCalendar(cacheKey, value);
         return value;
       }).catch((e) => {
         this.calendarCache.delete(cacheKey);
@@ -141,12 +151,37 @@ export class VedicService {
     return cached;
   }
 
+  refreshCalendarIntelligence(
+    kundliId: string,
+    days = 30,
+    place?: { city: string; nation: string } | null,
+  ): Promise<CalendarIntelligencePayload> {
+    const { cacheKey, params } = this.calendarParams(kundliId, days, place);
+    const request = this.api.get<CalendarIntelligencePayload>(
+      `/vedic/${kundliId}/calendar-intelligence?${params.toString()}`,
+    ).then((value) => {
+      this.calendarValues.set(cacheKey, value);
+      this.writeStoredCalendar(cacheKey, value);
+      return value;
+    }).catch((error) => {
+      this.calendarCache.delete(cacheKey);
+      throw error;
+    });
+    this.calendarCache.set(cacheKey, request);
+    return request;
+  }
+
   cachedCalendarIntelligence(
     kundliId: string,
     days = 30,
     place?: { city: string; nation: string } | null,
   ): CalendarIntelligencePayload | null {
-    return this.calendarValues.get(this.calendarParams(kundliId, days, place).cacheKey) ?? null;
+    const cacheKey = this.calendarParams(kundliId, days, place).cacheKey;
+    const memory = this.calendarValues.get(cacheKey);
+    if (memory) return memory;
+    const stored = this.readStoredCalendar(cacheKey);
+    if (stored) this.calendarValues.set(cacheKey, stored);
+    return stored;
   }
 
   compatibility(kundliId: string, partnerId: string): Promise<CompatibilityPayload> {
@@ -178,6 +213,7 @@ export class VedicService {
     for (const key of [...this.calendarValues.keys()]) {
       if (key.startsWith(`${kundliId}:`)) this.calendarValues.delete(key);
     }
+    this.removeStoredCalendars(`${kundliId}:`);
   }
 
   invalidateAll(): void {
@@ -187,6 +223,7 @@ export class VedicService {
     this.dailyValues.clear();
     this.calendarCache.clear();
     this.calendarValues.clear();
+    this.removeStoredCalendars();
   }
 
   private calcParams(): URLSearchParams {
@@ -207,7 +244,16 @@ export class VedicService {
   }
 
   private todayKey(): string {
-    return new Date().toISOString().slice(0, 10);
+    try {
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: this.prefs.effectiveTimezone(),
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(new Date());
+    } catch {
+      return new Date().toISOString().slice(0, 10);
+    }
   }
 
   private calendarParams(
@@ -223,5 +269,34 @@ export class VedicService {
     if (selectedPlace?.city) params.set('city', selectedPlace.city);
     if (selectedPlace?.nation) params.set('nation', selectedPlace.nation);
     return { cacheKey: `${kundliId}:${this.todayKey()}:${params.toString()}`, params };
+  }
+
+  private readStoredCalendar(cacheKey: string): CalendarIntelligencePayload | null {
+    try {
+      const raw = localStorage.getItem(`${this.calendarStoragePrefix}${cacheKey}`);
+      if (!raw) return null;
+      return JSON.parse(raw) as CalendarIntelligencePayload;
+    } catch {
+      return null;
+    }
+  }
+
+  private writeStoredCalendar(cacheKey: string, value: CalendarIntelligencePayload): void {
+    try {
+      localStorage.setItem(`${this.calendarStoragePrefix}${cacheKey}`, JSON.stringify(value));
+    } catch {
+      // Storage can be full or unavailable in private contexts; memory cache still works.
+    }
+  }
+
+  private removeStoredCalendars(cacheKeyPrefix = ''): void {
+    try {
+      const prefix = `${this.calendarStoragePrefix}${cacheKeyPrefix}`;
+      for (const key of Object.keys(localStorage)) {
+        if (key.startsWith(prefix)) localStorage.removeItem(key);
+      }
+    } catch {
+      // Ignore storage cleanup failures; volatile caches are already cleared.
+    }
   }
 }

@@ -1,5 +1,6 @@
 import { Component, HostListener, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { A11yModule } from '@angular/cdk/a11y';
+import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
@@ -15,13 +16,29 @@ import { AuthService } from './core/auth.service';
 import { KundliStore } from './core/kundli.store';
 import { Kundli } from './core/models';
 import { PreferencesService } from './core/preferences.service';
+import { SheetOverlayService } from './core/sheet-overlay.service';
 import { ThemeService } from './core/theme.service';
 import { KundliDialogComponent } from './shell/kundli-dialog/kundli-dialog.component';
 import { ACCOUNT_NAV, GLOBAL_PRIMARY_NAV, KUNDLI_MORE_GROUPS, PROFILE_PRIMARY_NAV, ROUTE_TITLES } from './shell/mobile-nav';
 import { SidebarComponent } from './shell/sidebar/sidebar.component';
+import { SplashComponent } from './shell/splash/splash.component';
+import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 
+/**
+ * Screens with nowhere in-app to go back to. Capacitor's hardware back
+ * button otherwise falls through to the WebView's own history — which
+ * includes every `pushState` the SPA ever made, onboarding and the marketing
+ * landing page included, so pressing back enough times on the dashboard
+ * walked out through sign-in and into the web app's home page. Stopping the
+ * unwind here and asking to exit instead is what every native Android app
+ * does at its own root; this app just never told Capacitor which routes
+ * those are.
+ */
+const NATIVE_EXIT_ROUTES = ['/m/today', '/m/start'];
+
 const SELECTED_PROFILE_STORAGE_KEY = 'astrospace:selected-profile';
+const ANIMATED_SPLASH_FADE_MS = 360;
 
 @Component({
   selector: 'app-root',
@@ -37,6 +54,7 @@ const SELECTED_PROFILE_STORAGE_KEY = 'astrospace:selected-profile';
     Toast,
     ConfirmDialog,
     TooltipModule,
+    SplashComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
@@ -49,7 +67,11 @@ export class App implements OnInit, OnDestroy {
   private confirmation = inject(ConfirmationService);
   private messages = inject(MessageService);
   private router = inject(Router);
+  private sheetOverlay = inject(SheetOverlayService);
+  private location = inject(Location);
   private removeViewportInsetObserver: (() => void) | null = null;
+  private removeBackButtonListener: (() => void) | null = null;
+  private animatedSplashFadeTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     // Native boot starts on a route that does not depend on auth or the network.
@@ -73,6 +95,8 @@ export class App implements OnInit, OnDestroy {
   protected readonly moreOpen = signal(false);
   protected readonly profileSheetOpen = signal(false);
   protected readonly profileQuery = signal('');
+  protected readonly showAnimatedSplash = signal(false);
+  protected readonly animatedSplashFading = signal(false);
   private readonly selectedProfileSnapshot = signal<Kundli | null>(this.restoreSelectedProfile());
   protected readonly currentUrl = computed(() => this.url());
   protected readonly profileOptions = computed(() =>
@@ -84,7 +108,7 @@ export class App implements OnInit, OnDestroy {
   );
   private readonly url = signal(this.router.url);
   protected readonly currentSection = computed(() => this.sectionFromUrl(this.currentUrl()));
-  protected readonly mobileTitle = computed(() => ROUTE_TITLES[this.currentSection()] ?? 'AstroSpace');
+  protected readonly mobileTitle = computed(() => ROUTE_TITLES[this.currentSection()] ?? 'SIDDHA');
   protected readonly inProfileWorkspace = computed(() => this.currentUrl().startsWith('/kundli/'));
   protected readonly mobileProfileLabel = computed(() => {
     const active = this.store.active();
@@ -125,7 +149,7 @@ export class App implements OnInit, OnDestroy {
     );
   });
 
-  protected readonly title = computed(() => this.store.active()?.name ?? 'AstroSpace');
+  protected readonly title = computed(() => this.store.active()?.name ?? 'SIDDHA');
   protected readonly publicOnly = computed(() => {
     const path = this.currentUrl().split('?')[0].split('#')[0];
     // /m is the native app shell — it renders its own app bar and tab bar,
@@ -152,6 +176,7 @@ export class App implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     this.removeViewportInsetObserver = this.installViewportInsetObserver();
+    this.removeBackButtonListener = this.installBackButtonHandler();
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event) => this.url.set(event.urlAfterRedirects));
@@ -173,11 +198,102 @@ export class App implements OnInit, OnDestroy {
         summary: 'Could not load kundlis',
         detail: (e as Error).message,
       });
+    } finally {
+      // In `finally`: a failed session restore still has to uncover the app.
+      // Leaving the splash up on error would look like a hang, and the error
+      // toast above is already the honest signal.
+      await this.hideNativeSplash();
+      this.startAnimatedSplashIntro();
+    }
+  }
+
+  /**
+   * Dismiss the native splash once the first screen can paint.
+   *
+   * `launchAutoHide` is false in capacitor.config.ts, so nothing else will do
+   * this — if this method stops being called the app boots to a stuck splash.
+   * Imported lazily so the web bundle does not pull in a native-only plugin.
+   */
+  private async hideNativeSplash(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      const { SplashScreen } = await import('@capacitor/splash-screen');
+      await SplashScreen.hide();
+    } catch {
+      // Never let splash teardown break boot.
     }
   }
 
   ngOnDestroy(): void {
     this.removeViewportInsetObserver?.();
+    this.removeBackButtonListener?.();
+    this.clearAnimatedSplashTimers();
+  }
+
+  protected finishAnimatedSplash(): void {
+    if (!this.showAnimatedSplash() || this.animatedSplashFading()) return;
+    this.animatedSplashFading.set(true);
+    this.clearAnimatedSplashTimers();
+    this.animatedSplashFadeTimer = setTimeout(() => {
+      this.showAnimatedSplash.set(false);
+      this.animatedSplashFading.set(false);
+      this.animatedSplashFadeTimer = null;
+    }, ANIMATED_SPLASH_FADE_MS);
+  }
+
+  private startAnimatedSplashIntro(): void {
+    if (!Capacitor.isNativePlatform()) return;
+    this.showAnimatedSplash.set(true);
+    this.animatedSplashFading.set(false);
+    this.clearAnimatedSplashTimers();
+  }
+
+  private clearAnimatedSplashTimers(): void {
+    if (this.animatedSplashFadeTimer) {
+      clearTimeout(this.animatedSplashFadeTimer);
+      this.animatedSplashFadeTimer = null;
+    }
+  }
+
+  /**
+   * Replace Capacitor's default hardware-back behaviour (which drives the
+   * WebView's own history — see NATIVE_EXIT_ROUTES's comment) with one keyed
+   * to this app's own idea of where "back" goes.
+   */
+  private installBackButtonHandler(): () => void {
+    if (!Capacitor.isNativePlatform()) return () => undefined;
+    let handle: { remove: () => void } | null = null;
+    void CapacitorApp.addListener('backButton', () => this.handleBackButton()).then((h) => {
+      handle = h;
+    });
+    return () => handle?.remove();
+  }
+
+  private handleBackButton(): void {
+    // A sheet is the thing being looked at; close it rather than navigating
+    // the route underneath.
+    if (this.sheetOverlay.dismissTop()) return;
+    const path = this.router.url.split('?')[0];
+    if (NATIVE_EXIT_ROUTES.includes(path)) {
+      this.confirmExitApp();
+      return;
+    }
+    // Angular's Location, not Capacitor's default — this pops one entry the
+    // same way an in-app back affordance would, rather than falling through
+    // to the WebView's raw history.
+    this.location.back();
+  }
+
+  private confirmExitApp(): void {
+    this.confirmation.confirm({
+      header: 'Exit app',
+      message: 'Close the app?',
+      acceptButtonProps: { label: 'Exit', severity: 'danger' },
+      rejectButtonProps: { label: 'Stay', severity: 'secondary', outlined: true },
+      accept: () => {
+        void CapacitorApp.exitApp();
+      },
+    });
   }
 
   private installViewportInsetObserver(): () => void {
@@ -325,7 +441,7 @@ export class App implements OnInit, OnDestroy {
     this.moreOpen.set(false);
     this.confirmation.confirm({
       header: 'Log out',
-      message: 'End this AstroSpace session on this device?',
+      message: 'End this session on this device?',
       acceptButtonProps: { label: 'Log out', severity: 'danger' },
       rejectButtonProps: { label: 'Cancel', severity: 'secondary', outlined: true },
       accept: async () => {

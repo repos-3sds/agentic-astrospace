@@ -6,16 +6,16 @@ import { RouterLink } from '@angular/router';
 export class SearchComponent {
   protected query='';
   protected readonly index=[
-    ['Today reading','Daily guidance and panchanga','/m/today','READINGS'],
+    ['Today guidance','Daily rhythm, practice and panchanga','/m/today','READINGS'],
     ['Ask history','Your saved questions','/m/ask/history','ASK'],
     ['Saturn transits','Gochara and current movement','/m/transits','TRANSITS'],
     ['Full transits','Aspects, vedha and strength','/m/transits/full','TRANSITS'],
-    ['Life periods','Vimshottari and Yogini dashas','/m/chart/periods','CHART'],
-    ['Divisional charts','D1, D9, D10 and vargas','/m/chart/vargas','CHART'],
-    ['Muhurta','Find a suitable time','/m/muhurta','TOOLS'],
+    ['Life chapters','Vimshottari and Yogini dashas','/m/chart/periods','CHART'],
+    ['Varga charts','D1, D9, D10 and divisional maps','/m/chart/vargas','CHART'],
+    ['Muhurta','Find a supportive time','/m/muhurta','TOOLS'],
     ['Compatibility','Ashta Koota matching','/m/compat','TOOLS'],
     ['Practitioner reference','Avkahada, grahas and tables','/m/chart/reference','REFERENCE'],
-    ['Notes','Your private chart notes','/m/notes','READINGS'],
+    ['Notes','Your private reflections','/m/notes','READINGS'],
   ];
   protected readonly results=computed(()=>{const q=this.query.trim().toLowerCase();return q?this.index.filter(row=>`${row[0]} ${row[1]}`.toLowerCase().includes(q)):[];});
   protected readonly recent=signal<string[]>(JSON.parse(localStorage.getItem('astrospace.mobile.searches')||'[]'));

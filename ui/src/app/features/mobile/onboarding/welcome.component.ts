@@ -28,10 +28,10 @@ interface Promise_ {
     <div class="top">
       <img class="orb" src="mobile/orb-sm.svg" alt="" aria-hidden="true" />
       <p class="greeting">నమస్తే · Namaste</p>
-      <h1 class="headline">Welcome to<br />AstroSpace</h1>
+      <h1 class="headline">Welcome to<br /><span class="brand-name">SIDDHA</span></h1>
       <p class="lede">
-        Let’s set up your first chart. It takes about a minute — just your birth
-        date, time, and place.
+        Let’s begin with your birth details so <span class="siddha-brand">SIDDHA</span>
+        can understand your personal rhythm and guide your everyday choices with care.
       </p>
 
       <ul class="promises">
@@ -64,21 +64,21 @@ export class WelcomeComponent {
   protected readonly promises = signal<Promise_[]>([
     {
       icon: 'promise-computed',
-      title: 'Computed, not conjured',
-      detail: 'Every reading traces to a real calculation.',
+      title: 'Wisdom with a foundation',
+      detail: 'Guidance is rooted in real calculations, then translated for life.',
     },
     {
       icon: 'promise-private',
-      title: 'Private by design',
-      detail: 'Your birth details stay yours.',
+      title: 'Your path stays yours',
+      detail: 'Your birth details and reflections are treated with care.',
     },
     {
       icon: 'promise-language',
-      title: 'Your language',
+      title: 'Guidance you can live with',
       // Was 'English & Telugu' — the app is not translated, so that promised
       // something onboarding could not deliver on the very screen that asks
       // for trust.
-      detail: 'English today, read aloud if you like. Telugu is on the way.',
+      detail: 'Simple words today, read aloud if you like. More languages are on the way.',
     },
   ]);
 }

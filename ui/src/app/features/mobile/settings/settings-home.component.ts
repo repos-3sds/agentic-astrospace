@@ -49,7 +49,7 @@ export class SettingsHomeComponent {
   readonly profile = computed(() => {
     const name = this.kundlis.active()?.name
       ?? this.auth.user()?.user_metadata?.['name']
-      ?? 'Your space';
+      ?? 'Your path';
     return {
       initial: name.slice(0, 1).toUpperCase(),
       name,
@@ -147,8 +147,8 @@ export class SettingsHomeComponent {
         {
           id: 'subscription',
           icon: 'sparkle',
-          label: 'AstroSpace Plus',
-          value: 'View plans',
+          label: 'Plus',
+          value: 'Deeper guidance',
           route: ['/m', 'subscription'],
         },
       ],

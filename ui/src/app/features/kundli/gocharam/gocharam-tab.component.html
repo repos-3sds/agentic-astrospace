@@ -87,25 +87,35 @@
 
     @if (workspace() === 'summary') {
       <section class="summary-workspace">
-        <article class="primary-reading" [class]="toneClass(t.gochara.interpretation.synthesis.tone)">
-          <header>
-            <div>
-              <span>Cited placement synthesis</span>
-              <h3>{{ t.gochara.interpretation.synthesis.headline }}</h3>
-            </div>
-            <small>
-              {{ t.gochara.interpretation.synthesis.counts.supportive }} supportive ·
-              {{ t.gochara.interpretation.synthesis.counts.mixed }} modified ·
-              {{ t.gochara.interpretation.synthesis.counts.challenging }} demanding
-            </small>
-          </header>
-          <p class="lead-reading">{{ t.gochara.interpretation.synthesis.balanced_context }}</p>
-          <details class="reading-details">
-            <summary>Convention and source boundary</summary>
-            <p>{{ t.gochara.interpretation.convention.node_treatment }}</p>
-            <p>{{ t.gochara.interpretation.convention.safety }}</p>
-          </details>
-        </article>
+        @if (synthesis(); as synth) {
+          <article class="primary-reading" [class]="toneClass(synth.tone)">
+            <header>
+              <div>
+                <span>Cited placement synthesis</span>
+                <h3>{{ synth.headline }}</h3>
+              </div>
+              <small>
+                {{ synth.counts.supportive }} supportive ·
+                {{ synth.counts.mixed }} modified ·
+                {{ synth.counts.challenging }} demanding
+              </small>
+            </header>
+            <p class="lead-reading">{{ synth.balanced_context }}</p>
+            <details class="reading-details">
+              <summary>Guided summary and practitioner depth</summary>
+              <p>{{ synth.guided_summary }}</p>
+              <p>{{ synth.practitioner_deep_dive }}</p>
+            </details>
+            <details class="reading-details">
+              <summary>Convention and source boundary</summary>
+              <p>{{ t.gochara.interpretation.convention.node_treatment }}</p>
+              <p>{{ t.gochara.interpretation.convention.safety }}</p>
+              @for (source of interpretationSources(); track source.id) {
+                <p class="as-muted">{{ source.work }} ({{ source.location }}) — {{ source.edition_status }}</p>
+              }
+            </details>
+          </article>
+        }
 
         <article class="primary-reading" [class]="toneClass(t.gochara.core_reading.tone)">
           <header>
@@ -121,6 +131,28 @@
             <p>{{ t.gochara.core_reading.rationale }}</p>
           </details>
         </article>
+
+        @if (sadeSati(); as sade) {
+          <article class="primary-reading" [class]="toneClass(sade.active ? 'challenging' : 'neutral')">
+            <header>
+              <div>
+                <span>Sade Sati status</span>
+                <h3>{{ sade.active ? 'Sade Sati is active' : 'Sade Sati is not active' }}</h3>
+              </div>
+              @if (sade.active && sade.phase) {
+                <small>{{ sade.phase | titlecase }} phase</small>
+              }
+            </header>
+            <p class="lead-reading">
+              Saturn is {{ sade.saturn_house_from_moon }} house{{ sade.saturn_house_from_moon === 1 ? '' : 's' }} from
+              the natal Moon.
+              @if (sade.active) {
+                Sade Sati covers Saturn's transit through the 12th, 1st and 2nd houses from natal Moon; the phase
+                names the leg currently underway.
+              }
+            </p>
+          </article>
+        }
 
         <div class="change-preview">
           <article>
@@ -140,6 +172,63 @@
             <small>{{ t.gochara.interpretation.range_outlook.previous_event_count }} earlier changes scanned</small>
           </article>
         </div>
+
+        @if (classicalGocharaRows().length) {
+          <app-section-card icon="scale" title="Classical status (Phaladeepika ch.26)" subtitle="favourable house and Vedha obstruction per planet">
+            <div class="change-preview">
+              @for (row of classicalGocharaRows(); track row.planet) {
+                <article [class]="toneClass(row.effective === 'favourable' ? 'supportive' : row.effective === 'obstructed' ? 'mixed' : 'challenging')">
+                  <span>{{ row.planet }} · house {{ row.house_from_moon }} from Moon</span>
+                  <h4>{{ row.effective | titlecase }}</h4>
+                  <p>
+                    @if (row.favourable) {
+                      Favourable house per the classical table.
+                      @if (row.vedha.obstructed) {
+                        Obstructed by {{ row.vedha.by }} transiting the {{ row.vedha.vedha_house }}th house from
+                        natal Moon, so the promised support is weakened while the Vedha lasts.
+                      } @else {
+                        No Vedha obstruction is currently active.
+                      }
+                    } @else {
+                      Not a favourable house per the classical table.
+                    }
+                  </p>
+                  <small>{{ row.source_status === 'convention_dependent' ? 'Rahu/Ketu convention, not the Phaladeepika table itself' : 'Phaladeepika ch.26' }}</small>
+                </article>
+              }
+            </div>
+          </app-section-card>
+        }
+
+        @if (ashtakavargaRows().length) {
+          <app-section-card icon="grid-3x3" title="Ashtakavarga support" subtitle="bindu backing for each transit sign">
+            <div class="av-grid">
+              @for (planet of ashtakavargaRows(); track planet.planet) {
+                <article class="av-card">
+                  <header>
+                    <strong>{{ planet.planet }}</strong>
+                    <span>{{ planet.transit_sign }}</span>
+                  </header>
+                  <div class="av-scores">
+                    <span class="av-chip" [class]="bindusClass(planet.bindus)">BAV {{ planet.bindus }}/8</span>
+                    <span class="av-chip">SAV {{ planet.sav }}</span>
+                  </div>
+                  <small>{{ planet.bav_support }} BAV · {{ planet.sav_support }} SAV</small>
+                  @if (planet.kakshya; as k) {
+                    <div class="kakshya-line">
+                      <i class="bindu-dot" [class.given]="k.bindu_given"></i>
+                      <span>Kakshya {{ k.kakshya_index }} · {{ k.kakshya_lord }}</span>
+                      <em>{{ k.bindu_given ? 'bindu given' : 'no bindu' }}</em>
+                    </div>
+                  }
+                </article>
+              }
+            </div>
+            @if (ashtakavargaNote()) {
+              <p class="as-muted av-note">{{ ashtakavargaNote() }}</p>
+            }
+          </app-section-card>
+        }
 
         <section class="active-section">
           <header class="section-heading">
@@ -231,7 +320,12 @@
               <summary>Practical focus and evidence</summary>
               @for (action of domain.actions; track action) { <p>{{ action }}</p> }
               <p>Leading planets: {{ domain.leading_planets.join(' · ') }}</p>
-              <p>Evidence: {{ domain.evidence_ids.join(' · ') }}</p>
+              <p class="evidence-list">
+                Evidence:
+                @for (id of domain.evidence_ids; track id) {
+                  <span class="evidence-chip">{{ resolveEvidence(id) }}</span>
+                }
+              </p>
             </details>
           </article>
         }
@@ -315,6 +409,20 @@
               <p>{{ rule.source_id }} · {{ rule.source_status }}</p>
               <p>{{ rule.claim_status }}</p>
             </details>
+            @if (classicalGochara()[rule.planet]; as classical) {
+              <details class="reading-details">
+                <summary>Classical status (Phaladeepika ch.26)</summary>
+                <p>
+                  House {{ classical.house_from_moon }} from Moon is
+                  {{ classical.favourable ? 'a favourable house' : 'not a favourable house' }} for
+                  {{ rule.planet }}.
+                  @if (classical.vedha.obstructed) {
+                    Obstructed by {{ classical.vedha.by }} in the {{ classical.vedha.vedha_house }}th house from
+                    Moon.
+                  }
+                </p>
+              </details>
+            }
           </article>
         }
       </section>

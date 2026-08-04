@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
     <!-- Supabase's session (including the refresh token) lives in the
          WebView's localStorage, which Android Auto Backup would otherwise
          copy to the user's Google account unencrypted. Do not re-enable
@@ -13,7 +12,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
             android:name=".MainActivity"
@@ -21,7 +19,6 @@
             android:theme="@style/AppTheme.NoActionBarLaunch"
             android:launchMode="singleTask"
             android:exported="true">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -31,10 +28,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="app.astrospace.mobile"
-                    android:host="auth"
-                    android:pathPrefix="/callback" />
+                <data android:scheme="app.astrospace.mobile" android:host="auth" android:pathPrefix="/callback" />
             </intent-filter>
 
             <intent-filter android:autoVerify="false">
@@ -44,9 +38,9 @@
                 <data
                     android:scheme="https"
                     android:host="agentic-astrospace-cwuqybpnzq-el.a.run.app"
-                    android:pathPrefix="/api/v1/auth/native-callback" />
+                    android:pathPrefix="/api/v1/auth/native-callback"
+                />
             </intent-filter>
-
         </activity>
 
         <provider
@@ -54,9 +48,7 @@
             android:authorities="${applicationId}.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths"></meta-data>
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
         </provider>
     </application>
 

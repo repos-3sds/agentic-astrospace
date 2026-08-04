@@ -49,10 +49,14 @@
   width: 100%;
   border: 0;
   border-radius: 999px;
-  background: #20150e;               // --ink
+  // Was a hardcoded #20150e with the comment "// --ink" — the token existed
+  // and was not used. --m-on-ink flips to a near-black in dark mode, so dark
+  // text sat on a fixed dark fill and this button read as invisible. Same
+  // defect the why-reading sheet's "Got it" button had.
+  background: var(--m-ink);
   color: var(--m-on-ink);
   padding: 16px 24px;
   cursor: pointer;
   @include m-button;
-  box-shadow: 0 10px 15px rgba(65, 42, 20, 0.07);
+  box-shadow: var(--m-shadow-card);
 }

@@ -29,6 +29,16 @@
   margin: 0 0 14px;
 }
 
+.brand-name {
+  display: inline-block;
+  font-family: 'Samarkan', 'Cormorant Garamond', serif;
+  font-size: 1.5em;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 0.9;
+  color: var(--m-accent-strong);
+}
+
 .lede {
   @include m-body-lg;
   color: var(--m-muted);

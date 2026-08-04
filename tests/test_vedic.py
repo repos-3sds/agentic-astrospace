@@ -401,6 +401,13 @@ class TestCompatibility:
             self._av = av
             self._moon_nakshatra = moon_nakshatra
             self._moon_sign = moon_sign
+            # Arbitrary but valid — these tests assert only on koota rows,
+            # never on Manglik/Gandanta, so any real longitude works for
+            # gun_milan()'s safety_checks to compute without asserting
+            # anything meaningful.
+            self.positions = {planet: {"lon": 15.0} for planet in
+                               ("Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn")}
+            self.lagna_lon = 0.0
 
         def avkahada(self):
             return self._av

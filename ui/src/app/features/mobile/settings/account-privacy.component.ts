@@ -58,10 +58,10 @@ export class AccountPrivacyComponent {
         const url = URL.createObjectURL(new Blob([payload], { type: 'application/json' }));
         const anchor = document.createElement('a');
         anchor.href = url;
-        anchor.download = `astrospace-export-${new Date().toISOString().slice(0, 10)}.json`;
+        anchor.download = `siddha-export-${new Date().toISOString().slice(0, 10)}.json`;
         anchor.click();
         URL.revokeObjectURL(url);
-        this.message.set('Your AstroSpace data export is ready.');
+        this.message.set('Your data export is ready.');
         return;
       }
       await this.router.navigate(['/m', 'auth'], { queryParams: { email: this.auth.email() } });

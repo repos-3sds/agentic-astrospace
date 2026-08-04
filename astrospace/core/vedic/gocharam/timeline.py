@@ -16,9 +16,15 @@ from ..positions import (
     sign_name,
     to_dms,
 )
+from ..strength import dignity_of
 from .kakshya import kakshya_of
 from .interpretation import compose_gocharam_interpretation
-from .rules import GocharaRuleDefinition, RULE_DEFINITIONS, classical_gochara_status
+from .rules import (
+    GocharaRuleDefinition,
+    RULE_DEFINITIONS,
+    classical_gochara_status,
+    special_aspect_houses,
+)
 from .strength import apply_ashtakavarga_context, ashtakavarga_transit_support
 
 TRANSIT_PLANETS = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"]
@@ -50,7 +56,9 @@ def _planet_snapshot(positions: dict, planet: str, natal_positions: dict, natal_
         dist = abs((lon - natal_lon + 180) % 360 - 180)
         if dist <= 1.0:
             exact_conjunctions.append(natal_planet)
-            
+
+    house_from_moon = house_from_lagna(s, natal_moon_sign)
+
     return {
         "planet": planet,
         "longitude": round(lon, 4),
@@ -62,10 +70,16 @@ def _planet_snapshot(positions: dict, planet: str, natal_positions: dict, natal_
         "nakshatra_pada": nak["pada"],
         "kakshya": kakshya_of(degree_in_sign(lon)),
         "house_from_lagna": house_from_lagna(s, natal_lagna_sign),
-        "house_from_moon": house_from_lagna(s, natal_moon_sign),
+        "house_from_moon": house_from_moon,
         "retrograde": data.get("retrograde", False),
         "speed": round(data.get("speed", 0.0), 6),
         "exact_natal_conjunctions": exact_conjunctions,
+        # Additive evidence (US-GOC-017): the transiting planet's own dignity in
+        # its transit sign (reuses the already-cited BPHS ch.3 dignity engine —
+        # see strength.dignity_of) and the houses it classically aspects from
+        # here, computed rather than hand-typed per placement.
+        "transit_dignity": dignity_of(planet, lon, positions),
+        "special_aspect_houses_from_moon": special_aspect_houses(planet, house_from_moon),
     }
 
 
@@ -415,6 +429,134 @@ def _timeline_core_reading(events: list[dict], mode: str, scan_days: int) -> dic
     }
 
 
+
+# ── Multi-pass tracking for Saturn's long-cycle rules (US-GOC-025) ──────────
+#
+# Saturn's ~2.5-year dwell per sign means it commonly retrogrades back across
+# the boundary of a named cycle (Sade Sati, Ashtama Shani, Ardhashtama Shani)
+# shortly after entering or leaving it, producing a real first-entry /
+# retrograde-return / final-exit pattern rather than one clean window. The
+# existing start/end scan only ever finds the single continuous run touching
+# ``as_of``; this scans a wide horizon around it and reports every run.
+SATURN_MULTI_PASS_RULE_IDS = {
+    "gochara_sade_sati",
+    "gochara_ashtama_shani",
+    "gochara_kantaka_shani",
+}
+MULTI_PASS_HORIZON_DAYS = 1500
+MULTI_PASS_STEP_DAYS = 7
+
+
+def _refine_toggle(
+    before: datetime,
+    after: datetime,
+    rule_id: str,
+    natal_positions: dict,
+    natal_lagna_sign: int,
+    natal_moon_sign: int,
+    ayanamsha: str,
+    node_type: str,
+    before_active: bool,
+) -> datetime:
+    """``before``/``after`` bracket a coarse-step state change; walk forward
+    a day at a time to find the exact day the state first differs."""
+    cursor = before + timedelta(days=1)
+    while cursor < after:
+        active = _is_rule_active(cursor, rule_id, natal_positions, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type)
+        if active != before_active:
+            return cursor
+        cursor += timedelta(days=1)
+    return after
+
+
+def _rule_active_runs(
+    as_of: datetime,
+    rule_id: str,
+    natal_positions: dict,
+    natal_lagna_sign: int,
+    natal_moon_sign: int,
+    ayanamsha: str,
+    node_type: str,
+    horizon_days: int = MULTI_PASS_HORIZON_DAYS,
+    step_days: int = MULTI_PASS_STEP_DAYS,
+) -> list[dict]:
+    """Every contiguous active run for ``rule_id`` inside
+    [as_of - horizon_days, as_of + horizon_days], refined to the exact day.
+
+    Returns runs in chronological order as ``{"start": iso_date_or_None,
+    "end": iso_date_or_None}``. ``None`` means the run is open at that end of
+    the scanned horizon — the true boundary lies further out than we looked.
+    """
+    window_start = as_of - timedelta(days=horizon_days)
+    window_end = as_of + timedelta(days=horizon_days)
+
+    samples: list[tuple[datetime, bool]] = []
+    cursor = window_start
+    while cursor < window_end:
+        samples.append((cursor, _is_rule_active(cursor, rule_id, natal_positions, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type)))
+        cursor += timedelta(days=step_days)
+    samples.append((window_end, _is_rule_active(window_end, rule_id, natal_positions, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type)))
+
+    # Chronological (datetime, state) instants: the sampled state at
+    # window_start, then every coarse-step toggle refined down to its exact
+    # day. Consecutive entries always alternate True/False by construction.
+    instants: list[tuple[datetime, bool]] = [(window_start, samples[0][1])]
+    for (prev_dt, prev_active), (next_dt, next_active) in zip(samples, samples[1:]):
+        if prev_active != next_active:
+            exact = _refine_toggle(
+                prev_dt, next_dt, rule_id, natal_positions, natal_lagna_sign, natal_moon_sign,
+                ayanamsha, node_type, prev_active,
+            )
+            instants.append((exact, next_active))
+
+    runs: list[dict] = []
+    for i, (dt, state) in enumerate(instants):
+        if not state:
+            continue
+        start = None if i == 0 else dt.date().isoformat()
+        end = instants[i + 1][0].date().isoformat() if i + 1 < len(instants) else None
+        runs.append({"start": start, "end": end})
+    return runs
+
+
+def _label_passes(runs: list[dict]) -> list[dict]:
+    """Label each run by how it began and, when it's the last one observed
+    and its end is genuinely known, that it's the cycle's final exit.
+
+    The common real case (e.g. Saturn's 2022 Aquarius entry, retrograde back
+    into Capricorn, and final Aquarius return in 2023) is exactly two runs
+    with no bounded end yet on the second — that one is correctly labelled
+    "retrograde_return", not "final_exit", until an end date is actually
+    observed within the scanned horizon.
+    """
+    labeled = []
+    n = len(runs)
+    for i, run in enumerate(runs):
+        if i == 0:
+            entry_type = "first_entry" if run["start"] else "continuing_before_horizon"
+        elif i == n - 1 and run["end"] is not None:
+            entry_type = "final_exit"
+        else:
+            entry_type = "retrograde_return"
+        labeled.append({**run, "entry_type": entry_type})
+    return labeled
+
+
+def _rule_passes(
+    as_of: datetime,
+    rule_id: str,
+    natal_positions: dict,
+    natal_lagna_sign: int,
+    natal_moon_sign: int,
+    ayanamsha: str,
+    node_type: str,
+) -> list[dict] | None:
+    if rule_id not in SATURN_MULTI_PASS_RULE_IDS:
+        return None
+    runs = _rule_active_runs(as_of, rule_id, natal_positions, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type)
+    return _label_passes(runs)
+
+
 def gocharam_rule_timeline(
     as_of: datetime,
     natal_positions: dict,
@@ -438,6 +580,7 @@ def gocharam_rule_timeline(
             "tone": _rule_tone(rule),
             "trigger": rule["trigger"],
             "summary": f"{rule['name']} is active now. It began {start or 'before the scan window'} and is estimated to remain active until {end or 'beyond the scan window'}.",
+            "passes": _rule_passes(as_of, rule["id"], natal_positions, natal_lagna_sign, natal_moon_sign, ayanamsha, node_type),
         })
 
     previous_events = _timeline_events(

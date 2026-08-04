@@ -1,8 +1,8 @@
 <main class="landing-page">
-  <nav class="landing-nav" aria-label="AstroSpace">
+  <nav class="landing-nav" aria-label="SIDDHA">
     <a class="brand" routerLink="/">
-      <span class="brand-mark">AS</span>
-      <span>AstroSpace</span>
+      <span class="brand-mark">SI</span>
+      <span class="brand-name">SIDDHA</span>
     </a>
     <div class="nav-links">
       <a href="#features">Guidance</a>
@@ -26,19 +26,23 @@
     <div class="hero-copy">
       <div class="hero-kicker">
         <span class="pulse-dot"></span>
-        Personal Vedic guidance for life, love and timing
+        A way of life guide for rhythm, clarity and right action
       </div>
       <h1>
-        Understand your chart. Know your timing. Move with more clarity.
+        Live with rhythm. Choose with clarity. Grow with guidance.
       </h1>
       <p>
-        AstroSpace helps you read your kundli in a simple, human way:
-        your personality, strengths, relationships, career direction, daily timing
-        and the planetary periods shaping your life right now.
+        <span class="siddha-brand">SIDDHA</span> brings classical Jyotisha, daily panchanga, and personal timing
+        into a calm guide for everyday life: what to practice, when to act,
+        when to pause, and how to understand the chapter you are in.
       </p>
       <div class="hero-actions">
         <a class="primary-cta" [routerLink]="appLink()">
-          {{ appCta() }}
+          @if (auth.session()) {
+            Open <span class="siddha-brand">SIDDHA</span>
+          } @else {
+            {{ appCta() }}
+          }
           <lucide-icon name="arrow-right" [size]="18" />
         </a>
         <a class="secondary-cta" href="#product">
@@ -52,10 +56,10 @@
       </div>
     </div>
 
-    <div class="hero-visual" id="product" aria-label="AstroSpace product preview">
+    <div class="hero-visual" id="product" aria-label="SIDDHA product preview">
       <div class="orbital-card chart-card">
         <div class="card-top">
-          <span>D1 Rasi</span>
+          <span>Life map</span>
           <strong>South Indian</strong>
         </div>
         <div class="chart-grid" aria-hidden="true">
@@ -98,28 +102,28 @@
   <section class="metric-band" id="trust">
     <article>
       <span>For self understanding</span>
-      <strong>your chart</strong>
-      <p>See your lagna, moon sign, nakshatra and planetary patterns without getting lost in jargon.</p>
+      <strong>your life map</strong>
+      <p>Understand your strengths, tendencies and recurring themes without getting lost in jargon.</p>
     </article>
     <article>
       <span>For daily life</span>
       <strong>your timing</strong>
-      <p>Use panchanga, dashas and transits to understand when to act, pause, plan or review.</p>
+      <p>Use panchanga, dashas and transits as daily rhythm cues for action, rest, reflection and review.</p>
     </article>
     <article>
       <span>For real trust</span>
-      <strong>your memory</strong>
-      <p>Save readings and come back later to see what matched your experience.</p>
+      <strong>your practice</strong>
+      <p>Return to simple actions, reflections and notes that help guidance become lived experience.</p>
     </article>
   </section>
 
   <section class="section" id="features">
     <div class="section-heading">
-      <span>Astrology that feels useful</span>
-      <h2>Ancient timing, explained for normal life.</h2>
+      <span>Wisdom that becomes practice</span>
+      <h2>Ancient timing, translated for modern life.</h2>
       <p>
-        You do not need to know every Sanskrit term to benefit from your chart.
-        AstroSpace keeps the calculations deep and the explanations grounded.
+        You do not need to know every Sanskrit term to benefit from the wisdom.
+        <span class="siddha-brand">SIDDHA</span> keeps the calculations deep and the guidance grounded.
       </p>
     </div>
 
@@ -139,10 +143,11 @@
   <section class="workflow-section" id="workflow">
     <div class="workflow-copy">
       <span>How it works</span>
-      <h2>Start with your birth details. Let the chart open up slowly.</h2>
+      <h2>Start with your birth details. Let your life map open slowly.</h2>
       <p>
-        Create your kundli, explore the big picture, then return for daily guidance
-        when you need perspective on decisions, emotions, relationships or timing.
+        Create your profile, explore the big picture, then return for daily
+        guidance when you need perspective on decisions, emotions, relationships
+        or timing.
       </p>
     </div>
 
@@ -158,7 +163,7 @@
 
   <section class="final-cta">
     <span>Begin gently</span>
-    <h2>Your chart has patterns. Start learning how they speak.</h2>
+    <h2>Your life has rhythm. Start learning how to move with it.</h2>
     <a class="primary-cta" [routerLink]="appLink()">
       {{ appCta() }}
       <lucide-icon name="arrow-right" [size]="18" />

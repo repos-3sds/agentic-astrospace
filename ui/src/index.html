@@ -1,14 +1,36 @@
 <!doctype html>
-<html lang="en" class="app-dark">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>AstroSpace — Vedic Astrology, Computed</title>
+  <title>SIDDHA — Your Guide to Living in Rhythm</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>
+    // Resolve the theme before first paint.
+    //
+    // `class="app-dark"` used to be hardcoded on <html>, which contradicted
+    // ThemeService's documented "defer to the device" default: a phone set to
+    // light painted dark, then snapped to light once Angular booted. Keep this
+    // in step with storedPreference()/prefersDark() in core/theme.service.ts —
+    // it is the same decision, made early enough to avoid the flash.
+    (function () {
+      try {
+        var stored = localStorage.getItem('astrospace-theme');
+        var dark = stored === 'dark' || (stored !== 'light'
+          && window.matchMedia
+          && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) document.documentElement.classList.add('app-dark');
+      } catch (e) {
+        // Private mode can throw on localStorage; the device query alone is
+        // still better than forcing a theme.
+      }
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

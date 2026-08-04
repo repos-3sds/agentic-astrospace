@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from .constants import NAKSHATRAS, NATURAL_RELATIONS, SIGNS, SIGN_LORDS
+from .doshas import gandanta_dosha, manglik_dosha
 
 VARNA_RANK = {"Shudra": 1, "Vaishya": 2, "Kshatriya": 3, "Brahmin": 4}
 # 0-based tara cycle. Classical Tara koota treats Vipat, Pratyari and
@@ -299,6 +300,43 @@ def _nadi(chart_a, chart_b) -> dict:
     return _row("Nadi", 0, 8, f"{a} with {b}; nadi dosha")
 
 
+def _safety_checks(chart_a, chart_b) -> dict:
+    """Manglik-match and Gandanta status for both charts.
+
+    Reuses the same dosha detection the individual chart's Yogas & Doshas
+    screen already shows — this is not a second implementation of Manglik or
+    Gandanta, just the two charts' existing results read side by side.
+    """
+    manglik_a = manglik_dosha(chart_a.positions, chart_a.lagna_lon)
+    manglik_b = manglik_dosha(chart_b.positions, chart_b.lagna_lon)
+    gandanta_a = gandanta_dosha(chart_a.positions, chart_a.lagna_lon)
+    gandanta_b = gandanta_dosha(chart_b.positions, chart_b.lagna_lon)
+
+    both_manglik = manglik_a["active"] and manglik_b["active"]
+    neither_manglik = not manglik_a["active"] and not manglik_b["active"]
+    manglik_match = both_manglik or neither_manglik
+
+    return {
+        "manglik": {
+            "person1_active": manglik_a["active"],
+            "person1_net_severity": manglik_a["net_severity"],
+            "person2_active": manglik_b["active"],
+            "person2_net_severity": manglik_b["net_severity"],
+            "match": manglik_match,
+            "note": (
+                "Both non-Manglik" if neither_manglik else
+                "Both Manglik" if both_manglik else
+                "One profile is Manglik and the other is not — a traditional caution, not a verdict; check net_severity and cancellation exceptions before treating it as a blocker."
+            ),
+        },
+        "gandanta": {
+            "person1_active": gandanta_a["active"],
+            "person2_active": gandanta_b["active"],
+            "clear": not gandanta_a["active"] and not gandanta_b["active"],
+        },
+    }
+
+
 def gun_milan(chart_a, chart_b) -> dict:
     """Return an Ashta Koota style 36-point compatibility breakdown."""
     rows = [
@@ -335,6 +373,7 @@ def gun_milan(chart_a, chart_b) -> dict:
             "person1": _compat_profile(chart_a),
             "person2": _compat_profile(chart_b),
         },
+        "safety_checks": _safety_checks(chart_a, chart_b),
     }
 
 

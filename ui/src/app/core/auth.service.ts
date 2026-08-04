@@ -5,6 +5,7 @@ import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { createClient, Session, SupabaseClient, User } from '@supabase/supabase-js';
 import { apiUrl } from './api-origin';
+import { Preferences } from '@capacitor/preferences';
 
 const NATIVE_AUTH_CALLBACK = 'app.astrospace.mobile://auth/callback';
 const NATIVE_AUTH_BRIDGE_PATH = '/api/v1/auth/native-callback';
@@ -65,18 +66,51 @@ export class AuthService {
       throw new Error('Supabase auth is enabled but URL/anon key are missing');
     }
 
+    const capacitorStorage = {
+      getItem: async (key: string): Promise<string | null> => {
+        const { value } = await Preferences.get({ key });
+        return value;
+      },
+      setItem: async (key: string, value: string): Promise<void> => {
+        await Preferences.set({ key, value });
+      },
+      removeItem: async (key: string): Promise<void> => {
+        await Preferences.remove({ key });
+      }
+    };
+
     this.client = createClient(config.supabase_url, config.supabase_anon_key, {
       auth: {
         flowType: 'pkce',
         detectSessionInUrl: !Capacitor.isNativePlatform(),
+        storage: capacitorStorage,
       },
     });
     await this.installNativeAuthCallback();
+    this.installAutoRefreshLifecycle();
     const { data, error } = await this.client.auth.getSession();
     if (error) throw error;
     this.setSession(data.session);
     this.client.auth.onAuthStateChange((_event, session) => this.setSession(session));
     this.ready.set(true);
+  }
+
+  /**
+   * supabase-js's autoRefreshToken runs on a JS timer, and iOS/Android freeze
+   * JS timers while the app is backgrounded. A user who leaves the app open
+   * in the background for longer than the access token's lifetime (1h by
+   * default) comes back to a client that never noticed the token expired —
+   * this is Supabase's own documented gotcha for Capacitor/React Native, not
+   * something autoRefreshToken:true (the default) covers by itself. The fix
+   * they document: drive start/stop off the app's own foreground lifecycle
+   * instead of trusting the timer to survive suspension.
+   */
+  private installAutoRefreshLifecycle(): void {
+    if (!Capacitor.isNativePlatform()) return;
+    void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) void this.client?.auth.startAutoRefresh();
+      else void this.client?.auth.stopAutoRefresh();
+    });
   }
 
   async signIn(email: string, password: string, destination: string[] = ['/app']): Promise<void> {
@@ -161,9 +195,19 @@ export class AuthService {
   async getAccessToken(): Promise<string | null> {
     await this.init();
     if (!this.enabled()) return null;
-    const current = this.session();
-    if (current?.access_token) return current.access_token;
-    const { data } = await this.client!.auth.getSession();
+    // Was: trust the cached session's token forever once one existed. If the
+    // auto-refresh timer missed its window (see installAutoRefreshLifecycle),
+    // that handed out an expired token on every request until the *next*
+    // auth state change, which is exactly the repeated-logout symptom this
+    // fixes. client.auth.getSession() is supabase-js's own freshness check —
+    // it returns the cached session with no network call when still valid,
+    // and refreshes it first when it isn't. Always deferring to it here
+    // means this method can't go stale independently of that logic.
+    const { data, error } = await this.client!.auth.getSession();
+    if (error) {
+      this.setSession(null);
+      return null;
+    }
     this.setSession(data.session);
     return data.session?.access_token ?? null;
   }

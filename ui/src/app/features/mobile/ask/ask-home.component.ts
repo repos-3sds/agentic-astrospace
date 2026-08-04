@@ -100,7 +100,7 @@ export class AskHomeComponent {
   protected readonly safetyLine = computed(() =>
     this.preferences.experienceMode() === 'practitioner'
       ? 'Safety boundary unchanged: medical, legal and financial verdicts still refer out.'
-      : 'For medical, legal or financial decisions, AstroSpace gives timing context only.',
+      : 'For medical, legal or financial decisions, this guide gives timing context only.',
   );
 
   /**

@@ -26,6 +26,12 @@
   border: 1px solid var(--m-border);
   border-radius: 16px;
   overflow: hidden;
+  // The sheet's panel is a flex column with max-height + overflow-y: auto. A
+  // flex item with its own `overflow` other than visible gets an automatic
+  // min-height of 0 instead of "size to content" (CSS Flexbox §4.5) — so once
+  // the sheet's content outgrew the panel, flexbox collapsed this to a sliver
+  // instead of letting the panel scroll, clipping every row silently.
+  flex-shrink: 0;
 }
 
 .calc-row {
@@ -52,7 +58,9 @@
   white-space: nowrap;
 }
 
-.actions { display: flex; gap: 10px; }
+// Also never collapsible — these are the sheet's only dismiss affordances
+// besides the scrim tap, per sheet.component's "generous dismissal" contract.
+.actions { display: flex; gap: 10px; flex-shrink: 0; }
 
 .btn {
   flex: 1 1 0;
@@ -70,8 +78,12 @@
 
   &.ink {
     border: 0;
-    background: #20150e;
+    // Was a hardcoded light-theme color that never flipped in dark mode,
+    // rendering dark text on a near-black button against the sheet's own
+    // dark surface — effectively invisible. var(--m-ink) is the token every
+    // other primary control in the app already uses for this.
+    background: var(--m-ink);
     color: var(--m-on-ink);
-    box-shadow: 0 10px 15px rgba(65, 42, 20, 0.07);
+    box-shadow: var(--m-shadow-card);
   }
 }

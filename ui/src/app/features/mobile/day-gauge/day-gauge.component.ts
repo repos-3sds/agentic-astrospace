@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, effect, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 
 /**
  * Day-quality gauge (Figma node 13:20).
@@ -17,6 +18,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   selector: 'as-day-gauge',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [DecimalPipe],
   template: `
     <svg [attr.viewBox]="'0 0 ' + SIZE + ' ' + SIZE" [attr.width]="SIZE" [attr.height]="SIZE"
          role="img" [attr.aria-label]="label() + ', ' + score() + ' out of 100'">
@@ -29,7 +31,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
               [attr.transform]="'rotate(-90 ' + C + ' ' + C + ')'" />
     </svg>
     <div class="readout" aria-hidden="true">
-      <span class="score">{{ score() }}</span>
+      <span class="score">{{ animatedScore() | number:'1.0-0' }}</span>
       <span class="label">{{ label() }}</span>
     </div>
   `,
@@ -45,8 +47,18 @@ export class DayGaugeComponent {
   protected readonly STROKE = 11.44;
   protected readonly CIRCUMFERENCE = 2 * Math.PI * 46.28;
 
+  protected readonly animatedScore = signal(0);
+
+  constructor() {
+    effect(() => {
+      const target = this.score();
+      // Add a slight delay to allow the gauge to render at 0 before animating to the target
+      setTimeout(() => this.animatedScore.set(target), 50);
+    });
+  }
+
   protected readonly dashOffset = computed(() => {
-    const clamped = Math.min(100, Math.max(0, this.score()));
+    const clamped = Math.min(100, Math.max(0, this.animatedScore()));
     return this.CIRCUMFERENCE * (1 - clamped / 100);
   });
 }

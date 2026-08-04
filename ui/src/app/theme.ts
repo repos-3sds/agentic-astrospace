@@ -2,7 +2,7 @@ import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
 
 /**
- * AstroSpace preset: refined warm neutral in light mode, ink/copper in dark mode.
+ * SIDDHA preset: refined warm neutral in light mode, ink/copper in dark mode.
  */
 export const CelestialPreset = definePreset(Aura, {
   semantic: {

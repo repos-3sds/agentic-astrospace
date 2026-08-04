@@ -264,6 +264,34 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'explore',
+        loadComponent: () =>
+          import('./features/mobile/explore/guided-explore.component').then(
+            (m) => m.GuidedExploreComponent,
+          ),
+      },
+      {
+        path: 'explore/story',
+        loadComponent: () =>
+          import('./features/mobile/explore/guided-story.component').then(
+            (m) => m.GuidedStoryComponent,
+          ),
+      },
+      {
+        path: 'explore/what-to-do',
+        loadComponent: () =>
+          import('./features/mobile/remedies/remedies.component').then(
+            (m) => m.RemediesComponent,
+          ),
+      },
+      {
+        path: 'explore/life-chapters',
+        loadComponent: () =>
+          import('./features/mobile/explore/guided-life-chapters.component').then(
+            (m) => m.GuidedLifeChaptersComponent,
+          ),
+      },
+      {
         path: 'remedies',
         loadComponent: () =>
           import('./features/mobile/remedies/remedies.component').then(
@@ -307,7 +335,6 @@ export const routes: Routes = [
       },
       {
         path: 'chart/vargas',
-        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/chart/varga-charts.component').then(
             (m) => m.VargaChartsComponent,
@@ -315,32 +342,31 @@ export const routes: Routes = [
       },
       {
         path: 'chart/reference',
-        data: { hideMobileTabs: true, referenceMode: 'home' },
+        data: { referenceMode: 'home' },
         loadComponent: () => import('./features/mobile/chart/reference.component').then((m) => m.ReferenceComponent),
       },
       {
         path: 'chart/reference/avkahada',
-        data: { hideMobileTabs: true, referenceMode: 'avkahada' },
+        data: { referenceMode: 'avkahada' },
         loadComponent: () => import('./features/mobile/chart/reference.component').then((m) => m.ReferenceComponent),
       },
       {
         path: 'chart/reference/grahas',
-        data: { hideMobileTabs: true, referenceMode: 'grahas' },
+        data: { referenceMode: 'grahas' },
         loadComponent: () => import('./features/mobile/chart/reference.component').then((m) => m.ReferenceComponent),
       },
       {
         path: 'chart/reference/ashtakavarga',
-        data: { hideMobileTabs: true, referenceMode: 'ashtakavarga' },
+        data: { referenceMode: 'ashtakavarga' },
         loadComponent: () => import('./features/mobile/chart/reference.component').then((m) => m.ReferenceComponent),
       },
       {
         path: 'chart/reference/favourable',
-        data: { hideMobileTabs: true, referenceMode: 'favourable' },
+        data: { referenceMode: 'favourable' },
         loadComponent: () => import('./features/mobile/chart/reference.component').then((m) => m.ReferenceComponent),
       },
       {
         path: 'chart/periods',
-        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/chart/life-periods.component').then(
             (m) => m.LifePeriodsComponent,
@@ -348,7 +374,6 @@ export const routes: Routes = [
       },
       {
         path: 'chart/yogas',
-        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/chart/yogas-doshas.component').then(
             (m) => m.YogasDoshasComponent,
@@ -356,7 +381,6 @@ export const routes: Routes = [
       },
       {
         path: 'chart/strength',
-        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/chart/strength-advanced.component').then(
             (m) => m.StrengthAdvancedComponent,
@@ -529,6 +553,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/mobile/compat/compat-results.component').then(
             (m) => m.CompatResultsComponent,
+          ),
+      },
+      {
+        path: 'compat/results/detail',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/compat/compat-detail.component').then(
+            (m) => m.CompatDetailComponent,
           ),
       },
       {

@@ -72,7 +72,19 @@
 
 .levels {
   background: var(--m-raised); border: 1px solid var(--m-border);
-  button { padding: 11px 4px; font-size: 13.5px; line-height: 1.2; color: var(--m-muted); }
+  // Built for 3 tabs (Maha/Antar/Pratyantar). Practitioner mode adds
+  // Sookshma/Prana — five equal-width flex buttons at 13.5px don't fit
+  // "Pratyantar" without overlapping its neighbour, so this scrolls instead
+  // of forcing every label into an ever-shrinking flex-basis.
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+
+  button {
+    flex: 0 0 auto; padding: 11px 16px; font-size: 13.5px; line-height: 1.2;
+    color: var(--m-muted); white-space: nowrap;
+  }
 }
 
 .gloss { @include m-caption; width: 100%; margin: 0; color: var(--m-muted); }

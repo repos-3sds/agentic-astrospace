@@ -8,6 +8,9 @@
     <div class="styles chart-skeleton" role="status" aria-label="Loading chart style controls">
       @for (_ of [1, 2, 3]; track _) { <span class="skel style-skel"></span> }
     </div>
+    <div class="varga-strip chart-skeleton">
+      @for (_ of [1, 2, 3, 4, 5, 6]; track _) { <span class="skel varga-skel"></span> }
+    </div>
     <div class="chart-card chart-skeleton">
       <span class="skel chart-box"></span>
     </div>
@@ -16,6 +19,10 @@
         <li class="legend-item"><span class="skel legend-dot"></span><span class="skel legend-line"></span></li>
       }
     </ul>
+    <section class="data-section chart-skeleton">
+      <span class="skel line-skel section-title-skel"></span>
+      <span class="skel table-skel"></span>
+    </section>
   } @else if (error()) {
     <section class="chart-state error" role="alert"><b>Chart could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
   } @else if (!chart()) {
@@ -35,6 +42,24 @@
         [attr.aria-checked]="s === style()"
         (click)="setStyle(s)"
       >{{ s }}</button>
+    }
+  </div>
+
+  <div class="varga-strip" aria-label="Divisional charts">
+    @for (varga of vargas; track varga) {
+      <button
+        class="varga-chip"
+        type="button"
+        [class.is-on]="varga === selectedVarga()"
+        [class.has-data]="hasVarga(varga)"
+        [attr.aria-pressed]="varga === selectedVarga()"
+        (click)="setVarga(varga)"
+      >
+        <span>{{ varga }}</span>
+        @if (hasVarga(varga) && varga !== selectedVarga() && varga !== 'D1') {
+          <i aria-hidden="true"></i>
+        }
+      </button>
     }
   </div>
 
@@ -64,6 +89,50 @@
   </ul>
 
   <p class="hint">Tap a planet to see details</p>
+
+  @if (preferences.experienceMode() === 'practitioner') {
+    <section class="data-section">
+      <p class="section-title">PLANETARY POSITIONS</p>
+      <div class="data-card positions-card">
+        <div class="positions-scroll" tabindex="0" aria-label="Planetary positions table">
+          <div class="positions-table">
+            <div class="positions-row positions-head">
+              <span>Graha</span>
+              <span>Sign</span>
+              <span>Degree</span>
+              <span>Nakshatra</span>
+              <span>Pada</span>
+              <span>Dignity</span>
+              <span>R</span>
+            </div>
+            @for (row of planetRows(); track row.planet) {
+              <button class="positions-row" type="button" (click)="openPlanetRow(row.planet)">
+                <span class="accent">{{ row.planet }}</span>
+                <span>{{ row.sign }}</span>
+                <span>{{ row.degree }}</span>
+                <span>{{ row.nakshatra }}</span>
+                <span>{{ row.pada }}</span>
+                <span>{{ row.dignity }}</span>
+                <span [class.accent]="row.retrograde === 'R'">{{ row.retrograde }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="data-section">
+      <p class="section-title">HOUSE LORDS</p>
+      <div class="data-card house-lords">
+        @for (house of houseLords(); track house.house) {
+          <article class="house-lord">
+            <span>House {{ house.house }}</span>
+            <b>{{ house.lord }} ({{ house.sign }})</b>
+          </article>
+        }
+      </div>
+    </section>
+  }
   }
 </div>
 

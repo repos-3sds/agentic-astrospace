@@ -12,7 +12,13 @@
           </button>
         }
         <div class="mobile-title-block">
-          <span class="mobile-route">{{ mobileTitle() }}</span>
+          <span class="mobile-route">
+            @if (mobileTitle() === 'SIDDHA') {
+              <span class="siddha-brand">SIDDHA</span>
+            } @else {
+              {{ mobileTitle() }}
+            }
+          </span>
           <button
             type="button"
             class="mobile-profile-trigger"
@@ -28,7 +34,13 @@
       <header class="topbar">
         <div class="topbar-inner">
           <div class="topbar-titles">
-            <h1>{{ title() }}</h1>
+            <h1>
+              @if (title() === 'SIDDHA') {
+                <span class="siddha-brand">SIDDHA</span>
+              } @else {
+                {{ title() }}
+              }
+            </h1>
             <p class="as-muted">{{ subtitle() }}</p>
           </div>
 
@@ -326,3 +338,10 @@
 <app-kundli-dialog />
 <p-toast position="bottom-right" />
 <p-confirmdialog [style]="{ width: '420px' }" />
+
+@if (showAnimatedSplash()) {
+  <div class="animated-splash-overlay" [class.fade-out]="animatedSplashFading()"
+       (click)="finishAnimatedSplash()" role="button" tabindex="0" aria-label="Skip intro">
+    <app-splash [dark]="theme.dark()" (finished)="finishAnimatedSplash()"></app-splash>
+  </div>
+}

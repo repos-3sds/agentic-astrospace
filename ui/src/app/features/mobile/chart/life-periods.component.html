@@ -62,14 +62,14 @@
 
     @if (preferences.experienceMode() !== 'guided') {
     <div class="levels" role="tablist" aria-label="Dasha level">
-      @for (item of ['maha', 'antar', 'pratyantar']; track item) {
+      @for (item of levelTabs(); track item) {
         <button
           type="button"
           role="tab"
           [class.is-on]="level() === item"
           [attr.aria-selected]="level() === item"
           (click)="chooseLevel($any(item))"
-        >{{ item === 'maha' ? 'Maha' : item === 'antar' ? 'Antar' : 'Pratyantar' }}</button>
+        >{{ item === 'maha' ? 'Maha' : item === 'antar' ? 'Antar' : item === 'pratyantar' ? 'Pratyantar' : item === 'sookshma' ? 'Sookshma' : 'Prana' }}</button>
       }
     </div>
     <p class="gloss">Maha = main period · Antar = sub-period · Pratyantar = fine-grained period</p>
@@ -84,6 +84,16 @@
       <p class="breadcrumb">
         <img src="mobile/dasha-crumb.svg" alt="" aria-hidden="true" />
         <span>Within {{ mahaCrumb() }}–{{ antarCrumb() }} antar dasha</span>
+      </p>
+    } @else if (level() === 'sookshma') {
+      <p class="breadcrumb">
+        <img src="mobile/dasha-crumb.svg" alt="" aria-hidden="true" />
+        <span>Within {{ mahaCrumb() }}–{{ antarCrumb() }}–{{ pratyantarCrumb() }} pratyantar dasha (active chain only)</span>
+      </p>
+    } @else if (level() === 'prana') {
+      <p class="breadcrumb">
+        <img src="mobile/dasha-crumb.svg" alt="" aria-hidden="true" />
+        <span>Within {{ mahaCrumb() }}–{{ antarCrumb() }}–{{ pratyantarCrumb() }}–{{ sookshmaCrumb() }} sookshma dasha (active chain only)</span>
       </p>
     }
   }
@@ -106,11 +116,13 @@
 
   @if (system() === 'yogini') {
     <p class="hint text-only">8 yoginis, 36-year cycle — repeats through life</p>
-  } @else if (level() !== 'pratyantar') {
+  } @else if (level() === 'maha' || level() === 'antar') {
     <p class="hint">
       <img src="mobile/info-period.svg" alt="" aria-hidden="true" />
       <span>Tap a period to drill into {{ level() === 'maha' ? 'Antar' : 'Pratyantar' }}</span>
     </p>
+  } @else if (level() === 'sookshma' || level() === 'prana') {
+    <p class="hint text-only">Sookshma and Prana are only available for the currently active period chain.</p>
   }
   }
 </div>

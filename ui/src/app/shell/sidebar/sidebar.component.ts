@@ -132,7 +132,7 @@ export class SidebarComponent {
   protected confirmLogout(): void {
     this.confirmation.confirm({
       header: 'Log out',
-      message: 'End this AstroSpace session on this device?',
+      message: 'End this session on this device?',
       acceptButtonProps: { label: 'Log out', severity: 'danger' },
       rejectButtonProps: { label: 'Cancel', severity: 'secondary', outlined: true },
       accept: async () => {

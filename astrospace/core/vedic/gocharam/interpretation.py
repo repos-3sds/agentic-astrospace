@@ -14,7 +14,18 @@ DOMAIN_DEFINITIONS = (
         "houses": {2, 6, 10, 11},
         "planets": {"Sun", "Mars", "Mercury", "Jupiter", "Saturn", "Rahu"},
         "theme": "responsibility, execution, reputation, gains and professional networks",
-        "action": "Prioritize work that can be completed and verified; document important decisions.",
+        "house_rationale": (
+            "the 10th is Karma Bhava itself (visible work and standing), the 6th is service, "
+            "competition and daily execution, the 11th is gains and the professional network "
+            "that follows from the 10th, and the 2nd adds the resources and accumulated value "
+            "career work is expected to produce"
+        ),
+        "action": (
+            "Prioritize work that can be completed and verified, and document important "
+            "decisions before they're contested. When the 10th or 11th carries a supportive "
+            "witness, use the window to make a visible move rather than wait for certainty; "
+            "when the 6th is under pressure, protect deadlines and avoid new disputes."
+        ),
     },
     {
         "id": "money",
@@ -22,7 +33,18 @@ DOMAIN_DEFINITIONS = (
         "houses": {2, 5, 8, 11, 12},
         "planets": {"Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"},
         "theme": "income, savings, shared resources, speculation and expenditure",
-        "action": "Use written numbers and buffers; avoid treating a transit as financial advice.",
+        "house_rationale": (
+            "the 2nd is Dhana Bhava (accumulated wealth and family resources), the 11th is "
+            "Labha Bhava (income and gains), the 5th governs speculation and intelligent "
+            "risk, the 8th governs shared or sudden resources, and the 12th governs "
+            "expenditure and loss"
+        ),
+        "action": (
+            "Use written numbers and buffers rather than a felt sense of abundance or "
+            "scarcity, and treat this as context, not financial advice. A supportive 2nd/11th "
+            "witness favours saving and steady income; an active 8th/12th witness calls for "
+            "conservative reserves before any new commitment."
+        ),
     },
     {
         "id": "relationships",
@@ -30,7 +52,18 @@ DOMAIN_DEFINITIONS = (
         "houses": {2, 4, 5, 7, 8, 11, 12},
         "planets": {"Moon", "Mars", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"},
         "theme": "partnership, family continuity, emotional availability and agreements",
-        "action": "Clarify expectations directly and allow extra time where the evidence is mixed.",
+        "house_rationale": (
+            "the 7th is Kalatra Bhava (marriage and open partnership), the 4th is domestic "
+            "and maternal continuity, the 2nd is family speech and continuity, the 5th is "
+            "romance and children, and the 8th/11th/12th track how shared resources, mutual "
+            "support networks, and separations touch those bonds"
+        ),
+        "action": (
+            "Clarify expectations directly rather than assuming they're understood, and allow "
+            "extra time where the evidence is mixed. A supportive 7th/5th witness favours "
+            "starting or deepening a bond; pressure on the 8th or 12th calls for patience "
+            "before treating a strain as final."
+        ),
     },
     {
         "id": "health_energy",
@@ -38,7 +71,17 @@ DOMAIN_DEFINITIONS = (
         "houses": {1, 6, 8, 12},
         "planets": {"Sun", "Moon", "Mars", "Saturn", "Rahu", "Ketu"},
         "theme": "energy, workload, recovery and sustainable routines",
-        "action": "Protect sleep and routine; use qualified medical care for symptoms or decisions.",
+        "house_rationale": (
+            "the 1st is the body and vitality itself, the 6th is Ari Bhava (disease, daily "
+            "routine and the capacity to resist obstacles), the 8th governs longevity-linked "
+            "and chronic matters, and the 12th governs rest, hospitalization and recovery"
+        ),
+        "action": (
+            "Protect sleep and routine ahead of a demanding window rather than after, and use "
+            "qualified medical care for any actual symptom or decision — this projection is "
+            "symbolic context, never a diagnosis. A supportive 6th witness favours starting a "
+            "disciplined routine; pressure on the 1st or 8th calls for extra rest margin."
+        ),
     },
     {
         "id": "learning_travel",
@@ -46,7 +89,18 @@ DOMAIN_DEFINITIONS = (
         "houses": {3, 5, 9, 12},
         "planets": {"Sun", "Mercury", "Jupiter", "Rahu", "Ketu"},
         "theme": "study, mentors, communication, journeys and changes of perspective",
-        "action": "Verify logistics and use supportive periods for structured learning or planning.",
+        "house_rationale": (
+            "the 9th is Dharma Bhava (higher learning, mentors and long journeys), the 5th is "
+            "intelligence and structured study, the 3rd is short journeys and applied skill, "
+            "and the 12th is distant travel and the letting-go that often accompanies a real "
+            "change of perspective"
+        ),
+        "action": (
+            "Verify logistics and commitments in writing, and use a supportive window for "
+            "structured learning or a planned journey rather than an improvised one. A "
+            "supportive 9th witness favours seeking a mentor or starting formal study; "
+            "pressure on the 3rd or 12th favours smaller, reversible steps over a big leap."
+        ),
     },
     {
         "id": "inner_life",
@@ -54,7 +108,18 @@ DOMAIN_DEFINITIONS = (
         "houses": {1, 4, 8, 12},
         "planets": {"Moon", "Jupiter", "Saturn", "Rahu", "Ketu"},
         "theme": "emotional foundations, reflection, uncertainty, release and resilience",
-        "action": "Make room for reflection without converting a symbolic indication into a diagnosis.",
+        "house_rationale": (
+            "the 4th is Sukha Bhava (emotional foundation and inner comfort), the 12th governs "
+            "solitude, release and the subconscious, the 8th governs uncertainty and "
+            "transformation, and the 1st is the felt sense of self all of these are read "
+            "against"
+        ),
+        "action": (
+            "Make room for reflection without converting a symbolic indication into a "
+            "diagnosis or a verdict. A supportive 4th witness favours consolidating routines "
+            "that support steadiness; pressure on the 8th or 12th favours deliberate rest and "
+            "support rather than pushing through alone."
+        ),
     },
 )
 
@@ -380,7 +445,9 @@ def _domain_readings(rules: list[dict], timeline: dict) -> list[dict]:
                 "tone": tone,
                 "main_theme": main_theme,
                 "rationale": (
-                    f"This domain projection uses {len(relevant)} current placement witnesses: {leading_text}. "
+                    f"This domain reads {', '.join(str(h) for h in sorted(definition['houses']))} from "
+                    f"the natal Moon because {definition['house_rationale']}. "
+                    f"It uses {len(relevant)} current placement witnesses: {leading_text}. "
                     "It retains each witness's base verdict and modifiers rather than assigning a new probability."
                 ),
                 "reading": (

@@ -37,7 +37,8 @@ import { VedicService } from '../../../core/vedic.service';
           @for (note of s.notes ?? []; track note) { <p>{{ note }}</p> }
           @if (!(s.notes ?? []).length) { <p>No additional backend notes were returned.</p> }
         </section>
-        <div class="mcor-actions"><button type="button" (click)="share()">{{ shared() ? 'Copied' : 'Share report' }}</button><a [routerLink]="['/m','muhurta']">Find a muhurtham</a></div>
+        <div class="mcor-actions"><button type="button" (click)="share()">{{ shared() ? 'Copied' : 'Share report' }}</button><a [routerLink]="['/m','compat','results','detail']" [queryParams]="{ partner: partnerId() }">Full detail</a></div>
+        <a class="mcor-muhurta" [routerLink]="['/m','muhurta']">Find a muhurtham</a>
       }
     </main>
   `,

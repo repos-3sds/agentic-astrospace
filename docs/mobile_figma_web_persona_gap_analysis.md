@@ -1,5 +1,12 @@
 # AstroSpace Mobile — Figma vs Web Capability and Persona Gap Analysis
 
+**Point-in-time audit — frozen at its date.** For current status, open items,
+and acceptance criteria, use
+[docs/mobile_screen_build_plan.md § Persona & Platform Parity](mobile_screen_build_plan.md#persona--platform-parity--implementation-checklist-2026-07-29)
+instead — that section is the living checklist derived from this audit and is
+kept up to date as items close. This file is left as-is for the reasoning
+behind each gap; don't edit it to reflect new progress.
+
 **Audit date:** 27 July 2026  
 **Figma source:** [AstroSpace — Mobile App (Hi-Fi)](https://www.figma.com/design/RRhuTcaKIhqILZW7JUKFzI)  
 **Repository scope:** Angular web app and `/m` mobile routes, Python/FastAPI APIs, Vedic engine, product vision, persona pack, and mobile screen backlog.

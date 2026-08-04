@@ -30,13 +30,57 @@ def _kakshya_of(lon: float) -> tuple[int, str]:
     return idx + 1, KAKSHYA_LORDS[idx]
 
 
-def _effective_severity(severity: str, active: bool, bav_support: str | None) -> str:
-    if not active or bav_support is None:
+# Ascending severity ladder for challenging rules. The original logic only
+# ever softened (strong BAV pushes left); US-GOC-024 makes it symmetric so a
+# challenging transit with weak support, poor dignity, or a kakshya whose own
+# lord withheld a bindu reads as more serious rather than just leaving
+# supportive dilution as the only direction that moves.
+_CHALLENGING_LADDER = ["low", "medium", "high", "critical"]
+
+_STRONG_DIGNITIES = {"Exalted", "Own", "Moolatrikona"}
+
+
+def _step_challenging(level: str, steps: int) -> str:
+    idx = _CHALLENGING_LADDER.index(level) if level in _CHALLENGING_LADDER else 1
+    idx = max(0, min(len(_CHALLENGING_LADDER) - 1, idx + steps))
+    return _CHALLENGING_LADDER[idx]
+
+
+def _effective_severity(
+    severity: str,
+    active: bool,
+    bav_support: str | None,
+    bindu_given: bool | None = None,
+    dignity: str | None = None,
+) -> str:
+    """Ashtakavarga-, kakshya- and dignity-adjusted severity.
+
+    ``bindu_given`` and ``dignity`` are optional additional evidence
+    (kakshya.bindu_given, transit_dignity.dignity) layered on top of the BAV
+    read; omitting them reproduces the BAV-only behaviour.
+    """
+    if not active:
         return severity
-    if severity in {"high", "medium"} and bav_support == "strong":
-        return {"high": "medium", "medium": "low"}[severity]
-    if severity == "supportive" and bav_support == "weak":
-        return "diluted"
+
+    if severity in _CHALLENGING_LADDER:
+        result = severity
+        if bav_support == "strong":
+            result = _step_challenging(result, -1)
+        elif bav_support == "weak":
+            result = _step_challenging(result, +1)
+        if dignity in _STRONG_DIGNITIES:
+            result = _step_challenging(result, -1)
+        elif dignity == "Debilitated":
+            result = _step_challenging(result, +1)
+        if bindu_given is False:
+            result = _step_challenging(result, +1)
+        return result
+
+    if severity == "supportive":
+        if bav_support == "weak" or dignity == "Debilitated" or bindu_given is False:
+            return "diluted"
+        return severity
+
     return severity
 
 
@@ -77,8 +121,10 @@ def ashtakavarga_transit_support(natal_av: dict, transit_positions: dict) -> dic
 
 
 def apply_ashtakavarga_context(gochara: dict, support: dict) -> None:
-    """Attach AV evidence to canonical rules without changing rule activation."""
+    """Attach AV, kakshya and dignity evidence to canonical rules without
+    changing rule activation."""
     rows = support["planets"]
+    planets = gochara.get("planets", {})
     for rule in gochara["rules"]:
         row = rows.get(rule["planet"])
         rule["av_context"] = (
@@ -92,19 +138,33 @@ def apply_ashtakavarga_context(gochara: dict, support: dict) -> None:
             if row
             else None
         )
+        snapshot = planets.get(rule["planet"])
+        dignity = snapshot["transit_dignity"]["dignity"] if snapshot else None
+        bindu_given = row["kakshya"]["bindu_given"] if row else None
         effective = _effective_severity(
-            rule["severity"], rule["active"], row["bav_support"] if row else None
+            rule["severity"],
+            rule["active"],
+            row["bav_support"] if row else None,
+            bindu_given=bindu_given,
+            dignity=dignity,
         )
         rule["effective_severity"] = effective
         if effective == rule["severity"]:
             continue
         if effective == "diluted":
             rule["note"] += (
-                f" Ashtakavarga: {rule['planet']} has {row['bindus']} BAV bindus in this sign, "
-                "so the supportive indication is treated as diluted."
+                f" Ashtakavarga/dignity: {rule['planet']} has {row['bindus']} BAV bindus in "
+                "this sign, so the supportive indication is treated as diluted."
+            )
+        elif _CHALLENGING_LADDER.index(effective) < _CHALLENGING_LADDER.index(rule["severity"]):
+            rule["note"] += (
+                f" Ashtakavarga/dignity: {rule['planet']} has {row['bindus']} BAV bindus and "
+                f"{dignity or 'ordinary'} dignity in this sign, so the challenging indication "
+                "is softened."
             )
         else:
             rule["note"] += (
-                f" Ashtakavarga: {rule['planet']} has {row['bindus']} BAV bindus in this sign, "
-                "so the challenging indication is softened by one level."
+                f" Ashtakavarga/dignity: {rule['planet']} has {row['bindus']} BAV bindus and "
+                f"{dignity or 'ordinary'} dignity in this sign, so the challenging indication "
+                "is escalated."
             )

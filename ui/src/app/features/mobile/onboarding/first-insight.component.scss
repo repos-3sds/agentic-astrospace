@@ -1,13 +1,54 @@
 @use '../mobile-tokens' as *;
 
-:host { min-height: 100%; display: flex; flex-direction: column; background: var(--m-bg); color: var(--m-text); }
+:host { 
+  min-height: 100%; 
+  display: flex; 
+  flex-direction: column; 
+  background: 
+    radial-gradient(circle at 15% 30%, color-mix(in srgb, var(--m-accent-strong) 15%, transparent), transparent 45%),
+    radial-gradient(circle at 85% 70%, color-mix(in srgb, var(--m-warn) 10%, transparent), transparent 50%),
+    var(--m-bg);
+  background-attachment: fixed;
+  color: var(--m-text); 
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0px); }
+}
 .insight-appbar { display:flex; justify-content:space-between; padding:18px 24px; @include m-eyebrow; }
 .insight-appbar em { color:var(--m-accent-strong); font-style:normal; text-transform:uppercase; }
 main { flex:1; padding:42px 24px 24px; }
 .kicker { @include m-eyebrow; color:var(--m-accent-strong); }
-h1 { @include m-h1; margin:12px 0; }
+h1 { 
+  @include m-h1; 
+  margin: 12px 0;
+  background: linear-gradient(135deg, var(--m-text) 0%, var(--m-muted) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+}
+
+h1 span {
+  background: linear-gradient(135deg, var(--m-accent) 0%, var(--m-warn) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 .lede { @include m-body; color:var(--m-muted); }
-.action, dl { margin-top:28px; padding:20px; border:1px solid var(--m-border); border-radius:22px; background:var(--m-surface); }
+.action, dl { 
+  margin-top: 28px; 
+  padding: 20px; 
+  border: 1px solid var(--m-border); 
+  border-radius: 22px; 
+  background: var(--m-surface);
+  box-shadow: var(--m-shadow-card);
+  -webkit-backdrop-filter: blur(24px) saturate(128%);
+  backdrop-filter: blur(24px) saturate(128%);
+  animation: float 6s ease-in-out infinite;
+}
 .action small { @include m-eyebrow; color:var(--m-muted); display:block; margin-bottom:8px; }
 .action strong { @include m-body-strong; }
 as-east-chart { display:block; width:250px; height:250px; margin:24px auto; }

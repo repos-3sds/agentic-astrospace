@@ -171,7 +171,7 @@ export class CalendarComponent {
   }
 
   protected reload(): void {
-    void this.load(this.activeId());
+    void this.load(this.activeId(), true);
   }
 
   protected shiftMonth(delta: number): void {
@@ -204,7 +204,7 @@ export class CalendarComponent {
     return new Intl.DateTimeFormat('en', { month: 'short' }).format(new Date(`${date}T12:00:00`));
   }
 
-  private async load(id: string | null): Promise<void> {
+  private async load(id: string | null, forceRefresh = false): Promise<void> {
     const request = ++this.requestId;
     this.error.set(null);
     if (!id) {
@@ -214,21 +214,24 @@ export class CalendarComponent {
       return;
     }
     const cached = this.vedic.cachedCalendarIntelligence(id, 45);
-    if (cached) {
+    if (cached && !forceRefresh) {
       this.data.set(cached);
       this.visibleMonth.set(cached.start_date.slice(0, 7));
       this.renderedProfileId = id;
       this.loading.set(false);
       void this.loadFestivals(cached.start_date, 60);
+      void this.refreshCalendar(id, request);
       return;
     }
     if (this.renderedProfileId !== id) {
       this.data.set(null);
       this.loading.set(true);
+    } else {
+      this.loading.set(!this.data());
     }
     try {
       const calendar = await withTimeout(
-        this.vedic.calendarIntelligence(id, 45),
+        forceRefresh ? this.vedic.refreshCalendarIntelligence(id, 45) : this.vedic.calendarIntelligence(id, 45),
         15000,
         'Calendar is taking longer than expected. Check your connection and retry.',
       );
@@ -238,9 +241,31 @@ export class CalendarComponent {
       this.visibleMonth.set(calendar.start_date.slice(0, 7));
       void this.loadFestivals(calendar.start_date, 60);
     } catch (error) {
-      if (request === this.requestId) this.error.set((error as Error).message);
+      if (request === this.requestId) {
+        const fallback = this.vedic.cachedCalendarIntelligence(id, 45);
+        if (fallback) {
+          this.data.set(fallback);
+          this.renderedProfileId = id;
+          this.visibleMonth.set(fallback.start_date.slice(0, 7));
+          void this.loadFestivals(fallback.start_date, 60);
+        } else {
+          this.error.set((error as Error).message);
+        }
+      }
     } finally {
       if (request === this.requestId) this.loading.set(false);
+    }
+  }
+
+  private async refreshCalendar(id: string, request: number): Promise<void> {
+    try {
+      const calendar = await this.vedic.refreshCalendarIntelligence(id, 45);
+      if (request !== this.requestId || this.activeId() !== id) return;
+      this.data.set(calendar);
+      this.renderedProfileId = id;
+      void this.loadFestivals(calendar.start_date, 60);
+    } catch {
+      // The cached calendar stays usable when background refresh fails.
     }
   }
 
@@ -259,6 +284,14 @@ export class CalendarComponent {
     const city = place?.city || profile?.birth_city;
     const nation = place?.nation || profile?.birth_nation || 'IN';
     if (!city) return;
+    const cached = this.festivals.cachedUpcoming(city, nation, fromDate, days);
+    if (cached) {
+      this.festivalRows.set(cached.festivals);
+      this.festivalLoading.set(false);
+      this.festivalError.set(null);
+      void this.refreshFestivals(city, nation, fromDate, days);
+      return;
+    }
     this.festivalLoading.set(true);
     this.festivalError.set(null);
     try {
@@ -268,6 +301,15 @@ export class CalendarComponent {
       this.festivalError.set((error as Error).message);
     } finally {
       this.festivalLoading.set(false);
+    }
+  }
+
+  private async refreshFestivals(city: string, nation: string, fromDate: string, days: number): Promise<void> {
+    try {
+      const payload = await this.festivals.refreshUpcoming(city, nation, fromDate, days);
+      this.festivalRows.set(payload.festivals);
+    } catch {
+      // Festival cache is deterministic enough to keep showing until the next successful refresh.
     }
   }
 

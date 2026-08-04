@@ -4,7 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "clean:generated": "node scripts/clean-generated-artifacts.mjs",
+    "build": "node scripts/clean-generated-artifacts.mjs --before-web-build && ng build && node scripts/clean-generated-artifacts.mjs --after-web-build",
     "build:dev": "ng build --configuration development",
     "version:sync": "node scripts/sync-version.mjs",
     "version:check": "node scripts/sync-version.mjs --check",
@@ -13,10 +14,11 @@
     "e2e": "playwright test",
     "e2e:headed": "playwright test --headed",
     "e2e:report": "playwright show-report",
-    "build:native": "npm run version:sync && ng build --configuration production && npx cap sync",
+    "sync:android": "node scripts/clean-generated-artifacts.mjs --before-cap-sync && npx cap sync android && node scripts/clean-generated-artifacts.mjs --after-cap-sync",
+    "build:native": "npm run version:sync && npm run build && node scripts/clean-generated-artifacts.mjs --before-cap-sync && npx cap sync && node scripts/clean-generated-artifacts.mjs --after-cap-sync",
     "open:ios": "npx cap open ios",
     "open:android": "npx cap open android",
-    "build:native:dev": "npm run version:sync && ng build --configuration development && npx cap sync"
+    "build:native:dev": "npm run version:sync && node scripts/clean-generated-artifacts.mjs --before-web-build && ng build --configuration development && node scripts/clean-generated-artifacts.mjs --after-web-build && node scripts/clean-generated-artifacts.mjs --before-cap-sync && npx cap sync && node scripts/clean-generated-artifacts.mjs --after-cap-sync"
   },
   "prettier": {
     "printWidth": 100,
@@ -46,7 +48,10 @@
     "@capacitor/browser": "^8.0.4",
     "@capacitor/cli": "^8.4.2",
     "@capacitor/core": "^8.4.2",
+    "@capacitor/haptics": "^8.0.2",
     "@capacitor/ios": "^8.4.2",
+    "@capacitor/preferences": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.2",
     "@primeuix/themes": "^2.0.3",
     "@supabase/supabase-js": "^2.110.3",
     "ag-grid-angular": "^34.3.1",

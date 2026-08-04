@@ -6,18 +6,18 @@
 <main>
   @switch (preferences.experienceMode()) {
     @case ('guided') {
-      <p class="kicker">A SIMPLE START</p>
+      <p class="kicker">YOUR FIRST STEP</p>
       <h1>@if (name()) {<span>{{ name() }}, </span>}your chart combines warmth with steady resolve.</h1>
       <p class="lede">{{ guidedLead() }}</p>
       <section class="action">
-        <small>USE THIS TODAY</small>
+        <small>PRACTICE TODAY</small>
         <strong>Finish one delayed task before taking on another.</strong>
       </section>
-      <a class="listen" routerLink="/m/today" [queryParams]="{ listen: 1 }">Listen to my first reading</a>
+      <a class="listen" routerLink="/m/today" [queryParams]="{ listen: 1 }">Listen to my first guidance</a>
     }
     @case ('practitioner') {
-      <p class="kicker">WORKBENCH READY</p>
-      <h1>@if (name()) {<span>{{ name() }}’s</span>} @else {<span>Your</span>} computed chart is ready.</h1>
+      <p class="kicker">YOUR MAP IS READY</p>
+      <h1>@if (name()) {<span>{{ name() }}’s</span>} @else {<span>Your</span>} life map is ready.</h1>
       <as-east-chart [cells]="cells" />
       <dl>
         <div><dt>Lagna</dt><dd>Taurus · 11°02′</dd></div>
@@ -25,7 +25,7 @@
         <div><dt>Active period</dt><dd>Venus · Saturn</dd></div>
         <div><dt>Convention</dt><dd>Lahiri · whole-sign</dd></div>
       </dl>
-      <a class="secondary" routerLink="/m/chart">Open workbench</a>
+      <a class="secondary" routerLink="/m/chart">Open the chart room</a>
     }
     @default {
       <p class="kicker">WHY THIS IS PERSONAL</p>
@@ -35,7 +35,7 @@
         <small>TODAY’S PREVIEW</small>
         <strong>A steady day for practical work and measured decisions.</strong>
       </section>
-      <a class="secondary" routerLink="/m/chart">Preview my chart</a>
+      <a class="secondary" routerLink="/m/chart">Preview my life map</a>
     }
   }
 </main>

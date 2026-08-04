@@ -21,16 +21,20 @@
 
 // 240px in the design's 393pt frame. Capped by width so it shrinks with the
 // screen instead of crowding the copy at 375.
-.orb {
+.landing-mark {
   display: block;
   width: min(240px, 64vw);
-  height: auto;
+  height: min(240px, 64vw);
+  pointer-events: none;
 }
 
 .wordmark {
-  @include m-title;
+  font-family: 'Samarkan', 'Cormorant Garamond', serif;
+  font-size: 36px;
+  font-weight: 500;
+  line-height: 0.95;
   color: var(--m-accent-strong);
-  letter-spacing: 2.38px;
+  letter-spacing: 0;
   margin: 0;
 }
 

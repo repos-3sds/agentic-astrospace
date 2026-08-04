@@ -22,6 +22,7 @@ cache/
 
 # Angular build output
 frontend/dist/
+ui/src/assets/videos/
 
 # Knowledge-base source texts (~318MB of PDFs/EPUBs).
 # These are ingestion inputs, not code — they live in Supabase storage

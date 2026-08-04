@@ -1,14 +1,14 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ThemeService } from '../../../core/theme.service';
+import { SplashComponent } from '../../../shell/splash/splash.component';
 
 /**
  * Landing (Figma node 4:2) — the app's front door and step one of onboarding.
  *
- * The promise on this screen is the product's whole claim: every reading comes
- * from a real, auditable calculation rather than a generic horoscope. The
- * footer names the sources and, deliberately, what the app will not do — "no
- * fear, no upsell" is a commitment the rest of the app has to keep, which is
- * why the refer-out and remedy screens read the way they do.
+ * The promise on this screen is the product's whole claim: SIDDHA is a way of
+ * life guide rooted in real calculation, not a fear-based prediction machine.
+ * The footer names the sources and, deliberately, what the app will not do.
  *
  * The design's mocked status bar (9:41 and a battery) is a Figma artifact and
  * is not built: the real status bar belongs to the OS, and the shell already
@@ -18,23 +18,24 @@ import { RouterLink } from '@angular/router';
   selector: 'as-landing',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, SplashComponent],
   template: `
     <div class="landing-hero">
-      <img class="orb" src="mobile/orb.svg" alt="" aria-hidden="true" />
-      <p class="wordmark">ASTROSPACE</p>
-      <p class="eyebrow">VEDIC ASTROLOGY, COMPUTED</p>
-      <h1 class="headline">Understand your chart.<br />Know your timing.</h1>
+      <app-splash class="landing-mark" [dark]="theme.dark()" [markOnly]="true" aria-hidden="true" />
+      <p class="wordmark">SIDDHA</p>
+      <p class="eyebrow">YOUR WAY OF LIFE GUIDE</p>
+      <h1 class="headline">Live with rhythm.<br />Move with clarity.</h1>
       <p class="lede">
-        Every reading is derived from a real, auditable calculation — not a
-        generic horoscope.
+        <span class="siddha-brand">SIDDHA</span> turns your daily timing, life
+        patterns, and inner seasons into practical guidance for how to act,
+        pause, reflect, and grow.
       </p>
     </div>
 
     <div class="actions">
-      <a class="btn primary" [routerLink]="['/m', 'auth']" [queryParams]="{ mode: 'register' }">Get started</a>
-      <a class="btn ghost" [routerLink]="['/m', 'auth']">I already have a space</a>
-      <p class="assurance">Swiss Ephemeris · Classical rules · No fear, no upsell</p>
+      <a class="btn primary" [routerLink]="['/m', 'auth']" [queryParams]="{ mode: 'register' }">Begin your path</a>
+      <a class="btn ghost" [routerLink]="['/m', 'auth']">I already walk with <span class="siddha-brand">SIDDHA</span></a>
+      <p class="assurance">Classical wisdom · Daily practice · No fear, no fatalism</p>
     </div>
   `,
   styleUrl: './landing.component.scss',
@@ -42,4 +43,6 @@ import { RouterLink } from '@angular/router';
   // var() silently falls back — see the build plan's first convention.
   host: { class: 'as-mobile' },
 })
-export class LandingComponent {}
+export class LandingComponent {
+  protected readonly theme = inject(ThemeService);
+}

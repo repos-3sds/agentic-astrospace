@@ -32,7 +32,7 @@ import { KundliStore } from '../../../core/kundli.store';
           @if (item.id === kundlis.activeId()) {
             <aside>The active profile will switch to another available profile after deletion.</aside>
           }
-          <label>TYPE DELETE TO CONFIRM<input [(ngModel)]="confirmation" autocomplete="off" /></label>
+          <label>TYPE {{ item.name.toUpperCase() }} TO CONFIRM<input [(ngModel)]="confirmation" autocomplete="off" /></label>
         </section>
       }
     </main>
@@ -77,7 +77,8 @@ export class ProfileDeleteComponent {
   }
 
   protected canDelete(): boolean {
-    return !!this.profile() && this.confirmation.trim().toUpperCase() === 'DELETE';
+    const profile = this.profile();
+    return !!profile && this.confirmation.trim().toUpperCase() === profile.name.toUpperCase();
   }
 
   private async load(): Promise<void> {

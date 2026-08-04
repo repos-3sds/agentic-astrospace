@@ -6,7 +6,7 @@
       <p class="date">{{ headerDate() }}</p>
     </div>
   </button>
-  <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search AstroSpace">
+  <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search SIDDHA">
     <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <circle cx="8.75" cy="8.75" r="5.75"></circle>
       <path d="m13 13 4 4"></path>
@@ -61,45 +61,52 @@
   } @else if (view(); as v) {
   <section class="card">
     <div class="card-head">
-      <p class="eyebrow">WHAT MATTERS TODAY</p>
+      <p class="eyebrow">{{ preferences.experienceMode() === 'guided' ? 'YOUR RHYTHM TODAY' : 'WHAT MATTERS TODAY' }}</p>
       <p class="place">{{ v.place }}</p>
     </div>
 
-    <div class="verdict-row">
-      <button class="gauge-btn" type="button" (click)="openSheet.set('quality')"
-              aria-label="Why today is a {{ v.score }}">
-        <as-day-gauge [score]="v.score" [label]="v.scoreLabel" [attr.data-band]="v.band" />
-      </button>
-      <div class="verdict">
+    @if (preferences.experienceMode() === 'guided') {
+      <div class="verdict verdict-guided">
         <p class="headline">{{ v.verdict }}</p>
         <p class="detail">{{ v.detail }}</p>
       </div>
-    </div>
+    } @else {
+      <div class="verdict-row">
+        <button class="gauge-btn" type="button" (click)="showSheet('quality')"
+                aria-label="Why today is a {{ v.score }}">
+          <as-day-gauge [score]="v.score" [label]="v.scoreLabel" [attr.data-band]="v.band" />
+        </button>
+        <div class="verdict">
+          <p class="headline">{{ v.verdict }}</p>
+          <p class="detail">{{ v.detail }}</p>
+        </div>
+      </div>
+    }
 
-    <button class="listen" type="button" (click)="openSheet.set('listen')">
+    <button class="listen" type="button" (click)="showSheet('listen')">
       <img src="mobile/play.svg" alt="" aria-hidden="true" />
-      <span>Listen to your day</span>
+      <span>{{ preferences.experienceMode() === 'guided' ? 'Listen to your guidance' : 'Listen to your day' }}</span>
     </button>
   </section>
 
   <div class="advice">
     <article class="advice-card do">
       <div class="advice-head">
-        <img src="mobile/do.svg" alt="" aria-hidden="true" />
+        <img [src]="preferences.experienceMode() === 'guided' ? 'mobile/trending-up.svg' : 'mobile/do.svg'" alt="" aria-hidden="true" />
         <p class="eyebrow">DO</p>
       </div>
       <p class="advice-body">{{ v.doItem }}</p>
     </article>
     <article class="advice-card avoid">
       <div class="advice-head">
-        <img src="mobile/avoid.svg" alt="" aria-hidden="true" />
+        <img [src]="preferences.experienceMode() === 'guided' ? 'mobile/alert-triangle.svg' : 'mobile/avoid.svg'" alt="" aria-hidden="true" />
         <p class="eyebrow">AVOID</p>
       </div>
       <p class="advice-body">{{ v.avoidItem }}</p>
     </article>
   </div>
 
-  <button class="why" type="button" (click)="openSheet.set('why')">
+  <button class="why" type="button" (click)="showSheet('why')">
     <span class="why-left">
       <img src="mobile/why.svg" alt="" aria-hidden="true" />
       <span class="why-label">Why this reading?</span>
@@ -118,7 +125,14 @@
     <p class="window-in">{{ v.nextWindowIn }}</p>
   </section>
 
-  @if (preferences.experienceMode() !== 'guided') {
+  @if (preferences.experienceMode() === 'guided') {
+    <button class="details-toggle" type="button" (click)="detailsOpen.set(!detailsOpen())">
+        <span>{{ detailsOpen() ? 'Hide the details' : 'See what shaped this' }}</span>
+      <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
+    </button>
+  }
+
+  @if (preferences.experienceMode() !== 'guided' || detailsOpen()) {
   @for (section of statSections(); track section.eyebrow) {
     <p class="eyebrow section-label">{{ section.eyebrow }}</p>
     <div class="stats" [attr.data-columns]="section.columns">
@@ -146,18 +160,55 @@
   }
 
   @if (preferences.experienceMode() === 'practitioner') {
-    <p class="eyebrow section-label">ACTIVE TECHNICAL BASIS</p>
-    <div class="stats" data-columns="2">
-      @for (row of calculation(); track row.label) {
-        <div class="stat">
-          <p class="eyebrow stat-label">{{ row.label }}</p>
-          <p class="stat-value">{{ row.value }}</p>
+    <p class="eyebrow section-label">ACTIVE PERIOD STACK (DASHA)</p>
+    <div class="dasha-chain">
+      @for (level of dashaChain(); track level.level; let last = $last) {
+        <span class="dasha-chip">{{ level.lord }} <em>{{ level.short }}</em></span>
+        @if (!last) { <span class="dasha-sep">›</span> }
+      }
+    </div>
+
+    <p class="eyebrow section-label">PANCHANGA DETAILS</p>
+    @if (panchangaDetails(); as panchanga) {
+      <div class="panchanga-table">
+        <div class="panchanga-row">
+          <span class="panchanga-cell"><span class="eyebrow stat-label">Tithi</span><span class="stat-value">{{ panchanga.tithi }}</span></span>
+          <span class="panchanga-cell"><span class="eyebrow stat-label">Nakshatra</span><span class="stat-value">{{ panchanga.nakshatra }}</span></span>
+        </div>
+        <div class="panchanga-row">
+          <span class="panchanga-cell"><span class="eyebrow stat-label">Yoga</span><span class="stat-value">{{ panchanga.yoga }}</span></span>
+          <span class="panchanga-cell"><span class="eyebrow stat-label">Karana</span><span class="stat-value">{{ panchanga.karana }}</span></span>
+        </div>
+        <div class="panchanga-row single">
+          <span class="panchanga-cell"><span class="eyebrow stat-label">Vara (Planetary Day)</span><span class="stat-value accent">{{ panchanga.vara }}</span></span>
+        </div>
+      </div>
+    }
+
+    <p class="eyebrow section-label">CRITICAL GOCHARA TRANSITS (MOON/LAGNA)</p>
+    <div class="transit-list">
+      @for (transit of criticalTransits(); track transit.name) {
+        <div class="transit-row" [attr.data-severity]="transit.severity">
+          <p class="transit-name">{{ transit.name }}</p>
+          <p class="transit-av">{{ transit.av_bindus === null ? 'AV —' : 'AV ' + transit.av_bindus + '/8' }}</p>
+        </div>
+      }
+    </div>
+
+    <p class="eyebrow section-label">SIGNIFICANT HORARY TIMINGS (MUHURTA)</p>
+    <div class="muhurta-list">
+      @for (window of muhurtaWindows(); track window.name) {
+        <div class="muhurta-row">
+          <img class="muhurta-icon" src="mobile/clock.svg" alt="" aria-hidden="true" />
+          <p class="muhurta-name">{{ window.name }}</p>
+          <p class="muhurta-time">{{ window.time }}</p>
+          <span class="muhurta-kind" [attr.data-kind]="window.kind">{{ window.kind === 'auspicious' ? 'Auspicious' : 'Inauspicious' }}</span>
         </div>
       }
     </div>
   }
 
-  <p class="eyebrow section-label">ASK ABOUT TODAY</p>
+  <p class="eyebrow section-label">REFLECT WITH <span class="siddha-brand">SIDDHA</span></p>
   <div class="suggestions">
     @for (q of askSuggestions(); track q) {
       <a class="suggestion" [routerLink]="['/m', 'ask']" [queryParams]="{ q }">

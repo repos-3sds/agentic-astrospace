@@ -1,7 +1,14 @@
 @use '../mobile-tokens' as *;
 
 :host {
-  position: absolute;
+  // Fixed, not absolute: a sheet is opened from route components nested deep
+  // inside .content (mobile-shell.component.scss), which scrolls
+  // (overflow-y: auto). An absolutely-positioned host there is still clipped
+  // by that ancestor's overflow box even though it's inset to the shell, so
+  // the bottom of every sheet — including its own scrim — rendered behind the
+  // tab bar instead of over it. Fixed positioning escapes ancestor clipping
+  // and stacks in the root context, which is what a full-screen modal needs.
+  position: fixed;
   inset: 0;
   z-index: 40;
   display: block;

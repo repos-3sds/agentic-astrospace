@@ -4,6 +4,8 @@ import { Skeleton } from 'primeng/skeleton';
 
 import { KundliStore } from '../../../core/kundli.store';
 import {
+  AshtakavargaTransitPlanet,
+  ClassicalGocharaStatus,
   GocharaActiveWindow,
   GocharamDomainReading,
   GocharamMatchedRule,
@@ -70,6 +72,38 @@ export class GocharamTabComponent {
     this.matchedRules().filter((rule) => rule.kind === 'special_overlay'),
   );
   protected readonly domains = computed(() => this.data()?.gochara.interpretation?.domains ?? []);
+  protected readonly synthesis = computed(() => this.data()?.gochara.interpretation?.synthesis ?? null);
+  protected readonly interpretationSources = computed(() => this.data()?.gochara.interpretation?.sources ?? []);
+
+  /** US-GOC-026: Phaladeepika ch.26 favourable/Vedha status, keyed by planet. */
+  protected readonly classicalGochara = computed<Record<string, ClassicalGocharaStatus>>(
+    () => this.data()?.gochara.classical_gochara ?? {},
+  );
+  protected readonly classicalGocharaRows = computed(() =>
+    Object.entries(this.classicalGochara()).map(([planet, status]) => ({ planet, ...status })),
+  );
+
+  /** US-GOC-026: structured BAV/SAV/kakshya, mirroring what transits-tab already shows. */
+  protected readonly ashtakavargaRows = computed<AshtakavargaTransitPlanet[]>(() => {
+    const planets = this.data()?.gochara.ashtakavarga?.planets ?? this.data()?.ashtakavarga_transit?.planets ?? {};
+    return Object.values(planets);
+  });
+  protected readonly ashtakavargaNote = computed(
+    () => this.data()?.gochara.ashtakavarga?.note ?? this.data()?.ashtakavarga_transit?.note ?? '',
+  );
+
+  protected readonly sadeSati = computed(() => this.data()?.gochara.sade_sati ?? null);
+
+  /** US-GOC-027: resolve interpretation.evidence_ids against interpretation.evidence
+   * instead of printing opaque IDs. */
+  private readonly evidenceById = computed(() => {
+    const map = new Map<string, Record<string, unknown>>();
+    for (const item of this.data()?.gochara.interpretation?.evidence ?? []) {
+      const id = item['id'];
+      if (typeof id === 'string') map.set(id, item);
+    }
+    return map;
+  });
   protected readonly activeDomain = computed<GocharamDomainReading | null>(() =>
     this.domains().find((domain) => domain.id === this.domainId()) ?? this.domains()[0] ?? null,
   );
@@ -204,6 +238,24 @@ export class GocharamTabComponent {
           if (request === this.requestSequence) this.refreshing.set(false);
         });
     });
+  }
+
+  protected resolveEvidence(id: string): string {
+    const item = this.evidenceById().get(id);
+    if (!item) return id;
+    if (item['type'] === 'computed_transit') {
+      return `${item['planet']} in ${item['sign'] ?? ''} (house ${item['house_from_moon'] ?? '?'} from Moon)`;
+    }
+    if (item['type'] === 'deterministic_rule') {
+      return `${item['source_id'] ?? id} · ${item['effective_verdict'] ?? item['base_verdict'] ?? ''}`;
+    }
+    return id;
+  }
+
+  protected bindusClass(bindus: number): string {
+    if (bindus >= 5) return 'good';
+    if (bindus === 4) return 'neutral';
+    return 'warn';
   }
 
   protected toneClass(tone?: string): string {

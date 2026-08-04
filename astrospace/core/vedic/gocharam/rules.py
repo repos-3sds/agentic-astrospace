@@ -40,7 +40,7 @@ RULE_DEFINITIONS = [
     ),
     GocharaRuleDefinition(
         id="gochara_kantaka_shani",
-        name="Kantaka Shani / Dhaiya",
+        name="Ardhashtama Shani (Kantaka Shani)",
         planet="Saturn",
         anchor="moon",
         active_houses=frozenset({4}),
@@ -136,6 +136,26 @@ _CLASSICAL_SOURCE_STATUS = {
     "Rahu": "convention_dependent",
     "Ketu": "convention_dependent",
 }
+
+
+# ── Special (graha) drishti: aspect houses from a transit position ──────────
+#
+# Every planet aspects the 7th house from itself. Mars, Jupiter and Saturn
+# additionally carry classical "special" aspects (BPHS ch.3): Mars on the 4th
+# and 8th, Jupiter on the 5th and 9th, Saturn on the 3rd and 10th. Expressed
+# as offsets added to the occupied house (1-12, wrapping mod 12).
+SPECIAL_ASPECT_OFFSETS: dict[str, tuple[int, ...]] = {
+    "Mars": (3, 6, 7),
+    "Jupiter": (4, 6, 8),
+    "Saturn": (2, 6, 9),
+}
+DEFAULT_ASPECT_OFFSETS: tuple[int, ...] = (6,)
+
+
+def special_aspect_houses(planet: str, house: int) -> list[int]:
+    """Houses (1-12) aspected by ``planet`` occupying ``house`` (1-12)."""
+    offsets = SPECIAL_ASPECT_OFFSETS.get(planet, DEFAULT_ASPECT_OFFSETS)
+    return sorted({((house - 1 + offset) % 12) + 1 for offset in offsets})
 
 
 def classical_gochara_status(houses_from_moon: dict[str, int]) -> dict[str, dict]:

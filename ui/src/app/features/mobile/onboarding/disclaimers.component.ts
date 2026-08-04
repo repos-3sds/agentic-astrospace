@@ -48,7 +48,7 @@ interface Vow {
       </div>
 
       <p class="eyebrow">BEFORE WE BEGIN</p>
-      <h1 class="headline">A guide, not a verdict</h1>
+      <h1 class="headline">A guide for choice, not a verdict</h1>
 
       <ul class="vows">
         @for (v of vows(); track v.title) {
@@ -84,20 +84,20 @@ export class DisclaimersComponent {
     {
       icon: 'vow-flag',
       tone: 'accent',
-      title: 'A flag, not a fate',
-      detail: 'We surface tendencies to reflect on — never fixed outcomes.',
+      title: 'Signals, not fate',
+      detail: 'We surface patterns for reflection, never fixed outcomes.',
     },
     {
       icon: 'vow-scope',
       tone: 'gold',
-      title: 'Not medical, legal or financial advice',
-      detail: 'For real concerns we point you to a professional.',
+      title: 'Life guidance has boundaries',
+      detail: 'For medical, legal, or financial concerns we point you to a professional.',
     },
     {
       icon: 'vow-nofear',
       tone: 'good',
       title: 'No fear, ever',
-      detail: 'We never predict death or lifespan, and never sell you a fix.',
+      detail: 'We never predict death or lifespan, and never sell fear as a fix.',
     },
   ]);
 }

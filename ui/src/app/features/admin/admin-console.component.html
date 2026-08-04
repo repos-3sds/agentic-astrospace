@@ -1,9 +1,9 @@
 <div class="admin-shell">
   <aside class="admin-rail">
-    <a class="admin-brand" routerLink="/app" aria-label="Return to AstroSpace">
+    <a class="admin-brand" routerLink="/app" aria-label="Return to SIDDHA">
       <span class="brand-mark"><lucide-icon name="orbit" [size]="19" /></span>
       <span>
-        <strong>AstroSpace</strong>
+        <strong>SIDDHA</strong>
         <small>Admin Console</small>
       </span>
     </a>
@@ -42,7 +42,7 @@
         <span class="eyebrow">Administration</span>
         <h1>
           @switch (view()) {
-            @case ('overview') { AstroSpace operations }
+            @case ('overview') { <span class="siddha-brand">SIDDHA</span> operations }
             @case ('users') { Users & access }
             @case ('activity') { Product activity }
             @case ('sources') { Source library }

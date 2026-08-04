@@ -12,8 +12,8 @@
 
 .as-mobile {
   --m-bg: #faf7f0;
-  --m-surface: #fffcf6;
-  --m-raised: #ffffff;
+  --m-surface: rgba(255, 252, 246, 0.7);
+  --m-raised: rgba(255, 255, 255, 0.75);
   --m-border: #e6dccd;
   --m-border-strong: #d5c6b4;
 
@@ -83,8 +83,8 @@
   // is warm cream/rust/brown and the dark theme should read as that brand at
   // night, not a different, colder app.
   --m-bg: #17130f;
-  --m-surface: #201a15;
-  --m-raised: #2a2219;
+  --m-surface: rgba(32, 26, 21, 0.7);
+  --m-raised: rgba(42, 34, 25, 0.75);
   --m-border: #3a3025;
   --m-border-strong: #5c4d3c;
   --m-text: #f4efe7;
@@ -93,15 +93,15 @@
   --m-on-ink: #201a14;
   --m-muted-on-ink: #6b5d4c;
   --m-accent-on-ink: #b84333;
-  --m-ink-raised: rgba(32, 26, 20, 0.08);
-  --m-ink-control: rgba(32, 26, 20, 0.1);
+  --m-ink-raised: rgba(255, 255, 255, 0.04);
+  --m-ink-control: rgba(255, 255, 255, 0.08);
   --m-accent: #e27666;
   // Was #ff9b8d — a pale salmon that read as a different, pastel color
   // family. This keeps the same saturated rust/coral the light theme uses,
   // just lightened enough for contrast, and matches the web app's own
   // --as-accent-strong dark value so the brand red is consistent app-wide.
   --m-accent-strong: #ff846d;
-  --m-accent-soft: #3a2620;
+  --m-accent-soft: rgba(58, 38, 32, 0.8);
   --m-good: #82d1aa;
   --m-good-soft: #182d23;
   --m-bad: #ff8f8a;
@@ -115,7 +115,7 @@
   // cutouts instead of lifted. Depth in dark UI comes from a highlight, not a
   // darker shadow: a soft top-edge sheen plus a wider, low-alpha ambient
   // shadow for grounding.
-  --m-shadow-card: 0 1px 0 rgba(255, 248, 236, 0.07) inset, 0 10px 28px rgba(0, 0, 0, 0.45);
+  --m-shadow-card: 0 1px 0 rgba(255, 248, 236, 0.04) inset, 0 12px 34px rgba(0, 0, 0, 0.55);
   --m-shadow-soft: 0 1px 0 rgba(255, 248, 236, 0.06) inset, 0 20px 60px rgba(0, 0, 0, 0.55);
   --m-back-icon-filter: invert(88%) sepia(9%) saturate(430%) hue-rotate(343deg) brightness(92%) contrast(88%);
 }

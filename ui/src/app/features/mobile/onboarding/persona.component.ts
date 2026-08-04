@@ -33,8 +33,8 @@ import { PreferencesService } from '../../../core/preferences.service';
         <p class="step">STEP 1 OF 2</p>
       </header>
 
-      <h1 class="headline">How do you like<br />your answers?</h1>
-      <p class="lede">This tailors how much depth you see. You can change it anytime.</p>
+      <h1 class="headline">How should <span class="siddha-brand">SIDDHA</span><br />walk with you?</h1>
+      <p class="lede">Choose the depth of guidance you want. You can change it anytime.</p>
 
       <as-persona-picker
         [options]="options"
@@ -62,7 +62,7 @@ export class PersonaComponent {
       title: 'Guided',
       badge: 'SIMPLE',
       badgeTone: 'gold',
-      detail: 'Just tell me, simply. Plain answers, no jargon.',
+      detail: 'Gentle daily guidance in plain words, with practice first.',
     },
     {
       id: 'balanced',
@@ -70,7 +70,7 @@ export class PersonaComponent {
       title: 'Balanced',
       badge: 'RECOMMENDED',
       badgeTone: 'accent',
-      detail: 'Tell me — and show me why, one tap away.',
+      detail: 'Clear guidance with the reasoning one tap away.',
     },
     {
       id: 'practitioner',
@@ -78,7 +78,7 @@ export class PersonaComponent {
       title: 'Practitioner',
       badge: 'ADVANCED',
       badgeTone: 'good',
-      detail: 'Full detail — charts, dashas, and the tools.',
+      detail: 'Full depth for charts, dashas, transits, and study.',
     },
   ];
 }

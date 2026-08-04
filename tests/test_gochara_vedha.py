@@ -12,20 +12,31 @@ from astrospace.core.vedic.gocharam import (
     CLASSICAL_GOCHARA_VEDHA,
     classical_gochara_status,
 )
-from astrospace.core.vedic.gocharam.timeline import gochara_rules as gocharam_gochara_rules
-from astrospace.core.vedic.transits import (
+from astrospace.core.vedic.gocharam.strength import (
     KAKSHYA_LORDS,
     _bav_support,
     _effective_severity,
     _kakshya_of,
     _sav_support,
-    classical_gochara,
-    gochara_rules,
-    transit_analysis,
 )
+from astrospace.core.vedic.gocharam.timeline import gochara_rules as gocharam_gochara_rules
+from astrospace.core.vedic.positions import house_from_lagna, sign_index
+from astrospace.core.vedic.transits import gochara_rules, transit_analysis
 
 ARIES = 0
 DELHI = {"lat": 28.6139, "lng": 77.2090, "tz_str": "Asia/Kolkata"}
+
+
+def classical_gochara(transit_positions: dict, natal_moon_sign: int) -> dict:
+    """Test-local convenience wrapper: the production duplicate that used to
+    live in transits.py was dead code (US-GOC-022) and has been removed —
+    this reproduces just its signature over the one canonical implementation,
+    astrospace.core.vedic.gocharam.rules.classical_gochara_status."""
+    houses_from_moon = {
+        planet: house_from_lagna(sign_index(data["lon"]), natal_moon_sign)
+        for planet, data in transit_positions.items()
+    }
+    return classical_gochara_status(houses_from_moon)
 
 
 def _positions(**signs: int) -> dict:
@@ -210,11 +221,35 @@ class TestAshtakavargaTransitSupport:
         assert _effective_severity("medium", True, "strong") == "low"
         assert _effective_severity("supportive", True, "weak") == "diluted"
         # No adjustment cases: booleans and base severity stay untouched.
-        assert _effective_severity("high", True, "weak") == "high"
         assert _effective_severity("high", True, "average") == "high"
         assert _effective_severity("supportive", True, "strong") == "supportive"
         assert _effective_severity("high", False, "strong") == "high"
         assert _effective_severity("supportive", True, None) == "supportive"
+
+    def test_effective_severity_escalates_symmetrically_under_weak_bav(self):
+        # US-GOC-024: weak BAV support used to leave a challenging rule
+        # completely unadjusted — it now escalates by one step, the mirror
+        # image of the existing strong-BAV softening.
+        assert _effective_severity("medium", True, "weak") == "high"
+        assert _effective_severity("high", True, "weak") == "critical"
+        # Already at the floor/ceiling of the ladder: clamped, not wrapped.
+        assert _effective_severity("high", True, "strong") == "medium"
+        assert _effective_severity("low", True, "strong") == "low"
+
+    def test_effective_severity_uses_dignity_and_bindu_given(self):
+        # Debilitation escalates a challenging rule even with average BAV.
+        assert _effective_severity("medium", True, "average", dignity="Debilitated") == "high"
+        # Exaltation softens a challenging rule even with average BAV.
+        assert _effective_severity("medium", True, "average", dignity="Exalted") == "low"
+        # Own-sign counts as a strong dignity too.
+        assert _effective_severity("high", True, "average", dignity="Own") == "medium"
+        # A kakshya whose own lord withheld a bindu nudges toward escalation.
+        assert _effective_severity("medium", True, "average", bindu_given=False) == "high"
+        # Debilitation dilutes a supportive rule the same way weak BAV does.
+        assert _effective_severity("supportive", True, "average", dignity="Debilitated") == "diluted"
+        assert _effective_severity("supportive", True, "average", bindu_given=False) == "diluted"
+        # Signals stack: weak BAV *and* debilitation escalates two steps.
+        assert _effective_severity("medium", True, "weak", dignity="Debilitated") == "critical"
 
     def test_transit_analysis_reports_av_rows_and_av_context(self):
         chart = VedicChart("T", 1990, 1, 1, 12, 0, **DELHI)
@@ -250,3 +285,26 @@ class TestAshtakavargaTransitSupport:
                 assert rule["av_context"] is None
                 assert rule["effective_severity"] == rule["severity"]
         assert "classical_gochara" in result["gochara"]
+
+    def test_transits_and_gocharam_report_identical_av_context(self):
+        """Regression test for US-GOC-022: transit_analysis() used to
+        recompute Ashtakavarga locally and silently drop the 'kakshya' key
+        from every rule's av_context. It now reuses the canonical profile
+        directly, so /gocharam and /transits must agree exactly."""
+        chart = VedicChart("T2", 1985, 6, 15, 8, 30, **DELHI)
+        as_of = datetime(2026, 7, 14, 12, 0, tzinfo=timezone.utc)
+        transits_result = transit_analysis(
+            chart.positions, chart.lagna_lon, as_of, chart.ayanamsha, chart.node_type,
+        )
+        gocharam_result = chart.gocharam(scan_days=30, as_of=as_of)
+
+        transits_rules = {r["id"]: r for r in transits_result["gochara"]["rules"]}
+        gocharam_rules_by_id = {r["id"]: r for r in gocharam_result["gochara"]["rules"]}
+        assert transits_rules.keys() == gocharam_rules_by_id.keys()
+        for rule_id, transits_rule in transits_rules.items():
+            gocharam_rule = gocharam_rules_by_id[rule_id]
+            assert transits_rule["av_context"] == gocharam_rule["av_context"]
+            assert transits_rule["effective_severity"] == gocharam_rule["effective_severity"]
+            if transits_rule["av_context"] is not None:
+                assert "kakshya" in transits_rule["av_context"]
+        assert transits_result["ashtakavarga_transit"] == gocharam_result["ashtakavarga_transit"]

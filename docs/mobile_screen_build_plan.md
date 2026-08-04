@@ -381,6 +381,41 @@ These frames were discovered in the updated Figma page after the original
 | `206:591` | 36 · Search | ✅ done — `/m/search` | Cross-module client index with working result deep links and recent searches |
 | `206:641` | 25h · Account Deletion | ✅ done — `/m/settings/account/delete` | Backend-confirmed user-scoped cascade with regression tests |
 
+## New frames added 2026-07-29
+
+A second, later batch (node IDs `103:xxx`–`269:xxx`) that neither the original
+inventory nor the 2026-07-27 batch above ever caught — found via a full
+top-level frame sweep, not the keyword search the first pass used. Per-persona
+screen variants, native OS surfaces, and edge-case states. Acceptance criteria
+for everything not yet done are in
+[Persona & Platform Parity](#persona--platform-parity--implementation-checklist-2026-07-29).
+
+| Node | Screen | Status |
+| --- | --- | --- |
+| `212:161` | 7G · Today (Guided) | ⚠️ partial — same component as Balanced, mode-specific layout not built |
+| `212:324` | 7B · Today (Balanced) | ✅ done — this is the shipped baseline `today.component` |
+| `212:751` | 7P · Today (Practitioner) | ✅ done 2026-07-29 — Active Period Stack, Panchanga Details, Critical Gochara Transits, Significant Horary Timings, all live-computed |
+| `212:416` / `458` / `512` | 6c/6d/6e · Aha — Guided/Balanced/Practitioner | ❌ not built — no onboarding result screen exists at all yet |
+| `212:971` / `1019` / `1077` | 10G/10B/10P · Ask Answer | ❌ not built — one answer template serves all modes |
+| `214:155` | 16P · Yantra (Practitioner) | ❌ not built |
+| `215:156` | 12G · What to do (Guided) | ⚠️ partial — tab label routes to the generic Remedies screen, not a dedicated Guided layout |
+| `215:241` | Profiles · Today Across Profiles | ❌ not built — no multi-profile dashboard exists |
+| `215:373` | 16G · Your Story (Guided) | ❌ not built — Guided mode reuses the Balanced/Practitioner Chart Hub |
+| `215:620` / `690` | 28G/28P · Calendar Day | ❌ not built — one Calendar Day layout serves all modes |
+| `215:805` | 30d · Full Compatibility Detail | ❌ not built — shipped Gun Milan Results is the summary card only |
+| `215:1216` | 16P · Charts (Practitioner) | ❌ not built |
+| `216:160` / `262` | 21e/21f · Life Periods — Sookshma/Prana | ❌ not built — grepped `life-periods.component.*`, no match |
+| `216:415` | 37 · Manage Profiles | ✅ close — live-verified on device, matches Figma closely |
+| `216:483` | 37b · Add Profile | ✅ done — `/m/settings/profiles/new` |
+| `216:543` | screen-3-edit-profile | ⚠️ partial — edit form exists; missing Gender field and the Danger Zone's Archive option |
+| `216:615` | screen-4-delete-confirmation | ⚠️ partial — has type-to-confirm, but types the literal word "DELETE" not the profile's name |
+| `216:773` | States · Offline / Stale Data | ❌ not built — grepped `core/` and `features/mobile/` for "offline"/"stale", no match |
+| `216:838` | States · Partial Calculation | ❌ not built — pairs with unknown-birth-time below |
+| `216:904` | screen-3-unknown (unknown birth time) | ❌ not built — grepped both birth-details components, no "unknown" field anywhere |
+| `216:964` | screen-4-denied (notification permission denied) | ❌ not built |
+| `103:92`–`107:101` | M10 · Home/Lock Screen Widget, Live Activity, Watch Complication, Push Notification, Share Story Card | ❌ not built — see Platform (M10) below; most need native extension targets, not just Angular work |
+| `269:158` | enhanced-stat-cells-concept | Not a spec'd screen — reads as a live design exploration (was the current selection in the Figma desktop app when checked) |
+
 ### Recommended implementation order
 
 1. **Ask History (`206:223`)** — it completes the active US-N2 thread journey
@@ -427,5 +462,221 @@ its static Figma implementation renders.
 All 79 inventoried Figma frames are implemented and routed. Subscription is
 present as a faithful, explicitly disabled screen because pricing,
 entitlements, restore-purchase behavior, and StoreKit/Play ownership have not
-yet been approved; it must not simulate a purchase. Remaining work is workflow
-hardening and native release verification rather than missing-screen buildout.
+yet been approved; it must not simulate a purchase.
+
+**This "79 frames" count is now known to be incomplete.** A 2026-07-29 sweep of
+the same Figma page found a second batch of frames (node IDs `103:xxx`
+through `269:xxx`) covering per-persona screen variants, native OS surfaces,
+and edge-case/resilience states that were never added to this inventory —
+see [Persona & Platform Parity](#persona--platform-parity--implementation-checklist-2026-07-29)
+below. Remaining work is that parity buildout plus workflow hardening and
+native release verification, not just the latter.
+
+## Persona & Platform Parity — Implementation Checklist (2026-07-29)
+
+Source: [docs/mobile_figma_web_persona_gap_analysis.md](mobile_figma_web_persona_gap_analysis.md)
+(2026-07-27 audit) plus the frame sweep above. That audit is the detailed
+rationale for *why* each gap matters; this checklist is what closes it. Check
+an item here — don't re-derive it from the audit — and update the audit's own
+status note if a whole section it describes is now closed.
+
+Items already shipped this session are marked done with their acceptance
+criteria for traceability; everything else is open with the criteria that
+close it.
+
+### Done (2026-07-29)
+
+- [x] **Persona nav bar icons match Figma.** Guided "What to do" uses
+      check-square, Balanced "Chart" uses git-branch, Practitioner
+      Chart/Periods/Transits/More use star/clock/map-pin/settings-gear.
+      AC met: verified live in-browser for all three modes; icons render
+      pixel-identical to their Figma source nodes (`212:214`, `212:391`,
+      `212:898`).
+- [x] **Practitioner Today board** (`212:751`). AC met: Active Period Stack
+      shows all 4 dasha levels (maha/antar/pratyantar/sookshma) with live
+      lord names; Panchanga Details shows tithi/nakshatra/yoga/karana/vara
+      from real engine output; Critical Gochara Transits shows each active
+      rule's AV bindus (or "AV —" for non-bindu planets); Significant Horary
+      Timings lists all 4 muhurta windows with real times. Backed by
+      `astrospace/context/daily.py`'s `panchanga_details`/`muhurta_windows`/
+      `av_bindus` fields (743 backend tests + 4 frontend unit tests pass).
+- [x] **Guided Today variant** (`212:161`). AC met: eyebrow reads "YOUR VIBE
+      TODAY", no numeric gauge (prose-only verdict), DO/AVOID icons are
+      trending-up/alert-triangle (downloaded from Figma, not the
+      checkmark-circle/x-circle used elsewhere), Listen button reads
+      "Listen to your day (2 min brief)". Verified live in-browser.
+- [x] **Life Periods Sookshma/Prana** (`21e`/`21f`, nodes `216:160`/`262`).
+      AC met: two more tabs alongside Maha/Antar/Pratyantar, each showing
+      the active chain's breadcrumb and a real timeline list, sourced from
+      `chart.dashas()`'s existing `sookshmadasha`/`pranadashas` output — both
+      levels confirmed present in `dashas.py` (not just `sookshmadasha` as
+      originally assumed here). Found and fixed a real bug along the way:
+      the tab bar's CSS was built for exactly 3 equal-flex tabs, and 5 tabs
+      overlapped without a gap ("PratyantarSookshma" rendered as one run of
+      text) — changed `.levels` to scroll horizontally instead of forcing
+      an ever-shrinking flex-basis.
+- [x] **Full Compatibility Detail** (`30d`, node `215:805`). AC met: new
+      `/m/compat/results/detail` screen shows all 8 Kootas with per-koota
+      status badges (✓/CAUTION/PARTIAL), a Special Cancellations section
+      (surfaces any row whose engine-authored note says "cancelled" — no
+      new detection), and a Safety Checks section. The Safety Checks section
+      needed a real backend addition: `compatibility.py` had no Manglik or
+      Gandanta cross-check between the two charts at all, so added
+      `_safety_checks()` reusing the existing `manglik_dosha()`/
+      `gandanta_dosha()` functions (not a second implementation) and wired
+      it into `gun_milan()`'s response. "Compare D1/D9" stays disabled (real
+      feature, not built, not faked); "Gen AI Narrative" links to Ask with
+      the question pre-filled, reusing Ask's existing generation rather than
+      a second AI path. Required updating two test doshas/compat stub
+      fixtures (`tests/test_doshas_compat_v2.py`, `tests/test_vedic.py`)
+      that didn't model `positions`/`lagna_lon` — all 743 backend tests
+      pass, including the newly-fixed ones.
+- [x] **Delete confirmation types the profile's name** (`screen-4-delete-
+      confirmation`, node `216:615`). AC met: now requires the profile's
+      actual name instead of the literal word "DELETE".
+
+Also observed already done in the working tree by the time this pass ran
+(not built in this session, noted here so the tracker stays accurate):
+Guided mode's "What to do"/"Chart" merged into a persona-appropriate
+`Explore`/`Your Story` flow (`ui/src/app/features/mobile/explore/`,
+routes `/m/explore`, `/m/explore/story`, `/m/explore/what-to-do`,
+`/m/explore/life-chapters`), and Practitioner's Chart tab relabeled
+"Yantra" per node `214:155` with its own icon set
+(`figma-yantra-nav-*.svg`). Both compiled and passed the full test suite
+alongside this session's changes.
+
+### P0 — Core persona variants
+
+- [ ] **Onboarding "Aha" result screens** (`6c`/`6d`/`6e`, nodes `212:416`/
+      `458`/`512`). AC: a new screen appears after chart computation and
+      before landing in the shell, one variant per persona (Guided: plain
+      signature + one strength + one action + Listen; Balanced: signature +
+      Sun/Moon/Lagna + Today/Chart preview; Practitioner: D1 chart + exact
+      birth constants + current period stack + "Open workbench"); routed
+      from the existing onboarding flow, not a dead end.
+- [ ] **Ask Answer persona variants** (`10G`/`10B`/`10P`, nodes `212:971`/
+      `1019`/`1077`). AC: Guided shows short verdict/action/caution only;
+      Balanced is today's shipped answer view; Practitioner adds question
+      scope (profile/date range/location/domain/chart), natal-promise vs.
+      active-dasha vs. gochara sections, and visible source/provenance
+      links — all three read the same underlying `/api/v1/ask` response,
+      no separate calculation path.
+- [ ] **Chart Hub persona variants** (`16G`/`16P`, nodes `215:373`/`1216`).
+      AC: Guided is relabeled "Your Story", leads with strengths/life areas,
+      and moves Vargas/Shadbala/AV/Jaimini under an "Advanced" disclosure;
+      Practitioner is a workbench landing (D1/D9 + current period + gochara
+      + graha table + quick style/ayanamsha controls); Balanced keeps the
+      shipped Chart Hub unchanged.
+- [ ] **Calendar Day persona variants** (`28G`/`28P`, nodes `215:620`/`690`).
+      AC: Guided shows observances/next-window/reminders in plain good-avoid
+      language only; Practitioner adds the full window list (Hora,
+      Durmuhurta, Gulika, Disha Shool, Panchaka, Bhadra) with provenance and
+      timezone; both read the same day-detail endpoint as the shipped
+      Balanced view.
+
+### P0 — Multi-profile & birth-data states
+
+- [ ] **"Today Across Profiles" dashboard** (`215:241`). AC: new screen
+      listing every profile with a one-line daily status and current
+      Mahādasha per profile, plus a single cross-profile "Today's Top
+      Alert" callout surfacing the most urgent item (e.g. an active
+      Chandrashtama); reachable from the profile switcher, not just a
+      renamed switcher sheet.
+- [ ] **Unknown/approximate birth time** (`screen-3-unknown`, node
+      `216:904`, pairs with `States · Partial Calculation`, node `216:838`).
+      AC: both `onboarding/birth-details.component` and
+      `settings/edit-birth-details.component` gain an "Unknown" toggle for
+      time of birth; choosing it shows the "works normally vs. limited
+      features" explainer and a fallback-mode choice (sunrise default /
+      noon-Madhya); any chart computed from a fallback time is marked
+      "APPROXIMATE" wherever house/dasha-dependent data is shown, with the
+      ±1 house / ±6 month uncertainty note from the Figma reference.
+- [ ] **Profile Archive, distinct from Delete** (`screen-3-edit-profile`,
+      node `216:543`). AC: edit-profile screen gains a "Danger Zone" with
+      two distinct actions — Archive (hides from Today/notifications,
+      preserves all data, reversible) and Delete (current behavior);
+      Archive must not touch `crud.py`'s delete cascade.
+
+### P0 — Resilience states
+
+- [ ] **Offline / stale-data banner** (node `216:773`). AC: when a network
+      request fails and a previously-cached response exists, show a banner
+      ("You're offline. Showing last updated results from Xh ago.") with a
+      Retry action, rather than either a blank error state or silently
+      stale content; applies at minimum to Today and Calendar Day.
+- [ ] **Notification permission denied screen** (`screen-4-denied`, node
+      `216:964`). AC: shown when the OS reports notifications denied;
+      explains what's missed (morning guidance, transit alerts, timing
+      windows) with "Open Settings" and "Remind me later" actions; ties
+      into the still-outstanding push notification registration work
+      below.
+
+### P1 — Trust and completeness (see the 2026-07-27 audit §7 for full detail)
+
+- [ ] Appearance & Accessibility settings screen (theme, text size,
+      contrast, motion, screen reader).
+- [ ] Search entity filters, empty state, and result-destination rules.
+- [ ] Reading/history empty, loading, retry, and version-comparison states.
+- [ ] Remedy alternatives (cost/mobility/dietary/religious substitutions)
+      and evidence-strength display.
+- [ ] Muhurta filtering, saved-window management, and timezone clarity.
+- [ ] Regional festival rules and location-sensitive observance behavior.
+
+### P2 — Platform (M10 native surfaces)
+
+None of these are Angular/Capacitor work — each needs its own native
+extension target, which is a separate build system and, for the watch app,
+a separate App Store product.
+
+- [ ] **Push notification registration** (node `106:109`). AC:
+      `@capacitor/push-notifications` wired, APNs cert + FCM key
+      configured, device token persisted server-side, morning-brief payload
+      sent on schedule. Tracked as not-done since `docs/native_builds.md`'s
+      original M11-US04.
+- [ ] **Share Story Card** (node `107:101`). AC: `@capacitor/share` plus a
+      canvas-rendered 9:16 image of the day's headline, shareable to
+      WhatsApp Status / Instagram Stories from the Today screen.
+- [ ] **Home Screen Widget** (node `103:92`). AC: iOS WidgetKit extension +
+      Android App Widget provider, both reading the same daily-guidance
+      data, medium-size layout matching the Figma mock.
+- [ ] **Lock Screen Widget** (node `104:92`). AC: iOS Lock Screen widget
+      (circular) via the same WidgetKit extension.
+- [ ] **Live Activity / Dynamic Island** (node `106:92`). AC: ActivityKit
+      integration showing the active/next muhurta window with a live
+      countdown, started when a window begins and ended when it lapses.
+- [ ] **Watch Complication** (node `106:102`). AC: a watchOS app target
+      exists and ships a complication showing the day's score and label.
+
+### Recommended sequence
+
+Phased by risk and how much the data already exists (checked against the
+engine before ordering, not guessed):
+
+1. **Cheap wins — data already computed, frontend-only. Done 2026-07-29.**
+   Guided Today variant; Life Periods Sookshma/Prana; Full Compatibility
+   Detail (needed one real backend addition — Manglik/Gandanta safety
+   checks didn't exist yet, see the Done list above); delete-confirmation
+   name-match fix.
+2. **New screens, moderate wiring.** Ask Answer / Chart Hub / Calendar Day
+   persona variants; onboarding Aha result screens (net-new route).
+3. **Backend/engine work.** Unknown/approximate birth time (touches chart
+   computation itself, not just a form field — treat with the same care as
+   any `astrospace/core/vedic/` change); Partial Calculation state (depends
+   on this); Today Across Profiles (new aggregation endpoint); Profile
+   Archive (schema change, separate from the delete cascade).
+4. **Resilience.** Offline/stale banner; notification-permission-denied
+   screen.
+5. **P1 items**, deferred until 1–4 close.
+6. **P2 native platform (M10).** Its own track — WidgetKit extension,
+   ActivityKit, a watchOS target, APNs/FCM setup. Don't start without an
+   explicit go-ahead; the watch app alone is a separate App Store product.
+
+## Definition of done for any item above
+
+Do not check an item off because its Figma layout renders. Per the
+2026-07-27 audit's §11: it must be reachable in the relevant persona
+mode(s), preserve the same calculation truth as every other mode, map every
+visible field to a real endpoint/key (no fixture text), define its loading/
+empty/error/offline state, and — where it touches a safety-relevant surface
+(death/health/legal/financial framing, dosha display) — carry the same
+refer-out and non-fatalistic rules as the rest of the app.

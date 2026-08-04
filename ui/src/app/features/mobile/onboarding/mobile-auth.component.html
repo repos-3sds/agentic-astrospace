@@ -4,8 +4,14 @@
 
 <main>
   <div class="heading">
-    <h1>{{ mode() === 'signin' ? 'Welcome back' : 'Create your space' }}</h1>
-    <p>{{ mode() === 'signin' ? 'Sign in to keep your charts and daily guidance.' : 'Free to start — save your chart and daily guidance.' }}</p>
+    <h1>
+      @if (mode() === 'signin') {
+        Welcome back
+      } @else {
+        Begin with <span class="siddha-brand">SIDDHA</span>
+      }
+    </h1>
+    <p>{{ mode() === 'signin' ? 'Sign in to keep your guidance, profiles, and daily rhythm.' : 'Free to start - save your life map, Today guidance, and practices.' }}</p>
   </div>
 
   <div class="switch" role="tablist" aria-label="Account action">
@@ -42,6 +48,6 @@
     <button class="continue" type="submit" [disabled]="loading()">{{ loading() ? 'Please wait…' : mode() === 'signin' ? 'Continue' : 'Create account' }}</button>
   </form>
 
-  <p class="magic">Prefer no password? <button type="button" (click)="magicLink()">Email me a magic link</button></p>
+  <p class="magic">Prefer no password? <button type="button" (click)="magicLink()">Email me a secure link</button></p>
   <p class="terms">By continuing you agree to our Terms &amp; Privacy Policy.</p>
 </main>

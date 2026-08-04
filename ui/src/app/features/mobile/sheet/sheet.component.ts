@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, output } from '@angular/core';
+import { SheetOverlayService } from '../../../core/sheet-overlay.service';
 
 /**
  * Bottom sheet: scrim plus a rounded panel (Figma nodes 21:23 / 21:24).
@@ -26,4 +27,16 @@ import { ChangeDetectionStrategy, Component, output } from '@angular/core';
 })
 export class SheetComponent {
   readonly dismissed = output<void>();
+
+  constructor() {
+    const overlay = inject(SheetOverlayService);
+    overlay.push();
+    // Lets Android's hardware back button close this sheet instead of falling
+    // through to route navigation underneath — see app.ts's backButton listener.
+    const unregister = overlay.registerDismiss(() => this.dismissed.emit());
+    inject(DestroyRef).onDestroy(() => {
+      overlay.pop();
+      unregister();
+    });
+  }
 }

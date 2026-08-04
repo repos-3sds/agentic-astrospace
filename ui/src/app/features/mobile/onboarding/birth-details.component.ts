@@ -38,8 +38,8 @@ type PlaceMatch = PanchangaCity;
         <p class="step">STEP 2 OF 2</p>
       </header>
 
-      <h1 class="headline">Your birth details</h1>
-      <p class="lede">The more precise, the more accurate your chart.</p>
+      <h1 class="headline">Begin with your birth rhythm</h1>
+      <p class="lede">These details anchor your life map. Daily guidance can still follow your current location.</p>
 
       <label class="field-label" for="bd-who">WHO IS THIS FOR?</label>
       <div class="field">
@@ -66,7 +66,7 @@ type PlaceMatch = PanchangaCity;
       <p class="approx">
         <span>Don’t know the exact time?</span>
         <button class="approx-action" type="button" (click)="useApproximate()">
-          Use approximate
+          Use a gentle estimate
         </button>
       </p>
 
@@ -118,7 +118,7 @@ type PlaceMatch = PanchangaCity;
     @if (error()) { <p class="form-error" role="alert">{{ error() }}</p> }
     <button class="btn" type="button" [disabled]="saving()" (click)="castChart()">
       <img src="mobile/cast.svg" alt="" aria-hidden="true" />
-      <span>{{ saving() ? 'Casting your chart…' : 'Cast my chart' }}</span>
+      <span>{{ saving() ? 'Preparing your guide…' : 'Begin my guide' }}</span>
     </button>
   `,
   styleUrl: './birth-details.component.scss',

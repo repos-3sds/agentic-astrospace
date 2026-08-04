@@ -26,7 +26,7 @@ const COPY: Record<ReferDomain, ReferCopy> = {
   health: {
     headline: 'This needs a real doctor, not an app',
     boundary:
-      'AstroSpace never diagnoses illness or predicts health outcomes — that call belongs to a qualified doctor. Please reach out to one if this is troubling you; please don’t wait on an app for something this important.',
+      'This guide never diagnoses illness or predicts health outcomes — that call belongs to a qualified doctor. Please reach out to one if this is troubling you; please don’t wait on an app for something this important.',
     offer:
       'A gentle daily check-in, and — if it helps — a traditional wellbeing practice for this period. Never a substitute for medical care.',
     action: 'See a wellbeing practice',
@@ -35,7 +35,7 @@ const COPY: Record<ReferDomain, ReferCopy> = {
   legal: {
     headline: 'This needs a lawyer, not an app',
     boundary:
-      'AstroSpace never predicts how a case will end or what a court will decide — that call belongs to a qualified lawyer. Please talk to one before you act on anything here.',
+      'This guide never predicts how a case will end or what a court will decide — that call belongs to a qualified lawyer. Please talk to one before you act on anything here.',
     offer:
       'Timing for the steps around it — when to have the conversation, when to file, which mornings are steadier. Never advice on the matter itself.',
     action: 'See timing for this week',
@@ -44,7 +44,7 @@ const COPY: Record<ReferDomain, ReferCopy> = {
   money: {
     headline: 'This needs a financial adviser, not an app',
     boundary:
-      'AstroSpace never tells you what to buy, sell or invest in, and never predicts what a market will do — that call belongs to a qualified adviser, and to you.',
+      'This guide never tells you what to buy, sell or invest in, and never predicts what a market will do — that call belongs to a qualified adviser, and to you.',
     offer:
       'Timing for decisions you have already made — which days are steadier for a conversation or a signature. Never a view on the decision itself.',
     action: 'See timing for this week',
@@ -53,7 +53,7 @@ const COPY: Record<ReferDomain, ReferCopy> = {
   death: {
     headline: 'This is not something we will answer',
     boundary:
-      'AstroSpace does not predict death or lifespan, for anyone, ever. Classical texts contain such methods; we do not use them, because no one is served by a date they cannot check and cannot unhear.',
+      'This guide does not predict death or lifespan, for anyone, ever. Classical texts contain such methods; we do not use them, because no one is served by a date they cannot check and cannot unhear.',
     offer:
       'If you are worried about someone’s health, a doctor can actually help. If you are carrying something heavier than that, please talk to someone you trust.',
   },

@@ -69,6 +69,10 @@ export class AskAnswerComponent {
       : 'Start conversations and send applications this week — Thursday & Friday mornings are best. Wait to sign anything until after the 14th.',
     followUps: ['What about starting a business instead?'],
   }));
+  readonly listenScript = computed(() => {
+    const v = this.view();
+    return `${v.question}. ${v.verdict} ${v.whatToDo}`;
+  });
 
   readonly draft = signal('');
   readonly submitting = signal(false);

@@ -38,7 +38,7 @@ export class ModeToneComponent {
       title: 'Guided',
       badge: 'SIMPLE',
       badgeTone: 'gold',
-      detail: 'Just tell me, simply. Plain answers, no jargon.',
+      detail: 'Gentle daily guidance in plain words, with practice first.',
     },
     {
       id: 'balanced',
@@ -46,7 +46,7 @@ export class ModeToneComponent {
       title: 'Balanced',
       badge: 'CURRENT',
       badgeTone: 'accent',
-      detail: 'Tell me — and show me why, one tap away.',
+      detail: 'Clear guidance with the reasoning one tap away.',
     },
     {
       id: 'practitioner',
@@ -54,7 +54,7 @@ export class ModeToneComponent {
       title: 'Practitioner',
       badge: 'ADVANCED',
       badgeTone: 'good',
-      detail: 'Full detail — charts, dashas, and the tools.',
+      detail: 'Full depth for charts, dashas, transits, and study.',
     },
   ];
 }

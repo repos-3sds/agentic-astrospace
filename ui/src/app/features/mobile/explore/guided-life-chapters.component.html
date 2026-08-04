@@ -1,0 +1,55 @@
+<a class="life-appbar" [routerLink]="['/m', 'explore']">
+  <span class="back">‹</span>
+  <h1>Life Chapters</h1>
+  <span class="spark asset-icon" style="--icon-url: url('/mobile/figma-guided-star.svg')" aria-hidden="true"></span>
+</a>
+
+<main class="life-body">
+  @if (loading()) {
+    <section class="life-state"><b>Loading chapters</b><p>Reading the current season of your life map.</p></section>
+  } @else if (error()) {
+    <section class="life-state error" role="alert"><b>Life chapters could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+  } @else {
+    <section class="chapter-hero">
+      <p>YOUR CURRENT CHAPTER</p>
+      <h2>{{ current().title }}</h2>
+      <span>{{ current().dates }}</span>
+      <div class="progress">
+        <span><i [style.width.%]="current().progress"></i></span>
+        <small>
+          <em>{{ current().start }}</em>
+          <b>Active</b>
+          <em>{{ current().end }}</em>
+        </small>
+      </div>
+    </section>
+
+    <section class="insights">
+      <h3>How to live this chapter</h3>
+      <article data-tone="gold"><b>Work & Purpose</b><span>Give your effort a structure. Build foundations now; let recognition come later.</span></article>
+      <article data-tone="good"><b>Relationships</b><span>Choose patience over reaction. Existing bonds deepen through steadiness and shared responsibility.</span></article>
+      <article data-tone="accent"><b>Energy & Routine</b><span>Steady routines matter more than intensity. Prioritise consistency in sleep, food, and movement.</span></article>
+    </section>
+
+    <section class="timeline-section">
+      <h3>Your Life Timeline</h3>
+      <div class="timeline">
+        @for (item of timeline(); track item.title) {
+          <article [class.is-active]="item.active" [class.is-future]="item.future">
+            <i aria-hidden="true"></i>
+            <span>
+              <b>{{ item.title }}</b>
+              @if (item.active) { <em>CURRENT</em> }
+              <small>{{ item.detail }}</small>
+            </span>
+          </article>
+        }
+      </div>
+    </section>
+
+    <a class="details-cta" [routerLink]="['/m', 'chart', 'periods']">
+      <span>Want the full timing stack? Explore Dashas</span>
+      <b aria-hidden="true">→</b>
+    </a>
+  }
+</main>

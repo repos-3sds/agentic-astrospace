@@ -1,4 +1,5 @@
 from datetime import datetime
+from functools import lru_cache
 from typing import Optional
 from zoneinfo import ZoneInfo
 
@@ -54,6 +55,28 @@ def _validate_timezone(tz_str: Optional[str], fallback: str) -> str:
     return tz_str
 
 
+@lru_cache(maxsize=2048)
+def _cached_daily_guidance(
+    kundli_id: str,
+    date_str: str,
+    name: str, year: int, month: int, day: int, hour: int, minute: int,
+    b_city: str, b_nation: str,
+    ayanamsha: str, node_type: str,
+    relation: str, as_of_iso: str,
+    loc_city: str, loc_nation: str, loc_lat: float, loc_lng: float, loc_tz: str
+):
+    chart = VedicChart(
+        name, year, month, day, hour, minute, b_city, b_nation,
+        ayanamsha=ayanamsha, node_type=node_type
+    )
+    as_of = datetime.fromisoformat(as_of_iso)
+    loc_kwargs = {}
+    if loc_city:
+        loc_kwargs = {"city": loc_city, "nation": loc_nation, "lat": loc_lat, "lng": loc_lng, "tz_str": loc_tz}
+    return daily_guidance(chart, relation=relation, as_of=as_of, **loc_kwargs)
+
+
+
 @router.get("/{kundli_id}/daily")
 def daily(
     kundli_id: str,
@@ -89,8 +112,21 @@ def daily(
         }
     if as_of and as_of.tzinfo is None:
         as_of = as_of.replace(tzinfo=ZoneInfo(loc_kwargs.get("tz_str", display_tz)))
+    
+    if not as_of:
+        as_of = datetime.now(ZoneInfo(loc_kwargs.get("tz_str", display_tz)))
+
     try:
-        return daily_guidance(chart, relation=kundli.relation, as_of=as_of, **loc_kwargs)
+        return _cached_daily_guidance(
+            kundli.id,
+            as_of.strftime("%Y-%m-%d"),
+            kundli.name, kundli.birth_year, kundli.birth_month, kundli.birth_day,
+            kundli.birth_hour, kundli.birth_minute, kundli.birth_city, kundli.birth_nation,
+            ayanamsha, node_type,
+            kundli.relation or "", as_of.isoformat(),
+            loc_kwargs.get("city", ""), loc_kwargs.get("nation", ""),
+            loc_kwargs.get("lat", 0.0), loc_kwargs.get("lng", 0.0), loc_kwargs.get("tz_str", "")
+        )
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
 

@@ -28,6 +28,13 @@ import { MobileSymbol, nakshatraSymbol, tithiSymbol } from '../symbols/mobile-sy
       } @else if (!activeId()) {
         <section class="mcald-state"><b>No active profile</b><p>Select a profile before opening a calendar day.</p></section>
       } @else if (data(); as calendar) {
+        @if (staleNotice()) {
+          <section class="mcald-stale" role="status">
+            <b>You're offline</b>
+            <p>{{ staleNotice() }}</p>
+            <button type="button" (click)="reload()">Retry</button>
+          </section>
+        }
         <header><h1>{{ dateLabel(selectedDate()) }}</h1><p>{{ daySubhead() }}</p></header>
 
         @if (day(); as summary) {
@@ -36,14 +43,32 @@ import { MobileSymbol, nakshatraSymbol, tithiSymbol } from '../symbols/mobile-sy
             <div><b>{{ qualityLabel(summary) }}</b><small>{{ qualityDetail(summary) }}</small></div>
           </section>
 
-          <p class="mcald-title accent">DAY TIMELINE</p>
-          <section class="mcald-list">
-            @for (row of windows(summary); track row.name + row.start_iso) {
-              <div [class.bad]="row.tone === 'bad'"><i></i><span><b>{{ row.name }}</b><small>{{ row.start }} - {{ row.end }}</small></span><em>{{ row.tone === 'bad' ? 'AVOID' : 'GOOD' }}</em></div>
-            } @empty {
-              <p>No timing windows were returned for this day.</p>
-            }
-          </section>
+          @if (preferences.experienceMode() === 'guided') {
+            <p class="mcald-title accent">WHAT TO NOTICE</p>
+            <section class="mcald-guided">
+              <article>
+                <img src="mobile/trending-up.svg" alt="" aria-hidden="true" />
+                <span><small>GOOD WINDOW</small><b>{{ guidedGoodWindow(summary) }}</b></span>
+              </article>
+              <article>
+                <img src="mobile/alert-triangle.svg" alt="" aria-hidden="true" />
+                <span><small>USE CARE</small><b>{{ guidedAvoidWindow(summary) }}</b></span>
+              </article>
+              <a [routerLink]="['/m', 'ask']" [queryParams]="{ q: 'What should I do on ' + dateLabel(selectedDate()) + '?' }">
+                Ask about this date
+                <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
+              </a>
+            </section>
+          } @else {
+            <p class="mcald-title accent">DAY TIMELINE</p>
+            <section class="mcald-list">
+              @for (row of windows(summary); track row.name + row.start_iso) {
+                <div [class.bad]="row.tone === 'bad'"><i></i><span><b>{{ row.name }}</b><small>{{ row.start }} - {{ row.end }}</small></span><em>{{ row.tone === 'bad' ? 'AVOID' : 'GOOD' }}</em></div>
+              } @empty {
+                <p>No timing windows were returned for this day.</p>
+              }
+            </section>
+          }
 
           @if (preferences.experienceMode() === 'practitioner') {
             <p class="mcald-title">PANCHANGA DETAIL</p>
@@ -58,6 +83,13 @@ import { MobileSymbol, nakshatraSymbol, tithiSymbol } from '../symbols/mobile-sy
               </div>
               <div><small>MOON RASHI</small><b>{{ summary.moon_rashi }}</b></div>
               <div><small>PLACE</small><b>{{ calendar.place.city }} · {{ calendar.timezone }}</b></div>
+            </section>
+
+            <p class="mcald-title">PRACTITIONER WINDOWS</p>
+            <section class="mcald-stack">
+              @for (row of practitionerWindowRows(summary); track row.label) {
+                <div><small>{{ row.label }}</small><b>{{ row.value }}</b><p>{{ row.note }}</p></div>
+              }
             </section>
           }
         } @else {
@@ -89,10 +121,12 @@ import { MobileSymbol, nakshatraSymbol, tithiSymbol } from '../symbols/mobile-sy
           }
         </section>
 
-        <p class="mcald-title">ACTIVE PERIOD STACK</p>
-        <section class="mcald-stack">
-          @for (row of periods(calendar); track row[0]) { <div><small>{{ row[0] }}</small><b>{{ row[1] }}</b></div> }
-        </section>
+        @if (preferences.experienceMode() !== 'guided') {
+          <p class="mcald-title">ACTIVE PERIOD STACK</p>
+          <section class="mcald-stack">
+            @for (row of periods(calendar); track row[0]) { <div><small>{{ row[0] }}</small><b>{{ row[1] }}</b></div> }
+          </section>
+        }
       }
     </main>
     @if (selectedFestival(); as festival) {
@@ -114,6 +148,7 @@ export class CalendarDayComponent {
   protected readonly error = signal<string | null>(null);
   protected readonly festivalRows = signal<FestivalOccurrence[]>([]);
   protected readonly selectedFestival = signal<FestivalOccurrence | null>(null);
+  protected readonly staleNotice = signal<string | null>(null);
   protected readonly selectedDate = signal(this.route.snapshot.queryParamMap.get('date') ?? '');
   protected readonly activeId = computed(() => this.store.activeId());
   protected readonly activeName = computed(() => this.store.active()?.name ?? 'this profile');
@@ -137,7 +172,7 @@ export class CalendarDayComponent {
   }
 
   protected reload(): void {
-    void this.load(this.activeId());
+    void this.load(this.activeId(), true);
   }
 
   protected dateLabel(date: string): string {
@@ -175,6 +210,35 @@ export class CalendarDayComponent {
     ].sort((a, b) => a.start_iso.localeCompare(b.start_iso));
   }
 
+  protected guidedGoodWindow(day: CalendarDaySummary): string {
+    const good = day.windows.auspicious[0];
+    return good ? `${good.name}, ${good.start} - ${good.end}` : 'No special good window returned for this day.';
+  }
+
+  protected guidedAvoidWindow(day: CalendarDaySummary): string {
+    const caution = day.windows.inauspicious[0];
+    return caution ? `${caution.name}, ${caution.start} - ${caution.end}` : 'No major caution window returned for this day.';
+  }
+
+  protected practitionerWindowRows(day: CalendarDaySummary): { label: string; value: string; note: string }[] {
+    const rows = this.windows(day);
+    const preferred = ['Hora', 'Durmuhurta', 'Gulika', 'Disha Shool', 'Panchaka', 'Bhadra'];
+    const picked = preferred.map((label) => {
+      const match = rows.find((row) => row.name.toLowerCase().includes(label.toLowerCase()));
+      return {
+        label,
+        value: match ? `${match.start} - ${match.end}` : 'Not returned',
+        note: match?.note ?? (match ? match.name : 'The current day-detail payload did not include this window.'),
+      };
+    });
+    if (picked.some((row) => row.value !== 'Not returned')) return picked;
+    return rows.slice(0, 6).map((row) => ({
+      label: row.name,
+      value: `${row.start} - ${row.end}`,
+      note: row.note ?? (row.tone === 'bad' ? 'Inauspicious window' : 'Auspicious window'),
+    }));
+  }
+
   protected periods(data: CalendarIntelligencePayload): string[][] {
     const current = data.current.dasha;
     return [
@@ -184,22 +248,63 @@ export class CalendarDayComponent {
     ];
   }
 
-  private async load(id: string | null): Promise<void> {
+  private async load(id: string | null, forceRefresh = false): Promise<void> {
     const request = ++this.requestId;
     this.error.set(null);
-    this.data.set(null);
-    if (!id) return;
-    this.loading.set(true);
+    this.staleNotice.set(null);
+    if (!id) {
+      this.data.set(null);
+      this.loading.set(false);
+      return;
+    }
+
+    const cached = this.vedic.cachedCalendarIntelligence(id, 45);
+    if (cached && !forceRefresh) {
+      this.data.set(cached);
+      if (!this.selectedDate()) this.selectedDate.set(cached.start_date);
+      this.loading.set(false);
+      void this.loadFestivals(cached.start_date, 60);
+      void this.refreshCalendar(id, request);
+      return;
+    }
+
+    if (!this.data()) this.loading.set(true);
     try {
-      const calendar = await this.vedic.calendarIntelligence(id, 45);
+      const calendar = forceRefresh
+        ? await this.vedic.refreshCalendarIntelligence(id, 45)
+        : await this.vedic.calendarIntelligence(id, 45);
       if (request !== this.requestId || this.activeId() !== id) return;
       this.data.set(calendar);
       if (!this.selectedDate()) this.selectedDate.set(calendar.start_date);
       void this.loadFestivals(calendar.start_date, 60);
     } catch (error) {
-      if (request === this.requestId) this.error.set((error as Error).message);
+      if (request === this.requestId) {
+        const cached = this.vedic.cachedCalendarIntelligence(id, 45);
+        if (cached) {
+          this.data.set(cached);
+          if (!this.selectedDate()) this.selectedDate.set(cached.start_date);
+          this.staleNotice.set(`Showing last loaded results for ${cached.place.city}. ${this.friendlyError(error)}`);
+          void this.loadFestivals(cached.start_date, 60);
+        } else {
+          this.error.set((error as Error).message);
+        }
+      }
     } finally {
       if (request === this.requestId) this.loading.set(false);
+    }
+  }
+
+  private async refreshCalendar(id: string, request: number): Promise<void> {
+    try {
+      const calendar = await this.vedic.refreshCalendarIntelligence(id, 45);
+      if (request !== this.requestId || this.activeId() !== id) return;
+      this.data.set(calendar);
+      if (!this.selectedDate()) this.selectedDate.set(calendar.start_date);
+      void this.loadFestivals(calendar.start_date, 60);
+    } catch (error) {
+      if (request === this.requestId && this.data()) {
+        this.staleNotice.set(`Showing saved results. ${this.friendlyError(error)}`);
+      }
     }
   }
 
@@ -209,11 +314,26 @@ export class CalendarDayComponent {
     const city = place?.city || profile?.birth_city;
     const nation = place?.nation || profile?.birth_nation || 'IN';
     if (!city) return;
+    const cached = this.festivals.cachedUpcoming(city, nation, fromDate, days);
+    if (cached) {
+      this.festivalRows.set(cached.festivals);
+      void this.refreshFestivals(city, nation, fromDate, days);
+      return;
+    }
     try {
       const payload = await this.festivals.upcoming(city, nation, fromDate, days);
       this.festivalRows.set(payload.festivals);
     } catch {
       this.festivalRows.set([]);
+    }
+  }
+
+  private async refreshFestivals(city: string, nation: string, fromDate: string, days: number): Promise<void> {
+    try {
+      const payload = await this.festivals.refreshUpcoming(city, nation, fromDate, days);
+      this.festivalRows.set(payload.festivals);
+    } catch {
+      // Keep the cached festival rows visible until a later refresh succeeds.
     }
   }
 
@@ -224,5 +344,10 @@ export class CalendarDayComponent {
       : event.tone === 'supportive'
         ? 'Supportive timing marker.'
         : 'Timing marker from your profile.';
+  }
+
+  private friendlyError(error: unknown): string {
+    const message = (error as Error).message || 'Network request failed.';
+    return message.includes('Failed to fetch') ? 'Network request failed.' : message;
   }
 }

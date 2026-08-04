@@ -1381,3 +1381,124 @@
     }
   }
 }
+
+// US-GOC-026: Ashtakavarga grid, ported from transits-tab.component.scss so
+// both surfaces present BAV/SAV/kakshya identically.
+.av-chip {
+  padding: 3px 9px;
+  border: 1px solid var(--as-border);
+  border-radius: 999px;
+  color: var(--as-muted);
+  background: var(--as-surface);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+
+  &.good {
+    border-color: color-mix(in srgb, var(--as-good) 34%, var(--as-border));
+    color: var(--as-good);
+    background: var(--as-good-soft);
+  }
+
+  &.warn {
+    border-color: color-mix(in srgb, var(--as-warn) 36%, var(--as-border));
+    color: var(--as-warn);
+    background: var(--as-warn-soft);
+  }
+}
+
+.av-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.av-card {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--as-border);
+  border-radius: 16px;
+  background: var(--as-raised);
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+
+    strong {
+      font-size: 14px;
+    }
+
+    span {
+      color: var(--as-muted);
+      font-size: 12px;
+    }
+  }
+
+  small {
+    color: var(--as-muted);
+    font-size: 11.5px;
+    text-transform: capitalize;
+  }
+}
+
+.av-scores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.kakshya-line {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--as-border);
+  color: var(--as-muted);
+  font-size: 11.5px;
+
+  em {
+    margin-left: auto;
+    font-style: normal;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+}
+
+.bindu-dot {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--as-warn);
+
+  &.given {
+    background: var(--as-good);
+  }
+}
+
+.av-note {
+  margin: 12px 0 0;
+  font-size: 12px;
+}
+
+// US-GOC-027: resolved evidence citations in the domain workspace.
+.evidence-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.evidence-chip {
+  padding: 2px 8px;
+  border: 1px solid var(--as-border);
+  border-radius: 999px;
+  background: var(--as-surface);
+  color: var(--as-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}

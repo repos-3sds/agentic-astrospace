@@ -1,11 +1,29 @@
-<header class="appbar">
-  <h1 class="screen-title">{{ screenTitle() }}</h1>
-  <button class="profile" type="button" aria-label="Switch profile" (click)="profileSwitcherOpen.set(true)">
-    <span class="avatar" aria-hidden="true">{{ profileInitial() }}</span>
-    <span class="profile-name">{{ profileName() }}</span>
-    <img src="mobile/caret-down.svg" alt="" aria-hidden="true" />
-  </button>
-</header>
+@if (preferences.experienceMode() === 'practitioner') {
+  <header class="yantra-appbar">
+    <button class="yantra-profile" type="button" aria-label="Switch profile" (click)="profileSwitcherOpen.set(true)">
+      <span class="avatar" aria-hidden="true">{{ profileInitial() }}</span>
+      <span class="yantra-who">
+        <b>Namaste, {{ profileName() }}</b>
+        <span><i aria-hidden="true"></i>Practitioner Board</span>
+      </span>
+    </button>
+    <a class="settings-btn" [routerLink]="['/m', 'search']" aria-label="Search SIDDHA">
+      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <circle cx="8.75" cy="8.75" r="5.75"></circle>
+        <path d="m13 13 4 4"></path>
+      </svg>
+    </a>
+  </header>
+} @else {
+  <header class="appbar">
+    <h1 class="screen-title">{{ screenTitle() }}</h1>
+    <button class="profile" type="button" aria-label="Switch profile" (click)="profileSwitcherOpen.set(true)">
+      <span class="avatar" aria-hidden="true">{{ profileInitial() }}</span>
+      <span class="profile-name">{{ profileName() }}</span>
+      <img src="mobile/caret-down.svg" alt="" aria-hidden="true" />
+    </button>
+  </header>
+}
 
 <div class="body" [attr.data-mode]="preferences.experienceMode()">
   @if (loading()) {
@@ -34,12 +52,64 @@
   } @else if (!chart()) {
     <section class="chart-state"><b>No active profile</b><p>Add or select a profile before opening chart workbench.</p><a [routerLink]="['/m','settings','profiles']">Manage profiles</a></section>
   } @else {
+  @if (preferences.experienceMode() === 'practitioner') {
+    <p class="config-line">{{ practitionerConfig() }}</p>
+
+    <section class="period-stack">
+      <p class="eyebrow">ACTIVE PERIOD STACK (DASHA)</p>
+      <div class="period-box">
+        <div class="period-chain">
+          @for (row of dashaChain(); track row.lord + row.short; let last = $last) {
+            <span class="period-pill" [class.is-active]="row.active">
+              {{ row.lord }} <b>{{ row.short }}</b>
+            </span>
+            @if (!last) { <span class="period-sep">›</span> }
+          } @empty {
+            <span class="period-pill is-active">Dasha <b>loading</b></span>
+          }
+        </div>
+        <div class="period-rule"></div>
+        <p class="period-timing">
+          <span class="yantra-mask-icon clock-icon" style="--icon-url: url('/mobile/figma-yantra-clock.svg')" aria-hidden="true"></span>
+          <span>{{ dashaTiming() }}</span>
+        </p>
+      </div>
+    </section>
+
+    <p class="eyebrow">YANTRA · EXPLORE</p>
+    <div class="yantra-grid">
+      @for (tile of yantraTiles(); track tile.title) {
+        <a class="yantra-tile" [attr.data-tone]="tile.tone" [class.is-active]="tile.active" [routerLink]="tile.route">
+          <span class="yantra-icon">
+            <span class="yantra-mask-icon tile-icon" [style.--icon-url]="'url(/mobile/' + tile.icon + '.svg)'" aria-hidden="true"></span>
+          </span>
+          @if (tile.active) { <span class="yantra-dot" aria-hidden="true"></span> }
+          <b>{{ tile.title }}</b>
+          <small>{{ tile.subtitle }}</small>
+        </a>
+      }
+    </div>
+  } @else {
   <!-- Plain language first. The diagram is below, the specialist areas below that. -->
   <section class="signature">
-    <p class="eyebrow">YOUR SIGNATURE</p>
+    <p class="eyebrow">{{ preferences.experienceMode() === 'guided' ? 'YOUR STORY' : preferences.experienceMode() === 'practitioner' ? 'CHART WORKBENCH' : 'YOUR SIGNATURE' }}</p>
     <p class="signature-headline">{{ signature().headline }}</p>
     <p class="signature-detail">{{ signature().detail }}</p>
   </section>
+
+  @if (preferences.experienceMode() === 'guided') {
+    <div class="story-cards" aria-label="Your story highlights">
+      @for (row of guidedStrengths(); track row.label) {
+        <article>
+          <span class="story-icon" aria-hidden="true">
+            <img [src]="row.label === 'How you shine' ? 'mobile/sparkle.svg' : row.label === 'How you feel' ? 'mobile/orb-sm.svg' : 'mobile/pin-accent.svg'" alt="" />
+          </span>
+          <p>{{ row.label }}</p>
+          <b>{{ row.value }}</b>
+        </article>
+      }
+    </div>
+  }
 
   <div class="angles">
     @for (a of angles(); track a.label) {
@@ -80,7 +150,14 @@
     <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
   </button>
 
-  <p class="eyebrow">EXPLORE YOUR CHART</p>
+  <div class="explore-head">
+    <p class="eyebrow">{{ preferences.experienceMode() === 'guided' ? 'EXPLORE YOUR STORY' : 'EXPLORE YOUR CHART' }}</p>
+    @if (preferences.experienceMode() === 'guided') {
+      <button type="button" (click)="advancedOpen.set(!advancedOpen())">
+        {{ advancedOpen() ? 'Hide advanced' : 'Advanced' }}
+      </button>
+    }
+  </div>
   <div class="explore">
     @for (card of visibleExplore(); track card.id) {
       @if (card.route; as route) {
@@ -109,6 +186,7 @@
     <span class="notes-count">{{ noteCount() }} lines</span>
     <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
   </a>
+  }
   }
 </div>
 

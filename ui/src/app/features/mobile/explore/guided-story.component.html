@@ -1,0 +1,44 @@
+<header class="story-appbar">
+  <a class="back" [routerLink]="['/m', 'explore']" aria-label="Back to Explore">
+    <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  </a>
+  <h1>Your Story</h1>
+  <a class="spark" [routerLink]="['/m', 'explore']" aria-label="Explore">
+    <span class="asset-icon" style="--icon-url: url('/mobile/figma-guided-star.svg')" aria-hidden="true"></span>
+  </a>
+</header>
+
+<main class="story-body">
+  @if (loading()) {
+    <section class="story-state"><b>Reading your life map</b><p>Building your story from your saved birth details.</p></section>
+  } @else if (error()) {
+    <section class="story-state error" role="alert"><b>Story could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+  } @else if (!chart()) {
+    <section class="story-state"><b>No active profile</b><p>Add birth details before opening your story.</p><a [routerLink]="['/m','birth-details']">Add birth details</a></section>
+  } @else {
+    <section class="hero">
+      <p>YOUR LIFE MAP</p>
+      <h2>{{ signature().headline }}</h2>
+      <span>{{ signature().detail }}</span>
+    </section>
+
+    <section class="story-cards" aria-label="Your story areas">
+      @for (card of cards(); track card.title) {
+        <article class="story-card" [attr.data-tone]="card.tone">
+          <div class="card-title">
+            <h2>{{ card.title }}</h2>
+            @if (card.badge) {
+              <span class="badge">{{ card.badge }}</span>
+            }
+          </div>
+          <p>{{ card.text }}</p>
+        </article>
+      }
+    </section>
+
+    <a class="full-chart" [routerLink]="['/m','chart']">
+      <span>Explore the full chart behind this</span>
+      <b aria-hidden="true">→</b>
+    </a>
+  }
+</main>

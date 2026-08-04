@@ -241,6 +241,8 @@ export interface DailyGuidancePayload {
   tarabala: { tara: string; count: number; favourable: boolean; note?: string | null };
   chandrabala: { house_from_rashi: number; favourable: boolean; chandrashtama: boolean };
   star_of_day: { nakshatra: string; moon_rashi: string; tithi: string };
+  panchanga_details: { tithi: string; nakshatra: string; yoga: string; karana: string; vara: string };
+  muhurta_windows: { name: string; time: string; kind: 'auspicious' | 'inauspicious' }[];
   do_today: DailyActionRow[];
   avoid_today: DailyActionRow[];
   lucky_signature: {
@@ -270,7 +272,7 @@ export interface DailyGuidancePayload {
     route_domain: string;
     dasha_chain: { level: string; lord: string }[];
     references: { statement: string; source_text_key: string; source_location: string }[];
-    active_gochara: { name: string; planet: string; severity?: string }[];
+    active_gochara: { name: string; planet: string; severity?: string; av_bindus: number | null }[];
   };
   provenance: {
     engine: string;
@@ -1143,6 +1145,21 @@ export interface CompatibilityPayload {
   rows: CompatibilityScoreRow[];
   notes?: string[];
   profiles?: Record<string, unknown>;
+  safety_checks: {
+    manglik: {
+      person1_active: boolean;
+      person1_net_severity: string;
+      person2_active: boolean;
+      person2_net_severity: string;
+      match: boolean;
+      note: string;
+    };
+    gandanta: {
+      person1_active: boolean;
+      person2_active: boolean;
+      clear: boolean;
+    };
+  };
 }
 
 /* ── AI payloads ────────────────────────────────────────────────────── */

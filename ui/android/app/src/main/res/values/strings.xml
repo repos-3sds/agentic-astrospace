@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">AstroSpace</string>
-    <string name="title_activity_main">AstroSpace</string>
+    <string name="app_name">SIDDHA</string>
+    <string name="title_activity_main">SIDDHA</string>
     <string name="package_name">app.astrospace.mobile</string>
     <string name="custom_url_scheme">app.astrospace.mobile</string>
 </resources>

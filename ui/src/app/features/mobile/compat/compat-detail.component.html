@@ -1,0 +1,75 @@
+<a class="mcod-back" [routerLink]="['/m','compat','results']" [queryParams]="{ partner: partnerId() }">
+  <img src="mobile/back.svg" alt="" />
+  <span>Compatibility</span>
+</a>
+
+<main class="mcod-body">
+  @if (loading()) {
+    <section class="mcod-state"><b>Loading detail</b><p>Computing the full Gun Milan breakdown.</p></section>
+  } @else if (error()) {
+    <section class="mcod-state error" role="alert">
+      <b>Compatibility detail could not load</b>
+      <p>{{ error() }}</p>
+      <button type="button" (click)="reload()">Retry</button>
+    </section>
+  } @else if (score(); as s) {
+    <h1 class="mcod-title">Compatibility Detail</h1>
+
+    <div class="mcod-pair">
+      <span class="mcod-avatar">{{ activeName().slice(0, 1) }}</span>
+      <span class="mcod-pair-line"></span>
+      <span class="mcod-avatar alt">{{ partnerName().slice(0, 1) }}</span>
+    </div>
+    <p class="mcod-pair-names">{{ activeName() }} &amp; {{ partnerName() }}</p>
+
+    <section class="mcod-score">
+      <p class="eyebrow">GUN MILAN SCORE</p>
+      <div><strong>{{ s.total }}</strong><span>/ {{ s.max }}</span></div>
+      <p class="verdict">{{ s.verdict }}</p>
+    </section>
+
+    <p class="mcod-eyebrow">EIGHT KOOTAS BREAKDOWN</p>
+    <div class="mcod-koota-table">
+      @for (row of s.rows; track row.label) {
+        <div class="mcod-koota-row">
+          <span class="mcod-koota-label">{{ row.label }}</span>
+          <span class="mcod-koota-score">{{ row.points }}/{{ row.max }}</span>
+          <span class="mcod-koota-status" [attr.data-status]="rowStatus(row)">
+            {{ rowStatus(row) === 'full' ? '✓' : rowStatus(row) === 'caution' ? 'CAUTION' : 'PARTIAL' }}
+          </span>
+        </div>
+      }
+    </div>
+
+    @if (cancellations().length) {
+      <p class="mcod-eyebrow">SPECIAL CANCELLATIONS</p>
+      <div class="mcod-note-list">
+        @for (row of cancellations(); track row.label) {
+          <p class="mcod-note good"><b>{{ row.label }}</b> — {{ row.note }}</p>
+        }
+      </div>
+    }
+
+    <p class="mcod-eyebrow">SAFETY CHECKS</p>
+    <div class="mcod-safety">
+      <div class="mcod-safety-row">
+        <span>Manglik</span>
+        <span class="mcod-safety-badge" [attr.data-ok]="s.safety_checks.manglik.match">
+          {{ s.safety_checks.manglik.match ? 'Match' : 'Review' }}
+        </span>
+      </div>
+      <p class="mcod-note">{{ s.safety_checks.manglik.note }}</p>
+      <div class="mcod-safety-row">
+        <span>Gandanta / Grahan Checks</span>
+        <span class="mcod-safety-badge" [attr.data-ok]="s.safety_checks.gandanta.clear">
+          {{ s.safety_checks.gandanta.clear ? 'Clear' : 'Review' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="mcod-actions">
+      <button type="button" class="ghost" disabled title="Not yet available">Compare D1/D9</button>
+      <a class="ink" [routerLink]="['/m', 'ask']" [queryParams]="{ q: askNarrativeQuery() }">Gen AI Narrative</a>
+    </div>
+  }
+</main>

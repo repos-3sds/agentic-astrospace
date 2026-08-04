@@ -1,5 +1,8 @@
 # Gocharam Engine and Interpretation Checklist
 
+**Status:** canonical, living tracker for Gocharam engine/product work — check
+items off as they land, do not fork a duplicate audit document for this area.
+
 ## Goal
 
 Deliver one deterministic South Indian Gocharam system that calculates once, explains the result by life domain, and supplies the same evidence to Gocharam, Transits, Calendar, Dashas, Dashboard, CE, and Ask AI.
@@ -26,8 +29,8 @@ Acceptance criteria:
 - [x] `VedicChart.transit_context()` consumes the canonical planet and Sade Sati result.
 - [x] Daily CE imports canonical `gochara_rules`.
 - [x] Calendar and Transits reuse the canonical profile.
-- [ ] Remove deprecated private duplicate helpers from `vedic/transits.py` after downstream compatibility monitoring.
-- [ ] Add a runtime deprecation warning if an external caller uses a removed private helper.
+- [x] Remove deprecated private duplicate helpers from `vedic/transits.py` after downstream compatibility monitoring. (2026-07-29: confirmed no external callers via repo-wide grep, then deleted; `transit_analysis()` now reuses the canonical profile's `ashtakavarga_transit`/`rules` directly instead of recomputing, which also fixed a bug where the recompute silently dropped `av_context.kakshya`.)
+- [ ] Add a runtime deprecation warning if an external caller uses a removed private helper. (Not needed: no external caller of the removed helpers was ever found, so there was nothing to deprecate-and-warn — removed outright instead.)
 
 ### US-GOC-002 - Versioned result contract
 
@@ -77,9 +80,9 @@ Acceptance criteria:
 Acceptance criteria:
 
 - [x] Current retrograde state is included in planet evidence and prose.
-- [ ] Calculate exact direct/retrograde station timestamps.
-- [ ] Group first entry, retrograde return, and final exit into one multi-pass transit cycle.
-- [ ] Show each pass and its exact date range in the UI.
+- [ ] Calculate exact direct/retrograde station timestamps. (Multi-pass windows are now day-refined by re-testing rule activation, not by finding the station itself — a real station timestamp is still a separate, unaddressed calculation.)
+- [x] Group first entry, retrograde return, and final exit into one multi-pass transit cycle. (2026-07-29, US-GOC-025: `gocharam/timeline.py` `_rule_active_runs`/`_label_passes` scan a wide horizon around Saturn's long-cycle rules and label every run; verified against a real historical crossing — Saturn's 2022 Aquarius entry, retrograde return to Capricorn, and final 2023 re-entry.)
+- [ ] Show each pass and its exact date range in the UI. (Backend `passes[]` and the `GocharaPass` model exist; a dedicated per-pass UI list is not yet built — today's UI additions cover Sade Sati active/phase status, not the individual passes.)
 
 ### US-GOC-007 - Dasha alignment
 
@@ -117,7 +120,7 @@ Acceptance criteria:
 - [x] All nine transit planets receive an explanatory reading.
 - [x] Each reading identifies sign, Moon house, Lagna house, classical status, AV evidence where available, retrograde state, and active named rules.
 - [ ] Add planet-sign nuance only after source-backed content review.
-- [ ] Add exact natal house lordship and transit aspects to planet readings.
+- [ ] Add exact natal house lordship and transit aspects to planet readings. (Partially done, 2026-07-29: `special_aspect_houses` now computes and states each planet's classical drishti houses in every baseline reading — US-GOC-017/018. Natal house lordship is still not addressed.)
 
 ### US-GOC-010 - Contradiction handling
 
@@ -139,7 +142,7 @@ Acceptance criteria:
 - [x] Calculation evidence retains classical versus convention-dependent status.
 - [x] Store interpretation clauses as versioned KB records with source and claim status.
 - [x] Rahu/Ketu treatment is explicitly labelled as a configured convention rather than attributed to Phaladeepika.
-- [ ] Require reviewer, source reference, language, status, and effective version before publication.
+- [ ] Require reviewer, source reference, language, status, and effective version before publication. (Groundwork laid 2026-07-29, US-GOC-019: the KB now carries `content_status: "ai_authored_pending_astrologer_review"` so a review gate has something to key off, but no actual review workflow exists yet.)
 - [ ] Add admin preview, diff, approval, rollback, and audit log for Gocharam content.
 
 ## Epic 4: Timing and Validation
@@ -191,7 +194,7 @@ Acceptance criteria:
 - [x] Dasha transit context uses canonical planet snapshots and Sade Sati.
 - [x] CE and Daily guidance consume canonical rules.
 - [x] Native Gochara and Full Transits screens consume the live versioned Gocharam profile.
-- [x] Native copy adapts to Guided, Balanced, and Practitioner presentation modes.
+- [x] Native copy adapts to Guided, Balanced, and Practitioner presentation modes. (Corrected 2026-07-29, US-GOC-028: this was only true for the Gochara screen — Full Transits hardcoded `balanced_context`/`practitioner_deep_dive` for every mode. Both screens now select copy via `PreferencesService.experienceMode()`.)
 - [ ] Dashboard consumes a compact canonical domain projection.
 - [ ] Ask AI cites canonical evidence IDs and content sources.
 
@@ -207,9 +210,108 @@ Acceptance criteria:
 - [x] Compatibility entry point is tested against the canonical engine.
 - [x] Exhaustive test proves exactly one baseline record for every planet-house pair.
 - [x] Live API verification asserts nine placement matches and evidence-bearing modifiers.
-- [ ] Add golden charts approved by an astrologer.
-- [ ] Add exact station/ingress fixtures and timezone boundary cases.
+- [ ] Add golden charts approved by an astrologer. (Still pending the user's own JHora-verified reference chart — see memory note `vedic-engine-validation`.)
+- [ ] Add exact station/ingress fixtures and timezone boundary cases. (Partially done, 2026-07-29: `test_saturn_multi_pass_detects_2022_capricorn_retrograde_return` is a real ephemeris-verified retrograde re-entry fixture, but exact station timestamps and timezone boundary cases are still not covered.)
 - [ ] Add performance budgets and persisted daily cache.
+
+## Epic 7: Deep, Sourced Content (2026-07-29 revamp)
+
+A full read of `rich_gocharam_content.json` found only 14 of 108 baseline
+placements were genuinely authored (Jupiter's and Saturn's named-effect
+houses); the other 94 (all of Sun/Moon/Mars/Mercury/Venus/Rahu/Ketu) were
+interchangeable mad-libs sentences, including an "1th/2th/3th house" ordinal
+bug. This epic replaced the generator rather than patching the string bug.
+
+### US-GOC-017 - Compute real evidence instead of hand-typing prose
+
+- [x] `transit_dignity` added via the existing, already-cited `strength.dignity_of()`.
+- [x] `special_aspect_houses` computed from BPHS ch.3 graha-drishti offsets, correct for all 9 planets (tested).
+- [x] Both fields are additive; no existing evidence field changed shape.
+
+### US-GOC-018 - Replace the 94 template placements with real per-planet content
+
+- [x] `build_content_kb.py` generator composes house theme + one authored per-planet voice paragraph + the computed aspect sentence + a named-effect blurb where genuinely established.
+- [x] No two placements share template-identical `practitioner_deep_dive` text (guardrail test).
+- [x] Ordinal numbers use a real `ordinal()` helper; the "1th/2th/3th house" bug is fixed at the source.
+- [x] All 108 entries regenerated; Mars hand-verified entry by entry against the computed aspect houses.
+
+### US-GOC-019 - Don't fabricate classical citations - label honestly instead
+
+- [x] Favourable/Vedha fields keep `source_status: "classical_table"`, unchanged.
+- [x] New computed sentences cite `bphs_3_drishti_and_dignity` as a distinct, honest source entry.
+- [x] Named effects limited to the genuinely well-established set (Sade Sati, Ashtama Shani, Ardhashtama/Kantaka Shani, Ashtama Guru) — nothing invented.
+- [x] KB carries `content_status: "ai_authored_pending_astrologer_review"`.
+
+### US-GOC-020 - Deepen the six life-domain projections
+
+- [x] Each domain's `action` block expanded to real practical guidance.
+- [x] Each domain's `rationale` states the classical reasoning for its house set.
+- [x] No combinatorial per-placement-per-domain content was authored; domains still compose from the (now richer) per-placement content.
+
+### US-GOC-021 - Guardrail tests exist before content is regenerated
+
+- [x] Ordinal-format, template-duplicate, aspect-fact, and content-status tests added; confirmed failing red against the pre-revamp library before the generator was changed.
+
+## Epic 8: Engine Correctness (2026-07-29)
+
+### US-GOC-022 - Remove dead and duplicate transit code
+
+- [x] Unreachable code after the early return in `transits.py`'s `gochara_rules()`, and the dead `transit_planet_details`/`classical_gochara`/`gochara_rule_timeline`, removed.
+- [x] `transit_analysis()` reuses the canonical `ashtakavarga_transit`/`rules` instead of recomputing.
+- [x] Regression test confirms `/gocharam` and `/transits` report identical `av_context` (including `kakshya`).
+
+### US-GOC-023 - One name per classical event across subsystems
+
+- [x] "Kantaka Shani / Dhaiya" and "Ardhashtama Shani" unified as "Ardhashtama Shani (Kantaka Shani)" in both `rules.py` and the content KB; tested.
+
+### US-GOC-024 - Symmetric severity, using the new signals
+
+- [x] `_effective_severity()` now escalates challenging rules under weak BAV (previously only ever softened).
+- [x] `kakshya.bindu_given` and `transit_dignity` added as further severity inputs.
+- [x] Existing AV-threshold tests still pass; new tests cover escalation and the two new inputs.
+
+### US-GOC-025 - Sade Sati and Saturn-cycle timing survives retrograde
+
+- [x] Saturn-anchored rules scan a wide horizon and detect every active run, not just the one touching `as_of`.
+- [x] Each run labelled `first_entry` / `retrograde_return` / `final_exit` (or the open-horizon variants).
+- [x] Aggregate `start_date`/`end_date` kept; new `passes[]` array added per active window.
+- [x] Verified against a real, ephemeris-confirmed event: Saturn's 2022 Aquarius entry, retrograde return to Capricorn, and final 2023 re-entry.
+
+## Epic 9: Frontend Parity (2026-07-29)
+
+### US-GOC-026/027 - Web surfaces classical Vedha, Ashtakavarga, and fixes null-safety
+
+- [x] `classical_gochara` and `gochara.ashtakavarga` typed and rendered on the web Gocharam tab (previously absent).
+- [x] `interpretation.*` template access aligned with the component's own optional chaining.
+- [x] `evidence_ids` resolved against `evidence[]` instead of printed as raw IDs.
+- [x] `synthesis.guided_summary`/`practitioner_deep_dive` surfaced.
+- [x] Sade Sati status card added.
+- [x] Stray tracked `gocharam-tab.component 2.html` deleted.
+- [x] Verified via a clean `ng build --configuration production` (both changed lazy chunks compiled); full authenticated visual check was not possible in this session (see PR/session notes).
+
+### US-GOC-028/029 - Mobile respects presentation mode; surfaces Sade Sati, Vedha, Ashtakavarga
+
+- [x] `full-transits.component.ts` now selects `guided_summary`/`balanced_context`/`practitioner_deep_dive` by `PreferencesService.experienceMode()` — previously hardcoded regardless of mode (the highest-priority mobile fix from the audit).
+- [x] `classical_gochara`/`gochara.ashtakavarga` typed and rendered, replacing the untyped `modifiers[].evidence` grab-bag.
+- [x] Dedicated Sade Sati status card added.
+- [x] Unguarded `payload.gochara.planets[rule.planet].sign` lookup fixed to match `gochara.component.ts`'s existing guard.
+- [x] Verified via a clean `ng build --configuration production` (both changed lazy chunks compiled).
+
+### US-GOC-030 - Repo hygiene
+
+- [x] Stray tracked `gocharam-tab.component 2.html`, untracked `calendar.component 2.ts`, and untracked `gocharam/timeline 2.py` (a stale pre-edit snapshot of the exact file being revamped) all removed.
+
+## Epic 10: Testing & Documentation (2026-07-29)
+
+### US-GOC-031 - Automated coverage for both apps' Gocharam screens
+
+- [x] Playwright coverage for web Gocharam tab and mobile Gochara/Full Transits screens (`ui/e2e/gocharam-screens.spec.ts`, previously none existed).
+- [x] Mode-switch regression guard on mobile (guided vs. practitioner, each in its own fresh page context to avoid an `addInitScript`-reapplies-on-reload footgun).
+
+### US-GOC-032 - Documentation reflects reality
+
+- [x] This file now declares its status in the first three lines.
+- [x] Checkboxes above (US-GOC-001 through US-GOC-016) updated to reflect what Epics 7-9 completed.
 
 ## External Review Inputs Needed
 

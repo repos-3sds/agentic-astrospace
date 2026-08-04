@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  Privacy manifest for AstroSpace.
+  Privacy manifest for SIDDHA.
 
   NSPrivacyAccessedAPITypes is deliberately EMPTY. A security audit predicted a
   UserDefaults (CA92.1) declaration would be needed via Capacitor, but this

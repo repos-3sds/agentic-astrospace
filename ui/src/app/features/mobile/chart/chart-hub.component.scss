@@ -2,6 +2,22 @@
 
 :host { display: block; }
 
+:host:has(.yantra-appbar) {
+  --yantra-bg: var(--m-bg);
+  --yantra-surface: var(--m-surface);
+  --yantra-raised: var(--m-raised);
+  --yantra-border: var(--m-border);
+  --yantra-border-strong: var(--m-border-strong);
+  --yantra-text: var(--m-text);
+  --yantra-muted: var(--m-muted);
+  --yantra-red: var(--m-accent);
+  --yantra-red-dark: var(--m-accent-strong);
+  --yantra-red-soft: var(--m-accent-soft);
+  --yantra-green: var(--m-good);
+  --yantra-amber: var(--m-gold);
+  background: var(--yantra-bg);
+}
+
 /* App bar — node 35:58 */
 .appbar {
   display: flex;
@@ -12,6 +28,74 @@
 }
 
 .screen-title { @include m-title; color: var(--m-text); margin: 0; }
+
+.yantra-appbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px 8px;
+  background: var(--yantra-bg);
+}
+
+.yantra-profile {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+
+.yantra-who {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+  b { @include m-body-strong; color: var(--yantra-text); }
+  span {
+    @include m-caption;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--yantra-muted);
+  }
+  i {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--yantra-red);
+  }
+}
+
+.settings-btn {
+  color: var(--yantra-text);
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--yantra-border);
+  border-radius: 999px;
+  background: var(--yantra-surface);
+  svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    display: block;
+  }
+}
+
+.yantra-mask-icon {
+  display: block;
+  background: currentColor;
+  mask: var(--icon-url) center / contain no-repeat;
+  -webkit-mask: var(--icon-url) center / contain no-repeat;
+}
 
 .profile {
   display: flex;
@@ -49,6 +133,11 @@
   flex-direction: column;
   gap: 16px;
   padding: 6px 20px 20px;
+}
+
+.body[data-mode='practitioner'] {
+  min-height: calc(100dvh - var(--m-tabbar-total, 96px));
+  background: var(--yantra-bg);
 }
 
 .chart-state {
@@ -105,6 +194,156 @@
 
 .signature-headline { @include m-h2; color: var(--m-text); margin: 0; }
 .signature-detail { @include m-body-small; color: var(--m-muted); margin: 0; }
+
+.config-line {
+  @include m-caption;
+  margin: -4px 0 0;
+  color: var(--yantra-muted);
+}
+
+.period-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.period-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--yantra-border);
+  border-radius: 16px;
+  background: var(--yantra-surface);
+}
+
+.period-chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.period-pill {
+  @include m-caption;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: var(--yantra-red-dark);
+  background: var(--yantra-red-soft);
+  b { font-weight: 700; }
+  &.is-active {
+    color: #fff8ec;
+    background: var(--yantra-red);
+  }
+}
+
+.period-sep { @include m-caption; color: var(--yantra-muted); }
+.period-rule { height: 1px; background: var(--yantra-border); }
+.period-timing {
+  @include m-caption;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--yantra-muted);
+}
+
+.settings-icon { width: 18px; height: 18px; }
+.clock-icon { width: 12px; height: 12px; flex: 0 0 auto; }
+
+.yantra-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.yantra-tile {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 96px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 14px;
+  border: 1px solid var(--yantra-border);
+  border-radius: 16px;
+  background: var(--yantra-surface);
+  box-shadow: var(--m-shadow-card);
+  color: var(--yantra-text);
+  text-decoration: none;
+}
+
+.yantra-tile.is-active { border-color: var(--yantra-border-strong); }
+.yantra-icon {
+  color: var(--yantra-muted);
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--yantra-raised);
+}
+.yantra-tile.is-active .yantra-icon {
+  color: var(--yantra-red);
+  background: var(--yantra-red-soft);
+}
+.tile-icon { width: 16px; height: 16px; }
+.yantra-dot {
+  position: absolute;
+  top: 23px;
+  right: 14px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--yantra-red);
+}
+.yantra-tile b { @include m-body-strong; margin-top: auto; color: var(--yantra-text); }
+.yantra-tile small {
+  @include m-caption;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--yantra-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.yantra-tile[data-tone='accent'] small { color: var(--yantra-red-dark); }
+.yantra-tile[data-tone='good'] small { color: var(--yantra-green); }
+.yantra-tile[data-tone='warn'] small { color: var(--yantra-amber); }
+
+.story-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.story-cards article {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 10px;
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+  background: var(--m-raised);
+}
+
+.story-icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--m-accent-soft);
+  img { width: 17px; height: 17px; display: block; }
+}
+
+.story-cards p { @include m-caption; margin: 0; color: var(--m-muted); }
+.story-cards b { @include m-body-strong; color: var(--m-text); }
 
 /* Sun / Moon / Ascendant — node 35:67 */
 .angles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
@@ -168,6 +407,71 @@
   img { width: 17px; height: 17px; display: block; }
 }
 
+.workbench {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid var(--m-border);
+  border-radius: 20px;
+  background: var(--m-raised);
+}
+
+.workbench-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  h2 { @include m-h2; margin: 3px 0 0; color: var(--m-text); }
+  > span { @include m-caption; color: var(--m-muted); }
+}
+
+.style-switch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.style-switch button {
+  display: flex;
+  min-width: 0;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--m-border);
+  border-radius: 14px;
+  color: var(--m-muted);
+  background: var(--m-surface);
+  @include m-caption;
+  img { width: 18px; height: 18px; display: block; }
+  &.is-on {
+    border-color: color-mix(in srgb, var(--m-accent) 45%, var(--m-border));
+    color: var(--m-accent-strong);
+    background: var(--m-accent-soft);
+  }
+}
+
+.tool-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.tool-strip a {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 8px;
+  border-radius: 14px;
+  background: var(--m-surface);
+  text-align: center;
+  text-decoration: none;
+  b { @include m-body-strong; color: var(--m-text); }
+  span { @include m-caption; color: var(--m-muted); }
+}
+
 /* Provenance row — node 35:109 */
 .provenance,
 .notes {
@@ -195,6 +499,23 @@
 
 /* Explore grid — node 35:117. Two equal columns rather than the design's fixed
    167px, for the same reason as Muhurta's goal cards: 167 is what fits 393. */
+.explore-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.explore-head button {
+  @include m-caption;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--m-border);
+  border-radius: 999px;
+  color: var(--m-accent-strong);
+  background: var(--m-accent-soft);
+}
+
 .explore {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

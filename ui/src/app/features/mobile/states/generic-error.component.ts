@@ -11,7 +11,7 @@ import { PreferencesService } from '../../../core/preferences.service';
 })
 export class GenericErrorComponent {
   private readonly preferences = inject(PreferencesService);
-  readonly message = input('We couldn’t reach AstroSpace — check your connection and try again.');
+  readonly message = input('We couldn’t reach the guidance service — check your connection and try again.');
   readonly technicalDetail = input('');
   readonly retried = output<void>();
   protected readonly title = computed(() =>

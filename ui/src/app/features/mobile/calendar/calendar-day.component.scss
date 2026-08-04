@@ -4,6 +4,7 @@
 .mcald-body { display: flex; flex-direction: column; gap: 14px; padding: 4px 20px 16px; }
 header { h1 { @include m-h1; margin: 0 0 3px; color: var(--m-text); } p { @include m-body-small; margin: 0; color: var(--m-muted); } }
 .mcald-state { display: flex; flex-direction: column; gap: 8px; padding: 18px; border: 1px solid var(--m-border); border-radius: 20px; background: var(--m-surface); box-shadow: var(--m-shadow-card); b { @include m-body-strong; } p { @include m-body-small; margin: 0; color: var(--m-muted); } button { @include m-button; align-self: flex-start; min-height: 42px; padding: 0 18px; border: 0; border-radius: 999px; color: var(--m-on-ink); background: var(--m-ink); } &.error { border-color: color-mix(in srgb, var(--m-bad) 45%, var(--m-border)); } }
+.mcald-stale { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--m-gold) 34%, var(--m-border)); border-radius: 16px; background: var(--m-gold-soft); b { @include m-body-strong; color: var(--m-text); white-space: nowrap; } p { @include m-caption; flex: 1 1 0; min-width: 0; margin: 0; color: var(--m-muted); } button { @include m-caption; min-height: 34px; padding: 0 12px; border: 1px solid color-mix(in srgb, var(--m-gold) 38%, var(--m-border)); border-radius: 999px; color: var(--m-gold); background: var(--m-surface); } }
 .mcald-quality { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 18px; background: var(--m-good-soft); }
 .mcald-quality.bad { background: var(--m-gold-soft); }
 .mcald-quality > span { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--m-surface); img { width: 19px; height: 19px; } }
@@ -15,6 +16,13 @@ header { h1 { @include m-h1; margin: 0 0 3px; color: var(--m-text); } p { @inclu
 .mcald-list span { display: flex; flex: 1; flex-direction: column; b { @include m-body-strong; } small { @include m-caption; color: var(--m-muted); } }
 .mcald-list em { @include m-caption; padding: 3px 9px; border-radius: 999px; color: var(--m-good); background: var(--m-good-soft); font-size: 10.5px; font-style: normal; }
 .mcald-list .bad { i { background: var(--m-bad); } em { color: var(--m-bad); background: var(--m-bad-soft); } }
+.mcald-guided { display: flex; flex-direction: column; gap: 10px; }
+.mcald-guided article, .mcald-guided a { display: flex; align-items: center; gap: 12px; padding: 13px 14px; border: 1px solid var(--m-border); border-radius: 17px; background: var(--m-raised); color: var(--m-text); text-decoration: none; }
+.mcald-guided article img { width: 20px; height: 20px; flex: 0 0 auto; }
+.mcald-guided article span { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mcald-guided small { @include m-caption; color: var(--m-muted); }
+.mcald-guided b { @include m-body-strong; }
+.mcald-guided a { @include m-body-strong; justify-content: space-between; background: var(--m-accent-soft); color: var(--m-accent-strong); img { width: 16px; height: 16px; } }
 .mcald-choghadiya { display: flex; flex-wrap: wrap; gap: 8px; }
 .mcald-choghadiya article { display: flex; flex-direction: column; gap: 2px; padding: 9px 12px; border-radius: 14px; background: var(--m-good-soft); b { font-size: 12.5px; color: var(--m-good); } small { font-size: 10px; color: var(--m-muted); } &[data-tone='bad'] { background: var(--m-bad-soft); b { color: var(--m-bad); } } &[data-tone='warn'] { background: var(--m-gold-soft); b { color: var(--m-gold); } } }
 .mcald-stack > div { display: flex; flex-direction: column; gap: 4px; padding: 12px 15px; border-bottom: 1px solid var(--m-border); &:last-child { border: 0; } small { @include m-caption; color: var(--m-muted); text-transform: uppercase; } b { @include m-body-strong; } p { @include m-body-small; margin: 0; color: var(--m-muted); } }

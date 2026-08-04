@@ -5,7 +5,7 @@ import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.c
 import { ProvenanceSheetComponent } from './provenance-sheet.component';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
-import { VedicAll } from '../../../core/models';
+import { DashaPayload, VedicAll } from '../../../core/models';
 import { VedicService } from '../../../core/vedic.service';
 import { buildChartAdapter } from './mobile-chart-data';
 
@@ -53,11 +53,12 @@ export class ChartHubComponent {
   private readonly vedic = inject(VedicService);
   protected readonly preferences = inject(PreferencesService);
   protected readonly chart = signal<VedicAll | null>(null);
+  protected readonly dashas = signal<DashaPayload | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly screenTitle = computed(() =>
     this.preferences.experienceMode() === 'guided' ? 'Your Story'
-      : this.preferences.experienceMode() === 'practitioner' ? 'Chart Workbench'
+      : this.preferences.experienceMode() === 'practitioner' ? 'Yantra'
       : 'Your Chart',
   );
   readonly profileName = computed(() => this.kundlis.active()?.name ?? 'Choose profile');
@@ -153,12 +154,82 @@ export class ChartHubComponent {
   ]);
 
   readonly noteCount = signal(0);
+  readonly advancedOpen = signal(false);
+  readonly guidedCoreIds = ['varga', 'yoga', 'transit', 'compat', 'readings'];
+  readonly guidedAdvancedIds = ['varga', 'dasha', 'strength', 'reference'];
   protected readonly visibleExplore = computed(() => {
     const cards = this.explore();
     if (this.preferences.experienceMode() === 'guided') {
-      return cards.filter((card) => ['yoga', 'transit', 'compat', 'readings'].includes(card.id));
+      const allowed = this.advancedOpen()
+        ? [...this.guidedCoreIds, ...this.guidedAdvancedIds]
+        : this.guidedCoreIds;
+      return cards.filter((card) => allowed.includes(card.id));
     }
     return cards;
+  });
+
+  protected readonly guidedStrengths = computed(() => {
+    const angles = this.angles();
+    const sun = angles.find((item) => item.label === 'SUN')?.sign ?? 'your Sun';
+    const moon = angles.find((item) => item.label === 'MOON')?.sign ?? 'your Moon';
+    const asc = angles.find((item) => item.label === 'ASCENDANT')?.sign ?? 'your rising sign';
+    return [
+      { label: 'How you shine', value: `${sun} Sun` },
+      { label: 'How you feel', value: `${moon} Moon` },
+      { label: 'How life meets you', value: `${asc} rising` },
+    ];
+  });
+
+  protected readonly practitionerConfig = computed(() => {
+    const chart = this.chart();
+    return [
+      chart?.meta?.ayanamsha?.name ?? 'Lahiri',
+      `${this.preferences.nodeType() === 'true' ? 'True' : 'Mean'} Node`,
+      chart?.provenance?.house_system ?? 'Whole-Sign',
+      chart?.provenance?.timezone ?? chart?.meta?.place ?? 'Local time',
+    ].join(' · ');
+  });
+
+  protected readonly dashaChain = computed(() => {
+    const current = this.dashaData()?.current;
+    return [
+      { lord: current?.mahadasha?.lord, short: 'Mahā', active: false },
+      { lord: current?.antardasha?.lord, short: 'Antar', active: false },
+      { lord: current?.pratyantardasha?.lord, short: 'Prat', active: true },
+      { lord: current?.sookshmadasha?.lord, short: 'Sookshma', active: false },
+    ]
+      .filter((row): row is { lord: string; short: string; active: boolean } => !!row.lord)
+      .map((row) => ({ ...row, lord: this.shortLord(row.lord) }));
+  });
+
+  protected readonly dashaTiming = computed(() => {
+    const current = this.dashaData()?.current;
+    const pratyantar = current?.pratyantardasha;
+    if (pratyantar?.end) return `${pratyantar.lord} Pratyantardasha until ${this.monthYear(pratyantar.end)}`;
+    const antar = current?.antardasha;
+    if (antar?.end) return `${antar.lord} Antardasha until ${this.monthYear(antar.end)}`;
+    return 'Active period stack from Vimshottari dasha';
+  });
+
+  protected readonly yantraTiles = computed(() => {
+    const ascendant = this.angles().find((item) => item.label === 'ASCENDANT')?.sign ?? 'chart ready';
+    const shadbala = this.chart()?.shadbala;
+    const strongest = shadbala?.classical?.ranking?.[0];
+    return [
+      { title: 'Charts', subtitle: `D1 · ${ascendant} Asc`, tone: 'accent', icon: 'figma-yantra-compass', route: ['/m', 'chart', 'full'], active: true },
+      { title: 'Vargas', subtitle: 'D1-D60 divisional charts', tone: 'accent', icon: 'figma-yantra-grid', route: ['/m', 'chart', 'vargas'] },
+      { title: 'Strength', subtitle: strongest ? `${strongest.planet} strongest` : 'Shadbala · AV', tone: 'good', icon: 'figma-yantra-activity', route: ['/m', 'chart', 'strength'] },
+      { title: 'Yogas', subtitle: 'Strengths & cancellations', tone: 'warn', icon: 'figma-yantra-git-commit', route: ['/m', 'chart', 'yogas'] },
+      { title: 'Ashtakavarga', subtitle: 'SAV · BAV points', tone: 'muted', icon: 'figma-yantra-grid', route: ['/m', 'chart', 'reference', 'ashtakavarga'] },
+      { title: 'Jaimini', subtitle: 'AK · AmK · padas', tone: 'muted', icon: 'figma-yantra-award', route: ['/m', 'chart', 'strength'] },
+      { title: 'Reference', subtitle: 'Avkahada · Ghatak · Fav', tone: 'muted', icon: 'figma-yantra-book-open', route: ['/m', 'chart', 'reference'] },
+      { title: 'Compatibility', subtitle: 'Gun Milan matching', tone: 'muted', icon: 'figma-yantra-users', route: ['/m', 'compat'] },
+      { title: 'Ask', subtitle: 'Recent threads', tone: 'muted', icon: 'figma-yantra-message-square', route: ['/m', 'ask'] },
+      { title: 'Readings', subtitle: 'Latest predictions', tone: 'muted', icon: 'figma-yantra-file-text', route: ['/m', 'readings'] },
+      { title: 'Notes', subtitle: `${this.noteCount()} notes`, tone: 'muted', icon: 'figma-yantra-edit-3', route: ['/m', 'notes'] },
+      { title: 'Remedies', subtitle: 'Active practices', tone: 'good', icon: 'figma-yantra-sun', route: ['/m', 'remedies'] },
+      { title: 'Muhurta', subtitle: 'Next windows', tone: 'warn', icon: 'figma-yantra-calendar', route: ['/m', 'muhurta'] },
+    ];
   });
 
   /** The provenance sheet (36:247), shared with the full render. */
@@ -185,6 +256,7 @@ export class ChartHubComponent {
       if (expectedActiveId && activeId !== expectedActiveId) return;
       if (!activeId) {
         this.chart.set(null);
+        this.dashas.set(null);
         this.renderedChartId = null;
         this.loading.set(false);
         return;
@@ -192,17 +264,43 @@ export class ChartHubComponent {
       const cached = this.vedic.cachedAll(activeId);
       if (cached) {
         this.chart.set(cached);
+        await this.loadDashas(activeId);
         this.renderedChartId = activeId;
         this.loading.set(false);
         return;
       }
       if (this.renderedChartId !== activeId) this.loading.set(true);
       this.chart.set(await this.vedic.all(activeId));
+      await this.loadDashas(activeId);
       this.renderedChartId = activeId;
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {
       this.loading.set(false);
     }
+  }
+
+  private dashaData(): DashaPayload | null {
+    return this.dashas() ?? this.chart()?.dashas ?? null;
+  }
+
+  private async loadDashas(activeId: string): Promise<void> {
+    if (this.preferences.experienceMode() !== 'practitioner') return;
+    try {
+      this.dashas.set(await this.vedic.dashas(activeId));
+    } catch {
+      this.dashas.set(this.chart()?.dashas ?? null);
+    }
+  }
+
+  private shortLord(lord: string): string {
+    const map: Record<string, string> = { Jupiter: 'Jup', Mercury: 'Merc', Venus: 'Ven', Saturn: 'Sat' };
+    return map[lord] ?? lord;
+  }
+
+  private monthYear(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   }
 }

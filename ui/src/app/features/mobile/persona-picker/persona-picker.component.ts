@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, input, model } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, model } from '@angular/core';
+import { HapticsService } from '../../../core/haptics.service';
 
 /** How much depth a reader wants. Drives disclosure, never content. */
 export type PersonaId = 'guided' | 'balanced' | 'practitioner';
@@ -43,7 +44,7 @@ export interface PersonaOption {
           role="radio"
           [class.is-on]="o.id === persona()"
           [attr.aria-checked]="o.id === persona()"
-          (click)="persona.set(o.id)"
+          (click)="choosePersona(o.id)"
         >
           <span class="option-icon">
             <img [src]="'mobile/' + o.icon + '.svg'" alt="" aria-hidden="true" />
@@ -76,7 +77,7 @@ export interface PersonaOption {
           role="radio"
           [class.is-on]="t.id === tone()"
           [attr.aria-checked]="t.id === tone()"
-          (click)="tone.set(t.id)"
+          (click)="chooseTone(t.id)"
         >{{ t.label }}</button>
       }
     </div>
@@ -95,4 +96,21 @@ export class PersonaPickerComponent {
     { id: 'gentle', label: 'Be gentle' },
     { id: 'direct', label: 'Be direct' },
   ];
+
+  private readonly haptics = inject(HapticsService);
+
+  // Only buzz when the value actually changes. Re-tapping the selected option
+  // is a no-op, and a confirmation for "nothing happened" teaches the reader
+  // that the feedback means nothing.
+  protected choosePersona(id: PersonaId): void {
+    if (id === this.persona()) return;
+    this.persona.set(id);
+    this.haptics.select();
+  }
+
+  protected chooseTone(id: ToneId): void {
+    if (id === this.tone()) return;
+    this.tone.set(id);
+    this.haptics.select();
+  }
 }

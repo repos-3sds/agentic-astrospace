@@ -10,7 +10,9 @@
 
 svg { display: block; }
 
-.track { stroke: #e6dccd; }
+// Hardcoded #e6dccd was the light theme's --m-border, so the unfilled part of
+// the ring stayed pale cream in dark mode — brighter than the score it frames.
+.track { stroke: var(--m-border); }
 
 // Colour follows the verdict band rather than being fixed green, so a hard day
 // does not render in a reassuring colour.

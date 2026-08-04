@@ -1,0 +1,219 @@
+@use '../mobile-tokens' as *;
+
+:host {
+  display: block;
+  min-height: 100%;
+  background: var(--m-bg);
+  color: var(--m-text);
+}
+
+.story-appbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 24px 14px;
+  color: var(--m-text);
+
+  h1 {
+    @include m-hero;
+    flex: 1 1 auto;
+    margin: 0;
+    color: var(--m-text);
+  }
+}
+
+.back,
+.spark {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--m-border) 86%, var(--m-accent) 14%);
+  border-radius: 999px;
+  color: var(--m-accent-strong);
+  background: var(--m-raised);
+  text-decoration: none;
+}
+
+.back {
+  color: var(--m-text);
+  border-color: var(--m-border);
+
+  img {
+    width: 17px;
+    height: 17px;
+    filter: var(--m-back-icon-filter);
+  }
+}
+
+.asset-icon {
+  display: block;
+  width: 22px;
+  height: 22px;
+  background: currentColor;
+  mask: var(--icon-url) center / contain no-repeat;
+  -webkit-mask: var(--icon-url) center / contain no-repeat;
+}
+
+.story-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 14px 24px 28px;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 26px 22px 28px;
+  border-radius: 26px;
+  background: color-mix(in srgb, var(--m-accent-soft) 70%, var(--m-raised) 30%);
+
+  p {
+    @include m-eyebrow;
+    margin: 0;
+    color: var(--m-accent);
+  }
+
+  h2 {
+    font-weight: 700;
+    font-size: 25px;
+    line-height: 1.22;
+    margin: 0;
+    color: var(--m-text);
+  }
+
+  span {
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--m-muted);
+  }
+}
+
+.story-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.story-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 116px;
+  padding: 22px 22px 22px 28px;
+  border: 1px solid var(--m-border);
+  border-radius: 15px;
+  background: var(--m-raised);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 5px;
+    background: var(--m-good);
+  }
+
+  &[data-tone='watch']::before { background: var(--m-gold); }
+
+  p {
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.45;
+    color: var(--m-muted);
+  }
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  h2 {
+    @include m-h2;
+    margin: 0;
+    color: var(--m-text);
+  }
+}
+
+.badge {
+  @include m-caption;
+  flex: 0 0 auto;
+  padding: 4px 9px;
+  border-radius: 7px;
+  color: var(--m-accent);
+  background: color-mix(in srgb, var(--m-accent-soft) 72%, var(--m-raised) 28%);
+}
+
+.story-card[data-tone='watch'] .badge {
+  color: var(--m-warn);
+  background: color-mix(in srgb, var(--m-warn-soft) 70%, var(--m-raised) 30%);
+}
+
+.full-chart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 58px;
+  margin-top: 20px;
+  padding: 0 18px;
+  border: 1px solid var(--m-border);
+  border-radius: 18px;
+  color: var(--m-accent);
+  background: var(--m-raised);
+  text-decoration: none;
+
+  span {
+    @include m-h2;
+    color: currentColor;
+  }
+
+  b {
+    font-size: 28px;
+    line-height: 1;
+  }
+}
+
+.story-state {
+  display: flex;
+  min-height: 56vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 22px;
+  border: 1px solid var(--m-border);
+  border-radius: 20px;
+  background: var(--m-surface);
+  text-align: center;
+
+  b { @include m-h2; color: var(--m-text); }
+  p { @include m-body-small; margin: 0; color: var(--m-muted); }
+  a,
+  button {
+    @include m-body-strong;
+    padding: 11px 16px;
+    border: 1px solid var(--m-border-strong);
+    border-radius: 999px;
+    color: var(--m-accent-strong);
+    background: transparent;
+    text-decoration: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .story-appbar,
+  .story-body { padding-inline: 18px; }
+
+  .hero h2 { font-size: 23px; }
+  .hero span,
+  .story-card p { font-size: 16px; }
+}

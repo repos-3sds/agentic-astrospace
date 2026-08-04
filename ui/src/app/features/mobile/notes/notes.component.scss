@@ -3,6 +3,27 @@
 .mnote-top { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 10px; a { @include m-body-strong; display: flex; align-items: center; gap: 12px; color: var(--m-muted); text-decoration: none; } img { width: 24px; height: 24px; } em { @include m-caption; padding: 5px 10px; border-radius: 999px; color: var(--m-accent-strong); background: var(--m-accent-soft); font-size: 11px; font-style: normal; } }
 .mnote-body { display: flex; flex-direction: column; gap: 14px; padding: 4px 20px 16px; }
 .mnote-body > header { h1 { @include m-h1; margin: 0 0 3px; } p { @include m-body-small; margin: 0; color: var(--m-muted); } }
-textarea { @include m-body; width: 100%; height: 300px; box-sizing: border-box; resize: none; padding: 16px 17px; border: 1.2px solid var(--m-border); border-radius: 20px; outline-color: var(--m-accent); color: var(--m-text); background: var(--m-surface); font-family: inherit; }
+// outline-color alone never wins against WKWebView's native blue focus ring —
+// outline-style was never set, so the UA default (auto/blue) kept rendering
+// underneath regardless of the color override. outline: none plus a themed
+// focus border is the reliable fix.
+textarea {
+  @include m-body;
+  width: 100%;
+  height: 300px;
+  box-sizing: border-box;
+  resize: none;
+  padding: 16px 17px;
+  border: 1.2px solid var(--m-border);
+  border-radius: 20px;
+  outline: none;
+  color: var(--m-text);
+  background: var(--m-surface);
+  font-family: inherit;
+
+  &:focus {
+    border-color: var(--m-accent);
+  }
+}
 .mnote-meta { @include m-caption; display: flex; justify-content: space-between; color: var(--m-muted); }
 .mnote-private { @include m-caption; display: flex; gap: 8px; margin: 0; color: var(--m-muted); span { flex: 1; } }

@@ -4,6 +4,7 @@ import { ManglikCancellationSheetComponent } from '../chart/manglik-cancellation
 import { KundliStore } from '../../../core/kundli.store';
 import { DashaPayload, YogasDoshasPayload } from '../../../core/models';
 import { VedicService } from '../../../core/vedic.service';
+import { PreferencesService } from '../../../core/preferences.service';
 
 /** What kind of thing in the chart a remedy answers to. */
 export type RemedyTone = 'warn' | 'bad' | 'good';
@@ -61,6 +62,7 @@ export interface RemedyCard {
 export class RemediesComponent {
   private readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
+  private readonly preferences = inject(PreferencesService);
   readonly cancellationOpen = signal(false);
   protected readonly dashas = signal<DashaPayload | null>(null);
   protected readonly yogas = signal<YogasDoshasPayload | null>(null);
@@ -111,6 +113,10 @@ export class RemediesComponent {
 
   protected retry(): void {
     void this.load(this.kundlis.activeId());
+  }
+
+  protected backRoute(): string[] {
+    return this.preferences.experienceMode() === 'guided' ? ['/m', 'explore'] : ['/m', 'today'];
   }
 
   private async load(expectedActiveId: string | null): Promise<void> {
