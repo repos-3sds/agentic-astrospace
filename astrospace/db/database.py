@@ -23,8 +23,14 @@ def _database_url() -> str:
 
 DATABASE_URL = _database_url()
 
-# SQLite needs check_same_thread=False
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+# SQLite needs check_same_thread=False. Supabase's transaction pooler is not
+# compatible with psycopg's server-side prepared statements across pooled
+# connections, so disable them for deployed Postgres connections.
+connect_args = (
+    {"check_same_thread": False}
+    if DATABASE_URL.startswith("sqlite")
+    else {"prepare_threshold": None}
+)
 
 engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
