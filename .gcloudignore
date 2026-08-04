@@ -16,6 +16,7 @@ cache/
 frontend/dist
 ui/node_modules
 ui/.angular
+ui/src/assets/videos
 ui/android
 ui/ios
 tests/
