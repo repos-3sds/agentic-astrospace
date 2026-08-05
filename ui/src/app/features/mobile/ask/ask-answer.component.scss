@@ -31,7 +31,8 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 10px 20px 16px;
+  padding: 10px 20px 18px;
+  scroll-padding-bottom: 78px;
 }
 
 .asked { display: flex; justify-content: flex-end; }
@@ -141,4 +142,10 @@
   &.is-error { color: var(--m-bad); }
 }
 
-/* The composer (node 26:93) is as-ask-composer, shared with Ask Home. */
+/* The composer (node 26:93) is as-ask-composer, seated as a chat input here. */
+as-ask-composer.answer-composer {
+  margin: 0 20px max(8px, env(safe-area-inset-bottom, 0px));
+  width: auto;
+  align-self: stretch;
+  background: var(--m-surface);
+}

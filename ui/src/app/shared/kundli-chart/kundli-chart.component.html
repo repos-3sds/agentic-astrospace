@@ -16,18 +16,26 @@
               {{ house.signLabel }}
             </text>
             @for (entry of house.entries; track entry.key; let i = $index) {
-              <text
-                class="planet-line"
-                x="0"
-                [attr.y]="10 + i * 13"
+              <g
+                class="planet-hit"
+                [class.interactive]="interactive() && entry.key !== 'Lagna'"
+                [attr.tabindex]="interactive() && entry.key !== 'Lagna' ? 0 : null"
+                [attr.role]="interactive() && entry.key !== 'Lagna' ? 'button' : null"
+                [attr.aria-label]="entry.key"
+                (click)="selectPlanet(entry)"
+                (keydown.enter)="selectPlanet(entry)"
+                (keydown.space)="selectPlanet(entry)"
               >
-                <tspan>{{ entry.label }}</tspan>
-                @for (annotation of entry.annotations; track annotation.code) {
-                  <tspan [attr.class]="'condition-symbol ' + annotation.tone" dx="3">
-                    {{ annotation.symbol }}
-                  </tspan>
-                }
-              </text>
+                <rect x="-22" [attr.y]="10 + i * 13 - 8" width="44" height="14" rx="3" />
+                <text class="planet-line" x="0" [attr.y]="10 + i * 13">
+                  <tspan>{{ entry.label }}</tspan>
+                  @for (annotation of entry.annotations; track annotation.code) {
+                    <tspan [attr.class]="'condition-symbol ' + annotation.tone" dx="3">
+                      {{ annotation.symbol }}
+                    </tspan>
+                  }
+                </text>
+              </g>
             }
           </g>
         }
@@ -46,19 +54,31 @@
             [attr.transform]="'translate(' + cell.x + ' ' + cell.y + ')'"
           >
             @for (entry of cell.entries; track entry.key; let i = $index) {
-              <text
-                class="planet-line"
-                x="0"
-                [attr.y]="i * 13"
-                [attr.text-anchor]="cell.planetAlign"
+              <g
+                class="planet-hit"
+                [class.interactive]="interactive() && entry.key !== 'Lagna'"
+                [attr.tabindex]="interactive() && entry.key !== 'Lagna' ? 0 : null"
+                [attr.role]="interactive() && entry.key !== 'Lagna' ? 'button' : null"
+                [attr.aria-label]="entry.key"
+                (click)="selectPlanet(entry)"
+                (keydown.enter)="selectPlanet(entry)"
+                (keydown.space)="selectPlanet(entry)"
               >
-                <tspan>{{ entry.label }}</tspan>
-                @for (annotation of entry.annotations; track annotation.code) {
-                  <tspan [attr.class]="'condition-symbol ' + annotation.tone" dx="3">
-                    {{ annotation.symbol }}
-                  </tspan>
-                }
-              </text>
+                <rect [attr.x]="hitX(cell.planetAlign)" [attr.y]="i * 13 - 8" width="44" height="14" rx="3" />
+                <text
+                  class="planet-line"
+                  x="0"
+                  [attr.y]="i * 13"
+                  [attr.text-anchor]="cell.planetAlign"
+                >
+                  <tspan>{{ entry.label }}</tspan>
+                  @for (annotation of entry.annotations; track annotation.code) {
+                    <tspan [attr.class]="'condition-symbol ' + annotation.tone" dx="3">
+                      {{ annotation.symbol }}
+                    </tspan>
+                  }
+                </text>
+              </g>
             }
           </g>
           <text class="house-number eastern-house" [attr.x]="cell.labelX" [attr.y]="cell.labelY" [attr.text-anchor]="cell.labelAlign">
@@ -83,18 +103,26 @@
           >
             <text class="house-number corner-label top-left" x="-42" y="-36">H{{ cell.house }}</text>
             @for (entry of cell.entries; track entry.key; let i = $index) {
-              <text
-                class="planet-line"
-                x="0"
-                [attr.y]="-12 + i * 12"
+              <g
+                class="planet-hit"
+                [class.interactive]="interactive() && entry.key !== 'Lagna'"
+                [attr.tabindex]="interactive() && entry.key !== 'Lagna' ? 0 : null"
+                [attr.role]="interactive() && entry.key !== 'Lagna' ? 'button' : null"
+                [attr.aria-label]="entry.key"
+                (click)="selectPlanet(entry)"
+                (keydown.enter)="selectPlanet(entry)"
+                (keydown.space)="selectPlanet(entry)"
               >
-                <tspan>{{ entry.label }}</tspan>
-                @for (annotation of entry.annotations; track annotation.code) {
-                  <tspan [attr.class]="'condition-symbol ' + annotation.tone" dx="3">
-                    {{ annotation.symbol }}
-                  </tspan>
-                }
-              </text>
+                <rect x="-22" [attr.y]="-12 + i * 12 - 8" width="44" height="14" rx="3" />
+                <text class="planet-line" x="0" [attr.y]="-12 + i * 12">
+                  <tspan>{{ entry.label }}</tspan>
+                  @for (annotation of entry.annotations; track annotation.code) {
+                    <tspan [attr.class]="'condition-symbol ' + annotation.tone" dx="3">
+                      {{ annotation.symbol }}
+                    </tspan>
+                  }
+                </text>
+              </g>
             }
             <text class="sign-label corner-label bottom-right" x="38" y="32" [attr.fill]="cell.signColor">
               {{ cell.signLabel }}

@@ -4,9 +4,15 @@
 </a>
 
 <div class="body">
+  @if (loading()) {
+    <section class="practice-state"><b>Loading practice</b><p>Opening the selected remedy practice.</p></section>
+  } @else if (error()) {
+    <section class="practice-state error" role="alert"><b>Practice unavailable</b><p>{{ error() }}</p><a [routerLink]="['/m','remedies']">Back to practices</a></section>
+  } @else {
   <header class="intro">
     <p class="eyebrow">{{ eyebrow() }}</p>
     <h1 class="mantra">{{ mantra() }}</h1>
+    <p class="instruction">{{ practice()?.instructions }}</p>
   </header>
 
   <p class="streak">
@@ -14,6 +20,26 @@
     <span>{{ streakLabel() }}</span>
   </p>
 
+  <nav class="mode-tabs" aria-label="Practice mode">
+    <button type="button" [class.is-on]="mode() === 'manual'" (click)="mode.set('manual')">Manual</button>
+    <button type="button" [class.is-on]="mode() === 'auto'" (click)="mode.set('auto')">Auto</button>
+  </nav>
+
+  @if (mode() === 'auto') {
+    <section class="audio-card" [class.is-pending]="audioPending()">
+      <img src="mobile/audio-art.svg" alt="" aria-hidden="true" />
+      <div>
+        <b>{{ audioPending() ? 'Audio pending' : 'Audio practice' }}</b>
+        <p>{{ audioPending() ? audioNote() : 'Audio is ready for this mantra.' }}</p>
+      </div>
+      <button type="button" [disabled]="audioPending()">
+        <img src="mobile/play.svg" alt="" aria-hidden="true" />
+        <span>{{ audioPending() ? 'Not ready' : 'Play 108' }}</span>
+      </button>
+    </section>
+  }
+
+  @if (mode() === 'manual') {
   <div class="ring">
     <svg
       [attr.viewBox]="'0 0 ' + SIZE + ' ' + SIZE"
@@ -44,14 +70,22 @@
 
   <button class="count-btn" type="button" [disabled]="done()" (click)="tap()">
     <img src="mobile/sparkle.svg" alt="" aria-hidden="true" />
-    <span>{{ done() ? 'Completed' : 'Tap to count' }}</span>
+    <span>{{ done() ? 'Completed today' : target() > 1 ? 'Tap to count' : 'Mark done today' }}</span>
   </button>
+  @if (count() > 0 && !done()) {
+    <button class="reset-btn" type="button" (click)="resetToday()">Reset today</button>
+  }
+  }
 
   <!-- Said again here, at the point of practice, not only on the list screen. -->
   <p class="caveat">
-    A traditional practice for this period — never a substitute for professional
-    advice.
+    {{ group()?.safety_note }}
   </p>
+  }
 </div>
 
-<button class="reminder" type="button">Set a Saturday reminder</button>
+@if (!loading() && !error()) {
+  <a class="reminder" [routerLink]="['/m','settings','notifications']">
+    Set {{ practice()?.preferred_day || 'practice' }} reminder
+  </a>
+}

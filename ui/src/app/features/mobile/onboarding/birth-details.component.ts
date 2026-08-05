@@ -32,10 +32,10 @@ type PlaceMatch = PanchangaCity;
   template: `
     <div class="top">
       <header class="topbar">
-        <a class="back" [routerLink]="['/m', 'persona']" aria-label="Back">
+        <a class="back" [routerLink]="['/m', 'customize']" aria-label="Back">
           <img src="mobile/back.svg" alt="" aria-hidden="true" />
         </a>
-        <p class="step">STEP 2 OF 2</p>
+        <p class="step">SETUP 6 OF 6</p>
       </header>
 
       <h1 class="headline">Begin with your birth rhythm</h1>

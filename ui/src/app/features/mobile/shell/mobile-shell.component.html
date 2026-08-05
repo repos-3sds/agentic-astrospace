@@ -1,5 +1,5 @@
-<div class="shell" [@routeTransition]="getRouteAnimationData()">
-  <main class="content"><router-outlet /></main>
+<div class="shell">
+  <main class="content" [class.tabs-hidden]="hideTabs() || overlay.open()"><router-outlet /></main>
 
   @if (!hideTabs() && !overlay.open()) {
     <nav class="tabbar" aria-label="Primary">

@@ -1,7 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
-import { ChildrenOutletContexts } from '@angular/router';
-import { routeTransitionAnimations } from '../../../core/mobile-route-animations';
 import {
   NavigationEnd,
   Router,
@@ -13,6 +10,7 @@ import { filter, map, startWith } from 'rxjs';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
 import { SheetOverlayService } from '../../../core/sheet-overlay.service';
+import { HapticsService } from '../../../core/haptics.service';
 
 interface MobileTab {
   commands: string[];
@@ -36,14 +34,13 @@ interface MobileTab {
   templateUrl: './mobile-shell.component.html',
   styleUrl: './mobile-shell.component.scss',
   host: { class: 'as-mobile' },
-  animations: [routeTransitionAnimations],
 })
 export class MobileShellComponent {
-  private readonly contexts = inject(ChildrenOutletContexts);
   private readonly router = inject(Router);
   private readonly kundlis = inject(KundliStore);
   protected readonly preferences = inject(PreferencesService);
   protected readonly overlay = inject(SheetOverlayService);
+  private readonly haptics = inject(HapticsService);
 
   constructor() {
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
@@ -86,27 +83,26 @@ export class MobileShellComponent {
       { commands: ['today'], label: 'Today', icon: 'nav-today' },
     ];
     if (this.preferences.experienceMode() === 'guided') {
-      const inStory = this.currentPath() === '/m/explore/story';
       return [
         ...fixed,
         { commands: ['ask'], label: 'Ask', icon: 'nav-ask' },
         {
-          commands: ['explore', ...(inStory ? ['story'] : [])],
-          label: inStory ? 'Your Story' : 'Explore',
-          icon: inStory ? 'figma-yantra-book-open' : 'nav-check-square',
+          commands: ['explore'],
+          label: 'Explore',
+          icon: 'nav-check-square',
         },
         { commands: ['calendar'], label: 'Calendar', icon: 'nav-calendar' },
         { commands: ['settings'], label: 'More', icon: 'nav-more' },
       ];
     }
     if (this.preferences.experienceMode() === 'practitioner') {
-      // Live Figma node 214:155, "16P · Yantra (Practitioner)": the practitioner
-      // footer is Today / Yantra / Periods / Transits / More.
+      // Practitioner keeps transits inside Yantra so Calendar remains a primary
+      // daily almanac destination instead of competing with chart workbench tools.
       return [
         { commands: ['today'], label: 'Today', icon: 'figma-yantra-nav-sun' },
         { commands: ['chart'], label: 'Yantra', icon: 'figma-yantra-nav-active' },
         { commands: ['chart', 'periods'], label: 'Periods', icon: 'figma-yantra-nav-clock' },
-        { commands: ['transits'], label: 'Transits', icon: 'figma-yantra-nav-map-pin' },
+        { commands: ['calendar'], label: 'Calendar', icon: 'figma-yantra-calendar' },
         { commands: ['settings'], label: 'More', icon: 'figma-yantra-nav-settings' },
       ];
     }
@@ -148,9 +144,12 @@ export class MobileShellComponent {
       if (route === '/m/chart/periods') {
         return path === '/m/chart/periods' || path.startsWith('/m/chart/periods/');
       }
+      if (route === '/m/calendar') {
+        return path === '/m/calendar' || path.startsWith('/m/calendar/');
+      }
       if (route === '/m/chart') {
         return (
-          (path === '/m/chart' || path.startsWith('/m/chart/')) &&
+          (path === '/m/chart' || path.startsWith('/m/chart/') || path.startsWith('/m/transits')) &&
           !(path === '/m/chart/periods' || path.startsWith('/m/chart/periods/'))
         );
       }
@@ -160,14 +159,7 @@ export class MobileShellComponent {
   }
 
   async onTabClick() {
-    try {
-      await Haptics.impact({ style: ImpactStyle.Light });
-    } catch (e) {
-      // Ignore if not on a device that supports haptics
-    }
+    this.haptics.tap();
   }
 
-  getRouteAnimationData() {
-    return this.contexts.getContext('primary')?.route?.snapshot?.url?.join('/') || 'home';
-  }
 }

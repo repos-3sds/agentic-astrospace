@@ -1,0 +1,12 @@
+@use './settings-shared' as shared;
+
+@include shared.settings-screen;
+@include shared.settings-switch;
+
+.local-note {
+  margin: 0;
+  color: var(--m-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}

@@ -37,7 +37,7 @@ interface Vow {
       <a class="back" [routerLink]="['/m', 'welcome']" aria-label="Back">
         <img src="mobile/back.svg" alt="" aria-hidden="true" />
       </a>
-      <a class="skip" [routerLink]="['/m', 'persona']">Skip</a>
+      <p class="step">SETUP 3 OF 6</p>
     </header>
 
     <div class="top">
@@ -66,11 +66,6 @@ interface Vow {
     </div>
 
     <div class="actions">
-      <div class="dots" aria-hidden="true">
-        <span class="dot"></span>
-        <span class="dot"></span>
-        <span class="dot is-on"></span>
-      </div>
       <a class="btn" [routerLink]="['/m', 'persona']">I understand — continue</a>
     </div>
   `,

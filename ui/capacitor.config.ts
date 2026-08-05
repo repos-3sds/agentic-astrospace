@@ -28,6 +28,10 @@ const config: CapacitorConfig = {
       showSpinner: false,
       androidScaleType: 'CENTER_CROP',
     },
+    StatusBar: {
+      style: 'LIGHT',
+      backgroundColor: '#FAF7F0',
+    },
   },
 };
 

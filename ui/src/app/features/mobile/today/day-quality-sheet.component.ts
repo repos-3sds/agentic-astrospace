@@ -30,5 +30,6 @@ export class DayQualitySheetComponent {
   readonly score = input.required<number>();
   readonly signals = input.required<DaySignal[]>();
   readonly summary = input.required<string>();
+  readonly reason = input.required<string>();
   readonly dismissed = output<void>();
 }

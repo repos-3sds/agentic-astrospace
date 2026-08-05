@@ -10,11 +10,13 @@ import {
   inject,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { EastChartComponent } from './east-chart.component';
+import { KundliChartComponent, KundliChartStyle } from '../../../shared/kundli-chart/kundli-chart.component';
 import { KundliStore } from '../../../core/kundli.store';
 import { VargaChart, VedicAll } from '../../../core/models';
+import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
-import { buildChartAdapter } from './mobile-chart-data';
+import { buildChartAdapter, PLANET_ABBR } from './mobile-chart-data';
+import { PlanetDetail, PlanetSheetComponent } from './planet-sheet.component';
 
 interface VargaOption {
   id: string;
@@ -33,7 +35,7 @@ interface VargaOption {
   selector: 'as-varga-charts',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [EastChartComponent, RouterLink],
+  imports: [KundliChartComponent, PlanetSheetComponent, RouterLink],
   templateUrl: './varga-charts.component.html',
   styleUrl: './varga-charts.component.scss',
 })
@@ -41,11 +43,13 @@ export class VargaChartsComponent implements AfterViewInit {
   @ViewChild('vargaStrip') private readonly vargaStrip?: ElementRef<HTMLElement>;
   private readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
+  protected readonly preferences = inject(PreferencesService);
 
   readonly selected = signal('D9');
   protected readonly data = signal<VedicAll | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
+  protected readonly selectedPlanet = signal<PlanetDetail | null>(null);
   private renderedChartId: string | null = null;
   readonly vargas: VargaOption[] = [
     { id: 'D1' },
@@ -70,11 +74,12 @@ export class VargaChartsComponent implements AfterViewInit {
     { id: 'D60' },
   ];
 
-  readonly chartCells = computed(() => {
-    const data = this.data();
-    return data ? buildChartAdapter(data, this.kundlis.active(), this.selected()).cells : [];
-  });
+  readonly chartStyle = computed<KundliChartStyle>(() => this.preferences.chartStyle());
   readonly selectedVarga = computed<VargaChart | null>(() => this.data()?.vargas?.[this.selected()] ?? null);
+  readonly adapter = computed(() => {
+    const data = this.data();
+    return data ? buildChartAdapter(data, this.kundlis.active(), this.selected()) : null;
+  });
   readonly chartTitle = computed(() => `${this.selected()} · ${this.selectedVarga()?.name ?? 'Divisional chart'}`);
   readonly chartMeaning = computed(() => this.selectedVarga()?.signifies ?? 'Computed divisional placements');
   readonly vargottama = computed(() =>
@@ -108,6 +113,13 @@ export class VargaChartsComponent implements AfterViewInit {
 
   protected chooseVarga(id: string): void {
     this.selected.set(id);
+    this.selectedPlanet.set(null);
+  }
+
+  protected openPlanet(planet: string): void {
+    const abbr = PLANET_ABBR[planet] ?? planet.slice(0, 2);
+    const detail = this.adapter()?.details[abbr];
+    if (detail) this.selectedPlanet.set(detail);
   }
 
   protected retry(): void {
@@ -131,6 +143,7 @@ export class VargaChartsComponent implements AfterViewInit {
         this.data.set(cached);
         this.renderedChartId = activeId;
         this.loading.set(false);
+        void this.refreshChart(activeId);
         return;
       }
       if (this.renderedChartId !== activeId) this.loading.set(true);
@@ -140,6 +153,17 @@ export class VargaChartsComponent implements AfterViewInit {
       this.error.set((error as Error).message);
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  private async refreshChart(activeId: string): Promise<void> {
+    try {
+      const chart = await this.vedic.refreshAll(activeId);
+      if (this.kundlis.activeId() !== activeId) return;
+      this.data.set(chart);
+      this.renderedChartId = activeId;
+    } catch {
+      // Keep the saved varga payload visible when background refresh fails.
     }
   }
 }

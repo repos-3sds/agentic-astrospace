@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { EastChartComponent } from './east-chart.component';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { ProvenanceSheetComponent } from './provenance-sheet.component';
+import { KundliChartComponent, KundliChartStyle } from '../../../shared/kundli-chart/kundli-chart.component';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
-import { DashaPayload, VedicAll } from '../../../core/models';
+import { DashaPayload, VargaChart, VedicAll } from '../../../core/models';
 import { VedicService } from '../../../core/vedic.service';
 import { buildChartAdapter } from './mobile-chart-data';
 
@@ -24,6 +24,7 @@ export interface ExploreCard {
   icon: string;
   /** Present once the destination exists; absent leaves the card inert. */
   route?: string[];
+  queryParams?: Record<string, string>;
 }
 
 /**
@@ -44,7 +45,7 @@ export interface ExploreCard {
   selector: 'as-chart-hub',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [EastChartComponent, ProfileSwitcherComponent, ProvenanceSheetComponent, RouterLink],
+  imports: [KundliChartComponent, ProfileSwitcherComponent, ProvenanceSheetComponent, RouterLink],
   templateUrl: './chart-hub.component.html',
   styleUrl: './chart-hub.component.scss',
 })
@@ -78,6 +79,7 @@ export class ChartHubComponent {
     const style = this.preferences.chartStyle();
     return style === 'south' ? 'South' : style === 'north' ? 'North' : 'Eastern';
   });
+  readonly sharedStyle = computed<KundliChartStyle>(() => this.preferences.chartStyle());
 
   /**
    * Glyph placements, as percentages of the frame, taken from the design's own
@@ -87,6 +89,11 @@ export class ChartHubComponent {
    * land in them changes.
    */
   readonly cells = computed(() => this.adapter()?.cells ?? []);
+  readonly rashiChart = computed<VargaChart | null>(() => {
+    const chart = this.chart();
+    if (!chart) return null;
+    return chart.vargas?.['D1'] ?? this.rashiFallback(chart);
+  });
   readonly provenanceRows = computed(() => this.adapter()?.provenance ?? []);
 
   /**
@@ -220,11 +227,11 @@ export class ChartHubComponent {
       { title: 'Vargas', subtitle: 'D1-D60 divisional charts', tone: 'accent', icon: 'figma-yantra-grid', route: ['/m', 'chart', 'vargas'] },
       { title: 'Strength', subtitle: strongest ? `${strongest.planet} strongest` : 'Shadbala · AV', tone: 'good', icon: 'figma-yantra-activity', route: ['/m', 'chart', 'strength'] },
       { title: 'Yogas', subtitle: 'Strengths & cancellations', tone: 'warn', icon: 'figma-yantra-git-commit', route: ['/m', 'chart', 'yogas'] },
-      { title: 'Ashtakavarga', subtitle: 'SAV · BAV points', tone: 'muted', icon: 'figma-yantra-grid', route: ['/m', 'chart', 'reference', 'ashtakavarga'] },
-      { title: 'Jaimini', subtitle: 'AK · AmK · padas', tone: 'muted', icon: 'figma-yantra-award', route: ['/m', 'chart', 'strength'] },
+      { title: 'Transits', subtitle: 'Gochara · current sky', tone: 'warn', icon: 'figma-yantra-nav-map-pin', route: ['/m', 'transits'] },
+      { title: 'Ashtakavarga', subtitle: 'SAV · BAV points', tone: 'muted', icon: 'figma-yantra-grid', route: ['/m', 'chart', 'strength'], queryParams: { tab: 'ashtakavarga' } },
+      { title: 'Jaimini', subtitle: 'AK · AmK · padas', tone: 'muted', icon: 'figma-yantra-award', route: ['/m', 'chart', 'strength'], queryParams: { tab: 'jaimini' } },
       { title: 'Reference', subtitle: 'Avkahada · Ghatak · Fav', tone: 'muted', icon: 'figma-yantra-book-open', route: ['/m', 'chart', 'reference'] },
       { title: 'Compatibility', subtitle: 'Gun Milan matching', tone: 'muted', icon: 'figma-yantra-users', route: ['/m', 'compat'] },
-      { title: 'Ask', subtitle: 'Recent threads', tone: 'muted', icon: 'figma-yantra-message-square', route: ['/m', 'ask'] },
       { title: 'Readings', subtitle: 'Latest predictions', tone: 'muted', icon: 'figma-yantra-file-text', route: ['/m', 'readings'] },
       { title: 'Notes', subtitle: `${this.noteCount()} notes`, tone: 'muted', icon: 'figma-yantra-edit-3', route: ['/m', 'notes'] },
       { title: 'Remedies', subtitle: 'Active practices', tone: 'good', icon: 'figma-yantra-sun', route: ['/m', 'remedies'] },
@@ -264,9 +271,11 @@ export class ChartHubComponent {
       const cached = this.vedic.cachedAll(activeId);
       if (cached) {
         this.chart.set(cached);
-        await this.loadDashas(activeId);
+        this.dashas.set(cached.dashas ?? null);
         this.renderedChartId = activeId;
         this.loading.set(false);
+        void this.refreshChart(activeId);
+        void this.loadDashas(activeId);
         return;
       }
       if (this.renderedChartId !== activeId) this.loading.set(true);
@@ -277,6 +286,17 @@ export class ChartHubComponent {
       this.error.set((error as Error).message);
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  private async refreshChart(activeId: string): Promise<void> {
+    try {
+      const chart = await this.vedic.refreshAll(activeId);
+      if (this.kundlis.activeId() !== activeId) return;
+      this.chart.set(chart);
+      if (!this.dashas()) this.dashas.set(chart.dashas ?? null);
+    } catch {
+      // Keep the saved chart visible when a background refresh fails.
     }
   }
 
@@ -302,5 +322,24 @@ export class ChartHubComponent {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;
     return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  }
+
+  private rashiFallback(data: VedicAll): VargaChart | null {
+    const lagnaSign = this.kundlis.active()?.ascendant ?? data.avkahada?.['rashi'];
+    if (!lagnaSign) return null;
+    return {
+      name: 'Rāśi',
+      signifies: 'Birth chart',
+      verified_rule: true,
+      lagna: { sign: lagnaSign },
+      planets: Object.fromEntries(Object.entries(data.planets ?? {}).map(([planet, row]) => [
+        planet,
+        {
+          sign: row.sign,
+          house: row.house,
+          retrograde: row.retrograde,
+        },
+      ])),
+    };
   }
 }

@@ -231,8 +231,12 @@
   border: 1px solid var(--as-border);
   border-bottom: 0;
   border-radius: 24px 24px 0 0;
-  background: var(--as-surface);
+  background: #fffcf6;
   box-shadow: var(--as-shadow-strong);
+}
+
+:host-context(.app-dark) .mobile-sheet {
+  background: #201a15;
 }
 
 .more-sheet {
@@ -328,10 +332,15 @@
   gap: 12px;
   border: 1px solid var(--as-border);
   color: inherit;
-  background: var(--as-raised);
+  background: #ffffff;
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+:host-context(.app-dark) .sheet-row,
+:host-context(.app-dark) .profile-sheet-row {
+  background: #2a2219;
 }
 
 .sheet-row {
@@ -378,7 +387,7 @@
   padding: 0 13px;
   border: 1px solid var(--as-border);
   border-radius: 16px;
-  background: var(--as-raised);
+  background: #ffffff;
   color: var(--as-muted);
 
   input {
@@ -391,6 +400,10 @@
     font: inherit;
     font-size: 15px;
   }
+}
+
+:host-context(.app-dark) .mobile-search {
+  background: #2a2219;
 }
 
 .profile-sheet-list {

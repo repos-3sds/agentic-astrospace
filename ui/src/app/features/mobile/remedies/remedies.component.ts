@@ -1,34 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ManglikCancellationSheetComponent } from '../chart/manglik-cancellation-sheet.component';
 import { KundliStore } from '../../../core/kundli.store';
-import { DashaPayload, YogasDoshasPayload } from '../../../core/models';
-import { VedicService } from '../../../core/vedic.service';
+import {
+  RemedyRecommendationGroup,
+  RemedyRecommendationPractice,
+  RemedyRecommendationsPayload,
+  VedicService,
+} from '../../../core/vedic.service';
 import { PreferencesService } from '../../../core/preferences.service';
 
 /** What kind of thing in the chart a remedy answers to. */
 export type RemedyTone = 'warn' | 'bad' | 'good';
-
-/** One practice. `icon` names the kind of act, not the planet. */
-export interface RemedyPractice {
-  icon: 'chant' | 'offer' | 'wear' | 'rite';
-  text: string;
-}
-
-export interface RemedyCard {
-  id: string;
-  title: string;
-  tagLabel: string;
-  tone: RemedyTone;
-  /** Why this is being shown at all — the chart fact behind it. */
-  rationale: string;
-  practices: RemedyPractice[];
-  ctaLabel: string;
-  /**
-   * Where the action goes when it is a route. Manglik opens its shared sheet.
-   */
-  ctaRoute?: string[];
-}
 
 /**
  * Remedies — "What to do" (Figma node 29:55).
@@ -55,7 +37,7 @@ export interface RemedyCard {
   selector: 'as-remedies',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, ManglikCancellationSheetComponent],
+  imports: [RouterLink],
   templateUrl: './remedies.component.html',
   styleUrl: './remedies.component.scss',
 })
@@ -63,46 +45,12 @@ export class RemediesComponent {
   private readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
   private readonly preferences = inject(PreferencesService);
-  readonly cancellationOpen = signal(false);
-  protected readonly dashas = signal<DashaPayload | null>(null);
-  protected readonly yogas = signal<YogasDoshasPayload | null>(null);
+  protected readonly recommendations = signal<RemedyRecommendationsPayload | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
-  readonly cards = computed<RemedyCard[]>(() => {
-    const cards: RemedyCard[] = [];
-    const activeLord = this.dashas()?.current.antardasha?.lord ?? this.dashas()?.current.mahadasha?.lord;
-    if (activeLord) {
-      cards.push({
-        id: `dasha-${activeLord}`,
-        title: `For your active ${activeLord} period`,
-        tagLabel: `${activeLord.toUpperCase()} DASHA`,
-        tone: 'warn',
-        rationale: `${activeLord} is active in the returned dasha stack, so the practice is labelled as traditional support rather than a guaranteed fix.`,
-        practices: this.planetPractices(activeLord),
-        ctaLabel: 'Start local streak',
-        ctaRoute: ['/m', 'remedies', 'mantra'],
-      });
-    }
-    const manglik = this.yogas()?.doshas.manglik;
-    if (manglik) {
-      const exception = manglik.exceptions?.find((row) => row.applies);
-      cards.push({
-        id: 'manglik',
-        title: manglik.active ? 'For the Manglik flag' : 'Manglik check',
-        tagLabel: manglik.active ? 'MARRIAGE · FLAG' : 'NOT PRESENT',
-        tone: manglik.active ? 'bad' : 'good',
-        rationale: exception?.detail ?? manglik.rule,
-        practices: manglik.active
-          ? [
-              { icon: 'rite', text: 'Discuss the flag and any returned exceptions with a qualified family practitioner.' },
-              { icon: 'chant', text: 'Hanuman Chalisa on Tuesdays, if this is already part of your tradition.' },
-            ]
-          : [{ icon: 'offer', text: 'No Manglik-specific action is recommended by the returned calculation.' }],
-        ctaLabel: 'View cancellation',
-      });
-    }
-    return cards;
-  });
+  protected readonly groups = computed(() => this.recommendations()?.groups ?? []);
+  protected readonly note = computed(() => this.recommendations()?.note ?? null);
+  protected readonly disclaimer = computed(() => this.recommendations()?.disclaimer ?? 'Traditional practice, not a guarantee.');
 
   constructor() {
     effect(() => {
@@ -127,16 +75,13 @@ export class RemediesComponent {
       const activeId = this.kundlis.activeId();
       if (expectedActiveId && activeId !== expectedActiveId) return;
       if (!activeId) {
-        this.dashas.set(null);
-        this.yogas.set(null);
+        this.recommendations.set(null);
         return;
       }
-      const [dashas, yogas] = await Promise.all([
-        this.vedic.dashas(activeId).catch(() => null),
-        this.vedic.yogasDoshas(activeId).catch(() => null),
-      ]);
-      this.dashas.set(dashas);
-      this.yogas.set(yogas);
+      this.recommendations.set(await this.vedic.remedies(activeId, {
+        includeCostly: false,
+        includeManglik: false,
+      }));
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {
@@ -144,23 +89,42 @@ export class RemediesComponent {
     }
   }
 
-  private planetPractices(planet: string): RemedyPractice[] {
-    const lower = planet.toLowerCase();
-    if (lower === 'saturn') return [
-      { icon: 'chant', text: 'Chant “Om Sham Shanaishcharaya Namah” · 108 times, Saturdays' },
-      { icon: 'offer', text: 'Offer sesame oil or donate black sesame on Saturdays' },
-    ];
-    if (lower === 'mars') return [
-      { icon: 'chant', text: 'Hanuman Chalisa on Tuesdays' },
-      { icon: 'offer', text: 'Donate red lentils or support service work on Tuesdays' },
-    ];
-    if (lower === 'moon') return [
-      { icon: 'chant', text: 'Chant “Om Som Somaya Namah” on Mondays' },
-      { icon: 'offer', text: 'Offer milk or rice as a traditional Monday practice' },
-    ];
-    return [
-      { icon: 'chant', text: `Use a traditional ${planet} mantra only if it belongs to your practice.` },
-      { icon: 'offer', text: 'Choose simple service or donation over paid “removal” claims.' },
-    ];
+  protected tag(group: RemedyRecommendationGroup): string {
+    const trigger = group.trigger;
+    if (trigger.kind === 'dasha' && trigger.planet) return `${trigger.planet.toUpperCase()} ${trigger.level?.toUpperCase() ?? 'DASHA'}`;
+    if (trigger.kind === 'dignity' && trigger.planet) return `${trigger.planet.toUpperCase()} DIGNITY`;
+    if (trigger.kind === 'combustion' && trigger.planet) return `${trigger.planet.toUpperCase()} COMBUST`;
+    if (trigger.kind === 'dosha' && trigger.dosha) return `${trigger.dosha.toUpperCase()} FLAG`;
+    return trigger.kind.toUpperCase();
+  }
+
+  protected tone(group: RemedyRecommendationGroup): RemedyTone {
+    if (group.trigger.kind === 'dosha') return 'bad';
+    if (group.trigger.kind === 'dasha') return 'warn';
+    return 'good';
+  }
+
+  protected icon(practice: RemedyRecommendationPractice): 'chant' | 'offer' | 'wear' | 'rite' {
+    if (practice.type === 'mantra') return 'chant';
+    if (practice.type === 'donation') return 'offer';
+    if (practice.type === 'colour' || practice.type === 'gem') return 'wear';
+    return 'rite';
+  }
+
+  protected practiceRoute(group: RemedyRecommendationGroup, practice: RemedyRecommendationPractice): string[] {
+    return ['/m', 'remedies', 'mantra'];
+  }
+
+  protected practiceParams(group: RemedyRecommendationGroup, practice: RemedyRecommendationPractice): Record<string, string> {
+    return {
+      recommendation: group.recommendation_id,
+      practice: practice.practice_slug,
+    };
+  }
+
+  protected practiceCta(practice: RemedyRecommendationPractice): string {
+    if (practice.type === 'mantra') return 'Start 108 practice';
+    if (practice.target_count) return 'Start count';
+    return 'Track practice';
   }
 }

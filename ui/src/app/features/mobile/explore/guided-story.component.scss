@@ -11,11 +11,11 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 18px 24px 14px;
+  padding: 16px 20px 8px;
   color: var(--m-text);
 
   h1 {
-    @include m-hero;
+    @include m-title;
     flex: 1 1 auto;
     margin: 0;
     color: var(--m-text);
@@ -49,8 +49,8 @@
 
 .asset-icon {
   display: block;
-  width: 22px;
-  height: 22px;
+  width: 19px;
+  height: 19px;
   background: currentColor;
   mask: var(--icon-url) center / contain no-repeat;
   -webkit-mask: var(--icon-url) center / contain no-repeat;
@@ -60,7 +60,7 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding: 14px 24px 28px;
+  padding: 14px 20px 48px;
 }
 
 .hero {
@@ -68,7 +68,7 @@
   flex-direction: column;
   gap: 18px;
   padding: 26px 22px 28px;
-  border-radius: 26px;
+  border-radius: 20px;
   background: color-mix(in srgb, var(--m-accent-soft) 70%, var(--m-raised) 30%);
 
   p {
@@ -78,16 +78,13 @@
   }
 
   h2 {
-    font-weight: 700;
-    font-size: 25px;
-    line-height: 1.22;
+    @include m-h2;
     margin: 0;
     color: var(--m-text);
   }
 
   span {
-    font-size: 18px;
-    line-height: 1.55;
+    @include m-body;
     color: var(--m-muted);
   }
 }
@@ -103,9 +100,9 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   min-height: 116px;
-  padding: 22px 22px 22px 28px;
+  padding: 18px 18px 18px 24px;
   border: 1px solid var(--m-border);
   border-radius: 15px;
   background: var(--m-raised);
@@ -123,9 +120,13 @@
   &[data-tone='watch']::before { background: var(--m-gold); }
 
   p {
+    @include m-body;
     margin: 0;
-    font-size: 17px;
-    line-height: 1.45;
+    color: var(--m-text);
+  }
+
+  small {
+    @include m-caption;
     color: var(--m-muted);
   }
 }
@@ -137,10 +138,36 @@
   gap: 12px;
 
   h2 {
-    @include m-h2;
+    @include m-body-strong;
     margin: 0;
     color: var(--m-text);
   }
+}
+
+.practice {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 13px 14px;
+  border-radius: 13px;
+  color: var(--m-text);
+  background: color-mix(in srgb, var(--m-good-soft) 60%, var(--m-surface) 40%);
+
+  b {
+    @include m-eyebrow;
+    color: var(--m-good);
+  }
+
+  span {
+    @include m-body-small;
+    color: var(--m-text);
+  }
+}
+
+.story-card[data-tone='watch'] .practice {
+  background: color-mix(in srgb, var(--m-warn-soft) 62%, var(--m-surface) 38%);
+
+  b { color: var(--m-warn); }
 }
 
 .badge {
@@ -172,7 +199,7 @@
   text-decoration: none;
 
   span {
-    @include m-h2;
+    @include m-body-strong;
     color: currentColor;
   }
 
@@ -212,8 +239,4 @@
 @media (max-width: 360px) {
   .story-appbar,
   .story-body { padding-inline: 18px; }
-
-  .hero h2 { font-size: 23px; }
-  .hero span,
-  .story-card p { font-size: 16px; }
 }

@@ -4,38 +4,63 @@
 </header>
 
 <main>
-  @switch (preferences.experienceMode()) {
-    @case ('guided') {
-      <p class="kicker">YOUR FIRST STEP</p>
-      <h1>@if (name()) {<span>{{ name() }}, </span>}your chart combines warmth with steady resolve.</h1>
-      <p class="lede">{{ guidedLead() }}</p>
-      <section class="action">
-        <small>PRACTICE TODAY</small>
-        <strong>Finish one delayed task before taking on another.</strong>
-      </section>
-      <a class="listen" routerLink="/m/today" [queryParams]="{ listen: 1 }">Listen to my first guidance</a>
-    }
-    @case ('practitioner') {
-      <p class="kicker">YOUR MAP IS READY</p>
-      <h1>@if (name()) {<span>{{ name() }}’s</span>} @else {<span>Your</span>} life map is ready.</h1>
-      <as-east-chart [cells]="cells" />
-      <dl>
-        <div><dt>Lagna</dt><dd>Taurus · 11°02′</dd></div>
-        <div><dt>Moon</dt><dd>Cancer · Pushya 2</dd></div>
-        <div><dt>Active period</dt><dd>Venus · Saturn</dd></div>
-        <div><dt>Convention</dt><dd>Lahiri · whole-sign</dd></div>
-      </dl>
-      <a class="secondary" routerLink="/m/chart">Open the chart room</a>
-    }
-    @default {
-      <p class="kicker">WHY THIS IS PERSONAL</p>
-      <h1>@if (name()) {<span>{{ name() }}, </span>}{{ balancedLead() }}</h1>
-      <p class="lede">Gemini Sun · Cancer Moon · Taurus rising</p>
-      <section class="action">
-        <small>TODAY’S PREVIEW</small>
-        <strong>A steady day for practical work and measured decisions.</strong>
-      </section>
-      <a class="secondary" routerLink="/m/chart">Preview my life map</a>
+  @if (loading()) {
+    <section class="loading-state">
+      <span class="orb"></span>
+      <p>Casting {{ name() || 'your' }} chart…</p>
+    </section>
+  } @else if (error() && !chart()) {
+    <section class="loading-state error">
+      <p>Your chart is still on its way — you can see it any time from the Chart tab.</p>
+    </section>
+  } @else {
+    @switch (preferences.experienceMode()) {
+      @case ('guided') {
+        <p class="kicker">YOUR FIRST STEP</p>
+        <h1>@if (name()) {<span>{{ name() }}, </span>}{{ adapter()?.signature?.headline ?? 'your chart is ready.' }}</h1>
+        <p class="lede">{{ guidedLead() }}</p>
+        @if (strongest(); as strong) {
+          <section class="action">
+            <small>YOUR STRONGEST PLACEMENT</small>
+            <strong>{{ strong.planet }} in {{ strong.sign }}</strong>
+            @if (strengthAction(); as action) {
+              <p>A good day to {{ action }}.</p>
+            }
+          </section>
+        }
+        <a class="listen" routerLink="/m/today" [queryParams]="{ listen: 1 }">Listen to my first guidance</a>
+      }
+      @case ('practitioner') {
+        <p class="kicker">YOUR MAP IS READY</p>
+        <h1>@if (name()) {<span>{{ name() }}’s</span>} @else {<span>Your</span>} life map is ready.</h1>
+        <app-kundli-chart [chart]="practitionerChart()" [chartStyle]="sharedStyle()" />
+        <p class="constants">{{ birthConstants() }}</p>
+        @if (dashaChain().length) {
+          <div class="period-chain">
+            @for (row of dashaChain(); track row.lord + row.short; let last = $last) {
+              <span class="period-pill" [class.is-active]="row.active">{{ row.lord }} <b>{{ row.short }}</b></span>
+              @if (!last) { <span class="period-sep">›</span> }
+            }
+          </div>
+        }
+        <a class="secondary" routerLink="/m/chart">Open workbench</a>
+      }
+      @default {
+        <p class="kicker">WHY THIS IS PERSONAL</p>
+        <h1>@if (name()) {<span>{{ name() }}, </span>}{{ adapter()?.signature?.detail ?? 'your chart is ready.' }}</h1>
+        <p class="lede">{{ adapter()?.signature?.headline }}</p>
+        @if (adapter()?.angles; as angles) {
+          <dl>
+            @for (angle of angles; track angle.label) {
+              <div><dt>{{ angle.label }}</dt><dd>{{ angle.sign }}</dd></div>
+            }
+          </dl>
+        }
+        <div class="preview-links">
+          <a routerLink="/m/today">Preview today</a>
+          <a routerLink="/m/chart">Preview chart</a>
+        </div>
+      }
     }
   }
 </main>

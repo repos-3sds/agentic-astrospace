@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ManglikCancellationSheetComponent } from './manglik-cancellation-sheet.component';
-import { YogaLearningSheetComponent } from './yoga-learning-sheet.component';
+import { YogaLearningDetail, YogaLearningSheetComponent } from './yoga-learning-sheet.component';
 import { KundliStore } from '../../../core/kundli.store';
 import { DoshasPayload, YogaResult, YogasDoshasPayload } from '../../../core/models';
 import { VedicService } from '../../../core/vedic.service';
@@ -17,6 +17,8 @@ interface Combination {
   tone: 'good' | 'gold' | 'bad' | 'neutral';
   summary: string;
   cancelled?: string;
+  source?: string;
+  chartFact?: string;
 }
 
 /** Yogas & Doshas overview and filtering (Figma node 41:87). */
@@ -33,6 +35,7 @@ export class YogasDoshasComponent {
   private readonly vedic = inject(VedicService);
   readonly filter = signal<Filter>('all');
   readonly learningOpen = signal(false);
+  readonly selectedLearning = signal<YogaLearningDetail | null>(null);
   readonly cancellationOpen = signal(false);
   protected readonly data = signal<YogasDoshasPayload | null>(null);
   protected readonly loading = signal(true);
@@ -54,7 +57,15 @@ export class YogasDoshasComponent {
 
   protected learn(item: Combination): void {
     if (item.id === 'manglik') this.cancellationOpen.set(true);
-    else this.learningOpen.set(true);
+    else {
+      this.selectedLearning.set({
+        title: item.title,
+        summary: item.summary,
+        source: item.source ?? 'Source review is not available for this combination yet.',
+        chartFact: item.chartFact ?? item.cancelled ?? 'This combination was returned for your selected chart by the live calculation service.',
+      });
+      this.learningOpen.set(true);
+    }
   }
 
   protected retry(): void {
@@ -89,6 +100,9 @@ export class YogasDoshasComponent {
       tone: yoga.category.toLowerCase().includes('caution') ? 'bad' : yoga.verified ? 'good' : 'gold',
       summary: yoga.rule || yoga.triggers.join(' · ') || 'Backend returned this yoga without additional detail.',
       cancelled: yoga.notes?.[0],
+      source: yoga.source_refs?.map((row) => `${row.source}: ${row.detail}`).join(' · ')
+        ?? this.statusLabel(yoga),
+      chartFact: yoga.triggers.join(' · ') || yoga.notes?.[0],
     };
   }
 
@@ -105,6 +119,9 @@ export class YogasDoshasComponent {
         tone: doshas.manglik.active ? 'bad' : 'neutral',
         summary: doshas.manglik.rule,
         cancelled: exception ? `Exception applies: ${exception.detail}` : doshas.manglik.notes?.[0],
+        source: doshas.manglik.source_refs?.map((row) => `${row.source}: ${row.detail}`).join(' · ')
+          ?? doshas.manglik.source_status
+          ?? 'Classical source not returned by the backend.',
       });
     }
     for (const row of [doshas.gandanta, doshas.grahan].filter(Boolean)) {
@@ -116,6 +133,9 @@ export class YogasDoshasComponent {
         tone: row!.active ? 'bad' : 'neutral',
         summary: row!.rule,
         cancelled: row!.notes?.[0],
+        source: row!.source_refs?.map((source) => `${source.source}: ${source.detail}`).join(' · ')
+          ?? row!.source_status
+          ?? 'Classical source not returned by the backend.',
       });
     }
     return items;

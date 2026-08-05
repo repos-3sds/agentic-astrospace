@@ -22,6 +22,8 @@ export interface SettingGroup {
   rows: SettingRow[];
 }
 
+const NOTIFICATION_STORAGE_KEY = 'astrospace.mobile.notificationPrefs';
+
 /**
  * Settings — Home (Figma node 66:89), the More tab's destination.
  *
@@ -63,14 +65,14 @@ export class SettingsHomeComponent {
       rows: [
         {
           id: 'appearance',
-          icon: 'set-mode',
+          icon: 'set-appearance',
           label: 'Appearance',
           value: this.theme.preference()[0].toUpperCase() + this.theme.preference().slice(1),
           route: ['/m', 'settings', 'appearance'],
         },
         {
           id: 'mode',
-          icon: `persona-${this.preferences.experienceMode()}`,
+          icon: 'set-tone',
           label: 'Mode & tone',
           value: `${this.modeLabel()} · ${this.toneLabel()}`,
           route: ['/m', 'settings', 'mode'],
@@ -82,10 +84,17 @@ export class SettingsHomeComponent {
       rows: [
         {
           id: 'language',
-          icon: 'language',
+          icon: 'set-lang',
           label: 'Language & audio',
           value: 'English · Audio on',
           route: ['/m', 'settings', 'language'],
+        },
+        {
+          id: 'interaction',
+          icon: 'set-interaction',
+          label: 'Interaction',
+          value: this.preferences.hapticsEnabled() ? 'Haptics on' : 'Haptics off',
+          route: ['/m', 'settings', 'interaction'],
         },
       ],
     },
@@ -96,19 +105,26 @@ export class SettingsHomeComponent {
           id: 'notifications',
           icon: 'set-notif',
           label: 'Notifications',
-          value: '3 on',
+          value: this.notificationLabel(),
           route: ['/m', 'settings', 'notifications'],
         },
         {
           id: 'location',
-          icon: this.preferences.panchangaPlace() ? 'pin-accent' : 'loc-current',
+          icon: 'set-loc',
           label: 'Location',
           value: this.locationLabel(),
           route: ['/m', 'settings', 'location'],
         },
         {
+          id: 'festivals',
+          icon: 'set-festival',
+          label: 'Festival calendar',
+          value: this.festivalLabel(),
+          route: ['/m', 'settings', 'festivals'],
+        },
+        {
           id: 'conventions',
-          icon: 'chart-east',
+          icon: 'set-conv',
           label: 'Conventions',
           value: `${this.ayanamshaLabel()} · ${this.chartStyleLabel()}`,
           route: ['/m', 'settings', 'conventions'],
@@ -132,21 +148,21 @@ export class SettingsHomeComponent {
       rows: [
         {
           id: 'account',
-          icon: 'shield',
+          icon: 'set-account',
           label: 'Account & privacy',
           value: 'Sign out, delete',
           route: ['/m', 'settings', 'account'],
         },
         {
           id: 'notification-center',
-          icon: 'set-notif',
+          icon: 'set-inbox',
           label: 'Notification center',
           value: 'Recent updates',
           route: ['/m', 'notifications'],
         },
         {
           id: 'subscription',
-          icon: 'sparkle',
+          icon: 'set-plus',
           label: 'Plus',
           value: 'Deeper guidance',
           route: ['/m', 'subscription'],
@@ -186,5 +202,24 @@ export class SettingsHomeComponent {
     if (value === 'south') return 'South';
     if (value === 'north') return 'North';
     return 'Eastern';
+  }
+
+  private festivalLabel(): string {
+    const regions = this.preferences.festivalRegions();
+    if (regions.length >= 3) return 'Multi-ethnic';
+    return regions.map((region) =>
+      region === 'pan-india' ? 'Essentials' : region === 'south' ? 'South' : 'North',
+    ).join(' · ') || 'Essentials';
+  }
+
+  private notificationLabel(): string {
+    try {
+      const stored = JSON.parse(localStorage.getItem(NOTIFICATION_STORAGE_KEY) ?? '[]') as Array<{ id: string; on: boolean }>;
+      if (!stored.length) return 'Local prefs';
+      const onCount = stored.filter((row) => row.on).length;
+      return `${onCount} selected`;
+    } catch {
+      return 'Local prefs';
+    }
   }
 }

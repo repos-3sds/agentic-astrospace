@@ -27,7 +27,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--m-surface);
+  background: var(--m-sheet-surface, var(--m-surface));
   border-radius: 28px 28px 0 0;
   padding: 12px 24px max(34px, calc(var(--m-safe-bottom) + 18px));
   display: flex;

@@ -115,16 +115,22 @@ class TestRemedyRoutes:
         assert "not a guarantee" in body["disclaimer"]
         assert "qualified professional" in body["disclaimer"]
         for group in body["groups"]:
-            assert group["affliction"]["severity"] in {"mild", "moderate"}
-            for remedy in group["remedies"]:
+            assert group["recommendation_id"]
+            assert group["safety_note"]
+            for remedy in group["practices"]:
                 assert remedy["is_convention_dependent"] is True
                 assert remedy["tradition_source"]
+
+    def test_manglik_is_excluded_by_default(self, client, kundli_id):
+        """US-PR-003: Manglik must never surface as a generic remedy card."""
+        body = client.get(f"/api/v1/remedies/{kundli_id}").json()
+        assert not [g for g in body["groups"] if g["trigger"].get("dosha") == "manglik"]
 
     def test_gemstones_can_be_excluded(self, client, kundli_id):
         body = client.get(
             f"/api/v1/remedies/{kundli_id}", params={"include_costly": "false"}
         ).json()
-        types = {r["remedy_type"] for g in body["groups"] for r in g["remedies"]}
+        types = {r["type"] for g in body["groups"] for r in g["practices"]}
         assert "gem" not in types
 
     def test_limit_is_honoured(self, client, kundli_id):
@@ -137,6 +143,35 @@ class TestRemedyRoutes:
     def test_another_users_kundli_404(self, client, foreign_kundli_id):
         """Ownership is enforced in the route, not just by RLS."""
         assert client.get(f"/api/v1/remedies/{foreign_kundli_id}").status_code == 404
+
+
+# ── Yogas/Doshas KB catalog ────────────────────────────────────────────────
+
+class TestVedicRulesRoutes:
+    """The rules KB catalog is reference data — no kundli_id needed."""
+
+    def test_list_all_rules(self, client):
+        body = client.get("/api/v1/vedic/rules").json()
+        assert body["count"] == len(body["rules"])
+        assert body["count"] > 25
+        assert {r["kind"] for r in body["rules"]} == {"yoga", "dosha"}
+
+    def test_kind_filter(self, client):
+        body = client.get("/api/v1/vedic/rules", params={"kind": "dosha"}).json()
+        assert body["rules"]
+        assert all(r["kind"] == "dosha" for r in body["rules"])
+
+    def test_rule_detail_matches_list_entry(self, client):
+        detail = client.get("/api/v1/vedic/rules/manglik_dosha").json()
+        assert detail["classical_name"] == "Manglik / Kuja Dosha"
+        assert detail["practitioner_explanation"]
+        assert detail["lay_explanation"]
+        assert detail["caveats"]
+
+    def test_unknown_rule_id_returns_pending_shape_not_500(self, client):
+        r = client.get("/api/v1/vedic/rules/not-a-real-rule")
+        assert r.status_code == 200
+        assert r.json()["status"] == "needs_review"
 
 
 # ── Muhurta ──────────────────────────────────────────────────────────────────

@@ -45,11 +45,13 @@
   </div>
 
   <div class="chart-card">
-    <as-east-chart
+    <app-kundli-chart
       class="render"
-      size="full"
-      [cells]="chartCells()"
-      [label]="chartTitle() + ' chart, East Indian style'"
+      [chart]="selectedVarga()"
+      [chartStyle]="chartStyle()"
+      [annotations]="data()?.planet_annotations || {}"
+      [interactive]="true"
+      (planetSelected)="openPlanet($event)"
     />
   </div>
 
@@ -61,3 +63,7 @@
   <p class="hint">Tap a planet to see details</p>
   }
 </div>
+
+@if (selectedPlanet(); as detail) {
+  <as-planet-sheet [detail]="detail" (dismissed)="selectedPlanet.set(null)" />
+}

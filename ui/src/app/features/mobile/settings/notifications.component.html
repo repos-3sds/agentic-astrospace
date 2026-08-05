@@ -7,11 +7,11 @@
   <header class="intro">
     <h1 class="title">Notifications</h1>
     <!-- The design rule, not a slogan. See the class comment. -->
-    <p class="lede">Opt-in, never fear-based — you choose what to hear.</p>
+    <p class="lede">Opt-in, never fear-based — saved now, delivered when push delivery is connected.</p>
   </header>
 
   <section class="delivery" [class.warn]="permission() !== 'granted'">
-    <b>{{ permission() === 'granted' ? 'Permission granted' : permission() === 'denied' ? 'Permission blocked' : 'Push not active yet' }}</b>
+    <b>{{ permission() === 'granted' ? 'Preferences ready' : permission() === 'denied' ? 'Permission blocked' : 'Push not active yet' }}</b>
     <p>{{ deliveryState() }}</p>
     @if (pushAvailable() && permission() === 'default') {
       <button type="button" (click)="requestPermission()">Request permission</button>
@@ -36,5 +36,5 @@
     </div>
   }
 
-  <p class="local-note">Notification choices persist on this device. Cross-device sync and push delivery depend on the native notification service.</p>
+  <p class="local-note">These are not live alerts yet. They persist on this device so the notification service can use them when it is enabled.</p>
 </div>

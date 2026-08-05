@@ -12,6 +12,7 @@ from ..core.cities import city_for_timezone, lookup_city
 from ..core.vedic import VedicChart, LocationError
 from ..core.vedic.compatibility import gun_milan
 from ..core.vedic.vargas import VARGA_FUNCTIONS
+from ..knowledge.vedic_rules import get_rule, rules_catalog
 from .auth import CurrentUser
 
 router = APIRouter(prefix="/api/v1/vedic", tags=["vedic"])
@@ -204,6 +205,29 @@ def compute_chart(b: VedicBirthInfo):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return chart.to_dict()
+
+
+@router.get("/rules")
+def vedic_rules(kind: str | None = Query(None, description="Filter to 'yoga' or 'dosha'.")):
+    """The full yoga/dosha knowledge base — reference data, not chart-specific.
+
+    Backs a Practitioner "browse all yogas/doshas" reference screen and any
+    "Learn this Yoga" sheet that wants the full catalog rather than a single
+    rule. Per-chart results (``/{kundli_id}/yogas``, ``/{kundli_id}/doshas``)
+    already carry the same explanatory fields inline via
+    ``enrich_rule_result`` — this endpoint exists for browsing, not as the
+    only way to get them.
+    """
+    catalog = list(rules_catalog().values())
+    if kind is not None:
+        catalog = [rule for rule in catalog if rule["kind"] == kind]
+    return {"rules": catalog, "count": len(catalog)}
+
+
+@router.get("/rules/{rule_id}")
+def vedic_rule_detail(rule_id: str):
+    """A single yoga/dosha rule by id — same shape as one entry of ``/rules``."""
+    return get_rule(rule_id)
 
 
 @router.get("/{kundli_id}/all")

@@ -112,6 +112,45 @@
   }
 }
 
+.date-range {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+
+  label {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 7px;
+    padding: 12px;
+    border: 1px solid var(--m-border);
+    border-radius: 16px;
+    background: var(--m-raised);
+  }
+
+  span {
+    @include m-caption;
+    color: var(--m-muted);
+  }
+
+  input {
+    @include m-body-strong;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    border: 0;
+    background: transparent;
+    color: var(--m-text);
+    font: inherit;
+    color-scheme: light;
+  }
+}
+
+:host-context(.dark) .date-range input,
+:host-context([data-theme='dark']) .date-range input {
+  color-scheme: dark;
+}
+
 /* Location — node 30:110 */
 .place {
   margin: 0;

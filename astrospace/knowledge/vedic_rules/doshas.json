@@ -10,6 +10,15 @@
         { "source": "bphs", "detail": "Kuja/Manglik placement rules; exact verse pending" },
         { "source": "phaladeepika", "detail": "Marriage caution combinations cross-reference pending" }
       ],
+      "practitioner_explanation": "Mars occupies one of six houses (1/2/4/7/8/12) counted from each of three reference points — Lagna, Moon, and Venus — independently. Raw severity scales with how many of the three references are affected (1=mild, 2=moderate, 3=strong). Widely-published exception rules (Mars in its own or exalted sign, Jupiter's graha drishti on Mars, Mars-Moon conjunction) apply a one-step downgrade to net_severity; the floor is 'mild' while any reference stays active, so an exception weakens but never fully erases an active flag by itself in this implementation.",
+      "lay_explanation": "Mars sits in a handful of specific positions relative to your ascendant, Moon, or Venus — a placement traditionally checked before marriage matching, and often softened by other factors elsewhere in the same chart.",
+      "strength_rubric": "severity: 1 active reference (of Lagna/Moon/Venus) = mild, 2 = moderate, 3 = strong. net_severity downgrades one step when any exception rule applies (see caveats), floored at mild while active.",
+      "caveats": [
+        "Classical exception: Mars in its own sign (Aries or Scorpio) or exalted (Capricorn) weakens the dosha.",
+        "Classical exception: Jupiter's graha drishti (5th/7th/9th aspect) on Mars weakens the dosha.",
+        "Classical exception: Mars conjunct the Moon in the same sign weakens the dosha.",
+        "This is a flag, not a verdict — treat it as one input among many, never as a marriage veto by itself."
+      ],
       "notes": [
         "Widely published exception rules (Mars own/exalted sign, Jupiter drishti on Mars, Mars-Moon conjunction) are applied as convention-dependent weakening factors in 'net_severity'; raw 'severity' is unchanged.",
         "Use this as a deterministic flag, not a final marriage judgement."
@@ -25,9 +34,16 @@
         { "source": "bphs", "detail": "Rashi/nakshatra sandhi affliction; exact verse pending" },
         { "source": "internal", "detail": "One-pada zone width and 0°48'/1°40' severity bands follow the common software convention; golden-chart validation pending" }
       ],
+      "practitioner_explanation": "Checks Moon, Lagna, and Sun for placement within one pada (3°20') of any of the three water→fire sign/nakshatra junctions. Severity grades by exact distance from the junction point: within 0°48' is severe, within 1°40' is moderate, otherwise mild (still within the one-pada zone).",
+      "lay_explanation": "One of your key chart points sits right at a sign changeover — a junction some traditions read as an ending running straight into a beginning, worth settling into gently rather than rushing.",
+      "strength_rubric": "severity by distance from the junction: <=0°48' severe, <=1°40' moderate, else mild (anywhere within the one-pada zone).",
+      "caveats": [
+        "Jyeshtha–Moola gandanta (Abhukta Mula) is traditionally treated as the most intense of the three junctions.",
+        "Zone width (one pada each side) and the severity orbs are convention-dependent; some traditions size the Moon-vs-Lagna zones differently."
+      ],
       "notes": [
         "Zone width (one pada on each side) and severity orbs are convention-dependent; some traditions use different spans for Moon vs Lagna.",
-        "Jyeshtha–Moola gandanta (Abhukta Mula) is traditionally treated as the most intense junction."
+        "Jyeshtha–Moola gandanta (Abhukta Mula) is traditionally considered the most intense of the three junctions."
       ]
     },
     "grahan_dosha": {
@@ -38,6 +54,13 @@
       "implementation": "computed",
       "source_refs": [
         { "source": "internal", "detail": "Same-sign conjunction definition with orb grading follows the common software convention; classical texts grade by eclipse proximity at birth" }
+      ],
+      "practitioner_explanation": "Checks whether the Sun or Moon shares a sign with Rahu or Ketu, then grades severity purely by the orb between the luminary and the node — this is a same-sign proxy, not a check against actual eclipse ephemeris.",
+      "lay_explanation": "The Sun or Moon in your chart sits close to one of the lunar nodes — a combination some traditions associate with an eclipse-adjacent influence.",
+      "strength_rubric": "severity by orb between luminary and node: <5° strong, <10° moderate, else mild (same sign but wide).",
+      "caveats": [
+        "Same-sign definition with orb grading is a software convention; classical texts more strictly require birth near an actual eclipse.",
+        "Not evaluated against real eclipse ephemeris data — this is a same-sign proxy, not eclipse detection."
       ],
       "notes": [
         "Orb thresholds are convention-dependent; some traditions require birth near an actual eclipse rather than any luminary-node conjunction."
@@ -52,6 +75,13 @@
       "source_refs": [
         { "source": "internal", "detail": "Awaiting preferred tradition/source before implementation" }
       ],
+      "practitioner_explanation": "Not implemented. Published definitions vary too widely across traditions (Sun/Rahu-Ketu combinations, 9th house afflictions, and several other schemes are all in circulation) to pick one without a source decision first.",
+      "lay_explanation": "AstroSpace does not calculate this yet.",
+      "strength_rubric": "n/a — never computed until a source-backed rule is implemented.",
+      "caveats": [
+        "Not displayed as active until a source-backed rule is selected.",
+        "Do not infer or display this dosha from other computed flags; it is genuinely absent from the engine, not merely hidden."
+      ],
       "notes": ["Not displayed as active until a source-backed rule is selected."]
     },
     "sarpa_dosha": {
@@ -62,6 +92,13 @@
       "implementation": "not_implemented",
       "source_refs": [
         { "source": "internal", "detail": "Awaiting preferred tradition/source before implementation" }
+      ],
+      "practitioner_explanation": "Not implemented. Tradition-dependent definitions (commonly tied to Rahu/Ketu house placement or nakshatra) have not been narrowed to a single source-backed rule yet.",
+      "lay_explanation": "AstroSpace does not calculate this yet.",
+      "strength_rubric": "n/a — never computed until a source-backed rule is implemented.",
+      "caveats": [
+        "Not displayed as active until a source-backed rule is selected.",
+        "Do not infer or display this dosha from other computed flags; it is genuinely absent from the engine, not merely hidden."
       ],
       "notes": ["Not displayed as active until a source-backed rule is selected."]
     }

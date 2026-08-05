@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DayGaugeComponent } from '../day-gauge/day-gauge.component';
 import { DayQualitySheetComponent, DaySignal } from './day-quality-sheet.component';
 import { ListenSheetComponent } from './listen-sheet.component';
@@ -65,6 +65,54 @@ export function gaugePositionFromScore(score: number): number {
   const span = Number.isFinite(lower) ? 4 : 4;
   const within = Math.min(1, Math.max(0, (score - (Number.isFinite(lower) ? lower : -6)) / span));
   return Math.round(floor + within * (ceiling - floor));
+}
+
+function gaugePositionFromDaily(daily: DailyGuidancePayload): number {
+  let score = 50;
+  score += daily.chandrabala.favourable ? 22 : -22;
+  score += daily.tarabala.favourable ? 18 : -18;
+  score += Math.min(2, daily.muhurta_windows.filter((row) => row.kind === 'auspicious').length) * 5;
+  score -= Math.min(2, daily.muhurta_windows.filter((row) => row.kind === 'inauspicious').length) * 5;
+  score -= Math.min(2, daily.context.active_gochara.filter((row) => row.severity === 'high').length) * 8;
+  if (daily.verdict.tone === 'supportive') score += 8;
+  if (daily.verdict.tone === 'caution') score -= 8;
+  return Math.round(Math.max(1, Math.min(100, score)));
+}
+
+function scoreReason(daily: DailyGuidancePayload): string {
+  const highTransits = daily.context.active_gochara.filter((row) => row.severity === 'high').length;
+  const difficultWindows = daily.muhurta_windows.filter((row) => row.kind === 'inauspicious').length;
+  const supportiveWindows = daily.muhurta_windows.filter((row) => row.kind === 'auspicious').length;
+  if (!daily.chandrabala.favourable) {
+    return highTransits || difficultWindows
+      ? 'The score is cautious mainly because your Moon support is weaker today, and one or more timing signals asks you to slow down.'
+      : 'The score is cautious mainly because the Moon is not giving you its usual emotional steadiness today. Keep the day simple and avoid reactive decisions.';
+  }
+  if (!daily.tarabala.favourable) {
+    return 'The score is mixed mainly because the day’s star is not fully aligned with you. It is usable, but better for steady follow-through than risky starts.';
+  }
+  if (highTransits) {
+    return 'The score is moderated by an active transit pressure. Your base support is present, but patience matters around the area being stirred.';
+  }
+  if (supportiveWindows > difficultWindows) {
+    return 'The score is supported by your Moon strength and helpful daily windows, so ordinary work and meaningful conversations get a cleaner rhythm.';
+  }
+  return 'The score is steady because your personal bala is supportive. Use the day with discipline rather than trying to force everything at once.';
+}
+
+function plainChandrabala(daily: DailyGuidancePayload): string {
+  if (daily.chandrabala.chandrashtama) {
+    return 'The Moon is in a sensitive position from your birth Moon, so reactions can feel sharper than usual.';
+  }
+  return daily.chandrabala.favourable
+    ? 'The Moon is supporting your emotional steadiness today, so routine decisions should feel easier to hold.'
+    : 'The Moon is not especially supportive today, so pause before reacting and leave space around important conversations.';
+}
+
+function plainTarabala(daily: DailyGuidancePayload): string {
+  return daily.tarabala.favourable
+    ? 'Today’s star has a helpful rhythm for you, so starting or completing ordinary work gets a little more support.'
+    : 'Today’s star asks for care, so simplify plans and avoid forcing outcomes that can wait.';
 }
 
 /** Verdict bands. Named, not numeric, so tone rules can key off them. */
@@ -144,6 +192,7 @@ export class TodayComponent {
   private readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
   private readonly festivals = inject(FestivalService);
+  private readonly route = inject(ActivatedRoute);
   protected readonly preferences = inject(PreferencesService);
   private readonly haptics = inject(HapticsService);
   protected readonly whyMode = computed(() => ({
@@ -188,6 +237,7 @@ export class TodayComponent {
   readonly signals = signal<DaySignal[]>([]);
 
   readonly summary = signal('');
+  readonly scoreReason = signal('');
 
   /** Which sheet is showing, if any. One signal so two cannot stack. */
   readonly openSheet = signal<'quality' | 'why' | 'listen' | null>(null);
@@ -244,6 +294,12 @@ export class TodayComponent {
 
   constructor() {
     void this.loadToday();
+    // Deep-linked from the onboarding Aha screen's "Listen to my first
+    // guidance" — arriving with ?listen=1 should open the sheet immediately
+    // rather than land on a plain Today with no explanation of the link.
+    if (this.route.snapshot.queryParamMap.get('listen') === '1') {
+      this.openSheet.set('listen');
+    }
   }
 
   protected async loadToday(): Promise<void> {
@@ -263,12 +319,14 @@ export class TodayComponent {
         this.applyDaily(profile.name, profile.birth_city, cached);
         this.loading.set(false);
         void this.prefetchCalendar(profile.id);
+        void this.prefetchChart(profile.id);
         return;
       }
       this.loading.set(true);
       const daily = await this.vedic.dailyGuidance(profile.id);
       this.applyDaily(profile.name, profile.birth_city, daily);
       void this.prefetchCalendar(profile.id);
+      void this.prefetchChart(profile.id);
     } catch (error) {
       this.loadError.set((error as Error).message);
     } finally {
@@ -291,7 +349,7 @@ export class TodayComponent {
       initial: name.slice(0, 1).toUpperCase(),
       dateLabel,
       place: daily.provenance.place.city || city,
-      score: gaugePositionFromScore(daily.verdict.score),
+      score: gaugePositionFromDaily(daily),
       band,
       scoreLabel: band === 'steady' ? 'Steady' : band === 'mixed' ? 'Mixed' : 'Take care',
       verdict: daily.verdict.headline,
@@ -315,23 +373,26 @@ export class TodayComponent {
     this.signals.set([
       {
         name: 'Tarabala',
-        verdict: daily.tarabala.favourable ? 'FAVOURABLE' : 'CAUTION',
+        verdict: daily.tarabala.favourable ? 'GOOD' : 'CAUTION',
         tone: daily.tarabala.favourable ? 'good' : 'warn',
-        explanation: daily.tarabala.note ?? `${daily.tarabala.tara} tara for today.`,
+        explanation: plainTarabala(daily),
       },
       {
         name: 'Chandrabala',
-        verdict: daily.chandrabala.favourable ? 'STRONG' : 'CAUTION',
+        verdict: daily.chandrabala.favourable ? 'GOOD' : 'CAUTION',
         tone: daily.chandrabala.favourable ? 'good' : 'warn',
-        explanation: `Moon is ${daily.chandrabala.house_from_rashi} houses from your natal Moon.`,
+        explanation: plainChandrabala(daily),
       },
       ...daily.context.active_gochara.slice(0, 1).map((transit) => ({
         name: transit.planet,
-        verdict: (transit.severity ?? 'ACTIVE').toUpperCase(),
+        verdict: transit.severity === 'high' ? 'USE CARE' : 'ACTIVE',
         tone: transit.severity === 'high' ? 'warn' as const : 'good' as const,
-        explanation: transit.name,
+        explanation: transit.severity === 'high'
+          ? `${transit.name} is active, so keep extra patience around the area it touches.`
+          : `${transit.name} is active in the background today.`,
       })),
     ]);
+    this.scoreReason.set(scoreReason(daily));
     this.summary.set(daily.reading.summary);
     // The full narrative leads the evidence sheet, so nothing the engine wrote
     // is dropped — it just stops overflowing the card it was never sized for.
@@ -340,6 +401,11 @@ export class TodayComponent {
       label: `Signal ${index + 1}`,
       value,
     })));
+    this.conventions.set([
+      daily.system,
+      this.preferences.ayanamsha(),
+      `${daily.provenance.place.city} · ${daily.provenance.place.timezone}`,
+    ]);
     this.dashaChain.set(daily.context.dasha_chain.map((level) => ({
       ...level,
       short: DASHA_LEVEL_SHORT[level.level] ?? level.level,
@@ -377,6 +443,11 @@ export class TodayComponent {
         ],
       },
     ]);
+    this.askSuggestions.set([
+      `Why is today ${daily.verdict.tone === 'caution' ? 'a caution day' : 'supportive'} for me?`,
+      `What should I do with ${daily.reading.focus.toLowerCase()} today?`,
+      `Explain ${daily.star_of_day.nakshatra} nakshatra in simple words`,
+    ]);
   }
 
   private async prefetchCalendar(profileId: string): Promise<void> {
@@ -389,6 +460,14 @@ export class TodayComponent {
       if (city) void this.festivals.upcoming(city, nation, calendar.start_date, 60);
     } catch {
       // Today should stay usable even if Calendar cannot be warmed in the background.
+    }
+  }
+
+  private async prefetchChart(profileId: string): Promise<void> {
+    try {
+      await this.vedic.all(profileId);
+    } catch {
+      // Today should stay usable even if the natal chart cannot be warmed.
     }
   }
 }

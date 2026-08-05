@@ -47,5 +47,7 @@
   }
 </main>
 
-@if (learningOpen()) { <as-yoga-learning-sheet (dismissed)="learningOpen.set(false)" /> }
+@if (learningOpen() && selectedLearning(); as detail) {
+  <as-yoga-learning-sheet [detail]="detail" (dismissed)="learningOpen.set(false)" />
+}
 @if (cancellationOpen()) { <as-manglik-cancellation-sheet (dismissed)="cancellationOpen.set(false)" /> }

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { RouterLink } from '@angular/router';
 
 /** One thing the app may notify about. */
@@ -57,11 +58,16 @@ export class NotificationsComponent {
   readonly prefs = signal<NotificationPref[]>(this.restorePrefs());
   readonly permission = signal(this.notificationPermission());
   readonly pushAvailable = computed(() => typeof Notification !== 'undefined');
+  readonly nativeApp = computed(() => Capacitor.isNativePlatform());
   readonly deliveryState = computed(() => {
-    if (!this.pushAvailable()) return 'Push notifications are not available in this browser preview.';
-    if (this.permission() === 'denied') return 'Notifications are blocked for this browser. Enable them in system or browser settings.';
+    if (!this.pushAvailable()) {
+      return this.nativeApp()
+        ? 'Push delivery is not enabled in this build yet. Your choices are saved for the native notification service.'
+        : 'Push delivery is not enabled in this web session. Your choices are saved for the native app.';
+    }
+    if (this.permission() === 'denied') return 'Notifications are blocked for this app. Enable them in Android settings when push delivery is connected.';
     if (this.permission() === 'granted') return 'Preferences are saved locally. Device-token delivery still requires the native push service.';
-    return 'Preferences are saved locally. Grant notification permission on a native build before delivery can start.';
+    return 'Preferences are saved locally. Permission can be requested once native push delivery is connected.';
   });
 
   /** What the Settings hub reports as "N on" — derived, never stated twice. */

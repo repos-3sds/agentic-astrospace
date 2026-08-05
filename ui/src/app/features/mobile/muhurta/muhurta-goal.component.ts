@@ -34,16 +34,18 @@ export type MuhurtaRange = 'week' | 'month' | 'custom';
 })
 export class MuhurtaGoalComponent {
   readonly goals = signal<MuhurtaGoal[]>([
-    { id: 'property', label: 'Buy property / gold', icon: 'goal-property' },
-    { id: 'contract', label: 'Sign a contract', icon: 'goal-contract' },
-    { id: 'journey', label: 'Start a journey', icon: 'goal-journey' },
-    { id: 'venture', label: 'Start a new venture', icon: 'goal-venture' },
-    { id: 'marriage', label: 'Marriage-related', icon: 'goal-marriage' },
-    { id: 'other', label: 'Something else', icon: 'goal-other' },
+    { id: 'buy_property_gold', label: 'Buy property / gold', icon: 'goal-property' },
+    { id: 'sign_contract', label: 'Sign a contract', icon: 'goal-contract' },
+    { id: 'start_journey', label: 'Start a journey', icon: 'goal-journey' },
+    { id: 'start_venture', label: 'Start a new venture', icon: 'goal-venture' },
+    { id: 'marriage_related', label: 'Marriage-related', icon: 'goal-marriage' },
+    { id: 'general', label: 'Something else', icon: 'goal-other' },
   ]);
 
-  readonly selectedGoal = signal<string>('contract');
+  readonly selectedGoal = signal<string>('sign_contract');
   readonly range = signal<MuhurtaRange>('month');
+  readonly customFrom = signal(this.isoDate(new Date()));
+  readonly customTo = signal(this.isoDate(this.addDays(new Date(), 14)));
 
   readonly ranges: { id: MuhurtaRange; label: string }[] = [
     { id: 'week', label: 'This week' },
@@ -64,7 +66,13 @@ export class MuhurtaGoalComponent {
   });
 
   // Nothing can be computed for a purpose that has not been chosen.
-  protected readonly canSearch = computed(() => this.selectedGoal().length > 0);
+  protected readonly canSearch = computed(() => {
+    if (!this.selectedGoal()) return false;
+    if (this.range() !== 'custom') return true;
+    const from = this.customFrom();
+    const to = this.customTo();
+    return !!from && !!to && from <= to;
+  });
 
   private readonly router = inject(Router);
 
@@ -72,8 +80,44 @@ export class MuhurtaGoalComponent {
     if (!this.canSearch()) {
       return;
     }
+    const dates = this.selectedDates();
     void this.router.navigate(['/m', 'muhurta', 'results'], {
-      queryParams: { goal: this.selectedGoal(), range: this.range() },
+      queryParams: {
+        goal: this.selectedGoal(),
+        range: this.range(),
+        date_from: dates.from,
+        date_to: dates.to,
+      },
     });
+  }
+
+  protected setCustomFrom(value: string): void {
+    this.customFrom.set(value);
+    if (this.customTo() < value) this.customTo.set(value);
+  }
+
+  protected setCustomTo(value: string): void {
+    this.customTo.set(value);
+  }
+
+  private selectedDates(): { from: string; to: string } {
+    const today = new Date();
+    if (this.range() === 'week') {
+      return { from: this.isoDate(today), to: this.isoDate(this.addDays(today, 6)) };
+    }
+    if (this.range() === 'custom') {
+      return { from: this.customFrom(), to: this.customTo() };
+    }
+    return { from: this.isoDate(today), to: this.isoDate(this.addDays(today, 30)) };
+  }
+
+  private addDays(date: Date, days: number): Date {
+    const next = new Date(date);
+    next.setDate(next.getDate() + days);
+    return next;
+  }
+
+  private isoDate(date: Date): string {
+    return date.toISOString().slice(0, 10);
   }
 }

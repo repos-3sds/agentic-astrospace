@@ -1,8 +1,10 @@
 <as-sheet (dismissed)="dismissed.emit()">
   <header class="head">
     <p class="title">Why today is a {{ score() }}</p>
-    <p class="sub">Your day-quality blends three computed signals.</p>
+    <p class="sub">Your day-quality gives extra weight to the signals that affect you most.</p>
   </header>
+
+  <p class="reason">{{ reason() }}</p>
 
   @for (signal of signals(); track signal.name) {
     <div class="signal">

@@ -1,4 +1,5 @@
 import { Injectable, effect, signal } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 
 const STORAGE_KEY = 'astrospace-theme';
 export type ThemePreference = 'system' | 'light' | 'dark';
@@ -33,7 +34,9 @@ export class ThemeService {
 
   constructor() {
     effect(() => {
-      document.documentElement.classList.toggle('app-dark', this.dark());
+      const dark = this.dark();
+      document.documentElement.classList.toggle('app-dark', dark);
+      void this.applyNativeBars(dark);
     });
 
     // Follow the device until the reader overrides it.
@@ -58,6 +61,17 @@ export class ThemeService {
       localStorage.removeItem(STORAGE_KEY);
     } else {
       localStorage.setItem(STORAGE_KEY, preference);
+    }
+  }
+
+  private async applyNativeBars(dark: boolean): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      const { StatusBar, Style } = await import('@capacitor/status-bar');
+      await StatusBar.setStyle({ style: dark ? Style.Dark : Style.Light });
+      await StatusBar.setBackgroundColor({ color: dark ? '#17130F' : '#FAF7F0' });
+    } catch {
+      // Native chrome should never block theme application.
     }
   }
 }

@@ -1,0 +1,89 @@
+@use './settings-shared' as shared;
+
+@include shared.settings-screen;
+
+.presets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.presets button {
+  min-height: 42px;
+  border: 1px solid var(--m-border);
+  border-radius: 999px;
+  color: var(--m-accent-strong);
+  background: var(--m-surface);
+  font-weight: 650;
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.choice {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 15px;
+  border: 1px solid var(--m-border);
+  border-radius: 18px;
+  background: var(--m-surface);
+  color: var(--m-text);
+  text-align: left;
+}
+
+.choice.is-on {
+  border-color: var(--m-accent);
+  background: var(--m-accent-soft);
+}
+
+.choice-copy {
+  min-width: 0;
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.choice-title {
+  color: var(--m-text);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.choice-detail {
+  color: var(--m-muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.check {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--m-border-strong);
+  border-radius: 999px;
+  color: var(--m-on-ink);
+  background: var(--m-ink);
+  font-weight: 800;
+}
+
+.choice:not(.is-on) .check {
+  background: transparent;
+}
+
+.local-note {
+  margin: 0;
+  color: var(--m-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}

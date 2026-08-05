@@ -18,13 +18,17 @@
 
   <nav class="tabs" aria-label="Strength calculation">
     @for (item of [{id: 'shadbala', label: 'Shadbala'}, {id: 'ashtakavarga', label: 'Ashtakavarga'}, {id: 'jaimini', label: 'Jaimini'}]; track item.id) {
-      <button type="button" [class.is-on]="tab() === item.id" (click)="tab.set($any(item.id))">{{ item.label }}</button>
+      <button type="button" [class.is-on]="tab() === item.id" (click)="selectTab($any(item.id))">{{ item.label }}</button>
     }
   </nav>
 
   @switch (tab()) {
     @case ('shadbala') {
       <p class="explainer"><img src="mobile/info.svg" alt="" aria-hidden="true" />Six-fold strength (virupa) vs. the classical required minimum.</p>
+      <section class="meaning-card">
+        <b>What this means for you</b>
+        <p>{{ shadbalaMeaning() }}</p>
+      </section>
       <section class="strength-list">
         @for (planet of strengths(); track planet.name) {
           <article class="strength-card">
@@ -48,6 +52,10 @@
         }
       </div>
       <div class="section-line"><span>{{ avPlanet() }} · {{ avPlanet() === 'SAV' ? 'SARVASHTAKAVARGA' : 'BHINNASHTAKAVARGA' }}</span><small>{{ totalBindus() }} total bindus</small></div>
+      <section class="meaning-card">
+        <b>What this means for you</b>
+        <p>{{ ashtakavargaMeaning() }}</p>
+      </section>
       <div class="av-chart">
         <img src="mobile/ashtakavarga-grid.svg" alt="" aria-hidden="true" />
         @for (house of displayedHouses(); track house.house) {
@@ -71,6 +79,10 @@
     }
     @case ('jaimini') {
       <p class="explainer"><img src="mobile/info.svg" alt="" aria-hidden="true" />A different analytical system — chara karakas and arudha padas, not Parashari.</p>
+      <section class="meaning-card">
+        <b>What this means for you</b>
+        <p>{{ jaiminiMeaning() }}</p>
+      </section>
       <p class="section-title">CHARA KARAKAS</p>
       <section class="data-list">
         @for (row of karakas(); track row[0]) {

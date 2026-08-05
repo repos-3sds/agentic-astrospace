@@ -32,7 +32,12 @@
   flex-shrink: 0;
   cursor: pointer;
   text-decoration: none;
-  img { width: 19px; height: 19px; display: block; }
+  img {
+    width: 19px;
+    height: 19px;
+    display: block;
+    filter: var(--m-back-icon-filter);
+  }
 }
 
 /* Content column — node 25:32 */

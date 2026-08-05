@@ -20,7 +20,7 @@ import { TransitDetail, TransitDetailComponent } from './transit-detail.componen
   template: `
     <a class="mtrf-back" [routerLink]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
     <main class="mtrf-body">
-      <header><h1>Full Transits</h1><p>Gochara with vedha, Ashtakavarga and evidence</p></header>
+      <header><h1>Full Transits</h1><p>Current sky with practical meaning first, evidence second</p></header>
       <nav class="mtrf-tabs"><a [routerLink]="['/m','transits']">Gochara</a><span>Full Transits</span></nav>
       @if (loading()) {
         <section class="mtrf-copy"><p>Calculating all nine placements…</p></section>
@@ -31,7 +31,8 @@ import { TransitDetail, TransitDetailComponent } from './transit-detail.componen
           <p class="mtrf-title">SADE SATI</p>
           <section class="mtrf-copy" [attr.data-tone]="sade.active ? 'warn' : 'good'">
             <p><b>{{ sade.active ? 'Active' : 'Not active' }}</b>@if (sade.active && sade.phase) { — {{ sade.phase }} phase }</p>
-            <p>Saturn is {{ sade.saturn_house_from_moon }} house(s) from your natal Moon.</p>
+            <p>{{ sade.active ? 'Use this as a discipline marker: simplify commitments, protect sleep, and do the slow necessary work.' : 'Saturn is not pressing the natal Moon through Sade Sati right now.' }}</p>
+            <p>Evidence: Saturn is {{ sade.saturn_house_from_moon }} house(s) from your natal Moon.</p>
           </section>
         }
         <p class="mtrf-title">{{ payload.gochara.interpretation.range_outlook.days }}-DAY RANGE</p>
@@ -39,11 +40,11 @@ import { TransitDetail, TransitDetailComponent } from './transit-detail.componen
           <p><b>{{ payload.gochara.interpretation.range_outlook.title }}</b></p>
           <p>{{ payload.gochara.interpretation.range_outlook.reading }}</p>
         </section>
-        <p class="mtrf-title">CURRENT POSITIONS · EFFECTIVE VERDICT</p>
+        <p class="mtrf-title">CURRENT POSITIONS · WHAT TO WATCH</p>
         <section class="mtrf-list">
           @for (rule of baselineRules(); track rule.rule_id) {
             <button type="button" (click)="open(rule)">
-              <span><b>{{ rule.planet }}</b><small>{{ payload.gochara.planets[rule.planet]?.sign ?? '—' }} · house {{ rule.house }}</small></span>
+              <span><b>{{ rule.planet }}</b><small>{{ transitPlain(rule) }}</small><small class="mtrf-action">{{ ruleAction(rule) }}</small></span>
               <em>AV {{ avRow(rule)?.bindus ?? '—' }}</em>
               @if (hasVedha(rule)) { <i>VEDHA</i> }
               @if (classicalFor(rule); as classical) {
@@ -131,6 +132,36 @@ export class FullTransitsComponent {
     if (this.preferences.experienceMode() === 'guided') return rule.content.guided_summary;
     if (this.preferences.experienceMode() === 'practitioner') return rule.content.practitioner_deep_dive;
     return rule.content.balanced_context;
+  }
+
+  protected transitPlain(rule: GocharamMatchedRule): string {
+    const house = rule.house ? `house ${rule.house}` : 'its current place';
+    const verdict = rule.effective_verdict === 'supportive' ? 'supportive' : 'needs care';
+    return `${house} · ${verdict} · tap for evidence`;
+  }
+
+  protected ruleAction(rule: GocharamMatchedRule): string {
+    const theme = this.houseTheme(rule.house);
+    if (rule.effective_verdict === 'supportive') return `Use for ${theme}, without forcing speed.`;
+    if (this.hasVedha(rule)) return `A block is present: double-check ${theme} before committing.`;
+    return `Watch ${theme}; choose patience over reaction.`;
+  }
+
+  private houseTheme(house: number): string {
+    return ({
+      1: 'body, mood and direction',
+      2: 'money, speech and family',
+      3: 'effort, skills and communication',
+      4: 'home and emotional ground',
+      5: 'learning and creativity',
+      6: 'health routines and disputes',
+      7: 'partnerships and agreements',
+      8: 'shared resources and repair',
+      9: 'belief, teachers and travel',
+      10: 'work and reputation',
+      11: 'gains and networks',
+      12: 'rest, expenses and release',
+    } as Record<number, string>)[Number(house)] ?? 'the activated life area';
   }
 
   protected open(rule: GocharamMatchedRule): void {

@@ -100,7 +100,7 @@ export function buildChartAdapter(data: VedicAll, profile: Kundli | null, vargaI
   };
   for (const [planet, row] of Object.entries(data.planets ?? {})) {
     const abbr = PLANET_ABBR[planet] ?? planet.slice(0, 2);
-    details[abbr] = planetDetail(planet, abbr, row);
+    details[abbr] = planetDetail(planet, abbr, row, varga?.planets?.[planet], vargaId, varga);
   }
 
   const sun = data.planets?.['Sun'];
@@ -130,16 +130,31 @@ function groupPlanets(data: VedicAll, varga: VargaChart | null): Record<string, 
   return grouped;
 }
 
-function planetDetail(planet: string, abbr: string, row: VedicPlanet): PlanetDetail {
-  const house = row.house ? `${ordinal(row.house)} house` : 'house unavailable';
+function planetDetail(
+  planet: string,
+  abbr: string,
+  row: VedicPlanet,
+  vargaRow: VargaChart['planets'][string] | undefined,
+  vargaId: string,
+  varga: VargaChart | null,
+): PlanetDetail {
+  const sign = vargaRow?.sign ?? row.sign;
+  const houseNumber = vargaRow?.house ?? row.house;
+  const house = houseNumber ? `${ordinal(houseNumber)} house` : 'house unavailable';
+  const isDivisional = !!vargaRow && vargaId !== 'D1';
   return {
     abbr,
-    title: `${planet} in ${row.sign}`,
-    position: `${row.dms ?? degreeLabel(row)} · ${house}`,
+    title: `${planet} in ${sign}`,
+    position: isDivisional
+      ? `${vargaId} · ${varga?.name ?? 'Divisional chart'} · ${house}`
+      : `${row.dms ?? degreeLabel(row)} · ${house}`,
     house,
     reading: [
-      `${planet} is in ${row.sign}${row.nakshatra ? `, ${row.nakshatra} pada ${row.nakshatra_pada}` : ''}.`,
-      row.retrograde ? 'It is marked retrograde in the returned calculation.' : null,
+      isDivisional
+        ? `${planet} falls in ${sign} in the ${vargaId} ${varga?.name ?? 'divisional'} chart${varga?.signifies ? `, which is used for ${varga.signifies.toLowerCase()}` : ''}.`
+        : `${planet} is in ${row.sign}${row.nakshatra ? `, ${row.nakshatra} pada ${row.nakshatra_pada}` : ''}.`,
+      (vargaRow?.retrograde ?? row.retrograde) ? 'It is marked retrograde in the returned calculation.' : null,
+      vargaRow?.vargottama ? 'It is also marked vargottama in this chart.' : null,
       `This detail is computed from the selected profile rather than fixed example text.`,
     ].filter(Boolean).join(' '),
   };

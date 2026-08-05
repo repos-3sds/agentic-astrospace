@@ -10,6 +10,12 @@
         { "source": "bphs", "detail": "Yoga chapters; edition-specific verse pending" },
         { "source": "phaladeepika", "detail": "Yoga chapter cross-reference pending" }
       ],
+      "practitioner_explanation": "Jupiter placed in a kendra (1st/4th/7th/10th) from the Moon. Strength starts strong when Jupiter is conjunct the Moon (house 1) and moderate for the other three kendras, then shifts one step down if either participant is debilitated, or one step up if either is exalted or in its own sign.",
+      "lay_explanation": "Jupiter sits in a supportive angle from your Moon — a classically favorable combination often read as steadiness paired with good judgment.",
+      "strength_rubric": "strong if Jupiter is in house 1 from Moon (conjunction), else moderate for house 4/7/10; then one step down if Moon or Jupiter is debilitated, one step up if either is exalted or in its own sign (debilitation takes precedence).",
+      "caveats": [
+        "Classical texts also weigh Jupiter's own dignity, aspects, and any affliction beyond this kendra check — treat as a starting signal, not the complete picture."
+      ],
       "notes": ["Strength should consider Jupiter dignity, Moon strength, aspects, and affliction."]
     },
     "chandra_mangal_yoga": {
@@ -22,6 +28,12 @@
         { "source": "phaladeepika", "detail": "Yoga chapter cross-reference pending" },
         { "source": "saravali", "detail": "Yoga chapter cross-reference pending" }
       ],
+      "practitioner_explanation": "Moon and Mars share a sign (conjunction) or sit in mutual opposition (7th from each other). Strength is strong for exact conjunction and moderate for opposition; no further dignity adjustment is applied.",
+      "lay_explanation": "Moon and Mars are linked in your chart — traditionally associated with drive paired with emotional intensity, expressed well or poorly depending on the rest of the chart.",
+      "strength_rubric": "strong if Moon and Mars share a sign (conjunction), moderate if in mutual opposition.",
+      "caveats": [
+        "Result language varies by dignity, house, and benefic/malefic influence in classical texts — this flag doesn't grade those separately."
+      ],
       "notes": ["Result language varies by dignity, house, and benefic/malefic influence."]
     },
     "budhaditya_yoga": {
@@ -32,6 +44,12 @@
       "implementation": "computed",
       "source_refs": [
         { "source": "bphs", "detail": "Commonly cited Parashari yoga; exact edition reference pending" }
+      ],
+      "practitioner_explanation": "Sun and Mercury share a sign. Always graded moderate — no dignity or combustion adjustment is applied, even though Mercury this close to the Sun is frequently near-combust by definition.",
+      "lay_explanation": "Sun and Mercury share a sign — often read as sharpened intellect and clearer communication.",
+      "strength_rubric": "always moderate when active; no upgrade/downgrade for dignity or combustion is applied in this implementation.",
+      "caveats": [
+        "Mercury's own dignity and combustion status (near-unavoidable this close to the Sun) should temper the reading; neither is folded into strength here yet."
       ],
       "notes": ["Combustion and Mercury dignity should temper strength."]
     },
@@ -45,6 +63,13 @@
         { "source": "bphs", "detail": "Kemadruma and cancellation rules vary by edition" },
         { "source": "phaladeepika", "detail": "Cancellation rules cross-reference pending" }
       ],
+      "practitioner_explanation": "Active when no classical planet besides the Sun sits adjacent to the Moon (2nd/12th sign) or in a kendra from the Moon. Graded strong whenever active — this is a binary, conservative flag rather than a fully cancellation-aware implementation.",
+      "lay_explanation": "Your Moon lacks other planets nearby or in a few key supportive positions — a classical caution flag about needing to build your own support systems, not a fixed outcome.",
+      "strength_rubric": "binary: active = strong, inactive = none — no partial grading.",
+      "caveats": [
+        "Numerous classical cancellation rules exist (e.g. Moon in a kendra from Lagna, benefic aspects on the Moon) that are not yet all implemented; treat this as a conservative, simplified flag pending fuller cancellation logic.",
+        "source_status: convention_dependent — traditions differ on what counts as 'support'."
+      ],
       "notes": ["Cancellation rules vary; AstroSpace currently uses a conservative simplified flag."]
     },
     "neecha_bhanga_raja_yoga": {
@@ -57,6 +82,13 @@
         { "source": "bphs", "detail": "Neecha Bhanga conditions; complete exception set pending" },
         { "source": "phaladeepika", "detail": "Cross-check pending" }
       ],
+      "practitioner_explanation": "For each debilitated classical planet, checks whether the lord of its debilitation sign is placed in a kendra from Lagna or from the Moon; either condition reports a cancellation trigger. Always graded moderate when triggered — the number of conditions met is not graded separately.",
+      "lay_explanation": "A weak (debilitated) placement in your chart may be getting classical backup that offsets the weakness, turning a caution into something more workable.",
+      "strength_rubric": "always moderate when triggered; no further grading by how many cancellation conditions are simultaneously met.",
+      "caveats": [
+        "Only checks 'debilitation-sign-lord in kendra from Lagna/Moon'; BPHS documents several additional Neecha Bhanga conditions (e.g. exchange with the debilitated planet, exaltation-sign-lord conditions) not yet implemented.",
+        "verified: false — pending fuller validation against a complete exception set."
+      ],
       "notes": ["Current implementation checks debilitation sign lord in kendra from Lagna or Moon only."]
     },
     "raja_yoga": {
@@ -67,6 +99,13 @@
       "implementation": "partial",
       "source_refs": [
         { "source": "bphs", "detail": "Kendra-trikona lord association rules" }
+      ],
+      "practitioner_explanation": "For every kendra-lord/trikona-lord pair (excluding cases where one planet lords both), reports one instance when they share a sambandha — conjunction, mutual aspect (including mutual 7th), parivartana exchange, or a one-way graha drishti. Strength starts moderate for a mutual connection or weak for a one-way aspect, then shifts one step for participant dignity.",
+      "lay_explanation": "Two of your chart's most influential house-lords are connected — a classical marker for authority, achievement, and standing, more so when the connection is a strong mutual link rather than a one-way glance.",
+      "strength_rubric": "moderate if mutual sambandha (conjunction / mutual aspect / parivartana), weak if only a one-way graha drishti; then one step down if a participant is debilitated, one step up if a participant is exalted or in its own sign (debilitation takes precedence).",
+      "caveats": [
+        "Full strength assessment (house condition, additional aspects, divisional/varga support) is pending; this is an association-detection pass, not a complete Raja Yoga strength model.",
+        "verified: false."
       ],
       "notes": ["Implementation includes conjunction, opposition, parivartana exchange, and special graha drishti for Mars/Jupiter/Saturn; full strength assessment pending."]
     },
@@ -80,6 +119,13 @@
         { "source": "bphs", "detail": "Dhana yoga combinations; edition references pending" },
         { "source": "phaladeepika", "detail": "Wealth yogas cross-reference pending" }
       ],
+      "practitioner_explanation": "For every pair of wealth-house lords (2nd/5th/9th/11th, excluding cases where one planet lords both), reports one instance when they share a sambandha — conjunction, mutual aspect, parivartana exchange, or a one-way graha drishti. Strength starts moderate for a mutual connection or weak for a one-way aspect, then shifts one step for participant dignity, mirroring Raja Yoga's method applied to wealth houses.",
+      "lay_explanation": "Two of your chart's wealth-house lords are connected — a classical marker for material resources coming together, more so when the connection is a strong mutual link.",
+      "strength_rubric": "moderate if mutual sambandha (conjunction / mutual aspect / parivartana), weak if only a one-way graha drishti; then one step down if a participant is debilitated, one step up if a participant is exalted or in its own sign (debilitation takes precedence).",
+      "caveats": [
+        "Full strength assessment (house condition, additional aspects, divisional/varga support) is pending; this is an association-detection pass, not a complete Dhana Yoga strength model.",
+        "verified: false."
+      ],
       "notes": ["Implementation includes conjunction, opposition, parivartana exchange, and special graha drishti for wealth-house lords; full strength assessment pending."]
     },
     "ruchaka_yoga": {
@@ -91,6 +137,12 @@
       "source_refs": [
         { "source": "bphs", "detail": "Pancha Mahapurusha yogas; exact edition reference pending" },
         { "source": "phaladeepika", "detail": "Cross-check pending" }
+      ],
+      "practitioner_explanation": "Mars in its own sign (Aries/Scorpio) or exalted (Capricorn) while placed in a kendra (1/4/7/10) from Lagna. Strength is strong when exalted, moderate when in own sign — both dignities are already required for activation, so no further dignity adjustment is applied.",
+      "lay_explanation": "Mars is strongly placed in one of your chart's four pillar houses — a classical marker tied to courage and initiative.",
+      "strength_rubric": "strong if Mars is exalted (Capricorn), moderate if in its own sign (Aries/Scorpio) — dignity here is definitional to activation, not a separate adjustment.",
+      "caveats": [
+        "Strength should still weigh combustion, aspects, house condition, and divisional (varga) support — none of those are folded in yet."
       ],
       "notes": ["Strength should consider combustion, aspects, house condition, and divisional support."]
     },
@@ -104,6 +156,12 @@
         { "source": "bphs", "detail": "Pancha Mahapurusha yogas; exact edition reference pending" },
         { "source": "phaladeepika", "detail": "Cross-check pending" }
       ],
+      "practitioner_explanation": "Mercury in its own sign (Gemini/Virgo) or exalted (Virgo) while placed in a kendra (1/4/7/10) from Lagna. Strength is strong when exalted, moderate when in own sign — both dignities are already required for activation, so no further dignity adjustment is applied.",
+      "lay_explanation": "Mercury is strongly placed in one of your chart's four pillar houses — a classical marker tied to intellect and adaptability.",
+      "strength_rubric": "strong if Mercury is exalted (Virgo), moderate if in its own sign (Gemini/Virgo) — dignity here is definitional to activation, not a separate adjustment.",
+      "caveats": [
+        "Strength should still weigh combustion, aspects, house condition, and divisional (varga) support — none of those are folded in yet."
+      ],
       "notes": ["Strength should consider combustion, aspects, house condition, and divisional support."]
     },
     "hamsa_yoga": {
@@ -115,6 +173,12 @@
       "source_refs": [
         { "source": "bphs", "detail": "Pancha Mahapurusha yogas; exact edition reference pending" },
         { "source": "phaladeepika", "detail": "Cross-check pending" }
+      ],
+      "practitioner_explanation": "Jupiter in its own sign (Sagittarius/Pisces) or exalted (Cancer) while placed in a kendra (1/4/7/10) from Lagna. Strength is strong when exalted, moderate when in own sign — both dignities are already required for activation, so no further dignity adjustment is applied.",
+      "lay_explanation": "Jupiter is strongly placed in one of your chart's four pillar houses — a classical marker tied to wisdom and ethical grounding.",
+      "strength_rubric": "strong if Jupiter is exalted (Cancer), moderate if in its own sign (Sagittarius/Pisces) — dignity here is definitional to activation, not a separate adjustment.",
+      "caveats": [
+        "Strength should still weigh aspects, house condition, and divisional (varga) support — none of those are folded in yet."
       ],
       "notes": ["Strength should consider aspects, house condition, and divisional support."]
     },
@@ -128,6 +192,12 @@
         { "source": "bphs", "detail": "Pancha Mahapurusha yogas; exact edition reference pending" },
         { "source": "phaladeepika", "detail": "Cross-check pending" }
       ],
+      "practitioner_explanation": "Venus in its own sign (Taurus/Libra) or exalted (Pisces) while placed in a kendra (1/4/7/10) from Lagna. Strength is strong when exalted, moderate when in own sign — both dignities are already required for activation, so no further dignity adjustment is applied.",
+      "lay_explanation": "Venus is strongly placed in one of your chart's four pillar houses — a classical marker tied to comfort, grace, and refinement.",
+      "strength_rubric": "strong if Venus is exalted (Pisces), moderate if in its own sign (Taurus/Libra) — dignity here is definitional to activation, not a separate adjustment.",
+      "caveats": [
+        "Strength should still weigh combustion, aspects, house condition, and divisional (varga) support — none of those are folded in yet."
+      ],
       "notes": ["Strength should consider combustion, aspects, house condition, and divisional support."]
     },
     "sasa_yoga": {
@@ -139,6 +209,12 @@
       "source_refs": [
         { "source": "bphs", "detail": "Pancha Mahapurusha yogas; exact edition reference pending" },
         { "source": "phaladeepika", "detail": "Cross-check pending" }
+      ],
+      "practitioner_explanation": "Saturn in its own sign (Capricorn/Aquarius) or exalted (Libra) while placed in a kendra (1/4/7/10) from Lagna. Strength is strong when exalted, moderate when in own sign — both dignities are already required for activation, so no further dignity adjustment is applied.",
+      "lay_explanation": "Saturn is strongly placed in one of your chart's four pillar houses — a classical marker tied to discipline and authority built through persistence.",
+      "strength_rubric": "strong if Saturn is exalted (Libra), moderate if in its own sign (Capricorn/Aquarius) — dignity here is definitional to activation, not a separate adjustment.",
+      "caveats": [
+        "Strength should still weigh retrogression, aspects, house condition, and divisional (varga) support — none of those are folded in yet."
       ],
       "notes": ["Strength should consider retrogression, aspects, house condition, and divisional support."]
     },
@@ -152,6 +228,13 @@
         { "source": "bphs", "detail": "Dusthana lord reversal combinations; exact verse pending" },
         { "source": "phaladeepika", "detail": "Cross-check pending" }
       ],
+      "practitioner_explanation": "The lord of a dusthana (6th/8th/12th) is itself placed in a dusthana; each qualifying lord reports one instance, always at moderate strength.",
+      "lay_explanation": "A house lord associated with obstacles ends up in another difficult house — a classical reversal pattern sometimes read as challenge dissolving into eventual resilience, not compounding difficulty.",
+      "strength_rubric": "always moderate when triggered; no further grading by which dusthana pair is involved.",
+      "caveats": [
+        "Strength depends on the specific house involved, dignity, and affliction — not graded separately here.",
+        "Read as 'resilience through reversal', an easing of difficulty rather than a promise about the outcome."
+      ],
       "notes": ["Strength depends on involved house, dignity, and affliction."]
     },
     "sunapha_yoga": {
@@ -163,6 +246,13 @@
       "source_refs": [
         { "source": "bphs", "detail": "Chandra yogas; exact edition reference pending" },
         { "source": "phaladeepika", "detail": "Chandra yoga chapter cross-reference pending" }
+      ],
+      "practitioner_explanation": "Any of Mars/Mercury/Jupiter/Venus/Saturn occupies the 2nd sign from the Moon; graded moderate. When both the 2nd and 12th from Moon are occupied, Durudhara Yoga (strong) subsumes this, and Sunapha is still reported alongside it with a 'subsumed' note rather than being suppressed.",
+      "lay_explanation": "A planet sits just after your Moon in the zodiac — traditionally linked to steady material support.",
+      "strength_rubric": "moderate whenever the single 2nd-from-Moon condition is met, regardless of which planet(s) occupy it.",
+      "caveats": [
+        "Sun, Moon, Rahu, and Ketu are excluded from the counted planets by definition.",
+        "When Durudhara Yoga is also active, Sunapha is reported alongside it with a 'subsumed' note, not replaced."
       ],
       "notes": ["Reported alongside Anapha; subsumed note added when Durudhara is present."]
     },
@@ -176,6 +266,13 @@
         { "source": "bphs", "detail": "Chandra yogas; exact edition reference pending" },
         { "source": "phaladeepika", "detail": "Chandra yoga chapter cross-reference pending" }
       ],
+      "practitioner_explanation": "Any of Mars/Mercury/Jupiter/Venus/Saturn occupies the 12th sign from the Moon; graded moderate. When both the 2nd and 12th from Moon are occupied, Durudhara Yoga (strong) subsumes this, and Anapha is still reported alongside it with a 'subsumed' note rather than being suppressed.",
+      "lay_explanation": "A planet sits just before your Moon in the zodiac — traditionally linked to personal comfort and self-sufficiency.",
+      "strength_rubric": "moderate whenever the single 12th-from-Moon condition is met, regardless of which planet(s) occupy it.",
+      "caveats": [
+        "Sun, Moon, Rahu, and Ketu are excluded from the counted planets by definition.",
+        "When Durudhara Yoga is also active, Anapha is reported alongside it with a 'subsumed' note, not replaced."
+      ],
       "notes": ["Reported alongside Sunapha; subsumed note added when Durudhara is present."]
     },
     "durudhara_yoga": {
@@ -187,6 +284,12 @@
       "source_refs": [
         { "source": "bphs", "detail": "Chandra yogas; exact edition reference pending" },
         { "source": "phaladeepika", "detail": "Chandra yoga chapter cross-reference pending" }
+      ],
+      "practitioner_explanation": "Both the 2nd and 12th signs from the Moon are occupied by at least one of Mars/Mercury/Jupiter/Venus/Saturn. Graded strong — this is the combined, stronger form of Sunapha and Anapha, which remain reported alongside it with a subsumed note.",
+      "lay_explanation": "Both flanks of your Moon are occupied by planets — the combined, stronger version of Sunapha and Anapha, traditionally read as support arriving from more than one direction.",
+      "strength_rubric": "binary: active (both 2nd and 12th from Moon occupied) = strong, else this specific yoga is inactive (Sunapha/Anapha may still be active independently).",
+      "caveats": [
+        "Requires both flanking signs occupied simultaneously; a single flank occupied is Sunapha or Anapha alone, not Durudhara."
       ],
       "notes": ["When active, Sunapha and Anapha are still reported with a subsumed note."]
     },
@@ -200,6 +303,13 @@
         { "source": "bphs", "detail": "Surya yogas; exact edition reference pending" },
         { "source": "phaladeepika", "detail": "Surya yoga chapter cross-reference pending" }
       ],
+      "practitioner_explanation": "Any of Mars/Mercury/Jupiter/Venus/Saturn occupies the 2nd sign from the Sun; graded moderate. When both the 2nd and 12th from Sun are occupied, Ubhayachari Yoga (strong) subsumes this, and Vesi is still reported alongside it with a 'subsumed' note.",
+      "lay_explanation": "A planet sits just after your Sun in the zodiac — traditionally linked to close support in visible, public-facing matters.",
+      "strength_rubric": "moderate whenever the single 2nd-from-Sun condition is met, regardless of which planet(s) occupy it.",
+      "caveats": [
+        "Moon, Rahu, and Ketu are excluded from the counted planets by definition.",
+        "When Ubhayachari Yoga is also active, Vesi is reported alongside it with a 'subsumed' note, not replaced."
+      ],
       "notes": ["Subsumed note added when Ubhayachari is present."]
     },
     "vosi_yoga": {
@@ -211,6 +321,13 @@
       "source_refs": [
         { "source": "bphs", "detail": "Surya yogas; exact edition reference pending" },
         { "source": "phaladeepika", "detail": "Surya yoga chapter cross-reference pending" }
+      ],
+      "practitioner_explanation": "Any of Mars/Mercury/Jupiter/Venus/Saturn occupies the 12th sign from the Sun; graded moderate. When both the 2nd and 12th from Sun are occupied, Ubhayachari Yoga (strong) subsumes this, and Vosi is still reported alongside it with a 'subsumed' note.",
+      "lay_explanation": "A planet sits just before your Sun in the zodiac — traditionally linked to steady support behind the scenes.",
+      "strength_rubric": "moderate whenever the single 12th-from-Sun condition is met, regardless of which planet(s) occupy it.",
+      "caveats": [
+        "Moon, Rahu, and Ketu are excluded from the counted planets by definition.",
+        "When Ubhayachari Yoga is also active, Vosi is reported alongside it with a 'subsumed' note, not replaced."
       ],
       "notes": ["Subsumed note added when Ubhayachari is present."]
     },
@@ -224,6 +341,12 @@
         { "source": "bphs", "detail": "Surya yogas; exact edition reference pending" },
         { "source": "phaladeepika", "detail": "Surya yoga chapter cross-reference pending" }
       ],
+      "practitioner_explanation": "Both the 2nd and 12th signs from the Sun are occupied by at least one of Mars/Mercury/Jupiter/Venus/Saturn. Graded strong — the combined, stronger form of Vesi and Vosi, which remain reported alongside it with a subsumed note.",
+      "lay_explanation": "Both flanks of your Sun are occupied by planets — the combined, stronger version of Vesi and Vosi, traditionally read as strong support around your public standing.",
+      "strength_rubric": "binary: active (both 2nd and 12th from Sun occupied) = strong, else this specific yoga is inactive (Vesi/Vosi may still be active independently).",
+      "caveats": [
+        "Requires both flanking signs occupied simultaneously; a single flank occupied is Vesi or Vosi alone, not Ubhayachari."
+      ],
       "notes": ["When active, Vesi and Vosi are still reported with a subsumed note."]
     },
     "adhi_yoga": {
@@ -235,6 +358,13 @@
       "source_refs": [
         { "source": "bphs", "detail": "Adhi yoga from Moon; exact edition reference pending" },
         { "source": "phaladeepika", "detail": "Cross-check pending" }
+      ],
+      "practitioner_explanation": "Natural benefics (Jupiter/Venus/Mercury) occupy two or more of the 6th/7th/8th signs from the Moon. Graded strong when all three houses are occupied, moderate for two of three; inactive below two.",
+      "lay_explanation": "Multiple supportive planets flank your Moon from a distance — a classical marker for resilience and support arriving when it's needed.",
+      "strength_rubric": "strong if benefics occupy all three of 6th/7th/8th from Moon, moderate if exactly two of three, inactive below two.",
+      "caveats": [
+        "Convention: this implementation activates at two of three houses occupied; some texts require all three before calling it active at all — check the occupied-house count in the result notes rather than assuming the strongest form.",
+        "source_status: convention_dependent."
       ],
       "notes": ["Convention: AstroSpace activates with two of the three houses occupied (moderate) and grades all three as strong; some texts require all three."]
     },
@@ -248,6 +378,12 @@
         { "source": "bphs", "detail": "Amala yoga; exact edition reference pending" },
         { "source": "phaladeepika", "detail": "Cross-check pending" }
       ],
+      "practitioner_explanation": "A natural benefic (Jupiter/Venus/Mercury) occupies the 10th sign from Lagna and/or the 10th sign from Moon, evaluated as two independent anchors. Graded strong when both anchors are hit, moderate when only one is.",
+      "lay_explanation": "A supportive planet sits in your career house (from Lagna and/or Moon) — traditionally linked to a good reputation that holds up over time.",
+      "strength_rubric": "strong if both the Lagna-10th and Moon-10th anchors are hit, moderate if only one anchor is hit.",
+      "caveats": [
+        "Which anchor(s) triggered (Lagna and/or Moon) are reported in the result notes — check before generalizing about strength."
+      ],
       "notes": ["Anchor (Lagna and/or Moon) is reported in the result notes."]
     },
     "saraswati_yoga": {
@@ -259,6 +395,12 @@
       "source_refs": [
         { "source": "bphs", "detail": "Saraswati yoga; exact edition reference pending" },
         { "source": "phaladeepika", "detail": "Cross-check pending" }
+      ],
+      "practitioner_explanation": "Jupiter, Venus, and Mercury are each placed in a kendra, trikona, or the 2nd house from Lagna, with Jupiter additionally in its own sign, exalted, or in a sign whose lord is a natural friend of Jupiter. Graded strong whenever fully active — this yoga has no partial/moderate state.",
+      "lay_explanation": "Your three classical 'wisdom' planets (Jupiter, Venus, Mercury) all land in supportive houses, with Jupiter itself well-placed — traditionally tied to learning, articulate expression, and refined taste.",
+      "strength_rubric": "binary: fully active = strong, else none — no moderate/weak grading exists for this yoga.",
+      "caveats": [
+        "'Friendly sign' for Jupiter is judged by the natural friendship of that sign's lord toward Jupiter (BPHS ch.3: Sun, Moon, Mars) — one specific classical reading among others in circulation."
       ],
       "notes": ["Friendly sign judged by natural friendship of the sign lord toward Jupiter (Sun, Moon, Mars per BPHS ch.3)."]
     },
@@ -272,6 +414,12 @@
         { "source": "phaladeepika", "detail": "Kartari yogas; cross-reference pending" },
         { "source": "bphs", "detail": "Cross-check pending" }
       ],
+      "practitioner_explanation": "Natural benefics occupy both the 2nd and 12th sign flanking an anchor (Lagna or Moon, each evaluated independently), with no natural malefic present in either flanking sign. Graded moderate whenever fully active.",
+      "lay_explanation": "Your ascendant or Moon is flanked on both sides by supportive planets, with no difficult ones interrupting — a protective 'scissors' pattern.",
+      "strength_rubric": "moderate whenever fully active (both flanking signs qualify, no malefic present); each anchor (Lagna, Moon) is evaluated and reported independently.",
+      "caveats": [
+        "Evaluated separately from Lagna and from Moon — a chart can show this yoga from one anchor and not the other; check which anchor triggered before generalizing."
+      ],
       "notes": ["Evaluated separately from Lagna and from Moon; each anchor is reported as its own entry."]
     },
     "papa_kartari_yoga": {
@@ -283,6 +431,13 @@
       "source_refs": [
         { "source": "phaladeepika", "detail": "Kartari yogas; cross-reference pending" },
         { "source": "bphs", "detail": "Cross-check pending" }
+      ],
+      "practitioner_explanation": "Natural malefics occupy both the 2nd and 12th sign flanking an anchor (Lagna or Moon, each evaluated independently), with no natural benefic present in either flanking sign. Graded moderate whenever fully active.",
+      "lay_explanation": "Your ascendant or Moon is flanked on both sides by challenging planets, with no support interrupting — a pattern classically read as friction that calls for patience, not a fixed hardship.",
+      "strength_rubric": "moderate whenever fully active (both flanking signs qualify, no benefic present); each anchor (Lagna, Moon) is evaluated and reported independently.",
+      "caveats": [
+        "Evaluated separately from Lagna and from Moon — a chart can show this yoga from one anchor and not the other; check which anchor triggered before generalizing.",
+        "Framed as a caution flag about friction, never as a fixed or fear-inducing hardship."
       ],
       "notes": ["Evaluated separately from Lagna and from Moon; each anchor is reported as its own entry."]
     },
@@ -296,6 +451,12 @@
         { "source": "bphs", "detail": "Shakata yoga and kendra cancellation; exact edition reference pending" },
         { "source": "phaladeepika", "detail": "Cross-check pending" }
       ],
+      "practitioner_explanation": "Base condition: Moon in the 6th, 8th, or 12th from Jupiter. If the Moon is also in a kendra from Lagna, the classical cancellation applies and the yoga is reported inactive, with the cancellation stated explicitly in the notes rather than silently omitted.",
+      "lay_explanation": "A caution pattern between your Moon and Jupiter — often cancelled outright when your Moon is strongly angular in the chart, which is common.",
+      "strength_rubric": "always moderate when active (i.e. base condition met and cancellation not applicable); the cancellation itself is binary (present/absent), not graded.",
+      "caveats": [
+        "Cancellation (Moon in a kendra from Lagna) is checked and, when it applies, the yoga is reported as inactive with the cancellation stated explicitly rather than silently dropped."
+      ],
       "notes": ["Cancellation reported as inactive with an explanatory note."]
     },
     "guru_chandala_yoga": {
@@ -307,6 +468,13 @@
       "source_refs": [
         { "source": "internal", "detail": "Jupiter-Rahu form is the commonly cited definition; Jupiter-Ketu extension is convention-dependent" }
       ],
+      "practitioner_explanation": "Jupiter conjunct Rahu in the same sign is the primary form, graded moderate. Jupiter conjunct Ketu is reported as a milder variant, graded weak.",
+      "lay_explanation": "Jupiter shares a sign with a lunar node — traditionally read as a tension between wisdom or tradition (Jupiter) and an unconventional or boundary-pushing influence (the node).",
+      "strength_rubric": "moderate for the Jupiter-Rahu form, weak for the Jupiter-Ketu variant.",
+      "caveats": [
+        "The Jupiter-Rahu form is the commonly cited classical definition; the Jupiter-Ketu extension is convention-dependent and reported as a milder variant, not the primary yoga.",
+        "source_status: convention_dependent."
+      ],
       "notes": ["Jupiter-Ketu same-sign conjunction is reported as a milder variant with a note."]
     },
     "kalasarpa_flag": {
@@ -317,6 +485,14 @@
       "implementation": "partial",
       "source_refs": [
         { "source": "internal", "detail": "Modern/convention-dependent flag; classical source review required" }
+      ],
+      "practitioner_explanation": "All seven classical planets (Sun through Saturn) fall within one arc between Rahu and Ketu, checked in both directions. This is a sign-based check only, always graded moderate when active.",
+      "lay_explanation": "All of your classical planets sit on one side of the Rahu-Ketu axis — a widely-discussed modern flag, shown here as a flag only, never as a deterministic judgement.",
+      "strength_rubric": "binary: active = moderate, else none.",
+      "caveats": [
+        "Sign-based only; degree-precise definitions and the many named partial-Kalasarpa exceptions are not yet implemented.",
+        "This is a popular modern flag with disputed classical standing — shown as a flag only, per design_principles.md, never as a deterministic dosha judgement.",
+        "source_status: convention_dependent."
       ],
       "notes": ["Shown as a flag only, not a deterministic dosha judgement."]
     }

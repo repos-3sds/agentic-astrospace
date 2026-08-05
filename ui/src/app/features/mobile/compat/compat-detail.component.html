@@ -26,7 +26,18 @@
       <p class="eyebrow">GUN MILAN SCORE</p>
       <div><strong>{{ s.total }}</strong><span>/ {{ s.max }}</span></div>
       <p class="verdict">{{ s.verdict }}</p>
+      <p class="mcod-meaning">{{ scoreMeaning(s) }}</p>
     </section>
+
+    <p class="mcod-eyebrow">WHAT THIS MEANS</p>
+    <div class="mcod-note-list">
+      @for (row of strongestRows(); track row.label) {
+        <p class="mcod-note good"><b>{{ row.label }}</b> supports the match. {{ row.note || 'This area returned a stronger score.' }}</p>
+      }
+      @for (row of cautionRows(); track row.label) {
+        <p class="mcod-note"><b>{{ row.label }}</b> needs attention. {{ row.note || 'Talk through this area before making conclusions.' }}</p>
+      }
+    </div>
 
     <p class="mcod-eyebrow">EIGHT KOOTAS BREAKDOWN</p>
     <div class="mcod-koota-table">

@@ -1,35 +1,31 @@
 @let p = profile();
 
-<header class="guided-header">
-  <button class="identity" type="button" (click)="profileSwitcherOpen.set(true)" aria-label="Switch profile">
-    <span class="avatar" aria-hidden="true">{{ p.initial }}</span>
-    <span class="identity-copy">
-      <b>Namaste, {{ p.name }}</b>
-      <span>Explore your way of life · Guided</span>
-    </span>
-  </button>
-  <a class="accent-btn" [routerLink]="['/m', 'search']" aria-label="Search SIDDHA">
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <circle cx="8.75" cy="8.75" r="5.75"></circle>
-      <path d="m13 13 4 4"></path>
-    </svg>
+<header class="appbar">
+  <h1 class="screen-title">Explore</h1>
+  <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search">
+    <img src="mobile/search.svg" alt="" aria-hidden="true" />
   </a>
 </header>
 
 <main class="guided-body">
   <section class="title-block">
     <p>GUIDED COMPANION</p>
-    <h1>Explore</h1>
+    <h2>Life guidance library</h2>
+    <span>Stories, practices, chart basics, and timing chapters in plain language.</span>
+    <button class="profile-chip" type="button" (click)="profileSwitcherOpen.set(true)">
+      <span class="avatar" aria-hidden="true">{{ p.initial }}</span>
+      <span>{{ p.name }}</span>
+    </button>
   </section>
 
   <a class="story-card" [routerLink]="['/m', 'explore', 'story']">
     <span class="story-head">
       <span class="story-badge">
-        <img class="story-icon" src="mobile/figma-guided-star.svg" alt="" aria-hidden="true" />
+        <img class="story-icon" src="mobile/figma-yantra-book-open.svg" alt="" aria-hidden="true" />
         <b>FEATURED</b>
       </span>
       <span class="story-dot" aria-hidden="true">
-        <img src="mobile/figma-guided-star.svg" alt="" />
+        <img src="mobile/chevron.svg" alt="" />
       </span>
     </span>
     <span class="story-copy">

@@ -7,13 +7,32 @@
 }
 
 .siddha-brand {
-  display: inline-block;
+  display: inline;
   font-family: 'Samarkan', 'Cormorant Garamond', serif;
-  font-size: 1.16em;
+  font-size: 0.82em;
   font-weight: 500;
   letter-spacing: 0;
-  line-height: 0.9;
+  line-height: inherit;
+  margin-inline: 0.08em;
+  padding-inline: 0;
   text-transform: none;
+  vertical-align: baseline;
+}
+
+p .siddha-brand,
+small .siddha-brand,
+.lede .siddha-brand,
+.note .siddha-brand,
+.btn .siddha-brand {
+  font-size: 1em;
+  line-height: inherit;
+  margin-inline: 0.1em;
+  padding-inline: 0.02em;
+  vertical-align: baseline;
+}
+
+.btn .siddha-brand {
+  margin-left: 0.18em;
 }
 
 /* ── SIDDHA design tokens ─────────────────────────────────────────────── */

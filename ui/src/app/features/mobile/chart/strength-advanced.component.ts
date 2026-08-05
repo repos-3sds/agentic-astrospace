@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { map } from 'rxjs';
 import { SIGN_ORDER } from '../../../core/glyphs';
 import { KundliStore } from '../../../core/kundli.store';
 import { AshtakavargaPayload, VedicAll } from '../../../core/models';
@@ -34,6 +36,8 @@ interface HouseBindu {
   styleUrl: './strength-advanced.component.scss',
 })
 export class StrengthAdvancedComponent {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
   readonly tab = signal<StrengthTab>('shadbala');
@@ -42,6 +46,12 @@ export class StrengthAdvancedComponent {
   protected readonly ashtakavarga = signal<AshtakavargaPayload | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
+  private readonly requestedTab = toSignal(
+    this.route.queryParamMap.pipe(
+      map((params) => this.validTab(params.get('tab'))),
+    ),
+    { initialValue: this.validTab(this.route.snapshot.queryParamMap.get('tab')) },
+  );
 
   readonly strengths = computed<PlanetStrength[]>(() => {
     const classical = this.data()?.shadbala?.classical;
@@ -90,6 +100,37 @@ export class StrengthAdvancedComponent {
   readonly totalBindus = computed(() =>
     this.displayedHouses().reduce((total, house) => total + house.value, 0),
   );
+  readonly strongestHouse = computed(() =>
+    [...this.displayedHouses()].sort((a, b) => b.value - a.value)[0] ?? null,
+  );
+  readonly weakestHouse = computed(() =>
+    [...this.displayedHouses()].sort((a, b) => a.value - b.value)[0] ?? null,
+  );
+  readonly ashtakavargaMeaning = computed(() => {
+    const strong = this.strongestHouse();
+    const weak = this.weakestHouse();
+    if (!strong || !weak) return 'Ashtakavarga shows where effort tends to meet support and where more patience is needed.';
+    if (this.avPlanet() === 'SAV') {
+      return `The strongest support is around house ${strong.house} (${strong.sign}), so that life area usually responds better to effort. House ${weak.house} (${weak.sign}) is not “bad”; it simply asks for more preparation, patience, and realistic timing.`;
+    }
+    return `${this.avPlanet()} gives more support to ${strong.sign} matters and asks for care around ${weak.sign} matters. Read this as that planet's personal support map, not as a final prediction by itself.`;
+  });
+  readonly shadbalaMeaning = computed(() => {
+    const rows = this.strengths();
+    const strong = [...rows].sort((a, b) => b.score - a.score)[0];
+    const weak = [...rows].sort((a, b) => a.score - b.score)[0];
+    if (!strong || !weak) return 'Shadbala compares each planet with its classical minimum so you can see which influences have more operating strength.';
+    return `${strong.name} has the clearest operating strength in this chart. ${weak.name} needs more conscious handling, so its topics should be approached with steadiness rather than force.`;
+  });
+  readonly jaiminiMeaning = computed(() => {
+    const atmakaraka = this.karakas().find((row) => String(row[0]).toLowerCase().includes('atma'));
+    const arudha = this.data()?.jaimini?.arudha_lagna?.sign_name;
+    const parts = [
+      atmakaraka ? `${atmakaraka[1]} carries the Atmakaraka role, pointing to the soul-level lesson that keeps repeating.` : 'Chara karakas show role-based significators rather than fixed planet meanings.',
+      arudha ? `Arudha Lagna in ${arudha} shows how the chart tends to be perceived by the world.` : 'Arudha padas show reflected image: how a life area appears, not only what it privately is.',
+    ];
+    return parts.join(' ');
+  });
 
   readonly karakas = computed(() =>
     (this.data()?.jaimini?.chara_karakas?.ordered ?? []).map((row) => [
@@ -118,13 +159,33 @@ export class StrengthAdvancedComponent {
 
   constructor() {
     effect(() => {
+      const tab = this.requestedTab();
+      if (tab && tab !== this.tab()) this.tab.set(tab);
+    });
+    effect(() => {
       const activeId = this.kundlis.activeId();
       void this.load(activeId);
     });
   }
 
+  protected selectTab(tab: StrengthTab): void {
+    this.tab.set(tab);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
   protected retry(): void {
     void this.load(this.kundlis.activeId());
+  }
+
+  private validTab(value: string | null): StrengthTab | null {
+    return value === 'shadbala' || value === 'ashtakavarga' || value === 'jaimini'
+      ? value
+      : null;
   }
 
   private async load(expectedActiveId: string | null): Promise<void> {

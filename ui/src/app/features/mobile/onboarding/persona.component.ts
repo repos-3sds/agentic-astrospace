@@ -30,7 +30,7 @@ import { PreferencesService } from '../../../core/preferences.service';
         <a class="back" [routerLink]="['/m', 'disclaimers']" aria-label="Back">
           <img src="mobile/back.svg" alt="" aria-hidden="true" />
         </a>
-        <p class="step">STEP 1 OF 2</p>
+        <p class="step">SETUP 4 OF 6</p>
       </header>
 
       <h1 class="headline">How should <span class="siddha-brand">SIDDHA</span><br />walk with you?</h1>
@@ -43,7 +43,7 @@ import { PreferencesService } from '../../../core/preferences.service';
       />
     </div>
 
-    <a class="btn" [routerLink]="['/m', 'birth-details']">Continue</a>
+    <a class="btn" [routerLink]="['/m', 'customize']">Continue</a>
   `,
   styleUrl: './persona.component.scss',
   // Outside the shell, so the token host class must be applied here or every

@@ -193,11 +193,14 @@ export class App implements OnInit, OnDestroy {
         await this.store.load();
       }
     } catch (e) {
-      this.messages.add({
-        severity: 'error',
-        summary: 'Could not load kundlis',
-        detail: (e as Error).message,
-      });
+      const browserPath = typeof window === 'undefined' ? '' : window.location.pathname;
+      if (!this.isMobileOnboardingRoute(this.router.url) && !this.isMobileOnboardingRoute(browserPath)) {
+        this.messages.add({
+          severity: 'error',
+          summary: 'Could not load kundlis',
+          detail: (e as Error).message,
+        });
+      }
     } finally {
       // In `finally`: a failed session restore still has to uncover the app.
       // Leaving the splash up on error would look like a hang, and the error
@@ -205,6 +208,23 @@ export class App implements OnInit, OnDestroy {
       await this.hideNativeSplash();
       this.startAnimatedSplashIntro();
     }
+  }
+
+  private isMobileOnboardingRoute(url: string): boolean {
+    const path = url.split('?')[0].split('#')[0];
+    return [
+      '/m/start',
+      '/m/auth',
+      '/m/forgot-password',
+      '/m/reset-password',
+      '/m/language',
+      '/m/welcome',
+      '/m/disclaimers',
+      '/m/persona',
+      '/m/customize',
+      '/m/birth-details',
+      '/m/insight',
+    ].includes(path);
   }
 
   /**

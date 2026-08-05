@@ -15,7 +15,7 @@
   <article class="answer">
     <p class="verdict-label">
       <span class="dot" [attr.data-tone]="v.tone" aria-hidden="true"></span>
-      <span class="eyebrow good">VERDICT · {{ v.domain }}</span>
+      <span class="eyebrow good">{{ v.preview ? 'STATUS' : 'VERDICT' }} · {{ v.domain }}</span>
     </p>
 
     <h1 class="verdict">{{ v.verdict }}</h1>
@@ -37,6 +37,7 @@
       </div>
     }
 
+    @if (!v.preview) {
     <button class="why" type="button" (click)="whyOpen.set(true)">
       <span class="why-left">
         <img src="mobile/why.svg" alt="" aria-hidden="true" />
@@ -44,6 +45,7 @@
       </span>
       <img class="why-chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
     </button>
+    }
 
     <div class="tools">
       <button class="tool" type="button" (click)="listenOpen.set(true)">
@@ -73,6 +75,8 @@
 </div>
 
 <as-ask-composer
+  class="answer-composer"
+  [inset]="true"
   [value]="draft()"
   label="Your follow-up question"
   (valueChange)="draft.set($event)"

@@ -2,6 +2,11 @@
   display: block;
   width: 100%;
   max-width: 560px;
+  --kundli-house-font: 10.5px;
+  --kundli-sign-font: 11.5px;
+  --kundli-eastern-sign-font: 9.8px;
+  --kundli-planet-font: 10.4px;
+  --kundli-condition-font: 9px;
 }
 
 .kundli-chart {
@@ -20,16 +25,13 @@
 
 @media (max-width: 599px) {
   :host {
-    max-width: min(100%, 360px);
+    max-width: min(100%, 388px);
     margin-inline: auto;
-  }
-
-  .house-sign {
-    font-size: 9.5px;
-  }
-
-  .planet-label {
-    font-size: 10px;
+    --kundli-house-font: 11.2px;
+    --kundli-sign-font: 12.4px;
+    --kundli-eastern-sign-font: 10.8px;
+    --kundli-planet-font: 11.35px;
+    --kundli-condition-font: 9.8px;
   }
 }
 
@@ -51,7 +53,7 @@
 }
 
 .house {
-  pointer-events: none;
+  pointer-events: auto;
   text {
     text-anchor: middle;
     dominant-baseline: middle;
@@ -59,7 +61,7 @@
 }
 
 .south-cell {
-  pointer-events: none;
+  pointer-events: auto;
 
   text {
     text-anchor: middle;
@@ -68,7 +70,7 @@
 }
 
 .eastern-cell {
-  pointer-events: none;
+  pointer-events: auto;
 
   text {
     dominant-baseline: middle;
@@ -77,14 +79,14 @@
 
 .house-number {
   fill: var(--as-muted);
-  font-size: 10.5px;
+  font-size: var(--kundli-house-font);
   font-weight: 700;
   letter-spacing: 0.08em;
 }
 
 .sign-label {
   font-family: var(--as-font-display);
-  font-size: 11.5px;
+  font-size: var(--kundli-sign-font);
   font-weight: 700;
 }
 
@@ -118,17 +120,42 @@
 
 .eastern-sign {
   dominant-baseline: middle;
-  font-size: 9.8px;
+  font-size: var(--kundli-eastern-sign-font);
+}
+
+.planet-hit {
+  rect {
+    fill: transparent;
+    pointer-events: none;
+  }
+
+  &.interactive {
+    cursor: pointer;
+    pointer-events: auto;
+
+    rect {
+      pointer-events: all;
+    }
+
+    &:focus-visible {
+      outline: none;
+
+      .planet-line {
+        filter: drop-shadow(0 0 4px color-mix(in srgb, var(--as-accent) 55%, transparent));
+      }
+    }
+  }
 }
 
 .planet-line {
   fill: var(--as-text);
-  font-size: 10.4px;
+  font-size: var(--kundli-planet-font);
   font-weight: 650;
+  pointer-events: none;
 }
 
 .condition-symbol {
-  font-size: 9px;
+  font-size: var(--kundli-condition-font);
   font-weight: 900;
 
   &.good {

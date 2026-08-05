@@ -3,8 +3,8 @@
     <img src="mobile/back.svg" alt="" aria-hidden="true" />
   </a>
   <h1>Your Story</h1>
-  <a class="spark" [routerLink]="['/m', 'explore']" aria-label="Explore">
-    <span class="asset-icon" style="--icon-url: url('/mobile/figma-guided-star.svg')" aria-hidden="true"></span>
+  <a class="spark" [routerLink]="['/m', 'chart']" aria-label="Open chart">
+    <span class="asset-icon" style="--icon-url: url('/mobile/nav-chart.svg')" aria-hidden="true"></span>
   </a>
 </header>
 
@@ -32,6 +32,11 @@
             }
           </div>
           <p>{{ card.text }}</p>
+          <div class="practice">
+            <b>Use it this way</b>
+            <span>{{ card.practice }}</span>
+          </div>
+          <small>{{ card.source }}</small>
         </article>
       }
     </section>

@@ -1,0 +1,36 @@
+<header class="topbar">
+  <a [routerLink]="['/m', 'language']" aria-label="Back">
+    <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  </a>
+  <p class="step">SETUP 2 OF 6</p>
+</header>
+
+<main>
+  <app-splash class="welcome-mark" [markOnly]="true" aria-hidden="true" />
+
+  <p class="wordmark siddha-brand">Siddha</p>
+  <p class="eyebrow">YOUR WAY OF LIFE GUIDE</p>
+  <h1>Guidance you can live with.</h1>
+  <p class="lede">
+    Not predictions to fear. Not generic daily lines. A personal rhythm for
+    how to act, pause, reflect, and grow.
+  </p>
+
+  <div class="promise-list">
+    @for (item of promises(); track item.title) {
+      <section class="promise">
+        <span class="promise-icon">
+          <img [src]="'mobile/' + item.icon + '.svg'" alt="" aria-hidden="true" />
+        </span>
+        <span class="promise-copy">
+          <strong>{{ item.title }}</strong>
+          <span>{{ item.detail }}</span>
+        </span>
+      </section>
+    }
+  </div>
+</main>
+
+<div class="actions">
+  <a class="btn" [routerLink]="['/m', 'disclaimers']">Continue</a>
+</div>

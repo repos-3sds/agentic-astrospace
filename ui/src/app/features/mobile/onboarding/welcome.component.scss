@@ -3,79 +3,135 @@
 :host {
   display: flex;
   flex-direction: column;
+  min-height: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 18px 24px calc(28px + var(--m-safe-bottom));
+  gap: 16px;
+  overflow: hidden;
+}
+
+.topbar {
+  display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 100%;
-  box-sizing: border-box;
-  padding: 18px 24px calc(36px + var(--m-safe-bottom));
-  gap: 24px;
+  flex: 0 0 auto;
 }
 
-.top { width: 100%; display: flex; flex-direction: column; align-items: center; }
+.topbar a,
+.topbar img {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
 
-.orb { display: block; width: 96px; height: 96px; margin-top: 40px; }
+.step {
+  @include m-caption;
+  color: var(--m-muted);
+  margin: 0;
+}
 
-.greeting {
-  @include m-title;
+main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
+}
+
+.welcome-mark {
+  display: block;
+  width: min(148px, 40vw);
+  height: min(148px, 40vw);
+  margin: 4px 0 8px;
+  pointer-events: none;
+}
+
+.wordmark {
+  font-size: 32px;
+  line-height: .95;
   color: var(--m-accent-strong);
-  text-align: center;
-  margin: 26px 0 10px;
+  margin: 0;
 }
 
-.headline {
-  @include m-hero;
+.eyebrow {
+  @include m-eyebrow;
+  color: var(--m-accent-strong);
+  margin: 4px 0 10px;
+}
+
+h1 {
+  @include m-h1;
   color: var(--m-text);
   text-align: center;
-  margin: 0 0 14px;
-}
-
-.brand-name {
-  display: inline-block;
-  font-family: 'Samarkan', 'Cormorant Garamond', serif;
-  font-size: 1.5em;
-  font-weight: 500;
-  letter-spacing: 0;
-  line-height: 0.9;
-  color: var(--m-accent-strong);
+  margin: 0;
 }
 
 .lede {
-  @include m-body-lg;
+  @include m-body;
   color: var(--m-muted);
   text-align: center;
-  margin: 0 0 30px;
+  margin: 8px 0 18px;
+  max-width: 34ch;
 }
 
-.promises {
+.promise-list {
   width: 100%;
-  list-style: none;
-  margin: 0;
-  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  padding: 4px 4px 16px;
+  box-sizing: border-box;
 }
 
-.promise { display: flex; align-items: center; gap: 14px; }
+.promise {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 0;
+}
 
 .promise-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: var(--m-surface);
-  border: 1px solid var(--m-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  img { width: 22px; height: 22px; display: block; }
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 11px;
+  background: var(--m-accent-soft);
+
+  img {
+    display: block;
+    width: 19px;
+    height: 19px;
+  }
 }
 
-.promise-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.promise-title { @include m-body-strong; color: var(--m-text); }
-.promise-detail { @include m-body-small; color: var(--m-muted); }
+.promise-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 
-.actions { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  strong {
+    @include m-body-strong;
+    color: var(--m-text);
+  }
+
+  span {
+    @include m-body-small;
+    color: var(--m-muted);
+  }
+}
+
+.actions {
+  width: 100%;
+  flex: 0 0 auto;
+}
 
 .btn {
   width: 100%;
@@ -92,11 +148,4 @@
   cursor: pointer;
   text-decoration: none;
   @include m-button;
-}
-
-.skip {
-  @include m-body-small;
-  color: var(--m-muted);
-  text-decoration: none;
-  cursor: pointer;
 }

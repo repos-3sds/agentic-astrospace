@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 
 import { SIGN_ORDER, signMeta } from '../../core/glyphs';
 import { PlanetConditionAnnotation, PlanetConditionCode, VargaChart } from '../../core/models';
@@ -122,6 +122,18 @@ export class KundliChartComponent {
   readonly chart = input<VargaChart | null>(null);
   readonly chartStyle = input<KundliChartStyle>('north');
   readonly annotations = input<Record<string, PlanetConditionAnnotation[]>>({});
+  readonly interactive = input(false);
+  readonly planetSelected = output<string>();
+
+  protected selectPlanet(entry: PlanetEntry): void {
+    if (this.interactive()) this.planetSelected.emit(entry.key);
+  }
+
+  protected hitX(anchor: 'start' | 'middle' | 'end'): number {
+    if (anchor === 'start') return -4;
+    if (anchor === 'end') return -40;
+    return -22;
+  }
 
   protected readonly houses = computed<HouseView[]>(() => {
     const chart = this.chart();

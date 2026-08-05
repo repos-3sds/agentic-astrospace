@@ -33,9 +33,41 @@
   padding: 10px 20px 16px;
 }
 
+.practice-state {
+  display: flex;
+  width: 100%;
+  min-height: 52vh;
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 22px 18px;
+  border: 1px solid var(--m-border);
+  border-radius: 20px;
+  background: var(--m-surface);
+  text-align: center;
+  color: var(--m-muted);
+  b { @include m-h2; color: var(--m-text); }
+  p { @include m-body-small; margin: 0; }
+  a {
+    @include m-body-strong;
+    display: inline-flex;
+    justify-content: center;
+    padding: 11px 16px;
+    border: 1px solid var(--m-border-strong);
+    border-radius: 999px;
+    color: var(--m-accent-strong);
+    background: transparent;
+    text-decoration: none;
+  }
+}
+.practice-state.error { border-color: var(--m-warn); b { color: var(--m-warn); } }
+
 .intro { width: 100%; display: flex; flex-direction: column; gap: 6px; }
 .eyebrow { @include m-eyebrow; color: var(--m-warn); margin: 0; }
 .mantra { @include m-h1; color: var(--m-text); margin: 0; }
+.instruction { @include m-body-small; color: var(--m-muted); margin: 0; }
 
 /* Streak — node 29:119 */
 .streak {
@@ -51,6 +83,67 @@
   @include m-body-strong;
   color: var(--m-gold);
   img { width: 18px; height: 18px; display: block; flex-shrink: 0; }
+}
+
+.mode-tabs {
+  display: flex;
+  width: 100%;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--m-accent-soft);
+
+  button {
+    @include m-button;
+    flex: 1;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--m-accent-strong);
+    padding: 10px;
+  }
+
+  .is-on {
+    background: var(--m-ink);
+    color: var(--m-on-ink);
+  }
+}
+
+.audio-card {
+  display: grid;
+  width: 100%;
+  box-sizing: border-box;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--m-border);
+  border-radius: 18px;
+  background: var(--m-surface);
+  align-items: center;
+
+  > img {
+    width: 44px;
+    height: 44px;
+  }
+
+  b { @include m-body-strong; color: var(--m-text); }
+  p { @include m-caption; color: var(--m-muted); margin: 2px 0 0; }
+
+  button {
+    @include m-body-strong;
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 0;
+    border-radius: 999px;
+    padding: 12px;
+    background: var(--m-ink);
+    color: var(--m-on-ink);
+    img { width: 17px; height: 17px; }
+    &:disabled { opacity: 0.5; }
+  }
 }
 
 /* Count ring — node 29:123. Redrawn, not the export: it moves on every tap. */
@@ -111,6 +204,13 @@
   &:disabled { opacity: 0.55; cursor: default; }
 }
 
+.reset-btn {
+  border: 0;
+  background: transparent;
+  color: var(--m-accent-strong);
+  @include m-body-strong;
+}
+
 .caveat {
   @include m-caption;
   color: var(--m-muted);
@@ -130,4 +230,6 @@
   cursor: pointer;
   @include m-button;
   color: var(--m-accent-strong);
+  text-align: center;
+  text-decoration: none;
 }

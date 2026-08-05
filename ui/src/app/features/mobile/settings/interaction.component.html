@@ -1,0 +1,29 @@
+<a class="appbar" [routerLink]="['/m', 'settings']">
+  <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  <span class="crumb">Settings</span>
+</a>
+
+<div class="body">
+  <header class="intro">
+    <h1 class="title">Interaction</h1>
+    <p class="lede">Control the physical feedback the native app gives on taps and selections.</p>
+  </header>
+
+  <div class="toggle-row">
+    <span class="toggle-text">
+      <span class="toggle-title">Haptic feedback</span>
+      <span class="toggle-detail">Light vibration for tabs, choices, and key actions on supported phones.</span>
+    </span>
+    <button
+      class="switch"
+      type="button"
+      role="switch"
+      [class.is-on]="preferences.hapticsEnabled()"
+      [attr.aria-checked]="preferences.hapticsEnabled()"
+      aria-label="Haptic feedback"
+      (click)="toggleHaptics()"
+    ></button>
+  </div>
+
+  <p class="local-note">This is device-specific. Turning it off here keeps Siddha quiet even when your phone allows vibration.</p>
+</div>

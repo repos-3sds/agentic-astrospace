@@ -49,7 +49,14 @@
     <section class="active-period">
       <p class="eyebrow">ACTIVE NOW</p>
       <h2>{{ activeYogini() }}</h2>
-      <p>Returned by the Yogini dasha endpoint for this profile.</p>
+      @if (activeInsight(); as insight) {
+        <p class="active-body">{{ insight.body }}</p>
+        <div class="active-action">
+          <b>Use it this way</b>
+          <p>{{ insight.action }}</p>
+        </div>
+        <small>{{ insight.evidence }}</small>
+      }
     </section>
     <p class="cycle-title">FULL 36-YEAR CYCLE</p>
   } @else {
@@ -57,10 +64,17 @@
     <section class="active-period">
       <p class="eyebrow">ACTIVE NOW</p>
       <h2>{{ activePath() }}</h2>
-      <p>As of {{ data()?.as_of }} — computed from the Moon nakshatra balance.</p>
+      @if (activeInsight(); as insight) {
+        <p class="active-body">{{ insight.title }}</p>
+        <p class="active-body">{{ insight.body }}</p>
+        <div class="active-action">
+          <b>Use it this way</b>
+          <p>{{ insight.action }}</p>
+        </div>
+        <small>{{ insight.evidence }}</small>
+      }
     </section>
 
-    @if (preferences.experienceMode() !== 'guided') {
     <div class="levels" role="tablist" aria-label="Dasha level">
       @for (item of levelTabs(); track item) {
         <button
@@ -72,8 +86,7 @@
         >{{ item === 'maha' ? 'Maha' : item === 'antar' ? 'Antar' : item === 'pratyantar' ? 'Pratyantar' : item === 'sookshma' ? 'Sookshma' : 'Prana' }}</button>
       }
     </div>
-    <p class="gloss">Maha = main period · Antar = sub-period · Pratyantar = fine-grained period</p>
-    }
+    <p class="gloss">Maha = life chapter · Antar = sub-period · Pratyantar = near-term current · Sookshma/Prana = active chain only.</p>
 
     @if (level() === 'antar') {
       <p class="breadcrumb">
@@ -110,6 +123,7 @@
           <span>{{ period.name }}</span>
         </span>
         <span class="dates">{{ period.dates }}</span>
+        <small>{{ periodMeaning(period) }}</small>
       </button>
     }
   </div>

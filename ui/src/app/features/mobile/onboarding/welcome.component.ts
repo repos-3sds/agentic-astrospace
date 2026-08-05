@@ -1,84 +1,47 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { SplashComponent } from '../../../shell/splash/splash.component';
 
-/** One commitment made before any birth data is asked for. */
-interface Promise_ {
+interface PromiseRow {
   icon: string;
   title: string;
   detail: string;
 }
 
 /**
- * Welcome (Figma node 6:2) — step two of onboarding.
+ * Welcome — step two of onboarding.
  *
- * The three promises come *before* the form, not after it. Birth date, time and
- * place is the most personal thing this app ever asks for, and the order here
- * says what will be done with it before asking rather than in a policy page
- * afterwards.
- *
- * "Skip for now" is real and stays. An app that will not let you look around
- * before handing over your birth time has already broken the second promise.
+ * This screen uses the same native animated Siddha mark as the splash and
+ * get-started screen. It avoids a generic carousel because this is still the
+ * first-run promise, not a feature tour.
  */
 @Component({
   selector: 'as-welcome',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
-  template: `
-    <div class="top">
-      <img class="orb" src="mobile/orb-sm.svg" alt="" aria-hidden="true" />
-      <p class="greeting">నమస్తే · Namaste</p>
-      <h1 class="headline">Welcome to<br /><span class="brand-name">SIDDHA</span></h1>
-      <p class="lede">
-        Let’s begin with your birth details so <span class="siddha-brand">SIDDHA</span>
-        can understand your personal rhythm and guide your everyday choices with care.
-      </p>
-
-      <ul class="promises">
-        @for (p of promises(); track p.title) {
-          <li class="promise">
-            <span class="promise-icon">
-              <img [src]="'mobile/' + p.icon + '.svg'" alt="" aria-hidden="true" />
-            </span>
-            <span class="promise-text">
-              <span class="promise-title">{{ p.title }}</span>
-              <span class="promise-detail">{{ p.detail }}</span>
-            </span>
-          </li>
-        }
-      </ul>
-    </div>
-
-    <div class="actions">
-      <a class="btn" [routerLink]="['/m', 'disclaimers']">Continue</a>
-      <!-- Real, and it stays: see the class comment. -->
-      <a class="skip" [routerLink]="['/m', 'today']">Skip for now</a>
-    </div>
-  `,
+  imports: [RouterLink, SplashComponent],
+  templateUrl: './welcome.component.html',
   styleUrl: './welcome.component.scss',
   // Outside the shell, so the token host class must be applied here or every
   // var() silently falls back — see the build plan's first convention.
   host: { class: 'as-mobile' },
 })
 export class WelcomeComponent {
-  protected readonly promises = signal<Promise_[]>([
+  protected readonly promises = signal<PromiseRow[]>([
     {
       icon: 'promise-computed',
-      title: 'Wisdom with a foundation',
-      detail: 'Guidance is rooted in real calculations, then translated for life.',
+      title: 'Daily guidance, not generic horoscope copy',
+      detail: 'Your timing comes from panchanga, dashas, transits, and your active profile.',
+    },
+    {
+      icon: 'figma-yantra-book-open',
+      title: 'Plain meaning first',
+      detail: 'Guided, Balanced, and Practitioner modes change depth without changing the truth.',
     },
     {
       icon: 'promise-private',
-      title: 'Your path stays yours',
-      detail: 'Your birth details and reflections are treated with care.',
-    },
-    {
-      icon: 'promise-language',
-      title: 'Guidance you can live with',
-      // Was 'English & Telugu' — the app is not translated, so that promised
-      // something onboarding could not deliver on the very screen that asks
-      // for trust.
-      detail: 'Simple words today, read aloud if you like. More languages are on the way.',
+      title: 'No fear, no fatalism',
+      detail: 'Difficult signals are explained as choices and boundaries, never as verdicts.',
     },
   ]);
 }

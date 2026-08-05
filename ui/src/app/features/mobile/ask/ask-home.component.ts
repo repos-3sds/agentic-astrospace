@@ -167,8 +167,8 @@ export class AskHomeComponent {
     if (!q || this.submitting()) {
       return;
     }
-    await this.router.navigate(['/m', 'ask', 'loading'], {
-      queryParams: { q, topic: this.selectedTopic() ?? undefined },
+    await this.router.navigate(['/m', 'ask', 'answer'], {
+      queryParams: { q, topic: this.selectedTopic() ?? undefined, preview: 'construction' },
     });
   }
 }

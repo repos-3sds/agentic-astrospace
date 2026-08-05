@@ -82,6 +82,11 @@ const PERIODS: Array<{ label: string; value: ReadingPeriod }> = [
           </button>
         </div>
 
+        <a class="mrd-ask" [routerLink]="['/m','ask']" [queryParams]="{ q: askQuestion(reading) }">
+          <span>Ask about this reading</span>
+          <img src="mobile/chevron.svg" alt="" />
+        </a>
+
         <section class="mrd-claims">
           <div>
             <b>Claims in this reading</b>
@@ -207,6 +212,10 @@ export class ReadingsComponent {
     if (reading.user_rating === 2) return 'N/A';
     if (reading.user_rating === 1) return 'Missed';
     return `${reading.user_rating}/5`;
+  }
+
+  protected askQuestion(reading: Reading): string {
+    return `Explain this ${this.readingTitle(reading)} reading in simple terms and what I should do next`;
   }
 
   protected claimStatusLabel(status: PredictionClaim['status']): string {

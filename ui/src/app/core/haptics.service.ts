@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
+import { PreferencesService } from './preferences.service';
 
 /**
  * Native haptic feedback, and a no-op everywhere else.
@@ -21,6 +22,7 @@ import { Capacitor } from '@capacitor/core';
 @Injectable({ providedIn: 'root' })
 export class HapticsService {
   private readonly native = Capacitor.isNativePlatform();
+  private readonly preferences = inject(PreferencesService);
 
   /** An ordinary button press. */
   tap(): void {
@@ -34,7 +36,7 @@ export class HapticsService {
 
   /** A choice changed — segmented controls, mode pickers, tabs. */
   select(): void {
-    if (!this.native) return;
+    if (!this.native || !this.preferences.hapticsEnabled()) return;
     void (async () => {
       try {
         const { Haptics } = await import('@capacitor/haptics');
@@ -68,7 +70,7 @@ export class HapticsService {
   }
 
   private async impact(style: 'Light' | 'Medium' | 'Heavy'): Promise<void> {
-    if (!this.native) return;
+    if (!this.native || !this.preferences.hapticsEnabled()) return;
     try {
       const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
       await Haptics.impact({ style: ImpactStyle[style] });
@@ -78,7 +80,7 @@ export class HapticsService {
   }
 
   private async notify(type: 'SUCCESS' | 'WARNING' | 'ERROR'): Promise<void> {
-    if (!this.native) return;
+    if (!this.native || !this.preferences.hapticsEnabled()) return;
     try {
       const { Haptics, NotificationType } = await import('@capacitor/haptics');
       const capacitorType = type === 'SUCCESS' ? NotificationType.Success 

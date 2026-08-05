@@ -207,6 +207,14 @@ export const routes: Routes = [
       import('./features/mobile/onboarding/persona.component').then((m) => m.PersonaComponent),
   },
   {
+    path: 'm/customize',
+    canActivate: [nativeAppGuard],
+    loadComponent: () =>
+      import('./features/mobile/onboarding/customize.component').then(
+        (m) => m.CustomizeComponent,
+      ),
+  },
+  {
     path: 'm/birth-details',
     canActivate: [nativeAppGuard],
     loadComponent: () =>
@@ -253,6 +261,7 @@ export const routes: Routes = [
       },
       {
         path: 'ask/answer',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/ask/ask-answer.component').then((m) => m.AskAnswerComponent),
       },
@@ -272,6 +281,7 @@ export const routes: Routes = [
       },
       {
         path: 'explore/story',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/explore/guided-story.component').then(
             (m) => m.GuidedStoryComponent,
@@ -279,6 +289,7 @@ export const routes: Routes = [
       },
       {
         path: 'explore/what-to-do',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/remedies/remedies.component').then(
             (m) => m.RemediesComponent,
@@ -286,6 +297,7 @@ export const routes: Routes = [
       },
       {
         path: 'explore/life-chapters',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/explore/guided-life-chapters.component').then(
             (m) => m.GuidedLifeChaptersComponent,
@@ -328,6 +340,7 @@ export const routes: Routes = [
       },
       {
         path: 'chart/full',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/chart/chart-full.component').then(
             (m) => m.ChartFullComponent,
@@ -335,6 +348,7 @@ export const routes: Routes = [
       },
       {
         path: 'chart/vargas',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/chart/varga-charts.component').then(
             (m) => m.VargaChartsComponent,
@@ -342,27 +356,27 @@ export const routes: Routes = [
       },
       {
         path: 'chart/reference',
-        data: { referenceMode: 'home' },
+        data: { referenceMode: 'home', hideMobileTabs: true },
         loadComponent: () => import('./features/mobile/chart/reference.component').then((m) => m.ReferenceComponent),
       },
       {
         path: 'chart/reference/avkahada',
-        data: { referenceMode: 'avkahada' },
+        data: { referenceMode: 'avkahada', hideMobileTabs: true },
         loadComponent: () => import('./features/mobile/chart/reference.component').then((m) => m.ReferenceComponent),
       },
       {
         path: 'chart/reference/grahas',
-        data: { referenceMode: 'grahas' },
+        data: { referenceMode: 'grahas', hideMobileTabs: true },
         loadComponent: () => import('./features/mobile/chart/reference.component').then((m) => m.ReferenceComponent),
       },
       {
         path: 'chart/reference/ashtakavarga',
-        data: { referenceMode: 'ashtakavarga' },
+        data: { referenceMode: 'ashtakavarga', hideMobileTabs: true },
         loadComponent: () => import('./features/mobile/chart/reference.component').then((m) => m.ReferenceComponent),
       },
       {
         path: 'chart/reference/favourable',
-        data: { referenceMode: 'favourable' },
+        data: { referenceMode: 'favourable', hideMobileTabs: true },
         loadComponent: () => import('./features/mobile/chart/reference.component').then((m) => m.ReferenceComponent),
       },
       {
@@ -374,6 +388,7 @@ export const routes: Routes = [
       },
       {
         path: 'chart/yogas',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/chart/yogas-doshas.component').then(
             (m) => m.YogasDoshasComponent,
@@ -381,6 +396,7 @@ export const routes: Routes = [
       },
       {
         path: 'chart/strength',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/chart/strength-advanced.component').then(
             (m) => m.StrengthAdvancedComponent,
@@ -462,10 +478,24 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'settings/interaction',
+        loadComponent: () =>
+          import('./features/mobile/settings/interaction.component').then(
+            (m) => m.InteractionComponent,
+          ),
+      },
+      {
         path: 'settings/location',
         loadComponent: () =>
           import('./features/mobile/settings/location.component').then(
             (m) => m.LocationComponent,
+          ),
+      },
+      {
+        path: 'settings/festivals',
+        loadComponent: () =>
+          import('./features/mobile/settings/festival-preferences.component').then(
+            (m) => m.FestivalPreferencesComponent,
           ),
       },
       {

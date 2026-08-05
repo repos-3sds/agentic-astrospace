@@ -10,13 +10,10 @@ import type { AppEnvironment } from './environment.model';
 export const environment: AppEnvironment = {
   production: false,
 
-  // Deliberately the same backend the browser loop verifies against
-  // (astrospace-debug, dev-bypass auth). Pointing the simulator at :8000 while
-  // verifying screens on :8010 means two different backends prove the same
-  // work, which is how "fine in the browser, broken on device" happens.
-  //
-  // A simulator shares the host's network so localhost reaches it; a physical
-  // device does not and needs the machine's LAN address. Cleartext is allowed
-  // for local networking only — see the ATS note in ios/App/App/Info.plist.
-  nativeApiOrigin: 'http://localhost:8010',
+  // Web preview still uses the Angular proxy and same-origin `/api` paths.
+  // Capacitor is different: the bundle runs from https://localhost inside the
+  // phone, so a localhost API origin points at the device itself. Review APKs
+  // must therefore use the deployed backend unless a developer intentionally
+  // swaps this to a LAN URL for local backend debugging.
+  nativeApiOrigin: 'https://agentic-astrospace-cwuqybpnzq-el.a.run.app',
 };

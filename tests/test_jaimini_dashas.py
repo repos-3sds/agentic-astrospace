@@ -1,8 +1,14 @@
 """Tests for Jaimini karakas/arudhas, special lagnas, Yogini dasha and
-the sookshma/prana extension of Vimshottari."""
+the sookshma/prana extension of Vimshottari.
+
+See docs/jaimini_validation_2026-08-06.md for the narrative validation
+report (scheme choice, Rahu reversal, tie handling, A1/UL exception, and
+the Scorpio/Aquarius dual-lordship convention) that these test vectors back.
+"""
 from datetime import datetime, timedelta
 
 import pytest
+import swisseph as swe
 
 from astrospace.core.vedic.constants import NAKSHATRA_SPAN
 from astrospace.core.vedic.dashas import vimshottari_dasha
@@ -14,6 +20,7 @@ from astrospace.core.vedic.jaimini import (
     chara_karakas,
     upapada,
 )
+from astrospace.core.vedic.positions import sidereal_lagna, sidereal_positions, sign_index
 from astrospace.core.vedic.special_lagnas import special_lagnas
 from astrospace.core.vedic.yogini import CYCLE_YEARS, YOGINIS, yogini_dasha
 
@@ -158,6 +165,121 @@ class TestArudhaPada:
             # Exception guarantee: never the house itself nor the 7th from it.
             assert row["sign"] != row["house_sign"]
             assert row["sign"] != (row["house_sign"] + 6) % 12
+
+
+class TestJaiminiValidationChartExamples:
+    """Three documented chart examples backing docs/jaimini_validation_2026-08-06.md.
+
+    1. An externally-sourced worked example (jagannathhora.com's public
+       description of the eight-karaka ranking rule and Rahu's reverse
+       degree) reproduced through our own engine — an independent
+       cross-check of the ranking algorithm, not just an internal unit test.
+    2. A real ephemeris-derived chart (the same reference chart used
+       elsewhere in this suite: 14 Aug 1991, 06:12 IST, Vijayawada) with its
+       full eight/seven-karaka and A1/UL output pinned down.
+    3. Synthetic charts isolating the Scorpio/Aquarius dual-lordship
+       convention (primary lord Mars/Saturn, per SIGN_LORDS) that
+       arudha_padas() documents as pending a stronger-lord variant.
+    """
+
+    def test_external_source_worked_example_eight_scheme(self):
+        """Cross-check against jagannathhora.com's published ranking example.
+
+        Source (fetched 2026-08-06): "Chara Karakas in Jaimini Astrology:
+        Complete 8-Karaka Guide" — within-sign degrees Saturn 28, Mercury 25,
+        Mars 22, Venus 19, Moon 16, Jupiter 11, Sun 6, Rahu 7 (raw, reversed
+        to 23). The source states the resulting order starts Saturn=AK,
+        Mercury=AmK, Rahu=BK, Mars=MK, Venus=PK — which is exactly what our
+        ranking algorithm (degree-in-sign descending, Rahu reversed,
+        Ketu excluded from the eight scheme) reproduces below. Only the
+        within-sign degree matters for ranking, so each planet is placed in
+        a distinct arbitrary sign to isolate that fact.
+        """
+        positions = {
+            "Saturn": {"lon": 0 * 30.0 + 28.0},
+            "Mercury": {"lon": 1 * 30.0 + 25.0},
+            "Mars": {"lon": 2 * 30.0 + 22.0},
+            "Venus": {"lon": 3 * 30.0 + 19.0},
+            "Moon": {"lon": 4 * 30.0 + 16.0},
+            "Jupiter": {"lon": 5 * 30.0 + 11.0},
+            "Sun": {"lon": 6 * 30.0 + 6.0},
+            "Rahu": {"lon": 7 * 30.0 + 7.0},
+        }
+        k = chara_karakas(positions, scheme="eight")["karakas"]
+        assert k["AK"]["planet"] == "Saturn"
+        assert k["AmK"]["planet"] == "Mercury"
+        assert k["BK"]["planet"] == "Rahu"
+        assert k["BK"]["effective_degree"] == pytest.approx(23.0)
+        assert k["MK"]["planet"] == "Mars"
+        assert k["PK"]["planet"] == "Venus"
+        assert k["PiK"]["planet"] == "Moon"
+        assert k["GK"]["planet"] == "Jupiter"
+        assert k["DK"]["planet"] == "Sun"
+
+    def test_reference_chart_eight_scheme_pinned(self):
+        """Ephemeris-derived chart: 14 Aug 1991, 06:12 IST, Vijayawada (16.51N, 80.63E).
+
+        Same chart used in test_remedies_muhurta.py, pinned here so a
+        regression in the Jaimini pipeline (not just the ranking function in
+        isolation) is caught. Values recorded 2026-08-06; re-derive if the
+        ayanamsha or ephemeris source changes.
+        """
+        birth_jd = swe.julday(1991, 8, 14, 6 - 5.5 + 12 / 60)
+        lat, lng = 16.51, 80.63
+        positions = sidereal_positions(birth_jd)
+        lagna_lon = sidereal_lagna(birth_jd, lat, lng)
+        lagna_sign = sign_index(lagna_lon)
+
+        assert lagna_sign == 4  # Leo
+
+        k = chara_karakas(positions, scheme="eight")["karakas"]
+        assert k["AK"]["planet"] == "Jupiter"
+        assert k["AmK"]["planet"] == "Sun"
+        assert k["BK"]["planet"] == "Mars"
+        assert k["MK"]["planet"] == "Moon"
+        assert k["PK"]["planet"] == "Mercury"
+        assert k["PiK"]["planet"] == "Venus"
+        assert k["GK"]["planet"] == "Saturn"
+        assert k["DK"]["planet"] == "Rahu"
+
+        padas = arudha_padas(lagna_sign, positions)
+        assert padas["arudha_lagna"]["sign_name"] == "Gemini"
+        assert padas["arudha_lagna"]["exception_applied"] is False
+        assert padas["upapada"]["sign_name"] == "Scorpio"
+        assert padas["upapada"]["exception_applied"] is False
+
+    def test_scorpio_dual_lordship_uses_primary_lord_mars(self):
+        """Scorpio lagna (house sign 7): AstroSpace uses Mars, not Ketu.
+
+        Mars placed in Capricorn (sign 9): count n = (9-7) % 12 = 2, raw
+        arudha = (9+2) % 12 = 11 (Pisces) — neither the house itself (7) nor
+        its 7th (1), so no exception. This isolates the dual-lordship
+        convention documented in arudha_padas()'s notes and pending a
+        stronger-lord variant.
+        """
+        positions = _positions(Mars=279.0)  # Capricorn 9°
+        detail = arudha_pada_detail(1, lagna_sign=7, positions=positions)
+        assert detail["lord"] == "Mars"
+        assert detail["count"] == 2
+        assert detail["exception_applied"] is False
+        assert detail["sign_name"] == "Pisces"
+
+    def test_aquarius_dual_lordship_uses_primary_lord_saturn(self):
+        """Aquarius lagna (house sign 10): AstroSpace uses Saturn, not Rahu.
+
+        Saturn placed in Taurus (sign 1): count n = (1-10) % 12 = 3, raw
+        arudha = (1+3) % 12 = 4 (Leo). Leo is the 7th sign from Aquarius
+        (10+6=16%12=4), so the BPHS exception fires and the final arudha is
+        the 10th from Leo instead.
+        """
+        positions = _positions(Saturn=31.0)  # Taurus 1°
+        detail = arudha_pada_detail(1, lagna_sign=10, positions=positions)
+        assert detail["lord"] == "Saturn"
+        assert detail["count"] == 3
+        assert detail["raw_sign"] == 4  # Leo — the 7th from Aquarius
+        assert detail["exception_applied"] is True
+        assert detail["sign"] == 1  # 10th from Leo = Taurus
+        assert detail["sign_name"] == "Taurus"
 
 
 class TestSpecialLagnas:

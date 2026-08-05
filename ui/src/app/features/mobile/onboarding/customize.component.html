@@ -1,0 +1,41 @@
+<div class="top">
+  <header class="topbar">
+    <a class="back" [routerLink]="['/m', 'persona']" aria-label="Back">
+      <img src="mobile/back.svg" alt="" aria-hidden="true" />
+    </a>
+    <p class="step">SETUP 5 OF 6</p>
+  </header>
+
+  <h1 class="headline">Choose your chart view</h1>
+  <p class="lede">
+    Pick the chart layout that feels familiar. This only changes how charts are
+    drawn, not the calculations.
+  </p>
+
+  <div class="chart-styles" role="radiogroup" aria-label="Chart style">
+    @for (choice of chartStyles; track choice.id) {
+      @let on = preferences.chartStyle() === choice.id;
+      <button
+        class="choice"
+        type="button"
+        role="radio"
+        [class.is-on]="on"
+        [attr.aria-checked]="on"
+        (click)="chooseChartStyle(choice.id)"
+      >
+        <span class="choice-left">
+          <span class="choice-copy">
+            <span class="choice-label">{{ choice.label }}</span>
+            <span class="choice-detail">{{ choice.description }}</span>
+          </span>
+        </span>
+        @if (on) {
+          <img class="choice-tick" src="mobile/check-accent.svg" alt="" aria-hidden="true" />
+        }
+      </button>
+    }
+  </div>
+  <p class="note">Festival calendar, language, haptics, and convention settings stay available in Settings.</p>
+</div>
+
+<a class="btn" [routerLink]="['/m', 'birth-details']">Continue</a>

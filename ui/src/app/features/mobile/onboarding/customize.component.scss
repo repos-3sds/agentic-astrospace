@@ -1,0 +1,131 @@
+@use '../mobile-tokens' as *;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 18px 24px calc(32px + var(--m-safe-bottom));
+  gap: 24px;
+}
+
+.top {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.back {
+  line-height: 0;
+
+  img {
+    width: 24px;
+    height: 24px;
+    display: block;
+  }
+}
+
+.step {
+  @include m-caption;
+  color: var(--m-muted);
+  margin: 0;
+}
+
+.headline {
+  @include m-h1;
+  color: var(--m-text);
+  margin: 28px 0 8px;
+}
+
+.lede {
+  @include m-body;
+  color: var(--m-muted);
+  margin: 0 0 26px;
+}
+
+.chart-styles {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.choice {
+  width: 100%;
+  min-height: 86px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px;
+  border: 1.2px solid var(--m-border);
+  border-radius: 20px;
+  background: var(--m-surface);
+  color: var(--m-text);
+  text-align: left;
+}
+
+.choice.is-on {
+  border: 1.5px solid var(--m-accent-strong);
+  background: var(--m-accent-soft);
+}
+
+.choice-left {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.choice-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.choice-label {
+  @include m-body-strong;
+}
+
+.choice-detail {
+  @include m-body-small;
+  color: var(--m-muted);
+}
+
+.choice-tick {
+  width: 18px;
+  height: 18px;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.note {
+  @include m-body-small;
+  color: var(--m-muted);
+  margin: 20px 0 0;
+}
+
+.btn {
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 999px;
+  background: var(--m-ink);
+  color: var(--m-on-ink);
+  box-shadow: var(--m-shadow-card);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  flex-shrink: 0;
+  @include m-button;
+}

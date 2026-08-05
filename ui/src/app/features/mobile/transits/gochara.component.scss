@@ -7,4 +7,10 @@ header { h1 { @include m-h1; margin: 0 0 3px; } p { @include m-body-small; margi
 .mtr-overall { display: flex; flex-direction: column; gap: 8px; padding: 17px 18px; border-radius: 22px; background: var(--m-accent-soft); > b { @include m-eyebrow; color: var(--m-accent); } h2 { @include m-h2; margin: 0; } p { @include m-body-small; margin: 0; } }
 .mtr-title { @include m-eyebrow; margin: 0; color: var(--m-muted); }
 .mtr-card { width:100%; text-align:left; color:var(--m-text); display: flex; flex-direction: column; gap: 7px; padding: 14px 16px; border: 1px solid var(--m-border); border-radius: 18px; background: var(--m-raised); div { display: flex; gap: 8px; align-items: center; } div b { @include m-body-strong; flex: 1; } em { @include m-caption; padding: 3px 9px; border-radius: 999px; color: var(--m-warn); background: var(--m-warn-soft); font-size: 10.5px; font-style: normal; &[data-tone='good'] { color: var(--m-good); background: var(--m-good-soft); } } small { @include m-caption; color: var(--m-muted); } p { @include m-body-small; margin: 0; } }
+.mtr-action {
+  @include m-caption;
+  display: block;
+  padding-top: 2px;
+  color: var(--m-accent-strong);
+}
 .mtr-hint { @include m-caption; margin: 0; color: var(--m-muted); }

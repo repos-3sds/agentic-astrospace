@@ -1,0 +1,32 @@
+<a class="appbar" [routerLink]="['/m', 'settings']">
+  <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  <span class="crumb">Settings</span>
+</a>
+
+<div class="body">
+  <header class="intro">
+    <h1 class="title">Festival calendar</h1>
+    <p class="lede">Choose the observance families your home follows. Pick more than one for multi-ethnic families.</p>
+  </header>
+
+  <section class="presets" aria-label="Quick festival presets">
+    <button type="button" (click)="selectPreset(['pan-india'])">Essentials</button>
+    <button type="button" (click)="selectPreset(['pan-india', 'north'])">North family</button>
+    <button type="button" (click)="selectPreset(['pan-india', 'south'])">South family</button>
+    <button type="button" (click)="selectPreset(['pan-india', 'north', 'south'])">Multi-ethnic</button>
+  </section>
+
+  <section class="choices" aria-label="Festival families">
+    @for (choice of choices; track choice.id) {
+      <button class="choice" type="button" [class.is-on]="selected(choice.id)" [attr.aria-pressed]="selected(choice.id)" (click)="toggle(choice.id)">
+        <span class="choice-copy">
+          <span class="choice-title">{{ choice.title }}</span>
+          <span class="choice-detail">{{ choice.detail }}</span>
+        </span>
+        <span class="check" aria-hidden="true">{{ selected(choice.id) ? '✓' : '' }}</span>
+      </button>
+    }
+  </section>
+
+  <p class="local-note">Calendar fetches use these choices. Location still controls sunrise and date boundaries.</p>
+</div>

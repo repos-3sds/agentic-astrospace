@@ -45,6 +45,12 @@ export class CompatDetailComponent {
   protected readonly askNarrativeQuery = computed(
     () => `Explain the Gun Milan compatibility between ${this.activeName()} and ${this.partnerName()}`,
   );
+  protected readonly strongestRows = computed(() =>
+    [...(this.score()?.rows ?? [])].sort((a, b) => b.points / Math.max(b.max, 1) - a.points / Math.max(a.max, 1)).slice(0, 2),
+  );
+  protected readonly cautionRows = computed(() =>
+    [...(this.score()?.rows ?? [])].filter((row) => row.points < row.max).sort((a, b) => a.points / Math.max(a.max, 1) - b.points / Math.max(b.max, 1)).slice(0, 2),
+  );
 
   constructor() {
     void this.load();
@@ -58,6 +64,13 @@ export class CompatDetailComponent {
     if (row.verified === false) return 'partial';
     if (row.points < row.max) return 'caution';
     return 'full';
+  }
+
+  protected scoreMeaning(score: CompatibilityPayload): string {
+    const ratio = score.total / Math.max(score.max, 1);
+    if (ratio >= 0.75) return 'The match has strong baseline agreement. Use the details below to protect the weaker areas instead of treating the score as a guarantee.';
+    if (ratio >= 0.5) return 'The match has workable support, but it needs conscious effort in the caution areas below.';
+    return 'The match asks for careful review. Do not rely on the total alone; the weaker kootas and safety checks matter more here.';
   }
 
   private async load(): Promise<void> {

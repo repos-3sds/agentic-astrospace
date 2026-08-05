@@ -13,6 +13,10 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <item name="android:statusBarColor">#FAF7F0</item>
+        <item name="android:navigationBarColor">#FAF7F0</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
     </style>
 
 
@@ -23,5 +27,9 @@
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
         <item name="android:windowBackground">#100B06</item>
         <item name="android:background">#100B06</item>
+        <item name="android:statusBarColor">#100B06</item>
+        <item name="android:navigationBarColor">#100B06</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
 </resources>

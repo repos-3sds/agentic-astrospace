@@ -89,11 +89,17 @@
   height: 34px;
   border-radius: 10px;
   background: var(--m-accent-soft);
+  color: var(--m-accent);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  img { width: 17px; height: 17px; display: block; }
+  img {
+    width: 17px;
+    height: 17px;
+    display: block;
+    filter: var(--settings-icon-filter, none);
+  }
 }
 
 .row-label { @include m-body-strong; color: var(--m-text); }
@@ -116,7 +122,18 @@
   height: 16px;
   display: block;
   flex-shrink: 0;
+  filter: var(--settings-chevron-filter, none);
   &.lg { width: 18px; height: 18px; }
 }
 
 .rule { height: 1px; background: var(--m-border); }
+
+:host-context(.app-dark) {
+  .row-icon img {
+    filter: brightness(1.28) saturate(0.95);
+  }
+
+  .chevron {
+    filter: brightness(1.35) saturate(0.9);
+  }
+}

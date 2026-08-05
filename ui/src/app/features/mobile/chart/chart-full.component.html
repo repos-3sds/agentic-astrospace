@@ -64,19 +64,14 @@
   </div>
 
   <div class="chart-card">
-    @if (style() === 'Eastern') {
-      <as-east-chart
-        class="render"
-        size="full"
-        [cells]="cells()"
-        [interactive]="true"
-        (planetSelected)="openPlanet($event)"
-      />
-    } @else if (style() === 'South') {
-      <as-regional-chart chartStyle="South" [cells]="cells()" (planetSelected)="openPlanet($event)" />
-    } @else {
-      <as-regional-chart chartStyle="North" [cells]="cells()" (planetSelected)="openPlanet($event)" />
-    }
+    <app-kundli-chart
+      class="render"
+      [chart]="selectedChart()"
+      [chartStyle]="sharedStyle()"
+      [annotations]="chart()?.planet_annotations || {}"
+      [interactive]="true"
+      (planetSelected)="openPlanet($event)"
+    />
   </div>
 
   <ul class="legend">

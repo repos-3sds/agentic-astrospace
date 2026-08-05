@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { EastChartComponent, PlanetSelection } from './east-chart.component';
 import { PlanetDetail, PlanetSheetComponent } from './planet-sheet.component';
-import { RegionalChartComponent } from './regional-chart.component';
+import { KundliChartComponent, KundliChartStyle } from '../../../shared/kundli-chart/kundli-chart.component';
 import { KundliStore } from '../../../core/kundli.store';
-import { VedicAll } from '../../../core/models';
+import { VargaChart, VedicAll } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { buildChartAdapter, PLANET_ABBR, PLANET_NAME, SIGN_ORDER } from './mobile-chart-data';
@@ -28,7 +27,7 @@ export type ChartStyle = 'Eastern' | 'South' | 'North';
   selector: 'as-chart-full',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [EastChartComponent, PlanetSheetComponent, RegionalChartComponent, RouterLink],
+  imports: [KundliChartComponent, PlanetSheetComponent, RouterLink],
   templateUrl: './chart-full.component.html',
   styleUrl: './chart-full.component.scss',
 })
@@ -38,7 +37,8 @@ export class ChartFullComponent {
   private readonly vedic = inject(VedicService);
   readonly styles: ChartStyle[] = ['Eastern', 'South', 'North'];
   readonly vargas = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'D11', 'D12', 'D16', 'D20', 'D24', 'D27', 'D30', 'D40', 'D45', 'D60'];
-  readonly style = signal<ChartStyle>(this.toChartStyle(this.preferences.chartStyle()));
+  readonly style = computed<ChartStyle>(() => this.toChartStyle(this.preferences.chartStyle()));
+  readonly sharedStyle = computed<KundliChartStyle>(() => this.preferences.chartStyle());
   readonly selectedVarga = signal('D9');
   protected readonly chart = signal<VedicAll | null>(null);
   protected readonly loading = signal(true);
@@ -49,6 +49,12 @@ export class ChartFullComponent {
   });
 
   readonly cells = computed(() => this.adapter()?.cells ?? []);
+  readonly selectedChart = computed<VargaChart | null>(() => {
+    const chart = this.chart();
+    if (!chart) return null;
+    const vargaId = this.selectedVarga();
+    return chart.vargas?.[vargaId] ?? (vargaId === 'D1' ? this.rashiFallback(chart) : null);
+  });
 
   /** Expanded once, so the legend is not a second thing to decode. */
   readonly legend = computed(() => Object.entries(this.adapter()?.details ?? {}).map(([abbr, detail]) => ({
@@ -107,7 +113,6 @@ export class ChartFullComponent {
   }
 
   protected setStyle(style: ChartStyle): void {
-    this.style.set(style);
     this.preferences.chartStyle.set(style.toLowerCase() as 'eastern' | 'south' | 'north');
   }
 
@@ -120,8 +125,9 @@ export class ChartFullComponent {
     return !!this.chart()?.vargas?.[varga];
   }
 
-  protected openPlanet(selection: PlanetSelection): void {
-    const detail = this.adapter()?.details[selection.planet];
+  protected openPlanet(planet: string): void {
+    const abbr = PLANET_ABBR[planet] ?? planet;
+    const detail = this.adapter()?.details[abbr];
     if (detail) {
       this.selected.set(detail);
     }
@@ -150,6 +156,7 @@ export class ChartFullComponent {
         this.chart.set(cached);
         this.renderedChartId = activeId;
         this.loading.set(false);
+        void this.refreshChart(activeId);
         return;
       }
       if (this.renderedChartId !== activeId) this.loading.set(true);
@@ -162,8 +169,38 @@ export class ChartFullComponent {
     }
   }
 
+  private async refreshChart(activeId: string): Promise<void> {
+    try {
+      const chart = await this.vedic.refreshAll(activeId);
+      if (this.kundlis.activeId() !== activeId) return;
+      this.chart.set(chart);
+      this.renderedChartId = activeId;
+    } catch {
+      // Keep the saved chart visible when a background refresh fails.
+    }
+  }
+
   private toChartStyle(style: 'eastern' | 'south' | 'north'): ChartStyle {
     return style === 'south' ? 'South' : style === 'north' ? 'North' : 'Eastern';
+  }
+
+  private rashiFallback(data: VedicAll): VargaChart | null {
+    const lagnaSign = this.kundlis.active()?.ascendant ?? data.avkahada?.['rashi'];
+    if (!lagnaSign) return null;
+    return {
+      name: 'Rāśi',
+      signifies: 'Birth chart',
+      verified_rule: true,
+      lagna: { sign: lagnaSign },
+      planets: Object.fromEntries(Object.entries(data.planets ?? {}).map(([planet, row]) => [
+        planet,
+        {
+          sign: row.sign,
+          house: row.house,
+          retrograde: row.retrograde,
+        },
+      ])),
+    };
   }
 }
 

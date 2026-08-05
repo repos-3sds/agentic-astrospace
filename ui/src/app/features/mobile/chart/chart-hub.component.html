@@ -79,7 +79,13 @@
     <p class="eyebrow">YANTRA · EXPLORE</p>
     <div class="yantra-grid">
       @for (tile of yantraTiles(); track tile.title) {
-        <a class="yantra-tile" [attr.data-tone]="tile.tone" [class.is-active]="tile.active" [routerLink]="tile.route">
+        <a
+          class="yantra-tile"
+          [attr.data-tone]="tile.tone"
+          [class.is-active]="tile.active"
+          [routerLink]="tile.route"
+          [queryParams]="tile.queryParams"
+        >
           <span class="yantra-icon">
             <span class="yantra-mask-icon tile-icon" [style.--icon-url]="'url(/mobile/' + tile.icon + '.svg)'" aria-hidden="true"></span>
           </span>
@@ -130,7 +136,12 @@
       <p class="style">{{ chartStyleLabel() }}</p>
     </div>
 
-    <as-east-chart class="preview" [cells]="cells()" />
+    <app-kundli-chart
+      class="preview"
+      [chart]="rashiChart()"
+      [chartStyle]="sharedStyle()"
+      [annotations]="chart()?.planet_annotations || {}"
+    />
 
     <a class="open" [routerLink]="['/m', 'chart', 'full']">
       <span>Open full chart</span>
@@ -161,7 +172,7 @@
   <div class="explore">
     @for (card of visibleExplore(); track card.id) {
       @if (card.route; as route) {
-        <a class="explore-card" [routerLink]="route">
+        <a class="explore-card" [routerLink]="route" [queryParams]="card.queryParams">
           <span class="explore-icon">
             <img [src]="'mobile/' + card.icon + '.svg'" alt="" aria-hidden="true" />
           </span>

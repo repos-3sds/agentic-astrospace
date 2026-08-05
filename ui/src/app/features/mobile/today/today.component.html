@@ -215,6 +215,11 @@
         <span class="suggestion-text">{{ q }}</span>
         <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
       </a>
+    } @empty {
+      <a class="suggestion" [routerLink]="['/m', 'ask']" [queryParams]="{ q: 'What should I reflect on today?' }">
+        <span class="suggestion-text">Ask what today is inviting you to notice</span>
+        <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
+      </a>
     }
   </div>
   } @else if (!loading() && !loadError()) {
@@ -232,6 +237,7 @@
     [score]="v.score"
     [signals]="signals()"
     [summary]="summary()"
+    [reason]="scoreReason()"
     (dismissed)="openSheet.set(null)"
   />
 }

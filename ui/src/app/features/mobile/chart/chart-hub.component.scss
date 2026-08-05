@@ -376,6 +376,16 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 14px;
+  --as-text: var(--m-text);
+  --as-muted: var(--m-muted);
+  --as-surface: var(--m-surface);
+  --as-border: var(--m-border);
+  --as-gold-soft: var(--m-gold-soft);
+  --as-good: var(--m-good);
+  --as-bad: var(--m-bad);
+  --as-warn: var(--m-warn);
+  --as-accent: var(--m-accent);
+  --as-accent-strong: var(--m-accent-strong);
 }
 
 .rashi-head {
@@ -388,7 +398,15 @@
 
 .style { @include m-caption; color: var(--m-muted); margin: 0; }
 
-.preview { width: 160px; align-self: center; }
+.preview {
+  width: 220px;
+  max-width: 100%;
+  align-self: center;
+}
+
+:host ::ng-deep .rashi .chart-legend {
+  display: none;
+}
 
 .open {
   width: 100%;
@@ -486,6 +504,7 @@
   background: var(--m-raised);
   cursor: pointer;
   text-align: left;
+  text-decoration: none;
 
   .mark { width: 18px; height: 18px; display: block; flex-shrink: 0; }
   .chevron { width: 16px; height: 16px; display: block; flex-shrink: 0; }
@@ -494,8 +513,8 @@
 .provenance-text { @include m-body-small; color: var(--m-text); flex: 1 1 0; min-width: 0; }
 
 .notes { gap: 11px; padding: 13px 14px 13px 15px; }
-.notes-label { @include m-body-strong; color: var(--m-text); flex: 1 1 0; min-width: 0; }
-.notes-count { @include m-caption; color: var(--m-muted); flex-shrink: 0; }
+.notes-label { @include m-body-strong; color: var(--m-text); flex: 1 1 0; min-width: 0; text-decoration: none; }
+.notes-count { @include m-caption; color: var(--m-muted); flex-shrink: 0; text-decoration: none; }
 
 /* Explore grid — node 35:117. Two equal columns rather than the design's fixed
    167px, for the same reason as Muhurta's goal cards: 167 is what fits 393. */

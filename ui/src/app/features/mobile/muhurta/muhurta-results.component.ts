@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
-import { CalendarDaySummary, PanchangaWindow } from '../../../core/models';
-import { VedicService } from '../../../core/vedic.service';
+import { PreferencesService } from '../../../core/preferences.service';
+import { MuhurtaApiWindow, VedicService } from '../../../core/vedic.service';
 
 /** How strongly a window is endorsed. Two levels, not a score. */
 export type WindowQuality = 'best' | 'good';
@@ -13,6 +13,10 @@ export interface MuhurtaWindow {
   date: string;
   quality: WindowQuality;
   time: string;
+  score: number;
+  window: string;
+  supports: string[];
+  against: string[];
   /** The rule that produced this window, named. */
   reason: string;
 }
@@ -24,12 +28,12 @@ export interface MuhurtaWindow {
  * matter".
  */
 const GOAL_PHRASES: Record<string, string> = {
-  property: 'buy property or gold',
-  contract: 'sign a contract',
-  journey: 'start a journey',
-  venture: 'start a new venture',
-  marriage: 'plan something marriage-related',
-  other: 'do what you’re planning',
+  buy_property_gold: 'buy property or gold',
+  sign_contract: 'sign a contract',
+  start_journey: 'start a journey',
+  start_venture: 'start a new venture',
+  marriage_related: 'plan something marriage-related',
+  general: 'do what you’re planning',
 };
 
 const RANGE_LABELS: Record<string, string> = {
@@ -69,18 +73,21 @@ export class MuhurtaResultsComponent {
   });
   private readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
+  private readonly preferences = inject(PreferencesService);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly searched = signal(false);
+  protected readonly note = signal<string | null>(null);
+  protected readonly disclaimer = signal('Timing supports your intent — the decision and diligence are still yours.');
 
   protected readonly heading = computed(() => {
-    const goal = this.params().get('goal') ?? 'contract';
-    return `Best times to ${GOAL_PHRASES[goal] ?? GOAL_PHRASES['other']}`;
+    const goal = this.params().get('goal') ?? 'sign_contract';
+    return `Best times to ${GOAL_PHRASES[goal] ?? GOAL_PHRASES['general']}`;
   });
 
   protected readonly scope = computed(() => {
     const range = this.params().get('range') ?? 'month';
-    return `${RANGE_LABELS[range] ?? RANGE_LABELS['month']} · ${this.place()}`;
+    return `${RANGE_LABELS[range] ?? RANGE_LABELS['month']} · ${this.dateScope()} · ${this.place()}`;
   });
 
   readonly place = signal('current panchanga place');
@@ -106,11 +113,15 @@ export class MuhurtaResultsComponent {
         this.windows.set([]);
         return;
       }
-      const range = this.params().get('range') ?? 'month';
-      const days = range === 'week' ? 7 : 31;
-      const payload = await this.vedic.calendarIntelligence(activeId, days);
-      this.place.set(`${payload.place.city}, ${payload.place.nation}`);
-      this.windows.set(this.extractWindows(payload.panchanga_days).slice(0, 5));
+      const goal = this.params().get('goal') ?? 'sign_contract';
+      const dateFrom = this.params().get('date_from') ?? this.isoDate(new Date());
+      const dateTo = this.params().get('date_to') ?? this.isoDate(this.addDays(new Date(), 30));
+      const place = this.preferences.panchangaPlace();
+      const payload = await this.vedic.muhurta(activeId, goal, dateFrom, dateTo, place);
+      this.place.set(place ? `${place.city}, ${place.nation}` : 'current panchanga place');
+      this.note.set(payload.note);
+      this.disclaimer.set(payload.disclaimer);
+      this.windows.set(this.extractWindows(payload.results));
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {
@@ -119,38 +130,57 @@ export class MuhurtaResultsComponent {
     }
   }
 
-  private extractWindows(days: CalendarDaySummary[]): MuhurtaWindow[] {
-    return days
-      .flatMap((day) => day.windows.auspicious.map((window) => ({ day, window, score: this.score(day, window) })))
-      .sort((a, b) => b.score - a.score || a.window.start_iso.localeCompare(b.window.start_iso))
-      .map(({ day, window, score }, index) => ({
+  private extractWindows(results: MuhurtaApiWindow[]): MuhurtaWindow[] {
+    return results.map((window, index) => ({
         rank: index + 1,
-        date: this.dateLabel(day.date),
-        quality: score >= 3 ? 'best' : 'good',
+        date: this.dateLabel(window.date),
+        quality: window.quality === 'best' ? 'best' : 'good',
         time: `${window.start} – ${window.end}`,
-        reason: this.reason(day, window),
+        score: window.score,
+        window: window.window,
+        supports: window.why.supports,
+        against: window.why.against,
+        reason: this.reason(window),
       }));
   }
 
-  private score(day: CalendarDaySummary, window: PanchangaWindow): number {
-    return (day.tarabala.favourable ? 1 : 0)
-      + (day.chandrabala.favourable && !day.chandrabala.chandrashtama ? 1 : 0)
-      + (window.name.toLowerCase().includes('amrit') || window.name.toLowerCase().includes('abhijit') ? 1 : 0)
-      - day.inauspicious_count;
-  }
-
-  private reason(day: CalendarDaySummary, window: PanchangaWindow): string {
-    return [
-      `${window.name} returned by the panchanga calculation`,
-      day.tarabala.favourable ? `${day.tarabala.tara} tarabala is favourable` : `${day.tarabala.tara} tarabala needs care`,
-      day.chandrabala.favourable ? 'chandrabala is supportive' : 'chandrabala is not supportive',
-      day.inauspicious_count ? `${day.inauspicious_count} inauspicious window(s) also present that day` : 'no inauspicious window was returned for that day',
-    ].join('; ') + '.';
+  private reason(window: MuhurtaApiWindow): string {
+    const parts = [
+      `${window.window} · ${window.score}/100`,
+      window.vara ? `${window.vara} vara` : null,
+      window.nakshatra ? `${window.nakshatra} nakshatra` : null,
+      window.trimmed ? 'trimmed around avoid-windows' : null,
+    ].filter(Boolean);
+    return `${parts.join(' · ')}.`;
   }
 
   private dateLabel(value: string): string {
     const date = new Date(`${value}T12:00:00`);
     if (Number.isNaN(date.getTime())) return value;
     return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  }
+
+  private dateScope(): string {
+    const from = this.params().get('date_from');
+    const to = this.params().get('date_to');
+    if (!from || !to) return 'next 30 days';
+    if (from === to) return this.shortDate(from);
+    return `${this.shortDate(from)} - ${this.shortDate(to)}`;
+  }
+
+  private shortDate(value: string): string {
+    const date = new Date(`${value}T12:00:00`);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  private addDays(date: Date, days: number): Date {
+    const next = new Date(date);
+    next.setDate(next.getDate() + days);
+    return next;
+  }
+
+  private isoDate(date: Date): string {
+    return date.toISOString().slice(0, 10);
   }
 }

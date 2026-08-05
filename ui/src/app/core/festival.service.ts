@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 
 import { ApiService } from './api.service';
 import { FestivalWindowPayload } from './models';
+import { FestivalRegion } from './preferences.service';
 
 @Injectable({ providedIn: 'root' })
 export class FestivalService {
@@ -15,6 +16,7 @@ export class FestivalService {
     nation: string,
     fromDate: string,
     days: number,
+    regions: FestivalRegion[] = [],
   ): Promise<FestivalWindowPayload> {
     const key = this.cacheKey(city, nation, fromDate, days);
     let cached = this.cache.get(key);
@@ -37,7 +39,7 @@ export class FestivalService {
       });
       this.cache.set(key, cached);
     }
-    return cached;
+    return cached.then((payload) => this.filterPayload(payload, regions));
   }
 
   refreshUpcoming(
@@ -45,6 +47,7 @@ export class FestivalService {
     nation: string,
     fromDate: string,
     days: number,
+    regions: FestivalRegion[] = [],
   ): Promise<FestivalWindowPayload> {
     const key = this.cacheKey(city, nation, fromDate, days);
     const request = this.api.get<FestivalWindowPayload>(`/festivals/upcoming?${key}`).then((payload) => {
@@ -56,7 +59,7 @@ export class FestivalService {
       throw error;
     });
     this.cache.set(key, request);
-    return request;
+    return request.then((payload) => this.filterPayload(payload, regions));
   }
 
   cachedUpcoming(
@@ -64,13 +67,14 @@ export class FestivalService {
     nation: string,
     fromDate: string,
     days: number,
+    regions: FestivalRegion[] = [],
   ): FestivalWindowPayload | null {
     const key = this.cacheKey(city, nation, fromDate, days);
     const memory = this.values.get(key);
-    if (memory) return memory;
+    if (memory) return this.filterPayload(memory, regions);
     const stored = this.readStored(key);
     if (stored) this.values.set(key, stored);
-    return stored;
+    return stored ? this.filterPayload(stored, regions) : null;
   }
 
   private cacheKey(city: string, nation: string, fromDate: string, days: number): string {
@@ -80,6 +84,16 @@ export class FestivalService {
       from_date: fromDate,
       days: String(days),
     }).toString();
+  }
+
+  private filterPayload(payload: FestivalWindowPayload, regions: FestivalRegion[]): FestivalWindowPayload {
+    const selected = [...new Set(regions)];
+    if (!selected.length) return payload;
+    const keep = new Set(selected);
+    const festivals = payload.festivals.filter((festival) =>
+      festival.regions.some((region) => keep.has(region as FestivalRegion)),
+    );
+    return { ...payload, count: festivals.length, festivals };
   }
 
   private readStored(key: string): FestivalWindowPayload | null {

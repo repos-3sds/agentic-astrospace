@@ -61,6 +61,7 @@
   strong { font-size: 44px; line-height: 1; color: var(--m-text); }
   span { @include m-h2; color: var(--m-muted); }
   .verdict { @include m-body-strong; color: var(--m-text); margin: 0; }
+  .mcod-meaning { @include m-body-small; margin: 0; color: var(--m-muted); text-align: center; }
 }
 
 .mcod-eyebrow { @include m-eyebrow; color: var(--m-accent); margin: 8px 0 0; }

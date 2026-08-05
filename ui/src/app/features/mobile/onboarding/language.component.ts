@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { PreferencesService } from '../../../core/preferences.service';
 
 @Component({
   selector: 'as-language',
@@ -11,5 +12,15 @@ import { RouterLink } from '@angular/router';
   host: { class: 'as-mobile' },
 })
 export class LanguageComponent {
-  protected readonly language = signal<'English' | 'Telugu'>('English');
+  private readonly preferences = inject(PreferencesService);
+
+  // Only English actually works today (see the Telugu note in the template),
+  // so this is the only value this signal can ever hold — but it still owns
+  // the write-through to PreferencesService rather than letting the choice
+  // evaporate on navigation.
+  protected readonly language = signal<'English'>('English');
+
+  constructor() {
+    this.preferences.language.set('en');
+  }
 }

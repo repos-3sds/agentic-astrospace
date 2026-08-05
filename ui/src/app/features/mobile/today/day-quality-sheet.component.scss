@@ -6,6 +6,16 @@
 .title { @include m-h2; color: var(--m-text); margin: 0; }
 .sub { @include m-body-small; color: var(--m-muted); margin: 0; }
 
+.reason {
+  @include m-body;
+  margin: 0;
+  padding: 14px 15px;
+  border-radius: 16px;
+  background: var(--m-raised);
+  color: var(--m-text);
+  border: 1px solid var(--m-border);
+}
+
 .signal { display: flex; align-items: flex-start; gap: 12px; }
 
 .dot {

@@ -4,7 +4,7 @@ import {
   provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
 } from '@angular/core';
-import { provideRouter, RouteReuseStrategy, withViewTransitions } from '@angular/router';
+import { provideRouter, RouteReuseStrategy } from '@angular/router';
 import { MobileRouteReuseStrategy } from './core/mobile-route-reuse-strategy';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
@@ -99,7 +99,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     { provide: RouteReuseStrategy, useClass: MobileRouteReuseStrategy },
-    provideRouter(routes, withViewTransitions()),
+    provideRouter(routes),
     provideHttpClient(withFetch()),
     provideAnimationsAsync(),
     providePrimeNG({

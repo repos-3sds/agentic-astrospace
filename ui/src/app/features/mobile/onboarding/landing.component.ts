@@ -22,7 +22,7 @@ import { SplashComponent } from '../../../shell/splash/splash.component';
   template: `
     <div class="landing-hero">
       <app-splash class="landing-mark" [dark]="theme.dark()" [markOnly]="true" aria-hidden="true" />
-      <p class="wordmark">SIDDHA</p>
+      <p class="wordmark siddha-brand">Siddha</p>
       <p class="eyebrow">YOUR WAY OF LIFE GUIDE</p>
       <h1 class="headline">Live with rhythm.<br />Move with clarity.</h1>
       <p class="lede">

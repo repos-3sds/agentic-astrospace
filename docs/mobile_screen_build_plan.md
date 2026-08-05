@@ -395,7 +395,7 @@ for everything not yet done are in
 | `212:161` | 7G · Today (Guided) | ⚠️ partial — same component as Balanced, mode-specific layout not built |
 | `212:324` | 7B · Today (Balanced) | ✅ done — this is the shipped baseline `today.component` |
 | `212:751` | 7P · Today (Practitioner) | ✅ done 2026-07-29 — Active Period Stack, Panchanga Details, Critical Gochara Transits, Significant Horary Timings, all live-computed |
-| `212:416` / `458` / `512` | 6c/6d/6e · Aha — Guided/Balanced/Practitioner | ❌ not built — no onboarding result screen exists at all yet |
+| `212:416` / `458` / `512` | 6c/6d/6e · Aha — Guided/Balanced/Practitioner | ✅ done 2026-08-04 — `first-insight.component` now computes from the just-cast kundli (`VedicService.all`) instead of hardcoded literals, one branch per persona |
 | `212:971` / `1019` / `1077` | 10G/10B/10P · Ask Answer | ❌ not built — one answer template serves all modes |
 | `214:155` | 16P · Yantra (Practitioner) | ❌ not built |
 | `215:156` | 12G · What to do (Guided) | ⚠️ partial — tab label routes to the generic Remedies screen, not a dedicated Guided layout |
@@ -474,6 +474,13 @@ native release verification, not just the latter.
 
 ## Persona & Platform Parity — Implementation Checklist (2026-07-29)
 
+**Status note, 2026-08-04:** this section is now historical for the
+persona/platform frame sweep. For the current bug triage, verification status,
+and acceptance criteria, use
+[Mobile Stabilization Checklist — 2026-08-04](#mobile-stabilization-checklist--2026-08-04)
+below. If a row here conflicts with that dated checklist, the 2026-08-04
+stabilization checklist wins until the final regression audit reconciles both.
+
 Source: [docs/mobile_figma_web_persona_gap_analysis.md](mobile_figma_web_persona_gap_analysis.md)
 (2026-07-27 audit) plus the frame sweep above. That audit is the detailed
 rationale for *why* each gap matters; this checklist is what closes it. Check
@@ -545,15 +552,48 @@ routes `/m/explore`, `/m/explore/story`, `/m/explore/what-to-do`,
 (`figma-yantra-nav-*.svg`). Both compiled and passed the full test suite
 alongside this session's changes.
 
+### Done (2026-08-05) — new-user journey polish
+
+Three more fixes beyond the Aha screens above, none of them a missed Figma
+node — logged here so the "done" list stays a complete record of what
+changed, not just what Figma asked for:
+
+- **`m/language` now persists.** The screen looked functional but never
+  wrote its selection anywhere — `PreferencesService.language` is now set
+  on entry. Telugu stays visibly disabled; see "Telugu is disabled" above.
+- **`m/welcome`'s "carousel" is now an actual carousel.** It was 3 static
+  stacked cards with no swipe interaction. Rebuilt as a real horizontal
+  scroll-snap carousel (4 slides, dot indicators, tap-to-jump) with fresh
+  copy grounded in what the app actually does — no Figma pull for this one
+  (connector unauthenticated this session; node `7:2` has no slide-level
+  content spec in this doc either, see "New frames added 2026-07-29" table
+  above).
+- **New `/m/customize` step** between Persona and Birth Details (not a
+  Figma-tracked node — an intentional post-launch addition). Chart style
+  and festival-region were real, working `PreferencesService` fields with
+  no onboarding UI at all; a new user only found them by accident later in
+  Settings. One combined screen, not two, to avoid adding two full steps to
+  signup. Persona is now "STEP 1 OF 3", this is "STEP 2 OF 3", Birth
+  Details is "STEP 3 OF 3" (was "STEP 2 OF 2").
+
 ### P0 — Core persona variants
 
-- [ ] **Onboarding "Aha" result screens** (`6c`/`6d`/`6e`, nodes `212:416`/
-      `458`/`512`). AC: a new screen appears after chart computation and
-      before landing in the shell, one variant per persona (Guided: plain
-      signature + one strength + one action + Listen; Balanced: signature +
-      Sun/Moon/Lagna + Today/Chart preview; Practitioner: D1 chart + exact
-      birth constants + current period stack + "Open workbench"); routed
-      from the existing onboarding flow, not a dead end.
+- [x] **Onboarding "Aha" result screens** (`6c`/`6d`/`6e`, nodes `212:416`/
+      `458`/`512`). AC met 2026-08-05: `first-insight.component.ts` now
+      injects `VedicService`/`KundliStore` and computes from the kundli
+      `birth-details` just created (via `buildChartAdapter`, the same
+      adapter Chart Hub uses) instead of a hardcoded literal shown to every
+      user. Guided shows the real signature line, the highest-Shadbala
+      planet as "one strength", a hedged one-line action tied to it, and a
+      real "Listen" deep link (`/m/today?listen=1`, now actually wired —
+      `today.component.ts` previously ignored that query param entirely).
+      Balanced shows the real signature plus real Sun/Moon/Ascendant, with
+      "Preview today"/"Preview chart" links. Practitioner renders the real
+      D1 chart via the shared `KundliChartComponent`, real birth constants
+      (ayanamsha/node/house-system/timezone), and the real current dasha
+      chain, reusing Chart Hub's `.period-chain`/`.period-pill` pattern.
+      All three keep "Continue to Today" reachable even if the chart fetch
+      fails — the Aha moment is a bonus, never a gate.
 - [ ] **Ask Answer persona variants** (`10G`/`10B`/`10P`, nodes `212:971`/
       `1019`/`1077`). AC: Guided shows short verdict/action/caution only;
       Balanced is today's shipped answer view; Practitioner adds question
@@ -670,6 +710,218 @@ engine before ordering, not guessed):
 6. **P2 native platform (M10).** Its own track — WidgetKit extension,
    ActivityKit, a watchOS target, APNs/FCM setup. Don't start without an
    explicit go-ahead; the watch app alone is a separate App Store product.
+
+## Mobile Stabilization Checklist — 2026-08-04
+
+This is the active tracker for the user-reported mobile quality bug list from
+2026-08-04. Use this section before changing any older 2026-07-29 status row.
+Statuses are deliberately stricter than "code exists":
+
+- `[x]` means implemented and verified enough to treat as closed.
+- `[~]` means implemented or improved, but still needs native verification,
+  deeper architecture, or content/data hardening.
+- `[ ]` means open.
+
+Do not mark an item `[x]` unless it is verified in a 375 x 812 browser/mobile
+preview and, where native behavior is involved, on the connected Android phone.
+Final proof belongs in `docs/mobile_ui_regression_audit.md`; this checklist is
+the live remediation tracker.
+
+### Verified or sufficiently closed
+
+- [x] **Settings menu icon consistency** — P2.
+  Routes: `/m/settings`.
+  AC: every Settings row uses a semantic icon; icons share one visual family;
+  light/dark colors remain visible; no duplicate gear/clock misuse remains.
+  Evidence: source mapping updated in `SettingsHomeComponent`; semantic
+  `set-*` assets added for appearance, tone, interaction, festival, inbox and
+  Plus.
+
+- [x] **Reflect with SIDDHA fallback** — P3.
+  Route: `/m/today`.
+  AC: the section never renders empty; at least one fallback prompt routes to
+  Ask; the section does not look like an unfinished block when daily prompts
+  are unavailable.
+  Evidence: Today renders fallback suggestion when `askSuggestions` is empty.
+
+- [x] **Ask construction response while AI is disabled** — P2.
+  Routes: `/m/ask`, `/m/ask/loading`, `/m/ask/answer`.
+  AC: typed questions and suggested questions land on an explicit
+  "SIDDHA Agents are under construction" response; the app does not imply a
+  fake live AI answer.
+  Evidence: Ask loading routes to answer preview instead of calling the live
+  Ask endpoint for this disabled module.
+
+- [x] **Dasha tab visibility** — P2.
+  Route: `/m/chart/periods`.
+  AC: Maha, Antar, Pratyantar, Sookshma and Prana are visible/reachable on
+  mobile without text collision.
+  Evidence: five-level life-period tabs are present and horizontally scroll.
+
+- [x] **Yoga detail hardcoded Gajakesari bug** — P2.
+  Route: `/m/chart/yogas`.
+  AC: opening a yoga shows that selected yoga's detail; unrelated yogas do not
+  reuse Gajakesari copy.
+  Evidence: learning sheet now receives selected yoga detail instead of using
+  fixed Gajakesari content.
+
+- [x] **Mobile scrollbar sticks hidden** — P3.
+  Routes: all `/m/*`.
+  AC: normal mobile interaction does not show persistent horizontal or vertical
+  scrollbar sticks.
+  Evidence: mobile global scrollbar suppression is defined in
+  `styles-mobile.scss`.
+
+- [x] **Calendar red dots** — P3.
+  Route: `/m/calendar`.
+  AC: red/event dots are not shown for every personal signal; month dots
+  reflect festival counts only.
+  Evidence: calendar `eventCount` derives from festival rows.
+
+- [x] **Ask history icon visibility in dark mode** — P3.
+  Route: `/m/ask`.
+  AC: history icon remains visible in dark mode.
+  Evidence: dark-mode icon filter applied for Ask history control.
+
+- [x] **Light-mode top status/signal bar visibility** — P2.
+  Routes: `/m/today`, `/m/settings`, `/m/calendar`, `/m/chart`, `/m/ask`.
+  AC: Android status bar and top app area remain readable in light mode across
+  shell and overlay states.
+  Evidence: installed APK verified on connected Android phone
+  (`R5CY11Y5W7L`) on 2026-08-04; Capacitor StatusBar bridge now follows the
+  app theme and the Today shell shows dark system icons on the light surface.
+
+- [x] **Calendar day selection routes to the selected date** — P1.
+  Routes: `/m/calendar`, `/m/calendar/day`.
+  AC: tapping different dates opens the matching day detail; query-param
+  changes do not leave the previous date visible.
+  Evidence: installed APK verified on connected Android phone
+  (`R5CY11Y5W7L`) on 2026-08-04 with August 5 and August 12 opening distinct
+  detail pages.
+
+- [x] **Divisional chart planet tap targets** — P1.
+  Routes: `/m/chart/full`, `/m/chart/vargas`.
+  AC: planet markers in divisional charts are individually tappable and open
+  the correct planet detail sheet.
+  Evidence: installed APK verified on connected Android phone
+  (`R5CY11Y5W7L`) on 2026-08-04; tapping Venus in D9/Navamsa opened
+  "Venus in Cancer" detail.
+
+### Partially covered — requires verification or deeper work
+
+- [~] **Notifications toggle is still not real push delivery** — P1.
+  Routes: `/m/settings/notifications`, `/m/notifications`.
+  AC to close: notification choices persist; OS permission state is visible;
+  denied state has recovery actions; real push registration/device-token
+  delivery is either implemented or explicitly product-deferred in the UI.
+  Current state: local preferences exist and native/web copy no longer calls the
+  APK a browser preview, but push delivery is not complete.
+
+- [~] **Settings option glitch screen** — P1.
+  Routes: all `/m/settings/*`.
+  AC to close: opening every settings option on Android shows no blank,
+  mixed-theme, or flash-of-wrong-screen state; Android back returns cleanly.
+  Current state: mobile route animation was removed, but native sweep is still
+  required.
+
+- [~] **Today score weighting and layman explanation** — P1.
+  Route: `/m/today`.
+  AC to close: score gives primary weight to Chandrabala/Tarabala; the sheet
+  explains why the day is good/caution/avoid in plain language; Guided and
+  Balanced users do not see raw technical tally as the main explanation.
+  Current state: score weighting and main reason text are improved; content QA
+  against live varied days is still required.
+
+- [~] **Settings conventions are wired but need full proof** — P1.
+  Routes: `/m/settings/conventions`, `/m/chart`, `/m/chart/full`,
+  `/m/chart/vargas`.
+  AC to close: chart style persists locally and to cloud; D1 and every
+  divisional chart inherit the selected style; ayanamsha/node changes
+  invalidate affected computations; Settings summary remains current and not
+  misleading.
+  Current state: chart-style signals are consumed by full/varga/hub charts and
+  sync conflict protection was added; full native verification remains.
+
+- [~] **Dosha source display** — P2.
+  Route: `/m/chart/yogas`.
+  AC to close: every dosha shows authoritative source/provenance or explicitly
+  says source unavailable; no silent source gaps remain.
+  Current state: missing source visibility improved; source completeness remains
+  open.
+
+- [~] **Strength/Ashtakavarga interpretation** — P2.
+  Route: `/m/chart/strength`.
+  AC to close: Ashtakavarga, Shadbala, Jaimini and strengths explain
+  "what this means for you" without repeating generic text.
+  Current state: Shadbala, Ashtakavarga and Jaimini now show derived plain
+  interpretation; deeper source-specific interpretation remains.
+
+- [~] **Transits and Gochara usefulness** — P1.
+  Routes: `/m/transits`, `/m/transits/full`.
+  AC to close: each transit explains affected life area, practical effect,
+  caution/support, timing and source; Guided/Balanced avoid technical dumping.
+  Current state: domain and planet rows now include practical "use/watch" lines
+  before evidence; deeper content QA against varied charts remains.
+
+- [~] **Tab latency and recomputation** — P1.
+  Routes: `/m/today`, `/m/calendar`, `/m/chart*`.
+  AC to close: after profile creation/edit, major tab payloads warm once and
+  reuse cached/stale data; tab entry does not recompute unnecessarily; explicit
+  refresh is visible.
+  Current state: caches exist and Calendar no longer auto-refreshes from cached
+  entry; profile-level precompute/loading orchestration is still open.
+
+- [~] **Readings wired with Ask** — P2.
+  Routes: `/m/readings`, `/m/ask`.
+  AC to close: reading CTA passes reading id/context to Ask; Ask placeholder
+  acknowledges the selected reading; future real Ask can continue from that
+  context.
+  Current state: CTA exists; context continuity still needs proof and likely
+  stronger query parameters.
+
+- [~] **Compatibility full detail quality** — P1.
+  Routes: `/m/compat/results`, `/m/compat/results/detail`.
+  AC to close: full detail explains result, strengths, cautions,
+  cancellations, timing and practical guidance; not just raw Gun Milan rows.
+  Current state: score interpretation and caution/strength rows exist; richer
+  explanation remains.
+
+### Open
+
+- [ ] **UX/font audit** — P2.
+  Routes: all `/m/*`.
+  AC: inventory actual font families; define approved mobile fonts; confirm
+  `SIDDHA` brand uses Samarkan only where intentional; remove accidental mixed
+  typography and non-Figma text styling.
+
+- [ ] **Dasha plus Gocharam interpretation** — P1.
+  Routes: `/m/chart/periods`, `/m/transits`.
+  AC: active dasha stack explains current effect in plain language and relates
+  it to active gocharam; Practitioner receives technical provenance.
+  Current state: active dasha stack now explains the current chapter and
+  practical use; direct dasha-to-gocharam synthesis remains open.
+
+- [~] **Yogini interpretation** — P2.
+  Route: `/m/chart/periods`.
+  AC: Yogini periods show meaning, timing, effect and source/provenance; not
+  just period table data.
+  Current state: active Yogini and period rows now have plain meanings; stronger
+  provenance and interaction with Vimshottari remain open.
+
+- [ ] **Life domains interpretation** — P1.
+  Routes: Chart, Readings and Compatibility surfaces that show life domains.
+  AC: "what this means for you" sections are specific, non-repetitive and
+  derived from chart/dasha/transit context.
+
+- [ ] **Notes underline verification/fix** — P3.
+  Route: `/m/notes`.
+  AC: Notes UI has no unintended underline; local-draft behavior remains honest.
+
+- [ ] **Final full mobile UI/UX audit** — P0 for release readiness.
+  Routes: all `/m/*`.
+  AC: 375 x 812 browser screenshots plus Android screenshots; light/dark;
+  Guided/Balanced/Practitioner; route inventory; broken CTA table; prioritized
+  backlog; results recorded in `docs/mobile_ui_regression_audit.md`.
 
 ## Definition of done for any item above
 

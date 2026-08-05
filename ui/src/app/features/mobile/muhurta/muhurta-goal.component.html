@@ -43,6 +43,28 @@
     }
   </div>
 
+  @if (range() === 'custom') {
+    <section class="date-range" aria-label="Choose date range">
+      <label>
+        <span>From</span>
+        <input
+          type="date"
+          [value]="customFrom()"
+          (input)="setCustomFrom($any($event.target).value)"
+        />
+      </label>
+      <label>
+        <span>To</span>
+        <input
+          type="date"
+          [value]="customTo()"
+          [min]="customFrom()"
+          (input)="setCustomTo($any($event.target).value)"
+        />
+      </label>
+    </section>
+  }
+
   <!--
     Stated, not assumed: a muhurta is sunrise-relative, so the same instant is a
     different window in another city.

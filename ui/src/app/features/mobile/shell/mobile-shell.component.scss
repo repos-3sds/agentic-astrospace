@@ -21,11 +21,16 @@
   flex: 1 1 auto;
   min-height: 0;
   box-sizing: border-box;
-  padding-bottom: calc(84px + max(10px, var(--m-safe-bottom)));
-  scroll-padding-bottom: calc(84px + max(10px, var(--m-safe-bottom)));
+  padding-bottom: calc(132px + max(18px, var(--m-safe-bottom)));
+  scroll-padding-bottom: calc(132px + max(18px, var(--m-safe-bottom)));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
+}
+
+.content.tabs-hidden {
+  padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  scroll-padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
 }
 
 .tabbar {
@@ -39,17 +44,14 @@
   align-items: stretch;
   gap: 2px;
   padding: 7px;
-  background: var(--m-raised);
-  // Low enough that cards and dividers remain visible underneath in the light
-  // theme; blur keeps that real transparency from becoming visual noise.
-  background: color-mix(in srgb, var(--m-raised) 40%, transparent);
+  background: color-mix(in srgb, var(--m-raised) 96%, var(--m-bg) 4%);
   border: 1px solid color-mix(in srgb, var(--m-border) 86%, white 14%);
   border-radius: 24px;
   box-shadow:
     0 10px 28px rgba(32, 21, 14, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(20px) saturate(125%);
-  -webkit-backdrop-filter: blur(20px) saturate(125%);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .tab {

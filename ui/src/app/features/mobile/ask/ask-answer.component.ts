@@ -26,6 +26,7 @@ export interface AnswerView {
   verdict: string;
   whatToDo: string;
   followUps: string[];
+  preview: boolean;
 }
 
 /**
@@ -58,17 +59,23 @@ export class AskAnswerComponent {
     requireSync: true,
   });
 
-  readonly view = computed<AnswerView>(() => ({
-    question: this.params().get('q') ?? 'Is this a good time to change my job?',
-    domain: 'CAREER',
-    tone: 'good',
-    verdict: this.askState.answer(this.params().get('thread'))
-      ?? 'Yes — the next 6 weeks favour a change.',
-    whatToDo: this.askState.answer(this.params().get('thread'))
-      ? 'Use this as reflective guidance, then decide with the real-world information available to you.'
-      : 'Start conversations and send applications this week — Thursday & Friday mornings are best. Wait to sign anything until after the 14th.',
-    followUps: ['What about starting a business instead?'],
-  }));
+  readonly view = computed<AnswerView>(() => {
+    const savedAnswer = this.askState.answer(this.params().get('thread'));
+    const preview = this.params().get('preview') === 'construction' || !savedAnswer;
+    return {
+      question: this.params().get('q') ?? 'What should I know right now?',
+      domain: preview ? 'PREVIEW' : 'GUIDANCE',
+      tone: preview ? 'warn' : 'good',
+      verdict: preview
+        ? 'SIDDHA Agents are under construction.'
+        : savedAnswer,
+      whatToDo: preview
+        ? 'We have saved the question shape for this screen, but the live answer agents are not active yet. Once they are alive, this space will answer from your chart, current periods, gochara, and safety boundaries.'
+        : 'Use this as reflective guidance, then decide with the real-world information available to you.',
+      followUps: preview ? [] : ['Ask a follow-up about timing', 'Show the chart factors behind this'],
+      preview,
+    };
+  });
   readonly listenScript = computed(() => {
     const v = this.view();
     return `${v.question}. ${v.verdict} ${v.whatToDo}`;
@@ -130,11 +137,19 @@ export class AskAnswerComponent {
   protected async askAgain(question: string): Promise<void> {
     const q = question.trim();
     const threadId = this.params().get('thread');
-    if (!q || !threadId || this.submitting()) return;
+    if (!q || this.submitting()) return;
 
     this.submitting.set(true);
     this.submitError.set(null);
     try {
+      if (!threadId || this.view().preview) {
+        await this.router.navigate(['/m', 'ask', 'answer'], {
+          queryParams: { q, preview: 'construction' },
+        });
+        this.draft.set('');
+        return;
+      }
+
       await this.kundlis.load();
       const profile = this.kundlis.active();
       if (!profile) throw new Error('Select a profile before asking a follow-up.');

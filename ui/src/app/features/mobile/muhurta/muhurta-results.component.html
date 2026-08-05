@@ -14,7 +14,7 @@
   } @else if (error()) {
     <section class="muhurta-state error" role="alert"><b>Windows could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
   } @else if (searched() && !windows().length) {
-    <section class="muhurta-state"><b>No windows returned</b><p>No auspicious panchanga windows were available for this range.</p><a [routerLink]="['/m','muhurta']">Change search</a></section>
+    <section class="muhurta-state"><b>No windows cleared the bar</b><p>{{ note() || 'Widening the dates usually helps more than settling for a weak slot.' }}</p><a [routerLink]="['/m','muhurta']">Change search</a></section>
   } @else {
   @for (w of windows(); track w.rank) {
     <article class="window" [class.is-top]="w.rank === 1">
@@ -29,9 +29,25 @@
       </div>
 
       <p class="time">{{ w.time }}</p>
+      <p class="score">Score {{ w.score }}/100 · {{ w.window }}</p>
 
       <!-- The rule, named. See the class comment on why this is not a score. -->
       <p class="reason">{{ w.reason }}</p>
+
+      <div class="factors">
+        @if (w.supports.length) {
+          <div>
+            <b>Supports</b>
+            @for (item of w.supports; track item) { <span>{{ item }}</span> }
+          </div>
+        }
+        @if (w.against.length) {
+          <div>
+            <b>Needs care</b>
+            @for (item of w.against; track item) { <span>{{ item }}</span> }
+          </div>
+        }
+      </div>
 
       <div class="actions">
         <button class="chip" type="button" disabled>
@@ -49,6 +65,6 @@
 
   <p class="footnote">
     <img src="mobile/info.svg" alt="" aria-hidden="true" />
-    <span>Timing supports your intent — the decision and diligence are still yours.</span>
+    <span>{{ disclaimer() }}</span>
   </p>
 </div>
