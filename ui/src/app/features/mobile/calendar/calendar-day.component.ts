@@ -349,7 +349,7 @@ export class CalendarDayComponent {
       return;
     }
 
-    const cached = this.vedic.cachedCalendarIntelligence(id, 45, null, { includePractitionerDetail: true });
+    const cached = this.vedic.cachedCalendarIntelligence(id, 45, undefined, { includePractitionerDetail: true });
     if (cached && !forceRefresh) {
       this.data.set(cached);
       if (!this.selectedDate()) this.selectedDate.set(cached.start_date);
@@ -361,15 +361,15 @@ export class CalendarDayComponent {
     if (!this.data()) this.loading.set(true);
     try {
       const calendar = forceRefresh
-        ? await this.vedic.refreshCalendarIntelligence(id, 45, null, { includePractitionerDetail: true })
-        : await this.vedic.calendarIntelligence(id, 45, null, { includePractitionerDetail: true });
+        ? await this.vedic.refreshCalendarIntelligence(id, 45, undefined, { includePractitionerDetail: true })
+        : await this.vedic.calendarIntelligence(id, 45, undefined, { includePractitionerDetail: true });
       if (request !== this.requestId || this.activeId() !== id) return;
       this.data.set(calendar);
       if (!this.selectedDate()) this.selectedDate.set(calendar.start_date);
       void this.loadFestivals(calendar.start_date, 60);
     } catch (error) {
       if (request === this.requestId) {
-        const cached = this.vedic.cachedCalendarIntelligence(id, 45, null, { includePractitionerDetail: true });
+        const cached = this.vedic.cachedCalendarIntelligence(id, 45, undefined, { includePractitionerDetail: true });
         if (cached) {
           this.data.set(cached);
           if (!this.selectedDate()) this.selectedDate.set(cached.start_date);
@@ -386,7 +386,7 @@ export class CalendarDayComponent {
 
   private async refreshCalendar(id: string, request: number): Promise<void> {
     try {
-      const calendar = await this.vedic.refreshCalendarIntelligence(id, 45, null, { includePractitionerDetail: true });
+      const calendar = await this.vedic.refreshCalendarIntelligence(id, 45, undefined, { includePractitionerDetail: true });
       if (request !== this.requestId || this.activeId() !== id) return;
       this.data.set(calendar);
       if (!this.selectedDate()) this.selectedDate.set(calendar.start_date);
