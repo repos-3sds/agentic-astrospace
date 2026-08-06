@@ -108,7 +108,7 @@ export class App implements OnInit, OnDestroy {
   );
   private readonly url = signal(this.router.url);
   protected readonly currentSection = computed(() => this.sectionFromUrl(this.currentUrl()));
-  protected readonly mobileTitle = computed(() => ROUTE_TITLES[this.currentSection()] ?? 'SIDDHA');
+  protected readonly mobileTitle = computed(() => ROUTE_TITLES[this.currentSection()] ?? 'Siddha');
   protected readonly inProfileWorkspace = computed(() => this.currentUrl().startsWith('/kundli/'));
   protected readonly mobileProfileLabel = computed(() => {
     const active = this.store.active();
@@ -149,7 +149,7 @@ export class App implements OnInit, OnDestroy {
     );
   });
 
-  protected readonly title = computed(() => this.store.active()?.name ?? 'SIDDHA');
+  protected readonly title = computed(() => this.store.active()?.name ?? 'Siddha');
   protected readonly publicOnly = computed(() => {
     const path = this.currentUrl().split('?')[0].split('#')[0];
     // /m is the native app shell — it renders its own app bar and tab bar,

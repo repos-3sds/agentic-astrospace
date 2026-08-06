@@ -11,7 +11,7 @@ const STORAGE_KEY = 'astrospace.mobile.notes.draft';
   template: `
     <header class="mnote-top"><a [routerLink]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a><em>Local draft</em></header>
     <main class="mnote-body">
-      <header><h1>Notes</h1><p>Local draft only. This is not synced to your <span class="siddha-brand">SIDDHA</span> account yet.</p></header>
+      <header><h1>Notes</h1><p>Local draft only. This is not synced to your <span class="siddha-brand">Siddha</span> account yet.</p></header>
       <textarea
         maxlength="2000"
         [value]="text()"
@@ -24,7 +24,7 @@ const STORAGE_KEY = 'astrospace.mobile.notes.draft';
         spellcheck="false"
       ></textarea>
       <div class="mnote-meta"><span>Saved on this device</span><span>{{ text().length }} / 2000</span></div>
-      <p class="mnote-private">▢ <span>This draft stays on this device only. It is not sent to the reading engine or your <span class="siddha-brand">SIDDHA</span> account.</span></p>
+      <p class="mnote-private">▢ <span>This draft stays on this device only. It is not sent to the reading engine or your <span class="siddha-brand">Siddha</span> account.</span></p>
     </main>
   `,
   styleUrl: './notes.component.scss',

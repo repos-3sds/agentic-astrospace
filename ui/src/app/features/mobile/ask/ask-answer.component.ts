@@ -67,7 +67,7 @@ export class AskAnswerComponent {
       domain: preview ? 'PREVIEW' : 'GUIDANCE',
       tone: preview ? 'warn' : 'good',
       verdict: preview
-        ? 'SIDDHA Agents are under construction.'
+        ? 'Siddha Agents are under construction.'
         : savedAnswer,
       whatToDo: preview
         ? 'We have saved the question shape for this screen, but the live answer agents are not active yet. Once they are alive, this space will answer from your chart, current periods, gochara, and safety boundaries.'

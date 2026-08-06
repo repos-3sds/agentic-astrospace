@@ -33,7 +33,7 @@ import { PreferencesService } from '../../../core/preferences.service';
         <p class="step">SETUP 4 OF 6</p>
       </header>
 
-      <h1 class="headline">How should <span class="siddha-brand">SIDDHA</span><br />walk with you?</h1>
+      <h1 class="headline">How should <span class="siddha-brand">Siddha</span><br />walk with you?</h1>
       <p class="lede">Choose the depth of guidance you want. You can change it anytime.</p>
 
       <as-persona-picker

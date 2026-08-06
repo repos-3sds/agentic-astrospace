@@ -13,7 +13,7 @@ import {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="splash" [class.dark]="dark" [class.mark-only]="markOnly" aria-label="SIDDHA loading">
+    <section class="splash" [class.dark]="dark" [class.mark-only]="markOnly" aria-label="Siddha loading">
       <svg class="siddha-mark" viewBox="0 0 320 320" role="img" aria-label="Siddha solar system mark">
         <defs>
           <radialGradient id="splashSun" cx="50%" cy="42%" r="58%">
@@ -244,7 +244,7 @@ import {
 })
 export class SplashComponent implements AfterViewInit, OnDestroy {
   @Input() dark = false;
-  @Input() appName = 'SIDDHA';
+  @Input() appName = 'Siddha';
   @Input() tagline = 'Your Guide to Living in Rhythm';
   @Input() duration = 5000;
   @Input() markOnly = false;

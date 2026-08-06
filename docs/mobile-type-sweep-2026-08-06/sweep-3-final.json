@@ -1,0 +1,650 @@
+[
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/today",
+    "title": "",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/ask",
+    "title": "Ask",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/explore",
+    "title": "Explore",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/chart",
+    "title": "Explore",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/chart/full",
+    "title": "",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 50
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/chart/periods",
+    "title": "Dashas",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/calendar",
+    "title": "Calendar",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/settings",
+    "title": "Settings",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/remedies",
+    "title": "What to do",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 52
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/muhurta",
+    "title": "Find the best time",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 50
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/birth-details",
+    "title": "Begin with your birth rhythm",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": null
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/language",
+    "title": "Choose your language",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": null
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/today",
+    "title": "",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/ask",
+    "title": "Ask",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/explore",
+    "title": "Explore",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/chart",
+    "title": "Explore",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/chart/full",
+    "title": "",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 50
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/chart/periods",
+    "title": "Dashas",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/calendar",
+    "title": "Calendar",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/settings",
+    "title": "Settings",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/remedies",
+    "title": "What to do",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 52
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/muhurta",
+    "title": "Find the best time",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 50
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/birth-details",
+    "title": "Begin with your birth rhythm",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": null
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/language",
+    "title": "Choose your language",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": null
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/today",
+    "title": "",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/ask",
+    "title": "Ask",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/explore",
+    "title": "Explore",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/chart",
+    "title": "Explore",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/chart/full",
+    "title": "",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 50
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/chart/periods",
+    "title": "Dashas",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/calendar",
+    "title": "Calendar",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/settings",
+    "title": "Settings",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/remedies",
+    "title": "What to do",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 52
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/muhurta",
+    "title": "Find the best time",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 50
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/birth-details",
+    "title": "Begin with your birth rhythm",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": null
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/language",
+    "title": "Choose your language",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": null
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/today",
+    "title": "",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/ask",
+    "title": "Ask",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/explore",
+    "title": "Explore",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/chart",
+    "title": "Explore",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/chart/full",
+    "title": "",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 50
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/chart/periods",
+    "title": "Dashas",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/calendar",
+    "title": "Calendar",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/settings",
+    "title": "Settings",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/remedies",
+    "title": "What to do",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 52
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/muhurta",
+    "title": "Find the best time",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 50
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/birth-details",
+    "title": "Begin with your birth rhythm",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": null
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/language",
+    "title": "Choose your language",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": null
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/today",
+    "title": "",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/ask",
+    "title": "Ask",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/explore",
+    "title": "Explore",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/chart",
+    "title": "Explore",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/chart/full",
+    "title": "",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 50
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/chart/periods",
+    "title": "Dashas",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/calendar",
+    "title": "Calendar",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/settings",
+    "title": "Settings",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/remedies",
+    "title": "What to do",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 52
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/muhurta",
+    "title": "Find the best time",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 50
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/birth-details",
+    "title": "Begin with your birth rhythm",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": null
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/language",
+    "title": "Choose your language",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": null
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/today",
+    "title": "",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/ask",
+    "title": "Ask",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/explore",
+    "title": "Explore",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/chart",
+    "title": "Explore",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/chart/full",
+    "title": "",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 50
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/chart/periods",
+    "title": "Dashas",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/calendar",
+    "title": "Calendar",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/settings",
+    "title": "Settings",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 64
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/remedies",
+    "title": "What to do",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 52
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/muhurta",
+    "title": "Find the best time",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": 50
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/birth-details",
+    "title": "Begin with your birth rhythm",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": null
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/language",
+    "title": "Choose your language",
+    "familyIssues": [],
+    "badCtas": [],
+    "headerHeight": null
+  }
+]

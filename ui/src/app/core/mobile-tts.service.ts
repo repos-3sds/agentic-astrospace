@@ -90,9 +90,18 @@ export class MobileTtsService {
   async listVoices(): Promise<{ name: string; lang: string }[]> {
     if (!this.nativeAvailable()) return [];
     const voices = await this.voices();
-    return voices
+    const seen = new Set<string>();
+    const uniqueVoices = voices
       .filter((voice) => voice.lang.startsWith('en'))
-      .map((voice) => ({ name: voice.name, lang: voice.lang }))
+      .map((voice) => ({ name: voice.name.trim(), lang: voice.lang.trim() }))
+      .filter((voice) => {
+        const key = `${voice.lang.toLowerCase()}::${voice.name.toLowerCase()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+    return uniqueVoices
       .sort((a, b) => {
         const aIndia = a.lang === 'en-IN' ? 0 : 1;
         const bIndia = b.lang === 'en-IN' ? 0 : 1;

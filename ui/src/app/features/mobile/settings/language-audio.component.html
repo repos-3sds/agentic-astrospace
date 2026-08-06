@@ -96,7 +96,7 @@
           <img class="choice-tick" src="mobile/check-accent.svg" alt="" aria-hidden="true" />
         }
       </button>
-      @for (voice of voices(); track voice.name) {
+      @for (voice of voices(); track voice.lang + ':' + voice.name) {
         <button
           class="choice"
           type="button"

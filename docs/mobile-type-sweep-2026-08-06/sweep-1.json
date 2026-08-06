@@ -1,0 +1,1302 @@
+[
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/today",
+    "title": "",
+    "families": [
+      "Arial",
+      "Inter",
+      "Playfair Display",
+      "Samarkan"
+    ],
+    "badCtas": [
+      {
+        "text": "Today",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "C\n\nNamaste, Codex Practitioner QA\n\nThursday, August 6\n\nWHAT MATTERS TODAY\n\nSinga"
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/ask",
+    "title": "Ask",
+    "families": [
+      "Playfair Display",
+      "Inter",
+      "Arial"
+    ],
+    "badCtas": [
+      {
+        "text": "Ask",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Ask\nWhat’s on your mind, Codex Practitioner QA?\n\nAsk anything — job, money, fami"
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/explore",
+    "title": "Explore",
+    "families": [
+      "Playfair Display",
+      "Inter"
+    ],
+    "badCtas": [],
+    "headerHeight": 64,
+    "bodyText": "Explore\n\nGUIDED COMPANION\n\nLife guidance library\nStories, practices, chart basic"
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/chart",
+    "title": "Explore",
+    "families": [
+      "Playfair Display",
+      "Inter"
+    ],
+    "badCtas": [
+      {
+        "text": "Explore",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Explore\nToday\nAsk\nExplore\nCalendar\nMore"
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/chart/full",
+    "title": "",
+    "families": [
+      "Inter"
+    ],
+    "badCtas": [],
+    "headerHeight": 50,
+    "bodyText": "Your Chart"
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/chart/periods",
+    "title": "Dashas",
+    "families": [
+      "Playfair Display",
+      "Inter"
+    ],
+    "badCtas": [
+      {
+        "text": "Explore",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Dashas\nLoading life periods\n\nComputing dashas for the selected profile.\n\nToday\nA"
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/calendar",
+    "title": "Calendar",
+    "families": [
+      "Playfair Display",
+      "Arial",
+      "Inter"
+    ],
+    "badCtas": [
+      {
+        "text": "Calendar",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Calendar\nAugust 2026\nS\nM\nT\nW\nT\nF\nS\n\nUPCOMING SIGNALS\n\nToday\nAsk\nExplore\nCalendar"
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/settings",
+    "title": "Settings",
+    "families": [
+      "Playfair Display",
+      "Inter",
+      "Arial"
+    ],
+    "badCtas": [
+      {
+        "text": "More",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Settings\nC\nCodex Practitioner QA\nLocal workspace\n\nEXPERIENCE\n\nAppearance\nSystem\n"
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/remedies",
+    "title": "What to do",
+    "families": [
+      "Inter",
+      "Playfair Display"
+    ],
+    "badCtas": [],
+    "headerHeight": 52,
+    "bodyText": "What to do\n\nPractices for what’s active in your chart right now.\n\nTraditional pr"
+  },
+  {
+    "theme": "light",
+    "persona": "guided",
+    "route": "/m/muhurta",
+    "title": "Find the best time",
+    "families": [
+      "Inter",
+      "Playfair Display",
+      "Arial"
+    ],
+    "badCtas": [],
+    "headerHeight": 50,
+    "bodyText": "What to do\nFind the best time\n\nPick what you’re planning — we’ll find windows th"
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/today",
+    "title": "",
+    "families": [
+      "Arial",
+      "Inter"
+    ],
+    "badCtas": [
+      {
+        "text": "Today",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "C\n\nNamaste, Codex Practitioner QA\n\nToday\n\nToday\nAsk\nExplore\nCalendar\nMore"
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/ask",
+    "title": "Ask",
+    "families": [
+      "Playfair Display",
+      "Inter",
+      "Arial"
+    ],
+    "badCtas": [
+      {
+        "text": "Ask",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Ask\nWhat’s on your mind, Codex Practitioner QA?\n\nAsk anything — job, money, fami"
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/explore",
+    "title": "Explore",
+    "families": [
+      "Playfair Display",
+      "Inter"
+    ],
+    "badCtas": [],
+    "headerHeight": 64,
+    "bodyText": "Explore\n\nGUIDED COMPANION\n\nLife guidance library\nStories, practices, chart basic"
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/chart",
+    "title": "Explore",
+    "families": [
+      "Playfair Display",
+      "Inter",
+      "Arial"
+    ],
+    "badCtas": [
+      {
+        "text": "Computed transparently — tap to see how.",
+        "h": 69,
+        "w": 335,
+        "rounded": false,
+        "filled": true,
+        "bordered": true,
+        "cls": "provenance ng-star-inserted"
+      },
+      {
+        "text": "Notes0 lines",
+        "h": 52,
+        "w": 335,
+        "rounded": false,
+        "filled": true,
+        "bordered": true,
+        "cls": "notes ng-star-inserted"
+      },
+      {
+        "text": "Explore",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Explore\n\nYOUR SIGNATURE\n\nCapricorn Sun, Leo Moon, Aquarius rising.\n\nCodex Practi"
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/chart/full",
+    "title": "",
+    "families": [
+      "Inter"
+    ],
+    "badCtas": [],
+    "headerHeight": 50,
+    "bodyText": "Your Chart\nEastern\nSouth\nNorth\nD1\nD2\nD3\nD4\nD5\nD6\nD7\nD8\nD9\nD10\nD11\nD12\nD16\nD20\nD2"
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/chart/periods",
+    "title": "Dashas",
+    "families": [
+      "Playfair Display",
+      "Inter"
+    ],
+    "badCtas": [
+      {
+        "text": "JupiterMay 2026–Sep 2028A growth period:",
+        "h": 98,
+        "w": 333,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "period is-active ng-star-inserted"
+      },
+      {
+        "text": "Explore",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Dashas\nLife Periods\n\nVimshottari dasha — five levels, computed from Moon\n\nVimsho"
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/calendar",
+    "title": "Calendar",
+    "families": [
+      "Playfair Display",
+      "Arial",
+      "Inter"
+    ],
+    "badCtas": [
+      {
+        "text": "Calendar",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Calendar\nAugust 2026\nS\nM\nT\nW\nT\nF\nS\n\nUPCOMING SIGNALS\n\nToday\nAsk\nExplore\nCalendar"
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/settings",
+    "title": "Settings",
+    "families": [
+      "Playfair Display",
+      "Inter",
+      "Arial"
+    ],
+    "badCtas": [
+      {
+        "text": "More",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Settings\nC\nCodex Practitioner QA\nLocal workspace\n\nEXPERIENCE\n\nAppearance\nSystem\n"
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/remedies",
+    "title": "What to do",
+    "families": [
+      "Inter",
+      "Playfair Display"
+    ],
+    "badCtas": [],
+    "headerHeight": 52,
+    "bodyText": "What to do\n\nPractices for what’s active in your chart right now.\n\nTraditional pr"
+  },
+  {
+    "theme": "light",
+    "persona": "balanced",
+    "route": "/m/muhurta",
+    "title": "Find the best time",
+    "families": [
+      "Inter",
+      "Playfair Display",
+      "Arial"
+    ],
+    "badCtas": [],
+    "headerHeight": 50,
+    "bodyText": "What to do\nFind the best time\n\nPick what you’re planning — we’ll find windows th"
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/today",
+    "title": "",
+    "families": [
+      "Arial",
+      "Inter"
+    ],
+    "badCtas": [
+      {
+        "text": "Today",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "C\n\nNamaste, Codex Practitioner QA\n\nToday\n\nToday\nAsk\nExplore\nCalendar\nMore"
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/ask",
+    "title": "Ask",
+    "families": [
+      "Playfair Display",
+      "Inter",
+      "Arial"
+    ],
+    "badCtas": [
+      {
+        "text": "Ask",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Ask\nWhat’s on your mind, Codex Practitioner QA?\n\nAsk anything — job, money, fami"
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/explore",
+    "title": "Explore",
+    "families": [
+      "Playfair Display",
+      "Inter"
+    ],
+    "badCtas": [],
+    "headerHeight": 64,
+    "bodyText": "Explore\n\nGUIDED COMPANION\n\nLife guidance library\nStories, practices, chart basic"
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/chart",
+    "title": "Explore",
+    "families": [
+      "Playfair Display",
+      "Inter",
+      "Arial"
+    ],
+    "badCtas": [
+      {
+        "text": "Computed transparently — tap to see how.",
+        "h": 69,
+        "w": 335,
+        "rounded": false,
+        "filled": true,
+        "bordered": true,
+        "cls": "provenance ng-star-inserted"
+      },
+      {
+        "text": "Notes0 lines",
+        "h": 52,
+        "w": 335,
+        "rounded": false,
+        "filled": true,
+        "bordered": true,
+        "cls": "notes ng-star-inserted"
+      },
+      {
+        "text": "Explore",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Explore\n\nYOUR SIGNATURE\n\nCapricorn Sun, Leo Moon, Aquarius rising.\n\nCodex Practi"
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/chart/full",
+    "title": "",
+    "families": [
+      "Inter"
+    ],
+    "badCtas": [],
+    "headerHeight": 50,
+    "bodyText": "Your Chart\nEastern\nSouth\nNorth\nD1\nD2\nD3\nD4\nD5\nD6\nD7\nD8\nD9\nD10\nD11\nD12\nD16\nD20\nD2"
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/chart/periods",
+    "title": "Dashas",
+    "families": [
+      "Playfair Display",
+      "Inter"
+    ],
+    "badCtas": [
+      {
+        "text": "JupiterMay 2026–Sep 2028A growth period:",
+        "h": 98,
+        "w": 333,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "period is-active ng-star-inserted"
+      },
+      {
+        "text": "Explore",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Dashas\nLife Periods\n\nVimshottari dasha — five levels, computed from Moon\n\nVimsho"
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/calendar",
+    "title": "Calendar",
+    "families": [
+      "Playfair Display",
+      "Arial",
+      "Inter"
+    ],
+    "badCtas": [
+      {
+        "text": "Calendar",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Calendar\nAugust 2026\nS\nM\nT\nW\nT\nF\nS\n\nUPCOMING SIGNALS\n\nToday\nAsk\nExplore\nCalendar"
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/settings",
+    "title": "Settings",
+    "families": [
+      "Playfair Display",
+      "Inter",
+      "Arial"
+    ],
+    "badCtas": [
+      {
+        "text": "More",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Settings\nC\nCodex Practitioner QA\nLocal workspace\n\nEXPERIENCE\n\nAppearance\nSystem\n"
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/remedies",
+    "title": "What to do",
+    "families": [
+      "Inter",
+      "Playfair Display"
+    ],
+    "badCtas": [],
+    "headerHeight": 52,
+    "bodyText": "What to do\n\nPractices for what’s active in your chart right now.\n\nTraditional pr"
+  },
+  {
+    "theme": "light",
+    "persona": "practitioner",
+    "route": "/m/muhurta",
+    "title": "Find the best time",
+    "families": [
+      "Inter",
+      "Playfair Display",
+      "Arial"
+    ],
+    "badCtas": [],
+    "headerHeight": 50,
+    "bodyText": "What to do\nFind the best time\n\nPick what you’re planning — we’ll find windows th"
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/today",
+    "title": "",
+    "families": [
+      "Arial",
+      "Inter"
+    ],
+    "badCtas": [
+      {
+        "text": "Today",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "C\n\nNamaste, Codex Practitioner QA\n\nToday\n\nToday\nAsk\nExplore\nCalendar\nMore"
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/ask",
+    "title": "Ask",
+    "families": [
+      "Playfair Display",
+      "Inter",
+      "Arial"
+    ],
+    "badCtas": [
+      {
+        "text": "Ask",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Ask\nWhat’s on your mind, Codex Practitioner QA?\n\nAsk anything — job, money, fami"
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/explore",
+    "title": "Explore",
+    "families": [
+      "Playfair Display",
+      "Inter"
+    ],
+    "badCtas": [],
+    "headerHeight": 64,
+    "bodyText": "Explore\n\nGUIDED COMPANION\n\nLife guidance library\nStories, practices, chart basic"
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/chart",
+    "title": "Explore",
+    "families": [
+      "Playfair Display",
+      "Inter",
+      "Arial"
+    ],
+    "badCtas": [
+      {
+        "text": "Computed transparently — tap to see how.",
+        "h": 69,
+        "w": 335,
+        "rounded": false,
+        "filled": true,
+        "bordered": true,
+        "cls": "provenance ng-star-inserted"
+      },
+      {
+        "text": "Notes0 lines",
+        "h": 52,
+        "w": 335,
+        "rounded": false,
+        "filled": true,
+        "bordered": true,
+        "cls": "notes ng-star-inserted"
+      },
+      {
+        "text": "Explore",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Explore\n\nYOUR SIGNATURE\n\nCapricorn Sun, Leo Moon, Aquarius rising.\n\nCodex Practi"
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/chart/full",
+    "title": "",
+    "families": [
+      "Inter"
+    ],
+    "badCtas": [],
+    "headerHeight": 50,
+    "bodyText": "Your Chart\nEastern\nSouth\nNorth\nD1\nD2\nD3\nD4\nD5\nD6\nD7\nD8\nD9\nD10\nD11\nD12\nD16\nD20\nD2"
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/chart/periods",
+    "title": "Dashas",
+    "families": [
+      "Playfair Display",
+      "Inter"
+    ],
+    "badCtas": [
+      {
+        "text": "JupiterMay 2026–Sep 2028A growth period:",
+        "h": 98,
+        "w": 333,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "period is-active ng-star-inserted"
+      },
+      {
+        "text": "Explore",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Dashas\nLife Periods\n\nVimshottari dasha — five levels, computed from Moon\n\nVimsho"
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/calendar",
+    "title": "Calendar",
+    "families": [
+      "Playfair Display",
+      "Arial",
+      "Inter"
+    ],
+    "badCtas": [
+      {
+        "text": "Calendar",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Calendar\nAugust 2026\nS\nM\nT\nW\nT\nF\nS\n\nUPCOMING SIGNALS\n\nToday\nAsk\nExplore\nCalendar"
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/settings",
+    "title": "Settings",
+    "families": [
+      "Playfair Display",
+      "Inter",
+      "Arial"
+    ],
+    "badCtas": [
+      {
+        "text": "More",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Settings\nC\nCodex Practitioner QA\nLocal workspace\n\nEXPERIENCE\n\nAppearance\nSystem\n"
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/remedies",
+    "title": "What to do",
+    "families": [
+      "Inter",
+      "Playfair Display"
+    ],
+    "badCtas": [],
+    "headerHeight": 52,
+    "bodyText": "What to do\n\nPractices for what’s active in your chart right now.\n\nTraditional pr"
+  },
+  {
+    "theme": "dark",
+    "persona": "guided",
+    "route": "/m/muhurta",
+    "title": "Find the best time",
+    "families": [
+      "Inter",
+      "Playfair Display",
+      "Arial"
+    ],
+    "badCtas": [],
+    "headerHeight": 50,
+    "bodyText": "What to do\nFind the best time\n\nPick what you’re planning — we’ll find windows th"
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/today",
+    "title": "",
+    "families": [
+      "Arial",
+      "Inter"
+    ],
+    "badCtas": [
+      {
+        "text": "Today",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "C\n\nNamaste, Codex Practitioner QA\n\nToday\n\nToday\nAsk\nExplore\nCalendar\nMore"
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/ask",
+    "title": "Ask",
+    "families": [
+      "Playfair Display",
+      "Inter",
+      "Arial"
+    ],
+    "badCtas": [
+      {
+        "text": "Ask",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Ask\nWhat’s on your mind, Codex Practitioner QA?\n\nAsk anything — job, money, fami"
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/explore",
+    "title": "Explore",
+    "families": [
+      "Playfair Display",
+      "Inter"
+    ],
+    "badCtas": [],
+    "headerHeight": 64,
+    "bodyText": "Explore\n\nGUIDED COMPANION\n\nLife guidance library\nStories, practices, chart basic"
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/chart",
+    "title": "Explore",
+    "families": [
+      "Playfair Display",
+      "Inter",
+      "Arial"
+    ],
+    "badCtas": [
+      {
+        "text": "Computed transparently — tap to see how.",
+        "h": 69,
+        "w": 335,
+        "rounded": false,
+        "filled": true,
+        "bordered": true,
+        "cls": "provenance ng-star-inserted"
+      },
+      {
+        "text": "Notes0 lines",
+        "h": 52,
+        "w": 335,
+        "rounded": false,
+        "filled": true,
+        "bordered": true,
+        "cls": "notes ng-star-inserted"
+      },
+      {
+        "text": "Explore",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Explore\n\nYOUR SIGNATURE\n\nCapricorn Sun, Leo Moon, Aquarius rising.\n\nCodex Practi"
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/chart/full",
+    "title": "",
+    "families": [
+      "Inter"
+    ],
+    "badCtas": [],
+    "headerHeight": 50,
+    "bodyText": "Your Chart\nEastern\nSouth\nNorth\nD1\nD2\nD3\nD4\nD5\nD6\nD7\nD8\nD9\nD10\nD11\nD12\nD16\nD20\nD2"
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/chart/periods",
+    "title": "Dashas",
+    "families": [
+      "Playfair Display",
+      "Inter"
+    ],
+    "badCtas": [
+      {
+        "text": "JupiterMay 2026–Sep 2028A growth period:",
+        "h": 98,
+        "w": 333,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "period is-active ng-star-inserted"
+      },
+      {
+        "text": "Explore",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Dashas\nLife Periods\n\nVimshottari dasha — five levels, computed from Moon\n\nVimsho"
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/calendar",
+    "title": "Calendar",
+    "families": [
+      "Playfair Display",
+      "Arial",
+      "Inter"
+    ],
+    "badCtas": [
+      {
+        "text": "Calendar",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Calendar\nAugust 2026\nS\nM\nT\nW\nT\nF\nS\n\nUPCOMING SIGNALS\n\nToday\nAsk\nExplore\nCalendar"
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/settings",
+    "title": "Settings",
+    "families": [
+      "Playfair Display",
+      "Inter",
+      "Arial"
+    ],
+    "badCtas": [
+      {
+        "text": "More",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Settings\nC\nCodex Practitioner QA\nLocal workspace\n\nEXPERIENCE\n\nAppearance\nSystem\n"
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/remedies",
+    "title": "What to do",
+    "families": [
+      "Inter",
+      "Playfair Display"
+    ],
+    "badCtas": [],
+    "headerHeight": 52,
+    "bodyText": "What to do\n\nPractices for what’s active in your chart right now.\n\nTraditional pr"
+  },
+  {
+    "theme": "dark",
+    "persona": "balanced",
+    "route": "/m/muhurta",
+    "title": "Find the best time",
+    "families": [
+      "Inter",
+      "Playfair Display",
+      "Arial"
+    ],
+    "badCtas": [],
+    "headerHeight": 50,
+    "bodyText": "What to do\nFind the best time\n\nPick what you’re planning — we’ll find windows th"
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/today",
+    "title": "",
+    "families": [
+      "Arial",
+      "Inter"
+    ],
+    "badCtas": [
+      {
+        "text": "Today",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "C\n\nNamaste, Codex Practitioner QA\n\nToday\n\nToday\nAsk\nExplore\nCalendar\nMore"
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/ask",
+    "title": "Ask",
+    "families": [
+      "Playfair Display",
+      "Inter",
+      "Arial"
+    ],
+    "badCtas": [
+      {
+        "text": "Ask",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Ask\nWhat’s on your mind, Codex Practitioner QA?\n\nAsk anything — job, money, fami"
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/explore",
+    "title": "Explore",
+    "families": [
+      "Playfair Display",
+      "Inter"
+    ],
+    "badCtas": [],
+    "headerHeight": 64,
+    "bodyText": "Explore\n\nGUIDED COMPANION\n\nLife guidance library\nStories, practices, chart basic"
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/chart",
+    "title": "Explore",
+    "families": [
+      "Playfair Display",
+      "Inter",
+      "Arial"
+    ],
+    "badCtas": [
+      {
+        "text": "Computed transparently — tap to see how.",
+        "h": 69,
+        "w": 335,
+        "rounded": false,
+        "filled": true,
+        "bordered": true,
+        "cls": "provenance ng-star-inserted"
+      },
+      {
+        "text": "Notes0 lines",
+        "h": 52,
+        "w": 335,
+        "rounded": false,
+        "filled": true,
+        "bordered": true,
+        "cls": "notes ng-star-inserted"
+      },
+      {
+        "text": "Explore",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Explore\n\nYOUR SIGNATURE\n\nCapricorn Sun, Leo Moon, Aquarius rising.\n\nCodex Practi"
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/chart/full",
+    "title": "",
+    "families": [
+      "Inter"
+    ],
+    "badCtas": [],
+    "headerHeight": 50,
+    "bodyText": "Your Chart\nEastern\nSouth\nNorth\nD1\nD2\nD3\nD4\nD5\nD6\nD7\nD8\nD9\nD10\nD11\nD12\nD16\nD20\nD2"
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/chart/periods",
+    "title": "Dashas",
+    "families": [
+      "Playfair Display",
+      "Inter"
+    ],
+    "badCtas": [
+      {
+        "text": "JupiterMay 2026–Sep 2028A growth period:",
+        "h": 98,
+        "w": 333,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "period is-active ng-star-inserted"
+      },
+      {
+        "text": "Explore",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Dashas\nLife Periods\n\nVimshottari dasha — five levels, computed from Moon\n\nVimsho"
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/calendar",
+    "title": "Calendar",
+    "families": [
+      "Playfair Display",
+      "Arial",
+      "Inter"
+    ],
+    "badCtas": [
+      {
+        "text": "Calendar",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Calendar\nAugust 2026\nS\nM\nT\nW\nT\nF\nS\n\nUPCOMING SIGNALS\n\nToday\nAsk\nExplore\nCalendar"
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/settings",
+    "title": "Settings",
+    "families": [
+      "Playfair Display",
+      "Inter",
+      "Arial"
+    ],
+    "badCtas": [
+      {
+        "text": "More",
+        "h": 56,
+        "w": 66,
+        "rounded": false,
+        "filled": true,
+        "bordered": false,
+        "cls": "tab is-active ng-star-inserted"
+      }
+    ],
+    "headerHeight": 64,
+    "bodyText": "Settings\nC\nCodex Practitioner QA\nLocal workspace\n\nEXPERIENCE\n\nAppearance\nSystem\n"
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/remedies",
+    "title": "What to do",
+    "families": [
+      "Inter",
+      "Playfair Display"
+    ],
+    "badCtas": [],
+    "headerHeight": 52,
+    "bodyText": "What to do\n\nPractices for what’s active in your chart right now.\n\nTraditional pr"
+  },
+  {
+    "theme": "dark",
+    "persona": "practitioner",
+    "route": "/m/muhurta",
+    "title": "Find the best time",
+    "families": [
+      "Inter",
+      "Playfair Display",
+      "Arial"
+    ],
+    "badCtas": [],
+    "headerHeight": 50,
+    "bodyText": "What to do\nFind the best time\n\nPick what you’re planning — we’ll find windows th"
+  }
+]

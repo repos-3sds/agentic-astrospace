@@ -1,13 +1,13 @@
-<header class="insight-appbar">
-  <span>YOUR FIRST INSIGHT</span>
-  <em>{{ preferences.experienceMode() }}</em>
-</header>
-
-<main>
+<main [class.is-practitioner]="ahaMode() === 'practitioner'">
   @if (loading()) {
     <section class="loading-state">
       <span class="orb"></span>
       <p>Casting {{ name() || 'your' }} chart…</p>
+    </section>
+  } @else if (!hasActiveProfile()) {
+    <section class="loading-state error">
+      <p>Add birth details first so Siddha can prepare your first insight.</p>
+      <a routerLink="/m/birth-details">Add birth details</a>
     </section>
   } @else if (error() && !chart()) {
     <section class="loading-state error">
@@ -16,53 +16,85 @@
   } @else {
     @switch (preferences.experienceMode()) {
       @case ('guided') {
-        <p class="kicker">YOUR FIRST STEP</p>
-        <h1>@if (name()) {<span>{{ name() }}, </span>}{{ adapter()?.signature?.headline ?? 'your chart is ready.' }}</h1>
-        <p class="lede">{{ guidedLead() }}</p>
-        @if (strongest(); as strong) {
-          <section class="action">
-            <small>YOUR STRONGEST PLACEMENT</small>
-            <strong>{{ strong.planet }} in {{ strong.sign }}</strong>
-            @if (strengthAction(); as action) {
-              <p>A good day to {{ action }}.</p>
+        <section class="journey-hero">
+          <span class="cosmic-mark" aria-hidden="true"><i></i><b></b></span>
+          <p class="kicker">YOUR JOURNEY BEGINS</p>
+          <h1>{{ journeyCopy().headline }}</h1>
+          <p class="lede">{{ journeyCopy().lede }}</p>
+        </section>
+        <section class="aha-card">
+          <img src="mobile/figma-yantra-award.svg" alt="" aria-hidden="true" />
+          <span>
+            <small>YOUR KEY STRENGTH</small>
+            <strong>{{ journeyCopy().strength }}</strong>
+          </span>
+        </section>
+        <section class="aha-card">
+          <img src="mobile/figma-guided-star.svg" alt="" aria-hidden="true" />
+          <span>
+            <small>RECOMMENDED FOR TODAY</small>
+            <strong>{{ journeyCopy().recommendation }}</strong>
+          </span>
+        </section>
+      }
+      @case ('practitioner') {
+        <p class="kicker">KUNDLI CALCULATION</p>
+        <h1>Varga D1 Chart Rendered</h1>
+        <p class="lede practitioner-lede">{{ birthConstants() }}</p>
+        <app-kundli-chart [chart]="practitionerChart()" [chartStyle]="practitionerStyle()" />
+        <section class="metrics-card">
+          <small>EXACT BIRTH METRICS</small>
+          @for (row of birthMetrics(); track row.label) {
+            <div><span>{{ row.label }}:</span><strong>{{ row.value }}</strong></div>
+          }
+        </section>
+        @if (dashaChain().length) {
+          <section class="metrics-card period-card">
+            <small>CURRENT VIMSHOTTARI PATH</small>
+            @for (row of dashaChain(); track row.lord + row.short; let last = $last) {
+              <span class="period-pill" [class.is-active]="row.active">{{ row.lord }} {{ row.short }}</span>
+              @if (!last) { <span class="period-sep">→</span> }
             }
           </section>
         }
-        <a class="listen" routerLink="/m/today" [queryParams]="{ listen: 1 }">Listen to my first guidance</a>
-      }
-      @case ('practitioner') {
-        <p class="kicker">YOUR MAP IS READY</p>
-        <h1>@if (name()) {<span>{{ name() }}’s</span>} @else {<span>Your</span>} life map is ready.</h1>
-        <app-kundli-chart [chart]="practitionerChart()" [chartStyle]="sharedStyle()" />
-        <p class="constants">{{ birthConstants() }}</p>
-        @if (dashaChain().length) {
-          <div class="period-chain">
-            @for (row of dashaChain(); track row.lord + row.short; let last = $last) {
-              <span class="period-pill" [class.is-active]="row.active">{{ row.lord }} <b>{{ row.short }}</b></span>
-              @if (!last) { <span class="period-sep">›</span> }
-            }
-          </div>
-        }
-        <a class="secondary" routerLink="/m/chart">Open workbench</a>
       }
       @default {
-        <p class="kicker">WHY THIS IS PERSONAL</p>
-        <h1>@if (name()) {<span>{{ name() }}, </span>}{{ adapter()?.signature?.detail ?? 'your chart is ready.' }}</h1>
-        <p class="lede">{{ adapter()?.signature?.headline }}</p>
-        @if (adapter()?.angles; as angles) {
-          <dl>
-            @for (angle of angles; track angle.label) {
-              <div><dt>{{ angle.label }}</dt><dd>{{ angle.sign }}</dd></div>
-            }
-          </dl>
-        }
-        <div class="preview-links">
-          <a routerLink="/m/today">Preview today</a>
-          <a routerLink="/m/chart">Preview chart</a>
-        </div>
+        <section class="journey-hero">
+          <span class="cosmic-mark" aria-hidden="true"><i></i><b></b></span>
+          <p class="kicker">YOUR JOURNEY BEGINS</p>
+          <h1>{{ journeyCopy().headline }}</h1>
+          <p class="lede">{{ journeyCopy().lede }}</p>
+        </section>
+        <section class="aha-card">
+          <img src="mobile/figma-yantra-award.svg" alt="" aria-hidden="true" />
+          <span>
+            <small>YOUR KEY STRENGTH</small>
+            <strong>{{ journeyCopy().strength }}</strong>
+          </span>
+        </section>
+        <section class="aha-card">
+          <img src="mobile/figma-guided-star.svg" alt="" aria-hidden="true" />
+          <span>
+            <small>RECOMMENDED FOR TODAY</small>
+            <strong>{{ journeyCopy().recommendation }}</strong>
+          </span>
+        </section>
       }
     }
   }
 </main>
 
-<footer><a routerLink="/m/today">Continue to Today</a></footer>
+@if (!loading() && hasActiveProfile()) {
+  <footer [class.is-practitioner]="ahaMode() === 'practitioner'">
+    @if (ahaMode() === 'practitioner') {
+      <a class="primary" routerLink="/m/chart">Open Practitioner Workbench</a>
+      <a class="secondary" routerLink="/m/chart/transits">View Daily Transits</a>
+    } @else {
+      <a class="listen" routerLink="/m/today" [queryParams]="{ listen: 1 }">
+        <img src="mobile/audio-art.svg" alt="" aria-hidden="true" />
+        <span>Listen to your cosmic signature</span>
+      </a>
+      <a class="primary" routerLink="/m/today">Continue to Today's Path</a>
+    }
+  </footer>
+}

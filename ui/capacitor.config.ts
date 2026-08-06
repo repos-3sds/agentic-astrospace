@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'app.astrospace.mobile',
-  appName: 'SIDDHA',
+  appName: 'Siddha',
 
   // Angular's production build output. Kept in step with angular.json's
   // outputPath — `npx cap sync` copies from here into the native projects,
@@ -22,7 +22,7 @@ const config: CapacitorConfig = {
 
   plugins: {
     SplashScreen: {
-      // Matches the SIDDHA animated intro backdrop so the native launch bridge
+      // Matches the Siddha animated intro backdrop so the native launch bridge
       // does not flash a different color before Angular paints.
       backgroundColor: '#100B06',
       showSpinner: false,

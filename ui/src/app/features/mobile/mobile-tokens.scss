@@ -107,8 +107,8 @@
 @mixin m-cta-primary {
   @include m-cta-base;
   border: 0;
-  color: var(--m-on-ink);
-  background: var(--m-ink);
+  color: var(--m-on-primary);
+  background: var(--m-primary-cta);
   box-shadow: var(--m-shadow-card);
 }
 

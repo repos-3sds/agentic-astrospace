@@ -6,7 +6,7 @@ import { SplashComponent } from '../../../shell/splash/splash.component';
 /**
  * Landing (Figma node 4:2) — the app's front door and step one of onboarding.
  *
- * The promise on this screen is the product's whole claim: SIDDHA is a way of
+ * The promise on this screen is the product's whole claim: Siddha is a way of
  * life guide rooted in real calculation, not a fear-based prediction machine.
  * The footer names the sources and, deliberately, what the app will not do.
  *
@@ -26,7 +26,7 @@ import { SplashComponent } from '../../../shell/splash/splash.component';
       <p class="eyebrow">YOUR WAY OF LIFE GUIDE</p>
       <h1 class="headline">Live with rhythm.<br />Move with clarity.</h1>
       <p class="lede">
-        <span class="siddha-brand">SIDDHA</span> turns your daily timing, life
+        <span class="siddha-brand">Siddha</span> turns your daily timing, life
         patterns, and inner seasons into practical guidance for how to act,
         pause, reflect, and grow.
       </p>
@@ -34,7 +34,7 @@ import { SplashComponent } from '../../../shell/splash/splash.component';
 
     <div class="actions">
       <a class="btn primary" [routerLink]="['/m', 'auth']" [queryParams]="{ mode: 'register' }">Begin your path</a>
-      <a class="btn ghost" [routerLink]="['/m', 'auth']">I already walk with <span class="siddha-brand">SIDDHA</span></a>
+      <a class="btn ghost" [routerLink]="['/m', 'auth']">I already walk with <span class="siddha-brand">Siddha</span></a>
       <p class="assurance">Classical wisdom · Daily practice · No fear, no fatalism</p>
     </div>
   `,

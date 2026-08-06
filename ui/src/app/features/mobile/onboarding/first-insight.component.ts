@@ -50,6 +50,7 @@ export class FirstInsightComponent {
   private readonly vedic = inject(VedicService);
 
   protected readonly name = computed(() => this.kundlis.active()?.name ?? '');
+  protected readonly hasActiveProfile = computed(() => !!this.kundlis.activeId());
   protected readonly chart = signal<VedicAll | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
@@ -59,11 +60,22 @@ export class FirstInsightComponent {
     return chart ? buildChartAdapter(chart, this.kundlis.active()) : null;
   });
 
-  protected readonly guidedLead = computed(() =>
-    this.preferences.tone() === 'direct'
-      ? 'Your strength is staying deliberate when other people rush.'
-      : 'One of your strengths is staying thoughtful when other people rush.',
-  );
+  protected readonly ahaMode = computed(() => this.preferences.experienceMode());
+
+  protected readonly journeyCopy = computed(() => {
+    const strength = this.strongest();
+    const action = this.strengthAction();
+    return {
+      headline: 'Your cosmic guide is ready',
+      lede: 'We have calculated your unique cosmic footprint using your exact birth time. Let us start aligning your days with your natural rhythm.',
+      strength: strength
+        ? `You have ${this.strengthPhrase(strength.planet)}`
+        : 'Your personal strengths are ready to explore',
+      recommendation: action
+        ? `Start with this: ${action}.`
+        : 'Start gently today — choose one clear step and do it with attention.',
+    };
+  });
 
   /** Highest-Shadbala planet — the Guided variant's "one strength". */
   protected readonly strongest = computed(() => {
@@ -78,7 +90,7 @@ export class FirstInsightComponent {
     return planet ? STRENGTH_ACTION[planet] ?? 'take one deliberate, unhurried step' : null;
   });
 
-  protected readonly sharedStyle = computed<KundliChartStyle>(() => this.preferences.chartStyle());
+  protected readonly practitionerStyle = computed<KundliChartStyle>(() => 'north');
 
   protected readonly practitionerChart = computed<VargaChart | null>(() => {
     const chart = this.chart();
@@ -101,17 +113,42 @@ export class FirstInsightComponent {
     return [
       { lord: current?.mahadasha?.lord, short: 'Mahā' },
       { lord: current?.antardasha?.lord, short: 'Antar' },
-      { lord: current?.pratyantardasha?.lord, short: 'Prat', active: true },
+      { lord: current?.pratyantardasha?.lord, short: 'Pratyantar' },
+      { lord: current?.sookshmadasha?.lord, short: 'Sookshma', active: true },
     ]
       .filter((row): row is { lord: string; short: string; active?: boolean } => !!row.lord);
   });
 
+  protected readonly birthMetrics = computed(() => {
+    const chart = this.chart();
+    const profile = this.kundlis.active();
+    const moon = chart?.planets?.['Moon'];
+    const sun = chart?.planets?.['Sun'];
+    const lagna = profile?.ascendant ?? chart?.avkahada?.['lagna'] ?? chart?.vargas?.['D1']?.lagna?.sign ?? 'Not returned';
+    return [
+      { label: 'Lagna (Ascendant)', value: this.metricValue(lagna, chart?.avkahada?.['nakshatra']) },
+      { label: 'Chandra (Moon)', value: this.planetMetric(moon) },
+      { label: 'Surya (Sun)', value: this.planetMetric(sun) },
+    ];
+  });
+
   private readonly dashas = computed<DashaPayload | null>(() => this.chart()?.dashas ?? null);
+  private profileLoadPromise: Promise<void> | null = null;
 
   constructor() {
     effect(() => {
       const id = this.kundlis.activeId();
-      if (!id) return;
+      const loaded = this.kundlis.loaded();
+      if (!loaded && !id) {
+        void this.loadProfiles();
+        return;
+      }
+      if (!id) {
+        this.chart.set(null);
+        this.error.set(null);
+        this.loading.set(false);
+        return;
+      }
       void this.loadChart(id);
     });
   }
@@ -132,6 +169,19 @@ export class FirstInsightComponent {
     }
   }
 
+  private async loadProfiles(): Promise<void> {
+    if (this.profileLoadPromise) return this.profileLoadPromise;
+    this.loading.set(true);
+    this.error.set(null);
+    this.profileLoadPromise = this.kundlis.load().catch((error) => {
+      this.error.set((error as Error).message);
+      this.loading.set(false);
+    }).finally(() => {
+      this.profileLoadPromise = null;
+    });
+    return this.profileLoadPromise;
+  }
+
   private rashiFallback(data: VedicAll): VargaChart | null {
     const lagnaSign = this.kundlis.active()?.ascendant ?? data.avkahada?.['rashi'];
     if (!lagnaSign) return null;
@@ -145,5 +195,32 @@ export class FirstInsightComponent {
         { sign: row.sign, house: row.house, retrograde: row.retrograde },
       ])),
     };
+  }
+
+  private strengthPhrase(planet: string): string {
+    const phrases: Record<string, string> = {
+      Sun: 'clear leadership and the courage to take responsibility',
+      Moon: 'strong intuition and emotional intelligence',
+      Mars: 'decisive energy and the will to finish what you start',
+      Mercury: 'a sharp mind for learning, language, and practical choices',
+      Jupiter: 'wisdom, generosity, and a natural guiding instinct',
+      Venus: 'taste, harmony, and the ability to build beautiful connections',
+      Saturn: 'discipline, patience, and the strength to stay with long work',
+      Rahu: 'ambition, strategy, and comfort with unfamiliar paths',
+      Ketu: 'inner detachment and the ability to see what is essential',
+    };
+    return phrases[planet] ?? `${planet} as a key support in your chart`;
+  }
+
+  private planetMetric(planet: { dms?: string; sign?: string; nakshatra?: string; nakshatra_pada?: number } | undefined): string {
+    if (!planet) return 'Not returned';
+    const nakshatra = planet.nakshatra
+      ? ` (${planet.nakshatra}${planet.nakshatra_pada ? ` ${planet.nakshatra_pada}` : ''})`
+      : '';
+    return `${planet.dms ?? ''}${planet.dms ? ' ' : ''}${planet.sign ?? 'Unknown'}${nakshatra}`;
+  }
+
+  private metricValue(sign: string, nakshatra: string | undefined): string {
+    return `${sign}${nakshatra ? ` (${nakshatra})` : ''}`;
   }
 }
