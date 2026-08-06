@@ -16,6 +16,60 @@ VARNA_RANK = {"Shudra": 1, "Vaishya": 2, "Kshatriya": 3, "Brahmin": 4}
 # are exactly the 3rd/5th/7th taras of that 1-based convention.
 UNFAVOURABLE_TARA_REMAINDERS = {2, 4, 6}
 BHAKOOT_DOSHA_PAIRS = {(2, 12), (12, 2), (5, 9), (9, 5), (6, 8), (8, 6)}
+
+# ── Dashakoota extension (T3.2, docs/backend_astro_depth_checklist_2026-08-06.md) ──
+# Rajju, Vedha, Stree Deergha: the three kootas the (more common in South
+# Indian practice) 10-factor Dashakoota system adds on top of Ashtakoota.
+# Returned as a separate, clearly-labeled block by dashakoota_extension()
+# rather than folded into gun_milan()'s 36-point total — mixing a
+# 36-point and a differently-scaled system in one sum would be a
+# correctness bug, not just a style choice.
+#
+# Rajju groups every nakshatra into one of five body-part zones; matching
+# zones (both partners' Moon nakshatra in the same Rajju) is traditionally
+# read as the single most serious Dashakoota caution — some South Indian
+# traditions weight it above even Nadi. Table cross-checked 2026-08-06:
+# four of five groups (Kantha/Udara/Kati/Pada, 6 nakshatras each) were
+# directly sourced; the fifth (Shiro) was derived by elimination against
+# the full 27-nakshatra list (Mrigashira, Chitra, Dhanishta are the three
+# not accounted for by the other four groups) and matches the commonly
+# published Shiro Rajju group, so kept rather than left unlabeled.
+RAJJU_GROUPS: dict[str, str] = {
+    # Shiro (head) — 3 nakshatras (derived by elimination, see above).
+    "Mrigashira": "Shiro", "Chitra": "Shiro", "Dhanishta": "Shiro",
+    # Kantha (neck).
+    "Rohini": "Kantha", "Ardra": "Kantha", "Hasta": "Kantha",
+    "Swati": "Kantha", "Shravana": "Kantha", "Shatabhisha": "Kantha",
+    # Udara / Nabhi (stomach).
+    "Krittika": "Udara", "Uttara Phalguni": "Udara", "Punarvasu": "Udara",
+    "Vishakha": "Udara", "Purva Bhadrapada": "Udara", "Uttara Ashadha": "Udara",
+    # Kati (waist).
+    "Pushya": "Kati", "Bharani": "Kati", "Purva Phalguni": "Kati",
+    "Anuradha": "Kati", "Uttara Bhadrapada": "Kati", "Purva Ashadha": "Kati",
+    # Pada (feet).
+    "Ashwini": "Pada", "Ashlesha": "Pada", "Magha": "Pada",
+    "Moola": "Pada", "Jyeshtha": "Pada", "Revati": "Pada",
+}
+
+# Vedha: 13 mutually-obstructing nakshatra pairs (one nakshatra, Chitra,
+# has no Vedha partner — 27 is odd). Bidirectional: order doesn't matter.
+VEDHA_PAIRS: set[frozenset] = {
+    frozenset(pair) for pair in (
+        ("Ashwini", "Jyeshtha"), ("Bharani", "Anuradha"),
+        ("Krittika", "Vishakha"), ("Rohini", "Swati"),
+        ("Ardra", "Shravana"), ("Punarvasu", "Uttara Ashadha"),
+        ("Pushya", "Purva Ashadha"), ("Ashlesha", "Moola"),
+        ("Magha", "Revati"), ("Purva Phalguni", "Uttara Bhadrapada"),
+        ("Uttara Phalguni", "Purva Bhadrapada"), ("Hasta", "Shatabhisha"),
+        ("Mrigashira", "Dhanishta"),
+    )
+}
+
+# Stree Deergha: count from the bride's Moon nakshatra to the groom's, must
+# be >= this threshold. 13 is the most-repeated figure in sources checked
+# 2026-08-06; other texts use 7, 9, or 15 — genuine, documented source
+# disagreement, not a typo.
+STREE_DEERGHA_MIN_COUNT = 13
 YONI_ENEMY_PAIRS = {
     frozenset(pair)
     for pair in (
@@ -337,6 +391,90 @@ def _safety_checks(chart_a, chart_b) -> dict:
     }
 
 
+def _rajju(chart_a, chart_b) -> dict:
+    a = _planet(chart_a, "Moon", "nakshatra")
+    b = _planet(chart_b, "Moon", "nakshatra")
+    group_a = RAJJU_GROUPS.get(a)
+    group_b = RAJJU_GROUPS.get(b)
+    if group_a is None or group_b is None:
+        return _row("Rajju", 0, 2, "Moon nakshatra unavailable", verified=False)
+    if group_a == group_b:
+        return _row(
+            "Rajju", 0, 2,
+            f"{a} ({group_a} Rajju) with {b} ({group_b} Rajju); same Rajju — "
+            "traditionally the most serious Dashakoota caution",
+            verified=False,
+        )
+    return _row("Rajju", 2, 2, f"{a} ({group_a} Rajju) with {b} ({group_b} Rajju)", verified=False)
+
+
+def _vedha(chart_a, chart_b) -> dict:
+    a = _planet(chart_a, "Moon", "nakshatra")
+    b = _planet(chart_b, "Moon", "nakshatra")
+    if a not in NAKSHATRAS or b not in NAKSHATRAS:
+        return _row("Vedha", 0, 2, "Moon nakshatra unavailable", verified=False)
+    if frozenset((a, b)) in VEDHA_PAIRS:
+        return _row("Vedha", 0, 2, f"{a} with {b}; Vedha (mutual obstruction) pair", verified=False)
+    return _row("Vedha", 2, 2, f"{a} with {b}", verified=False)
+
+
+def _stree_deergha(chart_a, chart_b) -> dict:
+    """Groom's (chart_a) Moon nakshatra counted from the bride's (chart_b)
+    must be >= STREE_DEERGHA_MIN_COUNT, per the same person1=groom
+    convention already used for Varna elsewhere in this module."""
+    groom_nak = _planet(chart_a, "Moon", "nakshatra")
+    bride_nak = _planet(chart_b, "Moon", "nakshatra")
+    if groom_nak not in NAKSHATRAS or bride_nak not in NAKSHATRAS:
+        return _row("Stree Deergha", 0, 2, "Moon nakshatra unavailable", verified=False)
+    bride_idx = NAKSHATRAS.index(bride_nak)
+    groom_idx = NAKSHATRAS.index(groom_nak)
+    count = ((groom_idx - bride_idx) % 27) + 1
+    note = f"{groom_nak} (groom) is {count} from {bride_nak} (bride)"
+    if count >= STREE_DEERGHA_MIN_COUNT:
+        return _row("Stree Deergha", 2, 2, note, verified=False)
+    return _row("Stree Deergha", 0, 2, f"{note}; below the {STREE_DEERGHA_MIN_COUNT}-count threshold", verified=False)
+
+
+def dashakoota_extension(chart_a, chart_b) -> dict:
+    """Rajju, Vedha and Stree Deergha — the three kootas the 10-factor
+    Dashakoota system adds on top of Ashtakoota. A separate, additively
+    scaled block (see module docstring) — call alongside gun_milan(), not
+    a replacement for it.
+    """
+    rows = [
+        _rajju(chart_a, chart_b),
+        _vedha(chart_a, chart_b),
+        _stree_deergha(chart_a, chart_b),
+    ]
+    total = round(sum(row["points"] for row in rows), 1)
+    max_points = sum(row["max"] for row in rows)
+    hard_blockers = [row["label"] for row in rows[:2] if row["points"] == 0 and row["label"] in ("Rajju", "Vedha")]
+    return {
+        "system": "Dashakoota extension (Rajju, Vedha, Stree Deergha)",
+        "total": total,
+        "max": max_points,
+        "rows": rows,
+        "hard_blockers": hard_blockers,
+        "notes": [
+            "This is a separate points scale from Ashtakoota's 36-point total — "
+            "do not add these points into gun_milan()'s total.",
+            "Rajju and Vedha are traditionally read as 'hard blockers' in South "
+            "Indian Dashakoota practice: even a strong Ashtakoota score is "
+            "reconsidered if either is in dosha — surfaced here as "
+            "'hard_blockers', not auto-applied as a verdict.",
+            "Point values (2 per koota) are a placeholder scale, since sources "
+            "differ on Dashakoota's exact per-koota weights; the pass/fail "
+            "logic (same Rajju, Vedha pair, Stree Deergha threshold) is the "
+            "load-bearing part, not the point count.",
+            f"Stree Deergha threshold used: >= {STREE_DEERGHA_MIN_COUNT}; other "
+            "texts use 7, 9, or 15 — documented source disagreement.",
+            "Cancellation/exception rules for Rajju and Vedha (some traditions "
+            "exempt specific pada combinations) are not implemented; treat an "
+            "active flag here as a caution to review, not an automatic veto.",
+        ],
+    }
+
+
 def gun_milan(chart_a, chart_b) -> dict:
     """Return an Ashta Koota style 36-point compatibility breakdown."""
     rows = [
@@ -374,6 +512,10 @@ def gun_milan(chart_a, chart_b) -> dict:
             "person2": _compat_profile(chart_b),
         },
         "safety_checks": _safety_checks(chart_a, chart_b),
+        # Additive key — a separate 10-koota-system block (Rajju/Vedha/
+        # Stree Deergha), not merged into the 36-point total above. See
+        # dashakoota_extension()'s own docstring for why they don't mix.
+        "dashakoota_extension": dashakoota_extension(chart_a, chart_b),
     }
 
 

@@ -6,7 +6,7 @@ and favourable points.
 from datetime import datetime
 
 from .positions import (
-    birth_moment, sidereal_positions, sidereal_lagna, tropical_sun,
+    birth_moment, sidereal_positions, sidereal_lagna, sidereal_mc, tropical_sun,
     ayanamsha_value, local_mean_time, local_sidereal_time, obliquity,
     sign_index, sign_name, sign_name_sanskrit, sign_lord, degree_in_sign,
     to_dms, house_from_lagna, sunrise_jd,
@@ -26,8 +26,15 @@ from .transits import transit_analysis
 from .gocharam import gochara_rules, gocharam_profile
 from .calendar import calendar_intelligence
 from .jaimini import chara_karakas, arudha_padas, arudha_lagna, upapada
-from .special_lagnas import special_lagnas as special_lagnas_of
+from .special_lagnas import (
+    special_lagnas as special_lagnas_of,
+    bhrigu_bindu as bhrigu_bindu_of,
+    indu_lagna as indu_lagna_of,
+)
 from .yogini import yogini_dasha
+from .vimshopaka import vimshopaka_bala as vimshopaka_bala_of
+from .chara_dasha import chara_dasha as chara_dasha_of
+from .bhava_chalit import bhava_chalit as bhava_chalit_of
 from .masa import amanta_masa, samvatsara, ritu, ayana
 
 
@@ -203,6 +210,10 @@ class VedicChart:
         return all_dignities(self.positions)
 
     def shadbala(self) -> dict:
+        # Already includes the degree-precise BPHS virupa Shadbala (T0.5,
+        # docs/backend_astro_depth_checklist_2026-08-06.md) under the
+        # "classical" key whenever moment/ayanamsha_val are supplied, as
+        # they are here — see strength.shadbala()'s own docstring.
         return shadbala(
             self.positions,
             self.lagna_lon,
@@ -252,6 +263,11 @@ class VedicChart:
             "arudha_padas": arudha_padas(lagna_sign, self.positions),
         }
 
+    def chara_dasha(self, as_of: datetime = None) -> dict:
+        as_of = as_of or datetime.now(self.moment.dt_local.tzinfo)
+        lagna_sign = sign_index(self.lagna_lon)
+        return chara_dasha_of(lagna_sign, self.positions, self.moment.dt_local, as_of)
+
     def _vedic_day_sunrise_jd(self) -> float | None:
         """Sunrise (UT jd) of the Vedic day containing the birth: the last
         sunrise at or before the birth instant."""
@@ -266,11 +282,22 @@ class VedicChart:
             rise = nxt
 
     def special_lagnas(self) -> dict:
+        # bhava_lagna/hora_lagna/ghati_lagna stay top-level exactly as
+        # before (ui/src/app/core/models.ts SpecialLagnasPayload and the
+        # Jaimini/Strength-Advanced screens read them there) — new points
+        # are added as new top-level keys, not by restructuring the payload.
         rise = self._vedic_day_sunrise_jd()
         if rise is None:
-            return {"error": "Sunrise undefined at this latitude/date (circumpolar)."}
-        sun_at_rise = sidereal_positions(rise, self.ayanamsha, self.node_type)["Sun"]["lon"]
-        return special_lagnas_of(self.moment.jd_ut, rise, sun_at_rise, self.lagna_lon)
+            out = {"error": "Sunrise undefined at this latitude/date (circumpolar)."}
+        else:
+            sun_at_rise = sidereal_positions(rise, self.ayanamsha, self.node_type)["Sun"]["lon"]
+            out = special_lagnas_of(self.moment.jd_ut, rise, sun_at_rise, self.lagna_lon)
+
+        lagna_sign = sign_index(self.lagna_lon)
+        moon_sign = sign_index(self.positions["Moon"]["lon"])
+        out["bhrigu_bindu"] = bhrigu_bindu_of(self.positions["Rahu"]["lon"], self.positions["Moon"]["lon"])
+        out["indu_lagna"] = indu_lagna_of(lagna_sign, moon_sign, self.positions)
+        return out
 
     def masa(self) -> dict:
         jd = self.moment.jd_ut
@@ -284,6 +311,15 @@ class VedicChart:
 
     def ashtakavarga(self) -> dict:
         return ashtakavarga(self.positions, self.lagna_lon)
+
+    def vimshopaka_bala(self, scheme: str = "shodashavarga") -> dict:
+        return vimshopaka_bala_of(self.positions, scheme=scheme)
+
+    def bhava_chalit(self) -> dict:
+        """Sripati (Bhava Chalit) houses — an opt-in alternate lens next to
+        this chart's default whole-sign houses. See bhava_chalit.py."""
+        mc = sidereal_mc(self.moment.jd_ut, self.moment.lat, self.moment.lng, self.ayanamsha)
+        return bhava_chalit_of(self.lagna_lon, mc, self.positions)
 
     def doshas(self) -> dict:
         return dosha_summary(self.positions, self.lagna_lon)

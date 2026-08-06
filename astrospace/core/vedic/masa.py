@@ -230,6 +230,32 @@ def moon_events_for_day(rise: float, next_rise: float,
 
 # ── Gulika / Mandi ───────────────────────────────────────────────────────────
 
+def _upagraha_block(start: float, end: float, first_lord_idx: int,
+                    offset_fraction: float, lat: float, lng: float,
+                    tz_str: str, ayanamsha: str) -> dict:
+    """One day/night block of the 8-part Saturn-portion upagraha method.
+
+    offset_fraction locates the instant WITHIN Saturn's 1/8 portion:
+    0.0 = start of the portion (the Gulika convention this codebase
+    defaults to), 0.5 = middle (the alternate "Mandi" convention — see
+    T1.4, docs/backend_astro_depth_checklist_2026-08-06.md). Both read the
+    same 8-part-day/lord-cycling structure; only this offset differs, per
+    research confirming Gulika and Mandi disagree only on which point
+    within Saturn's portion is taken, not on the underlying method.
+    """
+    part = (end - start) / 8.0
+    saturn_part = (6 - first_lord_idx) % 7  # 0-based part ruled by Saturn
+    instant = start + (saturn_part + offset_fraction) * part
+    lon = sidereal_lagna(instant, lat, lng, ayanamsha)
+    return {
+        "start_jd": instant,
+        "start_time": jd_to_local(instant, tz_str).strftime("%H:%M"),
+        "longitude": lon,
+        "sign": sign_name(sign_index(lon)),
+        "dms": to_dms(degree_in_sign(lon)),
+    }
+
+
 def gulika_positions(rise: float, sets: float, next_rise: float,
                      vara_idx: int, lat: float, lng: float, tz_str: str,
                      ayanamsha: str = "lahiri") -> dict:
@@ -240,24 +266,34 @@ def gulika_positions(rise: float, sets: float, next_rise: float,
     Night: sunset→next sunrise in 8 parts, lords starting from the 5th
     weekday-lord from the vara's ((vara_idx + 4) % 7). Gulika longitude is
     the sidereal ascendant at that instant. Note: Mandi conventions differ
-    — some traditions take the MIDDLE of Saturn's portion; we use the start.
+    — some traditions take the MIDDLE of Saturn's portion; see
+    mandi_positions() for that variant, computed side by side rather than
+    silently substituted.
     """
-    def _block(start: float, end: float, first_lord_idx: int) -> dict:
-        part = (end - start) / 8.0
-        saturn_part = (6 - first_lord_idx) % 7  # 0-based part ruled by Saturn
-        g_start = start + saturn_part * part
-        lon = sidereal_lagna(g_start, lat, lng, ayanamsha)
-        return {
-            "start_jd": g_start,
-            "start_time": jd_to_local(g_start, tz_str).strftime("%H:%M"),
-            "longitude": lon,
-            "sign": sign_name(sign_index(lon)),
-            "dms": to_dms(degree_in_sign(lon)),
-        }
-
     return {
-        "day": _block(rise, sets, vara_idx % 7),
-        "night": _block(sets, next_rise, (vara_idx + 4) % 7),
+        "day": _upagraha_block(rise, sets, vara_idx % 7, 0.0, lat, lng, tz_str, ayanamsha),
+        "night": _upagraha_block(sets, next_rise, (vara_idx + 4) % 7, 0.0, lat, lng, tz_str, ayanamsha),
         "note": ("Gulika at the START of Saturn's part; some traditions "
                  "(Mandi) use the middle of the portion — convention-dependent."),
+    }
+
+
+def mandi_positions(rise: float, sets: float, next_rise: float,
+                    vara_idx: int, lat: float, lng: float, tz_str: str,
+                    ayanamsha: str = "lahiri") -> dict:
+    """
+    Mandi — the alternate reading of the same 8-part Saturn-portion
+    upagraha method as gulika_positions(), taken at the MIDDLE of Saturn's
+    portion instead of the start (see T1.4,
+    docs/backend_astro_depth_checklist_2026-08-06.md). Shipped as a
+    separate function rather than a silent flag flip on gulika_positions()
+    so a caller that wants both conventions can show them side by side
+    instead of one point quietly overwriting the other.
+    """
+    return {
+        "day": _upagraha_block(rise, sets, vara_idx % 7, 0.5, lat, lng, tz_str, ayanamsha),
+        "night": _upagraha_block(sets, next_rise, (vara_idx + 4) % 7, 0.5, lat, lng, tz_str, ayanamsha),
+        "note": ("Mandi at the MIDDLE of Saturn's part — the same 8-part-day "
+                 "method as Gulika, differing only in this offset; "
+                 "convention-dependent, see gulika_positions()."),
     }

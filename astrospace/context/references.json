@@ -2,14 +2,16 @@
   "notes": [
     "Seed references — proves the retrieval path end to end.",
     "The real corpus lands here (or in a semantic backend) as structured rules with citations.",
-    "statement is a paraphrased rule, never copied translation text."
+    "statement is a paraphrased rule, never copied translation text.",
+    "Expanded 2026-08-06 (T2.1/T2.2, docs/backend_astro_depth_checklist_2026-08-06.md) so every domain in taxonomy.json has at least 2-3 references. Every source cited here is already in sources.json's curated catalog; nothing here cites a work outside that list. Statements are general, well-attested house/karaka/varga/yoga significations paraphrased from classical framing already used elsewhere in this codebase (astrospace/knowledge/vedic_rules) — none claim a specific chapter/verse this pass could not verify; 'location' stays at the topic/chapter level, not a fabricated verse number.",
+    "location is a topic pointer for a human to go find the passage, not a claim that a specific page/verse was checked. Where this codebase's own yogas.json/doshas.json already carries source_status for the same rule, that status is carried through here too."
   ],
   "references": [
     {
       "ref_id": "uk4_tenth_bhava_scope",
       "domains": ["career"],
       "subdomains": ["job_vs_business", "fame_status"],
-      "statement": "The 10th bhava governs livelihood, rank, honour, authority and karma; its lord's strength and placement set the career's trajectory.",
+      "statement": "The 10th bhava governs livelihood, rank, honour and karma; its lord's strength and placement set the career's trajectory.",
       "source": {"text_key": "uttara_kalamrita", "location": "Kanda 4 (10th bhava significations)"},
       "tags": ["house:10"],
       "status": "verified_common"
@@ -24,6 +26,15 @@
       "status": "verified_common"
     },
     {
+      "ref_id": "bphs_amala_career_reputation",
+      "domains": ["career"],
+      "subdomains": ["fame_status", "promotion_authority"],
+      "statement": "Amala Yoga — a natural benefic in the 10th from Lagna or from Moon — is classically read as steady professional reputation that holds up over time, distinct from raw career success or wealth.",
+      "source": {"text_key": "bphs", "location": "Amala yoga"},
+      "tags": ["yoga:amala_yoga", "house:10"],
+      "status": "convention_dependent"
+    },
+    {
       "ref_id": "bphs_seventh_kalatra",
       "domains": ["marriage"],
       "subdomains": ["spouse_nature", "harmony_discord"],
@@ -31,6 +42,24 @@
       "source": {"text_key": "bphs", "location": "7th bhava adhyaya"},
       "tags": ["house:7", "varga:D9", "planet:Venus"],
       "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_manglik_marriage_timing",
+      "domains": ["marriage"],
+      "subdomains": ["harmony_discord", "delay_denial", "compatibility"],
+      "statement": "Manglik (Kuja) placements are classically read as a factor affecting marital harmony and timing, always alongside the classical cancellation rules (Mars in its own or exalted sign, Jupiter's aspect on Mars, Mars-Moon conjunction) — a flag to weigh, never a standalone verdict against marriage.",
+      "source": {"text_key": "bphs", "location": "Kuja dosha and cancellation rules"},
+      "tags": ["dosha:manglik_dosha", "house:7"],
+      "status": "convention_dependent"
+    },
+    {
+      "ref_id": "light_on_relationships_venus_marriage",
+      "domains": ["marriage"],
+      "subdomains": ["harmony_discord", "romance"],
+      "statement": "Venus as the natural karaka for marriage and relationship harmony is read alongside the 7th lord and house — a well-placed 7th house with an afflicted Venus (or vice versa) is a common classical pattern for a mixed marital picture, not a simple pass/fail.",
+      "source": {"text_key": "light_on_relationships", "location": "Venus and the 7th house"},
+      "tags": ["planet:Venus", "house:7"],
+      "status": "convention_dependent"
     },
     {
       "ref_id": "pm_disease_sixth",
@@ -42,6 +71,24 @@
       "status": "verified_common"
     },
     {
+      "ref_id": "uk_1st_lagna_vitality",
+      "domains": ["health"],
+      "subdomains": ["vitality"],
+      "statement": "The Lagna (1st bhava) and its lord govern overall vitality and constitution; a strong, undamaged Lagna lord is classically read as a baseline of resilience that other houses' afflictions play out against.",
+      "source": {"text_key": "uttara_kalamrita", "location": "Lagna significations"},
+      "tags": ["house:1"],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "charak_6th_chronic_disease",
+      "domains": ["health"],
+      "subdomains": ["chronic_disease", "acute_disease"],
+      "statement": "The 6th bhava and its lord are the primary reference for chronic and recurring illness; Saturn's involvement there is classically associated with slow-onset or long-duration conditions, Mars' involvement with acute, sudden onset — read as tendency, never as diagnosis.",
+      "source": {"text_key": "charak_medical", "location": "6th bhava and planetary disease tendencies"},
+      "tags": ["house:6", "planet:Saturn", "planet:Mars"],
+      "status": "convention_dependent"
+    },
+    {
       "ref_id": "jaimini_ak_soul",
       "domains": ["spirituality"],
       "subdomains": ["spiritual_inclination", "moksha"],
@@ -49,6 +96,177 @@
       "source": {"text_key": "jaimini_sutras", "location": "Ch. 1 (chara karakas, karakamsha)"},
       "tags": ["karaka:AK", "varga:D9"],
       "status": "verified_common"
+    },
+    {
+      "ref_id": "uk_12th_moksha",
+      "domains": ["spirituality"],
+      "subdomains": ["moksha", "renunciation"],
+      "statement": "The 12th bhava governs moksha (liberation), renunciation, and detachment from worldly bonds; the 9th governs dharma and guru connection — classical texts read the two together as part of the 'moksha trikona' axis with the 4th and 8th.",
+      "source": {"text_key": "uttara_kalamrita", "location": "12th bhava and moksha trikona"},
+      "tags": ["house:12", "house:9"],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_d20_spiritual_practice",
+      "domains": ["spirituality"],
+      "subdomains": ["sadhana", "guru_lineage"],
+      "statement": "The Vimshamsha (D20) is examined specifically for spiritual practice (sadhana), devotion, and the nature of one's religious or ritual inclination — a finer lens than the 9th/12th houses alone.",
+      "source": {"text_key": "bphs", "location": "D20 / Vimshamsha"},
+      "tags": ["varga:D20"],
+      "status": "convention_dependent"
+    },
+    {
+      "ref_id": "uk_wealth_2nd_11th",
+      "domains": ["wealth"],
+      "subdomains": ["savings", "income"],
+      "statement": "The 2nd bhava shows accumulated wealth and family resources; the 11th shows income and gains. Dhana Yoga forms when the lords of these two houses associate, favouring material prosperity.",
+      "source": {"text_key": "uttara_kalamrita", "location": "wealth-house significations"},
+      "tags": ["house:2", "house:11"],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_dhana_yoga_wealth",
+      "domains": ["wealth"],
+      "subdomains": ["income", "inheritance"],
+      "statement": "Dhana Yoga arises when the lords of the wealth houses (2nd, 5th, 9th, 11th) associate by conjunction, mutual aspect, or exchange; the association's strength and the lords' dignity set how much of the promise materializes.",
+      "source": {"text_key": "bphs", "location": "Dhana yoga combinations"},
+      "tags": ["yoga:dhana_yoga"],
+      "status": "convention_dependent"
+    },
+    {
+      "ref_id": "saravali_chandra_mangal_wealth",
+      "domains": ["wealth"],
+      "subdomains": ["income", "speculation"],
+      "statement": "Chandra-Mangal Yoga (Moon and Mars conjoined or opposed) is classically read as a driver of enterprising wealth-building — an active, self-made financial temperament rather than inherited ease.",
+      "source": {"text_key": "saravali", "location": "yoga chapter, Chandra-Mangal"},
+      "tags": ["yoga:chandra_mangal_yoga", "planet:Moon", "planet:Mars"],
+      "status": "convention_dependent"
+    },
+    {
+      "ref_id": "bphs_4th_5th_education",
+      "domains": ["education"],
+      "subdomains": ["basic_education", "higher_education"],
+      "statement": "The 4th bhava governs basic schooling and foundational learning; the 5th governs higher intellect, specialized study, and academic merit. The Chaturvimshamsha (D24) refines which field of learning and how much of the promise the native actually pursues.",
+      "source": {"text_key": "bphs", "location": "4th/5th bhava and D24 significations"},
+      "tags": ["house:4", "house:5", "varga:D24"],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_saraswati_learning",
+      "domains": ["education"],
+      "subdomains": ["intelligence", "higher_education"],
+      "statement": "Saraswati Yoga — Jupiter, Venus and Mercury each well-placed from Lagna with Jupiter strong — is the classical marker for articulate, wide-ranging learning and refined intellect.",
+      "source": {"text_key": "bphs", "location": "Saraswati yoga"},
+      "tags": ["yoga:saraswati_yoga"],
+      "status": "convention_dependent"
+    },
+    {
+      "ref_id": "kn_rao_mercury_education",
+      "domains": ["education"],
+      "subdomains": ["breaks", "competitive_exams"],
+      "statement": "Mercury's strength and dignity are read as one of the most consistent indicators of ease in formal education; an afflicted or debilitated Mercury is a common thread in charts with schooling breaks or difficulty, though never a standalone verdict.",
+      "source": {"text_key": "kn_rao_education", "location": "Mercury and schooling patterns"},
+      "tags": ["planet:Mercury"],
+      "status": "convention_dependent"
+    },
+    {
+      "ref_id": "uk_5th_bhava_children",
+      "domains": ["children"],
+      "subdomains": ["timing_of_children", "child_wellbeing"],
+      "statement": "The 5th bhava and its lord, together with Jupiter as the naisargika putrakaraka (natural significator of children), govern progeny — timing, number, and relationship; the Saptamsha (D7) is examined specifically for children's promise.",
+      "source": {"text_key": "uttara_kalamrita", "location": "5th bhava significations"},
+      "tags": ["house:5", "varga:D7", "planet:Jupiter"],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_putrakaraka_jaimini",
+      "domains": ["children"],
+      "subdomains": ["timing_of_children"],
+      "statement": "In the Jaimini scheme, the Putrakaraka (PK, the chara karaka for children) adds a second, planet-specific lens on progeny alongside the fixed 5th-house/Jupiter reading — the two should be read together, not substituted for each other.",
+      "source": {"text_key": "jaimini_sutras", "location": "chara karakas, Putrakaraka"},
+      "tags": ["karaka:PK", "house:5"],
+      "status": "convention_dependent"
+    },
+    {
+      "ref_id": "prasna_marga_5th_affliction",
+      "domains": ["children"],
+      "subdomains": ["delay_difficulty"],
+      "statement": "Afflictions to the 5th house or its lord are read as timing/ease factors for conceiving and raising children, not as a fixed verdict — classical texts pair every affliction with cancellation and remedial factors.",
+      "source": {"text_key": "prasna_marga", "location": "5th bhava and progeny chapters"},
+      "tags": ["house:5"],
+      "status": "convention_dependent"
+    },
+    {
+      "ref_id": "uk_4th_bhava_property",
+      "domains": ["family_property"],
+      "subdomains": ["land_house", "vehicles"],
+      "statement": "The 4th bhava governs mother, home, land, vehicles, and general domestic comfort; the Chaturthamsha (D4) is examined specifically for fixed property and real-estate fortune.",
+      "source": {"text_key": "uttara_kalamrita", "location": "4th bhava significations"},
+      "tags": ["house:4", "varga:D4"],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_3rd_9th_siblings",
+      "domains": ["family_property"],
+      "subdomains": ["siblings"],
+      "statement": "The 3rd bhava shows younger siblings and courage; the 9th shows elder siblings, father, and fortune more broadly — classical texts read both houses together for the full sibling picture, not the 3rd alone.",
+      "source": {"text_key": "bphs", "location": "3rd and 9th bhava significations"},
+      "tags": ["house:3", "house:9"],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "phaladeepika_dwadashamsha_lineage",
+      "domains": ["family_property"],
+      "subdomains": ["ancestral_property", "father"],
+      "statement": "The Dwadashamsha (D12) is examined for parents and ancestral lineage specifically — a finer lens than the 4th/9th houses alone for questions about parental welfare and inherited patterns.",
+      "source": {"text_key": "phaladeepika", "location": "D12 / Dwadashamsha"},
+      "tags": ["varga:D12"],
+      "status": "convention_dependent"
+    },
+    {
+      "ref_id": "uk_12th_9th_foreign",
+      "domains": ["foreign"],
+      "subdomains": ["foreign_residence", "emigration"],
+      "statement": "The 12th bhava governs foreign residence and life far from one's birthplace; the 9th governs long journeys and fortune connected to distant places. Classical texts read both together for questions of relocation and life abroad, not the 12th in isolation.",
+      "source": {"text_key": "uttara_kalamrita", "location": "12th and 9th bhava significations"},
+      "tags": ["house:12", "house:9"],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_rahu_foreign",
+      "domains": ["foreign"],
+      "subdomains": ["emigration", "gains_abroad"],
+      "statement": "Rahu is the planet most consistently associated with foreign lands, unconventional geography, and emigration in classical and modern practice alike; its house placement and dignity are read for the flavour and timing of foreign connection.",
+      "source": {"text_key": "bphs", "location": "Rahu significations"},
+      "tags": ["planet:Rahu"],
+      "status": "convention_dependent"
+    },
+    {
+      "ref_id": "prasna_marga_3rd_short_travel",
+      "domains": ["foreign"],
+      "subdomains": ["short_travel"],
+      "statement": "The 3rd bhava governs short journeys and everyday travel, distinct from the 9th/12th's longer-distance and foreign-residence significations — a chart can show ease in one register without the other.",
+      "source": {"text_key": "prasna_marga", "location": "3rd bhava and travel"},
+      "tags": ["house:3"],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "uk_6th_enemies_litigation",
+      "domains": ["litigation"],
+      "subdomains": ["open_enemies", "court_cases"],
+      "statement": "The 6th bhava governs open enemies, disputes, and litigation; the 12th governs hidden losses and confinement. A strong 6th lord is classically read as an advantage in contested matters, while a weak or afflicted 6th lord favours settlement over confrontation.",
+      "source": {"text_key": "uttara_kalamrita", "location": "6th and 12th bhava significations"},
+      "tags": ["house:6", "house:12"],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_vipareeta_litigation",
+      "domains": ["litigation"],
+      "subdomains": ["victory_defeat", "obstacles"],
+      "statement": "Vipareeta Raja Yoga (a dusthana lord placed in a dusthana) is classically read as turning apparent obstruction into eventual advantage; in litigation contexts this is sometimes cited as a pattern for prevailing after early difficulty, though that is an interpretive extension rather than the yoga's primary classical scope.",
+      "source": {"text_key": "bphs", "location": "Vipareeta Raja Yoga"},
+      "tags": ["yoga:viparita_raja_yoga", "house:6"],
+      "status": "convention_dependent"
     }
   ]
 }

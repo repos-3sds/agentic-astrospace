@@ -119,8 +119,19 @@ def _sun_moon(jd: float) -> tuple[float, float]:
 
 # ── Varjya and Amrit Kalam ──────────────────────────────────────────────────
 # Start ghati (of 60 spanning the nakshatra) per nakshatra, duration 4 ghatis.
-# VERIFY: standard Muhurta tables, unvalidated against reference panchanga.
-
+#
+# T0.4 (docs/backend_astro_depth_checklist_2026-08-06.md) cross-check,
+# 2026-08-06: independent research surfaced a published Varjya start-ghati
+# list covering 18 of the 27 nakshatras (Ashwini, Krittika, Mrigashira,
+# Ardra, Punarvasu, Pushya, Ashlesha, Magha, Purva Phalguni, Uttara
+# Phalguni, Hasta, Chitra, Swati, Vishakha, Jyeshtha, Uttara Ashadha,
+# Shatabhisha, Revati) — every one of those 18 values matched this table
+# EXACTLY (e.g. Ashwini 50, Ashlesha 32, Jyeshtha 14). Zero discrepancies
+# found. The remaining 9 nakshatras (Bharani, Rohini, Anuradha, Moola,
+# Purva Ashadha, Shravana, Dhanishta, Purva Bhadrapada, Uttara Bhadrapada)
+# and the entire Amrit Kalam table remain UNCONFIRMED against an
+# independent source — upgrading the whole table to "verified" on the
+# strength of a partial match would overclaim, so it stays VERIFY.
 VARJYA_START_GHATI = [
     50, 24, 30, 40, 14, 21, 30, 20, 32, 30, 20, 18, 21, 20,
     14, 14, 10, 14, 20, 24, 20, 10, 10, 18, 16, 24, 30,

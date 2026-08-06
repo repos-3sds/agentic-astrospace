@@ -21,7 +21,7 @@ from astrospace.core.vedic.jaimini import (
     upapada,
 )
 from astrospace.core.vedic.positions import sidereal_lagna, sidereal_positions, sign_index
-from astrospace.core.vedic.special_lagnas import special_lagnas
+from astrospace.core.vedic.special_lagnas import bhrigu_bindu, indu_lagna, special_lagnas
 from astrospace.core.vedic.yogini import CYCLE_YEARS, YOGINIS, yogini_dasha
 
 
@@ -280,6 +280,68 @@ class TestJaiminiValidationChartExamples:
         assert detail["exception_applied"] is True
         assert detail["sign"] == 1  # 10th from Leo = Taurus
         assert detail["sign_name"] == "Taurus"
+
+
+class TestBhriguBinduAndInduLagna:
+    """T1.3, backend_astro_depth_checklist_2026-08-06.md."""
+
+    def test_bhrigu_bindu_same_point(self):
+        row = bhrigu_bindu(100.0, 100.0)
+        assert row["longitude"] == pytest.approx(100.0)
+
+    def test_bhrigu_bindu_takes_shorter_arc_across_zero(self):
+        # Rahu at 350deg, Moon at 10deg: the short arc (20deg, crossing 0deg)
+        # midpoints at 0deg/360deg, not the long-way midpoint at 180deg.
+        row = bhrigu_bindu(350.0, 10.0)
+        assert row["longitude"] == pytest.approx(0.0)
+
+    def test_bhrigu_bindu_ordinary_midpoint(self):
+        row = bhrigu_bindu(120.0, 80.0)
+        assert row["longitude"] == pytest.approx(100.0)
+
+    def _positions_all_at(self, lon: float) -> dict:
+        return {p: {"lon": lon} for p in
+                ("Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn")}
+
+    def test_indu_lagna_worked_example(self):
+        """Lagna Aries(0), Moon Cancer(3): 9th-from-Lagna is Sagittarius
+        (lord Jupiter, kala 10); 9th-from-Moon is Pisces (lord Jupiter,
+        kala 10). Sum 20, mod 12 = 8; counting 8 signs inclusively from
+        Cancer(3) lands on Aquarius(10)."""
+        out = indu_lagna(0, 3, self._positions_all_at(0.0))
+        assert out["ninth_from_lagna"]["lord"] == "Jupiter"
+        assert out["ninth_from_moon"]["lord"] == "Jupiter"
+        assert out["kala_sum"] == 20
+        assert out["count"] == 8
+        assert out["sign"] == 10
+        assert out["sign_name"] == "Aquarius"
+
+    def test_indu_lagna_zero_remainder_treated_as_twelve(self):
+        # Lagna Taurus(1): 9th = Capricorn(9), lord Saturn, kala 1.
+        # Moon Taurus(1) too (same sign): 9th = Capricorn(9), lord Saturn, kala 1.
+        # Sum = 2, mod 12 = 2 (no zero case here) -- construct one that IS
+        # zero instead: need kala_sum a multiple of 12, e.g. two Jupiter
+        # 9th-lords (10+10=20, not 12) -- use Sun+Saturn extras: Sun(30)+
+        # Saturn(1)=31 no. Easiest exact multiple of 12: Mercury+Mercury
+        # =8+8=16 no; Venus+Venus=12+12=24 -> mod 12 = 0 -> remainder 12.
+        # 9th lord Venus <=> 9th sign is Taurus(1) or Libra(6).
+        # Lagna sign with 9th=Taurus: lagna = (1-8)%12 = 5 (Virgo).
+        out = indu_lagna(5, 5, self._positions_all_at(0.0))
+        assert out["ninth_from_lagna"]["lord"] == "Venus"
+        assert out["ninth_from_moon"]["lord"] == "Venus"
+        assert out["kala_sum"] == 24
+        assert out["count"] == 12
+        # Counting 12 signs inclusively from Virgo(5) covers Virgo..Leo (the
+        # next 11 signs), ending one short of a full lap back to Virgo:
+        # Virgo, Libra, ..., Cancer, Leo -- the 12th and last is Leo(4).
+        assert out["sign"] == 4
+
+    def test_indu_lagna_kala_table_matches_uttara_kalamrita(self):
+        from astrospace.core.vedic.special_lagnas import INDU_KALA
+        assert INDU_KALA == {
+            "Sun": 30, "Moon": 16, "Mars": 6, "Mercury": 8,
+            "Jupiter": 10, "Venus": 12, "Saturn": 1,
+        }
 
 
 class TestSpecialLagnas:

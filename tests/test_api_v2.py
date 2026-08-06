@@ -96,6 +96,53 @@ class TestJaiminiEndpoint:
         assert r.status_code == 404
 
 
+class TestBackendDepthEndpoints:
+    """API smoke tests for the new routes added in
+    docs/backend_astro_depth_checklist_2026-08-06.md (T1.1, T1.2, T3.3)."""
+
+    def test_vimshopaka_bala_shape(self, client_and_kundli):
+        client, kid = client_and_kundli
+        r = client.get(f"/api/v1/vedic/{kid}/vimshopaka-bala")
+        assert r.status_code == 200
+        d = r.json()
+        assert d["scheme"] == "shodashavarga"
+        assert 0.0 <= d["planets"]["Sun"]["score"] <= 20.0
+
+    def test_vimshopaka_bala_scheme_param(self, client_and_kundli):
+        client, kid = client_and_kundli
+        r = client.get(f"/api/v1/vedic/{kid}/vimshopaka-bala", params={"scheme": "shadvarga"})
+        assert r.status_code == 200
+        assert r.json()["scheme"] == "shadvarga"
+
+    def test_vimshopaka_bala_bad_scheme_422(self, client_and_kundli):
+        client, kid = client_and_kundli
+        r = client.get(f"/api/v1/vedic/{kid}/vimshopaka-bala", params={"scheme": "not-a-scheme"})
+        assert r.status_code == 422
+
+    def test_chara_dasha_shape(self, client_and_kundli):
+        client, kid = client_and_kundli
+        r = client.get(f"/api/v1/vedic/{kid}/chara-dasha")
+        assert r.status_code == 200
+        d = r.json()
+        assert d["direction"] in ("direct", "reverse")
+        assert len(d["mahadashas"]) == 12
+
+    def test_bhava_chalit_shape(self, client_and_kundli):
+        client, kid = client_and_kundli
+        r = client.get(f"/api/v1/vedic/{kid}/bhava-chalit")
+        assert r.status_code == 200
+        d = r.json()
+        assert d["system"] == "Sripati (Bhava Chalit)"
+        assert 1 <= d["planets"]["Sun"]["house"] <= 12
+        assert sum(d["widths"].values()) == pytest.approx(360.0)
+
+    def test_unknown_kundli_404_across_new_routes(self, client_and_kundli):
+        client, _ = client_and_kundli
+        for suffix in ("vimshopaka-bala", "chara-dasha", "bhava-chalit"):
+            r = client.get(f"/api/v1/vedic/nonexistent-id/{suffix}")
+            assert r.status_code == 404, suffix
+
+
 class TestSpecialLagnasEndpoint:
     def test_special_lagnas_shape(self, client_and_kundli):
         client, kid = client_and_kundli

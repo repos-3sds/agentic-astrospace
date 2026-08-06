@@ -126,8 +126,14 @@ refresh to the selected kundli.
 - [ ] Validate convention-dependent rules with preferred tradition before stronger UI language.
 - [ ] Add audited full 14x14 Yoni matrix and Vashya table from preferred source.
 - [ ] Add classical graha drishti layer and expose natal aspect/drishti table.
-- [ ] Rework Shadbala v1 into virupa-based classical Shadbala or keep it clearly excluded from interpretive weighting.
-- [ ] Add Vedha and Ashtakavarga weighting into Gocharam severity.
+- [x] Rework Shadbala v1 into virupa-based classical Shadbala or keep it clearly excluded from interpretive weighting. (Verified 2026-08-06: `strength.classical_shadbala()` — full BPHS virupa system with degree-precise Drik Bala (`drik_bala_virupa`/`sputa_drishti`), Sthana/Dig/Kala/Cheshta/Naisargika — already exists with a 27-test suite (`tests/test_shadbala_classical.py`) and is already wired into `strength.shadbala()`'s `"classical"` key; when birth data is available, `total_score`/`rank_band` already derive from the classical ratio rather than the v1 approximation, so it already drives interpretive weighting, not excluded from it. This checkbox was stale — the work already shipped. Remaining approximations (Nathonnata proxy, fixed obliquity, Cheshta avastha table, flat Yuddha adjustment) are documented in the function's own `notes` and are finer-grained than this checklist item asks for. See docs/backend_astro_depth_checklist_2026-08-06.md T0.5.)
+- [x] Add Vedha and Ashtakavarga weighting into Gocharam severity. (Verified
+  2026-08-06 while working the backend depth checklist: `gocharam/rules.py`
+  has `CLASSICAL_GOCHARA_VEDHA` + `VEDHA_EXEMPT_PAIRS` with full obstruction
+  logic, and `gocharam/strength.py` has `ashtakavarga_transit_support()` /
+  `apply_ashtakavarga_context()` computing BAV/SAV/kakshya-weighted
+  `effective_severity`. This checkbox was stale — the work already
+  shipped. See docs/backend_astro_depth_checklist_2026-08-06.md T0.1.)
 - [ ] Add externally verified Gun Milan reference cases.
 
 ## 5. UX Polish

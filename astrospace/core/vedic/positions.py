@@ -124,6 +124,18 @@ def sidereal_lagna(jd_ut: float, lat: float, lng: float,
     return ascmc[0] % 360.0
 
 
+def sidereal_mc(jd_ut: float, lat: float, lng: float,
+                ayanamsha: str = "lahiri") -> float:
+    """Sidereal Midheaven (MC) longitude — the 10th-house bhava madhya
+    anchor for the Sripati (Bhava Chalit) house system; see bhava_chalit.py.
+    Whole-sign houses (the default everywhere else in this codebase) don't
+    use MC at all — this exists only to feed that opt-in alternate system.
+    """
+    _set_ayanamsha(ayanamsha)
+    _cusps, ascmc = swe.houses_ex(jd_ut, lat, lng, b"W", swe.FLG_SIDEREAL)
+    return ascmc[1] % 360.0
+
+
 def _sun_event(jd_ut_start: float, lat: float, lng: float, rsmi: int) -> float | None:
     try:
         res, tret = swe.rise_trans(

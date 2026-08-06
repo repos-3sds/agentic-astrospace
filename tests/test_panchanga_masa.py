@@ -19,15 +19,89 @@ import swisseph as swe
 from astrospace.core.vedic.constants import LUNAR_MONTHS, NAKSHATRAS, SIGNS
 from astrospace.core.vedic.masa import (
     RITUS, SAMVATSARA_NAMES, _elongation, amanta_masa, ayana,
-    gulika_positions, moon_events_for_day, new_moon_after, new_moon_before,
-    ritu, samvatsara,
+    gulika_positions, mandi_positions, moon_events_for_day, new_moon_after,
+    new_moon_before, ritu, samvatsara,
 )
+from astrospace.core.vedic.moontimes import VARJYA_START_GHATI
 from astrospace.core.vedic.panchanga_day import (
     DISHA_SHOOL, PANCHAKA_NAKSHATRA_IDX, daily_panchanga, personal_panchanga,
 )
 
 JD_TODAY = swe.julday(2026, 7, 14, 12.0)  # 2026-07-14 12:00 UT
 HHMM = re.compile(r"^\d{2}:\d{2}$")
+
+# Idealized Monday: sunrise 06:00 UT, sunset 18:00 UT, New Delhi coords.
+GULIKA_RISE = swe.julday(2026, 1, 5, 6.0)
+GULIKA_SET = swe.julday(2026, 1, 5, 18.0)
+GULIKA_NEXT = swe.julday(2026, 1, 6, 6.0)
+GULIKA_VARA = 1  # Monday
+GULIKA_LAT, GULIKA_LNG, GULIKA_TZ = 28.6139, 77.2090, "Asia/Kolkata"
+
+
+class TestVarjyaStartGhatiCrossCheck:
+    """T0.4, docs/backend_astro_depth_checklist_2026-08-06.md — 18 of 27
+    entries were independently cross-checked 2026-08-06 and matched
+    exactly; this locks that in so a future edit can't silently drift one
+    of the confirmed values without a test noticing."""
+
+    CONFIRMED = {
+        "Ashwini": 50, "Krittika": 30, "Mrigashira": 14, "Ardra": 21,
+        "Punarvasu": 30, "Pushya": 20, "Ashlesha": 32, "Magha": 30,
+        "Purva Phalguni": 20, "Uttara Phalguni": 18, "Hasta": 21,
+        "Chitra": 20, "Swati": 14, "Vishakha": 14, "Jyeshtha": 14,
+        "Uttara Ashadha": 20, "Shatabhisha": 18, "Revati": 30,
+    }
+
+    def test_confirmed_entries_match_independent_source(self):
+        for name, expected in self.CONFIRMED.items():
+            idx = NAKSHATRAS.index(name)
+            assert VARJYA_START_GHATI[idx] == expected, name
+
+    def test_all_twenty_seven_entries_present(self):
+        assert len(VARJYA_START_GHATI) == 27
+
+
+class TestMandi:
+    """T1.4, docs/backend_astro_depth_checklist_2026-08-06.md — Mandi as a
+    distinct reading (middle of Saturn's portion) of the same 8-part-day
+    method Gulika uses (start of Saturn's portion), not a separate formula.
+    """
+
+    def _gulika(self):
+        return gulika_positions(GULIKA_RISE, GULIKA_SET, GULIKA_NEXT,
+                                GULIKA_VARA, GULIKA_LAT, GULIKA_LNG, GULIKA_TZ)
+
+    def _mandi(self):
+        return mandi_positions(GULIKA_RISE, GULIKA_SET, GULIKA_NEXT,
+                               GULIKA_VARA, GULIKA_LAT, GULIKA_LNG, GULIKA_TZ)
+
+    def test_mandi_is_half_a_part_later_than_gulika(self):
+        """Both fall in the same 1/8 Saturn portion; Mandi's instant is
+        exactly half that portion's duration after Gulika's."""
+        gulika, mandi = self._gulika(), self._mandi()
+        day_part = (GULIKA_SET - GULIKA_RISE) / 8.0
+        night_part = (GULIKA_NEXT - GULIKA_SET) / 8.0
+        assert mandi["day"]["start_jd"] - gulika["day"]["start_jd"] == pytest.approx(day_part / 2.0)
+        assert mandi["night"]["start_jd"] - gulika["night"]["start_jd"] == pytest.approx(night_part / 2.0)
+
+    def test_mandi_and_gulika_agree_on_which_part_is_saturns(self):
+        """Both use the identical weekday-lord-cycling logic to find
+        Saturn's 1/8 portion — only the offset within it differs. Since
+        both instants fall inside the same one-part window, the elapsed
+        time from sunrise for each must differ by less than one full part."""
+        gulika, mandi = self._gulika(), self._mandi()
+        day_part = (GULIKA_SET - GULIKA_RISE) / 8.0
+        assert 0 < mandi["day"]["start_jd"] - gulika["day"]["start_jd"] < day_part
+
+    def test_mandi_shape_matches_gulika_shape(self):
+        gulika, mandi = self._gulika(), self._mandi()
+        assert set(gulika) == set(mandi) == {"day", "night", "note"}
+        for half in ("day", "night"):
+            assert set(gulika[half]) == set(mandi[half])
+
+    def test_mandi_note_explains_the_convention(self):
+        assert "MIDDLE" in self._mandi()["note"]
+        assert "START" in self._gulika()["note"]
 
 
 class TestNewMoons:

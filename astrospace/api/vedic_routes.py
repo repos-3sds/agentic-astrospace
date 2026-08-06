@@ -279,6 +279,22 @@ def ashtakavarga(
     return _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).ashtakavarga()
 
 
+@router.get("/{kundli_id}/vimshopaka-bala")
+def vimshopaka_bala_route(
+    kundli_id: str,
+    user: CurrentUser,
+    ayanamsha: str = "lahiri",
+    node_type: str = "mean",
+    scheme: str = Query("shodashavarga", description="shadvarga | saptavarga | dashavarga | shodashavarga"),
+    db: Session = Depends(get_db),
+):
+    chart = _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type)
+    try:
+        return chart.vimshopaka_bala(scheme=scheme)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+
 @router.get("/{kundli_id}/shadbala")
 def shadbala(
     kundli_id: str,
@@ -344,6 +360,30 @@ def jaimini(
     db: Session = Depends(get_db),
 ):
     return _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).jaimini()
+
+
+@router.get("/{kundli_id}/chara-dasha")
+def chara_dasha_route(
+    kundli_id: str,
+    user: CurrentUser,
+    ayanamsha: str = "lahiri",
+    node_type: str = "mean",
+    db: Session = Depends(get_db),
+):
+    return _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).chara_dasha()
+
+
+@router.get("/{kundli_id}/bhava-chalit")
+def bhava_chalit_route(
+    kundli_id: str,
+    user: CurrentUser,
+    ayanamsha: str = "lahiri",
+    node_type: str = "mean",
+    db: Session = Depends(get_db),
+):
+    """Sripati house system — opt-in alternate to the default whole-sign
+    houses everything else in this API uses."""
+    return _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).bhava_chalit()
 
 
 @router.get("/{kundli_id}/special-lagnas")

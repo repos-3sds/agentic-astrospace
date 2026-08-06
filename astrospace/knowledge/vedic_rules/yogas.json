@@ -1,5 +1,22 @@
 {
   "rules": {
+    "sankhya_yoga": {
+      "name": "Sankhya Yoga (umbrella)",
+      "category": "Nabhasa / Sankhya",
+      "rule": "Umbrella entry for the six Sankhya (count) yogas — see gola_yoga through dama_yoga for the specific 1-6 distinct-sign tiers.",
+      "status": "convention_dependent",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Nabhasa yogas, Sankhya group; ch. 35/37 depending on edition" }
+      ],
+      "practitioner_explanation": "The seven classical planets occupy 7 distinct signs in this chart — outside the 1-6 range the six named Sankhya yogas (Gola/Yuga/Shoola/Kedara/Pasa/Dama) cover, so none of them is active here. This umbrella entry exists so a 'no Sankhya yoga present' result still has a coherent explanation instead of a blank one.",
+      "lay_explanation": "Your planets are spread across enough different signs that none of the classical 'concentration' patterns apply.",
+      "strength_rubric": "n/a — this entry only appears when none of the six numbered Sankhya yogas (1-6 distinct signs) matched.",
+      "caveats": [
+        "7 distinct signs occupied forms no Sankhya yoga in the source used for this pass; some traditions may name a 7th tier — not implemented pending a source."
+      ],
+      "notes": ["Nodes (Rahu/Ketu) excluded, matching the classical Sankhya definition."]
+    },
     "gaja_kesari_yoga": {
       "name": "Gajakesari Yoga",
       "category": "Mind / Wisdom",
@@ -135,7 +152,7 @@
       "status": "verified_common",
       "implementation": "computed",
       "source_refs": [
-        { "source": "bphs", "detail": "Pancha Mahapurusha yogas; exact edition reference pending" },
+        { "source": "bphs", "detail": "Pancha Mahapurusha yogas; commonly cited as BPHS ch. 75 in the Santhanam-descended edition family (cross-checked 2026-08-06 via secondary sources citing ch. 75-77 depending on edition/translation) -- chapter numbering genuinely varies by edition, this is not a typo" },
         { "source": "phaladeepika", "detail": "Cross-check pending" }
       ],
       "practitioner_explanation": "Mars in its own sign (Aries/Scorpio) or exalted (Capricorn) while placed in a kendra (1/4/7/10) from Lagna. Strength is strong when exalted, moderate when in own sign — both dignities are already required for activation, so no further dignity adjustment is applied.",
@@ -153,7 +170,7 @@
       "status": "verified_common",
       "implementation": "computed",
       "source_refs": [
-        { "source": "bphs", "detail": "Pancha Mahapurusha yogas; exact edition reference pending" },
+        { "source": "bphs", "detail": "Pancha Mahapurusha yogas; commonly cited as BPHS ch. 75 in the Santhanam-descended edition family (cross-checked 2026-08-06 via secondary sources citing ch. 75-77 depending on edition/translation) -- chapter numbering genuinely varies by edition, this is not a typo" },
         { "source": "phaladeepika", "detail": "Cross-check pending" }
       ],
       "practitioner_explanation": "Mercury in its own sign (Gemini/Virgo) or exalted (Virgo) while placed in a kendra (1/4/7/10) from Lagna. Strength is strong when exalted, moderate when in own sign — both dignities are already required for activation, so no further dignity adjustment is applied.",
@@ -171,7 +188,7 @@
       "status": "verified_common",
       "implementation": "computed",
       "source_refs": [
-        { "source": "bphs", "detail": "Pancha Mahapurusha yogas; exact edition reference pending" },
+        { "source": "bphs", "detail": "Pancha Mahapurusha yogas; commonly cited as BPHS ch. 75 in the Santhanam-descended edition family (cross-checked 2026-08-06 via secondary sources citing ch. 75-77 depending on edition/translation) -- chapter numbering genuinely varies by edition, this is not a typo" },
         { "source": "phaladeepika", "detail": "Cross-check pending" }
       ],
       "practitioner_explanation": "Jupiter in its own sign (Sagittarius/Pisces) or exalted (Cancer) while placed in a kendra (1/4/7/10) from Lagna. Strength is strong when exalted, moderate when in own sign — both dignities are already required for activation, so no further dignity adjustment is applied.",
@@ -189,7 +206,7 @@
       "status": "verified_common",
       "implementation": "computed",
       "source_refs": [
-        { "source": "bphs", "detail": "Pancha Mahapurusha yogas; exact edition reference pending" },
+        { "source": "bphs", "detail": "Pancha Mahapurusha yogas; commonly cited as BPHS ch. 75 in the Santhanam-descended edition family (cross-checked 2026-08-06 via secondary sources citing ch. 75-77 depending on edition/translation) -- chapter numbering genuinely varies by edition, this is not a typo" },
         { "source": "phaladeepika", "detail": "Cross-check pending" }
       ],
       "practitioner_explanation": "Venus in its own sign (Taurus/Libra) or exalted (Pisces) while placed in a kendra (1/4/7/10) from Lagna. Strength is strong when exalted, moderate when in own sign — both dignities are already required for activation, so no further dignity adjustment is applied.",
@@ -207,7 +224,7 @@
       "status": "verified_common",
       "implementation": "computed",
       "source_refs": [
-        { "source": "bphs", "detail": "Pancha Mahapurusha yogas; exact edition reference pending" },
+        { "source": "bphs", "detail": "Pancha Mahapurusha yogas; commonly cited as BPHS ch. 75 in the Santhanam-descended edition family (cross-checked 2026-08-06 via secondary sources citing ch. 75-77 depending on edition/translation) -- chapter numbering genuinely varies by edition, this is not a typo" },
         { "source": "phaladeepika", "detail": "Cross-check pending" }
       ],
       "practitioner_explanation": "Saturn in its own sign (Capricorn/Aquarius) or exalted (Libra) while placed in a kendra (1/4/7/10) from Lagna. Strength is strong when exalted, moderate when in own sign — both dignities are already required for activation, so no further dignity adjustment is applied.",
@@ -495,6 +512,201 @@
         "source_status: convention_dependent."
       ],
       "notes": ["Shown as a flag only, not a deterministic dosha judgement."]
+    },
+    "rajju_yoga": {
+      "name": "Rajju Yoga",
+      "category": "Nabhasa / Ashraya",
+      "rule": "All seven classical planets occupy movable (chara) signs.",
+      "status": "convention_dependent",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Nabhasa yogas, Ashraya group; ch. 35/37 depending on edition" }
+      ],
+      "practitioner_explanation": "All seven classical planets (Sun through Saturn, Rahu/Ketu excluded) fall in movable signs (Aries, Cancer, Libra, Capricorn). One of three mutually exclusive Ashraya yogas graded by which sign quality holds all seven planets.",
+      "lay_explanation": "Every one of your classical planets sits in a 'movement-oriented' sign — traditionally read as a life shaped by travel, change, and restlessness.",
+      "strength_rubric": "binary: active = moderate, else none — Ashraya yogas are whole-chart patterns, not individually graded.",
+      "caveats": [
+        "Extremely rare in practice (all seven planets in one sign-quality group); mutually exclusive with Musala and Nala.",
+        "Whole-chart placement pattern, not tied to a specific house or lord — strength/cancellation rules from other yoga types don't apply here."
+      ],
+      "notes": ["Ashraya group: a whole-chart placement pattern, not tied to a house or lord."]
+    },
+    "musala_yoga": {
+      "name": "Musala Yoga",
+      "category": "Nabhasa / Ashraya",
+      "rule": "All seven classical planets occupy fixed (sthira) signs.",
+      "status": "convention_dependent",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Nabhasa yogas, Ashraya group; ch. 35/37 depending on edition" }
+      ],
+      "practitioner_explanation": "All seven classical planets fall in fixed signs (Taurus, Leo, Scorpio, Aquarius). One of three mutually exclusive Ashraya yogas.",
+      "lay_explanation": "Every one of your classical planets sits in a steady, fixed sign — traditionally read as firmness of purpose and resistance to change.",
+      "strength_rubric": "binary: active = moderate, else none.",
+      "caveats": [
+        "Extremely rare in practice; mutually exclusive with Rajju and Nala.",
+        "Whole-chart placement pattern, not tied to a specific house or lord."
+      ],
+      "notes": ["Ashraya group: a whole-chart placement pattern, not tied to a house or lord."]
+    },
+    "nala_yoga": {
+      "name": "Nala Yoga",
+      "category": "Nabhasa / Ashraya",
+      "rule": "All seven classical planets occupy dual (dwiswabhava) signs.",
+      "status": "convention_dependent",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Nabhasa yogas, Ashraya group; ch. 35/37 depending on edition" }
+      ],
+      "practitioner_explanation": "All seven classical planets fall in dual signs (Gemini, Virgo, Sagittarius, Pisces). One of three mutually exclusive Ashraya yogas.",
+      "lay_explanation": "Every one of your classical planets sits in an adaptable, dual-natured sign — traditionally read as versatility and a dual-sided temperament.",
+      "strength_rubric": "binary: active = moderate, else none.",
+      "caveats": [
+        "Extremely rare in practice; mutually exclusive with Rajju and Musala.",
+        "Whole-chart placement pattern, not tied to a specific house or lord."
+      ],
+      "notes": ["Ashraya group: a whole-chart placement pattern, not tied to a house or lord."]
+    },
+    "mala_yoga": {
+      "name": "Mala Yoga",
+      "category": "Nabhasa / Dala",
+      "rule": "Mercury, Venus and Jupiter each occupy a kendra (1/4/7/10) from Lagna.",
+      "status": "convention_dependent",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Nabhasa yogas, Dala group (benefic form); ch. 35/37 depending on edition" }
+      ],
+      "practitioner_explanation": "Mercury, Venus and Jupiter — the three natural benefics — each individually occupy one of the four kendra houses (1/4/7/10) from Lagna. The benefic ('garland') form of the two Dala yogas.",
+      "lay_explanation": "Your three classically supportive planets all anchor the four pillar houses of your chart — a traditionally auspicious, 'garland-like' pattern.",
+      "strength_rubric": "binary: active = moderate, else none.",
+      "caveats": [
+        "'Mutual kendras' in the source material is read here as each planet individually placed in some kendra from Lagna (not necessarily the same one), not a pairwise 90-degree separation between the three planets — sources are not fully explicit on which reading is intended; treat as convention-dependent.",
+        "Mutually exclusive in practice with Sarpa Yoga (different planet sets), though both could theoretically be inactive together."
+      ],
+      "notes": ["Dala group, benefic form: 'mutual kendras' read as each planet individually in a kendra from Lagna (convention — see Sarpa Yoga)."]
+    },
+    "sarpa_yoga": {
+      "name": "Sarpa Yoga",
+      "category": "Nabhasa / Dala (Caution)",
+      "rule": "Sun, Mars and Saturn each occupy a kendra (1/4/7/10) from Lagna.",
+      "status": "convention_dependent",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Nabhasa yogas, Dala group (caution form); ch. 35/37 depending on edition" }
+      ],
+      "practitioner_explanation": "Sun, Mars and Saturn — three natural malefics — each individually occupy one of the four kendra houses (1/4/7/10) from Lagna. The caution ('serpent') form of the two Dala yogas.",
+      "lay_explanation": "Three classically demanding planets anchor the four pillar houses of your chart — a traditional caution pattern, not a fixed verdict.",
+      "strength_rubric": "binary: active = moderate, else none.",
+      "caveats": [
+        "This is a flag, not a verdict — framed here as a caution pattern, never a fear-based prediction.",
+        "'Mutual kendras' read as each planet individually in a kendra from Lagna, not pairwise 90-degree separation between the three planets; sources are not fully explicit on which reading is intended."
+      ],
+      "notes": ["Dala group, caution form — a caution flag, not a verdict.",
+                "'Mutual kendras' read as each planet individually in a kendra from Lagna, not pairwise 90 degree separation between the three planets; sources are not fully explicit on which reading is intended."]
+    },
+    "gola_yoga": {
+      "name": "Gola Yoga",
+      "category": "Nabhasa / Sankhya",
+      "rule": "The seven classical planets occupy exactly 1 distinct sign.",
+      "status": "convention_dependent",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Nabhasa yogas, Sankhya group; ch. 35/37 depending on edition" }
+      ],
+      "practitioner_explanation": "All seven classical planets fall in a single sign — the tightest of the six Sankhya (count) yogas, graded by how many distinct signs the seven planets occupy.",
+      "lay_explanation": "Every one of your planets clusters into a single sign — an intensely concentrated chart pattern.",
+      "strength_rubric": "graded by distinct-sign count across the six Sankhya yogas: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama; each is binary active/inactive at its own count.",
+      "caveats": [
+        "Extremely rare (all seven planets in one sign); Rahu/Ketu excluded, matching the classical Sankhya definition.",
+        "7 distinct signs occupied forms no Sankhya yoga in the source used for this pass — some traditions may name a 7th tier; not implemented pending a source."
+      ],
+      "notes": ["Nodes (Rahu/Ketu) excluded, matching the classical Sankhya definition."]
+    },
+    "yuga_yoga": {
+      "name": "Yuga Yoga",
+      "category": "Nabhasa / Sankhya",
+      "rule": "The seven classical planets occupy exactly 2 distinct signs.",
+      "status": "convention_dependent",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Nabhasa yogas, Sankhya group; ch. 35/37 depending on edition" }
+      ],
+      "practitioner_explanation": "All seven classical planets fall across exactly two signs — the second-tightest Sankhya (count) yoga.",
+      "lay_explanation": "Your planets cluster into just two signs — a strongly concentrated chart pattern.",
+      "strength_rubric": "graded by distinct-sign count across the six Sankhya yogas: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama.",
+      "caveats": [
+        "Rahu/Ketu excluded, matching the classical Sankhya definition."
+      ],
+      "notes": ["Nodes (Rahu/Ketu) excluded, matching the classical Sankhya definition."]
+    },
+    "shoola_yoga": {
+      "name": "Shoola Yoga",
+      "category": "Nabhasa / Sankhya",
+      "rule": "The seven classical planets occupy exactly 3 distinct signs.",
+      "status": "convention_dependent",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Nabhasa yogas, Sankhya group; ch. 35/37 depending on edition" }
+      ],
+      "practitioner_explanation": "All seven classical planets fall across exactly three signs.",
+      "lay_explanation": "Your planets cluster into three signs — a concentrated chart pattern.",
+      "strength_rubric": "graded by distinct-sign count across the six Sankhya yogas: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama.",
+      "caveats": [
+        "Rahu/Ketu excluded, matching the classical Sankhya definition."
+      ],
+      "notes": ["Nodes (Rahu/Ketu) excluded, matching the classical Sankhya definition."]
+    },
+    "kedara_yoga": {
+      "name": "Kedara Yoga",
+      "category": "Nabhasa / Sankhya",
+      "rule": "The seven classical planets occupy exactly 4 distinct signs.",
+      "status": "convention_dependent",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Nabhasa yogas, Sankhya group; ch. 35/37 depending on edition" }
+      ],
+      "practitioner_explanation": "All seven classical planets fall across exactly four signs.",
+      "lay_explanation": "Your planets spread across four signs — traditionally linked to steady, grounded effort (the 'agriculturist' yoga).",
+      "strength_rubric": "graded by distinct-sign count across the six Sankhya yogas: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama.",
+      "caveats": [
+        "Rahu/Ketu excluded, matching the classical Sankhya definition."
+      ],
+      "notes": ["Nodes (Rahu/Ketu) excluded, matching the classical Sankhya definition."]
+    },
+    "pasa_yoga": {
+      "name": "Pasa Yoga",
+      "category": "Nabhasa / Sankhya",
+      "rule": "The seven classical planets occupy exactly 5 distinct signs.",
+      "status": "convention_dependent",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Nabhasa yogas, Sankhya group; ch. 35/37 depending on edition" }
+      ],
+      "practitioner_explanation": "All seven classical planets fall across exactly five signs.",
+      "lay_explanation": "Your planets spread across five signs — traditionally linked to prosperity and resourcefulness.",
+      "strength_rubric": "graded by distinct-sign count across the six Sankhya yogas: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama.",
+      "caveats": [
+        "Rahu/Ketu excluded, matching the classical Sankhya definition."
+      ],
+      "notes": ["Nodes (Rahu/Ketu) excluded, matching the classical Sankhya definition."]
+    },
+    "dama_yoga": {
+      "name": "Dama Yoga",
+      "category": "Nabhasa / Sankhya",
+      "rule": "The seven classical planets occupy exactly 6 distinct signs.",
+      "status": "convention_dependent",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "Nabhasa yogas, Sankhya group; ch. 35/37 depending on edition" }
+      ],
+      "practitioner_explanation": "All seven classical planets fall across exactly six signs — the most spread-out Sankhya (count) yoga.",
+      "lay_explanation": "Your planets spread across six signs — traditionally linked to recognition and standing.",
+      "strength_rubric": "graded by distinct-sign count across the six Sankhya yogas: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama.",
+      "caveats": [
+        "Rahu/Ketu excluded, matching the classical Sankhya definition.",
+        "The most common Sankhya yoga in practice, since most charts spread seven planets across 5-7 signs."
+      ],
+      "notes": ["Nodes (Rahu/Ketu) excluded, matching the classical Sankhya definition."]
     }
   }
 }

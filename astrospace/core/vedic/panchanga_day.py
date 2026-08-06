@@ -13,7 +13,7 @@ from .positions import (
 from .nakshatra import nakshatra_of
 from .kala import kala_windows, choghadiya, horas
 from .masa import (
-    amanta_masa, ayana, gulika_positions, moon_events_for_day, ritu,
+    amanta_masa, ayana, gulika_positions, mandi_positions, moon_events_for_day, ritu,
     samvatsara,
 )
 from .moontimes import elements_for_day, varjya_windows, amrit_kalam_windows
@@ -135,6 +135,8 @@ def daily_panchanga(year: int, month: int, day: int,
         },
         "gulika": gulika_positions(rise, sets, next_rise, vara_idx, lat, lng,
                                    display_tz_str),
+        "mandi": mandi_positions(rise, sets, next_rise, vara_idx, lat, lng,
+                                 display_tz_str),
         "elements": elements,
         "windows": windows,
         "choghadiya": choghadiya(rise, sets, next_rise, vara_idx, display_tz_str),
@@ -143,8 +145,11 @@ def daily_panchanga(year: int, month: int, day: int,
             "day_definition": "sunrise to next sunrise",
             "verify_pending": ["durmuhurta table", "choghadiya tables",
                                "varjya/amrit ghati tables", "godhuli span",
-                               "samvatsara reckoning", "panchaka type table",
-                               "gulika start-vs-middle of Saturn part"],
+                               "samvatsara reckoning", "panchaka type table"],
+            "resolved": ["gulika start-vs-middle of Saturn part — both "
+                        "conventions now computed side by side as 'gulika' "
+                        "(start) and 'mandi' (middle); see T1.4 in "
+                        "docs/backend_astro_depth_checklist_2026-08-06.md"],
         },
     }
 

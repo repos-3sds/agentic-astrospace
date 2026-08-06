@@ -641,6 +641,111 @@ def _kalasarpa(signs: dict[str, int]) -> dict:
     )
 
 
+# ── Nabhasa yogas (T3.1, docs/backend_astro_depth_checklist_2026-08-06.md) ───
+# BPHS ch. 35/37 describes 32 Nabhasa yogas in four groups: Ashraya (3),
+# Dala (2), Akriti (20), Sankhya (6) — 1 + 2 + ... doesn't sum that way
+# because Akriti is itself further subdivided; the widely-cited headline
+# count is 32. This pass implements the Ashraya, Dala and Sankhya groups
+# (11 yogas) — the ones with unambiguous, single-source-agreed trigger
+# conditions found in research for this pass. The 20 Akriti (shape) yogas
+# are deliberately deferred: their trigger conditions (which of the 12
+# houses from Lagna are occupied, in which specific pattern) have more
+# room for source disagreement per-yoga, and guessing at 20 of them in one
+# pass risks more error than value — see the checklist for what a future
+# pass should do with them.
+
+_SANKHYA_NAMES = {
+    1: ("gola_yoga", "Gola Yoga"),
+    2: ("yuga_yoga", "Yuga Yoga"),
+    3: ("shoola_yoga", "Shoola Yoga"),
+    4: ("kedara_yoga", "Kedara Yoga"),
+    5: ("pasa_yoga", "Pasa Yoga"),
+    6: ("dama_yoga", "Dama Yoga"),
+}
+
+
+def _ashraya_yogas(signs: dict[str, int]) -> list[dict]:
+    """Rajju/Musala/Nala: all seven classical planets share one sign
+    quality (movable/fixed/dual)."""
+    qualities = {signs[p] % 3 for p in CLASSICAL_PLANETS}
+    single_quality = qualities if len(qualities) == 1 else None
+    quality = next(iter(single_quality)) if single_quality else None
+    specs = [
+        (0, "rajju_yoga", "Rajju Yoga", "movable"),
+        (1, "musala_yoga", "Musala Yoga", "fixed"),
+        (2, "nala_yoga", "Nala Yoga", "dual"),
+    ]
+    out = []
+    for q, rule_id, name, label in specs:
+        active = quality == q
+        out.append(_result(
+            rule_id, name, "Nabhasa / Ashraya", active, "moderate" if active else "none",
+            f"All seven classical planets occupy {label} signs.",
+            [f"All planets in {label} signs"] if active else [],
+            list(CLASSICAL_PLANETS),
+            verified=False,
+            notes=["Ashraya group: a whole-chart placement pattern, not tied to a house or lord."],
+        ))
+    return out
+
+
+def _dala_yogas(signs: dict[str, int], lagna_sign: int) -> list[dict]:
+    """Mala (benefic) / Sarpa (malefic): Mercury+Venus+Jupiter, or
+    Sun+Mars+Saturn, each individually placed in a kendra (1/4/7/10) from
+    Lagna."""
+    def _in_kendra(planets: list[str]) -> tuple[bool, list[str]]:
+        houses = {p: house_from_lagna(signs[p], lagna_sign) for p in planets}
+        active = all(h in KENDRA_HOUSES for h in houses.values())
+        triggers = [f"{p} in house {h} from Lagna" for p, h in houses.items()] if active else []
+        return active, triggers
+
+    mala_active, mala_triggers = _in_kendra(["Mercury", "Venus", "Jupiter"])
+    sarpa_active, sarpa_triggers = _in_kendra(["Sun", "Mars", "Saturn"])
+    return [
+        _result(
+            "mala_yoga", "Mala Yoga", "Nabhasa / Dala", mala_active,
+            "moderate" if mala_active else "none",
+            "Mercury, Venus and Jupiter each occupy a kendra (1/4/7/10) from Lagna.",
+            mala_triggers, ["Mercury", "Venus", "Jupiter"],
+            verified=False,
+            notes=["Dala group, benefic form: 'mutual kendras' read as each planet "
+                   "individually in a kendra from Lagna (convention — see Sarpa Yoga)."],
+        ),
+        _result(
+            "sarpa_yoga", "Sarpa Yoga", "Nabhasa / Dala (Caution)", sarpa_active,
+            "moderate" if sarpa_active else "none",
+            "Sun, Mars and Saturn each occupy a kendra (1/4/7/10) from Lagna.",
+            sarpa_triggers, ["Sun", "Mars", "Saturn"],
+            verified=False,
+            notes=["Dala group, caution form — a caution flag, not a verdict.",
+                   "'Mutual kendras' read as each planet individually in a kendra from "
+                   "Lagna, not pairwise 90 degree separation between the three planets; "
+                   "sources are not fully explicit on which reading is intended."],
+        ),
+    ]
+
+
+def _sankhya_yoga(signs: dict[str, int]) -> dict:
+    """Gola/Yuga/Shoola/Kedara/Pasa/Dama: graded by how many distinct
+    signs the seven classical planets occupy (1 through 6; 7 distinct
+    signs forms no Sankhya yoga in the source used for this pass)."""
+    occupied = {signs[p] for p in CLASSICAL_PLANETS}
+    count = len(occupied)
+    rule_id, name = _SANKHYA_NAMES.get(count, (None, None))
+    active = rule_id is not None
+    return _result(
+        rule_id or "sankhya_yoga", name or "Sankhya Yoga (none)", "Nabhasa / Sankhya",
+        active, "moderate" if active else "none",
+        "Graded by the count of distinct signs occupied by the seven classical "
+        "planets: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama.",
+        [f"Seven classical planets occupy {count} distinct signs"] if active else [],
+        list(CLASSICAL_PLANETS),
+        verified=False,
+        notes=[f"{count} distinct sign(s) occupied.",
+               "Nodes (Rahu/Ketu) excluded, matching the classical Sankhya definition."],
+    )
+
+
 def yoga_summary(positions: dict, lagna_lon: float) -> dict:
     signs = _planet_signs(positions)
     lagna_sign = sign_index(lagna_lon)
@@ -663,6 +768,9 @@ def yoga_summary(positions: dict, lagna_lon: float) -> dict:
         *_dhana_yoga(signs, lagna_sign),
         *_vipareeta_raja(signs, lagna_sign),
         _kalasarpa(signs),
+        *_ashraya_yogas(signs),
+        *_dala_yogas(signs, lagna_sign),
+        _sankhya_yoga(signs),
     ]
     active = [y for y in yogas if y["active"]]
     categories = {}
