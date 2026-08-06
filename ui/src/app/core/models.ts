@@ -250,9 +250,13 @@ export interface DailyColorSwatch {
 }
 
 export interface DailyActionRow {
+  /** Short, card-friendly form — e.g. "Finance: a good day to review your numbers". */
+  headline: string;
+  /** Full sentence with the reason behind it, for the Why-reading sheet. */
   text: string;
   source: string;
-  window?: string;
+  /** Present for domain-based rows (Finance/Love/Health/Growth/Career); absent for tarabala. */
+  domain?: string;
 }
 
 export interface DailyGuidancePayload {

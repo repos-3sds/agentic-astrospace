@@ -23,6 +23,30 @@
     }
   </div>
 
+  @if (references().length) {
+    <p class="eyebrow">SOURCES</p>
+    <div class="sources">
+      @for (ref of references(); track ref.source_location) {
+        <div class="source-row">
+          <p class="source-statement">{{ ref.statement }}</p>
+          <p class="source-location">{{ ref.source_location }}</p>
+        </div>
+      }
+    </div>
+  }
+
+  @if (doAvoidExplained().length) {
+    <p class="eyebrow">DO &amp; AVOID, EXPLAINED</p>
+    <div class="sources">
+      @for (row of doAvoidExplained(); track row.headline) {
+        <div class="source-row">
+          <p class="source-statement">{{ row.detail }}</p>
+          <p class="source-location">{{ row.kind === 'do' ? 'DO' : 'AVOID' }} · {{ row.headline }}</p>
+        </div>
+      }
+    </div>
+  }
+
   <div class="chips">
     @for (chip of conventions(); track chip) {
       <span class="chip">{{ chip }}</span>

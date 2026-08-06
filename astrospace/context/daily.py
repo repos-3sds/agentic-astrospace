@@ -13,7 +13,9 @@ presentable `daily_guidance` payload is assembled entirely from that bundle.
 """
 from __future__ import annotations
 
+import hashlib
 from datetime import datetime
+from typing import Sequence
 from zoneinfo import ZoneInfo
 
 from ..core.vedic.constants import PLANET_COLORS, PLANET_NUMBER
@@ -352,44 +354,224 @@ def _reading(chart, relation: str, day_payload: dict, personal: dict, ctx: dict,
     }
 
 
-def _do_and_avoid(day_payload: dict, personal: dict, ctx: dict,
-                  words: dict) -> tuple[list[dict], list[dict]]:
-    poss = words["poss"]
+def _join_and(items: list[str]) -> str:
+    """"A", "A and B", or "A, B and C" — never an Oxford comma-less run-on."""
+    if len(items) == 1:
+        return items[0]
+    if len(items) == 2:
+        return f"{items[0]} and {items[1]}"
+    return f"{', '.join(items[:-1])} and {items[-1]}"
+
+
+def _pick(seed: str, options: Sequence[str]) -> str:
+    """Deterministic phrase rotation: same person + same day + same
+    condition always lands on the same option (reproducible, not
+    random-feeling on refresh), but a different day, a different person, or
+    a different condition lands somewhere else. Outer-planet transits stay
+    active for weeks to months, so naming *what's* active isn't enough on
+    its own to stop the sentence repeating verbatim for that whole span —
+    this is what actually varies the wording underneath it.
+    """
+    digest = hashlib.sha256(seed.encode()).hexdigest()
+    return options[int(digest, 16) % len(options)]
+
+
+_TARA_HEADLINE_FRAMES = [
+    "Today's tara: {tara}",
+    "Your tara today: {tara}",
+    "Tara of the day: {tara}",
+]
+
+_CHANDRASHTAMA_REASON = "the Moon is in a sensitive spot from your birth Moon today (chandrashtama)"
+
+_GHATAK_TYPE_LABEL = {
+    "month": "today's lunar month",
+    "day": "today's weekday",
+    "nakshatra": "today's nakshatra",
+    "tithi": "today's tithi",
+    "chandra": "today's Moon sign",
+}
+
+# Classical house significations, grouping the 12 houses into the five life
+# domains a user actually thinks in. Houses 3/6/10 have no domain here: 10th
+# (career) is never touched by any of the 8 gochara rules (see below), and
+# 3rd/6th aren't in play for the rules this maps.
+_HOUSE_DOMAIN = {
+    2: "Finance", 11: "Finance",
+    7: "Love",
+    1: "Health", 8: "Health", 12: "Health",
+    4: "Growth", 5: "Growth", 9: "Growth",
+}
+
+# No gochara rule's `active_houses` ever includes the 10th (see
+# gocharam/rules.py) — career can't be read off a house trigger the way the
+# other four domains are, so it comes from the current finest-grain dasha
+# lord instead (a real, per-person, slowly-varying signal). Always DO-framed:
+# a dasha lord isn't inherently a warning, and there's no classical basis for
+# "avoid your career today" from lord alone.
+_CAREER_THEME = {
+    "Sun": "step into a leadership moment",
+    "Moon": "lean on people-facing or caregiving work",
+    "Mars": "push the task that needs decisive action",
+    "Mercury": "handle the communication-heavy parts of work",
+    "Jupiter": "teach, mentor, or take the long view at work",
+    "Venus": "lean into collaborative or creative work",
+    "Saturn": "put in the disciplined, unglamorous work",
+    "Rahu": "chase the ambitious, unconventional move at work",
+    "Ketu": "handle the behind-the-scenes work without needing credit",
+}
+
+_DOMAIN_PHRASES = {
+    ("Finance", "do"): [
+        "a good day to review your numbers",
+        "steady ground for money decisions",
+        "worth checking in on your finances",
+        "a fair day to plan ahead financially",
+    ],
+    ("Finance", "avoid"): [
+        "hold off on big purchases or commitments",
+        "not the day for financial risk-taking",
+        "keep spending decisions small and reversible",
+        "double-check the numbers before committing",
+    ],
+    ("Love", "do"): [
+        "a good day for an honest conversation",
+        "warmth lands well with people today",
+        "worth making time for someone who matters",
+        "a fair day to repair or deepen a bond",
+    ],
+    ("Love", "avoid"): [
+        "give people a little more space than usual",
+        "not the day to force a hard conversation",
+        "go gently — patience matters more than being right",
+        "keep expectations modest in relationships today",
+    ],
+    ("Health", "do"): [
+        "a good day to build a healthy habit",
+        "your energy holds up well for routine care",
+        "worth prioritising rest and recovery",
+        "a fair day for steady, ordinary self-care",
+    ],
+    ("Health", "avoid"): [
+        "keep today lighter than usual",
+        "rest matters more than pushing today",
+        "go easy on yourself today",
+        "not a day to overextend physically",
+    ],
+    ("Growth", "do"): [
+        "a good day to learn something new",
+        "worth reflecting on the bigger picture",
+        "a fair day for study or quiet planning",
+        "lean into whatever feels meaningful, not just urgent",
+    ],
+    ("Growth", "avoid"): [
+        "avoid overthinking decisions that don't need it yet",
+        "not the day to force a big-picture decision",
+        "keep plans flexible rather than locked in",
+        "give yourself room to sit with uncertainty today",
+    ],
+    ("Career", "do"): [
+        "a good day to make progress at work",
+        "worth pushing the task that actually matters",
+        "a fair day to take initiative at work",
+        "steady ground for the work that needs doing",
+    ],
+}
+
+# Highest-severity signal wins a domain's line, and wins one of the two
+# capped slots per side — a Sade Sati (high) shouldn't lose its spot to a
+# Guru Bala (supportive) just by list order.
+_SEVERITY_RANK = {"high": 0, "medium": 1, "supportive": 2}
+
+
+def _domain_candidates(ctx: dict, personal: dict, seed_base: str) -> list[dict]:
+    """One candidate per (domain, stance) with a real signal today, ranked by
+    the underlying rule's severity. `_do_and_avoid` sorts and caps these —
+    this just finds and words them.
+    """
+    candidates: list[dict] = []
+    claimed: dict[str, str] = {}  # domain -> stance already taken (first/highest-ranked wins)
+
+    def add(domain: str, stance: str, reason: str, rank: int) -> None:
+        if claimed.get(domain) == stance:
+            return
+        claimed[domain] = stance
+        phrase = _pick(f"{seed_base}-{domain}-{stance}", _DOMAIN_PHRASES[(domain, stance)])
+        candidates.append({
+            "domain": domain,
+            "stance": stance,
+            "rank": rank,
+            "headline": f"{domain}: {phrase}",
+            "text": f"{domain}: {phrase} — {reason}.",
+        })
+
+    ranked_supportive = sorted(ctx["supportive_rules"], key=lambda r: _SEVERITY_RANK.get(r.get("severity"), 3))
+    for rule in ranked_supportive:
+        domain = _HOUSE_DOMAIN.get(rule["house"])
+        if domain:
+            add(domain, "do", f"{rule['name']} is active", _SEVERITY_RANK.get(rule.get("severity"), 3))
+
+    ranked_challenging = sorted(ctx["challenging_rules"], key=lambda r: _SEVERITY_RANK.get(r.get("severity"), 3))
+    for rule in ranked_challenging:
+        domain = _HOUSE_DOMAIN.get(rule["house"])
+        if domain:
+            add(domain, "avoid", f"{rule['name']} is active", _SEVERITY_RANK.get(rule.get("severity"), 3))
+
+    # Chandrashtama and matched ghatak markers are both sensitivity signals —
+    # they fold into Health as a reason rather than staying separate lines.
+    if personal.get("chandrabala", {}).get("chandrashtama"):
+        add("Health", "avoid", _CHANDRASHTAMA_REASON, 0)
+    matched = [alert for alert in personal.get("ghatak_alerts", []) if alert.get("matched")]
+    if matched:
+        labels = [_GHATAK_TYPE_LABEL.get(alert["type"], "today") for alert in matched]
+        verb = "matches" if len(labels) == 1 else "match"
+        add("Health", "avoid", f"{_join_and(labels)} {verb} one of your personal ghatak markers", 1)
+
+    dasha_chain = ctx.get("dasha_chain") or []
+    if dasha_chain:
+        lord = dasha_chain[-1]["lord"]
+        theme = _CAREER_THEME.get(lord)
+        if theme:
+            add("Career", "do", f"your current {lord} period favours this", 2)
+
+    return candidates
+
+
+def _do_and_avoid(personal: dict, ctx: dict, words: dict,
+                  seed_base: str) -> tuple[list[dict], list[dict]]:
+    """`seed_base` is a per-person, per-day fingerprint (see `_pick`) — every
+    rotating line below is keyed off it plus its own condition name, so two
+    different people (or the same person on two different days) land on
+    different phrasing even when the same rule or dasha lord is active for
+    both. Bullets are organised by life domain (Finance/Love/Health/Growth/
+    Career), not by which engine produced them, and capped at the top two
+    per side so the card stays a glance, not a checklist of every domain
+    every day.
+    """
     do: list[dict] = []
     avoid: list[dict] = []
 
-    tara = personal.get("tarabala", {})
-    if tara.get("tara") in _FAVOURABLE_TARAS:
-        do.append({"text": "Good for meaningful starts, follow-through and important conversations",
-                   "source": "tarabala"})
-    elif tara.get("tara") and tara.get("tara") != "Janma":
-        avoid.append({"text": "Hold off on major new commitments unless they are necessary",
-                      "source": "tarabala"})
+    # Tarabala is the day's general rhythm rather than one life area, so it
+    # stays a separate line and doesn't compete for the domain slots.
+    tara = personal.get("tarabala", {}).get("tara")
+    if tara:
+        meaning = TARABALA_MEANING[tara].format(**words)
+        headline = _pick(f"{seed_base}-tarabala-headline", _TARA_HEADLINE_FRAMES).format(tara=tara)
+        row = {
+            "headline": headline,
+            "text": f"Today's tara is {tara} — {meaning}.",
+            "source": "tarabala",
+        }
+        (do if tara in _FAVOURABLE_TARAS else avoid).append(row)
 
-    if personal.get("chandrabala", {}).get("chandrashtama"):
-        avoid.append({"text": "Postpone big decisions and travel if you can",
-                      "source": "chandrabala"})
+    domain_candidates = _domain_candidates(ctx, personal, seed_base)
+    do_domains = sorted((c for c in domain_candidates if c["stance"] == "do"), key=lambda c: c["rank"])[:2]
+    avoid_domains = sorted((c for c in domain_candidates if c["stance"] == "avoid"), key=lambda c: c["rank"])[:2]
+    for c in do_domains:
+        do.append({"headline": c["headline"], "text": c["text"], "source": "domain", "domain": c["domain"]})
+    for c in avoid_domains:
+        avoid.append({"headline": c["headline"], "text": c["text"], "source": "domain", "domain": c["domain"]})
 
-    for rule in ctx["supportive_rules"]:
-        do.append({"text": "Plan, learn, seek guidance or ask for help from the right person",
-                   "source": "gochara"})
-    for rule in ctx["challenging_rules"]:
-        avoid.append({"text": "Avoid rushed, risky or ego-driven moves",
-                      "source": "gochara"})
-
-    abhijit = _find_window(day_payload["windows"]["auspicious"], "Abhijit")
-    if abhijit:
-        do.append({"text": f"Use {_window_time(abhijit)} for your most important start or decision",
-                   "source": "muhurta", "window": _window_time(abhijit)})
-    rahu = _find_window(day_payload["windows"]["inauspicious"], "Rahu Kalam")
-    if rahu:
-        avoid.append({"text": f"Keep {_window_time(rahu)} for routine work, not fresh starts",
-                      "source": "muhurta", "window": _window_time(rahu)})
-
-    for alert in personal.get("ghatak_alerts", []):
-        if alert.get("matched"):
-            avoid.append({"text": "Treat the day as sensitive; avoid unnecessary risk or confrontation",
-                          "source": "ghatak"})
     return do, avoid
 
 
@@ -438,7 +620,10 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
     astro_number = favourable["astrological_number"]
 
     verdict = _verdict(chart, relation or "", day_payload, personal, ctx)
-    do_today, avoid_today = _do_and_avoid(day_payload, personal, ctx, words)
+    # jd_ut is a per-birth-instant float — a real per-person fingerprint, not
+    # a display name two profiles might share ("My chart" is common).
+    seed_base = f"{chart.moment.jd_ut}-{as_of.date().isoformat()}"
+    do_today, avoid_today = _do_and_avoid(personal, ctx, words, seed_base)
     reading = _reading(chart, relation or "", day_payload, personal, ctx,
                        verdict, do_today, avoid_today)
 

@@ -44,6 +44,23 @@
 .calc-value { @include m-body-strong; color: var(--m-text); margin: 0; text-align: right; }
 .rule { height: 1px; background: var(--m-border); }
 
+.sources {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.source-row {
+  padding: 12px 15px;
+  background: var(--m-raised);
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+}
+
+.source-statement { @include m-body-small; color: var(--m-text); margin: 0 0 4px; }
+.source-location { @include m-caption; color: var(--m-muted); margin: 0; }
+
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .chip {

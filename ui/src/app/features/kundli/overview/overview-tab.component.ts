@@ -205,8 +205,8 @@ export class OverviewTabComponent {
   }
 
   protected timingChip(d: DailyGuidancePayload): string {
-    const window = d.avoid_today.find((row) => row.source === 'muhurta' && row.window)?.window;
-    return window ? `Routine ${window}` : 'Check windows';
+    const rahu = d.muhurta_windows.find((w) => w.name.startsWith('Rahu Kalam'))?.time;
+    return rahu ? `Routine ${rahu}` : 'Check windows';
   }
 
   protected numbersAgree(d: DailyGuidancePayload): boolean {

@@ -4,7 +4,9 @@ import { DayGaugeComponent } from '../day-gauge/day-gauge.component';
 import { DayQualitySheetComponent, DaySignal } from './day-quality-sheet.component';
 import { ListenSheetComponent } from './listen-sheet.component';
 import {
+  DoAvoidExplainer,
   EvidenceRow,
+  SourceReference,
   WhyReadingSheetComponent,
 } from '../why-reading/why-reading-sheet.component';
 import { KundliStore } from '../../../core/kundli.store';
@@ -67,18 +69,6 @@ export function gaugePositionFromScore(score: number): number {
   return Math.round(floor + within * (ceiling - floor));
 }
 
-function gaugePositionFromDaily(daily: DailyGuidancePayload): number {
-  let score = 50;
-  score += daily.chandrabala.favourable ? 22 : -22;
-  score += daily.tarabala.favourable ? 18 : -18;
-  score += Math.min(2, daily.muhurta_windows.filter((row) => row.kind === 'auspicious').length) * 5;
-  score -= Math.min(2, daily.muhurta_windows.filter((row) => row.kind === 'inauspicious').length) * 5;
-  score -= Math.min(2, daily.context.active_gochara.filter((row) => row.severity === 'high').length) * 8;
-  if (daily.verdict.tone === 'supportive') score += 8;
-  if (daily.verdict.tone === 'caution') score -= 8;
-  return Math.round(Math.max(1, Math.min(100, score)));
-}
-
 function scoreReason(daily: DailyGuidancePayload): string {
   const highTransits = daily.context.active_gochara.filter((row) => row.severity === 'high').length;
   const difficultWindows = daily.muhurta_windows.filter((row) => row.kind === 'inauspicious').length;
@@ -115,6 +105,43 @@ function plainTarabala(daily: DailyGuidancePayload): string {
     : 'Today’s star asks for care, so simplify plans and avoid forcing outcomes that can wait.';
 }
 
+function minutesSinceMidnight(hhmm: string): number {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function formatDuration(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
+/**
+ * "Starts in 40m" / "Ends in 1h 10m" for the Rahu Kalam window the Timing
+ * Note already names. Both "now" and the window are wall-clock times in the
+ * same place timezone, so this is a same-timezone comparison, not a UTC
+ * conversion — Intl.DateTimeFormat just reads today's wall clock in that
+ * timezone rather than the device's own.
+ */
+function muhurtaCountdown(daily: DailyGuidancePayload): string {
+  const rahu = daily.muhurta_windows.find((w) => w.name.startsWith('Rahu Kalam'));
+  if (!rahu) return '';
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: daily.provenance.place.timezone,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(new Date());
+  const part = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+  // The guidance is cached per day; only show a live countdown for the day
+  // it actually describes, not a stale "starts in" on yesterday's cache.
+  if (`${part('year')}-${part('month')}-${part('day')}` !== daily.date) return '';
+  const nowMinutes = Number(part('hour')) * 60 + Number(part('minute'));
+  const [start, end] = rahu.time.split(/[–-]/).map(minutesSinceMidnight);
+  if (nowMinutes < start) return `Starts in ${formatDuration(start - nowMinutes)}`;
+  if (nowMinutes < end) return `Ends in ${formatDuration(end - nowMinutes)}`;
+  return '';
+}
+
 /** Verdict bands. Named, not numeric, so tone rules can key off them. */
 export type DayBand = 'steady' | 'mixed' | 'tough';
 
@@ -148,8 +175,8 @@ export interface TodayView {
   scoreLabel: string;
   verdict: string;
   detail: string;
-  doItem: string;
-  avoidItem: string;
+  doItems: string[];
+  avoidItems: string[];
   nextWindowLabel: string;
   nextWindowValue: string;
   nextWindowIn: string;
@@ -263,6 +290,12 @@ export class TodayComponent {
 
   readonly calculation = signal<EvidenceRow[]>([]);
 
+  /** Real KB citations behind today's routing — see context.references. */
+  readonly references = signal<SourceReference[]>([]);
+
+  /** Full reasoning behind each Do/Avoid card headline — see do_today/avoid_today. */
+  readonly doAvoidExplained = signal<DoAvoidExplainer[]>([]);
+
   /**
    * Practitioner Board (Figma 212:751) — the dedicated dense dashboard for
    * practitioner mode, distinct from the Guided/Balanced Today layout rather
@@ -349,7 +382,7 @@ export class TodayComponent {
       initial: name.slice(0, 1).toUpperCase(),
       dateLabel,
       place: daily.provenance.place.city || city,
-      score: gaugePositionFromDaily(daily),
+      score: gaugePositionFromScore(daily.verdict.score),
       band,
       scoreLabel: band === 'steady' ? 'Steady' : band === 'mixed' ? 'Mixed' : 'Take care',
       verdict: daily.verdict.headline,
@@ -358,11 +391,15 @@ export class TodayComponent {
       // down and shoved Do/Avoid off-screen entirely. The long form is not
       // lost: it is what the "Why this reading?" sheet opens with.
       detail: daily.reading.summary,
-      doItem: daily.do_today[0]?.text ?? daily.reading.best_for[0] ?? daily.reading.focus,
-      avoidItem: daily.avoid_today[0]?.text ?? daily.reading.avoid[0] ?? daily.reading.timing_note,
+      doItems: daily.do_today.length
+        ? daily.do_today.map((row) => row.headline)
+        : [daily.reading.best_for[0] ?? daily.reading.focus],
+      avoidItems: daily.avoid_today.length
+        ? daily.avoid_today.map((row) => row.headline)
+        : [daily.reading.avoid[0] ?? daily.reading.timing_note],
       nextWindowLabel: 'TIMING NOTE',
       nextWindowValue: daily.reading.timing_note,
-      nextWindowIn: '',
+      nextWindowIn: muhurtaCountdown(daily),
     });
     this.loadedDaily.set({
       name,
@@ -401,6 +438,11 @@ export class TodayComponent {
       label: `Signal ${index + 1}`,
       value,
     })));
+    this.references.set(daily.context.references);
+    this.doAvoidExplained.set([
+      ...daily.do_today.map((row) => ({ kind: 'do' as const, headline: row.headline, detail: row.text })),
+      ...daily.avoid_today.map((row) => ({ kind: 'avoid' as const, headline: row.headline, detail: row.text })),
+    ]);
     this.conventions.set([
       daily.system,
       this.preferences.ayanamsha(),
@@ -443,10 +485,25 @@ export class TodayComponent {
         ],
       },
     ]);
+    // The third question leans into what this persona already sees on the
+    // rest of the screen: Practitioner has AV bindus and a dasha chain right
+    // there, so "explain this nakshatra in simple words" undersells it.
+    const activePlanet = daily.context.active_gochara[0]?.planet;
+    const currentDashaLord = daily.context.dasha_chain.at(-1)?.lord;
+    const practitionerQuestion = activePlanet
+      ? `What does ${activePlanet}'s current transit mean for my chart specifically?`
+      : currentDashaLord
+        ? `How is my ${currentDashaLord} period shaping today's reading?`
+        : `Explain ${daily.star_of_day.nakshatra} nakshatra in simple words`;
     this.askSuggestions.set([
       `Why is today ${daily.verdict.tone === 'caution' ? 'a caution day' : 'supportive'} for me?`,
-      `What should I do with ${daily.reading.focus.toLowerCase()} today?`,
-      `Explain ${daily.star_of_day.nakshatra} nakshatra in simple words`,
+      // daily.reading.focus is a full coaching paragraph ("Downshift. This is
+      // a day for..."), not a short phrase — grafting it into "with X today?"
+      // read as a broken run-on. The question stands on its own instead.
+      'What should today’s focus be for me?',
+      this.preferences.experienceMode() === 'practitioner'
+        ? practitionerQuestion
+        : `Explain ${daily.star_of_day.nakshatra} nakshatra in simple words`,
     ]);
   }
 

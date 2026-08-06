@@ -1,3 +1,21 @@
+<div class="celestial-sky" aria-hidden="true">
+  <div class="celestial-sun"></div>
+  <div class="orbit-system">
+    <div class="orbit-rotor">
+      <span class="orbit-ring r1"></span>
+      <span class="orbit-ring r2"></span>
+      <span class="orbit-ring r3"></span>
+      <span class="orbit-ring r4"></span>
+      <span class="orbit-ring r5"></span>
+      <span class="planet mercury"></span>
+      <span class="planet venus"></span>
+      <span class="planet mars"></span>
+      <span class="planet jupiter"></span>
+      <span class="planet saturn"><span class="saturn-ring"></span></span>
+    </div>
+  </div>
+</div>
+
 <header class="appbar">
   <button class="identity" type="button" (click)="profileSwitcherOpen.set(true)" aria-label="Switch profile">
     <div class="avatar" aria-hidden="true">{{ headerInitial() }}</div>
@@ -10,7 +28,7 @@
     <a class="iconbtn" [routerLink]="['/m', 'notifications']" aria-label="Notifications">
       <img src="mobile/set-notif.svg" alt="" aria-hidden="true" />
     </a>
-    <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search SIDDHA">
+    <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search Siddha">
       <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
         <circle cx="8.75" cy="8.75" r="5.75"></circle>
         <path d="m13 13 4 4"></path>
@@ -100,14 +118,28 @@
         <img [src]="preferences.experienceMode() === 'guided' ? 'mobile/trending-up.svg' : 'mobile/do.svg'" alt="" aria-hidden="true" />
         <p class="eyebrow">DO</p>
       </div>
-      <p class="advice-body">{{ v.doItem }}</p>
+      <div class="advice-list">
+        @for (item of v.doItems; track item) {
+          <div class="advice-item">
+            <span class="advice-dot" aria-hidden="true"></span>
+            <p class="advice-body">{{ item }}</p>
+          </div>
+        }
+      </div>
     </article>
     <article class="advice-card avoid">
       <div class="advice-head">
         <img [src]="preferences.experienceMode() === 'guided' ? 'mobile/alert-triangle.svg' : 'mobile/avoid.svg'" alt="" aria-hidden="true" />
         <p class="eyebrow">AVOID</p>
       </div>
-      <p class="advice-body">{{ v.avoidItem }}</p>
+      <div class="advice-list">
+        @for (item of v.avoidItems; track item) {
+          <div class="advice-item">
+            <span class="advice-dot" aria-hidden="true"></span>
+            <p class="advice-body">{{ item }}</p>
+          </div>
+        }
+      </div>
     </article>
   </div>
 
@@ -213,7 +245,7 @@
     </div>
   }
 
-  <p class="eyebrow section-label">REFLECT WITH <span class="siddha-brand">SIDDHA</span></p>
+  <p class="eyebrow section-label">REFLECT WITH <span class="siddha-brand">Siddha</span></p>
   <div class="suggestions">
     @for (q of askSuggestions(); track q) {
       <a class="suggestion" [routerLink]="['/m', 'ask']" [queryParams]="{ q }">
@@ -270,6 +302,8 @@
     [mode]="whyMode()"
     [plainWords]="plainWords()"
     [calculation]="calculation()"
+    [references]="references()"
+    [doAvoidExplained]="doAvoidExplained()"
     [conventions]="conventions()"
     (dismissed)="openSheet.set(null)"
   />
