@@ -51,6 +51,13 @@ export class GuidedExploreComponent {
       tone: 'good',
     },
     {
+      title: 'Muhurthas',
+      body: 'Pick better windows for travel, contracts, purchases, and important starts.',
+      route: ['/m', 'muhurta'],
+      icon: 'figma-yantra-calendar',
+      tone: 'gold',
+    },
+    {
       title: 'Life Chapters',
       body: 'Understand the season you are in and the lessons it is asking of you.',
       route: ['/m', 'explore', 'life-chapters'],

@@ -58,4 +58,64 @@
       (click)="toggleGentleVoice()"
     ></button>
   </div>
+
+  <p class="eyebrow">VOICE</p>
+
+  @if (!nativeAvailable) {
+    <p class="voice-note">Voice selection is available when using the app on your phone.</p>
+  } @else if (voicesLoading()) {
+    <p class="voice-note">Reading the voices installed on this device…</p>
+  } @else {
+    <p class="voice-note">Tap a voice to hear it.</p>
+
+    <div class="voice-upgrade">
+      <p class="voice-note">
+        Voices sound robotic at their default download size. For a more
+        natural reading voice, open your phone's own Settings, then go to
+        <strong>{{ voiceSettingsPath() }}</strong> and download a higher-quality
+        voice when your device offers one — it will then show up in the list below.
+      </p>
+      <button type="button" class="settings-link" (click)="openVoiceSettings()">
+        Open Voice Settings
+      </button>
+    </div>
+
+    <div class="choice-list" role="radiogroup" aria-label="Reading voice">
+      <button
+        class="choice"
+        type="button"
+        role="radio"
+        [class.is-on]="isSelected(null)"
+        [attr.aria-checked]="isSelected(null)"
+        (click)="chooseVoice(null)"
+      >
+        <span class="choice-left">
+          <span class="choice-label">Automatic (recommended)</span>
+        </span>
+        @if (previewing() === null && isSelected(null)) {
+          <img class="choice-tick" src="mobile/check-accent.svg" alt="" aria-hidden="true" />
+        }
+      </button>
+      @for (voice of voices(); track voice.name) {
+        <button
+          class="choice"
+          type="button"
+          role="radio"
+          [class.is-on]="isSelected(voice.name)"
+          [attr.aria-checked]="isSelected(voice.name)"
+          (click)="chooseVoice(voice.name)"
+        >
+          <span class="choice-left">
+            <span class="choice-label">{{ voiceLabel(voice) }}</span>
+          </span>
+          @if (isSelected(voice.name)) {
+            <img class="choice-tick" src="mobile/check-accent.svg" alt="" aria-hidden="true" />
+          }
+        </button>
+      }
+      @if (!voices().length) {
+        <p class="voice-note">No extra voices found — your phone is using its one built-in voice.</p>
+      }
+    </div>
+  }
 </div>

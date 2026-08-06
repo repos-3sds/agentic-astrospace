@@ -36,10 +36,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px 10px;
+  height: 64px;
+  box-sizing: border-box;
+  padding: 10px 20px;
 }
 
-.identity { display: flex; align-items: center; gap: 11px; border:0; padding:0; background:none; text-align:left; }
+.identity { display: flex; min-width: 0; align-items: center; gap: 11px; border:0; padding:0; background:none; text-align:left; }
+.app-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
 
 .avatar {
   width: 42px;
@@ -56,9 +64,15 @@
   flex-shrink: 0;
 }
 
-.who { display: flex; flex-direction: column; gap: 1px; }
+.who { display: flex; min-width: 0; flex-direction: column; gap: 1px; }
 .name { @include m-body-strong; color: var(--m-text); margin: 0; }
 .date { @include m-caption; color: var(--m-muted); margin: 0; }
+.name,
+.date {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .iconbtn {
   width: 40px;
@@ -80,6 +94,12 @@
     stroke-linecap: round;
     stroke-linejoin: round;
   }
+  img {
+    width: 19px;
+    height: 19px;
+    display: block;
+    filter: var(--m-back-icon-filter);
+  }
 }
 
 /* Content column — node 13:14 */
@@ -87,7 +107,7 @@
   display: flex;
   flex-direction: column;
   gap: 22px;
-  padding: 12px 24px 32px;
+  padding: 8px 24px 32px;
 }
 
 .eyebrow { @include m-eyebrow; color: var(--m-accent); margin: 0; }

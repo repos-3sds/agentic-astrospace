@@ -17,7 +17,7 @@
   </header>
 
   <nav class="tabs" aria-label="Strength calculation">
-    @for (item of [{id: 'shadbala', label: 'Shadbala'}, {id: 'ashtakavarga', label: 'Ashtakavarga'}, {id: 'jaimini', label: 'Jaimini'}]; track item.id) {
+    @for (item of [{id: 'shadbala', label: 'Shadbala'}, {id: 'ashtakavarga', label: 'Ashtakavarga'}, {id: 'jaimini', label: 'Jaimini'}, {id: 'vimshopaka', label: 'Vimshopaka'}]; track item.id) {
       <button type="button" [class.is-on]="tab() === item.id" (click)="selectTab($any(item.id))">{{ item.label }}</button>
     }
   </nav>
@@ -99,6 +99,48 @@
       <section class="data-list">
         @for (row of specialLagnas(); track row[0]) {
           <div class="data-row"><span><b>{{ row[0] }}</b><small>{{ row[1] }}</small></span><em class="accent">{{ row[2] }}</em></div>
+        }
+      </section>
+      <p class="section-title">CHARA DASHA</p>
+      <section class="meaning-card">
+        <b>Current sign period</b>
+        <p>{{ activeChara() }}</p>
+      </section>
+      <section class="data-list">
+        @for (row of charaRows(); track row[0]) {
+          <div class="data-row">
+            <span><b>{{ row[0] }}</b><small>{{ row[1] }} · {{ row[2] }}</small></span>
+            <em class="accent">{{ row[3] }}</em>
+          </div>
+        } @empty {
+          <div class="data-row"><span><b>Chara Dasha</b><small>Endpoint did not return sign periods.</small></span><em>—</em></div>
+        }
+      </section>
+    }
+    @case ('vimshopaka') {
+      <p class="explainer"><img src="mobile/info.svg" alt="" aria-hidden="true" />Weighted dignity across divisional charts. This answers consistency across vargas, not raw event strength.</p>
+      <div class="planet-tabs">
+        @for (scheme of ['shadvarga', 'saptavarga', 'dashavarga', 'shodashavarga']; track scheme) {
+          <button type="button" [class.is-on]="vimshopakaScheme() === scheme" (click)="selectVimshopakaScheme(scheme)">{{ scheme.replace('varga', '') }}</button>
+        }
+      </div>
+      <section class="meaning-card">
+        <b>What this means for you</b>
+        <p>{{ vimshopakaMeaning() }}</p>
+      </section>
+      <section class="strength-list">
+        @for (row of vimshopakaRows(); track row.planet) {
+          <article class="strength-card">
+            <div class="strength-head">
+              <h2>{{ row.planet }}</h2>
+              <span class="status" [class.low]="row.score < 10">{{ row.band }}</span>
+              <strong>{{ row.score }}/{{ row.max }}</strong>
+            </div>
+            <div class="meter"><span [class.low]="row.score < 10" [style.width.%]="row.score / row.max * 100"></span></div>
+            <p>{{ row.scheme }} · strongest varga evidence: {{ row.breakdown[0]?.varga || '—' }}</p>
+          </article>
+        } @empty {
+          <p class="strength-empty">Vimshopaka Bala was not returned for this profile.</p>
         }
       </section>
     }

@@ -19,15 +19,33 @@
         role="radio"
         [class.is-on]="goal.id === selectedGoal()"
         [attr.aria-checked]="goal.id === selectedGoal()"
-        (click)="selectedGoal.set(goal.id)"
+        (click)="selectGoal(goal.id)"
       >
         <span class="goal-icon">
           <img [src]="'mobile/' + goal.icon + '.svg'" alt="" aria-hidden="true" />
         </span>
-        <span class="goal-label">{{ goal.label }}</span>
+        <span class="goal-copy">
+          <span class="goal-label">{{ goal.label }}</span>
+          <small>{{ goal.detail }}</small>
+        </span>
       </button>
     }
   </div>
+
+  @if (selectedGoal() === 'general') {
+    <section class="intent-box">
+      <label for="muhurta-intent">What are you planning?</label>
+      <textarea
+        id="muhurta-intent"
+        rows="3"
+        maxlength="120"
+        placeholder="Example: start a community satsang, register a course, move office..."
+        [value]="customIntent()"
+        (input)="customIntent.set($any($event.target).value)"
+      ></textarea>
+      <p>For custom intents we use a general panchanga screen unless the activity matches a specific ceremony above.</p>
+    </section>
+  }
 
   <p class="eyebrow">WHEN</p>
   <div class="ranges" role="radiogroup" aria-label="When">

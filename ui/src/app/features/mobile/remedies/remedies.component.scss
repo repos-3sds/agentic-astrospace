@@ -21,11 +21,46 @@
 .body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   padding: 8px 20px 24px;
 }
 
-.lede { @include m-body; color: var(--m-muted); margin: 0; }
+.hero {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid var(--m-border);
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--m-accent-soft) 54%, transparent), transparent),
+    var(--m-raised);
+
+  > span {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border-radius: 16px;
+    background: var(--m-surface);
+    img { width: 22px; height: 22px; display: block; }
+  }
+
+  div { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
+  small { @include m-caption; color: var(--m-muted); }
+}
+
+.lede { @include m-body; color: var(--m-text); margin: 0; }
+
+.scope-note {
+  @include m-caption;
+  padding: 12px 14px;
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--m-accent-soft) 58%, var(--m-raised) 42%);
+  color: var(--m-muted);
+}
 
 .remedy-state {
   display: flex;
@@ -43,42 +78,33 @@
   b { @include m-h2; color: var(--m-text); }
   p { @include m-body-small; margin: 0; }
   button {
-    @include m-body-strong;
-    display: inline-flex;
-    justify-content: center;
-    padding: 11px 16px;
-    border: 1px solid var(--m-border-strong);
-    border-radius: 999px;
-    color: var(--m-accent-strong);
-    background: transparent;
+    @include m-cta-secondary;
+    min-height: 42px;
   }
 }
 .remedy-state.error { border-color: var(--m-warn); b { color: var(--m-warn); } }
 
 /* Remedy card — node 29:62 */
 .remedy {
-  background: var(--m-surface);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--m-surface) 96%, white 4%), var(--m-surface));
   border: 1px solid var(--m-border);
-  border-radius: 22px;
+  border-radius: 24px;
   box-shadow: var(--m-shadow-card);
-  padding: 17px 18px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 13px;
+  gap: 12px;
 }
 
 .remedy-head { display: flex; align-items: center; gap: 8px; }
-.remedy-title { @include m-body-strong; color: var(--m-text); margin: 0; flex: 1 1 0; min-width: 0; }
+.remedy-title { @include m-h2; color: var(--m-text); margin: 0; flex: 1 1 0; min-width: 0; }
 
 // The tag names what in the chart this answers to, and takes that thing's own
 // tone. It is not a severity badge — a flag and a dasha are both just facts.
 .tag {
+  @include m-badge;
   flex-shrink: 0;
-  border-radius: 999px;
-  padding: 3px 9px;
-  font-weight: 500;
-  font-size: 10.5px;
-  line-height: 1.4;
   background: var(--m-warn-soft);
   color: var(--m-warn);
 
@@ -94,66 +120,90 @@
   text-transform: capitalize;
 }
 
-/* Practices — node 29:68 */
 .practices {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .practice {
-  display: flex;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
   align-items: flex-start;
-  gap: 9px;
+  gap: 10px 12px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--m-border) 72%, transparent);
+  border-radius: 18px;
+  background: var(--m-raised);
   @include m-body-small;
   color: var(--m-text);
-  img { width: 17px; height: 17px; display: block; flex-shrink: 0; }
+}
 
-  > span {
-    display: flex;
-    min-width: 0;
-    flex: 1 1 0;
-    flex-direction: column;
-    gap: 3px;
-  }
+.practice-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--m-accent-soft);
+  img { width: 19px; height: 19px; display: block; }
+}
 
+.practice-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.practice-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
   b {
     @include m-body-strong;
+    min-width: 0;
     color: var(--m-text);
+    overflow-wrap: anywhere;
   }
-
-  small {
-    @include m-caption;
-    color: var(--m-muted);
-  }
-
   em {
-    @include m-caption;
+    @include m-badge;
     color: var(--m-warn);
+    background: var(--m-warn-soft);
     font-style: normal;
   }
 }
 
-.practice-cta {
+.practice small { @include m-caption; color: var(--m-muted); }
+.practice-meta {
   @include m-caption;
-  flex: 0 0 auto;
-  align-self: center;
-  padding: 7px 10px;
-  border-radius: 999px;
-  background: var(--m-accent-soft);
   color: var(--m-accent-strong);
-  text-decoration: none;
-  white-space: nowrap;
 }
 
-.rule { height: 1px; background: var(--m-border); }
+.practice-cta {
+  @include m-cta-primary;
+  grid-column: 2;
+  width: fit-content;
+  min-width: 154px;
+  max-width: 100%;
+  min-height: 42px;
+  justify-self: start;
+  white-space: nowrap;
+  padding-inline: 14px;
+  font-size: 13px;
+}
 
-/* Caveat and action — node 29:84 */
-.foot { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-
-// Above the button, not beside it or after it: it has to be read before the
-// action, not discovered afterwards.
-.caveat { @include m-caption; color: var(--m-muted); margin: 0; text-align: center; }
+.practice-note {
+  @include m-badge;
+  grid-column: 2;
+  width: fit-content;
+  min-height: 28px;
+  max-width: 100%;
+  justify-self: start;
+  background: color-mix(in srgb, var(--m-border) 34%, transparent);
+  color: var(--m-muted);
+}

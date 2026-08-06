@@ -4,7 +4,7 @@
 .mco-body { display: flex; flex-direction: column; gap: 16px; padding: 4px 20px 16px; }
 header { h1 { @include m-h1; margin: 0 0 3px; } p { @include m-body-small; margin: 0; color: var(--m-muted); } }
 .mco-how { display: flex; flex-direction: column; gap: 8px; padding: 17px 18px; border-radius: 22px; background: var(--m-accent-soft); b { @include m-eyebrow; color: var(--m-accent); } p { @include m-body-small; margin: 0; } }
-.mco-primary { @include m-button; display: flex; align-items: center; justify-content: center; gap: 9px; padding: 16px; border-radius: 999px; color: var(--m-on-ink); background: var(--m-ink); text-decoration: none; box-shadow: var(--m-shadow-card); span { font-size: 22px; line-height: 0; } }
+.mco-primary { @include m-cta-primary; width: 100%; span { font-size: 22px; line-height: 0; } }
 .mco-label { @include m-eyebrow; margin: 0; color: var(--m-muted); }
 .mco-recent { display: flex; align-items: center; gap: 12px; padding: 13px 15px; border: 1px solid var(--m-border); border-radius: 18px; background: var(--m-raised); text-decoration: none; > span:nth-child(2) { display: flex; flex: 1; flex-direction: column; gap: 2px; } b { @include m-body-strong; color: var(--m-text); } small { @include m-caption; color: var(--m-muted); } img { width: 18px; height: 18px; } }
 .mco-avatar { @include m-body-strong; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: var(--m-on-ink); background: var(--m-gold); }
@@ -20,16 +20,9 @@ header { h1 { @include m-h1; margin: 0 0 3px; } p { @include m-body-small; margi
   p { margin:0;font-size:13px; }
   a,
   button {
-    @include m-body-strong;
-    display: inline-flex;
-    justify-content: center;
+    @include m-cta-secondary;
+    min-height: 42px;
     margin-top: 14px;
-    padding: 11px 16px;
-    border: 1px solid var(--m-border-strong);
-    border-radius: 999px;
-    color: var(--m-accent-strong);
-    background: transparent;
-    text-decoration: none;
   }
   button { cursor: pointer; }
   &.error {

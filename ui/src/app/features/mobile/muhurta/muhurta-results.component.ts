@@ -31,6 +31,11 @@ const GOAL_PHRASES: Record<string, string> = {
   buy_property_gold: 'buy property or gold',
   sign_contract: 'sign a contract',
   start_journey: 'start a journey',
+  griha_pravesha: 'do Griha Pravesha',
+  upanayana: 'perform Upanayana',
+  namakarana: 'hold Namakarana',
+  annaprashana: 'hold Annaprashana',
+  vidyarambha: 'begin learning',
   start_venture: 'start a new venture',
   marriage_related: 'plan something marriage-related',
   general: 'do what you’re planning',
@@ -40,6 +45,14 @@ const RANGE_LABELS: Record<string, string> = {
   week: 'This week',
   month: 'This month',
   custom: 'Your dates',
+};
+
+const DEPLOYED_GOAL_FALLBACKS: Record<string, string> = {
+  griha_pravesha: 'buy_property_gold',
+  upanayana: 'general',
+  namakarana: 'general',
+  annaprashana: 'general',
+  vidyarambha: 'start_venture',
 };
 
 /**
@@ -82,6 +95,8 @@ export class MuhurtaResultsComponent {
 
   protected readonly heading = computed(() => {
     const goal = this.params().get('goal') ?? 'sign_contract';
+    const intent = this.params().get('intent')?.trim();
+    if (goal === 'general' && intent) return `Best times for ${intent}`;
     return `Best times to ${GOAL_PHRASES[goal] ?? GOAL_PHRASES['general']}`;
   });
 
@@ -117,7 +132,7 @@ export class MuhurtaResultsComponent {
       const dateFrom = this.params().get('date_from') ?? this.isoDate(new Date());
       const dateTo = this.params().get('date_to') ?? this.isoDate(this.addDays(new Date(), 30));
       const place = this.preferences.panchangaPlace();
-      const payload = await this.vedic.muhurta(activeId, goal, dateFrom, dateTo, place);
+      const payload = await this.loadMuhurta(activeId, goal, dateFrom, dateTo, place);
       this.place.set(place ? `${place.city}, ${place.nation}` : 'current panchanga place');
       this.note.set(payload.note);
       this.disclaimer.set(payload.disclaimer);
@@ -127,6 +142,27 @@ export class MuhurtaResultsComponent {
     } finally {
       this.searched.set(true);
       this.loading.set(false);
+    }
+  }
+
+  private async loadMuhurta(
+    activeId: string,
+    goal: string,
+    dateFrom: string,
+    dateTo: string,
+    place: { city: string; nation: string } | null,
+  ) {
+    try {
+      return await this.vedic.muhurta(activeId, goal, dateFrom, dateTo, place);
+    } catch (error) {
+      const fallback = DEPLOYED_GOAL_FALLBACKS[goal];
+      const message = (error as Error).message ?? '';
+      if (!fallback || !message.toLowerCase().includes('unknown goal')) throw error;
+      const payload = await this.vedic.muhurta(activeId, fallback, dateFrom, dateTo, place);
+      return {
+        ...payload,
+        note: payload.note ?? `Using the closest available panchanga rules for ${GOAL_PHRASES[goal] ?? 'this intent'} until the dedicated backend rule is live.`,
+      };
     }
   }
 

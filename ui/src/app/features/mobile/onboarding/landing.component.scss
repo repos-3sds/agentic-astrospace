@@ -30,6 +30,7 @@
 }
 
 .wordmark {
+  font-family: 'Samarkan', 'Cormorant Garamond', serif;
   font-size: 34px;
   line-height: 0.95;
   color: var(--m-accent-strong);
@@ -58,27 +59,13 @@
 
 .btn {
   width: 100%;
-  box-sizing: border-box;
-  border-radius: 999px;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  text-decoration: none;
-  @include m-button;
 
   &.primary {
-    border: 0;
-    background: var(--m-ink);
-    color: var(--m-on-ink);
-    box-shadow: var(--m-shadow-card);
+    @include m-cta-primary;
   }
 
   &.ghost {
-    border: 1.5px solid var(--m-border-strong);
-    background: none;
-    color: var(--m-accent-strong);
+    @include m-cta-secondary;
   }
 }
 

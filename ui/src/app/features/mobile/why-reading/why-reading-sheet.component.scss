@@ -11,12 +11,10 @@
 .bullet-row { display: flex; align-items: flex-start; gap: 10px; }
 .bullet { width: 6px; height: 6px; display: block; flex-shrink: 0; margin-top: 8px; }
 .bullet-text {
+  @include m-body-small;
   flex: 1 1 0;
   min-width: 0;
   margin: 0;
-  font-weight: 400;
-  font-size: 15px;
-  line-height: 1.52;
   color: var(--m-text);
 }
 
@@ -65,25 +63,16 @@
 .btn {
   flex: 1 1 0;
   min-width: 0;
-  border-radius: 999px;
-  padding: 16px 24px;
-  cursor: pointer;
-  @include m-button;
 
   &.ghost {
-    background: none;
-    border: 1.5px solid var(--m-border-strong);
-    color: var(--m-accent-strong);
+    @include m-cta-secondary;
   }
 
   &.ink {
-    border: 0;
+    @include m-cta-primary;
     // Was a hardcoded light-theme color that never flipped in dark mode,
     // rendering dark text on a near-black button against the sheet's own
     // dark surface — effectively invisible. var(--m-ink) is the token every
     // other primary control in the app already uses for this.
-    background: var(--m-ink);
-    color: var(--m-on-ink);
-    box-shadow: var(--m-shadow-card);
   }
 }

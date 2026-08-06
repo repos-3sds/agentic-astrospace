@@ -1,8 +1,7 @@
 @use '../mobile-tokens' as *;
 
-:host { display: block; }
-
-:host:has(.yantra-appbar) {
+:host {
+  display: block;
   --yantra-bg: var(--m-bg);
   --yantra-surface: var(--m-surface);
   --yantra-raised: var(--m-raised);
@@ -24,7 +23,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px 20px 8px;
+  height: 64px;
+  box-sizing: border-box;
+  padding: 10px 20px;
 }
 
 .screen-title { @include m-title; color: var(--m-text); margin: 0; }
@@ -132,7 +133,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 6px 20px 20px;
+  padding: 8px 20px 20px;
 }
 
 .body[data-mode='practitioner'] {
@@ -409,18 +410,10 @@
 }
 
 .open {
+  @include m-cta-secondary;
   width: 100%;
-  box-sizing: border-box;
-  border-radius: 999px;
   background: var(--m-accent-soft);
-  padding: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  text-decoration: none;
-  cursor: pointer;
-  @include m-button;
+  border: 0;
   color: var(--m-accent-strong);
   img { width: 17px; height: 17px; display: block; }
 }

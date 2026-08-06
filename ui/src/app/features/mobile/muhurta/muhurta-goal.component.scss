@@ -5,7 +5,7 @@
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  padding-bottom: 28px;
+  padding-bottom: max(18px, var(--m-safe-bottom));
 }
 
 /* Back bar — node 30:58 */
@@ -29,7 +29,7 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding: 8px 20px 16px;
+  padding: 8px 20px 22px;
 }
 
 .intro { display: flex; flex-direction: column; gap: 6px; }
@@ -53,8 +53,10 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  justify-content: flex-start;
   gap: 8px;
-  padding: 14px;
+  min-height: 116px;
+  padding: 13px;
   border: 1.2px solid var(--m-border);
   border-radius: 18px;
   background: var(--m-surface);
@@ -83,32 +85,62 @@
   img { width: 20px; height: 20px; display: block; }
 }
 
+.goal-copy {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
 .goal-label { @include m-body-strong; color: var(--m-text); }
+.goal-copy small { @include m-caption; color: var(--m-muted); }
+
+.intent-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--m-border);
+  border-radius: 18px;
+  background: var(--m-raised);
+
+  label { @include m-body-strong; color: var(--m-text); }
+  textarea {
+    @include m-body-small;
+    width: 100%;
+    min-height: 84px;
+    box-sizing: border-box;
+    resize: none;
+    border: 1px solid color-mix(in srgb, var(--m-border) 78%, transparent);
+    border-radius: 14px;
+    padding: 11px 12px;
+    background: var(--m-surface);
+    color: var(--m-text);
+    font: inherit;
+    outline: none;
+  }
+  textarea:focus { border-color: var(--m-accent); }
+  p { @include m-caption; margin: 0; color: var(--m-muted); }
+}
 
 /* Range pills — node 30:103.
    The design's 16px side padding and 10px gap are sized for a 393pt frame; at
    375 the three labels no longer fit on one line each and "This week" breaks
    in half. Tightened just enough to keep them single-line, which is what the
    design's own nowrap was asking for. */
-.ranges { display: flex; gap: 8px; }
+.ranges { @include m-segmented-track; gap: 6px; background: transparent; padding: 0; }
 
 .range {
-  flex: 1 1 0;
-  min-width: 0;
-  box-sizing: border-box;
+  @include m-segmented-button;
   border: 1.2px solid var(--m-border-strong);
-  border-radius: 999px;
   background: none;
-  padding: 11px 10px;
-  cursor: pointer;
   white-space: nowrap;
-  @include m-button;
   color: var(--m-text);
 
   &.is-on {
-    background: var(--m-ink);
+    @include m-selected-pill;
     border-color: var(--m-ink);
-    color: var(--m-on-ink);
   }
 }
 
@@ -166,19 +198,15 @@
   img { width: 18px; height: 18px; display: block; flex-shrink: 0; }
 }
 
-/* Find windows — node 30:115. Full-bleed, as the design has it. */
 .find {
+  @include m-cta-primary;
   flex-shrink: 0;
-  width: 100%;
-  box-sizing: border-box;
-  border: 0;
-  border-radius: 999px;
-  background: var(--m-ink);
-  color: var(--m-on-ink);
-  padding: 16px 24px;
-  cursor: pointer;
-  @include m-button;
-  box-shadow: 0 10px 15px rgba(65, 42, 20, 0.07);
+  align-self: center;
+  width: fit-content;
+  min-width: 196px;
+  max-width: calc(100% - 40px);
+  margin: 6px 20px 0;
+  padding-inline: 28px;
 
   &:disabled { opacity: 0.45; cursor: default; }
 }

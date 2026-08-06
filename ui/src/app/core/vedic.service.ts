@@ -3,7 +3,9 @@ import { Injectable, inject } from '@angular/core';
 import { ApiService } from './api.service';
 import {
   AshtakavargaPayload,
+  BhavaChalitPayload,
   CalendarIntelligencePayload,
+  CharaDashaPayload,
   CompatibilityPayload,
   DailyGuidancePayload,
   DashaPayload,
@@ -14,6 +16,7 @@ import {
   TransitAnalysisPayload,
   TransitContextPayload,
   VedicAll,
+  VimshopakaBalaPayload,
   YoginiDashaPayload,
   YogasDoshasPayload,
 } from './models';
@@ -25,12 +28,12 @@ export class VedicService {
   private prefs = inject(PreferencesService);
   private cache = new Map<string, Promise<VedicAll>>();
   private allValues = new Map<string, VedicAll>();
-  private readonly allStoragePrefix = 'astrospace.vedic-all:v1:';
+  private readonly allStoragePrefix = 'astrospace.vedic-all:v2:';
   private dailyCache = new Map<string, Promise<DailyGuidancePayload>>();
   private dailyValues = new Map<string, DailyGuidancePayload>();
   private calendarCache = new Map<string, Promise<CalendarIntelligencePayload>>();
   private calendarValues = new Map<string, CalendarIntelligencePayload>();
-  private readonly calendarStoragePrefix = 'astrospace.calendar-intelligence:v1:';
+  private readonly calendarStoragePrefix = 'astrospace.calendar-intelligence:v3:';
   private detailCache = new Map<string, Promise<unknown>>();
   private detailValues = new Map<string, unknown>();
 
@@ -101,6 +104,24 @@ export class VedicService {
     return this.api.get<SpecialLagnasPayload>(`/vedic/${kundliId}/special-lagnas?${this.calcParams()}`);
   }
 
+  vimshopakaBala(kundliId: string, scheme = 'shodashavarga'): Promise<VimshopakaBalaPayload> {
+    const params = this.calcParams();
+    params.set('scheme', scheme);
+    return this.cachedDetail<VimshopakaBalaPayload>(
+      `vimshopaka-bala:${scheme}`,
+      kundliId,
+      `/vedic/${kundliId}/vimshopaka-bala?${params.toString()}`,
+    );
+  }
+
+  charaDasha(kundliId: string): Promise<CharaDashaPayload> {
+    return this.cachedDetail<CharaDashaPayload>('chara-dasha', kundliId, `/vedic/${kundliId}/chara-dasha?${this.calcParams()}`);
+  }
+
+  bhavaChalit(kundliId: string): Promise<BhavaChalitPayload> {
+    return this.cachedDetail<BhavaChalitPayload>('bhava-chalit', kundliId, `/vedic/${kundliId}/bhava-chalit?${this.calcParams()}`);
+  }
+
   masa(kundliId: string): Promise<MasaPayload> {
     return this.api.get<MasaPayload>(`/vedic/${kundliId}/masa?${this.calcParams()}`);
   }
@@ -160,8 +181,9 @@ export class VedicService {
     kundliId: string,
     days = 30,
     place?: { city: string; nation: string } | null,
+    options: { includePractitionerDetail?: boolean } = {},
   ): Promise<CalendarIntelligencePayload> {
-    const { cacheKey, params } = this.calendarParams(kundliId, days, place);
+    const { cacheKey, params } = this.calendarParams(kundliId, days, place, options);
     let cached = this.calendarCache.get(cacheKey);
     if (!cached) {
       const stored = this.readStoredCalendar(cacheKey);
@@ -192,8 +214,9 @@ export class VedicService {
     kundliId: string,
     days = 30,
     place?: { city: string; nation: string } | null,
+    options: { includePractitionerDetail?: boolean } = {},
   ): Promise<CalendarIntelligencePayload> {
-    const { cacheKey, params } = this.calendarParams(kundliId, days, place);
+    const { cacheKey, params } = this.calendarParams(kundliId, days, place, options);
     const request = this.api.get<CalendarIntelligencePayload>(
       `/vedic/${kundliId}/calendar-intelligence?${params.toString()}`,
     ).then((value) => {
@@ -212,8 +235,9 @@ export class VedicService {
     kundliId: string,
     days = 30,
     place?: { city: string; nation: string } | null,
+    options: { includePractitionerDetail?: boolean } = {},
   ): CalendarIntelligencePayload | null {
-    const cacheKey = this.calendarParams(kundliId, days, place).cacheKey;
+    const cacheKey = this.calendarParams(kundliId, days, place, options).cacheKey;
     const memory = this.calendarValues.get(cacheKey);
     if (memory) return memory;
     const stored = this.readStoredCalendar(cacheKey);
@@ -394,11 +418,13 @@ export class VedicService {
     kundliId: string,
     days: number,
     place?: { city: string; nation: string } | null,
+    options: { includePractitionerDetail?: boolean } = {},
   ): { cacheKey: string; params: URLSearchParams } {
     const selectedPlace = place ?? this.prefs.panchangaPlace();
     const timezone = this.prefs.effectiveTimezone();
     const params = this.calcParams();
     params.set('days', String(days));
+    if (options.includePractitionerDetail) params.set('include_practitioner_detail', 'true');
     if (timezone) params.set('timezone', timezone);
     if (selectedPlace?.city) params.set('city', selectedPlace.city);
     if (selectedPlace?.nation) params.set('nation', selectedPlace.nation);

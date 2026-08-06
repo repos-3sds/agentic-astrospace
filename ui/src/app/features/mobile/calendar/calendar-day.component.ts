@@ -4,7 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { FestivalService } from '../../../core/festival.service';
 import { KundliStore } from '../../../core/kundli.store';
-import { CalendarDaySummary, CalendarEvent, CalendarIntelligencePayload, FestivalOccurrence, PanchangaWindow } from '../../../core/models';
+import { CalendarDaySummary, CalendarEvent, CalendarIntelligencePayload, CalendarPractitionerDayDetail, FestivalOccurrence, PanchangaWindow } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { FestivalSheetComponent } from './festival-sheet.component';
@@ -89,6 +89,13 @@ import { MobileSymbol, nakshatraSymbol, tithiSymbol } from '../symbols/mobile-sy
             <p class="mcald-title">PRACTITIONER WINDOWS</p>
             <section class="mcald-stack">
               @for (row of practitionerWindowRows(summary); track row.label) {
+                <div><small>{{ row.label }}</small><b>{{ row.value }}</b><p>{{ row.note }}</p></div>
+              }
+            </section>
+
+            <p class="mcald-title">GULIKA &amp; MANDI</p>
+            <section class="mcald-stack">
+              @for (row of upagrahaRows(summary); track row.label) {
                 <div><small>{{ row.label }}</small><b>{{ row.value }}</b><p>{{ row.note }}</p></div>
               }
             </section>
@@ -217,9 +224,10 @@ export class CalendarDayComponent {
   }
 
   protected windows(day: CalendarDaySummary): Array<PanchangaWindow & { tone: 'good' | 'bad' }> {
+    const windows = day.practitioner_detail?.windows ?? day.windows;
     return [
-      ...day.windows.auspicious.map((window) => ({ ...window, tone: 'good' as const })),
-      ...day.windows.inauspicious.map((window) => ({ ...window, tone: 'bad' as const })),
+      ...(windows.auspicious ?? []).map((window) => ({ ...window, tone: 'good' as const })),
+      ...(windows.inauspicious ?? []).map((window) => ({ ...window, tone: 'bad' as const })),
     ].sort((a, b) => a.start_iso.localeCompare(b.start_iso));
   }
 
@@ -234,22 +242,43 @@ export class CalendarDayComponent {
   }
 
   protected practitionerWindowRows(day: CalendarDaySummary): { label: string; value: string; note: string }[] {
+    const detail = day.practitioner_detail;
     const rows = this.windows(day);
-    const preferred = ['Hora', 'Durmuhurta', 'Gulika', 'Disha Shool', 'Panchaka', 'Bhadra'];
-    const picked = preferred.map((label) => {
-      const match = rows.find((row) => row.name.toLowerCase().includes(label.toLowerCase()));
-      return {
-        label,
-        value: match ? `${match.start} - ${match.end}` : 'Not returned',
-        note: match?.note ?? (match ? match.name : 'The current day-detail payload did not include this window.'),
-      };
+    const find = (label: string) => rows.find((row) => row.name.toLowerCase().includes(label.toLowerCase()));
+    const rowFor = (label: string, match: (PanchangaWindow & { tone: 'good' | 'bad' }) | undefined, fallbackNote: string) => ({
+      label,
+      value: match ? `${match.start} - ${match.end}` : 'Not active in the returned day window',
+      note: match?.note ?? (match ? match.name : fallbackNote),
     });
-    if (picked.some((row) => row.value !== 'Not returned')) return picked;
-    return rows.slice(0, 6).map((row) => ({
-      label: row.name,
-      value: `${row.start} - ${row.end}`,
-      note: row.note ?? (row.tone === 'bad' ? 'Inauspicious window' : 'Auspicious window'),
-    }));
+    const activeHora = this.activeHora(detail?.horas);
+    return [
+      activeHora,
+      rowFor('Abhijit', find('Abhijit'), 'Abhijit Muhurta is not observed or not available for this date.'),
+      rowFor('Amrit Kalam', find('Amrit Kalam'), 'No Amrit Kalam segment overlaps this panchanga day.'),
+      rowFor('Rahu Kalam', find('Rahu Kalam'), 'Rahu Kalam was not included in the returned window set.'),
+      rowFor('Yamaganda', find('Yamaganda'), 'Yamaganda was not included in the returned window set.'),
+      rowFor('Gulika Kalam', find('Gulika Kalam'), 'Gulika Kalam was not included in the returned window set.'),
+      rowFor('Durmuhurta', find('Durmuhurta'), 'Durmuhurta was not included in the returned window set.'),
+      rowFor('Varjya', find('Varjya'), 'No Varjya segment overlaps this panchanga day.'),
+      rowFor('Bhadra', find('Bhadra'), 'Bhadra is not active for this day.'),
+      {
+        label: 'Disha Shool',
+        value: this.stringValue(detail?.disha_shool, 'No direction flagged'),
+        note: 'Traditional direction to avoid for unnecessary travel starts.',
+      },
+      {
+        label: 'Panchaka',
+        value: detail?.panchaka?.active ? `Active · ${detail.panchaka.nakshatra ?? day.nakshatra}` : 'Not active',
+        note: detail?.panchaka?.note ?? 'Panchaka is computed from the day nakshatra.',
+      },
+    ];
+  }
+
+  protected upagrahaRows(day: CalendarDaySummary): { label: string; value: string; note: string }[] {
+    return [
+      ...this.upagrahaPointRows('Gulika', day.gulika, 'start of Saturn portion'),
+      ...this.upagrahaPointRows('Mandi', day.mandi, 'middle of Saturn portion'),
+    ];
   }
 
   protected periods(data: CalendarIntelligencePayload): string[][] {
@@ -259,6 +288,55 @@ export class CalendarDayComponent {
       ['ANTAR', current.antardasha?.lord ?? '-'],
       ['PRATYANTAR', current.pratyantardasha?.lord ?? '-'],
     ];
+  }
+
+  private upagrahaPointRows(label: string, payload: unknown, convention: string): { label: string; value: string; note: string }[] {
+    if (!payload || typeof payload !== 'object') {
+      return [{ label, value: 'Not returned', note: 'The day payload did not include this upagraha calculation.' }];
+    }
+    const data = payload as Record<string, unknown>;
+    const note = typeof data['note'] === 'string' ? data['note'] : `${label} is shown using the ${convention} convention.`;
+    return ['day', 'night'].map((half) => {
+      const point = data[half] as Record<string, unknown> | undefined;
+      return {
+        label: `${label} · ${half}`,
+        value: this.upagrahaValue(point),
+        note,
+      };
+    });
+  }
+
+  private upagrahaValue(point: Record<string, unknown> | undefined): string {
+    if (!point) return 'Not returned';
+    const time = typeof point['start_time'] === 'string' ? point['start_time'] : '';
+    const sign = typeof point['sign'] === 'string' ? point['sign'] : '';
+    const dms = typeof point['dms'] === 'string' ? point['dms'] : '';
+    const longitude = typeof point['longitude'] === 'number' ? `${point['longitude'].toFixed(2)} deg` : '';
+    return [time, [sign, dms || longitude].filter(Boolean).join(' ')].filter(Boolean).join(' · ') || 'Returned by backend';
+  }
+
+  private activeHora(horas: CalendarPractitionerDayDetail['horas'] | null | undefined): { label: string; value: string; note: string } {
+    const rows = Array.isArray(horas)
+      ? horas
+      : [
+          ...((horas?.day) ?? []),
+          ...((horas?.night) ?? []),
+        ];
+    const now = Date.now();
+    const active = rows.find((row) => {
+      const start = new Date(row.start_iso).getTime();
+      const end = new Date(row.end_iso).getTime();
+      return Number.isFinite(start) && Number.isFinite(end) && start <= now && now < end;
+    }) ?? rows[0];
+    return {
+      label: 'Hora',
+      value: active ? `${active.name.replace(' Hora', '')} · ${active.start} - ${active.end}` : 'No hora rows returned',
+      note: active?.note ?? 'Planetary hour from sunrise/sunset divisions.',
+    };
+  }
+
+  private stringValue(value: unknown, fallback: string): string {
+    return typeof value === 'string' && value.trim() ? value : fallback;
   }
 
   private async load(id: string | null, forceRefresh = false): Promise<void> {
@@ -271,7 +349,7 @@ export class CalendarDayComponent {
       return;
     }
 
-    const cached = this.vedic.cachedCalendarIntelligence(id, 45);
+    const cached = this.vedic.cachedCalendarIntelligence(id, 45, null, { includePractitionerDetail: true });
     if (cached && !forceRefresh) {
       this.data.set(cached);
       if (!this.selectedDate()) this.selectedDate.set(cached.start_date);
@@ -283,15 +361,15 @@ export class CalendarDayComponent {
     if (!this.data()) this.loading.set(true);
     try {
       const calendar = forceRefresh
-        ? await this.vedic.refreshCalendarIntelligence(id, 45)
-        : await this.vedic.calendarIntelligence(id, 45);
+        ? await this.vedic.refreshCalendarIntelligence(id, 45, null, { includePractitionerDetail: true })
+        : await this.vedic.calendarIntelligence(id, 45, null, { includePractitionerDetail: true });
       if (request !== this.requestId || this.activeId() !== id) return;
       this.data.set(calendar);
       if (!this.selectedDate()) this.selectedDate.set(calendar.start_date);
       void this.loadFestivals(calendar.start_date, 60);
     } catch (error) {
       if (request === this.requestId) {
-        const cached = this.vedic.cachedCalendarIntelligence(id, 45);
+        const cached = this.vedic.cachedCalendarIntelligence(id, 45, null, { includePractitionerDetail: true });
         if (cached) {
           this.data.set(cached);
           if (!this.selectedDate()) this.selectedDate.set(cached.start_date);
@@ -308,7 +386,7 @@ export class CalendarDayComponent {
 
   private async refreshCalendar(id: string, request: number): Promise<void> {
     try {
-      const calendar = await this.vedic.refreshCalendarIntelligence(id, 45);
+      const calendar = await this.vedic.refreshCalendarIntelligence(id, 45, null, { includePractitionerDetail: true });
       if (request !== this.requestId || this.activeId() !== id) return;
       this.data.set(calendar);
       if (!this.selectedDate()) this.selectedDate.set(calendar.start_date);

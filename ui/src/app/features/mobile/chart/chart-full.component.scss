@@ -120,10 +120,11 @@
   }
 
   i {
-    width: 5px;
-    height: 5px;
+    width: 4px;
+    height: 4px;
     border-radius: 999px;
-    background: var(--m-accent-strong);
+    background: color-mix(in srgb, var(--m-accent-strong) 72%, transparent);
+    opacity: 0.72;
   }
 }
 
@@ -175,10 +176,12 @@
   padding: 0;
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 8px 14px;
+  text-align: center;
 }
 
-.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-item { display: inline-flex; align-items: baseline; justify-content: center; gap: 5px; }
 
 .legend-abbr {
   font-weight: 600;
@@ -189,7 +192,7 @@
 
 .legend-name { @include m-caption; color: var(--m-muted); }
 
-.hint { @include m-caption; color: var(--m-muted); margin: 0; }
+.hint { @include m-caption; width: 100%; color: var(--m-muted); margin: 0; text-align: center; }
 
 .data-section {
   width: 100%;
@@ -290,6 +293,12 @@ button.positions-row {
     color: var(--m-accent-strong);
     white-space: normal;
     overflow-wrap: anywhere;
+  }
+
+  &.full {
+    grid-column: 1 / -1;
+    border-right: 0;
+    border-bottom: 0;
   }
 }
 

@@ -60,7 +60,7 @@ export class ChartHubComponent {
   protected readonly screenTitle = computed(() =>
     this.preferences.experienceMode() === 'guided' ? 'Your Story'
       : this.preferences.experienceMode() === 'practitioner' ? 'Yantra'
-      : 'Your Chart',
+      : 'Explore',
   );
   readonly profileName = computed(() => this.kundlis.active()?.name ?? 'Choose profile');
   readonly profileInitial = computed(() => this.profileName().slice(0, 1).toUpperCase());
@@ -104,10 +104,11 @@ export class ChartHubComponent {
   readonly explore = signal<ExploreCard[]>([
     {
       id: 'varga',
-      title: 'Divisional charts',
-      subtitle: 'D1–D60, all varga',
+      title: 'Charts & Vargas',
+      subtitle: 'D1 plus divisional charts',
       icon: 'explore-varga',
-      route: ['/m', 'chart', 'vargas'],
+      route: ['/m', 'chart', 'full'],
+      queryParams: { varga: 'D9' },
     },
     {
       id: 'dasha',
@@ -152,6 +153,20 @@ export class ChartHubComponent {
       route: ['/m', 'readings'],
     },
     {
+      id: 'remedies',
+      title: 'Remedies',
+      subtitle: 'Practices active now',
+      icon: 'remedy-rite',
+      route: ['/m', 'remedies'],
+    },
+    {
+      id: 'muhurta',
+      title: 'Muhurthas',
+      subtitle: 'Find better timing',
+      icon: 'figma-yantra-calendar',
+      route: ['/m', 'muhurta'],
+    },
+    {
       id: 'reference',
       title: 'Reference',
       subtitle: 'Avkahada, tables, points',
@@ -162,8 +177,8 @@ export class ChartHubComponent {
 
   readonly noteCount = signal(0);
   readonly advancedOpen = signal(false);
-  readonly guidedCoreIds = ['varga', 'yoga', 'transit', 'compat', 'readings'];
-  readonly guidedAdvancedIds = ['varga', 'dasha', 'strength', 'reference'];
+  readonly guidedCoreIds = ['remedies', 'muhurta', 'varga', 'yoga', 'transit', 'compat', 'readings'];
+  readonly guidedAdvancedIds = ['dasha', 'strength', 'reference'];
   protected readonly visibleExplore = computed(() => {
     const cards = this.explore();
     if (this.preferences.experienceMode() === 'guided') {
@@ -223,8 +238,7 @@ export class ChartHubComponent {
     const shadbala = this.chart()?.shadbala;
     const strongest = shadbala?.classical?.ranking?.[0];
     return [
-      { title: 'Charts', subtitle: `D1 · ${ascendant} Asc`, tone: 'accent', icon: 'figma-yantra-compass', route: ['/m', 'chart', 'full'], active: true },
-      { title: 'Vargas', subtitle: 'D1-D60 divisional charts', tone: 'accent', icon: 'figma-yantra-grid', route: ['/m', 'chart', 'vargas'] },
+      { title: 'Charts & Vargas', subtitle: `D1-D60 · ${ascendant} Asc`, tone: 'accent', icon: 'figma-yantra-compass', route: ['/m', 'chart', 'full'], active: true },
       { title: 'Strength', subtitle: strongest ? `${strongest.planet} strongest` : 'Shadbala · AV', tone: 'good', icon: 'figma-yantra-activity', route: ['/m', 'chart', 'strength'] },
       { title: 'Yogas', subtitle: 'Strengths & cancellations', tone: 'warn', icon: 'figma-yantra-git-commit', route: ['/m', 'chart', 'yogas'] },
       { title: 'Transits', subtitle: 'Gochara · current sky', tone: 'warn', icon: 'figma-yantra-nav-map-pin', route: ['/m', 'transits'] },

@@ -6,10 +6,16 @@
 </header>
 
 <div class="body">
-  <p class="lede">
-    Practices for what’s active in your chart right now — never a substitute for
-    professional advice.
-  </p>
+  <section class="hero">
+    <span><img src="mobile/remedy-chant.svg" alt="" aria-hidden="true" /></span>
+    <div>
+      <p class="lede">Practices for what’s active in your chart right now.</p>
+      <small>Mantras and prayers can be tracked. Offerings and colours stay as guidance.</small>
+    </div>
+  </section>
+  <aside class="scope-note">
+    {{ disclaimer() }}
+  </aside>
 
   @if (loading()) {
     <section class="remedy-state"><b>Loading practices</b><p>Checking active periods, dignity, and traditional practice signals.</p></section>
@@ -27,40 +33,37 @@
         <span class="tag" [attr.data-tone]="tone(group)">{{ tag(group) }}</span>
       </div>
 
-      <p class="rationale">{{ group.reason_practitioner }}</p>
-      <p class="source">{{ group.source_status.replaceAll('_', ' ') }} · {{ group.tradition_source }}</p>
+      <p class="rationale">{{ groupReason(group) }}</p>
+      <p class="source">{{ sourceLabel(group) }}</p>
 
       <ul class="practices">
         @for (p of group.practices; track p.practice_slug) {
-          <li class="practice">
-            <img [src]="'mobile/remedy-' + icon(p) + '.svg'" alt="" aria-hidden="true" />
-            <span>
-              <b>{{ p.title }}</b>
-              <small>{{ p.instructions }}</small>
-              @if (p.optional_cost) {
-                <em>Optional cost · get qualified review first</em>
-              }
+          <li class="practice" [attr.data-trackable]="isTrackable(p)">
+            <span class="practice-icon">
+              <img [src]="'mobile/remedy-' + icon(p) + '.svg'" alt="" aria-hidden="true" />
             </span>
-            @if (!p.optional_cost) {
+            <span class="practice-copy">
+              <span class="practice-top">
+                <b>{{ p.title }}</b>
+                @if (p.optional_cost) {
+                  <em>Optional</em>
+                }
+              </span>
+              <small>{{ p.instructions }}</small>
+              <span class="practice-meta">{{ practiceMeta(p) }}</span>
+            </span>
+            @if (isTrackable(p)) {
               <a
                 class="practice-cta"
                 [routerLink]="practiceRoute(group, p)"
                 [queryParams]="practiceParams(group, p)"
               >{{ practiceCta(p) }}</a>
+            } @else {
+              <span class="practice-note">{{ practiceNote(p) }}</span>
             }
           </li>
         }
       </ul>
-
-      <div class="rule"></div>
-
-      <!--
-        Printed here, not carried on the card, so no remedy can ship without it.
-        Remedies are traditional practice — never a fix sold as a cure.
-      -->
-      <div class="foot">
-        <p class="caveat">{{ group.safety_note || disclaimer() }}</p>
-      </div>
     </article>
   }
   }

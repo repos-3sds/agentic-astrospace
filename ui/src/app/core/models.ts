@@ -178,9 +178,66 @@ export interface SpecialLagnasPayload {
   bhava_lagna?: SpecialLagnaPoint;
   hora_lagna?: SpecialLagnaPoint;
   ghati_lagna?: SpecialLagnaPoint;
+  bhrigu_bindu?: SpecialLagnaPoint;
+  indu_lagna?: SpecialLagnaPoint;
   lagna?: SpecialLagnaPoint;
   notes?: string[];
   error?: string;
+}
+
+export interface VimshopakaBalaPlanet {
+  scheme: string;
+  score: number;
+  max: number;
+  band: string;
+  breakdown: {
+    varga: string;
+    varga_name: string;
+    weight: number;
+    dignity: string;
+    earned: number;
+  }[];
+}
+
+export interface VimshopakaBalaPayload {
+  scheme: 'shadvarga' | 'saptavarga' | 'dashavarga' | 'shodashavarga' | string;
+  planets: Record<string, VimshopakaBalaPlanet>;
+  source_status: string;
+  notes: string[];
+}
+
+export interface CharaDashaPeriod {
+  sign: number;
+  sign_name: string;
+  lord: string;
+  start: string;
+  end: string;
+  years: number;
+  active: boolean;
+  antardashas?: CharaDashaPeriod[];
+}
+
+export interface CharaDashaPayload {
+  direction: 'forward' | 'reverse' | string;
+  ninth_from_lagna: string;
+  mahadashas: CharaDashaPeriod[];
+  current: {
+    mahadasha?: CharaDashaPeriod | null;
+    antardasha?: CharaDashaPeriod | null;
+  };
+  total_years: number;
+  source_status: string;
+  notes: string[];
+}
+
+export interface BhavaChalitPayload {
+  system: string;
+  madhyas: Record<string, number>;
+  cusps: Record<string, number>;
+  widths: Record<string, number>;
+  planets: Record<string, { longitude: number; house: number }>;
+  source_status: string;
+  notes: string[];
 }
 
 /* ── Masa / Kaala payload ───────────────────────────────────────────── */
@@ -1030,10 +1087,35 @@ export interface CalendarDaySummary {
   chandrabala: { house_from_rashi: number; favourable: boolean; chandrashtama: boolean };
   auspicious_count: number;
   inauspicious_count: number;
+  gulika?: unknown;
+  mandi?: unknown;
   windows: {
     auspicious: PanchangaWindow[];
     inauspicious: PanchangaWindow[];
   };
+  practitioner_detail?: CalendarPractitionerDayDetail;
+}
+
+export interface CalendarPractitionerDayDetail {
+  sunrise?: string | null;
+  sunset?: string | null;
+  next_sunrise?: string | null;
+  moonrise?: string | null;
+  moonset?: string | null;
+  masa?: Record<string, unknown> | null;
+  samvatsara?: string | null;
+  ritu?: string | null;
+  ayana?: string | null;
+  disha_shool?: string | null;
+  panchaka?: { active?: boolean; nakshatra?: string; note?: string | null } | null;
+  elements?: Record<string, PanchangaEntry[]> | null;
+  windows?: {
+    auspicious: PanchangaWindow[];
+    inauspicious: PanchangaWindow[];
+  };
+  choghadiya?: Record<string, unknown> | null;
+  horas?: PanchangaWindow[] | { day?: PanchangaWindow[]; night?: PanchangaWindow[] } | null;
+  conventions?: Record<string, unknown> | null;
 }
 
 export interface CalendarReadingMarker {
@@ -1159,6 +1241,14 @@ export interface CompatibilityPayload {
       person2_active: boolean;
       clear: boolean;
     };
+  };
+  dashakoota_extension?: {
+    system: string;
+    total: number;
+    max: number;
+    rows: CompatibilityScoreRow[];
+    hard_blockers: string[];
+    notes?: string[];
   };
 }
 

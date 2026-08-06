@@ -11,4 +11,4 @@ label { @include m-caption; color:var(--m-muted); display:flex;flex-direction:co
 input { @include m-body; box-sizing:border-box;width:100%;padding:16px;border:1.2px solid var(--m-border);border-radius:16px;background:var(--m-surface);color:var(--m-text); }
 .editbd-error,.editbd-state{@include m-body-small;color:var(--m-bad)}
 footer { padding:12px 24px max(20px,var(--m-safe-bottom)); }
-footer button { @include m-button;width:100%;padding:16px;border:0;border-radius:999px;background:var(--m-accent);color:var(--m-on-ink); }
+footer button { @include m-cta-primary; width:100%; }

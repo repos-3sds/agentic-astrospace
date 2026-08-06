@@ -29,6 +29,10 @@ import { TransitDetail, TransitDetailComponent } from './transit-detail.componen
           <h2>{{ payload.gochara.interpretation.synthesis.headline }}</h2>
           <p>{{ summary() }}</p>
         </section>
+        <button class="mtr-listen" type="button" (click)="listenToTransits(payload)">
+          <img src="mobile/play.svg" alt="" aria-hidden="true" />
+          <span>Listen to your transits</span>
+        </button>
         <p class="mtr-title">WHAT THIS MEANS FOR YOU · {{ payload.gochara.interpretation.range_outlook.days }} DAYS</p>
         @for (domain of domains(); track domain.id) {
           <button type="button" class="mtr-card" (click)="openDomain(domain)">
@@ -185,6 +189,22 @@ export class GocharaComponent {
         `Leading planets: ${domain.leading_planets.join(', ')}`,
         ...domain.evidence_ids,
         `${payload.ayanamsha} · ${payload.node_type} nodes`,
+      ],
+    });
+  }
+
+  protected listenToTransits(payload: GocharamProfilePayload): void {
+    const synthesis = payload.gochara.interpretation.synthesis;
+    this.selected.set({
+      planet: 'Transit guidance',
+      glyph: '▶',
+      position: `${payload.ayanamsha} · ${payload.node_type} nodes`,
+      period: `${payload.gochara.interpretation.range_outlook.days}-day outlook`,
+      meaning: this.summary(),
+      guidance: `${synthesis.headline}. ${payload.gochara.interpretation.range_outlook.reading}`,
+      evidence: [
+        payload.gochara.interpretation.library_version,
+        `Matched rules: ${payload.gochara.interpretation.matched_rules.length}`,
       ],
     });
   }

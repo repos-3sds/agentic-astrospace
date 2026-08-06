@@ -12,6 +12,7 @@ import {
 import { SheetComponent } from '../sheet/sheet.component';
 import { AudioReadingSection } from './audio-reading-script';
 import { MobileTtsService } from '../../../core/mobile-tts.service';
+import { PreferencesService } from '../../../core/preferences.service';
 
 /**
  * Bar heights of the waveform, in px, in the order the design draws them.
@@ -58,6 +59,7 @@ const PREFERRED_VOICE_NAMES = [
 })
 export class ListenSheetComponent implements OnDestroy, OnInit {
   private readonly nativeTts = inject(MobileTtsService);
+  private readonly preferences = inject(PreferencesService);
 
   readonly title = input.required<string>();
   readonly subtitle = input('Daily guidance · gentle voice');
@@ -291,7 +293,10 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
 
   private voiceFor(lang: string): SpeechSynthesisVoice | null {
     const voices = window.speechSynthesis.getVoices();
+    const chosenName = this.preferences.voiceName();
+    const chosen = chosenName ? voices.find((voice) => voice.name === chosenName) : undefined;
     return (
+      chosen ??
       voices.find((voice) => PREFERRED_VOICE_NAMES.some((name) => voice.name.includes(name))) ??
       voices.find((voice) => voice.lang === lang) ??
       voices.find((voice) => voice.lang.startsWith('en')) ??

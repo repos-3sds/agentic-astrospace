@@ -469,6 +469,7 @@ def calendar_intelligence(
     kundli_id: str,
     user: CurrentUser,
     days: int = Query(30, ge=1, le=60),
+    include_practitioner_detail: bool = Query(False, description="Include full practitioner day payloads"),
     timezone: Optional[str] = Query(None, description="Viewer IANA timezone"),
     city: Optional[str] = Query(None, description="Optional panchanga place override"),
     nation: Optional[str] = None,
@@ -496,6 +497,7 @@ def calendar_intelligence(
         tz_str=tz_str,
         display_tz_str=display_tz,
         days=days,
+        include_practitioner_detail=include_practitioner_detail,
     )
     return _attach_readings_to_calendar(payload, db, kundli_id, user.id)
 

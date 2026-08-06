@@ -64,7 +64,10 @@ export class RemediesComponent {
   }
 
   protected backRoute(): string[] {
-    return this.preferences.experienceMode() === 'guided' ? ['/m', 'explore'] : ['/m', 'today'];
+    const mode = this.preferences.experienceMode();
+    if (mode === 'guided') return ['/m', 'explore'];
+    if (mode === 'balanced') return ['/m', 'chart'];
+    return ['/m', 'chart'];
   }
 
   private async load(expectedActiveId: string | null): Promise<void> {
@@ -124,7 +127,58 @@ export class RemediesComponent {
 
   protected practiceCta(practice: RemedyRecommendationPractice): string {
     if (practice.type === 'mantra') return 'Start 108 practice';
-    if (practice.target_count) return 'Start count';
-    return 'Track practice';
+    if (practice.type === 'deity') return 'Track prayer';
+    return 'Open practice';
+  }
+
+  protected isTrackable(practice: RemedyRecommendationPractice): boolean {
+    return !practice.optional_cost && (practice.type === 'mantra' || practice.type === 'deity');
+  }
+
+  protected practiceNote(practice: RemedyRecommendationPractice): string {
+    if (practice.type === 'donation') return 'Offering';
+    if (practice.type === 'colour' || practice.type === 'gem') return 'Wear/use';
+    return practice.optional_cost ? 'Optional' : 'No tracking';
+  }
+
+  protected groupReason(group: RemedyRecommendationGroup): string {
+    return this.humanizeDates(group.reason_practitioner);
+  }
+
+  protected sourceLabel(group: RemedyRecommendationGroup): string {
+    const status = group.source_status.replaceAll('_', ' ');
+    return `${status} · ${group.tradition_source}`;
+  }
+
+  protected practiceMeta(practice: RemedyRecommendationPractice): string {
+    const parts = [
+      this.practiceTypeLabel(practice),
+      practice.cadence,
+      practice.preferred_day,
+      practice.target_count ? `${practice.target_count} count` : null,
+    ].filter(Boolean);
+    return parts.join(' · ');
+  }
+
+  private practiceTypeLabel(practice: RemedyRecommendationPractice): string {
+    if (practice.type === 'mantra') return 'Mantra';
+    if (practice.type === 'donation') return 'Offering';
+    if (practice.type === 'colour') return 'Colour';
+    if (practice.type === 'deity') return 'Prayer';
+    if (practice.type === 'gem') return 'Gemstone';
+    return 'Practice';
+  }
+
+  private humanizeDates(value: string): string {
+    return value.replace(
+      /\b(\d{4}-\d{2}-\d{2})(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?)?\b/g,
+      (match, datePart: string) => this.dateLabel(datePart) || match,
+    );
+  }
+
+  private dateLabel(value: string): string {
+    const date = new Date(`${value}T12:00:00`);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 }

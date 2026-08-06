@@ -52,6 +52,22 @@
       }
     </div>
 
+    <p class="mcod-eyebrow">DASHAKOOTA EXTENSION</p>
+    <p class="mcod-note">{{ dashakootaSummary() }}</p>
+    @if (dashakootaRows().length) {
+      <div class="mcod-koota-table compact">
+        @for (row of dashakootaRows(); track row.label) {
+          <div class="mcod-koota-row">
+            <span class="mcod-koota-label">{{ row.label }}</span>
+            <span class="mcod-koota-score">{{ row.points }}/{{ row.max }}</span>
+            <span class="mcod-koota-status" [attr.data-status]="rowStatus(row)">
+              {{ rowStatus(row) === 'full' ? '✓' : rowStatus(row) === 'caution' ? 'CAUTION' : 'PARTIAL' }}
+            </span>
+          </div>
+        }
+      </div>
+    }
+
     @if (cancellations().length) {
       <p class="mcod-eyebrow">SPECIAL CANCELLATIONS</p>
       <div class="mcod-note-list">

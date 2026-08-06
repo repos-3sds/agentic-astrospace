@@ -47,13 +47,6 @@
 }
 
 .settings {
+  @include m-cta-secondary;
   width: 100%;
-  box-sizing: border-box;
-  border: 1.5px solid var(--m-border-strong);
-  border-radius: 999px;
-  background: none;
-  padding: 16px 24px;
-  cursor: pointer;
-  @include m-button;
-  color: var(--m-accent-strong);
 }

@@ -17,8 +17,10 @@
 .scrim {
   position: absolute;
   inset: 0;
-  background: var(--m-ink);
-  opacity: 0.45;                // Figma node 21:23
+  background:
+    radial-gradient(circle at 50% 100%, rgba(255, 248, 236, 0.18), transparent 34%),
+    var(--m-ink);
+  opacity: 0.38;
   animation: scrim-in 180ms ease-out;
 }
 
@@ -27,14 +29,21 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--m-sheet-surface, var(--m-surface));
-  border-radius: 28px 28px 0 0;
+  background: var(--m-glass-panel, var(--m-sheet-surface, var(--m-surface)));
+  border: 1px solid var(--m-glass-border, var(--m-border));
+  border-bottom: 0;
+  border-radius: 32px 32px 0 0;
   padding: 12px 24px max(34px, calc(var(--m-safe-bottom) + 18px));
   display: flex;
   flex-direction: column;
   gap: 16px;
   max-height: 88%;
   overflow-y: auto;
+  box-shadow:
+    0 -20px 70px rgba(32, 21, 14, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.46);
+  -webkit-backdrop-filter: blur(28px) saturate(1.25);
+  backdrop-filter: blur(28px) saturate(1.25);
   animation: panel-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -44,10 +53,22 @@
   width: 40px;
   height: 5px;
   border-radius: 999px;
-  background: var(--m-border-strong);
+  background: color-mix(in srgb, var(--m-border-strong) 72%, transparent);
 }
 
-@keyframes scrim-in { from { opacity: 0; } to { opacity: 0.45; } }
+:host-context(.app-dark) .panel,
+:host-context(.dark) .panel,
+:host-context([data-theme='dark']) .panel {
+  box-shadow:
+    0 -24px 70px rgba(0, 0, 0, 0.58),
+    inset 0 1px 0 rgba(255, 248, 236, 0.1);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .panel { background: var(--m-sheet-surface, var(--m-surface)); }
+}
+
+@keyframes scrim-in { from { opacity: 0; } to { opacity: 0.38; } }
 @keyframes panel-in { from { transform: translateY(100%); } to { transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {

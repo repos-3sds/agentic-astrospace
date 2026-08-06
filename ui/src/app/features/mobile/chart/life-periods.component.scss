@@ -3,16 +3,34 @@
 :host { display: block; padding-bottom: 24px; }
 
 .appbar {
-  display: flex; align-items: center; gap: 12px;
-  padding: 16px 20px 10px; text-decoration: none;
-  img { display: block; width: 24px; height: 24px; }
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 64px;
+  box-sizing: border-box;
+  padding: 10px 20px;
 }
 
-.crumb { @include m-body-strong; color: var(--m-muted); }
+.screen-title { @include m-title; color: var(--m-text); margin: 0; }
+
+.iconbtn {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--m-border);
+  border-radius: 999px;
+  background: var(--m-surface);
+  color: var(--m-text);
+  text-decoration: none;
+  img { display: block; width: 19px; height: 19px; filter: var(--m-back-icon-filter); }
+}
 
 .body {
   display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
-  padding: 4px 20px 16px;
+  padding: 8px 20px 16px;
 }
 
 .period-state {
@@ -34,40 +52,32 @@
   p { @include m-body-small; margin: 0; }
   a,
   button {
-    @include m-body-strong;
-    display: inline-flex;
-    justify-content: center;
-    padding: 11px 16px;
-    border: 1px solid var(--m-border-strong);
-    border-radius: 999px;
-    color: var(--m-accent-strong);
-    background: transparent;
-    text-decoration: none;
+    @include m-cta-secondary;
+    min-height: 42px;
   }
 }
 .period-state.error { border-color: var(--m-warn); b { color: var(--m-warn); } }
 
 .heading {
   width: 100%;
-  h1 { @include m-h1; margin: 0 0 3px; color: var(--m-text); }
+  h2 { @include m-h1; margin: 0 0 3px; color: var(--m-text); }
   p { @include m-body-small; margin: 0; color: var(--m-muted); }
 }
 
 .system, .levels {
-  width: 100%; box-sizing: border-box; display: flex; gap: 4px;
-  padding: 4px; border-radius: 999px;
+  @include m-segmented-track;
+  width: 100%;
 
   button {
-    flex: 1 1 0; min-width: 0; border: 0; border-radius: 999px;
-    background: none; cursor: default; font-weight: 600;
+    @include m-segmented-button;
+    cursor: default;
   }
 
-  button.is-on { background: var(--m-ink); color: var(--m-on-ink); }
+  button.is-on { @include m-selected-pill; }
 }
 
 .system {
   background: var(--m-accent-soft);
-  button { @include m-button; padding: 10px; color: var(--m-accent-strong); }
 }
 
 .levels {
@@ -82,7 +92,7 @@
   &::-webkit-scrollbar { display: none; }
 
   button {
-    flex: 0 0 auto; padding: 11px 16px; font-size: 13.5px; line-height: 1.2;
+    flex: 0 0 auto;
     color: var(--m-muted); white-space: nowrap;
   }
 }

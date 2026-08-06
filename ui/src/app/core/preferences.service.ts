@@ -23,6 +23,8 @@ export interface PreferencesState {
   tone: ReadingTone;
   hapticsEnabled: boolean;
   festivalRegions: FestivalRegion[];
+  /** Device TTS voice name, or null to auto-pick — see mobile-tts.service.ts. */
+  voiceName: string | null;
 }
 
 interface RemoteSettings {
@@ -53,6 +55,7 @@ const DEFAULTS: PreferencesState = {
   tone: 'gentle',
   hapticsEnabled: true,
   festivalRegions: ['pan-india'],
+  voiceName: null,
 };
 
 function normalizedFestivalRegions(regions: unknown): FestivalRegion[] {
@@ -81,6 +84,7 @@ export class PreferencesService {
   readonly tone = signal<ReadingTone>(this.preferences().tone);
   readonly hapticsEnabled = signal(this.preferences().hapticsEnabled);
   readonly festivalRegions = signal<FestivalRegion[]>(this.preferences().festivalRegions);
+  readonly voiceName = signal<string | null>(this.preferences().voiceName);
   readonly cloudReady = signal(false);
   readonly cloudSaving = signal(false);
   readonly cloudError = signal<string | null>(null);
@@ -106,6 +110,7 @@ export class PreferencesService {
         tone: this.tone(),
         hapticsEnabled: this.hapticsEnabled(),
         festivalRegions: normalizedFestivalRegions(this.festivalRegions()),
+        voiceName: this.voiceName(),
       };
       this.preferences.set(next);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -154,6 +159,7 @@ export class PreferencesService {
     this.tone.set(DEFAULTS.tone);
     this.hapticsEnabled.set(DEFAULTS.hapticsEnabled);
     this.festivalRegions.set(DEFAULTS.festivalRegions);
+    this.voiceName.set(DEFAULTS.voiceName);
   }
 
   syncCloud(): Promise<void> {

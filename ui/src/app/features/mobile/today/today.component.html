@@ -6,12 +6,17 @@
       <p class="date">{{ headerDate() }}</p>
     </div>
   </button>
-  <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search SIDDHA">
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <circle cx="8.75" cy="8.75" r="5.75"></circle>
-      <path d="m13 13 4 4"></path>
-    </svg>
-  </a>
+  <div class="app-actions">
+    <a class="iconbtn" [routerLink]="['/m', 'notifications']" aria-label="Notifications">
+      <img src="mobile/set-notif.svg" alt="" aria-hidden="true" />
+    </a>
+    <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search SIDDHA">
+      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <circle cx="8.75" cy="8.75" r="5.75"></circle>
+        <path d="m13 13 4 4"></path>
+      </svg>
+    </a>
+  </div>
 </header>
 
 <div class="body" [attr.data-mode]="preferences.experienceMode()">

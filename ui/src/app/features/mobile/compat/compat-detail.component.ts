@@ -51,6 +51,15 @@ export class CompatDetailComponent {
   protected readonly cautionRows = computed(() =>
     [...(this.score()?.rows ?? [])].filter((row) => row.points < row.max).sort((a, b) => a.points / Math.max(a.max, 1) - b.points / Math.max(b.max, 1)).slice(0, 2),
   );
+  protected readonly dashakootaRows = computed(() => this.score()?.dashakoota_extension?.rows ?? []);
+  protected readonly dashakootaSummary = computed(() => {
+    const extension = this.score()?.dashakoota_extension;
+    if (!extension) return 'Dashakoota extension was not returned for this pair.';
+    const blockers = extension.hard_blockers?.length
+      ? ` Hard blockers: ${extension.hard_blockers.join(', ')}.`
+      : ' No hard blocker was returned by this extension.';
+    return `${extension.total}/${extension.max} on ${extension.system}.${blockers}`;
+  });
 
   constructor() {
     void this.load();

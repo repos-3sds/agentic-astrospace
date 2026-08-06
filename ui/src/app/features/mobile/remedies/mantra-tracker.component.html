@@ -11,7 +11,14 @@
   } @else {
   <header class="intro">
     <p class="eyebrow">{{ eyebrow() }}</p>
-    <h1 class="mantra">{{ mantra() }}</h1>
+    <h1 class="mantra">{{ practiceTitle() }}</h1>
+    <p class="context-line">{{ practiceContext() }}</p>
+    @if (literalPracticeText()) {
+      <section class="mantra-card" aria-label="Mantra">
+        <span>{{ practiceTextLabel() }}</span>
+        <p>{{ literalPracticeText() }}</p>
+      </section>
+    }
     <p class="instruction">{{ practice()?.instructions }}</p>
   </header>
 
@@ -77,15 +84,12 @@
   }
   }
 
-  <!-- Said again here, at the point of practice, not only on the list screen. -->
-  <p class="caveat">
-    {{ group()?.safety_note }}
-  </p>
+  <p class="caveat">{{ group()?.safety_note }}</p>
   }
 </div>
 
 @if (!loading() && !error()) {
   <a class="reminder" [routerLink]="['/m','settings','notifications']">
-    Set {{ practice()?.preferred_day || 'practice' }} reminder
+    {{ reminderLabel() }}
   </a>
 }

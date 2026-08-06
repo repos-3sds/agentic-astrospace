@@ -1,7 +1,9 @@
-<a class="appbar" [routerLink]="['/m', 'chart']">
-  <img src="mobile/back.svg" alt="" aria-hidden="true" />
-  <span class="crumb">Your Chart</span>
-</a>
+<header class="appbar">
+  <h1 class="screen-title">Dashas</h1>
+  <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search SIDDHA">
+    <img src="mobile/search.svg" alt="" aria-hidden="true" />
+  </a>
+</header>
 
 <div class="body">
   @if (loading()) {
@@ -12,7 +14,7 @@
     <section class="period-state"><b>No active profile</b><p>Select a profile before opening life periods.</p><a [routerLink]="['/m','settings','profiles']">Manage profiles</a></section>
   } @else {
   <header class="heading">
-    <h1>Life Periods</h1>
+    <h2>Life Periods</h2>
     <p>
       @if (system() === 'yogini') {
         Yogini dasha — an alternate 36-year period system

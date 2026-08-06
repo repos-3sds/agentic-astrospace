@@ -52,7 +52,11 @@ interface CalendarCell {
       } @else if (!activeId()) {
         <section class="mcal-state"><b>No active profile</b><p>Select a profile before loading calendar guidance.</p></section>
       } @else if (data(); as calendar) {
-        <section class="mcal-grid">
+        <section
+          class="mcal-grid"
+          (touchstart)="startMonthSwipe($event)"
+          (touchend)="finishMonthSwipe($event)"
+        >
           @for (day of weekdays; track day) { <span class="mcal-weekday">{{ day }}</span> }
           @for (_ of blanks(); track $index) { <span></span> }
           @for (cell of cells(); track cell.date) {
@@ -108,6 +112,7 @@ export class CalendarComponent {
   protected readonly activeId = computed(() => this.store.activeId());
   protected readonly activeName = computed(() => this.store.active()?.name ?? 'this profile');
   private renderedProfileId: string | null = null;
+  private monthSwipeStart: { x: number; y: number } | null = null;
 
   protected readonly monthStart = computed(() => {
     const month = this.visibleMonth() ?? this.data()?.start_date.slice(0, 7) ?? this.todayMonth();
@@ -162,6 +167,30 @@ export class CalendarComponent {
     const next = new Date(this.monthStart());
     next.setMonth(next.getMonth() + delta);
     this.visibleMonth.set(`${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}`);
+  }
+
+  protected startMonthSwipe(event: TouchEvent): void {
+    const touch = event.changedTouches.item(0);
+    if (!touch) return;
+    this.monthSwipeStart = { x: touch.clientX, y: touch.clientY };
+  }
+
+  protected finishMonthSwipe(event: TouchEvent): void {
+    const start = this.monthSwipeStart;
+    const touch = event.changedTouches.item(0);
+    this.monthSwipeStart = null;
+    if (!start || !touch) return;
+
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    const isHorizontalSwipe = Math.abs(deltaX) >= 56 && Math.abs(deltaX) > Math.abs(deltaY) * 1.35;
+    if (!isHorizontalSwipe) return;
+
+    if (deltaX < 0 && this.canGoNext()) {
+      this.shiftMonth(1);
+    } else if (deltaX > 0 && this.canGoPrevious()) {
+      this.shiftMonth(-1);
+    }
   }
 
   protected canGoPrevious(): boolean {

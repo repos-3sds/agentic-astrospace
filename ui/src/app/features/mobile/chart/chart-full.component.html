@@ -127,6 +127,26 @@
         }
       </div>
     </section>
+
+    @if (selectedVarga() === 'D1') {
+      <section class="data-section">
+        <p class="section-title">BHAVA CHALIT · SRIPATI</p>
+        <div class="data-card house-lords">
+          @for (row of bhavaRows(); track row.planet) {
+            <article class="house-lord">
+              <span>{{ row.planet }} · D1 house {{ row.whole }}</span>
+              <b>Sripati house {{ row.sripati }}</b>
+            </article>
+          } @empty {
+            <article class="house-lord full">
+              <span>Bhava Chalit</span>
+              <b>Not returned for this profile</b>
+            </article>
+          }
+        </div>
+        <p class="hint">Whole-sign D1 stays the main chart; Sripati is shown as a separate house-placement lens.</p>
+      </section>
+    }
   }
   }
 </div>

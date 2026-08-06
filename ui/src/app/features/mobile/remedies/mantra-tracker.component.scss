@@ -5,7 +5,7 @@
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  padding-bottom: 28px;
+  padding-bottom: max(18px, var(--m-safe-bottom));
 }
 
 /* Back bar — node 29:111 */
@@ -29,8 +29,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  padding: 10px 20px 16px;
+  gap: 18px;
+  padding: 10px 20px 18px;
 }
 
 .practice-state {
@@ -51,15 +51,8 @@
   b { @include m-h2; color: var(--m-text); }
   p { @include m-body-small; margin: 0; }
   a {
-    @include m-body-strong;
-    display: inline-flex;
-    justify-content: center;
-    padding: 11px 16px;
-    border: 1px solid var(--m-border-strong);
-    border-radius: 999px;
-    color: var(--m-accent-strong);
-    background: transparent;
-    text-decoration: none;
+    @include m-cta-secondary;
+    min-height: 42px;
   }
 }
 .practice-state.error { border-color: var(--m-warn); b { color: var(--m-warn); } }
@@ -67,6 +60,28 @@
 .intro { width: 100%; display: flex; flex-direction: column; gap: 6px; }
 .eyebrow { @include m-eyebrow; color: var(--m-warn); margin: 0; }
 .mantra { @include m-h1; color: var(--m-text); margin: 0; }
+.context-line { @include m-caption; color: var(--m-muted); margin: 0; }
+.mantra-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 15px 16px;
+  border: 1px solid var(--m-border);
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--m-accent-soft) 48%, transparent), transparent),
+    var(--m-raised);
+  box-shadow: var(--m-shadow-card);
+
+  span { @include m-eyebrow; color: var(--m-accent-strong); }
+  p {
+    @include m-h2;
+    margin: 0;
+    color: var(--m-text);
+    overflow-wrap: anywhere;
+  }
+}
 .instruction { @include m-body-small; color: var(--m-muted); margin: 0; }
 
 /* Streak — node 29:119 */
@@ -79,33 +94,25 @@
   gap: 8px;
   padding: 10px 16px;
   border-radius: 999px;
-  background: var(--m-gold-soft);
+  border: 1px solid color-mix(in srgb, var(--m-gold-soft) 70%, var(--m-border) 30%);
+  background: color-mix(in srgb, var(--m-gold-soft) 72%, var(--m-raised) 28%);
   @include m-body-strong;
   color: var(--m-gold);
   img { width: 18px; height: 18px; display: block; flex-shrink: 0; }
 }
 
 .mode-tabs {
-  display: flex;
+  @include m-segmented-track;
   width: 100%;
-  gap: 4px;
-  padding: 4px;
-  border-radius: 999px;
-  background: var(--m-accent-soft);
+  border: 1px solid var(--m-border);
+  background: var(--m-raised);
 
   button {
-    @include m-button;
-    flex: 1;
-    border: 0;
-    border-radius: 999px;
-    background: transparent;
-    color: var(--m-accent-strong);
-    padding: 10px;
+    @include m-segmented-button;
   }
 
   .is-on {
-    background: var(--m-ink);
-    color: var(--m-on-ink);
+    @include m-selected-pill;
   }
 }
 
@@ -118,7 +125,7 @@
   padding: 14px;
   border: 1px solid var(--m-border);
   border-radius: 18px;
-  background: var(--m-surface);
+  background: var(--m-raised);
   align-items: center;
 
   > img {
@@ -130,17 +137,10 @@
   p { @include m-caption; color: var(--m-muted); margin: 2px 0 0; }
 
   button {
-    @include m-body-strong;
+    @include m-cta-primary;
     grid-column: 1 / -1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     gap: 8px;
-    border: 0;
-    border-radius: 999px;
-    padding: 12px;
-    background: var(--m-ink);
-    color: var(--m-on-ink);
+    min-height: 44px;
     img { width: 17px; height: 17px; }
     &:disabled { opacity: 0.5; }
   }
@@ -185,51 +185,31 @@
 
 /* Tap to count — node 29:129 */
 .count-btn {
+  @include m-cta-primary;
   width: 100%;
-  box-sizing: border-box;
-  border: 0;
-  border-radius: 999px;
-  background: var(--m-ink);
-  color: var(--m-on-ink);
-  box-shadow: var(--m-shadow-card);
-  padding: 17px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 10px;
-  cursor: pointer;
-  @include m-button;
   img { width: 19px; height: 19px; display: block; }
 
   &:disabled { opacity: 0.55; cursor: default; }
 }
 
 .reset-btn {
-  border: 0;
-  background: transparent;
-  color: var(--m-accent-strong);
-  @include m-body-strong;
+  @include m-cta-tertiary;
 }
 
 .caveat {
   @include m-caption;
   color: var(--m-muted);
   margin: 0;
+  padding: 0 8px;
   text-align: center;
 }
 
 /* Reminder — node 29:134. Full-bleed, as the design has it. */
 .reminder {
+  @include m-cta-secondary;
   flex-shrink: 0;
-  width: 100%;
-  box-sizing: border-box;
-  border: 1.5px solid var(--m-border-strong);
-  border-radius: 999px;
-  background: none;
-  padding: 16px 24px;
-  cursor: pointer;
-  @include m-button;
-  color: var(--m-accent-strong);
-  text-align: center;
-  text-decoration: none;
+  width: calc(100% - 40px);
+  margin: 6px 20px 0;
+  min-height: 48px;
 }

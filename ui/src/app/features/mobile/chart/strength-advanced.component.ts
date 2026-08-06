@@ -4,11 +4,11 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 import { SIGN_ORDER } from '../../../core/glyphs';
 import { KundliStore } from '../../../core/kundli.store';
-import { AshtakavargaPayload, VedicAll } from '../../../core/models';
+import { AshtakavargaPayload, CharaDashaPayload, VedicAll, VimshopakaBalaPayload } from '../../../core/models';
 import { VedicService } from '../../../core/vedic.service';
 import { SIGN_SHORT } from './mobile-chart-data';
 
-type StrengthTab = 'shadbala' | 'ashtakavarga' | 'jaimini';
+type StrengthTab = 'shadbala' | 'ashtakavarga' | 'jaimini' | 'vimshopaka';
 
 interface PlanetStrength {
   name: string;
@@ -42,8 +42,11 @@ export class StrengthAdvancedComponent {
   private readonly vedic = inject(VedicService);
   readonly tab = signal<StrengthTab>('shadbala');
   readonly avPlanet = signal('SAV');
+  readonly vimshopakaScheme = signal('shodashavarga');
   protected readonly data = signal<VedicAll | null>(null);
   protected readonly ashtakavarga = signal<AshtakavargaPayload | null>(null);
+  protected readonly vimshopaka = signal<VimshopakaBalaPayload | null>(null);
+  protected readonly charaDasha = signal<CharaDashaPayload | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   private readonly requestedTab = toSignal(
@@ -154,7 +157,34 @@ export class StrengthAdvancedComponent {
       ['Bhava Lagna', 'Body & circumstance', data?.bhava_lagna ? `${data.bhava_lagna.sign_name} ${data.bhava_lagna.dms}` : '—'],
       ['Hora Lagna', 'Wealth & resources', data?.hora_lagna ? `${data.hora_lagna.sign_name} ${data.hora_lagna.dms}` : '—'],
       ['Ghati Lagna', 'Power & position', data?.ghati_lagna ? `${data.ghati_lagna.sign_name} ${data.ghati_lagna.dms}` : '—'],
+      ['Bhrigu Bindu', 'Karmic pressure point', data?.bhrigu_bindu ? `${data.bhrigu_bindu.sign_name} ${data.bhrigu_bindu.dms}` : '—'],
+      ['Indu Lagna', 'Wealth potential lens', data?.indu_lagna ? `${data.indu_lagna.sign_name} ${data.indu_lagna.dms}` : '—'],
     ];
+  });
+  readonly charaRows = computed(() => (this.charaDasha()?.mahadashas ?? []).map((period) => [
+    period.sign_name,
+    period.lord,
+    `${this.dateLabel(period.start)}–${this.dateLabel(period.end)}`,
+    period.active ? 'ACTIVE' : `${period.years}y`,
+  ]));
+  readonly activeChara = computed(() => {
+    const current = this.charaDasha()?.current;
+    const maha = current?.mahadasha;
+    const antar = current?.antardasha;
+    if (!maha) return 'No active Chara Dasha returned for the current date.';
+    return `${maha.sign_name} mahadasha${antar ? ` with ${antar.sign_name} antardasha` : ''}. This is a Jaimini sign-period lens, not a replacement for Vimshottari.`;
+  });
+  readonly vimshopakaRows = computed(() =>
+    Object.entries(this.vimshopaka()?.planets ?? {})
+      .map(([planet, row]) => ({ planet, ...row }))
+      .sort((a, b) => b.score - a.score),
+  );
+  readonly vimshopakaMeaning = computed(() => {
+    const rows = this.vimshopakaRows();
+    const strongest = rows[0];
+    const weakest = rows[rows.length - 1];
+    if (!strongest || !weakest) return 'Vimshopaka Bala shows how consistently a planet holds dignity across divisional charts.';
+    return `${strongest.planet} is most consistent across the selected varga scheme. ${weakest.planet} needs the most cross-chart caution; read its promises only after checking the relevant divisional chart.`;
   });
 
   constructor() {
@@ -178,12 +208,18 @@ export class StrengthAdvancedComponent {
     });
   }
 
+  protected selectVimshopakaScheme(scheme: string): void {
+    this.vimshopakaScheme.set(scheme);
+    const activeId = this.kundlis.activeId();
+    if (activeId) void this.loadVimshopaka(activeId, scheme);
+  }
+
   protected retry(): void {
     void this.load(this.kundlis.activeId());
   }
 
   private validTab(value: string | null): StrengthTab | null {
-    return value === 'shadbala' || value === 'ashtakavarga' || value === 'jaimini'
+    return value === 'shadbala' || value === 'ashtakavarga' || value === 'jaimini' || value === 'vimshopaka'
       ? value
       : null;
   }
@@ -198,15 +234,37 @@ export class StrengthAdvancedComponent {
       if (!activeId) {
         this.data.set(null);
         this.ashtakavarga.set(null);
+        this.vimshopaka.set(null);
+        this.charaDasha.set(null);
         return;
       }
-      const all = await this.vedic.all(activeId);
+      const [all, vimshopaka, charaDasha] = await Promise.all([
+        this.vedic.all(activeId),
+        this.vedic.vimshopakaBala(activeId, this.vimshopakaScheme()).catch(() => null),
+        this.vedic.charaDasha(activeId).catch(() => null),
+      ]);
       this.data.set(all);
       this.ashtakavarga.set(all.ashtakavarga ?? await this.vedic.ashtakavarga(activeId));
+      this.vimshopaka.set(vimshopaka);
+      this.charaDasha.set(charaDasha);
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {
       this.loading.set(false);
     }
+  }
+
+  private async loadVimshopaka(activeId: string, scheme: string): Promise<void> {
+    try {
+      this.vimshopaka.set(await this.vedic.vimshopakaBala(activeId, scheme));
+    } catch {
+      this.vimshopaka.set(null);
+    }
+  }
+
+  private dateLabel(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value || '—';
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
   }
 }

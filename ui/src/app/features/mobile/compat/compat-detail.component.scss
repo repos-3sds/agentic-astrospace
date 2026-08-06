@@ -18,12 +18,8 @@
   b { @include m-h2; color: var(--m-text); }
   p { @include m-body-small; margin: 0; }
   button {
-    @include m-body-strong;
-    padding: 11px 16px;
-    border: 1px solid var(--m-border-strong);
-    border-radius: 999px;
-    color: var(--m-accent-strong);
-    background: transparent;
+    @include m-cta-secondary;
+    min-height: 42px;
   }
 }
 .mcod-state.error b { color: var(--m-warn); }
@@ -84,13 +80,9 @@
 .mcod-koota-label { @include m-body-strong; color: var(--m-text); flex: 1 1 0; min-width: 0; }
 .mcod-koota-score { @include m-body-small; color: var(--m-muted); flex-shrink: 0; }
 .mcod-koota-status {
-  @include m-caption;
+  @include m-badge;
   flex-shrink: 0;
   min-width: 32px;
-  text-align: center;
-  padding: 3px 8px;
-  border-radius: 999px;
-  font-weight: 700;
 
   &[data-status='full'] { color: var(--m-good); background: var(--m-good-soft); }
   &[data-status='caution'] { color: var(--m-warn); background: var(--m-warn-soft); }
@@ -125,10 +117,7 @@
   span:first-child { @include m-body-strong; color: var(--m-text); }
 }
 .mcod-safety-badge {
-  @include m-caption;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-weight: 700;
+  @include m-badge;
   color: var(--m-muted);
   background: var(--m-border);
   &[data-ok='true'] { color: var(--m-good); background: var(--m-good-soft); }
@@ -141,12 +130,8 @@
   margin-top: 8px;
 
   > * {
-    @include m-button;
+    @include m-cta-base;
     flex: 1;
-    padding: 16px 8px;
-    border-radius: 999px;
-    text-align: center;
-    text-decoration: none;
   }
   .ghost { border: 1.5px solid var(--m-border-strong); color: var(--m-accent-strong); background: transparent; }
   .ghost:disabled { opacity: 0.5; cursor: not-allowed; }

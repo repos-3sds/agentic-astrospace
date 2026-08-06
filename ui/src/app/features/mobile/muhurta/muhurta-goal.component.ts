@@ -7,6 +7,7 @@ export interface MuhurtaGoal {
   id: string;
   label: string;
   icon: string;
+  detail: string;
 }
 
 /** How far out to search. `custom` hands off to a date picker. */
@@ -34,18 +35,24 @@ export type MuhurtaRange = 'week' | 'month' | 'custom';
 })
 export class MuhurtaGoalComponent {
   readonly goals = signal<MuhurtaGoal[]>([
-    { id: 'buy_property_gold', label: 'Buy property / gold', icon: 'goal-property' },
-    { id: 'sign_contract', label: 'Sign a contract', icon: 'goal-contract' },
-    { id: 'start_journey', label: 'Start a journey', icon: 'goal-journey' },
-    { id: 'start_venture', label: 'Start a new venture', icon: 'goal-venture' },
-    { id: 'marriage_related', label: 'Marriage-related', icon: 'goal-marriage' },
-    { id: 'general', label: 'Something else', icon: 'goal-other' },
+    { id: 'griha_pravesha', label: 'House warming', icon: 'goal-property', detail: 'Griha Pravesha' },
+    { id: 'upanayana', label: 'Upanayana', icon: 'goal-venture', detail: 'Sacred-thread ceremony' },
+    { id: 'marriage_related', label: 'Marriage-related', icon: 'goal-marriage', detail: 'Engagement or wedding work' },
+    { id: 'namakarana', label: 'Naming ceremony', icon: 'goal-other', detail: 'Namakarana' },
+    { id: 'annaprashana', label: 'First feeding', icon: 'goal-other', detail: 'Annaprashana' },
+    { id: 'vidyarambha', label: 'Start learning', icon: 'goal-contract', detail: 'Vidyarambha' },
+    { id: 'buy_property_gold', label: 'Buy property / gold', icon: 'goal-property', detail: 'Asset purchase' },
+    { id: 'sign_contract', label: 'Sign a contract', icon: 'goal-contract', detail: 'Agreement or paperwork' },
+    { id: 'start_journey', label: 'Start a journey', icon: 'goal-journey', detail: 'Travel departure' },
+    { id: 'start_venture', label: 'Start a venture', icon: 'goal-venture', detail: 'Business beginning' },
+    { id: 'general', label: 'Something else', icon: 'goal-other', detail: 'Tell us the intent' },
   ]);
 
-  readonly selectedGoal = signal<string>('sign_contract');
+  readonly selectedGoal = signal<string>('griha_pravesha');
   readonly range = signal<MuhurtaRange>('month');
   readonly customFrom = signal(this.isoDate(new Date()));
   readonly customTo = signal(this.isoDate(this.addDays(new Date(), 14)));
+  readonly customIntent = signal('');
 
   readonly ranges: { id: MuhurtaRange; label: string }[] = [
     { id: 'week', label: 'This week' },
@@ -68,6 +75,7 @@ export class MuhurtaGoalComponent {
   // Nothing can be computed for a purpose that has not been chosen.
   protected readonly canSearch = computed(() => {
     if (!this.selectedGoal()) return false;
+    if (this.selectedGoal() === 'general' && this.customIntent().trim().length < 6) return false;
     if (this.range() !== 'custom') return true;
     const from = this.customFrom();
     const to = this.customTo();
@@ -81,9 +89,11 @@ export class MuhurtaGoalComponent {
       return;
     }
     const dates = this.selectedDates();
+    const intent = this.customIntent().trim();
     void this.router.navigate(['/m', 'muhurta', 'results'], {
       queryParams: {
-        goal: this.selectedGoal(),
+        goal: this.selectedGoal() === 'general' ? 'general' : this.selectedGoal(),
+        intent: this.selectedGoal() === 'general' ? intent : null,
         range: this.range(),
         date_from: dates.from,
         date_to: dates.to,
@@ -98,6 +108,11 @@ export class MuhurtaGoalComponent {
 
   protected setCustomTo(value: string): void {
     this.customTo.set(value);
+  }
+
+  protected selectGoal(goal: string): void {
+    this.selectedGoal.set(goal);
+    if (goal !== 'general') this.customIntent.set('');
   }
 
   private selectedDates(): { from: string; to: string } {

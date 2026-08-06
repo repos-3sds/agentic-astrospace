@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PlanetDetail, PlanetSheetComponent } from './planet-sheet.component';
 import { KundliChartComponent, KundliChartStyle } from '../../../shared/kundli-chart/kundli-chart.component';
 import { KundliStore } from '../../../core/kundli.store';
-import { VargaChart, VedicAll } from '../../../core/models';
+import { BhavaChalitPayload, VargaChart, VedicAll } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { buildChartAdapter, PLANET_ABBR, PLANET_NAME, SIGN_ORDER } from './mobile-chart-data';
@@ -32,6 +33,7 @@ export type ChartStyle = 'Eastern' | 'South' | 'North';
   styleUrl: './chart-full.component.scss',
 })
 export class ChartFullComponent {
+  private readonly route = inject(ActivatedRoute);
   private readonly kundlis = inject(KundliStore);
   protected readonly preferences = inject(PreferencesService);
   private readonly vedic = inject(VedicService);
@@ -39,8 +41,10 @@ export class ChartFullComponent {
   readonly vargas = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'D11', 'D12', 'D16', 'D20', 'D24', 'D27', 'D30', 'D40', 'D45', 'D60'];
   readonly style = computed<ChartStyle>(() => this.toChartStyle(this.preferences.chartStyle()));
   readonly sharedStyle = computed<KundliChartStyle>(() => this.preferences.chartStyle());
-  readonly selectedVarga = signal('D9');
+  private readonly queryParams = toSignal(this.route.queryParamMap, { requireSync: true });
+  readonly selectedVarga = signal('D1');
   protected readonly chart = signal<VedicAll | null>(null);
+  protected readonly bhavaChalit = signal<BhavaChalitPayload | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly adapter = computed(() => {
@@ -98,10 +102,33 @@ export class ChartFullComponent {
     }));
   });
 
+  readonly bhavaRows = computed(() => {
+    if (this.selectedVarga() !== 'D1') return [];
+    const chart = this.chart();
+    const bhava = this.bhavaChalit();
+    if (!chart || !bhava?.planets) return [];
+    return PLANET_SEQUENCE
+      .filter((planet) => chart.planets?.[planet] && bhava.planets?.[planet])
+      .map((planet) => ({
+        planet,
+        whole: chart.planets[planet].house,
+        sripati: bhava.planets[planet].house,
+      }));
+  });
+
   readonly selected = signal<PlanetDetail | null>(null);
   private renderedChartId: string | null = null;
 
   constructor() {
+    if (this.route.snapshot.routeConfig?.path === 'chart/vargas') {
+      this.selectedVarga.set('D9');
+    }
+    effect(() => {
+      const requested = this.queryParams().get('varga')?.toUpperCase();
+      if (requested && this.vargas.includes(requested)) {
+        this.selectedVarga.set(requested);
+      }
+    });
     effect(() => {
       const activeId = this.kundlis.activeId();
       void this.load(activeId);
@@ -147,6 +174,7 @@ export class ChartFullComponent {
       if (expectedActiveId && activeId !== expectedActiveId) return;
       if (!activeId) {
         this.chart.set(null);
+        this.bhavaChalit.set(null);
         this.renderedChartId = null;
         this.loading.set(false);
         return;
@@ -156,11 +184,17 @@ export class ChartFullComponent {
         this.chart.set(cached);
         this.renderedChartId = activeId;
         this.loading.set(false);
+        void this.loadBhavaChalit(activeId);
         void this.refreshChart(activeId);
         return;
       }
       if (this.renderedChartId !== activeId) this.loading.set(true);
-      this.chart.set(await this.vedic.all(activeId));
+      const [chart, bhavaChalit] = await Promise.all([
+        this.vedic.all(activeId),
+        this.vedic.bhavaChalit(activeId).catch(() => null),
+      ]);
+      this.chart.set(chart);
+      this.bhavaChalit.set(bhavaChalit);
       this.renderedChartId = activeId;
     } catch (error) {
       this.error.set((error as Error).message);
@@ -175,8 +209,18 @@ export class ChartFullComponent {
       if (this.kundlis.activeId() !== activeId) return;
       this.chart.set(chart);
       this.renderedChartId = activeId;
+      void this.loadBhavaChalit(activeId);
     } catch {
       // Keep the saved chart visible when a background refresh fails.
+    }
+  }
+
+  private async loadBhavaChalit(activeId: string): Promise<void> {
+    try {
+      const bhavaChalit = await this.vedic.bhavaChalit(activeId);
+      if (this.kundlis.activeId() === activeId) this.bhavaChalit.set(bhavaChalit);
+    } catch {
+      if (this.kundlis.activeId() === activeId) this.bhavaChalit.set(null);
     }
   }
 

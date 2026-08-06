@@ -41,6 +41,34 @@ def _period_event_if_inside(period: dict | None, label: str,
     return rows
 
 
+def _practitioner_day_detail(payload: dict) -> dict:
+    """Full panchanga detail for practitioner-mode calendar day screens.
+
+    The regular day summary is intentionally compact for month/list rendering.
+    Practitioner mode needs the complete named windows and non-window rules
+    (Disha Shool, Panchaka, Hora, Choghadiya, masa, etc.) so the UI should not
+    have to render "Not returned" for facts already computed by daily_panchanga.
+    """
+    return {
+        "sunrise": payload.get("sunrise"),
+        "sunset": payload.get("sunset"),
+        "next_sunrise": payload.get("next_sunrise"),
+        "moonrise": payload.get("moonrise"),
+        "moonset": payload.get("moonset"),
+        "masa": payload.get("masa"),
+        "samvatsara": payload.get("samvatsara"),
+        "ritu": payload.get("ritu"),
+        "ayana": payload.get("ayana"),
+        "disha_shool": payload.get("disha_shool"),
+        "panchaka": payload.get("panchaka"),
+        "elements": payload.get("elements"),
+        "windows": payload.get("windows") or {"auspicious": [], "inauspicious": []},
+        "choghadiya": payload.get("choghadiya"),
+        "horas": payload.get("horas"),
+        "conventions": payload.get("_conventions"),
+    }
+
+
 def calendar_intelligence(
     chart,
     start_dt: datetime,
@@ -51,6 +79,7 @@ def calendar_intelligence(
     tz_str: str,
     display_tz_str: str,
     days: int = 30,
+    include_practitioner_detail: bool = False,
 ) -> dict:
     """Return a dated intelligence feed for the selected profile."""
     days = max(1, min(60, days))
@@ -140,7 +169,7 @@ def calendar_intelligence(
             ghatak_moon_sign=janma_rashi,
         )
         payload["personal"] = personal
-        panchanga_days.append({
+        day_summary = {
             "date": payload["date"],
             "vara": payload["vara"]["name"],
             "tithi": payload["elements"]["tithi"][0]["name"],
@@ -151,10 +180,17 @@ def calendar_intelligence(
             "auspicious_count": len(payload["windows"]["auspicious"]),
             "inauspicious_count": len(payload["windows"]["inauspicious"]),
             "windows": {
-                "auspicious": payload["windows"]["auspicious"][:3],
-                "inauspicious": payload["windows"]["inauspicious"][:3],
+                "auspicious": payload["windows"]["auspicious"] if include_practitioner_detail else payload["windows"]["auspicious"][:3],
+                "inauspicious": payload["windows"]["inauspicious"] if include_practitioner_detail else payload["windows"]["inauspicious"][:3],
             },
-        })
+        }
+        if include_practitioner_detail:
+            day_summary.update({
+                "gulika": payload.get("gulika"),
+                "mandi": payload.get("mandi"),
+                "practitioner_detail": _practitioner_day_detail(payload),
+            })
+        panchanga_days.append(day_summary)
         tone = "supportive" if personal["tarabala"]["favourable"] and personal["chandrabala"]["favourable"] else "challenging"
         strength = 74 if tone == "supportive" else 62
         events.append(_event(

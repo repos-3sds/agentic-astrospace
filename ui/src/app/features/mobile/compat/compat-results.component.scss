@@ -22,15 +22,8 @@
   }
   a,
   button {
-    @include m-body-strong;
-    display: inline-flex;
-    justify-content: center;
-    padding: 11px 16px;
-    border: 1px solid var(--m-border-strong);
-    border-radius: 999px;
-    color: var(--m-accent-strong);
-    background: transparent;
-    text-decoration: none;
+    @include m-cta-secondary;
+    min-height: 42px;
   }
 }
 .mcor-state.error {
@@ -40,6 +33,6 @@
 .mcor-title { @include m-eyebrow; margin: 0; color: var(--m-muted); }
 .mcor-list { border: 1px solid var(--m-border); border-radius: 18px; overflow: hidden; background: var(--m-raised); }
 .mcor-list div { display: flex; flex-direction: column; gap: 4px; padding: 12px 15px; border-bottom: 1px solid var(--m-border); &:last-child { border: 0; } b { @include m-body-strong; } span { @include m-body-small; color: var(--m-muted); } p { @include m-body-small; margin: 0; color: var(--m-muted); } }
-.mcor-flag { display: flex; flex-direction: column; gap: 6px; padding: 13px 15px; border: 1px solid var(--m-border); border-radius: 16px; background: var(--m-surface); div { display: flex; align-items: center; gap: 8px; } b { @include m-body-strong; flex: 1; } em { @include m-caption; padding: 3px 9px; border-radius: 999px; color: var(--m-good); background: var(--m-good-soft); font-size: 10.5px; font-style: normal; } p { @include m-body-small; margin: 0; color: var(--m-muted); } }
-.mcor-actions { display: flex; gap: 10px; > * { @include m-button; flex: 1; padding: 16px 8px; border-radius: 999px; text-align: center; text-decoration: none; } button { border: 1.5px solid var(--m-border-strong); color: var(--m-accent-strong); background: transparent; } a { color: var(--m-on-ink); background: var(--m-ink); } }
-.mcor-muhurta { @include m-body-strong; display: block; text-align: center; padding: 4px 0; color: var(--m-accent-strong); text-decoration: none; }
+.mcor-flag { display: flex; flex-direction: column; gap: 6px; padding: 13px 15px; border: 1px solid var(--m-border); border-radius: 16px; background: var(--m-surface); div { display: flex; align-items: center; gap: 8px; } b { @include m-body-strong; flex: 1; } em { @include m-badge; color: var(--m-good); background: var(--m-good-soft); font-style: normal; } p { @include m-body-small; margin: 0; color: var(--m-muted); } }
+.mcor-actions { display: flex; gap: 10px; > * { @include m-cta-base; flex: 1; } button { border: 1.5px solid var(--m-border-strong); color: var(--m-accent-strong); background: transparent; } a { border: 0; color: var(--m-on-ink); background: var(--m-ink); } }
+.mcor-muhurta { @include m-cta-tertiary; display: flex; text-align: center; padding: 4px 0; }

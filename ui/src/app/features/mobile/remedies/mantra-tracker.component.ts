@@ -56,8 +56,16 @@ export class MantraTrackerComponent {
     if (trigger.kind === 'dasha') return `${trigger.planet ?? 'Planet'} ${trigger.level ?? 'dasha'} · traditional practice`.toUpperCase();
     return `${trigger.kind} · traditional practice`.toUpperCase();
   });
-  protected readonly mantra = computed(() => this.practice()?.audio?.transliteration ?? this.practice()?.title ?? 'Selected practice');
-  protected readonly target = computed(() => this.practice()?.target_count ?? 1);
+  protected readonly practiceTitle = computed(() => this.practice()?.title ?? 'Selected practice');
+  protected readonly practiceTextLabel = computed(() => this.practice()?.type === 'mantra' ? 'MANTRA' : 'PRACTICE TEXT');
+  protected readonly literalPracticeText = computed(() => {
+    const practice = this.practice();
+    if (!practice) return '';
+    if (practice.type !== 'mantra') return this.devotionalFallback(practice);
+    const audio = this.practice()?.audio;
+    return audio?.text || audio?.transliteration || practice.title;
+  });
+  protected readonly target = computed(() => this.practice()?.target_count ?? (this.practice()?.type === 'deity' ? 1 : 108));
   protected readonly audioPending = computed(() => this.practice()?.audio?.source_status === 'pending_assets' || !this.practice()?.audio?.audio_url);
 
   protected readonly streakLabel = computed(() => {
@@ -115,6 +123,25 @@ export class MantraTrackerComponent {
 
   protected audioNote(): string {
     return this.practice()?.audio?.note ?? 'Recorded audio is not available yet. Manual counting is ready.';
+  }
+
+  protected practiceContext(): string {
+    const practice = this.practice();
+    const group = this.group();
+    const pieces = [
+      practice?.type === 'mantra' ? '108-count mantra' : 'Prayer practice',
+      practice?.preferred_day,
+      practice?.planet,
+      group?.reason_short,
+    ].filter(Boolean);
+    return pieces.join(' · ');
+  }
+
+  protected reminderLabel(): string {
+    const practice = this.practice();
+    if (!practice) return 'Set practice reminder';
+    const day = practice.preferred_day || 'practice';
+    return practice.type === 'mantra' ? `Set ${day} mantra reminder` : `Set ${day} prayer reminder`;
   }
 
   private async load(): Promise<void> {
@@ -176,5 +203,11 @@ export class MantraTrackerComponent {
 
   private todayKey(): string {
     return new Date().toISOString().slice(0, 10);
+  }
+
+  private devotionalFallback(practice: RemedyRecommendationPractice): string {
+    if (practice.type !== 'deity') return practice.instructions;
+    const deity = practice.title.replace(/^Prayer to\s+/i, '').trim();
+    return deity ? `Offer a simple prayer to ${deity}. Sit quietly, state your intention, and close with gratitude.` : practice.instructions;
   }
 }

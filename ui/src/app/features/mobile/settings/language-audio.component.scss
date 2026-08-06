@@ -1,10 +1,39 @@
+@use '../mobile-tokens' as *;
 @use './settings-shared' as shared;
 
 @include shared.settings-screen;
 @include shared.settings-segmented;
 @include shared.settings-switch;
+@include shared.settings-choice;
 
 .body { gap: 14px; }
 
 // Telugu, pending real localisation — see the component's class comment.
 .segment.is-soon { opacity: .5; cursor: default; }
+
+.eyebrow { @include m-eyebrow; color: var(--m-accent-strong); margin: 6px 0 0; }
+.voice-note { @include m-body-small; color: var(--m-muted); margin: -4px 0 2px; }
+
+.choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.voice-upgrade {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+  background: var(--m-surface);
+
+  .voice-note { margin: 0; }
+  strong { color: var(--m-text); }
+}
+
+.settings-link {
+  @include m-cta-secondary;
+  width: 100%;
+}

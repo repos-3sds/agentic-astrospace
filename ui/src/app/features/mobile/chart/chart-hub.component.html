@@ -1,29 +1,12 @@
-@if (preferences.experienceMode() === 'practitioner') {
-  <header class="yantra-appbar">
-    <button class="yantra-profile" type="button" aria-label="Switch profile" (click)="profileSwitcherOpen.set(true)">
-      <span class="avatar" aria-hidden="true">{{ profileInitial() }}</span>
-      <span class="yantra-who">
-        <b>Namaste, {{ profileName() }}</b>
-        <span><i aria-hidden="true"></i>Practitioner Board</span>
-      </span>
-    </button>
-    <a class="settings-btn" [routerLink]="['/m', 'search']" aria-label="Search SIDDHA">
-      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <circle cx="8.75" cy="8.75" r="5.75"></circle>
-        <path d="m13 13 4 4"></path>
-      </svg>
-    </a>
-  </header>
-} @else {
-  <header class="appbar">
-    <h1 class="screen-title">{{ screenTitle() }}</h1>
-    <button class="profile" type="button" aria-label="Switch profile" (click)="profileSwitcherOpen.set(true)">
-      <span class="avatar" aria-hidden="true">{{ profileInitial() }}</span>
-      <span class="profile-name">{{ profileName() }}</span>
-      <img src="mobile/caret-down.svg" alt="" aria-hidden="true" />
-    </button>
-  </header>
-}
+<header class="appbar">
+  <h1 class="screen-title">{{ screenTitle() }}</h1>
+  <a class="settings-btn" [routerLink]="['/m', 'search']" aria-label="Search SIDDHA">
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <circle cx="8.75" cy="8.75" r="5.75"></circle>
+      <path d="m13 13 4 4"></path>
+    </svg>
+  </a>
+</header>
 
 <div class="body" [attr.data-mode]="preferences.experienceMode()">
   @if (loading()) {

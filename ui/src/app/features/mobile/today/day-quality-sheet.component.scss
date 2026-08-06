@@ -34,12 +34,8 @@
 .signal-text { @include m-body-small; color: var(--m-muted); margin: 0; }
 
 .pill {
-  border-radius: 999px;
-  padding: 3px 9px;
+  @include m-badge;
   font-weight: 500;
-  font-size: 10.5px;
-  line-height: 1.4;
-  white-space: nowrap;
 
   &.good { background: var(--m-good-soft); color: var(--m-good); }
   &.warn { background: var(--m-warn-soft); color: var(--m-warn); }
@@ -56,17 +52,10 @@
 }
 
 .cta {
+  @include m-cta-primary;
   width: 100%;
-  border: 0;
-  border-radius: 999px;
   // Was a hardcoded #20150e with the comment "// --ink" — the token existed
   // and was not used. --m-on-ink flips to a near-black in dark mode, so dark
   // text sat on a fixed dark fill and this button read as invisible. Same
   // defect the why-reading sheet's "Got it" button had.
-  background: var(--m-ink);
-  color: var(--m-on-ink);
-  padding: 16px 24px;
-  cursor: pointer;
-  @include m-button;
-  box-shadow: var(--m-shadow-card);
 }

@@ -101,15 +101,15 @@ export class MobileShellComponent {
       return [
         { commands: ['today'], label: 'Today', icon: 'figma-yantra-nav-sun' },
         { commands: ['chart'], label: 'Yantra', icon: 'figma-yantra-nav-active' },
-        { commands: ['chart', 'periods'], label: 'Periods', icon: 'figma-yantra-nav-clock' },
-        { commands: ['calendar'], label: 'Calendar', icon: 'figma-yantra-calendar' },
+        { commands: ['chart', 'periods'], label: 'Dashas', icon: 'figma-yantra-nav-clock' },
+        { commands: ['calendar'], label: 'Calendar', icon: 'nav-calendar' },
         { commands: ['settings'], label: 'More', icon: 'figma-yantra-nav-settings' },
       ];
     }
     return [
       ...fixed,
       { commands: ['ask'], label: 'Ask', icon: 'nav-ask' },
-      { commands: ['chart'], label: 'Chart', icon: 'nav-git-branch' },
+      { commands: ['chart'], label: 'Explore', icon: 'nav-check-square' },
       { commands: ['calendar'], label: 'Calendar', icon: 'nav-calendar' },
       { commands: ['settings'], label: 'More', icon: 'nav-more' },
     ] satisfies MobileTab[];

@@ -249,6 +249,7 @@ export const routes: Routes = [
       },
       {
         path: 'ask/history',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/ask/ask-history.component').then(
             (m) => m.AskHistoryComponent,
@@ -267,6 +268,7 @@ export const routes: Routes = [
       },
       {
         path: 'ask/refer',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/ask/ask-refer-out.component').then(
             (m) => m.AskReferOutComponent,
@@ -305,6 +307,7 @@ export const routes: Routes = [
       },
       {
         path: 'remedies',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/remedies/remedies.component').then(
             (m) => m.RemediesComponent,
@@ -312,6 +315,7 @@ export const routes: Routes = [
       },
       {
         path: 'remedies/mantra',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/remedies/mantra-tracker.component').then(
             (m) => m.MantraTrackerComponent,
@@ -319,6 +323,7 @@ export const routes: Routes = [
       },
       {
         path: 'muhurta',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/muhurta/muhurta-goal.component').then(
             (m) => m.MuhurtaGoalComponent,
@@ -326,6 +331,7 @@ export const routes: Routes = [
       },
       {
         path: 'muhurta/results',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/muhurta/muhurta-results.component').then(
             (m) => m.MuhurtaResultsComponent,
@@ -350,8 +356,8 @@ export const routes: Routes = [
         path: 'chart/vargas',
         data: { hideMobileTabs: true },
         loadComponent: () =>
-          import('./features/mobile/chart/varga-charts.component').then(
-            (m) => m.VargaChartsComponent,
+          import('./features/mobile/chart/chart-full.component').then(
+            (m) => m.ChartFullComponent,
           ),
       },
       {
@@ -451,6 +457,7 @@ export const routes: Routes = [
       },
       {
         path: 'settings/mode',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/settings/mode-tone.component').then(
             (m) => m.ModeToneComponent,
@@ -458,6 +465,7 @@ export const routes: Routes = [
       },
       {
         path: 'settings/appearance',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/settings/appearance.component').then(
             (m) => m.AppearanceComponent,
@@ -465,6 +473,7 @@ export const routes: Routes = [
       },
       {
         path: 'settings/language',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/settings/language-audio.component').then(
             (m) => m.LanguageAudioComponent,
@@ -472,6 +481,7 @@ export const routes: Routes = [
       },
       {
         path: 'settings/notifications',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/settings/notifications.component').then(
             (m) => m.NotificationsComponent,
@@ -479,6 +489,7 @@ export const routes: Routes = [
       },
       {
         path: 'settings/interaction',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/settings/interaction.component').then(
             (m) => m.InteractionComponent,
@@ -486,6 +497,7 @@ export const routes: Routes = [
       },
       {
         path: 'settings/location',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/settings/location.component').then(
             (m) => m.LocationComponent,
@@ -493,6 +505,7 @@ export const routes: Routes = [
       },
       {
         path: 'settings/festivals',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/settings/festival-preferences.component').then(
             (m) => m.FestivalPreferencesComponent,
@@ -500,6 +513,7 @@ export const routes: Routes = [
       },
       {
         path: 'settings/account',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/settings/account-privacy.component').then(
             (m) => m.AccountPrivacyComponent,
@@ -515,6 +529,7 @@ export const routes: Routes = [
       },
       {
         path: 'settings/conventions',
+        data: { hideMobileTabs: true },
         loadComponent: () =>
           import('./features/mobile/settings/conventions.component').then(
             (m) => m.ConventionsComponent,

@@ -25,15 +25,8 @@
   p { @include m-body-small; margin: 0; }
   a,
   button {
-    @include m-body-strong;
-    display: inline-flex;
-    justify-content: center;
-    padding: 11px 16px;
-    border: 1px solid var(--m-border-strong);
-    border-radius: 999px;
-    color: var(--m-accent-strong);
-    background: transparent;
-    text-decoration: none;
+    @include m-cta-secondary;
+    min-height: 42px;
   }
 }
 .yd-empty {
@@ -47,12 +40,11 @@
   p { @include m-body-small; margin: 0; color: var(--m-muted); }
 }
 .filters {
-  display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--m-accent-soft);
+  @include m-segmented-track;
   button {
-    @include m-button; flex: 1 1 0; border: 0; border-radius: 999px; padding: 10px;
-    color: var(--m-accent-strong); background: transparent; cursor: pointer;
+    @include m-segmented-button;
   }
-  button.is-on { color: var(--m-on-ink); background: var(--m-ink); }
+  button.is-on { @include m-selected-pill; }
 }
 .cards { display: flex; flex-direction: column; gap: 12px; }
 .card {
@@ -64,8 +56,8 @@
 .card-head { display: flex; align-items: center; gap: 8px; }
 h2 { @include m-body-strong; flex: 1 1 0; margin: 0; color: var(--m-text); }
 .tag {
-  flex: 0 0 auto; padding: 3px 8px; border-radius: 999px;
-  font-size: 10px; font-weight: 600; line-height: 1.4; color: var(--m-muted); background: var(--m-raised);
+  @include m-badge;
+  flex: 0 0 auto; color: var(--m-muted); background: var(--m-raised);
   &[data-tone='good'] { color: var(--m-good); background: var(--m-good-soft); }
   &[data-tone='gold'] { color: var(--m-warn); background: var(--m-warn-soft); }
   &[data-tone='bad'] { color: var(--m-bad); background: var(--m-bad-soft); }
@@ -76,7 +68,6 @@ h2 { @include m-body-strong; flex: 1 1 0; margin: 0; color: var(--m-text); }
   img { width: 16px; height: 16px; margin-top: 1px; flex: 0 0 auto; }
 }
 .learn {
-  @include m-body-strong; align-self: flex-start; display: flex; align-items: center; gap: 4px;
-  padding: 0; border: 0; color: var(--m-accent-strong); background: transparent; cursor: pointer;
+  @include m-cta-tertiary; align-self: flex-start;
   img { width: 15px; height: 15px; }
 }

@@ -4,7 +4,7 @@
 .mcal-date-tile {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   width: 56px; height: 56px; border-radius: 16px; background: var(--m-gold-soft); color: var(--m-gold);
-  b { @include m-h2; } small { font-size: 10px; font-weight: 500; }
+  b { @include m-h2; } small { @include m-micro; font-weight: 500; }
 }
 .mcal-festival-head span:last-child { display: flex; flex-direction: column; gap: 2px; }
 h2 { @include m-h2; margin: 0; color: var(--m-text); }
@@ -37,7 +37,4 @@ h2 { @include m-h2; margin: 0; color: var(--m-text); }
   border: 1px solid var(--m-border); border-radius: 16px; background: var(--m-surface);
   p { @include m-body-small; margin: 0; color: var(--m-text); }
 }
-.mcal-remind {
-  @include m-button; align-self: flex-start; padding: 16px 24px; border: 1.5px solid var(--m-border-strong);
-  border-radius: 999px; color: var(--m-accent-strong); background: transparent;
-}
+.mcal-remind { @include m-cta-secondary; align-self: flex-start; }

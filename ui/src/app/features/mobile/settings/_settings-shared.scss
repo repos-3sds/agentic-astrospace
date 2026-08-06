@@ -95,30 +95,15 @@
 // A segmented control — the ink-pill-in-soft-track used for language and tone.
 @mixin settings-segmented {
   .segmented {
+    @include m-segmented-track;
     width: 100%;
-    box-sizing: border-box;
-    display: flex;
-    gap: 4px;
-    padding: 4px;
-    border-radius: 999px;
-    background: var(--m-accent-soft);
   }
 
   .segment {
-    flex: 1 1 0;
-    min-width: 0;
-    border: 0;
-    border-radius: 999px;
-    background: none;
-    padding: 11px;
-    cursor: pointer;
-    @include m-button;
-    color: var(--m-accent-strong);
+    @include m-segmented-button;
 
     &.is-on {
-      background: var(--m-ink);
-      color: var(--m-on-ink);
-      box-shadow: var(--m-shadow-card);
+      @include m-selected-pill;
     }
   }
 }

@@ -9,15 +9,24 @@
 // surfaces below produced light cards carrying dark-theme text — invisible.
 // The mobile palette owns both halves of its own light/dark pair, so it stays
 // internally consistent whatever the web app's theme is doing. Keep the
-// primary surfaces opaque: translucent mobile cards and sheets make scroll
-// content bleed through overlays, especially on native Android.
+// primary surfaces opaque: translucent mobile cards make scroll content bleed
+// through on native Android. Overlays get a separate, controlled glass token.
 
 .as-mobile {
   --m-bg: #faf7f0;
   --m-surface: #fffcf6;
   --m-raised: #ffffff;
+  --m-app-ground:
+    linear-gradient(180deg, #fffaf1 0%, #faf7f0 42%, #f3eee4 100%);
+  --m-frost:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 252, 246, 0.78));
+  --m-footer-glass: rgba(255, 252, 246, 0.58);
+  --m-footer-shine: rgba(255, 255, 255, 0.68);
   --m-sheet-surface: #fffcf6;
   --m-sheet-raised: #ffffff;
+  --m-glass-panel: rgba(255, 252, 246, 0.82);
+  --m-glass-control: rgba(255, 255, 255, 0.62);
+  --m-glass-border: rgba(255, 255, 255, 0.72);
   --m-border: #e6dccd;
   --m-border-strong: #d5c6b4;
 
@@ -70,8 +79,9 @@
   // the shell (onboarding) inherited the web app's theme-reactive background
   // and rendered --m-text, a near-black, on the dark theme's dark surface. The
   // headline was invisible. Setting it here means carrying .as-mobile is enough.
-  background: var(--m-bg);
+  background: var(--m-app-ground);
   color: var(--m-text);
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 // The shell already consumes the top safe area. Onboarding routes sit outside
@@ -89,8 +99,17 @@
   --m-bg: #15110d;
   --m-surface: #241d17;
   --m-raised: #30271f;
+  --m-app-ground:
+    linear-gradient(180deg, #19120d 0%, #15110d 48%, #100c09 100%);
+  --m-frost:
+    linear-gradient(180deg, rgba(54, 43, 34, 0.9), rgba(32, 25, 19, 0.82));
+  --m-footer-glass: rgba(38, 30, 24, 0.54);
+  --m-footer-shine: rgba(255, 248, 236, 0.12);
   --m-sheet-surface: #211a15;
   --m-sheet-raised: #332920;
+  --m-glass-panel: rgba(33, 26, 21, 0.76);
+  --m-glass-control: rgba(255, 248, 236, 0.08);
+  --m-glass-border: rgba(255, 248, 236, 0.14);
   --m-border: #4b3d30;
   --m-border-strong: #74604b;
   --m-text: #f4efe7;

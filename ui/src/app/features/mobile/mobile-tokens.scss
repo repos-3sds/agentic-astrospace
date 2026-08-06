@@ -76,7 +76,112 @@
   line-height: 1.5;
 }
 @mixin m-button {
+  font-family: 'Inter', system-ui, sans-serif;
   font-weight: 600;
   font-size: 15px;
   line-height: 1.2;
+}
+
+@mixin m-micro {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+@mixin m-cta-base {
+  @include m-button;
+  box-sizing: border-box;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 0 20px;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@mixin m-cta-primary {
+  @include m-cta-base;
+  border: 0;
+  color: var(--m-on-ink);
+  background: var(--m-ink);
+  box-shadow: var(--m-shadow-card);
+}
+
+@mixin m-cta-secondary {
+  @include m-cta-base;
+  border: 1.5px solid var(--m-border-strong);
+  color: var(--m-accent-strong);
+  background: transparent;
+}
+
+@mixin m-cta-tertiary {
+  @include m-button;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  padding: 0;
+  color: var(--m-accent-strong);
+  background: transparent;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@mixin m-icon-button($size: 40px) {
+  width: $size;
+  height: $size;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border: 1px solid var(--m-border);
+  border-radius: 999px;
+  background: var(--m-surface);
+  color: var(--m-text);
+  text-decoration: none;
+}
+
+@mixin m-segmented-track {
+  box-sizing: border-box;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--m-accent-soft);
+}
+
+@mixin m-segmented-button {
+  @include m-button;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 40px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 10px;
+  color: var(--m-accent-strong);
+  background: transparent;
+  cursor: pointer;
+}
+
+@mixin m-selected-pill {
+  color: var(--m-on-ink);
+  background: var(--m-ink);
+  box-shadow: var(--m-shadow-card);
+}
+
+@mixin m-badge {
+  @include m-micro;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  border-radius: 999px;
+  padding: 0 8px;
+  white-space: nowrap;
 }

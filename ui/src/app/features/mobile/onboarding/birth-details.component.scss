@@ -124,21 +124,9 @@
 .match-region { @include m-caption; color: var(--m-muted); }
 
 .btn {
+  @include m-cta-primary;
   width: 100%;
-  box-sizing: border-box;
-  border: 0;
-  border-radius: 999px;
-  background: var(--m-ink);
-  color: var(--m-on-ink);
-  box-shadow: var(--m-shadow-card);
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 9px;
-  cursor: pointer;
-  text-decoration: none;
-  @include m-button;
   img { width: 18px; height: 18px; display: block; }
   &:disabled { opacity: .65; cursor: wait; }
 }

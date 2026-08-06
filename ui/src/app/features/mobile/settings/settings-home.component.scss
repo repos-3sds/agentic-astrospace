@@ -6,16 +6,28 @@
 .appbar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  padding: 16px 20px 10px;
-}
-
-.back {
-  line-height: 0;
-  img { width: 24px; height: 24px; display: block; }
+  height: 64px;
+  box-sizing: border-box;
+  padding: 10px 20px;
 }
 
 .screen-title { @include m-title; color: var(--m-text); margin: 0; }
+
+.iconbtn {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--m-border);
+  border-radius: 999px;
+  background: var(--m-surface);
+  color: var(--m-text);
+  text-decoration: none;
+  img { display: block; width: 19px; height: 19px; filter: var(--m-back-icon-filter); }
+}
 
 /* Content column — node 66:94 */
 .body {
