@@ -357,7 +357,8 @@ class VedicChart:
                               city: str = None, nation: str = None,
                               lat: float = None, lng: float = None,
                               tz_str: str = None, display_tz_str: str = None,
-                              days: int = 30) -> dict:
+                              days: int = 30,
+                              include_practitioner_detail: bool = False) -> dict:
         as_of = as_of or datetime.now(self.moment.dt_local.tzinfo)
         return calendar_intelligence(
             self,
@@ -369,6 +370,7 @@ class VedicChart:
             tz_str or self.moment.tz_str,
             display_tz_str or tz_str or self.moment.tz_str,
             days,
+            include_practitioner_detail=include_practitioner_detail,
         )
 
     def transit_context(self) -> dict:

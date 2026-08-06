@@ -385,6 +385,7 @@ class TestTransitContext:
             **DELHI,
             display_tz_str="Asia/Kolkata",
             days=7,
+            include_practitioner_detail=True,
         )
         assert result["system"] == "AstroSpace Calendar Intelligence"
         assert result["current"]["dasha"]["mahadasha"]
@@ -392,6 +393,7 @@ class TestTransitContext:
         categories = {event["category"] for event in result["events"]}
         assert {"dasha", "panchanga", "transit"} <= categories
         assert "2026-07-14" in result["by_date"]
+        assert result["panchanga_days"][0]["practitioner_detail"]["windows"]
 
 
 class TestCompatibility:
