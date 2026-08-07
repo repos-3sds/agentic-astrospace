@@ -147,20 +147,20 @@ export class AskHomeComponent {
   private readonly router = inject(Router);
 
   /**
-   * Send the question on to the answer view (26:54).
+   * Send the question on to the answer view (26:54), which owns the actual
+   * call to the orchestrator (POST /ask/{kundliId}/stream) and streams the
+   * answer in as it's asked to open.
    *
    * The topic, when one is selected, rides along: it is the reader saying which
    * of several readings of an ambiguous question they meant, and dropping it
    * would make the chips decorative.
    *
-   * Every question currently lands on the answer view, including ones that must
-   * refer out — a health question here still shows a career verdict. Which of
-   * the two screens a question belongs on is the answer pipeline's call, not
-   * the composer's: classifying intent in the client would put the safety
-   * boundary somewhere it can be skipped by anything that does not go through
-   * this button. The refer-out screen is built and routed; wiring it is part of
-   * connecting /api/v1/ask, and until then this is placeholder routing like the
-   * placeholder verdict it lands on.
+   * Every question lands on the answer view first, including ones that must
+   * refer out — the answer view redirects to the refer-out screen itself once
+   * the response comes back with a refer_out_kind. Which of the two screens a
+   * question belongs on is the answer pipeline's call, not the composer's:
+   * classifying intent in the client would put the safety boundary somewhere
+   * it can be skipped by anything that does not go through this button.
    */
   protected async ask(question: string): Promise<void> {
     const q = question.trim();
@@ -168,7 +168,7 @@ export class AskHomeComponent {
       return;
     }
     await this.router.navigate(['/m', 'ask', 'answer'], {
-      queryParams: { q, topic: this.selectedTopic() ?? undefined, preview: 'construction' },
+      queryParams: { q, topic: this.selectedTopic() ?? undefined },
     });
   }
 }

@@ -1,7 +1,7 @@
 import json
 import os
 import anthropic
-from typing import Any
+from typing import Any, Iterator
 
 
 class BaseAstroAgent:
@@ -60,6 +60,48 @@ class BaseAstroAgent:
             break
 
         return "Unable to generate a response.", tools_used
+
+    def run_messages_stream(self, messages: list) -> Iterator[str]:
+        """Streaming counterpart to `run_messages`. Yields text deltas as they
+        arrive instead of returning the final string, so a caller can forward
+        them to a client incrementally (e.g. as SSE frames).
+
+        Runs the same tool loop `run_messages` does. Any text is streamed as
+        it arrives regardless of which turn produces it — a turn that ends in
+        `tool_use` is still executed and fed back afterward. In practice a
+        tool-use turn rarely emits user-facing text before the tool call, and
+        no current domain agent uses tools, so this is not yet a real gap;
+        revisit if a future tool-using domain agent narrates before calling.
+        """
+        messages = list(messages)
+
+        while True:
+            with self.client.messages.stream(
+                model=self.model,
+                max_tokens=4096,
+                system=self.system_prompt,
+                tools=self.tools,
+                messages=messages,
+            ) as stream:
+                for text in stream.text_stream:
+                    yield text
+                response = stream.get_final_message()
+
+            if response.stop_reason == "tool_use":
+                messages.append({"role": "assistant", "content": response.content})
+                tool_results = []
+                for block in response.content:
+                    if block.type == "tool_use":
+                        result = self._dispatch_tool(block.name, block.input)
+                        tool_results.append({
+                            "type": "tool_result",
+                            "tool_use_id": block.id,
+                            "content": json.dumps(result),
+                        })
+                messages.append({"role": "user", "content": tool_results})
+                continue
+
+            return
 
     def _dispatch_tool(self, name: str, inputs: dict) -> Any:
         method = getattr(self, f"_tool_{name}", None)

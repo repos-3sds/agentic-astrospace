@@ -22,7 +22,8 @@ If you widen the subject lists, run this. Both directions fail loudly.
 """
 import pytest
 
-from astrospace.api.ask_routes import _prohibited_verdict, _refer_out_kind
+from astrospace.agents.safety import prohibited_verdict as _prohibited_verdict
+from astrospace.agents.safety import refer_out_kind as _refer_out_kind
 
 
 # Every one of these was in the probe set, plus the paraphrases that motivated

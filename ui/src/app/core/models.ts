@@ -1315,3 +1315,28 @@ export interface AskResponse {
   thread_id?: string | null;
   refer_out_kind?: 'health' | 'legal' | 'money' | 'death' | null;
 }
+
+/** One citation surfaced from the orchestrator's assembled bundle. */
+export interface AskEvidenceItem {
+  statement: string;
+  source_location: string;
+}
+
+/**
+ * A frame from `POST /ask/{kundliId}/stream` (astrospace/api/ask_stream_routes.py).
+ * `reset: true` means the output-side safety gate tripped mid-stream — the
+ * client must discard whatever partial text it has rendered and show this
+ * delta instead of appending to it.
+ */
+export type AskStreamEvent =
+  | { delta: string; reset?: boolean }
+  | {
+      done: true;
+      thread_id: string | null;
+      /** The CE taxonomy domain routed to (e.g. "career"), or null when the
+       * question never reached routing (an input-side refer-out). */
+      domain: string | null;
+      /** Non-null only when the answer was refused — see AnswerView.tone. */
+      refer_out_kind: 'health' | 'legal' | 'money' | 'death' | null;
+      evidence: AskEvidenceItem[];
+    };
