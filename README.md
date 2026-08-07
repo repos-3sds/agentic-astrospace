@@ -125,7 +125,7 @@ agentic-astrospace/
 ### Prerequisites
 
 - Python 3.9 or higher
-- An Anthropic API key — get one at https://console.anthropic.com
+- A Gemini API key for AI readings — create one in Google AI Studio
 
 ### 1. Clone
 
@@ -138,7 +138,7 @@ cd agentic-astrospace
 ### 2. Install Dependencies
 
 ```bash
-pip3 install fastapi uvicorn sqlalchemy kerykeion anthropic python-dotenv
+pip3 install -r requirements.txt
 ```
 
 If `kerykeion` fails on Mac:
@@ -158,7 +158,11 @@ pip3 install kerykeion
 Create a `.env` file in the project root:
 
 ```bash
-echo "ANTHROPIC_API_KEY=sk-ant-api03-..." > .env
+cat > .env <<'EOF'
+AI_PROVIDER=gemini
+GEMINI_API_KEY=your_gemini_key_here
+GEMINI_MODEL=gemini-3.5-flash
+EOF
 ```
 
 ### 4. Run
@@ -179,9 +183,12 @@ The Swagger API docs are at **http://localhost:8000/docs**.
 
 | Variable | Required | Description |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | Yes | Anthropic API key for AI readings |
+| `AI_PROVIDER` | No | `gemini` or `anthropic`; defaults to `anthropic` if unset |
+| `GEMINI_API_KEY` | Yes for Gemini | Gemini API key for AI readings |
+| `GEMINI_MODEL` | No | Gemini model id. Defaults to `gemini-3.5-flash` |
+| `ANTHROPIC_API_KEY` | Yes for Anthropic | Anthropic API key for fallback/provider switch |
 | `DATABASE_URL` | No | PostgreSQL URL for Supabase. Defaults to local SQLite |
-| `ANTHROPIC_BASE_URL` | No | Override Anthropic API base URL (used in Claude Code sessions) |
+| `ANTHROPIC_MODEL` | No | Anthropic model id. Defaults to `claude-opus-5` |
 
 ---
 

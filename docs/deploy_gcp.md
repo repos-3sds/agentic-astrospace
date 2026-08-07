@@ -84,7 +84,10 @@ prompted.)
 | SUPABASE_ANON_KEY | yes | anon public key (safe to expose; it's shipped to browsers anyway) |
 | ALLOWED_ORIGINS | no | extra CORS origins, comma-separated (SPA is same-origin; only needed for a split frontend later) |
 | GEONAMES_USERNAME | no | only if online geocoding fallback is wanted |
-| ANTHROPIC_API_KEY | not yet | AI features not wired into the product |
+| AI_PROVIDER | yes for Ask | `gemini` for the mobile Ask experience; `anthropic` remains available as a fallback |
+| GEMINI_API_KEY | yes when AI_PROVIDER=gemini | Gemini API key for Ask and agentic explanations |
+| GEMINI_MODEL | no | Defaults to `gemini-3.5-flash` |
+| ANTHROPIC_API_KEY | yes when AI_PROVIDER=anthropic | Anthropic API key for fallback/provider switch |
 
 ## Updating
 
