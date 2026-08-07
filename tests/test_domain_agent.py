@@ -191,6 +191,21 @@ class TestAskStreamRoute:
         assert frames[-1]["domain"] == "career"
         assert frames[-1]["refer_out_kind"] == "legal"
 
+    def test_stream_generation_failure_returns_visible_fallback(self, client, env):
+        with patch("astrospace.agents.base.BaseAstroAgent.run_messages_stream",
+                   side_effect=TypeError("missing model auth")):
+            r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
+                "question": "Is this a good year for a promotion at work?",
+                "start_thread": True,
+            })
+        assert r.status_code == 200
+        frames = self._frames(r)
+        assert frames[0]["delta"].startswith("Siddha's Ask agents")
+        assert frames[-1]["done"] is True
+        assert frames[-1]["domain"] == "career"
+        assert frames[-1]["refer_out_kind"] is None
+        assert frames[-1]["thread_id"]
+
     def test_unknown_kundli_404_before_streaming(self, client):
         r = client.post("/api/v1/ask/nonexistent-id/stream", json={"question": "hi"})
         assert r.status_code == 404

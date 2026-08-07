@@ -32,6 +32,11 @@ from .context_routes import _chart_from_kundli
 
 router = APIRouter(prefix="/api/v1/ask", tags=["ask-ai"])
 
+AI_UNAVAILABLE_ANSWER = (
+    "Siddha's Ask agents are still being prepared. We have saved your question, "
+    "and this space will answer with live chart-grounded guidance once the agents are online."
+)
+
 
 def _sse(payload: dict) -> str:
     return f"data: {json.dumps(payload)}\n\n"
@@ -119,23 +124,34 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
         elif streams_tokens:
             buffer = []
             crossed = None
-            for delta in agent.run_messages_stream(messages):
-                buffer.append(delta)
-                crossed = prohibited_verdict("".join(buffer))
-                if crossed:
-                    break
-                yield _sse({"delta": delta})
+            generation_error = None
+            try:
+                for delta in agent.run_messages_stream(messages):
+                    buffer.append(delta)
+                    crossed = prohibited_verdict("".join(buffer))
+                    if crossed:
+                        break
+                    yield _sse({"delta": delta})
+            except Exception as exc:
+                generation_error = exc
             if crossed:
                 # Second-layer net tripped mid-stream — the client discards
                 # whatever partial text it has rendered and shows this instead.
                 answer = REFER_OUT_ANSWERS[crossed]
                 yield _sse({"reset": True, "delta": answer})
                 final_domain, final_refer_out_kind, final_evidence = domain, crossed, []
+            elif generation_error:
+                answer = AI_UNAVAILABLE_ANSWER
+                yield _sse({"reset": bool(buffer), "delta": answer})
+                final_domain, final_refer_out_kind, final_evidence = domain, None, []
             else:
                 answer = "".join(buffer)
                 final_domain, final_refer_out_kind, final_evidence = domain, None, evidence
         else:
-            answer, tools_used = agent.run_messages(messages)
+            try:
+                answer, tools_used = agent.run_messages(messages)
+            except Exception:
+                answer, tools_used = AI_UNAVAILABLE_ANSWER, []
             crossed = prohibited_verdict(answer)
             if crossed:
                 answer = REFER_OUT_ANSWERS[crossed]
