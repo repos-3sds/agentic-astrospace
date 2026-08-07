@@ -28,7 +28,7 @@ def _uuid() -> str:
 # Postgres gets a native text[]; SQLite (local-dev fallback) gets JSON, since
 # SQLite has no array type and would fail to compile the DDL otherwise.
 _StringArray = ARRAY(String).with_variant(JSON, "sqlite")
-_UuidString = Uuid(as_uuid=False)
+_UuidString = Uuid(as_uuid=False).with_variant(String, "sqlite")
 
 
 class Kundli(Base):
