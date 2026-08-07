@@ -1,4 +1,5 @@
 @let v = view();
+@let copy = answerCopy();
 
 <header class="appbar">
   <a class="back" [routerLink]="['/m', 'ask']" aria-label="Back to Ask">
@@ -12,13 +13,24 @@
     <p class="bubble">{{ v.question }}</p>
   </div>
 
-  <article class="answer">
+  <article class="answer" [class.is-loading]="streaming()">
     <p class="verdict-label">
       <span class="dot" [attr.data-tone]="v.tone" aria-hidden="true"></span>
       <span class="eyebrow good">{{ v.preview ? 'STATUS' : 'VERDICT' }} · {{ v.domain }}</span>
     </p>
 
-    <h1 class="verdict">{{ v.verdict }}</h1>
+    <h1 class="verdict">{{ copy.lead }}</h1>
+
+    @if (copy.sections.length) {
+      <div class="answer-sections">
+        @for (section of copy.sections; track section.title + section.body) {
+          <section class="answer-section">
+            <h2>{{ section.title }}</h2>
+            <p>{{ section.body }}</p>
+          </section>
+        }
+      </div>
+    }
 
     <div class="rule"></div>
 

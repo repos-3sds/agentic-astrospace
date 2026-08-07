@@ -5,6 +5,7 @@
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  background: var(--m-bg);
 }
 
 /* Back bar — node 26:55 */
@@ -30,19 +31,19 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 10px 20px 18px;
-  scroll-padding-bottom: 78px;
+  gap: 14px;
+  padding: 10px 20px 22px;
+  scroll-padding-bottom: 104px;
 }
 
 .asked { display: flex; justify-content: flex-end; }
 
 .bubble {
-  max-width: 260px;
+  max-width: min(296px, 82vw);
   margin: 0;
   background: var(--m-ink);
   color: var(--m-on-ink);
-  padding: 12px 16px;
+  padding: 13px 17px;
   // The clipped bottom-right corner is what marks the bubble as the reader's
   // own words rather than the app's.
   border-radius: 18px 18px 6px 18px;
@@ -53,12 +54,13 @@
 .answer {
   background: var(--m-surface);
   border: 1px solid var(--m-border);
-  border-radius: 22px;
+  border-radius: 24px;
   box-shadow: var(--m-shadow-card);
-  padding: 18px;
+  padding: 18px 16px 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 13px;
+  overflow: hidden;
 }
 
 .eyebrow { @include m-eyebrow; color: var(--m-accent); margin: 0; }
@@ -78,7 +80,64 @@
   &[data-tone='bad']  { background: var(--m-bad); }
 }
 
-.verdict { @include m-h2; color: var(--m-text); margin: 0; }
+.verdict {
+  @include m-body-lg;
+  font-weight: 500;
+  font-size: 17px;
+  line-height: 1.52;
+  color: var(--m-text);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.answer-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.answer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px 13px;
+  border: 1px solid color-mix(in srgb, var(--m-border) 72%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--m-raised) 70%, transparent);
+
+  h2 {
+    @include m-body-strong;
+    font-size: 15px;
+    line-height: 1.35;
+    color: var(--m-text);
+    margin: 0;
+  }
+
+  p {
+    @include m-body-small;
+    color: var(--m-muted);
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.answer.is-loading .verdict::after {
+  content: '';
+  display: inline-block;
+  width: 0.8em;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.12em;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.24;
+  animation: answer-pulse 1s ease-in-out infinite;
+}
+
+@keyframes answer-pulse {
+  0%, 100% { opacity: 0.16; transform: scale(0.74); }
+  50% { opacity: 0.36; transform: scale(0.92); }
+}
 
 .rule { height: 1px; background: var(--m-border); }
 
@@ -136,8 +195,14 @@
 
 /* The composer (node 26:93) is as-ask-composer, seated as a chat input here. */
 as-ask-composer.answer-composer {
-  margin: 0 20px max(8px, env(safe-area-inset-bottom, 0px));
+  margin: 0 20px max(10px, env(safe-area-inset-bottom, 0px));
   width: auto;
   align-self: stretch;
   background: var(--m-surface);
+  position: relative;
+  z-index: 2;
+}
+
+:host-context([data-theme='dark']) .answer-section {
+  background: color-mix(in srgb, var(--m-raised) 62%, transparent);
 }

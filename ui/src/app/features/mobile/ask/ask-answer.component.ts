@@ -30,7 +30,14 @@ export interface AnswerView {
   preview: boolean;
 }
 
+interface AnswerSection {
+  title: string;
+  body: string;
+}
+
 const REFER_OUT_KINDS = new Set(['death', 'health', 'legal', 'money']);
+const INLINE_SECTION_RE =
+  /(^|[.!?])\s+((?:The timing|Timing|Career signal|Main signal|What this means|What to do|Use care|Astrological basis|Basis|Recommendation|Bottom line|Verdict|Gochara|Remedy)[^.!?\n]{0,80}:)/gi;
 
 /**
  * Ask — Answer view (Figma node 26:54).
@@ -121,6 +128,7 @@ export class AskAnswerComponent {
     const v = this.view();
     return `${v.question}. ${v.verdict} ${v.whatToDo}`;
   });
+  readonly answerCopy = computed(() => this.copyFromAnswer(this.view().verdict));
 
   readonly draft = signal('');
   readonly submitError = signal<string | null>(null);
@@ -135,7 +143,7 @@ export class AskAnswerComponent {
   /** Sentence-split of the real streamed answer — not a separate backend
    * field, but genuinely the reasoning the reader is asking to see again. */
   readonly plainWords = computed<string[]>(() => {
-    const text = this.streamedAnswer().trim();
+    const text = this.normaliseAnswerText(this.streamedAnswer()).trim();
     if (!text) return [];
     return text.split(/(?<=[.!?])\s+/).filter((s) => s.length > 0);
   });
@@ -174,6 +182,103 @@ export class AskAnswerComponent {
    * not re-stream) — both cases can otherwise present the same threadId
    * with `askState.answer(threadId)` already populated. */
   private hasStreamedInThisInstance = false;
+
+  private copyFromAnswer(answer: string): { lead: string; sections: AnswerSection[] } {
+    const text = this.normaliseAnswerText(answer);
+    if (!text) return { lead: '', sections: [] };
+    if (text === 'Reading your chart…' || text === 'Ask a question to get started.') {
+      return { lead: text, sections: [] };
+    }
+
+    const lines = text
+      .replace(INLINE_SECTION_RE, (_match, boundary: string, heading: string) => `${boundary}\n${heading}`)
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    const leadParts: string[] = [];
+    const sections: AnswerSection[] = [];
+    let current: AnswerSection | null = null;
+
+    for (const line of lines) {
+      const heading = this.extractHeading(line);
+      if (heading) {
+        if (current) sections.push(current);
+        current = { title: heading.title, body: heading.body };
+        continue;
+      }
+      if (current) {
+        current.body = [current.body, line].filter(Boolean).join(' ');
+      } else {
+        leadParts.push(line);
+      }
+    }
+    if (current) sections.push(current);
+
+    const leadSource = leadParts.join(' ') || sections.shift()?.body || text;
+    const leadSentences = this.sentences(leadSource);
+    const splitLead = this.splitLead(leadSentences[0] || leadSource);
+    const lead = splitLead.lead;
+    const leadRemainder = [splitLead.remainder, ...leadSentences.slice(1)]
+      .filter(Boolean)
+      .join(' ');
+    if (leadRemainder) {
+      sections.unshift({ title: 'Summary', body: leadRemainder });
+    }
+
+    return {
+      lead,
+      sections: sections
+        .map((section) => ({
+          title: section.title,
+          body: section.body.trim(),
+        }))
+        .filter((section) => section.body),
+    };
+  }
+
+  private normaliseAnswerText(answer: string): string {
+    return answer
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/__(.*?)__/g, '$1')
+      .replace(/^\s{0,3}#{1,6}\s*/gm, '')
+      .replace(/^\s*[-*]\s+/gm, '')
+      .replace(/\s+/g, ' ')
+      .replace(/\s+([,.;:!?])/g, '$1')
+      .trim();
+  }
+
+  private extractHeading(line: string): AnswerSection | null {
+    const match = line.match(/^([^:]{3,86}):\s*(.*)$/);
+    if (!match) return null;
+    const title = match[1]
+      .replace(/^[0-9]+[.)]\s*/, '')
+      .trim();
+    if (!/[A-Za-z]/.test(title)) return null;
+    return { title, body: match[2].trim() };
+  }
+
+  private sentences(text: string): string[] {
+    return text
+      .split(/(?<=[.!?])\s+/)
+      .map((sentence) => sentence.trim())
+      .filter(Boolean);
+  }
+
+  private splitLead(sentence: string): { lead: string; remainder: string } {
+    if (sentence.length <= 145) return { lead: sentence, remainder: '' };
+    const candidates = [' for ', ' with ', ' because ', ' while ', ' as ']
+      .map((needle) => sentence.indexOf(needle, 88))
+      .filter((index) => index > 0 && index <= 150);
+    const cut = candidates.length ? Math.min(...candidates) : sentence.lastIndexOf(',', 145);
+    if (cut < 80) return { lead: sentence, remainder: '' };
+    const lead = sentence.slice(0, cut).replace(/[,.]\s*$/, '').trim() + '.';
+    const remainder = sentence.slice(cut).trim().replace(/^[,.;:-]\s*/, '');
+    return {
+      lead,
+      remainder: remainder ? remainder[0].toUpperCase() + remainder.slice(1) : '',
+    };
+  }
 
   constructor() {
     effect(() => {

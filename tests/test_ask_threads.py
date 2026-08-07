@@ -22,8 +22,8 @@ from astrospace.api.auth import AuthUser, current_user
 from astrospace.db import crud, crud_mobile as cm, get_db
 from astrospace.db.database import Base
 
-ME = "test-user-ask-threads"
-OTHER = "test-user-ask-other"
+ME = "11111111-1111-4111-8111-111111111111"
+OTHER = "22222222-2222-4222-8222-222222222222"
 
 
 @pytest.fixture(scope="module")

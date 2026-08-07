@@ -15,6 +15,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     UniqueConstraint,
+    Uuid,
 )
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from .database import Base
@@ -27,6 +28,7 @@ def _uuid() -> str:
 # Postgres gets a native text[]; SQLite (local-dev fallback) gets JSON, since
 # SQLite has no array type and would fail to compile the DDL otherwise.
 _StringArray = ARRAY(String).with_variant(JSON, "sqlite")
+_UuidString = Uuid(as_uuid=False)
 
 
 class Kundli(Base):
@@ -150,10 +152,11 @@ class UserSettings(Base):
 # =============================================================================
 # Mobile app schema — mirrors supabase/migrations/20260725120000_create_mobile_app_schema.sql
 #
-# Ids are Postgres uuid columns; they are modelled as String here (with a
-# Python-side uuid4 default) so the same models work against the SQLite
-# local-dev fallback in database.py. Timestamps follow the existing naive-UTC
-# convention used by the four original tables.
+# Most ids are still modelled as String so the same models work against the
+# SQLite local-dev fallback in database.py. Ask history uses SQLAlchemy's UUID
+# type with string values because the live Postgres schema stores these columns
+# as uuid. Timestamps follow the existing naive-UTC convention used by the four
+# original tables.
 # =============================================================================
 
 
@@ -194,9 +197,9 @@ class UserDevice(Base):
 class AskThread(Base):
     __tablename__ = "ask_threads"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
-    user_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
-    kundli_id: Mapped[str] = mapped_column(String, ForeignKey("kundlis.id"), nullable=False, index=True)
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
+    user_id: Mapped[str] = mapped_column(_UuidString, index=True, nullable=False)
+    kundli_id: Mapped[str] = mapped_column(_UuidString, ForeignKey("kundlis.id"), nullable=False, index=True)
     title: Mapped[str | None] = mapped_column(String)
     last_message_at: Mapped[datetime | None] = mapped_column(DateTime)
     message_count: Mapped[int] = mapped_column(Integer, default=0)
@@ -213,8 +216,8 @@ class AskThread(Base):
 class AskMessage(Base):
     __tablename__ = "ask_messages"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
-    thread_id: Mapped[str] = mapped_column(String, ForeignKey("ask_threads.id"), nullable=False, index=True)
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
+    thread_id: Mapped[str] = mapped_column(_UuidString, ForeignKey("ask_threads.id"), nullable=False, index=True)
     role: Mapped[str] = mapped_column(String, nullable=False)  # user | assistant
     content: Mapped[str] = mapped_column(Text, nullable=False)
     domain: Mapped[str | None] = mapped_column(String)
