@@ -17,28 +17,18 @@
   } @else if (!threads().length) {
     <div class="askhist-empty">
       <p class="askhist-empty-title">No past questions yet</p>
-      <p>Your saved conversations will appear here.</p>
+      <p>Completed Ask conversations will appear here after the answer finishes saving.</p>
       <a routerLink="/m/ask">Ask your first question</a>
     </div>
   } @else {
     <div class="askhist-list">
       @for (thread of threads(); track thread.id; let first = $first) {
-        <article
-          class="askhist-card"
-          [class.is-opening]="opening() === thread.id"
-          tabindex="0"
-          role="button"
-          (click)="open(thread)"
-          (keydown.enter)="open(thread)"
+        <div
+          class="askhist-swipe"
+          [class.is-revealed]="revealedThreadId() === thread.id"
+          (touchstart)="beginSwipe($event)"
+          (touchend)="endSwipe($event, thread)"
         >
-          <div class="askhist-meta">
-            <span>{{ date(thread) }} · {{ thread.message_count }} messages</span>
-            <span class="askhist-badge">{{ first ? 'ACTIVE' : 'SAVED' }}</span>
-          </div>
-          <div class="askhist-question">
-            <h2>{{ thread.title }}</h2>
-            <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
-          </div>
           <button
             class="askhist-archive"
             type="button"
@@ -47,7 +37,24 @@
           >
             {{ archiving() === thread.id ? 'Archiving…' : 'Archive' }}
           </button>
-        </article>
+          <article
+            class="askhist-card"
+            [class.is-opening]="opening() === thread.id"
+            tabindex="0"
+            role="button"
+            (click)="open(thread)"
+            (keydown.enter)="open(thread)"
+          >
+            <div class="askhist-meta">
+              <span>{{ date(thread) }} · {{ thread.message_count }} messages</span>
+              <span class="askhist-badge">{{ first ? 'ACTIVE' : 'SAVED' }}</span>
+            </div>
+            <div class="askhist-question">
+              <h2>{{ thread.title }}</h2>
+              <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
+            </div>
+          </article>
+        </div>
       }
     </div>
   }

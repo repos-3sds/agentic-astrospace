@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 
 import { ApiService } from '../../../core/api.service';
-import { AskResponse } from '../../../core/models';
 
 export interface MobileAskThread {
   id: string;
@@ -18,6 +17,7 @@ export interface MobileAskMessage {
   content: string;
   domain: string | null;
   refer_out_kind: string | null;
+  evidence: Record<string, unknown> | null;
   created_at: string | null;
 }
 
@@ -41,14 +41,6 @@ export class MobileAskThreadService {
     return this.api.get<MobileAskThreadDetail>(
       `/ask/threads/${encodeURIComponent(threadId)}`,
     );
-  }
-
-  continue(kundliId: string, threadId: string, question: string): Promise<AskResponse> {
-    return this.api.post<AskResponse>(`/ask/${encodeURIComponent(kundliId)}`, {
-      question,
-      thread_id: threadId,
-      input_mode: 'text',
-    });
   }
 
   async archive(threadId: string): Promise<void> {

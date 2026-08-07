@@ -168,7 +168,7 @@ export class AskHomeComponent {
       return;
     }
     await this.router.navigate(['/m', 'ask', 'answer'], {
-      queryParams: { q, topic: this.selectedTopic() ?? undefined },
+      queryParams: { q, topic: this.selectedTopic() ?? undefined, pending: '1' },
     });
   }
 }

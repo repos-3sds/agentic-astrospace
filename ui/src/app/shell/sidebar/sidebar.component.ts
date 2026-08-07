@@ -64,6 +64,7 @@ export class SidebarComponent {
   protected readonly profileQuery = signal('');
   protected readonly tabs = KUNDLI_TABS;
   protected readonly aiTab = AI_TAB;
+  private adminCheckUserId: string | null = null;
   protected readonly toggleLabel = computed(() =>
     this.collapsed() ? 'Expand sidebar' : 'Collapse sidebar',
   );
@@ -89,10 +90,27 @@ export class SidebarComponent {
     effect(() => {
       localStorage.setItem('astrospace-sidebar', this.collapsed() ? 'collapsed' : 'expanded');
     });
-    void this.auth.init()
-      .then(() => this.admin.me())
-      .then(() => this.canAdmin.set(true))
-      .catch(() => this.canAdmin.set(false));
+    void this.auth.init().catch(() => this.canAdmin.set(false));
+    effect(() => {
+      const ready = this.auth.ready();
+      const userId = this.auth.user()?.id ?? null;
+      if (!ready || !userId) {
+        this.adminCheckUserId = null;
+        this.canAdmin.set(false);
+        return;
+      }
+      void this.refreshAdminAccess(userId);
+    });
+  }
+
+  private async refreshAdminAccess(userId: string): Promise<void> {
+    this.adminCheckUserId = userId;
+    try {
+      await this.admin.me();
+      if (this.adminCheckUserId === userId) this.canAdmin.set(true);
+    } catch {
+      if (this.adminCheckUserId === userId) this.canAdmin.set(false);
+    }
   }
 
   protected toggle(): void {

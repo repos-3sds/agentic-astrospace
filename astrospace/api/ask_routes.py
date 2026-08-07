@@ -52,6 +52,15 @@ class AskRequest(BaseModel):
     )
     language: str = "en"
     input_mode: Literal["text", "voice"] = "text"
+    domain_override: Optional[str] = Field(
+        None,
+        description="An explicit domain the reader chose (e.g. tapping a "
+                    "clarification chip) — bypasses keyword routing entirely "
+                    "rather than being folded back into the question text, "
+                    "since repeating a keyword the router already saw once "
+                    "does not change its score. Only honoured by the "
+                    "streamed v2 orchestrator (ask_stream_routes.py).",
+    )
 
 
 # ── Threads ──────────────────────────────────────────────────────────────────

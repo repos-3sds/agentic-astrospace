@@ -48,6 +48,13 @@
   gap: 12px;
 }
 
+.askhist-swipe {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
 .askhist-card {
   position: relative;
   padding: 16px;
@@ -56,8 +63,13 @@
   background: var(--m-surface);
   box-shadow: 0 5px 18px rgb(62 45 25 / 6%);
   cursor: pointer;
+  transition: transform 180ms ease;
 
   &.is-opening { opacity: 0.65; }
+}
+
+.askhist-swipe.is-revealed .askhist-card {
+  transform: translateX(104px);
 }
 
 .askhist-meta,
@@ -96,12 +108,17 @@
 }
 
 .askhist-archive {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 96px;
   border: 0;
-  background: transparent;
-  padding: 8px 0 0;
-  color: var(--m-muted);
-  @include m-caption;
+  background: var(--m-accent-strong);
+  color: var(--m-on-ink);
+  @include m-body-strong;
   cursor: pointer;
+  display: grid;
+  place-items: center;
+  z-index: 0;
 }
 
 .askhist-state,

@@ -69,7 +69,15 @@ export class AskService {
       start_thread?: boolean;
       language?: string;
       input_mode?: 'text' | 'voice';
+      /** An explicit domain the reader chose (a clarification chip) —
+       * bypasses keyword routing server-side rather than being folded back
+       * into `question` as prose. See AskOrchestrator.route()'s docstring:
+       * the router only checks whether a keyword appears at least once, so
+       * repeating "career" in a question that already said it once doesn't
+       * change anything, and a tie against another domain never resolves. */
+      domain_override?: string;
     },
+    signal?: AbortSignal,
   ): AsyncGenerator<AskStreamEvent> {
     const token = await this.auth.getAccessToken();
     const response = await fetch(apiUrl(`/api/v1/ask/${encodeURIComponent(kundliId)}/stream`), {
@@ -79,17 +87,23 @@ export class AskService {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(body),
+      signal,
     });
     if (!response.ok || !response.body) {
       const text = await response.text().catch(() => '');
       const detail = (() => {
         try {
-          return JSON.parse(text).detail as string;
+          const parsed = JSON.parse(text);
+          return parsed.detail || parsed.message || text;
         } catch {
           return text;
         }
       })();
-      throw new Error(detail || `Ask stream failed (${response.status})`);
+      throw new Error(
+        typeof detail === 'string' && detail.trim()
+          ? detail
+          : `Ask stream failed (${response.status})`,
+      );
     }
 
     const reader = response.body.getReader();

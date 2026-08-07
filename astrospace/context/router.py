@@ -26,6 +26,11 @@ class RoutingDecision:
     confidence: str = "low"          # low | medium | high
     method: str = "keyword"          # keyword | llm | default
     matched_terms: tuple[str, ...] = field(default=())
+    # (domain_id, hit_count, matched_terms) per domain that scored at least
+    # one hit, ranked highest-first — lets a caller (the Ask orchestrator)
+    # decide "is this a genuine tie" without recomputing scoring itself.
+    # Empty for LLMRouter results (moot — those are always confidence="high").
+    ranked_domains: tuple[tuple[str, int, tuple[str, ...]], ...] = field(default=())
 
     @property
     def domains(self) -> list[str]:
@@ -60,9 +65,13 @@ class KeywordRouter:
         primary, primary_hits = ranked[0]
         secondary = tuple(domain_id for domain_id, _ in ranked[1:3])
         confidence = "high" if len(primary_hits) >= 2 else "medium"
+        ranked_domains = tuple(
+            (domain_id, len(hits), tuple(hits)) for domain_id, hits in ranked
+        )
         return RoutingDecision(
             primary=primary, secondary=secondary, confidence=confidence,
             method="keyword", matched_terms=tuple(primary_hits),
+            ranked_domains=ranked_domains,
         )
 
 

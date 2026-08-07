@@ -1,6 +1,10 @@
 import json
 import os
-from typing import Any, Iterator
+from typing import Any, Iterator, TypeVar
+
+from pydantic import BaseModel
+
+_SchemaT = TypeVar("_SchemaT", bound=BaseModel)
 
 
 DEFAULT_ANTHROPIC_MODEL = "claude-opus-5"
@@ -46,6 +50,71 @@ class BaseAstroAgent:
             yield from self._run_messages_stream_gemini(messages)
             return
         yield from self._run_messages_stream_anthropic(messages)
+
+    def run_structured(
+        self, messages: list, schema: type[_SchemaT], tool_name: str = "deliver_result",
+    ) -> _SchemaT:
+        """Force the model to answer via a single tool call whose input_schema
+        is `schema.model_json_schema()`, then validate the call's input back
+        into `schema`. Schema validity is free from Pydantic; the caller
+        (the Ask orchestrator's verifier) checks content correctness — this
+        method only guarantees *shape*, never grounding.
+        """
+        if self.provider == "gemini":
+            return self._run_structured_gemini(messages, schema, tool_name)
+        return self._run_structured_anthropic(messages, schema, tool_name)
+
+    def _run_structured_anthropic(
+        self, messages: list, schema: type[_SchemaT], tool_name: str,
+    ) -> _SchemaT:
+        tool = {
+            "name": tool_name,
+            "description": f"Deliver the answer as {schema.__name__}.",
+            "input_schema": schema.model_json_schema(),
+        }
+        response = self._anthropic_client().messages.create(
+            model=self.model,
+            max_tokens=4096,
+            system=self.system_prompt,
+            tools=[tool],
+            tool_choice={"type": "tool", "name": tool_name},
+            messages=messages,
+        )
+        for block in response.content:
+            if block.type == "tool_use" and block.name == tool_name:
+                return schema.model_validate(block.input)
+        raise ValueError(
+            f"Model did not call {tool_name!r}; stop_reason={response.stop_reason!r}"
+        )
+
+    def _run_structured_gemini(
+        self, messages: list, schema: type[_SchemaT], tool_name: str,
+    ) -> _SchemaT:
+        types = self._gemini_types()
+        contents = self._gemini_contents_from_messages(messages)
+        declaration = types.FunctionDeclaration(
+            name=tool_name,
+            description=f"Deliver the answer as {schema.__name__}.",
+            parameters_json_schema=schema.model_json_schema(),
+        )
+        config = types.GenerateContentConfig(
+            system_instruction=self.system_prompt or None,
+            max_output_tokens=4096,
+            temperature=0.35,
+            tools=[types.Tool(function_declarations=[declaration])],
+            tool_config=types.ToolConfig(
+                function_calling_config=types.FunctionCallingConfig(
+                    mode="ANY", allowed_function_names=[tool_name],
+                ),
+            ),
+        )
+        response = self._gemini_client().models.generate_content(
+            model=self.model, contents=contents, config=config,
+        )
+        for call in getattr(response, "function_calls", None) or []:
+            if call.name == tool_name:
+                return schema.model_validate(dict(call.args or {}))
+        raise ValueError(f"Model did not call {tool_name!r}")
 
     # Anthropic provider --------------------------------------------------
 

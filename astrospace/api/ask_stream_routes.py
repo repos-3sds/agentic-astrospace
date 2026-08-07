@@ -1,30 +1,29 @@
-"""Ask-AI, streamed — the orchestrator path.
+"""Ask-AI, streamed — the orchestrator path (v2).
 
 Additive alongside `/api/v1/ask/{kundli_id}` (ask_routes.py), which stays
-untouched. This endpoint routes a question through the Context Engine's
-`KeywordRouter` across the full taxonomy, and for domains with a registered
-specialist (`astrospace.agents.domain_agent.DOMAIN_AGENTS`) hands the
-already-assembled `ContextBundle` to that specialist and streams its answer
-token by token. Domains without a specialist yet fall back to the existing
-`VedicQAAgent`, sent as a single chunk — every question gets a real answer,
-only registered domains get the streamed, bundle-grounded treatment.
+untouched. Thin by design: this module resolves HTTP/DB concerns (auth,
+kundli lookup, thread/history, persistence), and hands everything else to
+`AskOrchestrator` (astrospace/agents/orchestrator.py) — routing, safety,
+registry gating, context assembly, generation, and verification all live
+there, not here.
 
-Chart construction and context assembly happen before the StreamingResponse
-is created (not inside the generator), so a bad-birth-data error still comes
-back as a normal HTTP error instead of a broken stream. Only the actual
-token generation and DB writes happen inside the generator.
+No silent fallback: a domain the registry doesn't know about never reaches
+a model call — see `AskOrchestrator.prepare()`. `prepare()` runs before the
+`StreamingResponse` is created, so a bad-birth-data error still comes back
+as a normal HTTPException instead of surfacing mid-stream where the status
+code can no longer change; only generation, verification, and persistence
+happen lazily inside the stream.
 """
 import json
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from ..agents.domain_agent import DOMAIN_AGENTS
-from ..agents.qa_agent import VedicQAAgent
-from ..agents.safety import REFER_OUT_ANSWERS, prohibited_verdict, refer_out_kind
-from ..context import KeywordRouter, assemble_domain
-from ..core.vedic import LocationError
+from ..agents.orchestrator import AskOrchestrator
+from ..agents.schema import StructuredReading
+from ..context.taxonomy import TaxonomyError
 from ..db import crud, crud_mobile as cm, get_db
 from .ask_routes import MAX_HISTORY, AskRequest, _history_from_thread, _owned_thread
 from .auth import CurrentUser
@@ -32,31 +31,38 @@ from .context_routes import _chart_from_kundli
 
 router = APIRouter(prefix="/api/v1/ask", tags=["ask-ai"])
 
-AI_UNAVAILABLE_ANSWER = (
-    "Siddha's Ask agents are still being prepared. We have saved your question, "
-    "and this space will answer with live chart-grounded guidance once the agents are online."
-)
-
 
 def _sse(payload: dict) -> str:
     return f"data: {json.dumps(payload)}\n\n"
 
 
-def _evidence_from_bundle(bundle: dict) -> list[dict]:
-    """Condensed citation list for the client's Why-reading sheet — a few
-    references, not the whole bundle (positions/vargas/etc. are provenance
-    for the model, not something the reader needs echoed back)."""
-    out = [
-        {"statement": ref["statement"],
-         "source_location": f"{ref['source_text_key']} · {ref['source_location']}"}
-        for ref in bundle.get("references", [])[:5]
-    ]
-    out += [
-        {"statement": passage["content"][:280],
-         "source_location": passage.get("book") or passage.get("source_key", "")}
-        for passage in bundle.get("source_passages", [])[:3]
-    ]
-    return out
+def _thread_established_domain(db: Session, thread_id: str) -> Optional[str]:
+    """The domain the thread most recently actually answered in — the last
+    assistant turn with a non-null `domain` field, skipping over
+    clarification turns (domain=None) and domain-not-ready turns (domain
+    is the *unconfigured* name, which `AskOrchestrator.route()` will
+    reject anyway since it only honours a `thread_domain` that's actually
+    in the registry). None for a brand-new thread or one that's only ever
+    hit clarification/not-ready so far — nothing to continue."""
+    messages = cm.get_thread_messages(db, thread_id)
+    for message in reversed(messages):
+        if message.role == "assistant" and message.domain:
+            return message.domain
+    return None
+
+
+def _evidence_from_reading(reading: StructuredReading) -> dict:
+    """Namespaced, versioned bridge shape for `AskMessage.evidence` — this is
+    explicitly a temporary storage decision, not the final one. Wrapping it
+    (rather than dumping the raw structured object) makes that obvious to
+    the next person who reads a row, and keeps `evidence`'s meaning
+    comparable across old rows (`{"tools_used": [...]}` etc., from before
+    this build) and new ones."""
+    return {
+        "schema_version": "ask_structured_v1",
+        "structured_reading": reading.model_dump(),
+        "references": [item.source for item in reading.technical_basis],
+    }
 
 
 @router.post("/{kundli_id}/stream")
@@ -80,116 +86,83 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
         messages.pop(0)
     messages.append({"role": "user", "content": body.question})
 
-    referred_out_as = refer_out_kind(body.question)
-
-    # Resolved before streaming starts: a bad-chart error must come back as a
-    # normal HTTPException, not surface mid-stream where the status code can
-    # no longer change.
-    domain = None
-    agent = None
-    evidence: list[dict] = []
-    streams_tokens = False
-    if not referred_out_as:
-        decision = KeywordRouter().route(body.question)
-        domain = decision.primary
-        if domain in DOMAIN_AGENTS:
-            try:
-                chart = _chart_from_kundli(k, "lahiri", "mean")
-            except (ValueError, OverflowError) as e:
-                raise HTTPException(status_code=422, detail=f"Invalid birth details: {e}")
-            bundle = assemble_domain(chart, domain, question=body.question)
-            evidence = _evidence_from_bundle(bundle)
-            agent = DOMAIN_AGENTS[domain](bundle)
-            streams_tokens = True
-        else:
-            try:
-                agent = VedicQAAgent(k)
-            except LocationError as e:
-                raise HTTPException(status_code=422, detail=str(e))
-            except (ValueError, OverflowError) as e:
-                raise HTTPException(status_code=422, detail=f"Invalid birth details: {e}")
-
-    def generate():
-        # `final_domain` is the CE taxonomy domain the question was routed to
-        # (career, health, marriage, ...) or None if routing never ran.
-        # `final_refer_out_kind` is the *safety* category (death/health/
-        # legal/money) — kept separate because "health" is a legitimate value
-        # for both and a client redirecting to the refer-out screen must not
-        # confuse an ordinary health-domain answer with a refused one.
-        tools_used: list[str] = []
-        if referred_out_as:
-            answer = REFER_OUT_ANSWERS[referred_out_as]
-            yield _sse({"delta": answer})
-            final_domain, final_refer_out_kind, final_evidence = None, referred_out_as, []
-        elif streams_tokens:
-            buffer = []
-            crossed = None
-            generation_error = None
-            try:
-                for delta in agent.run_messages_stream(messages):
-                    buffer.append(delta)
-                    crossed = prohibited_verdict("".join(buffer))
-                    if crossed:
-                        break
-                    yield _sse({"delta": delta})
-            except Exception as exc:
-                generation_error = exc
-            if crossed:
-                # Second-layer net tripped mid-stream — the client discards
-                # whatever partial text it has rendered and shows this instead.
-                answer = REFER_OUT_ANSWERS[crossed]
-                yield _sse({"reset": True, "delta": answer})
-                final_domain, final_refer_out_kind, final_evidence = domain, crossed, []
-            elif generation_error:
-                answer = AI_UNAVAILABLE_ANSWER
-                yield _sse({"reset": bool(buffer), "delta": answer})
-                final_domain, final_refer_out_kind, final_evidence = domain, None, []
-            else:
-                answer = "".join(buffer)
-                final_domain, final_refer_out_kind, final_evidence = domain, None, evidence
-        else:
-            try:
-                answer, tools_used = agent.run_messages(messages)
-            except Exception:
-                answer, tools_used = AI_UNAVAILABLE_ANSWER, []
-            crossed = prohibited_verdict(answer)
-            if crossed:
-                answer = REFER_OUT_ANSWERS[crossed]
-            yield _sse({"delta": answer})
-            final_domain, final_refer_out_kind, final_evidence = domain, crossed, []
-
-        # DB persistence keeps ask_routes.py's existing convention: `domain`
-        # is the refer_out_kind itself for a refused answer, the CE domain
-        # otherwise — analytics on AskMessage.domain stays comparable across
-        # both endpoints.
-        stored_domain = final_refer_out_kind or final_domain
-        stored_evidence = (
-            {"safety_policy": "excluded_verdict"} if final_refer_out_kind
-            else {"references": final_evidence} if streams_tokens
-            else {"tools_used": sorted(set(tools_used))}
-        )
-
-        # Nothing is written until here, once there is a final answer — same
-        # rule ask_routes.py follows, so a failed/interrupted stream persists
-        # nothing and stays safe to retry.
+    def persist_turn(content: str, domain: Optional[str], refer_out_kind: Optional[str],
+                     evidence: Optional[dict]) -> Optional[str]:
+        """Shared by every terminal path (refer-out, clarification,
+        domain-not-ready, answered) and by the orchestrator's own
+        `persist` callback for the success/failure-after-generation path.
+        Nothing is written until there is a final outcome — a failed or
+        interrupted turn persists nothing new, matching ask_routes.py's
+        existing convention, and never creates a thread on a generation
+        failure even if `start_thread` was set."""
         local_thread = thread
         if local_thread is None and body.start_thread:
             local_thread = cm.create_ask_thread(db, user.id, kundli_id)
-        if local_thread is not None:
-            cm.add_ask_message(db, local_thread.id, "user", body.question,
-                               language=body.language, input_mode=body.input_mode)
-            cm.add_ask_message(db, local_thread.id, "assistant", answer,
-                               language=body.language, domain=stored_domain,
-                               refer_out_kind=final_refer_out_kind,
-                               evidence=stored_evidence)
-            db.refresh(local_thread)
+        if local_thread is None:
+            return None
+        cm.add_ask_message(db, local_thread.id, "user", body.question,
+                           language=body.language, input_mode=body.input_mode)
+        cm.add_ask_message(db, local_thread.id, "assistant", content,
+                           language=body.language, domain=domain,
+                           refer_out_kind=refer_out_kind, evidence=evidence or {})
+        db.refresh(local_thread)
+        return local_thread.id
 
-        yield _sse({
-            "done": True,
-            "thread_id": local_thread.id if local_thread else None,
-            "domain": final_domain,
-            "refer_out_kind": final_refer_out_kind,
-            "evidence": final_evidence,
-        })
+    thread_domain = _thread_established_domain(db, thread.id) if thread else None
+
+    orchestrator = AskOrchestrator(chart_loader=lambda: _chart_from_kundli(k, "lahiri", "mean"))
+    try:
+        outcome = orchestrator.prepare(
+            body.question, thread_domain=thread_domain, domain_override=body.domain_override,
+        )
+    except TaxonomyError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    if outcome.terminal_envelope is not None:
+        envelope = outcome.terminal_envelope
+
+        def generate_terminal():
+            if envelope["type"] == "refer_out":
+                thread_id = persist_turn(
+                    envelope["answer"], domain=None, refer_out_kind=envelope["kind"],
+                    evidence={"safety_policy": "excluded_verdict"},
+                )
+            elif envelope["type"] == "clarification_needed":
+                content = (
+                    f"I can help with: {', '.join(envelope['options'])} right now — "
+                    "which one is this about?"
+                )
+                thread_id = persist_turn(
+                    content, domain=None, refer_out_kind=None,
+                    evidence={"clarification_options": envelope["options"]},
+                )
+            else:  # domain_not_ready
+                content = (
+                    f"{envelope['domain_label']} isn't ready yet. "
+                    f"I can currently help with: {', '.join(envelope['available'])}."
+                )
+                thread_id = persist_turn(
+                    content, domain=envelope["domain"], refer_out_kind=None,
+                    evidence={"status": "domain_not_ready", "available": envelope["available"]},
+                )
+            yield _sse({**envelope, "thread_id": thread_id})
+
+        return StreamingResponse(generate_terminal(), media_type="text/event-stream")
+
+    prepared = outcome.prepared
+
+    def persist_prepared(reading: Optional[StructuredReading], status: str) -> Optional[str]:
+        if reading is None:
+            # A failed generation/verification writes nothing new — only
+            # report the thread that already existed, if any.
+            return thread.id if thread else None
+        return persist_turn(
+            reading.interpretation, domain=prepared.domain, refer_out_kind=None,
+            evidence=_evidence_from_reading(reading),
+        )
+
+    def generate():
+        for event in orchestrator.run(prepared, messages, persist=persist_prepared):
+            yield _sse(event)
 
     return StreamingResponse(generate(), media_type="text/event-stream")

@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { Router, RouterLink } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
-import { MobileAskStateService } from './mobile-ask-state.service';
 import {
   MobileAskThread,
   MobileAskThreadService,
@@ -19,14 +18,15 @@ import {
 export class AskHistoryComponent {
   private readonly kundlis = inject(KundliStore);
   private readonly threadsApi = inject(MobileAskThreadService);
-  private readonly askState = inject(MobileAskStateService);
   private readonly router = inject(Router);
 
   readonly threads = signal<MobileAskThread[]>([]);
   readonly loading = signal(true);
   readonly opening = signal<string | null>(null);
   readonly archiving = signal<string | null>(null);
+  readonly revealedThreadId = signal<string | null>(null);
   readonly error = signal<string | null>(null);
+  private touchStartX = 0;
 
   constructor() {
     void this.load();
@@ -38,7 +38,12 @@ export class AskHistoryComponent {
     try {
       await this.kundlis.load();
       const profile = this.kundlis.active();
-      this.threads.set(profile ? await this.threadsApi.list(profile.id) : []);
+      if (!profile) {
+        this.threads.set([]);
+        return;
+      }
+      const rows = await this.threadsApi.list(profile.id);
+      this.threads.set(rows);
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {
@@ -47,24 +52,17 @@ export class AskHistoryComponent {
   }
 
   protected async open(thread: MobileAskThread): Promise<void> {
+    if (this.revealedThreadId() === thread.id) {
+      this.revealedThreadId.set(null);
+      return;
+    }
     if (this.opening()) return;
     this.opening.set(thread.id);
     this.error.set(null);
     try {
-      const detail = await this.threadsApi.get(thread.id);
-      const question = detail.messages.find((message) => message.role === 'user');
-      const answer = [...detail.messages]
-        .reverse()
-        .find((message) => message.role === 'assistant');
-      if (!question || !answer) throw new Error('This conversation has no answer yet.');
-
-      this.askState.rememberAnswer(thread.id, answer.content);
-      const destination = answer.refer_out_kind ? 'refer' : 'answer';
-      await this.router.navigate(['/m', 'ask', destination], {
+      await this.router.navigate(['/m', 'ask', 'answer'], {
         queryParams: {
-          q: question.content,
           thread: thread.id,
-          domain: answer.refer_out_kind ?? undefined,
         },
       });
     } catch (error) {
@@ -82,6 +80,7 @@ export class AskHistoryComponent {
     try {
       await this.threadsApi.archive(thread.id);
       this.threads.update((items) => items.filter((item) => item.id !== thread.id));
+      if (this.revealedThreadId() === thread.id) this.revealedThreadId.set(null);
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {
@@ -97,5 +96,20 @@ export class AskHistoryComponent {
       day: 'numeric',
       month: 'long',
     }).format(new Date(value));
+  }
+
+  protected beginSwipe(event: TouchEvent): void {
+    this.touchStartX = event.touches[0]?.clientX ?? 0;
+  }
+
+  protected endSwipe(event: TouchEvent, thread: MobileAskThread): void {
+    const endX = event.changedTouches[0]?.clientX ?? this.touchStartX;
+    const deltaX = endX - this.touchStartX;
+    if (deltaX > 44) {
+      this.revealedThreadId.set(thread.id);
+    } else if (deltaX < -24) {
+      this.revealedThreadId.set(null);
+    }
+    this.touchStartX = 0;
   }
 }

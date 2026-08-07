@@ -198,8 +198,8 @@ class AskThread(Base):
     __tablename__ = "ask_threads"
 
     id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
-    user_id: Mapped[str] = mapped_column(_UuidString, index=True, nullable=False)
-    kundli_id: Mapped[str] = mapped_column(_UuidString, ForeignKey("kundlis.id"), nullable=False, index=True)
+    user_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    kundli_id: Mapped[str] = mapped_column(String, ForeignKey("kundlis.id"), nullable=False, index=True)
     title: Mapped[str | None] = mapped_column(String)
     last_message_at: Mapped[datetime | None] = mapped_column(DateTime)
     message_count: Mapped[int] = mapped_column(Integer, default=0)

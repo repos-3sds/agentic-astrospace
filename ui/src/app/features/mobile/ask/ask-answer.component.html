@@ -1,88 +1,128 @@
-@let v = view();
-@let copy = answerCopy();
-
 <header class="appbar">
   <a class="back" [routerLink]="['/m', 'ask']" aria-label="Back to Ask">
     <img src="mobile/back.svg" alt="" aria-hidden="true" />
   </a>
   <p class="crumb">Ask</p>
+  @if (activeThreadId()) {
+    <button
+      class="thread-action"
+      type="button"
+      [disabled]="archivingThread()"
+      (click)="archiveThread()"
+    >
+      {{ archivingThread() ? 'Archiving' : 'Archive' }}
+    </button>
+  }
 </header>
 
 <div class="body" [attr.data-mode]="preferences.experienceMode()">
-  <div class="asked">
-    <p class="bubble">{{ v.question }}</p>
-  </div>
+  @if (loadingThread()) {
+    <p class="answer-state" role="status">Loading this conversation…</p>
+  }
 
-  <article class="answer" [class.is-loading]="streaming()">
-    <p class="verdict-label">
-      <span class="dot" [attr.data-tone]="v.tone" aria-hidden="true"></span>
-      <span class="eyebrow good">{{ v.preview ? 'STATUS' : 'VERDICT' }} · {{ v.domain }}</span>
-    </p>
-
-    <h1 class="verdict">{{ copy.lead }}</h1>
-
-    @if (copy.sections.length) {
-      <div class="answer-sections">
-        @for (section of copy.sections; track section.title + section.body) {
-          <section class="answer-section">
-            <h2>{{ section.title }}</h2>
-            <p>{{ section.body }}</p>
-          </section>
-        }
+  @for (message of messages(); track message.id) {
+    @if (message.role === 'user') {
+      <div class="asked">
+        <div class="bubble-wrap">
+          <p class="bubble">{{ message.content }}</p>
+          <button class="mini-action" type="button" (click)="editQuestion(message)">Edit</button>
+        </div>
       </div>
-    }
+    } @else {
+      <article class="answer" [class.is-loading]="message.streaming" (click)="selectAssistant(message)">
+        <p class="verdict-label">
+          <span class="dot" [attr.data-tone]="answerTone(message)" aria-hidden="true"></span>
+          <span class="eyebrow" [attr.data-tone]="answerTone(message)">
+            {{ answerLabel(message) }}
+            · {{ (message.domain ?? (message.streaming ? streamDomain() : null) ?? 'GUIDANCE').toUpperCase() }}
+          </span>
+        </p>
 
-    <div class="rule"></div>
+        @if (message.reading; as reading) {
+          <p class="acknowledgment">{{ reading.acknowledgment }}</p>
+          <h1 class="verdict">{{ reading.interpretation }}</h1>
+          <p class="summary-line">{{ reading.summary_and_assurance }}</p>
 
-    <div class="todo">
-      <p class="eyebrow">WHAT TO DO</p>
-      <p class="todo-text">{{ v.whatToDo }}</p>
-    </div>
+          @if (reading.guidance.practical_actions.length) {
+            <div class="answer-section">
+              <h2>Next best steps</h2>
+              @for (action of reading.guidance.practical_actions; track action) {
+                <p>{{ action }}</p>
+              }
+            </div>
+          }
 
-    @if (preferences.experienceMode() === 'practitioner') {
-      <div class="todo">
-        <p class="eyebrow">TECHNICAL BASIS</p>
-        @for (row of calculation(); track row.label) {
-          <p class="todo-text">{{ row.label }} · {{ row.value }}</p>
+          @if (reading.guidance.remedies.length) {
+            <div class="answer-section">
+              <h2>Traditional supports</h2>
+              @for (remedy of reading.guidance.remedies; track remedy.practice + remedy.note) {
+                <p><strong>{{ remedy.practice }}</strong> · {{ remedy.note }}</p>
+              }
+            </div>
+          }
+        } @else {
+          <p class="legacy-answer">{{ message.content || 'Reading your chart…' }}</p>
+          @if (streamStatus() && message.streaming) {
+            <p class="summary-line">{{ streamStatus() }}</p>
+          }
+          @if (!message.streaming && message.options.length) {
+            <div class="followups inline-options">
+              @for (option of message.options; track option) {
+                <button class="followup" type="button" (click)="askClarification(option)">{{ option }}</button>
+              }
+            </div>
+          }
         }
-        <p class="eyebrow">{{ conventions().join(' · ') }}</p>
-      </div>
-    }
 
-    @if (!v.preview) {
-    <button class="why" type="button" (click)="whyOpen.set(true)">
-      <span class="why-left">
-        <img src="mobile/why.svg" alt="" aria-hidden="true" />
-        <span class="why-label">Why this?</span>
-      </span>
-      <img class="why-chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
-    </button>
+        @if (!message.streaming && message.content && message.status === 'answered') {
+          <div class="tools">
+            <button class="tool" type="button" (click)="selectAssistant(message); listenOpen.set(true)">
+              <img src="mobile/play-muted.svg" alt="" aria-hidden="true" />
+              <span>Listen</span>
+            </button>
+            <button class="tool" type="button" (click)="copyAnswer(message)">
+              <span>Copy</span>
+            </button>
+            <button class="tool" type="button" (click)="selectAssistant(message); whyOpen.set(true)">
+              <img src="mobile/why.svg" alt="" aria-hidden="true" />
+              <span>Why this?</span>
+            </button>
+            @if (preferences.experienceMode() !== 'guided') {
+              <button class="tool" type="button" (click)="selectAssistant(message); share()">
+                <img src="mobile/share.svg" alt="" aria-hidden="true" />
+                <span>Share</span>
+              </button>
+            }
+          </div>
+        }
+      </article>
     }
+  }
 
-    <div class="tools">
-      <button class="tool" type="button" (click)="listenOpen.set(true)">
-        <img src="mobile/play-muted.svg" alt="" aria-hidden="true" />
-        <span>Listen</span>
-      </button>
-      @if (preferences.experienceMode() !== 'guided') {
-      <button class="tool" type="button" (click)="share()">
-        <img src="mobile/share.svg" alt="" aria-hidden="true" />
-        <span>Share</span>
-      </button>
-      }
-    </div>
-  </article>
+  @if (!messages().length && !loadingThread()) {
+    <article class="answer">
+      <p class="verdict-label">
+        <span class="dot" data-tone="warn" aria-hidden="true"></span>
+        <span class="eyebrow good">STATUS · PREVIEW</span>
+      </p>
+      <h1 class="verdict">Ask a question to get started.</h1>
+    </article>
+  }
 
-  <div class="followups">
-    @for (f of v.followUps; track f) {
-      <button class="followup" type="button" (click)="askAgain(f)">{{ f }}</button>
-    }
-  </div>
   @if (streaming()) {
-    <p class="answer-state" role="status">Reading your chart…</p>
+    <button class="stop-stream" type="button" (click)="stopStreaming()">Stop streaming</button>
+    <p class="answer-state" role="status">{{ streamStatus() || 'Reading your chart…' }}</p>
   }
   @if (submitError()) {
     <p class="answer-state is-error" role="alert">{{ submitError() }}</p>
+  }
+
+  @if (latestAssistant() && !streaming()) {
+    <div class="followups">
+      @for (f of latestFollowUps(); track f) {
+        <button class="followup" type="button" (click)="askAgain(f)">{{ f }}</button>
+      }
+    </div>
   }
 </div>
 

@@ -11,7 +11,8 @@
 /* Back bar — node 26:55 */
 .appbar {
   flex-shrink: 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
   align-items: center;
   gap: 12px;
   padding: 16px 20px 10px;
@@ -24,6 +25,16 @@
 
 .crumb { @include m-body-strong; color: var(--m-muted); margin: 0; }
 
+.thread-action {
+  border: 1px solid var(--m-border);
+  border-radius: 999px;
+  min-height: 36px;
+  padding: 0 13px;
+  background: color-mix(in srgb, var(--m-surface) 86%, transparent);
+  color: var(--m-accent-strong);
+  @include m-caption;
+}
+
 /* Thread — node 26:59 */
 .body {
   flex: 1 1 auto;
@@ -31,12 +42,20 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   padding: 10px 20px 22px;
   scroll-padding-bottom: 104px;
+  overscroll-behavior: contain;
 }
 
 .asked { display: flex; justify-content: flex-end; }
+
+.bubble-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
 
 .bubble {
   max-width: min(296px, 82vw);
@@ -50,8 +69,17 @@
   @include m-body;
 }
 
+.mini-action {
+  border: 0;
+  padding: 0 4px;
+  background: transparent;
+  color: var(--m-muted);
+  @include m-caption;
+}
+
 /* Answer card — node 26:63 */
 .answer {
+  flex: 0 0 auto;
   background: var(--m-surface);
   border: 1px solid var(--m-border);
   border-radius: 24px;
@@ -60,13 +88,16 @@
   display: flex;
   flex-direction: column;
   gap: 13px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .eyebrow { @include m-eyebrow; color: var(--m-accent); margin: 0; }
 
 .verdict-label { display: flex; align-items: center; gap: 8px; margin: 0; }
-.verdict-label .eyebrow.good { color: var(--m-good); }
+.verdict-label .eyebrow.good,
+.verdict-label .eyebrow[data-tone='good'] { color: var(--m-good); }
+.verdict-label .eyebrow[data-tone='warn'] { color: var(--m-warn); }
+.verdict-label .eyebrow[data-tone='bad'] { color: var(--m-bad); }
 
 // A flat disc, so it is drawn rather than fetched — the same circle in three
 // tones would otherwise be three assets that can drift apart.
@@ -88,6 +119,29 @@
   color: var(--m-text);
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+.acknowledgment,
+.summary-line,
+.legacy-answer {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.acknowledgment {
+  @include m-body-small;
+  color: var(--m-muted);
+}
+
+.summary-line {
+  @include m-body;
+  color: var(--m-text);
+}
+
+.legacy-answer {
+  @include m-body;
+  color: var(--m-text);
+  white-space: pre-wrap;
 }
 
 .answer-sections {
@@ -118,6 +172,15 @@
     color: var(--m-muted);
     margin: 0;
     overflow-wrap: anywhere;
+
+    &.is-list-item {
+      padding-left: 18px;
+      text-indent: -16px;
+    }
+
+    + p {
+      margin-top: 3px;
+    }
   }
 }
 
@@ -160,7 +223,11 @@
 .why-chevron { width: 18px; height: 18px; display: block; }
 
 /* Listen / Share — node 26:81 */
-.tools { display: flex; gap: 18px; }
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
 
 .tool {
   border: 0;
@@ -178,6 +245,10 @@
 /* Follow-up chips — node 26:90 */
 .followups { display: flex; flex-wrap: wrap; gap: 8px; }
 
+.inline-options {
+  padding-top: 2px;
+}
+
 .followup {
   @include m-cta-secondary;
   min-height: 38px;
@@ -191,6 +262,14 @@
   color: var(--m-muted);
 
   &.is-error { color: var(--m-bad); }
+}
+
+.stop-stream {
+  @include m-cta-secondary;
+  align-self: flex-start;
+  min-height: 38px;
+  padding: 0 14px;
+  color: var(--m-accent-strong);
 }
 
 /* The composer (node 26:93) is as-ask-composer, seated as a chat input here. */

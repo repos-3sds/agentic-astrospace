@@ -123,3 +123,30 @@ def prohibited_verdict(answer: str) -> str | None:
         if re.search(pattern, normalized):
             return kind
     return None
+
+
+# "A dosha is a flag, not a verdict" (CLAUDE.md, non-negotiable) had only a
+# prompt instruction, no net — unlike refer-out's input+output pair. Written
+# marriage-first: manglik/gandanta/grahan dosha is exactly where this fails
+# if it's weak, and marriage is the first sensitive domain shipping with it.
+_DOSHA_OVERCLAIM_OUTPUT = (
+    r"\byou cannot (?:get married|marry)\b",
+    r"\b(?:will|is going to) end in divorce\b",
+    r"\bmarriage will fail\b",
+    r"\byou will never (?:find|get) a (?:spouse|partner|husband|wife)\b",
+    r"\bdosha means you (?:must not|cannot|should never) marry\b",
+    r"\bthis dosha will (?:destroy|ruin) your marriage\b",
+    r"\b(?:dosha|yoga) (?:will definitely|definitely will|will certainly) cause\b",
+    r"\bcannot be avoided\b",
+    r"\byou must never\b",
+)
+
+
+def dosha_overclaim_kind(answer: str) -> str | None:
+    """Non-null when an answer states a dosha/yoga as a fixed, absolute
+    outcome instead of the classical flag-with-context it always is."""
+    normalized = " ".join(answer.casefold().split())
+    for pattern in _DOSHA_OVERCLAIM_OUTPUT:
+        if re.search(pattern, normalized):
+            return "dosha_overclaim"
+    return None

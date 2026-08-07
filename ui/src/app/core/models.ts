@@ -1316,11 +1316,81 @@ export interface AskResponse {
   refer_out_kind?: 'health' | 'legal' | 'money' | 'death' | null;
 }
 
+export type AskIntent =
+  | 'timing'
+  | 'suitability'
+  | 'explanation'
+  | 'remedy'
+  | 'comparison'
+  | 'daily_guidance'
+  | 'general_guidance';
+
 /** One citation surfaced from the orchestrator's assembled bundle. */
 export interface AskEvidenceItem {
   statement: string;
   source_location: string;
 }
+
+export interface AskTechnicalBasisSource {
+  key?: string;
+  location?: string;
+  ref_id?: string;
+  chunk_id?: string;
+  section?: string;
+}
+
+export interface AskTechnicalBasisItem {
+  factor: string;
+  reading: string;
+  source?: AskTechnicalBasisSource | string | null;
+}
+
+export interface AskRemedyItem {
+  practice: string;
+  note: string;
+}
+
+export interface AskGuidance {
+  practical_actions: string[];
+  remedies: AskRemedyItem[];
+  follow_up_questions: string[];
+}
+
+export interface StructuredReading {
+  acknowledgment: string;
+  technical_basis: AskTechnicalBasisItem[];
+  interpretation: string;
+  summary_and_assurance: string;
+  guidance: AskGuidance;
+  confidence: 'high' | 'medium' | 'low' | string;
+}
+
+export interface AskStructuredSuccessEnvelope {
+  type: 'done';
+  status: 'answered';
+  schema_version: 'ask_structured_v1' | string;
+  domain: string;
+  intent: AskIntent | string;
+  context_used: string[];
+  evidence_refs: string[];
+  reading: StructuredReading;
+  thread_id: string | null;
+}
+
+export interface AskStructuredFailureEnvelope {
+  type: 'done';
+  status: 'verification_failed' | 'generation_failed' | string;
+  schema_version?: 'ask_structured_v1' | string;
+  domain?: string | null;
+  intent?: AskIntent | string | null;
+  context_used?: string[];
+  evidence_refs?: string[];
+  thread_id: string | null;
+}
+
+export type AskStructuredEnvelope =
+  | AskStructuredSuccessEnvelope
+  | AskStructuredFailureEnvelope;
 
 /**
  * A frame from `POST /ask/{kundliId}/stream` (astrospace/api/ask_stream_routes.py).
@@ -1329,6 +1399,18 @@ export interface AskEvidenceItem {
  * delta instead of appending to it.
  */
 export type AskStreamEvent =
+  | { type: 'status'; stage: string; label: string }
+  | { type: 'clarification_needed'; options: string[]; message?: string; intent?: AskIntent | string }
+  | {
+      type: 'domain_not_ready';
+      domain?: string;
+      domain_label?: string;
+      available: string[];
+      reason?: string;
+      message?: string;
+    }
+  | { type: 'refer_out'; kind: 'health' | 'legal' | 'money' | 'death'; answer: string }
+  | AskStructuredEnvelope
   | { delta: string; reset?: boolean }
   | {
       done: true;

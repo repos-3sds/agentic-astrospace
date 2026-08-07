@@ -1,12 +1,18 @@
-"""Career domain agent, end to end: assemble_domain() shape, the agent's
-system prompt, and the streamed /ask/{kundli_id}/stream orchestrator.
+"""Domain agent, orchestrator, and the streamed /ask/{kundli_id}/stream
+route — career and marriage, end to end.
 
-The Anthropic call is always stubbed (patching `run_messages_stream` /
-`run_messages` on `BaseAstroAgent`, same pattern as test_ask_threads.py) —
-these cover assembly, routing, SSE framing and persistence, not the model.
+The Anthropic call is always stubbed. Most tests mock at
+`DomainReadingAgent.run_structured_reading` (matching the established
+pattern in test_ask_threads.py's `BaseAstroAgent.run_messages` mocks); one
+test — `TestRunStructuredMockRealism` — mocks one level deeper, at
+`client.messages.create`, using the real `anthropic.types.Message`/
+`ToolUseBlock` classes rather than a bare dict or loose MagicMock. Tool-call
+response parsing is where these plans quietly break; that test exists to
+prove `response.content[0].input` access actually works against the SDK's
+real object shape, not a stand-in that happens to have the right attributes.
 """
 import json
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -15,14 +21,17 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from main import app
-from astrospace.agents.domain_agent import DOMAIN_AGENTS, CareerReadingAgent
+from astrospace.agents.domain_agent import DomainReadingAgent
+from astrospace.agents.orchestrator import AskOrchestrator
+from astrospace.agents.registry import AGENT_REGISTRY
+from astrospace.agents.schema import Guidance, StructuredReading, TechnicalBasisItem
 from astrospace.api.auth import AuthUser, current_user
 from astrospace.context import assemble_domain
 from astrospace.core.vedic.chart import VedicChart
 from astrospace.db import crud, get_db
 from astrospace.db.database import Base
 
-ME = "33333333-3333-4333-8333-333333333333"
+ME = "test-user-domain-agent"
 
 
 @pytest.fixture(scope="module")
@@ -30,49 +39,222 @@ def chart():
     return VedicChart("Test Person", 1993, 7, 20, 11, 28, "Rajahmundry", "IN")
 
 
-class TestAssembleDomainForCareer:
-    """The bundle a CareerReadingAgent's prompt is built from — if this
-    shape ever drifts, the agent's grounding rules (which reference these
-    exact field names) silently stop matching reality."""
+def _good_reading(source: str = "houses", **overrides) -> StructuredReading:
+    base = dict(
+        acknowledgment="You're asking about timing.",
+        technical_basis=[TechnicalBasisItem(factor="10th lord", reading="well placed", source=source)],
+        interpretation="A supportive stretch, grounded in your chart.",
+        summary_and_assurance="A good window, not a fixed outcome.",
+        guidance=Guidance(follow_up_questions=["Which month is strongest?"]),
+        confidence="medium",
+    )
+    base.update(overrides)
+    return StructuredReading(**base)
 
-    def test_career_bundle_has_the_fields_the_agent_prompt_depends_on(self, chart):
+
+class TestAssembleDomainShapes:
+    """The bundles the agent prompts and the verifier depend on — if these
+    drift, both silently stop matching reality."""
+
+    def test_career_bundle_has_d10_and_primary_house(self, chart):
         bundle = assemble_domain(chart, "career")
         assert bundle["domain"] == "career"
-        assert bundle["domain_name"]
         assert "D10" in bundle["vargas"]
-        assert bundle["vargas"]["D10"]["tier"] == "primary"
         assert any(h["house"] == 10 and h["tier"] == "primary" for h in bundle["houses"])
-        assert isinstance(bundle["references"], list)
-        assert isinstance(bundle["source_passages"], list)
-        assert isinstance(bundle["dasha_relevance"]["chain"], list)
-        assert bundle["gochara"] is not None
 
-    def test_career_bundle_only_surfaces_career_relevant_yogas(self, chart):
-        """_filter_rules keeps a yoga if its rule_id OR its category matches
-        the domain — career's `yoga_categories` includes "Pancha Mahapurusha",
-        so e.g. bhadra_yoga shows up by category even though it isn't in
-        career's explicit `rule_ids` list. Both routes count as relevant."""
+    def test_marriage_bundle_has_d9_and_primary_house(self, chart):
+        bundle = assemble_domain(chart, "marriage")
+        assert bundle["domain"] == "marriage"
+        assert "D9" in bundle["vargas"]
+        assert any(h["house"] == 7 and h["tier"] == "primary" for h in bundle["houses"])
+
+
+class TestRunStructuredMockRealism:
+    """Mocks the SDK boundary itself, not our own wrapper — proves
+    `run_structured_reading` actually survives contact with the real
+    `Message`/`ToolUseBlock` shape."""
+
+    def test_parses_a_real_shaped_tool_use_response(self, chart):
+        from anthropic.types import Message, TextBlock, ToolUseBlock, Usage
+
         bundle = assemble_domain(chart, "career")
-        from astrospace.context.taxonomy import get_domain
-        spec = get_domain("career")
-        allowed_ids = set(spec.rule_ids)
-        allowed_categories = set(spec.yoga_categories)
-        for yoga in bundle["yogas"]:
-            assert yoga["rule_id"] in allowed_ids or yoga["category"] in allowed_categories
+        agent = DomainReadingAgent(bundle, AGENT_REGISTRY["career"].domain_addendum)
 
+        reading_dict = _good_reading().model_dump()
+        fake_response = Message(
+            id="msg_test", type="message", role="assistant", model=agent.model,
+            content=[ToolUseBlock(type="tool_use", id="toolu_1", name="deliver_reading", input=reading_dict)],
+            stop_reason="tool_use", stop_sequence=None,
+            usage=Usage(input_tokens=10, output_tokens=5),
+        )
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = fake_response
+        agent.client = mock_client
+        agent.provider = "anthropic"
 
-class TestCareerReadingAgentPrompt:
-    def test_system_prompt_embeds_the_bundle_and_career_framing(self, chart):
+        result = agent.run_structured_reading([{"role": "user", "content": "hi"}])
+        assert isinstance(result, StructuredReading)
+        assert result.interpretation == reading_dict["interpretation"]
+        # Confirms tool_choice was actually forced, not left to the model's discretion.
+        _, kwargs = mock_client.messages.create.call_args
+        assert kwargs["tool_choice"] == {"type": "tool", "name": "deliver_reading"}
+
+    def test_missing_tool_call_raises_rather_than_silently_returning_garbage(self, chart):
+        from anthropic.types import Message, TextBlock, Usage
+
         bundle = assemble_domain(chart, "career")
-        agent = CareerReadingAgent(bundle, api_key="test-key-not-called")
-        assert "Career & Profession" in agent.system_prompt
-        assert '"D10"' in agent.system_prompt
-        assert "dashamsa" in agent.system_prompt
-        assert "never predict death" in agent.system_prompt.lower()
-        assert agent.tools == []
+        agent = DomainReadingAgent(bundle, AGENT_REGISTRY["career"].domain_addendum)
+        fake_response = Message(
+            id="msg_test", type="message", role="assistant", model=agent.model,
+            content=[TextBlock(type="text", text="I refuse to use the tool.")],
+            stop_reason="end_turn", stop_sequence=None,
+            usage=Usage(input_tokens=10, output_tokens=5),
+        )
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = fake_response
+        agent.client = mock_client
+        agent.provider = "anthropic"
 
-    def test_registry_only_has_career_for_now(self):
-        assert set(DOMAIN_AGENTS) == {"career"}
+        with pytest.raises(ValueError):
+            agent.run_structured_reading([{"role": "user", "content": "hi"}])
+
+
+class TestAskOrchestratorPrepare:
+    @pytest.fixture
+    def orchestrator(self, chart):
+        return AskOrchestrator(chart_loader=lambda: chart)
+
+    def test_refer_out_gates_before_routing(self, orchestrator):
+        outcome = orchestrator.prepare("When will I die?")
+        assert outcome.terminal_envelope["type"] == "refer_out"
+        assert outcome.terminal_envelope["kind"] == "death"
+        assert outcome.prepared is None
+
+    def test_ambiguous_tie_needs_clarification(self, orchestrator):
+        outcome = orchestrator.prepare("Is this a good time for my career and my marriage?")
+        assert outcome.terminal_envelope["type"] == "clarification_needed"
+        assert set(outcome.terminal_envelope["options"]) == {"career", "marriage"}
+
+    def test_daily_guidance_only_needs_clarification_not_a_wrong_domain_answer(self, orchestrator):
+        outcome = orchestrator.prepare("What should I focus on today?")
+        assert outcome.terminal_envelope["type"] == "clarification_needed"
+        assert orchestrator.route("What should I focus on today?").intent == "daily_guidance"
+
+    def test_mixed_daily_and_career_question_still_answers_career(self, orchestrator):
+        """intent tags the response; it never gates routing by itself."""
+        outcome = orchestrator.prepare("Should I have a hard conversation at work today?")
+        assert outcome.prepared is not None
+        assert outcome.prepared.domain == "career"
+
+    def test_unsupported_domain_is_not_ready(self, orchestrator):
+        outcome = orchestrator.prepare("What does my chart show about property disputes with my siblings?")
+        assert outcome.terminal_envelope["type"] == "domain_not_ready"
+        assert outcome.terminal_envelope["domain"] == "family_property"
+        assert outcome.terminal_envelope["domain_label"]
+        assert outcome.terminal_envelope["available"] == ["career", "marriage"]
+
+    def test_career_question_prepares_a_real_bundle(self, orchestrator):
+        outcome = orchestrator.prepare("Is this a good year for a promotion at work?")
+        assert outcome.prepared.domain == "career"
+        assert outcome.prepared.bundle["domain"] == "career"
+        assert "houses" in outcome.prepared.context_used
+
+    def test_pronoun_followup_without_thread_domain_asks_to_clarify(self, orchestrator):
+        """Reproduces the reported bug directly: a follow-up with no
+        domain keywords of its own ("this"/"it") has nothing to route on
+        by itself."""
+        outcome = orchestrator.prepare("Which month is strongest for this?")
+        assert outcome.terminal_envelope["type"] == "clarification_needed"
+
+    def test_pronoun_followup_continues_the_threads_established_domain(self, orchestrator):
+        outcome = orchestrator.prepare("Which month is strongest for this?", thread_domain="career")
+        assert outcome.prepared is not None
+        assert outcome.prepared.domain == "career"
+
+    def test_confident_topic_switch_is_not_pulled_back_to_thread_domain(self, orchestrator):
+        """A follow-up that clearly names a different domain is a real
+        switch, not ambiguity — thread_domain must not override a real signal."""
+        outcome = orchestrator.prepare("Is this a good year for my marriage?", thread_domain="career")
+        assert outcome.prepared.domain == "marriage"
+
+    def test_unconfigured_thread_domain_hint_is_ignored_safely(self, orchestrator):
+        """A domain_not_ready turn stores its own (unconfigured) domain name
+        — that must never be treated as something to continue."""
+        outcome = orchestrator.prepare("Which month is strongest for this?", thread_domain="litigation")
+        assert outcome.terminal_envelope["type"] == "clarification_needed"
+
+    def test_domain_override_bypasses_the_ambiguous_tie(self, orchestrator):
+        """An explicit reader choice (tapping a clarification chip) must
+        resolve on the first try — a question that ties between career and
+        marriage keyword hits would otherwise clarify forever no matter how
+        many times its text is re-submitted, since KeywordRouter only checks
+        whether a keyword is present, not how many times."""
+        outcome = orchestrator.prepare(
+            "Is this a good time for my career and my marriage?", domain_override="career",
+        )
+        assert outcome.prepared is not None
+        assert outcome.prepared.domain == "career"
+
+    def test_domain_override_to_the_other_side_of_the_same_tie(self, orchestrator):
+        outcome = orchestrator.prepare(
+            "Is this a good time for my career and my marriage?", domain_override="marriage",
+        )
+        assert outcome.prepared is not None
+        assert outcome.prepared.domain == "marriage"
+
+    def test_domain_override_to_an_unconfigured_domain_still_reports_not_ready(self, orchestrator):
+        """An override bypasses routing, not the registry gate — it must
+        never reach a model call for a domain the registry doesn't know."""
+        outcome = orchestrator.prepare("Anything you like", domain_override="litigation")
+        assert outcome.terminal_envelope["type"] == "domain_not_ready"
+        assert outcome.terminal_envelope["domain"] == "litigation"
+
+
+class TestAskOrchestratorRun:
+    @pytest.fixture
+    def prepared(self, chart):
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart)
+        outcome = orchestrator.prepare("Is this a good year for a promotion at work?")
+        return orchestrator, outcome.prepared
+
+    def test_clean_reading_persists_on_first_try(self, prepared):
+        orchestrator, run = prepared
+        persisted = []
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=_good_reading()):
+            events = list(orchestrator.run(run, [{"role": "user", "content": "q"}],
+                                           persist=lambda reading, status: persisted.append((reading, status)) or "thread-1"))
+        done = events[-1]
+        assert done["status"] == "answered"
+        assert done["thread_id"] == "thread-1"
+        assert persisted[0][1] == "answered"
+
+    def test_bad_then_good_repairs_once_and_persists(self, prepared):
+        orchestrator, run = prepared
+        bad = _good_reading(source="totally_invented_ref")
+        good = _good_reading()
+        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, good]):
+            events = list(orchestrator.run(run, [{"role": "user", "content": "q"}],
+                                           persist=lambda reading, status: "thread-2"))
+        assert events[-1]["status"] == "answered"
+        assert events[-1]["thread_id"] == "thread-2"
+
+    def test_bad_twice_fails_verification_and_persists_nothing_new(self, prepared):
+        orchestrator, run = prepared
+        bad = _good_reading(source="totally_invented_ref")
+        persisted = []
+        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, bad]):
+            events = list(orchestrator.run(run, [{"role": "user", "content": "q"}],
+                                           persist=lambda reading, status: persisted.append((reading, status)) or None))
+        assert events[-1]["status"] == "verification_failed"
+        assert "reading" not in events[-1]
+        assert persisted[0] == (None, "verification_failed")
+
+    def test_generation_exception_reported_as_generation_failed(self, prepared):
+        orchestrator, run = prepared
+        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=RuntimeError("boom")):
+            events = list(orchestrator.run(run, [{"role": "user", "content": "q"}],
+                                           persist=lambda reading, status: None))
+        assert events[-1]["status"] == "generation_failed"
 
 
 class TestAskStreamRoute:
@@ -125,96 +307,69 @@ class TestAskStreamRoute:
                 out.append(json.loads(line[len("data: "):]))
         return out
 
-    def test_career_question_streams_through_the_domain_agent(self, client, env):
-        chunks = ["Your 10th ", "lord is well placed."]
-        with patch("astrospace.agents.base.BaseAstroAgent.run_messages_stream",
-                   return_value=iter(chunks)) as run:
+    def test_career_question_answers_with_structured_reading(self, client, env):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=_good_reading()):
             r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
                 "question": "Is this a good year for a promotion at work?",
             })
         assert r.status_code == 200
-        run.assert_called_once()
         frames = self._frames(r)
-        deltas = [f["delta"] for f in frames if "delta" in f and not f.get("reset")]
-        assert "".join(deltas) == "".join(chunks)
         done = frames[-1]
-        assert done["done"] is True
+        assert done["type"] == "done"
+        assert done["status"] == "answered"
         assert done["domain"] == "career"
-        assert done["refer_out_kind"] is None
+        assert done["schema_version"] == "ask_structured_v1"
+        assert done["reading"]["interpretation"] == _good_reading().interpretation
+        assert any(f["type"] == "status" for f in frames)
 
-    def test_non_career_question_falls_back_to_vedic_qa_agent(self, client, env):
-        # "health" has no registered agent yet (DOMAIN_AGENTS only has
-        # "career") — routes cleanly away from career by keyword match, not
-        # the router's own career-shaped default-domain fallback.
-        with patch("astrospace.agents.base.BaseAstroAgent.run_messages",
-                   return_value=("The Moon supports steady routines this week.", [])) as run:
+    def test_marriage_question_answers_with_structured_reading(self, client, env):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=_good_reading()):
             r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
-                "question": "Is this a good time for my health and energy levels?",
+                "question": "Is this a good year for my marriage?",
             })
         assert r.status_code == 200
-        run.assert_called_once()
-        frames = self._frames(r)
-        assert frames[0]["delta"] == "The Moon supports steady routines this week."
-        assert frames[-1]["done"] is True
-        assert frames[-1]["domain"] == "health"
-        assert frames[-1]["refer_out_kind"] is None
+        done = self._frames(r)[-1]
+        assert done["domain"] == "marriage"
+        assert done["status"] == "answered"
 
-    def test_refer_out_gates_before_any_model_call(self, client, env):
-        with patch("astrospace.agents.base.BaseAstroAgent.run_messages_stream") as stream, \
-             patch("astrospace.agents.base.BaseAstroAgent.run_messages") as run:
+    def test_unsupported_domain_never_calls_an_agent(self, client, env):
+        with patch.object(DomainReadingAgent, "run_structured_reading") as run:
+            r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
+                "question": "What does my chart show about property disputes with my siblings?",
+            })
+        assert r.status_code == 200
+        run.assert_not_called()
+        frame = self._frames(r)[0]
+        assert frame["type"] == "domain_not_ready"
+        assert frame["available"] == ["career", "marriage"]
+
+    def test_ambiguous_question_asks_for_clarification(self, client, env):
+        with patch.object(DomainReadingAgent, "run_structured_reading") as run:
+            r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
+                "question": "Is this a good time for my career and my marriage?",
+            })
+        run.assert_not_called()
+        frame = self._frames(r)[0]
+        assert frame["type"] == "clarification_needed"
+
+    def test_refer_out_gates_before_any_agent_call(self, client, env):
+        with patch.object(DomainReadingAgent, "run_structured_reading") as run:
             r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
                 "question": "When will I die?",
             })
-        assert r.status_code == 200
-        stream.assert_not_called()
         run.assert_not_called()
-        frames = self._frames(r)
-        assert frames[0]["delta"] == "AstroSpace does not predict death or lifespan, for anyone."
-        assert frames[-1]["domain"] is None
-        assert frames[-1]["refer_out_kind"] == "death"
-
-    def test_prohibited_verdict_mid_stream_resets_the_client(self, client, env):
-        chunks = ["You will ", "win your case for sure."]
-        with patch("astrospace.agents.base.BaseAstroAgent.run_messages_stream",
-                   return_value=iter(chunks)):
-            r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
-                "question": "How does my chart look for career authority?",
-            })
-        assert r.status_code == 200
-        frames = self._frames(r)
-        reset_frames = [f for f in frames if f.get("reset")]
-        assert reset_frames, "expected a reset frame once the output-side gate tripped"
-        assert "cannot predict legal outcomes" in reset_frames[0]["delta"]
-        # The question was genuinely routed to career before the output-side
-        # gate tripped mid-stream — domain records where it was routed,
-        # refer_out_kind records why the answer was replaced.
-        assert frames[-1]["domain"] == "career"
-        assert frames[-1]["refer_out_kind"] == "legal"
-
-    def test_stream_generation_failure_returns_visible_fallback(self, client, env):
-        with patch("astrospace.agents.base.BaseAstroAgent.run_messages_stream",
-                   side_effect=TypeError("missing model auth")):
-            r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
-                "question": "Is this a good year for a promotion at work?",
-                "start_thread": True,
-            })
-        assert r.status_code == 200
-        frames = self._frames(r)
-        assert frames[0]["delta"].startswith("Siddha's Ask agents")
-        assert frames[-1]["done"] is True
-        assert frames[-1]["domain"] == "career"
-        assert frames[-1]["refer_out_kind"] is None
-        assert frames[-1]["thread_id"]
+        frame = self._frames(r)[0]
+        assert frame["type"] == "refer_out"
+        assert frame["kind"] == "death"
 
     def test_unknown_kundli_404_before_streaming(self, client):
         r = client.post("/api/v1/ask/nonexistent-id/stream", json={"question": "hi"})
         assert r.status_code == 404
 
-    def test_thread_persists_career_domain_and_evidence(self, client, env):
-        with patch("astrospace.agents.base.BaseAstroAgent.run_messages_stream",
-                   return_value=iter(["A grounded career answer."])):
+    def test_thread_persists_structured_evidence(self, client, env):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=_good_reading()):
             r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
-                "question": "Is this a good time to change jobs?",
+                "question": "Is this a good time to change my job?",
                 "start_thread": True,
             })
         thread_id = self._frames(r)[-1]["thread_id"]
@@ -222,4 +377,87 @@ class TestAskStreamRoute:
         thread = client.get(f"/api/v1/ask/threads/{thread_id}").json()
         assistant_msg = next(m for m in thread["messages"] if m["role"] == "assistant")
         assert assistant_msg["domain"] == "career"
-        assert assistant_msg["content"] == "A grounded career answer."
+        assert assistant_msg["evidence"]["schema_version"] == "ask_structured_v1"
+        assert assistant_msg["evidence"]["structured_reading"]["interpretation"]
+
+    def test_failed_verification_persists_nothing_new(self, client, env):
+        bad = _good_reading(source="totally_invented_ref")
+        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, bad]):
+            r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
+                "question": "Is this a good year for a promotion at work?",
+                "start_thread": True,
+            })
+        done = self._frames(r)[-1]
+        assert done["status"] == "verification_failed"
+        assert done["thread_id"] is None
+
+    def test_pronoun_followup_in_same_thread_continues_career_not_clarify(self, client, env):
+        """The reported bug, exercised through the real route + real thread
+        persistence: a career thread's follow-up with no domain keywords of
+        its own ("this") must continue career, not re-ask to clarify."""
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=_good_reading()):
+            first = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
+                "question": "Is this a good year for a promotion at work?",
+                "start_thread": True,
+            })
+        thread_id = self._frames(first)[-1]["thread_id"]
+        assert thread_id
+
+        followup_reading = _good_reading(interpretation="July through September looks strongest.")
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=followup_reading):
+            second = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
+                "question": "Which month is strongest for this?",
+                "thread_id": thread_id,
+            })
+        frames = self._frames(second)
+        done = frames[-1]
+        assert done["type"] == "done"
+        assert done["status"] == "answered"
+
+    def test_clarification_chip_resolves_on_first_click_not_a_loop(self, client, env):
+        """Reproduces the reported bug end-to-end: an ambiguous question ties
+        between career and marriage, and tapping the "career" chip must
+        answer as career immediately — not re-trigger the same
+        clarification_needed response, which is what happened when the chip
+        click was resent as re-wrapped question text instead of an explicit
+        domain_override."""
+        with patch.object(DomainReadingAgent, "run_structured_reading") as run:
+            first = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
+                "question": "Is this a good time for my career and my marriage?",
+                "start_thread": True,
+            })
+        run.assert_not_called()
+        first_frame = self._frames(first)[0]
+        assert first_frame["type"] == "clarification_needed"
+        thread_id = first_frame["thread_id"]
+        assert thread_id
+
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=_good_reading()):
+            second = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
+                "question": "Is this a good time for my career and my marriage?",
+                "thread_id": thread_id,
+                "domain_override": "career",
+            })
+        done = self._frames(second)[-1]
+        assert done["type"] == "done"
+        assert done["status"] == "answered"
+        assert done["domain"] == "career"
+        assert done["thread_id"] == thread_id
+
+        thread = client.get(f"/api/v1/ask/threads/{thread_id}").json()
+        assert thread["messages"][-1]["domain"] == "career"
+
+    def test_confident_domain_switch_in_thread_is_not_pulled_back(self, client, env):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=_good_reading()):
+            first = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
+                "question": "Is this a good year for a promotion at work?",
+                "start_thread": True,
+            })
+        thread_id = self._frames(first)[-1]["thread_id"]
+
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=_good_reading()):
+            second = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
+                "question": "Is this a good year for my marriage?",
+                "thread_id": thread_id,
+            })
+        assert self._frames(second)[-1]["domain"] == "marriage"
