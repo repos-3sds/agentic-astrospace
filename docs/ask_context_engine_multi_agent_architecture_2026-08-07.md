@@ -1,8 +1,144 @@
 # Siddha Ask + Context Engine Multi-Agent Architecture Plan
 
-Date: 2026-08-07
+Date: 2026-08-07. Last reviewed: 2026-08-08.
 
-Status: planning / architecture. Do not treat this as implemented behavior.
+Status: living architecture doc — vision plus real implementation state, not
+a point-in-time audit. The body below (Executive Position through the
+Addendum) is the original plan, unedited except where noted; it should still
+be read as *target*, not as a description of running code. The
+"Implementation Status" section immediately below it, and the "Update
+2026-08-08" section near the end, are what's actually true right now. When
+the gap between vision and code changes, edit those two sections in place —
+do not fork a new dated file for the next pass; that's how this repo stops
+being readable (see CLAUDE.md).
+
+## Product Context
+
+Siddha is a mobile-first Vedic life guidance app. It is not meant to be just
+an astrology chart viewer or a generic AI chatbot. The product vision is to
+become a daily way-of-life guide that helps users understand timing,
+self-patterns, relationships, work, remedies, rituals, calendar choices, and
+personal growth through a grounded Vedic Context Engine.
+
+Ask is the conversational doorway into that system. Its job is to translate a
+human life question into the right astrological domain, gather deterministic
+chart and time context, interpret it with a specialist agent, verify that the
+answer is grounded, and return guidance that is practical, humane, and
+appropriate to the user's persona.
+
+### Vision
+
+- Siddha should feel like a disciplined consultation, not a free-form bot.
+- The Context Engine computes; agents interpret; deterministic verification
+  protects trust.
+- Guided users should receive simple, supportive language. Balanced users
+  should see enough reasoning to trust the answer. Practitioner users should
+  get deeper technical context, citations, and chart links.
+- Every meaningful answer should be traceable to chart computation, curated
+  knowledge, domain rules, safety policy, and user profile context.
+
+### Scope
+
+This architecture covers the Ask + Context Engine path:
+
+- routing a user question to the correct life domain and intent
+- gating unsupported domains honestly
+- assembling deterministic CE bundles
+- running configured domain specialist agents
+- verifying structured output before persistence
+- streaming progress and final answers to the mobile UI
+- preserving thread continuity and follow-up behavior
+
+This document does not replace the separate mobile UI design plan, knowledge
+ingestion plan, or core astrology computation checklists. It defines how those
+systems should be orchestrated when a user asks Siddha a question.
+
+### Business Objective
+
+The business goal is to make Siddha trustworthy enough for repeat daily use
+and deep enough to justify a premium guidance experience. Ask should increase
+engagement across the app by connecting answers to Today, Dashas, Calendar,
+Yantra, Charts, Remedies, Muhurta, and future domain journeys. The architecture
+must therefore prioritize accuracy, provenance, safety, latency control,
+persona fit, and extensibility over superficial chatbot breadth.
+
+## Implementation Status (as of 2026-08-08)
+
+### Live in code
+
+- **AskOrchestrator** (`astrospace/agents/orchestrator.py`) implements the
+  Addendum's graph below almost exactly: `SafetyResult -> RoutingResult ->
+  RegistryResult -> ContextResult -> AgentRunResult`, one class, sequential
+  method calls, no LangGraph or other graph-runtime dependency. Split into
+  `prepare()` (safety, routing, registry gate, context assembly — everything
+  that can short-circuit to a terminal envelope or a normal HTTP error,
+  called before the SSE stream opens) and `run()` (the generator: model
+  call, verify, one repair attempt, persist).
+- **Registry** (`astrospace/agents/registry.py`) — `AGENT_REGISTRY` holds
+  exactly two of the eleven agents mapped out below: `career` and
+  `marriage`. Every other domain in the Agent Map returns `domain_not_ready`,
+  never a silent generic fallback. Phase 0's acceptance criteria are met.
+- **Structured output** (`astrospace/agents/schema.py`) — `StructuredReading`
+  covers acknowledgment / technical_basis / interpretation /
+  summary_and_assurance / guidance / confidence: the "Human-Readable Flow"
+  below, collapsed from 6 steps to 5 (`context_gathered` and
+  `technical_interpretation` merged into one `technical_basis` list;
+  `next_paths.app_links` wasn't built). Envelope fields (`domain`, `status`,
+  `intent`, `schema_version`) are computed server-side and never trusted to
+  the model, per grounding rule #10 below.
+- **Deterministic verifier** (`astrospace/agents/verifier.py`) — no second
+  model call. Checks domain match, every `technical_basis[].source`
+  resolving to a real bundle reference or section, `prohibited_verdict`, and
+  `dosha_overclaim_kind`. Covers part of the Grounding Tests below (citation
+  validity, prohibited/dosha claims); "no unsupported dasha/transit claims"
+  (grounding rule #3) is not checked yet — see the Update section.
+- **Repair loop** is exactly the "structured output repair loop" specified
+  below: one attempt, hard-capped, in
+  `AskOrchestrator._agent_run_and_verify()`.
+- **Context assembly** — `assemble_domain()` (`astrospace/context/`) is the
+  Phase 3 CE bundle assembler, fully deterministic and taxonomy-driven. It
+  is **not** intent-aware: a "timing" question and an "explanation" question
+  about career currently get an identical bundle.
+- **Intent detection** (`astrospace/agents/intent.py`) — `detect_intent()`
+  is live and server-computed, but its output is a label only. It tags the
+  response; it does not yet shape what context gets assembled or gate
+  anything.
+- **Routing** (`astrospace/context/router.py`) — `KeywordRouter`: deterministic
+  keyword scoring with tie-detection for clarification, not the LLM-based
+  router this document originally implied. Thread continuity
+  (`thread_domain`, so a pronoun follow-up doesn't re-clarify) and an
+  explicit reader override (`domain_override`, bypassing the router entirely
+  when a clarification chip is tapped) were added 2026-08-08 as real
+  production bug fixes — see the Update section.
+- **Streaming events** are close to the "Streaming Event Contract" below:
+  `status`, `clarification_needed`, `domain_not_ready`, `refer_out`, `done`.
+  No `section_start`/per-field `delta` — the structured answer is delivered
+  whole once verification passes, not streamed field by field.
+
+### Explicitly not built
+
+- **Tool layer** (Phase 2, "Tool Architecture" below) — zero tools.
+  `DomainReadingAgent` never calls anything; the full bundle is handed to it
+  up front, and it answers with one forced `deliver_reading` tool call. This
+  is a deliberate, current decision, not an oversight not-yet-reached — see
+  the Update section for why a "give the agent scoped tools" proposal was
+  considered and rejected for now.
+- **Context Planner node** doesn't exist as a component. `assemble_domain`
+  plays this role today, but statically per-domain, not per-intent.
+- **9 of the 11 planned agents** — Clarifier, Daily Guidance, Dasha,
+  Transit, Remedies, Muhurta, Chart Explanation, Compatibility, and Safety
+  as a distinct node — are still sections in this document, not code.
+  "Safety" is a function (`agents/safety.py`), not an agent:
+  `check_safety()` gates before routing, matching this document's
+  safety-first intent even though it was never built as its own node.
+- **Multi-domain synthesis / diamond patterns** are not built. A question
+  naming two configured domains currently asks for clarification rather
+  than fanning out and converging — a real, currently-unresolved conflict
+  with the synthesis idea below; see the Update section.
+- **Persona depth rendering** (Guided/Balanced/Practitioner technical
+  stack) — `StructuredReading` has one fixed depth. Persona-based rendering
+  is a UI-only concern right now (the Why-sheet's mode selector swaps a
+  description string, not a different backend payload).
 
 ## Executive Position
 
@@ -586,7 +722,7 @@ Output:
 
 We should build skeletons for all agents first, then enable answer generation one by one.
 
-### Phase 0: Stop Unsafe Generalization
+### Phase 0: Stop Unsafe Generalization — DONE
 
 Acceptance criteria:
 - Unsupported domain does not fall back to generic answer.
@@ -594,7 +730,7 @@ Acceptance criteria:
 - Ask returns structured `domain_not_ready` or `clarification_needed`.
 - UI renders those states cleanly.
 
-### Phase 1: Agent Skeleton Registry
+### Phase 1: Agent Skeleton Registry — DONE for 2 of 11 agents (career, marriage)
 
 Acceptance criteria:
 - Agent registry exists with every planned agent.
@@ -603,7 +739,7 @@ Acceptance criteria:
 - Router checks registry before dispatch.
 - Tests prove disabled agents cannot answer.
 
-### Phase 2: Tool Layer
+### Phase 2: Tool Layer — NOT STARTED, deliberately deferred (see Update below)
 
 Acceptance criteria:
 - Each required tool has a stable interface.
@@ -611,7 +747,7 @@ Acceptance criteria:
 - Tools include provenance where relevant.
 - Agents receive tool outputs through CE bundle, not arbitrary raw DB dumps.
 
-### Phase 3: CE Bundle Contracts
+### Phase 3: CE Bundle Contracts — DONE for career + marriage; not intent-aware
 
 Acceptance criteria:
 - Domain-specific bundle schema exists.
@@ -619,7 +755,7 @@ Acceptance criteria:
 - Missing-context behavior is explicit.
 - Evidence refs are stable IDs that UI can display.
 
-### Phase 4: Structured Response Renderer
+### Phase 4: Structured Response Renderer — DONE
 
 Acceptance criteria:
 - Frontend renders structured answer sections.
@@ -627,7 +763,7 @@ Acceptance criteria:
 - Ask History stores and reopens structured answers.
 - Follow-ups preserve thread continuity.
 
-### Phase 5: Career Agent Production Readiness
+### Phase 5: Career Agent Production Readiness — DONE (marriage shipped alongside it)
 
 Acceptance criteria:
 - Career agent uses D1 + D10 + dasha + gochara + KB.
@@ -636,20 +772,32 @@ Acceptance criteria:
 - Safety verifier runs after generation.
 - Persona variants render correctly.
 
-### Phase 6: Add Agents by Traffic
+### Phase 6: Add Agents by Traffic — IN PROGRESS, 2 of 10 shipped
 
-Recommended order:
+**Correction, 2026-08-08:** the original order below mixed life-domain agents
+with technique/product-feature items (Daily Guidance, Dasha, Transit,
+Remedies, Muhurta, Chart Explanation) — but the Addendum two sections above
+already established that dasha/gochara/panchanga/vargas/remedies/muhurta are
+evidence providers and product features, not top-level agents. The corrected
+list below matches the real domain catalog (`astrospace/context/taxonomy.py`,
+10 domains) rather than the earlier mixed list. Daily Guidance, Chart
+Explanation, and the technique modules remain real product surfaces — they
+just aren't sequenced here as "agents to add," because they aren't agents.
 
-1. Career & Work
-2. Daily Guidance
-3. Dasha
-4. Transit / Gochara
-5. Relationship & Marriage
-6. Remedies
-7. Muhurta
-8. Chart Explanation
-9. Compatibility
-10. Advanced practitioner modules
+Recommended order (✅ = shipped 2026-08-08):
+
+1. ✅ Career
+2. ✅ Marriage (shipped alongside Career, not after — traffic data to
+   re-justify this order doesn't exist yet; see the Update section's note on
+   instrumenting before expanding)
+3. Wealth
+4. Children
+5. Health
+6. Foreign / relocation
+7. Education
+8. Family property
+9. Spirituality
+10. Litigation (safety-sensitive; mature guardrails first)
 
 ## Backend Architecture Recommendation
 
@@ -770,32 +918,42 @@ Agents must obey these rules:
 
 ## Immediate Backlog
 
-### P0
+### P0 — DONE
 
-- Remove generic fallback for unsupported routed domains in mobile Ask streaming.
-- Remove `career` as default domain for unknown questions.
-- Add structured unsupported-domain and clarification responses.
+- ~~Remove generic fallback for unsupported routed domains in mobile Ask streaming.~~
+- ~~Remove `career` as default domain for unknown questions.~~
+- ~~Add structured unsupported-domain and clarification responses.~~
 
-### P1
+### P1 — DONE
 
-- Create Agent Registry with enabled/disabled status.
-- Define agent contracts for all planned agents.
-- Define structured response schema and validator.
-- Persist structured response payload in Ask messages.
+- ~~Create Agent Registry with enabled/disabled status.~~ (2 of 11 agents defined, not all — registry pattern itself is done)
+- Define agent contracts for all planned agents. — not done past career/marriage
+- ~~Define structured response schema and validator.~~
+- ~~Persist structured response payload in Ask messages.~~
 
-### P2
+### P2 — DONE
 
-- Implement Ask Orchestrator service.
-- Implement Career CE bundle contract.
-- Implement Career Agent with verifier.
-- Update frontend renderer for structured answer cards.
+- ~~Implement Ask Orchestrator service.~~
+- ~~Implement Career CE bundle contract.~~ (marriage too)
+- ~~Implement Career Agent with verifier.~~ (marriage too)
+- ~~Update frontend renderer for structured answer cards.~~
 
-### P3
+### P3 — partially done
 
-- Add streaming status events.
-- Add context-used chips.
-- Add practitioner provenance panel.
-- Add UI affordance to choose/refine context for follow-up.
+- ~~Add streaming status events.~~
+- Add context-used chips. — backend emits `context_used`; not yet surfaced as UI chips
+- Add practitioner provenance panel. — not built (see Persona depth rendering, above)
+- Add UI affordance to choose/refine context for follow-up. — not built
+
+### P4 — next, superseded by the 2026-08-08 revised sequence below
+
+The original plan's next backlog item was "add agents by traffic." The
+2026-08-08 three-way design review (this document's Update section, next)
+revised that: strengthen and instrument the verifier before adding either
+more agents or more agent capability, because two production bugs shipped
+today (thread-continuity routing, a clarification-chip loop) both came from
+the routing layer having less rigor than the generation layer already has.
+Treat the Update section below as the current P4, not this paragraph.
 
 ## Final Recommendation
 
@@ -1000,3 +1158,296 @@ Do not start with parallel multi-agent synthesis. Start with inspectable nodes:
 Then add loops only where a real failure mode demands them.
 
 Then add diamonds only where independent context work can actually run in parallel.
+
+## Update 2026-08-08: Design Review After the First Two Agents Shipped
+
+Career and marriage went live, then broke twice in production — a follow-up
+question with no domain keywords of its own re-triggered clarification
+instead of continuing the thread, and tapping a clarification chip
+("career") sent the same ambiguous question back through the router
+prefixed with "Answer this as a Career question:", which added no
+disambiguating signal (the router only checks whether a keyword is
+*present*, not how many times) and produced an infinite, compounding loop
+of the identical clarification. Both fixes are live
+(`AskOrchestrator.route()`'s `thread_domain` and `domain_override`
+parameters, `astrospace/agents/orchestrator.py`). Both bugs came from the
+same root cause: the routing layer had noticeably less rigor than the
+generation layer already had, because this document's Phase 3–5 work went
+straight into grounding the *answer* without a matching pass on grounding
+the *route*. That prompted a three-way design review (this session, a
+collaborating agent session in the same repo, and the person driving both)
+on what to build next. This section is the outcome — read it as the current
+plan of record, superseding "Phase 6: add agents by traffic" and the
+original P4 as the immediate next step.
+
+### The proposal that was rejected: giving domain agents tool access
+
+Early in the review, giving `DomainReadingAgent` a small set of scoped tools
+(`get_domain_bundle`, `get_varga_chart`, `get_dasha_window`,
+`get_transit_context`, `retrieve_kb_passages` — essentially a subset of the
+"Tool Architecture" section above) was proposed as the next step, on the
+theory that 5 scoped tools is safer than the 35+ tools this document
+originally mapped out.
+
+That's true as far as it goes, but it was still the wrong next step, and the
+reasoning for rejecting it is worth keeping on record because it will come
+up again: **`DomainReadingAgent` having zero tools is not a gap to close, it
+is the load-bearing property that makes the deterministic verifier work at
+all.** Today, `assemble_domain()` builds the entire context bundle before
+the model ever sees the question, and `verify()` checks every
+`technical_basis[].source` against that one, already-known bundle. If the
+model could instead call tools to fetch its own context mid-generation, the
+bundle stops being fixed and known in advance, and the verifier would also
+have to validate which tool calls were legitimate for the question — a much
+harder, much less deterministic problem. It would also resurrect exactly
+the failure mode this whole rebuild exists to fix: the *previous* Ask
+implementation, `VedicQAAgent` (still live on the non-streaming `/ask`
+path, with real tools — `get_birth_chart`, `get_varga_chart`,
+`get_today_panchanga`, `get_current_gochara`), is a free-form tool-calling
+agent, and free-form tool access is what produced answers that looked
+confident but weren't reliably grounded — the original trust problem in
+this document's Executive Position.
+
+**The kept principle, worth stating plainly because it's now been
+independently rediscovered twice in one review:**
+
+> The model does not decide what astrological facts exist. The backend
+> decides the domain, the chart layers that matter, the dashas/transits/
+> yogas/references that are relevant, and what evidence is admissible. The
+> agent only interprets the bundle it's handed.
+
+If a tool layer gets built later (Phase 2 above), it should be tools the
+*orchestrator* calls deterministically to assemble a bundle — never tools
+the model selects and invokes itself.
+
+### The revised near-term sequence
+
+In priority order, each scoped down from what was originally floated in
+review to something concretely buildable against the code as it exists
+today:
+
+1. **Instrument before strengthening.** Nothing currently logs *which*
+   `verify()` violation fired or how often repair triggers —
+   `verification_failed`/`generation_failed` only ever surface as an SSE
+   status. Log violation types server-side first. Deciding which of the
+   verifier checks below are worth building should be driven by what
+   actually happens in production, not by guessing.
+2. **Strengthen the verifier**, cheapest checks first:
+   - "required sections present per intent" — mostly free, since
+     `StructuredReading`'s Pydantic schema already guarantees every field
+     exists; the remaining piece is intent-specific *content* requirements
+     (e.g. a `timing` intent should probably have a non-empty
+     `follow_up_questions`), not structural presence.
+   - "no unsupported dasha/transit claims" (grounding rule #3, never
+     implemented) — the hard one. It means extracting date/month
+     expressions from free text (a real answer already says things like
+     "through mid-September 2026") and cross-checking them against
+     `dasha_relevance`'s actual windows. Scope the first cut narrowly:
+     require any month/year mentioned in the answer to appear somewhere in
+     the bundle's serialized dasha data, rather than attempting general
+     temporal-claim parsing.
+3. **Make `assemble_domain` intent-aware — this *is* the Context Planner
+   from Phase 3/the graph above, not a new component.** `detect_intent()`
+   already runs server-side and is already threaded through
+   `PreparedRun.intent`; it just isn't used to shape what gets assembled
+   yet, only to label the response. Extending `assemble_domain(chart,
+   domain, question=..., intent=...)` to trim its output per intent (a
+   `timing` question doesn't need everything an `explanation` question
+   needs) is config/taxonomy work, not a new service with its own
+   validation and fallback machinery. If an LLM-driven planner is ever
+   warranted beyond that, its output must be schema-validated with a
+   deterministic fallback to the full taxonomy-defined bundle on failure —
+   never trusted un-checked, per the kept principle above.
+4. **Resolve routing vs. synthesis semantics before building either
+   further.** This is a real, currently-open conflict, not just a future
+   nice-to-have: "Is this a good time for my career and my marriage?" is
+   the literal test case `_needs_clarification()` uses today to define
+   *ambiguous* — mentioning two configured domains is exactly what forces a
+   clarify right now. Multi-domain synthesis (the diamond pattern above)
+   would make that same phrase answer both instead. Those are incompatible
+   readings of the same signal, so before any synthesis work starts, the
+   router needs two named categories, not one tie-break rule:
+   - **Ambiguous** — "Is this a good time?" with no named domain: clarify.
+   - **Multi-domain** — both named domains are in `AGENT_REGISTRY` and
+     ready: fan out, assemble both bundles, converge on a synthesis node.
+   - A domain named that isn't registered yet needs a partial-answer path
+     ("I can speak to career; marriage isn't ready yet") rather than either
+     silently dropping it or refusing the whole question.
+5. **Section-targeted repair, scoped down from "regenerate just the failed
+   field."** The original idea (repair message says exactly
+   `technical_basis[1].source is invalid` instead of a generic "answer
+   again, fixing these problems") is worth doing and is a small change to
+   `_agent_run_and_verify()`'s corrective message — `verify()` already
+   returns fairly specific per-violation strings, this is about surfacing
+   them precisely rather than newly generating them. Actually regenerating
+   only the failed field while holding the rest of the structured object
+   fixed is a bigger, separate protocol change (partial-object patching
+   against a single forced tool call) and should stay explicitly out of
+   scope until the simpler message-precision version proves insufficient.
+6. **Explicit node contracts, no LangGraph.** Convert the orchestrator's
+   already-typed dataclasses (`SafetyResult`, `RoutingResult`, etc.) into a
+   uniform per-node contract (e.g. a `Protocol` with one `run(state) ->
+   Result` shape) once there are enough nodes that the informal version
+   gets hard to follow. Low urgency at 2 agents; revisit once agent count or
+   node count grows enough to justify it — not before, per this repo's
+   general bias against premature abstraction.
+
+Everything above should run **after** fixing one documentation gap in the
+"Backend Architecture Recommendation" and graph diagrams elsewhere in this
+document: they list the pipeline starting at routing/intent
+(`IntentRouterNode` / `RouterNode` first). The real, correct, and currently
+implemented order is **safety first, unconditionally, before routing** —
+`AskOrchestrator.prepare()` calls `check_safety()` before `route()`, so a
+death/health/legal/money question never reaches the router at all. Any
+future diagram or plan should keep Safety as the first node, not fold it in
+after routing for narrative convenience.
+
+### What stays out of scope until the above lands
+
+- No LangGraph or other graph-runtime dependency (Item 6 above is a
+  contract-shape change, not a runtime change).
+- No tool access for domain agents (see "the proposal that was rejected,"
+  above) — if a deterministic, orchestrator-owned tool layer is built per
+  Phase 2, it's still the orchestrator calling tools, never the model.
+- No expansion past career + marriage (Phase 6) until the routing layer has
+  the same rigor as the generation layer already does — repeating Phase 6
+  before Items 1–4 above would very likely ship a third and fourth agent on
+  top of the same routing gaps that produced the two bugs that triggered
+  this review.
+
+## Cross-Check: Codex's 2026-08-08 Draft (`Codex_Architecture_Draft.md`)
+
+A parallel draft was written independently and largely converges with the
+above — same current-state read, same rejected-tool-access reasoning, same
+ambiguous-vs-multi-domain distinction. Rather than keep two documents, the
+items below are what that draft had and this one didn't; each was checked
+against the real code before being folded in, not merged on trust.
+
+**Genuine gaps, now incorporated:**
+
+- **Verifier needs a "confidence vs. evidence" check.** Not in `verify()`
+  today (confirmed by reading `astrospace/agents/verifier.py`): nothing
+  checks that a `confidence: "high"` reading is actually backed by more than
+  one or two thin citations. Add to Item 2's list above, after the cheap
+  checks — it's a comparison against the reading's own `technical_basis`
+  length/quality, not new external data, so it should be cheap too.
+- **"Remedies framed as paid removal" has no deterministic net.** Confirmed
+  by reading `astrospace/agents/safety.py` in full: there is no
+  `_REMEDY_OVERCLAIM` table analogous to `_DOSHA_OVERCLAIM_OUTPUT`. This
+  non-negotiable (CLAUDE.md: "Remedies are traditional practice, never 'pay
+  to remove'") currently exists only as prompt instruction in each domain's
+  `domain_addendum` string — exactly the state dosha-overclaim was in before
+  this session added its regex net (the comment already in `safety.py`
+  says as much: "had only a prompt instruction, no net"). Add a
+  `remedy_overclaim_kind()` alongside `dosha_overclaim_kind()` — same
+  shape, same file — as part of Item 2.
+- **Concrete per-intent context lists**, useful as the literal target for
+  Item 3 (making `assemble_domain` intent-aware) rather than describing it
+  only abstractly:
+  - Career + timing: D1, D10, 10th house/lord, 6th/2nd/11th supporting
+    houses, Vimshottari dasha stack, relevant gochara, career references.
+  - Marriage + timing: D1, D9, 7th house/lord, Venus/Jupiter/Mars,
+    2nd/4th/8th/12th supporting houses, dasha relevance, gochara, marriage
+    references, dosha flags with caution rules.
+- **A worked agent-contract example**, not just field names. The original
+  "Agent Contract" section (under Agent Skeleton, near the top of this
+  document) lists field names as prose; a concrete filled-in example for
+  `career` — `agent_id`, `owned_domains`, `allowed_intents`,
+  `required_context_by_intent`, `disallowed_outputs`, `persona_depth`,
+  `fallback_behavior: domain_not_ready` — is worth keeping as the literal
+  template once Item 1 (explicit node contracts) or agent count past 2
+  makes a formal registry worth building. See `Codex_Architecture_Draft.md`
+  §"Agent Contract Template" for the full YAML; not duplicated here since
+  the source file isn't going away.
+
+**Discrepancy worth resolving, not yet resolved:** Codex's draft lists 8
+primary intents including `follow_up`; the live `AskIntent` type
+(`astrospace/agents/schema.py:15`) has exactly 7 — `timing`, `suitability`,
+`explanation`, `remedy`, `comparison`, `daily_guidance`,
+`general_guidance` — no `follow_up`. This isn't an oversight to silently
+fix either way: today, "this is a follow-up" is handled structurally (the
+`thread_domain` continuity mechanism in `AskOrchestrator.route()`), not as
+an intent label. Whether a follow-up should *also* carry its own intent
+value (e.g. so the verifier or UI can treat it differently) is an open
+question, not a settled one — decide it explicitly before Item 3's
+intent-aware context planning gets built, since that's the point where the
+intent list's completeness actually starts to matter.
+
+**Correction applied to this document, not Codex's:** Codex's Phase 4
+("Structured UI Renderer") lists rendering the structured schema as still
+future work. That's not accurate against what's live — confirmed by reading
+`ask-answer.component.html`: `reading.acknowledgment`, `.interpretation`,
+`.summary_and_assurance`, `.guidance.practical_actions`, and
+`.guidance.remedies` all render as distinct elements today, and the old
+regex-based markdown section-parser was deleted, not kept as a fallback.
+What's genuinely still missing is the *richer* version both drafts describe
+elsewhere — persona-differentiated payloads (one backend response, three
+different depths), `next_paths.app_links` as clickable in-app routes, and
+distinct "cards" per section rather than one flowing bubble. Phase 4 above
+stays tagged DONE for the basic case; the richer version is folded into
+"Persona depth rendering" under "Explicitly not built," not treated as a
+separate unstarted phase.
+
+### Resolved, 2026-08-08 (second pass)
+
+The open items above were settled in a follow-up exchange. Recording the
+decisions and their concrete dependencies here so they don't need
+re-litigating a third time:
+
+- **`follow_up` is conversation metadata, not an intent.** `AskIntent` stays
+  at its current 7 values. Add a separate `is_follow_up: bool` signal
+  instead. Precision note: it must **not** be derived from
+  `thread_domain is not None` — that conflates "thread has an established
+  *domain*" with "this turn is structurally a follow-up." A thread whose
+  first turn was a clarification has no established domain
+  (`_thread_established_domain()`, `ask_stream_routes.py:39-51`, returns
+  `None` for exactly that case by design) but its second message is still a
+  follow-up. Derive `is_follow_up` from thread/message presence directly
+  (e.g. `bool(thread_id and existing_messages)`), not from the domain-
+  continuity check.
+- **Multi-domain synthesis schema, short-term/DB-compatible:** keep
+  `AskMessage.domain` as a plain string (`"synthesis"` or the primary
+  domain), add `domains: string[]`, `primary_domain`, `secondary_domains`,
+  and `answer_type: "single_domain" | "multi_domain_synthesis"` inside the
+  `evidence` JSON bridge — no schema migration, consistent with how
+  `structured_reading`/`references` are already stored there. UI badge
+  becomes `ANSWER · CAREER + MARRIAGE` for the synthesis case. **Concrete
+  dependency this creates:** `_thread_established_domain()` must be updated
+  in the same change — if a synthesized turn ever persists a literal
+  `domain: "synthesis"`, that value fails `AskOrchestrator.route()`'s
+  `thread_domain in AGENT_REGISTRY` check on the next turn and silently
+  breaks the thread-continuity fix shipped earlier today (a follow-up on a
+  synthesized answer would fall back to fuzzy routing instead of
+  continuing). Fix: when `answer_type == "multi_domain_synthesis"`, resolve
+  continuity from `primary_domain`, not from `domain`.
+- **Intent Router and Domain Router are separate node *contracts*, not
+  necessarily separate calls yet.** Near-term: one `route()` implementation
+  returns both, matching today's `RoutingResult` shape (already has
+  `domain` and `intent` as distinct fields). Formalize as
+  `IntentRouterNode`/`DomainRouterNode` types when Item 6 (explicit node
+  contracts) is built, so `ContextPlanner(domain, intent, persona,
+  thread_context)` has a clean two-input shape to depend on.
+- **`admin/client.py` reconciliation:** owned by Codex's session, since she
+  has live context on the file. Her reconciliation plan (diff current tree
+  against `origin/main`, distinguish which changes are whose, keep already-
+  deployed fixes, don't apply the stale worktree patch blindly) matches
+  what was already told to the spawned task session. Not part of either
+  agent's stated Ask-feature ownership — worth the user confirming the
+  hand-off explicitly rather than it being assumed by default.
+- **Section-level repair:** confirmed narrow scope — more precise repair
+  message text only, no partial-object regeneration. No change from Item 5
+  above.
+- **Verifier additions, confirmed backend-only, four items:** confidence-
+  vs-evidence-strength, remedy-overclaim (no net today — same gap
+  dosha-overclaim had before this session), unsupported-timing-certainty,
+  and required-sections-by-intent. Matches Item 2 above; no new items, just
+  confirmed alignment on the same four.
+
+**Scope named by Codex but out of scope for this document:** the "Future
+Ideal" section's cross-feature integration (Ask pulling in Today, Dashas,
+Yantra/transits, Remedies practice tracking, Calendar/muhurta, Charts/vargas,
+Compatibility, preferences, location panchanga, and knowledge ingestion) is
+real long-term product surface area, but every item on that list depends on
+agents this document's roadmap hasn't reached yet. Worth keeping on record
+as the eventual destination; not worth sequencing until Phase 6 above is
+further along than 2 of 10 domains.
