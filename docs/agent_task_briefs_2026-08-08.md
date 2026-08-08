@@ -38,6 +38,12 @@ Written from my side with less firsthand visibility into the mobile
 codebase's exact current state than you have — treat this as a starting
 proposal to refine, not a spec to execute blindly.
 
+**Acceptance criteria source:** Codex added
+[mobile Ask thread UX acceptance criteria](mobile_ask_thread_ux_acceptance_2026-08-08.md)
+as the working bar for Ask History, follow-ups, old-thread reopening,
+streaming terminal states, copy/edit/archive controls, and future
+multi-domain rendering.
+
 **What I can confirm is already built** (checked `ask-answer.component.html`
 directly this session): `reading.acknowledgment`, `.interpretation`,
 `.summary_and_assurance`, `.guidance.practical_actions`, and
