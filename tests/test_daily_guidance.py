@@ -30,7 +30,7 @@ class TestVerdict:
         reading = guidance["reading"]
         assert reading["summary"]
         assert reading["focus"]
-        assert reading["energy"] in ("low", "moderate", "steady", "high")
+        assert reading["energy"] in ("vibrant", "steady", "fragmented", "drained")
         assert reading["best_for"]
         assert reading["avoid"]
         assert reading["work_tone"]
