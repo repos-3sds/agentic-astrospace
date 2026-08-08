@@ -19,12 +19,16 @@ should be pruned, not archived — this isn't a history log, `git log` is.
 
 ## Current assignments
 
+Full task specs for all four: [docs/agent_task_briefs_2026-08-08.md](agent_task_briefs_2026-08-08.md).
+This table stays intentionally thin — status only, detail lives in the
+brief.
+
 | Agent | Task | Branch | Status | Touching | Last updated |
 |---|---|---|---|---|---|
-| Claude | Ask backend hardening sequence (SSE error contract → verifier strengthening → intent-aware context planner → routing/synthesis split → section-targeted repair) — see [architecture doc's Update section](ask_context_engine_multi_agent_architecture_2026-08-07.md#update-2026-08-08-design-review-after-the-first-two-agents-shipped) | not started | Queued — Claude owner, not started | `astrospace/agents/orchestrator.py`, `astrospace/agents/verifier.py`, `astrospace/api/ask_stream_routes.py` | 2026-08-08 |
-| Codex | Mobile Ask UI renderer, cross-agent backlog/acceptance criteria | — | Not yet started | `ui/src/app/features/mobile/ask/*` | 2026-08-08 |
-| Gemini | Golden chart validation + Wealth domain spec (data/spec first, not orchestrator code) | — | Not yet assigned in detail | `astrospace/context/taxonomy.json` (new `wealth` spec), no code yet | 2026-08-08 |
-| Qwen | Test gap audit + additive tests | — | Not yet started | `tests/*` only | 2026-08-08 |
+| Claude | Ask backend hardening sequence, Item 1 first (SSE `fatal_error` contract) | not started | Queued — Claude owner, not started | `astrospace/agents/orchestrator.py`, `astrospace/agents/verifier.py`, `astrospace/api/ask_stream_routes.py` | 2026-08-08 |
+| Codex | Mobile Ask UI renderer + cross-agent backlog docs | — | Not yet started | `ui/src/app/features/mobile/ask/*` | 2026-08-08 |
+| Gemini | Golden-chart VERIFY-flag legwork, then Wealth domain spec | — | Not yet started | `core/vedic/*` (docs/tests only), then `astrospace/agents/registry.py` (PR, owner review) | 2026-08-08 |
+| Qwen | Adversarial paraphrase audit on `safety.py`'s regex gates | — | Not yet started | `tests/test_verifier.py` (additive only) | 2026-08-08 |
 
 ## Open handoffs / things the next agent in an area should know
 
