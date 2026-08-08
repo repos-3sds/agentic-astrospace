@@ -29,13 +29,36 @@ criteria to her own brief). Cleared to begin per her kickoff recommendation.
 
 | Agent | Task | Branch | Status | Touching | Last updated |
 |---|---|---|---|---|---|
-| Claude | Ask backend hardening sequence, Item 1: SSE `fatal_error` contract | `ask-sse-fatal-error` | In progress | `astrospace/api/ask_stream_routes.py`, `ui/src/app/core/models.ts` (event type only, for Codex to consume) | 2026-08-08 |
-| Codex | Mobile Ask UI renderer + cross-agent backlog docs + Ask thread UX acceptance criteria | `main` | In progress — documenting Ask thread UX acceptance criteria, then inspecting mobile Ask gaps | `ui/src/app/features/mobile/ask/*`, `docs/mobile_ask_thread_ux_acceptance_2026-08-08.md` | 2026-08-08 |
-| Gemini | Golden-chart VERIFY-flag legwork and Wealth domain spec PR | main | In progress | `astrospace/core/vedic/*` (docs/tests only), `astrospace/agents/registry.py` | 2026-08-08 |
-| Qwen | Adversarial paraphrase audit on `safety.py`'s regex gates | — | Cleared to start | `tests/test_verifier.py` (additive only) | 2026-08-08 |
+| Claude | Ask backend Item 1: SSE `fatal_error` contract | `ask-sse-fatal-error` | **PR #3 open** (clean, verified — one commit, just the backend fix) | `astrospace/api/ask_stream_routes.py`, `tests/test_domain_agent.py` | 2026-08-08 |
+| Codex | Mobile Ask UI renderer + cross-agent backlog docs + Ask thread UX acceptance criteria | `codex-ask-ui` | **PR #4 open** (opened by Claude after the branch split — Codex should confirm content matches intent) | `ui/src/app/features/mobile/ask/*`, `ui/src/app/core/models.ts`, `docs/mobile_ask_thread_ux_acceptance_2026-08-08.md` | 2026-08-08 |
+| Gemini | Golden-chart VERIFY-flag legwork and Wealth domain spec | `gemini-wealth-domain-spec` | In progress — has its own clean branch off `main` now | `astrospace/core/vedic/*` (docs/tests only), `astrospace/agents/registry.py` | 2026-08-08 |
+| Qwen | Adversarial paraphrase audit on `safety.py`'s regex gates | `qwen-paraphrase-audit` (own environment, not this shared directory) | Done — 52 paraphrase test cases added, all 52 currently pass when they should fail (confirms the same weakness `refer_out_kind` already fixed once). Tests-only, no PR yet as of this note. | `tests/test_verifier.py` (additive only) | 2026-08-08 |
 
 ## Open handoffs / things the next agent in an area should know
 
+- **⚠️ RESOLVED (2026-08-08) — failure mode and the control now in place.**
+  This working directory is shared across all four agents in real time, not
+  just in git history: a branch switch by one agent (`git checkout` /
+  `git checkout -b`) changes what branch *everyone* in the directory is on,
+  silently, with no warning. Today that caused concurrent work to land on
+  the wrong branch and get bundled into an unrelated PR (#3 briefly carried
+  both a backend fix and unrelated frontend/docs work before being split
+  into PR #3 and PR #4). Untangling it also surfaced a second, related gap:
+  a fix that involves rewriting another agent's already-pushed commits
+  (reset/force-push) needs that agent's agreement before it happens, not
+  just after — the split here landed correctly, but happened before that
+  agreement was in place, and got flagged for exactly that reason once
+  reviewed.
+
+  **The control, now `AGENTS.md` Rule 3b — confirmed, not just proposed**
+  (both most-affected agents, Claude and Codex, have explicitly agreed):
+  use `git worktree add <path> <branch>` instead of switching branches
+  directly in the shared working directory. A worktree is an isolated
+  checkout that never touches what anyone else currently has checked out —
+  this fix itself, and PR #5 that carries it, were both made that way. And
+  separately: branch-rewriting fixes to a shared-state collision need
+  sign-off from whoever's commits are affected before they happen, the same
+  as any other destructive git operation.
 - **`astrospace/admin/client.py`** (Codex-owned per AGENTS.md): had a live
   uncommitted-edit collision with Claude's session on 2026-08-08 — already
   resolved (Codex committed the fix, `986963a`), but worth knowing this file
