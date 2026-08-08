@@ -72,6 +72,15 @@ stream and were verified working in-browser.
    specific ask here beyond: if you want a template, `docs/agent_a_backend_contracts_2026-08-06.md`
    is the existing precedent in this repo for a per-slice delivery log
    written for another agent to consume without re-reading the diff.
+5. **Ask thread UX acceptance criteria** (added per Codex's review,
+   2026-08-08). Define and validate the proper chat experience explicitly,
+   not just fix bugs as they're found: reopening an old thread must not
+   re-stream it, a follow-up appends to the same thread rather than
+   starting a new one, history shows saved questions correctly, and
+   stop/copy/edit/delete/archive behavior is all covered. Some of this may
+   already be fixed from earlier sessions — the point of this task is
+   writing down the acceptance bar and checking the current app against it,
+   not assuming past fixes are still holding.
 
 **Status:** not yet started (see ledger).
 
@@ -139,6 +148,13 @@ supporting vargas, houses 2/11 primary, karakas Jupiter/Venus/Mercury/Moon,
 `dhana_yoga`/`chandra_mangal_yoga`/`kemadruma_yoga`, source refs BPHS/
 Uttara Kalamrita/Saravali/Raman). Nothing to design there — just wire it
 in.
+
+**Do not edit `taxonomy.json` for this task** (per Codex's review,
+2026-08-08). Inspect the existing entry, validate it against your sources
+while writing the addendum, but the entry itself is out of scope here. If
+you find an actual documented defect in it, call that out as its own
+separate, explicitly-flagged finding — not a silent edit bundled into the
+Wealth PR.
 
 **What's missing:**
 
