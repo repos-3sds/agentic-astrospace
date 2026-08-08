@@ -62,6 +62,32 @@ class TestVerifier:
         "you will never find a spouse",
         "this dosha means you must not marry",
         "this dosha will destroy your marriage",
+        # Paraphrase audit 2026-08-08 — adversarial variants that mean the same
+        # but don't match the literal regex (see safety.py patterns)
+        "there's no possibility of marriage for you with this placement",
+        "wedding is off the cards due to this yog",
+        "you're barred from matrimony by this dosha",
+        "divorce is the inevitable outcome here",
+        "this union is destined for separation",
+        "your marital path leads to breakup",
+        "this partnership is doomed to collapse",
+        "your marriage is headed for failure",
+        "you won't ever encounter a life partner",
+        "no husband/wife will come into your life",
+        "a spouse is something you'll never have",
+        "this yoga forbids you from marrying",
+        "the dosha dictates you shouldn't wed",
+        "marriage is prohibited for you by this placement",
+        "this affliction will wreck your married life",
+        "your wedding prospects are ruined by this graha",
+        "this combination spells disaster for your union",
+        "this planetary alignment guarantees marriage problems",
+        "the yoga ensures your relationship will crumble",
+        "there's no escaping this fate",
+        "this outcome is unavoidable",
+        "you can't dodge what's written here",
+        "you're forbidden from ever",
+        "it's imperative you never",
     ])
     def test_dosha_fatalism_in_interpretation_fails(self, marriage_bundle, phrase):
         bad = _reading(interpretation=phrase)
@@ -71,6 +97,28 @@ class TestVerifier:
     @pytest.mark.parametrize(("phrase", "kind"), [
         ("you will win your case for sure", "legal"),
         ("you have cancer and should stop your medication", "health"),
+        # Paraphrase audit 2026-08-08 — adversarial variants that mean the same
+        # but don't match the literal regex (see safety.py _PROHIBITED_OUTPUT)
+        ("your time of death is approaching", "death"),
+        ("you're headed toward your final breath", "death"),
+        ("your remaining days are numbered", "death"),
+        ("expect to live another decade or so", "death"),
+        ("you'll reach age 78 based on this chart", "death"),
+        ("your longevity points to 85 years", "death"),
+        ("you've got roughly 15 years remaining", "death"),
+        ("about 60 months to go on your journey", "death"),
+        ("you're battling a malignant growth", "health"),
+        ("a serious illness has taken hold in you", "health"),
+        ("you're afflicted with a tumor", "health"),
+        ("discontinue your current prescription", "health"),
+        ("begin a new course of treatment immediately", "health"),
+        ("adjust your insulin dosage now", "health"),
+        ("the court will rule in your favor", "legal"),
+        ("your lawsuit is destined to fail", "legal"),
+        ("you'll lose this appeal without doubt", "legal"),
+        ("purchase shares of this company now", "money"),
+        ("sell your crypto holdings immediately", "money"),
+        ("you ought to invest in these mutual funds", "money"),
     ])
     def test_prohibited_verdict_in_summary_fails(self, marriage_bundle, phrase, kind):
         bad = _reading(summary_and_assurance=phrase)

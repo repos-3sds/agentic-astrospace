@@ -32,7 +32,7 @@ criteria to her own brief). Cleared to begin per her kickoff recommendation.
 | Claude | Ask backend hardening sequence, Item 1 first (SSE `fatal_error` contract) | not started | Cleared to start | `astrospace/agents/orchestrator.py`, `astrospace/agents/verifier.py`, `astrospace/api/ask_stream_routes.py` | 2026-08-08 |
 | Codex | Mobile Ask UI renderer + cross-agent backlog docs + Ask thread UX acceptance criteria | — | Cleared to start (hers to schedule) | `ui/src/app/features/mobile/ask/*` | 2026-08-08 |
 | Gemini | Golden-chart VERIFY-flag legwork now; Wealth domain spec PR held until Claude has review bandwidth | — | Cleared to start VERIFY research; Wealth PR blocked on reviewer availability, not on Gemini | `core/vedic/*` (docs/tests only, no `taxonomy.json`), then `astrospace/agents/registry.py` (PR, owner review) | 2026-08-08 |
-| Qwen | Adversarial paraphrase audit on `safety.py`'s regex gates | — | Cleared to start | `tests/test_verifier.py` (additive only) | 2026-08-08 |
+| Qwen | Adversarial paraphrase audit on `safety.py`'s regex gates | qwen/safety-paraphrase-audit | **Done** — PR ready for Claude's review. Found 44 total gaps: 24 dosha overclaim paraphrases + 20 prohibited verdict paraphrases that all slip through current regex patterns. Tests added to `tests/test_verifier.py`; safety.py fix is production logic requiring owner review. | `tests/test_verifier.py` (additive only) | 2026-08-08 |
 
 ## Open handoffs / things the next agent in an area should know
 
