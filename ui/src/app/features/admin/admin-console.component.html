@@ -643,10 +643,15 @@
                     <label>
                       <span>Audit reason <b>required</b></span>
                       <textarea
+                        id="admin-review-reason"
                         [(ngModel)]="reviewReason"
+                        (ngModelChange)="reviewReasonWarning.set('')"
                         rows="3"
                         placeholder="What did you verify or change?"
                       ></textarea>
+                      @if (reviewReasonWarning()) {
+                        <small class="field-warning">{{ reviewReasonWarning() }}</small>
+                      }
                     </label>
                     <button type="button" class="button secondary" (click)="saveMetadata()">
                       <lucide-icon name="save" [size]="15" /> Save metadata
@@ -655,6 +660,9 @@
                 </div>
 
                 <footer class="review-actions">
+                  @if (reviewReasonWarning()) {
+                    <span class="review-warning">{{ reviewReasonWarning() }}</span>
+                  }
                   @if (chunk.quality_status !== 'rejected') {
                     <button type="button" class="button reject" (click)="review('reject')">
                       <lucide-icon name="circle-x" [size]="16" /> Reject

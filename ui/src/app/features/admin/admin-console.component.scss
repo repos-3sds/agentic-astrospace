@@ -1360,6 +1360,12 @@ a {
 
   textarea { resize: vertical; }
 
+  .field-warning {
+    color: var(--as-bad);
+    font-size: 10.5px;
+    font-weight: 700;
+  }
+
   fieldset {
     margin: 0;
     padding: 9px;
@@ -1409,6 +1415,13 @@ a {
   gap: 7px;
   padding: 10px 13px;
   border-top: 1px solid var(--as-border);
+}
+
+.review-warning {
+  margin-right: auto;
+  color: var(--as-bad);
+  font-size: 10.5px;
+  font-weight: 750;
 }
 
 .retrieval-workspace {

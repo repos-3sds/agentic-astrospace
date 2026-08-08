@@ -71,6 +71,7 @@ export class AdminConsoleComponent implements OnInit {
   protected readonly selectedIds = signal<Set<string>>(new Set());
   protected readonly loading = signal(false);
   protected readonly error = signal('');
+  protected readonly reviewReasonWarning = signal('');
 
   protected sourceStatus = 'all';
   protected sourceQuery = '';
@@ -410,7 +411,12 @@ export class AdminConsoleComponent implements OnInit {
   }
 
   private requireReason(): boolean {
-    if (this.reviewReason.trim().length >= 3) return true;
+    if (this.reviewReason.trim().length >= 3) {
+      this.reviewReasonWarning.set('');
+      return true;
+    }
+    this.reviewReasonWarning.set('Add a short audit reason before publishing or rejecting.');
+    setTimeout(() => document.getElementById('admin-review-reason')?.focus(), 0);
     this.toast('Reason required', 'Add a short reason so the audit record is meaningful.', 'warn');
     return false;
   }
