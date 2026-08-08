@@ -85,10 +85,24 @@ the owner, per Rule 5.
 | New domain specs (taxonomy entries, domain addenda, golden-chart validation data) | **Gemini** | Start with data/spec artifacts, not direct orchestrator code — see the ledger for the first assigned domain |
 | Test coverage audits, additive tests | **Qwen** | No unsupervised infra/config changes — see Rule 5 |
 | `astrospace/admin/*` | **Codex** (by mutual agreement, 2026-08-08 — this file had a live-edit collision earlier and Codex took reconciliation ownership) | |
-| `astrospace/agents/registry.py` | Shared, append-only | Adding one new domain's `AgentConfig` entry is low-risk and doesn't need review; anything else in this file does |
+| `astrospace/agents/registry.py` | Shared | **Not append-only-safe** — see the correction below |
 
 If an area isn't listed, default to: whoever's been working in it most
 recently is the de facto owner until the ledger says otherwise.
+
+**Correction (PR #2 review, Codex, 2026-08-08): `registry.py` is not
+append-only-safe.** The first draft of this file called a new
+`AGENT_REGISTRY` entry low-risk because it's structurally a small addition.
+That was wrong — adding a domain there is what flips that domain from
+`domain_not_ready` to the model generating real answers for real users.
+That's the trust/safety boundary this whole architecture exists to protect
+(see the architecture doc's Executive Position and "Registry holds only
+configured/runnable agents" — the registry *is* the gate, not incidental to
+it). **Adding a new domain `AgentConfig` enables production answers and
+requires owner review plus tests** — domain addendum content, CE bundle
+validation, verifier tests, and route tests, same bar as career/marriage
+got. Pure formatting or comment-only edits to this file can still be
+direct.
 
 ## Rule 5: What needs a PR + review vs. what can go straight to `main`
 
@@ -101,15 +115,24 @@ auto-merge-on-green-CI alone:**
   understood why the previous version was the way it was" — the gitignore
   incident is exactly this gap.
 - Anything outside your own owned area (Rule 4).
+- A new entry in `AGENT_REGISTRY` (see the correction above).
 - Database schema/migration-shaped changes.
 - This file and the ledger's *structure* (not its daily content).
+- Non-trivial feature work, even inside your own owned area — "owned" means
+  "you're the default reviewer," not "risk doesn't apply here." A large Ask
+  backend change or a large mobile UI change can still break shared
+  behavior regardless of whose area it's in.
 
 **Direct commit to `main` is fine:**
 
-- Feature work inside your own owned area.
-- Tests, docs updates inside your own owned area.
+- Small fixes, docs, and tests inside your own owned area.
+- Low-risk changes inside your own owned area — genuinely small in scope
+  and blast radius, not just "I'm allowed to be here."
 - Small, obviously-correct fixes anywhere (typo, one-line bug with a
   passing test proving it).
+- Non-trivial work *only* when the user has explicitly asked for immediate
+  direct push (as has happened this session) — that's the user overriding
+  the default, not the default itself.
 
 When in doubt, PR it. A review costs one round-trip; a silent regression in
 shared config costs someone else finding it by accident.

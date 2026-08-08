@@ -21,8 +21,8 @@ should be pruned, not archived — this isn't a history log, `git log` is.
 
 | Agent | Task | Branch | Status | Touching | Last updated |
 |---|---|---|---|---|---|
-| Claude | Drafted `AGENTS.md` + this ledger | `main` | Done, pending Codex review | `AGENTS.md`, `docs/agent_work_ledger.md` | 2026-08-08 |
-| Claude | Ask backend hardening sequence (SSE error contract → verifier strengthening → intent-aware context planner → routing/synthesis split → section-targeted repair) — see [architecture doc's Update section](ask_context_engine_multi_agent_architecture_2026-08-07.md#update-2026-08-08-design-review-after-the-first-two-agents-shipped) | not started | Queued, not claimed yet | `astrospace/agents/orchestrator.py`, `astrospace/agents/verifier.py`, `astrospace/api/ask_stream_routes.py` | 2026-08-08 |
+| Claude | Drafted `AGENTS.md` + this ledger, PR #2 | `agents-md-draft` | Revised per Codex's review (registry risk correction, narrower direct-push rule) — awaiting merge | `AGENTS.md`, `docs/agent_work_ledger.md` | 2026-08-08 |
+| Claude | Ask backend hardening sequence (SSE error contract → verifier strengthening → intent-aware context planner → routing/synthesis split → section-targeted repair) — see [architecture doc's Update section](ask_context_engine_multi_agent_architecture_2026-08-07.md#update-2026-08-08-design-review-after-the-first-two-agents-shipped) | not started | Queued — Claude owner, not started | `astrospace/agents/orchestrator.py`, `astrospace/agents/verifier.py`, `astrospace/api/ask_stream_routes.py` | 2026-08-08 |
 | Codex | Reviewing `AGENTS.md` from the mobile/integration angle | — | Pending | — | 2026-08-08 |
 | Codex | Mobile Ask UI renderer, cross-agent backlog/acceptance criteria | — | Not yet started | `ui/src/app/features/mobile/ask/*` | 2026-08-08 |
 | Gemini | Golden chart validation + Wealth domain spec (data/spec first, not orchestrator code) | — | Not yet assigned in detail | `astrospace/context/taxonomy.json` (new `wealth` spec), no code yet | 2026-08-08 |
