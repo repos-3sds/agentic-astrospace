@@ -380,6 +380,28 @@ class TestAskStreamRoute:
         assert assistant_msg["evidence"]["schema_version"] == "ask_structured_v1"
         assert assistant_msg["evidence"]["structured_reading"]["interpretation"]
 
+    def test_unhandled_exception_mid_stream_yields_fatal_error_not_a_hang(self, client, env):
+        """Reproduces the gap the fatal_error contract exists for: a failure
+        outside the two guarded model-call spots (here, the DB write inside
+        persist_prepared) used to just kill the SSE connection with no
+        terminal frame at all. Patches astrospace.db.crud_mobile.add_ask_message
+        — the exact call persist_turn makes — to blow up after a clean,
+        successful generation, proving _safe_stream's guarantee holds even
+        when the failure isn't a model-call error."""
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=_good_reading()), \
+             patch("astrospace.db.crud_mobile.add_ask_message", side_effect=RuntimeError("db is down")):
+            r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
+                "question": "Is this a good year for a promotion at work?",
+                "start_thread": True,
+            })
+        assert r.status_code == 200
+        frames = self._frames(r)
+        assert frames, "stream must end in a terminal frame, not silently close"
+        last = frames[-1]
+        assert last["type"] == "fatal_error"
+        assert last["retryable"] is True
+        assert not any(f["type"] == "done" for f in frames)
+
     def test_failed_verification_persists_nothing_new(self, client, env):
         bad = _good_reading(source="totally_invented_ref")
         with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, bad]):
