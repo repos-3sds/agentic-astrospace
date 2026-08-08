@@ -16,6 +16,7 @@
 node_modules/
 venv/
 .venv/
+.venv312/
 __pycache__/
 .mypy_cache/
 .pytest_cache/
@@ -44,6 +45,16 @@ cache/
 .claude/
 .playwright-mcp/
 splash_screen/
+*.crdownload
+
+# Angular build output
+ui/src/assets/videos/
+
+# Knowledge-base source texts (~318MB of PDFs/EPUBs).
+# These are ingestion inputs, not code — they live in Supabase storage
+# (see knowledge_sources.storage_bucket/storage_path). Keeping them out of
+# git history avoids permanently bloating the repo.
+Astro Space Knowledge Base/
 
 # Coverage
 coverage/

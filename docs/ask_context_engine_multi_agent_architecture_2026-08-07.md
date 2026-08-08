@@ -882,6 +882,27 @@ Agents must obey these rules:
 9. No "certainty" language unless deterministic computation supports the statement.
 10. Every answer must expose what context was used.
 
+### Enforcement status (added 2026-08-08 — which of the above is real code, not just principle)
+
+| # | Rule | Enforced by | Status |
+|---|------|-------------|--------|
+| 1 | Claims map to CE field/KB passage | `verifier.py::verify()`, `_valid_sources()` | **Enforced** |
+| 2 | No invented placements | Structurally impossible — the model never computes placements, `assemble_domain` does, and the agent has no way to state one that isn't in its own prompt | **Enforced by construction** |
+| 3 | No unsupported dasha/transit claims | — | **Aspirational.** This is Item 3 above (temporal-claim checking), not built |
+| 4 | No contradiction of computed chart data | Same mechanism as #2 — the bundle is the only source of chart facts the model has | **Enforced by construction** |
+| 5 | No general fallback when domain unavailable | `AskOrchestrator.check_registry()` → `domain_not_ready` | **Enforced** |
+| 6 | No deterministic fatalism | `safety.py::dosha_overclaim_kind()`, checked in `verify()` | **Enforced, narrow** — see the paraphrase-evasion note in Item 3 above; catches the phrases in its table, unverified against paraphrase |
+| 7 | No paid/remedial fear framing | Domain-addendum prompt text only (`registry.py`) | **Prompt-only, no net** — the gap named in Item 3 above (`remedy_overclaim_kind()` doesn't exist yet) |
+| 8 | No medical/legal/financial directive | `safety.py::refer_out_kind()` (input) + `prohibited_verdict()` (output) | **Enforced, both directions** |
+| 9 | No unsupported certainty language | — | **Aspirational**, same gap as #3 (Item 3's "confidence vs. evidence strength" check) |
+| 10 | Every answer exposes context used | `context_used` field, computed server-side in `orchestrator.assemble_context()` | **Enforced** |
+
+Six of ten are real code today; two are structural guarantees rather than
+checks (nothing to build, the architecture makes the violation impossible);
+two are named gaps already tracked in the Update section above. This table
+is the honest current answer to "which of our guardrails are load-bearing
+and which are still just intentions" — keep it in sync as Item 3 lands.
+
 ## Testing Matrix
 
 ### Routing Tests
@@ -1180,7 +1201,7 @@ on what to build next. This section is the outcome — read it as the current
 plan of record, superseding "Phase 6: add agents by traffic" and the
 original P4 as the immediate next step.
 
-### The proposal that was rejected: giving domain agents tool access
+### ADR-001: No tool access for domain reading agents — REJECTED, DECIDED 2026-08-08
 
 Early in the review, giving `DomainReadingAgent` a small set of scoped tools
 (`get_domain_bundle`, `get_varga_chart`, `get_dasha_window`,
@@ -1232,7 +1253,20 @@ today:
    status. Log violation types server-side first. Deciding which of the
    verifier checks below are worth building should be driven by what
    actually happens in production, not by guessing.
-2. **Strengthen the verifier**, cheapest checks first:
+2. **Give the SSE stream an error contract — no verified path today.**
+   Confirmed by reading `generate()` in `ask_stream_routes.py`: the success
+   loop (`for event in orchestrator.run(...): yield _sse(event)`) has no
+   `try`/`except` around it at all. The only exception handling anywhere in
+   the pipeline is the two `except Exception` blocks inside
+   `_agent_run_and_verify()`, scoped specifically to the model call. Anything
+   else that throws mid-generator — a DB write failure in `persist_prepared`,
+   a bug in `_sse()`'s encoding — kills the SSE connection with whatever
+   bytes already went out: no `done` frame, no error frame, client left
+   hanging. Add a `fatal_error` event type and wrap `generate()`'s loop so
+   every stream is guaranteed to end in *some* terminal frame. Small, cheap,
+   and worth doing before verifier or planner work, not after — those add
+   more code inside the generator, which is more surface for this exact gap.
+3. **Strengthen the verifier**, cheapest checks first:
    - "required sections present per intent" — mostly free, since
      `StructuredReading`'s Pydantic schema already guarantees every field
      exists; the remaining piece is intent-specific *content* requirements
@@ -1246,7 +1280,19 @@ today:
      require any month/year mentioned in the answer to appear somewhere in
      the bundle's serialized dasha data, rather than attempting general
      temporal-claim parsing.
-3. **Make `assemble_domain` intent-aware — this *is* the Context Planner
+   - **Re-audit `dosha_overclaim_kind`/`prohibited_verdict` for the exact
+     weakness `refer_out_kind` already found and fixed in itself.**
+     `safety.py`'s own comment records that whole-phrase matching "let 24 of
+     31 probe questions through... because an allowlist of sentences cannot
+     cover paraphrase," which is why `refer_out_kind` moved to two-part
+     subject+frame matching. `dosha_overclaim_kind` and `prohibited_verdict`
+     are still simple phrase-regex tables — `test_verifier.py`'s existing
+     parametrized cases confirm the regexes catch the phrases *in* the
+     table, but nothing confirms they survive paraphrase the way refer-out's
+     redesign was specifically built to. Worth the same treatment, not a new
+     mechanism — this is the project re-applying a lesson it already
+     learned once, not a novel gap.
+4. **Make `assemble_domain` intent-aware — this *is* the Context Planner
    from Phase 3/the graph above, not a new component.** `detect_intent()`
    already runs server-side and is already threaded through
    `PreparedRun.intent`; it just isn't used to shape what gets assembled
@@ -1257,8 +1303,22 @@ today:
    validation and fallback machinery. If an LLM-driven planner is ever
    warranted beyond that, its output must be schema-validated with a
    deterministic fallback to the full taxonomy-defined bundle on failure —
-   never trusted un-checked, per the kept principle above.
-4. **Resolve routing vs. synthesis semantics before building either
+   never trusted un-checked, per the kept principle above. Target signature:
+   `ContextEngine.assemble(domain, intent, profile_id, question,
+   thread_context) -> CEBundle` — `assemble_domain` growing an `intent`
+   parameter, not a new class.
+
+   **Dependency this creates for Item 3 (the verifier), not obvious until
+   this is actually built:** today the bundle is always full, so the
+   verifier only has to catch *over*-claiming — a citation to something not
+   in the bundle. The moment the bundle gets trimmed per-intent,
+   *under*-provisioning becomes possible, and `verify()` has no way to see
+   it — it only checks that a citation resolves to something present, never
+   that something the answer needed was missing. A too-narrow trim would be
+   invisible to every check in this document. Ship intent-aware trimming
+   and a bundle-completeness sanity check in the same change, or trimming
+   quietly regresses grounding without any test catching it.
+5. **Resolve routing vs. synthesis semantics before building either
    further.** This is a real, currently-open conflict, not just a future
    nice-to-have: "Is this a good time for my career and my marriage?" is
    the literal test case `_needs_clarification()` uses today to define
@@ -1273,7 +1333,16 @@ today:
    - A domain named that isn't registered yet needs a partial-answer path
      ("I can speak to career; marriage isn't ready yet") rather than either
      silently dropping it or refusing the whole question.
-5. **Section-targeted repair, scoped down from "regenerate just the failed
+
+   **Stated interim policy, until the above is built:** a multi-domain
+   question is a clarification, full stop — that's today's actual behavior,
+   and it's being named here as a deliberate stated policy rather than left
+   as an unstated side effect of the tie-break rule. Add a test that asserts
+   this explicitly (e.g. `test_multi_domain_question_clarifies_until_synthesis_ships`)
+   so the day synthesis lands, the diff that changes this behavior is
+   obvious and intentional, not a silent regression of an assumption nobody
+   wrote down.
+6. **Section-targeted repair, scoped down from "regenerate just the failed
    field."** The original idea (repair message says exactly
    `technical_basis[1].source is invalid` instead of a generic "answer
    again, fixing these problems") is worth doing and is a small change to
@@ -1284,7 +1353,7 @@ today:
    fixed is a bigger, separate protocol change (partial-object patching
    against a single forced tool call) and should stay explicitly out of
    scope until the simpler message-precision version proves insufficient.
-6. **Explicit node contracts, no LangGraph.** Convert the orchestrator's
+7. **Explicit node contracts, no LangGraph.** Convert the orchestrator's
    already-typed dataclasses (`SafetyResult`, `RoutingResult`, etc.) into a
    uniform per-node contract (e.g. a `Protocol` with one `run(state) ->
    Result` shape) once there are enough nodes that the informal version
@@ -1451,3 +1520,76 @@ real long-term product surface area, but every item on that list depends on
 agents this document's roadmap hasn't reached yet. Worth keeping on record
 as the eventual destination; not worth sequencing until Phase 6 above is
 further along than 2 of 10 domains.
+
+## Cross-Check: Qwen's 2026-08-08 Review (fresh-eyes read, doc-only)
+
+A third review, done from this document's text alone — no codebase access.
+Genuinely useful for exactly that reason: it caught two things nobody with
+the code in front of them had flagged (SSE's missing error contract, the
+verifier's blind spot to under-provisioned context — both folded into Items
+2 and 4 above, with citations). It also, unavoidably, proposed fixes for a
+system that doesn't quite match what's actually built, since it couldn't
+check. Splitting the difference precisely, each checked against real code
+before being accepted or declined:
+
+**Adopted (see Items 2 and 4 above for the full write-up):** the SSE
+`fatal_error` event contract, the verifier's under-provisioning blind spot
+as an explicit Item 4 dependency, and re-auditing `dosha_overclaim_kind`/
+`prohibited_verdict` for the paraphrase-evasion weakness `refer_out_kind`
+already found and fixed in itself. Also adopted: the grounding-rules
+enforcement table above, and this section's own ADR-001 framing on the
+rejected tool-access decision.
+
+**Declined — based on a mental model this system doesn't have.** Two of
+the "Critical Gaps" describe problems that require a distributed,
+multi-service architecture: caching across "shared backend services,"
+resilience when "the chart service is unavailable," a C4 container diagram
+of the Context Engine as its own deployed component. Checked directly:
+`assemble_domain()` (`astrospace/context/assembler.py`) imports `swisseph`
+and computes entirely in-process — there is no chart service, no network
+call anywhere in `astrospace/context/`, nothing that can be "down"
+independently of the FastAPI process itself. This is a monolith, per this
+repo's own CLAUDE.md. A diagram of services that don't exist would
+document an imagined system, not this one. If ephemeris computation is ever
+a measured bottleneck, that's a caching decision to make against real
+profiling data then — not a speculative diagram now.
+
+**Declined — solving an already-shipped problem.** The review asks whether
+Ask's UI is web or mobile, and suggests adding progress events because
+generation might otherwise feel unresponsive. Checked: `askService.stream()`
+has exactly one caller in the whole frontend — `ui/src/app/features/mobile/
+ask/` — it's mobile-only by design, not an open question. And the progress
+events it asks for already exist and are already live: this session
+watched "Career & Profession specialist is interpreting…" render mid-stream
+in a real browser earlier today. Both suggestions are reasonable in the
+abstract and already true in practice; the review just couldn't see the
+running app to know that.
+
+**Declined — conflicts with a decision already made, not silently
+overridden.** "Make `domain` an array now, even if always length 1" directly
+contradicts the multi-domain schema settled with Codex two sections above:
+`domain` stays a plain string, with `domains`/`primary_domain`/
+`secondary_domains`/`answer_type` added alongside it in the `evidence`
+bridge, chosen specifically to avoid a migration. Recording the conflict
+here rather than picking one silently — if `domain`-as-array is ever
+revisited, it should be an explicit reopening of that decision, with both
+proposals on the table, not whichever document someone read most recently.
+
+**Declined — premature for this codebase's own stated bias.** Reserving an
+unused `practitioner_details` field now, "to avoid a future breaking
+change," is exactly the kind of speculative schema field this repo's
+conventions argue against (CLAUDE.md: "Don't design for hypothetical future
+requirements"). Persona-differentiated rendering isn't scoped yet. Noted as
+a deliberate non-decision, not an oversight — if it becomes real work, add
+the field when there's an actual consumer for it.
+
+**Deferred, not declined — right idea, wrong size for right now.** The
+full observability ask (per-node latency histograms, Prometheus-style
+counters, business-metric dashboards for `clarification_needed` vs.
+`domain_not_ready` rates) is reasonable for a system with production
+traffic to measure. This one has two configured domains and no evidence of
+live traffic yet in anything this document tracks. Item 1 above ("log which
+violation fired") is sized to what's actually needed right now; the fuller
+metrics buildout is worth revisiting once Phase 6 has shipped enough
+domains that "which agent do we add next" is actually a traffic-driven
+question rather than a guess either way.
