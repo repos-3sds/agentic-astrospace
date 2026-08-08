@@ -89,11 +89,12 @@ def _safe(call):
 def _source_map(client, source_ids: set[str]) -> dict[str, dict]:
     if not source_ids:
         return {}
+    source_id_values = [str(source_id) for source_id in source_ids if source_id]
     rows = client.rows("knowledge_sources", params={
-        "id": f"in.({','.join(sorted(source_ids))})",
+        "id": f"in.({','.join(sorted(source_id_values))})",
         "select": "id,source_key,title,author,edition,status",
     })
-    return {row["id"]: row for row in rows}
+    return {str(row["id"]): row for row in rows}
 
 
 def _refresh_source_status(client, source_id: str):
@@ -490,7 +491,7 @@ def list_sources(
         })
         counts: dict[str, Counter] = {}
         for row in chunks:
-            source_counts = counts.setdefault(row["source_id"], Counter())
+            source_counts = counts.setdefault(str(row["source_id"]), Counter())
             source_counts[row["quality_status"]] += 1
             if (
                 row["quality_status"] == "published"
@@ -501,7 +502,7 @@ def list_sources(
                 source_counts["excluded"] += 1
         return [{
             **source,
-            "chunk_counts": dict(counts.get(source["id"], Counter())),
+            "chunk_counts": dict(counts.get(str(source["id"]), Counter())),
         } for source in sources]
 
     return _safe(load)
@@ -601,7 +602,7 @@ def list_chunks(
             params["or"] = f"(title.ilike.*{safe_q}*,content.ilike.*{safe_q}*)"
         chunks = client.rows("knowledge_chunks", params=params)
         sources = _source_map(client, {row["source_id"] for row in chunks})
-        return [{**row, "source": sources.get(row["source_id"])} for row in chunks]
+        return [{**row, "source": sources.get(str(row["source_id"]))} for row in chunks]
 
     return _safe(load)
 

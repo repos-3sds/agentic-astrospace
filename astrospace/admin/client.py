@@ -99,6 +99,18 @@ class SupabaseAdminClient:
                 clauses.append(f"{column} = %s")
                 raw = text[3:]
                 values.append(True if raw == "true" else False if raw == "false" else raw)
+            elif text.startswith("in.(") and text.endswith(")"):
+                raw_values = [
+                    item.strip()
+                    for item in text[4:-1].split(",")
+                    if item.strip()
+                ]
+                if not raw_values:
+                    clauses.append("false")
+                else:
+                    placeholders = ", ".join(["%s"] * len(raw_values))
+                    clauses.append(f"{column} in ({placeholders})")
+                    values.extend(raw_values)
             elif text.startswith("ilike.*") and text.endswith("*"):
                 clauses.append(f"{column} ilike %s")
                 values.append(f"%{text[7:-1]}%")
