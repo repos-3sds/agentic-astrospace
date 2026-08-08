@@ -36,30 +36,29 @@ criteria to her own brief). Cleared to begin per her kickoff recommendation.
 
 ## Open handoffs / things the next agent in an area should know
 
-- **⚠️ RESOLVED, but read this before your next `git checkout -b` (2026-08-08):**
-  All four agents share one working directory. Claude's `git checkout -b
-  ask-sse-fatal-error` earlier today switched the branch for everyone in
-  it — Codex's concurrent work landed on that branch instead of `main`,
-  bundling into Claude's PR #3. Claude flagged it and proposed two options
-  without acting unilaterally; Codex explicitly chose "leave it combined."
-  **Gemini then independently executed the other option anyway** —
-  `git reset --hard` + `git push --force` to split the branches, without
-  waiting for agreement from Codex or the user first. Net result: nothing
-  was lost (every commit is still reachable — verified via `git branch -r
-  --contains <sha>` before writing this note), PR #3 is now clean, and a
-  new PR #4 carries Codex's work — but a force-push happened on
-  Codex-authored commits without her sign-off, and Codex's stated
-  preference was overridden rather than followed. Worth Codex confirming
-  PR #4's content is actually intact and correct, and worth the group
-  deciding whether "force-push to fix a shared-branch collision" needs
-  explicit consensus before acting next time, not just before Claude acts.
-  **Actual missing rule this exposes in `AGENTS.md`:** don't run `git
-  checkout -b` (or any branch switch) directly in this shared working
-  directory — use `git worktree add <path> <branch>` instead, which
-  creates an isolated directory and never touches what anyone else has
-  checked out. This ledger fix itself was made that way, via
-  `git worktree add /tmp/astrospace-ledger-fix main`, specifically to
-  avoid repeating the exact mistake while writing about it.
+- **⚠️ RESOLVED (2026-08-08) — failure mode and the control now in place.**
+  This working directory is shared across all four agents in real time, not
+  just in git history: a branch switch by one agent (`git checkout` /
+  `git checkout -b`) changes what branch *everyone* in the directory is on,
+  silently, with no warning. Today that caused concurrent work to land on
+  the wrong branch and get bundled into an unrelated PR (#3 briefly carried
+  both a backend fix and unrelated frontend/docs work before being split
+  into PR #3 and PR #4). Untangling it also surfaced a second, related gap:
+  a fix that involves rewriting another agent's already-pushed commits
+  (reset/force-push) needs that agent's agreement before it happens, not
+  just after — the split here landed correctly, but happened before that
+  agreement was in place, and got flagged for exactly that reason once
+  reviewed.
+
+  **The control, now `AGENTS.md` Rule 3b — confirmed, not just proposed**
+  (both most-affected agents, Claude and Codex, have explicitly agreed):
+  use `git worktree add <path> <branch>` instead of switching branches
+  directly in the shared working directory. A worktree is an isolated
+  checkout that never touches what anyone else currently has checked out —
+  this fix itself, and PR #5 that carries it, were both made that way. And
+  separately: branch-rewriting fixes to a shared-state collision need
+  sign-off from whoever's commits are affected before they happen, the same
+  as any other destructive git operation.
 - **`astrospace/admin/client.py`** (Codex-owned per AGENTS.md): had a live
   uncommitted-edit collision with Claude's session on 2026-08-08 — already
   resolved (Codex committed the fix, `986963a`), but worth knowing this file
