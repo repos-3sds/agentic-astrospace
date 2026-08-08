@@ -38,6 +38,12 @@ Thumbs.db
 *.a
 *.obj
 *.out
+astrospace.db
+astrospace_local.db
+cache/
+.claude/
+.playwright-mcp/
+splash_screen/
 
 # Coverage
 coverage/
