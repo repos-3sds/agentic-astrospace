@@ -15,7 +15,8 @@ code can no longer change; only generation, verification, and persistence
 happen lazily inside the stream.
 """
 import json
-from typing import Optional
+import traceback
+from typing import Iterator, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
@@ -34,6 +35,29 @@ router = APIRouter(prefix="/api/v1/ask", tags=["ask-ai"])
 
 def _sse(payload: dict) -> str:
     return f"data: {json.dumps(payload)}\n\n"
+
+
+def _safe_stream(events: Iterator[dict]) -> Iterator[str]:
+    """Every SSE stream this route returns goes through here — the
+    guarantee is that the stream always ends in a terminal frame, even if
+    something inside the generator throws that nothing upstream expected
+    (a DB write failure, a bug in event construction). Without this, an
+    unhandled exception mid-generator just kills the connection: no `done`,
+    no error frame, the client left with no way to know the stream is never
+    coming back. `HTTPException`/`TaxonomyError` paths above (still inside
+    `prepare()`, before the response starts) aren't affected by this — this
+    only covers exceptions raised after streaming has already begun, which
+    is the gap that had no contract at all before."""
+    try:
+        for event in events:
+            yield _sse(event)
+    except Exception:
+        traceback.print_exc()
+        yield _sse({
+            "type": "fatal_error",
+            "message": "Something went wrong while generating this answer. Please try again.",
+            "retryable": True,
+        })
 
 
 def _thread_established_domain(db: Session, thread_id: str) -> Optional[str]:
@@ -145,9 +169,9 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
                     content, domain=envelope["domain"], refer_out_kind=None,
                     evidence={"status": "domain_not_ready", "available": envelope["available"]},
                 )
-            yield _sse({**envelope, "thread_id": thread_id})
+            yield {**envelope, "thread_id": thread_id}
 
-        return StreamingResponse(generate_terminal(), media_type="text/event-stream")
+        return StreamingResponse(_safe_stream(generate_terminal()), media_type="text/event-stream")
 
     prepared = outcome.prepared
 
@@ -161,8 +185,7 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
             evidence=_evidence_from_reading(reading),
         )
 
-    def generate():
-        for event in orchestrator.run(prepared, messages, persist=persist_prepared):
-            yield _sse(event)
-
-    return StreamingResponse(generate(), media_type="text/event-stream")
+    return StreamingResponse(
+        _safe_stream(orchestrator.run(prepared, messages, persist=persist_prepared)),
+        media_type="text/event-stream",
+    )
