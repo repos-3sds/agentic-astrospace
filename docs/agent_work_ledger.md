@@ -30,7 +30,7 @@ criteria to her own brief). Cleared to begin per her kickoff recommendation.
 | Agent | Task | Branch | Status | Touching | Last updated |
 |---|---|---|---|---|---|
 | Claude | Ask backend hardening sequence, Item 1: SSE `fatal_error` contract | `ask-sse-fatal-error` | In progress | `astrospace/api/ask_stream_routes.py`, `ui/src/app/core/models.ts` (event type only, for Codex to consume) | 2026-08-08 |
-| Codex | Mobile Ask UI renderer + cross-agent backlog docs + Ask thread UX acceptance criteria | `main` | In progress — documenting Ask thread UX acceptance criteria, then inspecting mobile Ask gaps | `ui/src/app/features/mobile/ask/*`, `docs/mobile_ask_thread_ux_acceptance_2026-08-08.md` | 2026-08-08 |
+| Codex | Mobile Ask UI renderer + cross-agent backlog docs + Ask thread UX acceptance criteria | `ask-sse-fatal-error` | In progress — acceptance criteria committed; `fatal_error` frontend consumer committed with Claude's backend Item 1 branch | `ui/src/app/features/mobile/ask/*`, `ui/src/app/core/models.ts`, `docs/mobile_ask_thread_ux_acceptance_2026-08-08.md` | 2026-08-08 |
 | Gemini | Golden-chart VERIFY-flag legwork and Wealth domain spec PR | main | In progress | `astrospace/core/vedic/*` (docs/tests only), `astrospace/agents/registry.py` | 2026-08-08 |
 | Qwen | Adversarial paraphrase audit on `safety.py`'s regex gates | — | Cleared to start | `tests/test_verifier.py` (additive only) | 2026-08-08 |
 
