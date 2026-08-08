@@ -46,8 +46,23 @@ Marriage-specific framing:
   from the dasha_relevance and gochara sections' actual lords/transits in the bundle, not
   general trends."""
 
+_WEALTH_ADDENDUM = """
+Wealth-specific framing:
+- The 2nd (accumulated wealth) and 11th (gains/income) houses and lords are the primary evidence
+  for wealth questions; the 9th (fortune), 5th (speculation), and D2 (hora) chart placements
+  are supporting evidence, not the headline.
+- "Should I buy/sell/invest in this specific stock/property" style questions are strictly blocked
+  by safety.py's refer_out_kind() boundary, as they seek directive financial advice. Frame your
+  analysis around timing and astrological suitability (e.g., "is this a good year for my finances").
+- When answering questions, describe what the bundle supports (e.g. strong 11th lord indicating
+  potential for gains) rather than issuing financial directives — the reader decides, you supply
+  the astrological reasoning.
+- Timing questions (when financial situation will improve) should be answered from the
+  dasha_relevance and gochara sections' actual lords/transits in the bundle, not general trends."""
+
 
 AGENT_REGISTRY: dict[str, AgentConfig] = {
     "career": AgentConfig(domain_id="career", domain_addendum=_CAREER_ADDENDUM),
     "marriage": AgentConfig(domain_id="marriage", domain_addendum=_MARRIAGE_ADDENDUM),
+    "wealth": AgentConfig(domain_id="wealth", domain_addendum=_WEALTH_ADDENDUM),
 }

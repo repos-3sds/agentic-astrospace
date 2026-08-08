@@ -34,7 +34,7 @@
       "rule_ids": ["dhana_yoga", "chandra_mangal_yoga", "kemadruma_yoga"],
       "arudhas": ["A2", "A11"],
       "gochara_planets": ["Jupiter", "Saturn"],
-      "keywords": ["money", "wealth", "finance", "income", "loan", "debt", "investment", "property value", "savings", "rich", "profit", "loss", "stocks", "gold"],
+      "keywords": ["money", "wealth", "finance", "financial", "income", "loan", "debt", "investment", "property value", "savings", "rich", "profit", "loss", "stocks", "gold"],
       "convention_flags": [],
       "source_refs": ["bphs", "uttara_kalamrita", "saravali", "raman_htjh"]
     },
