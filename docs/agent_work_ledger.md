@@ -29,9 +29,9 @@ criteria to her own brief). Cleared to begin per her kickoff recommendation.
 
 | Agent | Task | Branch | Status | Touching | Last updated |
 |---|---|---|---|---|---|
-| Claude | Ask backend hardening sequence, Item 1 first (SSE `fatal_error` contract) | not started | Cleared to start | `astrospace/agents/orchestrator.py`, `astrospace/agents/verifier.py`, `astrospace/api/ask_stream_routes.py` | 2026-08-08 |
-| Codex | Mobile Ask UI renderer + cross-agent backlog docs + Ask thread UX acceptance criteria | — | Cleared to start (hers to schedule) | `ui/src/app/features/mobile/ask/*` | 2026-08-08 |
-| Gemini | Golden-chart VERIFY-flag legwork now; Wealth domain spec PR held until Claude has review bandwidth | — | Cleared to start VERIFY research; Wealth PR blocked on reviewer availability, not on Gemini | `core/vedic/*` (docs/tests only, no `taxonomy.json`), then `astrospace/agents/registry.py` (PR, owner review) | 2026-08-08 |
+| Claude | Ask backend hardening sequence, Item 1: SSE `fatal_error` contract | `ask-sse-fatal-error` | In progress | `astrospace/api/ask_stream_routes.py`, `ui/src/app/core/models.ts` (event type only, for Codex to consume) | 2026-08-08 |
+| Codex | Mobile Ask UI renderer + cross-agent backlog docs + Ask thread UX acceptance criteria | `main` | In progress — documenting Ask thread UX acceptance criteria, then inspecting mobile Ask gaps | `ui/src/app/features/mobile/ask/*`, `docs/mobile_ask_thread_ux_acceptance_2026-08-08.md` | 2026-08-08 |
+| Gemini | Golden-chart VERIFY-flag legwork and Wealth domain spec PR | main | In progress | `astrospace/core/vedic/*` (docs/tests only), `astrospace/agents/registry.py` | 2026-08-08 |
 | Qwen | Adversarial paraphrase audit on `safety.py`'s regex gates | — | Cleared to start | `tests/test_verifier.py` (additive only) | 2026-08-08 |
 
 ## Open handoffs / things the next agent in an area should know
