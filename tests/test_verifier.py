@@ -299,6 +299,55 @@ class TestWealthChildrenFatalismAudit:
         violations = verify(bad, wealth_bundle, "wealth")
         assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
 
+    @pytest.mark.parametrize("phrase", [
+        # Found by independent review of the first version of this fix: a
+        # flat character-window with per-pattern lookbehinds only on
+        # "guarantee" had no negation handling for "will never"/"will
+        # always" at all, so the canonical flag-not-verdict sentence
+        # CLAUDE.md requires was itself flagged as an overclaim.
+        "This dosha does not mean you will never have children.",
+        "It does not mean you will always struggle financially — remedies help.",
+        "This placement does not mean you are doomed to remain poor.",
+        "This yoga guarantees nothing about your finances.",
+        "No chart guarantees poverty or wealth; effort matters.",
+        "It is a myth that this dosha condemns you to childlessness; classical texts disagree.",
+        "This dosha does not forbid you from ever having children.",
+        "Wealth is never guaranteed by this dosha, only supported.",
+        "By no means is this dosha a guarantee of poverty.",
+        "It does not, in any reading, guarantee poverty.",
+    ])
+    def test_negated_reassurance_is_not_flagged(self, wealth_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
+
+    @pytest.mark.parametrize("phrase", [
+        # Found by independent review: a flat ±45-char window doesn't
+        # respect clause boundaries, so a fatalism verb and a domain
+        # subject in unrelated clauses of the same sentence were flagged
+        # as if they were connected.
+        "The 2nd house governs your finances; a single dosha will always be one factor among many.",
+        "This dasha supports having children later; the chart will never fix a date for you.",
+        "Traditional remedies for your finances exist, though no remedy can undo this dasha's timing.",
+    ])
+    def test_unrelated_clauses_are_not_flagged(self, wealth_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
+
+    @pytest.mark.parametrize("phrase", [
+        "You are destined for poverty because of this dosha.",
+        "You are destined to remain childless.",
+        "This dosha ensures you will remain childless.",
+        "This yoga makes poverty certain for you.",
+    ])
+    def test_additional_fatalism_phrasings_are_caught(self, wealth_bundle, phrase):
+        """A few more direct paraphrases found by review, added once the
+        negation/clause fixes above made it safe to widen the verb list."""
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations, f"expected a violation for: {phrase!r}"
+
 
 class TestFullFieldCoverage:
     """Found by a second independent review of PR #12: `text_to_check` had

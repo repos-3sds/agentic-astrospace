@@ -247,7 +247,10 @@ _DOSHA_OVERCLAIM_OUTPUT = (
     # ("fated", "sentenced", "barren", "blocked by...alignment") that check
     # doesn't cover, and is specific/rare enough not to need generalizing
     # into that machinery.
-    r"\bfated to (?:dissolve|fail|collapse|end)\b",
+    # Excludes bare "end" — a dasha/transit period legitimately "ends" all
+    # the time ("this dasha is fated to end in March" would be ordinary
+    # period language, not fatalism), found by review.
+    r"\bfated to (?:dissolve|fail|collapse)\b",
     r"\bsentenced (?:you|your \w+) to (?:struggle|hardship|poverty|childlessness|failure)\b",
     r"\b(?:womb|fertility) is (?:cosmically |permanently )?barren\b",
     r"\bbirth is blocked by\b",
@@ -261,24 +264,39 @@ _DOSHA_OVERCLAIM_OUTPUT = (
 # of overclaim (fatalism VERB + domain SUBJECT) but a different subject, and
 # subject-specific patterns don't transfer. Rather than writing a parallel
 # explicit-sentence cluster per domain (the exact flat-list weakness this
-# whole module exists to avoid), this is a generic two-part windowed check —
-# same principle as `_personal_years_remaining` above and `refer_out_kind`'s
-# subject+frame split: a fatalism VERB and a domain SUBJECT must both appear
-# within a short window of each other. Marriage keeps its own explicit,
-# already-proven patterns above rather than being folded into this (no
-# reason to risk regressing what's already correct); this covers the
-# domains that had *no* coverage at all before today.
-# Each verb pattern is compiled separately, not merged into one alternation,
-# because "guarantee(s)"/"guaranteed" needs its own negative lookbehind
-# ("does not guarantee poverty" is a reassurance, not an overclaim) and a
-# lookbehind only applies cleanly to the literal directly after it — trying
-# to share one lookbehind across a large alternation risks it silently not
-# applying to the branch that actually matched.
+# whole module exists to avoid), this is a generic two-part check — same
+# principle as `_personal_years_remaining` above and `refer_out_kind`'s
+# subject+frame split. Marriage keeps its own explicit, already-proven
+# patterns above rather than being folded into this (no reason to risk
+# regressing what's already correct); this covers the domains that had *no*
+# coverage at all before today.
+#
+# Revised after independent review found two real false-positive classes in
+# the first version (a flat ±45-char window with per-pattern negative
+# lookbehinds only on "guarantee"):
+#
+# 1. Negation-blindness: "will never"/"will always" have no negation
+#    handling at all, so "this dosha does not mean you will never have
+#    children" — the canonical flag-not-verdict sentence CLAUDE.md requires
+#    — was itself flagged as an overclaim. The lookbehind approach doesn't
+#    scale (every new verb needs its own hand-written negation forms, and
+#    even "guarantee"'s lookbehind missed "is never guaranteed"/"nothing
+#    guarantees"/"no chart guarantees"). Fixed with `_NEGATION_CUES`,
+#    checked once, generically, across every verb.
+# 2. Cross-clause collision: a flat character window doesn't respect
+#    sentence structure, so "The 2nd house governs your finances; a single
+#    dosha will always be one factor among many" — verb and subject in
+#    unrelated clauses — was flagged. Fixed by requiring the verb and
+#    subject to appear in the same *clause* (split on strong punctuation),
+#    not just nearby characters. Negation is checked over a wider window
+#    than the clause, deliberately — "it does not, in any reading,
+#    guarantee poverty" has its negation separated from the verb by commas
+#    that would otherwise split the clause.
 _FATALISM_VERB_PATTERNS = (
     r"\bdoomed to\b",
     r"\bcondemns? you to\b",
-    r"(?<!not )(?<!does not )\bguarantees?\b",
-    r"(?<!not )(?<!does not )\b(?:is |are )?guaranteed(?: by)?\b",
+    r"\bguarantees?\b",
+    r"\b(?:is |are )?guaranteed(?: by)?\b",
     r"\bdictates?(?: permanent| that)?\b",
     r"\bseals? your fate(?: as| of| to)?\b",
     r"\bforbids? you from(?: ever)?\b",
@@ -288,6 +306,11 @@ _FATALISM_VERB_PATTERNS = (
     r"\bcannot be undone\b",
     r"\bwill never\b",
     r"\bwill always\b",
+    r"\bcan never\b",
+    r"\bshall never\b",
+    r"\bdestined (?:to|for)\b",
+    r"\bensures?\b",
+    r"\bmakes? .{0,20}certain\b",
 )
 _FATALISM_VERBS = tuple(re.compile(p) for p in _FATALISM_VERB_PATTERNS)
 _WEALTH_FATALISM_SUBJECTS = re.compile(
@@ -300,15 +323,52 @@ _CHILDREN_FATALISM_SUBJECTS = re.compile(
     r"conceiv\w+|without offspring|remain without offspring|"
     r"chances? of having children)\b"
 )
+# Disqualifies a verb+subject co-occurrence — checked over a window around
+# the verb (not clause-bounded, since negation can be comma-separated from
+# what it negates). Broad and generic on purpose: this is what lets the
+# verb list above grow without every new verb needing its own hand-written
+# negation forms.
+_NEGATION_CUES = re.compile(
+    r"\b(?:does not|do not|did not|will not|cannot|is not|are not|was not|"
+    r"were not|never guarantees?|guarantees? nothing|nothing guarantees?|"
+    r"no (?:chart|placement|dosha|yoga|remedy) guarantees?|not mean|"
+    r"is a myth|myth that|not forbid|by no means)\b"
+)
+# Deliberately excludes em dash: English commonly uses it to extend a
+# thought rather than separate unrelated clauses ("...this dosha seals
+# your fate" after an em dash is still about the finances named before
+# it) — including it here broke a real must-catch case during testing.
+# `;`/`,`/`.` are the boundaries worth treating as hard clause breaks.
+_CLAUSE_SPLIT = re.compile(r"[.;,]")
+_NEGATION_WINDOW = 60
+
+
+def _clause_spans(text: str) -> list[tuple[int, int]]:
+    spans = []
+    start = 0
+    for boundary in _CLAUSE_SPLIT.finditer(text):
+        spans.append((start, boundary.start()))
+        start = boundary.end()
+    spans.append((start, len(text)))
+    return spans
 
 
 def _domain_fatalism_kind(normalized: str) -> str | None:
+    spans = _clause_spans(normalized)
     for verb_re in _FATALISM_VERBS:
         for match in verb_re.finditer(normalized):
-            window = normalized[max(0, match.start() - 45):match.end() + 45]
-            if _WEALTH_FATALISM_SUBJECTS.search(window):
+            negation_window = normalized[
+                max(0, match.start() - _NEGATION_WINDOW):match.end() + _NEGATION_WINDOW
+            ]
+            if _NEGATION_CUES.search(negation_window):
+                continue
+            clause_start, clause_end = next(
+                (s, e) for s, e in spans if s <= match.start() < e or s == e == match.start()
+            )
+            clause = normalized[clause_start:clause_end]
+            if _WEALTH_FATALISM_SUBJECTS.search(clause):
                 return "dosha_overclaim"
-            if _CHILDREN_FATALISM_SUBJECTS.search(window):
+            if _CHILDREN_FATALISM_SUBJECTS.search(clause):
                 return "dosha_overclaim"
     return None
 
