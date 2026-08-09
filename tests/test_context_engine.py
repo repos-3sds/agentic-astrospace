@@ -22,7 +22,7 @@ def chart():
 class TestTaxonomy:
     def test_all_domains_load_and_validate(self):
         specs = taxonomy()
-        assert len(specs) == 10
+        assert len(specs) == 11
         for spec in specs.values():
             assert spec.houses_primary
             assert spec.keywords
@@ -35,6 +35,15 @@ class TestTaxonomy:
         assert "AmK" in career.karakas_jaimini
         assert "D10" in career.vargas_primary
 
+    def test_personality_domain_shape(self):
+        personality = get_domain("personality")
+        assert 1 in personality.houses_primary
+        assert "Sun" in personality.karakas_naisargika
+        assert "Moon" in personality.karakas_naisargika
+        assert "Mercury" in personality.karakas_naisargika
+        assert "AK" in personality.karakas_jaimini
+        assert "D1" in personality.vargas_primary
+
     def test_unknown_domain_raises(self):
         with pytest.raises(TaxonomyError):
             get_domain("gambling")
@@ -43,6 +52,16 @@ class TestTaxonomy:
         health = get_domain("health")
         assert any("longevity" in e.lower() or "death" in e.lower()
                    for e in health.exclusions)
+
+    def test_personality_domain_carries_a_mental_health_exclusion(self):
+        """This domain sits right next to health's mental-health refer-out
+        boundary (safety.py's `mental (?:health|illness)` subject) — the
+        taxonomy itself must say, in its own exclusions, that it is not a
+        clinical/psychological assessment."""
+        personality = get_domain("personality")
+        assert any("clinical" in e.lower() or "mental-health" in e.lower()
+                   or "mental health" in e.lower() or "psychological" in e.lower()
+                   for e in personality.exclusions)
 
 
 class TestAssembler:
@@ -80,6 +99,19 @@ class TestAssembler:
         assert "manglik_dosha" in marriage_ids
         # Marriage bundle must not carry career yoga categories
         assert all(row.get("category") != "Power / Career" for row in marriage["yogas"])
+
+    def test_personality_bundle_structure(self, chart):
+        bundle = assemble_domain(chart, "personality", include_gochara=False)
+        assert bundle["domain"] == "personality"
+        house_numbers = {row["house"] for row in bundle["houses"]}
+        assert 1 in house_numbers
+        first = next(row for row in bundle["houses"] if row["house"] == 1)
+        assert first["tier"] == "primary"
+        assert first["lord_placement"]["dignity"]
+        assert {"Sun", "Moon", "Mercury"} <= set(bundle["karakas"])
+        assert "AK" in bundle["jaimini_karakas"]
+        assert "D1" in bundle["vargas"]
+        assert bundle["vargas"]["D1"]["tier"] == "primary"
 
     def test_dasha_relevance_chain(self, chart):
         bundle = assemble_domain(chart, "career", include_gochara=False)
@@ -133,6 +165,52 @@ class TestRouter:
         assert decision.primary != "foreign"
         decision = KeywordRouter().route("Will I settle into a stable routine?")
         assert decision.primary != "foreign"
+
+    @pytest.mark.parametrize("question", [
+        "What is my basic personality like?",
+        "What are my strengths and weaknesses?",
+        "Tell me about my character",
+        "What is my temperament according to my chart?",
+        "What are my personality traits?",
+        "How would you describe my nature?",
+        "What's my nature like?",
+        "Tell me about my emotional intelligence",
+        "What are my blind spots?",
+        "What are my biases?",
+        "Who am I, really?",
+        "I'd like some tips on self improvement",
+        "I want more self awareness about myself",
+        "Can you tell me about my self-awareness?",
+    ])
+    def test_personality_questions_route_to_personality(self, question):
+        decision = KeywordRouter().route(question)
+        assert decision.primary == "personality"
+
+    @pytest.mark.parametrize("question,not_expected", [
+        # Regression set: realistic questions from every other domain that
+        # must not be pulled toward "personality" by an over-broad keyword —
+        # the same category of bug as the "settle abroad"/"settle" collision
+        # above. Generic "nature of X" phrasing is the main risk (personality
+        # only claims the "my nature" phrase, not bare "nature", for exactly
+        # this reason) and "weakness"/"strengths" are scoped to "my
+        # weaknesses"/"my strengths" so a literal physical complaint
+        # ("weakness in my legs") or an unqualified "financial strengths"
+        # phrase can't misroute either.
+        ("When will I get a promotion in my job?", "personality"),
+        ("Why do I have weakness in my legs?", "personality"),
+        ("What is the nature of my illness?", "personality"),
+        ("What is the nature of my marriage?", "personality"),
+        ("Is this a good year for my marriage?", "personality"),
+        ("What is the nature of my spiritual path?", "personality"),
+        ("What is the nature of my court case?", "personality"),
+        ("What is the nature of my exam results?", "personality"),
+        ("What are my financial strengths?", "personality"),
+        ("Will I have children soon?", "personality"),
+        ("Is this a good time to settle abroad?", "personality"),
+    ])
+    def test_ordinary_other_domain_questions_do_not_misroute_to_personality(self, question, not_expected):
+        decision = KeywordRouter().route(question)
+        assert decision.primary != not_expected
 
     def test_no_keywords_falls_back_to_default(self):
         decision = KeywordRouter().route("Tell me something interesting")

@@ -158,6 +158,22 @@
       "keywords": ["court", "case", "litigation", "lawsuit", "enemy", "dispute", "legal", "police", "theft", "cheated", "conflict", "rival", "fight"],
       "convention_flags": ["Advisory tone only — no deterministic verdicts on legal outcomes or imprisonment."],
       "source_refs": ["prasna_marga", "bphs", "uttara_kalamrita"]
+    },
+    "personality": {
+      "name": "Personality & Self-Understanding",
+      "description": "Self-understanding: inherent nature, temperament, character traits, emotional patterns, strengths and growth areas, and how the self tends to express itself — as shown by the ascendant (Lagna), Moon, and planetary dispositions. Not a psychological, clinical, or mental-health assessment; describes chart-based tendencies, not fixed verdicts on someone's character.",
+      "subdomains": ["core_temperament", "self_perception", "emotional_patterns", "intellect_communication", "strengths_and_talents", "growth_areas", "self_awareness"],
+      "houses": {"primary": [1], "secondary": [3, 5]},
+      "karakas": {"naisargika": ["Sun", "Moon", "Mercury"], "jaimini": ["AK"]},
+      "vargas": {"primary": ["D1"], "supporting": []},
+      "yoga_categories": ["Pancha Mahapurusha", "Mind / Wisdom", "Intellect / Status", "Caution / Mind", "Lunar Support", "Solar Support"],
+      "rule_ids": ["gaja_kesari_yoga", "budhaditya_yoga", "kemadruma_yoga", "gandanta_dosha"],
+      "arudhas": ["A1"],
+      "gochara_planets": ["Saturn", "Jupiter"],
+      "keywords": ["personality", "character", "traits", "temperament", "my nature", "my strengths", "my weaknesses", "strengths and weaknesses", "emotional intelligence", "blind spots", "biases", "who am i", "self improvement", "self awareness", "self-awareness"],
+      "convention_flags": [],
+      "exclusions": ["No psychological, clinical, or mental-health assessment — describes chart-based trait tendencies only, framed as inclinations rather than fixed, deterministic verdicts on someone's character."],
+      "source_refs": ["bphs", "uttara_kalamrita", "phaladeepika", "brihat_jataka", "saravali", "raman_htjh"]
     }
   }
 }
