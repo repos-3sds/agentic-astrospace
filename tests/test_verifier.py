@@ -822,6 +822,35 @@ class TestTenseConflictInvariant:
         ])
         assert verify(reading, career_bundle_2026, "career") == []
 
+    def test_real_gochara_window_end_year_is_not_flagged(self, career_bundle_2026):
+        """2026-08-10 (independent review, persona-depth/timing-precision
+        task): the same false-positive class as
+        `test_real_dasha_period_boundary_is_not_flagged` above, new source.
+        Once `_gochara_for_domain()` started carrying real
+        `start_date`/`end_date` per active transit rule, and the domain
+        agent's prompt started requiring the model to cite them for timing
+        questions, a genuinely bundle-grounded gochara year could land in a
+        retrospective answer's close and get flagged as invented — it was
+        never in `dasha_relevance.chain`, the only section
+        `_period_boundary_years()` read from before this fix.
+
+        `career_bundle_2026`'s real Ashtama Shani window ends 2027-06-02 —
+        confirmed via this fixture's own `assemble_domain()` call — while
+        its dasha chain boundary years are {2020, 2025, 2026, 2028, 2038}.
+        2027 is deliberately not among them, so this is a real reproduction
+        of the gap, not a coincidence."""
+        end_date = next(
+            rule["end_date"] for rule in career_bundle_2026["gochara"]["active_rules"]
+            if rule["rule_id"] == "gochara_ashtama_shani"
+        )
+        assert end_date.startswith("2027"), "fixture drifted; update this test's expected year"
+        good = _reading(summary_and_assurance=(
+            f"The current Ashtama Shani transit window runs through {end_date}, "
+            "after which the pressure eases."
+        ))
+        violations = verify(good, career_bundle_2026, "career", question_tense="retrospective")
+        assert violations == []
+
 
 @pytest.fixture(scope="module")
 def personality_bundle():

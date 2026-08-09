@@ -14,9 +14,10 @@ straight into agent state (LangGraph checkpointing) or an API payload.
 Cost profile: uses only cheap chart sections. Gochara's snapshot (sign,
 house-from-moon/lagna, retrograde, active rules) is a single ephemeris call;
 finding the active window's real start/end date additionally walks the
-boundary (bounded, `gocharam/timeline.py`'s existing logic, reused rather
-than duplicated) but only for rules already active for that domain's own
-planets, not a full 365-day scan. Pass include_gochara=False to skip gochara
+boundary (`gocharam/timeline.py`'s existing logic, reused rather than
+duplicated) for whichever rules are already active for that domain's own
+planets — moderate, not free; see `_gochara_windows_for_domain`'s docstring
+for the actual cost shape. Pass include_gochara=False to skip gochara
 entirely, or supply precomputed transit_positions to reuse a snapshot across
 domains.
 """
@@ -212,9 +213,25 @@ def _gochara_windows_for_domain(spec: DomainSpec, chart, gochara: dict,
     here. Scoped to only the rules already active for this domain's planets
     (`gochara["active_rules"]` pre-filtered below) so the boundary search
     only runs for planets this domain actually cares about, and called with
-    `scan_days=1` since the CE bundle only needs the active window's own
-    start/end, not the full previous/next-365-day event scan `chart.gocharam()`
-    produces for the dedicated transits screen."""
+    `scan_days=1` to skip the full previous/next-365-day *event* scan
+    `chart.gocharam()` produces for the dedicated transits screen — the CE
+    bundle only needs the active window's own start/end.
+
+    That said, `scan_days` does NOT bound the boundary walk itself: finding
+    each active rule's actual start/end date is `gocharam_rule_timeline`'s
+    own `_active_rule_start`/`_active_rule_end`, gated by the separate
+    `GOCHARA_ACTIVE_WINDOW_DAYS` constant (currently 10 years), stepped one
+    week at a time — a real ephemeris recomputation per step, once per
+    active rule. For a long-running transit (Saturn/Rahu/Ketu commonly run
+    1.5-7.5 years) this is on the order of 100-300+ ephemeris calls per
+    active rule, on every Ask request for a domain whose gochara is
+    currently active. Measured cost against a real chart is moderate
+    (roughly 0.1s/request after ephemeris warm-up per the same-day
+    independent review that flagged this docstring's earlier, inaccurate
+    "bounded by scan_days" claim) — acceptable for now since it is the same
+    per-rule cost `chart.gocharam()` already pays elsewhere in the app, not
+    a new cost class. If this becomes a real hot path, the fix is bounding
+    `GOCHARA_ACTIVE_WINDOW_DAYS`'s walk itself, not this function."""
     domain_active_rules = [
         rule for rule in gochara["active_rules"]
         if rule["planet"] in spec.gochara_planets

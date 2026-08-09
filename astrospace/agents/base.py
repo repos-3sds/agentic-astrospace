@@ -74,7 +74,19 @@ class BaseAstroAgent:
         }
         response = self._anthropic_client().messages.create(
             model=self.model,
-            max_tokens=4096,
+            # 8192, not the 4096 every other call site here uses: this is the
+            # structured-reading path (DomainReadingAgent et al.), and the
+            # tool-call JSON has to fit acknowledgment + technical_basis +
+            # interpretation + summary_and_assurance + guidance (actions,
+            # remedies, follow-ups) in one payload. 2026-08-10: the domain
+            # agent's ~350-word soft cap was removed in favor of completeness
+            # (product spec: explanation depth is common to every persona
+            # mode, never truncated) — 4096 stayed just headroom for that
+            # single JSON call before, it would now risk truncating the tool
+            # call mid-JSON on a genuinely multi-factor answer, surfacing as
+            # `generation_failed` for no real reason. See astrospace/agents/
+            # domain_agent.py's _BASE_SYSTEM rule 7.
+            max_tokens=8192,
             system=self.system_prompt,
             tools=[tool],
             tool_choice={"type": "tool", "name": tool_name},
@@ -99,7 +111,10 @@ class BaseAstroAgent:
         )
         config = types.GenerateContentConfig(
             system_instruction=self.system_prompt or None,
-            max_output_tokens=4096,
+            # 8192 for the same reason as _run_structured_anthropic's
+            # matching bump — this is the structured-reading path, and the
+            # word-cap removal on the domain agent's prompt needs the room.
+            max_output_tokens=8192,
             temperature=0.35,
             tools=[types.Tool(function_declarations=[declaration])],
             tool_config=types.ToolConfig(
