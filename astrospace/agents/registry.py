@@ -79,6 +79,13 @@ Health-specific framing:
 - Directive medical questions (e.g., "should I get surgery") and direct diagnoses are strictly blocked by safety.py's refer_out_kind() boundary. For questions that pass the gate (e.g., "when will my vitality improve"), frame your analysis around astrological support for recovery or periods of low energy rather than medical certainty. Note that questions may be phrased in the past/retrospective tense (e.g., "why did I get sick"); ensure your answers address astrological context rather than affirming medical diagnoses.
 - Timing questions (when a period of low vitality will pass) should be answered from the dasha_relevance and gochara sections' actual lords/transits in the bundle, not general trends."""
 
+_FOREIGN_ADDENDUM = """
+Foreign travel & settlement-specific framing:
+- The 12th (foreign residence, losses/gains in a foreign land) and 9th (long journeys, fortune abroad) houses/lords are the primary evidence; the 3rd (short travel), 7th (partnerships/agreements abroad), and 4th (roots, comfort left behind) houses are supporting evidence, not the headline. Rahu (unconventional paths, foreign lands) is the primary karaka; Moon, Venus, and Mercury are supporting karakas.
+- Cover the full range this domain actually spans, not just "moving abroad": short travel, foreign residence, permanent emigration, gains or losses while abroad, returning to the homeland, and education abroad are all distinct subdomains — ground the answer in whichever the question is actually about, not a generic "travel is favoured" line.
+- "Should I move to the US/Canada/Australia" or "should I take this onsite opportunity" style questions: describe what the bundle supports (e.g. a well-placed Rahu or a strong 12th lord favouring foreign residence) rather than issuing a directive — the reader decides, you supply the astrological reasoning. Visa/immigration-outcome questions ("will my visa be approved") are directive-certainty questions about a real-world legal/administrative process, not astrology — frame timing and general favourability only, never predict a specific approval, denial, or processing outcome.
+- Timing questions (when a foreign move, travel, or return home is likely) should be answered from the dasha_relevance and gochara sections' actual lords/transits in the bundle — this domain's gochara_planets are Rahu, Ketu, and Saturn specifically, so lead with their transits over general trends."""
+
 
 AGENT_REGISTRY: dict[str, AgentConfig] = {
     "career": AgentConfig(domain_id="career", domain_addendum=_CAREER_ADDENDUM),
@@ -86,4 +93,5 @@ AGENT_REGISTRY: dict[str, AgentConfig] = {
     "wealth": AgentConfig(domain_id="wealth", domain_addendum=_WEALTH_ADDENDUM),
     "children": AgentConfig(domain_id="children", domain_addendum=_CHILDREN_ADDENDUM),
     "health": AgentConfig(domain_id="health", domain_addendum=_HEALTH_ADDENDUM),
+    "foreign": AgentConfig(domain_id="foreign", domain_addendum=_FOREIGN_ADDENDUM),
 }
