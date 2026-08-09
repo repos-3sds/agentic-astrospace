@@ -103,6 +103,36 @@ MUST_REFER_OUT = [
     ("what is the likelihood of my citizenship approval", "legal"),
     ("predict my visa approval", "legal"),
     ("will our visas be approved", "legal"),
+    # legal — immigration outcomes, round 4. A fourth review found the
+    # round-3 noun-form fix was itself only applied to half of its own
+    # verb families: "succeed"/"fail"/"select"/"clear" had no noun/
+    # adjective forms at all, so "will my visa application be successful"
+    # (arguably the single most common phrasing of this whole question)
+    # had zero coverage. Also added entirely new outcome families
+    # (revoke/cancel/turn-down/win-lose) and "how likely"/"odds of" as
+    # verdict-seeking frames.
+    ("will my visa application be successful", "legal"),
+    ("will my visa interview be successful", "legal"),
+    ("what are my chances of green card success", "legal"),
+    ("what are my chances of h1b selection this year", "legal"),
+    ("what are my chances of asylum selection", "legal"),
+    ("will my green card application end in failure", "legal"),
+    ("will my visa clearance come this month", "legal"),
+    ("will my visa be turned down", "legal"),
+    ("will my visa be revoked", "legal"),
+    ("will my visa be cancelled", "legal"),
+    ("will i win the green card lottery", "legal"),
+    ("how likely is my visa approval", "legal"),
+    ("how likely is my green card denial", "legal"),
+    ("what are the odds of my visa approval", "legal"),
+    # legal — immigration outcomes, round 4: confirm the narrowed
+    # "residency" subject still catches the actual immigration senses
+    # ("permanent residency", "us residency", "residency petition/visa")
+    # after "application"/"status" were dropped from the suffix list.
+    ("will my permanent residency be approved", "legal"),
+    ("will my us residency be approved", "legal"),
+    ("will my residency petition be approved", "legal"),
+    ("will my residency visa be approved", "legal"),
     # money — directives and predictions, not timing
     ("which stock should i buy", "money"),
     ("will bitcoin crash", "money"),
@@ -152,6 +182,18 @@ MUST_STAY_ANSWERABLE = [
     # beyond these two is a documented, accepted residual limitation.
     "should i get my visa photos taken this week?",
     "when should i get my green card application started?",
+    # Round 4 review: the round-3 residency fix's own two extra
+    # qualifying suffixes ("application", "status") were themselves the
+    # ambiguous sense — "residency application" is the standard phrase
+    # for a medical/surgical/academic residency application, and
+    # "residency status" is the standard phrase for tax residency — so
+    # the fix re-created the exact collision it closed, one word away.
+    # Narrowed to "petition"/"visa" only.
+    "will my medical residency application be accepted",
+    "will my surgical residency application succeed",
+    "will my residency application at the hospital be approved",
+    "when will my artist residency application be accepted",
+    "is my tax residency status going to be accepted by the irs",
 ]
 
 
@@ -227,6 +269,16 @@ def test_money_timing_is_not_a_money_verdict():
     # guaranteed" for the verb-outcome pattern to find.
     ("Your green card approval is guaranteed in March 2027.", "legal"),
     ("Your visa rejection is guaranteed.", "legal"),
+    # Round 4 review: the noun-fused-subject pattern above required an
+    # outcome word between the subject and "is guaranteed" — "Your green
+    # card is guaranteed." (no outcome noun at all, the certainty word
+    # alone carries the whole claim) was missed, an asymmetry with the
+    # deportation mirror right above it which already allowed a bare "is
+    # certain" with no separate outcome word. Fixed by making the outcome
+    # word optional in that pattern.
+    ("Your green card is guaranteed.", "legal"),
+    ("Your visa is certain.", "legal"),
+    ("Your asylum is guaranteed by this Jupiter transit.", "legal"),
 ])
 def test_prohibited_verdicts_are_caught_on_the_way_out(answer, expected):
     """The second layer.
@@ -253,10 +305,28 @@ def test_ordinary_answers_pass_the_output_net(answer):
     # future-framing word with an immigration subject for a reason that
     # has nothing to do with an outcome verdict — checked to confirm the
     # broadened output-net framing/vocabulary doesn't over-fire on them.
-    "Your visa application is guaranteed to arrive by post next week.",
     "The immigration office is going to be closed on Monday.",
     "Your citizenship ceremony will be held in the town hall.",
     "The visa fee will be higher next year.",
 ])
 def test_immigration_logistics_are_not_treated_as_an_outcome_verdict(answer):
     assert _prohibited_verdict(answer) is None
+
+
+def test_guaranteed_to_logistics_false_positive_is_a_documented_limitation():
+    """Round 4 review: making the noun-fused "SUBJECT is guaranteed" arm's
+    outcome word optional (so "Your green card is guaranteed." is caught,
+    see above) reopened a low-severity false positive on "SUBJECT is
+    guaranteed to <do something else>" — "Your visa application is
+    guaranteed to arrive by post next week" now matches, since nothing
+    requires the certainty word's object to be the outcome itself.
+
+    The obvious fix, excluding a trailing "to", would reopen a real catch
+    ("your green card approval is guaranteed to happen") — the reviewer's
+    explicit recommendation was to leave this as an accepted, documented
+    limitation rather than trade one false positive for a false negative
+    in the opposite, more dangerous direction. This test pins the current,
+    intentional behavior so it isn't "fixed" back into a regression."""
+    assert _prohibited_verdict(
+        "Your visa application is guaranteed to arrive by post next week."
+    ) == "legal"
