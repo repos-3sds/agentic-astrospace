@@ -532,6 +532,48 @@ _WEALTH_CHILDREN_OVERCLAIM_OUTPUT = (
     r"\bcannot be undone\b.{0,30}\b(?:will never have children|will never conceive|remain childless)\b",
 )
 
+# 2026-08-09 (personality domain build). Same category as the wealth/children
+# tuple above and checked the same way (`_negation_precedes`, not a bare
+# `re.search`) for the identical reason: the personality domain addendum
+# explicitly instructs the model to hedge trait descriptions ("this does not
+# mean you will always be selfish" is exactly the reassurance shape the
+# addendum asks for), so these phrases will routinely appear as a literal
+# substring of an actually-safe sentence. Explicit phrase matching, not a
+# generic fatalism-verb x character-trait-noun cross product — that
+# generic-windowing mechanism was tried for wealth/children in rounds 1-2,
+# found to have real, repeated bugs (missing negation, over-wide clause
+# splitting, a verb that disqualified its own match), and abandoned in favor
+# of this exact style. Character fatalism is CLAUDE.md's dosha-is-a-flag
+# principle applied to personality traits: a challenging placement is a flag
+# to describe, never grounds for telling someone their character is fixed,
+# broken, or beyond change.
+_PERSONALITY_OVERCLAIM_OUTPUT = (
+    r"\byou will always be (?:selfish|arrogant|dishonest|cruel|weak-willed|manipulative|cold|untrustworthy)\b",
+    r"\byou can never change (?:who you are|your nature|your character|your personality)\b",
+    r"\bthis (?:placement|dosha|yoga) means you can never trust anyone\b",
+    r"\byour character is (?:fixed|broken) and cannot change\b",
+    r"\byou are permanently flawed\b",
+    r"\byou are destined to (?:always be|remain) (?:selfish|arrogant|dishonest|cruel|weak-willed|manipulative|cold|untrustworthy)\b",
+    r"\byou will never overcome this weakness\b",
+    r"\byour personality cannot be changed\b",
+    r"\byou are incapable of change\b",
+    r"\bthis is simply who you are and nothing can change it\b",
+    r"\byou are fundamentally flawed\b",
+    r"\b(?:guarantees?|dictates?) a (?:bad|flawed|broken) character\b",
+    r"\bcondemned to a life of (?:selfishness|arrogance|weakness|dishonesty)\b",
+    r"\bcursed with this personality\b",
+    r"\byou cannot help being (?:selfish|manipulative|dishonest|cruel)\b",
+    r"\byour nature will never change\b",
+    r"\bthere is no changing who you are\b",
+    r"\byou are stuck with this (?:flaw|weakness|character) forever\b",
+    r"\byou will never (?:trust|connect with|open up to) anyone\b",
+    r"\bthis dosha means you are (?:a bad person|inherently flawed|beyond change)\b",
+    r"\byour flaws are permanent and unfixable\b",
+    r"\byou are trapped by your own character\b",
+    r"\bno amount of effort will change who you are\b",
+    r"\bcannot be undone\b.{0,30}\b(?:your character|your nature|this flaw|this weakness)\b",
+)
+
 # Shared by every pattern above (not per-pattern lookbehinds — those don't
 # scale and were the direct cause of round 2's bugs): a match is ignored if
 # a negation cue appears earlier in the *same clause* — not the same
@@ -651,12 +693,17 @@ def dosha_overclaim_kind(answer: str) -> str | None:
     weren't there before. Wealth/children patterns need the negation check
     (`_negation_precedes`) because their phrasing gets wrapped in "does not
     mean X" reassurances that contain the bad phrase as a literal
-    substring — a problem marriage's patterns don't have."""
+    substring — a problem marriage's patterns don't have. Personality
+    patterns (`_PERSONALITY_OVERCLAIM_OUTPUT`) need the same negation check
+    and for the same reason as wealth/children: the personality domain
+    addendum explicitly instructs hedged framing ("this does not mean you
+    will always be selfish"), so the reassurance form is expected, common
+    output, not an edge case."""
     normalized = _normalize(answer)
     for pattern in _DOSHA_OVERCLAIM_OUTPUT:
         if re.search(pattern, normalized):
             return "dosha_overclaim"
-    for pattern in _WEALTH_CHILDREN_OVERCLAIM_OUTPUT:
+    for pattern in (*_WEALTH_CHILDREN_OVERCLAIM_OUTPUT, *_PERSONALITY_OVERCLAIM_OUTPUT):
         for match in re.finditer(pattern, normalized):
             if not _negation_precedes(normalized, match.start()):
                 return "dosha_overclaim"
