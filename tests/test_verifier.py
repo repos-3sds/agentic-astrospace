@@ -183,3 +183,108 @@ class TestVerifier:
         bad = _reading(interpretation=phrase)
         violations = verify(bad, marriage_bundle, "marriage")
         assert violations == []
+
+
+@pytest.fixture(scope="module")
+def wealth_bundle():
+    chart = VedicChart("VerifierWealth", 1990, 1, 1, 12, 0, **DELHI)
+    return assemble_domain(chart, "wealth")
+
+
+@pytest.fixture(scope="module")
+def children_bundle():
+    chart = VedicChart("VerifierChildren", 1990, 1, 1, 12, 0, **DELHI)
+    return assemble_domain(chart, "children")
+
+
+class TestWealthChildrenFatalismAudit:
+    """Extends the marriage-fatalism guardrail (`dosha_overclaim_kind()`,
+    `astrospace/agents/safety.py`) to wealth and children — an audit gap
+    flagged 2026-08-09: the existing `_DOSHA_OVERCLAIM_OUTPUT` patterns are
+    all marriage-subject-anchored, so financial and fertility fatalism had
+    zero coverage. Confirmed as a real gap (all cases below failed against
+    the pre-fix code) before the fix was written, same discipline as PR #7's
+    audit and PR #10's regex hardening. The fix generalizes via a windowed
+    fatalism-VERB + domain-SUBJECT check (`_domain_fatalism_kind()`) rather
+    than a per-sentence list — the same lesson `refer_out_kind()` and
+    `_PROHIBITED_OUTPUT`'s clusters already encode."""
+
+    @pytest.mark.parametrize("phrase", [
+        "This dosha means you will always struggle financially.",
+        "Kemadruma dosha guarantees you will never accumulate wealth.",
+        "This yoga dictates permanent poverty for you.",
+        "Your finances are cursed by this dosha and will never improve.",
+        "This placement condemns you to lifelong financial hardship.",
+        "You are doomed to remain poor because of this dosha.",
+        "No amount of effort will fix your finances — this dosha seals your fate.",
+        "This dosha means your wealth prospects are permanently blocked.",
+        "Financial ruin is guaranteed by this yoga.",
+        "This dosha forbids you from ever becoming wealthy.",
+    ])
+    def test_wealth_fatalism_paraphrases_are_caught(self, wealth_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations, f"expected a violation for: {phrase!r}"
+
+    @pytest.mark.parametrize("phrase", [
+        "This dosha means you will never have children.",
+        "Putra dosha guarantees you will remain childless.",
+        "This placement condemns you to a childless life.",
+        "You are doomed to never bear children because of this dosha.",
+        "This dosha forbids you from ever having a child.",
+        "No remedy can undo this — you will never conceive.",
+        "This yoga dictates that you will remain without offspring.",
+        "Your chances of having children are permanently blocked by this dosha.",
+        "Childlessness is guaranteed by this placement.",
+        "This dosha seals your fate as childless forever.",
+    ])
+    def test_children_fatalism_paraphrases_are_caught(self, children_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, children_bundle, "children")
+        assert violations, f"expected a violation for: {phrase!r}"
+
+    @pytest.mark.parametrize("phrase", [
+        # Poetic/metaphorical fatalism — same category, different
+        # vocabulary the windowed verb+subject check doesn't cover, so
+        # these get their own explicit domain-agnostic patterns (same
+        # precedent as "no escaping this fate" already in the file).
+        "Divorce is the inevitable outcome.",
+        "Your partnership is fated to dissolve.",
+        "Poverty is your inescapable destiny.",
+        "The cosmos has sentenced you to struggle.",
+        "Your womb is cosmically barren.",
+        "Birth is blocked by this planetary alignment.",
+    ])
+    def test_poetic_fatalism_paraphrases_are_caught(self, wealth_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations, f"expected a violation for: {phrase!r}"
+
+    @pytest.mark.parametrize("phrase", [
+        # Ordinary, hedged wealth/children guidance that must stay
+        # answerable — the regression set proving the fix above doesn't
+        # over-trigger on caution language, negated guarantees, or
+        # traditional-remedy framing.
+        "This dosha does not mean you will never find financial stability — remedies can help.",
+        "While this placement can create financial caution, it does not guarantee poverty.",
+        "This yoga suggests periods of financial caution, not permanent hardship.",
+        "Many people navigate this dosha successfully with careful planning.",
+        "This dosha is a flag for financial caution, not a fixed outcome.",
+        "Having children later in life is common with this placement.",
+        "This dosha may indicate delays in having children, not an inability.",
+        "Fertility support and remedies are traditionally recommended for this dosha.",
+        "This placement does not prevent you from having children — timing may vary.",
+        "Financial growth is supported once this dasha period passes.",
+        "This dosha calls for care around joint finances, best paired with a savings habit.",
+        "A remedy like this practice is traditionally offered for this dosha, not as a fix but as a support.",
+        "Your finances may see some pressure this year, easing after the transit passes.",
+        "This dosha is a flag, not a verdict, and traditional remedies can support you.",
+        "The 5th house here suggests joy through children later in life, not sooner.",
+        "This placement is often read as a caution around expenses, not a permanent condition.",
+        "Some classical texts read this as delayed but not denied prosperity.",
+        "This yoga rewards patience — financial results tend to arrive later rather than never.",
+    ])
+    def test_ordinary_wealth_and_children_language_is_not_flagged(self, wealth_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"

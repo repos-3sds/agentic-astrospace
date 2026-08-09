@@ -241,7 +241,76 @@ _DOSHA_OVERCLAIM_OUTPUT = (
     # to act, not a fixed outcome.
     r"\bthis (?:outcome|fate) is unavoidable\b(?!\s*,?\s*(?:only\s+)?if\b|\s*unless\b)",
     r"\bcannot dodge what is written\b",
+    # 2026-08-09 (Qwen's audit): domain-agnostic poetic-fatalism phrasing,
+    # same category as "no escaping this fate" above — not caught by the
+    # windowed verb+subject check below because these use vocabulary
+    # ("fated", "sentenced", "barren", "blocked by...alignment") that check
+    # doesn't cover, and is specific/rare enough not to need generalizing
+    # into that machinery.
+    r"\bfated to (?:dissolve|fail|collapse|end)\b",
+    r"\bsentenced (?:you|your \w+) to (?:struggle|hardship|poverty|childlessness|failure)\b",
+    r"\b(?:womb|fertility) is (?:cosmically |permanently )?barren\b",
+    r"\bbirth is blocked by\b",
+    r"\bis your inescapable destiny\b",
 )
+
+
+# 2026-08-09 (Qwen's audit, confirmed and fixed here): the marriage-fatalism
+# clusters above don't generalize — "you will never have children" and "this
+# dosha guarantees you will always struggle financially" are the same shape
+# of overclaim (fatalism VERB + domain SUBJECT) but a different subject, and
+# subject-specific patterns don't transfer. Rather than writing a parallel
+# explicit-sentence cluster per domain (the exact flat-list weakness this
+# whole module exists to avoid), this is a generic two-part windowed check —
+# same principle as `_personal_years_remaining` above and `refer_out_kind`'s
+# subject+frame split: a fatalism VERB and a domain SUBJECT must both appear
+# within a short window of each other. Marriage keeps its own explicit,
+# already-proven patterns above rather than being folded into this (no
+# reason to risk regressing what's already correct); this covers the
+# domains that had *no* coverage at all before today.
+# Each verb pattern is compiled separately, not merged into one alternation,
+# because "guarantee(s)"/"guaranteed" needs its own negative lookbehind
+# ("does not guarantee poverty" is a reassurance, not an overclaim) and a
+# lookbehind only applies cleanly to the literal directly after it — trying
+# to share one lookbehind across a large alternation risks it silently not
+# applying to the branch that actually matched.
+_FATALISM_VERB_PATTERNS = (
+    r"\bdoomed to\b",
+    r"\bcondemns? you to\b",
+    r"(?<!not )(?<!does not )\bguarantees?\b",
+    r"(?<!not )(?<!does not )\b(?:is |are )?guaranteed(?: by)?\b",
+    r"\bdictates?(?: permanent| that)?\b",
+    r"\bseals? your fate(?: as| of| to)?\b",
+    r"\bforbids? you from(?: ever)?\b",
+    r"\bpermanently blocked\b",
+    r"\bcursed(?: by this (?:dosha|yoga|placement))?(?: and will never improve)?\b",
+    r"\bno remedy can (?:undo|fix) this\b",
+    r"\bcannot be undone\b",
+    r"\bwill never\b",
+    r"\bwill always\b",
+)
+_FATALISM_VERBS = tuple(re.compile(p) for p in _FATALISM_VERB_PATTERNS)
+_WEALTH_FATALISM_SUBJECTS = re.compile(
+    r"\b(?:poverty|financial (?:ruin|hardship)|struggl\w+ financially|"
+    r"remain(?:ing)? poor|becoming (?:wealthy|poor)|accumulat\w+ wealth|"
+    r"having wealth|wealth prospects|your finances)\b"
+)
+_CHILDREN_FATALISM_SUBJECTS = re.compile(
+    r"\b(?:childless(?:ness)?|(?:hav(?:e|ing)|bear(?:ing)?) (?:a )?child(?:ren)?|"
+    r"conceiv\w+|without offspring|remain without offspring|"
+    r"chances? of having children)\b"
+)
+
+
+def _domain_fatalism_kind(normalized: str) -> str | None:
+    for verb_re in _FATALISM_VERBS:
+        for match in verb_re.finditer(normalized):
+            window = normalized[max(0, match.start() - 45):match.end() + 45]
+            if _WEALTH_FATALISM_SUBJECTS.search(window):
+                return "dosha_overclaim"
+            if _CHILDREN_FATALISM_SUBJECTS.search(window):
+                return "dosha_overclaim"
+    return None
 
 
 def dosha_overclaim_kind(answer: str) -> str | None:
@@ -251,4 +320,4 @@ def dosha_overclaim_kind(answer: str) -> str | None:
     for pattern in _DOSHA_OVERCLAIM_OUTPUT:
         if re.search(pattern, normalized):
             return "dosha_overclaim"
-    return None
+    return _domain_fatalism_kind(normalized)
