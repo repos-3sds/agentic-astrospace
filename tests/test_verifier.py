@@ -924,3 +924,84 @@ class TestPersonalityCharacterFatalismGuardrail:
         bad = _reading(interpretation=phrase)
         violations = verify(bad, personality_bundle, "personality")
         assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
+
+
+class TestPersonalityGuardrailIndependentReviewRound2:
+    """A fresh subagent with no memory of the round-1 implementation probed
+    both `dosha_overclaim_kind()` and `prohibited_verdict()` from scratch
+    and found real gaps in each, confirmed here as demonstrated (all cases
+    below failed against the pre-fix code) before being written in as
+    permanent regression tests, the same discipline every guardrail in this
+    file follows.
+
+    Two separate root causes:
+    1. The original `_PERSONALITY_OVERCLAIM_OUTPUT` vocabulary was an
+       8-adjective closed set (selfish/arrogant/dishonest/cruel/weak-willed/
+       manipulative/cold/untrustworthy) and a handful of fixed sentence
+       shapes — a plausible paraphrase (different trait word, or the
+       identical fatalistic claim in a different sentence shape entirely)
+       defeated it easily. Widened to a much larger trait vocabulary plus
+       trait-neutral fatalistic sentence shapes (the "once a X, always a X"
+       backreference generalizes past any single reviewed example).
+    2. The addendum explicitly forbids clinical/psychiatric/diagnostic
+       vocabulary, but nothing on the output side checked for it — added as
+       health-kind entries in `_PROHIBITED_OUTPUT`, since an undisclosed
+       clinical assessment is exactly what health's refer-out boundary
+       already exists to prevent, regardless of which domain produced it."""
+
+    @pytest.mark.parametrize("phrase", [
+        # Root cause 1: vocabulary outside the original 8-word list.
+        "You will always be lazy because of this Saturn placement.",
+        "You will always be jealous of others due to this Venus affliction.",
+        "You are destined to always be greedy, this chart leaves no doubt.",
+        "You are condemned to a life of envy and pettiness because of Saturn's placement.",
+        # Root cause 1: fatalistic claims in sentence shapes the original
+        # patterns didn't cover at all, regardless of vocabulary.
+        "You will always struggle with jealousy; that is baked into your chart permanently.",
+        "Once a manipulator, always a manipulator — that is what this yoga confirms about you.",
+        "This is your unchangeable core — accept that you will always push people away.",
+        "Frankly, you are just a selfish person and this chart proves it will never change.",
+        "You're wired this way and rewiring is not on the table.",
+        "This yoga locks in a difficult character that no remedy can ever soften.",
+        "This is baked into you and cannot be undone.",
+        "Once a coward, always a coward, that is what your chart shows.",
+    ])
+    def test_round2_fatalism_paraphrases_are_caught(self, personality_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, personality_bundle, "personality")
+        assert violations, f"expected a violation for: {phrase!r}"
+
+    @pytest.mark.parametrize("phrase", [
+        # Root cause 2: clinical/psychiatric/diagnostic vocabulary the
+        # addendum explicitly forbids, previously unchecked on the output
+        # side entirely.
+        "Your Moon placement indicates a borderline personality pattern that is unlikely to improve with treatment.",
+        "Your chart shows classic markers of an antisocial personality disorder.",
+        "This is consistent with a mild anxiety disorder.",
+        "This suggests a narcissistic tendency in your temperament.",
+        "Astrologically diagnostic of a borderline personality pattern.",
+        "This chart reveals cognitive distortions in how you process criticism.",
+        "This points to an avoidant attachment style in relationships.",
+    ])
+    def test_round2_clinical_vocabulary_is_caught(self, personality_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, personality_bundle, "personality")
+        assert any("prohibited verdict (health)" in v for v in violations), (
+            f"expected a health-kind prohibited-verdict violation for: {phrase!r}: {violations}"
+        )
+
+    @pytest.mark.parametrize("phrase", [
+        # Regression set: the widened vocabulary/shapes above must not
+        # over-fire on ordinary hedged language, including sentence shapes
+        # that share surface words with the new patterns ("will always be",
+        # "wrong to say... fixed and cannot change").
+        "You will always be capable of growth, no matter your chart.",
+        "You will always be loved by the people who matter, this placement does not change that.",
+        "It would be wrong to say your character is fixed and cannot change, however this needs attention.",
+        "This tendency can soften over time with conscious effort and reflection.",
+        "This yoga suggests a warm, sociable temperament that tends to build trust easily.",
+    ])
+    def test_round2_widened_patterns_do_not_over_fire(self, personality_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, personality_bundle, "personality")
+        assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
