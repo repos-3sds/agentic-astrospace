@@ -65,18 +65,43 @@ _VERDICT_FRAMES = (
 # so the regex's own `{0,24}` quantifier braces never collide with
 # Python's f-string brace syntax — the exact kind of subtle bug this
 # constant exists to stop happening again.
+# "residency" deliberately narrowed to the immigration sense — a third
+# review found the bare word collides with a doctor's medical residency
+# ("will I get selected for my medical residency match"), and combined
+# with the get/select outcome verbs below, over-fired on ordinary
+# career-timing questions the product exists to answer.
 _IMMIGRATION_SUBJECTS = (
     r"visa|green ?card|immigration|citizenship|work permit|h-?1-?b|"
-    r"residency|asylum|naturalization|permanent residency"
+    # Both a prefix ("permanent"/"us") and a suffix (application/status/...)
+    # were optional here in an earlier version, which meant neither was
+    # actually required — bare "residency" still matched, undoing the
+    # narrowing entirely. Fixed by requiring the alternation to choose one
+    # qualified form, never the bare word alone.
+    r"(?:permanent residency|us residency|residency (?:application|petition|status|visa))|"
+    r"asylum|naturalization"
 )
+# Verb AND noun forms — a third review found only verbs were covered, so
+# "what are my chances of a green card approval" (no verb at all) slipped
+# through one word away from a phrase already pinned as caught.
 _IMMIGRATION_OUTCOME_VERBS = (
-    r"approve[ds]?|approving|reject(?:ed|s|ing)?|den(?:y|ies|ied|ying)|"
-    r"refuse[ds]?|refusing|grant(?:ed|s|ing)?|accept(?:ed|s|ing)?|"
+    r"approve[ds]?|approving|approvals?|reject(?:ed|s|ing)?|rejections?|"
+    r"den(?:y|ies|ied|ying)|denials?|refuse[ds]?|refusing|refusals?|"
+    r"grant(?:ed|s|ing)?|accept(?:ed|s|ing)?|acceptances?|"
     r"succeed(?:ed|s|ing)?|fail(?:ed|s|ing)?|go(?:es|ing)? through|"
     r"went through|comes? through|coming through|came through|"
     r"get(?:s|ting)?|got|receive[ds]?|receiving|obtain(?:ed|s|ing)?|"
-    r"issue[ds]?|issuing|clear(?:ed|s|ing)?|select(?:ed|s|ing)?"
+    r"issue[ds]?|issuing|issuance|clear(?:ed|s|ing)?|select(?:ed|s|ing)?"
 )
+# Future-framing words, shared the same way — a third review found this
+# scaffolding was still copy-pasted per pattern (once per output-net arm)
+# even after the vocabulary itself was de-duplicated, and had drifted the
+# identical way: "are going to" (the plural of an already-listed phrase)
+# and an adverb gap were present in one copy and missing from another.
+_FUTURE_FRAMING = (
+    r"will|shall|is going to|are going to|is certain to|are certain to|"
+    r"is guaranteed to|are guaranteed to|is bound to|are bound to"
+)
+_ADVERB_GAP = r".{0,16}"
 
 # Subjects the app must never issue a verdict on. Kept as word-stems so
 # inflections ("survive"/"survival") are covered without listing each form.
@@ -112,8 +137,21 @@ _REFER_OUT_SUBJECTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         # refusal into a live agent answer, since the foreign domain
         # routes exactly this vocabulary. Both directions, using the
         # shared vocabulary above so the two arms can't drift again.
-        r"\b(?:" + _IMMIGRATION_SUBJECTS + r")\b.{0,24}\b(?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b",
-        r"\b(?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b.{0,24}\b(?:" + _IMMIGRATION_SUBJECTS + r")\b",
+        r"\b(?:" + _IMMIGRATION_SUBJECTS + r")s?\b.{0,24}\b(?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b",
+        # Negative lookahead excludes "get my visa photos taken"/"get my
+        # green card application started" — "get" immediately followed by
+        # the subject reads as receiving it as a final outcome ("will I
+        # get my green card") in general, but not when the subject is
+        # itself modifying a process/document noun that follows it. A
+        # third review found this the one case narrowing to a tight gap
+        # or an exclusion list can't fully solve (English is genuinely
+        # ambiguous here even for a human reader without more context) —
+        # this closes the two demonstrated instances; broader "get + visa
+        # + [process noun]" phrasing beyond these is an accepted,
+        # documented residual limitation of a lexical approach, not a bug
+        # to keep chasing.
+        r"\b(?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b.{0,24}\b(?:" + _IMMIGRATION_SUBJECTS + r")s?\b"
+        r"(?!\s+(?:photos?|pictures?|application (?:started|going|in progress)|paperwork|documents?))",
         # Deportation is asked about the outcome by construction ("will I
         # get deported"), so it's a bare subject like the others here,
         # still gated by the shared seeks_verdict frame check below.
@@ -191,25 +229,35 @@ _PROHIBITED_OUTPUT = (
     (r"\byou will (?:win|lose) (?:the|your|this) (?:case|lawsuit|appeal)\b", "legal"),
     (r"\b(?:court|judge) will rule in your favor\b", "legal"),
     (r"\b(?:lawsuit|case|appeal) is destined to fail\b", "legal"),
-    # 2026-08-09 (foreign domain review, two rounds): output-side mirror of
-    # the immigration input-gate above — the input gate cannot catch every
-    # phrasing, so a generated answer stating a specific immigration
-    # outcome needs its own check too. First version used a narrower
-    # outcome-word list than the input gate and required a literal "your"
-    # + "will be" construction, so "the visa will be approved", "your visa
-    # will definitely be approved", "your visa is going to be approved",
-    # and "you will get your green card" all slipped through — found by a
-    # second review. Reuses the same shared vocabulary as the input gate
-    # now, with "be" optional (needed for passive forms like "be approved",
-    # not for active ones like "get" or "come through") and an optional
-    # adverb/"be" gap between the future-framing word and the outcome.
-    (r"\b(?:your |the )?(?:" + _IMMIGRATION_SUBJECTS + r")\b.{0,20}"
-     r"\b(?:will|is going to|is certain to|is guaranteed to|are certain to|are guaranteed to)\b"
-     r".{0,16}\b(?:be )?(?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b", "legal"),
-    (r"\byou will (?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b.{0,24}"
-     r"\b(?:your |the )?(?:" + _IMMIGRATION_SUBJECTS + r")\b", "legal"),
-    (r"\byou will (?:be )?deport(?:ed)?\b", "legal"),
-    (r"\bdeportation is (?:certain|guaranteed|inevitable)\b", "legal"),
+    # 2026-08-09 (foreign domain review, three rounds): output-side mirror
+    # of the immigration input-gate above. Rounds 1-2 progressively fixed
+    # the vocabulary; round 3 found the *scaffolding* around it — the
+    # future-framing words and the adverb gap — was still copy-pasted per
+    # arm and had drifted the identical way the vocabulary once did: arm 2
+    # (the "you will VERB SUBJECT" active-voice form) had no framing
+    # alternation or adverb gap at all, so "you will definitely get your
+    # green card" and "you are going to get your green card" both slipped
+    # through even though "you will get" alone was caught. Both arms now
+    # share `_FUTURE_FRAMING`/`_ADVERB_GAP` with the input-side pattern
+    # above (well, would if the input gate needed future-framing — it
+    # doesn't, `seeks_verdict` already covers that separately; the sharing
+    # here is between this file's two output arms).
+    (r"\b(?:your |the )?(?:" + _IMMIGRATION_SUBJECTS + r")s?\b" + _ADVERB_GAP +
+     r"\b(?:" + _FUTURE_FRAMING + r")\b" + _ADVERB_GAP +
+     r"\b(?:be )?(?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b", "legal"),
+    (r"\byou (?:" + _FUTURE_FRAMING + r")\b" + _ADVERB_GAP +
+     r"\b(?:be )?(?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b.{0,24}"
+     r"\b(?:your |the )?(?:" + _IMMIGRATION_SUBJECTS + r")s?\b", "legal"),
+    (r"\byou (?:" + _FUTURE_FRAMING + r")\b" + _ADVERB_GAP + r"\b(?:be )?deport(?:ed)?\b", "legal"),
+    (r"\byou (?:will|are going to) face deportation\b", "legal"),
+    (r"\bdeportation is (?:certain|guaranteed|inevitable|going to happen)\b", "legal"),
+    # A different sentence shape from the two arms above: the outcome is a
+    # NOUN fused into the subject phrase itself ("your green card approval
+    # is guaranteed") rather than a verb following the subject, so there's
+    # no separate outcome word after "is guaranteed" for the first arm's
+    # pattern to find.
+    (r"\b(?:your |the )?(?:" + _IMMIGRATION_SUBJECTS + r")s?\s+(?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b"
+     r".{0,16}\bis (?:certain|guaranteed|inevitable)\b", "legal"),
     (r"\byou (?:will|should|ought to) (?:buy|sell|invest in|purchase)\b.{0,24}\b(?:stock|share|crypto|mutual funds?)\b", "money"),
     (r"\b(?:purchase|buy|sell|invest in)\b.{0,20}\b(?:stocks?|shares?|crypto|holdings|mutual funds?)\b.{0,25}\b(?:now|immediately|today)\b", "money"),
 )

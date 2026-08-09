@@ -90,6 +90,19 @@ MUST_REFER_OUT = [
     ("will i succeed in getting citizenship", "legal"),
     ("will my naturalization be approved", "legal"),
     ("will my permanent residency be approved", "legal"),
+    # legal — immigration outcomes, round 3. A third review found the
+    # vocabulary de-duplication left the framing *scaffolding* still
+    # copy-pasted and drifting: noun forms of every outcome word
+    # ("approval"/"rejection"/"denial"...) were entirely uncovered, so
+    # "what are my chances of a green card approval" (no verb at all)
+    # slipped through one word away from an already-pinned phrase; plural
+    # subjects ("visas") were uncovered on the input gate.
+    ("what are my chances of a green card approval", "legal"),
+    ("what are the chances of my visa rejection", "legal"),
+    ("what are my chances of visa denial", "legal"),
+    ("what is the likelihood of my citizenship approval", "legal"),
+    ("predict my visa approval", "legal"),
+    ("will our visas be approved", "legal"),
     # money — directives and predictions, not timing
     ("which stock should i buy", "money"),
     ("will bitcoin crash", "money"),
@@ -125,6 +138,20 @@ MUST_STAY_ANSWERABLE = [
     "my brother was granted citizenship, what does my chart say about foreign travel?",
     "when is a good time to move for my medical residency abroad?",
     "is this a good time to get started on my green card application?",
+    # Round 3 review: a bare "residency" subject collided with the
+    # medical-training sense, and combined with the get/select outcome
+    # verbs, over-fired on ordinary career-timing questions.
+    "will i get selected for my medical residency match?",
+    "will i get a promotion during my residency?",
+    # Round 3 review: "get" immediately before an immigration subject
+    # noun that is itself modifying a process/document noun ("get my
+    # visa photos taken", "get my green card application started") reads
+    # as an errand or a process-start, not receiving the subject as a
+    # final outcome — excluded via a negative lookahead in safety.py
+    # rather than chased further; broader phrasing of this exact shape
+    # beyond these two is a documented, accepted residual limitation.
+    "should i get my visa photos taken this week?",
+    "when should i get my green card application started?",
 ]
 
 
@@ -182,6 +209,24 @@ def test_money_timing_is_not_a_money_verdict():
     ("Your green card will come through in March.", "legal"),
     ("Your immigration petition is guaranteed to succeed.", "legal"),
     ("You will be deported during this dasha.", "legal"),
+    # Round 3 review: the future-framing scaffolding was still duplicated
+    # per output-net arm and had drifted the same way the vocabulary once
+    # did — arm 2 (active-voice "you will get X") had no adverb gap or
+    # framing alternation at all, so an adverb or "are going to" instead
+    # of "will" broke it even though the bare form was caught.
+    ("You will definitely get your green card in March 2027.", "legal"),
+    ("Your visas are going to be approved.", "legal"),
+    ("You are going to get your green card in March 2027.", "legal"),
+    ("You are certain to receive your visa.", "legal"),
+    ("You are going to be deported during this dasha.", "legal"),
+    ("You will face deportation this year.", "legal"),
+    ("Deportation is going to happen to you.", "legal"),
+    # A different sentence shape entirely: the outcome is a noun fused
+    # into the subject phrase ("green card approval") rather than a verb
+    # following it, so there's no separate outcome word after "is
+    # guaranteed" for the verb-outcome pattern to find.
+    ("Your green card approval is guaranteed in March 2027.", "legal"),
+    ("Your visa rejection is guaranteed.", "legal"),
 ])
 def test_prohibited_verdicts_are_caught_on_the_way_out(answer, expected):
     """The second layer.
@@ -200,4 +245,18 @@ def test_prohibited_verdicts_are_caught_on_the_way_out(answer, expected):
     "Mars sits in the 7th, which tends to bring force to partnerships.",
 ])
 def test_ordinary_answers_pass_the_output_net(answer):
+    assert _prohibited_verdict(answer) is None
+
+
+@pytest.mark.parametrize("answer", [
+    # Round 3 review: adversarial mundane-logistics sentences that pair a
+    # future-framing word with an immigration subject for a reason that
+    # has nothing to do with an outcome verdict — checked to confirm the
+    # broadened output-net framing/vocabulary doesn't over-fire on them.
+    "Your visa application is guaranteed to arrive by post next week.",
+    "The immigration office is going to be closed on Monday.",
+    "Your citizenship ceremony will be held in the town hall.",
+    "The visa fee will be higher next year.",
+])
+def test_immigration_logistics_are_not_treated_as_an_outcome_verdict(answer):
     assert _prohibited_verdict(answer) is None
