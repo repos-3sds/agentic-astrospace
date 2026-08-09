@@ -1,4 +1,4 @@
-"""Registry holds only configured/runnable agents, not all 10 taxonomy
+"""Registry holds only configured/runnable agents, not all 11 taxonomy
 domains — a routed domain absent here must fall out to `domain_not_ready`,
 never a fallback answer. See astrospace/agents/registry.py."""
 from astrospace.agents.registry import AGENT_REGISTRY, AgentConfig
@@ -7,7 +7,7 @@ from astrospace.context.taxonomy import domain_ids, get_domain
 
 class TestAgentRegistry:
     def test_only_configured_domains_are_present(self):
-        assert set(AGENT_REGISTRY) == {"career", "marriage", "wealth", "children", "health", "foreign"}
+        assert set(AGENT_REGISTRY) == {"career", "marriage", "wealth", "children", "health", "foreign", "personality"}
 
     def test_configured_domains_are_real_taxonomy_domains(self):
         for domain_id in AGENT_REGISTRY:
@@ -28,8 +28,19 @@ class TestAgentRegistry:
 
     def test_unconfigured_taxonomy_domains_still_have_display_names(self):
         """domain_not_ready needs a real display name for any of the other
-        8 domains — via taxonomy directly, not a placeholder registry row."""
+        4 domains — via taxonomy directly, not a placeholder registry row."""
         unconfigured = set(domain_ids()) - set(AGENT_REGISTRY)
         assert unconfigured  # sanity: there really are unconfigured domains
         for domain_id in unconfigured:
             assert get_domain(domain_id).name
+
+    def test_personality_addendum_names_the_trait_not_verdict_framing(self):
+        """The sensitive-domain guardrail acceptance criterion for this
+        domain: it must explicitly say traits are chart-based tendencies,
+        not fixed verdicts on someone's character, and must rule out
+        clinical/psychiatric vocabulary — not just say "be careful"."""
+        addendum = AGENT_REGISTRY["personality"].domain_addendum.lower()
+        assert "tendency" in addendum or "tendencies" in addendum
+        assert "never" in addendum
+        assert "clinical" in addendum or "psychiatric" in addendum
+        assert "verdict" in addendum
