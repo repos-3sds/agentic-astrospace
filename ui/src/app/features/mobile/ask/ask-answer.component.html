@@ -39,16 +39,37 @@
         </p>
 
         @if (message.reading; as reading) {
-          <p class="acknowledgment">{{ reading.acknowledgment }}</p>
-          <h1 class="verdict">{{ reading.interpretation }}</h1>
-          <p class="summary-line">{{ reading.summary_and_assurance }}</p>
+          <div class="answer-meta" aria-label="Answer context">
+            <span class="confidence" [attr.data-confidence]="confidenceTone(reading.confidence)">
+              {{ confidenceLabel(reading.confidence) }}
+            </span>
+            @for (item of contextPills(message); track item) {
+              <span class="context-pill">{{ item }}</span>
+            }
+          </div>
+
+          <section class="intent-card" aria-label="Intent understood">
+            <span class="section-kicker">Intent</span>
+            <p class="acknowledgment">{{ reading.acknowledgment }}</p>
+          </section>
+
+          <section class="plain-card" aria-label="Plain guidance">
+            <span class="section-kicker">What this means</span>
+            <h1 class="verdict">{{ reading.interpretation }}</h1>
+            <p class="summary-line">{{ reading.summary_and_assurance }}</p>
+          </section>
 
           @if (reading.guidance.practical_actions.length) {
             <div class="answer-section">
               <h2>Next best steps</h2>
-              @for (action of reading.guidance.practical_actions; track action) {
-                <p>{{ action }}</p>
-              }
+              <ol class="action-list">
+                @for (action of reading.guidance.practical_actions; track action; let index = $index) {
+                  <li>
+                    <span class="step-index">{{ index + 1 }}</span>
+                    <span>{{ action }}</span>
+                  </li>
+                }
+              </ol>
             </div>
           }
 
@@ -56,7 +77,27 @@
             <div class="answer-section">
               <h2>Traditional supports</h2>
               @for (remedy of reading.guidance.remedies; track remedy.practice + remedy.note) {
-                <p><strong>{{ remedy.practice }}</strong> · {{ remedy.note }}</p>
+                <article class="remedy-row">
+                  <span class="remedy-mark" aria-hidden="true"></span>
+                  <p><strong>{{ remedy.practice }}</strong><span>{{ remedy.note }}</span></p>
+                </article>
+              }
+            </div>
+          }
+
+          @if (showTechnicalBasis(message)) {
+            <div class="answer-section technical-basis">
+              <h2>{{ preferences.experienceMode() === 'practitioner' ? 'Technical basis' : 'Chart factors used' }}</h2>
+              @for (item of technicalBasis(message); track item.factor + sourceLabel(item.source)) {
+                <article class="basis-row">
+                  <div>
+                    <strong>{{ item.factor }}</strong>
+                    <p>{{ item.reading }}</p>
+                  </div>
+                  @if (preferences.experienceMode() === 'practitioner') {
+                    <span>{{ sourceLabel(item.source) }}</span>
+                  }
+                </article>
               }
             </div>
           }
