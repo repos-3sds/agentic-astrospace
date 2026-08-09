@@ -51,6 +51,29 @@ def _jd_from_dt(dt: datetime) -> float:
     return swe.julday(dt_utc.year, dt_utc.month, dt_utc.day, hour)
 
 
+def _profile_facts(chart, as_of: datetime) -> dict:
+    """Deterministic, backend-computed profile facts — the block Item 3
+    calls for (docs/ask_context_engine_multi_agent_architecture_2026-08-07.md,
+    "Update 2026-08-09"). The agent must not be left to derive age itself
+    from birth data + `as_of`; that arithmetic belongs here, once, same
+    category as every other precomputed bundle section.
+
+    Deliberately minimal: only `age_years` is derivable from birth data
+    alone. Life-stage flags (retired/working/student), relationship/gender
+    context, and location facts named in the finding's follow-up require
+    profile data this engine does not hold today — they are left out
+    entirely rather than guessed, matching the finding's own principle that
+    an unknown fact must not be invented."""
+    birth_utc = chart.moment.dt_utc
+    as_of_utc = as_of.astimezone(timezone.utc)
+    age_years = (as_of_utc - birth_utc).days / 365.2425
+    return {
+        "age_years": round(age_years, 1),
+        "birth_year": birth_utc.year,
+        "as_of": as_of_utc.isoformat(),
+    }
+
+
 def _planet_brief(planet: str, positions: dict, lagna_sign: int,
                   dignities: dict) -> dict:
     lon = positions[planet]["lon"]
@@ -297,6 +320,7 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
         "domain": domain_id,
         "domain_name": spec.name,
         "tier": tier,
+        "profile_facts": _profile_facts(chart, as_of),
         "houses": houses,
         "karakas": karakas,
         "jaimini_karakas": jaimini_karakas,

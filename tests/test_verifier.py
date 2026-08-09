@@ -1,6 +1,8 @@
 """The deterministic verifier — the only gate before persistence. No model
 call in these tests; `verify()` is pure function over a bundle + a
 StructuredReading. See astrospace/agents/verifier.py."""
+from datetime import datetime, timezone
+
 import pytest
 
 from astrospace.agents.schema import Guidance, StructuredReading, TechnicalBasisItem
@@ -15,6 +17,14 @@ DELHI = {"city": "New Delhi", "nation": "IN"}
 def marriage_bundle():
     chart = VedicChart("Verifier", 1990, 1, 1, 12, 0, **DELHI)
     return assemble_domain(chart, "marriage")
+
+
+@pytest.fixture(scope="module")
+def career_bundle_2026():
+    """Fixed `as_of` so year-based tense-conflict assertions are
+    deterministic rather than drifting with the calendar."""
+    chart = VedicChart("Verifier2", 1975, 6, 15, 9, 0, **DELHI)
+    return assemble_domain(chart, "career", as_of=datetime(2026, 1, 1, tzinfo=timezone.utc))
 
 
 def _reading(**overrides) -> StructuredReading:
@@ -183,3 +193,43 @@ class TestVerifier:
         bad = _reading(interpretation=phrase)
         violations = verify(bad, marriage_bundle, "marriage")
         assert violations == []
+
+
+class TestTenseConflictInvariant:
+    """Item 3's candidate verifier invariant (docs/ask_context_engine_
+    multi_agent_architecture_2026-08-07.md, "Update 2026-08-09" requirement
+    4): a retrospective question answered with an invented future timeline
+    is a violation, the same category as a prohibited verdict. Only checked
+    when `question_tense == "retrospective"` — this must never fire for a
+    future or unspecified-tense question, since a real future window is the
+    correct answer there, not a bug."""
+
+    def test_future_year_in_retrospective_answer_fails(self, career_bundle_2026):
+        bad = _reading(interpretation=(
+            "Your career inception window opens around 2049, a strong period ahead."
+        ))
+        violations = verify(bad, career_bundle_2026, "career", question_tense="retrospective")
+        assert any("invented future" in v for v in violations)
+
+    def test_future_phrase_in_retrospective_answer_fails(self, career_bundle_2026):
+        bad = _reading(summary_and_assurance="This new chapter will begin once Jupiter transits your 10th house.")
+        violations = verify(bad, career_bundle_2026, "career", question_tense="retrospective")
+        assert any("invented future" in v for v in violations)
+
+    def test_past_year_in_retrospective_answer_passes(self, career_bundle_2026):
+        good = _reading(interpretation=(
+            "Your career took shape around 2001, when Jupiter supported new beginnings."
+        ))
+        violations = verify(good, career_bundle_2026, "career", question_tense="retrospective")
+        assert violations == []
+
+    def test_same_future_content_is_fine_when_tense_is_not_retrospective(self, career_bundle_2026):
+        """The exact text that fails above must pass cleanly for a real
+        future or unspecified-tense question — this invariant only fires on
+        the specific tense/content mismatch, never on future content alone."""
+        reading = _reading(interpretation=(
+            "Your career inception window opens around 2049, a strong period ahead."
+        ))
+        assert verify(reading, career_bundle_2026, "career", question_tense="future") == []
+        assert verify(reading, career_bundle_2026, "career", question_tense="unspecified") == []
+        assert verify(reading, career_bundle_2026, "career") == []

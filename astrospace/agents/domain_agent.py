@@ -44,6 +44,15 @@ Grounding rules — non-negotiable:
 6. Remedies, if you mention any, are traditional practice — never framed as something that
    must be paid for to "remove" a placement.
 7. Be warm, practical, and concise (under ~350 words unless the reader asks for depth).
+8. PROFILE FACTS: age_years {age_years}, as of {as_of}. This question's tense is
+   {question_tense}. Respect both over generating a plausible-sounding timeline the
+   question never asked for: if the tense is "retrospective" (the reader asked when or why
+   something already started/happened), answer about the past — do not invent or restate a
+   future window for an event the reader has already told you occurred. If the tense is
+   "future", answer forward from {as_of} as usual. If "current_state" or "unspecified",
+   follow the question's own framing. Logical/common-sense reasoning about the reader's
+   stated situation always comes before astrological interpretation, never gets overridden
+   by it.
 {domain_addendum}"""
 
 
@@ -53,13 +62,18 @@ class DomainReadingAgent(BaseAstroAgent):
     grounding rules above are shared by every domain and must never be
     duplicated per-config."""
 
-    def __init__(self, bundle: dict, domain_addendum: str, api_key: str = None):
+    def __init__(self, bundle: dict, domain_addendum: str, api_key: str = None,
+                question_tense: str = "unspecified"):
         super().__init__(api_key)
         self.bundle = bundle
+        profile_facts = bundle.get("profile_facts") or {}
         self.system_prompt = _BASE_SYSTEM.format(
             domain_name=bundle.get("domain_name", bundle.get("domain", "")),
             bundle_json=json.dumps(bundle, indent=2, default=str),
             domain_addendum=domain_addendum,
+            age_years=profile_facts.get("age_years", "unknown"),
+            as_of=profile_facts.get("as_of", "unknown"),
+            question_tense=question_tense,
         )
 
     def run_structured_reading(self, messages: list) -> StructuredReading:
