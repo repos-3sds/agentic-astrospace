@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from astrospace.agents.schema import Guidance, StructuredReading, TechnicalBasisItem
+from astrospace.agents.schema import Guidance, RemedyItem, StructuredReading, TechnicalBasisItem
 from astrospace.agents.verifier import verify
 from astrospace.context import assemble_domain
 from astrospace.core.vedic.chart import VedicChart
@@ -193,6 +193,51 @@ class TestVerifier:
         bad = _reading(interpretation=phrase)
         violations = verify(bad, marriage_bundle, "marriage")
         assert violations == []
+
+
+class TestFullFieldCoverage:
+    """Found by a second independent review of PR #12: `text_to_check` had
+    only ever covered `interpretation`/`summary_and_assurance` (plus,
+    after the first review fix, `technical_basis`/`practical_actions`) —
+    `acknowledgment`, `guidance.remedies[].practice`, `guidance.remedies[].note`,
+    and `guidance.follow_up_questions` were never scanned by ANY check here,
+    not just the tense one. Demonstrated as a real gap: a prohibited death
+    verdict placed in a remedy note passed cleanly before this fix. That's
+    CLAUDE.md non-negotiable #1 (no death/longevity verdicts) landing in a
+    field nothing was looking at — this is the regression test for exactly
+    that, not a hypothetical."""
+
+    def test_prohibited_verdict_in_remedy_note_fails(self, marriage_bundle):
+        bad = _reading(guidance=Guidance(remedies=[
+            RemedyItem(practice="a traditional practice", note="You will die in 2049."),
+        ]))
+        violations = verify(bad, marriage_bundle, "marriage")
+        assert any("prohibited verdict" in v for v in violations)
+
+    def test_prohibited_verdict_in_remedy_practice_fails(self, marriage_bundle):
+        bad = _reading(guidance=Guidance(remedies=[
+            RemedyItem(practice="You will die in 2049.", note="context"),
+        ]))
+        violations = verify(bad, marriage_bundle, "marriage")
+        assert any("prohibited verdict" in v for v in violations)
+
+    def test_prohibited_verdict_in_follow_up_question_fails(self, marriage_bundle):
+        bad = _reading(guidance=Guidance(follow_up_questions=["You will die in 2049."]))
+        violations = verify(bad, marriage_bundle, "marriage")
+        assert any("prohibited verdict" in v for v in violations)
+
+    def test_prohibited_verdict_in_acknowledgment_fails(self, marriage_bundle):
+        bad = _reading(acknowledgment="You will die in 2049.")
+        violations = verify(bad, marriage_bundle, "marriage")
+        assert any("prohibited verdict" in v for v in violations)
+
+    def test_clean_remedies_and_follow_ups_pass(self, marriage_bundle):
+        good = _reading(guidance=Guidance(
+            remedies=[RemedyItem(practice="A traditional practice, offered helpfully.",
+                                 note="Traditionally associated with this placement.")],
+            follow_up_questions=["Which month is strongest for this?"],
+        ))
+        assert verify(good, marriage_bundle, "marriage") == []
 
 
 class TestTenseConflictInvariant:

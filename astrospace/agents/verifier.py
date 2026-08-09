@@ -95,14 +95,21 @@ def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
                 "references, source_passages, or a known bundle section"
             )
 
-    # Shared across every text-scanning check below — a claim can land in
-    # the prose, a citation's own reading, or a recommended action, and a
-    # gap in only one of those fields is a real false negative (found by
-    # review: a fabricated year inside `guidance.practical_actions` passed
-    # every check here before this list included it).
-    text_to_check = [reading.interpretation, reading.summary_and_assurance] + [
+    # Shared across every text-scanning check below — every field a model
+    # can put free text into, not just the ones a first pass happened to
+    # cover. Found by a second independent review: the first fix added
+    # technical_basis and practical_actions but stopped there, leaving
+    # acknowledgment, guidance.remedies (both practice and note), and
+    # guidance.follow_up_questions completely unscanned by every check here
+    # — including prohibited_verdict, so a death verdict placed in a remedy
+    # note passed cleanly. That's CLAUDE.md non-negotiable #1 (no death/
+    # longevity verdicts) and #4 (remedies never framed as fear leverage)
+    # both landing in a field nothing was looking at.
+    text_to_check = [reading.acknowledgment, reading.interpretation, reading.summary_and_assurance] + [
         item.reading for item in reading.technical_basis
-    ] + list(reading.guidance.practical_actions)
+    ] + list(reading.guidance.practical_actions) + list(reading.guidance.follow_up_questions) + [
+        text for remedy in reading.guidance.remedies for text in (remedy.practice, remedy.note)
+    ]
 
     for text in text_to_check:
         crossed = prohibited_verdict(text)

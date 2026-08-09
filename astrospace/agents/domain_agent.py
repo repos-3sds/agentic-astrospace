@@ -49,10 +49,12 @@ Grounding rules — non-negotiable:
    question never asked for: if the tense is "retrospective" (the reader asked when or why
    something already started/happened), answer about the past — do not invent or restate a
    future window for an event the reader has already told you occurred. If the tense is
-   "future", answer forward from {as_of} as usual. If "current_state" or "unspecified",
-   follow the question's own framing. Logical/common-sense reasoning about the reader's
-   stated situation always comes before astrological interpretation, never gets overridden
-   by it.
+   "future", answer forward from {as_of} as usual. If "mixed" (the question has both a past
+   and a future half, e.g. "when did retirement happen, and what comes next?"), answer each
+   half in its own tense — do not project the past half forward just because a future half
+   is also present. If "current_state" or "unspecified", follow the question's own framing.
+   Logical/common-sense reasoning about the reader's stated situation always comes before
+   astrological interpretation, never gets overridden by it.
 {domain_addendum}"""
 
 
