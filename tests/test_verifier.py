@@ -619,6 +619,77 @@ class TestNegationScopeRound4:
         assert violations, f"expected a violation for: {phrase!r}"
 
 
+class TestBoundaryCompletenessRound6:
+    """A sixth independent review made two distinct findings, worth
+    separating clearly:
+
+    (a) The marriage/poetic split wasn't domain-clean — three poetic
+    patterns (sentenced-to, womb/fertility-barren, birth-blocked-by,
+    inescapable-destiny) named an actual wealth/children noun and so had
+    the same "does not mean [phrase]" substring problem the negation-
+    checked tuple exists for, but sat in the bare-`re.search` tuple with no
+    negation awareness. Moved into `_WEALTH_CHILDREN_OVERCLAIM_OUTPUT`.
+    `_fated to (dissolve|fail|collapse)_` stayed put — genuinely domain-
+    agnostic, no wealth/children noun in the pattern.
+
+    (b) `_CLAUSE_BOUNDARY` was incomplete in the *unsafe* direction: three
+    real gaps (conjunction-joined clauses with no comma, parentheses, and
+    bullet/newline-joined lines) let a hedge in one clause suppress a real
+    violation in the next — the exact failure mode the mechanism exists to
+    prevent, not a case of the already-accepted comma-ambiguity trade-off.
+    The review proved widening the boundary set is always safe to do
+    (adding a boundary can only shrink the backward-search window, so it
+    can only make `_negation_precedes` flag *more*, never less) — these are
+    closed for free, not another balance-of-risks judgment call."""
+
+    @pytest.mark.parametrize("phrase", [
+        "This dosha does not mean poverty is your inescapable destiny.",
+        "It is a myth that your womb is cosmically barren.",
+        "It is untrue that your fertility is permanently barren.",
+    ])
+    def test_moved_poetic_patterns_now_respect_negation(self, wealth_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
+
+    @pytest.mark.parametrize("phrase", [
+        # Conjunction-joined independent clauses with no comma at all —
+        # ordinary sentence construction, not covered by the comma-based
+        # boundary alone.
+        "Remedies cannot help and this dosha guarantees poverty.",
+        "There is no dosha stronger than this one and you will always struggle financially.",
+        "No chart is simple and yours guarantees poverty.",
+        "Your chart does not lie so this yoga guarantees childlessness.",
+        "This dosha cannot be softened and guarantees poverty.",
+        "Nobody escapes this yoga and you are destined for poverty.",
+    ])
+    def test_conjunction_without_a_comma_is_still_a_boundary(self, wealth_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations, f"expected a violation for: {phrase!r}"
+
+    @pytest.mark.parametrize("phrase", [
+        "This dosha does not affect your health (it guarantees poverty).",
+        "This yoga is not minor (you will never have children).",
+    ])
+    def test_parentheses_are_a_boundary(self, wealth_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations, f"expected a violation for: {phrase!r}"
+
+    @pytest.mark.parametrize("phrase", [
+        # _normalize() collapses newlines to spaces, so a hedge on one
+        # bullet line could otherwise silently cover a violation on the
+        # next — a plausible shape for a generated structured answer.
+        "Key points:\n- This chart does not show a wealth block\n- You will always struggle financially",
+        "Summary\n* Remedies cannot help\n* You will never have children",
+    ])
+    def test_bullet_and_newline_joined_lines_are_a_boundary(self, wealth_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations, f"expected a violation for: {phrase!r}"
+
+
 class TestFullFieldCoverage:
     """Found by a second independent review of PR #12: `text_to_check` had
     only ever covered `interpretation`/`summary_and_assurance` (plus,

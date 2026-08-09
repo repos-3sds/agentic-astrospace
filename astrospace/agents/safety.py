@@ -244,17 +244,16 @@ _DOSHA_OVERCLAIM_OUTPUT = (
     # 2026-08-09 (Qwen's audit): domain-agnostic poetic-fatalism phrasing,
     # same category as "no escaping this fate" above — not caught by the
     # windowed verb+subject check below because these use vocabulary
-    # ("fated", "sentenced", "barren", "blocked by...alignment") that check
-    # doesn't cover, and is specific/rare enough not to need generalizing
-    # into that machinery.
+    # ("fated", "barren", "blocked by...alignment") that check doesn't
+    # cover, and is specific/rare enough not to need generalizing into that
+    # machinery. Kept here (not in the negation-checked wealth/children
+    # tuple below) genuinely because it's domain-agnostic — no wealth or
+    # children noun in the pattern itself, unlike its siblings a sixth
+    # review found misplaced (see that tuple).
     # Excludes bare "end" — a dasha/transit period legitimately "ends" all
     # the time ("this dasha is fated to end in March" would be ordinary
     # period language, not fatalism), found by review.
     r"\bfated to (?:dissolve|fail|collapse)\b",
-    r"\bsentenced (?:you|your \w+) to (?:struggle|hardship|poverty|childlessness|failure)\b",
-    r"\b(?:womb|fertility) is (?:cosmically |permanently )?barren\b",
-    r"\bbirth is blocked by\b",
-    r"\bis your inescapable destiny\b",
 )
 
 # 2026-08-09 (Qwen's wealth/children audit). History worth reading before
@@ -293,6 +292,18 @@ _DOSHA_OVERCLAIM_OUTPUT = (
 # guarantees poverty" — is genuinely ambiguous to a comma/conjunction rule).
 # That's an accepted, documented limitation, not a bug to keep chasing.
 _WEALTH_CHILDREN_OVERCLAIM_OUTPUT = (
+    # Moved here from the marriage/poetic tuple by a sixth review: these
+    # three actually name a wealth or children noun (poverty/childlessness/
+    # womb/fertility/birth), so they have the exact same "does not mean
+    # [phrase]" literal-substring problem the rest of this tuple exists to
+    # handle — sitting in the bare-`re.search` tuple meant they had no
+    # negation awareness even though their semantics needed it. Demonstrated
+    # concretely: "This dosha does not mean poverty is your inescapable
+    # destiny" was flagged before this move.
+    r"\bsentenced (?:you|your \w+) to (?:struggle|hardship|poverty|childlessness|failure)\b",
+    r"\b(?:womb|fertility) is (?:cosmically |permanently )?barren\b",
+    r"\bbirth is blocked by\b",
+    r"\bis your inescapable destiny\b",
     r"\byou will always struggle financially\b",
     r"\bguarantees? you will never accumulate wealth\b",
     r"\bdictates? permanent poverty\b",
@@ -404,7 +415,23 @@ _NEGATION_CUES = re.compile(
 # non-restrictive relative clause ("this dosha, which is not minor,
 # guarantees poverty") are a known, accepted limitation of a lexical
 # approach — not a bug to keep chasing back and forth across review rounds.
-_CLAUSE_BOUNDARY = re.compile(r"[.;:!?,]|—|–|--")
+#
+# A sixth review pointed out this bias is monotone-safe (proof, not a
+# sampling result): adding a boundary character can only shrink the
+# backward-search window, so it can only make `_negation_precedes` return
+# True *less* often, never more — i.e. it can only flag more, never less.
+# That means widening this set is always safe to do outright, with no
+# trade-off to weigh, unlike the comma/conjunction question above. The
+# review found three real gaps that were exactly this — not the accepted
+# comma-ambiguity limitation, but genuine coverage holes in the *unsafe*
+# direction: bare conjunctions with no comma ("remedies cannot help and
+# this dosha guarantees poverty"), parentheses ("this dosha does not
+# affect your health (it guarantees poverty)"), and bullet/newline-joined
+# lines (`_normalize()` collapses `\n` to a space, so a hedge on one
+# bullet line silently covers a violation on the next). Closed for free.
+_CLAUSE_BOUNDARY = re.compile(
+    r"[.;:!?,()*]|—|–|--|\s-\s|\band\b|\bbut\b|\bso\b|\bbecause\b"
+)
 
 
 def _negation_precedes(normalized: str, start: int) -> bool:
