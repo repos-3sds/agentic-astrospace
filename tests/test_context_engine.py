@@ -122,6 +122,18 @@ class TestRouter:
         decision = KeywordRouter().route("Will I settle abroad after marriage?")
         assert {decision.primary, *decision.secondary} >= {"marriage", "foreign"}
 
+    def test_bare_settle_does_not_misroute_marriage_questions_to_foreign(self):
+        """Found during the foreign-domain PR review 2026-08-09: the
+        taxonomy's `foreign` keyword list had a bare "settle" entry, which
+        matched ordinary marriage-adjacent phrasing ("settle down") with no
+        actual foreign-travel content — and since it was the only hit,
+        there was no ambiguity signal to trigger clarification. Narrowed
+        to "settle abroad"/"settle overseas" in taxonomy.json."""
+        decision = KeywordRouter().route("When will I settle down and get married?")
+        assert decision.primary != "foreign"
+        decision = KeywordRouter().route("Will I settle into a stable routine?")
+        assert decision.primary != "foreign"
+
     def test_no_keywords_falls_back_to_default(self):
         decision = KeywordRouter().route("Tell me something interesting")
         assert decision.method == "default"

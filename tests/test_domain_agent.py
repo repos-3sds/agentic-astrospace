@@ -86,6 +86,15 @@ class TestAssembleDomainShapes:
         assert "D6" in bundle["vargas"]
         assert any(h["house"] in (1, 6) and h["tier"] == "primary" for h in bundle["houses"])
 
+    def test_foreign_bundle_has_d9_and_primary_house(self, chart):
+        # No unique domain-specific varga here (taxonomy's primary vargas
+        # for foreign are D1/D9, shared with marriage's D9) — the real
+        # domain-scoping signal is the primary house tier (12th/9th).
+        bundle = assemble_domain(chart, "foreign")
+        assert bundle["domain"] == "foreign"
+        assert "D9" in bundle["vargas"]
+        assert any(h["house"] in (9, 12) and h["tier"] == "primary" for h in bundle["houses"])
+
 
 class TestRunStructuredMockRealism:
     """Mocks the SDK boundary itself, not our own wrapper — proves
@@ -151,7 +160,7 @@ class TestAskOrchestratorPrepare:
     def test_ambiguous_tie_needs_clarification(self, orchestrator):
         outcome = orchestrator.prepare("Is this a good time for my career and my marriage?")
         assert outcome.terminal_envelope["type"] == "clarification_needed"
-        assert set(outcome.terminal_envelope["options"]) == {"career", "marriage", "wealth", "children", "health"}
+        assert set(outcome.terminal_envelope["options"]) == {"career", "marriage", "wealth", "children", "health", "foreign"}
 
     def test_daily_guidance_only_needs_clarification_not_a_wrong_domain_answer(self, orchestrator):
         outcome = orchestrator.prepare("What should I focus on today?")
@@ -169,7 +178,7 @@ class TestAskOrchestratorPrepare:
         assert outcome.terminal_envelope["type"] == "domain_not_ready"
         assert outcome.terminal_envelope["domain"] == "family_property"
         assert outcome.terminal_envelope["domain_label"]
-        assert outcome.terminal_envelope["available"] == ["career", "children", "health", "marriage", "wealth"]
+        assert outcome.terminal_envelope["available"] == ["career", "children", "foreign", "health", "marriage", "wealth"]
 
     def test_career_question_prepares_a_real_bundle(self, orchestrator):
         outcome = orchestrator.prepare("Is this a good year for a promotion at work?")
@@ -187,6 +196,12 @@ class TestAskOrchestratorPrepare:
         outcome = orchestrator.prepare("When will my health improve?")
         assert outcome.prepared.domain == "health"
         assert outcome.prepared.bundle["domain"] == "health"
+        assert "houses" in outcome.prepared.context_used
+
+    def test_foreign_question_prepares_a_real_bundle(self, orchestrator):
+        outcome = orchestrator.prepare("Is this a good time to settle abroad?")
+        assert outcome.prepared.domain == "foreign"
+        assert outcome.prepared.bundle["domain"] == "foreign"
         assert "houses" in outcome.prepared.context_used
 
     # Found missing by independent review of PR #12: every other tense/
@@ -423,6 +438,16 @@ class TestAskStreamRoute:
         assert done["domain"] == "health"
         assert done["status"] == "answered"
 
+    def test_foreign_question_answers_with_structured_reading(self, client, env):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=_good_reading()):
+            r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
+                "question": "Is this a good time to settle abroad?",
+            })
+        assert r.status_code == 200
+        done = self._frames(r)[-1]
+        assert done["domain"] == "foreign"
+        assert done["status"] == "answered"
+
     def test_unsupported_domain_never_calls_an_agent(self, client, env):
         with patch.object(DomainReadingAgent, "run_structured_reading") as run:
             r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
@@ -432,7 +457,7 @@ class TestAskStreamRoute:
         run.assert_not_called()
         frame = self._frames(r)[0]
         assert frame["type"] == "domain_not_ready"
-        assert frame["available"] == ["career", "children", "health", "marriage", "wealth"]
+        assert frame["available"] == ["career", "children", "foreign", "health", "marriage", "wealth"]
 
     def test_ambiguous_question_asks_for_clarification(self, client, env):
         with patch.object(DomainReadingAgent, "run_structured_reading") as run:

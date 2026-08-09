@@ -52,7 +52,130 @@ _VERDICT_FRAMES = (
     r"\bpredict\b", r"\btell me\b", r"\bcalculate\b", r"\bchances? of\b",
     r"\blikelihood\b", r"\bwhat will\b", r"\bwhen do i\b", r"\bhave left\b",
     r"\bdiagnos", r"\bwhat does .{0,20}mean for my\b",
+    # Found missing by a fourth review of the foreign-domain immigration
+    # patterns: "how likely"/"odds of" are verdict-seeking frames just as
+    # much as the "chances? of"/"likelihood" already here, and their
+    # absence meant a subject match (e.g. "how likely is my visa
+    # approval") never reached `seeks_verdict` at all. Not immigration-
+    # specific — this closes the same phrasing family across every
+    # domain the subject list already covers (legal/health/money too).
+    r"\bhow likely\b", r"\bodds of\b",
+    # Found by a fifth review: "probability" is a verdict-seeking frame
+    # exactly like "chances? of"/"likelihood" already here — "what's the
+    # probability my visa gets approved" never reached `seeks_verdict`.
+    r"\bprobability\b",
 )
+
+# Shared immigration-process vocabulary — one constant, not duplicated
+# per pattern. A second independent review of the first version (which
+# *did* duplicate it, once per direction) found real drift between the
+# copies: `approved?` etc. only makes the trailing letter optional, not
+# the whole "-ed" suffix, so "denied"/"rejected"/"granted"/"accepted"
+# silently had no bare-verb form at all despite reading as if they did —
+# and the reverse-order copy had quietly dropped several outcome words
+# the forward copy had. Concatenation (not an f-string) deliberately,
+# so the regex's own `{0,24}` quantifier braces never collide with
+# Python's f-string brace syntax — the exact kind of subtle bug this
+# constant exists to stop happening again.
+# "residency" deliberately narrowed to the immigration sense — a third
+# review found the bare word collides with a doctor's medical residency
+# ("will I get selected for my medical residency match"), and combined
+# with the get/select outcome verbs below, over-fired on ordinary
+# career-timing questions the product exists to answer.
+#
+# A fifth review found the round-4 narrowing ("permanent residency"/"us
+# residency"/"residency petition|visa") was US-only, but this domain is
+# "Foreign Travel & Settlement" — not "US Immigration" — and covers
+# settling in any country by construction. "will I get UK residency",
+# "canada residency", "dubai residency" all went uncaught. Rather than
+# re-widen the bare word (which reopens the medical/academic/tax
+# collision round 3-4 closed), added an explicit country/region list —
+# closes the demonstrated gap without touching the collision-prone bare
+# form; a country not in this list is an accepted, documented residual
+# limitation of a lexical approach, not a bug to keep chasing.
+_RESIDENCY_COUNTRIES = (
+    r"uk|united kingdom|canada|canadian|australia|australian|uae|dubai|"
+    r"eu|european union|schengen|germany|german|new zealand|singapore|"
+    r"ireland|irish"
+)
+_IMMIGRATION_SUBJECTS = (
+    r"visa|green ?card|immigration|citizenship|work permit|h-?1-?b|"
+    # Both a prefix ("permanent"/"us") and a suffix (application/status/...)
+    # were optional here in an earlier version, which meant neither was
+    # actually required — bare "residency" still matched, undoing the
+    # narrowing entirely. A fourth review found the FIX for that also had
+    # a version of the same bug one level down: "residency application" is
+    # the standard phrase for a medical/academic residency application,
+    # and "residency status" is the standard phrase for *tax* residency —
+    # so those two suffixes reintroduced exactly the collision they were
+    # meant to close. Dropped both; "petition"/"visa" aren't used outside
+    # the immigration sense and lose nothing demonstrated.
+    r"(?:permanent residency|us residency|residency (?:petition|visa)|"
+    r"(?:" + _RESIDENCY_COUNTRIES + r") residency|"
+    r"residency (?:in|for) (?:the )?(?:" + _RESIDENCY_COUNTRIES + r"))|"
+    r"asylum|naturalization|"
+    # A fifth review found several immigration-specific nouns entirely
+    # missing: bare "petition" ("will my petition be denied"), "USCIS" as
+    # the deciding agent ("will USCIS approve my application"), and a
+    # handful of status categories that are exactly this domain's subject
+    # matter, not edge cases.
+    r"petition|parole|refugee status|daca|tps|adjustment of status|"
+    r"extension of stay|uscis|"
+    # Form numbers (I-485, N-400, ...) — narrow, unambiguous pattern, low
+    # collision risk since the "letter-dash-3 digits" shape is specific to
+    # USCIS forms.
+    r"[in]-\d{3}"
+)
+# Verb AND noun forms — a third review found only verbs were covered, so
+# "what are my chances of a green card approval" (no verb at all) slipped
+# through one word away from a phrase already pinned as caught. A fourth
+# review found that noun-form fix had itself only been applied to half of
+# this constant's own verb families ("approve"/"reject"/"deny"/"refuse"/
+# "accept"/"issue" got nouns; "succeed"/"fail"/"select"/"clear" didn't) —
+# the drift moved from between copies of this constant to within it.
+# "will my visa application be successful" is arguably the single most
+# common phrasing of this whole question and had no coverage at all.
+_IMMIGRATION_OUTCOME_VERBS = (
+    r"approve[ds]?|approving|approvals?|reject(?:ed|s|ing)?|rejections?|"
+    r"den(?:y|ies|ied|ying)|denials?|refuse[ds]?|refusing|refusals?|"
+    r"grant(?:ed|s|ing)?|accept(?:ed|s|ing)?|acceptances?|"
+    r"succeed(?:ed|s|ing)?|success(?:es|ful|fully)?|"
+    r"fail(?:ed|s|ing)?|failures?|go(?:es|ing)? through|"
+    r"went through|comes? through|coming through|came through|"
+    r"get(?:s|ting)?|got|receive[ds]?|receiving|obtain(?:ed|s|ing)?|"
+    r"issue[ds]?|issuing|issuance|clear(?:ed|s|ing)?|clearances?|"
+    r"select(?:ed|s|ing)?|selections?|revoke[ds]?|revoking|revocations?|"
+    r"cancel(?:led|ed|s|ling|ing)?|cancellations?|turn(?:ed|s|ing)? down|"
+    r"wins?|won|lose[s]?|lost|"
+    # A fifth review found "pass" ("will I pass my citizenship interview")
+    # and "go well" ("will my visa interview go well") — both common,
+    # natural phrasings — entirely uncovered. "renew" is the standard verb
+    # for the status categories (DACA, TPS) added alongside it and was
+    # missing for the identical reason (found during this round's own
+    # verification probe, not the review itself — DACA/TPS are commonly
+    # asked about as renewals, not one-time approvals).
+    r"pass(?:ed|es|ing)?|go(?:es|ing)? well|renew(?:ed|s|ing|als?)?"
+)
+# Future-framing words, shared the same way — a third review found this
+# scaffolding was still copy-pasted per pattern (once per output-net arm)
+# even after the vocabulary itself was de-duplicated, and had drifted the
+# identical way: "are going to" (the plural of an already-listed phrase)
+# and an adverb gap were present in one copy and missing from another.
+_FUTURE_FRAMING = (
+    r"will|shall|is going to|are going to|is certain to|are certain to|"
+    r"is guaranteed to|are guaranteed to|is bound to|are bound to|"
+    # A fifth review found the output net required an explicit
+    # will/shall/certain-to framing word, but a model doesn't have to
+    # phrase a prediction that way — hedged/probabilistic certainty
+    # language ("has a high chance of approval", "is highly likely to be
+    # approved") is exactly how an LLM plausibly phrases the same verdict,
+    # and this is the *last* layer; nothing catches it after. Shared here
+    # (not duplicated per output arm) for the same reason every other
+    # scaffolding constant in this file is shared.
+    r"has a high chance of|has a good chance of|has an excellent chance of|"
+    r"is highly likely to be|is very likely to be|is likely to be"
+)
+_ADVERB_GAP = r".{0,16}"
 
 # Subjects the app must never issue a verdict on. Kept as word-stems so
 # inflections ("survive"/"survival") are covered without listing each form.
@@ -81,7 +204,32 @@ _REFER_OUT_SUBJECTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         r"\bjudge\b", r"\bjury\b", r"\bverdict\b", r"\bprison\b",
         r"\bjail\b", r"\bconvict", r"\bacquit", r"\bguilty\b",
         r"\bcase\b.{0,20}\b(?:win|lose|outcome)\b", r"\bbail\b",
-        r"\bcustody\b", r"\bdivorce settlement\b", r"\bvisa\b.{0,16}\b(?:approved|rejected)\b",
+        r"\bcustody\b", r"\bdivorce settlement\b",
+        # 2026-08-09 (foreign domain review, two rounds): the original
+        # "visa...approved/rejected" entry only covered one exact phrasing.
+        # This PR is what turns that gap from a safe domain_not_ready
+        # refusal into a live agent answer, since the foreign domain
+        # routes exactly this vocabulary. Both directions, using the
+        # shared vocabulary above so the two arms can't drift again.
+        r"\b(?:" + _IMMIGRATION_SUBJECTS + r")s?\b.{0,24}\b(?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b",
+        # Negative lookahead excludes "get my visa photos taken"/"get my
+        # green card application started" — "get" immediately followed by
+        # the subject reads as receiving it as a final outcome ("will I
+        # get my green card") in general, but not when the subject is
+        # itself modifying a process/document noun that follows it. A
+        # third review found this the one case narrowing to a tight gap
+        # or an exclusion list can't fully solve (English is genuinely
+        # ambiguous here even for a human reader without more context) —
+        # this closes the two demonstrated instances; broader "get + visa
+        # + [process noun]" phrasing beyond these is an accepted,
+        # documented residual limitation of a lexical approach, not a bug
+        # to keep chasing.
+        r"\b(?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b.{0,24}\b(?:" + _IMMIGRATION_SUBJECTS + r")s?\b"
+        r"(?!\s+(?:photos?|pictures?|application (?:started|going|in progress)|paperwork|documents?))",
+        # Deportation is asked about the outcome by construction ("will I
+        # get deported"), so it's a bare subject like the others here,
+        # still gated by the shared seeks_verdict frame check below.
+        r"\bdeport(?:ed|ations?)?\b",
     )),
     ("money", (
         # Directive-seeking only. "Is this month good to buy property" is a
@@ -155,6 +303,57 @@ _PROHIBITED_OUTPUT = (
     (r"\byou will (?:win|lose) (?:the|your|this) (?:case|lawsuit|appeal)\b", "legal"),
     (r"\b(?:court|judge) will rule in your favor\b", "legal"),
     (r"\b(?:lawsuit|case|appeal) is destined to fail\b", "legal"),
+    # 2026-08-09 (foreign domain review, three rounds): output-side mirror
+    # of the immigration input-gate above. Rounds 1-2 progressively fixed
+    # the vocabulary; round 3 found the *scaffolding* around it — the
+    # future-framing words and the adverb gap — was still copy-pasted per
+    # arm and had drifted the identical way the vocabulary once did: arm 2
+    # (the "you will VERB SUBJECT" active-voice form) had no framing
+    # alternation or adverb gap at all, so "you will definitely get your
+    # green card" and "you are going to get your green card" both slipped
+    # through even though "you will get" alone was caught. Both arms now
+    # share `_FUTURE_FRAMING`/`_ADVERB_GAP` with the input-side pattern
+    # above (well, would if the input gate needed future-framing — it
+    # doesn't, `seeks_verdict` already covers that separately; the sharing
+    # here is between this file's two output arms).
+    (r"\b(?:your |the )?(?:" + _IMMIGRATION_SUBJECTS + r")s?\b" + _ADVERB_GAP +
+     r"\b(?:" + _FUTURE_FRAMING + r")\b" + _ADVERB_GAP +
+     r"\b(?:be )?(?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b", "legal"),
+    (r"\byou (?:" + _FUTURE_FRAMING + r")\b" + _ADVERB_GAP +
+     r"\b(?:be )?(?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b.{0,24}"
+     r"\b(?:your |the )?(?:" + _IMMIGRATION_SUBJECTS + r")s?\b", "legal"),
+    (r"\byou (?:" + _FUTURE_FRAMING + r")\b" + _ADVERB_GAP + r"\b(?:be )?deport(?:ed)?\b", "legal"),
+    (r"\byou (?:will|are going to) face deportation\b", "legal"),
+    (r"\bdeportation is (?:certain|guaranteed|inevitable|going to happen)\b", "legal"),
+    # A different sentence shape from the two arms above: the outcome is a
+    # NOUN fused into the subject phrase itself ("your green card approval
+    # is guaranteed") rather than a verb following the subject, so there's
+    # no separate outcome word after "is guaranteed" for the first arm's
+    # pattern to find.
+    # The outcome word here is optional, not required — a fourth review
+    # found "your green card approval is guaranteed" was caught but "your
+    # green card is guaranteed" (no outcome noun at all, the certainty
+    # word alone carries the whole claim) was not, an asymmetry visible in
+    # the deportation mirror right above it having exactly this shape
+    # already ("deportation is certain", no separate outcome word needed).
+    # A fifth review found "highly likely"/"near certain" are the exact
+    # same claim as "certain"/"guaranteed" here, just hedged in wording —
+    # "your visa approval is highly likely" carries the same false
+    # precision as "your visa approval is guaranteed".
+    (r"\b(?:your |the )?(?:" + _IMMIGRATION_SUBJECTS + r")s?(?:\s+(?:" + _IMMIGRATION_OUTCOME_VERBS + r"))?\b"
+     r".{0,16}\bis (?:certain|guaranteed|inevitable|a certainty|"
+     r"highly likely|very likely|extremely likely|near certain|almost certain)\b", "legal"),
+    # A fifth review found "odds are excellent" — a different certainty
+    # construction the two arms above don't cover, since the certainty
+    # adjective follows "odds are"/"odds of", not "is".
+    (r"\b(?:your |the )?(?:" + _IMMIGRATION_SUBJECTS + r")s?(?:\s+(?:" + _IMMIGRATION_OUTCOME_VERBS + r"))?\b"
+     r".{0,16}\bodds (?:are|of)\b.{0,16}\b(?:excellent|good|high|strong|favou?rable|in your favou?r)\b", "legal"),
+    # A fifth review found a quantified-probability sentence — "the
+    # probability of your visa being approved is 90%" — entirely
+    # uncaught, since none of the arms above expect the subject and
+    # outcome to be introduced by a leading "probability of" clause.
+    (r"\bprobability of\b.{0,40}\b(?:" + _IMMIGRATION_SUBJECTS + r")s?\b.{0,40}"
+     r"\b(?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b.{0,30}\b\d{1,3}\s*%", "legal"),
     (r"\byou (?:will|should|ought to) (?:buy|sell|invest in|purchase)\b.{0,24}\b(?:stock|share|crypto|mutual funds?)\b", "money"),
     (r"\b(?:purchase|buy|sell|invest in)\b.{0,20}\b(?:stocks?|shares?|crypto|holdings|mutual funds?)\b.{0,25}\b(?:now|immediately|today)\b", "money"),
 )
