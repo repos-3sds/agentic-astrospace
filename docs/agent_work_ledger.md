@@ -29,33 +29,19 @@ criteria to her own brief). Cleared to begin per her kickoff recommendation.
 
 | Agent | Task | Branch | Status | Touching | Last updated |
 |---|---|---|---|---|---|
-| Claude | Ask backend Item 1: SSE `fatal_error` contract — **PR #3 open** | `ask-sse-fatal-error` | Backend commit done (`93923ad`); PR now also contains Codex's two commits, see warning below | `astrospace/api/ask_stream_routes.py`, `tests/test_domain_agent.py` | 2026-08-08 |
-| Codex | Mobile Ask UI renderer + cross-agent backlog docs + Ask thread UX acceptance criteria | `ask-sse-fatal-error` | Two commits pushed (`d4aa5b0`, `a4e1ba8`) — landed on Claude's branch, see warning below | `ui/src/app/features/mobile/ask/*`, `ui/src/app/core/models.ts`, `docs/mobile_ask_thread_ux_acceptance_2026-08-08.md` | 2026-08-08 |
-| Gemini | Golden-chart VERIFY-flag legwork and Wealth domain spec PR | unverified — ledger says `main`, but this working directory has been on `ask-sse-fatal-error` since Claude branched; Gemini should confirm | In progress | `astrospace/core/vedic/*` (docs/tests only), `astrospace/agents/registry.py` | 2026-08-08 |
-| Qwen | Adversarial paraphrase audit on `safety.py`'s regex gates | — | Cleared to start | `tests/test_verifier.py` (additive only) | 2026-08-08 |
+| Claude | Ask backend Item 1: SSE `fatal_error` contract — **DONE, merged** (PR #3, reviewed by Codex, no blocking findings) | `main` | Done. Next: verifier strengthening (Item 2 of the hardening sequence) | `astrospace/api/ask_stream_routes.py`, `tests/test_domain_agent.py` | 2026-08-08 |
+| Codex | Mobile Ask UI renderer + cross-agent backlog docs + Ask thread UX acceptance criteria — PR #4 open, content confirmed intact, diff now clean against `main` | `codex-ask-ui` | Awaiting Codex's own confirmation the frontend actually consumes the now-live `fatal_error` event before merging #4 | `ui/src/app/features/mobile/ask/*`, `ui/src/app/core/models.ts`, `docs/mobile_ask_thread_ux_acceptance_2026-08-08.md` | 2026-08-08 |
+| Gemini | Golden-chart VERIFY-flag legwork done (2 docs on `main`); Wealth domain — **DONE, merged** (PR #6, reviewed and 960-test suite independently re-verified by Claude). One process note from review: bundled a `taxonomy.json` keyword edit into the PR instead of flagging it separately per the brief — content was correct and load-bearing for the tests, so it went in, but worth reading the PR #6 comment before the next domain (next up per Phase 6: Children or Health) | `main` | Done. Wealth is now a live, answerable domain — `AGENT_REGISTRY` has career/marriage/wealth | `astrospace/agents/registry.py`, `astrospace/context/taxonomy.json`, tests | 2026-08-08 |
+| Qwen | Adversarial paraphrase audit on `safety.py`'s regex gates — **DONE**, 52 findings documented | `qwen-paraphrase-audit` (own environment, not this shared directory) | Tests-only, awaiting a PR; the actual regex fix for the 52 confirmed gaps is separate follow-up work, owner review required | `tests/test_verifier.py` (additive only) | 2026-08-08 |
 
 ## Open handoffs / things the next agent in an area should know
 
-- **⚠️ NEW, URGENT (2026-08-08): all four agents share one working
-  directory, and `git checkout -b` affects everyone in it, not just whoever
-  ran it.** Discovered live today: Claude ran `git checkout -b
-  ask-sse-fatal-error` to start Item 1. That switched the branch for the
-  *entire shared working directory* — Codex and Gemini's concurrent,
-  uncommitted work landed on that branch too, not `main`, regardless of
-  what their own ledger rows said. Codex has since pushed two real commits
-  (`d4aa5b0`, `a4e1ba8`) onto it; they're now bundled into Claude's PR #3
-  along with the unrelated backend fix. Nobody is force-pushing or
-  resetting to untangle this without explicit go-ahead from the user and
-  whoever else's commits are involved — that's a destructive operation on
-  another agent's already-pushed work, not a unilateral call. **Until this
-  is resolved: before every commit, run `git branch --show-current` and
-  actually check it against what you expect — don't trust the ledger's
-  "Branch" column, it can be stale the moment someone else switches
-  branches.** AGENTS.md doesn't have a rule for this yet; it needs one
-  (something like: coordinate before switching branches, or avoid it
-  entirely in favor of committing straight from whatever's checked out) —
-  flagging here first since fixing it requires everyone's docs update, not
-  changing the rules unilaterally mid-collision.
+- **`AGENTS.md` Rule 3b (branch switches in the shared working directory)
+  is confirmed and live** — merged via PR #5, 2026-08-08. Full incident
+  history that produced it isn't repeated here anymore (it's fully
+  resolved, and it's in `git log`/the merged PRs if anyone needs it) — the
+  rule itself is what matters going forward: use `git worktree add <path>
+  <branch>` instead of `git checkout`/`git checkout -b` in this directory.
 - **`astrospace/admin/client.py`** (Codex-owned per AGENTS.md): had a live
   uncommitted-edit collision with Claude's session on 2026-08-08 — already
   resolved (Codex committed the fix, `986963a`), but worth knowing this file

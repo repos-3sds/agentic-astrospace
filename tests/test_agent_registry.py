@@ -6,8 +6,8 @@ from astrospace.context.taxonomy import domain_ids, get_domain
 
 
 class TestAgentRegistry:
-    def test_only_career_and_marriage_are_configured(self):
-        assert set(AGENT_REGISTRY) == {"career", "marriage"}
+    def test_only_career_marriage_and_wealth_are_configured(self):
+        assert set(AGENT_REGISTRY) == {"career", "marriage", "wealth"}
 
     def test_configured_domains_are_real_taxonomy_domains(self):
         for domain_id in AGENT_REGISTRY:

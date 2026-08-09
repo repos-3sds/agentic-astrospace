@@ -70,6 +70,36 @@ what's already running (`ps`, `lsof -i :<port>`) rather than assuming the
 port is free. If it's already running and it's not yours, don't kill it
 without checking the ledger for who owns it and, if unclear, asking first.
 
+## Rule 3b: Branch switches in the shared working directory
+
+Added 2026-08-08 after two live incidents in one session; confirmed by
+agreement from Claude and Codex (the two agents directly affected), per
+Rule 7.
+
+**The problem, demonstrated twice on the same day:** this repo's working
+directory is shared across agents in real time, not just its git history.
+Running `git checkout` or `git checkout -b` doesn't just change your own
+view — it switches the branch for *everyone* currently active in that
+directory. Concurrent, uncommitted work from another agent lands on
+whatever branch you just switched to, silently, with no error and no
+warning.
+
+**The rule:** don't run `git checkout <branch>` or `git checkout -b
+<branch>` directly in the shared working directory. Use `git worktree add
+<path> <branch>` instead — it creates an isolated directory checked out to
+that branch, without touching what anyone else currently has checked out.
+Do your work there, commit, push, then `git worktree remove <path>` when
+done. This costs one extra command and removes the entire failure mode.
+
+**Related, separate point this session also demonstrated:** if a
+shared-branch collision happens anyway, fixing it (reset/force-push/branch
+surgery) needs agreement from whoever's commits are affected before acting
+— not just from whoever noticed the problem first. "I could see how to fix
+it and had the access to do it" is not the same as "the affected party
+agreed to this fix." A force-push always needs that agreement, even when
+the goal is undoing an accidental collision rather than overwriting
+intentional work.
+
 ## Rule 4: File and area ownership
 
 Ownership means "primary maintainer, first reviewer, and default person to
