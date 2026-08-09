@@ -125,6 +125,36 @@ class TestAssembler:
         gochara = bundle["gochara"]
         assert set(gochara["planets"]) <= {"Jupiter", "Saturn", "Rahu"}
 
+    def test_gochara_active_rules_carry_real_transit_windows(self, chart):
+        """Timing questions ('when', 'is this a good time') need an actual date
+        range to narrate, not just a planet/rule name — the bundle previously
+        carried only a snapshot (sign, house-from-moon/lagna, retrograde,
+        boolean active). This wires `gocharam/timeline.py`'s existing
+        ingress/exit boundary walk (already used by `chart.gocharam()` and
+        `transits.py`) into the CE bundle rather than reimplementing it.
+        `foreign`'s gochara_planets (Rahu, Ketu, Saturn) reliably have at
+        least one active rule for this fixture chart, so this is a real
+        assertion, not a vacuous "if any" check."""
+        as_of = datetime(2026, 8, 9, tzinfo=timezone.utc)
+        bundle = assemble_domain(chart, "foreign", include_gochara=True, as_of=as_of)
+        active_rules = bundle["gochara"]["active_rules"]
+        assert active_rules, "fixture chart should have an active foreign-domain gochara rule"
+        saw_a_real_date = False
+        for rule in active_rules:
+            assert "start_date" in rule and "end_date" in rule
+            for key in ("start_date", "end_date"):
+                value = rule[key]
+                if value is None:
+                    continue
+                # Must be a genuine, parseable ISO calendar date - not a
+                # placeholder string or a boolean/None stand-in.
+                parsed = datetime.fromisoformat(value)
+                assert 1900 <= parsed.year <= 2100
+                saw_a_real_date = True
+            if rule["start_date"] and rule["end_date"]:
+                assert rule["start_date"] <= rule["end_date"]
+        assert saw_a_real_date, "expected at least one real start/end date among active foreign-domain rules"
+
     def test_full_bundle_multi_domain_and_serializable(self, chart):
         bundle = assemble(chart, ["marriage", "foreign"],
                           question="Will I settle abroad after marriage?")

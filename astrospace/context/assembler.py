@@ -11,9 +11,14 @@ and the KB references that authorize the reading.
 Everything returned is a plain dict (JSON-serializable) so the bundle drops
 straight into agent state (LangGraph checkpointing) or an API payload.
 
-Cost profile: uses only cheap chart sections. Gochara uses a single ephemeris
-snapshot (no 365-day scans); pass include_gochara=False to skip it entirely,
-or supply precomputed transit_positions to reuse a snapshot across domains.
+Cost profile: uses only cheap chart sections. Gochara's snapshot (sign,
+house-from-moon/lagna, retrograde, active rules) is a single ephemeris call;
+finding the active window's real start/end date additionally walks the
+boundary (bounded, `gocharam/timeline.py`'s existing logic, reused rather
+than duplicated) but only for rules already active for that domain's own
+planets, not a full 365-day scan. Pass include_gochara=False to skip gochara
+entirely, or supply precomputed transit_positions to reuse a snapshot across
+domains.
 """
 from __future__ import annotations
 
@@ -23,7 +28,7 @@ from typing import Any
 import swisseph as swe
 
 from ..core.vedic.constants import SIGN_LORDS
-from ..core.vedic.gocharam import gochara_rules
+from ..core.vedic.gocharam import gochara_rules, gocharam_rule_timeline
 from ..core.vedic.gocharam.strength import (
     apply_ashtakavarga_context,
     ashtakavarga_transit_support,
@@ -196,6 +201,37 @@ def _dasha_relevance(dashas: dict, spec: DomainSpec, domain_planets: set[str],
     }
 
 
+def _gochara_windows_for_domain(spec: DomainSpec, chart, gochara: dict,
+                                as_of: datetime) -> dict[str, dict]:
+    """Real ingress/exit dates for this domain's currently-active gochara
+    rules, keyed by rule_id.
+
+    Reuses `gocharam/timeline.py`'s existing `gocharam_rule_timeline` — the
+    same date-range computation already wired into `chart.gocharam()` and
+    `transits.py` — rather than reimplementing the transit-boundary walk
+    here. Scoped to only the rules already active for this domain's planets
+    (`gochara["active_rules"]` pre-filtered below) so the boundary search
+    only runs for planets this domain actually cares about, and called with
+    `scan_days=1` since the CE bundle only needs the active window's own
+    start/end, not the full previous/next-365-day event scan `chart.gocharam()`
+    produces for the dedicated transits screen."""
+    domain_active_rules = [
+        rule for rule in gochara["active_rules"]
+        if rule["planet"] in spec.gochara_planets
+    ]
+    if not domain_active_rules:
+        return {}
+    lagna_sign = sign_index(chart.lagna_lon)
+    moon_sign = sign_index(chart.positions["Moon"]["lon"])
+    timeline = gocharam_rule_timeline(
+        as_of, chart.positions, lagna_sign, moon_sign,
+        chart.ayanamsha, chart.node_type,
+        {**gochara, "active_rules": domain_active_rules},
+        scan_days=1,
+    )
+    return {window["rule_id"]: window for window in timeline["active_windows"]}
+
+
 def _gochara_for_domain(spec: DomainSpec, chart, transit_positions: dict | None,
                         as_of: datetime) -> dict:
     if transit_positions is None:
@@ -219,6 +255,7 @@ def _gochara_for_domain(spec: DomainSpec, chart, transit_positions: dict | None,
         for planet, row in gochara["planets"].items()
         if planet in spec.gochara_planets
     }
+    windows_by_rule_id = _gochara_windows_for_domain(spec, chart, gochara, as_of)
     rules = [
         {
             "name": rule["name"],
@@ -228,6 +265,8 @@ def _gochara_for_domain(spec: DomainSpec, chart, transit_positions: dict | None,
             "severity": rule.get("effective_severity", rule.get("severity")),
             "trigger": rule["trigger"],
             "source_status": rule["source_status"],
+            "start_date": windows_by_rule_id.get(rule["id"], {}).get("start_date"),
+            "end_date": windows_by_rule_id.get(rule["id"], {}).get("end_date"),
         }
         for rule in gochara["rules"]
         if rule["planet"] in spec.gochara_planets and rule["active"]
