@@ -546,6 +546,17 @@ export class AskAnswerComponent {
             status: 'refer_out',
             streaming: false,
           });
+        } else if (this.isFatalErrorEvent(event)) {
+          finalThreadId = event.thread_id ?? finalThreadId;
+          this.streamStatus.set(null);
+          this.updateAssistantMessage(assistantId, {
+            content: event.message || 'Siddha could not complete this answer cleanly. Please try again in a moment.',
+            domain: event.domain ?? null,
+            intent: event.intent ?? null,
+            status: 'fatal_error',
+            streaming: false,
+          });
+          this.streaming.set(false);
         } else if (this.isStructuredSuccessEvent(event)) {
           finalThreadId = event.thread_id ?? finalThreadId;
           this.streamDomain.set(event.domain);
@@ -693,6 +704,10 @@ export class AskAnswerComponent {
     return 'type' in event && event.type === 'refer_out';
   }
 
+  private isFatalErrorEvent(event: AskStreamEvent): event is Extract<AskStreamEvent, { type: 'fatal_error' }> {
+    return 'type' in event && event.type === 'fatal_error';
+  }
+
   private isStructuredSuccessEvent(
     event: AskStreamEvent,
   ): event is Extract<AskStreamEvent, { type: 'done'; status: 'answered' }> {
@@ -730,6 +745,7 @@ export class AskAnswerComponent {
         return 'SAFETY';
       case 'verification_failed':
       case 'generation_failed':
+      case 'fatal_error':
         return 'GROUNDING';
       case 'answered':
         return 'ANSWER';
@@ -745,6 +761,7 @@ export class AskAnswerComponent {
       case 'refer_out':
       case 'verification_failed':
       case 'generation_failed':
+      case 'fatal_error':
         return 'bad';
       default:
         return 'warn';

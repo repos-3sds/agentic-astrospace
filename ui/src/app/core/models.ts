@@ -1392,6 +1392,15 @@ export type AskStructuredEnvelope =
   | AskStructuredSuccessEnvelope
   | AskStructuredFailureEnvelope;
 
+export interface AskFatalErrorEnvelope {
+  type: 'fatal_error';
+  stage?: string;
+  message: string;
+  domain?: string | null;
+  intent?: AskIntent | string | null;
+  thread_id?: string | null;
+}
+
 /**
  * A frame from `POST /ask/{kundliId}/stream` (astrospace/api/ask_stream_routes.py).
  * `reset: true` means the output-side safety gate tripped mid-stream — the
@@ -1410,6 +1419,7 @@ export type AskStreamEvent =
       message?: string;
     }
   | { type: 'refer_out'; kind: 'health' | 'legal' | 'money' | 'death'; answer: string }
+  | AskFatalErrorEnvelope
   | AskStructuredEnvelope
   | { delta: string; reset?: boolean }
   | {
