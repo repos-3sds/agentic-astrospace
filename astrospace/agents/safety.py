@@ -143,14 +143,6 @@ _PROHIBITED_OUTPUT = (
     (r"\byour (?:time of )?(?:death|dying|lifespan|life expectancy|longevity)\b", "death"),
     (r"\byou (?:will|are likely to) live (?:until|to|for)\b", "death"),
     (r"\byou have\b.{0,24}\b(?:years|months) (?:left|to live)\b", "death"),
-    # Anchored to personal-possession framing ("you have"/"you've got"),
-    # deliberately not a bare "N years remaining" — that also matches
-    # ordinary, safe dasha/transit-period descriptions ("this Saturn dasha
-    # has 3 years remaining"), which this app produces constantly and must
-    # never flag. Caught as a real false positive during review, not
-    # theoretical — verified against realistic period-description phrasing
-    # before this pattern shipped.
-    (r"\byou have\b.{0,20}\b\d+\s*(?:years?|months?)\s*(?:remaining|left|to go)\b", "death"),
     (r"\b\d+\s*months? to go on your journey\b", "death"),
     (r"\breach age \d+\b", "death"),
     (r"\bheaded toward (?:your )?(?:final|last) breath\b", "death"),
@@ -168,9 +160,41 @@ _PROHIBITED_OUTPUT = (
 )
 
 
+# "N years/months remaining" needs its own function, not a line in
+# _PROHIBITED_OUTPUT: whether it's a death verdict or an ordinary,
+# constantly-produced dasha/transit-period description ("you have 2 years
+# remaining in this Saturn dasha") depends on whether an astrological
+# period noun appears *anywhere* nearby — before or after the number. A
+# single regex can't express that in Python's `re` module (no
+# variable-length lookbehind), and anchoring only to "you have" isn't
+# enough either — that phrasing is exactly how this app describes a
+# dasha's remaining duration too. Found as a real false positive twice:
+# once during initial review ("this Saturn dasha has 3 years remaining"),
+# once again in review by another agent ("you have 2 years remaining in
+# this Saturn dasha") — the second case is why this moved out of a plain
+# regex line into a windowed context check.
+_PERIOD_NOUNS = re.compile(
+    r"\b(?:dasha|antardasha|pratyantardasha|sookshma|period|transit|"
+    r"cycle|phase|window)\b"
+)
+_YEARS_MONTHS_REMAINING = re.compile(
+    r"\byou have\b.{0,20}\b\d+\s*(?:years?|months?)\s*(?:remaining|left|to go)\b"
+)
+
+
+def _personal_years_remaining(normalized: str) -> bool:
+    for match in _YEARS_MONTHS_REMAINING.finditer(normalized):
+        window = normalized[max(0, match.start() - 40):match.end() + 40]
+        if not _PERIOD_NOUNS.search(window):
+            return True
+    return False
+
+
 def prohibited_verdict(answer: str) -> str | None:
     """Which boundary an answer crosses, if any. None means it is clean."""
     normalized = _normalize(answer)
+    if _personal_years_remaining(normalized):
+        return "death"
     for pattern, kind in _PROHIBITED_OUTPUT:
         if re.search(pattern, normalized):
             return kind
@@ -205,8 +229,17 @@ _DOSHA_OVERCLAIM_OUTPUT = (
     r"\bguarantees marriage problems\b", r"\byour relationship will crumble\b",
     r"\b(?:will not|never) ever encounter a\b.{0,15}\b(?:spouse|partner|husband|wife)\b",
     r"\bno (?:husband|wife|spouse|partner|life partner)\b.{0,20}\bwill (?:ever )?come into your life\b",
-    r"\bis something you will never have\b",
-    r"\bno escaping this fate\b", r"\bthis (?:outcome|fate) is unavoidable\b",
+    # Anchored to the marriage/spouse noun as subject — found by review not
+    # to be, and a bare "X is something you will never have" also matches
+    # ordinary hedges ("certainty is something you will never have from a
+    # chart alone"), which is caution language, not marriage fatalism.
+    r"\b(?:spouse|partner|husband|wife|life partner|marriage)\b.{0,20}\bis something you will never have\b",
+    r"\bno escaping this fate\b",
+    # Negative lookahead excludes a trailing conditional ("...unavoidable
+    # only if you ignore practical choices") — found by review to also
+    # match that qualified, non-fatalistic phrasing, which reads as advice
+    # to act, not a fixed outcome.
+    r"\bthis (?:outcome|fate) is unavoidable\b(?!\s*,?\s*(?:only\s+)?if\b|\s*unless\b)",
     r"\bcannot dodge what is written\b",
 )
 

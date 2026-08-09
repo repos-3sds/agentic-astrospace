@@ -166,6 +166,18 @@ class TestVerifier:
         "You have a supportive window for financial decisions this quarter.",
         "Begin exploring new opportunities as Jupiter transits your 10th house.",
         "The union of Venus and Jupiter here favors harmonious partnerships.",
+        # Found in review of this same fix (PR #10), by a second agent —
+        # "you have" wasn't a strong enough anchor on its own: this app
+        # routinely describes a dasha's remaining duration exactly this way.
+        "You have 2 years remaining in this Saturn dasha, which supports steady growth.",
+        "You have 8 months remaining in the Mercury antardasha, a good window for negotiations.",
+        "You have 3 months to go in this transit window before things ease up.",
+        # Also found in the same review: "is something you will never have"
+        # and "this outcome is unavoidable" weren't anchored to a marriage
+        # subject or checked for a trailing conditional, so ordinary hedges
+        # and qualified caution language tripped them too.
+        "Certainty is something you will never have from a chart alone.",
+        "This outcome is unavoidable only if practical choices are ignored.",
     ])
     def test_ordinary_period_and_partnership_language_is_not_flagged(self, marriage_bundle, phrase):
         bad = _reading(interpretation=phrase)
