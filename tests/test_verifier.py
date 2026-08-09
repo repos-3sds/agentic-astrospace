@@ -466,6 +466,111 @@ class TestWealthChildrenFatalismAudit:
         assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
 
 
+class TestNegationScopeRound4:
+    """A FOURTH independent review found the round-3 fix (a sentence-scoped
+    negation window, plus a forward lookahead for "guarantees nothing") had
+    its own real bugs — and because `_negation_precedes()` runs across the
+    *entire* `_DOSHA_OVERCLAIM_OUTPUT` list, not just the new wealth/
+    children patterns, those bugs reached the marriage patterns too: a net
+    regression against `main`, which had passed three review rounds clean.
+    Fixed by narrowing scope from "same sentence" to "same clause" (a comma
+    or dash only counts as a boundary when followed by a coordinating
+    conjunction — a bare comma still allows the appositive-negation case
+    below to work), dropping the forward lookahead entirely (proven
+    unnecessary — nothing in this file's real patterns needs it), and
+    special-casing colon so a "does not mean:" hedge doesn't get its own
+    negation cut off by the colon it introduces."""
+
+    @pytest.mark.parametrize("phrase", [
+        # The forward "nothing/no one/nobody" lookahead round 3 added
+        # ignored sentence/clause boundaries entirely, so an intensifier
+        # AFTER a real violation could clear it. Proven unnecessary by
+        # testing: removing the forward check broke zero existing tests.
+        "This dosha guarantees poverty — nothing can change it.",
+        "Poverty is guaranteed. Nothing you do will alter it.",
+        "You will never have children; no one can change that.",
+        "You are destined for poverty and nobody can fix it.",
+    ])
+    def test_trailing_intensifier_does_not_clear_a_real_violation(self, wealth_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations, f"expected a violation for: {phrase!r}"
+
+    @pytest.mark.parametrize("phrase", [
+        # Sentence-wide scoping let an unrelated negation anywhere in the
+        # SAME sentence (across a comma, dash, or "but") suppress a real,
+        # semantically unrelated violation later in it — narrower than
+        # round 2's cross-sentence bug, but still a real hole.
+        "Remedies cannot help, and this dosha guarantees poverty.",
+        "This dosha does not affect your career, but it guarantees poverty.",
+        "Your chart does not lie — this dosha guarantees poverty.",
+        "No chart is simple, and yours guarantees poverty.",
+    ])
+    def test_unrelated_negation_in_a_different_clause_does_not_suppress(self, wealth_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations, f"expected a violation for: {phrase!r}"
+
+    @pytest.mark.parametrize("phrase", [
+        # The sharpest finding: this exact bug class, reached through the
+        # shared negation check, regressed the untouched marriage patterns
+        # — sentences `main` correctly flags today. This is the guard the
+        # review explicitly asked for: a main-vs-branch style check kept as
+        # a permanent test, not just a one-time comparison.
+        "Your marriage will fail — nothing can save it.",
+        "This dosha will destroy your marriage; nothing else matters.",
+        "Divorce is the inevitable outcome, nothing can stop it.",
+        "Remedies cannot help, so your marriage will fail.",
+        "Your wedding prospects are ruined; no one can change that.",
+    ])
+    def test_marriage_patterns_not_regressed_by_shared_negation_check(self, marriage_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, marriage_bundle, "marriage")
+        assert violations, f"expected a violation for: {phrase!r}"
+
+    @pytest.mark.parametrize("phrase", [
+        # "nothing"/"no one"/"nobody" as the grammatical SUBJECT preceding
+        # the verb is the normal, correct way to state the flag-not-verdict
+        # principle — this must stay safe even though the same words were
+        # (correctly) removed from the forward lookahead above.
+        "Nothing in your chart guarantees poverty.",
+        "Nothing about this dosha guarantees childlessness.",
+        "No one can say you will never have children.",
+        "No astrologer can claim this dosha guarantees poverty.",
+        "Nobody should tell you that you will never have children.",
+        "It is untrue that this dosha guarantees poverty.",
+    ])
+    def test_nothing_as_preceding_subject_is_not_flagged(self, wealth_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
+
+    @pytest.mark.parametrize("phrase", [
+        # Colon is a hard clause boundary in general ("does not lie: X" —
+        # X is a new, unnegated claim) EXCEPT when the colon directly
+        # introduces what's being negated ("does not mean: X" / "does not
+        # mean the following: X" — X is part of the same negated
+        # statement). Getting this wrong either way is a real bug: too
+        # eager and a legitimate hedge gets flagged; too lax and "does not
+        # lie: guarantees poverty" stops being caught (covered by
+        # test_unrelated_negation_in_a_different_clause_does_not_suppress
+        # above).
+        "Here is what this dosha does not mean: you will never have children.",
+        "This dosha does not mean the following: you will never have children.",
+    ])
+    def test_colon_introducing_a_hedge_does_not_break_its_own_negation(self, wealth_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
+
+    def test_appositive_comma_still_does_not_break_negation(self, wealth_bundle):
+        """The case that ruled out a bare comma as a clause boundary in
+        the first place — still must work after the clause-vs-sentence
+        narrowing above."""
+        good = _reading(interpretation="It does not, in any reading, guarantee poverty.")
+        assert verify(good, wealth_bundle, "wealth") == []
+
+
 class TestFullFieldCoverage:
     """Found by a second independent review of PR #12: `text_to_check` had
     only ever covered `interpretation`/`summary_and_assurance` (plus,

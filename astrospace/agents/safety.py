@@ -311,17 +311,30 @@ _DOSHA_OVERCLAIM_OUTPUT = (
 
 # Shared by every pattern above (not per-pattern lookbehinds — those don't
 # scale and were the direct cause of round 2's bugs): a match is ignored if
-# a negation cue appears earlier in the *same sentence* (the sentence
-# boundary — `.`/`;`/`:` — is what scopes this; an unrelated negation in a
-# previous sentence must not suppress a real violation two sentences later,
-# which was round 2's regression). Backward-only because negation in
-# English overwhelmingly precedes what it negates ("does not guarantee X",
-# "is never guaranteed", "no chart guarantees X" — the negating word is
-# always at or before the verb); the one common exception, an immediate
-# post-verb object negation like "guarantees nothing", gets its own short
-# forward-only lookahead rather than a symmetric window, so an unrelated
-# LATER negation elsewhere in the sentence can't suppress an earlier real
-# violation the way round 2's ±60-char window did.
+# a negation cue appears earlier in the *same clause* — not the same
+# sentence, and this distinction is itself the fix for a bug a fourth
+# independent review found: scoping to the whole sentence let an unrelated
+# negation anywhere in it (across a comma, a dash, a "but") suppress a real,
+# semantically unrelated violation later in that sentence, and because this
+# check runs over the *entire* `_DOSHA_OVERCLAIM_OUTPUT` list, that widened
+# hole reached the marriage patterns too — a net regression against `main`,
+# not just a wealth/children issue. `_CLAUSE_BOUNDARY` below is deliberately
+# not a bare comma, though: "It does not, in any reading, guarantee
+# poverty." needs the negation to reach across two commas to the verb it
+# genuinely negates. The distinction that matters is whether a comma/dash
+# is followed by a coordinating conjunction (and/but/so/...) — that pattern
+# reliably means "new clause", where a bare comma inside a parenthetical
+# aside does not.
+#
+# Backward-only because negation in English overwhelmingly precedes what it
+# negates ("does not guarantee X", "is never guaranteed", "no chart
+# guarantees X"). The forward-only lookahead this review round's PR had for
+# "guarantees nothing" was removed entirely — the fourth review proved it
+# both unnecessary (no test needs it; the explicit patterns don't produce
+# that shape) and actively harmful (it doesn't respect sentence/clause
+# boundaries at all, so "This dosha guarantees poverty — nothing can change
+# it." was incorrectly cleared by an intensifier, not a negation, sitting
+# right after the real violation).
 _NEGATION_CUES = re.compile(
     r"\b(?:does not|do not|did not|will not|cannot|is not|are not|was not|"
     r"were not|is never|never guarantees?|never means?|"
@@ -339,24 +352,35 @@ _NEGATION_CUES = re.compile(
     # explicit patterns above), the opposite of a hedge; only "no remedy
     # guarantees X" is the reassuring form.
     r"no (?:chart|placement|dosha|yoga)\b|no remedy guarantees?|"
-    r"not mean|is a myth|myth that|misconception|"
+    r"not mean|is a myth|myth that|misconception|untrue|"
     r"wrongly claim|falsely claim|is false that|not true that|not forbid|"
     r"should (?:never|not) (?:ever )?(?:tell you|say|claim)|"
-    r"no (?:astrologer|one|reading|chart) should|"
+    r"no (?:astrologer|one|reading|chart) (?:should|can)|"
     r"ignore any reading that claims|reading that claims|"
+    r"nothing (?:in|about)|nobody|"
     r"by no means)\b"
 )
-_FORWARD_NEGATION_CUES = re.compile(r"\b(?:nothing|no one|nobody)\b")
-_SENTENCE_BOUNDARY = re.compile(r"[.;:]")
+# `.`/`;`/`:` are always hard boundaries. A comma or dash is *also* a
+# boundary when followed by a coordinating conjunction — "does not affect
+# your career, but it guarantees poverty" is two clauses; "does not, in any
+# reading, guarantee poverty" is one, the comma there introduces a
+# parenthetical aside around the verb it's still negating, not a new clause.
+# Colon is a boundary ("your chart does not lie: this dosha guarantees
+# poverty" — the negation must not reach across it to the new claim) except
+# when the colon itself directly introduces what's being negated ("does not
+# mean: X" / "does not mean the following: X" — there the colon is part of
+# the same negated statement, not a new one).
+_CLAUSE_BOUNDARY = re.compile(
+    r"[.;]|—|(?:,|--)\s*(?:and|but|yet|so|however|still|though)\b|"
+    r"(?<!mean)(?<!following):"
+)
 
 
-def _negation_precedes(normalized: str, start: int, end: int) -> bool:
-    sentence_start = 0
-    for boundary in _SENTENCE_BOUNDARY.finditer(normalized, 0, start):
-        sentence_start = boundary.end()
-    if _NEGATION_CUES.search(normalized[sentence_start:start]):
-        return True
-    return bool(_FORWARD_NEGATION_CUES.search(normalized[end:end + 20]))
+def _negation_precedes(normalized: str, start: int) -> bool:
+    clause_start = 0
+    for boundary in _CLAUSE_BOUNDARY.finditer(normalized, 0, start):
+        clause_start = boundary.end()
+    return bool(_NEGATION_CUES.search(normalized[clause_start:start]))
 
 
 def dosha_overclaim_kind(answer: str) -> str | None:
@@ -365,6 +389,6 @@ def dosha_overclaim_kind(answer: str) -> str | None:
     normalized = _normalize(answer)
     for pattern in _DOSHA_OVERCLAIM_OUTPUT:
         for match in re.finditer(pattern, normalized):
-            if not _negation_precedes(normalized, match.start(), match.end()):
+            if not _negation_precedes(normalized, match.start()):
                 return "dosha_overclaim"
     return None
