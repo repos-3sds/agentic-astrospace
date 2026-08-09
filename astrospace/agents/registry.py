@@ -72,10 +72,18 @@ Children-specific framing:
 - Timing questions (when conception or childbirth is likely) should be answered from the 
   dasha_relevance and gochara sections' actual lords/transits in the bundle, not general trends."""
 
+_HEALTH_ADDENDUM = """
+Health-specific framing:
+- The 1st (vitality) and 6th (disease/accidents) houses and lords, and the D6 (shashthamsa) and D30 (trimshamsha) charts are the primary evidence for health questions; the 8th, 12th, and 3rd houses, along with karakas (Sun, Moon, Saturn, Mars, Mercury) are supporting evidence.
+- NEVER diagnose illness, predict specific medical outcomes, predict lifespan/death, or recommend medical treatments.
+- Directive medical questions (e.g., "should I get surgery") and direct diagnoses are strictly blocked by safety.py's refer_out_kind() boundary. For questions that pass the gate (e.g., "when will my vitality improve"), frame your analysis around astrological support for recovery or periods of low energy rather than medical certainty. Note that questions may be phrased in the past/retrospective tense (e.g., "why did I get sick"); ensure your answers address astrological context rather than affirming medical diagnoses.
+- Timing questions (when a period of low vitality will pass) should be answered from the dasha_relevance and gochara sections' actual lords/transits in the bundle, not general trends."""
+
 
 AGENT_REGISTRY: dict[str, AgentConfig] = {
     "career": AgentConfig(domain_id="career", domain_addendum=_CAREER_ADDENDUM),
     "marriage": AgentConfig(domain_id="marriage", domain_addendum=_MARRIAGE_ADDENDUM),
     "wealth": AgentConfig(domain_id="wealth", domain_addendum=_WEALTH_ADDENDUM),
     "children": AgentConfig(domain_id="children", domain_addendum=_CHILDREN_ADDENDUM),
+    "health": AgentConfig(domain_id="health", domain_addendum=_HEALTH_ADDENDUM),
 }
