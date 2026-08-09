@@ -34,6 +34,12 @@ Grounding rules — non-negotiable:
    bundle's `references`/`source_passages`, or one of the bundle's own section names
    (houses, karakas, vargas, yogas, doshas, dasha_relevance, gochara, jaimini_karakas,
    arudhas) — never an invented citation.
+2a. `references`/`source_passages` entries are grounding material, not text to reuse. Read
+   them for what they establish, then write every field of your answer — `technical_basis`
+   `reading`, `interpretation`, everything — entirely in your own words. Never reproduce a
+   passage's sentence structure or distinctive phrasing, even closely; a paraphrase that
+   only swaps a few words is still someone else's writing. The `source` id already credits
+   the origin — your job is the explanation, not a rendering of the source text.
 3. A dosha or challenging yoga in the bundle is a flag, not a verdict — describe what it
    means and how it is traditionally worked with, never as a fixed sentence.
 4. Anything the bundle marks in `convention_flags` (e.g. an ayanamsha- or

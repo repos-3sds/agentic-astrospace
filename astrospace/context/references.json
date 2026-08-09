@@ -267,6 +267,42 @@
       "source": {"text_key": "bphs", "location": "Vipareeta Raja Yoga"},
       "tags": ["yoga:viparita_raja_yoga", "house:6"],
       "status": "convention_dependent"
+    },
+    {
+      "ref_id": "bphs_lagna_core_temperament",
+      "domains": ["personality"],
+      "subdomains": ["core_temperament", "self_perception"],
+      "statement": "The Lagna (ascendant) and its lord govern physical constitution and core temperament — how the self meets and engages with the world; the lord's strength and placement colour confidence, resilience, and self-expression.",
+      "source": {"text_key": "bphs", "location": "Lagna adhyaya (rising sign significations)"},
+      "tags": ["house:1"],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "uk_moon_emotional_nature",
+      "domains": ["personality"],
+      "subdomains": ["emotional_patterns", "self_awareness"],
+      "statement": "The Moon governs the mind and emotional responsiveness — the instinctive, feeling nature beneath the Lagna's outward temperament. Its sign, house, and aspects shape how emotions are processed and expressed.",
+      "source": {"text_key": "uttara_kalamrita", "location": "Chandra (Moon) significations"},
+      "tags": ["planet:Moon"],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_pancha_mahapurusha_strengths",
+      "domains": ["personality"],
+      "subdomains": ["strengths_and_talents", "core_temperament"],
+      "statement": "A Pancha Mahapurusha yoga forms when Mars, Mercury, Jupiter, Venus, or Saturn occupies its own or exaltation sign in a kendra from the Lagna; each is classically read as a distinct, well-defined strength — courage, intellect, wisdom, refinement, or discipline respectively — rather than a generic boost.",
+      "source": {"text_key": "bphs", "location": "Pancha Mahapurusha yoga"},
+      "tags": ["yoga:pancha_mahapurusha"],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_kemadruma_growth_area",
+      "domains": ["personality"],
+      "subdomains": ["growth_areas"],
+      "statement": "Kemadruma dosha (no planets in the 2nd or 12th from the Moon, and none conjunct it) is classically read as a tendency toward emotional self-reliance or a sense of isolation — a flag to work with, like any dosha, not a fixed deficiency in someone's character.",
+      "source": {"text_key": "bphs", "location": "Kemadruma dosha"},
+      "tags": ["dosha:kemadruma_dosha"],
+      "status": "convention_dependent"
     }
   ]
 }
