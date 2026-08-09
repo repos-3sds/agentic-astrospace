@@ -280,7 +280,7 @@ export class AskAnswerComponent {
       source.chunk_id,
       source.section,
       source.location,
-    ].filter(Boolean).join(' · ') || 'Context Engine';
+    ].filter(Boolean).map((item) => this.titleCase(String(item))).join(' · ') || 'Context Engine';
   }
 
   protected confidenceLabel(confidence: StructuredReading['confidence']): string {
@@ -315,6 +315,64 @@ export class AskAnswerComponent {
   protected technicalBasis(message: ChatMessage): AskTechnicalBasisItem[] {
     const items = message.reading?.technical_basis ?? [];
     return this.preferences.experienceMode() === 'practitioner' ? items : items.slice(0, 3);
+  }
+
+  protected modeEyebrow(message: ChatMessage): string {
+    if (message.status !== 'answered') {
+      return `${this.answerLabel(message)} · ${
+        (message.domain ?? (message.streaming ? this.streamDomain() : null) ?? 'GUIDANCE').toUpperCase()
+      }`;
+    }
+    switch (this.preferences.experienceMode()) {
+      case 'guided':
+        return 'DECISION VERDICT';
+      case 'practitioner':
+        return 'SYNTHESISED VERDICT';
+      default:
+        return 'BALANCED SUMMARY';
+    }
+  }
+
+  protected practitionerScopeLine(message: ChatMessage): string {
+    const domain = this.titleCase(message.domain ?? this.streamDomain() ?? 'Guidance');
+    const context = message.context_used?.length ? message.context_used : message.evidence_refs;
+    const scope = context.length ? context.slice(0, 3).map((item) => this.titleCase(item)).join(', ') : domain;
+    return `Profile: Active · Scope: ${domain}${scope && scope !== domain ? ` (${scope})` : ''}`;
+  }
+
+  protected practitionerVerdictLabel(message: ChatMessage): string {
+    const confidence = message.reading?.confidence ?? 'medium';
+    if (String(confidence).toLowerCase() === 'high') return 'Favourable';
+    if (String(confidence).toLowerCase() === 'low') return 'Needs care';
+    return 'Qualified';
+  }
+
+  protected answerHeadline(message: ChatMessage): string {
+    const reading = message.reading;
+    if (!reading) return message.content || 'Reading your chart…';
+    const source = reading.summary_and_assurance || reading.interpretation || reading.acknowledgment;
+    return this.compactSentence(source, 94);
+  }
+
+  protected guidedBody(reading: StructuredReading): string {
+    const primary = reading.interpretation || reading.summary_and_assurance || reading.acknowledgment;
+    return this.compactSentence(primary, 190);
+  }
+
+  protected guidedActions(reading: StructuredReading): string[] {
+    const actions = reading.guidance.practical_actions.filter(Boolean);
+    if (actions.length) return actions.slice(0, 2);
+    return reading.guidance.follow_up_questions.slice(0, 2).map((question) => `Ask next: ${question}`);
+  }
+
+  private compactSentence(text: string, maxLength: number): string {
+    const clean = this.normaliseAnswerText(text).replace(/\s+/g, ' ').trim();
+    if (!clean) return '';
+    const first = clean.match(/^(.+?[.!?])(\s|$)/)?.[1]?.trim() ?? clean;
+    const candidate = first.length >= 18 ? first : clean;
+    if (candidate.length <= maxLength) return candidate;
+    const clipped = candidate.slice(0, maxLength - 1).replace(/\s+\S*$/, '').trim();
+    return `${clipped || candidate.slice(0, maxLength - 1).trim()}…`;
   }
 
   constructor() {

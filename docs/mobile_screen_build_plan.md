@@ -396,7 +396,7 @@ for everything not yet done are in
 | `212:324` | 7B · Today (Balanced) | ✅ done — this is the shipped baseline `today.component` |
 | `212:751` | 7P · Today (Practitioner) | ✅ done 2026-07-29 — Active Period Stack, Panchanga Details, Critical Gochara Transits, Significant Horary Timings, all live-computed |
 | `212:416` / `458` / `512` | 6c/6d/6e · Aha — Guided/Balanced/Practitioner | ✅ done 2026-08-04 — `first-insight.component` now computes from the just-cast kundli (`VedicService.all`) instead of hardcoded literals, one branch per persona |
-| `212:971` / `1019` / `1077` | 10G/10B/10P · Ask Answer | ❌ not built — one answer template serves all modes |
+| `212:971` / `1019` / `1077` | 10G/10B/10P · Ask Answer | ✅ done 2026-08-09 — one structured response now renders Guided/Balanced/Practitioner templates; screenshots in `docs/mobile_screen_build_evidence/2026-08-09/` |
 | `214:155` | 16P · Yantra (Practitioner) | ❌ not built |
 | `215:156` | 12G · What to do (Guided) | ⚠️ partial — tab label routes to the generic Remedies screen, not a dedicated Guided layout |
 | `215:241` | Profiles · Today Across Profiles | ❌ not built — no multi-profile dashboard exists |
@@ -594,13 +594,15 @@ changed, not just what Figma asked for:
       chain, reusing Chart Hub's `.period-chain`/`.period-pill` pattern.
       All three keep "Continue to Today" reachable even if the chart fetch
       fails — the Aha moment is a bonus, never a gate.
-- [ ] **Ask Answer persona variants** (`10G`/`10B`/`10P`, nodes `212:971`/
+- [x] **Ask Answer persona variants** (`10G`/`10B`/`10P`, nodes `212:971`/
       `1019`/`1077`). AC: Guided shows short verdict/action/caution only;
       Balanced is today's shipped answer view; Practitioner adds question
       scope (profile/date range/location/domain/chart), natal-promise vs.
       active-dasha vs. gochara sections, and visible source/provenance
       links — all three read the same underlying `/api/v1/ask` response,
-      no separate calculation path.
+      no separate calculation path. Implemented 2026-08-09 in
+      `ask-answer.component.*`; verified at 375×812 with structured-thread
+      fixture screenshots for all three modes.
 - [ ] **Chart Hub persona variants** (`16G`/`16P`, nodes `215:373`/`1216`).
       AC: Guided is relabeled "Your Story", leads with strengths/life areas,
       and moves Vargas/Shadbala/AV/Jaimini under an "Advanced" disclosure;
