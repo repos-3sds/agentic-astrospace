@@ -241,14 +241,224 @@ _DOSHA_OVERCLAIM_OUTPUT = (
     # to act, not a fixed outcome.
     r"\bthis (?:outcome|fate) is unavoidable\b(?!\s*,?\s*(?:only\s+)?if\b|\s*unless\b)",
     r"\bcannot dodge what is written\b",
+    # 2026-08-09 (Qwen's audit): domain-agnostic poetic-fatalism phrasing,
+    # same category as "no escaping this fate" above — not caught by the
+    # windowed verb+subject check below because these use vocabulary
+    # ("fated", "barren", "blocked by...alignment") that check doesn't
+    # cover, and is specific/rare enough not to need generalizing into that
+    # machinery. Kept here (not in the negation-checked wealth/children
+    # tuple below) genuinely because it's domain-agnostic — no wealth or
+    # children noun in the pattern itself, unlike its siblings a sixth
+    # review found misplaced (see that tuple).
+    # Excludes bare "end" — a dasha/transit period legitimately "ends" all
+    # the time ("this dasha is fated to end in March" would be ordinary
+    # period language, not fatalism), found by review.
+    r"\bfated to (?:dissolve|fail|collapse)\b",
 )
+
+# 2026-08-09 (Qwen's wealth/children audit). History worth reading before
+# touching this block — it's had five independent review rounds, four of
+# which found real bugs:
+#
+# Rounds 1-2: a *generic* mechanism (any of a dozen "fatalism verbs" matched
+# against any of a handful of "domain subject" words, via a character
+# window or clause-splitting) had no negation handling, then a negation fix
+# that still missed forms, mishandled punctuation, made one verb pattern
+# permanently self-disqualifying, and shipped a regex missing a `\b` that
+# matched "certain" *inside* "uncertain" — flagging a hedge as its opposite.
+# Round 3 abandoned that mechanism for explicit phrase matching (this
+# tuple), the same style already proven clean on the marriage patterns
+# above — plus one shared negation check, `_negation_precedes()`, applied
+# at the time to *all* of `_DOSHA_OVERCLAIM_OUTPUT` including marriage.
+# Rounds 4-5 found that sharing was itself the bug: each attempt to widen
+# `_negation_precedes()`'s scope (sentence-wide, then clause-wide with a
+# conjunction rule) fixed some false negatives while reopening others, and
+# because it ran over the *whole* list, every miss reached the marriage
+# patterns too — a net regression against `main`, which had been correct
+# there for three rounds straight *without* any negation check at all.
+#
+# The fix, finally: stop trying to make one negation heuristic correct for
+# all of English grammar, and stop running it over patterns that never
+# needed it. `_negation_precedes()` (below) is now called only for this
+# tuple, not the marriage/poetic one above — marriage goes back to the
+# exact bare `re.search()` it had for three clean rounds. This tuple's
+# patterns are still explicit phrases, matched with the negation check,
+# because "does not mean you will never have children" contains the bad
+# phrase as a literal substring by construction (that's how a reassurance
+# sentence is built), so *some* negation awareness is unavoidable here in
+# a way it never was for marriage's patterns. What's true and stays true:
+# a lexical negation heuristic cannot resolve every English construction
+# (a non-restrictive relative clause — "this dosha, which is not minor,
+# guarantees poverty" — is genuinely ambiguous to a comma/conjunction rule).
+# That's an accepted, documented limitation, not a bug to keep chasing.
+_WEALTH_CHILDREN_OVERCLAIM_OUTPUT = (
+    # Moved here from the marriage/poetic tuple by a sixth review: these
+    # three actually name a wealth or children noun (poverty/childlessness/
+    # womb/fertility/birth), so they have the exact same "does not mean
+    # [phrase]" literal-substring problem the rest of this tuple exists to
+    # handle — sitting in the bare-`re.search` tuple meant they had no
+    # negation awareness even though their semantics needed it. Demonstrated
+    # concretely: "This dosha does not mean poverty is your inescapable
+    # destiny" was flagged before this move.
+    r"\bsentenced (?:you|your \w+) to (?:struggle|hardship|poverty|childlessness|failure)\b",
+    r"\b(?:womb|fertility) is (?:cosmically |permanently )?barren\b",
+    r"\bbirth is blocked by\b",
+    r"\bis your inescapable destiny\b",
+    r"\byou will always struggle financially\b",
+    r"\bguarantees? you will never accumulate wealth\b",
+    r"\bdictates? permanent poverty\b",
+    r"\bcursed by this (?:dosha|yoga|placement) and will never improve\b",
+    r"\bcondemns? you to lifelong financial hardship\b",
+    r"\bdoomed to remain poor\b",
+    r"\bseals? your fate\b",
+    r"\b(?:wealth prospects|financial (?:future|prospects))\b.{0,15}\bpermanently blocked\b",
+    r"\bfinancial ruin is guaranteed\b",
+    r"\bforbids? you from ever becoming wealthy\b",
+    r"\bdestined for poverty\b",
+    r"\bmakes? poverty certain\b",
+    r"\bguarantees? poverty\b", r"\bpoverty is guaranteed\b",
+    r"\bcannot be undone\b.{0,30}\b(?:poverty|struggl\w+ financially)\b",
+    r"\byou will never have children\b",
+    r"\bguarantees? you will remain childless\b",
+    r"\bcondemns? you to a childless life\b",
+    r"\bdoomed to never bear children\b",
+    r"\bforbids? you from ever having (?:a child|children)\b",
+    r"\byou will never conceive\b",
+    r"\bdictates? (?:that )?you will remain without offspring\b",
+    r"\bchances? of having children are permanently blocked\b",
+    r"\bchildlessness is guaranteed\b",
+    r"\bdestined to remain childless\b",
+    r"\bensures? you will remain childless\b",
+    r"\bguarantees? childlessness\b",
+    r"\bcannot be undone\b.{0,30}\b(?:will never have children|will never conceive|remain childless)\b",
+)
+
+# Shared by every pattern above (not per-pattern lookbehinds — those don't
+# scale and were the direct cause of round 2's bugs): a match is ignored if
+# a negation cue appears earlier in the *same clause* — not the same
+# sentence, and this distinction is itself the fix for a bug a fourth
+# independent review found: scoping to the whole sentence let an unrelated
+# negation anywhere in it (across a comma, a dash, a "but") suppress a real,
+# semantically unrelated violation later in that sentence, and because this
+# check runs over the *entire* `_DOSHA_OVERCLAIM_OUTPUT` list, that widened
+# hole reached the marriage patterns too — a net regression against `main`,
+# not just a wealth/children issue. `_CLAUSE_BOUNDARY` below is deliberately
+# not a bare comma, though: "It does not, in any reading, guarantee
+# poverty." needs the negation to reach across two commas to the verb it
+# genuinely negates. The distinction that matters is whether a comma/dash
+# is followed by a coordinating conjunction (and/but/so/...) — that pattern
+# reliably means "new clause", where a bare comma inside a parenthetical
+# aside does not.
+#
+# Backward-only because negation in English overwhelmingly precedes what it
+# negates ("does not guarantee X", "is never guaranteed", "no chart
+# guarantees X"). The forward-only lookahead this review round's PR had for
+# "guarantees nothing" was removed entirely — the fourth review proved it
+# both unnecessary (no test needs it; the explicit patterns don't produce
+# that shape) and actively harmful (it doesn't respect sentence/clause
+# boundaries at all, so "This dosha guarantees poverty — nothing can change
+# it." was incorrectly cleared by an intensifier, not a negation, sitting
+# right after the real violation).
+_NEGATION_CUES = re.compile(
+    r"\b(?:does not|do not|did not|will not|cannot|is not|are not|was not|"
+    r"were not|is never|never guarantees?|never means?|"
+    # No trailing "guarantees?" on "chart/placement/dosha/yoga" deliberately
+    # — the backward search stops right before the overclaim match itself,
+    # so "guarantees" (the word several overclaim patterns start with) is
+    # never part of the text available to search; requiring it here would
+    # mean the cue could never match "no chart guarantees poverty" at all.
+    # A version of this file briefly required "guarantees?" uniformly,
+    # worried that a bare "no dosha" would collide with fatalistic phrasing
+    # like "there is no dosha stronger than this one, your marriage will
+    # fail" — but that collision is now moot for two independent reasons:
+    # marriage doesn't run this negation check at all (see the docstring on
+    # `dosha_overclaim_kind` below), and for wealth/children, the comma in
+    # that exact shape is now itself an unconditional clause boundary
+    # (`_CLAUSE_BOUNDARY`), so "no dosha" in the clause before a comma can
+    # never reach a match in the clause after it regardless of this list.
+    # "remedy" is kept requiring "guarantees?" though — "no remedy can
+    # undo/fix this" is itself fatalistic phrasing (used by the explicit
+    # patterns above, same clause, no comma involved), the opposite of a
+    # hedge; only "no remedy guarantees X" is the reassuring form.
+    r"no (?:chart|placement|dosha|yoga)\b|no remedy guarantees?|"
+    r"not mean|is a myth|myth that|misconception|untrue|"
+    r"wrongly claim|falsely claim|is false that|not true that|not forbid|"
+    # "can" was briefly excluded here too, worried "no one can undo this
+    # dosha" reads as fatalistic emphasis rather than a hedge — same
+    # reasoning, same fix: the comma boundary already separates that
+    # emphasis from an unrelated claim after it, so "can" doesn't need to
+    # be excluded to prevent the collision.
+    r"should (?:never|not) (?:ever )?(?:tell you|say|claim)|"
+    r"no (?:astrologer|one|reading|chart) (?:should|can)|"
+    r"ignore any reading that claims|reading that claims|"
+    r"nothing (?:in|about)|nobody|"
+    r"by no means)\b"
+)
+# Every comma, dash (em or en), colon, and sentence-ending mark is a hard
+# clause boundary — deliberately unconditional, not conjunction-aware. An
+# earlier version tried to tell "comma starts a new independent clause"
+# ("remedies cannot help, and this dosha guarantees poverty") apart from
+# "comma introduces a parenthetical aside around the same verb" ("it does
+# not, however, guarantee poverty") by checking for a following
+# conjunction. A fifth independent review proved that distinction isn't
+# resolvable lexically in either direction — both shapes use the exact same
+# comma-plus-word pattern, and no fixed word list can tell them apart
+# without actually parsing the sentence.
+#
+# Given that, and given CLAUDE.md's explicit "never suppress" framing for
+# dosha fatalism, this deliberately biases toward the safer failure mode: a
+# comma-joined parenthetical aside around a real hedge occasionally gets
+# flagged (costing one repair-cycle regeneration — orchestrator.py's single
+# retry — not a shipped violation), rather than a comma-joined independent
+# clause silently letting a real fatalistic verdict through uncaught.
+# Constructions like "it does not, in any reading, guarantee poverty" or a
+# non-restrictive relative clause ("this dosha, which is not minor,
+# guarantees poverty") are a known, accepted limitation of a lexical
+# approach — not a bug to keep chasing back and forth across review rounds.
+#
+# A sixth review pointed out this bias is monotone-safe (proof, not a
+# sampling result): adding a boundary character can only shrink the
+# backward-search window, so it can only make `_negation_precedes` return
+# True *less* often, never more — i.e. it can only flag more, never less.
+# That means widening this set is always safe to do outright, with no
+# trade-off to weigh, unlike the comma/conjunction question above. The
+# review found three real gaps that were exactly this — not the accepted
+# comma-ambiguity limitation, but genuine coverage holes in the *unsafe*
+# direction: bare conjunctions with no comma ("remedies cannot help and
+# this dosha guarantees poverty"), parentheses ("this dosha does not
+# affect your health (it guarantees poverty)"), and bullet/newline-joined
+# lines (`_normalize()` collapses `\n` to a space, so a hedge on one
+# bullet line silently covers a violation on the next). Closed for free.
+_CLAUSE_BOUNDARY = re.compile(
+    r"[.;:!?,()*]|—|–|--|\s-\s|\band\b|\bbut\b|\bso\b|\bbecause\b"
+)
+
+
+def _negation_precedes(normalized: str, start: int) -> bool:
+    clause_start = 0
+    for boundary in _CLAUSE_BOUNDARY.finditer(normalized, 0, start):
+        clause_start = boundary.end()
+    return bool(_NEGATION_CUES.search(normalized[clause_start:start]))
 
 
 def dosha_overclaim_kind(answer: str) -> str | None:
     """Non-null when an answer states a dosha/yoga as a fixed, absolute
-    outcome instead of the classical flag-with-context it always is."""
+    outcome instead of the classical flag-with-context it always is.
+
+    Marriage/poetic patterns (`_DOSHA_OVERCLAIM_OUTPUT`) are checked with a
+    bare `re.search` — no negation awareness — because that's exactly what
+    was proven correct across three independent review rounds; adding a
+    shared negation check to them in rounds 3-4 introduced regressions that
+    weren't there before. Wealth/children patterns need the negation check
+    (`_negation_precedes`) because their phrasing gets wrapped in "does not
+    mean X" reassurances that contain the bad phrase as a literal
+    substring — a problem marriage's patterns don't have."""
     normalized = _normalize(answer)
     for pattern in _DOSHA_OVERCLAIM_OUTPUT:
         if re.search(pattern, normalized):
             return "dosha_overclaim"
+    for pattern in _WEALTH_CHILDREN_OVERCLAIM_OUTPUT:
+        for match in re.finditer(pattern, normalized):
+            if not _negation_precedes(normalized, match.start()):
+                return "dosha_overclaim"
     return None
