@@ -254,6 +254,7 @@
 
 .acknowledgment,
 .summary-line,
+.assurance-line,
 .legacy-answer {
   margin: 0;
   overflow-wrap: anywhere;
@@ -267,6 +268,25 @@
 .summary-line {
   @include m-body;
   color: var(--m-text);
+}
+
+// The closing "grounding" beat (`summary_and_assurance`) — same body type as
+// the interpretation above it, muted so it reads as a constructive close
+// rather than a second, equally-weighted claim.
+.assurance-line {
+  @include m-body;
+  color: var(--m-muted);
+}
+
+// Guided's "very less" technical disclosure: at most one line naming the
+// strongest chart factor — deliberately not a section (no border/background
+// like .answer-section), so it reads as a footnote under the explanation,
+// not a second technical block competing with Balanced/Practitioner's.
+.technical-hint {
+  @include m-caption;
+  margin: 0;
+  color: var(--m-muted);
+  overflow-wrap: anywhere;
 }
 
 .legacy-answer {

@@ -47,7 +47,7 @@
           <span class="eyebrow" [attr.data-tone]="answerTone(message)">
             {{ modeEyebrow(message) }}
           </span>
-          @if (preferences.experienceMode() === 'balanced' && message.reading; as reading) {
+          @if ((preferences.experienceMode() === 'balanced' || preferences.experienceMode() === 'guided') && message.reading; as reading) {
             <span class="answer-strength">{{ confidenceLabel(reading.confidence) }}</span>
           }
           @if (preferences.experienceMode() === 'practitioner' && message.status === 'answered') {
@@ -57,25 +57,56 @@
           }
         </p>
 
+        <!--
+          The explanation itself — acknowledgment-derived headline, full
+          interpretation, full closing assurance, full guidance (actions and
+          traditional supports) — is identical across Guided, Balanced, and
+          Practitioner (product spec: "explanation and accuracy should be
+          common for all"). The ONLY thing that varies below by mode is how
+          much `technical_basis` disclosure is shown: none/one line for
+          Guided, a high-level subset for Balanced, the full granular list
+          for Practitioner. Mode-specific chrome (Listen/Copy/Share buttons,
+          Sources & Provenance, Compare Date) still differs — that is UI
+          affordance, not explanation depth.
+        -->
         @if (message.reading; as reading) {
           @switch (preferences.experienceMode()) {
             @case ('guided') {
               <section class="plain-card guided-card" aria-label="Plain guidance">
                 <h1 class="verdict">{{ answerHeadline(message) }}</h1>
-                <p class="summary-line">{{ guidedBody(reading) }}</p>
+                <p class="summary-line">{{ reading.interpretation }}</p>
+                @if (reading.summary_and_assurance) {
+                  <p class="assurance-line">{{ reading.summary_and_assurance }}</p>
+                }
               </section>
 
-              @if (guidedActions(reading).length) {
+              @if (guidedTechnicalHint(message); as hint) {
+                <p class="technical-hint">{{ hint }}</p>
+              }
+
+              @if (readingActions(reading).length) {
                 <div class="answer-section action-panel">
                   <h2>What to do</h2>
                   <ol class="action-list">
-                    @for (action of guidedActions(reading); track action) {
+                    @for (action of readingActions(reading); track action) {
                       <li>
                         <span class="step-check">✓</span>
                         <span>{{ action }}</span>
                       </li>
                     }
                   </ol>
+                </div>
+              }
+
+              @if (reading.guidance.remedies.length) {
+                <div class="answer-section" aria-label="Traditional supports">
+                  <h2>Traditional supports</h2>
+                  @for (remedy of reading.guidance.remedies; track remedy.practice) {
+                    <article class="remedy-row">
+                      <span class="remedy-mark" aria-hidden="true"></span>
+                      <p><strong>{{ remedy.practice }}</strong><span>{{ remedy.note }}</span></p>
+                    </article>
+                  }
                 </div>
               }
 
@@ -89,7 +120,36 @@
               <section class="plain-card practitioner-verdict" aria-label="Synthesised verdict">
                 <h1 class="verdict">{{ answerHeadline(message) }}</h1>
                 <p class="summary-line">{{ reading.interpretation }}</p>
+                @if (reading.summary_and_assurance) {
+                  <p class="assurance-line">{{ reading.summary_and_assurance }}</p>
+                }
               </section>
+
+              @if (readingActions(reading).length) {
+                <div class="answer-section action-panel">
+                  <h2>What to do</h2>
+                  <ol class="action-list">
+                    @for (action of readingActions(reading); track action) {
+                      <li>
+                        <span class="step-check">✓</span>
+                        <span>{{ action }}</span>
+                      </li>
+                    }
+                  </ol>
+                </div>
+              }
+
+              @if (reading.guidance.remedies.length) {
+                <div class="answer-section" aria-label="Traditional supports">
+                  <h2>Traditional supports</h2>
+                  @for (remedy of reading.guidance.remedies; track remedy.practice) {
+                    <article class="remedy-row">
+                      <span class="remedy-mark" aria-hidden="true"></span>
+                      <p><strong>{{ remedy.practice }}</strong><span>{{ remedy.note }}</span></p>
+                    </article>
+                  }
+                </div>
+              }
 
               <section class="answer-section practitioner-stack" aria-label="Technical basis">
                 @for (item of technicalBasis(message); track item.factor + sourceLabel(item.source)) {
@@ -128,15 +188,44 @@
               <section class="plain-card balanced-card" aria-label="Balanced summary">
                 <h1 class="verdict">{{ answerHeadline(message) }}</h1>
                 <p class="summary-line">{{ reading.interpretation }}</p>
+                @if (reading.summary_and_assurance) {
+                  <p class="assurance-line">{{ reading.summary_and_assurance }}</p>
+                }
               </section>
 
-              @if (technicalBasis(message).length) {
+              @if (readingActions(reading).length) {
+                <div class="answer-section action-panel">
+                  <h2>What to do</h2>
+                  <ol class="action-list">
+                    @for (action of readingActions(reading); track action) {
+                      <li>
+                        <span class="step-check">✓</span>
+                        <span>{{ action }}</span>
+                      </li>
+                    }
+                  </ol>
+                </div>
+              }
+
+              @if (reading.guidance.remedies.length) {
+                <div class="answer-section" aria-label="Traditional supports">
+                  <h2>Traditional supports</h2>
+                  @for (remedy of reading.guidance.remedies; track remedy.practice) {
+                    <article class="remedy-row">
+                      <span class="remedy-mark" aria-hidden="true"></span>
+                      <p><strong>{{ remedy.practice }}</strong><span>{{ remedy.note }}</span></p>
+                    </article>
+                  }
+                </div>
+              }
+
+              @if (showTechnicalBasis(message)) {
                 <section class="answer-section why-inline" aria-label="Why this answer">
                   <header>
                     <h2>Why this answer?</h2>
                     <span aria-hidden="true">⌄</span>
                   </header>
-                  @for (item of technicalBasis(message).slice(0, 2); track item.factor + item.reading) {
+                  @for (item of technicalBasis(message); track item.factor + item.reading) {
                     <article class="basis-row compact">
                       <span class="mini-dot" aria-hidden="true"></span>
                       <div>
