@@ -8,6 +8,32 @@ out.
 """
 import re
 
+# Contraction expansion, applied before every pattern in this module sees
+# normalized text. "you'll"/"won't"/"can't"/"you're" etc. never matched a
+# single one of the patterns below that were written in full form ("you
+# will"/"will not"/"cannot"/"you are") — confirmed as a real, systemic gap by
+# the 2026-08-08 paraphrase audit (PR #7): most of its 44 confirmed cases
+# used a contraction specifically because the full form was already covered.
+# Normalizing once here means every pattern below can be written in full
+# form without an apostrophe-variant for each one.
+_CONTRACTIONS = (
+    (r"\byou'll\b", "you will"), (r"\byou're\b", "you are"),
+    (r"\byou've\b", "you have"), (r"\bwon't\b", "will not"),
+    (r"\bcan't\b", "cannot"), (r"\bdon't\b", "do not"),
+    (r"\bdoesn't\b", "does not"), (r"\bshouldn't\b", "should not"),
+    (r"\bisn't\b", "is not"), (r"\bit's\b", "it is"),
+    (r"\bthere's\b", "there is"), (r"\bwhat's\b", "what is"),
+    (r"\bwe've\b", "we have"), (r"\bi've\b", "i have"),
+)
+
+
+def _normalize(text: str) -> str:
+    normalized = " ".join(text.casefold().split())
+    for pattern, expansion in _CONTRACTIONS:
+        normalized = re.sub(pattern, expansion, normalized)
+    return normalized
+
+
 # Refer-out matching is deliberately two-part: a prohibited SUBJECT plus a
 # VERDICT-SEEKING frame. Matching whole phrasings — the previous approach — let
 # 24 of 31 probe questions through, because an allowlist of sentences cannot
@@ -89,7 +115,7 @@ def refer_out_kind(question: str) -> str | None:
     in which the app answers a question about when someone dies, so requiring a
     verdict frame would only create a gap to phrase around.
     """
-    normalized = " ".join(question.casefold().split())
+    normalized = _normalize(question)
     seeks_verdict = any(re.search(f, normalized) for f in _VERDICT_FRAMES)
     for kind, subjects in _REFER_OUT_SUBJECTS:
         if not any(re.search(pattern, normalized) for pattern in subjects):
@@ -104,21 +130,47 @@ def refer_out_kind(question: str) -> str | None:
 # verdict produced anyway would have been returned verbatim. This is the second
 # layer, and it is why the input rules can stay conservative about false
 # positives: the boundary does not rest on them alone.
+#
+# 2026-08-08 (PR #7 paraphrase audit, fixed here): the original flat
+# phrase-list had the exact weakness refer_out_kind() used to have before its
+# own two-part redesign — 20 of 20 audited paraphrases slipped through
+# because each pattern only matched its own wording. The additions below are
+# generalized clusters (verb/noun alternations, gap-tolerant word order),
+# not copies of the audit's specific sentences — a real fix generalizes past
+# the exact cases that exposed the gap, or the next paraphrase finds it again.
 _PROHIBITED_OUTPUT = (
     (r"\byou (?:will|are going to) die\b", "death"),
-    (r"\byour (?:death|lifespan|life expectancy)\b", "death"),
+    (r"\byour (?:time of )?(?:death|dying|lifespan|life expectancy|longevity)\b", "death"),
     (r"\byou (?:will|are likely to) live (?:until|to|for)\b", "death"),
     (r"\byou have\b.{0,24}\b(?:years|months) (?:left|to live)\b", "death"),
+    # Anchored to personal-possession framing ("you have"/"you've got"),
+    # deliberately not a bare "N years remaining" — that also matches
+    # ordinary, safe dasha/transit-period descriptions ("this Saturn dasha
+    # has 3 years remaining"), which this app produces constantly and must
+    # never flag. Caught as a real false positive during review, not
+    # theoretical — verified against realistic period-description phrasing
+    # before this pattern shipped.
+    (r"\byou have\b.{0,20}\b\d+\s*(?:years?|months?)\s*(?:remaining|left|to go)\b", "death"),
+    (r"\b\d+\s*months? to go on your journey\b", "death"),
+    (r"\breach age \d+\b", "death"),
+    (r"\bheaded toward (?:your )?(?:final|last) breath\b", "death"),
+    (r"\b(?:remaining )?days are numbered\b", "death"),
+    (r"\bexpect to live (?:another|for)\b.{0,20}\b(?:decade|year|month)s?\b", "death"),
     (r"\byou (?:have|are suffering from)\b.{0,24}\b(?:cancer|disease|tumou?r)\b", "health"),
-    (r"\b(?:stop|start|change) (?:taking )?your (?:medication|medicine|insulin)\b", "health"),
-    (r"\byou will (?:win|lose) (?:the|your) (?:case|lawsuit|appeal)\b", "legal"),
-    (r"\byou (?:will|should) (?:buy|sell|invest in)\b.{0,24}\b(?:stock|share|crypto)\b", "money"),
+    (r"\b(?:battling|suffering from|afflicted with)\b.{0,20}\b(?:malignant growth|tumou?r|cancer)\b", "health"),
+    (r"\billness has taken hold\b", "health"),
+    (r"\b(?:stop|start|change|discontinue|adjust|begin)\b.{0,32}\b(?:medication|medicine|insulin|prescription|dosage|dose|treatment)\b", "health"),
+    (r"\byou will (?:win|lose) (?:the|your|this) (?:case|lawsuit|appeal)\b", "legal"),
+    (r"\b(?:court|judge) will rule in your favor\b", "legal"),
+    (r"\b(?:lawsuit|case|appeal) is destined to fail\b", "legal"),
+    (r"\byou (?:will|should|ought to) (?:buy|sell|invest in|purchase)\b.{0,24}\b(?:stock|share|crypto|mutual funds?)\b", "money"),
+    (r"\b(?:purchase|buy|sell|invest in)\b.{0,20}\b(?:stocks?|shares?|crypto|holdings|mutual funds?)\b.{0,25}\b(?:now|immediately|today)\b", "money"),
 )
 
 
 def prohibited_verdict(answer: str) -> str | None:
     """Which boundary an answer crosses, if any. None means it is clean."""
-    normalized = " ".join(answer.casefold().split())
+    normalized = _normalize(answer)
     for pattern, kind in _PROHIBITED_OUTPUT:
         if re.search(pattern, normalized):
             return kind
@@ -129,6 +181,9 @@ def prohibited_verdict(answer: str) -> str | None:
 # prompt instruction, no net — unlike refer-out's input+output pair. Written
 # marriage-first: manglik/gandanta/grahan dosha is exactly where this fails
 # if it's weak, and marriage is the first sensitive domain shipping with it.
+#
+# 2026-08-08 (PR #7 paraphrase audit, fixed here): same generalization
+# principle as _PROHIBITED_OUTPUT above — clusters, not copied sentences.
 _DOSHA_OVERCLAIM_OUTPUT = (
     r"\byou cannot (?:get married|marry)\b",
     r"\b(?:will|is going to) end in divorce\b",
@@ -139,13 +194,27 @@ _DOSHA_OVERCLAIM_OUTPUT = (
     r"\b(?:dosha|yoga) (?:will definitely|definitely will|will certainly) cause\b",
     r"\bcannot be avoided\b",
     r"\byou must never\b",
+    r"\b(?:no possibility of|off the cards for|barred from|prohibited from|forbidden from|forbids you from)\b.{0,25}\b(?:marriage|marrying|matrimony|wed(?:ding)?)\b",
+    r"\b(?:marriage|wedding) is (?:off the cards|prohibited)\b",
+    r"\bdivorce is (?:the )?inevitable\b",
+    r"\bdictates you should not wed\b",
+    r"\b(?:destined for separation|doomed to (?:collapse|fail)|headed for (?:failure|breakup)|leads to breakup)\b.{0,25}\b(?:marriage|marital|union|partnership|relationship|married life|wedding)\b",
+    r"\b(?:marriage|marital|union|partnership|relationship|married life|wedding)\b.{0,25}\b(?:destined for separation|doomed to (?:collapse|fail)|headed for (?:failure|breakup)|leads to breakup)\b",
+    r"\bwill wreck your married life\b", r"\bwedding prospects are ruined\b",
+    r"\bspells disaster for your\b.{0,15}\b(?:union|marriage|relationship)\b",
+    r"\bguarantees marriage problems\b", r"\byour relationship will crumble\b",
+    r"\b(?:will not|never) ever encounter a\b.{0,15}\b(?:spouse|partner|husband|wife)\b",
+    r"\bno (?:husband|wife|spouse|partner|life partner)\b.{0,20}\bwill (?:ever )?come into your life\b",
+    r"\bis something you will never have\b",
+    r"\bno escaping this fate\b", r"\bthis (?:outcome|fate) is unavoidable\b",
+    r"\bcannot dodge what is written\b",
 )
 
 
 def dosha_overclaim_kind(answer: str) -> str | None:
     """Non-null when an answer states a dosha/yoga as a fixed, absolute
     outcome instead of the classical flag-with-context it always is."""
-    normalized = " ".join(answer.casefold().split())
+    normalized = _normalize(answer)
     for pattern in _DOSHA_OVERCLAIM_OUTPUT:
         if re.search(pattern, normalized):
             return "dosha_overclaim"
