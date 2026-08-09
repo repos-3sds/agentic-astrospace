@@ -201,8 +201,20 @@ class TestTenseConflictInvariant:
     4): a retrospective question answered with an invented future timeline
     is a violation, the same category as a prohibited verdict. Only checked
     when `question_tense == "retrospective"` — this must never fire for a
-    future or unspecified-tense question, since a real future window is the
-    correct answer there, not a bug."""
+    future, mixed, or unspecified-tense question, since a real future
+    window is the correct answer there, not a bug.
+
+    Revised after independent review of the first version of this PR, which
+    had a real false-positive: any 4-digit year past `as_of` was flagged,
+    including the bundle's own dasha period boundaries — the currently
+    running mahadasha always ends in the future, and the prompt tells the
+    model to cite exactly that. `career_bundle_2026`'s real mahadasha (Rahu,
+    2020->2038) is used directly below rather than an assumed one, so this
+    test is checked against what the bundle actually contains, not a guess.
+    The old phrase-based check ("will begin"/"upcoming") is gone entirely —
+    it flagged ordinary constructive closes, including ones explicitly
+    rejecting a future framing; the year check is the precise signal that
+    matches the actual reported bug."""
 
     def test_future_year_in_retrospective_answer_fails(self, career_bundle_2026):
         bad = _reading(interpretation=(
@@ -211,8 +223,33 @@ class TestTenseConflictInvariant:
         violations = verify(bad, career_bundle_2026, "career", question_tense="retrospective")
         assert any("invented future" in v for v in violations)
 
-    def test_future_phrase_in_retrospective_answer_fails(self, career_bundle_2026):
-        bad = _reading(summary_and_assurance="This new chapter will begin once Jupiter transits your 10th house.")
+    def test_real_dasha_period_boundary_is_not_flagged(self, career_bundle_2026):
+        boundary_end = career_bundle_2026["dasha_relevance"]["chain"][0]["end"][:4]
+        good = _reading(interpretation=(
+            f"Your career move in 2021 fell inside the Rahu mahadasha, which runs "
+            f"2020 to {boundary_end}."
+        ))
+        violations = verify(good, career_bundle_2026, "career", question_tense="retrospective")
+        assert violations == []
+
+    def test_ordinary_constructive_close_with_will_begin_is_not_flagged(self, career_bundle_2026):
+        """The exact phrasing that used to trip the removed phrase-based
+        check — an ordinary, non-timeline-inventing close."""
+        good = _reading(summary_and_assurance=(
+            "That chapter is complete; a quieter phase will begin as you settle in."
+        ))
+        violations = verify(good, career_bundle_2026, "career", question_tense="retrospective")
+        assert violations == []
+
+    def test_fabricated_year_in_technical_basis_is_caught(self, career_bundle_2026):
+        bad = _reading(technical_basis=[
+            TechnicalBasisItem(factor="x", reading="Career inception window opens 2049.", source="houses"),
+        ])
+        violations = verify(bad, career_bundle_2026, "career", question_tense="retrospective")
+        assert any("invented future" in v for v in violations)
+
+    def test_fabricated_year_in_practical_actions_is_caught(self, career_bundle_2026):
+        bad = _reading(guidance=Guidance(practical_actions=["Prepare for your career start in 2049."]))
         violations = verify(bad, career_bundle_2026, "career", question_tense="retrospective")
         assert any("invented future" in v for v in violations)
 
@@ -225,11 +262,22 @@ class TestTenseConflictInvariant:
 
     def test_same_future_content_is_fine_when_tense_is_not_retrospective(self, career_bundle_2026):
         """The exact text that fails above must pass cleanly for a real
-        future or unspecified-tense question — this invariant only fires on
-        the specific tense/content mismatch, never on future content alone."""
+        future, mixed, or unspecified-tense question — this invariant only
+        fires on the specific tense/content mismatch, never on future
+        content alone."""
         reading = _reading(interpretation=(
             "Your career inception window opens around 2049, a strong period ahead."
         ))
         assert verify(reading, career_bundle_2026, "career", question_tense="future") == []
+        assert verify(reading, career_bundle_2026, "career", question_tense="mixed") == []
         assert verify(reading, career_bundle_2026, "career", question_tense="unspecified") == []
+        assert verify(reading, career_bundle_2026, "career") == []
+
+    def test_profile_facts_is_a_valid_technical_basis_source(self, career_bundle_2026):
+        """profile_facts is a real bundle section (added by this PR) — a
+        model citing it as a source must not get a spurious invalid-source
+        violation, the same as any other bundle section name."""
+        reading = _reading(technical_basis=[
+            TechnicalBasisItem(factor="age", reading="You are 51.", source="profile_facts"),
+        ])
         assert verify(reading, career_bundle_2026, "career") == []

@@ -60,11 +60,23 @@ def test_detect_tense_case_insensitive():
     assert detect_tense("WHEN DID MY CAREER START") == "retrospective"
 
 
-def test_retrospective_checked_before_future_on_mixed_cues():
-    """A question naming a past event with 'happen' must not be pulled to
-    'future' just because a later, unrelated clause about future timing
-    exists — retrospective is checked first because 'when did' is the more
-    specific, earlier signal in the actual repro question."""
-    assert detect_tense(
-        "When did retirement happen, and will my next chapter be different?"
-    ) == "retrospective"
+# Revised after independent review of the first version (which picked
+# retrospective whenever both cues appeared, on the theory that "did" is
+# the more specific signal). That collapsed a genuinely two-part question
+# into a single tense and fed it to a *blocking* verifier invariant
+# (verifier.py) that then discarded a correct answer to the future half.
+# "mixed" is the honest classification: both halves are real, so the
+# retrospective-only invariant does not apply (checked via an exact
+# `== "retrospective"` match — "mixed" intentionally excluded).
+@pytest.mark.parametrize("question", [
+    "When did retirement happen, and will my next chapter be different?",
+    "I did start my career in 2001 - when will I get a promotion?",
+    "Why did my last job end, and when will I find a new one?",
+    "What happened in my last relationship, and when will I find love again?",
+])
+def test_mixed_retrospective_and_future_cues_is_not_pure_retrospective(question):
+    """Found by independent review: collapsing a two-part question to a
+    single tense fed a blocking invariant the wrong signal. A question
+    with a real future half must never classify as pure 'retrospective' —
+    that would suppress a legitimate future answer."""
+    assert detect_tense(question) == "mixed"

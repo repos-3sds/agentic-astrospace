@@ -19,23 +19,45 @@ from .schema import StructuredReading
 # (docs/ask_context_engine_multi_agent_architecture_2026-08-07.md, "Update
 # 2026-08-09" requirement 4): a retrospective question ("when did X start")
 # answered with an invented future timeline is a trust violation, same
-# category as a prohibited verdict or a dosha overclaim. Deterministic and
-# narrow by design — a 4-digit year past `as_of`, or an explicit
-# future-tense construction, in a reading whose *question* was retrospective.
-# This does not (and cannot, without a second model call) catch every
-# tense mismatch; it catches the exact repro shape that motivated it.
+# category as a prohibited verdict or a dosha overclaim.
+#
+# Revised after independent review of the first version, which had two real
+# false-positive sources:
+#
+# 1. A flat "any year past as_of" check flags the bundle's *own* dasha
+#    period boundaries — the currently-running mahadasha always ends in the
+#    future (e.g. "Saturn mahadasha 2011 -> 2030"), and the prompt tells the
+#    model to cite exactly that. `_period_boundary_years()` pulls the real
+#    boundary years out of `bundle["dasha_relevance"]["chain"]` and excludes
+#    them — a future year is only suspicious if it *isn't* one the bundle
+#    itself handed the model.
+# 2. `_FUTURE_PHRASE_RE` (removed) matched "will begin"/"upcoming" in
+#    ordinary constructive closes, including ones explicitly *rejecting* a
+#    future framing ("nothing about the upcoming years changes what already
+#    happened in 2003"). Natural language has too many legitimate uses of
+#    those words; the year check is the precise, well-grounded signal that
+#    actually matches the reported bug (explicit invented years), so the
+#    phrase heuristic is dropped rather than patched narrower and narrower.
 _FUTURE_YEAR_RE = re.compile(r"\b(?:19|20)\d{2}\b")
-_FUTURE_PHRASE_RE = re.compile(
-    r"\b(?:will (?:start|begin|happen|occur|arrive)|is coming|upcoming|"
-    r"in the (?:coming|next) \d+)\b"
-)
 
 
-def _tense_conflict(text: str, as_of_year: int) -> bool:
+def _period_boundary_years(bundle: dict) -> set[int]:
+    years: set[int] = set()
+    chain = (bundle.get("dasha_relevance") or {}).get("chain") or []
+    for row in chain:
+        for key in ("start", "end"):
+            value = row.get(key)
+            if isinstance(value, str) and value[:4].isdigit():
+                years.add(int(value[:4]))
+    return years
+
+
+def _tense_conflict(text: str, as_of_year: int, safe_years: set[int]) -> bool:
     for match in _FUTURE_YEAR_RE.finditer(text):
-        if int(match.group(0)) > as_of_year:
+        year = int(match.group(0))
+        if year > as_of_year and year not in safe_years:
             return True
-    return bool(_FUTURE_PHRASE_RE.search(text.casefold()))
+    return False
 
 
 # A technical_basis[].source is allowed to name a bundle *section* directly
@@ -46,6 +68,7 @@ def _tense_conflict(text: str, as_of_year: int) -> bool:
 _BUNDLE_SECTION_NAMES = {
     "houses", "karakas", "vargas", "yogas", "doshas",
     "dasha_relevance", "gochara", "jaimini_karakas", "arudhas",
+    "profile_facts",
 }
 
 
@@ -64,16 +87,6 @@ def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
             f"bundle domain {bundle.get('domain')!r} does not match routed domain {routed_domain!r}"
         )
 
-    if question_tense == "retrospective":
-        as_of = (bundle.get("profile_facts") or {}).get("as_of", "")
-        as_of_year = int(as_of[:4]) if as_of[:4].isdigit() else 9999
-        for text in (reading.interpretation, reading.summary_and_assurance):
-            if _tense_conflict(text, as_of_year):
-                violations.append(
-                    "retrospective question answered with an invented future "
-                    f"timeline: {text!r}"
-                )
-
     valid_sources = _valid_sources(bundle)
     for item in reading.technical_basis:
         if item.source not in valid_sources:
@@ -82,9 +95,15 @@ def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
                 "references, source_passages, or a known bundle section"
             )
 
+    # Shared across every text-scanning check below — a claim can land in
+    # the prose, a citation's own reading, or a recommended action, and a
+    # gap in only one of those fields is a real false negative (found by
+    # review: a fabricated year inside `guidance.practical_actions` passed
+    # every check here before this list included it).
     text_to_check = [reading.interpretation, reading.summary_and_assurance] + [
         item.reading for item in reading.technical_basis
-    ]
+    ] + list(reading.guidance.practical_actions)
+
     for text in text_to_check:
         crossed = prohibited_verdict(text)
         if crossed:
@@ -92,5 +111,22 @@ def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
         dosha_crossed = dosha_overclaim_kind(text)
         if dosha_crossed:
             violations.append(f"dosha overclaim in: {text!r}")
+
+    # "mixed" (both a retrospective and a future cue present in the same
+    # question, e.g. "when did retirement happen, and what comes next?")
+    # deliberately does not qualify here — only a pure retrospective
+    # question triggers this; see intent.py's detect_tense() docstring for
+    # why that split exists.
+    if question_tense == "retrospective":
+        profile_facts = bundle.get("profile_facts") or {}
+        as_of = str(profile_facts.get("as_of") or "")
+        as_of_year = int(as_of[:4]) if as_of[:4].isdigit() else 9999
+        safe_years = _period_boundary_years(bundle)
+        for text in text_to_check:
+            if _tense_conflict(text, as_of_year, safe_years):
+                violations.append(
+                    "retrospective question answered with an invented future "
+                    f"timeline: {text!r}"
+                )
 
     return violations

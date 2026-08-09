@@ -13,7 +13,7 @@ from typing import Literal
 
 from .schema import AskIntent
 
-QuestionTense = Literal["retrospective", "current_state", "future", "unspecified"]
+QuestionTense = Literal["retrospective", "current_state", "future", "mixed", "unspecified"]
 
 # Order matters: earlier entries win on overlap. daily_guidance's temporal
 # cues are checked first because they're the most specific and would
@@ -61,15 +61,19 @@ def detect_intent(question: str) -> AskIntent:
 # ("why did I get that promotion") can carry tense too, so this is a
 # separate, additional classification, not a timing sub-bucket.
 #
-# Order matters: retrospective is checked first — "did"/"was"/"already"
-# auxiliaries are the most specific past-tense signal and would otherwise be
-# swallowed by a bare "when"/"will" elsewhere in the same sentence (e.g.
-# "when did retirement happen" contains no future cue, but a naive
-# any-match-wins order could still misfire on an unrelated "will" later in a
-# multi-clause question). future is checked next — "will"/"going to" are
-# fairly specific. current_state is checked last and is the weakest signal
-# ("now"/"today" alone, without a stronger past or future cue already
-# present).
+# 2026-08-09, revised after independent review of the first version: that
+# version picked retrospective over future whenever both cues appeared
+# anywhere in the question, on the reasoning that "did" auxiliaries are the
+# more specific signal. That's true for classifying which cue is "stronger",
+# but it's the wrong call once tense feeds a *blocking* verifier invariant
+# (see verifier.py) — a genuinely two-part question like "When did
+# retirement happen, and will my next chapter be different?" has a real
+# future half that deserves a real future answer, and silently downgrading
+# it to "retrospective" caused the verifier to discard a correct answer.
+# `mixed` is a third, explicit outcome for exactly this case: both cues
+# present, so the verifier's retrospective-only invariant does not apply at
+# all (checked via `tense == "retrospective"`, an exact-match — "mixed"
+# intentionally does not qualify).
 _RETROSPECTIVE_PATTERNS = (
     r"\bwhen did\b", r"\bwhy did\b", r"\bhow did\b", r"\bwhat happened\b",
     r"\bhas already\b", r"\balready happened\b", r"\bwhen was\b",
@@ -86,12 +90,6 @@ _CURRENT_STATE_PATTERNS = (
     r"\bright now\b", r"\bcurrently\b", r"\bat the moment\b", r"\bthese days\b",
 )
 
-_TENSE_PATTERNS: tuple[tuple[QuestionTense, tuple[str, ...]], ...] = (
-    ("retrospective", _RETROSPECTIVE_PATTERNS),
-    ("future", _FUTURE_PATTERNS),
-    ("current_state", _CURRENT_STATE_PATTERNS),
-)
-
 
 def detect_tense(question: str) -> QuestionTense:
     """Server-computed, same discipline as `detect_intent()` — a cheap
@@ -100,7 +98,14 @@ def detect_tense(question: str) -> QuestionTense:
     signal at all, and guessing one would be worse than admitting there
     isn't one."""
     normalized = " ".join(question.casefold().split())
-    for tense, patterns in _TENSE_PATTERNS:
-        if any(re.search(pattern, normalized) for pattern in patterns):
-            return tense
+    is_retrospective = any(re.search(p, normalized) for p in _RETROSPECTIVE_PATTERNS)
+    is_future = any(re.search(p, normalized) for p in _FUTURE_PATTERNS)
+    if is_retrospective and is_future:
+        return "mixed"
+    if is_retrospective:
+        return "retrospective"
+    if is_future:
+        return "future"
+    if any(re.search(p, normalized) for p in _CURRENT_STATE_PATTERNS):
+        return "current_state"
     return "unspecified"

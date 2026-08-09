@@ -189,6 +189,29 @@ class TestAskOrchestratorPrepare:
         assert outcome.prepared.bundle["domain"] == "health"
         assert "houses" in outcome.prepared.context_used
 
+    # Found missing by independent review of PR #12: every other tense/
+    # profile-facts test in this codebase is a leaf unit test (detect_tense()
+    # in isolation, profile_facts shape in isolation, verify() in isolation)
+    # — nothing asserted the actual wiring between them. A refactor that
+    # dropped `question_tense=routing.tense` at the DomainReadingAgent call
+    # site would have silently disabled the whole feature with every one of
+    # those unit tests still green. These two close that gap.
+    def test_tense_flows_from_routing_into_the_agents_rendered_prompt(self, orchestrator):
+        outcome = orchestrator.prepare("Why did I get passed over for that promotion?")
+        assert outcome.prepared.tense == "retrospective"
+        rendered = outcome.prepared.agent.system_prompt
+        assert "retrospective" in rendered
+        assert "{age_years}" not in rendered  # unformatted placeholder, not the actual value
+        assert "{question_tense}" not in rendered
+        profile_facts = outcome.prepared.bundle["profile_facts"]
+        assert f"age_years {profile_facts['age_years']}" in rendered
+        assert profile_facts["as_of"] in rendered
+
+    def test_future_question_tense_is_future_not_retrospective(self, orchestrator):
+        outcome = orchestrator.prepare("When will I get a promotion?")
+        assert outcome.prepared.tense == "future"
+        assert "houses" in outcome.prepared.context_used
+
     def test_pronoun_followup_without_thread_domain_asks_to_clarify(self, orchestrator):
         """Reproduces the reported bug directly: a follow-up with no
         domain keywords of its own ("this"/"it") has nothing to route on
@@ -257,6 +280,14 @@ class TestAskOrchestratorRun:
         assert done["status"] == "answered"
         assert done["thread_id"] == "thread-1"
         assert persisted[0][1] == "answered"
+
+    def test_done_envelope_carries_tense(self, chart):
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart)
+        outcome = orchestrator.prepare("Why did I get passed over for that promotion?")
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=_good_reading()):
+            events = list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
+                                           persist=lambda reading, status: "thread-tense"))
+        assert events[-1]["tense"] == "retrospective"
 
     def test_bad_then_good_repairs_once_and_persists(self, prepared):
         orchestrator, run = prepared
