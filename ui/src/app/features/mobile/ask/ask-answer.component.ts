@@ -10,7 +10,7 @@ import {
 } from '../why-reading/why-reading-sheet.component';
 import { MobileAskStateService } from './mobile-ask-state.service';
 import { AskService } from '../../../core/ask.service';
-import { AskStreamEvent, StructuredReading } from '../../../core/models';
+import { AskStreamEvent, AskTechnicalBasisItem, StructuredReading } from '../../../core/models';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
 import { MobileAskMessage, MobileAskThreadService } from './mobile-ask-thread.service';
@@ -271,7 +271,7 @@ export class AskAnswerComponent {
       .replace(/\b\w/g, (letter) => letter.toUpperCase());
   }
 
-  private sourceLabel(source: StructuredReading['technical_basis'][number]['source']): string {
+  protected sourceLabel(source: StructuredReading['technical_basis'][number]['source']): string {
     if (!source) return 'Context Engine';
     if (typeof source === 'string') return this.titleCase(source);
     return [
@@ -281,6 +281,40 @@ export class AskAnswerComponent {
       source.section,
       source.location,
     ].filter(Boolean).join(' · ') || 'Context Engine';
+  }
+
+  protected confidenceLabel(confidence: StructuredReading['confidence']): string {
+    const normalized = String(confidence || 'medium').toLowerCase();
+    if (normalized === 'high') return 'High confidence';
+    if (normalized === 'low') return 'Low confidence';
+    return 'Medium confidence';
+  }
+
+  protected confidenceTone(confidence: StructuredReading['confidence']): VerdictTone {
+    const normalized = String(confidence || 'medium').toLowerCase();
+    if (normalized === 'high') return 'good';
+    if (normalized === 'low') return 'warn';
+    return 'warn';
+  }
+
+  protected contextPills(message: ChatMessage): string[] {
+    const mode = this.preferences.experienceMode();
+    if (mode === 'guided') return [];
+    const context = message.context_used?.length ? message.context_used : message.evidence_refs;
+    return context
+      .slice(0, mode === 'practitioner' ? 5 : 3)
+      .map((item) => this.titleCase(item))
+      .filter(Boolean);
+  }
+
+  protected showTechnicalBasis(message: ChatMessage): boolean {
+    if (!message.reading?.technical_basis?.length) return false;
+    return this.preferences.experienceMode() !== 'guided';
+  }
+
+  protected technicalBasis(message: ChatMessage): AskTechnicalBasisItem[] {
+    const items = message.reading?.technical_basis ?? [];
+    return this.preferences.experienceMode() === 'practitioner' ? items : items.slice(0, 3);
   }
 
   constructor() {
@@ -435,10 +469,15 @@ export class AskAnswerComponent {
 
   private flattenReading(reading: StructuredReading): string {
     return [
+      'Intent',
       reading.acknowledgment,
+      'What this means',
       reading.interpretation,
       reading.summary_and_assurance,
+      reading.guidance.practical_actions.length ? 'Next best steps' : '',
       ...reading.guidance.practical_actions,
+      reading.guidance.remedies.length ? 'Traditional supports' : '',
+      ...reading.guidance.remedies.map((remedy) => `${remedy.practice}: ${remedy.note}`),
     ].filter(Boolean).join('\n\n');
   }
 
