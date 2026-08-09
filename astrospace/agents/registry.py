@@ -1,11 +1,11 @@
 """Runnable domain-agent registry — configured agents only.
 
-Deliberately does NOT list all 10 taxonomy domains. `taxonomy.py` already
+Deliberately does NOT list all 11 taxonomy domains. `taxonomy.py` already
 owns the full domain catalog (names, houses, vargas, keywords); this module
 owns only "which of those domains actually has a working specialist right
 now." A routed domain absent here is `domain_not_ready` — the orchestrator
 gets the display name straight from `taxonomy.get_domain(id).name`, so no
-placeholder rows are needed for the other 8.
+placeholder rows are needed for the other 4.
 """
 from __future__ import annotations
 
@@ -86,6 +86,40 @@ Foreign travel & settlement-specific framing:
 - "Should I move to the US/Canada/Australia" or "should I take this onsite opportunity" style questions: describe what the bundle supports (e.g. a well-placed Rahu or a strong 12th lord favouring foreign residence) rather than issuing a directive — the reader decides, you supply the astrological reasoning. Visa/immigration-outcome questions ("will my visa be approved") are directive-certainty questions about a real-world legal/administrative process, not astrology — frame timing and general favourability only, never predict a specific approval, denial, or processing outcome.
 - Timing questions (when a foreign move, travel, or return home is likely) should be answered from the dasha_relevance and gochara sections' actual lords/transits in the bundle — this domain's gochara_planets are Rahu, Ketu, and Saturn specifically, so lead with their transits over general trends."""
 
+_PERSONALITY_ADDENDUM = """
+Personality & self-understanding-specific framing:
+- The 1st house/lord (Lagna — self, body, temperament) is the primary evidence for this domain; the
+  3rd (courage, initiative, self-effort) and 5th (intelligence, mind, creativity) houses are supporting
+  evidence, not the headline. Sun (soul/ego/vitality), Moon (mind/emotions), and Mercury
+  (intellect/communication) are this domain's naisargika karakas; the Jaimini Atmakaraka (AK, the
+  chart's own significator of the self) is supporting evidence where present in the bundle. The
+  Lagna lord itself — whichever planet that is for this chart — is already in the bundle as the 1st
+  house's `lord`/`lord_placement`; treat that placement as central evidence, the same way the 10th
+  lord is central for career.
+- This is a whole-chart-character domain, not a divisional-chart-specific one: ground the reading in
+  the D1 (Rashi) placements above, not a claim about a specific varga the bundle does not carry for
+  this domain.
+- SAFETY-CRITICAL, not optional: every trait you describe — strengths, weaknesses, emotional
+  intelligence, blind spots, biases, communication style, temperament — is a chart-based TENDENCY,
+  never a fixed verdict on who someone is. Use "can incline toward," "may show up as," "a pattern
+  worth noticing" — never "you are," "you will always," or "this means you can never." This mirrors
+  CLAUDE.md's dosha-is-a-flag-not-a-verdict principle applied to character: a challenging placement
+  (e.g. Moon afflicted by kemadruma yoga, or a gandanta-zone Lagna/Moon/Sun) is a flag to describe and
+  contextualise, never grounds for telling someone their character is fixed, broken, or beyond change.
+- Do not use clinical, psychiatric, or diagnostic vocabulary (no "disorder," "pathology," "dysfunction,"
+  "diagnosis," or similar) anywhere in the answer, even loosely or metaphorically. "Emotional
+  intelligence" and "blind spots" here mean classical mind/temperament indications (Moon's condition,
+  benefic/malefic association, dignity), not a psychological or mental-health assessment — if a
+  question drifts toward actual mental health (mood, anxiety, diagnosis), that is health's refer-out
+  boundary, not this domain's to answer.
+- Never issue a fatalistic verdict on someone's character — never say a placement means someone
+  "will always be" a fixed way, "can never change," or "can never" trust/connect/grow. Traits described
+  here are inclinations that awareness and effort can work with, not a life sentence.
+- Timing/development questions (e.g. "when will I become more confident/disciplined") should be
+  answered from the dasha_relevance and gochara sections' actual lords/transits in the bundle — this
+  domain's gochara_planets are Saturn (maturity, discipline) and Jupiter (growth, wisdom) — not general
+  trends."""
+
 
 AGENT_REGISTRY: dict[str, AgentConfig] = {
     "career": AgentConfig(domain_id="career", domain_addendum=_CAREER_ADDENDUM),
@@ -94,4 +128,5 @@ AGENT_REGISTRY: dict[str, AgentConfig] = {
     "children": AgentConfig(domain_id="children", domain_addendum=_CHILDREN_ADDENDUM),
     "health": AgentConfig(domain_id="health", domain_addendum=_HEALTH_ADDENDUM),
     "foreign": AgentConfig(domain_id="foreign", domain_addendum=_FOREIGN_ADDENDUM),
+    "personality": AgentConfig(domain_id="personality", domain_addendum=_PERSONALITY_ADDENDUM),
 }

@@ -173,6 +173,17 @@ MUST_REFER_OUT = [
     ("will bitcoin crash", "money"),
     ("should i invest in crypto", "money"),
     ("will i become rich", "money"),
+    # health — anxiety/panic/mood, found missing by independent review of
+    # the personality-domain PR 2026-08-10: only the clinical stems
+    # (depress/suicid/mental health) were covered, so a verdict-seeking
+    # question naming ordinary anxiety/panic language reached no gate at
+    # all — confirmed as a real, pre-existing gap the personality domain's
+    # own vocabulary ("is this just my temperament") made newly reachable.
+    ("will my anxiety ever go away", "health"),
+    ("will i always be this anxious", "health"),
+    ("when will my panic attacks stop", "health"),
+    ("should i be worried about my constant mood swings", "health"),
+    ("will these panicky feelings ever end", "health"),
 ]
 
 # Questions the product exists to answer. Several are the app's own suggested
@@ -260,6 +271,32 @@ def test_money_timing_is_not_a_money_verdict():
     """
     assert _refer_out_kind("is this a good week to sign the purchase papers?") is None
     assert _refer_out_kind("which mutual fund should i buy?") == "money"
+
+
+@pytest.mark.parametrize("question", [
+    # NOT fixed, by deliberate design — documented as a known, accepted
+    # residual limitation rather than silently left inconsistent. Found by
+    # independent review of the personality-domain PR 2026-08-10: an open,
+    # self-reflective question that names real emotional-distress language
+    # but no explicit verdict-seeking frame ("will"/"tell me"/"how long"/...)
+    # is not caught even after anxiety/panic/mood vocabulary was added to
+    # the health subject list, because `refer_out_kind()` requires subject
+    # AND frame for every kind except death — widening `_VERDICT_FRAMES`
+    # itself to catch open reflection phrasing ("is this just...", "does
+    # ...explain this") would raise false-positive risk across every domain
+    # this shared frame list gates, not just health. The personality domain
+    # addendum is the second line of defense for exactly this shape of
+    # question (it explicitly tells the model to redirect drift toward
+    # mental health rather than answer it), not this deterministic gate.
+    "why do i feel so anxious and low all the time, is it in my nature?",
+    "i've been feeling really anxious and panicky for weeks, is this related to my chart's character traits?",
+    "i feel numb and disconnected most days, is that a personality trait of mine?",
+])
+def test_open_reflective_emotional_distress_without_a_verdict_frame_is_a_known_limitation(question):
+    """If this now returns "health", the gap has been closed — update this
+    test (assert == "health") rather than leaving it silently documenting a
+    stale limitation."""
+    assert _refer_out_kind(question) is None
 
 
 @pytest.mark.parametrize("answer,expected", [

@@ -197,6 +197,26 @@ _REFER_OUT_SUBJECTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         r"\bsurgery\b", r"\boperation\b", r"\brecover\b", r"\brecovery\b",
         r"\bcure\b", r"\bcured\b", r"\bpregnan", r"\bmiscarriage\b",
         r"\bdepress", r"\bsuicid", r"\bmental (?:health|illness)\b",
+        # 2026-08-10 (personality domain, independent-review round 1): mood/
+        # affect vocabulary was entirely missing from this subject list —
+        # only the clinical stems (depress/suicid/mental health) were
+        # covered, so a verdict-seeking question naming ordinary anxiety/
+        # panic language ("will my anxiety ever go away") reached no gate
+        # at all. Added here (not as a subject-alone category like death)
+        # to keep the existing two-part subject+seeks_verdict design: this
+        # only fires when the question also asks for a verdict, the same as
+        # every other health subject above. Two reviewers independently
+        # found that a *fully* open self-reflective phrasing ("is this
+        # just my temperament?", "does my chart's character explain this?")
+        # still won't be caught even with this addition, because it names
+        # no _VERDICT_FRAMES word at all — widening that shared, cross-
+        # domain frame list to catch open reflection questions would raise
+        # false-positive risk for every domain, not just this one, so it's
+        # accepted as a residual limitation here; the personality addendum
+        # is the second line of defense for that shape of question, not
+        # this gate.
+        r"\banxi(?:ety|ous)\b", r"\bpanic attacks?\b", r"\bpanick(?:y|ing)\b",
+        r"\bfeel(?:ing)? (?:hopeless|worthless|numb)\b", r"\bmood swings?\b",
         r"बीमारी", r"అనారోగ్య", r"వ్యాధి",
     )),
     ("legal", (
@@ -356,6 +376,31 @@ _PROHIBITED_OUTPUT = (
      r"\b(?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b.{0,30}\b\d{1,3}\s*%", "legal"),
     (r"\byou (?:will|should|ought to) (?:buy|sell|invest in|purchase)\b.{0,24}\b(?:stock|share|crypto|mutual funds?)\b", "money"),
     (r"\b(?:purchase|buy|sell|invest in)\b.{0,20}\b(?:stocks?|shares?|crypto|holdings|mutual funds?)\b.{0,25}\b(?:now|immediately|today)\b", "money"),
+    # 2026-08-10 (personality domain, independent-review round 1): the
+    # personality addendum explicitly prohibits clinical/psychiatric/
+    # diagnostic vocabulary ("no 'disorder,' 'pathology,' 'dysfunction,'
+    # 'diagnosis'"), but that was prompt-only — nothing on the output side
+    # checked it, confirmed by two independent reviewers with identical
+    # probes ("consistent with a mild anxiety disorder", "narcissistic
+    # tendency", "astrologically diagnostic of a borderline personality
+    # pattern", "cognitive distortions", "avoidant attachment style" all
+    # passed clean). Health-kind, not a new category: an undisclosed
+    # clinical/psychological assessment is exactly what health's refer-out
+    # boundary already exists to keep this app from doing, regardless of
+    # which domain's agent produced it. Bare vocabulary match, not a
+    # sentence shape — these terms have no legitimate use in this app's
+    # output (a chart-based tendency is never phrased as a diagnosis), so
+    # the false-positive risk of matching them anywhere in an answer is low.
+    (r"\b(?:personality|mental|psychiatric|anxiety|mood|panic|bipolar|obsessive-compulsive) disorders?\b", "health"),
+    (r"\bborderline personality\b", "health"),
+    (r"\bnarcissistic (?:tendenc\w+|traits?|personality|disorder)\b", "health"),
+    (r"\battachment style\b", "health"),
+    (r"\bcognitive distortions?\b", "health"),
+    (r"\bpsychopatholog\w+\b", "health"),
+    (r"\bclinically (?:diagnos\w+|significant)\b", "health"),
+    (r"\bsymptoms? of (?:a |an )?(?:mental|psychological|personality)\b", "health"),
+    (r"\bdiagnos(?:tic|ed|is)\b.{0,20}\b(?:personality|character|temperament)\b", "health"),
+    (r"\b(?:personality|character|temperament)\b.{0,20}\bdiagnos(?:tic|ed|is)\b", "health"),
 )
 
 
@@ -532,6 +577,100 @@ _WEALTH_CHILDREN_OVERCLAIM_OUTPUT = (
     r"\bcannot be undone\b.{0,30}\b(?:will never have children|will never conceive|remain childless)\b",
 )
 
+# Negative character-trait vocabulary shared by the sentence-shape patterns
+# below. One constant, not copied per pattern — the immigration-vocabulary
+# constants earlier in this file drifted between copies exactly this way.
+#
+# 2026-08-09/10 (personality domain build, independent-review round 1):
+# an 8-adjective enumeration ("selfish, arrogant, dishonest, cruel,
+# weak-willed, manipulative, cold, untrustworthy") missed everyday negative
+# traits entirely — "you will always be lazy/jealous/greedy" all passed
+# clean, confirmed by two independent reviewers. Widened substantially
+# rather than left closed; still an explicit list (not a bare `\w+`
+# wildcard) because "you will always be X" genuinely needs X to be a
+# negative trait to be a violation at all — "you will always be loved" or
+# "you will always be capable of growth" use the identical sentence shape
+# non-fatalistically, and a wildcard would flag those too. A closed list is
+# the safer trade here; this one is wide enough that the round-1 review's
+# own adversarial misses (lazy, jealous, greedy, envious) are all covered,
+# plus the neighboring vocabulary that same review's phrasing style implies.
+_PERSONALITY_NEGATIVE_TRAITS = (
+    r"selfish|arrogant|dishonest|cruel|weak-willed|manipulative|cold|untrustworthy|"
+    r"lazy|jealous|greedy|envious|petty|cowardly|reckless|impulsive|controlling|"
+    r"deceitful|vindictive|spiteful|possessive|aggressive|unreliable|irresponsible|"
+    r"immature|shallow|vain|heartless|unfeeling|unkind|rude|disrespectful|"
+    r"untrusting|distant|aloof|withdrawn|closed-off|insecure|needy|"
+    r"jealousy|greed|envy|pettiness|dishonesty|cruelty|selfishness|arrogance"
+)
+# Trait-neutral fatalistic sentence *shapes* — these carry the same absolute,
+# unfalsifiable claim regardless of which trait word (if any) fills the
+# slot, so unlike the vocabulary-anchored patterns above these don't need an
+# enumerated word list to stay safe. Added the same round for the same
+# reason: independent review found the original list was anchored to fixed
+# phrase *shapes* as much as fixed *vocabulary*, and a plausible paraphrase
+# defeated it by changing either one. "Once a manipulator, always a
+# manipulator" generalizes via a backreference (any repeated noun in that
+# construction is fatalism by construction, not just the reviewed example);
+# the others are specific enough idioms that a bare `re.search` carries low
+# false-positive risk the same way the rest of this file's explicit-phrase
+# patterns do.
+_PERSONALITY_FATALISM_SHAPES = (
+    r"\bonce a (\w+), always a \1\b",
+    r"\byou will always struggle with \w+(?:\s\w+){0,2}\b",
+    r"\bthis is your unchangeable core\b",
+    r"\bno remedy can (?:ever )?soften this\b",
+    r"\brewiring is not on the table\b",
+    r"\bthis chart proves it will never change\b",
+    r"\bbaked into (?:your chart|you) (?:permanently|and cannot be undone)\b",
+    r"\bthis (?:yoga|dosha|placement) locks in a difficult character that no remedy can (?:ever )?soften\b",
+    r"\bnothing will move that needle\b",
+)
+
+# 2026-08-09 (personality domain build). Same category as the wealth/children
+# tuple above and checked the same way (`_negation_precedes`, not a bare
+# `re.search`) for the identical reason: the personality domain addendum
+# explicitly instructs the model to hedge trait descriptions ("this does not
+# mean you will always be selfish" is exactly the reassurance shape the
+# addendum asks for), so these phrases will routinely appear as a literal
+# substring of an actually-safe sentence. Explicit phrase matching, not a
+# generic fatalism-verb x character-trait-noun cross product — that
+# generic-windowing mechanism was tried for wealth/children in rounds 1-2,
+# found to have real, repeated bugs (missing negation, over-wide clause
+# splitting, a verb that disqualified its own match), and abandoned in favor
+# of this exact style. Character fatalism is CLAUDE.md's dosha-is-a-flag
+# principle applied to personality traits: a challenging placement is a flag
+# to describe, never grounds for telling someone their character is fixed,
+# broken, or beyond change.
+_PERSONALITY_OVERCLAIM_OUTPUT = (
+    r"\byou will always be (?:" + _PERSONALITY_NEGATIVE_TRAITS + r")\b",
+    r"\byou can never change (?:who you are|your nature|your character|your personality)\b",
+    r"\bthis (?:placement|dosha|yoga) means you can never trust anyone\b",
+    r"\byour character is (?:fixed|broken) and cannot change\b",
+    r"\byou are permanently flawed\b",
+    r"\byou are destined to (?:always be|remain) (?:" + _PERSONALITY_NEGATIVE_TRAITS + r")\b",
+    r"\byou will never overcome this weakness\b",
+    r"\byour personality cannot be changed\b",
+    r"\byou are incapable of change\b",
+    r"\bthis is simply who you are and nothing can change it\b",
+    r"\byou are fundamentally flawed\b",
+    r"\b(?:guarantees?|dictates?) a (?:bad|flawed|broken) character\b",
+    r"\bcondemned to a life of (?:" + _PERSONALITY_NEGATIVE_TRAITS + r")\b",
+    r"\bcursed with this personality\b",
+    r"\byou cannot help being (?:selfish|manipulative|dishonest|cruel)\b",
+    r"\byour nature will never change\b",
+    r"\bthere is no changing who you are\b",
+    r"\byou are stuck with this (?:flaw|weakness|character) forever\b",
+    r"\byou will never (?:trust|connect with|open up to) anyone\b",
+    r"\bthis dosha means you are (?:a bad person|inherently flawed|beyond change)\b",
+    r"\byour flaws are permanent and unfixable\b",
+    r"\byou are trapped by your own character\b",
+    r"\bno amount of effort will change who you are\b",
+    r"\byou(?:'re| are) wired this way and rewiring is not on the table\b",
+    r"\bfrankly, you are just a\b.{0,15}\bperson and this chart proves it will never change\b",
+    r"\bcannot be undone\b.{0,30}\b(?:your character|your nature|this flaw|this weakness)\b",
+    *_PERSONALITY_FATALISM_SHAPES,
+)
+
 # Shared by every pattern above (not per-pattern lookbehinds — those don't
 # scale and were the direct cause of round 2's bugs): a match is ignored if
 # a negation cue appears earlier in the *same clause* — not the same
@@ -591,6 +730,13 @@ _NEGATION_CUES = re.compile(
     r"no (?:astrologer|one|reading|chart) (?:should|can)|"
     r"ignore any reading that claims|reading that claims|"
     r"nothing (?:in|about)|nobody|"
+    # 2026-08-10 (personality domain, independent-review round 2): "it
+    # would be wrong to say X" is the same hedge shape as "wrongly claim
+    # X"/"is false that X" already above, just phrased as an editorializing
+    # lead-in rather than a claim-verb — found missing by review, the
+    # identical category of gap (a new phrasing of an already-covered
+    # hedge, not a new hedge concept) as every prior addition to this list.
+    r"wrong to say|"
     r"by no means)\b"
 )
 # Every comma, dash (em or en), colon, and sentence-ending mark is a hard
@@ -651,12 +797,17 @@ def dosha_overclaim_kind(answer: str) -> str | None:
     weren't there before. Wealth/children patterns need the negation check
     (`_negation_precedes`) because their phrasing gets wrapped in "does not
     mean X" reassurances that contain the bad phrase as a literal
-    substring — a problem marriage's patterns don't have."""
+    substring — a problem marriage's patterns don't have. Personality
+    patterns (`_PERSONALITY_OVERCLAIM_OUTPUT`) need the same negation check
+    and for the same reason as wealth/children: the personality domain
+    addendum explicitly instructs hedged framing ("this does not mean you
+    will always be selfish"), so the reassurance form is expected, common
+    output, not an edge case."""
     normalized = _normalize(answer)
     for pattern in _DOSHA_OVERCLAIM_OUTPUT:
         if re.search(pattern, normalized):
             return "dosha_overclaim"
-    for pattern in _WEALTH_CHILDREN_OVERCLAIM_OUTPUT:
+    for pattern in (*_WEALTH_CHILDREN_OVERCLAIM_OUTPUT, *_PERSONALITY_OVERCLAIM_OUTPUT):
         for match in re.finditer(pattern, normalized):
             if not _negation_precedes(normalized, match.start()):
                 return "dosha_overclaim"
