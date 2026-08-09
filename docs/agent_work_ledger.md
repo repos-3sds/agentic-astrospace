@@ -19,20 +19,22 @@ should be pruned, not archived — this isn't a history log, `git log` is.
 
 ## Current assignments
 
-Full task specs for all four: [docs/agent_task_briefs_2026-08-08.md](agent_task_briefs_2026-08-08.md).
-This table stays intentionally thin — status only, detail lives in the
-brief.
+Full task specs for the current round: [docs/agent_task_briefs_2026-08-09.md](agent_task_briefs_2026-08-09.md)
+(supersedes [the 2026-08-08 briefs](agent_task_briefs_2026-08-08.md) for the
+rows below — that doc's Claude/Codex/Gemini/Qwen sections are all now
+closed out). This table stays intentionally thin — status only, detail
+lives in the brief.
 
-All four briefs approved by Codex 2026-08-08, two refinements folded in
-(Gemini: no `taxonomy.json` edits; Codex: added Ask thread UX acceptance
-criteria to her own brief). Cleared to begin per her kickoff recommendation.
+Assigned by Claude 2026-08-09 after PR #10 merged; not yet reviewed/
+confirmed by the other three the way the 2026-08-08 round was by Codex —
+treat as proposed until each agent claims their row.
 
 | Agent | Task | Branch | Status | Touching | Last updated |
 |---|---|---|---|---|---|
-| Claude | Ask backend Item 2: fixed the 44 safety.py regex gaps — **DONE, merged** (PR #10). Root cause was structural (flat literal-phrase lists, same weakness `refer_out_kind()` already fixed once) — added contraction normalization + generalized pattern clusters, not phrase patches. Codex's review (2nd round) caught 2 more real false positives after my own self-caught one ("you have N years remaining" still matching real dasha-period phrasing; two dosha-overclaim patterns not anchored to a marriage subject) — both fixed properly, verified against her exact counterexamples, all 5 kept as permanent regression tests. Also verified and recorded Codex's separate tense/life-stage finding (retrospective vs. future questions) as the concrete spec for Item 3 in the architecture doc. Merged main (Children domain + structured rendering) before merge, full suite re-run clean: 1020 passed, 10 skipped | `main` | Done | `astrospace/agents/safety.py`, `tests/test_verifier.py` | 2026-08-09 |
-| Codex | Mobile Ask richer structured rendering — **DONE, merged** (PR #8). Confidence/context pills, intent/plain-guidance cards, numbered next-steps, remedy rows, technical-basis section, all persona-gated. Claude verified live in-browser (not just build) — asked two real questions end to end, confirmed every section renders correctly and Guided mode genuinely hides context pills + technical basis, not just in the diff | `main` | Done | `ui/src/app/features/mobile/ask/*` | 2026-08-09 |
-| Gemini | Health domain — **DONE, ready for review** (implementing spec, writing tests) | `gemini-health-domain-spec` | PR Ready | `astrospace/agents/registry.py`, `tests/*` | 2026-08-09 |
-| Qwen | Adversarial paraphrase audit on `safety.py`'s regex gates — **DONE, merged** (PR #7). Claude independently re-verified all 44 phrases against the real regex before merging, marked each `xfail(strict=True)` so the (real) gap doesn't fail CI, and dropped 2 malformed fragments | `main` | Done. The actual regex fix for the 44 confirmed gaps is Claude's next Ask-hardening item, ahead of anything else in that sequence | `tests/test_verifier.py` (additive, merged) | 2026-08-08 |
+| Claude | Ask backend Item 3: tense-aware context (intent tense classification, deterministic profile-facts block, agent prompt updates, verifier invariant) — full spec in the architecture doc's 2026-08-09 update. Not yet started | — | Queued, next up | `astrospace/agents/intent.py`, `astrospace/context/assembler.py`, `astrospace/agents/verifier.py` | 2026-08-09 |
+| Codex | Mobile screen build backlog — per-mode Ask Answer templates first, then offline/stale/partial-calculation states, then the rest of the ❌ list in `mobile_screen_build_plan.md`. | `codex-mobile-screen-build` | Claimed, in progress — starting with Ask Answer Figma nodes `212:971`/`212:1019`/`212:1077`; will screenshot 375×812 before PR | `ui/src/app/features/mobile/**`; screenshot evidence/docs if needed | 2026-08-09 |
+| Gemini | Health domain — **DONE, merged** (PR #11). `_HEALTH_ADDENDUM` states the refer-out boundary explicitly and covers retrospective framing in prose; bundle-shape/routing/stream tests added. Follow-up noted, not blocking: test *questions* are all future-framed, no retrospective-phrased case yet — worth adding once Item 3 ships a real profile-facts block to test against. Full suite re-run clean pre-merge: 1023 passed, 10 skipped | `main` | Done | `astrospace/agents/registry.py`, `tests/*` | 2026-08-09 |
+| Qwen | Adversarial audit extended to Wealth + Children dosha/prohibited-verdict phrasing (Health once Gemini's PR merges — now merged, Health is in scope too). Not yet started | — | Proposed, awaiting claim | `tests/test_verifier.py` (additive) | 2026-08-09 |
 
 ## Open handoffs / things the next agent in an area should know
 
