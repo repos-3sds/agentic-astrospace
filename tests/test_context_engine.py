@@ -212,6 +212,38 @@ class TestRouter:
         decision = KeywordRouter().route(question)
         assert decision.primary != not_expected
 
+    def test_strengths_and_weaknesses_does_not_double_count_as_two_keyword_hits(self):
+        """Independent-review finding (round 1, two reviewers independently):
+        taxonomy.json originally listed "my strengths", "my weaknesses", AND
+        "strengths and weaknesses" as three separate personality keywords.
+        The single, most common real phrasing ("what are my strengths and
+        weaknesses") matches BOTH "my strengths" and "strengths and
+        weaknesses" as literal substrings of the same mention, inflating one
+        real signal into 2 keyword hits — KeywordRouter's confidence="high"
+        threshold — which, combined with the orchestrator's old
+        confidence=="high" clarification bypass, let personality silently
+        outrank a genuine one-keyword competitor (career/wealth/children/
+        marriage all reproduced) with zero clarification signal. Fixed by
+        dropping the redundant "strengths and weaknesses" keyword — "my
+        strengths"/"my weaknesses" alone already cover the phrase without
+        the self-inflation. Pinned here so it can't silently come back."""
+        decision = KeywordRouter().route("What are my strengths and weaknesses?")
+        assert decision.matched_terms == ("my strengths",)
+        assert decision.confidence == "medium"
+
+    def test_exam_keyword_matches_the_plural_too(self):
+        """A second, smaller finding from the same review round: education's
+        "exam" keyword is `\\bexam\\b`-matched, which does not match plural
+        "exams" — so "competitive exams" (the taxonomy's own description
+        text for this domain) scored zero education signal, letting a
+        personality-flavored competing phrase ("what are my strengths...for
+        competitive exams") win uncontested. Small, obviously-correct fix
+        (AGENTS.md Rule 5) alongside the personality-domain change that
+        exposed it, not a personality-specific keyword."""
+        decision = KeywordRouter().route("How should I prepare for competitive exams?")
+        assert "exams" in decision.matched_terms
+        assert decision.primary == "education"
+
     def test_no_keywords_falls_back_to_default(self):
         decision = KeywordRouter().route("Tell me something interesting")
         assert decision.method == "default"

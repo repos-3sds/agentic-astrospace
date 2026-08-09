@@ -80,7 +80,7 @@
       "rule_ids": ["saraswati_yoga", "budhaditya_yoga", "guru_chandala_yoga"],
       "arudhas": ["A4", "A5"],
       "gochara_planets": ["Jupiter", "Mercury"],
-      "keywords": ["education", "study", "exam", "degree", "college", "university", "school", "learning", "research", "phd", "marks", "student", "course"],
+      "keywords": ["education", "study", "exam", "exams", "degree", "college", "university", "school", "learning", "research", "phd", "marks", "student", "course"],
       "convention_flags": [],
       "source_refs": ["bphs", "jataka_parijata", "kn_rao_education", "raman_htjh"]
     },
@@ -170,7 +170,7 @@
       "rule_ids": ["gaja_kesari_yoga", "budhaditya_yoga", "kemadruma_yoga", "gandanta_dosha"],
       "arudhas": ["A1"],
       "gochara_planets": ["Saturn", "Jupiter"],
-      "keywords": ["personality", "character", "traits", "temperament", "my nature", "my strengths", "my weaknesses", "strengths and weaknesses", "emotional intelligence", "blind spots", "biases", "who am i", "self improvement", "self awareness", "self-awareness"],
+      "keywords": ["personality", "character", "traits", "temperament", "my nature", "my strengths", "my weaknesses", "emotional intelligence", "blind spots", "biases", "who am i", "self improvement", "self awareness", "self-awareness"],
       "convention_flags": [],
       "exclusions": ["No psychological, clinical, or mental-health assessment — describes chart-based trait tendencies only, framed as inclinations rather than fixed, deterministic verdicts on someone's character."],
       "source_refs": ["bphs", "uttara_kalamrita", "phaladeepika", "brihat_jataka", "saravali", "raman_htjh"]

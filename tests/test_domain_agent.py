@@ -186,6 +186,39 @@ class TestAskOrchestratorPrepare:
         assert outcome.terminal_envelope["type"] == "clarification_needed"
         assert set(outcome.terminal_envelope["options"]) == {"career", "marriage", "wealth", "children", "health", "foreign", "personality"}
 
+    def test_high_confidence_tie_also_needs_clarification(self, orchestrator):
+        """Independent-review finding (personality-domain build, round 1,
+        confirmed by two reviewers): `_needs_clarification` used to skip
+        its tie check entirely whenever the primary domain scored 2+
+        keyword hits ("high" confidence) — even when a real secondary
+        domain scored only one hit fewer. A question naming two genuinely
+        distinct personality keywords ("temperament" + "character") for
+        what is actually a spirituality question used to be answered as
+        personality with zero clarification signal, purely because 2 hits
+        crossed the high-confidence threshold. The tie check now runs at
+        any confidence level whenever a real secondary domain exists."""
+        outcome = orchestrator.prepare(
+            "Do I have the temperament of a devoted, spiritual character?"
+        )
+        assert outcome.terminal_envelope["type"] == "clarification_needed"
+        # "options" is the static configured-domain list (routing.available_
+        # domains), not the two domains that actually tied — spirituality
+        # itself isn't even configured in AGENT_REGISTRY. The behavior this
+        # test pins is that clarification fires at all despite personality
+        # scoring "high" confidence (2 hits), which the pre-fix code never
+        # did once any domain crossed that threshold.
+        assert "personality" in outcome.terminal_envelope["options"]
+
+    def test_high_confidence_with_no_real_competitor_still_answers_directly(self, orchestrator):
+        """The fix above must not turn every high-confidence match into a
+        clarification prompt — only a genuine close tie. A clean multi-
+        keyword hit for one domain with nothing else in contention (no
+        second entry in `ranked_domains`) must still answer immediately,
+        the same as before this fix."""
+        outcome = orchestrator.prepare("Is this a good year for a promotion at work?")
+        assert outcome.prepared is not None
+        assert outcome.prepared.domain == "career"
+
     def test_daily_guidance_only_needs_clarification_not_a_wrong_domain_answer(self, orchestrator):
         outcome = orchestrator.prepare("What should I focus on today?")
         assert outcome.terminal_envelope["type"] == "clarification_needed"

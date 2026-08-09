@@ -93,13 +93,28 @@ class PrepareOutcome:
 # Ties (per the three-way design review): a single keyword hit is only
 # "medium" confidence in KeywordRouter's scoring, not "low" — a lone,
 # possibly-spurious match must not answer as confidently as a clean one.
-# Clarify on zero-match ("low") always; on a single-hit ("medium") only
-# when a secondary domain scores within one hit of the primary — a genuine
-# tie, not routine single-keyword ambiguity.
+# Clarify on zero-match ("low") always; on any real match, when a secondary
+# domain scores within one hit of the primary — a genuine tie, not routine
+# single-keyword ambiguity.
+#
+# 2026-08-09 (personality-domain independent review, two rounds): the
+# original version only ran this tie check at confidence=="medium", never
+# "high" (primary hits >= 2) — meaning a question that legitimately named
+# two real keywords from the wrong domain (e.g. "temperament" + "character"
+# for a spirituality question, both real, independently meaningful
+# personality signals, not a double-count of the same phrase) could outscore
+# a genuine one-keyword competitor and get answered with zero clarification
+# signal, no matter how close the competitor's own count was. Both an
+# independent review agent and this file's own precedent (KeywordRouter only
+# checks presence, not exclusivity, per the settle-abroad incident) pointed
+# at the same fix: the tie check is a property of the *margin* between
+# primary and secondary, not of which confidence bucket the primary
+# happened to land in — so it now runs whenever there is a real secondary
+# domain to compare against, high confidence included.
 def _needs_clarification(decision) -> bool:
     if decision.confidence == "low":
         return True
-    if decision.confidence != "medium" or len(decision.ranked_domains) < 2:
+    if len(decision.ranked_domains) < 2:
         return False
     _primary_domain, primary_hits, _ = decision.ranked_domains[0]
     _secondary_domain, secondary_hits, _ = decision.ranked_domains[1]
