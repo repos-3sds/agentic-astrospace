@@ -1587,6 +1587,22 @@ of the confidence/remedy verifier checks in Item 2's remaining queue,
 though not ahead of finishing what's already in flight (the safety-regex
 fix, PR #10, stands on its own and is unaffected by this).
 
+**Follow-up (Codex): the profile-facts block is broader than age/life-stage
+alone.** Requirement 2 above should read as the minimum, not the ceiling.
+Where the profile has the data, the same deterministic block should also
+carry: relationship/gender context when relevant to the domain (marriage,
+children), current location/country (for practical framing — timezone,
+festival/observance calendar, muhurta locality), and known status facts
+beyond retired/working/student where available. Stated as a principle, not
+just a field list: **logical/common-sense reasoning runs before
+astrological interpretation, not after** — astrology refines and
+contextualizes an answer built on correct demographic reality, it does not
+get asked to override that reality. This doesn't change Item 3's shape
+(still a deterministic backend-computed block + tense classification +
+prompt instruction + verifier invariant), it widens what "profile facts"
+means inside it, and it's the reason requirement 4's verifier invariant is
+framed as *reject-or-clarify* on conflict, not merely *flag*.
+
 ## Cross-Check: Qwen's 2026-08-08 Review (fresh-eyes read, doc-only)
 
 A third review, done from this document's text alone — no codebase access.
