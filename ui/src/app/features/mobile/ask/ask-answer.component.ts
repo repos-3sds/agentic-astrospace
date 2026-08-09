@@ -307,14 +307,37 @@ export class AskAnswerComponent {
       .filter(Boolean);
   }
 
+  /**
+   * Whether the FULL `technical_basis` section (a labelled list of chart
+   * factors) should render for this mode. Guided gets a single one-line
+   * mention instead — see `guidedTechnicalHint` — never this section: per
+   * product spec, the persona modes only ever differ on how much technical
+   * disclosure is shown, never on how much of the actual explanation
+   * (`interpretation`/`summary_and_assurance`/`guidance`) is shown — that
+   * part is identical across all three modes.
+   */
   protected showTechnicalBasis(message: ChatMessage): boolean {
     if (!message.reading?.technical_basis?.length) return false;
     return this.preferences.experienceMode() !== 'guided';
   }
 
+  /** Balanced gets a high-level subset (factor names + a compact reading,
+   * still no full provenance detail); Practitioner gets the whole list,
+   * granular. Guided never calls this — see `guidedTechnicalHint`. */
   protected technicalBasis(message: ChatMessage): AskTechnicalBasisItem[] {
     const items = message.reading?.technical_basis ?? [];
     return this.preferences.experienceMode() === 'practitioner' ? items : items.slice(0, 3);
+  }
+
+  /** Guided's "very less" technical disclosure: at most one line naming the
+   * single strongest chart factor, not the full labelled list Balanced/
+   * Practitioner get. Returns null when there is nothing to cite, in which
+   * case Guided shows no technical line at all — "none or a single
+   * one-line mention at most," never a full section. */
+  protected guidedTechnicalHint(message: ChatMessage): string | null {
+    const item = message.reading?.technical_basis?.[0];
+    if (!item) return null;
+    return this.compactSentence(`${item.factor}: ${item.reading}`, 100);
   }
 
   protected modeEyebrow(message: ChatMessage): string {
@@ -354,15 +377,15 @@ export class AskAnswerComponent {
     return this.compactSentence(source, 94);
   }
 
-  protected guidedBody(reading: StructuredReading): string {
-    const primary = reading.interpretation || reading.summary_and_assurance || reading.acknowledgment;
-    return this.compactSentence(primary, 190);
-  }
-
-  protected guidedActions(reading: StructuredReading): string[] {
+  /** Full `practical_actions` (falling back to `follow_up_questions` when
+   * the reading has none) — the same list, unsliced, for Guided, Balanced,
+   * and Practitioner alike. Was previously Guided-only and capped at 2
+   * items (`guidedActions`); per product spec the explanation and guidance
+   * are common to every mode, only technical disclosure varies. */
+  protected readingActions(reading: StructuredReading): string[] {
     const actions = reading.guidance.practical_actions.filter(Boolean);
-    if (actions.length) return actions.slice(0, 2);
-    return reading.guidance.follow_up_questions.slice(0, 2).map((question) => `Ask next: ${question}`);
+    if (actions.length) return actions;
+    return reading.guidance.follow_up_questions.map((question) => `Ask next: ${question}`);
   }
 
   private compactSentence(text: string, maxLength: number): string {

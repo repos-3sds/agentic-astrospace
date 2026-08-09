@@ -38,6 +38,20 @@ from .schema import StructuredReading
 #    those words; the year check is the precise, well-grounded signal that
 #    actually matches the reported bug (explicit invented years), so the
 #    phrase heuristic is dropped rather than patched narrower and narrower.
+#
+# 3. (2026-08-10, independent review of the persona-depth/timing-precision
+#    task) Same false-positive shape as #1, new source: once
+#    `assembler.py`'s `_gochara_for_domain()` started carrying real
+#    `start_date`/`end_date` per active transit rule, and `domain_agent.py`
+#    started requiring the model to cite them for timing-shaped questions,
+#    a genuinely bundle-grounded gochara year (e.g. "this transit runs
+#    through 2027") could land in a retrospective-tense answer's
+#    constructive close and get flagged as invented — it was never in
+#    `dasha_relevance.chain`, the only section this function read from.
+#    `_period_boundary_years()` now also pulls from
+#    `gochara.active_rules[].start_date/end_date`, on the same principle as
+#    #1: a future year is only suspicious if it isn't one the bundle itself
+#    handed the model.
 _FUTURE_YEAR_RE = re.compile(r"\b(?:19|20)\d{2}\b")
 
 
@@ -46,6 +60,12 @@ def _period_boundary_years(bundle: dict) -> set[int]:
     chain = (bundle.get("dasha_relevance") or {}).get("chain") or []
     for row in chain:
         for key in ("start", "end"):
+            value = row.get(key)
+            if isinstance(value, str) and value[:4].isdigit():
+                years.add(int(value[:4]))
+    gochara_rules = (bundle.get("gochara") or {}).get("active_rules") or []
+    for row in gochara_rules:
+        for key in ("start_date", "end_date"):
             value = row.get(key)
             if isinstance(value, str) and value[:4].isdigit():
                 years.add(int(value[:4]))
