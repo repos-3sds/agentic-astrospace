@@ -54,6 +54,30 @@ _VERDICT_FRAMES = (
     r"\bdiagnos", r"\bwhat does .{0,20}mean for my\b",
 )
 
+# Shared immigration-process vocabulary — one constant, not duplicated
+# per pattern. A second independent review of the first version (which
+# *did* duplicate it, once per direction) found real drift between the
+# copies: `approved?` etc. only makes the trailing letter optional, not
+# the whole "-ed" suffix, so "denied"/"rejected"/"granted"/"accepted"
+# silently had no bare-verb form at all despite reading as if they did —
+# and the reverse-order copy had quietly dropped several outcome words
+# the forward copy had. Concatenation (not an f-string) deliberately,
+# so the regex's own `{0,24}` quantifier braces never collide with
+# Python's f-string brace syntax — the exact kind of subtle bug this
+# constant exists to stop happening again.
+_IMMIGRATION_SUBJECTS = (
+    r"visa|green ?card|immigration|citizenship|work permit|h-?1-?b|"
+    r"residency|asylum|naturalization|permanent residency"
+)
+_IMMIGRATION_OUTCOME_VERBS = (
+    r"approve[ds]?|approving|reject(?:ed|s|ing)?|den(?:y|ies|ied|ying)|"
+    r"refuse[ds]?|refusing|grant(?:ed|s|ing)?|accept(?:ed|s|ing)?|"
+    r"succeed(?:ed|s|ing)?|fail(?:ed|s|ing)?|go(?:es|ing)? through|"
+    r"went through|comes? through|coming through|came through|"
+    r"get(?:s|ting)?|got|receive[ds]?|receiving|obtain(?:ed|s|ing)?|"
+    r"issue[ds]?|issuing|clear(?:ed|s|ing)?|select(?:ed|s|ing)?"
+)
+
 # Subjects the app must never issue a verdict on. Kept as word-stems so
 # inflections ("survive"/"survival") are covered without listing each form.
 _REFER_OUT_SUBJECTS: tuple[tuple[str, tuple[str, ...]], ...] = (
@@ -82,27 +106,18 @@ _REFER_OUT_SUBJECTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         r"\bjail\b", r"\bconvict", r"\bacquit", r"\bguilty\b",
         r"\bcase\b.{0,20}\b(?:win|lose|outcome)\b", r"\bbail\b",
         r"\bcustody\b", r"\bdivorce settlement\b",
-        # 2026-08-09 (foreign domain review): the original "visa...
-        # approved/rejected" entry only covered one exact phrasing.
-        # Confirmed as a real gap — "is my green card going to be
-        # approved", "will my immigration application be accepted", "will
-        # my H1B be approved" all slipped through with the domain unwired;
-        # this PR is what turns that gap from a safe domain_not_ready
-        # refusal into a live agent answer. Broadened to cover the real
-        # immigration-process vocabulary (visa/green card/immigration/
-        # citizenship/work permit/H1B/residency/asylum) against the real
-        # outcome-word vocabulary (approved/rejected/denied/refused/
-        # granted/accepted/successful/go through), both directions since
-        # English allows either order. Deportation is asked about the
-        # outcome by construction ("will I get deported"), so it's a bare
-        # subject like the others in this list, still gated by the shared
-        # seeks_verdict frame check below (e.g. "will").
-        r"\b(?:visa|green ?card|immigration|citizenship|work permit|h-?1-?b|residency|asylum)\b"
-        r".{0,24}\b(?:approved?|rejected?|denied?|refused?|granted?|accepted?|"
-        r"successful|succeeds?|fails?|go(?:ing)? through|come through)\b",
-        r"\b(?:approved?|rejected?|denied?|refused?|granted?|accepted?)\b.{0,24}"
-        r"\b(?:visa|green ?card|immigration|citizenship|work permit|h-?1-?b|residency|asylum)\b",
-        r"\bdeport(?:ed|ation)?\b",
+        # 2026-08-09 (foreign domain review, two rounds): the original
+        # "visa...approved/rejected" entry only covered one exact phrasing.
+        # This PR is what turns that gap from a safe domain_not_ready
+        # refusal into a live agent answer, since the foreign domain
+        # routes exactly this vocabulary. Both directions, using the
+        # shared vocabulary above so the two arms can't drift again.
+        r"\b(?:" + _IMMIGRATION_SUBJECTS + r")\b.{0,24}\b(?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b",
+        r"\b(?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b.{0,24}\b(?:" + _IMMIGRATION_SUBJECTS + r")\b",
+        # Deportation is asked about the outcome by construction ("will I
+        # get deported"), so it's a bare subject like the others here,
+        # still gated by the shared seeks_verdict frame check below.
+        r"\bdeport(?:ed|ations?)?\b",
     )),
     ("money", (
         # Directive-seeking only. "Is this month good to buy property" is a
@@ -176,20 +191,25 @@ _PROHIBITED_OUTPUT = (
     (r"\byou will (?:win|lose) (?:the|your|this) (?:case|lawsuit|appeal)\b", "legal"),
     (r"\b(?:court|judge) will rule in your favor\b", "legal"),
     (r"\b(?:lawsuit|case|appeal) is destined to fail\b", "legal"),
-    # 2026-08-09 (foreign domain review): output-side mirror of the
-    # broadened immigration input-gate above — the input gate cannot catch
-    # every phrasing, so a generated answer stating a specific immigration
-    # outcome needs its own check too, same as every other legal pattern
-    # here already does for court/lawsuit verdicts.
-    (r"\byour (?:visa|green card|immigration (?:application|petition)?|"
-     r"citizenship (?:application)?|work permit|h-?1-?b|residency (?:application)?|"
-     r"asylum (?:claim|application)?)\b.{0,24}\bwill be (?:approved|rejected|denied|granted)\b", "legal"),
-    (r"\byou will receive your (?:visa|green card|immigration|citizenship|"
-     r"work permit|h-?1-?b|residency|asylum) approval\b", "legal"),
-    (r"\b(?:visa|green card|immigration (?:application|petition)?|"
-     r"citizenship (?:application)?|work permit|h-?1-?b|residency (?:application)?|"
-     r"asylum (?:claim|application)?)\b.{0,24}\bis (?:certain|guaranteed) to be "
-     r"(?:approved|rejected|denied|granted)\b", "legal"),
+    # 2026-08-09 (foreign domain review, two rounds): output-side mirror of
+    # the immigration input-gate above — the input gate cannot catch every
+    # phrasing, so a generated answer stating a specific immigration
+    # outcome needs its own check too. First version used a narrower
+    # outcome-word list than the input gate and required a literal "your"
+    # + "will be" construction, so "the visa will be approved", "your visa
+    # will definitely be approved", "your visa is going to be approved",
+    # and "you will get your green card" all slipped through — found by a
+    # second review. Reuses the same shared vocabulary as the input gate
+    # now, with "be" optional (needed for passive forms like "be approved",
+    # not for active ones like "get" or "come through") and an optional
+    # adverb/"be" gap between the future-framing word and the outcome.
+    (r"\b(?:your |the )?(?:" + _IMMIGRATION_SUBJECTS + r")\b.{0,20}"
+     r"\b(?:will|is going to|is certain to|is guaranteed to|are certain to|are guaranteed to)\b"
+     r".{0,16}\b(?:be )?(?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b", "legal"),
+    (r"\byou will (?:" + _IMMIGRATION_OUTCOME_VERBS + r")\b.{0,24}"
+     r"\b(?:your |the )?(?:" + _IMMIGRATION_SUBJECTS + r")\b", "legal"),
+    (r"\byou will (?:be )?deport(?:ed)?\b", "legal"),
+    (r"\bdeportation is (?:certain|guaranteed|inevitable)\b", "legal"),
     (r"\byou (?:will|should|ought to) (?:buy|sell|invest in|purchase)\b.{0,24}\b(?:stock|share|crypto|mutual funds?)\b", "money"),
     (r"\b(?:purchase|buy|sell|invest in)\b.{0,20}\b(?:stocks?|shares?|crypto|holdings|mutual funds?)\b.{0,25}\b(?:now|immediately|today)\b", "money"),
 )
