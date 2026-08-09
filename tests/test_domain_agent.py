@@ -95,6 +95,30 @@ class TestAssembleDomainShapes:
         assert "D9" in bundle["vargas"]
         assert any(h["house"] in (9, 12) and h["tier"] == "primary" for h in bundle["houses"])
 
+    def test_personality_bundle_has_d1_and_primary_house(self, chart):
+        bundle = assemble_domain(chart, "personality")
+        assert bundle["domain"] == "personality"
+        assert "D1" in bundle["vargas"]
+        assert any(h["house"] == 1 and h["tier"] == "primary" for h in bundle["houses"])
+        assert "Sun" in bundle["karakas"]
+        assert "Moon" in bundle["karakas"]
+        assert "Mercury" in bundle["karakas"]
+
+    def test_personality_bundle_surfaces_lagna_lord_via_house_one(self, chart):
+        """The domain's central evidence — the Ascendant lord — is not a
+        fixed karaka (it varies by chart), so it cannot live in the static
+        taxonomy karaka list the way Sun/Moon/Mercury do. It is already
+        surfaced generically via house 1's own `lord`/`lord_placement`
+        fields (the same mechanism every domain uses for its primary
+        houses) — this pins that it actually resolves to a real planet
+        brief, not a scoping gap the addendum has to work around."""
+        bundle = assemble_domain(chart, "personality")
+        house_one = next(h for h in bundle["houses"] if h["house"] == 1)
+        assert house_one["tier"] == "primary"
+        assert house_one["lord"]
+        assert house_one["lord_placement"]["planet"] == house_one["lord"]
+        assert house_one["lord_placement"]["dignity"]
+
 
 class TestRunStructuredMockRealism:
     """Mocks the SDK boundary itself, not our own wrapper — proves
@@ -160,7 +184,7 @@ class TestAskOrchestratorPrepare:
     def test_ambiguous_tie_needs_clarification(self, orchestrator):
         outcome = orchestrator.prepare("Is this a good time for my career and my marriage?")
         assert outcome.terminal_envelope["type"] == "clarification_needed"
-        assert set(outcome.terminal_envelope["options"]) == {"career", "marriage", "wealth", "children", "health", "foreign"}
+        assert set(outcome.terminal_envelope["options"]) == {"career", "marriage", "wealth", "children", "health", "foreign", "personality"}
 
     def test_daily_guidance_only_needs_clarification_not_a_wrong_domain_answer(self, orchestrator):
         outcome = orchestrator.prepare("What should I focus on today?")
@@ -178,7 +202,7 @@ class TestAskOrchestratorPrepare:
         assert outcome.terminal_envelope["type"] == "domain_not_ready"
         assert outcome.terminal_envelope["domain"] == "family_property"
         assert outcome.terminal_envelope["domain_label"]
-        assert outcome.terminal_envelope["available"] == ["career", "children", "foreign", "health", "marriage", "wealth"]
+        assert outcome.terminal_envelope["available"] == ["career", "children", "foreign", "health", "marriage", "personality", "wealth"]
 
     def test_career_question_prepares_a_real_bundle(self, orchestrator):
         outcome = orchestrator.prepare("Is this a good year for a promotion at work?")
@@ -202,6 +226,12 @@ class TestAskOrchestratorPrepare:
         outcome = orchestrator.prepare("Is this a good time to settle abroad?")
         assert outcome.prepared.domain == "foreign"
         assert outcome.prepared.bundle["domain"] == "foreign"
+        assert "houses" in outcome.prepared.context_used
+
+    def test_personality_question_prepares_a_real_bundle(self, orchestrator):
+        outcome = orchestrator.prepare("What are my personality traits and character?")
+        assert outcome.prepared.domain == "personality"
+        assert outcome.prepared.bundle["domain"] == "personality"
         assert "houses" in outcome.prepared.context_used
 
     # Found missing by independent review of PR #12: every other tense/
@@ -448,6 +478,16 @@ class TestAskStreamRoute:
         assert done["domain"] == "foreign"
         assert done["status"] == "answered"
 
+    def test_personality_question_answers_with_structured_reading(self, client, env):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=_good_reading()):
+            r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
+                "question": "What are my personality traits and character?",
+            })
+        assert r.status_code == 200
+        done = self._frames(r)[-1]
+        assert done["domain"] == "personality"
+        assert done["status"] == "answered"
+
     def test_unsupported_domain_never_calls_an_agent(self, client, env):
         with patch.object(DomainReadingAgent, "run_structured_reading") as run:
             r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
@@ -457,7 +497,7 @@ class TestAskStreamRoute:
         run.assert_not_called()
         frame = self._frames(r)[0]
         assert frame["type"] == "domain_not_ready"
-        assert frame["available"] == ["career", "children", "foreign", "health", "marriage", "wealth"]
+        assert frame["available"] == ["career", "children", "foreign", "health", "marriage", "personality", "wealth"]
 
     def test_ambiguous_question_asks_for_clarification(self, client, env):
         with patch.object(DomainReadingAgent, "run_structured_reading") as run:
