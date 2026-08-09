@@ -60,9 +60,22 @@ Wealth-specific framing:
 - Timing questions (when financial situation will improve) should be answered from the
   dasha_relevance and gochara sections' actual lords/transits in the bundle, not general trends."""
 
+_CHILDREN_ADDENDUM = """
+Children-specific framing:
+- The 5th house/lord, D7 (saptamsa) placements, and Jupiter (karaka) are the primary evidence for 
+  children and progeny questions; the 9th, 2nd, and 11th houses are supporting evidence.
+- NEVER predict or confirm the specific number or gender of children. This is low-confidence 
+  astrologically and strictly excluded from product answers. If asked, gently clarify that 
+  astrology indicates timing and general progeny prospects, not deterministic counts or genders.
+- Delay, difficulty, or adoption questions: describe what the bundle supports (e.g., afflictions 
+  to the 5th house or D7) without deterministic fatalism (never say "you will never have children").
+- Timing questions (when conception or childbirth is likely) should be answered from the 
+  dasha_relevance and gochara sections' actual lords/transits in the bundle, not general trends."""
+
 
 AGENT_REGISTRY: dict[str, AgentConfig] = {
     "career": AgentConfig(domain_id="career", domain_addendum=_CAREER_ADDENDUM),
     "marriage": AgentConfig(domain_id="marriage", domain_addendum=_MARRIAGE_ADDENDUM),
     "wealth": AgentConfig(domain_id="wealth", domain_addendum=_WEALTH_ADDENDUM),
+    "children": AgentConfig(domain_id="children", domain_addendum=_CHILDREN_ADDENDUM),
 }

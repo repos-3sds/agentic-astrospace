@@ -74,6 +74,12 @@ class TestAssembleDomainShapes:
         assert "D2" in bundle["vargas"]
         assert any(h["house"] in (2, 11) and h["tier"] == "primary" for h in bundle["houses"])
 
+    def test_children_bundle_has_d7_and_primary_house(self, chart):
+        bundle = assemble_domain(chart, "children")
+        assert bundle["domain"] == "children"
+        assert "D7" in bundle["vargas"]
+        assert any(h["house"] == 5 and h["tier"] == "primary" for h in bundle["houses"])
+
 
 class TestRunStructuredMockRealism:
     """Mocks the SDK boundary itself, not our own wrapper — proves
@@ -139,7 +145,7 @@ class TestAskOrchestratorPrepare:
     def test_ambiguous_tie_needs_clarification(self, orchestrator):
         outcome = orchestrator.prepare("Is this a good time for my career and my marriage?")
         assert outcome.terminal_envelope["type"] == "clarification_needed"
-        assert set(outcome.terminal_envelope["options"]) == {"career", "marriage", "wealth"}
+        assert set(outcome.terminal_envelope["options"]) == {"career", "marriage", "wealth", "children"}
 
     def test_daily_guidance_only_needs_clarification_not_a_wrong_domain_answer(self, orchestrator):
         outcome = orchestrator.prepare("What should I focus on today?")
@@ -157,7 +163,7 @@ class TestAskOrchestratorPrepare:
         assert outcome.terminal_envelope["type"] == "domain_not_ready"
         assert outcome.terminal_envelope["domain"] == "family_property"
         assert outcome.terminal_envelope["domain_label"]
-        assert outcome.terminal_envelope["available"] == ["career", "marriage", "wealth"]
+        assert outcome.terminal_envelope["available"] == ["career", "children", "marriage", "wealth"]
 
     def test_career_question_prepares_a_real_bundle(self, orchestrator):
         outcome = orchestrator.prepare("Is this a good year for a promotion at work?")
@@ -354,6 +360,16 @@ class TestAskStreamRoute:
         assert done["domain"] == "wealth"
         assert done["status"] == "answered"
 
+    def test_children_question_answers_with_structured_reading(self, client, env):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=_good_reading()):
+            r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
+                "question": "Will I have children soon?",
+            })
+        assert r.status_code == 200
+        done = self._frames(r)[-1]
+        assert done["domain"] == "children"
+        assert done["status"] == "answered"
+
     def test_unsupported_domain_never_calls_an_agent(self, client, env):
         with patch.object(DomainReadingAgent, "run_structured_reading") as run:
             r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
@@ -363,7 +379,7 @@ class TestAskStreamRoute:
         run.assert_not_called()
         frame = self._frames(r)[0]
         assert frame["type"] == "domain_not_ready"
-        assert frame["available"] == ["career", "marriage", "wealth"]
+        assert frame["available"] == ["career", "children", "marriage", "wealth"]
 
     def test_ambiguous_question_asks_for_clarification(self, client, env):
         with patch.object(DomainReadingAgent, "run_structured_reading") as run:
