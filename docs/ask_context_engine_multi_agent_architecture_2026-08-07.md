@@ -1521,6 +1521,72 @@ agents this document's roadmap hasn't reached yet. Worth keeping on record
 as the eventual destination; not worth sequencing until Phase 6 above is
 further along than 2 of 10 domains.
 
+## Update 2026-08-09: Retrospective-vs-future tense gap (Codex, live user testing)
+
+Found via actual live testing, not review-by-reading: a user on an
+already-retired profile asked the career agent "when did my career
+inception start and when did retirement happen?" — a retrospective,
+event-history question. The agent answered it as a future prediction,
+generating future windows (~2023/2049) instead of recognizing the person
+is already retired and the question is about the past. Verified both
+technical root causes directly before recording this, not taken on trust:
+
+- `detect_intent()` (`astrospace/agents/intent.py`)'s `timing` pattern is
+  a bare `\bwhen\b` — "when did X start" and "when will X happen" produce
+  the identical `timing` intent. There is no tense distinction anywhere in
+  the intent layer.
+- The context bundle (`assemble_domain()`, `astrospace/context/
+  assembler.py`) carries `as_of` (today's date) but no `age`, `life_stage`,
+  or `retired`/`working`/`student` fact. Nothing in the bundle states the
+  person's current life stage as a precomputed fact — that inference is
+  left entirely to the model, which is exactly the failure mode this whole
+  architecture exists to prevent ("the model does not decide what
+  astrological facts exist," this document's Architecture Principle,
+  reaffirmed in the 2026-08-08 Update section above). A sufficiently
+  careful model could in principle derive age from birth data + `as_of`
+  itself, but leaving that arithmetic to the model instead of computing it
+  once, deterministically, in the backend is the same category of gap the
+  registry/verifier/safety-net work all season has been closing elsewhere.
+
+**Severity, per Codex's own framing, and independently agreed with:** this
+isn't domain-specific. The same failure recurs for marriage ("when did we
+meet" vs "when will I marry"), children, property, health, and any
+retirement/life-event question, in any domain, present or future. It's a
+Context Engine / intent-layer gap, not a career-agent bug — fixing it once
+here fixes it for every domain, including ones not yet built.
+
+**This is not a quick patch — it's the concrete specification Item 3 (the
+intent-aware context planner) was missing.** Item 3 above already says
+"make `assemble_domain` intent-aware" without saying precisely what that
+means; this finding gives it a real, validated requirement:
+
+1. `detect_intent()` (or a new field alongside it) needs a tense
+   classification — retrospective ("when did X start/happen") vs.
+   current-state vs. planning vs. future-prediction — not just a single
+   `timing` bucket covering all four.
+2. The context bundle needs a deterministic profile-facts block computed
+   once in the backend, not inferred by the model: current age at minimum;
+   life-stage flags (retired/working/student) where the profile has data
+   to support them, not guessed.
+3. Domain agent prompts need those facts and an explicit instruction:
+   respect profile age/life-stage and question tense over generating a
+   plausible-sounding future timeline when the question was never asking
+   for one.
+4. Candidate verifier invariant, for later once the above ships: if a
+   generated timeline (a date, dasha window, or age reference in the
+   answer) conflicts with the profile's known current age or the
+   question's retrospective framing, that's a violation — same category as
+   the citation/prohibited-verdict/dosha-overclaim checks already there.
+
+**Sequencing:** folded into Item 3, not a new unscoped workstream — this
+is what makes Item 3 buildable rather than a vague intention. Given the
+severity (recurs across every domain, damages trust even when the
+astrology math is internally correct) and that it was raised specifically
+in the context of "discuss before scaling more domains," it moves ahead
+of the confidence/remedy verifier checks in Item 2's remaining queue,
+though not ahead of finishing what's already in flight (the safety-regex
+fix, PR #10, stands on its own and is unaffected by this).
+
 ## Cross-Check: Qwen's 2026-08-08 Review (fresh-eyes read, doc-only)
 
 A third review, done from this document's text alone — no codebase access.

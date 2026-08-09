@@ -99,6 +99,35 @@
 .verdict-label .eyebrow[data-tone='warn'] { color: var(--m-warn); }
 .verdict-label .eyebrow[data-tone='bad'] { color: var(--m-bad); }
 
+.answer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.confidence,
+.context-pill {
+  @include m-badge;
+  min-height: 24px;
+}
+
+.confidence {
+  color: var(--m-warn);
+  background: color-mix(in srgb, var(--m-warn) 13%, transparent);
+
+  &[data-confidence='good'] {
+    color: var(--m-good);
+    background: color-mix(in srgb, var(--m-good) 13%, transparent);
+  }
+}
+
+.context-pill {
+  color: var(--m-muted);
+  border: 1px solid color-mix(in srgb, var(--m-border) 78%, transparent);
+  background: color-mix(in srgb, var(--m-raised) 58%, transparent);
+}
+
 // A flat disc, so it is drawn rather than fetched — the same circle in three
 // tones would otherwise be three assets that can drift apart.
 .dot {
@@ -109,6 +138,29 @@
   background: var(--m-good);
   &[data-tone='warn'] { background: var(--m-warn); }
   &[data-tone='bad']  { background: var(--m-bad); }
+}
+
+.intent-card,
+.plain-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.intent-card {
+  padding: 12px 13px;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--m-accent-soft) 56%, transparent);
+}
+
+.plain-card {
+  padding: 2px 0 0;
+}
+
+.section-kicker {
+  @include m-eyebrow;
+  color: var(--m-accent);
 }
 
 .verdict {
@@ -153,7 +205,7 @@
 .answer-section {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 10px;
   padding: 12px 13px;
   border: 1px solid color-mix(in srgb, var(--m-border) 72%, transparent);
   border-radius: 16px;
@@ -167,7 +219,9 @@
     margin: 0;
   }
 
-  p {
+  > p,
+  .basis-row p,
+  .remedy-row p {
     @include m-body-small;
     color: var(--m-muted);
     margin: 0;
@@ -181,6 +235,93 @@
     + p {
       margin-top: 3px;
     }
+  }
+}
+
+.action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.action-list li {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  align-items: start;
+  gap: 9px;
+  @include m-body-small;
+  color: var(--m-text);
+}
+
+.step-index {
+  @include m-micro;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--m-accent-strong);
+  background: color-mix(in srgb, var(--m-accent-soft) 72%, transparent);
+}
+
+.remedy-row,
+.basis-row {
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+}
+
+.remedy-mark {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 50%, var(--m-accent) 0 2px, transparent 3px),
+    color-mix(in srgb, var(--m-accent-soft) 76%, transparent);
+}
+
+.remedy-row p {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.remedy-row strong,
+.basis-row strong {
+  @include m-body-strong;
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--m-text);
+}
+
+.basis-row {
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-top: 9px;
+  border-top: 1px solid color-mix(in srgb, var(--m-border) 70%, transparent);
+
+  &:first-of-type {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  > div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  > span {
+    @include m-micro;
+    max-width: 36%;
+    color: var(--m-muted);
+    text-align: right;
+    overflow-wrap: anywhere;
   }
 }
 
