@@ -325,9 +325,9 @@ export class AskAnswerComponent {
     }
     switch (this.preferences.experienceMode()) {
       case 'guided':
-        return 'DECISION VERDICT';
+        return 'READING SUMMARY';
       case 'practitioner':
-        return 'SYNTHESISED VERDICT';
+        return 'CHART SYNTHESIS';
       default:
         return 'BALANCED SUMMARY';
     }
