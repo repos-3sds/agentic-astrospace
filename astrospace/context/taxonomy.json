@@ -125,7 +125,7 @@
       "rule_ids": [],
       "arudhas": ["A12"],
       "gochara_planets": ["Rahu", "Ketu", "Saturn"],
-      "keywords": ["foreign", "abroad", "visa", "immigration", "settle", "usa", "canada", "australia", "travel", "overseas", "relocate abroad", "green card", "onsite"],
+      "keywords": ["foreign", "abroad", "visa", "immigration", "settle abroad", "settle overseas", "usa", "canada", "australia", "travel", "overseas", "relocate abroad", "green card", "onsite"],
       "convention_flags": [],
       "source_refs": ["bphs", "prasna_marga", "uttara_kalamrita"]
     },

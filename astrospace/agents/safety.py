@@ -81,7 +81,28 @@ _REFER_OUT_SUBJECTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         r"\bjudge\b", r"\bjury\b", r"\bverdict\b", r"\bprison\b",
         r"\bjail\b", r"\bconvict", r"\bacquit", r"\bguilty\b",
         r"\bcase\b.{0,20}\b(?:win|lose|outcome)\b", r"\bbail\b",
-        r"\bcustody\b", r"\bdivorce settlement\b", r"\bvisa\b.{0,16}\b(?:approved|rejected)\b",
+        r"\bcustody\b", r"\bdivorce settlement\b",
+        # 2026-08-09 (foreign domain review): the original "visa...
+        # approved/rejected" entry only covered one exact phrasing.
+        # Confirmed as a real gap — "is my green card going to be
+        # approved", "will my immigration application be accepted", "will
+        # my H1B be approved" all slipped through with the domain unwired;
+        # this PR is what turns that gap from a safe domain_not_ready
+        # refusal into a live agent answer. Broadened to cover the real
+        # immigration-process vocabulary (visa/green card/immigration/
+        # citizenship/work permit/H1B/residency/asylum) against the real
+        # outcome-word vocabulary (approved/rejected/denied/refused/
+        # granted/accepted/successful/go through), both directions since
+        # English allows either order. Deportation is asked about the
+        # outcome by construction ("will I get deported"), so it's a bare
+        # subject like the others in this list, still gated by the shared
+        # seeks_verdict frame check below (e.g. "will").
+        r"\b(?:visa|green ?card|immigration|citizenship|work permit|h-?1-?b|residency|asylum)\b"
+        r".{0,24}\b(?:approved?|rejected?|denied?|refused?|granted?|accepted?|"
+        r"successful|succeeds?|fails?|go(?:ing)? through|come through)\b",
+        r"\b(?:approved?|rejected?|denied?|refused?|granted?|accepted?)\b.{0,24}"
+        r"\b(?:visa|green ?card|immigration|citizenship|work permit|h-?1-?b|residency|asylum)\b",
+        r"\bdeport(?:ed|ation)?\b",
     )),
     ("money", (
         # Directive-seeking only. "Is this month good to buy property" is a
@@ -155,6 +176,20 @@ _PROHIBITED_OUTPUT = (
     (r"\byou will (?:win|lose) (?:the|your|this) (?:case|lawsuit|appeal)\b", "legal"),
     (r"\b(?:court|judge) will rule in your favor\b", "legal"),
     (r"\b(?:lawsuit|case|appeal) is destined to fail\b", "legal"),
+    # 2026-08-09 (foreign domain review): output-side mirror of the
+    # broadened immigration input-gate above — the input gate cannot catch
+    # every phrasing, so a generated answer stating a specific immigration
+    # outcome needs its own check too, same as every other legal pattern
+    # here already does for court/lawsuit verdicts.
+    (r"\byour (?:visa|green card|immigration (?:application|petition)?|"
+     r"citizenship (?:application)?|work permit|h-?1-?b|residency (?:application)?|"
+     r"asylum (?:claim|application)?)\b.{0,24}\bwill be (?:approved|rejected|denied|granted)\b", "legal"),
+    (r"\byou will receive your (?:visa|green card|immigration|citizenship|"
+     r"work permit|h-?1-?b|residency|asylum) approval\b", "legal"),
+    (r"\b(?:visa|green card|immigration (?:application|petition)?|"
+     r"citizenship (?:application)?|work permit|h-?1-?b|residency (?:application)?|"
+     r"asylum (?:claim|application)?)\b.{0,24}\bis (?:certain|guaranteed) to be "
+     r"(?:approved|rejected|denied|granted)\b", "legal"),
     (r"\byou (?:will|should|ought to) (?:buy|sell|invest in|purchase)\b.{0,24}\b(?:stock|share|crypto|mutual funds?)\b", "money"),
     (r"\b(?:purchase|buy|sell|invest in)\b.{0,20}\b(?:stocks?|shares?|crypto|holdings|mutual funds?)\b.{0,25}\b(?:now|immediately|today)\b", "money"),
 )
