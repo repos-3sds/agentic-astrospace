@@ -9,8 +9,11 @@ via career. See `astrospace/agents/orchestrator.py`.
 from __future__ import annotations
 
 import re
+from typing import Literal
 
 from .schema import AskIntent
+
+QuestionTense = Literal["retrospective", "current_state", "future", "mixed", "unspecified"]
 
 # Order matters: earlier entries win on overlap. daily_guidance's temporal
 # cues are checked first because they're the most specific and would
@@ -49,3 +52,60 @@ def detect_intent(question: str) -> AskIntent:
         if any(re.search(pattern, normalized) for pattern in patterns):
             return intent
     return "general_guidance"
+
+
+# Orthogonal to AskIntent, not a replacement for it: "timing" intent covers
+# both "when did X start" and "when will X happen" today (that collapse is
+# exactly the gap this fixes — see docs/ask_context_engine_multi_agent_
+# architecture_2026-08-07.md, "Update 2026-08-09"). A non-timing question
+# ("why did I get that promotion") can carry tense too, so this is a
+# separate, additional classification, not a timing sub-bucket.
+#
+# 2026-08-09, revised after independent review of the first version: that
+# version picked retrospective over future whenever both cues appeared
+# anywhere in the question, on the reasoning that "did" auxiliaries are the
+# more specific signal. That's true for classifying which cue is "stronger",
+# but it's the wrong call once tense feeds a *blocking* verifier invariant
+# (see verifier.py) — a genuinely two-part question like "When did
+# retirement happen, and will my next chapter be different?" has a real
+# future half that deserves a real future answer, and silently downgrading
+# it to "retrospective" caused the verifier to discard a correct answer.
+# `mixed` is a third, explicit outcome for exactly this case: both cues
+# present, so the verifier's retrospective-only invariant does not apply at
+# all (checked via `tense == "retrospective"`, an exact-match — "mixed"
+# intentionally does not qualify).
+_RETROSPECTIVE_PATTERNS = (
+    r"\bwhen did\b", r"\bwhy did\b", r"\bhow did\b", r"\bwhat happened\b",
+    r"\bhas already\b", r"\balready happened\b", r"\bwhen was\b",
+    r"\bdid\b.{0,25}\b(?:start|happen|occur|begin|end)\b",
+    r"\bused to\b", r"\bin the past\b", r"\bhow long ago\b",
+)
+_FUTURE_PATTERNS = (
+    r"\bwhen will\b", r"\bwill i\b", r"\bwill my\b", r"\bwill this\b",
+    r"\bgoing to\b", r"\bhow soon\b", r"\bwhen can i expect\b",
+    r"\bwhen would\b", r"\bhow long until\b", r"\bwhat's coming\b",
+    r"\bwhats coming\b",
+)
+_CURRENT_STATE_PATTERNS = (
+    r"\bright now\b", r"\bcurrently\b", r"\bat the moment\b", r"\bthese days\b",
+)
+
+
+def detect_tense(question: str) -> QuestionTense:
+    """Server-computed, same discipline as `detect_intent()` — a cheap
+    heuristic tag, never inferred by the model. `unspecified` is the honest
+    default: most questions ("what does the 7th house mean") carry no tense
+    signal at all, and guessing one would be worse than admitting there
+    isn't one."""
+    normalized = " ".join(question.casefold().split())
+    is_retrospective = any(re.search(p, normalized) for p in _RETROSPECTIVE_PATTERNS)
+    is_future = any(re.search(p, normalized) for p in _FUTURE_PATTERNS)
+    if is_retrospective and is_future:
+        return "mixed"
+    if is_retrospective:
+        return "retrospective"
+    if is_future:
+        return "future"
+    if any(re.search(p, normalized) for p in _CURRENT_STATE_PATTERNS):
+        return "current_state"
+    return "unspecified"

@@ -1371,6 +1371,8 @@ export interface AskStructuredSuccessEnvelope {
   schema_version: 'ask_structured_v1' | string;
   domain: string;
   intent: AskIntent | string;
+  /** retrospective/current_state/future/mixed/unspecified — see astrospace/agents/intent.py detect_tense(). Not yet consumed by any UI. */
+  tense?: string;
   context_used: string[];
   evidence_refs: string[];
   reading: StructuredReading;
@@ -1383,6 +1385,7 @@ export interface AskStructuredFailureEnvelope {
   schema_version?: 'ask_structured_v1' | string;
   domain?: string | null;
   intent?: AskIntent | string | null;
+  tense?: string;
   context_used?: string[];
   evidence_refs?: string[];
   thread_id: string | null;

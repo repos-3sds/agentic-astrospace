@@ -22,7 +22,7 @@ from dataclasses import dataclass, field
 from typing import Callable, Iterator
 
 from .domain_agent import DomainReadingAgent
-from .intent import detect_intent
+from .intent import QuestionTense, detect_intent, detect_tense
 from .registry import AGENT_REGISTRY, AgentConfig
 from .safety import REFER_OUT_ANSWERS, refer_out_kind
 from .schema import AskIntent, StructuredReading
@@ -48,6 +48,7 @@ class SafetyResult:
 class RoutingResult:
     domain: str
     intent: AskIntent
+    tense: QuestionTense
     needs_clarification: bool
     available_domains: list[str] = field(default_factory=lambda: sorted(AGENT_REGISTRY))
 
@@ -75,6 +76,7 @@ class PreparedRun:
     """Everything `run()` needs, resolved eagerly by `prepare()`."""
     domain: str
     intent: str
+    tense: QuestionTense
     agent: DomainReadingAgent
     bundle: dict
     context_used: list[str]
@@ -145,6 +147,7 @@ class AskOrchestrator:
             return RoutingResult(
                 domain=domain_override,
                 intent=detect_intent(question),
+                tense=detect_tense(question),
                 needs_clarification=False,
             )
         decision = self._router.route(question)
@@ -156,6 +159,7 @@ class AskOrchestrator:
         return RoutingResult(
             domain=domain,
             intent=detect_intent(question),
+            tense=detect_tense(question),
             needs_clarification=needs_clarification,
         )
 
@@ -200,10 +204,14 @@ class AskOrchestrator:
             })
 
         context = self.assemble_context(routing.domain, question)
-        agent = DomainReadingAgent(context.bundle, registry_result.agent_config.domain_addendum)
+        agent = DomainReadingAgent(
+            context.bundle, registry_result.agent_config.domain_addendum,
+            question_tense=routing.tense,
+        )
         return PrepareOutcome(prepared=PreparedRun(
             domain=routing.domain,
             intent=routing.intent,
+            tense=routing.tense,
             agent=agent,
             bundle=context.bundle,
             context_used=context.context_used,
@@ -215,7 +223,7 @@ class AskOrchestrator:
         except Exception:
             return AgentRunResult(reading=None, violations=[], generation_failed=True)
 
-        violations = verify(reading, prepared.bundle, prepared.domain)
+        violations = verify(reading, prepared.bundle, prepared.domain, prepared.tense)
         if not violations:
             return AgentRunResult(reading=reading, violations=[])
 
@@ -232,7 +240,7 @@ class AskOrchestrator:
         except Exception:
             return AgentRunResult(reading=None, violations=violations, generation_failed=True)
 
-        violations = verify(reading, prepared.bundle, prepared.domain)
+        violations = verify(reading, prepared.bundle, prepared.domain, prepared.tense)
         if not violations:
             return AgentRunResult(reading=reading, violations=[])
         return AgentRunResult(reading=None, violations=violations)
@@ -257,7 +265,8 @@ class AskOrchestrator:
             thread_id = persist(None, status)
             yield {
                 "type": "done", "status": status, "schema_version": SCHEMA_VERSION,
-                "domain": prepared.domain, "intent": prepared.intent, "thread_id": thread_id,
+                "domain": prepared.domain, "intent": prepared.intent,
+                "tense": prepared.tense, "thread_id": thread_id,
             }
             return
 
@@ -265,6 +274,7 @@ class AskOrchestrator:
         yield {
             "type": "done", "status": "answered", "schema_version": SCHEMA_VERSION,
             "domain": prepared.domain, "intent": prepared.intent,
+            "tense": prepared.tense,
             "context_used": prepared.context_used,
             "evidence_refs": [item.source for item in result.reading.technical_basis],
             "reading": result.reading.model_dump(),
