@@ -2,7 +2,14 @@
   <a class="back" [routerLink]="['/m', 'ask']" aria-label="Back to Ask">
     <img src="mobile/back.svg" alt="" aria-hidden="true" />
   </a>
-  <p class="crumb">Ask</p>
+  <div class="appbar-title">
+    <p class="crumb">Ask Answer</p>
+    @if (preferences.experienceMode() === 'practitioner' && latestAssistant(); as assistant) {
+      <p class="crumb-detail">
+        {{ practitionerScopeLine(assistant) }}
+      </p>
+    }
+  </div>
   @if (activeThreadId()) {
     <button
       class="thread-action"
@@ -29,77 +36,129 @@
         </div>
       </div>
     } @else {
-      <article class="answer" [class.is-loading]="message.streaming" (click)="selectAssistant(message)">
+      <article
+        class="answer"
+        [class.is-loading]="message.streaming"
+        [attr.data-answer-mode]="preferences.experienceMode()"
+        (click)="selectAssistant(message)"
+      >
         <p class="verdict-label">
           <span class="dot" [attr.data-tone]="answerTone(message)" aria-hidden="true"></span>
           <span class="eyebrow" [attr.data-tone]="answerTone(message)">
-            {{ answerLabel(message) }}
-            · {{ (message.domain ?? (message.streaming ? streamDomain() : null) ?? 'GUIDANCE').toUpperCase() }}
+            {{ modeEyebrow(message) }}
           </span>
+          @if (preferences.experienceMode() === 'balanced' && message.reading; as reading) {
+            <span class="answer-strength">{{ confidenceLabel(reading.confidence) }}</span>
+          }
+          @if (preferences.experienceMode() === 'practitioner' && message.status === 'answered') {
+            <span class="status-badge" [attr.data-tone]="answerTone(message)">
+              {{ practitionerVerdictLabel(message) }}
+            </span>
+          }
         </p>
 
         @if (message.reading; as reading) {
-          <div class="answer-meta" aria-label="Answer context">
-            <span class="confidence" [attr.data-confidence]="confidenceTone(reading.confidence)">
-              {{ confidenceLabel(reading.confidence) }}
-            </span>
-            @for (item of contextPills(message); track item) {
-              <span class="context-pill">{{ item }}</span>
+          @switch (preferences.experienceMode()) {
+            @case ('guided') {
+              <section class="plain-card guided-card" aria-label="Plain guidance">
+                <h1 class="verdict">{{ answerHeadline(message) }}</h1>
+                <p class="summary-line">{{ guidedBody(reading) }}</p>
+              </section>
+
+              @if (guidedActions(reading).length) {
+                <div class="answer-section action-panel">
+                  <h2>What to do</h2>
+                  <ol class="action-list">
+                    @for (action of guidedActions(reading); track action) {
+                      <li>
+                        <span class="step-check">✓</span>
+                        <span>{{ action }}</span>
+                      </li>
+                    }
+                  </ol>
+                </div>
+              }
+
+              <button class="listen-brief" type="button" (click)="selectAssistant(message); listenOpen.set(true)">
+                <img src="mobile/play-muted.svg" alt="" aria-hidden="true" />
+                <span>Listen to answer brief</span>
+              </button>
             }
-          </div>
 
-          <section class="intent-card" aria-label="Intent understood">
-            <span class="section-kicker">Intent</span>
-            <p class="acknowledgment">{{ reading.acknowledgment }}</p>
-          </section>
+            @case ('practitioner') {
+              <section class="plain-card practitioner-verdict" aria-label="Synthesised verdict">
+                <h1 class="verdict">{{ answerHeadline(message) }}</h1>
+                <p class="summary-line">{{ reading.interpretation }}</p>
+              </section>
 
-          <section class="plain-card" aria-label="Plain guidance">
-            <span class="section-kicker">What this means</span>
-            <h1 class="verdict">{{ reading.interpretation }}</h1>
-            <p class="summary-line">{{ reading.summary_and_assurance }}</p>
-          </section>
-
-          @if (reading.guidance.practical_actions.length) {
-            <div class="answer-section">
-              <h2>Next best steps</h2>
-              <ol class="action-list">
-                @for (action of reading.guidance.practical_actions; track action; let index = $index) {
-                  <li>
-                    <span class="step-index">{{ index + 1 }}</span>
-                    <span>{{ action }}</span>
-                  </li>
+              <section class="answer-section practitioner-stack" aria-label="Technical basis">
+                @for (item of technicalBasis(message); track item.factor + sourceLabel(item.source)) {
+                  <article class="basis-row">
+                    <div>
+                      <strong>{{ item.factor }}</strong>
+                      <p>{{ item.reading }}</p>
+                    </div>
+                    @if (sourceLabel(item.source); as source) {
+                      <span>{{ source }}</span>
+                    }
+                  </article>
                 }
-              </ol>
-            </div>
-          }
+              </section>
 
-          @if (reading.guidance.remedies.length) {
-            <div class="answer-section">
-              <h2>Traditional supports</h2>
-              @for (remedy of reading.guidance.remedies; track remedy.practice + remedy.note) {
-                <article class="remedy-row">
-                  <span class="remedy-mark" aria-hidden="true"></span>
-                  <p><strong>{{ remedy.practice }}</strong><span>{{ remedy.note }}</span></p>
-                </article>
-              }
-            </div>
-          }
+              <div class="practitioner-actions">
+                <button class="source-row" type="button" (click)="selectAssistant(message); whyOpen.set(true)">
+                  <img src="mobile/why.svg" alt="" aria-hidden="true" />
+                  <span>Sources &amp; Provenance</span>
+                  <span aria-hidden="true">›</span>
+                </button>
+                <div class="split-actions">
+                  <button type="button" (click)="selectAssistant(message); copyAnswer(message)">
+                    <span aria-hidden="true">⌑</span>
+                    <span>Copy Answer</span>
+                  </button>
+                  <button type="button" (click)="askAgain('Which date is strongest for this?')">
+                    <span aria-hidden="true">□</span>
+                    <span>Compare Date</span>
+                  </button>
+                </div>
+              </div>
+            }
 
-          @if (showTechnicalBasis(message)) {
-            <div class="answer-section technical-basis">
-              <h2>{{ preferences.experienceMode() === 'practitioner' ? 'Technical basis' : 'Chart factors used' }}</h2>
-              @for (item of technicalBasis(message); track item.factor + sourceLabel(item.source)) {
-                <article class="basis-row">
-                  <div>
-                    <strong>{{ item.factor }}</strong>
-                    <p>{{ item.reading }}</p>
-                  </div>
-                  @if (preferences.experienceMode() === 'practitioner') {
-                    <span>{{ sourceLabel(item.source) }}</span>
+            @default {
+              <section class="plain-card balanced-card" aria-label="Balanced summary">
+                <h1 class="verdict">{{ answerHeadline(message) }}</h1>
+                <p class="summary-line">{{ reading.interpretation }}</p>
+              </section>
+
+              @if (technicalBasis(message).length) {
+                <section class="answer-section why-inline" aria-label="Why this answer">
+                  <header>
+                    <h2>Why this answer?</h2>
+                    <span aria-hidden="true">⌄</span>
+                  </header>
+                  @for (item of technicalBasis(message).slice(0, 2); track item.factor + item.reading) {
+                    <article class="basis-row compact">
+                      <span class="mini-dot" aria-hidden="true"></span>
+                      <div>
+                        <strong>{{ item.factor }}</strong>
+                        <p>{{ item.reading }}</p>
+                      </div>
+                    </article>
                   }
-                </article>
+                </section>
               }
-            </div>
+
+              <div class="balanced-actions">
+                <button type="button" (click)="selectAssistant(message); copyAnswer(message)">
+                  <span aria-hidden="true">♡</span>
+                  <span>Copy Answer</span>
+                </button>
+                <button type="button" (click)="selectAssistant(message); share()">
+                  <img src="mobile/share.svg" alt="" aria-hidden="true" />
+                  <span>Share</span>
+                </button>
+              </div>
+            }
           }
         } @else {
           <p class="legacy-answer">{{ message.content || 'Reading your chart…' }}</p>
@@ -115,7 +174,7 @@
           }
         }
 
-        @if (!message.streaming && message.content && message.status === 'answered') {
+        @if (!message.streaming && message.content && message.status === 'answered' && !message.reading) {
           <div class="tools">
             <button class="tool" type="button" (click)="selectAssistant(message); listenOpen.set(true)">
               <img src="mobile/play-muted.svg" alt="" aria-hidden="true" />
