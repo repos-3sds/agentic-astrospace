@@ -214,10 +214,23 @@ class TestWealthChildrenFatalismAudit:
     all marriage-subject-anchored, so financial and fertility fatalism had
     zero coverage. Confirmed as a real gap (all cases below failed against
     the pre-fix code) before the fix was written, same discipline as PR #7's
-    audit and PR #10's regex hardening. The fix generalizes via a windowed
-    fatalism-VERB + domain-SUBJECT check (`_domain_fatalism_kind()`) rather
-    than a per-sentence list — the same lesson `refer_out_kind()` and
-    `_PROHIBITED_OUTPUT`'s clusters already encode."""
+    audit and PR #10's regex hardening.
+
+    History worth reading before touching this: the first two fix attempts
+    used a *generic* mechanism (any of a dozen "fatalism verbs" matched
+    against any of a handful of "domain subject" words within a window or a
+    clause). Three independent review rounds each found real bugs in that
+    approach — no negation handling, then a negation window wide enough to
+    swallow unrelated negations and disqualify real violations, a clause
+    splitter that didn't handle colons/em-dashes/parens, a verb pattern that
+    permanently disqualified itself, and a `\\b`-missing regex that matched
+    "certain" inside "uncertain". The explicit marriage patterns above, and
+    the explicit poetic patterns in `_DOSHA_OVERCLAIM_OUTPUT`, were reviewed
+    clean across all three rounds. So this is now explicit phrase matching
+    (same style as marriage), plus one shared, narrowly-scoped, backward-
+    looking `_negation_precedes()` check applied to the whole list —
+    documented in `safety.py` itself, tested here from every angle that
+    broke a previous version."""
 
     @pytest.mark.parametrize("phrase", [
         "This dosha means you will always struggle financially.",
@@ -347,6 +360,110 @@ class TestWealthChildrenFatalismAudit:
         bad = _reading(interpretation=phrase)
         violations = verify(bad, wealth_bundle, "wealth")
         assert violations, f"expected a violation for: {phrase!r}"
+
+    @pytest.mark.parametrize("phrase", [
+        # A THIRD independent review found the clause/negation-window fix
+        # above still had real bugs: an unrelated, earlier negation in a
+        # compound or multi-sentence answer disqualified a real, later,
+        # unnegated fatalism claim (the exact opposite failure mode from
+        # what it was fixing). Sentence-scoped now — a negation in a
+        # previous sentence (bounded by . ; :) must not reach forward.
+        "Your chart does not lie: this dosha guarantees poverty.",
+        "This is not a small matter. You are destined for poverty.",
+        "Remedies cannot help here. This yoga guarantees childlessness.",
+        "There is not a single mitigating factor. You will always struggle financially.",
+        "I will not soften this. You will never have children because of this yoga.",
+        "It is not a matter of effort. Poverty is guaranteed by this yoga.",
+        "Do not hope for improvement: this placement seals your fate of poverty.",
+    ])
+    def test_unrelated_earlier_negation_does_not_suppress_a_real_violation(self, wealth_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations, f"expected a violation for: {phrase!r}"
+
+    def test_a_verb_pattern_cannot_permanently_disqualify_itself(self, wealth_bundle):
+        """The same review found `cannot be undone` unreachable: `cannot`
+        was both the verb's own trigger word and a negation cue, so the
+        negation check always found its own match and skipped every case.
+        Same root cause as the case above, this is the sharpest version of
+        it — the negation source and the violation are the identical word."""
+        bad = _reading(interpretation="This dosha cannot be undone and poverty will follow.")
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations, "the verb's own text must not disqualify its own match"
+
+    @pytest.mark.parametrize("phrase", [
+        # More negation forms the third review demonstrated the previous
+        # cue list missed outright — debunking language ("misconception",
+        # "wrongly claim") is the sharpest case: the app would flag itself
+        # for correcting a superstition.
+        "Financial ruin is never guaranteed by a single placement.",
+        "It is a misconception that this dosha guarantees poverty.",
+        "Some astrologers wrongly claim this dosha guarantees childlessness.",
+        "No astrologer should ever tell you that you will never have children.",
+        "Ignore any reading that claims you will always struggle financially.",
+        "It is false that this placement guarantees poverty.",
+        "This dosha never means you will never have children.",
+        "It is not true that this dosha, which the classical texts discuss "
+        "at some length, guarantees poverty.",
+    ])
+    def test_additional_negation_forms_are_not_flagged(self, wealth_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
+
+    @pytest.mark.parametrize("phrase", [
+        # The third review's cross-clause collision corpus using boundary
+        # characters the previous clause-splitter didn't handle: colon,
+        # em-dash, "but"/"though" without a comma, and parentheses.
+        "The 2nd house governs your finances: a single dosha will always be one factor among many.",
+        "The 2nd house governs your finances — a single dosha will always be one factor among many.",
+        "The 5th house shows chances of having children but a chart will never be the whole story.",
+        "Saturn shapes your finances though effort will always matter more.",
+        "Let us look at your finances (a dosha will never be the only factor here).",
+    ])
+    def test_more_cross_clause_collisions_are_not_flagged(self, wealth_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
+
+    @pytest.mark.parametrize("phrase", [
+        # The third review showed the generic verbs added in round 2
+        # (ensures, destined to, will always) misfired on exactly the kind
+        # of sentence `guidance.practical_actions`/`remedies` produce —
+        # direct evidence for abandoning the generic verb list in favor of
+        # explicit phrases, which don't have this failure mode because they
+        # require the fatalistic complement, not just the bare verb.
+        "Careful planning ensures your finances recover after this transit.",
+        "A written budget ensures your finances stay under control.",
+        "Regular charity ensures your finances get steady attention.",
+        "Your finances will always benefit from a written budget.",
+        "Couples destined to meet often ask about having children early.",
+        "Consulting a fertility specialist ensures having children stays a medical conversation.",
+        "This placement makes your finances uncertain for a while.",
+        # This one demonstrates the actual regex bug found: a missing `\b`
+        # before "certain" let the pattern match "certain" *inside*
+        # "uncertain", inverting the meaning of a direct CLAUDE.md
+        # non-negotiable statement into a flagged violation.
+        "Nothing in a chart makes having children certain or impossible.",
+    ])
+    def test_benign_action_and_remedy_style_sentences_are_not_flagged(self, wealth_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
+
+    @pytest.mark.parametrize("phrase", [
+        # Bonus: the third review found this exact class of bug was
+        # already live in the untouched marriage patterns on `main` — the
+        # shared `_negation_precedes()` check fixes it for free, since it
+        # now runs across the whole `_DOSHA_OVERCLAIM_OUTPUT` list, not
+        # just the wealth/children additions.
+        "This dosha does not mean you will never find a spouse.",
+        "A manglik dosha does not mean you cannot marry.",
+    ])
+    def test_marriage_negation_bug_fixed_as_a_side_effect(self, marriage_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, marriage_bundle, "marriage")
+        assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
 
 
 class TestFullFieldCoverage:

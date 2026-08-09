@@ -255,122 +255,108 @@ _DOSHA_OVERCLAIM_OUTPUT = (
     r"\b(?:womb|fertility) is (?:cosmically |permanently )?barren\b",
     r"\bbirth is blocked by\b",
     r"\bis your inescapable destiny\b",
+    # 2026-08-09 (Qwen's wealth/children audit). History worth reading before
+    # touching this block: the first two attempts at covering wealth/
+    # children used a *generic* mechanism — any of a dozen "fatalism verbs"
+    # (guarantees/dictates/will never/...) matched against any of a handful
+    # of "domain subject" words, found within a character window or a
+    # clause. Three independent review passes each found real bugs in it:
+    # round 1 found no negation handling at all ("does not mean you will
+    # never have children" — the canonical flag-not-verdict sentence — was
+    # itself flagged); round 2's fix (a negation window + clause-bounded
+    # subject search) still left multiple unfixed negation forms, still
+    # didn't handle colons/em-dashes/parens as clause boundaries, silently
+    # made `cannot be undone` permanently unreachable (its own trigger word
+    # matched its own negation-cue list), and shipped a regex missing a
+    # `\b` that matched "certain" *inside* "uncertain" — flagging a hedge as
+    # its opposite. Meanwhile the explicit, hand-written marriage patterns
+    # above, and the explicit poetic patterns just above this comment, were
+    # reviewed clean across all three passes. That track record is the
+    # reason this is now explicit phrase matching, same style as marriage,
+    # not a generic verb x subject cross-product: specific phrases don't
+    # need general-purpose negation/clause logic to stay safe, because
+    # "does not mean [phrase]" containing the bad phrase as a literal
+    # substring is caught by `_negation_precedes()` below (one shared,
+    # narrowly-scoped check — same-sentence, backward-looking, since
+    # negation in English overwhelmingly precedes what it negates) rather
+    # than by trying to make every pattern self-defending.
+    r"\byou will always struggle financially\b",
+    r"\bguarantees? you will never accumulate wealth\b",
+    r"\bdictates? permanent poverty\b",
+    r"\bcursed by this (?:dosha|yoga|placement) and will never improve\b",
+    r"\bcondemns? you to lifelong financial hardship\b",
+    r"\bdoomed to remain poor\b",
+    r"\bseals? your fate\b",
+    r"\b(?:wealth prospects|financial (?:future|prospects))\b.{0,15}\bpermanently blocked\b",
+    r"\bfinancial ruin is guaranteed\b",
+    r"\bforbids? you from ever becoming wealthy\b",
+    r"\bdestined for poverty\b",
+    r"\bmakes? poverty certain\b",
+    r"\bguarantees? poverty\b", r"\bpoverty is guaranteed\b",
+    r"\bcannot be undone\b.{0,30}\b(?:poverty|struggl\w+ financially)\b",
+    r"\byou will never have children\b",
+    r"\bguarantees? you will remain childless\b",
+    r"\bcondemns? you to a childless life\b",
+    r"\bdoomed to never bear children\b",
+    r"\bforbids? you from ever having (?:a child|children)\b",
+    r"\byou will never conceive\b",
+    r"\bdictates? (?:that )?you will remain without offspring\b",
+    r"\bchances? of having children are permanently blocked\b",
+    r"\bchildlessness is guaranteed\b",
+    r"\bdestined to remain childless\b",
+    r"\bensures? you will remain childless\b",
+    r"\bguarantees? childlessness\b",
+    r"\bcannot be undone\b.{0,30}\b(?:will never have children|will never conceive|remain childless)\b",
 )
 
-
-# 2026-08-09 (Qwen's audit, confirmed and fixed here): the marriage-fatalism
-# clusters above don't generalize — "you will never have children" and "this
-# dosha guarantees you will always struggle financially" are the same shape
-# of overclaim (fatalism VERB + domain SUBJECT) but a different subject, and
-# subject-specific patterns don't transfer. Rather than writing a parallel
-# explicit-sentence cluster per domain (the exact flat-list weakness this
-# whole module exists to avoid), this is a generic two-part check — same
-# principle as `_personal_years_remaining` above and `refer_out_kind`'s
-# subject+frame split. Marriage keeps its own explicit, already-proven
-# patterns above rather than being folded into this (no reason to risk
-# regressing what's already correct); this covers the domains that had *no*
-# coverage at all before today.
-#
-# Revised after independent review found two real false-positive classes in
-# the first version (a flat ±45-char window with per-pattern negative
-# lookbehinds only on "guarantee"):
-#
-# 1. Negation-blindness: "will never"/"will always" have no negation
-#    handling at all, so "this dosha does not mean you will never have
-#    children" — the canonical flag-not-verdict sentence CLAUDE.md requires
-#    — was itself flagged as an overclaim. The lookbehind approach doesn't
-#    scale (every new verb needs its own hand-written negation forms, and
-#    even "guarantee"'s lookbehind missed "is never guaranteed"/"nothing
-#    guarantees"/"no chart guarantees"). Fixed with `_NEGATION_CUES`,
-#    checked once, generically, across every verb.
-# 2. Cross-clause collision: a flat character window doesn't respect
-#    sentence structure, so "The 2nd house governs your finances; a single
-#    dosha will always be one factor among many" — verb and subject in
-#    unrelated clauses — was flagged. Fixed by requiring the verb and
-#    subject to appear in the same *clause* (split on strong punctuation),
-#    not just nearby characters. Negation is checked over a wider window
-#    than the clause, deliberately — "it does not, in any reading,
-#    guarantee poverty" has its negation separated from the verb by commas
-#    that would otherwise split the clause.
-_FATALISM_VERB_PATTERNS = (
-    r"\bdoomed to\b",
-    r"\bcondemns? you to\b",
-    r"\bguarantees?\b",
-    r"\b(?:is |are )?guaranteed(?: by)?\b",
-    r"\bdictates?(?: permanent| that)?\b",
-    r"\bseals? your fate(?: as| of| to)?\b",
-    r"\bforbids? you from(?: ever)?\b",
-    r"\bpermanently blocked\b",
-    r"\bcursed(?: by this (?:dosha|yoga|placement))?(?: and will never improve)?\b",
-    r"\bno remedy can (?:undo|fix) this\b",
-    r"\bcannot be undone\b",
-    r"\bwill never\b",
-    r"\bwill always\b",
-    r"\bcan never\b",
-    r"\bshall never\b",
-    r"\bdestined (?:to|for)\b",
-    r"\bensures?\b",
-    r"\bmakes? .{0,20}certain\b",
-)
-_FATALISM_VERBS = tuple(re.compile(p) for p in _FATALISM_VERB_PATTERNS)
-_WEALTH_FATALISM_SUBJECTS = re.compile(
-    r"\b(?:poverty|financial (?:ruin|hardship)|struggl\w+ financially|"
-    r"remain(?:ing)? poor|becoming (?:wealthy|poor)|accumulat\w+ wealth|"
-    r"having wealth|wealth prospects|your finances)\b"
-)
-_CHILDREN_FATALISM_SUBJECTS = re.compile(
-    r"\b(?:childless(?:ness)?|(?:hav(?:e|ing)|bear(?:ing)?) (?:a )?child(?:ren)?|"
-    r"conceiv\w+|without offspring|remain without offspring|"
-    r"chances? of having children)\b"
-)
-# Disqualifies a verb+subject co-occurrence — checked over a window around
-# the verb (not clause-bounded, since negation can be comma-separated from
-# what it negates). Broad and generic on purpose: this is what lets the
-# verb list above grow without every new verb needing its own hand-written
-# negation forms.
+# Shared by every pattern above (not per-pattern lookbehinds — those don't
+# scale and were the direct cause of round 2's bugs): a match is ignored if
+# a negation cue appears earlier in the *same sentence* (the sentence
+# boundary — `.`/`;`/`:` — is what scopes this; an unrelated negation in a
+# previous sentence must not suppress a real violation two sentences later,
+# which was round 2's regression). Backward-only because negation in
+# English overwhelmingly precedes what it negates ("does not guarantee X",
+# "is never guaranteed", "no chart guarantees X" — the negating word is
+# always at or before the verb); the one common exception, an immediate
+# post-verb object negation like "guarantees nothing", gets its own short
+# forward-only lookahead rather than a symmetric window, so an unrelated
+# LATER negation elsewhere in the sentence can't suppress an earlier real
+# violation the way round 2's ±60-char window did.
 _NEGATION_CUES = re.compile(
     r"\b(?:does not|do not|did not|will not|cannot|is not|are not|was not|"
-    r"were not|never guarantees?|guarantees? nothing|nothing guarantees?|"
-    r"no (?:chart|placement|dosha|yoga|remedy) guarantees?|not mean|"
-    r"is a myth|myth that|not forbid|by no means)\b"
+    r"were not|is never|never guarantees?|never means?|"
+    # No trailing "guarantees?" on this alternative deliberately — the
+    # backward search stops right before the overclaim match itself, so
+    # "guarantees" (the word the overclaim pattern starts with) is never
+    # part of the text available to search; requiring it here would mean
+    # this cue could never match ("no chart guarantees poverty" needs "no
+    # chart" alone to be recognized, since "guarantees" already belongs to
+    # the match). Found by running the actual test suite, not just the
+    # scratch adversarial corpus — a reminder that this file's history is
+    # full of exactly this kind of subtle miss.
+    # "remedy" deliberately kept separate, requiring "guarantees?" — "no
+    # remedy can undo/fix this" is itself fatalistic phrasing (used by the
+    # explicit patterns above), the opposite of a hedge; only "no remedy
+    # guarantees X" is the reassuring form.
+    r"no (?:chart|placement|dosha|yoga)\b|no remedy guarantees?|"
+    r"not mean|is a myth|myth that|misconception|"
+    r"wrongly claim|falsely claim|is false that|not true that|not forbid|"
+    r"should (?:never|not) (?:ever )?(?:tell you|say|claim)|"
+    r"no (?:astrologer|one|reading|chart) should|"
+    r"ignore any reading that claims|reading that claims|"
+    r"by no means)\b"
 )
-# Deliberately excludes em dash: English commonly uses it to extend a
-# thought rather than separate unrelated clauses ("...this dosha seals
-# your fate" after an em dash is still about the finances named before
-# it) — including it here broke a real must-catch case during testing.
-# `;`/`,`/`.` are the boundaries worth treating as hard clause breaks.
-_CLAUSE_SPLIT = re.compile(r"[.;,]")
-_NEGATION_WINDOW = 60
+_FORWARD_NEGATION_CUES = re.compile(r"\b(?:nothing|no one|nobody)\b")
+_SENTENCE_BOUNDARY = re.compile(r"[.;:]")
 
 
-def _clause_spans(text: str) -> list[tuple[int, int]]:
-    spans = []
-    start = 0
-    for boundary in _CLAUSE_SPLIT.finditer(text):
-        spans.append((start, boundary.start()))
-        start = boundary.end()
-    spans.append((start, len(text)))
-    return spans
-
-
-def _domain_fatalism_kind(normalized: str) -> str | None:
-    spans = _clause_spans(normalized)
-    for verb_re in _FATALISM_VERBS:
-        for match in verb_re.finditer(normalized):
-            negation_window = normalized[
-                max(0, match.start() - _NEGATION_WINDOW):match.end() + _NEGATION_WINDOW
-            ]
-            if _NEGATION_CUES.search(negation_window):
-                continue
-            clause_start, clause_end = next(
-                (s, e) for s, e in spans if s <= match.start() < e or s == e == match.start()
-            )
-            clause = normalized[clause_start:clause_end]
-            if _WEALTH_FATALISM_SUBJECTS.search(clause):
-                return "dosha_overclaim"
-            if _CHILDREN_FATALISM_SUBJECTS.search(clause):
-                return "dosha_overclaim"
-    return None
+def _negation_precedes(normalized: str, start: int, end: int) -> bool:
+    sentence_start = 0
+    for boundary in _SENTENCE_BOUNDARY.finditer(normalized, 0, start):
+        sentence_start = boundary.end()
+    if _NEGATION_CUES.search(normalized[sentence_start:start]):
+        return True
+    return bool(_FORWARD_NEGATION_CUES.search(normalized[end:end + 20]))
 
 
 def dosha_overclaim_kind(answer: str) -> str | None:
@@ -378,6 +364,7 @@ def dosha_overclaim_kind(answer: str) -> str | None:
     outcome instead of the classical flag-with-context it always is."""
     normalized = _normalize(answer)
     for pattern in _DOSHA_OVERCLAIM_OUTPUT:
-        if re.search(pattern, normalized):
-            return "dosha_overclaim"
-    return _domain_fatalism_kind(normalized)
+        for match in re.finditer(pattern, normalized):
+            if not _negation_precedes(normalized, match.start(), match.end()):
+                return "dosha_overclaim"
+    return None
