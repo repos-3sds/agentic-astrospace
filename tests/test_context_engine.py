@@ -1,5 +1,6 @@
 """Context Engine: taxonomy validation, assembly, routing, KB retrieval."""
 import json
+from datetime import datetime, timezone
 
 import pytest
 
@@ -57,6 +58,18 @@ class TestAssembler:
         assert "AmK" in bundle["jaimini_karakas"]
         assert "D10" in bundle["vargas"]
         assert bundle["vargas"]["D10"]["tier"] == "primary"
+
+    def test_profile_facts_are_deterministic_not_left_to_the_model(self, chart):
+        """Item 3 requirement (docs/ask_context_engine_multi_agent_
+        architecture_2026-08-07.md, "Update 2026-08-09"): age must be
+        computed once in the backend, not left for the model to derive
+        from birth data + as_of itself."""
+        as_of = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        bundle = assemble_domain(chart, "career", include_gochara=False, as_of=as_of)
+        facts = bundle["profile_facts"]
+        assert facts["birth_year"] == 1990
+        assert facts["age_years"] == pytest.approx(36.0, abs=0.1)
+        assert facts["as_of"].startswith("2026-01-01")
 
     def test_yoga_filtering_is_domain_scoped(self, chart):
         career = assemble_domain(chart, "career", include_gochara=False)
