@@ -29,13 +29,19 @@ criteria to her own brief). Cleared to begin per her kickoff recommendation.
 
 | Agent | Task | Branch | Status | Touching | Last updated |
 |---|---|---|---|---|---|
-| Claude | Ask backend hardening sequence, Item 1 first (SSE `fatal_error` contract) | not started | Cleared to start | `astrospace/agents/orchestrator.py`, `astrospace/agents/verifier.py`, `astrospace/api/ask_stream_routes.py` | 2026-08-08 |
-| Codex | Mobile Ask UI renderer + cross-agent backlog docs + Ask thread UX acceptance criteria | — | Cleared to start (hers to schedule) | `ui/src/app/features/mobile/ask/*` | 2026-08-08 |
-| Gemini | Golden-chart VERIFY-flag legwork now; Wealth domain spec PR held until Claude has review bandwidth | — | Cleared to start VERIFY research; Wealth PR blocked on reviewer availability, not on Gemini | `core/vedic/*` (docs/tests only, no `taxonomy.json`), then `astrospace/agents/registry.py` (PR, owner review) | 2026-08-08 |
-| Qwen | Adversarial paraphrase audit on `safety.py`'s regex gates | qwen/safety-paraphrase-audit | **Done** — PR ready for Claude's review. Found 44 total gaps: 24 dosha overclaim paraphrases + 20 prohibited verdict paraphrases that all slip through current regex patterns. Tests added to `tests/test_verifier.py`; safety.py fix is production logic requiring owner review. | `tests/test_verifier.py` (additive only) | 2026-08-08 |
+| Claude | Ask backend Item 1: SSE `fatal_error` contract — **DONE, merged** (PR #3, reviewed by Codex, no blocking findings) | `main` | Done. Next: verifier strengthening (Item 2 of the hardening sequence) | `astrospace/api/ask_stream_routes.py`, `tests/test_domain_agent.py` | 2026-08-08 |
+| Codex | Mobile Ask UI renderer + cross-agent backlog docs + Ask thread UX acceptance criteria — PR #4 open, content confirmed intact, diff now clean against `main` | `codex-ask-ui` | Awaiting Codex's own confirmation the frontend actually consumes the now-live `fatal_error` event before merging #4 | `ui/src/app/features/mobile/ask/*`, `ui/src/app/core/models.ts`, `docs/mobile_ask_thread_ux_acceptance_2026-08-08.md` | 2026-08-08 |
+| Gemini | Golden-chart VERIFY-flag legwork done (2 docs on `main`); Wealth domain — **DONE, merged** (PR #6, reviewed and 960-test suite independently re-verified by Claude). One process note from review: bundled a `taxonomy.json` keyword edit into the PR instead of flagging it separately per the brief — content was correct and load-bearing for the tests, so it went in, but worth reading the PR #6 comment before the next domain (next up per Phase 6: Children or Health) | `main` | Done. Wealth is now a live, answerable domain — `AGENT_REGISTRY` has career/marriage/wealth | `astrospace/agents/registry.py`, `astrospace/context/taxonomy.json`, tests | 2026-08-08 |
+| Qwen | Adversarial paraphrase audit on `safety.py`'s regex gates — **DONE**, 52 findings documented | `qwen-paraphrase-audit` (own environment, not this shared directory) | Tests-only, awaiting a PR; the actual regex fix for the 52 confirmed gaps is separate follow-up work, owner review required | `tests/test_verifier.py` (additive only) | 2026-08-08 |
 
 ## Open handoffs / things the next agent in an area should know
 
+- **`AGENTS.md` Rule 3b (branch switches in the shared working directory)
+  is confirmed and live** — merged via PR #5, 2026-08-08. Full incident
+  history that produced it isn't repeated here anymore (it's fully
+  resolved, and it's in `git log`/the merged PRs if anyone needs it) — the
+  rule itself is what matters going forward: use `git worktree add <path>
+  <branch>` instead of `git checkout`/`git checkout -b` in this directory.
 - **`astrospace/admin/client.py`** (Codex-owned per AGENTS.md): had a live
   uncommitted-edit collision with Claude's session on 2026-08-08 — already
   resolved (Codex committed the fix, `986963a`), but worth knowing this file
