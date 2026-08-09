@@ -327,7 +327,6 @@ class TestWealthChildrenFatalismAudit:
         "This dosha does not forbid you from ever having children.",
         "Wealth is never guaranteed by this dosha, only supported.",
         "By no means is this dosha a guarantee of poverty.",
-        "It does not, in any reading, guarantee poverty.",
     ])
     def test_negated_reassurance_is_not_flagged(self, wealth_bundle, phrase):
         bad = _reading(interpretation=phrase)
@@ -403,8 +402,6 @@ class TestWealthChildrenFatalismAudit:
         "Ignore any reading that claims you will always struggle financially.",
         "It is false that this placement guarantees poverty.",
         "This dosha never means you will never have children.",
-        "It is not true that this dosha, which the classical texts discuss "
-        "at some length, guarantees poverty.",
     ])
     def test_additional_negation_forms_are_not_flagged(self, wealth_bundle, phrase):
         bad = _reading(interpretation=phrase)
@@ -452,34 +449,62 @@ class TestWealthChildrenFatalismAudit:
         assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
 
     @pytest.mark.parametrize("phrase", [
-        # Bonus: the third review found this exact class of bug was
-        # already live in the untouched marriage patterns on `main` — the
-        # shared `_negation_precedes()` check fixes it for free, since it
-        # now runs across the whole `_DOSHA_OVERCLAIM_OUTPUT` list, not
-        # just the wealth/children additions.
+        # NOT fixed, by deliberate design — documented as a known,
+        # pre-existing limitation rather than silently left inconsistent.
+        # The third review found this exact phrasing flagged on `main` and
+        # fixed it by running the new `_negation_precedes()` check across
+        # the whole `_DOSHA_OVERCLAIM_OUTPUT` list, marriage included. A
+        # fourth and fifth review found that sharing caused two consecutive
+        # rounds of regressions specifically because it touched the
+        # marriage patterns, which had been correct for three rounds
+        # *without* any negation check. The fix that finally held: stop
+        # sharing it. Marriage goes back to the exact bare `re.search()` it
+        # had before any of this — which means this one bug (present on
+        # `main` long before this PR) comes back too. Fixing it is now a
+        # separate, marriage-scoped task, not something to bundle into a
+        # wealth/children audit that's already had five review rounds.
         "This dosha does not mean you will never find a spouse.",
         "A manglik dosha does not mean you cannot marry.",
     ])
-    def test_marriage_negation_bug_fixed_as_a_side_effect(self, marriage_bundle, phrase):
+    def test_marriage_negation_bug_is_a_known_preexisting_limitation_not_this_prs_scope(
+        self, marriage_bundle, phrase,
+    ):
         bad = _reading(interpretation=phrase)
         violations = verify(bad, marriage_bundle, "marriage")
-        assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
+        assert violations, (
+            f"if this now passes, the marriage negation bug has been fixed — "
+            f"great, but update this test (it should assert violations == []) "
+            f"rather than leaving it silently documenting a stale limitation: {phrase!r}"
+        )
 
 
 class TestNegationScopeRound4:
     """A FOURTH independent review found the round-3 fix (a sentence-scoped
     negation window, plus a forward lookahead for "guarantees nothing") had
-    its own real bugs — and because `_negation_precedes()` runs across the
-    *entire* `_DOSHA_OVERCLAIM_OUTPUT` list, not just the new wealth/
-    children patterns, those bugs reached the marriage patterns too: a net
-    regression against `main`, which had passed three review rounds clean.
-    Fixed by narrowing scope from "same sentence" to "same clause" (a comma
-    or dash only counts as a boundary when followed by a coordinating
-    conjunction — a bare comma still allows the appositive-negation case
-    below to work), dropping the forward lookahead entirely (proven
-    unnecessary — nothing in this file's real patterns needs it), and
-    special-casing colon so a "does not mean:" hedge doesn't get its own
-    negation cut off by the colon it introduces."""
+    its own real bugs — and because `_negation_precedes()` ran across the
+    *entire* `_DOSHA_OVERCLAIM_OUTPUT` list at the time, not just the new
+    wealth/children patterns, those bugs reached the marriage patterns too:
+    a net regression against `main`, which had passed three review rounds
+    clean. The round-4 fix (narrowing "same sentence" to "same clause" via
+    a comma-plus-conjunction rule) held up against round 4's own corpus but
+    not round 5's — "however"/"though"/"and" turned out to be common
+    *inside* a parenthetical aside as often as they mark a real new clause,
+    so no fixed conjunction list can tell the two apart lexically.
+
+    The fix that actually held (round 5): stop trying. `_negation_precedes()`
+    is no longer applied to the marriage/poetic patterns at all — see
+    `dosha_overclaim_kind()`'s docstring in safety.py — so marriage is back
+    to the exact bare `re.search()` proven clean for three rounds, and the
+    tests below that used to assert marriage wasn't regressed by the shared
+    check now assert something simpler and always true: marriage patterns
+    match regardless of negation, because they never look for it. For
+    wealth/children, clause boundaries are now unconditional — every comma,
+    dash, and sentence-ending mark — deliberately erring toward flagging a
+    parenthetical hedge (one wasted repair-cycle) over missing a real
+    violation. `test_known_limitations_from_choosing_the_safer_bias` below
+    documents the sentences this deliberately gets "wrong," so a future
+    change to the boundary logic shows up as a diff in expected behavior,
+    not a silent regression."""
 
     @pytest.mark.parametrize("phrase", [
         # The forward "nothing/no one/nobody" lookahead round 3 added
@@ -512,11 +537,13 @@ class TestNegationScopeRound4:
         assert violations, f"expected a violation for: {phrase!r}"
 
     @pytest.mark.parametrize("phrase", [
-        # The sharpest finding: this exact bug class, reached through the
-        # shared negation check, regressed the untouched marriage patterns
-        # — sentences `main` correctly flags today. This is the guard the
-        # review explicitly asked for: a main-vs-branch style check kept as
-        # a permanent test, not just a one-time comparison.
+        # This used to be the sharpest finding: this exact bug class,
+        # reached through a negation check shared with marriage, regressed
+        # sentences `main` correctly flagged. Now that marriage no longer
+        # runs any negation check (see the class docstring), this is
+        # trivially true by construction — kept as a permanent guard
+        # anyway, so a future change that reintroduces sharing would show
+        # up here immediately, not several review rounds later.
         "Your marriage will fail — nothing can save it.",
         "This dosha will destroy your marriage; nothing else matters.",
         "Divorce is the inevitable outcome, nothing can stop it.",
@@ -546,29 +573,50 @@ class TestNegationScopeRound4:
         assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
 
     @pytest.mark.parametrize("phrase", [
-        # Colon is a hard clause boundary in general ("does not lie: X" —
-        # X is a new, unnegated claim) EXCEPT when the colon directly
-        # introduces what's being negated ("does not mean: X" / "does not
-        # mean the following: X" — X is part of the same negated
-        # statement). Getting this wrong either way is a real bug: too
-        # eager and a legitimate hedge gets flagged; too lax and "does not
-        # lie: guarantees poverty" stops being caught (covered by
+        # A fifth review found the round-4 comma-plus-conjunction rule
+        # itself unreliable in both directions — "however"/"though"/"and"
+        # mark a parenthetical aside as often as a real new clause, and no
+        # fixed word list can tell them apart lexically. Every comma is now
+        # an unconditional boundary, same as period/semicolon/colon/dash.
+        # These are the sentences that decision deliberately gets flagged
+        # rather than missed — documented here so the trade-off is a
+        # visible, intentional line in the test suite, not silent behavior
+        # someone has to rediscover by reading five rounds of review
+        # history. If a future change narrows the boundary rule again, it
+        # needs to re-prove it against the false-negative corpus in
         # test_unrelated_negation_in_a_different_clause_does_not_suppress
-        # above).
-        "Here is what this dosha does not mean: you will never have children.",
+        # above (comma-joined *independent* clauses) before this test can
+        # move any of these back to "must stay safe."
+        "It does not, in any reading, guarantee poverty.",
+        "It does not, however, guarantee poverty.",
         "This dosha does not mean the following: you will never have children.",
+        "It is not true that this dosha, which the classical texts discuss "
+        "at some length, guarantees poverty.",
     ])
-    def test_colon_introducing_a_hedge_does_not_break_its_own_negation(self, wealth_bundle, phrase):
+    def test_known_limitations_from_choosing_the_safer_bias(self, wealth_bundle, phrase):
         bad = _reading(interpretation=phrase)
         violations = verify(bad, wealth_bundle, "wealth")
-        assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
+        assert violations, (
+            f"if this now passes clean, the boundary logic got smarter — "
+            f"move this case to a must-stay-safe test rather than deleting "
+            f"the record that it used to be a known gap: {phrase!r}"
+        )
 
-    def test_appositive_comma_still_does_not_break_negation(self, wealth_bundle):
-        """The case that ruled out a bare comma as a clause boundary in
-        the first place — still must work after the clause-vs-sentence
-        narrowing above."""
-        good = _reading(interpretation="It does not, in any reading, guarantee poverty.")
-        assert verify(good, wealth_bundle, "wealth") == []
+    @pytest.mark.parametrize("phrase", [
+        # Two more gaps the fifth review found in the round-4 boundary set:
+        # `!`/`?` weren't sentence boundaries at all (so a negation before
+        # them could reach forward past what should have been a hard stop),
+        # and en dash (U+2013) wasn't recognized, only em dash (U+2014) and
+        # `--` — a near-miss of exactly the kind this file's history is
+        # full of (round 2's missing `\b` was the same class of bug).
+        "This dosha does not affect your career – it guarantees poverty.",
+        "Remedies cannot help! This yoga guarantees childlessness.",
+        "It is not a matter of effort? Poverty is guaranteed by this yoga.",
+    ])
+    def test_exclamation_question_and_en_dash_are_boundaries(self, wealth_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, wealth_bundle, "wealth")
+        assert violations, f"expected a violation for: {phrase!r}"
 
 
 class TestFullFieldCoverage:
