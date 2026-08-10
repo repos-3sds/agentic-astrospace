@@ -395,3 +395,50 @@ leans on that harder than v1 did, not around it.
 5. Imprisonment/litigation outcomes — advisory tone, no deterministic verdicts (Domain 12)
 6. 3rd vs 11th house for younger/elder siblings — standard convention, not disputed, but both houses now feed one domain (3) so the split matters less in practice than it did across two houses in different v1 domains
 7. No dedicated divisional chart (varga) for the 11th house in the standard shodashavarga system — Domain 15 reads from D1/D9 only; not an engine gap, a fact about the classical system
+
+## Ground-truth validation against BPHS (2026-08-10)
+
+A source-cited validation pass checked the engine's actual computation
+functions against BPHS directly, not against this document's own prior
+claims — see `tests/test_bphs_ground_truth.py` for the permanent, CI-enforced
+version of this check. Any new domain agent whose addendum references one of
+these techniques should cite this section rather than re-deriving from
+scratch.
+
+**Confirmed correct, exact match** (used by Domains 1, 2, 7, 9, 12 among
+others): Special Ascendants (Bhava/Hora/Ghati Lagna, `special_lagnas.py`),
+Drishti Bala aspectual strength (`strength.sputa_drishti`, all 8 classical
+piecewise segments plus the Mars/Jupiter/Saturn special-aspect overrides),
+planetary relationships (`strength.NATURAL_RELATIONS`, `temporal_relation`,
+`panchadha_relation` — natural + temporal → the 5-fold Great Friend/Friend/
+Neutral/Enemy/Great Enemy compound).
+
+**Confirmed gaps, not built** (a validation pass found them; building them
+is separate work, not done as part of this pass):
+1. **Kalapurusha sign-to-body-part mapping** — no engine reference anywhere;
+   relevant to Health & Longevity's "disease location by body part"
+   subdomain, currently unsupported. Only the unrelated Rajju
+   (nakshatra-based) system exists, in `compatibility.py`.
+2. **D-60 (Shashtyamsha) deity database** — the engine computes the D-60
+   *sign* correctly (`vargas.d60()`) but has no deity-name layer (60 named
+   deities, odd/even sign reversal rule) on top of it. Relevant to any
+   domain that wants Shashtyamsha-level "finest analysis" framing.
+3. **Shayanadi Avastha** — the 12-state modulo-12 formula (distinct from
+   the Baladi and Cheshta avastha systems the engine already has). Lower
+   priority: BPHS itself frames this as modifying dasha timing/intensity,
+   not core house significations, so no domain currently depends on it.
+
+**A meta-finding worth keeping in mind for any future source-extraction
+pass**: not every section of an AI-synthesized "validation" document is
+equally trustworthy just because it cites a chapter. The Vimshopaka Bala
+per-varga weight table in the document that drove this pass claimed each of
+its 4 schemes summed to 20.0, but 3 of the 4 actually summed to 21.0, 16.5,
+and 8.0 when checked by hand — an internal inconsistency that means that
+specific table cannot be a faithful transcription, regardless of its
+citation. This codebase's own `vimshopaka.py` weights (self-consistent, each
+scheme correctly totals 20, already documented as "the commonly-published
+Vimshopaka table") were deliberately NOT changed on the strength of a
+document that fails its own arithmetic. Lesson: check that a claimed table
+actually sums to its claimed total before trusting any of its individual
+values — this is now standard practice for any future extraction pass, not
+a one-off catch.
