@@ -30,7 +30,10 @@ from .special_lagnas import (
     special_lagnas as special_lagnas_of,
     bhrigu_bindu as bhrigu_bindu_of,
     indu_lagna as indu_lagna_of,
+    GHATI_MINUTES,
 )
+from .shayanadi import all_shayanadi_avasthas
+from .argala import all_argala
 from .yogini import yogini_dasha
 from .vimshopaka import vimshopaka_bala as vimshopaka_bala_of
 from .chara_dasha import chara_dasha as chara_dasha_of
@@ -299,6 +302,19 @@ class VedicChart:
         out["indu_lagna"] = indu_lagna_of(lagna_sign, moon_sign, self.positions)
         return out
 
+    def shayanadi_avasthas(self) -> dict:
+        rise = self._vedic_day_sunrise_jd()
+        if rise is None:
+            return {"error": "Sunrise undefined at this latitude/date (circumpolar)."}
+        hours = (self.moment.jd_ut - rise) * 24.0
+        ghatis = hours * 60.0 / GHATI_MINUTES
+        lagna_sign = sign_index(self.lagna_lon)
+        return all_shayanadi_avasthas(self.positions, lagna_sign, ghatis)
+
+    def argala(self) -> dict:
+        lagna_sign = sign_index(self.lagna_lon)
+        return all_argala(lagna_sign, self.positions)
+
     def masa(self) -> dict:
         jd = self.moment.jd_ut
         m = amanta_masa(jd)
@@ -438,5 +454,7 @@ class VedicChart:
             "yogas": self.yogas(),
             "jaimini": self.jaimini(),
             "special_lagnas": self.special_lagnas(),
+            "shayanadi_avasthas": self.shayanadi_avasthas(),
+            "argala": self.argala(),
             "masa": self.masa(),
         }

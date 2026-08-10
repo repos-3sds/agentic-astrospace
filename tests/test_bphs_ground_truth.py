@@ -45,11 +45,30 @@ database, Shayanadi Avastha, and Kalapurusha body-part mapping. Findings:
   yet pass its own arithmetic is not a reason to touch working code.
 - Confirmed gaps, not fixed here (out of scope for a validation pass, not a
   build pass): Kalapurusha sign-to-body-part mapping (zero references
-  anywhere in astrospace/core/vedic/), the D-60 Shashtyamsha deity database
-  (60 named deities + odd/even reversal rule — the engine computes the D-60
-  *sign* correctly via vargas.d60() but has no deity layer at all), and
-  Shayanadi Avastha (the 12-state modulo-12 formula — confirmed absent in an
-  earlier chat-level check, not re-derived here since nothing changed).
+  anywhere in astrospace/core/vedic/), and the D-60 Shashtyamsha deity
+  database (60 named deities + odd/even reversal rule — the engine computes
+  the D-60 *sign* correctly via vargas.d60() but has no deity layer). The
+  deity build was started and then deliberately reverted mid-session: its
+  60-name list traced back to the same AI-extraction pipeline that produced
+  the wrong Vimshopaka table and a wrong Jaimini karaka scheme elsewhere in
+  this same validation pass, and only the reversal *arithmetic* had been
+  checked, never the names themselves against a primary source — so it was
+  not shipped.
+- Shayanadi Avastha (2026-08-10, separate follow-up pass, NOT from the
+  uploaded document): built in core/vedic/shayanadi.py after cross-checking
+  the formula, variable definitions and 12-name ordering against three
+  independent secondary sources (astrojyoti.com, ganeshmitra.com,
+  jothishi.com), all agreeing exactly — no primary BPHS verse located, so it
+  ships flagged source_status: convention_dependent. This deliberately did
+  NOT reuse the uploaded document's own worked examples for this formula:
+  those examples' shown arithmetic contradicted their own stated formula.
+- Argala / Argala-Bhanga (2026-08-10, same follow-up pass): built in
+  core/vedic/argala.py after cross-checking against two independent
+  secondary sources (a Jaimini Sutramritam blog post, and an Asheville
+  Vedic Astrology post citing Ernst Wilhelm) that agree on the 2nd/4th/11th
+  argala houses, the 12th/10th/3rd obstruction houses, and the count-based
+  obstruction-strength rule. Also convention_dependent — no primary
+  Jaimini-sutra verse located.
 """
 import pytest
 
@@ -269,12 +288,98 @@ class TestConfirmedGapsNotYetBuilt:
         from astrospace.core.vedic.vargas import VARGA_INFO
         assert "deities" in VARGA_INFO.get("D60", {})
 
-    @pytest.mark.xfail(reason="Shayanadi Avastha (12-state modulo-12 formula: Nakshatra "
-                               "serial x planet serial x Navamsha serial, summed with "
-                               "Moon's star + Ascendant's Navamsha, mod 12): confirmed "
-                               "absent as of 2026-08-10. Baladi and Cheshta avastha "
-                               "systems exist and are unrelated to this one.",
-                        strict=False)
-    def test_shayanadi_avastha_exists(self):
-        from astrospace.core.vedic import strength
-        assert hasattr(strength, "shayanadi_avastha")
+
+# ── Shayanadi Avastha — cross-checked against 3 independent secondary
+# sources 2026-08-10 (see core/vedic/shayanadi.py's module docstring). The
+# worked example below is the one source-provided example, hand-verified:
+# Sun in Hasta (nakshatra_serial=13), planet_serial=1 (Sun), navamsha_number=6,
+# Moon nakshatra_serial=25, ghatika=20, lagna_rashi_number=10
+#   -> (13*1*6) + 25 + 20 + 10 = 133 -> 133 % 12 = 1 -> Shayana.
+class TestShayanadiAvastha:
+    def test_worked_example_from_source(self):
+        from astrospace.core.vedic.shayanadi import AVASTHA_NAMES
+        raw = (13 * 1 * 6) + 25 + 20 + 10
+        remainder = raw % 12 or 12
+        assert AVASTHA_NAMES[remainder - 1] == "Shayana"
+
+    def test_names_are_the_twelve_in_source_order(self):
+        from astrospace.core.vedic.shayanadi import AVASTHA_NAMES
+        assert AVASTHA_NAMES == [
+            "Shayana", "Upavesana", "Netrapani", "Prakashana", "Gamana",
+            "Agamana", "Sabha", "Agama", "Bhojana", "Nrityalipsa", "Kautuka",
+            "Nidra",
+        ]
+
+    def test_planet_serial_matches_constants_planets_order(self):
+        # The three sources define planet_serial as Sun=1..Saturn=7,
+        # Rahu=8, Ketu=9 — this happens to be exactly this codebase's
+        # PLANETS list order, so no remapping table was needed.
+        from astrospace.core.vedic.constants import PLANETS
+        from astrospace.core.vedic.shayanadi import _PLANET_SERIAL
+        assert _PLANET_SERIAL == {p: i + 1 for i, p in enumerate(PLANETS)}
+
+    def test_zero_remainder_maps_to_nidra_not_index_zero(self):
+        from astrospace.core.vedic.shayanadi import shayanadi_avastha
+        # nakshatra_serial=1 (Ashwini) * planet_serial=2 (Moon) *
+        # navamsha_number=1 = 2; + moon_nakshatra_serial=2 (Bharani, at
+        # lon=13.4) + ghatika=4 + lagna_rashi_number=4 (lagna_sign=3) = 12
+        # -> 12 % 12 == 0 -> must map to Nidra (index 12), not crash or
+        # silently index [-1].
+        result = shayanadi_avastha("Moon", lon=0.1, moon_lon=13.4,
+                                    lagna_sign=3, ghatis_since_sunrise=4.0)
+        assert result["index"] == 12
+        assert result["name"] == "Nidra"
+
+
+# ── Argala / Argala-Bhanga — cross-checked against 2 independent secondary
+# sources 2026-08-10 (see core/vedic/argala.py's module docstring).
+class TestArgala:
+    def _positions(self, house_map: dict[str, int], lagna_sign: int = 0) -> dict:
+        # Places each named planet at 15 deg into the sign that is
+        # `house` houses forward from lagna_sign (whole-sign, 1-indexed).
+        return {
+            planet: {"lon": ((lagna_sign + house - 1) % 12) * 30.0 + 15.0}
+            for planet, house in house_map.items()
+        }
+
+    def test_primary_argala_from_2nd_house(self):
+        from astrospace.core.vedic.argala import argala_of_house
+        positions = self._positions({"Jupiter": 2})
+        result = argala_of_house(1, 0, positions)
+        assert result["legs"]["2nd"]["argala_planets"] == ["Jupiter"]
+        assert result["legs"]["2nd"]["outcome"] == "argala"
+
+    def test_obstruction_succeeds_when_obstructor_outnumbers_argala(self):
+        from astrospace.core.vedic.argala import argala_of_house
+        # 4th-from-1 (house 4) has 1 planet; 10th-from-1 (house 10, the
+        # obstructor) has 2 -- obstruction should win.
+        positions = self._positions({"Jupiter": 4, "Mercury": 10, "Saturn": 10})
+        result = argala_of_house(1, 0, positions)
+        assert result["legs"]["4th"]["outcome"] == "obstructed"
+
+    def test_equal_counts_reported_as_contested_not_guessed(self):
+        from astrospace.core.vedic.argala import argala_of_house
+        positions = self._positions({"Jupiter": 4, "Saturn": 10})
+        result = argala_of_house(1, 0, positions)
+        assert result["legs"]["4th"]["outcome"] == "contested"
+
+    def test_fewer_obstructors_fail_to_obstruct(self):
+        from astrospace.core.vedic.argala import argala_of_house
+        positions = self._positions({"Jupiter": 11, "Venus": 11, "Rahu": 11})
+        result = argala_of_house(1, 0, positions)
+        assert result["legs"]["11th"]["outcome"] == "argala"
+
+    def test_visesha_argala_needs_more_than_two_malefics(self):
+        from astrospace.core.vedic.argala import argala_of_house
+        two_malefics = self._positions({"Mars": 3, "Saturn": 3})
+        assert argala_of_house(1, 0, two_malefics)["legs"]["visesha_3rd"]["outcome"] == "none"
+
+        three_malefics = self._positions({"Mars": 3, "Saturn": 3, "Rahu": 3})
+        result = argala_of_house(1, 0, three_malefics)
+        assert result["legs"]["visesha_3rd"]["outcome"] == "argala"
+
+    def test_all_houses_covers_1_through_12(self):
+        from astrospace.core.vedic.argala import all_argala
+        result = all_argala(0, {})
+        assert set(result.keys()) == set(range(1, 13))
+

@@ -43,6 +43,7 @@ from ..core.vedic.positions import sidereal_positions
 from ..core.vedic.vargas import varga_sign
 from ..core.vedic.vimshopaka import WEIGHTS as _VIMSHOPAKA_SCHEMES
 from ..core.vedic.vimshopaka import vimshopaka_bala
+from ..core.vedic.argala import argala_of_house
 from .kb import get_knowledge_base
 from .taxonomy import DomainSpec, get_domain, taxonomy_version
 
@@ -83,7 +84,8 @@ def _profile_facts(chart, as_of: datetime) -> dict:
 
 
 def _planet_brief(planet: str, positions: dict, lagna_sign: int,
-                  dignities: dict, vimshopaka_scores: dict | None = None) -> dict:
+                  dignities: dict, vimshopaka_scores: dict | None = None,
+                  shayanadi_avasthas: dict | None = None) -> dict:
     lon = positions[planet]["lon"]
     s = sign_index(lon)
     nak = nakshatra_of(lon)
@@ -114,6 +116,18 @@ def _planet_brief(planet: str, positions: dict, lagna_sign: int,
         # from the same validated vimshopaka.py weights this session's
         # ground-truth pass confirmed against BPHS.
         brief["vimshopaka_bala"] = vimshopaka_scores[planet]
+    if shayanadi_avasthas and planet in shayanadi_avasthas:
+        # Shayanadi avastha — a 12-state condition distinct from the Baladi
+        # avastha and Cheshta avastha this codebase already computes
+        # elsewhere. Formula cross-checked against three independent
+        # secondary sources (see core/vedic/shayanadi.py's module
+        # docstring); no primary verse located, so source_status travels
+        # with the value rather than being asserted as settled fact.
+        row = shayanadi_avasthas[planet]
+        brief["shayanadi_avastha"] = {
+            "name": row["name"],
+            "source_status": row["source_status"],
+        }
     # Governing tissue (dhatu) and taste (rasa) — the classical Ayurvedic-
     # constitution associations Health & Longevity's own taxonomy scope
     # already claims to cover but previously had no data for. Static per
@@ -140,14 +154,16 @@ def _planet_brief(planet: str, positions: dict, lagna_sign: int,
 
 def _house_analysis(house: int, lagna_sign: int, positions: dict,
                     dignities: dict, tier: str,
-                    vimshopaka_scores: dict | None = None) -> dict:
+                    vimshopaka_scores: dict | None = None,
+                    shayanadi_avasthas: dict | None = None) -> dict:
     house_sign = (lagna_sign + house - 1) % 12
     lord = SIGN_LORDS[house_sign]
     occupants = [
         planet for planet, data in positions.items()
         if house_from_lagna(sign_index(data["lon"]), lagna_sign) == house
     ]
-    lord_brief = _planet_brief(lord, positions, lagna_sign, dignities, vimshopaka_scores)
+    lord_brief = _planet_brief(lord, positions, lagna_sign, dignities,
+                                vimshopaka_scores, shayanadi_avasthas)
     return {
         "house": house,
         "tier": tier,
@@ -156,6 +172,12 @@ def _house_analysis(house: int, lagna_sign: int, positions: dict,
         "lord_placement": lord_brief,
         "lord_in_dusthana": lord_brief["house"] in (6, 8, 12),
         "occupants": occupants,
+        # Argala/Argala-Bhanga — which houses' occupants support this
+        # house's significations and which obstruct that support. Source-
+        # checked against two independent secondary sources (see
+        # core/vedic/argala.py's module docstring); source_status travels
+        # with the payload.
+        "argala": argala_of_house(house, lagna_sign, positions),
     }
 
 
@@ -359,17 +381,24 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
         }
         for planet in positions
     }
+    # Computed once per bundle for the same reason as vimshopaka_scores
+    # above: it needs a sunrise search, not free to redo per planet brief.
+    # A circumpolar-sunrise chart returns {"error": ...} with no per-planet
+    # keys, which _planet_brief's `planet in shayanadi_avasthas` guard
+    # already handles by simply omitting the field.
+    shayanadi_avasthas = chart.shayanadi_avasthas()
 
     houses = [
         _house_analysis(h, lagna_sign, positions, dignities,
                         "primary" if h in spec.houses_primary else "secondary",
-                        vimshopaka_scores)
+                        vimshopaka_scores, shayanadi_avasthas)
         for h in spec.all_houses
     ]
     domain_house_lords = {row["lord"] for row in houses}
 
     karakas = {
-        planet: _planet_brief(planet, positions, lagna_sign, dignities, vimshopaka_scores)
+        planet: _planet_brief(planet, positions, lagna_sign, dignities,
+                              vimshopaka_scores, shayanadi_avasthas)
         for planet in spec.karakas_naisargika
     }
     chara_karakas_full = chart.jaimini()["chara_karakas"]["karakas"]
@@ -380,7 +409,8 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
             if row:
                 jaimini_karakas[code] = {
                     "karaka": _KARAKA_NAMES.get(code, code),
-                    **_planet_brief(row["planet"], positions, lagna_sign, dignities, vimshopaka_scores),
+                    **_planet_brief(row["planet"], positions, lagna_sign, dignities,
+                                     vimshopaka_scores, shayanadi_avasthas),
                 }
 
     focus_planets = list(dict.fromkeys(

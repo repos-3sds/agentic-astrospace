@@ -147,6 +147,33 @@ class TestAssembler:
         for scheme in ("shadvarga", "saptavarga", "dashavarga", "shodashavarga"):
             assert 0.0 <= vb[scheme] <= 20.0
 
+    def test_house_lord_carries_shayanadi_avastha(self, chart):
+        """Shayanadi avastha (core/vedic/shayanadi.py) — a 12-state condition
+        distinct from the Baladi/Cheshta avastha systems already in this
+        engine. Flagged source_status: convention_dependent, matching how
+        Indu Lagna already ships an unresolved-primary-source value."""
+        bundle = assemble_domain(chart, "career", include_gochara=False)
+        lord = bundle["houses"][0]["lord_placement"]
+        avastha = lord["shayanadi_avastha"]
+        assert avastha["name"] in {
+            "Shayana", "Upavesana", "Netrapani", "Prakashana", "Gamana",
+            "Agamana", "Sabha", "Agama", "Bhojana", "Nrityalipsa", "Kautuka",
+            "Nidra",
+        }
+        assert avastha["source_status"] == "convention_dependent"
+
+    def test_house_carries_argala(self, chart):
+        """Argala/Argala-Bhanga (core/vedic/argala.py) — each house entry
+        carries which houses support it and which obstruct that support."""
+        bundle = assemble_domain(chart, "career", include_gochara=False)
+        tenth = next(row for row in bundle["houses"] if row["house"] == 10)
+        argala = tenth["argala"]
+        assert argala["house"] == 10
+        assert set(argala["legs"]) == {"2nd", "4th", "11th", "visesha_3rd"}
+        for label in ("2nd", "4th", "11th"):
+            assert argala["legs"][label]["outcome"] in {"argala", "obstructed", "contested", "none"}
+        assert argala["source_status"] == "convention_dependent"
+
     def test_nodes_have_no_fabricated_dhatu_or_rasa(self, chart):
         """Rahu/Ketu genuinely have no classical dhatu/rasa assignment —
         confirm the field is absent, not a guessed/fabricated value."""

@@ -415,20 +415,43 @@ Neutral/Enemy/Great Enemy compound), and Vimshopaka Bala per-varga weights
 (`vimshopaka.WEIGHTS`, all 4 schemes — see the meta-finding below for how
 this one got confirmed).
 
-**Confirmed gaps, not built** (a validation pass found them; building them
-is separate work, not done as part of this pass):
+**Confirmed gaps, still not built**:
 1. **Kalapurusha sign-to-body-part mapping** — no engine reference anywhere;
    relevant to Health & Longevity's "disease location by body part"
    subdomain, currently unsupported. Only the unrelated Rajju
    (nakshatra-based) system exists, in `compatibility.py`.
 2. **D-60 (Shashtyamsha) deity database** — the engine computes the D-60
    *sign* correctly (`vargas.d60()`) but has no deity-name layer (60 named
-   deities, odd/even sign reversal rule) on top of it. Relevant to any
-   domain that wants Shashtyamsha-level "finest analysis" framing.
-3. **Shayanadi Avastha** — the 12-state modulo-12 formula (distinct from
-   the Baladi and Cheshta avastha systems the engine already has). Lower
-   priority: BPHS itself frames this as modifying dasha timing/intensity,
-   not core house significations, so no domain currently depends on it.
+   deities, odd/even sign reversal rule) on top of it. A build was started
+   and deliberately reverted: the 60-name list traced back to the same
+   AI-extraction pipeline that produced the wrong Vimshopaka table and a
+   wrong Jaimini karaka scheme elsewhere in this project's validation
+   pass, and only the reversal *arithmetic* had been checked, never the
+   names themselves against a primary source. Needs an independently
+   verifiable source before it ships.
+
+**Closed 2026-08-10, separate follow-up pass** (not from the originally
+uploaded validation document — cross-checked independently against fresh
+web sources, since the uploaded document's own worked examples for these
+two techniques were internally self-contradictory and could not be trusted
+as-is):
+3. **Shayanadi Avastha** — `core/vedic/shayanadi.py`. 12-state
+   modulo-12 formula (nakshatra serial × planet serial × navamsha number +
+   moon's nakshatra serial + ghatika since sunrise + lagna rashi number),
+   cross-checked against three independent secondary sources that agree
+   exactly on the formula and the 12-name ordering. No primary BPHS verse
+   located, so it ships flagged `source_status: convention_dependent`.
+   Wired into every planet brief in the CE bundle (`shayanadi_avastha`).
+4. **Argala / Argala-Bhanga** — `core/vedic/argala.py`. Jaimini's
+   planetary-intervention technique: 2nd/4th/11th houses from a target
+   house carry Argala (support), obstructed by the 12th/10th/3rd
+   respectively when the obstructing house has strictly more planets
+   (equal counts are reported as `contested`, not resolved, since neither
+   source gives an unambiguous tiebreak short of a full Shadbala strength
+   comparison this pass didn't attempt); 3+ malefics in the 3rd form an
+   unobstructable Visesha Argala. Cross-checked against two independent
+   secondary sources. Also `convention_dependent`. Wired into every house
+   entry in the CE bundle (`argala`).
 
 **A meta-finding worth keeping in mind for any future source-extraction
 pass**: not every section of an AI-synthesized "validation" document is
