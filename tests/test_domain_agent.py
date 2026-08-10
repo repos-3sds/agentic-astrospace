@@ -170,6 +170,33 @@ class TestRunStructuredMockRealism:
             agent.run_structured_reading([{"role": "user", "content": "hi"}])
 
 
+class TestBasePromptCoversConventionDependentFields:
+    """Regression pin: shayanadi_avastha/argala/d60_deity ship with
+    source_status: convention_dependent, and argala carries a 4-state
+    outcome per leg — the base prompt must actually tell the agent how to
+    handle both, or the field is silently ignored (best case) or asserted
+    with false confidence (worst case)."""
+
+    def test_rule_names_the_convention_dependent_fields(self, chart):
+        bundle = assemble_domain(chart, "marriage")
+        agent = DomainReadingAgent(bundle, AGENT_REGISTRY["marriage"].domain_addendum)
+        assert "convention_dependent" in agent.system_prompt
+        assert "shayanadi_avastha" in agent.system_prompt
+        assert "d60_deity" in agent.system_prompt
+
+    def test_rule_explains_all_four_argala_outcomes(self, chart):
+        bundle = assemble_domain(chart, "marriage")
+        agent = DomainReadingAgent(bundle, AGENT_REGISTRY["marriage"].domain_addendum)
+        for outcome in ("argala", "obstructed", "contested", "none"):
+            assert f'"{outcome}"' in agent.system_prompt
+
+    def test_rule_forbids_collapsing_one_leg_into_a_whole_house_verdict(self, chart):
+        bundle = assemble_domain(chart, "marriage")
+        agent = DomainReadingAgent(bundle, AGENT_REGISTRY["marriage"].domain_addendum)
+        assert "fully locked" in agent.system_prompt
+        assert "fully blocked" in agent.system_prompt
+
+
 class TestAskOrchestratorPrepare:
     @pytest.fixture
     def orchestrator(self, chart):
