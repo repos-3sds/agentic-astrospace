@@ -353,6 +353,31 @@ class TestShashtyamshaDeity:
         assert by_name["Kulanasa"] == "malefic"        # "destruction of lineage"
 
 
+# ── Naisargika planetary varna — cross-checked 2026-08-10 against multiple
+# independent sources converging on this exact 7-graha mapping (see
+# constants.py's PLANET_VARNA docstring for the caveat on Rahu/Ketu).
+class TestPlanetaryVarna:
+    def test_matches_the_standard_cross_source_mapping(self):
+        from astrospace.core.vedic.constants import PLANET_VARNA
+        assert PLANET_VARNA["Jupiter"] == "Brahmin"
+        assert PLANET_VARNA["Venus"] == "Brahmin"
+        assert PLANET_VARNA["Sun"] == "Kshatriya"
+        assert PLANET_VARNA["Mars"] == "Kshatriya"
+        assert PLANET_VARNA["Moon"] == "Vaishya"
+        assert PLANET_VARNA["Mercury"] == "Vaishya"
+        assert PLANET_VARNA["Saturn"] == "Shudra"
+
+    def test_distinct_from_varna_by_element(self):
+        """PLANET_VARNA (a static per-graha attribute) and VARNA_BY_ELEMENT
+        (a native's Varna Koota, derived from the Moon's sign element for
+        Ashtakoota compatibility scoring) are two unrelated classical
+        systems that happen to share the English word "varna" — confirm
+        they're not accidentally aliased to each other."""
+        from astrospace.core.vedic.constants import PLANET_VARNA, VARNA_BY_ELEMENT
+        assert set(PLANET_VARNA) != set(VARNA_BY_ELEMENT)
+        assert "Sun" in PLANET_VARNA and "Sun" not in VARNA_BY_ELEMENT
+
+
 class TestShayanadiAvastha:
     def test_worked_example_from_source(self):
         from astrospace.core.vedic.shayanadi import AVASTHA_NAMES

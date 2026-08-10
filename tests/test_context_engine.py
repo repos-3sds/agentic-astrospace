@@ -162,6 +162,17 @@ class TestAssembler:
         }
         assert avastha["source_status"] == "convention_dependent"
 
+    def test_house_lord_carries_planetary_varna(self, chart):
+        """Naisargika planetary varna (constants.PLANET_VARNA) — distinct
+        from VARNA_BY_ELEMENT's marriage-compatibility Varna Koota scoring.
+        Cross-checked against multiple independent sources 2026-08-10."""
+        bundle = assemble_domain(chart, "career", include_gochara=False)
+        lord = bundle["houses"][0]["lord_placement"]
+        assert lord["varna"] in {
+            "Kshatriya", "Vaishya", "Brahmin", "Shudra",
+            "Chandala (outcast)", "Jatyantara (mixed)",
+        }
+
     def test_house_carries_argala(self, chart):
         """Argala/Argala-Bhanga (core/vedic/argala.py) — each house entry
         carries which houses support it and which obstruct that support."""

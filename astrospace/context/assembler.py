@@ -28,7 +28,7 @@ from typing import Any
 
 import swisseph as swe
 
-from ..core.vedic.constants import PLANET_DHATU, PLANET_RASA, SIGN_LORDS
+from ..core.vedic.constants import PLANET_DHATU, PLANET_RASA, PLANET_VARNA, SIGN_LORDS
 from ..core.vedic.gocharam import gochara_rules, gocharam_rule_timeline
 from ..core.vedic.gocharam.strength import (
     apply_ashtakavarga_context,
@@ -145,6 +145,14 @@ def _planet_brief(planet: str, positions: dict, lagna_sign: int,
     if planet in PLANET_DHATU:
         brief["dhatu"] = PLANET_DHATU[planet]
         brief["rasa"] = PLANET_RASA[planet]
+    # Naisargika (natural) planetary varna — a static per-graha attribute,
+    # distinct from VARNA_BY_ELEMENT (which scores a native's own Varna
+    # Koota from the Moon's sign element for Ashtakoota compatibility).
+    # Cross-checked against multiple independent sources for the 7
+    # classical grahas; Rahu/Ketu's varna is a real but less universally
+    # fixed extension across traditions (see constants.py's docstring).
+    if planet in PLANET_VARNA:
+        brief["varna"] = PLANET_VARNA[planet]
     # The reasoning behind `dignity`, not just the label — only present when
     # dignity actually came from a dispositor relationship (Exalted/
     # Debilitated/Moolatrikona/Own/nodal-neutral have no dispositor to

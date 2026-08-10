@@ -245,6 +245,22 @@ PLANET_RASA = {
     "Venus": "Sour (Amla)", "Saturn": "Astringent (Kashaya)",
 }
 
+# Naisargika (natural) planetary varna — NOT the same system as
+# VARNA_BY_ELEMENT above, which classifies a *native's* Varna Koota by the
+# Moon's sign element for Ashtakoota compatibility. This is a separate,
+# static per-graha attribute (temperament/role, not a compatibility score),
+# cross-checked 2026-08-10 against multiple independent sources which
+# converge on this exact mapping for the 7 classical grahas; Rahu/Ketu are
+# a commonly-cited but less universally fixed extension (some traditions
+# give Rahu/Ketu a mixed or unclassified varna instead) — included since
+# our engine already treats the nodes as full participants elsewhere
+# (Jaimini Gnatikaraka, dignity, etc.), but flagged for that reason.
+PLANET_VARNA = {
+    "Sun": "Kshatriya", "Moon": "Vaishya", "Mars": "Kshatriya",
+    "Mercury": "Vaishya", "Jupiter": "Brahmin", "Venus": "Brahmin",
+    "Saturn": "Shudra", "Rahu": "Chandala (outcast)", "Ketu": "Jatyantara (mixed)",
+}
+
 # Traditional colour association per graha (name, hex for the swatch).
 # Used for the "colour of the day", keyed to the weekday (vara) lord and the
 # day's supportive/challenging transiting graha.
