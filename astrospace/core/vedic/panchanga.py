@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from .constants import (
     TITHI_NAMES, YOGA_NAMES, KARANA_MOVABLE, VARA_NAMES, VARA_LORDS,
 )
+from .abhijit import abhijit_status
 from .nakshatra import nakshatra_of
 from .positions import BirthMoment, local_sunrise
 
@@ -86,6 +87,10 @@ def panchanga_of(moment: BirthMoment, sun_lon: float, moon_lon: float) -> dict:
         "vara": vara_of(moment),
         "tithi": tithi_of(sun_lon, moon_lon),
         "nakshatra": nakshatra_of(moon_lon),
+        # Descriptive overlay only — `nakshatra` above stays authoritative.
+        # See abhijit.py: a Moon in the Abhijit arc still belongs to Uttara
+        # Ashadha or Shravana, so this never renames the birth nakshatra.
+        "abhijit": abhijit_status(moon_lon),
         "yoga": yoga_of(sun_lon, moon_lon),
         "karana": karana_of(sun_lon, moon_lon),
     }

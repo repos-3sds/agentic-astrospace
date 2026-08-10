@@ -353,6 +353,67 @@ class TestShashtyamshaDeity:
         assert by_name["Kulanasa"] == "malefic"        # "destruction of lineage"
 
 
+# ── Abhijit, the intercalary 28th nakshatra — span cross-checked 2026-08-10
+# against four independent sources, and re-derived here against this engine's
+# own pada math. The overlay property is the load-bearing one: Abhijit must
+# never displace the standard 27, or dashas and compatibility silently shift.
+class TestAbhijitNakshatra:
+    def test_span_boundaries_derive_exactly_from_the_pada_math(self):
+        """The two classical statements about Abhijit's edges — that it starts
+        at Uttara Ashadha's 4th pada and ends one fifteenth into Shravana —
+        must reproduce the quoted 276°40'–280°53'20" arc exactly, not
+        approximately. This is what promoted the span from 'plausible' to
+        'verified' when it was scoped."""
+        from astrospace.core.vedic.abhijit import ABHIJIT_START, ABHIJIT_END
+        from astrospace.core.vedic.constants import NAKSHATRA_SPAN
+
+        uttarashadha_start = 20 * NAKSHATRA_SPAN
+        fourth_pada = uttarashadha_start + 3 * (NAKSHATRA_SPAN / 4)
+        assert ABHIJIT_START == pytest.approx(fourth_pada, abs=1e-9)
+        assert ABHIJIT_START == pytest.approx(276 + 40 / 60, abs=1e-9)
+
+        shravana_start = 21 * NAKSHATRA_SPAN
+        one_fifteenth = shravana_start + NAKSHATRA_SPAN / 15
+        assert ABHIJIT_END == pytest.approx(one_fifteenth, abs=1e-9)
+        assert ABHIJIT_END == pytest.approx(280 + 53 / 60 + 20 / 3600, abs=1e-9)
+
+    def test_arc_width_is_the_classical_four_degrees_thirteen_twenty(self):
+        from astrospace.core.vedic.abhijit import ABHIJIT_START, ABHIJIT_END
+        width = ABHIJIT_END - ABHIJIT_START
+        assert width == pytest.approx(4 + 13 / 60 + 20 / 3600, abs=1e-9)
+
+    def test_is_an_overlay_and_never_displaces_the_standard_nakshatra(self):
+        """The whole reason this was safe to build: Uttara Ashadha and
+        Shravana keep their full spans. If this ever regresses into a real
+        28th nakshatra, Vimshottari dasha and Ashtakoota both shift under it."""
+        from astrospace.core.vedic.abhijit import in_abhijit_arc
+        from astrospace.core.vedic.nakshatra import nakshatra_of
+
+        assert in_abhijit_arc(277.0) and nakshatra_of(277.0)["name"] == "Uttara Ashadha"
+        assert in_abhijit_arc(279.9) and nakshatra_of(279.9)["name"] == "Uttara Ashadha"
+        assert in_abhijit_arc(280.5) and nakshatra_of(280.5)["name"] == "Shravana"
+
+    def test_boundaries_are_half_open_like_every_other_bucket_here(self):
+        from astrospace.core.vedic.abhijit import (
+            ABHIJIT_END, ABHIJIT_START, in_abhijit_arc,
+        )
+        assert in_abhijit_arc(ABHIJIT_START)          # inclusive lower
+        assert not in_abhijit_arc(ABHIJIT_END)        # exclusive upper
+        assert not in_abhijit_arc(ABHIJIT_START - 0.01)
+        assert in_abhijit_arc(ABHIJIT_END - 0.01)
+
+    def test_status_is_descriptive_and_flags_its_own_convention_dependence(self):
+        from astrospace.core.vedic.abhijit import abhijit_status
+        row = abhijit_status(278.0)
+        assert row["active"] is True
+        assert row["deity"] == "Brahma (Parabrahma)"
+        assert row["source_status"] == "convention_dependent"
+        # Shape is stable whether or not the arc is hit — callers can read
+        # `active` without first checking the key exists.
+        assert set(abhijit_status(10.0)) == set(row)
+        assert abhijit_status(10.0)["active"] is False
+
+
 # ── Naisargika planetary varna — cross-checked 2026-08-10 against multiple
 # independent sources converging on this exact 7-graha mapping (see
 # constants.py's PLANET_VARNA docstring for the caveat on Rahu/Ketu).

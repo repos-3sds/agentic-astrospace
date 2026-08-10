@@ -129,6 +129,23 @@ class TestDailyPanchanga:
         for w in day["windows"]["auspicious"] + day["windows"]["inauspicious"]:
             assert w["start_iso"] < w["end_iso"]
 
+    def test_carries_the_abhijit_nakshatra_overlay(self, day):
+        row = day["abhijit_nakshatra"]
+        assert isinstance(row["active"], bool)
+        assert row["source_status"] == "convention_dependent"
+
+    def test_abhijit_nakshatra_and_abhijit_muhurta_stay_distinct(self):
+        """Two unrelated things share the name "Abhijit": the daily noon
+        window (kala.py, always present) and the Moon's intercalary arc
+        (abhijit.py, rarely active). 2026-09-22 at Chennai has BOTH, which
+        is exactly the case that would expose them being conflated."""
+        day = daily_panchanga(2026, 9, 22, city="Chennai", nation="IN")
+        window_names = {w["name"].split(" (")[0] for w in day["windows"]["auspicious"]}
+        assert "Abhijit Muhurta" in window_names
+        assert day["abhijit_nakshatra"]["active"] is True
+        # The overlay must not have renamed the day's actual nakshatra.
+        assert day["elements"]["nakshatra"][0]["name"] == "Uttara Ashadha"
+
     def test_display_timezone_can_differ_from_calculation_timezone(self):
         local = daily_panchanga(2026, 7, 7, city="Rajahmundry", nation="IN")
         singapore = daily_panchanga(

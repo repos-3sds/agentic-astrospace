@@ -10,6 +10,7 @@ from .positions import (
     resolve_location, day_span, jd_to_local, sidereal_positions, sign_index,
     sign_name,
 )
+from .abhijit import abhijit_status
 from .nakshatra import nakshatra_of
 from .kala import kala_windows, choghadiya, horas
 from .masa import (
@@ -133,6 +134,11 @@ def daily_panchanga(year: int, month: int, day: int,
                      "starts from its second half); type classification "
                      "convention-dependent; verify"),
         },
+        # Descriptive overlay on the day's Moon at sunrise — never renames
+        # `elements.nakshatra`, which stays authoritative (see abhijit.py).
+        # Distinct from "Abhijit Muhurta" in `windows`, which is the daily
+        # noon window from kala.py and unrelated to the Moon's position.
+        "abhijit_nakshatra": abhijit_status(moon_at_rise),
         "gulika": gulika_positions(rise, sets, next_rise, vara_idx, lat, lng,
                                    display_tz_str),
         "mandi": mandi_positions(rise, sets, next_rise, vara_idx, lat, lng,
