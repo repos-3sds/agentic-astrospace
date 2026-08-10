@@ -50,8 +50,11 @@
   Manglik/Gandanta/Grahan dosha checks.
 
 ### Context Engine (partial)
-- **10 life-domains** taxonomy (career, wealth, marriage, health, education, children,
-  family/property, foreign, spirituality, litigation) — see `context_engine_taxonomy.md`.
+- **16-domain** taxonomy, split by topic rather than by house (career, wealth, personality,
+  siblings/self-effort, family/parents, property/assets, education, children, health,
+  marriage, business partnerships, rivals/disputes, litigation, foreign, spirituality/
+  dharma/fortune, gains/income/social circle, expenses/losses) — see
+  `context_engine_taxonomy.md` v2 for the full mapping and why the split happened.
 - Domain **assembler** (houses/karakas/vargas/yogas/dasha-relevance/gochara/KB refs),
   keyword/LLM **router**, pluggable **knowledge base**, daily-guidance wiring, optional
   LangGraph graph with checkpointing.

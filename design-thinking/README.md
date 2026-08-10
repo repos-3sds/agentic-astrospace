@@ -11,7 +11,7 @@ exists, then deep reference.
 3. **persona.md** — the 7 users we design for (synthetic proxy until real survey data lands).
 4. **capabilities.md** — what the engine can compute today vs not-yet (design material + feasibility).
 5. **ux_current_state.md** — the actual screens/IA today, so redesign starts from reality.
-6. **context_engine_taxonomy.md** — the 10 life-domains the engine can speak to.
+6. **context_engine_taxonomy.md** — the life-domains the engine can speak to (v2: split by topic, not by house — see the doc's own changelog note).
 7. **astrology_survey.md** — the research instrument that will replace the synthetic personas.
 8. **full_astro_software_checklist.md** — feature landscape (built vs not).
 9. **../docs/mobile_screen_build_plan.md** — the live native-app build tracker
@@ -29,7 +29,7 @@ exists, then deep reference.
 
 **Canonical in `docs/` (read these there):**
 - astrology_survey.md — the research instrument.
-- context_engine_taxonomy.md — the 10 life-domains.
+- context_engine_taxonomy.md — the life-domains (v2, topic-split).
 - full_astro_software_checklist.md — feature landscape.
 - ../docs/mobile_screen_build_plan.md — the live native-app build tracker.
 
