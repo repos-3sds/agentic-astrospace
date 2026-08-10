@@ -399,3 +399,108 @@ narrows them honestly.
   environment) — every "validated" claim in this checklist means internal
   consistency plus an external secondary-source cross-check, not a second
   software run. Stated explicitly per-item above, not implied.
+
+---
+
+## Deferred backlog — CE enrichment & BPHS validation pass (2026-08-10)
+
+**Status:** open backlog. Appended here rather than as a new dated file,
+per this doc's own "fold future audit passes into this file" rule.
+
+Scope note: this file's header scopes it to `core/vedic/**`,
+`knowledge/vedic_rules/**` and `context/**`. The Ask/agent-layer items in
+§C below sit outside that, and are recorded here anyway so there is **one**
+backlog to check rather than three. Cross-referenced from
+[context_engine_taxonomy.md](context_engine_taxonomy.md)'s ground-truth
+section.
+
+Nothing below is a time-budget skip. Each item is either (a) blocked on a
+verified source, or (b) a scoping decision made deliberately at the time.
+Every entry carries **why not**, **what unblocks it**, and **where the hook
+is** — so picking one up later doesn't mean re-deriving the research.
+
+**Shipped this pass, for context:** `dignity_reasoning`, `dhatu`/`rasa`,
+full 8-role Jaimini karaka array, D-60 sign, Vimshopaka precision scores,
+Shayanadi Avastha (`shayanadi.py`), Argala/Argala-Bhanga (`argala.py`),
+D-60 deity database (`shashtyamsha.py`), naisargika planetary varna
+(`PLANET_VARNA`), Abhijit intercalary nakshatra (`abhijit.py`), and base-
+prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
+
+### A. Blocked on a verified source
+
+- [ ] **Kalapurusha sign-to-body-part mapping** — zero references anywhere
+  in `core/vedic/`. Relevant to Health's "disease location by body part"
+  subdomain, currently unsupported. *Unblocks on:* a source giving the
+  full 12-sign→body-part table. *Hook:* pinned as the last remaining
+  `xfail` in `tests/test_bphs_ground_truth.py::TestConfirmedGapsNotYetBuilt`
+  — closing it makes noise (unexpected pass) rather than staying silent.
+- [ ] **Abhijit muhurta goal-preference scoring** — `abhijit.py` ships the
+  verified arc, but nothing scores it. No source found gives a checkable
+  mapping of which undertakings Abhijit favours, and `muhurta.py`'s `GOALS`
+  table will not be seeded with a guess (same bar applied to the D-60 deity
+  list before it shipped). *Unblocks on:* a source mapping Abhijit to
+  specific muhurta goals. *Hook:* `GOALS[...]["prefer_nakshatra"]`.
+- [ ] **T0.2 / edition-variance citations** — carried forward from the
+  pass above; still only 7 of ~32 yoga/dosha rules have a deeper citation,
+  none landing an undisputed chapter/verse.
+
+### B. Real, corroborated, simply not built yet
+
+- [ ] **Ashtottari and Shastihayani dashas** — the only two dasha systems
+  that actually consume Abhijit; neither exists here. This is the missing
+  consumer that would give `abhijit.py` live value beyond description.
+  *Hook:* `abhijit.py` is what either should read from.
+- [ ] **Karakamsha** — the sign the Atmakaraka occupies in D9. Real,
+  well-corroborated, and cheap: the engine already computes AK
+  (`jaimini.chara_karakas`) and D9 signs (`vargas.d9`) separately, so this
+  is a lookup, not a new calculation. Surfaced while auditing the career
+  KB, which used the non-existent term "Karakaksha" for it. *Hook:*
+  `jaimini.py`, alongside the existing `upapada`/`arudha_padas`.
+- [ ] **Argala "contested" tiebreak** — `argala.py` reports `contested`
+  when the argala and obstruction houses hold equal planet counts, and
+  deliberately does not pick a winner. Sources say to compare relative
+  strength, which needs Shadbala; that comparison was out of scope.
+  *Unblocks on:* a decision on which Shadbala measure to compare.
+  *Hook:* `argala._leg_outcome()`.
+- [ ] **9 remaining domains** from taxonomy v2's 16 (7 shipped: career,
+  marriage, wealth, children, health, foreign, personality). *Hook:*
+  `agents/registry.py` + `context/taxonomy.json`.
+
+### C. Ask/agent layer — one live safety gap, highest priority here
+
+- [ ] **`safety.py` third-party death/health output net** — **this is a
+  live gap in shipped code, not a future enhancement.**
+  `_PROHIBITED_OUTPUT`'s death cluster is entirely anchored to "you" (the
+  native), so third-party phrasing about a spouse, child or parent passes
+  straight through. Re-verified 2026-08-10:
+
+  ```
+  CAUGHT   | 'you will die young'              (first-party)
+  CAUGHT   | 'your lifespan is short'          (first-party)
+  MISSED ! | 'your spouse will die young'      (third-party)
+  MISSED ! | 'your husband will die early'     (third-party)
+  MISSED ! | 'your child will not survive'     (third-party)
+  MISSED ! | 'your mother will die soon'       (third-party)
+  ```
+
+  Marriage is a shipped, live domain whose whole subject is a third party,
+  which is what makes this reachable rather than theoretical. The fix is
+  small and needs no new mechanism — extend the existing detect-and-reject-
+  then-regenerate path to third-party subjects. *Hook:*
+  `agents/safety.py::_PROHIBITED_OUTPUT` / `prohibited_verdict()`; the
+  repair loop that consumes it already exists in `orchestrator.py`.
+  *Status:* proposed several times across this session, never explicitly
+  picked up — recorded here so it stops depending on someone remembering.
+
+### D. Docs pending a decision
+
+- [ ] **`docs/marriage-agent-kb.md`, `marriage-ce-payload-v1.md`,
+  `marriage-agent-prompt-v1.md`, `career-agent-kb.md`** — all four are
+  user-added, untracked in git, and none is wired into any addendum or the
+  KB pipeline. The payload/prompt docs were each audited and found to carry
+  fabricated specifics (a wrong Jaimini karaka scheme, self-contradicting
+  Avastha arithmetic, mismatched Vimshopaka scores, 2/3 wrong D-60 signs,
+  and the non-existent terms "Pratargala" and "Karakaksha"); the two KB
+  docs are largely standard prose the retrieval pipeline doesn't ingest
+  from `docs/` anyway. *Decision needed:* commit, relocate into the real KB
+  ingestion path, or delete.

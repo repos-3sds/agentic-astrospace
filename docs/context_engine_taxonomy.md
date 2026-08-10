@@ -421,6 +421,16 @@ this one got confirmed).
    subdomain, currently unsupported. Only the unrelated Rajju
    (nakshatra-based) system exists, in `compatibility.py`.
 
+> **Deferred backlog lives in one place.** Everything deliberately left
+> unbuilt across this validation/enrichment work — the gap above, the
+> Abhijit muhurta scoring hook, Ashtottari/Shastihayani dashas, Karakamsha,
+> the Argala `contested` tiebreak, the 9 unbuilt domains, and the live
+> `safety.py` third-party death/health output-net gap — is tracked with
+> reasons and unblock conditions in
+> [backend_astro_depth_checklist_2026-08-06.md](backend_astro_depth_checklist_2026-08-06.md)
+> under "Deferred backlog — CE enrichment & BPHS validation pass
+> (2026-08-10)". Add new deferrals there, not here.
+
 **Closed 2026-08-10, separate follow-up pass** (not from the originally
 uploaded validation document — cross-checked independently against fresh
 web sources, since the uploaded document's own worked examples for these
