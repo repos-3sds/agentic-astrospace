@@ -120,6 +120,37 @@ export interface TaxonomyDomain {
   keywords: string[];
 }
 
+export interface AgentPromptDomain {
+  id: string;
+  name: string;
+  description: string;
+  source_file: string;
+  symbol: string;
+  addendum: string;
+}
+
+export interface AgentPromptRegistry {
+  schema_version: string;
+  base: {
+    name: string;
+    source_file: string;
+    symbol: string;
+    prompt: string;
+  };
+  composition: {
+    owner: string;
+    description: string;
+    runtime_inputs: string[];
+  };
+  coverage: {
+    configured: number;
+    taxonomy_total: number;
+    unconfigured: Array<{ id: string; name: string }>;
+  };
+  domains: AgentPromptDomain[];
+  editable: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private api = inject(ApiService);
@@ -198,6 +229,10 @@ export class AdminService {
 
   taxonomy(): Promise<{ version: number; domains: TaxonomyDomain[] }> {
     return this.api.get('/admin/taxonomy');
+  }
+
+  agentPrompts(): Promise<AgentPromptRegistry> {
+    return this.api.get('/admin/agent-prompts');
   }
 
   updateChunkMetadata(
