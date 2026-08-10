@@ -86,16 +86,30 @@ def _planet_brief(planet: str, positions: dict, lagna_sign: int,
     s = sign_index(lon)
     nak = nakshatra_of(lon)
     combust = combustion_status(planet, positions)
-    return {
+    dignity = dignities.get(planet, {})
+    brief = {
         "planet": planet,
         "sign": sign_name(s),
         "degree_in_sign": round(degree_in_sign(lon), 2),
         "house": house_from_lagna(s, lagna_sign),
         "nakshatra": nak["name"],
-        "dignity": dignities.get(planet, {}).get("dignity"),
+        "dignity": dignity.get("dignity"),
         "retrograde": bool(positions[planet].get("retrograde")),
         "combust": bool(combust.get("active")),
     }
+    # The reasoning behind `dignity`, not just the label — only present when
+    # dignity actually came from a dispositor relationship (Exalted/
+    # Debilitated/Moolatrikona/Own/nodal-neutral have no dispositor to
+    # reason about). Lets the agent cite *why* a compound relationship
+    # landed where it did, e.g. "natural friend, but temporarily hostile
+    # from this house, giving Neutral" instead of only asserting "Neutral".
+    if dignity.get("dispositor"):
+        brief["dignity_reasoning"] = {
+            "dispositor": dignity["dispositor"],
+            "natural_relation": dignity.get("natural_relation"),
+            "temporal_relation": dignity.get("temporal_relation"),
+        }
+    return brief
 
 
 def _house_analysis(house: int, lagna_sign: int, positions: dict,

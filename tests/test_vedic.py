@@ -41,11 +41,13 @@ from astrospace.core.vedic.strength import (
     avastha_of,
     combustion_status,
     dignity_of,
+    natural_relation,
     panchadha_relation,
     planetary_conditions,
     planetary_war,
     retrograde_modifier,
     shadbala,
+    temporal_relation,
 )
 from astrospace.core.vedic.chart import VedicChart
 
@@ -704,6 +706,26 @@ class TestDignity:
         d = dignity_of("Rahu", 45.0, pos)
         assert d["dignity"] == "Neutral"
         assert "note" in d
+
+    def test_dignity_exposes_the_relationship_reasoning_behind_the_label(self):
+        """A domain agent citing `dignity` should be able to cite *why*, not
+        just the compound label — natural_relation and temporal_relation
+        were previously computed internally and discarded."""
+        pos = _positions_stub(Mercury=10.0, Saturn=280.0)  # Mercury in Aries (ruled by Mars)
+        pos["Mars"] = {"lon": 220.0}  # Mars in Scorpio (own sign) — dispositor of Mercury's Aries placement
+        d = dignity_of("Mercury", 10.0, pos)
+        assert d["dispositor"] == "Mars"
+        assert d["natural_relation"] == natural_relation("Mercury", "Mars")
+        assert d["temporal_relation"] == temporal_relation(0, 7)  # Aries(0) to Scorpio(7)
+        assert d["dignity"] == panchadha_relation("Mercury", 0, "Mars", 7)
+
+    def test_dignity_reasoning_absent_for_direct_sign_matches(self):
+        """Exalted/Debilitated/Moolatrikona/Own dignities have no dispositor
+        relationship to reason about — the reasoning keys simply don't apply."""
+        pos = _positions_stub(Sun=10.0)
+        d = dignity_of("Sun", 10.0, pos)
+        assert "natural_relation" not in d
+        assert "temporal_relation" not in d
 
 
 class TestShadbala:

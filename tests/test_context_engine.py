@@ -78,6 +78,28 @@ class TestAssembler:
         assert "D10" in bundle["vargas"]
         assert bundle["vargas"]["D10"]["tier"] == "primary"
 
+    def test_house_lord_dignity_carries_its_own_reasoning(self, chart):
+        """A domain agent should be able to cite *why* a lord's dignity
+        landed where it did, not just assert the label — dignity_reasoning
+        exposes the dispositor plus both the natural and temporal
+        relationship that the compound dignity was derived from."""
+        bundle = assemble_domain(chart, "career", include_gochara=False)
+        reasoned = [row for row in bundle["houses"]
+                    if "dignity_reasoning" in row["lord_placement"]]
+        assert reasoned, "expected at least one house lord with a dispositor relationship"
+        reasoning = reasoned[0]["lord_placement"]["dignity_reasoning"]
+        assert reasoning["dispositor"]
+        assert reasoning["natural_relation"] in ("friend", "enemy", "neutral")
+        assert reasoning["temporal_relation"] in ("friend", "enemy")
+        # Direct sign matches (Exalted/Debilitated/Moolatrikona/Own) have no
+        # dispositor relationship to reason about, so the key is absent
+        # rather than null — confirm both shapes actually occur.
+        direct = [row for row in bundle["houses"]
+                  if row["lord_placement"]["dignity"] in
+                  ("Exalted", "Debilitated", "Moolatrikona", "Own")]
+        if direct:
+            assert "dignity_reasoning" not in direct[0]["lord_placement"]
+
     def test_profile_facts_are_deterministic_not_left_to_the_model(self, chart):
         """Item 3 requirement (docs/ask_context_engine_multi_agent_
         architecture_2026-08-07.md, "Update 2026-08-09"): age must be

@@ -144,9 +144,21 @@ def dignity_of(planet: str, lon: float, positions: dict) -> dict:
 
     dispositor = SIGN_LORDS[sign]
     disp_sign = int(positions[dispositor]["lon"] % 360.0 // 30)
+    nat = natural_relation(planet, dispositor)
+    temp = temporal_relation(sign, disp_sign)
     relation = panchadha_relation(planet, sign, dispositor, disp_sign)
-    return {"dignity": relation, "score": DIGNITY_SCORES[relation],
-            "dispositor": dispositor}
+    return {
+        "dignity": relation, "score": DIGNITY_SCORES[relation],
+        "dispositor": dispositor,
+        # The reasoning chain behind `dignity`, not just its conclusion —
+        # added so a domain agent can cite *why* a compound relationship
+        # landed where it did (e.g. "natural friend, but temporarily
+        # hostile from this house, giving Neutral") instead of only
+        # asserting the label. Previously computed internally and
+        # discarded; every value here is exact, not derived/approximated.
+        "natural_relation": nat,
+        "temporal_relation": temp,
+    }
 
 
 def all_dignities(positions: dict) -> dict:
