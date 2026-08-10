@@ -443,6 +443,16 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
 - [ ] **T0.2 / edition-variance citations** — carried forward from the
   pass above; still only 7 of ~32 yoga/dosha rules have a deeper citation,
   none landing an undisputed chapter/verse.
+- [ ] **Nakshatra shakti (the 27 "powers")** — deliberately excluded when
+  the nakshatra deity/symbol tables were built. The system is genuine
+  (Taittiriya Brahmana I.5.1 with Bhattabhaskara Mishra's commentary), but
+  the familiar English "the power to…" renderings are one modern author's
+  translation, and a 27-row table of his phrasings would be reproducing his
+  work rather than stating a traditional fact — the same line that kept
+  interpretive trait-prose out of `NAKSHATRA_DEITY`. *Unblocks on:* the
+  Sanskrit shakti terms from the primary text (which are the actual
+  traditional data), glossed in our own words. *Hook:*
+  `constants.NAKSHATRA_DEITY` / `nakshatra.nakshatra_traits()`.
 
 ### B. Real, corroborated, simply not built yet
 

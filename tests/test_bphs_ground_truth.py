@@ -414,6 +414,65 @@ class TestAbhijitNakshatra:
         assert abhijit_status(10.0)["active"] is False
 
 
+# ── Nakshatra deity/symbol tables — cross-checked 2026-08-10 against two
+# independent complete 27-row tables (Wikipedia's List_of_Nakshatras and
+# bhagyax.com), 27/27 deity agreement modulo transliteration. The same pass
+# re-validated NAKSHATRA_LORDS against bhagyax's independent lord column.
+class TestNakshatraAttributeTables:
+    def test_every_table_covers_all_27_and_stays_aligned(self):
+        from astrospace.core.vedic.constants import (
+            GANA_BY_NAKSHATRA, NADI_BY_NAKSHATRA, NAKSHATRAS, NAKSHATRA_DEITY,
+            NAKSHATRA_LORDS, NAKSHATRA_SYMBOL, YONI_BY_NAKSHATRA,
+        )
+        for table in (NAKSHATRAS, NAKSHATRA_DEITY, NAKSHATRA_SYMBOL,
+                      NAKSHATRA_LORDS, GANA_BY_NAKSHATRA, NADI_BY_NAKSHATRA,
+                      YONI_BY_NAKSHATRA):
+            assert len(table) == 27
+        # No blanks — a silently empty row would surface as an agent citing
+        # a deity of "" rather than as a crash.
+        assert all(NAKSHATRA_DEITY) and all(NAKSHATRA_SYMBOL)
+
+    def test_spot_check_deities_against_both_sources(self):
+        """Anchors where both independent tables agreed exactly."""
+        from astrospace.core.vedic.constants import NAKSHATRAS, NAKSHATRA_DEITY
+        expected = {
+            "Ashwini": "Ashwini Kumaras", "Bharani": "Yama", "Krittika": "Agni",
+            "Rohini": "Brahma", "Ardra": "Rudra", "Pushya": "Brihaspati",
+            "Magha": "Pitris", "Shravana": "Vishnu", "Revati": "Pushan",
+        }
+        for name, deity_fragment in expected.items():
+            assert deity_fragment in NAKSHATRA_DEITY[NAKSHATRAS.index(name)]
+
+    def test_lords_follow_the_vimshottari_cycle(self):
+        """Independently re-derived: the lord sequence must repeat in groups
+        of 9 from Ketu. bhagyax.com's own lord column matched 27/27."""
+        from astrospace.core.vedic.constants import NAKSHATRA_LORDS
+        cycle = ["Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter",
+                 "Saturn", "Mercury"]
+        assert NAKSHATRA_LORDS == cycle * 3
+
+    def test_traits_helper_returns_the_full_grounded_set(self):
+        from astrospace.core.vedic.constants import NAKSHATRAS
+        from astrospace.core.vedic.nakshatra import nakshatra_traits
+        row = nakshatra_traits(NAKSHATRAS.index("Ardra"))
+        assert row["name"] == "Ardra"
+        assert row["lord"] == "Rahu"
+        assert "Rudra" in row["deity"]
+        assert row["symbol"] == "Teardrop"
+        assert row["gana"] and row["yoni"] and row["nadi"]
+
+    def test_traits_carry_no_interpretive_prose(self):
+        """The table is deliberately facts-only: no "natives of X are..."
+        characterisations, which would be a modern writer's opinion smuggled
+        in as classical authority. Guards against a future well-meaning
+        edit pasting trait paragraphs into these tables."""
+        from astrospace.core.vedic.constants import NAKSHATRA_DEITY, NAKSHATRA_SYMBOL
+        for entry in list(NAKSHATRA_DEITY) + list(NAKSHATRA_SYMBOL):
+            assert len(entry) < 60, f"{entry!r} reads like prose, not an attribute"
+            assert "native" not in entry.lower()
+            assert "you " not in entry.lower()
+
+
 # ── Naisargika planetary varna — cross-checked 2026-08-10 against multiple
 # independent sources converging on this exact 7-graha mapping (see
 # constants.py's PLANET_VARNA docstring for the caveat on Rahu/Ketu).

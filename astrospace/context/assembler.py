@@ -34,7 +34,7 @@ from ..core.vedic.gocharam.strength import (
     apply_ashtakavarga_context,
     ashtakavarga_transit_support,
 )
-from ..core.vedic.nakshatra import nakshatra_of
+from ..core.vedic.nakshatra import nakshatra_of, nakshatra_traits
 from ..core.vedic.positions import (
     degree_in_sign, house_from_lagna, sign_index, sign_name,
 )
@@ -98,6 +98,13 @@ def _planet_brief(planet: str, positions: dict, lagna_sign: int,
         "degree_in_sign": round(degree_in_sign(lon), 2),
         "house": house_from_lagna(s, lagna_sign),
         "nakshatra": nak["name"],
+        # The nakshatra's own classical attributes, so the agent can ground a
+        # reading in them instead of recalling them from training data with no
+        # bundle field to cite. Bare facts only — deity, symbol, lord and the
+        # three temperament axes; no interpretive prose (see
+        # constants.NAKSHATRA_DEITY). `pada` matters interpretively in its own
+        # right: it selects the navamsa the placement matures into.
+        "nakshatra_detail": {**nakshatra_traits(nak["index"]), "pada": nak["pada"]},
         "dignity": dignity.get("dignity"),
         "retrograde": bool(positions[planet].get("retrograde")),
         "combust": bool(combust.get("active")),

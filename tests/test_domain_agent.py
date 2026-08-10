@@ -190,6 +190,14 @@ class TestBasePromptCoversConventionDependentFields:
         for outcome in ("argala", "obstructed", "contested", "none"):
             assert f'"{outcome}"' in agent.system_prompt
 
+    def test_prompt_directs_the_agent_to_use_nakshatra_texture(self, chart):
+        """The nakshatra_detail payload is only worth carrying if the prompt
+        tells the agent to read from it — otherwise it is inert tokens."""
+        bundle = assemble_domain(chart, "career")
+        agent = DomainReadingAgent(bundle, AGENT_REGISTRY["career"].domain_addendum)
+        assert "nakshatra_detail" in agent.system_prompt
+        assert "flag-not-verdict" in agent.system_prompt   # guardrail travels with it
+
     def test_rule_forbids_collapsing_one_leg_into_a_whole_house_verdict(self, chart):
         bundle = assemble_domain(chart, "marriage")
         agent = DomainReadingAgent(bundle, AGENT_REGISTRY["marriage"].domain_addendum)
