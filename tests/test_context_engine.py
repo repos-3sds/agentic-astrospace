@@ -100,6 +100,25 @@ class TestAssembler:
         if direct:
             assert "dignity_reasoning" not in direct[0]["lord_placement"]
 
+    def test_house_lord_carries_dhatu_and_rasa(self, chart):
+        """Health & Longevity's taxonomy scope claims Ayurvedic-constitution
+        framing; dhatu/rasa give it real data to ground that in instead of
+        the model inventing or recalling it from training data."""
+        bundle = assemble_domain(chart, "health", include_gochara=False)
+        with_dhatu = [row for row in bundle["houses"]
+                      if "dhatu" in row["lord_placement"]]
+        assert with_dhatu, "expected at least one house lord to carry dhatu/rasa"
+        lord = with_dhatu[0]["lord_placement"]
+        assert lord["dhatu"]
+        assert lord["rasa"]
+
+    def test_nodes_have_no_fabricated_dhatu_or_rasa(self, chart):
+        """Rahu/Ketu genuinely have no classical dhatu/rasa assignment —
+        confirm the field is absent, not a guessed/fabricated value."""
+        from astrospace.core.vedic.constants import PLANET_DHATU, PLANET_RASA
+        assert "Rahu" not in PLANET_DHATU and "Ketu" not in PLANET_DHATU
+        assert "Rahu" not in PLANET_RASA and "Ketu" not in PLANET_RASA
+
     def test_profile_facts_are_deterministic_not_left_to_the_model(self, chart):
         """Item 3 requirement (docs/ask_context_engine_multi_agent_
         architecture_2026-08-07.md, "Update 2026-08-09"): age must be

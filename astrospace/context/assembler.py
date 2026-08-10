@@ -28,7 +28,7 @@ from typing import Any
 
 import swisseph as swe
 
-from ..core.vedic.constants import SIGN_LORDS
+from ..core.vedic.constants import PLANET_DHATU, PLANET_RASA, SIGN_LORDS
 from ..core.vedic.gocharam import gochara_rules, gocharam_rule_timeline
 from ..core.vedic.gocharam.strength import (
     apply_ashtakavarga_context,
@@ -97,6 +97,15 @@ def _planet_brief(planet: str, positions: dict, lagna_sign: int,
         "retrograde": bool(positions[planet].get("retrograde")),
         "combust": bool(combust.get("active")),
     }
+    # Governing tissue (dhatu) and taste (rasa) — the classical Ayurvedic-
+    # constitution associations Health & Longevity's own taxonomy scope
+    # already claims to cover but previously had no data for. Static per
+    # planet, not chart-position-dependent, so every planet either has both
+    # or neither (Rahu/Ketu genuinely have neither — see PLANET_DHATU's
+    # docstring) rather than a partial entry.
+    if planet in PLANET_DHATU:
+        brief["dhatu"] = PLANET_DHATU[planet]
+        brief["rasa"] = PLANET_RASA[planet]
     # The reasoning behind `dignity`, not just the label — only present when
     # dignity actually came from a dispositor relationship (Exalted/
     # Debilitated/Moolatrikona/Own/nodal-neutral have no dispositor to

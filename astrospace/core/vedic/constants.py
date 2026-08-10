@@ -226,6 +226,25 @@ PLANET_DAYS = {
     "Jupiter": "Thursday", "Venus": "Friday", "Saturn": "Saturday",
 }
 
+# Governing bodily tissue (dhatu) and taste (rasa) per graha — standard
+# classical associations, published consistently across independent
+# secondary sources, not transcribed from any single translation's wording.
+# Rahu/Ketu are deliberately absent: neither classical source consulted
+# assigns them a dhatu or rasa (they are shadow points, not physical
+# bodies, and most texts treat this pairing as reserved for the seven
+# classical grahas only) — omitted rather than guessed.
+PLANET_DHATU = {
+    "Sun": "Bones (Asthi)", "Moon": "Blood (Rakta)", "Mars": "Bone marrow (Majja)",
+    "Mercury": "Skin (Twak)", "Jupiter": "Fat tissue (Vasa/Meda)",
+    "Venus": "Reproductive fluid (Shukra)", "Saturn": "Nerves and ligaments (Snayu)",
+}
+
+PLANET_RASA = {
+    "Sun": "Pungent (Katu)", "Moon": "Salty (Lavana)", "Mars": "Bitter (Tikta)",
+    "Mercury": "Mixed/varied (Mishra)", "Jupiter": "Sweet (Madhura)",
+    "Venus": "Sour (Amla)", "Saturn": "Astringent (Kashaya)",
+}
+
 # Traditional colour association per graha (name, hex for the swatch).
 # Used for the "colour of the day", keyed to the weekday (vara) lord and the
 # day's supportive/challenging transiting graha.
