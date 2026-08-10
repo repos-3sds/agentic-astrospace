@@ -411,7 +411,9 @@ Drishti Bala aspectual strength (`strength.sputa_drishti`, all 8 classical
 piecewise segments plus the Mars/Jupiter/Saturn special-aspect overrides),
 planetary relationships (`strength.NATURAL_RELATIONS`, `temporal_relation`,
 `panchadha_relation` — natural + temporal → the 5-fold Great Friend/Friend/
-Neutral/Enemy/Great Enemy compound).
+Neutral/Enemy/Great Enemy compound), and Vimshopaka Bala per-varga weights
+(`vimshopaka.WEIGHTS`, all 4 schemes — see the meta-finding below for how
+this one got confirmed).
 
 **Confirmed gaps, not built** (a validation pass found them; building them
 is separate work, not done as part of this pass):
@@ -430,15 +432,22 @@ is separate work, not done as part of this pass):
 
 **A meta-finding worth keeping in mind for any future source-extraction
 pass**: not every section of an AI-synthesized "validation" document is
-equally trustworthy just because it cites a chapter. The Vimshopaka Bala
-per-varga weight table in the document that drove this pass claimed each of
-its 4 schemes summed to 20.0, but 3 of the 4 actually summed to 21.0, 16.5,
-and 8.0 when checked by hand — an internal inconsistency that means that
-specific table cannot be a faithful transcription, regardless of its
-citation. This codebase's own `vimshopaka.py` weights (self-consistent, each
-scheme correctly totals 20, already documented as "the commonly-published
-Vimshopaka table") were deliberately NOT changed on the strength of a
-document that fails its own arithmetic. Lesson: check that a claimed table
-actually sums to its claimed total before trusting any of its individual
-values — this is now standard practice for any future extraction pass, not
-a one-off catch.
+equally trustworthy just because it cites a chapter, and getting it right
+can take several corrective rounds even when the source is genuinely
+trying. The Vimshopaka Bala per-varga weight table in the document that
+drove this pass went through three rounds before it held up: v1 claimed
+each of its 4 schemes summed to 20.0, but 3 of the 4 actually summed to
+21.0, 16.5, and 8.0 when checked by hand (OCR row/column misalignment on
+the source's side); the v2 fix corrected 3 schemes but introduced a fresh
+row-shift in Saptavarga (its four weights were the *same numbers* as
+Shadvarga's, just assigned to the wrong vargas — a giveaway pattern for
+this failure mode); v3 fixed that but broke Dashavarga's D-60 weight in the
+process. Only the fourth version was both internally consistent (all 4
+schemes sum to exactly 20) *and* matched this codebase's own pre-existing,
+independently-sourced `vimshopaka.py` weights value-for-value — that
+convergence between two unrelated sources, only after the arithmetic
+finally held, is what makes it trustworthy now, not the citation alone.
+`vimshopaka.py` itself was never touched throughout this process. Lesson,
+now standard practice for any future extraction pass: check that a claimed
+table actually sums to its claimed total before trusting any individual
+value in it, and don't assume the first correction is the last one.

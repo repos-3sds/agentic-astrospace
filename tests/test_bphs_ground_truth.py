@@ -28,17 +28,21 @@ database, Shayanadi Avastha, and Kalapurusha body-part mapping. Findings:
   for manual calculation, not a more-accurate ground truth than a modern
   ephemeris. Mars/Jupiter/Saturn's constants (used for cheshta avastha
   classification) already matched closely and are unaffected.
-- Vimshopaka Bala per-varga weights: the uploaded document's own table does
-  NOT sum to its stated total of 20.0 for 3 of its 4 schemes (Shodashavarga
-  sums to 21.0, Dashavarga to 16.5, Saptavarga to 8.0 — verified by hand,
-  see the commit that added this file) — a self-inconsistency that means
-  that specific table in that document cannot be trusted as a faithful
-  transcription, whatever its citation claims. This codebase's own
-  vimshopaka.py weights (self-consistent, each scheme correctly summing to
-  20, already documented as "the commonly-published Vimshopaka table") were
-  NOT changed on the strength of a document that fails its own arithmetic.
-  If a genuinely primary-sourced table turns up later, re-derive from that,
-  not from this one.
+- Vimshopaka Bala per-varga weights: the uploaded document's original table
+  did NOT sum to its stated total of 20.0 for 3 of its 4 schemes
+  (Shodashavarga summed to 21.0, Dashavarga to 16.5, Saptavarga to 8.0) — a
+  self-inconsistency caused by OCR row/column misalignment on the source
+  side, confirmed and explained by the document's own author across two
+  follow-up correction rounds (round 1 fixed 3 schemes but introduced a
+  fresh Saptavarga row-shift; round 2 fixed that but broke Dashavarga's
+  D-60 weight; round 3 finally landed all four schemes both internally
+  consistent AND matching this codebase's pre-existing weights exactly,
+  value for value). That final convergence — an independently-sourced
+  table landing on identical numbers to ours after three corrective
+  rounds — is meaningfully stronger evidence than a single citation claim.
+  Pinned below now that it's confirmed; vimshopaka.py's weights were never
+  changed throughout this process, precisely because a table that doesn't
+  yet pass its own arithmetic is not a reason to touch working code.
 - Confirmed gaps, not fixed here (out of scope for a validation pass, not a
   build pass): Kalapurusha sign-to-body-part mapping (zero references
   anywhere in astrospace/core/vedic/), the D-60 Shashtyamsha deity database
@@ -57,6 +61,7 @@ from astrospace.core.vedic.strength import (
     temporal_relation,
 )
 from astrospace.core.vedic.special_lagnas import special_lagnas
+from astrospace.core.vedic.vimshopaka import WEIGHTS as VIMSHOPAKA_WEIGHTS
 
 
 # ── Drishti Bala (aspectual strength), BPHS's piecewise Virupa formula ──────
@@ -207,6 +212,39 @@ def test_panchadha_compound_relationship_matches_bphs(nat, temp, expected):
 
     result = panchadha_relation(fixed_planet, planet_sign, dispositor, dispositor_sign)
     assert result == expected
+
+
+# ── Vimshopaka Bala per-varga weights ───────────────────────────────────────
+# Confirmed 2026-08-10 after 3 correction rounds on the source-document side
+# (see module docstring). Each scheme's weights below sum to exactly 20.0 and
+# match this codebase's pre-existing, independently-sourced vimshopaka.py
+# weights exactly — the convergence itself is part of the evidence, not just
+# the individual numbers, so both are pinned here.
+BPHS_VIMSHOPAKA_WEIGHTS = {
+    "shadvarga": {"D1": 6.0, "D2": 2.0, "D3": 4.0, "D9": 5.0, "D12": 2.0, "D30": 1.0},
+    "saptavarga": {"D1": 5.0, "D2": 2.0, "D3": 3.0, "D7": 2.5, "D9": 4.5, "D12": 2.0, "D30": 1.0},
+    "dashavarga": {
+        "D1": 3.0, "D2": 1.5, "D3": 1.5, "D7": 1.5, "D9": 1.5, "D10": 1.5,
+        "D12": 1.5, "D16": 1.5, "D30": 1.5, "D60": 5.0,
+    },
+    "shodashavarga": {
+        "D1": 3.5, "D2": 1.0, "D3": 1.0, "D4": 0.5, "D7": 0.5, "D9": 3.0, "D10": 0.5,
+        "D12": 0.5, "D16": 2.0, "D20": 0.5, "D24": 0.5, "D27": 0.5, "D30": 1.0,
+        "D40": 0.5, "D45": 0.5, "D60": 4.0,
+    },
+}
+
+
+@pytest.mark.parametrize("scheme", list(BPHS_VIMSHOPAKA_WEIGHTS))
+def test_vimshopaka_weights_sum_to_twenty(scheme):
+    """The self-consistency check that caught the source document's original
+    errors — every scheme must sum to exactly 20 by classical construction."""
+    assert sum(BPHS_VIMSHOPAKA_WEIGHTS[scheme].values()) == pytest.approx(20.0)
+
+
+@pytest.mark.parametrize("scheme", list(BPHS_VIMSHOPAKA_WEIGHTS))
+def test_vimshopaka_weights_match_bphs(scheme):
+    assert VIMSHOPAKA_WEIGHTS[scheme] == BPHS_VIMSHOPAKA_WEIGHTS[scheme]
 
 
 # ── Confirmed gaps: pinned as expected failures, not silently forgotten ─────
