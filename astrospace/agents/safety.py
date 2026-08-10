@@ -177,6 +177,44 @@ _FUTURE_FRAMING = (
 )
 _ADVERB_GAP = r".{0,16}"
 
+# 2026-08-10 (validation-loop handoff §3, verified before fixing): the death
+# cluster in `_PROHIBITED_OUTPUT` below was anchored entirely to "you", so a
+# longevity verdict about anyone else passed straight through. Measured on the
+# shipped code, 10 of 12 probes were missed — "your spouse will die young",
+# "your child will not survive", "your father will die in 2029", "he will die
+# soon" — against 'you will die young' and 'your lifespan is short' being
+# caught. Same category of gap as the contraction one at the top of this file:
+# the rule was right and its subject list was one case wide.
+#
+# This matters specifically now. Once the validation loop stores reader-
+# reported life events, bundles start carrying third-party context ("reader
+# reported a family bereavement in 2019") and the model has a reason to write
+# about a family member's lifespan that it never had before. Closing it after
+# that data exists would be closing it late.
+#
+# People only, deliberately: "marriage"/"partnership"/"business" are NOT here
+# because the noun cluster below (lifespan/life expectancy/longevity) has an
+# ordinary non-death use with abstract subjects — "the longevity of your
+# marriage" is a legitimate sentence this app might well write, and adding
+# abstract nouns would flag it. Third-party pronouns are covered separately,
+# with explicit death VERBS only, for the same reason.
+_THIRD_PARTY_SUBJECTS = (
+    r"spouse|husband|wife|partner|fianc(?:e|é|ee|ée)|"
+    r"child|children|kid|son|daughter|baby|"
+    r"father|mother|dad|mom|mum|parent|parents|"
+    r"brother|sister|sibling|"
+    r"grandfather|grandmother|grandparents?|grandpa|grandma|"
+    r"father-in-law|mother-in-law|in-law|"
+    r"family member|relative|friend"
+)
+# "your father", "your father's", "your fathers'" — plus the bare pronouns,
+# which take no "your". Written once and shared by every death pattern below,
+# following this file's own hard-learned rule that a vocabulary list copied
+# per-pattern drifts between the copies.
+_THIRD_PARTY_REF = (
+    r"(?:your (?:" + _THIRD_PARTY_SUBJECTS + r")(?:'s|s')?|he|she|they)"
+)
+
 # Subjects the app must never issue a verdict on. Kept as word-stems so
 # inflections ("survive"/"survival") are covered without listing each form.
 _REFER_OUT_SUBJECTS: tuple[tuple[str, tuple[str, ...]], ...] = (
@@ -308,7 +346,32 @@ def refer_out_kind(question: str) -> str | None:
 # the exact cases that exposed the gap, or the next paraphrase finds it again.
 _PROHIBITED_OUTPUT = (
     (r"\byou (?:will|are going to) die\b", "death"),
-    (r"\byour (?:time of )?(?:death|dying|lifespan|life expectancy|longevity)\b", "death"),
+    # The subject slot is optional, so this one pattern covers both "your
+    # death"/"your lifespan" (what it always caught) and "your father's
+    # death"/"your spouse's lifespan" (what it did not).
+    (r"\byour (?:(?:" + _THIRD_PARTY_SUBJECTS + r")(?:'s|s')? )?"
+     r"(?:time of )?(?:death|dying|lifespan|life expectancy|longevity)\b", "death"),
+    # Third-party death verbs. Adverb-gap tolerant ("your spouse will soon
+    # die") using the same shared `_ADVERB_GAP` as the immigration arms, and
+    # negation-tolerant ("will not survive") because a survival verdict is the
+    # same claim as a death verdict with the polarity flipped — "your child
+    # will not survive" is not a hedge, it is the prohibited sentence.
+    (r"\b" + _THIRD_PARTY_REF + r"\b" + _ADVERB_GAP +
+     r"\b(?:will|shall|is going to|are going to)\b\s*(?:not\s+)?" + _ADVERB_GAP +
+     r"\b(?:die|dying|pass away|passing away)\b", "death"),
+    (r"\b" + _THIRD_PARTY_REF + r"\b" + _ADVERB_GAP +
+     r"\b(?:will|shall|is going to|are going to|can|is able to|are able to)\b\s*not\b" +
+     _ADVERB_GAP + r"\b(?:surviv|live|make it|pull through)", "death"),
+    # "your husband will live to 80" — a lifespan verdict stated as a
+    # duration rather than an event. Anchored to until/to/for/past/beyond so
+    # an ordinary "your father will live comfortably" is untouched.
+    (r"\b" + _THIRD_PARTY_REF + r"\b" + _ADVERB_GAP +
+     r"\b(?:will|shall|is going to|are going to|is likely to|are likely to)\b" + _ADVERB_GAP +
+     r"\blive (?:until|to|for|past|beyond)\b", "death"),
+    # Subject-free on purpose: "has a short lifespan" carries the whole
+    # verdict whoever it is about, and the noun forms here have no ordinary
+    # non-death use the way the abstract-subject case discussed above does.
+    (r"\b(?:short|limited|brief|reduced|curtailed) (?:lifespan|life span|life expectancy)\b", "death"),
     (r"\byou (?:will|are likely to) live (?:until|to|for)\b", "death"),
     (r"\byou have\b.{0,24}\b(?:years|months) (?:left|to live)\b", "death"),
     (r"\b\d+\s*months? to go on your journey\b", "death"),
@@ -421,8 +484,15 @@ _PERIOD_NOUNS = re.compile(
     r"\b(?:dasha|antardasha|pratyantardasha|sookshma|period|transit|"
     r"cycle|phase|window)\b"
 )
+# 2026-08-10: third-party subjects added here for the same reason as in the
+# death cluster above — "your mother has 3 years left" is the identical verdict
+# to "you have 3 years left" and was equally uncaught. The period-noun window
+# below still does the real work: "your father has 3 years remaining in his
+# Saturn dasha" is ordinary period language and stays clean, exactly as the
+# first-person version of that sentence already did.
 _YEARS_MONTHS_REMAINING = re.compile(
-    r"\byou have\b.{0,20}\b\d+\s*(?:years?|months?)\s*(?:remaining|left|to go)\b"
+    r"\b(?:you have|your (?:" + _THIRD_PARTY_SUBJECTS + r")(?:'s|s')? has|he has|she has|they have)\b"
+    r".{0,20}\b\d+\s*(?:years?|months?)\s*(?:remaining|left|to go|to live)\b"
 )
 
 

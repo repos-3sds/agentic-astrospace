@@ -372,6 +372,60 @@ def test_prohibited_verdicts_are_caught_on_the_way_out(answer, expected):
     assert _prohibited_verdict(answer) == expected
 
 
+@pytest.mark.parametrize("answer,expected", [
+    # 2026-08-10 (validation-loop handoff §3). The death cluster in the output
+    # net was anchored entirely to "you", so a longevity verdict about anyone
+    # else passed straight through: measured on shipped code, 10 of these 12
+    # were missed while "you will die young" and "your lifespan is short" were
+    # caught. The failure was not the rule, it was the rule's subject list.
+    #
+    # Why it was closed *before* the validation loop stores anything: once
+    # bundles carry reader-reported life events ("a family bereavement in
+    # 2019"), the model has a reason to write about a family member's
+    # lifespan that it did not have before, and this gap becomes materially
+    # more reachable than it was.
+    ("Your spouse will die young.", "death"),
+    ("Your child will not survive this period.", "death"),
+    ("Your father will die in 2029.", "death"),
+    ("Your mother has 3 years left.", "death"),
+    ("Your husband will not live past 60.", "death"),
+    ("Your wife will pass away next year.", "death"),
+    ("Your daughter is going to die.", "death"),
+    ("Your father's death is near.", "death"),
+    ("Your spouse has a short lifespan.", "death"),
+    ("Your grandmother has 6 months to live.", "death"),
+    ("Your partner will live to 80.", "death"),
+    ("Your mother-in-law will die during this dasha.", "death"),
+    # Adverb between the subject and the verb — the same gap shape round 3 of
+    # the immigration review found, so it is covered here from the start
+    # rather than after the fact.
+    ("Your brother will soon pass away.", "death"),
+    # Bare third-party pronouns take no "your" and so need their own subject
+    # arm. Explicit death verbs only for these — see `_THIRD_PARTY_REF`.
+    ("He will die soon.", "death"),
+    ("She will not pull through.", "death"),
+])
+def test_third_party_longevity_verdicts_are_caught(answer, expected):
+    assert _prohibited_verdict(answer) == expected
+
+
+@pytest.mark.parametrize("answer", [
+    # The other direction, and the reason the third-party subject list is
+    # people-only. "The longevity of your marriage" is a sentence this app may
+    # legitimately write; adding abstract nouns to that list would flag it.
+    "The longevity of your marriage is supported by Venus here.",
+    # The windowed period-noun check does the real work for durations — the
+    # third-party form of a sentence that was always legitimate stays
+    # legitimate.
+    "Your father has 3 years remaining in his Saturn dasha.",
+    "Your spouse will live comfortably through this period.",
+    "Your children will do well during this Jupiter dasha.",
+    "Your partner will travel abroad next year.",
+])
+def test_ordinary_third_party_sentences_pass_the_output_net(answer):
+    assert _prohibited_verdict(answer) is None
+
+
 @pytest.mark.parametrize("answer", [
     "A steady, workable day — good for routine work and errands.",
     "Your Saturn period rewards patience; Thursday mornings are steadier.",
