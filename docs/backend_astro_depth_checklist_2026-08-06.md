@@ -478,29 +478,84 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
 
 ### C. Ask/agent layer — one live safety gap, highest priority here
 
-- [ ] **`safety.py` third-party death/health output net** — **this is a
-  live gap in shipped code, not a future enhancement.**
-  `_PROHIBITED_OUTPUT`'s death cluster is entirely anchored to "you" (the
-  native), so third-party phrasing about a spouse, child or parent passes
-  straight through. Re-verified 2026-08-10:
+- [x] **`safety.py` third-party death output net** — **CLOSED 2026-08-10**
+  (validation-loop branch). `_PROHIBITED_OUTPUT`'s death cluster was
+  anchored entirely to "you", so third-party phrasing passed straight
+  through. Re-measured on shipped code before fixing: 10 of 12 probes
+  missed, against `'you will die young'` and `'your lifespan is short'`
+  being caught.
 
-  ```
-  CAUGHT   | 'you will die young'              (first-party)
-  CAUGHT   | 'your lifespan is short'          (first-party)
-  MISSED ! | 'your spouse will die young'      (third-party)
-  MISSED ! | 'your husband will die early'     (third-party)
-  MISSED ! | 'your child will not survive'     (third-party)
-  MISSED ! | 'your mother will die soon'       (third-party)
-  ```
+  Fixed by extending the existing detect-and-regenerate path — no new
+  mechanism — with a shared `_THIRD_PARTY_SUBJECTS`/`_THIRD_PARTY_REF`
+  vocabulary covering relatives and bare pronouns, applied to the death
+  verbs, the lifespan nouns, the survival negations, the "will live
+  to/until" duration form, and the windowed years-remaining check (which
+  still clears "your father has 3 years remaining in his Saturn dasha",
+  the third-party form of a sentence that was always legitimate). 18/18
+  prohibited phrasings now caught, 0 false positives on the ordinary set;
+  both directions pinned in
+  `tests/test_refer_out_boundary.py::test_third_party_longevity_verdicts_are_caught`
+  and `::test_ordinary_third_party_sentences_pass_the_output_net`.
 
-  Marriage is a shipped, live domain whose whole subject is a third party,
-  which is what makes this reachable rather than theoretical. The fix is
-  small and needs no new mechanism — extend the existing detect-and-reject-
-  then-regenerate path to third-party subjects. *Hook:*
-  `agents/safety.py::_PROHIBITED_OUTPUT` / `prohibited_verdict()`; the
-  repair loop that consumes it already exists in `orchestrator.py`.
-  *Status:* proposed several times across this session, never explicitly
-  picked up — recorded here so it stops depending on someone remembering.
+  Two deliberate scope limits, so the next reviewer doesn't re-litigate
+  them: the subject list is **people only** (adding "marriage"/
+  "partnership" would flag "the longevity of your marriage", a sentence
+  this app may legitimately write), and bare `he`/`she`/`they` are covered
+  with explicit death **verbs** only, never the noun cluster, for the same
+  reason ("their longevity" is ambiguous, "she will not survive" is not).
+  Third-party HEALTH phrasing (e.g. "your father has cancer") was not part
+  of this fix and remains open below.
+
+- [ ] **`safety.py` third-party health output net** — the health cluster in
+  `_PROHIBITED_OUTPUT` is still anchored to "you" the same way the death
+  cluster was ("you have cancer" is caught; "your father has cancer" is
+  not). Split out from the item above rather than folded into it because
+  the health vocabulary needs its own false-positive pass — a chart-based
+  reading legitimately discusses a family member's vitality in a way it
+  never discusses their lifespan, so the death cluster's "people-only
+  subject plus death noun is always a violation" shortcut does not
+  transfer. *Unblocks on:* nothing external; it needs a probe set in both
+  directions, same shape as the death one. *Hook:* the same
+  `_THIRD_PARTY_REF` constant is already in place and shared.
+
+- [ ] **Validation loop is wealth-only, and shipped behind a flag** — the
+  consultation validation loop (commit-before-ask probes, `timeline`,
+  `life_context`) landed 2026-08-10 for the **wealth** domain only.
+  `context/validation.py::validation_slots()` returns `[]` for every other
+  domain by design: the handoff's instruction was to make hit rate visible
+  on one real domain before generalising, and the slot generators are
+  wealth-shaped (`_WEALTH_HOUSE_SENSE` is a money-sense projection of the
+  house significations). *Unblocks on:* enough answered probes on wealth to
+  see whether the committed claims are any good — that number does not
+  exist yet for any reading this app produces, which is the whole point of
+  building it. *Hook:* the domain check at the top of `validation_slots()`;
+  a second domain needs its own house-sense table and its own generators,
+  not a widened wealth one.
+
+- [ ] **The validation turn defaults OFF** (`AskRequest.validate_first`,
+  default `False`). Not a scoping compromise in the engine — the backend
+  loop is complete and tested end to end — but a `validation_needed`
+  envelope that no client can render is a wealth question that silently
+  returns nothing to the reader. Answered probes already flow into every
+  reading as `life_context` regardless of the flag, so nothing is waiting
+  on the UI except the asking itself. *Unblocks on:* the mobile Ask
+  renderer handling `validation_needed` (Codex's area — options as chips,
+  a skip affordance, then re-send the original question). *Hook:* flip the
+  default in `api/ask_routes.py::AskRequest.validate_first`; no other code
+  changes.
+
+- [ ] **Birth-time rectification** — the reason the probe data is worth
+  storing at all, and explicitly deferred to a later pass by the handoff
+  that scoped this one. Known events plus dasha math can refine a birth
+  time; a *persistent* miss on a house-sensitive slot is the signal. The
+  store already carries what this needs (committed claim, confidence,
+  answer, and `slot_kind`, with `yoga_tension` slots flagged in their own
+  `why_it_changes_the_reading` as house-sensitive and therefore
+  birth-time-sensitive). *Unblocks on:* a body of answered probes per chart
+  — one miss is noise. *Hook:* `validation_probes` rows keyed by
+  `kundli_id`; `Kundli.birth_time_accuracy` already distinguishes
+  exact/approximate/unknown and is the field a rectification pass would
+  act on.
 
 ### D. Docs pending a decision
 

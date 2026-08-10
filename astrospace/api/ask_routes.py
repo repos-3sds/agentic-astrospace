@@ -74,6 +74,21 @@ class AskRequest(BaseModel):
                     "rows, so every reader got word-for-word the same "
                     "analyst-voiced answer.",
     )
+    validate_first: bool = Field(
+        False,
+        description="Opt this turn into the consultation validation loop: "
+                    "instead of answering immediately, the agent commits to a "
+                    "falsifiable claim about a dated window in the reader's "
+                    "chart, stores it, and returns one multiple-choice "
+                    "question about that window as a `validation_needed` "
+                    "envelope. Answer it via POST /api/v1/ask/validation/"
+                    "{probe_id}/answer, then re-send the original question. "
+                    "Defaults False because a client that cannot render that "
+                    "envelope would show the reader nothing at all; answered "
+                    "probes feed back into every reading as `life_context` "
+                    "whether or not this flag is set. Only honoured by the "
+                    "streamed v2 orchestrator (ask_stream_routes.py).",
+    )
 
 
 # ── Threads ──────────────────────────────────────────────────────────────────

@@ -26,9 +26,11 @@ from .intent import QuestionTense, detect_intent, detect_tense
 from .registry import AGENT_REGISTRY, AgentConfig
 from .safety import REFER_OUT_ANSWERS, refer_out_kind
 from .schema import AskIntent, StructuredReading
+from .validation_agent import ValidationAgent, ValidationProbeDraft, probe_violations
 from .verifier import verify
 from ..context import KeywordRouter, assemble_domain
 from ..context.taxonomy import get_domain
+from ..context.validation import validation_slots
 from ..core.vedic.chart import VedicChart
 
 SCHEMA_VERSION = "ask_structured_v1"
@@ -83,6 +85,22 @@ class PreparedRun:
 
 
 @dataclass
+class ValidationStore:
+    """Everything the validation loop needs from persistence, as two plain
+    callables — same pattern as `chart_loader`, and for the same reason:
+    nothing in this module touches SQLAlchemy.
+
+    `probes()` returns every probe already recorded for this reader and chart
+    (answered or not — an outstanding question must not be asked twice either).
+    `commit(slot, draft) -> probe_id` writes the commitment and returns its id;
+    it is called BEFORE the question is put to the reader, which is the whole
+    contract of this feature. See db/models.py's ValidationProbe.
+    """
+    probes: Callable[[], list[dict]]
+    commit: Callable[[dict, ValidationProbeDraft], str]
+
+
+@dataclass
 class PrepareOutcome:
     """Either a terminal envelope (nothing left to generate) or a
     `PreparedRun` ready for `run()` — never both."""
@@ -123,13 +141,19 @@ def _needs_clarification(decision) -> bool:
 
 class AskOrchestrator:
     def __init__(self, chart_loader: Callable[[], VedicChart],
-                router: KeywordRouter | None = None):
+                router: KeywordRouter | None = None,
+                validation_store: ValidationStore | None = None):
         """`chart_loader` is a zero-arg callable the route supplies —
         deferred so a bad-birth-data error only gets raised if a registered
         domain actually needs the chart (never for refer-out, never for
-        clarification, never for a domain the registry doesn't have)."""
+        clarification, never for a domain the registry doesn't have).
+
+        `validation_store` is optional: without it the orchestrator behaves
+        exactly as it did before this feature — no probes committed, and an
+        empty `life_context` in the bundle."""
         self._chart_loader = chart_loader
         self._router = router or KeywordRouter()
+        self._validation_store = validation_store
 
     def check_safety(self, question: str) -> SafetyResult:
         return SafetyResult(refer_out_kind=refer_out_kind(question))
@@ -183,22 +207,89 @@ class AskOrchestrator:
 
     def assemble_context(self, domain: str, question: str) -> ContextResult:
         chart = self._chart_loader()
-        bundle = assemble_domain(chart, domain, question=question)
+        bundle = assemble_domain(
+            chart, domain, question=question,
+            validation_probes=self._stored_probes(),
+        )
         context_used = [
             key for key in _BUNDLE_TOP_LEVEL_SECTIONS
             if bundle.get(key)
         ]
         return ContextResult(bundle=bundle, context_used=context_used)
 
+    def _stored_probes(self) -> list[dict]:
+        """Never let a probe-store failure cost the reader their reading. The
+        loop is additive by construction: without it every reading is exactly
+        the reading this app produced before the loop existed."""
+        if self._validation_store is None:
+            return []
+        try:
+            return self._validation_store.probes()
+        except Exception:
+            return []
+
+    def check_validation(self, prepared_bundle: dict, domain: str) -> dict | None:
+        """Commit to a falsifiable claim, then return the question to ask —
+        or None, which means "just answer them".
+
+        The ordering here is the feature. `store.commit()` runs before this
+        function returns, and the envelope it returns carries the question and
+        options but deliberately NOT the committed claim: showing a reader what
+        the chart expects before they answer tells them what to say, and the
+        answer is then worth nothing. The claim is on the record in the
+        database, which is where it needs to be for hit rate to mean anything.
+
+        Everything here fails open. A slot picker that finds nothing, a model
+        call that raises, a draft that fails `probe_violations`, a store that
+        errors — all of them fall through to the ordinary reading path. A probe
+        is a bonus; the answer is the product.
+        """
+        store = self._validation_store
+        if store is None:
+            return None
+        try:
+            asked = {probe.get("slot_id") for probe in self._stored_probes()}
+            slots = validation_slots(prepared_bundle, limit=1, exclude=asked)
+            if not slots:
+                return None
+            slot = slots[0]
+            draft = ValidationAgent(prepared_bundle, slot).run_probe()
+            if probe_violations(draft, slot):
+                return None
+            probe_id = store.commit(slot, draft)
+        except Exception:
+            return None
+        return {
+            "type": "validation_needed",
+            "domain": domain,
+            "probe_id": probe_id,
+            "slot_id": slot["slot_id"],
+            "slot_kind": slot["kind"],
+            "anchor": slot["anchor"],
+            "question": draft.question,
+            "options": [option.model_dump() for option in draft.options],
+            "skippable": True,
+        }
+
     def prepare(
         self, question: str, thread_domain: str | None = None,
         domain_override: str | None = None,
         experience_mode: str = "balanced",
+        validate_first: bool = False,
     ) -> PrepareOutcome:
         """`experience_mode` (guided/balanced/practitioner) selects the
         agent's VOICE only — never its facts, claims, or guardrails. See
         `domain_agent.REGISTERS`. Defaults to balanced so a caller that
-        doesn't supply one still gets the previous behaviour."""
+        doesn't supply one still gets the previous behaviour.
+
+        `validate_first` opts this turn into the validation loop: the agent
+        commits to a falsifiable claim about a dated window and asks the reader
+        one multiple-choice question about it instead of answering immediately.
+        Default False, so the loop is off until a client can render the
+        `validation_needed` envelope — a question no UI displays is a wealth
+        question that silently returns nothing. Answered probes flow back into
+        the bundle as `life_context` regardless of this flag, so the readings
+        improve as soon as any answers exist."""
         safety = self.check_safety(question)
         if safety.refer_out_kind:
             return PrepareOutcome(terminal_envelope={
@@ -224,6 +315,15 @@ class AskOrchestrator:
             })
 
         context = self.assemble_context(routing.domain, question)
+
+        # After context assembly (the slot picker reads the bundle) and before
+        # any reading is generated — a probe that arrived after the answer
+        # would be asking about something already interpreted.
+        if validate_first:
+            probe_envelope = self.check_validation(context.bundle, routing.domain)
+            if probe_envelope is not None:
+                return PrepareOutcome(terminal_envelope=probe_envelope)
+
         agent = DomainReadingAgent(
             context.bundle, registry_result.agent_config.domain_addendum,
             question_tense=routing.tense,

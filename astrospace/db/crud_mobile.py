@@ -38,8 +38,10 @@ from .models import (
     UserObservance,
     UserProfile,
     UserRemedy,
+    ValidationProbe,
     WidgetInstall,
 )
+from ..context.validation import score_answer
 
 # Defaults mirror the Settings > Notifications screen. Remedy reminders are the
 # one category that starts off — it only makes sense once a remedy is active.
@@ -158,6 +160,78 @@ def archive_ask_thread(db: Session, thread_id: str, user_id: str) -> bool:
     thread.archived_at = datetime.utcnow()
     db.commit()
     return True
+
+
+# ── Validation probes ─────────────────────────────────────────────────────────
+#
+# The ordering guarantee lives in these three functions, not in a comment: the
+# only write path that creates a row supplies the claim, and the only write path
+# that records an answer cannot touch it. See ValidationProbe's docstring.
+
+def commit_validation_probe(db: Session, user_id: str, kundli_id: str, domain: str,
+                            slot: dict, claim_text: str, claim_candidate: str,
+                            confidence: float, question: str, options: list,
+                            thread_id: str | None = None) -> ValidationProbe:
+    """Write the commitment. Called BEFORE the question reaches the reader —
+    that is the entire contract, and `committed_at` is stamped here so a row
+    can be checked against `answered_at` after the fact."""
+    anchor = slot.get("anchor") or {}
+    probe = ValidationProbe(
+        user_id=user_id, kundli_id=kundli_id, thread_id=thread_id, domain=domain,
+        slot_id=slot["slot_id"], slot_kind=slot["kind"],
+        anchor_start=anchor.get("start"), anchor_end=anchor.get("end"),
+        anchor_label=anchor.get("label"),
+        claim_text=claim_text, claim_candidate=claim_candidate,
+        confidence=confidence, committed_at=datetime.utcnow(),
+        question=question, options=options, status="committed",
+    )
+    db.add(probe)
+    db.commit()
+    db.refresh(probe)
+    return probe
+
+
+def record_validation_answer(db: Session, probe_id: str, user_id: str,
+                             answer_key: str, answer_text: str | None = None
+                             ) -> ValidationProbe | None:
+    """Score a committed claim against what the reader said.
+
+    Touches answer columns and `status` only. The claim, its confidence and its
+    commit timestamp are deliberately not parameters of this function — there
+    is no code path that can revise a prediction after seeing its answer, which
+    is what makes the stored hit rate worth computing.
+
+    Answering twice is refused rather than overwritten: a probe is one test.
+    """
+    probe = (
+        db.query(ValidationProbe)
+        .filter(ValidationProbe.id == probe_id, ValidationProbe.user_id == user_id)
+        .first()
+    )
+    if probe is None or probe.status != "committed":
+        return None
+    probe.answer_key = answer_key
+    probe.answer_text = answer_text
+    probe.answered_at = datetime.utcnow()
+    probe.status = score_answer(probe.claim_candidate, answer_key)
+    db.commit()
+    db.refresh(probe)
+    return probe
+
+
+def list_validation_probes(db: Session, user_id: str, kundli_id: str,
+                           domain: str | None = None,
+                           answered_only: bool = False) -> list[ValidationProbe]:
+    query = (
+        db.query(ValidationProbe)
+        .filter(ValidationProbe.user_id == user_id,
+                ValidationProbe.kundli_id == kundli_id)
+    )
+    if domain:
+        query = query.filter(ValidationProbe.domain == domain)
+    if answered_only:
+        query = query.filter(ValidationProbe.answered_at.isnot(None))
+    return query.order_by(ValidationProbe.committed_at).all()
 
 
 # ── Remedies ──────────────────────────────────────────────────────────────────
