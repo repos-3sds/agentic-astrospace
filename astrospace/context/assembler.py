@@ -84,6 +84,105 @@ def _profile_facts(chart, as_of: datetime) -> dict:
     }
 
 
+def _as_dt(value) -> datetime | None:
+    """Dasha boundaries arrive as datetimes or ISO strings depending on the
+    caller; normalise so age arithmetic below never depends on which."""
+    if isinstance(value, datetime):
+        return value
+    try:
+        return datetime.fromisoformat(str(value))
+    except (TypeError, ValueError):
+        return None
+
+
+def _retrospect(chart, as_of: datetime) -> dict:
+    """The reader's own dated past, so a reading can open by anchoring to a
+    real transition instead of a cold-read generality.
+
+    This exists to make *honest* past-validation possible. The compelling
+    version of "you've had money slip through your fingers" is a Barnum
+    line — true of nearly everyone, asserted about a life we cannot see.
+    The honest version is anchored and falsifiable: a real dated period
+    boundary from this chart, what that period classically tends to bring,
+    and an explicit invitation for the reader to confirm or deny it. That
+    is why every entry here carries a date and an age and nothing about
+    what actually happened — the engine supplies the *when*, the agent
+    supplies the *tends to*, and the reader supplies the *did it*.
+
+    Ages are included because "when you were 32" is checkable in a way
+    "in late 2022" is not — people remember their lives by age.
+    """
+    dashas = chart.dashas(as_of)
+    mahadashas = dashas.get("mahadashas") or []
+    birth_utc = chart.moment.dt_utc
+    as_of_utc = as_of.astimezone(timezone.utc)
+
+    def age_at(value) -> float | None:
+        moment = _as_dt(value)
+        if moment is None:
+            return None
+        if moment.tzinfo is None:
+            moment = moment.replace(tzinfo=timezone.utc)
+        return round((moment - birth_utc).days / 365.2425, 1)
+
+    def span(row: dict) -> dict:
+        return {
+            "lord": row.get("lord"),
+            "start": str(row.get("start"))[:10],
+            "end": str(row.get("end"))[:10],
+            "age_at_start": age_at(row.get("start")),
+            "age_at_end": age_at(row.get("end")),
+        }
+
+    def contains_now(row: dict) -> bool:
+        start, end = _as_dt(row.get("start")), _as_dt(row.get("end"))
+        if start is None or end is None:
+            return False
+        if start.tzinfo is None:
+            start = start.replace(tzinfo=timezone.utc)
+        if end.tzinfo is None:
+            end = end.replace(tzinfo=timezone.utc)
+        return start <= as_of_utc < end
+
+    current_index = next((i for i, m in enumerate(mahadashas) if contains_now(m)), None)
+    if current_index is None:
+        return {"available": False,
+                "note": "No mahadasha covers this instant; retrospect omitted."}
+
+    current = mahadashas[current_index]
+    started = _as_dt(current.get("start"))
+    if started is not None and started.tzinfo is None:
+        started = started.replace(tzinfo=timezone.utc)
+    total_years = float(current.get("years") or 0.0)
+    elapsed_years = round((as_of_utc - started).days / 365.2425, 1) if started else None
+
+    sub_periods = current.get("antardashas") or []
+    elapsed_subs = [span(s) for s in sub_periods
+                    if (_as_dt(s.get("end")) or as_of_utc.replace(tzinfo=None))
+                    and not contains_now(s)
+                    and str(s.get("end"))[:10] < as_of_utc.date().isoformat()]
+    current_sub = next((span(s) for s in sub_periods if contains_now(s)), None)
+
+    return {
+        "available": True,
+        "current_chapter": {
+            **span(current),
+            "years_total": total_years,
+            "years_elapsed": elapsed_years,
+            "years_remaining": (round(total_years - elapsed_years, 1)
+                                if elapsed_years is not None else None),
+        },
+        "previous_chapter": span(mahadashas[current_index - 1]) if current_index else None,
+        "current_sub_period": current_sub,
+        "elapsed_sub_periods": elapsed_subs,
+        "note": (
+            "Dated boundaries only — this block says WHEN the reader's periods "
+            "turned and how old they were, never what happened to them. Use it "
+            "to anchor a checkable question, not to assert a life event."
+        ),
+    }
+
+
 def _planet_brief(planet: str, positions: dict, lagna_sign: int,
                   dignities: dict, vimshopaka_scores: dict | None = None,
                   shayanadi_avasthas: dict | None = None) -> dict:
@@ -499,6 +598,9 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
         "domain_name": spec.name,
         "tier": tier,
         "profile_facts": _profile_facts(chart, as_of),
+        # The reader's dated past — enables anchored, checkable
+        # past-validation instead of cold-read generalities. See _retrospect.
+        "retrospect": _retrospect(chart, as_of),
         "houses": houses,
         "karakas": karakas,
         "jaimini_karakas": jaimini_karakas,

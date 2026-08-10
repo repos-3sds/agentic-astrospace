@@ -190,6 +190,43 @@ class TestBasePromptCoversConventionDependentFields:
         for outcome in ("argala", "obstructed", "contested", "none"):
             assert f'"{outcome}"' in agent.system_prompt
 
+    def test_register_changes_the_voice_and_nothing_else(self, chart):
+        """Persona was a frontend display filter before this — it hid
+        technical_basis rows and every reader still got word-for-word the
+        same analyst-voiced answer. The register must swap the VOICE while
+        leaving every grounding rule and guardrail identically in place."""
+        from astrospace.agents.domain_agent import REGISTERS
+        bundle = assemble_domain(chart, "wealth")
+        addendum = AGENT_REGISTRY["wealth"].domain_addendum
+        prompts = {
+            mode: DomainReadingAgent(bundle, addendum, experience_mode=mode).system_prompt
+            for mode in REGISTERS
+        }
+        assert "VOICE — Guided" in prompts["guided"]
+        assert "VOICE — Practitioner" in prompts["practitioner"]
+        assert "VOICE — Guided" not in prompts["practitioner"]
+        # Every guardrail survives every register.
+        for mode, text in prompts.items():
+            for guardrail in ("Never predict death", "flag, not a verdict",
+                              "never an invented citation", "TIMING PRECISION"):
+                assert guardrail in text, f"{guardrail!r} missing from {mode}"
+
+    def test_unknown_experience_mode_falls_back_rather_than_raising(self, chart):
+        """An unrecognised preference must never cost the reader an answer."""
+        bundle = assemble_domain(chart, "wealth")
+        agent = DomainReadingAgent(bundle, AGENT_REGISTRY["wealth"].domain_addendum,
+                                    experience_mode="astro-wizard")
+        assert agent.experience_mode == "balanced"
+
+    def test_retrospect_rule_forbids_asserting_unknowable_events(self, chart):
+        """The line between anchored validation and cold reading."""
+        bundle = assemble_domain(chart, "wealth")
+        agent = DomainReadingAgent(bundle, AGENT_REGISTRY["wealth"].domain_addendum)
+        prompt = agent.system_prompt
+        assert "retrospect" in prompt
+        assert "You do NOT know what happened to them" in prompt
+        assert "believe them over the chart" in prompt
+
     def test_prompt_directs_the_agent_to_use_nakshatra_texture(self, chart):
         """The nakshatra_detail payload is only worth carrying if the prompt
         tells the agent to read from it — otherwise it is inert tokens."""
