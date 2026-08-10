@@ -112,6 +112,41 @@ class TestAssembler:
         assert lord["dhatu"]
         assert lord["rasa"]
 
+    def test_full_jaimini_karaka_array_is_domain_independent(self, chart):
+        """All 8 chara karakas (not just the calling domain's own one)
+        should always be present, cross-domain significators matter to
+        every reading — e.g. a marriage reading citing the Atmakaraka's
+        condition, not just the Darakaraka's."""
+        marriage_bundle = assemble_domain(chart, "marriage", include_gochara=False)
+        career_bundle = assemble_domain(chart, "career", include_gochara=False)
+        for bundle in (marriage_bundle, career_bundle):
+            array = bundle["jaimini_karaka_array"]
+            assert set(array) == {"AK", "AmK", "BK", "MK", "PK", "PiK", "GK", "DK"}
+            for code, row in array.items():
+                assert row["planet"]
+                assert row["karaka"]
+                assert isinstance(row["degree_in_sign"], float)
+        # Domain-independent: the array itself doesn't vary by domain, only
+        # which karaka(s) get full planet detail in jaimini_karakas does.
+        assert marriage_bundle["jaimini_karaka_array"] == career_bundle["jaimini_karaka_array"]
+
+    def test_full_jaimini_karaka_array_uses_the_real_eight_karaka_scheme(self, chart):
+        """Regression pin: the scheme must include Rahu as Gnatikaraka (GK),
+        not a 7-planet Sun-only scheme that omits the node entirely."""
+        bundle = assemble_domain(chart, "marriage", include_gochara=False)
+        assert bundle["jaimini_karaka_array"]["GK"]["planet"] == "Rahu"
+
+    def test_house_lord_carries_d60_sign_and_vimshopaka_bala(self, chart):
+        """D-60 sign and precise Vimshopaka Bala scores replace what used to
+        be no strength-precision data at all beyond the qualitative dignity
+        label — validated in test_bphs_ground_truth.py, wired here."""
+        bundle = assemble_domain(chart, "career", include_gochara=False)
+        lord = bundle["houses"][0]["lord_placement"]
+        assert lord["d60_sign"]
+        vb = lord["vimshopaka_bala"]
+        for scheme in ("shadvarga", "saptavarga", "dashavarga", "shodashavarga"):
+            assert 0.0 <= vb[scheme] <= 20.0
+
     def test_nodes_have_no_fabricated_dhatu_or_rasa(self, chart):
         """Rahu/Ketu genuinely have no classical dhatu/rasa assignment —
         confirm the field is absent, not a guessed/fabricated value."""

@@ -41,6 +41,8 @@ from ..core.vedic.positions import (
 from ..core.vedic.strength import all_dignities, combustion_status
 from ..core.vedic.positions import sidereal_positions
 from ..core.vedic.vargas import varga_sign
+from ..core.vedic.vimshopaka import WEIGHTS as _VIMSHOPAKA_SCHEMES
+from ..core.vedic.vimshopaka import vimshopaka_bala
 from .kb import get_knowledge_base
 from .taxonomy import DomainSpec, get_domain, taxonomy_version
 
@@ -81,7 +83,7 @@ def _profile_facts(chart, as_of: datetime) -> dict:
 
 
 def _planet_brief(planet: str, positions: dict, lagna_sign: int,
-                  dignities: dict) -> dict:
+                  dignities: dict, vimshopaka_scores: dict | None = None) -> dict:
     lon = positions[planet]["lon"]
     s = sign_index(lon)
     nak = nakshatra_of(lon)
@@ -96,7 +98,22 @@ def _planet_brief(planet: str, positions: dict, lagna_sign: int,
         "dignity": dignity.get("dignity"),
         "retrograde": bool(positions[planet].get("retrograde")),
         "combust": bool(combust.get("active")),
+        # Shashtyamsha (D-60) sign — the finest-grained classical division,
+        # cited as the tie-breaker for an otherwise-ambiguous placement.
+        # Deity-per-division is a separate, not-yet-implemented layer (see
+        # docs/context_engine_taxonomy.md's ground-truth section) — only the
+        # sign itself, which vargas.d60() already computes correctly, is
+        # exposed here.
+        "d60_sign": sign_name(varga_sign("D60", lon)),
     }
+    if vimshopaka_scores and planet in vimshopaka_scores:
+        # Precise 0-20 float strength per scheme, replacing what used to be
+        # a bare "is this planet in its own/exaltation sign" boolean hint —
+        # lets the agent cite exactly how strong a placement is, not just
+        # whether it clears a single threshold. All four schemes computed
+        # from the same validated vimshopaka.py weights this session's
+        # ground-truth pass confirmed against BPHS.
+        brief["vimshopaka_bala"] = vimshopaka_scores[planet]
     # Governing tissue (dhatu) and taste (rasa) — the classical Ayurvedic-
     # constitution associations Health & Longevity's own taxonomy scope
     # already claims to cover but previously had no data for. Static per
@@ -122,14 +139,15 @@ def _planet_brief(planet: str, positions: dict, lagna_sign: int,
 
 
 def _house_analysis(house: int, lagna_sign: int, positions: dict,
-                    dignities: dict, tier: str) -> dict:
+                    dignities: dict, tier: str,
+                    vimshopaka_scores: dict | None = None) -> dict:
     house_sign = (lagna_sign + house - 1) % 12
     lord = SIGN_LORDS[house_sign]
     occupants = [
         planet for planet, data in positions.items()
         if house_from_lagna(sign_index(data["lon"]), lagna_sign) == house
     ]
-    lord_brief = _planet_brief(lord, positions, lagna_sign, dignities)
+    lord_brief = _planet_brief(lord, positions, lagna_sign, dignities, vimshopaka_scores)
     return {
         "house": house,
         "tier": tier,
@@ -331,27 +349,38 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
     positions = chart.positions
     lagna_sign = sign_index(chart.lagna_lon)
     dignities = all_dignities(positions)
+    # Computed once per bundle (4 scheme calls, each scoring every planet in
+    # one pass) rather than per-planet-brief, which would recompute the
+    # whole chart's Vimshopaka scores on every call.
+    vimshopaka_scores = {
+        planet: {
+            scheme: vimshopaka_bala(positions, scheme=scheme)["planets"][planet]["score"]
+            for scheme in _VIMSHOPAKA_SCHEMES
+        }
+        for planet in positions
+    }
 
     houses = [
         _house_analysis(h, lagna_sign, positions, dignities,
-                        "primary" if h in spec.houses_primary else "secondary")
+                        "primary" if h in spec.houses_primary else "secondary",
+                        vimshopaka_scores)
         for h in spec.all_houses
     ]
     domain_house_lords = {row["lord"] for row in houses}
 
     karakas = {
-        planet: _planet_brief(planet, positions, lagna_sign, dignities)
+        planet: _planet_brief(planet, positions, lagna_sign, dignities, vimshopaka_scores)
         for planet in spec.karakas_naisargika
     }
+    chara_karakas_full = chart.jaimini()["chara_karakas"]["karakas"]
     jaimini_karakas = {}
     if spec.karakas_jaimini:
-        chara = chart.jaimini()["chara_karakas"]["karakas"]
         for code in spec.karakas_jaimini:
-            row = chara.get(code)
+            row = chara_karakas_full.get(code)
             if row:
                 jaimini_karakas[code] = {
                     "karaka": _KARAKA_NAMES.get(code, code),
-                    **_planet_brief(row["planet"], positions, lagna_sign, dignities),
+                    **_planet_brief(row["planet"], positions, lagna_sign, dignities, vimshopaka_scores),
                 }
 
     focus_planets = list(dict.fromkeys(
@@ -395,6 +424,23 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
         # The source corpus is additive; a retrieval outage must not break CE.
         source_passages = []
 
+    # Full 8-karaka Jaimini array (Atmakaraka through Darakaraka, including
+    # Rahu's Gnatikaraka slot), not just this domain's own relevant one —
+    # cross-domain significators matter everywhere (a marriage reading can
+    # reference the Atmakaraka's condition, a career reading the
+    # Darakaraka's, etc.), so this is domain-independent and always present,
+    # same as dasha_relevance. `jaimini_karakas` above stays as-is: the
+    # domain-scoped subset with full planet detail for whichever karaka(s)
+    # this specific domain cares about.
+    jaimini_karaka_array = {
+        code: {
+            "karaka": _KARAKA_NAMES.get(code, code),
+            "planet": row["planet"],
+            "degree_in_sign": round(row["degree_in_sign"], 2),
+        }
+        for code, row in chara_karakas_full.items()
+    }
+
     return {
         "domain": domain_id,
         "domain_name": spec.name,
@@ -403,6 +449,7 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
         "houses": houses,
         "karakas": karakas,
         "jaimini_karakas": jaimini_karakas,
+        "jaimini_karaka_array": jaimini_karaka_array,
         "arudhas": arudhas,
         "vargas": _varga_placements(spec, focus_planets, positions, chart.lagna_lon),
         "yogas": _filter_rules(yogas_payload.get("all", []), spec),
