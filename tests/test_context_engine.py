@@ -174,6 +174,18 @@ class TestAssembler:
             assert argala["legs"][label]["outcome"] in {"argala", "obstructed", "contested", "none"}
         assert argala["source_status"] == "convention_dependent"
 
+    def test_house_lord_carries_d60_deity(self, chart):
+        """D-60 ruling deity (core/vedic/shashtyamsha.py) — cross-checked
+        against two independent sources agreeing on all 60 names; a third,
+        divergent source was excluded. Flagged convention_dependent."""
+        bundle = assemble_domain(chart, "career", include_gochara=False)
+        lord = bundle["houses"][0]["lord_placement"]
+        deity = lord["d60_deity"]
+        assert deity["deity"]
+        assert 1 <= deity["number"] <= 60
+        assert deity["nature"] in {"benefic", "malefic"}
+        assert deity["source_status"] == "convention_dependent"
+
     def test_nodes_have_no_fabricated_dhatu_or_rasa(self, chart):
         """Rahu/Ketu genuinely have no classical dhatu/rasa assignment —
         confirm the field is absent, not a guessed/fabricated value."""

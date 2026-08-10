@@ -34,6 +34,7 @@ from .special_lagnas import (
 )
 from .shayanadi import all_shayanadi_avasthas
 from .argala import all_argala
+from .shashtyamsha import d60_deity
 from .yogini import yogini_dasha
 from .vimshopaka import vimshopaka_bala as vimshopaka_bala_of
 from .chara_dasha import chara_dasha as chara_dasha_of
@@ -172,6 +173,8 @@ class VedicChart:
                 "retrograde": data["retrograde"],
                 "vargottama": varga == "D9" and s == d1_signs[planet],
             }
+            if varga == "D60":
+                planets[planet]["deity"] = d60_deity(data["lon"])
         return {
             "varga": varga,
             **VARGA_INFO[varga],

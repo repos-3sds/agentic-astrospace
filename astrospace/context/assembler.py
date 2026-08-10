@@ -44,6 +44,7 @@ from ..core.vedic.vargas import varga_sign
 from ..core.vedic.vimshopaka import WEIGHTS as _VIMSHOPAKA_SCHEMES
 from ..core.vedic.vimshopaka import vimshopaka_bala
 from ..core.vedic.argala import argala_of_house
+from ..core.vedic.shashtyamsha import d60_deity
 from .kb import get_knowledge_base
 from .taxonomy import DomainSpec, get_domain, taxonomy_version
 
@@ -107,6 +108,13 @@ def _planet_brief(planet: str, positions: dict, lagna_sign: int,
         # sign itself, which vargas.d60() already computes correctly, is
         # exposed here.
         "d60_sign": sign_name(varga_sign("D60", lon)),
+        # D-60 ruling deity + benefic/malefic nature — cross-checked
+        # against two independent secondary sources agreeing on all 60
+        # names (see core/vedic/shashtyamsha.py's module docstring); a
+        # third source that diverged from ~division 48 onward was
+        # excluded as unreliable. Still convention_dependent: no primary
+        # BPHS verse was located, only secondary-source agreement.
+        "d60_deity": d60_deity(lon),
     }
     if vimshopaka_scores and planet in vimshopaka_scores:
         # Precise 0-20 float strength per scheme, replacing what used to be

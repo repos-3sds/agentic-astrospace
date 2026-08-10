@@ -415,20 +415,11 @@ Neutral/Enemy/Great Enemy compound), and Vimshopaka Bala per-varga weights
 (`vimshopaka.WEIGHTS`, all 4 schemes — see the meta-finding below for how
 this one got confirmed).
 
-**Confirmed gaps, still not built**:
+**Confirmed gap, still not built**:
 1. **Kalapurusha sign-to-body-part mapping** — no engine reference anywhere;
    relevant to Health & Longevity's "disease location by body part"
    subdomain, currently unsupported. Only the unrelated Rajju
    (nakshatra-based) system exists, in `compatibility.py`.
-2. **D-60 (Shashtyamsha) deity database** — the engine computes the D-60
-   *sign* correctly (`vargas.d60()`) but has no deity-name layer (60 named
-   deities, odd/even sign reversal rule) on top of it. A build was started
-   and deliberately reverted: the 60-name list traced back to the same
-   AI-extraction pipeline that produced the wrong Vimshopaka table and a
-   wrong Jaimini karaka scheme elsewhere in this project's validation
-   pass, and only the reversal *arithmetic* had been checked, never the
-   names themselves against a primary source. Needs an independently
-   verifiable source before it ships.
 
 **Closed 2026-08-10, separate follow-up pass** (not from the originally
 uploaded validation document — cross-checked independently against fresh
@@ -452,6 +443,17 @@ as-is):
    unobstructable Visesha Argala. Cross-checked against two independent
    secondary sources. Also `convention_dependent`. Wired into every house
    entry in the CE bundle (`argala`).
+5. **D-60 (Shashtyamsha) deity database** — `core/vedic/shashtyamsha.py`.
+   The first attempt at this (see above) was reverted for lacking
+   independent verification; closed this pass by fetching and comparing
+   three web sources name-by-name. Two (rahasyavedicastrology.com,
+   shivohampath.com) agree on all 60 names and their benefic/malefic
+   nature; a third (sarvatobhadra.com) diverges from division ~48 onward
+   with an apparent index shift and nature tags that contradict the
+   literal Sanskrit meaning of several names (e.g. calling Poornachandra,
+   "full moon", malefic) — excluded as unreliable, the same failure
+   signature the Vimshopaka table showed. `convention_dependent`. Wired
+   into every planet brief (`d60_deity`) and `VedicChart.varga_chart("D60")`.
 
 **A meta-finding worth keeping in mind for any future source-extraction
 pass**: not every section of an AI-synthesized "validation" document is

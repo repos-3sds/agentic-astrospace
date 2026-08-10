@@ -43,17 +43,17 @@ database, Shayanadi Avastha, and Kalapurusha body-part mapping. Findings:
   Pinned below now that it's confirmed; vimshopaka.py's weights were never
   changed throughout this process, precisely because a table that doesn't
   yet pass its own arithmetic is not a reason to touch working code.
-- Confirmed gaps, not fixed here (out of scope for a validation pass, not a
-  build pass): Kalapurusha sign-to-body-part mapping (zero references
-  anywhere in astrospace/core/vedic/), and the D-60 Shashtyamsha deity
-  database (60 named deities + odd/even reversal rule — the engine computes
-  the D-60 *sign* correctly via vargas.d60() but has no deity layer). The
-  deity build was started and then deliberately reverted mid-session: its
-  60-name list traced back to the same AI-extraction pipeline that produced
-  the wrong Vimshopaka table and a wrong Jaimini karaka scheme elsewhere in
-  this same validation pass, and only the reversal *arithmetic* had been
-  checked, never the names themselves against a primary source — so it was
-  not shipped.
+- Confirmed gap, not fixed here (out of scope for a validation pass, not a
+  build pass): Kalapurusha sign-to-body-part mapping — zero references
+  anywhere in astrospace/core/vedic/.
+- D-60 Shashtyamsha deity database — a first attempt was started then
+  deliberately reverted mid-session: its 60-name list traced back to the
+  same AI-extraction pipeline that produced the wrong Vimshopaka table and
+  a wrong Jaimini karaka scheme elsewhere in this validation pass, and only
+  the reversal *arithmetic* had been checked, never the 60 names
+  themselves against an independent source. Closed 2026-08-10 in a
+  follow-up pass (see below) once two independent web sources were found
+  agreeing on all 60 names.
 - Shayanadi Avastha (2026-08-10, separate follow-up pass, NOT from the
   uploaded document): built in core/vedic/shayanadi.py after cross-checking
   the formula, variable definitions and 12-name ordering against three
@@ -69,6 +69,20 @@ database, Shayanadi Avastha, and Kalapurusha body-part mapping. Findings:
   argala houses, the 12th/10th/3rd obstruction houses, and the count-based
   obstruction-strength rule. Also convention_dependent — no primary
   Jaimini-sutra verse located.
+- D-60 Shashtyamsha deity database (2026-08-10, same follow-up pass,
+  closing the gap noted above): built in core/vedic/shashtyamsha.py after
+  fetching and comparing three independent web sources name-by-name
+  (rahasyavedicastrology.com, shivohampath.com, sarvatobhadra.com). The
+  first two agree on all 60 names and their benefic/malefic nature; the
+  handful of apparent mismatches between them turned out to be accepted
+  Sanskrit synonyms for the same deity, confirmed when the second source
+  gave both variants side by side. sarvatobhadra.com was excluded: it
+  diverges sharply from division ~48 onward with an apparent index shift,
+  and several of its nature tags contradict the literal Sanskrit meaning
+  of the name (e.g. calling Poornachandra, "full moon", malefic) — the
+  same OCR/row-misalignment failure signature the Vimshopaka table showed
+  above. Also convention_dependent — no primary BPHS verse located, only
+  two-source agreement plus a literal-meaning sanity check.
 """
 import pytest
 
@@ -280,14 +294,6 @@ class TestConfirmedGapsNotYetBuilt:
         from astrospace.core.vedic import kalapurusha  # noqa: F401 — expected to not exist yet
         assert False, "if this import succeeds, update this file and the taxonomy doc"
 
-    @pytest.mark.xfail(reason="D-60 Shashtyamsha deity database (60 named deities + "
-                               "odd/even sign reversal): confirmed absent as of "
-                               "2026-08-10. vargas.d60() computes the correct sign only.",
-                        strict=False)
-    def test_d60_deity_database_exists(self):
-        from astrospace.core.vedic.vargas import VARGA_INFO
-        assert "deities" in VARGA_INFO.get("D60", {})
-
 
 # ── Shayanadi Avastha — cross-checked against 3 independent secondary
 # sources 2026-08-10 (see core/vedic/shayanadi.py's module docstring). The
@@ -295,6 +301,58 @@ class TestConfirmedGapsNotYetBuilt:
 # Sun in Hasta (nakshatra_serial=13), planet_serial=1 (Sun), navamsha_number=6,
 # Moon nakshatra_serial=25, ghatika=20, lagna_rashi_number=10
 #   -> (13*1*6) + 25 + 20 + 10 = 133 -> 133 % 12 = 1 -> Shayana.
+# ── D-60 (Shashtyamsha) deity layer — cross-checked 2026-08-10 against two
+# independent secondary sources agreeing on all 60 names (see
+# core/vedic/shashtyamsha.py's module docstring). A third source that
+# diverged from division ~48 onward was fetched and excluded.
+class TestShashtyamshaDeity:
+    def test_deity_count_and_uniqueness_of_position(self):
+        from astrospace.core.vedic.shashtyamsha import DEITIES
+        assert len(DEITIES) == 60
+
+    def test_nature_split_matches_both_retained_sources(self):
+        # 27 malefic / 33 benefic, pinned so a future edit to the table
+        # can't silently drift the count without a test noticing.
+        from astrospace.core.vedic.shashtyamsha import DEITIES
+        malefic = sum(1 for _, nature in DEITIES if nature == "malefic")
+        benefic = sum(1 for _, nature in DEITIES if nature == "benefic")
+        assert (malefic, benefic) == (27, 33)
+
+    def test_odd_sign_reads_deities_in_direct_order(self):
+        from astrospace.core.vedic.shashtyamsha import d60_deity
+        # Aries (odd sign), first division (0.0-0.5deg) -> deity #1 (Ghora).
+        result = d60_deity(0.1)
+        assert result["number"] == 1
+        assert result["deity"] == "Ghora"
+        # Aries, last division (29.5-30deg) -> deity #60 (Chandrarekha).
+        result = d60_deity(29.9)
+        assert result["number"] == 60
+        assert result["deity"] == "Chandrarekha"
+
+    def test_even_sign_reads_deities_in_reverse_order(self):
+        from astrospace.core.vedic.shashtyamsha import d60_deity
+        # Taurus (30-60deg, even sign), first division -> deity #60 (reversed).
+        result = d60_deity(30.1)
+        assert result["number"] == 60
+        assert result["deity"] == "Chandrarekha"
+        # Taurus, last division -> deity #1 (reversed).
+        result = d60_deity(59.9)
+        assert result["number"] == 1
+        assert result["deity"] == "Ghora"
+
+    def test_literal_meaning_sanity_checks_hold(self):
+        """Independent check beyond source-agreement: names whose literal
+        Sanskrit meaning is unambiguous should carry the nature that
+        meaning implies (this is what got sarvatobhadra.com's table
+        rejected — it called Poornachandra, "full moon", malefic)."""
+        from astrospace.core.vedic.shashtyamsha import DEITIES
+        by_name = {name: nature for name, nature in DEITIES}
+        assert by_name["Poornachandra"] == "benefic"  # "full moon"
+        assert by_name["Kroora"] == "malefic"          # literally "cruel"
+        assert by_name["Amrita"] == "benefic"          # "nectar/ambrosia"
+        assert by_name["Kulanasa"] == "malefic"        # "destruction of lineage"
+
+
 class TestShayanadiAvastha:
     def test_worked_example_from_source(self):
         from astrospace.core.vedic.shayanadi import AVASTHA_NAMES
