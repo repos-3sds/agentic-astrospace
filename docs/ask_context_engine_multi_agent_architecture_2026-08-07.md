@@ -1763,3 +1763,68 @@ checklist's Deferred backlog rather than here.
 Every step of the loop fails open. No slots, a model call that raises, a draft
 that fails `probe_violations`, a probe store that errors — all fall through to
 the ordinary reading path. The probe is a bonus; the answer is the product.
+
+### Update 2026-08-11: PR #20 review round
+
+Independent adversarial review of the loop. **The commit-before-ask invariant
+held under direct attack** — a planted canary claim reached neither the SSE
+envelope, nor the persisted `AskMessage.evidence`, nor `life_context_section()`,
+and `_history_from_thread` replays only `{role, content}`, so a claim cannot
+reach a later model turn. Nothing in the design changed. Everything below was
+surrounding code.
+
+Three findings are worth keeping, because each is a *class* of mistake rather
+than a one-off:
+
+**A combined guard clause silently merged two different concerns.**
+`if key in seen or slot_id in exclude: continue` skipped `seen.add()` for
+excluded slots, so answering a question removed the dedup barrier it was
+providing and its suppressed twin surfaced next turn — the reader asked the
+same thing twice in different words, which is exactly what "asked once"
+exists to prevent. Dedup is a property of the slot set; exclusion is a
+property of one reader's history. Resolve the first, then apply the second.
+
+**Fail-open is a claim about the whole request, not about one try/except.**
+`check_validation` caught its exceptions and returned None as designed, but a
+rejected probe insert left the request's SQLAlchemy session in a failed
+transaction — and the next query is the one assembling the reading. The reader
+got `fatal_error` instead of their answer, from a feature documented as a
+bonus. Session hygiene now lives in the DB layer, which is the only layer that
+knows a transaction was in flight.
+
+**A safety pattern's false positives are as expensive as its misses.** The
+lifespan patterns matched `live (?:until|to|for|past|beyond)` and stopped
+there, which swallows "live to *see*", "live to *enjoy*", and "live beyond
+one's *means*". A match REPLACES the whole answer with the longevity
+refer-out, so each false positive cost a reader their reading and told them
+the app would not discuss their lifespan — about a question they never asked.
+The rewritten patterns key on the *object* ("live to 80", "live to a ripe old
+age"), which is what actually makes the verb a lifespan claim.
+
+**On why the tests did not catch it.** The negative test for those patterns
+contained exactly one "live" sentence — "will live comfortably", the adverb
+case the anchor was designed for — so the failing construction was never
+tested. The same blind spot was encoded in the test as in the code, which is
+how a green suite coexisted with three live false positives. The fix was to
+write the adversarial set from the *app's* vocabulary rather than from
+paraphrases of the positive cases: what does this product legitimately say
+that happens to contain "live", "survive", or a duration? Periods ending,
+money advice, foreign residence, businesses and partnerships. That set
+immediately found four more problems than the review had listed, including a
+**pre-existing** false positive in shipped `main` — `you have ... years left`
+was an absolute pattern, so "you have 2 years left in this Saturn dasha" read
+as a death verdict. Every fix in this round was also verified by reverting it
+and confirming the new test goes red.
+
+**On the intermittent test.** `test_an_already_asked_slot_is_not_asked_again`
+failed for two reviewers and passed three times for the author. Neither run
+was wrong. It was the one test in its file that did not stub the model call:
+without provider credentials `run_probe` raised, `check_validation`'s
+fail-open swallowed it, and the assertion passed for a reason unrelated to
+what it claimed to check; with credentials it ran for real and the assertion
+broke. The three test counts reconcile the same way — 1617 was the true total,
+1616 was a stale figure transcribed into the ledger from a run before the last
+test was added, and the reviewer's "1616 passed + 1 failed" is that same 1617
+with the flaky one red. The file now carries an autouse fixture that fails any
+test reaching the provider layer, so the failure class is un-writable here
+rather than merely fixed.

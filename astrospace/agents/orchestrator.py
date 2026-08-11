@@ -90,13 +90,19 @@ class ValidationStore:
     callables — same pattern as `chart_loader`, and for the same reason:
     nothing in this module touches SQLAlchemy.
 
-    `probes()` returns every probe already recorded for this reader and chart
-    (answered or not — an outstanding question must not be asked twice either).
+    `probes(domain)` returns the probes already recorded for this reader, this
+    chart, and THAT DOMAIN (answered or not — an outstanding question must not
+    be asked twice either). The domain argument is not a convenience: a probe
+    answer is reader-typed free text about their own life, and an answer given
+    to a wealth question has no business appearing in a marriage or health
+    bundle. Scoping it here means that stays true as further domains ship,
+    rather than becoming true only if whoever adds the next domain remembers.
+
     `commit(slot, draft) -> probe_id` writes the commitment and returns its id;
     it is called BEFORE the question is put to the reader, which is the whole
     contract of this feature. See db/models.py's ValidationProbe.
     """
-    probes: Callable[[], list[dict]]
+    probes: Callable[[str], list[dict]]
     commit: Callable[[dict, ValidationProbeDraft], str]
 
 
@@ -209,7 +215,7 @@ class AskOrchestrator:
         chart = self._chart_loader()
         bundle = assemble_domain(
             chart, domain, question=question,
-            validation_probes=self._stored_probes(),
+            validation_probes=self._stored_probes(domain),
         )
         context_used = [
             key for key in _BUNDLE_TOP_LEVEL_SECTIONS
@@ -217,14 +223,16 @@ class AskOrchestrator:
         ]
         return ContextResult(bundle=bundle, context_used=context_used)
 
-    def _stored_probes(self) -> list[dict]:
-        """Never let a probe-store failure cost the reader their reading. The
-        loop is additive by construction: without it every reading is exactly
-        the reading this app produced before the loop existed."""
+    def _stored_probes(self, domain: str) -> list[dict]:
+        """This domain's probes only — see `ValidationStore`.
+
+        Never let a probe-store failure cost the reader their reading. The loop
+        is additive by construction: without it every reading is exactly the
+        reading this app produced before the loop existed."""
         if self._validation_store is None:
             return []
         try:
-            return self._validation_store.probes()
+            return self._validation_store.probes(domain)
         except Exception:
             return []
 
@@ -248,7 +256,7 @@ class AskOrchestrator:
         if store is None:
             return None
         try:
-            asked = {probe.get("slot_id") for probe in self._stored_probes()}
+            asked = {probe.get("slot_id") for probe in self._stored_probes(domain)}
             slots = validation_slots(prepared_bundle, limit=1, exclude=asked)
             if not slots:
                 return None

@@ -174,6 +174,18 @@ directive financial instructions (CLAUDE.md non-negotiables).
 
 - **`AI_PROVIDER=gemini`**, model `gemini-3.5-flash`. Every reading in this
   project is Gemini-generated, not Anthropic. Don't assume otherwise.
+- **If you are running in the cloud, you have no API key.** `.env` is not in the
+  repo, so a cloud session cannot generate a live reading — attempting one fails
+  at auth, which looks like a bug and is not. This is not blocking for most of
+  this work: the engine, `assemble_domain()`, the timeline computation, the
+  schema/DB work, the `safety.py` fix and the whole test suite are deterministic
+  and need no model call. What you cannot do is the final end-to-end check that a
+  generated reading uses the new data correctly — flag that for the user to run
+  locally, or ask them to add `GEMINI_API_KEY` to the cloud environment. Say
+  plainly that you skipped it; do not describe an unrun verification as done.
+- The four untrusted files named in §6 are **untracked**, so a cloud clone will
+  not contain them. If they are absent, nothing is wrong — but if the user
+  uploads them, §6 applies.
 - A `done` envelope can legitimately arrive **without a `reading`** (verification
   failure or API error). Clients must handle it; the orchestrator correctly never
   persists an unverified reading.

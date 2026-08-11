@@ -409,18 +409,99 @@ def test_third_party_longevity_verdicts_are_caught(answer, expected):
     assert _prohibited_verdict(answer) == expected
 
 
+@pytest.mark.parametrize("answer,expected", [
+    # 2026-08-11 (PR #20 review, H2). "N months to live" is absolute — no
+    # period-noun window check — because unlike "remaining"/"left" it has no
+    # ordinary astrological meaning. Nothing is a dasha with six months to
+    # live, so a nearby period noun could only ever launder a real verdict,
+    # which is what it was doing.
+    ("Your grandmother has 6 months to live in this Saturn dasha.", "death"),
+    ("Your father has 2 years to live, going by this transit.", "death"),
+    ("You have 6 months to live, even with this Saturn dasha supporting you.", "death"),
+    # Found by this round's own probe set rather than the review: the
+    # first-person arm was older and shorter than the third-party one, so
+    # "your husband will live past 60" was caught while the same sentence
+    # about the reader was not. Both now run off one shared subject.
+    ("You will live past 90.", "death"),
+    ("You will live beyond 100.", "death"),
+    ("You will live to the age of 85.", "death"),
+    ("You will live a long life.", "death"),
+    ("You are likely to live for another 40 years.", "death"),
+    ("Your grandfather will live to a ripe old age.", "death"),
+    # Polarity alone decides this pair — see the pattern's own comment.
+    ("You will not live to see your grandchildren married.", "death"),
+    ("Your father will not live to see the wedding.", "death"),
+    # Spelled-out counts, not just digits. A model writes "about three years
+    # left" as readily as "3", and the pattern this replaces caught that only
+    # because it required no number at all — the same looseness that made it
+    # fire on ordinary dasha language (see the negative set below).
+    ("You have about three years left.", "death"),
+])
+def test_lifespan_verdicts_are_caught_in_both_persons(answer, expected):
+    assert _prohibited_verdict(answer) == expected
+
+
 @pytest.mark.parametrize("answer", [
-    # The other direction, and the reason the third-party subject list is
-    # people-only. "The longevity of your marriage" is a sentence this app may
-    # legitimately write; adding abstract nouns to that list would flag it.
-    "The longevity of your marriage is supported by Venus here.",
-    # The windowed period-noun check does the real work for durations — the
-    # third-party form of a sentence that was always legitimate stays
-    # legitimate.
-    "Your father has 3 years remaining in his Saturn dasha.",
+    # 2026-08-11 (PR #20 review, B3). The previous patterns matched
+    # `live (?:until|to|for|past|beyond)` and stopped there, which swallows
+    # the very common "live to <verb>" construction and the "live beyond
+    # one's means" idiom. Not cosmetic: a match REPLACES the entire answer
+    # with the longevity refer-out, so each of these cost a reader their
+    # reading and told them the app would not discuss their lifespan — about
+    # a question they never asked.
+    #
+    # The set below is deliberately NOT a paraphrase of the positive cases.
+    # It was built by asking what this app legitimately SAYS that happens to
+    # contain "live", "survive" or a duration — money advice, foreign
+    # residence, periods ending, businesses and partnerships. The previous
+    # negative test had exactly one "live" sentence in it ("will live
+    # comfortably"), the adverb case the anchor was designed for, so the
+    # failing construction was never tested. That is the same blind spot in
+    # the test as in the code, which is how it survived a full green suite.
+    #
+    # money advice that uses "live"
+    "He will not live beyond his means during this dasha.",
+    "You will live within your means through this period.",
+    "This is a good stretch to live simply and save what comes in.",
+    "Your father will live to enjoy his retirement.",
+    "He will live to see the business succeed.",
+    "You will live off savings for a few months during this antardasha.",
+    "You will live up to the responsibility this period brings.",
+    "He will live to regret a hasty investment made in a hurry.",
     "Your spouse will live comfortably through this period.",
+    "You will live more comfortably once Saturn moves on.",
+    # residence, which is what the foreign domain exists to answer
+    "You will live abroad for three years during this Rahu dasha.",
+    "Your partner will live and work in Dubai for a while.",
+    "Your mother will live with you during this period.",
+    "Your daughter will not live at home much longer.",
+    "Your son will live in a rented house until the 4th lord strengthens.",
+    # periods ending, which this app says constantly. The third of these is a
+    # PRE-EXISTING false positive in shipped code, not one this branch
+    # introduced: `you have ... years left` was an absolute pattern, so an
+    # ordinary dasha sentence using "left" instead of "remaining" was read as
+    # a longevity verdict. "left" now goes through the period-noun window,
+    # where it always belonged.
+    "Your father has 3 years remaining in his Saturn dasha.",
+    "You have 2 years remaining in this Saturn dasha.",
+    "You have 2 years left in this Saturn dasha.",
+    "Your mother has 4 years left in her Rahu dasha.",
+    "This Jupiter antardasha has 8 months remaining.",
+    "You have 6 months left in this phase.",
+    "The Venus period will not last beyond 2029.",
+    # businesses and partnerships, which are not people
+    "The business will not survive the downturn without restructuring.",
+    "Their partnership will not survive this transit.",
+    "A venture started now will not live up to expectations.",
+    # ordinary family sentences
+    "Your father will pass on the family business to you.",
     "Your children will do well during this Jupiter dasha.",
     "Your partner will travel abroad next year.",
+    "Your grandfather built this wealth over a lifetime of work.",
+    # The reason the third-party subject list is people-only: adding abstract
+    # nouns would flag this, and it is a sentence this app may legitimately
+    # write.
+    "The longevity of your marriage is supported by Venus here.",
 ])
 def test_ordinary_third_party_sentences_pass_the_output_net(answer):
     assert _prohibited_verdict(answer) is None
@@ -594,3 +675,77 @@ def test_person_anchor_is_a_person_not_a_possessive():
     assert "|your|" not in _DEATH_NOUN_REF
     assert _prohibited_verdict("Your portfolio will meet an untimely end.") is None
     assert _prohibited_verdict("Your father will meet an untimely end.") == "death"
+
+
+# ── Found while merging this branch into PR #20's later review round ─────────
+# Both were live gaps in the merged result, not in either side alone, which is
+# why they only surfaced once the two were actually combined.
+
+NEGATED_LIVE_LONG = [
+    "You will not live long.",
+    "Your mother will not live long.",
+    "Your child will not live much longer.",
+    "He will not live very long.",
+    "She may not live long.",
+]
+
+
+@pytest.mark.parametrize("answer", NEGATED_LIVE_LONG)
+def test_negated_live_long_is_caught_for_both_parties(answer):
+    """The most direct phrasing of the verdict, and it fitted NEITHER arm.
+
+    The survival-verb arm deliberately excludes `live` (because "will not live
+    at home much longer" is about moving out), and the lifespan arm keys on an
+    age object ("live to 80"), which "long" is not. So "you will not live long"
+    and "your mother will not live long" both passed straight through — first
+    party as well as third. Caught here by requiring `live` to be immediately
+    followed by the duration word."""
+    assert _prohibited_verdict(answer) == "death"
+
+
+ORDINARY_LIVE_AND_MAKE_IT = [
+    # "make it TO <event>" is missing an appointment, not dying.
+    "Your son will not make it to your birthday dinner.",
+    "Your daughter will not make it to the wedding.",
+    "Your business will not make it to next quarter.",
+    # The sentence this file already names as ordinary — "at home" intervenes,
+    # so the duration word is not the object of `live`.
+    "Your daughter will not live at home much longer.",
+    "He will not live beyond his means during this dasha.",
+    # An idiom of reassurance that read as a death verdict (pre-existing).
+    "You will not live to regret this decision.",
+    "You will not live up to expectations.",
+]
+
+
+@pytest.mark.parametrize("answer", ORDINARY_LIVE_AND_MAKE_IT)
+def test_ordinary_uses_of_live_and_make_it_are_not_flagged(answer):
+    assert _prohibited_verdict(answer) is None
+
+
+STILL_MORTAL = [
+    "Your father will not make it.",
+    "Your husband will not make it through the winter.",
+    "Your son will not make it to 50.",
+    "Your father will not live to see the wedding.",
+    "You will not live to tell the tale.",
+]
+
+
+@pytest.mark.parametrize("answer", STILL_MORTAL)
+def test_narrowing_make_it_and_live_to_did_not_open_a_hole(answer):
+    """Both fixes above narrow existing patterns, so they need the other
+    direction pinned too: bare "will not make it", "make it through", "make it
+    to <age>" and negated "live to <event>" are all still verdicts."""
+    assert _prohibited_verdict(answer) == "death"
+
+
+def test_superseded_years_left_row_stays_deleted():
+    """The merge trap. PR #20 replaced `you have ... years left` with a row
+    keyed on "to live" only, because the old row read "you have 2 years left in
+    this Saturn dasha" as a death verdict. Resolving the conflict by keeping
+    both sides silently restores that false positive — it is the kind of thing
+    a green test run would not have caught, since nothing else covers it."""
+    assert _prohibited_verdict("You have 2 years remaining in this Saturn dasha.") is None
+    assert _prohibited_verdict("This dasha has 3 years remaining.") is None
+    assert _prohibited_verdict("Your grandmother has 6 months to live.") == "death"

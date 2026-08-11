@@ -25,6 +25,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from main import app
+from astrospace.agents.base import BaseAstroAgent
 from astrospace.agents.domain_agent import DomainReadingAgent
 from astrospace.agents.orchestrator import AskOrchestrator, ValidationStore
 from astrospace.agents.schema import Guidance, StructuredReading, TechnicalBasisItem
@@ -42,6 +43,34 @@ from astrospace.db.database import Base
 from astrospace.db.models import ValidationProbe
 
 ME = "test-user-validation-loop"
+
+
+@pytest.fixture(autouse=True)
+def _no_real_model_calls(monkeypatch):
+    """Make the flaky-test class un-writable in this file, not merely fixed.
+
+    `test_an_already_asked_slot_is_not_asked_again` failed for two reviewers
+    and passed three times for the author. The cause was not the assertion: it
+    was the only test here that did not stub the model call, so without
+    provider credentials `run_probe` raised, `check_validation`'s fail-open
+    swallowed it, and `prepared` came back non-None for a reason unrelated to
+    what the test claims to check. With credentials it ran for real and the
+    assertion broke. A test whose result depends on whether an API key happens
+    to be configured is worse than a failing one.
+
+    Every model call in this file is stubbed at `run_probe` or
+    `run_structured_reading`; nothing should reach the provider layer beneath
+    them. Scoped to this module deliberately — other suites legitimately mock
+    further down (see test_domain_agent.py's TestRunStructuredMockRealism,
+    which patches `client.messages.create` on purpose).
+    """
+    def boom(self, *args, **kwargs):
+        raise AssertionError(
+            "this test reached a real provider call — stub it, or it will "
+            "pass or fail depending on whether credentials are configured"
+        )
+    monkeypatch.setattr(BaseAstroAgent, "run_structured", boom, raising=False)
+    monkeypatch.setattr(BaseAstroAgent, "run_messages", boom, raising=False)
 
 
 @pytest.fixture(scope="module")
@@ -161,6 +190,39 @@ class TestSlotSelection:
             assert anchor["start"] and anchor["end"] and anchor["label"]
             assert anchor["status"] != "upcoming"
 
+    def test_the_anchor_rule_holds_across_many_charts(self):
+        """PR #20's H1 and M3, and the reason the clamp moved into
+        `_anchor_from`.
+
+        The age floor originally lived in `_recallable`, which only ONE of the
+        three generators called — so `_significator_slots` and
+        `_yoga_tension_slots` anchored to the whole current mahadasha and 8% of
+        emitted slots still started before age 14, one at age 3.7. A single
+        fixture chart could not see that; a sweep can, which is why this test
+        is a sweep. The maximum window is the same class of problem from the
+        other end: "between 2002 and 2022, did your money mostly come through
+        X" can be answered "yes, sort of" about almost any X.
+        """
+        import random
+        random.seed(11)
+        cities = ["Rajahmundry", "Chennai", "Mumbai", "Hyderabad", "Bengaluru"]
+        emitted = 0
+        for _ in range(25):
+            chart = VedicChart(
+                "Swept", random.randint(1950, 2009), random.randint(1, 12),
+                random.randint(1, 28), random.randint(0, 23), random.randint(0, 59),
+                random.choice(cities), "IN",
+            )
+            bundle = assemble_domain(chart, "wealth", include_gochara=False)
+            for slot in validation_slots(bundle, limit=50):
+                anchor = slot["anchor"]
+                emitted += 1
+                assert anchor["age_at_start"] >= 14, slot["slot_id"]
+                assert anchor["window_years"] <= 10.01, slot["slot_id"]
+                assert anchor["window_years"] >= 0.5, slot["slot_id"]
+                assert anchor["start"] < anchor["end"]
+        assert emitted > 50, "the sweep must actually exercise slots"
+
     def test_no_slot_asks_about_years_that_have_not_happened(self, wealth_bundle):
         """Found by reading the assembled prompt, not the code: a mahadasha the
         reader is currently in runs years into the future, so an anchor taken
@@ -175,6 +237,25 @@ class TestSlotSelection:
             if anchor["in_progress"]:
                 assert anchor["end"] == today
                 assert anchor["period_end"] > today
+
+    def test_excluding_a_slot_does_not_unmask_its_twin(self, wealth_bundle):
+        """PR #20's B1. Dedup and exclusion are separate concerns and the
+        order matters: a single combined check skips `seen.add()` for an
+        excluded slot, so answering a question removes the dedup barrier it
+        was providing and the twin it suppressed surfaces next turn with an
+        identical subject and identical candidates — the reader asked the
+        same thing twice in different words."""
+        emitted = [s["slot_id"] for s in validation_slots(wealth_bundle, limit=50)]
+        assert validation_slots(wealth_bundle, limit=50, exclude=set(emitted)) == []
+        # And one at a time, since a real reader answers them one by one.
+        excluded = set()
+        for _ in range(len(emitted) + 2):
+            batch = validation_slots(wealth_bundle, limit=1, exclude=excluded)
+            if not batch:
+                break
+            assert batch[0]["slot_id"] not in excluded
+            excluded.add(batch[0]["slot_id"])
+        assert excluded == set(emitted)
 
     def test_exclude_is_the_asked_once_rule(self, wealth_bundle):
         first = validation_slots(wealth_bundle, limit=1)[0]
@@ -356,6 +437,34 @@ class TestProbeStore:
         assert cm.record_validation_answer(db, probe.id, ME, "neither") is not None
         assert cm.record_validation_answer(db, probe.id, ME, probe.claim_candidate) is None
 
+    def test_an_answer_the_probe_never_offered_is_refused(self, db, slot):
+        """PR #20's M1. The endpoint accepted any string, which reached two
+        places it should not: `score_answer`, where an unknown key silently
+        scores as a miss and corrupts the hit rate this loop exists to
+        produce, and `life_context`, which the reading prompt is told outranks
+        the chart."""
+        probe = self._commit(db, slot)
+        assert cm.record_validation_answer(db, probe.id, ME, "not_an_option") is None
+        assert cm.record_validation_answer(db, probe.id, ME, "") is None
+        after = db.get(ValidationProbe, probe.id)
+        assert after.status == "committed" and after.answer_key is None
+        # A real option still works, so the guard is not simply refusing.
+        assert cm.record_validation_answer(db, probe.id, ME, "skip") is not None
+
+    def test_a_failed_commit_leaves_the_session_usable(self, db, slot):
+        """PR #20's B2. `check_validation` promises the reader their answer
+        whatever the probe does, but a rejected insert — the unique "asked
+        once" index firing on two concurrent turns is enough — left the
+        session in a failed transaction, and the next query is the one
+        assembling the READING. The reader lost their answer to a bonus
+        feature's collision."""
+        self._commit(db, slot)
+        with pytest.raises(Exception):
+            self._commit(db, slot)          # same slot: unique index fires
+        # The session must still be usable, with no manual rollback by the
+        # caller — that is the whole point.
+        assert cm.list_validation_probes(db, ME, "k-probe") != []
+
     def test_another_user_cannot_answer_this_probe(self, db, slot):
         probe = self._commit(db, slot)
         assert cm.record_validation_answer(db, probe.id, "someone-else", "neither") is None
@@ -381,7 +490,7 @@ class TestValidationTurn:
             committed.append((slot, draft))
             return f"probe-{len(committed)}"
 
-        store = ValidationStore(probes=lambda: [], commit=commit)
+        store = ValidationStore(probes=lambda domain: [], commit=commit)
         return AskOrchestrator(chart_loader=lambda: chart,
                                validation_store=store), committed
 
@@ -438,15 +547,40 @@ class TestValidationTurn:
                 == {candidate["key"] for candidate in slot["candidates"]})
 
     def test_an_already_asked_slot_is_not_asked_again(self, chart, wealth_bundle):
+        """Regression for PR #20's B1, and for this test's own earlier
+        uselessness.
+
+        As originally written this was the one test in the file that did not
+        stub the model call. It therefore passed in any environment without AI
+        provider credentials — `run_probe` raised, `check_validation`'s
+        fail-open swallowed it, and `prepared` was not None for a reason that
+        had nothing to do with what the test claims to check. Two reviewers
+        with credentials configured saw it fail; three runs without them saw it
+        pass. An intermittently observable test is worse than a failing one,
+        so the model call is stubbed here like everywhere else and the real
+        assertion — that no slot survives exclusion — is made directly against
+        the picker as well.
+        """
         every_slot = [s["slot_id"] for s in validation_slots(wealth_bundle, limit=50)]
+        assert every_slot, "the fixture chart must produce slots for this to test anything"
+        # The bug directly: excluding what was emitted must leave nothing,
+        # because dedup and exclusion are separate concerns and dedup runs
+        # first. Before the fix, exclusion removed the dedup barrier and the
+        # suppressed twin surfaced here.
+        assert validation_slots(wealth_bundle, limit=50, exclude=set(every_slot)) == []
+
+        committed = []
         store = ValidationStore(
-            probes=lambda: [{"slot_id": slot_id, "status": "confirmed"}
-                            for slot_id in every_slot],
-            commit=lambda slot, draft: "never",
+            probes=lambda domain: [{"slot_id": slot_id, "status": "confirmed"}
+                                   for slot_id in every_slot],
+            commit=lambda slot, draft: committed.append(slot) or "never",
         )
         orchestrator = AskOrchestrator(chart_loader=lambda: chart, validation_store=store)
-        outcome = orchestrator.prepare("When will my financial situation improve?",
-                                       validate_first=True)
+        with patch.object(ValidationAgent, "run_probe",
+                          new=lambda self: _draft(self.slot)):
+            outcome = orchestrator.prepare("When will my financial situation improve?",
+                                           validate_first=True)
+        assert committed == [], "no probe may be committed when every slot is excluded"
         assert outcome.prepared is not None
 
     def test_a_broken_probe_never_costs_the_reader_their_answer(self, orchestrator_and_log):
@@ -623,6 +757,71 @@ class TestValidationRoute:
         assert section["available"] is True
         assert section["reported"][0]["answer"] == "neither"
         assert section["calibration"]["scored"] >= 1
+
+    def test_a_colliding_probe_commit_still_returns_the_reading(self, env):
+        """PR #20's B2, at the level the reader actually experiences it.
+
+        `check_validation` documents "a probe is a bonus; the answer is the
+        product", but a rejected insert left the request's session in a failed
+        transaction, and the very next query is the one assembling the
+        reading — so the reader got `fatal_error` instead of their answer.
+
+        The collision reproduced here is the real one: two turns racing, both
+        reading the probe list before either has committed. Simulated by
+        making the read return nothing while a row for that slot already
+        exists, which is exactly what the losing tab sees.
+        """
+        client, session = env["client"], env["Session"]()
+        # Its own kundli, so probes left behind by the tests above cannot be
+        # what makes this one collide — the collision has to come from the
+        # race being simulated, or the test proves nothing.
+        kundli = crud.create_kundli(session, {
+            "user_id": ME, "name": "Raced", "relation": "self",
+            "birth_year": 1993, "birth_month": 7, "birth_day": 20,
+            "birth_hour": 11, "birth_minute": 28,
+            "birth_city": "Rajahmundry", "birth_nation": "IN",
+        }).id
+        bundle = assemble_domain(
+            VedicChart("Raced", 1993, 7, 20, 11, 28, "Rajahmundry", "IN"), "wealth")
+        slot = validation_slots(bundle, limit=1)[0]
+        cm.commit_validation_probe(
+            session, ME, kundli, "wealth", slot,
+            claim_text="already committed by the other tab",
+            claim_candidate=slot["candidates"][0]["key"], confidence=0.5,
+            question="q", options=[{"key": c["key"], "label": c["key"]}
+                                   for c in slot["candidates"]],
+        )
+        session.close()
+
+        # `start_thread` matters and is not incidental: without a thread,
+        # persistence is a no-op, so nothing touches the session after the
+        # failed probe and the bug is invisible. The first version of this
+        # test omitted it and passed against the unfixed code — which is the
+        # same "the test avoids the one thing it is testing" failure this
+        # round is about. Reverting the rollback must make this red.
+        with patch.object(cm, "list_validation_probes", return_value=[]):
+            r = self._ask(client, kundli,
+                          "Will my savings grow this year or go into loans?",
+                          validate_first=True, start_thread=True)
+        assert r.status_code == 200
+        frames = self._frames(r)
+        assert not any(f["type"] == "fatal_error" for f in frames), frames
+        done = frames[-1]
+        assert done["type"] == "done" and done["status"] == "answered"
+
+    def test_probes_are_scoped_to_their_own_domain(self, env):
+        """PR #20's M2. A probe answer is reader-typed free text about their
+        own life; an answer given to a wealth question has no business
+        appearing in a marriage or health bundle. Latent while wealth is the
+        only generator, live the moment a second domain ships — so it is
+        closed now rather than left for whoever adds that domain to
+        remember."""
+        session = env["Session"]()
+        wealth = cm.list_validation_probes(session, ME, env["kundli"], domain="wealth")
+        marriage = cm.list_validation_probes(session, ME, env["kundli"], domain="marriage")
+        session.close()
+        assert wealth, "the earlier tests should have left wealth probes"
+        assert marriage == []
 
     def test_an_unknown_probe_is_a_404(self, env):
         r = env["client"].post("/api/v1/ask/validation/does-not-exist/answer",

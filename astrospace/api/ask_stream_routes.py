@@ -85,6 +85,7 @@ def _probe_row(probe) -> dict:
     write path that touches those columns is the commit itself (see
     crud_mobile.record_validation_answer)."""
     return {
+        "domain": probe.domain,
         "slot_id": probe.slot_id,
         "slot_kind": probe.slot_kind,
         "anchor_label": probe.anchor_label,
@@ -104,9 +105,9 @@ def _validation_store(db: Session, user_id: str, kundli_id: str,
                       thread_id: Optional[str]) -> ValidationStore:
     """The orchestrator's two callables, closed over this request's session."""
 
-    def probes() -> list[dict]:
+    def probes(domain: str) -> list[dict]:
         return [_probe_row(row) for row in
-                cm.list_validation_probes(db, user_id, kundli_id)]
+                cm.list_validation_probes(db, user_id, kundli_id, domain=domain)]
 
     def commit(slot: dict, draft: ValidationProbeDraft) -> str:
         probe = cm.commit_validation_probe(
