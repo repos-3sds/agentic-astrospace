@@ -31,6 +31,22 @@ def check(path: str) -> list[str]:
         problems.append("no chapters at all")
         return problems
 
+    # Pages absent from the scan are declared once at book level. Every chapter
+    # whose range covers one has to say so itself, because that is where anyone
+    # extracting will actually be looking — a book-level footnote gets skipped.
+    absent = set(m.get("missing_printed_pages", []))
+    for kanda_id, c in chapters:
+        first, last = c.get("first_page"), c.get("last_page")
+        if not (isinstance(first, int) and isinstance(last, int)):
+            continue
+        overlap = sorted(p for p in absent if first <= p <= last)
+        declared = sorted(c.get("missing_pages", []))
+        if overlap != declared:
+            problems.append(
+                f"kanda {kanda_id} ch {c['chapter']}: spans missing printed page(s) {overlap} "
+                f"but declares {declared or 'none'} — a chapter with holes must name them"
+            )
+
     # Chapter numbers contiguous within each kanda: a gap is a lost chapter.
     for kanda in m["kandas"]:
         nums = [ROMAN.get(c["chapter"], -1) for c in kanda["chapters"]]
@@ -46,6 +62,16 @@ def check(path: str) -> list[str]:
 
     for kanda_id, c in chapters:
         where = f"kanda {kanda_id} ch {c['chapter']}"
+        # A chapter whose own TOC listing stops short is incomplete no matter how
+        # well-formed its entries are. Documenting the truncation is not the same
+        # as closing it — the missing shlokas have to be read off the body pages.
+        if c.get("toc_truncated_after"):
+            t = c["toc_truncated_after"]
+            problems.append(
+                f"{where}: TOC stops at shloka {t.get('last_toc_shloka')} (p{t.get('last_toc_page')}) "
+                f"but the chapter runs to p{c.get('last_page')} — enumerate the rest from the "
+                f"body pages, or this manifest is complete only where the printed TOC was"
+            )
         # Zero entries is the exact silent failure this gate was written for.
         if not c.get("entries"):
             problems.append(f"{where}: zero entries — the parse dropped this chapter's contents")
