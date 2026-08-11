@@ -165,6 +165,50 @@ describe('AskAnswerComponent persona-mode content parity', () => {
     expect(balancedActions).toEqual(practitionerActions);
     expect(guidedActions).toEqual(FULL_READING.guidance.practical_actions);
   });
+
+  // ── Readability of a long reading ──────────────────────────────────────
+  // Both pinned from the shipped Android app (2026-08-11), where a genuinely
+  // good ~900-word career reading was unreadable: the verdict clipped
+  // mid-preposition and the body arrived as one unbroken slab. Copying the
+  // answer read far better than looking at it, because the clipboard kept
+  // the structure the page was throwing away.
+
+  it('renders the interpretation as real paragraphs, not one slab', () => {
+    const component = createComponent();
+    const reading = { ...FULL_READING,
+      interpretation: 'First about Saturn.\n\nSecond about Mercury.\n\nThird about timing.' };
+    const paragraphs = (component as any).readingParagraphs(reading);
+    expect(paragraphs.length).toBe(3);
+    expect(paragraphs[1]).toBe('Second about Mercury.');
+  });
+
+  it('collapses incidental single newlines inside a paragraph', () => {
+    const component = createComponent();
+    const reading = { ...FULL_READING,
+      interpretation: 'A sentence the model\nwrapped mid-line.\n\nA second paragraph.' };
+    const paragraphs = (component as any).readingParagraphs(reading);
+    expect(paragraphs.length).toBe(2);
+    expect(paragraphs[0]).toBe('A sentence the model wrapped mid-line.');
+  });
+
+  it('does not clip the verdict mid-phrase', () => {
+    const component = createComponent();
+    // The exact sentence the shipped app rendered as
+    // "...it is engineered for enduring..." — stopping on a preposition.
+    const message: any = { reading: { ...FULL_READING, summary_and_assurance:
+      'Your chart is not built for fleeting, superficial success; it is engineered for enduring professional respect and mastery.' } };
+    const headline = (component as any).answerHeadline(message);
+    expect(headline.endsWith('enduring…')).toBeFalse();
+    expect(headline).toContain('superficial success');
+  });
+
+  it('clips an over-long verdict at a clause boundary, not a preposition', () => {
+    const component = createComponent();
+    const message: any = { reading: { ...FULL_READING, summary_and_assurance:
+      'A very long opening clause that runs well past any sensible headline budget indeed, and then continues onward with a great deal more text that should not appear at all.' } };
+    const headline = (component as any).answerHeadline(message);
+    expect(headline.endsWith('indeed')).toBeTrue();
+  });
 });
 
 interface AskIsolationHarness {
