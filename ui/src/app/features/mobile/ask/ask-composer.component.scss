@@ -37,16 +37,32 @@
 
 .mic {
   background: var(--m-accent-soft);
-  img { width: 18px; height: 18px; display: block; }
+  color: var(--m-accent-strong);
 }
 
 .send {
-  background: var(--m-ink);
-  img { width: 17px; height: 17px; display: block; }
+  background: var(--m-primary-cta);
+  color: var(--m-on-primary);
   // Nothing to send yet. Dimmed rather than hidden so the control's position
   // does not move under the thumb the moment the first character is typed.
-  &:disabled { opacity: 0.4; cursor: default; }
+  &:disabled {
+    border: 1px solid var(--m-border);
+    background: var(--m-glass-control);
+    color: var(--m-muted);
+    cursor: default;
+  }
 }
+
+.composer-icon {
+  display: block;
+  flex-shrink: 0;
+  background: currentColor;
+  -webkit-mask: var(--composer-icon) center / contain no-repeat;
+  mask: var(--composer-icon) center / contain no-repeat;
+}
+
+.mic-icon { --composer-icon: url('/mobile/mic.svg'); width: 18px; height: 18px; }
+.send-icon { --composer-icon: url('/mobile/send.svg'); width: 17px; height: 17px; }
 
 .field {
   flex: 1 1 0;

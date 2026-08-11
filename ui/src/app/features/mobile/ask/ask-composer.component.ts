@@ -14,7 +14,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button class="mic" type="button" aria-label="Ask by voice" (click)="voiceRequested.emit()">
-      <img src="mobile/mic.svg" alt="" aria-hidden="true" />
+      <span class="composer-icon mic-icon" aria-hidden="true"></span>
     </button>
     <input
       class="field"
@@ -32,7 +32,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
       [disabled]="!value().trim()"
       (click)="submit()"
     >
-      <img src="mobile/send.svg" alt="" aria-hidden="true" />
+      <span class="composer-icon send-icon" aria-hidden="true"></span>
     </button>
   `,
   styleUrl: './ask-composer.component.scss',
