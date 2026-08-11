@@ -40,6 +40,7 @@ from ..core.vedic.positions import (
 )
 from ..core.vedic.strength import all_dignities, combustion_status
 from ..core.vedic.positions import sidereal_positions
+from ..core.vedic.dasha_phase import dasha_emphasis, emphasis_window
 from ..core.vedic.vargas import varga_sign
 from ..core.vedic.vimshopaka import WEIGHTS as _VIMSHOPAKA_SCHEMES
 from ..core.vedic.vimshopaka import vimshopaka_bala
@@ -126,13 +127,33 @@ def _retrospect(chart, as_of: datetime) -> dict:
         return round((moment - birth_utc).days / 365.2425, 1)
 
     def span(row: dict) -> dict:
-        return {
+        out = {
             "lord": row.get("lord"),
             "start": str(row.get("start"))[:10],
             "end": str(row.get("end"))[:10],
             "age_at_start": age_at(row.get("start")),
             "age_at_end": age_at(row.get("end")),
         }
+        # Where inside the period its weight falls (BPHS 47.3-4). Without this
+        # a sixteen-year mahadasha is narrated as one undifferentiated block,
+        # which is what makes a long period read as a generality. Absent rather
+        # than defaulted when the lord has no natal position, so the agent can
+        # tell "not computable" from "falls early".
+        natal = (chart.positions or {}).get(row.get("lord"))
+        if natal and "lon" in natal:
+            emphasis = dasha_emphasis(natal["lon"], bool(natal.get("retrograde")))
+            start, end = row.get("start"), row.get("end")
+            if start and end:
+                try:
+                    window = emphasis_window(start, end, emphasis["phase"])
+                    # Dates only, matching the rest of this block. A dasha third
+                    # is a multi-year span; a timestamp on it implies a precision
+                    # the rule does not have, and reads as false exactness.
+                    emphasis["window"] = {k: v[:10] for k, v in window.items()}
+                except ValueError:
+                    pass
+            out["emphasis"] = emphasis
+        return out
 
     def contains_now(row: dict) -> bool:
         start, end = _as_dt(row.get("start")), _as_dt(row.get("end"))
