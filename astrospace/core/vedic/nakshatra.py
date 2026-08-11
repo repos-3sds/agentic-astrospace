@@ -1,5 +1,9 @@
 """Nakshatra and pada from sidereal longitude. 27 nakshatras x 4 padas."""
-from .constants import NAKSHATRAS, NAKSHATRA_LORDS, NAKSHATRA_SPAN, PADA_SPAN
+from .constants import (
+    GANA_BY_NAKSHATRA, NADI_BY_NAKSHATRA, NAKSHATRAS, NAKSHATRA_DEITY,
+    NAKSHATRA_LORDS, NAKSHATRA_SPAN, NAKSHATRA_SYMBOL, PADA_SPAN,
+    YONI_BY_NAKSHATRA,
+)
 
 
 def nakshatra_of(lon: float) -> dict:
@@ -22,4 +26,23 @@ def nakshatra_of(lon: float) -> dict:
         "lord": NAKSHATRA_LORDS[idx],
         "pada": pada,
         "degree_in_nakshatra": lon - idx * NAKSHATRA_SPAN,
+    }
+
+
+def nakshatra_traits(index: int) -> dict:
+    """The classical attribute set for a nakshatra, by 0-based index.
+
+    Bare traditional facts only — deity, symbol, lord, and the three
+    Ashtakoota temperament axes. Deliberately carries no interpretive prose:
+    see NAKSHATRA_DEITY's comment in constants.py for why. Consumers are
+    expected to interpret from these, not to be handed a conclusion.
+    """
+    return {
+        "name": NAKSHATRAS[index],
+        "lord": NAKSHATRA_LORDS[index],
+        "deity": NAKSHATRA_DEITY[index],
+        "symbol": NAKSHATRA_SYMBOL[index],
+        "gana": GANA_BY_NAKSHATRA[index],
+        "yoni": "{} ({})".format(*YONI_BY_NAKSHATRA[index]),
+        "nadi": NADI_BY_NAKSHATRA[index],
     }

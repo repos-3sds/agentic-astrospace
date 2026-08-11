@@ -42,8 +42,15 @@ and §6:
   `python -m astrospace.db.seed`.
 - `.env` holds real credentials. Never read it into the transcript, never commit
   it, and let the user edit it themselves.
-- Run the suite with `.venv/bin/python -m pytest tests/ -q` (650 passing).
+- Run the suite with `.venv/bin/python -m pytest tests/ -q` (1540 passing).
   Frontend: `cd ui && npx ng test --watch=false --browsers=ChromeHeadless`.
+- Work deliberately left unbuilt goes in **one** backlog — the "Deferred
+  backlog" section of
+  [docs/backend_astro_depth_checklist_2026-08-06.md](docs/backend_astro_depth_checklist_2026-08-06.md),
+  which is the living tracker for engine + KB depth. Each entry states why
+  it isn't built, what would unblock it, and where the code hook is, so
+  picking one up doesn't mean re-deriving the research. Add deferrals there
+  rather than starting a new doc or leaving them in a commit message.
 
 ## Docs state their own status
 

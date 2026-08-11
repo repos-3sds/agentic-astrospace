@@ -193,7 +193,12 @@ class AskOrchestrator:
     def prepare(
         self, question: str, thread_domain: str | None = None,
         domain_override: str | None = None,
+        experience_mode: str = "balanced",
     ) -> PrepareOutcome:
+        """`experience_mode` (guided/balanced/practitioner) selects the
+        agent's VOICE only — never its facts, claims, or guardrails. See
+        `domain_agent.REGISTERS`. Defaults to balanced so a caller that
+        doesn't supply one still gets the previous behaviour."""
         safety = self.check_safety(question)
         if safety.refer_out_kind:
             return PrepareOutcome(terminal_envelope={
@@ -222,6 +227,7 @@ class AskOrchestrator:
         agent = DomainReadingAgent(
             context.bundle, registry_result.agent_config.domain_addendum,
             question_tense=routing.tense,
+            experience_mode=experience_mode,
         )
         return PrepareOutcome(prepared=PreparedRun(
             domain=routing.domain,

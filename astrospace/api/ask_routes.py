@@ -61,6 +61,19 @@ class AskRequest(BaseModel):
                     "does not change its score. Only honoured by the "
                     "streamed v2 orchestrator (ask_stream_routes.py).",
     )
+    experience_mode: Literal["guided", "balanced", "practitioner"] = Field(
+        "balanced",
+        description="The reader's own preference (PreferencesService's "
+                    "ExperienceMode), selecting the answer's VOICE — guided "
+                    "speaks as a warm counsellor in plain language, "
+                    "practitioner speaks peer-to-peer in full technical "
+                    "vocabulary. It never changes the facts, the claims "
+                    "allowed, or any guardrail: the same verified bundle is "
+                    "spoken three ways. Previously this preference existed "
+                    "only in the frontend and merely hid technical_basis "
+                    "rows, so every reader got word-for-word the same "
+                    "analyst-voiced answer.",
+    )
 
 
 # ── Threads ──────────────────────────────────────────────────────────────────

@@ -61,6 +61,55 @@ VIMSHOTTARI_YEARS = {
 NAKSHATRA_SPAN = 360.0 / 27.0      # 13°20'
 PADA_SPAN = 360.0 / 108.0          # 3°20'
 
+# Presiding deity (devata) and symbol per nakshatra, indexed like NAKSHATRAS.
+#
+# Why these two and not a fuller trait table: a deity and a symbol are bare
+# traditional facts — every source states them identically because nobody
+# authored them. Interpretive "natives of X are..." prose is a different
+# thing entirely: it is a modern writer's own expression and opinion, and
+# ingesting it would smuggle uncited personal views into readings dressed as
+# classical authority. The agent does the interpreting; this table exists so
+# it has grounded, citable facts to interpret *from* rather than recalling
+# them from training data with nothing in the bundle to cite.
+#
+# Cross-checked 2026-08-10 against two independent complete tables
+# (en.wikipedia.org/wiki/List_of_Nakshatras and bhagyax.com/nakshatras):
+# 27/27 deity agreement, differing only in transliteration (Ashvins /
+# Ashwini Kumaras, Nirrti / Nirriti, Ajaikapada / Aja Ekapada). The same
+# pass re-validated this file's own NAKSHATRA_LORDS against bhagyax's
+# independent lord column — also 27/27.
+#
+# Symbols are given in their single canonical form. Several nakshatras
+# carry a cluster of traditional alternates (Pushya: cow's udder, lotus,
+# arrow, circle) which the sources list to differing depths; the most
+# widely-cited one is used rather than reproducing any one source's full
+# phrasing.
+NAKSHATRA_DEITY = [
+    "Ashwini Kumaras (divine physicians)", "Yama (lord of dharma and endings)",
+    "Agni (fire)", "Brahma (the creator)", "Soma (the moon)",
+    "Rudra (the storm)", "Aditi (the boundless mother)",
+    "Brihaspati (guru of the gods)", "The Nagas (serpent beings)",
+    "The Pitris (the ancestors)", "Bhaga (delight and fortune)",
+    "Aryaman (patronage and contracts)", "Savitar (the vivifying sun)",
+    "Vishwakarma (the divine craftsman)", "Vayu (the wind)",
+    "Indra and Agni", "Mitra (friendship and compacts)",
+    "Indra (king of the gods)", "Nirriti (dissolution)",
+    "Apas (the waters)", "The Vishwadevas (the universal gods)",
+    "Vishnu (the preserver)", "The Vasus (the eight elementals)",
+    "Varuna (cosmic waters and oaths)", "Aja Ekapada (the one-footed goat)",
+    "Ahir Budhnya (the serpent of the deep)", "Pushan (the nourisher)",
+]
+
+NAKSHATRA_SYMBOL = [
+    "Horse's head", "Yoni", "Razor or flame", "Ox-cart", "Deer's head",
+    "Teardrop", "Quiver of arrows", "Cow's udder", "Coiled serpent",
+    "Royal throne", "Front legs of a bed", "Back legs of a bed", "Hand",
+    "Bright jewel", "Shoot of a plant", "Triumphal arch", "Lotus",
+    "Umbrella", "Bunch of tied roots", "Winnowing basket", "Elephant tusk",
+    "Three footprints", "Drum", "Empty circle", "Front legs of a cot",
+    "Back legs of a cot", "Pair of fish",
+]
+
 # ── Panchanga name tables ────────────────────────────────────────────────────
 
 TITHI_NAMES = [

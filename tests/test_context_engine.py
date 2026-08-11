@@ -162,6 +162,48 @@ class TestAssembler:
         }
         assert avastha["source_status"] == "convention_dependent"
 
+    def test_retrospect_carries_dated_anchors_and_no_life_events(self, chart):
+        """Enables honest past-validation: the engine supplies WHEN the
+        reader's periods turned and how old they were, never WHAT happened
+        to them. A cold read ("money slipped through your fingers") is true
+        of everyone; a dated, checkable anchor is not."""
+        bundle = assemble_domain(chart, "wealth", include_gochara=False)
+        r = bundle["retrospect"]
+        assert r["available"] is True
+        cur = r["current_chapter"]
+        assert cur["lord"] and cur["start"] and cur["end"]
+        assert isinstance(cur["age_at_start"], float)
+        assert cur["years_elapsed"] is not None and cur["years_remaining"] is not None
+        # elapsed + remaining must reconcile with the period's own length,
+        # or the "you are N years in" framing silently lies.
+        assert cur["years_elapsed"] + cur["years_remaining"] == pytest.approx(
+            cur["years_total"], abs=0.2)
+        assert r["previous_chapter"]["lord"] != cur["lord"]
+
+    def test_retrospect_periods_are_ordered_and_bounded_by_now(self, chart):
+        from datetime import datetime, timezone
+        bundle = assemble_domain(chart, "wealth", include_gochara=False)
+        r = bundle["retrospect"]
+        today = datetime.now(timezone.utc).date().isoformat()
+        assert r["previous_chapter"]["end"] <= r["current_chapter"]["start"]
+        assert r["current_chapter"]["start"] <= today < r["current_chapter"]["end"]
+        # Everything listed as elapsed must actually be in the past.
+        for sub in r["elapsed_sub_periods"]:
+            assert sub["end"] < today
+
+    def test_house_lord_carries_full_nakshatra_detail(self, chart):
+        """Before this, a planet brief carried the nakshatra NAME and nothing
+        else — so an agent had no bundle field to cite for what the nakshatra
+        means and had to recall it from training data. Cross-checked against
+        two independent 27-row tables; see test_bphs_ground_truth.py."""
+        bundle = assemble_domain(chart, "personality", include_gochara=False)
+        lord = bundle["houses"][0]["lord_placement"]
+        detail = lord["nakshatra_detail"]
+        assert detail["name"] == lord["nakshatra"]     # stays consistent
+        assert detail["lord"] and detail["deity"] and detail["symbol"]
+        assert detail["gana"] and detail["yoni"] and detail["nadi"]
+        assert detail["pada"] in (1, 2, 3, 4)
+
     def test_house_lord_carries_planetary_varna(self, chart):
         """Naisargika planetary varna (constants.PLANET_VARNA) — distinct
         from VARNA_BY_ELEMENT's marriage-compatibility Varna Koota scoring.
