@@ -13,6 +13,8 @@ from pydantic import BaseModel, Field
 from ..admin.client import AdminStorageError, get_admin_client
 from ..admin.ingestion_jobs import run_ingestion_job
 from ..admin.security import AdminUser, FullAdminUser
+from ..agents.domain_agent import _BASE_SYSTEM
+from ..agents.registry import AGENT_REGISTRY
 from ..context.source_retriever import SupabaseSourceRetriever
 from ..context.taxonomy import taxonomy, taxonomy_version
 
@@ -768,6 +770,70 @@ def get_taxonomy(user: AdminUser):
             "subdomains": list(spec.subdomains),
             "keywords": list(spec.keywords),
         } for key, spec in taxonomy().items()],
+    }
+
+
+@router.get("/agent-prompts")
+def get_agent_prompts(user: FullAdminUser):
+    """Return the prompt definitions that are live in this process.
+
+    This endpoint is deliberately read-only and full-admin-only. Prompt edits
+    change the behavior and safety boundary of every generated reading, so a
+    browser editor requires versioned drafts, review, audit, and rollback
+    before it can be introduced safely.
+    """
+    catalog = taxonomy()
+    configured = []
+    for domain_id, config in AGENT_REGISTRY.items():
+        spec = catalog.get(domain_id)
+        configured.append({
+            "id": domain_id,
+            "name": spec.name if spec else domain_id.replace("_", " ").title(),
+            "description": spec.description if spec else "",
+            "source_file": "astrospace/agents/registry.py",
+            "symbol": f"_{domain_id.upper()}_ADDENDUM",
+            "addendum": config.domain_addendum.strip(),
+        })
+
+    return {
+        "schema_version": "agent_prompt_registry_v1",
+        "base": {
+            "name": "Base grounding prompt",
+            "source_file": "astrospace/agents/domain_agent.py",
+            "symbol": "_BASE_SYSTEM",
+            "prompt": _BASE_SYSTEM.strip(),
+        },
+        "composition": {
+            "owner": "DomainReadingAgent.__init__",
+            "description": (
+                "The shared grounding prompt is formatted with the selected domain, "
+                "its deterministic context bundle, profile facts, question tense, and "
+                "persona voice register, plus the configured domain addendum."
+            ),
+            "runtime_inputs": [
+                "domain_name",
+                "bundle_json",
+                "profile_facts.age_years",
+                "profile_facts.as_of",
+                "question_tense",
+                "register (experience_mode voice)",
+                "domain_addendum",
+            ],
+        },
+        "coverage": {
+            "configured": len(configured),
+            "taxonomy_total": len(catalog),
+            "unconfigured": [
+                {
+                    "id": domain_id,
+                    "name": spec.name,
+                }
+                for domain_id, spec in catalog.items()
+                if domain_id not in AGENT_REGISTRY
+            ],
+        },
+        "domains": configured,
+        "editable": False,
     }
 
 
