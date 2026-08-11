@@ -374,7 +374,29 @@ export class AskAnswerComponent {
     const reading = message.reading;
     if (!reading) return message.content || 'Reading your chart…';
     const source = reading.summary_and_assurance || reading.interpretation || reading.acknowledgment;
-    return this.compactSentence(source, 94);
+    return this.compactSentence(source, 150);
+  }
+
+  /** The interpretation as real paragraphs.
+   *
+   * The backend writes multi-paragraph consultations — the word cap was
+   * deliberately removed from the domain agent's prompt ("prioritize
+   * completeness and accuracy over brevity") — but this was rendered into a
+   * single <p>, where HTML collapses the blank lines between paragraphs. A
+   * 900-word reading arrived on screen as one unbroken slab, which is why
+   * copying the answer read far better than looking at it: the clipboard
+   * kept the structure the page threw away.
+   *
+   * Splitting here rather than adding `white-space: pre-wrap` is deliberate:
+   * real <p> elements can carry their own spacing and reading measure, and
+   * pre-wrap would also preserve every incidental single newline the model
+   * happens to emit mid-sentence. */
+  protected readingParagraphs(reading: StructuredReading): string[] {
+    const text = this.normaliseAnswerText(reading.interpretation ?? '');
+    return text
+      .split(/\n\s*\n+/)
+      .map((paragraph) => paragraph.replace(/\s*\n\s*/g, ' ').trim())
+      .filter(Boolean);
   }
 
   /** Full `practical_actions` (falling back to `follow_up_questions` when
@@ -394,8 +416,18 @@ export class AskAnswerComponent {
     const first = clean.match(/^(.+?[.!?])(\s|$)/)?.[1]?.trim() ?? clean;
     const candidate = first.length >= 18 ? first : clean;
     if (candidate.length <= maxLength) return candidate;
-    const clipped = candidate.slice(0, maxLength - 1).replace(/\s+\S*$/, '').trim();
-    return `${clipped || candidate.slice(0, maxLength - 1).trim()}…`;
+    // Prefer a clause boundary over a word boundary. This is the most
+    // prominent line on the screen, and clipping it mid-phrase reads as
+    // broken rather than abbreviated — the shipped app showed "…it is
+    // engineered for enduring…", which stops on a preposition. Ending at
+    // the last semicolon or comma instead gives a fragment that reads as a
+    // deliberate headline: "Your chart is not built for fleeting,
+    // superficial success".
+    const window = candidate.slice(0, maxLength - 1);
+    const clause = Math.max(window.lastIndexOf(';'), window.lastIndexOf(','));
+    if (clause >= 32) return window.slice(0, clause).trim();
+    const clipped = window.replace(/\s+\S*$/, '').trim();
+    return `${clipped || window.trim()}…`;
   }
 
   constructor() {

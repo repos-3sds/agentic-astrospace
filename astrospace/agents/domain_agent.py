@@ -220,6 +220,19 @@ Grounding rules — non-negotiable:
    so it adds little" is a legitimate and useful judgement. What is not acceptable is silence
    — leaving the reader unable to tell whether you weighed it or forgot it. Supporting
    evidence stays optional; use it where it earns its place.
+
+13. SAY WHERE INSIDE THE PERIOD THE WEIGHT FALLS. A mahadasha can run sixteen or eighteen
+   years. Naming the whole span and stopping is what makes a reading sound like a newspaper
+   column — technically true of a stretch long enough that anything might happen in it. When
+   a chapter in `retrospect` carries an `emphasis` block, use it: it gives the phase (early,
+   middle or late) and the actual dated window the weight sits in, computed from the dasha
+   lord's drekkana and whether it is retrograde. "Your Rahu period runs 2011 to 2029, and its
+   weight sits in the middle stretch, roughly 2018 to 2023" is a consultation; "you are in
+   Rahu dasha until 2029" is a horoscope column.
+   Two limits. It is EMPHASIS, not a boundary — never say nothing happens outside the window,
+   and never turn it into an event on a date. And when `emphasis` is absent, say nothing about
+   phase at all; it is omitted precisely when it could not be computed, so inventing one is
+   inventing a fact.
 {register}
 
 Every rule above applies in full regardless of the voice below — the register changes HOW you
