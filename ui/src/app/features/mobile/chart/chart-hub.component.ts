@@ -114,6 +114,16 @@ export class ChartHubComponent {
    */
   readonly explore = signal<ExploreCard[]>([
     {
+      // First card on purpose. It is the one that answers "is this chart even
+      // mine?", and it was previously reachable only three taps deep under a
+      // section called Reference, which reads like a glossary.
+      id: 'birth-details',
+      title: 'Birth Details',
+      subtitle: 'Lagna, rashi, nakshatra · place & ayanamsha',
+      icon: 'explore-varga',
+      route: ['/m', 'chart', 'birth-details'],
+    },
+    {
       id: 'varga',
       title: 'Charts & Vargas',
       subtitle: 'D1 plus divisional charts',
