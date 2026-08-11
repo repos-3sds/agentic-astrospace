@@ -16,9 +16,68 @@ ROMAN = {"I":1,"II":2,"III":3,"IV":4,"V":5,"VI":6,"VII":7,"VIII":8,"IX":9,"X":10
          "XIX":19,"XX":20}
 
 
+def check_flat(m: dict) -> list[str]:
+    """Books with a flat chapter list and no kanda level (e.g. BPHS).
+
+    These manifests are script-generated from the book rather than read by hand,
+    so the generator already refuses to emit a broken one. This re-checks the
+    result independently: a generator that is wrong about its own output is
+    exactly the thing a gate exists to catch.
+    """
+    problems: list[str] = []
+    chapters = m["chapters"]
+    if not chapters:
+        return ["no chapters at all"]
+
+    nums = [c["chapter"] for c in chapters]
+    expected = list(range(nums[0], nums[0] + len(nums)))
+    if nums != expected:
+        missing = sorted(set(expected) - set(nums))
+        problems.append(f"chapter numbers are not contiguous (missing {missing}) — a chapter was dropped")
+
+    floor = m.get("quality", {}).get("accuracy_floor", 60)
+    median = m.get("quality", {}).get("median_accuracy")
+    if median is None:
+        problems.append("no measured text quality — a manifest may not assert a book is readable without checking")
+    elif median < floor:
+        problems.append(
+            f"median text accuracy {median}% is below the {floor}% floor — this book's text layer "
+            f"is not trustworthy prose and must be read as images, not extracted"
+        )
+
+    for c in chapters:
+        where = f"ch {c['chapter']}"
+        if not c.get("title", "").strip():
+            problems.append(f"{where}: empty title")
+        first, last = c.get("first_pdf_page"), c.get("last_pdf_page")
+        if not (isinstance(first, int) and isinstance(last, int)):
+            problems.append(f"{where}: missing page bounds")
+            continue
+        if last < first:
+            problems.append(f"{where}: page range runs backwards ({first}-{last})")
+        stray = [p for p in c.get("vision_pages", []) if not (first <= p <= last)]
+        if stray:
+            problems.append(f"{where}: vision_pages {stray} fall outside the chapter's own range")
+
+    # Chapters must tile the book: consecutive, no gaps, no overlaps.
+    for a, b in zip(chapters, chapters[1:]):
+        if a.get("last_pdf_page") is None or b.get("first_pdf_page") is None:
+            continue
+        if a["last_pdf_page"] + 1 != b["first_pdf_page"]:
+            problems.append(
+                f"ch {a['chapter']} ends p{a['last_pdf_page']} but ch {b['chapter']} starts "
+                f"p{b['first_pdf_page']} — chapters must tile the book with no gap or overlap"
+            )
+    return problems
+
+
 def check(path: str) -> list[str]:
     m = json.load(open(path, encoding="utf-8"))
     problems: list[str] = []
+
+    # Two shapes in the corpus: kanda/chapter/shloka books, and flat-chapter books.
+    if "kandas" not in m:
+        return check_flat(m)
 
     if m.get("toc_pages_pending"):
         problems.append(
