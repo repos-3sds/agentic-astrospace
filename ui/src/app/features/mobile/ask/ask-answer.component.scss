@@ -255,9 +255,24 @@
 .acknowledgment,
 .summary-line,
 .assurance-line,
+.reading-paragraph,
 .legacy-answer {
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+/* The interpretation is a multi-paragraph consultation, not the single
+   summary line the old `.summary-line` name assumed. Each paragraph is now
+   a real element so it can carry its own rhythm; `max-width` keeps the
+   measure readable rather than letting lines run the full device width. */
+.reading-paragraph {
+  @include m-body;
+  color: var(--m-text);
+  max-width: 68ch;
+}
+
+.reading-paragraph + .reading-paragraph {
+  margin-top: 14px;
 }
 
 .acknowledgment {

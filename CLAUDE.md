@@ -40,6 +40,14 @@ and §6:
   wrappers; do not move computation into them.
 - Catalog tables are seeded from the engines, never hand-authored:
   `python -m astrospace.db.seed`.
+- Before reading anything out of `Astro Space Knowledge Base/`, check
+  [docs/kb_corpus_sources.md](docs/kb_corpus_sources.md) — which books are
+  machine-readable and which must be read as images, measured rather than
+  remembered. Several PDFs have no text layer at all, and the best copies of
+  those books are OCR exports buried under directories named `<book>.pdf`.
+  Re-run `python scripts/audit_kb_sources.py` rather than trusting the table.
+  Per-book structure lives in `docs/kb_manifests/`, gated by
+  `scripts/check_kb_manifest.py`.
 - `.env` holds real credentials. Never read it into the transcript, never commit
   it, and let the user edit it themselves.
 - Run the suite with `.venv/bin/python -m pytest tests/ -q` (1540 passing).

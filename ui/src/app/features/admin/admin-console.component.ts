@@ -11,6 +11,7 @@ import {
   AdminOverview,
   AdminService,
   AdminUserRow,
+  AgentPromptRegistry,
   AuditEntry,
   KnowledgeChunk,
   KnowledgeSource,
@@ -19,6 +20,7 @@ import {
 } from '../../core/admin.service';
 import { AuthService } from '../../core/auth.service';
 import { ThemeService } from '../../core/theme.service';
+import { AdminAgentPromptsComponent } from './admin-agent-prompts.component';
 
 type ConsoleView =
   | 'overview'
@@ -27,6 +29,7 @@ type ConsoleView =
   | 'sources'
   | 'review'
   | 'retrieval'
+  | 'prompts'
   | 'audit'
   | 'system';
 
@@ -37,13 +40,21 @@ const NAV: Array<{ id: ConsoleView; label: string; icon: string }> = [
   { id: 'sources', label: 'Knowledge sources', icon: 'library' },
   { id: 'review', label: 'Review queue', icon: 'clipboard-check' },
   { id: 'retrieval', label: 'Retrieval lab', icon: 'flask-conical' },
+  { id: 'prompts', label: 'Agent prompts', icon: 'bot' },
   { id: 'audit', label: 'Audit log', icon: 'history' },
   { id: 'system', label: 'System health', icon: 'server-cog' },
 ];
 
 @Component({
   selector: 'app-admin-console',
-  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule, Toast],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    LucideAngularModule,
+    Toast,
+    AdminAgentPromptsComponent,
+  ],
   templateUrl: './admin-console.component.html',
   styleUrl: './admin-console.component.scss',
 })
@@ -54,9 +65,13 @@ export class AdminConsoleComponent implements OnInit {
   private router = inject(Router);
   protected theme = inject(ThemeService);
 
-  protected readonly nav = NAV;
   protected readonly view = signal<ConsoleView>('overview');
   protected readonly identity = signal<AdminIdentity | null>(null);
+  protected readonly nav = computed(() =>
+    this.identity()?.role === 'admin'
+      ? NAV
+      : NAV.filter((item) => item.id !== 'prompts'),
+  );
   protected readonly overview = signal<AdminOverview | null>(null);
   protected readonly sources = signal<KnowledgeSource[]>([]);
   protected readonly users = signal<AdminUserRow[]>([]);
@@ -67,6 +82,7 @@ export class AdminConsoleComponent implements OnInit {
   protected readonly chunks = signal<KnowledgeChunk[]>([]);
   protected readonly audit = signal<AuditEntry[]>([]);
   protected readonly taxonomy = signal<TaxonomyDomain[]>([]);
+  protected readonly agentPrompts = signal<AgentPromptRegistry | null>(null);
   protected readonly selectedChunk = signal<KnowledgeChunk | null>(null);
   protected readonly selectedIds = signal<Set<string>>(new Set());
   protected readonly loading = signal(false);
@@ -119,6 +135,7 @@ export class AdminConsoleComponent implements OnInit {
     if (view === 'activity') await this.loadActivity();
     if (view === 'sources') await this.loadSources();
     if (view === 'review') await this.loadChunks();
+    if (view === 'prompts') await this.loadAgentPrompts();
     if (view === 'audit') await this.loadAudit();
     if (view === 'system') await this.loadSystem();
   }
@@ -181,6 +198,10 @@ export class AdminConsoleComponent implements OnInit {
 
   protected async loadAudit(): Promise<void> {
     await this.run(async () => this.audit.set(await this.admin.audit()));
+  }
+
+  protected async loadAgentPrompts(): Promise<void> {
+    await this.run(async () => this.agentPrompts.set(await this.admin.agentPrompts()));
   }
 
   protected openSource(source: KnowledgeSource): void {

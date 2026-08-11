@@ -74,7 +74,9 @@
             @case ('guided') {
               <section class="plain-card guided-card" aria-label="Plain guidance">
                 <h1 class="verdict">{{ answerHeadline(message) }}</h1>
-                <p class="summary-line">{{ reading.interpretation }}</p>
+                @for (para of readingParagraphs(reading); track $index) {
+                  <p class="reading-paragraph">{{ para }}</p>
+                }
                 @if (reading.summary_and_assurance) {
                   <p class="assurance-line">{{ reading.summary_and_assurance }}</p>
                 }
@@ -119,7 +121,9 @@
             @case ('practitioner') {
               <section class="plain-card practitioner-verdict" aria-label="Synthesised verdict">
                 <h1 class="verdict">{{ answerHeadline(message) }}</h1>
-                <p class="summary-line">{{ reading.interpretation }}</p>
+                @for (para of readingParagraphs(reading); track $index) {
+                  <p class="reading-paragraph">{{ para }}</p>
+                }
                 @if (reading.summary_and_assurance) {
                   <p class="assurance-line">{{ reading.summary_and_assurance }}</p>
                 }
@@ -187,7 +191,9 @@
             @default {
               <section class="plain-card balanced-card" aria-label="Balanced summary">
                 <h1 class="verdict">{{ answerHeadline(message) }}</h1>
-                <p class="summary-line">{{ reading.interpretation }}</p>
+                @for (para of readingParagraphs(reading); track $index) {
+                  <p class="reading-paragraph">{{ para }}</p>
+                }
                 @if (reading.summary_and_assurance) {
                   <p class="assurance-line">{{ reading.summary_and_assurance }}</p>
                 }
