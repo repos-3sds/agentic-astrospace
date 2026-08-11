@@ -1,0 +1,251 @@
+{
+  "book": "Uttara Kalamritam",
+  "author": "Kalidasa",
+  "edition_note": "English translation; the one book in this corpus whose English text layer is clean (93% letters, zero pages flagged inaccurate). Devanagari did NOT OCR and must be read by vision where a Sanskrit term is needed.",
+  "source_file": "Astro Space Knowledge Base/EPUBS/Uttara kalamritam..epub",
+  "total_pages": 256,
+  "toc_source_pages": "EPUB/page_4.html onwards (read from the text layer, spot-checked by eye)",
+  "chapters": [
+    {
+      "chapter": "I",
+      "entries": [
+        {
+          "shlokas": "1",
+          "topic": "Obeissance to Ganapati"
+        },
+        {
+          "shlokas": "2",
+          "topic": "Obeissance to Para Shakti"
+        },
+        {
+          "shlokas": "3",
+          "topic": "Previous part of the text and the purpose of the present part"
+        },
+        {
+          "shlokas": "4",
+          "topic": "Time of birth, planets and bhavag"
+        },
+        {
+          "shlokas": "6-6",
+          "topic": "Rectification of the time of birth"
+        },
+        {
+          "shlokas": "7",
+          "topic": "‘osition of Mandi"
+        },
+        {
+          "shlokas": "8",
+          "topic": "Position of Gulika"
+        },
+        {
+          "shlokas": "11",
+          "topic": "Details about the delivery room"
+        }
+      ]
+    },
+    {
+      "chapter": "II",
+      "entries": [
+        {
+          "shlokas": "2-3",
+          "topic": "Relations among the planets"
+        },
+        {
+          "shlokas": "3-4",
+          "topic": "Sapta Vargas"
+        },
+        {
+          "shlokas": "4-6",
+          "topic": "Exaltation signs and strength of the planets 6: Exaltation, debilitation and retrogression"
+        },
+        {
+          "shlokas": "7-8",
+          "topic": "Hora, Drekkana, Saptamsa"
+        },
+        {
+          "shlokas": "8-8",
+          "topic": "Navamsa, Dvadasamsa, Trimsamsa"
+        },
+        {
+          "shlokas": "9-10",
+          "topic": "Strength of the Saptavargas"
+        },
+        {
+          "shlokas": "10-11",
+          "topic": "Strength of Uchcha and Kendra"
+        },
+        {
+          "shlokas": "11-12",
+          "topic": "Strength of odd and even signs and Drekkana"
+        },
+        {
+          "shlokas": "12-13",
+          "topic": "Directional strength 17 18 18 19 22 23 24 25 25 26 27 27 28 29 29"
+        },
+        {
+          "shlokas": "30",
+          "topic": "33 34 36 36 36 Page 5"
+        }
+      ]
+    },
+    {
+      "chapter": "IV",
+      "entries": []
+    },
+    {
+      "chapter": "V",
+      "entries": []
+    },
+    {
+      "chapter": "VI",
+      "entries": [
+        {
+          "shlokas": "34-38",
+          "topic": "Annual solar return—Varsha Phala 161-165"
+        },
+        {
+          "shlokas": "38-43",
+          "topic": "Results of the periods during the year of the solar return 165-167"
+        }
+      ]
+    },
+    {
+      "chapter": "VII",
+      "entries": [
+        {
+          "shlokas": "14-15",
+          "topic": "Subject of the question ; 174"
+        },
+        {
+          "shlokas": "17",
+          "topic": "Is the thing long or short? What is its colour? 175"
+        },
+        {
+          "shlokas": "18",
+          "topic": "Time of fructification 175"
+        },
+        {
+          "shlokas": "19",
+          "topic": "Effects of the time of question 176"
+        }
+      ]
+    },
+    {
+      "chapter": "VIII",
+      "entries": [
+        {
+          "shlokas": "2",
+          "topic": "Nis adhana 178"
+        },
+        {
+          "shlokas": "34",
+          "topic": "35,"
+        },
+        {
+          "shlokas": "1",
+          "topic": "205 2-7 206-208"
+        },
+        {
+          "shlokas": "8",
+          "topic": "Same continued -209"
+        },
+        {
+          "shlokas": "9",
+          "topic": "- Brotherless girls’ marriage 209"
+        },
+        {
+          "shlokas": "10",
+          "topic": "Five bad customs south of the Narmada 210"
+        },
+        {
+          "shlokas": "11",
+          "topic": "Bad customs in the East 210"
+        },
+        {
+          "shlokas": "12",
+          "topic": "Marriage with the daughter of l a maternal uncle 211"
+        },
+        {
+          "shlokas": "13",
+          "topic": "Children of the different wives of the same father 212"
+        },
+        {
+          "shlokas": "14",
+          "topic": "Marriage prohibitions 212"
+        },
+        {
+          "shlokas": "15",
+          "topic": "Eating before and after marriage 213"
+        },
+        {
+          "shlokas": "16",
+          "topic": "Pancha Sutri l 213"
+        },
+        {
+          "shlokas": "17",
+          "topic": "Six Pindas in a Shraddha 213"
+        },
+        {
+          "shlokas": "18",
+          "topic": "Who is elder among the twins? 214"
+        },
+        {
+          "shlokas": "19",
+          "topic": "Twelve kinds of children 215"
+        },
+        {
+          "shlokas": "20-21",
+          "topic": "Adopted son l 216"
+        },
+        {
+          "shlokas": "22",
+          "topic": "Study of the Veda 217"
+        },
+        {
+          "shlokas": "23-24",
+          "topic": "Gotra and Pinda-pradana , for the adopted son 217-218"
+        },
+        {
+          "shlokas": "25",
+          "topic": "Shraddha 218"
+        },
+        {
+          "shlokas": "27",
+          "topic": "Shraddha and Bhikshus 219"
+        },
+        {
+          "shlokas": "28",
+          "topic": "Rites of other castes done by a Brahmana 220"
+        },
+        {
+          "shlokas": "29",
+          "topic": "Bath in the Sea 220"
+        },
+        {
+          "shlokas": "30",
+          "topic": "Restrictions regarding food for widows and ascetics 221"
+        },
+        {
+          "shlokas": "31-32",
+          "topic": "Who can offer Pindas? - - 222"
+        },
+        {
+          "shlokas": "33-36",
+          "topic": "Upanayana 223-225"
+        },
+        {
+          "shlokas": "37",
+          "topic": "Marriage and Menstruation 225 ,"
+        },
+        {
+          "shlokas": "38-41",
+          "topic": "Ten avataras of Vishnu 226-227"
+        },
+        {
+          "shlokas": "42",
+          "topic": "Janmashtami and Ganesha Chaturthi 228"
+        }
+      ]
+    }
+  ]
+}
