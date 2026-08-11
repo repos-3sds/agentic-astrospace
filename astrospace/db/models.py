@@ -3,6 +3,7 @@ from datetime import date, datetime, time
 from sqlalchemy import (
     ARRAY,
     Boolean,
+    CheckConstraint,
     Date,
     Float,
     Integer,
@@ -215,6 +216,19 @@ class AskThread(Base):
 
 class AskMessage(Base):
     __tablename__ = "ask_messages"
+    # The deployed Postgres CHECK on refer_out_kind was absent here, so the
+    # column was a bare String to SQLAlchemy and the test suite — which runs
+    # on in-memory SQLite — could not see it. That is precisely how the
+    # constraint drifted out of step with the application for weeks while
+    # every test stayed green (ASK-001; see the 20260811090000 migration).
+    # Declaring it on the model puts the same rule in front of the tests.
+    __table_args__ = (
+        CheckConstraint(
+            "refer_out_kind IS NULL OR refer_out_kind IN "
+            "('death', 'health', 'legal', 'money')",
+            name="ask_messages_refer_out_kind_check",
+        ),
+    )
 
     id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
     thread_id: Mapped[str] = mapped_column(_UuidString, ForeignKey("ask_threads.id"), nullable=False, index=True)
