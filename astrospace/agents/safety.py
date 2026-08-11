@@ -263,6 +263,32 @@ _LIFESPAN_OBJECT = (
     r"|(?:his|her|their|your) (?:sixties|seventies|eighties|nineties)"
 )
 
+# Either party. Used by the death-as-a-NOUN rows, which apply identically to
+# the reader and to anyone they asked about — the gap those rows close was
+# present for both, precisely because first- and third-party patterns were
+# maintained as two separate lists and drifted. One reference group means a
+# relation added here is covered on both sides at once, rather than being
+# remembered in one list and forgotten in the other.
+_PERSON_REF_BODY = r"you|your (?:" + _THIRD_PARTY_SUBJECTS + r")(?:'s|s')?|he|she|they"
+
+# A PERSON, never a bare possessive. The first version of this constant
+# included a bare "your", which made it a possessive anchor: every "your
+# <anything>" satisfied it, so "your business will come to an untimely end"
+# read as a death verdict. The name said person; the pattern said possessive.
+_DEATH_NOUN_REF = r"(?:" + _PERSON_REF_BODY + r")"
+
+# Same, plus possessive pronouns. Used only where the predicate itself is
+# unambiguous ("short-lived", "life … cut short"), so the anchor carries less
+# weight than it does on rows like "end" where the noun has ordinary uses.
+_DEATH_NOUN_REF_POSS = r"(?:his|her|their|" + _PERSON_REF_BODY + r")"
+
+# Gap between a person reference and the death noun. Sentence-bounded rather
+# than `.{0,N}` because `_normalize()` collapses a whole multi-paragraph answer
+# onto one line: an unbounded gap let "…affects your career. An untimely end to
+# this job phase…" match across the full stop, so the true false-positive rate
+# on real answers was far higher than single-sentence testing suggested.
+_SAME_SENTENCE = r"[^.!?;]{0,40}?"
+
 # Subjects the app must never issue a verdict on. Kept as word-stems so
 # inflections ("survive"/"survival") are covered without listing each form.
 _REFER_OUT_SUBJECTS: tuple[tuple[str, tuple[str, ...]], ...] = (
@@ -408,9 +434,31 @@ _PROHIBITED_OUTPUT = (
     # `_LIFESPAN_OBJECT`; "your daughter will not live at home much longer" is
     # an ordinary sentence about moving out, and it matched here until the
     # lifespan arms below took the verb over.
+    # "make it" carries `(?!\s+to\b)` because bare "make it" is only mortal
+    # when nothing follows it: "will not make it", "will not make it through
+    # the winter". "will not make it TO <something>" is ordinary English about
+    # missing an event — "your son will not make it to your birthday dinner"
+    # was being read as a death verdict. The genuinely mortal "make it to" is
+    # "make it to 50" / "to old age", and that is already covered by the
+    # age-object row further down, which requires the age.
     (_LIFE_SUBJECT + _ADVERB_GAP +
      r"\b(?:will|shall|is going to|are going to|can|is able to|are able to)\b\s*not\b" +
-     _ADVERB_GAP + r"\b(?:surviv|make it|pull through)", "death"),
+     _ADVERB_GAP + r"\b(?:surviv|pull through|make it\b(?!\s+to\b))", "death"),
+    # Negated "live long" — the one lifespan claim that fits NEITHER arm, and
+    # so was missed for BOTH parties: "you will not live long" and "your mother
+    # will not live long" both passed straight through. The verb arm above
+    # deliberately excludes `live`, and the object arm below keys on an age
+    # ("live to 80"), which "long" is not. That leaves the single most direct
+    # phrasing of the verdict uncovered.
+    #
+    # `live` must be IMMEDIATELY followed by the duration word. That is what
+    # keeps out the sentence this file already calls out as ordinary — "your
+    # daughter will not live at home much longer" — where "at home" intervenes.
+    # It also leaves "he will not live beyond his means" alone, since "beyond"
+    # is not in this list.
+    (_LIFE_SUBJECT + _ADVERB_GAP +
+     r"\b(?:will|shall|is going to|are going to|may|might)\b\s*not\b" + _ADVERB_GAP +
+     r"\blive (?:long|much longer|very long|for long)\b", "death"),
     # ── "live", which is where this gets delicate ────────────────────────────
     # A lifespan claim is identified by its OBJECT, never by the verb: "will
     # live to 80" is a verdict, "will live to see the business succeed" is not.
@@ -425,13 +473,112 @@ _PROHIBITED_OUTPUT = (
     # wedding" is a death verdict about the same event, and the only thing
     # separating them is the "not". Excludes "live up to", which is a different
     # verb phrase entirely ("will not live up to expectations").
+    #
+    # "regret" is excluded for the same reason, found while unblocking this
+    # guard: "you will not live to regret this decision" is an idiom of
+    # REASSURANCE and was reading as a death verdict. Pre-existing, not
+    # introduced by the third-party work. "live to tell the tale" stays caught
+    # — negated, that one really is about not surviving.
     (_LIFE_SUBJECT + _ADVERB_GAP +
      r"\b(?:will|shall|is going to|are going to)\b\s*not\b" + _ADVERB_GAP +
-     r"\blive to \w+", "death"),
+     r"\blive to (?!regret\b)\w+", "death"),
     # Subject-free on purpose: "has a short lifespan" carries the whole
     # verdict whoever it is about, and the noun forms here have no ordinary
     # non-death use the way the abstract-subject case discussed above does.
     (r"\b(?:short|limited|brief|reduced|curtailed) (?:lifespan|life span|life expectancy)\b", "death"),
+    # 2026-08-11, independent verification of the third-party pass above:
+    # tested against a phrase set written separately from that pass's own
+    # tests, which exposed that every death pattern here — first- AND
+    # third-party — matched death as a VERB ("die", "not survive", "not
+    # live long") and nothing matched it as a NOUN. So "your son will have
+    # a short life", "your partner will meet an early death" and "your
+    # spouse will suffer a fatal accident" all passed the net while their
+    # verb equivalents were caught. Confirmed pre-existing and symmetric:
+    # "you will have a short life" missed identically, so this is inherited
+    # from the original table rather than introduced by the third-party
+    # work, and it is closed for both parties here in one place.
+    #
+    # ── What the first attempt got wrong, since the corrections below only
+    # make sense against it. Independent review broke it in both directions:
+    #
+    #  1. `_DEATH_NOUN_REF` contained a bare "your", so it anchored on a
+    #     POSSESSIVE rather than a PERSON, and every "your <anything>"
+    #     satisfied it: "your business will come to an untimely end" and
+    #     "your Mercury antardasha comes to a sudden end" both read as death
+    #     verdicts. The comment claimed it was a person anchor; the code was
+    #     not. That also silently reintroduced what an earlier review round
+    #     had removed further down this file, where bare "end" was excluded
+    #     precisely because dashas and transits legitimately end all the time.
+    #  2. "passing" was treated as subject-free, colliding with this app's own
+    #     vocabulary for a transit — "the sudden passing of Mars over your
+    #     ascendant". Same class of error as "life", one row apart.
+    #  3. "(?:\w+ )?(?:birthday|years)" swallowed "teenage years",
+    #     "retirement years", "golden years".
+    #  4. The gaps used `.{0,32}` while `_normalize()` flattens a whole
+    #     multi-paragraph answer to one line, so a match could span a full
+    #     stop.
+    #
+    # The root cause of all four was the same, and it is worth naming because
+    # it is the identical failure this block was written to fix: the negative
+    # tests avoided the word "your", which is the word these patterns key on,
+    # so "no false positives" was measuring nothing. Negatives now carry
+    # "your" against every person-anchored row.
+    #
+    # Two anchoring rules, applied consistently:
+    #  - Subject-free ONLY where the noun cannot describe anything but a
+    #    person's death: "death" and "demise". "passing" and "end" fail that
+    #    test in this domain and are person-anchored instead.
+    #  - Person anchors are `you` or `your <relation>` (pronouns included via
+    #    _THIRD_PARTY_REF) — never a bare possessive.
+    (r"\b(?:early|untimely|premature|sudden|violent) (?:death|demise)\b", "death"),
+    # "fatal" restricted to bodily nouns: bare "fatal" eats "a fatal flaw in
+    # the plan" and "a fatal error", both of which this app legitimately writes.
+    (r"\bfatal (?:accident|injury|illness|crash|fall|mishap)\b", "death"),
+    # Person-anchored nouns. "life"/"passing"/"end" all have ordinary
+    # non-mortal uses here, so each needs a person in the same sentence.
+    (r"\b" + _DEATH_NOUN_REF + r"\b" + _SAME_SENTENCE +
+     r"\b(?:short|brief|curtailed|limited) life\b", "death"),
+    (r"\b" + _DEATH_NOUN_REF + r"\b" + _SAME_SENTENCE +
+     r"\b(?:untimely|premature|sudden|early) (?:end|passing)\b", "death"),
+    # Reverse order — "a short life is indicated for your son". The file
+    # already handles both directions for immigration; this row was one-way.
+    (r"\b(?:short|brief|curtailed) life\b" + _SAME_SENTENCE + r"\bfor "
+     + _DEATH_NOUN_REF + r"\b", "death"),
+    # "short-lived" and "life cut short" — the standard English renderings of
+    # alpayu, the classical short-longevity class, and therefore the single
+    # most likely phrasing in this app's own subject matter. Both were missed.
+    # These two also accept a possessive pronoun ("his life will be cut
+    # short"), which _DEATH_NOUN_REF deliberately excludes elsewhere. Safe
+    # only because the predicate is unambiguous: nothing but a person's life
+    # is described as "short-lived" or "cut short" in a reading, so the
+    # anchor is carrying less weight here than it is on the "end" row.
+    (r"\b" + _DEATH_NOUN_REF_POSS + r"\b" + _SAME_SENTENCE +
+     r"\bshort[- ]lived\b", "death"),
+    (r"\b" + _DEATH_NOUN_REF_POSS + r"\b" + _SAME_SENTENCE +
+     r"\blife\b" + _SAME_SENTENCE + r"\bcut short\b", "death"),
+    # Possessive noun forms: "your father's demise is indicated". The verb
+    # equivalent was caught and this was not.
+    (r"\byour (?:" + _THIRD_PARTY_SUBJECTS + r")(?:'s|s')" + _SAME_SENTENCE +
+     r"\b(?:death|demise|passing)\b", "death"),
+    # Pronoun + lifespan noun: "his lifespan will be short".
+    (r"\b(?:his|her|their)\b" + _SAME_SENTENCE +
+     r"\b(?:lifespan|life span|life expectancy|longevity)\b" + _SAME_SENTENCE +
+     r"\b(?:short|limited|brief|curtailed|reduced)\b", "death"),
+    # Explicit noun list rather than "\w+ years": the wildcard read
+    # "teenage years", "retirement years" and "golden years" as death.
+    (r"\b" + _DEATH_NOUN_REF + r"\b" + _SAME_SENTENCE +
+     r"\bwill not (?:see|reach|live to see|make it to)\b" + _SAME_SENTENCE +
+     r"\b(?:old age|adulthood|maturity|\d+)\b", "death"),
+    (r"\byou (?:will|are likely to) live (?:until|to|for)\b", "death"),
+    # NOTE ON THIS MERGE: the row that stood here —
+    #   (r"\byou have\b.{0,24}\b(?:years|months) (?:left|to live)\b", "death")
+    # — is deliberately DELETED, not kept alongside the replacement below.
+    # It is superseded, and resolving this conflict by keeping both sides
+    # restores a demonstrated false positive: it reads "you have 2 years left
+    # in this Saturn dasha" as a death verdict and swaps an ordinary reading
+    # for the longevity refer-out. "left"/"remaining" are what a dasha
+    # legitimately has and are handled by the windowed check further down.
+
     # "N years/months TO LIVE" is absolute — no period-noun window check —
     # because unlike "remaining"/"left" it has no ordinary astrological
     # meaning. Nobody describes a dasha as having "6 months to live", so a

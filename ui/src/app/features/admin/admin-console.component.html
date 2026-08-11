@@ -9,7 +9,7 @@
     </a>
 
     <nav aria-label="Admin Console">
-      @for (item of nav; track item.id) {
+      @for (item of nav(); track item.id) {
         <button
           type="button"
           [class.active]="view() === item.id"
@@ -48,6 +48,7 @@
             @case ('sources') { Source library }
             @case ('review') { Review queue }
             @case ('retrieval') { Retrieval lab }
+            @case ('prompts') { Agent prompt registry }
             @case ('audit') { Audit log }
             @case ('system') { System health }
           }
@@ -745,6 +746,12 @@
               }
             </div>
           </section>
+        }
+
+        @case ('prompts') {
+          @if (agentPrompts(); as data) {
+            <app-admin-agent-prompts [registry]="data" />
+          }
         }
 
         @case ('audit') {
