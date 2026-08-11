@@ -15,6 +15,38 @@ import re
 from .safety import dosha_overclaim_kind, prohibited_verdict
 from .schema import StructuredReading
 
+# A reading may name a varga either way; both satisfy the coverage check.
+_VARGA_CLASSICAL_NAMES = {
+    "D1": "rashi", "D2": "hora", "D3": "drekkana", "D4": "chaturthamsha",
+    "D7": "saptamsa", "D9": "navamsa", "D10": "dashamsha", "D12": "dwadashamsha",
+    "D16": "shodashamsha", "D20": "vimshamsha", "D24": "chaturvimshamsha",
+    "D27": "bhamsha", "D30": "trimshamsha", "D40": "khavedamsha",
+    "D45": "akshavedamsha", "D60": "shashtyamsha",
+}
+
+_KARAKA_LABELS = {
+    "AK": "Atmakaraka", "AmK": "Amatyakaraka", "BK": "Bhratrikaraka",
+    "MK": "Matrikaraka", "PK": "Putrakaraka", "PiK": "Pitrikaraka",
+    "GK": "Gnatikaraka", "DK": "Darakaraka",
+}
+
+
+def _domain_spec(bundle: dict):
+    """The taxonomy spec for the bundle's domain, or None.
+
+    Imported lazily and failing soft on purpose: a taxonomy lookup problem
+    must never be able to fail a reading that is otherwise fine, since every
+    check built on it is quality-severity by design.
+    """
+    domain = bundle.get("domain")
+    if not domain:
+        return None
+    try:
+        from ..context.taxonomy import get_domain
+        return get_domain(domain)
+    except Exception:
+        return None
+
 # Candidate invariant from the tense/life-stage finding
 # (docs/ask_context_engine_multi_agent_architecture_2026-08-07.md, "Update
 # 2026-08-09" requirement 4): a retrospective question ("when did X start")
@@ -98,6 +130,46 @@ def _valid_sources(bundle: dict) -> set[str]:
     return _BUNDLE_SECTION_NAMES | ref_ids | chunk_ids
 
 
+class Violation(str):
+    """A violation that also knows how bad it is.
+
+    A `str` subclass on purpose: every existing consumer treats violations as
+    strings (`"; ".join(...)`, `== []`, formatting into the repair prompt) and
+    keeps working untouched. Severity is additive.
+
+    Two severities, and the distinction is about what happens when a repair
+    attempt fails to clear it:
+
+    - "safety"  — the reading is DISCARDED. A death verdict, an invented
+                  citation, a fabricated timeline. Shipping it is worse than
+                  shipping nothing, which is the current behaviour for every
+                  violation and stays exactly as it is.
+    - "quality" — the reading SHIPS, with the shortfall recorded. "You never
+                  addressed the D10" is worth one repair attempt; it is not
+                  worth throwing away an otherwise good consultation and
+                  handing the reader an error instead. Before this split
+                  existed, adding any coverage check would have meant exactly
+                  that.
+    """
+
+    severity: str = "safety"
+
+    def __new__(cls, text: str, severity: str = "safety"):
+        obj = super().__new__(cls, text)
+        obj.severity = severity
+        return obj
+
+
+def safety_violations(violations: list[str]) -> list[str]:
+    """The subset that must never ship. A plain `str` in the list counts as
+    safety, so anything constructed outside this module fails closed."""
+    return [v for v in violations if getattr(v, "severity", "safety") == "safety"]
+
+
+def quality_violations(violations: list[str]) -> list[str]:
+    return [v for v in violations if getattr(v, "severity", "safety") == "quality"]
+
+
 def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
           question_tense: str = "unspecified") -> list[str]:
     violations: list[str] = []
@@ -157,3 +229,67 @@ def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
                 )
 
     return violations
+
+
+def verify_coverage(reading: StructuredReading, bundle: dict) -> list[Violation]:
+    """The domain's own primary evidence must be addressed, or dismissed.
+
+    A real career reading (2026-08-11) opened with the dasha chain, the 6th
+    lord, two nakshatras and an argala — and never once mentioned the D10,
+    which the taxonomy marks `tier: primary` for that domain and which the
+    bundle carried the whole time. Also absent: A10, the career arudha, and
+    the Amatyakaraka. The prose was excellent; the *selection* silently
+    dropped the most career-specific chart available. A marriage reading that
+    skipped D9 would be the same defect.
+
+    Nothing enforced it, because the taxonomy declares what is primary and
+    only the prompt asked for it — and a prompt rule is advisory. Rule 11's
+    confirmation question was in the prompt too, and that reading skipped it.
+
+    Naming a factor and dismissing it satisfies this: "the D10 adds nothing
+    beyond what the D1 already shows" is a legitimate reading decision and a
+    much better answer than silence. Only saying nothing at all fails.
+
+    Quality severity throughout: a missed varga is worth one repair attempt,
+    never worth discarding the consultation and handing the reader an error.
+    """
+    spec = _domain_spec(bundle)
+    if spec is None:
+        return []
+
+    text_to_check = [
+        reading.acknowledgment, reading.interpretation, reading.summary_and_assurance,
+    ] + [item.reading for item in reading.technical_basis]
+
+    haystack = " ".join(
+        text_to_check
+        + [item.factor for item in reading.technical_basis]
+        + [item.source for item in reading.technical_basis]
+    ).casefold()
+
+    out: list[Violation] = []
+
+    for varga in getattr(spec, "vargas_primary", ()) or ():
+        # "D10" and the classical name both count — a reading is free to say
+        # "dashamsha" and never write the code.
+        names = {varga.casefold(), _VARGA_CLASSICAL_NAMES.get(varga, "").casefold()}
+        if not any(n and n in haystack for n in names):
+            out.append(Violation(
+                f"the domain's primary divisional chart {varga} is never addressed — "
+                f"cite it or say explicitly why it adds nothing here",
+                "quality",
+            ))
+
+    for code in getattr(spec, "karakas_jaimini", ()) or ():
+        row = (bundle.get("jaimini_karakas") or {}).get(code)
+        if not row:
+            continue
+        label = _KARAKA_LABELS.get(code, code)
+        if not any(t in haystack for t in (code.casefold(), label.casefold())):
+            out.append(Violation(
+                f"the domain's Jaimini karaka {code} ({label}, {row.get('planet')}) "
+                "is never addressed",
+                "quality",
+            ))
+
+    return out

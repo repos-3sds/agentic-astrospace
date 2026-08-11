@@ -26,7 +26,7 @@ from .intent import QuestionTense, detect_intent, detect_tense
 from .registry import AGENT_REGISTRY, AgentConfig
 from .safety import REFER_OUT_ANSWERS, refer_out_kind
 from .schema import AskIntent, StructuredReading
-from .verifier import verify
+from .verifier import quality_violations, safety_violations, verify, verify_coverage
 from ..context import KeywordRouter, assemble_domain
 from ..context.taxonomy import get_domain
 from ..core.vedic.chart import VedicChart
@@ -69,6 +69,10 @@ class AgentRunResult:
     reading: StructuredReading | None
     violations: list[str]
     generation_failed: bool = False
+    # Quality violations that survived the repair attempt. The reading still
+    # ships; this records what it fell short on so the gap is visible in logs
+    # and measurable, rather than silently absorbed.
+    quality_shortfall: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -244,7 +248,8 @@ class AskOrchestrator:
         except Exception:
             return AgentRunResult(reading=None, violations=[], generation_failed=True)
 
-        violations = verify(reading, prepared.bundle, prepared.domain, prepared.tense)
+        violations = (verify(reading, prepared.bundle, prepared.domain, prepared.tense)
+                      + verify_coverage(reading, prepared.bundle))
         if not violations:
             return AgentRunResult(reading=reading, violations=[])
 
@@ -261,10 +266,23 @@ class AskOrchestrator:
         except Exception:
             return AgentRunResult(reading=None, violations=violations, generation_failed=True)
 
-        violations = verify(reading, prepared.bundle, prepared.domain, prepared.tense)
+        violations = (verify(reading, prepared.bundle, prepared.domain, prepared.tense)
+                      + verify_coverage(reading, prepared.bundle))
         if not violations:
             return AgentRunResult(reading=reading, violations=[])
-        return AgentRunResult(reading=None, violations=violations)
+
+        # The repair did not clear everything. What happens next depends on
+        # WHICH violations survived, and the split is the whole point of
+        # having severities: a death verdict or an invented citation must
+        # never reach a reader, so those still discard the reading. A
+        # coverage shortfall ("the D10 is never addressed") is a worse
+        # reading, not a dangerous one — discarding it would hand the reader
+        # an error instead of a good-but-incomplete consultation, which is a
+        # strictly worse outcome for them.
+        if safety_violations(violations):
+            return AgentRunResult(reading=None, violations=violations)
+        return AgentRunResult(reading=reading, violations=[],
+                              quality_shortfall=quality_violations(violations))
 
     def run(
         self, prepared: PreparedRun, messages: list,
@@ -299,5 +317,13 @@ class AskOrchestrator:
             "context_used": prepared.context_used,
             "evidence_refs": [item.source for item in result.reading.technical_basis],
             "reading": result.reading.model_dump(),
+            # Present only when a quality check survived the repair attempt.
+            # The reading shipped anyway (see AgentRunResult.quality_shortfall)
+            # — this is what it fell short on, exposed rather than swallowed so
+            # the miss rate is measurable instead of invisible. Not an error:
+            # clients should treat it as telemetry, not something to show a
+            # reader.
+            **({"quality_shortfall": list(result.quality_shortfall)}
+               if result.quality_shortfall else {}),
             "thread_id": thread_id,
         }
