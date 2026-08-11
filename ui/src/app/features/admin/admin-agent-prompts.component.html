@@ -1,0 +1,78 @@
+<section class="prompt-intro">
+  <div>
+    <span class="eyebrow">Ask backend · live process</span>
+    <h2>The prompts behind every specialist</h2>
+    <p>
+      One shared grounding prompt is composed with a deterministic Context Engine bundle and one
+      domain addendum. This view reads the definitions running in the backend; it is not a detached
+      documentation copy.
+    </p>
+  </div>
+  <div class="prompt-coverage" aria-label="Agent coverage">
+    <span><strong>{{ registry().coverage.configured }}</strong><small>configured</small></span>
+    <span><strong>{{ registry().coverage.taxonomy_total }}</strong><small>taxonomy domains</small></span>
+    <span><strong>{{ registry().coverage.unconfigured.length }}</strong><small>not ready</small></span>
+  </div>
+</section>
+
+<section class="prompt-composition panel">
+  <span class="composition-icon"><lucide-icon name="boxes" [size]="19" /></span>
+  <div>
+    <span class="eyebrow">How the runtime composes a specialist</span>
+    <h2>{{ registry().composition.owner }}</h2>
+    <p>{{ registry().composition.description }}</p>
+    <div class="runtime-inputs" aria-label="Runtime inputs">
+      @for (item of registry().composition.runtime_inputs; track item) { <code>{{ item }}</code> }
+    </div>
+  </div>
+  <span class="read-only-badge"><lucide-icon name="shield-check" [size]="14" /> Read only</span>
+</section>
+
+<section class="prompt-workspace">
+  <aside class="prompt-index panel" aria-label="Prompt definitions">
+    <header><span class="eyebrow">Definitions</span><strong>{{ registry().domains.length + 1 }} prompt blocks</strong></header>
+    <button type="button" [class.active]="selectedKey() === 'base'" (click)="selectPrompt('base')">
+      <span class="prompt-index-icon"><lucide-icon name="shield-check" [size]="16" /></span>
+      <span><strong>Base grounding prompt</strong><small>Shared · all specialists</small></span>
+      <lucide-icon name="chevron-right" [size]="15" />
+    </button>
+    @for (domain of registry().domains; track domain.id) {
+      <button type="button" [class.active]="selectedKey() === domain.id" (click)="selectPrompt(domain.id)">
+        <span class="prompt-index-icon domain"><lucide-icon name="sparkles" [size]="15" /></span>
+        <span><strong>{{ domain.name }}</strong><small>Domain addendum</small></span>
+        <lucide-icon name="chevron-right" [size]="15" />
+      </button>
+    }
+    @if (registry().coverage.unconfigured.length) {
+      <footer>
+        <span class="eyebrow">Not configured</span>
+        <p>
+          @for (domain of registry().coverage.unconfigured; track domain.id; let last = $last) {
+            {{ domain.name }}{{ last ? '' : ' · ' }}
+          }
+        </p>
+        <small>These routes return <code>domain_not_ready</code>.</small>
+      </footer>
+    }
+  </aside>
+
+  @if (selectedPrompt(); as prompt) {
+    <article class="prompt-viewer panel">
+      <header>
+        <div>
+          <span class="eyebrow">{{ prompt.kind === 'shared' ? 'Shared prompt' : 'Domain addendum' }}</span>
+          <h2>{{ prompt.name }}</h2>
+          <p>{{ prompt.description }}</p>
+        </div>
+        <button type="button" class="copy-button" (click)="copyPrompt()">
+          <lucide-icon name="clipboard-check" [size]="15" /> Copy prompt
+        </button>
+      </header>
+      <div class="prompt-source">
+        <span><lucide-icon name="notebook-pen" [size]="14" /> {{ prompt.sourceFile }}</span>
+        <code>{{ prompt.symbol }}</code>
+      </div>
+      <pre><code>{{ prompt.body }}</code></pre>
+    </article>
+  }
+</section>
