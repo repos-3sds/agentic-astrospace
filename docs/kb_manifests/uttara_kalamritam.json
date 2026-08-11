@@ -1,0 +1,86 @@
+{
+  "book": "Uttara Kalamritam",
+  "author": "Kalidasa",
+  "source_file": "Astro Space Knowledge Base/EPUBS/Uttara kalamritam..epub",
+  "total_pages": 258,
+  "structure_note": "Organised as KANDAS, each containing numbered Chapters, each containing numbered shlokas. The Kanda level was missed entirely by text-layer parsing and only became visible on the rendered page.",
+  "extraction_method": "vision — TOC pages read as rendered images (PDF pages 4-9 at 150dpi)",
+  "why_not_text_layer": "This book's PROSE text layer is clean (93% letters, no pages flagged), but the TOC is a three-column table and OCR flattened the columns: page 4 ends '...Directional strength 17 18 18 19 22 23 24 25' — the topic column followed by the page-number column dumped separately. A naive parse of that text silently lost Chapter III entirely and returned zero entries for IV and V. Prose OCR and table OCR are different problems in the same file.",
+  "toc_pages_read": [5, 6],
+  "toc_pages_pending": [7, 8, 9],
+  "kandas": [
+    {
+      "kanda": "I",
+      "chapters": [
+        {
+          "chapter": "I", "first_page": 17, "last_page": 26,
+          "entries": [
+            {"shlokas": "1", "topic": "Obeissance to Ganapati", "page": 17},
+            {"shlokas": "2", "topic": "Obeissance to Para Shakti", "page": 18},
+            {"shlokas": "3", "topic": "Previous part of the text and the purpose of the present part", "page": 18},
+            {"shlokas": "4", "topic": "Time of birth, planets and bhavas", "page": 19},
+            {"shlokas": "5-6", "topic": "Rectification of the time of birth", "page": 22},
+            {"shlokas": "7", "topic": "Position of Mandi", "page": 23},
+            {"shlokas": "8", "topic": "Position of Gulika", "page": 24},
+            {"shlokas": "9", "topic": "Delivery room", "page": 25},
+            {"shlokas": "10", "topic": "Birth when the father is away. Nature of the delivery", "page": 25},
+            {"shlokas": "11", "topic": "Details about the delivery room", "page": 26}
+          ]
+        },
+        {
+          "chapter": "II", "first_page": 27, "last_page": 45,
+          "entries": [
+            {"shlokas": "1", "topic": "Right side and left side. Functions of the Sun and the Moon", "page": 27},
+            {"shlokas": "2-3", "topic": "Relations among the planets", "page": 27},
+            {"shlokas": "3-4", "topic": "Sapta Vargas", "page": 28},
+            {"shlokas": "4-5", "topic": "Exaltation signs and strength of the planets", "page": 29},
+            {"shlokas": "6", "topic": "Exaltation, debilitation and retrogression", "page": 29},
+            {"shlokas": "7-8", "topic": "Hora, Drekkana, Saptamsa", "page": 30},
+            {"shlokas": "8-9", "topic": "Navamsa, Dvadasamsa, Trimsamsa", "page": 33},
+            {"shlokas": "9-10", "topic": "Strength of the Saptavargas", "page": 34},
+            {"shlokas": "10-11", "topic": "Strength of Uchcha and Kendra", "page": 36},
+            {"shlokas": "11-12", "topic": "Strength of odd and even signs and Drekkana", "page": 36},
+            {"shlokas": "12-13", "topic": "Directional strength", "page": 36},
+            {"shlokas": "13-15", "topic": "Pakshabala, Diva-ratri bala and Natonnata bala", "page": 37},
+            {"shlokas": "16-17", "topic": "Strength of the lords of the year, month and day of birth", "page": 39},
+            {"shlokas": "17-18", "topic": "Ayana and Cheshta strength. Planetary War", "page": 40},
+            {"shlokas": "18-19", "topic": "Aspects", "page": 42},
+            {"shlokas": "19-20", "topic": "Strength of aspects", "page": 43},
+            {"shlokas": "20-21", "topic": "Natural Strength, Shadbala", "page": 44},
+            {"shlokas": "21-23", "topic": "Rectified Shadbala, Strength and Weakness of Planets, Nature of their major periods", "page": 45}
+          ]
+        },
+        {
+          "chapter": "III", "title_annotation": "Longevity", "first_page": 47, "last_page": 58,
+          "entries": [
+            {"shlokas": "1", "topic": "Amsa Ayurdaya", "page": 47},
+            {"shlokas": "2", "topic": "Various kinds of reductions", "page": 49},
+            {"shlokas": "3", "topic": "Longevity given by lagna in Amsa Ayurdaya", "page": 51},
+            {"shlokas": "4", "topic": "Knowledge of the good and bad in past, present and future lives", "page": 52},
+            {"shlokas": "5", "topic": "How to compute longevity in these three births", "page": 52},
+            {"shlokas": "6", "topic": "Long, medium, short life. Effects of malefics in 1, 4, 7, 10, 5, 9, 8 and 12", "page": 53},
+            {"shlokas": "7", "topic": "Short life and no children", "page": 56},
+            {"shlokas": "8", "topic": "Very short life", "page": 58}
+          ]
+        },
+        {
+          "chapter": "IV", "title_annotation": "Effects of Planets and Houses", "first_page": 64, "last_page": null,
+          "entries": [
+            {"shlokas": "1", "topic": "A great person of fame", "page": 64},
+            {"shlokas": "2", "topic": "Yogas destroying the above", "page": 66},
+            {"shlokas": "3", "topic": "Special Raja yogas", "page": 68},
+            {"shlokas": "4", "topic": "Raja yogas from the lords of 9 and 10", "page": 71},
+            {"shlokas": "5", "topic": "Yogas continued", "page": 73},
+            {"shlokas": "6", "topic": "When is a Bhava destroyed?", "page": 75},
+            {"shlokas": "7", "topic": "Lord of the lagna in the three Drekkanas", "page": 75},
+            {"shlokas": "8", "topic": "Yogas caused by Chandra, Kuja and Shani", "page": 76},
+            {"shlokas": "9", "topic": "Guru, Shukra and Rahu", "page": 78},
+            {"shlokas": "10", "topic": "When is a Bhava worthless?", "page": 80},
+            {"shlokas": "11", "topic": "Lord of the Bhava promoting it", "page": 81},
+            {"shlokas": "12", "topic": "When is a Bhava destroyed", "page": 81}
+          ]
+        }
+      ]
+    }
+  ]
+}

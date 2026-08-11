@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""Completeness gate for a KB extraction manifest.
+
+A manifest is the claim "this is everything the book contains". That claim has
+to be checkable, or it is just a hope — and the first attempt at this book's
+manifest silently lost Chapter III and returned zero entries for IV and V, with
+no error at all. These checks exist so that failure mode is loud.
+
+Usage:  python scripts/check_kb_manifest.py docs/kb_manifests/<book>.json
+Exit 0 = manifest may be used. Exit 1 = rejected, do not extract against it.
+"""
+import json, re, sys
+
+ROMAN = {"I":1,"II":2,"III":3,"IV":4,"V":5,"VI":6,"VII":7,"VIII":8,"IX":9,"X":10,
+         "XI":11,"XII":12,"XIII":13,"XIV":14,"XV":15,"XVI":16,"XVII":17,"XVIII":18,
+         "XIX":19,"XX":20}
+
+
+def check(path: str) -> list[str]:
+    m = json.load(open(path, encoding="utf-8"))
+    problems: list[str] = []
+
+    if m.get("toc_pages_pending"):
+        problems.append(
+            f"TOC pages {m['toc_pages_pending']} are unread — the manifest cannot "
+            f"claim completeness while part of the contents has never been looked at"
+        )
+
+    chapters = [(k["kanda"], c) for k in m["kandas"] for c in k["chapters"]]
+    if not chapters:
+        problems.append("no chapters at all")
+        return problems
+
+    # Chapter numbers contiguous within each kanda: a gap is a lost chapter.
+    for kanda in m["kandas"]:
+        nums = [ROMAN.get(c["chapter"], -1) for c in kanda["chapters"]]
+        if -1 in nums:
+            problems.append(f"kanda {kanda['kanda']}: unparseable chapter numeral")
+        expected = list(range(nums[0], nums[0] + len(nums)))
+        if nums != expected:
+            missing = sorted(set(expected) - set(nums))
+            problems.append(
+                f"kanda {kanda['kanda']}: chapter numbers {nums} are not contiguous "
+                f"(missing {missing}) — a gap means a chapter was dropped"
+            )
+
+    for kanda_id, c in chapters:
+        where = f"kanda {kanda_id} ch {c['chapter']}"
+        # Zero entries is the exact silent failure this gate was written for.
+        if not c.get("entries"):
+            problems.append(f"{where}: zero entries — the parse dropped this chapter's contents")
+            continue
+        # Page numbers must not run backwards within a chapter.
+        pages = [e["page"] for e in c["entries"] if isinstance(e.get("page"), int)]
+        if pages != sorted(pages):
+            problems.append(f"{where}: entry pages are not ascending — column misalignment")
+        if pages and c.get("first_page") and pages[0] != c["first_page"]:
+            problems.append(f"{where}: first entry is p{pages[0]} but chapter starts at p{c['first_page']}")
+        # Shloka ranges must be parseable and non-decreasing.
+        starts = []
+        for e in c["entries"]:
+            mt = re.match(r"^(\d+)", str(e.get("shlokas", "")))
+            if not mt:
+                problems.append(f"{where}: unparseable shloka ref {e.get('shlokas')!r}")
+            else:
+                starts.append(int(mt.group(1)))
+        if starts != sorted(starts):
+            problems.append(f"{where}: shloka numbers run backwards — entries out of order")
+
+    # Chapters must tile the book without overlap.
+    for (k1, a), (k2, b) in zip(chapters, chapters[1:]):
+        if a.get("last_page") and b.get("first_page") and a["last_page"] > b["first_page"]:
+            problems.append(
+                f"ch {a['chapter']} ends p{a['last_page']} after ch {b['chapter']} "
+                f"starts p{b['first_page']} — overlapping ranges"
+            )
+    return problems
+
+
+if __name__ == "__main__":
+    path = sys.argv[1]
+    found = check(path)
+    if not found:
+        print(f"PASS  {path}")
+        sys.exit(0)
+    print(f"REJECTED  {path}")
+    for p in found:
+        print(f"  - {p}")
+    sys.exit(1)
