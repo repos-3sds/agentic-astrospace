@@ -1675,3 +1675,156 @@ violation fired") is sized to what's actually needed right now; the fuller
 metrics buildout is worth revisiting once Phase 6 has shipped enough
 domains that "which agent do we add next" is actually a traffic-driven
 question rather than a guess either way.
+
+## Update 2026-08-10: the consultation validation loop (wealth first)
+
+What shipped on `claude/wealth-validation-loop-w0g7os`, and — more usefully —
+the two decisions inside it that are easy to get wrong on a second pass.
+
+### The problem this solves
+
+Every reading this app produces is unmeasured. Nobody knows whether they are
+any good, because nothing has ever been committed to in advance and checked
+afterwards. Real astrologers open by validating — asking about the past — and
+only then answer. Copying that naively produces a **cold-reading machine**:
+ask "have you had money trouble?", hear yes, reply "your chart shows that".
+Nothing was tested, and the reader was handed their own disclosure back as
+insight. That is not a hypothetical failure mode; it is the actual
+professional technique, and it is where a straightforward implementation
+lands by default.
+
+### Decision 1 — order, enforced structurally
+
+The agent commits to a falsifiable claim, with a confidence, **before** the
+question reaches the reader. Everything else follows from that:
+
+- `ValidationProbe` (`db/models.py`, migration `20260810120000`) writes
+  `claim_text`, `claim_candidate`, `confidence` and `committed_at` NOT NULL at
+  insert; `answer_key`/`answered_at` can only be filled in later, and the DB
+  has a CHECK tying answered-ness to a scored status.
+- `crud_mobile.record_validation_answer()` takes no claim parameters at all —
+  there is no code path that can revise a prediction after seeing its answer.
+  That is what makes the stored hit rate an honest number rather than a
+  self-graded one.
+- The `validation_needed` envelope carries the question and the options and
+  **not** the committed claim. Showing a reader what the chart expects tells
+  them what to say. The claim is revealed by the answer endpoint's response,
+  after they have committed — which is also the moment it becomes worth
+  something to them.
+- The persisted thread turn stores the question, never the claim: thread
+  history is replayed to the model on later turns, and a claim visible there
+  would let a future reading launder its own prediction as evidence.
+
+### Decision 2 — the engine picks the slots, the model writes the words
+
+`context/validation.py` decides *where* this chart is genuinely ambiguous;
+`agents/validation_agent.py` only writes the question and the option copy. If
+the model picked slots too it would ask about things the chart cannot speak
+to, and every answer would be unfalsifiable.
+
+"Genuinely ambiguous" is defined concretely, not by vibe: a planet gives the
+results of the houses it **rules** and of the house it **occupies**, so when
+those point at different areas of a reader's financial life, both readings are
+classically defensible and only the reader knows which happened. Slots that
+resolve to one reading are not emitted at all.
+
+Fatigue is treated as a real risk, not a footnote: one question per turn, at
+most two slots ever considered, asked once per chart (a unique index, not a
+caller's good intentions), always skippable, and every slot carries a
+`neither` option — without it the reader is forced into one of the chart's own
+guesses and the hit rate is inflated by construction.
+
+### Also landed
+
+- **`timeline`** (`context/timeline.py`, new bundle section) — the four
+  overlapping dated windows previously spread across `retrospect`,
+  `dasha_relevance` and `gochara`, flattened into one sorted list with an age
+  at every boundary, a past/current/upcoming `status`, a `domain_relevant`
+  flag, and `next_transition`. Base-prompt rule 12.
+- **`life_context`** (new bundle section) — answered probes plus a running
+  `calibration` hit rate, fed back into every reading. Base-prompt rule 13
+  carries the anti-cold-reading rule in as many words: never hand a reported
+  fact back as a discovery.
+- **The third-party death gap in `safety.py` is closed** — see the checklist's
+  §C. It was closed *first*, deliberately: once bundles carry reader-reported
+  life events, the model has a reason to write about a family member's
+  lifespan that it did not have before.
+
+### What is deliberately not done
+
+Wealth only, and the asking half is behind `AskRequest.validate_first`
+(default `False`) until a client can render the envelope. Birth-time
+rectification — the real prize, and the reason the data is worth storing — is
+a later pass. All three are recorded with unblock conditions in the
+checklist's Deferred backlog rather than here.
+
+### Failure posture
+
+Every step of the loop fails open. No slots, a model call that raises, a draft
+that fails `probe_violations`, a probe store that errors — all fall through to
+the ordinary reading path. The probe is a bonus; the answer is the product.
+
+### Update 2026-08-11: PR #20 review round
+
+Independent adversarial review of the loop. **The commit-before-ask invariant
+held under direct attack** — a planted canary claim reached neither the SSE
+envelope, nor the persisted `AskMessage.evidence`, nor `life_context_section()`,
+and `_history_from_thread` replays only `{role, content}`, so a claim cannot
+reach a later model turn. Nothing in the design changed. Everything below was
+surrounding code.
+
+Three findings are worth keeping, because each is a *class* of mistake rather
+than a one-off:
+
+**A combined guard clause silently merged two different concerns.**
+`if key in seen or slot_id in exclude: continue` skipped `seen.add()` for
+excluded slots, so answering a question removed the dedup barrier it was
+providing and its suppressed twin surfaced next turn — the reader asked the
+same thing twice in different words, which is exactly what "asked once"
+exists to prevent. Dedup is a property of the slot set; exclusion is a
+property of one reader's history. Resolve the first, then apply the second.
+
+**Fail-open is a claim about the whole request, not about one try/except.**
+`check_validation` caught its exceptions and returned None as designed, but a
+rejected probe insert left the request's SQLAlchemy session in a failed
+transaction — and the next query is the one assembling the reading. The reader
+got `fatal_error` instead of their answer, from a feature documented as a
+bonus. Session hygiene now lives in the DB layer, which is the only layer that
+knows a transaction was in flight.
+
+**A safety pattern's false positives are as expensive as its misses.** The
+lifespan patterns matched `live (?:until|to|for|past|beyond)` and stopped
+there, which swallows "live to *see*", "live to *enjoy*", and "live beyond
+one's *means*". A match REPLACES the whole answer with the longevity
+refer-out, so each false positive cost a reader their reading and told them
+the app would not discuss their lifespan — about a question they never asked.
+The rewritten patterns key on the *object* ("live to 80", "live to a ripe old
+age"), which is what actually makes the verb a lifespan claim.
+
+**On why the tests did not catch it.** The negative test for those patterns
+contained exactly one "live" sentence — "will live comfortably", the adverb
+case the anchor was designed for — so the failing construction was never
+tested. The same blind spot was encoded in the test as in the code, which is
+how a green suite coexisted with three live false positives. The fix was to
+write the adversarial set from the *app's* vocabulary rather than from
+paraphrases of the positive cases: what does this product legitimately say
+that happens to contain "live", "survive", or a duration? Periods ending,
+money advice, foreign residence, businesses and partnerships. That set
+immediately found four more problems than the review had listed, including a
+**pre-existing** false positive in shipped `main` — `you have ... years left`
+was an absolute pattern, so "you have 2 years left in this Saturn dasha" read
+as a death verdict. Every fix in this round was also verified by reverting it
+and confirming the new test goes red.
+
+**On the intermittent test.** `test_an_already_asked_slot_is_not_asked_again`
+failed for two reviewers and passed three times for the author. Neither run
+was wrong. It was the one test in its file that did not stub the model call:
+without provider credentials `run_probe` raised, `check_validation`'s
+fail-open swallowed it, and the assertion passed for a reason unrelated to
+what it claimed to check; with credentials it ran for real and the assertion
+broke. The three test counts reconcile the same way — 1617 was the true total,
+1616 was a stale figure transcribed into the ledger from a run before the last
+test was added, and the reviewer's "1616 passed + 1 failed" is that same 1617
+with the flaky one red. The file now carries an autouse fixture that fails any
+test reaching the provider layer, so the failure class is un-writable here
+rather than merely fixed.

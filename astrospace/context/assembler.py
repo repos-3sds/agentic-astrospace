@@ -48,6 +48,9 @@ from ..core.vedic.argala import argala_of_house
 from ..core.vedic.shashtyamsha import d60_deity
 from .kb import get_knowledge_base
 from .taxonomy import DomainSpec, get_domain, taxonomy_version
+from .timeline import as_dt as _as_dt
+from .timeline import build_timeline
+from .validation import life_context_section
 
 _KARAKA_NAMES = {
     "AK": "Atmakaraka", "AmK": "Amatyakaraka", "BK": "Bhratrikaraka",
@@ -83,17 +86,6 @@ def _profile_facts(chart, as_of: datetime) -> dict:
         "birth_year": birth_utc.year,
         "as_of": as_of_utc.isoformat(),
     }
-
-
-def _as_dt(value) -> datetime | None:
-    """Dasha boundaries arrive as datetimes or ISO strings depending on the
-    caller; normalise so age arithmetic below never depends on which."""
-    if isinstance(value, datetime):
-        return value
-    try:
-        return datetime.fromisoformat(str(value))
-    except (TypeError, ValueError):
-        return None
 
 
 def _retrospect(chart, as_of: datetime) -> dict:
@@ -507,8 +499,15 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
                     transit_positions: dict | None = None,
                     as_of: datetime | None = None,
                     kb_limit: int = 12,
-                    question: str | None = None) -> dict:
-    """Domain-scoped context for one domain. `chart` is a VedicChart."""
+                    question: str | None = None,
+                    validation_probes: list[dict] | None = None) -> dict:
+    """Domain-scoped context for one domain. `chart` is a VedicChart.
+
+    `validation_probes` are this reader's answered validation turns (see
+    context/validation.py). They are the one input here that is NOT derived
+    from the chart — everything else in the bundle is computed, this is
+    reported — which is why they arrive as an explicit argument rather than
+    being fetched: the assembler has no database and should not grow one."""
     spec = get_domain(domain_id)
     as_of = as_of or datetime.now(timezone.utc)
     positions = chart.positions
@@ -577,6 +576,12 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
         row["planet"] for row in jaimini_karakas.values()
     }
 
+    # Hoisted out of the return dict below because `timeline` needs the same
+    # object — computing it twice would double this bundle's most expensive
+    # section (see _gochara_windows_for_domain's cost note).
+    gochara = (_gochara_for_domain(spec, chart, transit_positions, as_of)
+               if include_gochara else None)
+
     kb = get_knowledge_base()
     references = [
         ref.to_dict()
@@ -622,6 +627,16 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
         # The reader's dated past — enables anchored, checkable
         # past-validation instead of cold-read generalities. See _retrospect.
         "retrospect": _retrospect(chart, as_of),
+        # The same boundaries `retrospect` and `dasha_relevance` carry, plus
+        # this domain's active transit windows, flattened into one sorted,
+        # scannable list so "where am I, what turns next" is read off the
+        # bundle rather than re-derived in prose. See timeline.py.
+        "timeline": build_timeline(chart, gochara, as_of,
+                                   domain_lords=domain_planets | domain_house_lords),
+        # What the reader themselves reported, from answered validation turns
+        # — the only section here the chart did not produce. See
+        # context/validation.py's life_context_section.
+        "life_context": life_context_section(validation_probes or []),
         "houses": houses,
         "karakas": karakas,
         "jaimini_karakas": jaimini_karakas,
@@ -632,8 +647,7 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
         "doshas": _filter_doshas(doshas_payload, spec),
         "dasha_relevance": _dasha_relevance(chart.dashas(), spec,
                                             domain_planets, domain_house_lords),
-        "gochara": (_gochara_for_domain(spec, chart, transit_positions, as_of)
-                    if include_gochara else None),
+        "gochara": gochara,
         "references": references,
         "source_passages": source_passages,
         "convention_flags": list(spec.convention_flags),

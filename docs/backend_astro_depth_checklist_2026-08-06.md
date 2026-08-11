@@ -478,29 +478,115 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
 
 ### C. Ask/agent layer — one live safety gap, highest priority here
 
-- [ ] **`safety.py` third-party death/health output net** — **this is a
-  live gap in shipped code, not a future enhancement.**
-  `_PROHIBITED_OUTPUT`'s death cluster is entirely anchored to "you" (the
-  native), so third-party phrasing about a spouse, child or parent passes
-  straight through. Re-verified 2026-08-10:
+- [x] **`safety.py` third-party death output net** — **CLOSED 2026-08-10**
+  (validation-loop branch). `_PROHIBITED_OUTPUT`'s death cluster was
+  anchored entirely to "you", so third-party phrasing passed straight
+  through. Re-measured on shipped code before fixing: 10 of 12 probes
+  missed, against `'you will die young'` and `'your lifespan is short'`
+  being caught.
 
-  ```
-  CAUGHT   | 'you will die young'              (first-party)
-  CAUGHT   | 'your lifespan is short'          (first-party)
-  MISSED ! | 'your spouse will die young'      (third-party)
-  MISSED ! | 'your husband will die early'     (third-party)
-  MISSED ! | 'your child will not survive'     (third-party)
-  MISSED ! | 'your mother will die soon'       (third-party)
-  ```
+  Fixed by extending the existing detect-and-regenerate path — no new
+  mechanism — with a shared `_THIRD_PARTY_SUBJECTS`/`_THIRD_PARTY_REF`
+  vocabulary covering relatives and bare pronouns, applied to the death
+  verbs, the lifespan nouns, the survival negations, the "will live
+  to/until" duration form, and the windowed years-remaining check (which
+  still clears "your father has 3 years remaining in his Saturn dasha",
+  the third-party form of a sentence that was always legitimate). 18/18
+  prohibited phrasings now caught, 0 false positives on the ordinary set;
+  both directions pinned in
+  `tests/test_refer_out_boundary.py::test_third_party_longevity_verdicts_are_caught`
+  and `::test_ordinary_third_party_sentences_pass_the_output_net`.
 
-  Marriage is a shipped, live domain whose whole subject is a third party,
-  which is what makes this reachable rather than theoretical. The fix is
-  small and needs no new mechanism — extend the existing detect-and-reject-
-  then-regenerate path to third-party subjects. *Hook:*
-  `agents/safety.py::_PROHIBITED_OUTPUT` / `prohibited_verdict()`; the
-  repair loop that consumes it already exists in `orchestrator.py`.
-  *Status:* proposed several times across this session, never explicitly
-  picked up — recorded here so it stops depending on someone remembering.
+  Two deliberate scope limits, so the next reviewer doesn't re-litigate
+  them: the subject list is **people only** (adding "marriage"/
+  "partnership" would flag "the longevity of your marriage", a sentence
+  this app may legitimately write), and bare `he`/`she`/`they` are covered
+  with explicit death **verbs** only, never the noun cluster, for the same
+  reason ("their longevity" is ambiguous, "she will not survive" is not).
+  Third-party HEALTH phrasing (e.g. "your father has cancer") was not part
+  of this fix and remains open below.
+
+- [ ] **`safety.py` third-party health output net** — the health cluster in
+  `_PROHIBITED_OUTPUT` is still anchored to "you" the same way the death
+  cluster was ("you have cancer" is caught; "your father has cancer" is
+  not). Split out from the item above rather than folded into it because
+  the health vocabulary needs its own false-positive pass — a chart-based
+  reading legitimately discusses a family member's vitality in a way it
+  never discusses their lifespan, so the death cluster's "people-only
+  subject plus death noun is always a violation" shortcut does not
+  transfer. *Unblocks on:* nothing external; it needs a probe set in both
+  directions, same shape as the death one. *Hook:* the same
+  `_THIRD_PARTY_REF` constant is already in place and shared.
+
+- [ ] **Validation loop anchor bounds are judgement calls, not sourced
+  numbers** — a probe window never starts before age 14, never exceeds 10
+  years, and is dropped below 6 months. All three are defensible and none
+  is derived from anything: they encode "a stretch the reader can
+  actually characterise". Worth revisiting once real answers exist —
+  a high `skipped` rate on long windows would be direct evidence the cap
+  is too generous. *Hook:* `_MIN_RECALL_AGE`, `_MAX_ANCHOR_YEARS`,
+  `_MIN_ANCHOR_YEARS` in `context/validation.py`, all applied in the one
+  place every generator builds an anchor (`_anchor_from`) after the
+  2026-08-11 review found the age floor had reached only one generator of
+  three.
+
+- [ ] **Validation loop is wealth-only, and shipped behind a flag** — the
+  consultation validation loop (commit-before-ask probes, `timeline`,
+  `life_context`) landed 2026-08-10 for the **wealth** domain only.
+  `context/validation.py::validation_slots()` returns `[]` for every other
+  domain by design: the handoff's instruction was to make hit rate visible
+  on one real domain before generalising, and the slot generators are
+  wealth-shaped (`_WEALTH_HOUSE_SENSE` is a money-sense projection of the
+  house significations). *Unblocks on:* enough answered probes on wealth to
+  see whether the committed claims are any good — that number does not
+  exist yet for any reading this app produces, which is the whole point of
+  building it. *Hook:* the domain check at the top of `validation_slots()`;
+  a second domain needs its own house-sense table and its own generators,
+  not a widened wealth one.
+
+- [ ] **The validation turn defaults OFF** (`AskRequest.validate_first`,
+  default `False`). Not a scoping compromise in the engine — the backend
+  loop is complete and tested end to end — but a `validation_needed`
+  envelope that no client can render is a wealth question that silently
+  returns nothing to the reader. Answered probes already flow into every
+  reading as `life_context` regardless of the flag, so nothing is waiting
+  on the UI except the asking itself. *Unblocks on:* the mobile Ask
+  renderer handling `validation_needed` (Codex's area — options as chips,
+  a skip affordance, then re-send the original question). *Hook:* flip the
+  default in `api/ask_routes.py::AskRequest.validate_first`; no other code
+  changes.
+
+- [ ] **Birth-time rectification** — the reason the probe data is worth
+  storing at all, and explicitly deferred to a later pass by the handoff
+  that scoped this one. Known events plus dasha math can refine a birth
+  time; a *persistent* miss on a house-sensitive slot is the signal. The
+  store already carries what this needs (committed claim, confidence,
+  answer, and `slot_kind`, with `yoga_tension` slots flagged in their own
+  `why_it_changes_the_reading` as house-sensitive and therefore
+  birth-time-sensitive). *Unblocks on:* a body of answered probes per chart
+  — one miss is noise. *Hook:* `validation_probes` rows keyed by
+  `kundli_id`; `Kundli.birth_time_accuracy` already distinguishes
+  exact/approximate/unknown and is the field a rectification pass would
+  act on.
+
+- [ ] **`safety.py`: the lifespan patterns are object-anchored, and that
+  bound is lexical** — the 2026-08-11 review found `live (?:until|to|for|
+  past|beyond)` swallowing "live to see", "live to enjoy" and "live beyond
+  one's means", each of which replaced a whole reading with the longevity
+  refer-out. Fixed by requiring a lifespan OBJECT (an age, a year, "a ripe
+  old age") rather than trusting the verb, and by making polarity decide the
+  one genuinely ambiguous pair ("will not live to see X" is a death verdict,
+  "will live to see X" is not). What remains open is the general shape:
+  distinguishing "live" the lifespan verb from "live" the reside/conduct verb
+  is a semantic judgement a regex approximates. The current approximation is
+  measured — 33/33 prohibited phrasings caught, 0 false positives over 36
+  app-realistic negatives plus 552 sentences of real shipped prompt/KB prose —
+  but a construction outside both sets is an accepted residual limitation of a
+  lexical approach, in the same category as the documented immigration ones.
+  *Hook:* `_LIFESPAN_OBJECT` / `_LIFE_SUBJECT` in `agents/safety.py`; the probe
+  sets are `tests/test_refer_out_boundary.py`'s
+  `test_lifespan_verdicts_are_caught_in_both_persons` and
+  `test_ordinary_third_party_sentences_pass_the_output_net`.
 
 ### D. Docs pending a decision
 

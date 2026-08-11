@@ -1,12 +1,37 @@
 # Handoff — consultation validation loop (2026-08-10)
 
-**Status:** point-in-time handoff brief, disposable. Written to carry context
-into a fresh session. Delete once the work it describes has landed and its
-durable findings are folded into
-[backend_astro_depth_checklist_2026-08-06.md](backend_astro_depth_checklist_2026-08-06.md).
+**Status:** point-in-time handoff brief, disposable — **mostly discharged
+2026-08-10**, kept only for §4's remaining item. Delete once birth-time
+rectification is picked up.
 
 Read this before starting. It exists so you don't re-derive things that cost a
 long session to learn, and so you don't repeat two specific mistakes.
+
+## What has since landed (2026-08-10, `claude/wealth-validation-loop-w0g7os`)
+
+Items 1, 2 and 3 of §1's scope are built and tested for the wealth domain, and
+§3's blocker is closed. The durable design record now lives in
+[ask_context_engine_multi_agent_architecture_2026-08-07.md](ask_context_engine_multi_agent_architecture_2026-08-07.md)'s
+"Update 2026-08-10" section, and the remaining work in
+[backend_astro_depth_checklist_2026-08-06.md](backend_astro_depth_checklist_2026-08-06.md)'s
+Deferred backlog — read those, not this, for current state.
+
+Three things this brief guessed that turned out otherwise, recorded so the
+next reader doesn't trust them over the code:
+
+- **§4's "`PredictionClaim` is likely reusable rather than a new table" was
+  wrong.** Its `reading_id` is a NOT NULL foreign key into `readings`, and an
+  Ask-side probe has no `readings` row to point at; a probe also carries a
+  question and its options, which a forward prediction never does. A new
+  `validation_probes` table carries them instead. The *mechanism* is reused
+  exactly as intended — commit, then score against what happened.
+- **§4's `clarification_needed` envelope was reused as a pattern, not as
+  code.** `validation_needed` is its own envelope type, because unlike a
+  clarification it must persist a commitment before it is emitted and must
+  keep that commitment out of both the envelope and the thread history.
+- **§1's item 4 (birth-time rectification) is untouched**, as scoped.
+
+Everything below is the original brief, unedited.
 
 ---
 

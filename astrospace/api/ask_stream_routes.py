@@ -20,10 +20,12 @@ from typing import Iterator, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from ..agents.orchestrator import AskOrchestrator
+from ..agents.orchestrator import AskOrchestrator, ValidationStore
 from ..agents.schema import StructuredReading
+from ..agents.validation_agent import ValidationProbeDraft
 from ..context.taxonomy import TaxonomyError
 from ..db import crud, crud_mobile as cm, get_db
 from .ask_routes import MAX_HISTORY, AskRequest, _history_from_thread, _owned_thread
@@ -73,6 +75,53 @@ def _thread_established_domain(db: Session, thread_id: str) -> Optional[str]:
         if message.role == "assistant" and message.domain:
             return message.domain
     return None
+
+
+def _probe_row(probe) -> dict:
+    """A stored probe as the orchestrator and the context engine see it.
+
+    `claim_text`/`confidence` are included because `life_context` scoring needs
+    the outcome, not because anything downstream may change them — the only
+    write path that touches those columns is the commit itself (see
+    crud_mobile.record_validation_answer)."""
+    return {
+        "domain": probe.domain,
+        "slot_id": probe.slot_id,
+        "slot_kind": probe.slot_kind,
+        "anchor_label": probe.anchor_label,
+        "anchor_start": probe.anchor_start,
+        "anchor_end": probe.anchor_end,
+        "question": probe.question,
+        "claim_text": probe.claim_text,
+        "claim_candidate": probe.claim_candidate,
+        "confidence": probe.confidence,
+        "answer_key": probe.answer_key,
+        "answer_text": probe.answer_text,
+        "status": probe.status,
+    }
+
+
+def _validation_store(db: Session, user_id: str, kundli_id: str,
+                      thread_id: Optional[str]) -> ValidationStore:
+    """The orchestrator's two callables, closed over this request's session."""
+
+    def probes(domain: str) -> list[dict]:
+        return [_probe_row(row) for row in
+                cm.list_validation_probes(db, user_id, kundli_id, domain=domain)]
+
+    def commit(slot: dict, draft: ValidationProbeDraft) -> str:
+        probe = cm.commit_validation_probe(
+            db, user_id, kundli_id, slot["domain"], slot,
+            claim_text=draft.committed_claim,
+            claim_candidate=draft.committed_candidate,
+            confidence=draft.confidence,
+            question=draft.question,
+            options=[option.model_dump() for option in draft.options],
+            thread_id=thread_id,
+        )
+        return probe.id
+
+    return ValidationStore(probes=probes, commit=commit)
 
 
 def _evidence_from_reading(reading: StructuredReading) -> dict:
@@ -134,11 +183,15 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
 
     thread_domain = _thread_established_domain(db, thread.id) if thread else None
 
-    orchestrator = AskOrchestrator(chart_loader=lambda: _chart_from_kundli(k, "lahiri", "mean"))
+    orchestrator = AskOrchestrator(
+        chart_loader=lambda: _chart_from_kundli(k, "lahiri", "mean"),
+        validation_store=_validation_store(db, user.id, kundli_id,
+                                           thread.id if thread else None),
+    )
     try:
         outcome = orchestrator.prepare(
             body.question, thread_domain=thread_domain, domain_override=body.domain_override,
-            experience_mode=body.experience_mode,
+            experience_mode=body.experience_mode, validate_first=body.validate_first,
         )
     except TaxonomyError as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -151,6 +204,20 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
                 thread_id = persist_turn(
                     envelope["answer"], domain=None, refer_out_kind=envelope["kind"],
                     evidence={"safety_policy": "excluded_verdict"},
+                )
+            elif envelope["type"] == "validation_needed":
+                # The stored turn carries the question and the options, never
+                # the committed claim — thread history is replayed back to the
+                # model on later turns, and a claim visible there would let a
+                # future reading quietly launder its own prediction as
+                # evidence. The commitment lives in validation_probes, which
+                # nothing replays.
+                thread_id = persist_turn(
+                    envelope["question"], domain=envelope["domain"], refer_out_kind=None,
+                    evidence={"status": "validation_needed",
+                              "probe_id": envelope["probe_id"],
+                              "slot_id": envelope["slot_id"],
+                              "options": envelope["options"]},
                 )
             elif envelope["type"] == "clarification_needed":
                 content = (
@@ -190,3 +257,48 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
         _safe_stream(orchestrator.run(prepared, messages, persist=persist_prepared)),
         media_type="text/event-stream",
     )
+
+
+class ValidationAnswer(BaseModel):
+    answer_key: str = Field(
+        min_length=1,
+        description="One of the option keys from the `validation_needed` envelope. "
+                    "'skip' is always offered and is recorded without being scored "
+                    "either way — a reader declining to answer is not evidence about "
+                    "their chart.",
+    )
+    answer_text: Optional[str] = Field(
+        None, max_length=2000,
+        description="Optional free-text the reader added alongside the option.",
+    )
+
+
+@router.post("/validation/{probe_id}/answer")
+def answer_validation_probe(probe_id: str, body: ValidationAnswer, user: CurrentUser,
+                            db: Session = Depends(get_db)):
+    """Score a committed claim against what the reader actually said.
+
+    Nothing here can touch the claim, its confidence, or its commit timestamp —
+    `record_validation_answer` writes answer columns only, which is what makes
+    the resulting hit rate an honest number rather than a self-graded one. A
+    probe already answered is refused rather than overwritten: it was one test.
+    """
+    probe = cm.record_validation_answer(
+        db, probe_id, user.id, body.answer_key, body.answer_text,
+    )
+    if probe is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No unanswered validation probe with that id for this user",
+        )
+    return {
+        "probe_id": probe.id,
+        "slot_id": probe.slot_id,
+        "status": probe.status,
+        # Safe to return now, and only now: the reader has committed their own
+        # answer, so showing them what the chart predicted can no longer
+        # influence it. This is the moment the loop is worth anything to them.
+        "committed_claim": probe.claim_text,
+        "confidence": probe.confidence,
+        "answered_at": probe.answered_at,
+    }

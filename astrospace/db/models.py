@@ -247,6 +247,74 @@ class AskMessage(Base):
     thread: Mapped["AskThread"] = relationship("AskThread", back_populates="messages")
 
 
+class ValidationProbe(Base):
+    """One commit-before-ask validation turn.
+
+    The whole point of this table is the ORDER its columns get written in. A
+    naive validation loop asks "have you had money trouble?", hears yes, and
+    replies "yes, your chart shows that" — the reader is handed their own
+    disclosure back as insight and nothing was tested. What makes it honest
+    instead is that the agent commits to a falsifiable claim, with a
+    confidence, BEFORE the question is put and therefore before any answer
+    exists. `claim_text`, `claim_candidate`, `confidence` and `committed_at`
+    are all written non-null at INSERT and are never updated afterwards
+    (`crud_mobile.record_validation_answer` touches only the answer columns);
+    `answer_key` and `answered_at` can only ever be filled in later. A row is
+    thus self-evidently a prediction that preceded its own test, and hit rate
+    computed over these rows means something.
+
+    NOT `PredictionClaim`, despite that table having claim_text/confidence/
+    status/user_feedback and being the obvious candidate. Two blockers: its
+    `reading_id` is a NOT NULL foreign key into `readings`, and an Ask-side
+    probe has no `Reading` row to point at (Ask persists `AskMessage`); and a
+    probe carries a question and its options, which a forward prediction never
+    does and which would have to be smuggled through `source_excerpt` as JSON.
+    The mechanism is the same and deliberately mirrors it — commit, then score
+    against what actually happened — but the shape genuinely differs.
+    """
+
+    __tablename__ = "validation_probes"
+    __table_args__ = (
+        # "Asked once" is a product requirement (fatigue), so it is enforced
+        # here rather than left to the caller remembering to check.
+        UniqueConstraint("user_id", "kundli_id", "slot_id",
+                         name="validation_probes_user_kundli_slot_key"),
+    )
+
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
+    user_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    kundli_id: Mapped[str] = mapped_column(String, ForeignKey("kundlis.id"), nullable=False, index=True)
+    thread_id: Mapped[str | None] = mapped_column(_UuidString, ForeignKey("ask_threads.id"))
+    domain: Mapped[str] = mapped_column(String, nullable=False, index=True)
+
+    # ── The slot the engine picked (never the model) ──────────────────────
+    slot_id: Mapped[str] = mapped_column(String, nullable=False)
+    slot_kind: Mapped[str] = mapped_column(String, nullable=False)
+    anchor_start: Mapped[str | None] = mapped_column(String)
+    anchor_end: Mapped[str | None] = mapped_column(String)
+    anchor_label: Mapped[str | None] = mapped_column(String)
+
+    # ── The commitment, written before the question is asked ──────────────
+    claim_text: Mapped[str] = mapped_column(Text, nullable=False)
+    claim_candidate: Mapped[str] = mapped_column(String, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    committed_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+
+    # ── The question put to the reader ────────────────────────────────────
+    question: Mapped[str] = mapped_column(Text, nullable=False)
+    options: Mapped[list | None] = mapped_column(JSON, default=list)
+
+    # ── What came back, and how the commitment scored ─────────────────────
+    answer_key: Mapped[str | None] = mapped_column(String)
+    answer_text: Mapped[str | None] = mapped_column(Text)
+    answered_at: Mapped[datetime | None] = mapped_column(DateTime)
+    # committed | confirmed | missed | partial | skipped
+    status: Mapped[str] = mapped_column(String, default="committed", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    kundli: Mapped["Kundli"] = relationship("Kundli")
+
+
 # ── Remedies & muhurta ────────────────────────────────────────────────────────
 
 class Remedy(Base):
