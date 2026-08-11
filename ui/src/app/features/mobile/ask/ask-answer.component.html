@@ -58,16 +58,12 @@
         </p>
 
         <!--
-          The explanation itself — acknowledgment-derived headline, full
-          interpretation, full closing assurance, full guidance (actions and
-          traditional supports) — is identical across Guided, Balanced, and
-          Practitioner (product spec: "explanation and accuracy should be
-          common for all"). The ONLY thing that varies below by mode is how
-          much `technical_basis` disclosure is shown: none/one line for
-          Guided, a high-level subset for Balanced, the full granular list
-          for Practitioner. Mode-specific chrome (Listen/Copy/Share buttons,
-          Sources & Provenance, Compare Date) still differs — that is UI
-          affordance, not explanation depth.
+          The agent writes the explanation in the selected persona register.
+          This view renders every returned explanation field and guidance item
+          without a second client-side truncation. Its mode branches control
+          technical disclosure (none/one line for Guided, a high-level subset
+          for Balanced, the full list for Practitioner) and the available
+          controls; they do not rewrite the agent's response.
         -->
         @if (message.reading; as reading) {
           @switch (preferences.experienceMode()) {

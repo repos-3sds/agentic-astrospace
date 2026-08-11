@@ -1,20 +1,24 @@
+import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
-import { of } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
 
 import { AskAnswerComponent } from './ask-answer.component';
 import { PreferencesService, ExperienceMode } from '../../../core/preferences.service';
 import { StructuredReading } from '../../../core/models';
+import { AskService } from '../../../core/ask.service';
+import { KundliStore } from '../../../core/kundli.store';
+import { MobileAskStateService } from './mobile-ask-state.service';
+import { MobileAskThreadService } from './mobile-ask-thread.service';
 
 /**
  * 2026-08-10 (independent review, persona-depth/timing-precision task):
  * before this file there was NO spec at all for ask-answer.component,
  * meaning the persona-mode content-parity fix in this same commit series
- * (Guided/Balanced/Practitioner must render an IDENTICAL explanation —
- * interpretation, summary_and_assurance, guidance.practical_actions,
- * guidance.remedies — and differ ONLY on technical_basis disclosure depth)
+ * (Guided/Balanced/Practitioner must render the complete explanation the
+ * persona-aware agent returned, while differing in technical_basis disclosure)
  * had no automated guard. A future edit could reintroduce Guided-only
  * truncation (the actual historical bug this series fixed:
  * `guidedBody()`'s 190-char `compactSentence` clip, `guidedActions()`'s
@@ -110,7 +114,7 @@ describe('AskAnswerComponent persona-mode content parity', () => {
     expect(actions[0]).toBe(`Ask next: ${reading.guidance.follow_up_questions[0]}`);
   });
 
-  it('technical_basis disclosure is the ONLY thing that varies by mode: none/1-line, subset, full', () => {
+  it('varies technical_basis disclosure by mode: none/1-line, subset, full', () => {
     const component = createComponent();
     const message = messageWithReading(FULL_READING);
     const totalFactors = FULL_READING.technical_basis.length;
@@ -160,5 +164,202 @@ describe('AskAnswerComponent persona-mode content parity', () => {
     expect(guidedActions).toEqual(balancedActions);
     expect(balancedActions).toEqual(practitionerActions);
     expect(guidedActions).toEqual(FULL_READING.guidance.practical_actions);
+  });
+});
+
+interface AskIsolationHarness {
+  component: AskAnswerComponent;
+  params: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
+  activeId: ReturnType<typeof signal<string | null>>;
+  router: { navigate: jasmine.Spy };
+  threads: { get: jasmine.Spy };
+  ask: { stream: jasmine.Spy };
+  askState: { answer: jasmine.Spy; rememberAnswer: jasmine.Spy; rememberThread: jasmine.Spy };
+}
+
+function threadDetail(threadId: string, kundliId: string) {
+  return {
+    thread: {
+      id: threadId,
+      kundli_id: kundliId,
+      title: `${kundliId} private question`,
+      message_count: 2,
+      last_message_at: '2026-08-11T00:00:00Z',
+      created_at: '2026-08-11T00:00:00Z',
+    },
+    messages: [
+      {
+        id: `${threadId}-user`, role: 'user' as const,
+        content: `${kundliId} private question`, domain: null,
+        refer_out_kind: null, evidence: null, created_at: null,
+      },
+      {
+        id: `${threadId}-assistant`, role: 'assistant' as const,
+        content: `${kundliId} private answer`, domain: 'career',
+        refer_out_kind: null, evidence: null, created_at: null,
+      },
+    ],
+  };
+}
+
+function createIsolationHarness(
+  initialParams: Record<string, string>,
+  activeProfileId = 'profile-a',
+): AskIsolationHarness {
+  const params = new BehaviorSubject(convertToParamMap(initialParams));
+  const activeId = signal<string | null>(activeProfileId);
+  const profiles = [
+    { id: 'profile-a', name: 'Profile A' },
+    { id: 'profile-b', name: 'Profile B' },
+  ];
+  const store = {
+    loaded: signal(true),
+    activeId,
+    active: computed(() => profiles.find((profile) => profile.id === activeId()) ?? null),
+    load: jasmine.createSpy().and.resolveTo(undefined),
+  };
+  const router = { navigate: jasmine.createSpy().and.resolveTo(true) };
+  const threads = {
+    get: jasmine.createSpy().and.callFake((threadId: string) =>
+      Promise.resolve(threadDetail(threadId, 'profile-a'))),
+    archive: jasmine.createSpy().and.resolveTo(undefined),
+  };
+  const ask = {
+    stream: jasmine.createSpy().and.callFake(async function* () { return; }),
+  };
+  const askState = {
+    answer: jasmine.createSpy().and.returnValue(null),
+    rememberAnswer: jasmine.createSpy(),
+    rememberThread: jasmine.createSpy(),
+  };
+
+  TestBed.configureTestingModule({
+    providers: [
+      provideHttpClient(),
+      provideHttpClientTesting(),
+      { provide: ActivatedRoute, useValue: { queryParamMap: params } },
+      { provide: Router, useValue: router },
+      { provide: KundliStore, useValue: store },
+      { provide: MobileAskThreadService, useValue: threads },
+      { provide: AskService, useValue: ask },
+      { provide: MobileAskStateService, useValue: askState },
+    ],
+  });
+  const component = TestBed.runInInjectionContext(() => new AskAnswerComponent());
+  TestBed.flushEffects();
+  return { component, params, activeId, router, threads, ask, askState };
+}
+
+async function settleEffects(): Promise<void> {
+  TestBed.flushEffects();
+  await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
+}
+
+describe('AskAnswerComponent profile isolation and thread lifecycle', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  it('starts an Ask Home submission as a new thread even when this component cached an old thread', async () => {
+    const harness = createIsolationHarness({ thread: 'thread-a' });
+    await settleEffects();
+    expect((harness.component as any).activeThreadId()).toBe('thread-a');
+
+    const startStream = spyOn(harness.component as any, 'startStream').and.resolveTo(undefined);
+    harness.params.next(convertToParamMap({ q: 'A genuinely new question', pending: '1' }));
+    await settleEffects();
+
+    expect(startStream).toHaveBeenCalledOnceWith('A genuinely new question', null, undefined);
+    expect((harness.component as any).activeThreadId()).toBeNull();
+    expect((harness.component as any).messages()).toEqual([]);
+  });
+
+  it('never paints a thread fetched for profile A after the reader switches to profile B', async () => {
+    let resolveThread!: (value: ReturnType<typeof threadDetail>) => void;
+    const pendingThread = new Promise<ReturnType<typeof threadDetail>>((resolve) => {
+      resolveThread = resolve;
+    });
+    const harness = createIsolationHarness({});
+    harness.threads.get.and.returnValue(pendingThread);
+    harness.params.next(convertToParamMap({ thread: 'thread-a' }));
+    await settleEffects();
+    (harness.component as any).view();
+    expect(harness.askState.answer).not.toHaveBeenCalledWith('thread-a');
+
+    harness.activeId.set('profile-b');
+    await settleEffects();
+    resolveThread(threadDetail('thread-a', 'profile-a'));
+    await settleEffects();
+
+    expect((harness.component as any).messages()).toEqual([]);
+    expect((harness.component as any).activeThreadId()).toBeNull();
+    expect(harness.router.navigate).toHaveBeenCalledWith(['/m', 'ask'], { replaceUrl: true });
+  });
+
+  it('rejects a browser-history thread belonging to another active profile before rendering it', async () => {
+    const harness = createIsolationHarness({ thread: 'thread-a' }, 'profile-b');
+    await settleEffects();
+
+    expect(harness.threads.get).toHaveBeenCalledWith('thread-a');
+    expect((harness.component as any).messages()).toEqual([]);
+    expect((harness.component as any).activeThreadId()).toBeNull();
+    expect(harness.router.navigate).toHaveBeenCalledWith(['/m', 'ask'], { replaceUrl: true });
+  });
+
+  it('ignores a stale thread response after the reader opens a newer thread', async () => {
+    const resolvers = new Map<string, (value: ReturnType<typeof threadDetail>) => void>();
+    const harness = createIsolationHarness({});
+    harness.threads.get.and.callFake((threadId: string) =>
+      new Promise<ReturnType<typeof threadDetail>>((resolve) => resolvers.set(threadId, resolve)));
+
+    harness.params.next(convertToParamMap({ thread: 'thread-a' }));
+    await settleEffects();
+    harness.params.next(convertToParamMap({ thread: 'thread-b' }));
+    await settleEffects();
+
+    resolvers.get('thread-b')?.(threadDetail('thread-b', 'profile-a'));
+    await settleEffects();
+    expect((harness.component as any).activeThreadId()).toBe('thread-b');
+
+    resolvers.get('thread-a')?.(threadDetail('thread-a', 'profile-a'));
+    await settleEffects();
+    expect((harness.component as any).activeThreadId()).toBe('thread-b');
+    expect((harness.component as any).messages()[0].id).toBe('thread-b-user');
+  });
+
+  it('drops late stream events from profile A after switching to profile B', async () => {
+    let continueStream!: () => void;
+    const gate = new Promise<void>((resolve) => { continueStream = resolve; });
+    const harness = createIsolationHarness({});
+    harness.ask.stream.and.callFake(async function* () {
+      yield { type: 'status', stage: 'interpreting', label: 'Interpreting profile A…' };
+      await gate;
+      // Deliberately ignore AbortSignal to model a late transport frame.
+      yield { type: 'delta', delta: 'PROFILE A PRIVATE ANSWER' };
+    });
+    harness.params.next(convertToParamMap({ q: 'Profile A question', pending: '1' }));
+    await settleEffects();
+
+    harness.activeId.set('profile-b');
+    await settleEffects();
+    continueStream();
+    await settleEffects();
+
+    expect((harness.component as any).messages()).toEqual([]);
+    expect((harness.component as any).streamedAnswer()).toBe('');
+    expect(harness.router.navigate).toHaveBeenCalledWith(['/m', 'ask'], { replaceUrl: true });
+  });
+
+  it('does not submit when profile switching and a pending route race in the same turn', async () => {
+    const harness = createIsolationHarness({});
+    await settleEffects();
+
+    harness.activeId.set('profile-b');
+    harness.params.next(convertToParamMap({ q: 'Question from the stale profile view', pending: '1' }));
+    await settleEffects();
+
+    expect(harness.ask.stream).not.toHaveBeenCalled();
+    expect((harness.component as any).messages()).toEqual([]);
+    expect(harness.router.navigate).toHaveBeenCalledWith(['/m', 'ask'], { replaceUrl: true });
   });
 });

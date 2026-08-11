@@ -143,7 +143,11 @@ export class AskAnswerComponent {
       };
     }
 
-    const savedAnswer = this.askState.answer(this.params().get('thread') ?? this.activeThreadId());
+    // Only a thread that has been fetched and verified against the active
+    // profile may unlock session-cached content. Reading by the raw URL id
+    // briefly exposed another profile's last answer while `loadThread()` was
+    // still checking the thread.
+    const savedAnswer = this.askState.answer(this.activeThreadId());
     if (savedAnswer) {
       return {
         question,
@@ -242,6 +246,8 @@ export class AskAnswerComponent {
    * freshly created thread id. */
   private lastRouteKey: string | null = null;
   private loadedThreadId: string | null = null;
+  private threadLoadRevision = 0;
+  private viewedProfileId: string | null | undefined = undefined;
   private abortController: AbortController | null = null;
 
   private normaliseAnswerText(answer: string): string {
@@ -311,10 +317,9 @@ export class AskAnswerComponent {
    * Whether the FULL `technical_basis` section (a labelled list of chart
    * factors) should render for this mode. Guided gets a single one-line
    * mention instead — see `guidedTechnicalHint` — never this section: per
-   * product spec, the persona modes only ever differ on how much technical
-   * disclosure is shown, never on how much of the actual explanation
-   * (`interpretation`/`summary_and_assurance`/`guidance`) is shown — that
-   * part is identical across all three modes.
+   * The agent now writes each reading in the selected persona register. The
+   * client must render that returned explanation in full; its own mode branch
+   * changes technical disclosure and controls, not explanation completeness.
    */
   protected showTechnicalBasis(message: ChatMessage): boolean {
     if (!message.reading?.technical_basis?.length) return false;
@@ -380,8 +385,8 @@ export class AskAnswerComponent {
   /** Full `practical_actions` (falling back to `follow_up_questions` when
    * the reading has none) — the same list, unsliced, for Guided, Balanced,
    * and Practitioner alike. Was previously Guided-only and capped at 2
-   * items (`guidedActions`); per product spec the explanation and guidance
-   * are common to every mode, only technical disclosure varies. */
+   * items (`guidedActions`). Each persona receives its own agent-written
+   * guidance, and the client renders the complete returned list. */
   protected readingActions(reading: StructuredReading): string[] {
     const actions = reading.guidance.practical_actions.filter(Boolean);
     if (actions.length) return actions;
@@ -404,23 +409,31 @@ export class AskAnswerComponent {
       const urlThreadId = this.params().get('thread');
       const shouldSend = this.params().get('pending') === '1';
       const forceDomain = this.params().get('forceDomain') ?? undefined;
-      if (urlThreadId && urlThreadId !== untracked(() => this.activeThreadId())) {
-        this.activeThreadId.set(urlThreadId);
-      }
-      const threadId = urlThreadId ?? untracked(() => this.activeThreadId());
+      // A route with no thread means "start a new consultation". Never infer
+      // continuity from component memory: Angular reuses this component when
+      // Ask Home navigates here, which previously attached a fresh question
+      // to whichever conversation happened to be open last.
+      const threadId = urlThreadId;
       const key = `${threadId ?? ''}::${question}::${shouldSend}::${forceDomain ?? ''}`;
       if (key === this.lastRouteKey) return;
-      this.lastRouteKey = key;
 
       if (shouldSend && question) {
+        if (!threadId || threadId !== untracked(() => this.loadedThreadId)) {
+          this.resetConversationState();
+        }
+        this.lastRouteKey = key;
         void this.startStream(question, threadId, forceDomain);
         return;
       }
 
       if (threadId && threadId !== untracked(() => this.loadedThreadId)) {
+        this.resetConversationState();
+        this.lastRouteKey = key;
         void this.loadThread(threadId);
         return;
       }
+
+      this.lastRouteKey = key;
 
       if (!threadId && question && !untracked(() => this.messages()).length) {
         this.messages.set([
@@ -436,13 +449,75 @@ export class AskAnswerComponent {
         ]);
       }
     });
+
+    effect(() => {
+      const profilesLoaded = this.kundlis.loaded();
+      const profileId = this.kundlis.active()?.id ?? null;
+      if (!profilesLoaded) return;
+
+      // The first loaded profile establishes this view's scope. Every later
+      // switch is a privacy boundary: immediately remove the old profile's
+      // messages, cancel its stream, and return to a clean Ask Home.
+      if (this.viewedProfileId === undefined) {
+        this.viewedProfileId = profileId;
+        return;
+      }
+      if (profileId === this.viewedProfileId) return;
+
+      this.viewedProfileId = profileId;
+      this.resetConversationState();
+      this.lastRouteKey = null;
+      void this.router.navigate(['/m', 'ask'], { replaceUrl: true });
+    });
   }
 
-  private async loadThread(threadId: string): Promise<void> {
+  private resetConversationState(): void {
+    this.abortController?.abort();
+    this.abortController = null;
+    this.threadLoadRevision += 1;
+    this.activeThreadId.set(null);
+    this.loadedThreadId = null;
+    this.messages.set([]);
+    this.selectedAssistant.set(null);
+    this.streamedAnswer.set('');
+    this.streamStatus.set(null);
+    this.streamDomain.set(null);
+    this.streamEvidence.set([]);
+    this.streaming.set(false);
+    this.loadingThread.set(false);
+    this.submitError.set(null);
+    this.whyOpen.set(false);
+    this.listenOpen.set(false);
+  }
+
+  private async loadThread(threadId: string): Promise<boolean> {
+    const requestRevision = ++this.threadLoadRevision;
     this.loadingThread.set(true);
     this.submitError.set(null);
     try {
+      await this.kundlis.load();
+      const requestedProfileId = this.kundlis.active()?.id ?? null;
+      if (!requestedProfileId) {
+        this.submitError.set('Select a profile before opening a conversation.');
+        return false;
+      }
+
       const detail = await this.threadsApi.get(threadId);
+      if (requestRevision !== this.threadLoadRevision) return false;
+      const currentProfileId = this.kundlis.active()?.id ?? null;
+      if (
+        currentProfileId !== requestedProfileId ||
+        detail.thread.kundli_id !== requestedProfileId
+      ) {
+        // Never paint the fetched messages, even for one frame. The profile
+        // may have changed while the request was in flight, or browser history
+        // may contain a thread URL belonging to another profile.
+        this.resetConversationState();
+        this.lastRouteKey = null;
+        await this.router.navigate(['/m', 'ask'], { replaceUrl: true });
+        return false;
+      }
+
       this.loadedThreadId = threadId;
       this.activeThreadId.set(threadId);
       const messages = detail.messages.map((message) => this.toChatMessage(message));
@@ -454,10 +529,16 @@ export class AskAnswerComponent {
         this.streamEvidence.set(latestAssistant.evidence);
         this.askState.rememberAnswer(threadId, latestAssistant.content);
       }
+      return true;
     } catch (error) {
-      this.submitError.set((error as Error).message);
+      if (requestRevision === this.threadLoadRevision) {
+        this.submitError.set((error as Error).message);
+      }
+      return false;
     } finally {
-      this.loadingThread.set(false);
+      if (requestRevision === this.threadLoadRevision) {
+        this.loadingThread.set(false);
+      }
     }
   }
 
@@ -566,11 +647,31 @@ export class AskAnswerComponent {
     question: string, threadId: string | null, forceDomain?: string,
   ): Promise<void> {
     this.abortController?.abort();
-    this.abortController = new AbortController();
+    const controller = new AbortController();
+    this.abortController = controller;
     await this.kundlis.load();
+    if (controller.signal.aborted) {
+      if (this.abortController === controller) this.abortController = null;
+      return;
+    }
     const profile = this.kundlis.active();
     if (!profile) {
       this.submitError.set('Select a profile before asking a question.');
+      if (this.abortController === controller) this.abortController = null;
+      return;
+    }
+
+    if (threadId) {
+      if (this.loadedThreadId !== threadId) {
+        const loaded = await this.loadThread(threadId);
+        if (!loaded) {
+          if (this.abortController === controller) this.abortController = null;
+          return;
+        }
+      }
+    }
+    if (controller.signal.aborted || this.kundlis.active()?.id !== profile.id) {
+      if (this.abortController === controller) this.abortController = null;
       return;
     }
 
@@ -580,12 +681,6 @@ export class AskAnswerComponent {
     this.streamDomain.set(null);
     this.streamEvidence.set([]);
     this.submitError.set(null);
-    if (threadId) {
-      this.activeThreadId.set(threadId);
-      if (this.loadedThreadId !== threadId) {
-        await this.loadThread(threadId);
-      }
-    }
 
     const userMessage = this.toChatMessage({
       id: `local-user-${Date.now()}`,
@@ -625,7 +720,11 @@ export class AskAnswerComponent {
         start_thread: !threadId,
         input_mode: 'text',
         domain_override: forceDomain,
-      }, this.abortController.signal)) {
+      }, controller.signal)) {
+        if (controller.signal.aborted || this.kundlis.active()?.id !== profile.id) {
+          controller.abort();
+          return;
+        }
         if (this.isStatusEvent(event)) {
           this.streamStatus.set(event.label);
           this.updateAssistantMessage(assistantId, {
@@ -762,6 +861,8 @@ export class AskAnswerComponent {
         }
       }
 
+      if (controller.signal.aborted || this.kundlis.active()?.id !== profile.id) return;
+
       if (referOutKind && REFER_OUT_KINDS.has(referOutKind)) {
         await this.router.navigate(['/m', 'ask', 'refer'], {
           queryParams: { q: question, domain: referOutKind },
@@ -791,8 +892,10 @@ export class AskAnswerComponent {
         this.updateAssistantMessage(assistantId, { streaming: false });
       }
     } finally {
-      this.streaming.set(false);
-      this.abortController = null;
+      if (this.abortController === controller) {
+        this.streaming.set(false);
+        this.abortController = null;
+      }
     }
   }
 
