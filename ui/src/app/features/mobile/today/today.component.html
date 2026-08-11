@@ -38,15 +38,6 @@
 </header>
 
 <div class="body" [attr.data-mode]="preferences.experienceMode()">
-  <!-- Who this reading is about. Sits above everything because a wrong city or
-       time makes every line below it wrong, and there was previously no way to
-       notice. Renders nothing until the chart cache is warm. -->
-  <as-birth-details-card
-    [chart]="natal()"
-    [personName]="activeName()"
-    density="compact"
-    [tone]="preferences.experienceMode() === 'guided' ? 'guided' : 'plain'" />
-
   @if (loading()) {
     <section class="card skeleton-card" role="status" aria-label="Loading your guidance">
       <div class="card-head">
@@ -180,6 +171,16 @@
 
   @if (preferences.experienceMode() !== 'guided' || detailsOpen()) {
   @for (section of statSections(); track section.eyebrow) {
+    @if (section.eyebrow.startsWith('ALWAYS')) {
+      <!-- Grouped with the signature, not stacked above the day: these are the
+           facts that never change. No name here — the header already greets
+           them, and repeating it made the card look like a profile switcher. -->
+      <p class="eyebrow section-label">ALWAYS · YOUR BIRTH DETAILS</p>
+      <as-birth-details-card
+        [chart]="natal()"
+        density="compact"
+        [tone]="preferences.experienceMode() === 'guided' ? 'guided' : 'plain'" />
+    }
     <p class="eyebrow section-label">{{ section.eyebrow }}</p>
     <div class="stats" [attr.data-columns]="section.columns">
       @for (cell of section.cells; track cell.label) {

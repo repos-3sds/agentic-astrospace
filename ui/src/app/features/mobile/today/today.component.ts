@@ -242,10 +242,6 @@ export class TodayComponent {
   protected readonly headerName = computed(
     () => this.view()?.greetingName ?? this.kundlis.active()?.name ?? 'there',
   );
-  /** The profile's real name, or null. `headerName` falls back to "there",
-   * which is a greeting and not a name — wrong for a details header. */
-  protected readonly activeName = computed(() => this.kundlis.active()?.name ?? null);
-
   protected readonly headerDate = computed(() => this.view()?.dateLabel ?? 'Today');
   protected readonly greeting = computed(() => `Namaste, ${this.headerName()}`);
   protected readonly listenScript = computed(() =>
