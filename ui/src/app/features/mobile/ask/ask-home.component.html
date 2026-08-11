@@ -1,4 +1,9 @@
-<header class="appbar">
+<header class="appbar" [class.has-back]="preferences.experienceMode() === 'practitioner'">
+  @if (preferences.experienceMode() === 'practitioner') {
+    <a class="iconbtn practitioner-back" routerLink="/m/chart" aria-label="Back to Yantra">
+      <span class="masked-icon back-icon" aria-hidden="true"></span>
+    </a>
+  }
   <h1 class="screen-title">Ask</h1>
   <a class="iconbtn" routerLink="/m/ask/history" aria-label="Past questions">
     <span class="masked-icon history-icon" aria-hidden="true"></span>

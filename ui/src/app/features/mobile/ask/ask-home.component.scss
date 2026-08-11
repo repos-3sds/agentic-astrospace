@@ -18,6 +18,12 @@
   padding: 16px 20px 8px;
 }
 
+.appbar.has-back {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  .screen-title { text-align: center; }
+}
+
 .screen-title { @include m-title; color: var(--m-text); margin: 0; }
 
 .iconbtn {
@@ -46,6 +52,7 @@
 }
 
 .history-icon { --ask-icon: url('/mobile/history.svg'); }
+.back-icon { --ask-icon: url('/mobile/back.svg'); }
 .chevron-icon { --ask-icon: url('/mobile/chevron.svg'); width: 17px; height: 17px; }
 
 /* Content column — node 25:32 */
