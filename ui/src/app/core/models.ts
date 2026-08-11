@@ -1375,6 +1375,9 @@ export interface AskStructuredSuccessEnvelope {
   tense?: string;
   context_used: string[];
   evidence_refs: string[];
+  /** Operator telemetry only. The reading still passed safety checks and is
+   * rendered normally; never surface these verifier notes to the reader. */
+  quality_shortfall?: string[];
   reading: StructuredReading;
   thread_id: string | null;
 }

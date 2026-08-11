@@ -78,6 +78,15 @@ export class MobileShellComponent {
     { initialValue: this.router.url.split('?')[0]?.split('#')[0] || '/m/today' },
   );
 
+  protected readonly tabsSuppressed = computed(() =>
+    this.hideTabs()
+    || this.overlay.open()
+    || (
+      this.preferences.experienceMode() === 'practitioner'
+      && this.currentPath().startsWith('/m/ask')
+    ),
+  );
+
   protected readonly tabs = computed(() => {
     const fixed = [
       { commands: ['today'], label: 'Today', icon: 'nav-today' },

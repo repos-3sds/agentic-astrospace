@@ -697,12 +697,35 @@
   &.is-error { color: var(--m-bad); }
 }
 
+.stream-progress {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  min-height: 40px;
+  @include m-body-small;
+  color: var(--m-muted);
+}
+
+.stream-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--m-accent);
+  animation: answer-pulse 1s ease-in-out infinite;
+}
+
 .stop-stream {
   @include m-cta-secondary;
   align-self: flex-start;
   min-height: 38px;
   padding: 0 14px;
   color: var(--m-accent-strong);
+}
+
+.stream-progress .stop-stream {
+  min-height: 34px;
+  padding: 0 12px;
 }
 
 /* The composer (node 26:93) is as-ask-composer, seated as a chat input here. */
@@ -715,6 +738,13 @@ as-ask-composer.answer-composer {
   z-index: 2;
 }
 
-:host-context([data-theme='dark']) .answer-section {
+:host-context(.app-dark) .answer-section {
   background: color-mix(in srgb, var(--m-raised) 62%, transparent);
+}
+
+:host-context(.app-dark) .tool img,
+:host-context(.app-dark) .balanced-actions img,
+:host-context(.app-dark) .source-row img,
+:host-context(.app-dark) .listen-brief img {
+  filter: var(--m-back-icon-filter);
 }

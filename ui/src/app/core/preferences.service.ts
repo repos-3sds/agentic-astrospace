@@ -1,4 +1,4 @@
-import { Injectable, effect, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal } from '@angular/core';
 
 import { ApiService } from './api.service';
 import { PanchangaCity } from './models';
@@ -88,6 +88,22 @@ export class PreferencesService {
   readonly cloudReady = signal(false);
   readonly cloudSaving = signal(false);
   readonly cloudError = signal<string | null>(null);
+  /**
+   * Stable identity for every current-location calculation input. Screens read
+   * this signal in their load effects so changing the panchanga place or
+   * timezone mode invalidates Today and Calendar without flushing unrelated
+   * natal-chart caches.
+   */
+  readonly panchangaContextKey = computed(() => {
+    const place = this.panchangaPlace();
+    return [
+      this.timezoneMode(),
+      this.effectiveTimezone(),
+      place?.city ?? '',
+      place?.nation ?? '',
+      place?.timezone ?? '',
+    ].join('|');
+  });
 
   private applyingRemote = false;
   private hydrated = false;

@@ -66,6 +66,7 @@
           class="yantra-tile"
           [attr.data-tone]="tile.tone"
           [class.is-active]="tile.active"
+          [class.is-featured]="tile.featured"
           [routerLink]="tile.route"
           [queryParams]="tile.queryParams"
         >
@@ -73,8 +74,13 @@
             <span class="yantra-mask-icon tile-icon" [style.--icon-url]="'url(/mobile/' + tile.icon + '.svg)'" aria-hidden="true"></span>
           </span>
           @if (tile.active) { <span class="yantra-dot" aria-hidden="true"></span> }
-          <b>{{ tile.title }}</b>
-          <small>{{ tile.subtitle }}</small>
+          <span class="yantra-copy">
+            <b>{{ tile.title }}</b>
+            <small>{{ tile.subtitle }}</small>
+          </span>
+          @if (tile.featured) {
+            <span class="yantra-mask-icon featured-arrow" style="--icon-url: url('/mobile/chevron.svg')" aria-hidden="true"></span>
+          }
         </a>
       }
     </div>

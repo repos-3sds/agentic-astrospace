@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { Router } from '@angular/router';
+import { Session } from '@supabase/supabase-js';
 
 import { AuthService } from './auth.service';
 
@@ -166,5 +167,59 @@ describe('AuthService native auth callback', () => {
     ).toBeRejectedWithError(/could not be verified/);
 
     expect(client.auth.setSession).not.toHaveBeenCalled();
+  });
+});
+
+describe('AuthService access-token resilience', () => {
+  let service: AuthService;
+  let router: jasmine.SpyObj<Router>;
+
+  beforeEach(() => {
+    router = jasmine.createSpyObj<Router>('Router', ['navigate', 'navigateByUrl']);
+    service = new AuthService(router);
+    service.enabled.set(true);
+    (service as any).initPromise = Promise.resolve();
+  });
+
+  it('keeps a still-valid session when Supabase has a transient getSession error', async () => {
+    const session = {
+      access_token: 'cached-live-token',
+      expires_at: Math.floor(Date.now() / 1000) + 300,
+      user: { id: 'u1' },
+    } as Session;
+    (service as any).setSession(session);
+    (service as any).client = {
+      auth: {
+        getSession: jasmine.createSpy('getSession').and.resolveTo({
+          data: { session: null },
+          error: new Error('Failed to fetch'),
+        }),
+      },
+    };
+
+    await expectAsync(service.getAccessToken()).toBeResolvedTo('cached-live-token');
+    expect(service.session()).toBe(session);
+    expect(service.isAuthenticated()).toBeTrue();
+  });
+
+  it('does not send an expired token after a refresh error, but preserves route auth state', async () => {
+    const session = {
+      access_token: 'expired-token',
+      expires_at: Math.floor(Date.now() / 1000) - 10,
+      user: { id: 'u1' },
+    } as Session;
+    (service as any).setSession(session);
+    (service as any).client = {
+      auth: {
+        getSession: jasmine.createSpy('getSession').and.resolveTo({
+          data: { session: null },
+          error: new Error('Failed to fetch'),
+        }),
+      },
+    };
+
+    await expectAsync(service.getAccessToken()).toBeResolvedTo(null);
+    expect(service.session()).toBe(session);
+    expect(service.isAuthenticated()).toBeTrue();
   });
 });

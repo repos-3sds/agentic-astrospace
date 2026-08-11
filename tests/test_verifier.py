@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import pytest
 
 from astrospace.agents.schema import Guidance, RemedyItem, StructuredReading, TechnicalBasisItem
-from astrospace.agents.verifier import verify
+from astrospace.agents.verifier import verify, verify_coverage
 from astrospace.context import assemble_domain
 from astrospace.core.vedic.chart import VedicChart
 
@@ -1034,3 +1034,84 @@ class TestPersonalityGuardrailIndependentReviewRound2:
         bad = _reading(interpretation=phrase)
         violations = verify(bad, personality_bundle, "personality")
         assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
+
+
+# ── Severity, and the coverage checks it exists to make safe ────────────────
+# A real career reading (2026-08-11) opened with the dasha chain, the 6th lord,
+# two nakshatras and an argala — and never mentioned the D10, which the taxonomy
+# marks primary for that domain and which the bundle carried throughout. Also
+# absent: the Amatyakaraka. The prose was excellent; the SELECTION silently
+# dropped the most career-specific chart available.
+#
+# Enforcing that needed the severity split first. Every violation used to
+# discard the reading, so a coverage check would have meant handing the reader
+# an error over a missed varga — strictly worse for them than a good-but-
+# incomplete consultation.
+
+class TestViolationSeverity:
+    def test_a_plain_string_violation_fails_closed_as_safety(self):
+        """Anything built outside this module — an older call site, a future
+        check someone forgets to tag — must be treated as unshippable."""
+        from astrospace.agents.verifier import safety_violations, quality_violations
+        assert safety_violations(["some untagged problem"]) == ["some untagged problem"]
+        assert quality_violations(["some untagged problem"]) == []
+
+    def test_violations_are_still_plain_strings_to_every_existing_consumer(self):
+        """The repair prompt joins them and the tests compare to []; severity
+        had to be additive or it would have broken both."""
+        from astrospace.agents.verifier import Violation
+        v = Violation("missing thing", "quality")
+        assert isinstance(v, str)
+        assert "; ".join([v]) == "missing thing"
+        assert v.severity == "quality"
+
+
+class TestPrimaryEvidenceCoverage:
+    def _reading(self, text, source="houses"):
+        return StructuredReading(
+            acknowledgment="ack",
+            technical_basis=[TechnicalBasisItem(factor="f", reading=text, source=source)],
+            interpretation=text, summary_and_assurance="s",
+            guidance=Guidance(), confidence="medium",
+        )
+
+    def test_a_career_reading_that_never_opens_the_d10_is_flagged(self, career_bundle_2026):
+        violations = verify_coverage(
+            self._reading("Saturn rules your 6th house and sits there."),
+            career_bundle_2026)
+        assert any("D10" in v for v in violations)
+
+    def test_addressing_it_clears_the_flag(self, career_bundle_2026):
+        violations = verify_coverage(
+            self._reading("Your D10 shows Mercury strong, and the Amatyakaraka agrees.",
+                          source="vargas"), career_bundle_2026)
+        assert not [v for v in violations if "D10" in v or "AmK" in v]
+
+    def test_dismissing_it_also_clears_the_flag(self, career_bundle_2026):
+        """Weighing the evidence and saying it adds nothing is a legitimate
+        reading decision, and a better answer than silence. Only saying
+        nothing at all fails."""
+        violations = verify_coverage(
+            self._reading("The D10 mostly repeats the D1 here so it adds little; "
+                          "the Amatyakaraka likewise.", source="vargas"), career_bundle_2026)
+        assert not [v for v in violations if "D10" in v or "AmK" in v]
+
+    def test_the_classical_name_counts_not_just_the_code(self, career_bundle_2026):
+        violations = verify_coverage(
+            self._reading("The dashamsha shows Mercury strong; Amatyakaraka agrees.",
+                          source="vargas"), career_bundle_2026)
+        assert not [v for v in violations if "D10" in v]
+
+    def test_coverage_shortfalls_are_quality_never_safety(self, career_bundle_2026):
+        """The load-bearing property: a missed varga must never discard a
+        reading. If this ever flips to safety, readers start getting errors
+        instead of consultations."""
+        from astrospace.agents.verifier import safety_violations
+        violations = verify_coverage(self._reading("Saturn rules your 6th."), career_bundle_2026)
+        assert violations
+        assert safety_violations(violations) == []
+
+    def test_safety_checks_are_unaffected_by_the_split(self, career_bundle_2026):
+        from astrospace.agents.verifier import safety_violations
+        bad = self._reading("You will die young.")
+        assert safety_violations(verify(bad, career_bundle_2026, "career"))

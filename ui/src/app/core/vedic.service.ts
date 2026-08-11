@@ -31,6 +31,7 @@ export class VedicService {
   private readonly allStoragePrefix = 'astrospace.vedic-all:v2:';
   private dailyCache = new Map<string, Promise<DailyGuidancePayload>>();
   private dailyValues = new Map<string, DailyGuidancePayload>();
+  private readonly dailyStoragePrefix = 'astrospace.daily-guidance:v1:';
   private calendarCache = new Map<string, Promise<CalendarIntelligencePayload>>();
   private calendarValues = new Map<string, CalendarIntelligencePayload>();
   private readonly calendarStoragePrefix = 'astrospace.calendar-intelligence:v3:';
@@ -131,8 +132,17 @@ export class VedicService {
     const cacheKey = `${kundliId}:${this.todayKey()}:${params.toString()}`;
     let cached = this.dailyCache.get(cacheKey);
     if (!cached) {
+      const stored = this.readStoredDaily(cacheKey);
+      if (stored) {
+        this.dailyValues.set(cacheKey, stored);
+        cached = Promise.resolve(stored);
+        this.dailyCache.set(cacheKey, cached);
+      }
+    }
+    if (!cached) {
       cached = this.api.get<DailyGuidancePayload>(`/context/${kundliId}/daily?${params.toString()}`).then((value) => {
         this.dailyValues.set(cacheKey, value);
+        this.writeStoredDaily(cacheKey, value);
         return value;
       }).catch((e) => {
         this.dailyCache.delete(cacheKey);
@@ -145,7 +155,27 @@ export class VedicService {
   }
 
   cachedDailyGuidance(kundliId: string): DailyGuidancePayload | null {
-    return this.dailyValues.get(`${kundliId}:${this.todayKey()}:${this.dailyParams().toString()}`) ?? null;
+    const cacheKey = `${kundliId}:${this.todayKey()}:${this.dailyParams().toString()}`;
+    const memory = this.dailyValues.get(cacheKey);
+    if (memory) return memory;
+    const stored = this.readStoredDaily(cacheKey);
+    if (stored) this.dailyValues.set(cacheKey, stored);
+    return stored;
+  }
+
+  refreshDailyGuidance(kundliId: string): Promise<DailyGuidancePayload> {
+    const params = this.dailyParams();
+    const cacheKey = `${kundliId}:${this.todayKey()}:${params.toString()}`;
+    const request = this.api.get<DailyGuidancePayload>(`/context/${kundliId}/daily?${params.toString()}`).then((value) => {
+      this.dailyValues.set(cacheKey, value);
+      this.writeStoredDaily(cacheKey, value);
+      return value;
+    }).catch((error) => {
+      this.dailyCache.delete(cacheKey);
+      throw error;
+    });
+    this.dailyCache.set(cacheKey, request);
+    return request;
   }
 
   ashtakavarga(kundliId: string): Promise<AshtakavargaPayload> {
@@ -308,6 +338,7 @@ export class VedicService {
     for (const key of [...this.dailyValues.keys()]) {
       if (key.startsWith(`${kundliId}:`)) this.dailyValues.delete(key);
     }
+    this.removeStoredDaily(`${kundliId}:`);
     for (const key of [...this.calendarCache.keys()]) {
       if (key.startsWith(`${kundliId}:`)) this.calendarCache.delete(key);
     }
@@ -329,6 +360,7 @@ export class VedicService {
     this.removeStoredAll();
     this.dailyCache.clear();
     this.dailyValues.clear();
+    this.removeStoredDaily();
     this.calendarCache.clear();
     this.calendarValues.clear();
     this.removeStoredCalendars();
@@ -399,6 +431,34 @@ export class VedicService {
     if (place?.city) params.set('city', place.city);
     if (place?.nation) params.set('nation', place.nation);
     return params;
+  }
+
+  private readStoredDaily(cacheKey: string): DailyGuidancePayload | null {
+    try {
+      const raw = localStorage.getItem(`${this.dailyStoragePrefix}${cacheKey}`);
+      return raw ? JSON.parse(raw) as DailyGuidancePayload : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private writeStoredDaily(cacheKey: string, value: DailyGuidancePayload): void {
+    try {
+      localStorage.setItem(`${this.dailyStoragePrefix}${cacheKey}`, JSON.stringify(value));
+    } catch {
+      // The in-memory value still serves this session when storage is full.
+    }
+  }
+
+  private removeStoredDaily(cacheKeyPrefix = ''): void {
+    try {
+      const prefix = `${this.dailyStoragePrefix}${cacheKeyPrefix}`;
+      for (const key of Object.keys(localStorage)) {
+        if (key.startsWith(prefix)) localStorage.removeItem(key);
+      }
+    } catch {
+      // Volatile caches were already cleared.
+    }
   }
 
   private todayKey(): string {

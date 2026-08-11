@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DayGaugeComponent } from '../day-gauge/day-gauge.component';
 import { DayQualitySheetComponent, DaySignal } from './day-quality-sheet.component';
@@ -222,6 +222,7 @@ export class TodayComponent {
   private readonly route = inject(ActivatedRoute);
   protected readonly preferences = inject(PreferencesService);
   private readonly haptics = inject(HapticsService);
+  private requestId = 0;
   protected readonly whyMode = computed(() => ({
     guided: 'Guided view - the life guidance first, with unfamiliar terms translated.',
     balanced: 'Balanced view - guidance first, the calculation underneath.',
@@ -326,7 +327,14 @@ export class TodayComponent {
   readonly askSuggestions = signal<string[]>([]);
 
   constructor() {
-    void this.loadToday();
+    effect(() => {
+      const profilesLoaded = this.kundlis.loaded();
+      const profileId = this.kundlis.activeId();
+      // This read is the invalidation boundary for current-place guidance.
+      this.preferences.panchangaContextKey();
+      if (profilesLoaded) void this.loadToday(profileId);
+    });
+    if (!this.kundlis.loaded()) void this.kundlis.load();
     // Deep-linked from the onboarding Aha screen's "Listen to my first
     // guidance" — arriving with ?listen=1 should open the sheet immediately
     // rather than land on a plain Today with no explanation of the link.
@@ -335,12 +343,12 @@ export class TodayComponent {
     }
   }
 
-  protected async loadToday(): Promise<void> {
+  protected async loadToday(profileId = this.kundlis.activeId()): Promise<void> {
+    const request = ++this.requestId;
     this.loadError.set(null);
     this.emptyProfile.set(false);
     try {
-      await this.kundlis.load();
-      const profile = this.kundlis.active();
+      const profile = this.kundlis.kundlis().find((item) => item.id === profileId) ?? null;
       if (!profile) {
         this.view.set(null);
         this.loading.set(false);
@@ -349,21 +357,35 @@ export class TodayComponent {
       }
       const cached = this.vedic.cachedDailyGuidance(profile.id);
       if (cached) {
+        if (request !== this.requestId || this.kundlis.activeId() !== profile.id) return;
         this.applyDaily(profile.name, profile.birth_city, cached);
         this.loading.set(false);
         void this.prefetchCalendar(profile.id);
         void this.prefetchChart(profile.id);
+        void this.refreshToday(profile.id, request);
         return;
       }
       this.loading.set(true);
       const daily = await this.vedic.dailyGuidance(profile.id);
+      if (request !== this.requestId || this.kundlis.activeId() !== profile.id) return;
       this.applyDaily(profile.name, profile.birth_city, daily);
       void this.prefetchCalendar(profile.id);
       void this.prefetchChart(profile.id);
     } catch (error) {
-      this.loadError.set((error as Error).message);
+      if (request === this.requestId) this.loadError.set((error as Error).message);
     } finally {
-      this.loading.set(false);
+      if (request === this.requestId) this.loading.set(false);
+    }
+  }
+
+  private async refreshToday(profileId: string, request: number): Promise<void> {
+    try {
+      const daily = await this.vedic.refreshDailyGuidance(profileId);
+      if (request !== this.requestId || this.kundlis.activeId() !== profileId) return;
+      const profile = this.kundlis.active();
+      if (profile) this.applyDaily(profile.name, profile.birth_city, daily);
+    } catch {
+      // Saved guidance remains usable when background refresh is unavailable.
     }
   }
 

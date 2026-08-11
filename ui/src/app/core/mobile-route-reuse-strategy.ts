@@ -4,10 +4,21 @@ import { Injectable } from '@angular/core';
 @Injectable()
 export class MobileRouteReuseStrategy implements RouteReuseStrategy {
   private handlers: { [key: string]: DetachedRouteHandle } = {};
+  private readonly retainedTabs = new Set([
+    'm/today',
+    'm/ask',
+    'm/explore',
+    'm/chart',
+    'm/chart/periods',
+    'm/calendar',
+    'm/settings',
+  ]);
 
   shouldDetach(route: ActivatedRouteSnapshot): boolean {
-    // Only cache routes that are under the '/m/' shell
-    return this.getRoutePath(route).startsWith('m/');
+    // Retain only footer destinations. Caching every /m/* detail route kept
+    // stale profile/date state alive and grew the handle map for the entire
+    // session; detail screens should be rebuilt from their route parameters.
+    return this.retainedTabs.has(this.getRoutePath(route));
   }
 
   store(route: ActivatedRouteSnapshot, handle: DetachedRouteHandle): void {

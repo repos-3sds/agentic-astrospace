@@ -27,6 +27,17 @@ export interface ExploreCard {
   queryParams?: Record<string, string>;
 }
 
+interface YantraTile {
+  title: string;
+  subtitle: string;
+  tone: string;
+  icon: string;
+  route: string[];
+  queryParams?: Record<string, string>;
+  active?: boolean;
+  featured?: boolean;
+}
+
 /**
  * Chart Hub (Figma node 35:57) — the Chart tab's home and the entry to the
  * chart flow: hub, full render, planet detail, provenance.
@@ -233,11 +244,12 @@ export class ChartHubComponent {
     return 'Active period stack from Vimshottari dasha';
   });
 
-  protected readonly yantraTiles = computed(() => {
+  protected readonly yantraTiles = computed<YantraTile[]>(() => {
     const ascendant = this.angles().find((item) => item.label === 'ASCENDANT')?.sign ?? 'chart ready';
     const shadbala = this.chart()?.shadbala;
     const strongest = shadbala?.classical?.ranking?.[0];
     return [
+      { title: 'Ask Siddha', subtitle: 'Grounded consultation from this chart', tone: 'accent', icon: 'nav-ask', route: ['/m', 'ask'], featured: true },
       { title: 'Charts & Vargas', subtitle: `D1-D60 · ${ascendant} Asc`, tone: 'accent', icon: 'figma-yantra-compass', route: ['/m', 'chart', 'full'], active: true },
       { title: 'Strength', subtitle: strongest ? `${strongest.planet} strongest` : 'Shadbala · AV', tone: 'good', icon: 'figma-yantra-activity', route: ['/m', 'chart', 'strength'] },
       { title: 'Yogas', subtitle: 'Strengths & cancellations', tone: 'warn', icon: 'figma-yantra-git-commit', route: ['/m', 'chart', 'yogas'] },
