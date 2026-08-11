@@ -1,7 +1,7 @@
 <header class="appbar">
   <h1 class="screen-title">Ask</h1>
   <a class="iconbtn" routerLink="/m/ask/history" aria-label="Past questions">
-    <img src="mobile/history.svg" alt="" aria-hidden="true" />
+    <span class="masked-icon history-icon" aria-hidden="true"></span>
   </a>
 </header>
 
@@ -27,7 +27,11 @@
         [attr.aria-pressed]="topic.id === selectedTopic()"
         (click)="toggleTopic(topic.id)"
       >
-        <img [src]="'mobile/' + topic.icon + '.svg'" alt="" aria-hidden="true" />
+        <span
+          class="masked-icon topic-icon"
+          [style.--ask-icon]="'url(/mobile/' + topic.icon + '.svg)'"
+          aria-hidden="true"
+        ></span>
         <span>{{ topic.label }}</span>
       </button>
     }
@@ -38,7 +42,7 @@
     @for (s of suggestions(); track s.prompt) {
       <button class="suggestion" type="button" (click)="ask(s.prompt)">
         <span class="suggestion-text">{{ s.prompt }} @if (s.because) { <small>{{ s.because }}</small> }</span>
-        <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
+        <span class="masked-icon chevron-icon" aria-hidden="true"></span>
       </button>
     }
   </div>

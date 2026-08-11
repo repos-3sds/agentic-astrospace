@@ -108,9 +108,23 @@ export class AuthService {
   private installAutoRefreshLifecycle(): void {
     if (!Capacitor.isNativePlatform()) return;
     void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-      if (isActive) void this.client?.auth.startAutoRefresh();
-      else void this.client?.auth.stopAutoRefresh();
+      if (isActive) {
+        void this.client?.auth.startAutoRefresh();
+        void this.refreshForegroundSession();
+      } else {
+        void this.client?.auth.stopAutoRefresh();
+      }
     });
+  }
+
+  private async refreshForegroundSession(): Promise<void> {
+    if (!this.client || !this.session()) return;
+    const { data, error } = await this.client.auth.getSession();
+    // A foreground network transition is not a sign-out. Supabase's auth-state
+    // callback remains the authority for a real SIGNED_OUT event; keeping the
+    // last session here prevents a brief offline/online handoff from ejecting
+    // the reader from every guarded mobile route.
+    if (!error && data.session) this.setSession(data.session);
   }
 
   async signIn(email: string, password: string, destination: string[] = ['/app']): Promise<void> {
@@ -205,8 +219,8 @@ export class AuthService {
     // means this method can't go stale independently of that logic.
     const { data, error } = await this.client!.auth.getSession();
     if (error) {
-      this.setSession(null);
-      return null;
+      const current = this.session();
+      return this.usableAccessToken(current);
     }
     this.setSession(data.session);
     return data.session?.access_token ?? null;
@@ -219,6 +233,12 @@ export class AuthService {
   private setSession(session: Session | null): void {
     this.session.set(session);
     this.user.set(session?.user ?? null);
+  }
+
+  private usableAccessToken(session: Session | null): string | null {
+    if (!session?.access_token) return null;
+    if (!session.expires_at) return session.access_token;
+    return session.expires_at * 1000 > Date.now() + 5_000 ? session.access_token : null;
   }
 
   private authRedirect(destination: string): string {

@@ -71,6 +71,7 @@ export class App implements OnInit, OnDestroy {
   private location = inject(Location);
   private removeViewportInsetObserver: (() => void) | null = null;
   private removeBackButtonListener: (() => void) | null = null;
+  private removeNativeInteractionGuards: (() => void) | null = null;
   private animatedSplashFadeTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
@@ -177,6 +178,7 @@ export class App implements OnInit, OnDestroy {
   async ngOnInit(): Promise<void> {
     this.removeViewportInsetObserver = this.installViewportInsetObserver();
     this.removeBackButtonListener = this.installBackButtonHandler();
+    this.removeNativeInteractionGuards = this.installNativeInteractionGuards();
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event) => this.url.set(event.urlAfterRedirects));
@@ -247,6 +249,7 @@ export class App implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.removeViewportInsetObserver?.();
     this.removeBackButtonListener?.();
+    this.removeNativeInteractionGuards?.();
     this.clearAnimatedSplashTimers();
   }
 
@@ -266,6 +269,24 @@ export class App implements OnInit, OnDestroy {
     this.showAnimatedSplash.set(true);
     this.animatedSplashFading.set(false);
     this.clearAnimatedSplashTimers();
+  }
+
+  private installNativeInteractionGuards(): () => void {
+    if (!Capacitor.isNativePlatform()) return () => undefined;
+    document.documentElement.classList.add('as-native-app');
+    const preventNativeDrag = (event: Event) => event.preventDefault();
+    const preventContextMenu = (event: Event) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('input, textarea, [contenteditable="true"]')) return;
+      event.preventDefault();
+    };
+    document.addEventListener('dragstart', preventNativeDrag, { capture: true });
+    document.addEventListener('contextmenu', preventContextMenu, { capture: true });
+    return () => {
+      document.documentElement.classList.remove('as-native-app');
+      document.removeEventListener('dragstart', preventNativeDrag, { capture: true });
+      document.removeEventListener('contextmenu', preventContextMenu, { capture: true });
+    };
   }
 
   private clearAnimatedSplashTimers(): void {

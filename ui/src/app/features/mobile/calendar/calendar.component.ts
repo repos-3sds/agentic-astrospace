@@ -150,7 +150,9 @@ export class CalendarComponent {
 
   constructor() {
     effect(() => {
-      void this.load(this.activeId());
+      const profileId = this.activeId();
+      this.preferences.panchangaContextKey();
+      void this.load(profileId);
     });
     effect(() => {
       const regions = this.preferences.festivalRegions();
@@ -233,6 +235,7 @@ export class CalendarComponent {
       this.renderedProfileId = id;
       this.loading.set(false);
       void this.loadFestivals(cached.start_date, 60);
+      void this.refreshCalendar(id, request);
       return;
     }
     if (this.renderedProfileId !== id) {
