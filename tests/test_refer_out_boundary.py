@@ -468,14 +468,21 @@ def test_guaranteed_to_logistics_false_positive_is_a_documented_limitation():
 
 
 # ── Death as a NOUN, both parties ────────────────────────────────────────────
-# Found 2026-08-11 by testing the third-party pass against a phrase set written
-# independently of that pass's own tests. Every death pattern in the table
-# matched death as a VERB and none matched it as a NOUN, so the verb form was
-# caught while the noun form of the identical claim walked through. Confirmed
-# pre-existing and symmetric — first-party missed the same phrasings — so this
-# closes both sides together rather than growing a third parallel list.
+# History, because it is the point. The first version of this block closed three
+# phrasings and introduced sixteen false positives, and its own negative tests
+# reported "no false positives" — because every one of them avoided the word
+# "your", which is the word the new patterns keyed on. The commit message for
+# that version had itself diagnosed exactly this failure mode in the code it was
+# fixing ("the tests only covered phrasings the author had already thought of").
+#
+# So the negatives below are built the opposite way round: "your" appears in
+# nearly all of them, and they are drawn from the language this app actually
+# writes — dashas and transits ending, businesses and contracts ending, Mars
+# "passing" over a house, retirement and teenage "years". If a person-anchored
+# row can be tripped by an ordinary sentence, it should be tripped here.
 
 DEATH_NOUN_PHRASINGS = [
+    # adj + noun, third party
     "Your son will have a short life.",
     "Your partner will meet an early death.",
     "Your spouse will suffer a fatal accident.",
@@ -483,12 +490,30 @@ DEATH_NOUN_PHRASINGS = [
     "Your child will suffer a violent death.",
     "Your wife may face a premature passing.",
     "Your father faces an untimely end.",
-    "He faces a premature end.",
     "She will have a sudden demise.",
-    # First-party equivalents — the gap was symmetric.
+    # adj + noun, first party — the gap was symmetric
     "You will have a short life.",
     "You will meet an early death.",
     "You will suffer a fatal accident.",
+    "You face an untimely end.",
+    # possessive noun forms; the verb equivalents were caught and these were not
+    "Your father's demise is indicated in 2031.",
+    "Your mother's passing is indicated in this dasha.",
+    "Your brother's death is likely during this period.",
+    # "short-lived" and "cut short" are the standard English renderings of
+    # alpayu, the classical short-longevity class — the most likely phrasing in
+    # this app's own subject matter, and missed entirely by the first version.
+    "Your son's life will be cut short.",
+    "Your daughter may be short-lived.",
+    "You may be short-lived.",
+    "His life will be cut short in that period.",
+    # reversed word order; the file handles both directions for immigration but
+    # this row was one-way
+    "A short life is indicated for your son.",
+    "A curtailed life is shown for your daughter.",
+    # pronoun subjects
+    "His lifespan will be short.",
+    "Her longevity is limited.",
 ]
 
 
@@ -497,29 +522,75 @@ def test_death_stated_as_a_noun_is_caught_for_either_party(answer):
     assert _prohibited_verdict(answer) == "death"
 
 
-ORDINARY_NOUN_NEIGHBOURS = [
-    # "short life" is the one noun here with a real non-mortal use, which is
-    # why it carries a person anchor while "lifespan"/"life expectancy" do
-    # not. It was briefly folded into the subject-free lifespan row during
-    # this fix and this exact sentence caught the mistake.
+ORDINARY_LANGUAGE_WITH_YOUR = [
+    # Dashas and transits legitimately end. An earlier review round had already
+    # excluded bare "end" from the dosha list for this reason; the first version
+    # of these rows silently reintroduced it via an anchor that accepted any
+    # possessive.
+    "Your Mercury antardasha comes to a sudden end in March 2027.",
+    "Your Saturn dasha will come to an untimely end if the sub-period is cut short.",
+    "Your Manglik dosha comes to an untimely end after the marriage rituals.",
+    "Your current phase will come to a premature end.",
+    # "passing" is this app's own word for a transit.
+    "The sudden passing of Mars over your ascendant sharpens the temper.",
+    "The premature passing of this phase leaves work unfinished.",
+    "Jupiter's passing over your tenth house supports promotion.",
+    # Businesses, contracts and projects end.
+    "Your business will come to an untimely end without new capital.",
+    "Your contract will come to a premature end.",
+    "Your lease may come to a sudden end.",
+    "Your venture could meet an early end.",
+    "Your winning streak will come to an untimely end.",
+    # "years" idioms — the first version used "\w+ years" and ate all of these.
+    "Your daughter will not reach her teenage years without some friction.",
+    "Your father will not see his retirement years as idle ones.",
+    "You will not see your golden years wasted if you plan now.",
+    # "short life" of things that are not people.
     "This trend had a short life in the market.",
     "Your business will have a short life.",
     "A short life cycle for this product is normal.",
-    # "fatal" is restricted to bodily nouns; these idioms must survive.
+    # "fatal" idioms.
     "There is a fatal flaw in that plan.",
     "A fatal error in the calculation was corrected.",
-    # "end" needs a person anchor for the same reason.
-    "This partnership may come to an untimely end.",
-    "The project met an early end.",
-    # Regressions the existing table already guards; re-pinned because the
-    # new rows sit directly beside them.
+    # Guards that already existed; re-pinned because the new rows sit beside them.
     "The longevity of your marriage depends on communication.",
     "Your business will not survive the downturn.",
     "Your savings will die down if you overspend.",
     "This dasha has 3 years remaining.",
+    "You have 2 years remaining in this Saturn dasha.",
+    "Your spouse will be supportive.",
+    "Your father will guide you.",
+    "Your career will have a brief lull.",
 ]
 
 
-@pytest.mark.parametrize("answer", ORDINARY_NOUN_NEIGHBOURS)
-def test_ordinary_language_near_the_death_nouns_is_not_flagged(answer):
+@pytest.mark.parametrize("answer", ORDINARY_LANGUAGE_WITH_YOUR)
+def test_ordinary_language_is_not_flagged(answer):
     assert _prohibited_verdict(answer) is None
+
+
+MULTI_SENTENCE_ANSWERS = [
+    "This affects your career. An untimely end to this job phase is possible.",
+    "Saturn sits in your tenth. A sudden end to the assignment is likely.",
+    "Your Rahu dasha runs to 2040. The current sub-period ends in 2027.",
+]
+
+
+@pytest.mark.parametrize("answer", MULTI_SENTENCE_ANSWERS)
+def test_person_anchors_do_not_reach_across_a_sentence_boundary(answer):
+    """`_normalize()` flattens a whole multi-paragraph answer onto one line, so
+    an unbounded gap let a person named in one sentence anchor a death noun in
+    the next. Real answers are multi-paragraph, so this was not a corner case —
+    it meant the true false-positive rate was well above what single-sentence
+    testing showed. The gaps are sentence-bounded now."""
+    assert _prohibited_verdict(answer) is None
+
+
+def test_person_anchor_is_a_person_not_a_possessive():
+    """The defect that made the first version unmergeable, pinned directly:
+    `_DEATH_NOUN_REF` contained a bare "your", so it anchored on any possessive
+    and the constant's name asserted a property its pattern did not have."""
+    from astrospace.agents.safety import _DEATH_NOUN_REF
+    assert "|your|" not in _DEATH_NOUN_REF
+    assert _prohibited_verdict("Your portfolio will meet an untimely end.") is None
+    assert _prohibited_verdict("Your father will meet an untimely end.") == "death"
