@@ -179,13 +179,76 @@ these shlokas are phrased about children and relatives. Extracting them now is
 deliberate — the work is done and recorded — but retrieval must stay closed
 until that net merges.
 
+---
+
+## The 6th lord through the twelve houses (S ch.24.61–72, pp.147–150)
+
+This is the servable core of the health domain: where the 6th lord sits, stated
+as disposition rather than diagnosis. All `[safe]` — none of these name a
+disease or a lifespan.
+
+| 6th lord in | Effect (S ch.24) |
+| --- | --- |
+| 1st | sickly; well known; hostile to his own people |
+| 2nd | adventurous, famous among his group |
+| 3rd | given to anger; bereft of (fraternal) support |
+| 4th | devoid of maternal happiness |
+| 5th | fluctuating finances |
+| 6th | enmity with his own circle |
+| 7th | deprived of happiness through the spouse |
+| 8th | sickly, inimical |
+| 9th | trades in wood and stone |
+| 10th | well known among his men |
+| 11th | gains wealth through his enemies |
+| 12th | spends on vices; hostile |
+
+Only the 1st and 8th placements are health claims at all; the rest are
+temperament, relationships and money. **That is a finding, not an omission** —
+BPHS treats the 6th lord as a significator of conflict and expenditure at least
+as much as of illness, and a health reading built from this chapter should say
+so rather than forcing every placement into a sickness frame.
+
+> **Textual note.** The section heading reads "EFFECTS OF THE 6TH LORD IN
+> VARIOUS HOUSES (up to shloka 71)" but the series runs to **72**, which carries
+> the 12th house. Trusting the heading drops a placement. The book's own
+> cross-references are not reliable bounds — the same lesson the Uttara
+> Kalamritam contents taught.
+
+---
+
+## Chapter 19 (Eighth House) — extracted, and not servable
+
+**S ch.19, pp.139–141 (PDF 139–141). Class: `gated_death` in full.**
+
+This chapter is *not* the chronic-illness chapter its title suggests. It is a
+longevity chapter end to end — shloka 1 "LONG LIFE", 2 "SHORT LIFE", 4–7 long
+life yogas, 8–13 short life, including explicit infant mortality:
+
+- 8th lord in an angle → long life; 8th lord with the ascendant lord or a
+  malefic in the 8th → short-lived (1–2)
+- weak ascendant lord with the 8th lord in an angle → a span of 20–32 years (8)
+- 8th house, 8th lord and 12th house all conjunct malefic → "death instant at
+  birth"; 8th lord in the 8th with an afflicted Moon → death within a month of
+  birth (8–13)
+- Santhanam's note is the useful structural point: a well-placed 8th lord is
+  **not sufficient** on its own — the ascendant lord's strength is a
+  simultaneous requirement for long life
+
+**Product conclusion: this chapter is never served.** CLAUDE.md refers longevity
+out to a professional, so no reading cites it, whatever the output guard does.
+It is extracted for completeness and audit — so nobody re-reads it wondering
+whether it was missed — and marked closed. The same applies to ch.43
+(Longevity), ch.44 (Maraka), ch.71, and ch.9–10 (arishta/balarishta).
+
+The distinction worth holding: the death guard in `safety.py` is a **net for
+model output**, not a licence to retrieve this material. Fixing the net (see
+below) does not open this chapter.
+
 ## What is not here
 
-Only the 6th house. The rest of BPHS's health-bearing material is mapped in
-`docs/kb_manifests/bphs_santhanam.json` and not yet extracted:
-
-- **ch.9 Evils at Birth** (arishta/balarishta, pp.87–94) and **ch.10 Antidotes** — `gated_death` in full
-- **ch.19 Effects of the Eighth House** (pp.139–141) — chronic illness, longevity
-- **ch.24 Effects of the Bhava Lords** (pp.157–193) — the 6th and 8th lord placements
-- **ch.43 Longevity**, **ch.44 Maraka**, **ch.71 longevity via Ashtaka Varga** — `gated_death` in full
-- **ch.81** features of the parts of the body (pp.789–801)
+- **ch.9 Evils at Birth** (pp.87–94) and **ch.10 Antidotes** — not extracted; `gated_death`
+- **ch.43 Longevity**, **ch.44 Maraka**, **ch.71 via Ashtaka Varga** — not extracted; `gated_death`
+- **ch.24** lords other than the 6th — the 8th lord series belongs to the same
+  gated class; the rest are other domains
+- **ch.81** features of the parts of the body (pp.789–801) — physical
+  description rather than health; unread
