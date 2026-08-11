@@ -1,7 +1,7 @@
 <div class="shell">
-  <main class="content" [class.tabs-hidden]="hideTabs() || overlay.open()"><router-outlet /></main>
+  <main class="content" [class.tabs-hidden]="tabsSuppressed()"><router-outlet /></main>
 
-  @if (!hideTabs() && !overlay.open()) {
+  @if (!tabsSuppressed()) {
     <nav class="tabbar" aria-label="Primary">
       @for (tab of tabs(); track tabTrack($index, tab)) {
         <a

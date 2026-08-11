@@ -252,9 +252,14 @@
             }
           }
         } @else {
-          <p class="legacy-answer">{{ message.content || 'Reading your chart…' }}</p>
-          @if (streamStatus() && message.streaming) {
-            <p class="summary-line">{{ streamStatus() }}</p>
+          @if (message.streaming) {
+            <div class="stream-progress" role="status">
+              <span class="stream-pulse" aria-hidden="true"></span>
+              <span>{{ streamStatus() || message.content || 'Reading your chart…' }}</span>
+              <button class="stop-stream" type="button" (click)="$event.stopPropagation(); stopStreaming()">Stop</button>
+            </div>
+          } @else {
+            <p class="legacy-answer">{{ message.content || 'Reading your chart…' }}</p>
           }
           @if (!message.streaming && message.options.length) {
             <div class="followups inline-options">
@@ -300,10 +305,6 @@
     </article>
   }
 
-  @if (streaming()) {
-    <button class="stop-stream" type="button" (click)="stopStreaming()">Stop streaming</button>
-    <p class="answer-state" role="status">{{ streamStatus() || 'Reading your chart…' }}</p>
-  }
   @if (submitError()) {
     <p class="answer-state is-error" role="alert">{{ submitError() }}</p>
   }

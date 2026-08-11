@@ -18,6 +18,12 @@
   padding: 16px 20px 8px;
 }
 
+.appbar.has-back {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  .screen-title { text-align: center; }
+}
+
 .screen-title { @include m-title; color: var(--m-text); margin: 0; }
 
 .iconbtn {
@@ -32,13 +38,22 @@
   flex-shrink: 0;
   cursor: pointer;
   text-decoration: none;
-  img {
-    width: 19px;
-    height: 19px;
-    display: block;
-    filter: var(--m-back-icon-filter);
-  }
+  color: var(--m-text);
 }
+
+.masked-icon {
+  width: 19px;
+  height: 19px;
+  display: block;
+  flex-shrink: 0;
+  background: currentColor;
+  -webkit-mask: var(--ask-icon) center / contain no-repeat;
+  mask: var(--ask-icon) center / contain no-repeat;
+}
+
+.history-icon { --ask-icon: url('/mobile/history.svg'); }
+.back-icon { --ask-icon: url('/mobile/back.svg'); }
+.chevron-icon { --ask-icon: url('/mobile/chevron.svg'); width: 17px; height: 17px; }
 
 /* Content column — node 25:32 */
 .body {
@@ -87,7 +102,7 @@
   flex-shrink: 0;
   @include m-body-small;
   color: var(--m-text);
-  img { width: 16px; height: 16px; display: block; flex-shrink: 0; }
+  .topic-icon { width: 16px; height: 16px; }
 
   // Selection is carried by the border, not a fill: the chips sit directly
   // above the accent-filled suggestions, and a second filled row would read as
@@ -112,7 +127,7 @@
   gap: 10px;
   cursor: pointer;
   text-align: left;
-  img { width: 17px; height: 17px; display: block; flex-shrink: 0; }
+  .chevron-icon { color: var(--m-accent-strong); }
 }
 
 .suggestion-text {

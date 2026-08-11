@@ -279,6 +279,15 @@
 }
 
 .yantra-tile.is-active { border-color: var(--yantra-border-strong); }
+.yantra-tile.is-featured {
+  grid-column: 1 / -1;
+  min-height: 80px;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  border-color: color-mix(in srgb, var(--yantra-red) 52%, var(--yantra-border));
+  background: var(--yantra-red-soft);
+}
 .yantra-icon {
   color: var(--yantra-muted);
   display: grid;
@@ -292,7 +301,24 @@
   color: var(--yantra-red);
   background: var(--yantra-red-soft);
 }
+.yantra-tile.is-featured .yantra-icon {
+  color: var(--m-on-primary);
+  background: var(--m-primary-cta);
+}
 .tile-icon { width: 16px; height: 16px; }
+.yantra-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 4px;
+}
+.featured-arrow {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: var(--yantra-red-dark);
+}
 .yantra-dot {
   position: absolute;
   top: 23px;
@@ -303,6 +329,7 @@
   background: var(--yantra-red);
 }
 .yantra-tile b { @include m-body-strong; margin-top: auto; color: var(--yantra-text); }
+.yantra-tile.is-featured b { margin-top: 0; color: var(--yantra-red-dark); }
 .yantra-tile small {
   @include m-caption;
   width: 100%;

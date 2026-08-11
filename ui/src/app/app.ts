@@ -71,13 +71,20 @@ export class App implements OnInit, OnDestroy {
   private location = inject(Location);
   private removeViewportInsetObserver: (() => void) | null = null;
   private removeBackButtonListener: (() => void) | null = null;
+  private removeNativeInteractionGuards: (() => void) | null = null;
   private animatedSplashFadeTimer: ReturnType<typeof setTimeout> | null = null;
+  private nativeBootReady = false;
+  private animatedSplashFinished = false;
 
   constructor() {
     // Native boot starts on a route that does not depend on auth or the network.
     // ngOnInit advances a restored session into the shell once auth resolves.
     // Web is untouched: isNativePlatform() is false in every browser.
     if (Capacitor.isNativePlatform()) {
+      // Angular's overlay must own the first rendered frame. Starting it only
+      // after auth.init() allowed /m/start to flash between Android's short
+      // system splash and session restoration on a real device.
+      this.startAnimatedSplashIntro();
       const path = this.router.url.split('?')[0];
       if (path === '/' || path === '') {
         void this.router.navigateByUrl('/m/start');
@@ -177,6 +184,7 @@ export class App implements OnInit, OnDestroy {
   async ngOnInit(): Promise<void> {
     this.removeViewportInsetObserver = this.installViewportInsetObserver();
     this.removeBackButtonListener = this.installBackButtonHandler();
+    this.removeNativeInteractionGuards = this.installNativeInteractionGuards();
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event) => this.url.set(event.urlAfterRedirects));
@@ -206,7 +214,8 @@ export class App implements OnInit, OnDestroy {
       // Leaving the splash up on error would look like a hang, and the error
       // toast above is already the honest signal.
       await this.hideNativeSplash();
-      this.startAnimatedSplashIntro();
+      this.nativeBootReady = true;
+      this.completeAnimatedSplashIfReady();
     }
   }
 
@@ -247,10 +256,19 @@ export class App implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.removeViewportInsetObserver?.();
     this.removeBackButtonListener?.();
+    this.removeNativeInteractionGuards?.();
     this.clearAnimatedSplashTimers();
   }
 
   protected finishAnimatedSplash(): void {
+    this.animatedSplashFinished = true;
+    this.completeAnimatedSplashIfReady();
+  }
+
+  private completeAnimatedSplashIfReady(): void {
+    // A tap may skip the animation, but it must never reveal the provisional
+    // /m/start route while auth is still deciding between Today and onboarding.
+    if (!this.nativeBootReady || !this.animatedSplashFinished) return;
     if (!this.showAnimatedSplash() || this.animatedSplashFading()) return;
     this.animatedSplashFading.set(true);
     this.clearAnimatedSplashTimers();
@@ -263,9 +281,28 @@ export class App implements OnInit, OnDestroy {
 
   private startAnimatedSplashIntro(): void {
     if (!Capacitor.isNativePlatform()) return;
+    this.animatedSplashFinished = false;
     this.showAnimatedSplash.set(true);
     this.animatedSplashFading.set(false);
     this.clearAnimatedSplashTimers();
+  }
+
+  private installNativeInteractionGuards(): () => void {
+    if (!Capacitor.isNativePlatform()) return () => undefined;
+    document.documentElement.classList.add('as-native-app');
+    const preventNativeDrag = (event: Event) => event.preventDefault();
+    const preventContextMenu = (event: Event) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('input, textarea, [contenteditable="true"]')) return;
+      event.preventDefault();
+    };
+    document.addEventListener('dragstart', preventNativeDrag, { capture: true });
+    document.addEventListener('contextmenu', preventContextMenu, { capture: true });
+    return () => {
+      document.documentElement.classList.remove('as-native-app');
+      document.removeEventListener('dragstart', preventNativeDrag, { capture: true });
+      document.removeEventListener('contextmenu', preventContextMenu, { capture: true });
+    };
   }
 
   private clearAnimatedSplashTimers(): void {

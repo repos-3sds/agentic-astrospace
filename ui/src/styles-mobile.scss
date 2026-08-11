@@ -153,6 +153,21 @@
   filter: var(--m-back-icon-filter);
 }
 
+// Capacitor should behave like an app surface, not a selectable web document.
+// Keep form controls editable; answers expose explicit Copy actions.
+:root.as-native-app .as-mobile,
+:root.as-native-app .as-mobile * {
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+:root.as-native-app .as-mobile input,
+:root.as-native-app .as-mobile textarea,
+:root.as-native-app .as-mobile [contenteditable='true'] {
+  user-select: text;
+}
+
 .as-mobile,
 .as-mobile * {
   scrollbar-width: none;
