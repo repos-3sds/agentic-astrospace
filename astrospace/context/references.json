@@ -6,7 +6,8 @@
     "Expanded 2026-08-06 (T2.1/T2.2, docs/backend_astro_depth_checklist_2026-08-06.md) so every domain in taxonomy.json has at least 2-3 references. Every source cited here is already in sources.json's curated catalog; nothing here cites a work outside that list. Statements are general, well-attested house/karaka/varga/yoga significations paraphrased from classical framing already used elsewhere in this codebase (astrospace/knowledge/vedic_rules) — none claim a specific chapter/verse this pass could not verify; 'location' stays at the topic/chapter level, not a fabricated verse number.",
     "location is a topic pointer for a human to go find the passage, not a claim that a specific page/verse was checked. Where this codebase's own yogas.json/doshas.json already carries source_status for the same rule, that status is carried through here too.",
     "Expanded 2026-08-11 with rules read from BPHS-Santhanam-Vol-1.pdf, whose text layer is measured readable (93.6%) — see docs/kb_corpus_sources.md. Unlike the 2026-08-06 pass, these carry a verifiable chapter/verse/page, not a topic pointer. NOTE ON EDITIONS: chapter numbers differ between translations — Sharma's ch.19 is Santhanam's ch.17 — so every location here names the translation.",
-    "DELIBERATELY NOT INGESTED: BPHS's longevity and maraka material (ch.19, ch.43, ch.44, ch.9-10 arishta, and the 2nd/7th/8th-lord dasha rows of ch.48 that read 'possibility of death'). Longevity is a refer-out under CLAUDE.md, so those rules must not be retrievable by a domain agent at all. Their absence here is a decision, not an oversight — see docs/health_kb_bphs_6th_house.md. Also excluded: the planet-by-planet named-disease tables at Santhanam pp.115-117, which are quotations from Cornell's 'Encyclopaedia of Medical Astrology', not Parasara, and would function as a diagnosis generator."
+    "DELIBERATELY NOT INGESTED: BPHS's longevity and maraka material (ch.19, ch.43, ch.44, ch.9-10 arishta, and the 2nd/7th/8th-lord dasha rows of ch.48 that read 'possibility of death'). Longevity is a refer-out under CLAUDE.md, so those rules must not be retrievable by a domain agent at all. Their absence here is a decision, not an oversight — see docs/health_kb_bphs_6th_house.md. Also excluded: the planet-by-planet named-disease tables at Santhanam pp.115-117, which are quotations from Cornell's 'Encyclopaedia of Medical Astrology', not Parasara, and would function as a diagnosis generator.",
+    "Marriage rules added 2026-08-12 from BPHS ch.18 and ch.24.73-84. THREE CLASSES ARE DELIBERATELY ABSENT. (1) Rules whose only content is a spouse's obedience or the native's control over them (ch.24.76, ch.24.82) — there is no neutral rule inside them to keep. (2) The passages describing a partner's body and sexual acts (ch.18.9 and surrounding notes). (3) Timing of a spouse's death (ch.18.3, 18.35-39, 18.42), which is longevity and refers out. The chapter is written throughout for a male native with a wife; that gender is the period reader's assumption and not a claim the chart makes, so statements here say spouse or partner. See docs/marriage_kb_bphs_7th_house.md."
   ],
   "references": [
     {
@@ -1024,6 +1025,191 @@
       ],
       "status": "convention_dependent",
       "observance_note": "A genuine intra-text conflict, left unresolved. State which reading is being used rather than implying the text speaks with one voice."
+    },
+    {
+      "ref_id": "bphs18_2_seventh_lord_dusthana",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "spouse_nature",
+        "harmony_discord"
+      ],
+      "statement": "The 7th lord placed in the 6th, 8th or 12th weakens the marriage's support and flags the partner's wellbeing as a concern.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.18 v.2, p.121 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:7",
+        "lord:7",
+        "dusthana"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs18_4_seventh_lord_strength",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "harmony_discord"
+      ],
+      "statement": "A 7th lord endowed with strength and well placed supports the marriage; weak and afflicted, it does not. Strength of the 7th lord is the first thing judged, before any single combination.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.18 vv.4-5, p.122 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:7",
+        "lord:7",
+        "dignity"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs18_16_malefic_on_seventh",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "harmony_discord",
+        "spouse_nature"
+      ],
+      "statement": "The 7th house or its lord conjunct a malefic brings difficulty to the partner and strain to the union.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.18 v.16, p.123 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:7",
+        "lord:7",
+        "malefic"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs18_18_moon_seventh_felicity",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "harmony_discord"
+      ],
+      "statement": "The Moon in the 7th with an afflicted 7th lord indicates a lack of conjugal ease. The translator adds that the Moon here should be waning — a condition the verse itself does not state.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.18 v.18, p.124 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:7",
+        "moon"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The waning-Moon requirement is the translator's gloss, not in the verse. State which reading is used."
+    },
+    {
+      "ref_id": "bphs18_timing_early_vs_delayed",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "timing_of_marriage"
+      ],
+      "statement": "BPHS gives combinations for the timing of marriage, and the text itself splits them into those that bring it early and those that delay it. The stated ages belong to a period of child betrothal and are not literal ages for a modern reader: they indicate marriage EARLIER or LATER than the reader's own norm, never a specific year of age.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.18 vv.23-34, pp.124-126 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:7",
+        "timing",
+        "venus"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Ages of 7 to 19 in the source reflect historical child-betrothal norms. Read the combinations as early-versus-delayed relative to the reader's context; never restate an age as a prediction."
+    },
+    {
+      "ref_id": "bphs18_30_delaying_combinations",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "timing_of_marriage",
+        "delay_denial"
+      ],
+      "statement": "Venus in the 2nd with its dispositor joined to Mars; the 7th lord in the 12th with the lagna lord in the 7th in navamsha; and the 8th lord in the 7th with Venus in the navamsha lagna are each read as delaying marriage.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.18 vv.30-34, pp.125-126 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:7",
+        "timing",
+        "venus",
+        "navamsha"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_79_seventh_lord_in_seventh",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "harmony_discord"
+      ],
+      "statement": "The 7th lord in the 7th itself gives happiness in marriage.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.79, p.149 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:7",
+        "lord:7"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_80_seventh_lord_in_eighth",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "harmony_discord"
+      ],
+      "statement": "The 7th lord in the 8th deprives the native of marital happiness.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.80, p.149 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:7",
+        "lord:7",
+        "house:8"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_seventh_lord_is_also_gain",
+      "domains": [
+        "marriage",
+        "wealth"
+      ],
+      "subdomains": [
+        "harmony_discord",
+        "income"
+      ],
+      "statement": "Only about half of the 7th lord's twelve placements speak to the marriage at all; the rest concern wealth, siblings and children. The 7th lord signifies partnership and gain through others together, so not every 7th-lord placement is a statement about the spouse.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 vv.73-84, pp.148-150 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:7",
+        "lord:7"
+      ],
+      "status": "verified_common"
     }
   ]
 }
