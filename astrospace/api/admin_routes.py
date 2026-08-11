@@ -808,7 +808,7 @@ def get_agent_prompts(user: FullAdminUser):
             "description": (
                 "The shared grounding prompt is formatted with the selected domain, "
                 "its deterministic context bundle, profile facts, question tense, and "
-                "the configured domain addendum."
+                "persona voice register, plus the configured domain addendum."
             ),
             "runtime_inputs": [
                 "domain_name",
@@ -816,6 +816,7 @@ def get_agent_prompts(user: FullAdminUser):
                 "profile_facts.age_years",
                 "profile_facts.as_of",
                 "question_tense",
+                "register (experience_mode voice)",
                 "domain_addendum",
             ],
         },

@@ -28,6 +28,7 @@ def test_agent_prompt_registry_is_sourced_from_live_definitions():
     payload = response.json()
     assert payload["schema_version"] == "agent_prompt_registry_v1"
     assert payload["base"]["prompt"] == _BASE_SYSTEM.strip()
+    assert "register (experience_mode voice)" in payload["composition"]["runtime_inputs"]
     assert payload["editable"] is False
     assert payload["coverage"]["configured"] == len(AGENT_REGISTRY)
     assert payload["coverage"]["taxonomy_total"] == len(taxonomy())
