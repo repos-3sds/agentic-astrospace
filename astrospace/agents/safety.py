@@ -214,6 +214,54 @@ _THIRD_PARTY_SUBJECTS = (
 _THIRD_PARTY_REF = (
     r"(?:your (?:" + _THIRD_PARTY_SUBJECTS + r")(?:'s|s')?|he|she|they)"
 )
+# First and third person in one subject, so the lifespan patterns below cannot
+# drift apart between the two the way the immigration vocabulary once drifted
+# between its copies. The 2026-08-11 review found exactly that drift already
+# starting: "your husband will live past 60" was caught while "you will live
+# past 90" was not, because the first-person arm was a separate, older, shorter
+# pattern. One subject, one set of arms.
+_LIFE_SUBJECT = r"\b(?:you|" + _THIRD_PARTY_REF + r")\b"
+_HAS_SUBJECT = (
+    r"\b(?:you have|your (?:" + _THIRD_PARTY_SUBJECTS + r")(?:'s|s')? has|"
+    r"he has|she has|they have)\b"
+)
+_MODAL = r"\b(?:will|shall|is going to|are going to|is likely to|are likely to)\b"
+
+# What makes "live" a lifespan claim is the OBJECT, not the verb — this is the
+# whole fix for the 2026-08-11 review's B3. The previous patterns matched
+# `live (?:until|to|for|past|beyond)` and stopped there, which swallows the
+# enormously common "live to <verb>" construction and the "live beyond one's
+# means" idiom:
+#
+#   flagged | He will not live beyond his means during this dasha.
+#   flagged | Your father will live to enjoy his retirement.
+#   flagged | He will live to see the business succeed.
+#
+# That is not cosmetic. A match here REPLACES the entire answer with the
+# longevity refer-out, so a false positive costs a reader their reading and
+# tells them the app will not discuss their lifespan — about a question they
+# never asked.
+#
+# So the object has to be something only a lifespan claim puts there: an age or
+# year, or the "old age" idiom. "for" is dropped from the preposition list
+# entirely — "live for three years in Dubai" is a foreign-residence sentence,
+# and the genuine longevity form of it ("live for another 40 years") is its own
+# pattern with `another` required.
+#
+# Spelled-out numbers are covered as well as digits. A model writes "about
+# three years left" at least as readily as "3", and the pattern this replaces
+# happened to catch that only because it required no number at all — which was
+# the same looseness that made it fire on ordinary dasha language.
+_DURATION_COUNT = (
+    r"\d+|a few|several|a couple of|one|two|three|four|five|six|seven|eight|"
+    r"nine|ten|eleven|twelve|eighteen|twenty|thirty|forty|fifty"
+)
+_LIFESPAN_OBJECT = (
+    r"(?:the age of |age )?\d{1,4}\b"
+    r"|(?:the age of |age )?(?:sixty|seventy|eighty|ninety|a hundred)(?:[- ]\w+)?\b"
+    r"|(?:a )?(?:ripe )?old age"
+    r"|(?:his|her|their|your) (?:sixties|seventies|eighties|nineties)"
+)
 
 # Subjects the app must never issue a verdict on. Kept as word-stems so
 # inflections ("survive"/"survival") are covered without listing each form.
@@ -345,35 +393,58 @@ def refer_out_kind(question: str) -> str | None:
 # not copies of the audit's specific sentences — a real fix generalizes past
 # the exact cases that exposed the gap, or the next paraphrase finds it again.
 _PROHIBITED_OUTPUT = (
-    (r"\byou (?:will|are going to) die\b", "death"),
     # The subject slot is optional, so this one pattern covers both "your
     # death"/"your lifespan" (what it always caught) and "your father's
     # death"/"your spouse's lifespan" (what it did not).
     (r"\byour (?:(?:" + _THIRD_PARTY_SUBJECTS + r")(?:'s|s')? )?"
      r"(?:time of )?(?:death|dying|lifespan|life expectancy|longevity)\b", "death"),
-    # Third-party death verbs. Adverb-gap tolerant ("your spouse will soon
-    # die") using the same shared `_ADVERB_GAP` as the immigration arms, and
-    # negation-tolerant ("will not survive") because a survival verdict is the
-    # same claim as a death verdict with the polarity flipped — "your child
-    # will not survive" is not a hedge, it is the prohibited sentence.
-    (r"\b" + _THIRD_PARTY_REF + r"\b" + _ADVERB_GAP +
-     r"\b(?:will|shall|is going to|are going to)\b\s*(?:not\s+)?" + _ADVERB_GAP +
+    # Death verbs, first and third person through one shared subject. Adverb-gap
+    # tolerant ("your spouse will soon die") and negation-tolerant, because a
+    # survival verdict is a death verdict with the polarity flipped — "your
+    # child will not survive" is not a hedge, it is the prohibited sentence.
+    (_LIFE_SUBJECT + _ADVERB_GAP + _MODAL + r"\s*(?:not\s+)?" + _ADVERB_GAP +
      r"\b(?:die|dying|pass away|passing away)\b", "death"),
-    (r"\b" + _THIRD_PARTY_REF + r"\b" + _ADVERB_GAP +
+    # Survival verbs, negated. `live` is deliberately NOT in this arm — see
+    # `_LIFESPAN_OBJECT`; "your daughter will not live at home much longer" is
+    # an ordinary sentence about moving out, and it matched here until the
+    # lifespan arms below took the verb over.
+    (_LIFE_SUBJECT + _ADVERB_GAP +
      r"\b(?:will|shall|is going to|are going to|can|is able to|are able to)\b\s*not\b" +
-     _ADVERB_GAP + r"\b(?:surviv|live|make it|pull through)", "death"),
-    # "your husband will live to 80" — a lifespan verdict stated as a
-    # duration rather than an event. Anchored to until/to/for/past/beyond so
-    # an ordinary "your father will live comfortably" is untouched.
-    (r"\b" + _THIRD_PARTY_REF + r"\b" + _ADVERB_GAP +
-     r"\b(?:will|shall|is going to|are going to|is likely to|are likely to)\b" + _ADVERB_GAP +
-     r"\blive (?:until|to|for|past|beyond)\b", "death"),
+     _ADVERB_GAP + r"\b(?:surviv|make it|pull through)", "death"),
+    # ── "live", which is where this gets delicate ────────────────────────────
+    # A lifespan claim is identified by its OBJECT, never by the verb: "will
+    # live to 80" is a verdict, "will live to see the business succeed" is not.
+    (_LIFE_SUBJECT + _ADVERB_GAP + _MODAL + r"\s*(?:not\s+)?" + _ADVERB_GAP +
+     r"\blive (?:until|to|past|beyond)\s+(?:" + _LIFESPAN_OBJECT + r")", "death"),
+    (_LIFE_SUBJECT + _ADVERB_GAP + _MODAL + _ADVERB_GAP +
+     r"\blive (?:for )?another (?:" + _DURATION_COUNT + r")\s*(?:years?|decades?|months?)\b", "death"),
+    (_LIFE_SUBJECT + _ADVERB_GAP + _MODAL + _ADVERB_GAP +
+     r"\blive a (?:long|short|brief) life\b", "death"),
+    # The one place polarity alone decides it. "He will live to see the
+    # business succeed" is ordinary; "your father will not live to see the
+    # wedding" is a death verdict about the same event, and the only thing
+    # separating them is the "not". Excludes "live up to", which is a different
+    # verb phrase entirely ("will not live up to expectations").
+    (_LIFE_SUBJECT + _ADVERB_GAP +
+     r"\b(?:will|shall|is going to|are going to)\b\s*not\b" + _ADVERB_GAP +
+     r"\blive to \w+", "death"),
     # Subject-free on purpose: "has a short lifespan" carries the whole
     # verdict whoever it is about, and the noun forms here have no ordinary
     # non-death use the way the abstract-subject case discussed above does.
     (r"\b(?:short|limited|brief|reduced|curtailed) (?:lifespan|life span|life expectancy)\b", "death"),
-    (r"\byou (?:will|are likely to) live (?:until|to|for)\b", "death"),
-    (r"\byou have\b.{0,24}\b(?:years|months) (?:left|to live)\b", "death"),
+    # "N years/months TO LIVE" is absolute — no period-noun window check —
+    # because unlike "remaining"/"left" it has no ordinary astrological
+    # meaning. Nobody describes a dasha as having "6 months to live", so a
+    # nearby "dasha" cannot launder it: "your grandmother has 6 months to live
+    # in this Saturn dasha" is the same verdict as the sentence without the
+    # clause. "left" and "remaining" deliberately do NOT appear here — they
+    # are what a period legitimately has, and they stay in the windowed check
+    # below. Getting that split wrong in the other direction is a real,
+    # demonstrated bug: the pre-existing `you have ... years left` line this
+    # replaces flagged "you have 2 years left in this Saturn dasha" as a death
+    # verdict, which would have replaced an ordinary reading with the
+    # longevity refer-out.
+    (_HAS_SUBJECT + _ADVERB_GAP + r"\b(?:" + _DURATION_COUNT + r")\s*(?:years?|months?)\s*to live\b", "death"),
     (r"\b\d+\s*months? to go on your journey\b", "death"),
     (r"\breach age \d+\b", "death"),
     (r"\bheaded toward (?:your )?(?:final|last) breath\b", "death"),
@@ -490,9 +561,17 @@ _PERIOD_NOUNS = re.compile(
 # below still does the real work: "your father has 3 years remaining in his
 # Saturn dasha" is ordinary period language and stays clean, exactly as the
 # first-person version of that sentence already did.
+#
+# 2026-08-11 (review H2): "to live" was removed from this alternation and made
+# an absolute pattern in `_PROHIBITED_OUTPUT` instead. It never belonged here.
+# This check exists to spare sentences where a nearby period noun proves the
+# duration describes a DASHA — and "6 months to live" is never a dasha, so the
+# window could only ever launder a real verdict ("your grandmother has 6 months
+# to live in this Saturn dasha" was cleared by it). What is left here is
+# exactly the vocabulary a period legitimately uses.
 _YEARS_MONTHS_REMAINING = re.compile(
     r"\b(?:you have|your (?:" + _THIRD_PARTY_SUBJECTS + r")(?:'s|s')? has|he has|she has|they have)\b"
-    r".{0,20}\b\d+\s*(?:years?|months?)\s*(?:remaining|left|to go|to live)\b"
+    r".{0,20}\b(?:" + _DURATION_COUNT + r")\s*(?:years?|months?)\s*(?:remaining|left|to go)\b"
 )
 
 

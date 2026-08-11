@@ -186,7 +186,19 @@ def commit_validation_probe(db: Session, user_id: str, kundli_id: str, domain: s
         question=question, options=options, status="committed",
     )
     db.add(probe)
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        # The caller's fail-open is only real if the session survives the
+        # failure. Without this rollback a rejected insert — the unique
+        # "asked once" index firing on two concurrent turns is enough — leaves
+        # the session in a failed transaction, and the very next query is the
+        # one assembling the READING. The reader loses their answer to a
+        # bonus feature's collision, which is the exact opposite of the
+        # contract `AskOrchestrator.check_validation` documents. Re-raised so
+        # the caller still knows the probe did not happen.
+        db.rollback()
+        raise
     db.refresh(probe)
     return probe
 
@@ -210,11 +222,23 @@ def record_validation_answer(db: Session, probe_id: str, user_id: str,
     )
     if probe is None or probe.status != "committed":
         return None
+    # An answer the probe never offered is not an answer. Without this the
+    # endpoint accepts any string, and `answer_key` reaches `score_answer()`
+    # (where an unknown key silently scores as a miss, corrupting the hit rate
+    # this whole loop exists to produce) and `life_context`, which the reading
+    # prompt is told outranks the chart.
+    offered = {option.get("key") for option in (probe.options or [])}
+    if offered and answer_key not in offered:
+        return None
     probe.answer_key = answer_key
     probe.answer_text = answer_text
     probe.answered_at = datetime.utcnow()
     probe.status = score_answer(probe.claim_candidate, answer_key)
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     db.refresh(probe)
     return probe
 

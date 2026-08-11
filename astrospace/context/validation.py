@@ -216,53 +216,114 @@ def _divergent_candidates(bundle: dict, planet: str,
     return candidates if len(candidates) >= 2 else []
 
 
-def _anchor_from(entry: dict, as_of_date: str, as_of_age: float | None = None) -> dict:
-    """The window a question is asked about — clamped to today.
+# A reader cannot validate a period they spent as a small child, and a
+# mahadasha can easily be 20 years long — one test chart's Venus mahadasha ran
+# from age 2 to age 22. Fourteen is a judgement call, not a sourced number: it
+# is roughly where "what were those years like for your family's money" starts
+# having an answer the reader owns rather than one they were told.
+_MIN_RECALL_AGE = 14
+# A twenty-year window is not falsifiable. "Between 2002 and 2022, did your
+# money mostly come through X" can be answered "yes, sort of" about almost any
+# X, because two decades of anyone's finances contain a bit of everything — and
+# a probe that cannot come back cleanly wrong measures nothing, the same defect
+# as a missing "neither" option. Ten years is again a judgement call: long
+# enough that a mahadasha-scale pattern can show, short enough that the reader
+# is characterising a stretch rather than a life.
+_MAX_ANCHOR_YEARS = 10
+# Below this a window is too short to have a character at all — a two-month
+# antardasha is a date, not a period the reader can describe.
+_MIN_ANCHOR_YEARS = 0.5
+# Beyond this a window is inside the reader's life but outside useful recall.
+_MAX_ANCHOR_AGE_YEARS = 15
 
-    Found by reading the assembled prompt rather than the code: a mahadasha the
-    reader is currently in runs years into the FUTURE, so an anchor taken
-    straight off the timeline entry produced "between 2021 and 2041, did your
-    money mostly come through X" — fifteen years of which have not happened.
-    The reader can only speak to the part they have lived, so a running period
-    is truncated at today and says so.
+
+def _shift_date(date_str: str, years: float) -> str:
+    """Date arithmetic on the ISO strings the timeline already carries.
+
+    Deliberately approximate — this shifts an anchor boundary by a number of
+    years to keep a question answerable, and being a day or two out on a
+    ten-year clamp changes nothing about whether the reader can answer it.
     """
-    running = entry["status"] == "current" and entry["end"] > as_of_date
+    from datetime import date, timedelta
+    try:
+        base = date.fromisoformat(date_str[:10])
+    except (TypeError, ValueError):
+        return date_str
+    return (base + timedelta(days=years * 365.2425)).isoformat()
+
+
+def _anchor_from(entry: dict, as_of_date: str, as_of_age: float | None = None) -> dict | None:
+    """The window a question is asked about, or None if nothing askable is left.
+
+    Every generator builds its anchor here, and that is the point. The age
+    floor originally lived in `_recallable`, which only `_dasha_boundary_slots`
+    called — so two of the three generators happily anchored to the whole
+    current mahadasha and 8% of emitted slots still started before age 14, one
+    of them at age 3.7. A rule about what makes a window answerable belongs on
+    the window, not in one of the three places windows are made.
+
+    Three clamps, all for the same reason — the reader has to be able to answer:
+
+    * the END never runs past today. A mahadasha the reader is currently in
+      extends years into the future, and an unclamped anchor asked "between
+      2021 and 2041, did your money mostly come through X" — fifteen years of
+      which have not happened.
+    * the START never precedes age 14, so no question reaches into a childhood
+      the reader can only report second-hand.
+    * the SPAN never exceeds `_MAX_ANCHOR_YEARS`, so the answer means something.
+
+    `period_start`/`period_end` keep the untouched boundaries, so clamping
+    loses no information — it only narrows what is asked about.
+    """
+    period_start, period_end = entry["start"], entry["end"]
+    running = entry["status"] == "current" and period_end > as_of_date
+    start, end = period_start, (as_of_date if running else period_end)
+    age_at_start = entry.get("age_at_start")
+    age_at_end = as_of_age if running else entry.get("age_at_end")
+    if age_at_start is None or age_at_end is None:
+        return None
+
+    if age_at_start < _MIN_RECALL_AGE:
+        start = _shift_date(start, _MIN_RECALL_AGE - age_at_start)
+        age_at_start = float(_MIN_RECALL_AGE)
+    if age_at_end - age_at_start > _MAX_ANCHOR_YEARS:
+        start = _shift_date(end, -_MAX_ANCHOR_YEARS)
+        age_at_start = round(age_at_end - _MAX_ANCHOR_YEARS, 1)
+    if age_at_end - age_at_start < _MIN_ANCHOR_YEARS or start >= end:
+        return None
+
     return {
         "label": entry["label"],
-        "start": entry["start"],
-        "end": as_of_date if running else entry["end"],
-        "age_at_start": entry["age_at_start"],
-        "age_at_end": as_of_age if running else entry["age_at_end"],
+        "start": start,
+        "end": end,
+        "age_at_start": age_at_start,
+        "age_at_end": age_at_end,
         "status": entry["status"],
         # So the model narrates "so far" rather than implying the period is
-        # over, and so `period_end` stays available for anything that needs the
-        # real boundary.
+        # over, and so the real boundaries stay available.
         "in_progress": running,
-        "period_end": entry["end"],
+        "period_start": period_start,
+        "period_end": period_end,
+        # True when the askable window is narrower than the period itself, so
+        # the question can say "the last few years of that period" rather than
+        # implying the whole of it.
+        "partial_window": start != period_start or end != period_end,
+        "window_years": round(age_at_end - age_at_start, 1),
     }
 
 
-# A reader cannot validate a period they spent as a small child, and a
-# mahadasha can easily be 20 years long — this chart's Venus mahadasha ran from
-# age 2 to age 22, which the slot picker happily offered as an anchor until
-# this guard existed. Fourteen is a judgement call, not a sourced number: it is
-# roughly where "what were those years like for your family's money" starts
-# having an answer the reader owns rather than one they were told.
-_MIN_RECALL_AGE = 14
-
-
 def _recallable(entry: dict, as_of_year: int) -> bool:
-    """A probe has to be answerable from memory. A window that has not started
-    yet cannot be validated at all, one that ended decades ago will be answered
-    vaguely if at all, and one the reader spent in childhood cannot be answered
-    honestly — so only periods they lived through, old enough to have noticed,
-    are eligible to anchor a question."""
+    """Whether a period is eligible to anchor a question at all.
+
+    Only the checks `_anchor_from` cannot make: a window that has not started
+    yet, and one that ended so long ago it will be answered vaguely if at all.
+    The age floor deliberately does NOT live here any more — it applied to one
+    generator of three while sitting in this function.
+    """
     if entry["status"] == "upcoming":
         return False
-    if (entry.get("age_at_start") or 0) < _MIN_RECALL_AGE:
-        return False
     end_year = int(entry["end"][:4]) if entry["end"][:4].isdigit() else as_of_year
-    return as_of_year - end_year <= 15
+    return as_of_year - end_year <= _MAX_ANCHOR_AGE_YEARS
 
 
 def _dasha_boundary_slots(bundle: dict, as_of_year: int, as_of_date: str,
@@ -285,6 +346,9 @@ def _dasha_boundary_slots(bundle: dict, as_of_year: int, as_of_date: str,
         candidates = _divergent_candidates(bundle, lord, placement)
         if not candidates:
             continue
+        anchor = _anchor_from(entry, as_of_date, as_of_age)
+        if anchor is None:
+            continue
         ruled = _and_list([_ord(c["house"]) for c in candidates if c["role"] == "ruled"])
         occupied = next(
             (c["house"] for c in candidates if c["role"] == "occupied"), None
@@ -292,7 +356,7 @@ def _dasha_boundary_slots(bundle: dict, as_of_year: int, as_of_date: str,
         slots.append({
             "slot_id": f"wealth.dasha_boundary.{lord}.{entry['start']}",
             "kind": "dasha_boundary",
-            "anchor": _anchor_from(entry, as_of_date, as_of_age),
+            "anchor": anchor,
             "subject": lord,
             "ambiguity": (
                 f"{lord} rules this chart's {ruled}"
@@ -346,10 +410,13 @@ def _significator_slots(bundle: dict, current_entry: dict | None,
         candidates = _divergent_candidates(bundle, lord, placement)
         if not candidates:
             continue
+        anchor = _anchor_from(current_entry, as_of_date, as_of_age)
+        if anchor is None:
+            continue
         slots.append({
             "slot_id": f"wealth.significator.h{house}.{lord}",
             "kind": "significator_placement",
-            "anchor": _anchor_from(current_entry, as_of_date, as_of_age),
+            "anchor": anchor,
             "subject": lord,
             "ambiguity": (
                 f"{lord} is this chart's {_ord(house)} lord and sits in the "
@@ -395,13 +462,16 @@ def _yoga_tension_slots(bundle: dict, current_entry: dict | None,
     ]
     if not strained:
         return []
+    anchor = _anchor_from(current_entry, as_of_date, as_of_age)
+    if anchor is None:
+        return []
     yoga = active_yogas[0]
     house_row = strained[0]
     house = house_row["house"]
     return [{
         "slot_id": f"wealth.yoga_tension.{yoga.get('rule_id')}.h{house}",
         "kind": "yoga_tension",
-        "anchor": _anchor_from(current_entry, as_of_date, as_of_age),
+        "anchor": anchor,
         "subject": yoga.get("name"),
         "ambiguity": (
             f"{yoga.get('name')} is active in this chart, while the {house}th "
@@ -485,13 +555,26 @@ def validation_slots(bundle: dict, *, limit: int = 2,
     ]
     # Same placement reached by two generators (a significator slot and a dasha
     # boundary slot can both land on the 11th lord) is one question, not two.
+    #
+    # The order of these three steps is load-bearing, and getting it wrong is
+    # invisible until someone answers a question. A single combined check —
+    # `if key in seen or slot_id in exclude: continue` — skips `seen.add()` for
+    # an excluded slot, so answering a question removes the dedup barrier it
+    # was providing and its suppressed twin surfaces on the next turn with an
+    # identical subject and identical candidates. The reader is asked the same
+    # thing twice in different words, which is precisely what "asked once"
+    # exists to prevent. Dedup is a property of the slot set; exclusion is a
+    # property of this reader's history. The first must be resolved before the
+    # second is applied.
     seen: set[tuple] = set()
     unique = []
     for slot in slots:
         key = (slot["subject"], tuple(sorted(c["key"] for c in slot["candidates"])))
-        if key in seen or slot["slot_id"] in exclude:
+        if key in seen:
             continue
         seen.add(key)
+        if slot["slot_id"] in exclude:
+            continue
         slot["domain"] = "wealth"
         slot["source_status"] = "engine_selected"
         unique.append(slot)

@@ -518,6 +518,18 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   directions, same shape as the death one. *Hook:* the same
   `_THIRD_PARTY_REF` constant is already in place and shared.
 
+- [ ] **Validation loop anchor bounds are judgement calls, not sourced
+  numbers** — a probe window never starts before age 14, never exceeds 10
+  years, and is dropped below 6 months. All three are defensible and none
+  is derived from anything: they encode "a stretch the reader can
+  actually characterise". Worth revisiting once real answers exist —
+  a high `skipped` rate on long windows would be direct evidence the cap
+  is too generous. *Hook:* `_MIN_RECALL_AGE`, `_MAX_ANCHOR_YEARS`,
+  `_MIN_ANCHOR_YEARS` in `context/validation.py`, all applied in the one
+  place every generator builds an anchor (`_anchor_from`) after the
+  2026-08-11 review found the age floor had reached only one generator of
+  three.
+
 - [ ] **Validation loop is wealth-only, and shipped behind a flag** — the
   consultation validation loop (commit-before-ask probes, `timeline`,
   `life_context`) landed 2026-08-10 for the **wealth** domain only.
@@ -556,6 +568,25 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   `kundli_id`; `Kundli.birth_time_accuracy` already distinguishes
   exact/approximate/unknown and is the field a rectification pass would
   act on.
+
+- [ ] **`safety.py`: the lifespan patterns are object-anchored, and that
+  bound is lexical** — the 2026-08-11 review found `live (?:until|to|for|
+  past|beyond)` swallowing "live to see", "live to enjoy" and "live beyond
+  one's means", each of which replaced a whole reading with the longevity
+  refer-out. Fixed by requiring a lifespan OBJECT (an age, a year, "a ripe
+  old age") rather than trusting the verb, and by making polarity decide the
+  one genuinely ambiguous pair ("will not live to see X" is a death verdict,
+  "will live to see X" is not). What remains open is the general shape:
+  distinguishing "live" the lifespan verb from "live" the reside/conduct verb
+  is a semantic judgement a regex approximates. The current approximation is
+  measured — 33/33 prohibited phrasings caught, 0 false positives over 36
+  app-realistic negatives plus 552 sentences of real shipped prompt/KB prose —
+  but a construction outside both sets is an accepted residual limitation of a
+  lexical approach, in the same category as the documented immigration ones.
+  *Hook:* `_LIFESPAN_OBJECT` / `_LIFE_SUBJECT` in `agents/safety.py`; the probe
+  sets are `tests/test_refer_out_boundary.py`'s
+  `test_lifespan_verdicts_are_caught_in_both_persons` and
+  `test_ordinary_third_party_sentences_pass_the_output_net`.
 
 ### D. Docs pending a decision
 
