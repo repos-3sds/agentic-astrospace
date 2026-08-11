@@ -465,3 +465,61 @@ def test_guaranteed_to_logistics_false_positive_is_a_documented_limitation():
     assert _prohibited_verdict(
         "Your visa application is guaranteed to arrive by post next week."
     ) == "legal"
+
+
+# ── Death as a NOUN, both parties ────────────────────────────────────────────
+# Found 2026-08-11 by testing the third-party pass against a phrase set written
+# independently of that pass's own tests. Every death pattern in the table
+# matched death as a VERB and none matched it as a NOUN, so the verb form was
+# caught while the noun form of the identical claim walked through. Confirmed
+# pre-existing and symmetric — first-party missed the same phrasings — so this
+# closes both sides together rather than growing a third parallel list.
+
+DEATH_NOUN_PHRASINGS = [
+    "Your son will have a short life.",
+    "Your partner will meet an early death.",
+    "Your spouse will suffer a fatal accident.",
+    "Your mother will have a brief life.",
+    "Your child will suffer a violent death.",
+    "Your wife may face a premature passing.",
+    "Your father faces an untimely end.",
+    "He faces a premature end.",
+    "She will have a sudden demise.",
+    # First-party equivalents — the gap was symmetric.
+    "You will have a short life.",
+    "You will meet an early death.",
+    "You will suffer a fatal accident.",
+]
+
+
+@pytest.mark.parametrize("answer", DEATH_NOUN_PHRASINGS)
+def test_death_stated_as_a_noun_is_caught_for_either_party(answer):
+    assert _prohibited_verdict(answer) == "death"
+
+
+ORDINARY_NOUN_NEIGHBOURS = [
+    # "short life" is the one noun here with a real non-mortal use, which is
+    # why it carries a person anchor while "lifespan"/"life expectancy" do
+    # not. It was briefly folded into the subject-free lifespan row during
+    # this fix and this exact sentence caught the mistake.
+    "This trend had a short life in the market.",
+    "Your business will have a short life.",
+    "A short life cycle for this product is normal.",
+    # "fatal" is restricted to bodily nouns; these idioms must survive.
+    "There is a fatal flaw in that plan.",
+    "A fatal error in the calculation was corrected.",
+    # "end" needs a person anchor for the same reason.
+    "This partnership may come to an untimely end.",
+    "The project met an early end.",
+    # Regressions the existing table already guards; re-pinned because the
+    # new rows sit directly beside them.
+    "The longevity of your marriage depends on communication.",
+    "Your business will not survive the downturn.",
+    "Your savings will die down if you overspend.",
+    "This dasha has 3 years remaining.",
+]
+
+
+@pytest.mark.parametrize("answer", ORDINARY_NOUN_NEIGHBOURS)
+def test_ordinary_language_near_the_death_nouns_is_not_flagged(answer):
+    assert _prohibited_verdict(answer) is None

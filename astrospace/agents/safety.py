@@ -215,6 +215,14 @@ _THIRD_PARTY_REF = (
     r"(?:your (?:" + _THIRD_PARTY_SUBJECTS + r")(?:'s|s')?|he|she|they)"
 )
 
+# Either party. Used by the death-as-a-NOUN rows, which apply identically to
+# the reader and to anyone they asked about — the gap those rows close was
+# present for both, precisely because first- and third-party patterns were
+# maintained as two separate lists and drifted. One reference group means a
+# relation added here is covered on both sides at once, rather than being
+# remembered in one list and forgotten in the other.
+_DEATH_NOUN_REF = r"(?:you|your|" + _THIRD_PARTY_REF + r")"
+
 # Subjects the app must never issue a verdict on. Kept as word-stems so
 # inflections ("survive"/"survival") are covered without listing each form.
 _REFER_OUT_SUBJECTS: tuple[tuple[str, tuple[str, ...]], ...] = (
@@ -372,6 +380,48 @@ _PROHIBITED_OUTPUT = (
     # verdict whoever it is about, and the noun forms here have no ordinary
     # non-death use the way the abstract-subject case discussed above does.
     (r"\b(?:short|limited|brief|reduced|curtailed) (?:lifespan|life span|life expectancy)\b", "death"),
+    # 2026-08-11, independent verification of the third-party pass above:
+    # tested against a phrase set written separately from that pass's own
+    # tests, which exposed that every death pattern here — first- AND
+    # third-party — matched death as a VERB ("die", "not survive", "not
+    # live long") and nothing matched it as a NOUN. So "your son will have
+    # a short life", "your partner will meet an early death" and "your
+    # spouse will suffer a fatal accident" all passed the net while their
+    # verb equivalents were caught. Confirmed pre-existing and symmetric:
+    # "you will have a short life" missed identically, so this is inherited
+    # from the original table rather than introduced by the third-party
+    # work, and it is closed for both parties here in one place.
+    #
+    # Subject-free for the same reason the lifespan row above is: these
+    # nouns carry the whole verdict regardless of who it is about, and a
+    # subject anchor would just be a second place to forget a relation.
+    #
+    # "short life" is the exception and gets a person anchor. It was first
+    # folded into the subject-free lifespan row above on the reasoning that
+    # "a short life" is the same claim as "a short lifespan" — testing
+    # immediately disproved that: "this trend had a short life in the
+    # market" tripped it. "lifespan"/"life expectancy" have no ordinary
+    # non-mortal use in a reading; bare "life" plainly does.
+    #
+    # Deliberately NOT subject-free, and deliberately narrow:
+    #  - "end" is excluded from the noun list. "an untimely end" is a real
+    #    death phrase, but "an untimely end to this chapter/partnership"
+    #    is ordinary reading language, so it needs a person anchor and
+    #    gets one via _DEATH_NOUN_REF below.
+    #  - "fatal" is restricted to bodily nouns. Bare "fatal" would catch
+    #    "a fatal flaw in the plan" and "a fatal error", both of which this
+    #    app can legitimately write.
+    (r"\b(?:early|untimely|premature|sudden|violent) "
+     r"(?:death|demise|passing)\b", "death"),
+    # Person-anchored, and deliberately NOT using _DEATH_NOUN_REF's bare
+    # "your": that would read "your business will have a short life" as a
+    # death verdict. "you" and "your <relation>" only.
+    (r"\b(?:you|" + _THIRD_PARTY_REF + r")\b.{0,32}?"
+     r"\b(?:short|brief|curtailed) life\b", "death"),
+    (r"\bfatal (?:accident|injury|illness|crash|fall|mishap)\b", "death"),
+    (r"\b" + _DEATH_NOUN_REF + r"\b.{0,32}?\b(?:untimely|premature|sudden) end\b", "death"),
+    (r"\b" + _DEATH_NOUN_REF + r"\b.{0,32}?\bwill not (?:see|reach|make it to) "
+     r"(?:old age|their|his|her|your) ?(?:\w+ )?(?:birthday|years)\b", "death"),
     (r"\byou (?:will|are likely to) live (?:until|to|for)\b", "death"),
     (r"\byou have\b.{0,24}\b(?:years|months) (?:left|to live)\b", "death"),
     (r"\b\d+\s*months? to go on your journey\b", "death"),
