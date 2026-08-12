@@ -1,0 +1,79 @@
+@if (hasChart()) {
+  <section class="bd-card" [class.bd-full]="density() === 'full'">
+    <header class="bd-head">
+      @if (personName()) { <h2>{{ personName() }}</h2> }
+      <p class="bd-born">{{ born() }}</p>
+    </header>
+
+    <ul class="bd-headline">
+      @for (row of headline(); track row.label) {
+        <li>
+          <small>{{ row.label }}</small>
+          <strong>{{ row.value }}</strong>
+          @if (row.note) { <small class="bd-note-inline">{{ row.note }}</small> }
+        </li>
+      }
+    </ul>
+
+    @if (density() === 'full') {
+      @if (lords().length) {
+        <div class="bd-group">
+          <h3>Lords</h3>
+          <dl>
+            @for (row of lords(); track row.label) {
+              <div><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
+            }
+          </dl>
+        </div>
+      }
+
+      @if (placement().length) {
+        <div class="bd-group">
+          <h3>Where and when</h3>
+          <dl>
+            @for (row of placement(); track row.label) {
+              <div><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
+            }
+          </dl>
+        </div>
+      }
+
+      @if (panchanga().length) {
+        <div class="bd-group">
+          <h3>Panchanga at birth</h3>
+          <dl>
+            @for (row of panchanga(); track row.label) {
+              <div><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
+            }
+          </dl>
+        </div>
+      }
+
+      @if (constants().length) {
+        <div class="bd-group">
+          <h3>Birth constants</h3>
+          <dl>
+            @for (row of constants(); track row.label) {
+              <div><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
+            }
+          </dl>
+        </div>
+      }
+
+      @if (calculation().length) {
+        <div class="bd-group bd-calc">
+          <h3>How this was calculated</h3>
+          <dl>
+            @for (row of calculation(); track row.label) {
+              <div><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
+            }
+          </dl>
+          <p class="bd-note">
+            Two apps disagreeing about a rising sign is usually a different ayanamsha,
+            not a different chart.
+          </p>
+        </div>
+      }
+    }
+  </section>
+}
