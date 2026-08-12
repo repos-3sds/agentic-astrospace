@@ -600,3 +600,104 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   docs are largely standard prose the retrieval pipeline doesn't ingest
   from `docs/` anyway. *Decision needed:* commit, relocate into the real KB
   ingestion path, or delete.
+
+---
+
+## Live evaluation pass (2026-08-12)
+
+**Status:** point-in-time evaluation, folded in per this file's own rule. Real
+`AskOrchestrator` runs against a real Gemini call (`.venv`'s live
+`GEMINI_API_KEY`), bypassing HTTP/auth/DB so the agent's actual behaviour
+could be inspected directly — not the plumbing around it, which the existing
+test suite already covers. This is the "does grounding actually change
+behaviour" question the career/health/marriage/children/Phaladeepika passes
+had not yet been checked against.
+
+Setup: a local, disposable merge of `main` + the three open KB PRs at the
+time (`claude/marriage-kb`, `claude/children-kb`,
+`claude/phaladeepika-crosscheck`) in a scratch worktree, giving the full
+75-reference grounded state those PRs together produce. Never pushed; the
+worktree was deleted after this entry was written. Five live generations
+across marriage, children and career.
+
+### It works — marriage cited real grounded verses
+
+Asked "Will my marriage be happy? What should I know about my spouse's
+nature?" The reading passed verification and its `technical_basis` cited
+`bphs24_79_seventh_lord_in_seventh` and `bphs18_16_malefic_on_seventh` by
+`ref_id` — both landed in the marriage KB pass, both correctly matched to the
+actual chart (7th lord Saturn in the 7th, Rahu conjunct Saturn in the 7th).
+The Manglik-adjacent placement (Mars in the 8th) was framed as "a gentle flag
+to manage... mindfully" — the flag-not-verdict framing CLAUDE.md requires,
+produced without being asked for in the question. Nothing from the excluded
+material (exact wife-count, unconditioned spouse-death, the spouse's own
+birth-sign prediction) leaked into either this reading or four other live
+generations checked the same way.
+
+The **drekkana-emphasis dasha-timing feature is confirmed working in live
+output**, not just passing its unit tests: the career reading said "This long
+period had its core weight concentrated in its middle phase, from December
+2017 to December 2023" — unprompted, and matching the computed emphasis
+window exactly.
+
+### It works — the verifier correctly refused a bad generation
+
+The children reading (`"When will I have children, and will it come easily?"`)
+returned `verification_failed` on the first live run — both the initial
+generation and the one repair attempt failed `verify()`/`verify_coverage()`.
+Reproduced the orchestrator's exact repair loop standalone
+(`scratch_eval_repair_trace.py`, not committed — see below) to capture the
+actual violations rather than the discarded terminal status alone: four
+further live generations of the *same question* against the *same bundle*
+all passed cleanly on the first try, citing `houses`, `karakas`,
+`jaimini_karakas`, `vargas` (D7), `dasha_relevance` and `gochara`, and
+correctly framing delay as delay rather than a literal age. Read together as
+transient sampling variance (an occasional non-compliant generation, at
+roughly the rate LLM structured-output tasks produce them) that the
+repair-then-refuse design **correctly caught and declined to serve** —
+exactly the failure mode `verification_failed` exists for. Not evidence of a
+defect in the newly grounded children material.
+
+### A real, precisely diagnosed gap: verse-level citations are optional, and models take the option
+
+The career reading — 12 references sitting in its bundle, including the
+Phaladeepika navamsa-of-10th-lord technique that has no BPHS equivalent —
+cited **zero** of them by `ref_id`. `technical_basis` used only generic
+section names (`houses`, `jaimini_karakas`, `yogas`, `vargas`,
+`dasha_relevance` ×2, `gochara`). The reading's content was directionally
+consistent with the navamsa technique (it discussed the D10 lagna lord and a
+Venusian professional flavour) without ever citing
+`phal5_navamsa_tenth_lord_livelihood` specifically — plausibly reasoning from
+the model's own training-data familiarity with the underlying classical
+concept rather than from what this project actually grounded.
+
+Root cause, found by reading the prompt rather than guessing: rule 2 in
+`domain_agent.py` states a `technical_basis` source "must be either a
+reference/passage id from the bundle's `references`... **or** one of the
+bundle's own section names" — the two are presented as equally valid, with no
+preference for the more specific, independently-checkable citation over the
+generic one. A model given two compliant options with no ranking between them
+will not reliably reach for the harder-to-produce one.
+
+- [ ] **Prefer verse-level citation over bundle-section citation when both
+  apply.** *Hook:* rule 2 in `astrospace/agents/domain_agent.py`. Not fixed
+  here — a prompt change is a product decision, made deliberately rather
+  than as a side effect of an evaluation pass. The fix is a one-line
+  addition to rule 2 ("prefer a specific reference id over a bare section
+  name whenever one applies") plus a regression test asserting the career
+  bundle above yields at least one verse-level citation. This is the
+  single most actionable finding of this pass: the grounding work across
+  five PRs is real, but roughly half of it (career, by this sample) is not
+  yet reliably surfaced in what a reader actually sees cited.
+
+### What this pass did not do
+
+Five generations across three domains is a sample, not a benchmark — no
+health, wealth, personality, family_property or foreign generation was run
+live, and no guided/practitioner register variance was checked (only
+balanced). The eval harness scripts (`scratch_eval_orchestrator.py`,
+`scratch_eval_repair_trace.py`) were written into the scratch worktree and
+deliberately not committed; they call the orchestrator directly with a
+synthetic chart and no persistence, which is the right shape for a quick
+check and the wrong shape for a permanent fixture — a real eval suite would
+need seeded charts with known expected citations, not a hand-run script.
