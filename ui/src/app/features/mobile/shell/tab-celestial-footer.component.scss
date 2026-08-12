@@ -20,6 +20,18 @@
   opacity: .94;
 }
 
+.celestial-ending::before {
+  content: '';
+  position: absolute;
+  width: 290px;
+  height: 290px;
+  right: -112px;
+  bottom: -112px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--planet-mid) 15%, transparent), transparent 68%);
+  filter: blur(18px);
+}
+
 .planet {
   position: absolute;
   z-index: 2;
@@ -49,18 +61,20 @@
 .orbit {
   position: absolute;
   z-index: 0;
-  left: var(--planet-x);
-  top: var(--planet-y);
+  right: -94px;
+  bottom: -104px;
   width: 280px;
   height: 280px;
   border: 1px dashed color-mix(in srgb, var(--m-gold) 22%, transparent);
   border-radius: 50%;
-  transform: translate(-50%, -50%) rotate(-18deg);
+  transform: rotate(-18deg) scaleY(.72);
 }
 
 .orbit-far {
   width: 380px;
   height: 380px;
+  right: -142px;
+  bottom: -154px;
   opacity: .55;
 }
 
