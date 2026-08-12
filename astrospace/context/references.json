@@ -1558,7 +1558,8 @@
         "house:6",
         "mercury"
       ],
-      "status": "verified_common"
+      "status": "convention_dependent",
+      "observance_note": "The verse names the constitutional type (Pitta/bilious) only; the 'digestive and metabolic' body-system gloss reflects standard Ayurvedic dosha-to-system association, not wording stated verbatim in this BPHS verse -- same category of added elaboration as the Kapha clause's convention_dependent treatment above."
     },
     {
       "ref_id": "bphs17_saturn_vata_sensitivity",
@@ -1577,7 +1578,8 @@
         "house:6",
         "saturn"
       ],
-      "status": "verified_common"
+      "status": "convention_dependent",
+      "observance_note": "The verse names the constitutional type (Vata/windy) only; the 'joints, nerves, mobility' body-system gloss reflects standard Ayurvedic dosha-to-system association, not wording stated verbatim in this BPHS verse -- same category of added elaboration as the Kapha clause's convention_dependent treatment above."
     },
     {
       "ref_id": "bphs17_moon_kapha_sensitivity",
