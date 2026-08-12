@@ -498,7 +498,7 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
                     include_gochara: bool = True,
                     transit_positions: dict | None = None,
                     as_of: datetime | None = None,
-                    kb_limit: int = 12,
+                    kb_limit: int = 30,
                     question: str | None = None,
                     validation_probes: list[dict] | None = None) -> dict:
     """Domain-scoped context for one domain. `chart` is a VedicChart.

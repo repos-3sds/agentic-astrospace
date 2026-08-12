@@ -6,7 +6,9 @@
     "Expanded 2026-08-06 (T2.1/T2.2, docs/backend_astro_depth_checklist_2026-08-06.md) so every domain in taxonomy.json has at least 2-3 references. Every source cited here is already in sources.json's curated catalog; nothing here cites a work outside that list. Statements are general, well-attested house/karaka/varga/yoga significations paraphrased from classical framing already used elsewhere in this codebase (astrospace/knowledge/vedic_rules) — none claim a specific chapter/verse this pass could not verify; 'location' stays at the topic/chapter level, not a fabricated verse number.",
     "location is a topic pointer for a human to go find the passage, not a claim that a specific page/verse was checked. Where this codebase's own yogas.json/doshas.json already carries source_status for the same rule, that status is carried through here too.",
     "Expanded 2026-08-11 with rules read from BPHS-Santhanam-Vol-1.pdf, whose text layer is measured readable (93.6%) — see docs/kb_corpus_sources.md. Unlike the 2026-08-06 pass, these carry a verifiable chapter/verse/page, not a topic pointer. NOTE ON EDITIONS: chapter numbers differ between translations — Sharma's ch.19 is Santhanam's ch.17 — so every location here names the translation.",
-    "DELIBERATELY NOT INGESTED: BPHS's longevity and maraka material (ch.19, ch.43, ch.44, ch.9-10 arishta, and the 2nd/7th/8th-lord dasha rows of ch.48 that read 'possibility of death'). Longevity is a refer-out under CLAUDE.md, so those rules must not be retrievable by a domain agent at all. Their absence here is a decision, not an oversight — see docs/health_kb_bphs_6th_house.md. Also excluded: the planet-by-planet named-disease tables at Santhanam pp.115-117, which are quotations from Cornell's 'Encyclopaedia of Medical Astrology', not Parasara, and would function as a diagnosis generator."
+    "DELIBERATELY NOT INGESTED: BPHS's longevity and maraka material (ch.19, ch.43, ch.44, ch.9-10 arishta, and the 2nd/7th/8th-lord dasha rows of ch.48 that read 'possibility of death'). Longevity is a refer-out under CLAUDE.md, so those rules must not be retrievable by a domain agent at all. Their absence here is a decision, not an oversight — see docs/health_kb_bphs_6th_house.md. Also excluded: the planet-by-planet named-disease tables at Santhanam pp.115-117, which are quotations from Cornell's 'Encyclopaedia of Medical Astrology', not Parasara, and would function as a diagnosis generator.",
+    "Health extension 2026-08-12, re-examining ch.17's disease bucket shloka by shloka rather than as one block: Parasara's own generic constitutional categories (bilious/windy/phlegmatic -- the Ayurvedic doshas) and Mars's injury/weapon-hit clause are groundable as flags; named, stigmatizing or diagnosis-grade claims (leprosy, tumours, timing-of-named-illness) are not, and stay excluded -- CLAUDE.md's medical-verdict non-negotiable, unchanged. Also newly examined: ch.24's 8th-lord series, previously assumed uniformly gated_death and never checked line by line; ten of twelve placements are, but two (85 lagna, 90 sixth) carry real, unnamed, non-longevity health content. See docs/health_kb_bphs_susceptibility_and_injury.md.",
+    "Health caution reframe 2026-08-12, per explicit user direction: apply the SAME flag-not-verdict pattern CLAUDE.md already uses for doshas to health-susceptibility content, rather than excluding it outright. Material previously classed gated_medical in ch.17 (facial disease, the leprosy verses, the Sun/Ketu clauses of the general-disease block, and the timing-of-illness block) is reframed as body-system or life-stage cautions -- naming an area worth checking, never a specific disease, never a specific age. This is the same softening already applied to marriage/children timing (early-vs-delayed rather than a literal year), extended to illness timing (life-stage vigilance rather than a literal age plus a named illness). What remains excluded and why: the Rahu clause of the general-disease block (caste-based framing, unrelated to the medical question); the Venus clause (too ambiguous to state responsibly even as a caution); the exact number-of-events framing throughout stays dropped as it always has, since a caution does not need a count. See docs/health_kb_bphs_susceptibility_and_injury.md."
   ],
   "references": [
     {
@@ -1024,6 +1026,289 @@
       ],
       "status": "convention_dependent",
       "observance_note": "A genuine intra-text conflict, left unresolved. State which reading is being used rather than implying the text speaks with one voice."
+    },
+    {
+      "ref_id": "bphs17_9_jupiter_protective",
+      "domains": [
+        "health"
+      ],
+      "subdomains": [
+        "vitality"
+      ],
+      "statement": "A strong, well-placed Jupiter in this 6th/8th-lord-in-lagna configuration tends to protect against illness — a positive constitutional signal, not a caution.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.17 v.9-12½ (Jupiter clause), p.115 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:6",
+        "jupiter"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs17_mercury_pitta_sensitivity",
+      "domains": [
+        "health"
+      ],
+      "subdomains": [
+        "chronic_disease"
+      ],
+      "statement": "This configuration with Mercury indicates a constitutional tendency toward Pitta/bilious-type sensitivity — digestive and metabolic — read as a susceptibility, not a diagnosis, the same way a dosha is a flag rather than a verdict.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.17 v.9-12½ (Mercury clause), p.115 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:6",
+        "mercury"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs17_saturn_vata_sensitivity",
+      "domains": [
+        "health"
+      ],
+      "subdomains": [
+        "chronic_disease"
+      ],
+      "statement": "This configuration with Saturn indicates a constitutional tendency toward Vata/windy-type sensitivity — joints, nerves, mobility — read as a susceptibility, not a diagnosis.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.17 v.9-12½ (Saturn clause), p.115 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:6",
+        "saturn"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs17_moon_kapha_sensitivity",
+      "domains": [
+        "health"
+      ],
+      "subdomains": [
+        "chronic_disease"
+      ],
+      "statement": "This configuration with the Moon indicates a constitutional tendency toward Kapha/phlegmatic-type sensitivity — respiratory and fluid balance. Only this clause of the Moon's line is kept; a separate 'danger through water' phrase in the same verse is too ambiguous to state responsibly and is dropped.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.17 v.9-12½ (Moon clause, phlegmatic only), p.115 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:6",
+        "moon"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Only the phlegmatic/Kapha clause is used; the verse's separate water-danger phrase is excluded as too ambiguous to ground responsibly."
+    },
+    {
+      "ref_id": "bphs17_mars_injury_proneness",
+      "domains": [
+        "health"
+      ],
+      "subdomains": [
+        "accidents_surgery"
+      ],
+      "statement": "This configuration with Mars indicates a tendency toward injury, wounds, or accident-proneness — a materially different claim from disease susceptibility, and the direct classical answer to whether a chart shows accident risk.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.17 v.9-12½ (Mars clause), p.115 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:6",
+        "mars"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_85_eighth_lord_lagna_injury",
+      "domains": [
+        "health"
+      ],
+      "subdomains": [
+        "accidents_surgery"
+      ],
+      "statement": "The 8th lord placed in the lagna indicates a general vulnerability to injury or wounding. The verse's separate clause about religious hostility is unrelated to health and is not carried over.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.85, p.167 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:8",
+        "lord:8",
+        "house:1"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_90_eighth_lord_sixth_disease",
+      "domains": [
+        "health"
+      ],
+      "subdomains": [
+        "acute_disease"
+      ],
+      "statement": "The 8th lord placed in the 6th house indicates a general susceptibility to illness (unnamed in the verse). The same shloka carries a childhood-danger clause and a separate clause on the closed topic documented for the 8th house generally (see health_kb_bphs_6th_house.md) -- neither is carried over here.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.90, p.168 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:8",
+        "lord:8",
+        "house:6"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs17_6_facial_area_caution",
+      "domains": [
+        "health"
+      ],
+      "subdomains": [
+        "chronic_disease"
+      ],
+      "statement": "The ascendant lord placed in a sign of Mars or Mercury and aspected by Mercury is classically read as a caution toward the facial area -- worth attending to, not a diagnosis of a specific condition.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.17 v.6, p.114 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:1",
+        "mars",
+        "mercury"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs17_leprosy_reframed_skin_immune_caution",
+      "domains": [
+        "health"
+      ],
+      "subdomains": [
+        "chronic_disease"
+      ],
+      "statement": "Mars or Mercury owning the ascendant and joining the Moon, Rahu or Saturn is classically read as a caution toward skin and immune-system vulnerability -- a signal historically taken seriously enough to warrant particular care, not a named diagnosis. The verse's own named condition is a specific, now-stigmatizing historical term and is deliberately not repeated; the underlying combinatorial signal (skin/immune area, worth checking) is what is kept.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.17 vv.7-8½, p.114 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:1",
+        "mars",
+        "mercury",
+        "saturn"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The verse names a specific historical disease term across three variants (by planet). Reframed to the body-system area the verse itself is organized around, dropping the stigmatizing specific name; this is a deliberate softening, stated so the boundary is visible rather than implied."
+    },
+    {
+      "ref_id": "bphs17_sun_inflammatory_caution",
+      "domains": [
+        "health"
+      ],
+      "subdomains": [
+        "acute_disease"
+      ],
+      "statement": "The lords of the 6th and 8th conjunct the Sun in the ascendant is classically read as a caution toward febrile or inflammatory susceptibility -- general systemic wellbeing worth attending to during flare periods, not a named condition.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.17 v.9-12½ (Sun clause), p.115 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:6",
+        "house:8",
+        "sun"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The verse's second term (historically 'tumour', which in period medical English denoted any abnormal swelling, not specifically malignancy) is generalized to inflammatory/swelling susceptibility rather than read as a cancer-specific claim, since the source text does not support that specificity either way."
+    },
+    {
+      "ref_id": "bphs17_ketu_abdominal_caution",
+      "domains": [
+        "health"
+      ],
+      "subdomains": [
+        "chronic_disease"
+      ],
+      "statement": "The lords of the 6th and 8th conjunct Ketu in the ascendant is classically read as a caution toward the abdominal/digestive area -- worth attending to, not a named diagnosis.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.17 v.9-12½ (Ketu clause), p.115 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:6",
+        "house:8",
+        "ketu"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs17_vigilance_periods_childhood",
+      "domains": [
+        "health"
+      ],
+      "subdomains": [
+        "acute_disease"
+      ],
+      "statement": "Saturn with Rahu conjunct the 6th lord and 6th house, or Mars in the 6th with the 6th lord in the 8th, is classically read as flagging childhood as a period warranting extra health vigilance -- a general caution about a life-stage, not a named condition or a specific age.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.17 v.13-19½ (childhood clauses), p.117 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:6",
+        "lord:6",
+        "timing"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The verse states specific ages (6 and 12) tied to specific named illnesses. Neither the age nor the illness name is carried over -- only the life-stage-level flag, for the same reason a marriage or children timing verse's literal age is not restated as a modern prediction: a specific year is a period artifact, and pairing it with a named illness is the clearest case of a medical verdict this corpus holds."
+    },
+    {
+      "ref_id": "bphs17_vigilance_periods_youth",
+      "domains": [
+        "health"
+      ],
+      "subdomains": [
+        "acute_disease"
+      ],
+      "statement": "The Moon in Sagittarius or Pisces with Jupiter in the 6th, Rahu in the 6th with the ascendant lord in the 8th and Mandi in an angle, or the 6th and 12th lords in exchange, are classically read as flagging youth and young adulthood as a period warranting extra health vigilance -- a general caution, not a named condition or a specific age.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.17 v.13-19½ (youth clauses), p.117 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:6",
+        "lord:6",
+        "timing"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Same treatment as the childhood entry: the verse's named illnesses and specific ages (19, 22, 26) are not carried over, only the life-stage-level flag."
+    },
+    {
+      "ref_id": "bphs17_vigilance_periods_midlife",
+      "domains": [
+        "health"
+      ],
+      "subdomains": [
+        "chronic_disease"
+      ],
+      "statement": "Saturn and the Moon together in the 6th, or Saturn with an inimical planet as the ascendant lord occupies the ascendant, are classically read as flagging midlife and later years as a period warranting extra health vigilance -- a general caution, not a named condition or a specific age.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.17 v.13-19½ (midlife/later clauses), p.117 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:6",
+        "lord:6",
+        "timing",
+        "saturn"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Same treatment: the verse's named illnesses and specific ages (45, 59) are not carried over, only the life-stage-level flag."
     }
   ]
 }

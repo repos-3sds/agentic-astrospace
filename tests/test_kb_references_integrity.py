@@ -121,3 +121,65 @@ def test_retrieval_reaches_the_cross_domain_dasha_rules():
     for domain in ("career", "health", "wealth"):
         ids = {r.ref_id for r in get_knowledge_base().retrieve([domain])}
         assert "bphs47_3_drekkana_emphasis" in ids, domain
+
+
+# Health-caution content (2026-08-12) is a deliberately new class: it names a
+# body system or a life-stage as worth attending to, but never the specific
+# disease and never the literal age those combinations were softened FROM.
+# The point of these two checks is drift, not the initial write — a future
+# edit that "clarifies" a caution by naming what it's actually about is
+# exactly how this class of content quietly turns back into the verdict it
+# was built not to be.
+_NAMED_DIAGNOSIS = re.compile(
+    r"\b(leprosy|cancer|tumou?r|tuberculosis|consumption|diabetes|epilepsy|"
+    r"syphilis|smallpox|jaundice|dysentery|hepatitis|asthma|arthritis)\b",
+    re.I,
+)
+
+
+def test_health_caution_references_do_not_name_a_disease(references):
+    """The whole point of the caution reframe is a body-system or life-stage
+    flag, never the specific diagnosis. If this fails, a caution has drifted
+    back into the verdict it was built to avoid."""
+    offenders = [(r["ref_id"], _NAMED_DIAGNOSIS.search(r["statement"]).group(0))
+                 for r in references
+                 if r["ref_id"].startswith("bphs17_") and _NAMED_DIAGNOSIS.search(r["statement"])]
+    assert not offenders, f"health caution references name a specific disease: {offenders}"
+
+
+_LITERAL_AGE = re.compile(r"\bage(?:d|s)?\s+\d{1,3}\b|\bat\s+\d{1,3}\b|\byears?\s+of\s+age\b", re.I)
+
+
+def test_vigilance_period_references_do_not_state_a_literal_age(references):
+    """The vigilance-period rows were built specifically by stripping the
+    source verse's literal ages (6, 12, 19, 22, 26, 29, 30, 45, 59) down to a
+    life-stage bucket (childhood/youth/midlife). A literal age creeping back
+    in here is the same failure the marriage and children timing corrections
+    exist to prevent, one chapter later."""
+    offenders = [(r["ref_id"], _LITERAL_AGE.search(r["statement"]).group(0))
+                 for r in references
+                 if r["ref_id"].startswith("bphs17_vigilance_periods_")
+                 and _LITERAL_AGE.search(r["statement"])]
+    assert not offenders, f"vigilance-period references state a literal age: {offenders}"
+
+
+def test_no_domains_bundle_reference_count_exceeds_kb_limit(references):
+    """Found live: health grew to 27 servable references while
+    `assemble_domain`'s kb_limit default sat at 12, so 11 of 14 newly grounded
+    references -- including both accident/injury rules and every vigilance-
+    timing rule -- were silently cut before they ever reached the model. The
+    references existed, passed every other check, and were still invisible to
+    a real reading. This guards the general case: whichever domain has the
+    most references must not exceed the assembler's default capacity, so the
+    same silent truncation cannot recur for any domain as the KB grows."""
+    import astrospace.context.assembler as assembler_module
+    default_limit = assembler_module.assemble_domain.__kwdefaults__["kb_limit"]
+
+    from collections import Counter
+    per_domain = Counter(d for r in references for d in r["domains"])
+    worst_domain, worst_count = per_domain.most_common(1)[0]
+    assert worst_count <= default_limit, (
+        f"{worst_domain} has {worst_count} references but assemble_domain's "
+        f"kb_limit default is {default_limit} -- raise the default or this "
+        f"domain's references will be silently truncated before reaching the model"
+    )
