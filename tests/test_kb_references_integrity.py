@@ -142,46 +142,6 @@ def test_retrieval_reaches_the_cross_domain_dasha_rules():
         assert "bphs47_3_drekkana_emphasis" in ids, domain
 
 
-# Health-caution content (2026-08-12) is a deliberately new class: it names a
-# body system or a life-stage as worth attending to, but never the specific
-# disease and never the literal age those combinations were softened FROM.
-# The point of these two checks is drift, not the initial write — a future
-# edit that "clarifies" a caution by naming what it's actually about is
-# exactly how this class of content quietly turns back into the verdict it
-# was built not to be.
-_NAMED_DIAGNOSIS = re.compile(
-    r"\b(leprosy|cancer|tumou?r|tuberculosis|consumption|diabetes|epilepsy|"
-    r"syphilis|smallpox|jaundice|dysentery|hepatitis|asthma|arthritis)\b",
-    re.I,
-)
-
-
-def test_health_caution_references_do_not_name_a_disease(references):
-    """The whole point of the caution reframe is a body-system or life-stage
-    flag, never the specific diagnosis. If this fails, a caution has drifted
-    back into the verdict it was built to avoid."""
-    offenders = [(r["ref_id"], _NAMED_DIAGNOSIS.search(r["statement"]).group(0))
-                 for r in references
-                 if r["ref_id"].startswith("bphs17_") and _NAMED_DIAGNOSIS.search(r["statement"])]
-    assert not offenders, f"health caution references name a specific disease: {offenders}"
-
-
-_LITERAL_AGE = re.compile(r"\bage(?:d|s)?\s+\d{1,3}\b|\bat\s+\d{1,3}\b|\byears?\s+of\s+age\b", re.I)
-
-
-def test_vigilance_period_references_do_not_state_a_literal_age(references):
-    """The vigilance-period rows were built specifically by stripping the
-    source verse's literal ages (6, 12, 19, 22, 26, 29, 30, 45, 59) down to a
-    life-stage bucket (childhood/youth/midlife). A literal age creeping back
-    in here is the same failure the marriage and children timing corrections
-    exist to prevent, one chapter later."""
-    offenders = [(r["ref_id"], _LITERAL_AGE.search(r["statement"]).group(0))
-                 for r in references
-                 if r["ref_id"].startswith("bphs17_vigilance_periods_")
-                 and _LITERAL_AGE.search(r["statement"])]
-    assert not offenders, f"vigilance-period references state a literal age: {offenders}"
-
-
 # Brought forward from the marriage PR (#38) since this branch predates it.
 TAXONOMY_PATH = Path("astrospace/context/taxonomy.json")
 
@@ -239,3 +199,72 @@ def test_no_domains_bundle_reference_count_exceeds_kb_limit(references):
         f"({kb_limit}) — raise kb_limit or this domain's references will be "
         f"silently truncated before reaching the model"
     )
+
+
+_NAMED_DIAGNOSIS = re.compile(
+    r"\b(leprosy|cancer|tumou?r|tuberculosis|consumption|diabetes|epilepsy|"
+    r"syphilis|smallpox|jaundice|dysentery|hepatitis|asthma|arthritis)\b",
+    re.I,
+)
+
+
+def test_health_caution_references_do_not_name_a_disease(references):
+    """Health cautions may name a body system, never a diagnosis."""
+    offenders = [
+        (ref["ref_id"], match.group(0))
+        for ref in references
+        if ref["ref_id"].startswith("bphs17_")
+        if (match := _NAMED_DIAGNOSIS.search(ref["statement"]))
+    ]
+    assert not offenders, f"health caution references name a disease: {offenders}"
+
+
+_LITERAL_AGE = re.compile(
+    r"\bage(?:d|s)?\s+\d{1,3}\b|\bat\s+\d{1,3}\b|\byears?\s+of\s+age\b",
+    re.I,
+)
+
+
+def test_vigilance_period_references_do_not_state_a_literal_age(references):
+    """Vigilance windows remain life-stage flags, not predicted ages."""
+    offenders = [
+        (ref["ref_id"], match.group(0))
+        for ref in references
+        if ref["ref_id"].startswith("bphs17_vigilance_periods_")
+        if (match := _LITERAL_AGE.search(ref["statement"]))
+    ]
+    assert not offenders, f"vigilance references state a literal age: {offenders}"
+
+
+def test_question_scoped_health_retrieval_reaches_injury_rules():
+    """The deeper health rows must survive the current subdomain narrowing."""
+    ids = {
+        ref.ref_id
+        for ref in get_knowledge_base().retrieve(
+            ["health"],
+            subdomains=["accidents_surgery"],
+            limit=30,
+            require_subdomain_match=True,
+        )
+    }
+    assert {"bphs17_2_sixth_lord_and_limb", "bphs17_mars_injury_proneness"} <= ids
+
+
+@pytest.mark.parametrize(
+    ("subdomain", "expected"),
+    [
+        ("acute_disease", "bphs17_vigilance_periods_childhood"),
+        ("chronic_disease", "bphs17_vigilance_periods_midlife"),
+    ],
+)
+def test_question_scoped_health_retrieval_reaches_vigilance_rules(subdomain, expected):
+    ids = {
+        ref.ref_id
+        for ref in get_knowledge_base().retrieve(
+            ["health"],
+            subdomains=[subdomain],
+            limit=30,
+            require_subdomain_match=True,
+        )
+    }
+    assert expected in ids
