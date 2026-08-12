@@ -48,7 +48,8 @@ class KnowledgeBase(Protocol):
     """Retrieval contract — implement this to swap in a semantic backend."""
 
     def retrieve(self, domains: list[str], subdomains: list[str] | None = None,
-                 tags: list[str] | None = None, limit: int = 20) -> list[Reference]:
+                 tags: list[str] | None = None, limit: int = 20,
+                 require_subdomain_match: bool = False) -> list[Reference]:
         ...
 
     def sources_catalog(self) -> dict:
@@ -59,7 +60,16 @@ class KnowledgeBase(Protocol):
 class JsonKnowledgeBase:
     """File-backed KB. Metadata-filtered lookup — no embeddings needed while
     the corpus is structured rules. Ranking: domain match, then subdomain
-    match count, then tag match count, then verified status."""
+    match count, then tag match count, then verified status.
+
+    `subdomains` only ranks by default — a reference tagged outside the
+    given subdomains still comes back, just later in the list. That's the
+    right default when `subdomains` is a domain's *entire* subdomain list
+    (nothing would be excluded by matching against everything anyway) but it
+    means passing a genuinely narrow subdomain set does nothing unless
+    `require_subdomain_match=True` also asks the store to drop non-matching
+    references outright. See `astrospace/context/subdomain_match.py` for the
+    caller that decides when a narrow set is confident enough to filter on."""
 
     def __init__(self, references_path: Path | None = None,
                  sources_path: Path | None = None):
@@ -86,7 +96,8 @@ class JsonKnowledgeBase:
         return out
 
     def retrieve(self, domains: list[str], subdomains: list[str] | None = None,
-                 tags: list[str] | None = None, limit: int = 20) -> list[Reference]:
+                 tags: list[str] | None = None, limit: int = 20,
+                 require_subdomain_match: bool = False) -> list[Reference]:
         domain_set = set(domains)
         sub_set = set(subdomains or [])
         tag_set = set(tags or [])
@@ -97,6 +108,8 @@ class JsonKnowledgeBase:
             if not domain_set & set(ref.domains):
                 continue
             sub_hits = len(sub_set & set(ref.subdomains))
+            if require_subdomain_match and sub_set and sub_hits == 0:
+                continue
             tag_hits = len(tag_set & set(ref.tags))
             scored.append(((-sub_hits, -tag_hits, _status_rank.get(ref.status, 3)), ref))
         scored.sort(key=lambda pair: pair[0])

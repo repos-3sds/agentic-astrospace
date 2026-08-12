@@ -8,10 +8,12 @@ and relying on that is a worse design than never retrieving it.
 """
 import json
 import re
+from collections import Counter
 from pathlib import Path
 
 import pytest
 
+from astrospace.context import assembler as assembler_module
 from astrospace.context.kb import get_knowledge_base
 
 REFS_PATH = Path("astrospace/context/references.json")
@@ -160,3 +162,22 @@ def test_every_subdomain_named_by_a_reference_exists(references):
             if not any(sub in taxonomy.get(domain, set()) for domain in ref["domains"]):
                 bad.append(f"{ref['ref_id']}:{sub}")
     assert not bad, f"references filed under subdomains no domain declares: {bad}"
+
+
+def test_no_domains_bundle_reference_count_exceeds_kb_limit(references):
+    """assemble_domain()'s kb_limit caps how many references kb.retrieve()
+    can return. If any single domain's real reference count grows past that
+    cap, references silently stop reaching the model — correctly written,
+    correctly cited in the KB, and invisible to a reading anyway, with
+    nothing failing loudly to say so. This is a general-case guard, not tied
+    to any one domain's content, so it keeps working as the KB grows."""
+    kb_limit = assembler_module.assemble_domain.__kwdefaults__["kb_limit"]
+    counts = Counter(
+        domain for ref in references for domain in ref.get("domains", [])
+    )
+    worst_domain, worst_count = counts.most_common(1)[0]
+    assert worst_count <= kb_limit, (
+        f"{worst_domain!r} has {worst_count} references, exceeding kb_limit "
+        f"({kb_limit}) — raise kb_limit or this domain's references will be "
+        f"silently truncated before reaching the model"
+    )
