@@ -125,6 +125,45 @@ def test_retrieval_reaches_the_cross_domain_dasha_rules():
         assert "bphs47_3_drekkana_emphasis" in ids, domain
 
 
+TAXONOMY_PATH = Path("astrospace/context/taxonomy.json")
+
+
+def _taxonomy_subdomains() -> dict[str, set[str]]:
+    raw = json.loads(TAXONOMY_PATH.read_text(encoding="utf-8"))
+    domains = raw["domains"] if isinstance(raw, dict) and "domains" in raw else raw
+    items = domains.items() if isinstance(domains, dict) else ((d["id"], d) for d in domains)
+    out: dict[str, set[str]] = {}
+    for domain_id, spec in items:
+        subs = spec.get("subdomains", [])
+        out[domain_id] = {s if isinstance(s, str) else s.get("id") for s in subs}
+    return out
+
+
+def test_every_domain_named_by_a_reference_exists(references):
+    known = set(_taxonomy_subdomains())
+    unknown = {d for r in references for d in r["domains"]} - known
+    assert not unknown, f"references target domains absent from taxonomy.json: {unknown}"
+
+
+def test_every_subdomain_named_by_a_reference_exists(references):
+    """A reference filed under a subdomain that does not exist is unreachable —
+    retrieval by that subdomain returns nothing, and no error is raised anywhere.
+
+    This test exists because it happened: the marriage rules were first written
+    against `marital_harmony`, which is not in the taxonomy (the real id is
+    `harmony_discord`). Everything passed. The rules were simply invisible to a
+    subdomain-scoped query, which is the failure this whole file is meant to
+    make loud."""
+    taxonomy = _taxonomy_subdomains()
+    bad: list[str] = []
+    for ref in references:
+        for sub in ref.get("subdomains") or []:
+            # A subdomain is valid if ANY of the reference's domains declares it.
+            if not any(sub in taxonomy.get(domain, set()) for domain in ref["domains"]):
+                bad.append(f"{ref['ref_id']}:{sub}")
+    assert not bad, f"references filed under subdomains no domain declares: {bad}"
+
+
 def test_no_domains_bundle_reference_count_exceeds_kb_limit(references):
     """assemble_domain()'s kb_limit caps how many references kb.retrieve()
     can return. If any single domain's real reference count grows past that
