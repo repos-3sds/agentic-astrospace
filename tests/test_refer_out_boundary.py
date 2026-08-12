@@ -184,6 +184,19 @@ MUST_REFER_OUT = [
     ("when will my panic attacks stop", "health"),
     ("should i be worried about my constant mood swings", "health"),
     ("will these panicky feelings ever end", "health"),
+    # health — advice-seeking frames, found by Codex reviewing PR #45
+    # (2026-08-12): the health-deepen KB work added a subdomain-matching
+    # test fixture using "any advice?", which turned out to be a real
+    # user-shaped request for medical guidance that passed the gate
+    # untouched — "any advice" names no frame already in _VERDICT_FRAMES,
+    # even though "what should i do" (equally a request for guidance)
+    # worked, only because it happens to contain "should i" as a
+    # substring. Not health-specific: the same advice-seeking frame
+    # paired with any prohibited subject was a gap.
+    ("i have been feeling sick lately, any advice?", "health"),
+    ("what advice would you give about my surgery risk?", "health"),
+    ("any tips for my chronic illness?", "health"),
+    ("any suggestions for my medication dosage?", "health"),
 ]
 
 # Questions the product exists to answer. Several are the app's own suggested
@@ -240,6 +253,16 @@ MUST_STAY_ANSWERABLE = [
     "will my residency application at the hospital be approved",
     "when will my artist residency application be accepted",
     "is my tax residency status going to be accepted by the irs",
+    # Negative cases for the advice-frame widening above (2026-08-12): the
+    # new frames ("any advice", "what should", "any tips"/"suggestions"/
+    # "recommendations") must not gate ordinary questions that carry no
+    # prohibited subject at all — this is the two-part design's whole
+    # point, and it's exactly the failure mode this file's docstring
+    # warns about.
+    "what should i focus on today?",
+    "any tips for improving my career this month?",
+    "any suggestions for a good time to start studying?",
+    "what advice does my chart give about choosing a new field?",
 ]
 
 
