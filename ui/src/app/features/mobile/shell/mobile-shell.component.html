@@ -1,5 +1,10 @@
 <div class="shell">
-  <main class="content" [class.tabs-hidden]="tabsSuppressed()"><router-outlet /></main>
+  <main class="content" [class.tabs-hidden]="tabsSuppressed()">
+    <router-outlet />
+    @if (!tabsSuppressed() && tabPlanet(); as planet) {
+      <as-tab-celestial-footer [planet]="planet" />
+    }
+  </main>
 
   @if (!tabsSuppressed()) {
     <nav class="tabbar" aria-label="Primary">
