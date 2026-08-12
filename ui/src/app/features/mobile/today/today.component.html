@@ -171,28 +171,49 @@
 
   @if (preferences.experienceMode() !== 'guided' || detailsOpen()) {
   @for (section of statSections(); track section.eyebrow) {
-    <p class="eyebrow section-label">{{ section.eyebrow }}</p>
-    <div class="stats" [attr.data-columns]="section.columns">
-      @for (cell of section.cells; track cell.label) {
-        <div class="stat" [class.has-symbol]="cell.symbol">
-          <span class="stat-copy">
-            <p class="eyebrow stat-label">{{ cell.label }}</p>
-            <p class="stat-value">{{ cell.value }}</p>
-          </span>
-          @if (cell.symbol; as symbol) {
-            <span
-              class="stat-symbol"
-              [attr.data-kind]="symbol.kind"
-              [style.--symbol-color]="symbol.color ?? null"
-              [style.--symbol-rotate]="(symbol.angle ?? 0) + 'deg'"
-              [attr.aria-label]="symbol.label"
-            >
-              <span class="symbol-glyph" aria-hidden="true">{{ symbol.glyph }}</span>
+    <section
+      class="stat-section"
+      [class.birth-signature]="section.presentation === 'signature'"
+      [attr.aria-label]="section.presentation === 'signature' ? 'Your birth signature' : null"
+    >
+      <div [class.birth-signature-heading]="section.presentation === 'signature'">
+      <p class="eyebrow section-label">{{ section.eyebrow }}</p>
+        @if (section.presentation === 'signature') {
+          <p class="birth-signature-detail">From your birth chart · constant across daily readings</p>
+        }
+      </div>
+      <div
+        class="stats"
+        [class.birth-signature-facts]="section.presentation === 'signature'"
+        [attr.data-columns]="section.columns"
+      >
+        @for (cell of section.cells; track cell.label) {
+          <div
+            class="stat"
+            [class.has-symbol]="cell.symbol"
+            [class.birth-signature-fact]="section.presentation === 'signature'"
+          >
+            <span class="stat-copy">
+              <p class="eyebrow stat-label">{{ cell.label }}</p>
+              <p class="stat-value">{{ cell.value }}</p>
             </span>
-          }
-        </div>
-      }
-    </div>
+            @if (cell.symbol; as symbol) {
+              <span
+                class="stat-symbol"
+                [attr.data-kind]="symbol.kind"
+                [style.--symbol-color]="symbol.color ?? null"
+                [style.--symbol-rotate]="(symbol.angle ?? 0) + 'deg'"
+                [attr.aria-label]="symbol.label"
+              >
+                <span class="symbol-glyph" aria-hidden="true">{{ symbol.glyph }}</span>
+              </span>
+            } @else if (section.presentation === 'signature') {
+              <span class="stat-symbol birth-signature-number" aria-hidden="true">#</span>
+            }
+          </div>
+        }
+      </div>
+    </section>
   }
   }
 
