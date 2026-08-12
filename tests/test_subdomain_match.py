@@ -10,6 +10,7 @@ from astrospace.context.taxonomy import get_domain
     ("Will I have an accident or need surgery?", "health", {"accidents_surgery"}),
     ("How is my overall vitality and energy levels?", "health", {"vitality"}),
     ("Am I prone to any chronic illness?", "health", {"chronic_disease"}),
+    ("I've been feeling sick lately, any advice?", "health", {"acute_disease"}),
     ("Will I recover quickly after this operation?", "health", {"accidents_surgery", "recovery"}),
     ("When will I get married?", "marriage", {"timing_of_marriage"}),
     ("Will there be a lot of conflict and fighting in my marriage?", "marriage", {"harmony_discord"}),
