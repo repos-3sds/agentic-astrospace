@@ -10,8 +10,9 @@ import {
   WhyReadingSheetComponent,
 } from '../why-reading/why-reading-sheet.component';
 import { KundliStore } from '../../../core/kundli.store';
+import { BirthDetailsCardComponent } from '../chart/birth-details-card.component';
 import { VedicService } from '../../../core/vedic.service';
-import { DailyGuidancePayload } from '../../../core/models';
+import { DailyGuidancePayload, VedicAll } from '../../../core/models';
 import { FestivalService } from '../../../core/festival.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { PreferencesService } from '../../../core/preferences.service';
@@ -201,6 +202,7 @@ export interface TodayView {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    BirthDetailsCardComponent,
     DayGaugeComponent,
     DayQualitySheetComponent,
     ListenSheetComponent,
@@ -269,6 +271,10 @@ export class TodayComponent {
 
   /** Which sheet is showing, if any. One signal so two cannot stack. */
   readonly openSheet = signal<'quality' | 'why' | 'listen' | null>(null);
+  /** Birth constants for the header strip. Populated from the chart cache that
+   * `prefetchChart()` already warms, so this costs no extra request. */
+  readonly natal = signal<VedicAll | null>(null);
+
   readonly profileSwitcherOpen = signal(false);
   readonly detailsOpen = signal(false);
 
@@ -544,7 +550,7 @@ export class TodayComponent {
 
   private async prefetchChart(profileId: string): Promise<void> {
     try {
-      await this.vedic.all(profileId);
+      this.natal.set(await this.vedic.all(profileId));
     } catch {
       // Today should stay usable even if the natal chart cannot be warmed.
     }

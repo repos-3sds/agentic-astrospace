@@ -16,6 +16,10 @@
   } @else if (!chart()) {
     <section class="story-state"><b>No active profile</b><p>Add birth details before opening your story.</p><a [routerLink]="['/m','birth-details']">Add birth details</a></section>
   } @else {
+    <!-- The story starts with who it is about. Guided tone: rising sign, moon
+         sign, birth star — the words a person would use, not the Sanskrit. -->
+    <as-birth-details-card [chart]="chart()" density="compact" tone="guided" />
+
     <section class="hero">
       <p>YOUR LIFE MAP</p>
       <h2>{{ signature().headline }}</h2>

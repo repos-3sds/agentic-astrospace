@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
 import { VedicAll } from '../../../core/models';
 import { VedicService } from '../../../core/vedic.service';
+import { BirthDetailsCardComponent } from '../chart/birth-details-card.component';
 import { buildChartAdapter } from '../chart/mobile-chart-data';
 
 interface StoryCard {
@@ -19,7 +20,7 @@ interface StoryCard {
   selector: 'as-guided-story',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, BirthDetailsCardComponent],
   templateUrl: './guided-story.component.html',
   styleUrl: './guided-story.component.scss',
 })

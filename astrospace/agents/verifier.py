@@ -208,7 +208,9 @@ def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
         if crossed:
             violations.append(f"prohibited verdict ({crossed}) in: {text!r}")
         dosha_crossed = dosha_overclaim_kind(text)
-        if dosha_crossed:
+        if dosha_crossed == "health_outcome_overclaim":
+            violations.append(f"health outcome overclaim in: {text!r}")
+        elif dosha_crossed:
             violations.append(f"dosha overclaim in: {text!r}")
 
     # "mixed" (both a retrospective and a future cue present in the same
