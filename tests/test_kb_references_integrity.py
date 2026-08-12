@@ -41,7 +41,24 @@ _MORTAL = re.compile(
     # this pattern originally held. Found by running the guard against the
     # rules that were deliberately NOT ingested, rather than only against the
     # ones that were.
-    r"span of|years of life|will live|(long|short|brief|full) life)\b",
+    r"span of|years of life|will live|(long|short|brief|full) life|"
+    # Same discovery, different chapter: BPHS ch.16's child-loss shlokas
+    # ("the native will ... lose his child", "loss of children at 33 and 36",
+    # "grief on account of loss of child", "3 will pass away") describe a
+    # child's death without any word above. A guard that only ever gets tested
+    # against a book's LONGEVITY chapter will not catch a different chapter's
+    # death phrasing — it has to be tested against every closed chapter, not
+    # just the first one that taught the lesson. Brought forward from the
+    # children/foreign PR (#39) since this branch predates it.
+    r"lose (?:his|her|their|a) child(?:ren)?|loss of (?:a |his |her |their )?child(?:ren)?|"
+    r"pass(?:ed)? away|will pass away|"
+    # "demise" is a word this project's OWN safety.py death-noun work (the
+    # third-party guard) was built to catch in model output ("your father's
+    # demise is indicated in 2031") — and it was absent from THIS guard the
+    # whole time. Found via the Phaladeepika cross-check pass, testing the
+    # guard against a third book's phrasing rather than assuming two books
+    # had exhausted the vocabulary.
+    r"demise)\b",
     re.I,
 )
 
@@ -121,3 +138,39 @@ def test_retrieval_reaches_the_cross_domain_dasha_rules():
     for domain in ("career", "health", "wealth"):
         ids = {r.ref_id for r in get_knowledge_base().retrieve([domain])}
         assert "bphs47_3_drekkana_emphasis" in ids, domain
+
+
+# Brought forward from the marriage PR (#38) since this branch predates it.
+TAXONOMY_PATH = Path("astrospace/context/taxonomy.json")
+
+
+def _taxonomy_subdomains() -> dict[str, set[str]]:
+    raw = json.loads(TAXONOMY_PATH.read_text(encoding="utf-8"))
+    domains = raw["domains"] if isinstance(raw, dict) and "domains" in raw else raw
+    items = domains.items() if isinstance(domains, dict) else ((d["id"], d) for d in domains)
+    out: dict[str, set[str]] = {}
+    for domain_id, spec in items:
+        subs = spec.get("subdomains", [])
+        out[domain_id] = {s if isinstance(s, str) else s.get("id") for s in subs}
+    return out
+
+
+def test_every_domain_named_by_a_reference_exists(references):
+    known = set(_taxonomy_subdomains())
+    unknown = {d for r in references for d in r["domains"]} - known
+    assert not unknown, f"references target domains absent from taxonomy.json: {unknown}"
+
+
+def test_every_subdomain_named_by_a_reference_exists(references):
+    """A reference filed under a subdomain that does not exist is unreachable —
+    retrieval by that subdomain returns nothing, and no error is raised anywhere.
+    Found by falling into it: the marriage rules were first written against
+    `marital_harmony`, which is not in the taxonomy (the real id is
+    `harmony_discord`). Every other test passed."""
+    taxonomy = _taxonomy_subdomains()
+    bad: list[str] = []
+    for ref in references:
+        for sub in ref.get("subdomains") or []:
+            if not any(sub in taxonomy.get(domain, set()) for domain in ref["domains"]):
+                bad.append(f"{ref['ref_id']}:{sub}")
+    assert not bad, f"references filed under subdomains no domain declares: {bad}"
