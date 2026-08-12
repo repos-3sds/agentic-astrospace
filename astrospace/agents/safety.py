@@ -991,17 +991,58 @@ _PERSONALITY_OVERCLAIM_OUTPUT = (
 # reason as wealth/children/personality above: "this does not mean you will
 # have an accident" is exactly the reassurance shape a caution-framed answer
 # is expected to use, and contains the bad phrase as a literal substring.
+#
+# 2026-08-12, generalized (Codex, second review round): the first version
+# was first-person-only and phrase-list-narrow, verified by direct probe to
+# miss every one of: third-party subjects ("your mother will have an
+# accident" — this app supports multiple profiles, so a third-party health
+# outcome is exactly as reachable as a third-party death verdict already is,
+# and that guard learned this same lesson once already, see
+# `_THIRD_PARTY_SUBJECTS` above), noun-led certainty ("an accident is
+# unavoidable/guaranteed/bound to happen" — no person or verb needed for
+# this to be a verdict), chart-led assertions ("this chart confirms an
+# accident"), and modal variants ("destined to", "certain to", "probably")
+# the original modal list didn't cover. Rebuilt on the file's existing
+# person/third-party machinery (`_LIFE_SUBJECT`, reused rather than a new
+# vocabulary list, per the file's own hard-learned lesson about copied
+# lists drifting) instead of appended as more first-person sentences.
+_HEALTH_OUTCOME_MODAL = (
+    r"\b(?:will|shall|is going to|are going to|is likely to|are likely to|"
+    r"is destined to|are destined to|is certain to|are certain to|"
+    r"is bound to|are bound to)\b"
+)
 _HEALTH_OUTCOME_OVERCLAIM_OUTPUT = (
-    r"\byou will (?:have|get|meet with|suffer) an? (?:accident|injury)\b",
-    r"\ban accident will happen(?: to you)?\b",
-    r"\byou (?:will|are going to) (?:be|get) (?:injured|hurt)\b",
-    r"\byou will (?:need|require) surgery\b",
-    r"\byou (?:will|are going to) end up in (?:the |a )?hospital\b",
-    r"\bthis (?:combination|configuration|placement) guarantees an accident\b",
-    r"\ban accident is (?:certain|inevitable)\b",
-    r"\bsurgery is (?:certain|inevitable)\b",
-    r"\byou cannot avoid (?:this accident|getting injured|needing surgery)\b",
-    r"\byou are certain to (?:have an accident|get injured|need surgery)\b",
+    # Person-led (first- or third-party via `_LIFE_SUBJECT`) future event.
+    # `_ADVERB_GAP` between subject and modal, and between modal and verb,
+    # is what makes "you will probably have an accident" a match without a
+    # dedicated "probably" pattern — the gap absorbs the adverb the same way
+    # it already does for the death-verdict rows above.
+    (_LIFE_SUBJECT + _ADVERB_GAP + _HEALTH_OUTCOME_MODAL + _ADVERB_GAP +
+     r"\b(?:have|get|meet with|experience|suffer) an? (?:accident|injury)\b"),
+    (_LIFE_SUBJECT + _ADVERB_GAP + _HEALTH_OUTCOME_MODAL + _ADVERB_GAP +
+     r"\b(?:get|be) (?:injured|hurt|hospitalized)\b"),
+    (_LIFE_SUBJECT + _ADVERB_GAP + _HEALTH_OUTCOME_MODAL + _ADVERB_GAP +
+     r"\b(?:need|require) surgery\b"),
+    (_LIFE_SUBJECT + _ADVERB_GAP + _HEALTH_OUTCOME_MODAL + _ADVERB_GAP +
+     r"\bend up in (?:the |a )?hospital\b"),
+    (_LIFE_SUBJECT + _ADVERB_GAP +
+     r"cannot avoid (?:this accident|getting injured|needing surgery|being hospitalized)\b"),
+    # Event-as-subject, no person needed — "an accident will happen"/"is
+    # bound to happen" asserts the outcome without naming who it happens to.
+    r"\b(?:an? )?(?:accident|injury) will happen\b",
+    r"\b(?:an? )?(?:accident|injury) is bound to happen\b",
+    # Noun-led certainty — the event itself stated as guaranteed, with no
+    # modal or person in the sentence at all.
+    r"\b(?:an? )?(?:accident|injury|surgery|hospitalization) is (?:certain|inevitable|unavoidable|guaranteed)\b",
+    # Chart-led assertion. "shows? that" (not bare "shows") deliberately —
+    # "shows an injury-proneness combination" is exactly the safe caution
+    # phrasing this guard must not catch; requiring "that" keeps this
+    # narrow to the assertive construction ("shows THAT X will occur")
+    # without flagging the ordinary "shows X" chart-description sentences
+    # this app writes constantly.
+    (r"\b(?:this |the )?(?:chart|placement|configuration|combination) "
+     r"(?:confirms?|guarantees?|shows? that)\b" + _ADVERB_GAP +
+     r"(?:an? )?(?:accident|injury|surgery|hospitalization)\b"),
 )
 
 # Shared by every pattern above (not per-pattern lookbehinds — those don't

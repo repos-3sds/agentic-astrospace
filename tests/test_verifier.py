@@ -1026,6 +1026,78 @@ class TestHealthOutcomeOverclaimGuardrail:
         assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
 
 
+class TestHealthOutcomeOverclaimGuardrailIndependentReviewRound2:
+    """Codex's review of PR #46 (2026-08-12) probed the round-1 guard from
+    scratch and found it first-person-only and phrase-list-narrow — every
+    case below failed against the pre-fix code, confirmed by direct probe
+    before this file was rebuilt. Same discipline as
+    `TestPersonalityGuardrailIndependentReviewRound2` above: two root
+    causes, both closed by rebuilding on the file's existing person/
+    third-party machinery rather than appending more first-person
+    sentences.
+
+    1. No third-party coverage at all. This app supports multiple profiles
+       ("your mother will have an accident", "your spouse will need
+       surgery") — the exact same gap the death-verdict guard already
+       learned to close via `_LIFE_SUBJECT`/`_THIRD_PARTY_SUBJECTS`, reused
+       here rather than duplicated.
+    2. Person-anchored patterns only, missing three whole outcome shapes:
+       noun-led certainty with no person or verb ("an accident is
+       unavoidable", "hospitalization is certain"), event-as-subject
+       ("an injury will happen"), and chart-led assertion ("this chart
+       confirms an accident"). Also missing modal variants ("destined to",
+       "certain to") and adverb-qualified predictions ("will probably have
+       an accident")."""
+
+    @pytest.mark.parametrize("phrase", [
+        # Third-party — the specific gap Codex named as most important,
+        # since Siddha supports multiple profiles and family-member
+        # questions are a real, reachable shape.
+        "Your mother will have an accident next year.",
+        "Your child is going to get injured during this transit.",
+        "Your spouse will need surgery this year.",
+        # Event-as-subject, no person named at all.
+        "An injury will happen during this period.",
+        "An accident is bound to happen.",
+        # First-person verb variants the round-1 vocabulary missed.
+        "You will experience an accident next month.",
+        "You will be hospitalized during this dasha.",
+        # Noun-led certainty, no modal or person required.
+        "Hospitalization is certain with this placement.",
+        "An accident is unavoidable.",
+        # Chart-led assertion.
+        "This chart confirms an accident in 2027.",
+        "This placement guarantees hospitalization.",
+        # Modal variants round-1's modal list didn't cover.
+        "You are destined to have an accident.",
+        "You will probably have an accident.",
+    ])
+    def test_round_2_paraphrases_are_caught(self, health_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, health_bundle, "health")
+        assert violations, f"expected a violation for: {phrase!r}"
+
+    @pytest.mark.parametrize("phrase", [
+        # Historical fact — past tense, no modal, must never be confused
+        # with a future outcome prediction.
+        "You had an accident last year.",
+        "Your mother had surgery last year.",
+        # Negated noun-led certainty — the direct-adjacency requirement in
+        # the certainty pattern already keeps this clean without needing
+        # the shared negation check, but pinned here so a future edit that
+        # loosens that adjacency gets caught.
+        "An accident is not inevitable.",
+        # Ordinary caution language must survive the generalized rebuild
+        # exactly as it survived the narrower round-1 version.
+        "This configuration indicates a tendency toward accidents.",
+        "Your chart shows an injury-proneness combination — not an outcome, a susceptibility.",
+    ])
+    def test_round_2_negative_cases_stay_clean(self, health_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, health_bundle, "health")
+        assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
+
+
 class TestPersonalityGuardrailIndependentReviewRound2:
     """A fresh subagent with no memory of the round-1 implementation probed
     both `dosha_overclaim_kind()` and `prohibited_verdict()` from scratch
