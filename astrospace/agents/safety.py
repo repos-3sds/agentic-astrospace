@@ -64,6 +64,17 @@ _VERDICT_FRAMES = (
     # exactly like "chances? of"/"likelihood" already here — "what's the
     # probability my visa gets approved" never reached `seeks_verdict`.
     r"\bprobability\b",
+    # 2026-08-12 (Codex, reviewing PR #45): "I have been feeling sick
+    # lately, any advice?" named the health subject but sought no frame
+    # already listed here — "any advice" is a request for medical guidance
+    # exactly as directly as "what should i do", which already worked only
+    # because it happens to contain "should i" as a substring. Not a health-
+    # specific gap: an advice-seeking frame paired with any prohibited
+    # subject (a legal or financial "any advice?" equally) was passing the
+    # gate on phrasing alone, same class of miss as the immigration/
+    # probability additions above.
+    r"\bany advice\b", r"\bwhat advice\b", r"\badvice (?:on|for|about)\b",
+    r"\bany (?:tips|suggestions|recommendations)\b", r"\bwhat should\b",
 )
 
 # Shared immigration-process vocabulary — one constant, not duplicated
@@ -967,6 +978,32 @@ _PERSONALITY_OVERCLAIM_OUTPUT = (
     *_PERSONALITY_FATALISM_SHAPES,
 )
 
+# 2026-08-12 (Codex review of PR #45, health-deepen integration prep): the
+# health-deepen pass reframes accident/injury susceptibility as a caution —
+# "this configuration indicates a tendency toward accidents" — exactly the
+# same flag-not-verdict standard as a dosha. Nothing previously stopped the
+# model from crossing that line into a definite future event ("you will
+# have an accident"), which is a different claim: not a chart-derived
+# tendency, but a specific outcome prediction — the thing CLAUDE.md's health
+# non-negotiable exists to prevent, just phrased around "accident"/"surgery"
+# rather than the disease/diagnosis vocabulary the refer-out gate already
+# covers. Checked with the negation check (`_negation_precedes`), same
+# reason as wealth/children/personality above: "this does not mean you will
+# have an accident" is exactly the reassurance shape a caution-framed answer
+# is expected to use, and contains the bad phrase as a literal substring.
+_HEALTH_OUTCOME_OVERCLAIM_OUTPUT = (
+    r"\byou will (?:have|get|meet with|suffer) an? (?:accident|injury)\b",
+    r"\ban accident will happen(?: to you)?\b",
+    r"\byou (?:will|are going to) (?:be|get) (?:injured|hurt)\b",
+    r"\byou will (?:need|require) surgery\b",
+    r"\byou (?:will|are going to) end up in (?:the |a )?hospital\b",
+    r"\bthis (?:combination|configuration|placement) guarantees an accident\b",
+    r"\ban accident is (?:certain|inevitable)\b",
+    r"\bsurgery is (?:certain|inevitable)\b",
+    r"\byou cannot avoid (?:this accident|getting injured|needing surgery)\b",
+    r"\byou are certain to (?:have an accident|get injured|need surgery)\b",
+)
+
 # Shared by every pattern above (not per-pattern lookbehinds — those don't
 # scale and were the direct cause of round 2's bugs): a match is ignored if
 # a negation cue appears earlier in the *same clause* — not the same
@@ -1098,7 +1135,10 @@ def dosha_overclaim_kind(answer: str) -> str | None:
     and for the same reason as wealth/children: the personality domain
     addendum explicitly instructs hedged framing ("this does not mean you
     will always be selfish"), so the reassurance form is expected, common
-    output, not an edge case."""
+    output, not an edge case. Health outcome patterns
+    (`_HEALTH_OUTCOME_OVERCLAIM_OUTPUT`) need it for the identical reason: a
+    caution-framed answer is expected to say "this does not mean you will
+    have an accident" as reassurance."""
     normalized = _normalize(answer)
     for pattern in _DOSHA_OVERCLAIM_OUTPUT:
         if re.search(pattern, normalized):
@@ -1107,4 +1147,8 @@ def dosha_overclaim_kind(answer: str) -> str | None:
         for match in re.finditer(pattern, normalized):
             if not _negation_precedes(normalized, match.start()):
                 return "dosha_overclaim"
+    for pattern in _HEALTH_OUTCOME_OVERCLAIM_OUTPUT:
+        for match in re.finditer(pattern, normalized):
+            if not _negation_precedes(normalized, match.start()):
+                return "health_outcome_overclaim"
     return None

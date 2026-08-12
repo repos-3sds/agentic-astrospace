@@ -955,6 +955,77 @@ class TestPersonalityCharacterFatalismGuardrail:
         assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
 
 
+@pytest.fixture(scope="module")
+def health_bundle():
+    chart = VedicChart("VerifierHealth", 1990, 1, 1, 12, 0, **DELHI)
+    return assemble_domain(chart, "health")
+
+
+class TestHealthOutcomeOverclaimGuardrail:
+    """Extends `dosha_overclaim_kind()` (astrospace/agents/safety.py) to
+    health outcome predictions — found by Codex reviewing PR #45
+    (2026-08-12) during health-deepen integration prep. The health-deepen KB
+    pass reframes accident/injury susceptibility as a caution, the same
+    flag-not-verdict standard CLAUDE.md already gives a dosha: "this
+    configuration indicates a tendency toward accidents" is meant to ship,
+    "you will have an accident" is not — the difference between a chart-
+    derived tendency and a definite future event, which nothing previously
+    stopped the model from crossing into.
+
+    Checked with `_negation_precedes()`, same reason as wealth/children/
+    personality: a caution-framed answer is expected to say "this does not
+    mean you will have an accident" as reassurance, and that sentence
+    contains the bad phrase as a literal substring."""
+
+    @pytest.mark.parametrize("phrase", [
+        "You will have an accident next month.",
+        "An accident will happen to you during this period.",
+        "You are going to get injured during this transit.",
+        "You will need surgery this year.",
+        "You will require surgery because of this placement.",
+        "You are going to end up in the hospital during this dasha.",
+        "This configuration guarantees an accident.",
+        "An accident is certain given this Mars placement.",
+        "Surgery is inevitable with this combination.",
+        "You cannot avoid getting injured because of this yoga.",
+        "You are certain to have an accident this year.",
+        "Because of this Mars-Saturn combination, you will get injured.",
+    ])
+    def test_accident_outcome_paraphrases_are_caught(self, health_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, health_bundle, "health")
+        assert violations, f"expected a violation for: {phrase!r}"
+
+    def test_accident_outcome_checked_in_technical_basis_too(self, health_bundle):
+        bad = _reading(technical_basis=[
+            TechnicalBasisItem(
+                factor="Mars afflicted in the 6th", reading="you will have an accident",
+                source="houses",
+            ),
+        ])
+        violations = verify(bad, health_bundle, "health")
+        assert any("health outcome overclaim" in v for v in violations)
+
+    @pytest.mark.parametrize("phrase", [
+        # The realistic case: caution-framed susceptibility language the
+        # health-deepen pass is built to produce, and negated reassurance
+        # around the exact prohibited phrases above — must stay clean.
+        "Your chart shows an injury-proneness combination worth extra care.",
+        "This configuration indicates a tendency toward accidents, worth staying mindful of.",
+        "This is a caution, not a certainty — it does not mean you will have an accident.",
+        "This does not mean you will need surgery; it is a flag, not a verdict.",
+        "This placement suggests some susceptibility to minor injuries during this period.",
+        "Extra care around vehicles and machinery is worth taking during this dasha.",
+        "This is a susceptibility, not a diagnosis — many people with this placement never have an accident.",
+        "A strong Mars here can bring energy and drive, not necessarily injury.",
+        "You visited the hospital last year during a similar period; this dasha carries a similar caution.",
+    ])
+    def test_ordinary_health_caution_language_is_not_flagged(self, health_bundle, phrase):
+        bad = _reading(interpretation=phrase)
+        violations = verify(bad, health_bundle, "health")
+        assert violations == [], f"unexpected violation for: {phrase!r}: {violations}"
+
+
 class TestPersonalityGuardrailIndependentReviewRound2:
     """A fresh subagent with no memory of the round-1 implementation probed
     both `dosha_overclaim_kind()` and `prohibited_verdict()` from scratch
