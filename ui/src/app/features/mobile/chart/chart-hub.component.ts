@@ -260,6 +260,7 @@ export class ChartHubComponent {
     const strongest = shadbala?.classical?.ranking?.[0];
     return [
       { title: 'Ask Siddha', subtitle: 'Grounded consultation from this chart', tone: 'accent', icon: 'nav-ask', route: ['/m', 'ask'], featured: true },
+      { title: 'Birth Details', subtitle: 'Lagna · rashi · birth place', tone: 'accent', icon: 'explore-varga', route: ['/m', 'chart', 'birth-details'] },
       { title: 'Charts & Vargas', subtitle: `D1-D60 · ${ascendant} Asc`, tone: 'accent', icon: 'figma-yantra-compass', route: ['/m', 'chart', 'full'], active: true },
       { title: 'Strength', subtitle: strongest ? `${strongest.planet} strongest` : 'Shadbala · AV', tone: 'good', icon: 'figma-yantra-activity', route: ['/m', 'chart', 'strength'] },
       { title: 'Yogas', subtitle: 'Strengths & cancellations', tone: 'warn', icon: 'figma-yantra-git-commit', route: ['/m', 'chart', 'yogas'] },
