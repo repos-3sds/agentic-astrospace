@@ -12,6 +12,7 @@ from .daily import assemble_daily_context, daily_guidance
 from .graph import ReadingState, build_reading_graph
 from .kb import JsonKnowledgeBase, Reference, get_knowledge_base, set_knowledge_base
 from .router import KeywordRouter, LLMRouter, RoutingDecision
+from .subdomain_match import match_subdomains
 from .taxonomy import DomainSpec, TaxonomyError, domain_ids, get_domain, taxonomy
 
 __all__ = [
@@ -19,6 +20,7 @@ __all__ = [
     "assemble_daily_context", "daily_guidance",
     "JsonKnowledgeBase", "Reference", "get_knowledge_base", "set_knowledge_base",
     "KeywordRouter", "LLMRouter", "RoutingDecision",
+    "match_subdomains",
     "ReadingState", "build_reading_graph",
     "DomainSpec", "TaxonomyError", "domain_ids", "get_domain", "taxonomy",
 ]

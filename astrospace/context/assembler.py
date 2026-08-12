@@ -47,6 +47,7 @@ from ..core.vedic.vimshopaka import vimshopaka_bala
 from ..core.vedic.argala import argala_of_house
 from ..core.vedic.shashtyamsha import d60_deity
 from .kb import get_knowledge_base
+from .subdomain_match import match_subdomains
 from .taxonomy import DomainSpec, get_domain, taxonomy_version
 from .timeline import as_dt as _as_dt
 from .timeline import build_timeline
@@ -583,10 +584,20 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
                if include_gochara else None)
 
     kb = get_knowledge_base()
+    # A confident question->subdomain match narrows retrieval to just the
+    # subdomains the question is actually about; a miss (empty set) falls
+    # back to the domain's full subdomain list with no hard filter — exactly
+    # today's behavior. See subdomain_match.py for why this is scoped to a
+    # handful of domains rather than all of them.
+    matched_subdomains = match_subdomains(question, domain_id)
     references = [
         ref.to_dict()
-        for ref in kb.retrieve([domain_id], subdomains=list(spec.subdomains),
-                               limit=kb_limit)
+        for ref in kb.retrieve(
+            [domain_id],
+            subdomains=list(matched_subdomains) if matched_subdomains else list(spec.subdomains),
+            limit=kb_limit,
+            require_subdomain_match=bool(matched_subdomains),
+        )
     ]
     source_passages = []
     try:
