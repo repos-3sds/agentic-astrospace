@@ -1,3 +1,5 @@
+@use '../mobile-tokens' as *;
+
 // Tokens only — every colour here is one of the theme-reactive `--m-*` vars the
 // rest of the mobile app uses. Mixing a reactive token with a fixed one is how
 // this app has produced invisible text before (CLAUDE.md, "Verify visually").
@@ -119,4 +121,50 @@
   font-size: 0.75rem;
   line-height: 1.45;
   color: var(--m-muted);
+}
+
+/* Inside Today this is part of the signature, not a card inside another card. */
+.bd-card.bd-embedded {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  gap: 14px;
+
+  .bd-born {
+    @include m-body-small;
+  }
+
+  .bd-headline {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+
+    li {
+      min-height: 58px;
+      padding: 0 10px;
+      gap: 7px;
+
+      &:first-child { padding-left: 0; }
+      &:last-child { padding-right: 0; }
+      & + li { border-left: 1px solid color-mix(in srgb, var(--m-accent) 16%, var(--m-border)); }
+    }
+
+    small {
+      @include m-eyebrow;
+    }
+
+    .bd-note-inline {
+      @include m-caption;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    strong {
+      @include m-title;
+      font-size: 17px;
+      line-height: 1.25;
+      overflow-wrap: normal;
+      word-break: normal;
+    }
+  }
 }

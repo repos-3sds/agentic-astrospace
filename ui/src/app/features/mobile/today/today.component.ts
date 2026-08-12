@@ -164,6 +164,7 @@ export interface StatSection {
   eyebrow: string;
   columns: 2 | 3;
   cells: StatCell[];
+  presentation?: 'grid' | 'signature';
 }
 
 export interface TodayView {
@@ -504,8 +505,9 @@ export class TodayComponent {
         ],
       },
       {
-        eyebrow: 'ALWAYS · YOUR SIGNATURE',
+        eyebrow: 'YOUR BIRTH SIGNATURE',
         columns: 3,
+        presentation: 'signature',
         cells: [
           { label: 'LUCKY NO.', value: String(daily.lucky_numbers.astrological.number) },
           { label: 'GEM', value: daily.lucky_signature.gem, symbol: gemSymbol(daily.lucky_signature.gem) },

@@ -304,7 +304,8 @@
   gap: 20px;
 }
 
-.body > .card:not(.skeleton-card) {
+.body > .card:not(.skeleton-card),
+.body > .birth-signature {
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.1) 0%, transparent 48%),
     linear-gradient(180deg, rgba(255, 252, 246, 0.04), transparent);
@@ -316,7 +317,8 @@
   backdrop-filter: blur(3px) saturate(1.04);
 }
 
-:host-context(.app-dark) .body > .card:not(.skeleton-card) {
+:host-context(.app-dark) .body > .card:not(.skeleton-card),
+:host-context(.app-dark) .body > .birth-signature {
   background:
     linear-gradient(145deg, rgba(255, 248, 236, 0.06) 0%, transparent 48%),
     linear-gradient(180deg, rgba(36, 29, 23, 0.08), transparent);
@@ -472,7 +474,7 @@
   img { width: 20px; height: 20px; display: block; }
 }
 
-.window-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.window-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
 .window-value { @include m-body-strong; color: var(--m-text); margin: 0; }
 .window-in { @include m-body-strong; color: var(--m-warn); margin: 0; flex-shrink: 0; }
 
@@ -498,6 +500,12 @@
 // card is the one thing being pointed at, and repeating it four times down the
 // scroll would flatten that.
 .section-label { color: var(--m-muted); }
+
+.stat-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
 /* Stat grids — nodes 20:103 / 20:121 / 20:132 */
 .stats {
@@ -583,7 +591,7 @@
   font-size: 21px;
 }
 
-.stat-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.stat-copy { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .stat-label { color: var(--m-muted); }
 // Values run to two words ("Lucky no." / "Dvitiya") in a third of the width, so
 // they are allowed to shrink rather than overflow the fixed-height cell.
@@ -597,6 +605,81 @@
 
 .stats[data-columns='2'] .stat {
   height: auto;
+}
+
+.stats[data-columns='3'] .stat {
+  padding-inline: 12px;
+
+  .stat-value {
+    font-size: 18px;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+}
+
+/* Birth constants share Chart's "Your Signature" hierarchy instead of
+   masquerading as another set of daily panchanga cards. */
+.birth-signature {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+  padding: 17px 18px 18px;
+  border-radius: 22px;
+}
+
+.birth-signature-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .eyebrow { color: var(--m-accent-strong); }
+}
+
+.birth-signature-detail {
+  @include m-body-small;
+  margin: 0;
+  color: var(--m-muted);
+}
+
+.birth-signature-facts {
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1.35fr) minmax(0, .9fr);
+  gap: 0;
+  padding-top: 16px;
+  border-top: 1px solid color-mix(in srgb, var(--m-accent) 16%, var(--m-border));
+}
+
+.birth-signature-fact {
+  min-width: 0;
+  min-height: 104px;
+  padding: 1px 10px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 10px;
+
+  &:first-child { padding-left: 0; }
+  &:last-child { padding-right: 0; }
+
+  & + & {
+    border-left: 1px solid color-mix(in srgb, var(--m-accent) 16%, var(--m-border));
+  }
+
+  .stat-value {
+    font-size: 17px;
+    line-height: 1.25;
+  }
+
+  .stat-symbol { margin-top: auto; }
+}
+
+.birth-signature-number {
+  @include m-body-strong;
+  color: var(--m-accent-strong);
 }
 
 /* Ask suggestions — node 20:134 */

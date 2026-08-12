@@ -1,5 +1,9 @@
 @if (hasChart()) {
-  <section class="bd-card" [class.bd-full]="density() === 'full'">
+  <section
+    class="bd-card"
+    [class.bd-full]="density() === 'full'"
+    [class.bd-embedded]="embedded()"
+  >
     <header class="bd-head">
       @if (personName()) { <h2>{{ personName() }}</h2> }
       <p class="bd-born">{{ born() }}</p>

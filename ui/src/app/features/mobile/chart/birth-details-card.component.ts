@@ -31,6 +31,8 @@ export class BirthDetailsCardComponent {
   readonly chart = input<VedicAll | null>(null);
   readonly personName = input<string | null>(null);
   readonly density = input<BirthDetailsDensity>('compact');
+  /** Removes the nested card shell when this content lives inside a signature surface. */
+  readonly embedded = input(false);
   /** `guided` names things the way a person would, not the way a chart does. */
   readonly tone = input<BirthDetailsTone>('plain');
 
