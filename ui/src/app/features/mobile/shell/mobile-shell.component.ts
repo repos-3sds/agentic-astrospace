@@ -11,10 +11,6 @@ import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
 import { SheetOverlayService } from '../../../core/sheet-overlay.service';
 import { HapticsService } from '../../../core/haptics.service';
-import {
-  TabCelestialFooterComponent,
-  tabPlanetForPath,
-} from './tab-celestial-footer.component';
 
 interface MobileTab {
   commands: string[];
@@ -34,7 +30,7 @@ interface MobileTab {
   selector: 'as-mobile-shell',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, TabCelestialFooterComponent],
+  imports: [RouterOutlet, RouterLink],
   templateUrl: './mobile-shell.component.html',
   styleUrl: './mobile-shell.component.scss',
   host: { class: 'as-mobile' },
@@ -90,8 +86,6 @@ export class MobileShellComponent {
       && this.currentPath().startsWith('/m/ask')
     ),
   );
-
-  protected readonly tabPlanet = computed(() => tabPlanetForPath(this.currentPath()));
 
   protected readonly tabs = computed(() => {
     const fixed = [
