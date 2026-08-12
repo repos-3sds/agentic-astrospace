@@ -8,7 +8,8 @@
     "Expanded 2026-08-11 with rules read from BPHS-Santhanam-Vol-1.pdf, whose text layer is measured readable (93.6%) — see docs/kb_corpus_sources.md. Unlike the 2026-08-06 pass, these carry a verifiable chapter/verse/page, not a topic pointer. NOTE ON EDITIONS: chapter numbers differ between translations — Sharma's ch.19 is Santhanam's ch.17 — so every location here names the translation.",
     "DELIBERATELY NOT INGESTED: BPHS's longevity and maraka material (ch.19, ch.43, ch.44, ch.9-10 arishta, and the 2nd/7th/8th-lord dasha rows of ch.48 that read 'possibility of death'). Longevity is a refer-out under CLAUDE.md, so those rules must not be retrievable by a domain agent at all. Their absence here is a decision, not an oversight — see docs/health_kb_bphs_6th_house.md. Also excluded: the planet-by-planet named-disease tables at Santhanam pp.115-117, which are quotations from Cornell's 'Encyclopaedia of Medical Astrology', not Parasara, and would function as a diagnosis generator.",
     "Marriage rules added 2026-08-12 from BPHS ch.18 and ch.24.73-84. THREE CLASSES ARE DELIBERATELY ABSENT. (1) Rules whose only content is a spouse's obedience or the native's control over them (ch.24.76, ch.24.82) — there is no neutral rule inside them to keep. (2) The passages describing a partner's body and sexual acts (ch.18.9 and surrounding notes). (3) Timing of a spouse's death (ch.18.3, 18.35-39, 18.42), which is longevity and refers out. The chapter is written throughout for a male native with a wife; that gender is the period reader's assumption and not a claim the chart makes, so statements here say spouse or partner. See docs/marriage_kb_bphs_7th_house.md.",
-    "Children and foreign rules added 2026-08-12. CHILDREN: BPHS ch.16 required more content exclusion than any prior chapter — legitimacy/paternity claims (16.14, 16.15) excluded outright, no neutral core; the sex-of-children rule (16.13) excluded on real-world-harm grounds (son-preference bias), a stricter bar than gendered-language cleanup alone; child-death timing (16.21-23) is gated_death; the exact-count-of-children block (16.24-32) excluded as an unservable deterministic claim with embedded death timing, not picked apart row by row. See docs/children_kb_bphs_5th_house.md. FOREIGN: honestly thin. BPHS's 12th-lord series (ch.24.134-144) and the 3rd/9th house chapters were checked in full and contain no explicit foreign-travel statement in this translation; only ch.23.11-12 speak to it directly. This domain needs a second source (Saravali, Prasna Marga) for real depth. See docs/foreign_kb_bphs_12th_house.md."
+    "Children and foreign rules added 2026-08-12. CHILDREN: BPHS ch.16 required more content exclusion than any prior chapter — legitimacy/paternity claims (16.14, 16.15) excluded outright, no neutral core; the sex-of-children rule (16.13) excluded on real-world-harm grounds (son-preference bias), a stricter bar than gendered-language cleanup alone; child-death timing (16.21-23) is gated_death; the exact-count-of-children block (16.24-32) excluded as an unservable deterministic claim with embedded death timing, not picked apart row by row. See docs/children_kb_bphs_5th_house.md. FOREIGN: honestly thin. BPHS's 12th-lord series (ch.24.134-144) and the 3rd/9th house chapters were checked in full and contain no explicit foreign-travel statement in this translation; only ch.23.11-12 speak to it directly. This domain needs a second source (Saravali, Prasna Marga) for real depth. See docs/foreign_kb_bphs_12th_house.md.",
+    "Cross-check pass 2026-08-12 against Phaladeepika (Sastri translation), the third distinct translator in the corpus. Saravali (the earlier standing candidate) was checked directly and found not to reach house-effect chapters in the volume we hold (Vol I runs chapters 1-26, fundamentals only) -- Phaladeepika's Adhyayas V/X/XII/XX map onto career/marriage/children/dasha, which is why it was used instead. Adds a new career technique (navamsa of the 10th lord), cross-verifies three marriage and three children claims previously single-source, adds dasha-timing rules for both, and independently corroborates the dasha dignity-over-nature principle and the maraka-lords-give-gain caveat. See docs/phaladeepika_crosscheck.md for the full reasoning, including the exclusions -- this pass found the single most severe content problem in the corpus so far: Adhyaya XII attributes childlessness to sin in a previous birth and prescribes ritual atonement per planet. Excluded outright, along with a second, unhedged version of BPHS's spouse-death timing problem, an exact-count-of-wives block mirroring the exact-count-of-children exclusion, and a technique for predicting a future spouse's own birth sign -- excluded as an enabler of astrological compatibility-gatekeeping."
   ],
   "references": [
     {
@@ -1351,6 +1352,171 @@
       "tags": [
         "house:12",
         "lord:12"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "phal5_navamsa_tenth_lord_livelihood",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection",
+        "job_vs_business"
+      ],
+      "statement": "A second classical technique for profession, independent of the 10th lord's Rashi placement: the navamsa occupied by the 10th lord names the type of livelihood — for example the Sun's navamsa indicating government or priestly service, Mercury's indicating writing, scholarship or clerical work, Mars's indicating metals, conflict or adventurous trades. Two authors centuries apart both treat the 10th lord as the key career significator, through different vargas.",
+      "source": {
+        "text_key": "phaladeepika",
+        "location": "Adhyaya V slokas 2-8, pp.43-45 (Sastri trans.)"
+      },
+      "tags": [
+        "house:10",
+        "lord:10",
+        "navamsa"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "phal10_malefic_seventh_harm",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "harmony_discord"
+      ],
+      "statement": "The 7th house or its lord afflicted by, aspected by, or positioned between malefics brings harm to the marriage. Independently states the same claim as BPHS ch.18 v.16 (bphs18_16_malefic_on_seventh) — two authors, same underlying rule.",
+      "source": {
+        "text_key": "phaladeepika",
+        "location": "Adhyaya X slokas 1,4,15, pp.105-106 (Sastri trans.)"
+      },
+      "tags": [
+        "house:7",
+        "lord:7",
+        "malefic"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "phal10_strong_seventh_lord_marriage",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "harmony_discord"
+      ],
+      "statement": "A strong, well-placed and unafflicted 7th lord, aspected by Jupiter, brings a marriage with happiness and children. Independently corroborates BPHS ch.18 vv.4-5 (bphs18_4_seventh_lord_strength).",
+      "source": {
+        "text_key": "phaladeepika",
+        "location": "Adhyaya X slokas 9-10, p.106 (Sastri trans.)"
+      },
+      "tags": [
+        "house:7",
+        "lord:7",
+        "jupiter"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "phal10_marriage_dasha_timing",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "timing_of_marriage"
+      ],
+      "statement": "Marriage may occur during the dasha of a planet occupying, aspecting, or owning the 7th house, or when the lagna lord transits into the sign representing the 7th house. A dasha-based marriage-timing technique not offered directly in the BPHS extract.",
+      "source": {
+        "text_key": "phaladeepika",
+        "location": "Adhyaya X sloka 13, p.106 (Sastri trans.)"
+      },
+      "tags": [
+        "house:7",
+        "lord:7",
+        "dasha",
+        "timing"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "phal12_strong_fifth_lord_children",
+      "domains": [
+        "children"
+      ],
+      "subdomains": [
+        "delay_difficulty"
+      ],
+      "statement": "Jupiter and a well-placed 5th lord, aspected by a benefic or a lord of an auspicious house, assure children; the character of the children follows from the 5th lord's own strength. Independently corroborates BPHS ch.16 vv.12,16 (bphs16_12_many_children, bphs16_16_children_come).",
+      "source": {
+        "text_key": "phaladeepika",
+        "location": "Adhyaya XII slokas 1,10, pp.116-117 (Sastri trans.)"
+      },
+      "tags": [
+        "house:5",
+        "lord:5",
+        "jupiter"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "phal12_adoption",
+      "domains": [
+        "children"
+      ],
+      "subdomains": [
+        "adoption"
+      ],
+      "statement": "The 5th house in a sign owned by Saturn or Mercury, aspected by or associated with Mandi or Saturn, or a weak 5th lord disconnected from the lords of the 1st and 7th houses, indicates a child by adoption. Independently corroborates BPHS ch.16 v.11 (bphs16_11_adoption).",
+      "source": {
+        "text_key": "phaladeepika",
+        "location": "Adhyaya XII sloka 8, p.117 (Sastri trans.)"
+      },
+      "tags": [
+        "house:5",
+        "lord:5"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "phal12_children_dasha_timing",
+      "domains": [
+        "children"
+      ],
+      "subdomains": [
+        "timing_of_children"
+      ],
+      "statement": "The birth of a child may occur during the dasha of the lagna lord, the 7th lord, the 5th lord, Jupiter, or a planet aspecting or occupying the 5th house, or when Jupiter transits the sign occupied by the 5th lord. A dasha-based children-timing technique structurally parallel to the marriage-timing rule from the same book.",
+      "source": {
+        "text_key": "phaladeepika",
+        "location": "Adhyaya XII slokas 25-27,29-30, pp.128-129 (Sastri trans.)"
+      },
+      "tags": [
+        "house:5",
+        "lord:5",
+        "dasha",
+        "timing",
+        "jupiter"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "phal20_maraka_lords_positive_dasha",
+      "domains": [
+        "wealth",
+        "marriage"
+      ],
+      "subdomains": [
+        "harmony_discord"
+      ],
+      "statement": "A strong 2nd-house lord's dasha brings family success, good fortune and eloquence; a strong 7th-house lord's dasha brings new possessions, marital happiness and celebration. Stated as the base verse, not as commentary on a contrary reading -- a direct, independent corroboration of the caveat that the 2nd and 7th lords, though counted among the marakas elsewhere in this text, give gain rather than distress alone when well placed.",
+      "source": {
+        "text_key": "phaladeepika",
+        "location": "Adhyaya XX slokas 3,8, pp.201-202 (Sastri trans.)"
+      },
+      "tags": [
+        "house:2",
+        "house:7",
+        "dasha",
+        "maraka"
       ],
       "status": "verified_common"
     }

@@ -50,9 +50,17 @@ _MORTAL = re.compile(
     # child's death without any word above. A guard that only ever gets tested
     # against a book's LONGEVITY chapter will not catch a different chapter's
     # death phrasing — it has to be tested against every closed chapter, not
-    # just the first one that taught the lesson.
+    # just the first one that taught the lesson. Brought forward from the
+    # children/foreign PR (#39) since this branch predates it.
     r"lose (?:his|her|their|a) child(?:ren)?|loss of (?:a |his |her |their )?child(?:ren)?|"
-    r"pass(?:ed)? away|will pass away)\b",
+    r"pass(?:ed)? away|will pass away|"
+    # "demise" is a word this project's OWN safety.py death-noun work (the
+    # third-party guard) was built to catch in model output ("your father's
+    # demise is indicated in 2031") — and it was absent from THIS guard the
+    # whole time. Found via the Phaladeepika cross-check pass, testing the
+    # guard against a third book's phrasing rather than assuming two books
+    # had exhausted the vocabulary.
+    r"demise)\b",
     re.I,
 )
 
@@ -134,6 +142,7 @@ def test_retrieval_reaches_the_cross_domain_dasha_rules():
         assert "bphs47_3_drekkana_emphasis" in ids, domain
 
 
+# Brought forward from the marriage PR (#38) since this branch predates it.
 TAXONOMY_PATH = Path("astrospace/context/taxonomy.json")
 
 
