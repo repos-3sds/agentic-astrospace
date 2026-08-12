@@ -1,0 +1,170 @@
+@use '../mobile-tokens' as *;
+
+// Tokens only — every colour here is one of the theme-reactive `--m-*` vars the
+// rest of the mobile app uses. Mixing a reactive token with a fixed one is how
+// this app has produced invisible text before (CLAUDE.md, "Verify visually").
+:host {
+  display: block;
+}
+
+.bd-card {
+  background: var(--m-surface);
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+  padding: 14px 16px;
+  color: var(--m-text);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bd-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 650;
+    color: var(--m-text);
+  }
+}
+
+.bd-born {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--m-muted);
+}
+
+// The three facts a person quotes about themselves, side by side.
+.bd-headline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+
+  li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  small {
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--m-muted);
+  }
+
+  .bd-note-inline {
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  strong {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--m-text);
+    overflow-wrap: anywhere;
+  }
+}
+
+.bd-group {
+  border-top: 1px solid var(--m-border);
+  padding-top: 10px;
+
+  h3 {
+    margin: 0 0 8px;
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--m-muted);
+    font-weight: 600;
+  }
+
+  dl {
+    margin: 0;
+    display: grid;
+    gap: 6px;
+  }
+
+  div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  dt {
+    color: var(--m-muted);
+    font-size: 0.8125rem;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--m-text);
+    font-size: 0.8125rem;
+    font-weight: 550;
+    text-align: right;
+    // Coordinates and times line up when the digits do.
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+}
+
+.bd-note {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--m-muted);
+}
+
+/* Inside Today this is part of the signature, not a card inside another card. */
+.bd-card.bd-embedded {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  gap: 14px;
+
+  .bd-born {
+    @include m-body-small;
+  }
+
+  .bd-headline {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+
+    li {
+      min-height: 58px;
+      padding: 0 10px;
+      gap: 7px;
+
+      &:first-child { padding-left: 0; }
+      &:last-child { padding-right: 0; }
+      & + li { border-left: 1px solid color-mix(in srgb, var(--m-accent) 16%, var(--m-border)); }
+    }
+
+    small {
+      @include m-eyebrow;
+    }
+
+    .bd-note-inline {
+      @include m-caption;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    strong {
+      @include m-title;
+      font-size: 17px;
+      line-height: 1.25;
+      overflow-wrap: normal;
+      word-break: normal;
+    }
+  }
+}

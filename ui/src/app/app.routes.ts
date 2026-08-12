@@ -361,6 +361,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'chart/birth-details',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/chart/birth-details-screen.component').then(
+            (m) => m.BirthDetailsScreenComponent,
+          ),
+      },
+      {
         path: 'chart/reference',
         data: { referenceMode: 'home', hideMobileTabs: true },
         loadComponent: () => import('./features/mobile/chart/reference.component').then((m) => m.ReferenceComponent),

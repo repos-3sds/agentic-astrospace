@@ -1,0 +1,25 @@
+<a class="bds-appbar" [routerLink]="['/m','chart']">
+  <img src="mobile/back.svg" alt="" /><span>Your Chart</span>
+</a>
+
+<main>
+  <header>
+    <h1>Birth details</h1>
+    <p>The inputs every line of your chart is computed from.</p>
+  </header>
+
+  @if (loading()) {
+    <p class="bds-state">Loading birth details…</p>
+  } @else if (error()) {
+    <div class="bds-state error">
+      <p>{{ error() }}</p>
+      <button type="button" (click)="load()">Try again</button>
+    </div>
+  } @else {
+    <as-birth-details-card
+      [chart]="chart()"
+      [personName]="personName()"
+      density="full"
+      tone="plain" />
+  }
+</main>

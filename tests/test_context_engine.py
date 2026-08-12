@@ -341,6 +341,40 @@ class TestAssembler:
         assert ref["source_text_key"]
         assert ref["statement"]
 
+    def test_no_question_falls_back_to_full_subdomain_list_unfiltered(self, chart):
+        """No question at all is the same as a vague question — must match
+        the pre-narrowing behavior exactly, no accidental regression."""
+        no_question = assemble_domain(chart, "career", include_gochara=False)
+        vague = assemble_domain(chart, "career", include_gochara=False,
+                                question="Tell me about my chart")
+        assert {r["ref_id"] for r in no_question["references"]} == \
+               {r["ref_id"] for r in vague["references"]}
+
+    def test_confident_question_narrows_references_to_the_matched_subdomain(self, chart):
+        """The real behavior this exists for: a question that clearly names
+        one subdomain must not pull in every other subdomain's references
+        just because they share the domain."""
+        unfiltered = assemble_domain(chart, "career", include_gochara=False,
+                                     question="Tell me about my chart")
+        narrowed = assemble_domain(chart, "career", include_gochara=False,
+                                   question="Am I at risk of unemployment or being fired?")
+        assert narrowed["references"], "the unemployment subdomain has a seeded reference"
+        assert len(narrowed["references"]) < len(unfiltered["references"])
+        for ref in narrowed["references"]:
+            assert "unemployment" in ref.get("subdomains", [])
+
+    def test_narrowing_never_drops_below_zero_evidence_on_a_near_miss(self, chart):
+        """A question that touches career but doesn't match any subdomain's
+        wording must not empty out the evidence bundle entirely — it should
+        fall back to the full unfiltered set, not a filter with nothing left
+        to show."""
+        unmatched = assemble_domain(chart, "career", include_gochara=False,
+                                    question="How is my career going in general?")
+        no_question = assemble_domain(chart, "career", include_gochara=False)
+        assert unmatched["references"]
+        assert {r["ref_id"] for r in unmatched["references"]} == \
+               {r["ref_id"] for r in no_question["references"]}
+
 
 class TestRouter:
     def test_career_question(self):
