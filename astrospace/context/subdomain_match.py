@@ -56,7 +56,7 @@ _PATTERNS: dict[str, tuple[tuple[str, tuple[str, ...]], ...]] = {
     "health": (
         ("vitality", (r"\bvitality\b", r"\benergy levels?\b", r"\bstamina\b", r"\boverall health\b")),
         ("chronic_disease", (r"\bchronic\b", r"\blong[- ]term (?:illness|disease|condition)\b", r"\bconstitution\b")),
-        ("acute_disease", (r"\bfever\b", r"\binfection\b", r"\bsudden illness\b", r"\backness\b")),
+        ("acute_disease", (r"\bfever\b", r"\binfection\b", r"\bsudden illness\b", r"\bsick(?:ness)?\b")),
         ("mental_health", (r"\bstress\b", r"\banxiety\b", r"\bmental health\b", r"\bmental well", r"\bmind\b")),
         ("accidents_surgery", (r"\baccident\b", r"\bsurgery\b", r"\bwound\b", r"\binjur", r"\boperation\b")),
         ("recovery", (r"\brecover(?:y|ing)?\b", r"\bheal(?:ing)?\b")),
