@@ -199,3 +199,72 @@ def test_no_domains_bundle_reference_count_exceeds_kb_limit(references):
         f"({kb_limit}) — raise kb_limit or this domain's references will be "
         f"silently truncated before reaching the model"
     )
+
+
+_NAMED_DIAGNOSIS = re.compile(
+    r"\b(leprosy|cancer|tumou?r|tuberculosis|consumption|diabetes|epilepsy|"
+    r"syphilis|smallpox|jaundice|dysentery|hepatitis|asthma|arthritis)\b",
+    re.I,
+)
+
+
+def test_health_caution_references_do_not_name_a_disease(references):
+    """Health cautions may name a body system, never a diagnosis."""
+    offenders = [
+        (ref["ref_id"], match.group(0))
+        for ref in references
+        if ref["ref_id"].startswith("bphs17_")
+        if (match := _NAMED_DIAGNOSIS.search(ref["statement"]))
+    ]
+    assert not offenders, f"health caution references name a disease: {offenders}"
+
+
+_LITERAL_AGE = re.compile(
+    r"\bage(?:d|s)?\s+\d{1,3}\b|\bat\s+\d{1,3}\b|\byears?\s+of\s+age\b",
+    re.I,
+)
+
+
+def test_vigilance_period_references_do_not_state_a_literal_age(references):
+    """Vigilance windows remain life-stage flags, not predicted ages."""
+    offenders = [
+        (ref["ref_id"], match.group(0))
+        for ref in references
+        if ref["ref_id"].startswith("bphs17_vigilance_periods_")
+        if (match := _LITERAL_AGE.search(ref["statement"]))
+    ]
+    assert not offenders, f"vigilance references state a literal age: {offenders}"
+
+
+def test_question_scoped_health_retrieval_reaches_injury_rules():
+    """The deeper health rows must survive the current subdomain narrowing."""
+    ids = {
+        ref.ref_id
+        for ref in get_knowledge_base().retrieve(
+            ["health"],
+            subdomains=["accidents_surgery"],
+            limit=30,
+            require_subdomain_match=True,
+        )
+    }
+    assert {"bphs17_2_sixth_lord_and_limb", "bphs17_mars_injury_proneness"} <= ids
+
+
+@pytest.mark.parametrize(
+    ("subdomain", "expected"),
+    [
+        ("acute_disease", "bphs17_vigilance_periods_childhood"),
+        ("chronic_disease", "bphs17_vigilance_periods_midlife"),
+    ],
+)
+def test_question_scoped_health_retrieval_reaches_vigilance_rules(subdomain, expected):
+    ids = {
+        ref.ref_id
+        for ref in get_knowledge_base().retrieve(
+            ["health"],
+            subdomains=[subdomain],
+            limit=30,
+            require_subdomain_match=True,
+        )
+    }
+    assert expected in ids
