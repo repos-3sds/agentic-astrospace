@@ -98,12 +98,16 @@ export interface PlanetConditionAnnotation {
 
 export interface VedicAll {
   meta: {
+    name?: string;
     birth_date: string;
     birth_time: string;
     weekday: string;
     place?: string;
     latitude: number;
     longitude: number;
+    // Sent by chart.meta() since it was written; the interface simply never
+    // declared it, which is why nothing could render a birth time zone.
+    timezone?: string;
     ayanamsha: { name: string; dms: string };
     sidereal_time: string;
     local_mean_time: string;
