@@ -7,7 +7,8 @@
     "location is a topic pointer for a human to go find the passage, not a claim that a specific page/verse was checked. Where this codebase's own yogas.json/doshas.json already carries source_status for the same rule, that status is carried through here too.",
     "Expanded 2026-08-11 with rules read from BPHS-Santhanam-Vol-1.pdf, whose text layer is measured readable (93.6%) — see docs/kb_corpus_sources.md. Unlike the 2026-08-06 pass, these carry a verifiable chapter/verse/page, not a topic pointer. NOTE ON EDITIONS: chapter numbers differ between translations — Sharma's ch.19 is Santhanam's ch.17 — so every location here names the translation.",
     "DELIBERATELY NOT INGESTED: BPHS's longevity and maraka material (ch.19, ch.43, ch.44, ch.9-10 arishta, and the 2nd/7th/8th-lord dasha rows of ch.48 that read 'possibility of death'). Longevity is a refer-out under CLAUDE.md, so those rules must not be retrievable by a domain agent at all. Their absence here is a decision, not an oversight — see docs/health_kb_bphs_6th_house.md. Also excluded: the planet-by-planet named-disease tables at Santhanam pp.115-117, which are quotations from Cornell's 'Encyclopaedia of Medical Astrology', not Parasara, and would function as a diagnosis generator.",
-    "Marriage rules added 2026-08-12 from BPHS ch.18 and ch.24.73-84. THREE CLASSES ARE DELIBERATELY ABSENT. (1) Rules whose only content is a spouse's obedience or the native's control over them (ch.24.76, ch.24.82) — there is no neutral rule inside them to keep. (2) The passages describing a partner's body and sexual acts (ch.18.9 and surrounding notes). (3) Timing of a spouse's death (ch.18.3, 18.35-39, 18.42), which is longevity and refers out. The chapter is written throughout for a male native with a wife; that gender is the period reader's assumption and not a claim the chart makes, so statements here say spouse or partner. See docs/marriage_kb_bphs_7th_house.md."
+    "Marriage rules added 2026-08-12 from BPHS ch.18 and ch.24.73-84. THREE CLASSES ARE DELIBERATELY ABSENT. (1) Rules whose only content is a spouse's obedience or the native's control over them (ch.24.76, ch.24.82) — there is no neutral rule inside them to keep. (2) The passages describing a partner's body and sexual acts (ch.18.9 and surrounding notes). (3) Timing of a spouse's death (ch.18.3, 18.35-39, 18.42), which is longevity and refers out. The chapter is written throughout for a male native with a wife; that gender is the period reader's assumption and not a claim the chart makes, so statements here say spouse or partner. See docs/marriage_kb_bphs_7th_house.md.",
+    "Children and foreign rules added 2026-08-12. CHILDREN: BPHS ch.16 required more content exclusion than any prior chapter — legitimacy/paternity claims (16.14, 16.15) excluded outright, no neutral core; the sex-of-children rule (16.13) excluded on real-world-harm grounds (son-preference bias), a stricter bar than gendered-language cleanup alone; child-death timing (16.21-23) is gated_death; the exact-count-of-children block (16.24-32) excluded as an unservable deterministic claim with embedded death timing, not picked apart row by row. See docs/children_kb_bphs_5th_house.md. FOREIGN: honestly thin. BPHS's 12th-lord series (ch.24.134-144) and the 3rd/9th house chapters were checked in full and contain no explicit foreign-travel statement in this translation; only ch.23.11-12 speak to it directly. This domain needs a second source (Saravali, Prasna Marga) for real depth. See docs/foreign_kb_bphs_12th_house.md."
   ],
   "references": [
     {
@@ -1208,6 +1209,148 @@
       "tags": [
         "house:7",
         "lord:7"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs16_12_many_children",
+      "domains": [
+        "children"
+      ],
+      "subdomains": [
+        "delay_difficulty"
+      ],
+      "statement": "A strong 5th lord aspected by strong Mercury, Jupiter and Venus indicates many children.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.16 v.12, p.109 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:5",
+        "lord:5"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs16_16_children_come",
+      "domains": [
+        "children"
+      ],
+      "subdomains": [
+        "delay_difficulty"
+      ],
+      "statement": "Any one of three conditions on the 5th lord indicates children will come: exaltation, placement in the 2nd/5th/9th from lagna, or conjunction/aspect with Jupiter. The conditions are independently sufficient, not cumulative.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.16 v.16, p.109 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:5",
+        "lord:5",
+        "jupiter"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs16_17_children_character",
+      "domains": [
+        "children"
+      ],
+      "subdomains": [
+        "child_wellbeing"
+      ],
+      "statement": "Three or four malefics in the 5th with a debilitated 5th lord flags behavioural challenges in the children; a benefic (including Mercury) placed in the 5th cancels the combination. A flag on tendency, not a verdict on character.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.16 v.17, p.110 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:5",
+        "lord:5",
+        "malefic"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs16_11_adoption",
+      "domains": [
+        "children"
+      ],
+      "subdomains": [
+        "adoption"
+      ],
+      "statement": "The 5th house tenanted by six planets, its lord in the 12th, with a strong Moon and lagna, indicates adopted issue.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.16 v.11, p.109 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:5",
+        "lord:5",
+        "house:12"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs16_timing_delayed",
+      "domains": [
+        "children"
+      ],
+      "subdomains": [
+        "timing_of_children",
+        "delay_difficulty"
+      ],
+      "statement": "BPHS gives several combinations for the age at which children arrive, and every one of them falls late relative to typical fertility timing. Read as the chart indicating a LATER path to children, never as a literal guaranteed age for a modern reader.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.16 vv.18-20, p.110 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:5",
+        "timing",
+        "jupiter",
+        "venus"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Specific ages (32, 33, 36, 40) are the source's own figures. State the combination and the direction (delayed), never assert the literal age as a prediction."
+    },
+    {
+      "ref_id": "bphs24_fifth_lord_is_not_only_children",
+      "domains": [
+        "children",
+        "wealth"
+      ],
+      "subdomains": [
+        "child_wellbeing"
+      ],
+      "statement": "Roughly half of the 5th lord's twelve placements concern children directly; the rest speak to wealth, siblings, standing and temperament. The 5th lord signifies intelligence, merit and purva-punya as much as progeny, so not every 5th-lord placement is a statement about children.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 vv.49-60, pp.175-177 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:5",
+        "lord:5"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs23_11_12_foreign_travel",
+      "domains": [
+        "foreign"
+      ],
+      "subdomains": [
+        "foreign_residence",
+        "emigration"
+      ],
+      "statement": "The 12th lord and 12th house both afflicted by and aspected by malefics indicates movement from country to country; the same combination with benefics instead indicates the native stays within their own country. The two verses are read as a pair, inverted between malefic and benefic association.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.23 vv.11-12, p.144 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:12",
+        "lord:12"
       ],
       "status": "verified_common"
     }

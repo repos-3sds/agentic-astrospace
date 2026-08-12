@@ -43,7 +43,16 @@ _MORTAL = re.compile(
     # this pattern originally held. Found by running the guard against the
     # rules that were deliberately NOT ingested, rather than only against the
     # ones that were.
-    r"span of|years of life|will live|(long|short|brief|full) life)\b",
+    r"span of|years of life|will live|(long|short|brief|full) life|"
+    # Same discovery, different chapter: BPHS ch.16's child-loss shlokas
+    # ("the native will ... lose his child", "loss of children at 33 and 36",
+    # "grief on account of loss of child", "3 will pass away") describe a
+    # child's death without any word above. A guard that only ever gets tested
+    # against a book's LONGEVITY chapter will not catch a different chapter's
+    # death phrasing — it has to be tested against every closed chapter, not
+    # just the first one that taught the lesson.
+    r"lose (?:his|her|their|a) child(?:ren)?|loss of (?:a |his |her |their )?child(?:ren)?|"
+    r"pass(?:ed)? away|will pass away)\b",
     re.I,
 )
 
