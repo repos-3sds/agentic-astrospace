@@ -268,3 +268,39 @@ def test_question_scoped_health_retrieval_reaches_vigilance_rules(subdomain, exp
         )
     }
     assert expected in ids
+
+
+def test_question_scoped_wealth_retrieval_reaches_income_rules():
+    """The 2nd/11th-house extraction must survive the current subdomain
+    narrowing -- wealth's total (45) exceeds kb_limit, so an unnarrowed
+    fallback query would truncate before an income-scoped one would."""
+    ids = {
+        ref.ref_id
+        for ref in get_knowledge_base().retrieve(
+            ["wealth"],
+            subdomains=["income"],
+            limit=50,
+            require_subdomain_match=True,
+        )
+    }
+    assert {"bphs13_1_second_lord_placement_wealth", "bphs24_131_eleventh_lord_in_eleventh"} <= ids
+
+
+@pytest.mark.parametrize(
+    ("subdomain", "expected"),
+    [
+        ("poverty_combinations", "bphs13_6_yogas_for_poverty"),
+        ("losses", "bphs13_8_loss_through_authority"),
+    ],
+)
+def test_question_scoped_wealth_retrieval_reaches_caution_rules(subdomain, expected):
+    ids = {
+        ref.ref_id
+        for ref in get_knowledge_base().retrieve(
+            ["wealth"],
+            subdomains=[subdomain],
+            limit=50,
+            require_subdomain_match=True,
+        )
+    }
+    assert expected in ids
