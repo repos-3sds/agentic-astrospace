@@ -1310,6 +1310,15 @@ export interface AskMessage {
   role: 'user' | 'assistant';
   content: string;
   tools?: string[];
+  /**
+   * Carried from `AskResponse.status` — undefined for a user message or an
+   * older-shaped assistant message. Present and not `'answered'` means this
+   * bubble is a boundary notice (clarification/unsupported-domain/refusal),
+   * never a real reading, and must be rendered distinctly rather than
+   * folded into the ordinary answered presentation.
+   */
+  status?: AskResponse['status'];
+  refer_out_kind?: AskResponse['refer_out_kind'];
 }
 
 export interface AskResponse {
