@@ -11,19 +11,28 @@ subdomain list with `require_subdomain_match=False` — exactly today's
 behavior. Narrowing only ever activates on a confident match.
 
 **Scope, deliberately narrow.** Patterns exist for `health`, `career`,
-`marriage`, `children` only — the four domains with a real KB extraction
-pass behind them (see `docs/health_kb_bphs_susceptibility_and_injury.md`,
+`marriage`, `children`, `wealth` only — the five domains with a real KB
+extraction pass behind them (see
+`docs/health_kb_bphs_susceptibility_and_injury.md`,
 `docs/career_kb_bphs_10th_house.md`, `docs/marriage_kb_bphs_7th_house.md`,
-`docs/children_kb_bphs_5th_house.md`), where the subdomain vocabulary is
-grounded in the source text rather than guessed. The other seven taxonomy
-domains (`wealth`, `education`, `family_property`, `foreign`,
-`spirituality`, `litigation`, `personality`) currently carry only a handful
-of references each and have had no equivalent extraction pass — writing
-keyword tables for them now would be guessing English phrasing for
-subdomains with no grounding to check it against. `match_subdomains()`
-returns an empty set for any domain not in `_PATTERNS`, which is exactly the
-safe no-op the empty-match contract already handles — so adding a domain
-here later is additive, not a redesign.
+`docs/children_kb_bphs_5th_house.md`,
+`docs/wealth_kb_bphs_2nd_11th_house.md`), where the subdomain vocabulary is
+grounded in the source text rather than guessed. The remaining six taxonomy
+domains (`education`, `family_property`, `foreign`, `spirituality`,
+`litigation`, `personality`) currently carry only a handful of references
+each and have had no equivalent extraction pass — writing keyword tables
+for them now would be guessing English phrasing for subdomains with no
+grounding to check it against. `match_subdomains()` returns an empty set
+for any domain not in `_PATTERNS`, which is exactly the safe no-op the
+empty-match contract already handles — so adding a domain here later is
+additive, not a redesign.
+
+`wealth`'s table covers only `income`, `losses` and `poverty_combinations`
+— the three subdomains the ch.13/ch.22/ch.24 extraction actually grounds
+(see that doc's "What this pass does not cover"). `savings`, `speculation`,
+`inheritance` and `debts` have no pattern rows; a question naming them
+falls through to the safe no-narrow default like any other miss, until a
+future pass grounds them too.
 
 Each subdomain listed here is a real entry in `taxonomy.json`'s domain spec;
 `test_subdomain_match.py::test_every_pattern_key_is_a_real_subdomain` guards
@@ -68,6 +77,11 @@ _PATTERNS: dict[str, tuple[tuple[str, tuple[str, ...]], ...]] = {
         ("child_wellbeing", (r"\bchild(?:'s|ren'?s)? (?:health|wellbeing|well-being)\b",)),
         ("relationship_with_children", (r"\brelationship with (?:my )?child", r"\bbond with (?:my )?child")),
         ("adoption", (r"\badopt",)),
+    ),
+    "wealth": (
+        ("income", (r"\bincome\b", r"\bsalary\b", r"\bearn(?:ing)?s?\b", r"\bmoney (?:coming|come) in\b", r"\bgains?\b")),
+        ("losses", (r"\bfinancial loss(?:es)?\b", r"\blose money\b", r"\blosing money\b", r"\bexpenditure\b", r"\bexpenses?\b")),
+        ("poverty_combinations", (r"\bpoverty\b", r"\bstruggl(?:e|ing) financially\b", r"\bnever have (?:enough )?money\b", r"\bfinancial(?:ly)? strain\b")),
     ),
 }
 

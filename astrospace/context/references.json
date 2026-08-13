@@ -11,7 +11,8 @@
     "Children and foreign rules added 2026-08-12. CHILDREN: BPHS ch.16 required more content exclusion than any prior chapter — legitimacy/paternity claims (16.14, 16.15) excluded outright, no neutral core; the sex-of-children rule (16.13) excluded on real-world-harm grounds (son-preference bias), a stricter bar than gendered-language cleanup alone; child-death timing (16.21-23) is gated_death; the exact-count-of-children block (16.24-32) excluded as an unservable deterministic claim with embedded death timing, not picked apart row by row. See docs/children_kb_bphs_5th_house.md. FOREIGN: honestly thin. BPHS's 12th-lord series (ch.24.134-144) and the 3rd/9th house chapters were checked in full and contain no explicit foreign-travel statement in this translation; only ch.23.11-12 speak to it directly. This domain needs a second source (Saravali, Prasna Marga) for real depth. See docs/foreign_kb_bphs_12th_house.md.",
     "Cross-check pass 2026-08-12 against Phaladeepika (Sastri translation), the third distinct translator in the corpus. Saravali (the earlier standing candidate) was checked directly and found not to reach house-effect chapters in the volume we hold (Vol I runs chapters 1-26, fundamentals only) -- Phaladeepika's Adhyayas V/X/XII/XX map onto career/marriage/children/dasha, which is why it was used instead. Adds a new career technique (navamsa of the 10th lord), cross-verifies three marriage and three children claims previously single-source, adds dasha-timing rules for both, and independently corroborates the dasha dignity-over-nature principle and the maraka-lords-give-gain caveat. See docs/phaladeepika_crosscheck.md for the full reasoning, including the exclusions -- this pass found the single most severe content problem in the corpus so far: Adhyaya XII attributes childlessness to sin in a previous birth and prescribes ritual atonement per planet. Excluded outright, along with a second, unhedged version of BPHS's spouse-death timing problem, an exact-count-of-wives block mirroring the exact-count-of-children exclusion, and a technique for predicting a future spouse's own birth sign -- excluded as an enabler of astrological compatibility-gatekeeping.",
     "Health extension 2026-08-12, re-examining ch.17's disease bucket shloka by shloka rather than as one block: Parasara's own generic constitutional categories (bilious/windy/phlegmatic -- the Ayurvedic doshas) and Mars's injury/weapon-hit clause are groundable as flags; named, stigmatizing or diagnosis-grade claims (leprosy, tumours, timing-of-named-illness) are not, and stay excluded -- CLAUDE.md's medical-verdict non-negotiable, unchanged. Also newly examined: ch.24's 8th-lord series, previously assumed uniformly gated_death and never checked line by line; ten of twelve placements are, but two (85 lagna, 90 sixth) carry real, unnamed, non-longevity health content. See docs/health_kb_bphs_susceptibility_and_injury.md.",
-    "Health caution reframe 2026-08-12, per explicit user direction: apply the SAME flag-not-verdict pattern CLAUDE.md already uses for doshas to health-susceptibility content, rather than excluding it outright. Material previously classed gated_medical in ch.17 (facial disease, the leprosy verses, the Sun/Ketu clauses of the general-disease block, and the timing-of-illness block) is reframed as body-system or life-stage cautions -- naming an area worth checking, never a specific disease, never a specific age. This is the same softening already applied to marriage/children timing (early-vs-delayed rather than a literal year), extended to illness timing (life-stage vigilance rather than a literal age plus a named illness). What remains excluded and why: the Rahu clause of the general-disease block (caste-based framing, unrelated to the medical question); the Venus clause (too ambiguous to state responsibly even as a caution); the exact number-of-events framing throughout stays dropped as it always has, since a caution does not need a count. See docs/health_kb_bphs_susceptibility_and_injury.md."
+    "Health caution reframe 2026-08-12, per explicit user direction: apply the SAME flag-not-verdict pattern CLAUDE.md already uses for doshas to health-susceptibility content, rather than excluding it outright. Material previously classed gated_medical in ch.17 (facial disease, the leprosy verses, the Sun/Ketu clauses of the general-disease block, and the timing-of-illness block) is reframed as body-system or life-stage cautions -- naming an area worth checking, never a specific disease, never a specific age. This is the same softening already applied to marriage/children timing (early-vs-delayed rather than a literal year), extended to illness timing (life-stage vigilance rather than a literal age plus a named illness). What remains excluded and why: the Rahu clause of the general-disease block (caste-based framing, unrelated to the medical question); the Venus clause (too ambiguous to state responsibly even as a caution); the exact number-of-events framing throughout stays dropped as it always has, since a caution does not need a count. See docs/health_kb_bphs_susceptibility_and_injury.md.",
+    "2026-08-13: wealth KB extraction pass -- BPHS ch.13 (2nd house), ch.22 (11th house), ch.24.13-24 (2nd lord), ch.24.121-132 (11th lord). 34 new references. See docs/wealth_kb_bphs_2nd_11th_house.md."
   ],
   "references": [
     {
@@ -1806,6 +1807,684 @@
       ],
       "status": "convention_dependent",
       "observance_note": "Same treatment: the verse's named illnesses and specific ages (45, 59) are not carried over, only the life-stage-level flag."
+    },
+    {
+      "ref_id": "bphs13_1_second_lord_placement_wealth",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 2nd lord in the 2nd house, an angle, or a trine from the ascendant promotes wealth; in the 6th, 8th or 12th it indicates decline. A benefic occupying the 2nd house supports wealth, a malefic there works against it.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.13 vv.1-2, p.96 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:2",
+        "lord:2"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs13_3_jupiter_second_lord_or_mars",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "Jupiter as the 2nd lord placed in the 2nd house, or Jupiter conjunct Mars, indicates wealth.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.13 v.3, p.96 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:2",
+        "jupiter",
+        "mars"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs13_4_second_eleventh_exchange",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 2nd lord in the 11th house while the 11th lord is in the 2nd -- or both lords together in an angle or a trine -- indicates wealth.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.13 v.4, p.97 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:2",
+        "house:11",
+        "lord:2",
+        "lord:11"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs13_5_second_eleventh_angle_trine",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 2nd lord in an angle while the 11th lord occupies a trine from that position, or the 2nd lord aspected by or conjunct Jupiter and Venus, indicates wealth.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.13 v.5, p.97 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:2",
+        "house:11",
+        "jupiter",
+        "venus"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs13_6_yogas_for_poverty",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "poverty_combinations"
+      ],
+      "statement": "The 2nd and 11th lords placed together in the 6th, 8th or 12th house, with a malefic occupying the 2nd, is read as a caution toward financial strain -- worth attending to, not a fixed verdict on the native's means.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.13 vv.6-7, p.97 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:2",
+        "house:11",
+        "lord:2",
+        "lord:11"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs13_8_loss_through_authority",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "losses"
+      ],
+      "statement": "The 2nd and 11th lords in the 6th, 8th or 12th together with Mars in the 11th and Rahu in the 2nd indicates financial loss through penalties or fines from an official or governing authority -- read in the modern sense (tax, legal or regulatory loss), per the source commentary's own gloss.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.13 v.8, p.98 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:2",
+        "house:11",
+        "mars",
+        "rahu"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs13_9_expenditure_on_good_accounts",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "losses"
+      ],
+      "statement": "Jupiter in the 11th house, Venus in the 2nd, a benefic in the 12th, and the 2nd lord conjunct a benefic indicates expenditure directed toward religious or charitable purposes.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.13 v.9, p.98 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:2",
+        "house:11",
+        "house:12",
+        "jupiter",
+        "venus"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs13_11_effortless_acquisition",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 2nd lord conjunct a benefic and placed in a strong divisional-chart dignity indicates wealth acquired without significant effort, extending to the native's family.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.13 v.11, p.99 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:2",
+        "lord:2"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs22_2_eleventh_lord_strong_placement",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 11th lord in the 11th house, an angle, or a trine from the ascendant indicates many gains; even if combust, an exalted 11th lord still indicates many gains.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.22 v.2, p.141 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:11",
+        "lord:11"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs22_3_eleventh_second_with_jupiter",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 11th lord in the 2nd house while the 2nd lord is in an angle conjunct Jupiter indicates substantial gains.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.22 v.3, p.141 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:2",
+        "house:11",
+        "jupiter"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs22_4_eleventh_third_benefic",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 11th lord in the 3rd house while the 11th house itself is occupied by a benefic indicates a notable gain.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.22 v.4, p.142 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:3",
+        "house:11",
+        "lord:11"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The verse names a specific age (36th year) and a specific quantity of Nishkas (an archaic gold-coin unit). Both are dropped as unservable false precision -- an obsolete currency figure has no honest modern reading, and a literal age here follows the same softening already applied to marriage's and children's timing verses. Only the chart combination and its general direction (a notable gain) are kept."
+    },
+    {
+      "ref_id": "bphs22_5_eleventh_benefic_angle_trine",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 11th lord conjunct a benefic in an angle or a trine indicates a notable gain.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.22 v.5, p.142 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:11",
+        "lord:11"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Age (40th year) and Nishka amount dropped for the same reason as the neighbouring verse (S22.4) -- unservable false precision, not a disputed reading."
+    },
+    {
+      "ref_id": "bphs22_6_jupiter_eleventh_configuration",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "Jupiter in the 11th house with the Moon in the 2nd and Venus in the 9th indicates a substantial gain.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.22 v.6, p.142 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:2",
+        "house:9",
+        "house:11",
+        "jupiter",
+        "moon",
+        "venus"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Nishka amount dropped for the same reason as S22.4/S22.5 -- an obsolete currency figure has no honest modern reading."
+    },
+    {
+      "ref_id": "bphs22_7_ninth_house_trio",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "Jupiter, Mercury and the Moon together in the 9th house (the 11th-from-the-11th) indicates wealth, provisions, fortune and fine ornaments.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.22 v.7, p.142 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:9",
+        "house:11",
+        "jupiter",
+        "mercury",
+        "moon"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs22_8_lagna_eleventh_exchange",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 11th lord in the ascendant while the ascendant lord is in the 11th house indicates a notable gain.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.22 v.8, p.142 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:1",
+        "house:11",
+        "lord:11"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Age (33rd year) and Nishka amount dropped for the same reason as S22.4/S22.5/S22.6 -- unservable false precision."
+    },
+    {
+      "ref_id": "bphs22_9_second_eleventh_after_marriage",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 11th lord in the 2nd house while the 2nd lord is in the 11th indicates abundant fortune accumulating, particularly following marriage.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.22 v.9, p.142 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:2",
+        "house:11",
+        "lord:2",
+        "lord:11"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs22_10_third_eleventh_exchange",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 11th lord in the 3rd house while the 3rd lord is in the 11th indicates wealth gained through siblings, along with fine ornaments.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.22 v.10, p.142 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:3",
+        "house:11",
+        "lord:3",
+        "lord:11"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs22_11_eleventh_lord_afflicted",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "poverty_combinations"
+      ],
+      "statement": "The 11th lord in fall, combust, or in the 6th, 8th or 12th house with a malefic is read as a caution that gains may not come easily despite effort -- a flag on the native's earning tendency, not a fixed verdict.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.22 v.11, p.143 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:11",
+        "lord:11"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_14_second_lord_in_second",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 2nd lord in the 2nd house indicates wealth and more than one significant partnership.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.14, p.150 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:2",
+        "lord:2"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_16_second_lord_in_fourth",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 2nd lord in the 4th house indicates wealth of all kinds; exalted there and conjunct Jupiter, it indicates prosperity comparable to royalty.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.16, p.150 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:4",
+        "lord:2",
+        "jupiter"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_17_second_lord_in_fifth",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 2nd lord in the 5th house indicates wealth, with the native's children also inclined toward earning.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.17, p.150 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:5",
+        "lord:2"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_18_second_lord_in_sixth",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 2nd lord in the 6th house conjunct a benefic indicates gain through rivals or competitors; conjunct a malefic instead, it indicates loss through the same.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.18, p.150 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:6",
+        "lord:2"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_20_second_lord_in_eighth",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 2nd lord in the 8th house indicates abundant land and wealth.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.20, p.151 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:8",
+        "lord:2"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_21_second_lord_in_ninth",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 2nd lord in the 9th house indicates wealth, diligence and skill.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.21, p.151 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:9",
+        "lord:2"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_23_second_lord_in_eleventh",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 2nd lord in the 11th house indicates wealth of every kind, along with diligence, honour and renown.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.23, p.151 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:11",
+        "lord:2"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_24_second_lord_in_twelfth",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income",
+        "poverty_combinations"
+      ],
+      "statement": "The 2nd lord alone in the 12th house generally indicates reduced wealth; the source notes that with two or more favourable planets also present in the 12th, the placement instead indicates considerable wealth.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.24, p.151 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:12",
+        "lord:2"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_121_eleventh_lord_in_lagna",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 11th lord in the ascendant indicates a native who is prosperous, content, and consistently gaining.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.121, p.177 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:1",
+        "lord:11"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_122_eleventh_lord_in_second",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 11th lord in the 2nd house indicates wealth of every kind along with a charitable disposition.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.122, p.178 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:2",
+        "lord:11"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_123_eleventh_lord_in_third",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 11th lord in the 3rd house indicates skill across undertakings and wealth.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.123, p.178 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:3",
+        "lord:11"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_124_eleventh_lord_in_fourth",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 11th lord in the 4th house indicates gains through maternal relatives along with happiness from house and land.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.124, p.178 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:4",
+        "lord:11"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_127_eleventh_lord_in_seventh",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 11th lord in the 7th house indicates gains coming through the spouse's relatives.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.127, p.178 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:7",
+        "lord:11"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_129_eleventh_lord_in_ninth",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 11th lord in the 9th house indicates good fortune and affluence.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.129, p.179 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:9",
+        "lord:11"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_131_eleventh_lord_in_eleventh",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "income"
+      ],
+      "statement": "The 11th lord in the 11th house, its own, indicates gains increasing across all undertakings, day by day.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.131, p.179 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:11",
+        "lord:11"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs24_132_eleventh_lord_in_twelfth",
+      "domains": [
+        "wealth"
+      ],
+      "subdomains": [
+        "losses"
+      ],
+      "statement": "The 11th lord in the 12th house indicates habitual expenditure toward good causes, along with connections abroad.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.24 v.132, p.180 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:12",
+        "lord:11"
+      ],
+      "status": "verified_common"
     }
   ]
 }
