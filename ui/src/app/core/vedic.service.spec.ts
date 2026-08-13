@@ -32,6 +32,7 @@ describe('VedicService location-sensitive caches', () => {
     });
     prefs = TestBed.inject(PreferencesService);
     service = TestBed.inject(VedicService);
+    service.configureProfile({ id: 'profile-1', user_id: 'user-1', updated_at: '2026-08-11T00:00:00Z' });
   });
 
   it('uses city, nation and timezone in daily guidance identity and refetches after a place change', async () => {
@@ -61,5 +62,37 @@ describe('VedicService location-sensitive caches', () => {
 
     expect(prefs.panchangaContextKey()).not.toBe(first);
     expect(prefs.panchangaContextKey()).toContain('Chennai');
+  });
+
+  it('does not reuse guidance after the profile birth-data revision changes', async () => {
+    prefs.timezoneMode.set('panchanga_place');
+    prefs.setPanchangaPlace({ city: 'Singapore', nation: 'SG', timezone: 'Asia/Singapore', label: 'Singapore' } as any);
+    await service.dailyGuidance('profile-1');
+    expect(service.cachedDailyGuidance('profile-1')).not.toBeNull();
+
+    service.configureProfile({ id: 'profile-1', user_id: 'user-1', updated_at: '2026-08-12T00:00:00Z' });
+
+    expect(service.cachedDailyGuidance('profile-1')).toBeNull();
+    await service.dailyGuidance('profile-1');
+    expect(api.get).toHaveBeenCalledTimes(2);
+  });
+
+  it('isolates the same profile id when its owning account changes', async () => {
+    await service.dailyGuidance('profile-1');
+    service.configureProfile({ id: 'profile-1', user_id: 'user-2', updated_at: '2026-08-11T00:00:00Z' });
+
+    expect(service.cachedDailyGuidance('profile-1')).toBeNull();
+  });
+
+  it('keeps Calendar cache identities separate by place and practitioner depth', async () => {
+    prefs.timezoneMode.set('panchanga_place');
+    prefs.setPanchangaPlace({ city: 'Singapore', nation: 'SG', timezone: 'Asia/Singapore', label: 'Singapore' } as any);
+    await service.calendarIntelligence('profile-1', 45);
+
+    expect(service.cachedCalendarIntelligence('profile-1', 45)).not.toBeNull();
+    expect(service.cachedCalendarIntelligence('profile-1', 45, undefined, { includePractitionerDetail: true })).toBeNull();
+
+    prefs.setPanchangaPlace({ city: 'Chennai', nation: 'IN', timezone: 'Asia/Kolkata', label: 'Chennai' } as any);
+    expect(service.cachedCalendarIntelligence('profile-1', 45)).toBeNull();
   });
 });

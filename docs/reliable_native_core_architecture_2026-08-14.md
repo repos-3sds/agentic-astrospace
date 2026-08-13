@@ -2,7 +2,7 @@
 
 Date: 2026-08-14
 
-Status: proposed contract with an implementation-neutral cache-key prototype
+Status: web-storage pilot implemented for Today and Calendar; native encrypted repository pending review
 
 Owner: Codex
 
@@ -168,6 +168,27 @@ Separate tables should be used later for Profile Context Ledger facts and queued
 | Account deletion | perform logout cleanup plus server deletion confirmation and local database compaction |
 
 ## Today + Calendar Pilot
+
+### Implemented 2026-08-14
+
+- Canonical cache envelopes now scope Today and Calendar by authenticated
+  account, profile, profile revision, date/range, place, timezone,
+  conventions, and practitioner payload depth.
+- The first runtime repository uses WebView storage behind
+  `ResourceCacheService`; legacy unscoped Today/Calendar entries are deleted
+  and never reused.
+- Fresh entries render without a redundant route-load request. Stale entries
+  render immediately with an explicit notice and refresh once in the
+  background. Expired or corrupt entries are removed.
+- Profile edits/deletes/logout invalidate both persistent rows and in-memory
+  request maps. Late cached data cannot satisfy another account or profile.
+- Unit tests cover account, profile revision, location, convention and persona
+  isolation. The Angular suite (59 tests), production build, and 375x812 Today
+  and Calendar empty-state visual checks pass.
+
+This is deliberately not the final native store. Installing encrypted SQLite
+changes dependencies and native projects, so it remains a separately reviewed
+release slice with Android and iOS device evidence.
 
 ### Slice A: Contract and instrumentation
 

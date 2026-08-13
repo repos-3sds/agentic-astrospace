@@ -25,6 +25,8 @@ export interface Kundli {
     planets?: Record<string, PlanetPosition>;
     houses?: Record<string, { sign?: string; degree?: number }>;
   };
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface KundliPayload {

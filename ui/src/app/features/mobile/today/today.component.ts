@@ -12,6 +12,7 @@ import {
 import { KundliStore } from '../../../core/kundli.store';
 import { BirthDetailsCardComponent } from '../chart/birth-details-card.component';
 import { VedicService } from '../../../core/vedic.service';
+import { ResourceFreshness } from '../../../core/resource-cache';
 import { DailyGuidancePayload, VedicAll } from '../../../core/models';
 import { FestivalService } from '../../../core/festival.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
@@ -236,6 +237,8 @@ export class TodayComponent {
   readonly loadError = signal<string | null>(null);
   readonly emptyProfile = signal(false);
   readonly view = signal<TodayView | null>(null);
+  readonly cacheFreshness = signal<ResourceFreshness | null>(null);
+  readonly cacheUpdatedAt = signal<number | null>(null);
 
   protected readonly headerInitial = computed(
     () => this.view()?.initial ?? this.kundlis.active()?.name.slice(0, 1).toUpperCase() ?? 'A',
@@ -362,20 +365,24 @@ export class TodayComponent {
         this.emptyProfile.set(true);
         return;
       }
-      const cached = this.vedic.cachedDailyGuidance(profile.id);
+      const cached = this.vedic.cachedDailyGuidanceEntry(profile.id);
       if (cached) {
         if (request !== this.requestId || this.kundlis.activeId() !== profile.id) return;
-        this.applyDaily(profile.name, profile.birth_city, cached);
+        this.applyDaily(profile.name, profile.birth_city, cached.data);
+        this.cacheFreshness.set(cached.freshness);
+        this.cacheUpdatedAt.set(cached.storedAt);
         this.loading.set(false);
         void this.prefetchCalendar(profile.id);
         void this.prefetchChart(profile.id);
-        void this.refreshToday(profile.id, request);
+        if (cached.freshness === 'stale') void this.refreshToday(profile.id, request);
         return;
       }
       this.loading.set(true);
       const daily = await this.vedic.dailyGuidance(profile.id);
       if (request !== this.requestId || this.kundlis.activeId() !== profile.id) return;
       this.applyDaily(profile.name, profile.birth_city, daily);
+      this.cacheFreshness.set('fresh');
+      this.cacheUpdatedAt.set(Date.now());
       void this.prefetchCalendar(profile.id);
       void this.prefetchChart(profile.id);
     } catch (error) {
@@ -390,10 +397,20 @@ export class TodayComponent {
       const daily = await this.vedic.refreshDailyGuidance(profileId);
       if (request !== this.requestId || this.kundlis.activeId() !== profileId) return;
       const profile = this.kundlis.active();
-      if (profile) this.applyDaily(profile.name, profile.birth_city, daily);
+      if (profile) {
+        this.applyDaily(profile.name, profile.birth_city, daily);
+        this.cacheFreshness.set('fresh');
+        this.cacheUpdatedAt.set(Date.now());
+      }
     } catch {
       // Saved guidance remains usable when background refresh is unavailable.
     }
+  }
+
+  protected cacheAgeLabel(): string {
+    const updatedAt = this.cacheUpdatedAt();
+    if (!updatedAt) return 'Saved guidance';
+    return `Saved ${new Intl.DateTimeFormat('en', { hour: 'numeric', minute: '2-digit' }).format(updatedAt)}`;
   }
 
   private applyDaily(name: string, city: string, daily: DailyGuidancePayload): void {

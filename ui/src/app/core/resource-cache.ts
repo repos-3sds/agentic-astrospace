@@ -25,6 +25,28 @@ export interface ResourceCacheEnvelope<T> {
   source: 'network' | 'migration';
 }
 
+export interface ResourceCachePolicy {
+  staleAfterMs: number;
+  expireAfterMs: number;
+}
+
+export interface CachedResource<T> {
+  data: T;
+  freshness: ResourceFreshness;
+  storedAt: number;
+  expiresAt: number;
+}
+
+export const TODAY_CACHE_POLICY: ResourceCachePolicy = {
+  staleAfterMs: 15 * 60 * 1000,
+  expireAfterMs: 36 * 60 * 60 * 1000,
+};
+
+export const CALENDAR_CACHE_POLICY: ResourceCachePolicy = {
+  staleAfterMs: 6 * 60 * 60 * 1000,
+  expireAfterMs: 45 * 24 * 60 * 60 * 1000,
+};
+
 const IDENTITY_FIELDS: ReadonlyArray<keyof ResourceCacheIdentity> = [
   'userId',
   'profileId',
