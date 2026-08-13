@@ -44,6 +44,15 @@ answers and projects answered probes into the CE bundle as `life_context`.
 That mechanism is narrow and scientifically useful: the engine commits to a
 claim before asking, then measures whether the claim matched.
 
+The repository also contains a narrow protection for the incident that
+motivated this epic: `detect_tense()`, a deterministic `profile_facts` bundle
+section, and a verifier invariant prevent a known retired profile from being
+given an invented future career timeline. The ledger must absorb and
+generalize that path through one typed preflight contract; it must not create
+a second competing source of life-stage truth. Until parity tests prove the
+replacement, the existing controls remain authoritative and the ledger
+projection is additive only.
+
 The Profile Context Ledger is different:
 
 | Concern | Validation probe | Profile context fact |
@@ -213,10 +222,22 @@ Rules:
    and explicitly dated events.
 5. If the question conflicts with a confirmed fact, acknowledge and clarify
    instead of choosing whichever wording gives the easiest prediction.
+
 6. If facts conflict with one another, return `context_confirmation_needed`;
    do not let the model resolve identity truth.
 7. Thread messages may carry conversational context, but durable profile facts
    only come from the ledger projection.
+
+### Evidence-reference reconciliation
+
+`profile_fact:fact_uuid@revision` is a namespace inside the existing evidence
+contract, not a second verifier. Extend the current evidence resolver so each
+citation resolves against the exact frozen request bundle, whether it points
+to classical/CE evidence or a profile fact. Verification must reject a fact
+reference that belongs to another profile, is superseded or expired, has a
+revision mismatch, or was not supplied to the agent. It must not perform a
+fresh database read that could observe a different ledger revision. Persist
+the answer only after this unified deterministic evidence pass succeeds.
 
 ## Logical Reasoning Before Astrology
 
@@ -255,6 +276,10 @@ GET    /api/v1/profiles/{profile_id}/context/export
 Writes require an idempotency key and `expected_revision`. A stale revision
 returns `409` with the current projection; clients do not last-write-win over
 another device. All reads and writes re-check account ownership server-side.
+Optimistic ledger revisions and `409` conflict recovery are new infrastructure
+for this repository, not an extension of an existing profile-write contract.
+They require schema, API, concurrent-write, and client conflict-state tests
+before the endpoint contract can be called implemented.
 
 ## Mobile Experience
 
@@ -302,6 +327,11 @@ Reliable Native Core epic; do not put ledger facts in plain `localStorage`.
 - Family-plan account owners cannot inspect another adult profile's ledger
   without that adult's explicit sharing grant.
 - Deletion emits an opaque audit event but no deleted value.
+
+Export generation, minimal audit storage, retention scheduling/TTL, and
+deletion propagation are new platform capabilities. They need explicit jobs,
+failure handling, and end-to-end privacy tests; naming them here does not mean
+the repository already supplies that infrastructure.
 
 ## Failure And Safety States
 
@@ -359,6 +389,15 @@ Reliable Native Core epic; do not put ledger facts in plain `localStorage`.
   future follow-ups.
 - Introduce plan entitlements only after privacy controls and deletion/export
   are proven; memory safety is not a paid-tier feature.
+
+### Commercial and Family dependency
+
+The Family behavior described here depends on the still-separate Commercial
+Entitlements proposal (PR #54 at the time of writing). Individual-profile
+ledger work may proceed without it. Family membership, adult sharing roles,
+dependent profiles, and paid-seat lifecycle behavior must wait for an approved
+entitlement contract and must be linked as an explicit delivery dependency.
+The core privacy invariants remain mandatory for every plan.
 
 ## Acceptance Matrix
 
