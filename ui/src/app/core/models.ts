@@ -1318,6 +1318,15 @@ export interface AskResponse {
   kundli_id?: string;
   thread_id?: string | null;
   refer_out_kind?: 'health' | 'legal' | 'money' | 'death' | null;
+  /**
+   * Explicit outcome signal — added when the web Ask endpoint was migrated
+   * to the same AskOrchestrator pipeline as native streaming Ask.
+   * 'clarification_needed' and 'domain_not_ready' carry a plain-text
+   * `answer` explaining the situation, but must never be treated as a real
+   * reading just because `answer` is a non-empty string. Optional so
+   * existing callers reading only `answer`/`tools_used` are unaffected.
+   */
+  status?: 'answered' | 'refer_out' | 'clarification_needed' | 'domain_not_ready';
 }
 
 export type AskIntent =
