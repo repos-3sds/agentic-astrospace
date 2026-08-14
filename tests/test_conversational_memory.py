@@ -74,6 +74,18 @@ def test_rejects_reported_belief_and_secondhand_claims_about_the_reader():
     assert extract_memory_candidates("I heard that I am considered retired at work.") == []
 
 
+def test_requires_a_declarative_first_person_assertion_clause():
+    """Automatic memory must not extract an `I am ...` fragment merely
+    because it appears later in a question or chart/report attribution.
+    These were the next real false positives after the reporting-verb
+    deny-list grew; the extractor now only considers sentence clauses that
+    BEGIN as first-person declarative assertions."""
+    assert extract_memory_candidates("I wonder whether I am retired.") == []
+    assert extract_memory_candidates("My chart indicates I am retired.") == []
+    assert extract_memory_candidates("The report suggests I am married.") == []
+    assert _one("For context, I am retired.").value == {"code": "retired"}
+
+
 def test_sensitive_relationship_and_children_always_require_confirmation():
     marriage = _one("I am married.")
     children = _one("I have two children.")

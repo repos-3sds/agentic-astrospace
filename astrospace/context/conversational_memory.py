@@ -31,8 +31,18 @@ class MemoryCandidate:
         }
 
 
-_QUESTION_OPEN = re.compile(r"^\s*(?:when|will|would|could|can|should|do|does|did|am i|are we|is my)\b", re.I)
-_THIRD_PERSON = re.compile(r"\b(?:my (?:mother|father|wife|husband|partner|son|daughter|child)|he|she|they)\s+(?:is|am|are|has|have|works?)\b", re.I)
+# Automatic memory must begin from a positive assertion, not an expanding
+# collection of ways a sentence might be hypothetical or secondhand. We only
+# inspect sentence clauses that START as a first-person declarative statement.
+# This accepts "I am retired" and "For context, I work as a teacher", while
+# excluding "I wonder whether I am retired" and "My chart indicates I am
+# retired" before their later `I am ...` fragments are even considered.
+_ASSERTION_START = re.compile(
+    r"^\s*(?:(?:for context|to clarify|just so you know)\s*[:,]?\s+)?"
+    r"(?:i\s+(?:am|have been|work as|am employed as|have)\b|i\s*['’]m\b)",
+    re.I,
+)
+_SENTENCE_BREAK = re.compile(r"(?<=[.!?;])\s+")
 
 # Anywhere in the message, not just at the start — "Suppose I am retired,
 # what would the chart say?" and "What happens if I am married?" both put
@@ -90,26 +100,29 @@ _CHILDREN = re.compile(
 def extract_memory_candidates(text: str) -> list[MemoryCandidate]:
     """Return only explicit first-person assertions from one user turn."""
     clean = " ".join(text.strip().split())
-    if (not clean or _QUESTION_OPEN.search(clean) or _THIRD_PERSON.search(clean)
-            or _HYPOTHETICAL_RE.search(clean) or _REPORTED_SPEECH_RE.search(clean)):
+    if (not clean or _HYPOTHETICAL_RE.search(clean)
+            or _REPORTED_SPEECH_RE.search(clean)):
         return []
     found: list[MemoryCandidate] = []
-    for key, code, label, display, pattern in _CODE_PATTERNS:
-        match = re.search(pattern, clean, re.I)
-        if match:
-            sensitivity = "sensitive" if key == "relationship_status" else "personal"
-            found.append(MemoryCandidate(key, {"code": code}, label, display, sensitivity, match.group(0)))
-    child = _CHILDREN.search(clean)
-    if child:
-        found.append(MemoryCandidate("has_children", {"value": True}, "Children", "Has children", "sensitive", child.group(0)))
-    occupation = _OCCUPATION.search(clean)
-    if occupation:
-        value = occupation.group(1).strip(" .")
-        # Avoid absorbing a second clause into the occupation value.
-        value = re.split(r"\b(?:and|but|because|who)\b", value, maxsplit=1, flags=re.I)[0].strip()
-        value = re.sub(r"^(?:a|an)\s+", "", value, flags=re.I)
-        if value.lower() not in {"student", "retired", "unemployed", "married", "single"}:
-            found.append(MemoryCandidate("occupation", {"text": value}, "Occupation", value, "personal", occupation.group(0)))
+    for sentence in _SENTENCE_BREAK.split(clean):
+        if not _ASSERTION_START.match(sentence):
+            continue
+        for key, code, label, display, pattern in _CODE_PATTERNS:
+            match = re.search(pattern, sentence, re.I)
+            if match:
+                sensitivity = "sensitive" if key == "relationship_status" else "personal"
+                found.append(MemoryCandidate(key, {"code": code}, label, display, sensitivity, match.group(0)))
+        child = _CHILDREN.search(sentence)
+        if child:
+            found.append(MemoryCandidate("has_children", {"value": True}, "Children", "Has children", "sensitive", child.group(0)))
+        occupation = _OCCUPATION.search(sentence)
+        if occupation:
+            value = occupation.group(1).strip(" .")
+            # Avoid absorbing a second clause into the occupation value.
+            value = re.split(r"\b(?:and|but|because|who)\b", value, maxsplit=1, flags=re.I)[0].strip()
+            value = re.sub(r"^(?:a|an)\s+", "", value, flags=re.I)
+            if value.lower() not in {"student", "retired", "unemployed", "married", "single"}:
+                found.append(MemoryCandidate("occupation", {"text": value}, "Occupation", value, "personal", occupation.group(0)))
     deduped: dict[str, MemoryCandidate] = {}
     for candidate in found:
         deduped[candidate.key] = candidate
