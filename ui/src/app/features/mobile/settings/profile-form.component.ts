@@ -3,14 +3,16 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
-import { Kundli, KundliPayload } from '../../../core/models';
+import { Kundli, KundliPayload, PanchangaCity } from '../../../core/models';
 import { ChartComputingComponent } from '../states/chart-computing.component';
+import { BirthPlaceFieldComponent } from './birth-place-field.component';
+import { normalizeProfileRelationship, PROFILE_RELATIONSHIPS } from './profile-fields';
 
 @Component({
   selector: 'as-profile-form',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink, ChartComputingComponent],
+  imports: [FormsModule, RouterLink, ChartComputingComponent, BirthPlaceFieldComponent],
   template: `
     <header class="profiles-appbar">
       <a routerLink="/m/settings/profiles" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
@@ -28,11 +30,16 @@ import { ChartComputingComponent } from '../states/chart-computing.component';
       } @else {
         <form id="profile-form" class="profile-form" (ngSubmit)="save()">
           <label>NAME<input name="name" [(ngModel)]="name" autocomplete="name" /></label>
-          <label>RELATION<input name="relation" [(ngModel)]="relation" placeholder="self, partner, child" /></label>
+          <label>RELATIONSHIP
+            <select name="relation" [(ngModel)]="relation">
+              @for (option of relationships; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
           <label>DATE OF BIRTH<input name="date" [(ngModel)]="date" type="date" /></label>
           <label>TIME OF BIRTH<input name="time" [(ngModel)]="time" type="time" /></label>
-          <label>PLACE OF BIRTH<input name="city" [(ngModel)]="city" autocomplete="address-level2" /></label>
-          <label>COUNTRY CODE<input name="nation" [(ngModel)]="nation" maxlength="2" autocomplete="country" /></label>
+          <as-birth-place-field [initialPlace]="initialPlace()" (placeChange)="onPlaceChange($event)" />
           @if (error()) { <p class="profiles-error" role="alert">{{ error() }}</p> }
         </form>
       }
@@ -57,6 +64,8 @@ export class ProfileFormComponent {
   protected readonly saving = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly editingId = signal<string | null>(this.route.snapshot.paramMap.get('id'));
+  protected readonly initialPlace = signal<Pick<PanchangaCity, 'city' | 'nation'> | null>(null);
+  protected readonly relationships = PROFILE_RELATIONSHIPS;
 
   protected name = '';
   protected relation = 'self';
@@ -64,6 +73,7 @@ export class ProfileFormComponent {
   protected time = '';
   protected city = '';
   protected nation = 'IN';
+  private placeSelectionRequired = true;
 
   constructor() {
     void this.load();
@@ -90,6 +100,14 @@ export class ProfileFormComponent {
     }
   }
 
+  protected onPlaceChange(place: PanchangaCity | null): void {
+    this.placeSelectionRequired = !place;
+    if (place) {
+      this.city = place.city;
+      this.nation = place.nation;
+    }
+  }
+
   private async load(): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
@@ -110,18 +128,20 @@ export class ProfileFormComponent {
 
   private applyProfile(profile: Kundli): void {
     this.name = profile.name;
-    this.relation = profile.relation || 'self';
+    this.relation = normalizeProfileRelationship(profile.relation);
     this.date = `${profile.birth_year}-${String(profile.birth_month).padStart(2, '0')}-${String(profile.birth_day).padStart(2, '0')}`;
     this.time = `${String(profile.birth_hour).padStart(2, '0')}:${String(profile.birth_minute).padStart(2, '0')}`;
     this.city = profile.birth_city;
     this.nation = profile.birth_nation || 'IN';
+    this.initialPlace.set({ city: this.city, nation: this.nation });
+    this.placeSelectionRequired = false;
   }
 
   private payload(): KundliPayload | null {
     const [year, month, day] = this.date.split('-').map(Number);
     const [hour, minute] = this.time.split(':').map(Number);
-    if (!this.name.trim() || !year || !month || !day || Number.isNaN(hour) || Number.isNaN(minute) || !this.city.trim()) {
-      this.error.set('Complete each birth detail before saving.');
+    if (!this.name.trim() || !year || !month || !day || Number.isNaN(hour) || Number.isNaN(minute) || !this.city.trim() || this.placeSelectionRequired) {
+      this.error.set(this.placeSelectionRequired ? 'Choose the birth place from the search results.' : 'Complete each birth detail before saving.');
       return null;
     }
     return {
