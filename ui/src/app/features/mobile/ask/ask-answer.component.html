@@ -270,6 +270,10 @@
           }
         }
 
+        @if (!message.streaming && message.reading && profileContextLabel(message); as contextLabel) {
+          <p class="profile-context-note">{{ contextLabel }}</p>
+        }
+
         @if (!message.streaming && message.content && message.status === 'answered' && !message.reading) {
           <div class="tools">
             <button class="tool" type="button" (click)="selectAssistant(message); listenOpen.set(true)">

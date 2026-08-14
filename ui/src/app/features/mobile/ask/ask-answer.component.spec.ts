@@ -90,8 +90,62 @@ function messageWithReading(reading: StructuredReading | null): any {
     id: 'm1', role: 'assistant', content: '', domain: 'career', intent: null,
     status: 'answered', refer_out_kind: null, created_at: null,
     evidence: [], context_used: [], evidence_refs: [], reading, options: [],
+    profile_context_revision: 0, profile_context_as_of: null,
   };
 }
+
+describe('AskAnswerComponent profile context provenance', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  it('formats the frozen ledger date only when saved context was used', () => {
+    const component = createComponent();
+    const withoutContext = messageWithReading(FULL_READING);
+    expect((component as any).profileContextLabel(withoutContext)).toBeNull();
+
+    const withContext = {
+      ...withoutContext,
+      profile_context_revision: 3,
+      profile_context_as_of: '2026-08-14',
+    };
+    const label = (component as any).profileContextLabel(withContext);
+    expect(label).toContain('Uses your saved profile context');
+    expect(label).toContain('2026');
+  });
+
+  it('restores frozen ledger provenance from persisted history evidence', () => {
+    const component = createComponent();
+    const message = (component as any).toChatMessage({
+      id: 'saved-1', role: 'assistant', content: 'Saved answer', domain: 'career',
+      refer_out_kind: null, created_at: '2026-08-14T01:00:00Z',
+      evidence: {
+        structured_reading: FULL_READING,
+        profile_context_revision: 4,
+        profile_context_as_of: '2026-08-13',
+      },
+    });
+    expect(message.profile_context_revision).toBe(4);
+    expect(message.profile_context_as_of).toBe('2026-08-13');
+  });
+
+  it('restores a context-unavailable terminal message as a warning, not an answer', () => {
+    const component = createComponent();
+    const message = (component as any).toChatMessage({
+      id: 'saved-context-error', role: 'assistant', content: 'Please try again.',
+      domain: 'career', refer_out_kind: null, created_at: '2026-08-14T01:00:00Z',
+      evidence: { status: 'context_unavailable', retryable: true },
+    });
+    expect(message.status).toBe('context_unavailable');
+    expect((component as any).answerLabel(message)).toBe('CONTEXT');
+    expect((component as any).answerTone(message)).toBe('warn');
+  });
+
+  it('recognises the live context-unavailable SSE envelope', () => {
+    const component = createComponent();
+    expect((component as any).isContextUnavailableEvent({
+      type: 'context_unavailable', domain: 'career', retryable: true, thread_id: 't1',
+    })).toBeTrue();
+  });
+});
 
 describe('AskAnswerComponent persona-mode content parity', () => {
   afterEach(() => TestBed.resetTestingModule());

@@ -183,6 +183,12 @@
   background: color-mix(in srgb, var(--m-raised) 58%, transparent);
 }
 
+.profile-context-note {
+  @include m-caption;
+  margin: 2px 0 0;
+  color: var(--m-muted);
+}
+
 // A flat disc, so it is drawn rather than fetched — the same circle in three
 // tones would otherwise be three assets that can drift apart.
 .dot {
