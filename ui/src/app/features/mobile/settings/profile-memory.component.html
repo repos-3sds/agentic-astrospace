@@ -1,0 +1,75 @@
+<header class="memory-appbar">
+  <a routerLink="/m/settings/profiles" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
+  <div><h1>What Siddha remembers</h1><p>{{ profile()?.name || 'Profile' }}</p></div>
+  <button type="button" aria-label="Export profile memory" [disabled]="busy()" (click)="exportMemory()">Export</button>
+</header>
+
+<main class="memory-main">
+  <section class="privacy-note">
+    <b>You control this memory</b>
+    <p>These facts guide future readings for this profile only. They never change the birth chart and can be corrected or removed here.</p>
+  </section>
+
+  @if (error()) { <p class="memory-error" role="alert">{{ error() }}</p> }
+
+  @if (contradictions().length) {
+    <section class="conflict" role="alert">
+      <b>Confirmation needed</b>
+      <p>More than one current value exists for {{ contradictions().join(', ') }}. Correct or remove the outdated entry before Siddha uses it.</p>
+    </section>
+  }
+
+  @if (loading()) {
+    <section class="memory-state"><b>Loading profile memory</b><p>Checking the latest saved revision.</p></section>
+  } @else if (!facts().length) {
+    <section class="memory-state"><b>Nothing remembered yet</b><p>Add only the life context you want Siddha to carry into future readings.</p></section>
+  } @else {
+    <section class="fact-list" aria-label="Saved profile memory">
+      @for (fact of facts(); track fact.id) {
+        <article class="fact-card">
+          <div class="fact-copy">
+            <span>{{ label(fact) }}</span>
+            <b>{{ displayValue(fact) }}</b>
+            <small>{{ fact.valid_from ? 'From ' + fact.valid_from : 'Current until you change it' }}</small>
+          </div>
+          @if (pendingDelete() === fact.id) {
+            <div class="confirm-delete">
+              <span>Remove from future readings?</span>
+              <button type="button" (click)="pendingDelete.set(null)">Keep</button>
+              <button class="danger" type="button" [disabled]="busy()" (click)="remove(fact.id)">Remove</button>
+            </div>
+          } @else {
+            <div class="fact-actions">
+              <button type="button" (click)="openEdit(fact)">Edit</button>
+              <button class="danger" type="button" (click)="askDelete(fact.id)">Remove</button>
+            </div>
+          }
+        </article>
+      }
+    </section>
+  }
+
+  @if (editorOpen()) {
+    <section class="editor" aria-label="Profile memory editor">
+      <div class="editor-heading"><h2>{{ editing() ? 'Correct memory' : 'Add context' }}</h2><button type="button" (click)="closeEditor()">Cancel</button></div>
+      <label>WHAT SHOULD SIDDHA REMEMBER?
+        <select [(ngModel)]="editorKind" [disabled]="!!editing()" (ngModelChange)="editorChanged()">
+          <option value="employment_status">Work status</option>
+          <option value="relationship_status">Relationship status</option>
+          <option value="has_children">Children</option>
+          <option value="occupation">Occupation</option>
+        </select>
+      </label>
+      @if (editorKind === 'occupation') {
+        <label>OCCUPATION<input [(ngModel)]="editorValue" maxlength="240" autocomplete="off" /></label>
+      } @else {
+        <label>VALUE<select [(ngModel)]="editorValue">@for (option of options(editorKind); track option.value) {<option [value]="option.value">{{ option.label }}</option>}</select></label>
+      }
+      <label>TRUE FROM <input type="date" [(ngModel)]="validFrom" /></label>
+      <p class="consent">Saving confirms that Siddha may use this fact only for this profile's relevant future readings.</p>
+      <button class="save" type="button" [disabled]="busy() || !editorValue.trim()" (click)="save()">{{ busy() ? 'Saving…' : 'Save to this profile' }}</button>
+    </section>
+  } @else {
+    <button class="add" type="button" (click)="openAdd()">Add profile context</button>
+  }
+</main>

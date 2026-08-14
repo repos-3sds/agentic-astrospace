@@ -23,6 +23,8 @@ from ..db.models import (
     LiveActivity, MuhurtaRequest, NotificationJob, NotificationPreference,
     PushToken, SavedMuhurta, ShareAsset, UserAlert, UserDevice, UserObservance,
     UserProfile, UserRemedy, UserSettings, WidgetInstall,
+    ProfileContextAuditEvent, ProfileContextFact, ProfileContextLedger,
+    ProfileContextMutation,
 )
 from .auth import CurrentUser
 
@@ -198,6 +200,13 @@ def delete_account(payload: AccountDeletionPayload, user: CurrentUser,
     ):
         db.query(model).filter(model.user_id == user.id).delete(synchronize_session=False)
     if kundli_ids:
+        for model in (
+            ProfileContextAuditEvent, ProfileContextMutation,
+            ProfileContextFact, ProfileContextLedger,
+        ):
+            db.query(model).filter(model.profile_id.in_(kundli_ids)).delete(
+                synchronize_session=False
+            )
         db.query(DailyGuidanceCache).filter(
             DailyGuidanceCache.kundli_id.in_(kundli_ids)
         ).delete(synchronize_session=False)
