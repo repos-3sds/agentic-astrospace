@@ -129,6 +129,59 @@ The current package registry reports `@capacitor-community/sqlite` 8.1.1 with a 
 
 Do not store Supabase tokens in this database; Capacitor Preferences remains the auth SDK's storage adapter. Do not put full reading text in logs or analytics.
 
+### Decision: conditional go, separate proof PR
+
+Approve `@capacitor-community/sqlite` 8.1.1 as the preferred native repository
+candidate, but do not add it to this pilot PR. Package compatibility is not
+proof that encrypted persistence is correctly configured. A dedicated
+dependency/native-project PR must pass every gate below before the application
+stores private profile context or queued writes in it.
+
+1. Generate a cryptographically random installation secret on device. Never
+   hardcode a passphrase in Angular, `capacitor.config`, source control, build
+   variables, or a remotely delivered configuration.
+2. Store/use the secret through the plugin's native secure-secret path backed
+   by iOS Keychain and Android Keystore. JavaScript may provide a newly
+   generated secret during initialization but must not persist or log it.
+3. Open the database with encryption enabled and prove with native tests that
+   the resulting file cannot be opened as plaintext SQLite.
+4. Exclude the database and secret material from Android cloud backup/device
+   transfer and iOS backup unless a separately reviewed encrypted-restore model
+   exists. Verify the built manifests and an actual backup/restore attempt.
+5. Run schema upgrades transactionally. On failure, disposable cache tables may
+   be rebuilt; confirmed profile facts and queued mutations must never be
+   silently discarded or downgraded to plaintext storage.
+6. Logout/account deletion cancels repository work, closes connections,
+   removes that account's rows, compacts or deletes the database as policy
+   requires, and clears the installation secret only after encrypted data is no
+   longer needed. A second account must not inherit the first account's rows.
+7. If secure-secret initialization or encrypted open fails, private durable
+   features become unavailable with an honest recovery state. There is no
+   `localStorage`, Preferences, or unencrypted-SQLite fallback for Profile
+   Context Ledger facts, Ask memory, reports, notes, or queued writes.
+8. Release/legal acknowledges SQLCipher encryption export-classification and
+   reporting obligations before store submission.
+
+The first native proof stores only disposable Today/Calendar cache envelopes.
+Profile Context Ledger and offline mutation queues remain disabled until key
+rotation, recovery, conflict handling, and deletion semantics pass a second
+privacy review.
+
+### Native proof matrix
+
+| Scenario | Required evidence |
+|---|---|
+| Fresh Android install | Random secret created; encrypted DB opens; cache survives process death |
+| Fresh iOS install | Random secret created; encrypted DB opens; cache survives process death |
+| App upgrade with schema change | Upgrade commits atomically; rollback/recovery leaves app usable |
+| Wrong/missing secret | No plaintext fallback; explicit recoverable state; no private payload logged |
+| Logout A -> login B | A rows unavailable before B renders; no shared front-cache or open connection |
+| Uninstall/reinstall | No orphaned readable database; initialization behavior documented per platform |
+| Backup/device transfer | Database and secret do not produce a restorable mismatched or readable copy |
+| Storage full/corrupt cache | Cache rebuild succeeds without affecting auth or server-owned data |
+| Background/foreground | Connection lifecycle is stable; no duplicate handles or stale-account reads |
+| Encryption inspection | Native artifact/file check demonstrates SQLCipher, not header-only configuration |
+
 ## Proposed Local Schema
 
 ```sql
@@ -183,7 +236,7 @@ Separate tables should be used later for Profile Context Ledger facts and queued
 - Profile edits/deletes/logout invalidate both persistent rows and in-memory
   request maps. Late cached data cannot satisfy another account or profile.
 - Unit tests cover account, profile revision, location, convention and persona
-  isolation. The Angular suite (59 tests), production build, and 375x812 Today
+  isolation. The Angular suite (61 tests), production build, and 375x812 Today
   and Calendar empty-state visual checks pass.
 
 This is deliberately not the final native store. Installing encrypted SQLite
