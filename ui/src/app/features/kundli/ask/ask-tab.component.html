@@ -47,6 +47,17 @@
           <div class="msg-row user">
             <div class="bubble user">{{ m.content }}</div>
           </div>
+        } @else if (isBoundary(m)) {
+          <div class="msg-row assistant">
+            <div class="bubble assistant boundary" [class.refer-out]="m.status === 'refer_out'">
+              <lucide-icon
+                [name]="m.status === 'refer_out' ? 'badge-alert' : 'circle-alert'"
+                [size]="15"
+                [strokeWidth]="2"
+              />
+              <div class="as-prose" [innerHTML]="m.content | markdown"></div>
+            </div>
+          </div>
         } @else {
           <div class="msg-row assistant">
             <div class="bubble assistant">
