@@ -191,6 +191,37 @@ class TestAssembler:
         for sub in r["elapsed_sub_periods"]:
             assert sub["end"] < today
 
+    def test_earlier_chapters_reach_further_back_than_previous_chapter_alone(self, chart):
+        """The gap `previous_chapter` alone leaves: a reader whose current
+        mahadasha started long ago has an entire earlier life with no dated
+        anchor. Chart is born 1990-01-01 — old enough (as of any date this
+        suite runs) to have at least one mahadasha before `previous_chapter`."""
+        bundle = assemble_domain(chart, "wealth", include_gochara=False)
+        r = bundle["retrospect"]
+        assert "earlier_chapters" in r
+        assert len(r["earlier_chapters"]) >= 1
+        assert len(r["earlier_chapters"]) <= 4  # capped, not the full life list
+        # Chronological (oldest first) and strictly older than previous_chapter.
+        ends = [c["end"] for c in r["earlier_chapters"]] + [r["previous_chapter"]["start"]]
+        assert ends == sorted(ends)
+        for chapter in r["earlier_chapters"]:
+            assert chapter["lord"] and chapter["start"] and chapter["end"]
+            assert isinstance(chapter["age_at_start"], float)
+            # Real BPHS 47.3-4 weight computation, same as current/previous —
+            # not a stripped-down summary of the same period.
+            if chapter["emphasis"] is not None:
+                assert chapter["emphasis"]["source"] == "BPHS 47.3-4 (Santhanam, p.453)"
+                assert "window" in chapter["emphasis"]
+
+    def test_earlier_chapters_empty_for_a_reader_early_in_their_current_mahadasha(self):
+        """A reader whose current mahadasha is one of the first two of their
+        life has no earlier chapters yet — must be an empty list, not an
+        error, and never a fabricated entry."""
+        newborn = VedicChart("Newborn", 2024, 1, 1, 12, 0, **DELHI)
+        bundle = assemble_domain(newborn, "wealth", include_gochara=False)
+        r = bundle["retrospect"]
+        assert r["earlier_chapters"] == []
+
     def test_house_lord_carries_full_nakshatra_detail(self, chart):
         """Before this, a planet brief carried the nakshatra NAME and nothing
         else — so an agent had no bundle field to cite for what the nakshatra

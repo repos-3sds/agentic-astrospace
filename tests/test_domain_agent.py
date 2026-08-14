@@ -227,6 +227,16 @@ class TestBasePromptCoversConventionDependentFields:
         assert "You do NOT know what happened to them" in prompt
         assert "believe them over the chart" in prompt
 
+    def test_prompt_directs_multi_chapter_questions_to_earlier_chapters(self, chart):
+        """A "different phases over the years" question needs more than
+        `previous_chapter` — see `retrospect.earlier_chapters`
+        (assembler.py's `_retrospect()`)."""
+        bundle = assemble_domain(chart, "wealth")
+        agent = DomainReadingAgent(bundle, AGENT_REGISTRY["wealth"].domain_addendum)
+        prompt = agent.system_prompt
+        assert "earlier_chapters" in prompt
+        assert "do not invent a chapter that isn't there" in prompt.lower()
+
     def test_prompt_directs_the_agent_to_use_nakshatra_texture(self, chart):
         """The nakshatra_detail payload is only worth carrying if the prompt
         tells the agent to read from it — otherwise it is inert tokens."""

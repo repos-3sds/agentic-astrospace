@@ -66,6 +66,19 @@ class TestVerifier:
         violations = verify(_reading(), marriage_bundle, "career")
         assert any("does not match routed domain" in v for v in violations)
 
+    @pytest.mark.parametrize("section", ["retrospect", "timeline"])
+    def test_retrospect_and_timeline_are_valid_citation_sources(self, marriage_bundle, section):
+        """Both are real top-level bundle sections `domain_agent.py`'s own
+        prompt tells the model to read dated boundaries from (rules 10 and
+        13) — a model citing either must not get a spurious invalid-source
+        violation just because `_BUNDLE_SECTION_NAMES` had never listed
+        them."""
+        assert section in marriage_bundle  # sanity: the section really exists
+        good = _reading(technical_basis=[
+            TechnicalBasisItem(factor="dated period", reading="anchored", source=section),
+        ])
+        assert verify(good, marriage_bundle, "marriage") == []
+
     @pytest.mark.parametrize("phrase", [
         "you cannot get married because of this dosha",
         "this will end in divorce",
