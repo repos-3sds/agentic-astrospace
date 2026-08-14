@@ -351,13 +351,16 @@ export class CalendarDayComponent {
       return;
     }
 
-    const cached = this.vedic.cachedCalendarIntelligence(id, 45, undefined, { includePractitionerDetail: true });
+    const cached = this.vedic.cachedCalendarIntelligenceEntry(id, 45, undefined, { includePractitionerDetail: true });
     if (cached && !forceRefresh) {
-      this.data.set(cached);
-      if (!this.selectedDate()) this.selectedDate.set(cached.start_date);
+      this.data.set(cached.data);
+      if (!this.selectedDate()) this.selectedDate.set(cached.data.start_date);
       this.loading.set(false);
-      void this.loadFestivals(cached.start_date, 60);
-      void this.refreshCalendar(id, request);
+      void this.loadFestivals(cached.data.start_date, 60);
+      if (cached.freshness === 'stale') {
+        this.staleNotice.set(`Showing saved results for ${cached.data.place.city} while details refresh.`);
+        void this.refreshCalendar(id, request);
+      }
       return;
     }
 
@@ -372,12 +375,12 @@ export class CalendarDayComponent {
       void this.loadFestivals(calendar.start_date, 60);
     } catch (error) {
       if (request === this.requestId) {
-        const cached = this.vedic.cachedCalendarIntelligence(id, 45, undefined, { includePractitionerDetail: true });
+        const cached = this.vedic.cachedCalendarIntelligenceEntry(id, 45, undefined, { includePractitionerDetail: true });
         if (cached) {
-          this.data.set(cached);
-          if (!this.selectedDate()) this.selectedDate.set(cached.start_date);
-          this.staleNotice.set(`Showing last loaded results for ${cached.place.city}. ${this.friendlyError(error)}`);
-          void this.loadFestivals(cached.start_date, 60);
+          this.data.set(cached.data);
+          if (!this.selectedDate()) this.selectedDate.set(cached.data.start_date);
+          this.staleNotice.set(`Showing last loaded results for ${cached.data.place.city}. ${this.friendlyError(error)}`);
+          void this.loadFestivals(cached.data.start_date, 60);
         } else {
           this.error.set((error as Error).message);
         }

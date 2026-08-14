@@ -83,6 +83,9 @@
     </section>
   } @else if (view(); as v) {
   <section class="card">
+    @if (cacheFreshness() === 'stale') {
+      <p class="cache-notice" role="status">{{ cacheAgeLabel() }} · refreshing</p>
+    }
     <div class="card-head">
       <p class="eyebrow">{{ preferences.experienceMode() === 'guided' ? 'YOUR RHYTHM TODAY' : 'WHAT MATTERS TODAY' }}</p>
       <p class="place">{{ v.place }}</p>

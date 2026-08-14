@@ -933,3 +933,8 @@
   &[data-kind='auspicious'] { color: var(--m-good); background: var(--m-good-soft); }
   &[data-kind='inauspicious'] { color: var(--m-warn); background: var(--m-warn-soft); }
 }
+.cache-notice {
+  @include m-caption;
+  margin: 0 0 8px;
+  color: var(--m-muted);
+}

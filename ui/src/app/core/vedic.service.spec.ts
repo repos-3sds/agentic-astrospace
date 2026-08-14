@@ -32,6 +32,7 @@ describe('VedicService location-sensitive caches', () => {
     });
     prefs = TestBed.inject(PreferencesService);
     service = TestBed.inject(VedicService);
+    service.configureProfile({ id: 'profile-1', user_id: 'user-1', updated_at: '2026-08-11T00:00:00Z' });
   });
 
   it('uses city, nation and timezone in daily guidance identity and refetches after a place change', async () => {
@@ -61,5 +62,87 @@ describe('VedicService location-sensitive caches', () => {
 
     expect(prefs.panchangaContextKey()).not.toBe(first);
     expect(prefs.panchangaContextKey()).toContain('Chennai');
+  });
+
+  it('does not reuse guidance after the profile birth-data revision changes', async () => {
+    prefs.timezoneMode.set('panchanga_place');
+    prefs.setPanchangaPlace({ city: 'Singapore', nation: 'SG', timezone: 'Asia/Singapore', label: 'Singapore' } as any);
+    await service.dailyGuidance('profile-1');
+    expect(service.cachedDailyGuidance('profile-1')).not.toBeNull();
+
+    service.configureProfile({ id: 'profile-1', user_id: 'user-1', updated_at: '2026-08-12T00:00:00Z' });
+
+    expect(service.cachedDailyGuidance('profile-1')).toBeNull();
+    await service.dailyGuidance('profile-1');
+    expect(api.get).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not resurrect hard-expired Today data from a suspended WebView memory cache', async () => {
+    const clock = spyOn(Date, 'now').and.returnValue(1_000);
+    await service.dailyGuidance('profile-1');
+
+    clock.and.returnValue(1_000 + (40 * 60 * 60 * 1000));
+
+    expect(service.cachedDailyGuidanceEntry('profile-1')).toBeNull();
+    await service.dailyGuidance('profile-1');
+    expect(api.get).toHaveBeenCalledTimes(2);
+  });
+
+  it('isolates the same profile id when its owning account changes', async () => {
+    await service.dailyGuidance('profile-1');
+    service.configureProfile({ id: 'profile-1', user_id: 'user-2', updated_at: '2026-08-11T00:00:00Z' });
+
+    expect(service.cachedDailyGuidance('profile-1')).toBeNull();
+  });
+
+  it('keeps Calendar cache identities separate by place and practitioner depth', async () => {
+    prefs.timezoneMode.set('panchanga_place');
+    prefs.setPanchangaPlace({ city: 'Singapore', nation: 'SG', timezone: 'Asia/Singapore', label: 'Singapore' } as any);
+    await service.calendarIntelligence('profile-1', 45);
+
+    expect(service.cachedCalendarIntelligence('profile-1', 45)).not.toBeNull();
+    expect(service.cachedCalendarIntelligence('profile-1', 45, undefined, { includePractitionerDetail: true })).toBeNull();
+
+    prefs.setPanchangaPlace({ city: 'Chennai', nation: 'IN', timezone: 'Asia/Kolkata', label: 'Chennai' } as any);
+    expect(service.cachedCalendarIntelligence('profile-1', 45)).toBeNull();
+  });
+
+  it('does not resurrect hard-expired Calendar data from a suspended WebView memory cache', async () => {
+    const clock = spyOn(Date, 'now').and.returnValue(1_000);
+    await service.calendarIntelligence('profile-1', 45);
+
+    clock.and.returnValue(1_000 + (46 * 24 * 60 * 60 * 1000));
+
+    expect(service.cachedCalendarIntelligenceEntry('profile-1', 45)).toBeNull();
+    await service.calendarIntelligence('profile-1', 45);
+    expect(api.get).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not restore Today cache when an in-flight refresh completes after logout cleanup', async () => {
+    let resolve!: (value: any) => void;
+    api.get.and.returnValue(new Promise((done) => { resolve = done; }));
+
+    const refresh = service.refreshDailyGuidance('profile-1');
+    service.clearConfiguredProfiles();
+    resolve({ date: '2026-08-14' });
+    await refresh;
+
+    service.configureProfile({ id: 'profile-1', user_id: 'user-1', updated_at: '2026-08-11T00:00:00Z' });
+    expect(service.cachedDailyGuidanceEntry('profile-1')).toBeNull();
+    expect(Object.keys(localStorage).some((key) => key.startsWith('siddha.resource-cache'))).toBeFalse();
+  });
+
+  it('does not restore Calendar cache when an in-flight refresh completes after logout cleanup', async () => {
+    let resolve!: (value: any) => void;
+    api.get.and.returnValue(new Promise((done) => { resolve = done; }));
+
+    const refresh = service.refreshCalendarIntelligence('profile-1', 45);
+    service.clearConfiguredProfiles();
+    resolve({ panchanga_days: [], by_date: {} });
+    await refresh;
+
+    service.configureProfile({ id: 'profile-1', user_id: 'user-1', updated_at: '2026-08-11T00:00:00Z' });
+    expect(service.cachedCalendarIntelligenceEntry('profile-1', 45)).toBeNull();
+    expect(Object.keys(localStorage).some((key) => key.startsWith('siddha.resource-cache'))).toBeFalse();
   });
 });
