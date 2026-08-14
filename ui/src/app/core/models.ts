@@ -1348,7 +1348,7 @@ export interface AskResponse {
    * reading just because `answer` is a non-empty string. Optional so
    * existing callers reading only `answer`/`tools_used` are unaffected.
    */
-  status?: 'answered' | 'refer_out' | 'clarification_needed' | 'domain_not_ready';
+  status?: 'answered' | 'refer_out' | 'clarification_needed' | 'domain_not_ready' | 'context_unavailable';
 }
 
 export type AskIntent =
@@ -1446,6 +1446,13 @@ export interface AskFatalErrorEnvelope {
   thread_id?: string | null;
 }
 
+export interface AskContextUnavailableEnvelope {
+  type: 'context_unavailable';
+  domain?: string | null;
+  retryable: boolean;
+  thread_id?: string | null;
+}
+
 /**
  * A frame from `POST /ask/{kundliId}/stream` (astrospace/api/ask_stream_routes.py).
  * `reset: true` means the output-side safety gate tripped mid-stream — the
@@ -1464,6 +1471,7 @@ export type AskStreamEvent =
       message?: string;
     }
   | { type: 'refer_out'; kind: 'health' | 'legal' | 'money' | 'death'; answer: string }
+  | AskContextUnavailableEnvelope
   | AskFatalErrorEnvelope
   | AskStructuredEnvelope
   | { delta: string; reset?: boolean }

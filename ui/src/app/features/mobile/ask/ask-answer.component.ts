@@ -611,6 +611,7 @@ export class AskAnswerComponent {
     if (message.refer_out_kind) return 'refer_out';
     const evidence = message.evidence;
     if (evidence?.['clarification_options']) return 'clarification_needed';
+    if (evidence?.['status'] === 'context_unavailable') return 'context_unavailable';
     if (evidence?.['status'] === 'domain_not_ready') return 'domain_not_ready';
     return null;
   }
@@ -829,6 +830,16 @@ export class AskAnswerComponent {
             status: 'refer_out',
             streaming: false,
           });
+        } else if (this.isContextUnavailableEvent(event)) {
+          finalThreadId = event.thread_id ?? finalThreadId;
+          this.streamStatus.set(null);
+          this.updateAssistantMessage(assistantId, {
+            content: 'I could not check your saved profile context just now, so I am holding off rather than risk missing something you already shared. Please try again in a moment.',
+            domain: event.domain ?? null,
+            status: 'context_unavailable',
+            streaming: false,
+          });
+          this.streaming.set(false);
         } else if (this.isFatalErrorEvent(event)) {
           finalThreadId = event.thread_id ?? finalThreadId;
           this.streamStatus.set(null);
@@ -993,6 +1004,12 @@ export class AskAnswerComponent {
     return 'type' in event && event.type === 'refer_out';
   }
 
+  private isContextUnavailableEvent(
+    event: AskStreamEvent,
+  ): event is Extract<AskStreamEvent, { type: 'context_unavailable' }> {
+    return 'type' in event && event.type === 'context_unavailable';
+  }
+
   private isFatalErrorEvent(event: AskStreamEvent): event is Extract<AskStreamEvent, { type: 'fatal_error' }> {
     return 'type' in event && event.type === 'fatal_error';
   }
@@ -1036,6 +1053,8 @@ export class AskAnswerComponent {
       case 'generation_failed':
       case 'fatal_error':
         return 'GROUNDING';
+      case 'context_unavailable':
+        return 'CONTEXT';
       case 'answered':
         return 'ANSWER';
       default:
@@ -1052,6 +1071,8 @@ export class AskAnswerComponent {
       case 'generation_failed':
       case 'fatal_error':
         return 'bad';
+      case 'context_unavailable':
+        return 'warn';
       default:
         return 'warn';
     }

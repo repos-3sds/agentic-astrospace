@@ -93,6 +93,22 @@ describe('AskTabComponent boundary-state rendering', () => {
     expect(boundary?.classList.contains('refer-out')).toBeFalse();
   });
 
+  it('renders context_unavailable as a retryable notice rather than an answer', () => {
+    const fixture = createFixture([
+      { role: 'user', content: 'When did my career begin?' },
+      {
+        role: 'assistant',
+        content: 'I could not check your saved profile context just now. Please try again.',
+        status: 'context_unavailable',
+      },
+    ]);
+    const el: HTMLElement = fixture.nativeElement;
+    const boundary = el.querySelector('.bubble.assistant.boundary');
+    expect(boundary).not.toBeNull();
+    expect(boundary?.classList.contains('refer-out')).toBeFalse();
+    expect(boundary?.textContent).toContain('saved profile context');
+  });
+
   it('renders a refer_out reply with the stronger refer-out treatment', () => {
     const fixture = createFixture([
       { role: 'user', content: 'Do I have a fatal illness coming?' },

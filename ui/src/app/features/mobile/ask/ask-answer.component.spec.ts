@@ -126,6 +126,25 @@ describe('AskAnswerComponent profile context provenance', () => {
     expect(message.profile_context_revision).toBe(4);
     expect(message.profile_context_as_of).toBe('2026-08-13');
   });
+
+  it('restores a context-unavailable terminal message as a warning, not an answer', () => {
+    const component = createComponent();
+    const message = (component as any).toChatMessage({
+      id: 'saved-context-error', role: 'assistant', content: 'Please try again.',
+      domain: 'career', refer_out_kind: null, created_at: '2026-08-14T01:00:00Z',
+      evidence: { status: 'context_unavailable', retryable: true },
+    });
+    expect(message.status).toBe('context_unavailable');
+    expect((component as any).answerLabel(message)).toBe('CONTEXT');
+    expect((component as any).answerTone(message)).toBe('warn');
+  });
+
+  it('recognises the live context-unavailable SSE envelope', () => {
+    const component = createComponent();
+    expect((component as any).isContextUnavailableEvent({
+      type: 'context_unavailable', domain: 'career', retryable: true, thread_id: 't1',
+    })).toBeTrue();
+  });
 });
 
 describe('AskAnswerComponent persona-mode content parity', () => {
