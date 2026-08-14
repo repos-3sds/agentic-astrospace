@@ -3,6 +3,9 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'app.astrospace.mobile',
   appName: 'Siddha',
+  // Native bridge arguments can contain private chart/cache payloads. Keep
+  // Capacitor's method-data logging disabled in debug and release builds.
+  loggingBehavior: 'none',
 
   // Angular's production build output. Kept in step with angular.json's
   // outputPath — `npx cap sync` copies from here into the native projects,

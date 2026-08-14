@@ -249,6 +249,9 @@ Separate tables should be used later for Profile Context Ledger facts and queued
   `isDatabaseEncrypted()` before hydrating memory. A failed secret, connection,
   or encryption check leaves durable caching unavailable and never falls back
   to WebView `localStorage`.
+- Capacitor bridge logging is disabled for every build configuration because
+  native plugin method arguments contain the serialized cache envelope. This
+  was caught during the first Android device proof before release.
 - The cache service blocks bootstrap until persistence hydration completes,
   then preserves its synchronous memory read API. Writes and account/profile
   deletions are serialized so a late write cannot overtake logout cleanup.
