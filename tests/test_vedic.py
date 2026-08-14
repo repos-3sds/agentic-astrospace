@@ -390,6 +390,11 @@ class TestTransitContext:
             include_practitioner_detail=True,
         )
         assert result["system"] == "AstroSpace Calendar Intelligence"
+        # Cache-validity contract (docs/reliable_native_core_architecture_
+        # 2026-08-14.md): a rule/dataset deployment must be able to
+        # invalidate cached projections independent of profile.updated_at.
+        assert result["engine_version"] == "calendar-intelligence-1.0"
+        assert result["dataset_version"] == "astrospace-calendar-2026.08.14"
         assert result["current"]["dasha"]["mahadasha"]
         assert result["current"]["panchanga"]["date"] == "2026-07-14"
         categories = {event["category"] for event in result["events"]}

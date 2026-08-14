@@ -53,6 +53,68 @@ class TestVerdict:
         assert _subject_words("parent")["you"] == "them"
 
 
+class TestSunriseBoundedValidity:
+    """docs/reliable_native_core_architecture_2026-08-14.md's cache-validity
+    contract: the response must carry an authoritative Vedic-day interval
+    (sunrise to next sunrise), and a request made before today's sunrise
+    must still resolve to the Vedic day that began at yesterday's sunrise —
+    not silently serve the wrong day's panchanga."""
+
+    def test_carries_engine_version_and_validity_window(self, guidance):
+        assert guidance["engine_version"] == "daily-guidance-1.0"
+        assert guidance["day_definition"] == "sunrise_to_next_sunrise"
+        valid_from = datetime.fromisoformat(guidance["valid_from"])
+        valid_until = datetime.fromisoformat(guidance["valid_until"])
+        as_of = datetime(2026, 7, 21, 10, 0, tzinfo=ZoneInfo("Asia/Kolkata"))
+        assert valid_from <= as_of < valid_until
+
+    def test_pre_sunrise_request_resolves_to_the_previous_vedic_day(self):
+        chart = VedicChart("Daily", 1990, 1, 1, 12, 0, **DELHI)
+        # Delhi sunrise in late July is well after 4am IST — 3am is safely
+        # before it, without depending on the exact minute.
+        pre_sunrise = datetime(2026, 7, 21, 3, 0, tzinfo=ZoneInfo("Asia/Kolkata"))
+        prev_afternoon = datetime(2026, 7, 20, 15, 0, tzinfo=ZoneInfo("Asia/Kolkata"))
+        post_sunrise_same_civil_day = datetime(2026, 7, 21, 10, 0, tzinfo=ZoneInfo("Asia/Kolkata"))
+
+        before_dawn = daily_guidance(chart, relation="self", as_of=pre_sunrise)
+        yesterday = daily_guidance(chart, relation="self", as_of=prev_afternoon)
+        today = daily_guidance(chart, relation="self", as_of=post_sunrise_same_civil_day)
+
+        # 3am on the 21st is still yesterday's Vedic day — same civil date,
+        # vara, and panchanga elements as the confirmed-yesterday-afternoon
+        # call, not the 21st's civil date.
+        assert before_dawn["date"] == yesterday["date"] == "2026-07-20"
+        assert before_dawn["vara"] == yesterday["vara"]
+        assert before_dawn["star_of_day"] == yesterday["star_of_day"]
+        # ...and genuinely different from what a post-sunrise request on the
+        # 21st itself gets — this is not a fluke of two days looking alike.
+        assert today["date"] == "2026-07-21"
+        assert before_dawn["date"] != today["date"]
+
+        # The validity window for the pre-sunrise call brackets the actual
+        # request instant and ends at (approximately) the sunrise that
+        # promotes the reader into the new Vedic day.
+        valid_from = datetime.fromisoformat(before_dawn["valid_from"])
+        valid_until = datetime.fromisoformat(before_dawn["valid_until"])
+        assert valid_from <= pre_sunrise < valid_until
+        assert valid_until.date() == pre_sunrise.date()  # sunrise, same civil day
+
+    def test_do_avoid_phrasing_is_stable_across_the_same_vedic_day(self):
+        # A pre-sunrise and a post-sunrise check of the SAME Vedic day must
+        # not get different do/avoid phrasing just because of the hour —
+        # the phrase-rotation seed is keyed on the Vedic date, not as_of.
+        chart = VedicChart("Daily", 1990, 1, 1, 12, 0, **DELHI)
+        pre_sunrise = datetime(2026, 7, 21, 3, 0, tzinfo=ZoneInfo("Asia/Kolkata"))
+        later_same_vedic_day = datetime(2026, 7, 20, 20, 0, tzinfo=ZoneInfo("Asia/Kolkata"))
+
+        before_dawn = daily_guidance(chart, relation="self", as_of=pre_sunrise)
+        evening_before = daily_guidance(chart, relation="self", as_of=later_same_vedic_day)
+
+        assert before_dawn["date"] == evening_before["date"]
+        assert before_dawn["do_today"] == evening_before["do_today"]
+        assert before_dawn["avoid_today"] == evening_before["avoid_today"]
+
+
 class TestColorAndNumber:
     def test_color_from_weekday_lord(self, guidance):
         c = guidance["color"]

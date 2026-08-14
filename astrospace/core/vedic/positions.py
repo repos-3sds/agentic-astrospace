@@ -181,6 +181,25 @@ def day_span(year: int, month: int, day: int, lat: float, lng: float,
     return rise, sets, next_rise
 
 
+def vedic_day_bounds(jd_ut: float, lat: float, lng: float) -> tuple[float, float] | None:
+    """(sunrise, next_sunrise) UT julian days bounding the Vedic day that
+    contains jd_ut: the last sunrise at or before jd_ut, through the
+    following sunrise. None if circumpolar. Mirrors VedicChart's own
+    birth-instant version (chart.py) but for an arbitrary moment, so a
+    pre-sunrise request resolves to the still-current previous Vedic day
+    rather than the civil calendar date."""
+    rise = sunrise_jd(jd_ut - 1.5, lat, lng)
+    if rise is None or rise > jd_ut:
+        return None
+    while True:
+        nxt = sunrise_jd(rise + 0.01, lat, lng)
+        if nxt is None:
+            return None
+        if nxt > jd_ut:
+            return rise, nxt
+        rise = nxt
+
+
 def local_sunrise(moment: BirthMoment) -> datetime | None:
     """Sunrise (local tz) on the birth's local calendar date."""
     midnight_local = moment.dt_local.replace(hour=0, minute=0, second=0, microsecond=0)
