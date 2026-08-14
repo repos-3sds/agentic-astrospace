@@ -1,7 +1,9 @@
 import {
   ApplicationConfig,
+  inject,
   importProvidersFrom,
   provideBrowserGlobalErrorListeners,
+  provideAppInitializer,
   provideZoneChangeDetection,
 } from '@angular/core';
 import { provideRouter, RouteReuseStrategy } from '@angular/router';
@@ -93,10 +95,12 @@ import {
 
 import { routes } from './app.routes';
 import { CelestialPreset } from './theme';
+import { ResourceCacheService } from './core/resource-cache.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    provideAppInitializer(() => inject(ResourceCacheService).initialize()),
     provideZoneChangeDetection({ eventCoalescing: true }),
     { provide: RouteReuseStrategy, useClass: MobileRouteReuseStrategy },
     provideRouter(routes),

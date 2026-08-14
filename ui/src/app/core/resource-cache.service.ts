@@ -1,28 +1,65 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 
 import {
   CachedResource,
   ResourceCacheEnvelope,
   ResourceCacheIdentity,
+  ResourceCacheMetadata,
   ResourceCachePolicy,
+  ResourceCacheVersionExpectation,
   resourceCacheKey,
   resourceFreshness,
 } from './resource-cache';
-
-const STORAGE_PREFIX = 'siddha.resource-cache:v1:';
+import { RESOURCE_CACHE_PERSISTENCE } from './resource-cache.persistence';
 
 @Injectable({ providedIn: 'root' })
 export class ResourceCacheService {
+  private readonly persistence = inject(RESOURCE_CACHE_PERSISTENCE);
   private readonly memory = new Map<string, ResourceCacheEnvelope<unknown>>();
+  private persistenceQueue = Promise.resolve();
+  private initialized = false;
+  readonly durability = signal<'initializing' | 'ready' | 'unavailable'>('initializing');
 
-  get<T>(identity: ResourceCacheIdentity, now = Date.now()): CachedResource<T> | null {
-    const key = resourceCacheKey(identity);
-    let envelope = this.memory.get(key) as ResourceCacheEnvelope<T> | undefined;
-    if (!envelope) {
-      envelope = this.read<T>(key);
-      if (envelope) this.memory.set(key, envelope);
+  async initialize(): Promise<void> {
+    if (this.initialized) return;
+    try {
+      const envelopes = await this.persistence.initialize();
+      const now = Date.now();
+      for (const envelope of envelopes) {
+        if (!this.validEnvelope(envelope)) continue;
+        const key = resourceCacheKey(envelope.identity);
+        if (resourceFreshness(envelope, now) === 'expired') {
+          this.enqueue(() => this.persistence.deleteKey(key));
+          continue;
+        }
+        this.memory.set(key, envelope);
+      }
+      this.initialized = true;
+      this.durability.set('ready');
+    } catch {
+      // Native storage fails closed: memory remains usable for this process,
+      // but private payloads are never redirected into WebView storage.
+      this.initialized = true;
+      this.durability.set('unavailable');
     }
+  }
+
+  async flush(): Promise<void> {
+    await this.persistenceQueue;
+  }
+
+  get<T>(
+    identity: ResourceCacheIdentity,
+    now = Date.now(),
+    expected: ResourceCacheVersionExpectation = {},
+  ): CachedResource<T> | null {
+    const key = resourceCacheKey(identity);
+    const envelope = this.memory.get(key) as ResourceCacheEnvelope<T> | undefined;
     if (!envelope || resourceCacheKey(envelope.identity) !== key) return null;
+    if (!this.matchesVersion(envelope, expected)) {
+      this.deleteKey(key);
+      return null;
+    }
     const freshness = resourceFreshness(envelope, now);
     if (freshness === 'expired') {
       this.deleteKey(key);
@@ -42,39 +79,49 @@ export class ResourceCacheService {
     policy: ResourceCachePolicy,
     now = Date.now(),
     source: ResourceCacheEnvelope<T>['source'] = 'network',
+    metadata: ResourceCacheMetadata = {},
   ): CachedResource<T> {
     if (policy.staleAfterMs < 0 || policy.expireAfterMs <= policy.staleAfterMs) {
       throw new Error('Cache policy requires expiry after the stale boundary');
     }
     const key = resourceCacheKey(identity);
+    const authoritativeExpiry = metadata.validUntil ? Date.parse(metadata.validUntil) : Number.NaN;
+    const expiresAt = Number.isFinite(authoritativeExpiry)
+      ? Math.min(now + policy.expireAfterMs, authoritativeExpiry)
+      : now + policy.expireAfterMs;
+    if (expiresAt <= now) {
+      this.deleteKey(key);
+      return { data: payload, freshness: 'expired', storedAt: now, expiresAt };
+    }
+    const staleAt = Math.max(now, Math.min(now + policy.staleAfterMs, expiresAt - 1));
     const envelope: ResourceCacheEnvelope<T> = {
       identity,
       payload,
       storedAt: now,
-      staleAt: now + policy.staleAfterMs,
-      expiresAt: now + policy.expireAfterMs,
+      staleAt,
+      expiresAt,
+      engineVersion: metadata.engineVersion || undefined,
+      datasetVersion: metadata.datasetVersion || undefined,
       source,
     };
     this.memory.set(key, envelope);
-    try {
-      localStorage.setItem(`${STORAGE_PREFIX}${key}`, JSON.stringify(envelope));
-    } catch {
-      // A full/unavailable WebView store must not discard the usable memory copy.
-    }
+    this.enqueue(() => this.persistence.put(key, envelope));
     return { data: payload, freshness: 'fresh', storedAt: now, expiresAt: envelope.expiresAt };
   }
 
   deleteProfile(userId: string, profileId: string): void {
-    this.deleteMatching((identity) => identity.userId === userId && identity.profileId === profileId);
+    this.deleteMemoryMatching((identity) => identity.userId === userId && identity.profileId === profileId);
+    this.enqueue(() => this.persistence.deleteProfile(userId, profileId));
   }
 
   clearUser(userId: string): void {
-    this.deleteMatching((identity) => identity.userId === userId);
+    this.deleteMemoryMatching((identity) => identity.userId === userId);
+    this.enqueue(() => this.persistence.clearUser(userId));
   }
 
   clearAll(): void {
     this.memory.clear();
-    this.deleteStoredWhere(() => true);
+    this.enqueue(() => this.persistence.clearAll());
   }
 
   discardLegacyUnscopedCaches(): void {
@@ -88,23 +135,6 @@ export class ResourceCacheService {
     }
   }
 
-  private read<T>(key: string): ResourceCacheEnvelope<T> | undefined {
-    try {
-      const raw = localStorage.getItem(`${STORAGE_PREFIX}${key}`);
-      if (!raw) return undefined;
-      const envelope = JSON.parse(raw) as ResourceCacheEnvelope<T>;
-      if (!this.validEnvelope(envelope)) throw new Error('Invalid cache envelope');
-      return envelope;
-    } catch {
-      try {
-        localStorage.removeItem(`${STORAGE_PREFIX}${key}`);
-      } catch {
-        // Storage may be unavailable; the malformed value remains unreachable.
-      }
-      return undefined;
-    }
-  }
-
   private validEnvelope(value: ResourceCacheEnvelope<unknown>): boolean {
     return !!value
       && typeof value.identity === 'object'
@@ -113,38 +143,33 @@ export class ResourceCacheService {
       && typeof value.expiresAt === 'number'
       && value.staleAt >= value.storedAt
       && value.expiresAt > value.staleAt
+      && (value.engineVersion === undefined || typeof value.engineVersion === 'string')
+      && (value.datasetVersion === undefined || typeof value.datasetVersion === 'string')
       && Object.prototype.hasOwnProperty.call(value, 'payload');
   }
 
-  private deleteMatching(predicate: (identity: ResourceCacheIdentity) => boolean): void {
-    for (const [key, envelope] of this.memory) {
-      if (predicate(envelope.identity)) this.memory.delete(key);
-    }
-    this.deleteStoredWhere(predicate);
+  private matchesVersion(
+    envelope: ResourceCacheEnvelope<unknown>,
+    expected: ResourceCacheVersionExpectation,
+  ): boolean {
+    // Missing metadata is tolerated for one rolling-deploy cycle. A present,
+    // incompatible version is never surfaced as current.
+    return (!expected.engineVersion || !envelope.engineVersion || envelope.engineVersion === expected.engineVersion)
+      && (!expected.datasetVersion || !envelope.datasetVersion || envelope.datasetVersion === expected.datasetVersion);
   }
 
-  private deleteStoredWhere(predicate: (identity: ResourceCacheIdentity) => boolean): void {
-    try {
-      for (const storageKey of Object.keys(localStorage)) {
-        if (!storageKey.startsWith(STORAGE_PREFIX)) continue;
-        try {
-          const envelope = JSON.parse(localStorage.getItem(storageKey) ?? '') as ResourceCacheEnvelope<unknown>;
-          if (this.validEnvelope(envelope) && predicate(envelope.identity)) localStorage.removeItem(storageKey);
-        } catch {
-          localStorage.removeItem(storageKey);
-        }
-      }
-    } catch {
-      // Memory cleanup still provides isolation for the running process.
+  private deleteMemoryMatching(predicate: (identity: ResourceCacheIdentity) => boolean): void {
+    for (const [key, envelope] of this.memory) {
+      if (predicate(envelope.identity)) this.memory.delete(key);
     }
   }
 
   private deleteKey(key: string): void {
     this.memory.delete(key);
-    try {
-      localStorage.removeItem(`${STORAGE_PREFIX}${key}`);
-    } catch {
-      // Ignore unavailable storage; memory no longer exposes the value.
-    }
+    this.enqueue(() => this.persistence.deleteKey(key));
+  }
+
+  private enqueue(operation: () => Promise<void>): void {
+    this.persistenceQueue = this.persistenceQueue.then(operation, operation).catch(() => undefined);
   }
 }

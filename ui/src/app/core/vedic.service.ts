@@ -31,6 +31,10 @@ import {
 } from './resource-cache';
 import { ResourceCacheService } from './resource-cache.service';
 
+const DAILY_GUIDANCE_ENGINE_VERSION = 'daily-guidance-1.0';
+const CALENDAR_ENGINE_VERSION = 'calendar-intelligence-1.0';
+const CALENDAR_DATASET_VERSION = 'astrospace-calendar-2026.08.14';
+
 @Injectable({ providedIn: 'root' })
 export class VedicService {
   private api = inject(ApiService);
@@ -179,7 +183,11 @@ export class VedicService {
       : `volatile:${kundliId}:${this.todayKey()}:${params.toString()}`;
     let cached = this.dailyCache.get(cacheKey);
     if (!cached) {
-      const stored = identity ? this.resourceCache.get<DailyGuidancePayload>(identity)?.data ?? null : null;
+      const stored = identity
+        ? this.resourceCache.get<DailyGuidancePayload>(identity, Date.now(), {
+            engineVersion: DAILY_GUIDANCE_ENGINE_VERSION,
+          })?.data ?? null
+        : null;
       if (stored) {
         this.dailyValues.set(cacheKey, stored);
         cached = Promise.resolve(stored);
@@ -192,7 +200,7 @@ export class VedicService {
         const currentIdentity = this.dailyIdentity(kundliId, this.dailyParams());
         if (this.canCommitResource(requestEpoch, identity, currentIdentity)) {
           this.dailyValues.set(cacheKey, value);
-          if (identity) this.resourceCache.set(identity, value, TODAY_CACHE_POLICY);
+          if (identity) this.cacheDailyGuidance(identity, value);
         }
         return value;
       }).catch((e) => {
@@ -217,7 +225,9 @@ export class VedicService {
       : `volatile:${kundliId}:${this.todayKey()}:${params.toString()}`;
     const memory = this.dailyValues.get(cacheKey);
     if (identity) {
-      const stored = this.resourceCache.get<DailyGuidancePayload>(identity);
+      const stored = this.resourceCache.get<DailyGuidancePayload>(identity, Date.now(), {
+        engineVersion: DAILY_GUIDANCE_ENGINE_VERSION,
+      });
       if (stored) {
         this.dailyValues.set(cacheKey, stored.data);
         return stored;
@@ -249,7 +259,7 @@ export class VedicService {
       const currentIdentity = this.dailyIdentity(kundliId, this.dailyParams());
       if (this.canCommitResource(requestEpoch, identity, currentIdentity)) {
         this.dailyValues.set(cacheKey, value);
-        if (identity) this.resourceCache.set(identity, value, TODAY_CACHE_POLICY);
+        if (identity) this.cacheDailyGuidance(identity, value);
       }
       return value;
     }).catch((error) => {
@@ -298,7 +308,12 @@ export class VedicService {
     const { cacheKey, params, identity } = this.calendarParams(kundliId, days, place, options);
     let cached = this.calendarCache.get(cacheKey);
     if (!cached) {
-      const stored = identity ? this.resourceCache.get<CalendarIntelligencePayload>(identity)?.data ?? null : null;
+      const stored = identity
+        ? this.resourceCache.get<CalendarIntelligencePayload>(identity, Date.now(), {
+            engineVersion: CALENDAR_ENGINE_VERSION,
+            datasetVersion: CALENDAR_DATASET_VERSION,
+          })?.data ?? null
+        : null;
       if (stored) {
         this.calendarValues.set(cacheKey, stored);
         cached = Promise.resolve(stored);
@@ -313,7 +328,7 @@ export class VedicService {
         const currentIdentity = this.calendarParams(kundliId, days, place, options).identity;
         if (this.canCommitResource(requestEpoch, identity, currentIdentity)) {
           this.calendarValues.set(cacheKey, value);
-          if (identity) this.resourceCache.set(identity, value, CALENDAR_CACHE_POLICY);
+          if (identity) this.cacheCalendar(identity, value);
         }
         return value;
       }).catch((e) => {
@@ -340,7 +355,7 @@ export class VedicService {
       const currentIdentity = this.calendarParams(kundliId, days, place, options).identity;
       if (this.canCommitResource(requestEpoch, identity, currentIdentity)) {
         this.calendarValues.set(cacheKey, value);
-        if (identity) this.resourceCache.set(identity, value, CALENDAR_CACHE_POLICY);
+        if (identity) this.cacheCalendar(identity, value);
       }
       return value;
     }).catch((error) => {
@@ -369,7 +384,10 @@ export class VedicService {
     const { cacheKey, identity } = this.calendarParams(kundliId, days, place, options);
     const memory = this.calendarValues.get(cacheKey);
     if (identity) {
-      const stored = this.resourceCache.get<CalendarIntelligencePayload>(identity);
+      const stored = this.resourceCache.get<CalendarIntelligencePayload>(identity, Date.now(), {
+        engineVersion: CALENDAR_ENGINE_VERSION,
+        datasetVersion: CALENDAR_DATASET_VERSION,
+      });
       if (stored) {
         this.calendarValues.set(cacheKey, stored.data);
         return stored;
@@ -607,6 +625,20 @@ export class VedicService {
     });
   }
 
+  private cacheDailyGuidance(identity: ResourceCacheIdentity, value: DailyGuidancePayload): void {
+    this.resourceCache.set(identity, value, TODAY_CACHE_POLICY, Date.now(), 'network', {
+      engineVersion: value.engine_version,
+      validUntil: value.valid_until,
+    });
+  }
+
+  private cacheCalendar(identity: ResourceCacheIdentity, value: CalendarIntelligencePayload): void {
+    this.resourceCache.set(identity, value, CALENDAR_CACHE_POLICY, Date.now(), 'network', {
+      engineVersion: value.engine_version,
+      datasetVersion: value.dataset_version,
+    });
+  }
+
   private scopedIdentity(
     profileId: string,
     resource: string,
@@ -618,7 +650,7 @@ export class VedicService {
       userId: scope.userId,
       profileId,
       resource,
-      schemaVersion: 1,
+      schemaVersion: 2,
       profileRevision: scope.revision,
       ayanamsha: this.prefs.ayanamsha(),
       nodeType: this.prefs.nodeType(),

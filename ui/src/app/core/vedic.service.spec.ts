@@ -88,6 +88,24 @@ describe('VedicService location-sensitive caches', () => {
     expect(api.get).toHaveBeenCalledTimes(2);
   });
 
+  it('expires Today at the backend-provided next-sunrise boundary', async () => {
+    const clock = spyOn(Date, 'now').and.returnValue(1_000);
+    api.get.and.resolveTo({
+      date: '2026-08-14',
+      engine_version: 'daily-guidance-1.0',
+      valid_from: new Date(900).toISOString(),
+      valid_until: new Date(1_180).toISOString(),
+      day_definition: 'sunrise_to_next_sunrise',
+    } as any);
+
+    await service.dailyGuidance('profile-1');
+    clock.and.returnValue(1_179);
+    expect(service.cachedDailyGuidanceEntry('profile-1')).not.toBeNull();
+
+    clock.and.returnValue(1_180);
+    expect(service.cachedDailyGuidanceEntry('profile-1')).toBeNull();
+  });
+
   it('isolates the same profile id when its owning account changes', async () => {
     await service.dailyGuidance('profile-1');
     service.configureProfile({ id: 'profile-1', user_id: 'user-2', updated_at: '2026-08-11T00:00:00Z' });
