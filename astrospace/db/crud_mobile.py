@@ -138,7 +138,7 @@ def add_ask_message(db: Session, thread_id: str, role: str, content: str, **fiel
         thread.message_count = (thread.message_count or 0) + 1
         # First user message doubles as the thread title.
         if not thread.title and role == "user":
-            thread.title = content[:80]
+            thread.title = f"{content[:79].rstrip()}…" if len(content) > 80 else content
 
     db.commit()
     db.refresh(message)

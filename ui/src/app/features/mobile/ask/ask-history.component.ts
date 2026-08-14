@@ -140,6 +140,11 @@ export class AskHistoryComponent {
     }).format(new Date(value));
   }
 
+  protected title(thread: MobileAskThread): string {
+    const title = thread.title.trim();
+    return title.length >= 80 && !/[.…]$/.test(title) ? `${title}…` : title;
+  }
+
   protected beginSwipe(event: TouchEvent): void {
     this.touchStartX = event.touches[0]?.clientX ?? 0;
   }

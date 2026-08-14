@@ -73,4 +73,10 @@ describe('AskHistoryComponent active and archived conversations', () => {
     expect(api.delete).toHaveBeenCalledOnceWith('thread-1');
     expect((component as any).threads()).toEqual([]);
   });
+
+  it('marks legacy 80-character thread titles as truncated', () => {
+    const legacy = { ...thread, title: 'x'.repeat(80) };
+    expect((component as any).title(legacy)).toBe(`${'x'.repeat(80)}…`);
+    expect((component as any).title(thread)).toBe('Career timing');
+  });
 });

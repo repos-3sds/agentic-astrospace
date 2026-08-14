@@ -54,7 +54,7 @@
               <span class="askhist-badge">{{ view() === 'archived' ? 'ARCHIVED' : (first ? 'CURRENT' : 'ACTIVE') }}</span>
             </div>
             <div class="askhist-question">
-              <h2>{{ thread.title }}</h2>
+              <h2>{{ title(thread) }}</h2>
               <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
             </div>
           </article>

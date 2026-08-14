@@ -197,6 +197,13 @@ class TestThreadPersistence:
         assert body["thread"]["title"] == "What about marriage timing?"
         assert body["thread"]["message_count"] == 2
 
+    def test_long_first_question_gets_an_explicit_title_ellipsis(self, env):
+        db = next(app.dependency_overrides[get_db]())
+        thread = cm.create_ask_thread(db, ME, env["kundli"])
+        cm.add_ask_message(db, thread.id, "user", "x" * 100)
+        assert cm.get_ask_thread(db, thread.id, ME).title == f"{'x' * 79}…"
+        db.close()
+
     def test_continuing_a_thread_appends(self, client, env):
         """The second question ("Follow up") deliberately carries no domain
         keyword of its own — it must inherit the thread's established
