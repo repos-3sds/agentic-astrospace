@@ -6,6 +6,7 @@ import { InputTextModule } from 'primeng/inputtext';
 
 import { AskService, TOOL_LABELS } from '../../../core/ask.service';
 import { KundliStore } from '../../../core/kundli.store';
+import { AskMessage } from '../../../core/models';
 import { MarkdownPipe } from '../../../shared/markdown.pipe';
 import { SectionCardComponent } from '../../../shared/section-card/section-card.component';
 
@@ -48,6 +49,16 @@ export class AskTabComponent implements AfterViewChecked {
 
   protected toolLabel(tool: string): string {
     return TOOL_LABELS[tool] ?? tool;
+  }
+
+  /**
+   * True for a boundary/notice reply (refer_out, clarification_needed,
+   * domain_not_ready) that must never render as an ordinary answered bubble.
+   * Messages predating the `status` field (or `status: 'answered'`) fall
+   * through to the normal presentation.
+   */
+  protected isBoundary(m: AskMessage): boolean {
+    return !!m.status && m.status !== 'answered';
   }
 
   protected send(question?: string): void {

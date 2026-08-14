@@ -3,6 +3,9 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'app.astrospace.mobile',
   appName: 'Siddha',
+  // Native bridge arguments can contain private chart/cache payloads. Keep
+  // Capacitor's method-data logging disabled in debug and release builds.
+  loggingBehavior: 'none',
 
   // Angular's production build output. Kept in step with angular.json's
   // outputPath — `npx cap sync` copies from here into the native projects,
@@ -21,6 +24,12 @@ const config: CapacitorConfig = {
   ios: { contentInset: 'never' },
 
   plugins: {
+    CapacitorSQLite: {
+      iosDatabaseLocation: 'Library/CapacitorDatabase',
+      iosIsEncryption: true,
+      iosKeychainPrefix: 'app.astrospace.mobile',
+      androidIsEncryption: true,
+    },
     SplashScreen: {
       // Matches the Siddha animated intro backdrop so the native launch bridge
       // does not flash a different color before Angular paints.

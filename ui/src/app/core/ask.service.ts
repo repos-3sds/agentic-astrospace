@@ -43,7 +43,13 @@ export class AskService {
       });
       history.update((msgs) => [
         ...msgs,
-        { role: 'assistant', content: res.answer, tools: res.tools_used },
+        {
+          role: 'assistant',
+          content: res.answer,
+          tools: res.tools_used,
+          status: res.status,
+          refer_out_kind: res.refer_out_kind,
+        },
       ]);
     } catch (e) {
       history.update((msgs) => [

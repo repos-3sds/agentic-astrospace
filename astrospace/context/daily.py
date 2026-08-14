@@ -22,7 +22,7 @@ from ..core.vedic.constants import PLANET_COLORS, PLANET_NUMBER
 from ..core.vedic.favourable import digital_root, favourable_points
 from ..core.vedic.nakshatra import nakshatra_of
 from ..core.vedic.panchanga_day import daily_panchanga, personal_panchanga
-from ..core.vedic.positions import sign_index
+from ..core.vedic.positions import jd_to_local, sign_index, vedic_day_bounds
 from ..core.vedic.gocharam import gochara_rules
 from ..core.vedic.gocharam.strength import (
     apply_ashtakavarga_context,
@@ -31,6 +31,13 @@ from ..core.vedic.gocharam.strength import (
 from ..core.vedic.transits import _jd_from_dt
 from ..core.vedic.positions import sidereal_positions
 from .kb import get_knowledge_base
+
+# Bumped when the daily-guidance assembly logic (scoring, verdict thresholds,
+# do/avoid selection) changes in a way that would make a previously cached
+# response wrong — independent of any profile's own birth-data revision. See
+# docs/reliable_native_core_architecture_2026-08-14.md's cache validity
+# contract; consumed by /api/v1/context/{kundli_id}/daily.
+DAILY_GUIDANCE_ENGINE_VERSION = "daily-guidance-1.0"
 
 # Plain-language meaning of each tara (the star of the day counted from the
 # birth star). {you}/{poss} are filled per subject. BPHS/Muhurta convention.
@@ -81,8 +88,8 @@ def _day_color(vara_lord: str, supportive_planet: str | None,
     return out
 
 
-def _day_number(as_of: datetime, vara_lord: str, favourable: dict) -> dict:
-    value = digital_root(as_of.year + as_of.month + as_of.day)
+def _day_number(vedic_date, vara_lord: str, favourable: dict) -> dict:
+    value = digital_root(vedic_date.year + vedic_date.month + vedic_date.day)
     ruling_number = PLANET_NUMBER[vara_lord]
     good = favourable.get("good_numbers", [])
     evil = favourable.get("evil_numbers", [])
@@ -590,8 +597,24 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
     place_lat = chart.moment.lat if lat is None else lat
     place_lng = chart.moment.lng if lng is None else lng
 
+    # The Vedic day runs sunrise to next sunrise, not civil midnight to
+    # midnight. A request made before today's sunrise still belongs to the
+    # Vedic day that began at yesterday's sunrise — using as_of's own civil
+    # date here would silently serve tomorrow's-early-hours panchanga as if
+    # it were already in force. vedic_day_bounds is None only when sunrise
+    # is undefined at this latitude (circumpolar); daily_panchanga below
+    # raises its own ValueError for that case, so falling back to as_of's
+    # civil date here changes nothing for that already-handled failure mode.
+    vedic_bounds = vedic_day_bounds(_jd_from_dt(as_of), place_lat, place_lng)
+    if vedic_bounds is not None:
+        vedic_rise, vedic_next_rise = vedic_bounds
+        vedic_date = jd_to_local(vedic_rise, tz).date()
+    else:
+        vedic_rise = vedic_next_rise = None
+        vedic_date = as_of.date()
+
     day_payload = daily_panchanga(
-        as_of.year, as_of.month, as_of.day,
+        vedic_date.year, vedic_date.month, vedic_date.day,
         place_city, place_nation, place_lat, place_lng, tz, tz,
     )
 
@@ -621,14 +644,25 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
 
     verdict = _verdict(chart, relation or "", day_payload, personal, ctx)
     # jd_ut is a per-birth-instant float — a real per-person fingerprint, not
-    # a display name two profiles might share ("My chart" is common).
-    seed_base = f"{chart.moment.jd_ut}-{as_of.date().isoformat()}"
+    # a display name two profiles might share ("My chart" is common). Seeded
+    # on the Vedic date so a pre-sunrise and a post-sunrise check of the same
+    # Vedic day get identical do/avoid phrasing, not a coin-flip on the hour.
+    seed_base = f"{chart.moment.jd_ut}-{vedic_date.isoformat()}"
     do_today, avoid_today = _do_and_avoid(personal, ctx, words, seed_base)
     reading = _reading(chart, relation or "", day_payload, personal, ctx,
                        verdict, do_today, avoid_today)
 
     return {
         "system": "AstroSpace Daily Guidance",
+        "engine_version": DAILY_GUIDANCE_ENGINE_VERSION,
+        # Cache-validity contract (docs/reliable_native_core_architecture_
+        # 2026-08-14.md): the authoritative Vedic-day interval this response
+        # is valid for, sunrise to next sunrise. A client should treat this
+        # as the real expiry, falling back to its own defensive TTL only
+        # when sunrise is undefined here (circumpolar place).
+        "valid_from": jd_to_local(vedic_rise, tz).isoformat() if vedic_rise else None,
+        "valid_until": jd_to_local(vedic_next_rise, tz).isoformat() if vedic_next_rise else None,
+        "day_definition": "sunrise_to_next_sunrise",
         "as_of": as_of.isoformat(),
         "date": day_payload["date"],
         "subject": chart.name,
@@ -637,7 +671,7 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
         "verdict": verdict,
         "reading": reading,
         "color": _day_color(vara_lord, supportive_planet, challenging_planet),
-        "number": _day_number(as_of, vara_lord, favourable),
+        "number": _day_number(vedic_date, vara_lord, favourable),
         "tarabala": personal["tarabala"],
         "chandrabala": personal["chandrabala"],
         "star_of_day": {

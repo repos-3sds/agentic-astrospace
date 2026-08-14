@@ -93,6 +93,32 @@
     border: 1px solid var(--as-border);
     border-radius: 14px 14px 14px 4px;
   }
+
+  /* clarification_needed / domain_not_ready — a boundary notice, not a reading */
+  &.assistant.boundary {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    color: var(--as-warn);
+    background: var(--as-warn-soft);
+    border: 1px solid color-mix(in srgb, var(--as-warn) 30%, transparent);
+
+    lucide-icon {
+      flex: none;
+      margin-top: 2px;
+    }
+
+    .as-prose {
+      color: var(--as-text);
+    }
+  }
+
+  /* refer_out — a refusal, stronger treatment than a plain clarification */
+  &.assistant.boundary.refer-out {
+    color: var(--as-bad);
+    background: var(--as-bad-soft);
+    border-color: color-mix(in srgb, var(--as-bad) 30%, transparent);
+  }
 }
 
 .tools {

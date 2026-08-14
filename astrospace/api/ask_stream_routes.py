@@ -28,7 +28,10 @@ from ..agents.schema import StructuredReading
 from ..agents.validation_agent import ValidationProbeDraft
 from ..context.taxonomy import TaxonomyError
 from ..db import crud, crud_mobile as cm, get_db
-from .ask_routes import MAX_HISTORY, AskRequest, _history_from_thread, _owned_thread
+from .ask_routes import (
+    MAX_HISTORY, AskRequest, _evidence_from_reading, _history_from_thread,
+    _owned_thread, _thread_established_domain,
+)
 from .auth import CurrentUser
 from .context_routes import _chart_from_kundli
 
@@ -60,21 +63,6 @@ def _safe_stream(events: Iterator[dict]) -> Iterator[str]:
             "message": "Something went wrong while generating this answer. Please try again.",
             "retryable": True,
         })
-
-
-def _thread_established_domain(db: Session, thread_id: str) -> Optional[str]:
-    """The domain the thread most recently actually answered in — the last
-    assistant turn with a non-null `domain` field, skipping over
-    clarification turns (domain=None) and domain-not-ready turns (domain
-    is the *unconfigured* name, which `AskOrchestrator.route()` will
-    reject anyway since it only honours a `thread_domain` that's actually
-    in the registry). None for a brand-new thread or one that's only ever
-    hit clarification/not-ready so far — nothing to continue."""
-    messages = cm.get_thread_messages(db, thread_id)
-    for message in reversed(messages):
-        if message.role == "assistant" and message.domain:
-            return message.domain
-    return None
 
 
 def _probe_row(probe) -> dict:
@@ -122,20 +110,6 @@ def _validation_store(db: Session, user_id: str, kundli_id: str,
         return probe.id
 
     return ValidationStore(probes=probes, commit=commit)
-
-
-def _evidence_from_reading(reading: StructuredReading) -> dict:
-    """Namespaced, versioned bridge shape for `AskMessage.evidence` — this is
-    explicitly a temporary storage decision, not the final one. Wrapping it
-    (rather than dumping the raw structured object) makes that obvious to
-    the next person who reads a row, and keeps `evidence`'s meaning
-    comparable across old rows (`{"tools_used": [...]}` etc., from before
-    this build) and new ones."""
-    return {
-        "schema_version": "ask_structured_v1",
-        "structured_reading": reading.model_dump(),
-        "references": [item.source for item in reading.technical_basis],
-    }
 
 
 @router.post("/{kundli_id}/stream")
