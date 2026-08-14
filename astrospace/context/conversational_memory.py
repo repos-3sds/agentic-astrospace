@@ -49,17 +49,23 @@ _HYPOTHETICAL_RE = re.compile(
     r"\bassuming\b|\bin case\b|\blet'?s say\b|\bpretend(?:ing)?\b",
     re.I,
 )
-# Reported/quoted speech — "My mother said 'I am retired now.'" is the
-# mother's own statement inside the reader's message, not the reader's own
-# assertion; `_THIRD_PERSON` alone misses this because the third-person
-# subject isn't directly followed by is/am/are/has/have/works, a reporting
-# verb sits between them instead. Straight and curly double quotes catch
-# quoted material generally; single quotes are deliberately excluded here
-# since they collide with contractions ("I'm") too often to use as a
-# reliable signal.
+# Reported/quoted speech and reported BELIEF — "My mother said 'I am
+# retired now.'" is the mother's own statement, not the reader's; "They
+# believe I am retired." / "According to my mother, I am retired." /
+# "My friend thinks I am married." / "My wife insists I am retired." are
+# all someone ELSE's claim ABOUT the reader, not the reader's own
+# assertion, even though grammatically "I am retired" still appears as
+# the embedded clause. `_THIRD_PERSON` alone misses all of these because
+# it only matches a third-person subject directly followed by
+# is/am/are/has/have/works — a reporting or belief verb, or an
+# "according to" attribution, sits between them instead. Straight and
+# curly double quotes catch quoted material generally; single quotes are
+# deliberately excluded since they collide with contractions ("I'm") too
+# often to use as a reliable signal.
 _REPORTED_SPEECH_RE = re.compile(
-    r'["“”]|\b(?:said|says?|told|tells?|mention(?:ed|s)?|claim(?:ed|s)?|'
-    r"stat(?:ed|es)?|wrote|writes?|texted|messaged)\b",
+    r'["“”]|\baccording to\b|\b(?:said|says?|told|tells?|mention(?:ed|s)?|'
+    r"claim(?:ed|s)?|stat(?:ed|es)?|wrote|writes?|texted|messaged|"
+    r"believe[sd]?|think[s]?|thought|insist(?:s|ed)?|heard)\b",
     re.I,
 )
 

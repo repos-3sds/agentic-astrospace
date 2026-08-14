@@ -58,6 +58,22 @@ def test_rejects_reported_and_quoted_speech():
     assert extract_memory_candidates("The astrologer said I am retired, is that accurate?") == []
 
 
+def test_rejects_reported_belief_and_secondhand_claims_about_the_reader():
+    """Reproduced in PR #66 re-review: these are someone ELSE's belief or
+    claim about the reader, not the reader's own assertion, even though
+    "I am retired"/"I am married" still appears grammatically as the
+    embedded clause. Neither `_THIRD_PERSON` (only matches a third-person
+    subject directly followed by is/am/are/has/have/works — a belief verb
+    sits between them here) nor the original reporting-verb list (said/
+    told/etc. — believe/think/insist/according to weren't covered) caught
+    these before this fix."""
+    assert extract_memory_candidates("They believe I am retired.") == []
+    assert extract_memory_candidates("According to my mother, I am retired.") == []
+    assert extract_memory_candidates("My friend thinks I am married.") == []
+    assert extract_memory_candidates("My wife insists I am retired.") == []
+    assert extract_memory_candidates("I heard that I am considered retired at work.") == []
+
+
 def test_sensitive_relationship_and_children_always_require_confirmation():
     marriage = _one("I am married.")
     children = _one("I have two children.")
