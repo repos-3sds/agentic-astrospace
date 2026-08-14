@@ -295,6 +295,9 @@ GET    /api/v1/profiles/{profile_id}/context/export
 Writes require an idempotency key and `expected_revision`. A stale revision
 returns `409` with the current projection; clients do not last-write-win over
 another device. All reads and writes re-check account ownership server-side.
+Candidate confirmation uses the same idempotency and revision contract; a
+double-tap on **Save to this profile** cannot activate two facts or advance the
+ledger twice.
 Optimistic ledger revisions and `409` conflict recovery are new infrastructure
 for this repository, not an extension of an existing profile-write contract.
 They require schema, API, concurrent-write, and client conflict-state tests
@@ -332,6 +335,10 @@ The native app may keep an encrypted read-only projection for continuity.
 Offline edits enter a profile-scoped pending queue and require conflict review
 after reconnect. This depends on the encrypted native repository from the
 Reliable Native Core epic; do not put ledger facts in plain `localStorage`.
+On reconnect, replace the durable projection from the server's complete current
+revision, including deletions and supersessions; never append-merge it. A
+tombstoned health or relationship fact must not reappear because an offline
+client received additions without removals.
 
 ## Retention And Privacy
 
@@ -417,6 +424,9 @@ ledger work may proceed without it. Family membership, adult sharing roles,
 dependent profiles, and paid-seat lifecycle behavior must wait for an approved
 entitlement contract and must be linked as an explicit delivery dependency.
 The core privacy invariants remain mandatory for every plan.
+No cross-profile ledger read or sharing endpoint may ship before that contract
+defines authenticated membership and explicit grants; temporary organizer or
+same-account shortcuts are forbidden.
 
 ## Acceptance Matrix
 
@@ -435,6 +445,12 @@ The core privacy invariants remain mandatory for every plan.
 | Agent invents a profile fact | Unknown evidence ref fails verification; turn does not persist |
 | Historical and current facts coexist | Query time frame selects the appropriate interval |
 | Offline profile switch | Previous profile's projection is removed before target profile renders |
+| Caller requests another account's `profile_id` directly | Server returns not-found/forbidden without revealing whether a ledger exists |
+| Reader double-taps candidate confirmation | One idempotent activation and one revision advance |
+| Ask generation for profile A is in flight when user switches to B | Late result is discarded from the active UI and may persist only to A's authenticated thread; it never enters B's thread, projection or cache |
+| Fact is corrected or expires after request projection is frozen | Verification uses the exact frozen request bundle, never a live ledger re-read; later requests use the new revision |
+| Reported fact appears in one thread but is never confirmed | It may support that immediate turn only and never appears in another thread's profile projection |
+| Offline device reconnects after server-side fact deletion | Full revision replacement removes the local fact; append-only merge is forbidden |
 
 ## Release Gates
 
@@ -447,9 +463,12 @@ The core privacy invariants remain mandatory for every plan.
 5. All fact evidence refs resolve against the exact CE projection used.
 6. Golden tests prove profile facts do not alter deterministic chart outputs and
    cannot be cited as astronomical evidence.
-6. Correction, deletion, account deletion, and offline conflict paths pass on
+7. Phase 2 replaces the narrow tense/profile-fact path only after parity tests
+   prove the old behavior is a strict subset with zero disagreement cases; no
+   release may run two independently authoritative preflight paths.
+8. Correction, deletion, account deletion, and offline conflict paths pass on
    Android and iOS.
-7. Production telemetry contains counts/status/latency only, never fact values.
+9. Production telemetry contains counts/status/latency only, never fact values.
 
 ## Immediate Dependency Boundary
 
