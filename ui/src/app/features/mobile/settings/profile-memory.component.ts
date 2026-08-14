@@ -50,6 +50,8 @@ export class ProfileMemoryComponent {
     void this.kundlis.load();
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       this.profileId.set(params.get('id') ?? '');
+      this.busy.set(false);
+      this.pendingDelete.set(null);
       this.closeEditor();
       void this.load();
     });
@@ -100,8 +102,8 @@ export class ProfileMemoryComponent {
       await this.load();
     } catch (error) {
       if (requestedProfile === this.profileId()) {
-        this.error.set(this.message(error));
         await this.refreshAfterConflict(error);
+        this.error.set(this.message(error));
       }
     } finally {
       if (requestedProfile === this.profileId()) this.busy.set(false);
@@ -123,8 +125,8 @@ export class ProfileMemoryComponent {
       await this.load();
     } catch (error) {
       if (requestedProfile === this.profileId()) {
-        this.error.set(this.message(error));
         await this.refreshAfterConflict(error);
+        this.error.set(this.message(error));
       }
     } finally {
       if (requestedProfile === this.profileId()) this.busy.set(false);
@@ -132,13 +134,15 @@ export class ProfileMemoryComponent {
   }
 
   protected async exportMemory(): Promise<void> {
+    const requestedProfile = this.profileId();
     this.busy.set(true);
     this.error.set(null);
     try {
-      const payload = await this.context.export(this.profileId());
+      const payload = await this.context.export(requestedProfile);
+      if (requestedProfile !== this.profileId()) return;
       const file = new File(
         [JSON.stringify(payload, null, 2)],
-        `siddha-profile-memory-${this.profileId()}.json`,
+        `siddha-profile-memory-${requestedProfile}.json`,
         { type: 'application/json' },
       );
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
@@ -152,9 +156,14 @@ export class ProfileMemoryComponent {
         URL.revokeObjectURL(url);
       }
     } catch (error) {
-      if ((error as DOMException).name !== 'AbortError') this.error.set(this.message(error));
+      if (
+        requestedProfile === this.profileId()
+        && (error as DOMException).name !== 'AbortError'
+      ) {
+        this.error.set(this.message(error));
+      }
     } finally {
-      this.busy.set(false);
+      if (requestedProfile === this.profileId()) this.busy.set(false);
     }
   }
 

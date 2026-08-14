@@ -20,7 +20,7 @@
   }
 
   @if (loading()) {
-    <section class="memory-state"><b>Loading profile memory</b><p>Checking the latest saved revision.</p></section>
+    <section class="memory-state" role="status" aria-live="polite"><b>Loading profile memory</b><p>Checking the latest saved revision.</p></section>
   } @else if (!facts().length) {
     <section class="memory-state"><b>Nothing remembered yet</b><p>Add only the life context you want Siddha to carry into future readings.</p></section>
   } @else {
