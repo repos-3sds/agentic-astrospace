@@ -44,6 +44,7 @@ import { Kundli } from '../../../core/models';
                 @if (profile.id === kundlis.activeId()) { <em>Active</em> }
               </button>
               <div class="profile-actions">
+                <a [routerLink]="['/m','settings','profiles',profile.id,'memory']">Memory</a>
                 <a [routerLink]="['/m','settings','profiles',profile.id,'edit']">Edit</a>
                 <a class="danger" [routerLink]="['/m','settings','profiles',profile.id,'delete']">Delete</a>
               </div>
