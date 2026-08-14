@@ -83,4 +83,17 @@ describe('ProfileContextService', () => {
     expect(api.deleteWithBody.calls.mostRecent().args[1]).toEqual({ expected_revision: 5 });
     expect(api.deleteWithBody.calls.mostRecent().args[2]?.['Idempotency-Key']).toMatch(/^delete-/);
   });
+
+  it('undoes a supersede against its own endpoint, distinct from plain delete', async () => {
+    api.post.and.resolveTo({
+      revision: 7, removed_fact_id: 'fact-2',
+      restored_fact: { id: 'fact-1', status: 'active' } as never,
+    });
+    await service.undoSupersede('profile-a', 'fact-2', 6);
+    const [path, body, headers] = api.post.calls.mostRecent().args;
+    expect(path).toBe('/profiles/profile-a/context/facts/fact-2/undo-supersede');
+    expect(body).toEqual({ expected_revision: 6 });
+    expect(headers?.['Idempotency-Key']).toMatch(/^undo-supersede-/);
+    expect(api.deleteWithBody).not.toHaveBeenCalled();
+  });
 });

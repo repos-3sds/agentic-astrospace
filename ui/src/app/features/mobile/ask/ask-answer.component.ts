@@ -148,7 +148,18 @@ export class AskAnswerComponent {
     if (!saved || this.memoryBusy() || this.kundlis.active()?.id !== saved.profileId) return;
     this.memoryBusy.set(true);
     try {
-      await this.profileContext.remove(saved.profileId, saved.fact.id, saved.revision);
+      // A saved memory that REPLACED an existing value (automatic mode
+      // correcting a prior fact) must be reversed with undo-supersede, not
+      // plain delete — deleting only the new fact would leave the key with
+      // no active value at all, since the fact it replaced is still
+      // sitting at status "superseded". Plain delete is only correct when
+      // there was nothing to replace (a brand-new fact, `supersedes_id`
+      // null).
+      if (saved.fact.supersedes_id) {
+        await this.profileContext.undoSupersede(saved.profileId, saved.fact.id, saved.revision);
+      } else {
+        await this.profileContext.remove(saved.profileId, saved.fact.id, saved.revision);
+      }
       if (this.kundlis.active()?.id === saved.profileId) this.memorySaved.set(null);
     } catch (error) {
       this.submitError.set((error as Error).message || 'That memory could not be removed.');

@@ -10,6 +10,7 @@ import { PreferencesService, ExperienceMode } from '../../../core/preferences.se
 import { StructuredReading } from '../../../core/models';
 import { AskService } from '../../../core/ask.service';
 import { KundliStore } from '../../../core/kundli.store';
+import { ProfileContextFact, ProfileContextService } from '../../../core/profile-context.service';
 import { MobileAskStateService } from './mobile-ask-state.service';
 import { MobileAskThreadService } from './mobile-ask-thread.service';
 
@@ -459,5 +460,59 @@ describe('AskAnswerComponent profile isolation and thread lifecycle', () => {
     expect(harness.ask.stream).not.toHaveBeenCalled();
     expect((harness.component as any).messages()).toEqual([]);
     expect(harness.router.navigate).toHaveBeenCalledWith(['/m', 'ask'], { replaceUrl: true });
+  });
+});
+
+describe('AskAnswerComponent memory undo', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  function fact(overrides: Partial<ProfileContextFact> = {}): ProfileContextFact {
+    return {
+      id: 'fact-new', ref: 'profile_fact:fact-new@1', category: 'life_stage',
+      key: 'employment_status', value: { code: 'retired' },
+      valid_from: null, valid_to: null, status: 'active', sensitivity: 'personal',
+      source: { kind: 'reader_statement', channel: 'ask' }, revision: 2,
+      supersedes_id: null, ...overrides,
+    };
+  }
+
+  it('undoes via undo-supersede, not plain delete, when the saved fact replaced an earlier value', async () => {
+    const harness = createIsolationHarness({});
+    await settleEffects();
+    const profileContext = TestBed.inject(ProfileContextService);
+    const undoSupersede = spyOn(profileContext, 'undoSupersede').and.resolveTo({
+      revision: 3, removed_fact_id: 'fact-new', restored_fact: fact({ id: 'fact-old', status: 'active' }),
+    });
+    const remove = spyOn(profileContext, 'remove').and.resolveTo({ revision: 3, fact_id: 'fact-new', status: 'deleted' });
+
+    (harness.component as any).memorySaved.set({
+      profileId: 'profile-a', revision: 2,
+      fact: fact({ supersedes_id: 'fact-old' }),
+      message: 'Remembered work status for this profile.',
+    });
+    await (harness.component as any).undoMemory();
+
+    expect(undoSupersede).toHaveBeenCalledOnceWith('profile-a', 'fact-new', 2);
+    expect(remove).not.toHaveBeenCalled();
+    expect((harness.component as any).memorySaved()).toBeNull();
+  });
+
+  it('undoes via plain delete when the saved fact was a brand-new value, not a replacement', async () => {
+    const harness = createIsolationHarness({});
+    await settleEffects();
+    const profileContext = TestBed.inject(ProfileContextService);
+    const undoSupersede = spyOn(profileContext, 'undoSupersede').and.resolveTo({} as never);
+    const remove = spyOn(profileContext, 'remove').and.resolveTo({ revision: 2, fact_id: 'fact-new', status: 'deleted' });
+
+    (harness.component as any).memorySaved.set({
+      profileId: 'profile-a', revision: 1,
+      fact: fact({ supersedes_id: null }),
+      message: 'Remembered work status for this profile.',
+    });
+    await (harness.component as any).undoMemory();
+
+    expect(remove).toHaveBeenCalledOnceWith('profile-a', 'fact-new', 1);
+    expect(undoSupersede).not.toHaveBeenCalled();
+    expect((harness.component as any).memorySaved()).toBeNull();
   });
 });

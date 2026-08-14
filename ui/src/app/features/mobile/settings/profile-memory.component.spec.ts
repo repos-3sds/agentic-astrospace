@@ -47,6 +47,7 @@ function employmentFact(id: string, code: string): ProfileContextFact {
     sensitivity: 'personal',
     source: { kind: 'profile_form', channel: 'profile_settings' },
     revision: 1,
+    supersedes_id: null,
   };
 }
 

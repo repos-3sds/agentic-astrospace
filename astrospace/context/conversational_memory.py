@@ -34,6 +34,35 @@ class MemoryCandidate:
 _QUESTION_OPEN = re.compile(r"^\s*(?:when|will|would|could|can|should|do|does|did|am i|are we|is my)\b", re.I)
 _THIRD_PERSON = re.compile(r"\b(?:my (?:mother|father|wife|husband|partner|son|daughter|child)|he|she|they)\s+(?:is|am|are|has|have|works?)\b", re.I)
 
+# Anywhere in the message, not just at the start — "Suppose I am retired,
+# what would the chart say?" and "What happens if I am married?" both put
+# the hypothetical marker mid-sentence, after where `_QUESTION_OPEN`'s
+# start-anchored check already gave up. Reproduced as real false positives
+# in review (PR #66): both were extracted as if the reader had actually
+# asserted retired/married. Precision matters far more than recall here —
+# in automatic mode a false positive silently writes a wrong fact to the
+# active profile, where a false negative just means the reader adds it
+# manually later — so this deliberately over-suppresses rather than trying
+# to scope the check to only the clause containing the hypothetical.
+_HYPOTHETICAL_RE = re.compile(
+    r"\bif\b|\bsuppos(?:e|ing)\b|\bimagin(?:e|ing)\b|\bhypothetical(?:ly)?\b|"
+    r"\bassuming\b|\bin case\b|\blet'?s say\b|\bpretend(?:ing)?\b",
+    re.I,
+)
+# Reported/quoted speech — "My mother said 'I am retired now.'" is the
+# mother's own statement inside the reader's message, not the reader's own
+# assertion; `_THIRD_PERSON` alone misses this because the third-person
+# subject isn't directly followed by is/am/are/has/have/works, a reporting
+# verb sits between them instead. Straight and curly double quotes catch
+# quoted material generally; single quotes are deliberately excluded here
+# since they collide with contractions ("I'm") too often to use as a
+# reliable signal.
+_REPORTED_SPEECH_RE = re.compile(
+    r'["“”]|\b(?:said|says?|told|tells?|mention(?:ed|s)?|claim(?:ed|s)?|'
+    r"stat(?:ed|es)?|wrote|writes?|texted|messaged)\b",
+    re.I,
+)
+
 _CODE_PATTERNS = (
     ("employment_status", "retired", "Work status", "Retired", r"\bi(?:'m| am| have been) retired\b"),
     ("employment_status", "self_employed", "Work status", "Self-employed", r"\bi(?:'m| am) self[- ]employed\b"),
@@ -55,7 +84,8 @@ _CHILDREN = re.compile(
 def extract_memory_candidates(text: str) -> list[MemoryCandidate]:
     """Return only explicit first-person assertions from one user turn."""
     clean = " ".join(text.strip().split())
-    if not clean or _QUESTION_OPEN.search(clean) or _THIRD_PERSON.search(clean):
+    if (not clean or _QUESTION_OPEN.search(clean) or _THIRD_PERSON.search(clean)
+            or _HYPOTHETICAL_RE.search(clean) or _REPORTED_SPEECH_RE.search(clean)):
         return []
     found: list[MemoryCandidate] = []
     for key, code, label, display, pattern in _CODE_PATTERNS:

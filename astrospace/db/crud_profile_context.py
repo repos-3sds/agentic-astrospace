@@ -222,6 +222,67 @@ def supersede_fact(db: Session, *, user_id: str, profile_id: str, fact_id: str,
         raise
 
 
+def undo_supersede(db: Session, *, user_id: str, profile_id: str, fact_id: str,
+                   expected_revision: int, idempotency_key: str,
+                   request_hash: str) -> dict | None:
+    """Reverses ONE automatic-mode supersede as a single atomic operation.
+
+    `fact_id` is the NEW fact (`supersede_fact`'s replacement). Plain
+    deletion of that fact — what the reader-facing "Undo" action used
+    before this existed — leaves the key with zero active facts, because
+    the OLD value it replaced is still sitting at `status: "superseded"`,
+    not `"active"`. This does both halves in one revision bump: the new
+    fact is retired (scrubbed the same way an ordinary delete already
+    scrubs a fact — see `change_fact_status`), and the fact it superseded
+    is restored to `"active"`. Undo only reverses the most recent hop —
+    it does not walk further back through a chain of corrections.
+
+    Returns None (same 404-shaped contract as `change_fact_status`) when
+    `fact_id` isn't a currently-active fact that actually resulted from a
+    supersede, or when the fact it claims to have superseded isn't
+    currently in `"superseded"` status — both mean there is nothing valid
+    to undo, not a revision conflict."""
+    replay = _replay(db, user_id, profile_id, idempotency_key, request_hash)
+    if replay is not None:
+        return replay
+    try:
+        ledger = get_or_create_ledger(db, user_id, profile_id)
+        replay = _replay(db, user_id, profile_id, idempotency_key, request_hash)
+        if replay is not None:
+            db.rollback()
+            return replay
+        fact = get_fact(db, user_id, profile_id, fact_id, lock=True)
+        if not fact or fact.status != "active" or not fact.supersedes_id:
+            db.rollback()
+            return None
+        previous = get_fact(db, user_id, profile_id, fact.supersedes_id, lock=True)
+        if not previous or previous.status != "superseded":
+            db.rollback()
+            return None
+        revision = _advance(ledger, expected_revision)
+        fact.status = "deleted"
+        fact.value = None
+        fact.source = {}
+        fact.consent = {}
+        fact.deleted_at = datetime.utcnow()
+        fact.updated_at = datetime.utcnow()
+        previous.status = "active"
+        previous.updated_at = datetime.utcnow()
+        response = {
+            "revision": revision, "removed_fact_id": fact.id,
+            "restored_fact": fact_dict(previous),
+        }
+        _record(db, user_id=user_id, profile_id=profile_id,
+                idempotency_key=idempotency_key, request_hash=request_hash,
+                action="undone", fact=fact, revision=revision, response=response,
+                category=previous.category, key=previous.key)
+        db.commit()
+        return response
+    except Exception:
+        db.rollback()
+        raise
+
+
 def change_fact_status(db: Session, *, user_id: str, profile_id: str,
                        fact_id: str, action: str, expected_revision: int,
                        idempotency_key: str, request_hash: str) -> dict | None:

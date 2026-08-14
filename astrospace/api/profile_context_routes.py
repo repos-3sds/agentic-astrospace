@@ -23,6 +23,7 @@ from ..db.crud_profile_context import (
     fact_dict,
     list_facts,
     supersede_fact,
+    undo_supersede,
 )
 
 router = APIRouter(prefix="/api/v1/profiles", tags=["profile-context"])
@@ -209,6 +210,32 @@ def delete_profile_fact(
     db: Session = Depends(get_db),
 ):
     return _status_mutation(profile_id, fact_id, body, user, idempotency, db, "deleted")
+
+
+@router.post("/{profile_id}/context/facts/{fact_id}/undo-supersede")
+def undo_supersede_fact(
+    profile_id: str, fact_id: str, body: FactMutation, user: CurrentUser,
+    idempotency: str | None = Header(default=None, alias="Idempotency-Key"),
+    db: Session = Depends(get_db),
+):
+    """Reverses one automatic-mode memory write: `fact_id` (the new value)
+    is retired, and the value it superseded is restored to active — see
+    `crud_profile_context.undo_supersede`'s docstring for why plain
+    deletion (the `DELETE` route above) is the wrong operation here.
+    404 covers both "no such fact" and "this fact wasn't a supersede" —
+    the reader-facing distinction doesn't matter, there's nothing to undo
+    either way."""
+    _owned_profile(db, profile_id, user.id)
+    key = _idempotency_key(idempotency)
+    payload = body.model_dump(mode="json")
+    result = _run_mutation(lambda: undo_supersede(
+        db, user_id=user.id, profile_id=profile_id, fact_id=fact_id,
+        expected_revision=body.expected_revision,
+        idempotency_key=key, request_hash=_request_hash(f"undo-supersede:{fact_id}", payload),
+    ))
+    if result is None:
+        raise HTTPException(status_code=404, detail="Nothing to undo for this fact")
+    return result
 
 
 @router.post("/{profile_id}/context/facts/{fact_id}/dispute")

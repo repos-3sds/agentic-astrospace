@@ -174,6 +174,61 @@ def test_correction_supersedes_history_without_rewriting_it(env):
     assert [item["status"] for item in history] == ["superseded", "active"]
 
 
+def test_undo_supersede_restores_the_previous_value_as_active(env):
+    """PR #66 review: plain DELETE on the replacement fact left the key
+    with zero active values, since the fact it replaced was still sitting
+    at status "superseded". `undo-supersede` must restore that fact to
+    active in the same operation, not just remove the replacement."""
+    created = post_fact(env, env["mine"], key="undo-create-1").json()
+    old_id = created["fact"]["id"]
+    corrected = fact_body(1, value={"code": "self_employed"})
+    corrected["source"]["kind"] = "reader_correction"
+    correction = env["client"].patch(
+        f"/api/v1/profiles/{env['mine']}/context/facts/{old_id}",
+        json=corrected, headers={"Idempotency-Key": "undo-correct-0001"},
+    ).json()
+    new_id = correction["fact"]["id"]
+
+    undo = env["client"].post(
+        f"/api/v1/profiles/{env['mine']}/context/facts/{new_id}/undo-supersede",
+        json={"expected_revision": 2}, headers={"Idempotency-Key": "undo-0001"},
+    )
+    assert undo.status_code == 200
+    body = undo.json()
+    assert body["revision"] == 3
+    assert body["restored_fact"]["id"] == old_id
+    assert body["restored_fact"]["status"] == "active"
+    assert body["restored_fact"]["value"] == {"code": "retired", "label": "Retired"}
+
+    history = env["client"].get(
+        f"/api/v1/profiles/{env['mine']}/context?include_history=true"
+    ).json()["facts"]
+    by_id = {item["id"]: item["status"] for item in history}
+    assert by_id[old_id] == "active"
+    assert by_id[new_id] == "deleted"
+
+    # And a live domain projection has exactly one active value for the
+    # key — not zero, which plain delete-the-new-fact would have left.
+    projection = env["client"].get(
+        f"/api/v1/profiles/{env['mine']}/context"
+    ).json()
+    active_for_key = [f for f in projection["facts"] if f["key"] == "employment_status"]
+    assert len(active_for_key) == 1
+    assert active_for_key[0]["id"] == old_id
+
+
+def test_undo_supersede_rejects_a_fact_that_was_never_a_supersede(env):
+    """Undoing a plain create (no `supersedes_id`) has nothing to restore
+    — 404, not a silent no-op or a crash."""
+    created = post_fact(env, env["mine"], key="undo-plain-create").json()
+    fact_id = created["fact"]["id"]
+    response = env["client"].post(
+        f"/api/v1/profiles/{env['mine']}/context/facts/{fact_id}/undo-supersede",
+        json={"expected_revision": 1}, headers={"Idempotency-Key": "undo-plain-0001"},
+    )
+    assert response.status_code == 404
+
+
 def test_correction_cannot_change_the_governed_key(env):
     created = post_fact(env, env["mine"], key="immutable-key-create").json()
     changed = fact_body(1, key="occupation", value={"text": "Teacher"})

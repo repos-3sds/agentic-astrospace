@@ -20,6 +20,7 @@ export interface ProfileContextFact {
   sensitivity: string;
   source: { kind: string; channel: string };
   revision: number;
+  supersedes_id: string | null;
 }
 
 export interface ProfileContextProjection {
@@ -98,6 +99,20 @@ export class ProfileContextService {
     return this.api.deleteWithBody<{ revision: number; fact_id: string; status: string }>(
       `/profiles/${profileId}/context/facts/${factId}`, { expected_revision: revision },
       { 'Idempotency-Key': this.idempotencyKey('delete') },
+    );
+  }
+
+  /** Reverses an automatic-mode memory write: retires `factId` and
+   * restores the fact it superseded to active. Plain `remove()` is the
+   * wrong call for this — it would leave the key with no active value at
+   * all, since the fact it replaced is still sitting at status
+   * "superseded", not "active". Only valid when `factId` actually came
+   * from a supersede (check `fact.supersedes_id` before calling this). */
+  undoSupersede(profileId: string, factId: string, revision: number) {
+    return this.api.post<{ revision: number; removed_fact_id: string; restored_fact: ProfileContextFact }>(
+      `/profiles/${profileId}/context/facts/${factId}/undo-supersede`,
+      { expected_revision: revision },
+      { 'Idempotency-Key': this.idempotencyKey('undo-supersede') },
     );
   }
 
