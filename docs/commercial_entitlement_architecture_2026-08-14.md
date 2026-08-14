@@ -2,7 +2,7 @@
 
 Date: 2026-08-14
 
-Status: product and engineering contract proposal; no purchasing or gating is live
+Status: reviewed architecture proposal; packaging limits and prices remain unapproved; no purchasing or gating is live
 
 Owner: Codex
 
@@ -10,7 +10,7 @@ Required reviewers: product owner for packaging/pricing; Claude for backend enfo
 
 ## Executive Decision
 
-Siddha should launch with four product plans:
+Siddha should present four launch offers to readers:
 
 - **Free** — a trustworthy daily guide and one complete personal foundation.
 - **Plus** — deeper individual guidance, more profiles, richer planning, and
@@ -19,6 +19,18 @@ Siddha should launch with four product plans:
   professional reports, notes, comparison, and high usage.
 - **Family** — shared payment with private member spaces, dependent profiles,
   family-aware planning, and explicit sharing controls.
+
+Internally, however, these are not four mutually exclusive capability tiers.
+The entitlement model has two independent axes:
+
+- **access tier:** `free`, `plus`, or `pro`;
+- **account topology:** `individual` or `family`.
+
+The launch "Family" SKU composes a paid access tier with the Family topology.
+This avoids a structural dead end where a household must give up Pro workflow
+to gain private family seats, or a practitioner must create a second account to
+manage their own family. Storefront naming may remain Free/Plus/Pro/Family;
+server policy resolves the composed capabilities.
 
 Personas remain **Guided, Balanced, and Practitioner** presentation modes.
 They are not plans. Paying never changes chart facts or safety; it changes
@@ -67,6 +79,21 @@ As of this document:
 - Local caches exist, but reliability behavior is not an entitlement.
 
 Therefore every plan below is a target contract, not implemented behavior.
+
+## Decision Status
+
+This document fixes architecture and safety boundaries; it does not approve
+commercial quantities. The following remain product hypotheses until CE-1:
+
+- profile, comparison, report, and Ask limits;
+- Family member/dependent counts and whether a Pro + Family combination ships;
+- trial length, billing periods, launch countries, and localized prices;
+- history-retention durations above the mandatory privacy baseline;
+- support and computation-priority promises.
+
+Engineering may build the entitlement vocabulary, resolver, denial contract,
+and test fixtures before those numbers are approved. It must not publish plan
+copy, create store products, or enforce provisional quantities as constants.
 
 ## Market Signals
 
@@ -119,7 +146,7 @@ surface should describe benefits, while exact counters come from the server.
 | Compatibility | One saved comparison | Up to 10 saved comparisons | High-volume comparison/report | Family/relationship comparisons by consent |
 | Ask grounded answers per billing month | 5 | 60 | 300 | 60/member + 120 shared pool |
 | Ask follow-up threads | 7-day history | 12-month history | Full retained history subject to policy | 12 months per private member |
-| Profile Context Ledger | User controls and safety always | Full continuity | Full continuity + professional notes kept separate | Full private ledger per member |
+| Profile Context Ledger | Full correctness, controls and active facts | Same; richer longitudinal views may be paid | Same; professional notes are a separate data class | Full private ledger per member; never organizer-readable by default |
 | Audio | Today and accessibility essentials | Full readings/practices | Full + export-ready scripts | Full per member |
 | Reports | One basic personal report | Detailed personal/share report | Practitioner templates, batch/export, optional branding | Family overview only with explicit consent |
 | Notes | Basic personal notes | Extended notes | Structured practitioner notes | Private personal notes |
@@ -138,6 +165,11 @@ surface should describe benefits, while exact counters come from the server.
 - Viewing existing data, correcting profile details, deleting/exporting data,
   restoring purchases, and safety resources never consume quota.
 - Basic device caching and offline error handling are not Plus features.
+- Profile memory required to avoid logically impossible answers is not a paid
+  feature. Plans may add longitudinal views and report workflow, not a more
+  truthful reading.
+- The quantities in the matrix are test fixtures until CE-1 approves unit
+  economics and reader research; they are not launch commitments.
 
 ## Ask Usage Model
 
@@ -166,6 +198,18 @@ parallel requests exceeding limits and prevents failed turns from charging.
 The client displays server-provided `remaining`, `resets_at`, and fair-use
 status; it never calculates authority locally.
 
+The quota period must be one server-defined interval with a stable `period_id`.
+Do not mix "billing month" with calendar-month reset semantics. Renewal dates,
+trials, promotional grants, and Family pools can have different boundaries;
+the resolver returns the authoritative start/end and every reservation binds
+to that period. Device time never selects a bucket.
+
+For Family, each successful answer consumes the member's included allowance
+first, then the shared pool only when policy explicitly permits it. The
+organizer may see aggregate pool usage but never which member asked, the
+question domain, or thread content. Parallel member requests reserve against
+the shared bucket atomically.
+
 ### Exhausted state
 
 Readers may still open history, Today, charts, Calendar, sources and safety
@@ -191,7 +235,9 @@ Recommended response:
 ```json
 {
   "account_id": "uuid",
-  "plan": "plus",
+  "access_tier": "plus",
+  "account_topology": "individual",
+  "offer_code": "plus_monthly",
   "status": "active",
   "source": "google_play",
   "effective_at": "2026-08-14T00:00:00Z",
@@ -214,8 +260,9 @@ Recommended response:
 }
 ```
 
-Never make mobile code branch on product IDs. It asks whether an entitlement
-exists or a limit permits an action. Store product mappings remain server-side
+Never make mobile code branch on product IDs, offer codes, access tiers, or
+topology to decide access. It asks whether an entitlement exists or a limit
+permits an action. Store mappings and composed policy remain server-side
 configuration.
 
 ## Backend Data Model
@@ -238,7 +285,8 @@ Recommended entities:
 
 ### `plan_assignments`
 
-- `billing_account_id`, `plan_code`, `source_grant_id`
+- `billing_account_id`, `access_tier`, `account_topology`, `offer_code`,
+  `source_grant_id`
 - `effective_at`, `ends_at`, `revision`
 
 ### `family_memberships`
@@ -332,6 +380,11 @@ limits. Vendor choice is a separate ADR.
 - Family dependent profiles have an accountable guardian and age-appropriate
   privacy rules; adult profiles become independently owned when invited and
   accepted.
+- A Pro-managed profile is not automatically a client account. Before selling
+  practitioner workflow, define lawful basis/consent, practitioner access,
+  client export/deletion, ownership transfer, and what happens when the
+  practitioner subscription ends. Managed-profile scale is disabled until
+  that separate professional-data contract passes privacy review.
 
 ## Family Privacy Model
 
@@ -349,6 +402,10 @@ astrology database.
   account data.
 - Apple Family Sharing is a store entitlement mechanism, not a substitute for
   Siddha Family membership/privacy. Google parity must be designed server-side.
+- Dependent-profile rules require an age model, guardian authority,
+  jurisdiction review, transition to adult ownership, deletion/export rights,
+  and a strict prohibition on using a child's chart for fear-based predictions.
+  "Dependent" must not ship as merely another profile flag.
 
 ## Feature-Gate UX
 
@@ -393,7 +450,7 @@ Gated APIs return structured errors:
 {
   "code": "entitlement_limit_reached",
   "entitlement": "ask.answers.monthly",
-  "plan": "free",
+  "access_tier": "free",
   "remaining": 0,
   "resets_at": "2026-09-01T00:00:00Z",
   "upgrade_options": ["plus", "pro"]
