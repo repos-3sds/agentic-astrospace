@@ -77,6 +77,17 @@ describe('VedicService location-sensitive caches', () => {
     expect(api.get).toHaveBeenCalledTimes(2);
   });
 
+  it('does not resurrect hard-expired Today data from a suspended WebView memory cache', async () => {
+    const clock = spyOn(Date, 'now').and.returnValue(1_000);
+    await service.dailyGuidance('profile-1');
+
+    clock.and.returnValue(1_000 + (40 * 60 * 60 * 1000));
+
+    expect(service.cachedDailyGuidanceEntry('profile-1')).toBeNull();
+    await service.dailyGuidance('profile-1');
+    expect(api.get).toHaveBeenCalledTimes(2);
+  });
+
   it('isolates the same profile id when its owning account changes', async () => {
     await service.dailyGuidance('profile-1');
     service.configureProfile({ id: 'profile-1', user_id: 'user-2', updated_at: '2026-08-11T00:00:00Z' });
@@ -94,5 +105,16 @@ describe('VedicService location-sensitive caches', () => {
 
     prefs.setPanchangaPlace({ city: 'Chennai', nation: 'IN', timezone: 'Asia/Kolkata', label: 'Chennai' } as any);
     expect(service.cachedCalendarIntelligence('profile-1', 45)).toBeNull();
+  });
+
+  it('does not resurrect hard-expired Calendar data from a suspended WebView memory cache', async () => {
+    const clock = spyOn(Date, 'now').and.returnValue(1_000);
+    await service.calendarIntelligence('profile-1', 45);
+
+    clock.and.returnValue(1_000 + (46 * 24 * 60 * 60 * 1000));
+
+    expect(service.cachedCalendarIntelligenceEntry('profile-1', 45)).toBeNull();
+    await service.calendarIntelligence('profile-1', 45);
+    expect(api.get).toHaveBeenCalledTimes(2);
   });
 });

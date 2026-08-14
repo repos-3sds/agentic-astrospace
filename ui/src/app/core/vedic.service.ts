@@ -204,17 +204,26 @@ export class VedicService {
       ? resourceCacheKey(identity)
       : `volatile:${kundliId}:${this.todayKey()}:${params.toString()}`;
     const memory = this.dailyValues.get(cacheKey);
-    const stored = identity ? this.resourceCache.get<DailyGuidancePayload>(identity) : null;
+    if (identity) {
+      const stored = this.resourceCache.get<DailyGuidancePayload>(identity);
+      if (stored) {
+        this.dailyValues.set(cacheKey, stored.data);
+        return stored;
+      }
+      this.dailyValues.delete(cacheKey);
+      this.dailyCache.delete(cacheKey);
+      return null;
+    }
     if (memory) {
-      return stored ?? {
+      const now = Date.now();
+      return {
         data: memory,
         freshness: 'fresh',
-        storedAt: Date.now(),
-        expiresAt: Date.now() + TODAY_CACHE_POLICY.expireAfterMs,
+        storedAt: now,
+        expiresAt: now + TODAY_CACHE_POLICY.expireAfterMs,
       };
     }
-    if (stored) this.dailyValues.set(cacheKey, stored.data);
-    return stored;
+    return null;
   }
 
   refreshDailyGuidance(kundliId: string): Promise<DailyGuidancePayload> {
@@ -335,17 +344,26 @@ export class VedicService {
   ): CachedResource<CalendarIntelligencePayload> | null {
     const { cacheKey, identity } = this.calendarParams(kundliId, days, place, options);
     const memory = this.calendarValues.get(cacheKey);
-    const stored = identity ? this.resourceCache.get<CalendarIntelligencePayload>(identity) : null;
+    if (identity) {
+      const stored = this.resourceCache.get<CalendarIntelligencePayload>(identity);
+      if (stored) {
+        this.calendarValues.set(cacheKey, stored.data);
+        return stored;
+      }
+      this.calendarValues.delete(cacheKey);
+      this.calendarCache.delete(cacheKey);
+      return null;
+    }
     if (memory) {
-      return stored ?? {
+      const now = Date.now();
+      return {
         data: memory,
         freshness: 'fresh',
-        storedAt: Date.now(),
-        expiresAt: Date.now() + CALENDAR_CACHE_POLICY.expireAfterMs,
+        storedAt: now,
+        expiresAt: now + CALENDAR_CACHE_POLICY.expireAfterMs,
       };
     }
-    if (stored) this.calendarValues.set(cacheKey, stored.data);
-    return stored;
+    return null;
   }
 
   compatibility(kundliId: string, partnerId: string): Promise<CompatibilityPayload> {
