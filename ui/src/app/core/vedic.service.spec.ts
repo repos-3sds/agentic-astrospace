@@ -117,4 +117,32 @@ describe('VedicService location-sensitive caches', () => {
     await service.calendarIntelligence('profile-1', 45);
     expect(api.get).toHaveBeenCalledTimes(2);
   });
+
+  it('does not restore Today cache when an in-flight refresh completes after logout cleanup', async () => {
+    let resolve!: (value: any) => void;
+    api.get.and.returnValue(new Promise((done) => { resolve = done; }));
+
+    const refresh = service.refreshDailyGuidance('profile-1');
+    service.clearConfiguredProfiles();
+    resolve({ date: '2026-08-14' });
+    await refresh;
+
+    service.configureProfile({ id: 'profile-1', user_id: 'user-1', updated_at: '2026-08-11T00:00:00Z' });
+    expect(service.cachedDailyGuidanceEntry('profile-1')).toBeNull();
+    expect(Object.keys(localStorage).some((key) => key.startsWith('siddha.resource-cache'))).toBeFalse();
+  });
+
+  it('does not restore Calendar cache when an in-flight refresh completes after logout cleanup', async () => {
+    let resolve!: (value: any) => void;
+    api.get.and.returnValue(new Promise((done) => { resolve = done; }));
+
+    const refresh = service.refreshCalendarIntelligence('profile-1', 45);
+    service.clearConfiguredProfiles();
+    resolve({ panchanga_days: [], by_date: {} });
+    await refresh;
+
+    service.configureProfile({ id: 'profile-1', user_id: 'user-1', updated_at: '2026-08-11T00:00:00Z' });
+    expect(service.cachedCalendarIntelligenceEntry('profile-1', 45)).toBeNull();
+    expect(Object.keys(localStorage).some((key) => key.startsWith('siddha.resource-cache'))).toBeFalse();
+  });
 });
