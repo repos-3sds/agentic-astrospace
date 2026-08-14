@@ -7,10 +7,16 @@
   @if (loading()) { <p class="editbd-state">Loading profile…</p> } @else {
     <form id="edit-birth-form" (ngSubmit)="save()">
       <label>FULL NAME<input name="name" [(ngModel)]="name" autocomplete="name" /></label>
+      <label>RELATIONSHIP
+        <select name="relation" [(ngModel)]="relation">
+          @for (option of relationships; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </label>
       <label>DATE OF BIRTH<input name="date" [(ngModel)]="date" type="date" /></label>
       <label>TIME OF BIRTH<input name="time" [(ngModel)]="time" type="time" /></label>
-      <label>PLACE OF BIRTH<input name="city" [(ngModel)]="city" autocomplete="address-level2" /></label>
-      <label>COUNTRY CODE<input name="nation" [(ngModel)]="nation" maxlength="2" autocomplete="country" /></label>
+      <as-birth-place-field [initialPlace]="initialPlace()" (placeChange)="onPlaceChange($event)" />
       @if (error()) { <p class="editbd-error" role="alert">{{ error() }}</p> }
     </form>
   }
