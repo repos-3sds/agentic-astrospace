@@ -448,6 +448,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'settings/profiles/:id/memory',
+        data: { hideMobileTabs: true },
+        loadComponent: () =>
+          import('./features/mobile/settings/profile-memory.component').then(
+            (m) => m.ProfileMemoryComponent,
+          ),
+      },
+      {
         path: 'settings/profiles/:id/delete',
         data: { hideMobileTabs: true },
         loadComponent: () =>

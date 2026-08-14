@@ -17,32 +17,36 @@ export class ApiService {
     return this.unwrap(firstValueFrom(this.http.get<T>(BASE() + path, await this.options())));
   }
 
-  async post<T>(path: string, body: unknown): Promise<T> {
-    return this.unwrap(firstValueFrom(this.http.post<T>(BASE() + path, body, await this.options())));
+  async post<T>(path: string, body: unknown, headers?: Record<string, string>): Promise<T> {
+    return this.unwrap(firstValueFrom(this.http.post<T>(BASE() + path, body, await this.options(headers))));
   }
 
   async put<T>(path: string, body: unknown): Promise<T> {
     return this.unwrap(firstValueFrom(this.http.put<T>(BASE() + path, body, await this.options())));
   }
 
-  async patch<T>(path: string, body: unknown): Promise<T> {
-    return this.unwrap(firstValueFrom(this.http.patch<T>(BASE() + path, body, await this.options())));
+  async patch<T>(path: string, body: unknown, headers?: Record<string, string>): Promise<T> {
+    return this.unwrap(firstValueFrom(this.http.patch<T>(BASE() + path, body, await this.options(headers))));
   }
 
   async delete(path: string): Promise<void> {
     return this.unwrap(firstValueFrom(this.http.delete<void>(BASE() + path, await this.options())));
   }
 
-  async deleteWithBody<T>(path: string, body: unknown): Promise<T> {
+  async deleteWithBody<T>(path: string, body: unknown, headers?: Record<string, string>): Promise<T> {
     return this.unwrap(firstValueFrom(this.http.delete<T>(BASE() + path, {
-      ...(await this.options()),
+      ...(await this.options(headers)),
       body,
     })));
   }
 
-  private async options(): Promise<{ headers?: Record<string, string> }> {
+  private async options(extraHeaders?: Record<string, string>): Promise<{ headers?: Record<string, string> }> {
     const token = await this.auth.getAccessToken();
-    return token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    const headers = {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(extraHeaders ?? {}),
+    };
+    return Object.keys(headers).length ? { headers } : {};
   }
 
   private async unwrap<T>(req: Promise<T>): Promise<T> {

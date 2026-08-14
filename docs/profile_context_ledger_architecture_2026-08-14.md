@@ -17,9 +17,16 @@ CRUD, optimistic revisions, idempotent mutations, immutable supersession,
 deletion scrubbing, domain-filtered projection, logical constraints, export,
 account/profile deletion behavior, and adversarial API tests.
 
-This does **not** activate Ask memory, candidate extraction, agent retrieval,
-logical preflight, mobile controls, or offline ledger storage. Those remain
-Phases 2–4 and must not infer durable facts from model output.
+The first reader-controlled mobile surface is also implemented: each profile
+has a dedicated `What Siddha remembers` screen for reviewing, adding,
+correcting, deleting, and exporting allow-listed facts. Writes carry the
+server revision, an idempotency key, an explicit reader-consent source, and
+discard late responses when the route/profile identity changes. The screen
+does not cache sensitive ledger values locally.
+
+This does **not** activate Ask memory, model candidate extraction, agent
+retrieval, logical preflight, or offline ledger storage. Those remain Phases
+2–4 and must not infer durable facts from model output.
 
 ## Product Purpose
 
