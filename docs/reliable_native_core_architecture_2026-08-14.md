@@ -2,7 +2,7 @@
 
 Date: 2026-08-14
 
-Status: web-storage pilot implemented for Today and Calendar; native encrypted repository pending review
+Status: web-storage pilot implemented; encrypted native Today/Calendar repository implemented on `codex-native-secure-cache`, physical-device privacy proof pending
 
 Owner: Codex
 
@@ -239,9 +239,42 @@ Separate tables should be used later for Profile Context Ledger facts and queued
   isolation. The Angular suite (61 tests), production build, and 375x812 Today
   and Calendar empty-state visual checks pass.
 
-This is deliberately not the final native store. Installing encrypted SQLite
-changes dependencies and native projects, so it remains a separately reviewed
-release slice with Android and iOS device evidence.
+### Native encrypted repository implemented 2026-08-14
+
+- `@capacitor-community/sqlite` 8.1.1 is wired into Android and iOS with
+  encryption enabled. A cryptographically random 256-bit installation secret
+  is created once and stored through the plugin's Android Keystore/iOS Keychain
+  secret path; it is never written to Angular storage, configuration, or logs.
+- Native startup opens only an encrypted SQLCipher connection and verifies
+  `isDatabaseEncrypted()` before hydrating memory. A failed secret, connection,
+  or encryption check leaves durable caching unavailable and never falls back
+  to WebView `localStorage`.
+- Capacitor bridge logging is disabled for every build configuration because
+  native plugin method arguments contain the serialized cache envelope. This
+  was caught during the first Android device proof before release.
+- The cache service blocks bootstrap until persistence hydration completes,
+  then preserves its synchronous memory read API. Writes and account/profile
+  deletions are serialized so a late write cannot overtake logout cleanup.
+- Calendar month and selected-day routes must request the same persona-depth
+  identity. Guided and Balanced reuse the summary payload; Practitioner loads
+  practitioner detail at the month route so a date tap is a local projection,
+  not a second 45-day calculation. Android proof measured 118 ms with zero API
+  requests for a selected date after the month payload was available.
+- The first native table contains only disposable Today/Calendar envelopes,
+  keyed and indexed by account/profile identity. Profile Context Ledger facts,
+  Ask memory, reports, notes, and offline mutations remain out of scope.
+- Android `allowBackup=false` remains enforced. The SQLite iOS implementation
+  marks its configured `Library/CapacitorDatabase` directory excluded from
+  iCloud backup when creating it.
+- Verified: 67/67 Angular tests; production Angular build; Capacitor sync for
+  both targets; Android debug APK build containing `libsqlcipher.so` for all
+  packaged ABIs; unsigned iOS simulator build linking SQLCipher 4.17.0.
+
+Still required before merge/release approval: physical Android and iOS runs
+covering process death, logout A -> login B, wrong/missing secret, backup/device
+transfer, and direct inspection that the on-device database file is not readable
+as plaintext SQLite. Encryption export classification also remains a release
+owner/legal acknowledgement, not an engineering checkbox.
 
 ### Slice A: Contract and instrumentation
 
@@ -304,11 +337,14 @@ considered astrologically complete, the backend must return:
 ```
 
 For a pre-sunrise request, the backend selects the Vedic day that began at the
-previous sunrise. Once available, `valid_from` (or a stable Vedic-day ID) joins
-the cache identity and `valid_until` caps `expiresAt`; the fixed 36-hour policy
-remains only a defensive upper bound. Calendar/festival responses likewise
-need an `engine_version`/`dataset_version` so rule deployments invalidate old
-projections independently of `profile.updated_at`.
+previous sunrise. `valid_until` caps `expiresAt`; the fixed 36-hour policy
+remains only a defensive upper bound. Engine and dataset versions are persisted
+as cache provenance, and a client release rejects present incompatible
+versions. Payload metadata alone cannot proactively invalidate an offline
+client after a backend deployment because that client cannot know the new
+version until it contacts the server; true deployment-push invalidation still
+requires a lightweight version manifest, ETag revalidation, or equivalent
+server contract.
 
 Muhurta and transit resources require response-owned `valid_until` boundaries
 at the end of the represented window. A generic TTL may be shorter, but never
