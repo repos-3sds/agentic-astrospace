@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import re
 
-from .safety import dosha_overclaim_kind, prohibited_verdict
+from .safety import _negation_precedes, _normalize, dosha_overclaim_kind, prohibited_verdict
 from .schema import StructuredReading
 
 # A reading may name a varga either way; both satisfy the coverage check.
@@ -120,14 +120,31 @@ def _tense_conflict(text: str, as_of_year: int, safe_years: set[int]) -> bool:
 _BUNDLE_SECTION_NAMES = {
     "houses", "karakas", "vargas", "yogas", "doshas",
     "dasha_relevance", "gochara", "jaimini_karakas", "arudhas",
-    "profile_facts",
+    "profile_facts", "profile_context",
 }
 
 
 def _valid_sources(bundle: dict) -> set[str]:
+    """Every source a `technical_basis` item may cite — one deterministic
+    evidence-resolution boundary shared by KB citations and Profile Context
+    Ledger facts (docs/profile_context_ledger_architecture_2026-08-14.md's
+    "Unified evidence resolution against the frozen request bundle").
+
+    `profile_fact:<id>@<revision>` refs are checked against the FROZEN
+    bundle's own `profile_context.facts[].ref` values only — never a live
+    database re-read. A ref that is deleted, superseded, expired outside
+    `as_of`, or belongs to a different profile is simply absent from that
+    list (it was never included when the projection was built, see
+    `astrospace/db/crud_profile_context.py`'s `build_profile_context_projection`),
+    so citing it fails this membership check the same way an invented KB
+    citation already does — no special-case detection needed."""
     ref_ids = {ref["ref_id"] for ref in bundle.get("references", []) if ref.get("ref_id")}
     chunk_ids = {p["chunk_id"] for p in bundle.get("source_passages", []) if p.get("chunk_id")}
-    return _BUNDLE_SECTION_NAMES | ref_ids | chunk_ids
+    fact_refs = {
+        f["ref"] for f in (bundle.get("profile_context") or {}).get("facts", [])
+        if f.get("ref")
+    }
+    return _BUNDLE_SECTION_NAMES | ref_ids | chunk_ids | fact_refs
 
 
 class Violation(str):
@@ -168,6 +185,170 @@ def safety_violations(violations: list[str]) -> list[str]:
 
 def quality_violations(violations: list[str]) -> list[str]:
     return [v for v in violations if getattr(v, "severity", "safety") == "quality"]
+
+
+# ── Profile Context Ledger — logical preflight enforcement ────────────────
+#
+# Deterministic, regex-based, same discipline as every check above: no
+# second model call, and every pattern here corresponds 1:1 to a
+# `blocked_frames` code `astrospace/context/profile_context.py`'s
+# `build_logical_preflight()` can emit. Adding a new blocked frame means
+# adding both a row in that function AND a row here — the two are meant to
+# be read together, not duplicated logic, since the preflight decides
+# *when* a frame applies and this only detects whether the model's own
+# text actually used it.
+#
+# Negation-aware, using the SAME shared check as safety.py's wealth/
+# children/personality/health-outcome overclaim patterns
+# (`_negation_precedes`/`_normalize`, imported above) — not a second
+# heuristic. Round-1 of this file shipped without it on the (wrong)
+# assumption these patterns were as clearly-positive as the marriage
+# dosha-overclaim patterns that deliberately skip the check; in fact these
+# are exactly the reassurance shape the negation check exists for — "This
+# does not mean you will get married in this period" and "I cannot promise
+# you will recover" both contain the bad phrase as a literal substring of a
+# safe, hedged sentence, and a bare `.search()` rejected both, discarding a
+# careful answer the agent is explicitly asked to produce. Safety severity
+# throughout: a genuinely unhedged blocked frame is exactly the class of
+# violation `safety_violations()` must never let ship, same as a prohibited
+# verdict — the negation check only prevents flagging the sentences that
+# exist specifically to rule the frame out.
+_BLOCKED_FRAME_PATTERNS: dict[str, re.Pattern] = {
+    "future_first_career_inception": re.compile(
+        r"\byour career will begin\b|\byour career (?:is going to|will) start\b|"
+        r"\bstart(?:ing)? your career\b|\bbegin(?:ning)? your career\b|"
+        r"\byour first job\b|\bentering the workforce\b|"
+        r"\byou will (?:begin|start) working\b",
+        re.IGNORECASE,
+    ),
+    "first_marriage_framing": re.compile(
+        r"\byou will (?:get married|marry)\b|\byour (?:future|upcoming) (?:marriage|wedding)\b|"
+        r"\bfind (?:your |a )?(?:future )?(?:husband|wife|spouse)\b",
+        re.IGNORECASE,
+    ),
+    "medical_prognosis_or_recovery_guarantee": re.compile(
+        r"\byou will (?:recover|heal|be cured|make a full recovery)\b|"
+        r"\bfull recovery is (?:certain|guaranteed|assured)\b|"
+        r"\byour (?:illness|condition|surgery|recovery) will\b",
+        re.IGNORECASE,
+    ),
+    "biological_pregnancy_framing": re.compile(
+        r"\byou will (?:conceive|become pregnant|have a baby|have a child)\b|"
+        r"\byour (?:future |upcoming )?pregnancy\b",
+        re.IGNORECASE,
+    ),
+    "first_job_entry_framing": re.compile(
+        r"\byour first job\b|\bentering the workforce\b|\bstart(?:ing)? your first career\b",
+        re.IGNORECASE,
+    ),
+    "future_first_child_framing": re.compile(
+        r"\byou will (?:have|become the parent of) (?:a |your first )?(?:child|baby|kids)\b|"
+        r"\byou (?:will|are going to) become a parent\b",
+        re.IGNORECASE,
+    ),
+}
+
+# "Your chart reveals/shows..." immediately paired with language about a
+# fact the reader already disclosed is exactly the discovery-not-report
+# failure the prompt (domain_agent.py's `_format_profile_context_block`)
+# explicitly forbids. A generous character window around the discovery
+# phrase, not a same-sentence requirement — "Your chart reveals real
+# strength here. As you know, since you're retired, this next phase..." is
+# fine (the discovery phrase governs "real strength", not the retirement
+# fact); "Your chart reveals that you are retired" is not, and both need
+# the same window to be caught by the same check.
+_DISCOVERY_PHRASE_RE = re.compile(
+    r"\byour chart (?:reveals?|shows?|indicates?|tells? (?:us|me))\b|"
+    r"\bthe (?:chart|stars|planets) (?:reveals?|shows?|indicates?)\b",
+    re.IGNORECASE,
+)
+
+_FACT_KEY_KEYWORDS: dict[str, tuple[str, ...]] = {
+    "employment_status": ("retir", "employ", "career status", "job status"),
+    "relationship_status": ("marri", "spouse", "divorce", "separat"),
+    "has_children": ("child", "kids", " a parent", "parenthood"),
+    "current_health_constraint": ("health condition", "your condition",
+                                  "your recovery", "your illness", "diagnos"),
+    "recovery_period": ("your recovery", "recovering", "your condition"),
+}
+
+
+def _blocked_frame_violations(reading: StructuredReading, bundle: dict) -> list[Violation]:
+    preflight = ((bundle.get("profile_context") or {}).get("preflight") or {})
+    blocked = preflight.get("blocked_frames") or []
+    if not blocked:
+        return []
+    text_to_check = [reading.interpretation, reading.summary_and_assurance,
+                     reading.acknowledgment] + [item.reading for item in reading.technical_basis]
+    out: list[Violation] = []
+    for frame in blocked:
+        pattern = _BLOCKED_FRAME_PATTERNS.get(frame)
+        if not pattern:
+            continue
+        for text in text_to_check:
+            normalized = _normalize(text)
+            unhedged = next(
+                (match for match in pattern.finditer(normalized)
+                 if not _negation_precedes(normalized, match.start())),
+                None,
+            )
+            if unhedged:
+                out.append(Violation(
+                    f"blocked frame {frame!r} used in: {text!r} — the reader's own "
+                    "confirmed profile context rules this framing out",
+                    "safety",
+                ))
+                break
+    return out
+
+
+def _required_frame_shortfall(reading: StructuredReading, bundle: dict) -> list[Violation]:
+    """Quality-severity, matching `verify_coverage`'s discipline exactly:
+    a required frame's applicable fact never being cited is a worse
+    reading, not a dangerous one — the reader isn't told anything false,
+    the answer just failed to use context it had. Checked at the citation
+    level (did the reading cite at least one of the facts driving a
+    required frame), not by re-parsing prose for the framing itself, which
+    would be far more false-positive-prone than a citation check."""
+    preflight = ((bundle.get("profile_context") or {}).get("preflight") or {})
+    required = preflight.get("required_frames") or []
+    refs = preflight.get("applicable_fact_refs") or []
+    if not required or not refs:
+        return []
+    cited = {item.source for item in reading.technical_basis}
+    if cited & set(refs):
+        return []
+    return [Violation(
+        "required framing "
+        f"({', '.join(required)}) is established by the reader's own confirmed "
+        "context, but none of the applicable facts "
+        f"({', '.join(refs)}) were cited — the reading may have ignored it",
+        "quality",
+    )]
+
+
+def _discovery_violations(reading: StructuredReading, bundle: dict) -> list[Violation]:
+    active_keys = {
+        f["key"] for f in (bundle.get("profile_context") or {}).get("facts", [])
+        if f.get("status") == "active"
+    }
+    if not active_keys:
+        return []
+    text_to_check = [reading.interpretation, reading.summary_and_assurance,
+                     reading.acknowledgment] + [item.reading for item in reading.technical_basis]
+    out: list[Violation] = []
+    for text in text_to_check:
+        for match in _DISCOVERY_PHRASE_RE.finditer(text):
+            window = text[max(0, match.start() - 80): match.end() + 80].lower()
+            for key in active_keys:
+                if any(kw in window for kw in _FACT_KEY_KEYWORDS.get(key, ())):
+                    out.append(Violation(
+                        f"disclosed profile fact {key!r} presented as an astrological "
+                        f"discovery in: {text!r}",
+                        "safety",
+                    ))
+                    break
+    return out
 
 
 def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
@@ -230,6 +411,13 @@ def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
                     f"timeline: {text!r}"
                 )
 
+    # Profile Context Ledger logical preflight (Phase 2) — safety severity,
+    # same tier as prohibited_verdict/dosha_overclaim above: a blocked frame
+    # or a disclosed fact handed back as a chart discovery is not a worse
+    # reading, it is a trust violation, exactly like an invented citation.
+    violations.extend(_blocked_frame_violations(reading, bundle))
+    violations.extend(_discovery_violations(reading, bundle))
+
     return violations
 
 
@@ -255,9 +443,14 @@ def verify_coverage(reading: StructuredReading, bundle: dict) -> list[Violation]
     Quality severity throughout: a missed varga is worth one repair attempt,
     never worth discarding the consultation and handing the reader an error.
     """
+    # Independent of taxonomy — a required framing constraint applies
+    # whenever the Profile Context Ledger preflight set one, regardless of
+    # whether this domain has a registered taxonomy spec at all.
+    out: list[Violation] = list(_required_frame_shortfall(reading, bundle))
+
     spec = _domain_spec(bundle)
     if spec is None:
-        return []
+        return out
 
     text_to_check = [
         reading.acknowledgment, reading.interpretation, reading.summary_and_assurance,
@@ -268,8 +461,6 @@ def verify_coverage(reading: StructuredReading, bundle: dict) -> list[Violation]
         + [item.factor for item in reading.technical_basis]
         + [item.source for item in reading.technical_basis]
     ).casefold()
-
-    out: list[Violation] = []
 
     for varga in getattr(spec, "vargas_primary", ()) or ():
         # "D10" and the classical name both count — a reading is free to say
