@@ -30,7 +30,7 @@ from ..context.taxonomy import TaxonomyError
 from ..db import crud, crud_mobile as cm, get_db
 from .ask_routes import (
     MAX_HISTORY, AskRequest, _evidence_from_reading, _history_from_thread,
-    _owned_thread, _thread_established_domain,
+    _owned_thread, _profile_context_store, _thread_established_domain,
 )
 from .auth import CurrentUser
 from .context_routes import _chart_from_kundli
@@ -161,6 +161,7 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
         chart_loader=lambda: _chart_from_kundli(k, "lahiri", "mean"),
         validation_store=_validation_store(db, user.id, kundli_id,
                                            thread.id if thread else None),
+        profile_context_store=_profile_context_store(db, user.id, kundli_id),
     )
     try:
         outcome = orchestrator.prepare(
@@ -224,7 +225,11 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
             return thread.id if thread else None
         return persist_turn(
             reading.interpretation, domain=prepared.domain, refer_out_kind=None,
-            evidence=_evidence_from_reading(reading),
+            evidence=_evidence_from_reading(
+                reading,
+                profile_context_revision=prepared.profile_context_revision,
+                profile_context_as_of=prepared.profile_context_as_of,
+            ),
         )
 
     return StreamingResponse(

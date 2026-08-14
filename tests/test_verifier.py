@@ -8,6 +8,7 @@ import pytest
 from astrospace.agents.schema import Guidance, RemedyItem, StructuredReading, TechnicalBasisItem
 from astrospace.agents.verifier import verify, verify_coverage
 from astrospace.context import assemble_domain
+from astrospace.context.profile_context import build_logical_preflight
 from astrospace.core.vedic.chart import VedicChart
 
 DELHI = {"city": "New Delhi", "nation": "IN"}
@@ -850,6 +851,76 @@ class TestTenseConflictInvariant:
         ))
         violations = verify(good, career_bundle_2026, "career", question_tense="retrospective")
         assert violations == []
+
+
+class TestTenseInvariantParityWithLedgerPreflight:
+    """Profile Context Ledger Phase 2 (docs/profile_context_ledger_
+    architecture_2026-08-14.md, release gate 7): the new ledger-aware
+    preflight checks (`_blocked_frame_violations`/`_discovery_violations`/
+    `_required_frame_shortfall`, added alongside `_tense_conflict` in this
+    same `verify()`) must be a strict superset of the old tense-only
+    invariant, never a competing or contradicting one. Two things must both
+    be true, and this class checks both directly rather than trusting it by
+    inspection:
+
+    1. With no ledger data (`profile_context` empty, exactly what every
+       bundle looked like before Phase 2), `verify()` must produce IDENTICAL
+       violations to what it produced before — re-running every case from
+       `TestTenseConflictInvariant` above through the CURRENT code proves
+       the new checks add nothing when there is nothing new to check.
+    2. When ledger data IS present alongside a tense conflict, the old
+       invariant's violation must still be there — `old ⊆ combined`,
+       checked as a literal subset assertion, not just "still fails
+       somehow." The new checks are additive `violations.extend(...)`
+       calls in `verify()`'s own source, so this is structurally
+       guaranteed, but the whole point of a parity test is to prove that
+       from the outside, not from reading the code that could change."""
+
+    def test_old_tense_conflict_cases_are_byte_identical_with_empty_ledger(self, career_bundle_2026):
+        assert career_bundle_2026["profile_context"] == {
+            "facts": [], "logical_constraints": [], "preflight": {},
+            "revision": 0, "as_of": career_bundle_2026["profile_facts"]["as_of"][:10],
+        }
+        bad = _reading(interpretation=(
+            "Your career inception window opens around 2049, a strong period ahead."
+        ))
+        violations = verify(bad, career_bundle_2026, "career", question_tense="retrospective")
+        assert violations == ["retrospective question answered with an invented future "
+                              f"timeline: {bad.interpretation!r}"]
+
+        good = _reading(interpretation="Your career took shape around 2001, when Jupiter supported new beginnings.")
+        assert verify(good, career_bundle_2026, "career", question_tense="retrospective") == []
+
+    def test_ledger_and_tense_violations_both_surface_together_never_one_suppressing_the_other(self, career_bundle_2026):
+        facts = [{"id": "r1", "key": "employment_status", "status": "active",
+                 "value": {"code": "retired"}, "ref": "profile_fact:r1@1"}]
+        preflight = build_logical_preflight(
+            profile_facts=career_bundle_2026["profile_facts"], projection_facts=facts,
+            tense="retrospective", question="ignored for this check", domain="career",
+        )
+        bundle = {**career_bundle_2026, "profile_context": {
+            "facts": facts, "logical_constraints": [], "revision": 1, "as_of": "2026-01-01",
+            "preflight": preflight.to_dict(),
+        }}
+        # Both an invented future YEAR (old invariant) and a blocked
+        # career-inception FRAME (new preflight) in the same answer.
+        bad = _reading(interpretation=(
+            "Your career will begin in earnest around 2049, a strong new start."
+        ))
+        old_only_bundle = {**career_bundle_2026, "profile_context": {
+            "facts": [], "logical_constraints": [], "revision": 0, "as_of": "2026-01-01",
+        }}
+        old_violations = verify(bad, old_only_bundle, "career", question_tense="retrospective")
+        combined_violations = verify(bad, bundle, "career", question_tense="retrospective")
+
+        assert old_violations, "sanity check: the old invariant alone must still fire"
+        assert set(old_violations) <= set(combined_violations), (
+            "the ledger-aware preflight must never suppress a violation the "
+            "old tense invariant alone would have raised"
+        )
+        assert any("blocked frame" in v for v in combined_violations), (
+            "the new preflight must ALSO fire — this is additive, not a replacement"
+        )
 
 
 @pytest.fixture(scope="module")

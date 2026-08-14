@@ -1,10 +1,17 @@
 """Transactional persistence for the Profile Context Ledger."""
 
+from dataclasses import dataclass, field
 from datetime import date, datetime
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from ..context.profile_context import (
+    FACT_REGISTRY,
+    fact_is_current,
+    logical_constraints,
+    relevant_to_domain,
+)
 from .models import (
     ProfileContextAuditEvent,
     ProfileContextFact,
@@ -255,3 +262,113 @@ def change_fact_status(db: Session, *, user_id: str, profile_id: str,
     except Exception:
         db.rollback()
         raise
+
+
+@dataclass(frozen=True)
+class FrozenProfileContextProjection:
+    """One immutable snapshot of a profile's ledger, as of the moment it was
+    built. Both `profile_context_routes.py` (the reader-facing "what Siddha
+    remembers" screen) and `AskOrchestrator` (Phase 2) build this through
+    the SAME function — one deterministic evidence-resolution boundary, not
+    a route-only projection and a second orchestrator-only one.
+
+    "Frozen" is a naming discipline, not a runtime lock: this is a plain
+    dataclass built once from one set of queries and then only ever read.
+    Nothing in this module re-queries the ledger after construction — an
+    Ask turn that builds this once before generation and never rebuilds it
+    during repair/verification gets that guarantee for free by simply never
+    calling this function a second time for the same turn. See
+    `AskOrchestrator.check_profile_context()`."""
+    profile_id: str
+    revision: int
+    as_of: str
+    domain: str | None
+    status: str
+    contradictions: tuple[str, ...] = ()
+    facts: tuple[dict, ...] = ()
+    logical_constraints: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict:
+        return {
+            "profile_id": self.profile_id,
+            "revision": self.revision,
+            "as_of": self.as_of,
+            "domain": self.domain,
+            "status": self.status,
+            "contradictions": list(self.contradictions),
+            "facts": [dict(f) for f in self.facts],
+            "logical_constraints": list(self.logical_constraints),
+        }
+
+
+def build_profile_context_projection(
+    db: Session, *, user_id: str, profile_id: str,
+    domain: str | None = None, as_of: date | None = None,
+    include_history: bool = False,
+) -> FrozenProfileContextProjection:
+    """The one shared projection builder — see `FrozenProfileContextProjection`.
+
+    Does NOT check profile ownership. Every caller already sits behind an
+    ownership check that returns 404 for an absent-or-foreign profile before
+    this runs: `profile_context_routes.py`'s `_owned_profile()` for the
+    mobile surface, and the chart loader's own `crud.get_kundli()` check
+    (astrospace/api/ask_routes.py, ask_stream_routes.py) for Ask — by the
+    time an Ask turn reaches this function, the profile is already resolved.
+    Filtering by BOTH `user_id` and `profile_id` here means a mismatched
+    pair simply returns an empty, revision-0 projection rather than another
+    account's data, so this stays safe even if a future caller forgot the
+    upstream check — but the uniform 404 behaviour itself is the caller's
+    job, not this function's, exactly like `list_facts` already works."""
+    effective_date = as_of or date.today()
+    ledger = db.query(ProfileContextLedger).filter_by(
+        profile_id=profile_id, user_id=user_id
+    ).first()
+    revision = ledger.revision if ledger else 0
+
+    rows = list_facts(db, user_id, profile_id, include_history=include_history)
+    facts: list[dict] = []
+    for row in rows:
+        spec = FACT_REGISTRY.get(row.key)
+        if not spec:
+            continue
+        if include_history or (fact_is_current(row, effective_date) and relevant_to_domain(spec, domain)):
+            item = fact_dict(row)
+            item["ref"] = f"profile_fact:{row.id}@{row.revision}"
+            facts.append(item)
+
+    current_by_key: dict[str, list[dict]] = {}
+    for fact in facts:
+        if fact["status"] == "active":
+            current_by_key.setdefault(fact["key"], []).append(fact)
+    contradictions = [key for key, values in current_by_key.items() if len(values) > 1]
+    current = [fact for fact in facts if fact["status"] == "active"]
+
+    return FrozenProfileContextProjection(
+        profile_id=profile_id,
+        revision=revision,
+        as_of=effective_date.isoformat(),
+        domain=domain,
+        status="context_confirmation_needed" if contradictions else "ready",
+        contradictions=tuple(contradictions),
+        facts=tuple(facts),
+        logical_constraints=() if contradictions else tuple(logical_constraints(current)),
+    )
+
+
+def resolve_fact_ref(
+    db: Session, *, user_id: str, profile_id: str, ref: str,
+) -> ProfileContextFact | None:
+    """Resolve one `profile_fact:<id>@<revision>` evidence ref against the
+    real ledger — used by the verifier to confirm a citation both exists
+    and belongs to this exact profile/revision, not a wrong-profile or
+    stale/superseded one. See `astrospace/agents/verifier.py`."""
+    if not ref.startswith("profile_fact:") or "@" not in ref:
+        return None
+    body = ref[len("profile_fact:"):]
+    fact_id, _, revision_str = body.partition("@")
+    if not fact_id or not revision_str.isdigit():
+        return None
+    fact = get_fact(db, user_id, profile_id, fact_id)
+    if fact is None or fact.revision != int(revision_str):
+        return None
+    return fact

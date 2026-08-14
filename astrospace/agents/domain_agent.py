@@ -103,15 +103,17 @@ not recompute or contradict it.
 CONTEXT BUNDLE ({domain_name}):
 {bundle_json}
 
-Grounding rules — non-negotiable:
+{profile_context_block}Grounding rules — non-negotiable:
 ── EVIDENCE — what you may claim, and what you must not skip ─────────────
 1. Base every claim on a specific field in the bundle above (a house, a varga placement, an
    active yoga/dosha, a dasha lord, a transit). Do not introduce placements or techniques
    that are not in the bundle.
 2. Every `technical_basis` item's `source` must be either a reference/passage id from the
-   bundle's `references`/`source_passages`, or one of the bundle's own section names
+   bundle's `references`/`source_passages`, one of the bundle's own section names
    (houses, karakas, vargas, yogas, doshas, dasha_relevance, gochara, jaimini_karakas,
-   arudhas) — never an invented citation.
+   arudhas, profile_facts, profile_context), or — when citing a specific reader-confirmed
+   fact from the LOGICAL CONTEXT block below — that exact fact's `ref` value
+   (e.g. "profile_fact:3f2a...@2"), copied precisely, never an invented citation.
 2a. `references`/`source_passages` entries are grounding material, not text to reuse. Read
    them for what they establish, then write every field of your answer — `technical_basis`
    `reading`, `interpretation`, everything — entirely in your own words. Never reproduce a
@@ -284,6 +286,70 @@ speak, never WHAT is true, what you may claim, or what you must refuse.
 {domain_addendum}"""
 
 
+def _format_profile_context_block(bundle: dict) -> str:
+    """Renders the frozen `profile_context` bundle section (see
+    astrospace/context/assembler.py, astrospace/agents/orchestrator.py's
+    `check_profile_context()`) as prose, positioned in the prompt BEFORE the
+    astrological grounding rules — logical constraints from reader-confirmed
+    life facts must be established before astrological reasoning, the same
+    ordering rule 8 already states for tense alone. Returns "" (omitted
+    entirely) when there is nothing to say, so a profile with no ledger
+    facts sees an identical prompt to before Phase 2."""
+    pc = bundle.get("profile_context") or {}
+    preflight = pc.get("preflight") or {}
+    blocked = preflight.get("blocked_frames") or []
+    required = preflight.get("required_frames") or []
+    notes = preflight.get("context_notes") or []
+    missing = preflight.get("missing_or_conflicting_context") or []
+    facts = pc.get("facts") or []
+    if not (blocked or required or notes or missing or facts):
+        return ""
+
+    lines = [
+        "── LOGICAL CONTEXT — established from the reader's own confirmed "
+        "life facts, BEFORE any astrological evidence below, and it governs "
+        "everything that follows. Logical/common-sense reasoning about the "
+        "reader's stated situation always comes before astrological "
+        "interpretation, never gets overridden by it. ──",
+    ]
+    if facts:
+        lines.append(
+            "The reader has explicitly confirmed the following about their own "
+            "life through the app's profile settings — reported fact, never "
+            "chart-derived, never inferred by you:"
+        )
+        for fact in facts:
+            lines.append(f"  - {fact.get('key')}: {fact.get('value')} (ref: {fact.get('ref')})")
+    if blocked:
+        lines.append(
+            "BLOCKED FRAMES — do not answer using any of these framings, "
+            "under any circumstance: " + "; ".join(blocked)
+        )
+    if required:
+        lines.append(
+            "REQUIRED FRAMES — your answer must use these framings wherever "
+            "the question invites them: " + "; ".join(required)
+        )
+    for note in notes:
+        lines.append(f"  - {note}")
+    if missing:
+        lines.append(
+            "UNRESOLVED CONFLICT — the ledger and the question do not agree. "
+            "Do not silently pick a side: acknowledge the conflict in plain "
+            "language and ask the reader to confirm which is current. "
+            + "; ".join(missing)
+        )
+    lines.append(
+        "Never hand a confirmed fact above back to the reader as if the chart "
+        "discovered it — that is a lie when they are the one who told you. Say "
+        "\"you mentioned...\" or \"since you shared...\", never \"your chart "
+        "reveals...\" or \"your chart shows...\" about something on this list. "
+        "If a fact above is central to your reasoning, cite its exact `ref` "
+        "value (e.g. \"profile_fact:...\") as a `technical_basis` source."
+    )
+    return "\n".join(lines) + "\n\n"
+
+
 class DomainReadingAgent(BaseAstroAgent):
     """One taxonomy-domain specialist, configured (not subclassed) per
     domain. `domain_addendum` carries the domain-specific framing; the
@@ -302,6 +368,7 @@ class DomainReadingAgent(BaseAstroAgent):
         self.system_prompt = _BASE_SYSTEM.format(
             domain_name=bundle.get("domain_name", bundle.get("domain", "")),
             bundle_json=json.dumps(bundle, indent=2, default=str),
+            profile_context_block=_format_profile_context_block(bundle),
             domain_addendum=domain_addendum,
             age_years=profile_facts.get("age_years", "unknown"),
             as_of=profile_facts.get("as_of", "unknown"),

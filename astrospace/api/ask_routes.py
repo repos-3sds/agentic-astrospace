@@ -20,11 +20,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 
-from ..agents.orchestrator import AskOrchestrator
+from ..agents.orchestrator import AskOrchestrator, ProfileContextStore
 from ..agents.schema import StructuredReading
 from ..context.taxonomy import TaxonomyError
 from ..db import get_db
 from ..db import crud, crud_mobile as cm
+from ..db.crud_profile_context import build_profile_context_projection
 from .auth import CurrentUser
 from .context_routes import _chart_from_kundli
 
@@ -178,7 +179,32 @@ def _thread_established_domain(db: Session, thread_id: str) -> Optional[str]:
     return None
 
 
-def _evidence_from_reading(reading: StructuredReading) -> dict:
+def _profile_context_store(db: Session, user_id: str, kundli_id: str) -> ProfileContextStore:
+    """One profile-scoped `ProfileContextStore` per Ask call, closing over
+    exactly one `(db, user_id, kundli_id)` triple — the same isolation
+    pattern as `chart_loader`. A single orchestrator instance is bound to
+    one profile for its whole lifetime; there is no code path by which a
+    profile switch mid-request could redirect this closure at a different
+    profile's data. `build_profile_context_projection` does not check
+    ownership itself (see its own docstring) — safe here because the route
+    already resolved `k = crud.get_kundli(db, kundli_id, user.id)` (a 404 on
+    mismatch) before this closure is ever constructed.
+
+    Shared with `ask_stream_routes.py` (imported from here) so both
+    surfaces build the profile-context projection identically."""
+    def projection(domain: str, as_of_iso: str) -> dict:
+        as_of = datetime.fromisoformat(as_of_iso).date() if as_of_iso else None
+        return build_profile_context_projection(
+            db, user_id=user_id, profile_id=kundli_id, domain=domain, as_of=as_of,
+        ).to_dict()
+    return ProfileContextStore(projection=projection)
+
+
+def _evidence_from_reading(
+    reading: StructuredReading, *,
+    profile_context_revision: int | None = None,
+    profile_context_as_of: str | None = None,
+) -> dict:
     """Namespaced, versioned bridge shape for `AskMessage.evidence` — this is
     explicitly a temporary storage decision, not the final one. Wrapping it
     (rather than dumping the raw structured object) makes that obvious to
@@ -186,14 +212,27 @@ def _evidence_from_reading(reading: StructuredReading) -> dict:
     comparable across old rows (`{"tools_used": [...]}` etc., from before
     this build) and new ones.
 
+    `profile_context_revision`/`profile_context_as_of` are optional so old
+    call sites and old persisted rows are unaffected — present only from
+    Phase 2 onward, and only when a `ProfileContextStore` was actually
+    wired in. This is the ledger snapshot the answer was generated and
+    verified against (`AskOrchestrator.PreparedRun`), frozen at persistence
+    time: reopening this thread later must show what the answer was
+    actually grounded in, never a value re-read from the ledger's current
+    (possibly since-corrected) state.
+
     Shared with `ask_stream_routes.py` (imported from here) so a thread's
     evidence shape is identical regardless of which endpoint answered a
     given turn."""
-    return {
+    evidence = {
         "schema_version": "ask_structured_v1",
         "structured_reading": reading.model_dump(),
         "references": [item.source for item in reading.technical_basis],
     }
+    if profile_context_revision is not None:
+        evidence["profile_context_revision"] = profile_context_revision
+        evidence["profile_context_as_of"] = profile_context_as_of
+    return evidence
 
 
 @router.post("/{kundli_id}")
@@ -265,6 +304,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
 
     orchestrator = AskOrchestrator(
         chart_loader=lambda: _chart_from_kundli(k, "lahiri", "mean"),
+        profile_context_store=_profile_context_store(db, user.id, kundli_id),
     )
     try:
         outcome = orchestrator.prepare(
@@ -327,7 +367,11 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
             return thread.id if thread else None
         return persist_turn(reading.interpretation, domain=prepared.domain,
                             refer_out_kind=None,
-                            evidence=_evidence_from_reading(reading))
+                            evidence=_evidence_from_reading(
+                                reading,
+                                profile_context_revision=prepared.profile_context_revision,
+                                profile_context_as_of=prepared.profile_context_as_of,
+                            ))
 
     done = None
     for event in orchestrator.run(prepared, messages, persist=persist_prepared):

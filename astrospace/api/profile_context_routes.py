@@ -10,23 +10,17 @@ from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.orm import Session
 
 from .auth import CurrentUser
-from ..context.profile_context import (
-    FACT_REGISTRY,
-    fact_is_current,
-    logical_constraints,
-    relevant_to_domain,
-    validate_fact_value,
-)
+from ..context.profile_context import validate_fact_value
 from ..db import Kundli, get_db
 from ..db import crud
 from ..db.crud_profile_context import (
     IdempotencyConflict,
     InvalidFactMutation,
     RevisionConflict,
+    build_profile_context_projection,
     change_fact_status,
     create_fact,
     fact_dict,
-    get_or_create_ledger,
     list_facts,
     supersede_fact,
 )
@@ -144,38 +138,11 @@ def get_profile_context(
     db: Session = Depends(get_db),
 ):
     _owned_profile(db, profile_id, user.id)
-    from ..db.models import ProfileContextLedger
-    ledger = db.query(ProfileContextLedger).filter_by(
-        profile_id=profile_id, user_id=user.id
-    ).first()
-    revision = ledger.revision if ledger else 0
-    effective_date = as_of or date.today()
-    rows = list_facts(db, user.id, profile_id, include_history=include_history)
-    facts = []
-    for row in rows:
-        spec = FACT_REGISTRY.get(row.key)
-        if not spec:
-            continue
-        if include_history or (fact_is_current(row, effective_date) and relevant_to_domain(spec, domain)):
-            item = fact_dict(row)
-            item["ref"] = f"profile_fact:{row.id}@{row.revision}"
-            facts.append(item)
-
-    current_by_key: dict[str, list[dict]] = {}
-    for fact in facts:
-        if fact["status"] == "active":
-            current_by_key.setdefault(fact["key"], []).append(fact)
-    contradictions = [key for key, values in current_by_key.items() if len(values) > 1]
-    current = [fact for fact in facts if fact["status"] == "active"]
-    return {
-        "profile_id": profile_id,
-        "revision": revision,
-        "as_of": effective_date.isoformat(),
-        "status": "context_confirmation_needed" if contradictions else "ready",
-        "contradictions": contradictions,
-        "facts": facts,
-        "logical_constraints": [] if contradictions else logical_constraints(current),
-    }
+    projection = build_profile_context_projection(
+        db, user_id=user.id, profile_id=profile_id,
+        domain=domain, as_of=as_of, include_history=include_history,
+    )
+    return projection.to_dict()
 
 
 @router.post("/{profile_id}/context/facts", status_code=201)
