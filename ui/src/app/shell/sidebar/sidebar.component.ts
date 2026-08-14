@@ -99,6 +99,12 @@ export class SidebarComponent {
         this.canAdmin.set(false);
         return;
       }
+      // getAccessToken() refreshes AuthService's session/user signals before
+      // every API request. Without this identity guard, /admin/me refreshes
+      // the user signal, which re-runs this effect and starts another
+      // /admin/me request indefinitely. Only a genuinely different signed-in
+      // user needs a new access check.
+      if (this.adminCheckUserId === userId) return;
       void this.refreshAdminAccess(userId);
     });
   }
