@@ -7,6 +7,14 @@ from .panchanga_day import daily_panchanga, personal_panchanga
 from .positions import sign_index
 from .transits import transit_analysis
 
+# Bumped when the calendar/festival assembly logic or dataset changes in a
+# way that would make a previously cached response wrong — independent of
+# any profile's own birth-data revision. See docs/reliable_native_core_
+# architecture_2026-08-14.md's cache validity contract; consumed by
+# /api/v1/vedic/{kundli_id}/calendar-intelligence.
+CALENDAR_ENGINE_VERSION = "calendar-intelligence-1.0"
+CALENDAR_DATASET_VERSION = "astrospace-calendar-2026.08.14"
+
 
 def _event(date: str, category: str, title: str, detail: str,
            tone: str = "neutral", strength: int = 50, meta: dict | None = None) -> dict:
@@ -214,6 +222,8 @@ def calendar_intelligence(
     start_date = start_dt.date().isoformat()
     return {
         "system": "AstroSpace Calendar Intelligence",
+        "engine_version": CALENDAR_ENGINE_VERSION,
+        "dataset_version": CALENDAR_DATASET_VERSION,
         "profile": {"name": chart.name, "janma_nakshatra": janma_nak["name"]},
         "provenance": {
             **chart.provenance("calendar-intelligence"),
