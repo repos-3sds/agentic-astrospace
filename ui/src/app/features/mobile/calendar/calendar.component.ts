@@ -6,7 +6,9 @@ import { KundliStore } from '../../../core/kundli.store';
 import { CalendarIntelligencePayload, FestivalOccurrence } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
+import { ResourceFreshness } from '../../../core/resource-cache';
 import { FestivalSheetComponent } from './festival-sheet.component';
+import { calendarCacheOptions } from './calendar-cache-options';
 
 interface CalendarCell {
   date: string;
@@ -52,6 +54,9 @@ interface CalendarCell {
       } @else if (!activeId()) {
         <section class="mcal-state"><b>No active profile</b><p>Select a profile before loading calendar guidance.</p></section>
       } @else if (data(); as calendar) {
+        @if (cacheFreshness() === 'stale') {
+          <p class="mcal-cache-notice" role="status">{{ cacheAgeLabel() }} · refreshing calendar</p>
+        }
         <section
           class="mcal-grid"
           (touchstart)="startMonthSwipe($event)"
@@ -102,6 +107,8 @@ export class CalendarComponent {
   protected readonly weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   protected readonly skeletonDays = Array.from({ length: 35 });
   protected readonly data = signal<CalendarIntelligencePayload | null>(null);
+  protected readonly cacheFreshness = signal<ResourceFreshness | null>(null);
+  protected readonly cacheUpdatedAt = signal<number | null>(null);
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly festivalLoading = signal(false);
@@ -152,6 +159,7 @@ export class CalendarComponent {
     effect(() => {
       const profileId = this.activeId();
       this.preferences.panchangaContextKey();
+      this.preferences.experienceMode();
       void this.load(profileId);
     });
     effect(() => {
@@ -228,14 +236,17 @@ export class CalendarComponent {
       this.loading.set(false);
       return;
     }
-    const cached = this.vedic.cachedCalendarIntelligence(id, 45);
+    const options = this.calendarOptions();
+    const cached = this.vedic.cachedCalendarIntelligenceEntry(id, 45, undefined, options);
     if (cached && !forceRefresh) {
-      this.data.set(cached);
-      this.visibleMonth.set(cached.start_date.slice(0, 7));
+      this.data.set(cached.data);
+      this.cacheFreshness.set(cached.freshness);
+      this.cacheUpdatedAt.set(cached.storedAt);
+      this.visibleMonth.set(cached.data.start_date.slice(0, 7));
       this.renderedProfileId = id;
       this.loading.set(false);
-      void this.loadFestivals(cached.start_date, 60);
-      void this.refreshCalendar(id, request);
+      void this.loadFestivals(cached.data.start_date, 60);
+      if (cached.freshness === 'stale') void this.refreshCalendar(id, request);
       return;
     }
     if (this.renderedProfileId !== id) {
@@ -246,23 +257,29 @@ export class CalendarComponent {
     }
     try {
       const calendar = await withTimeout(
-        forceRefresh ? this.vedic.refreshCalendarIntelligence(id, 45) : this.vedic.calendarIntelligence(id, 45),
+        forceRefresh
+          ? this.vedic.refreshCalendarIntelligence(id, 45, undefined, options)
+          : this.vedic.calendarIntelligence(id, 45, undefined, options),
         15000,
         'Calendar is taking longer than expected. Check your connection and retry.',
       );
       if (request !== this.requestId || this.activeId() !== id) return;
       this.data.set(calendar);
+      this.cacheFreshness.set('fresh');
+      this.cacheUpdatedAt.set(Date.now());
       this.renderedProfileId = id;
       this.visibleMonth.set(calendar.start_date.slice(0, 7));
       void this.loadFestivals(calendar.start_date, 60);
     } catch (error) {
       if (request === this.requestId) {
-        const fallback = this.vedic.cachedCalendarIntelligence(id, 45);
+        const fallback = this.vedic.cachedCalendarIntelligenceEntry(id, 45, undefined, options);
         if (fallback) {
-          this.data.set(fallback);
+          this.data.set(fallback.data);
+          this.cacheFreshness.set(fallback.freshness);
+          this.cacheUpdatedAt.set(fallback.storedAt);
           this.renderedProfileId = id;
-          this.visibleMonth.set(fallback.start_date.slice(0, 7));
-          void this.loadFestivals(fallback.start_date, 60);
+          this.visibleMonth.set(fallback.data.start_date.slice(0, 7));
+          void this.loadFestivals(fallback.data.start_date, 60);
         } else {
           this.error.set((error as Error).message);
         }
@@ -274,14 +291,26 @@ export class CalendarComponent {
 
   private async refreshCalendar(id: string, request: number): Promise<void> {
     try {
-      const calendar = await this.vedic.refreshCalendarIntelligence(id, 45);
+      const calendar = await this.vedic.refreshCalendarIntelligence(id, 45, undefined, this.calendarOptions());
       if (request !== this.requestId || this.activeId() !== id) return;
       this.data.set(calendar);
+      this.cacheFreshness.set('fresh');
+      this.cacheUpdatedAt.set(Date.now());
       this.renderedProfileId = id;
       void this.loadFestivals(calendar.start_date, 60);
     } catch {
       // The cached calendar stays usable when background refresh fails.
     }
+  }
+
+  private calendarOptions(): { includePractitionerDetail: boolean } {
+    return calendarCacheOptions(this.preferences.experienceMode());
+  }
+
+  protected cacheAgeLabel(): string {
+    const updatedAt = this.cacheUpdatedAt();
+    if (!updatedAt) return 'Saved data';
+    return `Saved ${new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(updatedAt)}`;
   }
 
   private isoDate(year: number, month: number, day: number): string {

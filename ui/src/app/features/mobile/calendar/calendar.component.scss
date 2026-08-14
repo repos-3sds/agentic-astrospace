@@ -71,3 +71,8 @@
   .mcal-skel-row .mcal-date-tile,
   .mcal-skel-row i { animation: none; }
 }
+.mcal-cache-notice {
+  @include m-caption;
+  margin: 0 0 12px;
+  color: var(--m-muted);
+}

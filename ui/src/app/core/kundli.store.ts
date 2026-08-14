@@ -57,6 +57,7 @@ export class KundliStore {
 
   /** Drop every user-scoped value before another account can enter the shell. */
   reset(): void {
+    this.vedic.clearConfiguredProfiles();
     this.kundlis.set([]);
     this.activeId.set(null);
     this.loaded.set(false);
@@ -69,6 +70,7 @@ export class KundliStore {
     try {
       const kundlis = await this.api.get<Kundli[]>('/kundlis');
       this.kundlis.set(kundlis);
+      for (const kundli of kundlis) this.vedic.configureProfile(kundli);
       const storedId = localStorage.getItem(this.activeStorageKey);
       const selected = kundlis.find((kundli) => kundli.id === storedId) ?? kundlis[0] ?? null;
       this.setActive(selected?.id ?? null);
@@ -87,6 +89,7 @@ export class KundliStore {
 
   async create(payload: KundliPayload): Promise<Kundli> {
     const created = await this.api.post<Kundli>('/kundlis', payload);
+    this.vedic.configureProfile(created);
     this.kundlis.update((list) => [...list, created]);
     this.setActive(created.id);
     return created;
@@ -96,6 +99,7 @@ export class KundliStore {
     const updated = await this.api.patch<Kundli>(`/kundlis/${id}`, payload);
     this.kundlis.update((list) => list.map((k) => (k.id === id ? updated : k)));
     this.vedic.invalidate(id);
+    this.vedic.configureProfile(updated);
     return updated;
   }
 
@@ -103,6 +107,7 @@ export class KundliStore {
     await this.api.delete(`/kundlis/${id}`);
     this.kundlis.update((list) => list.filter((k) => k.id !== id));
     this.vedic.invalidate(id);
+    this.vedic.removeConfiguredProfile(id);
     if (this.activeId() === id) this.setActive(this.kundlis()[0]?.id ?? null);
   }
 }

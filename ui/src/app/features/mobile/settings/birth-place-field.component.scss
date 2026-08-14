@@ -1,0 +1,15 @@
+@use '../mobile-tokens' as *;
+:host { display: flex; flex-direction: column; gap: 8px; position: relative; }
+label { @include m-caption; color: var(--m-muted); }
+.place-input { display: flex; align-items: center; gap: 10px; box-sizing: border-box; width: 100%; padding: 0 16px; border: 1.2px solid var(--m-border); border-radius: 16px; background: var(--m-surface); }
+.place-input.active { border-color: var(--m-accent); }
+.place-input > img { width: 18px; height: 18px; flex: 0 0 auto; opacity: .72; }
+input { @include m-body; min-width: 0; width: 100%; padding: 16px 0; border: 0; outline: 0; color: var(--m-text); background: transparent; }
+ul { z-index: 5; display: flex; flex-direction: column; margin: 0; padding: 6px; border: 1px solid var(--m-border); border-radius: 16px; background: var(--m-raised); box-shadow: var(--m-shadow-card); list-style: none; }
+li + li { border-top: 1px solid var(--m-border); }
+button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 10px; border: 0; color: var(--m-text); background: transparent; text-align: left; }
+button > img { width: 18px; height: 18px; opacity: .68; }
+button span { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+b { @include m-body-strong; }
+small, .status, .error { @include m-body-small; margin: 0; color: var(--m-muted); }
+.error { color: var(--m-bad); }
