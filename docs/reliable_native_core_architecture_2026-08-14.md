@@ -283,9 +283,37 @@ release slice with Android and iOS device evidence.
 | Edit birth details | old profile revision cannot satisfy any dependent read |
 | Background 2 hours then resume | session remains; stale visible data refreshes once |
 | Logout A, login B | B cannot read any A cache row, Ask draft, thread, or selected profile |
-| Day boundary in selected timezone | Today key changes at that timezone's midnight, not device/UTC midnight |
+| Civil midnight before local sunrise | Keep the Vedic day that began at the previous sunrise once the backend supplies its authoritative interval; do not derive this from device midnight |
 | Corrupt local row | row is quarantined/deleted; network recovery succeeds; app does not crash |
 | Storage full | existing cache remains usable; failed write is observable and non-fatal |
+
+### Astrological validity contract required from the backend
+
+The current `/context/{profile_id}/daily` response is civil-date keyed and does
+not expose an authoritative Vedic-day interval. The client must not approximate
+sunrise from a display string or device clock. Before the Today cache policy is
+considered astrologically complete, the backend must return:
+
+```json
+{
+  "engine_version": "daily-guidance-...",
+  "valid_from": "2026-08-14T06:03:00+05:30",
+  "valid_until": "2026-08-15T06:04:00+05:30",
+  "day_definition": "sunrise_to_next_sunrise"
+}
+```
+
+For a pre-sunrise request, the backend selects the Vedic day that began at the
+previous sunrise. Once available, `valid_from` (or a stable Vedic-day ID) joins
+the cache identity and `valid_until` caps `expiresAt`; the fixed 36-hour policy
+remains only a defensive upper bound. Calendar/festival responses likewise
+need an `engine_version`/`dataset_version` so rule deployments invalidate old
+projections independently of `profile.updated_at`.
+
+Muhurta and transit resources require response-owned `valid_until` boundaries
+at the end of the represented window. A generic TTL may be shorter, but never
+longer. This pilot does not yet cache those resources and must not extend the
+generic Today/Calendar adapter to them without that contract.
 
 ## Performance Budgets
 
