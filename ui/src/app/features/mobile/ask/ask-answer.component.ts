@@ -44,6 +44,8 @@ interface ChatMessage {
   evidence: SourceReference[];
   context_used: string[];
   evidence_refs: string[];
+  profile_context_revision: number;
+  profile_context_as_of: string | null;
   reading: StructuredReading | null;
   options: string[];
   streaming?: boolean;
@@ -588,6 +590,8 @@ export class AskAnswerComponent {
       evidence: this.referencesFromEvidence(message.evidence),
       context_used: [],
       evidence_refs: [],
+      profile_context_revision: this.numberFromEvidence(message.evidence, 'profile_context_revision'),
+      profile_context_as_of: this.stringFromEvidence(message.evidence, 'profile_context_as_of'),
       reading: structured,
       options: this.clarificationOptionsFromEvidence(message.evidence),
     };
@@ -614,6 +618,32 @@ export class AskAnswerComponent {
   private clarificationOptionsFromEvidence(evidence: Record<string, unknown> | null | undefined): string[] {
     const value = evidence?.['clarification_options'] ?? evidence?.['available'];
     return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+  }
+
+  private numberFromEvidence(
+    evidence: Record<string, unknown> | null | undefined, key: string,
+  ): number {
+    const value = evidence?.[key];
+    return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+  }
+
+  private stringFromEvidence(
+    evidence: Record<string, unknown> | null | undefined, key: string,
+  ): string | null {
+    const value = evidence?.[key];
+    return typeof value === 'string' && value.trim() ? value : null;
+  }
+
+  protected profileContextLabel(message: ChatMessage): string | null {
+    if (message.profile_context_revision <= 0) return null;
+    const rawDate = message.profile_context_as_of;
+    if (!rawDate) return 'Uses your saved profile context';
+    const parsed = new Date(`${rawDate.slice(0, 10)}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) return 'Uses your saved profile context';
+    const date = new Intl.DateTimeFormat(undefined, {
+      day: 'numeric', month: 'short', year: 'numeric',
+    }).format(parsed);
+    return `Uses your saved profile context · ${date}`;
   }
 
   private readingFromEvidence(evidence: Record<string, unknown> | null | undefined): StructuredReading | null {
@@ -736,6 +766,8 @@ export class AskAnswerComponent {
       evidence: [],
       context_used: [],
       evidence_refs: [],
+      profile_context_revision: 0,
+      profile_context_as_of: null,
       reading: null,
       options: [],
       streaming: true,
@@ -826,6 +858,8 @@ export class AskAnswerComponent {
             evidence: references,
             context_used: event.context_used ?? [],
             evidence_refs: event.evidence_refs ?? [],
+            profile_context_revision: event.profile_context_revision ?? 0,
+            profile_context_as_of: event.profile_context_as_of ?? null,
             reading: event.reading,
             streaming: false,
           });
