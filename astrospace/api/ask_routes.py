@@ -103,6 +103,7 @@ def _thread(row) -> dict:
         "message_count": row.message_count,
         "last_message_at": (row.last_message_at.isoformat()
                             if row.last_message_at else None),
+        "archived_at": (row.archived_at.isoformat() if row.archived_at else None),
         "created_at": row.created_at.isoformat() if row.created_at else None,
     }
 
@@ -131,9 +132,12 @@ def _owned_thread(db: Session, thread_id: str, user_id: str):
 @router.get("/threads")
 def list_threads(user: CurrentUser,
                  kundli_id: Optional[str] = None,
+                 archived: bool = False,
                  limit: int = Query(50, ge=1, le=200),
                  db: Session = Depends(get_db)):
-    rows = cm.list_ask_threads(db, user.id, kundli_id=kundli_id, limit=limit)
+    rows = cm.list_ask_threads(
+        db, user.id, kundli_id=kundli_id, limit=limit, archived=archived,
+    )
     return {"count": len(rows), "threads": [_thread(r) for r in rows]}
 
 
@@ -152,6 +156,22 @@ def archive_thread(thread_id: str, user: CurrentUser,
     if not cm.archive_ask_thread(db, thread_id, user.id):
         raise HTTPException(status_code=404, detail="Thread not found")
     return {"archived": True}
+
+
+@router.post("/threads/{thread_id}/restore")
+def restore_thread(thread_id: str, user: CurrentUser,
+                   db: Session = Depends(get_db)):
+    if not cm.restore_ask_thread(db, thread_id, user.id):
+        raise HTTPException(status_code=404, detail="Thread not found")
+    return {"archived": False}
+
+
+@router.delete("/threads/{thread_id}")
+def delete_thread(thread_id: str, user: CurrentUser,
+                  db: Session = Depends(get_db)):
+    if not cm.delete_ask_thread(db, thread_id, user.id):
+        raise HTTPException(status_code=404, detail="Thread not found")
+    return {"deleted": True}
 
 
 # ── Ask ──────────────────────────────────────────────────────────────────────

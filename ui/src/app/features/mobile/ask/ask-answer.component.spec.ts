@@ -271,12 +271,12 @@ interface AskIsolationHarness {
   params: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
   activeId: ReturnType<typeof signal<string | null>>;
   router: { navigate: jasmine.Spy };
-  threads: { get: jasmine.Spy };
+  threads: { get: jasmine.Spy; archive: jasmine.Spy; restore: jasmine.Spy };
   ask: { stream: jasmine.Spy };
   askState: { answer: jasmine.Spy; rememberAnswer: jasmine.Spy; rememberThread: jasmine.Spy };
 }
 
-function threadDetail(threadId: string, kundliId: string) {
+function threadDetail(threadId: string, kundliId: string, archivedAt: string | null = null) {
   return {
     thread: {
       id: threadId,
@@ -284,6 +284,7 @@ function threadDetail(threadId: string, kundliId: string) {
       title: `${kundliId} private question`,
       message_count: 2,
       last_message_at: '2026-08-11T00:00:00Z',
+      archived_at: archivedAt,
       created_at: '2026-08-11T00:00:00Z',
     },
     messages: [
@@ -322,6 +323,7 @@ function createIsolationHarness(
     get: jasmine.createSpy().and.callFake((threadId: string) =>
       Promise.resolve(threadDetail(threadId, 'profile-a'))),
     archive: jasmine.createSpy().and.resolveTo(undefined),
+    restore: jasmine.createSpy().and.resolveTo(undefined),
   };
   const ask = {
     stream: jasmine.createSpy().and.callFake(async function* () { return; }),
@@ -460,6 +462,53 @@ describe('AskAnswerComponent profile isolation and thread lifecycle', () => {
     expect(harness.ask.stream).not.toHaveBeenCalled();
     expect((harness.component as any).messages()).toEqual([]);
     expect(harness.router.navigate).toHaveBeenCalledWith(['/m', 'ask'], { replaceUrl: true });
+  });
+
+  it('sends the active persona and language with every mobile Ask request', async () => {
+    const harness = createIsolationHarness({});
+    const preferences = TestBed.inject(PreferencesService);
+    preferences.experienceMode.set('practitioner');
+    preferences.language.set('te');
+    harness.params.next(convertToParamMap({ q: 'Explain my career timing', pending: '1' }));
+    await settleEffects();
+
+    expect(harness.ask.stream).toHaveBeenCalled();
+    const [, body] = harness.ask.stream.calls.mostRecent().args;
+    expect(body.experience_mode).toBe('practitioner');
+    expect(body.language).toBe('te');
+  });
+
+  it('turns a stopped stream into an explicit retryable state', async () => {
+    const harness = createIsolationHarness({});
+    await settleEffects();
+    const abort = jasmine.createSpy('abort');
+    (harness.component as any).abortController = { abort };
+    (harness.component as any).streaming.set(true);
+    (harness.component as any).streamedAnswer.set('Partial grounded answer');
+    (harness.component as any).messages.set([
+      { ...messageWithReading(null), id: 'user', role: 'user', content: 'Retry me', streaming: false },
+      { ...messageWithReading(null), id: 'assistant', status: 'understanding', streaming: true },
+    ]);
+
+    (harness.component as any).stopStreaming();
+
+    expect(abort).toHaveBeenCalled();
+    expect((harness.component as any).messages()[1].status).toBe('stopped');
+    expect((harness.component as any).messages()[1].content).toBe('Partial grounded answer');
+  });
+
+  it('opens an archived thread read-only until the reader explicitly restores it', async () => {
+    const harness = createIsolationHarness({});
+    harness.threads.get.and.resolveTo(threadDetail(
+      'thread-archived', 'profile-a', '2026-08-15T01:00:00Z',
+    ));
+    harness.params.next(convertToParamMap({ thread: 'thread-archived' }));
+    await settleEffects();
+
+    expect((harness.component as any).threadArchived()).toBeTrue();
+    await (harness.component as any).restoreThread();
+    expect(harness.threads.restore).toHaveBeenCalledOnceWith('thread-archived');
+    expect((harness.component as any).threadArchived()).toBeFalse();
   });
 });
 

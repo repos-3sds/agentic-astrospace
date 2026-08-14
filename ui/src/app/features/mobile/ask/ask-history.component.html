@@ -7,6 +7,10 @@
 </header>
 
 <main class="askhist-body">
+  <div class="askhist-tabs" role="tablist" aria-label="Conversation state">
+    <button type="button" role="tab" [attr.aria-selected]="view() === 'active'" [class.is-active]="view() === 'active'" (click)="switchView('active')">Active</button>
+    <button type="button" role="tab" [attr.aria-selected]="view() === 'archived'" [class.is-active]="view() === 'archived'" (click)="switchView('archived')">Archived</button>
+  </div>
   @if (loading()) {
     <p class="askhist-state" role="status">Loading your conversations…</p>
   } @else if (error()) {
@@ -16,9 +20,9 @@
     </div>
   } @else if (!threads().length) {
     <div class="askhist-empty">
-      <p class="askhist-empty-title">No past questions yet</p>
-      <p>Completed Ask conversations will appear here after the answer finishes saving.</p>
-      <a routerLink="/m/ask">Ask your first question</a>
+      <p class="askhist-empty-title">{{ view() === 'archived' ? 'No archived conversations' : 'No past questions yet' }}</p>
+      <p>{{ view() === 'archived' ? 'Conversations you archive will remain available here.' : 'Completed Ask conversations will appear here after the answer finishes saving.' }}</p>
+      @if (view() === 'active') { <a routerLink="/m/ask">Ask your first question</a> }
     </div>
   } @else {
     <div class="askhist-list">
@@ -29,14 +33,14 @@
           (touchstart)="beginSwipe($event)"
           (touchend)="endSwipe($event, thread)"
         >
-          <button
-            class="askhist-archive"
-            type="button"
-            [disabled]="archiving() === thread.id"
-            (click)="archive($event, thread)"
-          >
-            {{ archiving() === thread.id ? 'Archiving…' : 'Archive' }}
-          </button>
+          <div class="askhist-actions">
+            @if (view() === 'active') {
+              <button class="askhist-archive" type="button" [disabled]="mutating() === thread.id" (click)="archive($event, thread)">Archive</button>
+            } @else {
+              <button class="askhist-restore" type="button" [disabled]="mutating() === thread.id" (click)="restore($event, thread)">Restore</button>
+            }
+            <button class="askhist-delete" type="button" [disabled]="mutating() === thread.id" (click)="deleteThread($event, thread)">Delete</button>
+          </div>
           <article
             class="askhist-card"
             [class.is-opening]="opening() === thread.id"
@@ -47,7 +51,7 @@
           >
             <div class="askhist-meta">
               <span>{{ date(thread) }} · {{ thread.message_count }} messages</span>
-              <span class="askhist-badge">{{ first ? 'ACTIVE' : 'SAVED' }}</span>
+              <span class="askhist-badge">{{ view() === 'archived' ? 'ARCHIVED' : (first ? 'CURRENT' : 'ACTIVE') }}</span>
             </div>
             <div class="askhist-question">
               <h2>{{ thread.title }}</h2>

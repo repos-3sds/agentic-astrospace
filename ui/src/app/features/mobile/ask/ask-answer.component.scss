@@ -734,6 +734,14 @@
   color: var(--m-accent-strong);
 }
 
+.retry-answer {
+  @include m-cta-secondary;
+  width: fit-content;
+  min-height: 40px;
+  padding: 0 16px;
+  color: var(--m-accent-strong);
+}
+
 .stream-progress .stop-stream {
   min-height: 34px;
   padding: 0 12px;
@@ -747,6 +755,16 @@ as-ask-composer.answer-composer {
   background: var(--m-surface);
   position: relative;
   z-index: 2;
+}
+
+.archived-notice {
+  margin: 0 20px max(12px, env(safe-area-inset-bottom, 0px));
+  padding: 12px 14px;
+  border: 1px solid var(--m-border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--m-surface) 82%, transparent);
+  color: var(--m-muted);
+  @include m-body-small;
 }
 
 :host-context(.app-dark) .answer-section {

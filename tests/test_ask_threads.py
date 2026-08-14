@@ -453,6 +453,40 @@ class TestThreadListing:
         client.post(f"/api/v1/ask/threads/{tid}/archive")
         assert tid not in {t["id"] for t in
                            client.get("/api/v1/ask/threads").json()["threads"]}
+        assert tid in {t["id"] for t in client.get(
+            "/api/v1/ask/threads", params={"archived": True},
+        ).json()["threads"]}
+        archived_detail = client.get(f"/api/v1/ask/threads/{tid}").json()["thread"]
+        assert archived_detail["archived_at"] is not None
+
+    def test_archived_thread_can_be_restored(self, client, env):
+        with _reply():
+            tid = client.post(f"/api/v1/ask/{env['kundli']}", json={
+                "question": "Restore this career thread", "start_thread": True,
+            }).json()["thread_id"]
+        client.post(f"/api/v1/ask/threads/{tid}/archive")
+        restored = client.post(f"/api/v1/ask/threads/{tid}/restore")
+        assert restored.status_code == 200
+        assert restored.json() == {"archived": False}
+        assert tid in {t["id"] for t in client.get(
+            "/api/v1/ask/threads", params={"kundli_id": env["kundli"]},
+        ).json()["threads"]}
+
+    def test_owned_thread_can_be_deleted_with_its_messages(self, client, env):
+        with _reply():
+            tid = client.post(f"/api/v1/ask/{env['kundli']}", json={
+                "question": "Delete this career thread", "start_thread": True,
+            }).json()["thread_id"]
+        assert client.delete(f"/api/v1/ask/threads/{tid}").json() == {"deleted": True}
+        assert client.get(f"/api/v1/ask/threads/{tid}").status_code == 404
+
+    def test_cannot_restore_or_delete_another_users_thread(self, client, env):
+        assert client.post(
+            f"/api/v1/ask/threads/{env['foreign_thread']}/restore",
+        ).status_code == 404
+        assert client.delete(
+            f"/api/v1/ask/threads/{env['foreign_thread']}",
+        ).status_code == 404
 
     def test_filter_by_kundli(self, client, env):
         with _reply():

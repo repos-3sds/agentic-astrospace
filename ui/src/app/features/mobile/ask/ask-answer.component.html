@@ -10,7 +10,11 @@
       </p>
     }
   </div>
-  @if (activeThreadId()) {
+  @if (activeThreadId() && threadArchived()) {
+    <button class="thread-action" type="button" [disabled]="restoringThread()" (click)="restoreThread()">
+      {{ restoringThread() ? 'Restoring' : 'Restore' }}
+    </button>
+  } @else if (activeThreadId()) {
     <button
       class="thread-action"
       type="button"
@@ -22,7 +26,7 @@
   }
 </header>
 
-<div class="body" [attr.data-mode]="preferences.experienceMode()">
+<div #threadScroller class="body" [attr.data-mode]="preferences.experienceMode()" (scroll)="onThreadScroll()">
   @if (loadingThread()) {
     <p class="answer-state" role="status">Loading this conversation…</p>
   }
@@ -268,6 +272,9 @@
               }
             </div>
           }
+          @if (!message.streaming && (message.status === 'stopped' || message.status === 'network_error' || message.status === 'fatal_error' || message.status === 'generation_failed' || message.status === 'verification_failed' || message.status === 'context_unavailable')) {
+            <button class="retry-answer" type="button" (click)="$event.stopPropagation(); retryLatest()">Try again</button>
+          }
         }
 
         @if (!message.streaming && message.reading && profileContextLabel(message); as contextLabel) {
@@ -324,7 +331,7 @@
     <section class="memory-toast" role="status"><span>{{ saved.message }}</span><button type="button" [disabled]="memoryBusy()" (click)="undoMemory()">Undo</button></section>
   }
 
-  @if (latestAssistant() && !streaming()) {
+  @if (latestAssistant() && !streaming() && !threadArchived()) {
     <div class="followups">
       @for (f of latestFollowUps(); track f) {
         <button class="followup" type="button" (click)="askAgain(f)">{{ f }}</button>
@@ -333,14 +340,18 @@
   }
 </div>
 
-<as-ask-composer
-  class="answer-composer"
-  [inset]="true"
-  [value]="draft()"
-  label="Your follow-up question"
-  (valueChange)="draft.set($event)"
-  (submitted)="askAgain($event)"
-/>
+@if (threadArchived()) {
+  <p class="archived-notice">This conversation is archived. Restore it to continue asking follow-ups.</p>
+} @else {
+  <as-ask-composer
+    class="answer-composer"
+    [inset]="true"
+    [value]="draft()"
+    label="Your follow-up question"
+    (valueChange)="draft.set($event)"
+    (submitted)="askAgain($event)"
+  />
+}
 
 @if (whyOpen()) {
   <as-why-reading-sheet

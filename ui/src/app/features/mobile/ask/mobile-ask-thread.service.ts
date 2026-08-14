@@ -8,6 +8,7 @@ export interface MobileAskThread {
   title: string;
   message_count: number;
   last_message_at: string | null;
+  archived_at?: string | null;
   created_at: string | null;
 }
 
@@ -30,9 +31,9 @@ export interface MobileAskThreadDetail {
 export class MobileAskThreadService {
   private readonly api = inject(ApiService);
 
-  async list(kundliId: string): Promise<MobileAskThread[]> {
+  async list(kundliId: string, archived = false): Promise<MobileAskThread[]> {
     const result = await this.api.get<{ threads: MobileAskThread[] }>(
-      `/ask/threads?kundli_id=${encodeURIComponent(kundliId)}`,
+      `/ask/threads?kundli_id=${encodeURIComponent(kundliId)}&archived=${archived}`,
     );
     return result.threads;
   }
@@ -45,5 +46,13 @@ export class MobileAskThreadService {
 
   async archive(threadId: string): Promise<void> {
     await this.api.post(`/ask/threads/${encodeURIComponent(threadId)}/archive`, {});
+  }
+
+  async restore(threadId: string): Promise<void> {
+    await this.api.post(`/ask/threads/${encodeURIComponent(threadId)}/restore`, {});
+  }
+
+  async delete(threadId: string): Promise<void> {
+    await this.api.delete(`/ask/threads/${encodeURIComponent(threadId)}`);
   }
 }

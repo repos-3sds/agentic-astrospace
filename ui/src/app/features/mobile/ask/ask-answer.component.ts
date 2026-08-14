@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AskComposerComponent } from './ask-composer.component';
@@ -99,6 +99,8 @@ export class AskAnswerComponent {
   readonly streaming = signal(false);
   readonly loadingThread = signal(false);
   readonly archivingThread = signal(false);
+  readonly restoringThread = signal(false);
+  readonly threadArchived = signal(false);
   readonly messages = signal<ChatMessage[]>([]);
   readonly streamedAnswer = signal('');
   readonly streamStatus = signal<string | null>(null);
@@ -109,6 +111,8 @@ export class AskAnswerComponent {
   readonly memoryBusy = signal(false);
   protected readonly activeThreadId = signal<string | null>(null);
   private readonly selectedAssistant = signal<ChatMessage | null>(null);
+  private readonly threadScroller = viewChild<ElementRef<HTMLElement>>('threadScroller');
+  private stayPinnedToBottom = true;
 
   protected async confirmMemory(): Promise<void> {
     const pending = this.memoryCandidate();
@@ -574,6 +578,7 @@ export class AskAnswerComponent {
     this.threadLoadRevision += 1;
     this.activeThreadId.set(null);
     this.loadedThreadId = null;
+    this.threadArchived.set(false);
     this.messages.set([]);
     this.selectedAssistant.set(null);
     this.streamedAnswer.set('');
@@ -619,8 +624,10 @@ export class AskAnswerComponent {
 
       this.loadedThreadId = threadId;
       this.activeThreadId.set(threadId);
+      this.threadArchived.set(!!detail.thread.archived_at);
       const messages = detail.messages.map((message) => this.toChatMessage(message));
       this.messages.set(messages);
+      this.scheduleScrollToBottom(true);
       const latestAssistant = [...messages].reverse().find((message) => message.role === 'assistant');
       this.selectedAssistant.set(latestAssistant ?? null);
       if (latestAssistant) {
@@ -840,6 +847,7 @@ export class AskAnswerComponent {
     };
     this.messages.update((items) => [...items, userMessage, assistantMessage]);
     this.selectedAssistant.set(assistantMessage);
+    this.scheduleScrollToBottom(true);
 
     try {
       let finalThreadId: string | null = threadId;
@@ -848,6 +856,8 @@ export class AskAnswerComponent {
         question,
         thread_id: threadId ?? undefined,
         start_thread: !threadId,
+        language: this.preferences.language(),
+        experience_mode: this.preferences.experienceMode(),
         input_mode: 'text',
         domain_override: forceDomain,
       }, controller.signal)) {
@@ -1037,10 +1047,18 @@ export class AskAnswerComponent {
       }
     } catch (error) {
       if ((error as Error).name === 'AbortError') {
-        this.updateAssistantMessage(assistantId, { streaming: false });
+        this.updateAssistantMessage(assistantId, {
+          content: this.streamedAnswer() || 'Answer stopped. You can retry when you are ready.',
+          status: 'stopped',
+          streaming: false,
+        });
       } else {
         this.submitError.set((error as Error).message);
-        this.updateAssistantMessage(assistantId, { streaming: false });
+        this.updateAssistantMessage(assistantId, {
+          content: 'The connection was interrupted before this answer completed.',
+          status: 'network_error',
+          streaming: false,
+        });
       }
     } finally {
       if (this.abortController === controller) {
@@ -1056,6 +1074,22 @@ export class AskAnswerComponent {
     );
     const updated = this.messages().find((message) => message.id === id);
     if (updated) this.selectedAssistant.set(updated);
+    this.scheduleScrollToBottom();
+  }
+
+  protected onThreadScroll(): void {
+    const element = this.threadScroller()?.nativeElement;
+    if (!element) return;
+    this.stayPinnedToBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 120;
+  }
+
+  private scheduleScrollToBottom(force = false): void {
+    if (!force && !this.stayPinnedToBottom) return;
+    requestAnimationFrame(() => {
+      const element = this.threadScroller()?.nativeElement;
+      if (!element) return;
+      element.scrollTop = element.scrollHeight;
+    });
   }
 
   private isStatusEvent(event: AskStreamEvent): event is Extract<AskStreamEvent, { type: 'status' }> {
@@ -1106,7 +1140,12 @@ export class AskAnswerComponent {
     this.streaming.set(false);
     this.messages.update((items) =>
       items.map((message) =>
-        message.streaming ? { ...message, streaming: false } : message,
+        message.streaming ? {
+          ...message,
+          content: this.streamedAnswer() || 'Answer stopped. You can retry when you are ready.',
+          status: 'stopped',
+          streaming: false,
+        } : message,
       ),
     );
   }
@@ -1129,6 +1168,10 @@ export class AskAnswerComponent {
         return 'GROUNDING';
       case 'context_unavailable':
         return 'CONTEXT';
+      case 'stopped':
+        return 'STOPPED';
+      case 'network_error':
+        return 'CONNECTION';
       case 'answered':
         return 'ANSWER';
       default:
@@ -1146,6 +1189,8 @@ export class AskAnswerComponent {
       case 'fatal_error':
         return 'bad';
       case 'context_unavailable':
+      case 'stopped':
+      case 'network_error':
         return 'warn';
       default:
         return 'warn';
@@ -1173,6 +1218,21 @@ export class AskAnswerComponent {
       this.submitError.set((error as Error).message);
     } finally {
       this.archivingThread.set(false);
+    }
+  }
+
+  protected async restoreThread(): Promise<void> {
+    const threadId = this.activeThreadId() ?? this.params().get('thread');
+    if (!threadId || this.restoringThread()) return;
+    this.restoringThread.set(true);
+    this.submitError.set(null);
+    try {
+      await this.threadsApi.restore(threadId);
+      this.threadArchived.set(false);
+    } catch (error) {
+      this.submitError.set((error as Error).message);
+    } finally {
+      this.restoringThread.set(false);
     }
   }
 
@@ -1218,11 +1278,16 @@ export class AskAnswerComponent {
    * effect is what actually calls the orchestrator once params land. */
   protected async askAgain(question: string): Promise<void> {
     const q = question.trim();
-    if (!q || this.streaming()) return;
+    if (!q || this.streaming() || this.threadArchived()) return;
     this.draft.set('');
     const threadId = this.activeThreadId() ?? this.params().get('thread') ?? undefined;
     await this.router.navigate(['/m', 'ask', 'answer'], {
       queryParams: { q, thread: threadId, pending: '1' },
     });
+  }
+
+  protected retryLatest(): void {
+    const question = this.latestUser()?.content ?? '';
+    if (question && !this.streaming()) void this.askAgain(question);
   }
 }
