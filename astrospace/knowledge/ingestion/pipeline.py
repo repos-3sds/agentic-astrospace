@@ -10,6 +10,7 @@ from .models import EpubBook, KnowledgeChunk, TextBlock
 from .pdf import PdfExtractor
 from .repository import KnowledgeRepository
 from .scope import classify_retrieval_scope
+from .source_policy import source_enrichment
 
 
 class IngestionPipeline:
@@ -57,6 +58,7 @@ class IngestionPipeline:
     def build_chunks(self, book: EpubBook) -> list[KnowledgeChunk]:
         chunks = []
         ordinal = 0
+        enrichment = source_enrichment(book.source_key)
         extraction_methods = {
             section.ordinal: section.extraction_method
             for section in book.sections
@@ -76,6 +78,7 @@ class IngestionPipeline:
                 ]
                 extraction_confidence = min(extraction) if extraction else None
                 notes = list(plan.quality_notes)
+                notes.extend(enrichment.quality_notes)
                 notes.extend(
                     note
                     for block in selected
@@ -136,7 +139,7 @@ class IngestionPipeline:
                     )),
                     domains=plan.domains,
                     subdomains=plan.subdomains,
-                    topics=plan.topics,
+                    topics=tuple(dict.fromkeys((*plan.topics, *enrichment.topics))),
                     content_types=plan.content_types,
                     classification_confidence=plan.confidence,
                     extraction_confidence=extraction_confidence,
@@ -144,7 +147,9 @@ class IngestionPipeline:
                     quality_notes=tuple(dict.fromkeys(notes)),
                     embedding=embedding,
                     embedding_provider=self.embedder.provider,
-                    source_domains=plan.source_domains,
+                    source_domains=tuple(dict.fromkeys(
+                        (*plan.source_domains, *enrichment.source_domains)
+                    )),
                     retrieval_scope=scope.scope,
                     retrieval_exclusion_reason=scope.reason,
                     scope_confidence=scope.confidence,

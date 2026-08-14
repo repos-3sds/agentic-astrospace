@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -91,7 +92,7 @@ class _CleanAnalyzer:
         )]
 
 
-def _build_chunks(text: str):
+def _build_chunks(text: str, source_key: str = "synthetic"):
     """Run build_chunks over a synthetic one-block book."""
     import hashlib
 
@@ -106,12 +107,54 @@ def _build_chunks(text: str):
                           blocks=(block,), exact_text=text,
                           text_sha256=digest, raw_xhtml_sha256=digest,
                           extraction_method="epub_xhtml")
-    book = EpubBook(source_key="synthetic", title="Synthetic", author=None,
+    book = EpubBook(source_key=source_key, title="Synthetic", author=None,
                     language="sa", identifier=None, sha256=digest,
                     sections=(section,))
     return IngestionPipeline(
         MemoryRepository(), analyzer=_CleanAnalyzer()
     ).build_chunks(book)
+
+
+class TestLalKitabSourcePolicy:
+    def test_catalog_names_the_edition_and_distinct_tradition(self):
+        catalog = json.loads(Path("astrospace/context/sources.json").read_text())
+        source = catalog["sources"]["lal_kitab_1952"]
+
+        assert source["ingestion_source_key"] == "lal-kitab-1952-roop-chand-joshi"
+        assert source["tradition"] == "Lal Kitab"
+        assert "not a Parashari authority" in source["caveat"]
+        assert "human review" in source["caveat"]
+
+    def test_lal_kitab_passages_are_tagged_and_held_for_review(self):
+        chunks = _build_chunks(
+            "A house-specific traditional remedy is described in this passage.",
+            source_key="lal-kitab-1952-roop-chand-joshi",
+        )
+
+        assert chunks
+        for chunk in chunks:
+            assert chunk.quality_status == "needs_review"
+            assert "lal_kitab_tradition" in chunk.source_domains
+            assert "traditional_remedies" in chunk.source_domains
+            assert "lal_kitab_remedies" in chunk.topics
+            assert any(
+                "edition-aware human review" in note
+                for note in chunk.quality_notes
+            )
+
+    def test_lal_kitab_policy_does_not_change_other_sources(self):
+        chunks = _build_chunks(
+            "The lord of the tenth house supports professional responsibility.",
+            source_key="brihat-parasara-hora-sastra-volume-1",
+        )
+
+        assert chunks
+        assert all("lal_kitab_tradition" not in chunk.source_domains for chunk in chunks)
+        assert all("lal_kitab_remedies" not in chunk.topics for chunk in chunks)
+        assert all(
+            not any("edition-aware human review" in note for note in chunk.quality_notes)
+            for chunk in chunks
+        )
 
 
 
