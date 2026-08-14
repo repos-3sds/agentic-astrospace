@@ -8,6 +8,19 @@ Owner: Codex (product/mobile contract)
 
 Required reviewers: Claude (Ask orchestration and persistence), Gemini (astrological domain semantics), Qwen (privacy and contradiction tests)
 
+## Implementation Update — 2026-08-14
+
+Phase 1 server-ledger implementation is complete on
+`codex-profile-context-ledger-implementation` and awaiting owner review. It
+includes the governed fact registry, Postgres/SQLAlchemy schema, profile-owned
+CRUD, optimistic revisions, idempotent mutations, immutable supersession,
+deletion scrubbing, domain-filtered projection, logical constraints, export,
+account/profile deletion behavior, and adversarial API tests.
+
+This does **not** activate Ask memory, candidate extraction, agent retrieval,
+logical preflight, mobile controls, or offline ledger storage. Those remain
+Phases 2–4 and must not infer durable facts from model output.
+
 ## Product Purpose
 
 Siddha is a way-of-life guidance product, not a stateless horoscope chatbot.

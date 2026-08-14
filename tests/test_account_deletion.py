@@ -9,7 +9,10 @@ from main import app
 from astrospace.api.auth import AuthUser, current_user
 from astrospace.db import crud, get_db
 from astrospace.db.database import Base
-from astrospace.db.models import Kundli, UserProfile
+from astrospace.db.models import (
+    Kundli, ProfileContextAuditEvent, ProfileContextFact,
+    ProfileContextLedger, ProfileContextMutation, UserProfile,
+)
 
 
 @pytest.fixture()
@@ -75,6 +78,27 @@ def test_rejects_missing_typed_confirmation(deletion_client):
 
 def test_deletes_only_the_authenticated_user(deletion_client):
     client, session_factory, user_id, other_id = deletion_client
+    with session_factory() as db:
+        profile_id = db.query(Kundli).filter(Kundli.user_id == user_id).one().id
+        db.add(ProfileContextLedger(profile_id=profile_id, user_id=user_id, revision=1))
+        fact = ProfileContextFact(
+            user_id=user_id, profile_id=profile_id, category="life_stage",
+            key="employment_status", value={"code": "retired"}, status="active",
+            confidence="confirmed", sensitivity="personal", retention="until_removed",
+            source={"kind": "profile_form"}, consent={"state": "granted"}, revision=1,
+        )
+        db.add(fact)
+        db.flush()
+        db.add(ProfileContextMutation(
+            user_id=user_id, profile_id=profile_id, idempotency_key="account-delete-test",
+            request_hash="hash", action="created", fact_id=fact.id,
+            resulting_revision=1, response={"revision": 1, "fact_id": fact.id},
+        ))
+        db.add(ProfileContextAuditEvent(
+            user_id=user_id, profile_id=profile_id, fact_id=fact.id,
+            action="created", category="life_stage", key="employment_status", revision=1,
+        ))
+        db.commit()
     response = client.request(
         "DELETE", "/api/v1/me", json={"confirmation": "DELETE"},
     )
@@ -85,3 +109,6 @@ def test_deletes_only_the_authenticated_user(deletion_client):
         assert db.query(Kundli).filter(Kundli.user_id == user_id).count() == 0
         assert db.get(UserProfile, other_id) is not None
         assert db.query(Kundli).filter(Kundli.user_id == other_id).count() == 1
+        assert db.query(ProfileContextFact).filter_by(user_id=user_id).count() == 0
+        assert db.query(ProfileContextMutation).filter_by(user_id=user_id).count() == 0
+        assert db.query(ProfileContextAuditEvent).filter_by(user_id=user_id).count() == 0

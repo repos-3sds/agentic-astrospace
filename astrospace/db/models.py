@@ -73,6 +73,112 @@ class Kundli(Base):
         "PredictionClaim", back_populates="kundli", cascade="all, delete-orphan",
         order_by="PredictionClaim.target_start_date.desc()"
     )
+    context_ledger: Mapped["ProfileContextLedger | None"] = relationship(
+        "ProfileContextLedger", cascade="all, delete-orphan", uselist=False
+    )
+    context_facts: Mapped[list["ProfileContextFact"]] = relationship(
+        "ProfileContextFact", cascade="all, delete-orphan",
+        foreign_keys="ProfileContextFact.profile_id",
+    )
+    context_mutations: Mapped[list["ProfileContextMutation"]] = relationship(
+        "ProfileContextMutation", cascade="all, delete-orphan"
+    )
+    context_audit_events: Mapped[list["ProfileContextAuditEvent"]] = relationship(
+        "ProfileContextAuditEvent", cascade="all, delete-orphan"
+    )
+
+
+class ProfileContextLedger(Base):
+    __tablename__ = "profile_context_ledgers"
+
+    profile_id: Mapped[str] = mapped_column(
+        String, ForeignKey("kundlis.id", ondelete="CASCADE"), primary_key=True
+    )
+    user_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    revision: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+
+class ProfileContextFact(Base):
+    __tablename__ = "profile_context_facts"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('active', 'superseded', 'disputed', 'deleted')",
+            name="profile_context_facts_status_check",
+        ),
+        CheckConstraint(
+            "confidence IN ('confirmed', 'reported', 'candidate', 'disputed')",
+            name="profile_context_facts_confidence_check",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
+    user_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    profile_id: Mapped[str] = mapped_column(
+        String, ForeignKey("kundlis.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    category: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    key: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    value: Mapped[dict | None] = mapped_column(JSON)
+    valid_from: Mapped[date | None] = mapped_column(Date)
+    valid_to: Mapped[date | None] = mapped_column(Date)
+    status: Mapped[str] = mapped_column(String, nullable=False, default="active", index=True)
+    confidence: Mapped[str] = mapped_column(String, nullable=False, default="confirmed")
+    sensitivity: Mapped[str] = mapped_column(String, nullable=False)
+    retention: Mapped[str] = mapped_column(String, nullable=False)
+    source: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    consent: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    supersedes_id: Mapped[str | None] = mapped_column(
+        _UuidString, ForeignKey("profile_context_facts.id", ondelete="SET NULL")
+    )
+    revision: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+
+class ProfileContextMutation(Base):
+    __tablename__ = "profile_context_mutations"
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "profile_id", "idempotency_key",
+            name="profile_context_mutations_idempotency_key",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
+    user_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    profile_id: Mapped[str] = mapped_column(
+        String, ForeignKey("kundlis.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    idempotency_key: Mapped[str] = mapped_column(String, nullable=False)
+    request_hash: Mapped[str] = mapped_column(String, nullable=False)
+    action: Mapped[str] = mapped_column(String, nullable=False)
+    fact_id: Mapped[str | None] = mapped_column(_UuidString)
+    resulting_revision: Mapped[int] = mapped_column(Integer, nullable=False)
+    response: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class ProfileContextAuditEvent(Base):
+    __tablename__ = "profile_context_audit_events"
+
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
+    user_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    profile_id: Mapped[str] = mapped_column(
+        String, ForeignKey("kundlis.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    fact_id: Mapped[str | None] = mapped_column(_UuidString)
+    action: Mapped[str] = mapped_column(String, nullable=False)
+    category: Mapped[str | None] = mapped_column(String)
+    key: Mapped[str | None] = mapped_column(String)
+    revision: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 class Reading(Base):
