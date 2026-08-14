@@ -31,6 +31,33 @@ location-correct calendar behavior, entitlement enforcement, profile-memory
 governance, runtime observability, accessibility, privacy controls, and a
 release-grade regression program.
 
+## Since this audit
+
+This document is a point-in-time benchmark against commit `c7b6095`. The
+following work landed after the audit and supersedes the corresponding status
+cells below without changing the original research record:
+
+- **Reliable Native Core:** encrypted, identity-scoped native resource caching
+  now exists with schema/version metadata, stale-while-revalidate behavior,
+  logout/profile invalidation, race protection, and sunrise-aware Today
+  validity. It has Android device evidence; physical iOS validation and wider
+  endpoint adoption remain open.
+- **Profile Context Ledger:** the architecture, privacy contract, frozen-request
+  evidence model, and rollout gates are documented and merged. The database,
+  APIs, preflight integration, user controls, and encrypted sync are **not yet
+  implemented**.
+- **Ask safety parity:** the non-streaming web Ask route now uses the same
+  orchestrator and safety boundary as native streaming Ask; boundary states are
+  preserved and rendered distinctly.
+- **Commercial entitlements:** a server-authoritative entitlement and plan
+  architecture has been specified. Store integration, billing webhooks,
+  enforcement, quota accounting, restore/grace behavior, and approved product
+  pricing remain implementation work.
+
+Where a table below says **Missing** or **Partial** for one of these areas, use
+this addendum as the current status and treat the table as the original audit
+snapshot.
+
 ## Research method and limits
 
 - Competitor capabilities were checked against official product sites, official
@@ -569,4 +596,3 @@ profile context to manufacture astrological confirmation.
 - Agent registry: `astrospace/agents/registry.py`
 - Existing detailed mobile trackers: `docs/mobile_screen_build_plan.md`,
   `docs/mobile_ui_regression_audit.md`, `docs/ask_full_regression_audit_2026-08-10.md`
-
