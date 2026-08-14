@@ -2,7 +2,7 @@
 
 Date: 2026-08-14
 
-Status: web-storage pilot implemented for Today and Calendar; native encrypted repository pending review
+Status: web-storage pilot implemented; encrypted native Today/Calendar repository implemented on `codex-native-secure-cache`, physical-device privacy proof pending
 
 Owner: Codex
 
@@ -239,9 +239,34 @@ Separate tables should be used later for Profile Context Ledger facts and queued
   isolation. The Angular suite (61 tests), production build, and 375x812 Today
   and Calendar empty-state visual checks pass.
 
-This is deliberately not the final native store. Installing encrypted SQLite
-changes dependencies and native projects, so it remains a separately reviewed
-release slice with Android and iOS device evidence.
+### Native encrypted repository implemented 2026-08-14
+
+- `@capacitor-community/sqlite` 8.1.1 is wired into Android and iOS with
+  encryption enabled. A cryptographically random 256-bit installation secret
+  is created once and stored through the plugin's Android Keystore/iOS Keychain
+  secret path; it is never written to Angular storage, configuration, or logs.
+- Native startup opens only an encrypted SQLCipher connection and verifies
+  `isDatabaseEncrypted()` before hydrating memory. A failed secret, connection,
+  or encryption check leaves durable caching unavailable and never falls back
+  to WebView `localStorage`.
+- The cache service blocks bootstrap until persistence hydration completes,
+  then preserves its synchronous memory read API. Writes and account/profile
+  deletions are serialized so a late write cannot overtake logout cleanup.
+- The first native table contains only disposable Today/Calendar envelopes,
+  keyed and indexed by account/profile identity. Profile Context Ledger facts,
+  Ask memory, reports, notes, and offline mutations remain out of scope.
+- Android `allowBackup=false` remains enforced. The SQLite iOS implementation
+  marks its configured `Library/CapacitorDatabase` directory excluded from
+  iCloud backup when creating it.
+- Verified: 67/67 Angular tests; production Angular build; Capacitor sync for
+  both targets; Android debug APK build containing `libsqlcipher.so` for all
+  packaged ABIs; unsigned iOS simulator build linking SQLCipher 4.17.0.
+
+Still required before merge/release approval: physical Android and iOS runs
+covering process death, logout A -> login B, wrong/missing secret, backup/device
+transfer, and direct inspection that the on-device database file is not readable
+as plaintext SQLite. Encryption export classification also remains a release
+owner/legal acknowledgement, not an engineering checkbox.
 
 ### Slice A: Contract and instrumentation
 

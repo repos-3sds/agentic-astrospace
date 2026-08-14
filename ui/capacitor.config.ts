@@ -21,6 +21,12 @@ const config: CapacitorConfig = {
   ios: { contentInset: 'never' },
 
   plugins: {
+    CapacitorSQLite: {
+      iosDatabaseLocation: 'Library/CapacitorDatabase',
+      iosIsEncryption: true,
+      iosKeychainPrefix: 'app.astrospace.mobile',
+      androidIsEncryption: true,
+    },
     SplashScreen: {
       // Matches the Siddha animated intro backdrop so the native launch bridge
       // does not flash a different color before Angular paints.
