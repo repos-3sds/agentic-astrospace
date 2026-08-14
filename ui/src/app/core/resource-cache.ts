@@ -22,7 +22,21 @@ export interface ResourceCacheEnvelope<T> {
   storedAt: number;
   staleAt: number;
   expiresAt: number;
+  engineVersion?: string;
+  datasetVersion?: string;
   source: 'network' | 'migration';
+}
+
+export interface ResourceCacheMetadata {
+  engineVersion?: string | null;
+  datasetVersion?: string | null;
+  /** Authoritative server boundary, such as next local sunrise. */
+  validUntil?: string | null;
+}
+
+export interface ResourceCacheVersionExpectation {
+  engineVersion?: string;
+  datasetVersion?: string;
 }
 
 export interface ResourceCachePolicy {

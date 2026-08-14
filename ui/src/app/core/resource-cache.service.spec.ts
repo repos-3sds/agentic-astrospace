@@ -82,6 +82,36 @@ describe('ResourceCacheService', () => {
     expect(service.get<{ usable: boolean }>(identity, 1_050)?.data.usable).toBeTrue();
   });
 
+  it('caps expiry at an authoritative server validity boundary', () => {
+    const cached = service.set(identity, { day: 'Thursday' }, policy, 1_000, 'network', {
+      validUntil: new Date(1_180).toISOString(),
+      engineVersion: 'daily-guidance-1.0',
+    });
+
+    expect(cached.expiresAt).toBe(1_180);
+    expect(service.get(identity, 1_179, { engineVersion: 'daily-guidance-1.0' })?.data).toEqual({ day: 'Thursday' });
+    expect(service.get(identity, 1_180, { engineVersion: 'daily-guidance-1.0' })).toBeNull();
+  });
+
+  it('rejects present incompatible engine or dataset versions', () => {
+    service.set(identity, { old: true }, policy, 1_000, 'network', {
+      engineVersion: 'daily-guidance-0.9',
+      datasetVersion: 'calendar-old',
+    });
+
+    expect(service.get(identity, 1_050, { engineVersion: 'daily-guidance-1.0' })).toBeNull();
+  });
+
+  it('does not persist a response whose authoritative boundary already passed', async () => {
+    const cached = service.set(identity, { late: true }, policy, 1_000, 'network', {
+      validUntil: new Date(999).toISOString(),
+    });
+    await service.flush();
+
+    expect(cached.freshness).toBe('expired');
+    expect(service.get(identity, 1_000)).toBeNull();
+  });
+
   it('removes legacy unscoped Today and Calendar payloads', () => {
     localStorage.setItem('astrospace.daily-guidance:v1:profile-a', '{}');
     localStorage.setItem('astrospace.calendar-intelligence:v3:profile-a', '{}');

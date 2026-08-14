@@ -337,11 +337,14 @@ considered astrologically complete, the backend must return:
 ```
 
 For a pre-sunrise request, the backend selects the Vedic day that began at the
-previous sunrise. Once available, `valid_from` (or a stable Vedic-day ID) joins
-the cache identity and `valid_until` caps `expiresAt`; the fixed 36-hour policy
-remains only a defensive upper bound. Calendar/festival responses likewise
-need an `engine_version`/`dataset_version` so rule deployments invalidate old
-projections independently of `profile.updated_at`.
+previous sunrise. `valid_until` caps `expiresAt`; the fixed 36-hour policy
+remains only a defensive upper bound. Engine and dataset versions are persisted
+as cache provenance, and a client release rejects present incompatible
+versions. Payload metadata alone cannot proactively invalidate an offline
+client after a backend deployment because that client cannot know the new
+version until it contacts the server; true deployment-push invalidation still
+requires a lightweight version manifest, ETag revalidation, or equivalent
+server contract.
 
 Muhurta and transit resources require response-owned `valid_until` boundaries
 at the end of the represented window. A generic TTL may be shorter, but never

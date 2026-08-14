@@ -4,7 +4,9 @@ import {
   CachedResource,
   ResourceCacheEnvelope,
   ResourceCacheIdentity,
+  ResourceCacheMetadata,
   ResourceCachePolicy,
+  ResourceCacheVersionExpectation,
   resourceCacheKey,
   resourceFreshness,
 } from './resource-cache';
@@ -46,10 +48,18 @@ export class ResourceCacheService {
     await this.persistenceQueue;
   }
 
-  get<T>(identity: ResourceCacheIdentity, now = Date.now()): CachedResource<T> | null {
+  get<T>(
+    identity: ResourceCacheIdentity,
+    now = Date.now(),
+    expected: ResourceCacheVersionExpectation = {},
+  ): CachedResource<T> | null {
     const key = resourceCacheKey(identity);
     const envelope = this.memory.get(key) as ResourceCacheEnvelope<T> | undefined;
     if (!envelope || resourceCacheKey(envelope.identity) !== key) return null;
+    if (!this.matchesVersion(envelope, expected)) {
+      this.deleteKey(key);
+      return null;
+    }
     const freshness = resourceFreshness(envelope, now);
     if (freshness === 'expired') {
       this.deleteKey(key);
@@ -69,17 +79,29 @@ export class ResourceCacheService {
     policy: ResourceCachePolicy,
     now = Date.now(),
     source: ResourceCacheEnvelope<T>['source'] = 'network',
+    metadata: ResourceCacheMetadata = {},
   ): CachedResource<T> {
     if (policy.staleAfterMs < 0 || policy.expireAfterMs <= policy.staleAfterMs) {
       throw new Error('Cache policy requires expiry after the stale boundary');
     }
     const key = resourceCacheKey(identity);
+    const authoritativeExpiry = metadata.validUntil ? Date.parse(metadata.validUntil) : Number.NaN;
+    const expiresAt = Number.isFinite(authoritativeExpiry)
+      ? Math.min(now + policy.expireAfterMs, authoritativeExpiry)
+      : now + policy.expireAfterMs;
+    if (expiresAt <= now) {
+      this.deleteKey(key);
+      return { data: payload, freshness: 'expired', storedAt: now, expiresAt };
+    }
+    const staleAt = Math.max(now, Math.min(now + policy.staleAfterMs, expiresAt - 1));
     const envelope: ResourceCacheEnvelope<T> = {
       identity,
       payload,
       storedAt: now,
-      staleAt: now + policy.staleAfterMs,
-      expiresAt: now + policy.expireAfterMs,
+      staleAt,
+      expiresAt,
+      engineVersion: metadata.engineVersion || undefined,
+      datasetVersion: metadata.datasetVersion || undefined,
       source,
     };
     this.memory.set(key, envelope);
@@ -121,7 +143,19 @@ export class ResourceCacheService {
       && typeof value.expiresAt === 'number'
       && value.staleAt >= value.storedAt
       && value.expiresAt > value.staleAt
+      && (value.engineVersion === undefined || typeof value.engineVersion === 'string')
+      && (value.datasetVersion === undefined || typeof value.datasetVersion === 'string')
       && Object.prototype.hasOwnProperty.call(value, 'payload');
+  }
+
+  private matchesVersion(
+    envelope: ResourceCacheEnvelope<unknown>,
+    expected: ResourceCacheVersionExpectation,
+  ): boolean {
+    // Missing metadata is tolerated for one rolling-deploy cycle. A present,
+    // incompatible version is never surfaced as current.
+    return (!expected.engineVersion || !envelope.engineVersion || envelope.engineVersion === expected.engineVersion)
+      && (!expected.datasetVersion || !envelope.datasetVersion || envelope.datasetVersion === expected.datasetVersion);
   }
 
   private deleteMemoryMatching(predicate: (identity: ResourceCacheIdentity) => boolean): void {
