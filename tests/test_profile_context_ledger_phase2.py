@@ -15,6 +15,7 @@ Two layers, matching the two ways this system is exercised:
 
 No test here calls a real model. Every reading is an explicit fixture.
 """
+import json
 from unittest.mock import patch
 
 import pytest
@@ -61,18 +62,33 @@ def _fact(key: str, value: dict, ref: str = "profile_fact:aaaa@1", status: str =
             "category": "life_stage", "sensitivity": "personal"}
 
 
-def _store(facts: list[dict], revision: int = 1, calls: list | None = None) -> ProfileContextStore:
+def _store(facts: list[dict], revision: int = 1, calls: list | None = None,
+          status: str = "ready", contradictions: tuple = ()) -> ProfileContextStore:
     """A fake, DB-free ProfileContextStore — the closure IS the frozen
     snapshot boundary in these tests; `calls` (if supplied) records every
-    invocation so a test can assert it was built exactly once."""
+    invocation so a test can assert it was built exactly once. `status`/
+    `contradictions` let a test build the exact shape
+    `build_profile_context_projection()` produces for an unresolved
+    contradiction, without a real DB."""
     def projection(domain: str, as_of_iso: str) -> dict:
         if calls is not None:
             calls.append((domain, as_of_iso))
         relevant = [f for f in facts]  # domain filtering already applied by caller in these fixtures
         return {
             "facts": relevant, "revision": revision, "as_of": as_of_iso or "2026-08-14",
-            "domain": domain, "status": "ready", "contradictions": [],
+            "domain": domain, "status": status, "contradictions": list(contradictions),
         }
+    return ProfileContextStore(projection=projection)
+
+
+def _failing_store(calls: list | None = None) -> ProfileContextStore:
+    """A configured store whose `projection()` always raises — simulates a
+    transient ledger-query failure, distinct from no store being configured
+    at all (see `AskOrchestrator.check_profile_context()`)."""
+    def projection(domain: str, as_of_iso: str) -> dict:
+        if calls is not None:
+            calls.append((domain, as_of_iso))
+        raise RuntimeError("ledger query failed")
     return ProfileContextStore(projection=projection)
 
 
@@ -426,3 +442,194 @@ class TestVerifierEvidenceResolution:
             events = list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
                                            persist=lambda reading, status: "t9"))
         assert events[-1]["status"] == "answered"
+
+
+# ── Review findings (2026-08-14): reproduced counterexamples against 3e503d9,
+# fixed, pinned here so they cannot regress silently ──────────────────────
+
+class TestBlockedFrameNegationAware:
+    """P1: `_BLOCKED_FRAME_PATTERNS` used a bare `.search()`, so a careful,
+    correctly-hedged answer that merely CONTAINS the blocked phrase as a
+    negated substring was rejected as if it had used the frame unhedged. A
+    repair attempt facing this bug would just repeat the same safe wording
+    and burn its one retry into `verification_failed` — turning a valid
+    consultation into a failure. Fixed by routing the same shared
+    negation check safety.py's overclaim patterns already use
+    (`_negation_precedes`) through `_blocked_frame_violations`."""
+
+    def test_a_hedged_denial_of_first_marriage_framing_is_not_rejected(self, chart):
+        store = _store([_fact("relationship_status", {"code": "married"})])
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart, profile_context_store=store)
+        outcome = orchestrator.prepare("Will I ever get married?", domain_override="marriage")
+        safe = _reading(
+            interpretation="This does not mean you will get married in this period.",
+        )
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=safe):
+            events = list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
+                                           persist=lambda reading, status: "t10"))
+        assert events[-1]["status"] == "answered"
+
+    def test_a_hedged_denial_of_a_recovery_guarantee_is_not_rejected(self, chart):
+        store = _store([_fact("current_health_constraint", {"text": "recovering from surgery"})])
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart, profile_context_store=store)
+        outcome = orchestrator.prepare(
+            "How is my chart supporting me through this recovery period?", domain_override="health",
+        )
+        safe = _reading(interpretation="I cannot promise you will recover.")
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=safe):
+            events = list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
+                                           persist=lambda reading, status: "t11"))
+        assert events[-1]["status"] == "answered"
+
+    def test_an_unhedged_first_marriage_answer_is_still_rejected(self, chart):
+        # Regression guard: the negation fix must not blunt the genuine
+        # positive case this whole mechanism exists for.
+        store = _store([_fact("relationship_status", {"code": "married"})])
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart, profile_context_store=store)
+        outcome = orchestrator.prepare("Will I ever get married?", domain_override="marriage")
+        bad = _reading(interpretation="You will get married once Jupiter transits your 7th house.")
+        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, bad]):
+            events = list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
+                                           persist=lambda reading, status: None))
+        assert events[-1]["status"] == "verification_failed"
+
+
+class TestContradictoryLedgerFactsAreNotAuthoritative:
+    """P1: the projection correctly flags simultaneous active
+    `relationship_status=married` and `relationship_status=single` as
+    `status: context_confirmation_needed` with `contradictions:
+    ["relationship_status"]`, but `check_profile_context()` was handing ALL
+    facts — including both contradictory ones — to
+    `build_logical_preflight()`, which picked whichever value happened to
+    come first in the list and built a hard blocked frame from it. Fixed by
+    threading the projection's own `contradictions` through to
+    `build_logical_preflight()`, which now excludes any contradicted key
+    from every blocked/required-frame decision and surfaces the conflict in
+    `missing_or_conflicting_context` instead. Both insertion orders are
+    tested so DB row order cannot become policy either."""
+
+    def test_married_then_single_is_not_authoritative(self, chart):
+        store = _store(
+            [_fact("relationship_status", {"code": "married"}, ref="profile_fact:a@1"),
+             _fact("relationship_status", {"code": "single"}, ref="profile_fact:b@1")],
+            status="context_confirmation_needed", contradictions=("relationship_status",),
+        )
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart, profile_context_store=store)
+        outcome = orchestrator.prepare("Will I ever get married?", domain_override="marriage")
+        preflight = outcome.prepared.bundle["profile_context"]["preflight"]
+        assert "first_marriage_framing" not in preflight["blocked_frames"]
+        assert not preflight["applicable_fact_refs"]
+        assert any("relationship_status" in note
+                   for note in preflight["missing_or_conflicting_context"])
+
+    def test_single_then_married_is_not_authoritative(self, chart):
+        # Same facts, opposite insertion order — the outcome must be
+        # identical, proving neither value silently wins by being first.
+        store = _store(
+            [_fact("relationship_status", {"code": "single"}, ref="profile_fact:b@1"),
+             _fact("relationship_status", {"code": "married"}, ref="profile_fact:a@1")],
+            status="context_confirmation_needed", contradictions=("relationship_status",),
+        )
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart, profile_context_store=store)
+        outcome = orchestrator.prepare("Will I ever get married?", domain_override="marriage")
+        preflight = outcome.prepared.bundle["profile_context"]["preflight"]
+        assert "first_marriage_framing" not in preflight["blocked_frames"]
+        assert not preflight["applicable_fact_refs"]
+        assert any("relationship_status" in note
+                   for note in preflight["missing_or_conflicting_context"])
+
+    def test_a_reading_can_still_ship_when_the_only_conflict_is_unrelated_to_the_question(self, chart):
+        # The contradiction must not turn into a hard failure of its own —
+        # it only removes that key's authority, it does not block the turn.
+        store = _store(
+            [_fact("relationship_status", {"code": "married"}, ref="profile_fact:a@1"),
+             _fact("relationship_status", {"code": "single"}, ref="profile_fact:b@1")],
+            status="context_confirmation_needed", contradictions=("relationship_status",),
+        )
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart, profile_context_store=store)
+        outcome = orchestrator.prepare("Tell me about my career.", domain_override="career")
+        reading = _reading(interpretation="Your career shows a steady, supportive pattern this year.")
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=reading):
+            events = list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
+                                           persist=lambda reading, status: "t12"))
+        assert events[-1]["status"] == "answered"
+
+
+class TestLedgerRetrievalFailureBlocksGeneration:
+    """P1: `check_profile_context()` caught every exception from a
+    CONFIGURED `ProfileContextStore` and substituted an empty, `status:
+    "ready"` projection — silently answering as if the reader had no saved
+    facts at all whenever the ledger query merely failed once. For a
+    retired/married/health-disclosed reader this recreates the exact
+    unconstrained-answer failure Phase 2 exists to close, indistinguishable
+    from a genuinely empty ledger. Fixed: a configured store's exception
+    now short-circuits `prepare()` to a terminal `context_unavailable`
+    envelope before any model call — no fact values exposed, generation
+    never runs. No store configured at all is unaffected (stays additive,
+    matching pre-Phase-2 behaviour) — see `TestRetiredCareerInception.
+    test_no_ledger_fact_leaves_the_same_answer_untouched` for that control."""
+
+    def test_a_configured_store_that_raises_blocks_the_turn_instead_of_answering_unconstrained(self, chart):
+        calls: list = []
+        store = _failing_store(calls=calls)
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart, profile_context_store=store)
+        outcome = orchestrator.prepare("When will my career begin?", domain_override="career")
+        assert outcome.prepared is None
+        assert outcome.terminal_envelope["type"] == "context_unavailable"
+        assert outcome.terminal_envelope["domain"] == "career"
+        assert outcome.terminal_envelope["retryable"] is True
+        assert len(calls) == 1
+
+    def test_no_fact_values_leak_into_the_terminal_envelope(self, chart):
+        store = _failing_store()
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart, profile_context_store=store)
+        outcome = orchestrator.prepare("When will my career begin?", domain_override="career")
+        assert "facts" not in outcome.terminal_envelope
+        assert "retired" not in str(outcome.terminal_envelope)
+
+    def test_no_store_at_all_is_unaffected_and_still_answers(self, chart):
+        # The additive/off case (tests, or any caller that never configured
+        # a ledger) must not be swept into the new failure path.
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart)
+        outcome = orchestrator.prepare("When will my career begin?", domain_override="career")
+        assert outcome.terminal_envelope is None
+        assert outcome.prepared is not None
+
+
+class TestContextUnavailableAtTheRoutes:
+    """The orchestrator-level tests above prove `prepare()` returns the
+    right terminal envelope; these prove the two Ask routes actually handle
+    that new envelope type end-to-end (real DB, real routing) rather than
+    hitting the unhandled-terminal-state fallback added alongside it in
+    ask_routes.py/ask_stream_routes.py. `build_profile_context_projection`
+    is patched at its `astrospace.api.ask_routes` import site — the same
+    name `_profile_context_store`'s closure resolves in both route
+    modules, since `ask_stream_routes.py` imports that closure builder
+    from `ask_routes.py` rather than duplicating it."""
+
+    def test_non_streaming_route_returns_context_unavailable_without_a_500(self, db_env):
+        with patch("astrospace.api.ask_routes.build_profile_context_projection",
+                   side_effect=RuntimeError("ledger query failed")):
+            response = db_env["client"].post(
+                f"/api/v1/ask/{db_env['mine']}",
+                json={"question": "How is my career progressing this year?"},
+            )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["status"] == "context_unavailable"
+        assert "retired" not in body["answer"].lower()
+
+    def test_streaming_route_returns_context_unavailable_without_a_500(self, db_env):
+        with patch("astrospace.api.ask_routes.build_profile_context_projection",
+                   side_effect=RuntimeError("ledger query failed")):
+            response = db_env["client"].post(
+                f"/api/v1/ask/{db_env['mine']}/stream",
+                json={"question": "How is my career progressing this year?",
+                     "domain_override": "career"},
+            )
+        assert response.status_code == 200
+        frames = [
+            json.loads(line[len("data: "):])
+            for line in response.text.splitlines() if line.startswith("data: ")
+        ]
+        assert any(frame.get("type") == "context_unavailable" for frame in frames)

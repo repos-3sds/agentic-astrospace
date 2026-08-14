@@ -923,6 +923,48 @@ class TestTenseInvariantParityWithLedgerPreflight:
         )
 
 
+class TestBlockedFrameNegationAwareThroughVerify:
+    """Review finding (2026-08-14, PR #62): `_blocked_frame_violations` used
+    a bare `.search()` against `_BLOCKED_FRAME_PATTERNS`, so a correctly
+    hedged sentence that merely CONTAINS the blocked phrasing as a negated
+    substring — "This does not mean you will get married in this period."
+    — was rejected exactly as if it had used the frame unhedged. Pinned
+    here through the real `verify()` entrypoint (not just the private
+    `_blocked_frame_violations` helper) so this cannot regress silently."""
+
+    def test_a_hedged_denial_of_first_marriage_framing_passes(self, career_bundle_2026):
+        facts = [{"id": "m1", "key": "relationship_status", "status": "active",
+                 "value": {"code": "married"}, "ref": "profile_fact:m1@1"}]
+        preflight = build_logical_preflight(
+            profile_facts=career_bundle_2026["profile_facts"], projection_facts=facts,
+            tense="future", question="Will I ever get married?", domain="marriage",
+        )
+        assert "first_marriage_framing" in preflight.blocked_frames  # sanity check
+        bundle = {**career_bundle_2026, "domain": "marriage", "profile_context": {
+            "facts": facts, "logical_constraints": [], "revision": 1, "as_of": "2026-01-01",
+            "preflight": preflight.to_dict(),
+        }}
+        safe = _reading(interpretation="This does not mean you will get married in this period.")
+        assert verify(safe, bundle, "marriage") == []
+
+    def test_an_unhedged_first_marriage_framing_still_fails(self, career_bundle_2026):
+        # Regression guard: the negation fix must not blunt the genuine
+        # positive case — same fixtures, unhedged text.
+        facts = [{"id": "m1", "key": "relationship_status", "status": "active",
+                 "value": {"code": "married"}, "ref": "profile_fact:m1@1"}]
+        preflight = build_logical_preflight(
+            profile_facts=career_bundle_2026["profile_facts"], projection_facts=facts,
+            tense="future", question="Will I ever get married?", domain="marriage",
+        )
+        bundle = {**career_bundle_2026, "domain": "marriage", "profile_context": {
+            "facts": facts, "logical_constraints": [], "revision": 1, "as_of": "2026-01-01",
+            "preflight": preflight.to_dict(),
+        }}
+        bad = _reading(interpretation="You will get married once Jupiter transits your 7th house.")
+        violations = verify(bad, bundle, "marriage")
+        assert any("blocked frame 'first_marriage_framing'" in v for v in violations)
+
+
 @pytest.fixture(scope="module")
 def personality_bundle():
     chart = VedicChart("VerifierPersonality", 1990, 1, 1, 12, 0, **DELHI)

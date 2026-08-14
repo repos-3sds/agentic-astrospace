@@ -216,7 +216,20 @@ _IMPLAUSIBLE_FIRST_JOB_AGE = 70
 _IMPLAUSIBLE_PREGNANCY_AGE = 55
 
 
-def _active_fact(projection_facts: list[dict], key: str) -> dict | None:
+def _active_fact(
+    projection_facts: list[dict], key: str,
+    contradicted_keys: frozenset[str] = frozenset(),
+) -> dict | None:
+    # A key with more than one simultaneously-active value (the reader has
+    # an unresolved `married` AND `single` fact, say) must never be picked
+    # from arbitrarily — whichever happened to be first in `projection_facts`
+    # would silently become policy, driven by DB insertion order rather than
+    # any real resolution. `contradicted_keys` (from the projection's own
+    # `contradictions` list, the same list that already drives its
+    # `context_confirmation_needed` status) makes this key inert here: no
+    # blocked/required frame, no ref, until the reader resolves it.
+    if key in contradicted_keys:
+        return None
     for fact in projection_facts:
         if fact.get("key") == key and fact.get("status") == "active":
             return fact
@@ -226,6 +239,7 @@ def _active_fact(projection_facts: list[dict], key: str) -> dict | None:
 def build_logical_preflight(
     *, profile_facts: dict, projection_facts: list[dict],
     tense: str, question: str, domain: str,
+    contradictions: tuple[str, ...] = (),
 ) -> LogicalPreflight:
     """`profile_facts` is the assembler's own deterministic block
     (age_years/birth_year/as_of — astrospace/context/assembler.py's
@@ -235,14 +249,28 @@ def build_logical_preflight(
     the caller — see `FrozenProfileContextProjection` in
     `astrospace/db/crud_profile_context.py`. This function does no I/O and
     reads no mutable state; called once per Ask turn against an already-
-    frozen snapshot."""
+    frozen snapshot.
+
+    `contradictions` is the projection's own `contradictions` field (fact
+    keys with more than one simultaneously-active value) — kept as a
+    separate explicit parameter rather than re-derived from
+    `projection_facts` so this stays the same one contradiction check the
+    projection builder already performs, not a second one that could drift
+    out of sync with it."""
     blocked: list[str] = []
     required: list[str] = []
     notes: list[str] = []
     missing_or_conflicting: list[str] = []
     refs: list[str] = []
+    contradicted_keys = frozenset(contradictions)
+    for key in sorted(contradicted_keys):
+        missing_or_conflicting.append(
+            f"The ledger has more than one active value for {key!r} — an unresolved "
+            "contradiction. No blocked or required framing is derived from it until the "
+            "reader confirms a single value."
+        )
 
-    employment = _active_fact(projection_facts, "employment_status")
+    employment = _active_fact(projection_facts, "employment_status", contradicted_keys)
     if employment and employment["value"].get("code") == "retired" and domain in ("career", "wealth"):
         blocked.append("future_first_career_inception")
         required.append("retrospective_or_legacy_or_purpose_career_framing")
@@ -253,7 +281,7 @@ def build_logical_preflight(
         )
         refs.append(employment["ref"])
 
-    relationship = _active_fact(projection_facts, "relationship_status")
+    relationship = _active_fact(projection_facts, "relationship_status", contradicted_keys)
     if relationship and relationship["value"].get("code") == "married" and domain == "marriage":
         if tense != "retrospective":
             blocked.append("first_marriage_framing")
@@ -264,7 +292,7 @@ def build_logical_preflight(
             )
         refs.append(relationship["ref"])
 
-    children = _active_fact(projection_facts, "has_children")
+    children = _active_fact(projection_facts, "has_children", contradicted_keys)
     if children and children["value"].get("value") is True and domain in ("children", "wealth", "marriage"):
         required.append("existing_children_context")
         notes.append(
@@ -286,7 +314,7 @@ def build_logical_preflight(
                 "active confirmed has_children=true fact."
             )
 
-    health = _active_fact(projection_facts, "current_health_constraint")
+    health = _active_fact(projection_facts, "current_health_constraint", contradicted_keys)
     if health and domain == "health":
         blocked.append("medical_prognosis_or_recovery_guarantee")
         notes.append(

@@ -133,6 +133,67 @@ literal subset check. Per this doc's release gate 7, the old path has not
 been removed or delegated — that only happens after this parity evidence is
 accepted, which is what this section documents.
 
+### Independent review fixes — 2026-08-14, round 2
+
+An independent review of the Phase 2 diff (PR #62, commit `3e503d9`)
+reproduced three P1 correctness gaps before merge. All three are fixed on
+the same branch, with counterexamples pinned as regression tests so they
+cannot silently reopen.
+
+1. **Blocked-frame verifier rejected safe negated statements.**
+   `_BLOCKED_FRAME_PATTERNS` used a bare `.search()`, so a correctly hedged
+   answer — "This does not mean you will get married in this period.", "I
+   cannot promise you will recover." — was rejected exactly as if it had
+   used the blocked frame unhedged, because the bad phrase appears as a
+   negated literal substring. A repair attempt facing this would just
+   repeat the same safe wording and burn the one retry into
+   `verification_failed`. Fixed by routing `_blocked_frame_violations()`
+   through the SAME shared negation check `safety.py`'s wealth/children/
+   personality/health-outcome overclaim patterns already use
+   (`_negation_precedes`/`_normalize`) — not a second heuristic. See
+   `TestBlockedFrameNegationAware` in `tests/test_profile_context_ledger_
+   phase2.py` and `TestBlockedFrameNegationAwareThroughVerify` in
+   `tests/test_verifier.py`.
+
+2. **Contradictory ledger facts were silently treated as authoritative.**
+   The projection correctly detects simultaneous active facts for the same
+   key (`status: context_confirmation_needed`, `contradictions: [...]`),
+   but `check_profile_context()` was handing ALL facts — including both
+   contradictory values — into `build_logical_preflight()`, which picked
+   whichever came first in the list and built a hard blocked frame from it;
+   which value "won" depended on DB insertion order. Fixed:
+   `build_logical_preflight()` now takes the projection's own
+   `contradictions` tuple explicitly, and `_active_fact()` returns `None`
+   for any contradicted key — no blocked/required frame, no fact ref, and
+   the conflict is surfaced in `missing_or_conflicting_context` instead of
+   silently resolved. `TestContradictoryLedgerFactsAreNotAuthoritative`
+   tests both insertion orders and asserts identical (non-)authoritative
+   behaviour.
+
+3. **Ledger retrieval failure failed open into an unconstrained answer.**
+   `check_profile_context()` caught every exception from a CONFIGURED
+   `ProfileContextStore` and substituted an empty `status: "ready"`
+   projection — indistinguishable from a genuinely empty ledger. For a
+   retired/married/health-disclosed reader this recreates the exact
+   unconstrained-answer failure Phase 2 exists to close, on nothing more
+   than a transient query error. Fixed: a configured store's exception now
+   sets `ContextResult.profile_context_unavailable`, and `prepare()`
+   short-circuits to a new terminal envelope, `context_unavailable`
+   (`retryable: true`), before any model call — no fact values are exposed.
+   No store configured at all is unaffected (stays additive, matching
+   pre-Phase-2 behaviour — this is the "tests / no ledger" case, not a
+   failure). See `TestLedgerRetrievalFailureBlocksGeneration` and the
+   route-level `TestContextUnavailableAtTheRoutes` (both endpoints, real DB,
+   patched projection).
+
+`context_unavailable` is handled explicitly (not via a catch-all `else`) in
+both `ask_routes.py` and `ask_stream_routes.py`, alongside `refer_out`/
+`clarification_needed`/`domain_not_ready`; an unrecognised envelope type now
+raises rather than silently falling through the old `else: # domain_not_ready`
+branch, which would have mis-rendered any future new terminal type using
+the wrong fields. This is a wire-visible addition — see the CE/SSE contract
+update immediately below.
+
 ### CE/SSE contract for mobile rendering (handoff to Codex)
 
 Every SSE `done` frame from `POST /api/v1/ask/{kundli_id}/stream` with
@@ -159,13 +220,29 @@ re-querying the live ledger.
 now legitimately contains `profile_fact:<id>@<revision>` entries whenever the
 model cited a ledger fact — no shape change, same array of strings.
 
-No new SSE event type was added. `blocked_frames`/`required_frames`/etc. are
-NOT exposed on the wire — they're an internal generation/verification
-contract between the orchestrator, the prompt, and the verifier, not
-something the client renders. If a reading is discarded for a ledger-related
-reason, the client sees the existing `status: "verification_failed"` frame,
-identical in shape to every other verification failure — no ledger-specific
-error UI is required.
+`blocked_frames`/`required_frames`/etc. are NOT exposed on the wire — they're
+an internal generation/verification contract between the orchestrator, the
+prompt, and the verifier, not something the client renders. If a reading is
+discarded for a ledger-related reason, the client sees the existing
+`status: "verification_failed"` frame, identical in shape to every other
+verification failure — no ledger-specific error UI is required.
+
+**One new terminal state, added in the round-2 review fixes above:**
+`context_unavailable` — the ledger could not be checked for this turn (a
+transient query failure on a CONFIGURED profile), so the orchestrator
+refused to generate rather than answer unconstrained. On the streamed route
+this is a `{"type": "context_unavailable", "domain": ..., "retryable": true,
+"thread_id": ...}` SSE frame in the same position `refer_out`/
+`clarification_needed`/`domain_not_ready` already occupy (a terminal frame
+in place of `status`/`done`, not an addition to a successful turn). On the
+non-streaming route it is `"status": "context_unavailable"` in the JSON
+response, same shape as `"status": "domain_not_ready"`. Both carry a plain,
+non-technical `answer`/`content` string ("I couldn't check your saved
+profile context just now...") with no fact values or ledger internals in
+it. Codex should render this as a retryable notice (same family as a
+network error), not as a refusal or a domain-not-ready notice — the reader
+did nothing wrong and nothing was found to be unsafe; the check itself
+simply couldn't run.
 
 What Codex owns from here, per the original task split: mobile confirmation/
 audit rendering (surfacing `profile_context_revision`/`profile_context_as_of`

@@ -65,6 +65,13 @@ class RegistryResult:
 class ContextResult:
     bundle: dict
     context_used: list[str]
+    # True only when a CONFIGURED profile_context_store raised on this turn
+    # — never when no store was supplied at all (that stays additive/off,
+    # see `AskOrchestrator.__init__`'s docstring). `prepare()` turns this
+    # into a terminal `context_unavailable` envelope rather than silently
+    # generating against an empty, unconstrained projection — see
+    # `check_profile_context()`.
+    profile_context_unavailable: bool = False
 
 
 @dataclass
@@ -115,6 +122,9 @@ class ProfileContextStore:
 class ProfileContextResult:
     bundle_section: dict  # the projection dict, plus a "preflight" key
     preflight: LogicalPreflight
+    # See `ContextResult.profile_context_unavailable` — same distinction,
+    # one level lower.
+    unavailable: bool = False
 
 
 @dataclass
@@ -267,7 +277,8 @@ class AskOrchestrator:
             key for key in _BUNDLE_TOP_LEVEL_SECTIONS
             if bundle.get(key)
         ]
-        return ContextResult(bundle=bundle, context_used=context_used)
+        return ContextResult(bundle=bundle, context_used=context_used,
+                             profile_context_unavailable=profile_context.unavailable)
 
     def check_profile_context(self, bundle: dict, domain: str, question: str,
                               tense: QuestionTense) -> ProfileContextResult:
@@ -277,14 +288,26 @@ class AskOrchestrator:
         neither the one repair attempt nor `verify()`/`verify_coverage()`
         ever calls back into the store, so the same snapshot governs
         generation, repair, and verification for this turn — the "freeze
-        context per Ask turn" requirement. A store failure fails open, same
-        discipline as `_stored_probes()`: reader-authored context is
-        additive, never a hard dependency for answering."""
+        context per Ask turn" requirement.
+
+        No store at all (`self._profile_context_store is None`) is additive
+        and fails open, same discipline as `_stored_probes()` — every caller
+        that never configured a ledger continues to behave exactly as before
+        Phase 2. A CONFIGURED store that raises is a different situation
+        entirely: silently substituting an empty "ready" projection here is
+        exactly the retired/married/health trust hole Phase 2 exists to
+        close (a saved fact the reader already gave us going unenforced
+        because of a transient query failure, with the answer looking
+        identically confident either way). That case is flagged via
+        `unavailable=True` instead — `AskOrchestrator.prepare()` turns it
+        into a terminal `context_unavailable` envelope and generation never
+        runs."""
         empty = {
             "facts": [], "logical_constraints": [], "revision": 0,
             "as_of": (bundle.get("profile_facts") or {}).get("as_of", ""),
             "domain": domain, "status": "ready", "contradictions": [],
         }
+        unavailable = False
         if self._profile_context_store is None:
             projection = empty
         else:
@@ -293,15 +316,18 @@ class AskOrchestrator:
                 projection = self._profile_context_store.projection(domain, as_of_date)
             except Exception:
                 projection = empty
+                unavailable = True
 
         preflight = build_logical_preflight(
             profile_facts=bundle.get("profile_facts") or {},
             projection_facts=projection.get("facts") or [],
             tense=tense, question=question, domain=domain,
+            contradictions=tuple(projection.get("contradictions") or ()),
         )
         return ProfileContextResult(
             bundle_section={**projection, "preflight": preflight.to_dict()},
             preflight=preflight,
+            unavailable=unavailable,
         )
 
     def _stored_probes(self, domain: str) -> list[dict]:
@@ -404,6 +430,18 @@ class AskOrchestrator:
             })
 
         context = self.assemble_context(routing.domain, question, routing.tense)
+        if context.profile_context_unavailable:
+            # A configured ledger failed to answer for this turn — must not
+            # fall through to a normal reading, which would look identically
+            # confident whether or not the reader's saved facts were actually
+            # enforced. No fact values are exposed here, only that the check
+            # could not be made; the reader is asked to retry rather than
+            # given a possibly-unconstrained answer.
+            return PrepareOutcome(terminal_envelope={
+                "type": "context_unavailable",
+                "domain": routing.domain,
+                "retryable": True,
+            })
 
         # After context assembly (the slot picker reads the bundle) and before
         # any reading is generated — a probe that arrived after the answer

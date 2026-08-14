@@ -332,7 +332,21 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
             refer_out = None
             persist_turn(answer, domain=None, refer_out_kind=None,
                         evidence={"clarification_options": envelope["options"]})
-        else:  # domain_not_ready
+        elif envelope["type"] == "context_unavailable":
+            # A configured ProfileContextStore raised for this turn (see
+            # orchestrator.py's check_profile_context()) — the reader's
+            # saved facts couldn't be checked, so this must not fall through
+            # to a reading that would look identically confident whether or
+            # not they were enforced. No fact values are surfaced here.
+            answer = (
+                "I couldn't check your saved profile context just now, so I'm holding off "
+                "on this answer rather than risk missing something you've already told me. "
+                "Please try again in a moment."
+            )
+            refer_out = None
+            persist_turn(answer, domain=envelope["domain"], refer_out_kind=None,
+                        evidence={"status": "context_unavailable", "retryable": True})
+        elif envelope["type"] == "domain_not_ready":
             answer = (
                 f"{envelope['domain_label']} isn't ready yet. "
                 f"I can currently help with: {', '.join(envelope['available'])}."
@@ -341,6 +355,11 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
             persist_turn(answer, domain=envelope["domain"], refer_out_kind=None,
                         evidence={"status": "domain_not_ready",
                                   "available": envelope["available"]})
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Unhandled orchestrator terminal state: {envelope['type']!r}",
+            )
         return {
             "answer": answer,
             "tools_used": [],

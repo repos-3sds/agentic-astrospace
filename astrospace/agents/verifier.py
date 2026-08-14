@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import re
 
-from .safety import dosha_overclaim_kind, prohibited_verdict
+from .safety import _negation_precedes, _normalize, dosha_overclaim_kind, prohibited_verdict
 from .schema import StructuredReading
 
 # A reading may name a varga either way; both satisfy the coverage check.
@@ -198,12 +198,21 @@ def quality_violations(violations: list[str]) -> list[str]:
 # *when* a frame applies and this only detects whether the model's own
 # text actually used it.
 #
-# Not negation-aware, matching this file's own precedent for the marriage
-# dosha-overclaim patterns (safety.py's `_DOSHA_OVERCLAIM_OUTPUT`) — proven
-# sufficient across review rounds for clearly-positive framings like these.
-# Safety severity throughout: a blocked frame is exactly the class of
+# Negation-aware, using the SAME shared check as safety.py's wealth/
+# children/personality/health-outcome overclaim patterns
+# (`_negation_precedes`/`_normalize`, imported above) — not a second
+# heuristic. Round-1 of this file shipped without it on the (wrong)
+# assumption these patterns were as clearly-positive as the marriage
+# dosha-overclaim patterns that deliberately skip the check; in fact these
+# are exactly the reassurance shape the negation check exists for — "This
+# does not mean you will get married in this period" and "I cannot promise
+# you will recover" both contain the bad phrase as a literal substring of a
+# safe, hedged sentence, and a bare `.search()` rejected both, discarding a
+# careful answer the agent is explicitly asked to produce. Safety severity
+# throughout: a genuinely unhedged blocked frame is exactly the class of
 # violation `safety_violations()` must never let ship, same as a prohibited
-# verdict.
+# verdict — the negation check only prevents flagging the sentences that
+# exist specifically to rule the frame out.
 _BLOCKED_FRAME_PATTERNS: dict[str, re.Pattern] = {
     "future_first_career_inception": re.compile(
         r"\byour career will begin\b|\byour career (?:is going to|will) start\b|"
@@ -277,7 +286,13 @@ def _blocked_frame_violations(reading: StructuredReading, bundle: dict) -> list[
         if not pattern:
             continue
         for text in text_to_check:
-            if pattern.search(text):
+            normalized = _normalize(text)
+            unhedged = next(
+                (match for match in pattern.finditer(normalized)
+                 if not _negation_precedes(normalized, match.start())),
+                None,
+            )
+            if unhedged:
                 out.append(Violation(
                     f"blocked frame {frame!r} used in: {text!r} — the reader's own "
                     "confirmed profile context rules this framing out",
