@@ -43,11 +43,9 @@ import { SheetComponent } from '../sheet/sheet.component';
 export class ProfileSwitcherComponent {
   readonly kundlis = inject(KundliStore);
   readonly dismissed = output<void>();
-  readonly selected = output<Kundli>();
 
   protected choose(profile: Kundli): void {
     this.kundlis.setActive(profile.id);
-    this.selected.emit(profile);
     this.dismissed.emit();
   }
 }
