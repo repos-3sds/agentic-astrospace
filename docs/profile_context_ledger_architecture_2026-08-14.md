@@ -92,6 +92,16 @@ or revoke it.
 13. Profile memory is excluded from logs, analytics payloads, crash reports,
     and cache keys.
 14. Account deletion and profile deletion have deterministic cascade behavior.
+15. Profile facts never alter deterministic astronomical computation: planetary
+    degrees, houses, Vargas, Dashas, transits, Panchanga, strengths, Yogas and
+    Doshas are calculated from their declared astronomical inputs only.
+16. A profile fact may constrain semantic framing but can never serve as proof
+    of a chart placement or cause the model to manufacture astrological
+    evidence that confirms the fact.
+17. High-severity health, relationship, finance, legal and child facts are
+    retrieved only when the routed domain and intent require them. A diagnosis
+    blocks astrological diagnosis, treatment, recovery guarantees and medical
+    prognosis; it does not automatically suppress unrelated daily guidance.
 
 ## Fact Model
 
@@ -250,7 +260,8 @@ The orchestrator needs a deterministic preflight result:
   "contradictions": [],
   "clarifications": [],
   "allowed_frames": ["career_history", "retirement_transition", "legacy"],
-  "blocked_frames": ["first_career_inception_after_retirement"]
+  "blocked_frames": ["first_career_inception_after_retirement"],
+  "blocked_prognoses": []
 }
 ```
 
@@ -258,6 +269,14 @@ This is not an LLM “common sense” prompt. It is a typed node whose output is
 testable and available to the verifier. The final answer must fail verification
 if it asserts a blocked frame or treats an explicit historical question as a
 future prediction.
+
+Blocked frames constrain narration after the chart is computed; they are not
+inputs to chart mathematics. Safety routing still evaluates the reader's
+question first. When a relevant confirmed fact contains a diagnosed condition,
+the preflight adds medical diagnosis/treatment/recovery claims to
+`blocked_prognoses`; medical-advice or prognosis questions return the existing
+health `refer_out`. The diagnosis itself is not sent to unrelated domain agents
+and must not become a prompt for confirmation-biased chart interpretation.
 
 ## API Contract
 
@@ -406,6 +425,9 @@ The core privacy invariants remain mandatory for every plan.
 | Retired mother asks career inception/retirement dates | Answer is retrospective; no post-retirement “career inception” invented |
 | User says “I retired in 2021” | Candidate shown; nothing durable saved without confirmation |
 | User asks about children | No `has_children` fact inferred from the question |
+| Older reader asks whether they will have children | Clarify whose parenthood is meant and avoid an assumed biological-pregnancy prediction; adoption, grandchildren or creative legacy are offered only when relevant, not inferred as facts |
+| Reader with a confirmed diagnosis asks for astrological diagnosis, treatment or recovery certainty | Health `refer_out`; the known diagnosis is not used to invent chart evidence or a medical prognosis |
+| Diagnosed health fact exists while reader asks an unrelated career question | Health fact is excluded from the career projection; career answer proceeds without medical contamination |
 | Profile A is married, profile B is single/unknown | Each receives only its own facts; no cross-profile flash or retrieval |
 | User corrects married to separated | New revision supersedes prior fact; history is auditable; current projection is separated |
 | User deletes a health fact | It disappears from CE, device projection, export, and later answers |
@@ -423,6 +445,8 @@ The core privacy invariants remain mandatory for every plan.
    profile races.
 4. No durable fact can be written from model output without reader confirmation.
 5. All fact evidence refs resolve against the exact CE projection used.
+6. Golden tests prove profile facts do not alter deterministic chart outputs and
+   cannot be cited as astronomical evidence.
 6. Correction, deletion, account deletion, and offline conflict paths pass on
    Android and iOS.
 7. Production telemetry contains counts/status/latency only, never fact values.
