@@ -8,6 +8,7 @@ import { CalendarDaySummary, CalendarEvent, CalendarIntelligencePayload, Calenda
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { FestivalSheetComponent } from './festival-sheet.component';
+import { calendarCacheOptions } from './calendar-cache-options';
 import { MobileSymbol, nakshatraSymbol, tithiSymbol } from '../symbols/mobile-symbols';
 
 @Component({
@@ -184,6 +185,7 @@ export class CalendarDayComponent {
     effect(() => {
       const profileId = this.activeId();
       this.preferences.panchangaContextKey();
+      this.preferences.experienceMode();
       void this.load(profileId);
     });
     effect(() => {
@@ -351,7 +353,8 @@ export class CalendarDayComponent {
       return;
     }
 
-    const cached = this.vedic.cachedCalendarIntelligenceEntry(id, 45, undefined, { includePractitionerDetail: true });
+    const options = this.calendarOptions();
+    const cached = this.vedic.cachedCalendarIntelligenceEntry(id, 45, undefined, options);
     if (cached && !forceRefresh) {
       this.data.set(cached.data);
       if (!this.selectedDate()) this.selectedDate.set(cached.data.start_date);
@@ -367,15 +370,15 @@ export class CalendarDayComponent {
     if (!this.data()) this.loading.set(true);
     try {
       const calendar = forceRefresh
-        ? await this.vedic.refreshCalendarIntelligence(id, 45, undefined, { includePractitionerDetail: true })
-        : await this.vedic.calendarIntelligence(id, 45, undefined, { includePractitionerDetail: true });
+        ? await this.vedic.refreshCalendarIntelligence(id, 45, undefined, options)
+        : await this.vedic.calendarIntelligence(id, 45, undefined, options);
       if (request !== this.requestId || this.activeId() !== id) return;
       this.data.set(calendar);
       if (!this.selectedDate()) this.selectedDate.set(calendar.start_date);
       void this.loadFestivals(calendar.start_date, 60);
     } catch (error) {
       if (request === this.requestId) {
-        const cached = this.vedic.cachedCalendarIntelligenceEntry(id, 45, undefined, { includePractitionerDetail: true });
+        const cached = this.vedic.cachedCalendarIntelligenceEntry(id, 45, undefined, options);
         if (cached) {
           this.data.set(cached.data);
           if (!this.selectedDate()) this.selectedDate.set(cached.data.start_date);
@@ -392,7 +395,7 @@ export class CalendarDayComponent {
 
   private async refreshCalendar(id: string, request: number): Promise<void> {
     try {
-      const calendar = await this.vedic.refreshCalendarIntelligence(id, 45, undefined, { includePractitionerDetail: true });
+      const calendar = await this.vedic.refreshCalendarIntelligence(id, 45, undefined, this.calendarOptions());
       if (request !== this.requestId || this.activeId() !== id) return;
       this.data.set(calendar);
       if (!this.selectedDate()) this.selectedDate.set(calendar.start_date);
@@ -402,6 +405,10 @@ export class CalendarDayComponent {
         this.staleNotice.set(`Showing saved results. ${this.friendlyError(error)}`);
       }
     }
+  }
+
+  private calendarOptions(): { includePractitionerDetail: boolean } {
+    return calendarCacheOptions(this.preferences.experienceMode());
   }
 
   private async loadFestivals(fromDate: string, days: number, regions = this.preferences.festivalRegions()): Promise<void> {

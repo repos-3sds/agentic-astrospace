@@ -255,6 +255,11 @@ Separate tables should be used later for Profile Context Ledger facts and queued
 - The cache service blocks bootstrap until persistence hydration completes,
   then preserves its synchronous memory read API. Writes and account/profile
   deletions are serialized so a late write cannot overtake logout cleanup.
+- Calendar month and selected-day routes must request the same persona-depth
+  identity. Guided and Balanced reuse the summary payload; Practitioner loads
+  practitioner detail at the month route so a date tap is a local projection,
+  not a second 45-day calculation. Android proof measured 118 ms with zero API
+  requests for a selected date after the month payload was available.
 - The first native table contains only disposable Today/Calendar envelopes,
   keyed and indexed by account/profile identity. Profile Context Ledger facts,
   Ask memory, reports, notes, and offline mutations remain out of scope.

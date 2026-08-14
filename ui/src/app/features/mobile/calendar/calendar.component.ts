@@ -8,6 +8,7 @@ import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { ResourceFreshness } from '../../../core/resource-cache';
 import { FestivalSheetComponent } from './festival-sheet.component';
+import { calendarCacheOptions } from './calendar-cache-options';
 
 interface CalendarCell {
   date: string;
@@ -158,6 +159,7 @@ export class CalendarComponent {
     effect(() => {
       const profileId = this.activeId();
       this.preferences.panchangaContextKey();
+      this.preferences.experienceMode();
       void this.load(profileId);
     });
     effect(() => {
@@ -234,7 +236,8 @@ export class CalendarComponent {
       this.loading.set(false);
       return;
     }
-    const cached = this.vedic.cachedCalendarIntelligenceEntry(id, 45);
+    const options = this.calendarOptions();
+    const cached = this.vedic.cachedCalendarIntelligenceEntry(id, 45, undefined, options);
     if (cached && !forceRefresh) {
       this.data.set(cached.data);
       this.cacheFreshness.set(cached.freshness);
@@ -254,7 +257,9 @@ export class CalendarComponent {
     }
     try {
       const calendar = await withTimeout(
-        forceRefresh ? this.vedic.refreshCalendarIntelligence(id, 45) : this.vedic.calendarIntelligence(id, 45),
+        forceRefresh
+          ? this.vedic.refreshCalendarIntelligence(id, 45, undefined, options)
+          : this.vedic.calendarIntelligence(id, 45, undefined, options),
         15000,
         'Calendar is taking longer than expected. Check your connection and retry.',
       );
@@ -267,7 +272,7 @@ export class CalendarComponent {
       void this.loadFestivals(calendar.start_date, 60);
     } catch (error) {
       if (request === this.requestId) {
-        const fallback = this.vedic.cachedCalendarIntelligenceEntry(id, 45);
+        const fallback = this.vedic.cachedCalendarIntelligenceEntry(id, 45, undefined, options);
         if (fallback) {
           this.data.set(fallback.data);
           this.cacheFreshness.set(fallback.freshness);
@@ -286,7 +291,7 @@ export class CalendarComponent {
 
   private async refreshCalendar(id: string, request: number): Promise<void> {
     try {
-      const calendar = await this.vedic.refreshCalendarIntelligence(id, 45);
+      const calendar = await this.vedic.refreshCalendarIntelligence(id, 45, undefined, this.calendarOptions());
       if (request !== this.requestId || this.activeId() !== id) return;
       this.data.set(calendar);
       this.cacheFreshness.set('fresh');
@@ -296,6 +301,10 @@ export class CalendarComponent {
     } catch {
       // The cached calendar stays usable when background refresh fails.
     }
+  }
+
+  private calendarOptions(): { includePractitionerDetail: boolean } {
+    return calendarCacheOptions(this.preferences.experienceMode());
   }
 
   protected cacheAgeLabel(): string {
