@@ -29,6 +29,7 @@ from .schema import AskIntent, StructuredReading
 from .validation_agent import ValidationAgent, ValidationProbeDraft, probe_violations
 from .verifier import quality_violations, safety_violations, verify, verify_coverage
 from ..context import KeywordRouter, assemble_domain
+from ..context.profile_context import LogicalPreflight, build_logical_preflight
 from ..context.taxonomy import get_domain
 from ..context.validation import validation_slots
 from ..core.vedic.chart import VedicChart
@@ -64,6 +65,13 @@ class RegistryResult:
 class ContextResult:
     bundle: dict
     context_used: list[str]
+    # True only when a CONFIGURED profile_context_store raised on this turn
+    # — never when no store was supplied at all (that stays additive/off,
+    # see `AskOrchestrator.__init__`'s docstring). `prepare()` turns this
+    # into a terminal `context_unavailable` envelope rather than silently
+    # generating against an empty, unconstrained projection — see
+    # `check_profile_context()`.
+    profile_context_unavailable: bool = False
 
 
 @dataclass
@@ -86,6 +94,37 @@ class PreparedRun:
     agent: DomainReadingAgent
     bundle: dict
     context_used: list[str]
+    # The exact profile-context snapshot this turn's agent was prompted
+    # with — carried alongside the bundle (not re-derived from it) so
+    # `run()` can report the revision/as_of this answer is grounded in
+    # without re-reading `bundle["profile_context"]`'s shape.
+    profile_context_revision: int = 0
+    profile_context_as_of: str | None = None
+
+
+@dataclass
+class ProfileContextStore:
+    """DB-touching callable the route supplies — same pattern as
+    `ValidationStore`/`chart_loader`, and for the same reason: nothing in
+    this module touches SQLAlchemy.
+
+    `projection(domain, as_of_iso) -> dict` must return the plain-dict form
+    of a `FrozenProfileContextProjection`
+    (`astrospace/db/crud_profile_context.py`'s `build_profile_context_projection()`
+    `.to_dict()`) — already domain-filtered and current-as-of, built exactly
+    once per call. The orchestrator calls this exactly once per turn, before
+    `AgentRun`, and never again during repair or verification — see
+    `check_profile_context()`."""
+    projection: Callable[[str, str], dict]
+
+
+@dataclass
+class ProfileContextResult:
+    bundle_section: dict  # the projection dict, plus a "preflight" key
+    preflight: LogicalPreflight
+    # See `ContextResult.profile_context_unavailable` — same distinction,
+    # one level lower.
+    unavailable: bool = False
 
 
 @dataclass
@@ -152,7 +191,8 @@ def _needs_clarification(decision) -> bool:
 class AskOrchestrator:
     def __init__(self, chart_loader: Callable[[], VedicChart],
                 router: KeywordRouter | None = None,
-                validation_store: ValidationStore | None = None):
+                validation_store: ValidationStore | None = None,
+                profile_context_store: ProfileContextStore | None = None):
         """`chart_loader` is a zero-arg callable the route supplies —
         deferred so a bad-birth-data error only gets raised if a registered
         domain actually needs the chart (never for refer-out, never for
@@ -160,10 +200,19 @@ class AskOrchestrator:
 
         `validation_store` is optional: without it the orchestrator behaves
         exactly as it did before this feature — no probes committed, and an
-        empty `life_context` in the bundle."""
+        empty `life_context` in the bundle.
+
+        `profile_context_store` is optional in exactly the same sense, and
+        for the same reason: without it every reading behaves exactly as it
+        did before Phase 2 — an empty `profile_context` bundle section, no
+        logical preflight constraints, nothing new for the verifier to
+        check. A store failure fails open the same way a validation-store
+        failure does (see `check_profile_context()`) — reader-authored
+        context is additive, never a hard dependency for answering."""
         self._chart_loader = chart_loader
         self._router = router or KeywordRouter()
         self._validation_store = validation_store
+        self._profile_context_store = profile_context_store
 
     def check_safety(self, question: str) -> SafetyResult:
         return SafetyResult(refer_out_kind=refer_out_kind(question))
@@ -215,17 +264,71 @@ class AskOrchestrator:
     def check_registry(self, domain: str) -> RegistryResult:
         return RegistryResult(agent_config=AGENT_REGISTRY.get(domain))
 
-    def assemble_context(self, domain: str, question: str) -> ContextResult:
+    def assemble_context(self, domain: str, question: str,
+                         tense: QuestionTense = "unspecified") -> ContextResult:
         chart = self._chart_loader()
         bundle = assemble_domain(
             chart, domain, question=question,
             validation_probes=self._stored_probes(domain),
         )
+        profile_context = self.check_profile_context(bundle, domain, question, tense)
+        bundle["profile_context"] = profile_context.bundle_section
         context_used = [
             key for key in _BUNDLE_TOP_LEVEL_SECTIONS
             if bundle.get(key)
         ]
-        return ContextResult(bundle=bundle, context_used=context_used)
+        return ContextResult(bundle=bundle, context_used=context_used,
+                             profile_context_unavailable=profile_context.unavailable)
+
+    def check_profile_context(self, bundle: dict, domain: str, question: str,
+                              tense: QuestionTense) -> ProfileContextResult:
+        """Builds the frozen projection EXACTLY ONCE per call — the store's
+        `projection()` callable is invoked here and nowhere else in this
+        module. `assemble_context()` calls this once, before `AgentRun`;
+        neither the one repair attempt nor `verify()`/`verify_coverage()`
+        ever calls back into the store, so the same snapshot governs
+        generation, repair, and verification for this turn — the "freeze
+        context per Ask turn" requirement.
+
+        No store at all (`self._profile_context_store is None`) is additive
+        and fails open, same discipline as `_stored_probes()` — every caller
+        that never configured a ledger continues to behave exactly as before
+        Phase 2. A CONFIGURED store that raises is a different situation
+        entirely: silently substituting an empty "ready" projection here is
+        exactly the retired/married/health trust hole Phase 2 exists to
+        close (a saved fact the reader already gave us going unenforced
+        because of a transient query failure, with the answer looking
+        identically confident either way). That case is flagged via
+        `unavailable=True` instead — `AskOrchestrator.prepare()` turns it
+        into a terminal `context_unavailable` envelope and generation never
+        runs."""
+        empty = {
+            "facts": [], "logical_constraints": [], "revision": 0,
+            "as_of": (bundle.get("profile_facts") or {}).get("as_of", ""),
+            "domain": domain, "status": "ready", "contradictions": [],
+        }
+        unavailable = False
+        if self._profile_context_store is None:
+            projection = empty
+        else:
+            try:
+                as_of_date = str((bundle.get("profile_facts") or {}).get("as_of") or "")[:10]
+                projection = self._profile_context_store.projection(domain, as_of_date)
+            except Exception:
+                projection = empty
+                unavailable = True
+
+        preflight = build_logical_preflight(
+            profile_facts=bundle.get("profile_facts") or {},
+            projection_facts=projection.get("facts") or [],
+            tense=tense, question=question, domain=domain,
+            contradictions=tuple(projection.get("contradictions") or ()),
+        )
+        return ProfileContextResult(
+            bundle_section={**projection, "preflight": preflight.to_dict()},
+            preflight=preflight,
+            unavailable=unavailable,
+        )
 
     def _stored_probes(self, domain: str) -> list[dict]:
         """This domain's probes only — see `ValidationStore`.
@@ -326,7 +429,19 @@ class AskOrchestrator:
                 "available": routing.available_domains,
             })
 
-        context = self.assemble_context(routing.domain, question)
+        context = self.assemble_context(routing.domain, question, routing.tense)
+        if context.profile_context_unavailable:
+            # A configured ledger failed to answer for this turn — must not
+            # fall through to a normal reading, which would look identically
+            # confident whether or not the reader's saved facts were actually
+            # enforced. No fact values are exposed here, only that the check
+            # could not be made; the reader is asked to retry rather than
+            # given a possibly-unconstrained answer.
+            return PrepareOutcome(terminal_envelope={
+                "type": "context_unavailable",
+                "domain": routing.domain,
+                "retryable": True,
+            })
 
         # After context assembly (the slot picker reads the bundle) and before
         # any reading is generated — a probe that arrived after the answer
@@ -341,6 +456,7 @@ class AskOrchestrator:
             question_tense=routing.tense,
             experience_mode=experience_mode,
         )
+        profile_context = context.bundle.get("profile_context") or {}
         return PrepareOutcome(prepared=PreparedRun(
             domain=routing.domain,
             intent=routing.intent,
@@ -348,6 +464,8 @@ class AskOrchestrator:
             agent=agent,
             bundle=context.bundle,
             context_used=context.context_used,
+            profile_context_revision=profile_context.get("revision", 0),
+            profile_context_as_of=profile_context.get("as_of"),
         ))
 
     def _agent_run_and_verify(self, prepared: PreparedRun, messages: list) -> AgentRunResult:
@@ -424,6 +542,13 @@ class AskOrchestrator:
             "tense": prepared.tense,
             "context_used": prepared.context_used,
             "evidence_refs": [item.source for item in result.reading.technical_basis],
+            # The exact ledger snapshot this answer was generated and
+            # verified against — not re-read at persistence time. A later
+            # correction/deletion to the ledger must never retroactively
+            # change what an already-persisted answer is understood to have
+            # been grounded in.
+            "profile_context_revision": prepared.profile_context_revision,
+            "profile_context_as_of": prepared.profile_context_as_of,
             "reading": result.reading.model_dump(),
             # Present only when a quality check survived the repair attempt.
             # The reading shipped anyway (see AgentRunResult.quality_shortfall)

@@ -2,7 +2,7 @@
 
 Date: 2026-08-14
 
-Status: implementation contract; backend schema and agent integration require owner review
+Status: Phase 1 (server ledger + mobile "what Siddha remembers" screen) merged. Phase 2 (deterministic Ask integration) implemented on `claude/profile-context-ledger-phase2`, awaiting review — see "Implementation Update — Phase 2" below. Model extraction, agent-initiated candidate proposal, and offline ledger storage remain unimplemented (Phases 3-4).
 
 Owner: Codex (product/mobile contract)
 
@@ -27,6 +27,230 @@ does not cache sensitive ledger values locally.
 This does **not** activate Ask memory, model candidate extraction, agent
 retrieval, logical preflight, or offline ledger storage. Those remain Phases
 2–4 and must not infer durable facts from model output.
+
+## Implementation Update — Phase 2 (2026-08-14)
+
+Deterministic Ask integration is implemented on
+`claude/profile-context-ledger-phase2`, following the sequence below exactly.
+Reader-authored facts only — no model extraction, no Ask-derived writes, no
+silent inference persistence, no offline ledger cache, and no change to any
+deterministic chart calculation. Every claim in this section is backed by a
+passing test; see `tests/test_profile_context_ledger_phase2.py` and the new
+`TestTenseInvariantParityWithLedgerPreflight` class in `tests/test_verifier.py`.
+
+### 1. Projection builder extracted and shared
+
+`build_profile_context_projection(db, user_id=, profile_id=, domain=, as_of=,
+include_history=)` (`astrospace/db/crud_profile_context.py`) is now the one
+function both `profile_context_routes.py`'s `GET .../context` and
+`AskOrchestrator` call — the route was refactored to call it rather than
+duplicate the projection logic Phase 1 built inline. Ownership is NOT checked
+inside this function (filtering by both `user_id` and `profile_id` makes a
+mismatched pair return an empty, revision-0 projection rather than another
+account's data); the uniform-404 behaviour stays the caller's job, exactly as
+it already was for `list_facts`. `resolve_fact_ref()` (same file) resolves one
+`profile_fact:<id>@<revision>` ref against the real ledger for future
+audit/admin tooling; the verifier itself does not use it (see below — it
+checks bundle membership only, never a live query).
+
+### 2. Frozen per-turn snapshot
+
+`AskOrchestrator` gained `ProfileContextStore` (`astrospace/agents/orchestrator.py`),
+the same DB-free-closure pattern as `ValidationStore`/`chart_loader`. Its
+`projection(domain, as_of_iso) -> dict` callable is invoked exactly once per
+turn, inside `check_profile_context()`, called from `assemble_context()`
+during `prepare()` — before `AgentRun`, and never again during the one repair
+attempt or verification. `PreparedRun.profile_context_revision`/
+`profile_context_as_of` carry the exact snapshot identity forward to
+persistence, so a later correction/deletion never retroactively changes what
+an already-answered turn is understood to have been grounded in.
+`tests/test_profile_context_ledger_phase2.py::TestFrozenSnapshot` proves the
+store is called exactly once even across a repair, and that a "concurrent"
+correction committed after `prepare()` cannot reach the same turn's bundle.
+
+### 3. Logical preflight
+
+`build_logical_preflight()` (`astrospace/context/profile_context.py`) combines
+the assembler's own `profile_facts` (age/birth_year/as_of), the frozen
+projection's active facts, `detect_tense()`'s tense, and the routed domain
+into a `LogicalPreflight`: `blocked_frames`, `required_frames`,
+`context_notes`, `missing_or_conflicting_context`, `applicable_fact_refs` —
+deterministic, regex/rule-based, zero model calls, same discipline as
+`logical_constraints()` and `detect_tense()` before it. Covers exactly the
+five named examples: retired -> blocks future first-career-inception;
+married -> blocks first-marriage framing (unless the question is genuinely
+retrospective); existing children -> requires existing-children framing and
+blocks first-child framing when the question asks "will I have children";
+disclosed health constraint -> blocks medical prognosis/recovery guarantees;
+age/life-stage mismatch -> blocks implausible first-job or biological-
+pregnancy framing at wide, conservative age margins (70+/55+).
+
+### 4. CE bundle extension
+
+`assemble_domain()` (`astrospace/context/assembler.py`) gained an optional
+`profile_context` parameter and always returns a `profile_context` top-level
+bundle section (an empty stub when no store is configured, so every existing
+caller — including the `/context/{kundli_id}` POST route, untouched — keeps
+working identically). It is populated by the orchestrator AFTER
+`assemble_domain()` returns (not threaded through assembler internals), kept
+structurally separate from every chart-derived section, and
+`astrospace/context/profile_context.py` imports nothing from
+`astrospace.core.vedic` — there is no code path by which a ledger fact can
+reach a chart calculation. `domain_agent.py`'s system prompt renders this
+section as prose (`_format_profile_context_block`) positioned BEFORE the
+astrological grounding rules, and instructs the model never to present a
+disclosed fact as a chart discovery, citing the fact's exact `ref` instead.
+
+### 5. Deterministic verification extended
+
+`verifier.py`'s `_valid_sources()` now includes the frozen bundle's own
+`profile_context.facts[].ref` values — the SAME evidence-resolution function
+KB citations already went through, not a second one. A `profile_fact:` ref
+that is deleted, superseded, expired outside `as_of`, or belongs to a
+different profile is simply absent from that list (it was never included
+when the projection was built), so citing it fails exactly like an invented
+KB citation always has. `verify()` gained `_blocked_frame_violations()`
+(safety severity — the reading is discarded, same tier as a prohibited
+verdict) and `_discovery_violations()` (a disclosed fact handed back as
+"your chart reveals..."). `verify_coverage()` gained
+`_required_frame_shortfall()` (quality severity, matching the existing
+varga-coverage check's discipline — a missed required frame is a worse
+reading, not a dangerous one).
+
+### 6. Tense invariant absorption — additive, not a replacement
+
+`detect_tense()` and the existing verifier tense-conflict invariant are
+**unchanged**. The new checks are pure `violations.extend(...)` calls
+alongside it in the same `verify()` function — structurally incapable of
+suppressing an old violation, since nothing removes or filters the old
+check's output. `TestTenseInvariantParityWithLedgerPreflight`
+(`tests/test_verifier.py`) proves this from the outside rather than by
+inspection: every existing `TestTenseConflictInvariant` case still produces
+byte-identical violations with an empty ledger, and a case with both an
+invented future year AND a blocked ledger frame proves both violations
+surface together, with `old_violations ⊆ combined_violations` asserted as a
+literal subset check. Per this doc's release gate 7, the old path has not
+been removed or delegated — that only happens after this parity evidence is
+accepted, which is what this section documents.
+
+### Independent review fixes — 2026-08-14, round 2
+
+An independent review of the Phase 2 diff (PR #62, commit `3e503d9`)
+reproduced three P1 correctness gaps before merge. All three are fixed on
+the same branch, with counterexamples pinned as regression tests so they
+cannot silently reopen.
+
+1. **Blocked-frame verifier rejected safe negated statements.**
+   `_BLOCKED_FRAME_PATTERNS` used a bare `.search()`, so a correctly hedged
+   answer — "This does not mean you will get married in this period.", "I
+   cannot promise you will recover." — was rejected exactly as if it had
+   used the blocked frame unhedged, because the bad phrase appears as a
+   negated literal substring. A repair attempt facing this would just
+   repeat the same safe wording and burn the one retry into
+   `verification_failed`. Fixed by routing `_blocked_frame_violations()`
+   through the SAME shared negation check `safety.py`'s wealth/children/
+   personality/health-outcome overclaim patterns already use
+   (`_negation_precedes`/`_normalize`) — not a second heuristic. See
+   `TestBlockedFrameNegationAware` in `tests/test_profile_context_ledger_
+   phase2.py` and `TestBlockedFrameNegationAwareThroughVerify` in
+   `tests/test_verifier.py`.
+
+2. **Contradictory ledger facts were silently treated as authoritative.**
+   The projection correctly detects simultaneous active facts for the same
+   key (`status: context_confirmation_needed`, `contradictions: [...]`),
+   but `check_profile_context()` was handing ALL facts — including both
+   contradictory values — into `build_logical_preflight()`, which picked
+   whichever came first in the list and built a hard blocked frame from it;
+   which value "won" depended on DB insertion order. Fixed:
+   `build_logical_preflight()` now takes the projection's own
+   `contradictions` tuple explicitly, and `_active_fact()` returns `None`
+   for any contradicted key — no blocked/required frame, no fact ref, and
+   the conflict is surfaced in `missing_or_conflicting_context` instead of
+   silently resolved. `TestContradictoryLedgerFactsAreNotAuthoritative`
+   tests both insertion orders and asserts identical (non-)authoritative
+   behaviour.
+
+3. **Ledger retrieval failure failed open into an unconstrained answer.**
+   `check_profile_context()` caught every exception from a CONFIGURED
+   `ProfileContextStore` and substituted an empty `status: "ready"`
+   projection — indistinguishable from a genuinely empty ledger. For a
+   retired/married/health-disclosed reader this recreates the exact
+   unconstrained-answer failure Phase 2 exists to close, on nothing more
+   than a transient query error. Fixed: a configured store's exception now
+   sets `ContextResult.profile_context_unavailable`, and `prepare()`
+   short-circuits to a new terminal envelope, `context_unavailable`
+   (`retryable: true`), before any model call — no fact values are exposed.
+   No store configured at all is unaffected (stays additive, matching
+   pre-Phase-2 behaviour — this is the "tests / no ledger" case, not a
+   failure). See `TestLedgerRetrievalFailureBlocksGeneration` and the
+   route-level `TestContextUnavailableAtTheRoutes` (both endpoints, real DB,
+   patched projection).
+
+`context_unavailable` is handled explicitly (not via a catch-all `else`) in
+both `ask_routes.py` and `ask_stream_routes.py`, alongside `refer_out`/
+`clarification_needed`/`domain_not_ready`; an unrecognised envelope type now
+raises rather than silently falling through the old `else: # domain_not_ready`
+branch, which would have mis-rendered any future new terminal type using
+the wrong fields. This is a wire-visible addition — see the CE/SSE contract
+update immediately below.
+
+### CE/SSE contract for mobile rendering (handoff to Codex)
+
+Every SSE `done` frame from `POST /api/v1/ask/{kundli_id}/stream` with
+`status: "answered"` now additionally carries:
+
+```json
+{
+  "profile_context_revision": 1,
+  "profile_context_as_of": "2026-08-14"
+}
+```
+
+`profile_context_revision` is the ledger's `revision` counter at the moment
+this turn's snapshot was frozen (0 when the reader has no ledger facts or no
+store was configured). `profile_context_as_of` is the ISO date the snapshot
+was evaluated as-of. Both are also persisted into the assistant `AskMessage`
+row's `evidence` JSON (`{"profile_context_revision": ..., "profile_context_as_of": ...}`,
+alongside the existing `structured_reading`/`references` keys) via
+`_evidence_from_reading()` (`astrospace/api/ask_routes.py`) — reopening an old
+thread can show what ledger state an answer was actually grounded in, without
+re-querying the live ledger.
+
+`evidence_refs` (already on the `done` envelope, and already used by mobile)
+now legitimately contains `profile_fact:<id>@<revision>` entries whenever the
+model cited a ledger fact — no shape change, same array of strings.
+
+`blocked_frames`/`required_frames`/etc. are NOT exposed on the wire — they're
+an internal generation/verification contract between the orchestrator, the
+prompt, and the verifier, not something the client renders. If a reading is
+discarded for a ledger-related reason, the client sees the existing
+`status: "verification_failed"` frame, identical in shape to every other
+verification failure — no ledger-specific error UI is required.
+
+**One new terminal state, added in the round-2 review fixes above:**
+`context_unavailable` — the ledger could not be checked for this turn (a
+transient query failure on a CONFIGURED profile), so the orchestrator
+refused to generate rather than answer unconstrained. On the streamed route
+this is a `{"type": "context_unavailable", "domain": ..., "retryable": true,
+"thread_id": ...}` SSE frame in the same position `refer_out`/
+`clarification_needed`/`domain_not_ready` already occupy (a terminal frame
+in place of `status`/`done`, not an addition to a successful turn). On the
+non-streaming route it is `"status": "context_unavailable"` in the JSON
+response, same shape as `"status": "domain_not_ready"`. Both carry a plain,
+non-technical `answer`/`content` string ("I couldn't check your saved
+profile context just now...") with no fact values or ledger internals in
+it. Codex should render this as a retryable notice (same family as a
+network error), not as a refusal or a domain-not-ready notice — the reader
+did nothing wrong and nothing was found to be unsafe; the check itself
+simply couldn't run.
+
+What Codex owns from here, per the original task split: mobile confirmation/
+audit rendering (surfacing `profile_context_revision`/`profile_context_as_of`
+somewhere reader-visible, e.g. a "grounded in your saved context as of ..."
+line, is a product decision, not specified here), cross-profile and profile-
+switch device testing against this new field, any structured status UI the
+preflight's existence might motivate, and the final Android regression after
+this backend lands.
 
 ## Product Purpose
 
@@ -408,12 +632,17 @@ the repository already supplies that infrastructure.
 - Add deterministic profile projection and relevance filtering.
 - No model extraction yet; support structured profile forms first.
 
-### Phase 2: Logical preflight and verifier
+### Phase 2: Logical preflight and verifier — implemented, see update above
 
-- Add typed life-stage/tense/contradiction node before CE assembly.
-- Feed the minimal projection to domain agents.
-- Verify fact refs and blocked-frame invariants.
-- Reproduce the retired-career failure as a golden regression.
+- ~~Add typed life-stage/tense/contradiction node before CE assembly.~~ Done:
+  `build_logical_preflight()`.
+- ~~Feed the minimal projection to domain agents.~~ Done: `profile_context`
+  bundle section + prompt block.
+- ~~Verify fact refs and blocked-frame invariants.~~ Done: `_valid_sources()`,
+  `_blocked_frame_violations()`, `_discovery_violations()`,
+  `_required_frame_shortfall()`.
+- ~~Reproduce the retired-career failure as a golden regression.~~ Done:
+  `TestRetiredCareerInception`.
 
 ### Phase 3: Mobile control surface
 
@@ -478,14 +707,28 @@ same-account shortcuts are forbidden.
 2. Privacy review approves sensitivity, consent, retention, export, and Family
    plan boundaries.
 3. Golden tests include the retired-career incident and attacker-side A/B
-   profile races.
-4. No durable fact can be written from model output without reader confirmation.
+   profile races. **Engineering-satisfied on `claude/profile-context-ledger-phase2`**
+   — `tests/test_profile_context_ledger_phase2.py` covers the retired-career
+   scenario plus foreign-profile/cross-domain isolation; broader attacker-side
+   device/production testing (Qwen's original scope) is still separate.
 5. All fact evidence refs resolve against the exact CE projection used.
+   **Engineering-satisfied** — `verifier.py`'s `_valid_sources()` checks
+   `profile_fact:` refs against the frozen bundle only, never a live query;
+   see `TestVerifierEvidenceResolution`.
 6. Golden tests prove profile facts do not alter deterministic chart outputs and
-   cannot be cited as astronomical evidence.
+   cannot be cited as astronomical evidence. **Engineering-satisfied** —
+   `astrospace/context/profile_context.py` imports nothing from
+   `astrospace.core.vedic`; there is no code path from a ledger fact to a
+   chart calculation.
 7. Phase 2 replaces the narrow tense/profile-fact path only after parity tests
    prove the old behavior is a strict subset with zero disagreement cases; no
    release may run two independently authoritative preflight paths.
+   **Parity proven, old path NOT yet removed** — `detect_tense()` and the
+   existing verifier tense invariant are unchanged; the new checks are purely
+   additive (`violations.extend(...)`, never a filter/override). See
+   `TestTenseInvariantParityWithLedgerPreflight`. Whether/when to delegate or
+   retire the narrow path is a separate decision this parity evidence enables,
+   not one this implementation makes unilaterally.
 8. Correction, deletion, account deletion, and offline conflict paths pass on
    Android and iOS.
 9. Production telemetry contains counts/status/latency only, never fact values.

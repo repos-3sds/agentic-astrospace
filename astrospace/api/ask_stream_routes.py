@@ -30,7 +30,7 @@ from ..context.taxonomy import TaxonomyError
 from ..db import crud, crud_mobile as cm, get_db
 from .ask_routes import (
     MAX_HISTORY, AskRequest, _evidence_from_reading, _history_from_thread,
-    _owned_thread, _thread_established_domain,
+    _owned_thread, _profile_context_store, _thread_established_domain,
 )
 from .auth import CurrentUser
 from .context_routes import _chart_from_kundli
@@ -161,6 +161,7 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
         chart_loader=lambda: _chart_from_kundli(k, "lahiri", "mean"),
         validation_store=_validation_store(db, user.id, kundli_id,
                                            thread.id if thread else None),
+        profile_context_store=_profile_context_store(db, user.id, kundli_id),
     )
     try:
         outcome = orchestrator.prepare(
@@ -202,7 +203,23 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
                     content, domain=None, refer_out_kind=None,
                     evidence={"clarification_options": envelope["options"]},
                 )
-            else:  # domain_not_ready
+            elif envelope["type"] == "context_unavailable":
+                # A configured ProfileContextStore raised for this turn (see
+                # orchestrator.py's check_profile_context()) — the reader's
+                # saved facts couldn't be checked, so this must not fall
+                # through to a reading that would look identically confident
+                # whether or not they were enforced. No fact values are
+                # surfaced here.
+                content = (
+                    "I couldn't check your saved profile context just now, so I'm holding "
+                    "off on this answer rather than risk missing something you've already "
+                    "told me. Please try again in a moment."
+                )
+                thread_id = persist_turn(
+                    content, domain=envelope["domain"], refer_out_kind=None,
+                    evidence={"status": "context_unavailable", "retryable": True},
+                )
+            elif envelope["type"] == "domain_not_ready":
                 content = (
                     f"{envelope['domain_label']} isn't ready yet. "
                     f"I can currently help with: {', '.join(envelope['available'])}."
@@ -211,6 +228,8 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
                     content, domain=envelope["domain"], refer_out_kind=None,
                     evidence={"status": "domain_not_ready", "available": envelope["available"]},
                 )
+            else:
+                raise ValueError(f"Unhandled orchestrator terminal state: {envelope['type']!r}")
             yield {**envelope, "thread_id": thread_id}
 
         return StreamingResponse(_safe_stream(generate_terminal()), media_type="text/event-stream")
@@ -224,7 +243,11 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
             return thread.id if thread else None
         return persist_turn(
             reading.interpretation, domain=prepared.domain, refer_out_kind=None,
-            evidence=_evidence_from_reading(reading),
+            evidence=_evidence_from_reading(
+                reading,
+                profile_context_revision=prepared.profile_context_revision,
+                profile_context_as_of=prepared.profile_context_as_of,
+            ),
         )
 
     return StreamingResponse(

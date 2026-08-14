@@ -501,14 +501,26 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
                     as_of: datetime | None = None,
                     kb_limit: int = 50,
                     question: str | None = None,
-                    validation_probes: list[dict] | None = None) -> dict:
+                    validation_probes: list[dict] | None = None,
+                    profile_context: dict | None = None) -> dict:
     """Domain-scoped context for one domain. `chart` is a VedicChart.
 
     `validation_probes` are this reader's answered validation turns (see
     context/validation.py). They are the one input here that is NOT derived
     from the chart — everything else in the bundle is computed, this is
     reported — which is why they arrive as an explicit argument rather than
-    being fetched: the assembler has no database and should not grow one."""
+    being fetched: the assembler has no database and should not grow one.
+
+    `profile_context` is the same kind of input, one level further: a
+    pre-built, already-frozen dict (from `AskOrchestrator.check_profile_context()`
+    -> `astrospace/db/crud_profile_context.py`'s `build_profile_context_projection()`
+    + `astrospace/context/profile_context.py`'s `build_logical_preflight()`) —
+    never fetched here, never re-queried here. Kept as its own top-level
+    bundle section, never merged into `profile_facts` or any chart-derived
+    section: a reader-authored fact must never look like something the
+    chart computed, and nothing in this function ever writes INTO it — see
+    the Profile Context Ledger architecture doc's "registry and projection
+    cannot alter deterministic chart calculations" invariant."""
     spec = get_domain(domain_id)
     as_of = as_of or datetime.now(timezone.utc)
     positions = chart.positions
@@ -635,6 +647,13 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
         "domain_name": spec.name,
         "tier": tier,
         "profile_facts": _profile_facts(chart, as_of),
+        # Reader-authored, ledger-sourced — never chart-derived. See the
+        # `profile_context` docstring above for why this stays a distinct
+        # section rather than folding into profile_facts.
+        "profile_context": profile_context or {
+            "facts": [], "logical_constraints": [], "preflight": {},
+            "revision": 0, "as_of": as_of.date().isoformat(),
+        },
         # The reader's dated past — enables anchored, checkable
         # past-validation instead of cold-read generalities. See _retrospect.
         "retrospect": _retrospect(chart, as_of),

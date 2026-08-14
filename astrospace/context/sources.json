@@ -142,6 +142,15 @@
       "author": "C.S. Patel",
       "translation": "English original",
       "sanskrit_source": null
+    },
+    "lal_kitab_1952": {
+      "title": "Lal Kitab (1952 edition)",
+      "author": "Pandit Roop Chand Joshi",
+      "translation": "Prefer an edition-faithful Urdu source or a translation that identifies its editor, translator, publication year, and page correspondence",
+      "sanskrit_source": null,
+      "tradition": "Lal Kitab",
+      "ingestion_source_key": "lal-kitab-1952-roop-chand-joshi",
+      "caveat": "A distinct interpretive and remedial tradition, not a Parashari authority. Keep edition provenance, classify remedies as convention-dependent, and require human review before publishing extracted chunks."
     }
   }
 }
