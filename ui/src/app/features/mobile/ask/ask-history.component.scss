@@ -115,6 +115,10 @@
     @include m-body-strong;
     margin: 0;
     flex: 1;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 
   img { width: 18px; height: 18px; flex-shrink: 0; }
