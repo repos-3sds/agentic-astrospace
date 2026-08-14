@@ -177,6 +177,28 @@ def _retrospect(chart, as_of: datetime) -> dict:
                     and str(s.get("end"))[:10] < as_of_utc.date().isoformat()]
     current_sub = next((span(s) for s in sub_periods if contains_now(s)), None)
 
+    # `previous_chapter` alone only reaches one mahadasha back — for a
+    # reader whose current period started decades ago, that leaves their
+    # entire earlier adult life with no dated anchor at all. A "different
+    # career/marriage/wealth phases" question needs more than one chapter
+    # back; this closes that without turning `retrospect` into the full
+    # 120-year list (`chart.dashas()["mahadashas"]` already has that, for
+    # anything that genuinely needs it — `timeline.py`'s own module
+    # docstring makes the same scope call for the same reason: unbounded
+    # history hurts scannability more than it helps). Capped, not
+    # conditional on question text: a fixed small cap is simpler and more
+    # robust than trying to detect "this question wants history" up front,
+    # and the cost is small and bounded either way (~4 extra `span()`
+    # calls, no ephemeris, no new engine computation — `chart.dashas()`
+    # already computes the full lifetime tree unconditionally, this only
+    # decides how much of it reaches the bundle).
+    _EARLIER_CHAPTERS_CAP = 4
+    earlier_start = max(0, current_index - 1 - _EARLIER_CHAPTERS_CAP)
+    earlier_chapters = (
+        [span(m) for m in mahadashas[earlier_start:current_index - 1]]
+        if current_index > 1 else []
+    )
+
     return {
         "available": True,
         "current_chapter": {
@@ -187,6 +209,11 @@ def _retrospect(chart, as_of: datetime) -> dict:
                                 if elapsed_years is not None else None),
         },
         "previous_chapter": span(mahadashas[current_index - 1]) if current_index else None,
+        # Chronological (oldest first), matching `elapsed_sub_periods`'
+        # own order — up to 4 mahadashas older than `previous_chapter`,
+        # empty when there aren't that many (a young reader's chart, or
+        # `previous_chapter` itself being the first mahadasha of life).
+        "earlier_chapters": earlier_chapters,
         "current_sub_period": current_sub,
         "elapsed_sub_periods": elapsed_subs,
         "note": (

@@ -121,6 +121,13 @@ _BUNDLE_SECTION_NAMES = {
     "houses", "karakas", "vargas", "yogas", "doshas",
     "dasha_relevance", "gochara", "jaimini_karakas", "arudhas",
     "profile_facts", "profile_context",
+    # `retrospect` and `timeline` are real top-level bundle sections
+    # (assembler.py's `_retrospect()`/`build_timeline()`) that
+    # `domain_agent.py`'s own prompt explicitly tells the model to read
+    # dated boundaries from (rules 10 and 13) — they were simply missing
+    # here, so a technical_basis item citing either failed verification
+    # even though the underlying claim was legitimately bundle-grounded.
+    "retrospect", "timeline",
 }
 
 
