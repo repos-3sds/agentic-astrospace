@@ -267,6 +267,15 @@ export interface DailyActionRow {
 
 export interface DailyGuidancePayload {
   system: string;
+  engine_version: string;
+  /**
+   * Cache-validity contract: the authoritative Vedic-day interval (sunrise
+   * to next sunrise) this response is valid for. Null when sunrise is
+   * undefined at this latitude (circumpolar) — fall back to a defensive TTL.
+   */
+  valid_from: string | null;
+  valid_until: string | null;
+  day_definition: 'sunrise_to_next_sunrise';
   as_of: string;
   date: string;
   subject: string;
@@ -1144,6 +1153,8 @@ export interface CalendarReadingMarker {
 
 export interface CalendarIntelligencePayload {
   system: string;
+  engine_version: string;
+  dataset_version: string;
   profile: { name: string; janma_nakshatra: string };
   provenance?: CalculationProvenance;
   start_date: string;
