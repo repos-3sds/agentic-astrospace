@@ -313,6 +313,17 @@
     <p class="answer-state is-error" role="alert">{{ submitError() }}</p>
   }
 
+  @if (memoryCandidate(); as memory) {
+    <section class="memory-prompt" aria-label="Save profile memory">
+      <div><span>REMEMBER FOR THIS PROFILE?</span><b>{{ memory.candidate.label }} · {{ memory.candidate.display_value }}</b><p>This came from your words and will guide relevant future readings. It never changes your birth chart.</p></div>
+      <div class="memory-actions"><button type="button" (click)="dismissMemory()">Not now</button><button class="primary" type="button" [disabled]="memoryBusy()" (click)="confirmMemory()">{{ memoryBusy() ? 'Saving…' : 'Remember' }}</button></div>
+    </section>
+  }
+
+  @if (memorySaved(); as saved) {
+    <section class="memory-toast" role="status"><span>{{ saved.message }}</span><button type="button" [disabled]="memoryBusy()" (click)="undoMemory()">Undo</button></section>
+  }
+
   @if (latestAssistant() && !streaming()) {
     <div class="followups">
       @for (f of latestFollowUps(); track f) {

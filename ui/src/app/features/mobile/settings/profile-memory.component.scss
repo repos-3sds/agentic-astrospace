@@ -4,6 +4,11 @@
 .memory-appbar { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 12px 20px 10px; a { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid var(--m-border); border-radius: 50%; background: var(--m-surface); } img { width: 16px; height: 16px; } div { min-width: 0; } h1 { @include m-title; margin: 0; } p { @include m-caption; margin: 2px 0 0; color: var(--m-muted); } > button { @include m-caption; min-height: 36px; padding: 0 8px; border: 0; background: transparent; color: var(--m-accent-strong); font-weight: 700; } }
 .memory-main { display: flex; flex-direction: column; gap: 14px; padding: 8px 20px max(24px, var(--m-safe-bottom)); }
 .privacy-note, .memory-state, .conflict { display: flex; flex-direction: column; gap: 5px; padding: 15px; border: 1px solid var(--m-border); border-radius: 16px; background: var(--m-surface); b { @include m-body-strong; } p { @include m-body-small; margin: 0; color: var(--m-muted); } }
+.memory-controls { display: flex; flex-direction: column; gap: 14px; padding: 15px; border: 1px solid var(--m-border); border-radius: 16px; background: var(--m-surface); }
+.memory-toggle, .memory-controls fieldset label { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.memory-toggle span, .memory-controls fieldset label span { display: flex; flex: 1; flex-direction: column; gap: 3px; b { @include m-body-strong; } small { @include m-caption; color: var(--m-muted); } }
+.memory-toggle input { width: 44px; height: 24px; accent-color: var(--m-accent); }
+.memory-controls fieldset { display: flex; flex-direction: column; gap: 13px; margin: 0; padding: 14px 0 0; border: 0; border-top: 1px solid var(--m-border); legend { @include m-eyebrow; padding: 0 0 10px; color: var(--m-muted); } label { justify-content: flex-start; } input { accent-color: var(--m-accent); } }
 .privacy-note { background: var(--m-accent-soft); }
 .conflict { border-color: color-mix(in srgb, var(--m-warn) 55%, var(--m-border)); }
 .memory-error { @include m-body-small; margin: 0; color: var(--m-bad); }

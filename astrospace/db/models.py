@@ -248,6 +248,8 @@ class UserSettings(Base):
     # Drives labels, nav priority, default disclosure and copy register app-wide.
     experience_mode: Mapped[str] = mapped_column(String, default="balanced")  # guided | balanced | practitioner
     tone: Mapped[str] = mapped_column(String, default="gentle")  # gentle | direct
+    memory_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    memory_mode: Mapped[str] = mapped_column(String, default="ask")  # ask | automatic
     large_tap_mode: Mapped[bool] = mapped_column(Boolean, default=False)
     audio_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     reduce_motion: Mapped[bool] = mapped_column(Boolean, default=False)

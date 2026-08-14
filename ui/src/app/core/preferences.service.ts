@@ -9,6 +9,7 @@ export type DefaultNodeType = 'mean' | 'true';
 export type TimezoneMode = 'browser' | 'panchanga_place';
 export type ExperienceMode = 'guided' | 'balanced' | 'practitioner';
 export type ReadingTone = 'gentle' | 'direct';
+export type MemoryMode = 'ask' | 'automatic';
 export type FestivalRegion = 'pan-india' | 'north' | 'south';
 
 export interface PreferencesState {
@@ -25,6 +26,8 @@ export interface PreferencesState {
   festivalRegions: FestivalRegion[];
   /** Device TTS voice name, or null to auto-pick — see mobile-tts.service.ts. */
   voiceName: string | null;
+  memoryEnabled: boolean;
+  memoryMode: MemoryMode;
 }
 
 interface RemoteSettings {
@@ -38,6 +41,8 @@ interface RemoteSettings {
   regional_format: string;
   experience_mode: ExperienceMode;
   tone: ReadingTone;
+  memory_enabled: boolean;
+  memory_mode: MemoryMode;
   updated_at?: string | null;
 }
 
@@ -56,6 +61,8 @@ const DEFAULTS: PreferencesState = {
   hapticsEnabled: true,
   festivalRegions: ['pan-india'],
   voiceName: null,
+  memoryEnabled: true,
+  memoryMode: 'ask',
 };
 
 function normalizedFestivalRegions(regions: unknown): FestivalRegion[] {
@@ -85,6 +92,8 @@ export class PreferencesService {
   readonly hapticsEnabled = signal(this.preferences().hapticsEnabled);
   readonly festivalRegions = signal<FestivalRegion[]>(this.preferences().festivalRegions);
   readonly voiceName = signal<string | null>(this.preferences().voiceName);
+  readonly memoryEnabled = signal(this.preferences().memoryEnabled);
+  readonly memoryMode = signal<MemoryMode>(this.preferences().memoryMode);
   readonly cloudReady = signal(false);
   readonly cloudSaving = signal(false);
   readonly cloudError = signal<string | null>(null);
@@ -127,6 +136,8 @@ export class PreferencesService {
         hapticsEnabled: this.hapticsEnabled(),
         festivalRegions: normalizedFestivalRegions(this.festivalRegions()),
         voiceName: this.voiceName(),
+        memoryEnabled: this.memoryEnabled(),
+        memoryMode: this.memoryMode(),
       };
       this.preferences.set(next);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -176,6 +187,8 @@ export class PreferencesService {
     this.hapticsEnabled.set(DEFAULTS.hapticsEnabled);
     this.festivalRegions.set(DEFAULTS.festivalRegions);
     this.voiceName.set(DEFAULTS.voiceName);
+    this.memoryEnabled.set(DEFAULTS.memoryEnabled);
+    this.memoryMode.set(DEFAULTS.memoryMode);
   }
 
   syncCloud(): Promise<void> {
@@ -233,6 +246,8 @@ export class PreferencesService {
       this.regionalFormat.set(remote.regional_format || DEFAULTS.regionalFormat);
       this.experienceMode.set(remote.experience_mode || DEFAULTS.experienceMode);
       this.tone.set(remote.tone || DEFAULTS.tone);
+      this.memoryEnabled.set(remote.memory_enabled ?? DEFAULTS.memoryEnabled);
+      this.memoryMode.set(remote.memory_mode || DEFAULTS.memoryMode);
     } finally {
       queueMicrotask(() => {
         this.applyingRemote = false;
@@ -272,6 +287,8 @@ export class PreferencesService {
       regional_format: state.regionalFormat,
       experience_mode: state.experienceMode,
       tone: state.tone,
+      memory_enabled: state.memoryEnabled,
+      memory_mode: state.memoryMode,
     };
   }
 

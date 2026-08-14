@@ -54,6 +54,38 @@ export class ProfileContextService {
     );
   }
 
+  createFromAsk(profileId: string, revision: number, input: ProfileFactInput, excerpt?: string) {
+    return this.api.post<{ revision: number; fact: ProfileContextFact }>(
+      `/profiles/${profileId}/context/facts`,
+      {
+        expected_revision: revision,
+        key: input.key,
+        value: input.value,
+        valid_from: input.valid_from ?? null,
+        valid_to: input.valid_to ?? null,
+        source: { kind: 'reader_statement', channel: 'ask', ...(excerpt ? { excerpt } : {}) },
+        consent: { state: 'granted', surface: 'ask_memory_confirmation_v1' },
+      },
+      { 'Idempotency-Key': this.idempotencyKey('ask-confirm') },
+    );
+  }
+
+  correctFromAsk(profileId: string, factId: string, revision: number, input: ProfileFactInput, excerpt?: string) {
+    return this.api.patch<{ revision: number; fact: ProfileContextFact }>(
+      `/profiles/${profileId}/context/facts/${factId}`,
+      {
+        expected_revision: revision,
+        key: input.key,
+        value: input.value,
+        valid_from: input.valid_from ?? null,
+        valid_to: input.valid_to ?? null,
+        source: { kind: 'reader_statement', channel: 'ask', ...(excerpt ? { excerpt } : {}) },
+        consent: { state: 'granted', surface: 'ask_memory_confirmation_v1' },
+      },
+      { 'Idempotency-Key': this.idempotencyKey('ask-correct') },
+    );
+  }
+
   correct(profileId: string, factId: string, revision: number, input: ProfileFactInput) {
     return this.api.patch<{ revision: number; fact: ProfileContextFact }>(
       `/profiles/${profileId}/context/facts/${factId}`,

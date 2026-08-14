@@ -49,6 +49,31 @@ describe('ProfileContextService', () => {
     }));
   });
 
+  it('confirms an Ask candidate with reader-statement provenance', async () => {
+    api.post.and.resolveTo({ revision: 2, fact: {} as never });
+    await service.createFromAsk('profile-a', 1, {
+      key: 'relationship_status', value: { code: 'married' },
+    }, 'I am married');
+    const [, body, headers] = api.post.calls.mostRecent().args;
+    expect(body).toEqual(jasmine.objectContaining({
+      expected_revision: 1,
+      source: { kind: 'reader_statement', channel: 'ask', excerpt: 'I am married' },
+      consent: { state: 'granted', surface: 'ask_memory_confirmation_v1' },
+    }));
+    expect(headers?.['Idempotency-Key']).toMatch(/^ask-confirm-/);
+  });
+
+  it('corrects an existing Ask memory instead of creating a conflicting fact', async () => {
+    api.patch.and.resolveTo({ revision: 3, fact: {} as never });
+    await service.correctFromAsk('profile-a', 'existing-fact', 2, {
+      key: 'employment_status', value: { code: 'retired' },
+    }, 'I am retired');
+    expect(api.patch.calls.mostRecent().args[0]).toBe(
+      '/profiles/profile-a/context/facts/existing-fact',
+    );
+    expect(api.patch.calls.mostRecent().args[2]?.['Idempotency-Key']).toMatch(/^ask-correct-/);
+  });
+
   it('deletes with the current revision and idempotency key', async () => {
     api.deleteWithBody.and.resolveTo({ revision: 6, fact_id: 'fact-1', status: 'deleted' });
     await service.remove('profile-a', 'fact-1', 5);

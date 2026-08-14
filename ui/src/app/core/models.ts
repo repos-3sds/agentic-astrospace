@@ -1453,6 +1453,16 @@ export interface AskContextUnavailableEnvelope {
   thread_id?: string | null;
 }
 
+export interface AskMemoryCandidate {
+  key: 'employment_status' | 'relationship_status' | 'has_children' | 'occupation';
+  value: Record<string, unknown>;
+  label: string;
+  display_value: string;
+  sensitivity: string;
+  excerpt: string;
+  requires_confirmation: boolean;
+}
+
 /**
  * A frame from `POST /ask/{kundliId}/stream` (astrospace/api/ask_stream_routes.py).
  * `reset: true` means the output-side safety gate tripped mid-stream — the
@@ -1473,6 +1483,8 @@ export type AskStreamEvent =
   | { type: 'refer_out'; kind: 'health' | 'legal' | 'money' | 'death'; answer: string }
   | AskContextUnavailableEnvelope
   | AskFatalErrorEnvelope
+  | { type: 'memory_candidate'; profile_id: string; revision: number; existing_fact_id?: string | null; candidate: AskMemoryCandidate }
+  | { type: 'memory_saved'; profile_id: string; revision: number; fact: Record<string, unknown>; message: string }
   | AskStructuredEnvelope
   | { delta: string; reset?: boolean }
   | {

@@ -10,6 +10,20 @@
     <p>These facts guide future readings for this profile only. They never change the birth chart and can be corrected or removed here.</p>
   </section>
 
+  <section class="memory-controls" aria-label="Conversational memory settings">
+    <label class="memory-toggle">
+      <span><b>Use memory in Ask</b><small>Let Siddha carry confirmed context into future readings.</small></span>
+      <input type="checkbox" [checked]="preferences.memoryEnabled()" (change)="setMemoryEnabled($any($event.target).checked)" />
+    </label>
+    @if (preferences.memoryEnabled()) {
+      <fieldset>
+        <legend>WHEN ASK NOTICES SOMETHING USEFUL</legend>
+        <label><input type="radio" name="memory-mode" value="ask" [checked]="preferences.memoryMode() === 'ask'" (change)="setMemoryMode('ask')" /><span><b>Ask every time</b><small>You approve each memory before it is saved.</small></span></label>
+        <label><input type="radio" name="memory-mode" value="automatic" [checked]="preferences.memoryMode() === 'automatic'" (change)="setMemoryMode('automatic')" /><span><b>Save safe details automatically</b><small>Sensitive details still require your approval. Every automatic save can be undone.</small></span></label>
+      </fieldset>
+    }
+  </section>
+
   @if (error()) { <p class="memory-error" role="alert">{{ error() }}</p> }
 
   @if (contradictions().length) {

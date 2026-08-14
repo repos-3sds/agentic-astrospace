@@ -132,6 +132,11 @@
   white-space: nowrap;
 }
 
+.memory-prompt { display: flex; flex-direction: column; gap: 13px; padding: 15px; border: 1px solid color-mix(in srgb, var(--m-accent) 42%, var(--m-border)); border-radius: 16px; background: color-mix(in srgb, var(--m-surface) 91%, transparent); box-shadow: var(--m-shadow-card); }
+.memory-prompt > div:first-child { display: flex; flex-direction: column; gap: 5px; span { @include m-eyebrow; color: var(--m-accent); } b { @include m-body-strong; } p { @include m-body-small; margin: 0; color: var(--m-muted); } }
+.memory-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; button { min-height: 44px; border: 1px solid var(--m-border); border-radius: 999px; background: transparent; color: var(--m-ink); @include m-body-strong; } .primary { border-color: var(--m-accent); background: var(--m-accent); color: white; } }
+.memory-toast { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 10px 14px; border: 1px solid var(--m-border); border-radius: 14px; background: var(--m-ink); color: var(--m-on-ink); @include m-body-small; button { border: 0; background: transparent; color: var(--m-accent-soft); font-weight: 700; } }
+
 .status-badge {
   @include m-micro;
   margin-left: auto;

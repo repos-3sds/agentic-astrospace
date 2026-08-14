@@ -28,6 +28,8 @@ class UserSettingsPayload(BaseModel):
     regional_format: str = "en-IN"
     experience_mode: Literal["guided", "balanced", "practitioner"] = "balanced"
     tone: Literal["gentle", "direct"] = "gentle"
+    memory_enabled: bool = True
+    memory_mode: Literal["ask", "automatic"] = "ask"
 
 
 def _settings_to_dict(settings) -> dict:
@@ -42,6 +44,8 @@ def _settings_to_dict(settings) -> dict:
         "regional_format": settings.regional_format,
         "experience_mode": settings.experience_mode,
         "tone": settings.tone,
+        "memory_enabled": settings.memory_enabled,
+        "memory_mode": settings.memory_mode,
         "created_at": settings.created_at.isoformat() if settings.created_at else None,
         "updated_at": settings.updated_at.isoformat() if settings.updated_at else None,
     }

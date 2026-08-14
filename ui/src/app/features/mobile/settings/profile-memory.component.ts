@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
+import { MemoryMode, PreferencesService } from '../../../core/preferences.service';
 import {
   ProfileContextFact,
   ProfileContextService,
@@ -26,6 +27,7 @@ export class ProfileMemoryComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly context = inject(ProfileContextService);
   protected readonly kundlis = inject(KundliStore);
+  protected readonly preferences = inject(PreferencesService);
 
   protected readonly profileId = signal('');
   protected readonly loading = signal(true);
@@ -55,6 +57,14 @@ export class ProfileMemoryComponent {
       this.closeEditor();
       void this.load();
     });
+  }
+
+  protected setMemoryEnabled(enabled: boolean): void {
+    this.preferences.memoryEnabled.set(enabled);
+  }
+
+  protected setMemoryMode(mode: MemoryMode): void {
+    this.preferences.memoryMode.set(mode);
   }
 
   protected openAdd(): void {

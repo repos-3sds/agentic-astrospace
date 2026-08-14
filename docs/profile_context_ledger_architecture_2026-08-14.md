@@ -653,10 +653,17 @@ the repository already supplies that infrastructure.
 
 ### Phase 4: Candidate extraction
 
-- Start with retirement/employment, relationship status, children, move/current
-  country, and explicit dated life events.
+- Start with retirement/employment, occupation, relationship status, and children.
 - Measure proposal precision and rejection rate before expanding categories.
-- Never auto-save.
+- Extraction is deterministic and assertion-only. It reads the reader's current
+  message, never assistant prose, and never treats a question as a fact.
+- Reader setting supports `off`, `ask`, and `automatic`. Automatic mode may
+  save only allow-listed `personal` facts; `sensitive` and `highly_sensitive`
+  facts always require explicit confirmation. Every automatic save emits a
+  visible notice with a revision-safe Undo action.
+- Implementation exists on `codex-conversational-profile-memory` pending the
+  required Ask-owner and migration review. Until merged/deployed, this remains
+  planned rather than production behavior.
 
 ### Phase 5: Longitudinal guidance
 
@@ -683,6 +690,9 @@ same-account shortcuts are forbidden.
 |---|---|
 | Retired mother asks career inception/retirement dates | Answer is retrospective; no post-retirement “career inception” invented |
 | User says “I retired in 2021” | Candidate shown; nothing durable saved without confirmation |
+| Automatic mode user says “I am retired” | Low-risk fact is saved for that profile, a visible “Memory updated” notice appears, and Undo deletes that exact revisioned fact |
+| Automatic mode user says “I am married” | Sensitive fact is proposed for explicit confirmation; it is never silently saved |
+| User asks “Will I retire?” | No candidate is extracted; questions never become profile facts |
 | User asks about children | No `has_children` fact inferred from the question |
 | Older reader asks whether they will have children | Clarify whose parenthood is meant and avoid an assumed biological-pregnancy prediction; adoption, grandchildren or creative legacy are offered only when relevant, not inferred as facts |
 | Reader with a confirmed diagnosis asks for astrological diagnosis, treatment or recovery certainty | Health `refer_out`; the known diagnosis is not used to invent chart evidence or a medical prognosis |

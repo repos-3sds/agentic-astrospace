@@ -29,10 +29,11 @@ router = APIRouter(prefix="/api/v1/profiles", tags=["profile-context"])
 
 
 class FactSource(BaseModel):
-    # Ask extraction is a later phase. Phase 1 cannot persist model-proposed
-    # content through this structured profile-form endpoint.
-    kind: Literal["profile_form", "reader_correction"]
-    channel: Literal["profile_settings", "onboarding"]
+    # Ask candidates are deterministic extracts from the reader's own words,
+    # never facts authored or inferred by the model.
+    kind: Literal["profile_form", "reader_correction", "reader_statement"]
+    channel: Literal["profile_settings", "onboarding", "ask"]
+    excerpt: str | None = Field(default=None, max_length=240)
 
 
 class FactConsent(BaseModel):

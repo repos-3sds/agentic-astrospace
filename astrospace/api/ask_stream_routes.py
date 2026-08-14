@@ -16,6 +16,9 @@ happen lazily inside the stream.
 """
 import json
 import traceback
+import hashlib
+import uuid
+from datetime import datetime, timezone
 from typing import Iterator, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -27,7 +30,12 @@ from ..agents.orchestrator import AskOrchestrator, ValidationStore
 from ..agents.schema import StructuredReading
 from ..agents.validation_agent import ValidationProbeDraft
 from ..context.taxonomy import TaxonomyError
+from ..context.conversational_memory import extract_memory_candidates
+from ..context.profile_context import FACT_REGISTRY
 from ..db import crud, crud_mobile as cm, get_db
+from ..db.crud_profile_context import (
+    RevisionConflict, build_profile_context_projection, create_fact, supersede_fact,
+)
 from .ask_routes import (
     MAX_HISTORY, AskRequest, _evidence_from_reading, _history_from_thread,
     _owned_thread, _profile_context_store, _thread_established_domain,
@@ -63,6 +71,77 @@ def _safe_stream(events: Iterator[dict]) -> Iterator[str]:
             "message": "Something went wrong while generating this answer. Please try again.",
             "retryable": True,
         })
+
+
+def _memory_events(db: Session, user_id: str, profile_id: str,
+                   question: str) -> Iterator[dict]:
+    """Emit at most one reader-owned memory action after an answered turn.
+
+    Candidates come only from deterministic parsing of the user's message.
+    Sensitive candidates are never auto-written, even in automatic mode.
+    """
+    settings = crud.get_user_settings(db, user_id)
+    if settings and not settings.memory_enabled:
+        return
+    mode = settings.memory_mode if settings else "ask"
+    candidates = extract_memory_candidates(question)
+    if not candidates:
+        return
+    projection = build_profile_context_projection(
+        db, user_id=user_id, profile_id=profile_id, include_history=False,
+    )
+    active = {fact["key"]: fact for fact in projection.facts
+              if fact["status"] == "active"}
+    candidate = next((item for item in candidates
+                      if active.get(item.key, {}).get("value") != item.value), None)
+    if candidate is None:
+        return
+    payload = candidate.to_dict()
+    existing = active.get(candidate.key)
+    if mode != "automatic" or candidate.requires_confirmation:
+        yield {"type": "memory_candidate", "profile_id": profile_id,
+               "revision": projection.revision,
+               "existing_fact_id": existing["id"] if existing else None,
+               "candidate": payload}
+        return
+    spec = FACT_REGISTRY[candidate.key]
+    data = {
+        "category": spec.category, "key": candidate.key, "value": candidate.value,
+        "valid_from": None, "valid_to": None, "status": "active",
+        "confidence": "confirmed", "sensitivity": spec.sensitivity,
+        "retention": spec.retention,
+        "source": {"kind": "reader_statement", "channel": "ask",
+                   "excerpt": candidate.excerpt},
+        "consent": {"state": "granted", "surface": "memory_automatic_setting",
+                    "captured_at": datetime.now(timezone.utc).isoformat()},
+    }
+    request_payload = json.dumps(
+        {"profile_id": profile_id, "revision": projection.revision,
+         "key": candidate.key, "value": candidate.value, "excerpt": candidate.excerpt},
+        sort_keys=True,
+    )
+    try:
+        mutation = dict(
+            db=db, user_id=user_id, profile_id=profile_id, data=data,
+            expected_revision=projection.revision,
+            idempotency_key=f"ask-memory-{uuid.uuid4()}",
+            request_hash=hashlib.sha256(request_payload.encode()).hexdigest(),
+        )
+        result = supersede_fact(fact_id=existing["id"], **mutation) if existing else create_fact(**mutation)
+    except RevisionConflict:
+        # A simultaneous settings edit wins. Ask rather than silently losing
+        # or overwriting the newer profile context.
+        latest = build_profile_context_projection(db, user_id=user_id, profile_id=profile_id)
+        latest_existing = next((fact for fact in latest.facts
+                                if fact["status"] == "active" and fact["key"] == candidate.key), None)
+        yield {"type": "memory_candidate", "profile_id": profile_id,
+               "revision": latest.revision,
+               "existing_fact_id": latest_existing["id"] if latest_existing else None,
+               "candidate": payload}
+        return
+    yield {"type": "memory_saved", "profile_id": profile_id,
+           "revision": result["revision"], "fact": result["fact"],
+           "message": f"Remembered {candidate.label.lower()} for this profile."}
 
 
 def _probe_row(probe) -> dict:
@@ -250,8 +329,24 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
             ),
         )
 
+    def generate_answer_and_memory():
+        for event in orchestrator.run(prepared, messages, persist=persist_prepared):
+            if event.get("type") == "done" and event.get("status") == "answered":
+                # `done` remains terminal. Memory frames belong to the same
+                # completed turn, but must precede it so older consumers that
+                # stop reading at `done` keep a truthful stream contract.
+                try:
+                    yield from _memory_events(db, user.id, kundli_id, body.question)
+                except Exception:
+                    # Memory is auxiliary to a reading that already passed
+                    # verification and persistence. A preference/ledger write
+                    # outage must not replace that valid answer with the
+                    # stream's fatal-error terminal state.
+                    traceback.print_exc()
+            yield event
+
     return StreamingResponse(
-        _safe_stream(orchestrator.run(prepared, messages, persist=persist_prepared)),
+        _safe_stream(generate_answer_and_memory()),
         media_type="text/event-stream",
     )
 

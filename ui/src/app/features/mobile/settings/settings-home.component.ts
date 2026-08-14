@@ -64,6 +64,17 @@ export class SettingsHomeComponent {
       eyebrow: 'EXPERIENCE',
       rows: [
         {
+          id: 'memory',
+          icon: 'set-profiles',
+          label: 'Memory',
+          value: !this.preferences.memoryEnabled()
+            ? 'Off'
+            : this.preferences.memoryMode() === 'automatic' ? 'Automatic' : 'Ask every time',
+          route: this.kundlis.active()?.id
+            ? ['/m', 'settings', 'profiles', this.kundlis.active()!.id, 'memory']
+            : ['/m', 'settings', 'profiles'],
+        },
+        {
           id: 'appearance',
           icon: 'set-appearance',
           label: 'Appearance',

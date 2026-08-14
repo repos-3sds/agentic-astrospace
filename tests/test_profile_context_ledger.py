@@ -75,6 +75,17 @@ def fact_body(revision=0, *, key="employment_status", value=None):
     }
 
 
+def test_reader_can_confirm_an_ask_memory_candidate(env):
+    body = fact_body()
+    body["source"] = {"kind": "reader_statement", "channel": "ask"}
+    body["consent"] = {"state": "granted", "surface": "ask_memory_confirmation_v1"}
+    response = post_fact(env, env["mine"], body, key="ask-memory-confirm-0001")
+    assert response.status_code == 201
+    assert response.json()["fact"]["source"] == {
+        "kind": "reader_statement", "channel": "ask"
+    }
+
+
 def post_fact(env, profile, body=None, key="create-retired-0001"):
     return env["client"].post(
         f"/api/v1/profiles/{profile}/context/facts",

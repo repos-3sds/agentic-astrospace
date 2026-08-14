@@ -4,6 +4,7 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { BehaviorSubject } from 'rxjs';
 
 import { KundliStore } from '../../../core/kundli.store';
+import { PreferencesService } from '../../../core/preferences.service';
 import {
   ProfileContextFact,
   ProfileContextProjection,
@@ -68,6 +69,10 @@ describe('ProfileMemoryComponent', () => {
         provideRouter([]),
         { provide: ActivatedRoute, useValue: { paramMap: routeParams.asObservable() } },
         { provide: ProfileContextService, useValue: context },
+        {
+          provide: PreferencesService,
+          useValue: { memoryEnabled: signal(true), memoryMode: signal('ask') },
+        },
         {
           provide: KundliStore,
           useValue: {

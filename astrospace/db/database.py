@@ -100,6 +100,8 @@ def _migrate_sqlite_user_settings():
     additions = {
         "experience_mode": "VARCHAR DEFAULT 'balanced'",
         "tone": "VARCHAR DEFAULT 'gentle'",
+        "memory_enabled": "BOOLEAN DEFAULT 1",
+        "memory_mode": "VARCHAR DEFAULT 'ask'",
         "large_tap_mode": "BOOLEAN DEFAULT 0",
         "audio_enabled": "BOOLEAN DEFAULT 1",
         "reduce_motion": "BOOLEAN DEFAULT 0",
@@ -113,6 +115,8 @@ def _migrate_sqlite_user_settings():
             "UPDATE user_settings SET experience_mode = 'balanced' WHERE experience_mode IS NULL"
         ))
         conn.execute(text("UPDATE user_settings SET tone = 'gentle' WHERE tone IS NULL"))
+        conn.execute(text("UPDATE user_settings SET memory_enabled = 1 WHERE memory_enabled IS NULL"))
+        conn.execute(text("UPDATE user_settings SET memory_mode = 'ask' WHERE memory_mode IS NULL"))
 
 
 def _migrate_sqlite_readings():

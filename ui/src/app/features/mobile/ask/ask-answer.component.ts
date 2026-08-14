@@ -10,9 +10,10 @@ import {
 } from '../why-reading/why-reading-sheet.component';
 import { MobileAskStateService } from './mobile-ask-state.service';
 import { AskService } from '../../../core/ask.service';
-import { AskStreamEvent, AskTechnicalBasisItem, StructuredReading } from '../../../core/models';
+import { AskMemoryCandidate, AskStreamEvent, AskTechnicalBasisItem, StructuredReading } from '../../../core/models';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
+import { ProfileContextFact, ProfileContextService } from '../../../core/profile-context.service';
 import { MobileAskMessage, MobileAskThreadService } from './mobile-ask-thread.service';
 
 /**
@@ -85,6 +86,7 @@ export class AskAnswerComponent {
   private readonly askState = inject(MobileAskStateService);
   private readonly askService = inject(AskService);
   private readonly threadsApi = inject(MobileAskThreadService);
+  private readonly profileContext = inject(ProfileContextService);
   private readonly kundlis = inject(KundliStore);
   private readonly router = inject(Router);
   // The observable, not the snapshot: a follow-up re-enters this same route, and
@@ -102,8 +104,58 @@ export class AskAnswerComponent {
   readonly streamStatus = signal<string | null>(null);
   readonly streamDomain = signal<string | null>(null);
   readonly streamEvidence = signal<SourceReference[]>([]);
+  readonly memoryCandidate = signal<{ profileId: string; revision: number; existingFactId: string | null; candidate: AskMemoryCandidate } | null>(null);
+  readonly memorySaved = signal<{ profileId: string; revision: number; fact: ProfileContextFact; message: string } | null>(null);
+  readonly memoryBusy = signal(false);
   protected readonly activeThreadId = signal<string | null>(null);
   private readonly selectedAssistant = signal<ChatMessage | null>(null);
+
+  protected async confirmMemory(): Promise<void> {
+    const pending = this.memoryCandidate();
+    if (!pending || this.memoryBusy() || this.kundlis.active()?.id !== pending.profileId) return;
+    this.memoryBusy.set(true);
+    try {
+      const input = { key: pending.candidate.key, value: pending.candidate.value };
+      const result = pending.existingFactId
+        ? await this.profileContext.correctFromAsk(
+            pending.profileId, pending.existingFactId, pending.revision, input,
+            pending.candidate.excerpt,
+          )
+        : await this.profileContext.createFromAsk(
+            pending.profileId, pending.revision, input, pending.candidate.excerpt,
+          );
+      if (this.kundlis.active()?.id !== pending.profileId) return;
+      this.memoryCandidate.set(null);
+      this.memorySaved.set({
+        profileId: pending.profileId,
+        revision: result.revision,
+        fact: result.fact,
+        message: `Remembered ${pending.candidate.label.toLowerCase()} for this profile.`,
+      });
+    } catch (error) {
+      this.submitError.set((error as Error).message || 'That memory could not be saved.');
+    } finally {
+      this.memoryBusy.set(false);
+    }
+  }
+
+  protected dismissMemory(): void {
+    this.memoryCandidate.set(null);
+  }
+
+  protected async undoMemory(): Promise<void> {
+    const saved = this.memorySaved();
+    if (!saved || this.memoryBusy() || this.kundlis.active()?.id !== saved.profileId) return;
+    this.memoryBusy.set(true);
+    try {
+      await this.profileContext.remove(saved.profileId, saved.fact.id, saved.revision);
+      if (this.kundlis.active()?.id === saved.profileId) this.memorySaved.set(null);
+    } catch (error) {
+      this.submitError.set((error as Error).message || 'That memory could not be removed.');
+    } finally {
+      this.memoryBusy.set(false);
+    }
+  }
 
   readonly assistantMessages = computed(() => this.messages().filter((message) => message.role === 'assistant'));
   readonly latestAssistant = computed(() => {
@@ -520,6 +572,8 @@ export class AskAnswerComponent {
     this.streaming.set(false);
     this.loadingThread.set(false);
     this.submitError.set(null);
+    this.memoryCandidate.set(null);
+    this.memorySaved.set(null);
     this.whyOpen.set(false);
     this.listenOpen.set(false);
   }
@@ -851,6 +905,15 @@ export class AskAnswerComponent {
             streaming: false,
           });
           this.streaming.set(false);
+        } else if ('type' in event && event.type === 'memory_candidate') {
+          this.memoryCandidate.set({ profileId: event.profile_id, revision: event.revision, existingFactId: event.existing_fact_id ?? null, candidate: event.candidate });
+        } else if ('type' in event && event.type === 'memory_saved') {
+          this.memorySaved.set({
+            profileId: event.profile_id,
+            revision: event.revision,
+            fact: event.fact as unknown as ProfileContextFact,
+            message: event.message,
+          });
         } else if (this.isStructuredSuccessEvent(event)) {
           finalThreadId = event.thread_id ?? finalThreadId;
           this.streamDomain.set(event.domain);
