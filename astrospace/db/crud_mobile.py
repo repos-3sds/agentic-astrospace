@@ -111,8 +111,10 @@ def create_ask_thread(db: Session, user_id: str, kundli_id: str, title: str | No
     return thread
 
 
-def list_ask_threads(db: Session, user_id: str, kundli_id: str | None = None, limit: int = 50) -> list[AskThread]:
-    q = db.query(AskThread).filter(AskThread.user_id == user_id, AskThread.archived_at.is_(None))
+def list_ask_threads(db: Session, user_id: str, kundli_id: str | None = None,
+                     limit: int = 50, archived: bool = False) -> list[AskThread]:
+    archived_filter = AskThread.archived_at.is_not(None) if archived else AskThread.archived_at.is_(None)
+    q = db.query(AskThread).filter(AskThread.user_id == user_id, archived_filter)
     if kundli_id is not None:
         q = q.filter(AskThread.kundli_id == kundli_id)
     return q.order_by(AskThread.last_message_at.desc().nullslast()).limit(limit).all()
@@ -158,6 +160,24 @@ def archive_ask_thread(db: Session, thread_id: str, user_id: str) -> bool:
     if not thread:
         return False
     thread.archived_at = datetime.utcnow()
+    db.commit()
+    return True
+
+
+def restore_ask_thread(db: Session, thread_id: str, user_id: str) -> bool:
+    thread = get_ask_thread(db, thread_id, user_id)
+    if not thread:
+        return False
+    thread.archived_at = None
+    db.commit()
+    return True
+
+
+def delete_ask_thread(db: Session, thread_id: str, user_id: str) -> bool:
+    thread = get_ask_thread(db, thread_id, user_id)
+    if not thread:
+        return False
+    db.delete(thread)
     db.commit()
     return True
 

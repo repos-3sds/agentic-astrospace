@@ -42,6 +42,19 @@
   padding: 8px 16px 24px;
 }
 
+.askhist-tabs {
+  @include m-segmented-track;
+  margin-bottom: 14px;
+
+  button {
+    @include m-segmented-button;
+  }
+
+  button.is-active {
+    @include m-selected-pill;
+  }
+}
+
 .askhist-list {
   display: flex;
   flex-direction: column;
@@ -69,7 +82,7 @@
 }
 
 .askhist-swipe.is-revealed .askhist-card {
-  transform: translateX(104px);
+  transform: translateX(184px);
 }
 
 .askhist-meta,
@@ -107,12 +120,18 @@
   img { width: 18px; height: 18px; flex-shrink: 0; }
 }
 
-.askhist-archive {
+.askhist-actions {
   position: absolute;
   inset: 0 auto 0 0;
-  width: 96px;
+  width: 176px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.askhist-archive,
+.askhist-restore,
+.askhist-delete {
   border: 0;
-  background: var(--m-accent-strong);
   color: var(--m-on-ink);
   @include m-body-strong;
   cursor: pointer;
@@ -120,6 +139,10 @@
   place-items: center;
   z-index: 0;
 }
+
+.askhist-archive { background: var(--m-accent-strong); }
+.askhist-restore { background: var(--m-good); }
+.askhist-delete { background: var(--m-bad); }
 
 .askhist-state,
 .askhist-empty {

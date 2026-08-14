@@ -21,9 +21,10 @@ export class AskHistoryComponent {
   private readonly router = inject(Router);
 
   readonly threads = signal<MobileAskThread[]>([]);
+  readonly view = signal<'active' | 'archived'>('active');
   readonly loading = signal(true);
   readonly opening = signal<string | null>(null);
-  readonly archiving = signal<string | null>(null);
+  readonly mutating = signal<string | null>(null);
   readonly revealedThreadId = signal<string | null>(null);
   readonly error = signal<string | null>(null);
   private touchStartX = 0;
@@ -42,7 +43,7 @@ export class AskHistoryComponent {
         this.threads.set([]);
         return;
       }
-      const rows = await this.threadsApi.list(profile.id);
+      const rows = await this.threadsApi.list(profile.id, this.view() === 'archived');
       this.threads.set(rows);
     } catch (error) {
       this.error.set((error as Error).message);
@@ -74,8 +75,8 @@ export class AskHistoryComponent {
 
   protected async archive(event: Event, thread: MobileAskThread): Promise<void> {
     event.stopPropagation();
-    if (this.archiving()) return;
-    this.archiving.set(thread.id);
+    if (this.mutating()) return;
+    this.mutating.set(thread.id);
     this.error.set(null);
     try {
       await this.threadsApi.archive(thread.id);
@@ -84,8 +85,49 @@ export class AskHistoryComponent {
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {
-      this.archiving.set(null);
+      this.mutating.set(null);
     }
+  }
+
+  protected async restore(event: Event, thread: MobileAskThread): Promise<void> {
+    event.stopPropagation();
+    if (this.mutating()) return;
+    this.mutating.set(thread.id);
+    this.error.set(null);
+    try {
+      await this.threadsApi.restore(thread.id);
+      this.threads.update((items) => items.filter((item) => item.id !== thread.id));
+      if (this.revealedThreadId() === thread.id) this.revealedThreadId.set(null);
+    } catch (error) {
+      this.error.set((error as Error).message);
+    } finally {
+      this.mutating.set(null);
+    }
+  }
+
+  protected async deleteThread(event: Event, thread: MobileAskThread): Promise<void> {
+    event.stopPropagation();
+    if (this.mutating()) return;
+    const confirmed = typeof window === 'undefined' || window.confirm('Delete this conversation permanently?');
+    if (!confirmed) return;
+    this.mutating.set(thread.id);
+    this.error.set(null);
+    try {
+      await this.threadsApi.delete(thread.id);
+      this.threads.update((items) => items.filter((item) => item.id !== thread.id));
+      if (this.revealedThreadId() === thread.id) this.revealedThreadId.set(null);
+    } catch (error) {
+      this.error.set((error as Error).message);
+    } finally {
+      this.mutating.set(null);
+    }
+  }
+
+  protected switchView(view: 'active' | 'archived'): void {
+    if (this.view() === view || this.loading()) return;
+    this.view.set(view);
+    this.revealedThreadId.set(null);
+    void this.load();
   }
 
   protected date(thread: MobileAskThread): string {

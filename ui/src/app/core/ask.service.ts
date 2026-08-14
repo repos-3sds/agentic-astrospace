@@ -74,6 +74,7 @@ export class AskService {
       thread_id?: string;
       start_thread?: boolean;
       language?: string;
+      experience_mode?: 'guided' | 'balanced' | 'practitioner';
       input_mode?: 'text' | 'voice';
       /** An explicit domain the reader chose (a clarification chip) —
        * bypasses keyword routing server-side rather than being folded back
