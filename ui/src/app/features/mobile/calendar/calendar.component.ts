@@ -3,17 +3,13 @@ import { RouterLink } from '@angular/router';
 
 import { FestivalService } from '../../../core/festival.service';
 import { KundliStore } from '../../../core/kundli.store';
-import { CalendarIntelligencePayload, FestivalOccurrence } from '../../../core/models';
+import { FestivalOccurrence } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
-import { VedicService } from '../../../core/vedic.service';
-import { ResourceFreshness } from '../../../core/resource-cache';
 import { FestivalSheetComponent } from './festival-sheet.component';
-import { calendarMonthCacheOptions } from './calendar-cache-options';
 
 interface CalendarCell {
   date: string;
   day: number;
-  inPayload: boolean;
   eventCount: number;
 }
 
@@ -33,30 +29,9 @@ interface CalendarCell {
     </header>
 
     <main class="mcal-body">
-      @if (loading()) {
-        <section class="mcal-grid mcal-skeleton" role="status" aria-label="Loading calendar">
-          @for (day of weekdays; track day) { <span class="mcal-weekday">{{ day }}</span> }
-          @for (_ of skeletonDays; track $index) { <span class="mcal-skel-day"></span> }
-        </section>
-        <p class="mcal-eyebrow">UPCOMING SIGNALS</p>
-        @for (_ of [1, 2, 3]; track _) {
-          <section class="mcal-observance mcal-skel-row">
-            <span class="mcal-date-tile"></span>
-            <span><i></i><i></i><i></i></span>
-          </section>
-        }
-      } @else if (error()) {
-        <section class="mcal-state error" role="alert">
-          <b>Calendar could not load</b>
-          <p>{{ error() }}</p>
-          <button type="button" (click)="reload()">Retry</button>
-        </section>
-      } @else if (!activeId()) {
+      @if (!activeId()) {
         <section class="mcal-state"><b>No active profile</b><p>Select a profile before loading calendar guidance.</p></section>
-      } @else if (data(); as calendar) {
-        @if (cacheFreshness() === 'stale') {
-          <p class="mcal-cache-notice" role="status">{{ cacheAgeLabel() }} · refreshing calendar</p>
-        }
+      } @else {
         <section
           class="mcal-grid"
           (touchstart)="startMonthSwipe($event)"
@@ -68,7 +43,6 @@ interface CalendarCell {
             <a
               [class.mcal-selected]="cell.date === todayDate()"
               [class.mcal-event]="cell.eventCount > 0"
-              [class.mcal-empty-day]="!cell.inPayload"
               [routerLink]="['/m','calendar','day']"
               [queryParams]="{ date: cell.date }"
             >{{ cell.day }}</a>
@@ -77,7 +51,7 @@ interface CalendarCell {
 
         <p class="mcal-eyebrow">FESTIVALS</p>
         @if (festivalError()) {
-          <section class="mcal-state error"><b>Festivals could not load</b><p>{{ festivalError() }}</p></section>
+          <section class="mcal-state error"><b>Festivals could not load</b><p>{{ festivalError() }}</p><button type="button" (click)="reload()">Retry</button></section>
         }
         @for (festival of visibleFestivals(); track festival.slug + festival.occurs_on) {
           <button class="mcal-observance festival" type="button" (click)="selectedFestival.set(festival)">
@@ -85,7 +59,11 @@ interface CalendarCell {
             <span><b>{{ festival.name }}</b><small>{{ festival.description || festival.prep_guidance || 'Tap for observance details' }}</small><em>{{ festival.regions.join(' · ') }}</em></span>
           </button>
         } @empty {
-          @if (!festivalLoading() && !festivalError()) {
+          @if (festivalLoading()) {
+            <section class="mcal-observance mcal-skel-row" role="status" aria-label="Loading festivals">
+              <span class="mcal-date-tile"></span><span><i></i><i></i><i></i></span>
+            </section>
+          } @else if (!festivalError()) {
             <section class="mcal-state"><b>No festivals in this window</b><p>No major Hindu festivals were returned for {{ monthLabel() }}.</p></section>
           }
         }
@@ -100,30 +78,20 @@ interface CalendarCell {
 export class CalendarComponent {
   protected readonly preferences = inject(PreferencesService);
   private readonly store = inject(KundliStore);
-  private readonly vedic = inject(VedicService);
   private readonly festivals = inject(FestivalService);
-  private requestId = 0;
+  private festivalRequestId = 0;
 
   protected readonly weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-  protected readonly skeletonDays = Array.from({ length: 35 });
-  protected readonly data = signal<CalendarIntelligencePayload | null>(null);
-  protected readonly cacheFreshness = signal<ResourceFreshness | null>(null);
-  protected readonly cacheUpdatedAt = signal<number | null>(null);
-  protected readonly loading = signal(false);
-  protected readonly error = signal<string | null>(null);
   protected readonly festivalLoading = signal(false);
   protected readonly festivalError = signal<string | null>(null);
   protected readonly festivalRows = signal<FestivalOccurrence[]>([]);
   protected readonly selectedFestival = signal<FestivalOccurrence | null>(null);
-  protected readonly visibleMonth = signal<string | null>(null);
+  protected readonly visibleMonth = signal(this.todayMonth());
   protected readonly activeId = computed(() => this.store.activeId());
-  protected readonly activeName = computed(() => this.store.active()?.name ?? 'this profile');
-  private renderedProfileId: string | null = null;
   private monthSwipeStart: { x: number; y: number } | null = null;
 
   protected readonly monthStart = computed(() => {
-    const month = this.visibleMonth() ?? this.data()?.start_date.slice(0, 7) ?? this.todayMonth();
-    return new Date(`${month}-01T12:00:00`);
+    return new Date(`${this.visibleMonth()}-01T12:00:00`);
   });
   protected readonly blanks = computed(() => Array.from({ length: this.monthStart().getDay() }));
   protected readonly cells = computed<CalendarCell[]>(() => {
@@ -131,7 +99,6 @@ export class CalendarComponent {
     const year = start.getFullYear();
     const month = start.getMonth();
     const days = new Date(year, month + 1, 0).getDate();
-    const payloadDates = new Set(this.data()?.panchanga_days.map((day) => day.date) ?? []);
     const festivalCounts = this.festivalRows().reduce<Record<string, number>>((counts, festival) => {
       counts[festival.occurs_on] = (counts[festival.occurs_on] ?? 0) + 1;
       return counts;
@@ -141,14 +108,12 @@ export class CalendarComponent {
       return {
         date,
         day: index + 1,
-        inPayload: payloadDates.has(date),
         eventCount: festivalCounts[date] ?? 0,
       };
     });
   });
   protected readonly visibleFestivals = computed(() => {
-    const month = this.visibleMonth() ?? this.data()?.start_date.slice(0, 7);
-    if (!month) return [];
+    const month = this.visibleMonth();
     return this.festivalRows()
       .filter((festival) => festival.occurs_on.startsWith(month))
       .sort((a, b) => a.occurs_on.localeCompare(b.occurs_on) || a.name.localeCompare(b.name))
@@ -159,18 +124,15 @@ export class CalendarComponent {
     effect(() => {
       const profileId = this.activeId();
       this.preferences.panchangaContextKey();
-      this.preferences.experienceMode();
-      void this.load(profileId);
-    });
-    effect(() => {
       const regions = this.preferences.festivalRegions();
-      const startDate = this.data()?.start_date;
-      if (startDate) void this.loadFestivals(startDate, 60, regions);
+      const month = this.visibleMonth();
+      if (profileId) void this.loadFestivals(`${month}-01`, this.daysInVisibleMonth(), regions);
     });
   }
 
   protected reload(): void {
-    void this.load(this.activeId(), true);
+    const month = this.visibleMonth();
+    void this.loadFestivals(`${month}-01`, this.daysInVisibleMonth(), this.preferences.festivalRegions(), true);
   }
 
   protected shiftMonth(delta: number): void {
@@ -204,15 +166,11 @@ export class CalendarComponent {
   }
 
   protected canGoPrevious(): boolean {
-    const first = this.data()?.start_date.slice(0, 7);
-    const current = this.visibleMonth() ?? first;
-    return !!first && !!current && current > first;
+    return this.visibleMonth() > this.todayMonth();
   }
 
   protected canGoNext(): boolean {
-    const last = this.data()?.end_date.slice(0, 7);
-    const current = this.visibleMonth() ?? this.data()?.start_date.slice(0, 7);
-    return !!last && !!current && current < last;
+    return this.visibleMonth() < this.monthOffset(this.todayMonth(), 12);
   }
 
   protected monthLabel(): string {
@@ -225,92 +183,6 @@ export class CalendarComponent {
 
   protected monthShort(date: string): string {
     return new Intl.DateTimeFormat('en', { month: 'short' }).format(new Date(`${date}T12:00:00`));
-  }
-
-  private async load(id: string | null, forceRefresh = false): Promise<void> {
-    const request = ++this.requestId;
-    this.error.set(null);
-    if (!id) {
-      this.data.set(null);
-      this.renderedProfileId = null;
-      this.loading.set(false);
-      return;
-    }
-    const options = this.calendarOptions();
-    const cached = this.vedic.cachedCalendarIntelligenceEntry(id, 45, undefined, options);
-    if (cached && !forceRefresh) {
-      this.data.set(cached.data);
-      this.cacheFreshness.set(cached.freshness);
-      this.cacheUpdatedAt.set(cached.storedAt);
-      this.visibleMonth.set(cached.data.start_date.slice(0, 7));
-      this.renderedProfileId = id;
-      this.loading.set(false);
-      void this.loadFestivals(cached.data.start_date, 60);
-      if (cached.freshness === 'stale') void this.refreshCalendar(id, request);
-      return;
-    }
-    if (this.renderedProfileId !== id) {
-      this.data.set(null);
-      this.loading.set(true);
-    } else {
-      this.loading.set(!this.data());
-    }
-    try {
-      const calendar = await withTimeout(
-        forceRefresh
-          ? this.vedic.refreshCalendarIntelligence(id, 45, undefined, options)
-          : this.vedic.calendarIntelligence(id, 45, undefined, options),
-        15000,
-        'Calendar is taking longer than expected. Check your connection and retry.',
-      );
-      if (request !== this.requestId || this.activeId() !== id) return;
-      this.data.set(calendar);
-      this.cacheFreshness.set('fresh');
-      this.cacheUpdatedAt.set(Date.now());
-      this.renderedProfileId = id;
-      this.visibleMonth.set(calendar.start_date.slice(0, 7));
-      void this.loadFestivals(calendar.start_date, 60);
-    } catch (error) {
-      if (request === this.requestId) {
-        const fallback = this.vedic.cachedCalendarIntelligenceEntry(id, 45, undefined, options);
-        if (fallback) {
-          this.data.set(fallback.data);
-          this.cacheFreshness.set(fallback.freshness);
-          this.cacheUpdatedAt.set(fallback.storedAt);
-          this.renderedProfileId = id;
-          this.visibleMonth.set(fallback.data.start_date.slice(0, 7));
-          void this.loadFestivals(fallback.data.start_date, 60);
-        } else {
-          this.error.set((error as Error).message);
-        }
-      }
-    } finally {
-      if (request === this.requestId) this.loading.set(false);
-    }
-  }
-
-  private async refreshCalendar(id: string, request: number): Promise<void> {
-    try {
-      const calendar = await this.vedic.refreshCalendarIntelligence(id, 45, undefined, this.calendarOptions());
-      if (request !== this.requestId || this.activeId() !== id) return;
-      this.data.set(calendar);
-      this.cacheFreshness.set('fresh');
-      this.cacheUpdatedAt.set(Date.now());
-      this.renderedProfileId = id;
-      void this.loadFestivals(calendar.start_date, 60);
-    } catch {
-      // The cached calendar stays usable when background refresh fails.
-    }
-  }
-
-  private calendarOptions(): { includePractitionerDetail: boolean } {
-    return calendarMonthCacheOptions();
-  }
-
-  protected cacheAgeLabel(): string {
-    const updatedAt = this.cacheUpdatedAt();
-    if (!updatedAt) return 'Saved data';
-    return `Saved ${new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(updatedAt)}`;
   }
 
   private isoDate(year: number, month: number, day: number): string {
@@ -327,14 +199,26 @@ export class CalendarComponent {
     return this.isoDate(today.getFullYear(), today.getMonth(), today.getDate());
   }
 
-  private async loadFestivals(fromDate: string, days: number, regions = this.preferences.festivalRegions()): Promise<void> {
+  private async loadFestivals(
+    fromDate: string,
+    days: number,
+    regions = this.preferences.festivalRegions(),
+    forceRefresh = false,
+  ): Promise<void> {
+    const requestId = ++this.festivalRequestId;
     const place = this.preferences.panchangaPlace();
     const profile = this.store.active();
     const city = place?.city || profile?.birth_city;
     const nation = place?.nation || profile?.birth_nation || 'IN';
-    if (!city) return;
-    const cached = this.festivals.cachedUpcoming(city, nation, fromDate, days, regions);
+    this.festivalRows.set([]);
+    if (!city) {
+      this.festivalLoading.set(false);
+      this.festivalError.set('Set a Panchanga place to load local festivals.');
+      return;
+    }
+    const cached = forceRefresh ? null : this.festivals.cachedUpcoming(city, nation, fromDate, days, regions);
     if (cached) {
+      if (requestId !== this.festivalRequestId) return;
       this.festivalRows.set(cached.festivals);
       this.festivalLoading.set(false);
       this.festivalError.set(null);
@@ -343,31 +227,27 @@ export class CalendarComponent {
     this.festivalLoading.set(true);
     this.festivalError.set(null);
     try {
-      const payload = await this.festivals.upcoming(city, nation, fromDate, days, regions);
+      const payload = forceRefresh
+        ? await this.festivals.refreshUpcoming(city, nation, fromDate, days, regions)
+        : await this.festivals.upcoming(city, nation, fromDate, days, regions);
+      if (requestId !== this.festivalRequestId) return;
       this.festivalRows.set(payload.festivals);
     } catch (error) {
+      if (requestId !== this.festivalRequestId) return;
       this.festivalError.set((error as Error).message);
     } finally {
-      this.festivalLoading.set(false);
+      if (requestId === this.festivalRequestId) this.festivalLoading.set(false);
     }
   }
 
-  private async refreshFestivals(city: string, nation: string, fromDate: string, days: number, regions = this.preferences.festivalRegions()): Promise<void> {
-    try {
-      const payload = await this.festivals.refreshUpcoming(city, nation, fromDate, days, regions);
-      this.festivalRows.set(payload.festivals);
-    } catch {
-      // Festival cache is deterministic enough to keep showing until the next successful refresh.
-    }
+  private daysInVisibleMonth(): number {
+    const start = this.monthStart();
+    return new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
   }
-}
 
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
-  let timeout: ReturnType<typeof setTimeout> | undefined;
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    timeout = setTimeout(() => reject(new Error(message)), timeoutMs);
-  });
-  return Promise.race([promise, timeoutPromise]).finally(() => {
-    if (timeout) clearTimeout(timeout);
-  });
+  private monthOffset(month: string, delta: number): string {
+    const value = new Date(`${month}-01T12:00:00`);
+    value.setMonth(value.getMonth() + delta);
+    return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}`;
+  }
 }
