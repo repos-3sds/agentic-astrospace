@@ -884,6 +884,208 @@
       "status": "verified_common"
     },
     {
+      "ref_id": "bphs_g23_6_auspicious_industries",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection"
+      ],
+      "statement": "The 10th lord in the 8th house conjunct Rahu, while generally a difficult combination for professional happiness, is specifically noted as auspicious for the leather trade, life-insurance work, and the mining industry.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.23 v.6 (Sharma trans.)"
+      },
+      "tags": [
+        "house:10",
+        "house:8",
+        "lord:10"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_g23_7_trade_conduct_caution",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "job_vs_business"
+      ],
+      "statement": "Saturn and Mars together with the 10th lord in the 7th house, the house of trade and business, with the 7th lord itself afflicted, is read by one translation as a caution toward illegal or unethical means in trade — a professional-conduct reading of the same combination another translation reads only as personal character. Cite as a trade-conduct caution, never as a character or sexual-conduct verdict.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.23 v.7 (Sharma trans.); cf. ch.21 v.7, p.138 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:10",
+        "house:7",
+        "lord:10",
+        "convention_dependent"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The two translations of this verse diverge: Sharma reads it as a caution about illegal or unethical trade conduct, Santhanam's ch.21 v.7 reads the same combination as a personal-character remark. This app cites the trade-conduct reading only — never as a character or sexual-conduct verdict — and states that the reading is one of two translator interpretations rather than implying the text speaks with one voice."
+    },
+    {
+      "ref_id": "bphs_g23_11_sun_afflicted_eleventh",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "unemployment",
+        "job_change"
+      ],
+      "statement": "The Sun conjunct Rahu, Mars and Saturn in the 11th house afflicts the Sun as significator of will and self-confidence, and the native fails to complete his professional efforts.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.23 v.11 (Sharma trans.)"
+      },
+      "tags": [
+        "house:11"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_g23_16_saturn_debilitated_bereft_of_actions",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "unemployment"
+      ],
+      "statement": "Saturn together with a debilitated planet in the 10th house, with the 10th house's own navamsha also afflicted by a malefic, leaves the native bereft of accomplishment in his actions.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.23 v.16 (Sharma trans.)"
+      },
+      "tags": [
+        "house:10",
+        "dignity",
+        "varga:D9"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_g26_110_finance_banking",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection"
+      ],
+      "statement": "The 10th lord in the 2nd house, well placed, is read as banking, finance, or governmental-authority professions — high officials in banks, finance ministers, or holders of special governmental authority.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.110 (Sharma trans.)"
+      },
+      "tags": [
+        "house:10",
+        "house:2",
+        "lord:10"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_g26_111_engineering",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection"
+      ],
+      "statement": "The 10th lord in the 3rd house, for a Capricorn ascendant specifically, is read as prompting an engineering profession.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.111 (Sharma trans.)"
+      },
+      "tags": [
+        "house:10",
+        "house:3",
+        "lord:10"
+      ],
+      "status": "convention_dependent"
+    },
+    {
+      "ref_id": "bphs_g26_112_automobiles_agriculture",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection"
+      ],
+      "statement": "The 10th lord in the 4th house is read as a profession relating to automobiles, building material, agriculture, or dairy.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.112 (Sharma trans.)"
+      },
+      "tags": [
+        "house:10",
+        "house:4",
+        "lord:10"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_g26_113_creative_scholarly_professions",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection",
+        "fame_status"
+      ],
+      "statement": "The 10th lord in the 5th house is read as statesmen, scholars, professors, writers, educationists, or actors — professional distinction through intellectual or creative work.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.113 (Sharma trans.)"
+      },
+      "tags": [
+        "house:10",
+        "house:5",
+        "lord:10"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_g26_114_doctors_lawyers",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection"
+      ],
+      "statement": "The 10th lord in the 6th house is read as auspicious specifically for doctors and lawyers; other professions under this placement see more fluctuation and obstacles.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.114 (Sharma trans.)"
+      },
+      "tags": [
+        "house:10",
+        "house:6",
+        "lord:10"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_g26_116_scrap_minerals_lic",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection"
+      ],
+      "statement": "The 10th lord in the 8th house is read as favouring trades in scrap, mineral substances, life-insurance work, or leather goods; other professions under this placement fail badly.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.116 (Sharma trans.)"
+      },
+      "tags": [
+        "house:10",
+        "house:8",
+        "lord:10"
+      ],
+      "status": "verified_common"
+    },
+    {
       "ref_id": "bphs17_1_sixth_scope",
       "domains": [
         "health"
