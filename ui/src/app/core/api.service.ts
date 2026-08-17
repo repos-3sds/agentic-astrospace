@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from './auth.service';
 import { apiUrl } from './api-origin';
+import { ConnectivityService } from './connectivity.service';
 
 // Relative on web (the SPA is served same-origin by FastAPI); absolute in a
 // Capacitor WebView, where a relative path resolves inside the app bundle.
@@ -12,6 +13,7 @@ const BASE = () => apiUrl('/api/v1');
 export class ApiService {
   private http = inject(HttpClient);
   private auth = inject(AuthService);
+  private connectivity = inject(ConnectivityService);
 
   async get<T>(path: string): Promise<T> {
     return this.unwrap(firstValueFrom(this.http.get<T>(BASE() + path, await this.options())));
@@ -51,8 +53,11 @@ export class ApiService {
 
   private async unwrap<T>(req: Promise<T>): Promise<T> {
     try {
-      return await req;
+      const value = await req;
+      this.connectivity.noteRequestSuccess();
+      return value;
     } catch (e) {
+      this.connectivity.noteRequestFailure(e);
       if (e instanceof HttpErrorResponse) {
         const detail = (e.error && (e.error.detail || e.error.message)) || e.statusText;
         throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
