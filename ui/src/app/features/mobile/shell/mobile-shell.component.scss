@@ -33,6 +33,68 @@
   scroll-padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
 }
 
+.network-banner {
+  @include m-caption;
+  flex: 0 0 auto;
+  min-height: 48px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 14px 4px;
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--m-warn) 45%, var(--m-border));
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--m-warn-soft) 97%, transparent);
+  color: var(--m-text);
+  box-shadow: var(--m-shadow-card);
+  backdrop-filter: blur(10px) saturate(1.08);
+  -webkit-backdrop-filter: blur(10px) saturate(1.08);
+
+  > span:nth-child(2) {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+  }
+
+  b { font-weight: 700; }
+  small { color: var(--m-muted); }
+
+  button {
+    @include m-cta-tertiary;
+    min-height: 40px;
+    padding: 0 6px;
+  }
+}
+
+.network-banner.is-reconnecting {
+  border-color: var(--m-border);
+  background: color-mix(in srgb, var(--m-surface) 95%, transparent);
+}
+
+.network-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+  background: var(--m-warn);
+  -webkit-mask: url('/mobile/alert-triangle.svg') center / contain no-repeat;
+  mask: url('/mobile/alert-triangle.svg') center / contain no-repeat;
+}
+
+.is-reconnecting .network-icon {
+  border: 2px solid var(--m-border-strong);
+  border-top-color: var(--m-accent-strong);
+  border-radius: 50%;
+  background: transparent;
+  -webkit-mask: none;
+  mask: none;
+  animation: connection-spin 800ms linear infinite;
+}
+
+@keyframes connection-spin { to { transform: rotate(360deg); } }
+
 .tabbar {
   position: absolute;
   z-index: 20;
@@ -124,4 +186,5 @@
 
 @media (prefers-reduced-motion: reduce) {
   .tab { transition: none; }
+  .is-reconnecting .network-icon { animation: none; }
 }
