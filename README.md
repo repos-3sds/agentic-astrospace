@@ -1,6 +1,19 @@
-# AstroSpace — AI-Powered Astrology Engine
+# AstroSpace — Vedic Astrology, Computed
 
-AstroSpace is a full-stack astrology application that combines Swiss Ephemeris precision (via kerykeion) with Claude AI autonomous agents to generate natal charts, personalised readings, compatibility analyses, and live transit interpretations. It is built for personal use: save kundlis for your family and friends, and generate AI readings across any time period.
+AstroSpace is a Vedic astrology platform: a FastAPI + Swiss Ephemeris backend
+that computes real sidereal charts (Lahiri ayanamsha) — planets, houses,
+divisional charts (D1–D60), dashas, yogas, doshas, strength, and transits —
+grounded by a classical-text knowledge base, interpreted by a configured AI
+provider's agents that are gated by a deterministic safety and verification
+layer, and served
+to readers through two front ends: a responsive **web app** and a
+Figma-designed **native app** (`/m/*`, packaged with Capacitor for iOS and
+Android) sharing one backend and one Supabase Postgres database.
+
+AI explains and personalizes; the astrology itself is calculated, testable,
+and auditable — see [CLAUDE.md](CLAUDE.md) for the product's non-negotiable
+constraints (no death/medical/legal/financial verdicts, dosha as a flag never
+a verdict, convention-dependent content always labelled).
 
 ---
 
@@ -11,10 +24,9 @@ AstroSpace is a full-stack astrology application that combines Swiss Ephemeris p
 - [Directory Structure](#directory-structure)
 - [Quick Start](#quick-start)
 - [Environment Variables](#environment-variables)
-- [API Reference](#api-reference)
 - [Database](#database)
-- [Upgrading to Supabase (PostgreSQL)](#upgrading-to-supabase)
-- [Python Version](#python-version)
+- [API Reference](#api-reference)
+- [Testing](#testing)
 - [Contributing / Agents](#contributing--agents)
 
 ---
@@ -23,17 +35,29 @@ AstroSpace is a full-stack astrology application that combines Swiss Ephemeris p
 
 | Feature | Description |
 |---|---|
-| Natal Chart | Full planetary positions, houses, aspects via Swiss Ephemeris |
-| Big Three | Sun, Moon, Ascendant with zodiac emoji badges |
-| AI Readings | Daily / Weekly / Monthly / Quarterly / Yearly via Claude agents |
-| Kundli Manager | Save, edit, delete birth profiles for family and friends |
-| Chart Wheel | Canvas-rendered natal chart with coloured zodiac segments |
-| Compatibility | AI synastry analysis between any two saved kundlis |
-| Live Transits | Current sky positions + transit-to-natal aspect calculation |
-| Notes | Personal notes per kundli, persisted in the database |
-| Knowledge Base | 200+ curated astrological interpretations used by AI agents |
-| Offline Mode | Built-in 80+ city database — no GeoNames API key needed |
-| Caching | Readings cached per period (daily 20h, weekly 6d, monthly 25d…) |
+| Vedic Chart Engine | Sidereal (Lahiri) planets, houses, D1–D60 vargas, Avkahada Chakra — via Swiss Ephemeris |
+| Dashas | Vimshottari (all 5 levels) + Yogini + Chara dasha systems |
+| Yogas & Doshas | Rule-based detection with classical-text citations and provenance labels, never a bare verdict |
+| Strength | Classical (virupa-based) Shadbala, Ashtakavarga (BAV/SAV/Shodhana), avasthas, combustion, planetary war |
+| Gocharam | Canonical Moon-first transit engine with Vedha/Ashtakavarga-weighted severity |
+| Compatibility | Ashta Koota / Gun Milan scoring with per-koota breakdown and Manglik/Kuja dosha |
+| Calendar Intelligence | Panchanga, active dasha, and transit feed per day, with muhurta and festival detection |
+| Ask AI | Deterministic domain-routed reading pipeline (see below) — never a free-form chat |
+| Profile Context Ledger | Reader-authored durable life facts (retired, married, has children, …) that constrain — never overwrite — AI interpretation |
+| Knowledge Base | Machine-checked citations from classical texts (BPHS and others), ingested with provenance and confidence gating |
+| Two Front Ends | A responsive web app and a native app (`/m/*`, Capacitor for iOS/Android) sharing one backend |
+
+### The Ask AI pipeline
+
+Every question to `AskOrchestrator` (`astrospace/agents/orchestrator.py`)
+runs through one sequential gate before any content reaches a reader:
+input safety check → domain routing → registry check (unconfigured domains
+never reach a model) → deterministic context assembly (chart data + KB
+citations + Profile Context Ledger facts) → structured-reading model
+generation → deterministic verification (`astrospace/agents/verifier.py` —
+regex/set-membership only, no second model call) → one repair attempt on
+failure → persist only after a pass. A death/medical/legal/financial verdict
+never ships; a dosha is always framed as a flag.
 
 ---
 
@@ -41,53 +65,55 @@ AstroSpace is a full-stack astrology application that combines Swiss Ephemeris p
 
 Detailed operational documentation:
 
-- [Admin Console](docs/admin_console.md) - roles, APIs, workflows, audit,
+- [CLAUDE.md](CLAUDE.md) — product non-negotiables and where things live.
+- [Admin Console](docs/admin_console.md) — roles, APIs, workflows, audit,
   Supabase objects, operations, and limitations.
-- [Knowledge Base Engine](docs/knowledge_ingestion.md) - source provenance,
+- [Knowledge Base Engine](docs/knowledge_ingestion.md) — source provenance,
   OCR/EPUB ingestion, LLM boundaries, quality gates, retrieval scope, hybrid
   search, and Context Engine integration.
-- [Context Engine Taxonomy](docs/context_engine_taxonomy.md) - domain routing
-  and context-assembly contract.
+- [Context Engine Taxonomy](docs/context_engine_taxonomy.md) — domain
+  routing and context-assembly contract.
+- [Native Builds](docs/native_builds.md) — Capacitor packaging for iOS/Android.
+- [Mobile Screen Build Plan](docs/mobile_screen_build_plan.md) — the native
+  app's Figma-to-screen implementation tracker.
+- [Profile Context Ledger Architecture](docs/profile_context_ledger_architecture_2026-08-14.md) —
+  the reader-authored life-facts system and its deterministic Ask integration.
 
 ```
-Browser (SPA)
+Web SPA (/)  ·  Native app (/m/*, Capacitor)
+                     │
+                     │  HTTP / REST + SSE
+                     ▼
+FastAPI (main.py) — serves the built Angular SPA same-origin in production
      │
-     │  HTTP / REST
-     ▼
-FastAPI (main.py)
-     │
-     ├── /api/v1/kundlis        ← CRUD: create, list, get, update, delete
-     ├── /api/v1/readings       ← generate + retrieve AI readings
-     ├── /api/v1/chart          ← one-shot chart calculation (no DB)
-     ├── /api/v1/compatibility  ← AI synastry report
-     ├── /api/v1/transits       ← transit reading for a natal chart
-     └── /api/v1/transits/current ← live sky snapshot
+     ├── /api/v1/kundlis          ← CRUD: birth profiles
+     ├── /api/v1/vedic/{id}       ← chart, vargas, dashas, yogas, strength, gocharam
+     ├── /api/v1/context/{id}     ← Context Engine bundle + daily guidance
+     ├── /api/v1/ask/{id}         ← Ask AI (non-streaming + SSE stream)
+     ├── /api/v1/profiles/{id}/context ← Profile Context Ledger
+     ├── /api/v1/compatibility    ← synastry / Gun Milan
+     ├── /api/v1/remedies, /muhurta, /festivals
+     ├── /api/v1/admin            ← ops console (role-gated, audited)
+     └── /api/v1/auth, /settings, /me
           │
-          ├── astrospace/core/         ← Swiss Ephemeris via kerykeion
-          │     chart.py              BirthChart — planets, houses, aspects
-          │     transits.py           TransitCalculator — current sky + aspects
-          │     cities.py             Offline city → lat/lng/tz lookup
-          │     planets.py            Meaning dictionaries
+          ├── astrospace/core/vedic/   ← Swiss Ephemeris engine (sidereal, Lahiri)
+          │     chart.py, positions.py, dashas.py, doshas.py, gocharam/, ...
           │
-          ├── astrospace/agents/       ← Claude AI tool-use agents
-          │     base.py               BaseAstroAgent — tool-use loop
-          │     period_agent.py       Daily/Weekly/Monthly/Quarterly/Yearly
-          │     reading_agent.py      Natal chart deep reading
-          │     horoscope_agent.py    Sun-sign horoscopes
-          │     compatibility_agent.py Synastry reports
-          │     transit_agent.py      Transit interpretations
+          ├── astrospace/agents/       ← AI agents (provider-configurable)
+          │     orchestrator.py        AskOrchestrator — the one Ask pipeline
+          │     domain_agent.py        config-driven structured-reading agent
+          │     verifier.py            deterministic safety/quality gate
+          │     safety.py              refer-out + prohibited-verdict/dosha-overclaim regex
           │
-          ├── astrospace/knowledge/    ← Astrological knowledge base
-          │     astro_kb.py           Planet-in-sign, house, transit windows
+          ├── astrospace/context/      ← Context Engine (assembler, KB retrieval, routing)
+          │     assembler.py, kb.py, router.py, taxonomy.py, profile_context.py
           │
-          ├── astrospace/db/           ← SQLAlchemy ORM
-          │     models.py             Kundli + Reading tables
-          │     crud.py               Database operations
-          │     database.py           Engine + session factory
+          ├── astrospace/db/           ← SQLAlchemy ORM (SQLite dev / Supabase Postgres prod)
+          │     models.py, crud.py, crud_mobile.py, crud_profile_context.py, seed.py
           │
-          └── astrospace/ai/
-                client.py             Anthropic SDK wrapper
-                prompts.py            Agent system prompts
+          ├── astrospace/api/          ← FastAPI routers (thin — computation lives above)
+          │
+          └── astrospace/knowledge/    ← classical-text KB ingestion + rules
 ```
 
 ---
@@ -98,24 +124,28 @@ FastAPI (main.py)
 agentic-astrospace/
 ├── main.py                    FastAPI app entry point
 ├── requirements.txt           Python dependencies
-├── .env                       API keys (not committed)
-├── astrospace.db              SQLite database (auto-created)
+├── setup.py                   Python package metadata (python_requires>=3.11)
+├── .env                       API keys and DB URL (not committed)
+├── astrospace.db              SQLite database (local dev, auto-created)
 │
-├── frontend/                  Static SPA served by FastAPI
-│   ├── index.html
-│   ├── style.css
-│   └── app.js
+├── ui/                        Angular 20 SPA — web app + native app (/m/*)
+│   ├── src/app/features/      landing, dashboard, kundli, settings, mobile/
+│   ├── android/, ios/         Capacitor native shells
+│   └── capacitor.config.ts
 │
 ├── astrospace/
-│   ├── core/                  Chart engine (no AI)
-│   ├── agents/                Claude AI agents
-│   ├── api/                   FastAPI routers
-│   ├── db/                    Database models + CRUD
-│   ├── knowledge/             Astrological knowledge base
-│   └── ai/                    Anthropic client + prompts
+│   ├── core/vedic/            Swiss Ephemeris Vedic chart engine (no AI)
+│   ├── agents/                AI agents (provider-configurable) — Ask orchestrator, verifier, safety
+│   ├── context/                Context Engine — assembly, KB retrieval, routing, taxonomy
+│   ├── api/                   FastAPI routers (thin wrappers over the above)
+│   ├── db/                    SQLAlchemy models + CRUD
+│   ├── knowledge/             Astrological knowledge base + ingestion
+│   └── admin/                 Admin console security + audit middleware
 │
-├── docs/                      GitHub Pages marketing site
-└── tests/
+├── supabase/migrations/       Postgres schema migrations (production DB)
+├── docs/                      Operational docs, KB manifests, screen-build trackers
+├── design-thinking/           Product/design principles
+└── tests/                     Backend test suite (pytest)
 ```
 
 ---
@@ -124,8 +154,9 @@ agentic-astrospace/
 
 ### Prerequisites
 
-- Python 3.9 or higher
-- A Gemini API key for AI readings — create one in Google AI Studio
+- Python 3.11 or higher
+- Node.js (for the Angular SPA) — see `ui/package.json` for the Angular version
+- An Anthropic or Gemini API key for AI readings
 
 ### 1. Clone
 
@@ -135,229 +166,144 @@ git clone https://github.com/repos-3sds/agentic-astrospace.git
 cd agentic-astrospace
 ```
 
-### 2. Install Dependencies
+### 2. Backend — install and configure
 
 ```bash
-pip3 install -r requirements.txt
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+cp .env.example .env
+# edit .env: set AI_PROVIDER + the matching API key at minimum
 ```
 
-If `kerykeion` fails on Mac:
-```bash
-brew install python3   # ensure system Python is up to date
-pip3 install kerykeion
-```
+If `kerykeion`/`pyswisseph` fail to build, install a C toolchain first
+(`brew install python3` on macOS, `sudo apt-get install -y python3-scour
+build-essential` on Debian/Ubuntu) and retry.
 
-If `kerykeion` fails on Ubuntu/Debian:
-```bash
-sudo apt-get install -y python3-scour
-pip3 install kerykeion
-```
-
-### 3. Set Your API Key
-
-Create a `.env` file in the project root:
+### 3. Run the backend
 
 ```bash
-cat > .env <<'EOF'
-AI_PROVIDER=gemini
-GEMINI_API_KEY=your_gemini_key_here
-GEMINI_MODEL=gemini-3.5-flash
-EOF
+.venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8000
 ```
-
-### 4. Run
-
-```bash
-python3 -m uvicorn main:app --host 0.0.0.0 --port 8000
-```
-
-### 5. Open
-
-Navigate to **http://localhost:8000** in your browser.
 
 The Swagger API docs are at **http://localhost:8000/docs**.
+
+### 4. Frontend — the Angular SPA (web app)
+
+```bash
+cd ui
+npm install
+npm run start   # ng serve, proxies API calls to :8000 — see proxy.conf.json
+```
+
+Open **http://localhost:4200**. In production, FastAPI serves the built SPA
+same-origin from `/` (and the native app from `/m/*`) — there is no separate
+frontend deployment.
+
+### 5. Native app (optional)
+
+See [docs/native_builds.md](docs/native_builds.md) for the full Capacitor
+iOS/Android build and device-verification workflow.
 
 ---
 
 ## Environment Variables
 
+See [.env.example](.env.example) for the authoritative, commented list.
+Summary:
+
 | Variable | Required | Description |
 |---|---|---|
-| `AI_PROVIDER` | No | `gemini` or `anthropic`; defaults to `anthropic` if unset |
-| `GEMINI_API_KEY` | Yes for Gemini | Gemini API key for AI readings |
-| `GEMINI_MODEL` | No | Gemini model id. Defaults to `gemini-3.5-flash` |
-| `ANTHROPIC_API_KEY` | Yes for Anthropic | Anthropic API key for fallback/provider switch |
-| `DATABASE_URL` | No | PostgreSQL URL for Supabase. Defaults to local SQLite |
-| `ANTHROPIC_MODEL` | No | Anthropic model id. Defaults to `claude-opus-5` |
+| `AI_PROVIDER` | No | `gemini` or `anthropic`; the mobile Ask experience defaults to Gemini |
+| `GEMINI_API_KEY` / `GEMINI_MODEL` | Yes for Gemini | Gemini API key + model id |
+| `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL` | Yes for Anthropic | Anthropic API key + model id (fallback/provider switch) |
+| `DATABASE_URL` | No | Defaults to local SQLite; set to a Supabase Postgres URL for cloud persistence |
+| `SUPABASE_URL` / `SUPABASE_ANON_KEY` | No | When both are set, API routes require Supabase bearer tokens |
+| `ASTROSPACE_DEV_AUTH_BYPASS` | No | Local visual QA only — never set in a deployed environment |
+| `GEONAMES_USERNAME` | No | Defaults to `anonymous`; only needed for city lookups outside the offline city database |
+| `ALLOWED_ORIGINS` | No | Extra CORS origins, comma-separated; native app origins are always allowed regardless of this setting |
 
----
-
-## API Reference
-
-### Kundlis (Birth Profiles)
-
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/api/v1/kundlis` | List all kundlis |
-| `POST` | `/api/v1/kundlis` | Create kundli (auto-calculates chart) |
-| `GET` | `/api/v1/kundlis/{id}` | Get single kundli with full chart data |
-| `PATCH` | `/api/v1/kundlis/{id}` | Update name, relation, notes, etc. |
-| `DELETE` | `/api/v1/kundlis/{id}` | Delete kundli and all its readings |
-
-**Create Kundli — example request:**
-```json
-POST /api/v1/kundlis
-{
-  "name": "Priya Sharma",
-  "relation": "friend",
-  "birth_year": 1992,
-  "birth_month": 3,
-  "birth_day": 22,
-  "birth_hour": 9,
-  "birth_minute": 15,
-  "birth_city": "Mumbai",
-  "birth_nation": "IN"
-}
-```
-
-### Readings (AI-Generated)
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/api/v1/readings/{id}/generate` | Generate or retrieve cached reading |
-| `GET` | `/api/v1/readings/{id}` | List all readings for a kundli |
-| `GET` | `/api/v1/readings/{id}/latest/{period}` | Get the most recent reading for a period |
-
-**Generate Reading — example request:**
-```json
-POST /api/v1/readings/{kundli_id}/generate
-{
-  "period": "daily",
-  "force_refresh": false
-}
-```
-
-Valid `period` values: `daily`, `weekly`, `monthly`, `quarterly`, `yearly`.
-
-### Core Astrology (Stateless)
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/api/v1/chart` | Calculate natal chart without saving |
-| `POST` | `/api/v1/reading` | Deep natal chart AI reading |
-| `POST` | `/api/v1/horoscope` | Sun-sign horoscope |
-| `POST` | `/api/v1/compatibility` | Synastry report for two people |
-| `POST` | `/api/v1/transits` | Transit reading for a natal chart |
-| `GET` | `/api/v1/transits/current` | Current positions of all planets |
+`.env` holds real credentials — it is never committed and should be edited
+directly, not read into an agent transcript.
 
 ---
 
 ## Database
 
-AstroSpace uses SQLite by default. The database file `astrospace.db` is created automatically in the project root when the server starts.
+SQLite is the local-dev default (`astrospace.db`, auto-created on first run).
+Production uses **Supabase Postgres** — schema and RLS policies live in
+[supabase/migrations/](supabase/migrations/), applied via the Supabase CLI or
+dashboard, not by SQLAlchemy `create_all()`. Catalog tables (remedies,
+festivals, muhurta goals) are seeded from the engine code, never
+hand-authored:
 
-### Schema
+```bash
+.venv/bin/python -m astrospace.db.seed
+```
 
-**`kundlis` table**
-
-| Column | Type | Description |
-|---|---|---|
-| `id` | TEXT (UUID) | Primary key |
-| `name` | TEXT | Person's name |
-| `relation` | TEXT | self / friend / spouse / parent / sibling / child |
-| `birth_year/month/day` | INT | Birth date |
-| `birth_hour/minute` | INT | Birth time (24h) |
-| `birth_city` | TEXT | City name used for chart calculation |
-| `birth_nation` | TEXT | ISO country code (US, IN, GB…) |
-| `sun_sign` | TEXT | Calculated and stored at creation |
-| `moon_sign` | TEXT | Calculated and stored at creation |
-| `ascendant` | TEXT | Calculated and stored at creation |
-| `chart_data` | JSON | Full chart dict (planets, houses, aspects) |
-| `notes` | TEXT | Personal notes |
-| `created_at` | DATETIME | |
-| `updated_at` | DATETIME | Auto-updated on PATCH |
-
-**`readings` table**
-
-| Column | Type | Description |
-|---|---|---|
-| `id` | TEXT (UUID) | Primary key |
-| `kundli_id` | TEXT (FK) | References `kundlis.id` — cascades on delete |
-| `reading_type` | TEXT | daily / weekly / monthly / quarterly / yearly |
-| `period_label` | TEXT | Human label e.g. "June 2026", "Q2 2026" |
-| `content` | TEXT | Full AI-generated markdown reading |
-| `generated_at` | DATETIME | When the reading was generated |
+Set `DATABASE_URL` to a `postgresql+psycopg://...` URL to point the backend
+at Supabase; SQLAlchemy switches driver automatically based on the scheme.
 
 ---
 
-## Upgrading to Supabase
+## API Reference
 
-To persist data in the cloud using Supabase PostgreSQL:
+The full, current route list is generated live at **`/docs`** (Swagger UI)
+and **`/redoc`** — this README does not hand-maintain an endpoint table that
+would drift from `main.py`'s router registration. Start here instead:
 
-1. Create a project at https://supabase.com
-2. In the Supabase SQL Editor, run:
-
-```sql
-CREATE TABLE kundlis (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    relation TEXT DEFAULT 'friend',
-    birth_year INT,
-    birth_month INT,
-    birth_day INT,
-    birth_hour INT DEFAULT 12,
-    birth_minute INT DEFAULT 0,
-    birth_city TEXT NOT NULL,
-    birth_nation TEXT DEFAULT 'US',
-    sun_sign TEXT,
-    moon_sign TEXT,
-    ascendant TEXT,
-    chart_data JSONB,
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-
-CREATE TABLE readings (
-    id TEXT PRIMARY KEY,
-    kundli_id TEXT REFERENCES kundlis(id) ON DELETE CASCADE,
-    reading_type TEXT NOT NULL,
-    period_label TEXT,
-    content TEXT NOT NULL,
-    generated_at TIMESTAMP DEFAULT NOW()
-);
-```
-
-3. Copy the connection string from **Settings → Database → Connection string (URI)** and add to `.env`:
-
-```bash
-DATABASE_URL=postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/postgres
-```
-
-4. Install the PostgreSQL driver:
-```bash
-pip3 install psycopg2-binary
-```
-
-5. Restart the server. SQLAlchemy automatically uses PostgreSQL when `DATABASE_URL` starts with `postgresql://`.
+- [Context Engine Taxonomy](docs/context_engine_taxonomy.md) for the domain
+  routing/context-assembly contract behind `/api/v1/context` and
+  `/api/v1/ask`.
+- [Admin Console](docs/admin_console.md) for `/api/v1/admin/*`.
+- `astrospace/api/` — one thin router file per resource; each one imports the
+  computation it wraps from `astrospace/core/vedic/`, `astrospace/context/`,
+  or `astrospace/agents/` rather than implementing it inline.
 
 ---
 
-## Python Version
+## Testing
 
-**Minimum: Python 3.9**
+```bash
+# Backend — 1900+ tests
+.venv/bin/python -m pytest tests/ -q
 
-The codebase avoids `X | Y` union type syntax (Python 3.10+) and uses `Optional[X]` from `typing` throughout. All type annotations are compatible with Python 3.9+.
+# Frontend
+cd ui && npx ng test --watch=false --browsers=ChromeHeadless
+```
+
+For UI changes, also verify visually in a browser (or the iOS/Android
+simulator for `/m/*`) — a green build is not evidence a screen renders
+correctly; see [CLAUDE.md](CLAUDE.md)'s "Verify visually, not just by build".
 
 ---
 
 ## Contributing / Agents
 
-If you are a developer or AI agent continuing this project, read `VISION.md` first. It describes the long-term product direction, the architectural decisions made and why, and a prioritised backlog of what to build next.
+Read [CLAUDE.md](CLAUDE.md) first — it states the product's non-negotiable
+constraints and where things live. Then:
+
+- [VISION.md](VISION.md) — product philosophy and long-term direction.
+- [AGENTS.md](AGENTS.md) — cross-agent operating protocol for this repo
+  (multiple AI agents work here concurrently on shared `main`).
+- [docs/agent_work_ledger.md](docs/agent_work_ledger.md) — who is doing what
+  today.
 
 Key conventions:
-- All chart calculations go through `astrospace/core/chart.py` — never call kerykeion directly from agents or routes
-- All AI calls go through `astrospace/agents/base.py` — the tool-use loop is centralised there
-- New features that need AI reasoning should be new agent classes in `astrospace/agents/`
-- Knowledge base additions go in `astrospace/knowledge/astro_kb.py`
-- New API endpoints need a new router file in `astrospace/api/` and must be registered in `main.py`
+
+- All chart calculations go through `astrospace/core/vedic/` — never call
+  `kerykeion`/`pyswisseph` directly from agents or routes.
+- All AI generation goes through `astrospace/agents/orchestrator.py`'s
+  `AskOrchestrator` — there is no second, unverified answer path.
+- `astrospace/api/` routers stay thin; computation lives in `core/vedic`,
+  `context/`, or `agents/`.
+- New Ask domains are configured in `astrospace/agents/registry.py`, not
+  hand-rolled per domain.
+- Knowledge base additions go through the ingestion pipeline
+  (`docs/knowledge_ingestion.md`) with real provenance — never a hand-typed
+  citation with no source check.
+- `/` is the web app; `/m/*` is the separate, Figma-designed native app
+  (`ui/src/app/features/mobile/`) — they are not the same screens under two
+  routes.
+- Markdown docs declare their own status in the first three lines
+  (`canonical`, `source of truth`, `point-in-time audit`, or `superseded`) —
+  see CLAUDE.md's "Docs state their own status".
