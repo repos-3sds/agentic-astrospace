@@ -1828,3 +1828,270 @@ test was added, and the reviewer's "1616 passed + 1 failed" is that same 1617
 with the flaky one red. The file now carries an autouse fixture that fails any
 test reaching the provider layer, so the failure class is un-writable here
 rather than merely fixed.
+
+## Update 2026-08-17: Ask latency and CE payload growth — the shape, not the parameters
+
+Two symptoms reported from live use: prediction generation after a prompt
+sometimes exceeds a minute, and the CE payload gets bulkier day by day. They
+were profiled against real code rather than reasoned about, and they turn out
+to be two faces of one property this document already named — **the bundle is
+assembled whole, before the model has reasoned about the question** — plus one
+consequence of that property this document has not previously recorded.
+
+The useful correction here is about *level*. The first pass at this produced a
+list of parameter fixes: drop `indent=2`, lower `kb_limit`, add prompt caching,
+cap `max_tokens`. Every one of those is real and some are worth an hour. None
+of them changes the shape, and the shape is what is generating both symptoms on
+a schedule. `kb_limit` has already been retuned twice (12 → 30 → 50); a third
+retune is the same move a third time.
+
+### What was measured
+
+Profiled against a real chart (1985-06-14, Chennai) on a clean checkout:
+
+```
+chart build                          0.002s
+assemble_domain(wealth)              0.349s   ← 0.31s of it the gochara boundary walk
+assemble_domain(wealth, no gochara)  0.043s
+```
+
+Bundle sizes, serialized as the prompt actually serializes them
+(`json.dumps(bundle, indent=2)` at `domain_agent.py:380`):
+
+| domain | full | references + passages | **structural floor** | floor as % |
+|---|---|---|---|---|
+| career | 59,186 B | 8,687 B | **49,955 B** | 84% |
+| wealth | 72,355 B | 23,715 B | **47,022 B** | 65% |
+| marriage | 54,030 B | 10,249 B | **43,151 B** | 80% |
+| health | 61,950 B | 16,481 B | **44,499 B** | 72% |
+
+Roughly 13k–18k tokens by byte estimate, and JSON tokenizes denser than prose
+so the real figure is higher. Two limits on these numbers, stated so nobody
+treats them as a ceiling: the profiling container had no database, so
+`source_passages` returned `[]` through `assembler.py:651`'s `except Exception`
+— production bundles carry up to 8 more book chunks on top of every row above;
+and one chart with one set of active transits is a floor for the gochara walk,
+not a worst case.
+
+### The finding that reframes the payload problem
+
+**The structural floor is 65–84% of the bundle and it is 100% unconditional.**
+`assemble_domain()` has no intent-awareness at all: `houses`, `karakas`,
+`vargas`, `retrospect`, `timeline`, `jaimini_karaka_array`, `gochara`,
+`dasha_relevance` and every per-planet enrichment compute identically whether
+the question is "when will I get a promotion?" or "should I start my own
+business?". The *only* thing that narrows is `references`/`source_passages`,
+via `subdomain_match`.
+
+And that narrowing already works. A career question that matches a subdomain
+confidently drops from 15 references to 3–4 — and the bundle still sits at
+~52,000 B, against ~59,000 B unmatched. Perfect reference retrieval saves ~12%.
+
+So `kb_limit` is a lever on 16–35% of the payload, and it is the only lever
+anyone currently has. That is the whole reason it has been retuned twice: it is
+the one number in reach, so it absorbs pressure that belongs elsewhere. Setting
+it to zero still leaves ~47,000 B.
+
+**The pressure is live, not historical.** 14 new career-domain reference
+entries were reported landing this session (Sharma BPHS cross-check + Brihat
+Jataka extraction). They are not in `main` as of this writing — the last commit
+touching `references.json` is `c7b6095` (2026-08-13, wealth), and this tree
+carries 15 career references — so the count above is pre-growth. Recorded as
+reported rather than measured, but the direction is not in doubt: every KB
+extraction pass makes Item 4 more urgent, not less, and the KB corpus work is
+nowhere near done.
+
+### Where the latency actually is
+
+Not in the engine. Assembly is ~0.35s against a wall clock exceeding 60s.
+Almost all of it is **one non-streamed model call**: `base.py:75`
+`_run_structured_anthropic` uses blocking `messages.create` with `tool_choice`
+forcing a single `deliver_reading` call at `max_tokens=8192`. Nothing reaches
+the reader until the whole tool-call JSON closes; `orchestrator.run()` emits two
+static status frames and then the SSE stream is silent.
+
+Three things compound, in order of size:
+
+1. **The cap removal.** `ed30589` (2026-08-10) dropped the ~350-word soft cap
+   "in favor of completeness" and raised `max_tokens` 4096 → 8192 in the same
+   change. On a blocking call, latency is essentially `output_tokens /
+   throughput` — that change removed the only bound on the numerator. It is why
+   this got worse over time instead of being bad from the start. The product
+   reasoning behind it was right; the latency consequence was simply not part of
+   the decision.
+2. **The repair round trip.** `_agent_run_and_verify` retries once on any
+   violation and resends the entire prompt. A verification miss does not add a
+   margin, it roughly doubles wall clock. That is the "*sometimes* over a
+   minute".
+3. **No prompt caching, and a cache-buster that would defeat it anyway.**
+   `grep cache_control` over `astrospace/` returns nothing. Separately,
+   `_profile_facts` stamps `as_of` at microsecond precision and it propagates
+   into `gochara.as_of` and every timeline entry, so no two requests share a
+   prefix even if caching were added tomorrow.
+
+Minor but real: `source_retriever.py:71` opens a fresh `psycopg.connect` per
+Ask with no pool, and the ledger projection, stored probes and passage
+retrieval all run serially.
+
+### Item 4 is now the top of the sequence — the Context Planner (Part A)
+
+This document's revised near-term sequence, Item 4, says it plainly: *"Make
+`assemble_domain` intent-aware — this **is** the Context Planner from Phase
+3/the graph above, not a new component."* The graph in "Revised Implementation
+Bias" lists "Context planning" as step 4 of the boring graph. Phase 3 is marked
+"DONE for career + marriage; **not intent-aware**".
+
+It was never built, and the measurement above is what it costs. `detect_intent()`
+already runs, already threads through `PreparedRun.intent`, and is used only to
+*label the response* — never to shape what is assembled.
+
+Nothing about that analysis is new; what is new is that it should now be read as
+the top of the sequence rather than the fourth item on it, because the payload
+symptom is the one actively degrading and it is the only item that addresses the
+structural 65–84%.
+
+The dependency this document already recorded under Item 4 stands and is the
+part most likely to be skipped: today the bundle is always full, so `verify()`
+only has to catch **over**-claiming — a citation to something absent. The moment
+the bundle is trimmed per intent, **under**-provisioning becomes possible and no
+check in this system can see it. Trimming and a bundle-completeness assertion
+ship together, or grounding regresses with a green suite.
+
+**Ownership: taken by the human maintainer, 2026-08-17.** Scoped as a function-
+signature change across `astrospace/agents/*` and `astrospace/context/assembler.py`,
+no schema and no migration. Not to be started independently by an agent session
+— flagged here because collision on `assemble_domain()` is exactly the live-edit
+failure this file has already recorded once.
+
+### Part B: layer the bundle by what actually varies — NOT STARTED, blocked pending its own PR
+
+New to this document. The natal half of the bundle is recomputed from Swiss
+Ephemeris on every single Ask, and it is immutable: `houses`, `karakas`,
+`vargas`, `yogas`, `doshas`, `jaimini`, `nakshatra_detail`, `d60_*`,
+`vimshopaka_bala`, `shayanadi` never change for a given kundli. Only gochara,
+dasha position, `timeline` and `retrospect` depend on `as_of`, and those move at
+*daily* granularity, not per-request.
+
+Three layers instead of one:
+
+- **`natal_core`** — computed once at kundli creation, persisted, versioned by
+  engine version. The invalidation discipline already exists in this repo:
+  catalog tables are seeded from the engines, never hand-authored.
+- **`temporal_layer`** — computed once per `(kundli_id, date)`.
+- **`question_layer`** — the only part assembled per request: references,
+  subdomain match, profile ledger, life context.
+
+The payoffs compound rather than add. It removes the gochara walk from the
+request path. It makes the prompt prefix byte-identical for 24 hours across
+every question a reader asks, which is the precondition that makes prompt
+caching hit at all. It yields a real cache key, `(kundli_id, engine_version,
+date, domain, intent)`.
+
+And it gives the payload problem somewhere to live. A materialized bundle is a
+schema with a migration, so adding a field becomes a reviewable act instead of
+one more key in a dict literal — which is the actual mechanism by which this
+grew day by day.
+
+**Compatibility with ADR-001, stated up front because the shape invites the
+wrong reading:** this is not a tool layer and it does not move any decision to
+the model. It is orchestrator-side deterministic assembly with a cache in front
+of it — precisely what ADR-001 says a tool layer should be *if* one is ever
+built ("tools the *orchestrator* calls deterministically to assemble a bundle
+— never tools the model selects and invokes itself"). The bundle stays fixed and
+known in advance before generation; `verify()`'s contract is untouched.
+
+**Status: deliberately not started.** This is migration-shaped, which under Rule
+5 means its own PR with dedicated backend and security review, not something
+bundled into Part A. Sequenced as a standalone follow-up once A has landed.
+
+### Part C: decompose generation — blocked behind B
+
+`StructuredReading`'s five beats have different dependencies, different token
+volume, and different risk, but are welded into one serial `max_tokens=8192`
+generation, so wall clock is their sum. `acknowledgment` depends on the question
+alone. `technical_basis` is mechanical extraction over a deterministic bundle
+and carries the bulk of the output tokens — Rule 3 obliges it to be exhaustive.
+`interpretation` is the judgment. `guidance` follows interpretation.
+
+Architecturally that is a fan-out: run evidence extraction and interpretation
+concurrently against the same frozen bundle, converge on a short synthesis pass,
+and wall clock becomes `max(branches) + synthesis` with a small `max_tokens` per
+branch.
+
+Three caveats, all load-bearing:
+
+1. **This is not the bad diamond this document already warned about.** "Asking
+   Dasha Agent, Transit Agent, Yoga Agent, and Career Agent separately and
+   synthesizing prose" fragments the *judgment*, and that warning stands. Here
+   the judgment stays in exactly one place and only the mechanical extraction
+   forks off the critical path.
+2. **Consistency between `technical_basis` and `interpretation` is currently
+   free** because one pass writes both. Fan out and it has to be enforced —
+   `verify_coverage` grows. That is a real cost, not a footnote.
+3. **If extraction moves to a cheaper model for tiering, the deterministic
+   verifier must be re-validated against that model's own failure modes**, not
+   assumed to generalize from Opus's. The verifier's regex and source-resolution
+   checks were tuned against what one model gets wrong; a different model gets
+   different things wrong, and this file has already recorded once what it costs
+   when a test encodes the same blind spot as the code.
+
+Depends on B's frozen, materialized bundle to fan out safely, so it is last
+regardless.
+
+### Part D: build the tool schema per request — free to pick up, no dependency
+
+`TechnicalBasisItem.source` is a free-form string validated after the fact, and
+an invalid citation costs a full second generation through the repair path. The
+valid set is knowable before generation: reference ids, `source_passages` ids,
+the bundle's own section names, and `profile_fact:` refs. Emitting it as a JSON
+Schema `enum` in the per-request tool definition makes the most enumerable
+violation class structurally impossible instead of merely detectable.
+
+This leans on the same load-bearing property ADR-001 protects — the bundle being
+fixed and known in advance is exactly what makes the enum computable — so it
+reinforces that decision rather than eroding it. It is a constraint on decoding,
+not a checker, so it does not touch the "the checker must not be the same
+generation context grading itself" principle; the deterministic verifier stays
+exactly as it is, behind it.
+
+Where repair is still needed, repair the failing field rather than the whole
+object. A tense violation in `interpretation` should not regenerate
+`technical_basis`.
+
+### ADR-001 reaffirmed, with a second independent reason
+
+Model-selected tools (`get_varga_chart` on demand, pull references as needed)
+look like the obvious architectural answer to payload growth, and this is the
+third time the idea has surfaced in this file's history. ADR-001 rejected it on
+grounding: the verifier depends on the bundle being fixed and known before
+generation.
+
+The profiling adds a second, independent reason. Every model-selected pull is a
+round trip, and round trips are the thing already producing the latency
+complaint. The Context Planner delivers question-scoped context with **zero**
+extra round trips. Phase 2 stays deferred; the reasoning is now over-determined.
+
+### Also: the thread window contradicts this document's own Memory section
+
+The Memory section says follow-ups "should use a compact thread summary and the
+prior structured answers, not an ever-growing free-text context window."
+`MAX_HISTORY = 12` raw turns at up to 8,000 chars each is up to ~96 KB of
+free-text stacked on top of the bundle in a long thread — the exact thing that
+section rules out. Not the cause of either symptom, but it is on the same input
+budget and it is already decided.
+
+### Sequencing and ownership
+
+| part | what | status | owner |
+|---|---|---|---|
+| A | Context Planner / intent-aware `assemble_domain` | **next** | human maintainer, taken 2026-08-17 |
+| D | per-request `source` enum; field-level repair | free to start, no dependency | unassigned |
+| B | `natal_core` / `temporal_layer` / `question_layer` | **blocked** — needs its own reviewed PR (Rule 5, migration-shaped) | unassigned |
+| C | decompose generation, fan out extraction | **blocked** behind B | unassigned |
+
+The parameter-level fixes from the first pass — compact JSON instead of
+`indent=2` (−26% with no information loss), deduplicating repeated planet briefs
+across `houses` (−13%; the test chart emitted 11 briefs for 7 distinct planets),
+quantizing `as_of` to the day — are worth doing, but they belong inside A and B
+as cleanup. They are not a strategy, and recording them as one is how this
+problem returns in a month with `kb_limit` at 80.
