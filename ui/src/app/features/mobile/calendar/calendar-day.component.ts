@@ -8,7 +8,7 @@ import { CalendarDaySummary, CalendarEvent, CalendarIntelligencePayload, Calenda
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { FestivalSheetComponent } from './festival-sheet.component';
-import { calendarCacheOptions } from './calendar-cache-options';
+import { calendarDayCacheOptions } from './calendar-cache-options';
 import { MobileSymbol, nakshatraSymbol, tithiSymbol } from '../symbols/mobile-symbols';
 
 @Component({
@@ -87,19 +87,26 @@ import { MobileSymbol, nakshatraSymbol, tithiSymbol } from '../symbols/mobile-sy
               <div><small>PLACE</small><b>{{ calendar.place.city }} · {{ calendar.timezone }}</b></div>
             </section>
 
-            <p class="mcald-title">PRACTITIONER WINDOWS</p>
-            <section class="mcald-stack">
-              @for (row of practitionerWindowRows(summary); track row.label) {
-                <div><small>{{ row.label }}</small><b>{{ row.value }}</b><p>{{ row.note }}</p></div>
-              }
-            </section>
+            @if (detailLoading()) {
+              <section class="mcald-state" role="status">
+                <b>Loading practitioner detail</b>
+                <p>Calculating the selected day's Hora, Gulika, Mandi, and full timing windows.</p>
+              </section>
+            } @else {
+              <p class="mcald-title">PRACTITIONER WINDOWS</p>
+              <section class="mcald-stack">
+                @for (row of practitionerWindowRows(summary); track row.label) {
+                  <div><small>{{ row.label }}</small><b>{{ row.value }}</b><p>{{ row.note }}</p></div>
+                }
+              </section>
 
-            <p class="mcald-title">GULIKA &amp; MANDI</p>
-            <section class="mcald-stack">
-              @for (row of upagrahaRows(summary); track row.label) {
-                <div><small>{{ row.label }}</small><b>{{ row.value }}</b><p>{{ row.note }}</p></div>
-              }
-            </section>
+              <p class="mcald-title">GULIKA &amp; MANDI</p>
+              <section class="mcald-stack">
+                @for (row of upagrahaRows(summary); track row.label) {
+                  <div><small>{{ row.label }}</small><b>{{ row.value }}</b><p>{{ row.note }}</p></div>
+                }
+              </section>
+            }
           }
         } @else {
           <section class="mcald-state">
@@ -152,9 +159,11 @@ export class CalendarDayComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private requestId = 0;
+  private renderedRequestKey: string | null = null;
 
   protected readonly data = signal<CalendarIntelligencePayload | null>(null);
   protected readonly loading = signal(false);
+  protected readonly detailLoading = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly festivalRows = signal<FestivalOccurrence[]>([]);
   protected readonly selectedFestival = signal<FestivalOccurrence | null>(null);
@@ -184,6 +193,7 @@ export class CalendarDayComponent {
 
     effect(() => {
       const profileId = this.activeId();
+      this.selectedDate();
       this.preferences.panchangaContextKey();
       this.preferences.experienceMode();
       void this.load(profileId);
@@ -349,16 +359,28 @@ export class CalendarDayComponent {
     this.staleNotice.set(null);
     if (!id) {
       this.data.set(null);
+      this.renderedRequestKey = null;
       this.loading.set(false);
+      this.detailLoading.set(false);
       return;
     }
 
     const options = this.calendarOptions();
-    const cached = this.vedic.cachedCalendarIntelligenceEntry(id, 45, undefined, options);
+    const selectedDate = this.selectedDate() || this.localDate();
+    const requestKey = [
+      id,
+      selectedDate,
+      this.preferences.panchangaContextKey(),
+      options.includePractitionerDetail ? 'practitioner' : 'standard',
+    ].join('|');
+    const dayOptions = { ...options, asOf: selectedDate };
+    const cached = this.vedic.cachedCalendarIntelligenceEntry(id, 1, undefined, dayOptions);
     if (cached && !forceRefresh) {
       this.data.set(cached.data);
       if (!this.selectedDate()) this.selectedDate.set(cached.data.start_date);
+      this.renderedRequestKey = requestKey;
       this.loading.set(false);
+      this.detailLoading.set(false);
       void this.loadFestivals(cached.data.start_date, 60);
       if (cached.freshness === 'stale') {
         this.staleNotice.set(`Showing saved results for ${cached.data.place.city} while details refresh.`);
@@ -367,35 +389,66 @@ export class CalendarDayComponent {
       return;
     }
 
+    // A month summary is enough to render the selected day immediately.
+    // Practitioner-only rows then replace it with a bounded one-day payload.
+    const monthCached = this.vedic.cachedCalendarIntelligenceEntry(
+      id,
+      45,
+      undefined,
+      { includePractitionerDetail: false },
+    );
+    const monthContainsDate = monthCached?.data.panchanga_days.some((day) => day.date === selectedDate);
+    if (!forceRefresh && monthCached && monthContainsDate) {
+      this.data.set(monthCached.data);
+      this.renderedRequestKey = requestKey;
+      this.loading.set(false);
+      void this.loadFestivals(monthCached.data.start_date, 60);
+      if (!options.includePractitionerDetail) return;
+    } else if (this.renderedRequestKey !== requestKey) {
+      this.data.set(null);
+    }
+
     if (!this.data()) this.loading.set(true);
+    this.detailLoading.set(options.includePractitionerDetail && !!this.data());
     try {
       const calendar = forceRefresh
-        ? await this.vedic.refreshCalendarIntelligence(id, 45, undefined, options)
-        : await this.vedic.calendarIntelligence(id, 45, undefined, options);
+        ? await this.vedic.refreshCalendarIntelligence(id, 1, undefined, dayOptions)
+        : await this.vedic.calendarIntelligence(id, 1, undefined, dayOptions);
       if (request !== this.requestId || this.activeId() !== id) return;
       this.data.set(calendar);
       if (!this.selectedDate()) this.selectedDate.set(calendar.start_date);
+      this.renderedRequestKey = requestKey;
       void this.loadFestivals(calendar.start_date, 60);
     } catch (error) {
       if (request === this.requestId) {
-        const cached = this.vedic.cachedCalendarIntelligenceEntry(id, 45, undefined, options);
-        if (cached) {
-          this.data.set(cached.data);
-          if (!this.selectedDate()) this.selectedDate.set(cached.data.start_date);
-          this.staleNotice.set(`Showing last loaded results for ${cached.data.place.city}. ${this.friendlyError(error)}`);
-          void this.loadFestivals(cached.data.start_date, 60);
+        const fallback = this.vedic.cachedCalendarIntelligenceEntry(id, 1, undefined, dayOptions) ?? monthCached;
+        if (fallback && fallback.data.panchanga_days.some((day) => day.date === selectedDate)) {
+          this.data.set(fallback.data);
+          if (!this.selectedDate()) this.selectedDate.set(fallback.data.start_date);
+          this.renderedRequestKey = requestKey;
+          this.staleNotice.set(`Showing last loaded results for ${fallback.data.place.city}. ${this.friendlyError(error)}`);
+          void this.loadFestivals(fallback.data.start_date, 60);
         } else {
           this.error.set((error as Error).message);
         }
       }
     } finally {
-      if (request === this.requestId) this.loading.set(false);
+      if (request === this.requestId) {
+        this.loading.set(false);
+        this.detailLoading.set(false);
+      }
     }
   }
 
   private async refreshCalendar(id: string, request: number): Promise<void> {
+    const selectedDate = this.selectedDate() || this.localDate();
     try {
-      const calendar = await this.vedic.refreshCalendarIntelligence(id, 45, undefined, this.calendarOptions());
+      const calendar = await this.vedic.refreshCalendarIntelligence(
+        id,
+        1,
+        undefined,
+        { ...this.calendarOptions(), asOf: selectedDate },
+      );
       if (request !== this.requestId || this.activeId() !== id) return;
       this.data.set(calendar);
       if (!this.selectedDate()) this.selectedDate.set(calendar.start_date);
@@ -408,7 +461,20 @@ export class CalendarDayComponent {
   }
 
   private calendarOptions(): { includePractitionerDetail: boolean } {
-    return calendarCacheOptions(this.preferences.experienceMode());
+    return calendarDayCacheOptions(this.preferences.experienceMode());
+  }
+
+  private localDate(): string {
+    try {
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: this.preferences.effectiveTimezone(),
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(new Date());
+    } catch {
+      return new Date().toISOString().slice(0, 10);
+    }
   }
 
   private async loadFestivals(fromDate: string, days: number, regions = this.preferences.festivalRegions()): Promise<void> {

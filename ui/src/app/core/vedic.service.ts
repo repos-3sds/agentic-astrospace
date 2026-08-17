@@ -35,6 +35,11 @@ const DAILY_GUIDANCE_ENGINE_VERSION = 'daily-guidance-1.0';
 const CALENDAR_ENGINE_VERSION = 'calendar-intelligence-1.0';
 const CALENDAR_DATASET_VERSION = 'astrospace-calendar-2026.08.14';
 
+export interface CalendarIntelligenceOptions {
+  includePractitionerDetail?: boolean;
+  asOf?: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class VedicService {
   private api = inject(ApiService);
@@ -303,7 +308,7 @@ export class VedicService {
     kundliId: string,
     days = 30,
     place?: { city: string; nation: string } | null,
-    options: { includePractitionerDetail?: boolean } = {},
+    options: CalendarIntelligenceOptions = {},
   ): Promise<CalendarIntelligencePayload> {
     const { cacheKey, params, identity } = this.calendarParams(kundliId, days, place, options);
     let cached = this.calendarCache.get(cacheKey);
@@ -345,7 +350,7 @@ export class VedicService {
     kundliId: string,
     days = 30,
     place?: { city: string; nation: string } | null,
-    options: { includePractitionerDetail?: boolean } = {},
+    options: CalendarIntelligenceOptions = {},
   ): Promise<CalendarIntelligencePayload> {
     const { cacheKey, params, identity } = this.calendarParams(kundliId, days, place, options);
     const requestEpoch = this.resourceEpoch;
@@ -370,7 +375,7 @@ export class VedicService {
     kundliId: string,
     days = 30,
     place?: { city: string; nation: string } | null,
-    options: { includePractitionerDetail?: boolean } = {},
+    options: CalendarIntelligenceOptions = {},
   ): CalendarIntelligencePayload | null {
     return this.cachedCalendarIntelligenceEntry(kundliId, days, place, options)?.data ?? null;
   }
@@ -379,7 +384,7 @@ export class VedicService {
     kundliId: string,
     days = 30,
     place?: { city: string; nation: string } | null,
-    options: { includePractitionerDetail?: boolean } = {},
+    options: CalendarIntelligenceOptions = {},
   ): CachedResource<CalendarIntelligencePayload> | null {
     const { cacheKey, identity } = this.calendarParams(kundliId, days, place, options);
     const memory = this.calendarValues.get(cacheKey);
@@ -588,22 +593,23 @@ export class VedicService {
     kundliId: string,
     days: number,
     place?: { city: string; nation: string } | null,
-    options: { includePractitionerDetail?: boolean } = {},
+    options: CalendarIntelligenceOptions = {},
   ): { cacheKey: string; params: URLSearchParams; identity: ResourceCacheIdentity | null } {
     const selectedPlace = place ?? this.prefs.panchangaPlace();
     const timezone = this.prefs.effectiveTimezone();
     const params = this.calcParams();
     params.set('days', String(days));
+    if (options.asOf) params.set('as_of', options.asOf);
     if (options.includePractitionerDetail) params.set('include_practitioner_detail', 'true');
     if (timezone) params.set('timezone', timezone);
     if (selectedPlace?.city) params.set('city', selectedPlace.city);
     if (selectedPlace?.nation) params.set('nation', selectedPlace.nation);
     const identity = this.scopedIdentity(kundliId, 'calendar', {
-      date: this.todayKey(),
+      date: options.asOf ?? this.todayKey(),
       timezone,
       city: selectedPlace?.city,
       nation: selectedPlace?.nation,
-      variant: `${days}d:${options.includePractitionerDetail ? 'practitioner' : 'standard'}`,
+      variant: `${days}d:${options.includePractitionerDetail ? 'practitioner' : 'standard'}:${options.asOf ?? 'rolling'}`,
     });
     return {
       cacheKey: identity

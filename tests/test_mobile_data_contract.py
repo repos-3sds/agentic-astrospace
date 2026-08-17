@@ -148,3 +148,26 @@ def test_field_budget(payloads, budget: FieldBudget):
         f"{budget.endpoint} field `{budget.field}` violated its budget "
         f"(value={value!r}). {budget.why}"
     )
+
+
+def test_calendar_selected_day_starts_at_requested_local_date(contract_client):
+    client, kundli_id = contract_client
+    response = client.get(
+        f"/api/v1/vedic/{kundli_id}/calendar-intelligence",
+        params={
+            "days": 1,
+            "as_of": "2026-09-03",
+            "timezone": "Asia/Singapore",
+            "city": "Singapore",
+            "nation": "SG",
+            "include_practitioner_detail": "true",
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["start_date"] == "2026-09-03"
+    assert payload["timezone"] == "Asia/Singapore"
+    assert payload["place"]["city"] == "Singapore"
+    assert payload["panchanga_days"][0]["date"] == "2026-09-03"
+    assert payload["panchanga_days"][0]["practitioner_detail"]["windows"]
