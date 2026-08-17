@@ -3,8 +3,9 @@
 AstroSpace is a Vedic astrology platform: a FastAPI + Swiss Ephemeris backend
 that computes real sidereal charts (Lahiri ayanamsha) — planets, houses,
 divisional charts (D1–D60), dashas, yogas, doshas, strength, and transits —
-grounded by a classical-text knowledge base, interpreted by Claude AI agents
-that are gated by a deterministic safety and verification layer, and served
+grounded by a classical-text knowledge base, interpreted by a configured AI
+provider's agents that are gated by a deterministic safety and verification
+layer, and served
 to readers through two front ends: a responsive **web app** and a
 Figma-designed **native app** (`/m/*`, packaged with Capacitor for iOS and
 Android) sharing one backend and one Supabase Postgres database.
@@ -52,7 +53,7 @@ Every question to `AskOrchestrator` (`astrospace/agents/orchestrator.py`)
 runs through one sequential gate before any content reaches a reader:
 input safety check → domain routing → registry check (unconfigured domains
 never reach a model) → deterministic context assembly (chart data + KB
-citations + Profile Context Ledger facts) → Claude structured-output
+citations + Profile Context Ledger facts) → structured-reading model
 generation → deterministic verification (`astrospace/agents/verifier.py` —
 regex/set-membership only, no second model call) → one repair attempt on
 failure → persist only after a pass. A death/medical/legal/financial verdict
@@ -98,7 +99,7 @@ FastAPI (main.py) — serves the built Angular SPA same-origin in production
           ├── astrospace/core/vedic/   ← Swiss Ephemeris engine (sidereal, Lahiri)
           │     chart.py, positions.py, dashas.py, doshas.py, gocharam/, ...
           │
-          ├── astrospace/agents/       ← Claude AI agents
+          ├── astrospace/agents/       ← AI agents (provider-configurable)
           │     orchestrator.py        AskOrchestrator — the one Ask pipeline
           │     domain_agent.py        config-driven structured-reading agent
           │     verifier.py            deterministic safety/quality gate
@@ -134,7 +135,7 @@ agentic-astrospace/
 │
 ├── astrospace/
 │   ├── core/vedic/            Swiss Ephemeris Vedic chart engine (no AI)
-│   ├── agents/                Claude AI agents — Ask orchestrator, verifier, safety
+│   ├── agents/                AI agents (provider-configurable) — Ask orchestrator, verifier, safety
 │   ├── context/                Context Engine — assembly, KB retrieval, routing, taxonomy
 │   ├── api/                   FastAPI routers (thin wrappers over the above)
 │   ├── db/                    SQLAlchemy models + CRUD
