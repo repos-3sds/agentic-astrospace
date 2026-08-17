@@ -4,7 +4,12 @@ export interface CalendarCacheOptions {
   includePractitionerDetail: boolean;
 }
 
-/** Keep month and selected-day requests on the same cache identity. */
-export function calendarCacheOptions(mode: ExperienceMode): CalendarCacheOptions {
+/** Month grids never need the expensive practitioner payload for every day. */
+export function calendarMonthCacheOptions(): CalendarCacheOptions {
+  return { includePractitionerDetail: false };
+}
+
+/** Selected days opt into technical rows only for Practitioner mode. */
+export function calendarDayCacheOptions(mode: ExperienceMode): CalendarCacheOptions {
   return { includePractitionerDetail: mode === 'practitioner' };
 }

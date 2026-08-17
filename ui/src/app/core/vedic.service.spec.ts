@@ -125,6 +125,30 @@ describe('VedicService location-sensitive caches', () => {
     expect(service.cachedCalendarIntelligence('profile-1', 45)).toBeNull();
   });
 
+  it('requests and caches a bounded selected-day payload independently from the month', async () => {
+    prefs.timezoneMode.set('panchanga_place');
+    prefs.setPanchangaPlace({ city: 'Singapore', nation: 'SG', timezone: 'Asia/Singapore', label: 'Singapore' } as any);
+
+    await service.calendarIntelligence('profile-1', 1, undefined, {
+      includePractitionerDetail: true,
+      asOf: '2026-09-03',
+    });
+
+    const path = api.get.calls.mostRecent().args[0] as string;
+    expect(path).toContain('days=1');
+    expect(path).toContain('as_of=2026-09-03');
+    expect(path).toContain('include_practitioner_detail=true');
+    expect(path).toContain('timezone=Asia%2FSingapore');
+    expect(service.cachedCalendarIntelligenceEntry('profile-1', 1, undefined, {
+      includePractitionerDetail: true,
+      asOf: '2026-09-03',
+    })).not.toBeNull();
+    expect(service.cachedCalendarIntelligenceEntry('profile-1', 1, undefined, {
+      includePractitionerDetail: true,
+      asOf: '2026-09-04',
+    })).toBeNull();
+  });
+
   it('does not resurrect hard-expired Calendar data from a suspended WebView memory cache', async () => {
     const clock = spyOn(Date, 'now').and.returnValue(1_000);
     await service.calendarIntelligence('profile-1', 45);

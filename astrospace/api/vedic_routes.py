@@ -469,6 +469,7 @@ def calendar_intelligence(
     kundli_id: str,
     user: CurrentUser,
     days: int = Query(30, ge=1, le=60),
+    as_of: Optional[date] = Query(None, description="Calendar window start date in the viewer timezone"),
     include_practitioner_detail: bool = Query(False, description="Include full practitioner day payloads"),
     timezone: Optional[str] = Query(None, description="Viewer IANA timezone"),
     city: Optional[str] = Query(None, description="Optional panchanga place override"),
@@ -487,9 +488,13 @@ def calendar_intelligence(
     if not geo:
         raise HTTPException(status_code=422, detail=f"City {loc_city!r} not in offline database.")
     lat, lng, tz_str = geo
-    as_of = datetime.now(ZoneInfo(display_tz))
+    calculation_time = (
+        datetime.combine(as_of, time(hour=12), tzinfo=ZoneInfo(display_tz))
+        if as_of
+        else datetime.now(ZoneInfo(display_tz))
+    )
     payload = chart.calendar_intelligence(
-        as_of=as_of,
+        as_of=calculation_time,
         city=loc_city,
         nation=loc_nation,
         lat=lat,

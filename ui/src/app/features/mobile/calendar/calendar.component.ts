@@ -8,7 +8,7 @@ import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { ResourceFreshness } from '../../../core/resource-cache';
 import { FestivalSheetComponent } from './festival-sheet.component';
-import { calendarCacheOptions } from './calendar-cache-options';
+import { calendarMonthCacheOptions } from './calendar-cache-options';
 
 interface CalendarCell {
   date: string;
@@ -304,7 +304,7 @@ export class CalendarComponent {
   }
 
   private calendarOptions(): { includePractitionerDetail: boolean } {
-    return calendarCacheOptions(this.preferences.experienceMode());
+    return calendarMonthCacheOptions();
   }
 
   protected cacheAgeLabel(): string {
