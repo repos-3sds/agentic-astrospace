@@ -835,7 +835,15 @@ class TestSourceEnumMatchesTheVerifier:
         """The enum is a constraint, not a replacement for the check. If a
         provider ignores it, validation must still succeed (the Pydantic
         model is unchanged) so the verifier — not a parse crash — is what
-        rejects the citation."""
+        rejects the citation.
+
+        Note for whoever reads this next: unlike the three tests above,
+        this one passes with or without the enum, deliberately. It pins the
+        DEGRADATION path, not the constraint — it is a characterization
+        test, not a regression pin, and it going green proves nothing about
+        whether the enum is still wired up. The other three cover that (all
+        three go red if the enum is gutted or forked; verified by reverting
+        each and re-running)."""
         from anthropic.types import Message, ToolUseBlock, Usage
         from astrospace.agents.verifier import verify
 
