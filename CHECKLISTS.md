@@ -1,8 +1,23 @@
 # CHECKLISTS
 
-This file did not exist at the start of the 2026-07-28 mobile UI audit. It was created to hold the requested remediation checklist.
+> **Status: superseded.**
+>
+> This file held the remediation checklist from the 2026-07-28 mobile UI
+> audit. Every gap it lists — profile management, calendar, compatibility,
+> chart wiring, remedies/muhurta, and most platform/resilience states — is
+> now tracked with per-item, live-verified status (✅/⚠️/❌, against the same
+> Figma node IDs used below) in
+> [docs/mobile_screen_build_plan.md](docs/mobile_screen_build_plan.md), which
+> is the current, actively-maintained tracker for the native app build. Check
+> there instead of here; this file is not being kept in sync and its
+> checkboxes no longer reflect reality (most of what's listed `[ ]` below has
+> since shipped).
+>
+> Kept in place rather than deleted only so the historical remediation list
+> and its node-ID references remain visible; no inbound references to this
+> file exist elsewhere in the repo.
 
-## Mobile UI audit remediation
+## Mobile UI audit remediation (2026-07-28, historical — see status above)
 
 Gap type legend: Missing screen; Missing route/navigation; Missing interaction; Missing backend capability; Existing backend not wired; Placeholder/static data; Missing loading/error/empty/offline state; Native-platform surface; Visual/accessibility defect; Verification/configuration gap.
 
