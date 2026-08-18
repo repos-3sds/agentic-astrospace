@@ -92,3 +92,51 @@ def reading_tool_schema(allowed_sources: set[str]) -> dict:
     # a different tool definition on every request for the same bundle.
     source["enum"] = sorted(allowed_sources)
     return schema
+
+
+class StructuredReadingPatch(BaseModel):
+    """`StructuredReading` with every field optional — the shape a D2
+    field-scoped repair asks for and receives.
+
+    A whole-object repair resends every field even when only one is wrong,
+    because `StructuredReading` requires all of them; that cost is exactly
+    what field-scoped repair exists to remove. This model is the
+    Python-side validation target for a repair response — it is never
+    handed to the model as-is. `repair_patch_schema()` below compiles a
+    JSON Schema from it with only the actually-failing fields marked
+    `required`, so the model is asked for (and expected to return) just
+    those; anything else in the response is accepted but ignored by the
+    orchestrator's merge, and a field the model omits entirely comes back
+    `None` here rather than crashing validation — the same "a provider
+    that doesn't fully comply still parses, and is caught by known
+    behaviour rather than an exception" degradation `reading_tool_schema`
+    established for the source enum."""
+    acknowledgment: str | None = None
+    technical_basis: list[TechnicalBasisItem] | None = None
+    interpretation: str | None = None
+    summary_and_assurance: str | None = None
+    guidance: Guidance | None = None
+    confidence: Literal["high", "medium", "low"] | None = None
+
+
+def repair_patch_schema(fields: set[str], allowed_sources: set[str]) -> dict:
+    """JSON Schema for a field-scoped repair: `StructuredReadingPatch`'s
+    schema with `required` narrowed to exactly `fields` — the top-level
+    `StructuredReading` fields a violation actually implicated (see
+    `verifier.violation_fields()`) — and, same as `reading_tool_schema`,
+    `technical_basis[].source` narrowed to this bundle's own citable set.
+
+    The source enum is applied unconditionally, not only when
+    `"technical_basis"` is in `fields`, because `TechnicalBasisItem` is
+    reachable from `$defs` regardless of which top-level fields are
+    required — narrowing it costs nothing when unused and keeps this
+    function's behaviour independent of which fields happen to be under
+    repair this time.
+
+    `fields` MUST be non-empty; an empty repair is a whole-object repair by
+    definition (see `_agent_run_and_verify`'s fallback), not a call here."""
+    schema = StructuredReadingPatch.model_json_schema()
+    source = schema["$defs"]["TechnicalBasisItem"]["properties"]["source"]
+    source["enum"] = sorted(allowed_sources)
+    schema["required"] = sorted(fields)
+    return schema

@@ -164,11 +164,12 @@ def valid_sources(bundle: dict) -> set[str]:
 
 
 class Violation(str):
-    """A violation that also knows how bad it is.
+    """A violation that also knows how bad it is, and — since D2 — which
+    `StructuredReading` field it lives in.
 
     A `str` subclass on purpose: every existing consumer treats violations as
     strings (`"; ".join(...)`, `== []`, formatting into the repair prompt) and
-    keeps working untouched. Severity is additive.
+    keeps working untouched. Severity and field are both additive.
 
     Two severities, and the distinction is about what happens when a repair
     attempt fails to clear it:
@@ -183,13 +184,27 @@ class Violation(str):
                   handing the reader an error instead. Before this split
                   existed, adding any coverage check would have meant exactly
                   that.
+
+    `field` names the top-level `StructuredReading` field a fix belongs in
+    (`"acknowledgment"`, `"technical_basis"`, `"interpretation"`,
+    `"summary_and_assurance"`, `"guidance"`), or `None` when a violation
+    isn't attributable to one field — a bundle/routed-domain mismatch, for
+    instance, is an orchestration bug, not something regenerating any field
+    of this reading would fix. `None` is also the safe default for a
+    violation constructed without a field: the orchestrator's D2 repair
+    path (`_agent_run_and_verify`) falls back to whole-object repair
+    whenever any surviving violation's field is unknown, exactly the
+    behaviour that existed before field attribution — this is additive,
+    not a narrowing of what gets fixed.
     """
 
     severity: str = "safety"
+    field: str | None = None
 
-    def __new__(cls, text: str, severity: str = "safety"):
+    def __new__(cls, text: str, severity: str = "safety", field: str | None = None):
         obj = super().__new__(cls, text)
         obj.severity = severity
+        obj.field = field
         return obj
 
 
@@ -201,6 +216,18 @@ def safety_violations(violations: list[str]) -> list[str]:
 
 def quality_violations(violations: list[str]) -> list[str]:
     return [v for v in violations if getattr(v, "severity", "safety") == "quality"]
+
+
+def violation_fields(violations: list[str]) -> set[str | None]:
+    """The set of `StructuredReading` top-level fields a violation list
+    touches — `None` in the set means at least one violation isn't
+    attributable to a single field, which the orchestrator's repair path
+    reads as "fall back to whole-object repair, we don't know what's safe
+    to leave alone." A plain `str` (constructed outside this module, or a
+    violation predating field attribution) counts as unattributed for the
+    same fail-closed reason `safety_violations` treats a plain `str` as
+    safety-severity."""
+    return {getattr(v, "field", None) for v in violations}
 
 
 # ── Profile Context Ledger — logical preflight enforcement ────────────────
@@ -283,8 +310,17 @@ _FACT_KEY_KEYWORDS: dict[str, tuple[str, ...]] = {
     "employment_status": ("retir", "employ", "career status", "job status"),
     "relationship_status": ("marri", "spouse", "divorce", "separat"),
     "has_children": ("child", "kids", " a parent", "parenthood"),
+    # "illness"/"recovering" bare (not just "your illness"/"your recovery")
+    # — found by D2's field-scoped repair: "recovering from an illness"
+    # phrasing didn't match either possessive form, so this check silently
+    # never fired for it. Whole-object repair had masked the gap, since a
+    # DIFFERENT (coverage) violation on the same reading also triggered a
+    # repair that happened to fix the discovery text as a side effect —
+    # see tests/test_profile_context_ledger_phase2.py's
+    # test_never_presents_disclosed_condition_as_a_chart_discovery.
     "current_health_constraint": ("health condition", "your condition",
-                                  "your recovery", "your illness", "diagnos"),
+                                  "your recovery", "your illness", "illness",
+                                  "recovering", "diagnos"),
     "recovery_period": ("your recovery", "recovering", "your condition"),
 }
 
@@ -294,14 +330,17 @@ def _blocked_frame_violations(reading: StructuredReading, bundle: dict) -> list[
     blocked = preflight.get("blocked_frames") or []
     if not blocked:
         return []
-    text_to_check = [reading.interpretation, reading.summary_and_assurance,
-                     reading.acknowledgment] + [item.reading for item in reading.technical_basis]
+    text_to_check = [
+        ("interpretation", reading.interpretation),
+        ("summary_and_assurance", reading.summary_and_assurance),
+        ("acknowledgment", reading.acknowledgment),
+    ] + [("technical_basis", item.reading) for item in reading.technical_basis]
     out: list[Violation] = []
     for frame in blocked:
         pattern = _BLOCKED_FRAME_PATTERNS.get(frame)
         if not pattern:
             continue
-        for text in text_to_check:
+        for field, text in text_to_check:
             normalized = _normalize(text)
             unhedged = next(
                 (match for match in pattern.finditer(normalized)
@@ -312,7 +351,7 @@ def _blocked_frame_violations(reading: StructuredReading, bundle: dict) -> list[
                 out.append(Violation(
                     f"blocked frame {frame!r} used in: {text!r} — the reader's own "
                     "confirmed profile context rules this framing out",
-                    "safety",
+                    "safety", field,
                 ))
                 break
     return out
@@ -339,7 +378,7 @@ def _required_frame_shortfall(reading: StructuredReading, bundle: dict) -> list[
         f"({', '.join(required)}) is established by the reader's own confirmed "
         "context, but none of the applicable facts "
         f"({', '.join(refs)}) were cited — the reading may have ignored it",
-        "quality",
+        "quality", "technical_basis",
     )]
 
 
@@ -350,10 +389,13 @@ def _discovery_violations(reading: StructuredReading, bundle: dict) -> list[Viol
     }
     if not active_keys:
         return []
-    text_to_check = [reading.interpretation, reading.summary_and_assurance,
-                     reading.acknowledgment] + [item.reading for item in reading.technical_basis]
+    text_to_check = [
+        ("interpretation", reading.interpretation),
+        ("summary_and_assurance", reading.summary_and_assurance),
+        ("acknowledgment", reading.acknowledgment),
+    ] + [("technical_basis", item.reading) for item in reading.technical_basis]
     out: list[Violation] = []
-    for text in text_to_check:
+    for field, text in text_to_check:
         for match in _DISCOVERY_PHRASE_RE.finditer(text):
             window = text[max(0, match.start() - 80): match.end() + 80].lower()
             for key in active_keys:
@@ -361,7 +403,7 @@ def _discovery_violations(reading: StructuredReading, bundle: dict) -> list[Viol
                     out.append(Violation(
                         f"disclosed profile fact {key!r} presented as an astrological "
                         f"discovery in: {text!r}",
-                        "safety",
+                        "safety", field,
                     ))
                     break
     return out
@@ -379,10 +421,11 @@ def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
     allowed = valid_sources(bundle)
     for item in reading.technical_basis:
         if item.source not in allowed:
-            violations.append(
+            violations.append(Violation(
                 f"technical_basis source {item.source!r} does not resolve to the bundle's "
-                "references, source_passages, or a known bundle section"
-            )
+                "references, source_passages, or a known bundle section",
+                "safety", "technical_basis",
+            ))
 
     # Shared across every text-scanning check below — every field a model
     # can put free text into, not just the ones a first pass happened to
@@ -394,21 +437,37 @@ def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
     # note passed cleanly. That's CLAUDE.md non-negotiable #1 (no death/
     # longevity verdicts) and #4 (remedies never framed as fear leverage)
     # both landing in a field nothing was looking at.
-    text_to_check = [reading.acknowledgment, reading.interpretation, reading.summary_and_assurance] + [
-        item.reading for item in reading.technical_basis
-    ] + list(reading.guidance.practical_actions) + list(reading.guidance.follow_up_questions) + [
-        text for remedy in reading.guidance.remedies for text in (remedy.practice, remedy.note)
+    #
+    # (field, text) pairs, not bare text — D2 needs to know which top-level
+    # field a violation came from so a repair can regenerate only that
+    # field. `guidance.practical_actions`/`follow_up_questions`/`remedies`
+    # all live under the single `guidance` field on `StructuredReading`, so
+    # they all attribute to `"guidance"`, not to their own sub-paths — the
+    # repair schema (see schema.py's `repair_patch_schema`) regenerates
+    # `guidance` as one object anyway, matching the model's own shape.
+    text_to_check = [
+        ("acknowledgment", reading.acknowledgment),
+        ("interpretation", reading.interpretation),
+        ("summary_and_assurance", reading.summary_and_assurance),
+    ] + [
+        ("technical_basis", item.reading) for item in reading.technical_basis
+    ] + [
+        ("guidance", text) for text in reading.guidance.practical_actions
+    ] + [
+        ("guidance", text) for text in reading.guidance.follow_up_questions
+    ] + [
+        ("guidance", text) for remedy in reading.guidance.remedies for text in (remedy.practice, remedy.note)
     ]
 
-    for text in text_to_check:
+    for field, text in text_to_check:
         crossed = prohibited_verdict(text)
         if crossed:
-            violations.append(f"prohibited verdict ({crossed}) in: {text!r}")
+            violations.append(Violation(f"prohibited verdict ({crossed}) in: {text!r}", "safety", field))
         dosha_crossed = dosha_overclaim_kind(text)
         if dosha_crossed == "health_outcome_overclaim":
-            violations.append(f"health outcome overclaim in: {text!r}")
+            violations.append(Violation(f"health outcome overclaim in: {text!r}", "safety", field))
         elif dosha_crossed:
-            violations.append(f"dosha overclaim in: {text!r}")
+            violations.append(Violation(f"dosha overclaim in: {text!r}", "safety", field))
 
     # "mixed" (both a retrospective and a future cue present in the same
     # question, e.g. "when did retirement happen, and what comes next?")
@@ -420,12 +479,13 @@ def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
         as_of = str(profile_facts.get("as_of") or "")
         as_of_year = int(as_of[:4]) if as_of[:4].isdigit() else 9999
         safe_years = _period_boundary_years(bundle)
-        for text in text_to_check:
+        for field, text in text_to_check:
             if _tense_conflict(text, as_of_year, safe_years):
-                violations.append(
+                violations.append(Violation(
                     "retrospective question answered with an invented future "
-                    f"timeline: {text!r}"
-                )
+                    f"timeline: {text!r}",
+                    "safety", field,
+                ))
 
     # Profile Context Ledger logical preflight (Phase 2) — safety severity,
     # same tier as prohibited_verdict/dosha_overclaim above: a blocked frame
@@ -486,7 +546,7 @@ def verify_coverage(reading: StructuredReading, bundle: dict) -> list[Violation]
             out.append(Violation(
                 f"the domain's primary divisional chart {varga} is never addressed — "
                 f"cite it or say explicitly why it adds nothing here",
-                "quality",
+                "quality", "technical_basis",
             ))
 
     for code in getattr(spec, "karakas_jaimini", ()) or ():
@@ -498,7 +558,7 @@ def verify_coverage(reading: StructuredReading, bundle: dict) -> list[Violation]
             out.append(Violation(
                 f"the domain's Jaimini karaka {code} ({label}, {row.get('planet')}) "
                 "is never addressed",
-                "quality",
+                "quality", "technical_basis",
             ))
 
     return out
