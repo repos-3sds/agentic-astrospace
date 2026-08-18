@@ -24,7 +24,9 @@ from main import app
 from astrospace.agents.domain_agent import DomainReadingAgent
 from astrospace.agents.orchestrator import AskOrchestrator
 from astrospace.agents.registry import AGENT_REGISTRY
-from astrospace.agents.schema import Guidance, StructuredReading, TechnicalBasisItem
+from astrospace.agents.schema import (
+    Guidance, StructuredReading, StructuredReadingPatch, TechnicalBasisItem,
+)
 from astrospace.api.auth import AuthUser, current_user
 from astrospace.context import assemble_domain
 from astrospace.core.vedic.chart import VedicChart
@@ -50,6 +52,21 @@ def _good_reading(source: str = "houses", **overrides) -> StructuredReading:
     )
     base.update(overrides)
     return StructuredReading(**base)
+
+
+def _good_patch(source: str = "houses") -> StructuredReadingPatch:
+    """D2's repair path asks for, and validates into,
+    `StructuredReadingPatch` — a `technical_basis`-only violation (an
+    invented citation) is field-attributed to `technical_basis` and
+    triggers `DomainReadingAgent.run_structured_repair`, not a second call
+    to `run_structured_reading`. Any test whose 'bad' reading is an
+    invented-source `technical_basis` (the common case here) must mock
+    this too, or the repair call falls through to the real, unmocked
+    method — which is exactly the "Anthropic call is always stubbed"
+    invariant this file's own docstring states."""
+    return StructuredReadingPatch(
+        technical_basis=[TechnicalBasisItem(factor="10th lord", reading="well placed", source=source)],
+    )
 
 
 class TestAssembleDomainShapes:
@@ -472,20 +489,29 @@ class TestAskOrchestratorRun:
         assert events[-1]["tense"] == "retrospective"
 
     def test_bad_then_good_repairs_once_and_persists(self, prepared):
+        """An invented-source `technical_basis` violation is field-
+        attributed to `technical_basis` alone, so D2 repairs it through
+        `run_structured_repair` — the initial `run_structured_reading` is
+        called exactly once, not twice."""
         orchestrator, run = prepared
         bad = _good_reading(source="totally_invented_ref")
-        good = _good_reading()
-        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, good]):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad) as gen, \
+             patch.object(DomainReadingAgent, "run_structured_repair", return_value=_good_patch()) as repair:
             events = list(orchestrator.run(run, [{"role": "user", "content": "q"}],
                                            persist=lambda reading, status: "thread-2"))
         assert events[-1]["status"] == "answered"
         assert events[-1]["thread_id"] == "thread-2"
+        assert gen.call_count == 1
+        repair.assert_called_once()
+        assert repair.call_args.args[1] == {"technical_basis"}
 
     def test_bad_twice_fails_verification_and_persists_nothing_new(self, prepared):
         orchestrator, run = prepared
         bad = _good_reading(source="totally_invented_ref")
+        still_bad = _good_patch(source="still_totally_invented")
         persisted = []
-        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, bad]):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad), \
+             patch.object(DomainReadingAgent, "run_structured_repair", return_value=still_bad):
             events = list(orchestrator.run(run, [{"role": "user", "content": "q"}],
                                            persist=lambda reading, status: persisted.append((reading, status)) or None))
         assert events[-1]["status"] == "verification_failed"
@@ -697,7 +723,9 @@ class TestAskStreamRoute:
 
     def test_failed_verification_persists_nothing_new(self, client, env):
         bad = _good_reading(source="totally_invented_ref")
-        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, bad]):
+        still_bad = _good_patch(source="still_totally_invented")
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad), \
+             patch.object(DomainReadingAgent, "run_structured_repair", return_value=still_bad):
             r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
                 "question": "Is this a good year for a promotion at work?",
                 "start_thread": True,
@@ -888,3 +916,117 @@ class TestSourceEnumMatchesTheVerifier:
         assert isinstance(reading, StructuredReading)
         assert [v for v in verify(reading, bundle, "career", "future")
                 if "does not resolve" in v]
+
+
+# tests/conftest.py's autouse fixture replaces `run_structured_repair`
+# class-wide with a mock-friendly default (so every test that only mocks
+# `run_structured_reading` doesn't have to know D2 exists). Captured here,
+# at MODULE level, before any fixture has patched anything, and as a plain
+# module global rather than a class attribute — a class attribute would
+# rebind `self` to the test instance on access (`self.attr` triggers the
+# function descriptor's `__get__`), not to the `DomainReadingAgent`
+# instance the real method needs.
+_REAL_RUN_STRUCTURED_REPAIR = DomainReadingAgent.run_structured_repair
+
+
+class TestFieldScopedRepair:
+    """D2: repair the failing field(s) only, not the whole object — a
+    tense violation confined to `interpretation` should not cost a
+    regenerated `technical_basis` alongside it."""
+
+    def test_repair_patch_schema_narrows_required_and_source_enum(self, chart):
+        from astrospace.agents.schema import repair_patch_schema
+        bundle = assemble_domain(chart, "career")
+        allowed = {"houses", "karakas"}
+        schema = repair_patch_schema({"interpretation"}, allowed)
+        assert schema["required"] == ["interpretation"]
+        assert schema["$defs"]["TechnicalBasisItem"]["properties"]["source"]["enum"] == sorted(allowed)
+
+    def test_structured_reading_patch_leaves_unset_fields_none(self):
+        patch_obj = StructuredReadingPatch(interpretation="fixed text")
+        assert patch_obj.interpretation == "fixed text"
+        assert patch_obj.technical_basis is None
+        assert patch_obj.acknowledgment is None
+        assert patch_obj.guidance is None
+        assert patch_obj.confidence is None
+
+    def test_run_structured_repair_sends_the_narrowed_schema_to_the_provider(self, chart):
+        from anthropic.types import Message, ToolUseBlock, Usage
+        bundle = assemble_domain(chart, "career")
+        agent = DomainReadingAgent(bundle, AGENT_REGISTRY["career"].domain_addendum)
+        fake_response = Message(
+            id="msg_test", type="message", role="assistant", model=agent.model,
+            content=[ToolUseBlock(type="tool_use", id="toolu_1", name="repair_reading",
+                                  input={"interpretation": "fixed"})],
+            stop_reason="tool_use", stop_sequence=None,
+            usage=Usage(input_tokens=10, output_tokens=5),
+        )
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = fake_response
+        agent.client = mock_client
+        agent.provider = "anthropic"
+
+        with patch.object(DomainReadingAgent, "run_structured_repair", new=_REAL_RUN_STRUCTURED_REPAIR):
+            patch_obj = agent.run_structured_repair([{"role": "user", "content": "hi"}], {"interpretation"})
+        assert isinstance(patch_obj, StructuredReadingPatch)
+        assert patch_obj.interpretation == "fixed"
+        assert patch_obj.technical_basis is None
+
+        _, kwargs = mock_client.messages.create.call_args
+        sent_schema = kwargs["tools"][0]["input_schema"]
+        assert sent_schema["required"] == ["interpretation"]
+
+    def test_a_field_attributable_violation_calls_repair_not_a_second_generation(self, chart):
+        """The narrowness this whole feature exists for: `run_structured_
+        reading` (the first, full generation) is called exactly once —
+        the repair goes through `run_structured_repair` instead, scoped to
+        exactly the field the violation implicated."""
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart)
+        outcome = orchestrator.prepare("Is this a good year for a promotion at work?")
+        bad = _good_reading(source="totally_invented_ref")
+        good_patch = StructuredReadingPatch(
+            technical_basis=[TechnicalBasisItem(factor="10th lord", reading="well placed", source="houses")],
+        )
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad) as gen, \
+             patch.object(DomainReadingAgent, "run_structured_repair", return_value=good_patch) as repair:
+            events = list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
+                                           persist=lambda reading, status: "t"))
+        assert events[-1]["status"] == "answered"
+        assert gen.call_count == 1
+        repair.assert_called_once()
+        assert repair.call_args.args[1] == {"technical_basis"}
+
+    def test_repair_merge_keeps_untouched_fields_from_the_original_reading(self, chart):
+        """The other half of the narrowness: fields NOT in the violated
+        set must survive the repair completely unchanged, proving the
+        merge doesn't silently regenerate more than it asked for."""
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart)
+        outcome = orchestrator.prepare("Is this a good year for a promotion at work?")
+        bad = _good_reading(source="totally_invented_ref",
+                            acknowledgment="A distinctive untouched acknowledgment.")
+        good_patch = StructuredReadingPatch(
+            technical_basis=[TechnicalBasisItem(factor="10th lord", reading="well placed", source="houses")],
+        )
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad), \
+             patch.object(DomainReadingAgent, "run_structured_repair", return_value=good_patch):
+            events = list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
+                                           persist=lambda reading, status: "t"))
+        assert events[-1]["reading"]["acknowledgment"] == "A distinctive untouched acknowledgment."
+        assert events[-1]["reading"]["technical_basis"][0]["source"] == "houses"
+
+    def test_an_unattributed_violation_falls_back_to_whole_object_repair(self, chart):
+        """Domain/routed-domain mismatch is the one violation `verify()`
+        never attributes to a field — regenerating any single field of
+        this reading against the same mismatched bundle fixes nothing.
+        This must call `run_structured_reading` a second time (whole-
+        object repair), never `run_structured_repair`."""
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart)
+        outcome = orchestrator.prepare("Is this a good year for a promotion at work?")
+        outcome.prepared.bundle["domain"] = "not-the-routed-domain"
+        good = _good_reading()
+        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[_good_reading(), good]) as gen, \
+             patch.object(DomainReadingAgent, "run_structured_repair") as repair:
+            list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
+                                  persist=lambda reading, status: "t"))
+        assert gen.call_count == 2
+        repair.assert_not_called()

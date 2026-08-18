@@ -27,7 +27,7 @@ from .registry import AGENT_REGISTRY, AgentConfig
 from .safety import REFER_OUT_ANSWERS, refer_out_kind
 from .schema import AskIntent, StructuredReading
 from .validation_agent import ValidationAgent, ValidationProbeDraft, probe_violations
-from .verifier import quality_violations, safety_violations, verify, verify_coverage
+from .verifier import quality_violations, safety_violations, verify, verify_coverage, violation_fields
 from ..context import KeywordRouter, assemble_domain
 from ..context.profile_context import LogicalPreflight, build_logical_preflight
 from ..context.taxonomy import get_domain
@@ -482,17 +482,26 @@ class AskOrchestrator:
             return AgentRunResult(reading=reading, violations=[])
 
         # Exactly one repair attempt — hard cap, no open-ended retry loop.
-        repair_messages = messages + [{
-            "role": "user",
-            "content": (
-                "Your previous answer had these problems — answer again, fixing them, "
-                "using only what is in the CONTEXT BUNDLE: " + "; ".join(violations)
-            ),
-        }]
+        # D2: scoped when every surviving violation is attributable to a
+        # field (`violation_fields()` excludes `None`), whole-object when
+        # any isn't — the same fallback `Violation.field`'s own docstring
+        # names: an unattributed violation means we don't know what's safe
+        # to leave alone, so leave nothing alone, exactly today's behaviour.
+        fields = violation_fields(violations)
         try:
-            reading = prepared.agent.run_structured_reading(repair_messages)
+            if None not in fields:
+                repaired = self._scoped_repair(prepared, messages, reading, violations, fields)
+            else:
+                repaired = prepared.agent.run_structured_reading(messages + [{
+                    "role": "user",
+                    "content": (
+                        "Your previous answer had these problems — answer again, fixing them, "
+                        "using only what is in the CONTEXT BUNDLE: " + "; ".join(violations)
+                    ),
+                }])
         except Exception:
             return AgentRunResult(reading=None, violations=violations, generation_failed=True)
+        reading = repaired
 
         violations = (verify(reading, prepared.bundle, prepared.domain, prepared.tense)
                       + verify_coverage(reading, prepared.bundle))
@@ -511,6 +520,35 @@ class AskOrchestrator:
             return AgentRunResult(reading=None, violations=violations)
         return AgentRunResult(reading=reading, violations=[],
                               quality_shortfall=quality_violations(violations))
+
+    def _scoped_repair(self, prepared: PreparedRun, messages: list, original: StructuredReading,
+                       violations: list[str], fields: set[str]) -> StructuredReading:
+        """D2: ask for, and merge in, only the fields the surviving
+        violations actually implicate — a tense violation confined to
+        `interpretation` no longer costs a regenerated `technical_basis`
+        alongside it.
+
+        Merges onto `original` — the reading from before this repair
+        attempt — not onto some other state — every field outside `fields`
+        is by definition violation-free, so it is correct by construction
+        to keep it untouched rather than ask the model to reproduce it.
+        A field in `fields` the patch leaves as `None` (a provider that
+        didn't fully comply with the narrowed schema) is left as
+        `original`'s value too — the same "still parses, degrades to known
+        behaviour" contract `run_structured_repair` documents; the
+        violation simply survives into the re-verify below, exactly as it
+        would have if this whole method didn't exist."""
+        repair_messages = messages + [{
+            "role": "user",
+            "content": (
+                f"Your previous answer had these problems in {', '.join(sorted(fields))} — "
+                "answer again with ONLY those field(s), fixing them, using only what is in "
+                "the CONTEXT BUNDLE: " + "; ".join(violations)
+            ),
+        }]
+        patch = prepared.agent.run_structured_repair(repair_messages, fields)
+        updates = {f: getattr(patch, f) for f in fields if getattr(patch, f, None) is not None}
+        return original.model_copy(update=updates)
 
     def run(
         self, prepared: PreparedRun, messages: list,
