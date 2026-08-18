@@ -265,10 +265,11 @@ class AskOrchestrator:
         return RegistryResult(agent_config=AGENT_REGISTRY.get(domain))
 
     def assemble_context(self, domain: str, question: str,
-                         tense: QuestionTense = "unspecified") -> ContextResult:
+                         tense: QuestionTense = "unspecified",
+                         intent: AskIntent | None = None) -> ContextResult:
         chart = self._chart_loader()
         bundle = assemble_domain(
-            chart, domain, question=question,
+            chart, domain, question=question, intent=intent,
             validation_probes=self._stored_probes(domain),
         )
         profile_context = self.check_profile_context(bundle, domain, question, tense)
@@ -429,7 +430,8 @@ class AskOrchestrator:
                 "available": routing.available_domains,
             })
 
-        context = self.assemble_context(routing.domain, question, routing.tense)
+        context = self.assemble_context(routing.domain, question, routing.tense,
+                                        routing.intent)
         if context.profile_context_unavailable:
             # A configured ledger failed to answer for this turn — must not
             # fall through to a normal reading, which would look identically

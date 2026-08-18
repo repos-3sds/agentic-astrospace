@@ -372,6 +372,28 @@ class TestAskOrchestratorPrepare:
         assert outcome.prepared.tense == "future"
         assert "houses" in outcome.prepared.context_used
 
+    def test_timing_question_reaches_orchestrator_prepared_bundle_compact(self, orchestrator):
+        """End-to-end wiring for the Context Planner's first increment
+        (docs/ask_context_engine_multi_agent_architecture_2026-08-07.md):
+        `routing.intent` has to actually reach `assemble_domain`, not just
+        exist as a label on the envelope. A "when will X" question is
+        routed with intent="timing", which `assemble_context` now threads
+        through — confirmed here by the resulting bundle's karaka briefs
+        having dropped their decorative nakshatra/D-60 texture, the same
+        assertion `TestIntentAwareTrimming` in test_context_engine.py makes
+        directly against `assemble_domain`, but exercised through the real
+        orchestrator call path this time."""
+        outcome = orchestrator.prepare("When will I get a promotion?")
+        assert outcome.prepared.intent == "timing"
+        planet = next(iter(outcome.prepared.bundle["karakas"]))
+        assert "nakshatra_detail" not in outcome.prepared.bundle["karakas"][planet]
+
+    def test_explanation_question_reaches_orchestrator_prepared_bundle_verbose(self, orchestrator):
+        outcome = orchestrator.prepare("What does my career placement mean for my job?")
+        assert outcome.prepared.intent == "explanation"
+        planet = next(iter(outcome.prepared.bundle["karakas"]))
+        assert "nakshatra_detail" in outcome.prepared.bundle["karakas"][planet]
+
     def test_pronoun_followup_without_thread_domain_asks_to_clarify(self, orchestrator):
         """Reproduces the reported bug directly: a follow-up with no
         domain keywords of its own ("this"/"it") has nothing to route on

@@ -1293,14 +1293,15 @@ today:
      mechanism — this is the project re-applying a lesson it already
      learned once, not a novel gap.
 4. **Make `assemble_domain` intent-aware — this *is* the Context Planner
-   from Phase 3/the graph above, not a new component.** `detect_intent()`
+   from Phase 3/the graph above, not a new component.** ~~`detect_intent()`
    already runs server-side and is already threaded through
    `PreparedRun.intent`; it just isn't used to shape what gets assembled
-   yet, only to label the response. Extending `assemble_domain(chart,
-   domain, question=..., intent=...)` to trim its output per intent (a
-   `timing` question doesn't need everything an `explanation` question
-   needs) is config/taxonomy work, not a new service with its own
-   validation and fallback machinery. If an LLM-driven planner is ever
+   yet, only to label the response.~~ **DONE, 2026-08-18 — see "Update
+   2026-08-18" below.** `assemble_domain` now takes `intent=...` and trims
+   per-planet decorative texture for a scoped set of intents. Deliberately
+   a first increment, not the full target below: no top-level section
+   (`timeline`, `gochara`, `retrospect`) is dropped by intent yet — only
+   `_planet_brief`'s texture is. If an LLM-driven planner is ever
    warranted beyond that, its output must be schema-validated with a
    deterministic fallback to the full taxonomy-defined bundle on failure —
    never trusted un-checked, per the kept principle above. Target signature:
@@ -1828,3 +1829,192 @@ test was added, and the reviewer's "1616 passed + 1 failed" is that same 1617
 with the flaky one red. The file now carries an autouse fixture that fails any
 test reaching the provider layer, so the failure class is un-writable here
 rather than merely fixed.
+
+## Update 2026-08-18: Payload/latency review — one root cause, four moves
+
+A user report ("Ask took almost a minute") plus a growing KB (career alone
+picked up 24 new reference entries this session, on top of two prior
+`kb_limit` raises — 12→30→50) prompted a second-agent review of why Ask's
+payload and latency keep needing more tuning instead of settling. Its
+diagnosis, independently verified against the code rather than taken on
+trust: **one decision — `assemble_domain()` eagerly materializes an entire
+domain's context before the model has reasoned about the question at all —
+explains both symptoms.** Confirmed directly: every structural section
+(`houses`, `karakas`, `vargas`, `yogas`, `doshas`, `jaimini_karakas`,
+`dasha_relevance`, `gochara`, `timeline`, `retrospect`) computed
+unconditionally regardless of question shape; only `references`/
+`source_passages` narrowed via subdomain match. `kb_limit`'s history really
+is 12→30→50 across two prior commits, both raises forced by KB growth, not
+demand shaping. `MAX_HISTORY=12×8000` chars is real.
+
+Four moves came out of the review, given a priority order below.
+
+### A — Context Planner, first increment. SHIPPED 2026-08-18.
+
+Item 4 above, "make `assemble_domain` intent-aware," was a named, unbuilt
+gap — this closes the first slice of it. `assemble_domain(chart, domain,
+..., intent=...)` now trims `_planet_brief`'s decorative texture
+(`nakshatra_detail`, `d60_sign`, `d60_deity`, `dhatu`, `rasa`, `varna`) for
+`timing`, `daily_guidance`, and `comparison` intents — roughly 20% off a
+career bundle's serialized size in the measured case. `intent=None` (every
+existing caller, until the orchestrator opts in) is byte-identical to
+pre-change output — purely additive. `explanation`, `suitability`,
+`remedy`, and `general_guidance` keep full texture: for `explanation`
+specifically, nakshatra deity/symbol content *is* the answer, so trimming
+it there would be exactly backwards.
+
+**Deliberately conservative, and this is the load-bearing design decision
+of the whole change:** no top-level bundle section (`timeline`, `gochara`,
+`retrospect`) is ever dropped by intent in this pass — only per-planet
+texture inside `houses`/`karakas`/`jaimini_karakas` shrinks.
+`_assert_bundle_completeness()` (`astrospace/context/assembler.py`) asserts
+every section name `TechnicalBasisItem.source`'s docstring lists as a valid
+citation target is present regardless of intent. The reason this matters
+more than it looks: today the bundle is always full, so `verify()` only
+ever has to catch *over*-claiming (a citation to something absent).
+Dropping a whole section makes *under*-provisioning possible, and no
+existing check can see that failure mode — a model citing `gochara`
+sections for a domain that stopped computing them would look identical to
+a healthy citation until a human happened to notice the reading was thin.
+Section-level dropping is real and worth doing, but it is a separately
+reviewed follow-up on top of this, not bundled with it.
+
+Wired end-to-end: `RoutingResult.intent` (already computed by
+`detect_intent()`) now flows through `AskOrchestrator.assemble_context()`
+into `assemble_domain()`, confirmed by a live orchestrator test, not just a
+unit test against the assembler directly. Tests: `TestIntentAwareTrimming`
+in `tests/test_context_engine.py` (assembler-level, 8 cases including the
+completeness invariant across all 8 intents), plus two orchestrator-level
+wiring tests in `tests/test_domain_agent.py`.
+
+### B — Split the immutable half from the time-varying half. DESIGN ONLY, NOT BUILT.
+
+Not previously in this doc. A natal chart is immutable — `houses`,
+`karakas`, `vargas`, `yogas`, `doshas`, `jaimini`, `d60_*`,
+`vimshopaka_bala`, `shayanadi` never change for a given kundli, yet every
+Ask request recomputes all of it from Swiss Ephemeris. Only `gochara`,
+`dasha_relevance`'s current-period slice, `timeline`, and `retrospect`
+depend on `as_of`, and those move at daily granularity, not per-request.
+
+Proposed three-layer split:
+- `natal_core` — computed once at kundli creation, persisted, versioned by
+  engine version. Same invalidation discipline this codebase already uses
+  for KB catalog tables (`python -m astrospace.db.seed`, re-run on engine
+  change, never hand-edited).
+- `temporal_layer` — computed once per `(kundli_id, date)`.
+- `question_layer` — assembled per request: `references`, subdomain match,
+  profile ledger, life context. The only thing that still needs to be
+  cheap-and-fresh every turn.
+
+Payoff, if built: removes the gochara walk from the request path entirely
+for a warm kundli; makes the prompt prefix byte-identical for 24 hours
+across every question the same reader asks, which is what actually makes
+prompt caching hit (`as_of` at microsecond precision today guarantees a
+cache miss on every single request); and gives Ask a real cache key —
+`(kundli_id, engine_version, date, domain, intent)`.
+
+**Why this is design-only for now, not a branch:** it needs a Supabase
+migration and a new persistence layer, both categories this session
+already treats with extra caution — a same-day PR (#74, commercial
+entitlement foundation) was explicitly held back from merge specifically
+because it touched a migration and self-flagged needing backend/security
+review, per `AGENTS.md` Rule 5 ("Database schema/migration-shaped changes"
+always need PR + review from the relevant owner, never green-CI-only). B
+gets the identical treatment: a draft schema and invalidation plan belong
+in this doc and a draft PR, not applied to the database in the same pass
+as A.
+
+Draft shape for review (not final, not applied):
+
+```sql
+-- natal_core: one row per kundli, immutable once written.
+create table natal_core (
+    kundli_id uuid primary key references kundlis(id),
+    engine_version text not null,
+    houses jsonb not null,
+    karakas jsonb not null,
+    jaimini_karakas jsonb not null,
+    jaimini_karaka_array jsonb not null,
+    vargas jsonb not null,
+    computed_at timestamptz not null default now()
+);
+
+-- temporal_layer: one row per (kundli, date), append-mostly.
+create table temporal_layer (
+    kundli_id uuid not null references kundlis(id),
+    as_of_date date not null,
+    engine_version text not null,
+    gochara jsonb not null,
+    dasha_relevance jsonb not null,
+    timeline jsonb not null,
+    retrospect jsonb not null,
+    computed_at timestamptz not null default now(),
+    primary key (kundli_id, as_of_date)
+);
+```
+
+Invalidation discipline still to be worked out before this is buildable,
+not solved by the sketch above:
+- What actually constitutes an `engine_version` bump (a Swiss Ephemeris
+  version change is obvious; a bug fix to `vimshopaka.py`'s weights, which
+  this session's own history shows happens, is not obviously "the engine"
+  from a migration's point of view) needs a real definition, not an
+  assumption that it's rare.
+- Backfill/rebuild story for existing kundlis when the version does bump —
+  lazy-on-next-request vs. an eager batch job — is unscoped.
+- `temporal_layer` at daily granularity assumes nothing in `gochara`/
+  `dasha_relevance`/`timeline` needs finer resolution than a day. True today
+  (confirmed: `dasha_relevance` reads current mahadasha through pranadasha,
+  none of which turn over intraday), but this assumption should be stated
+  as a checked invariant somewhere the next person touching dasha timing
+  will actually see it, not left implicit in the migration.
+
+None of this ships until a reviewer signs off on the schema and the
+invalidation plan specifically — this section exists so that review has
+something concrete to react to.
+
+### C — Decompose generation. DESIGN ONLY, DEPENDENT ON B.
+
+Also not previously in this doc. `StructuredReading`'s five beats have
+different dependencies, cost, and risk: `acknowledgment` needs only the
+question (~30 words, no Opus needed); `technical_basis` extraction is
+mechanical against the bundle and is the bulk of output tokens (no Opus
+needed); `interpretation` needs full context and judgment (needs Opus);
+`guidance` depends on `interpretation` (borderline). All four currently
+serialize inside one generation, so wall clock is their sum. Proposed:
+fan out `technical_basis` extraction and `interpretation` concurrently
+against the same frozen bundle, then a short synthesis pass — wall clock
+becomes `max(branches) + synthesis`, and model tiering falls out for free
+(extraction doesn't need the expensive model).
+
+Two costs, not footnotes:
+- The existing "asking Dasha/Transit/Yoga/Career agents separately and
+  synthesizing prose" anti-pattern this doc already names is a real trap
+  this is adjacent to but distinct from — judgment stays in exactly one
+  place (`interpretation`); only mechanical evidence extraction forks off.
+- Consistency between `technical_basis` and `interpretation` is currently
+  free because one generation pass writes both. Forking them means
+  `verify_coverage` has to actively enforce that consistency instead of
+  getting it for free — a real addition to the verifier, not a footnote.
+- **New since the original review**: if `technical_basis` extraction moves
+  to a cheaper/faster model for the tiering payoff, the deterministic
+  verifier needs to be re-validated specifically against *that* model's
+  failure modes (what does a weaker model get wrong when asked to map a
+  claim to a bundle section?), not assumed to generalize from whatever was
+  true of Opus's failure modes.
+
+Sequenced after B on purpose: fanning out generation safely needs a bundle
+that's already frozen and cheap to hand to two branches at once, which is
+exactly what B's `question_layer` composition gives for free and what
+building C directly against today's `assemble_domain()` would have to
+solve from scratch.
+
+### D — Schema-constrained repair. Not started; cheap and orthogonal, no dependency on A/B/C.
+
+Two changes, neither built yet: (1) build the `deliver_reading` tool
+schema per request with `source` as a JSON-schema enum of the bundle's
+actual valid citation ids/section names, so an invalid citation becomes
+structurally impossible rather than something a full Opus generation is
+spent detecting after the fact; (2) repair the failing field only, not the
+whole object, on a verifier violation. Low risk, no schema, no fan-out —
+can land whenever, independent of the other three.
