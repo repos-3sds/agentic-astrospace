@@ -1293,14 +1293,15 @@ today:
      mechanism — this is the project re-applying a lesson it already
      learned once, not a novel gap.
 4. **Make `assemble_domain` intent-aware — this *is* the Context Planner
-   from Phase 3/the graph above, not a new component.** `detect_intent()`
+   from Phase 3/the graph above, not a new component.** ~~`detect_intent()`
    already runs server-side and is already threaded through
    `PreparedRun.intent`; it just isn't used to shape what gets assembled
-   yet, only to label the response. Extending `assemble_domain(chart,
-   domain, question=..., intent=...)` to trim its output per intent (a
-   `timing` question doesn't need everything an `explanation` question
-   needs) is config/taxonomy work, not a new service with its own
-   validation and fallback machinery. If an LLM-driven planner is ever
+   yet, only to label the response.~~ **DONE, 2026-08-18 — see "Update
+   2026-08-18" below.** `assemble_domain` now takes `intent=...` and trims
+   per-planet decorative texture for a scoped set of intents. Deliberately
+   a first increment, not the full target below: no top-level section
+   (`timeline`, `gochara`, `retrospect`) is dropped by intent yet — only
+   `_planet_brief`'s texture is. If an LLM-driven planner is ever
    warranted beyond that, its output must be schema-validated with a
    deterministic fallback to the full taxonomy-defined bundle on failure —
    never trusted un-checked, per the kept principle above. Target signature:
@@ -1972,11 +1973,10 @@ the bundle is trimmed per intent, **under**-provisioning becomes possible and no
 check in this system can see it. Trimming and a bundle-completeness assertion
 ship together, or grounding regresses with a green suite.
 
-**Ownership: taken by the human maintainer, 2026-08-17.** Scoped as a function-
-signature change across `astrospace/agents/*` and `astrospace/context/assembler.py`,
-no schema and no migration. Not to be started independently by an agent session
-— flagged here because collision on `assemble_domain()` is exactly the live-edit
-failure this file has already recorded once.
+**Ownership: taken by the human maintainer, 2026-08-17. Shipped 2026-08-18
+(PR #76).** Scoped as a function-signature change across
+`astrospace/agents/*` and `astrospace/context/assembler.py`, no schema and
+no migration — see the sequencing table below for what actually landed.
 
 ### Part B: layer the bundle by what actually varies — NOT STARTED, blocked pending its own PR
 
@@ -2093,12 +2093,12 @@ input tokens — measured at +1,188 B (career), +1,836 B (wealth), +780 B
 repair round trip costing an entire second reading. It is a latency win, not a
 payload win, and should not be counted as one.
 
-**Still open:** where repair is genuinely needed, repair the failing field rather
-than the whole object. A tense violation in `interpretation` should not
-regenerate `technical_basis`. Deliberately not done in the same change — it
-touches `AskOrchestrator._agent_run_and_verify()`, and Part A is concurrently
-editing `orchestrator.py`/`assembler.py`; splitting it avoids a live-edit
-collision of exactly the kind this file has already recorded once.
+**Still open (D2):** where repair is genuinely needed, repair the failing
+field rather than the whole object. A tense violation in `interpretation`
+should not regenerate `technical_basis`. Deliberately not done in the same
+change as D's enum — it touches `AskOrchestrator._agent_run_and_verify()`,
+which A was concurrently editing at the time; A has since shipped (PR #76,
+2026-08-18), so D2 is no longer collision-blocked, just not yet started.
 
 ### ADR-001 reaffirmed, with a second independent reason
 
@@ -2126,11 +2126,31 @@ budget and it is already decided.
 
 | part | what | status | owner |
 |---|---|---|---|
-| A | Context Planner / intent-aware `assemble_domain` | **next** | human maintainer, taken 2026-08-17 |
+| A | Context Planner / intent-aware `assemble_domain` | **shipped 2026-08-18** (PR #76) | Claude |
 | D | per-request `source` enum | **shipped 2026-08-18** | Claude |
-| D2 | field-level repair (not whole-object) | open — deferred off A's files | unassigned |
-| B | `natal_core` / `temporal_layer` / `question_layer` | **blocked** — needs its own reviewed PR (Rule 5, migration-shaped) | unassigned |
+| D2 | field-level repair (not whole-object) | open — no longer blocked, A has landed | unassigned |
+| B | `natal_core` / `temporal_layer` / `question_layer` | **blocked** — needs its own reviewed PR (Rule 5, migration-shaped); draft schema recorded, not applied | unassigned |
 | C | decompose generation, fan out extraction | **blocked** behind B | unassigned |
+
+**A, first increment, shipped 2026-08-18 (PR #76):** `assemble_domain(...,
+intent=...)` trims `_planet_brief`'s decorative texture (nakshatra deity/
+symbol detail, D-60 sign+deity, dhatu/rasa, varna) for `timing`/
+`daily_guidance`/`comparison` intents — ~20% off a career bundle's
+serialized size in the measured case. Deliberately conservative relative
+to the structural-floor number above: **no top-level section is dropped by
+intent in this pass** — only per-planet detail inside `houses`/`karakas`/
+`jaimini_karakas` shrinks, which is why this closes Item 4 but does not by
+itself close the 65–84% structural-floor gap this section measured. A
+bundle-completeness assertion (`_assert_bundle_completeness()` in
+`assembler.py`) ships in the same change, per the dependency this section
+already named — every section name `TechnicalBasisItem.source` can cite
+stays present regardless of intent, so under-provisioning stays
+impossible rather than merely unlikely. Wired end-to-end: `RoutingResult.
+intent` → `AskOrchestrator.assemble_context()` → `assemble_domain()`,
+confirmed by orchestrator-level tests, not just an assembler unit test.
+Section-level dropping (`timeline`/`gochara`/`retrospect` per intent, the
+rest of the 65–84% floor) is a real, larger follow-up — not bundled with
+this pass.
 
 The parameter-level fixes from the first pass — compact JSON instead of
 `indent=2` (−26% with no information loss), deduplicating repeated planet briefs

@@ -46,6 +46,7 @@ from ..core.vedic.vimshopaka import WEIGHTS as _VIMSHOPAKA_SCHEMES
 from ..core.vedic.vimshopaka import vimshopaka_bala
 from ..core.vedic.argala import argala_of_house
 from ..core.vedic.shashtyamsha import d60_deity
+from ..agents.schema import AskIntent
 from .kb import get_knowledge_base
 from .subdomain_match import match_subdomains
 from .taxonomy import DomainSpec, get_domain, taxonomy_version
@@ -58,6 +59,45 @@ _KARAKA_NAMES = {
     "MK": "Matrikaraka", "PK": "Putrakaraka", "PiK": "Pitrikaraka",
     "GK": "Gnatikaraka", "DK": "Darakaraka",
 }
+
+# Context Planner, part 1 (docs/ask_context_engine_multi_agent_architecture_
+# 2026-08-07.md, "Make assemble_domain intent-aware"). Intents in this set
+# get a compact per-planet brief: nakshatra deity/symbol texture and the
+# D-60 tie-breaker are dropped, since a timing/daily/comparison question
+# rarely cites them and they are the single biggest source of per-planet
+# bulk. Every other intent (explanation, suitability, remedy,
+# general_guidance) and intent=None (unknown / backward-compat) keep the
+# full brief — explanation in particular is where this texture IS the
+# content, so the default has to stay verbose, not compact.
+#
+# Deliberately conservative for this first pass: only the per-planet brief
+# is trimmed. No top-level bundle section (timeline, gochara, retrospect)
+# is ever dropped by intent — that is a larger, separately-reviewed change
+# because an under-provisioned section is invisible to the existing
+# verifier (which only catches over-claiming, never a missing citation
+# target). See _assert_bundle_completeness below.
+_COMPACT_PLANET_INTENTS: frozenset[AskIntent] = frozenset({
+    "timing", "daily_guidance", "comparison",
+})
+
+# Sourced from astrospace.agents.verifier's own `_BUNDLE_SECTION_NAMES` —
+# NOT a second hardcoded copy. An earlier draft of this constant duplicated
+# that set by hand and immediately went stale: the verifier separately
+# grew `retrospect`/`timeline`/`profile_context` (real bundle sections the
+# domain agent's prompt already tells the model to cite) while this copy
+# stayed at 10 entries, silently under-checking exactly the thing this
+# assertion exists to catch. Two independently-maintained copies of "what
+# can a citation legally name" is the same failure mode
+# `verifier.valid_sources()`'s own docstring warns against for the
+# generation side — the fix here is the same one: one set, not two.
+def _assert_bundle_completeness(bundle: dict) -> None:
+    from ..agents.verifier import _BUNDLE_SECTION_NAMES
+    missing = _BUNDLE_SECTION_NAMES - bundle.keys()
+    assert not missing, (
+        f"assemble_domain dropped section(s) the verifier can cite by name: "
+        f"{sorted(missing)} — intent-based trimming may shrink a section's "
+        "contents but must never remove the section itself."
+    )
 
 
 def _jd_from_dt(dt: datetime) -> float:
@@ -226,7 +266,17 @@ def _retrospect(chart, as_of: datetime) -> dict:
 
 def _planet_brief(planet: str, positions: dict, lagna_sign: int,
                   dignities: dict, vimshopaka_scores: dict | None = None,
-                  shayanadi_avasthas: dict | None = None) -> dict:
+                  shayanadi_avasthas: dict | None = None,
+                  verbose: bool = True) -> dict:
+    """`verbose=False` drops the decorative texture (nakshatra deity/symbol
+    detail, D-60 sign+deity, dhatu/rasa, varna) that an intent like timing
+    or comparison rarely cites — see `_COMPACT_PLANET_INTENTS`. Positional
+    facts (sign, house, degree, dignity, retrograde, combust) and the
+    load-bearing strength/state fields (vimshopaka_bala, shayanadi_avastha,
+    dignity_reasoning) are never gated: those are exactly the kind of field
+    a citation or a downstream judgement can depend on, so cutting them
+    would risk the silent under-provisioning `_assert_bundle_completeness`
+    cannot see."""
     lon = positions[planet]["lon"]
     s = sign_index(lon)
     nak = nakshatra_of(lon)
@@ -238,31 +288,32 @@ def _planet_brief(planet: str, positions: dict, lagna_sign: int,
         "degree_in_sign": round(degree_in_sign(lon), 2),
         "house": house_from_lagna(s, lagna_sign),
         "nakshatra": nak["name"],
-        # The nakshatra's own classical attributes, so the agent can ground a
-        # reading in them instead of recalling them from training data with no
-        # bundle field to cite. Bare facts only — deity, symbol, lord and the
-        # three temperament axes; no interpretive prose (see
-        # constants.NAKSHATRA_DEITY). `pada` matters interpretively in its own
-        # right: it selects the navamsa the placement matures into.
-        "nakshatra_detail": {**nakshatra_traits(nak["index"]), "pada": nak["pada"]},
         "dignity": dignity.get("dignity"),
         "retrograde": bool(positions[planet].get("retrograde")),
         "combust": bool(combust.get("active")),
+    }
+    if verbose:
+        # The nakshatra's own classical attributes, so the agent can ground a
+        # reading in them instead of recalling them from training data with
+        # no bundle field to cite. Bare facts only — deity, symbol, lord and
+        # the three temperament axes; no interpretive prose (see
+        # constants.NAKSHATRA_DEITY). `pada` matters interpretively in its
+        # own right: it selects the navamsa the placement matures into.
+        brief["nakshatra_detail"] = {**nakshatra_traits(nak["index"]), "pada": nak["pada"]}
         # Shashtyamsha (D-60) sign — the finest-grained classical division,
         # cited as the tie-breaker for an otherwise-ambiguous placement.
         # Deity-per-division is a separate, not-yet-implemented layer (see
         # docs/context_engine_taxonomy.md's ground-truth section) — only the
         # sign itself, which vargas.d60() already computes correctly, is
         # exposed here.
-        "d60_sign": sign_name(varga_sign("D60", lon)),
+        brief["d60_sign"] = sign_name(varga_sign("D60", lon))
         # D-60 ruling deity + benefic/malefic nature — cross-checked
         # against two independent secondary sources agreeing on all 60
         # names (see core/vedic/shashtyamsha.py's module docstring); a
         # third source that diverged from ~division 48 onward was
         # excluded as unreliable. Still convention_dependent: no primary
         # BPHS verse was located, only secondary-source agreement.
-        "d60_deity": d60_deity(lon),
-    }
+        brief["d60_deity"] = d60_deity(lon)
     if vimshopaka_scores and planet in vimshopaka_scores:
         # Precise 0-20 float strength per scheme, replacing what used to be
         # a bare "is this planet in its own/exaltation sign" boolean hint —
@@ -289,7 +340,7 @@ def _planet_brief(planet: str, positions: dict, lagna_sign: int,
     # planet, not chart-position-dependent, so every planet either has both
     # or neither (Rahu/Ketu genuinely have neither — see PLANET_DHATU's
     # docstring) rather than a partial entry.
-    if planet in PLANET_DHATU:
+    if verbose and planet in PLANET_DHATU:
         brief["dhatu"] = PLANET_DHATU[planet]
         brief["rasa"] = PLANET_RASA[planet]
     # Naisargika (natural) planetary varna — a static per-graha attribute,
@@ -298,7 +349,7 @@ def _planet_brief(planet: str, positions: dict, lagna_sign: int,
     # Cross-checked against multiple independent sources for the 7
     # classical grahas; Rahu/Ketu's varna is a real but less universally
     # fixed extension across traditions (see constants.py's docstring).
-    if planet in PLANET_VARNA:
+    if verbose and planet in PLANET_VARNA:
         brief["varna"] = PLANET_VARNA[planet]
     # The reasoning behind `dignity`, not just the label — only present when
     # dignity actually came from a dispositor relationship (Exalted/
@@ -318,7 +369,8 @@ def _planet_brief(planet: str, positions: dict, lagna_sign: int,
 def _house_analysis(house: int, lagna_sign: int, positions: dict,
                     dignities: dict, tier: str,
                     vimshopaka_scores: dict | None = None,
-                    shayanadi_avasthas: dict | None = None) -> dict:
+                    shayanadi_avasthas: dict | None = None,
+                    verbose: bool = True) -> dict:
     house_sign = (lagna_sign + house - 1) % 12
     lord = SIGN_LORDS[house_sign]
     occupants = [
@@ -326,7 +378,7 @@ def _house_analysis(house: int, lagna_sign: int, positions: dict,
         if house_from_lagna(sign_index(data["lon"]), lagna_sign) == house
     ]
     lord_brief = _planet_brief(lord, positions, lagna_sign, dignities,
-                                vimshopaka_scores, shayanadi_avasthas)
+                                vimshopaka_scores, shayanadi_avasthas, verbose)
     return {
         "house": house,
         "tier": tier,
@@ -528,9 +580,16 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
                     as_of: datetime | None = None,
                     kb_limit: int = 50,
                     question: str | None = None,
+                    intent: AskIntent | None = None,
                     validation_probes: list[dict] | None = None,
                     profile_context: dict | None = None) -> dict:
     """Domain-scoped context for one domain. `chart` is a VedicChart.
+
+    `intent` is the Context Planner's first increment (see
+    `_COMPACT_PLANET_INTENTS` above): for a handful of intents, per-planet
+    briefs drop their decorative texture. `intent=None` (the default) keeps
+    today's full-verbosity behavior — this is purely additive, no existing
+    caller's output changes unless it opts in.
 
     `validation_probes` are this reader's answered validation turns (see
     context/validation.py). They are the one input here that is NOT derived
@@ -569,18 +628,19 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
     # keys, which _planet_brief's `planet in shayanadi_avasthas` guard
     # already handles by simply omitting the field.
     shayanadi_avasthas = chart.shayanadi_avasthas()
+    verbose_planets = intent not in _COMPACT_PLANET_INTENTS
 
     houses = [
         _house_analysis(h, lagna_sign, positions, dignities,
                         "primary" if h in spec.houses_primary else "secondary",
-                        vimshopaka_scores, shayanadi_avasthas)
+                        vimshopaka_scores, shayanadi_avasthas, verbose_planets)
         for h in spec.all_houses
     ]
     domain_house_lords = {row["lord"] for row in houses}
 
     karakas = {
         planet: _planet_brief(planet, positions, lagna_sign, dignities,
-                              vimshopaka_scores, shayanadi_avasthas)
+                              vimshopaka_scores, shayanadi_avasthas, verbose_planets)
         for planet in spec.karakas_naisargika
     }
     chara_karakas_full = chart.jaimini()["chara_karakas"]["karakas"]
@@ -592,7 +652,7 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
                 jaimini_karakas[code] = {
                     "karaka": _KARAKA_NAMES.get(code, code),
                     **_planet_brief(row["planet"], positions, lagna_sign, dignities,
-                                     vimshopaka_scores, shayanadi_avasthas),
+                                     vimshopaka_scores, shayanadi_avasthas, verbose_planets),
                 }
 
     focus_planets = list(dict.fromkeys(
@@ -669,7 +729,7 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
         for code, row in chara_karakas_full.items()
     }
 
-    return {
+    bundle = {
         "domain": domain_id,
         "domain_name": spec.name,
         "tier": tier,
@@ -710,10 +770,13 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
         "convention_flags": list(spec.convention_flags),
         "exclusions": list(spec.exclusions),
     }
+    _assert_bundle_completeness(bundle)
+    return bundle
 
 
 def assemble(chart, domains: list[str], *, question: str | None = None,
-             include_gochara: bool = True, as_of: datetime | None = None) -> dict:
+             include_gochara: bool = True, as_of: datetime | None = None,
+             intent: AskIntent | None = None) -> dict:
     """Full ContextBundle for one or more domains (first = primary).
 
     Returns a JSON-serializable dict ready to be embedded in agent state.
@@ -733,6 +796,7 @@ def assemble(chart, domains: list[str], *, question: str | None = None,
             transit_positions=transit_positions,
             as_of=as_of,
             question=question,
+            intent=intent,
         ))
     lagna_sign = sign_index(chart.lagna_lon)
     moon_sign = sign_index(chart.positions["Moon"]["lon"])

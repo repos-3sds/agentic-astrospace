@@ -407,6 +407,114 @@ class TestAssembler:
                {r["ref_id"] for r in no_question["references"]}
 
 
+class TestIntentAwareTrimming:
+    """Part A of the Context Planner (docs/ask_context_engine_multi_agent_
+    architecture_2026-08-07.md, 'Make assemble_domain intent-aware').
+
+    Deliberately scoped narrow for this first pass: only the per-planet
+    brief shrinks (nakshatra deity/symbol texture, D-60 sign+deity, dhatu/
+    rasa, varna). No top-level section is ever dropped by intent — see
+    `_assert_bundle_completeness` in assembler.py for why that's a
+    separate, larger change."""
+
+    def test_no_intent_keeps_todays_full_behavior(self, chart):
+        """Backward compatibility is the whole point of defaulting
+        intent=None: every existing caller's output must be byte-identical
+        to before this change."""
+        fixed_as_of = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        no_intent = assemble_domain(chart, "career", include_gochara=False,
+                                    as_of=fixed_as_of)
+        explicit_none = assemble_domain(chart, "career", include_gochara=False,
+                                        as_of=fixed_as_of, intent=None)
+        assert no_intent == explicit_none
+        planet = next(iter(no_intent["karakas"]))
+        brief = no_intent["karakas"][planet]
+        assert "nakshatra_detail" in brief
+        assert "d60_sign" in brief
+        assert "d60_deity" in brief
+
+    def test_timing_intent_drops_decorative_planet_texture(self, chart):
+        compact = assemble_domain(chart, "career", include_gochara=False,
+                                  intent="timing")
+        planet = next(iter(compact["karakas"]))
+        brief = compact["karakas"][planet]
+        assert "nakshatra_detail" not in brief
+        assert "d60_sign" not in brief
+        assert "d60_deity" not in brief
+        assert "varna" not in brief
+        # Load-bearing fields survive trimming — these are exactly what a
+        # citation or a strength judgement can depend on, so they are never
+        # gated by intent, only the decorative texture is.
+        assert "dignity" in brief
+        assert "vimshopaka_bala" in brief
+        assert "sign" in brief
+        assert "house" in brief
+
+    def test_explanation_intent_keeps_full_texture(self, chart):
+        """The other side of the same coin: an explanation question is
+        exactly where nakshatra deity/symbol texture IS the content, so it
+        must not be trimmed just because *some* intent trims it."""
+        verbose = assemble_domain(chart, "career", include_gochara=False,
+                                  intent="explanation")
+        planet = next(iter(verbose["karakas"]))
+        brief = verbose["karakas"][planet]
+        assert "nakshatra_detail" in brief
+        assert "d60_sign" in brief
+        assert "d60_deity" in brief
+
+    def test_daily_guidance_and_comparison_also_compact(self, chart):
+        for intent in ("daily_guidance", "comparison"):
+            compact = assemble_domain(chart, "career", include_gochara=False,
+                                      intent=intent)
+            planet = next(iter(compact["karakas"]))
+            assert "nakshatra_detail" not in compact["karakas"][planet], intent
+
+    def test_house_lord_placement_also_compacts(self, chart):
+        """The trim has to reach house lord briefs too, not just the
+        karakas dict — `_house_analysis` embeds its own `_planet_brief`
+        call for `lord_placement`."""
+        compact = assemble_domain(chart, "career", include_gochara=False,
+                                  intent="timing")
+        tenth = next(row for row in compact["houses"] if row["house"] == 10)
+        assert "nakshatra_detail" not in tenth["lord_placement"]
+        assert "dignity" in tenth["lord_placement"]
+
+    def test_trimming_shrinks_serialized_payload(self, chart):
+        full = json.dumps(assemble_domain(chart, "career", include_gochara=False,
+                                          intent=None))
+        compact = json.dumps(assemble_domain(chart, "career", include_gochara=False,
+                                             intent="timing"))
+        assert len(compact) < len(full)
+
+    def test_no_top_level_section_is_ever_dropped_by_intent(self, chart):
+        """The completeness invariant this whole change stands on: whatever
+        intent trims per-planet detail, the section names a
+        TechnicalBasisItem.source can cite by name must always be present,
+        so a citation never points at a bundle field that quietly stopped
+        existing for this particular question.
+
+        Pulls the citable set from `verifier._BUNDLE_SECTION_NAMES` rather
+        than hardcoding a second copy — the same one `_assert_bundle_
+        completeness()` uses. A hand-copied set here already went stale
+        once (missed `retrospect`/`timeline`/`profile_context` when the
+        verifier grew them), so this test would have kept passing against
+        a completeness check that was itself under-checking."""
+        from astrospace.agents.verifier import _BUNDLE_SECTION_NAMES
+        for intent in (None, "timing", "daily_guidance", "comparison",
+                       "explanation", "suitability", "remedy",
+                       "general_guidance"):
+            bundle = assemble_domain(chart, "career", intent=intent)
+            missing = _BUNDLE_SECTION_NAMES - bundle.keys()
+            assert not missing, (intent, missing)
+
+    def test_multi_domain_assemble_threads_intent_through(self, chart):
+        from astrospace.context import assemble
+        result = assemble(chart, ["career"], include_gochara=False,
+                          intent="timing")
+        planet = next(iter(result["domains"][0]["karakas"]))
+        assert "nakshatra_detail" not in result["domains"][0]["karakas"][planet]
+
+
 class TestRouter:
     def test_career_question(self):
         decision = KeywordRouter().route("When will I get a promotion in my job?")
