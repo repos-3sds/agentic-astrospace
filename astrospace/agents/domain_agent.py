@@ -13,7 +13,8 @@ before it can answer.
 import json
 
 from .base import BaseAstroAgent
-from .schema import StructuredReading
+from .schema import StructuredReading, reading_tool_schema
+from .verifier import valid_sources
 
 # ── Registers ────────────────────────────────────────────────────────────────
 # The SAME verified bundle, spoken three ways. This is a voice switch, never a
@@ -387,4 +388,17 @@ class DomainReadingAgent(BaseAstroAgent):
         )
 
     def run_structured_reading(self, messages: list) -> StructuredReading:
-        return self.run_structured(messages, StructuredReading, tool_name="deliver_reading")
+        """The `source` field is constrained to this bundle's own citable
+        set, compiled from `verifier.valid_sources()` — the same function
+        `verify()` checks against afterwards, deliberately shared rather
+        than reimplemented. An invented citation used to cost a full repair
+        generation to detect; it is now unrepresentable in the tool call.
+
+        `verify()` still runs and still checks `source` membership: the enum
+        is a constraint, not a substitute for the check. A provider that
+        ignores it, or a future provider without enum support, degrades to
+        exactly the previous behaviour rather than to an unchecked one."""
+        return self.run_structured(
+            messages, StructuredReading, tool_name="deliver_reading",
+            input_schema=reading_tool_schema(valid_sources(self.bundle)),
+        )

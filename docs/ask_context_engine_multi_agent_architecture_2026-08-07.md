@@ -1892,14 +1892,29 @@ anyone currently has. That is the whole reason it has been retuned twice: it is
 the one number in reach, so it absorbs pressure that belongs elsewhere. Setting
 it to zero still leaves ~47,000 B.
 
-**The pressure is live, not historical.** 14 new career-domain reference
-entries were reported landing this session (Sharma BPHS cross-check + Brihat
-Jataka extraction). They are not in `main` as of this writing — the last commit
-touching `references.json` is `c7b6095` (2026-08-13, wealth), and this tree
-carries 15 career references — so the count above is pre-growth. Recorded as
-reported rather than measured, but the direction is not in doubt: every KB
-extraction pass makes Item 4 more urgent, not less, and the KB corpus work is
-nowhere near done.
+**The pressure is live, not historical — and it is now measured, in one day.**
+The table above was taken on a checkout that predated `#71` (Sharma BPHS
+cross-check of the career 10th house) and `#73` (Brihat Jataka Ch. X
+extraction). Both are now in `main`, and they took career from 15 references to
+29. Re-measuring the same chart, same question, against `main` after them:
+
+| domain | before (this session) | after `#71`+`#73` | delta |
+|---|---|---|---|
+| **career** | 59,186 B | **69,608 B** | **+10,422 B (+17.6%)** |
+| wealth | 72,355 B | 72,354 B | — |
+| marriage | 54,030 B | 54,016 B | — |
+| health | 61,950 B | 61,961 B | — |
+
+Career's `references` block alone went 8,687 B → 18,618 B. **One KB extraction
+pass, one day, +17.6% on every career Ask.** That is the reported symptom
+reproduced as a number rather than an impression, and it is the strongest single
+argument for Item 4: the KB corpus work is nowhere near done, so this recurs on
+every extraction pass, and `kb_limit` is the only thing currently standing
+between it and the prompt.
+
+Note what the other three rows show: they did not move. Growth is per-domain and
+arrives in steps, which is exactly why it reads as "bulkier day by day" rather
+than as a single regression anyone would have caught.
 
 ### Where the latency actually is
 
@@ -2038,7 +2053,7 @@ Three caveats, all load-bearing:
 Depends on B's frozen, materialized bundle to fan out safely, so it is last
 regardless.
 
-### Part D: build the tool schema per request — free to pick up, no dependency
+### Part D: build the tool schema per request — SOURCE ENUM SHIPPED 2026-08-18; field-level repair still open
 
 `TechnicalBasisItem.source` is a free-form string validated after the fact, and
 an invalid citation costs a full second generation through the repair path. The
@@ -2054,9 +2069,36 @@ not a checker, so it does not touch the "the checker must not be the same
 generation context grading itself" principle; the deterministic verifier stays
 exactly as it is, behind it.
 
-Where repair is still needed, repair the failing field rather than the whole
-object. A tense violation in `interpretation` should not regenerate
-`technical_basis`.
+**Shipped 2026-08-18.** `schema.reading_tool_schema()` compiles the allowed set
+into the tool's `source` enum, and `DomainReadingAgent.run_structured_reading()`
+passes it per request through `BaseAstroAgent.run_structured(input_schema=...)`
+(both providers). The one design decision worth keeping on record: the enum is
+built from `verifier.valid_sources()` — the same function `verify()` checks
+against, made public rather than reimplemented. **Never fork a second copy of
+that logic for the schema.** A constraint that disagrees with its own checker
+fails silently in whichever direction is looser, which is strictly worse than no
+constraint; `tests/test_domain_agent.py::TestSourceEnumMatchesTheVerifier::test_enum_and_verifier_cannot_drift`
+exists to fail if anyone re-derives it.
+
+`verify()` is unchanged and still checks `source` membership. A provider that
+ignores the enum, or a future provider without enum support, degrades to exactly
+the previous behaviour rather than to an unchecked one — validation stays on the
+general Pydantic model, so an off-enum value still parses and is caught by the
+verifier instead of crashing the parse.
+
+Honest accounting, since this document is otherwise about shrinking the payload:
+the enum restates reference ids already present in the bundle, so it **adds**
+input tokens — measured at +1,188 B (career), +1,836 B (wealth), +780 B
+(marriage), i.e. 1.4-2.5% of the bundle. That is a deliberate trade against a
+repair round trip costing an entire second reading. It is a latency win, not a
+payload win, and should not be counted as one.
+
+**Still open:** where repair is genuinely needed, repair the failing field rather
+than the whole object. A tense violation in `interpretation` should not
+regenerate `technical_basis`. Deliberately not done in the same change — it
+touches `AskOrchestrator._agent_run_and_verify()`, and Part A is concurrently
+editing `orchestrator.py`/`assembler.py`; splitting it avoids a live-edit
+collision of exactly the kind this file has already recorded once.
 
 ### ADR-001 reaffirmed, with a second independent reason
 
@@ -2085,7 +2127,8 @@ budget and it is already decided.
 | part | what | status | owner |
 |---|---|---|---|
 | A | Context Planner / intent-aware `assemble_domain` | **next** | human maintainer, taken 2026-08-17 |
-| D | per-request `source` enum; field-level repair | free to start, no dependency | unassigned |
+| D | per-request `source` enum | **shipped 2026-08-18** | Claude |
+| D2 | field-level repair (not whole-object) | open — deferred off A's files | unassigned |
 | B | `natal_core` / `temporal_layer` / `question_layer` | **blocked** — needs its own reviewed PR (Rule 5, migration-shaped) | unassigned |
 | C | decompose generation, fan out extraction | **blocked** behind B | unassigned |
 
