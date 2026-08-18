@@ -51,3 +51,44 @@ class StructuredReading(BaseModel):
     summary_and_assurance: str = Field(description="A short, grounding close — not a fixed sentence, the constructive angle.")
     guidance: Guidance
     confidence: Literal["high", "medium", "low"]
+
+
+def reading_tool_schema(allowed_sources: set[str]) -> dict:
+    """`StructuredReading`'s JSON Schema with `technical_basis[].source`
+    narrowed to an enum of exactly the sources this request's bundle can
+    support.
+
+    The point is to move the most common failure class from *detected* to
+    *impossible*. Before this, `source` was a free-form string, and an
+    invented citation was caught only after generation — by
+    `verifier.valid_sources()` — which cost a full second generation through
+    `AskOrchestrator._agent_run_and_verify()`'s repair path. An enum in the
+    tool definition makes the model unable to emit one in the first place.
+
+    Two properties this depends on, both load-bearing:
+
+    - `allowed_sources` MUST come from `verifier.valid_sources()`, never be
+      re-derived here. A constraint that disagrees with its own checker is
+      worse than no constraint: whichever side is looser wins silently.
+    - The bundle is fixed and known before generation (ADR-001's kept
+      property — the agent has no tools and fetches no context of its own),
+      which is the only reason the valid set is computable up front at all.
+      This reinforces that decision rather than eroding it.
+
+    This is a decoding constraint, not a checker, so it does not touch the
+    "the checker must not be the same generation context grading itself"
+    principle — `verify()` still runs afterwards, unchanged, and still
+    rejects an out-of-set source if a provider ever ignores the enum.
+
+    Honest cost: the enum restates every reference/passage id already
+    present in the bundle, so it *adds* input tokens (measured at ~1.2 KB
+    on a career bundle). That is a deliberate trade against a repair round
+    trip that costs an entire second reading — it is a latency win, not a
+    payload win, and should not be mistaken for one.
+    """
+    schema = StructuredReading.model_json_schema()
+    source = schema["$defs"]["TechnicalBasisItem"]["properties"]["source"]
+    # Sorted for a stable, cacheable schema — an unordered set would produce
+    # a different tool definition on every request for the same bundle.
+    source["enum"] = sorted(allowed_sources)
+    return schema
