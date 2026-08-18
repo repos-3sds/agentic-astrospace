@@ -776,3 +776,115 @@ class TestAskStreamRoute:
                 "thread_id": thread_id,
             })
         assert self._frames(second)[-1]["domain"] == "marriage"
+
+
+class TestSourceEnumMatchesTheVerifier:
+    """Part D: `technical_basis[].source` is constrained in the tool schema
+    to exactly what the verifier will accept, so an invented citation is
+    unrepresentable rather than merely detectable.
+
+    The load-bearing property is not "there is an enum" — it is that the
+    enum and `verify()` are the SAME set. A constraint that disagrees with
+    its checker fails silently in whichever direction is looser, so the
+    drift test below matters more than the presence test."""
+
+    def test_tool_schema_constrains_source_to_the_bundles_own_sources(self, chart):
+        from astrospace.agents.schema import reading_tool_schema
+        from astrospace.agents.verifier import valid_sources
+
+        bundle = assemble_domain(chart, "career")
+        schema = reading_tool_schema(valid_sources(bundle))
+        enum = schema["$defs"]["TechnicalBasisItem"]["properties"]["source"]["enum"]
+
+        assert enum == sorted(valid_sources(bundle))
+        assert "houses" in enum
+        # Request-specific, not a static list: this bundle's real reference
+        # ids are in it, and a plausible-looking invention is not.
+        ref_ids = [r["ref_id"] for r in bundle["references"]]
+        assert ref_ids, "career bundle should carry references"
+        assert all(ref_id in enum for ref_id in ref_ids)
+        assert "bphs_10th_house_totally_made_up" not in enum
+
+    def test_enum_and_verifier_cannot_drift(self, chart):
+        """Every value the schema permits must survive `verify()`, and a
+        value it forbids must not. This is the test that fails if someone
+        later re-derives the allowed set in one place and not the other."""
+        from astrospace.agents.schema import reading_tool_schema
+        from astrospace.agents.verifier import valid_sources, verify
+
+        bundle = assemble_domain(chart, "career")
+        enum = reading_tool_schema(valid_sources(bundle))["$defs"][
+            "TechnicalBasisItem"]["properties"]["source"]["enum"]
+
+        for source in enum:
+            violations = verify(_good_reading(source=source), bundle, "career", "future")
+            assert not [v for v in violations if "does not resolve" in v], (
+                f"schema permits {source!r} but the verifier rejects it"
+            )
+
+        rejected = verify(_good_reading(source="not_in_the_bundle_at_all"),
+                          bundle, "career", "future")
+        assert [v for v in rejected if "does not resolve" in v], (
+            "a source outside the enum must still be rejected by the verifier"
+        )
+
+    def test_the_narrowed_schema_reaches_the_provider(self, chart):
+        from anthropic.types import Message, ToolUseBlock, Usage
+        from astrospace.agents.verifier import valid_sources
+
+        bundle = assemble_domain(chart, "career")
+        agent = DomainReadingAgent(bundle, AGENT_REGISTRY["career"].domain_addendum)
+        fake_response = Message(
+            id="msg_test", type="message", role="assistant", model=agent.model,
+            content=[ToolUseBlock(type="tool_use", id="toolu_1", name="deliver_reading",
+                                  input=_good_reading().model_dump())],
+            stop_reason="tool_use", stop_sequence=None,
+            usage=Usage(input_tokens=10, output_tokens=5),
+        )
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = fake_response
+        agent.client = mock_client
+        agent.provider = "anthropic"
+
+        agent.run_structured_reading([{"role": "user", "content": "hi"}])
+        _, kwargs = mock_client.messages.create.call_args
+        sent = kwargs["tools"][0]["input_schema"]
+        assert sent["$defs"]["TechnicalBasisItem"]["properties"]["source"]["enum"] == sorted(
+            valid_sources(bundle)
+        )
+
+    def test_a_provider_ignoring_the_enum_still_parses_and_is_caught_downstream(self, chart):
+        """The enum is a constraint, not a replacement for the check. If a
+        provider ignores it, validation must still succeed (the Pydantic
+        model is unchanged) so the verifier — not a parse crash — is what
+        rejects the citation.
+
+        Note for whoever reads this next: unlike the three tests above,
+        this one passes with or without the enum, deliberately. It pins the
+        DEGRADATION path, not the constraint — it is a characterization
+        test, not a regression pin, and it going green proves nothing about
+        whether the enum is still wired up. The other three cover that (all
+        three go red if the enum is gutted or forked; verified by reverting
+        each and re-running)."""
+        from anthropic.types import Message, ToolUseBlock, Usage
+        from astrospace.agents.verifier import verify
+
+        bundle = assemble_domain(chart, "career")
+        agent = DomainReadingAgent(bundle, AGENT_REGISTRY["career"].domain_addendum)
+        off_enum = _good_reading(source="an_id_the_enum_never_offered").model_dump()
+        fake_response = Message(
+            id="msg_test", type="message", role="assistant", model=agent.model,
+            content=[ToolUseBlock(type="tool_use", id="toolu_1", name="deliver_reading",
+                                  input=off_enum)],
+            stop_reason="tool_use", stop_sequence=None,
+            usage=Usage(input_tokens=10, output_tokens=5),
+        )
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = fake_response
+        agent.client = mock_client
+        agent.provider = "anthropic"
+
+        reading = agent.run_structured_reading([{"role": "user", "content": "hi"}])
+        assert isinstance(reading, StructuredReading)
+        assert [v for v in verify(reading, bundle, "career", "future")
+                if "does not resolve" in v]

@@ -80,20 +80,19 @@ _COMPACT_PLANET_INTENTS: frozenset[AskIntent] = frozenset({
     "timing", "daily_guidance", "comparison",
 })
 
-# Section names TechnicalBasisItem.source's docstring lists as valid
-# citation targets (astrospace/agents/schema.py). Intent-based trimming
-# must never remove one of these keys entirely — only shrink what is
-# inside it — or a model citing "gochara" as its source for a domain that
-# still computes gochara would be citing a bundle field that silently
-# stopped existing, with no test or verifier positioned to catch it.
-_VERIFIER_CITABLE_SECTIONS = frozenset({
-    "houses", "karakas", "vargas", "yogas", "doshas", "dasha_relevance",
-    "gochara", "jaimini_karakas", "arudhas", "profile_facts",
-})
-
-
+# Sourced from astrospace.agents.verifier's own `_BUNDLE_SECTION_NAMES` —
+# NOT a second hardcoded copy. An earlier draft of this constant duplicated
+# that set by hand and immediately went stale: the verifier separately
+# grew `retrospect`/`timeline`/`profile_context` (real bundle sections the
+# domain agent's prompt already tells the model to cite) while this copy
+# stayed at 10 entries, silently under-checking exactly the thing this
+# assertion exists to catch. Two independently-maintained copies of "what
+# can a citation legally name" is the same failure mode
+# `verifier.valid_sources()`'s own docstring warns against for the
+# generation side — the fix here is the same one: one set, not two.
 def _assert_bundle_completeness(bundle: dict) -> None:
-    missing = _VERIFIER_CITABLE_SECTIONS - bundle.keys()
+    from ..agents.verifier import _BUNDLE_SECTION_NAMES
+    missing = _BUNDLE_SECTION_NAMES - bundle.keys()
     assert not missing, (
         f"assemble_domain dropped section(s) the verifier can cite by name: "
         f"{sorted(missing)} — intent-based trimming may shrink a section's "

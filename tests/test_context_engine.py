@@ -491,15 +491,20 @@ class TestIntentAwareTrimming:
         intent trims per-planet detail, the section names a
         TechnicalBasisItem.source can cite by name must always be present,
         so a citation never points at a bundle field that quietly stopped
-        existing for this particular question."""
-        citable = {"houses", "karakas", "vargas", "yogas", "doshas",
-                   "dasha_relevance", "gochara", "jaimini_karakas",
-                   "arudhas", "profile_facts"}
+        existing for this particular question.
+
+        Pulls the citable set from `verifier._BUNDLE_SECTION_NAMES` rather
+        than hardcoding a second copy — the same one `_assert_bundle_
+        completeness()` uses. A hand-copied set here already went stale
+        once (missed `retrospect`/`timeline`/`profile_context` when the
+        verifier grew them), so this test would have kept passing against
+        a completeness check that was itself under-checking."""
+        from astrospace.agents.verifier import _BUNDLE_SECTION_NAMES
         for intent in (None, "timing", "daily_guidance", "comparison",
                        "explanation", "suitability", "remedy",
                        "general_guidance"):
             bundle = assemble_domain(chart, "career", intent=intent)
-            missing = citable - bundle.keys()
+            missing = _BUNDLE_SECTION_NAMES - bundle.keys()
             assert not missing, (intent, missing)
 
     def test_multi_domain_assemble_threads_intent_through(self, chart):

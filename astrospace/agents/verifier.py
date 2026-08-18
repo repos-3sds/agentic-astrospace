@@ -116,7 +116,7 @@ def _tense_conflict(text: str, as_of_year: int, safe_years: set[int]) -> bool:
 # (not every claim traces to a citation — a house placement is itself
 # evidence) as long as that section actually exists in the bundle handed to
 # the agent. Citation-shaped sources are checked against the bundle's real
-# references/source_passages instead — see `_valid_sources`.
+# references/source_passages instead — see `valid_sources`.
 _BUNDLE_SECTION_NAMES = {
     "houses", "karakas", "vargas", "yogas", "doshas",
     "dasha_relevance", "gochara", "jaimini_karakas", "arudhas",
@@ -131,11 +131,20 @@ _BUNDLE_SECTION_NAMES = {
 }
 
 
-def _valid_sources(bundle: dict) -> set[str]:
+def valid_sources(bundle: dict) -> set[str]:
     """Every source a `technical_basis` item may cite — one deterministic
     evidence-resolution boundary shared by KB citations and Profile Context
     Ledger facts (docs/profile_context_ledger_architecture_2026-08-14.md's
     "Unified evidence resolution against the frozen request bundle").
+
+    Since 2026-08-18 the generation side consumes it too:
+    `astrospace/agents/schema.py`'s `reading_tool_schema()` compiles this
+    exact set into the tool's `source` enum, so the model cannot emit a
+    citation this function would then reject. Public rather than private
+    for that reason — one set, two consumers. Never fork a second copy of
+    this logic for the schema; a constraint that disagrees with its checker
+    is worse than no constraint, because it fails silently in whichever
+    direction is looser.
 
     `profile_fact:<id>@<revision>` refs are checked against the FROZEN
     bundle's own `profile_context.facts[].ref` values only — never a live
@@ -367,9 +376,9 @@ def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
             f"bundle domain {bundle.get('domain')!r} does not match routed domain {routed_domain!r}"
         )
 
-    valid_sources = _valid_sources(bundle)
+    allowed = valid_sources(bundle)
     for item in reading.technical_basis:
-        if item.source not in valid_sources:
+        if item.source not in allowed:
             violations.append(
                 f"technical_basis source {item.source!r} does not resolve to the bundle's "
                 "references, source_passages, or a known bundle section"
