@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -28,7 +29,9 @@ from astrospace.api.festival_routes import router as festival_router
 from astrospace.api.me_routes import router as me_router
 from astrospace.api.practice_routes import router as practice_router
 from astrospace.api.profile_context_routes import router as profile_context_router
+from astrospace.api.entitlement_routes import router as entitlement_router
 from astrospace.admin.audit_middleware import AppAuditMiddleware
+from astrospace.entitlements import EntitlementDenied
 
 app = FastAPI(
     title="AstroSpace",
@@ -83,6 +86,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.exception_handler(EntitlementDenied)
+async def entitlement_denied_handler(_request, exc: EntitlementDenied):
+    return JSONResponse(status_code=402, content=exc.decision.denial())
+
 # API routers
 app.include_router(core_router)
 app.include_router(auth_router)
@@ -101,6 +109,7 @@ app.include_router(festival_router)
 app.include_router(me_router)
 app.include_router(practice_router)
 app.include_router(profile_context_router)
+app.include_router(entitlement_router)
 
 # Registered before the "/" SPA mount — Starlette matches in registration
 # order, so anything defined after the mount is unreachable.

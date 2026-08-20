@@ -284,6 +284,159 @@ class UserProfile(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+# ── Commercial entitlement authority ─────────────────────────────────────────
+
+class BillingAccount(Base):
+    __tablename__ = "billing_accounts"
+    __table_args__ = (
+        UniqueConstraint("owner_user_id", "kind", name="billing_accounts_owner_kind_key"),
+        CheckConstraint("kind IN ('individual', 'family')", name="billing_accounts_kind_check"),
+    )
+
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
+    owner_user_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    kind: Mapped[str] = mapped_column(String, nullable=False, default="individual")
+    entitlement_revision: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+
+class SubscriptionGrant(Base):
+    __tablename__ = "subscription_grants"
+    __table_args__ = (
+        UniqueConstraint(
+            "provider", "provider_transaction_id",
+            name="subscription_grants_provider_transaction_key",
+        ),
+        CheckConstraint(
+            "state IN ('pending', 'active', 'grace', 'paused', 'expired', 'revoked')",
+            name="subscription_grants_state_check",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
+    billing_account_id: Mapped[str] = mapped_column(
+        _UuidString, ForeignKey("billing_accounts.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    provider: Mapped[str] = mapped_column(String, nullable=False)
+    provider_product_id: Mapped[str] = mapped_column(String, nullable=False)
+    provider_transaction_id: Mapped[str] = mapped_column(String, nullable=False)
+    state: Mapped[str] = mapped_column(String, nullable=False, default="pending")
+    starts_at: Mapped[datetime | None] = mapped_column(DateTime)
+    renews_at: Mapped[datetime | None] = mapped_column(DateTime)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime)
+    grace_ends_at: Mapped[datetime | None] = mapped_column(DateTime)
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime)
+    last_event_at: Mapped[datetime | None] = mapped_column(DateTime)
+    provider_reference_hash: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+
+class PlanAssignment(Base):
+    __tablename__ = "plan_assignments"
+    __table_args__ = (
+        UniqueConstraint(
+            "billing_account_id", "revision", name="plan_assignments_account_revision_key"
+        ),
+        CheckConstraint(
+            "access_tier IN ('free', 'plus', 'pro')",
+            name="plan_assignments_access_tier_check",
+        ),
+        CheckConstraint(
+            "account_topology IN ('individual', 'family')",
+            name="plan_assignments_topology_check",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
+    billing_account_id: Mapped[str] = mapped_column(
+        _UuidString, ForeignKey("billing_accounts.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    access_tier: Mapped[str] = mapped_column(String, nullable=False)
+    account_topology: Mapped[str] = mapped_column(String, nullable=False)
+    offer_code: Mapped[str | None] = mapped_column(String)
+    source_grant_id: Mapped[str | None] = mapped_column(
+        _UuidString, ForeignKey("subscription_grants.id", ondelete="SET NULL")
+    )
+    effective_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    ends_at: Mapped[datetime | None] = mapped_column(DateTime)
+    revision: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class EntitlementOverride(Base):
+    __tablename__ = "entitlement_overrides"
+    __table_args__ = (
+        UniqueConstraint(
+            "billing_account_id", "revision", name="entitlement_overrides_account_revision_key"
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
+    billing_account_id: Mapped[str] = mapped_column(
+        _UuidString, ForeignKey("billing_accounts.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    entitlement_key: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    value: Mapped[dict] = mapped_column(JSON, nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    actor_user_id: Mapped[str] = mapped_column(String, nullable=False)
+    revision: Mapped[int] = mapped_column(Integer, nullable=False)
+    effective_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class UsageBucket(Base):
+    __tablename__ = "usage_buckets"
+    __table_args__ = (
+        UniqueConstraint(
+            "billing_account_id", "scope_id", "entitlement_key", "period_id",
+            name="usage_buckets_scope_entitlement_period_key",
+        ),
+        CheckConstraint("reserved >= 0 AND consumed >= 0", name="usage_buckets_counts_check"),
+    )
+
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
+    billing_account_id: Mapped[str] = mapped_column(
+        _UuidString, ForeignKey("billing_accounts.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    scope_id: Mapped[str] = mapped_column(String, nullable=False, default="account")
+    entitlement_key: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    period_id: Mapped[str] = mapped_column(String, nullable=False)
+    period_start: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    period_end: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    reserved: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    consumed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+
+class EntitlementAuditEvent(Base):
+    __tablename__ = "entitlement_audit_events"
+
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
+    billing_account_id: Mapped[str | None] = mapped_column(
+        _UuidString, ForeignKey("billing_accounts.id", ondelete="SET NULL"), index=True
+    )
+    user_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    action: Mapped[str] = mapped_column(String, nullable=False)
+    entitlement_key: Mapped[str | None] = mapped_column(String)
+    detail: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
 class UserDevice(Base):
     __tablename__ = "user_devices"
     __table_args__ = (UniqueConstraint("user_id", "device_id", name="user_devices_user_id_device_id_key"),)
