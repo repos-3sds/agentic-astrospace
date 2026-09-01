@@ -460,12 +460,31 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   that actually consume Abhijit; neither exists here. This is the missing
   consumer that would give `abhijit.py` live value beyond description.
   *Hook:* `abhijit.py` is what either should read from.
-- [ ] **Karakamsha** — the sign the Atmakaraka occupies in D9. Real,
-  well-corroborated, and cheap: the engine already computes AK
-  (`jaimini.chara_karakas`) and D9 signs (`vargas.d9`) separately, so this
-  is a lookup, not a new calculation. Surfaced while auditing the career
-  KB, which used the non-existent term "Karakaksha" for it. *Hook:*
-  `jaimini.py`, alongside the existing `upapada`/`arudha_padas`.
+- [x] **Karakamsha** — **CLOSED 2026-09-01**. `jaimini.karakamsha()`:
+  Atmakaraka's D9 sign, who occupies it, and who occupies the 5th sign
+  from it, wired into `VedicChart.jaimini()` and exposed domain-
+  independently in the CE bundle (`bundle["karakamsha"]`, same reasoning
+  as `jaimini_karaka_array`). Motivated by a real question — "how would
+  the model predict a reader's inclination toward astrology without being
+  asked" — which turned up two grounded BPHS rules, cross-verified in both
+  Santhanam's and Sharma's independent translations: "Effects of
+  Karakamsha" (ch.33/35, shlokas 41-45 — Ketu or Rahu there names an
+  astrologer) and Matsya Yoga (ch.36/37 — a separate combination with the
+  same outcome, flagged `convention_dependent` for a genuine manuscript
+  disagreement). Both now in `references.json` under
+  career/`field_selection`. Also caught while fixing this: a real
+  pre-existing extraction gap — Phaladeepika's Mercury-navamsa sloka names
+  "a knowledge of astrology" explicitly, which the already-landed
+  `phal5_navamsa_tenth_lord_livelihood` reference had summarized away;
+  corrected in place. *Deferred, on purpose:* `spirituality` (taxonomy
+  subdomain `spiritual_inclination` already exists for exactly this) isn't
+  wired into `AGENT_REGISTRY` at all yet — no agent answers there
+  regardless of KB content. The Karakamsha computation and both BPHS
+  references are written generically enough to extend to that domain
+  once it's registered; this pass deliberately stayed career-only per the
+  scope agreed at the time. *Hook:* `jaimini.py`'s `karakamsha()`,
+  `assembler.py`'s `karakamsha_section`, `agents/registry.py` for the
+  eventual `spirituality` `AgentConfig`.
 - [ ] **Argala "contested" tiebreak** — `argala.py` reports `contested`
   when the argala and obstruction houses hold equal planet counts, and
   deliberately does not pick a winner. Sources say to compare relative

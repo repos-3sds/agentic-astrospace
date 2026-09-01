@@ -128,7 +128,32 @@ class TestAssembler:
                 assert isinstance(row["degree_in_sign"], float)
         # Domain-independent: the array itself doesn't vary by domain, only
         # which karaka(s) get full planet detail in jaimini_karakas does.
-        assert marriage_bundle["jaimini_karaka_array"] == career_bundle["jaimini_karaka_array"]
+
+    def test_karakamsha_is_domain_independent_and_matches_the_atmakaraka(self, chart):
+        """BPHS "Effects of Karakamsha" (Santhanam ch.33 / Sharma ch.35) —
+        same reasoning as the jaimini_karaka_array test above: this is a
+        chart-level Jaimini fact, not scoped to any one domain."""
+        marriage_bundle = assemble_domain(chart, "marriage", include_gochara=False)
+        career_bundle = assemble_domain(chart, "career", include_gochara=False)
+        for bundle in (marriage_bundle, career_bundle):
+            k = bundle["karakamsha"]
+            assert k["atmakaraka"] == bundle["jaimini_karaka_array"]["AK"]["planet"]
+            assert k["atmakaraka"] in k["occupants"]
+            assert isinstance(k["occupants"], list)
+            assert isinstance(k["fifth_occupants"], list)
+        assert marriage_bundle["karakamsha"] == career_bundle["karakamsha"]
+
+    def test_karakamsha_and_jaimini_karaka_array_are_citable_by_the_verifier(self, chart):
+        """A regression this needs to actually prevent: `jaimini_karaka_array`
+        has been a real bundle section since it was added but was missing
+        from the verifier's citable set until this change — a citation
+        naming it would have failed exactly like retrospect/timeline once
+        did. karakamsha is new and needs the same registration."""
+        from astrospace.agents.verifier import valid_sources
+        bundle = assemble_domain(chart, "career", include_gochara=False)
+        allowed = valid_sources(bundle)
+        assert "karakamsha" in allowed
+        assert "jaimini_karaka_array" in allowed
 
     def test_full_jaimini_karaka_array_uses_the_real_eight_karaka_scheme(self, chart):
         """Regression pin: the scheme must include Rahu as Gnatikaraka (GK),

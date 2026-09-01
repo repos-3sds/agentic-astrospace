@@ -1032,6 +1032,50 @@
       "observance_note": "A genuine intra-text conflict, left unresolved. State which reading is being used rather than implying the text speaks with one voice."
     },
     {
+      "ref_id": "bphs33_karakamsha_ketu_rahu_astrologer",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection"
+      ],
+      "statement": "A Jaimini technique read independently of the 10th house or 10th lord: the Atmakaraka's navamsa sign (Karakamsha) is treated as its own reference point, and whichever planet occupies it, or the 5th sign from it, names a learned pursuit — Jupiter with the Moon there gives an author, Jupiter alone a polymath well versed in Veda and Vedanta, Mars a logician, Mercury a follower of Mimamsa philosophy, Saturn one dull-witted in assembly, the Sun a musician, the Moon a follower of Sankhya philosophy, and Ketu or Rahu an astrologer.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.33 v.41-45, p.267 (Santhanam trans.); ch.35 v.41-45 (Sharma trans.)"
+      },
+      "tags": [
+        "karakamsha",
+        "navamsa",
+        "atmakaraka"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs36_matsya_yoga_astrologer",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection"
+      ],
+      "statement": "Matsya Yoga: benefics in the 9th house and the ascendant, mixed planets in the 5th house, and malefics in the 4th and 8th houses — the native born in this yoga will be an astrologer, kind, virtuous, strong, beautiful, famous, learned and pious.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.36 v.21-22, p.302 (Santhanam trans.); ch.37 v.21-22 (Sharma trans.)"
+      },
+      "tags": [
+        "yoga",
+        "house:9",
+        "house:1",
+        "house:5",
+        "house:4",
+        "house:8"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Both translations agree on the yoga's name and effects, but flag the same manuscript disagreement: this reading (also Chaukhamba's) requires benefics in the ascendant and 9th with malefics in the 4th/8th; other manuscript traditions (Sri Venkateswara Press, Thakur Prasad Pustaka Bhandar, C.G. Rajan, Jataka Parijata) require the reverse — malefics in the ascendant and 9th. State which reading is being used rather than implying the text speaks with one voice."
+    },
+    {
       "ref_id": "bj10_1_tenth_house_occupant_method",
       "domains": [
         "career"
@@ -1649,7 +1693,7 @@
         "field_selection",
         "job_vs_business"
       ],
-      "statement": "A second classical technique for profession, independent of the 10th lord's Rashi placement: the navamsa occupied by the 10th lord names the type of livelihood — for example the Sun's navamsa indicating government or priestly service, Mercury's indicating writing, scholarship or clerical work, Mars's indicating metals, conflict or adventurous trades. Two authors centuries apart both treat the 10th lord as the key career significator, through different vargas.",
+      "statement": "A second classical technique for profession, independent of the 10th lord's Rashi placement: the navamsa occupied by the 10th lord names the type of livelihood — for example the Sun's navamsa indicating government or priestly service, Mercury's indicating writing, scholarship, clerical work, or a knowledge of astrology, Mars's indicating metals, conflict or adventurous trades. Two authors centuries apart both treat the 10th lord as the key career significator, through different vargas.",
       "source": {
         "text_key": "phaladeepika",
         "location": "Adhyaya V slokas 2-8, pp.43-45 (Sastri trans.)"
