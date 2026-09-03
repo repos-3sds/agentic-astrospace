@@ -1034,12 +1034,14 @@
     {
       "ref_id": "bphs33_karakamsha_ketu_rahu_astrologer",
       "domains": [
-        "career"
+        "career",
+        "spirituality"
       ],
       "subdomains": [
-        "field_selection"
+        "field_selection",
+        "spiritual_inclination"
       ],
-      "statement": "A Jaimini technique read independently of the 10th house or 10th lord: the Atmakaraka's navamsa sign (Karakamsha) is treated as its own reference point, and whichever planet occupies it, or the 5th sign from it, names a learned pursuit — Jupiter with the Moon there gives an author, Jupiter alone a polymath well versed in Veda and Vedanta, Mars a logician, Mercury a follower of Mimamsa philosophy, Saturn one dull-witted in assembly, the Sun a musician, the Moon a follower of Sankhya philosophy, and Ketu or Rahu an astrologer.",
+      "statement": "A Jaimini technique read independently of the 10th house or 10th lord: the Atmakaraka's navamsa sign (Karakamsha) is treated as its own reference point, and whichever planet occupies it, or the 5th sign from it, names a learned pursuit — Jupiter with the Moon there gives an author, Jupiter alone a polymath well versed in Veda and Vedanta, Mars a logician, Mercury a follower of Mimamsa philosophy, Saturn one dull-witted in assembly, the Sun a musician, the Moon a follower of Sankhya philosophy, and Ketu or Rahu an astrologer. Ketu and Rahu here are read as the soul's own pull toward occult, intuitive, or non-worldly knowledge — a spiritual-inclination signal as much as a livelihood one, not just a career outcome.",
       "source": {
         "text_key": "bphs",
         "location": "ch.33 v.41-45, p.267 (Santhanam trans.); ch.35 v.41-45 (Sharma trans.)"

@@ -118,17 +118,23 @@ without building it. Closed here.
 
 ---
 
+## Update — `spirituality` domain registered
+
+The `spirituality` deferral below described the state as of the first pass.
+Since then: `spirituality` is now registered in `AGENT_REGISTRY` (its own
+addendum in `astrospace/agents/registry.py`, matching every other domain's
+non-directive/dosha-as-flag framing, with extra care for the domain's real
+stakes — renunciation, real gurus, past-life claims). The Karakamsha
+reference (`bphs33_karakamsha_ketu_rahu_astrologer`) now carries both
+`career` and `spirituality` in `domains`, plus `spiritual_inclination` in
+`subdomains` — the Ketu/Rahu-in-Karakamsha finding is read as a soul-level
+pull toward occult/intuitive knowledge as much as a livelihood indicator.
+Matsya Yoga stays career-only: it names a specific profession outcome, not
+a general spiritual inclination, so extending its domain would overstate
+what the yoga actually claims.
+
 ## Not extracted / deferred
 
-- **`spirituality` domain.** The taxonomy already has the right subdomain
-  (`spiritual_inclination`) for this content to live in a spirituality
-  reading, not just a career one — but `spirituality` isn't registered in
-  `AGENT_REGISTRY` at all, so no agent answers there regardless of KB
-  content. The Karakamsha computation and both new BPHS references are
-  written generically (not career-specific in their wording), so extending
-  domain coverage later is a `references.json` + registry change, not a
-  re-extraction. Deliberately deferred — this pass stayed career-only per
-  the agreed scope.
 - The rest of the Karakamsha 41-45 list (author, logician, musician,
   Sankhya-follower, Mimamsaka) — see above.
 - The Karakamsha chapter continues well past shloka 45 (2nd through 12th

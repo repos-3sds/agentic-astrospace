@@ -476,23 +476,23 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   pre-existing extraction gap — Phaladeepika's Mercury-navamsa sloka names
   "a knowledge of astrology" explicitly, which the already-landed
   `phal5_navamsa_tenth_lord_livelihood` reference had summarized away;
-  corrected in place. *Deferred, on purpose:* `spirituality` (taxonomy
-  subdomain `spiritual_inclination` already exists for exactly this) isn't
-  wired into `AGENT_REGISTRY` at all yet — no agent answers there
-  regardless of KB content. The Karakamsha computation and both BPHS
-  references are written generically enough to extend to that domain
-  once it's registered; this pass deliberately stayed career-only per the
-  scope agreed at the time. *Hook:* `jaimini.py`'s `karakamsha()`,
-  `assembler.py`'s `karakamsha_section`, `agents/registry.py` for the
-  eventual `spirituality` `AgentConfig`.
+  corrected in place. **Follow-up closed same session:** `spirituality` is
+  now registered in `AGENT_REGISTRY` (own addendum in `registry.py`,
+  non-directive framing around renunciation/gurus/past-life claims) and the
+  Karakamsha reference now carries `spirituality`/`spiritual_inclination`
+  alongside `career`/`field_selection`. Matsya Yoga stayed career-only —
+  it names a specific profession, not a general inclination.
 - [ ] **Argala "contested" tiebreak** — `argala.py` reports `contested`
   when the argala and obstruction houses hold equal planet counts, and
   deliberately does not pick a winner. Sources say to compare relative
   strength, which needs Shadbala; that comparison was out of scope.
   *Unblocks on:* a decision on which Shadbala measure to compare.
   *Hook:* `argala._leg_outcome()`.
-- [ ] **9 remaining domains** from taxonomy v2's 16 (7 shipped: career,
-  marriage, wealth, children, health, foreign, personality). *Hook:*
+- [ ] **3 remaining domains** — `taxonomy.json` defines 11 total (not 16 as
+  this item previously said; recounted directly against the file rather
+  than propagating an unverified figure). 8 shipped: career, marriage,
+  wealth, children, health, foreign, personality, spirituality (2026-09-01).
+  Still unregistered: `education`, `family_property`, `litigation`. *Hook:*
   `agents/registry.py` + `context/taxonomy.json`.
 
 ### C. Ask/agent layer — one live safety gap, highest priority here
