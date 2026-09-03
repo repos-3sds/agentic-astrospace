@@ -8,6 +8,14 @@
   background: var(--m-bg);
 }
 
+@media (min-width: 768px) {
+  :host-context(.web-ask) {
+    background: transparent;
+    .body { padding-inline: 24px; }
+    .bubble { max-width: min(65ch, 80%); }
+  }
+}
+
 /* Back bar — node 26:55 */
 .appbar {
   flex-shrink: 0;

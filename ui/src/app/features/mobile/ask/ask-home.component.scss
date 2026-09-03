@@ -142,3 +142,45 @@
 }
 
 /* The composer (node 25:75) is as-ask-composer in its inset variant. */
+
+// Web shares the conversation logic, not the phone's pinned empty-state layout.
+@media (min-width: 768px) {
+  :host-context(.web-ask) {
+    height: auto;
+    min-height: 100%;
+    box-sizing: border-box;
+    padding: 40px 24px;
+    gap: 24px;
+
+    .appbar { display: none; }
+    .body { display: contents; }
+    .intro { order: 0; gap: 12px; }
+    .ask-hero { @include m-title; line-height: 1.35; overflow-wrap: anywhere; }
+    .lede { @include m-body-small; }
+    .safety { color: var(--m-muted); }
+    as-ask-composer { order: 1; margin: 0; height: 64px; border-radius: 8px; }
+    .topics { order: 2; gap: 12px; }
+    .eyebrow { order: 3; color: var(--m-muted); letter-spacing: 0; }
+    .suggestions {
+      order: 4;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .suggestion {
+      min-height: 88px;
+      padding: 20px;
+      border: 1px solid var(--m-border);
+      border-radius: 8px;
+      background: var(--m-surface);
+      align-items: flex-start;
+      transition: border-color 150ms;
+      &:hover { border-color: var(--m-accent); }
+    }
+    .suggestion-text { color: var(--m-text); line-height: 1.6; }
+    .ask-state { order: 1; }
+  }
+}
+@media (min-width: 768px) and (max-width: 1100px) {
+  :host-context(.web-ask) .suggestions { grid-template-columns: 1fr; }
+}

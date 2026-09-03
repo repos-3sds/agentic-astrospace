@@ -186,6 +186,10 @@
   margin-inline: auto;
 }
 
+.content-inner:has(.web-ask) {
+  width: 100%;
+}
+
 .mobile-appbar,
 .mobile-bottom-nav {
   display: none;

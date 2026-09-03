@@ -14,7 +14,7 @@ const reading = {
   confidence: 'medium',
 };
 
-for (const width of [1280, 390]) {
+for (const width of [1280, 390, 2560]) {
   test(`web Ask shares conversation, persona, history and memory at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     const requests: Record<string, unknown>[] = [];
@@ -60,6 +60,15 @@ for (const width of [1280, 390]) {
     await page.goto('/kundli/a/ask');
     const host = page.locator('app-ask-tab');
     await expect(host.locator('as-ask-home')).toBeVisible();
+    if (width >= 768) {
+      const workspace = await host.boundingBox();
+      const intro = await host.locator('.intro').boundingBox();
+      const input = await host.locator('as-ask-composer').boundingBox();
+      expect(workspace!.width).toBeGreaterThan(width - 400);
+      expect(input!.y - (intro!.y + intro!.height)).toBeLessThan(40);
+      await expect(host.locator('as-ask-home .appbar')).toBeHidden();
+    }
+    await page.screenshot({ path: `/tmp/web-ask-home-${width}.png`, fullPage: true });
     await host.getByLabel('Reading style').selectOption('practitioner');
     await host.getByRole('textbox', { name: 'Your question' }).fill('I am retired. What career work could I explore?');
     await host.getByRole('button', { name: 'Send', exact: true }).click();

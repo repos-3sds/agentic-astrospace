@@ -1,4 +1,6 @@
 <nav class="ask-toolbar" aria-label="Ask controls">
+  <h1 class="ask-title">Ask Siddha</h1>
+  <div class="ask-actions">
   <div class="ask-links">
     <a [routerLink]="navigation.path()" title="New conversation"><lucide-icon name="pencil" [size]="18" />New chat</a>
     <a [routerLink]="navigation.path('history')" title="Conversation history"><lucide-icon name="history" [size]="18" />History</a>
@@ -11,6 +13,7 @@
       <option value="practitioner">Practitioner</option>
     </select>
   </label>
+  </div>
 </nav>
 <div class="ask-workspace">
   @if (ready()) {
