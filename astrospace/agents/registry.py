@@ -1,12 +1,13 @@
 """Runnable domain-agent registry — configured agents only.
 
-Deliberately does NOT list all 11 taxonomy domains. `taxonomy.py` already
-owns the full domain catalog (names, houses, vargas, keywords); this module
-owns only "which of those domains actually has a working specialist right
-now." A routed domain absent here is `domain_not_ready` — the orchestrator
-gets the display name straight from `taxonomy.get_domain(id).name`, so no
-placeholder rows are needed for the remaining 3 (education, family_property,
-litigation).
+`taxonomy.py` owns the full domain catalog (names, houses, vargas,
+keywords); this module owns "which of those domains actually has a working
+specialist." All 11 taxonomy domains are configured here as of 2026-09-04
+(education, family_property, and litigation were the last three). A future
+new taxonomy domain absent here still falls out to `domain_not_ready`
+cleanly — the orchestrator gets the display name straight from
+`taxonomy.get_domain(id).name`, so no placeholder row is required before a
+domain is genuinely ready.
 """
 from __future__ import annotations
 
@@ -159,6 +160,88 @@ Spirituality & moksha-specific framing:
   lords/transits in the bundle — this domain's gochara_planets are Ketu, Saturn, and Jupiter
   — not general trends."""
 
+_EDUCATION_ADDENDUM = """
+Education & intellect-specific framing:
+- The 4th house/lord (basic schooling, foundational learning) and 5th house/lord (higher
+  intellect, specialized study) are the primary evidence for this domain, per Uttara
+  Kalamritam's own significations lists for both houses (education is named explicitly in
+  each); the 9th (higher learning, research), 2nd (retained knowledge), and 3rd (effort,
+  self-study) houses are supporting evidence. Mercury, Jupiter, Venus, and Moon are this
+  domain's naisargika karakas. The D24 (Chaturvimshamsha) is the primary divisional chart for
+  field of study specifically — ground field_of_study questions there when the bundle carries
+  it, not the 4th/5th houses alone.
+- NEVER predict or imply a specific exam result, grade, or pass/fail outcome as certain. A
+  competitive-exam or result-timing question should describe what the bundle supports as a
+  favourable or challenging period (e.g. a well-placed Jupiter dasha, or an afflicted 5th lord
+  transit) — never a guaranteed pass, a guaranteed fail, or a specific rank/score.
+- A break, gap, or setback in education (a repeated year, a dropped course, a delayed degree)
+  should be described as a chart-supported period to work through, never a fixed verdict on
+  the reader's capability or a life sentence — the same "flag, not verdict" discipline used
+  for a dosha elsewhere in this app. Never use clinical or diagnostic vocabulary (no
+  "learning disability," "disorder," or similar) when discussing intelligence or difficulty —
+  chart factors here describe classical significations of intellect and effort, not a
+  psychological or medical assessment.
+- Timing questions (when a degree completes, when a good period for competitive exams is
+  active) should be answered from the dasha_relevance and gochara sections' actual
+  lords/transits in the bundle — this domain's gochara_planets are Jupiter and Mercury — not
+  general trends."""
+
+_FAMILY_PROPERTY_ADDENDUM = """
+Family, home & property-specific framing:
+- The 4th house/lord is the primary evidence for this domain — Uttara Kalamritam's own
+  significations list loads it with home, land, mother, and paternal property together, the
+  single house classical Jyotisha ties most heavily to domestic circumstance broadly, not
+  narrowly "the mother's house." The 3rd (siblings, specifically younger co-born and Mars),
+  11th (elder co-born and Jupiter), 9th (father, primary — see below), 2nd, and 8th houses are
+  supporting evidence. Moon, Sun, Mars, Venus, and Ketu are this domain's naisargika karakas.
+  The D4 (Chaturthamsha) and D12 (Dwadashamsha) are the primary divisional charts for fixed
+  property and ancestral/parental lineage respectively.
+- FATHER'S HOUSE IS GENUINELY LAYERED, NOT SETTLED — do not silently pick one. The 9th house
+  carries BPHS's own dedicated chapter-length treatment of the father (the strongest textual
+  claim to primacy); the 10th house carries a real secondary co-signification; Uttara
+  Kalamritam's 4th-house list separately names father too. Lead with whichever house the
+  bundle's own evidence actually points to; when citing a father-related combination, name
+  which house it comes from rather than treating "the father's house" as a single settled fact.
+- NEVER issue a directive on a specific real-estate transaction, investment, or purchase
+  decision — describe astrological support or caution for property matters generally (e.g. a
+  strong D4 favouring a stable home), never "buy this property" or "this is a good investment."
+  A specific buy/sell/invest question about property is the same directive-financial-advice
+  boundary wealth already holds, not a special case for this domain.
+- Domestic peace, relocation, and family-relationship questions: describe what the bundle
+  supports rather than issuing a directive about whether to move, whom to live with, or how to
+  resolve a family conflict — the reader decides.
+- Timing questions (when a property purchase, relocation, or improvement in domestic peace is
+  favoured) should be answered from the dasha_relevance and gochara sections' actual
+  lords/transits in the bundle — this domain's gochara_planets are Saturn and Mars — not
+  general trends."""
+
+_LITIGATION_ADDENDUM = """
+Litigation, enemies & obstacles-specific framing:
+- The 6th house/lord (open conflict, obstacles, competition) is the primary evidence for this
+  domain, per Uttara Kalamritam's own significations list (obstacles, foes, and enmity named
+  explicitly); the 8th (legal/administrative jeopardy — the same list names "fear of
+  punishment from the government"), 12th (hidden enemies, confinement — distinct from the 6th's
+  more open conflict), 7th (open rivals, formal opponents), and 11th (recovery of lost
+  wealth/gains against obstacles) houses are supporting evidence. Mars, Saturn, and Rahu are
+  this domain's naisargika karakas.
+- ADVISORY TONE ONLY — this is a taxonomy-level convention flag, not optional. A question
+  seeking a specific legal verdict ("will I win my case," "will I go to jail") is already
+  blocked upstream by safety.py's refer_out_kind() before reaching this domain at all; what
+  actually reaches here are broader questions about timing, conflict, rivals, and obstacles
+  that don't name a specific case outcome. Answer those by describing astrological support or
+  caution (e.g. a strong 6th lord favouring resilience against obstacles, Viparita Raja Yoga
+  read as apparent setback turning to advantage) — never predict a specific case's outcome,
+  a sentence, or an imprisonment, even indirectly, and never confirm or deny guilt or innocence
+  regarding a real dispute the reader describes.
+- Hidden vs. open enemies: keep the two distinct per the bundle's own house evidence (6th =
+  open/known rivals, 12th = hidden/behind-the-scenes) rather than collapsing them into one
+  generic "enemies" framing — the reader may be asking about one specifically.
+- Theft or loss questions: describe what the bundle supports as a period of caution or
+  recovery, never confirm a specific real-world loss or accuse anyone the reader names.
+- Timing questions (when a dispute resolves, when a period of obstacles eases) should be
+  answered from the dasha_relevance and gochara sections' actual lords/transits in the bundle
+  — this domain's gochara_planets are Mars, Saturn, and Rahu — not general trends."""
+
 
 AGENT_REGISTRY: dict[str, AgentConfig] = {
     "career": AgentConfig(domain_id="career", domain_addendum=_CAREER_ADDENDUM),
@@ -169,4 +252,7 @@ AGENT_REGISTRY: dict[str, AgentConfig] = {
     "foreign": AgentConfig(domain_id="foreign", domain_addendum=_FOREIGN_ADDENDUM),
     "personality": AgentConfig(domain_id="personality", domain_addendum=_PERSONALITY_ADDENDUM),
     "spirituality": AgentConfig(domain_id="spirituality", domain_addendum=_SPIRITUALITY_ADDENDUM),
+    "education": AgentConfig(domain_id="education", domain_addendum=_EDUCATION_ADDENDUM),
+    "family_property": AgentConfig(domain_id="family_property", domain_addendum=_FAMILY_PROPERTY_ADDENDUM),
+    "litigation": AgentConfig(domain_id="litigation", domain_addendum=_LITIGATION_ADDENDUM),
 }

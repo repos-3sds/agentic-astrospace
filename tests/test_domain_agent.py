@@ -285,7 +285,8 @@ class TestAskOrchestratorPrepare:
         assert outcome.terminal_envelope["type"] == "clarification_needed"
         assert set(outcome.terminal_envelope["options"]) == {
             "career", "marriage", "wealth", "children", "health", "foreign",
-            "personality", "spirituality",
+            "personality", "spirituality", "education", "family_property",
+            "litigation",
         }
 
     def test_high_confidence_tie_also_needs_clarification(self, orchestrator):
@@ -333,11 +334,23 @@ class TestAskOrchestratorPrepare:
         assert outcome.prepared.domain == "career"
 
     def test_unsupported_domain_is_not_ready(self, orchestrator):
-        outcome = orchestrator.prepare("What does my chart show about property disputes with my siblings?")
+        """All 11 taxonomy domains are registered as of 2026-09-04, so there
+        is no longer a naturally-unsupported real domain to route a question
+        into — the mechanism itself still needs proving, so this patches one
+        entry out of AGENT_REGISTRY for the duration of the test rather than
+        relying on a domain that happens to be unfinished. A genuinely new
+        taxonomy domain added later and not yet registered would hit this
+        exact path for real."""
+        from unittest.mock import patch as _patch
+        from astrospace.agents import orchestrator as orchestrator_module
+        patched = dict(orchestrator_module.AGENT_REGISTRY)
+        del patched["family_property"]
+        with _patch.dict(orchestrator_module.AGENT_REGISTRY, patched, clear=True):
+            outcome = orchestrator.prepare("What does my chart show about property disputes with my siblings?")
         assert outcome.terminal_envelope["type"] == "domain_not_ready"
         assert outcome.terminal_envelope["domain"] == "family_property"
         assert outcome.terminal_envelope["domain_label"]
-        assert outcome.terminal_envelope["available"] == ["career", "children", "foreign", "health", "marriage", "personality", "spirituality", "wealth"]
+        assert "family_property" not in outcome.terminal_envelope["available"]
 
     def test_career_question_prepares_a_real_bundle(self, orchestrator):
         outcome = orchestrator.prepare("Is this a good year for a promotion at work?")
@@ -378,6 +391,35 @@ class TestAskOrchestratorPrepare:
         # (docs/career_kb_bphs_karakamsha_astrology_interest.md) is actually
         # reachable from here, not just from career.
         assert "karakamsha" in outcome.prepared.bundle
+
+    def test_education_question_prepares_a_real_bundle(self, orchestrator):
+        outcome = orchestrator.prepare("Is this a good year for my education and studies?")
+        assert outcome.prepared.domain == "education"
+        assert outcome.prepared.bundle["domain"] == "education"
+        assert "houses" in outcome.prepared.context_used
+
+    def test_family_property_question_prepares_a_real_bundle(self, orchestrator):
+        outcome = orchestrator.prepare("What does my chart say about buying land or a vehicle?")
+        assert outcome.prepared.domain == "family_property"
+        assert outcome.prepared.bundle["domain"] == "family_property"
+        assert "houses" in outcome.prepared.context_used
+
+    def test_litigation_question_prepares_a_real_bundle(self, orchestrator):
+        outcome = orchestrator.prepare("Is this a favourable period for dealing with disputes and conflict?")
+        assert outcome.prepared.domain == "litigation"
+        assert outcome.prepared.bundle["domain"] == "litigation"
+        assert "houses" in outcome.prepared.context_used
+
+    def test_litigation_case_outcome_question_still_refers_out_first(self, orchestrator):
+        """The litigation domain's own addendum leans on refer_out_kind()
+        gating specific case-outcome questions before routing ever reaches
+        it — confirmed directly rather than assumed, since a wrong
+        assumption here would mean the domain answers exactly the question
+        its own addendum says it must not."""
+        outcome = orchestrator.prepare("Am I likely to face a court case or lawsuit soon?")
+        assert outcome.terminal_envelope["type"] == "refer_out"
+        assert outcome.terminal_envelope["kind"] == "legal"
+        assert outcome.prepared is None
 
     # Found missing by independent review of PR #12: every other tense/
     # profile-facts test in this codebase is a leaf unit test (detect_tense()
@@ -444,8 +486,18 @@ class TestAskOrchestratorPrepare:
 
     def test_unconfigured_thread_domain_hint_is_ignored_safely(self, orchestrator):
         """A domain_not_ready turn stores its own (unconfigured) domain name
-        — that must never be treated as something to continue."""
-        outcome = orchestrator.prepare("Which month is strongest for this?", thread_domain="litigation")
+        — that must never be treated as something to continue. All 11
+        taxonomy domains are registered as of 2026-09-04 (see
+        TestAskOrchestratorPrepare.test_unsupported_domain_is_not_ready for
+        why this patches AGENT_REGISTRY instead of relying on a naturally-
+        unconfigured one), so this simulates the real scenario the check
+        exists for: an old thread whose stored domain predates its
+        registration, or a domain later deprecated."""
+        from astrospace.agents import orchestrator as orchestrator_module
+        patched = dict(orchestrator_module.AGENT_REGISTRY)
+        del patched["litigation"]
+        with patch.dict(orchestrator_module.AGENT_REGISTRY, patched, clear=True):
+            outcome = orchestrator.prepare("Which month is strongest for this?", thread_domain="litigation")
         assert outcome.terminal_envelope["type"] == "clarification_needed"
 
     def test_domain_override_bypasses_the_ambiguous_tie(self, orchestrator):
@@ -469,8 +521,15 @@ class TestAskOrchestratorPrepare:
 
     def test_domain_override_to_an_unconfigured_domain_still_reports_not_ready(self, orchestrator):
         """An override bypasses routing, not the registry gate — it must
-        never reach a model call for a domain the registry doesn't know."""
-        outcome = orchestrator.prepare("Anything you like", domain_override="litigation")
+        never reach a model call for a domain the registry doesn't know.
+        See test_unsupported_domain_is_not_ready for why this patches
+        AGENT_REGISTRY rather than relying on a naturally-unconfigured
+        domain."""
+        from astrospace.agents import orchestrator as orchestrator_module
+        patched = dict(orchestrator_module.AGENT_REGISTRY)
+        del patched["litigation"]
+        with patch.dict(orchestrator_module.AGENT_REGISTRY, patched, clear=True):
+            outcome = orchestrator.prepare("Anything you like", domain_override="litigation")
         assert outcome.terminal_envelope["type"] == "domain_not_ready"
         assert outcome.terminal_envelope["domain"] == "litigation"
 
@@ -665,7 +724,15 @@ class TestAskStreamRoute:
         assert done["status"] == "answered"
 
     def test_unsupported_domain_never_calls_an_agent(self, client, env):
-        with patch.object(DomainReadingAgent, "run_structured_reading") as run:
+        """See TestAskOrchestratorPrepare.test_unsupported_domain_is_not_ready
+        for why this patches AGENT_REGISTRY rather than relying on a
+        naturally-unsupported domain — all 11 are registered as of
+        2026-09-04."""
+        from astrospace.agents import orchestrator as orchestrator_module
+        patched = dict(orchestrator_module.AGENT_REGISTRY)
+        del patched["family_property"]
+        with patch.dict(orchestrator_module.AGENT_REGISTRY, patched, clear=True), \
+             patch.object(DomainReadingAgent, "run_structured_reading") as run:
             r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
                 "question": "What does my chart show about property disputes with my siblings?",
             })
@@ -673,7 +740,7 @@ class TestAskStreamRoute:
         run.assert_not_called()
         frame = self._frames(r)[0]
         assert frame["type"] == "domain_not_ready"
-        assert frame["available"] == ["career", "children", "foreign", "health", "marriage", "personality", "spirituality", "wealth"]
+        assert "family_property" not in frame["available"]
 
     def test_ambiguous_question_asks_for_clarification(self, client, env):
         with patch.object(DomainReadingAgent, "run_structured_reading") as run:

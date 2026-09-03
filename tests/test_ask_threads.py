@@ -368,9 +368,17 @@ class TestTerminalStatesAreExplicit:
         assert body["status"] == "refer_out"
 
     def test_domain_not_ready_status(self, client, env):
-        body = client.post(f"/api/v1/ask/{env['kundli']}", json={
-            "question": "What subjects should I study in college?",
-        }).json()
+        """All 11 taxonomy domains are registered as of 2026-09-04, so
+        "education" (this test's question) is no longer naturally
+        unconfigured — patched out of AGENT_REGISTRY for the duration,
+        matching test_domain_agent.py's identical fix."""
+        from astrospace.agents import orchestrator as orchestrator_module
+        patched = dict(orchestrator_module.AGENT_REGISTRY)
+        del patched["education"]
+        with patch.dict(orchestrator_module.AGENT_REGISTRY, patched, clear=True):
+            body = client.post(f"/api/v1/ask/{env['kundli']}", json={
+                "question": "What subjects should I study in college?",
+            }).json()
         assert body["status"] == "domain_not_ready"
         assert "isn't ready yet" in body["answer"]
 
@@ -408,11 +416,18 @@ class TestNonStreamingSafetyParity:
         assert stream_done["kind"] == expected_kind
 
     def test_unconfigured_domain_matches_across_both_endpoints(self, client, env):
+        """See TestTerminalStatesAreExplicit.test_domain_not_ready_status
+        for why this patches AGENT_REGISTRY — all 11 taxonomy domains are
+        registered as of 2026-09-04."""
+        from astrospace.agents import orchestrator as orchestrator_module
         question = "What subjects should I study in college?"
-        non_stream = client.post(f"/api/v1/ask/{env['kundli']}", json={"question": question}).json()
-        stream_done = self._stream_done(
-            client.post(f"/api/v1/ask/{env['kundli']}/stream", json={"question": question})
-        )
+        patched = dict(orchestrator_module.AGENT_REGISTRY)
+        del patched["education"]
+        with patch.dict(orchestrator_module.AGENT_REGISTRY, patched, clear=True):
+            non_stream = client.post(f"/api/v1/ask/{env['kundli']}", json={"question": question}).json()
+            stream_done = self._stream_done(
+                client.post(f"/api/v1/ask/{env['kundli']}/stream", json={"question": question})
+            )
         assert non_stream["status"] == "domain_not_ready"
         assert stream_done["type"] == "domain_not_ready"
         assert stream_done["domain"] == "education"
