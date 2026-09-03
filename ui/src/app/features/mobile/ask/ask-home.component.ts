@@ -51,7 +51,7 @@ export class AskHomeComponent {
   private readonly kundlis = inject(KundliStore);
   protected readonly preferences = inject(PreferencesService);
   readonly name = computed(() => this.kundlis.active()?.name ?? 'there');
-  protected readonly heading = computed(() => `What’s on your mind, ${this.name()}?`);
+  protected readonly heading = computed(() => this.navigation.web ? 'What would you like to explore?' : `What’s on your mind, ${this.name()}?`);
   protected readonly lede = computed(() => ({
     guided: 'Ask in plain language. We keep the answer practical and explain unfamiliar terms.',
     balanced: 'Ask anything — job, money, family, timing. You’ll get a plain answer, computed from your chart.',
@@ -79,6 +79,11 @@ export class AskHomeComponent {
    * now" is a claim, so these have to move when the dasha or the transit does.
    */
   readonly suggestions = computed<AskSuggestion[]>(() => {
+    if (this.navigation.web) return [
+      { prompt: 'What should I consider about my career right now?' },
+      { prompt: 'Help me understand my current dasha' },
+      { prompt: 'What does my chart say about relationships?' },
+    ];
     if (this.preferences.experienceMode() === 'guided') {
       return [
         { prompt: 'What should I focus on at work this week?', because: 'Plain-language starter' },

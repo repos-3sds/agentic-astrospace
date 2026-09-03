@@ -2,6 +2,7 @@ import { InjectionToken } from '@angular/core';
 
 /** Shared conversation screens keep their host's route and profile context. */
 export interface AskNavigation {
+  web?: boolean;
   path: (screen?: string) => string[];
   chart: () => string[];
 }

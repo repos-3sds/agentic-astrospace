@@ -1,27 +1,32 @@
 <nav class="ask-toolbar" aria-label="Ask controls">
-  <h1 class="ask-title">Ask Siddha</h1>
-  <div class="ask-actions">
-  <div class="ask-links">
-    <a [routerLink]="navigation.path()" title="New conversation"><lucide-icon name="pencil" [size]="18" />New chat</a>
-    <a [routerLink]="navigation.path('history')" title="Conversation history"><lucide-icon name="history" [size]="18" />History</a>
-    <a [routerLink]="navigation.path('memory')" title="Profile memory"><lucide-icon name="notebook-pen" [size]="18" />Memory</a>
+  <div class="ask-brand">
+    <button class="rail-toggle" type="button" title="Conversations" aria-label="Toggle conversations" [attr.aria-expanded]="railOpen()" (click)="railOpen.set(!railOpen())"><lucide-icon name="history" [size]="18" /></button>
+    <h1>Ask Siddha</h1>
   </div>
   <label>Reading style
     <select #mode [value]="preferences.experienceMode()" (change)="setMode(mode.value)">
-      <option value="guided">Guided</option>
-      <option value="balanced">Balanced</option>
-      <option value="practitioner">Practitioner</option>
+      <option value="guided">Guided</option><option value="balanced">Balanced</option><option value="practitioner">Practitioner</option>
     </select>
   </label>
-  </div>
 </nav>
-<div class="ask-workspace">
-  @if (ready()) {
-    <router-outlet />
-  } @else if (loadError()) {
-    <p role="alert">Could not load this profile.</p>
-    <button type="button" (click)="loadProfile()">Try again</button>
-  } @else {
-    <p role="status">Loading profile...</p>
-  }
+<div class="ask-layout" [class.rail-open]="railOpen()">
+  <aside class="conversation-rail" aria-label="Conversations">
+    <a class="new-chat" [routerLink]="navigation.path()" (click)="railOpen.set(false)"><lucide-icon name="pencil" [size]="17" />New chat</a>
+    <a [routerLink]="navigation.path('history')" (click)="railOpen.set(false)"><lucide-icon name="history" [size]="17" />History</a>
+    <h2>Recent conversations</h2>
+    <div class="recent-list">
+      @if (recentLoading() && !recent().length) { <p role="status">Loading conversations...</p> }
+      @else if (recentError()) { <button type="button" (click)="loadRecent()">Retry loading conversations</button> }
+      @else if (!recent().length) { <p>No conversations yet</p> }
+      @for (thread of recent(); track thread.id) {
+        <a [routerLink]="navigation.path('answer')" [queryParams]="{thread: thread.id}" routerLinkActive="current" [routerLinkActiveOptions]="{exact: true}" ariaCurrentWhenActive="page" [title]="thread.title" (click)="railOpen.set(false)"><span>{{ thread.title }}</span></a>
+      }
+    </div>
+    <a class="memory-link" [routerLink]="navigation.path('memory')" (click)="railOpen.set(false)"><lucide-icon name="notebook-pen" [size]="17" />Memory</a>
+  </aside>
+  <div class="ask-workspace">
+    @if (ready()) { <router-outlet /> }
+    @else if (loadError()) { <p role="alert">Could not load this profile.</p><button type="button" (click)="loadProfile()">Try again</button> }
+    @else { <p role="status">Loading profile...</p> }
+  </div>
 </div>

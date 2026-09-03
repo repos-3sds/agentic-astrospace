@@ -75,3 +75,12 @@
   &::placeholder { color: var(--m-muted); }
   &:focus { outline: none; }
 }
+
+:host(.web-composer) {
+  display: grid; grid-template-columns: 1fr auto; height: auto; padding: 16px;
+  gap: 12px; border-radius: 8px; background: var(--m-surface); margin: 0;
+  .field { grid-column: 1 / -1; width: 100%; box-sizing: border-box; resize: vertical; min-height: 72px; max-height: 240px; line-height: 1.6; font-size: 16px; }
+  .mic { background: transparent; border: 1px solid var(--m-border); }
+  .send { justify-self: end; }
+  &:focus-within { border-color: var(--m-accent); }
+}

@@ -1,6 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
+import { EMPTY } from 'rxjs';
+import { MobileAskThreadService } from '../../mobile/ask/mobile-ask-thread.service';
 import { AskTabComponent, webAskNavigation } from './ask-tab.component';
 import { ASK_NAVIGATION } from '../../mobile/ask/ask-navigation';
 import { KundliStore } from '../../../core/kundli.store';
@@ -15,6 +17,8 @@ describe('Web Ask shared conversation host', () => {
       setActive: (id: string) => activeId.set(id),
     };
     TestBed.configureTestingModule({ providers: [
+      { provide: Router, useValue: { events: EMPTY } },
+      { provide: MobileAskThreadService, useValue: { list: jasmine.createSpy().and.resolveTo([]) } },
       { provide: KundliStore, useValue: store },
       { provide: PreferencesService, useValue: { experienceMode: signal('balanced') } },
       { provide: ActivatedRoute, useValue: { parent: { snapshot: { paramMap: convertToParamMap({ id: 'profile-b' }) } } } },
@@ -48,5 +52,23 @@ describe('Web Ask shared conversation host', () => {
     expect(TestBed.inject(PreferencesService).experienceMode()).toBe('practitioner');
     (component as any).setMode('invalid');
     expect(TestBed.inject(PreferencesService).experienceMode()).toBe('practitioner');
+  });
+
+  it('discards outgoing-profile recent chats when a new profile wins the race', async () => {
+    const store = setup();
+    const component = TestBed.runInInjectionContext(() => new AskTabComponent());
+    await Promise.resolve();
+    await Promise.resolve();
+    const list = TestBed.inject(MobileAskThreadService).list as jasmine.Spy;
+    let finishOld!: (rows: any[]) => void;
+    list.and.returnValue(new Promise(resolve => { finishOld = resolve; }));
+    store.activeId.set('profile-a');
+    const oldLoad = (component as any).loadRecent();
+    store.activeId.set('profile-b');
+    list.and.resolveTo([{ id: 'b-chat', kundli_id: 'profile-b', title: 'B' }]);
+    await (component as any).loadRecent();
+    finishOld([{ id: 'a-chat', kundli_id: 'profile-a', title: 'A' }]);
+    await oldLoad;
+    expect((component as any).recent().map((row: any) => row.id)).toEqual(['b-chat']);
   });
 });

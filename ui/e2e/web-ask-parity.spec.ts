@@ -62,7 +62,7 @@ for (const width of [1280, 390, 2560]) {
     await expect(host.locator('as-ask-home')).toBeVisible();
     if (width >= 768) {
       const workspace = await host.boundingBox();
-      const intro = await host.locator('.intro').boundingBox();
+      const intro = await host.locator('.ask-hero').boundingBox();
       const input = await host.locator('as-ask-composer').boundingBox();
       expect(workspace!.width).toBeGreaterThan(width - 400);
       expect(input!.y - (intro!.y + intro!.height)).toBeLessThan(40);
@@ -82,7 +82,7 @@ for (const width of [1280, 390, 2560]) {
     await expect.poll(() => memoryWrites.length).toBe(1);
     await page.screenshot({ path: `/tmp/web-ask-answer-${width}.png`, fullPage: true });
     await page.evaluate(() => document.documentElement.classList.add('app-dark'));
-    await expect(host.locator('.answer').last()).toHaveCSS('background-color', 'rgb(36, 29, 23)');
+    await expect(host.locator('.answer').last()).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
     await page.screenshot({ path: `/tmp/web-ask-answer-dark-${width}.png`, fullPage: true, animations: 'disabled' });
     await page.evaluate(() => document.documentElement.classList.remove('app-dark'));
     const composer = await host.locator('as-ask-composer').boundingBox();
@@ -92,6 +92,7 @@ for (const width of [1280, 390, 2560]) {
     await host.getByRole('button', { name: 'Send', exact: true }).click();
     await expect.poll(() => requests.length).toBe(2);
     expect(requests[1].thread_id).toBe('thread-a');
+    if (width <= 1100) await host.getByRole('button', { name: 'Toggle conversations' }).click();
     await host.getByRole('link', { name: 'History', exact: true }).click();
     await host.getByRole('button', { name: 'Conversation actions' }).click();
     await host.getByRole('button', { name: 'Archive', exact: true }).click();
@@ -99,6 +100,7 @@ for (const width of [1280, 390, 2560]) {
     await host.getByRole('button', { name: /Career change/ }).click();
     await expect(host.getByRole('button', { name: 'Restore', exact: true })).toBeVisible();
     expect(requests.length).toBe(2);
+    if (width <= 1100) await host.getByRole('button', { name: 'Toggle conversations' }).click();
     await host.getByRole('link', { name: 'Memory', exact: true }).click();
     await expect(host.getByRole('heading', { name: 'What Siddha remembers' })).toBeVisible();
     await expect(host.getByText('Nothing remembered yet')).toBeVisible();
