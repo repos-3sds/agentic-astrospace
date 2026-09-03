@@ -27,7 +27,9 @@ from sqlalchemy.pool import StaticPool
 from main import app
 from astrospace.agents.domain_agent import DomainReadingAgent
 from astrospace.agents.orchestrator import AskOrchestrator, ProfileContextStore
-from astrospace.agents.schema import Guidance, StructuredReading, TechnicalBasisItem
+from astrospace.agents.schema import (
+    Guidance, StructuredReading, StructuredReadingPatch, TechnicalBasisItem,
+)
 from astrospace.api.auth import AuthUser, current_user
 from astrospace.context.profile_context import build_logical_preflight
 from astrospace.core.vedic.chart import VedicChart
@@ -55,6 +57,23 @@ def _reading(**overrides) -> StructuredReading:
     )
     base.update(overrides)
     return StructuredReading(**base)
+
+
+def _repair_with(source: StructuredReading):
+    """`side_effect` for a mocked `DomainReadingAgent.run_structured_repair`.
+
+    D2 attributes every violation in this file (blocked-frame, discovery,
+    invented-citation) to a single field — `interpretation` or
+    `technical_basis` — so the orchestrator's repair path is always scoped,
+    never a second `run_structured_reading` call. Rather than hand-compute
+    which field each of this file's ~10 repair scenarios lands on, this
+    pulls whatever field(s) the orchestrator actually asks for straight
+    out of `source`: pass the fixed-up reading to get a working repair, or
+    the same bad reading again to reproduce "the repair didn't help" and
+    exercise the whole-object-discard path."""
+    def _side_effect(messages, fields):
+        return StructuredReadingPatch(**{f: getattr(source, f) for f in fields})
+    return _side_effect
 
 
 def _fact(key: str, value: dict, ref: str = "profile_fact:aaaa@1", status: str = "active") -> dict:
@@ -101,7 +120,8 @@ class TestRetiredCareerInception:
         outcome = orchestrator.prepare("When will my career begin?", domain_override="career")
         bad = _reading(interpretation="Your career will begin in earnest around 2029, a strong new start.")
         good = _reading(interpretation="Looking back, your working years were most active in the 1990s.")
-        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, good]):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad), \
+             patch.object(DomainReadingAgent, "run_structured_repair", side_effect=_repair_with(good)):
             events = list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
                                            persist=lambda reading, status: "t1"))
         # The bad first attempt must not ship as-is; the repair must be
@@ -114,7 +134,8 @@ class TestRetiredCareerInception:
         orchestrator = AskOrchestrator(chart_loader=lambda: chart, profile_context_store=store)
         outcome = orchestrator.prepare("When will my career begin?", domain_override="career")
         bad = _reading(interpretation="Your career will begin in earnest around 2029.")
-        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, bad]):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad), \
+             patch.object(DomainReadingAgent, "run_structured_repair", side_effect=_repair_with(bad)):
             events = list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
                                            persist=lambda reading, status: None))
         assert events[-1]["status"] == "verification_failed"
@@ -142,7 +163,8 @@ class TestMarriedRelationshipTiming:
         outcome = orchestrator.prepare("Will I ever get married?", domain_override="marriage")
         bad = _reading(interpretation="You will get married once Jupiter transits your 7th house.")
         good = _reading(interpretation="Your existing marriage strengthens further in this window.")
-        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, good]):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad), \
+             patch.object(DomainReadingAgent, "run_structured_repair", side_effect=_repair_with(good)):
             events = list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
                                            persist=lambda reading, status: "t4"))
         assert events[-1]["status"] == "answered"
@@ -174,7 +196,8 @@ class TestExistingChildrenFutureFraming:
         good = _reading(interpretation="Your existing children's milestones are well supported in this window.",
                         technical_basis=[TechnicalBasisItem(factor="5th house", reading="supports family",
                                                             source="profile_fact:aaaa@1")])
-        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, good]):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad), \
+             patch.object(DomainReadingAgent, "run_structured_repair", side_effect=_repair_with(good)):
             events = list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
                                            persist=lambda reading, status: "t5"))
         assert events[-1]["status"] == "answered"
@@ -193,7 +216,8 @@ class TestDiagnosedIllnessPrognosis:
         bad = _reading(interpretation="You will make a full recovery within weeks, guaranteed by this transit.")
         good = _reading(interpretation="This transit offers supportive energy; please follow your doctor's guidance "
                                        "for anything about your actual recovery.")
-        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, good]):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad), \
+             patch.object(DomainReadingAgent, "run_structured_repair", side_effect=_repair_with(good)):
             events = list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
                                            persist=lambda reading, status: "t6"))
         assert events[-1]["status"] == "answered"
@@ -205,7 +229,8 @@ class TestDiagnosedIllnessPrognosis:
         outcome = orchestrator.prepare("What does my chart say about my health?", domain_override="health")
         bad = _reading(interpretation="Your chart reveals that you are currently recovering from an illness.")
         good = _reading(interpretation="Since you shared that you're recovering, this transit favours gentle pacing.")
-        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, good]):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad), \
+             patch.object(DomainReadingAgent, "run_structured_repair", side_effect=_repair_with(good)):
             events = list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
                                            persist=lambda reading, status: "t7"))
         assert events[-1]["status"] == "answered"
@@ -224,7 +249,8 @@ class TestFrozenSnapshot:
 
         bad = _reading(interpretation="Your career will begin in earnest around 2029.")
         good = _reading(interpretation="Looking back at your working years, they peaked in the 1990s.")
-        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, good]):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad), \
+             patch.object(DomainReadingAgent, "run_structured_repair", side_effect=_repair_with(good)):
             list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
                                   persist=lambda reading, status: "t8"))
         # The repair attempt reused prepared.agent (built once in prepare())
@@ -426,7 +452,8 @@ class TestVerifierEvidenceResolution:
         fabricated = _reading(technical_basis=[TechnicalBasisItem(
             factor="employment", reading="retired", source="profile_fact:does-not-exist@99",
         )])
-        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[fabricated, fabricated]):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=fabricated), \
+             patch.object(DomainReadingAgent, "run_structured_repair", side_effect=_repair_with(fabricated)):
             events = list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
                                            persist=lambda reading, status: None))
         assert events[-1]["status"] == "verification_failed"
@@ -488,7 +515,8 @@ class TestBlockedFrameNegationAware:
         orchestrator = AskOrchestrator(chart_loader=lambda: chart, profile_context_store=store)
         outcome = orchestrator.prepare("Will I ever get married?", domain_override="marriage")
         bad = _reading(interpretation="You will get married once Jupiter transits your 7th house.")
-        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, bad]):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad), \
+             patch.object(DomainReadingAgent, "run_structured_repair", side_effect=_repair_with(bad)):
             events = list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
                                            persist=lambda reading, status: None))
         assert events[-1]["status"] == "verification_failed"

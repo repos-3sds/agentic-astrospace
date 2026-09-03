@@ -28,7 +28,9 @@ from sqlalchemy.pool import StaticPool
 
 from main import app
 from astrospace.agents.domain_agent import DomainReadingAgent
-from astrospace.agents.schema import Guidance, StructuredReading, TechnicalBasisItem
+from astrospace.agents.schema import (
+    Guidance, StructuredReading, StructuredReadingPatch, TechnicalBasisItem,
+)
 from astrospace.api.auth import AuthUser, current_user
 from astrospace.db import crud, crud_mobile as cm, get_db
 from astrospace.db.database import Base
@@ -96,6 +98,17 @@ def _good_reading(text="Saturn is transiting your 10th house.") -> StructuredRea
         guidance=Guidance(follow_up_questions=[]),
         confidence="medium",
     )
+
+
+def _repair_with(source: StructuredReading):
+    """`side_effect` for a mocked `DomainReadingAgent.run_structured_repair`
+    — see tests/test_profile_context_ledger_phase2.py's identical helper
+    for why this exists: D2 attributes a violation to a specific field, so
+    repair is scoped rather than a second `run_structured_reading` call.
+    Pass the same reading again to reproduce "the repair didn't help.\""""
+    def _side_effect(messages, fields):
+        return StructuredReadingPatch(**{f: getattr(source, f) for f in fields})
+    return _side_effect
 
 
 def _reply(text="Saturn is transiting your 10th house."):
@@ -263,7 +276,14 @@ class TestThreadPersistence:
         (`_evidence_from_reading`), not a free-form tool-call list — the new
         pipeline has no tool loop to record tools_used from."""
         reading = _good_reading("Career answer with a real citation.")
-        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=reading):
+        # This thin reading doesn't cite the career domain's primary vargas/
+        # karakas, so verify_coverage() finds quality-severity violations
+        # and D2 scopes a repair to `technical_basis` — mock it to hand
+        # back the same citation so the persisted evidence stays `["houses"]`
+        # exactly as before D2, same convention as _repair_with() elsewhere.
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=reading), \
+             patch.object(DomainReadingAgent, "run_structured_repair",
+                          return_value=StructuredReadingPatch(technical_basis=reading.technical_basis)):
             tid = client.post(f"/api/v1/ask/{env['kundli']}", json={
                 "question": "How is my career this quarter?", "start_thread": True,
             }).json()["thread_id"]
@@ -315,7 +335,13 @@ class TestFailureLeavesNoPartialWrite:
         before = client.get("/api/v1/ask/threads").json()["count"]
         bad = _good_reading()
         bad.technical_basis[0].source = "totally_invented_ref"
-        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad):
+        # D2: this violation is field-attributed to technical_basis alone,
+        # so the repair goes through run_structured_repair, not a second
+        # run_structured_reading call — mock it to hand back the same
+        # invented source so verification fails again, same as before.
+        still_bad_patch = StructuredReadingPatch(technical_basis=bad.technical_basis)
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad), \
+             patch.object(DomainReadingAgent, "run_structured_repair", return_value=still_bad_patch):
             r = client.post(f"/api/v1/ask/{env['kundli']}", json={
                 "question": "How is my career outlook this quarter?", "start_thread": True,
             })
@@ -404,11 +430,18 @@ class TestNonStreamingSafetyParity:
         attempt and the single repair fail identically -- verification_failed
         on both surfaces."""
         overclaim = _good_reading("You will have an accident next year.")
-        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=overclaim):
+        # D2 attributes a health-outcome-overclaim violation to the field
+        # it was found in (`interpretation` here) and scopes repair to it —
+        # mock run_structured_repair to hand back the same overclaiming
+        # text so both attempts fail identically, matching this test's
+        # own docstring.
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=overclaim), \
+             patch.object(DomainReadingAgent, "run_structured_repair", side_effect=_repair_with(overclaim)):
             non_stream = client.post(f"/api/v1/ask/{env['kundli']}", json={
                 "question": "Will I have an accident this year?",
             })
-        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=overclaim):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=overclaim), \
+             patch.object(DomainReadingAgent, "run_structured_repair", side_effect=_repair_with(overclaim)):
             stream_done = self._stream_done(
                 client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
                     "question": "Will I have an accident this year?",
