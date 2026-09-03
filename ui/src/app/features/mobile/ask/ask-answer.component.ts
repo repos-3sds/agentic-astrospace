@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
+import { ASK_NAVIGATION } from './ask-navigation';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AskComposerComponent } from './ask-composer.component';
@@ -82,6 +83,7 @@ const REFER_OUT_KINDS = new Set(['death', 'health', 'legal', 'money']);
   styleUrl: './ask-answer.component.scss',
 })
 export class AskAnswerComponent {
+  protected readonly navigation = inject(ASK_NAVIGATION);
   protected readonly preferences = inject(PreferencesService);
   private readonly askState = inject(MobileAskStateService);
   private readonly askService = inject(AskService);
@@ -568,7 +570,7 @@ export class AskAnswerComponent {
       this.viewedProfileId = profileId;
       this.resetConversationState();
       this.lastRouteKey = null;
-      void this.router.navigate(['/m', 'ask'], { replaceUrl: true });
+      void this.router.navigate(this.navigation.path(), { replaceUrl: true });
     });
   }
 
@@ -618,7 +620,7 @@ export class AskAnswerComponent {
         // may contain a thread URL belonging to another profile.
         this.resetConversationState();
         this.lastRouteKey = null;
-        await this.router.navigate(['/m', 'ask'], { replaceUrl: true });
+        await this.router.navigate(this.navigation.path(), { replaceUrl: true });
         return false;
       }
 
@@ -1025,7 +1027,7 @@ export class AskAnswerComponent {
       if (controller.signal.aborted || this.kundlis.active()?.id !== profile.id) return;
 
       if (referOutKind && REFER_OUT_KINDS.has(referOutKind)) {
-        await this.router.navigate(['/m', 'ask', 'refer'], {
+        await this.router.navigate(this.navigation.path('refer'), {
           queryParams: { q: question, domain: referOutKind },
           replaceUrl: true,
         });
@@ -1035,12 +1037,12 @@ export class AskAnswerComponent {
         this.activeThreadId.set(finalThreadId);
         this.loadedThreadId = finalThreadId;
         this.lastRouteKey = `${finalThreadId}::::false`;
-        await this.router.navigate(['/m', 'ask', 'answer'], {
+        await this.router.navigate(this.navigation.path('answer'), {
           queryParams: { thread: finalThreadId },
           replaceUrl: true,
         });
       } else if (!this.streaming()) {
-        await this.router.navigate(['/m', 'ask', 'answer'], {
+        await this.router.navigate(this.navigation.path('answer'), {
           queryParams: { q: question },
           replaceUrl: true,
         });
@@ -1213,7 +1215,7 @@ export class AskAnswerComponent {
     this.submitError.set(null);
     try {
       await this.threadsApi.archive(threadId);
-      await this.router.navigate(['/m', 'ask']);
+      await this.router.navigate(this.navigation.path());
     } catch (error) {
       this.submitError.set((error as Error).message);
     } finally {
@@ -1269,7 +1271,7 @@ export class AskAnswerComponent {
     if (!original || this.streaming()) return;
     this.draft.set('');
     const threadId = this.activeThreadId() ?? this.params().get('thread') ?? undefined;
-    await this.router.navigate(['/m', 'ask', 'answer'], {
+    await this.router.navigate(this.navigation.path('answer'), {
       queryParams: { q: original, thread: threadId, pending: '1', forceDomain: option },
     });
   }
@@ -1281,7 +1283,7 @@ export class AskAnswerComponent {
     if (!q || this.streaming() || this.threadArchived()) return;
     this.draft.set('');
     const threadId = this.activeThreadId() ?? this.params().get('thread') ?? undefined;
-    await this.router.navigate(['/m', 'ask', 'answer'], {
+    await this.router.navigate(this.navigation.path('answer'), {
       queryParams: { q, thread: threadId, pending: '1' },
     });
   }

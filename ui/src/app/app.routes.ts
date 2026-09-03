@@ -120,6 +120,13 @@ export const routes: Routes = [
         path: 'ask',
         loadComponent: () =>
           import('./features/kundli/ask/ask-tab.component').then((m) => m.AskTabComponent),
+        children: [
+          { path: '', pathMatch: 'full', loadComponent: () => import('./features/mobile/ask/ask-home.component').then(m => m.AskHomeComponent) },
+          { path: 'answer', loadComponent: () => import('./features/mobile/ask/ask-answer.component').then(m => m.AskAnswerComponent) },
+          { path: 'history', loadComponent: () => import('./features/mobile/ask/ask-history.component').then(m => m.AskHistoryComponent) },
+          { path: 'refer', loadComponent: () => import('./features/mobile/ask/ask-refer-out.component').then(m => m.AskReferOutComponent) },
+          { path: 'memory', data: { backToAsk: true }, loadComponent: () => import('./features/mobile/settings/profile-memory.component').then(m => m.ProfileMemoryComponent) },
+        ],
       },
       {
         path: 'chart',

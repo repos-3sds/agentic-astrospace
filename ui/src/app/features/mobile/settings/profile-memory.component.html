@@ -1,5 +1,5 @@
 <header class="memory-appbar">
-  <a routerLink="/m/settings/profiles" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
+  <a [routerLink]="backRoute()" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
   <div><h1>What Siddha remembers</h1><p>{{ profile()?.name || 'Profile' }}</p></div>
   <button type="button" aria-label="Export profile memory" [disabled]="busy()" (click)="exportMemory()">Export</button>
 </header>

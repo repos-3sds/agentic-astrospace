@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ASK_NAVIGATION } from './ask-navigation';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AskComposerComponent } from './ask-composer.component';
 import { VoiceListeningComponent } from './voice-listening.component';
@@ -46,6 +47,7 @@ export interface AskSuggestion {
   styleUrl: './ask-home.component.scss',
 })
 export class AskHomeComponent {
+  protected readonly navigation = inject(ASK_NAVIGATION);
   private readonly kundlis = inject(KundliStore);
   protected readonly preferences = inject(PreferencesService);
   readonly name = computed(() => this.kundlis.active()?.name ?? 'there');
@@ -167,7 +169,7 @@ export class AskHomeComponent {
     if (!q || this.submitting()) {
       return;
     }
-    await this.router.navigate(['/m', 'ask', 'answer'], {
+    await this.router.navigate(this.navigation.path('answer'), {
       queryParams: { q, topic: this.selectedTopic() ?? undefined, pending: '1' },
     });
   }

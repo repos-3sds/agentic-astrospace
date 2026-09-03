@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signa
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { combineLatest } from 'rxjs';
+import { ASK_NAVIGATION } from '../ask/ask-navigation';
 
 import { KundliStore } from '../../../core/kundli.store';
 import { MemoryMode, PreferencesService } from '../../../core/preferences.service';
@@ -24,6 +26,10 @@ type EditorKind = ProfileFactKey;
 })
 export class ProfileMemoryComponent {
   private readonly route = inject(ActivatedRoute);
+  private readonly navigation = inject(ASK_NAVIGATION);
+  protected readonly backRoute = computed(() => this.route.snapshot?.data['backToAsk']
+    ? this.navigation.path()
+    : ['/m', 'settings', 'profiles']);
   private readonly destroyRef = inject(DestroyRef);
   private readonly context = inject(ProfileContextService);
   protected readonly kundlis = inject(KundliStore);
@@ -50,8 +56,9 @@ export class ProfileMemoryComponent {
 
   constructor() {
     void this.kundlis.load();
-    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
-      this.profileId.set(params.get('id') ?? '');
+    combineLatest((this.route.pathFromRoot ?? [this.route]).map(route => route.paramMap))
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      this.profileId.set([...params].reverse().find(p => p.has('id'))?.get('id') ?? '');
       this.busy.set(false);
       this.pendingDelete.set(null);
       this.closeEditor();
