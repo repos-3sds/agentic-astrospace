@@ -128,6 +128,14 @@ _BUNDLE_SECTION_NAMES = {
     # here, so a technical_basis item citing either failed verification
     # even though the underlying claim was legitimately bundle-grounded.
     "retrospect", "timeline",
+    # Also real, also missing until now: `jaimini_karaka_array` (the full
+    # 8-karaka domain-independent array) was in the bundle since it was
+    # added but never added here, so a citation naming it would have failed
+    # the same way retrospect/timeline did. `karakamsha` is new — the
+    # Atmakaraka's navamsa sign, occupants, and 5th-therefrom occupants
+    # (assembler.py; BPHS "Effects of Karakamsha", Santhanam ch.33 /
+    # Sharma ch.35, cross-verified in both translations).
+    "jaimini_karaka_array", "karakamsha",
 }
 
 

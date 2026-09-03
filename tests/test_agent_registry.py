@@ -7,7 +7,10 @@ from astrospace.context.taxonomy import domain_ids, get_domain
 
 class TestAgentRegistry:
     def test_only_configured_domains_are_present(self):
-        assert set(AGENT_REGISTRY) == {"career", "marriage", "wealth", "children", "health", "foreign", "personality"}
+        assert set(AGENT_REGISTRY) == {
+            "career", "marriage", "wealth", "children", "health", "foreign",
+            "personality", "spirituality",
+        }
 
     def test_configured_domains_are_real_taxonomy_domains(self):
         for domain_id in AGENT_REGISTRY:
@@ -44,3 +47,17 @@ class TestAgentRegistry:
         assert "never" in addendum
         assert "clinical" in addendum or "psychiatric" in addendum
         assert "verdict" in addendum
+
+    def test_spirituality_addendum_names_the_key_guardrails(self):
+        """The sensitive-domain guardrail acceptance criterion for this
+        domain: it must explicitly forbid directing a reader to renounce or
+        leave a real relationship/career, forbid confirming or denying a
+        real person's status as a guru, and forbid asserting a specific
+        past-life claim as settled fact — not just say "be careful"."""
+        addendum = AGENT_REGISTRY["spirituality"].domain_addendum.lower()
+        assert "never" in addendum
+        assert "renounce" in addendum
+        assert "guru" in addendum
+        assert "past-life" in addendum or "past life" in addendum
+        assert "guru chandala" in addendum
+        assert "kemadruma" in addendum

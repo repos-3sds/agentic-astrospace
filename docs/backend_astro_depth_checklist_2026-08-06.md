@@ -460,20 +460,39 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   that actually consume Abhijit; neither exists here. This is the missing
   consumer that would give `abhijit.py` live value beyond description.
   *Hook:* `abhijit.py` is what either should read from.
-- [ ] **Karakamsha** — the sign the Atmakaraka occupies in D9. Real,
-  well-corroborated, and cheap: the engine already computes AK
-  (`jaimini.chara_karakas`) and D9 signs (`vargas.d9`) separately, so this
-  is a lookup, not a new calculation. Surfaced while auditing the career
-  KB, which used the non-existent term "Karakaksha" for it. *Hook:*
-  `jaimini.py`, alongside the existing `upapada`/`arudha_padas`.
+- [x] **Karakamsha** — **CLOSED 2026-09-01**. `jaimini.karakamsha()`:
+  Atmakaraka's D9 sign, who occupies it, and who occupies the 5th sign
+  from it, wired into `VedicChart.jaimini()` and exposed domain-
+  independently in the CE bundle (`bundle["karakamsha"]`, same reasoning
+  as `jaimini_karaka_array`). Motivated by a real question — "how would
+  the model predict a reader's inclination toward astrology without being
+  asked" — which turned up two grounded BPHS rules, cross-verified in both
+  Santhanam's and Sharma's independent translations: "Effects of
+  Karakamsha" (ch.33/35, shlokas 41-45 — Ketu or Rahu there names an
+  astrologer) and Matsya Yoga (ch.36/37 — a separate combination with the
+  same outcome, flagged `convention_dependent` for a genuine manuscript
+  disagreement). Both now in `references.json` under
+  career/`field_selection`. Also caught while fixing this: a real
+  pre-existing extraction gap — Phaladeepika's Mercury-navamsa sloka names
+  "a knowledge of astrology" explicitly, which the already-landed
+  `phal5_navamsa_tenth_lord_livelihood` reference had summarized away;
+  corrected in place. **Follow-up closed same session:** `spirituality` is
+  now registered in `AGENT_REGISTRY` (own addendum in `registry.py`,
+  non-directive framing around renunciation/gurus/past-life claims) and the
+  Karakamsha reference now carries `spirituality`/`spiritual_inclination`
+  alongside `career`/`field_selection`. Matsya Yoga stayed career-only —
+  it names a specific profession, not a general inclination.
 - [ ] **Argala "contested" tiebreak** — `argala.py` reports `contested`
   when the argala and obstruction houses hold equal planet counts, and
   deliberately does not pick a winner. Sources say to compare relative
   strength, which needs Shadbala; that comparison was out of scope.
   *Unblocks on:* a decision on which Shadbala measure to compare.
   *Hook:* `argala._leg_outcome()`.
-- [ ] **9 remaining domains** from taxonomy v2's 16 (7 shipped: career,
-  marriage, wealth, children, health, foreign, personality). *Hook:*
+- [ ] **3 remaining domains** — `taxonomy.json` defines 11 total (not 16 as
+  this item previously said; recounted directly against the file rather
+  than propagating an unverified figure). 8 shipped: career, marriage,
+  wealth, children, health, foreign, personality, spirituality (2026-09-01).
+  Still unregistered: `education`, `family_property`, `litigation`. *Hook:*
   `agents/registry.py` + `context/taxonomy.json`.
 
 ### C. Ask/agent layer — one live safety gap, highest priority here

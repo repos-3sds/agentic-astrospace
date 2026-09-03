@@ -643,7 +643,12 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
                               vimshopaka_scores, shayanadi_avasthas, verbose_planets)
         for planet in spec.karakas_naisargika
     }
-    chara_karakas_full = chart.jaimini()["chara_karakas"]["karakas"]
+    # One jaimini() call, reused below — chara_karakas/arudha_padas/upapada/
+    # karakamsha were each triggering their own separate call previously,
+    # recomputing chara_karakas from scratch every time (karakamsha's own
+    # Atmakaraka lookup included).
+    jaimini_data = chart.jaimini()
+    chara_karakas_full = jaimini_data["chara_karakas"]["karakas"]
     jaimini_karakas = {}
     if spec.karakas_jaimini:
         for code in spec.karakas_jaimini:
@@ -662,8 +667,8 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
 
     arudhas = {}
     if spec.arudhas:
-        padas = chart.jaimini()["arudha_padas"]["padas"]
-        upapada = chart.jaimini()["upapada"]
+        padas = jaimini_data["arudha_padas"]["padas"]
+        upapada = jaimini_data["upapada"]
         for code in spec.arudhas:
             if code == "UL":
                 arudhas["UL"] = {"sign_name": upapada.get("sign_name")}
@@ -729,6 +734,22 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
         for code, row in chara_karakas_full.items()
     }
 
+    # Domain-independent, same reasoning as jaimini_karaka_array above: the
+    # Atmakaraka's navamsa sign and who shares it (or the 5th from it) is a
+    # chart-level Jaimini fact, not something specific to one domain — BPHS's
+    # "Effects of Karakamsha" chapter reads it for profession/pursuit
+    # (ch.33/35 shlokas 41-45: e.g. Ketu or Rahu there names an astrologer),
+    # which is why this was added, but nothing about the computation itself
+    # is career-specific.
+    karakamsha_raw = jaimini_data["karakamsha"]
+    karakamsha_section = {
+        "atmakaraka": karakamsha_raw["atmakaraka"],
+        "sign_name": karakamsha_raw["sign_name"],
+        "occupants": karakamsha_raw["occupants"],
+        "fifth_sign_name": karakamsha_raw["fifth_sign_name"],
+        "fifth_occupants": karakamsha_raw["fifth_occupants"],
+    }
+
     bundle = {
         "domain": domain_id,
         "domain_name": spec.name,
@@ -758,6 +779,7 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
         "karakas": karakas,
         "jaimini_karakas": jaimini_karakas,
         "jaimini_karaka_array": jaimini_karaka_array,
+        "karakamsha": karakamsha_section,
         "arudhas": arudhas,
         "vargas": _varga_placements(spec, focus_planets, positions, chart.lagna_lon),
         "yogas": _filter_rules(yogas_payload.get("all", []), spec),

@@ -266,7 +266,10 @@ class TestAskOrchestratorPrepare:
     def test_ambiguous_tie_needs_clarification(self, orchestrator):
         outcome = orchestrator.prepare("Is this a good time for my career and my marriage?")
         assert outcome.terminal_envelope["type"] == "clarification_needed"
-        assert set(outcome.terminal_envelope["options"]) == {"career", "marriage", "wealth", "children", "health", "foreign", "personality"}
+        assert set(outcome.terminal_envelope["options"]) == {
+            "career", "marriage", "wealth", "children", "health", "foreign",
+            "personality", "spirituality",
+        }
 
     def test_high_confidence_tie_also_needs_clarification(self, orchestrator):
         """Independent-review finding (personality-domain build, round 1,
@@ -317,7 +320,7 @@ class TestAskOrchestratorPrepare:
         assert outcome.terminal_envelope["type"] == "domain_not_ready"
         assert outcome.terminal_envelope["domain"] == "family_property"
         assert outcome.terminal_envelope["domain_label"]
-        assert outcome.terminal_envelope["available"] == ["career", "children", "foreign", "health", "marriage", "personality", "wealth"]
+        assert outcome.terminal_envelope["available"] == ["career", "children", "foreign", "health", "marriage", "personality", "spirituality", "wealth"]
 
     def test_career_question_prepares_a_real_bundle(self, orchestrator):
         outcome = orchestrator.prepare("Is this a good year for a promotion at work?")
@@ -348,6 +351,16 @@ class TestAskOrchestratorPrepare:
         assert outcome.prepared.domain == "personality"
         assert outcome.prepared.bundle["domain"] == "personality"
         assert "houses" in outcome.prepared.context_used
+
+    def test_spirituality_question_prepares_a_real_bundle(self, orchestrator):
+        outcome = orchestrator.prepare("Am I drawn toward meditation and sadhana?")
+        assert outcome.prepared.domain == "spirituality"
+        assert outcome.prepared.bundle["domain"] == "spirituality"
+        assert "houses" in outcome.prepared.context_used
+        # The whole point of wiring this domain now: the Karakamsha finding
+        # (docs/career_kb_bphs_karakamsha_astrology_interest.md) is actually
+        # reachable from here, not just from career.
+        assert "karakamsha" in outcome.prepared.bundle
 
     # Found missing by independent review of PR #12: every other tense/
     # profile-facts test in this codebase is a leaf unit test (detect_tense()
@@ -634,7 +647,7 @@ class TestAskStreamRoute:
         run.assert_not_called()
         frame = self._frames(r)[0]
         assert frame["type"] == "domain_not_ready"
-        assert frame["available"] == ["career", "children", "foreign", "health", "marriage", "personality", "wealth"]
+        assert frame["available"] == ["career", "children", "foreign", "health", "marriage", "personality", "spirituality", "wealth"]
 
     def test_ambiguous_question_asks_for_clarification(self, client, env):
         with patch.object(DomainReadingAgent, "run_structured_reading") as run:

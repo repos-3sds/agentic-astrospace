@@ -5,7 +5,8 @@ owns the full domain catalog (names, houses, vargas, keywords); this module
 owns only "which of those domains actually has a working specialist right
 now." A routed domain absent here is `domain_not_ready` — the orchestrator
 gets the display name straight from `taxonomy.get_domain(id).name`, so no
-placeholder rows are needed for the other 4.
+placeholder rows are needed for the remaining 3 (education, family_property,
+litigation).
 """
 from __future__ import annotations
 
@@ -121,6 +122,44 @@ Personality & self-understanding-specific framing:
   trends."""
 
 
+_SPIRITUALITY_ADDENDUM = """
+Spirituality & moksha-specific framing:
+- The 12th house/lord (moksha, renunciation, detachment) and 9th house/lord (dharma, guru
+  connection) are the primary evidence for this domain, read together as the "moksha trikona"
+  with the 4th and 8th houses as supporting evidence. Ketu (detachment, past-life momentum),
+  Jupiter (wisdom, dharma), and Saturn (renunciation through discipline) are this domain's
+  naisargika karakas; the Jaimini Atmakaraka (AK) and its navamsa position (Karakamsha,
+  already in the bundle) are supporting evidence for the soul's own inclination — the same
+  Karakamsha computation career questions read for livelihood, read here for direction
+  instead. The D20 (Vimshamsha) is the primary divisional chart for spiritual practice
+  specifically — ground sadhana/practice questions there, not the 9th/12th houses alone.
+- NEVER tell a reader to renounce, leave, or walk away from a real relationship, family,
+  career, or set of responsibilities — even when the bundle shows a strong moksha or
+  renunciation combination. Describe what the chart supports as an inclination or a
+  traditional reading of the combination; the decision to act on it, and how, is the reader's
+  alone. This is the same "reader decides" boundary marriage and wealth already hold, applied
+  to the highest-stakes version of it this domain has.
+- Guru Chandala Yoga and Kemadruma Yoga are flags, not verdicts, exactly like a marriage
+  dosha: describe what the classical texts associate with the combination (traditionally,
+  caution around teachers/guidance, or a mind lacking support) without naming, implying, or
+  validating a judgment about any real person the reader may describe as their guru or
+  teacher. Never confirm or deny whether a specific real person is a "true" or "false" guru —
+  that is not something a chart establishes, and doing so risks being read as license to
+  distrust or leave a real relationship on the app's authority.
+- Karmic axis (Rahu/Ketu) and past-life questions: read the nodal axis as a directional
+  tendency (what the native is moving away from vs toward), never as a confirmed biographical
+  fact about a literal past life. Never assert a specific past-life identity, event, or
+  wrongdoing as settled truth.
+- Stay non-sectarian: ground answers in the classical Vedic framework (dharma, guru, sadhana,
+  moksha) without prescribing a specific deity, denomination, or practice as the one correct
+  path — describe what the chart traditionally supports, let the reader's own tradition or
+  choice fill in the specific practice.
+- Timing questions (when spiritual inclination deepens, when a renunciation-adjacent period
+  is active) should be answered from the dasha_relevance and gochara sections' actual
+  lords/transits in the bundle — this domain's gochara_planets are Ketu, Saturn, and Jupiter
+  — not general trends."""
+
+
 AGENT_REGISTRY: dict[str, AgentConfig] = {
     "career": AgentConfig(domain_id="career", domain_addendum=_CAREER_ADDENDUM),
     "marriage": AgentConfig(domain_id="marriage", domain_addendum=_MARRIAGE_ADDENDUM),
@@ -129,4 +168,5 @@ AGENT_REGISTRY: dict[str, AgentConfig] = {
     "health": AgentConfig(domain_id="health", domain_addendum=_HEALTH_ADDENDUM),
     "foreign": AgentConfig(domain_id="foreign", domain_addendum=_FOREIGN_ADDENDUM),
     "personality": AgentConfig(domain_id="personality", domain_addendum=_PERSONALITY_ADDENDUM),
+    "spirituality": AgentConfig(domain_id="spirituality", domain_addendum=_SPIRITUALITY_ADDENDUM),
 }
