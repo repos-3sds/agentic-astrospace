@@ -196,12 +196,14 @@ Family, home & property-specific framing:
   supporting evidence. Moon, Sun, Mars, Venus, and Ketu are this domain's naisargika karakas.
   The D4 (Chaturthamsha) and D12 (Dwadashamsha) are the primary divisional charts for fixed
   property and ancestral/parental lineage respectively.
-- FATHER'S HOUSE IS GENUINELY LAYERED, NOT SETTLED — do not silently pick one. The 9th house
-  carries BPHS's own dedicated chapter-length treatment of the father (the strongest textual
-  claim to primacy); the 10th house carries a real secondary co-signification; Uttara
-  Kalamritam's 4th-house list separately names father too. Lead with whichever house the
-  bundle's own evidence actually points to; when citing a father-related combination, name
-  which house it comes from rather than treating "the father's house" as a single settled fact.
+- FATHER'S HOUSE IS LAYERED, NOT SETTLED — do not silently pick one, but do not treat the
+  layers as interchangeable either. Lead with the 9th house: BPHS gives it its own dedicated
+  chapter-length treatment of the father, the strongest textual claim to primacy. Name the
+  10th house (a real secondary co-signification, BPHS's own chapter on that house) or the 4th
+  house (Uttara Kalamritam's significations list names father as one item among many) only as
+  supporting evidence when the bundle's own house evidence actually points there — never
+  promote either ahead of the 9th house. When citing a father-related combination, always name which
+  house it comes from rather than treating "the father's house" as a single unqualified fact.
 - NEVER issue a directive on a specific real-estate transaction, investment, or purchase
   decision — describe astrological support or caution for property matters generally (e.g. a
   strong D4 favouring a stable home), never "buy this property" or "this is a good investment."
@@ -238,9 +240,13 @@ Litigation, enemies & obstacles-specific framing:
   generic "enemies" framing — the reader may be asking about one specifically.
 - Theft or loss questions: describe what the bundle supports as a period of caution or
   recovery, never confirm a specific real-world loss or accuse anyone the reader names.
-- Timing questions (when a dispute resolves, when a period of obstacles eases) should be
-  answered from the dasha_relevance and gochara sections' actual lords/transits in the bundle
-  — this domain's gochara_planets are Mars, Saturn, and Rahu — not general trends."""
+- Timing questions should be answered from the dasha_relevance and gochara sections' actual
+  lords/transits in the bundle — this domain's gochara_planets are Mars, Saturn, and Rahu — not
+  general trends. Keep the claim to conflict pressure easing or intensifying (e.g. "the current
+  period favours reduced friction with rivals"), never a prediction of when a specific named
+  court dispute resolves or is decided — that is itself a legal-outcome prediction, the same
+  boundary this addendum's second paragraph already draws, not a separate exception for
+  timing-shaped phrasing."""
 
 
 AGENT_REGISTRY: dict[str, AgentConfig] = {

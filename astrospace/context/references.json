@@ -2786,10 +2786,10 @@
         "family_property"
       ],
       "subdomains": [
-        "competitive_exams",
+        "basic_education",
         "ancestral_property"
       ],
-      "statement": "Uttara Kalamritam's classical significations list for the 11th house names, among its roughly 30 items, education and ancestral property alongside the house's primary signification of gains, income, and fulfilled desires -- read as supporting evidence for competitive/exam success and inherited property respectively, not the headline house for either.",
+      "statement": "Uttara Kalamritam's classical significations list for the 11th house names, among its roughly 30 items, education and ancestral property alongside the house's primary signification of gains, income, and fulfilled desires -- the passage lists both as items among many, not as a rule about exam or competitive-result success; read as supporting evidence for education and inherited property generally, not the headline house for either.",
       "source": {
         "text_key": "uttara_kalamrita",
         "location": "Kanda I, Ch. V, shlokas 19-21, pp.123-124"
@@ -2826,7 +2826,7 @@
         "hidden_enemies",
         "obstacles"
       ],
-      "statement": "Uttara Kalamritam's classical significations list for the 12th house includes, among its roughly 30 items, fear from foes, imprisonment, disputes, and being hated by the public -- read as the house of hidden or behind-the-scenes conflict and confinement, distinct from the 6th house's more open enmity and obstacles (see uk_6th_enemies_litigation).",
+      "statement": "Uttara Kalamritam's classical significations list for the 12th house includes, among its roughly 30 items, fear from foes, imprisonment, disputes, and being hated by the public.",
       "source": {
         "text_key": "uttara_kalamrita",
         "location": "Kanda I, Ch. V, shlokas 21-23, p.124"
@@ -2834,7 +2834,8 @@
       "tags": [
         "house:12"
       ],
-      "status": "verified_common"
+      "status": "convention_dependent",
+      "observance_note": "The passage itself lists these items without calling them 'hidden' or contrasting them with the 6th house's open enmity -- that framing is the widespread classical dusthana convention (6th = open/known conflict, 12th = hidden/behind-the-scenes loss and confinement), applied here rather than quoted from this specific verse. State it as the convention being used, not as this passage's own wording."
     }
   ]
 }

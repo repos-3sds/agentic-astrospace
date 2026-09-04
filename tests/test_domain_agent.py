@@ -350,7 +350,10 @@ class TestAskOrchestratorPrepare:
         assert outcome.terminal_envelope["type"] == "domain_not_ready"
         assert outcome.terminal_envelope["domain"] == "family_property"
         assert outcome.terminal_envelope["domain_label"]
-        assert "family_property" not in outcome.terminal_envelope["available"]
+        assert outcome.terminal_envelope["available"] == sorted(
+            {"career", "marriage", "wealth", "children", "health", "foreign",
+             "personality", "spirituality", "education", "litigation"}
+        )
 
     def test_career_question_prepares_a_real_bundle(self, orchestrator):
         outcome = orchestrator.prepare("Is this a good year for a promotion at work?")
@@ -740,7 +743,10 @@ class TestAskStreamRoute:
         run.assert_not_called()
         frame = self._frames(r)[0]
         assert frame["type"] == "domain_not_ready"
-        assert "family_property" not in frame["available"]
+        assert frame["available"] == sorted(
+            {"career", "marriage", "wealth", "children", "health", "foreign",
+             "personality", "spirituality", "education", "litigation"}
+        )
 
     def test_ambiguous_question_asks_for_clarification(self, client, env):
         with patch.object(DomainReadingAgent, "run_structured_reading") as run:

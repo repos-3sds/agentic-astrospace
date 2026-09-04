@@ -12,6 +12,48 @@ plainly. The primary find is Uttara Kalamritam's own significations chapter,
 which no other readable book in this corpus duplicates verse-for-verse the
 way BPHS's Santhanam/Sharma translations do for career.
 
+**Update, 2026-09-04 — Codex review found two release-blockers, both fixed:**
+Codex reviewed PR #80 against the live `refer_out_kind()` code and the local
+source PDFs directly, not just the diff. Two findings were release-blocking:
+
+1. The litigation addendum claimed case-outcome questions were already
+   blocked upstream, citing "will I win my case" as the example — but
+   `refer_out_kind()`'s `case ... win/lose/outcome` pattern was order-
+   sensitive and never matched that exact phrasing (the outcome word came
+   first), and had no subject pattern at all for "appeal," "tribunal," or
+   "prosecutor." Confirmed directly by running the function against all
+   five of Codex's test phrasings before fixing. Fixed in
+   `astrospace/agents/safety.py`: the case pattern now matches both word
+   orders, and appeal/tribunal/prosecutor/charges-dropped are now real
+   subjects, with an output-side mirror added for symmetry. New test cases
+   added to `tests/test_refer_out_boundary.py` for all five phrasings, plus
+   two of the domain's own legitimate timing questions confirmed to still
+   answer.
+2. `test_every_taxonomy_domain_is_now_configured`'s reverse equality
+   (`set(AGENT_REGISTRY) == set(domain_ids())`) would have forced any future
+   12th taxonomy domain to become a live agent the moment its taxonomy
+   entry existed, defeating the registry as a trust boundary. Removed; the
+   one-way check (every configured domain is a real taxonomy domain) stays.
+
+Also fixed, both flagged P2:
+
+- The family_property addendum let the model "lead with whichever house the
+  bundle's own evidence points to," which could promote the 10th or 4th
+  house ahead of the 9th — contradicting `taxonomy.json`'s own
+  `convention_flags` wording, which says lead with the 9th. Addendum now
+  matches: lead with the 9th, name the 10th/4th only as supporting evidence.
+- Two Uttara Kalamritam citations were promoted beyond what their passages
+  establish. `uk_11th_house_education_and_property`'s "competitive/exam
+  success" reading isn't in a passage that just lists education among many
+  items — dropped, subdomain changed to `basic_education`.
+  `uk_12th_house_enemies_and_disputes`'s "hidden enemies, distinct from the
+  6th's open enemies" framing is the standard dusthana convention, not this
+  specific passage's own wording — moved to `convention_dependent` with an
+  `observance_note` saying so explicitly, rather than presenting the
+  convention as the passage's text.
+
+Full suite re-run clean after all fixes: 2061 passed, 2 skipped, 1 xfailed.
+
 ---
 
 ## What prompted this

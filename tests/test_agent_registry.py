@@ -5,7 +5,16 @@ were the last three) — a domain routed here that somehow isn't registered
 `domain_not_ready`, never a fallback answer; see
 test_domain_agent.py::TestAskOrchestratorPrepare::test_unsupported_domain_is_not_ready
 for that mechanism proven directly, since there's no longer a naturally-
-unsupported real domain to exercise it against. See astrospace/agents/registry.py."""
+unsupported real domain to exercise it against.
+
+Deliberately one-directional: `test_configured_domains_are_real_taxonomy_domains`
+checks every configured domain is real, but nothing here asserts the reverse
+(every taxonomy domain is configured). A domain is meant to stay in
+taxonomy.json without a registry entry until its addendum, KB, and route
+tests are actually ready — the registry membership list in
+`test_only_configured_domains_are_present` is what changes, deliberately by
+hand, per domain, not derived from taxonomy.py's domain count. See
+astrospace/agents/registry.py."""
 from astrospace.agents.registry import AGENT_REGISTRY, AgentConfig
 from astrospace.context.taxonomy import domain_ids, get_domain
 
@@ -21,13 +30,6 @@ class TestAgentRegistry:
     def test_configured_domains_are_real_taxonomy_domains(self):
         for domain_id in AGENT_REGISTRY:
             assert domain_id in domain_ids()
-
-    def test_every_taxonomy_domain_is_now_configured(self):
-        """All 11 taxonomy domains are live as of 2026-09-04 — confirmed
-        directly against taxonomy.py rather than a hardcoded count, so this
-        stays true if a domain's taxonomy spec changes without anyone
-        remembering to update this file too."""
-        assert set(AGENT_REGISTRY) == set(domain_ids())
 
     def test_each_config_has_a_real_addendum(self):
         for config in AGENT_REGISTRY.values():
