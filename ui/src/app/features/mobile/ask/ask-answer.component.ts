@@ -16,6 +16,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
 import { ProfileContextFact, ProfileContextService } from '../../../core/profile-context.service';
 import { MobileAskMessage, MobileAskThreadService } from './mobile-ask-thread.service';
+import { AskReportInput, askReportPdf, askReportText, downloadBlob } from '../../../core/ask-report';
 
 /**
  * How confidently the answer lands. Named, not a number: the point of the dot
@@ -111,6 +112,8 @@ export class AskAnswerComponent {
   readonly memoryCandidate = signal<{ profileId: string; revision: number; existingFactId: string | null; candidate: AskMemoryCandidate } | null>(null);
   readonly memorySaved = signal<{ profileId: string; revision: number; fact: ProfileContextFact; message: string } | null>(null);
   readonly memoryBusy = signal(false);
+  readonly copiedMessageId = signal<string | null>(null);
+  readonly exportingMessageId = signal<string | null>(null);
   protected readonly activeThreadId = signal<string | null>(null);
   private readonly selectedAssistant = signal<ChatMessage | null>(null);
   private readonly threadScroller = viewChild<ElementRef<HTMLElement>>('threadScroller');
@@ -1200,8 +1203,61 @@ export class AskAnswerComponent {
   }
 
   protected async copyAnswer(message: ChatMessage): Promise<void> {
-    if (typeof navigator === 'undefined' || !navigator.clipboard) return;
-    await navigator.clipboard.writeText(this.normaliseAnswerText(message.content));
+    const text = this.navigation.web
+      ? askReportText(this.reportInput(message))
+      : this.normaliseAnswerText(message.content);
+    if (!text || typeof document === 'undefined') return;
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+      }
+      this.copiedMessageId.set(message.id);
+      setTimeout(() => {
+        if (this.copiedMessageId() === message.id) this.copiedMessageId.set(null);
+      }, 1800);
+    } catch {
+      this.submitError.set('The answer could not be copied. Please try again.');
+    }
+  }
+
+  protected copyLabel(message: ChatMessage): string {
+    return this.copiedMessageId() === message.id ? 'Copied' : 'Copy Answer';
+  }
+
+  protected shareLabel(message: ChatMessage): string {
+    return this.exportingMessageId() === message.id ? 'Preparing PDF…' : 'Download PDF';
+  }
+
+  private questionFor(message: ChatMessage): string {
+    const index = this.messages().findIndex(item => item.id === message.id);
+    for (let cursor = index - 1; cursor >= 0; cursor--) {
+      if (this.messages()[cursor].role === 'user') return this.messages()[cursor].content;
+    }
+    return this.view().question;
+  }
+
+  protected reportInput(message: ChatMessage): AskReportInput {
+    return {
+      question: this.questionFor(message),
+      domain: message.domain,
+      intent: message.intent,
+      createdAt: message.created_at,
+      contextUsed: message.context_used,
+      evidenceRefs: message.evidence_refs,
+      profileContextRevision: message.profile_context_revision,
+      profileContextAsOf: message.profile_context_as_of,
+      reading: message.reading,
+      fallbackContent: this.normaliseAnswerText(message.content),
+    };
   }
 
   protected editQuestion(message: ChatMessage): void {
@@ -1246,6 +1302,20 @@ export class AskAnswerComponent {
   protected async share(): Promise<void> {
     const v = this.view();
     const message = this.selectedAssistant() ?? this.latestAssistant();
+    if (this.navigation.web && message) {
+      if (this.exportingMessageId()) return;
+      this.exportingMessageId.set(message.id);
+      try {
+        const safeDomain = (message.domain || 'reading').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const date = new Date().toISOString().slice(0, 10);
+        downloadBlob(askReportPdf(this.reportInput(message)), `siddha-${safeDomain}-${date}.pdf`);
+      } catch {
+        this.submitError.set('The PDF could not be generated. Please try again.');
+      } finally {
+        this.exportingMessageId.set(null);
+      }
+      return;
+    }
     if (typeof navigator !== 'undefined' && 'share' in navigator) {
       try {
         await navigator.share({ title: v.question, text: `${message?.content ?? v.verdict}\n\n${v.whatToDo}` });

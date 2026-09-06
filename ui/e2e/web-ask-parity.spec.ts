@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 
 const profile = (id: string) => ({
   id, name: id === 'a' ? 'Anika' : 'Ravi', relation: 'self',
@@ -15,7 +16,8 @@ const reading = {
 };
 
 for (const width of [1280, 390, 2560]) {
-  test(`web Ask shares conversation, persona, history and memory at ${width}px`, async ({ page }) => {
+  test(`web Ask shares conversation, persona, history and memory at ${width}px`, async ({ context, page }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: 'http://127.0.0.1:4200' });
     await page.setViewportSize({ width, height: 900 });
     const requests: Record<string, unknown>[] = [];
     const memoryWrites: Record<string, unknown>[] = [];
@@ -77,6 +79,18 @@ for (const width of [1280, 390, 2560]) {
     expect(requests[0].start_thread).toBe(true);
     await expect(page).toHaveURL(/\/kundli\/a\/ask\/answer\?thread=thread-a/);
     await expect(host.getByRole('region', { name: 'Save profile memory' })).toBeVisible();
+    await host.getByRole('button', { name: 'Copy Answer', exact: true }).click();
+    await expect(host.getByRole('button', { name: 'Copied', exact: true })).toBeVisible();
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('SIDDHA · STRUCTURED READING');
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('PROVENANCE');
+    const downloadPromise = page.waitForEvent('download');
+    await host.getByRole('button', { name: 'Download PDF', exact: true }).click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/^siddha-career-\d{4}-\d{2}-\d{2}\.pdf$/);
+    const downloadedPath = await download.path();
+    expect(downloadedPath).not.toBeNull();
+    const pdfHeader = readFileSync(downloadedPath!, { encoding: 'latin1' }).slice(0, 8);
+    expect(pdfHeader.startsWith('%PDF-1.4')).toBe(true);
     expect(memoryWrites).toHaveLength(0);
     await host.getByRole('button', { name: 'Remember', exact: true }).click();
     await expect.poll(() => memoryWrites.length).toBe(1);
