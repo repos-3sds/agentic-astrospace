@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ASK_NAVIGATION } from './ask-navigation';
 import { Router, RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 
 import { KundliStore } from '../../../core/kundli.store';
 import {
@@ -10,12 +12,13 @@ import {
 @Component({
   selector: 'as-ask-history',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, LucideAngularModule],
   templateUrl: './ask-history.component.html',
   styleUrl: './ask-history.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AskHistoryComponent {
+  protected readonly navigation = inject(ASK_NAVIGATION);
   private readonly kundlis = inject(KundliStore);
   private readonly threadsApi = inject(MobileAskThreadService);
   private readonly router = inject(Router);
@@ -61,7 +64,7 @@ export class AskHistoryComponent {
     this.opening.set(thread.id);
     this.error.set(null);
     try {
-      await this.router.navigate(['/m', 'ask', 'answer'], {
+      await this.router.navigate(this.navigation.path('answer'), {
         queryParams: {
           thread: thread.id,
         },

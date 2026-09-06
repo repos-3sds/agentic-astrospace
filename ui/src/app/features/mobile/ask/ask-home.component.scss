@@ -142,3 +142,55 @@
 }
 
 /* The composer (node 25:75) is as-ask-composer in its inset variant. */
+
+// Web shares the conversation logic, not the phone's pinned empty-state layout.
+@media (min-width: 0px) {
+  :host-context(.web-ask) {
+    height: auto;
+    min-height: 100%;
+    box-sizing: border-box;
+    padding: 64px max(24px, calc((100% - var(--ask-reading-width)) / 2));
+    gap: 20px;
+
+    .appbar { display: none; }
+    .body { display: contents; }
+    .intro { order: 0; gap: 12px; }
+    .ask-hero { font: 500 28px/1.4 Inter, sans-serif; text-align: center; overflow-wrap: anywhere; }
+    .lede { @include m-body-small; }
+    .intro { display: contents; }
+    .ask-hero { order: 0; margin-bottom: 8px; }
+    .safety { order: 5; color: var(--m-muted); text-align: center; font-size: 12px; }
+    as-ask-composer { order: 1; margin: 0; }
+    .topics { order: 2; gap: 8px; justify-content: center; }
+    .topic { font-size: 13px; padding: 8px 12px; background: transparent; }
+    .eyebrow { order: 3; color: var(--m-muted); letter-spacing: 0; font-size: 13px; font-weight: 400; text-transform: none; margin-top: 12px; }
+    .suggestions {
+      order: 4;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .suggestion {
+      min-height: 84px;
+      padding: 16px;
+      border: 1px solid var(--m-border);
+      border-radius: 8px;
+      background: transparent;
+      align-items: flex-start;
+      transition: border-color 150ms;
+      &:hover { border-color: var(--m-accent); }
+    }
+    .suggestion-text { color: var(--m-text); line-height: 1.6; font-size: 13px; }
+    .ask-state { order: 1; }
+  }
+}
+@media (max-width: 1300px) {
+  :host-context(.web-ask) {
+    padding-top: 32px;
+    .suggestions { grid-template-columns: 1fr; gap: 8px; }
+    .suggestion { min-height: 48px; padding: 12px 16px; }
+  }
+}
+@media (max-width: 600px) {
+  :host-context(.web-ask) { padding: 24px 16px; gap: 16px; .ask-hero { font-size: 22px; } }
+}

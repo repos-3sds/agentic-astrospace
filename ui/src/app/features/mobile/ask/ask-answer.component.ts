@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
+import { ASK_NAVIGATION } from './ask-navigation';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AskComposerComponent } from './ask-composer.component';
@@ -15,6 +16,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
 import { ProfileContextFact, ProfileContextService } from '../../../core/profile-context.service';
 import { MobileAskMessage, MobileAskThreadService } from './mobile-ask-thread.service';
+import { AskReportInput, askReportPdf, askReportText, downloadBlob } from '../../../core/ask-report';
 
 /**
  * How confidently the answer lands. Named, not a number: the point of the dot
@@ -82,6 +84,7 @@ const REFER_OUT_KINDS = new Set(['death', 'health', 'legal', 'money']);
   styleUrl: './ask-answer.component.scss',
 })
 export class AskAnswerComponent {
+  protected readonly navigation = inject(ASK_NAVIGATION);
   protected readonly preferences = inject(PreferencesService);
   private readonly askState = inject(MobileAskStateService);
   private readonly askService = inject(AskService);
@@ -109,6 +112,8 @@ export class AskAnswerComponent {
   readonly memoryCandidate = signal<{ profileId: string; revision: number; existingFactId: string | null; candidate: AskMemoryCandidate } | null>(null);
   readonly memorySaved = signal<{ profileId: string; revision: number; fact: ProfileContextFact; message: string } | null>(null);
   readonly memoryBusy = signal(false);
+  readonly copiedMessageId = signal<string | null>(null);
+  readonly exportingMessageId = signal<string | null>(null);
   protected readonly activeThreadId = signal<string | null>(null);
   private readonly selectedAssistant = signal<ChatMessage | null>(null);
   private readonly threadScroller = viewChild<ElementRef<HTMLElement>>('threadScroller');
@@ -568,7 +573,7 @@ export class AskAnswerComponent {
       this.viewedProfileId = profileId;
       this.resetConversationState();
       this.lastRouteKey = null;
-      void this.router.navigate(['/m', 'ask'], { replaceUrl: true });
+      void this.router.navigate(this.navigation.path(), { replaceUrl: true });
     });
   }
 
@@ -618,7 +623,7 @@ export class AskAnswerComponent {
         // may contain a thread URL belonging to another profile.
         this.resetConversationState();
         this.lastRouteKey = null;
-        await this.router.navigate(['/m', 'ask'], { replaceUrl: true });
+        await this.router.navigate(this.navigation.path(), { replaceUrl: true });
         return false;
       }
 
@@ -1025,7 +1030,7 @@ export class AskAnswerComponent {
       if (controller.signal.aborted || this.kundlis.active()?.id !== profile.id) return;
 
       if (referOutKind && REFER_OUT_KINDS.has(referOutKind)) {
-        await this.router.navigate(['/m', 'ask', 'refer'], {
+        await this.router.navigate(this.navigation.path('refer'), {
           queryParams: { q: question, domain: referOutKind },
           replaceUrl: true,
         });
@@ -1035,12 +1040,12 @@ export class AskAnswerComponent {
         this.activeThreadId.set(finalThreadId);
         this.loadedThreadId = finalThreadId;
         this.lastRouteKey = `${finalThreadId}::::false`;
-        await this.router.navigate(['/m', 'ask', 'answer'], {
+        await this.router.navigate(this.navigation.path('answer'), {
           queryParams: { thread: finalThreadId },
           replaceUrl: true,
         });
       } else if (!this.streaming()) {
-        await this.router.navigate(['/m', 'ask', 'answer'], {
+        await this.router.navigate(this.navigation.path('answer'), {
           queryParams: { q: question },
           replaceUrl: true,
         });
@@ -1198,8 +1203,61 @@ export class AskAnswerComponent {
   }
 
   protected async copyAnswer(message: ChatMessage): Promise<void> {
-    if (typeof navigator === 'undefined' || !navigator.clipboard) return;
-    await navigator.clipboard.writeText(this.normaliseAnswerText(message.content));
+    const text = askReportText(this.reportInput(message));
+    if (!text || typeof document === 'undefined') return;
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+      }
+      this.copiedMessageId.set(message.id);
+      setTimeout(() => {
+        if (this.copiedMessageId() === message.id) this.copiedMessageId.set(null);
+      }, 1800);
+    } catch {
+      this.submitError.set('The answer could not be copied. Please try again.');
+    }
+  }
+
+  protected copyLabel(message: ChatMessage): string {
+    return this.copiedMessageId() === message.id ? 'Copied' : 'Copy Answer';
+  }
+
+  protected shareLabel(message: ChatMessage): string {
+    if (this.exportingMessageId() === message.id) return 'Preparing PDF…';
+    return this.navigation.web ? 'Download PDF' : 'Share PDF';
+  }
+
+  private questionFor(message: ChatMessage): string {
+    const index = this.messages().findIndex(item => item.id === message.id);
+    for (let cursor = index - 1; cursor >= 0; cursor--) {
+      if (this.messages()[cursor].role === 'user') return this.messages()[cursor].content;
+    }
+    return this.view().question;
+  }
+
+  protected reportInput(message: ChatMessage): AskReportInput {
+    return {
+      profileName: this.kundlis.active()?.name ?? 'Selected profile',
+      question: this.questionFor(message),
+      domain: message.domain,
+      intent: message.intent,
+      createdAt: message.created_at,
+      contextUsed: message.context_used,
+      evidenceRefs: message.evidence_refs,
+      profileContextRevision: message.profile_context_revision,
+      profileContextAsOf: message.profile_context_as_of,
+      reading: message.reading,
+      fallbackContent: this.normaliseAnswerText(message.content),
+    };
   }
 
   protected editQuestion(message: ChatMessage): void {
@@ -1213,7 +1271,7 @@ export class AskAnswerComponent {
     this.submitError.set(null);
     try {
       await this.threadsApi.archive(threadId);
-      await this.router.navigate(['/m', 'ask']);
+      await this.router.navigate(this.navigation.path());
     } catch (error) {
       this.submitError.set((error as Error).message);
     } finally {
@@ -1236,20 +1294,37 @@ export class AskAnswerComponent {
     }
   }
 
-  /**
-   * Hands the verdict to the OS share sheet where available. No fallback UI:
-   * on a platform without it, doing nothing is better than inventing a
-   * share dialog the design never specified.
-   */
+  /** Builds the same signed report on web and mobile. Browsers download it;
+   * native-capable WebViews hand the actual PDF file to the OS share sheet. */
   protected async share(): Promise<void> {
-    const v = this.view();
     const message = this.selectedAssistant() ?? this.latestAssistant();
-    if (typeof navigator !== 'undefined' && 'share' in navigator) {
-      try {
-        await navigator.share({ title: v.question, text: `${message?.content ?? v.verdict}\n\n${v.whatToDo}` });
-      } catch {
-        // Cancelled by the reader; nothing to report.
+    if (!message || this.exportingMessageId()) return;
+    this.exportingMessageId.set(message.id);
+    try {
+      const safeDomain = (message.domain || 'reading').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const date = new Date().toISOString().slice(0, 10);
+      const filename = `siddha-${safeDomain}-${date}.pdf`;
+      const report = askReportPdf(this.reportInput(message));
+      if (!this.navigation.web) {
+        const file = new File([report], filename, { type: 'application/pdf' });
+        if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare?.({ files: [file] })) {
+          try {
+            await navigator.share({
+              title: `Siddha reading for ${this.kundlis.active()?.name ?? 'this profile'}`,
+              text: this.questionFor(message),
+              files: [file],
+            });
+            return;
+          } catch (error) {
+            if ((error as DOMException).name === 'AbortError') return;
+          }
+        }
       }
+      downloadBlob(report, filename);
+    } catch {
+      this.submitError.set('The PDF could not be generated. Please try again.');
+    } finally {
+      this.exportingMessageId.set(null);
     }
   }
 
@@ -1269,7 +1344,7 @@ export class AskAnswerComponent {
     if (!original || this.streaming()) return;
     this.draft.set('');
     const threadId = this.activeThreadId() ?? this.params().get('thread') ?? undefined;
-    await this.router.navigate(['/m', 'ask', 'answer'], {
+    await this.router.navigate(this.navigation.path('answer'), {
       queryParams: { q: original, thread: threadId, pending: '1', forceDomain: option },
     });
   }
@@ -1281,7 +1356,7 @@ export class AskAnswerComponent {
     if (!q || this.streaming() || this.threadArchived()) return;
     this.draft.set('');
     const threadId = this.activeThreadId() ?? this.params().get('thread') ?? undefined;
-    await this.router.navigate(['/m', 'ask', 'answer'], {
+    await this.router.navigate(this.navigation.path('answer'), {
       queryParams: { q, thread: threadId, pending: '1' },
     });
   }
