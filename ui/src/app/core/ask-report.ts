@@ -244,7 +244,6 @@ function canvasPages(input: AskReportInput): HTMLCanvasElement[] {
   };
 
   const blocks = reportBlocks(input);
-  const freshPageCapacity = bottom - 132;
   for (let blockIndex = 0; blockIndex < blocks.length; blockIndex++) {
     const block = blocks[blockIndex];
     const rule = style(block.kind);
@@ -253,7 +252,6 @@ function canvasPages(input: AskReportInput): HTMLCanvasElement[] {
     const contentWidth = width - margin * 2 - inset;
     const lines = block.kind === 'rule' ? [] : wrap(context, block.text ?? '', contentWidth);
     const required = rule.before + Math.max(rule.line, lines.length * rule.line) + rule.after;
-    const fitsOnFreshPage = required <= freshPageCapacity;
     let keepWithNext = 0;
     if (block.kind === 'heading') {
       const next = blocks[blockIndex + 1];
@@ -266,7 +264,15 @@ function canvasPages(input: AskReportInput): HTMLCanvasElement[] {
         context.font = rule.font;
       }
     }
-    if (y + required + keepWithNext > bottom && y > margin + 100 && (fitsOnFreshPage || block.kind === 'heading')) {
+    // Long prose should consume the space that remains on this page, not jump
+    // wholesale to a fresh page. Start a non-heading block on a fresh page only
+    // when fewer than three opening lines would fit.
+    const openingLines = block.kind === 'rule' ? rule.line : Math.min(3, Math.max(1, lines.length)) * rule.line;
+    const minimumUsefulSpace = rule.before + openingLines + rule.after;
+    const shouldBreak = block.kind === 'heading'
+      ? y + required + keepWithNext > bottom
+      : y + minimumUsefulSpace > bottom;
+    if (shouldBreak && y > margin + 100) {
       newPage();
     }
     y += rule.before;
