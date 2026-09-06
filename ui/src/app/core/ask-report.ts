@@ -355,6 +355,17 @@ export function downloadBlob(blob: Blob, filename: string): void {
   const anchor = document.createElement('a');
   anchor.href = url;
   anchor.download = filename;
+  // Standards-compliant browsers honour `download`; embedded browsers that
+  // suppress it can still open the PDF in a separate preview surface.
+  anchor.target = '_blank';
+  anchor.rel = 'noopener';
+  anchor.style.display = 'none';
+  document.body.appendChild(anchor);
   anchor.click();
-  setTimeout(() => URL.revokeObjectURL(url), 0);
+  anchor.remove();
+
+  // WebViews and embedded browsers may consume the object URL after the
+  // synthetic click task completes. Revoking it immediately makes the click
+  // appear successful while silently cancelling the actual download.
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }

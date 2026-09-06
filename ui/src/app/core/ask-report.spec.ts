@@ -1,4 +1,4 @@
-import { askReportPdf, askReportText, AskReportInput } from './ask-report';
+import { askReportPdf, askReportText, AskReportInput, downloadBlob } from './ask-report';
 
 const INPUT: AskReportInput = {
   profileName: 'Anika Rao',
@@ -58,5 +58,31 @@ describe('Ask report export', () => {
     expect(pdf.size).toBeGreaterThan(10_000);
     const header = new TextDecoder().decode((await pdf.arrayBuffer()).slice(0, 8));
     expect(header.startsWith('%PDF-1.4')).toBeTrue();
+  });
+
+  it('keeps the object URL alive while an attached download link is consumed', () => {
+    jasmine.clock().install();
+    const createUrl = spyOn(URL, 'createObjectURL').and.returnValue('blob:siddha-report');
+    const revokeUrl = spyOn(URL, 'revokeObjectURL');
+    const click = spyOn(HTMLAnchorElement.prototype, 'click').and.callFake(function (this: HTMLAnchorElement) {
+      expect(this.isConnected).toBeTrue();
+      expect(this.download).toBe('siddha-reading.pdf');
+      expect(this.target).toBe('_blank');
+    });
+
+    try {
+      const blob = new Blob(['report'], { type: 'application/pdf' });
+      downloadBlob(blob, 'siddha-reading.pdf');
+
+      expect(createUrl).toHaveBeenCalledWith(blob);
+      expect(click).toHaveBeenCalled();
+      expect(document.querySelector('a[href="blob:siddha-report"]')).toBeNull();
+      expect(revokeUrl).not.toHaveBeenCalled();
+
+      jasmine.clock().tick(30_000);
+      expect(revokeUrl).toHaveBeenCalledOnceWith('blob:siddha-report');
+    } finally {
+      jasmine.clock().uninstall();
+    }
   });
 });

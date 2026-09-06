@@ -115,6 +115,13 @@
   flex-direction: column;
   gap: 13px;
   overflow: visible;
+
+  // The global stylesheet gives every article a pressed transform. An Ask
+  // answer contains its own actions, so pressing Copy/PDF must not make the
+  // entire reading jump as though the whole card were a button.
+  &:active {
+    transform: none;
+  }
 }
 
 .answer[data-answer-mode='guided'],
