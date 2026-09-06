@@ -243,14 +243,32 @@ function canvasPages(input: AskReportInput): HTMLCanvasElement[] {
     return rules[kind];
   };
 
-  for (const block of reportBlocks(input)) {
+  const blocks = reportBlocks(input);
+  const freshPageCapacity = bottom - 132;
+  for (let blockIndex = 0; blockIndex < blocks.length; blockIndex++) {
+    const block = blocks[blockIndex];
     const rule = style(block.kind);
     context.font = rule.font;
     const inset = block.kind === 'bullet' ? 28 : 0;
     const contentWidth = width - margin * 2 - inset;
     const lines = block.kind === 'rule' ? [] : wrap(context, block.text ?? '', contentWidth);
     const required = rule.before + Math.max(rule.line, lines.length * rule.line) + rule.after;
-    if (y + required > bottom && y > margin + 100) newPage();
+    const fitsOnFreshPage = required <= freshPageCapacity;
+    let keepWithNext = 0;
+    if (block.kind === 'heading') {
+      const next = blocks[blockIndex + 1];
+      if (next && next.kind !== 'heading' && next.kind !== 'rule') {
+        const nextRule = style(next.kind);
+        context.font = nextRule.font;
+        const nextInset = next.kind === 'bullet' ? 28 : 0;
+        const nextLines = wrap(context, next.text ?? '', width - margin * 2 - nextInset);
+        keepWithNext = nextRule.before + Math.min(3, Math.max(1, nextLines.length)) * nextRule.line;
+        context.font = rule.font;
+      }
+    }
+    if (y + required + keepWithNext > bottom && y > margin + 100 && (fitsOnFreshPage || block.kind === 'heading')) {
+      newPage();
+    }
     y += rule.before;
     if (block.kind === 'rule') {
       context.strokeStyle = rule.color;
