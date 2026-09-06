@@ -162,7 +162,7 @@ export class App implements OnInit, OnDestroy {
     // /m is the native app shell — it renders its own app bar and tab bar,
     // so the web chrome must not wrap it.
     return path === '/' || path.startsWith('/auth') || path.startsWith('/admin')
-      || path.startsWith('/m');
+      || path.startsWith('/m') || path.startsWith('/ask/');
   });
 
   protected readonly subtitle = computed(() => {

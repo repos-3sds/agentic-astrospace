@@ -36,6 +36,20 @@ describe('Web Ask shared conversation host', () => {
     expect(navigation.path('memory')).toEqual(['/kundli', 'profile-b', 'ask', 'memory']);
   });
 
+  it('keeps standalone workspace destinations outside the Kundli shell', () => {
+    const activeId = signal<string | null>('profile-a');
+    TestBed.configureTestingModule({ providers: [
+      { provide: KundliStore, useValue: { activeId } },
+      { provide: ActivatedRoute, useValue: { snapshot: { routeConfig: { path: 'ask/:id' } } } },
+      { provide: ASK_NAVIGATION, useFactory: webAskNavigation },
+    ] });
+    const navigation = TestBed.inject(ASK_NAVIGATION);
+    expect(navigation.path()).toEqual(['/ask', 'profile-a']);
+    expect(navigation.path('answer')).toEqual(['/ask', 'profile-a', 'answer']);
+    expect(navigation.path('memory')).toEqual(['/ask', 'profile-a', 'memory']);
+    expect(navigation.chart()).toEqual(['/kundli', 'profile-a', 'chart']);
+  });
+
   it('waits for profiles and binds direct entry to the URL, not the saved selection', async () => {
     const store = setup();
     const component = TestBed.runInInjectionContext(() => new AskTabComponent());

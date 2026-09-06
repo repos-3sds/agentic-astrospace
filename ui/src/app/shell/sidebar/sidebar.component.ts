@@ -34,7 +34,7 @@ const KUNDLI_TABS: NavTab[] = [
   { route: 'notes', label: 'Notes', icon: 'notebook-tabs' },
 ];
 
-const AI_TAB: NavTab = { route: 'ask', label: 'Ask AI', icon: 'sparkles' };
+const AI_TAB: NavTab = { route: 'ask', label: 'Ask Siddha', icon: 'sparkles' };
 
 @Component({
   selector: 'app-sidebar',
@@ -131,6 +131,11 @@ export class SidebarComponent {
   protected tabLink(route: string): string[] {
     const id = this.store.activeId();
     return id ? ['/kundli', id, route] : ['/app'];
+  }
+
+  protected standaloneAskLink(): string[] {
+    const id = this.store.activeId();
+    return id ? ['/ask', id] : ['/app'];
   }
 
   protected openProfileOverlay(): void {

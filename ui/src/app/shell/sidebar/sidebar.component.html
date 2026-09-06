@@ -46,8 +46,9 @@
 
       <a
         class="rail-item ai-item"
-        [routerLink]="tabLink(aiTab.route)"
-        routerLinkActive="active"
+        [routerLink]="standaloneAskLink()"
+        target="_blank"
+        rel="noopener"
         [title]="collapsed() ? aiTab.label : null"
       >
         <lucide-icon [name]="aiTab.icon" [size]="18" />
