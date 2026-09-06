@@ -1203,9 +1203,7 @@ export class AskAnswerComponent {
   }
 
   protected async copyAnswer(message: ChatMessage): Promise<void> {
-    const text = this.navigation.web
-      ? askReportText(this.reportInput(message))
-      : this.normaliseAnswerText(message.content);
+    const text = askReportText(this.reportInput(message));
     if (!text || typeof document === 'undefined') return;
     try {
       if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
@@ -1234,7 +1232,8 @@ export class AskAnswerComponent {
   }
 
   protected shareLabel(message: ChatMessage): string {
-    return this.exportingMessageId() === message.id ? 'Preparing PDF…' : 'Download PDF';
+    if (this.exportingMessageId() === message.id) return 'Preparing PDF…';
+    return this.navigation.web ? 'Download PDF' : 'Share PDF';
   }
 
   private questionFor(message: ChatMessage): string {
@@ -1247,6 +1246,7 @@ export class AskAnswerComponent {
 
   protected reportInput(message: ChatMessage): AskReportInput {
     return {
+      profileName: this.kundlis.active()?.name ?? 'Selected profile',
       question: this.questionFor(message),
       domain: message.domain,
       intent: message.intent,
@@ -1294,34 +1294,37 @@ export class AskAnswerComponent {
     }
   }
 
-  /**
-   * Hands the verdict to the OS share sheet where available. No fallback UI:
-   * on a platform without it, doing nothing is better than inventing a
-   * share dialog the design never specified.
-   */
+  /** Builds the same signed report on web and mobile. Browsers download it;
+   * native-capable WebViews hand the actual PDF file to the OS share sheet. */
   protected async share(): Promise<void> {
-    const v = this.view();
     const message = this.selectedAssistant() ?? this.latestAssistant();
-    if (this.navigation.web && message) {
-      if (this.exportingMessageId()) return;
-      this.exportingMessageId.set(message.id);
-      try {
-        const safeDomain = (message.domain || 'reading').toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const date = new Date().toISOString().slice(0, 10);
-        downloadBlob(askReportPdf(this.reportInput(message)), `siddha-${safeDomain}-${date}.pdf`);
-      } catch {
-        this.submitError.set('The PDF could not be generated. Please try again.');
-      } finally {
-        this.exportingMessageId.set(null);
+    if (!message || this.exportingMessageId()) return;
+    this.exportingMessageId.set(message.id);
+    try {
+      const safeDomain = (message.domain || 'reading').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const date = new Date().toISOString().slice(0, 10);
+      const filename = `siddha-${safeDomain}-${date}.pdf`;
+      const report = askReportPdf(this.reportInput(message));
+      if (!this.navigation.web) {
+        const file = new File([report], filename, { type: 'application/pdf' });
+        if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare?.({ files: [file] })) {
+          try {
+            await navigator.share({
+              title: `Siddha reading for ${this.kundlis.active()?.name ?? 'this profile'}`,
+              text: this.questionFor(message),
+              files: [file],
+            });
+            return;
+          } catch (error) {
+            if ((error as DOMException).name === 'AbortError') return;
+          }
+        }
       }
-      return;
-    }
-    if (typeof navigator !== 'undefined' && 'share' in navigator) {
-      try {
-        await navigator.share({ title: v.question, text: `${message?.content ?? v.verdict}\n\n${v.whatToDo}` });
-      } catch {
-        // Cancelled by the reader; nothing to report.
-      }
+      downloadBlob(report, filename);
+    } catch {
+      this.submitError.set('The PDF could not be generated. Please try again.');
+    } finally {
+      this.exportingMessageId.set(null);
     }
   }
 

@@ -133,6 +133,52 @@ for (const width of [1280, 390, 2560]) {
   });
 }
 
+test('mobile Ask shares the structured answer as a real Siddha PDF file', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.setItem('astrospace.activeKundliId', 'a');
+    localStorage.setItem('astrospace-preferences', JSON.stringify({ experienceMode: 'balanced', language: 'en' }));
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', {
+      configurable: true,
+      value: async (data: ShareData) => {
+        const file = data.files?.[0];
+        const header = file ? new TextDecoder().decode((await file.arrayBuffer()).slice(0, 8)) : '';
+        (window as any).__sharedPdf = {
+          title: data.title, text: data.text, name: file?.name, type: file?.type, header,
+        };
+      },
+    });
+  });
+  await page.route('**/api/v1/**', async route => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.endsWith('/auth/config')) return route.fulfill({ json: { enabled: false } });
+    if (path.endsWith('/kundlis')) return route.fulfill({ json: [profile('a')] });
+    if (path.endsWith('/stream')) return route.fulfill({
+      contentType: 'text/event-stream',
+      body: 'data: ' + JSON.stringify({
+        type: 'done', status: 'answered', schema_version: 'ask_structured_v1', domain: 'career',
+        reading, thread_id: 'thread-mobile', context_used: ['houses'], evidence_refs: ['houses'],
+      }) + '\n\n',
+    });
+    return route.fulfill({ json: {} });
+  });
+
+  await page.goto('/m/ask/answer?q=When%20will%20my%20career%20settle%3F&pending=1');
+  const answer = page.locator('as-ask-answer');
+  await expect(answer.getByText(reading.interpretation, { exact: true })).toBeVisible();
+  await answer.getByRole('button', { name: 'Share PDF', exact: true }).click();
+  await expect.poll(() => page.evaluate(() => (window as any).__sharedPdf)).toMatchObject({
+    title: 'Siddha reading for Anika',
+    text: 'When will my career settle?',
+    type: 'application/pdf',
+    header: '%PDF-1.4',
+  });
+  const shared = await page.evaluate(() => (window as any).__sharedPdf);
+  expect(shared.name).toMatch(/^siddha-career-\d{4}-\d{2}-\d{2}\.pdf$/);
+  await page.screenshot({ path: '/tmp/mobile-ask-pdf-share.png', fullPage: true });
+});
+
 for (const surface of ['web', 'mobile']) {
   for (const boundary of [
     { event: { type: 'fatal_error', message: 'Could not finish this reading.' }, text: 'Could not finish this reading.' },

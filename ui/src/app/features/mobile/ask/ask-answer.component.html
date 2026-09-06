@@ -116,18 +116,16 @@
                 <img src="mobile/play-muted.svg" alt="" aria-hidden="true" />
                 <span>Listen to answer brief</span>
               </button>
-              @if (navigation.web) {
-                <div class="balanced-actions web-export-actions">
-                  <button type="button" (click)="selectAssistant(message); copyAnswer(message)">
-                    <span aria-hidden="true">⌑</span>
-                    <span>{{ copyLabel(message) }}</span>
-                  </button>
-                  <button type="button" [disabled]="exportingMessageId() === message.id" (click)="selectAssistant(message); share()">
-                    <img src="mobile/share.svg" alt="" aria-hidden="true" />
-                    <span>{{ shareLabel(message) }}</span>
-                  </button>
-                </div>
-              }
+              <div class="balanced-actions web-export-actions">
+                <button type="button" (click)="selectAssistant(message); copyAnswer(message)">
+                  <span aria-hidden="true">⌑</span>
+                  <span>{{ copyLabel(message) }}</span>
+                </button>
+                <button type="button" [disabled]="exportingMessageId() === message.id" (click)="selectAssistant(message); share()">
+                  <img src="mobile/share.svg" alt="" aria-hidden="true" />
+                  <span>{{ shareLabel(message) }}</span>
+                </button>
+              </div>
             }
 
             @case ('practitioner') {
@@ -192,17 +190,10 @@
                     <span aria-hidden="true">⌑</span>
                     <span>{{ copyLabel(message) }}</span>
                   </button>
-                  @if (navigation.web) {
-                    <button type="button" [disabled]="exportingMessageId() === message.id" (click)="selectAssistant(message); share()">
-                      <img src="mobile/share.svg" alt="" aria-hidden="true" />
-                      <span>{{ shareLabel(message) }}</span>
-                    </button>
-                  } @else {
-                    <button type="button" (click)="askAgain('Which date is strongest for this?')">
-                      <span aria-hidden="true">□</span>
-                      <span>Compare Date</span>
-                    </button>
-                  }
+                  <button type="button" [disabled]="exportingMessageId() === message.id" (click)="selectAssistant(message); share()">
+                    <img src="mobile/share.svg" alt="" aria-hidden="true" />
+                    <span>{{ shareLabel(message) }}</span>
+                  </button>
                 </div>
               </div>
             }
@@ -267,9 +258,9 @@
                   <span aria-hidden="true">♡</span>
                   <span>{{ copyLabel(message) }}</span>
                 </button>
-                <button type="button" [disabled]="navigation.web && exportingMessageId() === message.id" (click)="selectAssistant(message); share()">
+                <button type="button" [disabled]="exportingMessageId() === message.id" (click)="selectAssistant(message); share()">
                   <img src="mobile/share.svg" alt="" aria-hidden="true" />
-                  <span>{{ navigation.web ? shareLabel(message) : 'Share' }}</span>
+                  <span>{{ shareLabel(message) }}</span>
                 </button>
               </div>
             }
@@ -314,9 +305,9 @@
               <span>Why this?</span>
             </button>
             @if (preferences.experienceMode() !== 'guided') {
-              <button class="tool" type="button" [disabled]="navigation.web && exportingMessageId() === message.id" (click)="selectAssistant(message); share()">
+              <button class="tool" type="button" [disabled]="exportingMessageId() === message.id" (click)="selectAssistant(message); share()">
                 <img src="mobile/share.svg" alt="" aria-hidden="true" />
-                <span>{{ navigation.web ? shareLabel(message) : 'Share' }}</span>
+                <span>{{ shareLabel(message) }}</span>
               </button>
             }
           </div>

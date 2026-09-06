@@ -565,3 +565,38 @@ describe('AskAnswerComponent memory undo', () => {
     expect((harness.component as any).memorySaved()).toBeNull();
   });
 });
+
+describe('AskAnswerComponent PDF sharing', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  it('shares a signed, profile-scoped PDF file through the mobile OS sheet', async () => {
+    const harness = createIsolationHarness({});
+    await settleEffects();
+    const user = { ...messageWithReading(null), id: 'user-report', role: 'user', content: 'When will my career settle?' };
+    const answer = { ...messageWithReading(FULL_READING), id: 'answer-report', created_at: '2026-09-06T08:30:00Z' };
+    (harness.component as any).messages.set([user, answer]);
+    (harness.component as any).selectedAssistant.set(answer);
+
+    let shared: ShareData | undefined;
+    Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => true });
+    Object.defineProperty(navigator, 'share', {
+      configurable: true,
+      value: async (data: ShareData) => { shared = data; },
+    });
+    try {
+      await (harness.component as any).share();
+    } finally {
+      delete (navigator as any).canShare;
+      delete (navigator as any).share;
+    }
+
+    expect(shared?.title).toBe('Siddha reading for Profile A');
+    expect(shared?.text).toBe('When will my career settle?');
+    expect(shared?.files).toHaveSize(1);
+    const file = shared!.files![0];
+    expect(file.name).toMatch(/^siddha-career-\d{4}-\d{2}-\d{2}\.pdf$/);
+    expect(file.type).toBe('application/pdf');
+    const header = new TextDecoder().decode((await file.arrayBuffer()).slice(0, 8));
+    expect(header.startsWith('%PDF-1.4')).toBeTrue();
+  });
+});

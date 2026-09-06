@@ -1,6 +1,7 @@
 import { askReportPdf, askReportText, AskReportInput } from './ask-report';
 
 const INPUT: AskReportInput = {
+  profileName: 'Anika Rao',
   question: 'When does my career become more stable?',
   domain: 'career',
   intent: 'timing',
@@ -33,6 +34,7 @@ const INPUT: AskReportInput = {
 describe('Ask report export', () => {
   it('serializes every structured section and provenance instead of copying the summary only', () => {
     const text = askReportText(INPUT);
+    expect(text).toContain('Profile: Anika Rao');
     expect(text).toContain('Question: When does my career become more stable?');
     expect(text).toContain('TECHNICAL BASIS');
     expect(text).toContain('10th lord Mercury');
