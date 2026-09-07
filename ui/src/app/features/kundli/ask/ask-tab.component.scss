@@ -1,35 +1,320 @@
 :host {
-  display: flex; flex-direction: column; width: 100%; height: calc(100dvh - 160px);
-  min-height: 420px; color: var(--m-text); background: var(--as-bg);
-  --ask-reading-width: 860px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100dvh;
+  min-height: 560px;
+  color: var(--m-text);
+  background: color-mix(in srgb, var(--as-bg) 91%, var(--m-surface));
+  --ask-reading-width: 760px;
+  --ask-glass: color-mix(in srgb, var(--m-raised) 70%, transparent);
+  --ask-glass-strong: color-mix(in srgb, var(--m-raised) 84%, transparent);
+  --ask-glass-border: color-mix(in srgb, var(--m-border-strong) 52%, transparent);
 }
-.ask-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 24px; border-bottom: 1px solid var(--m-border); }
-.ask-brand { display: flex; align-items: center; gap: 12px; }
-h1 { margin: 0; font: 600 18px/1.5 Inter, sans-serif; }
-label { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--m-muted); }
-select { background: var(--m-surface); color: var(--m-text); border: 1px solid var(--m-border); padding: 8px 12px; border-radius: 6px; font: inherit; min-height: 40px; }
-.ask-layout { display: grid; grid-template-columns: 224px minmax(0, 1fr); flex: 1; min-height: 0; position: relative; }
-.conversation-rail { display: flex; flex-direction: column; gap: 4px; padding: 16px 12px; border-right: 1px solid var(--m-border); overflow: auto; }
-a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; min-height: 42px; box-sizing: border-box; color: var(--m-text); font-size: 14px; text-decoration: none; border-radius: 6px; }
-a:hover { background: var(--m-surface); }
-a.current { background: var(--m-surface); color: var(--m-accent-strong); }
-.new-chat { border: 1px solid var(--m-border); margin-bottom: 8px; }
-h2 { margin: 24px 12px 8px; font-size: 12px; font-weight: 500; color: var(--m-muted); }
+
+.ask-toolbar {
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: minmax(190px, 1fr) minmax(280px, 480px) minmax(260px, 1fr);
+  align-items: center;
+  gap: 24px;
+  padding: 9px 18px;
+  box-sizing: border-box;
+  border-bottom: 1px solid color-mix(in srgb, var(--m-border) 68%, transparent);
+  background: color-mix(in srgb, var(--as-bg) 70%, transparent);
+  backdrop-filter: blur(22px);
+  position: relative;
+  z-index: 30;
+}
+
+.ask-brand,
+.header-actions,
+.profile-switcher,
+.mode-switcher {
+  display: flex;
+  align-items: center;
+}
+
+.ask-brand { gap: 10px; }
+.brand-mark {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--m-primary-cta);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--m-accent) 24%, transparent);
+}
+.brand-copy { display: flex; flex-direction: column; min-width: 0; }
+.brand-copy strong { font: 600 15px/1.2 Inter, sans-serif; letter-spacing: 0; }
+.brand-copy small { color: var(--m-muted); font: 400 11px/1.3 Inter, sans-serif; }
+
+.profile-switcher {
+  justify-self: center;
+  width: min(100%, 480px);
+  gap: 10px;
+  padding: 6px 8px 6px 14px;
+  border: 1px solid color-mix(in srgb, var(--m-border) 72%, transparent);
+  border-radius: 999px;
+  background: var(--ask-glass);
+  box-shadow: 0 10px 34px color-mix(in srgb, #000 10%, transparent);
+  backdrop-filter: blur(18px) saturate(1.08);
+}
+.profile-switcher > span,
+.mode-switcher > span {
+  flex: 0 0 auto;
+  color: var(--m-muted);
+  font: 500 11px/1 Inter, sans-serif;
+}
+.profile-switcher select {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--m-text);
+  font: 600 13px/1.4 Inter, sans-serif;
+}
+
+.header-actions { justify-content: flex-end; gap: 10px; }
+.mode-switcher {
+  gap: 7px;
+  padding: 0 8px 0 10px;
+  min-height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ask-glass);
+  backdrop-filter: blur(16px) saturate(1.08);
+}
+.mode-switcher select {
+  border: 0;
+  background: transparent;
+  color: var(--m-text);
+  font: 500 12px/1.4 Inter, sans-serif;
+}
+.return-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 11px;
+  border-radius: 999px;
+  color: var(--m-muted);
+  text-decoration: none;
+  font: 500 12px/1 Inter, sans-serif;
+}
+.return-link:hover { color: var(--m-text); background: var(--ask-glass); backdrop-filter: blur(14px); }
+
+.ask-layout {
+  display: grid;
+  grid-template-columns: 272px minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+.conversation-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 10px 12px;
+  border-right: 1px solid color-mix(in srgb, var(--m-border) 62%, transparent);
+  overflow: auto;
+  background: color-mix(in srgb, var(--m-surface) 46%, transparent);
+  backdrop-filter: blur(20px) saturate(1.06);
+}
+.conversation-rail a {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 38px;
+  padding: 7px 11px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  color: var(--m-text);
+  text-decoration: none;
+  font: 400 13px/1.35 Inter, sans-serif;
+}
+.conversation-rail a:hover { background: color-mix(in srgb, var(--m-surface) 84%, transparent); }
+.conversation-rail a.current { background: var(--m-surface); color: var(--m-accent-strong); box-shadow: 0 5px 18px color-mix(in srgb, #000 7%, transparent); }
+.new-chat {
+  margin-bottom: 12px;
+  border: 0;
+  background: var(--ask-glass-strong);
+  box-shadow: 0 10px 28px color-mix(in srgb, #000 10%, transparent);
+  backdrop-filter: blur(18px) saturate(1.08);
+  font-weight: 600 !important;
+}
+.rail-section-head { display: flex; align-items: center; justify-content: space-between; margin: 4px 4px 6px 10px; }
+.rail-section-head h2 { margin: 0; color: var(--m-muted); font: 600 11px/1 Inter, sans-serif; text-transform: uppercase; }
+.rail-section-head .icon-link { min-height: 30px; padding: 6px; }
 .recent-list { flex: 1; min-height: 100px; }
 .recent-list a span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.recent-list p { margin: 12px; font-size: 13px; line-height: 1.5; color: var(--m-muted); }
-.memory-link { margin-top: 16px; border-top: 1px solid var(--m-border); }
-.ask-workspace { min-width: 0; min-height: 0; overflow: auto; }
-button { color: var(--m-text); background: var(--m-surface); border: 1px solid var(--m-border); border-radius: 6px; padding: 10px; cursor: pointer; }
-.rail-toggle { display: none; }
-@media (max-width: 1100px) {
-  .ask-layout { grid-template-columns: minmax(0, 1fr); }
-  .rail-toggle { display: flex; }
-  .conversation-rail { display: none; }
-  .rail-open .conversation-rail { display: flex; position: absolute; inset: 0 auto 0 0; width: 240px; z-index: 10; background: var(--as-bg); box-shadow: var(--m-shadow-card); }
+.recent-list p { margin: 12px 10px; color: var(--m-muted); font: 400 12px/1.5 Inter, sans-serif; }
+.memory-link { margin-top: 12px; border-top: 1px solid color-mix(in srgb, var(--m-border) 65%, transparent); border-radius: 0 !important; }
+
+.ask-workspace {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  position: relative;
+  isolation: isolate;
+  background: color-mix(in srgb, var(--as-bg) 91%, var(--m-surface));
 }
-@media (max-width: 600px) {
-  :host { height: calc(100dvh - 180px); min-height: 280px; }
-  .ask-toolbar { padding: 8px 12px; gap: 8px; }
-  label { font-size: 0; gap: 0; } select { font-size: 13px; }
+.celestial-sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: paint;
+  opacity: .96;
+  --sun-center-x: 50%;
+  --sun-center-y: 50%;
+  --sun-core: #fff6a8;
+  --sun-mid: color-mix(in srgb, var(--m-gold) 42%, #ffc75d);
+  --sun-edge: color-mix(in srgb, var(--m-accent) 18%, #f2a12a);
+  --orbit-gold: color-mix(in srgb, var(--m-gold) 78%, var(--m-accent));
+  --mercury: #c7993a;
+  --venus: #f2bf66;
+  --mars: color-mix(in srgb, var(--m-accent) 76%, #ef7a3a);
+  --jupiter: #d1a673;
+  --saturn: #8c80bf;
+}
+.celestial-sun,
+.orbit-system {
+  position: absolute;
+  left: var(--sun-center-x);
+  top: var(--sun-center-y);
+}
+.celestial-sun {
+  width: 76px;
+  height: 76px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 36% 32%, rgba(255, 255, 255, 0.56) 0 12%, transparent 23%),
+    radial-gradient(circle, var(--sun-core) 0 23%, var(--sun-mid) 54%, var(--sun-edge) 100%);
+  opacity: .24;
+  transform: translate(-50%, -50%) scale(1);
+  filter: drop-shadow(0 0 30px color-mix(in srgb, var(--sun-edge) 30%, transparent));
+}
+.celestial-sun::before,
+.celestial-sun::after {
+  content: '';
+  position: absolute;
+  border-radius: inherit;
+  z-index: -1;
+}
+.celestial-sun::before {
+  inset: -10px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--sun-mid) 44%, transparent), transparent 68%);
+  filter: blur(46px);
+  opacity: .72;
+}
+.celestial-sun::after {
+  inset: -42px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--m-gold) 22%, transparent), transparent 72%);
+  filter: blur(68px);
+  opacity: .46;
+}
+.orbit-system {
+  width: min(72vw, 620px);
+  height: min(72vw, 620px);
+  max-width: 620px;
+  max-height: 620px;
+  opacity: .68;
+  transform: translate(-50%, -50%) scale(1);
+  transform-origin: center;
+}
+.orbit-rotor {
+  position: absolute;
+  inset: 0;
+  transform-origin: center;
+  animation: web-ask-orbit-rotate 36s linear infinite;
+}
+.orbit-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border: 0.5px dashed color-mix(in srgb, var(--orbit-gold) 34%, transparent);
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+}
+.orbit-ring.r1 { width: 23%; height: 23%; }
+.orbit-ring.r2 { width: 38.5%; height: 38.5%; }
+.orbit-ring.r3 { width: 56.5%; height: 56.5%; }
+.orbit-ring.r4 { width: 77%; height: 77%; }
+.orbit-ring.r5 { width: 100%; height: 100%; }
+.planet {
+  --planet-size: 8px;
+  --planet-color: var(--m-accent);
+  --planet-angle: 0deg;
+  --planet-radius: 11.5vw;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--planet-size);
+  height: var(--planet-size);
+  margin: calc(var(--planet-size) / -2) 0 0 calc(var(--planet-size) / -2);
+  border-radius: 999px;
+  opacity: .76;
+  background:
+    radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.68) 0 16%, transparent 32%),
+    radial-gradient(circle, color-mix(in srgb, var(--planet-color) 74%, #fff7da) 0 18%, var(--planet-color) 55%, color-mix(in srgb, var(--planet-color) 72%, #1e120b) 100%);
+  box-shadow: 0 0 5px 1px color-mix(in srgb, var(--planet-color) 28%, transparent);
+  transform: rotate(var(--planet-angle)) translateX(var(--planet-radius)) scale(1);
+}
+.planet.mercury { --planet-size: 6px; --planet-color: var(--mercury); --planet-radius: min(11vw, 71px); --planet-angle: 12deg; }
+.planet.venus { --planet-size: 9px; --planet-color: var(--venus); --planet-radius: min(19vw, 119px); --planet-angle: 84deg; }
+.planet.mars { --planet-size: 8px; --planet-color: var(--mars); --planet-radius: min(28vw, 175px); --planet-angle: 156deg; }
+.planet.jupiter { --planet-size: 14px; --planet-color: var(--jupiter); --planet-radius: min(38vw, 238px); --planet-angle: 228deg; }
+.planet.saturn { --planet-size: 11px; --planet-color: var(--saturn); --planet-radius: min(50vw, 310px); --planet-angle: 300deg; }
+.saturn-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 20px;
+  height: 6px;
+  border: 1px solid color-mix(in srgb, var(--saturn) 52%, transparent);
+  border-radius: 999px;
+  transform: translate(-50%, -50%) rotate(-12deg);
+}
+.ask-workspace > :not(.celestial-sky) {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes web-ask-orbit-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.ask-workspace > [role='status'],
+.ask-workspace > [role='alert'] { margin: 40px; color: var(--m-muted); }
+button { color: var(--m-text); background: transparent; border: 0; cursor: pointer; }
+.rail-toggle { display: none; width: 34px; height: 34px; place-items: center; border-radius: 6px; }
+.rail-toggle:hover { background: var(--m-surface); }
+
+@media (max-width: 1050px) {
+  .ask-toolbar { grid-template-columns: 1fr auto; }
+  .profile-switcher { grid-column: 1 / -1; grid-row: 2; width: 100%; max-width: none; }
+  .ask-layout { grid-template-columns: minmax(0, 1fr); }
+  .rail-toggle { display: grid; }
+  .conversation-rail { display: none; }
+  .rail-open .conversation-rail {
+    display: flex;
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: min(280px, 84vw);
+    z-index: 20;
+    box-shadow: var(--m-shadow-card);
+  }
+}
+
+@media (max-width: 620px) {
+  :host { min-height: 420px; }
+  .ask-toolbar { min-height: 58px; grid-template-columns: 1fr auto; gap: 8px; padding: 8px 10px; }
+  .brand-copy small, .mode-switcher > span { display: none; }
+  .header-actions { gap: 2px; }
+  .mode-switcher { padding: 0 4px; }
+  .return-link { width: 36px; padding: 0; justify-content: center; font-size: 0; }
+  .profile-switcher { padding-left: 10px; }
 }
