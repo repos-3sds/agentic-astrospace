@@ -246,6 +246,22 @@ describe('AskAnswerComponent persona-mode content parity', () => {
     expect(paragraphs[0]).toBe('A sentence the model wrapped mid-line.');
   });
 
+  // Balanced's own prompt allows a bold side-heading lead-in on a genuinely
+  // long answer (domain_agent.py's _REGISTER_BALANCED: "a header is fine").
+  // `readingParagraphs` above deliberately flattens that emphasis for
+  // plain-text contexts (TTS, history previews); `readingParagraphRuns` is
+  // the rendering counterpart that must NOT discard it — this is what the
+  // template renders with `<strong class="side-heading">`.
+  it('readingParagraphRuns keeps a bold side-heading as a real run instead of flattening it', () => {
+    const component = createComponent();
+    const reading = { ...FULL_READING,
+      interpretation: '**Career Trajectory:** Your Mars is strong this year.\n\nA plain second paragraph.' };
+    const paragraphs = (component as any).readingParagraphRuns(reading);
+    expect(paragraphs.length).toBe(2);
+    expect(paragraphs[0][0]).toEqual({ text: 'Career Trajectory:', bold: true });
+    expect(paragraphs[1]).toEqual([{ text: 'A plain second paragraph.', bold: false }]);
+  });
+
   it('does not clip the verdict mid-phrase', () => {
     const component = createComponent();
     // The exact sentence the shipped app rendered as
