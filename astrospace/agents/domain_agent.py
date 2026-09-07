@@ -139,6 +139,15 @@ CONTEXT BUNDLE ({domain_name}):
    passage's sentence structure or distinctive phrasing, even closely; a paraphrase that
    only swaps a few words is still someone else's writing. The `source` id already credits
    the origin — your job is the explanation, not a rendering of the source text.
+2b. When a claim is grounded in a specific reference/passage id AND that section's bare name
+   would also technically pass (e.g. a career claim resting on
+   `phal5_navamsa_tenth_lord_livelihood`, which lives under `vargas`), cite the specific
+   reference id, never the bare section name — the two are not equally good, even though both
+   validate. A reader who sees "vargas" learns nothing checkable; a reader who sees a real
+   reference id can trace the exact classical source behind the claim. Reach for a section
+   name only when no reference/passage id in the bundle actually covers the claim (a raw
+   house placement or dasha lord with no accompanying citation is legitimately bundle-
+   grounded without one) — never as the easier default when a real citation exists.
 3. COVER THIS DOMAIN'S OWN PRIMARY EVIDENCE. The bundle marks some evidence as this
    domain's primary lens: `vargas` entries with `"tier": "primary"` (career's D10, marriage's
    D9, wealth's D2), the primary houses and their lords, and `jaimini_karakas`. Address every
