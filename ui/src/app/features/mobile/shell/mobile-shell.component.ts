@@ -11,6 +11,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
 import { SheetOverlayService } from '../../../core/sheet-overlay.service';
 import { HapticsService } from '../../../core/haptics.service';
+import { ConnectivityService } from '../../../core/connectivity.service';
 
 interface MobileTab {
   commands: string[];
@@ -41,6 +42,7 @@ export class MobileShellComponent {
   protected readonly preferences = inject(PreferencesService);
   protected readonly overlay = inject(SheetOverlayService);
   private readonly haptics = inject(HapticsService);
+  protected readonly connectivity = inject(ConnectivityService);
 
   constructor() {
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
@@ -169,6 +171,10 @@ export class MobileShellComponent {
 
   async onTabClick() {
     this.haptics.tap();
+  }
+
+  protected retryConnection(): void {
+    void this.connectivity.retry();
   }
 
 }

@@ -3,6 +3,14 @@ import { Router } from '@angular/router';
 import { Session } from '@supabase/supabase-js';
 
 import { AuthService } from './auth.service';
+import { ConnectivityService } from './connectivity.service';
+
+function connectivitySpy(): jasmine.SpyObj<ConnectivityService> {
+  return jasmine.createSpyObj<ConnectivityService>('ConnectivityService', [
+    'noteRequestSuccess',
+    'noteRequestFailure',
+  ]);
+}
 
 /**
  * The native OAuth/magic-link/password-reset callback arrives over a custom
@@ -39,7 +47,7 @@ describe('AuthService native auth callback', () => {
     localStorage.removeItem(DESTINATION_KEY);
 
     router = jasmine.createSpyObj<Router>('Router', ['navigate', 'navigateByUrl']);
-    service = new AuthService(router);
+    service = new AuthService(router, connectivitySpy());
 
     client = {
       auth: {
@@ -176,7 +184,7 @@ describe('AuthService access-token resilience', () => {
 
   beforeEach(() => {
     router = jasmine.createSpyObj<Router>('Router', ['navigate', 'navigateByUrl']);
-    service = new AuthService(router);
+    service = new AuthService(router, connectivitySpy());
     service.enabled.set(true);
     (service as any).initPromise = Promise.resolve();
   });
