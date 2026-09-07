@@ -12,12 +12,22 @@ export function webAskNavigation(): AskNavigation {
   const store = inject(KundliStore);
   const route = inject(ActivatedRoute);
   const standalone = route.snapshot?.routeConfig?.path === 'ask/:id';
+  const currentProfileId = () => standalone
+    ? route.snapshot?.paramMap?.get('id') ?? store.activeId()
+    : route.parent?.snapshot.paramMap.get('id') ?? store.activeId();
   return {
     web: true,
-    path: (screen) => standalone
-      ? ['/ask', store.activeId()!, ...(screen ? [screen] : [])]
-      : ['/kundli', store.activeId()!, 'ask', ...(screen ? [screen] : [])],
-    chart: () => ['/kundli', store.activeId()!, 'chart'],
+    path: (screen) => {
+      const id = currentProfileId();
+      if (!id) return ['/app'];
+      return standalone
+        ? ['/ask', id, ...(screen ? [screen] : [])]
+        : ['/kundli', id, 'ask', ...(screen ? [screen] : [])];
+    },
+    chart: () => {
+      const id = currentProfileId();
+      return id ? ['/kundli', id, 'chart'] : ['/app'];
+    },
   };
 }
 

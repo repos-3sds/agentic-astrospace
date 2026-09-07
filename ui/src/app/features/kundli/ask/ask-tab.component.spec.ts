@@ -27,10 +27,10 @@ describe('Web Ask shared conversation host', () => {
     return store;
   }
 
-  it('keeps every conversation destination inside the current web profile', () => {
+  it('keeps every conversation destination inside the URL profile', () => {
     const store = setup();
     const navigation = TestBed.inject(ASK_NAVIGATION);
-    expect(navigation.path('answer')).toEqual(['/kundli', 'profile-a', 'ask', 'answer']);
+    expect(navigation.path('answer')).toEqual(['/kundli', 'profile-b', 'ask', 'answer']);
     store.activeId.set('profile-b');
     expect(navigation.path('history')).toEqual(['/kundli', 'profile-b', 'ask', 'history']);
     expect(navigation.path('memory')).toEqual(['/kundli', 'profile-b', 'ask', 'memory']);
@@ -48,6 +48,19 @@ describe('Web Ask shared conversation host', () => {
     expect(navigation.path('answer')).toEqual(['/ask', 'profile-a', 'answer']);
     expect(navigation.path('memory')).toEqual(['/ask', 'profile-a', 'memory']);
     expect(navigation.chart()).toEqual(['/kundli', 'profile-a', 'chart']);
+  });
+
+  it('keeps standalone links anchored to the URL profile while the store is empty', () => {
+    const activeId = signal<string | null>(null);
+    TestBed.configureTestingModule({ providers: [
+      { provide: KundliStore, useValue: { activeId } },
+      { provide: ActivatedRoute, useValue: { snapshot: { routeConfig: { path: 'ask/:id' }, paramMap: convertToParamMap({ id: 'profile-url' }) } } },
+      { provide: ASK_NAVIGATION, useFactory: webAskNavigation },
+    ] });
+    const navigation = TestBed.inject(ASK_NAVIGATION);
+    expect(navigation.path()).toEqual(['/ask', 'profile-url']);
+    expect(navigation.path('history')).toEqual(['/ask', 'profile-url', 'history']);
+    expect(navigation.chart()).toEqual(['/kundli', 'profile-url', 'chart']);
   });
 
   it('waits for profiles and binds direct entry to the URL, not the saved selection', async () => {

@@ -1,6 +1,6 @@
 <header class="ask-toolbar" aria-label="Ask Siddha workspace header">
   <div class="ask-brand">
-    <button class="rail-toggle" type="button" title="Conversations" aria-label="Toggle conversations" [attr.aria-expanded]="railOpen()" (click)="railOpen.set(!railOpen())"><lucide-icon name="panel-left" [size]="18" /></button>
+    <button class="rail-toggle" type="button" title="Conversations" aria-label="Toggle conversations" [attr.aria-expanded]="railOpen()" (click)="railOpen.set(!railOpen())"><lucide-icon name="list" [size]="18" /></button>
     <span class="brand-mark"><lucide-icon name="orbit" [size]="18" [strokeWidth]="1.75" /></span>
     <span class="brand-copy"><strong>SIDDHA</strong><small>Ask Siddha</small></span>
   </div>
@@ -22,12 +22,12 @@
         <option value="guided">Guided</option><option value="balanced">Balanced</option><option value="practitioner">Practitioner</option>
       </select>
     </label>
-    <a class="return-link" [routerLink]="navigation.chart()"><lucide-icon name="arrow-up-right" [size]="15" />Main app</a>
+    <a class="return-link" [routerLink]="navigation.chart()"><lucide-icon name="arrow-left" [size]="15" />Main app</a>
   </div>
 </header>
 <div class="ask-layout" [class.rail-open]="railOpen()">
   <aside class="conversation-rail" aria-label="Conversations">
-    <a class="new-chat" [routerLink]="navigation.path()" (click)="railOpen.set(false)"><lucide-icon name="square-pen" [size]="17" />New conversation</a>
+    <a class="new-chat" [routerLink]="navigation.path()" (click)="railOpen.set(false)"><lucide-icon name="pencil" [size]="17" />New conversation</a>
     <div class="rail-section-head"><h2>Conversations</h2><a class="icon-link" [routerLink]="navigation.path('history')" (click)="railOpen.set(false)" title="View all history" aria-label="View all history"><lucide-icon name="history" [size]="16" /></a></div>
     <div class="recent-list">
       @if (recentLoading() && !recent().length) { <p role="status">Loading conversations...</p> }
@@ -37,7 +37,7 @@
         <a [routerLink]="navigation.path('answer')" [queryParams]="{thread: thread.id}" routerLinkActive="current" [routerLinkActiveOptions]="{exact: true}" ariaCurrentWhenActive="page" [title]="thread.title" (click)="railOpen.set(false)"><span>{{ thread.title }}</span></a>
       }
     </div>
-    <a class="memory-link" [routerLink]="navigation.path('memory')" (click)="railOpen.set(false)"><lucide-icon name="brain" [size]="17" />What Siddha remembers</a>
+    <a class="memory-link" [routerLink]="navigation.path('memory')" (click)="railOpen.set(false)"><lucide-icon name="notebook-pen" [size]="17" />What Siddha remembers</a>
   </aside>
   <div class="ask-workspace">
     @if (ready()) { <router-outlet /> }
