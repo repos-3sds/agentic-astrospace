@@ -245,7 +245,8 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
     try:
         outcome = orchestrator.prepare(
             body.question, thread_domain=thread_domain, domain_override=body.domain_override,
-            experience_mode=body.experience_mode, validate_first=body.validate_first,
+            experience_mode=body.experience_mode, language=body.language,
+            validate_first=body.validate_first,
         )
     except TaxonomyError as e:
         raise HTTPException(status_code=500, detail=str(e))

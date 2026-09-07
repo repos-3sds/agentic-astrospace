@@ -8,8 +8,20 @@
 
 .body { gap: 14px; }
 
-// Telugu, pending real localisation — see the component's class comment.
-.segment.is-soon { opacity: .5; cursor: default; }
+.segment {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+
+  small {
+    @include m-caption;
+    color: var(--m-muted);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+}
+
+.segment.is-on small { color: color-mix(in srgb, var(--m-text) 76%, transparent); }
 
 .eyebrow { @include m-eyebrow; color: var(--m-accent-strong); margin: 6px 0 0; }
 .voice-note { @include m-body-small; color: var(--m-muted); margin: -4px 0 2px; }

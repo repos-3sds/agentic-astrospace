@@ -235,6 +235,40 @@ class TestBasePromptCoversConventionDependentFields:
                                     experience_mode="astro-wizard")
         assert agent.experience_mode == "balanced"
 
+    def test_telugu_language_adds_simple_mixed_telugu_instruction(self, chart):
+        bundle = assemble_domain(chart, "career")
+        agent = DomainReadingAgent(
+            bundle,
+            AGENT_REGISTRY["career"].domain_addendum,
+            language="te",
+        )
+        assert agent.language == "te"
+        compact_prompt = " ".join(agent.system_prompt.split())
+        assert "ANSWER LANGUAGE — Telugu" in agent.system_prompt
+        assert "simple, conversational Telugu" in compact_prompt
+        assert "natural English words mixed in" in compact_prompt
+        assert "Technical citations and `source`" in agent.system_prompt
+        assert "must stay exactly as source ids" in compact_prompt
+
+    def test_unknown_language_falls_back_rather_than_raising(self, chart):
+        bundle = assemble_domain(chart, "career")
+        agent = DomainReadingAgent(
+            bundle,
+            AGENT_REGISTRY["career"].domain_addendum,
+            language="klingon",
+        )
+        assert agent.language == "en"
+        assert "ANSWER LANGUAGE — English" in agent.system_prompt
+
+    def test_orchestrator_passes_language_to_domain_agent(self, chart):
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart)
+        outcome = orchestrator.prepare(
+            "What should I consider about my career right now?",
+            language="te",
+        )
+        assert outcome.prepared is not None
+        assert outcome.prepared.agent.language == "te"
+
     def test_retrospect_rule_forbids_asserting_unknowable_events(self, chart):
         """The line between anchored validation and cold reading."""
         bundle = assemble_domain(chart, "wealth")

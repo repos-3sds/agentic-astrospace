@@ -97,7 +97,7 @@ export class SettingsHomeComponent {
           id: 'language',
           icon: 'set-lang',
           label: 'Language & audio',
-          value: 'English · Audio on',
+          value: `${this.languageLabel()} · Audio on`,
           route: ['/m', 'settings', 'language'],
         },
         {
@@ -193,6 +193,10 @@ export class SettingsHomeComponent {
 
   private toneLabel(): string {
     return this.preferences.tone() === 'direct' ? 'Direct' : 'Gentle';
+  }
+
+  private languageLabel(): string {
+    return this.preferences.language() === 'te' ? 'Telugu' : 'English';
   }
 
   private locationLabel(): string {

@@ -11,7 +11,7 @@ import { AuthService } from '../../core/auth.service';
 import { KundliStore } from '../../core/kundli.store';
 import { PanchangaCity } from '../../core/models';
 import { PanchangaService } from '../../core/panchanga.service';
-import { PreferencesService } from '../../core/preferences.service';
+import { AskResponseLanguage, PreferencesService } from '../../core/preferences.service';
 import { ThemeService } from '../../core/theme.service';
 import { VedicService } from '../../core/vedic.service';
 import { DefListComponent, DefRow } from '../../shared/def-list/def-list.component';
@@ -67,6 +67,7 @@ export class SettingsComponent {
   ];
   protected readonly languageOptions = [
     { label: 'English', value: 'en' },
+    { label: 'Telugu · simple Telugu + English', value: 'te' },
   ];
   protected readonly regionalOptions = [
     { label: 'India format', value: 'en-IN' },
@@ -82,6 +83,7 @@ export class SettingsComponent {
     { label: 'Chart style', value: this.chartStyleLabel(this.prefs.chartStyle()) },
     { label: 'Ayanamsha', value: this.prefs.ayanamsha() },
     { label: 'Node type', value: this.prefs.nodeType() },
+    { label: 'Ask language', value: this.languageLabel(this.prefs.language()) },
     { label: 'Regional format', value: this.prefs.regionalFormat() },
   ]);
 
@@ -96,7 +98,7 @@ export class SettingsComponent {
     { label: 'Node type', value: this.prefs.nodeType() },
     { label: 'Timezone', value: this.prefs.effectiveTimezone() },
     { label: 'Panchanga place', value: this.prefs.panchangaPlace()?.label ?? 'Browser timezone place' },
-    { label: 'Language', value: this.prefs.language() },
+    { label: 'Ask language', value: this.languageLabel(this.prefs.language()) },
     { label: 'Regional format', value: this.prefs.regionalFormat() },
   ]);
 
@@ -148,8 +150,12 @@ export class SettingsComponent {
     this.prefs.setPanchangaPlace(place);
   }
 
-  protected setLanguage(value: string): void {
+  protected setLanguage(value: AskResponseLanguage): void {
     this.prefs.language.set(value);
+  }
+
+  private languageLabel(value: AskResponseLanguage): string {
+    return value === 'te' ? 'Telugu' : 'English';
   }
 
   protected setRegionalFormat(value: string): void {

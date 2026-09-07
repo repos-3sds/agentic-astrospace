@@ -6,24 +6,24 @@
 <div class="body">
   <header class="intro">
     <h1 class="title">Language &amp; audio</h1>
-    <p class="lede">English today. Telugu is on the way — the app is not translated yet.</p>
+    <p class="lede">Choose how Siddha answers Ask questions. The app shell stays English for now.</p>
   </header>
 
   <!-- Telugu is written in Telugu: a picker that names languages only in
        English is useless to the reader most likely to need it. -->
-  <div class="segmented" role="radiogroup" aria-label="App language">
+  <div class="segmented" role="radiogroup" aria-label="Ask response language">
     @for (l of languages; track l.id) {
       <button
         class="segment"
         type="button"
         role="radio"
-        [class.is-on]="l.id === language()"
-        [class.is-soon]="!l.ready"
-        [disabled]="!l.ready"
-        [attr.aria-checked]="l.id === language()"
-        [attr.aria-disabled]="!l.ready"
-        (click)="l.ready && language.set(l.id)"
-      >{{ l.label }}{{ l.ready ? '' : ' · soon' }}</button>
+        [class.is-on]="l.id === preferences.language()"
+        [attr.aria-checked]="l.id === preferences.language()"
+        (click)="setLanguage(l.id)"
+      >
+        <span>{{ l.label }}</span>
+        <small>{{ l.detail }}</small>
+      </button>
     }
   </div>
 

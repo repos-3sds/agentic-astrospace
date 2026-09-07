@@ -11,6 +11,7 @@ export type ExperienceMode = 'guided' | 'balanced' | 'practitioner';
 export type ReadingTone = 'gentle' | 'direct';
 export type MemoryMode = 'ask' | 'automatic';
 export type FestivalRegion = 'pan-india' | 'north' | 'south';
+export type AskResponseLanguage = 'en' | 'te';
 
 export interface PreferencesState {
   chartStyle: DefaultChartStyle;
@@ -18,7 +19,7 @@ export interface PreferencesState {
   nodeType: DefaultNodeType;
   timezoneMode: TimezoneMode;
   panchangaPlace: Pick<PanchangaCity, 'city' | 'nation' | 'timezone' | 'label'> | null;
-  language: string;
+  language: AskResponseLanguage;
   regionalFormat: string;
   experienceMode: ExperienceMode;
   tone: ReadingTone;
@@ -37,7 +38,7 @@ interface RemoteSettings {
   node_type: DefaultNodeType;
   timezone_mode: TimezoneMode;
   panchanga_place: PreferencesState['panchangaPlace'];
-  language: string;
+  language: AskResponseLanguage;
   regional_format: string;
   experience_mode: ExperienceMode;
   tone: ReadingTone;
@@ -72,6 +73,10 @@ function normalizedFestivalRegions(regions: unknown): FestivalRegion[] {
   return normalized.length ? normalized : DEFAULTS.festivalRegions;
 }
 
+function normalizedLanguage(value: unknown): AskResponseLanguage {
+  return value === 'te' ? 'te' : 'en';
+}
+
 @Injectable({ providedIn: 'root' })
 export class PreferencesService {
   private api = inject(ApiService);
@@ -85,7 +90,7 @@ export class PreferencesService {
   readonly panchangaPlace = signal<PreferencesState['panchangaPlace']>(
     this.preferences().panchangaPlace,
   );
-  readonly language = signal(this.preferences().language);
+  readonly language = signal<AskResponseLanguage>(this.preferences().language);
   readonly regionalFormat = signal(this.preferences().regionalFormat);
   readonly experienceMode = signal<ExperienceMode>(this.preferences().experienceMode);
   readonly tone = signal<ReadingTone>(this.preferences().tone);
@@ -203,7 +208,11 @@ export class PreferencesService {
     try {
       const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') as Partial<PreferencesState> | null;
       const next = { ...DEFAULTS, ...(parsed ?? {}) };
-      return { ...next, festivalRegions: normalizedFestivalRegions(next.festivalRegions) };
+      return {
+        ...next,
+        language: normalizedLanguage(next.language),
+        festivalRegions: normalizedFestivalRegions(next.festivalRegions),
+      };
     } catch {
       return DEFAULTS;
     }
@@ -242,7 +251,7 @@ export class PreferencesService {
       this.nodeType.set(remote.node_type);
       this.timezoneMode.set(remote.timezone_mode);
       this.panchangaPlace.set(remote.panchanga_place ?? null);
-      this.language.set(remote.language || DEFAULTS.language);
+      this.language.set(normalizedLanguage(remote.language));
       this.regionalFormat.set(remote.regional_format || DEFAULTS.regionalFormat);
       this.experienceMode.set(remote.experience_mode || DEFAULTS.experienceMode);
       this.tone.set(remote.tone || DEFAULTS.tone);

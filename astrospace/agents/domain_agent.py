@@ -93,7 +93,25 @@ REGISTERS = {
     "practitioner": _REGISTER_PRACTITIONER,
 }
 
-_BASE_SYSTEM = """You are AstroSpace's {domain_name} reading specialist, one of several
+_LANGUAGE_ENGLISH = """
+ANSWER LANGUAGE — English. Write the reading in natural Indian English."""
+
+_LANGUAGE_TELUGU = """
+ANSWER LANGUAGE — Telugu. Write every user-facing field of the structured reading in simple,
+conversational Telugu, with natural English words mixed in where Telugu readers commonly use
+them in speech. Keep astrological terms such as Rahu, Shani, Guru, dasha, antardasha,
+gochara, D9, D10, lagna, nakshatra and bhava as familiar transliterated terms when that is
+clearer than a forced translation. Prefer plain everyday wording over literary Telugu. Do not
+make the answer formal, Sanskrit-heavy, or hard to read. Technical citations and `source`
+ids must stay exactly as source ids from the bundle; translate the explanation, not the
+machine-readable evidence keys."""
+
+LANGUAGE_INSTRUCTIONS = {
+    "en": _LANGUAGE_ENGLISH,
+    "te": _LANGUAGE_TELUGU,
+}
+
+_BASE_SYSTEM = """You are Siddha's {domain_name} reading specialist, one of several
 domain specialists in a larger Vedic astrology assistant. You have been handed a single,
 precomputed CONTEXT BUNDLE below — houses, karakas, divisional-chart (varga) placements,
 the yogas/doshas relevant to this domain, the current dasha lords relevant to it, current
@@ -292,6 +310,8 @@ CONTEXT BUNDLE ({domain_name}):
 
 {register}
 
+{language_instruction}
+
 Every rule above applies in full regardless of the voice below — the register changes HOW you
 speak, never WHAT is true, what you may claim, or what you must refuse.
 {domain_addendum}"""
@@ -369,12 +389,14 @@ class DomainReadingAgent(BaseAstroAgent):
 
     def __init__(self, bundle: dict, domain_addendum: str, api_key: str = None,
                 question_tense: str = "unspecified",
-                experience_mode: str = "balanced"):
+                experience_mode: str = "balanced",
+                language: str = "en"):
         super().__init__(api_key)
         self.bundle = bundle
         # Unknown/absent mode falls back to balanced rather than raising: an
         # unrecognised preference must never cost the reader their answer.
         self.experience_mode = experience_mode if experience_mode in REGISTERS else "balanced"
+        self.language = language if language in LANGUAGE_INSTRUCTIONS else "en"
         profile_facts = bundle.get("profile_facts") or {}
         self.system_prompt = _BASE_SYSTEM.format(
             domain_name=bundle.get("domain_name", bundle.get("domain", "")),
@@ -385,6 +407,7 @@ class DomainReadingAgent(BaseAstroAgent):
             as_of=profile_facts.get("as_of", "unknown"),
             question_tense=question_tense,
             register=REGISTERS[self.experience_mode],
+            language_instruction=LANGUAGE_INSTRUCTIONS[self.language],
         )
 
     def run_structured_reading(self, messages: list) -> StructuredReading:

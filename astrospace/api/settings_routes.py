@@ -24,7 +24,7 @@ class UserSettingsPayload(BaseModel):
     node_type: Literal["mean", "true"] = "mean"
     timezone_mode: Literal["browser", "panchanga_place"] = "browser"
     panchanga_place: Optional[PanchangaPlace] = None
-    language: str = "en"
+    language: Literal["en", "te"] = "en"
     regional_format: str = "en-IN"
     experience_mode: Literal["guided", "balanced", "practitioner"] = "balanced"
     tone: Literal["gentle", "direct"] = "gentle"

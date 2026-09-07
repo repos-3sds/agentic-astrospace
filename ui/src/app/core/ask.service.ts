@@ -4,6 +4,7 @@ import { ApiService } from './api.service';
 import { apiUrl } from './api-origin';
 import { AuthService } from './auth.service';
 import { AskMessage, AskResponse, AskStreamEvent } from './models';
+import { PreferencesService } from './preferences.service';
 
 export const TOOL_LABELS: Record<string, string> = {
   get_birth_chart: 'Birth chart',
@@ -16,6 +17,7 @@ export const TOOL_LABELS: Record<string, string> = {
 export class AskService {
   private api = inject(ApiService);
   private auth = inject(AuthService);
+  private preferences = inject(PreferencesService);
 
   /** per-kundli chat history, kept for the session */
   private histories = new Map<string, ReturnType<typeof signal<AskMessage[]>>>();
@@ -40,6 +42,8 @@ export class AskService {
       const res = await this.api.post<AskResponse>(`/ask/${kundliId}`, {
         question,
         history: priorTurns,
+        language: this.preferences.language(),
+        experience_mode: this.preferences.experienceMode(),
       });
       history.update((msgs) => [
         ...msgs,

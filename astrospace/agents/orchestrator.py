@@ -391,6 +391,7 @@ class AskOrchestrator:
         self, question: str, thread_domain: str | None = None,
         domain_override: str | None = None,
         experience_mode: str = "balanced",
+        language: str = "en",
         validate_first: bool = False,
     ) -> PrepareOutcome:
         """`experience_mode` (guided/balanced/practitioner) selects the
@@ -457,6 +458,7 @@ class AskOrchestrator:
             context.bundle, registry_result.agent_config.domain_addendum,
             question_tense=routing.tense,
             experience_mode=experience_mode,
+            language=language,
         )
         profile_context = context.bundle.get("profile_context") or {}
         return PrepareOutcome(prepared=PreparedRun(

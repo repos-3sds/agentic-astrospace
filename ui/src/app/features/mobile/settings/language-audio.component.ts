@@ -2,11 +2,11 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { RouterLink } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { MobileTtsService } from '../../../core/mobile-tts.service';
-import { PreferencesService } from '../../../core/preferences.service';
+import { AskResponseLanguage, PreferencesService } from '../../../core/preferences.service';
 import { HapticsService } from '../../../core/haptics.service';
 
-/** The languages the app reads and speaks in. */
-export type AppLanguage = 'en' | 'te';
+/** The languages the Ask agent can answer in. */
+export type AppLanguage = AskResponseLanguage;
 
 /** Text spoken when a voice row is tapped, so the choice is heard, not just read. */
 const PREVIEW_TEXT =
@@ -15,9 +15,9 @@ const PREVIEW_TEXT =
 /**
  * Settings — Language & audio (Figma node 67:147).
  *
- * Language is a segmented control rather than a list because there are two of
- * them, and Telugu is written in Telugu. A language picker that names languages
- * only in English is useless to the person most likely to need it.
+ * Language is a segmented control because there are two response languages,
+ * and Telugu is written in Telugu. The app shell is still English; this
+ * controls the language Siddha uses for generated Ask answers.
  *
  * Both switches describe their consequence rather than their mechanism —
  * "Adds a Listen button to your daily card", not "Enable TTS". Someone turning
@@ -42,25 +42,10 @@ export class LanguageAudioComponent {
   private readonly haptics = inject(HapticsService);
   protected readonly preferences = inject(PreferencesService);
 
-  /**
-   * Telugu is listed but not selectable.
-   *
-   * The app has no UI translation, and `language` never reaches the agent — it
-   * is stored on the message row and used to filter the remedies table, and
-   * that is all. Offering the switch implied a translated app and Telugu
-   * answers; it delivered neither.
-   *
-   * Shipping it for real means UI localisation, passing the language through to
-   * generation, Telugu TTS for Listen, and extending the refer-out boundary,
-   * which is English-only on both the input and output side. Until then this
-   * says so rather than pretending.
-   */
-  readonly languages: { id: AppLanguage; label: string; ready: boolean }[] = [
-    { id: 'en', label: 'English', ready: true },
-    { id: 'te', label: 'తెలుగు', ready: false },
+  readonly languages: { id: AppLanguage; label: string; detail: string }[] = [
+    { id: 'en', label: 'English', detail: 'Natural Indian English' },
+    { id: 'te', label: 'తెలుగు', detail: 'Simple Telugu with natural English words' },
   ];
-
-  readonly language = signal<AppLanguage>('en');
   readonly readAloud = signal(true);
   readonly gentleVoice = signal(true);
 
@@ -80,6 +65,11 @@ export class LanguageAudioComponent {
 
   protected toggleGentleVoice(): void {
     this.gentleVoice.update((on) => !on);
+  }
+
+  protected setLanguage(language: AppLanguage): void {
+    this.haptics.select();
+    this.preferences.language.set(language);
   }
 
   protected isSelected(name: string | null): boolean {

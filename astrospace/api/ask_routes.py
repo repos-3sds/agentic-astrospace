@@ -51,7 +51,7 @@ class AskRequest(BaseModel):
     start_thread: bool = Field(
         False, description="Create and persist a new thread for this question."
     )
-    language: str = "en"
+    language: Literal["en", "te"] = "en"
     input_mode: Literal["text", "voice"] = "text"
     domain_override: Optional[str] = Field(
         None,
@@ -331,6 +331,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
             body.question, thread_domain=thread_domain,
             domain_override=body.domain_override,
             experience_mode=body.experience_mode,
+            language=body.language,
             # validate_first intentionally not passed through — see docstring.
         )
     except TaxonomyError as e:

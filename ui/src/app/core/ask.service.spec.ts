@@ -3,10 +3,12 @@ import { TestBed } from '@angular/core/testing';
 import { ApiService } from './api.service';
 import { AskService } from './ask.service';
 import { AskResponse } from './models';
+import { PreferencesService } from './preferences.service';
 
 describe('AskService status handling', () => {
   let api: jasmine.SpyObj<ApiService>;
   let service: AskService;
+  let preferences: PreferencesService;
 
   beforeEach(() => {
     api = jasmine.createSpyObj<ApiService>('ApiService', ['post']);
@@ -14,6 +16,7 @@ describe('AskService status handling', () => {
       providers: [AskService, { provide: ApiService, useValue: api }],
     });
     service = TestBed.inject(AskService);
+    preferences = TestBed.inject(PreferencesService);
   });
 
   function lastAssistantMessage(kundliId: string) {
@@ -76,5 +79,23 @@ describe('AskService status handling', () => {
     const msg = lastAssistantMessage('k1');
     expect(msg.status).toBe('refer_out');
     expect(msg.refer_out_kind).toBe('health');
+  });
+
+  it('sends response language and persona with non-streaming web Ask requests', async () => {
+    preferences.language.set('te');
+    preferences.experienceMode.set('guided');
+    api.post.and.resolveTo({
+      answer: 'సరే, simple Telugu lo answer.',
+      tools_used: [],
+      status: 'answered',
+    } as AskResponse);
+
+    await service.ask('k1', 'Career gurinchi cheppu');
+
+    expect(api.post).toHaveBeenCalledWith('/ask/k1', jasmine.objectContaining({
+      question: 'Career gurinchi cheppu',
+      language: 'te',
+      experience_mode: 'guided',
+    }));
   });
 });
