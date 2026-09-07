@@ -1,14 +1,34 @@
 # AstroSpace Full-Fledged Astrology Software Checklist
 
+**Status:** canonical, living tracker for the broader product/feature
+checklist — calculation-engine depth (as a feature landscape, not
+implementation detail), prediction/validation workflow, product workflows,
+trust/UX polish, and external-validation asks. Companion to
+[backend_astro_depth_checklist_2026-08-06.md](backend_astro_depth_checklist_2026-08-06.md)
+(implementation-level engine/KB depth, that file's source of truth) and
+[mobile_screen_build_plan.md](mobile_screen_build_plan.md) (native screen
+build, now that file's source of truth — see the note below). Check items
+off as they land; when checking one off, add a one-line pointer to what
+proves it, matching this file's own existing practice further down.
+
 This checklist tracks the work needed to move AstroSpace from a strong prototype into a serious, deterministic astrology platform. AI should explain and personalize; the core astrology must be calculated, testable, and auditable.
 
-## Immediate Native-App Execution Plan
+## Immediate Native-App Execution Plan — superseded, see below
 
-Screen completion and workflow completion are tracked separately. A Figma screen
-is not considered product-complete until its controls, state, API, loading,
-empty, error, and return navigation have been exercised at 375 × 812.
+> This section (US-N1 through US-N6) predates
+> [mobile_screen_build_plan.md](mobile_screen_build_plan.md), which now
+> tracks the native app build per-screen, with live-verified ✅/⚠️/❌ status
+> against real Figma node IDs — a finer grain than the checkboxes below, and
+> kept current. Most of what's still unchecked here has since shipped (profile
+> management, calendar, compatibility, chart module wiring, and most platform
+> states all show ✅/⚠️ there now); this section is not being kept in sync
+> and is left in place only because `mobile_screen_build_plan.md` §"Delivery
+> Sequence" still cites `US-N1`–`US-N6` by name as its ordered backlog (see
+> that file's reference to this one). Do not re-check or re-derive items here
+> — use `mobile_screen_build_plan.md`'s own screen table and Delivery
+> Sequence checklist instead.
 
-### US-N1 · Returning user gets the correct active profile
+### US-N1 · Returning user gets the correct active profile (historical)
 
 **Journey:** Sign in → restore/select saved profile → Today loads real guidance.
 
@@ -22,7 +42,7 @@ empty, error, and return navigation have been exercised at 375 × 812.
 - [ ] Verify authenticated cross-account profile isolation against port 8000.
 - [x] Verify loading, API failure, and retry at 375 × 812.
 
-### US-N2 · User asks and receives a safe, persisted answer
+### US-N2 · User asks and receives a safe, persisted answer (historical)
 
 **Journey:** Today suggestion or Ask → backend classification → answer or refer-out
 → follow-up → history.
@@ -33,7 +53,7 @@ empty, error, and return navigation have been exercised at 375 × 812.
 - [ ] Persist and reopen Ask threads for the active profile.
 - [x] Test health, legal, money, death/longevity, and ordinary questions.
 
-### US-N3 · User switches and manages profiles
+### US-N3 · User switches and manages profiles (historical)
 
 **Journey:** Profile trigger → switcher → select/add/edit/archive → all modules
 refresh to the selected kundli.
@@ -44,7 +64,7 @@ refresh to the selected kundli.
 - [ ] Invalidate profile-scoped calculation caches after a switch or edit.
 - [ ] Verify Today, Ask, Chart, Calendar, Transits, Readings, and Notes refresh.
 
-### US-N4 · Core astrology modules use real profile data
+### US-N4 · Core astrology modules use real profile data (historical)
 
 - [ ] Wire Chart and its detail screens to deterministic Vedic APIs.
 - [ ] Wire Calendar and day detail to calendar intelligence.
@@ -54,7 +74,7 @@ refresh to the selected kundli.
 - [ ] Wire Notes persistence.
 - [ ] Add loading, empty, generic-error, and retry states to every module.
 
-### US-N5 · Account lifecycle is complete
+### US-N5 · Account lifecycle is complete (historical)
 
 - [x] Register/sign in and protect the native shell.
 - [x] Create the first kundli during onboarding.
@@ -65,7 +85,7 @@ refresh to the selected kundli.
 - [ ] Verify registration, email confirmation, reset, restart persistence, and
   logout against Supabase on port 8000.
 
-### US-N6 · Native release candidate
+### US-N6 · Native release candidate (historical)
 
 - [ ] Finish remaining Figma variants and practitioner-reference screens.
 - [ ] Build and sync with `npm run build:native:dev`.

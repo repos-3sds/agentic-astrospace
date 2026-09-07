@@ -1335,6 +1335,86 @@ class TestViolationSeverity:
         assert v.severity == "quality"
 
 
+class TestViolationFieldAttribution:
+    """D2: field-scoped repair depends on every violation naming which
+    `StructuredReading` top-level field it lives in, so the orchestrator
+    can regenerate only that field instead of the whole object."""
+
+    def test_a_plain_string_violation_has_no_field(self):
+        """Same fail-closed default as severity: anything built outside
+        this module, or predating field attribution, must read as
+        unattributed — `violation_fields()` reads that as 'fall back to
+        whole-object repair', never as 'safe to leave everything alone'."""
+        from astrospace.agents.verifier import violation_fields
+        assert violation_fields(["some untagged problem"]) == {None}
+
+    def test_violation_field_defaults_to_none(self):
+        from astrospace.agents.verifier import Violation
+        v = Violation("missing thing", "quality")
+        assert v.field is None
+
+    def test_violation_field_is_settable_and_additive_to_severity(self):
+        from astrospace.agents.verifier import Violation
+        v = Violation("bad interpretation", "safety", "interpretation")
+        assert isinstance(v, str)
+        assert v.severity == "safety"
+        assert v.field == "interpretation"
+
+    def test_invented_citation_attributes_to_technical_basis(self, marriage_bundle):
+        bad = _reading(technical_basis=[
+            TechnicalBasisItem(factor="7th lord", reading="well placed", source="totally_invented_ref"),
+        ])
+        from astrospace.agents.verifier import violation_fields
+        violations = verify(bad, marriage_bundle, "marriage")
+        assert violation_fields(violations) == {"technical_basis"}
+
+    def test_prohibited_verdict_attributes_to_whichever_field_it_is_in(self, marriage_bundle):
+        from astrospace.agents.verifier import violation_fields
+        in_interpretation = _reading(interpretation="You will die soon.")
+        assert violation_fields(verify(in_interpretation, marriage_bundle, "marriage")) == {"interpretation"}
+
+        in_guidance = _reading(guidance=Guidance(practical_actions=["You will die soon."]))
+        assert violation_fields(verify(in_guidance, marriage_bundle, "marriage")) == {"guidance"}
+
+        in_technical_basis = _reading(technical_basis=[
+            TechnicalBasisItem(factor="7th lord", reading="You will die soon.", source="houses"),
+        ])
+        assert violation_fields(verify(in_technical_basis, marriage_bundle, "marriage")) == {"technical_basis"}
+
+    def test_a_reading_with_two_distinct_violations_attributes_to_both_fields(self, marriage_bundle):
+        """The union, not just one — a repair scoped to only one of two
+        genuinely broken fields would ship the other one unfixed."""
+        from astrospace.agents.verifier import violation_fields
+        bad = _reading(
+            interpretation="You will die soon.",
+            technical_basis=[TechnicalBasisItem(factor="7th lord", reading="fine", source="totally_invented_ref")],
+        )
+        assert violation_fields(verify(bad, marriage_bundle, "marriage")) == {"interpretation", "technical_basis"}
+
+    def test_domain_mismatch_is_unattributed(self, marriage_bundle):
+        """Not a model-content problem — regenerating any field of this
+        reading against the same mismatched bundle fixes nothing, so this
+        must force whole-object repair (in practice: the same 'we don't
+        know what happened' fallback as any other unattributed case)."""
+        from astrospace.agents.verifier import violation_fields
+        clean = _reading()
+        violations = verify(clean, marriage_bundle, "career")
+        assert violations
+        assert None in violation_fields(violations)
+
+    def test_coverage_shortfall_attributes_to_technical_basis(self, career_bundle_2026):
+        from astrospace.agents.verifier import violation_fields
+        thin = StructuredReading(
+            acknowledgment="ack",
+            technical_basis=[TechnicalBasisItem(factor="f", reading="Saturn rules your 6th.", source="houses")],
+            interpretation="Saturn rules your 6th house and sits there.",
+            summary_and_assurance="s", guidance=Guidance(), confidence="medium",
+        )
+        violations = verify_coverage(thin, career_bundle_2026)
+        assert violations
+        assert violation_fields(violations) == {"technical_basis"}
+
+
 class TestPrimaryEvidenceCoverage:
     def _reading(self, text, source="houses"):
         return StructuredReading(

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ASK_NAVIGATION } from './ask-navigation';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AskComposerComponent } from './ask-composer.component';
@@ -84,6 +85,7 @@ const COPY: Record<ReferDomain, ReferCopy> = {
   styleUrl: './ask-refer-out.component.scss',
 })
 export class AskReferOutComponent {
+  protected readonly navigation = inject(ASK_NAVIGATION);
   private readonly params = toSignal(inject(ActivatedRoute).queryParamMap, {
     requireSync: true,
   });
@@ -104,7 +106,7 @@ export class AskReferOutComponent {
   private readonly router = inject(Router);
 
   protected askAgain(question: string): void {
-    void this.router.navigate(['/m', 'ask'], { queryParams: { q: question } });
+    void this.router.navigate(this.navigation.path(), { queryParams: { q: question } });
     this.draft.set('');
   }
 }

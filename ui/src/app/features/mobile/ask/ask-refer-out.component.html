@@ -1,7 +1,7 @@
 @let c = copy();
 
 <header class="appbar">
-  <a class="back" [routerLink]="['/m', 'ask']" aria-label="Back to Ask">
+  <a class="back" [routerLink]="navigation.path()" aria-label="Back to Ask">
     <img src="mobile/back.svg" alt="" aria-hidden="true" />
   </a>
   <p class="crumb">Ask</p>

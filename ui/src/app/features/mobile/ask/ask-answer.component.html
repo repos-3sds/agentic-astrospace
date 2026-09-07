@@ -1,5 +1,5 @@
 <header class="appbar">
-  <a class="back" [routerLink]="['/m', 'ask']" aria-label="Back to Ask">
+  <a class="back" [routerLink]="navigation.path()" aria-label="Back to Ask">
     <img src="mobile/back.svg" alt="" aria-hidden="true" />
   </a>
   <div class="appbar-title">
@@ -116,6 +116,16 @@
                 <img src="mobile/play-muted.svg" alt="" aria-hidden="true" />
                 <span>Listen to answer brief</span>
               </button>
+              <div class="balanced-actions web-export-actions">
+                <button type="button" (click)="selectAssistant(message); copyAnswer(message)">
+                  <span aria-hidden="true">⌑</span>
+                  <span>{{ copyLabel(message) }}</span>
+                </button>
+                <button type="button" [disabled]="exportingMessageId() === message.id" (click)="selectAssistant(message); share()">
+                  <img src="mobile/share.svg" alt="" aria-hidden="true" />
+                  <span>{{ shareLabel(message) }}</span>
+                </button>
+              </div>
             }
 
             @case ('practitioner') {
@@ -178,11 +188,11 @@
                 <div class="split-actions">
                   <button type="button" (click)="selectAssistant(message); copyAnswer(message)">
                     <span aria-hidden="true">⌑</span>
-                    <span>Copy Answer</span>
+                    <span>{{ copyLabel(message) }}</span>
                   </button>
-                  <button type="button" (click)="askAgain('Which date is strongest for this?')">
-                    <span aria-hidden="true">□</span>
-                    <span>Compare Date</span>
+                  <button type="button" [disabled]="exportingMessageId() === message.id" (click)="selectAssistant(message); share()">
+                    <img src="mobile/share.svg" alt="" aria-hidden="true" />
+                    <span>{{ shareLabel(message) }}</span>
                   </button>
                 </div>
               </div>
@@ -246,11 +256,11 @@
               <div class="balanced-actions">
                 <button type="button" (click)="selectAssistant(message); copyAnswer(message)">
                   <span aria-hidden="true">♡</span>
-                  <span>Copy Answer</span>
+                  <span>{{ copyLabel(message) }}</span>
                 </button>
-                <button type="button" (click)="selectAssistant(message); share()">
+                <button type="button" [disabled]="exportingMessageId() === message.id" (click)="selectAssistant(message); share()">
                   <img src="mobile/share.svg" alt="" aria-hidden="true" />
-                  <span>Share</span>
+                  <span>{{ shareLabel(message) }}</span>
                 </button>
               </div>
             }
@@ -288,16 +298,16 @@
               <span>Listen</span>
             </button>
             <button class="tool" type="button" (click)="copyAnswer(message)">
-              <span>Copy</span>
+              <span>{{ copiedMessageId() === message.id ? 'Copied' : 'Copy' }}</span>
             </button>
             <button class="tool" type="button" (click)="selectAssistant(message); whyOpen.set(true)">
               <img src="mobile/why.svg" alt="" aria-hidden="true" />
               <span>Why this?</span>
             </button>
             @if (preferences.experienceMode() !== 'guided') {
-              <button class="tool" type="button" (click)="selectAssistant(message); share()">
+              <button class="tool" type="button" [disabled]="exportingMessageId() === message.id" (click)="selectAssistant(message); share()">
                 <img src="mobile/share.svg" alt="" aria-hidden="true" />
-                <span>Share</span>
+                <span>{{ shareLabel(message) }}</span>
               </button>
             }
           </div>

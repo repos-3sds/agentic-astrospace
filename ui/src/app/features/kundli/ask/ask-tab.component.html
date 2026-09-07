@@ -1,104 +1,64 @@
-<div class="as-panel">
-  <section class="as-tab-hero">
-    <div>
-      <span class="as-hero-eyebrow">Ask AI · chart-grounded</span>
-      <h2>Question {{ kundli()?.name || 'this chart' }} directly.</h2>
-      <p>
-        The assistant answers through computed Vedic tools first, then explains
-        the reasoning in plain language.
-      </p>
-    </div>
-    <div class="as-hero-stats">
-      <article>
-        <span>Conversation</span>
-        <strong>{{ messages().length }}</strong>
-        <small>messages in this profile</small>
-      </article>
-      <article>
-        <span>Starter prompts</span>
-        <strong>{{ suggestions.length }}</strong>
-        <small>ready questions</small>
-      </article>
-    </div>
-  </section>
-
-<app-section-card icon="message-circle" title="Ask AI about {{ kundli()?.name }}">
-  <div class="chat">
-    <div class="messages" #scroller>
-      @if (!messages().length) {
-        <div class="intro">
-          <div class="intro-mark">
-            <lucide-icon name="sparkles" [size]="22" [strokeWidth]="1.75" />
-          </div>
-          <div class="intro-title">Ask about {{ kundli()?.name }}'s chart</div>
-          <p class="as-muted">
-            Answers are grounded in the computed Vedic charts — every claim cites its placements.
-          </p>
-          <div class="suggestions">
-            @for (q of suggestions; track q) {
-              <button type="button" class="suggestion" (click)="send(q)">{{ q }}</button>
-            }
-          </div>
-        </div>
-      }
-
-      @for (m of messages(); track $index) {
-        @if (m.role === 'user') {
-          <div class="msg-row user">
-            <div class="bubble user">{{ m.content }}</div>
-          </div>
-        } @else if (isBoundary(m)) {
-          <div class="msg-row assistant">
-            <div class="bubble assistant boundary" [class.refer-out]="m.status === 'refer_out'">
-              <lucide-icon
-                [name]="m.status === 'refer_out' ? 'badge-alert' : 'circle-alert'"
-                [size]="15"
-                [strokeWidth]="2"
-              />
-              <div class="as-prose" [innerHTML]="m.content | markdown"></div>
-            </div>
-          </div>
-        } @else {
-          <div class="msg-row assistant">
-            <div class="bubble assistant">
-              <div class="as-prose" [innerHTML]="m.content | markdown"></div>
-              @if (m.tools?.length) {
-                <div class="tools">
-                  <span class="as-muted">grounded on</span>
-                  @for (t of m.tools; track t) {
-                    <span class="tool-chip">{{ toolLabel(t) }}</span>
-                  }
-                </div>
-              }
-            </div>
-          </div>
-        }
-      }
-
-      @if (askSvc.pending()) {
-        <div class="msg-row assistant">
-          <div class="bubble assistant thinking">
-            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-            <span class="as-muted">Consulting the charts…</span>
-          </div>
-        </div>
-      }
-    </div>
-
-    <form class="composer" (ngSubmit)="send()">
-      <input
-        pInputText
-        type="text"
-        name="question"
-        [(ngModel)]="draft"
-        [disabled]="askSvc.pending()"
-        placeholder="e.g. Is this week good for a job change?"
-        autocomplete="off"
-      >
-      <p-button type="submit" [disabled]="askSvc.pending() || !draft.trim()">
-        <lucide-icon name="send" [size]="15" />
-      </p-button>
-    </form>
+<header class="ask-toolbar" aria-label="Ask Siddha workspace header">
+  <div class="ask-brand">
+    <button class="rail-toggle" type="button" title="Conversations" aria-label="Toggle conversations" [attr.aria-expanded]="railOpen()" (click)="railOpen.set(!railOpen())"><lucide-icon name="list" [size]="18" /></button>
+    <span class="brand-mark"><lucide-icon name="orbit" [size]="18" [strokeWidth]="1.75" /></span>
+    <span class="brand-copy"><strong>SIDDHA</strong><small>Ask Siddha</small></span>
   </div>
-</app-section-card>
+
+  @if (activeProfile(); as profile) {
+    <label class="profile-switcher">
+      <span>Reading for</span>
+      <select #profileSelect [value]="profile.id" (change)="switchProfile(profileSelect.value)" aria-label="Reading profile">
+        @for (item of store.kundlis(); track item.id) {
+          <option [value]="item.id">{{ item.name }} · {{ item.relation || 'profile' }}</option>
+        }
+      </select>
+    </label>
+  }
+
+  <div class="header-actions">
+    <label class="mode-switcher"><span>Style</span>
+      <select #mode [value]="preferences.experienceMode()" (change)="setMode(mode.value)" aria-label="Reading style">
+        <option value="guided">Guided</option><option value="balanced">Balanced</option><option value="practitioner">Practitioner</option>
+      </select>
+    </label>
+    <a class="return-link" [routerLink]="navigation.chart()"><lucide-icon name="arrow-left" [size]="15" />Main app</a>
+  </div>
+</header>
+<div class="ask-layout" [class.rail-open]="railOpen()">
+  <aside class="conversation-rail" aria-label="Conversations">
+    <a class="new-chat" [routerLink]="navigation.path()" (click)="railOpen.set(false)"><lucide-icon name="pencil" [size]="17" />New conversation</a>
+    <div class="rail-section-head"><h2>Conversations</h2><a class="icon-link" [routerLink]="navigation.path('history')" (click)="railOpen.set(false)" title="View all history" aria-label="View all history"><lucide-icon name="history" [size]="16" /></a></div>
+    <div class="recent-list">
+      @if (recentLoading() && !recent().length) { <p role="status">Loading conversations...</p> }
+      @else if (recentError()) { <button type="button" (click)="loadRecent()">Retry loading conversations</button> }
+      @else if (!recent().length) { <p>No conversations yet</p> }
+      @for (thread of recent(); track thread.id) {
+        <a [routerLink]="navigation.path('answer')" [queryParams]="{thread: thread.id}" routerLinkActive="current" [routerLinkActiveOptions]="{exact: true}" ariaCurrentWhenActive="page" [title]="thread.title" (click)="railOpen.set(false)"><span>{{ thread.title }}</span></a>
+      }
+    </div>
+    <a class="memory-link" [routerLink]="navigation.path('memory')" (click)="railOpen.set(false)"><lucide-icon name="notebook-pen" [size]="17" />What Siddha remembers</a>
+  </aside>
+  <div class="ask-workspace">
+    <div class="celestial-sky" aria-hidden="true">
+      <div class="celestial-sun"></div>
+      <div class="orbit-system">
+        <div class="orbit-rotor">
+          <span class="orbit-ring r1"></span>
+          <span class="orbit-ring r2"></span>
+          <span class="orbit-ring r3"></span>
+          <span class="orbit-ring r4"></span>
+          <span class="orbit-ring r5"></span>
+          <span class="planet mercury"></span>
+          <span class="planet venus"></span>
+          <span class="planet mars"></span>
+          <span class="planet jupiter"></span>
+          <span class="planet saturn"><span class="saturn-ring"></span></span>
+        </div>
+      </div>
+    </div>
+    @if (ready()) { <router-outlet /> }
+    @else if (loadError()) { <p role="alert">Could not load this profile.</p><button type="button" (click)="loadProfile()">Try again</button> }
+    @else { <p role="status">Loading profile...</p> }
+  </div>
 </div>

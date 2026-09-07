@@ -24,7 +24,9 @@ from main import app
 from astrospace.agents.domain_agent import DomainReadingAgent
 from astrospace.agents.orchestrator import AskOrchestrator
 from astrospace.agents.registry import AGENT_REGISTRY
-from astrospace.agents.schema import Guidance, StructuredReading, TechnicalBasisItem
+from astrospace.agents.schema import (
+    Guidance, StructuredReading, StructuredReadingPatch, TechnicalBasisItem,
+)
 from astrospace.api.auth import AuthUser, current_user
 from astrospace.context import assemble_domain
 from astrospace.core.vedic.chart import VedicChart
@@ -50,6 +52,21 @@ def _good_reading(source: str = "houses", **overrides) -> StructuredReading:
     )
     base.update(overrides)
     return StructuredReading(**base)
+
+
+def _good_patch(source: str = "houses") -> StructuredReadingPatch:
+    """D2's repair path asks for, and validates into,
+    `StructuredReadingPatch` — a `technical_basis`-only violation (an
+    invented citation) is field-attributed to `technical_basis` and
+    triggers `DomainReadingAgent.run_structured_repair`, not a second call
+    to `run_structured_reading`. Any test whose 'bad' reading is an
+    invented-source `technical_basis` (the common case here) must mock
+    this too, or the repair call falls through to the real, unmocked
+    method — which is exactly the "Anthropic call is always stubbed"
+    invariant this file's own docstring states."""
+    return StructuredReadingPatch(
+        technical_basis=[TechnicalBasisItem(factor="10th lord", reading="well placed", source=source)],
+    )
 
 
 class TestAssembleDomainShapes:
@@ -266,7 +283,11 @@ class TestAskOrchestratorPrepare:
     def test_ambiguous_tie_needs_clarification(self, orchestrator):
         outcome = orchestrator.prepare("Is this a good time for my career and my marriage?")
         assert outcome.terminal_envelope["type"] == "clarification_needed"
-        assert set(outcome.terminal_envelope["options"]) == {"career", "marriage", "wealth", "children", "health", "foreign", "personality"}
+        assert set(outcome.terminal_envelope["options"]) == {
+            "career", "marriage", "wealth", "children", "health", "foreign",
+            "personality", "spirituality", "education", "family_property",
+            "litigation",
+        }
 
     def test_high_confidence_tie_also_needs_clarification(self, orchestrator):
         """Independent-review finding (personality-domain build, round 1,
@@ -313,11 +334,26 @@ class TestAskOrchestratorPrepare:
         assert outcome.prepared.domain == "career"
 
     def test_unsupported_domain_is_not_ready(self, orchestrator):
-        outcome = orchestrator.prepare("What does my chart show about property disputes with my siblings?")
+        """All 11 taxonomy domains are registered as of 2026-09-04, so there
+        is no longer a naturally-unsupported real domain to route a question
+        into — the mechanism itself still needs proving, so this patches one
+        entry out of AGENT_REGISTRY for the duration of the test rather than
+        relying on a domain that happens to be unfinished. A genuinely new
+        taxonomy domain added later and not yet registered would hit this
+        exact path for real."""
+        from unittest.mock import patch as _patch
+        from astrospace.agents import orchestrator as orchestrator_module
+        patched = dict(orchestrator_module.AGENT_REGISTRY)
+        del patched["family_property"]
+        with _patch.dict(orchestrator_module.AGENT_REGISTRY, patched, clear=True):
+            outcome = orchestrator.prepare("What does my chart show about property disputes with my siblings?")
         assert outcome.terminal_envelope["type"] == "domain_not_ready"
         assert outcome.terminal_envelope["domain"] == "family_property"
         assert outcome.terminal_envelope["domain_label"]
-        assert outcome.terminal_envelope["available"] == ["career", "children", "foreign", "health", "marriage", "personality", "wealth"]
+        assert outcome.terminal_envelope["available"] == sorted(
+            {"career", "marriage", "wealth", "children", "health", "foreign",
+             "personality", "spirituality", "education", "litigation"}
+        )
 
     def test_career_question_prepares_a_real_bundle(self, orchestrator):
         outcome = orchestrator.prepare("Is this a good year for a promotion at work?")
@@ -349,6 +385,45 @@ class TestAskOrchestratorPrepare:
         assert outcome.prepared.bundle["domain"] == "personality"
         assert "houses" in outcome.prepared.context_used
 
+    def test_spirituality_question_prepares_a_real_bundle(self, orchestrator):
+        outcome = orchestrator.prepare("Am I drawn toward meditation and sadhana?")
+        assert outcome.prepared.domain == "spirituality"
+        assert outcome.prepared.bundle["domain"] == "spirituality"
+        assert "houses" in outcome.prepared.context_used
+        # The whole point of wiring this domain now: the Karakamsha finding
+        # (docs/career_kb_bphs_karakamsha_astrology_interest.md) is actually
+        # reachable from here, not just from career.
+        assert "karakamsha" in outcome.prepared.bundle
+
+    def test_education_question_prepares_a_real_bundle(self, orchestrator):
+        outcome = orchestrator.prepare("Is this a good year for my education and studies?")
+        assert outcome.prepared.domain == "education"
+        assert outcome.prepared.bundle["domain"] == "education"
+        assert "houses" in outcome.prepared.context_used
+
+    def test_family_property_question_prepares_a_real_bundle(self, orchestrator):
+        outcome = orchestrator.prepare("What does my chart say about buying land or a vehicle?")
+        assert outcome.prepared.domain == "family_property"
+        assert outcome.prepared.bundle["domain"] == "family_property"
+        assert "houses" in outcome.prepared.context_used
+
+    def test_litigation_question_prepares_a_real_bundle(self, orchestrator):
+        outcome = orchestrator.prepare("Is this a favourable period for dealing with disputes and conflict?")
+        assert outcome.prepared.domain == "litigation"
+        assert outcome.prepared.bundle["domain"] == "litigation"
+        assert "houses" in outcome.prepared.context_used
+
+    def test_litigation_case_outcome_question_still_refers_out_first(self, orchestrator):
+        """The litigation domain's own addendum leans on refer_out_kind()
+        gating specific case-outcome questions before routing ever reaches
+        it — confirmed directly rather than assumed, since a wrong
+        assumption here would mean the domain answers exactly the question
+        its own addendum says it must not."""
+        outcome = orchestrator.prepare("Am I likely to face a court case or lawsuit soon?")
+        assert outcome.terminal_envelope["type"] == "refer_out"
+        assert outcome.terminal_envelope["kind"] == "legal"
+        assert outcome.prepared is None
+
     # Found missing by independent review of PR #12: every other tense/
     # profile-facts test in this codebase is a leaf unit test (detect_tense()
     # in isolation, profile_facts shape in isolation, verify() in isolation)
@@ -372,6 +447,28 @@ class TestAskOrchestratorPrepare:
         assert outcome.prepared.tense == "future"
         assert "houses" in outcome.prepared.context_used
 
+    def test_timing_question_reaches_orchestrator_prepared_bundle_compact(self, orchestrator):
+        """End-to-end wiring for the Context Planner's first increment
+        (docs/ask_context_engine_multi_agent_architecture_2026-08-07.md):
+        `routing.intent` has to actually reach `assemble_domain`, not just
+        exist as a label on the envelope. A "when will X" question is
+        routed with intent="timing", which `assemble_context` now threads
+        through — confirmed here by the resulting bundle's karaka briefs
+        having dropped their decorative nakshatra/D-60 texture, the same
+        assertion `TestIntentAwareTrimming` in test_context_engine.py makes
+        directly against `assemble_domain`, but exercised through the real
+        orchestrator call path this time."""
+        outcome = orchestrator.prepare("When will I get a promotion?")
+        assert outcome.prepared.intent == "timing"
+        planet = next(iter(outcome.prepared.bundle["karakas"]))
+        assert "nakshatra_detail" not in outcome.prepared.bundle["karakas"][planet]
+
+    def test_explanation_question_reaches_orchestrator_prepared_bundle_verbose(self, orchestrator):
+        outcome = orchestrator.prepare("What does my career placement mean for my job?")
+        assert outcome.prepared.intent == "explanation"
+        planet = next(iter(outcome.prepared.bundle["karakas"]))
+        assert "nakshatra_detail" in outcome.prepared.bundle["karakas"][planet]
+
     def test_pronoun_followup_without_thread_domain_asks_to_clarify(self, orchestrator):
         """Reproduces the reported bug directly: a follow-up with no
         domain keywords of its own ("this"/"it") has nothing to route on
@@ -392,8 +489,18 @@ class TestAskOrchestratorPrepare:
 
     def test_unconfigured_thread_domain_hint_is_ignored_safely(self, orchestrator):
         """A domain_not_ready turn stores its own (unconfigured) domain name
-        — that must never be treated as something to continue."""
-        outcome = orchestrator.prepare("Which month is strongest for this?", thread_domain="litigation")
+        — that must never be treated as something to continue. All 11
+        taxonomy domains are registered as of 2026-09-04 (see
+        TestAskOrchestratorPrepare.test_unsupported_domain_is_not_ready for
+        why this patches AGENT_REGISTRY instead of relying on a naturally-
+        unconfigured one), so this simulates the real scenario the check
+        exists for: an old thread whose stored domain predates its
+        registration, or a domain later deprecated."""
+        from astrospace.agents import orchestrator as orchestrator_module
+        patched = dict(orchestrator_module.AGENT_REGISTRY)
+        del patched["litigation"]
+        with patch.dict(orchestrator_module.AGENT_REGISTRY, patched, clear=True):
+            outcome = orchestrator.prepare("Which month is strongest for this?", thread_domain="litigation")
         assert outcome.terminal_envelope["type"] == "clarification_needed"
 
     def test_domain_override_bypasses_the_ambiguous_tie(self, orchestrator):
@@ -417,8 +524,15 @@ class TestAskOrchestratorPrepare:
 
     def test_domain_override_to_an_unconfigured_domain_still_reports_not_ready(self, orchestrator):
         """An override bypasses routing, not the registry gate — it must
-        never reach a model call for a domain the registry doesn't know."""
-        outcome = orchestrator.prepare("Anything you like", domain_override="litigation")
+        never reach a model call for a domain the registry doesn't know.
+        See test_unsupported_domain_is_not_ready for why this patches
+        AGENT_REGISTRY rather than relying on a naturally-unconfigured
+        domain."""
+        from astrospace.agents import orchestrator as orchestrator_module
+        patched = dict(orchestrator_module.AGENT_REGISTRY)
+        del patched["litigation"]
+        with patch.dict(orchestrator_module.AGENT_REGISTRY, patched, clear=True):
+            outcome = orchestrator.prepare("Anything you like", domain_override="litigation")
         assert outcome.terminal_envelope["type"] == "domain_not_ready"
         assert outcome.terminal_envelope["domain"] == "litigation"
 
@@ -450,20 +564,29 @@ class TestAskOrchestratorRun:
         assert events[-1]["tense"] == "retrospective"
 
     def test_bad_then_good_repairs_once_and_persists(self, prepared):
+        """An invented-source `technical_basis` violation is field-
+        attributed to `technical_basis` alone, so D2 repairs it through
+        `run_structured_repair` — the initial `run_structured_reading` is
+        called exactly once, not twice."""
         orchestrator, run = prepared
         bad = _good_reading(source="totally_invented_ref")
-        good = _good_reading()
-        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, good]):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad) as gen, \
+             patch.object(DomainReadingAgent, "run_structured_repair", return_value=_good_patch()) as repair:
             events = list(orchestrator.run(run, [{"role": "user", "content": "q"}],
                                            persist=lambda reading, status: "thread-2"))
         assert events[-1]["status"] == "answered"
         assert events[-1]["thread_id"] == "thread-2"
+        assert gen.call_count == 1
+        repair.assert_called_once()
+        assert repair.call_args.args[1] == {"technical_basis"}
 
     def test_bad_twice_fails_verification_and_persists_nothing_new(self, prepared):
         orchestrator, run = prepared
         bad = _good_reading(source="totally_invented_ref")
+        still_bad = _good_patch(source="still_totally_invented")
         persisted = []
-        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, bad]):
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad), \
+             patch.object(DomainReadingAgent, "run_structured_repair", return_value=still_bad):
             events = list(orchestrator.run(run, [{"role": "user", "content": "q"}],
                                            persist=lambda reading, status: persisted.append((reading, status)) or None))
         assert events[-1]["status"] == "verification_failed"
@@ -604,7 +727,15 @@ class TestAskStreamRoute:
         assert done["status"] == "answered"
 
     def test_unsupported_domain_never_calls_an_agent(self, client, env):
-        with patch.object(DomainReadingAgent, "run_structured_reading") as run:
+        """See TestAskOrchestratorPrepare.test_unsupported_domain_is_not_ready
+        for why this patches AGENT_REGISTRY rather than relying on a
+        naturally-unsupported domain — all 11 are registered as of
+        2026-09-04."""
+        from astrospace.agents import orchestrator as orchestrator_module
+        patched = dict(orchestrator_module.AGENT_REGISTRY)
+        del patched["family_property"]
+        with patch.dict(orchestrator_module.AGENT_REGISTRY, patched, clear=True), \
+             patch.object(DomainReadingAgent, "run_structured_reading") as run:
             r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
                 "question": "What does my chart show about property disputes with my siblings?",
             })
@@ -612,7 +743,10 @@ class TestAskStreamRoute:
         run.assert_not_called()
         frame = self._frames(r)[0]
         assert frame["type"] == "domain_not_ready"
-        assert frame["available"] == ["career", "children", "foreign", "health", "marriage", "personality", "wealth"]
+        assert frame["available"] == sorted(
+            {"career", "marriage", "wealth", "children", "health", "foreign",
+             "personality", "spirituality", "education", "litigation"}
+        )
 
     def test_ambiguous_question_asks_for_clarification(self, client, env):
         with patch.object(DomainReadingAgent, "run_structured_reading") as run:
@@ -675,7 +809,9 @@ class TestAskStreamRoute:
 
     def test_failed_verification_persists_nothing_new(self, client, env):
         bad = _good_reading(source="totally_invented_ref")
-        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[bad, bad]):
+        still_bad = _good_patch(source="still_totally_invented")
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad), \
+             patch.object(DomainReadingAgent, "run_structured_repair", return_value=still_bad):
             r = client.post(f"/api/v1/ask/{env['kundli']}/stream", json={
                 "question": "Is this a good year for a promotion at work?",
                 "start_thread": True,
@@ -754,3 +890,229 @@ class TestAskStreamRoute:
                 "thread_id": thread_id,
             })
         assert self._frames(second)[-1]["domain"] == "marriage"
+
+
+class TestSourceEnumMatchesTheVerifier:
+    """Part D: `technical_basis[].source` is constrained in the tool schema
+    to exactly what the verifier will accept, so an invented citation is
+    unrepresentable rather than merely detectable.
+
+    The load-bearing property is not "there is an enum" — it is that the
+    enum and `verify()` are the SAME set. A constraint that disagrees with
+    its checker fails silently in whichever direction is looser, so the
+    drift test below matters more than the presence test."""
+
+    def test_tool_schema_constrains_source_to_the_bundles_own_sources(self, chart):
+        from astrospace.agents.schema import reading_tool_schema
+        from astrospace.agents.verifier import valid_sources
+
+        bundle = assemble_domain(chart, "career")
+        schema = reading_tool_schema(valid_sources(bundle))
+        enum = schema["$defs"]["TechnicalBasisItem"]["properties"]["source"]["enum"]
+
+        assert enum == sorted(valid_sources(bundle))
+        assert "houses" in enum
+        # Request-specific, not a static list: this bundle's real reference
+        # ids are in it, and a plausible-looking invention is not.
+        ref_ids = [r["ref_id"] for r in bundle["references"]]
+        assert ref_ids, "career bundle should carry references"
+        assert all(ref_id in enum for ref_id in ref_ids)
+        assert "bphs_10th_house_totally_made_up" not in enum
+
+    def test_enum_and_verifier_cannot_drift(self, chart):
+        """Every value the schema permits must survive `verify()`, and a
+        value it forbids must not. This is the test that fails if someone
+        later re-derives the allowed set in one place and not the other."""
+        from astrospace.agents.schema import reading_tool_schema
+        from astrospace.agents.verifier import valid_sources, verify
+
+        bundle = assemble_domain(chart, "career")
+        enum = reading_tool_schema(valid_sources(bundle))["$defs"][
+            "TechnicalBasisItem"]["properties"]["source"]["enum"]
+
+        for source in enum:
+            violations = verify(_good_reading(source=source), bundle, "career", "future")
+            assert not [v for v in violations if "does not resolve" in v], (
+                f"schema permits {source!r} but the verifier rejects it"
+            )
+
+        rejected = verify(_good_reading(source="not_in_the_bundle_at_all"),
+                          bundle, "career", "future")
+        assert [v for v in rejected if "does not resolve" in v], (
+            "a source outside the enum must still be rejected by the verifier"
+        )
+
+    def test_the_narrowed_schema_reaches_the_provider(self, chart):
+        from anthropic.types import Message, ToolUseBlock, Usage
+        from astrospace.agents.verifier import valid_sources
+
+        bundle = assemble_domain(chart, "career")
+        agent = DomainReadingAgent(bundle, AGENT_REGISTRY["career"].domain_addendum)
+        fake_response = Message(
+            id="msg_test", type="message", role="assistant", model=agent.model,
+            content=[ToolUseBlock(type="tool_use", id="toolu_1", name="deliver_reading",
+                                  input=_good_reading().model_dump())],
+            stop_reason="tool_use", stop_sequence=None,
+            usage=Usage(input_tokens=10, output_tokens=5),
+        )
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = fake_response
+        agent.client = mock_client
+        agent.provider = "anthropic"
+
+        agent.run_structured_reading([{"role": "user", "content": "hi"}])
+        _, kwargs = mock_client.messages.create.call_args
+        sent = kwargs["tools"][0]["input_schema"]
+        assert sent["$defs"]["TechnicalBasisItem"]["properties"]["source"]["enum"] == sorted(
+            valid_sources(bundle)
+        )
+
+    def test_a_provider_ignoring_the_enum_still_parses_and_is_caught_downstream(self, chart):
+        """The enum is a constraint, not a replacement for the check. If a
+        provider ignores it, validation must still succeed (the Pydantic
+        model is unchanged) so the verifier — not a parse crash — is what
+        rejects the citation.
+
+        Note for whoever reads this next: unlike the three tests above,
+        this one passes with or without the enum, deliberately. It pins the
+        DEGRADATION path, not the constraint — it is a characterization
+        test, not a regression pin, and it going green proves nothing about
+        whether the enum is still wired up. The other three cover that (all
+        three go red if the enum is gutted or forked; verified by reverting
+        each and re-running)."""
+        from anthropic.types import Message, ToolUseBlock, Usage
+        from astrospace.agents.verifier import verify
+
+        bundle = assemble_domain(chart, "career")
+        agent = DomainReadingAgent(bundle, AGENT_REGISTRY["career"].domain_addendum)
+        off_enum = _good_reading(source="an_id_the_enum_never_offered").model_dump()
+        fake_response = Message(
+            id="msg_test", type="message", role="assistant", model=agent.model,
+            content=[ToolUseBlock(type="tool_use", id="toolu_1", name="deliver_reading",
+                                  input=off_enum)],
+            stop_reason="tool_use", stop_sequence=None,
+            usage=Usage(input_tokens=10, output_tokens=5),
+        )
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = fake_response
+        agent.client = mock_client
+        agent.provider = "anthropic"
+
+        reading = agent.run_structured_reading([{"role": "user", "content": "hi"}])
+        assert isinstance(reading, StructuredReading)
+        assert [v for v in verify(reading, bundle, "career", "future")
+                if "does not resolve" in v]
+
+
+# tests/conftest.py's autouse fixture replaces `run_structured_repair`
+# class-wide with a mock-friendly default (so every test that only mocks
+# `run_structured_reading` doesn't have to know D2 exists). Captured here,
+# at MODULE level, before any fixture has patched anything, and as a plain
+# module global rather than a class attribute — a class attribute would
+# rebind `self` to the test instance on access (`self.attr` triggers the
+# function descriptor's `__get__`), not to the `DomainReadingAgent`
+# instance the real method needs.
+_REAL_RUN_STRUCTURED_REPAIR = DomainReadingAgent.run_structured_repair
+
+
+class TestFieldScopedRepair:
+    """D2: repair the failing field(s) only, not the whole object — a
+    tense violation confined to `interpretation` should not cost a
+    regenerated `technical_basis` alongside it."""
+
+    def test_repair_patch_schema_narrows_required_and_source_enum(self, chart):
+        from astrospace.agents.schema import repair_patch_schema
+        bundle = assemble_domain(chart, "career")
+        allowed = {"houses", "karakas"}
+        schema = repair_patch_schema({"interpretation"}, allowed)
+        assert schema["required"] == ["interpretation"]
+        assert schema["$defs"]["TechnicalBasisItem"]["properties"]["source"]["enum"] == sorted(allowed)
+
+    def test_structured_reading_patch_leaves_unset_fields_none(self):
+        patch_obj = StructuredReadingPatch(interpretation="fixed text")
+        assert patch_obj.interpretation == "fixed text"
+        assert patch_obj.technical_basis is None
+        assert patch_obj.acknowledgment is None
+        assert patch_obj.guidance is None
+        assert patch_obj.confidence is None
+
+    def test_run_structured_repair_sends_the_narrowed_schema_to_the_provider(self, chart):
+        from anthropic.types import Message, ToolUseBlock, Usage
+        bundle = assemble_domain(chart, "career")
+        agent = DomainReadingAgent(bundle, AGENT_REGISTRY["career"].domain_addendum)
+        fake_response = Message(
+            id="msg_test", type="message", role="assistant", model=agent.model,
+            content=[ToolUseBlock(type="tool_use", id="toolu_1", name="repair_reading",
+                                  input={"interpretation": "fixed"})],
+            stop_reason="tool_use", stop_sequence=None,
+            usage=Usage(input_tokens=10, output_tokens=5),
+        )
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = fake_response
+        agent.client = mock_client
+        agent.provider = "anthropic"
+
+        with patch.object(DomainReadingAgent, "run_structured_repair", new=_REAL_RUN_STRUCTURED_REPAIR):
+            patch_obj = agent.run_structured_repair([{"role": "user", "content": "hi"}], {"interpretation"})
+        assert isinstance(patch_obj, StructuredReadingPatch)
+        assert patch_obj.interpretation == "fixed"
+        assert patch_obj.technical_basis is None
+
+        _, kwargs = mock_client.messages.create.call_args
+        sent_schema = kwargs["tools"][0]["input_schema"]
+        assert sent_schema["required"] == ["interpretation"]
+
+    def test_a_field_attributable_violation_calls_repair_not_a_second_generation(self, chart):
+        """The narrowness this whole feature exists for: `run_structured_
+        reading` (the first, full generation) is called exactly once —
+        the repair goes through `run_structured_repair` instead, scoped to
+        exactly the field the violation implicated."""
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart)
+        outcome = orchestrator.prepare("Is this a good year for a promotion at work?")
+        bad = _good_reading(source="totally_invented_ref")
+        good_patch = StructuredReadingPatch(
+            technical_basis=[TechnicalBasisItem(factor="10th lord", reading="well placed", source="houses")],
+        )
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad) as gen, \
+             patch.object(DomainReadingAgent, "run_structured_repair", return_value=good_patch) as repair:
+            events = list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
+                                           persist=lambda reading, status: "t"))
+        assert events[-1]["status"] == "answered"
+        assert gen.call_count == 1
+        repair.assert_called_once()
+        assert repair.call_args.args[1] == {"technical_basis"}
+
+    def test_repair_merge_keeps_untouched_fields_from_the_original_reading(self, chart):
+        """The other half of the narrowness: fields NOT in the violated
+        set must survive the repair completely unchanged, proving the
+        merge doesn't silently regenerate more than it asked for."""
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart)
+        outcome = orchestrator.prepare("Is this a good year for a promotion at work?")
+        bad = _good_reading(source="totally_invented_ref",
+                            acknowledgment="A distinctive untouched acknowledgment.")
+        good_patch = StructuredReadingPatch(
+            technical_basis=[TechnicalBasisItem(factor="10th lord", reading="well placed", source="houses")],
+        )
+        with patch.object(DomainReadingAgent, "run_structured_reading", return_value=bad), \
+             patch.object(DomainReadingAgent, "run_structured_repair", return_value=good_patch):
+            events = list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
+                                           persist=lambda reading, status: "t"))
+        assert events[-1]["reading"]["acknowledgment"] == "A distinctive untouched acknowledgment."
+        assert events[-1]["reading"]["technical_basis"][0]["source"] == "houses"
+
+    def test_an_unattributed_violation_falls_back_to_whole_object_repair(self, chart):
+        """Domain/routed-domain mismatch is the one violation `verify()`
+        never attributes to a field — regenerating any single field of
+        this reading against the same mismatched bundle fixes nothing.
+        This must call `run_structured_reading` a second time (whole-
+        object repair), never `run_structured_repair`."""
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart)
+        outcome = orchestrator.prepare("Is this a good year for a promotion at work?")
+        outcome.prepared.bundle["domain"] = "not-the-routed-domain"
+        good = _good_reading()
+        with patch.object(DomainReadingAgent, "run_structured_reading", side_effect=[_good_reading(), good]) as gen, \
+             patch.object(DomainReadingAgent, "run_structured_repair") as repair:
+            list(orchestrator.run(outcome.prepared, [{"role": "user", "content": "q"}],
+                                  persist=lambda reading, status: "t"))
+        assert gen.call_count == 2
+        repair.assert_not_called()

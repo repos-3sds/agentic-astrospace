@@ -135,26 +135,6 @@
       "status": "convention_dependent"
     },
     {
-      "ref_id": "pm_disease_sixth",
-      "domains": [
-        "health",
-        "litigation"
-      ],
-      "subdomains": [
-        "chronic_disease",
-        "court_cases"
-      ],
-      "statement": "The 6th bhava carries disease, debt and enemies together; afflictions to the 6th and its lord activate all three significations and must be separated by karaka and context.",
-      "source": {
-        "text_key": "prasna_marga",
-        "location": "roga/prasna chapters"
-      },
-      "tags": [
-        "house:6"
-      ],
-      "status": "verified_common"
-    },
-    {
       "ref_id": "uk_1st_lagna_vitality",
       "domains": [
         "health"
@@ -321,15 +301,14 @@
         "basic_education",
         "higher_education"
       ],
-      "statement": "The 4th bhava governs basic schooling and foundational learning; the 5th governs higher intellect, specialized study, and academic merit. The Chaturvimshamsha (D24) refines which field of learning and how much of the promise the native actually pursues.",
+      "statement": "Uttara Kalamritam's classical significations list names 'education' explicitly among the 4th house's roughly 46 items and again among the 5th house's roughly 41 items -- both houses carry it, not just one. Corrected from an earlier, unverifiable BPHS attribution: BPHS Santhanam's own 4th- and 5th-house effects chapters (ch.15, ch.16) do not use the word education at all -- ch.16 is occupied entirely by progeny/children combinations -- so the 4th/5th-for-education claim is genuinely Uttara Kalamritam's, not BPHS's, and is cited to the book that actually says it.",
       "source": {
-        "text_key": "bphs",
-        "location": "4th/5th bhava and D24 significations"
+        "text_key": "uttara_kalamrita",
+        "location": "Kanda I, Ch. V, shlokas 7 and 9-10, pp.115-116"
       },
       "tags": [
         "house:4",
-        "house:5",
-        "varga:D24"
+        "house:5"
       ],
       "status": "verified_common"
     },
@@ -349,25 +328,6 @@
       },
       "tags": [
         "yoga:saraswati_yoga"
-      ],
-      "status": "convention_dependent"
-    },
-    {
-      "ref_id": "kn_rao_mercury_education",
-      "domains": [
-        "education"
-      ],
-      "subdomains": [
-        "breaks",
-        "competitive_exams"
-      ],
-      "statement": "Mercury's strength and dignity are read as one of the most consistent indicators of ease in formal education; an afflicted or debilitated Mercury is a common thread in charts with schooling breaks or difficulty, though never a standalone verdict.",
-      "source": {
-        "text_key": "kn_rao_education",
-        "location": "Mercury and schooling patterns"
-      },
-      "tags": [
-        "planet:Mercury"
       ],
       "status": "convention_dependent"
     },
@@ -412,40 +372,23 @@
       "status": "convention_dependent"
     },
     {
-      "ref_id": "prasna_marga_5th_affliction",
-      "domains": [
-        "children"
-      ],
-      "subdomains": [
-        "delay_difficulty"
-      ],
-      "statement": "Afflictions to the 5th house or its lord are read as timing/ease factors for conceiving and raising children, not as a fixed verdict — classical texts pair every affliction with cancellation and remedial factors.",
-      "source": {
-        "text_key": "prasna_marga",
-        "location": "5th bhava and progeny chapters"
-      },
-      "tags": [
-        "house:5"
-      ],
-      "status": "convention_dependent"
-    },
-    {
       "ref_id": "uk_4th_bhava_property",
       "domains": [
         "family_property"
       ],
       "subdomains": [
         "land_house",
-        "vehicles"
+        "vehicles",
+        "mother",
+        "ancestral_property"
       ],
-      "statement": "The 4th bhava governs mother, home, land, vehicles, and general domestic comfort; the Chaturthamsha (D4) is examined specifically for fixed property and real-estate fortune.",
+      "statement": "Uttara Kalamritam's classical significations list for the 4th house names, among its roughly 46 items: house, land, garden, wells/tanks, paternal property, mother, and conveyances/vehicles including animal-drawn ones and livestock (buffaloes, cows, horses, elephants). This is the single house classical Jyotisha loads most heavily with domestic/family significance -- not narrowly 'the mother's house' the way some shorthand summaries put it. (This same list also names 'father' under the 4th house -- see bphs20_ninth_house_father for why that specific point is recorded separately, layered rather than folded in here.)",
       "source": {
         "text_key": "uttara_kalamrita",
-        "location": "4th bhava significations"
+        "location": "Kanda I, Ch. V, shloka 7, p.115"
       },
       "tags": [
-        "house:4",
-        "varga:D4"
+        "house:4"
       ],
       "status": "verified_common"
     },
@@ -457,14 +400,14 @@
       "subdomains": [
         "siblings"
       ],
-      "statement": "The 3rd bhava shows younger siblings and courage; the 9th shows elder siblings, father, and fortune more broadly — classical texts read both houses together for the full sibling picture, not the 3rd alone.",
+      "statement": "Corrected from an earlier, unverified claim that the 9th house shows elder siblings. BPHS's actual rule (its own note on ch.14 v.1-3) splits siblings by birth order across two different houses, not 3rd-vs-9th: the 3rd house and Mars signify younger co-born (Bhratru covers both brother and sister, disambiguated as Jyeshta/elder or Kanishta/younger); the 11th house and Jupiter signify elder co-born. Benefic conjunction/aspect on the 3rd brings courage and good co-born relations; the 3rd lord and Mars together in a malefic sign or with a malefic is read as adverse for the co-born's wellbeing generally. The same passage also confirms the Sun/9th-lord pairing for father and the Moon/4th-lord pairing for mother, each read the same way.",
       "source": {
         "text_key": "bphs",
-        "location": "3rd and 9th bhava significations"
+        "location": "ch.14 v.1-3, pp.100-101 (Santhanam trans.)"
       },
       "tags": [
         "house:3",
-        "house:9"
+        "house:11"
       ],
       "status": "verified_common"
     },
@@ -527,17 +470,17 @@
       "status": "convention_dependent"
     },
     {
-      "ref_id": "prasna_marga_3rd_short_travel",
+      "ref_id": "uk_3rd_short_travel",
       "domains": [
         "foreign"
       ],
       "subdomains": [
         "short_travel"
       ],
-      "statement": "The 3rd bhava governs short journeys and everyday travel, distinct from the 9th/12th's longer-distance and foreign-residence significations — a chart can show ease in one register without the other.",
+      "statement": "Corrected from an earlier, unverifiable Prasna Marga attribution (that book is not present in this KB corpus). Uttara Kalamritam's classical significations list for the 3rd house names 'short good journeys' explicitly among its roughly 36 items, alongside wandering and pilgrimages — distinct from the 9th/12th houses' longer-distance and foreign-residence significations elsewhere in the same chapter.",
       "source": {
-        "text_key": "prasna_marga",
-        "location": "3rd bhava and travel"
+        "text_key": "uttara_kalamrita",
+        "location": "Kanda I, Ch. V, shloka 4-5, p.114"
       },
       "tags": [
         "house:3"
@@ -551,16 +494,15 @@
       ],
       "subdomains": [
         "open_enemies",
-        "court_cases"
+        "obstacles"
       ],
-      "statement": "The 6th bhava governs open enemies, disputes, and litigation; the 12th governs hidden losses and confinement. A strong 6th lord is classically read as an advantage in contested matters, while a weak or afflicted 6th lord favours settlement over confrontation.",
+      "statement": "Uttara Kalamritam's classical significations list for the 6th house names, among its roughly 41 items: obstacles, foes and enmity, imprisonment-adjacent affliction, and quarrels/reproach -- the house of open conflict and impediment generally, not narrowly disease (the more commonly cited 6th-house signification). Corrected from an earlier, unverified claim that dignity of the 6th lord determines outcome in contested matters specifically -- that interpretive gloss is not in this passage (which is an inventory of significations, not a strength-based rule) and has been dropped rather than left uncited.",
       "source": {
         "text_key": "uttara_kalamrita",
-        "location": "6th and 12th bhava significations"
+        "location": "Kanda I, Ch. V, shlokas 10-12, p.117"
       },
       "tags": [
-        "house:6",
-        "house:12"
+        "house:6"
       ],
       "status": "verified_common"
     },
@@ -1032,6 +974,334 @@
       "observance_note": "A genuine intra-text conflict, left unresolved. State which reading is being used rather than implying the text speaks with one voice."
     },
     {
+      "ref_id": "bphs33_karakamsha_ketu_rahu_astrologer",
+      "domains": [
+        "career",
+        "spirituality"
+      ],
+      "subdomains": [
+        "field_selection",
+        "spiritual_inclination"
+      ],
+      "statement": "A Jaimini technique read independently of the 10th house or 10th lord: the Atmakaraka's navamsa sign (Karakamsha) is treated as its own reference point, and whichever planet occupies it, or the 5th sign from it, names a learned pursuit — Jupiter with the Moon there gives an author, Jupiter alone a polymath well versed in Veda and Vedanta, Mars a logician, Mercury a follower of Mimamsa philosophy, Saturn one dull-witted in assembly, the Sun a musician, the Moon a follower of Sankhya philosophy, and Ketu or Rahu an astrologer. Ketu and Rahu here are read as the soul's own pull toward occult, intuitive, or non-worldly knowledge — a spiritual-inclination signal as much as a livelihood one, not just a career outcome.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.33 v.41-45, p.267 (Santhanam trans.); ch.35 v.41-45 (Sharma trans.)"
+      },
+      "tags": [
+        "karakamsha",
+        "navamsa",
+        "atmakaraka"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs36_matsya_yoga_astrologer",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection"
+      ],
+      "statement": "Matsya Yoga: benefics in the 9th house and the ascendant, mixed planets in the 5th house, and malefics in the 4th and 8th houses — the native born in this yoga will be an astrologer, kind, virtuous, strong, beautiful, famous, learned and pious.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.36 v.21-22, p.302 (Santhanam trans.); ch.37 v.21-22 (Sharma trans.)"
+      },
+      "tags": [
+        "yoga",
+        "house:9",
+        "house:1",
+        "house:5",
+        "house:4",
+        "house:8"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Both translations agree on the yoga's name and effects, but flag the same manuscript disagreement: this reading (also Chaukhamba's) requires benefics in the ascendant and 9th with malefics in the 4th/8th; other manuscript traditions (Sri Venkateswara Press, Thakur Prasad Pustaka Bhandar, C.G. Rajan, Jataka Parijata) require the reverse — malefics in the ascendant and 9th. State which reading is being used rather than implying the text speaks with one voice."
+    },
+    {
+      "ref_id": "bj10_1_tenth_house_occupant_method",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection"
+      ],
+      "statement": "A third, independent technique for reading livelihood: the planet occupying the 10th house from Lagna or the Moon names the channel of wealth directly — Sun: father/inheritance, Moon: mother, Mars: through one's enemy, Mercury: friends, Jupiter: brothers, Venus: women, Saturn: servants. If more than one planet occupies the 10th, the active channel follows whichever planet's dasha or antardasha is running, not a single fixed source. If no planet occupies the 10th from Lagna or Moon, the navamsa of the 10th lord is read instead.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.X st.1, p.142 (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "house:10",
+        "navamsa"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bj10_1_multiple_income_sources_caution",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection",
+        "job_vs_business"
+      ],
+      "statement": "The source explicitly warns against reducing a person's livelihood to a single planet or technique: a person may simultaneously be a lawyer, a landowner drawing produce, a trustee, a shareholder, a salaried official, and receive money from father, mother, spouse's dowry, and siblings at once. Picking only 'the stronger' significator and discarding the rest is stated as not supported by the classical authorities. A career reading should not force one deterministic profession out of a chart that genuinely supports several concurrent income sources.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.X st.1 notes, p.142 (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "house:10",
+        "methodology"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bj10_2_3_navamsa_tenth_lord_full_table",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection"
+      ],
+      "statement": "The full seven-graha table for the navamsa-of-the-10th-lord technique (converges with, and predates by roughly a millennium, Phaladeepika Adhyaya V's independent extraction of the same method): Sun's navamsa - perfumery/scented articles, gold, wool, medicines, or medical/nursing work; Moon's navamsa - corals, pearls, shells, agricultural or watery produce, livelihood bound up with women; Mars's navamsa - minerals/ores, weapons, fire-adjacent work, adventurous or risk-taking work, occupations using physical strength; Mercury's navamsa - writer, mechanic, painter, sculptor, engraver, poet, mathematician, or architect; Jupiter's navamsa - priestly or temple work, mining or manufacturing, charitable work, pilgrimage-related livelihood; Venus's navamsa - gems, silver or metals, cattle; Saturn's navamsa - labor, transport/carrying work, or enforcement-adjacent occupations.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.X st.2-3, pp.142-143 (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "house:10",
+        "lord:10",
+        "navamsa"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bj10_4_house_relationship_and_sun_self_made",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection",
+        "job_vs_business"
+      ],
+      "statement": "The 10th lord's placement by house-relationship shapes the wealth channel: in its own house, wealth comes through that house's own domain; in a friendly house, through friends; in an unfriendly or enemy house, through enemies or opposition. If the 10th lord is specifically the Sun, exalted and otherwise strong, wealth instead comes through self-exertion and self-acquisition rather than any of those relationship channels — this self-made distinction is named for the Sun only, not generalized to other exalted planets. Separately, powerful benefics placed in the Lagna, 2nd, or 11th house bring wealth through many different channels, with success across ventures even where they diverge from the person's original line of work.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.X st.4, p.145 (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "house:10",
+        "lord:10",
+        "dignity"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_g23_6_auspicious_industries",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection"
+      ],
+      "statement": "The 10th lord in the 8th house conjunct Rahu, while generally a difficult combination for professional happiness, is specifically noted as auspicious for the leather trade, life-insurance work, and the mining industry.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.23 v.6 (Sharma trans.)"
+      },
+      "tags": [
+        "house:10",
+        "house:8",
+        "lord:10"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_g23_7_trade_conduct_caution",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "job_vs_business"
+      ],
+      "statement": "Saturn and Mars together with the 10th lord in the 7th house, the house of trade and business, with the 7th lord itself afflicted, is read by one translation as a caution toward illegal or unethical means in trade — a professional-conduct reading of the same combination another translation reads only as personal character. Cite as a trade-conduct caution, never as a character or sexual-conduct verdict.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.23 v.7 (Sharma trans.); cf. ch.21 v.7, p.138 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:10",
+        "house:7",
+        "lord:10",
+        "convention_dependent"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The two translations of this verse diverge: Sharma reads it as a caution about illegal or unethical trade conduct, Santhanam's ch.21 v.7 reads the same combination as a personal-character remark. This app cites the trade-conduct reading only — never as a character or sexual-conduct verdict — and states that the reading is one of two translator interpretations rather than implying the text speaks with one voice."
+    },
+    {
+      "ref_id": "bphs_g23_11_sun_afflicted_eleventh",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "unemployment",
+        "job_change"
+      ],
+      "statement": "The Sun conjunct Rahu, Mars and Saturn in the 11th house afflicts the Sun as significator of will and self-confidence, and the native fails to complete his professional efforts.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.23 v.11 (Sharma trans.)"
+      },
+      "tags": [
+        "house:11"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_g23_16_saturn_debilitated_bereft_of_actions",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "unemployment"
+      ],
+      "statement": "Saturn together with a debilitated planet in the 10th house, with the 10th house's own navamsha also afflicted by a malefic, leaves the native bereft of accomplishment in his actions.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.23 v.16 (Sharma trans.)"
+      },
+      "tags": [
+        "house:10",
+        "dignity",
+        "varga:D9"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_g26_110_finance_banking",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection"
+      ],
+      "statement": "The 10th lord in the 2nd house, well placed, is read as banking, finance, or governmental-authority professions — high officials in banks, finance ministers, or holders of special governmental authority.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.110 (Sharma trans.)"
+      },
+      "tags": [
+        "house:10",
+        "house:2",
+        "lord:10"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_g26_111_engineering",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection"
+      ],
+      "statement": "The 10th lord in the 3rd house, for a Capricorn ascendant specifically, is read as prompting an engineering profession.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.111 (Sharma trans.)"
+      },
+      "tags": [
+        "house:10",
+        "house:3",
+        "lord:10"
+      ],
+      "status": "convention_dependent"
+    },
+    {
+      "ref_id": "bphs_g26_112_automobiles_agriculture",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection"
+      ],
+      "statement": "The 10th lord in the 4th house is read as a profession relating to automobiles, building material, agriculture, or dairy.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.112 (Sharma trans.)"
+      },
+      "tags": [
+        "house:10",
+        "house:4",
+        "lord:10"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_g26_113_creative_scholarly_professions",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection",
+        "fame_status"
+      ],
+      "statement": "The 10th lord in the 5th house is read as statesmen, scholars, professors, writers, educationists, or actors — professional distinction through intellectual or creative work.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.113 (Sharma trans.)"
+      },
+      "tags": [
+        "house:10",
+        "house:5",
+        "lord:10"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_g26_114_doctors_lawyers",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection"
+      ],
+      "statement": "The 10th lord in the 6th house is read as auspicious specifically for doctors and lawyers; other professions under this placement see more fluctuation and obstacles.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.114 (Sharma trans.)"
+      },
+      "tags": [
+        "house:10",
+        "house:6",
+        "lord:10"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs_g26_116_scrap_minerals_lic",
+      "domains": [
+        "career"
+      ],
+      "subdomains": [
+        "field_selection"
+      ],
+      "statement": "The 10th lord in the 8th house is read as favouring trades in scrap, mineral substances, life-insurance work, or leather goods; other professions under this placement fail badly.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.116 (Sharma trans.)"
+      },
+      "tags": [
+        "house:10",
+        "house:8",
+        "lord:10"
+      ],
+      "status": "verified_common"
+    },
+    {
       "ref_id": "bphs18_2_seventh_lord_dusthana",
       "domains": [
         "marriage"
@@ -1367,7 +1637,7 @@
         "field_selection",
         "job_vs_business"
       ],
-      "statement": "A second classical technique for profession, independent of the 10th lord's Rashi placement: the navamsa occupied by the 10th lord names the type of livelihood — for example the Sun's navamsa indicating government or priestly service, Mercury's indicating writing, scholarship or clerical work, Mars's indicating metals, conflict or adventurous trades. Two authors centuries apart both treat the 10th lord as the key career significator, through different vargas.",
+      "statement": "A second classical technique for profession, independent of the 10th lord's Rashi placement: the navamsa occupied by the 10th lord names the type of livelihood — for example the Sun's navamsa indicating government or priestly service, Mercury's indicating writing, scholarship, clerical work, or a knowledge of astrology, Mars's indicating metals, conflict or adventurous trades. Two authors centuries apart both treat the 10th lord as the key career significator, through different vargas.",
       "source": {
         "text_key": "phaladeepika",
         "location": "Adhyaya V slokas 2-8, pp.43-45 (Sastri trans.)"
@@ -2485,6 +2755,87 @@
         "lord:11"
       ],
       "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs20_ninth_house_father",
+      "domains": [
+        "family_property",
+        "litigation"
+      ],
+      "subdomains": [
+        "father",
+        "ancestral_property",
+        "court_cases"
+      ],
+      "statement": "BPHS's 9th-house-effects chapter (ch.20) is the primary classical treatment of the father as a person, not just a paternal-property signification -- it opens with dedicated combinations for the father's own fortune, standing, and status. The Sun and the 9th lord together are the classical significator-pairing for father, independently confirmed by ch.14's own note on siblings (which pairs the Moon/4th lord for mother the same way). Ch.20 v.4's note on an afflicted 9th lord adds a direct litigation link: the native may 'disinherit patrimony or enter into litigations' over the father's estate.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.20 v.1-7, pp.131-133 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:9",
+        "father"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Three houses genuinely carry 'father' with different weight across this KB's sources, not a single settled convention: the 9th house (this entry) gets BPHS's own dedicated chapter-length treatment, the strongest textual claim to primacy; the 10th house carries it as a real but secondary co-signification in BPHS's own 10th-house chapter opening (see bphs21_karma_and_father); Uttara Kalamritam's 4th-house significations list separately names father as one item among ~46 (see uk_4th_bhava_property). Lead with the 9th house as primary; name the 10th/4th as supporting only when the bundle's own evidence points there, never imply the texts speak with one voice."
+    },
+    {
+      "ref_id": "uk_11th_house_education_and_property",
+      "domains": [
+        "education",
+        "family_property"
+      ],
+      "subdomains": [
+        "basic_education",
+        "ancestral_property"
+      ],
+      "statement": "Uttara Kalamritam's classical significations list for the 11th house names, among its roughly 30 items, education and ancestral property alongside the house's primary signification of gains, income, and fulfilled desires -- the passage lists both as items among many, not as a rule about exam or competitive-result success; read as supporting evidence for education and inherited property generally, not the headline house for either.",
+      "source": {
+        "text_key": "uttara_kalamrita",
+        "location": "Kanda I, Ch. V, shlokas 19-21, pp.123-124"
+      },
+      "tags": [
+        "house:11"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "uk_8th_house_legal_jeopardy",
+      "domains": [
+        "litigation"
+      ],
+      "subdomains": [
+        "court_cases"
+      ],
+      "statement": "Uttara Kalamritam's classical significations list for the 8th house includes, among its roughly 28 items, fear of punishment from the government and debts -- a direct classical link between the 8th house and legal/administrative jeopardy specifically, alongside its more commonly cited significations of sudden loss and worry.",
+      "source": {
+        "text_key": "uttara_kalamrita",
+        "location": "Kanda I, Ch. V, shlokas 14-16, pp.118-119"
+      },
+      "tags": [
+        "house:8"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "uk_12th_house_enemies_and_disputes",
+      "domains": [
+        "litigation"
+      ],
+      "subdomains": [
+        "hidden_enemies",
+        "obstacles"
+      ],
+      "statement": "Uttara Kalamritam's classical significations list for the 12th house includes, among its roughly 30 items, fear from foes, imprisonment, disputes, and being hated by the public.",
+      "source": {
+        "text_key": "uttara_kalamrita",
+        "location": "Kanda I, Ch. V, shlokas 21-23, p.124"
+      },
+      "tags": [
+        "house:12"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The passage itself lists these items without calling them 'hidden' or contrasting them with the 6th house's open enmity -- that framing is the widespread classical dusthana convention (6th = open/known conflict, 12th = hidden/behind-the-scenes loss and confinement), applied here rather than quoted from this specific verse. State it as the convention being used, not as this passage's own wording."
     }
   ]
 }
