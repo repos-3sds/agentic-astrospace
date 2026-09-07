@@ -460,21 +460,59 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   that actually consume Abhijit; neither exists here. This is the missing
   consumer that would give `abhijit.py` live value beyond description.
   *Hook:* `abhijit.py` is what either should read from.
-- [ ] **Karakamsha** — the sign the Atmakaraka occupies in D9. Real,
-  well-corroborated, and cheap: the engine already computes AK
-  (`jaimini.chara_karakas`) and D9 signs (`vargas.d9`) separately, so this
-  is a lookup, not a new calculation. Surfaced while auditing the career
-  KB, which used the non-existent term "Karakaksha" for it. *Hook:*
-  `jaimini.py`, alongside the existing `upapada`/`arudha_padas`.
+- [x] **Karakamsha** — **CLOSED 2026-09-01**. `jaimini.karakamsha()`:
+  Atmakaraka's D9 sign, who occupies it, and who occupies the 5th sign
+  from it, wired into `VedicChart.jaimini()` and exposed domain-
+  independently in the CE bundle (`bundle["karakamsha"]`, same reasoning
+  as `jaimini_karaka_array`). Motivated by a real question — "how would
+  the model predict a reader's inclination toward astrology without being
+  asked" — which turned up two grounded BPHS rules, cross-verified in both
+  Santhanam's and Sharma's independent translations: "Effects of
+  Karakamsha" (ch.33/35, shlokas 41-45 — Ketu or Rahu there names an
+  astrologer) and Matsya Yoga (ch.36/37 — a separate combination with the
+  same outcome, flagged `convention_dependent` for a genuine manuscript
+  disagreement). Both now in `references.json` under
+  career/`field_selection`. Also caught while fixing this: a real
+  pre-existing extraction gap — Phaladeepika's Mercury-navamsa sloka names
+  "a knowledge of astrology" explicitly, which the already-landed
+  `phal5_navamsa_tenth_lord_livelihood` reference had summarized away;
+  corrected in place. **Follow-up closed same session:** `spirituality` is
+  now registered in `AGENT_REGISTRY` (own addendum in `registry.py`,
+  non-directive framing around renunciation/gurus/past-life claims) and the
+  Karakamsha reference now carries `spirituality`/`spiritual_inclination`
+  alongside `career`/`field_selection`. Matsya Yoga stayed career-only —
+  it names a specific profession, not a general inclination.
 - [ ] **Argala "contested" tiebreak** — `argala.py` reports `contested`
   when the argala and obstruction houses hold equal planet counts, and
   deliberately does not pick a winner. Sources say to compare relative
   strength, which needs Shadbala; that comparison was out of scope.
   *Unblocks on:* a decision on which Shadbala measure to compare.
   *Hook:* `argala._leg_outcome()`.
-- [ ] **9 remaining domains** from taxonomy v2's 16 (7 shipped: career,
-  marriage, wealth, children, health, foreign, personality). *Hook:*
-  `agents/registry.py` + `context/taxonomy.json`.
+- [x] **All 11 taxonomy domains registered — CLOSED 2026-09-04.**
+  `education`, `family_property`, and `litigation` (the last 3) now have
+  real addenda in `agents/registry.py` and real KB grounding, primarily
+  from Uttara Kalamritam's Kanda I Ch. V significations chapter (a single
+  chapter covering all three domains, plus BPHS's own 9th-house-father
+  chapter). See docs/career_kb_education_family_litigation_domains.md.
+- [ ] **Several domains' `source_refs` name books absent from this corpus.**
+  Surfaced while closing the item above, and checked all the way through
+  for `prasna_marga`: `kn_rao_mercury_education`, `pm_disease_sixth`,
+  `prasna_marga_5th_affliction` (all three removed), and
+  `prasna_marga_3rd_short_travel` (retargeted to a real Uttara Kalamritam
+  citation, `uk_3rd_short_travel`) all cited K.N. Rao's *Planets and
+  Education* or *Prasna Marga* — neither book exists anywhere in the KB
+  corpus, confirmed by `scripts/audit_kb_sources.py` and a direct filename
+  sweep. Every `prasna_marga`-cited reference is now fixed; `raman_htjh`
+  and `kn_rao_career` have not been swept the same way yet. `career`,
+  `wealth`, `marriage`, and `health` still name `raman_htjh` (Raman's *How
+  to Judge a Horoscope*) in their own `taxonomy.json` `source_refs`, and
+  `career`/`wealth` also name `kn_rao_career` — neither book is in the
+  corpus either. Not every mention has necessarily produced a bad reference
+  yet, but each is a latent one. *Hook:* audit every `references.json`
+  entry whose `source.text_key` is `raman_htjh` or `kn_rao_career` against
+  `scripts/audit_kb_sources.py`'s real output, then correct
+  `taxonomy.json`'s `source_refs` for those 5 domains the same way this
+  pass corrected `education`'s and `litigation`'s.
 
 ### C. Ask/agent layer — one live safety gap, highest priority here
 

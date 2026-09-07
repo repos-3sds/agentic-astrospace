@@ -6,6 +6,7 @@ import { Capacitor } from '@capacitor/core';
 import { createClient, Session, SupabaseClient, User } from '@supabase/supabase-js';
 import { apiUrl } from './api-origin';
 import { Preferences } from '@capacitor/preferences';
+import { ConnectivityService } from './connectivity.service';
 
 const NATIVE_AUTH_CALLBACK = 'app.astrospace.mobile://auth/callback';
 const NATIVE_AUTH_BRIDGE_PATH = '/api/v1/auth/native-callback';
@@ -40,8 +41,11 @@ export class AuthService {
   private client: SupabaseClient | null = null;
   private initPromise: Promise<void> | null = null;
   private nativeCallbackInstalled = false;
+  private readonly connectivity: ConnectivityService;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, connectivity: ConnectivityService) {
+    this.connectivity = connectivity;
+  }
 
   init(): Promise<void> {
     if (this.initPromise) return this.initPromise;
@@ -53,7 +57,14 @@ export class AuthService {
   }
 
   private async load(): Promise<void> {
-    const res = await fetch(apiUrl('/api/v1/auth/config'));
+    let res: Response;
+    try {
+      res = await fetch(apiUrl('/api/v1/auth/config'));
+      this.connectivity.noteRequestSuccess();
+    } catch (error) {
+      this.connectivity.noteRequestFailure(error);
+      throw error;
+    }
     if (!res.ok) throw new Error('Could not load auth configuration');
     const config = (await res.json()) as AuthConfig;
     this.enabled.set(!!config.enabled);

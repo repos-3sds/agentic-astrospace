@@ -1,5 +1,5 @@
 <header class="askhist-appbar">
-  <a class="askhist-back" routerLink="/m/ask" aria-label="Back to Ask">
+  <a class="askhist-back" [routerLink]="navigation.path()" aria-label="Back to Ask">
     <img src="mobile/back.svg" alt="" aria-hidden="true" />
   </a>
   <h1>Ask History</h1>
@@ -22,7 +22,7 @@
     <div class="askhist-empty">
       <p class="askhist-empty-title">{{ view() === 'archived' ? 'No archived conversations' : 'No past questions yet' }}</p>
       <p>{{ view() === 'archived' ? 'Conversations you archive will remain available here.' : 'Completed Ask conversations will appear here after the answer finishes saving.' }}</p>
-      @if (view() === 'active') { <a routerLink="/m/ask">Ask your first question</a> }
+      @if (view() === 'active') { <a [routerLink]="navigation.path()">Ask your first question</a> }
     </div>
   } @else {
     <div class="askhist-list">
@@ -33,6 +33,10 @@
           (touchstart)="beginSwipe($event)"
           (touchend)="endSwipe($event, thread)"
         >
+          <button class="askhist-menu" type="button" aria-label="Conversation actions"
+            [attr.aria-expanded]="revealedThreadId() === thread.id"
+            title="Conversation actions"
+            (click)="revealedThreadId.set(revealedThreadId() === thread.id ? null : thread.id)"><lucide-icon name="list" [size]="18" /></button>
           <div class="askhist-actions">
             @if (view() === 'active') {
               <button class="askhist-archive" type="button" [disabled]="mutating() === thread.id" (click)="archive($event, thread)">Archive</button>

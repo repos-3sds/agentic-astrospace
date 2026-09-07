@@ -82,7 +82,7 @@
       "gochara_planets": ["Jupiter", "Mercury"],
       "keywords": ["education", "study", "exam", "exams", "degree", "college", "university", "school", "learning", "research", "phd", "marks", "student", "course"],
       "convention_flags": [],
-      "source_refs": ["bphs", "jataka_parijata", "kn_rao_education", "raman_htjh"]
+      "source_refs": ["bphs", "uttara_kalamrita", "jataka_parijata"]
     },
     "children": {
       "name": "Children & Progeny",
@@ -111,8 +111,8 @@
       "arudhas": ["A4"],
       "gochara_planets": ["Saturn", "Mars"],
       "keywords": ["mother", "father", "parents", "sibling", "brother", "sister", "home", "house", "property", "land", "vehicle", "car", "relocation", "shifting", "ancestral"],
-      "convention_flags": ["Father: 9th house (southern) vs 10th house (some northern texts) — resolve against reference corpus."],
-      "source_refs": ["bphs", "uttara_kalamrita", "phaladeepika", "raman_htjh"]
+      "convention_flags": ["Father's house is layered across sources, not a single settled convention: BPHS gives the 9th house its own dedicated chapter-length treatment of the father (the strongest textual claim to primacy), the 10th house carries a real secondary co-signification in BPHS's own 10th-house chapter, and Uttara Kalamritam's 4th-house significations list separately names father too. Lead with the 9th house; name the 10th/4th only when the bundle's own evidence points there — see bphs20_ninth_house_father in references.json."],
+      "source_refs": ["bphs", "uttara_kalamrita", "phaladeepika"]
     },
     "foreign": {
       "name": "Foreign Travel & Settlement",
@@ -157,7 +157,7 @@
       "gochara_planets": ["Mars", "Saturn", "Rahu"],
       "keywords": ["court", "case", "litigation", "lawsuit", "enemy", "dispute", "legal", "police", "theft", "cheated", "conflict", "rival", "fight"],
       "convention_flags": ["Advisory tone only — no deterministic verdicts on legal outcomes or imprisonment."],
-      "source_refs": ["prasna_marga", "bphs", "uttara_kalamrita"]
+      "source_refs": ["bphs", "uttara_kalamrita"]
     },
     "personality": {
       "name": "Personality & Self-Understanding",

@@ -68,6 +68,21 @@
   touch-action: pan-y;
 }
 
+.askhist-menu {
+  position: absolute;
+  right: 6px;
+  top: 4px;
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: var(--m-surface);
+  color: var(--m-text);
+  font-size: 24px;
+  cursor: pointer;
+}
+.askhist-card .askhist-meta { padding-right: 36px; }
+
 .askhist-card {
   position: relative;
   padding: 16px;

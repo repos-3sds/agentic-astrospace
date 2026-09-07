@@ -1,4 +1,21 @@
 <div class="shell">
+  @if (connectivity.state() !== 'online') {
+    <section
+      class="network-banner"
+      [class.is-reconnecting]="connectivity.reconnecting()"
+      role="status"
+      aria-live="polite"
+    >
+      <span class="network-icon" aria-hidden="true"></span>
+      <span>
+        <b>{{ connectivity.reconnecting() ? 'Reconnecting' : 'You’re offline' }}</b>
+        <small>{{ connectivity.reconnecting() ? 'Checking the connection…' : 'Saved guidance stays available.' }}</small>
+      </span>
+      @if (connectivity.offline()) {
+        <button type="button" (click)="retryConnection()">Retry</button>
+      }
+    </section>
+  }
   <main class="content" [class.tabs-hidden]="tabsSuppressed()"><router-outlet /></main>
 
   @if (!tabsSuppressed()) {

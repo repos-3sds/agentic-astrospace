@@ -53,24 +53,35 @@ class BaseAstroAgent:
 
     def run_structured(
         self, messages: list, schema: type[_SchemaT], tool_name: str = "deliver_result",
+        input_schema: dict | None = None,
     ) -> _SchemaT:
         """Force the model to answer via a single tool call whose input_schema
         is `schema.model_json_schema()`, then validate the call's input back
         into `schema`. Schema validity is free from Pydantic; the caller
         (the Ask orchestrator's verifier) checks content correctness — this
         method only guarantees *shape*, never grounding.
+
+        `input_schema` overrides what the TOOL advertises while `schema`
+        still governs validation — the two are deliberately separable so a
+        caller can narrow a field per request (see
+        `schema.reading_tool_schema()`, which compiles this request's valid
+        citation set into an enum) without needing a distinct Pydantic model
+        per request. Validation stays on the general model, so a provider
+        that ignores the narrowed schema still produces a parseable object
+        and is caught downstream by the verifier rather than crashing here.
         """
         if self.provider == "gemini":
-            return self._run_structured_gemini(messages, schema, tool_name)
-        return self._run_structured_anthropic(messages, schema, tool_name)
+            return self._run_structured_gemini(messages, schema, tool_name, input_schema)
+        return self._run_structured_anthropic(messages, schema, tool_name, input_schema)
 
     def _run_structured_anthropic(
         self, messages: list, schema: type[_SchemaT], tool_name: str,
+        input_schema: dict | None = None,
     ) -> _SchemaT:
         tool = {
             "name": tool_name,
             "description": f"Deliver the answer as {schema.__name__}.",
-            "input_schema": schema.model_json_schema(),
+            "input_schema": input_schema or schema.model_json_schema(),
         }
         response = self._anthropic_client().messages.create(
             model=self.model,
@@ -101,13 +112,14 @@ class BaseAstroAgent:
 
     def _run_structured_gemini(
         self, messages: list, schema: type[_SchemaT], tool_name: str,
+        input_schema: dict | None = None,
     ) -> _SchemaT:
         types = self._gemini_types()
         contents = self._gemini_contents_from_messages(messages)
         declaration = types.FunctionDeclaration(
             name=tool_name,
             description=f"Deliver the answer as {schema.__name__}.",
-            parameters_json_schema=schema.model_json_schema(),
+            parameters_json_schema=input_schema or schema.model_json_schema(),
         )
         config = types.GenerateContentConfig(
             system_instruction=self.system_prompt or None,

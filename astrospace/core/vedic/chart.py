@@ -25,7 +25,7 @@ from .yogas import yoga_summary
 from .transits import transit_analysis
 from .gocharam import gochara_rules, gocharam_profile
 from .calendar import calendar_intelligence
-from .jaimini import chara_karakas, arudha_padas, arudha_lagna, upapada
+from .jaimini import chara_karakas, arudha_padas, arudha_lagna, upapada, karakamsha
 from .special_lagnas import (
     special_lagnas as special_lagnas_of,
     bhrigu_bindu as bhrigu_bindu_of,
@@ -262,11 +262,13 @@ class VedicChart:
 
     def jaimini(self) -> dict:
         lagna_sign = sign_index(self.lagna_lon)
+        karakas = chara_karakas(self.positions)
         return {
-            "chara_karakas": chara_karakas(self.positions),
+            "chara_karakas": karakas,
             "arudha_lagna": arudha_lagna(lagna_sign, self.positions),
             "upapada": upapada(lagna_sign, self.positions),
             "arudha_padas": arudha_padas(lagna_sign, self.positions),
+            "karakamsha": karakamsha(self.positions, atmakaraka=karakas["karakas"]["AK"]["planet"]),
         }
 
     def chara_dasha(self, as_of: datetime = None) -> dict:

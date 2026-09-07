@@ -8,6 +8,17 @@
   background: var(--m-bg);
 }
 
+@media (min-width: 0px) {
+  :host-context(.web-ask) {
+    background: transparent;
+    .body { padding-inline: max(24px, calc((100% - var(--ask-reading-width)) / 2)); }
+    .appbar { padding-inline: 24px; border-bottom: 1px solid var(--m-border); }
+    .bubble { max-width: min(65ch, 80%); }
+    .answer { background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+    as-ask-composer { margin-inline: max(24px, calc((100% - var(--ask-reading-width)) / 2)); margin-bottom: 16px; }
+  }
+}
+
 /* Back bar — node 26:55 */
 .appbar {
   flex-shrink: 0;
@@ -104,6 +115,13 @@
   flex-direction: column;
   gap: 13px;
   overflow: visible;
+
+  // The global stylesheet gives every article a pressed transform. An Ask
+  // answer contains its own actions, so pressing Copy/PDF must not make the
+  // entire reading jump as though the whole card were a button.
+  &:active {
+    transform: none;
+  }
 }
 
 .answer[data-answer-mode='guided'],

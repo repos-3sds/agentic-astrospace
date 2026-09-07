@@ -25,7 +25,8 @@ class TechnicalBasisItem(BaseModel):
         description="Either a KB reference/passage id from the context bundle's `references`/"
                     "`source_passages`, or one of the bundle's own section names "
                     "(houses, karakas, vargas, yogas, doshas, dasha_relevance, gochara, "
-                    "jaimini_karakas, arudhas, profile_facts) — never an invented citation."
+                    "jaimini_karakas, jaimini_karaka_array, karakamsha, arudhas, profile_facts, "
+                    "profile_context, retrospect, timeline) — never an invented citation."
     )
 
 
@@ -51,3 +52,92 @@ class StructuredReading(BaseModel):
     summary_and_assurance: str = Field(description="A short, grounding close — not a fixed sentence, the constructive angle.")
     guidance: Guidance
     confidence: Literal["high", "medium", "low"]
+
+
+def reading_tool_schema(allowed_sources: set[str]) -> dict:
+    """`StructuredReading`'s JSON Schema with `technical_basis[].source`
+    narrowed to an enum of exactly the sources this request's bundle can
+    support.
+
+    The point is to move the most common failure class from *detected* to
+    *impossible*. Before this, `source` was a free-form string, and an
+    invented citation was caught only after generation — by
+    `verifier.valid_sources()` — which cost a full second generation through
+    `AskOrchestrator._agent_run_and_verify()`'s repair path. An enum in the
+    tool definition makes the model unable to emit one in the first place.
+
+    Two properties this depends on, both load-bearing:
+
+    - `allowed_sources` MUST come from `verifier.valid_sources()`, never be
+      re-derived here. A constraint that disagrees with its own checker is
+      worse than no constraint: whichever side is looser wins silently.
+    - The bundle is fixed and known before generation (ADR-001's kept
+      property — the agent has no tools and fetches no context of its own),
+      which is the only reason the valid set is computable up front at all.
+      This reinforces that decision rather than eroding it.
+
+    This is a decoding constraint, not a checker, so it does not touch the
+    "the checker must not be the same generation context grading itself"
+    principle — `verify()` still runs afterwards, unchanged, and still
+    rejects an out-of-set source if a provider ever ignores the enum.
+
+    Honest cost: the enum restates every reference/passage id already
+    present in the bundle, so it *adds* input tokens (measured at ~1.2 KB
+    on a career bundle). That is a deliberate trade against a repair round
+    trip that costs an entire second reading — it is a latency win, not a
+    payload win, and should not be mistaken for one.
+    """
+    schema = StructuredReading.model_json_schema()
+    source = schema["$defs"]["TechnicalBasisItem"]["properties"]["source"]
+    # Sorted for a stable, cacheable schema — an unordered set would produce
+    # a different tool definition on every request for the same bundle.
+    source["enum"] = sorted(allowed_sources)
+    return schema
+
+
+class StructuredReadingPatch(BaseModel):
+    """`StructuredReading` with every field optional — the shape a D2
+    field-scoped repair asks for and receives.
+
+    A whole-object repair resends every field even when only one is wrong,
+    because `StructuredReading` requires all of them; that cost is exactly
+    what field-scoped repair exists to remove. This model is the
+    Python-side validation target for a repair response — it is never
+    handed to the model as-is. `repair_patch_schema()` below compiles a
+    JSON Schema from it with only the actually-failing fields marked
+    `required`, so the model is asked for (and expected to return) just
+    those; anything else in the response is accepted but ignored by the
+    orchestrator's merge, and a field the model omits entirely comes back
+    `None` here rather than crashing validation — the same "a provider
+    that doesn't fully comply still parses, and is caught by known
+    behaviour rather than an exception" degradation `reading_tool_schema`
+    established for the source enum."""
+    acknowledgment: str | None = None
+    technical_basis: list[TechnicalBasisItem] | None = None
+    interpretation: str | None = None
+    summary_and_assurance: str | None = None
+    guidance: Guidance | None = None
+    confidence: Literal["high", "medium", "low"] | None = None
+
+
+def repair_patch_schema(fields: set[str], allowed_sources: set[str]) -> dict:
+    """JSON Schema for a field-scoped repair: `StructuredReadingPatch`'s
+    schema with `required` narrowed to exactly `fields` — the top-level
+    `StructuredReading` fields a violation actually implicated (see
+    `verifier.violation_fields()`) — and, same as `reading_tool_schema`,
+    `technical_basis[].source` narrowed to this bundle's own citable set.
+
+    The source enum is applied unconditionally, not only when
+    `"technical_basis"` is in `fields`, because `TechnicalBasisItem` is
+    reachable from `$defs` regardless of which top-level fields are
+    required — narrowing it costs nothing when unused and keeps this
+    function's behaviour independent of which fields happen to be under
+    repair this time.
+
+    `fields` MUST be non-empty; an empty repair is a whole-object repair by
+    definition (see `_agent_run_and_verify`'s fallback), not a call here."""
+    schema = StructuredReadingPatch.model_json_schema()
+    source = schema["$defs"]["TechnicalBasisItem"]["properties"]["source"]
+    source["enum"] = sorted(allowed_sources)
+    schema["required"] = sorted(fields)
+    return schema

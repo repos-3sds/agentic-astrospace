@@ -1,4 +1,4 @@
-"""Jaimini chara karakas and arudha padas.
+"""Jaimini chara karakas, arudha padas, and Karakamsha.
 
 Sources:
 - Chara karakas: BPHS ch. 32 / Jaimini Upadesa Sutras 1.1.10-18. Planets
@@ -9,6 +9,15 @@ Sources:
   removed from the house lord as the lord is from the house. If the count
   lands in the house itself or the 7th from it, the 10th therefrom is
   taken instead (the classical exception).
+- Karakamsha: BPHS "Effects of Karakamsha" (Santhanam ch.33 / Sharma
+  ch.35 — same shlokas, different chapter numbering between recensions,
+  cross-verified word-for-word in both translations). The navamsa sign
+  occupied by the Atmakaraka, read as its own reference point — planets
+  placed in it, or in the 5th sign from it, are read the way a lagna's
+  occupants are read elsewhere. Distinct from D9 varga placement of the
+  Atmakaraka as a chart *factor* (already available via vargas.py) — this
+  is the classical technique of using Karakamsha itself as a counting
+  origin, which needs its own occupant/5th-therefrom computation.
 
 All functions are pure: they take a positions dict
 {planet: {"lon": float, ...}} with sidereal longitudes and a lagna sign
@@ -18,6 +27,7 @@ from __future__ import annotations
 
 from .constants import SIGN_LORDS
 from .positions import degree_in_sign, sign_index, sign_name
+from .vargas import varga_sign
 
 # Karaka order, most advanced planet first (BPHS eight-karaka scheme).
 KARAKA_ORDER_EIGHT = [
@@ -186,4 +196,44 @@ def arudha_padas(lagna_sign: int, positions: dict) -> dict:
             "Scorpio and Aquarius use their primary lords Mars and Saturn "
             "(dual-lordship with Ketu/Rahu; stronger-lord variant pending).",
         ],
+    }
+
+
+# ── Karakamsha ───────────────────────────────────────────────────────────────
+
+def karakamsha(positions: dict, atmakaraka: str | None = None) -> dict:
+    """Karakamsha: the navamsa (D9) sign occupied by the Atmakaraka, plus
+    who occupies it and who occupies the 5th sign from it — BPHS's
+    "Effects of Karakamsha" chapter reads planets placed in either
+    position (e.g. ch.33/35 shlokas 41-45: Jupiter+Moon there → an author;
+    Ketu or Rahu → an astrologer).
+
+    `atmakaraka` is accepted rather than always recomputed so a caller that
+    already has `chara_karakas(positions)` doesn't pay for it twice; pass
+    `chara_karakas(positions)["karakas"]["AK"]["planet"]` when available,
+    otherwise it's derived here.
+
+    The Atmakaraka's own navamsa position trivially always resolves to the
+    Karakamsha sign, so it always appears in `occupants` — not filtered
+    out, since a second planet conjunct the Atmakaraka in navamsa is
+    exactly the kind of detail this technique exists to surface, and
+    dropping the Atmakaraka itself would make that conjunction unreadable.
+
+    Returns {"atmakaraka", "sign", "sign_name", "occupants",
+             "fifth_sign", "fifth_sign_name", "fifth_occupants"}."""
+    if atmakaraka is None:
+        atmakaraka = chara_karakas(positions)["karakas"]["AK"]["planet"]
+
+    navamsa_signs = {planet: varga_sign("D9", data["lon"]) for planet, data in positions.items()}
+    karakamsha_sign = navamsa_signs[atmakaraka]
+    fifth_sign = (karakamsha_sign + 4) % 12
+
+    return {
+        "atmakaraka": atmakaraka,
+        "sign": karakamsha_sign,
+        "sign_name": sign_name(karakamsha_sign),
+        "occupants": [p for p, s in navamsa_signs.items() if s == karakamsha_sign],
+        "fifth_sign": fifth_sign,
+        "fifth_sign_name": sign_name(fifth_sign),
+        "fifth_occupants": [p for p, s in navamsa_signs.items() if s == fifth_sign],
     }
