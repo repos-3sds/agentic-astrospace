@@ -296,6 +296,29 @@ class TestBasePromptCoversConventionDependentFields:
         assert "nakshatra_detail" in agent.system_prompt
         assert "flag-not-verdict" in agent.system_prompt   # guardrail travels with it
 
+    def test_prompt_prefers_verse_level_citation_over_bare_section_name(self, chart):
+        """Live-eval finding (2026-08-12): a career reading with 12 real
+        references sitting in its bundle cited zero of them by ref_id,
+        reaching for the always-valid bare section name every time instead
+        — both options pass the schema/verifier the same way, so nothing
+        pushed the model toward the more specific, independently-checkable
+        one. Rule 2b names the preference explicitly.
+
+        Also pins the precondition that finding depended on: the career
+        bundle must actually carry a real reference id under `vargas` (not
+        just the bare section name) for the preference to have anything to
+        bite on. If this reference is ever renamed or removed, this test
+        should fail loudly rather than the preference rule silently having
+        nothing left to prefer."""
+        bundle = assemble_domain(chart, "career")
+        agent = DomainReadingAgent(bundle, AGENT_REGISTRY["career"].domain_addendum)
+        compact_prompt = " ".join(agent.system_prompt.split())
+        assert "cite the specific reference id, never the bare section name" in compact_prompt
+        assert "learns nothing checkable" in compact_prompt
+
+        reference_ids = {ref["ref_id"] for ref in bundle.get("references", [])}
+        assert "phal5_navamsa_tenth_lord_livelihood" in reference_ids
+
     def test_rule_forbids_collapsing_one_leg_into_a_whole_house_verdict(self, chart):
         bundle = assemble_domain(chart, "marriage")
         agent = DomainReadingAgent(bundle, AGENT_REGISTRY["marriage"].domain_addendum)

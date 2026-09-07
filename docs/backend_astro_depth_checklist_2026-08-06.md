@@ -717,16 +717,26 @@ preference for the more specific, independently-checkable citation over the
 generic one. A model given two compliant options with no ranking between them
 will not reliably reach for the harder-to-produce one.
 
-- [ ] **Prefer verse-level citation over bundle-section citation when both
-  apply.** *Hook:* rule 2 in `astrospace/agents/domain_agent.py`. Not fixed
-  here — a prompt change is a product decision, made deliberately rather
-  than as a side effect of an evaluation pass. The fix is a one-line
-  addition to rule 2 ("prefer a specific reference id over a bare section
-  name whenever one applies") plus a regression test asserting the career
-  bundle above yields at least one verse-level citation. This is the
-  single most actionable finding of this pass: the grounding work across
-  five PRs is real, but roughly half of it (career, by this sample) is not
-  yet reliably surfaced in what a reader actually sees cited.
+- [x] **Prefer verse-level citation over bundle-section citation when both
+  apply — CLOSED 2026-09-08.** Added rule 2b to `astrospace/agents/
+  domain_agent.py`'s `_BASE_SYSTEM`, directly after rule 2a: when a claim is
+  grounded in a specific reference/passage id and that section's bare name
+  would also technically validate, cite the specific id, never the bare
+  name — both were already equally valid against `verifier.valid_sources()`
+  and the tool schema's `source` enum (`schema.py`'s
+  `reading_tool_schema()`), so nothing before this pushed the model toward
+  the harder-to-produce, independently-checkable option. Regression test
+  (`test_prompt_prefers_verse_level_citation_over_bare_section_name`)
+  pins the rule text in the rendered career prompt and, separately, that
+  `phal5_navamsa_tenth_lord_livelihood` still exists in the career bundle's
+  `references` — the exact citation the live-eval pass found silently
+  unused — so the test fails loudly if that reference is ever renamed
+  rather than the preference rule silently having nothing left to prefer.
+  Full suite: 2076 passed, 2 skipped, 1 xfailed. **Not yet re-verified live**
+  (the finding this fixes was only ever observed via a live model call,
+  the 2026-08-12 eval pass) — a prompt instruction is not proof the model
+  actually follows it more often; that needs a follow-up live-eval spot
+  check, same shape as the original pass, not run this pass.
 
 ### What this pass did not do
 
