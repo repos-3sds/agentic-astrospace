@@ -488,12 +488,31 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   strength, which needs Shadbala; that comparison was out of scope.
   *Unblocks on:* a decision on which Shadbala measure to compare.
   *Hook:* `argala._leg_outcome()`.
-- [ ] **3 remaining domains** — `taxonomy.json` defines 11 total (not 16 as
-  this item previously said; recounted directly against the file rather
-  than propagating an unverified figure). 8 shipped: career, marriage,
-  wealth, children, health, foreign, personality, spirituality (2026-09-01).
-  Still unregistered: `education`, `family_property`, `litigation`. *Hook:*
-  `agents/registry.py` + `context/taxonomy.json`.
+- [x] **All 11 taxonomy domains registered — CLOSED 2026-09-04.**
+  `education`, `family_property`, and `litigation` (the last 3) now have
+  real addenda in `agents/registry.py` and real KB grounding, primarily
+  from Uttara Kalamritam's Kanda I Ch. V significations chapter (a single
+  chapter covering all three domains, plus BPHS's own 9th-house-father
+  chapter). See docs/career_kb_education_family_litigation_domains.md.
+- [ ] **Several domains' `source_refs` name books absent from this corpus.**
+  Surfaced while closing the item above, and checked all the way through
+  for `prasna_marga`: `kn_rao_mercury_education`, `pm_disease_sixth`,
+  `prasna_marga_5th_affliction` (all three removed), and
+  `prasna_marga_3rd_short_travel` (retargeted to a real Uttara Kalamritam
+  citation, `uk_3rd_short_travel`) all cited K.N. Rao's *Planets and
+  Education* or *Prasna Marga* — neither book exists anywhere in the KB
+  corpus, confirmed by `scripts/audit_kb_sources.py` and a direct filename
+  sweep. Every `prasna_marga`-cited reference is now fixed; `raman_htjh`
+  and `kn_rao_career` have not been swept the same way yet. `career`,
+  `wealth`, `marriage`, and `health` still name `raman_htjh` (Raman's *How
+  to Judge a Horoscope*) in their own `taxonomy.json` `source_refs`, and
+  `career`/`wealth` also name `kn_rao_career` — neither book is in the
+  corpus either. Not every mention has necessarily produced a bad reference
+  yet, but each is a latent one. *Hook:* audit every `references.json`
+  entry whose `source.text_key` is `raman_htjh` or `kn_rao_career` against
+  `scripts/audit_kb_sources.py`'s real output, then correct
+  `taxonomy.json`'s `source_refs` for those 5 domains the same way this
+  pass corrected `education`'s and `litigation`'s.
 
 ### C. Ask/agent layer — one live safety gap, highest priority here
 

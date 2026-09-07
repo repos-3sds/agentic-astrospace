@@ -135,26 +135,6 @@
       "status": "convention_dependent"
     },
     {
-      "ref_id": "pm_disease_sixth",
-      "domains": [
-        "health",
-        "litigation"
-      ],
-      "subdomains": [
-        "chronic_disease",
-        "court_cases"
-      ],
-      "statement": "The 6th bhava carries disease, debt and enemies together; afflictions to the 6th and its lord activate all three significations and must be separated by karaka and context.",
-      "source": {
-        "text_key": "prasna_marga",
-        "location": "roga/prasna chapters"
-      },
-      "tags": [
-        "house:6"
-      ],
-      "status": "verified_common"
-    },
-    {
       "ref_id": "uk_1st_lagna_vitality",
       "domains": [
         "health"
@@ -321,15 +301,14 @@
         "basic_education",
         "higher_education"
       ],
-      "statement": "The 4th bhava governs basic schooling and foundational learning; the 5th governs higher intellect, specialized study, and academic merit. The Chaturvimshamsha (D24) refines which field of learning and how much of the promise the native actually pursues.",
+      "statement": "Uttara Kalamritam's classical significations list names 'education' explicitly among the 4th house's roughly 46 items and again among the 5th house's roughly 41 items -- both houses carry it, not just one. Corrected from an earlier, unverifiable BPHS attribution: BPHS Santhanam's own 4th- and 5th-house effects chapters (ch.15, ch.16) do not use the word education at all -- ch.16 is occupied entirely by progeny/children combinations -- so the 4th/5th-for-education claim is genuinely Uttara Kalamritam's, not BPHS's, and is cited to the book that actually says it.",
       "source": {
-        "text_key": "bphs",
-        "location": "4th/5th bhava and D24 significations"
+        "text_key": "uttara_kalamrita",
+        "location": "Kanda I, Ch. V, shlokas 7 and 9-10, pp.115-116"
       },
       "tags": [
         "house:4",
-        "house:5",
-        "varga:D24"
+        "house:5"
       ],
       "status": "verified_common"
     },
@@ -349,25 +328,6 @@
       },
       "tags": [
         "yoga:saraswati_yoga"
-      ],
-      "status": "convention_dependent"
-    },
-    {
-      "ref_id": "kn_rao_mercury_education",
-      "domains": [
-        "education"
-      ],
-      "subdomains": [
-        "breaks",
-        "competitive_exams"
-      ],
-      "statement": "Mercury's strength and dignity are read as one of the most consistent indicators of ease in formal education; an afflicted or debilitated Mercury is a common thread in charts with schooling breaks or difficulty, though never a standalone verdict.",
-      "source": {
-        "text_key": "kn_rao_education",
-        "location": "Mercury and schooling patterns"
-      },
-      "tags": [
-        "planet:Mercury"
       ],
       "status": "convention_dependent"
     },
@@ -412,40 +372,23 @@
       "status": "convention_dependent"
     },
     {
-      "ref_id": "prasna_marga_5th_affliction",
-      "domains": [
-        "children"
-      ],
-      "subdomains": [
-        "delay_difficulty"
-      ],
-      "statement": "Afflictions to the 5th house or its lord are read as timing/ease factors for conceiving and raising children, not as a fixed verdict — classical texts pair every affliction with cancellation and remedial factors.",
-      "source": {
-        "text_key": "prasna_marga",
-        "location": "5th bhava and progeny chapters"
-      },
-      "tags": [
-        "house:5"
-      ],
-      "status": "convention_dependent"
-    },
-    {
       "ref_id": "uk_4th_bhava_property",
       "domains": [
         "family_property"
       ],
       "subdomains": [
         "land_house",
-        "vehicles"
+        "vehicles",
+        "mother",
+        "ancestral_property"
       ],
-      "statement": "The 4th bhava governs mother, home, land, vehicles, and general domestic comfort; the Chaturthamsha (D4) is examined specifically for fixed property and real-estate fortune.",
+      "statement": "Uttara Kalamritam's classical significations list for the 4th house names, among its roughly 46 items: house, land, garden, wells/tanks, paternal property, mother, and conveyances/vehicles including animal-drawn ones and livestock (buffaloes, cows, horses, elephants). This is the single house classical Jyotisha loads most heavily with domestic/family significance -- not narrowly 'the mother's house' the way some shorthand summaries put it. (This same list also names 'father' under the 4th house -- see bphs20_ninth_house_father for why that specific point is recorded separately, layered rather than folded in here.)",
       "source": {
         "text_key": "uttara_kalamrita",
-        "location": "4th bhava significations"
+        "location": "Kanda I, Ch. V, shloka 7, p.115"
       },
       "tags": [
-        "house:4",
-        "varga:D4"
+        "house:4"
       ],
       "status": "verified_common"
     },
@@ -457,14 +400,14 @@
       "subdomains": [
         "siblings"
       ],
-      "statement": "The 3rd bhava shows younger siblings and courage; the 9th shows elder siblings, father, and fortune more broadly — classical texts read both houses together for the full sibling picture, not the 3rd alone.",
+      "statement": "Corrected from an earlier, unverified claim that the 9th house shows elder siblings. BPHS's actual rule (its own note on ch.14 v.1-3) splits siblings by birth order across two different houses, not 3rd-vs-9th: the 3rd house and Mars signify younger co-born (Bhratru covers both brother and sister, disambiguated as Jyeshta/elder or Kanishta/younger); the 11th house and Jupiter signify elder co-born. Benefic conjunction/aspect on the 3rd brings courage and good co-born relations; the 3rd lord and Mars together in a malefic sign or with a malefic is read as adverse for the co-born's wellbeing generally. The same passage also confirms the Sun/9th-lord pairing for father and the Moon/4th-lord pairing for mother, each read the same way.",
       "source": {
         "text_key": "bphs",
-        "location": "3rd and 9th bhava significations"
+        "location": "ch.14 v.1-3, pp.100-101 (Santhanam trans.)"
       },
       "tags": [
         "house:3",
-        "house:9"
+        "house:11"
       ],
       "status": "verified_common"
     },
@@ -527,17 +470,17 @@
       "status": "convention_dependent"
     },
     {
-      "ref_id": "prasna_marga_3rd_short_travel",
+      "ref_id": "uk_3rd_short_travel",
       "domains": [
         "foreign"
       ],
       "subdomains": [
         "short_travel"
       ],
-      "statement": "The 3rd bhava governs short journeys and everyday travel, distinct from the 9th/12th's longer-distance and foreign-residence significations — a chart can show ease in one register without the other.",
+      "statement": "Corrected from an earlier, unverifiable Prasna Marga attribution (that book is not present in this KB corpus). Uttara Kalamritam's classical significations list for the 3rd house names 'short good journeys' explicitly among its roughly 36 items, alongside wandering and pilgrimages — distinct from the 9th/12th houses' longer-distance and foreign-residence significations elsewhere in the same chapter.",
       "source": {
-        "text_key": "prasna_marga",
-        "location": "3rd bhava and travel"
+        "text_key": "uttara_kalamrita",
+        "location": "Kanda I, Ch. V, shloka 4-5, p.114"
       },
       "tags": [
         "house:3"
@@ -551,16 +494,15 @@
       ],
       "subdomains": [
         "open_enemies",
-        "court_cases"
+        "obstacles"
       ],
-      "statement": "The 6th bhava governs open enemies, disputes, and litigation; the 12th governs hidden losses and confinement. A strong 6th lord is classically read as an advantage in contested matters, while a weak or afflicted 6th lord favours settlement over confrontation.",
+      "statement": "Uttara Kalamritam's classical significations list for the 6th house names, among its roughly 41 items: obstacles, foes and enmity, imprisonment-adjacent affliction, and quarrels/reproach -- the house of open conflict and impediment generally, not narrowly disease (the more commonly cited 6th-house signification). Corrected from an earlier, unverified claim that dignity of the 6th lord determines outcome in contested matters specifically -- that interpretive gloss is not in this passage (which is an inventory of significations, not a strength-based rule) and has been dropped rather than left uncited.",
       "source": {
         "text_key": "uttara_kalamrita",
-        "location": "6th and 12th bhava significations"
+        "location": "Kanda I, Ch. V, shlokas 10-12, p.117"
       },
       "tags": [
-        "house:6",
-        "house:12"
+        "house:6"
       ],
       "status": "verified_common"
     },
@@ -2813,6 +2755,87 @@
         "lord:11"
       ],
       "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs20_ninth_house_father",
+      "domains": [
+        "family_property",
+        "litigation"
+      ],
+      "subdomains": [
+        "father",
+        "ancestral_property",
+        "court_cases"
+      ],
+      "statement": "BPHS's 9th-house-effects chapter (ch.20) is the primary classical treatment of the father as a person, not just a paternal-property signification -- it opens with dedicated combinations for the father's own fortune, standing, and status. The Sun and the 9th lord together are the classical significator-pairing for father, independently confirmed by ch.14's own note on siblings (which pairs the Moon/4th lord for mother the same way). Ch.20 v.4's note on an afflicted 9th lord adds a direct litigation link: the native may 'disinherit patrimony or enter into litigations' over the father's estate.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.20 v.1-7, pp.131-133 (Santhanam trans.)"
+      },
+      "tags": [
+        "house:9",
+        "father"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Three houses genuinely carry 'father' with different weight across this KB's sources, not a single settled convention: the 9th house (this entry) gets BPHS's own dedicated chapter-length treatment, the strongest textual claim to primacy; the 10th house carries it as a real but secondary co-signification in BPHS's own 10th-house chapter opening (see bphs21_karma_and_father); Uttara Kalamritam's 4th-house significations list separately names father as one item among ~46 (see uk_4th_bhava_property). Lead with the 9th house as primary; name the 10th/4th as supporting only when the bundle's own evidence points there, never imply the texts speak with one voice."
+    },
+    {
+      "ref_id": "uk_11th_house_education_and_property",
+      "domains": [
+        "education",
+        "family_property"
+      ],
+      "subdomains": [
+        "basic_education",
+        "ancestral_property"
+      ],
+      "statement": "Uttara Kalamritam's classical significations list for the 11th house names, among its roughly 30 items, education and ancestral property alongside the house's primary signification of gains, income, and fulfilled desires -- the passage lists both as items among many, not as a rule about exam or competitive-result success; read as supporting evidence for education and inherited property generally, not the headline house for either.",
+      "source": {
+        "text_key": "uttara_kalamrita",
+        "location": "Kanda I, Ch. V, shlokas 19-21, pp.123-124"
+      },
+      "tags": [
+        "house:11"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "uk_8th_house_legal_jeopardy",
+      "domains": [
+        "litigation"
+      ],
+      "subdomains": [
+        "court_cases"
+      ],
+      "statement": "Uttara Kalamritam's classical significations list for the 8th house includes, among its roughly 28 items, fear of punishment from the government and debts -- a direct classical link between the 8th house and legal/administrative jeopardy specifically, alongside its more commonly cited significations of sudden loss and worry.",
+      "source": {
+        "text_key": "uttara_kalamrita",
+        "location": "Kanda I, Ch. V, shlokas 14-16, pp.118-119"
+      },
+      "tags": [
+        "house:8"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "uk_12th_house_enemies_and_disputes",
+      "domains": [
+        "litigation"
+      ],
+      "subdomains": [
+        "hidden_enemies",
+        "obstacles"
+      ],
+      "statement": "Uttara Kalamritam's classical significations list for the 12th house includes, among its roughly 30 items, fear from foes, imprisonment, disputes, and being hated by the public.",
+      "source": {
+        "text_key": "uttara_kalamrita",
+        "location": "Kanda I, Ch. V, shlokas 21-23, p.124"
+      },
+      "tags": [
+        "house:12"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The passage itself lists these items without calling them 'hidden' or contrasting them with the 6th house's open enmity -- that framing is the widespread classical dusthana convention (6th = open/known conflict, 12th = hidden/behind-the-scenes loss and confinement), applied here rather than quoted from this specific verse. State it as the convention being used, not as this passage's own wording."
     }
   ]
 }

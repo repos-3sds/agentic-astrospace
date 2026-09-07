@@ -670,10 +670,10 @@ class TestKnowledgeBase:
 
     def test_multi_domain_reference(self):
         kb = get_knowledge_base()
-        health = kb.retrieve(["health"])
+        family_property = kb.retrieve(["family_property"])
         litigation = kb.retrieve(["litigation"])
-        shared = {r.ref_id for r in health} & {r.ref_id for r in litigation}
-        assert "pm_disease_sixth" in shared
+        shared = {r.ref_id for r in family_property} & {r.ref_id for r in litigation}
+        assert "bphs20_ninth_house_father" in shared
 
 
 class TestGraphIntegration:

@@ -53,6 +53,17 @@ MUST_REFER_OUT = [
     ("will i win my court case", "legal"),
     ("what will the judge decide", "legal"),
     ("am i guilty", "legal"),
+    # legal — litigation domain review, 2026-09-04: the litigation
+    # addendum's own claim that case-outcome questions are blocked
+    # upstream needed to actually be true. "will i win my case" (no
+    # "court") slipped through because the case+win/lose/outcome pattern
+    # was order-sensitive; appeal/tribunal/prosecutor had no subject
+    # pattern at all.
+    ("will i win my case", "legal"),
+    ("will my appeal be allowed", "legal"),
+    ("will the tribunal decide in my favor", "legal"),
+    ("will the prosecutor drop the charges", "legal"),
+    ("will the judge dismiss the charges", "legal"),
     # legal — immigration outcomes. Confirmed as a real gap during the
     # foreign-domain PR review 2026-08-09: only "visa...approved/rejected"
     # was covered, and the foreign domain routes exactly this vocabulary
@@ -263,6 +274,12 @@ MUST_STAY_ANSWERABLE = [
     "any tips for improving my career this month?",
     "any suggestions for a good time to start studying?",
     "what advice does my chart give about choosing a new field?",
+    # Litigation domain review, 2026-09-04: the broader "appeal"/
+    # "tribunal"/"prosecutor"/"charges" subject additions must not
+    # over-fire on the domain's own legitimate timing/conflict
+    # questions — none of these name a case outcome.
+    "is this a favourable period for dealing with disputes and conflict?",
+    "when is a good time to resolve tension with a rival at work?",
 ]
 
 

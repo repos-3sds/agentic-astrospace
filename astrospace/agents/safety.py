@@ -346,7 +346,16 @@ _REFER_OUT_SUBJECTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         r"\blegal advice\b", r"\bsue\b", r"\blawsuit\b", r"\bcourt\b",
         r"\bjudge\b", r"\bjury\b", r"\bverdict\b", r"\bprison\b",
         r"\bjail\b", r"\bconvict", r"\bacquit", r"\bguilty\b",
-        r"\bcase\b.{0,20}\b(?:win|lose|outcome)\b", r"\bbail\b",
+        # 2026-09-04 (litigation domain review): the order-sensitive form
+        # below only matched "case ... win/lose/outcome" — "will I win my
+        # case" has the outcome word first, so it silently slipped through.
+        # Litigation is a live-answering domain now, and this was the
+        # addendum's own first example. Both orders, same as every other
+        # bidirectional pair in this list.
+        r"\bcase\b.{0,20}\b(?:win|lose|outcome)\b",
+        r"\b(?:win|lose)\b.{0,20}\bcase\b",
+        r"\bbail\b", r"\bappeal\b", r"\btribunal\b", r"\bprosecutor\b",
+        r"\bcharges?\b.{0,20}\b(?:dropped?|dismiss(?:ed)?|filed|pressed)\b",
         r"\bcustody\b", r"\bdivorce settlement\b",
         # 2026-08-09 (foreign domain review, two rounds): the original
         # "visa...approved/rejected" entry only covered one exact phrasing.
@@ -613,8 +622,14 @@ _PROHIBITED_OUTPUT = (
     (r"\billness has taken hold\b", "health"),
     (r"\b(?:stop|start|change|discontinue|adjust|begin)\b.{0,32}\b(?:medication|medicine|insulin|prescription|dosage|dose|treatment)\b", "health"),
     (r"\byou will (?:win|lose) (?:the|your|this) (?:case|lawsuit|appeal)\b", "legal"),
-    (r"\b(?:court|judge) will rule in your favor\b", "legal"),
+    (r"\b(?:court|judge|tribunal) will rule in your favor\b", "legal"),
     (r"\b(?:lawsuit|case|appeal) is destined to fail\b", "legal"),
+    # 2026-09-04 (litigation domain review): output-side mirror of the
+    # input-gate additions above — appeal/tribunal/prosecutor outcome
+    # claims stated as fact, the same shape as the case/lawsuit lines
+    # already here.
+    (r"\byour appeal will (?:be allowed|be granted|succeed|fail)\b", "legal"),
+    (r"\bthe prosecutor will (?:drop|press|file) the charges\b", "legal"),
     # 2026-08-09 (foreign domain review, three rounds): output-side mirror
     # of the immigration input-gate above. Rounds 1-2 progressively fixed
     # the vocabulary; round 3 found the *scaffolding* around it — the
