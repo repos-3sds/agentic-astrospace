@@ -592,3 +592,28 @@ first engineering implementation should be **CE-2 Entitlement foundation**,
 not a StoreKit/Play purchase button. That sequence gives the app one testable
 server authority and prevents store products, frontend copy and API gates from
 drifting into three competing definitions of “Pro.”
+
+## CE-2 Implementation Record — 2026-08-18
+
+Implemented in `codex-commercial-gate-foundation` for review:
+
+- one canonical, versioned capability registry for Free/Plus/Pro policy;
+- protected Free-baseline capabilities for safety, provenance, account
+  controls, reliability, profile-memory correctness, Today, Calendar, and D1;
+- billing account, verified grant, plan assignment, support override, usage
+  bucket, and entitlement audit persistence plus a Supabase migration;
+- a server-side resolver that falls back to Free, rejects unverified/revoked
+  paid grants, applies active overrides without allowing protected-baseline
+  removal, and returns an immutable revisioned snapshot;
+- authenticated snapshot, catalog, and per-capability decision endpoints;
+- a mobile Plans screen driven by those server contracts, replacing the old
+  hardcoded “Premium” claims while purchases remain unavailable;
+- a disabled-by-default probe endpoint proving structured HTTP 402 denials
+  before any real feature or store purchase is gated;
+- account-deletion cleanup for the pre-billing foundation records.
+
+Commercial quantities remain `null`/not enforced. This implementation does
+not add prices, products, purchase buttons, billing SDKs, provider verification,
+webhooks, Family membership, profile limits, or Ask charging. Those remain
+CE-1 and CE-3/CE-4 decisions; enabling them without reviewed product economics
+and provider lifecycle handling would violate this document.

@@ -19,9 +19,11 @@ from sqlalchemy.orm import Session
 
 from ..db import crud_mobile as cm, get_db
 from ..db.models import (
-    AskThread, AudioRender, CompatibilityCheck, DailyGuidanceCache, Kundli,
+    AskThread, AudioRender, BillingAccount, CompatibilityCheck, DailyGuidanceCache,
+    EntitlementAuditEvent, EntitlementOverride, Kundli,
     LiveActivity, MuhurtaRequest, NotificationJob, NotificationPreference,
-    PushToken, SavedMuhurta, ShareAsset, UserAlert, UserDevice, UserObservance,
+    PlanAssignment, PushToken, SavedMuhurta, ShareAsset, SubscriptionGrant,
+    UsageBucket, UserAlert, UserDevice, UserObservance,
     UserProfile, UserRemedy, UserSettings, WidgetInstall,
     ProfileContextAuditEvent, ProfileContextFact, ProfileContextLedger,
     ProfileContextMutation,
@@ -214,6 +216,19 @@ def delete_account(payload: AccountDeletionPayload, user: CurrentUser,
         db.delete(row)
     db.query(UserSettings).filter(UserSettings.user_id == user.id).delete(synchronize_session=False)
     db.query(UserProfile).filter(UserProfile.user_id == user.id).delete(synchronize_session=False)
+    # CE-2 creates a Free billing account on first entitlement resolution. No
+    # store transactions exist yet, so delete the complete commercial
+    # foundation record. CE-3 must replace this with the approved legal/audit
+    # retention policy before verified provider records can be written.
+    for account in db.query(BillingAccount).filter(BillingAccount.owner_user_id == user.id).all():
+        for model in (
+            UsageBucket, EntitlementOverride, PlanAssignment,
+            SubscriptionGrant, EntitlementAuditEvent,
+        ):
+            db.query(model).filter(model.billing_account_id == account.id).delete(
+                synchronize_session=False
+            )
+        db.delete(account)
     db.flush()
     db.query(UserDevice).filter(UserDevice.user_id == user.id).delete(synchronize_session=False)
 

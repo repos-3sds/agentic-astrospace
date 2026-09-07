@@ -174,8 +174,8 @@ export class SettingsHomeComponent {
         {
           id: 'subscription',
           icon: 'set-plus',
-          label: 'Plus',
-          value: 'Deeper guidance',
+          label: 'Plans',
+          value: 'Access and billing',
           route: ['/m', 'subscription'],
         },
       ],
