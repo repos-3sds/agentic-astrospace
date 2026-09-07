@@ -163,8 +163,15 @@
     .safety { order: 5; color: var(--m-muted); text-align: center; font-size: 12px; }
     as-ask-composer { order: 1; margin: 0; }
     .topics { order: 2; gap: 6px; justify-content: center; }
-    .topic { font-size: 12px; padding: 7px 11px; border-color: transparent; background: color-mix(in srgb, var(--m-surface) 66%, transparent); }
-    .topic:hover { background: var(--m-surface); }
+    .topic {
+      font-size: 12px;
+      padding: 7px 11px;
+      border-color: color-mix(in srgb, var(--m-border) 36%, transparent);
+      background: color-mix(in srgb, var(--m-raised) 62%, transparent);
+      backdrop-filter: blur(14px) saturate(1.06);
+      box-shadow: 0 6px 18px color-mix(in srgb, #000 7%, transparent);
+    }
+    .topic:hover { background: color-mix(in srgb, var(--m-raised) 82%, transparent); }
     .eyebrow { order: 3; color: var(--m-muted); letter-spacing: 0; font-size: 12px; font-weight: 500; text-transform: none; margin-top: 18px; }
     .suggestions {
       order: 4;
@@ -177,10 +184,13 @@
       padding: 12px 14px;
       border: 0;
       border-radius: 10px;
-      background: color-mix(in srgb, var(--m-surface) 68%, transparent);
+      border: 1px solid color-mix(in srgb, var(--m-border) 32%, transparent);
+      background: color-mix(in srgb, var(--m-raised) 58%, transparent);
+      backdrop-filter: blur(16px) saturate(1.07);
+      box-shadow: 0 10px 28px color-mix(in srgb, #000 7%, transparent);
       align-items: center;
       transition: background 150ms, transform 150ms;
-      &:hover { background: var(--m-surface); transform: translateY(-1px); }
+      &:hover { background: color-mix(in srgb, var(--m-raised) 82%, transparent); transform: translateY(-1px); }
     }
     .suggestion-text { color: var(--m-text); line-height: 1.6; font-size: 13px; }
     .ask-state { order: 1; }

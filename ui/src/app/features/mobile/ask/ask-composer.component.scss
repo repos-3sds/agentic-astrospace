@@ -83,7 +83,8 @@
   gap: 9px;
   border: 1px solid color-mix(in srgb, var(--m-border-strong) 76%, transparent);
   border-radius: 22px;
-  background: var(--m-raised);
+  background: color-mix(in srgb, var(--m-raised) 74%, transparent);
+  backdrop-filter: blur(22px) saturate(1.1);
   margin: 0;
   box-shadow: 0 18px 48px color-mix(in srgb, #000 13%, transparent), 0 2px 8px color-mix(in srgb, #000 6%, transparent);
   transition: border-color 160ms, box-shadow 160ms;
