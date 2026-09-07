@@ -40,6 +40,23 @@
     <a class="memory-link" [routerLink]="navigation.path('memory')" (click)="railOpen.set(false)"><lucide-icon name="notebook-pen" [size]="17" />What Siddha remembers</a>
   </aside>
   <div class="ask-workspace">
+    <div class="celestial-sky" aria-hidden="true">
+      <div class="celestial-sun"></div>
+      <div class="orbit-system">
+        <div class="orbit-rotor">
+          <span class="orbit-ring r1"></span>
+          <span class="orbit-ring r2"></span>
+          <span class="orbit-ring r3"></span>
+          <span class="orbit-ring r4"></span>
+          <span class="orbit-ring r5"></span>
+          <span class="planet mercury"></span>
+          <span class="planet venus"></span>
+          <span class="planet mars"></span>
+          <span class="planet jupiter"></span>
+          <span class="planet saturn"><span class="saturn-ring"></span></span>
+        </div>
+      </div>
+    </div>
     @if (ready()) { <router-outlet /> }
     @else if (loadError()) { <p role="alert">Could not load this profile.</p><button type="button" (click)="loadProfile()">Try again</button> }
     @else { <p role="status">Loading profile...</p> }

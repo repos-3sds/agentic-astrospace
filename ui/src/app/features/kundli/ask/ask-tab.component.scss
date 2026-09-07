@@ -158,46 +158,134 @@
   overflow: auto;
   position: relative;
   isolation: isolate;
-  background:
-    radial-gradient(circle at 52% 47%, color-mix(in srgb, var(--m-accent) 10%, transparent) 0 2px, transparent 3px),
-    color-mix(in srgb, var(--as-bg) 91%, var(--m-surface));
+  background: color-mix(in srgb, var(--as-bg) 91%, var(--m-surface));
 }
-.ask-workspace::before,
-.ask-workspace::after {
+.celestial-sky {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: paint;
+  opacity: .96;
+  --sun-center-x: 50%;
+  --sun-center-y: 50%;
+  --sun-core: #fff6a8;
+  --sun-mid: color-mix(in srgb, var(--m-gold) 42%, #ffc75d);
+  --sun-edge: color-mix(in srgb, var(--m-accent) 18%, #f2a12a);
+  --orbit-gold: color-mix(in srgb, var(--m-gold) 78%, var(--m-accent));
+  --mercury: #c7993a;
+  --venus: #f2bf66;
+  --mars: color-mix(in srgb, var(--m-accent) 76%, #ef7a3a);
+  --jupiter: #d1a673;
+  --saturn: #8c80bf;
+}
+.celestial-sun,
+.orbit-system {
+  position: absolute;
+  left: var(--sun-center-x);
+  top: var(--sun-center-y);
+}
+.celestial-sun {
+  width: 76px;
+  height: 76px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 36% 32%, rgba(255, 255, 255, 0.56) 0 12%, transparent 23%),
+    radial-gradient(circle, var(--sun-core) 0 23%, var(--sun-mid) 54%, var(--sun-edge) 100%);
+  opacity: .24;
+  transform: translate(-50%, -50%) scale(1);
+  filter: drop-shadow(0 0 30px color-mix(in srgb, var(--sun-edge) 30%, transparent));
+}
+.celestial-sun::before,
+.celestial-sun::after {
   content: '';
   position: absolute;
-  left: 50%;
-  top: 49%;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
+  border-radius: inherit;
   z-index: -1;
 }
-.ask-workspace::before {
-  width: min(78vw, 920px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  opacity: .62;
-  background:
-    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--m-accent) 84%, #f9d48b) 0 12px, color-mix(in srgb, var(--m-accent) 28%, transparent) 13px 36px, transparent 37px),
-    radial-gradient(circle at 50% 16%, color-mix(in srgb, var(--m-accent-strong) 76%, #fff) 0 4px, transparent 5px),
-    radial-gradient(circle at 84% 50%, color-mix(in srgb, var(--m-good) 72%, #fff) 0 5px, transparent 6px),
-    radial-gradient(circle at 50% 84%, color-mix(in srgb, var(--m-warn) 78%, #fff) 0 4px, transparent 5px),
-    radial-gradient(circle at 22% 50%, color-mix(in srgb, var(--m-bad) 66%, #fff) 0 5px, transparent 6px);
-  filter: blur(.2px);
+.celestial-sun::before {
+  inset: -10px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--sun-mid) 44%, transparent), transparent 68%);
+  filter: blur(46px);
+  opacity: .72;
 }
-.ask-workspace::after {
-  width: min(82vw, 960px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  opacity: .34;
-  background:
-    repeating-radial-gradient(circle, transparent 0 112px, color-mix(in srgb, var(--m-border-strong) 52%, transparent) 113px 114px, transparent 115px 170px),
-    conic-gradient(from 24deg, transparent 0 11deg, color-mix(in srgb, var(--m-accent) 38%, transparent) 12deg 13deg, transparent 14deg 80deg, color-mix(in srgb, var(--m-border-strong) 34%, transparent) 81deg 82deg, transparent 83deg);
-  mask-image: radial-gradient(circle, transparent 0 54px, #000 56px 52%, transparent 76%);
+.celestial-sun::after {
+  inset: -42px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--m-gold) 22%, transparent), transparent 72%);
+  filter: blur(68px);
+  opacity: .46;
 }
-.ask-workspace > * {
+.orbit-system {
+  width: min(72vw, 620px);
+  height: min(72vw, 620px);
+  max-width: 620px;
+  max-height: 620px;
+  opacity: .68;
+  transform: translate(-50%, -50%) scale(1);
+  transform-origin: center;
+}
+.orbit-rotor {
+  position: absolute;
+  inset: 0;
+  transform-origin: center;
+  animation: web-ask-orbit-rotate 36s linear infinite;
+}
+.orbit-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border: 0.5px dashed color-mix(in srgb, var(--orbit-gold) 34%, transparent);
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+}
+.orbit-ring.r1 { width: 23%; height: 23%; }
+.orbit-ring.r2 { width: 38.5%; height: 38.5%; }
+.orbit-ring.r3 { width: 56.5%; height: 56.5%; }
+.orbit-ring.r4 { width: 77%; height: 77%; }
+.orbit-ring.r5 { width: 100%; height: 100%; }
+.planet {
+  --planet-size: 8px;
+  --planet-color: var(--m-accent);
+  --planet-angle: 0deg;
+  --planet-radius: 11.5vw;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--planet-size);
+  height: var(--planet-size);
+  margin: calc(var(--planet-size) / -2) 0 0 calc(var(--planet-size) / -2);
+  border-radius: 999px;
+  opacity: .76;
+  background:
+    radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.68) 0 16%, transparent 32%),
+    radial-gradient(circle, color-mix(in srgb, var(--planet-color) 74%, #fff7da) 0 18%, var(--planet-color) 55%, color-mix(in srgb, var(--planet-color) 72%, #1e120b) 100%);
+  box-shadow: 0 0 5px 1px color-mix(in srgb, var(--planet-color) 28%, transparent);
+  transform: rotate(var(--planet-angle)) translateX(var(--planet-radius)) scale(1);
+}
+.planet.mercury { --planet-size: 6px; --planet-color: var(--mercury); --planet-radius: min(11vw, 71px); --planet-angle: 12deg; }
+.planet.venus { --planet-size: 9px; --planet-color: var(--venus); --planet-radius: min(19vw, 119px); --planet-angle: 84deg; }
+.planet.mars { --planet-size: 8px; --planet-color: var(--mars); --planet-radius: min(28vw, 175px); --planet-angle: 156deg; }
+.planet.jupiter { --planet-size: 14px; --planet-color: var(--jupiter); --planet-radius: min(38vw, 238px); --planet-angle: 228deg; }
+.planet.saturn { --planet-size: 11px; --planet-color: var(--saturn); --planet-radius: min(50vw, 310px); --planet-angle: 300deg; }
+.saturn-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 20px;
+  height: 6px;
+  border: 1px solid color-mix(in srgb, var(--saturn) 52%, transparent);
+  border-radius: 999px;
+  transform: translate(-50%, -50%) rotate(-12deg);
+}
+.ask-workspace > :not(.celestial-sky) {
   position: relative;
   z-index: 1;
+}
+
+@keyframes web-ask-orbit-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 .ask-workspace > [role='status'],
 .ask-workspace > [role='alert'] { margin: 40px; color: var(--m-muted); }
