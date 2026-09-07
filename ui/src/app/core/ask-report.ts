@@ -107,14 +107,10 @@ export function askReportText(input: AskReportInput): string {
 function reportBlocks(input: AskReportInput): ReportBlock[] {
   const reading = input.reading;
   if (!reading) return [
-    { kind: 'heading', text: 'Question' },
-    { kind: 'body', text: clean(input.question) },
     { kind: 'body', text: clean(input.fallbackContent) },
   ];
 
   const blocks: ReportBlock[] = [
-    { kind: 'heading', text: 'Question' },
-    { kind: 'body', text: clean(input.question) },
     { kind: 'source', text: `${label(input.domain) || 'Guidance'} · ${label(input.intent) || 'General'} · ${label(reading.confidence)} confidence` },
     { kind: 'heading', text: 'Acknowledgment' },
     { kind: 'body', text: clean(reading.acknowledgment) },

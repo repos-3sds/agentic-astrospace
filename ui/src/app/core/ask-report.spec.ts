@@ -60,6 +60,26 @@ describe('Ask report export', () => {
     expect(header.startsWith('%PDF-1.4')).toBeTrue();
   });
 
+  it('starts structured PDF content from the acknowledgment, not the question', () => {
+    const drawn: string[] = [];
+    const originalFillText = CanvasRenderingContext2D.prototype.fillText;
+    spyOn(CanvasRenderingContext2D.prototype, 'fillText').and.callFake(
+      function (this: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth?: number) {
+        drawn.push(String(text));
+        return maxWidth === undefined
+          ? originalFillText.call(this, text, x, y)
+          : originalFillText.call(this, text, x, y, maxWidth);
+      },
+    );
+
+    askReportPdf(INPUT);
+
+    expect(drawn).not.toContain('Question');
+    expect(drawn).not.toContain('When does my career become more stable?');
+    expect(drawn).toContain('Acknowledgment');
+    expect(drawn.indexOf('Acknowledgment')).toBeLessThan(drawn.indexOf('Interpretation'));
+  });
+
   it('keeps the object URL alive while an attached download link is consumed', () => {
     jasmine.clock().install();
     const createUrl = spyOn(URL, 'createObjectURL').and.returnValue('blob:siddha-report');
