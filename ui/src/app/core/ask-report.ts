@@ -1,4 +1,5 @@
 import { StructuredReading } from './models';
+import { TextRun, cleanPlainText, paragraphRuns } from './answer-text';
 
 export interface AskReportInput {
   profileName: string;
@@ -19,17 +20,13 @@ interface ReportBlock {
   text?: string;
 }
 
-function clean(text: string): string {
-  return String(text || '')
-    .replace(/\*\*(.*?)\*\*/g, '$1')
-    .replace(/__(.*?)__/g, '$1')
-    .replace(/^\s{0,3}#{1,6}\s*/gm, '')
-    .replace(/^\s*[-*]\s+/gm, '• ')
-    .replace(/[ \t]+/g, ' ')
-    .replace(/\n{3,}/g, '\n\n')
-    .replace(/\s+([,.;:!?])/g, '$1')
-    .trim();
-}
+// `askReportText` (the plain-text/clipboard export) has no rendering surface
+// for emphasis, so it keeps flattening `**bold**` markers the way this file
+// always has — `cleanPlainText` (answer-text.ts) is that same behaviour,
+// now shared with the streamed UI instead of duplicated here. The PDF path
+// below deliberately does NOT use this for body/bullet text — see
+// `reportBlocks()`.
+const clean = cleanPlainText;
 
 function label(value: string | null): string {
   return clean(value ?? '')
@@ -104,33 +101,41 @@ export function askReportText(input: AskReportInput): string {
   return lines.filter((line, index) => line || lines[index - 1] !== '').join('\n').trim();
 }
 
+// `body` and `bullet` blocks below deliberately carry RAW model text —
+// `**bold**`/`__bold__` markers intact, headers/bullet-dashes/whitespace
+// NOT yet normalized. That normalization (and the bold-preserving run
+// split) happens once, at draw time, in `wrapRichText` — this is what
+// lets a Balanced-voice side-heading ("**Career Trajectory:** ...",
+// allowed by _REGISTER_BALANCED's own prompt) actually render bold in the
+// PDF instead of being silently flattened the way `askReportText`'s plain
+// export still correctly flattens it for clipboard/TTS contexts.
 function reportBlocks(input: AskReportInput): ReportBlock[] {
   const reading = input.reading;
   if (!reading) return [
-    { kind: 'body', text: clean(input.fallbackContent) },
+    { kind: 'body', text: input.fallbackContent || '' },
   ];
 
   const blocks: ReportBlock[] = [
     { kind: 'source', text: `${label(input.domain) || 'Guidance'} · ${label(input.intent) || 'General'} · ${label(reading.confidence)} confidence` },
     { kind: 'heading', text: 'Acknowledgment' },
-    { kind: 'body', text: clean(reading.acknowledgment) },
+    { kind: 'body', text: reading.acknowledgment || '' },
     { kind: 'heading', text: 'Interpretation' },
-    { kind: 'body', text: clean(reading.interpretation) },
+    { kind: 'body', text: reading.interpretation || '' },
     { kind: 'heading', text: 'Summary and Assurance' },
-    { kind: 'body', text: clean(reading.summary_and_assurance) },
+    { kind: 'body', text: reading.summary_and_assurance || '' },
   ];
   if (reading.guidance.practical_actions.length) {
     blocks.push({ kind: 'heading', text: 'Practical Actions' });
-    reading.guidance.practical_actions.forEach((action, index) => blocks.push({ kind: 'bullet', text: `${index + 1}. ${clean(action)}` }));
+    reading.guidance.practical_actions.forEach((action, index) => blocks.push({ kind: 'bullet', text: `${index + 1}. ${action}` }));
   }
   if (reading.guidance.remedies.length) {
     blocks.push({ kind: 'heading', text: 'Traditional Supports' });
-    reading.guidance.remedies.forEach(remedy => blocks.push({ kind: 'bullet', text: `${clean(remedy.practice)}${remedy.note ? ` — ${clean(remedy.note)}` : ''}` }));
+    reading.guidance.remedies.forEach(remedy => blocks.push({ kind: 'bullet', text: `${remedy.practice}${remedy.note ? ` — ${remedy.note}` : ''}` }));
   }
   if (reading.technical_basis.length) {
     blocks.push({ kind: 'heading', text: 'Technical Basis' });
     reading.technical_basis.forEach(item => {
-      blocks.push({ kind: 'bullet', text: `${clean(item.factor)}: ${clean(item.reading)}` });
+      blocks.push({ kind: 'bullet', text: `${item.factor}: ${item.reading}` });
       blocks.push({ kind: 'source', text: `Source: ${sourceLabel(item.source)}` });
     });
   }
@@ -150,24 +155,130 @@ function reportBlocks(input: AskReportInput): ReportBlock[] {
   return blocks;
 }
 
-function wrap(context: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
-  const paragraphs = String(text || '').split(/\n+/).filter(Boolean);
-  const lines: string[] = [];
-  for (const paragraph of paragraphs) {
-    const words = paragraph.split(/\s+/);
-    let line = '';
+// Georgia does not exist on Android at all, and `system-ui` resolves to a
+// different actual typeface on every platform (Roboto on Android, San
+// Francisco on iOS, whatever the desktop OS ships) — since this PDF is
+// built by rasterizing a <canvas>, not by embedding real PDF text/fonts,
+// whichever face is ACTUALLY installed on the device generating it is what
+// gets permanently baked into the image. Mixing two font stacks that were
+// each already platform-dependent compounded the problem into visible,
+// unpredictable inconsistency: the same report could render with a
+// completely different heading/body contrast on every device, or with no
+// contrast at all where a fallback happened to collapse both onto the same
+// glyphs. Using the app's own real font (`--as-font-body`/`--as-font-display`
+// in styles.scss, both 'Inter') for every text kind here fixes the
+// platform-dependence at the source: the hierarchy becomes weight/size/
+// color only, exactly how the live streamed answer already differentiates
+// a side-heading from body prose (see `.side-heading` in
+// ask-answer.component.scss).
+const REPORT_FONT_FAMILY = "'Inter', system-ui, sans-serif";
+
+function reportFont(weight: number, size: number): string {
+  return `${weight} ${size}px ${REPORT_FONT_FAMILY}`;
+}
+
+/** Canvas text does not reflow once a webfont finishes loading the way
+ * ordinary DOM text does — if Inter has not finished loading when
+ * `fillText` runs, whatever fallback was active at that instant is what
+ * gets rasterized into the image, permanently. `font` strings alone only
+ * declare a preference; this is what actually waits for it. Best-effort:
+ * a blocked or failed load still produces a real PDF, just with the
+ * platform's own default sans-serif baked in instead of Inter — still
+ * internally consistent, since every kind shares the one declared family. */
+async function ensureReportFontReady(): Promise<void> {
+  if (typeof document === 'undefined' || !('fonts' in document)) return;
+  try {
+    await Promise.all([400, 500, 600, 700].map(weight => document.fonts.load(reportFont(weight, 16))));
+    await document.fonts.ready;
+  } catch {
+    // Ignored — see comment above.
+  }
+}
+
+type Token = TextRun;
+interface DrawLine {
+  tokens: Token[];
+  /** True for a line that opens a new paragraph (not the block's first) —
+   * the draw loop adds a little extra space above it, the canvas
+   * equivalent of `.reading-paragraph + .reading-paragraph`'s margin in
+   * the live streamed answer. Interpretation's real paragraph breaks were
+   * previously collapsed into a single run of same-height lines with no
+   * visual separation at all. */
+  newParagraph: boolean;
+}
+
+function tokensFromRuns(runs: TextRun[]): Token[] {
+  const tokens: Token[] = [];
+  for (const run of runs) {
+    for (const word of run.text.split(/\s+/).filter(Boolean)) tokens.push({ text: word, bold: run.bold });
+  }
+  return tokens;
+}
+
+/** Word-wraps RAW model text (bold markers intact, headers/bullets not yet
+ * normalized — `paragraphRuns` does both) into lines ready to draw, each
+ * token individually measured against the weight it will actually be
+ * drawn in. This is the one place a `**bold**` side-heading in
+ * `interpretation`/`acknowledgment`/a bullet's text actually becomes a
+ * highlighted run instead of being silently discarded. */
+function wrapRichText(
+  context: CanvasRenderingContext2D,
+  rawText: string,
+  maxWidth: number,
+  normalFont: string,
+  boldFont: string,
+): DrawLine[] {
+  const paragraphs = paragraphRuns(rawText);
+  const drawLines: DrawLine[] = [];
+  context.font = normalFont;
+  const spaceWidth = context.measureText(' ').width;
+  paragraphs.forEach((runs, paragraphIndex) => {
+    const words = tokensFromRuns(runs);
+    let line: Token[] = [];
+    let lineWidth = 0;
+    let isFirstLineOfParagraph = true;
     for (const word of words) {
-      const candidate = line ? `${line} ${word}` : word;
-      if (line && context.measureText(candidate).width > maxWidth) {
-        lines.push(line);
-        line = word;
+      context.font = word.bold ? boldFont : normalFont;
+      const wordWidth = context.measureText(word.text).width;
+      const extra = line.length ? spaceWidth + wordWidth : wordWidth;
+      if (line.length && lineWidth + extra > maxWidth) {
+        drawLines.push({ tokens: line, newParagraph: isFirstLineOfParagraph && paragraphIndex > 0 });
+        isFirstLineOfParagraph = false;
+        line = [word];
+        lineWidth = wordWidth;
       } else {
-        line = candidate;
+        line.push(word);
+        lineWidth += extra;
       }
     }
-    if (line) lines.push(line);
-  }
-  return lines;
+    if (line.length) drawLines.push({ tokens: line, newParagraph: isFirstLineOfParagraph && paragraphIndex > 0 });
+  });
+  return drawLines;
+}
+
+/** Draws one wrapped line left-to-right, switching font/color per token so
+ * a bold side-heading run and the plain prose beside it render inline on
+ * the same line. Returns the x position drawing stopped at (unused today,
+ * kept because a caller measuring trailing space is a natural next need). */
+function drawRichLine(
+  context: CanvasRenderingContext2D,
+  line: DrawLine,
+  x: number,
+  y: number,
+  normalFont: string,
+  boldFont: string,
+  normalColor: string,
+  boldColor: string,
+): void {
+  context.font = normalFont;
+  const spaceWidth = context.measureText(' ').width;
+  let cursorX = x;
+  line.tokens.forEach(token => {
+    context.font = token.bold ? boldFont : normalFont;
+    context.fillStyle = token.bold ? boldColor : normalColor;
+    context.fillText(token.text, cursorX, y);
+    cursorX += context.measureText(token.text).width + spaceWidth;
+  });
 }
 
 function bytes(value: string): Uint8Array {
@@ -187,7 +298,13 @@ function dataUrlBytes(dataUrl: string): Uint8Array {
   return Uint8Array.from(binary, char => char.charCodeAt(0));
 }
 
-function canvasPages(input: AskReportInput): HTMLCanvasElement[] {
+// The canvas equivalent of `.reading-paragraph + .reading-paragraph`'s
+// margin in ask-answer.component.scss — a real paragraph in Interpretation
+// previously produced no visible gap at all, just more same-height lines.
+const PARAGRAPH_GAP = 12;
+
+async function canvasPages(input: AskReportInput): Promise<HTMLCanvasElement[]> {
+  await ensureReportFontReady();
   const width = 1240;
   const height = 1754;
   const margin = 104;
@@ -206,11 +323,13 @@ function canvasPages(input: AskReportInput): HTMLCanvasElement[] {
     context = canvas.getContext('2d')!;
     context.fillStyle = '#fffdf9';
     context.fillRect(0, 0, width, height);
-    context.font = '600 20px system-ui, sans-serif';
+    context.font = reportFont(600, 20);
     context.fillStyle = '#332823';
     context.textAlign = 'left';
     context.fillText(profileName, margin, 65);
-    context.font = '700 22px Georgia, serif';
+    // Distinguished from the profile name by weight and accent color alone,
+    // not by a second, platform-dependent typeface — see REPORT_FONT_FAMILY.
+    context.font = reportFont(700, 22);
     context.fillStyle = '#8f3f30';
     context.textAlign = 'right';
     context.fillText('SIDDHA', width - margin, 65);
@@ -228,13 +347,15 @@ function canvasPages(input: AskReportInput): HTMLCanvasElement[] {
 
   const style = (kind: ReportBlock['kind']) => {
     const rules = {
-      title: { font: '700 52px Georgia, serif', color: '#6f2f24', line: 66, before: 0, after: 4 },
-      subtitle: { font: '500 24px system-ui, sans-serif', color: '#6e625b', line: 34, before: 0, after: 18 },
-      heading: { font: '700 22px system-ui, sans-serif', color: '#8f3f30', line: 31, before: 30, after: 8 },
-      body: { font: '400 22px Georgia, serif', color: '#241d19', line: 34, before: 0, after: 15 },
-      bullet: { font: '400 21px system-ui, sans-serif', color: '#241d19', line: 32, before: 3, after: 7 },
-      source: { font: '400 16px system-ui, sans-serif', color: '#756b65', line: 25, before: 0, after: 8 },
-      rule: { font: '', color: '#d8c4b9', line: 1, before: 8, after: 14 },
+      title: { font: reportFont(700, 52), boldFont: reportFont(700, 52), color: '#6f2f24', boldColor: '#6f2f24', line: 66, before: 0, after: 4 },
+      subtitle: { font: reportFont(500, 24), boldFont: reportFont(700, 24), color: '#6e625b', boldColor: '#6e625b', line: 34, before: 0, after: 18 },
+      heading: { font: reportFont(700, 22), boldFont: reportFont(700, 22), color: '#8f3f30', boldColor: '#8f3f30', line: 31, before: 30, after: 8 },
+      // `boldColor` gives a `**bold**` side-heading the same accent as a
+      // real heading — the point of the highlight, not just a weight bump.
+      body: { font: reportFont(400, 22), boldFont: reportFont(700, 22), color: '#241d19', boldColor: '#8f3f30', line: 34, before: 0, after: 15 },
+      bullet: { font: reportFont(400, 21), boldFont: reportFont(700, 21), color: '#241d19', boldColor: '#8f3f30', line: 32, before: 3, after: 7 },
+      source: { font: reportFont(400, 16), boldFont: reportFont(700, 16), color: '#756b65', boldColor: '#8f3f30', line: 25, before: 0, after: 8 },
+      rule: { font: '', boldFont: '', color: '#d8c4b9', boldColor: '#d8c4b9', line: 1, before: 8, after: 14 },
     };
     return rules[kind];
   };
@@ -243,21 +364,18 @@ function canvasPages(input: AskReportInput): HTMLCanvasElement[] {
   for (let blockIndex = 0; blockIndex < blocks.length; blockIndex++) {
     const block = blocks[blockIndex];
     const rule = style(block.kind);
-    context.font = rule.font;
     const inset = block.kind === 'bullet' ? 28 : 0;
     const contentWidth = width - margin * 2 - inset;
-    const lines = block.kind === 'rule' ? [] : wrap(context, block.text ?? '', contentWidth);
+    const lines = block.kind === 'rule' ? [] : wrapRichText(context, block.text ?? '', contentWidth, rule.font, rule.boldFont);
     const required = rule.before + Math.max(rule.line, lines.length * rule.line) + rule.after;
     let keepWithNext = 0;
     if (block.kind === 'heading') {
       const next = blocks[blockIndex + 1];
       if (next && next.kind !== 'heading' && next.kind !== 'rule') {
         const nextRule = style(next.kind);
-        context.font = nextRule.font;
         const nextInset = next.kind === 'bullet' ? 28 : 0;
-        const nextLines = wrap(context, next.text ?? '', width - margin * 2 - nextInset);
+        const nextLines = wrapRichText(context, next.text ?? '', width - margin * 2 - nextInset, nextRule.font, nextRule.boldFont);
         keepWithNext = nextRule.before + Math.min(3, Math.max(1, nextLines.length)) * nextRule.line;
-        context.font = rule.font;
       }
     }
     // Long prose should consume the space that remains on this page, not jump
@@ -282,25 +400,21 @@ function canvasPages(input: AskReportInput): HTMLCanvasElement[] {
       y += rule.after;
       continue;
     }
-    context.font = rule.font;
-    context.fillStyle = rule.color;
     if (block.kind === 'bullet') {
       context.fillStyle = '#b9523f';
       context.beginPath();
       context.arc(margin + 6, y + 10, 4, 0, Math.PI * 2);
       context.fill();
-      context.fillStyle = rule.color;
     }
     lines.forEach((line, index) => {
       if (y + rule.line > bottom) {
         newPage();
-        context.font = rule.font;
-        context.fillStyle = rule.color;
         // A continued bullet gets a quiet continuation indent rather than a
         // second marker that would incorrectly look like a new list item.
         if (block.kind === 'bullet' && index > 0) y += 4;
       }
-      context.fillText(line, margin + inset, y);
+      if (line.newParagraph) y += PARAGRAPH_GAP;
+      drawRichLine(context, line, margin + inset, y, rule.font, rule.boldFont, rule.color, rule.boldColor);
       y += rule.line;
     });
     y += rule.after;
@@ -308,7 +422,7 @@ function canvasPages(input: AskReportInput): HTMLCanvasElement[] {
 
   pages.forEach((page, index) => {
     const ctx = page.getContext('2d')!;
-    ctx.font = '400 15px system-ui, sans-serif';
+    ctx.font = reportFont(400, 15);
     ctx.fillStyle = '#8b817b';
     ctx.textAlign = 'left';
     ctx.fillText(`Generated by Siddha · ${generated}`, margin, height - 48);
@@ -318,9 +432,9 @@ function canvasPages(input: AskReportInput): HTMLCanvasElement[] {
   return pages;
 }
 
-export function askReportPdf(input: AskReportInput): Blob {
+export async function askReportPdf(input: AskReportInput): Promise<Blob> {
   if (typeof document === 'undefined') throw new Error('PDF export requires a browser.');
-  const images = canvasPages(input).map(canvas => ({
+  const images = (await canvasPages(input)).map(canvas => ({
     width: canvas.width,
     height: canvas.height,
     data: dataUrlBytes(canvas.toDataURL('image/jpeg', 0.9)),

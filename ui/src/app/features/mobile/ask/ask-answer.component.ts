@@ -17,6 +17,7 @@ import { PreferencesService } from '../../../core/preferences.service';
 import { ProfileContextFact, ProfileContextService } from '../../../core/profile-context.service';
 import { MobileAskMessage, MobileAskThreadService } from './mobile-ask-thread.service';
 import { AskReportInput, askReportPdf, askReportText, downloadBlob } from '../../../core/ask-report';
+import { TextRun, cleanPlainText, paragraphRuns } from '../../../core/answer-text';
 
 /**
  * How confidently the answer lands. Named, not a number: the point of the dot
@@ -325,15 +326,7 @@ export class AskAnswerComponent {
   private abortController: AbortController | null = null;
 
   private normaliseAnswerText(answer: string): string {
-    return answer
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/__(.*?)__/g, '$1')
-      .replace(/^\s{0,3}#{1,6}\s*/gm, '')
-      .replace(/^\s*[-*]\s+/gm, '• ')
-      .replace(/[ \t]+/g, ' ')
-      .replace(/\n{3,}/g, '\n\n')
-      .replace(/\s+([,.;:!?])/g, '$1')
-      .trim();
+    return cleanPlainText(answer);
   }
 
   private sentences(text: string): string[] {
@@ -476,6 +469,20 @@ export class AskAnswerComponent {
       .split(/\n\s*\n+/)
       .map((paragraph) => paragraph.replace(/\s*\n\s*/g, ' ').trim())
       .filter(Boolean);
+  }
+
+  /** The rich counterpart to `readingParagraphs`: same paragraph split, but
+   * keeps `**bold**`/`__bold__` markers as structured runs instead of
+   * flattening them. The Balanced voice's own prompt allows a model answer
+   * to lead a paragraph with a bold side-heading for a long reading
+   * (`_REGISTER_BALANCED`: "a header is fine if the answer is genuinely
+   * long") — this is what lets the template actually render that emphasis
+   * (`<strong class="side-heading">`) instead of discarding it the way
+   * `readingParagraphs`' plain-text form necessarily does. `readingParagraphs`
+   * stays as-is for the contexts that only ever wanted flat prose (TTS,
+   * history previews) — this is additive, not a replacement. */
+  protected readingParagraphRuns(reading: StructuredReading): TextRun[][] {
+    return paragraphRuns(reading.interpretation ?? '');
   }
 
   /** Full `practical_actions` (falling back to `follow_up_questions` when
@@ -1304,7 +1311,7 @@ export class AskAnswerComponent {
       const safeDomain = (message.domain || 'reading').toLowerCase().replace(/[^a-z0-9]+/g, '-');
       const date = new Date().toISOString().slice(0, 10);
       const filename = `siddha-${safeDomain}-${date}.pdf`;
-      const report = askReportPdf(this.reportInput(message));
+      const report = await askReportPdf(this.reportInput(message));
       if (!this.navigation.web) {
         const file = new File([report], filename, { type: 'application/pdf' });
         if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare?.({ files: [file] })) {

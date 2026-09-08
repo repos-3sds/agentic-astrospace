@@ -53,14 +53,14 @@ describe('Ask report export', () => {
   });
 
   it('generates a real PDF blob in-browser', async () => {
-    const pdf = askReportPdf(INPUT);
+    const pdf = await askReportPdf(INPUT);
     expect(pdf.type).toBe('application/pdf');
     expect(pdf.size).toBeGreaterThan(10_000);
     const header = new TextDecoder().decode((await pdf.arrayBuffer()).slice(0, 8));
     expect(header.startsWith('%PDF-1.4')).toBeTrue();
   });
 
-  it('starts structured PDF content from the acknowledgment, not the question', () => {
+  it('starts structured PDF content from the acknowledgment, not the question', async () => {
     const drawn: string[] = [];
     const originalFillText = CanvasRenderingContext2D.prototype.fillText;
     spyOn(CanvasRenderingContext2D.prototype, 'fillText').and.callFake(
@@ -72,12 +72,64 @@ describe('Ask report export', () => {
       },
     );
 
-    askReportPdf(INPUT);
+    await askReportPdf(INPUT);
 
     expect(drawn).not.toContain('Question');
     expect(drawn).not.toContain('When does my career become more stable?');
     expect(drawn).toContain('Acknowledgment');
     expect(drawn.indexOf('Acknowledgment')).toBeLessThan(drawn.indexOf('Interpretation'));
+  });
+
+  // Real-user report, 2026-09: side-headings the model writes in the
+  // Balanced voice (allowed by domain_agent.py's own _REGISTER_BALANCED —
+  // "a header is fine if the answer is genuinely long") were not
+  // highlighted in the generated PDF. Root cause: the canvas draw path
+  // stripped `**bold**` markers to plain text before drawing, the same way
+  // the plain-text export correctly still does for clipboard/TTS. This
+  // pins the fix directly against what actually gets sent to
+  // CanvasRenderingContext2D.fillText, not just the text content.
+  it('draws a Balanced-voice bold side-heading in a bold font, not flattened to plain text', async () => {
+    const calls: { text: string; font: string }[] = [];
+    const originalFillText = CanvasRenderingContext2D.prototype.fillText;
+    spyOn(CanvasRenderingContext2D.prototype, 'fillText').and.callFake(
+      function (this: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth?: number) {
+        calls.push({ text: String(text), font: this.font });
+        return maxWidth === undefined
+          ? originalFillText.call(this, text, x, y)
+          : originalFillText.call(this, text, x, y, maxWidth);
+      },
+    );
+
+    await askReportPdf({
+      ...INPUT,
+      reading: {
+        ...INPUT.reading!,
+        // "Zenith"/"Wolfpack" appear nowhere else in INPUT — a word that
+        // could collide with the domain/intent/citation labels drawn
+        // elsewhere on the page (e.g. "career") would make `.find` below
+        // match the wrong occurrence rather than proving anything.
+        interpretation: '**Zenith Point:** Wolfpack energy is strong this year.',
+      },
+    });
+
+    // The bold run's own words are drawn as their own fillText calls, not
+    // fused with the plain prose beside them.
+    const headingWord = calls.find(call => call.text === 'Zenith');
+    const plainWord = calls.find(call => call.text === 'Wolfpack');
+    expect(headingWord).withContext('the bold side-heading word was never drawn at all').toBeTruthy();
+    expect(plainWord).toBeTruthy();
+    // Canvas normalizes a `700`-weight font string to the `bold` keyword
+    // when read back (and drops a `400`/`normal` weight token entirely) —
+    // asserting on that serialized form, not the '700'/'400' this file
+    // itself writes, is what actually proves two different weights were
+    // set on the context, not just two different-looking input strings.
+    expect(headingWord!.font).toContain('bold');
+    expect(plainWord!.font).not.toContain('bold');
+    expect(headingWord!.font).not.toBe(plainWord!.font);
+
+    // Neither the literal ** markers nor a fused "Career Trajectory:" +
+    // plain-text run should ever reach fillText.
+    expect(calls.some(call => call.text.includes('**'))).toBeFalse();
   });
 
   it('keeps the object URL alive while an attached download link is consumed', () => {
