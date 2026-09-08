@@ -247,6 +247,9 @@ class TestBasePromptCoversConventionDependentFields:
         assert "ANSWER LANGUAGE — Telugu" in agent.system_prompt
         assert "simple, conversational Telugu" in compact_prompt
         assert "natural English words mixed in" in compact_prompt
+        assert "must not shrink the reading" in compact_prompt
+        assert "same depth, coverage, timing detail" in compact_prompt
+        assert "not a shorter or less complete answer" in compact_prompt
         assert "Technical citations and `source`" in agent.system_prompt
         assert "must stay exactly as source ids" in compact_prompt
 

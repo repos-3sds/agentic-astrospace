@@ -102,8 +102,13 @@ conversational Telugu, with natural English words mixed in where Telugu readers 
 them in speech. Keep astrological terms such as Rahu, Shani, Guru, dasha, antardasha,
 gochara, D9, D10, lagna, nakshatra and bhava as familiar transliterated terms when that is
 clearer than a forced translation. Prefer plain everyday wording over literary Telugu. Do not
-make the answer formal, Sanskrit-heavy, or hard to read. Technical citations and `source`
-ids must stay exactly as source ids from the bundle; translate the explanation, not the
+make the answer formal, Sanskrit-heavy, or hard to read.
+
+Important: changing to Telugu must not shrink the reading. Preserve the same depth,
+coverage, timing detail, and number of meaningful `technical_basis` factors that you would
+give in English for the selected register. "Simple Telugu" means easier words and natural
+English mixing, not a shorter or less complete answer. Technical citations and `source` ids
+must stay exactly as source ids from the bundle; translate the explanation, not the
 machine-readable evidence keys."""
 
 LANGUAGE_INSTRUCTIONS = {
