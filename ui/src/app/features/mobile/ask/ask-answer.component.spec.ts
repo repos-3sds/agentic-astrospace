@@ -600,3 +600,61 @@ describe('AskAnswerComponent PDF sharing', () => {
     expect(header.startsWith('%PDF-1.4')).toBeTrue();
   });
 });
+
+describe('AskAnswerComponent copy answer', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  // Live report, 2026-09: "Copy Answer" was reported broken on mobile.
+  // Root cause: `navigator.clipboard.writeText` can exist (pass feature
+  // detection) and still reject — a real, common shape in a Capacitor/
+  // WebView context, where the API surface is present but blocked by the
+  // WebView's own clipboard permission policy. The previous code tried the
+  // modern API inside the same try/catch that reported failure, so any
+  // rejection from it skipped the `execCommand` fallback entirely and
+  // always showed "could not be copied", even on a device where the legacy
+  // path would have worked.
+  it('falls through to execCommand when the modern Clipboard API exists but rejects', async () => {
+    const harness = createIsolationHarness({});
+    await settleEffects();
+    const user = { ...messageWithReading(null), id: 'user-copy', role: 'user', content: 'When will my career settle?' };
+    const answer = { ...messageWithReading(FULL_READING), id: 'answer-copy' };
+    (harness.component as any).messages.set([user, answer]);
+
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: () => Promise.reject(new DOMException('Document is not focused', 'NotAllowedError')) },
+    });
+    const execCommandSpy = spyOn(document, 'execCommand').and.returnValue(true);
+    try {
+      await (harness.component as any).copyAnswer(answer);
+    } finally {
+      delete (navigator as any).clipboard;
+    }
+
+    expect(execCommandSpy).toHaveBeenCalledWith('copy');
+    expect((harness.component as any).copiedMessageId()).toBe('answer-copy');
+    expect((harness.component as any).submitError()).toBeNull();
+  });
+
+  it('reports failure only when both the modern API and the legacy fallback fail', async () => {
+    const harness = createIsolationHarness({});
+    await settleEffects();
+    const user = { ...messageWithReading(null), id: 'user-copy-2', role: 'user', content: 'When will my career settle?' };
+    const answer = { ...messageWithReading(FULL_READING), id: 'answer-copy-2' };
+    (harness.component as any).messages.set([user, answer]);
+
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: () => Promise.reject(new DOMException('Document is not focused', 'NotAllowedError')) },
+    });
+    spyOn(document, 'execCommand').and.returnValue(false);
+    try {
+      await (harness.component as any).copyAnswer(answer);
+    } finally {
+      delete (navigator as any).clipboard;
+    }
+
+    expect((harness.component as any).copiedMessageId()).toBeNull();
+    expect((harness.component as any).submitError()).toBe('The answer could not be copied. Please try again.');
+  });
+});
