@@ -1202,29 +1202,59 @@ export class AskAnswerComponent {
     }
   }
 
+  private legacyCopy(text: string): boolean {
+    if (typeof document === 'undefined') return false;
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    let ok = false;
+    try {
+      ok = document.execCommand('copy');
+    } catch {
+      ok = false;
+    }
+    textarea.remove();
+    return ok;
+  }
+
   protected async copyAnswer(message: ChatMessage): Promise<void> {
     const text = askReportText(this.reportInput(message));
     if (!text || typeof document === 'undefined') return;
-    try {
-      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+
+    // The modern Clipboard API and the legacy execCommand fallback are two
+    // genuinely independent mechanisms, not a feature-detected either/or:
+    // `navigator.clipboard.writeText` can exist (pass feature detection) and
+    // still reject — a real, common shape in Capacitor/WebView contexts,
+    // where the API surface is present but blocked by the WebView's own
+    // clipboard permission policy or a lost user-activation transfer through
+    // the native bridge. Trying it first and only falling through to the
+    // legacy path on its OWN failure (not on its absence) is what makes the
+    // fallback reachable at all — the previous shape tried the modern API
+    // inside the same try/catch that reported failure, so any rejection from
+    // it skipped the fallback entirely and showed "could not be copied" even
+    // when the legacy path would have worked.
+    let copied = false;
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      try {
         await navigator.clipboard.writeText(text);
-      } else {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        textarea.remove();
+        copied = true;
+      } catch {
+        copied = false;
       }
-      this.copiedMessageId.set(message.id);
-      setTimeout(() => {
-        if (this.copiedMessageId() === message.id) this.copiedMessageId.set(null);
-      }, 1800);
-    } catch {
-      this.submitError.set('The answer could not be copied. Please try again.');
     }
+    if (!copied) copied = this.legacyCopy(text);
+
+    if (!copied) {
+      this.submitError.set('The answer could not be copied. Please try again.');
+      return;
+    }
+    this.copiedMessageId.set(message.id);
+    setTimeout(() => {
+      if (this.copiedMessageId() === message.id) this.copiedMessageId.set(null);
+    }, 1800);
   }
 
   protected copyLabel(message: ChatMessage): string {

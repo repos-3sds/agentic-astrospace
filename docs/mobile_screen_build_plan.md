@@ -119,6 +119,31 @@ fail with a misleading "no booted simulator".
   invisible text, unconsumed safe areas, and the global-class collision above —
   passed the build cleanly and were only caught by screenshots. Verify visually,
   every screen.
+- **Web Share API / blob-URL download is not a Capacitor bridge.** Ask's
+  "Share PDF"/"Download PDF" (`ask-answer.component.ts::share()`,
+  `ask-report.ts::downloadBlob()`) relies entirely on `navigator.share`/
+  `navigator.canShare` and a synthetic `<a download>` blob-URL click — pure
+  web-standard APIs, no `@capacitor/share`/`@capacitor/filesystem` in
+  `package.json`. Real-user report, 2026-09-08: "download pdf or share
+  option is not working" on mobile. Not fixed here — `downloadBlob()`'s own
+  comment already flagged the risk ("WebViews... may consume the object URL
+  after the synthetic click task completes"), and PR #79's ledger row
+  independently found the same class of gap ("Codex's in-app-browser host
+  itself suppresses outbound file downloads, so file persistence there
+  cannot serve as product-browser proof"). Many Android WebView builds
+  either don't implement the Web Share API's file-sharing form at all
+  (`canShare({files})` returns false) or restrict blob-URL `download`
+  clicks outside a full browser UI, silently no-opping instead of erroring
+  — which is why this reached the user as "nothing happens" rather than a
+  visible failure. *Real fix needs a native bridge*: add
+  `@capacitor/share` (and likely `@capacitor/filesystem` to write the PDF
+  bytes to a real file first, since `Share.share()` takes a file URI, not
+  raw bytes), gated behind `Capacitor.isNativePlatform()` the same way
+  `connectivity.service.ts` already gates `@capacitor/network` — falling
+  back to the current web-standard path on actual web. This is a new native
+  dependency, so it needs the same dependency/native review PR #72 called
+  out for `@capacitor/network`, plus physical-device verification before
+  calling it fixed — not a quick patch.
 
 ## Before a device build
 
