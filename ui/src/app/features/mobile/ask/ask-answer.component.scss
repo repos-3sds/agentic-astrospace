@@ -304,6 +304,18 @@
   margin-top: 14px;
 }
 
+/* The Balanced voice's own prompt allows a bold side-heading to lead a
+   paragraph in a genuinely long reading (domain_agent.py's
+   _REGISTER_BALANCED) — real markdown emphasis, not decoration. Give it
+   the same accent language as the app's other section markers (.eyebrow,
+   h2) rather than the quieter .basis-row/.remedy-row `<strong>` treatment,
+   since this one is functioning as an inline heading, not a label next to
+   its own value. */
+.side-heading {
+  @include m-body-strong;
+  color: var(--m-accent-strong);
+}
+
 .acknowledgment {
   @include m-body-small;
   color: var(--m-muted);
