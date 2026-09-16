@@ -513,6 +513,31 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   `scripts/audit_kb_sources.py`'s real output, then correct
   `taxonomy.json`'s `source_refs` for those 5 domains the same way this
   pass corrected `education`'s and `litigation`'s.
+- [ ] **Migrate off kerykeion 5.x to 6.x's factory API — deliberately not
+  done as part of pinning it, 2026-09-16.** `requirements.txt` had
+  `kerykeion>=4.0.0` (no upper bound); kerykeion 6.0 removed
+  `AstrologicalSubject`/`NatalAspects` outright in favor of
+  `AstrologicalSubjectFactory.from_birth_data(...)`, which broke CI and any
+  fresh Docker build the instant it published to PyPI — pinned to `==5.12.9`
+  (the verified-good version) to stop that, see the commit pinning it for
+  the full incident. The pin is a stopgap, not the fix: v6 also changes
+  actual computed results, not just the API surface — default active points
+  drop from 18 to 14 (Descendant, Imum Coeli, True South Lunar Node, Mean
+  Lilith no longer active unless requested), aspect orbs narrow
+  (conjunction/opposition 10°→6°, quintile dropped), transits/returns/
+  progressions move to a flat 3° orb, and the default chart style changes
+  from 'classic' to 'modern'. Any of those could silently shift dasha/
+  aspect/strength output this app has spent many sessions verifying against
+  BPHS/Santhanam/Sharma — migrating needs each default reviewed against
+  this app's own verified fixtures before adopting, not a version bump.
+  *Unblocks on:* deciding, per changed default, whether to adopt v6's new
+  default or explicitly pin the old v5 behavior via kerykeion's
+  `V5_DEFAULT_ACTIVE_POINTS` (kerykeion's own migration guide names this
+  escape hatch) — not a decision to make inside a routine dependency bump.
+  *Hook:* `astrospace/core/chart.py`, `astrospace/core/transits.py` (both
+  `from kerykeion import AstrologicalSubject`), `astrospace/agents/
+  compatibility_agent.py` (`SynastryAspects`, unaffected by the v6 removal
+  but built on the same v5-era API surface).
 
 ### C. Ask/agent layer — one live safety gap, highest priority here
 
