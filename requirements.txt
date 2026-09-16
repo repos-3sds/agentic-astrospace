@@ -1,4 +1,14 @@
-kerykeion>=4.0.0
+# Pinned exactly, not >=: kerykeion 6.0 (released between 2026-09-08 and
+# 2026-09-16) removed `AstrologicalSubject`/`NatalAspects` outright — CI and
+# any fresh Docker build (`pip install --no-cache-dir`, no lockfile) resolve
+# to latest on every run, so the unbounded `>=4.0.0` this used to be broke
+# both the instant v6 published, with no code change on our side. v6 also
+# changes computed results, not just the API (active points 18->14, narrower
+# aspect orbs, chart style default) — see docs/backend_astro_depth_checklist_2026-08-06.md's
+# deferred backlog for the real migration, which needs those changes
+# reviewed against this app's verified output before adopting, not a quiet
+# version bump. 5.12.9 is the last verified-good v5 release.
+kerykeion==5.12.9
 pyswisseph>=2.10.0
 anthropic>=0.34.0
 google-genai>=1.0.0
