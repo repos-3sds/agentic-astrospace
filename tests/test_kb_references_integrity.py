@@ -97,6 +97,52 @@ def test_every_source_is_in_the_curated_catalogue(references):
     assert not unknown, f"references cite sources absent from sources.json: {unknown}"
 
 
+def test_every_catalogued_source_declares_its_corpus_status():
+    """`corpus_status` is the field the test below reads, so a new catalogue
+    entry must not be able to omit it and silently become uncheckable."""
+    catalogue = json.loads(SOURCES_PATH.read_text(encoding="utf-8"))["sources"]
+    valid = {"readable", "present_unreadable", "absent"}
+    bad = {k: v.get("corpus_status") for k, v in catalogue.items()
+           if v.get("corpus_status") not in valid}
+    assert not bad, f"sources.json entries need a corpus_status in {valid}: {bad}"
+
+
+def test_every_cited_source_is_actually_in_the_corpus(references):
+    """Being catalogued is not the same as being HELD, and until 2026-09-18
+    nothing in this repo could tell the two apart.
+
+    `verifier.valid_sources()` resolves a citation against `sources.json`'s
+    keys and never against the corpus, so four references citing books this
+    project does not own — charak_medical, light_on_relationships, and
+    jaimini_sutras twice — passed verification looking exactly as grounded as
+    a BPHS citation. A reader has no way to see the difference either: the
+    reading cites a ref_id, and the ref_id names a real classical work we
+    simply do not have and therefore never checked the claim against.
+
+    18 of the 24 catalogued sources are `absent`, so this is a wide door, not
+    a corner case. `present_unreadable` fails too: Jataka Parijata is owned in
+    two copies that both OCR at roughly 25%, and a text nobody can read
+    grounds nothing — it becomes citable when Phase 0 re-OCRs it, and this
+    test is what will notice.
+
+    The corpus itself is gitignored (~318MB) and absent in CI, so this checks
+    the DECLARED status rather than the filesystem. Keeping that declaration
+    honest is `scripts/audit_kb_sources.py`'s job, run locally.
+    """
+    catalogue = json.loads(SOURCES_PATH.read_text(encoding="utf-8"))["sources"]
+    offenders = {}
+    for r in references:
+        key = r["source"]["text_key"]
+        status = catalogue.get(key, {}).get("corpus_status")
+        if status != "readable":
+            offenders.setdefault(f"{key} ({status})", []).append(r["ref_id"])
+    assert not offenders, (
+        "references cite sources this project does not hold in readable form — "
+        "either retarget the claim onto a text in the corpus, or acquire the "
+        f"text and update its corpus_status: {offenders}"
+    )
+
+
 def test_convention_dependent_references_explain_themselves(references):
     """CLAUDE.md: anything convention-dependent states the rule used. A flag with
     no note tells a reader something is disputed without telling them how."""

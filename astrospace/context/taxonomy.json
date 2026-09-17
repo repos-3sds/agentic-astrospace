@@ -21,7 +21,7 @@
       "gochara_planets": ["Saturn", "Jupiter"],
       "keywords": ["career", "job", "work", "business", "promotion", "profession", "boss", "salary", "office", "company", "startup", "employment", "resign", "interview"],
       "convention_flags": [],
-      "source_refs": ["bphs", "uttara_kalamrita", "phaladeepika", "raman_htjh", "kn_rao_career"]
+      "source_refs": ["bphs", "uttara_kalamrita", "phaladeepika"]
     },
     "wealth": {
       "name": "Wealth & Finance",
@@ -36,7 +36,7 @@
       "gochara_planets": ["Jupiter", "Saturn"],
       "keywords": ["money", "wealth", "finance", "financial", "income", "loan", "debt", "investment", "property value", "savings", "rich", "profit", "loss", "stocks", "gold"],
       "convention_flags": [],
-      "source_refs": ["bphs", "uttara_kalamrita", "saravali", "raman_htjh"]
+      "source_refs": ["bphs", "uttara_kalamrita", "saravali"]
     },
     "marriage": {
       "name": "Marriage & Relationships",
@@ -51,7 +51,7 @@
       "gochara_planets": ["Jupiter", "Saturn", "Rahu"],
       "keywords": ["marriage", "spouse", "wife", "husband", "partner", "wedding", "divorce", "relationship", "love", "engagement", "compatibility", "match", "manglik"],
       "convention_flags": [],
-      "source_refs": ["bphs", "jataka_parijata", "muhurta_chintamani", "raman_htjh", "light_on_relationships"]
+      "source_refs": ["bphs", "jataka_parijata"]
     },
     "health": {
       "name": "Health & Longevity",
@@ -67,7 +67,7 @@
       "keywords": ["health", "disease", "illness", "sick", "surgery", "accident", "hospital", "mental", "anxiety", "depression", "recovery", "pain", "diagnosis"],
       "convention_flags": ["D6 varga rule is VERIFY-flagged in the engine"],
       "exclusions": ["No longevity/death predictions — policy exclusion regardless of classical basis."],
-      "source_refs": ["prasna_marga", "bphs", "uttara_kalamrita", "charak_medical"]
+      "source_refs": ["bphs", "uttara_kalamrita"]
     },
     "education": {
       "name": "Education & Intellect",
@@ -97,7 +97,7 @@
       "gochara_planets": ["Jupiter"],
       "keywords": ["child", "children", "baby", "pregnancy", "progeny", "son", "daughter", "conceive", "adoption", "kids"],
       "convention_flags": ["Number/gender of children is low-confidence; consider excluding from product answers."],
-      "source_refs": ["bphs", "prasna_marga", "uttara_kalamrita"]
+      "source_refs": ["bphs", "uttara_kalamrita"]
     },
     "family_property": {
       "name": "Family, Home & Property",
@@ -127,7 +127,7 @@
       "gochara_planets": ["Rahu", "Ketu", "Saturn"],
       "keywords": ["foreign", "abroad", "visa", "immigration", "settle abroad", "settle overseas", "usa", "canada", "australia", "travel", "overseas", "relocate abroad", "green card", "onsite"],
       "convention_flags": [],
-      "source_refs": ["bphs", "prasna_marga", "uttara_kalamrita"]
+      "source_refs": ["bphs", "uttara_kalamrita"]
     },
     "spirituality": {
       "name": "Spirituality & Moksha",
@@ -142,7 +142,7 @@
       "gochara_planets": ["Ketu", "Saturn", "Jupiter"],
       "keywords": ["spiritual", "moksha", "meditation", "guru", "temple", "sadhana", "renunciation", "karma", "past life", "mantra", "devotion", "pilgrimage"],
       "convention_flags": [],
-      "source_refs": ["jaimini_sutras", "bphs", "phaladeepika", "rath_jaimini"]
+      "source_refs": ["bphs", "phaladeepika"]
     },
     "litigation": {
       "name": "Litigation, Enemies & Obstacles",
@@ -173,7 +173,7 @@
       "keywords": ["personality", "character", "traits", "temperament", "my nature", "my strengths", "my weaknesses", "emotional intelligence", "blind spots", "biases", "who am i", "self improvement", "self awareness", "self-awareness"],
       "convention_flags": [],
       "exclusions": ["No psychological, clinical, or mental-health assessment — describes chart-based trait tendencies only, framed as inclinations rather than fixed, deterministic verdicts on someone's character."],
-      "source_refs": ["bphs", "uttara_kalamrita", "phaladeepika", "brihat_jataka", "saravali", "raman_htjh"]
+      "source_refs": ["bphs", "uttara_kalamrita", "phaladeepika", "brihat_jataka", "saravali"]
     }
   }
 }

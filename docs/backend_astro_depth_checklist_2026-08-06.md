@@ -862,10 +862,14 @@ are refused *by design* and invites a future pass to re-add them as
 this file's own rule that anything deliberately unbuilt states why. **The
 real coverage gap is 14 subdomains, not 17.**
 
-### Verified source discovery
+### Source discovery — availability only (2026-09-17)
 
-Availability confirmed by direct lookup this pass. Rights tiers are a
-first read for triage, **not legal advice** — confirm before ingesting.
+Availability confirmed by direct lookup. Rights tiers are a first read for
+triage, **not legal advice** — confirm before ingesting. **This section
+establishes that a text EXISTS online; it says nothing about whether its OCR
+is usable.** Where it disagrees with the measured pass below, the measured
+pass wins — it was wrong about two Prasna Marga identifiers and about
+Sarvartha Chintamani being findable by title.
 
 **Tier A — pre-1930, almost certainly public domain.** B. Suryanarain Rao
 died 1936; his own editions are PD in India (life+60) and the US (pre-1930
@@ -921,6 +925,114 @@ drew.
 - **[INDOLOGY virtual e-text archive](https://indology.info/virtual-e-text-archive-of-indic-texts/)**,
   **ebharatisampat.in** — secondary aggregators worth a sweep.
 
+### Measured OCR pass — 2026-09-18
+
+**Status:** supersedes the availability lists above wherever the two
+disagree.
+
+**Method.** Downloaded each candidate's `_djvu.txt` from archive.org and
+scored it with `scripts/audit_kb_sources.py`'s own scoring — median percent
+of tokens that are real dictionary words, over prose pages — so every number
+here sits on the same scale as `docs/kb_corpus_sources.md`'s table. Sampled
+from roughly 40-45% into each file, never the front: title pages and
+Devanagari plates are unrepresentative, which is exactly why our own Saravali
+reads as mush in its opening pages and still scores 94.9% overall. Bar is the
+audit's own: **>=85% readable, 60-85% marginal, <60% mush.**
+
+#### The rule this pass produced: verify SUBJECT, not title and score
+
+The two best-scoring "Jaimini Sutras" items on archive.org — 86.2% and 87.8%,
+one titled *"Jaimini Sutras, 1911 Edition"* — are **the wrong book**. They are
+the *Purva Mimamsa* sutras, Vedic ritual philosophy by a same-named author.
+A subject-vocabulary check returned 452 ritual-philosophy terms against 0
+astrology terms. The genuine astrological Jaimini scores **lower** (82.5-84.3%).
+
+Selecting on title and OCR score alone would have ingested Vedic ritual
+philosophy as astrological grounding — the same fabricated-citation failure
+Phase 1's guard exists to prevent, arriving through a door that guard does not
+cover, because the source would have been genuinely present and genuinely
+readable. **Every acquisition gets a subject check before ingestion.**
+
+#### Readable (>=85%)
+
+| Text | archive.org item | Acc | Closes |
+| --- | --- | ---: | --- |
+| Intro to the Study of Astrology 1900 | Row collection | 94.1% | general |
+| Prasna Marga Pt 2 | `prasna-marga-part-2-by-bv-raman` | 91.9% | `litigation.theft_loss`, remedies |
+| Astrological Self Instructor 1893 | Row collection | 91.7% | general |
+| Jataka Chandrika 1900 | Row collection | 90.5% | `laghu_parashari` phantom |
+| **Sarvartha Chintamani 1899** | Row collection | 90.3% | education gaps, `sarvartha_chintamani` phantom |
+| Chappanna / Prasana Sastra 1946 | Row collection | 90.0% | theft/loss prasna |
+| Prasna Marga | `PrasnaMargaBVR` | 89.7% | as above |
+| Stri Jataka (alt copy) | `STRIJATAKA` | 89.3% | `marriage.second_marriage` |
+| Bhavartha Ratnakara | `BhavarthaRatnakara` | 89.0% | phantom — **only 13 prose pages, sample too small to trust; re-measure before acquiring** |
+| Stri Jataka 1931 | Row collection | 87.4% | `marriage.second_marriage` |
+| Hora Sara | `HoraSaraRSanthanamEng` | 86.0% | `hora_sara` phantom |
+| **BPHS Vol 2** | `pcis_brihat-parasara-hora-sastra-volume-2-by-maharshi-parasara-sanskrit-and-engl` | 85.3% | **half our backbone text, plus the remedial chapters** |
+
+"Row collection" = `Astrology_Books_by_B_Suryanarayana_Row`, a single archive.org
+item holding nine titles. **It must be scored file-by-file** — the first pass
+scored only its first file and concluded Sarvartha Chintamani was unavailable,
+when it is sitting in that item at 90.3%.
+
+#### Marginal (60-85%, spot-check before trusting)
+
+| Text | Item | Acc | Note |
+| --- | --- | ---: | --- |
+| **Jataka Parijata 1932** | `JatakaParijata1932` | 75.8% | vs **~25%** for both copies we own — a real upgrade, still under the bar |
+| Bhavartha Ratnakara | `in.ernet.dli.2015.142241` | 84.4% | 72 prose pages, more trustworthy sample than the 89.0% one |
+| **Jaimini Sutras 1955** | Row collection | 84.3% | the *genuine astrological* one — see the subject-check rule above |
+| Jaimini Sutras 1949 | Row collection | 82.5% | same work, earlier edition |
+| BPHS Vol 1 | `heag_brihat-parasara-hora-sastra-vol-1-by-maharshi-parasara-commentary-editor-tr` | 83.0% | we already hold better (93.6%/93.8%) |
+| Brihat Jataka 1919 | Row collection | 79.8% | we already hold better (91.2%) |
+
+#### Negative results — recorded so nobody researches them twice
+
+- **Lal Kitab has no readable copy.** `LALKITAB1941URDUEDITION` 18.0%;
+  `lal-kitab-amrit-rohit-sharma-2` 46.2%; `lal-kitab-1952-grammer-portion...`,
+  `asli-prachin-lal-kitab`, `beef_asli-pracheen-lal-kitab...` and the Arun
+  Samhita copy all have **no text layer at all**. Every one is untranslated
+  Urdu or Hindi, and all sit far below the 60% floor. Note what the result
+  list itself demonstrates: 1941 Urdu, 1952, two rival "Asli Pracheen"
+  editions and Arun Samhita — **that is the edition problem**, which is
+  presumably why `knowledge/ingestion/source_policy.py` already gates Lal
+  Kitab behind "requires edition-aware human review before publication".
+  Leave `lal_kitab_1952` at `corpus_status: absent` and leave that gate
+  alone. Two further reasons it is a product decision rather than a cleanup:
+  Lal Kitab is the **North Indian (Punjabi)** tradition, so it does not serve
+  a South-Indian-weighted reader, and it is the most *prescriptive* remedial
+  tradition there is, which sits awkwardly against CLAUDE.md's "traditional
+  practice, never pay-to-remove" and `remedies.py`'s own no-fear-leverage rule.
+- **Navagraha items are liturgy, not jyotisha.** Ashtottara Shatanamavali
+  name-lists, Navagraha Gayatri, puja mantras — 9.9% to 59%, and devotional
+  rather than interpretive. They would ground no *rule*.
+- **Two Prasna Marga items named in the availability section above are
+  unusable** — `prasna-marga-part-i-don` and `prasnamarga-035823mbp-1` return
+  zero prose pages, as does the Nilakantha Sharma tippani. The good copies are
+  different items entirely, listed above.
+- `in.ernet.dli.2015.134838` (Bhavartha Ratnakara) returns HTTP 500.
+
+#### South Indian remedial sources — and a gap underneath them
+
+`remedies.py` is a real engine with careful safety constraints, but **no
+reference in `references.json` mentions remedies at all**, and `remedies` is
+not one of the 11 taxonomy domains — so remedy content is currently generated
+with zero KB grounding. The two texts that would change that are both already
+on the acquisition list:
+
+- **Prasna Marga** is the Kerala tradition, so genuinely South Indian, and is
+  densely remedial at 87.7-92.4%: it names specific South Indian rites
+  (Aghorabali, Kapala Homa, Chakra Homa, Prathikarabali, Bhuthamaranabali,
+  Khanga Ravanabali).
+- **BPHS Vol 2** carries the remedial chapters — Ashtakavarga remedial
+  measures, "he should take appropriate remedial measures to appease the
+  planet concerned" — and that scan is explicitly marked **CC-0, public
+  domain** (Gurukul Kangri Collection), which settles its rights cleanly.
+
+Grounding remedies needs a design decision first — whether `remedies` becomes
+a taxonomy domain or its references attach to the existing eleven — so it is
+listed in the checklist as a decision, not a mining task.
+
 ### Gap → source mapping
 
 Ordered by cost. **Most of the real gap closes from texts already owned.**
@@ -965,20 +1077,38 @@ Ordered by cost. **Most of the real gap closes from texts already owned.**
 
 **Phase 1 — stop citing books we do not have**
 
-- [ ] **Retarget or drop the 4 live phantom references.**
+- [x] **Retarget or drop the 4 live phantom references — DONE 2026-09-18.**
+  All four moved onto BPHS, which was confirmed to support each claim in the
+  owned text first: "the Karaka or Significator of wife (Venus)", "the 6th
+  House, the House of disease" (plus Saturn-as-delay, Mars-as-significator-
+  of-wounds), and the chara-karaka degree-ordering passage naming Putra
+  Karaka. Every statement is byte-identical; only citations moved. Two
+  ref_ids renamed for naming a source they no longer cite.
+  ~~Original item:~~
   `charak_6th_chronic_disease` (health) cites `charak_medical`, a modern
   in-copyright book absent from the corpus — its claim (6th bhava, Saturn
   chronic / Mars acute) is well attested in BPHS and Uttara Kalamritam, so
   retarget rather than delete. Same treatment for the 1
   `light_on_relationships` reference. The 2 `jaimini_sutras` references
   become real the moment Phase 2 lands that text.
-- [ ] **Clean `taxonomy.json` `source_refs` of unowned books** — `raman_htjh`
+- [x] **Clean `taxonomy.json` `source_refs` of unowned books — DONE
+  2026-09-18.** 8 lines cleaned. `jataka_parijata` deliberately kept on
+  marriage/education: we own it, Phase 0 re-OCRs it, and no reference cites
+  it. ~~Original item:~~ — `raman_htjh`
   (career, wealth, marriage, personality), `kn_rao_career` (career),
   `prasna_marga` (health, children, foreign — until acquired),
   `charak_medical` (health), `muhurta_chintamani` (marriage),
   `rath_jaimini` (spirituality). Zero references depend on any of these, so
   this is a pure catalogue correction.
-- [ ] **Make corpus absence visible to the code.** *Missing:*
+- [x] **Make corpus absence visible to the code — DONE 2026-09-18.**
+  `sources.json` entries now carry `corpus_status`
+  (`readable`/`present_unreadable`/`absent`) — three states, not a boolean,
+  because Jataka Parijata is owned *and* unusable. Guarded by
+  `test_every_cited_source_is_actually_in_the_corpus` and
+  `test_every_catalogued_source_declares_its_corpus_status` in
+  `tests/test_kb_references_integrity.py`. The guard was verified to FAIL by
+  re-injecting a phantom citation, not just observed passing.
+  ~~Original item:~~ *Missing:*
   `valid_sources()` checks `sources.json` keys only, so a phantom citation
   is indistinguishable from a real one. *AC:* `sources.json` entries carry
   an explicit `in_corpus` (or equivalent) field, a test asserts every
@@ -989,17 +1119,42 @@ Ordered by cost. **Most of the real gap closes from texts already owned.**
 
 **Phase 2 — acquisitions, highest value first**
 
-- [ ] **Jaimini Sutras** (Row, earliest edition) — closes 2 live phantom
-  citations *and* `spirituality.karmic_axis`. Highest value of any
-  acquisition.
-- [ ] **Prasna Marga** (Raman) — sole practical route to
-  `litigation.theft_loss`; also serves health/children/foreign, which
-  already name it. Tier B: locate chapters, write our own paraphrase.
-- [ ] **Sarvartha Chintamani** (Row 1899, Tier A) — closes a catalogue
-  phantom and serves education + foreign.
-- [ ] **Stri Jataka** (Row 1931, Tier A) — `marriage.second_marriage`.
-- [ ] **Bhavartha Ratnakara**, **Jataka Chandrika**, **Brihat Samhita** —
-  lower priority; each closes a catalogue phantom or a single subdomain.
+Reordered 2026-09-18 by measured OCR rather than assumed availability.
+
+- [ ] **Subject-check every acquisition before ingesting it.** Confirm the
+  text is astrology and is the work its title claims — the two highest-scoring
+  "Jaimini Sutras" are the Purva Mimamsa sutras. Cheap: sample the OCR and
+  compare astrology vocabulary against the wrong subject's vocabulary. Do this
+  for every item below, not only the Jaimini one.
+- [ ] **BPHS Vol 2** (`pcis_...volume-2...`, 85.3%, **CC-0**) — highest value
+  of any acquisition and absent from the first draft of this plan. Makes half
+  the backbone text readable (ours is 56.1% and no-text-layer) *and* carries
+  the remedial chapters.
+- [ ] **Prasna Marga** (`prasna-marga-part-2-by-bv-raman` 91.9%,
+  `PrasnaMargaBVR` 89.7%) — `litigation.theft_loss`, and the South Indian
+  remedial source. Still in copyright: locate chapters, write our own
+  paraphrase.
+- [ ] **Sarvartha Chintamani 1899** (Row collection, 90.3%) — education gaps
+  plus a catalogue phantom. Score the Row item file-by-file, not as a whole.
+- [ ] **Stri Jataka** (Row 1931 87.4%, or `STRIJATAKA` 89.3%) —
+  `marriage.second_marriage`.
+- [ ] **Jaimini Sutras** (Row 1955, 84.3% — *marginal*) — closes 2 retargeted
+  citations and `spirituality.karmic_axis`. Demoted from "highest value": the
+  only genuine copies are marginal, and the readable-looking ones are the
+  wrong book.
+- [ ] **Jataka Parijata 1932** (75.8%, *marginal*) — weigh against re-OCR'ing
+  the two copies we already own (Phase 0); 75.8% is a large upgrade on ~25%
+  but still under the bar either way.
+- [ ] **Hora Sara** (86.0%), **Jataka Chandrika 1900** (90.5%),
+  **Bhavartha Ratnakara** (re-measure first — the 89.0% sample is 13 pages) —
+  lower priority; each closes a catalogue phantom.
+- [ ] **Decide whether `remedies` becomes a taxonomy domain** before grounding
+  any remedial material. `remedies.py` ships with zero KB references behind
+  it; BPHS Vol 2 and Prasna Marga would fix that, but where those references
+  attach is a design call.
+- [ ] **Lal Kitab: closed, not acquirable.** No readable copy exists in any
+  edition — see the negative results above. Leave `absent` and leave
+  `source_policy.py`'s human-review gate in place.
 - [ ] **Run `scripts/audit_kb_sources.py` after every acquisition** and let
   it rewrite `docs/kb_corpus_sources.md`. That file is the source of truth
   and this plan is not.

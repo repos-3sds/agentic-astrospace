@@ -12,7 +12,8 @@
     "Cross-check pass 2026-08-12 against Phaladeepika (Sastri translation), the third distinct translator in the corpus. Saravali (the earlier standing candidate) was checked directly and found not to reach house-effect chapters in the volume we hold (Vol I runs chapters 1-26, fundamentals only) -- Phaladeepika's Adhyayas V/X/XII/XX map onto career/marriage/children/dasha, which is why it was used instead. Adds a new career technique (navamsa of the 10th lord), cross-verifies three marriage and three children claims previously single-source, adds dasha-timing rules for both, and independently corroborates the dasha dignity-over-nature principle and the maraka-lords-give-gain caveat. See docs/phaladeepika_crosscheck.md for the full reasoning, including the exclusions -- this pass found the single most severe content problem in the corpus so far: Adhyaya XII attributes childlessness to sin in a previous birth and prescribes ritual atonement per planet. Excluded outright, along with a second, unhedged version of BPHS's spouse-death timing problem, an exact-count-of-wives block mirroring the exact-count-of-children exclusion, and a technique for predicting a future spouse's own birth sign -- excluded as an enabler of astrological compatibility-gatekeeping.",
     "Health extension 2026-08-12, re-examining ch.17's disease bucket shloka by shloka rather than as one block: Parasara's own generic constitutional categories (bilious/windy/phlegmatic -- the Ayurvedic doshas) and Mars's injury/weapon-hit clause are groundable as flags; named, stigmatizing or diagnosis-grade claims (leprosy, tumours, timing-of-named-illness) are not, and stay excluded -- CLAUDE.md's medical-verdict non-negotiable, unchanged. Also newly examined: ch.24's 8th-lord series, previously assumed uniformly gated_death and never checked line by line; ten of twelve placements are, but two (85 lagna, 90 sixth) carry real, unnamed, non-longevity health content. See docs/health_kb_bphs_susceptibility_and_injury.md.",
     "Health caution reframe 2026-08-12, per explicit user direction: apply the SAME flag-not-verdict pattern CLAUDE.md already uses for doshas to health-susceptibility content, rather than excluding it outright. Material previously classed gated_medical in ch.17 (facial disease, the leprosy verses, the Sun/Ketu clauses of the general-disease block, and the timing-of-illness block) is reframed as body-system or life-stage cautions -- naming an area worth checking, never a specific disease, never a specific age. This is the same softening already applied to marriage/children timing (early-vs-delayed rather than a literal year), extended to illness timing (life-stage vigilance rather than a literal age plus a named illness). What remains excluded and why: the Rahu clause of the general-disease block (caste-based framing, unrelated to the medical question); the Venus clause (too ambiguous to state responsibly even as a caution); the exact number-of-events framing throughout stays dropped as it always has, since a caution does not need a count. See docs/health_kb_bphs_susceptibility_and_injury.md.",
-    "2026-08-13: wealth KB extraction pass -- BPHS ch.13 (2nd house), ch.22 (11th house), ch.24.13-24 (2nd lord), ch.24.121-132 (11th lord). 34 new references. See docs/wealth_kb_bphs_2nd_11th_house.md."
+    "2026-08-13: wealth KB extraction pass -- BPHS ch.13 (2nd house), ch.22 (11th house), ch.24.13-24 (2nd lord), ch.24.121-132 (11th lord). 34 new references. See docs/wealth_kb_bphs_2nd_11th_house.md.",
+    "2026-09-18: four references cited texts absent from the corpus (charak_medical, light_on_relationships, jaimini_sutras x2). Every CLAIM was left exactly as written and only the CITATION moved, after confirming BPHS supports each one in the owned text: 'the Karaka or Significator of wife (Venus)' for the marriage rule, 'the 6th House, the House of disease' plus Saturn-as-delay and Mars-as-significator-of-wounds for the health rule, and the chara-karaka degree-ordering passage naming Putra Karaka, plus the Karakamsha navamsha chapter, for the two Jaimini rules. Two ref_ids were renamed because they named the source they no longer cite. Guarded from here by test_every_cited_source_is_actually_in_the_corpus."
   ],
   "references": [
     {
@@ -115,7 +116,7 @@
       "status": "convention_dependent"
     },
     {
-      "ref_id": "light_on_relationships_venus_marriage",
+      "ref_id": "bphs_venus_karaka_seventh",
       "domains": [
         "marriage"
       ],
@@ -125,8 +126,8 @@
       ],
       "statement": "Venus as the natural karaka for marriage and relationship harmony is read alongside the 7th lord and house — a well-placed 7th house with an afflicted Venus (or vice versa) is a common classical pattern for a mixed marital picture, not a simple pass/fail.",
       "source": {
-        "text_key": "light_on_relationships",
-        "location": "Venus and the 7th house"
+        "text_key": "bphs",
+        "location": "7th bhava; Venus as the karaka (significator) of the wife"
       },
       "tags": [
         "planet:Venus",
@@ -153,7 +154,7 @@
       "status": "verified_common"
     },
     {
-      "ref_id": "charak_6th_chronic_disease",
+      "ref_id": "bphs_6th_chronic_disease",
       "domains": [
         "health"
       ],
@@ -163,8 +164,8 @@
       ],
       "statement": "The 6th bhava and its lord are the primary reference for chronic and recurring illness; Saturn's involvement there is classically associated with slow-onset or long-duration conditions, Mars' involvement with acute, sudden onset — read as tendency, never as diagnosis.",
       "source": {
-        "text_key": "charak_medical",
-        "location": "6th bhava and planetary disease tendencies"
+        "text_key": "bphs",
+        "location": "6th bhava, the house of disease; Saturn as a factor in delay, Mars as significator of wounds"
       },
       "tags": [
         "house:6",
@@ -184,8 +185,8 @@
       ],
       "statement": "The Atmakaraka (highest-degree graha) shows the soul's desire; its navamsha position (Karakamsha) frames the spiritual path and final direction.",
       "source": {
-        "text_key": "jaimini_sutras",
-        "location": "Ch. 1 (chara karakas, karakamsha)"
+        "text_key": "bphs",
+        "location": "chara karakas; Karakamsha (the Atmakaraka's navamsha sign)"
       },
       "tags": [
         "karaka:AK",
@@ -362,8 +363,8 @@
       ],
       "statement": "In the Jaimini scheme, the Putrakaraka (PK, the chara karaka for children) adds a second, planet-specific lens on progeny alongside the fixed 5th-house/Jupiter reading — the two should be read together, not substituted for each other.",
       "source": {
-        "text_key": "jaimini_sutras",
-        "location": "chara karakas, Putrakaraka"
+        "text_key": "bphs",
+        "location": "chara karakas; Putra Karaka in the karaka degree-ordering"
       },
       "tags": [
         "karaka:PK",
