@@ -75,6 +75,37 @@ _VERDICT_FRAMES = (
     # probability additions above.
     r"\bany advice\b", r"\bwhat advice\b", r"\badvice (?:on|for|about)\b",
     r"\bany (?:tips|suggestions|recommendations)\b", r"\bwhat should\b",
+    # 2026-09-17: this whole frame list was English-only despite the app
+    # shipping live Telugu generation — a pure-Telugu question naming a
+    # prohibited subject (health/legal/money; death is subject-gated alone
+    # and unaffected) could never reach `seeks_verdict` at all, since every
+    # frame word here is a Latin-script substring that simply never appears
+    # in Telugu text. Deliberately no `\b` boundaries on these: Python's
+    # `re` does not treat Telugu dependent vowel signs (matras) as `\w`
+    # characters, so a `\b` immediately after one — a very common
+    # word-final position in Telugu — silently never matches; confirmed
+    # directly before writing any of this, not assumed. Bare substrings
+    # only, matching this file's own pre-existing మరణ/చనిపో/అనారోగ్య/వ్యాధి
+    # entries below, none of which are `\b`-wrapped either. Each entry was
+    # verified against a real sentence using it before being added, and
+    # zero false positives on eight ordinary Telugu timing/guidance
+    # questions (career, marriage, travel, children's education, finances)
+    # — see tests/test_refer_out_boundary.py. A first real pass, not a
+    # native-speaker-reviewed final state — docs/mobile_screen_build_plan.md
+    # names what a fluent-speaker review should still check.
+    r"అవుతుందా", r"అవుతానా", r"జరుగుతుందా", r"ఉందా", r"ఎప్పుడు", r"ఎంతకాలం",
+    r"చెప్పండి", r"అవకాశం", r"సాధ్యత", r"గెలుస్తానా", r"వస్తుందా", r"పడుతుందా",
+    r"వెళ్తానా",
+    # ాలా (dependent vowel sign ా, not the independent letter ఆ — verified
+    # directly after the independent-vowel form silently failed to match
+    # its own target word) is the Telugu "should X" verb suffix itself
+    # (కొన+ాలా = కొనాలా "should buy", వెళ్ళ+ాలా = వెళ్ళాలా "should go") —
+    # the structural equivalent of English's own generic "\bshould i\b"
+    # frame two lines up, needed because the money subject list's Telugu
+    # directive compounds (కొనాలా/అమ్మాలా below) still need a
+    # _VERDICT_FRAMES hit, same as English's "should i (?:buy|sell...)"
+    # does via its own separate "should i" entry.
+    r"ాలా",
 )
 
 # Shared immigration-process vocabulary — one constant, not duplicated
@@ -310,7 +341,16 @@ _REFER_OUT_SUBJECTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         r"\bhow long .{0,20}\blive\b", r"\bkill", r"\bfatal\b", r"\bterminal\b",
         # Devanagari and Telugu death terms. NOT a substitute for review by a
         # fluent speaker — see docs; these cover the literal words only.
+        # 2026-09-17: widened Telugu from 2 root words to real coverage of
+        # death/lifespan vocabulary (చావు colloquial, మృతి formal, ఆయుష్షు/
+        # ఆయువు lifespan — the actual subject of "how long will I live",
+        # కన్నుమూ the idiom for dying (root truncated deliberately: the
+        # bare infinitive కన్నుమూయు does not survive conjugation — "నేను
+        # కన్నుమూస్తాను" changes the stem — కన్నుమూ is the substring common
+        # to every conjugated form, verified directly), గతించు formal
+        # "pass away". Death stays subject-gated alone, same as English.
         r"मृत्यु", r"मौत", r"मरण", r"మరణ", r"చనిపో",
+        r"చావు", r"మృతి", r"ఆయుష్షు", r"ఆయువు", r"కన్నుమూ", r"గతించు",
     )),
     ("health", (
         r"\bdiagnos", r"\bmedical advice\b", r"\btreatment plan\b",
@@ -341,6 +381,17 @@ _REFER_OUT_SUBJECTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         r"\banxi(?:ety|ous)\b", r"\bpanic attacks?\b", r"\bpanick(?:y|ing)\b",
         r"\bfeel(?:ing)? (?:hopeless|worthless|numb)\b", r"\bmood swings?\b",
         r"बीमारी", r"అనారోగ్య", r"వ్యాధి",
+        # 2026-09-17: అనారోగ్య/వ్యాధి alone were dead weight without a
+        # matching Telugu entry in _VERDICT_FRAMES — health requires
+        # subject+frame both, and every frame word was English-only, so a
+        # pure-Telugu health question could never gate regardless of
+        # subject coverage. Fixed there; widened the subject list itself
+        # too — క్యాన్సర్ (the Telugu-script transliteration; the bare
+        # English "cancer" already matched via \bcancer\b above even
+        # inside Telugu text, since normalization doesn't strip script,
+        # but code-switching isn't guaranteed), జబ్బు colloquial illness,
+        # రోగ the root shared by "రోగం"/"రోగి"/etc.
+        r"క్యాన్సర్", r"జబ్బు", r"రోగ",
     )),
     ("legal", (
         r"\blegal advice\b", r"\bsue\b", r"\blawsuit\b", r"\bcourt\b",
@@ -382,6 +433,14 @@ _REFER_OUT_SUBJECTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         # get deported"), so it's a bare subject like the others here,
         # still gated by the shared seeks_verdict frame check below.
         r"\bdeport(?:ed|ations?)?\b",
+        # 2026-09-17: zero non-English coverage on this subject until now,
+        # despite live Telugu generation — కోర్టు/కేసు/జైలు/బెయిల్ are the
+        # everyday transliterated loanwords (a Telugu speaker overwhelmingly
+        # says "కోర్టు"/"కేసు" rather than reaching for the fully native
+        # న్యాయస్థానం), న్యాయస్థాన the formal native term for court, శిక్ష
+        # punishment/sentence, నేర the root of "నేరం"/crime, దోషి guilty.
+        r"కోర్టు", r"న్యాయస్థాన", r"కేసు", r"జైలు", r"శిక్ష", r"నేర", r"దోషి",
+        r"బెయిల్",
     )),
     ("money", (
         # Directive-seeking only. "Is this month good to buy property" is a
@@ -392,6 +451,17 @@ _REFER_OUT_SUBJECTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         r"\bmarket\b.{0,24}\b(?:rise|fall|crash|go up|go down)\b",
         r"\bguaranteed (?:return|profit)\b", r"\brisk[- ]free\b",
         r"\bwill i (?:become|be) rich\b", r"\bhow much money will\b",
+        # 2026-09-17: money's own directive-seeking verbs are baked directly
+        # into the English subject list above (\bshould i (?:buy|sell|
+        # invest|trade)\b) rather than relying on the shared frame list —
+        # same design mirrored here. కొనాలా/అమ్మాలా are the standard "should
+        # [I] buy?"/"should [I] sell?" question-forms (verb root + -ఆలా
+        # suffix); "పెట్టుబడి పెట్టాలా" ("should [I] invest?") is kept as
+        # one two-word phrase rather than splitting పెట్టుబడి (investment)
+        # out as a bare subject — a bare "పెట్టుబడి" names the topic without
+        # seeking a directive, same reasoning as English keeping "which
+        # fund" as a phrase instead of gating on "fund" alone.
+        r"కొనాలా", r"అమ్మాలా", r"పెట్టుబడి పెట్టాలా",
     )),
 )
 
@@ -617,6 +687,19 @@ _PROHIBITED_OUTPUT = (
     (r"\bheaded toward (?:your )?(?:final|last) breath\b", "death"),
     (r"\b(?:remaining )?days are numbered\b", "death"),
     (r"\bexpect to live (?:another|for)\b.{0,20}\b(?:decade|year|month)s?\b", "death"),
+    # Telugu output net, first pass. The elaborate subject/adverb-gap/modal/
+    # negation combinators above are built entirely around English grammar
+    # and do not transfer to Telugu's agglutinative verb conjugation — this
+    # is literal-phrase coverage of the model actually stating a death
+    # verdict in Telugu, the output-side counterpart to the literal-word
+    # input-gate entries already in this file (మరణ/చనిపో and this pass's
+    # additions). Second person, both register levels (మీరు formal,
+    # నువ్వు/నువ్విద informal), matching the shape of the already-verified
+    # third-party death output net this file closed for English. Explicitly
+    # NOT a substitute for a fluent-speaker adversarial review — see
+    # docs/mobile_screen_build_plan.md.
+    (r"చనిపోతారు|చనిపోతావు|బతకరు|బతకవు", "death"),
+    (r"మీ ఆయుష్షు తక్కువ|నీ ఆయుష్షు తక్కువ", "death"),
     (r"\byou (?:have|are suffering from)\b.{0,24}\b(?:cancer|disease|tumou?r)\b", "health"),
     (r"\b(?:battling|suffering from|afflicted with)\b.{0,20}\b(?:malignant growth|tumou?r|cancer)\b", "health"),
     (r"\billness has taken hold\b", "health"),
