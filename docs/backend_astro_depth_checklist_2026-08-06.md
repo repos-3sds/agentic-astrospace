@@ -826,21 +826,41 @@ five good `ocr-playground-…/markdown.md` exports, not acquisition.
 Same treatment needed for BPHS Santhanam Vol 2 (56.1%) and BPHS Sharma
 Vol 2 (no text layer at all).
 
-### Finding 3 — the taxonomy over-promises three subdomains the product refuses
+### Finding 3 — three ungrounded subdomains are ones the product refuses
 
-Three of the 17 ungrounded subdomains are ones the agents are explicitly
-instructed never to answer, so "missing references" is the correct state and
-grounding them would be actively wrong:
+Three of the 17 ungrounded subdomains name things the agents are instructed
+not to answer, so "no references" is the correct state and grounding them
+would be actively wrong:
 
-- `marriage.divorce` — the marriage addendum forbids predicting divorce.
-- `health.mental_health` — the personality addendum routes mental health to
-  health's refer-out boundary; CLAUDE.md forbids medical verdicts.
-- `health.hospitalization` — same medical-verdict boundary.
+- `marriage.divorce` — `registry.py`'s marriage addendum: never say a dosha
+  means a marriage "will end in divorce". An explicit, named refusal.
+- `health.mental_health` — the personality addendum routes mood/anxiety/
+  diagnosis questions to health's refer-out boundary; CLAUDE.md forbids
+  medical verdicts. Also explicit.
+- `health.hospitalization` — **inference, not an explicit refusal.** No
+  instruction names hospitalization; it is read off the general "never
+  predict specific medical outcomes" ban. A case exists that the 12th
+  house's traditional confinement significations could be described as a
+  tendency under the same flag-not-verdict rule the app already applies to
+  doshas. Needs a human call before it is treated like the other two.
 
-These should be removed from `taxonomy.json`, or carry an explicit
-`answerable: false`, so the catalogue stops advertising capability the
-safety layer is designed to refuse. **The real gap is 14 subdomains, not
-17.**
+**Scope check, measured before recommending anything here:** taxonomy
+subdomains are consumed *only* by KB retrieval —
+`assembler.py` passes them to `JsonKnowledgeBase.retrieve()` as a
+rank/filter input, and `kb.py` ranks rather than excludes unless
+`require_subdomain_match` is set. **They are never rendered into the
+prompt; the model never sees this list.** So an entry here is not
+"advertising" anything to the model, and removing one changes no agent
+behaviour and weakens no refusal — the refusals live in `registry.py`'s
+addenda and `safety.py`'s gate, neither of which reads `taxonomy.json`.
+This is metrics and catalogue hygiene, not a safety fix, and should not be
+sold as one.
+
+**Prefer marking over deleting.** Deleting loses the knowledge that these
+are refused *by design* and invites a future pass to re-add them as
+"missing coverage". An explicit `answerable: false` plus a reason matches
+this file's own rule that anything deliberately unbuilt states why. **The
+real coverage gap is 14 subdomains, not 17.**
 
 ### Verified source discovery
 
@@ -986,10 +1006,15 @@ Ordered by cost. **Most of the real gap closes from texts already owned.**
 
 **Phase 3 — taxonomy honesty**
 
-- [ ] **Remove or mark `answerable: false` on `marriage.divorce`,
-  `health.mental_health`, `health.hospitalization`.** *AC:* a test asserts
-  no subdomain the agents are instructed to refuse is advertised as
-  groundable, so the coverage metric stops counting refusals as gaps.
+- [ ] **Mark `marriage.divorce` and `health.mental_health` as
+  `answerable: false`, with the reason, in `taxonomy.json`.** Marking, not
+  deleting — see Finding 3. *AC:* the coverage metric skips refused
+  subdomains, and a test asserts no reference is ever tagged to one, so a
+  future mining pass cannot quietly ground a refusal.
+- [ ] **Decide `health.hospitalization` first.** It is an inference from the
+  medical-verdict ban, not a named refusal like the other two — it either
+  joins them or gets grounded under flag-not-verdict framing. A human
+  decision, not one to make inside a cleanup pass.
 
 **Phase 4 — prove it changed behaviour**
 
