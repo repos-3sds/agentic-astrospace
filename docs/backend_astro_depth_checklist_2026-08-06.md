@@ -774,3 +774,265 @@ deliberately not committed; they call the orchestrator directly with a
 synthetic chart and no persistence, which is the right shape for a quick
 check and the wrong shape for a permanent fixture — a real eval suite would
 need seeded charts with known expected citations, not a hand-run script.
+
+---
+
+## KB coverage expansion plan — discovery pass (2026-09-17)
+
+**Status:** open plan + checklist. Folded in per this file's own "one
+backlog" rule rather than started as a new dated doc. Measured, not
+recalled: every number below came from reading `references.json`,
+`taxonomy.json`, `sources.json` and the actual corpus directory in this
+pass. Re-derive with the commands in each section rather than trusting
+these figures once they age.
+
+### The measured baseline
+
+- **140 references**, but **108 of them (77%) cite BPHS alone.** The rest:
+  `uttara_kalamrita` 14, `phaladeepika` 9, `brihat_jataka` 4,
+  `jaimini_sutras` 2, `charak_medical` 1, `light_on_relationships` 1,
+  `saravali` 1.
+- **57 of 74 declared subdomains (77%) have at least one reference.** Per
+  domain: career 7/7, wealth 6/7, personality 6/7, spirituality 5/6,
+  litigation 5/6, children 4/5, marriage 6/8, family_property 6/8,
+  health 5/7, foreign 4/6, **education 3/7 (worst)**.
+- **Only 6 of the 24 catalogued sources are physically in the corpus**
+  (bphs, brihat_jataka, jataka_parijata, phaladeepika, saravali,
+  uttara_kalamrita). The other 18 are catalogue entries with no text behind
+  them. Separately, the corpus holds one work that is *not* in the
+  catalogue at all (the dokumen.pub nakshatra ebook), so the two lists
+  disagree in both directions.
+- **`valid_sources()` cannot see any of this.** It validates a citation
+  against `sources.json`'s keys, never against corpus presence — so a
+  reference citing a book this project does not have passes verification
+  looking exactly as grounded as a BPHS citation.
+
+### Finding 1 — Saravali is the cheapest coverage on the table
+
+`saravaliofkalyan01kalyuoft.pdf`'s OCR export is **98,301 words at 94.9%
+accuracy — the single most accurate text in the corpus** — and exactly
+**one** reference has ever been mined from it. Saravali is encyclopedic on
+planets in signs/houses/combinations, which is precisely the material the
+thin domains need. No acquisition, no rights question, no OCR work.
+
+### Finding 2 — Jataka Parijata is owned but unreadable
+
+Two copies (`2015.312156.Jataka-Parijata.epub`, and the Mysore 1933
+Subrahmanya Sastri Vol 2 EPUB), **both OCR mush** — the DLI copy embeds its
+own warning, "estimated to be only 25.10% accurate". Zero references. Yet
+`taxonomy.json` names `jataka_parijata` as a `source_ref` for **marriage**
+and **education**. Fix is re-OCR through the same pipeline that produced the
+five good `ocr-playground-…/markdown.md` exports, not acquisition.
+Same treatment needed for BPHS Santhanam Vol 2 (56.1%) and BPHS Sharma
+Vol 2 (no text layer at all).
+
+### Finding 3 — three ungrounded subdomains are ones the product refuses
+
+Three of the 17 ungrounded subdomains name things the agents are instructed
+not to answer, so "no references" is the correct state and grounding them
+would be actively wrong:
+
+- `marriage.divorce` — `registry.py`'s marriage addendum: never say a dosha
+  means a marriage "will end in divorce". An explicit, named refusal.
+- `health.mental_health` — the personality addendum routes mood/anxiety/
+  diagnosis questions to health's refer-out boundary; CLAUDE.md forbids
+  medical verdicts. Also explicit.
+- `health.hospitalization` — **inference, not an explicit refusal.** No
+  instruction names hospitalization; it is read off the general "never
+  predict specific medical outcomes" ban. A case exists that the 12th
+  house's traditional confinement significations could be described as a
+  tendency under the same flag-not-verdict rule the app already applies to
+  doshas. Needs a human call before it is treated like the other two.
+
+**Scope check, measured before recommending anything here:** taxonomy
+subdomains are consumed *only* by KB retrieval —
+`assembler.py` passes them to `JsonKnowledgeBase.retrieve()` as a
+rank/filter input, and `kb.py` ranks rather than excludes unless
+`require_subdomain_match` is set. **They are never rendered into the
+prompt; the model never sees this list.** So an entry here is not
+"advertising" anything to the model, and removing one changes no agent
+behaviour and weakens no refusal — the refusals live in `registry.py`'s
+addenda and `safety.py`'s gate, neither of which reads `taxonomy.json`.
+This is metrics and catalogue hygiene, not a safety fix, and should not be
+sold as one.
+
+**Prefer marking over deleting.** Deleting loses the knowledge that these
+are refused *by design* and invites a future pass to re-add them as
+"missing coverage". An explicit `answerable: false` plus a reason matches
+this file's own rule that anything deliberately unbuilt states why. **The
+real coverage gap is 14 subdomains, not 17.**
+
+### Verified source discovery
+
+Availability confirmed by direct lookup this pass. Rights tiers are a
+first read for triage, **not legal advice** — confirm before ingesting.
+
+**Tier A — pre-1930, almost certainly public domain.** B. Suryanarain Rao
+died 1936; his own editions are PD in India (life+60) and the US (pre-1930
+publication). All nine titles sit in one Internet Archive item,
+[`Astrology_Books_by_B_Suryanarayana_Row`](https://archive.org/details/Astrology_Books_by_B_Suryanarayana_Row):
+
+| Text | Year | Closes |
+| --- | --- | --- |
+| Sarvartha Chintamani | 1899 | `sarvartha_chintamani` phantom; bhava depth across most domains |
+| Jataka Chandrika | 1900 | `laghu_parashari` phantom |
+| An Introduction to the Study of Astrology | 1900 | general |
+| Brihat Jataka (Row translation) | 1919 | independent cross-check of an owned text |
+| Stri Jataka / Female Horoscopy | 1931 | `marriage.second_marriage` |
+| The Astrological Self Instructor | 1893 | general |
+
+- **Bhavartha Ratnakara** — DLI scans [`in.ernet.dli.2015.134838`](https://archive.org/details/in.ernet.dli.2015.134838)
+  and [`in.ernet.dli.2015.142241`](https://archive.org/details/in.ernet.dli.2015.142241),
+  both with `_djvu.txt` full text. Closes the `bhavartha_ratnakara` phantom.
+- **Brihat Samhita** — [`archive.org/details/Brihatsamhita`](https://archive.org/details/Brihatsamhita);
+  relevant to `foreign` (yatra/journey chapters). Edition/rights unverified.
+
+**Tier B — obtainable but modern and in copyright.** Usable to *confirm a
+rule exists and locate its chapter*, never to reproduce prose. This is
+already how `references.json` works (our own paraphrase + chapter-level
+`location`), and it is the same line the deferred nakshatra-shakti item
+drew.
+
+- **Prasna Marga**, B.V. Raman, 2 vols — [`PrasnaMargaBVR`](https://archive.org/details/PrasnaMargaBVR)
+  (with `_djvu.txt`), also [`prasnamarga-035823mbp-1`](https://archive.org/details/prasnamarga-035823mbp-1).
+  **The canonical text for `litigation.theft_loss`** and strong on disease
+  and travel prasna. Currently named as a `source_ref` by health, children
+  and foreign while absent from the corpus.
+- **Jaimini Sutras**, Row/Raman 1949 & 1955 — [`in.ernet.dli.2015.486584`](https://archive.org/details/in.ernet.dli.2015.486584).
+  **Two live references already cite this text and we do not have it.**
+  Prefer the earliest Row edition; Raman's annotations are separately in
+  copyright.
+- **Hora Sara**, Prithuyasas / R. Santhanam — [full text](https://archive.org/stream/HoraSaraRSanthanamEng/Hora%20Sara%20RSanthanam%20Eng_djvu.txt).
+
+**Websites / structured corpora**
+
+- **[wisdomlib.org](https://www.wisdomlib.org/hinduism/book/brihat-jataka-by-varahamihira-sanskrit-english)** —
+  the most useful find for the *citation-precision* problem. Brihat Jataka
+  is addressable **per chapter and per individual sloka** (27 chapters, one
+  URL per verse), and Brihat Samhita is published the same way. Ideal for
+  resolving a rule to a real chapter/verse. **The English there is Michael
+  D Neely's 2017 translation — copy the citation target, never the prose.**
+- **[GRETIL](https://gretil.sub.uni-goettingen.de/gretilbk.htm)** —
+  machine-readable plain-text Sanskrit, searchable. Jyotisha holdings not
+  confirmed this pass; worth a direct check.
+- **[Muktabodha](https://muktabodha.org/digital-library/)** — 3,000+ texts,
+  570+ searchable e-texts, but Śaiva/Tantra-weighted; jyotisha holdings
+  unconfirmed.
+- **[INDOLOGY virtual e-text archive](https://indology.info/virtual-e-text-archive-of-indic-texts/)**,
+  **ebharatisampat.in** — secondary aggregators worth a sweep.
+
+### Gap → source mapping
+
+Ordered by cost. **Most of the real gap closes from texts already owned.**
+
+| Ungrounded subdomain | Closes from | Cost |
+| --- | --- | --- |
+| `personality.intellect_communication` | Saravali (owned) + BPHS | mine only |
+| `children.relationship_with_children` | Saravali + BPHS 5th bhava | mine only |
+| `family_property.domestic_peace` | Saravali + BPHS 4th bhava | mine only |
+| `family_property.relocation` | Saravali + BPHS 4th/12th | mine only |
+| `wealth.debts` | BPHS 6th bhava + Uttara Kalamritam | mine only |
+| `education.field_of_study` | BPHS D-24 + Uttara Kalamritam Kanda I Ch. V | mine only |
+| `education.breaks` | BPHS 4th/5th + Saravali | mine only |
+| `education.research` | BPHS 5th/8th + Saravali | mine only |
+| `education.competitive_exams` | Sarvartha Chintamani (Tier A) | acquire |
+| `foreign.return_home` | BPHS 4th/12th + Brihat Samhita yatra | mine + acquire |
+| `foreign.education_abroad` | BPHS 9th/12th + Sarvartha Chintamani | mine + acquire |
+| `spirituality.karmic_axis` | **Jaimini Sutras** (already cited, unowned) | acquire |
+| `litigation.theft_loss` | **Prasna Marga** (Tier B) | acquire |
+| `marriage.second_marriage` | Stri Jataka 1931 (Tier A) + BPHS 7th | acquire |
+
+### Checklist
+
+**Phase 0 — mine what we own (no acquisition, no rights question)**
+
+- [ ] **Saravali mining pass.** *Missing:* 98k readable words, 1 reference.
+  *AC:* ≥20 new references drawn from Saravali, each with a chapter-level
+  `location` and honest `status`; every one of the 8 "mine only" subdomains
+  above reaches ≥1 reference. *Depth:* content-authorship, the slowest
+  per-item work in this file — but zero blockers.
+- [ ] **Re-OCR Jataka Parijata** (both copies) through the
+  `ocr-playground` pipeline; target ≥90% like the other five exports. Then
+  mine it for marriage/education, the two domains whose `source_refs`
+  already claim it. *AC:* a `markdown.md` export exists and
+  `audit_kb_sources.py` reports it readable.
+- [ ] **Re-OCR BPHS Santhanam Vol 2 (56.1%) and BPHS Sharma Vol 2 (no text
+  layer).** Half the backbone text is currently unreadable.
+- [ ] **Identify the two unlabelled corpus files** —
+  `EPUBS/7136b975-c819-43ae-8c04-b510504137e2.epub` (180k words, OCR mush)
+  and `EPUBS/Unconfirmed 71230.crdownload` (an incomplete download). Name
+  them or delete them.
+
+**Phase 1 — stop citing books we do not have**
+
+- [ ] **Retarget or drop the 4 live phantom references.**
+  `charak_6th_chronic_disease` (health) cites `charak_medical`, a modern
+  in-copyright book absent from the corpus — its claim (6th bhava, Saturn
+  chronic / Mars acute) is well attested in BPHS and Uttara Kalamritam, so
+  retarget rather than delete. Same treatment for the 1
+  `light_on_relationships` reference. The 2 `jaimini_sutras` references
+  become real the moment Phase 2 lands that text.
+- [ ] **Clean `taxonomy.json` `source_refs` of unowned books** — `raman_htjh`
+  (career, wealth, marriage, personality), `kn_rao_career` (career),
+  `prasna_marga` (health, children, foreign — until acquired),
+  `charak_medical` (health), `muhurta_chintamani` (marriage),
+  `rath_jaimini` (spirituality). Zero references depend on any of these, so
+  this is a pure catalogue correction.
+- [ ] **Make corpus absence visible to the code.** *Missing:*
+  `valid_sources()` checks `sources.json` keys only, so a phantom citation
+  is indistinguishable from a real one. *AC:* `sources.json` entries carry
+  an explicit `in_corpus` (or equivalent) field, a test asserts every
+  `references.json` `text_key` resolves to a source marked present, and
+  that test fails loudly when a reference cites a book the repo does not
+  hold. This is the item that stops this whole class of drift recurring —
+  **do it before Phase 2, not after.**
+
+**Phase 2 — acquisitions, highest value first**
+
+- [ ] **Jaimini Sutras** (Row, earliest edition) — closes 2 live phantom
+  citations *and* `spirituality.karmic_axis`. Highest value of any
+  acquisition.
+- [ ] **Prasna Marga** (Raman) — sole practical route to
+  `litigation.theft_loss`; also serves health/children/foreign, which
+  already name it. Tier B: locate chapters, write our own paraphrase.
+- [ ] **Sarvartha Chintamani** (Row 1899, Tier A) — closes a catalogue
+  phantom and serves education + foreign.
+- [ ] **Stri Jataka** (Row 1931, Tier A) — `marriage.second_marriage`.
+- [ ] **Bhavartha Ratnakara**, **Jataka Chandrika**, **Brihat Samhita** —
+  lower priority; each closes a catalogue phantom or a single subdomain.
+- [ ] **Run `scripts/audit_kb_sources.py` after every acquisition** and let
+  it rewrite `docs/kb_corpus_sources.md`. That file is the source of truth
+  and this plan is not.
+
+**Phase 3 — taxonomy honesty**
+
+- [ ] **Mark `marriage.divorce` and `health.mental_health` as
+  `answerable: false`, with the reason, in `taxonomy.json`.** Marking, not
+  deleting — see Finding 3. *AC:* the coverage metric skips refused
+  subdomains, and a test asserts no reference is ever tagged to one, so a
+  future mining pass cannot quietly ground a refusal.
+- [ ] **Decide `health.hospitalization` first.** It is an inference from the
+  medical-verdict ban, not a named refusal like the other two — it either
+  joins them or gets grounded under flag-not-verdict framing. A human
+  decision, not one to make inside a cleanup pass.
+
+**Phase 4 — prove it changed behaviour**
+
+- [ ] **Live-eval the newly grounded domains.** The only end-to-end check
+  this project has ever run (2026-08-12) covered marriage, children and
+  career — 3 of 11. *AC:* one live generation per newly grounded domain,
+  confirming the new references are actually cited by `ref_id` rather than
+  the model falling back on bundle-section names. This also finally
+  re-verifies rule 2b, which has been shipped-but-unproven since
+  2026-09-08.
+
+### Deliberately not in this plan
+
+- **Verse-pinpoint citations as a blanket goal.** Edition variance is real
+  (T0.2 found no undisputed chapter/verse across ~32 rules even when
+  looking hard). wisdomlib makes per-sloka addressing *possible* for Brihat
+  Jataka and Brihat Samhita specifically; it does not make it possible
+  corpus-wide, and the chapter-level `location` convention stays.
+- **Bulk-ingesting Tier B prose.** The existing paraphrase-and-cite
+  discipline is what keeps modern translations usable at all. Nothing here
+  proposes relaxing it.
