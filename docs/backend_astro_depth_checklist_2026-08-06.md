@@ -965,20 +965,38 @@ Ordered by cost. **Most of the real gap closes from texts already owned.**
 
 **Phase 1 — stop citing books we do not have**
 
-- [ ] **Retarget or drop the 4 live phantom references.**
+- [x] **Retarget or drop the 4 live phantom references — DONE 2026-09-18.**
+  All four moved onto BPHS, which was confirmed to support each claim in the
+  owned text first: "the Karaka or Significator of wife (Venus)", "the 6th
+  House, the House of disease" (plus Saturn-as-delay, Mars-as-significator-
+  of-wounds), and the chara-karaka degree-ordering passage naming Putra
+  Karaka. Every statement is byte-identical; only citations moved. Two
+  ref_ids renamed for naming a source they no longer cite.
+  ~~Original item:~~
   `charak_6th_chronic_disease` (health) cites `charak_medical`, a modern
   in-copyright book absent from the corpus — its claim (6th bhava, Saturn
   chronic / Mars acute) is well attested in BPHS and Uttara Kalamritam, so
   retarget rather than delete. Same treatment for the 1
   `light_on_relationships` reference. The 2 `jaimini_sutras` references
   become real the moment Phase 2 lands that text.
-- [ ] **Clean `taxonomy.json` `source_refs` of unowned books** — `raman_htjh`
+- [x] **Clean `taxonomy.json` `source_refs` of unowned books — DONE
+  2026-09-18.** 8 lines cleaned. `jataka_parijata` deliberately kept on
+  marriage/education: we own it, Phase 0 re-OCRs it, and no reference cites
+  it. ~~Original item:~~ — `raman_htjh`
   (career, wealth, marriage, personality), `kn_rao_career` (career),
   `prasna_marga` (health, children, foreign — until acquired),
   `charak_medical` (health), `muhurta_chintamani` (marriage),
   `rath_jaimini` (spirituality). Zero references depend on any of these, so
   this is a pure catalogue correction.
-- [ ] **Make corpus absence visible to the code.** *Missing:*
+- [x] **Make corpus absence visible to the code — DONE 2026-09-18.**
+  `sources.json` entries now carry `corpus_status`
+  (`readable`/`present_unreadable`/`absent`) — three states, not a boolean,
+  because Jataka Parijata is owned *and* unusable. Guarded by
+  `test_every_cited_source_is_actually_in_the_corpus` and
+  `test_every_catalogued_source_declares_its_corpus_status` in
+  `tests/test_kb_references_integrity.py`. The guard was verified to FAIL by
+  re-injecting a phantom citation, not just observed passing.
+  ~~Original item:~~ *Missing:*
   `valid_sources()` checks `sources.json` keys only, so a phantom citation
   is indistinguishable from a real one. *AC:* `sources.json` entries carry
   an explicit `in_corpus` (or equivalent) field, a test asserts every

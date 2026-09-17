@@ -1,7 +1,8 @@
 {
   "notes": [
     "Bibliographic catalog for Reference citations (text_key -> entry).",
-    "Extend as the corpus is acquired; sanskrit_source points at the original-text repository."
+    "Extend as the corpus is acquired; sanskrit_source points at the original-text repository.",
+    "corpus_status (added 2026-09-18) says whether this project actually HOLDS the text, which is a different question from whether the text is catalogued here. 'readable' = present with a trustworthy text layer, so a reference may cite it. 'present_unreadable' = we own it but its OCR is mush (Jataka Parijata's two copies score ~25%), so it cannot ground a citation until re-OCR'd. 'absent' = catalogued aspirationally; no copy exists in the corpus. Before this field existed, 18 of these 24 entries were absent and nothing could tell — four live references cited books this repo does not hold and passed verification looking exactly as grounded as a BPHS citation, because valid_sources() checks catalogue membership and never corpus presence. Re-derive with scripts/audit_kb_sources.py against 'Astro Space Knowledge Base/' (gitignored, ~318MB, so CI cannot see it) rather than trusting this field once it ages."
   ],
   "sources": {
     "bphs": {
@@ -9,139 +10,162 @@
       "author": "Parashara",
       "translation": "R. Santhanam (Ranjan Publications, 2 vols); alt. G.C. Sharma (Sagar)",
       "sanskrit_source": "archive.org / Chaukhamba (Ganesha Datta Pathak edition)",
-      "caveat": "Recensions differ between editions."
+      "caveat": "Recensions differ between editions.",
+      "corpus_status": "readable"
     },
     "uttara_kalamrita": {
       "title": "Uttara Kalamrita",
       "author": "Kalidasa (attrib.)",
       "translation": "V. Subrahmanya Sastri",
-      "sanskrit_source": "archive.org (Sastri edition includes devanagari)"
+      "sanskrit_source": "archive.org (Sastri edition includes devanagari)",
+      "corpus_status": "readable"
     },
     "phaladeepika": {
       "title": "Phaladeepika",
       "author": "Mantreswara",
       "translation": "K.S. Charak (Uma Publications); alt. V.S. Sastri",
-      "sanskrit_source": "archive.org, sanskritdocuments.org"
+      "sanskrit_source": "archive.org, sanskritdocuments.org",
+      "corpus_status": "readable"
     },
     "brihat_jataka": {
       "title": "Brihat Jataka",
       "author": "Varahamihira",
       "translation": "V.S. Sastri; B. Suryanarain Rao",
-      "sanskrit_source": "GRETIL (machine-readable), sa.wikisource.org"
+      "sanskrit_source": "GRETIL (machine-readable), sa.wikisource.org",
+      "corpus_status": "readable"
     },
     "saravali": {
       "title": "Saravali",
       "author": "Kalyana Varma",
       "translation": "R. Santhanam (Ranjan, 2 vols)",
-      "sanskrit_source": "archive.org (Venkateshwar Press)"
+      "sanskrit_source": "archive.org (Venkateshwar Press)",
+      "corpus_status": "readable"
     },
     "jataka_parijata": {
       "title": "Jataka Parijata",
       "author": "Vaidyanatha Dikshita",
       "translation": "V.S. Sastri (3 vols)",
-      "sanskrit_source": "included in Sastri edition"
+      "sanskrit_source": "included in Sastri edition",
+      "corpus_status": "present_unreadable"
     },
     "prasna_marga": {
       "title": "Prasna Marga",
       "author": "Kerala tradition",
       "translation": "B.V. Raman (Motilal Banarsidass, 2 vols)",
-      "sanskrit_source": "verses included in Raman edition"
+      "sanskrit_source": "verses included in Raman edition",
+      "corpus_status": "absent"
     },
     "jaimini_sutras": {
       "title": "Jaimini Upadesa Sutras",
       "author": "Jaimini",
       "translation": "Sanjay Rath (Sagar); B. Suryanarain Rao",
-      "sanskrit_source": "widely available; included in Rath edition"
+      "sanskrit_source": "widely available; included in Rath edition",
+      "corpus_status": "absent"
     },
     "hora_sara": {
       "title": "Hora Sara",
       "author": "Prithuyasas",
       "translation": "R. Santhanam (Ranjan)",
-      "sanskrit_source": "archive.org"
+      "sanskrit_source": "archive.org",
+      "corpus_status": "absent"
     },
     "sarvartha_chintamani": {
       "title": "Sarvartha Chintamani",
       "author": "Venkatesa",
       "translation": "J.N. Bhasin (Sagar)",
-      "sanskrit_source": "archive.org"
+      "sanskrit_source": "archive.org",
+      "corpus_status": "absent"
     },
     "bhavartha_ratnakara": {
       "title": "Bhavartha Ratnakara",
       "author": "Ramanujacharya",
       "translation": "B.V. Raman",
-      "sanskrit_source": "included in Raman edition"
+      "sanskrit_source": "included in Raman edition",
+      "corpus_status": "absent"
     },
     "chamatkar_chintamani": {
       "title": "Chamatkar Chintamani",
       "author": "Bhatta Narayana",
       "translation": "S.S. Sareen (Sagar)",
-      "sanskrit_source": "archive.org"
+      "sanskrit_source": "archive.org",
+      "corpus_status": "absent"
     },
     "laghu_parashari": {
       "title": "Laghu Parashari",
       "author": "(Vimshottari interpretation tradition)",
       "translation": "O.P. Verma (Ranjan)",
-      "sanskrit_source": "archive.org"
+      "sanskrit_source": "archive.org",
+      "corpus_status": "absent"
     },
     "muhurta_chintamani": {
       "title": "Muhurta Chintamani",
       "author": "Rama Daivajna",
       "translation": "G.C. Sharma (Sagar)",
-      "sanskrit_source": "archive.org / Chaukhamba"
+      "sanskrit_source": "archive.org / Chaukhamba",
+      "corpus_status": "absent"
     },
     "raman_htjh": {
       "title": "How to Judge a Horoscope (Vols 1-2)",
       "author": "B.V. Raman",
       "translation": "English original",
-      "sanskrit_source": null
+      "sanskrit_source": null,
+      "corpus_status": "absent"
     },
     "raman_300": {
       "title": "Three Hundred Important Combinations",
       "author": "B.V. Raman",
       "translation": "English original",
-      "sanskrit_source": null
+      "sanskrit_source": null,
+      "corpus_status": "absent"
     },
     "kn_rao_career": {
       "title": "Ups and Downs in Career",
       "author": "K.N. Rao",
       "translation": "English original",
-      "sanskrit_source": null
+      "sanskrit_source": null,
+      "corpus_status": "absent"
     },
     "kn_rao_education": {
       "title": "Planets and Education",
       "author": "K.N. Rao",
       "translation": "English original",
-      "sanskrit_source": null
+      "sanskrit_source": null,
+      "corpus_status": "absent"
     },
     "charak_medical": {
       "title": "Subtleties of Medical Astrology",
       "author": "K.S. Charak",
       "translation": "English original",
-      "sanskrit_source": null
+      "sanskrit_source": null,
+      "corpus_status": "absent"
     },
     "rath_timing": {
       "title": "Crux of Vedic Astrology: Timing of Events",
       "author": "Sanjay Rath",
       "translation": "English original",
-      "sanskrit_source": null
+      "sanskrit_source": null,
+      "corpus_status": "absent"
     },
     "rath_jaimini": {
       "title": "Jaimini Maharishi's Upadesa Sutras (commentary)",
       "author": "Sanjay Rath",
       "translation": "English original",
-      "sanskrit_source": null
+      "sanskrit_source": null,
+      "corpus_status": "absent"
     },
     "light_on_relationships": {
       "title": "Light on Relationships",
       "author": "Hart de Fouw & Robert Svoboda",
       "translation": "English original",
-      "sanskrit_source": null
+      "sanskrit_source": null,
+      "corpus_status": "absent"
     },
     "patel_ashtakavarga": {
       "title": "Ashtakavarga",
       "author": "C.S. Patel",
       "translation": "English original",
-      "sanskrit_source": null
+      "sanskrit_source": null,
+      "corpus_status": "absent"
     },
     "lal_kitab_1952": {
       "title": "Lal Kitab (1952 edition)",
@@ -150,7 +174,8 @@
       "sanskrit_source": null,
       "tradition": "Lal Kitab",
       "ingestion_source_key": "lal-kitab-1952-roop-chand-joshi",
-      "caveat": "A distinct interpretive and remedial tradition, not a Parashari authority. Keep edition provenance, classify remedies as convention-dependent, and require human review before publishing extracted chunks."
+      "caveat": "A distinct interpretive and remedial tradition, not a Parashari authority. Keep edition provenance, classify remedies as convention-dependent, and require human review before publishing extracted chunks.",
+      "corpus_status": "absent"
     }
   }
 }
