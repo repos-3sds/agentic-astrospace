@@ -14,7 +14,8 @@
     "Health caution reframe 2026-08-12, per explicit user direction: apply the SAME flag-not-verdict pattern CLAUDE.md already uses for doshas to health-susceptibility content, rather than excluding it outright. Material previously classed gated_medical in ch.17 (facial disease, the leprosy verses, the Sun/Ketu clauses of the general-disease block, and the timing-of-illness block) is reframed as body-system or life-stage cautions -- naming an area worth checking, never a specific disease, never a specific age. This is the same softening already applied to marriage/children timing (early-vs-delayed rather than a literal year), extended to illness timing (life-stage vigilance rather than a literal age plus a named illness). What remains excluded and why: the Rahu clause of the general-disease block (caste-based framing, unrelated to the medical question); the Venus clause (too ambiguous to state responsibly even as a caution); the exact number-of-events framing throughout stays dropped as it always has, since a caution does not need a count. See docs/health_kb_bphs_susceptibility_and_injury.md.",
     "2026-08-13: wealth KB extraction pass -- BPHS ch.13 (2nd house), ch.22 (11th house), ch.24.13-24 (2nd lord), ch.24.121-132 (11th lord). 34 new references. See docs/wealth_kb_bphs_2nd_11th_house.md.",
     "2026-09-18: four references cited texts absent from the corpus (charak_medical, light_on_relationships, jaimini_sutras x2). Every CLAIM was left exactly as written and only the CITATION moved, after confirming BPHS supports each one in the owned text: 'the Karaka or Significator of wife (Venus)' for the marriage rule, 'the 6th House, the House of disease' plus Saturn-as-delay and Mars-as-significator-of-wounds for the health rule, and the chara-karaka degree-ordering passage naming Putra Karaka, plus the Karakamsha navamsha chapter, for the two Jaimini rules. Two ref_ids were renamed because they named the source they no longer cite. Guarded from here by test_every_cited_source_is_actually_in_the_corpus.",
-    "2026-09-19 (Phase 0, Saravali mining): added 7 references from the Saravali OCR export, which held 98k readable words at 94.9% — the most accurate text in the corpus — and had exactly ONE reference mined from it. Scope is narrower than the plan assumed: the copy we hold is Vol 1 (chapters 1-26 — planetary characters, yogas, planets-in-rasis) and does NOT contain the bhava-effect chapters, so only intellect_communication, field_of_study and debts could be honestly grounded. relocation (0 hits), domestic_peace, research and education-breaks are not in this volume; children material here is bereavement-flavoured and deliberately not ingested; Rahu/Ketu significations are disease and fear vocabulary, so karmic_axis stays ungrounded. Statements are our own paraphrase; locations carry a sloka only where the text actually numbered one."
+    "2026-09-19 (Phase 0, Saravali mining): added 7 references from the Saravali OCR export, which held 98k readable words at 94.9% — the most accurate text in the corpus — and had exactly ONE reference mined from it. Scope is narrower than the plan assumed: the copy we hold is Vol 1 (chapters 1-26 — planetary characters, yogas, planets-in-rasis) and does NOT contain the bhava-effect chapters, so only intellect_communication, field_of_study and debts could be honestly grounded. relocation (0 hits), domestic_peace, research and education-breaks are not in this volume; children material here is framed around progeny denial and deliberately not ingested; Rahu/Ketu significations are disease and fear vocabulary, so karmic_axis stays ungrounded. Statements are our own paraphrase; locations carry a sloka only where the text actually numbered one.",
+    "2026-09-19 (Phase 0, BPHS pass): closed children.relationship_with_children and education.research from BPHS Sharma Vol 1 (214k words, ch.1-46, carries the bhava-effect chapters Saravali Vol 1 lacks). education.breaks was attempted and DELIBERATELY LEFT OPEN: the only supporting material is a single worked example in Sharma's own commentary for one ascendant (debilitated 5th lord in the 4th), not a mula sloka — grounding a product claim on one modern commentator's illustration is weaker than leaving the subdomain honestly empty."
   ],
   "references": [
     {
@@ -2985,6 +2986,47 @@
       ],
       "status": "convention_dependent",
       "observance_note": "Saravali's node significations are a bare list, and most of its other Ketu entries are affliction vocabulary this product does not surface. Only the debt signification is carried here; the rest is deliberately not ingested."
+    },
+    {
+      "ref_id": "bphs18_1_fifth_lord_happiness_through_children",
+      "domains": [
+        "children"
+      ],
+      "subdomains": [
+        "relationship_with_children"
+      ],
+      "statement": "BPHS opens its 5th-house chapter with the supportive case: the Ascendant lord together with the 5th lord placed in the 5th house, or in a kendra or trikona, is read as full happiness through one's children. Treat a strong, well-placed 5th lord as the chart's indication for a warm and rewarding bond with children — a tendency to weigh alongside Jupiter and the D7, never a scoring of the relationship itself.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.18 v.1-3, effects of the 5th house (Sharma trans.)"
+      },
+      "tags": [
+        "house:5",
+        "lord:5",
+        "planet:Jupiter"
+      ],
+      "status": "verified_common",
+      "observance_note": "Only the supportive half of this passage is carried. Its remaining slokas, and ch.18 v.4 immediately after, continue into predictions this product refuses on principle — denial of progeny, and adverse outcomes asserted for a named child. Those are deliberately not ingested, per CLAUDE.md's non-negotiables and the children addendum's ban on deterministic verdicts. A reader asking about children must never receive the omitted half."
+    },
+    {
+      "ref_id": "bphs26_8_lagna_lord_eighth_deep_knowledge",
+      "domains": [
+        "education"
+      ],
+      "subdomains": [
+        "research"
+      ],
+      "statement": "The Ascendant lord placed in the 8th house is read as conferring mastery of hidden and investigative subjects — Siddha Vidya Visharada, skill in occult learning — the 8th being the classical house of what is concealed and must be dug for. Useful as an indication that someone's intellectual leaning runs toward depth and investigation rather than conventional coursework.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.8, effects of the Ascendant lord in the houses (Sharma trans.)"
+      },
+      "tags": [
+        "house:8",
+        "lord:1"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Two honest limits. The same sloka pairs this knowledge indication with a run of adverse character and health descriptions; only the knowledge half is carried, per the flag-not-verdict rule. And BPHS has no 'research' category of its own — mapping the 8th house to research and investigation is a modern reading of a classical significator, so this is supporting evidence, not a pinpoint classical rule."
     }
   ]
 }
