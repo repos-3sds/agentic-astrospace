@@ -1040,13 +1040,13 @@ Ordered by cost. **Most of the real gap closes from texts already owned.**
 | Ungrounded subdomain | Closes from | Cost |
 | --- | --- | --- |
 | ~~`personality.intellect_communication`~~ | **DONE** — Saravali ch.4/13/22 | closed 2026-09-19 |
-| `children.relationship_with_children` | **not** Saravali — its child material is bereavement-flavoured and deliberately not ingested; needs BPHS 5th bhava | mine (BPHS only) |
+| ~~`children.relationship_with_children`~~ | **DONE** — BPHS ch.18 v.1-3 (supportive half only) | closed 2026-09-19 |
 | `family_property.domestic_peace` | ~~Saravali~~ — **not in our Vol 1** (4 hits, all affliction framing); needs Saravali Vol 2 or BPHS 4th bhava | acquire |
 | `family_property.relocation` | ~~Saravali~~ — **zero hits in our Vol 1**; needs Saravali Vol 2 or BPHS | acquire |
 | ~~`wealth.debts`~~ | **DONE** — Saravali ch.4 (Ketu), ch.15 v.19 | closed 2026-09-19 |
 | ~~`education.field_of_study`~~ | **DONE** — Saravali ch.4/22/23 | closed 2026-09-19 |
-| `education.breaks` | ~~Saravali~~ — its "obstacle" hits are never about study; needs BPHS 4th/5th | mine (BPHS only) |
-| `education.research` | ~~Saravali~~ — 4 hits, too thin; needs BPHS 5th/8th | mine (BPHS only) |
+| `education.breaks` | **attempted, left open on purpose** — not in Saravali Vol 1, and BPHS's only support is one worked example in Sharma's *commentary* for a single ascendant, not a mula sloka | needs a real source |
+| ~~`education.research`~~ | **DONE** — BPHS ch.26 v.8 (lagna lord in the 8th) | closed 2026-09-19 |
 | `education.competitive_exams` | Sarvartha Chintamani (Tier A) | acquire |
 | `foreign.return_home` | BPHS 4th/12th + Brihat Samhita yatra | mine + acquire |
 | `foreign.education_abroad` | BPHS 9th/12th + Sarvartha Chintamani | mine + acquire |
@@ -1082,6 +1082,28 @@ Ordered by cost. **Most of the real gap closes from texts already owned.**
 
   *Remaining AC:* the other four subdomains move to Phase 2 behind a fuller
   Saravali — see the acquisition item added there.
+
+- [x] **BPHS follow-up pass — DONE 2026-09-19.** Two of the four subdomains
+  Saravali could not reach were closed from BPHS Sharma Vol 1 instead
+  (214k words, ch.1-46 — it *does* carry the bhava-effect chapters Saravali
+  Vol 1 lacks): `children.relationship_with_children` from ch.18 v.1-3 and
+  `education.research` from ch.26 v.8. Coverage 60/74 -> **62/74**.
+
+  `education.breaks` was attempted and **deliberately left open**. Saravali
+  Vol 1 has nothing, and BPHS's only support is a single worked example in
+  Sharma's own *commentary* for one ascendant (debilitated 5th lord in the
+  4th) — a modern commentator's illustration, not a mula sloka. Grounding a
+  product claim on that is weaker than leaving the subdomain honestly empty.
+
+  Both new references carry an `observance_note` recording what was
+  **not** ingested: BPHS ch.18 continues straight into progeny-denial
+  material, and ch.26 v.8 pairs its knowledge indication with adverse
+  character claims. Only the supportive halves are carried.
+
+  Worth knowing for the next pass: `test_no_reference_asserts_longevity_or_death`
+  scans `statement` **plus** `observance_note`, so a note that *describes*
+  excluded mortality material trips the guard even when the statement is
+  clean. Describe the exclusion without the vocabulary.
 - [ ] **Re-OCR Jataka Parijata** (both copies) through the
   `ocr-playground` pipeline; target ≥90% like the other five exports. Then
   mine it for marriage/education, the two domains whose `source_refs`
