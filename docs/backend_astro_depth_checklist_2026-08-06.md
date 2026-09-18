@@ -1039,14 +1039,14 @@ Ordered by cost. **Most of the real gap closes from texts already owned.**
 
 | Ungrounded subdomain | Closes from | Cost |
 | --- | --- | --- |
-| `personality.intellect_communication` | Saravali (owned) + BPHS | mine only |
-| `children.relationship_with_children` | Saravali + BPHS 5th bhava | mine only |
-| `family_property.domestic_peace` | Saravali + BPHS 4th bhava | mine only |
-| `family_property.relocation` | Saravali + BPHS 4th/12th | mine only |
-| `wealth.debts` | BPHS 6th bhava + Uttara Kalamritam | mine only |
-| `education.field_of_study` | BPHS D-24 + Uttara Kalamritam Kanda I Ch. V | mine only |
-| `education.breaks` | BPHS 4th/5th + Saravali | mine only |
-| `education.research` | BPHS 5th/8th + Saravali | mine only |
+| ~~`personality.intellect_communication`~~ | **DONE** — Saravali ch.4/13/22 | closed 2026-09-19 |
+| `children.relationship_with_children` | **not** Saravali — its child material is bereavement-flavoured and deliberately not ingested; needs BPHS 5th bhava | mine (BPHS only) |
+| `family_property.domestic_peace` | ~~Saravali~~ — **not in our Vol 1** (4 hits, all affliction framing); needs Saravali Vol 2 or BPHS 4th bhava | acquire |
+| `family_property.relocation` | ~~Saravali~~ — **zero hits in our Vol 1**; needs Saravali Vol 2 or BPHS | acquire |
+| ~~`wealth.debts`~~ | **DONE** — Saravali ch.4 (Ketu), ch.15 v.19 | closed 2026-09-19 |
+| ~~`education.field_of_study`~~ | **DONE** — Saravali ch.4/22/23 | closed 2026-09-19 |
+| `education.breaks` | ~~Saravali~~ — its "obstacle" hits are never about study; needs BPHS 4th/5th | mine (BPHS only) |
+| `education.research` | ~~Saravali~~ — 4 hits, too thin; needs BPHS 5th/8th | mine (BPHS only) |
 | `education.competitive_exams` | Sarvartha Chintamani (Tier A) | acquire |
 | `foreign.return_home` | BPHS 4th/12th + Brihat Samhita yatra | mine + acquire |
 | `foreign.education_abroad` | BPHS 9th/12th + Sarvartha Chintamani | mine + acquire |
@@ -1058,11 +1058,30 @@ Ordered by cost. **Most of the real gap closes from texts already owned.**
 
 **Phase 0 — mine what we own (no acquisition, no rights question)**
 
-- [ ] **Saravali mining pass.** *Missing:* 98k readable words, 1 reference.
-  *AC:* ≥20 new references drawn from Saravali, each with a chapter-level
-  `location` and honest `status`; every one of the 8 "mine only" subdomains
-  above reaches ≥1 reference. *Depth:* content-authorship, the slowest
-  per-item work in this file — but zero blockers.
+- [x] **Saravali mining pass — PARTIALLY DONE 2026-09-19, and the original
+  AC was not achievable.** 7 references added (Saravali went from 1 to 8),
+  closing `personality.intellect_communication`, `education.field_of_study`
+  and `wealth.debts`; all three verified retrievable, coverage 57/74 -> 60/74.
+
+  **The finding that matters more than the references:** the copy we hold is
+  **Volume 1 — chapters 1-26 only** (planetary characters, karakas, yogas,
+  planets-in-rasis). Saravali's **bhava-effect chapters are in Volume 2,
+  which we do not have.** This plan assumed 8 subdomains were "mine only"
+  from word count and OCR accuracy without checking what the volume actually
+  contains. Measured: `family_property.relocation` has **zero** hits,
+  `domestic_peace` and `education.research` have four each, and
+  `education.breaks` hits are about obstacles in general, never about study.
+  Those four need Volume 2 or another text — they are **not** mining work.
+
+  Two more deliberately left ungrounded rather than forced:
+  `children.relationship_with_children` has 180 hits but the material is
+  bereavement-flavoured (child-loss shlokas the reference store's own
+  `_MORTAL` guard exists to keep out), and `spirituality.karmic_axis` would
+  have to come from Saravali's Rahu/Ketu significations, which are disease
+  and fear vocabulary this product does not surface.
+
+  *Remaining AC:* the other four subdomains move to Phase 2 behind a fuller
+  Saravali — see the acquisition item added there.
 - [ ] **Re-OCR Jataka Parijata** (both copies) through the
   `ocr-playground` pipeline; target ≥90% like the other five exports. Then
   mine it for marriage/education, the two domains whose `source_refs`
@@ -1145,6 +1164,13 @@ Reordered 2026-09-18 by measured OCR rather than assumed availability.
 - [ ] **Jataka Parijata 1932** (75.8%, *marginal*) — weigh against re-OCR'ing
   the two copies we already own (Phase 0); 75.8% is a large upgrade on ~25%
   but still under the bar either way.
+- [ ] **Saravali, fuller text** (`KalyanaVarmasSaravali_201707`, **94.5%**) —
+  reaches **chapter 55** where our copy stops at 26. Added 2026-09-19 after
+  the mining pass found our copy is Vol 1 and lacks the bhava chapters.
+  Confirm at acquisition that it actually carries them (the 80%-through
+  sample showed ch.43-55 but no bhava vocabulary), then it closes
+  `family_property.domestic_peace`, `family_property.relocation` and likely
+  `education.research`.
 - [ ] **Hora Sara** (86.0%), **Jataka Chandrika 1900** (90.5%),
   **Bhavartha Ratnakara** (re-measure first — the 89.0% sample is 13 pages) —
   lower priority; each closes a catalogue phantom.
