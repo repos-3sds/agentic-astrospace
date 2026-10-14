@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from ..context import KeywordRouter, assemble, daily_guidance, domain_ids
-from ..core.cities import city_for_timezone, lookup_city
+from .timing_place import resolve_timing_place
 from ..core.vedic import LocationError, VedicChart
 from ..db import crud, get_db
 from .auth import CurrentUser
@@ -44,15 +44,6 @@ def _chart_from_kundli(k, ayanamsha: str, node_type: str) -> VedicChart:
     except (ValueError, OverflowError) as e:
         raise HTTPException(status_code=422, detail=f"Invalid birth details: {e}")
 
-
-def _validate_timezone(tz_str: Optional[str], fallback: str) -> str:
-    if not tz_str:
-        return fallback
-    try:
-        ZoneInfo(tz_str)
-    except Exception:
-        raise HTTPException(status_code=400, detail="timezone must be a valid IANA timezone")
-    return tz_str
 
 
 @lru_cache(maxsize=2048)
@@ -92,43 +83,33 @@ def daily(
     kundli = crud.get_kundli(db, kundli_id, user.id)
     if not kundli:
         raise HTTPException(status_code=404, detail="Kundli not found")
-    chart = _chart_from_kundli(kundli, ayanamsha, node_type)
-    display_tz = _validate_timezone(timezone, chart.moment.tz_str)
-    viewer_city = city_for_timezone(display_tz) if timezone and not city else None
-    loc_city = city or (viewer_city[0] if viewer_city else None)
-    loc_nation = nation or (viewer_city[1] if viewer_city else None)
-    loc_kwargs = {}
-    if loc_city:
-        geo = lookup_city(loc_city, loc_nation or kundli.birth_nation)
-        if not geo:
-            raise HTTPException(status_code=422, detail=f"City {loc_city!r} not in offline database.")
-        lat, lng, tz_str = geo
-        loc_kwargs = {
-            "city": loc_city,
-            "nation": loc_nation or kundli.birth_nation,
-            "lat": lat,
-            "lng": lng,
-            "tz_str": tz_str,
-        }
+    _chart_from_kundli(kundli, ayanamsha, node_type)  # validates the birth details
+    # One rule for "where" shared with Calendar Day, personal panchanga and
+    # muhurta (api/timing_place.py); the viewer timezone only decides today.
+    place = resolve_timing_place(kundli, timezone, city, nation)
     if as_of and as_of.tzinfo is None:
-        as_of = as_of.replace(tzinfo=ZoneInfo(loc_kwargs.get("tz_str", display_tz)))
-    
+        as_of = as_of.replace(tzinfo=ZoneInfo(place.tz_str))
     if not as_of:
-        as_of = datetime.now(ZoneInfo(loc_kwargs.get("tz_str", display_tz)))
+        as_of = datetime.now(ZoneInfo(place.today_tz))
 
     try:
-        return _cached_daily_guidance(
+        cached = _cached_daily_guidance(
             kundli.id,
             as_of.strftime("%Y-%m-%d"),
             kundli.name, kundli.birth_year, kundli.birth_month, kundli.birth_day,
             kundli.birth_hour, kundli.birth_minute, kundli.birth_city, kundli.birth_nation,
             ayanamsha, node_type,
             kundli.relation or "", as_of.isoformat(),
-            loc_kwargs.get("city", ""), loc_kwargs.get("nation", ""),
-            loc_kwargs.get("lat", 0.0), loc_kwargs.get("lng", 0.0), loc_kwargs.get("tz_str", "")
+            place.city, place.nation, place.lat, place.lng, place.tz_str,
         )
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+    # The cache key does not carry `source`, so annotate a copy, never the
+    # cached dict itself.
+    return {
+        **cached,
+        "provenance": {**cached["provenance"], "place": {**cached["provenance"]["place"], **place.as_payload()}},
+    }
 
 
 @router.post("/{kundli_id}")

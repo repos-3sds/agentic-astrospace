@@ -13,6 +13,7 @@ defaults to the kundli's birth city but is overridable, because a muhurta is
 useless if it is computed for the wrong sunrise.
 """
 from datetime import date as date_cls, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -23,6 +24,7 @@ from ..core.vedic.nakshatra import nakshatra_of
 from ..core.vedic.positions import sign_index
 from ..db import crud, get_db
 from .auth import CurrentUser
+from .timing_place import resolve_timing_place
 from .vedic_routes import _chart_from_kundli
 
 router = APIRouter(prefix="/api/v1/muhurta", tags=["muhurta"])
@@ -51,9 +53,11 @@ def find_muhurta(
     date_from: str | None = Query(None, description="YYYY-MM-DD; default today"),
     date_to: str | None = Query(None, description="YYYY-MM-DD; default +14 days"),
     city: str | None = Query(
-        None, description="Where the timings apply; defaults to the birth city"
+        None, description="Where the timings apply; defaults to a city in the "
+                          "viewer timezone, then the birth city"
     ),
     nation: str | None = None,
+    timezone: str | None = Query(None, description="Viewer IANA timezone; picks the city when none is given"),
     limit: int = Query(5, ge=1, le=20),
     db: Session = Depends(get_db),
 ):
@@ -61,7 +65,10 @@ def find_muhurta(
     if not kundli:
         raise HTTPException(status_code=404, detail="Kundli not found")
 
-    today = date_cls.today()
+    # Same rule as Calendar Day and Today (api/timing_place.py), so the two
+    # screens can never again show the same window at two different hours.
+    place = resolve_timing_place(kundli, timezone, city, nation)
+    today = datetime.now(ZoneInfo(place.today_tz)).date()
     start = _parse_date(date_from, "date_from", today)
     end = _parse_date(date_to, "date_to", start + timedelta(days=14))
 
@@ -70,15 +77,20 @@ def find_muhurta(
     moon_sign = sign_index(moon_lon)
 
     try:
-        return muhurta.find(
+        payload = muhurta.find(
             goal, start, end,
             janma_nakshatra_index=NAKSHATRAS.index(nakshatra_of(moon_lon)["name"]),
             janma_rashi_index=moon_sign,
             ghatak_moon_sign=moon_sign,
-            city=city or kundli.birth_city,
-            nation=nation or kundli.birth_nation or "IN",
+            city=place.city,
+            nation=place.nation,
+            lat=place.lat,
+            lng=place.lng,
+            tz_str=place.tz_str,
             limit=limit,
         )
+        payload["place"] = place.as_payload()
+        return payload
     except muhurta.ExcludedGoalError as e:
         # Not a failure — the product declines to time these, by design.
         raise HTTPException(status_code=422, detail={

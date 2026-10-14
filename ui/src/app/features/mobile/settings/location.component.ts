@@ -5,7 +5,11 @@ import { PanchangaCity } from '../../../core/models';
 import { PanchangaService } from '../../../core/panchanga.service';
 import { PreferencesService } from '../../../core/preferences.service';
 
-/** Which place the day's timings are computed for. */
+/**
+ * Which place the day's timings are computed for. 'current' is not
+ * geolocation (there is none): the server picks a listed city in the phone's
+ * timezone, or the birth city, and the copy says so.
+ */
 export type TimingPlace = 'current' | 'selected';
 
 /**
@@ -46,8 +50,8 @@ export class LocationComponent {
     {
       id: 'current',
       icon: 'loc-current',
-      label: 'Current location',
-      detail: 'Use this phone’s timezone for daily panchang, windows and Today.',
+      label: 'Phone timezone',
+      detail: 'Daily windows use the nearest listed city in this phone’s timezone, or your birth city, in that city’s own clock.',
     },
     {
       id: 'selected',

@@ -22,6 +22,7 @@ import {
   YogasDoshasPayload,
 } from './models';
 import { PreferencesService } from './preferences.service';
+import { TimingPlacePayload } from './timing-place';
 import {
   CALENDAR_CACHE_POLICY,
   CachedResource,
@@ -433,6 +434,10 @@ export class VedicService {
       date_to: dateTo,
       limit: String(limit),
     });
+    // Same inputs as Calendar Day and Today, so the server resolves the
+    // same place for all three (see api/timing_place.py).
+    const timezone = this.prefs.effectiveTimezone();
+    if (timezone) params.set('timezone', timezone);
     if (place?.city) params.set('city', place.city);
     if (place?.nation) params.set('nation', place.nation);
     return this.api.get<MuhurtaSearchPayload>(`/muhurta/${kundliId}?${params.toString()}`);
@@ -677,6 +682,8 @@ export interface MuhurtaSearchPayload {
   note: string | null;
   is_convention_dependent: boolean;
   disclaimer: string;
+  /** Where the windows apply, in whose clock, and which rule chose it. */
+  place?: TimingPlacePayload;
 }
 
 export interface MuhurtaApiWindow {

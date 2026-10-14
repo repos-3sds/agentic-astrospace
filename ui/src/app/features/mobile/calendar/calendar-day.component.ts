@@ -6,6 +6,7 @@ import { FestivalService } from '../../../core/festival.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { CalendarDaySummary, CalendarEvent, CalendarIntelligencePayload, CalendarPractitionerDayDetail, FestivalOccurrence, PanchangaWindow } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
+import { timingClockNote, timingPlaceLabel } from '../../../core/timing-place';
 import { VedicService } from '../../../core/vedic.service';
 import { FestivalSheetComponent } from './festival-sheet.component';
 import { calendarDayCacheOptions } from './calendar-cache-options';
@@ -37,7 +38,11 @@ import { MobileSymbol, nakshatraSymbol, tithiSymbol } from '../symbols/mobile-sy
             <button type="button" (click)="reload()">Retry</button>
           </section>
         }
-        <header><h1>{{ dateLabel(selectedDate()) }}</h1><p>{{ daySubhead() }}</p></header>
+        <header>
+          <h1>{{ dateLabel(selectedDate()) }}</h1>
+          <p>{{ daySubhead() }}</p>
+          <p class="mcald-place">{{ clockNote(calendar) }}</p>
+        </header>
 
         @if (day(); as summary) {
           <section class="mcald-quality" [class.bad]="!summary.tarabala.favourable || !summary.chandrabala.favourable">
@@ -84,7 +89,7 @@ import { MobileSymbol, nakshatraSymbol, tithiSymbol } from '../symbols/mobile-sy
                 <span><small>NAKSHATRA</small><b>{{ summary.nakshatra }}</b></span>
               </div>
               <div><small>MOON RASHI</small><b>{{ summary.moon_rashi }}</b></div>
-              <div><small>PLACE</small><b>{{ calendar.place.city }} · {{ calendar.timezone }}</b></div>
+              <div><small>PLACE</small><b>{{ placeLabel(calendar) }}</b></div>
             </section>
 
             @if (detailLoading()) {
@@ -213,6 +218,15 @@ export class CalendarDayComponent {
     const value = date || this.data()?.start_date;
     if (!value) return 'Calendar day';
     return new Intl.DateTimeFormat('en', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(`${value}T12:00:00`));
+  }
+
+  /** Whose clock the windows are in; the audit found them read as the phone's. */
+  protected clockNote(calendar: CalendarIntelligencePayload): string {
+    return timingClockNote(calendar.place);
+  }
+
+  protected placeLabel(calendar: CalendarIntelligencePayload): string {
+    return timingPlaceLabel(calendar.place);
   }
 
   protected daySubhead(): string {
