@@ -36,7 +36,7 @@
           <p class="cancelled"><img src="mobile/yoga-check.svg" alt="" aria-hidden="true" />{{ item.cancelled }}</p>
         }
         <button class="learn" type="button" (click)="learn(item)">
-          <span>{{ item.id === 'manglik' ? 'View cancellation' : 'Learn this yoga' }}</span>
+          <span>{{ item.id === 'manglik' ? 'View exceptions' : 'Learn this yoga' }}</span>
           <img src="mobile/yoga-chevron.svg" alt="" aria-hidden="true" />
         </button>
       </article>
@@ -50,4 +50,6 @@
 @if (learningOpen() && selectedLearning(); as detail) {
   <as-yoga-learning-sheet [detail]="detail" (dismissed)="learningOpen.set(false)" />
 }
-@if (cancellationOpen()) { <as-manglik-cancellation-sheet (dismissed)="cancellationOpen.set(false)" /> }
+@if (cancellationOpen() && manglik(); as row) {
+  <as-manglik-cancellation-sheet [manglik]="row" (dismissed)="cancellationOpen.set(false)" />
+}
