@@ -60,6 +60,11 @@ export class ApiService {
       this.connectivity.noteRequestFailure(e);
       if (e instanceof HttpErrorResponse) {
         const detail = (e.error && (e.error.detail || e.error.message)) || e.statusText;
+        // Structured refusals (`{kind: "refer_out", message}` from readings and
+        // muhurta) carry a sentence meant for the screen; show that, not JSON.
+        if (detail && typeof detail === 'object' && typeof detail.message === 'string') {
+          throw new Error(detail.message);
+        }
         throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
       }
       throw e;

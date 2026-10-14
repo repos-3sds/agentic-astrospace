@@ -11,7 +11,10 @@ from typing import Literal, Optional
 from ..db import get_db
 from ..db import crud
 from ..core.cities import lookup_city
+from ..core.vedic.chart import VedicChart
+from ..core.vedic.positions import LocationError
 from ..agents.period_agent import PeriodAgent
+from ..agents.safety import REFER_OUT_ANSWERS
 from .auth import CurrentUser
 
 router = APIRouter(prefix="/api/v1/readings", tags=["readings"])
@@ -284,18 +287,31 @@ def generate_reading(
             if fresh:
                 return {"cached": True, **_reading_to_dict(latest)}
 
-    agent = PeriodAgent()
-    content = agent.generate_reading(
-        period=body.period,
-        name=k.name,
-        year=k.birth_year,
-        month=k.birth_month,
-        day=k.birth_day,
-        hour=k.birth_hour,
-        minute=k.birth_minute,
-        city=k.birth_city,
-        nation=k.birth_nation,
-    )
+    try:
+        chart = VedicChart(
+            k.name, k.birth_year, k.birth_month, k.birth_day,
+            k.birth_hour, k.birth_minute, k.birth_city, k.birth_nation,
+        )
+    except LocationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except (ValueError, OverflowError) as e:
+        raise HTTPException(status_code=422, detail=f"Invalid birth details on this kundli: {e}")
+
+    content, crossed = PeriodAgent(chart).generate_reading(body.period, now=now_local)
+    if crossed:
+        # Output-side safety net, same tier as Ask's verifier. Nothing is
+        # persisted and no claims are extracted: a reading that crossed the
+        # boundary twice is declined, not trimmed.
+        raise HTTPException(status_code=422, detail={
+            "kind": "refer_out",
+            "domain": crossed,
+            "message": (
+                "This reading was not published because it crossed a boundary "
+                "AstroSpace does not cross. "
+                + REFER_OUT_ANSWERS.get(crossed, "A dosha is a flag, not a verdict.")
+                + " Try generating it again."
+            ),
+        })
 
     previous = crud.get_latest_period_reading(db, kundli_id, body.period, label, user.id)
     next_version = (previous.version or 1) + 1 if previous else 1
