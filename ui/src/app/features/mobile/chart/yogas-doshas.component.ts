@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { ManglikCancellationSheetComponent } from './manglik-cancellation-sheet.component';
 import { YogaLearningDetail, YogaLearningSheetComponent } from './yoga-learning-sheet.component';
 import { KundliStore } from '../../../core/kundli.store';
-import { DoshasPayload, YogaResult, YogasDoshasPayload } from '../../../core/models';
+import { DoshasPayload, ManglikPayload, YogaResult, YogasDoshasPayload } from '../../../core/models';
 import { VedicService } from '../../../core/vedic.service';
 
 type Kind = 'yoga' | 'dosha';
@@ -38,6 +38,8 @@ export class YogasDoshasComponent {
   readonly selectedLearning = signal<YogaLearningDetail | null>(null);
   readonly cancellationOpen = signal(false);
   protected readonly data = signal<YogasDoshasPayload | null>(null);
+  /** The engine's Manglik row, handed to the exceptions sheet unchanged. */
+  readonly manglik = computed<ManglikPayload | null>(() => this.data()?.doshas?.manglik ?? null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   readonly items = computed<Combination[]>(() => [
