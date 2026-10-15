@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..entitlements.registry import capability_registry, public_registry
+from ..entitlements.products import public_products
+from ..entitlements.registry import capability_registry, public_registry, quotas_enforced
 from ..entitlements.resolver import require_entitlement, resolve_entitlements
 from .auth import CurrentUser
 
@@ -15,6 +16,12 @@ router = APIRouter(prefix="/api/v1/entitlements", tags=["entitlements"])
 @router.get("")
 def get_entitlements(user: CurrentUser, db: Session = Depends(get_db)):
     return resolve_entitlements(db, user.id).to_dict()
+
+
+@router.get("/products")
+def get_products(user: CurrentUser):
+    """Plans and question packs with their launch prices, for the paywall."""
+    return {"products": public_products(), "quotas_enforced": quotas_enforced()}
 
 
 @router.get("/catalog")

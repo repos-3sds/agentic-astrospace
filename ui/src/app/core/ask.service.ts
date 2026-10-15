@@ -1,4 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
+import { EntitlementLimitError, isEntitlementDenial } from './entitlement-denial';
 
 import { ApiService } from './api.service';
 import { apiUrl } from './api-origin';
@@ -105,6 +106,14 @@ export class AskService {
     });
     if (!response.ok || !response.body) {
       const text = await response.text().catch(() => '');
+      if (response.status === 402) {
+        try {
+          const denial = JSON.parse(text);
+          if (isEntitlementDenial(denial)) throw new EntitlementLimitError(denial);
+        } catch (error) {
+          if (error instanceof EntitlementLimitError) throw error;
+        }
+      }
       const detail = (() => {
         try {
           const parsed = JSON.parse(text);

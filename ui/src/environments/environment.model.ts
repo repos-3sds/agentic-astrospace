@@ -15,4 +15,13 @@ export interface AppEnvironment {
    * ordinary web deployment.
    */
   nativeApiOrigin: string;
+
+  /**
+   * RevenueCat public SDK keys (`goog_…`, `appl_…`). Public by design: they
+   * only let the app read offerings and start a store purchase, and the
+   * server trusts nothing until RevenueCat's webhook confirms it. Empty means
+   * the store is not connected yet, and Plans says so instead of offering a
+   * button that cannot work.
+   */
+  revenueCat?: { android?: string; ios?: string };
 }

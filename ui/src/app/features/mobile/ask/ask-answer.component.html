@@ -306,7 +306,7 @@
               }
             </div>
           }
-          @if (!message.streaming && (message.status === 'stopped' || message.status === 'network_error' || message.status === 'fatal_error' || message.status === 'generation_failed' || message.status === 'verification_failed' || message.status === 'context_unavailable')) {
+          @if (!message.streaming && (message.status === 'stopped' || message.status === 'network_error' || message.status === 'fatal_error' || message.status === 'generation_failed' || message.status === 'verification_failed' || message.status === 'context_unavailable' || message.status === 'limit_reached')) {
             <button class="retry-answer" type="button" (click)="$event.stopPropagation(); retryLatest()">Try again</button>
           }
         }
@@ -350,7 +350,9 @@
     </article>
   }
 
-  @if (submitError()) {
+  @if (limitDenial(); as denial) {
+    <as-locked-state [denial]="denial" />
+  } @else if (submitError()) {
     <p class="answer-state is-error" role="alert">{{ submitError() }}</p>
   }
 

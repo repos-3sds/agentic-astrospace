@@ -26,6 +26,7 @@ from ..context.taxonomy import TaxonomyError
 from ..db import get_db
 from ..db import crud, crud_mobile as cm
 from ..db.crud_profile_context import build_profile_context_projection
+from ..entitlements.usage import commit_ask_credit, release_ask_credit, reserve_ask_credit
 from .auth import CurrentUser
 from .context_routes import _chart_from_kundli
 
@@ -427,6 +428,10 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
         }
 
     prepared = outcome.prepared
+    # Only a real answer attempt holds an Ask credit: every terminal state
+    # above (refer-out, clarification, not ready) returned without one. A 402
+    # here is the structured limit denial, raised before any model call.
+    reservation = reserve_ask_credit(db, user.id)
 
     def persist_prepared(reading: Optional[StructuredReading], status: str) -> Optional[str]:
         if reading is None:
@@ -445,11 +450,17 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
                             usage=prepared.usage)
 
     done = None
-    for event in orchestrator.run(prepared, messages, persist=persist_prepared):
-        if event["type"] == "done":
-            done = event
+    try:
+        for event in orchestrator.run(prepared, messages, persist=persist_prepared):
+            if event["type"] == "done":
+                done = event
+    except BaseException:
+        release_ask_credit(db, reservation)
+        raise
 
-    if done["status"] != "answered":
+    if done is None or done["status"] != "answered":
+        # A failed or unverified answer is never charged.
+        release_ask_credit(db, reservation)
         # Explicit, not a generic 500 — the reader gets a clear signal that
         # generation or verification failed, never a reading that shouldn't
         # have shipped. Matches this route's pre-migration contract (a
@@ -460,6 +471,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
                   else "The answer did not pass verification")
         raise HTTPException(status_code=502, detail=detail)
 
+    commit_ask_credit(db, reservation)
     reading = done["reading"]
     return {
         "answer": reading["interpretation"],

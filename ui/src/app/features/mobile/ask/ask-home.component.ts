@@ -8,6 +8,7 @@ import { DailyGuidancePayload } from '../../../core/models';
 import { VedicService } from '../../../core/vedic.service';
 import { buildAskSuggestions } from './ask-suggestions';
 import { PreferencesService } from '../../../core/preferences.service';
+import { EntitlementService } from '../../../core/entitlement.service';
 import { SpeechService } from '../../../core/speech.service';
 
 /** A subject the reader can scope a question to. */
@@ -55,6 +56,19 @@ export class AskHomeComponent {
   private readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
   protected readonly preferences = inject(PreferencesService);
+  private readonly entitlements = inject(EntitlementService);
+
+  /**
+   * "2 of 3 free answers left this month". Only once limits block: before
+   * then a count would read as a wall that is not there.
+   */
+  protected readonly allowanceLine = computed(() => {
+    const allowance = this.entitlements.askAllowance();
+    if (!allowance?.enforced) return null;
+    const plan = this.entitlements.current()?.access_tier === 'free' ? 'free ' : '';
+    const credits = allowance.credits ? ` · ${allowance.credits} bought question${allowance.credits === 1 ? '' : 's'}` : '';
+    return `${allowance.remaining} of ${allowance.limit} ${plan}answers left this month${credits}`;
+  });
   readonly name = computed(() => this.kundlis.active()?.name ?? 'there');
   protected readonly heading = computed(() => this.navigation.web ? 'What would you like to explore?' : `What’s on your mind, ${this.name()}?`);
   protected readonly lede = computed(() => ({
@@ -127,6 +141,7 @@ export class AskHomeComponent {
   readonly submitError = signal<string | null>(null);
 
   constructor() {
+    void this.entitlements.refresh();
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
     // Re-seed whenever the active profile changes; the service caches per
     // profile and day, so a revisit costs no request.

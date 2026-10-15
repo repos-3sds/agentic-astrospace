@@ -79,6 +79,7 @@
 .ask-hero { @include m-hero; color: var(--m-text); margin: 0; }
 .lede { @include m-body; color: var(--m-muted); margin: 0; }
 .safety { @include m-caption; color: var(--m-warn); margin: 0; }
+.allowance { @include m-caption; color: var(--m-muted); text-decoration: underline dotted; text-underline-offset: 3px; align-self: flex-start; padding: 8px 0; margin: -8px 0; }
 
 .ask-state {
   margin: 0;

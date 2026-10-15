@@ -31,6 +31,7 @@ from astrospace.api.practice_routes import router as practice_router
 from astrospace.api.profile_context_routes import router as profile_context_router
 from astrospace.api.entitlement_routes import router as entitlement_router
 from astrospace.api.legal_routes import router as legal_router
+from astrospace.api.store_routes import router as store_router
 from astrospace.api.voice_routes import router as voice_router
 from astrospace.admin.audit_middleware import AppAuditMiddleware
 from astrospace.entitlements import EntitlementDenied
@@ -115,6 +116,7 @@ app.include_router(entitlement_router)
 app.include_router(voice_router)
 # Terms + Privacy Policy pages; must precede the SPA mount like /api/health.
 app.include_router(legal_router)
+app.include_router(store_router)
 
 # Registered before the "/" SPA mount — Starlette matches in registration
 # order, so anything defined after the mount is unreachable.

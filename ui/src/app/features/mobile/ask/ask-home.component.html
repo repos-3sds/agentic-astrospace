@@ -15,6 +15,9 @@
     <h2 class="ask-hero">{{ heading() }}</h2>
     @if (!navigation.web) { <p class="lede">{{ lede() }}</p> }
     <p class="safety">{{ safetyLine() }}</p>
+    @if (!navigation.web && allowanceLine(); as line) {
+      <a class="allowance" routerLink="/m/subscription">{{ line }}</a>
+    }
   </div>
   @if (submitting()) {
     <p class="ask-state" role="status">Computing from your chart…</p>

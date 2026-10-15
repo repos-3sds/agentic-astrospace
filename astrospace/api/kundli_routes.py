@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from typing import Literal, Optional
 from ..db import get_db, Kundli
 from ..db import crud
+from ..entitlements import EntitlementDenied, resolve_entitlements
 from ..core.chart import BirthChart
 from ..core.cities import lookup_city
 from .auth import CurrentUser
@@ -130,6 +131,13 @@ def create_kundli(body: KundliCreate, user: CurrentUser, db: Session = Depends(g
             status_code=409,
             detail="A profile for yourself already exists. Edit it instead of adding another.",
         )
+    # D7: Free keeps 2 profiles, Plus 6. Counted against what the account
+    # holds now, so deleting a profile frees its place.
+    decision = resolve_entitlements(db, user.id).decide_capacity(
+        "profiles.max", crud.count_kundlis(db, user.id)
+    )
+    if not decision.allowed:
+        raise EntitlementDenied(decision)
     _require_resolvable_place(body.birth_city, body.birth_nation)
     data = _with_chart_fields(body.model_dump())
     data["user_id"] = user.id

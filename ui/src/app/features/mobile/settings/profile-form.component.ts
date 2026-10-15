@@ -6,12 +6,14 @@ import { Kundli, KundliPayload } from '../../../core/models';
 import { ChartComputingComponent } from '../states/chart-computing.component';
 import { BirthDetailsFormComponent } from '../shared/birth-details-form.component';
 import { BackBarComponent } from '../shared/back-bar.component';
+import { LockedStateComponent } from '../shared/locked-state.component';
+import { EntitlementDenial, EntitlementLimitError } from '../../../core/entitlement-denial';
 
 @Component({
   selector: 'as-profile-form',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackBarComponent, ChartComputingComponent, BirthDetailsFormComponent],
+  imports: [BackBarComponent, LockedStateComponent, ChartComputingComponent, BirthDetailsFormComponent],
   template: `
     <as-back-bar back="/m/settings/profiles" crumb="Profiles" [title]="editingId() ? 'Edit profile' : 'Add a profile'" />
 
@@ -24,6 +26,8 @@ import { BackBarComponent } from '../shared/back-bar.component';
         <section class="profiles-state"><b>Loading profile</b><p>Preparing the profile form.</p></section>
       } @else if (loadError(); as message) {
         <section class="profiles-state error"><b>Profile not found</b><p>{{ message }}</p></section>
+      } @else if (limitDenial(); as denial) {
+        <as-locked-state [denial]="denial" />
       } @else {
         <as-birth-details-form
           [initial]="initial()"
@@ -50,6 +54,7 @@ export class ProfileFormComponent {
   protected readonly loadError = signal<string | null>(null);
   protected readonly saving = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly limitDenial = signal<EntitlementDenial | null>(null);
   protected readonly editingId = signal<string | null>(this.route.snapshot.paramMap.get('id'));
   protected readonly initial = signal<Partial<KundliPayload> | null>(null);
   /** "Myself" is offered only while the account has no self profile, or when editing it. */
@@ -71,7 +76,8 @@ export class ProfileFormComponent {
       }
       await this.router.navigate(['/m', 'settings', 'profiles']);
     } catch (error) {
-      this.error.set((error as Error).message);
+      if (error instanceof EntitlementLimitError) this.limitDenial.set(error.denial);
+      else this.error.set((error as Error).message);
     } finally {
       this.saving.set(false);
     }
