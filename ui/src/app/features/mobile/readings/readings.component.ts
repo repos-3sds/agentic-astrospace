@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
@@ -7,6 +7,18 @@ import { ReadingPeriod, ReadingService } from '../../../core/reading.service';
 import { MarkdownPipe } from '../../../shared/markdown.pipe';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+
+// Generation runs one model call over the chart, transits and dashas and
+// usually takes 20-40 s. The stages are paced by elapsed time (the API does
+// not stream progress) so the user sees the work moving instead of a static
+// label.
+const GENERATE_STAGES: Array<{ after: number; label: string }> = [
+  { after: 0, label: 'Reading your chart' },
+  { after: 4, label: 'Checking current dashas and transits' },
+  { after: 12, label: 'Writing your reading' },
+  { after: 30, label: 'Pulling out claims to track' },
+];
+const GENERATE_SLOW_AFTER = 50;
 
 const PERIODS: Array<{ label: string; value: ReadingPeriod }> = [
   { label: 'Today', value: 'daily' },
@@ -33,7 +45,7 @@ const PERIODS: Array<{ label: string; value: ReadingPeriod }> = [
 
       <nav class="mrd-tabs" aria-label="Reading period">
         @for (tab of periods; track tab.value) {
-          <button type="button" [class.on]="period() === tab.value" [disabled]="loading()" (click)="period.set(tab.value)">
+          <button type="button" [class.on]="period() === tab.value" [disabled]="loading() || generating()" (click)="period.set(tab.value)">
             {{ tab.label }}
           </button>
         }
@@ -43,6 +55,28 @@ const PERIODS: Array<{ label: string; value: ReadingPeriod }> = [
         <section class="mrd-state" aria-live="polite">
           <b>Loading readings</b>
           <p>Checking saved readings for {{ activeName() }}.</p>
+        </section>
+      } @else if (generating()) {
+        <section class="mrd-progress" role="status" aria-live="polite">
+          <div class="mrd-progress-head">
+            <span class="mrd-spinner" aria-hidden="true"></span>
+            <span>
+              <b>Generating your {{ periodLabel().toLowerCase() }} reading</b>
+              <small>{{ elapsed() }}s · usually 20–40 seconds</small>
+            </span>
+          </div>
+          <div class="mrd-bar" role="progressbar" aria-label="Reading generation progress"
+            aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="progress()">
+            <i [style.width.%]="progress()"></i>
+          </div>
+          <ol>
+            @for (stage of stages; track stage.label; let i = $index) {
+              <li [class.done]="i < stageIndex()" [class.on]="i === stageIndex()">{{ stage.label }}</li>
+            }
+          </ol>
+          @if (elapsed() >= slowAfter) {
+            <p>Taking a little longer than usual. Keep this screen open; your reading is still being written.</p>
+          }
         </section>
       } @else if (error()) {
         <as-generic-error role="alert" [message]="error()!" (retried)="reload()" />
@@ -56,7 +90,7 @@ const PERIODS: Array<{ label: string; value: ReadingPeriod }> = [
           <b>No {{ periodLabel().toLowerCase() }} readings yet</b>
           <p>Generate a reading to start tracking real versions and claims for this profile.</p>
           <button type="button" [disabled]="generating()" (click)="generate()">
-            {{ generating() ? 'Generating' : 'Generate reading' }}
+            Generate reading
           </button>
         </section>
       } @else if (selected(); as reading) {
@@ -76,7 +110,7 @@ const PERIODS: Array<{ label: string; value: ReadingPeriod }> = [
         <div class="mrd-actions">
           <button type="button" disabled title="Saved versions are listed below">Saved versions</button>
           <button class="ink" type="button" [disabled]="generating()" (click)="generate()">
-            {{ generating() ? 'Generating' : 'Generate new' }}
+            Generate new
           </button>
         </div>
 
@@ -117,8 +151,11 @@ export class ReadingsComponent {
   private readonly store = inject(KundliStore);
   private readonly readingsApi = inject(ReadingService);
   private requestId = 0;
+  private elapsedTimer: ReturnType<typeof setInterval> | null = null;
 
   protected readonly periods = PERIODS;
+  protected readonly stages = GENERATE_STAGES;
+  protected readonly slowAfter = GENERATE_SLOW_AFTER;
   protected readonly period = signal<ReadingPeriod>('weekly');
   protected readonly readings = signal<Reading[]>([]);
   protected readonly claims = signal<PredictionClaim[]>([]);
@@ -126,6 +163,16 @@ export class ReadingsComponent {
   protected readonly loading = signal(false);
   protected readonly generating = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly elapsed = signal(0);
+
+  protected readonly stageIndex = computed(() => {
+    const seconds = this.elapsed();
+    let index = 0;
+    GENERATE_STAGES.forEach((stage, i) => { if (seconds >= stage.after) index = i; });
+    return index;
+  });
+  // Eases towards 95% and never claims completion until the API answers.
+  protected readonly progress = computed(() => Math.round(95 * (1 - Math.exp(-this.elapsed() / 18))));
 
   protected readonly activeId = computed(() => this.store.activeId());
   protected readonly activeName = computed(() => this.store.active()?.name ?? 'this profile');
@@ -144,6 +191,7 @@ export class ReadingsComponent {
   );
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => this.stopElapsed());
     effect(() => {
       const id = this.activeId();
       const period = this.period();
@@ -164,6 +212,7 @@ export class ReadingsComponent {
     if (!id) return;
     const request = ++this.requestId;
     this.generating.set(true);
+    this.startElapsed();
     this.error.set(null);
     try {
       const generated = await this.readingsApi.generate(id, this.period(), true);
@@ -174,7 +223,10 @@ export class ReadingsComponent {
     } catch (error) {
       if (request === this.requestId) this.error.set((error as Error).message);
     } finally {
-      if (request === this.requestId) this.generating.set(false);
+      if (request === this.requestId) {
+        this.generating.set(false);
+        this.stopElapsed();
+      }
     }
   }
 
@@ -221,8 +273,23 @@ export class ReadingsComponent {
     return status.replace('_', ' ');
   }
 
+  private startElapsed(): void {
+    this.stopElapsed();
+    const startedAt = Date.now();
+    this.elapsed.set(0);
+    this.elapsedTimer = setInterval(() => this.elapsed.set(Math.floor((Date.now() - startedAt) / 1000)), 1000);
+  }
+
+  private stopElapsed(): void {
+    if (this.elapsedTimer !== null) clearInterval(this.elapsedTimer);
+    this.elapsedTimer = null;
+  }
+
   private async load(id: string | null, period: ReadingPeriod): Promise<void> {
     const request = ++this.requestId;
+    // A profile switch supersedes any in-flight generation for the old one.
+    this.generating.set(false);
+    this.stopElapsed();
     this.error.set(null);
     this.selectedId.set(null);
     this.readings.set([]);
