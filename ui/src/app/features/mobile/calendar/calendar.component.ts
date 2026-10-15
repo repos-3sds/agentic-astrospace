@@ -37,7 +37,7 @@ interface CalendarCell {
           (touchstart)="startMonthSwipe($event)"
           (touchend)="finishMonthSwipe($event)"
         >
-          @for (day of weekdays; track day) { <span class="mcal-weekday">{{ day }}</span> }
+          @for (day of weekdays; track $index) { <span class="mcal-weekday">{{ day }}</span> }
           @for (_ of blanks(); track $index) { <span></span> }
           @for (cell of cells(); track cell.date) {
             <a
