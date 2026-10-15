@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
@@ -33,6 +33,12 @@ export class AccountPrivacyComponent {
   protected readonly busy = signal<string | null>(null);
   protected readonly message = signal<string | null>(null);
   protected readonly error = signal<string | null>(null);
+  /** The inline Change email form under its row. */
+  protected readonly editingEmail = signal(false);
+  protected readonly newEmail = signal('');
+  // The real address only: `auth.email()` falls back to "Local workspace".
+  protected readonly currentEmail = computed(() => this.auth.user()?.email ?? null);
+
   protected readonly actions = [
     { id: 'export', label: 'Export my data' },
     { id: 'email', label: 'Change email' },
@@ -65,7 +71,41 @@ export class AccountPrivacyComponent {
         this.message.set('Your data export is ready.');
         return;
       }
-      await this.router.navigate(['/m', 'auth'], { queryParams: { email: this.auth.email() } });
+      if (id === 'email') {
+        this.editingEmail.update((open) => !open);
+        this.newEmail.set('');
+        return;
+      }
+    } catch (error) {
+      this.error.set((error as Error).message);
+    } finally {
+      this.busy.set(null);
+    }
+  }
+
+  /**
+   * Sends the confirmation link. The address only changes once that link is
+   * opened, so the message says what to do next instead of "done".
+   */
+  protected async sendEmailChange(): Promise<void> {
+    const email = this.newEmail().trim();
+    this.message.set(null);
+    this.error.set(null);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      this.error.set('Enter the new email address.');
+      return;
+    }
+    if (email.toLowerCase() === (this.currentEmail() ?? '').toLowerCase()) {
+      this.error.set('That is already your email address.');
+      return;
+    }
+    this.busy.set('email');
+    try {
+      await this.auth.changeEmail(email);
+      this.editingEmail.set(false);
+      this.message.set(
+        `We sent a confirmation link to ${email}. Your email changes once you open it; if your current address gets a link too, open that one as well. Until then, keep signing in with ${this.currentEmail() ?? 'your current address'}.`,
+      );
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {
