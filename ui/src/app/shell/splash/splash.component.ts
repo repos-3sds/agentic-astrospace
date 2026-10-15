@@ -78,11 +78,11 @@ import {
         align-content: center;
         gap: 28px;
         overflow: hidden;
-        color: #291b12;
+        color: #141a33;
         background:
-          radial-gradient(circle at 50% 38%, rgba(224, 164, 72, 0.24), transparent 28%),
-          radial-gradient(circle at 50% 115%, rgba(177, 63, 46, 0.18), transparent 38%),
-          #fbf5e8;
+          radial-gradient(circle at 50% 38%, rgba(233, 185, 73, 0.22), transparent 28%),
+          radial-gradient(circle at 50% 115%, rgba(30, 42, 94, 0.12), transparent 38%),
+          #f4f5fa;
       }
 
       .splash.mark-only {
@@ -91,11 +91,11 @@ import {
       }
 
       .splash.dark {
-        color: #fff4e0;
+        color: #eef0fa;
         background:
-          radial-gradient(circle at 50% 36%, rgba(230, 168, 60, 0.22), transparent 30%),
-          radial-gradient(circle at 50% 115%, rgba(177, 63, 46, 0.22), transparent 40%),
-          #100b06;
+          radial-gradient(circle at 50% 36%, rgba(233, 185, 73, 0.2), transparent 30%),
+          radial-gradient(circle at 50% 115%, rgba(27, 35, 80, 0.6), transparent 40%),
+          #0a0e1f;
       }
 
       .splash.mark-only.dark {

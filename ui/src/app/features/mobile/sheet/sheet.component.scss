@@ -18,7 +18,7 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 50% 100%, rgba(255, 248, 236, 0.18), transparent 34%),
+    radial-gradient(circle at 50% 100%, rgba(238, 240, 250, 0.18), transparent 34%),
     var(--m-ink);
   opacity: 0.38;
   animation: scrim-in 180ms ease-out;
@@ -40,7 +40,7 @@
   max-height: 88%;
   overflow-y: auto;
   box-shadow:
-    0 -20px 70px rgba(32, 21, 14, 0.18),
+    0 -20px 70px rgba(20, 26, 51, 0.18),
     inset 0 1px 0 rgba(255, 255, 255, 0.46);
   @include m-glass(28px, 1.25);
   animation: panel-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -89,7 +89,7 @@
 :host-context([data-theme='dark']) .panel {
   box-shadow:
     0 -24px 70px rgba(0, 0, 0, 0.58),
-    inset 0 1px 0 rgba(255, 248, 236, 0.1);
+    inset 0 1px 0 rgba(238, 240, 250, 0.1);
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {

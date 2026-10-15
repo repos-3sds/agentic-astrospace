@@ -13,66 +13,67 @@
 // through on native Android. Overlays get a separate, controlled glass token.
 
 .as-mobile {
-  --m-bg: #faf7f0;
-  --m-surface: #fffcf6;
+  --m-bg: #f4f5fa;
+  --m-surface: #fbfbfe;
   --m-raised: #ffffff;
   --m-app-ground:
-    linear-gradient(180deg, #fffaf1 0%, #faf7f0 42%, #f3eee4 100%);
+    radial-gradient(120% 40% at 85% 0%, #e7eaf7 0%, transparent 62%),
+    linear-gradient(180deg, #f7f8fc 0%, #f4f5fa 42%, #eceef6 100%);
   --m-frost:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 252, 246, 0.78));
-  --m-footer-glass: rgba(255, 252, 246, 0.58);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(251, 251, 254, 0.8));
+  --m-footer-glass: rgba(251, 251, 254, 0.58);
   --m-footer-shine: rgba(255, 255, 255, 0.68);
-  --m-sheet-surface: #fffcf6;
+  --m-sheet-surface: #fbfbfe;
   --m-sheet-raised: #ffffff;
-  --m-glass-panel: rgba(255, 252, 246, 0.82);
+  --m-glass-panel: rgba(251, 251, 254, 0.82);
   --m-glass-control: rgba(255, 255, 255, 0.62);
   --m-glass-border: rgba(255, 255, 255, 0.72);
-  --m-border: #e6dccd;
-  --m-border-strong: #d5c6b4;
+  --m-border: #dfe2ee;
+  --m-border-strong: #c5cadf;
 
-  --m-text: #201a14;
-  --m-muted: #756b5e;
+  --m-text: #141a33;
+  --m-muted: #565e80;
   // The near-black the design reserves for scrims and for the one control on a
   // screen that must read as primary — the play button, the selected language.
-  --m-ink: #20150e;
-  --m-on-ink: #fff8ec;
+  --m-ink: #141a33;
+  --m-on-ink: #f7f3e6;
   // The ink ground needs its own muted and its own accent. --m-muted is 3.4:1
   // against it and --m-accent nearly disappears; these are the values the
   // design's own on-ink assets are drawn with.
-  --m-muted-on-ink: #b2a592;
-  --m-accent-on-ink: #e04432;
+  --m-muted-on-ink: #9aa3c4;
+  --m-accent-on-ink: #f2c55c;
   // Raised surfaces on ink are white at low alpha rather than a fixed colour, so
   // they hold up over the halo's gradient as well as over flat ink.
   --m-ink-raised: rgba(255, 255, 255, 0.08);
   --m-ink-control: rgba(255, 255, 255, 0.1);
 
-  --m-accent: #b13f2e;
-  --m-accent-strong: #8f2f22;
-  --m-accent-soft: #f4e6e2;
-  --m-primary-cta: #b13f2e;
-  --m-on-primary: #fff8ec;
+  --m-accent: #9c6c0a;
+  --m-accent-strong: #8a5d00;
+  --m-accent-soft: #e9ecf8;
+  --m-primary-cta: #1e2a5e;
+  --m-on-primary: #f7f3e6;
 
-  --m-good: #2f7d57;
-  --m-good-soft: #e6efe9;
-  --m-bad: #a33a3a;
-  --m-bad-soft: #f4e6e4;
+  --m-good: #1f7a55;
+  --m-good-soft: #e3f2eb;
+  --m-bad: #b3364a;
+  --m-bad-soft: #f8e6e9;
   // 4.5:1 on --m-warn-soft and on the page ground; the previous #b86f19 was
   // 3.3:1 on its own soft surface, under AA for the body-size text it carries.
-  --m-warn: #8a5210;
-  --m-warn-soft: #f4ead7;
+  --m-warn: #a1460f;
+  --m-warn-soft: #fbeadc;
   // Gold is not warn. Warn marks a window to avoid — something the reading is
   // telling you. Gold marks the app declining to answer at all, and the two
   // must not be confusable.
-  --m-gold: #7a5218;
-  --m-gold-soft: #efe4cf;
+  --m-gold: #7a5a12;
+  --m-gold-soft: #f3ead2;
   // Dark text on the gold sun (Today's avatar). Fixed in both themes because
   // the sun it sits on is drawn from --m-gold, which stays light enough.
-  --m-on-gold: #2b1608;
+  --m-on-gold: #1a1405;
 
-  --m-shadow-card: 0 10px 30px rgba(65, 42, 20, 0.07);
+  --m-shadow-card: 0 10px 30px rgba(20, 26, 51, 0.07);
   // Deeper and wider than the card shadow: it lifts a floating control clear of
   // whatever is scrolling underneath it, rather than seating a card on the page.
-  --m-shadow-soft: 0 20px 60px rgba(65, 42, 20, 0.1);
+  --m-shadow-soft: 0 20px 60px rgba(20, 26, 51, 0.1);
 
   // styles.scss has defined these since the mobile UX pass but nothing consumed
   // them, which is why the status bar and home indicator rendered as bare white
@@ -80,7 +81,7 @@
   --m-safe-top: var(--as-safe-top);
   --m-safe-bottom: var(--as-safe-bottom);
   --m-back-icon-filter: none;
-  // Settings row glyphs are drawn in the light accent (#B13F2E stroke); the
+  // Settings row glyphs are drawn in the light accent (#9C6C0A stroke); the
   // dark theme recolours them towards its own accent with a filter.
   --settings-icon-filter: none;
   --settings-chevron-filter: none;
@@ -120,63 +121,64 @@
 }
 
 :root.app-dark .as-mobile {
-  // Warm near-black, on the same axis as the web app's proven --as-bg dark
-  // value, rather than the blue-slate this used to sit on — the light theme
-  // is warm cream/rust/brown and the dark theme should read as that brand at
-  // night, not a different, colder app.
-  --m-bg: #15110d;
-  --m-surface: #241d17;
-  --m-raised: #30271f;
+  // Midnight & Gold (2026-10-15): a deep indigo night sky with gold as the one
+  // accent. It replaced a warm brown-black that read as leather rather than
+  // sky, and a rust accent that shared a hue with --m-bad, so every link
+  // looked like a warning. Gold is kept well clear of the bad/warn hues.
+  --m-bg: #0a0e1f;
+  --m-surface: #141a33;
+  --m-raised: #1c2445;
   --m-app-ground:
-    linear-gradient(180deg, #19120d 0%, #15110d 48%, #100c09 100%);
+    radial-gradient(120% 45% at 85% 0%, #1b2350 0%, transparent 62%),
+    linear-gradient(180deg, #0d1330 0%, #0a0e1f 48%, #070a17 100%);
   --m-frost:
-    linear-gradient(180deg, rgba(54, 43, 34, 0.9), rgba(32, 25, 19, 0.82));
-  --m-footer-glass: rgba(38, 30, 24, 0.54);
-  --m-footer-shine: rgba(255, 248, 236, 0.12);
-  --m-sheet-surface: #211a15;
-  --m-sheet-raised: #332920;
-  --m-glass-panel: rgba(33, 26, 21, 0.76);
-  --m-glass-control: rgba(255, 248, 236, 0.08);
-  --m-glass-border: rgba(255, 248, 236, 0.14);
-  --m-border: #4b3d30;
-  --m-border-strong: #74604b;
-  --m-text: #f4efe7;
-  --m-muted: #b3a494;
-  --m-ink: #f5efe6;
-  --m-on-ink: #201a14;
-  --m-muted-on-ink: #6b5d4c;
-  --m-accent-on-ink: #b84333;
+    linear-gradient(180deg, rgba(31, 40, 73, 0.9), rgba(18, 24, 48, 0.82));
+  --m-footer-glass: rgba(20, 26, 51, 0.54);
+  --m-footer-shine: rgba(238, 240, 250, 0.12);
+  --m-sheet-surface: #121830;
+  --m-sheet-raised: #1f2849;
+  --m-glass-panel: rgba(18, 24, 48, 0.76);
+  --m-glass-control: rgba(238, 240, 250, 0.08);
+  --m-glass-border: rgba(238, 240, 250, 0.14);
+  --m-border: #2a3460;
+  --m-border-strong: #3c4880;
+  --m-text: #eef0fa;
+  --m-muted: #9aa3c4;
+  --m-ink: #eef0fa;
+  --m-on-ink: #0a0e1f;
+  --m-muted-on-ink: #565e80;
+  --m-accent-on-ink: #8a5d00;
   --m-ink-raised: rgba(255, 255, 255, 0.04);
   --m-ink-control: rgba(255, 255, 255, 0.08);
-  --m-accent: #e27666;
-  // Was #ff9b8d — a pale salmon that read as a different, pastel color
-  // family. This keeps the same saturated rust/coral the light theme uses,
-  // just lightened enough for contrast, and matches the web app's own
-  // --as-accent-strong dark value so the brand red is consistent app-wide.
-  --m-accent-strong: #ff846d;
-  --m-accent-soft: rgba(82, 44, 36, 0.78);
-  --m-primary-cta: #b13f2e;
-  --m-on-primary: #fff8ec;
-  --m-good: #82d1aa;
-  --m-good-soft: #163626;
-  --m-bad: #ff8f8a;
-  --m-bad-soft: #452421;
-  --m-warn: #f0c36b;
-  --m-warn-soft: #443318;
+  --m-accent: #e9b949;
+  // 10.5:1 on --m-surface; the CTA pairs gold with near-black text (10:1).
+  --m-accent-strong: #f2c55c;
+  // An indigo lift, not translucent gold: gold at low alpha over indigo mixes
+  // to olive-brown, which is the muddy look this palette replaced.
+  --m-accent-soft: #232d58;
+  --m-primary-cta: #e9b949;
+  --m-on-primary: #1a1405;
+  --m-good: #5fd0a5;
+  --m-good-soft: #12302a;
+  --m-bad: #f2828f;
+  --m-bad-soft: #3a1d2a;
+  --m-warn: #f59e5b;
+  --m-warn-soft: #3b2716;
   --m-gold: #dfb45e;
-  --m-gold-soft: #433316;
-  --m-on-gold: #2b1608;
+  --m-gold-soft: #3a3018;
+  --m-on-gold: #1a1405;
   // A dark drop-shadow under a light element on a near-black background is
   // invisible — it contributes nothing, so raised controls read as flat
   // cutouts instead of lifted. Depth in dark UI comes from a highlight, not a
   // darker shadow: a soft top-edge sheen plus a wider, low-alpha ambient
   // shadow for grounding.
-  --m-shadow-card: 0 1px 0 rgba(255, 248, 236, 0.04) inset, 0 12px 34px rgba(0, 0, 0, 0.55);
-  --m-shadow-soft: 0 1px 0 rgba(255, 248, 236, 0.06) inset, 0 20px 60px rgba(0, 0, 0, 0.55);
-  --m-back-icon-filter: invert(88%) sepia(9%) saturate(430%) hue-rotate(343deg) brightness(92%) contrast(88%);
-  // #B13F2E glyphs → close to --m-accent (#e27666) on dark ground.
-  --settings-icon-filter: brightness(1.3) saturate(0.7);
-  --settings-chevron-filter: brightness(1.3) saturate(0.7);
+  --m-shadow-card: 0 1px 0 rgba(238, 240, 250, 0.04) inset, 0 12px 34px rgba(0, 0, 0, 0.55);
+  --m-shadow-soft: 0 1px 0 rgba(238, 240, 250, 0.06) inset, 0 20px 60px rgba(0, 0, 0, 0.55);
+  --m-back-icon-filter: brightness(0) invert(94%);
+  // Settings glyphs are drawn in the light accent (#9C6C0A); lift them towards
+  // the dark accent gold on the night ground.
+  --settings-icon-filter: brightness(1.55) saturate(0.85);
+  --settings-chevron-filter: brightness(1.55) saturate(0.85);
 }
 
 .as-mobile img[src$='back.svg'] {

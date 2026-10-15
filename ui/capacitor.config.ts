@@ -33,7 +33,7 @@ const config: CapacitorConfig = {
     SplashScreen: {
       // Matches the Siddha animated intro backdrop so the native launch bridge
       // does not flash a different color before Angular paints.
-      backgroundColor: '#100B06',
+      backgroundColor: '#0A0E1F',
       showSpinner: false,
       androidScaleType: 'CENTER_CROP',
     },
@@ -44,7 +44,7 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       style: 'LIGHT',
-      backgroundColor: '#FAF7F0',
+      backgroundColor: '#F4F5FA',
     },
   },
 };

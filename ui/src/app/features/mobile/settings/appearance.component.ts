@@ -20,7 +20,7 @@ export class AppearanceComponent {
   protected readonly theme = inject(ThemeService);
   protected readonly options: AppearanceOption[] = [
     { id: 'system', label: 'System', detail: 'Follow your device setting' },
-    { id: 'light', label: 'Light', detail: 'Warm and bright' },
+    { id: 'light', label: 'Light', detail: 'Clear and bright' },
     { id: 'dark', label: 'Dark', detail: 'Gentle in low light' },
   ];
 
