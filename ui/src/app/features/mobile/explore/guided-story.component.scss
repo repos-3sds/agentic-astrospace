@@ -7,21 +7,6 @@
   color: var(--m-text);
 }
 
-.story-appbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 20px 8px;
-  color: var(--m-text);
-
-  h1 {
-    @include m-title;
-    flex: 1 1 auto;
-    margin: 0;
-    color: var(--m-text);
-  }
-}
-
 .back,
 .spark {
   display: grid;
@@ -237,6 +222,5 @@
 }
 
 @media (max-width: 360px) {
-  .story-appbar,
   .story-body { padding-inline: 18px; }
 }

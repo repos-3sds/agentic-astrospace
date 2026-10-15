@@ -8,7 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { BackLinkDirective } from '../../../core/back-link.directive';
+import { BackBarComponent } from '../shared/back-bar.component';
 import { BirthTimeBadgeComponent } from './birth-time-badge.component';
 import { monthYear } from '../format-date';
 import { KundliStore } from '../../../core/kundli.store';
@@ -38,7 +38,7 @@ type DashaLevel = 'maha' | 'antar' | 'pratyantar' | 'sookshma' | 'prana';
   selector: 'as-life-periods',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, RouterLink, BirthTimeBadgeComponent],
+  imports: [BackBarComponent, GenericErrorComponent, RouterLink, BirthTimeBadgeComponent],
   templateUrl: './life-periods.component.html',
   styleUrl: './life-periods.component.scss',
 })

@@ -1,14 +1,17 @@
-<header class="appbar">
-  @if (preferences.experienceMode() !== 'practitioner') {
-    <a class="iconbtn" [asBack]="['/m', 'chart']" aria-label="Back">
-      <img src="mobile/back.svg" alt="" aria-hidden="true" />
+@if (preferences.experienceMode() === 'practitioner') {
+  <header class="appbar">
+    <h1 class="screen-title">Dashas</h1>
+    <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search Siddha">
+      <img src="mobile/search.svg" alt="" aria-hidden="true" />
     </a>
-  }
-  <h1 class="screen-title">Dashas</h1>
-  <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search Siddha">
-    <img src="mobile/search.svg" alt="" aria-hidden="true" />
-  </a>
-</header>
+  </header>
+} @else {
+  <as-back-bar [back]="['/m', 'chart']" crumb="Chart">
+    <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search Siddha">
+      <img src="mobile/search.svg" alt="" aria-hidden="true" />
+    </a>
+  </as-back-bar>
+}
 
 <div class="body">
   @if (loading()) {
@@ -19,7 +22,7 @@
     <section class="period-state"><b>No active profile</b><p>Select a profile before opening life periods.</p><a [routerLink]="['/m','settings','profiles']">Manage profiles</a></section>
   } @else {
   <header class="heading">
-    <h2>Life Periods</h2>
+    <h2>Life periods</h2>
     @if (preferences.experienceMode() === 'guided') {
       <p>The chapter of life you are in now, and the shorter periods inside it.</p>
     } @else {

@@ -7,6 +7,7 @@ import { VedicService } from '../../../core/vedic.service';
 import { BirthDetailsCardComponent } from '../chart/birth-details-card.component';
 import { buildChartAdapter } from '../chart/mobile-chart-data';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { BackBarComponent } from '../shared/back-bar.component';
 
 interface StoryCard {
   title: string;
@@ -21,7 +22,7 @@ interface StoryCard {
   selector: 'as-guided-story',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GenericErrorComponent, RouterLink, BirthDetailsCardComponent],
+  imports: [BackBarComponent, GenericErrorComponent, RouterLink, BirthDetailsCardComponent],
   templateUrl: './guided-story.component.html',
   styleUrl: './guided-story.component.scss',
 })

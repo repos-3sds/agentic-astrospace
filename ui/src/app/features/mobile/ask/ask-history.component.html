@@ -1,10 +1,4 @@
-<header class="askhist-appbar">
-  <a class="askhist-back" [routerLink]="navigation.path()" aria-label="Back to Ask">
-    <img src="mobile/back.svg" alt="" aria-hidden="true" />
-  </a>
-  <h1>Ask History</h1>
-  <span class="askhist-balance" aria-hidden="true"></span>
-</header>
+<as-back-bar [back]="navigation.path()" crumb="Ask" title="Past questions" />
 
 <main class="askhist-body">
   <div class="askhist-tabs" role="tablist" aria-label="Conversation state">

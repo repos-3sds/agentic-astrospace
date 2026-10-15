@@ -58,7 +58,7 @@ export class GuidedExploreComponent {
       tone: 'gold',
     },
     {
-      title: 'Life Chapters',
+      title: 'Life chapters',
       body: 'Understand the season you are in and the lessons it is asking of you.',
       route: ['/m', 'explore', 'life-chapters'],
       icon: 'nav-clock',

@@ -4,20 +4,16 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
 import { Kundli, KundliPayload } from '../../../core/models';
 import { ChartComputingComponent } from '../states/chart-computing.component';
-import { BackLinkDirective } from '../../../core/back-link.directive';
 import { BirthDetailsFormComponent } from '../shared/birth-details-form.component';
+import { BackBarComponent } from '../shared/back-bar.component';
 
 @Component({
   selector: 'as-profile-form',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, ChartComputingComponent, BirthDetailsFormComponent],
+  imports: [BackBarComponent, ChartComputingComponent, BirthDetailsFormComponent],
   template: `
-    <header class="profiles-appbar">
-      <a asBack="/m/settings/profiles" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
-      <h1>{{ editingId() ? 'Edit Profile' : 'Add Profile' }}</h1>
-      <span></span>
-    </header>
+    <as-back-bar back="/m/settings/profiles" crumb="Profiles" [title]="editingId() ? 'Edit profile' : 'Add a profile'" />
 
     <main class="profiles-main">
       <aside class="profiles-note">

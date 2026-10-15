@@ -1,12 +1,8 @@
-<header class="story-appbar">
-  <a class="back" [routerLink]="['/m', 'explore']" aria-label="Back to Explore">
-    <img src="mobile/back.svg" alt="" aria-hidden="true" />
-  </a>
-  <h1>Your Story</h1>
+<as-back-bar [back]="['/m', 'explore']" crumb="Explore" title="Your story">
   <a class="spark" [routerLink]="['/m', 'chart']" aria-label="Open chart">
     <span class="asset-icon" style="--icon-url: url('/mobile/nav-chart.svg')" aria-hidden="true"></span>
   </a>
-</header>
+</as-back-bar>
 
 <main class="story-body">
   @if (loading()) {

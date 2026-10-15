@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { BackLinkDirective } from '../../../core/back-link.directive';
+import { BackBarComponent } from '../shared/back-bar.component';
 
-@Component({selector:'as-mobile-search',standalone:true,imports:[BackLinkDirective, FormsModule,RouterLink],templateUrl:'./search.component.html',styleUrl:'./utility.component.scss',changeDetection:ChangeDetectionStrategy.OnPush})
+@Component({selector:'as-mobile-search',standalone:true,imports:[BackBarComponent, FormsModule,RouterLink],templateUrl:'./search.component.html',styleUrl:'./utility.component.scss',changeDetection:ChangeDetectionStrategy.OnPush})
 export class SearchComponent {
   protected query='';
   protected readonly index=[

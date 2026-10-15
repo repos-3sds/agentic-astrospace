@@ -738,7 +738,7 @@ test('mobile profile management adds, edits, deletes and switches safely', async
   await page.goto('/m/settings/profiles/profile-3/delete');
   await expect(page.getByText('The active profile will switch to another available profile after deletion.')).toBeVisible();
   await page.getByRole('textbox', { name: 'TYPE MIRA IYER TO CONFIRM' }).fill('Mira Iyer');
-  await page.getByRole('button', { name: 'Delete Profile' }).click();
+  await page.getByRole('button', { name: 'Delete profile' }).click();
   await expect(page).toHaveURL(/\/m\/settings\/profiles$/);
   await expect(page.getByText('Mira Iyer')).toHaveCount(0);
   await expect(page.locator('.profile-card.active').filter({ hasText: 'Anika Rao' })).toBeVisible();

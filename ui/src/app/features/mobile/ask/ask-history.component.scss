@@ -8,38 +8,8 @@
   color: var(--m-text);
 }
 
-.askhist-appbar {
-  display: grid;
-  grid-template-columns: 42px 1fr 42px;
-  align-items: center;
-  padding: 14px 16px 10px;
-  flex-shrink: 0;
-
-  h1 {
-    @include m-title;
-    margin: 0;
-    text-align: center;
-  }
-}
-
-.askhist-back,
-.askhist-balance {
-  width: 44px;
-  height: 44px;
-}
-
-.askhist-back {
-  border-radius: 999px;
-  border: 1px solid var(--m-border);
-  background: var(--m-surface);
-  display: grid;
-  place-items: center;
-
-  img { width: 18px; height: 18px; }
-}
-
 .askhist-body {
-  padding: 8px 16px 24px;
+  padding: 4px 20px 24px;
 }
 
 .askhist-tabs {

@@ -5,20 +5,14 @@ import {
   EntitlementSnapshot,
 } from '../../../core/entitlement.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
-import { RouterLink } from '@angular/router';
+import { BackBarComponent } from '../shared/back-bar.component';
 
 @Component({
   selector: 'as-subscription',
   standalone: true,
-  imports: [RouterLink, GenericErrorComponent],
+  imports: [BackBarComponent, GenericErrorComponent],
   template: `
-    <header class="util-appbar">
-      <a routerLink="/m/settings" aria-label="Back to settings">
-        <img src="/mobile/back.svg" alt="" />
-      </a>
-      <h1>Plans</h1>
-      <span></span>
-    </header>
+    <as-back-bar back="/m/settings" crumb="Settings" title="Plans" />
     <main class="plan-page">
       @if (loading()) {
         <section class="plan-state" aria-live="polite">Checking your access…</section>

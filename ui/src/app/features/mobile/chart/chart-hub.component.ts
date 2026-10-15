@@ -72,7 +72,7 @@ export class ChartHubComponent {
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly screenTitle = computed(() =>
-    this.preferences.experienceMode() === 'guided' ? 'Your Story'
+    this.preferences.experienceMode() === 'guided' ? 'Your story'
       : this.preferences.experienceMode() === 'practitioner' ? 'Yantra'
       : 'Explore',
   );
@@ -136,7 +136,7 @@ export class ChartHubComponent {
     },
     {
       id: 'dasha',
-      title: 'Life Periods',
+      title: 'Life periods',
       subtitle: 'Dashas & Yogini',
       icon: 'explore-dasha',
       route: ['/m', 'chart', 'periods'],
