@@ -7,6 +7,7 @@ import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { TransitDetail, TransitDetailComponent } from './transit-detail.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { transitVerdictLabel } from './transit-verdict';
 
 @Component({
   selector: 'as-gochara',
@@ -26,7 +27,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
         <section class="mtr-overall"><b>BIRTH CHART NEEDED</b><h2>Add birth details first</h2><p>Gocharam needs a natal Moon and Lagna.</p><a [routerLink]="['/m','birth-details']">Create chart</a></section>
       } @else if (data(); as payload) {
         <section class="mtr-overall">
-          <b>OVERALL · {{ payload.gochara.interpretation.synthesis.tone }}</b>
+          <b>OVERALL · {{ verdictLabel(payload.gochara.interpretation.synthesis.tone) }}</b>
           <h2>{{ payload.gochara.interpretation.synthesis.headline }}</h2>
           <p>{{ summary() }}</p>
         </section>
@@ -39,7 +40,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
           <button type="button" class="mtr-card" (click)="openDomain(domain)">
             <div>
               <b>{{ domain.title }}</b>
-              <em [attr.data-tone]="domain.tone === 'supportive' ? 'good' : 'warn'">{{ domain.tone }}</em>
+              <em [attr.data-tone]="domain.tone === 'supportive' ? 'good' : 'warn'">{{ verdictLabel(domain.tone) }}</em>
             </div>
             <small>{{ domain.main_theme }}</small>
             <p>{{ domainMeaning(domain) }}</p>
@@ -51,7 +52,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
           <button type="button" class="mtr-card" (click)="open(rule)">
             <div>
               <b>{{ rule.planet }} in house {{ rule.house }}</b>
-              <em [attr.data-tone]="tone(rule)">{{ rule.effective_verdict }}</em>
+              <em [attr.data-tone]="tone(rule)">{{ verdictLabel(rule.effective_verdict) }}</em>
             </div>
             <small>{{ rule.rule_name }}</small>
             <p>{{ content(rule) }}</p>
@@ -83,9 +84,13 @@ export class GocharaComponent {
   readonly summary = computed(() => {
     const synthesis = this.data()?.gochara.interpretation.synthesis;
     if (!synthesis) return '';
-    if (this.preferences.experienceMode() === 'guided') return synthesis.guided_summary;
-    if (this.preferences.experienceMode() === 'practitioner') return synthesis.practitioner_deep_dive;
-    return synthesis.balanced_context;
+    const mode = this.preferences.experienceMode();
+    const text = mode === 'guided' ? synthesis.guided_summary
+      : mode === 'practitioner' ? synthesis.practitioner_deep_dive
+      : synthesis.balanced_context;
+    // Guided and Balanced copy opens with the headline shown just above it.
+    const lead = `${synthesis.headline}.`;
+    return text.startsWith(lead) ? text.slice(lead.length).trim() : text;
   });
 
   constructor() {
@@ -114,8 +119,15 @@ export class GocharaComponent {
     return rule.content.balanced_context;
   }
 
+  protected readonly verdictLabel = transitVerdictLabel;
+
   protected domainMeaning(domain: GocharamDomainReading): string {
-    const text = domain.reading || domain.range_outlook.reading || domain.main_theme;
+    // The reading opens with the main theme, which the card already shows
+    // directly above it.
+    const reading = domain.reading?.startsWith(domain.main_theme)
+      ? domain.reading.slice(domain.main_theme.length).trim()
+      : domain.reading;
+    const text = reading || domain.range_outlook.reading || domain.main_theme;
     if (this.preferences.experienceMode() === 'practitioner') return text;
     return text
       .replace(/\bgochara\b/gi, 'current transit')
@@ -167,7 +179,7 @@ export class GocharaComponent {
       position: `${payload.gochara.planets[rule.planet]?.sign ?? ''} · ${rule.house} from Moon`,
       period: rule.duration.replaceAll('_', ' '),
       meaning: this.content(rule),
-      guidance: `Base: ${rule.base_verdict}. Effective after modifiers: ${rule.effective_verdict}.`,
+      guidance: `Base: ${transitVerdictLabel(rule.base_verdict)}. After modifiers: ${transitVerdictLabel(rule.effective_verdict)}.`,
       evidence: [
         ...rule.modifiers.map((modifier) => `${modifier.type}: ${modifier.label}`),
         `${rule.source_id} · ${rule.claim_status}`,
