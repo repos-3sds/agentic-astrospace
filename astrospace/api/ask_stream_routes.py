@@ -14,17 +14,19 @@ as a normal HTTPException instead of surfacing mid-stream where the status
 code can no longer change; only generation, verification, and persistence
 happen lazily inside the stream.
 """
+import asyncio
 import json
-import traceback
 import hashlib
+import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Iterator, Optional
+from typing import AsyncIterator, Iterator, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from ..agents.orchestrator import AskOrchestrator, ValidationStore
 from ..agents.schema import StructuredReading
@@ -36,19 +38,68 @@ from ..db import crud, crud_mobile as cm, get_db
 from ..db.crud_profile_context import (
     RevisionConflict, build_profile_context_projection, create_fact, supersede_fact,
 )
+from ..db.database import release_connection, short_session
 from .ask_routes import (
     MAX_HISTORY, AskRequest, _evidence_from_reading, _history_from_thread,
-    _owned_thread, _profile_context_store, _thread_established_domain, _usage_fields,
+    _owned_thread, _persist_ask_turn, _profile_context_store, _settle_credit,
+    _thread_established_domain,
 )
 from ..entitlements.usage import commit_ask_credit, release_ask_credit, reserve_ask_credit
 from .auth import CurrentUser
 from .context_routes import _chart_from_kundli
 
 router = APIRouter(prefix="/api/v1/ask", tags=["ask-ai"])
+log = logging.getLogger(__name__)
+
+# Seconds of silence before a `: ping` comment goes out. Generation is one
+# blocking 10–90 s model call with nothing to send meanwhile, and proxies and
+# mobile networks cut an SSE connection that stays quiet that long.
+HEARTBEAT_SECONDS = 15.0
+_PING = ": ping\n\n"
 
 
 def _sse(payload: dict) -> str:
     return f"data: {json.dumps(payload)}\n\n"
+
+
+async def _with_heartbeat(frames: Iterator[str],
+                          interval: float | None = None) -> AsyncIterator[str]:
+    """Relay `frames` (a blocking iterator), sending an SSE comment whenever
+    nothing has gone out for `interval` seconds.
+
+    The iterator runs in the threadpool (bounded, and it carries the request's
+    context variables, so log lines keep their trace id) and hands frames
+    back through a queue, which is what lets this side keep talking while the
+    model call blocks. If the reader disconnects, the producer is left to
+    finish: a model call cannot be interrupted anyway, and finishing means
+    the answer is still persisted to the thread, exactly as before.
+    """
+    interval = HEARTBEAT_SECONDS if interval is None else interval
+    loop = asyncio.get_running_loop()
+    queue: asyncio.Queue = asyncio.Queue()
+    finished = object()
+
+    def produce() -> None:
+        try:
+            for frame in frames:
+                loop.call_soon_threadsafe(queue.put_nowait, frame)
+        finally:
+            loop.call_soon_threadsafe(queue.put_nowait, finished)
+
+    producer = asyncio.ensure_future(run_in_threadpool(produce))
+    producer.add_done_callback(
+        lambda task: task.cancelled() or task.exception() is None
+        or log.error("ask stream producer failed", exc_info=task.exception())
+    )
+    while True:
+        try:
+            item = await asyncio.wait_for(queue.get(), timeout=interval)
+        except asyncio.TimeoutError:
+            yield _PING
+            continue
+        if item is finished:
+            break
+        yield item
 
 
 def _safe_stream(events: Iterator[dict]) -> Iterator[str]:
@@ -66,7 +117,7 @@ def _safe_stream(events: Iterator[dict]) -> Iterator[str]:
         for event in events:
             yield _sse(event)
     except Exception:
-        traceback.print_exc()
+        log.exception("ask stream failed mid-stream")
         yield _sse({
             "type": "fatal_error",
             "message": "Something went wrong while generating this answer. Please try again.",
@@ -213,6 +264,11 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
         messages.pop(0)
     messages.append({"role": "user", "content": body.question})
 
+    # Plain values only past this point: the request session is released
+    # before the stream starts, so the generator must not touch ORM rows.
+    thread_id = thread.id if thread else None
+    user_id = user.id
+
     def persist_turn(content: str, domain: Optional[str], refer_out_kind: Optional[str],
                      evidence: Optional[dict], usage: Optional[dict] = None) -> Optional[str]:
         """Shared by every terminal path (refer-out, clarification,
@@ -221,20 +277,14 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
         Nothing is written until there is a final outcome — a failed or
         interrupted turn persists nothing new, matching ask_routes.py's
         existing convention, and never creates a thread on a generation
-        failure even if `start_thread` was set."""
-        local_thread = thread
-        if local_thread is None and body.start_thread:
-            local_thread = cm.create_ask_thread(db, user.id, kundli_id)
-        if local_thread is None:
-            return None
-        cm.add_ask_message(db, local_thread.id, "user", body.question,
-                           language=body.language, input_mode=body.input_mode)
-        cm.add_ask_message(db, local_thread.id, "assistant", content,
-                           language=body.language, domain=domain,
-                           refer_out_kind=refer_out_kind, evidence=evidence or {},
-                           **_usage_fields(usage))
-        db.refresh(local_thread)
-        return local_thread.id
+        failure even if `start_thread` was set. Both turns are written in one
+        transaction on a fresh short session (`_persist_ask_turn`)."""
+        saved = _persist_ask_turn(
+            db, body, user_id=user_id, kundli_id=kundli_id, thread_id=thread_id,
+            content=content, domain=domain, refer_out_kind=refer_out_kind,
+            evidence=evidence, usage=usage,
+        )
+        return saved.id if saved else None
 
     thread_domain = _thread_established_domain(db, thread.id) if thread else None
 
@@ -250,8 +300,15 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
             experience_mode=body.experience_mode, language=body.language,
             tone=body.tone, validate_first=body.validate_first,
         )
-    except TaxonomyError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except TaxonomyError:
+        log.exception("ask stream prepare failed on taxonomy (kundli=%s)", kundli_id)
+        raise HTTPException(status_code=500, detail="Could not prepare this answer")
+
+    # prepare() has read (and, for a validation probe, written) everything it
+    # needs. Commit and give the connection back before the stream starts:
+    # generation inside it takes 10–90 s, and a transaction held open across
+    # that pins a Supabase pooler connection per waiting reader.
+    release_connection(db)
 
     if outcome.terminal_envelope is not None:
         envelope = outcome.terminal_envelope
@@ -314,19 +371,21 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
                 raise ValueError(f"Unhandled orchestrator terminal state: {envelope['type']!r}")
             yield {**envelope, "thread_id": thread_id}
 
-        return StreamingResponse(_safe_stream(generate_terminal()), media_type="text/event-stream")
+        return StreamingResponse(_with_heartbeat(_safe_stream(generate_terminal())),
+                                 media_type="text/event-stream")
 
     prepared = outcome.prepared
     # Reserved before the response starts, so a reached limit is a plain 402
     # with the structured denial rather than a frame mid-stream. Every
     # terminal envelope above returned without touching a credit.
     reservation = reserve_ask_credit(db, user.id)
+    release_connection(db)  # the reservation is ids only; hold nothing into the stream
 
     def persist_prepared(reading: Optional[StructuredReading], status: str) -> Optional[str]:
         if reading is None:
             # A failed generation/verification writes nothing new — only
             # report the thread that already existed, if any.
-            return thread.id if thread else None
+            return thread_id
         return persist_turn(
             reading.interpretation, domain=prepared.domain, refer_out_kind=None,
             evidence=_evidence_from_reading(
@@ -342,28 +401,37 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
             yield from answer_events()
         finally:
             # Not delivered (failed, unverified, client gone): the credit goes
-            # back. A no-op once the answer was committed below.
-            release_ask_credit(db, reservation)
+            # back. A no-op once the answer was committed below. A fresh short
+            # session: the request one was released before the stream began.
+            _settle_credit(db, release_ask_credit, reservation)
 
     def answer_events():
         for event in orchestrator.run(prepared, messages, persist=persist_prepared):
             if event.get("type") == "done" and event.get("status") == "answered":
-                commit_ask_credit(db, reservation)
+                _settle_credit(db, commit_ask_credit, reservation)
                 # `done` remains terminal. Memory frames belong to the same
                 # completed turn, but must precede it so older consumers that
                 # stop reading at `done` keep a truthful stream contract.
                 try:
-                    yield from _memory_events(db, user.id, kundli_id, body.question)
+                    # A fresh short session: the request one was released
+                    # before generation and must not be reopened here.
+                    with short_session(db) as session:
+                        yield from _memory_events(session, user_id, kundli_id, body.question)
                 except Exception:
                     # Memory is auxiliary to a reading that already passed
                     # verification and persistence. A preference/ledger write
                     # outage must not replace that valid answer with the
                     # stream's fatal-error terminal state.
-                    traceback.print_exc()
+                    log.exception("ask memory capture failed (kundli=%s)", kundli_id)
+            if event.get("type") == "done":
+                # Token usage is ours, not the reader's: it is persisted on the
+                # assistant turn and logged as `astrospace.ask.cost`, and no
+                # client reads it.
+                event = {key: value for key, value in event.items() if key != "usage"}
             yield event
 
     return StreamingResponse(
-        _safe_stream(generate_answer_and_memory()),
+        _with_heartbeat(_safe_stream(generate_answer_and_memory())),
         media_type="text/event-stream",
     )
 

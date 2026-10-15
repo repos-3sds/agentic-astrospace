@@ -23,33 +23,43 @@ _BIRTH_FIELDS = {"birth_year", "birth_month", "birth_day", "birth_hour",
 # which nothing downstream could read.
 BirthTimeAccuracy = Literal["exact", "approximate", "unknown"]
 
+# Upper bounds on the free-text fields. Nothing bounded them, so one request
+# could store megabytes per row, and `name`/`birth_city` are echoed into
+# every chart payload and prompt built from the profile. Generous for any
+# real name or place; notes are a short personal memo, not a document.
+MAX_NAME_CHARS = 100
+MAX_RELATION_CHARS = 40
+MAX_CITY_CHARS = 120
+MAX_NATION_CHARS = 64
+MAX_NOTES_CHARS = 2000
+
 
 class KundliCreate(BaseModel):
-    name: str
-    relation: str = "friend"
+    name: str = Field(max_length=MAX_NAME_CHARS)
+    relation: str = Field(default="friend", max_length=MAX_RELATION_CHARS)
     birth_year: int = Field(ge=1200, le=2100)
     birth_month: int = Field(ge=1, le=12)
     birth_day: int = Field(ge=1, le=31)
     birth_hour: int = Field(default=12, ge=0, le=23)
     birth_minute: int = Field(default=0, ge=0, le=59)
-    birth_city: str
-    birth_nation: str = "US"
+    birth_city: str = Field(max_length=MAX_CITY_CHARS)
+    birth_nation: str = Field(default="US", max_length=MAX_NATION_CHARS)
     birth_time_accuracy: BirthTimeAccuracy = "exact"
-    notes: Optional[str] = None
+    notes: Optional[str] = Field(default=None, max_length=MAX_NOTES_CHARS)
 
 
 class KundliUpdate(BaseModel):
-    name: Optional[str] = None
-    relation: Optional[str] = None
+    name: Optional[str] = Field(default=None, max_length=MAX_NAME_CHARS)
+    relation: Optional[str] = Field(default=None, max_length=MAX_RELATION_CHARS)
     birth_year: Optional[int] = Field(default=None, ge=1200, le=2100)
     birth_month: Optional[int] = Field(default=None, ge=1, le=12)
     birth_day: Optional[int] = Field(default=None, ge=1, le=31)
     birth_hour: Optional[int] = Field(default=None, ge=0, le=23)
     birth_minute: Optional[int] = Field(default=None, ge=0, le=59)
-    birth_city: Optional[str] = None
-    birth_nation: Optional[str] = None
+    birth_city: Optional[str] = Field(default=None, max_length=MAX_CITY_CHARS)
+    birth_nation: Optional[str] = Field(default=None, max_length=MAX_NATION_CHARS)
     birth_time_accuracy: Optional[BirthTimeAccuracy] = None
-    notes: Optional[str] = None
+    notes: Optional[str] = Field(default=None, max_length=MAX_NOTES_CHARS)
 
 
 def _kundli_to_dict(k: Kundli) -> dict:

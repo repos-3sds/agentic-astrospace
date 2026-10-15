@@ -1,5 +1,7 @@
 import json
+import logging
 import os
+import threading
 from typing import Any, Iterator, TypeVar
 
 from pydantic import BaseModel
@@ -28,6 +30,70 @@ def extract_usage(response: Any) -> dict:
 
 DEFAULT_ANTHROPIC_MODEL = "claude-opus-5"
 DEFAULT_GEMINI_MODEL = "gemini-3.5-flash"
+
+log = logging.getLogger(__name__)
+
+# Provider call limits. The SDK defaults were a 600 s timeout with 2 retries
+# (Anthropic) and no timeout at all (Gemini), while Cloud Run cuts the request
+# at 300 s — so a stuck call kept a worker thread and the spend running long
+# after the reader had been shown an error. One structured answer at
+# max_tokens=8192 finishes well inside 60 s; a call that doesn't is better
+# failed (and repaired or reported) than waited on.
+LLM_TIMEOUT_SECONDS = 60.0
+LLM_MAX_RETRIES = 1
+# Hard cap on model round-trips in one tool loop. Each round is a full,
+# billed model call; nothing in the prompts needs more than a handful.
+MAX_TOOL_ROUNDS = 6
+
+# Module-level clients, reused across agents and requests: one connection
+# pool (and one TLS handshake) per credential per process instead of one per
+# Ask turn. Keyed by credential so an explicit `api_key=` still gets its own.
+# Both SDK clients are safe to share between threads.
+_clients: dict[tuple, Any] = {}
+_clients_lock = threading.Lock()
+
+
+def _shared_client(key: tuple, factory) -> Any:
+    client = _clients.get(key)
+    if client is None:
+        with _clients_lock:
+            client = _clients.get(key)
+            if client is None:
+                client = factory()
+                _clients[key] = client
+    return client
+
+
+def anthropic_client(api_key: str | None = None):
+    """The shared Anthropic client for this credential: 60 s timeout, 1 retry."""
+    key = api_key or os.getenv("ANTHROPIC_API_KEY", "")
+
+    def build():
+        import anthropic
+
+        limits = {"timeout": LLM_TIMEOUT_SECONDS, "max_retries": LLM_MAX_RETRIES}
+        if key.startswith("sk-ant-si"):
+            return anthropic.Anthropic(auth_token=key, **limits)
+        return anthropic.Anthropic(api_key=key or None, **limits)
+
+    return _shared_client(("anthropic", key), build)
+
+
+def gemini_client(api_key: str | None = None):
+    """The shared Gemini client for this credential, with an explicit timeout."""
+    key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+
+    def build():
+        from google import genai
+        from google.genai import types
+
+        # HttpOptions.timeout is in milliseconds.
+        return genai.Client(
+            api_key=key,
+            http_options=types.HttpOptions(timeout=int(LLM_TIMEOUT_SECONDS * 1000)),
+        )
+
+    return _shared_client(("gemini", key), build)
 
 
 class BaseAstroAgent:
@@ -196,23 +262,17 @@ class BaseAstroAgent:
     # Anthropic provider --------------------------------------------------
 
     def _anthropic_client(self):
+        # `self.client` stays an override point (tests inject fakes there);
+        # otherwise every agent shares the process-wide client.
         if self.client is not None:
             return self.client
-
-        import anthropic
-
-        key = self.api_key or os.getenv("ANTHROPIC_API_KEY", "")
-        if key.startswith("sk-ant-si"):
-            self.client = anthropic.Anthropic(auth_token=key)
-        else:
-            self.client = anthropic.Anthropic(api_key=key or None)
-        return self.client
+        return anthropic_client(self.api_key)
 
     def _run_messages_anthropic(self, messages: list) -> tuple[str, list]:
         messages = list(messages)
         tools_used = []
 
-        while True:
+        for _round in range(MAX_TOOL_ROUNDS):
             response = self._anthropic_client().messages.create(
                 model=self.model,
                 max_tokens=4096,
@@ -244,13 +304,15 @@ class BaseAstroAgent:
                 continue
 
             break
+        else:
+            log.warning("anthropic tool loop hit the %d-round cap", MAX_TOOL_ROUNDS)
 
         return "Unable to generate a response.", tools_used
 
     def _run_messages_stream_anthropic(self, messages: list) -> Iterator[str]:
         messages = list(messages)
 
-        while True:
+        for _round in range(MAX_TOOL_ROUNDS):
             with self._anthropic_client().messages.stream(
                 model=self.model,
                 max_tokens=4096,
@@ -278,18 +340,14 @@ class BaseAstroAgent:
                 continue
 
             return
+        log.warning("anthropic streamed tool loop hit the %d-round cap", MAX_TOOL_ROUNDS)
 
     # Gemini provider -----------------------------------------------------
 
     def _gemini_client(self):
         if self.client is not None:
             return self.client
-
-        from google import genai
-
-        key = self.api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-        self.client = genai.Client(api_key=key)
-        return self.client
+        return gemini_client(self.api_key)
 
     def _gemini_types(self):
         from google.genai import types
@@ -357,7 +415,7 @@ class BaseAstroAgent:
         contents = self._gemini_contents_from_messages(messages)
         tools_used = []
 
-        for _ in range(8):
+        for _ in range(MAX_TOOL_ROUNDS):
             response = self._gemini_client().models.generate_content(
                 model=self.model,
                 contents=contents,
@@ -431,6 +489,5 @@ class BaseAstroAgent:
         except Exception as e:
             # Surface the failure to the model so it can adapt or report,
             # instead of crashing the whole agent run.
-            import traceback
-            traceback.print_exc()
+            log.exception("tool %s failed", name)
             return {"error": f"Tool {name} failed: {type(e).__name__}: {e}"}

@@ -1,0 +1,4 @@
+# Test and development tools. Kept out of requirements.txt so they are not
+# installed into the production image; CI installs this file.
+-r requirements.txt
+pytest>=7.0.0

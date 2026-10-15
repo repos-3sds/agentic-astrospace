@@ -12,6 +12,7 @@ Supabase bearer token to a user id) and, at the database level, by RLS policies.
 from datetime import date, datetime, timedelta
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .models import (
@@ -127,8 +128,12 @@ def get_ask_thread(db: Session, thread_id: str, user_id: str | None = None) -> A
     return q.first()
 
 
-def add_ask_message(db: Session, thread_id: str, role: str, content: str, **fields) -> AskMessage:
-    """Append a message and keep the thread's denormalised counters in step."""
+def add_ask_message(db: Session, thread_id: str, role: str, content: str,
+                    commit: bool = True, **fields) -> AskMessage:
+    """Append a message and keep the thread's denormalised counters in step.
+
+    `commit=False` leaves the write in the caller's transaction — see
+    `add_ask_turn`, which needs the question and its answer to land together."""
     message = AskMessage(thread_id=thread_id, role=role, content=content, **fields)
     db.add(message)
 
@@ -140,9 +145,48 @@ def add_ask_message(db: Session, thread_id: str, role: str, content: str, **fiel
         if not thread.title and role == "user":
             thread.title = f"{content[:79].rstrip()}…" if len(content) > 80 else content
 
-    db.commit()
-    db.refresh(message)
+    if commit:
+        db.commit()
+        db.refresh(message)
     return message
+
+
+def add_ask_turn(db: Session, *, thread_id: str | None, user_id: str, kundli_id: str,
+                 question: str, answer: str, user_fields: dict | None = None,
+                 assistant_fields: dict | None = None) -> AskThread:
+    """Write one question and its answer as a single transaction.
+
+    Separately committed, a failure between the two writes left a dangling
+    user turn, and the next request replayed a history with two user turns
+    in a row — exactly what the Ask routes' "persist only after an answer"
+    rule exists to prevent. With `thread_id=None` the thread is created in
+    the same transaction, so a failed write never leaves an empty thread.
+
+    The two `created_at` values are set explicitly, one microsecond apart:
+    history is ordered by that column, and two rows stamped in the same
+    flush could otherwise tie and replay in either order.
+    """
+    try:
+        if thread_id is None:
+            thread = AskThread(user_id=user_id, kundli_id=kundli_id)
+            db.add(thread)
+            db.flush()
+        else:
+            thread = db.get(AskThread, thread_id)
+            if thread is None:
+                raise LookupError(f"Ask thread {thread_id} no longer exists")
+        asked_at = datetime.utcnow()
+        add_ask_message(db, thread.id, "user", question, commit=False,
+                        created_at=asked_at, **(user_fields or {}))
+        add_ask_message(db, thread.id, "assistant", answer, commit=False,
+                        created_at=asked_at + timedelta(microseconds=1),
+                        **(assistant_fields or {}))
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    db.refresh(thread)
+    return thread
 
 
 def get_thread_messages(db: Session, thread_id: str, limit: int = 200) -> list[AskMessage]:
@@ -592,9 +636,59 @@ def schedule_notification(db: Session, user_id: str, category: str, scheduled_fo
         title=title, dedupe_key=dedupe_key, **fields,
     )
     db.add(job)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # Two schedulers (overlapping job runs, or a retry) passed the check
+        # above at the same moment; the unique dedupe_key let exactly one
+        # insert through. That one is the job — return it, don't crash the run.
+        db.rollback()
+        if not dedupe_key:
+            raise
+        existing = (
+            db.query(NotificationJob)
+            .filter(NotificationJob.dedupe_key == dedupe_key)
+            .first()
+        )
+        if existing is None:
+            raise
+        return existing
     db.refresh(job)
     return job
+
+
+# A job is claimed (status 'processing') and then sent within seconds. One
+# still 'processing' after this long belongs to a worker that died between
+# the claim and the send/fail write, and nothing else would ever pick it up.
+STALE_PROCESSING_AFTER = timedelta(minutes=15)
+
+
+def reap_stale_notifications(db: Session, now: datetime | None = None,
+                             stale_after: timedelta = STALE_PROCESSING_AFTER,
+                             max_attempts: int = 5) -> int:
+    """Return jobs stuck in 'processing' to 'pending' (or 'failed' once they
+    have used their attempts, same cap as mark_notification_failed).
+
+    At-least-once by design: a worker that crashed after the provider
+    accepted a push but before recording it will send that push again. A
+    duplicate morning brief is a smaller failure than one that never arrives.
+    `updated_at` is the claim time: claim_due_notifications stamps it.
+    """
+    now = now or datetime.utcnow()
+    q = db.query(NotificationJob).filter(
+        NotificationJob.status == "processing",
+        NotificationJob.updated_at < now - stale_after,
+    )
+    if db.bind is not None and db.bind.dialect.name == "postgresql":
+        q = q.with_for_update(skip_locked=True)
+    jobs = q.all()
+    for job in jobs:
+        retry = (job.attempts or 0) < max_attempts
+        job.status = "pending" if retry else "failed"
+        job.last_error = "reaped: stuck in processing (worker likely crashed)"
+        job.updated_at = now
+    db.commit()
+    return len(jobs)
 
 
 def claim_due_notifications(db: Session, limit: int = 100,
@@ -613,9 +707,11 @@ def claim_due_notifications(db: Session, limit: int = 100,
         q = q.with_for_update(skip_locked=True)
 
     jobs = q.all()
+    claimed_at = datetime.utcnow()
     for job in jobs:
         job.status = "processing"
         job.attempts = (job.attempts or 0) + 1
+        job.updated_at = claimed_at  # what reap_stale_notifications measures
     db.commit()
     return jobs
 
