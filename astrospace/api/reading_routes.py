@@ -1,6 +1,7 @@
 from calendar import monthrange
 from datetime import datetime, timezone, timedelta
 from difflib import SequenceMatcher
+import logging
 import re
 from zoneinfo import ZoneInfo
 
@@ -18,6 +19,12 @@ from ..agents.safety import REFER_OUT_ANSWERS
 from .auth import CurrentUser
 
 router = APIRouter(prefix="/api/v1/readings", tags=["readings"])
+logger = logging.getLogger(__name__)
+
+# What the person sees when the model call fails. The provider's own error
+# (a 400 body, a quota message) goes to the log, never to the screen.
+READING_UNAVAILABLE = "Your reading couldn't be written just now. Please try again in a minute."
+NO_ANSWER = "Unable to generate a response."
 
 VALID_PERIODS = {"daily", "weekly", "monthly", "quarterly", "yearly"}
 CLAIM_STATUSES = {"pending", "accurate", "partly", "missed", "not_applicable"}
@@ -297,7 +304,16 @@ def generate_reading(
     except (ValueError, OverflowError) as e:
         raise HTTPException(status_code=422, detail=f"Invalid birth details on this kundli: {e}")
 
-    content, crossed = PeriodAgent(chart).generate_reading(body.period, now=now_local)
+    try:
+        content, crossed = PeriodAgent(chart).generate_reading(body.period, now=now_local)
+    except Exception:
+        logger.exception("reading generation failed (kundli=%s period=%s)", kundli_id, body.period)
+        raise HTTPException(status_code=503, detail=READING_UNAVAILABLE)
+    if not content.strip() or content.strip() == NO_ANSWER:
+        # The agent loop ran out without an answer. Saving it would publish
+        # the placeholder as this period's reading and mint claims from it.
+        logger.error("reading generation returned no text (kundli=%s period=%s)", kundli_id, body.period)
+        raise HTTPException(status_code=503, detail=READING_UNAVAILABLE)
     if crossed:
         # Output-side safety net, same tier as Ask's verifier. Nothing is
         # persisted and no claims are extracted: a reading that crossed the

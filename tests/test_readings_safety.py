@@ -190,3 +190,23 @@ def test_unresolvable_birth_place_is_a_422_not_a_crash(client, env):
         res = _generate(client, lost)
     assert res.status_code == 422
     assert run.call_count == 0
+
+
+class TestProviderFailure:
+    """A failed model call used to escape the route as a bare 500, and a loop
+    that ran out of tool rounds saved "Unable to generate a response." as the
+    period's reading. Both now answer 503 with a sentence and persist nothing."""
+
+    def test_provider_error_is_a_503_with_a_sentence(self, client, env):
+        with patch.object(PeriodAgent, "run", side_effect=RuntimeError("400 INVALID_ARGUMENT")):
+            res = _generate(client, env["kundli"], "daily")
+        assert res.status_code == 503
+        assert "try again" in res.json()["detail"].lower()
+        assert "INVALID_ARGUMENT" not in res.text
+        assert client.get(f"/api/v1/readings/{env['kundli']}?period=daily").json() == []
+
+    def test_placeholder_answer_is_never_saved(self, client, env):
+        with patch.object(PeriodAgent, "run", return_value="Unable to generate a response."):
+            res = _generate(client, env["kundli"], "daily")
+        assert res.status_code == 503
+        assert client.get(f"/api/v1/readings/{env['kundli']}?period=daily").json() == []
