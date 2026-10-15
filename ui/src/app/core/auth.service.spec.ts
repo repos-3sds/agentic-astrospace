@@ -2,6 +2,8 @@ import { Capacitor } from '@capacitor/core';
 import { Router } from '@angular/router';
 import { Session } from '@supabase/supabase-js';
 
+import { Preferences } from '@capacitor/preferences';
+
 import { AuthService } from './auth.service';
 import { ConnectivityService } from './connectivity.service';
 
@@ -229,5 +231,78 @@ describe('AuthService access-token resilience', () => {
     await expectAsync(service.getAccessToken()).toBeResolvedTo(null);
     expect(service.session()).toBe(session);
     expect(service.isAuthenticated()).toBeTrue();
+  });
+});
+
+
+/**
+ * Offline relaunch. Until 2026-10-15 a failed /auth/config fetch rethrew and
+ * the mobile auth guard awaited it, so a returning user with no network was
+ * sent to sign-in even though their guidance was cached on device.
+ */
+describe('AuthService offline relaunch', () => {
+  const CONFIG_KEY = 'astrospace.authConfig';
+  const SUPABASE_URL = 'https://abcproject.supabase.co';
+  const SESSION_KEY = 'sb-abcproject-auth-token';
+  const config = { enabled: true, supabase_url: SUPABASE_URL, supabase_anon_key: 'anon' };
+  const storedSession = { access_token: 'stale-token', refresh_token: 'r', expires_at: 1, user: { id: 'u1', email: 'a@b.c' } };
+
+  let service: AuthService;
+  let router: jasmine.SpyObj<Router>;
+  let getSession: jasmine.Spy;
+
+  beforeEach(async () => {
+    await Preferences.clear();
+    router = jasmine.createSpyObj<Router>('Router', ['navigate', 'navigateByUrl']);
+    service = new AuthService(router, connectivitySpy());
+    getSession = jasmine.createSpy('getSession');
+    spyOn(service as any, 'buildClient').and.returnValue({
+      auth: { getSession, onAuthStateChange: jasmine.createSpy('onAuthStateChange') },
+    });
+  });
+
+  afterEach(async () => { await Preferences.clear(); });
+
+  it('caches the auth config after a successful fetch', async () => {
+    spyOn(window, 'fetch').and.resolveTo(new Response(JSON.stringify(config), { status: 200 }));
+    getSession.and.resolveTo({ data: { session: storedSession }, error: null });
+
+    await service.init();
+
+    expect((await Preferences.get({ key: CONFIG_KEY })).value).toBe(JSON.stringify(config));
+    expect(service.ready()).toBeTrue();
+    expect(service.session()?.access_token).toBe('stale-token');
+  });
+
+  it('relaunches on the cached config and stored session when the network is down', async () => {
+    await Preferences.set({ key: CONFIG_KEY, value: JSON.stringify(config) });
+    await Preferences.set({ key: SESSION_KEY, value: JSON.stringify(storedSession) });
+    spyOn(window, 'fetch').and.rejectWith(new TypeError('Failed to fetch'));
+    // supabase-js cannot refresh offline and reports that as an error.
+    getSession.and.resolveTo({ data: { session: null }, error: new Error('AuthRetryableFetchError') });
+
+    await service.init();
+
+    expect(service.ready()).toBeTrue();
+    expect(service.enabled()).toBeTrue();
+    expect(service.session()?.user?.id).toBe('u1');
+    expect(service.isAuthenticated()).toBeTrue();
+  });
+
+  it('still fails on a first launch with no network and nothing cached', async () => {
+    spyOn(window, 'fetch').and.rejectWith(new TypeError('Failed to fetch'));
+
+    await expectAsync(service.init()).toBeRejected();
+    expect(service.ready()).toBeFalse();
+    expect(getSession).not.toHaveBeenCalled();
+  });
+
+  it('does not resurrect a session after a real sign-out', async () => {
+    await Preferences.set({ key: CONFIG_KEY, value: JSON.stringify(config) });
+    spyOn(window, 'fetch').and.rejectWith(new TypeError('Failed to fetch'));
+    getSession.and.resolveTo({ data: { session: null }, error: new Error('offline') });
+
+    await expectAsync(service.init()).toBeRejected();
+    expect(service.session()).toBeNull();
   });
 });

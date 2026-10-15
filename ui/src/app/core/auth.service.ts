@@ -15,6 +15,18 @@ const NATIVE_AUTH_STATE_KEY = 'astrospace.nativeAuthState';
 // Long enough to survive a slow inbox check, short enough to bound how long a
 // captured callback URL stays redeemable.
 const NATIVE_AUTH_STATE_TTL_MS = 10 * 60 * 1000;
+/**
+ * The last /auth/config the app fetched, kept so a relaunch with no network
+ * can still build the Supabase client and read the stored session. The
+ * values are the project URL and the anon key, both public by design.
+ */
+const AUTH_CONFIG_CACHE_KEY = 'astrospace.authConfig';
+
+/** The key supabase-js persists its session under when no storageKey is configured. */
+export function supabaseStorageKey(supabaseUrl: string): string {
+  const ref = new URL(supabaseUrl).hostname.split('.')[0];
+  return `sb-${ref}-auth-token`;
+}
 
 /** crypto.randomUUID() is unavailable on some older WKWebView builds. */
 function randomNonce(): string {
@@ -57,16 +69,7 @@ export class AuthService {
   }
 
   private async load(): Promise<void> {
-    let res: Response;
-    try {
-      res = await fetch(apiUrl('/api/v1/auth/config'));
-      this.connectivity.noteRequestSuccess();
-    } catch (error) {
-      this.connectivity.noteRequestFailure(error);
-      throw error;
-    }
-    if (!res.ok) throw new Error('Could not load auth configuration');
-    const config = (await res.json()) as AuthConfig;
+    const config = await this.loadConfig();
     this.enabled.set(!!config.enabled);
 
     if (!config.enabled) {
@@ -77,6 +80,75 @@ export class AuthService {
       throw new Error('Supabase auth is enabled but URL/anon key are missing');
     }
 
+    this.client = this.buildClient(config.supabase_url, config.supabase_anon_key);
+    await this.installNativeAuthCallback();
+    this.installAutoRefreshLifecycle();
+    const { data, error } = await this.client.auth.getSession();
+    if (error || !data.session) {
+      // Offline, supabase-js cannot refresh an expired session and reports
+      // that as an error (or no session). The stored session is still the
+      // person's, and the encrypted cache behind the shell is keyed to it,
+      // so a relaunch with no network keeps them signed in on what is
+      // saved rather than bouncing them to the sign-in screen. API calls
+      // fail honestly until the connection returns; the shell banner says
+      // so. A real sign-out clears this storage, so it is never resurrected.
+      const stored = await this.storedSession(config.supabase_url);
+      if (error && !stored) throw error;
+      this.setSession(stored ?? data.session);
+    } else {
+      this.setSession(data.session);
+    }
+    this.client.auth.onAuthStateChange((_event, session) => this.setSession(session));
+    this.ready.set(true);
+  }
+
+  /**
+   * Fetch /auth/config, caching it on success; fall back to the cached copy
+   * when the fetch fails and a copy exists. Until 2026-10-15 a failed fetch
+   * always rethrew, so a returning user with no signal never got past the
+   * mobile auth guard even though their guidance was cached on device.
+   */
+  private async loadConfig(): Promise<AuthConfig> {
+    try {
+      const res = await fetch(apiUrl('/api/v1/auth/config'));
+      this.connectivity.noteRequestSuccess();
+      if (!res.ok) throw new Error('Could not load auth configuration');
+      const config = (await res.json()) as AuthConfig;
+      await Preferences.set({ key: AUTH_CONFIG_CACHE_KEY, value: JSON.stringify(config) }).catch(() => undefined);
+      return config;
+    } catch (error) {
+      this.connectivity.noteRequestFailure(error);
+      const cached = await this.cachedConfig();
+      if (!cached) throw error;
+      return cached;
+    }
+  }
+
+  private async cachedConfig(): Promise<AuthConfig | null> {
+    try {
+      const { value } = await Preferences.get({ key: AUTH_CONFIG_CACHE_KEY });
+      if (!value) return null;
+      const parsed = JSON.parse(value) as Partial<AuthConfig>;
+      return typeof parsed.enabled === 'boolean' ? (parsed as AuthConfig) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** supabase-js's persisted session, read directly from the same storage it writes. */
+  private async storedSession(supabaseUrl: string): Promise<Session | null> {
+    try {
+      const { value } = await Preferences.get({ key: supabaseStorageKey(supabaseUrl) });
+      if (!value) return null;
+      const parsed = JSON.parse(value) as Partial<Session>;
+      return parsed?.access_token && parsed.user ? (parsed as Session) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Separate so tests can hand the service a fake client without touching the network. */
+  protected buildClient(url: string, anonKey: string): SupabaseClient {
     const capacitorStorage = {
       getItem: async (key: string): Promise<string | null> => {
         const { value } = await Preferences.get({ key });
@@ -89,21 +161,13 @@ export class AuthService {
         await Preferences.remove({ key });
       }
     };
-
-    this.client = createClient(config.supabase_url, config.supabase_anon_key, {
+    return createClient(url, anonKey, {
       auth: {
         flowType: 'pkce',
         detectSessionInUrl: !Capacitor.isNativePlatform(),
         storage: capacitorStorage,
       },
     });
-    await this.installNativeAuthCallback();
-    this.installAutoRefreshLifecycle();
-    const { data, error } = await this.client.auth.getSession();
-    if (error) throw error;
-    this.setSession(data.session);
-    this.client.auth.onAuthStateChange((_event, session) => this.setSession(session));
-    this.ready.set(true);
   }
 
   /**
