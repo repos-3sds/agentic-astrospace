@@ -1,13 +1,28 @@
 from __future__ import annotations
 
+import asyncio
+import hashlib
+import logging
 import re
 import time
 from urllib.parse import parse_qsl, urlencode
 from uuid import uuid4
 
+from starlette.concurrency import run_in_threadpool
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from .client import AdminStorageError, get_admin_client
+
+log = logging.getLogger(__name__)
+
+# The audit write is a network call to Supabase on every mutating request.
+# It used to run synchronously inside this async middleware with the admin
+# client's 45 s timeout, which froze the whole instance — SSE streams
+# included — whenever Supabase was slow. It now runs in the threadpool, and
+# the request waits at most this long for it. Awaited rather than fired and
+# forgotten because Cloud Run throttles CPU once the response is sent, so
+# background work after it is not reliably run.
+AUDIT_WRITE_TIMEOUT_SECONDS = 3.0
 
 _RESOURCE_RE = re.compile(
     r"^/api/v1/(?P<resource>kundlis|readings|settings|ask|admin)"
@@ -24,6 +39,16 @@ _SENSITIVE_QUERY_KEYS = frozenset({
     "token_hash", "state", "code_verifier", "password", "api_key", "apikey",
 })
 _REDACTED = "[redacted]"
+
+
+def pseudonymous_actor_id(user_id: str) -> str:
+    """What a deleted account's `actor_id` becomes in app_request_audit_log.
+
+    Stable, so an erased actor's requests still group together, and not
+    reversible to the account id. The database only permits an update that
+    sets exactly this value (md5 of the old id) and clears the email — see
+    supabase/migrations/20261015130000_allow_request_audit_erasure.sql."""
+    return "erased:" + hashlib.md5(user_id.encode()).hexdigest()
 
 
 def redact_query(query: str, limit: int = 500) -> str:
@@ -61,9 +86,13 @@ class AppAuditMiddleware(BaseHTTPMiddleware):
         ):
             match = _RESOURCE_RE.match(request.url.path)
             user = getattr(request.state, "auth_user", None)
+            # Account deletion erases the caller's email from this log
+            # (me_routes.delete_account); its own row must not write it back.
+            erasing = request.method == "DELETE" and request.url.path.rstrip("/") == "/api/v1/me"
+            actor_id = getattr(user, "id", None)
             payload = {
-                "actor_id": getattr(user, "id", None),
-                "actor_email": getattr(user, "email", None),
+                "actor_id": pseudonymous_actor_id(actor_id) if erasing and actor_id else actor_id,
+                "actor_email": None if erasing else getattr(user, "email", None),
                 "method": request.method,
                 "route": request.url.path,
                 "status_code": response.status_code,
@@ -73,10 +102,27 @@ class AppAuditMiddleware(BaseHTTPMiddleware):
                 "duration_ms": round((time.monotonic() - started) * 1000),
                 "metadata": {"query": redact_query(str(request.url.query))},
             }
-            try:
-                get_admin_client().insert("app_request_audit_log", payload)
-            except AdminStorageError:
-                # Audit storage must not break the user's primary workflow.
-                pass
+            await write_audit_event(payload)
         response.headers["X-Request-ID"] = request_id
         return response
+
+
+def _insert(payload: dict) -> None:
+    try:
+        client = get_admin_client()
+    except AdminStorageError:
+        return  # no audit storage configured (local development)
+    client.insert(
+        "app_request_audit_log", payload, timeout=AUDIT_WRITE_TIMEOUT_SECONDS,
+    )
+
+
+async def write_audit_event(payload: dict) -> None:
+    """Off the event loop, bounded, and never raising: audit storage must not
+    break or stall the user's primary workflow."""
+    try:
+        await asyncio.wait_for(run_in_threadpool(_insert, payload),
+                               timeout=AUDIT_WRITE_TIMEOUT_SECONDS)
+    except Exception:
+        log.warning("request audit write failed (route=%s)", payload.get("route"),
+                    exc_info=True)

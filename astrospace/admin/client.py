@@ -172,7 +172,8 @@ class SupabaseAdminClient:
         return self._db_write_returning(sql, [*adapted, *values])
 
     def request(self, method: str, path: str, *, params: dict | None = None,
-                json: Any = None, prefer: str | None = None) -> requests.Response:
+                json: Any = None, prefer: str | None = None,
+                timeout: float = 45) -> requests.Response:
         if not self.secret:
             if method == "POST" and path == "admin_users":
                 return _JsonResponse(self._db_upsert_admin_user(json))
@@ -187,7 +188,7 @@ class SupabaseAdminClient:
                 headers=headers,
                 params=params,
                 json=json,
-                timeout=45,
+                timeout=timeout,
             )
             response.raise_for_status()
             return response
@@ -221,11 +222,13 @@ class SupabaseAdminClient:
         rows = self.rows(table, params={**params, "limit": 1})
         return rows[0] if rows else None
 
-    def insert(self, table: str, payload: dict | list[dict]) -> list[dict]:
+    def insert(self, table: str, payload: dict | list[dict],
+               timeout: float = 45) -> list[dict]:
         if not self.secret:
             return self._db_insert(table, payload)
         return self.request(
             "POST", table, json=payload, prefer="return=representation",
+            timeout=timeout,
         ).json()
 
     def patch(self, table: str, *, params: dict, payload: dict) -> list[dict]:

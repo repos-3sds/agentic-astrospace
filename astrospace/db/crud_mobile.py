@@ -12,6 +12,7 @@ Supabase bearer token to a user id) and, at the database level, by RLS policies.
 from datetime import date, datetime, timedelta
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .models import (
@@ -635,9 +636,59 @@ def schedule_notification(db: Session, user_id: str, category: str, scheduled_fo
         title=title, dedupe_key=dedupe_key, **fields,
     )
     db.add(job)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # Two schedulers (overlapping job runs, or a retry) passed the check
+        # above at the same moment; the unique dedupe_key let exactly one
+        # insert through. That one is the job — return it, don't crash the run.
+        db.rollback()
+        if not dedupe_key:
+            raise
+        existing = (
+            db.query(NotificationJob)
+            .filter(NotificationJob.dedupe_key == dedupe_key)
+            .first()
+        )
+        if existing is None:
+            raise
+        return existing
     db.refresh(job)
     return job
+
+
+# A job is claimed (status 'processing') and then sent within seconds. One
+# still 'processing' after this long belongs to a worker that died between
+# the claim and the send/fail write, and nothing else would ever pick it up.
+STALE_PROCESSING_AFTER = timedelta(minutes=15)
+
+
+def reap_stale_notifications(db: Session, now: datetime | None = None,
+                             stale_after: timedelta = STALE_PROCESSING_AFTER,
+                             max_attempts: int = 5) -> int:
+    """Return jobs stuck in 'processing' to 'pending' (or 'failed' once they
+    have used their attempts, same cap as mark_notification_failed).
+
+    At-least-once by design: a worker that crashed after the provider
+    accepted a push but before recording it will send that push again. A
+    duplicate morning brief is a smaller failure than one that never arrives.
+    `updated_at` is the claim time: claim_due_notifications stamps it.
+    """
+    now = now or datetime.utcnow()
+    q = db.query(NotificationJob).filter(
+        NotificationJob.status == "processing",
+        NotificationJob.updated_at < now - stale_after,
+    )
+    if db.bind is not None and db.bind.dialect.name == "postgresql":
+        q = q.with_for_update(skip_locked=True)
+    jobs = q.all()
+    for job in jobs:
+        retry = (job.attempts or 0) < max_attempts
+        job.status = "pending" if retry else "failed"
+        job.last_error = "reaped: stuck in processing (worker likely crashed)"
+        job.updated_at = now
+    db.commit()
+    return len(jobs)
 
 
 def claim_due_notifications(db: Session, limit: int = 100,
@@ -656,9 +707,11 @@ def claim_due_notifications(db: Session, limit: int = 100,
         q = q.with_for_update(skip_locked=True)
 
     jobs = q.all()
+    claimed_at = datetime.utcnow()
     for job in jobs:
         job.status = "processing"
         job.attempts = (job.attempts or 0) + 1
+        job.updated_at = claimed_at  # what reap_stale_notifications measures
     db.commit()
     return jobs
 

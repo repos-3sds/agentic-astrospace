@@ -10,6 +10,7 @@ delivery worker as well as from here, so the ownership check lives in this
 layer — see `_owned_push_token` and the live-activity handler.
 """
 from datetime import datetime, time as time_cls
+import logging
 import os
 import requests
 
@@ -28,9 +29,12 @@ from ..db.models import (
     ProfileContextAuditEvent, ProfileContextFact, ProfileContextLedger,
     ProfileContextMutation,
 )
+from ..admin.audit_middleware import pseudonymous_actor_id
+from ..admin.client import get_admin_client
 from .auth import CurrentUser
 
 router = APIRouter(prefix="/api/v1/me", tags=["me"])
+log = logging.getLogger(__name__)
 
 # Severity is capped at "attention" in the schema on purpose: the product does
 # not have a "critical" or "danger" tier. Mirrored here so a bad payload is
@@ -173,7 +177,19 @@ def delete_account(payload: AccountDeletionPayload, user: CurrentUser,
 
     The typed confirmation is checked by the backend; a client cannot bypass
     it by calling the endpoint directly. Auth deletion requires the service
-    role and is attempted before the database transaction commits.
+    role.
+
+    Order matters. The app data is committed first, then the Supabase auth
+    user is deleted (with one retry). It used to be the other way round: an
+    auth deletion followed by a failed commit left a person with no way to
+    sign in and all of their data still stored. Now the worst case is data
+    gone and the sign-in still present — and calling this again finishes the
+    job, because every database step is a no-op the second time.
+
+    The request audit log keeps every mutating request this person made;
+    their email is erased from it and their id replaced by a pseudonym
+    (`_erase_request_audit`), and the audit row for this request is written
+    without the email (see AppAuditMiddleware).
     """
     if payload.confirmation.strip().casefold() != "delete":
         raise HTTPException(status_code=400, detail="Type DELETE to confirm")
@@ -231,22 +247,54 @@ def delete_account(payload: AccountDeletionPayload, user: CurrentUser,
         db.delete(account)
     db.flush()
     db.query(UserDevice).filter(UserDevice.user_id == user.id).delete(synchronize_session=False)
-
-    if user.auth_enabled:
-        try:
-            response = requests.delete(
-                f"{os.environ['SUPABASE_URL'].rstrip('/')}/auth/v1/admin/users/{user.id}",
-                headers={"apikey": service_key, "Authorization": f"Bearer {service_key}"},
-                timeout=8,
-            )
-        except requests.RequestException as error:
-            db.rollback()
-            raise HTTPException(status_code=503, detail=f"Auth deletion unavailable: {error}")
-        if response.status_code not in {200, 204}:
-            db.rollback()
-            raise HTTPException(status_code=502, detail="Could not delete authentication account")
     db.commit()
+
+    _erase_request_audit(user.id)
+
+    if user.auth_enabled and not _delete_auth_user(user.id, service_key):
+        # The data is already gone; only the sign-in remains. A retry of this
+        # endpoint completes the deletion.
+        raise HTTPException(
+            status_code=502,
+            detail="Your data was deleted, but your sign-in could not be removed. "
+                   "Please try again.",
+        )
     return {"deleted": True}
+
+
+AUTH_DELETE_ATTEMPTS = 2  # the first try plus one retry
+
+
+def _delete_auth_user(user_id: str, service_key: str) -> bool:
+    """Delete the Supabase auth user. True when it is gone (a 404 counts: a
+    retried deletion may find it already removed)."""
+    url = f"{os.environ['SUPABASE_URL'].rstrip('/')}/auth/v1/admin/users/{user_id}"
+    headers = {"apikey": service_key, "Authorization": f"Bearer {service_key}"}
+    for attempt in range(1, AUTH_DELETE_ATTEMPTS + 1):
+        try:
+            response = requests.delete(url, headers=headers, timeout=8)
+        except requests.RequestException:
+            log.exception("auth user deletion attempt %d failed", attempt)
+            continue
+        if response.status_code in {200, 204, 404}:
+            return True
+        log.error("auth user deletion attempt %d returned %d", attempt, response.status_code)
+    return False
+
+
+def _erase_request_audit(user_id: str) -> None:
+    """Clear the email and pseudonymise the id on this person's rows in
+    app_request_audit_log. Best effort: the log lives in Supabase (not on the
+    ORM), and its outage must not block deleting the account itself — a
+    failure is logged for follow-up instead."""
+    try:
+        get_admin_client().patch(
+            "app_request_audit_log",
+            params={"actor_id": f"eq.{user_id}"},
+            payload={"actor_email": None, "actor_id": pseudonymous_actor_id(user_id)},
+        )
+    except Exception:
+        log.exception("request audit erasure failed; erase actor rows manually")
 
 
 @router.put("/devices")

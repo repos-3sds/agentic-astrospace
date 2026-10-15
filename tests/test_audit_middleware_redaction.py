@@ -27,7 +27,7 @@ def test_middleware_stores_redacted_query(monkeypatch):
     captured: list[dict] = []
 
     class FakeAdmin:
-        def insert(self, table, payload):
+        def insert(self, table, payload, **kwargs):
             captured.append(payload)
             return [payload]
 

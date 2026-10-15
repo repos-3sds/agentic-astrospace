@@ -72,21 +72,55 @@ def deliver_job(db: Session, job: NotificationJob,
 
 def deliver_due(db: Session, transports: dict[str, PushTransport] | None = None,
                 now: datetime | None = None, limit: int = 100) -> dict[str, int]:
+    """Deliver every claimed job, each in isolation: one job that raises (a
+    transport bug, a bad payload, a lost connection) is rolled back, logged
+    and returned to the queue, and the rest of the batch still goes out.
+    Before this, the first exception ended the run and left every claimed
+    job after it stuck in 'processing' for good."""
     transports = transports or transports_from_env()
-    sent = failed = 0
+    sent = failed = errored = 0
     for job in cm.claim_due_notifications(db, limit=limit, now=now):
-        if deliver_job(db, job, transports):
-            sent += 1
-        else:
-            failed += 1
-    return {"sent": sent, "failed": failed}
+        job_id = job.id
+        try:
+            if deliver_job(db, job, transports):
+                sent += 1
+            else:
+                failed += 1
+        except Exception as exc:
+            errored += 1
+            log.exception("notification job %s raised during delivery", job_id)
+            db.rollback()
+            try:
+                cm.mark_notification_failed(db, job_id, f"worker error: {type(exc).__name__}")
+            except Exception:
+                # Left 'processing'; the next run's reaper returns it.
+                db.rollback()
+                log.exception("could not record failure for notification job %s", job_id)
+    result = {"sent": sent, "failed": failed}
+    if errored:
+        result["errored"] = errored
+    return result
+
+
+def _step(db: Session, name: str, call, default):
+    """Run one stage of a worker run; a failing stage is logged and the run
+    moves on, so a scheduler bug never blocks delivery of what is queued."""
+    try:
+        return call()
+    except Exception:
+        log.exception("notifications: %s failed", name)
+        db.rollback()
+        return default
 
 
 def run_once(db: Session, transports: dict[str, PushTransport] | None = None) -> dict:
-    scheduled = schedule_morning_briefs(db)
-    windows = schedule_window_alerts(db)
-    delivered = deliver_due(db, transports)
-    summary = {"scheduled": len(scheduled), "window_alerts": len(windows), **delivered}
+    reaped = _step(db, "reap", lambda: cm.reap_stale_notifications(db), 0)
+    scheduled = _step(db, "morning briefs", lambda: schedule_morning_briefs(db), [])
+    windows = _step(db, "window alerts", lambda: schedule_window_alerts(db), [])
+    delivered = _step(db, "delivery", lambda: deliver_due(db, transports),
+                      {"sent": 0, "failed": 0, "delivery_failed": True})
+    summary = {"reaped": reaped, "scheduled": len(scheduled),
+               "window_alerts": len(windows), **delivered}
     log.info("notifications: %s", summary)
     return summary
 
@@ -96,19 +130,28 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--once", action="store_true", help="schedule and deliver once, then exit")
     parser.add_argument("--interval", type=int, default=900, help="seconds between runs (default 900)")
     args = parser.parse_args(argv)
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    from ..logging_config import configure_logging
+
+    configure_logging()
 
     from ..db.database import SessionLocal
 
     transports = transports_from_env()
     while True:
+        ok = True
         db = SessionLocal()
         try:
             run_once(db, transports)
+        except Exception:
+            # Per run: a failure (the database unreachable, say) is logged and
+            # the loop carries on to the next interval instead of dying.
+            ok = False
+            log.exception("notifications: run failed")
         finally:
             db.close()
         if args.once:
-            return 0
+            # Non-zero so the Cloud Run job execution shows as failed.
+            return 0 if ok else 1
         _time.sleep(args.interval)
 
 
