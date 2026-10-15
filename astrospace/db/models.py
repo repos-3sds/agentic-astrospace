@@ -503,6 +503,14 @@ class AskMessage(Base):
     language: Mapped[str] = mapped_column(String, default="en")
     model: Mapped[str | None] = mapped_column(String)
     latency_ms: Mapped[int | None] = mapped_column(Integer)
+    # Cost of producing an assistant turn: tokens across every model call
+    # (generation + the single repair pass) and the per-call breakdown.
+    # Null on user turns and on refer-outs, which never reach a model.
+    # Added 2026-10-15 (migration 20261015120000) so cost per verified
+    # answer can be measured before Ask quotas are fixed.
+    input_tokens: Mapped[int | None] = mapped_column(Integer)
+    output_tokens: Mapped[int | None] = mapped_column(Integer)
+    llm_calls: Mapped[dict | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     thread: Mapped["AskThread"] = relationship("AskThread", back_populates="messages")

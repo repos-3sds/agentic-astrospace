@@ -7,6 +7,25 @@ from pydantic import BaseModel
 _SchemaT = TypeVar("_SchemaT", bound=BaseModel)
 
 
+def extract_usage(response: Any) -> dict:
+    """Token counts from an Anthropic (`usage.input_tokens/output_tokens`)
+    or Gemini (`usage_metadata.prompt_token_count/candidates_token_count`)
+    response, as {"input_tokens", "output_tokens"}; zeros when absent."""
+    usage = getattr(response, "usage", None)
+    if usage is not None:
+        return {
+            "input_tokens": int(getattr(usage, "input_tokens", 0) or 0),
+            "output_tokens": int(getattr(usage, "output_tokens", 0) or 0),
+        }
+    meta = getattr(response, "usage_metadata", None)
+    if meta is not None:
+        return {
+            "input_tokens": int(getattr(meta, "prompt_token_count", 0) or 0),
+            "output_tokens": int(getattr(meta, "candidates_token_count", 0) or 0),
+        }
+    return {"input_tokens": 0, "output_tokens": 0}
+
+
 DEFAULT_ANTHROPIC_MODEL = "claude-opus-5"
 DEFAULT_GEMINI_MODEL = "gemini-3.5-flash"
 
@@ -23,6 +42,12 @@ class BaseAstroAgent:
         self.provider = os.getenv("AI_PROVIDER", "anthropic").strip().lower()
         self.api_key = api_key
         self.client = None
+        # One entry per model call this agent instance has made, in order:
+        # {"purpose", "provider", "model", "input_tokens", "output_tokens"}.
+        # The Ask orchestrator reads it after a turn to persist the cost of
+        # the answer including its repair pass. Agents are created per turn,
+        # so the ledger is per answer by construction.
+        self.usage_log: list[dict] = []
         if self.provider == "gemini":
             self.model = os.getenv("GEMINI_MODEL", DEFAULT_GEMINI_MODEL)
         else:
@@ -32,6 +57,29 @@ class BaseAstroAgent:
     def run(self, user_input: str) -> str:
         text, _tools = self.run_messages([{"role": "user", "content": user_input}])
         return text
+
+    # Usage accounting ------------------------------------------------------
+
+    def _record_usage(self, response: Any, purpose: str) -> None:
+        """Append the token counts of one provider response. Tolerant of
+        shape: a response without usage (a stub, an older SDK) records zeros
+        rather than raising, because accounting must never cost a reader
+        their answer."""
+        self.usage_log.append({
+            "purpose": purpose, "provider": self.provider, "model": self.model,
+            **extract_usage(response),
+        })
+
+    def usage_totals(self) -> dict:
+        """Sum of `usage_log`, plus the per-call breakdown."""
+        return {
+            "provider": self.provider,
+            "model": self.model,
+            "calls": len(self.usage_log),
+            "input_tokens": sum(int(u.get("input_tokens") or 0) for u in self.usage_log),
+            "output_tokens": sum(int(u.get("output_tokens") or 0) for u in self.usage_log),
+            "breakdown": list(self.usage_log),
+        }
 
     def run_messages(self, messages: list) -> tuple[str, list]:
         """Agent loop over an existing conversation. Returns (text, tools_used)."""
@@ -103,6 +151,7 @@ class BaseAstroAgent:
             tool_choice={"type": "tool", "name": tool_name},
             messages=messages,
         )
+        self._record_usage(response, tool_name)
         for block in response.content:
             if block.type == "tool_use" and block.name == tool_name:
                 return schema.model_validate(block.input)
@@ -138,6 +187,7 @@ class BaseAstroAgent:
         response = self._gemini_client().models.generate_content(
             model=self.model, contents=contents, config=config,
         )
+        self._record_usage(response, tool_name)
         for call in getattr(response, "function_calls", None) or []:
             if call.name == tool_name:
                 return schema.model_validate(dict(call.args or {}))
@@ -170,6 +220,7 @@ class BaseAstroAgent:
                 tools=self.tools,
                 messages=messages,
             )
+            self._record_usage(response, "messages")
 
             if response.stop_reason == "end_turn":
                 for block in response.content:
@@ -210,6 +261,7 @@ class BaseAstroAgent:
                 for text in stream.text_stream:
                     yield text
                 response = stream.get_final_message()
+            self._record_usage(response, "messages_stream")
 
             if response.stop_reason == "tool_use":
                 messages.append({"role": "assistant", "content": response.content})
@@ -305,6 +357,7 @@ class BaseAstroAgent:
                 contents=contents,
                 config=self._gemini_config(include_tools=True),
             )
+            self._record_usage(response, "messages")
 
             function_calls = getattr(response, "function_calls", None) or []
             if not function_calls:

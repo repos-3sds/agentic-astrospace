@@ -18,6 +18,9 @@ a model call. `run()` never writes to the database before a verifier pass.
 """
 from __future__ import annotations
 
+import json
+import logging
+import time
 from dataclasses import dataclass, field
 from typing import Callable, Iterator
 
@@ -74,11 +77,33 @@ class ContextResult:
     profile_context_unavailable: bool = False
 
 
+# One line per Ask turn, JSON, so the cost per verified answer can be read
+# off the logs for the two weeks the launch plan asks for before quotas are
+# fixed. Nothing in it identifies the reader beyond the thread id.
+cost_log = logging.getLogger("astrospace.ask.cost")
+
+
+def _usage_summary(usage: dict) -> dict:
+    """The persisted/streamed shape: totals without the per-call breakdown."""
+    return {
+        "provider": usage.get("provider"), "model": usage.get("model"),
+        "calls": int(usage.get("calls") or 0),
+        "input_tokens": int(usage.get("input_tokens") or 0),
+        "output_tokens": int(usage.get("output_tokens") or 0),
+        "repaired": bool(usage.get("repaired")),
+        "latency_ms": usage.get("latency_ms"),
+    }
+
+
 @dataclass
 class AgentRunResult:
     reading: StructuredReading | None
     violations: list[str]
     generation_failed: bool = False
+    # Token usage of every model call this turn made — the first generation
+    # and the repair pass alike — as `BaseAstroAgent.usage_totals()` reports
+    # it. Filled by `_agent_run_and_verify()` on every path, failures too.
+    usage: dict = field(default_factory=dict)
     # Quality violations that survived the repair attempt. The reading still
     # ships; this records what it fell short on so the gap is visible in logs
     # and measurable, rather than silently absorbed.
@@ -100,6 +125,11 @@ class PreparedRun:
     # without re-reading `bundle["profile_context"]`'s shape.
     profile_context_revision: int = 0
     profile_context_as_of: str | None = None
+    # Set by `run()` before it calls `persist`, so the route's persist
+    # closure can store the cost of the answer it is writing without the
+    # callback signature changing: {"provider", "model", "calls",
+    # "input_tokens", "output_tokens", "repaired", "latency_ms", "breakdown"}.
+    usage: dict = field(default_factory=dict)
 
 
 @dataclass
@@ -477,6 +507,18 @@ class AskOrchestrator:
         ))
 
     def _agent_run_and_verify(self, prepared: PreparedRun, messages: list) -> AgentRunResult:
+        started = time.monotonic()
+        result = self._generate_and_verify(prepared, messages)
+        totals = getattr(prepared.agent, "usage_totals", lambda: {})() or {}
+        result.usage = {
+            **totals,
+            # Two or more calls means the single repair attempt ran.
+            "repaired": int(totals.get("calls") or 0) >= 2,
+            "latency_ms": int((time.monotonic() - started) * 1000),
+        }
+        return result
+
+    def _generate_and_verify(self, prepared: PreparedRun, messages: list) -> AgentRunResult:
         try:
             reading = prepared.agent.run_structured_reading(messages)
         except Exception:
@@ -556,6 +598,16 @@ class AskOrchestrator:
         updates = {f: getattr(patch, f) for f in fields if getattr(patch, f, None) is not None}
         return original.model_copy(update=updates)
 
+    def _log_cost(self, prepared: PreparedRun, status: str, thread_id: str | None) -> None:
+        try:
+            cost_log.info(json.dumps({
+                "event": "ask.cost", "status": status, "domain": prepared.domain,
+                "intent": prepared.intent, "thread_id": thread_id,
+                **_usage_summary(prepared.usage),
+            }, default=str))
+        except Exception:  # accounting never costs a reader their answer
+            pass
+
     def run(
         self, prepared: PreparedRun, messages: list,
         persist: Callable[[StructuredReading | None, str], str | None],
@@ -570,18 +622,22 @@ class AskOrchestrator:
               "label": f"{prepared.bundle.get('domain_name', prepared.domain)} specialist is interpreting…"}
 
         result = self._agent_run_and_verify(prepared, messages)
+        prepared.usage = result.usage
 
         if result.reading is None:
             status = "generation_failed" if result.generation_failed else "verification_failed"
             thread_id = persist(None, status)
+            self._log_cost(prepared, status, thread_id)
             yield {
                 "type": "done", "status": status, "schema_version": SCHEMA_VERSION,
                 "domain": prepared.domain, "intent": prepared.intent,
                 "tense": prepared.tense, "thread_id": thread_id,
+                "usage": _usage_summary(result.usage),
             }
             return
 
         thread_id = persist(result.reading, "answered")
+        self._log_cost(prepared, "answered", thread_id)
         yield {
             "type": "done", "status": "answered", "schema_version": SCHEMA_VERSION,
             "domain": prepared.domain, "intent": prepared.intent,
@@ -596,6 +652,7 @@ class AskOrchestrator:
             "profile_context_revision": prepared.profile_context_revision,
             "profile_context_as_of": prepared.profile_context_as_of,
             "reading": result.reading.model_dump(),
+            "usage": _usage_summary(result.usage),
             # Present only when a quality check survived the repair attempt.
             # The reading shipped anyway (see AgentRunResult.quality_shortfall)
             # — this is what it fell short on, exposed rather than swallowed so
