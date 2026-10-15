@@ -1,5 +1,5 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 
@@ -19,6 +19,12 @@ export const PREF_CATEGORY: Record<string, string> = {
 };
 
 const TOKEN_KEY = 'astrospace.push.token';
+
+/** Native check in ui/android/.../PushConfigPlugin.java. Android only. */
+const PushConfig = registerPlugin<{ available(): Promise<{ available: boolean }> }>('PushConfig');
+
+/** Shown in settings when the build has no Firebase config to register with. */
+export const PUSH_NOT_CONFIGURED = 'Push notifications are not set up in this build of the app yet.';
 
 /**
  * Device push registration, end to end on the client side.
@@ -88,6 +94,10 @@ export class PushService {
   async register(): Promise<void> {
     if (!this.native()) return;
     this.error.set(null);
+    if (!(await pushConfigured())) {
+      this.error.set(PUSH_NOT_CONFIGURED);
+      return;
+    }
     try {
       const { PushNotifications } = await import('@capacitor/push-notifications');
       await this.installListeners(PushNotifications);
@@ -163,6 +173,21 @@ export class PushService {
       this.error.set(describe(err));
       this.registered.set(false);
     }
+  }
+}
+
+/**
+ * An Android build without google-services.json has no FirebaseApp, and the
+ * push plugin's register() then crashes the process on a native thread that
+ * no try/catch here can reach. Ask natively first. iOS registers with APNs
+ * and has no such failure, so it is always considered configured.
+ */
+async function pushConfigured(): Promise<boolean> {
+  if (Capacitor.getPlatform() !== 'android') return true;
+  try {
+    return (await PushConfig.available()).available;
+  } catch {
+    return false;
   }
 }
 
