@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { BackBarComponent } from '../shared/back-bar.component';
 import { BirthTimeBadgeComponent } from './birth-time-badge.component';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { ProvenanceSheetComponent } from './provenance-sheet.component';
@@ -59,7 +60,7 @@ interface YantraTile {
   selector: 'as-chart-hub',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GenericErrorComponent, KundliChartComponent, ProfileSwitcherComponent, ProvenanceSheetComponent, RouterLink, BirthTimeBadgeComponent],
+  imports: [BackBarComponent, GenericErrorComponent, KundliChartComponent, ProfileSwitcherComponent, ProvenanceSheetComponent, RouterLink, BirthTimeBadgeComponent],
   templateUrl: './chart-hub.component.html',
   styleUrl: './chart-hub.component.scss',
 })
@@ -72,9 +73,7 @@ export class ChartHubComponent {
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly screenTitle = computed(() =>
-    this.preferences.experienceMode() === 'guided' ? 'Your story'
-      : this.preferences.experienceMode() === 'practitioner' ? 'Yantra'
-      : 'Explore',
+    this.preferences.experienceMode() === 'practitioner' ? 'Yantra' : 'Your chart',
   );
   readonly profileName = computed(() => this.kundlis.active()?.name ?? 'Choose profile');
   readonly profileInitial = computed(() => this.profileName().slice(0, 1).toUpperCase());

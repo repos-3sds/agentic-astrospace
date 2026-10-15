@@ -12,7 +12,7 @@ import { BackBarComponent } from '../shared/back-bar.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [BackBarComponent, GenericErrorComponent, RouterLink],
   template: `
-    <as-back-bar back="/m/settings" crumb="Settings" title="Profiles">
+    <as-back-bar back="/m/settings" crumb="More" title="Profiles">
       <a class="text-link" routerLink="/m/settings/profiles/new">Add</a>
     </as-back-bar>
 

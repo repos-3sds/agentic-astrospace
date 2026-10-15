@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
+import { BackBarComponent } from '../shared/back-bar.component';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 
 interface ExploreCard {
@@ -17,7 +18,7 @@ interface ExploreCard {
   selector: 'as-guided-explore',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ProfileSwitcherComponent, RouterLink],
+  imports: [BackBarComponent, ProfileSwitcherComponent, RouterLink],
   templateUrl: './guided-explore.component.html',
   styleUrl: './guided-explore.component.scss',
 })

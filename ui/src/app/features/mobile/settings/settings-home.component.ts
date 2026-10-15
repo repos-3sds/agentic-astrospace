@@ -63,7 +63,29 @@ export class SettingsHomeComponent {
     };
   });
 
+  /**
+   * Ask-first modes take the chart screens off the tab bar (checklist D1);
+   * this is where they are listed instead. Practitioner keeps them as tabs,
+   * so the group would only repeat the bar there.
+   */
+  private readonly chartGroup = computed<SettingGroup[]>(() => {
+    const mode = this.preferences.experienceMode();
+    if (mode === 'practitioner') return [];
+    const rows: SettingRow[] = [];
+    if (mode === 'guided') {
+      rows.push({ id: 'explore', icon: 'explore-readings', label: 'Your story', value: 'Life chapters, what to do', route: ['/m', 'explore'] });
+    }
+    rows.push(
+      { id: 'chart', icon: 'explore-varga', label: 'Your chart', value: this.kundlis.active()?.ascendant ? `${this.kundlis.active()!.ascendant} rising` : 'Chart & vargas', route: ['/m', 'chart'] },
+      { id: 'periods', icon: 'explore-dasha', label: 'Life periods', value: 'Dashas', route: ['/m', 'chart', 'periods'] },
+      { id: 'transits', icon: 'explore-transit', label: 'Transits', value: 'Now', route: ['/m', 'transits'] },
+      { id: 'readings', icon: 'explore-reference', label: 'Readings', value: 'Track record', route: ['/m', 'readings'] },
+    );
+    return [{ eyebrow: 'CHART & TIMING', rows }];
+  });
+
   readonly groups = computed<SettingGroup[]>(() => [
+    ...this.chartGroup(),
     {
       eyebrow: 'EXPERIENCE',
       rows: [

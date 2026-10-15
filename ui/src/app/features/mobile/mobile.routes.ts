@@ -45,6 +45,11 @@ export const MOBILE_ROUTES: Routes = [
       ),
   },
   {
+    path: 'family',
+    loadComponent: () =>
+      import('./family/family.component').then((m) => m.FamilyComponent),
+  },
+  {
     path: 'explore',
     loadComponent: () =>
       import('./explore/guided-explore.component').then(
