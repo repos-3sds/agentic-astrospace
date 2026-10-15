@@ -4,8 +4,8 @@ import { RouterLink } from '@angular/router';
 import { ApiService } from '../../../core/api.service';
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
-import { BackLinkDirective } from '../../../core/back-link.directive';
-@Component({selector:'as-account-deletion',standalone:true,imports:[BackLinkDirective, FormsModule,RouterLink],templateUrl:'./account-deletion.component.html',styleUrl:'./account-deletion.component.scss',changeDetection:ChangeDetectionStrategy.OnPush})
+import { BackBarComponent } from '../shared/back-bar.component';
+@Component({selector:'as-account-deletion',standalone:true,imports:[BackBarComponent, FormsModule,RouterLink],templateUrl:'./account-deletion.component.html',styleUrl:'./account-deletion.component.scss',changeDetection:ChangeDetectionStrategy.OnPush})
 export class AccountDeletionComponent{
  private readonly api=inject(ApiService);private readonly auth=inject(AuthService);private readonly kundlis=inject(KundliStore);
  protected understood=false;protected confirmation='';protected readonly busy=signal(false);protected readonly error=signal<string|null>(null);

@@ -5,6 +5,8 @@ import { ReferOutError } from '../../../core/api.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
 import { timingClockNote, timingPlaceLabel } from '../../../core/timing-place';
+import { buildIcs } from '../../../core/ics';
+import { shareFile } from '../../../core/native-share';
 import { MuhurtaApiWindow, VedicService } from '../../../core/vedic.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
@@ -23,6 +25,8 @@ export interface MuhurtaWindow {
   against: string[];
   /** The rule that produced this window, named. */
   reason: string;
+  startIso: string;
+  endIso: string;
 }
 
 /**
@@ -124,6 +128,47 @@ export class MuhurtaResultsComponent {
   readonly conventionDependent = signal(false);
 
   readonly windows = signal<MuhurtaWindow[]>([]);
+  /** Rank of the window whose calendar file is being made. */
+  protected readonly exporting = signal<number | null>(null);
+  /** Rank of the window whose export failed, so the note sits under it. */
+  protected readonly exportFailed = signal<number | null>(null);
+
+  /**
+   * Hands one window to the phone's calendar as an .ics file, with an alert
+   * 30 minutes before. The calendar app owns the reminder, so it fires even
+   * with this app closed.
+   */
+  protected async addToCalendar(w: MuhurtaWindow): Promise<void> {
+    this.exporting.set(w.rank);
+    this.exportFailed.set(null);
+    try {
+      const title = this.heading().replace(/^Best times (to|for) /, '');
+      const ics = buildIcs([{
+        uid: `muhurta-${w.startIso}@astrospace`,
+        title: `Muhurta: ${title}`,
+        startIso: w.startIso,
+        endIso: w.endIso,
+        description: `${w.reason} ${this.disclaimer()}`,
+        location: this.place(),
+        alarmMinutes: 30,
+      }]);
+      const name = `muhurta-${w.startIso.slice(0, 10)}.ics`;
+      const file = new File([ics], name, { type: 'text/calendar' });
+      const shared = await shareFile(file, { title: `Muhurta: ${title}` });
+      if (!shared) {
+        const url = URL.createObjectURL(file);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = name;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+    } catch {
+      this.exportFailed.set(w.rank);
+    } finally {
+      this.exporting.set(null);
+    }
+  }
 
   constructor() {
     void this.load();
@@ -197,17 +242,21 @@ export class MuhurtaResultsComponent {
         supports: window.why.supports,
         against: window.why.against,
         reason: this.reason(window),
+        startIso: window.start_iso,
+        endIso: window.end_iso,
       }));
   }
 
   private reason(window: MuhurtaApiWindow): string {
+    // The window name and score already sit on the line above.
     const parts = [
-      `${window.window} · ${window.score}/100`,
       window.vara ? `${window.vara} vara` : null,
       window.nakshatra ? `${window.nakshatra} nakshatra` : null,
       window.trimmed ? 'trimmed around avoid-windows' : null,
-    ].filter(Boolean);
-    return `${parts.join(' · ')}.`;
+    ].filter(Boolean) as string[];
+    if (!parts.length) return '';
+    const text = parts.join(' · ');
+    return `${text.charAt(0).toUpperCase()}${text.slice(1)}.`;
   }
 
   private dateLabel(value: string): string {

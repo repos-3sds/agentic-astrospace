@@ -3,6 +3,8 @@ import { ASK_NAVIGATION } from './ask-navigation';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
+import { BackBarComponent } from '../shared/back-bar.component';
+
 import { KundliStore } from '../../../core/kundli.store';
 import {
   MobileAskThread,
@@ -13,7 +15,7 @@ import { GenericErrorComponent } from '../states/generic-error.component';
 @Component({
   selector: 'as-ask-history',
   standalone: true,
-  imports: [GenericErrorComponent, RouterLink, LucideAngularModule],
+  imports: [BackBarComponent, GenericErrorComponent, RouterLink, LucideAngularModule],
   templateUrl: './ask-history.component.html',
   styleUrl: './ask-history.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

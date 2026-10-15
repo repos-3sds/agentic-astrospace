@@ -1,8 +1,4 @@
-<a class="life-appbar" [routerLink]="['/m', 'explore']">
-  <span class="back">‹</span>
-  <h1>Life Chapters</h1>
-  <span class="spark asset-icon" style="--icon-url: url('/mobile/figma-guided-star.svg')" aria-hidden="true"></span>
-</a>
+<as-back-bar [back]="['/m', 'explore']" crumb="Explore" title="Life chapters" />
 
 <main class="life-body">
   @if (loading()) {

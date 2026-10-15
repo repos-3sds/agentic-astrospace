@@ -15,13 +15,13 @@ const PREVIEW_TEXT =
 /**
  * Settings — Language & audio (Figma node 67:147).
  *
- * Language is a segmented control because there are two response languages,
- * and Telugu is written in Telugu. The app shell is still English; this
- * controls the language Siddha uses for generated Ask answers.
+ * Language uses the same cards as onboarding's language step, and Telugu is
+ * written in Telugu. The app shell is still English; this controls the
+ * language Siddha uses for generated Ask answers.
  *
- * Both switches describe their consequence rather than their mechanism —
- * "Adds a Listen button to your daily card", not "Enable TTS". Someone turning
- * audio off should be able to tell what will disappear.
+ * The read-aloud switch describes its consequence rather than its mechanism
+ * ("Shows a Listen button on your daily card", not "Enable TTS"), and Today
+ * honours it, so someone turning audio off can tell what will disappear.
  *
  * Voice selection lists whatever the device's own TTS engine has installed —
  * see mobile-tts.service.ts's listVoices(). It cannot offer voices the device
@@ -46,8 +46,7 @@ export class LanguageAudioComponent {
     { id: 'en', label: 'English', detail: 'Natural Indian English' },
     { id: 'te', label: 'తెలుగు', detail: 'Simple Telugu with natural English words' },
   ];
-  readonly readAloud = signal(true);
-  readonly gentleVoice = signal(true);
+  readonly readAloud = this.preferences.readAloud;
 
   protected readonly nativeAvailable = Capacitor.isNativePlatform();
   protected readonly platform = Capacitor.getPlatform();
@@ -60,11 +59,8 @@ export class LanguageAudioComponent {
   }
 
   protected toggleReadAloud(): void {
+    this.haptics.select();
     this.readAloud.update((on) => !on);
-  }
-
-  protected toggleGentleVoice(): void {
-    this.gentleVoice.update((on) => !on);
   }
 
   protected setLanguage(language: AppLanguage): void {

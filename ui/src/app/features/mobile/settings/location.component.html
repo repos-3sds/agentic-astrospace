@@ -24,7 +24,7 @@
         <span class="choice-copy">
           <span class="choice-label">{{ p.label }}</span>
           <span class="choice-detail">
-            {{ p.id === 'current' ? currentTimezone() : selectedLabel() }}
+            {{ p.id === 'current' ? currentDetail() : selectedLabel() }}
           </span>
         </span>
       </span>
@@ -35,7 +35,7 @@
   }
 
   <label class="place-search">
-    <span>SELECT CITY</span>
+    <span>CHOOSE A CITY</span>
     <input
       type="search"
       autocomplete="off"

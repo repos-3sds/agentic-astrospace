@@ -4,19 +4,17 @@ import { RouterLink } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
 import { Kundli } from '../../../core/models';
 import { GenericErrorComponent } from '../states/generic-error.component';
-import { BackLinkDirective } from '../../../core/back-link.directive';
+import { BackBarComponent } from '../shared/back-bar.component';
 
 @Component({
   selector: 'as-profile-management',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, RouterLink],
+  imports: [BackBarComponent, GenericErrorComponent, RouterLink],
   template: `
-    <header class="profiles-appbar">
-      <a asBack="/m/settings" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
-      <h1>Manage Profiles</h1>
+    <as-back-bar back="/m/settings" crumb="Settings" title="Profiles">
       <a class="text-link" routerLink="/m/settings/profiles/new">Add</a>
-    </header>
+    </as-back-bar>
 
     <main class="profiles-main">
       @if (loading()) {

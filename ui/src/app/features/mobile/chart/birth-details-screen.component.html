@@ -1,12 +1,6 @@
-<a class="bds-appbar" [asBack]="['/m','chart']">
-  <img src="mobile/back.svg" alt="" /><span>Your Chart</span>
-</a>
+<as-back-bar [back]="['/m','chart']" crumb="Chart" title="Birth details" lede="The inputs every line of your chart is computed from." />
 
 <main>
-  <header>
-    <h1>Birth details</h1>
-    <p>The inputs every line of your chart is computed from.</p>
-  </header>
 
   @if (loading()) {
     <p class="bds-state">Loading birth details…</p>

@@ -4,19 +4,15 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
 import { GenericErrorComponent } from '../states/generic-error.component';
-import { BackLinkDirective } from '../../../core/back-link.directive';
+import { BackBarComponent } from '../shared/back-bar.component';
 
 @Component({
   selector: 'as-profile-delete',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, FormsModule, RouterLink],
+  imports: [BackBarComponent, GenericErrorComponent, FormsModule, RouterLink],
   template: `
-    <header class="profiles-appbar">
-      <a asBack="/m/settings/profiles" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
-      <h1>Delete Profile</h1>
-      <span></span>
-    </header>
+    <as-back-bar back="/m/settings/profiles" crumb="Profiles" title="Delete profile" />
 
     <main class="profiles-main">
       @if (loading()) {
@@ -39,7 +35,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
     <footer class="profiles-footer split">
       <a routerLink="/m/settings/profiles">Cancel</a>
       <button type="button" [disabled]="!canDelete() || deleting()" (click)="remove()">
-        {{ deleting() ? 'Deleting...' : 'Delete Profile' }}
+        {{ deleting() ? 'Deleting…' : 'Delete profile' }}
       </button>
     </footer>
   `,

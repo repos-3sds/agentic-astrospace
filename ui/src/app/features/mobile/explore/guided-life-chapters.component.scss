@@ -7,17 +7,6 @@
   color: var(--m-text);
 }
 
-.life-appbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  color: var(--m-text);
-  text-decoration: none;
-
-  h1 { @include m-h1; flex: 1 1 auto; margin: 0; }
-}
-
 .back,
 .spark {
   display: grid;

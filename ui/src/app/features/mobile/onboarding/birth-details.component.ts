@@ -39,7 +39,7 @@ export function registeredName(metadata: Record<string, unknown> | undefined | n
     </header>
 
     <h1 class="headline">Begin with your birth rhythm</h1>
-    <p class="lede">These details anchor your life map. Daily guidance can still follow your current location.</p>
+    <p class="lede">These details anchor your life map. Daily timings follow your phone’s timezone, or a city you choose in Settings.</p>
 
     <as-birth-details-form
       class="form"

@@ -18,11 +18,33 @@ export interface TimingPlacePayload {
   viewer_timezone?: string | null;
 }
 
-const SOURCE_NOTE: Record<TimingPlaceSource, string> = {
+export const SOURCE_NOTE: Record<TimingPlaceSource, string> = {
   selected: 'your selected city',
   viewer_timezone: 'nearest listed city to your phone’s timezone',
   birth_city: 'birth city',
 };
+
+/**
+ * The place a timing screen will use before the server has answered, said
+ * the way the server will decide it (`api/timing_place.py`): the chosen city
+ * if there is one, else the listed city nearest the phone's timezone, else
+ * the birth city. Settings, Today and Muhurta all describe it with this, so
+ * the same rule is never worded three ways.
+ */
+export function plannedTimingPlace(
+  selected: { city: string; nation?: string } | null | undefined,
+  viewerTimezone: string,
+  at = new Date(),
+): { short: string; sentence: string } {
+  if (selected?.city) {
+    return { short: selected.city, sentence: `${selected.city}, the city you chose` };
+  }
+  const clock = timezoneShortName(viewerTimezone, at);
+  return {
+    short: 'Follows phone',
+    sentence: `The listed city nearest your phone’s timezone${clock ? ` (${clock})` : ''}, or your birth city`,
+  };
+}
 
 /** "GMT+5:30" for Asia/Kolkata; falls back to the IANA name. */
 export function timezoneShortName(timezone: string | undefined, at = new Date()): string {

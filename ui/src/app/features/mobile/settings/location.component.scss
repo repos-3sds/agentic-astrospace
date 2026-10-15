@@ -16,9 +16,7 @@
 .choice-detail {
   @include m-caption;
   color: var(--m-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .place-search {

@@ -358,7 +358,16 @@
 }
 
 .card-head { display: flex; align-items: center; justify-content: space-between; }
-.place { @include m-caption; color: var(--m-muted); margin: 0; }
+.place {
+  @include m-caption;
+  color: var(--m-muted);
+  margin: 0;
+  text-decoration: underline dotted color-mix(in srgb, var(--m-muted) 60%, transparent);
+  text-underline-offset: 3px;
+  // Small text, full-size target.
+  padding: 12px 0 12px 12px;
+  margin: -12px 0 -12px -12px;
+}
 
 .verdict-row { display: flex; align-items: center; gap: 18px; }
 

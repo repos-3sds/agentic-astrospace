@@ -2,38 +2,53 @@
 @use './settings-shared' as shared;
 
 @include shared.settings-screen;
-@include shared.settings-segmented;
 @include shared.settings-switch;
 @include shared.settings-choice;
 
 .body { gap: 14px; }
 
-// Two-line segments (name and detail) keep equal halves and wrap rather than
-// scrolling; the picker's redesign is a separate checklist item.
-.segmented { grid-auto-columns: minmax(0, 1fr); border-radius: 22px; }
+.languages { display: flex; flex-direction: column; gap: 12px; }
 
-// The button mixin left these as inline content, so the detail line ran on
-// after the name and the selected pill covered it.
-.segment {
+.language {
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
-  justify-content: center;
-  white-space: normal;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 72px;
+  padding: 14px 18px;
+  border: 1.2px solid var(--m-border);
+  border-radius: 20px;
+  background: var(--m-surface);
+  color: var(--m-text);
   text-align: left;
-  padding: 10px 14px;
-  border-radius: 18px;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 3px;
+  cursor: pointer;
 
-  small {
-    @include m-caption;
-    color: var(--m-muted);
-    text-transform: none;
-    letter-spacing: 0;
+  &.is-on {
+    border: 2px solid var(--m-accent);
+    background: var(--m-accent-soft);
+    box-shadow: var(--m-shadow-card);
   }
 }
 
-.segment.is-on small { color: color-mix(in srgb, var(--m-on-ink) 72%, transparent); }
+.language-copy { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.language-label { @include m-body-strong; }
+.language small { @include m-body-small; color: var(--m-muted); }
+
+.radio { width: 24px; height: 24px; display: block; flex-shrink: 0; }
+
+.tick {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--m-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  img { width: 14px; height: 14px; display: block; }
+}
 
 .eyebrow { @include m-eyebrow; color: var(--m-accent-strong); margin: 6px 0 0; }
 .voice-note { @include m-body-small; color: var(--m-muted); margin: -4px 0 2px; }

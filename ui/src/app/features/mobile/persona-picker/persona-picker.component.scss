@@ -23,6 +23,8 @@
     border: 2px solid var(--m-accent);
     box-shadow: var(--m-shadow-card);
     .option-icon { background: var(--m-surface); }
+    // The accent badge shares the selected card's fill and lost its pill.
+    .badge[data-tone='accent'] { background: var(--m-surface); }
   }
 }
 

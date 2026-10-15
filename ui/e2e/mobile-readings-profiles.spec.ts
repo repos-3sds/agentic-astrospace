@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 
 const profileOne = {
   id: 'profile-1',
@@ -725,20 +726,22 @@ test('mobile profile management adds, edits, deletes and switches safely', async
   await page.getByLabel('TIME OF BIRTH').fill('06:45');
   await page.getByRole('textbox', { name: 'PLACE OF BIRTH' }).fill('Pune');
   await page.getByRole('option', { name: /Pune/ }).click();
-  await page.getByRole('button', { name: 'Add Profile' }).click();
+  await page.getByRole('button', { name: 'Add profile' }).click();
   await expect(page).toHaveURL(/\/m\/settings\/profiles$/);
   await expect(page.getByText('Mira Rao')).toBeVisible();
+  // Adding someone does not switch the app to them.
+  await expect(page.locator('.profile-card.active').filter({ hasText: 'Anika Rao' })).toBeVisible();
 
   await page.goto('/m/settings/profiles/profile-3/edit');
   await page.getByRole('textbox', { name: 'NAME' }).fill('Mira Iyer');
-  await page.getByRole('button', { name: 'Save Changes' }).click();
+  await page.getByRole('button', { name: 'Save changes' }).click();
   await expect(page).toHaveURL(/\/m\/settings\/profiles$/);
   await expect(page.getByText('Mira Iyer')).toBeVisible();
 
   await page.goto('/m/settings/profiles/profile-3/delete');
-  await expect(page.getByText('The active profile will switch to another available profile after deletion.')).toBeVisible();
+  await expect(page.getByText('The active profile will switch to another available profile after deletion.')).toHaveCount(0);
   await page.getByRole('textbox', { name: 'TYPE MIRA IYER TO CONFIRM' }).fill('Mira Iyer');
-  await page.getByRole('button', { name: 'Delete Profile' }).click();
+  await page.getByRole('button', { name: 'Delete profile' }).click();
   await expect(page).toHaveURL(/\/m\/settings\/profiles$/);
   await expect(page.getByText('Mira Iyer')).toHaveCount(0);
   await expect(page.locator('.profile-card.active').filter({ hasText: 'Anika Rao' })).toBeVisible();
@@ -880,8 +883,11 @@ test('mobile remedies and muhurta use available backend-backed inputs honestly',
   await expect(page.getByText('Wednesday, July 29')).toBeVisible();
   await expect(page.getByText('12:05 – 12:55')).toBeVisible();
   await expect(page.getByText(/Abhijit Muhurta returned by the panchanga calculation/)).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Calendar export not available yet' }).first()).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'Reminders need native support' }).first()).toBeDisabled();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Add to calendar' }).first().click();
+  const ics = readFileSync((await (await download).path())!, 'utf8');
+  expect(ics).toContain('BEGIN:VEVENT');
+  expect(ics).toContain('TRIGGER:-PT30M');
   await expect(page.getByText('Tuesday, 29 July')).toHaveCount(0);
 });
 

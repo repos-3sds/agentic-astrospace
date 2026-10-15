@@ -29,8 +29,11 @@
             <span class="choice-detail">{{ choice.description }}</span>
           </span>
         </span>
+        <!-- Same radio and filled tick as the language and persona steps before it. -->
         @if (on) {
-          <img class="choice-tick" src="mobile/check-accent.svg" alt="" aria-hidden="true" />
+          <span class="tick" aria-hidden="true"><img src="mobile/check.svg" alt="" /></span>
+        } @else {
+          <img class="radio" src="mobile/radio-off.svg" alt="" aria-hidden="true" />
         }
       </button>
     }

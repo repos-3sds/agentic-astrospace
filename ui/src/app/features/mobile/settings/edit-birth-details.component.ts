@@ -4,13 +4,13 @@ import { Router } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
 import { KundliPayload } from '../../../core/models';
 import { ChartComputingComponent } from '../states/chart-computing.component';
-import { BackLinkDirective } from '../../../core/back-link.directive';
 import { BirthDetailsFormComponent } from '../shared/birth-details-form.component';
+import { BackBarComponent } from '../shared/back-bar.component';
 
 @Component({
   selector: 'as-edit-birth-details',
   standalone: true,
-  imports: [BackLinkDirective, ChartComputingComponent, BirthDetailsFormComponent],
+  imports: [BackBarComponent, ChartComputingComponent, BirthDetailsFormComponent],
   templateUrl: './edit-birth-details.component.html',
   styleUrl: './edit-birth-details.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

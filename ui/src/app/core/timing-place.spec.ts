@@ -1,4 +1,4 @@
-import { timingClockNote, timingPlaceLabel, timezoneShortName } from './timing-place';
+import { plannedTimingPlace, timingClockNote, timingPlaceLabel, timezoneShortName } from './timing-place';
 
 describe('timing place labels', () => {
   const at = new Date('2026-07-07T06:00:00Z');
@@ -25,5 +25,14 @@ describe('timing place labels', () => {
     expect(timezoneShortName('Mars/Olympus', at)).toBe('Mars/Olympus');
     expect(timingPlaceLabel(null)).toBe('');
     expect(timingClockNote(undefined)).toBe('');
+  });
+
+  it('describes the planned place the way the server will choose it', () => {
+    expect(plannedTimingPlace({ city: 'Chennai', nation: 'IN' }, 'UTC', at))
+      .toEqual({ short: 'Chennai', sentence: 'Chennai, the city you chose' });
+    expect(plannedTimingPlace(null, 'Asia/Kolkata', at)).toEqual({
+      short: 'Follows phone',
+      sentence: 'The listed city nearest your phone’s timezone (GMT+5:30), or your birth city',
+    });
   });
 });

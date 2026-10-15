@@ -92,11 +92,17 @@ export class KundliStore {
     else localStorage.removeItem(this.activeStorageKey);
   }
 
-  async create(payload: KundliPayload): Promise<Kundli> {
+  /**
+   * `activate: false` adds the profile without switching to it. Adding a
+   * family member used to swap the whole app to them without a word, so the
+   * Profiles screen adds quietly and lets the person choose; the first
+   * profile is always made active, since there is nothing else to show.
+   */
+  async create(payload: KundliPayload, options: { activate?: boolean } = {}): Promise<Kundli> {
     const created = await this.api.post<Kundli>('/kundlis', payload);
     this.vedic.configureProfile(created);
     this.kundlis.update((list) => [...list, created]);
-    this.setActive(created.id);
+    if (options.activate !== false || !this.activeId()) this.setActive(created.id);
     return created;
   }
 
