@@ -25,6 +25,13 @@ COPY main.py setup.py ./
 COPY astrospace/ ./astrospace/
 COPY --from=ui-build /app/frontend/dist ./frontend/dist
 
+# Run as an unprivileged user. The code stays root-owned (read-only to the
+# app); only the working directory itself is the app's, for anything a
+# library caches next to it. Temporary files go to /tmp as usual.
+RUN useradd --system --uid 10001 --create-home --home-dir /home/app app \
+    && chown app /app
+USER app
+
 # Cloud Run injects PORT; default to 8080 for local docker runs.
 ENV PORT=8080
 EXPOSE 8080

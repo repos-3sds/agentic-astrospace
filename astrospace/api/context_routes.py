@@ -46,6 +46,22 @@ def _chart_from_kundli(k, ayanamsha: str, node_type: str) -> VedicChart:
 
 
 
+# "Now" for the daily guidance is rounded down to this many minutes. The
+# cache key below includes `as_of`, and with the raw clock (microseconds) it
+# never hit twice. Why not the hour or the date: the Vedic day turns at
+# sunrise and the Moon moves about half a degree an hour, so a coarse bucket
+# would keep serving yesterday's day for up to an hour after sunrise. Fifteen
+# minutes bounds that lag while letting every open of the app in the same
+# quarter hour share one computation. An explicit `as_of` is left exact.
+DAILY_GUIDANCE_BUCKET_MINUTES = 15
+
+
+def _bucketed_now(tz: ZoneInfo) -> datetime:
+    now = datetime.now(tz)
+    return now.replace(minute=now.minute - now.minute % DAILY_GUIDANCE_BUCKET_MINUTES,
+                       second=0, microsecond=0)
+
+
 @lru_cache(maxsize=2048)
 def _cached_daily_guidance(
     kundli_id: str,
@@ -90,7 +106,7 @@ def daily(
     if as_of and as_of.tzinfo is None:
         as_of = as_of.replace(tzinfo=ZoneInfo(place.tz_str))
     if not as_of:
-        as_of = datetime.now(ZoneInfo(place.today_tz))
+        as_of = _bucketed_now(ZoneInfo(place.today_tz))
 
     try:
         cached = _cached_daily_guidance(
