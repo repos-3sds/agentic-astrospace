@@ -73,19 +73,23 @@ def reserve_ask_credit(db: Session, user_id: str, *, now: datetime | None = None
     snapshot = resolve_entitlements(db, user_id, now=now)
     limit = snapshot.entitlements.get(ASK_KEY)
     bucket = _bucket(db, snapshot.account_id, now)
+    # Plain values, read before any commit: a commit expires `bucket`, and
+    # touching it afterwards would open a new transaction just to reload it,
+    # pinning a pooler connection through the model call that follows.
+    bucket_id, period_end = bucket.id, bucket.period_end
 
     if limit is not None:
         claimed = db.execute(
             update(UsageBucket)
             .where(
-                UsageBucket.id == bucket.id,
+                UsageBucket.id == bucket_id,
                 UsageBucket.consumed + UsageBucket.reserved < int(limit),
             )
             .values(reserved=UsageBucket.reserved + 1, version=UsageBucket.version + 1)
         ).rowcount
         if claimed:
             db.commit()
-            return AskReservation("allowance", bucket.id)
+            return AskReservation("allowance", bucket_id)
 
         packs = (
             db.query(QuestionCredit.id)
@@ -111,18 +115,18 @@ def reserve_ask_credit(db: Session, user_id: str, *, now: datetime | None = None
         if quotas_enforced():
             raise EntitlementDenied(EntitlementDecision(
                 False, ASK_KEY, limit, "limit_reached", snapshot.access_tier,
-                remaining=0, resets_at=bucket.period_end.isoformat(),
+                remaining=0, resets_at=period_end.isoformat(),
             ))
 
     # No limit, or a limit that is counted but not yet enforced: the answer
     # goes ahead and still lands in this month's count.
     db.execute(
         update(UsageBucket)
-        .where(UsageBucket.id == bucket.id)
+        .where(UsageBucket.id == bucket_id)
         .values(reserved=UsageBucket.reserved + 1, version=UsageBucket.version + 1)
     )
     db.commit()
-    return AskReservation("unmetered", bucket.id)
+    return AskReservation("unmetered", bucket_id)
 
 
 def commit_ask_credit(db: Session, reservation: AskReservation | None) -> None:

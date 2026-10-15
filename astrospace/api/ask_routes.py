@@ -12,7 +12,16 @@ leave a dangling user turn behind whenever generation fails, and the next
 request would replay a history with two user messages in a row. So the user
 and assistant messages are written together, once there is an answer. A failed
 request persists nothing and is safe to retry.
+
+Why the request's transaction is released before generation
+------------------------------------------------------------
+A model call takes 10–90 s. Under Supabase's transaction pooler an open
+transaction pins a server connection for that whole time, so the request
+session is committed (`release_connection`) once `prepare()` has read
+everything it needs, and the turn is written afterwards through a fresh,
+short session (`short_session`) in a single transaction (`add_ask_turn`).
 """
+import logging
 from datetime import datetime
 from typing import Optional, Literal
 
@@ -26,11 +35,13 @@ from ..context.taxonomy import TaxonomyError
 from ..db import get_db
 from ..db import crud, crud_mobile as cm
 from ..db.crud_profile_context import build_profile_context_projection
+from ..db.database import release_connection, short_session
 from ..entitlements.usage import commit_ask_credit, release_ask_credit, reserve_ask_credit
 from .auth import CurrentUser
 from .context_routes import _chart_from_kundli
 
 router = APIRouter(prefix="/api/v1/ask", tags=["ask-ai"])
+log = logging.getLogger(__name__)
 
 MAX_HISTORY = 12
 MAX_QUESTION_CHARS = 2000
@@ -148,6 +159,43 @@ def _usage_fields(usage: Optional[dict]) -> dict:
             "breakdown": list(usage.get("breakdown") or []),
         },
     }
+
+
+def _persist_ask_turn(db: Session, body: "AskRequest", *, user_id: str, kundli_id: str,
+                      thread_id: Optional[str], content: str, domain: Optional[str],
+                      refer_out_kind: Optional[str], evidence: Optional[dict],
+                      usage: Optional[dict] = None):
+    """Write the question and its answer together through a fresh, short
+    session; returns the (detached, fully loaded) thread, or None when the
+    turn is stateless. Shared with `ask_stream_routes.py` so both surfaces
+    persist identically.
+
+    The request session is released first, so no transaction it opened is
+    still holding a connection (or, on SQLite, a lock) while this one writes.
+    """
+    if thread_id is None and not body.start_thread:
+        return None
+    release_connection(db)
+    with short_session(db) as session:
+        return cm.add_ask_turn(
+            session, thread_id=thread_id, user_id=user_id, kundli_id=kundli_id,
+            question=body.question, answer=content,
+            user_fields={"language": body.language, "input_mode": body.input_mode},
+            assistant_fields={
+                "language": body.language, "domain": domain,
+                "refer_out_kind": refer_out_kind, "evidence": evidence or {},
+                **_usage_fields(usage),
+            },
+        )
+
+
+def _settle_credit(db: Session, settle, reservation) -> None:
+    """Commit or release an Ask credit after the model call, on a fresh short
+    session bound to the request's engine. The reservation carries only row
+    ids, so it needs nothing from the (released) request session. Shared
+    with `ask_stream_routes.py`."""
+    with short_session(db) as session:
+        settle(session, reservation)
 
 
 def _owned_thread(db: Session, thread_id: str, user_id: str):
@@ -337,19 +385,19 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
         response built after this call sees the thread this turn actually
         used or created, matching every other terminal branch below."""
         nonlocal thread
-        if thread is None and body.start_thread:
-            thread = cm.create_ask_thread(db, user.id, kundli_id)
-        if thread is None:
+        saved = _persist_ask_turn(
+            db, body, user_id=user.id, kundli_id=kundli_id, thread_id=thread_id,
+            content=content, domain=domain, refer_out_kind=refer_out_kind,
+            evidence=evidence, usage=usage,
+        )
+        if saved is None:
             return None
-        cm.add_ask_message(db, thread.id, "user", body.question,
-                           language=body.language, input_mode=body.input_mode)
-        cm.add_ask_message(db, thread.id, "assistant", content,
-                           language=body.language, domain=domain,
-                           refer_out_kind=refer_out_kind, evidence=evidence or {},
-                           **_usage_fields(usage))
-        db.refresh(thread)
+        thread = saved
         return thread.id
 
+    # Read while the request session is still live: after release_connection
+    # below, touching `thread` would open a new transaction just to reload it.
+    thread_id = thread.id if thread else None
     thread_domain = _thread_established_domain(db, thread.id) if thread else None
 
     orchestrator = AskOrchestrator(
@@ -365,8 +413,9 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
             tone=body.tone,
             # validate_first intentionally not passed through — see docstring.
         )
-    except TaxonomyError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except TaxonomyError:
+        log.exception("ask prepare failed on taxonomy (kundli=%s)", kundli_id)
+        raise HTTPException(status_code=500, detail="Could not prepare this answer")
 
     if outcome.terminal_envelope is not None:
         envelope = outcome.terminal_envelope
@@ -439,7 +488,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
             # report the thread that already existed, if any. Matches the
             # module docstring's "a failed request persists nothing" and
             # ask_stream_routes.py's identical contract.
-            return thread.id if thread else None
+            return thread_id
         return persist_turn(reading.interpretation, domain=prepared.domain,
                             refer_out_kind=None,
                             evidence=_evidence_from_reading(
@@ -449,29 +498,35 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
                             ),
                             usage=prepared.usage)
 
+    # Everything the model needs is in `prepared` and `messages`; give the
+    # connection back before the 10–90 s generation (see module docstring).
+    # The credit was reserved (and committed) above; settling it after the
+    # model call goes through a fresh short session like the turn itself.
+    release_connection(db)
     done = None
     try:
         for event in orchestrator.run(prepared, messages, persist=persist_prepared):
             if event["type"] == "done":
                 done = event
     except BaseException:
-        release_ask_credit(db, reservation)
+        _settle_credit(db, release_ask_credit, reservation)
         raise
 
     if done is None or done["status"] != "answered":
         # A failed or unverified answer is never charged.
-        release_ask_credit(db, reservation)
+        _settle_credit(db, release_ask_credit, reservation)
         # Explicit, not a generic 500 — the reader gets a clear signal that
         # generation or verification failed, never a reading that shouldn't
         # have shipped. Matches this route's pre-migration contract (a
         # model-call exception was already a 502) and extends it to the new
         # failure mode `verify()`/`verify_coverage()` can produce that
         # VedicQAAgent never had.
-        detail = ("AI generation failed" if done["status"] == "generation_failed"
+        detail = ("AI generation failed"
+                  if done is None or done["status"] == "generation_failed"
                   else "The answer did not pass verification")
         raise HTTPException(status_code=502, detail=detail)
 
-    commit_ask_credit(db, reservation)
+    _settle_credit(db, commit_ask_credit, reservation)
     reading = done["reading"]
     return {
         "answer": reading["interpretation"],

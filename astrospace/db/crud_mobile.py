@@ -127,8 +127,12 @@ def get_ask_thread(db: Session, thread_id: str, user_id: str | None = None) -> A
     return q.first()
 
 
-def add_ask_message(db: Session, thread_id: str, role: str, content: str, **fields) -> AskMessage:
-    """Append a message and keep the thread's denormalised counters in step."""
+def add_ask_message(db: Session, thread_id: str, role: str, content: str,
+                    commit: bool = True, **fields) -> AskMessage:
+    """Append a message and keep the thread's denormalised counters in step.
+
+    `commit=False` leaves the write in the caller's transaction — see
+    `add_ask_turn`, which needs the question and its answer to land together."""
     message = AskMessage(thread_id=thread_id, role=role, content=content, **fields)
     db.add(message)
 
@@ -140,9 +144,48 @@ def add_ask_message(db: Session, thread_id: str, role: str, content: str, **fiel
         if not thread.title and role == "user":
             thread.title = f"{content[:79].rstrip()}…" if len(content) > 80 else content
 
-    db.commit()
-    db.refresh(message)
+    if commit:
+        db.commit()
+        db.refresh(message)
     return message
+
+
+def add_ask_turn(db: Session, *, thread_id: str | None, user_id: str, kundli_id: str,
+                 question: str, answer: str, user_fields: dict | None = None,
+                 assistant_fields: dict | None = None) -> AskThread:
+    """Write one question and its answer as a single transaction.
+
+    Separately committed, a failure between the two writes left a dangling
+    user turn, and the next request replayed a history with two user turns
+    in a row — exactly what the Ask routes' "persist only after an answer"
+    rule exists to prevent. With `thread_id=None` the thread is created in
+    the same transaction, so a failed write never leaves an empty thread.
+
+    The two `created_at` values are set explicitly, one microsecond apart:
+    history is ordered by that column, and two rows stamped in the same
+    flush could otherwise tie and replay in either order.
+    """
+    try:
+        if thread_id is None:
+            thread = AskThread(user_id=user_id, kundli_id=kundli_id)
+            db.add(thread)
+            db.flush()
+        else:
+            thread = db.get(AskThread, thread_id)
+            if thread is None:
+                raise LookupError(f"Ask thread {thread_id} no longer exists")
+        asked_at = datetime.utcnow()
+        add_ask_message(db, thread.id, "user", question, commit=False,
+                        created_at=asked_at, **(user_fields or {}))
+        add_ask_message(db, thread.id, "assistant", answer, commit=False,
+                        created_at=asked_at + timedelta(microseconds=1),
+                        **(assistant_fields or {}))
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    db.refresh(thread)
+    return thread
 
 
 def get_thread_messages(db: Session, thread_id: str, limit: int = 200) -> list[AskMessage]:

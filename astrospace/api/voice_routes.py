@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from ..db import get_db
+from ..db.database import release_connection
 from ..entitlements.resolver import require_entitlement, resolve_entitlements
 from ..voice import (
     MAX_SECTIONS,
@@ -67,6 +68,9 @@ def create_speech(body: SpeechRequest, user: CurrentUser, db: Session = Depends(
     require_entitlement(resolve_entitlements(db, user.id), "audio.natural_voice")
     if not _within_budget(user.id, len(body.text)):
         raise HTTPException(status_code=429, detail="Daily natural-voice allowance used; the phone voice still works.")
+    # The entitlement check was the last database read. Synthesis can take
+    # many seconds; don't hold a pooler connection open through it.
+    release_connection(db)
     try:
         speech = natural_speech(body.text, None if body.language == "auto" else body.language)
     except SpeechTooLong as exc:
@@ -105,6 +109,7 @@ def translate_sections(body: TranslateRequest, user: CurrentUser, db: Session = 
     require_entitlement(resolve_entitlements(db, user.id), "audio.natural_voice")
     if sum(len(section.text) for section in body.sections) > MAX_TOTAL_CHARS:
         raise HTTPException(status_code=413, detail="Too much text to translate at once.")
+    release_connection(db)  # translation is a model call; see create_speech
     try:
         sections = telugu_sections([Section(s.label, s.text) for s in body.sections])
     except TranslationUnavailable:

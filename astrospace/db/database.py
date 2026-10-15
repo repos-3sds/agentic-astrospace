@@ -1,7 +1,10 @@
 import os
+from contextlib import contextmanager
+from typing import Iterator
+
 from sqlalchemy import inspect, text
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.orm import Session, sessionmaker, DeclarativeBase
 
 def _database_url() -> str:
     """Return the SQLAlchemy database URL.
@@ -26,14 +29,71 @@ DATABASE_URL = _database_url()
 # SQLite needs check_same_thread=False. Supabase's transaction pooler is not
 # compatible with psycopg's server-side prepared statements across pooled
 # connections, so disable them for deployed Postgres connections.
-connect_args = (
-    {"check_same_thread": False}
-    if DATABASE_URL.startswith("sqlite")
-    else {"prepare_threshold": None}
-)
+def engine_options(url: str) -> dict:
+    """Pool settings per backend.
 
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+    SQLite keeps SQLAlchemy's defaults. Postgres sits behind Supabase's
+    transaction pooler, which drops connections it considers idle, so every
+    checkout is pinged (`pool_pre_ping`) and nothing older than five minutes
+    is reused (`pool_recycle`). The pool is sized for one Cloud Run instance:
+    routes release their connection before slow LLM/TTS calls (see
+    `release_connection`), so 5 + 5 per instance serves a request concurrency
+    of 20–40 without pinning a pooler slot per waiting reader. The two env
+    vars exist so the size can follow `--concurrency`/`--max-instances`
+    without a code change.
+    """
+    if url.startswith("sqlite"):
+        return {"connect_args": {"check_same_thread": False}}
+    return {
+        "connect_args": {"prepare_threshold": None},
+        "pool_pre_ping": True,
+        "pool_recycle": 300,
+        "pool_size": int(os.getenv("DB_POOL_SIZE", "5")),
+        "max_overflow": int(os.getenv("DB_MAX_OVERFLOW", "5")),
+        "pool_timeout": 30,
+    }
+
+
+engine = create_engine(DATABASE_URL, **engine_options(DATABASE_URL))
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+def release_connection(db: Session) -> None:
+    """End the session's transaction and hand its connection back to the pool.
+
+    Call this before any slow provider call (LLM, TTS). Under Supavisor's
+    transaction mode an open transaction pins a server connection, so one held
+    idle through a 10–90 s model call is a pooler slot nobody else can use.
+    Anything pending is committed rather than discarded. Loaded objects are
+    expired; re-reading an attribute starts a new short transaction, so read
+    what you need (ids, plain values) before calling this.
+    """
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+
+@contextmanager
+def short_session(db: Session) -> Iterator[Session]:
+    """A fresh session on the same engine as `db`, for a write that follows a
+    long provider call. It commits or rolls back on exit and keeps loaded
+    attributes readable after closing (`expire_on_commit=False`), so returned
+    rows can be serialised without another round trip.
+
+    Bound to `db`'s engine rather than to `SessionLocal` so it follows
+    whatever database the request was given (tests override `get_db`).
+    """
+    session = Session(bind=db.get_bind(), autoflush=False, expire_on_commit=False)
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 class Base(DeclarativeBase):
