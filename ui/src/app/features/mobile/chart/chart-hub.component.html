@@ -167,32 +167,54 @@
   <div class="explore-head">
     <p class="eyebrow">{{ preferences.experienceMode() === 'guided' ? 'EXPLORE YOUR STORY' : 'EXPLORE YOUR CHART' }}</p>
     @if (preferences.experienceMode() === 'guided') {
-      <button type="button" (click)="advancedOpen.set(!advancedOpen())">
+      <button
+        type="button"
+        aria-controls="chart-advanced"
+        [attr.aria-expanded]="advancedOpen()"
+        (click)="advancedOpen.set(!advancedOpen())"
+      >
         {{ advancedOpen() ? 'Hide advanced' : 'Advanced' }}
       </button>
     }
   </div>
   <div class="explore">
     @for (card of visibleExplore(); track card.id) {
-      @if (card.route; as route) {
-        <a class="explore-card m-pressable" [routerLink]="route" [queryParams]="card.queryParams">
-          <span class="explore-icon">
-            <img [src]="'mobile/' + card.icon + '.svg'" alt="" aria-hidden="true" />
-          </span>
-          <span class="explore-title">{{ card.title }}</span>
-          <span class="explore-sub">{{ card.subtitle }}</span>
-        </a>
-      } @else {
-        <button class="explore-card m-pressable" type="button">
-          <span class="explore-icon">
-            <img [src]="'mobile/' + card.icon + '.svg'" alt="" aria-hidden="true" />
-          </span>
-          <span class="explore-title">{{ card.title }}</span>
-          <span class="explore-sub">{{ card.subtitle }}</span>
-        </button>
-      }
+      <ng-container *ngTemplateOutlet="exploreCard; context: { $implicit: card }" />
     }
   </div>
+  @if (advancedExplore().length) {
+    <div
+      id="chart-advanced"
+      class="explore-advanced m-collapse"
+      [class.is-open]="advancedOpen()"
+    >
+      <div class="m-collapse-inner">
+        @for (card of advancedExplore(); track card.id) {
+          <ng-container *ngTemplateOutlet="exploreCard; context: { $implicit: card }" />
+        }
+      </div>
+    </div>
+  }
+
+  <ng-template #exploreCard let-card>
+    @if (card.route; as route) {
+      <a class="explore-card m-pressable" [routerLink]="route" [queryParams]="card.queryParams">
+        <span class="explore-icon">
+          <img [src]="'mobile/' + card.icon + '.svg'" alt="" aria-hidden="true" />
+        </span>
+        <span class="explore-title">{{ card.title }}</span>
+        <span class="explore-sub">{{ card.subtitle }}</span>
+      </a>
+    } @else {
+      <button class="explore-card m-pressable" type="button">
+        <span class="explore-icon">
+          <img [src]="'mobile/' + card.icon + '.svg'" alt="" aria-hidden="true" />
+        </span>
+        <span class="explore-title">{{ card.title }}</span>
+        <span class="explore-sub">{{ card.subtitle }}</span>
+      </button>
+    }
+  </ng-template>
 
   <a class="notes" [routerLink]="['/m', 'notes']">
     <img class="mark" src="mobile/notes.svg" alt="" aria-hidden="true" />

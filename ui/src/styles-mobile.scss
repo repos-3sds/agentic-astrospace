@@ -273,3 +273,54 @@ body.as-keyboard-open as-mobile-shell > .shell > .content {
 as-sheet header {
   touch-action: none;
 }
+
+// Expand/collapse in place. Markup:
+//   <div class="m-collapse" [class.is-open]="open"><div class="m-collapse-inner">…</div></div>
+// The row animates from 0fr to 1fr, so the content's real height is used and
+// nothing pops. Shut content is visibility: hidden — out of the tab order and
+// the accessibility tree — once the collapse finishes. The inner clips only
+// while moving, then unclips so card shadows are not cut off.
+//
+// In a flex or grid parent with a gap, set --m-collapse-gap to that gap: the
+// shut collapse pulls itself up by it, so it leaves one gap rather than two.
+// (Padding on the inner would not do: an fr track never shrinks below the
+// item's padding.)
+.as-mobile .m-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  margin-top: calc(-1 * var(--m-collapse-gap, 0px));
+  visibility: hidden;
+  transition:
+    grid-template-rows var(--m-dur-base) var(--m-ease-standard),
+    margin-top var(--m-dur-base) var(--m-ease-standard),
+    visibility 0s linear var(--m-dur-base);
+}
+
+.as-mobile .m-collapse.is-open {
+  grid-template-rows: 1fr;
+  margin-top: 0;
+  visibility: visible;
+  transition:
+    grid-template-rows var(--m-dur-base) var(--m-ease-standard),
+    margin-top var(--m-dur-base) var(--m-ease-standard),
+    visibility 0s;
+}
+
+.as-mobile .m-collapse > .m-collapse-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.as-mobile .m-collapse.is-open > .m-collapse-inner {
+  animation: m-collapse-unclip 0s linear var(--m-dur-base) forwards;
+}
+
+@keyframes m-collapse-unclip {
+  to { overflow: visible; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .as-mobile .m-collapse,
+  .as-mobile .m-collapse.is-open { transition: none; }
+  .as-mobile .m-collapse.is-open > .m-collapse-inner { animation: none; overflow: visible; }
+}

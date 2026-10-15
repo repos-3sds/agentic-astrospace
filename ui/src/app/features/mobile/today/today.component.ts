@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { timingPlaceLabel } from '../../../core/timing-place';
 import { DayGaugeComponent } from '../day-gauge/day-gauge.component';
@@ -32,6 +32,15 @@ import {
   nakshatraSymbol,
   tithiSymbol,
 } from '../symbols/mobile-symbols';
+
+/**
+ * The sun-rise intro is a once-per-launch moment. Module state, so it
+ * survives Today being detached and re-attached by the route reuse strategy
+ * (which restarts CSS animations) and Today being rebuilt.
+ */
+let todayIntroPlayed = false;
+/** The last planet lands at 2.7 s + 0.52 s (today.component.scss). */
+const TODAY_INTRO_MS = 3300;
 
 /** Figma 212:751's dasha-chain chips ("Moon Mahā › Rahu Antar › Jup Prat › Ven Sookshma"). */
 const DASHA_LEVEL_SHORT: Record<string, string> = {
@@ -392,7 +401,19 @@ export class TodayComponent {
   /** Openers for Ask, seeded from the day so the tab is not a blank prompt. */
   readonly askSuggestions = signal<string[]>([]);
 
+  /**
+   * True once the intro has run this session. The sky then renders in its
+   * final state with no entrance, so returning to the tab does not replay a
+   * 3 s animation.
+   */
+  protected readonly introPlayed = signal(todayIntroPlayed);
+
   constructor() {
+    if (!todayIntroPlayed) {
+      todayIntroPlayed = true;
+      const timer = setTimeout(() => this.introPlayed.set(true), TODAY_INTRO_MS);
+      inject(DestroyRef).onDestroy(() => clearTimeout(timer));
+    }
     effect(() => {
       const profilesLoaded = this.kundlis.loaded();
       const profileId = this.kundlis.activeId();

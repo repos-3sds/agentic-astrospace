@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BackBarComponent } from '../shared/back-bar.component';
+import { NgTemplateOutlet } from '@angular/common';
 import { BirthTimeBadgeComponent } from './birth-time-badge.component';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { ProvenanceSheetComponent } from './provenance-sheet.component';
@@ -63,7 +64,7 @@ const PRACTITIONER_ONLY = new Set(['remedies', 'muhurta']);
   selector: 'as-chart-hub',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackBarComponent, GenericErrorComponent, KundliChartComponent, ProfileSwitcherComponent, ProvenanceSheetComponent, RouterLink, BirthTimeBadgeComponent],
+  imports: [BackBarComponent, GenericErrorComponent, KundliChartComponent, ProfileSwitcherComponent, ProvenanceSheetComponent, RouterLink, BirthTimeBadgeComponent, NgTemplateOutlet],
   templateUrl: './chart-hub.component.html',
   styleUrl: './chart-hub.component.scss',
 })
@@ -210,13 +211,21 @@ export class ChartHubComponent {
     const cards = this.explore().filter((card) => !PRACTITIONER_ONLY.has(card.id));
     if (this.preferences.experienceMode() === 'practitioner') return this.explore();
     if (this.preferences.experienceMode() === 'guided') {
-      const allowed = this.advancedOpen()
-        ? [...this.guidedCoreIds, ...this.guidedAdvancedIds]
-        : this.guidedCoreIds;
-      return cards.filter((card) => allowed.includes(card.id));
+      return cards.filter((card) => this.guidedCoreIds.includes(card.id));
     }
     return cards;
   });
+
+  /**
+   * Guided mode's Advanced cards. Always rendered, inside a collapse that
+   * animates open and shut (grid-template-rows 0fr → 1fr), rather than
+   * filtered in and out of the grid, which made them pop in a single frame.
+   */
+  protected readonly advancedExplore = computed(() =>
+    this.preferences.experienceMode() === 'guided'
+      ? this.explore().filter((card) => this.guidedAdvancedIds.includes(card.id))
+      : [],
+  );
 
   protected readonly guidedStrengths = computed(() => {
     const angles = this.angles();

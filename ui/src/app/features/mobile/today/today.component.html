@@ -1,4 +1,4 @@
-<div class="celestial-sky" aria-hidden="true">
+<div class="celestial-sky" [class.intro-played]="introPlayed()" aria-hidden="true">
   <div class="celestial-sun"></div>
   <div class="orbit-system">
     <div class="orbit-rotor">
@@ -181,13 +181,25 @@
   }
 
   @if (preferences.experienceMode() === 'guided') {
-    <button class="details-toggle" type="button" (click)="detailsOpen.set(!detailsOpen())">
+    <button
+      class="details-toggle"
+      type="button"
+      aria-controls="today-details"
+      [attr.aria-expanded]="detailsOpen()"
+      [class.is-open]="detailsOpen()"
+      (click)="detailsOpen.set(!detailsOpen())"
+    >
         <span>{{ detailsOpen() ? 'Hide the details' : 'See what shaped this' }}</span>
       <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
     </button>
   }
 
-  @if (preferences.experienceMode() !== 'guided' || detailsOpen()) {
+  <div
+    id="today-details"
+    class="today-details m-collapse"
+    [class.is-open]="preferences.experienceMode() !== 'guided' || detailsOpen()"
+  >
+  <div class="m-collapse-inner">
   @for (section of statSections(); track section.eyebrow) {
     @if (section.presentation === 'signature') {
       <section class="birth-signature" aria-label="Your birth signature">
@@ -252,7 +264,8 @@
       </section>
     }
   }
-  }
+  </div>
+  </div>
 
   @if (preferences.experienceMode() === 'practitioner') {
     <p class="eyebrow section-label">ACTIVE PERIOD STACK (DASHA)</p>
