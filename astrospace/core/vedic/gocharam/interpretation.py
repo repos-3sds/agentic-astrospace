@@ -452,8 +452,8 @@ def _domain_readings(rules: list[dict], timeline: dict) -> list[dict]:
                 ),
                 "reading": (
                     f"{main_theme} {definition['action']} "
-                    f"The current mix contains {len(supportive)} supportive, {len(mixed)} modified, "
-                    f"and {len(challenging)} demanding witnesses."
+                    f"Of the placements read here, {len(supportive)} are supportive, {len(mixed)} mixed "
+                    f"and {len(challenging)} need care."
                 ),
                 "strengths": [
                     rule["content"]["guided_summary"] for rule in supportive[:2]

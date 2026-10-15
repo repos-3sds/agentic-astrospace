@@ -44,7 +44,6 @@
   width: 100%;
   button {
     @include m-segmented-button;
-    padding-inline: 2px;
   }
   button.is-on { @include m-selected-pill; }
 }

@@ -33,15 +33,7 @@
           <button class="askhist-menu" type="button" aria-label="Conversation actions"
             [attr.aria-expanded]="revealedThreadId() === thread.id"
             title="Conversation actions"
-            (click)="revealedThreadId.set(revealedThreadId() === thread.id ? null : thread.id)"><lucide-icon name="list" [size]="18" /></button>
-          <div class="askhist-actions">
-            @if (view() === 'active') {
-              <button class="askhist-archive" type="button" [disabled]="mutating() === thread.id" (click)="archive($event, thread)">Archive</button>
-            } @else {
-              <button class="askhist-restore" type="button" [disabled]="mutating() === thread.id" (click)="restore($event, thread)">Restore</button>
-            }
-            <button class="askhist-delete" type="button" [disabled]="mutating() === thread.id" (click)="deleteThread($event, thread)">Delete</button>
-          </div>
+            (click)="revealedThreadId.set(revealedThreadId() === thread.id ? null : thread.id)"><lucide-icon name="ellipsis-vertical" [size]="20" /></button>
           <article
             class="askhist-card"
             [class.is-opening]="opening() === thread.id"
@@ -59,6 +51,16 @@
               <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
             </div>
           </article>
+          @if (revealedThreadId() === thread.id) {
+            <div class="askhist-actions">
+              @if (view() === 'active') {
+                <button class="askhist-archive" type="button" [disabled]="mutating() === thread.id" (click)="archive($event, thread)">Archive</button>
+              } @else {
+                <button class="askhist-restore" type="button" [disabled]="mutating() === thread.id" (click)="restore($event, thread)">Restore</button>
+              }
+              <button class="askhist-delete" type="button" [disabled]="mutating() === thread.id" (click)="deleteThread($event, thread)">Delete</button>
+            </div>
+          }
         </div>
       }
     </div>

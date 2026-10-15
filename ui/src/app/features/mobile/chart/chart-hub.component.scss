@@ -74,8 +74,8 @@
 .settings-btn {
   color: var(--yantra-text);
   display: grid;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   flex: 0 0 auto;
   place-items: center;
   border: 1px solid var(--yantra-border);
@@ -308,6 +308,11 @@
 .tile-icon { width: 16px; height: 16px; }
 .yantra-copy {
   display: flex;
+  // The tile aligns its children to the start, which sized the copy to its
+  // text and let long lines ("Strengths & cancellations") run past the tile.
+  align-self: stretch;
+  max-width: 100%;
+  overflow-wrap: break-word;
   min-width: 0;
   flex: 1 1 auto;
   flex-direction: column;
@@ -336,8 +341,11 @@
   min-width: 0;
   overflow: hidden;
   color: var(--yantra-muted);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  // Two lines before clipping: at 320 px one line cut most subtitles to a
+  // single word and an ellipsis.
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 .yantra-tile[data-tone='accent'] small { color: var(--yantra-red-dark); }
 .yantra-tile[data-tone='good'] small { color: var(--yantra-green); }

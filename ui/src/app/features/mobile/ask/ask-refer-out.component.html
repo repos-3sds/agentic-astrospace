@@ -48,6 +48,7 @@
 </div>
 
 <as-ask-composer
+  [inset]="true"
   [value]="draft()"
   label="Your follow-up question"
   (valueChange)="draft.set($event)"

@@ -12,6 +12,7 @@ import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { TransitDetail, TransitDetailComponent } from './transit-detail.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { transitVerdictLabel } from './transit-verdict';
 
 @Component({
   selector: 'as-full-transits',
@@ -137,7 +138,7 @@ export class FullTransitsComponent {
 
   protected transitPlain(rule: GocharamMatchedRule): string {
     const house = rule.house ? `house ${rule.house}` : 'its current place';
-    const verdict = rule.effective_verdict === 'supportive' ? 'supportive' : 'needs care';
+    const verdict = transitVerdictLabel(rule.effective_verdict);
     return `${house} · ${verdict} · tap for evidence`;
   }
 
@@ -174,7 +175,7 @@ export class FullTransitsComponent {
       position: `${payload.gochara.planets[rule.planet]?.sign ?? '—'} · house ${rule.house} from Moon`,
       period: rule.duration.replaceAll('_', ' '),
       meaning: this.content(rule),
-      guidance: `Base ${rule.base_verdict}; effective ${rule.effective_verdict}.`,
+      guidance: `Base: ${transitVerdictLabel(rule.base_verdict)}. After modifiers: ${transitVerdictLabel(rule.effective_verdict)}.`,
       evidence: rule.modifiers
         .map((row) => `${row.type}: ${row.label}`)
         .concat(`${rule.source_id} · ${rule.source_status}`),
