@@ -134,7 +134,9 @@
   cursor: pointer;
 }
 
-@mixin m-icon-button($size: 40px) {
+// 44 px is the WCAG 2.5.5 / Apple HIG minimum target; pass a smaller size only
+// for a non-interactive glyph.
+@mixin m-icon-button($size: 44px) {
   width: $size;
   height: $size;
   display: grid;

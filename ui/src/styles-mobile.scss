@@ -93,6 +93,16 @@
   padding-top: var(--m-safe-top);
 }
 
+// One focus ring for the whole native app. Until 2026-10-15 there was none:
+// the UA outline survived on some controls and was reset on others, so a
+// keyboard or switch-access user lost their place between screens. The
+// :focus-visible heuristic keeps it off tap and click, so it costs the touch
+// experience nothing.
+.as-mobile :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--m-accent-strong);
+  outline-offset: 2px;
+}
+
 :root.app-dark .as-mobile {
   // Warm near-black, on the same axis as the web app's proven --as-bg dark
   // value, rather than the blue-slate this used to sit on — the light theme

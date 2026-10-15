@@ -24,8 +24,8 @@
 
 .mic,
 .send {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: 0;
   border-radius: 999px;
   display: flex;
@@ -73,7 +73,9 @@
   @include m-body;
   color: var(--m-text);
   &::placeholder { color: var(--m-muted); }
-  &:focus { outline: none; }
+  // The composer box draws the focus state on its own border (:focus-within
+  // below), so the textarea does not need a second ring inside it.
+  &:focus-visible { outline: none; }
 }
 
 :host(.web-composer) {
@@ -100,7 +102,7 @@
     line-height: 22px;
     font-size: 15px;
   }
-  .mic { order: 2; width: 38px; height: 38px; background: transparent; border: 0; }
-  .send { order: 3; width: 40px; height: 40px; }
+  .mic { order: 2; width: 44px; height: 44px; background: transparent; border: 0; }
+  .send { order: 3; width: 44px; height: 44px; }
   &:focus-within { border-color: color-mix(in srgb, var(--m-accent) 72%, var(--m-border)); box-shadow: 0 20px 54px color-mix(in srgb, #000 16%, transparent); }
 }
