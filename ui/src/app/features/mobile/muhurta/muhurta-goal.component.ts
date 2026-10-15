@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { PreferencesService } from '../../../core/preferences.service';
+import { plannedTimingPlace } from '../../../core/timing-place';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /** One thing someone might be planning. */
@@ -30,7 +31,7 @@ export type MuhurtaRange = 'week' | 'month' | 'custom';
   selector: 'as-muhurta-goal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective],
+  imports: [BackLinkDirective, RouterLink],
   templateUrl: './muhurta-goal.component.html',
   styleUrl: './muhurta-goal.component.scss',
 })
@@ -68,10 +69,8 @@ export class MuhurtaGoalComponent {
    * windows for the wrong place without being told.
    */
   private readonly preferences = inject(PreferencesService);
-  readonly place = computed(() => {
-    const place = this.preferences.panchangaPlace();
-    return place ? `${place.city}, ${place.nation}` : 'your panchanga place';
-  });
+  readonly place = computed(() =>
+    plannedTimingPlace(this.preferences.panchangaPlace(), this.preferences.browserTimezone()).sentence);
 
   // Nothing can be computed for a purpose that has not been chosen.
   protected readonly canSearch = computed(() => {

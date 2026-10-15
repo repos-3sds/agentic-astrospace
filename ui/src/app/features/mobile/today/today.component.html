@@ -88,7 +88,7 @@
     }
     <div class="card-head">
       <p class="eyebrow">{{ preferences.experienceMode() === 'guided' ? 'YOUR RHYTHM TODAY' : 'WHAT MATTERS TODAY' }}</p>
-      <p class="place">{{ v.place }}</p>
+      <a class="place" routerLink="/m/settings/location" [attr.aria-label]="'Daily timings for ' + v.placeLong + '. Change'">{{ v.place }}</a>
     </div>
 
     @if (preferences.experienceMode() === 'guided') {
@@ -109,10 +109,12 @@
       </div>
     }
 
+    @if (preferences.readAloud()) {
     <button class="listen" type="button" (click)="showSheet('listen')">
       <img src="mobile/play.svg" alt="" aria-hidden="true" />
       <span>{{ preferences.experienceMode() === 'guided' ? 'Listen to your guidance' : 'Listen to your day' }}</span>
     </button>
+    }
   </section>
 
   <div class="advice">

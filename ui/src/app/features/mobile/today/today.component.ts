@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { timingPlaceLabel } from '../../../core/timing-place';
 import { DayGaugeComponent } from '../day-gauge/day-gauge.component';
 import { DayQualitySheetComponent, DaySignal } from './day-quality-sheet.component';
 import { ListenSheetComponent } from './listen-sheet.component';
@@ -173,6 +174,8 @@ export interface TodayView {
   initial: string;
   dateLabel: string;
   place: string;
+  /** "Hyderabad (birth city)": which rule chose the place, for the label. */
+  placeLong: string;
   score: number;
   band: DayBand;
   scoreLabel: string;
@@ -454,6 +457,7 @@ export class TodayComponent {
       initial: name.slice(0, 1).toUpperCase(),
       dateLabel,
       place: daily.provenance.place.city || city,
+      placeLong: timingPlaceLabel(daily.provenance.place) || city,
       score: gaugePositionFromScore(daily.verdict.score),
       band,
       scoreLabel: band === 'steady' ? 'Steady' : band === 'mixed' ? 'Mixed' : 'Take care',

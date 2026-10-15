@@ -87,10 +87,11 @@
     Stated, not assumed: a muhurta is sunrise-relative, so the same instant is a
     different window in another city.
   -->
-  <p class="place">
+  <a class="place" routerLink="/m/settings/location">
     <img src="mobile/pin.svg" alt="" aria-hidden="true" />
-    <span>Using panchanga place · {{ place() }}</span>
-  </p>
+    <span>Windows for {{ place() }}</span>
+    <span class="place-change">Change</span>
+  </a>
 </div>
 
 <button class="find" type="button" [disabled]="!canSearch()" (click)="findWindows()">

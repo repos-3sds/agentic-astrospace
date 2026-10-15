@@ -6,6 +6,7 @@ import { LegalDocument, openLegal } from '../../../core/legal';
 import { ThemeService } from '../../../core/theme.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { PreferencesService } from '../../../core/preferences.service';
+import { plannedTimingPlace } from '../../../core/timing-place';
 
 /** One settings row. `value` is the current state, shown without opening it. */
 export interface SettingRow {
@@ -100,7 +101,7 @@ export class SettingsHomeComponent {
           id: 'language',
           icon: 'set-lang',
           label: 'Language & audio',
-          value: `${this.languageLabel()} · Audio on`,
+          value: `${this.languageLabel()} · ${this.preferences.readAloud() ? this.voiceLabel() : 'Listen off'}`,
           route: ['/m', 'settings', 'language'],
         },
         {
@@ -209,15 +210,21 @@ export class SettingsHomeComponent {
     return this.preferences.tone() === 'direct' ? 'Direct' : 'Gentle';
   }
 
-  private languageLabel(): string {
+  /** The voice Listen will use; there is no on/off, so never say "on". */
+  private voiceLabel(): string {
+    const name = this.preferences.voiceName();
+    if (!name) return 'Default voice';
+    // Device voice names carry vendor noise: "Google हिन्दी (India)", "en-in-x-ene-local".
+    const short = name.replace(/\s*\(.*\)\s*$/, '').trim();
+    return short.length > 18 ? 'Chosen voice' : short;
+  }
+
+    private languageLabel(): string {
     return this.preferences.language() === 'te' ? 'Telugu' : 'English';
   }
 
   private locationLabel(): string {
-    const place = this.preferences.panchangaPlace();
-    if (place?.city) return place.city;
-    const timezone = this.preferences.browserTimezone().split('/').pop()?.replaceAll('_', ' ');
-    return timezone ? `Current · ${timezone}` : 'Current location';
+    return plannedTimingPlace(this.preferences.panchangaPlace(), this.preferences.browserTimezone()).short;
   }
 
   private ayanamshaLabel(): string {

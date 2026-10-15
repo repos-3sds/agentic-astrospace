@@ -423,7 +423,7 @@ export interface DailyGuidancePayload {
   };
   provenance: {
     engine: string;
-    place: { city: string; nation: string; timezone: string };
+    place: TimingPlacePayload & { city: string; nation: string; timezone: string };
     note: string;
   };
 }

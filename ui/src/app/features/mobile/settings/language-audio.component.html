@@ -11,18 +11,27 @@
 
   <!-- Telugu is written in Telugu: a picker that names languages only in
        English is useless to the reader most likely to need it. -->
-  <div class="segmented" role="radiogroup" aria-label="Ask response language">
+  <!-- The same cards, radio and filled tick as onboarding's language step. -->
+  <div class="languages" role="radiogroup" aria-label="Ask response language">
     @for (l of languages; track l.id) {
+      @let on = l.id === preferences.language();
       <button
-        class="segment"
+        class="language"
         type="button"
         role="radio"
-        [class.is-on]="l.id === preferences.language()"
-        [attr.aria-checked]="l.id === preferences.language()"
+        [class.is-on]="on"
+        [attr.aria-checked]="on"
         (click)="setLanguage(l.id)"
       >
-        <span>{{ l.label }}</span>
-        <small>{{ l.detail }}</small>
+        <span class="language-copy">
+          <span class="language-label">{{ l.label }}</span>
+          <small>{{ l.detail }}</small>
+        </span>
+        @if (on) {
+          <span class="tick" aria-hidden="true"><img src="mobile/check.svg" alt="" /></span>
+        } @else {
+          <img class="radio" src="mobile/radio-off.svg" alt="" aria-hidden="true" />
+        }
       </button>
     }
   </div>
@@ -30,7 +39,7 @@
   <div class="toggle-row">
     <span class="toggle-text">
       <span class="toggle-title">Read guidance aloud</span>
-      <span class="toggle-detail">Adds a Listen button to your daily card</span>
+      <span class="toggle-detail">Shows a Listen button on your daily card</span>
     </span>
     <button
       class="switch"
@@ -40,22 +49,6 @@
       [attr.aria-checked]="readAloud()"
       aria-label="Read guidance aloud"
       (click)="toggleReadAloud()"
-    ></button>
-  </div>
-
-  <div class="toggle-row">
-    <span class="toggle-text">
-      <span class="toggle-title">Gentle voice tone</span>
-      <span class="toggle-detail">Matches your Gentle setting</span>
-    </span>
-    <button
-      class="switch"
-      type="button"
-      role="switch"
-      [class.is-on]="gentleVoice()"
-      [attr.aria-checked]="gentleVoice()"
-      aria-label="Gentle voice tone"
-      (click)="toggleGentleVoice()"
     ></button>
   </div>
 

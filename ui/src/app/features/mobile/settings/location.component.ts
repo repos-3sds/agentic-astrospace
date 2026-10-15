@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { PanchangaCity } from '../../../core/models';
 import { PanchangaService } from '../../../core/panchanga.service';
 import { PreferencesService } from '../../../core/preferences.service';
+import { timezoneShortName } from '../../../core/timing-place';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /**
@@ -43,20 +44,24 @@ export class LocationComponent {
   readonly searchError = signal<string | null>(null);
   readonly selectedPlace = computed(() => this.preferences.panchangaPlace());
   readonly currentTimezone = computed(() => this.preferences.browserTimezone());
-  readonly selectedLabel = computed(() => this.selectedPlace()?.label ?? 'Device timezone');
+  readonly selectedLabel = computed(() => this.selectedPlace()?.label ?? 'Search for a city below');
+  readonly currentDetail = computed(() => {
+    const clock = timezoneShortName(this.currentTimezone());
+    return `Listed city nearest this phone’s timezone${clock ? ` (${clock})` : ''}, else your birth city`;
+  });
   readonly useSelectedCity = computed(() => this.preferences.timezoneMode() === 'panchanga_place' && !!this.selectedPlace());
 
   readonly places: { id: TimingPlace; icon: string; label: string; detail: string }[] = [
     {
       id: 'current',
       icon: 'loc-current',
-      label: 'Phone timezone',
+      label: 'Follow my phone',
       detail: 'Daily windows use the nearest listed city in this phone’s timezone, or your birth city, in that city’s own clock.',
     },
     {
       id: 'selected',
       icon: 'loc-birth',
-      label: 'Selected city',
+      label: 'A city I choose',
       detail: 'Pin daily timing to a city when device location is not specific enough.',
     },
   ];

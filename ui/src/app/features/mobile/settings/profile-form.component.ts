@@ -28,7 +28,7 @@ import { BackBarComponent } from '../shared/back-bar.component';
         <as-birth-details-form
           [initial]="initial()"
           [hideSelf]="hideSelf()"
-          [submitLabel]="editingId() ? 'Save Changes' : 'Add Profile'"
+          [submitLabel]="editingId() ? 'Save changes' : 'Add profile'"
           busyLabel="Saving…"
           [saving]="saving()"
           [error]="error()"
@@ -66,9 +66,8 @@ export class ProfileFormComponent {
       const id = this.editingId();
       if (id) {
         await this.kundlis.update(id, payload);
-        this.kundlis.setActive(id);
       } else {
-        await this.kundlis.create(payload);
+        await this.kundlis.create(payload, { activate: false });
       }
       await this.router.navigate(['/m', 'settings', 'profiles']);
     } catch (error) {

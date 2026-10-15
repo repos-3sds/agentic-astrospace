@@ -195,8 +195,13 @@
   background: var(--m-raised);
   @include m-body-small;
   color: var(--m-muted);
+  text-decoration: none;
+  min-height: 44px;
+  box-sizing: border-box;
   img { width: 18px; height: 18px; display: block; flex-shrink: 0; }
+  span:first-of-type { flex: 1 1 auto; min-width: 0; }
 }
+.place-change { @include m-body-strong; color: var(--m-accent-strong); flex-shrink: 0; }
 
 .find {
   @include m-cta-primary;

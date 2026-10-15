@@ -90,7 +90,7 @@
   <footer [class.is-practitioner]="ahaMode() === 'practitioner'">
     @if (ahaMode() === 'practitioner') {
       <a class="primary" routerLink="/m/chart">Open Practitioner Workbench</a>
-      <a class="secondary" routerLink="/m/chart/transits">View Daily Transits</a>
+      <a class="secondary" routerLink="/m/transits">See today’s transits</a>
     } @else {
       <a class="listen" routerLink="/m/today" [queryParams]="{ listen: 1 }">
         <img src="mobile/audio-art.svg" alt="" aria-hidden="true" />
