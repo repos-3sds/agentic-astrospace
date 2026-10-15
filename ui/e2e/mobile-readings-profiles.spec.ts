@@ -626,25 +626,85 @@ test('mobile Notes and Readings avoid false persistence and load real claims', a
 
   await page.goto('/m/readings');
   await expect(page.getByText('Mercury week reading from the API.')).toBeVisible();
-  await expect(page.getByText('1 of 2 held or partly held')).toBeVisible();
-  await expect(page.getByText('3 total claims for Anika Rao')).toBeVisible();
+  await expect(page.getByText('1 of 2 predictions held')).toBeVisible();
+  await expect(page.getByText('1 waiting for you to check')).toBeVisible();
+  await expect(page.getByText('Version 4 · Written', { exact: false })).toBeVisible();
+  await expect(page.getByText('2 of 3 checked')).toBeVisible();
   await expect(page.getByText('18 of 24 held up')).toHaveCount(0);
   await expect(page.getByText('WEEK OF 20-26 JULY')).toHaveCount(0);
 
-  await page.getByRole('link', { name: /1 of 2 held or partly held/ }).click();
+  await page.getByRole('link', { name: /1 of 2 predictions held/ }).click();
   await expect(page).toHaveURL(/\/m\/readings\/accuracy$/);
-  await expect(page.getByText('3 claims returned')).toBeVisible();
-  await expect(page.getByText('1 pending')).toBeVisible();
-  await expect(page.getByText('1 accurate')).toBeVisible();
-  await expect(page.getByText('1 missed')).toBeVisible();
+  await expect(page.getByText('1 of 2 held')).toBeVisible();
+  await expect(page.getByText('Not checked yet 1')).toBeVisible();
+  await expect(page.getByText('Happened 1')).toBeVisible();
+  await expect(page.getByText('Didn’t happen 1')).toBeVisible();
+  await expect(page.getByText('Status:')).toHaveCount(0);
 
   await page
     .locator('.mra-claim')
     .filter({ hasText: 'A delayed payment clears before the weekend.' })
-    .getByRole('button', { name: 'partly' })
+    .getByRole('button', { name: 'Partly' })
     .click();
-  await expect(page.getByText('0 pending')).toBeVisible();
-  await expect(page.getByText('1 partly')).toBeVisible();
+  await expect(page.getByText('Not checked yet 0')).toBeVisible();
+  await expect(page.getByText('Partly 1')).toBeVisible();
+  await expect(page.getByText('Nothing to check right now')).toBeVisible();
+});
+
+test('mobile Readings keeps versions, reviews inline and retries a failed generation in place', async ({ page }, testInfo) => {
+  phoneOnly(testInfo.project.name);
+  await page.setViewportSize({ width: 375, height: 812 });
+  const state = await mockMobileApi(page);
+  let generateCalls = 0;
+  await page.route('**/api/v1/readings/profile-1/generate', async (route: Route) => {
+    generateCalls += 1;
+    if (generateCalls === 1) {
+      await route.fulfill({ status: 503, json: { detail: 'Your reading couldn’t be written just now. Please try again in a minute.' } });
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    state.claims.push({
+      id: 'claim-new', kundli_id: 'profile-1', reading_id: 'reading-2', reading_type: 'weekly', reading_version: 5,
+      category: 'career', claim_text: 'A new lead arrives through a colleague.', status: 'pending', target_start_date: '2026-07-28',
+    });
+    await route.fulfill({ status: 201, json: {
+      id: 'reading-2', kundli_id: 'profile-1', reading_type: 'weekly', period_label: 'Week of 27 July 2026',
+      content: 'Fresh fifth version of the week.', generated_at: '2026-07-28T08:00:00Z', generated_local_date: '2026-07-28', version: 5,
+    } });
+  });
+
+  await page.goto('/m/readings');
+  await expect(page.getByText('Mercury week reading from the API.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Saved versions' })).toHaveCount(0);
+
+  // A failed generation leaves the saved reading on screen and retries the generation itself.
+  await page.getByRole('button', { name: 'New version' }).click();
+  await expect(page.getByText('That reading didn’t finish')).toBeVisible();
+  await expect(page.getByText('Mercury week reading from the API.')).toBeVisible();
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await expect(page.getByRole('status')).toContainText('Writing your weekly reading');
+  await expect(page.getByRole('progressbar', { name: 'Reading generation progress' })).toBeVisible();
+  await expect(page.getByText('Fresh fifth version of the week.')).toBeVisible();
+  expect(generateCalls).toBe(2);
+  await expect(page.getByText('That reading didn’t finish')).toHaveCount(0);
+  await expect(page.locator('.mrd-reading em')).toHaveText('Latest');
+  await expect(page.getByText('A new lead arrives through a colleague.')).toBeVisible();
+
+  // Inline review, and a second tap on the chosen answer clears it.
+  const claim = page.locator('.mrd-claims article').filter({ hasText: 'A new lead arrives through a colleague.' });
+  await claim.getByRole('button', { name: 'Happened' }).click();
+  await expect(claim.getByRole('button', { name: 'Happened' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByText('1 of 1 checked')).toBeVisible();
+  await claim.getByRole('button', { name: 'Happened' }).click();
+  await expect(claim.getByRole('button', { name: 'Happened' })).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByText('0 of 1 checked')).toBeVisible();
+
+  // The earlier version stays readable, clearly marked, with a way back.
+  await page.locator('.mrd-earlier').filter({ hasText: 'Version 4' }).click();
+  await expect(page.getByText('You’re looking at an earlier version.')).toBeVisible();
+  await expect(page.getByText('Mercury week reading from the API.')).toBeVisible();
+  await page.getByRole('button', { name: 'Back to latest' }).click();
+  await expect(page.getByText('Fresh fifth version of the week.')).toBeVisible();
 });
 
 test('mobile profile management adds, edits, deletes and switches safely', async ({ page }, testInfo) => {

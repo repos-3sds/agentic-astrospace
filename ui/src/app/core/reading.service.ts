@@ -41,8 +41,14 @@ export class ReadingService {
     });
   }
 
-  claims(kundliId: string, options: { status?: PredictionClaimStatus; startDate?: string; endDate?: string } = {}): Promise<PredictionClaim[]> {
+  claims(
+    kundliId: string,
+    options: { status?: PredictionClaimStatus; startDate?: string; endDate?: string; includeSuperseded?: boolean } = {},
+  ): Promise<PredictionClaim[]> {
     const params = new URLSearchParams();
+    // Unreviewed claims of an older version are hidden unless asked for, so
+    // regenerating a reading doesn't double the review queue.
+    if (options.includeSuperseded) params.set('include_superseded', 'true');
     if (options.status) params.set('status', options.status);
     if (options.startDate) params.set('start_date', options.startDate);
     if (options.endDate) params.set('end_date', options.endDate);
