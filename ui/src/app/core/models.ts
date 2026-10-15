@@ -291,6 +291,36 @@ export interface DailyActionRow {
   domain?: string;
 }
 
+/**
+ * The lunar month under both reckonings. Amanta (South and West India) and
+ * purnimanta (North India) name the same tithi differently for half of every
+ * month, which is the first convention CLAUDE.md says must never be implied
+ * away, so both names travel together with the note stating which is used.
+ */
+export interface DailyMasa {
+  amanta: string | null;
+  purnimanta: string | null;
+  adhika: boolean;
+  paksha: string | null;
+  is_convention_dependent: true;
+  observance_note: string;
+}
+
+/** The day payload's month block: both reckonings, as panchanga_day projects them. */
+export interface PanchangaMasa {
+  amanta: string;
+  purnimanta: string;
+  adhika: boolean;
+  paksha: string;
+}
+
+/** panchanga_day's own statement of the rules it applied. */
+export interface PanchangaConventions {
+  day_definition: string;
+  verify_pending: string[];
+  resolved: string[];
+}
+
 export interface DailyGuidancePayload {
   system: string;
   engine_version: string;
@@ -344,6 +374,8 @@ export interface DailyGuidancePayload {
   chandrabala: { house_from_rashi: number; favourable: boolean; chandrashtama: boolean };
   star_of_day: { nakshatra: string; moon_rashi: string; tithi: string };
   panchanga_details: { tithi: string; nakshatra: string; yoga: string; karana: string; vara: string };
+  /** Both lunar-month reckonings; which one a reader follows is regional. */
+  masa?: DailyMasa | null;
   muhurta_windows: { name: string; time: string; kind: 'auspicious' | 'inauspicious' }[];
   do_today: DailyActionRow[];
   avoid_today: DailyActionRow[];
@@ -1147,7 +1179,7 @@ export interface CalendarPractitionerDayDetail {
   next_sunrise?: string | null;
   moonrise?: string | null;
   moonset?: string | null;
-  masa?: Record<string, unknown> | null;
+  masa?: PanchangaMasa | null;
   samvatsara?: string | null;
   ritu?: string | null;
   ayana?: string | null;
@@ -1160,7 +1192,7 @@ export interface CalendarPractitionerDayDetail {
   };
   choghadiya?: Record<string, unknown> | null;
   horas?: PanchangaWindow[] | { day?: PanchangaWindow[]; night?: PanchangaWindow[] } | null;
-  conventions?: Record<string, unknown> | null;
+  conventions?: PanchangaConventions | null;
 }
 
 export interface CalendarReadingMarker {

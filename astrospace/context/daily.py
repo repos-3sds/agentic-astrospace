@@ -108,6 +108,26 @@ def _day_number(vedic_date, vara_lord: str, favourable: dict) -> dict:
     }
 
 
+def _masa_summary(masa: dict | None) -> dict | None:
+    """Both month names plus the flags that change how they are read."""
+    if not masa:
+        return None
+    # panchanga_day projects the engine's {name, purnimanta_name} as
+    # {amanta, purnimanta}; accept either spelling so a raw masa dict works.
+    return {
+        "amanta": masa.get("amanta") or masa.get("name"),
+        "purnimanta": masa.get("purnimanta") or masa.get("purnimanta_name"),
+        "adhika": bool(masa.get("adhika")),
+        "paksha": masa.get("paksha"),
+        "is_convention_dependent": True,
+        "observance_note": (
+            "Amanta reckoning is used for names here; purnimanta readers "
+            "(most of North India) will see the next month's name during "
+            "Krishna paksha."
+        ),
+    }
+
+
 def _window_time(window: dict | None) -> str | None:
     if not window:
         return None
@@ -689,6 +709,13 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
             "karana": day_payload["elements"]["karana"][0]["name"],
             "vara": day_payload["vara"]["name"],
         },
+        # The lunar month under both reckonings. Amanta (month ends at the new
+        # moon, South and West India) and purnimanta (ends at the full moon,
+        # North India) give the same tithi a different month name for half of
+        # every month, so a client has to be able to state which it is using
+        # rather than print one name as if it were the only answer. The
+        # engine computes amanta and derives the purnimanta name alongside it.
+        "masa": _masa_summary(day_payload.get("masa")),
         # The four horary windows kala.py already computes for the day
         # (Rahu Kalam, Yamaganda, Gulika, Abhijit), surfaced as one list
         # instead of requiring a caller to know which sub-window to look up.

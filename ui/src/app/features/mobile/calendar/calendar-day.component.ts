@@ -90,6 +90,9 @@ import { MobileSymbol, nakshatraSymbol, tithiSymbol } from '../symbols/mobile-sy
               </div>
               <div><small>MOON RASHI</small><b>{{ summary.moon_rashi }}</b></div>
               <div><small>PLACE</small><b>{{ placeLabel(calendar) }}</b></div>
+              @for (row of masaRows(summary); track row.label) {
+                <div><small>{{ row.label }}</small><b>{{ row.value }}</b><p>{{ row.note }}</p></div>
+              }
             </section>
 
             @if (detailLoading()) {
@@ -300,6 +303,42 @@ export class CalendarDayComponent {
         note: detail?.panchaka?.note ?? 'Panchaka is computed from the day nakshatra.',
       },
     ];
+  }
+
+  /**
+   * Month and day-definition rows, each stating the convention used. The
+   * engine computes amanta and derives the purnimanta name beside it; a
+   * practitioner from a purnimanta region needs the second name, not a hint.
+   */
+  protected masaRows(day: CalendarDaySummary): { label: string; value: string; note: string }[] {
+    const detail = day.practitioner_detail;
+    const masa = detail?.masa;
+    const rows: { label: string; value: string; note: string }[] = [];
+    if (masa?.amanta) {
+      const adhika = masa.adhika ? 'Adhika ' : '';
+      rows.push({
+        label: 'Masa (amanta)',
+        value: `${adhika}${masa.amanta}${masa.paksha ? ` · ${masa.paksha} paksha` : ''}`,
+        note: 'Month ends at the new moon — the reckoning used throughout this app.',
+      });
+      if (masa.purnimanta && masa.purnimanta !== masa.amanta) {
+        rows.push({
+          label: 'Masa (purnimanta)',
+          value: `${adhika}${masa.purnimanta}`,
+          note: 'Month ends at the full moon — North Indian reckoning; convention-dependent.',
+        });
+      }
+    }
+    if (detail?.conventions?.day_definition) {
+      rows.push({
+        label: 'Day definition',
+        value: detail.conventions.day_definition,
+        note: detail.conventions.verify_pending?.length
+          ? `Tables still being verified: ${detail.conventions.verify_pending.join(', ')}.`
+          : 'All timing tables verified against the sources in the KB manifest.',
+      });
+    }
+    return rows;
   }
 
   protected upagrahaRows(day: CalendarDaySummary): { label: string; value: string; note: string }[] {

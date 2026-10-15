@@ -25,6 +25,7 @@
 .intro { display: flex; flex-direction: column; gap: 4px; }
 .title { @include m-h2; color: var(--m-text); margin: 0; }
 .scope { @include m-body-small; color: var(--m-muted); margin: 0; }
+.convention { @include m-caption; margin: 8px 0 0; padding: 8px 10px; border-radius: 10px; color: var(--m-text); background: var(--m-accent-soft); }
 
 .muhurta-state {
   display: flex;
