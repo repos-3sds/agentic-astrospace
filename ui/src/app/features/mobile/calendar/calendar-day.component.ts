@@ -11,23 +11,20 @@ import { VedicService } from '../../../core/vedic.service';
 import { FestivalSheetComponent } from './festival-sheet.component';
 import { calendarDayCacheOptions } from './calendar-cache-options';
 import { MobileSymbol, nakshatraSymbol, tithiSymbol } from '../symbols/mobile-symbols';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 @Component({
   selector: 'as-calendar-day',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FestivalSheetComponent, RouterLink],
+  imports: [GenericErrorComponent, FestivalSheetComponent, RouterLink],
   template: `
     <a class="mcald-back" [routerLink]="['/m','calendar']"><img src="mobile/back.svg" alt="" /><span>Calendar</span></a>
     <main class="mcald-body">
       @if (loading()) {
         <section class="mcald-state"><b>Loading day</b><p>Checking timing signals for {{ activeName() }}.</p></section>
       } @else if (error()) {
-        <section class="mcald-state error" role="alert">
-          <b>Day could not load</b>
-          <p>{{ error() }}</p>
-          <button type="button" (click)="reload()">Retry</button>
-        </section>
+        <as-generic-error role="alert" [message]="error()!" (retried)="reload()" />
       } @else if (!activeId()) {
         <section class="mcald-state"><b>No active profile</b><p>Select a profile before opening a calendar day.</p></section>
       } @else if (data(); as calendar) {

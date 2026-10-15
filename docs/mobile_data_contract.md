@@ -57,33 +57,45 @@ Three budget kinds:
    its `observance_note` / provenance to the surface that shows it.
 5. **Placeholder must look placeholder.** A screen on literals must not be
    indistinguishable from a wired one, or it ships.
+6. **A refusal is not an error.** A 422 whose `detail` is
+   `{kind: "refer_out", domain, message}` is the product declining by design.
+   `ApiService` raises it as `ReferOutError`; the screen shows a card with the
+   message and a way back, never a retry button.
 
 ## Endpoint → screens → owner
 
 Wire **by endpoint, not by screen**. `/vedic/{id}/all` feeds four screens; four
 separate wirings produce four interpretations of the same payload.
 
-| endpoint | feeds | status | owner |
-| --- | --- | --- | --- |
-| `/kundlis` | profile switcher, settings, onboarding | ✅ wired | — |
-| `/context/{id}/daily` | Today, day-quality sheet, why-reading | ✅ wired | — |
-| `/panchanga/{id}/today` | Today panchang grid | ⚠️ partial | A |
-| `/vedic/{id}/all` | chart hub, full render, planet sheet, provenance | ✅ wired | — |
-| `/vedic/{id}/dashas` + `/yogini-dashas` | Life Periods (21, 21b–d) | ⬜ placeholder | A |
-| `/vedic/{id}/yogas-doshas` | Yogas & Doshas (22), Manglik sheet | ⬜ placeholder | A |
-| `/vedic/{id}/ashtakavarga` | Strength — Ashtakavarga (23b) | ⬜ placeholder | A |
-| `/vedic/{id}/jaimini` | Strength — Jaimini (23c) | ⬜ placeholder | A |
-| `/vedic/{id}/transits` | Gochara (27), Full Transits (27b) | ⬜ placeholder | B |
-| `/panchanga/cities` | location settings, birth details | ⬜ placeholder | B |
-| `/readings/{id}` + `/claims` | Readings (31), Accuracy (31b) | ⬜ **no data** | B |
-| `/ask/{id}` | Ask thread | ✅ wired | — |
-| *(none — festivals)* | Calendar (28), festival sheet | ⬜ **endpoint unverified** | B |
-| *(none)* | Compatibility (30, 30b, 30c) | ⬜ **no endpoint identified** | B |
-| *(none)* | Muhurta (14, 15) | ⬜ **no endpoint identified** | A |
-| *(none)* | Remedies (12, 13) | ⬜ **no endpoint identified** | A |
-| *(none)* | Notes (32) | ⬜ **no endpoint identified** | B |
+| endpoint | feeds | status |
+| --- | --- | --- |
+| `/kundlis` | profile switcher, settings, onboarding | ✅ wired |
+| `/context/{id}/daily` | Today, day-quality sheet, why-reading | ✅ wired (`masa` + `plain_headline` added 2026-10-15) |
+| `/panchanga/{id}/today` | Today panchang grid, Calendar Day | ✅ wired |
+| `/vedic/{id}/all` | chart hub, full render, vargas, planet sheet, provenance | ✅ wired |
+| `/vedic/{id}/dashas` + `/yogini-dashas` | Life Periods (21, 21b–f) | ✅ wired |
+| `/vedic/{id}/yogas-doshas` | Yogas & Doshas (22), Manglik sheet | ✅ wired |
+| `/vedic/{id}/ashtakavarga` | Strength — Ashtakavarga (23b) | ✅ wired |
+| `/vedic/{id}/jaimini` | Strength — Jaimini (23c) | ✅ wired |
+| `/vedic/{id}/transits` | Gochara (27), Full Transits (27b) | ✅ wired |
+| `/vedic/{id}/compatibility/{partner}` | Compatibility (30, 30b, 30c, detail) | ✅ wired |
+| `/panchanga/cities` | location settings, birth-place field | ✅ wired |
+| `/readings/{id}` + `/claims` + `/feedback` | Readings (31), Accuracy (31b) | ✅ wired; empty state is honest, feedback tested 2026-10-15 |
+| `/ask/{id}/stream` | Ask thread, answer, refer-out | ✅ wired (`tone` added 2026-10-15) |
+| `/festivals/*` | Calendar (28), festival sheet | ✅ wired |
+| `/muhurta/{id}` | Muhurta (14, 15) | ✅ wired; an excluded intent is a 422 `{kind: "refer_out"}` the app renders as a card, never a retry (tested both sides 2026-10-15) |
+| `/remedies/{id}` + `/practice/*` | Remedies (12, 13), mantra tracker | ✅ wired |
+| `/profiles/{id}/context/*` | profile memory, fact confirm/dispute/undo | ✅ wired; dispute tested 2026-10-15 |
+| `/me/*` | devices, push tokens, notification preferences, account | ✅ wired (push tokens from 2026-10-15) |
+| `/auth/migration/local` | sign-in "claim local data" | ✅ wired; tested 2026-10-15 |
+| `/legal/{terms,privacy}` | auth footer, Settings › About | ✅ wired |
+| *(none)* | Notes (32) | local drafts by design; no endpoint |
 
-Owner A / B = the two agents. One endpoint, one owner, no overlap.
+Status column re-checked against `ui/src/app/core/*.service.ts` on
+2026-10-15 (mobile audit item 19); the "placeholder" rows from 2026-07-27 were
+long since wired and the table had not kept up.
+
+
 
 **`/context/{id}/daily` recomputes on every call.** A `daily_guidance_cache`
 table exists (`astrospace/db/models.py:566`) with working read/write helpers

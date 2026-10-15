@@ -9,7 +9,7 @@
   @if (loading()) {
     <section class="period-state"><b>Loading life periods</b><p>Computing dashas for the selected profile.</p></section>
   } @else if (error()) {
-    <section class="period-state error" role="alert"><b>Life periods could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+    <as-generic-error role="alert" [message]="error()!" (retried)="retry()" />
   } @else if (!data()) {
     <section class="period-state"><b>No active profile</b><p>Select a profile before opening life periods.</p><a [routerLink]="['/m','settings','profiles']">Manage profiles</a></section>
   } @else {

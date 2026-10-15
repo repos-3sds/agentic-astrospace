@@ -5,11 +5,12 @@ import {
   EntitlementService,
   EntitlementSnapshot,
 } from '../../../core/entitlement.service';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 @Component({
   selector: 'as-subscription',
   standalone: true,
-  imports: [RouterLink],
+  imports: [GenericErrorComponent, RouterLink],
   template: `
     <header class="util-appbar">
       <a routerLink="/m/settings" aria-label="Back to settings">
@@ -22,11 +23,7 @@ import {
       @if (loading()) {
         <section class="plan-state" aria-live="polite">Checking your access…</section>
       } @else if (error()) {
-        <section class="plan-state error" role="alert">
-          <b>Plans could not load</b>
-          <span>Your current access has not changed.</span>
-          <button type="button" (click)="load()">Try again</button>
-        </section>
+        <as-generic-error role="alert" message="Plans could not load. Your current access has not changed." (retried)="load()" />
       } @else if (current(); as plan) {
         <section class="plan-summary">
           <span class="plan-kicker">CURRENT PLAN</span>

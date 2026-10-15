@@ -7,14 +7,46 @@
   <header class="intro">
     <h1 class="title">Notifications</h1>
     <!-- The design rule, not a slogan. See the class comment. -->
-    <p class="lede">Opt-in, never fear-based — saved now, delivered when push delivery is connected.</p>
+    <p class="lede">Opt-in, never fear-based. A window alert says a window is coming, never that something bad will happen in it.</p>
   </header>
 
-  <section class="delivery" [class.warn]="permission() !== 'granted'">
-    <b>{{ permission() === 'granted' ? 'Preferences ready' : permission() === 'denied' ? 'Permission blocked' : 'Push not active yet' }}</b>
+  <section
+    class="delivery"
+    [class.warn]="permission() === 'prompt'"
+    [class.blocked]="permission() === 'denied'"
+    [class.muted]="permission() === 'unsupported'"
+    role="status"
+  >
+    @if (permission() === 'denied') {
+      <img class="delivery-icon" src="mobile/set-notif.svg" alt="" aria-hidden="true" />
+    }
+    <b>{{ deliveryTitle() }}</b>
     <p>{{ deliveryState() }}</p>
-    @if (pushAvailable() && permission() === 'default') {
-      <button type="button" (click)="requestPermission()">Request permission</button>
+
+    @if (permission() === 'prompt') {
+      <button type="button" class="primary" (click)="enable()" [disabled]="busy()">
+        {{ busy() ? 'Asking…' : 'Turn on notifications' }}
+      </button>
+    }
+
+    @if (permission() === 'denied') {
+      <ol class="steps">
+        <li>Open the system settings for Siddha.</li>
+        <li>Turn on <b>Allow notifications</b>.</li>
+        <li>Come back here; the card updates on its own.</li>
+      </ol>
+      <div class="actions">
+        <button type="button" class="primary" (click)="openSettings()">Open Settings</button>
+        @if (!snoozed()) {
+          <button type="button" (click)="remindLater()">Remind me later</button>
+        } @else {
+          <button type="button" (click)="recheck()">Check again</button>
+        }
+      </div>
+    }
+
+    @if (pushError(); as err) {
+      <p class="delivery-error">{{ err }}</p>
     }
   </section>
 
@@ -36,5 +68,11 @@
     </div>
   }
 
-  <p class="local-note">These are not live alerts yet. They persist on this device so the notification service can use them when it is enabled.</p>
+  <p class="local-note">
+    @if (permission() === 'granted') {
+      Delivered by the Siddha notification service; nothing is sent that you turned off.
+    } @else {
+      Saved on this device and on your account, ready for when delivery is on.
+    }
+  </p>
 </div>

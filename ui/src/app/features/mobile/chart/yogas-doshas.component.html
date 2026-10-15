@@ -7,7 +7,7 @@
   @if (loading()) {
     <section class="yd-state"><b>Loading combinations</b><p>Checking yogas and doshas for the selected profile.</p></section>
   } @else if (error()) {
-    <section class="yd-state error" role="alert"><b>Combinations could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+    <as-generic-error role="alert" [message]="error()!" (retried)="retry()" />
   } @else if (!data()) {
     <section class="yd-state"><b>No active profile</b><p>Select a profile before opening yogas and doshas.</p><a [routerLink]="['/m','settings','profiles']">Manage profiles</a></section>
   } @else {

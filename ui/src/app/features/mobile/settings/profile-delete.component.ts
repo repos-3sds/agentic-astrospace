@@ -3,12 +3,13 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 @Component({
   selector: 'as-profile-delete',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink],
+  imports: [GenericErrorComponent, FormsModule, RouterLink],
   template: `
     <header class="profiles-appbar">
       <a routerLink="/m/settings/profiles" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
@@ -20,10 +21,7 @@ import { KundliStore } from '../../../core/kundli.store';
       @if (loading()) {
         <section class="profiles-state"><b>Loading profile</b><p>Checking which profile will be deleted.</p></section>
       } @else if (error()) {
-        <section class="profiles-state error" role="alert">
-          <b>Profile could not load</b>
-          <p>{{ error() }}</p>
-        </section>
+        <as-generic-error role="alert" [message]="error()!" (retried)="load()" />
       } @else if (profile(); as item) {
         <section class="delete-card">
           <div class="danger-mark">!</div>
@@ -81,7 +79,7 @@ export class ProfileDeleteComponent {
     return !!profile && this.confirmation.trim().toUpperCase() === profile.name.toUpperCase();
   }
 
-  private async load(): Promise<void> {
+  protected async load(): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
     try {

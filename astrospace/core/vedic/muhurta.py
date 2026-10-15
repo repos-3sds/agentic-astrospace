@@ -139,9 +139,10 @@ class ExcludedGoalError(ValueError):
 
     def __init__(self, domain: str):
         self.domain = domain
+        # Reader-facing: this sentence is what the app's refer-out card shows.
         super().__init__(
-            f"{domain} decisions are not answered with muhurta timing; "
-            "refer the user to a qualified professional."
+            f"We don't pick times for {domain} decisions. Please take those to "
+            "a qualified professional, who can weigh what a chart cannot."
         )
 
 

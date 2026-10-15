@@ -37,7 +37,7 @@ from .kb import get_knowledge_base
 # response wrong — independent of any profile's own birth-data revision. See
 # docs/reliable_native_core_architecture_2026-08-14.md's cache validity
 # contract; consumed by /api/v1/context/{kundli_id}/daily.
-DAILY_GUIDANCE_ENGINE_VERSION = "daily-guidance-1.0"
+DAILY_GUIDANCE_ENGINE_VERSION = "daily-guidance-1.1"
 
 # Plain-language meaning of each tara (the star of the day counted from the
 # birth star). {you}/{poss} are filled per subject. BPHS/Muhurta convention.
@@ -54,6 +54,20 @@ TARABALA_MEANING = {
 }
 
 _FAVOURABLE_TARAS = {"Sampat", "Kshema", "Sadhaka", "Mitra", "Parama Mitra"}
+
+# What the Do/Avoid card says in Guided mode, where "tara: Vipat" is a label
+# the reader has no way to unpack. Same fact, no vocabulary.
+TARA_PLAIN_HEADLINE = {
+    "Janma": "A reflective, inward day",
+    "Sampat": "A naturally prosperous day",
+    "Vipat": "A day to guard against loss",
+    "Kshema": "A steady, well-being day",
+    "Pratyari": "A day with some friction",
+    "Sadhaka": "A day for finishing things",
+    "Vadha": "A day to avoid confrontation",
+    "Mitra": "A day for people and alliances",
+    "Parama Mitra": "One of your most fortunate days",
+}
 
 
 def _subject_words(relation: str | None) -> dict[str, str]:
@@ -251,7 +265,7 @@ def _verdict(chart, relation: str, day_payload: dict, personal: dict,
     rahu = _find_window(day_payload["windows"]["inauspicious"], "Rahu Kalam")
     rahu_time = _window_time(rahu)
     caution_clause = (
-        f"Keep {rahu_time} for routine work rather than fresh starts"
+        f"keep {rahu_time} for routine work rather than fresh starts"
         if rahu_time else "watch the daily inauspicious windows before starting anything major"
     )
     closing = {
@@ -586,6 +600,7 @@ def _do_and_avoid(personal: dict, ctx: dict, words: dict,
         headline = _pick(f"{seed_base}-tarabala-headline", _TARA_HEADLINE_FRAMES).format(tara=tara)
         row = {
             "headline": headline,
+            "plain_headline": TARA_PLAIN_HEADLINE[tara],
             "text": f"Today's tara is {tara} — {meaning}.",
             "source": "tarabala",
         }

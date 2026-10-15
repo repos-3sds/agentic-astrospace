@@ -7,11 +7,7 @@
   @if (loading()) {
     <section class="mcod-state"><b>Loading detail</b><p>Computing the full Gun Milan breakdown.</p></section>
   } @else if (error()) {
-    <section class="mcod-state error" role="alert">
-      <b>Compatibility detail could not load</b>
-      <p>{{ error() }}</p>
-      <button type="button" (click)="reload()">Retry</button>
-    </section>
+    <as-generic-error role="alert" [message]="error()!" (retried)="reload()" />
   } @else if (score(); as s) {
     <h1 class="mcod-title">Compatibility Detail</h1>
 

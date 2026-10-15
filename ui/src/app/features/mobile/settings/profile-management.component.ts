@@ -3,12 +3,13 @@ import { RouterLink } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
 import { Kundli } from '../../../core/models';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 @Component({
   selector: 'as-profile-management',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [GenericErrorComponent, RouterLink],
   template: `
     <header class="profiles-appbar">
       <a routerLink="/m/settings" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
@@ -20,11 +21,7 @@ import { Kundli } from '../../../core/models';
       @if (loading()) {
         <section class="profiles-state"><b>Loading profiles</b><p>Checking the profiles on this account.</p></section>
       } @else if (error()) {
-        <section class="profiles-state error" role="alert">
-          <b>Profiles could not load</b>
-          <p>{{ error() }}</p>
-          <button type="button" (click)="reload()">Retry</button>
-        </section>
+        <as-generic-error role="alert" [message]="error()!" (retried)="reload()" />
       } @else if (!kundlis.kundlis().length) {
         <section class="profiles-state">
           <b>No profiles yet</b>

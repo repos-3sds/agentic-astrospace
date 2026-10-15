@@ -1,4 +1,4 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, Injector, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { App as CapacitorApp, URLOpenListenerEvent } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
@@ -68,6 +68,8 @@ export class AuthService {
     private router: Router,
     connectivity: ConnectivityService,
     private readonly cache: ResourceCacheService,
+    // Optional so specs can `new AuthService(...)` without an injector.
+    private readonly injector?: Injector,
   ) {
     this.connectivity = connectivity;
   }
@@ -277,6 +279,13 @@ export class AuthService {
     if (this.client) {
       const { error } = await this.client.auth.signOut({ scope: 'local' });
       if (error) throw error;
+    }
+    // Revoke before the session goes: the API call needs the bearer token,
+    // and a signed-out phone must not keep receiving this account's briefs.
+    // Resolved lazily because PushService -> ApiService -> AuthService.
+    if (Capacitor.isNativePlatform() && this.injector) {
+      const { PushService } = await import('./push.service');
+      await this.injector.get(PushService).revoke();
     }
     this.setSession(null);
     // The encrypted cache holds the signed-out account's guidance, charts and

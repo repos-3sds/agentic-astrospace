@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ReferOutError } from '../../../core/api.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
 import { timingClockNote, timingPlaceLabel } from '../../../core/timing-place';
 import { MuhurtaApiWindow, VedicService } from '../../../core/vedic.service';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 /** How strongly a window is endorsed. Two levels, not a score. */
 export type WindowQuality = 'best' | 'good';
@@ -77,7 +79,7 @@ const DEPLOYED_GOAL_FALLBACKS: Record<string, string> = {
   selector: 'as-muhurta-results',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [GenericErrorComponent, RouterLink],
   templateUrl: './muhurta-results.component.html',
   styleUrl: './muhurta-results.component.scss',
 })
@@ -90,6 +92,8 @@ export class MuhurtaResultsComponent {
   private readonly preferences = inject(PreferencesService);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
+  /** The backend's refer-out sentence for an excluded intent; not an error. */
+  protected readonly referOut = signal<string | null>(null);
   protected readonly searched = signal(false);
   protected readonly note = signal<string | null>(null);
   protected readonly disclaimer = signal('Timing supports your intent — the decision and diligence are still yours.');
@@ -129,6 +133,7 @@ export class MuhurtaResultsComponent {
   private async load(): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
+    this.referOut.set(null);
     this.searched.set(false);
     try {
       await this.kundlis.load();
@@ -149,7 +154,8 @@ export class MuhurtaResultsComponent {
       this.conventionDependent.set(!!payload.is_convention_dependent);
       this.windows.set(this.extractWindows(payload.results));
     } catch (error) {
-      this.error.set((error as Error).message);
+      if (error instanceof ReferOutError) this.referOut.set(error.message);
+      else this.error.set((error as Error).message);
     } finally {
       this.searched.set(true);
       this.loading.set(false);

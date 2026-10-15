@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
 import { CompatibilityPayload } from '../../../core/models';
 import { VedicService } from '../../../core/vedic.service';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 /**
  * Full Compatibility Detail (Figma 215:805) — the eight-Koota breakdown,
@@ -20,7 +21,7 @@ import { VedicService } from '../../../core/vedic.service';
   selector: 'as-compat-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [GenericErrorComponent, RouterLink],
   templateUrl: './compat-detail.component.html',
   styleUrl: './compat-detail.component.scss',
 })

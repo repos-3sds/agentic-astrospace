@@ -58,6 +58,9 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 13+: requested at runtime by @capacitor/push-notifications from
+         Settings > Notifications, never on launch (opt-in, never fear-based). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Ask by voice (@capacitor-community/speech-recognition); requested at first use. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 </manifest>

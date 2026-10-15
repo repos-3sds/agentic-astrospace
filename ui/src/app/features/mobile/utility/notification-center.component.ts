@@ -2,8 +2,9 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../../core/api.service';
 import { PreferencesService } from '../../../core/preferences.service';
+import { GenericErrorComponent } from '../states/generic-error.component';
 interface AlertItem{id:string;category:string;title:string;body:string|null;deep_link:string|null;read_at:string|null;created_at:string|null}
-@Component({selector:'as-notification-center',standalone:true,imports:[RouterLink],templateUrl:'./notification-center.component.html',styleUrl:'./utility.component.scss',changeDetection:ChangeDetectionStrategy.OnPush})
+@Component({selector:'as-notification-center',standalone:true,imports:[RouterLink, GenericErrorComponent],templateUrl:'./notification-center.component.html',styleUrl:'./utility.component.scss',changeDetection:ChangeDetectionStrategy.OnPush})
 export class NotificationCenterComponent{
  private readonly api=inject(ApiService);private readonly router=inject(Router);
  protected readonly preferences=inject(PreferencesService);

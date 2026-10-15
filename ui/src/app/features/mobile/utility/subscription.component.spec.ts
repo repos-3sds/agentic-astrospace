@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import {
   EntitlementCatalog,
@@ -38,7 +39,7 @@ describe('SubscriptionComponent', () => {
     entitlements.catalog.and.resolveTo(CATALOG);
     await TestBed.configureTestingModule({
       imports: [SubscriptionComponent],
-      providers: [provideRouter([]), { provide: EntitlementService, useValue: entitlements }],
+      providers: [provideRouter([]), provideHttpClient(), { provide: EntitlementService, useValue: entitlements }],
     }).compileComponents();
     fixture = TestBed.createComponent(SubscriptionComponent);
   });

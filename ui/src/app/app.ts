@@ -24,6 +24,7 @@ import { SidebarComponent } from './shell/sidebar/sidebar.component';
 import { SplashComponent } from './shell/splash/splash.component';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { PushService } from './core/push.service';
 
 /**
  * Screens with nowhere in-app to go back to. Capacitor's hardware back
@@ -72,6 +73,7 @@ export class App implements OnInit, OnDestroy {
   private removeViewportInsetObserver: (() => void) | null = null;
   private removeBackButtonListener: (() => void) | null = null;
   private removeNativeInteractionGuards: (() => void) | null = null;
+  private readonly push = inject(PushService);
   private animatedSplashFadeTimer: ReturnType<typeof setTimeout> | null = null;
   private nativeBootReady = false;
   private animatedSplashFinished = false;
@@ -191,6 +193,9 @@ export class App implements OnInit, OnDestroy {
     try {
       await this.auth.init();
       if (this.auth.isAuthenticated()) {
+        // Re-registers the device token if permission was granted earlier.
+        // Never prompts: the OS dialog belongs to Settings > Notifications.
+        void this.push.init();
         if (
           Capacitor.isNativePlatform()
           && this.router.url.split('?')[0] === '/m/start'

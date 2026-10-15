@@ -13,7 +13,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { BirthDetailsCardComponent } from '../chart/birth-details-card.component';
 import { VedicService } from '../../../core/vedic.service';
 import { ResourceFreshness } from '../../../core/resource-cache';
-import { DailyGuidancePayload, VedicAll } from '../../../core/models';
+import { DailyGuidancePayload, VedicAll, DailyActionRow } from '../../../core/models';
 import { FestivalService } from '../../../core/festival.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { PreferencesService } from '../../../core/preferences.service';
@@ -199,6 +199,12 @@ export interface TodayView {
  * it were personalized is worse than a blank state; real cards appear only
  * after the daily-guidance payload or an in-memory cached payload is applied.
  */
+/** The "Practically, … Overall, …" sentence that closes the day narrative, if present. */
+function practicalClose(text: string): string[] {
+  const at = text.indexOf('Practically,');
+  return at >= 0 ? [text.slice(at).trim()] : [];
+}
+
 @Component({
   selector: 'as-today',
   standalone: true,
@@ -225,6 +231,11 @@ export class TodayComponent {
   private readonly festivals = inject(FestivalService);
   private readonly route = inject(ActivatedRoute);
   protected readonly preferences = inject(PreferencesService);
+
+  /** Guided readers get the row without the tara label ("A steady, well-being day"). */
+  private rowHeadline(row: DailyActionRow): string {
+    return this.preferences.experienceMode() === 'guided' && row.plain_headline ? row.plain_headline : row.headline;
+  }
   private readonly haptics = inject(HapticsService);
   private requestId = 0;
   protected readonly whyMode = computed(() => ({
@@ -359,7 +370,7 @@ export class TodayComponent {
       this.preferences.panchangaContextKey();
       if (profilesLoaded) void this.loadToday(profileId);
     });
-    if (!this.kundlis.loaded()) void this.kundlis.load();
+    if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
     // Deep-linked from the onboarding Aha screen's "Listen to my first
     // guidance" — arriving with ?listen=1 should open the sheet immediately
     // rather than land on a plain Today with no explanation of the link.
@@ -453,10 +464,10 @@ export class TodayComponent {
       // lost: it is what the "Why this reading?" sheet opens with.
       detail: daily.reading.summary,
       doItems: daily.do_today.length
-        ? daily.do_today.map((row) => row.headline)
+        ? daily.do_today.map((row) => this.rowHeadline(row))
         : [daily.reading.best_for[0] ?? daily.reading.focus],
       avoidItems: daily.avoid_today.length
-        ? daily.avoid_today.map((row) => row.headline)
+        ? daily.avoid_today.map((row) => this.rowHeadline(row))
         : [daily.reading.avoid[0] ?? daily.reading.timing_note],
       nextWindowLabel: 'TIMING NOTE',
       nextWindowValue: daily.reading.timing_note,
@@ -492,17 +503,18 @@ export class TodayComponent {
     ]);
     this.scoreReason.set(scoreReason(daily));
     this.summary.set(daily.reading.summary);
-    // The full narrative leads the evidence sheet, so nothing the engine wrote
-    // is dropped — it just stops overflowing the card it was never sized for.
-    this.plainWords.set([daily.verdict.text, ...daily.reading.plain_why]);
+    // plain_why already restates the narrative's three signals (tara, Moon,
+    // transit) one per bullet, so leading with the whole narrative said the
+    // transit twice. Keep the bullets and only the narrative's practical close.
+    this.plainWords.set([...daily.reading.plain_why, ...practicalClose(daily.verdict.text)]);
     this.calculation.set(daily.reading.technical_why.map((value, index) => ({
       label: `Signal ${index + 1}`,
       value,
     })));
     this.references.set(daily.context.references);
     this.doAvoidExplained.set([
-      ...daily.do_today.map((row) => ({ kind: 'do' as const, headline: row.headline, detail: row.text })),
-      ...daily.avoid_today.map((row) => ({ kind: 'avoid' as const, headline: row.headline, detail: row.text })),
+      ...daily.do_today.map((row) => ({ kind: 'do' as const, headline: this.rowHeadline(row), detail: row.text })),
+      ...daily.avoid_today.map((row) => ({ kind: 'avoid' as const, headline: this.rowHeadline(row), detail: row.text })),
     ]);
     this.conventions.set([
       daily.system,

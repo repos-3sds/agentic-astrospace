@@ -7,7 +7,7 @@
   @if (loading()) {
     <section class="strength-state"><b>Loading strengths</b><p>Computing Shadbala, Ashtakavarga and Jaimini values.</p></section>
   } @else if (error()) {
-    <section class="strength-state error" role="alert"><b>Strength data could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+    <as-generic-error role="alert" [message]="error()!" (retried)="retry()" />
   } @else if (!data()) {
     <section class="strength-state"><b>No active profile</b><p>Select a profile before opening advanced chart data.</p><a [routerLink]="['/m','settings','profiles']">Manage profiles</a></section>
   } @else {

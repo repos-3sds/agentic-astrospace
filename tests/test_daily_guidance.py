@@ -61,7 +61,7 @@ class TestSunriseBoundedValidity:
     not silently serve the wrong day's panchanga."""
 
     def test_carries_engine_version_and_validity_window(self, guidance):
-        assert guidance["engine_version"] == "daily-guidance-1.0"
+        assert guidance["engine_version"] == "daily-guidance-1.1"
         assert guidance["day_definition"] == "sunrise_to_next_sunrise"
         valid_from = datetime.fromisoformat(guidance["valid_from"])
         valid_until = datetime.fromisoformat(guidance["valid_until"])
@@ -144,6 +144,13 @@ class TestDoAvoidAndContext:
     def test_do_avoid_carry_sources(self, guidance):
         for row in guidance["do_today"] + guidance["avoid_today"]:
             assert row["source"] in ("tarabala", "domain")
+
+    def test_tarabala_row_has_a_plain_headline_for_guided_readers(self, guidance):
+        rows = [r for r in guidance["do_today"] + guidance["avoid_today"] if r["source"] == "tarabala"]
+        assert rows, "tarabala row missing"
+        plain = rows[0]["plain_headline"]
+        assert plain.startswith(("A ", "One "))
+        assert "tara" not in plain.lower()
 
     def test_domain_rows_carry_a_domain_and_headline(self, guidance):
         for row in guidance["do_today"] + guidance["avoid_today"]:

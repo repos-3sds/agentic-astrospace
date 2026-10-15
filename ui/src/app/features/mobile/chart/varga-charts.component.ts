@@ -17,6 +17,7 @@ import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { buildChartAdapter, PLANET_ABBR } from './mobile-chart-data';
 import { PlanetDetail, PlanetSheetComponent } from './planet-sheet.component';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 interface VargaOption {
   id: string;
@@ -35,7 +36,7 @@ interface VargaOption {
   selector: 'as-varga-charts',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [KundliChartComponent, PlanetSheetComponent, RouterLink],
+  imports: [GenericErrorComponent, KundliChartComponent, PlanetSheetComponent, RouterLink],
   templateUrl: './varga-charts.component.html',
   styleUrl: './varga-charts.component.scss',
 })

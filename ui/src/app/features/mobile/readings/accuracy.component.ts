@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
 import { PredictionClaim, PredictionClaimStatus } from '../../../core/models';
 import { ReadingService } from '../../../core/reading.service';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 const REVIEW_STATUSES: Array<{ label: string; status: PredictionClaimStatus; tone: string }> = [
   { label: 'accurate', status: 'accurate', tone: 'good' },
@@ -21,7 +22,7 @@ const COUNT_STATUSES: Array<{ label: string; status: PredictionClaimStatus; tone
   selector: 'as-reading-accuracy',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [GenericErrorComponent, RouterLink],
   template: `
     <a class="mra-back" [routerLink]="['/m','readings']"><img src="mobile/back.svg" alt="" /><span>Readings</span></a>
     <main class="mra-body">
@@ -33,11 +34,7 @@ const COUNT_STATUSES: Array<{ label: string; status: PredictionClaimStatus; tone
           <p>Checking prediction claims for {{ activeName() }}.</p>
         </section>
       } @else if (error()) {
-        <section class="mra-state error" role="alert">
-          <b>Claims could not load</b>
-          <p>{{ error() }}</p>
-          <button type="button" (click)="reload()">Retry</button>
-        </section>
+        <as-generic-error role="alert" [message]="error()!" (retried)="reload()" />
       } @else if (!activeId()) {
         <section class="mra-state">
           <b>No active profile</b>

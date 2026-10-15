@@ -8,7 +8,7 @@
   @if (loading()) {
     <section class="life-state"><b>Loading chapters</b><p>Reading the current season of your life map.</p></section>
   } @else if (error()) {
-    <section class="life-state error" role="alert"><b>Life chapters could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+    <as-generic-error role="alert" [message]="error()!" (retried)="retry()" />
   } @else if (noProfile()) {
     <section class="life-state"><b>No active profile</b><p>Add birth details before opening your life chapters.</p><a [routerLink]="['/m', 'birth-details']">Add birth details</a></section>
   } @else if (!current()) {

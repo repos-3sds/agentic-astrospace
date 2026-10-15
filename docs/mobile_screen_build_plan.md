@@ -437,8 +437,8 @@ for everything not yet done are in
 | `216:773` | States · Offline / Stale Data | ❌ not built — grepped `core/` and `features/mobile/` for "offline"/"stale", no match |
 | `216:838` | States · Partial Calculation | ❌ not built — pairs with unknown-birth-time below |
 | `216:904` | screen-3-unknown (unknown birth time) | ❌ not built — grepped both birth-details components, no "unknown" field anywhere |
-| `216:964` | screen-4-denied (notification permission denied) | ❌ not built |
-| `103:92`–`107:101` | M10 · Home/Lock Screen Widget, Live Activity, Watch Complication, Push Notification, Share Story Card | ❌ not built — see Platform (M10) below; most need native extension targets, not just Angular work |
+| `216:964` | screen-4-denied (notification permission denied) | ✅ done — the denied state of `/m/settings/notifications` (mobile audit item 20, 2026-10-15): Open Settings via `capacitor-native-settings`, Remind me later, Check again |
+| `103:92`–`107:101` | M10 · Home/Lock Screen Widget, Live Activity, Watch Complication, Push Notification, Share Story Card | ⚠️ partial — Push Notification registration and the morning brief shipped 2026-10-15 (see Platform below); widget, Live Activity and complication need native extension targets, not just Angular work |
 | `269:158` | enhanced-stat-cells-concept | Not a spec'd screen — reads as a live design exploration (was the current selection in the Figma desktop app when checked) |
 
 ### Recommended implementation order
@@ -585,7 +585,9 @@ changed, not just what Figma asked for:
 
 - **`m/language` now persists.** The screen looked functional but never
   wrote its selection anywhere — `PreferencesService.language` is now set
-  on entry. Telugu stays visibly disabled; see "Telugu is disabled" above.
+  on entry. *Superseded 2026-10-15 (audit item 15):* Telugu is selectable
+  here, writing the same preference Settings › Language does; the "disabled"
+  state is gone.
 - **`m/welcome`'s "carousel" is now an actual carousel.** It was 3 static
   stacked cards with no swipe interaction. Rebuilt as a real horizontal
   scroll-snap carousel (4 slides, dot indicators, tap-to-jump) with fresh
@@ -649,9 +651,13 @@ changed, not just what Figma asked for:
       Alert" callout surfacing the most urgent item (e.g. an active
       Chandrashtama); reachable from the profile switcher, not just a
       renamed switcher sheet.
-- [ ] **Unknown/approximate birth time** (`screen-3-unknown`, node
+- [~] **Unknown/approximate birth time** (`screen-3-unknown`, node
       `216:904`, pairs with `States · Partial Calculation`, node `216:838`).
-      AC: both `onboarding/birth-details.component` and
+      Shipped 2026-10-15 (audit item 9, PR #96): `birth_time_accuracy` on
+      the kundli, an "approximate" toggle on both birth-details forms, and
+      an APPROXIMATE badge on the chart hub, life periods, birth details and
+      the first-insight hero. Still open: the sunrise/noon fallback-mode
+      choice and the ±1 house / ±6 month note. Original AC: both `onboarding/birth-details.component` and
       `settings/edit-birth-details.component` gain an "Unknown" toggle for
       time of birth; choosing it shows the "works normally vs. limited
       features" explainer and a fallback-mode choice (sunrise default /
@@ -666,17 +672,21 @@ changed, not just what Figma asked for:
 
 ### P0 — Resilience states
 
-- [ ] **Offline / stale-data banner** (node `216:773`). AC: when a network
-      request fails and a previously-cached response exists, show a banner
-      ("You're offline. Showing last updated results from Xh ago.") with a
-      Retry action, rather than either a blank error state or silently
-      stale content; applies at minimum to Today and Calendar Day.
-- [ ] **Notification permission denied screen** (`screen-4-denied`, node
-      `216:964`). AC: shown when the OS reports notifications denied;
-      explains what's missed (morning guidance, transit alerts, timing
-      windows) with "Open Settings" and "Remind me later" actions; ties
-      into the still-outstanding push notification registration work
-      below.
+- [~] **Offline / stale-data banner** (node `216:773`). The shell shows an
+      offline/reconnecting banner with Retry from `ConnectivityService`
+      (2026-10), and a failed profile load now renders one shared error
+      state with retry (2026-10-15, audit item 18) instead of empty tabs.
+      Still open: the "last updated Xh ago" age on cached Today and Calendar
+      Day content. Original AC: when a network request fails and a
+      previously-cached response exists, show a banner ("You're offline.
+      Showing last updated results from Xh ago.") with a Retry action.
+- [x] **Notification permission denied screen** (`screen-4-denied`, node
+      `216:964`). Shipped 2026-10-15 (mobile audit item 20) as the denied
+      state of Settings › Notifications: what is off, three steps, "Open
+      Settings" (`capacitor-native-settings`, app notification screen on
+      both platforms) and "Remind me later" (a week's snooze, then "Check
+      again"). The card re-reads the OS permission on every visit, so
+      flipping the system switch updates it without a relaunch.
 
 ### P1 — Trust and completeness (see the 2026-07-27 audit §7 for full detail)
 
@@ -695,14 +705,25 @@ None of these are Angular/Capacitor work — each needs its own native
 extension target, which is a separate build system and, for the watch app,
 a separate App Store product.
 
-- [ ] **Push notification registration** (node `106:109`). AC:
-      `@capacitor/push-notifications` wired, APNs cert + FCM key
-      configured, device token persisted server-side, morning-brief payload
-      sent on schedule. Tracked as not-done since `docs/native_builds.md`'s
-      original M11-US04.
+- [~] **Push notification registration** (node `106:109`). Built
+      2026-10-15 (mobile audit item 20): `@capacitor/push-notifications`
+      registers after the reader opts in on Settings › Notifications (never
+      on launch), `core/push.service.ts` stores the token through
+      `PUT /me/push-tokens` (FCM on Android, APNs on iOS) and revokes it on
+      sign-out; toggles sync to `/me/notification-preferences`. Server side,
+      `astrospace/notifications/` queues one morning brief per user per day
+      at their preferred local time and `python -m
+      astrospace.notifications.worker` delivers it over FCM HTTP v1. Still
+      open, and the reason this is `[~]`: the Firebase service account
+      (`FCM_SERVICE_ACCOUNT_FILE`) and `google-services.json` are
+      deployment secrets that live outside the repo, and iOS delivery needs
+      the Firebase decision recorded in the deferred backlog of
+      `backend_astro_depth_checklist_2026-08-06.md`.
 - [ ] **Share Story Card** (node `107:101`). AC: `@capacitor/share` plus a
       canvas-rendered 9:16 image of the day's headline, shareable to
-      WhatsApp Status / Instagram Stories from the Today screen.
+      WhatsApp Status / Instagram Stories from the Today screen. The share
+      plumbing exists since 2026-10-15 (`ui/src/app/core/native-share.ts`,
+      used by the Ask PDF); the story image is the remaining work.
 - [ ] **Home Screen Widget** (node `103:92`). AC: iOS WidgetKit extension +
       Android App Widget provider, both reading the same daily-guidance
       data, medium-size layout matching the Figma mock.
@@ -836,13 +857,15 @@ the live remediation tracker.
 
 ### Partially covered — requires verification or deeper work
 
-- [~] **Notifications toggle is still not real push delivery** — P1.
+- [x] **Notifications toggle is real push registration** — P1, closed
+  2026-10-15 (mobile audit item 20).
   Routes: `/m/settings/notifications`, `/m/notifications`.
-  AC to close: notification choices persist; OS permission state is visible;
-  denied state has recovery actions; real push registration/device-token
-  delivery is either implemented or explicitly product-deferred in the UI.
-  Current state: local preferences exist and native/web copy no longer calls the
-  APK a browser preview, but push delivery is not complete.
+  Choices persist on the device and on the account; the OS permission state
+  is the card's headline (off, denied, delivered to this device, or not
+  available on the web); the denied state opens system settings or snoozes;
+  the device token is registered and revoked on sign-out; the morning brief
+  is queued and delivered by `astrospace/notifications/`. What remains is
+  deployment configuration, tracked under Platform (M10) above.
 
 - [~] **Settings option glitch screen** — P1.
   Routes: all `/m/settings/*`.

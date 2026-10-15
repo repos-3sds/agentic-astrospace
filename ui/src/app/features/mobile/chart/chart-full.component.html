@@ -24,7 +24,7 @@
       <span class="skel table-skel"></span>
     </section>
   } @else if (error()) {
-    <section class="chart-state error" role="alert"><b>Chart could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+    <as-generic-error role="alert" [message]="error()!" (retried)="retry()" />
   } @else if (!chart()) {
     <section class="chart-state"><b>No active profile</b><p>Select a profile before opening the full chart.</p><a [routerLink]="['/m','settings','profiles']">Manage profiles</a></section>
   } @else {

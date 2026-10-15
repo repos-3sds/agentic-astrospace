@@ -14,8 +14,17 @@
 
   @if (loading()) {
     <section class="muhurta-state"><b>Finding windows</b><p>Checking panchanga windows for your selected range.</p></section>
+  } @else if (referOut(); as refusal) {
+    <!-- A refusal by design, not a failure: no retry, and the same boundary
+         every health, legal and money question meets elsewhere in the app. -->
+    <section class="muhurta-state refer-out" role="status">
+      <img src="mobile/shield.svg" alt="" aria-hidden="true" />
+      <b>Not something we time</b>
+      <p>{{ refusal }}</p>
+      <a [routerLink]="['/m','muhurta']">Choose another goal</a>
+    </section>
   } @else if (error()) {
-    <section class="muhurta-state error" role="alert"><b>Windows could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+    <as-generic-error role="alert" [message]="error()!" (retried)="retry()" />
   } @else if (searched() && !windows().length) {
     <section class="muhurta-state"><b>No windows cleared the bar</b><p>{{ note() || 'Widening the dates usually helps more than settling for a weak slot.' }}</p><a [routerLink]="['/m','muhurta']">Change search</a></section>
   } @else {

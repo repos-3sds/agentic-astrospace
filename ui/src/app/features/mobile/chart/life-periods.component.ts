@@ -9,10 +9,12 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BirthTimeBadgeComponent } from './birth-time-badge.component';
+import { monthYear } from '../format-date';
 import { KundliStore } from '../../../core/kundli.store';
 import { DashaPayload, DashaPeriod, YoginiDashaPayload, YoginiDashaPeriod } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 interface Period {
   name: string;
@@ -33,7 +35,7 @@ interface ActivePeriodInsight {
   selector: 'as-life-periods',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, BirthTimeBadgeComponent],
+  imports: [GenericErrorComponent, RouterLink, BirthTimeBadgeComponent],
   templateUrl: './life-periods.component.html',
   styleUrl: './life-periods.component.scss',
 })
@@ -177,7 +179,7 @@ export class LifePeriodsComponent {
   private toPeriod(period: DashaPeriod | YoginiDashaPeriod): Period {
     return {
       name: period.lord,
-      dates: `${this.dateLabel(period.start)}–${this.dateLabel(period.end)}`,
+      dates: `${monthYear(period.start)}–${monthYear(period.end)}`,
       active: period.active,
       source: period,
     };
@@ -224,12 +226,6 @@ export class LifePeriodsComponent {
     return 'Use this period as timing context, then check house placement, strength and transits before acting.';
   }
 
-  private dateLabel(value: string): string {
-    if (!value) return '—';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-  }
 
   private asOfLabel(value?: string): string {
     if (!value) return 'current date';

@@ -5,23 +5,20 @@ import { KundliStore } from '../../../core/kundli.store';
 import { CompatibilityPayload } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 @Component({
   selector: 'as-compat-results',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [GenericErrorComponent, RouterLink],
   template: `
     <a class="mcor-back" [routerLink]="['/m','compat']"><img src="mobile/back.svg" alt="" /><span>Compatibility</span></a>
     <main class="mcor-body">
       @if (loading()) {
         <section class="mcor-state"><b>Computing match</b><p>Calculating Gun Milan from both saved profiles.</p></section>
       } @else if (error()) {
-        <section class="mcor-state error" role="alert">
-          <b>Compatibility could not load</b>
-          <p>{{ error() }}</p>
-          <button type="button" (click)="reload()">Retry</button>
-        </section>
+        <as-generic-error role="alert" [message]="error()!" (retried)="reload()" />
       } @else if (!partnerId()) {
         <section class="mcor-state"><b>Select a person</b><p>Choose or add another profile before viewing results.</p><a [routerLink]="['/m','compat']">Choose person</a></section>
       } @else if (score(); as s) {

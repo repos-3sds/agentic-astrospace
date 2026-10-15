@@ -284,6 +284,8 @@ export interface DailyColorSwatch {
 export interface DailyActionRow {
   /** Short, card-friendly form — e.g. "Finance: a good day to review your numbers". */
   headline: string;
+  /** The same line without astrological vocabulary; sent for tarabala rows, shown in Guided mode. */
+  plain_headline?: string;
   /** Full sentence with the reason behind it, for the Why-reading sheet. */
   text: string;
   source: string;
