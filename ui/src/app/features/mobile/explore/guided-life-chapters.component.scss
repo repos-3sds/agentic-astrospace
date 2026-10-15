@@ -218,12 +218,14 @@
 
   b { @include m-h2; color: var(--m-text); }
   p { @include m-body-small; margin: 0; color: var(--m-muted); }
-  button {
+  button,
+  a {
     @include m-body-strong;
     padding: 11px 16px;
     border: 1px solid var(--m-border-strong);
     border-radius: 999px;
     color: var(--m-accent-strong);
     background: transparent;
+    text-decoration: none;
   }
 }
