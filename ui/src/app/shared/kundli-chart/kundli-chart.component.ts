@@ -129,11 +129,37 @@ export class KundliChartComponent {
     if (this.interactive()) this.planetSelected.emit(entry.key);
   }
 
+  /**
+   * Tap targets for the planet labels, in chart units (the SVG is 400 wide,
+   * about 337 px on a phone, so 54 units is about 45 px). Flow audit
+   * 2026-10-15, section 6: they were 37 x 12 px.
+   *
+   * Each target stays centred on its own label, so a tap on a label always
+   * lands on that planet. Rows of a stack abut at the label spacing; the
+   * stack's first and last rows grow outward until the stack is 54 units
+   * tall, so a lone planet is a full 44 px target. Middle rows of a stack of
+   * three or more keep the label spacing: making them taller would mean
+   * spacing the labels further apart.
+   */
+  protected static readonly HIT = 54;
+
   protected hitX(anchor: 'start' | 'middle' | 'end'): number {
     if (anchor === 'start') return -4;
-    if (anchor === 'end') return -40;
-    return -22;
+    if (anchor === 'end') return 4 - KundliChartComponent.HIT;
+    return -KundliChartComponent.HIT / 2;
   }
+
+  /** `base` is the first row's text baseline, `step` the row spacing. */
+  protected hitRow(i: number, count: number, base: number, step: number): { y: number; h: number } {
+    const extra = Math.max(0, KundliChartComponent.HIT - step * count) / 2;
+    let y = base - 1 + i * step - step / 2;
+    let h = step;
+    if (i === 0) { y -= extra; h += extra; }
+    if (i === count - 1) h += extra;
+    return { y, h };
+  }
+
+  protected readonly hitWidth = KundliChartComponent.HIT;
 
   protected readonly houses = computed<HouseView[]>(() => {
     const chart = this.chart();

@@ -30,6 +30,14 @@
 }
 
 .back {
+  // A 44 px target around the 24 px chevron, pulled back so the chevron
+  // keeps its place in the app bar.
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  margin: -10px;
   line-height: 0;
   img { width: 24px; height: 24px; display: block; }
 }
@@ -96,8 +104,12 @@
 }
 
 .mini-action {
+  min-width: 44px;
+  min-height: 44px;
+  margin: -12px 0;
   border: 0;
   padding: 0 4px;
+  cursor: pointer;
   background: transparent;
   color: var(--m-muted);
   @include m-caption;

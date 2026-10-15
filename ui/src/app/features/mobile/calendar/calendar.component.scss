@@ -5,7 +5,8 @@
   h1 { @include m-title; margin: 0; color: var(--m-text); }
   div { display: flex; align-items: center; gap: 10px; }
   b { @include m-body-strong; color: var(--m-text); }
-  button { border: 0; padding: 0; background: none; }
+  // 44 px targets around 18 px chevrons (flow audit section 6).
+  button { width: 44px; height: 44px; display: grid; place-items: center; margin: -13px; border: 0; padding: 0; background: none; cursor: pointer; }
   button:disabled { opacity: 0.35; }
   img { width: 18px; height: 18px; display: block; }
   .mcal-next img { transform: rotate(180deg); }

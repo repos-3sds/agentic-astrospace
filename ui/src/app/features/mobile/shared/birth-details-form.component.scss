@@ -93,8 +93,10 @@
 
 .approx-action {
   border: 0;
-  padding: 0;
-  min-height: 24px;
+  // 44 px tall to the finger, 24 px to the layout.
+  padding: 10px 0;
+  margin: -10px 0;
+  min-height: 44px;
   background: none;
   cursor: pointer;
   @include m-body-strong;
