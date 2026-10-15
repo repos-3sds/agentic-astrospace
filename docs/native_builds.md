@@ -130,10 +130,36 @@ the store listings point at the deployed URLs.
   return (M11-US02).
 - Complete the Android lifecycle matrix beyond launch, keyboard, route Back,
   and callback-intent delivery (M11-US03).
-- Push notification registration (M11-US04).
+- Push credentials (M11-US04). The code is in place on both sides; what a
+  build needs is below under "Push notifications".
 - Splash screen and icon assets are Capacitor defaults so far.
 - The native projects are not in CI; `npm run version:check` runs there, a
   native build does not.
+
+## Push notifications
+
+Registration lives in `ui/src/app/core/push.service.ts` and is opt-in from
+Settings › Notifications; the worker that sends is
+`python -m astrospace.notifications.worker` (see `astrospace/notifications/`).
+A build delivers nothing until these are in place, none of them committed:
+
+- **Android:** `ui/android/app/google-services.json` from the Firebase
+  console. `build.gradle` already applies the google-services plugin only
+  when the file exists, so a build without it still runs; it just gets no
+  token. `POST_NOTIFICATIONS` is declared in the manifest and requested at
+  runtime by the plugin.
+- **iOS:** the Push Notifications capability on the App ID and in the
+  provisioning profile. `ui/ios/App/App/App.entitlements` carries
+  `aps-environment` (development; Xcode switches it to production for an
+  archive) and `AppDelegate.swift` forwards the APNs token to the plugin.
+  Delivery to that token is deferred until the app joins the Firebase
+  project; see the deferred backlog.
+- **Server:** `FCM_SERVICE_ACCOUNT_FILE` (and optionally `FCM_PROJECT_ID`)
+  in the worker's environment, pointing at a Firebase service-account JSON
+  with the Cloud Messaging role. Without it every send fails with
+  "fcm transport not configured" and the job stays pending, so configuring
+  it later drains the backlog. Run the worker once a day or on a loop; it
+  is idempotent per user per day.
 
 ## Verified on iOS
 
