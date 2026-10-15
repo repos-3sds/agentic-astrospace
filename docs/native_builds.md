@@ -132,9 +132,24 @@ the store listings point at the deployed URLs.
   and callback-intent delivery (M11-US03).
 - Push credentials (M11-US04). The code is in place on both sides; what a
   build needs is below under "Push notifications".
-- Splash screen and icon assets are Capacitor defaults so far.
 - The native projects are not in CI; `npm run version:check` runs there, a
   native build does not.
+
+## App icon
+
+The app icon (iOS, Android legacy, round and adaptive layers, PWA icons and
+favicon) is the Nine-Arm Galaxy on space black, rendered from one drawing in
+`ui/scripts/brand/galaxy.cjs`. After changing the drawing, regenerate from
+`ui/`:
+
+```sh
+node scripts/brand/render-icons.cjs && python3 scripts/brand/finish_icons.py
+```
+
+Android adaptive icons use the PNG layers in
+`mipmap-*/ic_launcher_{foreground,background}.png`. The splash screen and the
+onboarding logo are separate and still use the sun-and-orbits mark in
+`ui/src/app/shell/splash/splash.component.ts`.
 
 ## Push notifications
 
