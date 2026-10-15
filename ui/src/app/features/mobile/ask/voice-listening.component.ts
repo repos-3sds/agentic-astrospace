@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
 /**
  * Input-level meter bar heights, in px, as the design draws them.
@@ -32,10 +32,17 @@ export class VoiceListeningComponent {
   /** What has been recognised so far. Empty until the first words land. */
   readonly transcript = input('');
   readonly language = input('English');
+  /** Why recognition is not running, when it is not. */
+  readonly error = input<string | null>(null);
+  /** Whether the recogniser is still capturing. */
+  readonly active = input(true);
 
   readonly cancelled = output<void>();
   readonly confirmed = output<string>();
 
   protected readonly meter = METER;
-  protected readonly status = signal('Listening…');
+  protected readonly status = computed(() => {
+    if (this.error()) return 'Voice input unavailable';
+    return this.active() ? 'Listening…' : 'Finished listening';
+  });
 }

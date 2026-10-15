@@ -18,8 +18,10 @@
 
     <div class="transcript">
       <p class="transcript-text">
-        @if (transcript()) {
-          “{{ transcript() }}…”
+        @if (error()) {
+          {{ error() }}
+        } @else if (transcript()) {
+          “{{ transcript() }}{{ active() ? '…' : '' }}”
         } @else {
           Go ahead — ask your question.
         }

@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { PreferencesService } from '../../../core/preferences.service';
+import { AskResponseLanguage, PreferencesService } from '../../../core/preferences.service';
 
 @Component({
   selector: 'as-language',
@@ -14,13 +14,11 @@ import { PreferencesService } from '../../../core/preferences.service';
 export class LanguageComponent {
   private readonly preferences = inject(PreferencesService);
 
-  // Only English actually works today (see the Telugu note in the template),
-  // so this is the only value this signal can ever hold — but it still owns
-  // the write-through to PreferencesService rather than letting the choice
-  // evaporate on navigation.
-  protected readonly language = signal<'English'>('English');
+  /** The same two Ask response languages Settings offers (`language-audio`);
+   * both screens write the one preference so the choice survives setup. */
+  protected readonly language = this.preferences.language;
 
-  constructor() {
-    this.preferences.language.set('en');
+  protected choose(language: AskResponseLanguage): void {
+    this.preferences.language.set(language);
   }
 }

@@ -63,14 +63,18 @@
   [value]="draft()"
   placeholder="Type your question…"
   (valueChange)="draft.set($event)"
+  [voice]="speech.supported()"
   (submitted)="ask($event)"
   (voiceRequested)="startListening()"
 />
 
 @if (listening()) {
   <as-voice-listening
-    [transcript]="heard()"
-    (cancelled)="listening.set(false)"
+    [transcript]="speech.transcript()"
+    [language]="preferences.language() === 'te' ? 'Telugu' : 'English'"
+    [error]="speech.error()"
+    [active]="speech.listening()"
+    (cancelled)="stopListening()"
     (confirmed)="acceptSpeech($event)"
   />
 }

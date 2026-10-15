@@ -18,9 +18,11 @@ import { ASK_NAVIGATION } from './ask-navigation';
       <textarea class="field" rows="3" [placeholder]="placeholder()" [attr.aria-label]="label()"
         [value]="value()" (input)="valueChange.emit($any($event.target).value)" (keydown)="onWebKey($event)"></textarea>
     }
-    <button class="mic" type="button" aria-label="Ask by voice" (click)="voiceRequested.emit()">
-      <span class="composer-icon mic-icon" aria-hidden="true"></span>
-    </button>
+    @if (voice()) {
+      <button class="mic" type="button" aria-label="Ask by voice" (click)="voiceRequested.emit()">
+        <span class="composer-icon mic-icon" aria-hidden="true"></span>
+      </button>
+    }
     @if (!navigation.web) { <input
       class="field"
       type="text"
@@ -56,6 +58,9 @@ export class AskComposerComponent {
   readonly label = input('Your question');
   /** Inset and floating (Ask Home) rather than edge to edge (the thread). */
   readonly inset = input(false);
+  /** Show the microphone. Off where no host listens for `voiceRequested` or
+   * where speech recognition is unavailable; a mic that does nothing is a lie. */
+  readonly voice = input(false);
 
   readonly valueChange = output<string>();
   readonly submitted = output<string>();
