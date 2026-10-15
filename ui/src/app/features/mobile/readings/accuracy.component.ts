@@ -5,17 +5,11 @@ import { PredictionClaim, PredictionClaimStatus } from '../../../core/models';
 import { ReadingService } from '../../../core/reading.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
-
-const REVIEW_STATUSES: Array<{ label: string; status: PredictionClaimStatus; tone: string }> = [
-  { label: 'accurate', status: 'accurate', tone: 'good' },
-  { label: 'partly', status: 'partly', tone: 'warn' },
-  { label: 'missed', status: 'missed', tone: 'bad' },
-  { label: 'n/a', status: 'not_applicable', tone: 'neutral' },
-];
+import { REVIEW_OPTIONS, claimIsDue, claimWindow } from './claim-review';
 
 const COUNT_STATUSES: Array<{ label: string; status: PredictionClaimStatus; tone: string }> = [
-  { label: 'pending', status: 'pending', tone: 'neutral' },
-  ...REVIEW_STATUSES,
+  ...REVIEW_OPTIONS,
+  { label: 'Not checked yet', status: 'pending', tone: 'empty' },
 ];
 
 @Component({
@@ -26,7 +20,7 @@ const COUNT_STATUSES: Array<{ label: string; status: PredictionClaimStatus; tone
   template: `
     <a class="mra-back" [asBack]="['/m','readings']"><img src="mobile/back.svg" alt="" /><span>Readings</span></a>
     <main class="mra-body">
-      <header><h1>Track record</h1><p>Only returned prediction claims are counted here.</p></header>
+      <header><h1>Track record</h1><p>How the predictions in your readings turned out, by your own account.</p></header>
 
       @if (loading()) {
         <section class="mra-state" aria-live="polite">
@@ -42,7 +36,7 @@ const COUNT_STATUSES: Array<{ label: string; status: PredictionClaimStatus; tone
         </section>
       } @else {
         <section class="mra-summary">
-          <div><span><b>{{ heldRateLabel() }}</b></span><small>{{ totalClaims() }} claims returned</small></div>
+          <div><span><b>{{ heldRateLabel() }}</b></span><small>{{ summaryLine() }}</small></div>
           <div class="mra-meter">
             @for (item of counts(); track item.label) {
               <i [attr.data-tone]="item.tone" [style.flex]="item.count || 0.0001"></i>
@@ -50,26 +44,26 @@ const COUNT_STATUSES: Array<{ label: string; status: PredictionClaimStatus; tone
           </div>
           <footer>
             @for (item of counts(); track item.label) {
-              <span><i [attr.data-tone]="item.tone"></i>{{ item.count }} {{ item.label }}</span>
+              <span><i [attr.data-tone]="item.tone"></i>{{ item.label }} {{ item.count }}</span>
             }
           </footer>
         </section>
 
         <nav class="mra-tabs" aria-label="Claim filter">
-          <button type="button" [class.on]="filter() === 'pending'" (click)="filter.set('pending')">To review</button>
+          <button type="button" [class.on]="filter() === 'pending'" (click)="filter.set('pending')">To check ({{ dueClaims().length }})</button>
           <button type="button" [class.on]="filter() === 'all'" (click)="filter.set('all')">All</button>
         </nav>
 
         @if (!claims().length) {
           <section class="mra-state">
-            <b>No claims returned</b>
-            <p>Generate a reading first, then return here after claims are available.</p>
+            <b>No predictions yet</b>
+            <p>Get a reading first. Its predictions show up here so you can mark what happened.</p>
           </section>
         } @else {
           @if (filter() === 'pending') {
-            <p class="mra-title accent">AWAITING YOUR CALL</p>
+            <p class="mra-title accent">DID THESE HAPPEN?</p>
           } @else {
-            <p class="mra-title">ALL CLAIMS</p>
+            <p class="mra-title">ALL PREDICTIONS</p>
           }
 
           @for (claim of visibleClaims(); track claim.id) {
@@ -79,12 +73,14 @@ const COUNT_STATUSES: Array<{ label: string; status: PredictionClaimStatus; tone
                 <small>{{ claimWindow(claim) }}</small>
               </div>
               <blockquote>{{ claim.claim_text }}</blockquote>
-              <p>Status: {{ claimStatusLabel(claim.status) }}</p>
+              <p>{{ sourceLabel(claim) }}</p>
               <footer>
                 @for (option of statuses; track option.status) {
                   <button
                     type="button"
+                    [attr.data-tone]="option.tone"
                     [class.active]="claim.status === option.status"
+                    [attr.aria-pressed]="claim.status === option.status"
                     [disabled]="savingId() === claim.id"
                     (click)="review(claim, option.status)"
                   >{{ option.label }}</button>
@@ -93,8 +89,8 @@ const COUNT_STATUSES: Array<{ label: string; status: PredictionClaimStatus; tone
             </section>
           } @empty {
             <section class="mra-state">
-              <b>No pending claims</b>
-              <p>All returned claims for this profile have a review status.</p>
+              <b>Nothing to check right now</b>
+              <p>{{ upcomingLine() }}</p>
             </section>
           }
         }
@@ -108,7 +104,8 @@ export class AccuracyComponent {
   private readonly readingsApi = inject(ReadingService);
   private requestId = 0;
 
-  protected readonly statuses = REVIEW_STATUSES;
+  protected readonly statuses = REVIEW_OPTIONS;
+  protected readonly claimWindow = claimWindow;
   protected readonly claims = signal<PredictionClaim[]>([]);
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -118,10 +115,13 @@ export class AccuracyComponent {
   protected readonly activeId = computed(() => this.store.activeId());
   protected readonly activeName = computed(() => this.store.active()?.name ?? 'this profile');
   protected readonly visibleClaims = computed(() =>
-    this.filter() === 'pending'
-      ? this.claims().filter((claim) => claim.status === 'pending')
-      : this.claims(),
+    this.filter() === 'pending' ? this.dueClaims() : this.claims(),
   );
+  // A prediction is only asked about once its window has begun.
+  protected readonly dueClaims = computed(() => {
+    const today = new Date();
+    return this.claims().filter((claim) => claim.status === 'pending' && claimIsDue(claim, today));
+  });
   protected readonly counts = computed(() =>
     COUNT_STATUSES.map((status) => ({
       ...status,
@@ -152,9 +152,11 @@ export class AccuracyComponent {
     this.savingId.set(claim.id);
     this.error.set(null);
     try {
-      const updated = await this.readingsApi.claimFeedback(id, claim.id, status, claim.user_feedback ?? '');
+      // Tapping the chosen answer again clears it, so a mis-tap is undoable.
+      const next: PredictionClaimStatus = claim.status === status ? 'pending' : status;
+      const updated = await this.readingsApi.claimFeedback(id, claim.id, next, claim.user_feedback ?? '');
       if (this.activeId() !== id) return;
-      this.claims.update((claims) => claims.map((item) => (item.id === updated.id ? updated : item)));
+      this.claims.update((claims) => claims.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)));
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {
@@ -164,21 +166,26 @@ export class AccuracyComponent {
 
   protected heldRateLabel(): string {
     const applicable = this.reviewedApplicable().length;
-    if (!applicable) return '-';
+    if (!applicable) return 'No checks yet';
     return `${Math.round((this.heldClaims().length / applicable) * 100)}%`;
   }
 
-  protected claimStatusLabel(status: PredictionClaimStatus): string {
-    if (status === 'not_applicable') return 'N/A';
-    return status.replace('_', ' ');
+  protected summaryLine(): string {
+    const applicable = this.reviewedApplicable().length;
+    if (!applicable) return `${this.totalClaims()} predictions to follow`;
+    return `${this.heldClaims().length} of ${applicable} held`;
   }
 
-  protected claimWindow(claim: PredictionClaim): string {
-    if (!claim.target_start_date) return claim.period_label ?? 'undated';
-    if (!claim.target_end_date || claim.target_end_date === claim.target_start_date) {
-      return claim.target_start_date;
-    }
-    return `${claim.target_start_date} to ${claim.target_end_date}`;
+  protected upcomingLine(): string {
+    const upcoming = this.claims().filter((claim) => claim.status === 'pending').length;
+    if (upcoming) return `${upcoming} more will be ready to check once their dates arrive. They are listed under All.`;
+    return 'You have checked every prediction so far.';
+  }
+
+  protected sourceLabel(claim: PredictionClaim): string {
+    const kind = claim.reading_type ? `${claim.reading_type} reading` : 'reading';
+    const version = claim.reading_version && claim.reading_version > 1 ? `, version ${claim.reading_version}` : '';
+    return `From your ${kind}${version}`;
   }
 
   private async load(id: string | null): Promise<void> {
