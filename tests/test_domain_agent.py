@@ -228,6 +228,32 @@ class TestBasePromptCoversConventionDependentFields:
                               "never an invented citation", "TIMING PRECISION"):
                 assert guardrail in text, f"{guardrail!r} missing from {mode}"
 
+    def test_tone_changes_delivery_and_nothing_else(self, chart):
+        """The Mode & tone screen offered gentle/direct but the preference
+        never left the phone. It now rides to the agent as a delivery-only
+        instruction, orthogonal to the register and to every guardrail."""
+        from astrospace.agents.domain_agent import TONES
+        bundle = assemble_domain(chart, "wealth")
+        addendum = AGENT_REGISTRY["wealth"].domain_addendum
+        prompts = {
+            tone: DomainReadingAgent(bundle, addendum, tone=tone).system_prompt
+            for tone in TONES
+        }
+        assert "TONE — Gentle" in prompts["gentle"]
+        assert "TONE — Direct" in prompts["direct"]
+        assert "TONE — Gentle" not in prompts["direct"]
+        for tone, text in prompts.items():
+            assert "VOICE — Balanced" in text, f"register lost under {tone}"
+            for guardrail in ("Never predict death", "flag, not a verdict",
+                              "never an invented citation", "TIMING PRECISION"):
+                assert guardrail in text, f"{guardrail!r} missing from {tone}"
+
+    def test_unknown_tone_falls_back_rather_than_raising(self, chart):
+        bundle = assemble_domain(chart, "wealth")
+        agent = DomainReadingAgent(bundle, AGENT_REGISTRY["wealth"].domain_addendum,
+                                    tone="brutal")
+        assert agent.tone == "gentle"
+
     def test_unknown_experience_mode_falls_back_rather_than_raising(self, chart):
         """An unrecognised preference must never cost the reader an answer."""
         bundle = assemble_domain(chart, "wealth")

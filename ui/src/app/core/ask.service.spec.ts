@@ -84,6 +84,7 @@ describe('AskService status handling', () => {
   it('sends response language and persona with non-streaming web Ask requests', async () => {
     preferences.language.set('te');
     preferences.experienceMode.set('guided');
+    preferences.tone.set('direct');
     api.post.and.resolveTo({
       answer: 'సరే, simple Telugu lo answer.',
       tools_used: [],
@@ -96,6 +97,7 @@ describe('AskService status handling', () => {
       question: 'Career gurinchi cheppu',
       language: 'te',
       experience_mode: 'guided',
+      tone: 'direct',
     }));
   });
 });

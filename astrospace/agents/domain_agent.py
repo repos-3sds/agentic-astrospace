@@ -116,6 +116,26 @@ LANGUAGE_INSTRUCTIONS = {
     "te": _LANGUAGE_TELUGU,
 }
 
+# The reader's tone preference (PreferencesService's ReadingTone, chosen on the
+# Mode & tone screen) rides alongside the register. Like the register it is
+# delivery only: gentle cushions, direct does not, and neither may add, drop,
+# soften or sharpen a claim, nor touch the refer-out boundary.
+_TONE_GENTLE = """
+TONE — Gentle. Lead with what is steady before what is strained, and pair every difficult
+finding with the practical step that goes with it. Reassure where the chart genuinely
+supports reassurance — never where it does not."""
+
+_TONE_DIRECT = """
+TONE — Direct. Say the finding first, without cushioning or preamble, then the step. No
+softening phrases ("it may be worth considering", "you might find"); if the chart shows
+strain, name it in the first sentence. Direct is not harsh: no scolding, no drama, and the
+same care in what to do about it."""
+
+TONES = {
+    "gentle": _TONE_GENTLE,
+    "direct": _TONE_DIRECT,
+}
+
 _BASE_SYSTEM = """You are Siddha's {domain_name} reading specialist, one of several
 domain specialists in a larger Vedic astrology assistant. You have been handed a single,
 precomputed CONTEXT BUNDLE below — houses, karakas, divisional-chart (varga) placements,
@@ -323,10 +343,11 @@ CONTEXT BUNDLE ({domain_name}):
    `technical_basis` detail is shown, not about shortening the reading itself.
 
 {register}
+{tone_instruction}
 
 {language_instruction}
 
-Every rule above applies in full regardless of the voice below — the register changes HOW you
+Every rule above applies in full regardless of the voice and tone above — they change HOW you
 speak, never WHAT is true, what you may claim, or what you must refuse.
 {domain_addendum}"""
 
@@ -404,13 +425,15 @@ class DomainReadingAgent(BaseAstroAgent):
     def __init__(self, bundle: dict, domain_addendum: str, api_key: str = None,
                 question_tense: str = "unspecified",
                 experience_mode: str = "balanced",
-                language: str = "en"):
+                language: str = "en",
+                tone: str = "gentle"):
         super().__init__(api_key)
         self.bundle = bundle
         # Unknown/absent mode falls back to balanced rather than raising: an
         # unrecognised preference must never cost the reader their answer.
         self.experience_mode = experience_mode if experience_mode in REGISTERS else "balanced"
         self.language = language if language in LANGUAGE_INSTRUCTIONS else "en"
+        self.tone = tone if tone in TONES else "gentle"
         profile_facts = bundle.get("profile_facts") or {}
         self.system_prompt = _BASE_SYSTEM.format(
             domain_name=bundle.get("domain_name", bundle.get("domain", "")),
@@ -421,6 +444,7 @@ class DomainReadingAgent(BaseAstroAgent):
             as_of=profile_facts.get("as_of", "unknown"),
             question_tense=question_tense,
             register=REGISTERS[self.experience_mode],
+            tone_instruction=TONES[self.tone],
             language_instruction=LANGUAGE_INSTRUCTIONS[self.language],
         )
 

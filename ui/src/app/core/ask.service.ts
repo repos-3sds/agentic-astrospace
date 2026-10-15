@@ -44,6 +44,7 @@ export class AskService {
         history: priorTurns,
         language: this.preferences.language(),
         experience_mode: this.preferences.experienceMode(),
+        tone: this.preferences.tone(),
       });
       history.update((msgs) => [
         ...msgs,
@@ -79,6 +80,8 @@ export class AskService {
       start_thread?: boolean;
       language?: string;
       experience_mode?: 'guided' | 'balanced' | 'practitioner';
+      /** The reader's gentle/direct preference; delivery only, like experience_mode. */
+      tone?: 'gentle' | 'direct';
       input_mode?: 'text' | 'voice';
       /** An explicit domain the reader chose (a clarification chip) —
        * bypasses keyword routing server-side rather than being folded back

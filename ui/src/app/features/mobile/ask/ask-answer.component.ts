@@ -871,6 +871,7 @@ export class AskAnswerComponent {
         start_thread: !threadId,
         language: this.preferences.language(),
         experience_mode: this.preferences.experienceMode(),
+        tone: this.preferences.tone(),
         input_mode: 'text',
         domain_override: forceDomain,
       }, controller.signal)) {

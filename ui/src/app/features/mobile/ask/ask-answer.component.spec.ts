@@ -485,6 +485,7 @@ describe('AskAnswerComponent profile isolation and thread lifecycle', () => {
     const preferences = TestBed.inject(PreferencesService);
     preferences.experienceMode.set('practitioner');
     preferences.language.set('te');
+    preferences.tone.set('direct');
     harness.params.next(convertToParamMap({ q: 'Explain my career timing', pending: '1' }));
     await settleEffects();
 
@@ -492,6 +493,7 @@ describe('AskAnswerComponent profile isolation and thread lifecycle', () => {
     const [, body] = harness.ask.stream.calls.mostRecent().args;
     expect(body.experience_mode).toBe('practitioner');
     expect(body.language).toBe('te');
+    expect(body.tone).toBe('direct');
   });
 
   it('turns a stopped stream into an explicit retryable state', async () => {

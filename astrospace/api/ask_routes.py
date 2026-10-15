@@ -53,6 +53,13 @@ class AskRequest(BaseModel):
     )
     language: Literal["en", "te"] = "en"
     input_mode: Literal["text", "voice"] = "text"
+    tone: Literal["gentle", "direct"] = Field(
+        "gentle",
+        description="The reader's tone preference (PreferencesService's "
+                    "ReadingTone). Gentle cushions hard findings with what "
+                    "is steady; direct states them first. Delivery only: "
+                    "neither changes a claim or the refer-out boundary.",
+    )
     domain_override: Optional[str] = Field(
         None,
         description="An explicit domain the reader chose (e.g. tapping a "
@@ -332,6 +339,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
             domain_override=body.domain_override,
             experience_mode=body.experience_mode,
             language=body.language,
+            tone=body.tone,
             # validate_first intentionally not passed through — see docstring.
         )
     except TaxonomyError as e:
