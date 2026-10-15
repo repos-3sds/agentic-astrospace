@@ -8,18 +8,25 @@ interface HandleWithComponent {
   componentRef?: ComponentRef<unknown>;
 }
 
+/**
+ * Footer destinations whose screens are kept alive between visits. Shared
+ * with the shell's scroll memory, which restores a retained tab's offset when
+ * it re-attaches.
+ */
+export const RETAINED_MOBILE_TABS: ReadonlySet<string> = new Set([
+  'm/today',
+  'm/ask',
+  'm/explore',
+  'm/chart',
+  'm/chart/periods',
+  'm/calendar',
+  'm/settings',
+]);
+
 @Injectable()
 export class MobileRouteReuseStrategy implements RouteReuseStrategy {
   private handlers: { [key: string]: DetachedRouteHandle } = {};
-  private readonly retainedTabs = new Set([
-    'm/today',
-    'm/ask',
-    'm/explore',
-    'm/chart',
-    'm/chart/periods',
-    'm/calendar',
-    'm/settings',
-  ]);
+  private readonly retainedTabs = RETAINED_MOBILE_TABS;
   /**
    * Set by a sign-out, cleared when the native shell is next entered. While
    * set nothing is retained, so the tab being left as the person signs out is

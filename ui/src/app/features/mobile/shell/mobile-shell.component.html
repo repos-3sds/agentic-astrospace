@@ -16,7 +16,7 @@
       }
     </section>
   }
-  <main class="content" [class.tabs-hidden]="tabsSuppressed()">
+  <main class="content" asScrollMemory [class.tabs-hidden]="layoutWithoutTabs()">
     @if (profilesBlocked()) {
       <as-generic-error
         role="alert"
@@ -35,7 +35,7 @@
         <a
           class="tab"
           [routerLink]="tabLink(tab)"
-          (click)="onTabClick()"
+          (click)="onTabClick(tab)"
           [class.is-active]="tabActive(tab)"
           [attr.aria-current]="tabActive(tab) ? 'page' : null"
         >
