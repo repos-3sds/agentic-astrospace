@@ -9,27 +9,33 @@
     <section class="life-state"><b>Loading chapters</b><p>Reading the current season of your life map.</p></section>
   } @else if (error()) {
     <section class="life-state error" role="alert"><b>Life chapters could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+  } @else if (noProfile()) {
+    <section class="life-state"><b>No active profile</b><p>Add birth details before opening your life chapters.</p><a [routerLink]="['/m', 'birth-details']">Add birth details</a></section>
+  } @else if (!current()) {
+    <section class="life-state"><b>No running chapter</b><p>The dasha timeline came back without a current mahadasha, so there is nothing to show yet.</p><button type="button" (click)="retry()">Retry</button></section>
   } @else {
     <section class="chapter-hero">
       <p>YOUR CURRENT CHAPTER</p>
-      <h2>{{ current().title }}</h2>
-      <span>{{ current().dates }}</span>
+      <h2>{{ current()!.title }}</h2>
+      <span>{{ current()!.dates }}</span>
       <div class="progress">
-        <span><i [style.width.%]="current().progress"></i></span>
+        <span><i [style.width.%]="current()!.progress"></i></span>
         <small>
-          <em>{{ current().start }}</em>
+          <em>{{ current()!.start }}</em>
           <b>Active</b>
-          <em>{{ current().end }}</em>
+          <em>{{ current()!.end }}</em>
         </small>
       </div>
     </section>
 
-    <section class="insights">
-      <h3>How to live this chapter</h3>
-      <article data-tone="gold"><b>Work & Purpose</b><span>Give your effort a structure. Build foundations now; let recognition come later.</span></article>
-      <article data-tone="good"><b>Relationships</b><span>Choose patience over reaction. Existing bonds deepen through steadiness and shared responsibility.</span></article>
-      <article data-tone="accent"><b>Energy & Routine</b><span>Steady routines matter more than intensity. Prioritise consistency in sleep, food, and movement.</span></article>
-    </section>
+    @if (insights().length) {
+      <section class="insights">
+        <h3>How to live this chapter</h3>
+        @for (insight of insights(); track insight.title) {
+          <article [attr.data-tone]="insight.tone"><b>{{ insight.title }}</b><span>{{ insight.text }}</span></article>
+        }
+      </section>
+    }
 
     <section class="timeline-section">
       <h3>Your Life Timeline</h3>
