@@ -61,6 +61,7 @@ _CAPABILITIES = (
     _flag("vargas.full", "Full standard divisional-chart set", free=False, plus=True, pro=True),
     _flag("dashas.full", "Full five-level Dasha navigation", free=False, plus=True, pro=True),
     _flag("transits.full", "Full transit timeline and domain detail", free=False, plus=True, pro=True),
+    _flag("audio.natural_voice", "Natural server-made read-aloud voice", free=False, plus=True, pro=True),
     _flag("reports.detailed", "Detailed personal reports", free=False, plus=True, pro=True),
     _flag("practitioner.workflow", "Advanced practitioner workflow", free=False, plus=False, pro=True),
     _flag("reports.practitioner", "Practitioner report templates and export", free=False, plus=False, pro=True),

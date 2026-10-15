@@ -13,6 +13,13 @@ import { SheetComponent } from '../sheet/sheet.component';
 import { AudioReadingSection } from './audio-reading-script';
 import { MobileTtsService } from '../../../core/mobile-tts.service';
 import { PreferencesService } from '../../../core/preferences.service';
+import { NaturalVoiceService, naturalChunks } from '../../../core/natural-voice.service';
+
+/**
+ * Natural voice is generated at 0.95x, which the sheet's default 0.9x setting
+ * should play back unchanged; other speeds scale from there on the device.
+ */
+const NATURAL_BASE_SPEED = 0.9;
 
 /**
  * Bar heights of the waveform, in px, in the order the design draws them.
@@ -59,6 +66,7 @@ const PREFERRED_VOICE_NAMES = [
 })
 export class ListenSheetComponent implements OnDestroy, OnInit {
   private readonly nativeTts = inject(MobileTtsService);
+  private readonly naturalVoice = inject(NaturalVoiceService);
   private readonly preferences = inject(PreferencesService);
 
   readonly title = input.required<string>();
@@ -84,6 +92,15 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
   protected readonly speed = signal(0.9);
   protected readonly status = signal<string | null>(null);
   protected readonly chunkIndex = signal(0);
+  /**
+   * 'natural' plays server-made audio (Plus); 'device' is the phone's own
+   * voice. Starts as device and upgrades once the entitlement check returns,
+   * so a slow network never delays the play button.
+   */
+  protected readonly mode = signal<'natural' | 'device'>('device');
+  protected readonly voiceLabel = computed(() =>
+    this.mode() === 'natural' ? 'Natural voice' : 'Phone voice',
+  );
 
   /**
    * How many bars are behind the playhead. Derived from the clock rather than
@@ -130,6 +147,7 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
   readonly playing = signal(false);
   protected readonly unsupported = computed(
     () =>
+      this.mode() !== 'natural' &&
       !this.nativeTts.nativeAvailable() &&
       (typeof window === 'undefined' ||
         !('speechSynthesis' in window) ||
@@ -141,9 +159,19 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
   private nextSentenceTimer: ReturnType<typeof setTimeout> | null = null;
   private voicesReady: Promise<void> | null = null;
   private playbackRun = 0;
+  private audio: HTMLAudioElement | null = null;
+  /** Which chunk `audio` holds, so resume after a skip doesn't replay the old one. */
+  private audioIndex = -1;
 
   ngOnInit(): void {
     void this.ensureVoices(false);
+    void this.naturalVoice.available().then((ok) => {
+      // Never switch voices under a reader who has already pressed play.
+      if (ok && !this.playing() && this.chunkIndex() === 0) {
+        this.mode.set('natural');
+        void this.naturalVoice.audioUrl(this.prepareForSpeech(this.chunks()[0] ?? '')).catch(() => undefined);
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -156,7 +184,11 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
       return;
     }
     if (this.playing()) {
-      if (this.nativeTts.nativeAvailable()) {
+      if (this.mode() === 'natural') {
+        // No playbackRun bump: the same run resumes, and its onended handler
+        // must still advance to the next part.
+        this.audio?.pause();
+      } else if (this.nativeTts.nativeAvailable()) {
         this.playbackRun += 1;
         void this.nativeTts.stop();
       } else {
@@ -167,7 +199,22 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
       this.status.set('Paused.');
       return;
     }
-    if (!this.nativeTts.nativeAvailable() && window.speechSynthesis.paused && this.utterance) {
+    if (this.mode() === 'natural' && this.audio?.src && this.audio.paused && this.audio.currentTime > 0 && this.audioIndex === this.chunkIndex()) {
+      const run = this.playbackRun;
+      void this.audio.play().then(
+        () => {
+          if (run !== this.playbackRun) return;
+          this.playing.set(true);
+          this.startTimer();
+          this.status.set(null);
+        },
+        () => {
+          if (run === this.playbackRun) this.fallBackToDevice();
+        },
+      );
+      return;
+    }
+    if (this.mode() === 'device' && !this.nativeTts.nativeAvailable() && window.speechSynthesis.paused && this.utterance) {
       window.speechSynthesis.resume();
       this.playing.set(true);
       this.startTimer();
@@ -190,6 +237,10 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
     const speeds = [0.8, 0.9, 1, 1.2];
     const next = speeds[(speeds.indexOf(this.speed()) + 1) % speeds.length];
     this.speed.set(next);
+    if (this.mode() === 'natural') {
+      if (this.audio) this.audio.playbackRate = next / NATURAL_BASE_SPEED;
+      return;
+    }
     if (this.playing()) void this.speakFrom(this.chunkIndex());
   }
 
@@ -211,7 +262,17 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
     return this.chunksFor(this.scriptText());
   }
 
+  /**
+   * Natural voice and the phone's native voice read a whole section at a
+   * time: one utterance per sentence restarts the intonation and leaves a gap
+   * at every full stop, which is most of what made read-aloud sound robotic.
+   * Only the browser's speechSynthesis keeps sentence chunks, because Chrome
+   * silently cuts off long utterances after about fifteen seconds.
+   */
   private chunksFor(text: string): string[] {
+    if (this.mode() === 'natural' || this.nativeTts.nativeAvailable()) {
+      return naturalChunks(text);
+    }
     return text
       .split(/(?<=[.!?])\s+/)
       .map((chunk) => chunk.trim())
@@ -230,6 +291,10 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
     }
     this.clearStartWatch();
     this.clearNextSentenceTimer();
+    if (this.mode() === 'natural') {
+      void this.speakNaturalFrom(index, chunks);
+      return;
+    }
     if (this.nativeTts.nativeAvailable()) {
       void this.speakNativeFrom(index, chunks);
       return;
@@ -304,6 +369,69 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
     );
   }
 
+  private async speakNaturalFrom(index: number, chunks: string[]): Promise<void> {
+    const run = ++this.playbackRun;
+    this.chunkIndex.set(index);
+    this.audio?.pause();
+    this.stopTimer();
+    this.status.set('Preparing natural voice...');
+    let url: string;
+    try {
+      url = await this.naturalVoice.audioUrl(this.prepareForSpeech(chunks[index]));
+    } catch {
+      if (run === this.playbackRun) this.fallBackToDevice();
+      return;
+    }
+    if (run !== this.playbackRun) return;
+    const audio = this.audio ?? (this.audio = new Audio());
+    audio.onended = () => {
+      if (run !== this.playbackRun) return;
+      const next = index + 1;
+      if (next < chunks.length) {
+        this.elapsed.set(Math.floor(this.duration() * (next / chunks.length)));
+        void this.speakNaturalFrom(next, chunks);
+        return;
+      }
+      this.finishPlayback();
+    };
+    audio.onerror = () => {
+      if (run === this.playbackRun) this.fallBackToDevice();
+    };
+    audio.src = url;
+    this.audioIndex = index;
+    audio.playbackRate = this.speed() / NATURAL_BASE_SPEED;
+    try {
+      await audio.play();
+    } catch {
+      if (run === this.playbackRun) this.fallBackToDevice();
+      return;
+    }
+    if (run !== this.playbackRun) return;
+    this.playing.set(true);
+    this.status.set(null);
+    this.startTimer();
+    // Fetch the next part while this one plays, so sections join without a wait.
+    const following = chunks[index + 1];
+    if (following) {
+      void this.naturalVoice.audioUrl(this.prepareForSpeech(following)).catch(() => undefined);
+    }
+  }
+
+  /** Natural voice failed (offline, provider down): carry on with the phone voice. */
+  private fallBackToDevice(): void {
+    const label = this.activeSectionLabel();
+    this.audio?.pause();
+    this.mode.set('device');
+    const start = this.sectionStarts().find((section) => section.label === label)?.index ?? 0;
+    this.status.set('Natural voice is unavailable right now; using the phone voice.');
+    if (this.unsupported()) {
+      this.playing.set(false);
+      this.stopTimer();
+      return;
+    }
+    this.speakFrom(start);
+  }
+
   private async speakNativeFrom(index: number, chunks: string[]): Promise<void> {
     const run = ++this.playbackRun;
     this.chunkIndex.set(index);
@@ -370,6 +498,12 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
     this.clearStartWatch();
     this.clearNextSentenceTimer();
     this.stopTimer();
+    if (this.audio) {
+      this.audio.onended = null;
+      this.audio.onerror = null;
+      this.audio.pause();
+      this.audio = null;
+    }
     void this.nativeTts.stop();
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();

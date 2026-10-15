@@ -1,0 +1,136 @@
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { apiUrl } from './api-origin';
+import { AuthService } from './auth.service';
+import { ConnectivityService } from './connectivity.service';
+import { EntitlementService } from './entitlement.service';
+
+const ENTITLEMENT = 'audio.natural_voice';
+const ENTITLEMENT_TTL_MS = 10 * 60 * 1000;
+const CACHE_NAME = 'natural-voice-v1';
+const CACHE_MAX_ENTRIES = 80;
+/** Kept below the server's per-request byte cap even for Telugu (3 bytes/char). */
+export const NATURAL_CHUNK_MAX_CHARS = 1200;
+
+/**
+ * Server-made read-aloud audio for Plus readers (Google Chirp 3 HD).
+ *
+ * Everything here fails soft: `available()` is false and `audioUrl()` throws
+ * whenever natural voice can't be had (free plan, offline, provider down), and
+ * the Listen sheet then reads with the phone's own voice exactly as before.
+ *
+ * Audio is kept twice on the device: an object URL per text for this run of
+ * the app, and the Cache Storage API so a brief played once still plays
+ * offline. Cache Storage isn't guaranteed in every WebView, so both are
+ * best-effort and keyed by the text itself, which is all the audio depends on.
+ */
+@Injectable({ providedIn: 'root' })
+export class NaturalVoiceService {
+  private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
+  private readonly connectivity = inject(ConnectivityService);
+  private readonly entitlements = inject(EntitlementService);
+
+  private entitled: { value: boolean; at: number } | null = null;
+  private readonly urls = new Map<string, Promise<string>>();
+
+  async available(): Promise<boolean> {
+    if (this.entitled && Date.now() - this.entitled.at < ENTITLEMENT_TTL_MS) {
+      return this.entitled.value;
+    }
+    try {
+      const snapshot = await this.entitlements.snapshot();
+      const value = snapshot.entitlements[ENTITLEMENT] === true;
+      this.entitled = { value, at: Date.now() };
+      return value;
+    } catch {
+      // Offline or signed out: still allow anything already cached on device.
+      return this.entitled?.value ?? false;
+    }
+  }
+
+  /** An object URL for `text` spoken naturally. Starts the request on first call. */
+  audioUrl(text: string): Promise<string> {
+    let pending = this.urls.get(text);
+    if (!pending) {
+      pending = this.load(text);
+      this.urls.set(text, pending);
+      // A failed request must not poison later attempts once back online.
+      pending.catch(() => this.urls.delete(text));
+    }
+    return pending;
+  }
+
+  private async load(text: string): Promise<string> {
+    const key = await cacheKey(text);
+    const stored = await readCache(key);
+    if (stored) return URL.createObjectURL(stored);
+    if (this.connectivity.offline()) throw new Error('offline');
+
+    const token = await this.auth.getAccessToken();
+    const blob = await firstValueFrom(
+      this.http.post(apiUrl('/api/v1/voice/speech'), { text, language: 'auto' }, {
+        responseType: 'blob',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      }),
+    );
+    void writeCache(key, blob);
+    return URL.createObjectURL(blob);
+  }
+}
+
+/** Splits a section into request-sized pieces at sentence ends, never mid-sentence. */
+export function naturalChunks(text: string, max = NATURAL_CHUNK_MAX_CHARS): string[] {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  if (!clean) return [];
+  if (clean.length <= max) return [clean];
+  const sentences = clean.split(/(?<=[.!?।])\s+/);
+  const out: string[] = [];
+  let current = '';
+  for (const sentence of sentences) {
+    if (current && current.length + 1 + sentence.length > max) {
+      out.push(current);
+      current = '';
+    }
+    current = current ? `${current} ${sentence}` : sentence;
+  }
+  if (current) out.push(current);
+  return out;
+}
+
+async function cacheKey(text: string): Promise<string> {
+  try {
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    const hex = Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+    return `https://natural-voice.local/${hex}.mp3`;
+  } catch {
+    return '';
+  }
+}
+
+async function readCache(key: string): Promise<Blob | null> {
+  if (!key || typeof caches === 'undefined') return null;
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    const hit = await cache.match(key);
+    return hit ? await hit.blob() : null;
+  } catch {
+    return null;
+  }
+}
+
+async function writeCache(key: string, blob: Blob): Promise<void> {
+  if (!key || typeof caches === 'undefined') return;
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.put(key, new Response(blob, { headers: { 'Content-Type': 'audio/mpeg' } }));
+    // Briefs change daily, so only recent audio is worth keeping on device.
+    const keys = await cache.keys();
+    for (const old of keys.slice(0, Math.max(0, keys.length - CACHE_MAX_ENTRIES))) {
+      await cache.delete(old);
+    }
+  } catch {
+    // Best-effort only.
+  }
+}
