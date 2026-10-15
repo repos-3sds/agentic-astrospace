@@ -11,10 +11,11 @@ from ..db.models import (
     BillingAccount,
     EntitlementOverride,
     PlanAssignment,
+    QuestionCredit,
     SubscriptionGrant,
     UsageBucket,
 )
-from .registry import CATALOG_REVISION, capability_registry
+from .registry import CATALOG_REVISION, capability_registry, quotas_enforced
 
 
 @dataclass(frozen=True)
@@ -59,6 +60,10 @@ class EntitlementSnapshot:
     catalog_revision: int
     entitlements: dict[str, Any]
     usage: dict[str, dict]
+    # Unspent question-pack credits, used once the monthly Ask allowance runs out.
+    question_credits: int = 0
+    # Whether a reached limit blocks. Off until store purchases are live.
+    quotas_enforced: bool = False
 
     def decide(self, key: str) -> EntitlementDecision:
         if key not in capability_registry:
@@ -71,14 +76,38 @@ class EntitlementSnapshot:
             return EntitlementDecision(True, key, value, "not_enforced", self.access_tier)
         usage = self.usage.get(key, {})
         remaining = max(0, int(value) - int(usage.get("used", 0)) - int(usage.get("reserved", 0)))
+        if remaining > 0:
+            reason = "available"
+        elif key == "ask.answers.period" and self.question_credits > 0:
+            reason = "question_credit"
+        elif not self.quotas_enforced:
+            reason = "not_enforced"
+        else:
+            reason = "limit_reached"
         return EntitlementDecision(
-            remaining > 0,
+            reason != "limit_reached",
             key,
             value,
-            "available" if remaining > 0 else "limit_reached",
+            reason,
             self.access_tier,
             remaining=remaining,
             resets_at=usage.get("resets_at"),
+        )
+
+    def decide_capacity(self, key: str, in_use: int) -> EntitlementDecision:
+        """A limit on things held rather than used per period (profiles)."""
+        value = self.entitlements.get(key)
+        if value is None:
+            return EntitlementDecision(True, key, value, "not_enforced", self.access_tier)
+        remaining = max(0, int(value) - in_use)
+        if remaining > 0:
+            reason = "available"
+        elif not self.quotas_enforced:
+            reason = "not_enforced"
+        else:
+            reason = "limit_reached"
+        return EntitlementDecision(
+            reason != "limit_reached", key, value, reason, self.access_tier, remaining=remaining,
         )
 
     def to_dict(self) -> dict:
@@ -196,6 +225,13 @@ def resolve_entitlements(db: Session, user_id: str, *, now: datetime | None = No
         catalog_revision=CATALOG_REVISION,
         entitlements=values,
         usage=usage,
+        question_credits=sum(
+            remaining for (remaining,) in db.query(QuestionCredit.remaining).filter(
+                QuestionCredit.billing_account_id == account.id,
+                QuestionCredit.revoked_at.is_(None),
+            ).all()
+        ),
+        quotas_enforced=quotas_enforced(),
     )
 
 

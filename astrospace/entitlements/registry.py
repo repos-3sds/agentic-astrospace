@@ -2,8 +2,16 @@
 
 This registry is policy, not storefront copy. Mobile and backend code consume
 capability keys and resolved values; neither branches on store product ids.
-Commercial quantities remain unset until CE-1 approves economics.
+
+Quantities follow the hybrid pricing decision (D2, launch plan numbers):
+Free answers 3 grounded questions a month and keeps 2 profiles (D7); Plus
+answers 30 and keeps 6. Pro numbers are provisional, since Pro is not on
+sale yet. Question packs top up Ask beyond the monthly allowance and are
+held separately (`entitlements/usage.py`). Whether a limit actually blocks is
+`quotas_enforced()`: off until store purchases are live, so nobody meets a
+wall with no way past it.
 """
+import os
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Literal
@@ -11,7 +19,7 @@ from typing import Literal
 AccessTier = Literal["free", "plus", "pro"]
 CapabilityKind = Literal["flag", "limit"]
 
-CATALOG_REVISION = 1
+CATALOG_REVISION = 2
 
 
 @dataclass(frozen=True)
@@ -34,6 +42,16 @@ def _flag(key: str, description: str, *, free: bool, plus: bool, pro: bool,
         description=description,
         values=MappingProxyType({"free": free, "plus": plus, "pro": pro}),
         protected_baseline=protected,
+    )
+
+
+def _limit(key: str, description: str, *, free: int | None, plus: int | None,
+           pro: int | None) -> CapabilityDefinition:
+    return CapabilityDefinition(
+        key=key,
+        kind="limit",
+        description=description,
+        values=MappingProxyType({"free": free, "plus": plus, "pro": pro}),
     )
 
 
@@ -65,12 +83,22 @@ _CAPABILITIES = (
     _flag("reports.detailed", "Detailed personal reports", free=False, plus=True, pro=True),
     _flag("practitioner.workflow", "Advanced practitioner workflow", free=False, plus=False, pro=True),
     _flag("reports.practitioner", "Practitioner report templates and export", free=False, plus=False, pro=True),
-    _unapproved_limit("profiles.max", "Maximum active profiles"),
-    _unapproved_limit("ask.answers.period", "Grounded Ask answers per server-defined period"),
+    _limit("profiles.max", "Maximum active profiles", free=2, plus=6, pro=20),
+    _limit("ask.answers.period", "Grounded Ask answers per calendar month", free=3, plus=30, pro=100),
     _unapproved_limit("compatibility.saved.max", "Maximum saved compatibility comparisons"),
 )
 
 capability_registry = MappingProxyType({item.key: item for item in _CAPABILITIES})
+
+
+def quotas_enforced() -> bool:
+    """Limits are counted always, and only block when this is on.
+
+    Turned on with ASTROSPACE_QUOTAS_ENFORCED once store purchases are live,
+    so the count is real from day one but no reader is stopped before there
+    is a way to buy more.
+    """
+    return os.getenv("ASTROSPACE_QUOTAS_ENFORCED", "").lower() in {"1", "true", "yes"}
 
 
 def public_registry() -> dict:

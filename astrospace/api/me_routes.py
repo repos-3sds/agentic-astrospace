@@ -22,7 +22,7 @@ from ..db.models import (
     AskThread, AudioRender, BillingAccount, CompatibilityCheck, DailyGuidanceCache,
     EntitlementAuditEvent, EntitlementOverride, Kundli,
     LiveActivity, MuhurtaRequest, NotificationJob, NotificationPreference,
-    PlanAssignment, PushToken, SavedMuhurta, ShareAsset, SubscriptionGrant,
+    PlanAssignment, PushToken, QuestionCredit, SavedMuhurta, ShareAsset, SubscriptionGrant,
     UsageBucket, UserAlert, UserDevice, UserObservance,
     UserProfile, UserRemedy, UserSettings, WidgetInstall,
     ProfileContextAuditEvent, ProfileContextFact, ProfileContextLedger,
@@ -222,7 +222,7 @@ def delete_account(payload: AccountDeletionPayload, user: CurrentUser,
     # retention policy before verified provider records can be written.
     for account in db.query(BillingAccount).filter(BillingAccount.owner_user_id == user.id).all():
         for model in (
-            UsageBucket, EntitlementOverride, PlanAssignment,
+            UsageBucket, QuestionCredit, EntitlementOverride, PlanAssignment,
             SubscriptionGrant, EntitlementAuditEvent,
         ):
             db.query(model).filter(model.billing_account_id == account.id).delete(

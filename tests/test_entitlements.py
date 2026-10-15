@@ -91,11 +91,14 @@ def test_registry_keeps_truth_safety_and_reliability_in_every_tier():
         assert all(item.value_for(tier) is True for tier in ("free", "plus", "pro"))
 
 
-def test_unapproved_limits_are_represented_but_not_enforced():
-    for key in ("profiles.max", "ask.answers.period", "compatibility.saved.max"):
-        item = capability_registry[key]
-        assert item.kind == "limit"
-        assert all(item.value_for(tier) is None for tier in ("free", "plus", "pro"))
+def test_hybrid_pricing_limits_follow_d2_and_d7():
+    ask = capability_registry["ask.answers.period"]
+    assert (ask.value_for("free"), ask.value_for("plus")) == (3, 30)
+    profiles = capability_registry["profiles.max"]
+    assert (profiles.value_for("free"), profiles.value_for("plus")) == (2, 6)
+    # Not part of D2: represented, never enforced.
+    saved = capability_registry["compatibility.saved.max"]
+    assert all(saved.value_for(tier) is None for tier in ("free", "plus", "pro"))
 
 
 def test_free_snapshot_is_created_server_side_and_unknown_keys_fail_closed(env):
@@ -106,7 +109,8 @@ def test_free_snapshot_is_created_server_side_and_unknown_keys_fail_closed(env):
     assert snapshot.source == "free_default"
     assert snapshot.entitlements["today.core"] is True
     assert snapshot.entitlements["reports.detailed"] is False
-    assert snapshot.decide("ask.answers.period").reason == "not_enforced"
+    assert snapshot.decide("ask.answers.period").reason == "available"
+    assert snapshot.decide("ask.answers.period").remaining == 3
     assert snapshot.decide("made.up.capability").allowed is False
     assert db.query(BillingAccount).filter_by(owner_user_id=USER).count() == 1
     db.close()
@@ -175,7 +179,8 @@ def test_override_can_unlock_paid_workflow_but_not_remove_protected_baseline(env
     db.close()
 
 
-def test_usage_decision_includes_authoritative_period(env):
+def test_usage_decision_includes_authoritative_period(env, monkeypatch):
+    monkeypatch.setenv("ASTROSPACE_QUOTAS_ENFORCED", "true")
     _, Session = env
     now = datetime.utcnow()
     db = Session()

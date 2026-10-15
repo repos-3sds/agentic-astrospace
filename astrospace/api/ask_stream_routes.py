@@ -40,6 +40,7 @@ from .ask_routes import (
     MAX_HISTORY, AskRequest, _evidence_from_reading, _history_from_thread,
     _owned_thread, _profile_context_store, _thread_established_domain, _usage_fields,
 )
+from ..entitlements.usage import commit_ask_credit, release_ask_credit, reserve_ask_credit
 from .auth import CurrentUser
 from .context_routes import _chart_from_kundli
 
@@ -316,6 +317,10 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
         return StreamingResponse(_safe_stream(generate_terminal()), media_type="text/event-stream")
 
     prepared = outcome.prepared
+    # Reserved before the response starts, so a reached limit is a plain 402
+    # with the structured denial rather than a frame mid-stream. Every
+    # terminal envelope above returned without touching a credit.
+    reservation = reserve_ask_credit(db, user.id)
 
     def persist_prepared(reading: Optional[StructuredReading], status: str) -> Optional[str]:
         if reading is None:
@@ -333,8 +338,17 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
         )
 
     def generate_answer_and_memory():
+        try:
+            yield from answer_events()
+        finally:
+            # Not delivered (failed, unverified, client gone): the credit goes
+            # back. A no-op once the answer was committed below.
+            release_ask_credit(db, reservation)
+
+    def answer_events():
         for event in orchestrator.run(prepared, messages, persist=persist_prepared):
             if event.get("type") == "done" and event.get("status") == "answered":
+                commit_ask_credit(db, reservation)
                 # `done` remains terminal. Memory frames belong to the same
                 # completed turn, but must precede it so older consumers that
                 # stop reading at `done` keep a truthful stream contract.

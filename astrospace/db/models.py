@@ -423,6 +423,35 @@ class UsageBucket(Base):
     )
 
 
+class QuestionCredit(Base):
+    """A bought question pack: non-expiring Ask credits beyond the monthly
+    allowance. One row per verified store transaction; `remaining` goes down
+    when an answer is reserved and back up if that answer is not delivered."""
+    __tablename__ = "question_credits"
+    __table_args__ = (
+        UniqueConstraint(
+            "provider", "provider_transaction_id",
+            name="question_credits_provider_transaction_key",
+        ),
+        CheckConstraint(
+            "remaining >= 0 AND remaining <= quantity", name="question_credits_remaining_check"
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
+    billing_account_id: Mapped[str] = mapped_column(
+        _UuidString, ForeignKey("billing_accounts.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    provider: Mapped[str] = mapped_column(String, nullable=False)
+    provider_product_id: Mapped[str] = mapped_column(String, nullable=False)
+    provider_transaction_id: Mapped[str] = mapped_column(String, nullable=False)
+    quantity: Mapped[int] = mapped_column(Integer, nullable=False)
+    remaining: Mapped[int] = mapped_column(Integer, nullable=False)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
 class EntitlementAuditEvent(Base):
     __tablename__ = "entitlement_audit_events"
 
