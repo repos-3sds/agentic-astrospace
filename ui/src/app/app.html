@@ -1,5 +1,7 @@
 @if (publicOnly()) {
-  <router-outlet />
+  <div class="public-scroll">
+    <router-outlet />
+  </div>
 } @else {
   <div class="shell">
     <app-sidebar />
