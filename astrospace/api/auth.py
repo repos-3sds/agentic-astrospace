@@ -50,6 +50,15 @@ def current_user(
     authorization: Annotated[str | None, Header(alias="Authorization")] = None,
 ) -> AuthUser:
     if not supabase_configured():
+        if running_on_cloud_run():
+            # A deploy missing SUPABASE_URL or SUPABASE_ANON_KEY must not hand
+            # every caller the shared dev identity: that would let anyone read
+            # and write the "local-dev-user" profiles and spend LLM budget
+            # without signing in. Refuse instead, the way admin already does.
+            raise HTTPException(
+                status_code=503,
+                detail="Sign-in is not configured on this server.",
+            )
         user = AuthUser(
             id=DEV_USER_ID, email="local@astrospace.dev",
             role="dev", auth_enabled=False,
