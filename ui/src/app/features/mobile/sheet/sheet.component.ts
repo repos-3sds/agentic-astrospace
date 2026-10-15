@@ -50,9 +50,8 @@ let nextTitleId = 0;
  * - the handle row and any projected <header> drag the panel; release past
  *   DISMISS_DISTANCE (or a downward flick) dismisses, otherwise it springs
  *   back;
- * - every dismissal — including a consumer's own @if turning false — slides
- *   the panel out and fades the scrim through `animate.leave`, instead of
- *   the sheet vanishing in one frame;
+ * - every dismissal slides the panel out and fades the scrim instead of the
+ *   sheet vanishing in one frame (see close() and leave());
  * - scrolling inside the panel never chains to the page behind it.
  */
 @Component({
@@ -60,14 +59,14 @@ let nextTitleId = 0;
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div #scrim class="scrim" (click)="dismissed.emit()" aria-hidden="true"></div>
+    <div #scrim class="scrim" (click)="close()" aria-hidden="true"></div>
     <div
       #panel
       class="panel"
       role="dialog"
       aria-modal="true"
       [attr.aria-label]="label()"
-      (keydown.escape)="dismissed.emit()"
+      (keydown.escape)="close()"
       (keydown.tab)="trapTab($event)"
       (keydown.shift.tab)="trapTab($event)"
       (pointerdown)="dragStart($event)"
@@ -78,7 +77,7 @@ let nextTitleId = 0;
     >
       <div class="handle-row">
         <div class="handle" aria-hidden="true"></div>
-        <button class="close" type="button" aria-label="Close" (click)="dismissed.emit()">
+        <button class="close" type="button" aria-label="Close" (click)="close()">
           <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
             <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
           </svg>
@@ -100,6 +99,9 @@ export class SheetComponent implements AfterViewInit {
   private readonly panel = viewChild.required<ElementRef<HTMLElement>>('panel');
   private readonly scrim = viewChild.required<ElementRef<HTMLElement>>('scrim');
   private opener: HTMLElement | null = null;
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+  /** Set once the slide-out has started; a second dismissal is ignored. */
+  private closing = false;
   private drag: { id: number; startY: number; dy: number; lastY: number; lastT: number; velocity: number } | null = null;
 
   constructor() {
@@ -107,7 +109,7 @@ export class SheetComponent implements AfterViewInit {
     overlay.push();
     // Lets Android's hardware back button close this sheet instead of falling
     // through to route navigation underneath — see app.ts's backButton listener.
-    const unregister = overlay.registerDismiss(() => this.dismissed.emit());
+    const unregister = overlay.registerDismiss(() => this.close());
     inject(DestroyRef).onDestroy(() => {
       overlay.pop();
       unregister();
@@ -167,7 +169,7 @@ export class SheetComponent implements AfterViewInit {
     try { panel.releasePointerCapture(event.pointerId); } catch { /* not captured */ }
     const threshold = Math.min(DISMISS_DISTANCE, panel.offsetHeight * 0.3);
     if (drag.dy > threshold || (drag.dy > 12 && drag.velocity > DISMISS_VELOCITY)) {
-      this.dismissed.emit();
+      this.close();
     } else {
       this.springBack();
     }
@@ -181,33 +183,57 @@ export class SheetComponent implements AfterViewInit {
   }
 
   /**
-   * `animate.leave` on the host: Angular keeps the element until
-   * animationComplete(), so the slide-out runs whichever path removed the
-   * sheet. It starts from wherever a drag left the panel.
+   * Every dismissal the sheet owns — scrim, Escape, Close, Android back, a
+   * drag — slides the panel out first and only then emits `dismissed`, so
+   * the consumer removes a sheet that is already off screen.
+   *
+   * This cannot be left to `animate.leave` alone: consumers wrap as-sheet in
+   * their own component, and Angular runs a leave animation only on the
+   * element an @if actually removes, not on one nested inside it.
+   */
+  close(): void {
+    if (this.closing) return;
+    this.closing = true;
+    this.slideOut(() => this.dismissed.emit());
+  }
+
+  /**
+   * `animate.leave` on the host covers the remaining path: a consumer's own
+   * @if removing as-sheet directly, say from a primary button inside it.
+   * When close() already slid the panel out there is nothing left to animate.
    */
   protected leave(event: AnimationCallbackEvent): void {
+    if (this.closing) {
+      event.animationComplete();
+      return;
+    }
+    this.closing = true;
+    this.slideOut(() => event.animationComplete());
+  }
+
+  /** Slide the panel down from wherever it is (mid-drag or at rest) and fade the scrim. */
+  private slideOut(done: () => void): void {
     const panel = this.panel().nativeElement;
     const scrim = this.scrim().nativeElement;
     const reduced = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if (reduced || !panel.isConnected) {
-      event.animationComplete();
+      done();
       return;
     }
-    (event.target as HTMLElement).classList.add('is-leaving');
-    let done = false;
+    this.host.classList.add('is-leaving');
+    let finished = false;
     const finish = () => {
-      if (done) return;
-      done = true;
+      if (finished) return;
+      finished = true;
       clearTimeout(timer);
       panel.removeEventListener('transitionend', onEnd);
-      event.animationComplete();
+      done();
     };
     const onEnd = (e: TransitionEvent) => {
       if (e.target === panel && e.propertyName === 'transform') finish();
     };
     const timer = setTimeout(finish, LEAVE_MS + 80);
     panel.addEventListener('transitionend', onEnd);
-    // Pin the current position (mid-drag or at rest) before transitioning out.
     const current = getComputedStyle(panel).transform;
     panel.style.animation = 'none';
     panel.style.transform = current === 'none' ? 'translateY(0)' : current;

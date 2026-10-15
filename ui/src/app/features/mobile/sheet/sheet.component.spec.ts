@@ -148,6 +148,32 @@ describe('SheetComponent accessibility', () => {
   });
 });
 
+/** How every real consumer uses it: as-sheet inside the consumer's own component. */
+@Component({
+  selector: 'as-test-wrapped-sheet',
+  standalone: true,
+  imports: [SheetComponent],
+  template: `<as-sheet (dismissed)="closed.set(true)"><header><h2>Wrapped</h2></header></as-sheet>`,
+})
+class WrappedSheetComponent {
+  readonly closed = signal(false);
+}
+
+describe('SheetComponent exit inside a consumer component', () => {
+  it('slides out before emitting dismissed', async () => {
+    const fixture = TestBed.createComponent(WrappedSheetComponent);
+    document.body.appendChild(fixture.nativeElement);
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.close') as HTMLButtonElement).click();
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    expect(fixture.componentInstance.closed()).toBeFalse();
+    expect(fixture.nativeElement.querySelector('as-sheet').classList).toContain('is-leaving');
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    expect(fixture.componentInstance.closed()).toBeTrue();
+    fixture.nativeElement.remove();
+  });
+});
+
 /** TestBed disables animate.leave by default; this block turns it back on. */
 describe('SheetComponent exit', () => {
   it('slides out before it is removed, instead of vanishing in one frame', async () => {
@@ -168,6 +194,7 @@ describe('SheetComponent exit', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 500));
     fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve, 60));
     expect(fixture.nativeElement.querySelector('as-sheet')).toBeNull();
     fixture.nativeElement.remove();
   });
