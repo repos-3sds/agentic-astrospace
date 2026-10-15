@@ -474,11 +474,27 @@ async function mockMobileApi(page: Page): Promise<{
             id: 'reading-1',
             kundli_id: 'profile-1',
             reading_type: url.searchParams.get('period') ?? 'weekly',
-            period_label: 'Week of 27 July 2026',
+            period_label: 'Week of Jul 27, 2026',
+            period_start: '2026-07-27',
+            period_end: '2026-08-02',
+            is_current_period: true,
             content: 'Mercury week reading from the API.',
             generated_at: '2026-07-27T08:00:00Z',
             generated_local_date: '2026-07-27',
             version: 4,
+          },
+          {
+            id: 'reading-0',
+            kundli_id: 'profile-1',
+            reading_type: url.searchParams.get('period') ?? 'weekly',
+            period_label: 'Week of Jul 20, 2026',
+            period_start: '2026-07-20',
+            period_end: '2026-07-26',
+            is_current_period: false,
+            content: 'Saturn week reading from a past week.',
+            generated_at: '2026-07-21T08:00:00Z',
+            generated_local_date: '2026-07-21',
+            version: 1,
           },
         ],
       });
@@ -583,6 +599,7 @@ async function mockMobileApi(page: Page): Promise<{
           kundli_id: 'profile-1',
           reading_type: request.postDataJSON()['period'],
           period_label: 'Generated now',
+          is_current_period: true,
           content: 'New generated reading from the API.',
           generated_at: '2026-07-28T08:00:00Z',
           generated_local_date: '2026-07-28',
@@ -669,7 +686,8 @@ test('mobile Readings keeps versions, reviews inline and retries a failed genera
       category: 'career', claim_text: 'A new lead arrives through a colleague.', status: 'pending', target_start_date: '2026-07-28',
     });
     await route.fulfill({ status: 201, json: {
-      id: 'reading-2', kundli_id: 'profile-1', reading_type: 'weekly', period_label: 'Week of 27 July 2026',
+      id: 'reading-2', kundli_id: 'profile-1', reading_type: 'weekly', period_label: 'Week of Jul 27, 2026',
+      period_start: '2026-07-27', period_end: '2026-08-02', is_current_period: true,
       content: 'Fresh fifth version of the week.', generated_at: '2026-07-28T08:00:00Z', generated_local_date: '2026-07-28', version: 5,
     } });
   });
@@ -678,13 +696,29 @@ test('mobile Readings keeps versions, reviews inline and retries a failed genera
   await expect(page.getByText('Mercury week reading from the API.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Saved versions' })).toHaveCount(0);
 
+  // This week's versions and past weeks are listed apart; a past week is
+  // titled by its dates, not as another "Version 1" (audit R2).
+  await expect(page.getByText('PAST WEEKS')).toBeVisible();
+  await expect(page.locator('.mrd-earlier').filter({ hasText: /Jul\s*20\s*[–-]\s*26/ })).toBeVisible();
+  await expect(page.locator('.mrd-reading em')).toHaveText('Latest');
+
+  // "New version" asks first; cancelling writes nothing (audit R6).
+  await page.getByRole('button', { name: 'New version' }).click();
+  await expect(page.getByText('Write a new version?')).toBeVisible();
+  await page.getByRole('button', { name: 'Keep this one' }).click();
+  await expect(page.getByText('Write a new version?')).toHaveCount(0);
+  expect(generateCalls).toBe(0);
+
   // A failed generation leaves the saved reading on screen and retries the generation itself.
   await page.getByRole('button', { name: 'New version' }).click();
+  await page.getByRole('button', { name: 'Write new version' }).click();
   await expect(page.getByText('That reading didn’t finish')).toBeVisible();
   await expect(page.getByText('Mercury week reading from the API.')).toBeVisible();
   await page.getByRole('button', { name: 'Try again' }).click();
-  await expect(page.getByRole('status')).toContainText('Writing your weekly reading');
+  await expect(page.getByRole('status')).toContainText('Writing a new version of your weekly reading');
   await expect(page.getByRole('progressbar', { name: 'Reading generation progress' })).toBeVisible();
+  // The reading being replaced stays readable under the progress.
+  await expect(page.getByText('Mercury week reading from the API.')).toBeVisible();
   await expect(page.getByText('Fresh fifth version of the week.')).toBeVisible();
   expect(generateCalls).toBe(2);
   await expect(page.getByText('That reading didn’t finish')).toHaveCount(0);
@@ -700,12 +734,26 @@ test('mobile Readings keeps versions, reviews inline and retries a failed genera
   await expect(claim.getByRole('button', { name: 'Happened' })).toHaveAttribute('aria-pressed', 'false');
   await expect(page.getByText('0 of 1 checked')).toBeVisible();
 
-  // The earlier version stays readable, clearly marked, with a way back.
-  await page.locator('.mrd-earlier').filter({ hasText: 'Version 4' }).click();
-  await expect(page.getByText('You’re looking at an earlier version.')).toBeVisible();
+  // The earlier version stays readable, clearly marked, with a way back. The
+  // list does not reshuffle: every version stays, the one being read is
+  // marked instead of vanishing (audit R3).
+  const versions = page.locator('.mrd-earlier');
+  await expect(versions).toHaveCount(3);
+  const titlesBefore = await versions.locator('b').allTextContents();
+  await versions.filter({ hasText: 'Version 4' }).click();
+  await expect(page.getByText('An earlier version of this week’s reading.')).toBeVisible();
   await expect(page.getByText('Mercury week reading from the API.')).toBeVisible();
-  await page.getByRole('button', { name: 'Back to latest' }).click();
+  await expect(versions.filter({ hasText: 'Version 4' })).toHaveAttribute('aria-current', 'true');
+  await expect(versions.filter({ hasText: 'Version 4' })).toContainText('Viewing');
+  expect(await versions.locator('b').allTextContents()).toEqual(titlesBefore);
+  await page.getByRole('button', { name: 'Show latest' }).click();
   await expect(page.getByText('Fresh fifth version of the week.')).toBeVisible();
+
+  // A past week opens marked as such.
+  await versions.filter({ hasText: /Jul\s*20/ }).click();
+  await expect(page.getByText('Saturn week reading from a past week.')).toBeVisible();
+  await expect(page.getByText('A reading from a past week.')).toBeVisible();
+  await expect(page.locator('.mrd-reading em')).toHaveText('Past week');
 });
 
 test('mobile profile management adds, edits, deletes and switches safely', async ({ page }, testInfo) => {

@@ -174,6 +174,30 @@ def get_latest_period_reading(
     return q.order_by(Reading.version.desc(), Reading.generated_at.desc()).first()
 
 
+def count_new_period_versions(
+    db: Session,
+    kundli_id: str,
+    reading_type: str,
+    generated_local_date: str,
+    user_id: str | None = None,
+) -> int:
+    """Regenerations ("new version") of a period written on one local day.
+
+    A first reading has no parent; every later version points at the one it
+    replaced, so counting rows with a parent counts the regenerations. Read
+    from saved rows so the daily cap holds across server workers.
+    """
+    q = db.query(Reading).filter(
+        Reading.kundli_id == kundli_id,
+        Reading.reading_type == reading_type,
+        Reading.generated_local_date == generated_local_date,
+        Reading.parent_reading_id.isnot(None),
+    )
+    if user_id is not None:
+        q = q.join(Kundli).filter(Kundli.user_id == user_id)
+    return q.count()
+
+
 def update_reading_feedback(
     db: Session,
     kundli_id: str,

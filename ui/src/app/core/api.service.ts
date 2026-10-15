@@ -49,6 +49,9 @@ export function friendlyApiMessage(status: number, detail: unknown): string {
       : 'That already exists, so nothing was added.';
   }
   if (status === 408 || status === 504) return 'That took too long to answer. Try again in a moment.';
+  // A daily allowance (new reading versions) is refused with a sentence
+  // written for the person that says when it resets; it is shown as-is.
+  if (status === 429 && /\btomorrow\b/i.test(raw)) return raw;
   if (status === 429) return 'Too many requests right now. Wait a moment and try again.';
   if (status >= 500) return 'The guidance service hit a problem on our side. Try again in a moment.';
   // The kundli API refuses an unresolvable birth place with a sentence

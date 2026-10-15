@@ -94,7 +94,13 @@ def test_docs_are_served_locally(reload_main):
 def test_docs_are_off_on_cloud_run(reload_main):
     client = TestClient(reload_main(cloud_run=True).app)
     for path in ("/docs", "/redoc", "/openapi.json"):
-        assert client.get(path).status_code == 404, path
+        response = client.get(path)
+        # With a built SPA present the catch-all serves index.html (200);
+        # without one it is a 404. Either way the API schema must not leak.
+        assert response.status_code in (200, 404), path
+        assert "swagger" not in response.text.lower(), path
+        assert "redoc" not in response.text.lower(), path
+        assert '"openapi"' not in response.text, path
 
 
 def test_security_headers_locally_without_hsts(reload_main):
