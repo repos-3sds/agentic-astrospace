@@ -74,27 +74,22 @@ let instances = 0;
       @if (!markOnly) {
         <svg class="sky" aria-hidden="true">
           @for (s of sky; track $index) {
-            <circle class="twinkle" [attr.cx]="s.x + '%'" [attr.cy]="s.y + '%'" [attr.r]="s.r" fill="#fff"
+            <circle class="star twinkle" [attr.cx]="s.x + '%'" [attr.cy]="s.y + '%'" [attr.r]="s.r"
               [attr.opacity]="s.opacity" [style.animation-delay.s]="s.delay" />
           }
         </svg>
       }
       <svg class="siddha-mark" viewBox="0 0 100 100" role="img" aria-label="Siddha">
         <defs>
-          <radialGradient [attr.id]="id + '-bg'" cx="50%" cy="46%" r="75%">
-            <stop offset="0" stop-color="#0d0b18" />
-            <stop offset=".6" stop-color="#05050b" />
-            <stop offset="1" stop-color="#000000" />
-          </radialGradient>
           <radialGradient [attr.id]="id + '-haze'" cx="50%" cy="50%" r="50%">
-            <stop offset="0" stop-color="#e9b949" stop-opacity=".18" />
-            <stop offset=".55" stop-color="#5b3fa0" stop-opacity=".07" />
+            <stop class="haze-a" offset="0" />
+            <stop class="haze-b" offset=".55" />
             <stop offset="1" stop-color="#000" stop-opacity="0" />
           </radialGradient>
           <radialGradient [attr.id]="id + '-core'">
-            <stop offset="0" stop-color="#ffffff" />
-            <stop offset=".3" stop-color="#ffe7a6" />
-            <stop offset="1" stop-color="#e9b949" stop-opacity="0" />
+            <stop class="core-a" offset="0" />
+            <stop class="core-b" offset=".3" />
+            <stop class="core-c" offset="1" />
           </radialGradient>
           <filter [attr.id]="id + '-glow'" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="1.2" result="b" />
@@ -106,9 +101,8 @@ let instances = 0;
         </defs>
 
         @if (markOnly) {
-          <rect width="100" height="100" rx="22.5" [attr.fill]="'url(#' + id + '-bg)'" />
           @for (s of field; track $index) {
-            <circle class="twinkle" [attr.cx]="s.x" [attr.cy]="s.y" [attr.r]="s.r" fill="#fff"
+            <circle class="star twinkle" [attr.cx]="s.x" [attr.cy]="s.y" [attr.r]="s.r"
               [attr.opacity]="s.opacity" [style.animation-delay.s]="s.delay" />
           }
         }
@@ -117,15 +111,15 @@ let instances = 0;
           <g class="spin">
             <g [attr.filter]="'url(#' + id + '-glow)'" transform="rotate(-24 50 50)">
               @for (d of arms; track $index) {
-                <circle [class.graha]="d.graha" [attr.cx]="d.x" [attr.cy]="d.y" [attr.r]="d.r"
-                  [attr.fill]="d.graha ? '#fff4d6' : '#e9b949'" [attr.opacity]="d.opacity"
+                <circle [class]="d.graha ? 'graha' : 'dot'" [attr.cx]="d.x" [attr.cy]="d.y" [attr.r]="d.r"
+                  [attr.opacity]="d.opacity"
                   [style.animation-delay.s]="d.delay" />
               }
             </g>
           </g>
           <g class="core">
             <circle cx="50" cy="50" r="11" [attr.fill]="'url(#' + id + '-core)'" />
-            <circle cx="50" cy="50" r="2.6" fill="#fff" />
+            <circle class="core-dot" cx="50" cy="50" r="2.6" />
           </g>
         </g>
       </svg>
@@ -146,7 +140,44 @@ let instances = 0;
         display: block;
       }
 
-      /* Space black in both themes: the intro is the galaxy, not the app chrome. */
+      /* Adaptive: space black in dark mode, porcelain sky in light mode, the
+         same galaxy redrawn in each so it never sits on the page as a patch. */
+      :host {
+        --g-text: #141a33;
+        --g-muted: rgba(20, 26, 51, 0.62);
+        --g-ground:
+          radial-gradient(circle at 50% 40%, rgba(233, 185, 73, 0.16), transparent 34%),
+          radial-gradient(circle at 50% 46%, #ffffff, #f4f5fa 60%, #e6e9f5 100%);
+        --g-dot: #c18d1a;
+        --g-graha: #8a5d00;
+        --g-star: #2b3770;
+        --g-star-alpha: 0.5;
+        --g-haze-a: rgba(233, 185, 73, 0.26);
+        --g-haze-b: rgba(91, 63, 160, 0.06);
+        --g-core-a: #fff8e2;
+        --g-core-b: #f2c24f;
+        --g-core-c: rgba(233, 185, 73, 0);
+        --g-core-dot: #fffaf0;
+      }
+
+      :host-context(.app-dark) {
+        --g-text: #f4ead2;
+        --g-muted: rgba(244, 234, 210, 0.66);
+        --g-ground:
+          radial-gradient(circle at 50% 40%, rgba(233, 185, 73, 0.1), transparent 34%),
+          radial-gradient(circle at 50% 46%, #0d0b18, #05050b 60%, #000 100%);
+        --g-dot: #e9b949;
+        --g-graha: #fff4d6;
+        --g-star: #ffffff;
+        --g-star-alpha: 1;
+        --g-haze-a: rgba(233, 185, 73, 0.18);
+        --g-haze-b: rgba(91, 63, 160, 0.07);
+        --g-core-a: #ffffff;
+        --g-core-b: #ffe7a6;
+        --g-core-c: rgba(233, 185, 73, 0);
+        --g-core-dot: #ffffff;
+      }
+
       .splash {
         width: 100%;
         height: 100%;
@@ -155,11 +186,20 @@ let instances = 0;
         align-content: center;
         gap: 28px;
         overflow: hidden;
-        color: #f4ead2;
-        background:
-          radial-gradient(circle at 50% 40%, rgba(233, 185, 73, 0.1), transparent 34%),
-          radial-gradient(circle at 50% 46%, #0d0b18, #05050b 60%, #000 100%);
+        color: var(--g-text);
+        background: var(--g-ground);
       }
+
+      .dot { fill: var(--g-dot); }
+      .graha { fill: var(--g-graha); }
+      .star { fill: var(--g-star); }
+      .star { fill-opacity: var(--g-star-alpha); }
+      .haze-a { stop-color: var(--g-haze-a); }
+      .haze-b { stop-color: var(--g-haze-b); }
+      .core-a { stop-color: var(--g-core-a); }
+      .core-b { stop-color: var(--g-core-b); }
+      .core-c { stop-color: var(--g-core-c); }
+      .core-dot { fill: var(--g-core-dot); }
 
       .splash {
         position: relative;
@@ -191,12 +231,9 @@ let instances = 0;
         animation: markRise 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
       }
 
-      /* The old sun mark drew inside ~75% of its box; the tile keeps that footprint. */
       .mark-only .siddha-mark {
-        width: 78%;
-        height: 78%;
-        overflow: hidden;
-        border-radius: 22.5%;
+        width: 100%;
+        height: 100%;
         animation: none;
       }
 
@@ -241,7 +278,7 @@ let instances = 0;
 
       p {
         margin: 0;
-        color: rgba(244, 234, 210, 0.66);
+        color: var(--g-muted);
         font: 700 13px/1.4 'Inter', system-ui, sans-serif;
         letter-spacing: 0.16em;
         text-transform: uppercase;

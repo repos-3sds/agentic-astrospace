@@ -32,21 +32,24 @@ for (const [d, k] of Object.entries(dens)) {
 }
 // Splash images: space black with the galaxy centred at ~28% of the short side.
 // Stars spread over the whole canvas (the same seeded sky the in-app intro draws).
-function sky(w, h) {
+function sky(w, h, light) {
   let seed = 29; const next = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
   const k = Math.min(w, h) / 390; let c = '';
-  for (let i = 0; i < 140; i++) { const x = next() * w, y = next() * h; c += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${((0.3 + (i % 3) * 0.18) * 2.2 * k).toFixed(2)}" fill="#fff" opacity="${(0.25 + (i % 4) * 0.15) * .8}"/>`; }
+  for (let i = 0; i < 140; i++) { const x = next() * w, y = next() * h; c += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${((0.3 + (i % 3) * 0.18) * 2.2 * k).toFixed(2)}" fill="${light ? '#2b3770' : '#fff'}" opacity="${(0.25 + (i % 4) * 0.15) * (light ? .5 : .8)}"/>`; }
   return `<svg width="${w}" height="${h}" style="position:absolute;inset:0">${c}</svg>`;
 }
-const splash = (w, h) => page(w, h, sky(w, h) + `<div style="position:relative">${sized(galaxySvg({ background: false, field: false, idPrefix: 'sp' }), Math.round(Math.min(w, h) * .3))}</div>`, 'radial-gradient(circle at 50% 46%, #0d0b18, #05050b 60%, #000)');
+// Dark (night) variants are space black; light variants are the porcelain sky.
+const splash = (w, h, light = false) => page(w, h, sky(w, h, light) + `<div style="position:relative">${sized(galaxySvg({ background: false, field: false, idPrefix: 'sp', theme: light ? 'light' : 'dark' }), Math.round(Math.min(w, h) * .3))}</div>`,
+  light ? 'radial-gradient(circle at 50% 40%, rgba(233,185,73,.16), transparent 34%), radial-gradient(circle at 50% 46%, #fff, #f4f5fa 60%, #e6e9f5)'
+        : 'radial-gradient(circle at 50% 46%, #0d0b18, #05050b 60%, #000)');
 for (const dir of fs.readdirSync(R).filter(d => d.startsWith('drawable'))) {
   const f = `${R}/${dir}/splash.png`; if (!fs.existsSync(f)) continue;
   const { w, h } = JSON.parse(require('child_process').execSync(`python3 -c "from PIL import Image;i=Image.open('${f}');print('{\\"w\\":%d,\\"h\\":%d}'%i.size)"`).toString());
-  jobs.push([f, w, h, splash(w, h)]);
+  jobs.push([f, w, h, splash(w, h, !dir.includes('night'))]);
 }
 jobs.push([UI + '/assets/splash.png', 1024, 1024, splash(1024, 1024)]);
 const IS = UI + '/ios/App/App/Assets.xcassets/Splash.imageset';
-for (const f of fs.readdirSync(IS).filter(f => f.endsWith('.png'))) { const s = f.includes('@1x') ? 1366 : 2732; jobs.push([`${IS}/${f}`, s, s, splash(s, s)]); }
+for (const f of fs.readdirSync(IS).filter(f => f.endsWith('.png'))) { const s = f.includes('@1x') ? 1366 : 2732; jobs.push([`${IS}/${f}`, s, s, splash(s, s, !f.includes('-dark'))]); }
 (async () => {
   const b = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
   const pg = await b.newPage();

@@ -37,8 +37,8 @@
 
   // These swatches depict the other theme, so they stay literal on purpose:
   // a token would make the dark preview follow whichever theme is active.
-  &.dark { background: #0a0e1f; border-color: #3c4880; }
-  &.system { background: linear-gradient(135deg, #f4f5fa 0 49%, #0a0e1f 51%); }
+  &.dark { background: #05050b; border-color: #3a3849; }
+  &.system { background: linear-gradient(135deg, #f4f5fa 0 49%, #05050b 51%); }
 }
 
 .preview-card {
@@ -48,8 +48,8 @@
   background: #fff;
   box-shadow: 0 3px 8px rgba(20, 26, 51, 0.12);
 }
-.dark .preview-card { background: #1c2445; }
-.system .preview-card { background: linear-gradient(135deg, #fff 0 49%, #1c2445 51%); }
+.dark .preview-card { background: #181824; }
+.system .preview-card { background: linear-gradient(135deg, #fff 0 49%, #181824 51%); }
 
 .preview-line {
   position: absolute;

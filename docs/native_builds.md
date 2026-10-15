@@ -147,7 +147,10 @@ with motion. After changing the drawing, regenerate from `ui/`:
 node scripts/brand/render-icons.cjs && python3 scripts/brand/finish_icons.py
 ```
 
-then mirror any geometry change in the splash component. Android adaptive
+then mirror any geometry change in the splash component. The galaxy has a dark
+form (space black) and a light form (porcelain); splash images and the Android
+launch theme (`values` / `values-night`) follow the system theme, and the icon
+is always the dark form. Android adaptive
 icons use the PNG layers in `mipmap-*/ic_launcher_{foreground,background}.png`.
 
 ## Push notifications

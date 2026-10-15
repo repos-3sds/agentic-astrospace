@@ -121,41 +121,42 @@
 }
 
 :root.app-dark .as-mobile {
-  // Midnight & Gold (2026-10-15): a deep indigo night sky with gold as the one
-  // accent. It replaced a warm brown-black that read as leather rather than
-  // sky, and a rust accent that shared a hue with --m-bad, so every link
-  // looked like a warning. Gold is kept well clear of the bad/warn hues.
-  --m-bg: #0a0e1f;
-  --m-surface: #141a33;
-  --m-raised: #1c2445;
+  // Midnight & Gold (2026-10-15), on space black. Dark mode shares the
+  // launch splash's ground: near-black with a faint violet cast, gold as the
+  // one accent. It replaced a warm brown-black that read as leather, and later
+  // an indigo that didn't match the space-black icon and intro. Gold is kept
+  // well clear of the bad/warn hues.
+  --m-bg: #05050b;
+  --m-surface: #101019;
+  --m-raised: #181824;
   --m-app-ground:
-    radial-gradient(120% 45% at 85% 0%, #1b2350 0%, transparent 62%),
-    linear-gradient(180deg, #0d1330 0%, #0a0e1f 48%, #070a17 100%);
+    radial-gradient(120% 45% at 50% 0%, rgba(233, 185, 73, 0.07) 0%, transparent 62%),
+    linear-gradient(180deg, #0d0b18 0%, #05050b 48%, #000000 100%);
   --m-frost:
-    linear-gradient(180deg, rgba(31, 40, 73, 0.9), rgba(18, 24, 48, 0.82));
-  --m-footer-glass: rgba(20, 26, 51, 0.54);
+    linear-gradient(180deg, rgba(30, 29, 42, 0.9), rgba(16, 16, 25, 0.82));
+  --m-footer-glass: rgba(16, 16, 25, 0.58);
   --m-footer-shine: rgba(238, 240, 250, 0.12);
-  --m-sheet-surface: #121830;
-  --m-sheet-raised: #1f2849;
-  --m-glass-panel: rgba(18, 24, 48, 0.76);
+  --m-sheet-surface: #0e0e16;
+  --m-sheet-raised: #1c1c29;
+  --m-glass-panel: rgba(16, 16, 25, 0.78);
   --m-glass-control: rgba(238, 240, 250, 0.08);
   --m-glass-border: rgba(238, 240, 250, 0.14);
-  --m-border: #2a3460;
-  --m-border-strong: #3c4880;
+  --m-border: #262534;
+  --m-border-strong: #3a3849;
   --m-text: #eef0fa;
-  --m-muted: #9aa3c4;
+  --m-muted: #a19eb2;
   --m-ink: #eef0fa;
-  --m-on-ink: #0a0e1f;
-  --m-muted-on-ink: #565e80;
+  --m-on-ink: #05050b;
+  --m-muted-on-ink: #5e5b70;
   --m-accent-on-ink: #8a5d00;
   --m-ink-raised: rgba(255, 255, 255, 0.04);
   --m-ink-control: rgba(255, 255, 255, 0.08);
   --m-accent: #e9b949;
   // 10.5:1 on --m-surface; the CTA pairs gold with near-black text (10:1).
   --m-accent-strong: #f2c55c;
-  // An indigo lift, not translucent gold: gold at low alpha over indigo mixes
-  // to olive-brown, which is the muddy look this palette replaced.
-  --m-accent-soft: #232d58;
+  // A cool lift, not translucent gold: gold at low alpha over a dark ground
+  // mixes to olive-brown, which is the muddy look this palette replaced.
+  --m-accent-soft: #222033;
   --m-primary-cta: #e9b949;
   --m-on-primary: #1a1405;
   --m-good: #5fd0a5;

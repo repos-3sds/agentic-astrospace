@@ -31,7 +31,8 @@ const config: CapacitorConfig = {
       androidIsEncryption: true,
     },
     SplashScreen: {
-      // Space black, matching the animated galaxy intro so the native launch bridge
+      // Space black, matching the dark galaxy intro (the splash images themselves
+      // have light and dark variants) so the native launch bridge
       // does not flash a different color before Angular paints.
       backgroundColor: '#000000',
       showSpinner: false,

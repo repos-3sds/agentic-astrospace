@@ -20,16 +20,17 @@
     </style>
 
 
+    <!-- Launch follows the system theme: porcelain here, space black in values-night. -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">#000000</item>
+        <item name="windowSplashScreenBackground">#F4F5FA</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
-        <item name="windowSplashScreenIconBackgroundColor">#000000</item>
+        <item name="windowSplashScreenIconBackgroundColor">#F4F5FA</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
-        <item name="android:windowBackground">#000000</item>
-        <item name="android:background">#000000</item>
-        <item name="android:statusBarColor">#000000</item>
-        <item name="android:navigationBarColor">#000000</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowBackground">#F4F5FA</item>
+        <item name="android:background">#F4F5FA</item>
+        <item name="android:statusBarColor">#F4F5FA</item>
+        <item name="android:navigationBarColor">#F4F5FA</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
     </style>
 </resources>
