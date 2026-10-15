@@ -1,9 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { ASK_NAVIGATION } from './ask-navigation';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AskComposerComponent } from './ask-composer.component';
 import { VoiceListeningComponent } from './voice-listening.component';
 import { KundliStore } from '../../../core/kundli.store';
+import { DailyGuidancePayload } from '../../../core/models';
+import { VedicService } from '../../../core/vedic.service';
+import { buildAskSuggestions } from './ask-suggestions';
 import { PreferencesService } from '../../../core/preferences.service';
 import { SpeechService } from '../../../core/speech.service';
 
@@ -50,6 +53,7 @@ export interface AskSuggestion {
 export class AskHomeComponent {
   protected readonly navigation = inject(ASK_NAVIGATION);
   private readonly kundlis = inject(KundliStore);
+  private readonly vedic = inject(VedicService);
   protected readonly preferences = inject(PreferencesService);
   readonly name = computed(() => this.kundlis.active()?.name ?? 'there');
   protected readonly heading = computed(() => this.navigation.web ? 'What would you like to explore?' : `What’s on your mind, ${this.name()}?`);
@@ -78,32 +82,24 @@ export class AskHomeComponent {
   /**
    * Seeded from the chart and the day, per the design's own heading — "right
    * now" is a claim, so these have to move when the dasha or the transit does.
+   *
+   * Until 2026-10-15 the Balanced list was three fixed strings ("Your Saturn
+   * period is active…", "Moon is in Hasta today…", "Is this month good for a
+   * big purchase?") shown to every profile, every day — one of them invited
+   * a financial-verdict refer-out. They now come from the same daily
+   * guidance payload Today renders (cached per profile and Vedic day), one
+   * per life area, each with the chart fact it rests on. When the payload
+   * is not available yet the list falls back to neutral, non-claiming
+   * prompts rather than fabricated ones.
    */
+  private readonly daily = signal<DailyGuidancePayload | null>(null);
   readonly suggestions = computed<AskSuggestion[]>(() => {
     if (this.navigation.web) return [
       { prompt: 'What should I consider about my career right now?' },
       { prompt: 'Help me understand my current dasha' },
       { prompt: 'What does my chart say about relationships?' },
     ];
-    if (this.preferences.experienceMode() === 'guided') {
-      return [
-        { prompt: 'What should I focus on at work this week?', because: 'Plain-language starter' },
-        { prompt: 'What is one thing to avoid today?', because: 'Safety-first daily prompt' },
-        { prompt: 'How should I think about a family conversation?', because: 'Practical guidance' },
-      ];
-    }
-    if (this.preferences.experienceMode() === 'practitioner') {
-      return [
-        { prompt: 'Explain my current dasha with natal and transit factors', because: 'Technical depth' },
-        { prompt: 'Which transit rules are driving today’s reading?', because: 'Provenance check' },
-        { prompt: 'Compare D1 and D9 factors for this relationship question', because: 'Chart-layer prompt' },
-      ];
-    }
-    return [
-      { prompt: 'Your Saturn period is active — ask about work & patience' },
-      { prompt: 'Moon is in Hasta today — good for detail work' },
-      { prompt: 'Is this month good for a big purchase?' },
-    ];
+    return buildAskSuggestions(this.daily(), this.preferences.experienceMode());
   });
   protected readonly safetyLine = computed(() =>
     this.preferences.experienceMode() === 'practitioner'
@@ -132,6 +128,16 @@ export class AskHomeComponent {
 
   constructor() {
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
+    // Re-seed whenever the active profile changes; the service caches per
+    // profile and day, so a revisit costs no request.
+    effect(() => {
+      const id = this.kundlis.activeId();
+      this.daily.set(null);
+      if (!id || this.navigation.web) return;
+      void this.vedic.dailyGuidance(id)
+        .then((payload) => { if (this.kundlis.activeId() === id) this.daily.set(payload); })
+        .catch(() => undefined);
+    });
   }
 
   protected startListening(): void {
