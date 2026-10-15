@@ -32,6 +32,8 @@ interface ActivePeriodInsight {
 }
 
 /** Life Periods / Dashas (Figma node 40:87), Antar level. */
+type DashaLevel = 'maha' | 'antar' | 'pratyantar' | 'sookshma' | 'prana';
+
 @Component({
   selector: 'as-life-periods',
   standalone: true,
@@ -51,7 +53,7 @@ export class LifePeriodsComponent {
   protected readonly error = signal<string | null>(null);
 
   readonly system = signal<'vimshottari' | 'yogini'>('vimshottari');
-  readonly level = signal<'maha' | 'antar' | 'pratyantar' | 'sookshma' | 'prana'>('antar');
+  readonly level = signal<DashaLevel>('antar');
 
   readonly selectedMaha = signal<DashaPeriod | null>(null);
   readonly selectedAntar = signal<DashaPeriod | null>(null);
@@ -105,11 +107,20 @@ export class LifePeriodsComponent {
   readonly pratyantarCrumb = computed(() => this.data()?.current.pratyantardasha?.lord ?? 'selected pratyantar');
   readonly sookshmaCrumb = computed(() => this.data()?.current.sookshmadasha?.lord ?? 'selected sookshma');
 
-  // Sookshma/Prana are Practitioner-only — Balanced keeps the three-level
-  // stack it already had; only Practitioner gets the full five.
-  readonly levelTabs = computed(() =>
-    ['maha', 'antar', 'pratyantar', 'sookshma', 'prana'] as const,
-  );
+  // The comment here always said Sookshma/Prana were Practitioner-only, but
+  // every mode got all five. Guided now sees chapters and sub-periods,
+  // Balanced the three-level stack, and Practitioner the full five.
+  readonly levelTabs = computed<readonly DashaLevel[]>(() => {
+    const mode = this.preferences.experienceMode();
+    if (mode === 'guided') return ['maha', 'antar'];
+    if (mode === 'practitioner') return ['maha', 'antar', 'pratyantar', 'sookshma', 'prana'];
+    return ['maha', 'antar', 'pratyantar'];
+  });
+
+  protected levelLabel(level: DashaLevel): string {
+    if (this.preferences.experienceMode() === 'guided') return level === 'maha' ? 'Chapters' : 'Sub-periods';
+    return { maha: 'Maha', antar: 'Antar', pratyantar: 'Pratyantar', sookshma: 'Sookshma', prana: 'Prana' }[level];
+  }
 
   constructor() {
     effect(() => {
@@ -123,7 +134,7 @@ export class LifePeriodsComponent {
     this.resetScroll();
   }
 
-  protected chooseLevel(level: 'maha' | 'antar' | 'pratyantar' | 'sookshma' | 'prana'): void {
+  protected chooseLevel(level: DashaLevel): void {
     this.system.set('vimshottari');
     this.level.set(level);
     this.resetScroll();
@@ -136,7 +147,7 @@ export class LifePeriodsComponent {
       this.selectedMaha.set(source);
       this.selectedAntar.set(source.antardashas.find((row) => row.active) ?? source.antardashas[0] ?? null);
       this.level.set('antar');
-    } else if (this.level() === 'antar' && source?.pratyantardashas?.length) {
+    } else if (this.level() === 'antar' && source?.pratyantardashas?.length && this.levelTabs().includes('pratyantar')) {
       this.selectedAntar.set(source);
       this.level.set('pratyantar');
     }

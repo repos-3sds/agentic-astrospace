@@ -98,7 +98,7 @@
       @for (row of guidedStrengths(); track row.label) {
         <article>
           <span class="story-icon" aria-hidden="true">
-            <img [src]="row.label === 'How you shine' ? 'mobile/sparkle.svg' : row.label === 'How you feel' ? 'mobile/orb-sm.svg' : 'mobile/pin-accent.svg'" alt="" />
+            <img [src]="row.label === 'How you shine' ? 'mobile/story-sun.svg' : row.label === 'How you feel' ? 'mobile/orb-sm.svg' : 'mobile/pin-accent.svg'" alt="" />
           </span>
           <p>{{ row.label }}</p>
           <b>{{ row.value }}</b>
@@ -107,17 +107,18 @@
     </div>
   }
 
-  <div class="angles">
-    @for (a of angles(); track a.label) {
-      <div class="angle">
-        <p class="eyebrow muted">{{ a.label }}</p>
-        <p class="angle-sign">{{ a.sign }}</p>
-        @if (preferences.experienceMode() !== 'guided') {
+  <!-- Guided already says Sun, Moon and rising in the story cards above. -->
+  @if (preferences.experienceMode() !== 'guided') {
+    <div class="angles">
+      @for (a of angles(); track a.label) {
+        <div class="angle">
+          <p class="eyebrow muted">{{ a.label }}</p>
+          <p class="angle-sign">{{ a.sign }}</p>
           <p class="angle-degree">{{ a.degree }}</p>
-        }
-      </div>
-    }
-  </div>
+        </div>
+      }
+    </div>
+  }
 
   @if (preferences.experienceMode() !== 'guided') {
   <section class="rashi">

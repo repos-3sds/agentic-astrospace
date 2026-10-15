@@ -20,21 +20,24 @@
   } @else {
   <header class="heading">
     <h2>Life Periods</h2>
-    <p>
-      @if (system() === 'yogini') {
-        Yogini dasha — an alternate 36-year period system
-      } @else {
-        Vimshottari dasha — five levels, computed from Moon
-      }
-    </p>
     @if (preferences.experienceMode() === 'guided') {
-      <p>Your current chapter, explained without requiring the technical tables.</p>
-    } @else if (preferences.experienceMode() === 'practitioner') {
+      <p>The chapter of life you are in now, and the shorter periods inside it.</p>
+    } @else {
+      <p>
+        @if (system() === 'yogini') {
+          Yogini dasha — an alternate 36-year period system
+        } @else {
+          Vimshottari dasha — five levels, computed from Moon
+        }
+      </p>
+    }
+    @if (preferences.experienceMode() === 'practitioner') {
       <p>Lahiri · sidereal Moon · exact period boundaries · five-level stack</p>
     }
     <as-birth-time-badge [profile]="kundlis.active()" detail="Period start and end dates are estimates." />
   </header>
 
+  @if (preferences.experienceMode() !== 'guided') {
   <div class="system" role="tablist" aria-label="Dasha system">
     <button
       type="button"
@@ -51,6 +54,7 @@
       (click)="chooseSystem('yogini')"
     >Yogini</button>
   </div>
+  }
 
   @if (system() === 'yogini') {
     <p class="gloss">Yogini — a secondary system, computed the same way, useful as a cross-check.</p>
@@ -68,7 +72,9 @@
     </section>
     <p class="cycle-title">FULL 36-YEAR CYCLE</p>
   } @else {
-    <p class="gloss">Vimshottari — the primary period system used here.</p>
+    @if (preferences.experienceMode() !== 'guided') {
+      <p class="gloss">Vimshottari — the primary period system used here.</p>
+    }
     <section class="active-period">
       <p class="eyebrow">ACTIVE NOW</p>
       <h2>{{ activePath() }}</h2>
@@ -79,7 +85,7 @@
           <b>Use it this way</b>
           <p>{{ insight.action }}</p>
         </div>
-        <small>{{ insight.evidence }}</small>
+        @if (preferences.experienceMode() !== 'guided') { <small>{{ insight.evidence }}</small> }
       }
     </section>
 
@@ -91,15 +97,19 @@
           [class.is-on]="level() === item"
           [attr.aria-selected]="level() === item"
           (click)="chooseLevel($any(item))"
-        >{{ item === 'maha' ? 'Maha' : item === 'antar' ? 'Antar' : item === 'pratyantar' ? 'Pratyantar' : item === 'sookshma' ? 'Sookshma' : 'Prana' }}</button>
+        >{{ levelLabel(item) }}</button>
       }
     </div>
-    <p class="gloss">Maha = life chapter · Antar = sub-period · Pratyantar = near-term current · Sookshma/Prana = active chain only.</p>
+    @if (preferences.experienceMode() === 'practitioner') {
+      <p class="gloss">Maha = life chapter · Antar = sub-period · Pratyantar = near-term current · Sookshma/Prana = active chain only.</p>
+    } @else if (preferences.experienceMode() === 'balanced') {
+      <p class="gloss">Maha = life chapter · Antar = sub-period · Pratyantar = near-term current.</p>
+    }
 
     @if (level() === 'antar') {
       <p class="breadcrumb">
         <img src="mobile/dasha-crumb.svg" alt="" aria-hidden="true" />
-        <span>Within {{ mahaCrumb() }} maha dasha</span>
+        <span>{{ preferences.experienceMode() === 'guided' ? 'Within your ' + mahaCrumb() + ' chapter' : 'Within ' + mahaCrumb() + ' maha dasha' }}</span>
       </p>
     } @else if (level() === 'pratyantar') {
       <p class="breadcrumb">
@@ -138,10 +148,10 @@
 
   @if (system() === 'yogini') {
     <p class="hint text-only">8 yoginis, 36-year cycle — repeats through life</p>
-  } @else if (level() === 'maha' || level() === 'antar') {
+  } @else if (level() === 'maha' || (level() === 'antar' && levelTabs().includes('pratyantar'))) {
     <p class="hint">
       <img src="mobile/info-period.svg" alt="" aria-hidden="true" />
-      <span>Tap a period to drill into {{ level() === 'maha' ? 'Antar' : 'Pratyantar' }}</span>
+      <span>Tap a period to drill into {{ level() === 'maha' ? levelLabel('antar') : levelLabel('pratyantar') }}</span>
     </p>
   } @else if (level() === 'sookshma' || level() === 'prana') {
     <p class="hint text-only">Sookshma and Prana are only available for the currently active period chain.</p>
