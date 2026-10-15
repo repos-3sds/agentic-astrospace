@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { FestivalService } from '../../../core/festival.service';
+import { FestivalService, festivalRegionsLabel } from '../../../core/festival.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { FestivalOccurrence } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
@@ -56,7 +56,7 @@ interface CalendarCell {
         @for (festival of visibleFestivals(); track festival.slug + festival.occurs_on) {
           <button class="mcal-observance festival" type="button" (click)="selectedFestival.set(festival)">
             <span class="mcal-date-tile"><b>{{ dayNumber(festival.occurs_on) }}</b><small>{{ monthShort(festival.occurs_on) }}</small></span>
-            <span><b>{{ festival.name }}</b><small>{{ festival.description || festival.prep_guidance || 'Tap for observance details' }}</small><em>{{ festival.regions.join(' · ') }}</em></span>
+            <span><b>{{ festival.name }}</b><small>{{ festival.description || festival.prep_guidance || 'Tap for observance details' }}</small><em>{{ regionsLabel(festival.regions) }}</em></span>
           </button>
         } @empty {
           @if (festivalLoading()) {
@@ -172,6 +172,8 @@ export class CalendarComponent {
   protected canGoNext(): boolean {
     return this.visibleMonth() < this.monthOffset(this.todayMonth(), 12);
   }
+
+  protected readonly regionsLabel = festivalRegionsLabel;
 
   protected monthLabel(): string {
     return new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(this.monthStart());
