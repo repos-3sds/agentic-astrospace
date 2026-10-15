@@ -25,14 +25,21 @@ import { PreferencesService } from './preferences.service';
 import { TimingPlacePayload } from './timing-place';
 import {
   CALENDAR_CACHE_POLICY,
+  CHART_CACHE_POLICY,
   CachedResource,
   ResourceCacheIdentity,
   TODAY_CACHE_POLICY,
   resourceCacheKey,
 } from './resource-cache';
 import { ResourceCacheService } from './resource-cache.service';
+import { SessionTeardown } from './session-teardown';
 
-const DAILY_GUIDANCE_ENGINE_VERSION = 'daily-guidance-1.0';
+// Must equal the server's constants (astrospace/context/daily.py,
+// astrospace/core/vedic/calendar.py); tests/test_client_engine_versions.py
+// checks. A mismatch makes every cached read look incompatible and get
+// discarded: from #98 until 2026-10-15 the server said 1.1 and this said
+// 1.0, so Today never served from cache and an offline launch had nothing.
+const DAILY_GUIDANCE_ENGINE_VERSION = 'daily-guidance-1.1';
 const CALENDAR_ENGINE_VERSION = 'calendar-intelligence-1.0';
 const CALENDAR_DATASET_VERSION = 'astrospace-calendar-2026.08.14';
 
@@ -49,7 +56,6 @@ export class VedicService {
   private readonly profileScopes = new Map<string, { userId: string; revision: string }>();
   private cache = new Map<string, Promise<VedicAll>>();
   private allValues = new Map<string, VedicAll>();
-  private readonly allStoragePrefix = 'astrospace.vedic-all:v2:';
   private dailyCache = new Map<string, Promise<DailyGuidancePayload>>();
   private dailyValues = new Map<string, DailyGuidancePayload>();
   private calendarCache = new Map<string, Promise<CalendarIntelligencePayload>>();
@@ -60,6 +66,7 @@ export class VedicService {
 
   constructor() {
     this.resourceCache.discardLegacyUnscopedCaches();
+    inject(SessionTeardown).register(() => this.invalidateAll());
   }
 
   configureProfile(profile: Pick<Kundli, 'id' | 'user_id' | 'updated_at'>): void {
@@ -96,7 +103,7 @@ export class VedicService {
     const cacheKey = `${kundliId}:${this.prefs.ayanamsha()}:${this.prefs.nodeType()}`;
     let cached = this.cache.get(cacheKey);
     if (!cached) {
-      const stored = this.readStoredAll(cacheKey);
+      const stored = this.readStoredAll(kundliId);
       if (stored) {
         this.allValues.set(cacheKey, stored);
         cached = Promise.resolve(stored);
@@ -106,7 +113,7 @@ export class VedicService {
     if (!cached) {
       cached = this.api.get<VedicAll>(`/vedic/${kundliId}/all?${this.calcParams()}`).then((value) => {
         this.allValues.set(cacheKey, value);
-        this.writeStoredAll(cacheKey, value);
+        this.writeStoredAll(kundliId, value);
         return value;
       }).catch((e) => {
         this.cache.delete(cacheKey);
@@ -122,7 +129,7 @@ export class VedicService {
     const cacheKey = `${kundliId}:${this.prefs.ayanamsha()}:${this.prefs.nodeType()}`;
     const request = this.api.get<VedicAll>(`/vedic/${kundliId}/all?${this.calcParams()}`).then((value) => {
       this.allValues.set(cacheKey, value);
-      this.writeStoredAll(cacheKey, value);
+      this.writeStoredAll(kundliId, value);
       return value;
     }).catch((error) => {
       this.cache.delete(cacheKey);
@@ -136,7 +143,7 @@ export class VedicService {
     const cacheKey = `${kundliId}:${this.prefs.ayanamsha()}:${this.prefs.nodeType()}`;
     const memory = this.allValues.get(cacheKey);
     if (memory) return memory;
-    const stored = this.readStoredAll(cacheKey);
+    const stored = this.readStoredAll(kundliId);
     if (stored) this.allValues.set(cacheKey, stored);
     return stored;
   }
@@ -475,7 +482,6 @@ export class VedicService {
     for (const key of [...this.allValues.keys()]) {
       if (key.startsWith(`${kundliId}:`)) this.allValues.delete(key);
     }
-    this.removeStoredAll(`${kundliId}:`);
     // Resource keys are hashed, so profile-scoped invalidation cannot safely
     // infer ownership from the in-memory key. Clear these small request maps.
     this.dailyCache.clear();
@@ -496,7 +502,6 @@ export class VedicService {
     this.resourceEpoch += 1;
     this.cache.clear();
     this.allValues.clear();
-    this.removeStoredAll();
     this.dailyCache.clear();
     this.dailyValues.clear();
     this.calendarCache.clear();
@@ -542,32 +547,31 @@ export class VedicService {
     });
   }
 
-  private readStoredAll(cacheKey: string): VedicAll | null {
+  /**
+   * The chart bundle lives in ResourceCacheService (SQLCipher on native,
+   * localStorage on the web) under the owner's identity. Until 2026-10-15 it
+   * was written to plaintext localStorage on native too, where anything that
+   * can read the WebView's storage could read a person's birth chart, and a
+   * sign-out did not remove it. Without an owner (profile not configured yet)
+   * it stays in memory only.
+   */
+  private readStoredAll(kundliId: string): VedicAll | null {
+    const identity = this.scopedIdentity(kundliId, 'vedic-all', {});
+    if (!identity) return null;
     try {
-      const raw = localStorage.getItem(`${this.allStoragePrefix}${cacheKey}`);
-      if (!raw) return null;
-      return JSON.parse(raw) as VedicAll;
+      return this.resourceCache.get<VedicAll>(identity)?.data ?? null;
     } catch {
       return null;
     }
   }
 
-  private writeStoredAll(cacheKey: string, value: VedicAll): void {
+  private writeStoredAll(kundliId: string, value: VedicAll): void {
+    const identity = this.scopedIdentity(kundliId, 'vedic-all', {});
+    if (!identity) return;
     try {
-      localStorage.setItem(`${this.allStoragePrefix}${cacheKey}`, JSON.stringify(value));
+      this.resourceCache.set(identity, value, CHART_CACHE_POLICY);
     } catch {
-      // Storage can be full or unavailable; the in-memory cache still serves this session.
-    }
-  }
-
-  private removeStoredAll(cacheKeyPrefix = ''): void {
-    try {
-      const prefix = `${this.allStoragePrefix}${cacheKeyPrefix}`;
-      for (const key of Object.keys(localStorage)) {
-        if (key.startsWith(prefix)) localStorage.removeItem(key);
-      }
-    } catch {
-      // Ignore storage cleanup failures; volatile caches are already cleared.
+      // The in-memory cache still serves this session.
     }
   }
 

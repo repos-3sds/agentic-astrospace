@@ -1,13 +1,24 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 
 import { ApiService } from './api.service';
+import { AuthService } from './auth.service';
+import { ConnectivityService } from './connectivity.service';
 import { Kundli, KundliPayload } from './models';
+import { PROFILES_CACHE_POLICY, ResourceCacheIdentity } from './resource-cache';
+import { ResourceCacheService } from './resource-cache.service';
+import { SessionTeardown } from './session-teardown';
 import { VedicService } from './vedic.service';
+
+/** Profile id used for the list itself, which belongs to no one profile. */
+const PROFILE_LIST_SCOPE = 'profiles';
 
 @Injectable({ providedIn: 'root' })
 export class KundliStore {
   private api = inject(ApiService);
   private vedic = inject(VedicService);
+  private auth = inject(AuthService);
+  private cache = inject(ResourceCacheService);
+  private connectivity = inject(ConnectivityService);
 
   readonly kundlis = signal<Kundli[]>([]);
   readonly loaded = signal(false);
@@ -21,6 +32,29 @@ export class KundliStore {
   );
   private loadPromise: Promise<void> | null = null;
   private readonly activeStorageKey = 'astrospace.activeKundliId';
+  /** The list on screen came from the device cache and the server has not confirmed it yet. */
+  private needsRevalidation = false;
+  /** Whose cached list is on screen, so reset() can drop exactly that entry. */
+  private cacheOwner: string | null = null;
+
+  constructor() {
+    inject(SessionTeardown).register(() => {
+      this.reset();
+      try {
+        localStorage.removeItem(this.activeStorageKey);
+      } catch {
+        // Storage unavailable; the in-memory selection is already gone.
+      }
+    });
+    // Back online: confirm a cached list, or retry one that never loaded.
+    effect(() => {
+      if (this.connectivity.state() !== 'online') return;
+      untracked(() => {
+        if (this.needsRevalidation) void this.revalidate();
+        else if (this.loadError() && !this.loaded()) void this.load().catch(() => undefined);
+      });
+    });
+  }
 
   readonly filtered = computed(() => {
     const q = this.query().toLowerCase().trim();
@@ -60,6 +94,9 @@ export class KundliStore {
   /** Drop every user-scoped value before another account can enter the shell. */
   reset(): void {
     this.vedic.clearConfiguredProfiles();
+    if (this.cacheOwner) this.cache.deleteProfile(this.cacheOwner, PROFILE_LIST_SCOPE);
+    this.cacheOwner = null;
+    this.needsRevalidation = false;
     this.kundlis.set([]);
     this.activeId.set(null);
     this.loaded.set(false);
@@ -69,16 +106,25 @@ export class KundliStore {
     this.closeDialog();
   }
 
+  /**
+   * Stale-while-revalidate. A list cached on this device (SQLCipher on
+   * native, localStorage on the web) is shown at once and confirmed in the
+   * background; only a first load waits on the network. Until 2026-10-15 the
+   * list was never cached, so an offline cold start showed "Your profiles
+   * could not be loaded" over guidance that was sitting in the encrypted
+   * cache the whole time.
+   */
   private async loadOnce(): Promise<void> {
     this.loadError.set(null);
+    const cached = this.readCachedProfiles();
+    if (cached) {
+      this.apply(cached);
+      this.needsRevalidation = true;
+      void this.revalidate();
+      return;
+    }
     try {
-      const kundlis = await this.api.get<Kundli[]>('/kundlis');
-      this.kundlis.set(kundlis);
-      for (const kundli of kundlis) this.vedic.configureProfile(kundli);
-      const storedId = localStorage.getItem(this.activeStorageKey);
-      const selected = kundlis.find((kundli) => kundli.id === storedId) ?? kundlis[0] ?? null;
-      this.setActive(selected?.id ?? null);
-      this.loaded.set(true);
+      await this.fetchProfiles();
     } catch (error) {
       this.loadPromise = null;
       this.loadError.set((error as Error)?.message || 'Your profiles could not be loaded.');
@@ -86,10 +132,90 @@ export class KundliStore {
     }
   }
 
+  private revalidating: Promise<void> | null = null;
+
+  private revalidate(): Promise<void> {
+    this.revalidating ??= this.fetchProfiles()
+      .catch(() => {
+        // The cached list stays on screen; the connectivity effect retries.
+        this.needsRevalidation = true;
+      })
+      .finally(() => {
+        this.revalidating = null;
+      });
+    return this.revalidating;
+  }
+
+  private async fetchProfiles(): Promise<void> {
+    const owner = this.ownerId();
+    const kundlis = await this.api.get<Kundli[]>('/kundlis');
+    // A sign-out (or account switch) while the request was in flight: the
+    // answer belongs to someone who is no longer here.
+    if (owner !== this.ownerId()) return;
+    this.needsRevalidation = false;
+    this.apply(kundlis);
+    this.persist();
+  }
+
+  private apply(kundlis: Kundli[]): void {
+    this.kundlis.set(kundlis);
+    for (const kundli of kundlis) this.vedic.configureProfile(kundli);
+    const current = this.activeId();
+    let storedId: string | null = null;
+    try {
+      storedId = localStorage.getItem(this.activeStorageKey);
+    } catch {
+      storedId = null;
+    }
+    const selected =
+      kundlis.find((kundli) => kundli.id === current)
+      ?? kundlis.find((kundli) => kundli.id === storedId)
+      ?? kundlis[0]
+      ?? null;
+    this.setActive(selected?.id ?? null);
+    this.loaded.set(true);
+    this.loadError.set(null);
+  }
+
+  private ownerId(): string {
+    // Auth disabled (dev, e2e) has no user; one local owner stands in.
+    return this.auth.user()?.id ?? 'local';
+  }
+
+  private identity(owner = this.ownerId()): ResourceCacheIdentity {
+    return { userId: owner, profileId: PROFILE_LIST_SCOPE, resource: 'profile-list', schemaVersion: 1 };
+  }
+
+  private readCachedProfiles(): Kundli[] | null {
+    try {
+      const owner = this.ownerId();
+      const cached = this.cache.get<Kundli[]>(this.identity(owner));
+      if (!cached || !Array.isArray(cached.data)) return null;
+      this.cacheOwner = owner;
+      return cached.data;
+    } catch {
+      return null;
+    }
+  }
+
+  private persist(): void {
+    try {
+      const owner = this.ownerId();
+      this.cache.set(this.identity(owner), this.kundlis(), PROFILES_CACHE_POLICY);
+      this.cacheOwner = owner;
+    } catch {
+      // A cache write failing must not fail the load; the list is on screen.
+    }
+  }
+
   setActive(id: string | null): void {
     this.activeId.set(id);
-    if (id) localStorage.setItem(this.activeStorageKey, id);
-    else localStorage.removeItem(this.activeStorageKey);
+    try {
+      if (id) localStorage.setItem(this.activeStorageKey, id);
+      else localStorage.removeItem(this.activeStorageKey);
+    } catch {
+      // Storage unavailable: the selection still holds for this session.
+    }
   }
 
   /**
@@ -103,6 +229,7 @@ export class KundliStore {
     this.vedic.configureProfile(created);
     this.kundlis.update((list) => [...list, created]);
     if (options.activate !== false || !this.activeId()) this.setActive(created.id);
+    this.persist();
     return created;
   }
 
@@ -111,6 +238,7 @@ export class KundliStore {
     this.kundlis.update((list) => list.map((k) => (k.id === id ? updated : k)));
     this.vedic.invalidate(id);
     this.vedic.configureProfile(updated);
+    this.persist();
     return updated;
   }
 
@@ -120,5 +248,6 @@ export class KundliStore {
     this.vedic.invalidate(id);
     this.vedic.removeConfiguredProfile(id);
     if (this.activeId() === id) this.setActive(this.kundlis()[0]?.id ?? null);
+    this.persist();
   }
 }

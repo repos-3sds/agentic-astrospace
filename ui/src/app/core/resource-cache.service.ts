@@ -125,7 +125,9 @@ export class ResourceCacheService {
   }
 
   discardLegacyUnscopedCaches(): void {
-    const prefixes = ['astrospace.daily-guidance:', 'astrospace.calendar-intelligence:'];
+    // vedic-all: the natal chart bundle, plaintext in WebView storage until
+    // 2026-10-15; it now lives behind this service.
+    const prefixes = ['astrospace.daily-guidance:', 'astrospace.calendar-intelligence:', 'astrospace.vedic-all:'];
     try {
       for (const key of Object.keys(localStorage)) {
         if (prefixes.some((prefix) => key.startsWith(prefix))) localStorage.removeItem(key);

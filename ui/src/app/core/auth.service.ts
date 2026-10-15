@@ -9,6 +9,7 @@ import { Preferences } from '@capacitor/preferences';
 import { ConnectivityService } from './connectivity.service';
 import { ResourceCacheService } from './resource-cache.service';
 import { SessionStorageAdapter, sessionStorageAdapter } from './session-storage';
+import { SessionTeardown } from './session-teardown';
 
 const NATIVE_AUTH_CALLBACK = 'app.astrospace.mobile://auth/callback';
 const NATIVE_AUTH_BRIDGE_PATH = '/api/v1/auth/native-callback';
@@ -23,6 +24,16 @@ const NATIVE_AUTH_STATE_TTL_MS = 10 * 60 * 1000;
  * values are the project URL and the anon key, both public by design.
  */
 const AUTH_CONFIG_CACHE_KEY = 'astrospace.authConfig';
+/** The most any single boot-time network step may hold the splash. */
+const BOOT_NETWORK_TIMEOUT_MS = 8_000;
+
+function withTimeout<T>(work: Promise<T>, ms: number, fallback: () => T): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<T>((resolve) => {
+    timer = setTimeout(() => resolve(fallback()), ms);
+  });
+  return Promise.race([work, timeout]).finally(() => clearTimeout(timer));
+}
 
 /** The key supabase-js persists its session under when no storageKey is configured. */
 export function supabaseStorageKey(supabaseUrl: string): string {
@@ -104,7 +115,18 @@ export class AuthService {
     this.client = this.buildClient(config.supabase_url, config.supabase_anon_key);
     await this.installNativeAuthCallback();
     this.installAutoRefreshLifecycle();
-    const { data, error } = await this.client.auth.getSession();
+    // Bounded: with an expired access token getSession() refreshes over the
+    // network, and supabase-js retries a failing refresh with backoff for up
+    // to ~30 s. Past the bound the stored session stands in (same rule as the
+    // offline branch below) and onAuthStateChange applies the refreshed one
+    // whenever it lands.
+    const { data, error } = await withTimeout<{ data: { session: Session | null }; error: Error | null }>(
+      this.client.auth.getSession(),
+      BOOT_NETWORK_TIMEOUT_MS,
+      // Only a refresh can take this long, and a refresh means a stored
+      // session exists; so no error here, the stored session is used below.
+      () => ({ data: { session: null }, error: null }),
+    );
     if (error || !data.session) {
       // Offline, supabase-js cannot refresh an expired session and reports
       // that as an error (or no session). The stored session is still the
@@ -124,24 +146,42 @@ export class AuthService {
   }
 
   /**
-   * Fetch /auth/config, caching it on success; fall back to the cached copy
-   * when the fetch fails and a copy exists. Until 2026-10-15 a failed fetch
-   * always rethrew, so a returning user with no signal never got past the
-   * mobile auth guard even though their guidance was cached on device.
+   * Cache first, revalidated in the background. The config is the Supabase
+   * project URL and anon key, which change on a key rotation and essentially
+   * never otherwise, so a cold start must not wait on the network for them:
+   * until 2026-10-15 every launch fetched first, with no timeout, and a slow
+   * network held the splash. A first launch (nothing cached) still fetches,
+   * bounded by BOOT_NETWORK_TIMEOUT_MS. A revalidated config that differs is
+   * stored and takes effect on the next launch — rebuilding the Supabase
+   * client under a live session is riskier than one stale launch.
    */
   private async loadConfig(): Promise<AuthConfig> {
+    const cached = await this.cachedConfig();
+    if (cached) {
+      void this.fetchConfig().catch(() => undefined);
+      return cached;
+    }
+    return this.fetchConfig();
+  }
+
+  private async fetchConfig(): Promise<AuthConfig> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), BOOT_NETWORK_TIMEOUT_MS);
     try {
-      const res = await fetch(apiUrl('/api/v1/auth/config'));
+      const res = await fetch(apiUrl('/api/v1/auth/config'), { signal: controller.signal });
       this.connectivity.noteRequestSuccess();
       if (!res.ok) throw new Error('Could not load auth configuration');
       const config = (await res.json()) as AuthConfig;
       await Preferences.set({ key: AUTH_CONFIG_CACHE_KEY, value: JSON.stringify(config) }).catch(() => undefined);
       return config;
     } catch (error) {
-      this.connectivity.noteRequestFailure(error);
-      const cached = await this.cachedConfig();
-      if (!cached) throw error;
-      return cached;
+      // An abort is a timeout, which for boot purposes is unreachable.
+      this.connectivity.noteRequestFailure(
+        controller.signal.aborted ? new TypeError('Failed to fetch (timed out)') : error,
+      );
+      throw error;
+    } finally {
+      clearTimeout(timer);
     }
   }
 
@@ -312,6 +352,11 @@ export class AuthService {
     }
     this.setSession(null);
     this.signedOut.set(true);
+    // Retained tab views, the profile list and every other per-user value
+    // registered with SessionTeardown. Before this the footer tabs kept the
+    // previous account's Today alive in the route-reuse store, so the next
+    // account to sign in on the phone saw it until it re-rendered.
+    this.injector?.get(SessionTeardown, null)?.run();
     // The encrypted cache holds the signed-out account's guidance, charts and
     // threads. Until 2026-10-15 it was left on disk until its TTL, so the next
     // person to sign in on a shared phone inherited it. The cache is keyed by
