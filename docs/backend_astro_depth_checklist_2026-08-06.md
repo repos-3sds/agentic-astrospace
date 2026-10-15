@@ -679,8 +679,9 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   section when the sheet opens and the next while one plays. Making the
   whole brief overnight would make play instant, but the brief script is
   built on the device (`audio-reading-script.ts`), so the server has no
-  text to synthesise yet. *Unblocks on:* the daily notification worker
-  being scheduled, plus a server-side copy of the brief script. *Hook:*
+  text to synthesise yet. *Unblocks on:* a server-side copy of the brief
+  script; the daily notification job (`agentic-astrospace-notifications`,
+  every 15 minutes) is already running and can do the warming. *Hook:*
   `natural_speech()` in `astrospace/voice/tts.py` already caches by text
   hash, so a worker that warms the same text makes the app's request a hit.
 - [ ] **Natural voice: real metered limit and durable cache.** The speech
