@@ -76,11 +76,14 @@ export interface ChartAdapterResult {
 
 /**
  * A D1 chart assembled from the planet table when the payload carries no
- * `vargas.D1` (older cached responses). `lagnaSign` is the profile's stored
- * ascendant; the avkahada rashi is the fallback for that.
+ * `vargas.D1` (older cached responses). The lagna comes from the same
+ * sidereal payload (`lagna.sign`, else the avkahada lagna). It never falls
+ * back to the profile's stored `ascendant`: that column is the tropical
+ * (kerykeion) ascendant and showed the wrong rising sign — and never to the
+ * avkahada *rashi*, which is the Moon sign, not the lagna.
  */
-export function rashiFallback(data: VedicAll, lagnaSign: string | null | undefined): VargaChart | null {
-  const sign = lagnaSign ?? data.avkahada?.['rashi'];
+export function rashiFallback(data: VedicAll): VargaChart | null {
+  const sign = data.lagna?.sign ?? data.avkahada?.['lagna'];
   if (!sign) return null;
   return {
     name: 'Rāśi',
@@ -96,7 +99,7 @@ export function rashiFallback(data: VedicAll, lagnaSign: string | null | undefin
 
 export function buildChartAdapter(data: VedicAll, profile: Kundli | null, vargaId = 'D1'): ChartAdapterResult {
   const varga = data.vargas?.[vargaId] ?? null;
-  const lagnaSign = varga?.lagna?.sign ?? profile?.ascendant ?? data.avkahada?.['rashi'] ?? '—';
+  const lagnaSign = varga?.lagna?.sign ?? data.lagna?.sign ?? data.avkahada?.['lagna'] ?? '—';
   const grouped = groupPlanets(data, varga);
   grouped[lagnaSign] = ['Ascendant', ...(grouped[lagnaSign] ?? [])];
 
@@ -126,8 +129,9 @@ export function buildChartAdapter(data: VedicAll, profile: Kundli | null, vargaI
   const sun = data.planets?.['Sun'];
   const moon = data.planets?.['Moon'];
   const angles = [
-    { label: 'SUN', sign: sun?.sign ?? profile?.sun_sign ?? '—', degree: degreeLabel(sun) },
-    { label: 'MOON', sign: moon?.sign ?? profile?.moon_sign ?? '—', degree: degreeLabel(moon) },
+    // Sidereal only: the profile's stored sun_sign / moon_sign are tropical.
+    { label: 'SUN', sign: sun?.sign ?? '—', degree: degreeLabel(sun) },
+    { label: 'MOON', sign: moon?.sign ?? data.avkahada?.['rashi'] ?? '—', degree: degreeLabel(moon) },
     { label: 'ASCENDANT', sign: lagnaSign, degree: data.meta?.sidereal_time ? 'from birth time' : 'computed' },
   ];
   const signature = {

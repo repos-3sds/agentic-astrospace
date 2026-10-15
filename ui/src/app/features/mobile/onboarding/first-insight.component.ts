@@ -98,7 +98,7 @@ export class FirstInsightComponent {
   protected readonly practitionerChart = computed<VargaChart | null>(() => {
     const chart = this.chart();
     if (!chart) return null;
-    return chart.vargas?.['D1'] ?? rashiFallback(chart, this.kundlis.active()?.ascendant);
+    return chart.vargas?.['D1'] ?? rashiFallback(chart);
   });
 
   protected readonly birthConstants = computed(() => {
@@ -124,12 +124,18 @@ export class FirstInsightComponent {
 
   protected readonly birthMetrics = computed(() => {
     const chart = this.chart();
-    const profile = this.kundlis.active();
     const moon = chart?.planets?.['Moon'];
     const sun = chart?.planets?.['Sun'];
-    const lagna = profile?.ascendant ?? chart?.avkahada?.['lagna'] ?? chart?.vargas?.['D1']?.lagna?.sign ?? 'Not returned';
+    // Sidereal lagna from the chart payload only. The profile's stored
+    // `ascendant` is tropical and used to win here; the avkahada nakshatra is
+    // the Moon's, so the lagna's own nakshatra comes from `lagna`.
+    const lagnaDetails = chart?.lagna;
+    const lagna = chart?.vargas?.['D1']?.lagna?.sign ?? lagnaDetails?.sign ?? chart?.avkahada?.['lagna'] ?? 'Not returned';
+    const lagnaNakshatra = lagnaDetails?.nakshatra
+      ? `${lagnaDetails.nakshatra}${lagnaDetails.nakshatra_pada ? ` ${lagnaDetails.nakshatra_pada}` : ''}`
+      : undefined;
     return [
-      { label: 'Lagna (Ascendant)', value: this.metricValue(lagna, chart?.avkahada?.['nakshatra']) },
+      { label: 'Lagna (Ascendant)', value: this.metricValue(lagna, lagnaNakshatra) },
       { label: 'Chandra (Moon)', value: this.planetMetric(moon) },
       { label: 'Surya (Sun)', value: this.planetMetric(sun) },
     ];

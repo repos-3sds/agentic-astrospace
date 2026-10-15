@@ -3,6 +3,17 @@
   height: 100vh;
 }
 
+// Routes rendered outside the web shell (the native onboarding screens under
+// /m/*, auth, admin). app-root clips overflow, so without a scroll container
+// here a screen taller than a small phone's viewport (persona, birth details)
+// simply cut off its primary button. The native shell manages its own
+// scrolling and fills this box exactly, so it is unaffected.
+.public-scroll {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .shell {
   display: flex;
   height: 100%;

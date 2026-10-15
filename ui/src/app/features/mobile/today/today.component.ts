@@ -554,7 +554,10 @@ export class TodayComponent {
         columns: 3,
         presentation: 'signature',
         cells: [
-          { label: 'LUCKY NO.', value: String(daily.lucky_numbers.astrological.number) },
+          // The chart-derived number (lagna lord). Labelled as such because the
+          // Favourable screen also shows the numerology moolank, and both read as
+          // "lucky number" when the method is not named.
+          { label: 'CHART NUMBER', value: String(daily.lucky_numbers.astrological.number) },
           { label: 'GEM', value: daily.lucky_signature.gem, symbol: gemSymbol(daily.lucky_signature.gem) },
           { label: 'DIRECTION', value: daily.lucky_signature.direction, symbol: directionSymbol(daily.lucky_signature.direction) },
         ],

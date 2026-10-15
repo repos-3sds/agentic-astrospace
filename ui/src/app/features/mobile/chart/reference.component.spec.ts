@@ -104,3 +104,89 @@ describe('ReferenceComponent (ashtakavarga)', () => {
     expect(el.textContent).toContain('No Ashtakavarga tables came back');
   });
 });
+
+describe('ReferenceComponent (avkahada and favourable)', () => {
+  const chart = {
+    avkahada: {
+      lagna: 'Aries', lagna_sanskrit: 'Mesha', lagna_lord: 'Mars', rashi: 'Libra', rashi_sanskrit: 'Tula', rashi_lord: 'Venus',
+      nakshatra: 'Swati', nakshatra_lord: 'Rahu', charan: 2, tithi: 'Chaturthi Krishna', yoga: 'Vyaghata', karana: 'Bava',
+      varna: 'Shudra', gana: 'Deva', nadi: 'Antya', first_letters: ['Ru', 'Re', 'Ro', 'Ta'], name_letter: 'Re', vara: 'Thursday',
+    },
+    ghatak: { rashi: 'Capricorn', rashi_sanskrit: 'Makara', month: 'Jyeshtha', tithi: '4, 9, 14', day: 'Thursday', nakshatra: 'Shatabhisha', lagna: 'Libra', lagna_sanskrit: 'Tula', yoga: null, karana: null, prahar: null },
+    favourable: {
+      lucky_number: 6, ruling_planet: 'Venus', good_numbers: [3, 6, 9], evil_numbers: [1, 8], good_years: [6, 15],
+      lucky_days: ['Thursday'], good_planets: ['Jupiter'], evil_planets: ['Saturn'], yogakaraka: null, friendly_signs: ['Aries'],
+      lucky_metal: 'Copper', lucky_stone: 'Red Coral', lucky_direction: 'South', lucky_time: 'Hora of Mars',
+      lucky_color: { name: 'Coral Red', hex: '#D0342C', planet: 'Mars', source: 'colour of Mars, the Lagna lord' },
+      astrological_number: { number: 9, planet: 'Mars', source: 'Lagna lord', witnesses: [], confirmed_by: ['Nakshatra lord'], confirmation_count: 1 },
+    },
+    planets: {},
+  };
+
+  async function render(mode: 'avkahada' | 'favourable'): Promise<HTMLElement> {
+    await TestBed.configureTestingModule({
+      imports: [ReferenceComponent],
+      providers: [
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: { snapshot: { data: { referenceMode: mode } } } },
+        { provide: KundliStore, useValue: { activeId: signal('profile-1'), active: signal({ id: 'profile-1' }), load: () => Promise.resolve() } },
+        { provide: VedicService, useValue: { all: () => Promise.resolve(chart) } },
+      ],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(ReferenceComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await Promise.resolve();
+    fixture.detectChanges();
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  function rowsOf(section: Element): Record<string, string> {
+    return Object.fromEntries(Array.from(section.querySelectorAll('.ref-row'))
+      .map((row) => [row.querySelector('span')?.textContent?.trim() ?? '', row.querySelector('strong')?.textContent?.trim() ?? '']));
+  }
+
+  it('keeps the person’s own constants and the ghatak markers in separate sections', async () => {
+    const el = await render('avkahada');
+    const sections = Array.from(el.querySelectorAll('.ref-section'));
+    const headings = sections.map((section) => section.querySelector('h2')?.textContent?.trim());
+    expect(headings[0]).toBe('Chart anchors');
+    expect(headings.at(-1)).toBe('Ghatak chakra');
+
+    const anchors = rowsOf(sections[0]);
+    expect(anchors['Lagna (ascendant)']).toBe('Aries (Mesha)');
+    expect(anchors['Rashi (Moon sign)']).toBe('Libra (Tula)');
+    expect(anchors['Janma nakshatra']).toBe('Swati');
+    expect(anchors['Tithi']).toBeUndefined();
+
+    const ghatak = rowsOf(sections.at(-1)!);
+    expect(ghatak['Ghatak lagna']).toBe('Libra (Tula)');
+    expect(ghatak['Ghatak Moon sign']).toBe('Capricorn (Makara)');
+    expect(ghatak['Ghatak tithis']).toBe('4, 9, 14');
+    expect(ghatak['Ghatak nakshatra']).toBe('Shatabhisha');
+    // Unverified ghatak columns (null) are not rendered as "—" rows.
+    expect(ghatak['Ghatak yoga']).toBeUndefined();
+    expect(sections.at(-1)!.classList).toContain('caution');
+    expect(el.textContent).not.toContain('rashi sanskrit');
+  });
+
+  it('shows both number conventions with their sources and joins lists', async () => {
+    const el = await render('favourable');
+    const sections = Array.from(el.querySelectorAll('.ref-section'));
+    const chartNumber = rowsOf(sections[0]);
+    expect(sections[0].querySelector('h2')?.textContent).toContain('Chart number');
+    expect(chartNumber['Number']).toBe('9');
+    expect(chartNumber['From']).toBe('Mars, the lagna lord');
+    expect(chartNumber['Also agrees']).toBe('Nakshatra lord');
+
+    const moolank = rowsOf(sections[1]);
+    expect(sections[1].querySelector('h2')?.textContent).toContain('moolank');
+    expect(moolank['Moolank']).toBe('6');
+    expect(moolank['Good numbers']).toBe('3, 6, 9');
+    expect(el.textContent).not.toContain('good numbers · 0');
+
+    const signature = rowsOf(sections[2]);
+    expect(signature['Colour']).toBe('Coral Red');
+    expect(signature['Stone']).toBe('Red Coral');
+  });
+});

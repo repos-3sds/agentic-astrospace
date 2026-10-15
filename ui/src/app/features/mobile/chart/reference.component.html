@@ -76,10 +76,16 @@
       <p class="ref-state">No Ashtakavarga tables came back for this profile.</p>
     }
   } @else {
-    <div class="ref-table">
-      @for (row of simpleRows(); track row.label) {
-        <div class="ref-row"><span>{{ row.label }}</span><strong>{{ row.value }}</strong></div>
-      } @empty { <p class="ref-state">No computed values are available for this profile.</p> }
-    </div>
+    @for (section of sections(); track section.heading) {
+      <section class="ref-section" [class.caution]="section.tone === 'caution'">
+        <h2 class="av-heading">{{ section.heading }}</h2>
+        @if (section.note) { <p class="av-note">{{ section.note }}</p> }
+        <div class="ref-table">
+          @for (row of section.rows; track row.label) {
+            <div class="ref-row"><span>{{ row.label }}</span><strong>{{ row.value }}</strong></div>
+          }
+        </div>
+      </section>
+    } @empty { <p class="ref-state">No computed values are available for this profile.</p> }
   }
 </main>

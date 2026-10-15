@@ -106,7 +106,7 @@ export class ChartHubComponent {
   readonly rashiChart = computed<VargaChart | null>(() => {
     const chart = this.chart();
     if (!chart) return null;
-    return chart.vargas?.['D1'] ?? rashiFallback(chart, this.kundlis.active()?.ascendant);
+    return chart.vargas?.['D1'] ?? rashiFallback(chart);
   });
   readonly provenanceRows = computed(() => this.adapter()?.provenance ?? []);
 

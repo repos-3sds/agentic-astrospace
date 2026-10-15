@@ -20,6 +20,39 @@ export class ReferOutError extends Error {
   }
 }
 
+/**
+ * An HTTP failure with a sentence meant for the screen. `message` is the
+ * friendly copy; `detail` keeps the backend's raw `detail` (a string, or the
+ * JSON of a validation array) for practitioner diagnostics and logs. Until
+ * 2026-10-15 the raw detail *was* the message, so "Internal Server Error",
+ * "City 'Mumbaii' not in offline database." and Pydantic JSON reached the
+ * generic error card verbatim.
+ */
+export class ApiError extends Error {
+  override readonly name = 'ApiError';
+  constructor(message: string, readonly status: number, readonly detail: string) {
+    super(message);
+  }
+}
+
+const NETWORK_MESSAGE = 'We couldn’t reach the guidance service — check your connection and try again.';
+
+export function friendlyApiMessage(status: number, detail: unknown): string {
+  const raw = typeof detail === 'string' ? detail : '';
+  if (status === 0) return NETWORK_MESSAGE;
+  if (status === 401 || status === 403) return 'Please sign in again to continue.';
+  if (status === 404) return 'We couldn’t find what this screen needs. The profile may have been removed — pick another or try again.';
+  if (status === 408 || status === 504) return 'That took too long to answer. Try again in a moment.';
+  if (status === 429) return 'Too many requests right now. Wait a moment and try again.';
+  if (status >= 500) return 'The guidance service hit a problem on our side. Try again in a moment.';
+  if (status === 422 || Array.isArray(detail)) return 'Some of the details sent weren’t valid. Check the date, time and place and try again.';
+  if (/\bcity\b/i.test(raw)) return 'We couldn’t place that city. Check the place of birth and try again.';
+  if (/timezone/i.test(raw)) return 'We couldn’t work out the time zone for that place. Check the place of birth and try again.';
+  if (/birth details/i.test(raw)) return 'The saved birth details could not be used. Check the date, time and place of birth.';
+  if (/must be YYYY-MM-DD|date must be/i.test(raw)) return 'That date couldn’t be read. Pick the date again.';
+  return 'That request couldn’t be completed. Check the details and try again.';
+}
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private http = inject(HttpClient);
@@ -78,7 +111,8 @@ export class ApiService {
             ? new ReferOutError(detail.message, detail.domain)
             : new Error(detail.message);
         }
-        throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
+        const raw = typeof detail === 'string' ? detail : JSON.stringify(detail ?? null);
+        throw new ApiError(friendlyApiMessage(e.status, detail), e.status, raw);
       }
       throw e;
     }

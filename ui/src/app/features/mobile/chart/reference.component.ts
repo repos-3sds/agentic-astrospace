@@ -24,6 +24,120 @@ const PLANET_SHORT: Record<string, string> = {
   Sun: 'Su', Moon: 'Mo', Mars: 'Ma', Mercury: 'Me', Jupiter: 'Ju', Venus: 'Ve', Saturn: 'Sa',
 };
 
+interface ReferenceRow { label: string; value: string }
+interface ReferenceSection { heading: string; note?: string; rows: ReferenceRow[]; tone?: 'caution' }
+
+type Payload = Record<string, unknown>;
+
+function text(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '—';
+  if (Array.isArray(value)) return value.length ? value.map(text).join(', ') : '—';
+  if (typeof value === 'object') {
+    const named = value as { name?: unknown };
+    return typeof named.name === 'string' ? named.name : JSON.stringify(value);
+  }
+  return String(value);
+}
+
+function rows(payload: Payload, fields: [key: string, label: string][]): ReferenceRow[] {
+  return fields
+    .filter(([key]) => payload[key] !== undefined && payload[key] !== null && payload[key] !== '')
+    .map(([key, label]) => ({ label, value: text(payload[key]) }));
+}
+
+function withSanskrit(payload: Payload, key: string): string {
+  const sanskrit = payload[`${key}_sanskrit`];
+  return typeof sanskrit === 'string' && sanskrit ? `${text(payload[key])} (${sanskrit})` : text(payload[key]);
+}
+
+function avkahadaSections(avkahada: Payload, ghatak: Payload): ReferenceSection[] {
+  const sections: ReferenceSection[] = [
+    {
+      heading: 'Chart anchors',
+      rows: [
+        ...(avkahada['lagna'] ? [{ label: 'Lagna (ascendant)', value: withSanskrit(avkahada, 'lagna') }] : []),
+        ...rows(avkahada, [['lagna_lord', 'Lagna lord']]),
+        ...(avkahada['rashi'] ? [{ label: 'Rashi (Moon sign)', value: withSanskrit(avkahada, 'rashi') }] : []),
+        ...rows(avkahada, [['rashi_lord', 'Rashi lord'], ['nakshatra', 'Janma nakshatra'], ['nakshatra_lord', 'Nakshatra lord'], ['charan', 'Charan (pada)']]),
+      ],
+    },
+    {
+      heading: 'Birth constants',
+      note: 'From the Moon’s nakshatra and sign — the matching points used in kundli milan.',
+      rows: rows(avkahada, [
+        ['varna', 'Varna'], ['vashya', 'Vashya'], ['yoni', 'Yoni'], ['gana', 'Gana'], ['nadi', 'Nadi'],
+        ['nadi_pada', 'Nadi pada'], ['tatwa', 'Tatwa'], ['paya', 'Paya'], ['vihaga', 'Vihaga'],
+      ]),
+    },
+    {
+      heading: 'Panchanga at birth',
+      rows: rows(avkahada, [['vara', 'Vara (weekday)'], ['tithi', 'Tithi'], ['yoga', 'Yoga'], ['karana', 'Karana']]),
+    },
+    {
+      heading: 'Name and Western reference',
+      rows: rows(avkahada, [
+        ['name_letter', 'Name syllable (pada)'], ['first_letters', 'Nakshatra syllables'],
+        ['sun_sign_western', 'Sun sign (Western, tropical)'], ['decanate', 'Decanate'],
+      ]),
+    },
+    {
+      heading: 'Ghatak chakra',
+      tone: 'caution',
+      note: 'Inauspicious markers keyed by your Moon sign — periods and points to treat with care, not your own birth values.',
+      rows: [
+        ...rows(ghatak, [['month', 'Ghatak month'], ['tithi', 'Ghatak tithis'], ['day', 'Ghatak weekday'], ['nakshatra', 'Ghatak nakshatra']]),
+        ...(ghatak['lagna'] ? [{ label: 'Ghatak lagna', value: withSanskrit(ghatak, 'lagna') }] : []),
+        ...(ghatak['rashi'] ? [{ label: 'Ghatak Moon sign', value: withSanskrit(ghatak, 'rashi') }] : []),
+        ...rows(ghatak, [['yoga', 'Ghatak yoga'], ['karana', 'Ghatak karana'], ['prahar', 'Ghatak prahar']]),
+      ],
+    },
+  ];
+  return sections.filter((section) => section.rows.length);
+}
+
+function favourableSections(favourable: Payload): ReferenceSection[] {
+  const astro = (favourable['astrological_number'] ?? null) as
+    | { number?: number; planet?: string; source?: string; confirmed_by?: string[] }
+    | null;
+  const colour = favourable['lucky_color'] as { name?: string; planet?: string } | undefined;
+  const sections: ReferenceSection[] = [
+    {
+      heading: 'Chart number',
+      note: 'The number of the lagna lord, the ascendant’s ruler. This is the one shown on Today.',
+      rows: astro?.number === undefined ? [] : [
+        { label: 'Number', value: text(astro.number) },
+        { label: 'From', value: astro.planet ? `${astro.planet}, the lagna lord` : text(astro.source) },
+        ...(astro.confirmed_by?.length ? [{ label: 'Also agrees', value: astro.confirmed_by.join(', ') }] : []),
+      ],
+    },
+    {
+      heading: 'Numerology number (moolank)',
+      note: 'A different method: the digital root of your birth day-of-month. Numerology, not the chart — so it can differ from the chart number.',
+      rows: rows(favourable, [
+        ['lucky_number', 'Moolank'], ['ruling_planet', 'Ruling planet'], ['good_numbers', 'Good numbers'],
+        ['evil_numbers', 'Numbers to avoid'], ['good_years', 'Good years (ages)'],
+      ]),
+    },
+    {
+      heading: 'Lagna-lord signature',
+      note: colour?.planet ? `Colour, metal, stone, direction and hora of ${colour.planet}, the lagna lord.` : undefined,
+      rows: rows(favourable, [
+        ['lucky_color', 'Colour'], ['lucky_metal', 'Metal'], ['lucky_stone', 'Stone'],
+        ['lucky_direction', 'Direction'], ['lucky_time', 'Time'],
+      ]),
+    },
+    {
+      heading: 'Planets and signs',
+      note: 'Functional benefics and malefics for your lagna; days and signs follow from them.',
+      rows: rows(favourable, [
+        ['good_planets', 'Supportive planets'], ['evil_planets', 'Planets to watch'], ['yogakaraka', 'Yogakaraka'],
+        ['lucky_days', 'Supportive days'], ['friendly_signs', 'Friendly signs'],
+      ]),
+    },
+  ];
+  return sections.filter((section) => section.rows.length);
+}
+
 @Component({
   selector: 'as-chart-reference',
   standalone: true,
@@ -47,10 +161,10 @@ export class ReferenceComponent {
   })[this.mode]);
   protected readonly subtitle = computed(() => ({
     home: 'Classical tables and birth constants — the practitioner’s workbench.',
-    avkahada: 'Your birth constants, from the Moon’s nakshatra',
+    avkahada: 'Your birth constants, with the ghatak markers kept separate',
     grahas: 'Sidereal positions, nakshatra-pada and conditions',
     ashtakavarga: 'Bindu tables computed from your chart',
-    favourable: 'Your birth-constant signature — steady across your life.',
+    favourable: 'Two number conventions and the lagna-lord signature — steady across your life.',
   })[this.mode]);
   protected readonly homeCards = [
     { label: 'Avkahada & Ghatak', detail: 'Varna, vashya, yoni, gana, nadi, tatwa · ghatak points', route: 'avkahada' },
@@ -59,12 +173,19 @@ export class ReferenceComponent {
     { label: 'Favourable points', detail: 'Birth-constant colours, numbers and directions', route: 'favourable' },
   ];
 
-  protected readonly simpleRows = computed(() => {
+  /**
+   * Avkahada, ghatak and favourable points as labelled sections. Until
+   * 2026-10-15 this screen spread `{...avkahada, ...ghatak}` into one flat
+   * key dump, so the ghatak lagna/rashi/nakshatra/tithi — the *inauspicious*
+   * markers keyed by the Moon sign — overwrote the person's own constants
+   * and were shown as theirs.
+   */
+  protected readonly sections = computed<ReferenceSection[]>(() => {
     const data = this.data();
-    const source = this.mode === 'avkahada'
-      ? { ...(data?.avkahada ?? {}), ...(data?.ghatak ?? {}) }
-      : this.mode === 'favourable' ? data?.favourable ?? {} : {};
-    return this.flatten(source);
+    if (!data) return [];
+    if (this.mode === 'avkahada') return avkahadaSections(data.avkahada ?? {}, data.ghatak ?? {});
+    if (this.mode === 'favourable') return favourableSections(data.favourable ?? {});
+    return [];
   });
   protected readonly planets = computed(() => Object.entries(this.data()?.planets ?? {}));
 
@@ -116,16 +237,5 @@ export class ReferenceComponent {
   /** 0..1 heat for a SAV cell: 28 is the classical neutral mark, 18..40 the usual spread. */
   protected savHeat(sav: number): number {
     return Math.min(1, Math.max(0, (sav - 18) / 22));
-  }
-
-  private flatten(value: unknown, prefix = ''): { label: string; value: string }[] {
-    if (!value || typeof value !== 'object') return [];
-    const rows: { label: string; value: string }[] = [];
-    for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
-      const label = prefix ? `${prefix} · ${key}` : key;
-      if (item !== null && typeof item === 'object') rows.push(...this.flatten(item, label));
-      else rows.push({ label: label.replaceAll('_', ' '), value: String(item ?? '—') });
-    }
-    return rows.slice(0, 120);
   }
 }
