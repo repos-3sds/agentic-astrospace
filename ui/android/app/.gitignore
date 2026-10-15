@@ -1,2 +1,5 @@
 /build/*
 !/build/.npmkeep
+
+# Firebase client config, per-developer; see docs/native_builds.md "Push notifications"
+google-services.json
