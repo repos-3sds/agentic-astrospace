@@ -33,15 +33,15 @@
         <span class="tag" [attr.data-tone]="tone(group)">{{ tag(group) }}</span>
       </div>
 
-      <p class="rationale">{{ groupReason(group) }}</p>
+      <p class="rationale m-selectable">{{ groupReason(group) }}</p>
       <p class="source">{{ sourceLabel(group) }}</p>
       <!-- Both fields have been in the payload all along; a remedy screen that
            hides them turns traditional practice into a prescription. -->
       @if (group.convention_dependent) {
-        <p class="convention">Traditions differ on this practice. Where your family or temple guidance disagrees, follow that.</p>
+        <p class="convention m-selectable">Traditions differ on this practice. Where your family or temple guidance disagrees, follow that.</p>
       }
       @if (groupSafetyNote(group); as safety) {
-        <p class="safety">{{ safety }}</p>
+        <p class="safety m-selectable">{{ safety }}</p>
       }
 
       <ul class="practices">
@@ -57,7 +57,7 @@
                   <em>Optional</em>
                 }
               </span>
-              <small>{{ p.instructions }}</small>
+              <small class="m-selectable">{{ p.instructions }}</small>
               <span class="practice-meta">{{ practiceMeta(p) }}</span>
             </span>
             @if (isTrackable(p)) {

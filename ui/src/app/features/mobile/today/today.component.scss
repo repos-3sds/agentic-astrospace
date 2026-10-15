@@ -310,7 +310,7 @@
 }
 
 .body > .card:not(.skeleton-card),
-.body > .birth-signature {
+.body .birth-signature {
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.1) 0%, transparent 48%),
     linear-gradient(180deg, rgba(255, 252, 246, 0.04), transparent);
@@ -322,7 +322,7 @@
 }
 
 :host-context(.app-dark) .body > .card:not(.skeleton-card),
-:host-context(.app-dark) .body > .birth-signature {
+:host-context(.app-dark) .body .birth-signature {
   background:
     linear-gradient(145deg, rgba(255, 248, 236, 0.06) 0%, transparent 48%),
     linear-gradient(180deg, rgba(36, 29, 23, 0.08), transparent);
@@ -535,7 +535,27 @@
   color: var(--m-accent-strong);
   cursor: pointer;
   span { @include m-body-strong; }
-  img { width: 17px; height: 17px; display: block; flex-shrink: 0; }
+  img {
+    width: 17px;
+    height: 17px;
+    display: block;
+    flex-shrink: 0;
+    transition: transform var(--m-dur-base) var(--m-ease-standard);
+  }
+  // A disclosure chevron: right while shut, down while open.
+  &.is-open img { transform: rotate(90deg); }
+}
+
+// "See what shaped this": the sections expand in place (see .m-collapse in
+// styles-mobile.scss). The collapse gap cancels .body's 22 px gap while shut.
+.today-details {
+  --m-collapse-gap: 22px;
+
+  > .m-collapse-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
 }
 
 // Section headings are muted, not accent: the accent eyebrow inside the day
@@ -821,6 +841,28 @@
     transform: rotate(var(--planet-angle)) translateX(var(--planet-radius)) scale(1.4);
   }
   100% {
+    opacity: 1;
+    transform: rotate(var(--planet-angle)) translateX(var(--planet-radius)) scale(1);
+  }
+}
+
+// After the first play this session: the sky's final frame, no entrance.
+// The rotor's own delay is left alone — changing it on a running animation
+// jumps the orbit by a quarter turn.
+.celestial-sky.intro-played {
+  .celestial-sun {
+    animation: none;
+    opacity: 0.82;
+    transform: translate(-50%, -50%) scale(1);
+    filter: drop-shadow(0 0 30px color-mix(in srgb, var(--sun-edge) 44%, transparent));
+  }
+  .orbit-system {
+    animation: none;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .planet {
+    animation: none;
     opacity: 1;
     transform: rotate(var(--planet-angle)) translateX(var(--planet-radius)) scale(1);
   }

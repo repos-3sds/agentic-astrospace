@@ -27,7 +27,7 @@
     <span>{{ streakLabel() }}</span>
   </p>
 
-  <nav class="mode-tabs" aria-label="Practice mode">
+  <nav class="mode-tabs" asSelectHaptic aria-label="Practice mode">
     <button type="button" [class.is-on]="mode() === 'manual'" (click)="mode.set('manual')">Manual</button>
     <button type="button" [class.is-on]="mode() === 'auto'" (click)="mode.set('auto')">Auto</button>
   </nav>

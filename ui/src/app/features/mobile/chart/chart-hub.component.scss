@@ -569,6 +569,19 @@
   gap: 10px;
 }
 
+// Guided Advanced cards: a second two-column grid under the first, in its
+// own collapse. It sits in .body's flex column rather than inside .explore:
+// a negative margin cannot take back a grid row gap, but it can a flex gap.
+.explore-advanced {
+  --m-collapse-gap: 16px;
+
+  > .m-collapse-inner {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
 .explore-card {
   box-sizing: border-box;
   display: flex;

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ThemePreference, ThemeService } from '../../../core/theme.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 interface AppearanceOption {
   id: ThemePreference;
@@ -11,7 +12,7 @@ interface AppearanceOption {
 @Component({
   selector: 'as-appearance',
   standalone: true,
-  imports: [BackLinkDirective],
+  imports: [BackLinkDirective, SelectHapticDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './appearance.component.html',
   styleUrl: './appearance.component.scss',

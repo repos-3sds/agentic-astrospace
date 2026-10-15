@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DefaultChartStyle, PreferencesService } from '../../../core/preferences.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 interface ChartStyleChoice {
   id: DefaultChartStyle;
@@ -20,7 +21,7 @@ interface ChartStyleChoice {
   selector: 'as-customize',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, RouterLink],
+  imports: [BackLinkDirective, RouterLink, SelectHapticDirective],
   templateUrl: './customize.component.html',
   styleUrl: './customize.component.scss',
   host: { class: 'as-mobile' },

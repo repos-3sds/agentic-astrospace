@@ -8,18 +8,31 @@ interface HandleWithComponent {
   componentRef?: ComponentRef<unknown>;
 }
 
+/**
+ * Footer destinations whose screens are kept alive between visits. Shared
+ * with the shell's scroll memory, which restores a retained tab's offset when
+ * it re-attaches.
+ *
+ * Covers every persona's tab roots: Today, Ask, Family and More (Ask-first),
+ * Yantra, Dashas and Calendar (Practitioner). Explore is no longer a tab
+ * but is kept, because the guided Explore hub is still a root reached from
+ * More and retaining it costs one handle.
+ */
+export const RETAINED_MOBILE_TABS: ReadonlySet<string> = new Set([
+  'm/today',
+  'm/ask',
+  'm/family',
+  'm/explore',
+  'm/chart',
+  'm/chart/periods',
+  'm/calendar',
+  'm/settings',
+]);
+
 @Injectable()
 export class MobileRouteReuseStrategy implements RouteReuseStrategy {
   private handlers: { [key: string]: DetachedRouteHandle } = {};
-  private readonly retainedTabs = new Set([
-    'm/today',
-    'm/ask',
-    'm/explore',
-    'm/chart',
-    'm/chart/periods',
-    'm/calendar',
-    'm/settings',
-  ]);
+  private readonly retainedTabs = RETAINED_MOBILE_TABS;
   /**
    * Set by a sign-out, cleared when the native shell is next entered. While
    * set nothing is retained, so the tab being left as the person signs out is

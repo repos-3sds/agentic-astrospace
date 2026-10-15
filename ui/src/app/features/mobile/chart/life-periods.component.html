@@ -41,7 +41,7 @@
   </header>
 
   @if (preferences.experienceMode() !== 'guided') {
-  <div class="system" role="tablist" aria-label="Dasha system">
+  <div class="system" role="tablist" asSelectHaptic aria-label="Dasha system">
     <button
       type="button"
       role="tab"
@@ -92,7 +92,7 @@
       }
     </section>
 
-    <div class="levels" role="tablist" aria-label="Dasha level">
+    <div class="levels" role="tablist" asSelectHaptic aria-label="Dasha level">
       @for (item of levelTabs(); track item) {
         <button
           type="button"

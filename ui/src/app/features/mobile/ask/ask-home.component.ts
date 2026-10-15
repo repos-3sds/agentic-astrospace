@@ -11,6 +11,8 @@ import { buildAskSuggestions } from './ask-suggestions';
 import { PreferencesService } from '../../../core/preferences.service';
 import { EntitlementService } from '../../../core/entitlement.service';
 import { SpeechService } from '../../../core/speech.service';
+import { BackLinkDirective } from '../../../core/back-link.directive';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 /** A subject the reader can scope a question to. */
 export interface AskTopic {
@@ -48,7 +50,7 @@ export interface AskSuggestion {
   selector: 'as-ask-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AskComposerComponent, VoiceListeningComponent, RouterLink],
+  imports: [AskComposerComponent, VoiceListeningComponent, RouterLink, BackLinkDirective, SelectHapticDirective],
   templateUrl: './ask-home.component.html',
   styleUrl: './ask-home.component.scss',
 })

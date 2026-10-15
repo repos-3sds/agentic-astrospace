@@ -5,6 +5,7 @@ import { PanchangaService } from '../../../core/panchanga.service';
 import { PreferencesService } from '../../../core/preferences.service';
 import { timezoneShortName } from '../../../core/timing-place';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 /**
  * Which place the day's timings are computed for. 'current' is not
@@ -29,7 +30,7 @@ export type TimingPlace = 'current' | 'selected';
   selector: 'as-settings-location',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, FormsModule],
+  imports: [BackLinkDirective, FormsModule, SelectHapticDirective],
   templateUrl: './location.component.html',
   styleUrl: './location.component.scss',
 })

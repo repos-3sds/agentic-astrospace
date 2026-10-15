@@ -226,3 +226,19 @@
   padding: 0 8px;
   white-space: nowrap;
 }
+
+// Press feedback for a tappable card or button, for use inside a component
+// stylesheet. The global .m-pressable class (styles-mobile.scss) is the same
+// recipe for templates; use one or the other on an element, not both.
+@mixin m-pressable($scale: 0.98) {
+  transition: transform var(--m-dur-fast, 120ms) var(--m-ease-standard, ease);
+
+  &:active:not(:disabled):not([aria-disabled='true']) {
+    transform: scale($scale);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    &:active:not(:disabled):not([aria-disabled='true']) { transform: none; }
+  }
+}

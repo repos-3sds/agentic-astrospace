@@ -1,7 +1,16 @@
 <header class="appbar">
-  <a class="back" [routerLink]="navigation.path()" aria-label="Back to Ask">
-    <img src="mobile/back.svg" alt="" aria-hidden="true" />
-  </a>
+  <!-- The web Ask keeps "Back to Ask" as a fixed up-link to the Ask home
+       (web-ask-parity e2e); in the native app it is a real back, so Android
+       back does not loop between the answer and whatever opened it. -->
+  @if (navigation.web) {
+    <a class="back" [routerLink]="navigation.path()" aria-label="Back to Ask">
+      <img src="mobile/back.svg" alt="" aria-hidden="true" />
+    </a>
+  } @else {
+    <a class="back" [asBack]="navigation.path()" aria-label="Back to Ask">
+      <img src="mobile/back.svg" alt="" aria-hidden="true" />
+    </a>
+  }
   <div class="appbar-title">
     <p class="crumb">Answer</p>
     @if (preferences.experienceMode() === 'practitioner' && latestAssistant(); as assistant) {

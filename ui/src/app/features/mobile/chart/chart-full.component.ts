@@ -10,6 +10,7 @@ import { VedicService } from '../../../core/vedic.service';
 import { buildChartAdapter, PLANET_ABBR, PLANET_NAME, SIGN_ORDER, rashiFallback } from './mobile-chart-data';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 /** The three drawing conventions the app can render a chart in. */
 export type ChartStyle = 'Eastern' | 'South' | 'North';
@@ -30,7 +31,7 @@ export type ChartStyle = 'Eastern' | 'South' | 'North';
   selector: 'as-chart-full',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, KundliChartComponent, PlanetSheetComponent, RouterLink],
+  imports: [BackLinkDirective, GenericErrorComponent, KundliChartComponent, PlanetSheetComponent, RouterLink, SelectHapticDirective],
   templateUrl: './chart-full.component.html',
   styleUrl: './chart-full.component.scss',
 })

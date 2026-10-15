@@ -17,7 +17,7 @@
     </button>
   </section>
 
-  <a class="story-card" [routerLink]="['/m', 'explore', 'story']">
+  <a class="story-card m-pressable" [routerLink]="['/m', 'explore', 'story']">
     <span class="story-head">
       <span class="story-badge">
         <img class="story-icon" src="mobile/figma-yantra-book-open.svg" alt="" aria-hidden="true" />
@@ -35,7 +35,7 @@
 
   <section class="explore-list" aria-label="Guided explore areas">
     @for (card of cards; track card.title) {
-      <a class="explore-card" [attr.data-tone]="card.tone" [routerLink]="card.route">
+      <a class="explore-card m-pressable" [attr.data-tone]="card.tone" [routerLink]="card.route">
         <span class="card-icon">
           <img [src]="'mobile/' + card.icon + '.svg'" alt="" aria-hidden="true" />
         </span>

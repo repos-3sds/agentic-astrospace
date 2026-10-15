@@ -12,7 +12,7 @@
     drawn, not the calculations.
   </p>
 
-  <div class="chart-styles" role="radiogroup" aria-label="Chart style">
+  <div class="chart-styles" role="radiogroup" asSelectHaptic aria-label="Chart style">
     @for (choice of chartStyles; track choice.id) {
       @let on = preferences.chartStyle() === choice.id;
       <button

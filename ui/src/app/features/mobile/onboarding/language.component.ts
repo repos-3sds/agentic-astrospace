@@ -2,12 +2,13 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AskResponseLanguage, PreferencesService } from '../../../core/preferences.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 @Component({
   selector: 'as-language',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, RouterLink],
+  imports: [BackLinkDirective, RouterLink, SelectHapticDirective],
   templateUrl: './language.component.html',
   styleUrl: './language.component.scss',
   host: { class: 'as-mobile' },

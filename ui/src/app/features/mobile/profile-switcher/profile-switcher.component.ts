@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { Kundli } from '../../../core/models';
 import { KundliStore } from '../../../core/kundli.store';
 import { SheetComponent } from '../sheet/sheet.component';
+import { HapticsService } from '../../../core/haptics.service';
 
 @Component({
   selector: 'as-profile-switcher',
@@ -43,8 +44,11 @@ import { SheetComponent } from '../sheet/sheet.component';
 export class ProfileSwitcherComponent {
   readonly kundlis = inject(KundliStore);
   readonly dismissed = output<void>();
+  private readonly haptics = inject(HapticsService);
 
   protected choose(profile: Kundli): void {
+    // The switch is the committed action; re-choosing the active profile is not.
+    if (profile.id !== this.kundlis.activeId()) this.haptics.success();
     this.kundlis.setActive(profile.id);
     this.dismissed.emit();
   }

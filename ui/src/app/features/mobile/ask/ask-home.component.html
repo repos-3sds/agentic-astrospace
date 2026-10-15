@@ -1,6 +1,6 @@
 <header class="appbar" [class.has-back]="preferences.experienceMode() === 'practitioner'">
   @if (preferences.experienceMode() === 'practitioner') {
-    <a class="iconbtn practitioner-back" [routerLink]="navigation.chart()" aria-label="Back to Yantra">
+    <a class="iconbtn practitioner-back" [asBack]="navigation.chart()" aria-label="Back to Yantra">
       <span class="masked-icon back-icon" aria-hidden="true"></span>
     </a>
   }
@@ -26,7 +26,7 @@
     <p class="ask-state is-error" role="alert">{{ submitError() }}</p>
   }
 
-  <div class="topics" role="group" aria-label="Narrow your question">
+  <div class="topics" role="group" asSelectHaptic aria-label="Narrow your question">
     @for (topic of topics(); track topic.id) {
       <button
         class="topic"

@@ -5,12 +5,13 @@ import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { legalUrl, openLegal } from '../../../core/legal';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 @Component({
   selector: 'as-mobile-auth',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, FormsModule, RouterLink],
+  imports: [BackLinkDirective, FormsModule, RouterLink, SelectHapticDirective],
   templateUrl: './mobile-auth.component.html',
   styleUrl: './mobile-auth.component.scss',
   host: { class: 'as-mobile' },

@@ -19,6 +19,7 @@
         class="choice"
         type="button"
         role="radio"
+        asSelectHaptic
         [class.is-on]="on"
         [attr.aria-checked]="on"
         (click)="choose(group.key, choice.id)"

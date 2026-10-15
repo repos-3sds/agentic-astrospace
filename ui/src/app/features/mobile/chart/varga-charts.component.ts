@@ -19,6 +19,7 @@ import { buildChartAdapter, PLANET_ABBR } from './mobile-chart-data';
 import { PlanetDetail, PlanetSheetComponent } from './planet-sheet.component';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 interface VargaOption {
   id: string;
@@ -37,7 +38,7 @@ interface VargaOption {
   selector: 'as-varga-charts',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, KundliChartComponent, PlanetSheetComponent, RouterLink],
+  imports: [BackLinkDirective, GenericErrorComponent, KundliChartComponent, PlanetSheetComponent, RouterLink, SelectHapticDirective],
   templateUrl: './varga-charts.component.html',
   styleUrl: './varga-charts.component.scss',
 })

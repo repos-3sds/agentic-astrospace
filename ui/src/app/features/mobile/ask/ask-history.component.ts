@@ -11,11 +11,13 @@ import {
   MobileAskThreadService,
 } from './mobile-ask-thread.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { HapticsService } from '../../../core/haptics.service';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 @Component({
   selector: 'as-ask-history',
   standalone: true,
-  imports: [BackBarComponent, GenericErrorComponent, RouterLink, LucideAngularModule],
+  imports: [BackBarComponent, GenericErrorComponent, RouterLink, LucideAngularModule, SelectHapticDirective],
   templateUrl: './ask-history.component.html',
   styleUrl: './ask-history.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,6 +26,7 @@ export class AskHistoryComponent {
   protected readonly navigation = inject(ASK_NAVIGATION);
   private readonly kundlis = inject(KundliStore);
   private readonly threadsApi = inject(MobileAskThreadService);
+  private readonly haptics = inject(HapticsService);
   private readonly router = inject(Router);
 
   readonly threads = signal<MobileAskThread[]>([]);
@@ -114,6 +117,7 @@ export class AskHistoryComponent {
   protected async deleteThread(event: Event, thread: MobileAskThread): Promise<void> {
     event.stopPropagation();
     if (this.mutating()) return;
+    this.haptics.warning();
     const confirmed = typeof window === 'undefined' || window.confirm('Delete this conversation permanently?');
     if (!confirmed) return;
     this.mutating.set(thread.id);

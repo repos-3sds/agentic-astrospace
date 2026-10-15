@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, viewChild } from '@angular/core';
 import {
   NavigationEnd,
   Router,
@@ -13,6 +13,7 @@ import { PreferencesService } from '../../../core/preferences.service';
 import { SheetOverlayService } from '../../../core/sheet-overlay.service';
 import { HapticsService } from '../../../core/haptics.service';
 import { ConnectivityService } from '../../../core/connectivity.service';
+import { ScrollMemoryDirective } from './scroll-memory.directive';
 
 interface MobileTab {
   commands: string[];
@@ -43,7 +44,7 @@ function under(path: string, root: string): boolean {
   selector: 'as-mobile-shell',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, GenericErrorComponent],
+  imports: [RouterOutlet, RouterLink, GenericErrorComponent, ScrollMemoryDirective],
   templateUrl: './mobile-shell.component.html',
   styleUrl: './mobile-shell.component.scss',
   host: { class: 'as-mobile' },
@@ -55,6 +56,7 @@ export class MobileShellComponent {
   protected readonly overlay = inject(SheetOverlayService);
   private readonly haptics = inject(HapticsService);
   protected readonly connectivity = inject(ConnectivityService);
+  private readonly scroller = viewChild(ScrollMemoryDirective);
 
   constructor() {
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
@@ -102,14 +104,21 @@ export class MobileShellComponent {
     { initialValue: this.router.url.split('?')[0]?.split('#')[0] || '/m/today' },
   );
 
-  protected readonly tabsSuppressed = computed(() =>
+  /** Whether the screen itself has no tab bar — the layout decision. */
+  protected readonly layoutWithoutTabs = computed(() =>
     this.hideTabs()
-    || this.overlay.open()
     || (
       this.preferences.experienceMode() === 'practitioner'
       && this.currentPath().startsWith('/m/ask')
     ),
   );
+
+  /**
+   * Whether the tab bar is drawn. An open sheet hides the bar (see
+   * SheetOverlayService) but must not change the layout: `.content` keeps
+   * its bottom padding, so the page behind the scrim does not jump.
+   */
+  protected readonly tabsSuppressed = computed(() => this.layoutWithoutTabs() || this.overlay.open());
 
   protected readonly tabs = computed<MobileTab[]>(() => {
     if (this.preferences.experienceMode() === 'practitioner') {
@@ -174,7 +183,18 @@ export class MobileShellComponent {
     return path === route || path.startsWith(`${route}/`);
   }
 
-  async onTabClick() {
+  /**
+   * A tab press. On the tab already showing its root, the press scrolls back
+   * to the top rather than doing nothing — the router ignores a same-URL
+   * navigation, so this is the only feedback the reader would get.
+   */
+  protected onTabClick(tab: MobileTab): void {
+    const route = `/m/${tab.commands.join('/')}`;
+    if (this.currentPath() === route) {
+      this.haptics.select();
+      this.scroller()?.scrollToTop();
+      return;
+    }
     this.haptics.tap();
   }
 

@@ -16,7 +16,7 @@
     <p>Notable combinations found in your chart — strengths and flags</p>
   </header>
 
-  <div class="filters" role="tablist" aria-label="Combination type">
+  <div class="filters" role="tablist" asSelectHaptic aria-label="Combination type">
     @for (item of [{id: 'all', label: 'All'}, {id: 'yoga', label: 'Yogas'}, {id: 'dosha', label: 'Doshas'}]; track item.id) {
       <button type="button" role="tab" [class.is-on]="filter() === item.id"
         [attr.aria-selected]="filter() === item.id" (click)="filter.set($any(item.id))">{{ item.label }}</button>
