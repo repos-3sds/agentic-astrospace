@@ -774,6 +774,30 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   the WebView (a plugin's Swift or Kotlin code) are not covered; that needs a
   native crash SDK if they turn up in store reviews.
 
+- [ ] **Native app micro-interactions left after the 2026-10-15 pass**
+  (production audit §5). Scroll memory, sheet drag and exit, press states,
+  haptics, motion tokens, expand/collapse and selectable prose shipped.
+  Still open:
+  - pull-to-refresh, because `overscroll-behavior: contain` swallows the
+    gesture and it needs a directive on Today, Readings, Notifications and
+    Calendar;
+  - Ask history swipe, which should follow the finger and reveal leftward,
+    and should close the reveal on tap rather than open the row
+    (`ask/ask-history.*`);
+  - the Android exit prompt, which is still a PrimeNG web dialog
+    (`app.ts`, NATIVE_EXIT_ROUTES);
+  - one skeleton component sized to the final layout, to replace the mix of
+    text cards and spinners;
+  - `.m-pressable` on the remaining tappables (only cards and rows have it);
+  - `warning()` on the profile-delete and account-deletion screens;
+  - haptics on reading generation;
+  - forgot/reset-password back links, which still use `routerLink`.
+
+  *Why not:* these were outside the pass's scope. *Unblocks on:* nothing;
+  each one is ready to build. *Hook:* `styles-mobile.scss` (`.m-pressable`,
+  `.m-collapse`), `shared/select-haptic.directive.ts`,
+  `shell/scroll-memory.directive.ts`.
+
 ### D. Docs pending a decision
 
 - [ ] **`docs/marriage-agent-kb.md`, `marriage-ce-payload-v1.md`,
