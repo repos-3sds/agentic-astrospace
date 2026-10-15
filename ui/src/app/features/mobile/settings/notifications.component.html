@@ -50,7 +50,7 @@
     }
   </section>
 
-  @for (pref of prefs(); track pref.id) {
+  @for (pref of visiblePrefs(); track pref.id) {
     <div class="toggle-row">
       <span class="toggle-text">
         <span class="toggle-title">{{ pref.title }}</span>

@@ -490,6 +490,36 @@
 .window-value { @include m-body-strong; color: var(--m-text); margin: 0; }
 .window-in { @include m-body-strong; color: var(--m-warn); margin: 0; flex-shrink: 0; }
 
+/* The one festival or vrat reminder Today carries (checklist D1). */
+.festival {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid var(--m-border);
+  border-radius: 18px;
+  background: var(--m-raised);
+  color: var(--m-text);
+  text-align: left;
+  cursor: pointer;
+  .eyebrow { color: var(--m-gold); }
+  .chevron { width: 18px; height: 18px; display: block; flex-shrink: 0; }
+}
+.festival-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--m-gold-soft);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  img { width: 20px; height: 20px; display: block; }
+}
+.festival-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.festival-name { @include m-body-strong; }
+.festival-when { @include m-caption; color: var(--m-muted); }
+
 /* Below the fold — node 20:2 */
 
 .details-toggle {

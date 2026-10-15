@@ -37,4 +37,4 @@ h2 { @include m-h2; margin: 0; color: var(--m-text); }
   border: 1px solid var(--m-border); border-radius: 16px; background: var(--m-surface);
   p { @include m-body-small; margin: 0; color: var(--m-text); }
 }
-.mcal-remind { @include m-cta-secondary; align-self: flex-start; }
+.mcal-remind { @include m-cta-secondary; align-self: flex-start; &:disabled { opacity: 0.6; } }

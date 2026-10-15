@@ -73,7 +73,7 @@ export class SettingsHomeComponent {
     if (mode === 'practitioner') return [];
     const rows: SettingRow[] = [];
     if (mode === 'guided') {
-      rows.push({ id: 'explore', icon: 'explore-readings', label: 'Your story', value: 'Life chapters, what to do', route: ['/m', 'explore'] });
+      rows.push({ id: 'explore', icon: 'explore-readings', label: 'Life guidance', value: 'Story, chapters', route: ['/m', 'explore'] });
     }
     rows.push(
       { id: 'chart', icon: 'explore-varga', label: 'Your chart', value: this.kundlis.active()?.ascendant ? `${this.kundlis.active()!.ascendant} rising` : 'Chart & vargas', route: ['/m', 'chart'] },
@@ -152,13 +152,14 @@ export class SettingsHomeComponent {
           value: this.locationLabel(),
           route: ['/m', 'settings', 'location'],
         },
-        {
+        // Festival regions tune the Calendar tab, which only Practitioner has.
+        ...(this.preferences.experienceMode() === 'practitioner' ? [{
           id: 'festivals',
           icon: 'set-festival',
           label: 'Festival calendar',
           value: this.festivalLabel(),
           route: ['/m', 'settings', 'festivals'],
-        },
+        }] : []),
         {
           id: 'conventions',
           icon: 'set-conv',

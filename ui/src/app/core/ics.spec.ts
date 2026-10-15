@@ -20,6 +20,16 @@ describe('buildIcs', () => {
     expect(ics.endsWith('END:VCALENDAR\r\n')).toBeTrue();
   });
 
+  it('writes an all-day event, ending the day after, with a morning alert', () => {
+    const ics = buildIcs([{
+      uid: 'diwali@astrospace', title: 'Diwali', startIso: '2026-12-31', endIso: '2026-12-31',
+      allDay: true, alarmAfterStartMinutes: 420,
+    }], now);
+    expect(ics).toContain('DTSTART;VALUE=DATE:20261231');
+    expect(ics).toContain('DTEND;VALUE=DATE:20270101');
+    expect(ics).toContain('TRIGGER:PT420M');
+  });
+
   it('folds long lines at 75 octets', () => {
     const ics = buildIcs([{ uid: 'u', title: 'x'.repeat(200), startIso: '2026-10-16T00:00:00Z', endIso: '2026-10-16T01:00:00Z' }], now);
     for (const line of ics.split('\r\n')) expect(new TextEncoder().encode(line).length).toBeLessThanOrEqual(75);

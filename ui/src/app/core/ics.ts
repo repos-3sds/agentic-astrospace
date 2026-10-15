@@ -10,12 +10,18 @@
 export interface IcsEvent {
   uid: string;
   title: string;
+  /** An offset-aware instant, or `YYYY-MM-DD` when `allDay` is set. */
   startIso: string;
+  /** For an all-day event, the last day it covers (inclusive). */
   endIso: string;
+  /** A date, not a time: festivals fall on a day wherever the phone is. */
+  allDay?: boolean;
   description?: string;
   location?: string;
   /** Minutes before the start to alert; omitted for no alert. */
   alarmMinutes?: number;
+  /** For an all-day event: minutes after the day begins to alert (420 = 7 am). */
+  alarmAfterStartMinutes?: number;
 }
 
 export function buildIcs(events: IcsEvent[], now = new Date()): string {
@@ -25,14 +31,18 @@ export function buildIcs(events: IcsEvent[], now = new Date()): string {
       'BEGIN:VEVENT',
       `UID:${event.uid}`,
       `DTSTAMP:${utcStamp(now)}`,
-      `DTSTART:${utcStamp(new Date(event.startIso))}`,
-      `DTEND:${utcStamp(new Date(event.endIso))}`,
+      ...(event.allDay
+        ? [`DTSTART;VALUE=DATE:${dateStamp(event.startIso)}`, `DTEND;VALUE=DATE:${dateStamp(event.endIso, 1)}`]
+        : [`DTSTART:${utcStamp(new Date(event.startIso))}`, `DTEND:${utcStamp(new Date(event.endIso))}`]),
       `SUMMARY:${escapeText(event.title)}`,
     );
     if (event.description) lines.push(`DESCRIPTION:${escapeText(event.description)}`);
     if (event.location) lines.push(`LOCATION:${escapeText(event.location)}`);
-    if (event.alarmMinutes != null) {
-      lines.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${escapeText(event.title)}`, `TRIGGER:-PT${event.alarmMinutes}M`, 'END:VALARM');
+    const trigger = event.allDay && event.alarmAfterStartMinutes != null
+      ? `TRIGGER:PT${event.alarmAfterStartMinutes}M`
+      : event.alarmMinutes != null ? `TRIGGER:-PT${event.alarmMinutes}M` : null;
+    if (trigger) {
+      lines.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${escapeText(event.title)}`, trigger, 'END:VALARM');
     }
     lines.push('END:VEVENT');
   }
@@ -43,6 +53,14 @@ export function buildIcs(events: IcsEvent[], now = new Date()): string {
 function utcStamp(date: Date): string {
   if (Number.isNaN(date.getTime())) throw new Error('Invalid event time');
   return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+}
+
+/** `YYYY-MM-DD` (plus `addDays`) as an iCalendar DATE; no time zone is involved. */
+function dateStamp(isoDate: string, addDays = 0): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
+  if (!match) throw new Error('Invalid event date');
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + addDays));
+  return date.toISOString().slice(0, 10).replace(/-/g, '');
 }
 
 function escapeText(value: string): string {
