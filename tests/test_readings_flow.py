@@ -113,3 +113,14 @@ def test_a_new_version_retires_the_old_versions_unreviewed_claims(env):
 
     everything = client.get(f"/api/v1/readings/{kundli}/claims?include_superseded=true").json()
     assert len(everything) > len(claims), "nothing is deleted; superseded claims are only hidden"
+
+
+def test_claims_saved_with_a_fused_heading_read_cleanly():
+    from types import SimpleNamespace
+    from astrospace.api.reading_routes import _display_claim_text
+
+    reading = SimpleNamespace(content="## Career and money\nA delayed payment is likely to clear.\n")
+    claim = SimpleNamespace(claim_text="## Career and money A delayed payment is likely to clear.", reading=reading)
+    assert _display_claim_text(claim) == "A delayed payment is likely to clear."
+    plain = SimpleNamespace(claim_text="Rest more this week.", reading=reading)
+    assert _display_claim_text(plain) == "Rest more this week."

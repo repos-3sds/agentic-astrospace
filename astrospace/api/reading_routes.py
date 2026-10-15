@@ -128,6 +128,22 @@ def _reading_to_dict(r) -> dict:
     }
 
 
+def _display_claim_text(c) -> str:
+    """Claims saved before headers were stripped read "## Career and money A
+    delayed payment...". Drop the fused section heading on the way out; the
+    stored row is left as it is."""
+    text = c.claim_text or ""
+    if not text.lstrip().startswith("#"):
+        return text
+    body = text.lstrip().lstrip("#").strip()
+    content = c.reading.content if c.reading else ""
+    for heading in _HEADING.findall(content or ""):
+        title = heading.strip().lstrip("#").strip()
+        if title and body.lower().startswith(title.lower() + " "):
+            return body[len(title):].strip()
+    return body
+
+
 def _claim_to_dict(c) -> dict:
     return {
         "id": c.id,
@@ -140,7 +156,7 @@ def _claim_to_dict(c) -> dict:
         "target_start_date": c.target_start_date,
         "target_end_date": c.target_end_date,
         "category": c.category,
-        "claim_text": c.claim_text,
+        "claim_text": _display_claim_text(c),
         "confidence": c.confidence,
         "source_excerpt": c.source_excerpt,
         "status": c.status,
