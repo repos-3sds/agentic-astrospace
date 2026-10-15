@@ -123,6 +123,29 @@ strings already in `Info.plist`.
 privacy policy are served by the API at `/legal/terms` and `/legal/privacy`;
 the store listings point at the deployed URLs.
 
+## Startup, splash, keyboard and insets
+
+- **Splash.** `launchAutoHide` is false. `App` hides the native splash once
+  the animated web intro has painted (`afterNextRender`), and again when boot
+  settles as a safety net. If that call is ever removed the app sits on the
+  splash forever.
+- **Boot does not wait on the network** beyond one bounded step: auth config
+  comes from the device and is revalidated behind, the session refresh gives
+  up after 8 s, `/settings` syncs in the background, and the profile list is
+  cache-first. API GETs time out at 8 s and retry once.
+- **The native root carries no PrimeNG.** The web app's chrome lives in
+  `shell/web-shell`, loaded lazily for routes outside `/m`. Do not import
+  PrimeNG, the sidebar or the kundli dialog into `app.ts` or anything under
+  `features/mobile`; the initial budget in `angular.json` fails the build at
+  1.2 MB.
+- **Keyboard.** `@capacitor/keyboard` resizes the WebView on iOS
+  (`resize: 'native'`) and the accessory bar is hidden at runtime; Android 15+
+  is resized by Capacitor 8's SystemBars. While the keyboard is up the body
+  carries `as-keyboard-open` and the tab bar is hidden.
+- **Insets.** `--as-safe-*` read `env(safe-area-inset-*)` and SystemBars'
+  injected `--safe-area-inset-*`; there is no hard-coded Android bottom any
+  more. Re-check on device after changing either.
+
 ## Not yet done
 
 - Add `app.astrospace.mobile://auth/callback` to the Supabase Redirect URLs

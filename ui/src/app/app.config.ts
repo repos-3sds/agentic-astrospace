@@ -11,10 +11,8 @@ import {
 import { provideRouter, RouteReuseStrategy, Router } from '@angular/router';
 import { AnalyticsService, ReportingErrorHandler } from './core/analytics.service';
 import { MobileRouteReuseStrategy } from './core/mobile-route-reuse-strategy';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { providePrimeNG } from 'primeng/config';
-import { ConfirmationService, MessageService } from 'primeng/api';
 import {
   AlertTriangle,
   Activity,
@@ -99,7 +97,7 @@ import {
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
-import { CelestialPreset } from './theme';
+import { httpResilienceInterceptor } from './core/http-resilience.interceptor';
 import { ResourceCacheService } from './core/resource-cache.service';
 
 export const appConfig: ApplicationConfig = {
@@ -111,18 +109,11 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     { provide: RouteReuseStrategy, useClass: MobileRouteReuseStrategy },
     provideRouter(routes),
-    provideHttpClient(withFetch()),
+    provideHttpClient(withFetch(), withInterceptors([httpResilienceInterceptor])),
     provideAnimationsAsync(),
-    providePrimeNG({
-      theme: {
-        preset: CelestialPreset,
-        options: {
-          darkModeSelector: '.app-dark',
-        },
-      },
-    }),
-    MessageService,
-    ConfirmationService,
+    // PrimeNG, MessageService and ConfirmationService are provided by the web
+    // shell's lazy route (shell/web-shell/web-shell.routes.ts), not here: the
+    // native app never uses them and should not parse them at launch.
     importProvidersFrom(
       LucideAngularModule.pick({
         AlertTriangle,

@@ -43,7 +43,7 @@ async function mockMobileApi(page: Page): Promise<{
 }> {
   const state = {
     profiles: [{ ...profileOne }, { ...profileTwo }] as Record<string, unknown>[],
-    alertsFailedOnce: false,
+    alertsFailures: 0,
     claims: [
       {
         id: 'claim-1',
@@ -409,8 +409,10 @@ async function mockMobileApi(page: Page): Promise<{
     }
 
     if (url.pathname === '/api/v1/me/alerts' && request.method() === 'GET') {
-      if (!state.alertsFailedOnce) {
-        state.alertsFailedOnce = true;
+      // Two failures: the first load and the interceptor's one automatic retry
+      // of a 503 (http-resilience.interceptor.ts), so the error state shows.
+      if (state.alertsFailures < 2) {
+        state.alertsFailures += 1;
         await route.fulfill({ status: 503, json: { detail: 'temporary alerts outage' } });
         return;
       }

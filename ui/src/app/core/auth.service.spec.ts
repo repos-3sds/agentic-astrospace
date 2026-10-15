@@ -294,6 +294,56 @@ describe('AuthService offline relaunch', () => {
     expect(service.isAuthenticated()).toBeTrue();
   });
 
+  it('boots from the cached config without waiting on the network, and revalidates it behind', async () => {
+    const rotated = { ...config, supabase_anon_key: 'rotated' };
+    await Preferences.set({ key: CONFIG_KEY, value: JSON.stringify(config) });
+    let answer!: (response: Response) => void;
+    spyOn(window, 'fetch').and.returnValue(new Promise<Response>((resolve) => (answer = resolve)));
+    getSession.and.resolveTo({ data: { session: storedSession }, error: null });
+
+    // The config request has not answered, and boot is already done.
+    await service.init();
+    expect(service.ready()).toBeTrue();
+    expect((service as any).buildClient).toHaveBeenCalledWith(SUPABASE_URL, 'anon');
+
+    answer(new Response(JSON.stringify(rotated), { status: 200 }));
+    let stored: string | null = null;
+    for (let i = 0; i < 50 && stored !== JSON.stringify(rotated); i++) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      stored = (await Preferences.get({ key: CONFIG_KEY })).value;
+    }
+    // Stored for the next launch; this one keeps the client it built.
+    expect(stored).toBe(JSON.stringify(rotated));
+  });
+
+  it('does not let a stalled session refresh hold boot: the stored session stands in', async () => {
+    jasmine.clock().install();
+    try {
+      await Preferences.set({ key: CONFIG_KEY, value: JSON.stringify(config) });
+      await Preferences.set({ key: SESSION_KEY, value: JSON.stringify(storedSession) });
+      spyOn(window, 'fetch').and.returnValue(new Promise<Response>(() => undefined));
+      getSession.and.returnValue(new Promise(() => undefined));
+
+      let done = false;
+      const booted = service.init().then(() => (done = true));
+      // Advance a second at a time, letting the async storage reads settle in
+      // between, until boot gives up on the refresh (bounded at 8 s).
+      let elapsed = 0;
+      while (!done && elapsed < 20_000) {
+        for (let i = 0; i < 10; i++) await Promise.resolve();
+        jasmine.clock().tick(1_000);
+        elapsed += 1_000;
+      }
+      await booted;
+      expect(elapsed).toBeLessThanOrEqual(9_000);
+
+      expect(service.session()?.user?.id).toBe('u1');
+      expect(service.isAuthenticated()).toBeTrue();
+    } finally {
+      jasmine.clock().uninstall();
+    }
+  });
+
   it('still fails on a first launch with no network and nothing cached', async () => {
     spyOn(window, 'fetch').and.rejectWith(new TypeError('Failed to fetch'));
 

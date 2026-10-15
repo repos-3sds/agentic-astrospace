@@ -1,4 +1,5 @@
 import type { CapacitorConfig } from '@capacitor/cli';
+import type { KeyboardResize } from '@capacitor/keyboard';
 
 const config: CapacitorConfig = {
   appId: 'app.astrospace.mobile',
@@ -31,11 +32,26 @@ const config: CapacitorConfig = {
       androidIsEncryption: true,
     },
     SplashScreen: {
-      // Matches the Siddha animated intro backdrop so the native launch bridge
-      // does not flash a different color before Angular paints.
+      // Held until the web intro has painted: App calls SplashScreen.hide()
+      // from afterNextRender (and again, as a safety net, when boot settles).
+      // With auto-hide the native splash dropped after 500 ms whether or not
+      // Angular had drawn anything, which could show a blank WebView between
+      // the two.
+      launchAutoHide: false,
+      // The animated intro's backdrop (#100b06, app.scss
+      // .animated-splash-overlay; android styles.xml NoActionBarLaunch), so
+      // the hand-off from native to web splash is the same colour.
       backgroundColor: '#100B06',
       showSpinner: false,
       androidScaleType: 'CENTER_CROP',
+    },
+    Keyboard: {
+      // iOS: resize the whole WebView above the keyboard, so the page gets
+      // shorter instead of being covered. Android 15+ is handled by
+      // Capacitor 8's SystemBars, which pads the WebView by the IME inset.
+      // The accessory bar is hidden at runtime (NativeKeyboardService); the
+      // plugin has no config key for it.
+      resize: 'native' as KeyboardResize,
     },
     PushNotifications: {
       // Without this a push that lands while the app is open is delivered to

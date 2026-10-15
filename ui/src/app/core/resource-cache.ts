@@ -61,6 +61,23 @@ export const CALENDAR_CACHE_POLICY: ResourceCachePolicy = {
   expireAfterMs: 45 * 24 * 60 * 60 * 1000,
 };
 
+/** The profile list: shown at once on launch, confirmed by the server behind it. */
+export const PROFILES_CACHE_POLICY: ResourceCachePolicy = {
+  staleAfterMs: 5 * 60 * 1000,
+  expireAfterMs: 30 * 24 * 60 * 60 * 1000,
+};
+
+/**
+ * The natal chart bundle (`/vedic/{id}/all`). Birth data does not move, and
+ * the identity carries the profile revision, ayanamsha and node type, so an
+ * edit or a calculation-setting change is a different entry rather than a
+ * stale one. The expiry only bounds how long an unused chart sits on disk.
+ */
+export const CHART_CACHE_POLICY: ResourceCachePolicy = {
+  staleAfterMs: 7 * 24 * 60 * 60 * 1000,
+  expireAfterMs: 90 * 24 * 60 * 60 * 1000,
+};
+
 const IDENTITY_FIELDS: ReadonlyArray<keyof ResourceCacheIdentity> = [
   'userId',
   'profileId',

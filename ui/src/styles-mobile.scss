@@ -209,3 +209,16 @@
   height: 0;
   display: none;
 }
+
+// Keyboard up (native; NativeKeyboardService sets the class). The WebView has
+// already shrunk to the space above the keyboard, so the floating tab bar
+// would otherwise sit on top of it and cover the field being typed in. Hidden
+// rather than restyled: its items and labels belong to the shell.
+body.as-keyboard-open as-mobile-shell > .shell > .tabbar {
+  display: none;
+}
+
+body.as-keyboard-open as-mobile-shell > .shell > .content {
+  padding-bottom: max(8px, var(--m-safe-bottom));
+  scroll-padding-bottom: max(8px, var(--m-safe-bottom));
+}

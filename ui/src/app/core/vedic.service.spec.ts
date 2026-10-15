@@ -92,7 +92,7 @@ describe('VedicService location-sensitive caches', () => {
     const clock = spyOn(Date, 'now').and.returnValue(1_000);
     api.get.and.resolveTo({
       date: '2026-08-14',
-      engine_version: 'daily-guidance-1.0',
+      engine_version: 'daily-guidance-1.1',
       valid_from: new Date(900).toISOString(),
       valid_until: new Date(1_180).toISOString(),
       day_definition: 'sunrise_to_next_sunrise',
