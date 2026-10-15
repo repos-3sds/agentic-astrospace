@@ -114,6 +114,16 @@ jobs:
         # so no backend is started. Config starts `ng serve` itself.
         run: npx playwright test --project=mobile-chrome-360
 
+      - name: Show failure context in the log
+        # The report artifact is not always reachable from where someone is
+        # debugging; the ARIA snapshot Playwright writes per failure is small
+        # and says what the page actually showed.
+        if: failure()
+        run: |
+          for f in $(find test-results -name 'error-context.md' | sort); do
+            echo "::group::$f"; cat "$f"; echo; echo "::endgroup::"
+          done
+
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v4

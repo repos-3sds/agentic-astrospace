@@ -848,6 +848,7 @@ test('mobile persona modes change navigation and presentation depth', async ({ p
 
   await page.goto('/m/settings/mode');
   await page.getByRole('radio', { name: /Guided/ }).click();
+  await expect(page.getByRole('radio', { name: /Guided/ })).toBeChecked();
   await page.goto('/m/ask');
   await expect(page.getByText('Explore')).toBeVisible();
   await expect(page.getByText('Chart', { exact: true })).toHaveCount(0);
@@ -857,6 +858,7 @@ test('mobile persona modes change navigation and presentation depth', async ({ p
 
   await page.goto('/m/settings/mode');
   await page.getByRole('radio', { name: /Practitioner/ }).click();
+  await expect(page.getByRole('radio', { name: /Practitioner/ })).toBeChecked();
   await page.goto('/m/today');
   await expect(page.locator('nav[aria-label="Primary"]').getByText('Yantra')).toBeVisible();
   await expect(page.locator('nav[aria-label="Primary"]').getByText('Dashas')).toBeVisible();
