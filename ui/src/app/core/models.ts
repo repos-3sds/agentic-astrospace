@@ -142,6 +142,17 @@ export interface VedicAll {
     node_type: string;
   };
   provenance?: CalculationProvenance;
+  /** Sidereal ascendant from `chart.lagna_details()` — sign, lord, degree and the lagna's own nakshatra. */
+  lagna?: {
+    longitude?: number;
+    sign: string;
+    sign_sanskrit?: string;
+    lord?: string;
+    degree_in_sign?: number;
+    dms?: string;
+    nakshatra?: string;
+    nakshatra_pada?: number;
+  };
   avkahada: Record<string, any>;
   ghatak: Record<string, any>;
   favourable: Record<string, any>;

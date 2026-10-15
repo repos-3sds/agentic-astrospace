@@ -58,7 +58,7 @@ export class ChartFullComponent {
     const chart = this.chart();
     if (!chart) return null;
     const vargaId = this.selectedVarga();
-    return chart.vargas?.[vargaId] ?? (vargaId === 'D1' ? rashiFallback(chart, this.kundlis.active()?.ascendant) : null);
+    return chart.vargas?.[vargaId] ?? (vargaId === 'D1' ? rashiFallback(chart) : null);
   });
 
   /** Expanded once, so the legend is not a second thing to decode. */
@@ -91,7 +91,7 @@ export class ChartFullComponent {
     const chart = this.chart();
     if (!chart) return [];
     const varga = chart.vargas?.[this.selectedVarga()] ?? null;
-    const ascendantSign = varga?.lagna?.sign ?? this.kundlis.active()?.ascendant ?? chart.avkahada?.['rashi'];
+    const ascendantSign = varga?.lagna?.sign ?? chart.lagna?.sign ?? chart.avkahada?.['lagna'];
     const start = SIGN_ORDER.indexOf(ascendantSign);
     const houseSigns = start >= 0
       ? Array.from({ length: 12 }, (_, index) => SIGN_ORDER[(start + index) % SIGN_ORDER.length])
