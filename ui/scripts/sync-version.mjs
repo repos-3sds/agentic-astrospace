@@ -21,8 +21,16 @@
  * grows on a branch that only ever gains commits.
  *
  * Run: node scripts/sync-version.mjs [--check]
- *   --check exits non-zero if anything is out of sync, without writing. That is
- *   the form CI should use.
+ *   --check exits non-zero if anything is wrong, without writing. That is the
+ *   form CI runs. Because the build number is the commit count, it moves with
+ *   every commit, so --check does not demand that the native projects already
+ *   carry today's count (that would fail on every pull request that did not
+ *   re-run the sync). It demands what actually breaks a release: the marketing
+ *   version must match package.json, iOS and Android must agree with each
+ *   other, and neither may be AHEAD of the commit count, since a later sync
+ *   would then lower the number and Play would reject the upload. A build
+ *   number that is merely behind is reported and `build:native` refreshes it.
+ *   --check needs the full history: on a shallow clone the count is the depth.
  */
 import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -69,9 +77,31 @@ if (edits.length === 0) {
 }
 
 if (checkOnly) {
-  console.error(`version drift in: ${edits.map((e) => e.path).join(', ')}`);
-  console.error(`expected ${marketing} (build ${build}) — run: npm run version:sync`);
-  process.exit(1);
+  const problems = [];
+  const ios = readFileSync(join(root, 'ios/App/App.xcodeproj/project.pbxproj'), 'utf8');
+  const android = readFileSync(join(root, 'android/app/build.gradle'), 'utf8');
+  const iosMarketing = new Set([...ios.matchAll(/MARKETING_VERSION = ([^;]+);/g)].map((m) => m[1]));
+  const iosBuild = new Set([...ios.matchAll(/CURRENT_PROJECT_VERSION = ([^;]+);/g)].map((m) => Number(m[1])));
+  const androidMarketing = android.match(/versionName "([^"]*)"/)?.[1];
+  const androidBuild = Number(android.match(/versionCode (\d+)/)?.[1]);
+  if (iosMarketing.size !== 1 || !iosMarketing.has(marketing)) problems.push(`iOS MARKETING_VERSION ${[...iosMarketing].join('/')} != package.json ${marketing}`);
+  if (androidMarketing !== marketing) problems.push(`Android versionName ${androidMarketing} != package.json ${marketing}`);
+  if (iosBuild.size !== 1) problems.push(`iOS targets disagree on CURRENT_PROJECT_VERSION: ${[...iosBuild].join('/')}`);
+  const [iosNumber] = iosBuild;
+  if (iosBuild.size === 1 && iosNumber !== androidBuild) problems.push(`iOS build ${iosNumber} != Android versionCode ${androidBuild}`);
+  if (process.env.GITHUB_ACTIONS && execSync('git rev-parse --is-shallow-repository', { cwd: root }).toString().trim() === 'true') {
+    problems.push('shallow clone: the commit-count build number cannot be checked (use fetch-depth: 0)');
+  }
+  for (const [name, number] of [['iOS', iosNumber], ['Android', androidBuild]]) {
+    if (Number.isFinite(number) && number > Number(build)) problems.push(`${name} build ${number} is ahead of the commit count ${build}; a sync would lower it`);
+  }
+  if (problems.length) {
+    console.error(`version check failed:\n  ${problems.join('\n  ')}`);
+    console.error(`expected ${marketing} (build ${build}) — run: npm run version:sync`);
+    process.exit(1);
+  }
+  console.log(`versions consistent — ${marketing}, native build ${androidBuild} (commit count ${build}; build:native refreshes it)`);
+  process.exit(0);
 }
 
 for (const { path, file, after } of edits) {

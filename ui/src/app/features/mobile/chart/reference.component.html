@@ -26,9 +26,58 @@
         </div>
       }
     </div>
+  } @else if (mode === 'ashtakavarga') {
+    @if (ashtaRows().length) {
+      <section class="av-summary">
+        <div><small>SAV total</small><strong>{{ ashtaTotals()?.sav }}</strong><span>of 337</span></div>
+        <div><small>Strongest signs</small><strong>{{ ashtaStrongest()[0].sign }}</strong><span>{{ ashtaStrongest()[1].short }} · {{ ashtaStrongest()[2].short }}</span></div>
+        <div><small>Weakest signs</small><strong>{{ ashtaWeakest()[0].sign }}</strong><span>{{ ashtaWeakest()[1].short }} · {{ ashtaWeakest()[2].short }}</span></div>
+      </section>
+
+      <h2 class="av-heading">Bhinnashtakavarga &amp; Sarvashtakavarga</h2>
+      <p class="av-note">Bindus each graha contributes to each sign, Sun through Saturn with the lagna's share; the SAV column is the sign's total.</p>
+      <div class="av-table-wrap">
+        <table class="av-table" aria-label="Bindus by sign and planet">
+          <thead>
+            <tr><th scope="col">Sign</th>@for (planet of ashtaPlanetShort(); track $index) { <th scope="col" [attr.title]="ashtaPlanets()[$index]">{{ planet }}</th> }<th scope="col" class="av-sav">SAV</th></tr>
+          </thead>
+          <tbody>
+            @for (row of ashtaRows(); track row.sign) {
+              <tr>
+                <th scope="row" [attr.title]="row.sign">{{ row.short }}</th>
+                @for (bindu of row.bindus; track $index) { <td>{{ bindu }}</td> }
+                <td class="av-sav" [style.--heat]="savHeat(row.sav)">{{ row.sav }}</td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr><th scope="row">Total</th>@for (total of ashtaTotals()?.bav ?? []; track $index) { <td>{{ total }}</td> }<td class="av-sav">{{ ashtaTotals()?.sav }}</td></tr>
+          </tfoot>
+        </table>
+      </div>
+
+      @if (ashtaPinda().length) {
+        <h2 class="av-heading">Shodhya pinda</h2>
+        <p class="av-note">After trikona and ekadhipatya reductions; rashi pinda plus graha pinda, ranked.</p>
+        <div class="av-table-wrap">
+          <table class="av-table av-pinda" aria-label="Shodhya pinda by planet">
+            <thead><tr><th scope="col">Graha</th><th scope="col">Rashi</th><th scope="col">Graha</th><th scope="col">Shodhya</th></tr></thead>
+            <tbody>
+              @for (row of ashtaPinda(); track row.planet) {
+                <tr><th scope="row">{{ row.planet }}</th><td>{{ row.rashi_pinda }}</td><td>{{ row.graha_pinda }}</td><td class="av-sav">{{ row.shodhya_pinda }}</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      <p class="av-footnote">Parashari Ashtakavarga: Rahu and Ketu contribute no bindus, so the classical SAV total is 337. Reductions follow the trikona-then-ekadhipatya order.</p>
+    } @else {
+      <p class="ref-state">No Ashtakavarga tables came back for this profile.</p>
+    }
   } @else {
     <div class="ref-table">
-      @for (row of mode === 'ashtakavarga' ? ashtaRows() : simpleRows(); track row.label) {
+      @for (row of simpleRows(); track row.label) {
         <div class="ref-row"><span>{{ row.label }}</span><strong>{{ row.value }}</strong></div>
       } @empty { <p class="ref-state">No computed values are available for this profile.</p> }
     </div>
