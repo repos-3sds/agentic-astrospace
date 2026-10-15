@@ -1352,6 +1352,12 @@ export interface Reading {
   kundli_id: string;
   reading_type: string;
   period_label?: string;
+  /** First and last kundli-local day of the calendar period (ISO dates). */
+  period_start?: string | null;
+  period_end?: string | null;
+  /** Whether this row is a version of the period the person is in now.
+   * Set by the list and generate endpoints; null where the server can't say. */
+  is_current_period?: boolean | null;
   content: string;
   cached?: boolean;
   generated_at?: string;

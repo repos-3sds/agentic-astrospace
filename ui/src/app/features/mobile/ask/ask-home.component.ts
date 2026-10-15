@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { ASK_NAVIGATION } from './ask-navigation';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AskComposerComponent } from './ask-composer.component';
 import { VoiceListeningComponent } from './voice-listening.component';
 import { KundliStore } from '../../../core/kundli.store';
@@ -69,6 +70,7 @@ export class AskHomeComponent {
     const credits = allowance.credits ? ` · ${allowance.credits} bought question${allowance.credits === 1 ? '' : 's'}` : '';
     return `${allowance.remaining} of ${allowance.limit} ${plan}answers left this month${credits}`;
   });
+  private readonly router = inject(Router);
   readonly name = computed(() => this.kundlis.active()?.name ?? 'there');
   protected readonly heading = computed(() => this.navigation.web ? 'What would you like to explore?' : `What’s on your mind, ${this.name()}?`);
   protected readonly lede = computed(() => ({
@@ -123,15 +125,18 @@ export class AskHomeComponent {
 
   /**
    * The composer, pre-filled from `?q=` when the reader arrived by tapping a
-   * suggestion on Today. Pre-filled rather than sent: the suggestion is the
-   * app's wording, and the reader gets to edit it before it becomes their
-   * question.
+   * suggestion on Today or "Ask about this" on a reading. Pre-filled rather
+   * than sent: the suggestion is the app's wording, and the reader gets to
+   * edit it before it becomes their question.
    *
-   * Read from the snapshot rather than the observable: it is a handoff at
-   * entry, and re-reading would overwrite whatever the reader had started
-   * typing.
+   * /m/ask is a retained tab, so the component outlives one visit. Reading
+   * the snapshot once meant a second handoff was ignored and the composer
+   * opened empty (production audit 2026-10-15, R5). Each `q` is taken from
+   * the live query params instead, then removed from the URL (replaceUrl),
+   * so returning to the tab or reloading never re-applies an old one over
+   * what the reader has typed since.
    */
-  readonly draft = signal(inject(ActivatedRoute).snapshot.queryParamMap.get('q') ?? '');
+  readonly draft = signal('');
 
   /** Whether the microphone overlay (25:123) is up. The transcript inside it
    * comes live from {@link SpeechService}. */
@@ -142,6 +147,18 @@ export class AskHomeComponent {
 
   constructor() {
     void this.entitlements.refresh();
+    const route = inject(ActivatedRoute);
+    route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      const q = params.get('q');
+      if (q === null) return;
+      this.draft.set(q);
+      void this.router.navigate([], {
+        relativeTo: route,
+        queryParams: { q: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+    });
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
     // Re-seed whenever the active profile changes; the service caches per
     // profile and day, so a revisit costs no request.
@@ -188,8 +205,6 @@ export class AskHomeComponent {
   protected toggleTopic(id: string): void {
     this.selectedTopic.update((current) => (current === id ? null : id));
   }
-
-  private readonly router = inject(Router);
 
   /**
    * Send the question on to the answer view (26:54), which owns the actual

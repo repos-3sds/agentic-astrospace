@@ -1,11 +1,18 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+
+import { HapticsService } from '../../../core/haptics.service';
 
 import { KundliStore } from '../../../core/kundli.store';
 import { PredictionClaim, PredictionClaimStatus } from '../../../core/models';
 import { ReadingService } from '../../../core/reading.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
-import { REVIEW_OPTIONS, claimIsDue, claimWindow } from './claim-review';
+import { ClaimMarker, REVIEW_OPTIONS, claimIsDue, claimWindow } from './claim-review';
+
+/** How long a just-marked card stays put under the finger before it folds away. */
+export const SETTLE_MS = 600;
+/** Matches the collapse transition in accuracy.component.scss. */
+export const COLLAPSE_MS = 280;
 
 const COUNT_STATUSES: Array<{ label: string; status: PredictionClaimStatus; tone: string }> = [
   ...REVIEW_OPTIONS,
@@ -67,6 +74,7 @@ const COUNT_STATUSES: Array<{ label: string; status: PredictionClaimStatus; tone
           }
 
           @for (claim of visibleClaims(); track claim.id) {
+            <div class="mra-slot" [class.collapsing]="collapsing().has(claim.id)">
             <section class="mra-claim" [class.reviewed]="claim.status !== 'pending'">
               <div>
                 <em>{{ claim.category }}</em>
@@ -81,12 +89,17 @@ const COUNT_STATUSES: Array<{ label: string; status: PredictionClaimStatus; tone
                     [attr.data-tone]="option.tone"
                     [class.active]="claim.status === option.status"
                     [attr.aria-pressed]="claim.status === option.status"
-                    [disabled]="savingId() === claim.id"
+                    [class.saving]="marker.isSaving(claim.id, option.status)"
+                    [attr.aria-busy]="marker.isSaving(claim.id, option.status)"
                     (click)="review(claim, option.status)"
                   >{{ option.label }}</button>
                 }
               </footer>
+              @if (marker.errors()[claim.id]; as message) {
+                <small class="mra-claim-error" role="alert">{{ message }}</small>
+              }
             </section>
+            </div>
           } @empty {
             <section class="mra-state">
               <b>Nothing to check right now</b>
@@ -109,14 +122,27 @@ export class AccuracyComponent {
   protected readonly claims = signal<PredictionClaim[]>([]);
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
-  protected readonly savingId = signal<string | null>(null);
+  /** Marked in "To check" and still shown, so the card doesn't vanish under the finger. */
+  protected readonly settling = signal<ReadonlySet<string>>(new Set());
+  /** Folding away after the pause. */
+  protected readonly collapsing = signal<ReadonlySet<string>>(new Set());
+  private readonly timers = new Map<string, ReturnType<typeof setTimeout>[]>();
+  private readonly haptics = inject(HapticsService);
+  protected readonly marker = new ClaimMarker(this.readingsApi, (claimId, change) =>
+    this.claims.update((claims) => claims.map((item) => (item.id === claimId ? { ...item, ...change } : item))),
+  );
   protected readonly filter = signal<'pending' | 'all'>('pending');
 
   protected readonly activeId = computed(() => this.store.activeId());
   protected readonly activeName = computed(() => this.store.active()?.name ?? 'this profile');
-  protected readonly visibleClaims = computed(() =>
-    this.filter() === 'pending' ? this.dueClaims() : this.claims(),
-  );
+  protected readonly visibleClaims = computed(() => {
+    if (this.filter() !== 'pending') return this.claims();
+    const today = new Date();
+    const settling = this.settling();
+    return this.claims().filter(
+      (claim) => settling.has(claim.id) || (claim.status === 'pending' && claimIsDue(claim, today)),
+    );
+  });
   // A prediction is only asked about once its window has begun.
   protected readonly dueClaims = computed(() => {
     const today = new Date();
@@ -137,6 +163,7 @@ export class AccuracyComponent {
   );
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => this.timers.forEach((list) => list.forEach(clearTimeout)));
     effect(() => {
       void this.load(this.activeId());
     });
@@ -146,22 +173,43 @@ export class AccuracyComponent {
     void this.load(this.activeId());
   }
 
+  /**
+   * Optimistic: the answer shows at once and only the tapped chip says it is
+   * saving. In "To check" a marked card used to disappear the moment the
+   * answer came back and the next card slid under the finger (audit R7); it
+   * now stays marked for a beat, then folds away.
+   */
   protected async review(claim: PredictionClaim, status: PredictionClaimStatus): Promise<void> {
     const id = this.activeId();
     if (!id) return;
-    this.savingId.set(claim.id);
-    this.error.set(null);
-    try {
-      // Tapping the chosen answer again clears it, so a mis-tap is undoable.
-      const next: PredictionClaimStatus = claim.status === status ? 'pending' : status;
-      const updated = await this.readingsApi.claimFeedback(id, claim.id, next, claim.user_feedback ?? '');
-      if (this.activeId() !== id) return;
-      this.claims.update((claims) => claims.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)));
-    } catch (error) {
-      this.error.set((error as Error).message);
-    } finally {
-      if (this.savingId() === claim.id) this.savingId.set(null);
-    }
+    this.haptics.select();
+    const next: PredictionClaimStatus = claim.status === status ? 'pending' : status;
+    if (this.filter() === 'pending' && next !== 'pending') this.settle(claim.id);
+    else this.unsettle(claim.id);
+    const saved = await this.marker.mark(id, claim, status);
+    if (saved === null) this.unsettle(claim.id);
+  }
+
+  private settle(claimId: string): void {
+    this.unsettle(claimId);
+    this.settling.update((ids) => new Set(ids).add(claimId));
+    this.timers.set(claimId, [
+      setTimeout(() => this.collapsing.update((ids) => new Set(ids).add(claimId)), SETTLE_MS),
+      setTimeout(() => this.unsettle(claimId), SETTLE_MS + COLLAPSE_MS),
+    ]);
+  }
+
+  private unsettle(claimId: string): void {
+    this.timers.get(claimId)?.forEach(clearTimeout);
+    this.timers.delete(claimId);
+    const without = (ids: ReadonlySet<string>) => {
+      if (!ids.has(claimId)) return ids;
+      const next = new Set(ids);
+      next.delete(claimId);
+      return next;
+    };
+    this.settling.update(without);
+    this.collapsing.update(without);
   }
 
   protected heldRateLabel(): string {
@@ -192,6 +240,11 @@ export class AccuracyComponent {
     const request = ++this.requestId;
     this.error.set(null);
     this.claims.set([]);
+    this.marker.reset();
+    this.timers.forEach((list) => list.forEach(clearTimeout));
+    this.timers.clear();
+    this.settling.set(new Set());
+    this.collapsing.set(new Set());
     if (!id) return;
     this.loading.set(true);
     try {

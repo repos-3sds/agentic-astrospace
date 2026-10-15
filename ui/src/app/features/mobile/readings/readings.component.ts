@@ -1,13 +1,28 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  signal,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { HapticsService } from '../../../core/haptics.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { PredictionClaim, PredictionClaimStatus, Reading } from '../../../core/models';
 import { ReadingPeriod, ReadingService } from '../../../core/reading.service';
 import { MarkdownPipe } from '../../../shared/markdown.pipe';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
-import { REVIEW_OPTIONS, claimIsDue, claimWindow } from './claim-review';
+import { SheetComponent } from '../sheet/sheet.component';
+import { ClaimMarker, REVIEW_OPTIONS, claimIsDue, claimWindow } from './claim-review';
+import { GenerationJob, ReadingGenerationService, generationKey } from './reading-generation.service';
 
 // Generation runs one model call over the chart, transits and dashas and
 // usually takes 20-40 s. The stages are paced by elapsed time (the API does
@@ -36,13 +51,78 @@ const PERIOD_NOUN: Record<ReadingPeriod, string> = {
   yearly: 'yearly',
 };
 
+/** "this week", "Past weeks": how a period is named in a sentence and in a list title. */
+const PERIOD_UNIT: Record<ReadingPeriod, { current: string; past: string; one: string }> = {
+  daily: { current: 'today', past: 'Past days', one: 'day' },
+  weekly: { current: 'this week', past: 'Past weeks', one: 'week' },
+  monthly: { current: 'this month', past: 'Past months', one: 'month' },
+  quarterly: { current: 'this quarter', past: 'Past quarters', one: 'quarter' },
+  yearly: { current: 'this year', past: 'Past years', one: 'year' },
+};
+
 const STAMP = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+const SHORT_DAY = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' });
+const WEEKDAY = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+const MONTH = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' });
+
+function parseDay(value: string): Date {
+  const [y, m, d] = value.split('-').map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
+}
+
+/** "Oct 12 – 18", or "Sep 28 – Oct 4" across a month. */
+export function dayRange(start: string, end: string): string {
+  const a = parseDay(start);
+  const b = parseDay(end);
+  const format = SHORT_DAY as Intl.DateTimeFormat & { formatRange?: (x: Date, y: Date) => string };
+  if (typeof format.formatRange === 'function') return format.formatRange(a, b);
+  return `${SHORT_DAY.format(a)} – ${SHORT_DAY.format(b)}`;
+}
+
+/** The calendar period a reading covers, named by its dates. */
+export function periodTitle(reading: Reading): string {
+  const start = reading.period_start;
+  const end = reading.period_end;
+  if (start && end) {
+    switch (reading.reading_type) {
+      case 'daily': return WEEKDAY.format(parseDay(start));
+      case 'weekly': return dayRange(start, end);
+      case 'monthly': return MONTH.format(parseDay(start));
+      case 'yearly': return String(parseDay(start).getFullYear());
+    }
+  }
+  return reading.period_label ?? reading.generated_local_date ?? reading.reading_type;
+}
+
+/**
+ * Splits a period's readings into versions of the period the person is in
+ * now and readings of earlier periods. Until 2026-10-15 every row was
+ * treated as a version of the current reading, so three different weeks
+ * showed as "Version 1 / Version 1 / Version 1" and yesterday's daily
+ * reading as today's "Latest" (production audit R2). The server says which
+ * rows are current; an older server that doesn't is read as "the newest
+ * row's label is the current one".
+ */
+export function splitReadings(readings: Reading[]): { current: Reading[]; past: Reading[] } {
+  const flagged = readings.some((reading) => typeof reading.is_current_period === 'boolean');
+  const newestLabel = readings[0]?.period_label;
+  const isCurrent = (reading: Reading) =>
+    flagged ? reading.is_current_period === true : reading.period_label === newestLabel;
+  const byVersion = (a: Reading, b: Reading) =>
+    (b.version ?? 1) - (a.version ?? 1) || (b.generated_at ?? '').localeCompare(a.generated_at ?? '');
+  const byPeriod = (a: Reading, b: Reading) =>
+    (b.period_start ?? b.generated_local_date ?? '').localeCompare(a.period_start ?? a.generated_local_date ?? '') || byVersion(a, b);
+  return {
+    current: readings.filter(isCurrent).sort(byVersion),
+    past: readings.filter((reading) => !isCurrent(reading)).sort(byPeriod),
+  };
+}
 
 @Component({
   selector: 'as-mobile-readings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, RouterLink, MarkdownPipe],
+  imports: [BackLinkDirective, GenericErrorComponent, RouterLink, MarkdownPipe, SheetComponent],
   template: `
     <a class="mrd-back" [asBack]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
     <main class="mrd-body">
@@ -54,33 +134,37 @@ const STAMP = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric
         <img src="mobile/chevron.svg" alt="" />
       </a>
 
-      <nav class="mrd-tabs" aria-label="Reading period">
+      <nav class="mrd-tabs" aria-label="Reading period" [attr.aria-busy]="loading()">
         @for (tab of periods; track tab.value) {
-          <button type="button" [class.on]="period() === tab.value" [disabled]="loading() || generating()" (click)="period.set(tab.value)">
+          <button type="button" [class.on]="period() === tab.value" [attr.aria-pressed]="period() === tab.value"
+            [disabled]="loading()" (click)="choosePeriod(tab.value)">
             {{ tab.label }}
           </button>
         }
       </nav>
 
       @if (generateError(); as message) {
-        <section class="mrd-state error" role="alert">
-          <b>That reading didn’t finish</b>
-          <p>{{ message }}</p>
-          <button type="button" (click)="generate()">Try again</button>
-        </section>
+        @if (generateLimited()) {
+          <!-- The daily allowance, not a failure: nothing to retry today. -->
+          <section class="mrd-state" role="status">
+            <b>No more new versions today</b>
+            <p>{{ message }}</p>
+          </section>
+        } @else {
+          <section class="mrd-state error" role="alert">
+            <b>That reading didn’t finish</b>
+            <p>{{ message }}</p>
+            <button type="button" (click)="generate(lastForce)">Try again</button>
+          </section>
+        }
       }
 
-      @if (loading()) {
-        <section class="mrd-state" aria-live="polite">
-          <b>Loading readings</b>
-          <p>Checking saved readings for {{ activeName() }}.</p>
-        </section>
-      } @else if (generating()) {
+      @if (generating()) {
         <section class="mrd-progress" role="status" aria-live="polite">
           <div class="mrd-progress-head">
             <span class="mrd-spinner" aria-hidden="true"></span>
             <span>
-              <b>Writing your {{ periodNoun() }} reading</b>
+              <b>Writing {{ job()?.force ? 'a new version of ' : '' }}your {{ periodNoun() }} reading</b>
               <small>{{ elapsed() }}s · usually 20–40 seconds</small>
             </span>
           </div>
@@ -94,8 +178,17 @@ const STAMP = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric
             }
           </ol>
           @if (elapsed() >= slowAfter) {
-            <p>Taking a little longer than usual. Keep this screen open; your reading is still being written.</p>
+            <p>Taking a little longer than usual. It keeps going if you leave this screen.</p>
+          } @else if (selected()) {
+            <p>Your current reading stays below until the new one is ready.</p>
           }
+        </section>
+      }
+
+      @if (loading()) {
+        <section class="mrd-state" aria-live="polite">
+          <b>Loading readings</b>
+          <p>Checking saved readings for {{ activeName() }}.</p>
         </section>
       } @else if (loadError()) {
         <as-generic-error role="alert" [message]="loadError()!" (retried)="reload()" />
@@ -104,112 +197,166 @@ const STAMP = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric
           <b>No active profile</b>
           <p>Create or select a profile to get readings.</p>
         </section>
-      } @else if (!readings().length) {
-        @if (!generateError()) {
+      } @else {
+        @if (!current().length && !generating() && !generateError()) {
           <section class="mrd-state">
-            <b>No {{ periodNoun() }} reading yet</b>
+            <b>No {{ periodNoun() }} reading for {{ unit().current }} yet</b>
             <p>Get a {{ periodNoun() }} reading for {{ activeName() }}. Its predictions will be listed below it so you can check them as the days pass.</p>
-            <button type="button" (click)="generate()">Get my {{ periodNoun() }} reading</button>
+            <button type="button" (click)="generate(false)">Get my {{ periodNoun() }} reading</button>
           </section>
         }
-      } @else if (selected(); as reading) {
-        @if (!isLatest(reading)) {
-          <div class="mrd-older" role="note">
-            <span>You’re looking at an earlier version.</span>
-            <button type="button" (click)="select(readings()[0].id)">Back to latest</button>
+
+        @if (selected(); as reading) {
+          <!-- Re-created per reading so a swap fades in instead of jumping. -->
+          @for (shown of [reading]; track shown.id) {
+            <article #article class="mrd-reading" [attr.aria-label]="titleFor(shown)">
+              @if (!isLatestCurrent(shown)) {
+                <div class="mrd-older" role="note">
+                  <span>{{ olderNote(shown) }}</span>
+                  @if (current().length) {
+                    <button type="button" (click)="select(current()[0].id)">Show latest</button>
+                  }
+                </div>
+              }
+              <div class="mrd-reading-head">
+                <b>{{ titleFor(shown) }}</b>
+                <em [class.latest]="isLatestCurrent(shown)">{{ badgeFor(shown) }}</em>
+              </div>
+              <div class="mrd-prose" [innerHTML]="shown.content | markdown"></div>
+              <hr />
+              <footer><small>{{ versionLine(shown) }}</small></footer>
+            </article>
+          }
+
+          <div class="mrd-actions">
+            <a [routerLink]="['/m','ask']" [queryParams]="{ q: askQuestion(reading) }">Ask about this</a>
+            @if (isCurrent(reading)) {
+              <button type="button" [disabled]="generating()" (click)="confirmNewVersion()">New version</button>
+            }
           </div>
+
+          <section class="mrd-claims" aria-labelledby="mrd-claims-title">
+            <div>
+              <b id="mrd-claims-title">Predictions to check</b>
+              @if (selectedClaims().length) {
+                <small>{{ checkedCount() }} of {{ selectedClaims().length }} checked</small>
+              }
+            </div>
+            @if (selectedClaims().length) {
+              <p>As each one plays out, mark what happened. Your track record is built from these.</p>
+            }
+            @for (claim of selectedClaims(); track claim.id) {
+              <article [class.checked]="claim.status !== 'pending'">
+                <span>{{ claim.category }}@if (window(claim)) { · {{ window(claim) }}}</span>
+                <p>{{ claim.claim_text }}</p>
+                <div class="mrd-chips" role="group" [attr.aria-label]="'Did this happen? ' + claim.claim_text">
+                  @for (option of reviewOptions; track option.status) {
+                    <button type="button" [attr.data-tone]="option.tone"
+                      [class.on]="claim.status === option.status"
+                      [class.saving]="marker.isSaving(claim.id, option.status)"
+                      [attr.aria-pressed]="claim.status === option.status"
+                      [attr.aria-busy]="marker.isSaving(claim.id, option.status)"
+                      (click)="review(claim, option.status)">{{ option.label }}</button>
+                  }
+                </div>
+                @if (marker.errors()[claim.id]; as message) {
+                  <small class="mrd-claim-error" role="alert">{{ message }}</small>
+                }
+              </article>
+            } @empty {
+              <p>This reading has no specific predictions to check.</p>
+            }
+          </section>
         }
 
-        <article class="mrd-reading">
-          <div>
-            <b>{{ readingTitle(reading) }}</b>
-            <em [class.latest]="isLatest(reading)">{{ isLatest(reading) ? 'Latest' : 'Version ' + (reading.version ?? 1) }}</em>
-          </div>
-          <div class="mrd-prose" [innerHTML]="reading.content | markdown"></div>
-          <hr />
-          <footer><small>{{ versionLine(reading) }}</small></footer>
-        </article>
-
-        <div class="mrd-actions">
-          <a [routerLink]="['/m','ask']" [queryParams]="{ q: askQuestion(reading) }">Ask about this</a>
-          <button class="ink" type="button" (click)="generate()">New version</button>
-        </div>
-
-        <section class="mrd-claims" aria-labelledby="mrd-claims-title">
-          <div>
-            <b id="mrd-claims-title">Predictions to check</b>
-            @if (selectedClaims().length) {
-              <small>{{ checkedCount() }} of {{ selectedClaims().length }} checked</small>
-            }
-          </div>
-          @if (selectedClaims().length) {
-            <p>As each one plays out, mark what happened. Your track record is built from these.</p>
+        @if (current().length > 1) {
+          <p class="mrd-title">VERSIONS OF {{ unit().current.toUpperCase() }}</p>
+          @for (item of current(); track item.id; let first = $first) {
+            <button class="mrd-earlier" type="button" [class.on]="item.id === selected()?.id"
+              [attr.aria-current]="item.id === selected()?.id ? 'true' : null" (click)="select(item.id)">
+              <span>
+                <b>Version {{ item.version ?? 1 }}@if (first) { (latest)}</b>
+                <small>Written {{ stamp(item) }}</small>
+              </span>
+              <em>{{ item.id === selected()?.id ? 'Viewing' : checkedLabel(item) }}</em>
+              <img src="mobile/chevron.svg" alt="" />
+            </button>
           }
-          @for (claim of selectedClaims(); track claim.id) {
-            <article [class.checked]="claim.status !== 'pending'">
-              <span>{{ claim.category }}@if (window(claim)) { · {{ window(claim) }}}</span>
-              <p>{{ claim.claim_text }}</p>
-              <div class="mrd-chips" role="group" [attr.aria-label]="'Did this happen? ' + claim.claim_text">
-                @for (option of reviewOptions; track option.status) {
-                  <button type="button" [attr.data-tone]="option.tone"
-                    [class.on]="claim.status === option.status"
-                    [attr.aria-pressed]="claim.status === option.status"
-                    [disabled]="savingId() === claim.id"
-                    (click)="review(claim, option.status)">{{ option.label }}</button>
-                }
-              </div>
-            </article>
-          } @empty {
-            <p>This reading has no specific predictions to check.</p>
-          }
-          @if (reviewError(); as message) {
-            <p class="mrd-review-error" role="alert">{{ message }}</p>
-          }
-        </section>
+        }
 
-        @if (readings().length > 1) {
-          <p class="mrd-title">EARLIER VERSIONS</p>
-          @for (item of readings(); track item.id) {
-            @if (item.id !== reading.id) {
-              <button class="mrd-earlier" type="button" (click)="select(item.id)">
-                <span>
-                  <b>Version {{ item.version ?? 1 }}@if (isLatest(item)) { (latest)}</b>
-                  <small>Written {{ stamp(item) }}</small>
-                </span>
-                <em>{{ checkedLabel(item) }}</em>
-                <img src="mobile/chevron.svg" alt="" />
-              </button>
-            }
+        @if (past().length) {
+          <p class="mrd-title">{{ unit().past.toUpperCase() }}</p>
+          @for (item of past(); track item.id) {
+            <button class="mrd-earlier" type="button" [class.on]="item.id === selected()?.id"
+              [attr.aria-current]="item.id === selected()?.id ? 'true' : null" (click)="select(item.id)">
+              <span>
+                <b>{{ periodTitle(item) }}</b>
+                <small>@if (versionsOfLabel(item) > 1) {Version {{ item.version ?? 1 }} · }Written {{ stamp(item) }}</small>
+              </span>
+              <em>{{ item.id === selected()?.id ? 'Viewing' : checkedLabel(item) }}</em>
+              <img src="mobile/chevron.svg" alt="" />
+            </button>
           }
         }
       }
     </main>
+
+    @if (confirming()) {
+      <as-sheet label="Write a new version" (dismissed)="confirming.set(false)">
+        <div class="mrd-confirm">
+          <h2>Write a new version?</h2>
+          <p>It takes about 30 seconds, and this version stays in your list.</p>
+          <button type="button" class="primary" (click)="startNewVersion()">Write new version</button>
+          <button type="button" class="secondary" (click)="confirming.set(false)">Keep this one</button>
+        </div>
+      </as-sheet>
+    }
   `,
   styleUrl: './readings.component.scss',
 })
 export class ReadingsComponent {
   private readonly store = inject(KundliStore);
   private readonly readingsApi = inject(ReadingService);
+  private readonly generation = inject(ReadingGenerationService);
+  private readonly haptics = inject(HapticsService);
+  private readonly injector = inject(Injector);
   private requestId = 0;
-  private elapsedTimer: ReturnType<typeof setInterval> | null = null;
 
   protected readonly periods = PERIODS;
   protected readonly stages = GENERATE_STAGES;
   protected readonly slowAfter = GENERATE_SLOW_AFTER;
   protected readonly reviewOptions = REVIEW_OPTIONS;
   protected readonly window = claimWindow;
+  protected readonly periodTitle = periodTitle;
   protected readonly period = signal<ReadingPeriod>('weekly');
   protected readonly readings = signal<Reading[]>([]);
   protected readonly claims = signal<PredictionClaim[]>([]);
   protected readonly selectedId = signal<string | null>(null);
   protected readonly loading = signal(false);
-  protected readonly generating = signal(false);
   protected readonly loadError = signal<string | null>(null);
   protected readonly generateError = signal<string | null>(null);
-  protected readonly reviewError = signal<string | null>(null);
-  protected readonly savingId = signal<string | null>(null);
-  protected readonly elapsed = signal(0);
+  protected readonly generateLimited = signal(false);
+  protected readonly confirming = signal(false);
+  protected lastForce = false;
+  private readonly now = signal(Date.now());
+  private readonly article = viewChild<ElementRef<HTMLElement>>('article');
 
+  protected readonly activeId = computed(() => this.store.activeId());
+  protected readonly activeName = computed(() => this.store.active()?.name ?? 'this profile');
+  protected readonly periodNoun = computed(() => PERIOD_NOUN[this.period()]);
+  protected readonly unit = computed(() => PERIOD_UNIT[this.period()]);
+
+  /** The generation for this profile and period, held above the screen so it
+   * survives leaving it (production audit R6). */
+  protected readonly job = computed<GenerationJob | null>(() => {
+    const id = this.activeId();
+    return id ? this.generation.jobs()[generationKey(id, this.period())] ?? null : null;
+  });
+  protected readonly generating = computed(() => this.job()?.status === 'running');
+  protected readonly elapsed = computed(() => {
+    const job = this.job();
+    return job?.status === 'running' ? Math.max(0, Math.floor((this.now() - job.startedAt) / 1000)) : 0;
+  });
   protected readonly stageIndex = computed(() => {
     const seconds = this.elapsed();
     let index = 0;
@@ -219,11 +366,11 @@ export class ReadingsComponent {
   // Eases towards 95% and never claims completion until the API answers.
   protected readonly progress = computed(() => Math.round(95 * (1 - Math.exp(-this.elapsed() / 18))));
 
-  protected readonly activeId = computed(() => this.store.activeId());
-  protected readonly activeName = computed(() => this.store.active()?.name ?? 'this profile');
-  protected readonly periodNoun = computed(() => PERIOD_NOUN[this.period()]);
-  protected readonly selected = computed(
-    () => this.readings().find((reading) => reading.id === this.selectedId()) ?? this.readings()[0] ?? null,
+  private readonly split = computed(() => splitReadings(this.readings()));
+  protected readonly current = computed(() => this.split().current);
+  protected readonly past = computed(() => this.split().past);
+  protected readonly selected = computed<Reading | null>(
+    () => this.readings().find((reading) => reading.id === this.selectedId()) ?? this.current()[0] ?? null,
   );
   protected readonly selectedClaims = computed(() => {
     const readingId = this.selected()?.id;
@@ -235,12 +382,36 @@ export class ReadingsComponent {
   // unreviewed claims of a superseded version are not waiting on anyone.
   private readonly liveClaims = signal<PredictionClaim[]>([]);
 
+  protected readonly marker = new ClaimMarker(this.readingsApi, (claimId, change) => {
+    const swap = (claims: PredictionClaim[]) => claims.map((item) => (item.id === claimId ? { ...item, ...change } : item));
+    this.claims.update(swap);
+    // A reviewed claim of an earlier version counts from now on.
+    this.liveClaims.update((live) => {
+      if (live.some((item) => item.id === claimId)) return swap(live);
+      const claim = this.claims().find((item) => item.id === claimId);
+      return claim && claim.status !== 'pending' ? [...live, claim] : live;
+    });
+  });
+
   constructor() {
-    inject(DestroyRef).onDestroy(() => this.stopElapsed());
     effect(() => {
       const id = this.activeId();
       const period = this.period();
       void this.load(id, period);
+    });
+    // Ticks the elapsed counter only while a generation is running.
+    effect((onCleanup) => {
+      if (!this.generating()) return;
+      this.now.set(Date.now());
+      const timer = setInterval(() => this.now.set(Date.now()), 1000);
+      onCleanup(() => clearInterval(timer));
+    });
+    // A generation that finished, here or while the person was elsewhere,
+    // is picked up once the saved list is on screen.
+    effect(() => {
+      const job = this.job();
+      if (!job || job.status === 'running' || this.loading()) return;
+      untracked(() => this.settle(job));
     });
   }
 
@@ -248,62 +419,58 @@ export class ReadingsComponent {
     void this.load(this.activeId(), this.period());
   }
 
+  protected choosePeriod(period: ReadingPeriod): void {
+    if (period === this.period()) return;
+    this.haptics.select();
+    this.period.set(period);
+  }
+
+  /**
+   * Show another reading. The lists below never reorder; the one being read
+   * is marked instead. Until 2026-10-15 the tapped card vanished and the
+   * page above was rewritten out of view (audit R3), so the article's top is
+   * now brought into view inside the shell's scroller.
+   */
   protected select(id: string): void {
+    this.haptics.select();
     this.selectedId.set(id);
-    this.reviewError.set(null);
+    this.scrollToArticle();
   }
 
-  protected isLatest(reading: Reading): boolean {
-    return this.readings()[0]?.id === reading.id;
+  protected isCurrent(reading: Reading): boolean {
+    return this.current().some((item) => item.id === reading.id);
   }
 
-  protected async generate(): Promise<void> {
+  protected isLatestCurrent(reading: Reading): boolean {
+    return this.current()[0]?.id === reading.id;
+  }
+
+  protected confirmNewVersion(): void {
+    this.haptics.tap();
+    this.confirming.set(true);
+  }
+
+  protected startNewVersion(): void {
+    this.confirming.set(false);
+    this.generate(true);
+  }
+
+  /** The first reading of a period reuses a saved one; "New version" forces. */
+  protected generate(force: boolean): void {
     const id = this.activeId();
     if (!id || this.generating()) return;
-    const request = ++this.requestId;
-    this.generating.set(true);
-    this.startElapsed();
+    this.haptics.press();
+    this.lastForce = force;
     this.generateError.set(null);
-    this.reviewError.set(null);
-    try {
-      const generated = await this.readingsApi.generate(id, this.period(), true);
-      if (request !== this.requestId || this.activeId() !== id) return;
-      this.readings.update((items) => [generated, ...items.filter((item) => item.id !== generated.id)]);
-      this.selectedId.set(generated.id);
-      await this.loadClaims(id, request);
-    } catch (error) {
-      // The saved readings stay on screen; the failure sits above them with
-      // a retry that tries the generation again, not a page reload.
-      if (request === this.requestId) this.generateError.set((error as Error).message);
-    } finally {
-      if (request === this.requestId) {
-        this.generating.set(false);
-        this.stopElapsed();
-      }
-    }
+    this.generateLimited.set(false);
+    this.generation.start(id, this.period(), force);
   }
 
-  /** Tapping the chosen answer again clears it, so a mis-tap is undoable. */
-  protected async review(claim: PredictionClaim, status: PredictionClaimStatus): Promise<void> {
+  protected review(claim: PredictionClaim, status: PredictionClaimStatus): void {
     const id = this.activeId();
     if (!id) return;
-    const next: PredictionClaimStatus = claim.status === status ? 'pending' : status;
-    this.savingId.set(claim.id);
-    this.reviewError.set(null);
-    try {
-      const updated = await this.readingsApi.claimFeedback(id, claim.id, next, claim.user_feedback ?? '');
-      if (this.activeId() !== id) return;
-      const swap = (claims: PredictionClaim[]) => claims.map((item) => (item.id === updated.id ? { ...item, ...updated } : item));
-      this.claims.update(swap);
-      // A reviewed claim of an earlier version counts from now on.
-      this.liveClaims.update((live) =>
-        live.some((item) => item.id === updated.id) ? swap(live) : updated.status === 'pending' ? live : [...live, updated],
-      );
-    } catch (error) {
-      this.reviewError.set((error as Error).message);
-    } finally {
-      if (this.savingId() === claim.id) this.savingId.set(null);
-    }
+    this.haptics.select();
+    void this.marker.mark(id, claim, status);
   }
 
   protected trackLabel(): string {
@@ -321,8 +488,27 @@ export class ReadingsComponent {
     return 'Builds up as you check predictions';
   }
 
-  protected readingTitle(reading: Reading): string {
-    return reading.period_label ?? reading.generated_local_date ?? reading.reading_type;
+  /** "This week · Oct 12 – 18" for the current period, the dates alone for a past one. */
+  protected titleFor(reading: Reading): string {
+    const title = periodTitle(reading);
+    if (!this.isCurrent(reading)) return title;
+    const lead = this.unit().current;
+    return `${lead.charAt(0).toUpperCase()}${lead.slice(1)} · ${title}`;
+  }
+
+  protected badgeFor(reading: Reading): string {
+    if (this.isLatestCurrent(reading)) return 'Latest';
+    if (this.isCurrent(reading)) return `Version ${reading.version ?? 1}`;
+    return `Past ${this.unit().one}`;
+  }
+
+  protected olderNote(reading: Reading): string {
+    if (this.isCurrent(reading)) return `An earlier version of ${this.unit().current}’s reading.`;
+    return `A reading from a past ${this.unit().one}.`;
+  }
+
+  protected versionsOfLabel(reading: Reading): number {
+    return this.readings().filter((item) => item.period_label === reading.period_label).length;
   }
 
   protected stamp(reading: Reading): string {
@@ -342,29 +528,45 @@ export class ReadingsComponent {
   }
 
   protected askQuestion(reading: Reading): string {
-    return `Explain my ${this.readingTitle(reading)} reading in simple terms and what I should do next`;
+    return `Explain my ${reading.period_label ?? periodTitle(reading)} reading in simple terms and what I should do next`;
   }
 
-  private startElapsed(): void {
-    this.stopElapsed();
-    const startedAt = Date.now();
-    this.elapsed.set(0);
-    this.elapsedTimer = setInterval(() => this.elapsed.set(Math.floor((Date.now() - startedAt) / 1000)), 1000);
+  private scrollToArticle(): void {
+    afterNextRender(() => {
+      const element = this.article()?.nativeElement;
+      if (!element) return;
+      const reduce = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      element.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    }, { injector: this.injector });
   }
 
-  private stopElapsed(): void {
-    if (this.elapsedTimer !== null) clearInterval(this.elapsedTimer);
-    this.elapsedTimer = null;
+  private settle(job: GenerationJob): void {
+    this.generation.clear(job.kundliId, job.period);
+    if (job.kundliId !== this.activeId() || job.period !== this.period()) return;
+    if (job.status === 'error') {
+      this.lastForce = job.force;
+      this.generateLimited.set(job.errorStatus === 429);
+      this.generateError.set(job.error ?? 'Your reading couldn’t be written just now.');
+      this.haptics.error();
+      return;
+    }
+    const reading = job.reading;
+    if (!reading) return;
+    this.generateError.set(null);
+    this.readings.update((items) => [{ ...reading, is_current_period: true }, ...items.filter((item) => item.id !== reading.id)]);
+    this.selectedId.set(reading.id);
+    this.haptics.success();
+    this.scrollToArticle();
+    void this.loadClaims(job.kundliId, this.requestId);
   }
 
   private async load(id: string | null, period: ReadingPeriod): Promise<void> {
     const request = ++this.requestId;
-    // A profile or period switch supersedes any in-flight generation.
-    this.generating.set(false);
-    this.stopElapsed();
     this.loadError.set(null);
     this.generateError.set(null);
-    this.reviewError.set(null);
+    this.generateLimited.set(false);
+    this.confirming.set(false);
+    this.marker.reset();
     this.selectedId.set(null);
     this.readings.set([]);
     this.claims.set([]);
@@ -375,7 +577,6 @@ export class ReadingsComponent {
       const readings = await this.readingsApi.list(id, period);
       if (request !== this.requestId || this.activeId() !== id || this.period() !== period) return;
       this.readings.set(readings);
-      this.selectedId.set(readings[0]?.id ?? null);
       await this.loadClaims(id, request);
     } catch (error) {
       if (request === this.requestId) this.loadError.set((error as Error).message);

@@ -21,6 +21,12 @@ describe('friendlyApiMessage', () => {
     expect(friendlyApiMessage(409, 'A profile for yourself already exists.')).toContain('profile for yourself');
   });
 
+  it('shows a daily-allowance refusal as written, since it says when it resets', () => {
+    const detail = 'You’ve asked for 3 new versions of this weekly reading today. Your latest version is still here, and you can ask for another tomorrow.';
+    expect(friendlyApiMessage(429, detail)).toBe(detail);
+    expect(friendlyApiMessage(429, 'Rate limit exceeded')).toContain('Too many requests');
+  });
+
   it('keeps the raw detail on the error for diagnostics', () => {
     const error = new ApiError(friendlyApiMessage(500, 'Internal Server Error'), 500, 'Internal Server Error');
     expect(error.message).not.toBe('Internal Server Error');
