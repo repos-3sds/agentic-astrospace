@@ -10,7 +10,7 @@ Cancer on the other. It was also the one LLM surface with no safety layer at
 all: `prohibited_verdict()` and `dosha_overclaim_kind()` were never run on what
 it produced. Both are fixed here; see `reading_boundary()` and the route.
 """
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from .base import BaseAstroAgent
 from .safety import dosha_overclaim_kind, prohibited_verdict
@@ -207,9 +207,18 @@ class PeriodAgent(BaseAstroAgent):
 
     def reading_prompt(self, period: str, now: datetime) -> str:
         chart = self.chart
+        week_start = now - timedelta(days=now.weekday())
+        week_end = week_start + timedelta(days=6)
         period_labels = {
             "daily":     f"today {now.strftime('%B %d, %Y')}",
-            "weekly":    f"the week of {now.strftime('%B %d, %Y')}",
+            # The calendar week the reading is filed under (Monday to
+            # Sunday, see reading_routes._period_label), not the seven days
+            # from whenever it was asked for.
+            "weekly":    (
+                f"the week of {week_start.strftime('%B')} {week_start.day} to "
+                f"{week_end.strftime('%B')} {week_end.day}, {week_end.year} "
+                f"(today is {now.strftime('%A')}, {now.strftime('%B')} {now.day})"
+            ),
             "monthly":   f"{now.strftime('%B %Y')}",
             "quarterly": f"Q{((now.month - 1) // 3) + 1} {now.year}",
             "yearly":    f"the year {now.year}",

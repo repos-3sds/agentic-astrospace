@@ -712,6 +712,26 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   Still open: the rendering is cached per server instance only, and the
   phone-voice fallback drops back to English because device Telugu voices
   are unreliable.
+- [ ] **Readings: in-flight guard is per process.** Since 2026-10-15 a
+  second generate request for the same (kundli, period, label) waits for
+  the one already running and returns its reading, and new versions are
+  capped at `MAX_NEW_VERSIONS_PER_DAY` (3) per kundli, period and
+  kundli-local day (429). The cap counts saved rows, so it holds across
+  workers; the in-flight registry is a module dict, so two Cloud Run
+  instances can still each start one generation for the same period. *Why
+  not now:* a cross-instance lock needs shared state (a Postgres advisory
+  lock or a `generation_jobs` row) and the cap already bounds the cost.
+  *Unblocks on:* choosing that lock. *Hook:* `_IN_FLIGHT` /
+  `generate_reading` in `astrospace/api/reading_routes.py`.
+- [ ] **Readings: legacy weekly labels are not rewritten.** Rows written
+  before 2026-10-15 carry "Week of <day written>" labels. They now list
+  under past weeks titled by their Monday–Sunday range (computed from
+  `generated_local_date`), and the current week's lookup simply misses
+  them, costing at most one regeneration per profile after deploy. *Why
+  not now:* rewriting labels in production would merge several "version 1"
+  rows into one label with clashing version numbers. *Unblocks on:* a
+  migration that renumbers versions within the merged label. *Hook:*
+  `_reading_range` / `_period_label` in `astrospace/api/reading_routes.py`.
 
 - [ ] **Paid reports (D2: ₹199–499; Plus gets one a month)** (2026-10-15).
   The hybrid pricing layer shipped without them: a report is a new

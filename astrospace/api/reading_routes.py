@@ -1,8 +1,9 @@
 from calendar import monthrange
-from datetime import datetime, timezone, timedelta
+from datetime import date, datetime, timezone, timedelta
 from difflib import SequenceMatcher
 import logging
 import re
+import threading
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -48,12 +49,40 @@ def _kundli_now(k) -> datetime:
     return datetime.now(tz)
 
 
-def _period_label(period: str, now: datetime) -> str:
+def _period_start(period: str, local_day: date) -> date:
+    """First day of the calendar period that contains `local_day`.
+
+    Weeks run Monday to Sunday. That is a calendar convention for grouping
+    readings, not an astrological one (the Vedic weekday cycle starts on
+    Ravivara); it only decides which readings count as "this week".
+    """
+    if period == "weekly":
+        return local_day - timedelta(days=local_day.weekday())
+    if period == "monthly":
+        return local_day.replace(day=1)
     if period == "quarterly":
-        return f"Q{(now.month - 1) // 3 + 1} {now.year}"
-    return now.strftime({
+        return local_day.replace(month=((local_day.month - 1) // 3) * 3 + 1, day=1)
+    if period == "yearly":
+        return local_day.replace(month=1, day=1)
+    return local_day
+
+
+def _period_label(period: str, now: datetime) -> str:
+    """The label a reading is filed and looked up under.
+
+    It names the period, not the moment of writing, so it is the same for
+    every request inside one period. Weekly used to read "Week of <today>",
+    which changed every day: the cache lookup missed daily and each miss
+    wrote another paid "Version 1" (production audit 2026-10-15, R1).
+    `now` is the kundli-local time from `_kundli_now`.
+    """
+    start = _period_start(period, now.date())
+    if period == "weekly":
+        return f"Week of {start.strftime('%b')} {start.day}, {start.year}"
+    if period == "quarterly":
+        return f"Q{(start.month - 1) // 3 + 1} {start.year}"
+    return start.strftime({
         "daily":   "%Y-%m-%d",
-        "weekly":  "Week of %b %d, %Y",
         "monthly": "%B %Y",
         "yearly":  "%Y",
     }[period])
@@ -109,8 +138,28 @@ def _deviation(previous: str | None, current: str) -> tuple[float | None, dict |
     }
 
 
-def _reading_to_dict(r) -> dict:
+def _reading_range(r) -> tuple[str | None, str | None]:
+    """The calendar period a saved reading belongs to, from the kundli-local
+    date it was written on. Rows written under the old "Week of <today>"
+    labels get the Monday–Sunday week they fall in, so the client can title
+    them by date either way."""
+    try:
+        day = date.fromisoformat(r.generated_local_date or "")
+    except ValueError:
+        return None, None
+    if r.reading_type not in VALID_PERIODS:
+        return None, None
+    return _period_window(r.reading_type, datetime(day.year, day.month, day.day))
+
+
+def _reading_to_dict(r, current_label: str | None = None) -> dict:
+    period_start, period_end = _reading_range(r)
     return {
+        "period_start": period_start,
+        "period_end":   period_end,
+        # Whether this row is a version of the period the person is in now
+        # (production audit R2). Only set where the caller knows "now".
+        "is_current_period": (r.period_label == current_label) if current_label is not None else None,
         "id":           r.id,
         "kundli_id":    r.kundli_id,
         "reading_type": r.reading_type,
@@ -167,7 +216,11 @@ def _claim_to_dict(c) -> dict:
 
 
 def _period_window(period: str, now_local: datetime) -> tuple[str, str]:
-    start = now_local.date()
+    """ISO start and end of the calendar period `now_local` falls in, the
+    same period `_period_label` names. Claims carry this as their window,
+    so "Week of Oct 12" covers Oct 12 – 18, not the seven days from
+    whenever it happened to be written."""
+    start = _period_start(period, now_local.date())
     if period == "daily":
         end = start
     elif period == "weekly":
@@ -175,11 +228,8 @@ def _period_window(period: str, now_local: datetime) -> tuple[str, str]:
     elif period == "monthly":
         end = start.replace(day=monthrange(start.year, start.month)[1])
     elif period == "quarterly":
-        quarter_end_month = ((now_local.month - 1) // 3 + 1) * 3
-        end = start.replace(
-            month=quarter_end_month,
-            day=monthrange(start.year, quarter_end_month)[1],
-        )
+        end_month = start.month + 2
+        end = start.replace(month=end_month, day=monthrange(start.year, end_month)[1])
     else:
         end = start.replace(month=12, day=31)
     return start.isoformat(), end.isoformat()
@@ -299,6 +349,46 @@ def _extract_prediction_claims(
     return claims
 
 
+# ── Generation guard ─────────────────────────────────────────────────────────
+#
+# A reading is one model call of 20-40 s. Two taps on "New version", or the
+# same screen open twice, used to start two paid generations for the same
+# period (production audit 2026-10-15, R6). A request that arrives while one
+# is in flight for the same (kundli, period, label) now waits for it and
+# returns its result. The registry is per process: with several workers a
+# duplicate can still slip through on another worker, and the daily cap
+# below (which counts saved rows, so it holds across workers) bounds that.
+
+class _InFlight:
+    def __init__(self) -> None:
+        self.done = threading.Event()
+        self.reading_id: str | None = None
+        self.waiters = 0
+
+
+_IN_FLIGHT: dict[tuple[str, str, str], _InFlight] = {}
+_IN_FLIGHT_LOCK = threading.Lock()
+IN_FLIGHT_WAIT_SECONDS = 180
+
+# New versions per kundli and period per kundli-local day. The first reading
+# of a period is not counted; only regenerations of it are.
+MAX_NEW_VERSIONS_PER_DAY = 3
+NEW_VERSION_LIMIT = (
+    "You’ve asked for {limit} new versions of this {period} reading today. "
+    "Your latest version is still here, and you can ask for another tomorrow."
+)
+
+
+def _join_in_flight(db: Session, kundli_id: str, user_id: str, entry: _InFlight) -> dict:
+    """Wait for the generation already running and answer with what it made."""
+    entry.done.wait(IN_FLIGHT_WAIT_SECONDS)
+    reading = crud.get_reading(db, kundli_id, entry.reading_id, user_id) if entry.reading_id else None
+    if reading is None:
+        # The run we waited on failed or is still going; don't start another.
+        raise HTTPException(status_code=503, detail=READING_UNAVAILABLE)
+    return {"cached": True, **_reading_to_dict(reading, reading.period_label)}
+
+
 @router.post("/{kundli_id}/generate")
 def generate_reading(
     kundli_id: str,
@@ -316,26 +406,44 @@ def generate_reading(
     now_local = _kundli_now(k)
     label = _period_label(body.period, now_local)
     local_date = now_local.strftime("%Y-%m-%d")
-    target_start_date, target_end_date = _period_window(body.period, now_local)
 
     if not body.force_refresh:
+        # The label names the period, so a reading filed under it is this
+        # period's reading however long ago in the period it was written.
         latest = crud.get_latest_period_reading(db, kundli_id, body.period, label, user.id)
         if latest:
-            if body.period == "daily":
-                # a daily reading is stale as soon as the local date changes
-                fresh = latest.period_label == label
-            else:
-                age_limits = {
-                    "weekly":    timedelta(days=6),
-                    "monthly":   timedelta(days=25),
-                    "quarterly": timedelta(days=80),
-                    "yearly":    timedelta(days=350),
-                }
-                age = datetime.now(timezone.utc) - latest.generated_at.replace(tzinfo=timezone.utc)
-                fresh = age < age_limits[body.period]
-            if fresh:
-                return {"cached": True, **_reading_to_dict(latest)}
+            return {"cached": True, **_reading_to_dict(latest, label)}
 
+    key = (kundli_id, body.period, label)
+    with _IN_FLIGHT_LOCK:
+        entry = _IN_FLIGHT.get(key)
+        owner = entry is None
+        if owner:
+            entry = _IN_FLIGHT[key] = _InFlight()
+        else:
+            entry.waiters += 1
+    if not owner:
+        return _join_in_flight(db, kundli_id, user.id, entry)
+
+    try:
+        if body.force_refresh and crud.count_new_period_versions(
+            db, kundli_id, body.period, local_date, user.id,
+        ) >= MAX_NEW_VERSIONS_PER_DAY:
+            raise HTTPException(status_code=429, detail=NEW_VERSION_LIMIT.format(
+                limit=MAX_NEW_VERSIONS_PER_DAY, period=body.period,
+            ))
+        r = _generate_and_save(db, k, body.period, label, local_date, now_local, user.id)
+        entry.reading_id = r.id
+        return {"cached": False, **_reading_to_dict(r, label)}
+    finally:
+        with _IN_FLIGHT_LOCK:
+            _IN_FLIGHT.pop(key, None)
+        entry.done.set()
+
+
+def _generate_and_save(db: Session, k, period: str, label: str, local_date: str, now_local: datetime, user_id: str):
+    kundli_id = k.id
+    target_start_date, target_end_date = _period_window(period, now_local)
     try:
         chart = VedicChart(
             k.name, k.birth_year, k.birth_month, k.birth_day,
@@ -347,14 +455,14 @@ def generate_reading(
         raise HTTPException(status_code=422, detail=f"Invalid birth details on this kundli: {e}")
 
     try:
-        content, crossed = PeriodAgent(chart).generate_reading(body.period, now=now_local)
+        content, crossed = PeriodAgent(chart).generate_reading(period, now=now_local)
     except Exception:
-        logger.exception("reading generation failed (kundli=%s period=%s)", kundli_id, body.period)
+        logger.exception("reading generation failed (kundli=%s period=%s)", kundli_id, period)
         raise HTTPException(status_code=503, detail=READING_UNAVAILABLE)
     if not content.strip() or content.strip() == NO_ANSWER:
         # The agent loop ran out without an answer. Saving it would publish
         # the placeholder as this period's reading and mint claims from it.
-        logger.error("reading generation returned no text (kundli=%s period=%s)", kundli_id, body.period)
+        logger.error("reading generation returned no text (kundli=%s period=%s)", kundli_id, period)
         raise HTTPException(status_code=503, detail=READING_UNAVAILABLE)
     if crossed:
         # Output-side safety net, same tier as Ask's verifier. Nothing is
@@ -371,13 +479,13 @@ def generate_reading(
             ),
         })
 
-    previous = crud.get_latest_period_reading(db, kundli_id, body.period, label, user.id)
+    previous = crud.get_latest_period_reading(db, kundli_id, period, label, user_id)
     next_version = (previous.version or 1) + 1 if previous else 1
     deviation_score, deviation_summary = _deviation(previous.content if previous else None, content)
     r = crud.save_reading(
         db,
         kundli_id,
-        body.period,
+        period,
         content,
         label,
         generated_local_date=local_date,
@@ -390,15 +498,15 @@ def generate_reading(
         content,
         kundli_id=kundli_id,
         reading_id=r.id,
-        user_id=user.id,
-        reading_type=body.period,
+        user_id=user_id,
+        reading_type=period,
         period_label=label,
         generated_local_date=local_date,
         target_start_date=target_start_date,
         target_end_date=target_end_date,
     )
-    crud.replace_prediction_claims(db, r.id, claims, user.id)
-    return {"cached": False, **_reading_to_dict(r)}
+    crud.replace_prediction_claims(db, r.id, claims, user_id)
+    return r
 
 
 @router.get("/{kundli_id}")
@@ -421,7 +529,11 @@ def list_readings(
         period_label=period_label,
         generated_local_date=generated_date,
     )
-    return [_reading_to_dict(r) for r in readings]
+    # Every row says whether it belongs to the period the person is in now,
+    # so "versions of this week" and "past weeks" are not mixed together.
+    now_local = _kundli_now(k)
+    current = {p: _period_label(p, now_local) for p in VALID_PERIODS}
+    return [_reading_to_dict(r, current.get(r.reading_type, "")) for r in readings]
 
 
 @router.patch("/{kundli_id}/{reading_id}/feedback")
