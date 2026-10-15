@@ -27,7 +27,7 @@ from typing import Optional, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from ..agents.orchestrator import AskOrchestrator, ProfileContextStore
 from ..agents.schema import StructuredReading
@@ -45,6 +45,11 @@ log = logging.getLogger(__name__)
 
 MAX_HISTORY = 12
 MAX_QUESTION_CHARS = 2000
+# A client-supplied `history` longer than this is refused outright (422). The
+# web app sends its whole in-memory conversation, so anything up to this is
+# accepted and trimmed to the last MAX_HISTORY turns — the only ones a model
+# ever sees — before each turn is validated.
+MAX_HISTORY_ACCEPTED = 200
 
 
 class HistoryTurn(BaseModel):
@@ -55,6 +60,16 @@ class HistoryTurn(BaseModel):
 class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=MAX_QUESTION_CHARS)
     history: Optional[list[HistoryTurn]] = None
+
+    @field_validator("history", mode="before")
+    @classmethod
+    def _bound_history(cls, value):
+        if isinstance(value, list):
+            if len(value) > MAX_HISTORY_ACCEPTED:
+                raise ValueError(f"history is limited to {MAX_HISTORY_ACCEPTED} turns")
+            return value[-MAX_HISTORY:]
+        return value
+
     thread_id: Optional[str] = Field(
         None,
         description="Continue a saved thread. Its stored messages are used as "

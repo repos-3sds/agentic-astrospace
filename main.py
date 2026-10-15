@@ -40,12 +40,21 @@ from astrospace.api.legal_routes import router as legal_router
 from astrospace.api.store_routes import router as store_router
 from astrospace.api.voice_routes import router as voice_router
 from astrospace.admin.audit_middleware import AppAuditMiddleware
+from astrospace.api.auth import running_on_cloud_run
+from astrospace.api.security_headers import SecurityHeadersMiddleware
 from astrospace.entitlements import EntitlementDenied
+
+_ON_CLOUD_RUN = running_on_cloud_run()
 
 app = FastAPI(
     title="AstroSpace",
     description="AI-Powered Astrology Engine with Autonomous Agents",
     version="2.0.0",
+    # The interactive docs and the schema are a map of every route for
+    # anyone who asks. Useful locally; not published from production.
+    docs_url=None if _ON_CLOUD_RUN else "/docs",
+    redoc_url=None if _ON_CLOUD_RUN else "/redoc",
+    openapi_url=None if _ON_CLOUD_RUN else "/openapi.json",
 )
 
 # The web SPA is served same-origin, so CORS only matters for local dev
@@ -72,9 +81,14 @@ _DEV_ORIGINS = (
 )
 
 _configured = os.getenv("ALLOWED_ORIGINS")
+# The dev defaults are a fallback for a developer's machine only. On Cloud Run
+# with ALLOWED_ORIGINS unset they used to apply too, which allowed any page
+# served from localhost to make credentialed calls to production. The web SPA
+# is same-origin there and needs no entry.
+_fallback = () if _ON_CLOUD_RUN else _DEV_ORIGINS
 _origins = [
     origin.strip()
-    for origin in (_configured.split(",") if _configured else _DEV_ORIGINS)
+    for origin in (_configured.split(",") if _configured else _fallback)
     if origin.strip()
 ]
 # dict.fromkeys rather than set(): order is stable, which keeps the resolved
@@ -94,6 +108,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(SecurityHeadersMiddleware, on_cloud_run=_ON_CLOUD_RUN)
 # Added last, so it is the outermost layer: every line logged while handling
 # a request, the audit middleware's included, carries the Cloud Trace id.
 app.add_middleware(TraceContextMiddleware)
@@ -138,14 +153,25 @@ async def health():
 DIST = Path(__file__).parent / "frontend" / "dist" / "browser"
 
 
+def _is_api_path(path: str) -> bool:
+    # `path` is relative to the mount, without the leading slash.
+    return path == "api" or path.startswith("api/")
+
+
 class SPAStaticFiles(StaticFiles):
     """Static files with SPA fallback: unknown paths serve index.html so
-    client-side routes like /kundli/:id survive a full page load."""
+    client-side routes like /kundli/:id survive a full page load.
+
+    Never for /api/*: an unknown API path used to come back as 200 with the
+    SPA's index.html, which a client then failed to parse as JSON and a
+    scanner read as "exists". It gets FastAPI's own JSON 404 instead."""
 
     async def get_response(self, path, scope):
         from fastapi import HTTPException
         from starlette.exceptions import HTTPException as StarletteHTTPException
 
+        if _is_api_path(path):
+            return JSONResponse({"detail": "Not Found"}, status_code=404)
         try:
             response = await super().get_response(path, scope)
         except (HTTPException, StarletteHTTPException) as exc:

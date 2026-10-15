@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import replace
 from typing import Annotated
@@ -8,6 +9,8 @@ from fastapi import Depends, HTTPException
 
 from ..api.auth import AuthUser, CurrentUser, running_on_cloud_run
 from .client import AdminStorageError, get_admin_client
+
+log = logging.getLogger(__name__)
 
 
 def _bootstrap_emails() -> set[str]:
@@ -77,7 +80,8 @@ def current_admin(user: CurrentUser) -> AuthUser:
         role = _admin_role_from_database_url(user.id)
         if role:
             return replace(user, role=role)
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
+        log.exception("admin role lookup failed")
+        raise HTTPException(status_code=503, detail="Admin storage unavailable") from exc
     if record:
         return replace(user, role=record["role"])
     if user.email and user.email.lower() in _bootstrap_emails():

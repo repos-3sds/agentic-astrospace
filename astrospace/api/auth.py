@@ -1,3 +1,4 @@
+import logging
 import os
 from dataclasses import dataclass
 from functools import lru_cache
@@ -7,6 +8,7 @@ import requests
 from fastapi import Depends, Header, HTTPException, Request
 
 DEV_USER_ID = "local-dev-user"
+log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -79,8 +81,11 @@ def current_user(
             },
             timeout=8,
         )
-    except requests.RequestException as e:
-        raise HTTPException(status_code=503, detail=f"Supabase auth unavailable: {e}")
+    except requests.RequestException:
+        # The exception text carries the Supabase URL and connection details;
+        # log it, don't hand it to the caller.
+        log.exception("Supabase auth lookup failed")
+        raise HTTPException(status_code=503, detail="Sign-in service unavailable")
 
     if response.status_code != 200:
         raise HTTPException(status_code=401, detail="Invalid or expired session")

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
+import logging
 from pathlib import Path
 import re
 import tempfile
@@ -19,6 +20,7 @@ from ..context.source_retriever import SupabaseSourceRetriever
 from ..context.taxonomy import taxonomy, taxonomy_version
 
 router = APIRouter(prefix="/api/v1/admin", tags=["knowledge-admin"])
+log = logging.getLogger(__name__)
 
 
 class ReviewPayload(BaseModel):
@@ -75,17 +77,21 @@ class UserStatusPayload(BaseModel):
 
 
 def _client():
+    # AdminStorageError text can carry SQL, database errors or the raw body
+    # of a Supabase response; it goes to the log, not to the browser.
     try:
         return get_admin_client()
     except AdminStorageError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
+        log.exception("admin storage client unavailable")
+        raise HTTPException(status_code=503, detail="Admin storage unavailable") from exc
 
 
 def _safe(call):
     try:
         return call()
     except AdminStorageError as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        log.exception("admin storage call failed")
+        raise HTTPException(status_code=502, detail="Admin storage request failed") from exc
 
 
 def _source_map(client, source_ids: set[str]) -> dict[str, dict]:
