@@ -8,7 +8,19 @@
 
 .body { gap: 14px; }
 
+// Two-line segments (name and detail) keep equal halves and wrap rather than
+// scrolling; the picker's redesign is a separate checklist item.
+.segmented { grid-auto-columns: minmax(0, 1fr); border-radius: 22px; }
+
+// The button mixin left these as inline content, so the detail line ran on
+// after the name and the selected pill covered it.
 .segment {
+  display: flex;
+  justify-content: center;
+  white-space: normal;
+  text-align: left;
+  padding: 10px 14px;
+  border-radius: 18px;
   flex-direction: column;
   align-items: flex-start;
   gap: 3px;
@@ -21,7 +33,7 @@
   }
 }
 
-.segment.is-on small { color: color-mix(in srgb, var(--m-text) 76%, transparent); }
+.segment.is-on small { color: color-mix(in srgb, var(--m-on-ink) 72%, transparent); }
 
 .eyebrow { @include m-eyebrow; color: var(--m-accent-strong); margin: 6px 0 0; }
 .voice-note { @include m-body-small; color: var(--m-muted); margin: -4px 0 2px; }

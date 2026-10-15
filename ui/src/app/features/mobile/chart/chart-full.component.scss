@@ -229,6 +229,11 @@
   &::-webkit-scrollbar { display: none; }
 }
 
+// The table's last columns sat past the card edge with nothing to say the
+// row scrolls.
+.positions-scroll,
+.varga-strip { @include m-scroll-cue; }
+
 .positions-table {
   width: max-content;
   min-width: 100%;
