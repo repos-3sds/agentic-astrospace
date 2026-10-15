@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, input, output } from '@angular/core';
 import { ASK_NAVIGATION } from './ask-navigation';
 
 /**
@@ -65,6 +65,23 @@ export class AskComposerComponent {
   readonly valueChange = output<string>();
   readonly submitted = output<string>();
   readonly voiceRequested = output<void>();
+
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /**
+   * Put the caret at the end of the field, so a suggestion tapped into the
+   * composer is ready to edit or send. Deferred a frame: the new value has to
+   * reach the field before the caret can be placed after it.
+   */
+  focus(): void {
+    requestAnimationFrame(() => {
+      const field = this.host.nativeElement.querySelector<HTMLInputElement | HTMLTextAreaElement>('.field');
+      if (!field) return;
+      field.focus();
+      const end = field.value.length;
+      field.setSelectionRange(end, end);
+    });
+  }
 
   protected submit(): void {
     const q = this.value().trim();

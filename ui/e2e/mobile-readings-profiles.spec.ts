@@ -859,6 +859,13 @@ test('mobile persona modes change navigation and presentation depth', async ({ p
   await expect(page.getByText('Ask in plain language.')).toBeVisible();
   await expect(page.getByRole('button', { name: /Money/ })).toHaveCount(0);
   await expect(page.getByText('Plain-language starter')).toBeVisible();
+  // A suggestion fills the composer, as on Today; it is not sent (flow audit 5.4).
+  const suggestion = page.locator('button.suggestion').first();
+  const prompt = (await suggestion.locator('.suggestion-text').evaluate((el) => el.firstChild?.textContent ?? '')).trim();
+  await suggestion.click();
+  await expect(page).toHaveURL(/\/m\/ask$/);
+  await expect(page.getByRole('textbox', { name: 'Your question' })).toHaveValue(prompt);
+  await expect(page.getByRole('textbox', { name: 'Your question' })).toBeFocused();
 
   await page.goto('/m/settings/mode');
   await page.getByRole('radio', { name: /Practitioner/ }).click();

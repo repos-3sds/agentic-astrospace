@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { ASK_NAVIGATION } from './ask-navigation';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AskComposerComponent } from './ask-composer.component';
@@ -155,6 +155,19 @@ export class AskHomeComponent {
     void this.speech.stop();
     this.draft.set(text);
     this.listening.set(false);
+  }
+
+  private readonly composer = viewChild(AskComposerComponent);
+
+  /**
+   * A suggestion goes into the composer; it is not sent. Same as tapping one
+   * on Today: the suggestion is the app's wording, and the reader gets to
+   * edit it before it becomes their question. Sending on tap also opened a
+   * new thread with the same title on every tap (flow audit 5.4).
+   */
+  protected useSuggestion(prompt: string): void {
+    this.draft.set(prompt);
+    this.composer()?.focus();
   }
 
   protected toggleTopic(id: string): void {
