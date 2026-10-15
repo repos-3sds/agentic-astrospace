@@ -8,6 +8,12 @@
 .editbd-warning { @include m-body-small; padding:16px; border:1px solid var(--m-warn); border-radius:16px; background:var(--m-warn-soft); color:var(--m-warn); margin-bottom:16px; }
 form { display:flex;flex-direction:column;gap:16px; }
 label { @include m-caption; color:var(--m-muted); display:flex;flex-direction:column;gap:8px; }
+.editbd-check {
+  flex-direction: row; align-items: flex-start; gap: 12px; min-height: 44px;
+  input { width: 20px; height: 20px; margin: 2px 0 0; flex-shrink: 0; accent-color: var(--m-accent-strong); }
+  span { @include m-body; color: var(--m-text); display: flex; flex-direction: column; gap: 2px; }
+  small { @include m-caption; color: var(--m-muted); }
+}
 input, select { @include m-body; box-sizing:border-box;width:100%;padding:16px;border:1.2px solid var(--m-border);border-radius:16px;background:var(--m-surface);color:var(--m-text); }
 .editbd-error,.editbd-state{@include m-body-small;color:var(--m-bad)}
 footer { padding:12px 24px max(20px,var(--m-safe-bottom)); }

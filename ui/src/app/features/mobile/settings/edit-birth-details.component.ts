@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
-import { PanchangaCity } from '../../../core/models';
+import { PanchangaCity, birthTimeIsApproximate } from '../../../core/models';
 import { ChartComputingComponent } from '../states/chart-computing.component';
 import { BirthPlaceFieldComponent } from './birth-place-field.component';
 import { normalizeProfileRelationship, PROFILE_RELATIONSHIPS } from './profile-fields';
@@ -32,6 +32,8 @@ export class EditBirthDetailsComponent {
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
   protected readonly error = signal<string | null>(null);
+  /** Bound to the checkbox; a chart cast from a guess must keep saying so. */
+  protected approximate = false;
 
   constructor() { void this.load(); }
 
@@ -46,6 +48,7 @@ export class EditBirthDetailsComponent {
       this.city = profile.birth_city;
       this.nation = profile.birth_nation;
       this.relation = normalizeProfileRelationship(profile.relation);
+      this.approximate = birthTimeIsApproximate(profile);
       this.initialPlace.set({ city: this.city, nation: this.nation });
     } catch (error) {
       this.error.set((error as Error).message);
@@ -69,6 +72,7 @@ export class EditBirthDetailsComponent {
         name: this.name.trim(), birth_year: year, birth_month: month, birth_day: day,
         birth_hour: hour, birth_minute: minute, birth_city: this.city.trim(),
         birth_nation: this.nation.trim() || profile.birth_nation, relation: this.relation,
+        birth_time_accuracy: this.approximate ? 'approximate' : 'exact',
       });
       await this.router.navigate(['/m', 'settings']);
     } catch (error) {

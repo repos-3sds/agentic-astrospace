@@ -182,6 +182,7 @@
         </div>
         <as-birth-details-card
           [chart]="natal()"
+          [profile]="kundlis.active()"
           density="compact"
           [embedded]="true"
           [tone]="preferences.experienceMode() === 'guided' ? 'guided' : 'plain'" />

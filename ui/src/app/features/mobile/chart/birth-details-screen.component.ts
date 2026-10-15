@@ -31,6 +31,7 @@ export class BirthDetailsScreenComponent {
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly personName = computed(() => this.kundlis.active()?.name ?? null);
+  protected readonly profile = computed(() => this.kundlis.active() ?? null);
 
   constructor() {
     void this.load();

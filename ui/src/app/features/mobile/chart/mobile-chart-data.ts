@@ -1,4 +1,4 @@
-import { Kundli, VargaChart, VedicAll, VedicPlanet } from '../../../core/models';
+import { Kundli, VargaChart, VedicAll, VedicPlanet, birthTimeIsApproximate } from '../../../core/models';
 import { ChartCell } from './east-chart.component';
 import { PlanetDetail } from './planet-sheet.component';
 
@@ -168,7 +168,7 @@ function provenanceRows(data: VedicAll, profile: Kundli | null): { label: string
     { label: 'Node type', value: provenance?.node_type ?? data.meta?.node_type ?? '—' },
     { label: 'House system', value: provenance?.house_system ?? 'Whole-sign' },
     { label: 'Calculation place', value: provenance?.calculation_place?.city ?? data.meta?.place ?? profile?.birth_city ?? '—' },
-    { label: 'Birth time confidence', value: profile?.notes?.toLowerCase().includes('approx') ? 'Approximate' : 'Provided' },
+    { label: 'Birth time confidence', value: birthTimeIsApproximate(profile) ? 'Approximate' : 'Provided' },
   ];
 }
 

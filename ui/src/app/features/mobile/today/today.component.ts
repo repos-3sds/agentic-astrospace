@@ -220,7 +220,7 @@ export interface TodayView {
   styleUrl: './today.component.scss',
 })
 export class TodayComponent {
-  private readonly kundlis = inject(KundliStore);
+  protected readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
   private readonly festivals = inject(FestivalService);
   private readonly route = inject(ActivatedRoute);

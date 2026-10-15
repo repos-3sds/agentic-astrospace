@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-import { VedicAll } from '../../../core/models';
+import { Kundli, VedicAll } from '../../../core/models';
+import { BirthTimeBadgeComponent } from './birth-time-badge.component';
 
 /**
  * The reader's own birth constants — the panel every astrology app opens with,
@@ -23,6 +24,7 @@ interface Row { label: string; value: string; note?: string; }
 @Component({
   selector: 'as-birth-details-card',
   standalone: true,
+  imports: [BirthTimeBadgeComponent],
   templateUrl: './birth-details-card.component.html',
   styleUrl: './birth-details-card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -30,6 +32,8 @@ interface Row { label: string; value: string; note?: string; }
 export class BirthDetailsCardComponent {
   readonly chart = input<VedicAll | null>(null);
   readonly personName = input<string | null>(null);
+  /** Whose chart this is, for the approximate-time flag; optional for callers without a profile. */
+  readonly profile = input<Pick<Kundli, 'birth_time_accuracy' | 'notes'> | null>(null);
   readonly density = input<BirthDetailsDensity>('compact');
   /** Removes the nested card shell when this content lives inside a signature surface. */
   readonly embedded = input(false);

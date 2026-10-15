@@ -68,7 +68,7 @@ export class AddProspectComponent {
         birth_minute: minute,
         birth_city: this.city.trim(),
         birth_nation: (this.nation.trim() || 'IN').toUpperCase(),
-        notes: this.approximate() ? 'Birth time is approximate.' : undefined,
+        birth_time_accuracy: this.approximate() ? 'approximate' : 'exact',
       });
       if (previousActive) this.kundlis.setActive(previousActive);
       await this.router.navigate(['/m', 'compat', 'results'], { queryParams: { partner: created.id } });

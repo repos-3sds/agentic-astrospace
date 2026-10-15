@@ -16,6 +16,10 @@
       </label>
       <label>DATE OF BIRTH<input name="date" [(ngModel)]="date" type="date" /></label>
       <label>TIME OF BIRTH<input name="time" [(ngModel)]="time" type="time" /></label>
+      <label class="editbd-check">
+        <input name="approximate" type="checkbox" [(ngModel)]="approximate" />
+        <span>This time is approximate<small>Rising sign, houses and dasha dates will be marked as estimates.</small></span>
+      </label>
       <as-birth-place-field [initialPlace]="initialPlace()" (placeChange)="onPlaceChange($event)" />
       @if (error()) { <p class="editbd-error" role="alert">{{ error() }}</p> }
     </form>

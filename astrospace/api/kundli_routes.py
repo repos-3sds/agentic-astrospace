@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Literal, Optional
 from ..db import get_db, Kundli
 from ..db import crud
 from ..core.chart import BirthChart
@@ -11,6 +11,15 @@ router = APIRouter(prefix="/api/v1/kundlis", tags=["kundlis"])
 
 _BIRTH_FIELDS = {"birth_year", "birth_month", "birth_day", "birth_hour",
                  "birth_minute", "birth_city", "birth_nation"}
+
+# How much to trust birth_hour/birth_minute. "approximate" is the reader's own
+# admission (onboarding's "use a gentle estimate"); "unknown" is a time nobody
+# has, defaulted to noon. Either one moves the ascendant by up to a sign, so
+# every screen that shows house- or dasha-derived data must be able to say so.
+# The column has existed since the kundlis table gained it; until 2026-10-15
+# the apps wrote "Birth time is approximate." into the free-text notes instead,
+# which nothing downstream could read.
+BirthTimeAccuracy = Literal["exact", "approximate", "unknown"]
 
 
 class KundliCreate(BaseModel):
@@ -23,6 +32,7 @@ class KundliCreate(BaseModel):
     birth_minute: int = Field(default=0, ge=0, le=59)
     birth_city: str
     birth_nation: str = "US"
+    birth_time_accuracy: BirthTimeAccuracy = "exact"
     notes: Optional[str] = None
 
 
@@ -36,6 +46,7 @@ class KundliUpdate(BaseModel):
     birth_minute: Optional[int] = Field(default=None, ge=0, le=59)
     birth_city: Optional[str] = None
     birth_nation: Optional[str] = None
+    birth_time_accuracy: Optional[BirthTimeAccuracy] = None
     notes: Optional[str] = None
 
 
@@ -52,6 +63,7 @@ def _kundli_to_dict(k: Kundli) -> dict:
         "birth_minute": k.birth_minute,
         "birth_city":   k.birth_city,
         "birth_nation": k.birth_nation,
+        "birth_time_accuracy": k.birth_time_accuracy or "exact",
         "sun_sign":     k.sun_sign,
         "moon_sign":    k.moon_sign,
         "ascendant":    k.ascendant,
