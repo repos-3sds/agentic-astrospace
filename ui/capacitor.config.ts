@@ -37,6 +37,11 @@ const config: CapacitorConfig = {
       showSpinner: false,
       androidScaleType: 'CENTER_CROP',
     },
+    PushNotifications: {
+      // Without this a push that lands while the app is open is delivered to
+      // the listener but never shown, so the morning brief silently vanishes.
+      presentationOptions: ['badge', 'sound', 'alert'],
+    },
     StatusBar: {
       style: 'LIGHT',
       backgroundColor: '#FAF7F0',
