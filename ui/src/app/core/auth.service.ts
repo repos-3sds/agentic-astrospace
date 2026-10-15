@@ -7,6 +7,8 @@ import { createClient, Session, SupabaseClient, User } from '@supabase/supabase-
 import { apiUrl } from './api-origin';
 import { Preferences } from '@capacitor/preferences';
 import { ConnectivityService } from './connectivity.service';
+import { ResourceCacheService } from './resource-cache.service';
+import { SessionStorageAdapter, sessionStorageAdapter } from './session-storage';
 
 const NATIVE_AUTH_CALLBACK = 'app.astrospace.mobile://auth/callback';
 const NATIVE_AUTH_BRIDGE_PATH = '/api/v1/auth/native-callback';
@@ -54,8 +56,19 @@ export class AuthService {
   private initPromise: Promise<void> | null = null;
   private nativeCallbackInstalled = false;
   private readonly connectivity: ConnectivityService;
+  /**
+   * Keychain / Keystore on a device, Preferences in a browser — see
+   * session-storage.ts. One adapter instance serves both supabase-js and the
+   * offline fallback read in load(), so they can never disagree about where
+   * the session is.
+   */
+  private readonly sessionStorage: SessionStorageAdapter = sessionStorageAdapter();
 
-  constructor(private router: Router, connectivity: ConnectivityService) {
+  constructor(
+    private router: Router,
+    connectivity: ConnectivityService,
+    private readonly cache: ResourceCacheService,
+  ) {
     this.connectivity = connectivity;
   }
 
@@ -138,7 +151,7 @@ export class AuthService {
   /** supabase-js's persisted session, read directly from the same storage it writes. */
   private async storedSession(supabaseUrl: string): Promise<Session | null> {
     try {
-      const { value } = await Preferences.get({ key: supabaseStorageKey(supabaseUrl) });
+      const value = await this.sessionStorage.getItem(supabaseStorageKey(supabaseUrl));
       if (!value) return null;
       const parsed = JSON.parse(value) as Partial<Session>;
       return parsed?.access_token && parsed.user ? (parsed as Session) : null;
@@ -149,23 +162,11 @@ export class AuthService {
 
   /** Separate so tests can hand the service a fake client without touching the network. */
   protected buildClient(url: string, anonKey: string): SupabaseClient {
-    const capacitorStorage = {
-      getItem: async (key: string): Promise<string | null> => {
-        const { value } = await Preferences.get({ key });
-        return value;
-      },
-      setItem: async (key: string, value: string): Promise<void> => {
-        await Preferences.set({ key, value });
-      },
-      removeItem: async (key: string): Promise<void> => {
-        await Preferences.remove({ key });
-      }
-    };
     return createClient(url, anonKey, {
       auth: {
         flowType: 'pkce',
         detectSessionInUrl: !Capacitor.isNativePlatform(),
-        storage: capacitorStorage,
+        storage: this.sessionStorage,
       },
     });
   }
@@ -278,6 +279,11 @@ export class AuthService {
       if (error) throw error;
     }
     this.setSession(null);
+    // The encrypted cache holds the signed-out account's guidance, charts and
+    // threads. Until 2026-10-15 it was left on disk until its TTL, so the next
+    // person to sign in on a shared phone inherited it. The cache is keyed by
+    // user, but a sign-out means "nothing of mine stays on this device".
+    this.cache.clearAll();
     await this.router.navigate(destination ?? (this.enabled() ? ['/auth'] : ['/']));
   }
 
