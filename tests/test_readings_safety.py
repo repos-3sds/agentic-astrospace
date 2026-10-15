@@ -205,6 +205,18 @@ class TestProviderFailure:
         assert "INVALID_ARGUMENT" not in res.text
         assert client.get(f"/api/v1/readings/{env['kundli']}?period=daily").json() == []
 
+    def test_provider_error_reaches_the_native_app(self, env):
+        """An unhandled exception became a 500 from Starlette's outermost
+        middleware, with no CORS header. The Capacitor webview (origin
+        https://localhost) then blocked the response, so the app saw
+        "Failed to fetch" and showed the offline banner."""
+        native = TestClient(app, raise_server_exceptions=False,
+                            headers={"Origin": "https://localhost"})
+        with patch.object(PeriodAgent, "run", side_effect=RuntimeError("400 INVALID_ARGUMENT")):
+            res = _generate(native, env["kundli"], "weekly")
+        assert res.status_code == 503
+        assert res.headers.get("access-control-allow-origin") == "https://localhost"
+
     def test_placeholder_answer_is_never_saved(self, client, env):
         with patch.object(PeriodAgent, "run", return_value="Unable to generate a response."):
             res = _generate(client, env["kundli"], "daily")
