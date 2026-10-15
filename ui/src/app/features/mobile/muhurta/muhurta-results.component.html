@@ -13,7 +13,11 @@
   </header>
 
   @if (loading()) {
-    <section class="muhurta-state"><b>Finding windows</b><p>Checking panchanga windows for your selected range.</p></section>
+    <section class="muhurta-state" role="status" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <b>Finding windows</b>
+      <p>Checking every day in your range against the panchanga. This can take a few seconds.</p>
+    </section>
   } @else if (referOut(); as refusal) {
     <!-- A refusal by design, not a failure: no retry, and the same boundary
          every health, legal and money question meets elsewhere in the app. -->

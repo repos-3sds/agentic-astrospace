@@ -48,6 +48,21 @@
     min-height: 42px;
   }
 }
+.muhurta-state .spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 3px solid var(--m-border);
+  border-top-color: var(--m-accent);
+  animation: muhurta-spin 0.9s linear infinite;
+}
+
+@keyframes muhurta-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .muhurta-state .spinner { animation-duration: 2.4s; }
+}
+
 .muhurta-state.error { border-color: var(--m-warn); b { color: var(--m-warn); } }
 .muhurta-state.refer-out { border-color: var(--m-gold); img { width: 28px; height: 28px; } b { color: var(--m-gold); } }
 

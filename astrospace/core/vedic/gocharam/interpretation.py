@@ -314,7 +314,7 @@ def _synthesis(rules: list[dict]) -> dict:
             "challenging": len(challenging),
         },
         "guided_summary": f"{headline}. Focus on one practical response at a time rather than treating any single transit as a guarantee.",
-        "balanced_context": f"{headline}. The leading placement evidence is {names}. Open a planet for vedha, strength, motion and timing.",
+        "balanced_context": f"{headline}. The leading placement evidence is {names}. Tap a planet to see what blocks or supports it, how strong it is, and when it moves.",
         "practitioner_deep_dive": (
             f"Resolved {len(baseline)} baseline placements: {len(supportive)} supportive, "
             f"{len(mixed)} modified/mixed and {len(challenging)} challenging. "

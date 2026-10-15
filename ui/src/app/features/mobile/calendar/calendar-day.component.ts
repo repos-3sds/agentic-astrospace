@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, injec
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
-import { FestivalService } from '../../../core/festival.service';
+import { FestivalService, festivalRegionsLabel } from '../../../core/festival.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { CalendarDaySummary, CalendarEvent, CalendarIntelligencePayload, CalendarPractitionerDayDetail, FestivalOccurrence, PanchangaWindow } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
@@ -125,7 +125,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
         <section class="mcald-stack">
           @for (festival of dayFestivals(); track festival.slug + festival.occurs_on) {
             <button class="festival-row" type="button" (click)="selectedFestival.set(festival)">
-              <small>{{ festival.regions.join(' · ') }}</small>
+              <small>{{ regionsLabel(festival.regions) }}</small>
               <b>{{ festival.name }}</b>
               <p>{{ festival.description || festival.prep_guidance || 'Tap for observance details.' }}</p>
             </button>
@@ -214,6 +214,8 @@ export class CalendarDayComponent {
   protected reload(): void {
     void this.load(this.activeId(), true);
   }
+
+  protected readonly regionsLabel = festivalRegionsLabel;
 
   protected dateLabel(date: string): string {
     const value = date || this.data()?.start_date;

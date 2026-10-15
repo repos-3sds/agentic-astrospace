@@ -11,10 +11,36 @@
 
   <!-- Export first: data you cannot take with you is not yours. -->
   @for (action of actions; track action.id) {
-    <button class="action" type="button" [disabled]="busy()" (click)="run(action.id)">
-      <span class="action-label">{{ action.label }}</span>
-      <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
+    <button
+      class="action"
+      type="button"
+      [disabled]="busy()"
+      [attr.aria-expanded]="action.id === 'email' ? editingEmail() : null"
+      (click)="run(action.id)"
+    >
+      <span class="action-label">
+        {{ action.label }}
+        @if (action.id === 'email' && currentEmail()) { <small>{{ currentEmail() }}</small> }
+      </span>
+      <img src="mobile/chevron.svg" alt="" aria-hidden="true" [class.is-open]="action.id === 'email' && editingEmail()" />
     </button>
+    @if (action.id === 'email' && editingEmail()) {
+      <form class="email-form" (submit)="$event.preventDefault(); sendEmailChange()">
+        <label for="new-email">NEW EMAIL</label>
+        <input
+          id="new-email"
+          type="email"
+          autocomplete="email"
+          inputmode="email"
+          [value]="newEmail()"
+          (input)="newEmail.set($any($event.target).value)"
+        />
+        <p class="hint">We’ll send a link to the new address. Nothing changes until you open it.</p>
+        <button class="send" type="submit" [disabled]="busy()">
+          {{ busy() === 'email' ? 'Sending…' : 'Send confirmation link' }}
+        </button>
+      </form>
+    }
   }
   @if (message()) { <p class="status" role="status">{{ message() }}</p> }
   @if (error()) { <p class="status error" role="alert">{{ error() }}</p> }
