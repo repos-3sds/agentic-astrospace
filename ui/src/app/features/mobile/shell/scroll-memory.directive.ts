@@ -4,6 +4,8 @@ import { RETAINED_MOBILE_TABS } from '../../../core/mobile-route-reuse-strategy'
 
 /** How long a restore keeps retrying while a rebuilt screen loads its content. */
 const RESTORE_WINDOW_MS = 1500;
+/** Consecutive frames an offset must hold before the restore lets go. */
+const STABLE_FRAMES = 3;
 /** Positions remembered at once; the oldest is dropped past this. */
 const MAX_ENTRIES = 60;
 
@@ -91,25 +93,38 @@ export class ScrollMemoryDirective {
     const saved = this.positions.get(this.keyFor(url));
     const restore = saved !== undefined && (this.popstate || isRetainedTab(path));
     this.popstate = false;
-    if (restore && saved > 0) {
-      this.restore(saved);
-    } else {
-      this.host.scrollTop = 0;
-    }
+    this.holdAt(restore ? saved : 0);
   }
 
-  private restore(target: number): void {
+  /**
+   * Set the offset now, then keep it for a few frames.
+   *
+   * At NavigationEnd the outgoing screen's DOM can still be in the scroller:
+   * the animation renderer removes a detached view a frame later. Setting
+   * 700 against that taller document succeeded, and then the old screen's
+   * removal above it pulled the offset to 18 through scroll anchoring. So
+   * the offset is only trusted once it has held for STABLE_FRAMES frames in
+   * a row; a rebuilt screen still loading its content gets the same
+   * treatment until RESTORE_WINDOW_MS runs out.
+   */
+  private holdAt(target: number): void {
+    this.host.scrollTop = target;
     const started = performance.now();
-    const apply = () => {
-      this.host.scrollTop = target;
-      const reached = Math.abs(this.host.scrollTop - target) <= 1;
-      if (reached || performance.now() - started > RESTORE_WINDOW_MS) {
+    let stable = 0;
+    const step = () => {
+      if (Math.abs(this.host.scrollTop - target) <= 1) {
+        stable++;
+      } else {
+        stable = 0;
+        this.host.scrollTop = target;
+      }
+      if (stable >= STABLE_FRAMES || performance.now() - started > RESTORE_WINDOW_MS) {
         this.frame = 0;
         return;
       }
-      this.frame = requestAnimationFrame(apply);
+      this.frame = requestAnimationFrame(step);
     };
-    apply();
+    this.frame = requestAnimationFrame(step);
   }
 
   private cancelRestore(): void {

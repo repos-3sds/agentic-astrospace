@@ -48,7 +48,7 @@ describe('ScrollMemoryDirective', () => {
   });
 
   async function settle(): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    await new Promise((resolve) => setTimeout(resolve, 120));
   }
 
   it('opens a forward destination at the top, not at the previous offset', async () => {
@@ -75,6 +75,16 @@ describe('ScrollMemoryDirective', () => {
     await router.navigateByUrl('/m/today');
     await settle();
     expect(scroller.scrollTop).toBe(640);
+  });
+
+  it('holds a restored offset when the outgoing screen leaves a frame later', async () => {
+    scroller.scrollTop = 700;
+    await router.navigateByUrl('/m/explore');
+    await router.navigateByUrl('/m/today');
+    // What the old screen's late removal does through scroll anchoring.
+    requestAnimationFrame(() => { scroller.scrollTop = 18; });
+    await settle();
+    expect(scroller.scrollTop).toBe(700);
   });
 
   it('starts a non-tab screen at the top on a fresh forward visit', async () => {
