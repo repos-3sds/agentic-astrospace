@@ -26,6 +26,10 @@ FCM_ENDPOINT = "https://fcm.googleapis.com/v1/projects/{project}/messages:send"
 
 # FCM error codes that mean the token will never work again. The worker
 # revokes those rows so the next run does not keep paying for them.
+# Android notification channel with the temple-bell sound, created by the app
+# (ui/android/.../MainActivity.java). Unknown channel ids fall back to the
+# app's default, so an older build still shows the push.
+ANDROID_CHANNEL_ID = "siddha_bell"
 FCM_DEAD_TOKEN_CODES = {"UNREGISTERED", "INVALID_ARGUMENT"}
 
 
@@ -110,7 +114,10 @@ class FcmTransport:
                 "token": token,
                 "notification": {"title": message.title, "body": message.body or ""},
                 "data": data,
-                "android": {"priority": "normal"},
+                "android": {
+                    "priority": "normal",
+                    "notification": {"channel_id": ANDROID_CHANNEL_ID},
+                },
             }
         }
         try:
