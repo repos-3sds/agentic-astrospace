@@ -181,3 +181,21 @@ def test_run_once_schedules_and_delivers(db, monkeypatch):
     assert summary["scheduled"] == 2
     # A 2020 send time is long past, so both go out on the same run.
     assert summary["sent"] == 2
+
+
+@pytest.mark.parametrize("model, column", [
+    (PushToken, "id"),
+    (PushToken, "device_id"),
+    (NotificationJob, "id"),
+    (NotificationDelivery, "id"),
+    (NotificationDelivery, "job_id"),
+    (NotificationDelivery, "push_token_id"),
+])
+def test_uuid_columns_bind_as_uuid_on_postgres(model, column):
+    """Supabase declares these uuid; binding a varchar there fails every insert
+    (DatatypeMismatch), which SQLite in the rest of this file cannot catch."""
+    from sqlalchemy import Uuid
+    from sqlalchemy.dialects import postgresql
+
+    col_type = model.__table__.c[column].type
+    assert isinstance(col_type.dialect_impl(postgresql.dialect()), Uuid)

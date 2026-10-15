@@ -441,7 +441,7 @@ class UserDevice(Base):
     __tablename__ = "user_devices"
     __table_args__ = (UniqueConstraint("user_id", "device_id", name="user_devices_user_id_device_id_key"),)
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
     user_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
     device_id: Mapped[str] = mapped_column(String, nullable=False)
     platform: Mapped[str] = mapped_column(String, nullable=False)  # ios | android | web
@@ -775,9 +775,9 @@ class PushToken(Base):
     __tablename__ = "push_tokens"
     __table_args__ = (UniqueConstraint("provider", "token", name="push_tokens_provider_token_key"),)
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
     user_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
-    device_id: Mapped[str | None] = mapped_column(String, ForeignKey("user_devices.id"))
+    device_id: Mapped[str | None] = mapped_column(_UuidString, ForeignKey("user_devices.id"))
     provider: Mapped[str] = mapped_column(String, nullable=False)  # apns | fcm | webpush
     token: Mapped[str] = mapped_column(Text, nullable=False)
     environment: Mapped[str] = mapped_column(String, default="production")
@@ -809,7 +809,7 @@ class NotificationPreference(Base):
 class NotificationJob(Base):
     __tablename__ = "notification_jobs"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
     user_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
     kundli_id: Mapped[str | None] = mapped_column(String, ForeignKey("kundlis.id"))
     category: Mapped[str] = mapped_column(String, nullable=False)
@@ -838,9 +838,9 @@ class NotificationJob(Base):
 class NotificationDelivery(Base):
     __tablename__ = "notification_deliveries"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
-    job_id: Mapped[str] = mapped_column(String, ForeignKey("notification_jobs.id"), nullable=False, index=True)
-    push_token_id: Mapped[str | None] = mapped_column(String, ForeignKey("push_tokens.id"))
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
+    job_id: Mapped[str] = mapped_column(_UuidString, ForeignKey("notification_jobs.id"), nullable=False, index=True)
+    push_token_id: Mapped[str | None] = mapped_column(_UuidString, ForeignKey("push_tokens.id"))
     provider: Mapped[str | None] = mapped_column(String)
     provider_message_id: Mapped[str | None] = mapped_column(String)
     status: Mapped[str] = mapped_column(String, default="queued")
@@ -858,7 +858,7 @@ class UserAlert(Base):
 
     __tablename__ = "user_alerts"
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
     user_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
     kundli_id: Mapped[str | None] = mapped_column(String, ForeignKey("kundlis.id"))
     category: Mapped[str] = mapped_column(String, nullable=False)
@@ -866,7 +866,7 @@ class UserAlert(Base):
     title: Mapped[str] = mapped_column(String, nullable=False)
     body: Mapped[str | None] = mapped_column(Text)
     deep_link: Mapped[str | None] = mapped_column(String)
-    source_job_id: Mapped[str | None] = mapped_column(String, ForeignKey("notification_jobs.id"))
+    source_job_id: Mapped[str | None] = mapped_column(_UuidString, ForeignKey("notification_jobs.id"))
     read_at: Mapped[datetime | None] = mapped_column(DateTime)
     dismissed_at: Mapped[datetime | None] = mapped_column(DateTime)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime)
@@ -880,7 +880,7 @@ class WidgetInstall(Base):
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
     user_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
-    device_id: Mapped[str | None] = mapped_column(String, ForeignKey("user_devices.id"))
+    device_id: Mapped[str | None] = mapped_column(_UuidString, ForeignKey("user_devices.id"))
     kind: Mapped[str] = mapped_column(String, nullable=False)
     family: Mapped[str | None] = mapped_column(String)
     kundli_id: Mapped[str | None] = mapped_column(String, ForeignKey("kundlis.id"))
@@ -894,7 +894,7 @@ class LiveActivity(Base):
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
     user_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
-    device_id: Mapped[str | None] = mapped_column(String, ForeignKey("user_devices.id"))
+    device_id: Mapped[str | None] = mapped_column(_UuidString, ForeignKey("user_devices.id"))
     kundli_id: Mapped[str | None] = mapped_column(String, ForeignKey("kundlis.id"))
     kind: Mapped[str] = mapped_column(String, nullable=False)
     activity_token: Mapped[str | None] = mapped_column(Text)
