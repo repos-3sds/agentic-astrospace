@@ -295,7 +295,7 @@ class BaseAstroAgent:
         from google.genai import types
         return types
 
-    def _gemini_config(self, include_tools: bool = True):
+    def _gemini_config(self, include_tools: bool = True, allow_calls: bool = True):
         types = self._gemini_types()
         kwargs = {
             "system_instruction": self.system_prompt or None,
@@ -315,6 +315,12 @@ class BaseAstroAgent:
                 for tool in self.tools
             ]
             kwargs["tools"] = [types.Tool(function_declarations=declarations)]
+            if not allow_calls:
+                # Tools stay declared (the history holds calls to them) but
+                # the model must answer in text.
+                kwargs["tool_config"] = types.ToolConfig(
+                    function_calling_config=types.FunctionCallingConfig(mode="NONE"),
+                )
         return types.GenerateContentConfig(**kwargs)
 
     def _gemini_contents_from_messages(self, messages: list):
@@ -367,20 +373,35 @@ class BaseAstroAgent:
                 return "Unable to generate a response.", tools_used
 
             contents.append(response.candidates[0].content)
+            # Every response to one model turn goes back in ONE user turn.
+            # Gemini rejects a request whose function-response parts don't
+            # match the function-call parts of the turn before (400 "number
+            # of function response parts is equal to the number of function
+            # call parts"), which is what one Content per call produced as
+            # soon as the model called two tools in parallel. The SDK's own
+            # automatic function calling builds the turn the same way.
+            response_parts = []
             for function_call in function_calls:
                 name = function_call.name
                 args = dict(function_call.args or {})
                 tools_used.append(name)
                 result = self._dispatch_tool(name, args)
-                contents.append(types.Content(
-                    role="tool",
-                    parts=[types.Part.from_function_response(
-                        name=name,
-                        response={"result": result},
-                    )],
+                response_parts.append(types.Part.from_function_response(
+                    name=name,
+                    response={"result": result},
                 ))
+            contents.append(types.Content(role="user", parts=response_parts))
 
-        return "Unable to generate a response.", tools_used
+        # Out of tool rounds: ask once more with tools off so the model writes
+        # its answer from what it already fetched, rather than handing the
+        # caller a placeholder it might persist as if it were the answer.
+        response = self._gemini_client().models.generate_content(
+            model=self.model,
+            contents=contents,
+            config=self._gemini_config(include_tools=True, allow_calls=False),
+        )
+        self._record_usage(response, "messages")
+        return self._response_text(response) or "Unable to generate a response.", tools_used
 
     def _run_messages_stream_gemini(self, messages: list) -> Iterator[str]:
         if self.tools:
