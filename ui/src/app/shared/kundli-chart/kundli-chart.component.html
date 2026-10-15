@@ -26,7 +26,8 @@
                 (keydown.enter)="selectPlanet(entry)"
                 (keydown.space)="selectPlanet(entry)"
               >
-                <rect x="-22" [attr.y]="10 + i * 13 - 8" width="44" height="14" rx="3" />
+                @let southHit = hitRow(i, house.entries.length, 10, 13);
+                <rect [attr.x]="-hitWidth / 2" [attr.y]="southHit.y" [attr.width]="hitWidth" [attr.height]="southHit.h" rx="3" />
                 <text class="planet-line" x="0" [attr.y]="10 + i * 13">
                   <tspan>{{ entry.label }}</tspan>
                   @for (annotation of entry.annotations; track annotation.code) {
@@ -64,7 +65,8 @@
                 (keydown.enter)="selectPlanet(entry)"
                 (keydown.space)="selectPlanet(entry)"
               >
-                <rect [attr.x]="hitX(cell.planetAlign)" [attr.y]="i * 13 - 8" width="44" height="14" rx="3" />
+                @let northHit = hitRow(i, cell.entries.length, 0, 13);
+                <rect [attr.x]="hitX(cell.planetAlign)" [attr.y]="northHit.y" [attr.width]="hitWidth" [attr.height]="northHit.h" rx="3" />
                 <text
                   class="planet-line"
                   x="0"
@@ -113,7 +115,8 @@
                 (keydown.enter)="selectPlanet(entry)"
                 (keydown.space)="selectPlanet(entry)"
               >
-                <rect x="-22" [attr.y]="-12 + i * 12 - 8" width="44" height="14" rx="3" />
+                @let eastHit = hitRow(i, cell.entries.length, -12, 12);
+                <rect [attr.x]="-hitWidth / 2" [attr.y]="eastHit.y" [attr.width]="hitWidth" [attr.height]="eastHit.h" rx="3" />
                 <text class="planet-line" x="0" [attr.y]="-12 + i * 12">
                   <tspan>{{ entry.label }}</tspan>
                   @for (annotation of entry.annotations; track annotation.code) {

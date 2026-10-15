@@ -663,7 +663,7 @@ test('mobile profile management adds, edits, deletes and switches safely', async
   await page.getByLabel('RELATIONSHIP').selectOption('child');
   await page.getByLabel('DATE OF BIRTH').fill('2018-05-11');
   await page.getByLabel('TIME OF BIRTH').fill('06:45');
-  await page.getByRole('searchbox', { name: 'PLACE OF BIRTH' }).fill('Pune');
+  await page.getByRole('textbox', { name: 'PLACE OF BIRTH' }).fill('Pune');
   await page.getByRole('option', { name: /Pune/ }).click();
   await page.getByRole('button', { name: 'Add Profile' }).click();
   await expect(page).toHaveURL(/\/m\/settings\/profiles$/);
@@ -729,8 +729,11 @@ test('mobile compatibility selects saved people and computes endpoint-backed res
   await page.getByRole('textbox', { name: 'NAME' }).fill('Nisha Kapoor');
   await page.getByLabel('DATE OF BIRTH').fill('1994-11-22');
   await page.getByLabel('TIME OF BIRTH').fill('10:15');
-  await page.getByRole('textbox', { name: 'PLACE OF BIRTH' }).fill('Delhi');
-  await page.getByRole('textbox', { name: 'COUNTRY CODE' }).fill('IN');
+  // A typed place is not enough: the form only saves one chosen from the search.
+  await page.getByRole('textbox', { name: 'PLACE OF BIRTH' }).fill('Pune');
+  await page.getByRole('button', { name: 'Check compatibility' }).click();
+  await expect(page.getByText('Choose the birth place from the search results.')).toBeVisible();
+  await page.getByRole('option', { name: /Pune/ }).click();
   await page.getByRole('button', { name: 'Check compatibility' }).click();
   await expect(page).toHaveURL(/\/m\/compat\/results\?partner=profile-3$/);
   await expect(page.getByText('Anika Rao x Nisha Kapoor')).toBeVisible();
@@ -856,6 +859,13 @@ test('mobile persona modes change navigation and presentation depth', async ({ p
   await expect(page.getByText('Ask in plain language.')).toBeVisible();
   await expect(page.getByRole('button', { name: /Money/ })).toHaveCount(0);
   await expect(page.getByText('Plain-language starter')).toBeVisible();
+  // A suggestion fills the composer, as on Today; it is not sent (flow audit 5.4).
+  const suggestion = page.locator('button.suggestion').first();
+  const prompt = (await suggestion.locator('.suggestion-text').evaluate((el) => el.firstChild?.textContent ?? '')).trim();
+  await suggestion.click();
+  await expect(page).toHaveURL(/\/m\/ask$/);
+  await expect(page.getByRole('textbox', { name: 'Your question' })).toHaveValue(prompt);
+  await expect(page.getByRole('textbox', { name: 'Your question' })).toBeFocused();
 
   await page.goto('/m/settings/mode');
   await page.getByRole('radio', { name: /Practitioner/ }).click();

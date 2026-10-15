@@ -539,6 +539,17 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   compatibility_agent.py` (`SynastryAspects`, unaffected by the v6 removal
   but built on the same v5-era API surface).
 
+- [ ] **Middle planets of a crowded house are small tap targets (UI)**
+  — added 2026-10-15 with the flow-audit tap-target fix. Lone planets and
+  the first and last planet of a stack now get 44 px targets in every chart
+  style, and each target stays centred on its own label. A planet in the
+  middle of a stack of three or more keeps the label spacing, about 45 x 11
+  px on a phone, because a taller target there would reach its neighbour's
+  label. *Unblocks on:* choosing between spacing stacked labels further
+  apart (changes how crowded houses look) or a tap on a crowded house
+  opening a small list of its planets. *Hook:* `hitRow()` in
+  `ui/src/app/shared/kundli-chart/kundli-chart.component.ts`.
+
 ### C. Ask/agent layer — one live safety gap, highest priority here
 
 - [x] **`safety.py` third-party death output net** — **CLOSED 2026-08-10**

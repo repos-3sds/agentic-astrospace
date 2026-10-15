@@ -28,4 +28,17 @@ describe('Ask composer host isolation', () => {
     field.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
     expect(submit).toHaveBeenCalledOnceWith('A question');
   });
+
+  it('focus() puts the caret after a pre-filled suggestion', async () => {
+    const fixture = TestBed.createComponent(AskComposerComponent);
+    fixture.componentRef.setInput('value', 'What should I focus on at work?');
+    fixture.detectChanges();
+    document.body.appendChild(fixture.nativeElement);
+    fixture.componentInstance.focus();
+    await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+    const field: HTMLInputElement = fixture.nativeElement.querySelector('input');
+    expect(document.activeElement).toBe(field);
+    expect(field.selectionStart).toBe(field.value.length);
+    fixture.nativeElement.remove();
+  });
 });

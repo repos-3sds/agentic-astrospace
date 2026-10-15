@@ -1,19 +1,17 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
-import { Kundli, KundliPayload, PanchangaCity } from '../../../core/models';
+import { Kundli, KundliPayload } from '../../../core/models';
 import { ChartComputingComponent } from '../states/chart-computing.component';
-import { BirthPlaceFieldComponent } from './birth-place-field.component';
-import { normalizeProfileRelationship, PROFILE_RELATIONSHIPS } from './profile-fields';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { BirthDetailsFormComponent } from '../shared/birth-details-form.component';
 
 @Component({
   selector: 'as-profile-form',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, FormsModule, ChartComputingComponent, BirthPlaceFieldComponent],
+  imports: [BackLinkDirective, ChartComputingComponent, BirthDetailsFormComponent],
   template: `
     <header class="profiles-appbar">
       <a asBack="/m/settings/profiles" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
@@ -28,29 +26,20 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
 
       @if (loading()) {
         <section class="profiles-state"><b>Loading profile</b><p>Preparing the profile form.</p></section>
+      } @else if (loadError(); as message) {
+        <section class="profiles-state error"><b>Profile not found</b><p>{{ message }}</p></section>
       } @else {
-        <form id="profile-form" class="profile-form" (ngSubmit)="save()">
-          <label>NAME<input name="name" [(ngModel)]="name" autocomplete="name" /></label>
-          <label>RELATIONSHIP
-            <select name="relation" [(ngModel)]="relation">
-              @for (option of relationships; track option.value) {
-                <option [value]="option.value">{{ option.label }}</option>
-              }
-            </select>
-          </label>
-          <label>DATE OF BIRTH<input name="date" [(ngModel)]="date" type="date" /></label>
-          <label>TIME OF BIRTH<input name="time" [(ngModel)]="time" type="time" /></label>
-          <as-birth-place-field [initialPlace]="initialPlace()" (placeChange)="onPlaceChange($event)" />
-          @if (error()) { <p class="profiles-error" role="alert">{{ error() }}</p> }
-        </form>
+        <as-birth-details-form
+          [initial]="initial()"
+          [hideSelf]="hideSelf()"
+          [submitLabel]="editingId() ? 'Save Changes' : 'Add Profile'"
+          busyLabel="Saving…"
+          [saving]="saving()"
+          [error]="error()"
+          (submitted)="save($event)"
+        />
       }
     </main>
-
-    <footer class="profiles-footer">
-      <button type="submit" form="profile-form" [disabled]="loading() || saving()">
-        {{ saving() ? 'Saving...' : editingId() ? 'Save Changes' : 'Add Profile' }}
-      </button>
-    </footer>
 
     @if (saving()) { <as-chart-computing /> }
   `,
@@ -62,27 +51,19 @@ export class ProfileFormComponent {
   private readonly router = inject(Router);
 
   protected readonly loading = signal(true);
+  protected readonly loadError = signal<string | null>(null);
   protected readonly saving = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly editingId = signal<string | null>(this.route.snapshot.paramMap.get('id'));
-  protected readonly initialPlace = signal<Pick<PanchangaCity, 'city' | 'nation'> | null>(null);
-  protected readonly relationships = PROFILE_RELATIONSHIPS;
-
-  protected name = '';
-  protected relation = 'self';
-  protected date = '';
-  protected time = '';
-  protected city = '';
-  protected nation = 'IN';
-  private placeSelectionRequired = true;
+  protected readonly initial = signal<Partial<KundliPayload> | null>(null);
+  /** "Myself" is offered only while the account has no self profile, or when editing it. */
+  protected readonly hideSelf = signal(false);
 
   constructor() {
     void this.load();
   }
 
-  protected async save(): Promise<void> {
-    const payload = this.payload();
-    if (!payload) return;
+  protected async save(payload: KundliPayload): Promise<void> {
     this.saving.set(true);
     this.error.set(null);
     try {
@@ -101,60 +82,43 @@ export class ProfileFormComponent {
     }
   }
 
-  protected onPlaceChange(place: PanchangaCity | null): void {
-    this.placeSelectionRequired = !place;
-    if (place) {
-      this.city = place.city;
-      this.nation = place.nation;
-    }
-  }
-
   private async load(): Promise<void> {
     this.loading.set(true);
-    this.error.set(null);
+    this.loadError.set(null);
     try {
       await this.kundlis.load();
       const id = this.editingId();
+      const self = this.kundlis.kundlis().find((item) => (item.relation ?? '').toLowerCase() === 'self');
       if (id) {
         const profile = this.kundlis.kundlis().find((item) => item.id === id);
         if (!profile) throw new Error('Profile not found.');
-        this.applyProfile(profile);
+        this.initial.set(fromProfile(profile));
+        this.hideSelf.set(!!self && self.id !== id);
+      } else {
+        // A second profile is someone else; the backend refuses a second
+        // self and the form should not offer it.
+        this.initial.set({ relation: self ? 'friend' : 'self' });
+        this.hideSelf.set(!!self);
       }
     } catch (error) {
-      this.error.set((error as Error).message);
+      this.loadError.set((error as Error).message);
     } finally {
       this.loading.set(false);
     }
   }
+}
 
-  private applyProfile(profile: Kundli): void {
-    this.name = profile.name;
-    this.relation = normalizeProfileRelationship(profile.relation);
-    this.date = `${profile.birth_year}-${String(profile.birth_month).padStart(2, '0')}-${String(profile.birth_day).padStart(2, '0')}`;
-    this.time = `${String(profile.birth_hour).padStart(2, '0')}:${String(profile.birth_minute).padStart(2, '0')}`;
-    this.city = profile.birth_city;
-    this.nation = profile.birth_nation || 'IN';
-    this.initialPlace.set({ city: this.city, nation: this.nation });
-    this.placeSelectionRequired = false;
-  }
-
-  private payload(): KundliPayload | null {
-    const [year, month, day] = this.date.split('-').map(Number);
-    const [hour, minute] = this.time.split(':').map(Number);
-    if (!this.name.trim() || !year || !month || !day || Number.isNaN(hour) || Number.isNaN(minute) || !this.city.trim() || this.placeSelectionRequired) {
-      this.error.set(this.placeSelectionRequired ? 'Choose the birth place from the search results.' : 'Complete each birth detail before saving.');
-      return null;
-    }
-    return {
-      name: this.name.trim(),
-      relation: this.relation.trim() || 'self',
-      birth_year: year,
-      birth_month: month,
-      birth_day: day,
-      birth_hour: hour,
-      birth_minute: minute,
-      birth_city: this.city.trim(),
-      birth_nation: (this.nation.trim() || 'IN').toUpperCase(),
-    };
-  }
+function fromProfile(profile: Kundli): Partial<KundliPayload> {
+  return {
+    name: profile.name,
+    relation: profile.relation,
+    birth_year: profile.birth_year,
+    birth_month: profile.birth_month,
+    birth_day: profile.birth_day,
+    birth_hour: profile.birth_hour,
+    birth_minute: profile.birth_minute,
+    birth_city: profile.birth_city,
+    birth_nation: profile.birth_nation || 'IN',
+    birth_time_accuracy: profile.birth_time_accuracy ?? 'exact',
+  };
 }

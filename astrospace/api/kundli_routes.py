@@ -5,6 +5,7 @@ from typing import Literal, Optional
 from ..db import get_db, Kundli
 from ..db import crud
 from ..core.chart import BirthChart
+from ..core.cities import lookup_city
 from .auth import CurrentUser
 
 router = APIRouter(prefix="/api/v1/kundlis", tags=["kundlis"])
@@ -79,6 +80,23 @@ def list_kundlis(user: CurrentUser, db: Session = Depends(get_db)):
     return [_kundli_to_dict(k) for k in crud.list_kundlis(db, user.id)]
 
 
+def _require_resolvable_place(city: str, nation: str) -> None:
+    """A profile whose birth place the engines cannot resolve breaks every
+    screen that reads it (Today, Explore, each chart), and the only way out
+    was deleting it. Refuse at the door instead, with a sentence the apps
+    show as-is. The offline table is the source of truth: the online
+    GeoNames fallback in BirthChart never runs for API-created profiles."""
+    if not lookup_city((city or "").strip(), (nation or "").strip() or "IN"):
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"We couldn\u2019t find \u201c{(city or '').strip()}\u201d"
+                f"{' in ' + nation.strip().upper() if (nation or '').strip() else ''}. "
+                "Choose the birth place from the search results."
+            ),
+        )
+
+
 def _with_chart_fields(data: dict) -> dict:
     """Compute chart_data + big-three columns for a full birth-detail dict.
     Leaves them untouched (create: null) if calculation fails."""
@@ -112,6 +130,7 @@ def create_kundli(body: KundliCreate, user: CurrentUser, db: Session = Depends(g
             status_code=409,
             detail="A profile for yourself already exists. Edit it instead of adding another.",
         )
+    _require_resolvable_place(body.birth_city, body.birth_nation)
     data = _with_chart_fields(body.model_dump())
     data["user_id"] = user.id
     k = crud.create_kundli(db, data)
@@ -139,6 +158,8 @@ def update_kundli(kundli_id: str, body: KundliUpdate, user: CurrentUser, db: Ses
             "name": data.get("name", existing.name),
             **{f: data.get(f, getattr(existing, f)) for f in _BIRTH_FIELDS},
         }
+        if {"birth_city", "birth_nation"} & data.keys():
+            _require_resolvable_place(merged["birth_city"], merged["birth_nation"])
         data.update({k: v for k, v in _with_chart_fields(merged).items()
                      if k in ("sun_sign", "moon_sign", "ascendant", "chart_data")})
 

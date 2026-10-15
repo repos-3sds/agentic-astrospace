@@ -45,7 +45,7 @@
   <p class="eyebrow">{{ navigation.web ? 'A few places to begin' : 'SUGGESTED FOR YOU RIGHT NOW' }}</p>
   <div class="suggestions">
     @for (s of suggestions(); track s.prompt) {
-      <button class="suggestion" type="button" (click)="ask(s.prompt)">
+      <button class="suggestion" type="button" (click)="useSuggestion(s.prompt)">
         <span class="suggestion-text">{{ s.prompt }} @if (s.because) { <small>{{ s.because }}</small> }</span>
         <span class="masked-icon chevron-icon" aria-hidden="true"></span>
       </button>

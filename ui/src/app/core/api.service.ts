@@ -50,6 +50,10 @@ export function friendlyApiMessage(status: number, detail: unknown): string {
   if (status === 408 || status === 504) return 'That took too long to answer. Try again in a moment.';
   if (status === 429) return 'Too many requests right now. Wait a moment and try again.';
   if (status >= 500) return 'The guidance service hit a problem on our side. Try again in a moment.';
+  // The kundli API refuses an unresolvable birth place with a sentence
+  // written for the person ("We couldn’t find “Mumbaii” in IN. Choose the
+  // birth place from the search results."); it is shown as-is.
+  if (status === 422 && /birth place from the search results/i.test(raw)) return raw;
   if (status === 422 || Array.isArray(detail)) return 'Some of the details sent weren’t valid. Check the date, time and place and try again.';
   if (/\bcity\b/i.test(raw)) return 'We couldn’t place that city. Check the place of birth and try again.';
   if (/timezone/i.test(raw)) return 'We couldn’t work out the time zone for that place. Check the place of birth and try again.';

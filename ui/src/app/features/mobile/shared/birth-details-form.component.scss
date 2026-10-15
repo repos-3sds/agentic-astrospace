@@ -1,0 +1,176 @@
+@use '../mobile-tokens' as *;
+
+// The field dressing is the onboarding design's (Figma node 11:2): an icon
+// and the input in one rounded box, the box being typed into taking the
+// accent border. Every screen that embeds the form inherits it, which is the
+// point — four screens, one form.
+
+:host { display: flex; flex-direction: column; }
+
+.form { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+
+.fields { display: flex; flex-direction: column; gap: 13px; }
+
+.group { display: flex; flex-direction: column; }
+
+.field-label {
+  @include m-caption;
+  color: var(--m-muted);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  box-sizing: border-box;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1.2px solid var(--m-border);
+  border-radius: 16px;
+  background: var(--m-surface);
+
+  img { width: 20px; height: 20px; display: block; flex-shrink: 0; }
+
+  &.is-active { border: 2px solid var(--m-accent); padding: 0 15.2px; }
+  &.is-invalid { border-color: var(--m-bad); }
+}
+
+.field input,
+.field select {
+  flex: 1 1 0;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 0;
+  background: none;
+  padding: 15px 0;
+  @include m-body;
+  color: var(--m-text);
+  &:focus { outline: none; }
+}
+
+// The native date/time pickers draw their own chrome; keep the text aligned
+// with the other fields and let the box carry the border.
+.field input[type='date'],
+.field input[type='time'] {
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 50px;
+}
+
+.field select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 24px;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8"><path d="M1 1l5 5 5-5" fill="none" stroke="%23888" stroke-width="1.6" stroke-linecap="round"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 2px center;
+}
+
+.field-error {
+  @include m-caption;
+  color: var(--m-bad);
+  margin: 6px 0 0;
+}
+
+.approx {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 8px 0 0;
+  @include m-body-small;
+  color: var(--m-muted);
+
+  &.is-on {
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--m-accent-soft);
+    color: var(--m-accent-strong);
+  }
+}
+
+.approx-action {
+  border: 0;
+  // 44 px tall to the finger, 24 px to the layout.
+  padding: 10px 0;
+  margin: -10px 0;
+  min-height: 44px;
+  background: none;
+  cursor: pointer;
+  @include m-body-strong;
+  color: var(--m-accent-strong);
+}
+
+.place-status {
+  @include m-caption;
+  color: var(--m-muted);
+  margin: 8px 0 0;
+}
+
+/* Place typeahead — node 11:48 */
+.matches {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 6px 0;
+  border: 1.2px solid var(--m-border);
+  border-radius: 16px;
+  background: var(--m-raised);
+  box-shadow: var(--m-shadow-soft);
+  overflow: hidden;
+}
+
+.match {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 44px;
+  padding: 11px 16px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+
+  img { width: 18px; height: 18px; display: block; flex-shrink: 0; }
+
+  // The first match is pre-highlighted, so hitting enter does the likely thing.
+  &.is-first {
+    background: var(--m-accent-soft);
+    .match-city { color: var(--m-accent-strong); }
+  }
+}
+
+.match-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.match-city { @include m-body-strong; color: var(--m-text); }
+.match-region { @include m-caption; color: var(--m-muted); }
+
+// Pushed to the bottom when the host stretches the form (onboarding), and
+// following the fields otherwise (a scrolling settings screen).
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.submit {
+  @include m-cta-primary;
+  width: 100%;
+  gap: 9px;
+  img { width: 18px; height: 18px; display: block; }
+  &:disabled { opacity: .65; cursor: wait; }
+}
+
+.form-error {
+  @include m-body-small;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--m-bad);
+  border-radius: 14px;
+  color: var(--m-bad);
+  background: var(--m-bad-soft);
+}
