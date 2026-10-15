@@ -21,14 +21,14 @@
 
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">#0A0E1F</item>
+        <item name="windowSplashScreenBackground">#000000</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_blank</item>
-        <item name="windowSplashScreenIconBackgroundColor">#0A0E1F</item>
+        <item name="windowSplashScreenIconBackgroundColor">#000000</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
-        <item name="android:windowBackground">#0A0E1F</item>
-        <item name="android:background">#0A0E1F</item>
-        <item name="android:statusBarColor">#0A0E1F</item>
-        <item name="android:navigationBarColor">#0A0E1F</item>
+        <item name="android:windowBackground">#000000</item>
+        <item name="android:background">#000000</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
     </style>

@@ -31,9 +31,9 @@ const config: CapacitorConfig = {
       androidIsEncryption: true,
     },
     SplashScreen: {
-      // Matches the Siddha animated intro backdrop so the native launch bridge
+      // Space black, matching the animated galaxy intro so the native launch bridge
       // does not flash a different color before Angular paints.
-      backgroundColor: '#0A0E1F',
+      backgroundColor: '#000000',
       showSpinner: false,
       androidScaleType: 'CENTER_CROP',
     },
