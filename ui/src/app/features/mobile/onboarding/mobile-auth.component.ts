@@ -48,10 +48,12 @@ export class MobileAuthComponent {
     this.loading.set(true);
     this.error.set(null);
     try {
+      // localStorage, not sessionStorage: with email confirmation on, the
+      // person leaves the app to confirm and signs in afresh, by which time a
+      // session-scoped value is gone and the first profile was named
+      // "My chart". Sign-in leaves any stored name alone for the same reason.
       if (this.mode() === 'register') {
-        sessionStorage.setItem('astrospace.onboardingName', this.name.trim());
-      } else {
-        sessionStorage.removeItem('astrospace.onboardingName');
+        localStorage.setItem('astrospace.onboardingName', this.name.trim());
       }
       await this.auth.init();
       if (!this.auth.enabled()) {
