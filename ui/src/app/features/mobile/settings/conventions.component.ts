@@ -7,6 +7,7 @@ import {
 } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 /** One selectable convention within a group. */
 export interface ConventionChoice {
@@ -44,7 +45,7 @@ export interface ConventionGroup {
   selector: 'as-settings-conventions',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective],
+  imports: [BackLinkDirective, SelectHapticDirective],
   templateUrl: './conventions.component.html',
   styleUrl: './conventions.component.scss',
 })

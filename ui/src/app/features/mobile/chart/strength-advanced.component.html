@@ -16,7 +16,7 @@
     <p>Classical strength calculations, BPHS-sourced</p>
   </header>
 
-  <nav class="tabs" aria-label="Strength calculation">
+  <nav class="tabs" asSelectHaptic aria-label="Strength calculation">
     @for (item of [{id: 'shadbala', label: 'Shadbala'}, {id: 'ashtakavarga', label: 'Ashtakavarga'}, {id: 'jaimini', label: 'Jaimini'}, {id: 'vimshopaka', label: 'Vimshopaka'}]; track item.id) {
       <button type="button" [class.is-on]="tab() === item.id" (click)="selectTab($any(item.id))">{{ item.label }}</button>
     }
@@ -46,7 +46,7 @@
     }
     @case ('ashtakavarga') {
       <p class="explainer"><img src="mobile/info.svg" alt="" aria-hidden="true" />Bindu points per house — the Sarvashtakavarga (SAV) total across all planets.</p>
-      <div class="planet-tabs">
+      <div class="planet-tabs" asSelectHaptic>
         @for (planet of planets(); track planet) {
           <button type="button" [class.is-on]="avPlanet() === planet" (click)="avPlanet.set(planet)">{{ planet }}</button>
         }
@@ -119,7 +119,7 @@
     }
     @case ('vimshopaka') {
       <p class="explainer"><img src="mobile/info.svg" alt="" aria-hidden="true" />Weighted dignity across divisional charts. This answers consistency across vargas, not raw event strength.</p>
-      <div class="planet-tabs">
+      <div class="planet-tabs" asSelectHaptic>
         @for (scheme of ['shadvarga', 'saptavarga', 'dashavarga', 'shodashavarga']; track scheme) {
           <button type="button" [class.is-on]="vimshopakaScheme() === scheme" (click)="selectVimshopakaScheme(scheme)">{{ scheme.replace('varga', '') }}</button>
         }

@@ -16,6 +16,7 @@ import { DashaPayload, DashaPeriod, YoginiDashaPayload, YoginiDashaPeriod } from
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 interface Period {
   name: string;
@@ -38,7 +39,7 @@ type DashaLevel = 'maha' | 'antar' | 'pratyantar' | 'sookshma' | 'prana';
   selector: 'as-life-periods',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackBarComponent, GenericErrorComponent, RouterLink, BirthTimeBadgeComponent],
+  imports: [BackBarComponent, GenericErrorComponent, RouterLink, BirthTimeBadgeComponent, SelectHapticDirective],
   templateUrl: './life-periods.component.html',
   styleUrl: './life-periods.component.scss',
 })

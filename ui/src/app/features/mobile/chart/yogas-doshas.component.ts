@@ -7,6 +7,7 @@ import { DoshasPayload, ManglikPayload, YogaResult, YogasDoshasPayload } from '.
 import { VedicService } from '../../../core/vedic.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 type Kind = 'yoga' | 'dosha';
 type Filter = 'all' | Kind;
@@ -28,7 +29,7 @@ interface Combination {
   selector: 'as-yogas-doshas',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, RouterLink, YogaLearningSheetComponent, ManglikCancellationSheetComponent],
+  imports: [BackLinkDirective, GenericErrorComponent, RouterLink, YogaLearningSheetComponent, ManglikCancellationSheetComponent, SelectHapticDirective],
   templateUrl: './yogas-doshas.component.html',
   styleUrl: './yogas-doshas.component.scss',
 })

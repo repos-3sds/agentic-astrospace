@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { PreferencesService } from '../../../core/preferences.service';
 import { plannedTimingPlace } from '../../../core/timing-place';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 /** One thing someone might be planning. */
 export interface MuhurtaGoal {
@@ -31,7 +32,7 @@ export type MuhurtaRange = 'week' | 'month' | 'custom';
   selector: 'as-muhurta-goal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, RouterLink],
+  imports: [BackLinkDirective, RouterLink, SelectHapticDirective],
   templateUrl: './muhurta-goal.component.html',
   styleUrl: './muhurta-goal.component.scss',
 })

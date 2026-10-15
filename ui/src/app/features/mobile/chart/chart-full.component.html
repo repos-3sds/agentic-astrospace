@@ -32,7 +32,7 @@
     Which diagram a reader recognises depends on where they learned. The app
     should not pick for them.
   -->
-  <div class="styles" role="radiogroup" aria-label="Chart style">
+  <div class="styles" role="radiogroup" asSelectHaptic aria-label="Chart style">
     @for (s of styles; track s) {
       <button
         class="style"
@@ -45,7 +45,7 @@
     }
   </div>
 
-  <div class="varga-strip" aria-label="Divisional charts">
+  <div class="varga-strip" aria-label="Divisional charts" asSelectHaptic>
     @for (varga of vargas; track varga) {
       <button
         class="varga-chip"

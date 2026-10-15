@@ -6,6 +6,7 @@ import { combineLatest } from 'rxjs';
 import { ASK_NAVIGATION } from '../ask/ask-navigation';
 
 import { KundliStore } from '../../../core/kundli.store';
+import { HapticsService } from '../../../core/haptics.service';
 import { shareFile } from '../../../core/native-share';
 import { MemoryMode, PreferencesService } from '../../../core/preferences.service';
 import {
@@ -47,6 +48,7 @@ export class ProfileMemoryComponent {
   protected readonly editorOpen = signal(false);
   protected readonly editing = signal<ProfileContextFact | null>(null);
   protected readonly pendingDelete = signal<string | null>(null);
+  private readonly haptics = inject(HapticsService);
 
   protected editorKind: EditorKind = 'employment_status';
   protected editorValue = '';
@@ -130,6 +132,9 @@ export class ProfileMemoryComponent {
   }
 
   protected askDelete(factId: string): void {
+    // The removal confirm is about to show: an interface consequence, which is
+    // exactly what warning() is reserved for.
+    this.haptics.warning();
     this.pendingDelete.set(factId);
   }
 

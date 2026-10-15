@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
+import { HapticsService } from '../../../core/haptics.service';
 import { AskHistoryComponent } from './ask-history.component';
 import { MobileAskThread, MobileAskThreadService } from './mobile-ask-thread.service';
 
@@ -14,6 +15,7 @@ describe('AskHistoryComponent active and archived conversations', () => {
 
   let api: jasmine.SpyObj<MobileAskThreadService>;
   let router: jasmine.SpyObj<Router>;
+  let haptics: jasmine.SpyObj<HapticsService>;
   let component: AskHistoryComponent;
 
   beforeEach(async () => {
@@ -24,12 +26,14 @@ describe('AskHistoryComponent active and archived conversations', () => {
     api.archive.and.resolveTo(undefined);
     api.restore.and.resolveTo(undefined);
     api.delete.and.resolveTo(undefined);
+    haptics = jasmine.createSpyObj<HapticsService>('HapticsService', ['tap', 'select', 'success', 'warning', 'error']);
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
     router.navigate.and.resolveTo(true);
     TestBed.configureTestingModule({
       providers: [
         { provide: MobileAskThreadService, useValue: api },
         { provide: Router, useValue: router },
+        { provide: HapticsService, useValue: haptics },
         {
           provide: KundliStore,
           useValue: {
@@ -70,6 +74,7 @@ describe('AskHistoryComponent active and archived conversations', () => {
     spyOn(window, 'confirm').and.returnValue(true);
     (component as any).threads.set([thread]);
     await (component as any).deleteThread(new Event('click'), thread);
+    expect(haptics.warning).toHaveBeenCalledTimes(1);
     expect(api.delete).toHaveBeenCalledOnceWith('thread-1');
     expect((component as any).threads()).toEqual([]);
   });

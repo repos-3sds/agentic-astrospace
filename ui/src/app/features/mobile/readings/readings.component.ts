@@ -21,6 +21,7 @@ import { MarkdownPipe } from '../../../shared/markdown.pipe';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SheetComponent } from '../sheet/sheet.component';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 import { ClaimMarker, REVIEW_OPTIONS, claimIsDue, claimWindow } from './claim-review';
 import { GenerationJob, ReadingGenerationService, generationKey } from './reading-generation.service';
 
@@ -122,7 +123,7 @@ export function splitReadings(readings: Reading[]): { current: Reading[]; past: 
   selector: 'as-mobile-readings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, RouterLink, MarkdownPipe, SheetComponent],
+  imports: [BackLinkDirective, GenericErrorComponent, RouterLink, MarkdownPipe, SheetComponent, SelectHapticDirective],
   template: `
     <a class="mrd-back" [asBack]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
     <main class="mrd-body">
@@ -134,7 +135,7 @@ export function splitReadings(readings: Reading[]): { current: Reading[]; past: 
         <img src="mobile/chevron.svg" alt="" />
       </a>
 
-      <nav class="mrd-tabs" aria-label="Reading period" [attr.aria-busy]="loading()">
+      <nav class="mrd-tabs" asSelectHaptic aria-label="Reading period" [attr.aria-busy]="loading()">
         @for (tab of periods; track tab.value) {
           <button type="button" [class.on]="period() === tab.value" [attr.aria-pressed]="period() === tab.value"
             [disabled]="loading()" (click)="choosePeriod(tab.value)">

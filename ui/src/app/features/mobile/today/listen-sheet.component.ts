@@ -14,6 +14,7 @@ import { AudioReadingSection } from './audio-reading-script';
 import { MobileTtsService } from '../../../core/mobile-tts.service';
 import { PreferencesService } from '../../../core/preferences.service';
 import { NaturalVoiceService, naturalChunks } from '../../../core/natural-voice.service';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 /**
  * Natural voice is generated at 0.95x, which the sheet's default 0.9x setting
@@ -61,7 +62,7 @@ const PREFERRED_VOICE_NAMES = [
   selector: 'as-listen-sheet',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SheetComponent],
+  imports: [SheetComponent, SelectHapticDirective],
   templateUrl: './listen-sheet.component.html',
   styleUrl: './listen-sheet.component.scss',
 })

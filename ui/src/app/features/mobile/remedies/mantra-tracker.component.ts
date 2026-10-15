@@ -9,6 +9,7 @@ import {
 } from '../../../core/vedic.service';
 import { HapticsService } from '../../../core/haptics.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 /**
  * Remedy detail — mantra tracker (Figma node 29:109).
@@ -32,7 +33,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
   selector: 'as-mantra-tracker',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, RouterLink],
+  imports: [BackLinkDirective, RouterLink, SelectHapticDirective],
   templateUrl: './mantra-tracker.component.html',
   styleUrl: './mantra-tracker.component.scss',
 })

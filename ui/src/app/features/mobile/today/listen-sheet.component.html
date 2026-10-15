@@ -9,7 +9,7 @@
       </div>
     </header>
 
-    <div class="chapters" role="group" aria-label="Reading sections">
+    <div class="chapters" role="group" asSelectHaptic aria-label="Reading sections">
       @for (section of effectiveSections(); track section.label) {
         <button
           class="chapter"
@@ -58,7 +58,7 @@
     }
 
     <div class="options">
-      <div class="langs" role="group" aria-label="Audio language">
+      <div class="langs" role="group" asSelectHaptic aria-label="Audio language">
         @for (lang of languages(); track lang.label) {
           <button
             class="lang"

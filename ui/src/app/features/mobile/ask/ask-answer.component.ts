@@ -25,6 +25,7 @@ import { EntitlementService } from '../../../core/entitlement.service';
 import { LockedStateComponent } from '../shared/locked-state.component';
 import { TextRun, cleanPlainText, paragraphRuns } from '../../../core/answer-text';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { HapticsService } from '../../../core/haptics.service';
 
 /**
  * How confidently the answer lands. Named, not a number: the point of the dot
@@ -99,6 +100,7 @@ export class AskAnswerComponent {
   private readonly askService = inject(AskService);
   private readonly entitlements = inject(EntitlementService);
   private readonly threadsApi = inject(MobileAskThreadService);
+  private readonly haptics = inject(HapticsService);
   private readonly profileContext = inject(ProfileContextService);
   private readonly kundlis = inject(KundliStore);
   private readonly router = inject(Router);
@@ -1025,6 +1027,7 @@ export class AskAnswerComponent {
             streaming: false,
           });
           this.streaming.set(false);
+          this.haptics.error();
         } else if ('delta' in event) {
           const next = event.reset ? event.delta : this.streamedAnswer() + event.delta;
           this.streamedAnswer.set(next);
@@ -1041,6 +1044,7 @@ export class AskAnswerComponent {
             evidence: event.evidence,
             streaming: false,
           });
+          if (!controller.signal.aborted) this.haptics.success();
           if (finalThreadId) {
             this.activeThreadId.set(finalThreadId);
             const savedAt = new Date().toISOString();
@@ -1100,6 +1104,7 @@ export class AskAnswerComponent {
         });
       } else {
         this.submitError.set((error as Error).message);
+        this.haptics.error();
         this.updateAssistantMessage(assistantId, {
           content: 'The connection was interrupted before this answer completed.',
           status: 'network_error',

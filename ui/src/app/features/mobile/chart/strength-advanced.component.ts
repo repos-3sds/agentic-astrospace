@@ -10,6 +10,7 @@ import { VedicService } from '../../../core/vedic.service';
 import { SIGN_SHORT } from './mobile-chart-data';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 type StrengthTab = 'shadbala' | 'ashtakavarga' | 'jaimini' | 'vimshopaka';
 
@@ -34,7 +35,7 @@ interface HouseBindu {
   selector: 'as-strength-advanced',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, RouterLink],
+  imports: [BackLinkDirective, GenericErrorComponent, RouterLink, SelectHapticDirective],
   templateUrl: './strength-advanced.component.html',
   styleUrl: './strength-advanced.component.scss',
 })
