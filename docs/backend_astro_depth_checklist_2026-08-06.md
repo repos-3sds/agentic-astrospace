@@ -713,6 +713,36 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   phone-voice fallback drops back to English because device Telugu voices
   are unreliable.
 
+- [ ] **Paid reports (D2: ₹199–499; Plus gets one a month)** (2026-10-15).
+  The hybrid pricing layer shipped without them: a report is a new
+  product (Kundli, marriage timing, career, year-ahead, matching PDFs) with
+  its own generation, review and convention notes, not a gate on something
+  that exists. *Unblocks on:* the report content spec per type and a
+  `reports.monthly` limit. *Hook:* add the products to
+  `astrospace/entitlements/products.py`; `_apply_pack` in
+  `astrospace/api/store_routes.py` is the pattern for a one-off purchase,
+  and `ask-report.ts` already builds a PDF on the device.
+- [ ] **Ask credit reservations that never settle.** A reservation is a
+  counter on the month's `usage_buckets` row (or a decrement on a
+  `question_credits` row), released in a `finally` on every route path. A
+  process killed between reserve and release leaves one credit held until
+  the month rolls over. *Unblocks on:* evidence it happens (watch
+  `reserved > 0` on old buckets). *Hook:* `reserve_ask_credit()` in
+  `astrospace/entitlements/usage.py`; a per-reservation row with an expiry
+  would let a sweeper return it.
+- [ ] **Turning quotas on.** `ASTROSPACE_QUOTAS_ENFORCED` stays off until the
+  store products exist in Play Console and App Store Connect, RevenueCat
+  has the app keys (`ui/src/environments/*.ts`, `revenueCat`) and the
+  webhook secret (`REVENUECAT_WEBHOOK_AUTH`), and a sandbox purchase has
+  round-tripped. Until then usage is counted, never blocked. Hawk's own
+  account needs an `entitlement_overrides` row for `ask.answers.period`
+  (value null) before enforcement, or testing stops at 3 answers.
+- [ ] **Muhurta: add the window straight into the calendar on Android.**
+  "Add to calendar" shares an .ics file; whether a calendar app is offered
+  in the share sheet depends on the device. *Unblocks on:* a device check.
+  *Hook:* `addToCalendar()` in `muhurta-results.component.ts`; an
+  `Intent.ACTION_INSERT` plugin call would skip the share sheet.
+
 ### D. Docs pending a decision
 
 - [ ] **`docs/marriage-agent-kb.md`, `marriage-ce-payload-v1.md`,
