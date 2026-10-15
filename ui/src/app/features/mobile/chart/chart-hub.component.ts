@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { BackBarComponent } from '../shared/back-bar.component';
 import { BirthTimeBadgeComponent } from './birth-time-badge.component';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { ProvenanceSheetComponent } from './provenance-sheet.component';
@@ -41,6 +42,9 @@ interface YantraTile {
   featured?: boolean;
 }
 
+/** Explore cards shown only in Practitioner mode. */
+const PRACTITIONER_ONLY = new Set(['remedies', 'muhurta']);
+
 /**
  * Chart Hub (Figma node 35:57) — the Chart tab's home and the entry to the
  * chart flow: hub, full render, planet detail, provenance.
@@ -59,7 +63,7 @@ interface YantraTile {
   selector: 'as-chart-hub',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GenericErrorComponent, KundliChartComponent, ProfileSwitcherComponent, ProvenanceSheetComponent, RouterLink, BirthTimeBadgeComponent],
+  imports: [BackBarComponent, GenericErrorComponent, KundliChartComponent, ProfileSwitcherComponent, ProvenanceSheetComponent, RouterLink, BirthTimeBadgeComponent],
   templateUrl: './chart-hub.component.html',
   styleUrl: './chart-hub.component.scss',
 })
@@ -72,9 +76,7 @@ export class ChartHubComponent {
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly screenTitle = computed(() =>
-    this.preferences.experienceMode() === 'guided' ? 'Your story'
-      : this.preferences.experienceMode() === 'practitioner' ? 'Yantra'
-      : 'Explore',
+    this.preferences.experienceMode() === 'practitioner' ? 'Yantra' : 'Your chart',
   );
   readonly profileName = computed(() => this.kundlis.active()?.name ?? 'Choose profile');
   readonly profileInitial = computed(() => this.profileName().slice(0, 1).toUpperCase());
@@ -201,10 +203,12 @@ export class ChartHubComponent {
 
   readonly noteCount = signal(0);
   readonly advancedOpen = signal(false);
-  readonly guidedCoreIds = ['remedies', 'muhurta', 'varga', 'yoga', 'transit', 'compat', 'readings'];
+  readonly guidedCoreIds = ['varga', 'yoga', 'transit', 'compat', 'readings'];
   readonly guidedAdvancedIds = ['dasha', 'strength', 'reference'];
   protected readonly visibleExplore = computed(() => {
-    const cards = this.explore();
+    // Remedies and Muhurta are Practitioner tools at launch (checklist D1).
+    const cards = this.explore().filter((card) => !PRACTITIONER_ONLY.has(card.id));
+    if (this.preferences.experienceMode() === 'practitioner') return this.explore();
     if (this.preferences.experienceMode() === 'guided') {
       const allowed = this.advancedOpen()
         ? [...this.guidedCoreIds, ...this.guidedAdvancedIds]

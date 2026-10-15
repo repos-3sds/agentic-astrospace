@@ -14,4 +14,5 @@ export const environment: AppEnvironment = {
    */
   nativeApiOrigin: 'https://agentic-astrospace-cwuqybpnzq-el.a.run.app',
   revenueCat: { android: '', ios: '' },
+  posthog: { key: '', host: 'https://eu.i.posthog.com' },
 };

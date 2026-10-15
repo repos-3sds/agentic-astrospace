@@ -6,7 +6,8 @@ import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
 import { timingClockNote, timingPlaceLabel } from '../../../core/timing-place';
 import { buildIcs } from '../../../core/ics';
-import { shareFile } from '../../../core/native-share';
+import { AnalyticsService } from '../../../core/analytics.service';
+import { exportCalendarFile } from '../../../core/calendar-export';
 import { MuhurtaApiWindow, VedicService } from '../../../core/vedic.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
@@ -152,23 +153,16 @@ export class MuhurtaResultsComponent {
         location: this.place(),
         alarmMinutes: 30,
       }]);
-      const name = `muhurta-${w.startIso.slice(0, 10)}.ics`;
-      const file = new File([ics], name, { type: 'text/calendar' });
-      const shared = await shareFile(file, { title: `Muhurta: ${title}` });
-      if (!shared) {
-        const url = URL.createObjectURL(file);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = name;
-        link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-      }
+      await exportCalendarFile(ics, `muhurta-${w.startIso.slice(0, 10)}.ics`, `Muhurta: ${title}`);
+      this.analytics.track('calendar_exported', { source: 'muhurta' });
     } catch {
       this.exportFailed.set(w.rank);
     } finally {
       this.exporting.set(null);
     }
   }
+
+  private readonly analytics = inject(AnalyticsService);
 
   constructor() {
     void this.load();

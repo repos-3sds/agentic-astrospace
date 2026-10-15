@@ -196,7 +196,7 @@
               </section>
 
               <div class="practitioner-actions">
-                <button class="source-row" type="button" (click)="selectAssistant(message); whyOpen.set(true)">
+                <button class="source-row" type="button" (click)="selectAssistant(message); openWhy()">
                   <img src="mobile/why.svg" alt="" aria-hidden="true" />
                   <span>Sources &amp; Provenance</span>
                   <span aria-hidden="true">›</span>
@@ -324,7 +324,7 @@
             <button class="tool" type="button" (click)="copyAnswer(message)">
               <span>{{ copiedMessageId() === message.id ? 'Copied' : 'Copy' }}</span>
             </button>
-            <button class="tool" type="button" (click)="selectAssistant(message); whyOpen.set(true)">
+            <button class="tool" type="button" (click)="selectAssistant(message); openWhy()">
               <img src="mobile/why.svg" alt="" aria-hidden="true" />
               <span>Why this?</span>
             </button>
@@ -396,6 +396,7 @@
     [calculation]="calculation()"
     [references]="references()"
     [conventions]="conventions()"
+    [drillDowns]="drillDowns()"
     (dismissed)="whyOpen.set(false)"
   />
 }

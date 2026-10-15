@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
 import { NotificationsComponent } from './notifications.component';
 import { PushPermission, PushService } from '../../../core/push.service';
+import { PreferencesService } from '../../../core/preferences.service';
 
 class PushStub {
   permission = signal<PushPermission>('prompt');
@@ -28,7 +29,11 @@ describe('NotificationsComponent', () => {
     push = new PushStub();
     await TestBed.configureTestingModule({
       imports: [NotificationsComponent],
-      providers: [provideRouter([]), { provide: PushService, useValue: push }],
+      providers: [
+        provideRouter([]),
+        { provide: PushService, useValue: push },
+        { provide: PreferencesService, useValue: { experienceMode: signal('balanced') } },
+      ],
     }).compileComponents();
     fixture = TestBed.createComponent(NotificationsComponent);
     fixture.detectChanges();
@@ -73,10 +78,14 @@ describe('NotificationsComponent', () => {
   });
 
   it('syncs a toggle to the account as well as the device', () => {
-    const remedies = (fixture.nativeElement as HTMLElement).querySelector('button[aria-label="Remedy reminders"]') as HTMLButtonElement;
-    remedies.click();
+    const festivals = (fixture.nativeElement as HTMLElement).querySelector('button[aria-label="Festival reminders"]') as HTMLButtonElement;
+    festivals.click();
     fixture.detectChanges();
-    expect(push.synced).toEqual([['remedies', true]]);
-    expect(JSON.parse(localStorage.getItem('astrospace.mobile.notificationPrefs')!)).toContain({ id: 'remedies', on: true });
+    expect(push.synced).toEqual([['festivals', false]]);
+    expect(JSON.parse(localStorage.getItem('astrospace.mobile.notificationPrefs')!)).toContain({ id: 'festivals', on: false });
+  });
+
+  it('keeps remedy reminders with Practitioner, where remedies live', () => {
+    expect((fixture.nativeElement as HTMLElement).querySelector('button[aria-label="Remedy reminders"]')).toBeNull();
   });
 });

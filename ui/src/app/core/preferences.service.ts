@@ -26,6 +26,8 @@ export interface PreferencesState {
   hapticsEnabled: boolean;
   /** Shows the Listen button on Today. */
   readAloud: boolean;
+  /** Anonymous usage events and crash reports (see analytics.service.ts). */
+  shareUsage: boolean;
   festivalRegions: FestivalRegion[];
   /** Device TTS voice name, or null to auto-pick — see mobile-tts.service.ts. */
   voiceName: string | null;
@@ -63,6 +65,7 @@ const DEFAULTS: PreferencesState = {
   tone: 'gentle',
   hapticsEnabled: true,
   readAloud: true,
+  shareUsage: true,
   festivalRegions: ['pan-india'],
   voiceName: null,
   memoryEnabled: true,
@@ -99,6 +102,7 @@ export class PreferencesService {
   readonly tone = signal<ReadingTone>(this.preferences().tone);
   readonly hapticsEnabled = signal(this.preferences().hapticsEnabled);
   readonly readAloud = signal(this.preferences().readAloud);
+  readonly shareUsage = signal(this.preferences().shareUsage);
   readonly festivalRegions = signal<FestivalRegion[]>(this.preferences().festivalRegions);
   readonly voiceName = signal<string | null>(this.preferences().voiceName);
   readonly memoryEnabled = signal(this.preferences().memoryEnabled);
@@ -144,6 +148,7 @@ export class PreferencesService {
         tone: this.tone(),
         hapticsEnabled: this.hapticsEnabled(),
         readAloud: this.readAloud(),
+        shareUsage: this.shareUsage(),
         festivalRegions: normalizedFestivalRegions(this.festivalRegions()),
         voiceName: this.voiceName(),
         memoryEnabled: this.memoryEnabled(),
@@ -196,6 +201,7 @@ export class PreferencesService {
     this.tone.set(DEFAULTS.tone);
     this.hapticsEnabled.set(DEFAULTS.hapticsEnabled);
     this.readAloud.set(DEFAULTS.readAloud);
+    this.shareUsage.set(DEFAULTS.shareUsage);
     this.festivalRegions.set(DEFAULTS.festivalRegions);
     this.voiceName.set(DEFAULTS.voiceName);
     this.memoryEnabled.set(DEFAULTS.memoryEnabled);

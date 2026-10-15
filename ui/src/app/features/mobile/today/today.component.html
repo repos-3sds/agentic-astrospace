@@ -167,6 +167,19 @@
     <p class="window-in">{{ v.nextWindowIn }}</p>
   </section>
 
+  @if (preferences.experienceMode() !== 'practitioner' && upcomingFestival(); as festival) {
+    <button class="festival" type="button" (click)="showSheet('festival')"
+            [attr.aria-label]="festival.name + ', ' + festivalWhen() + '. Open details'">
+      <span class="festival-icon" aria-hidden="true"><img src="mobile/calendar.svg" alt="" /></span>
+      <span class="festival-text">
+        <span class="eyebrow">COMING UP</span>
+        <span class="festival-name">{{ festival.name }}</span>
+        <span class="festival-when">{{ festivalWhen() }}</span>
+      </span>
+      <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
+    </button>
+  }
+
   @if (preferences.experienceMode() === 'guided') {
     <button class="details-toggle" type="button" (click)="detailsOpen.set(!detailsOpen())">
         <span>{{ detailsOpen() ? 'Hide the details' : 'See what shaped this' }}</span>
@@ -341,6 +354,10 @@
   />
 }
 
+@if (openSheet() === 'festival' && upcomingFestival(); as festival) {
+  <as-festival-sheet [festival]="festival" (dismissed)="openSheet.set(null)" />
+}
+
 @if (openSheet() === 'why') {
   <as-why-reading-sheet
     [mode]="whyMode()"
@@ -349,6 +366,7 @@
     [references]="references()"
     [doAvoidExplained]="doAvoidExplained()"
     [conventions]="conventions()"
+    [drillDowns]="drillDowns()"
     (dismissed)="openSheet.set(null)"
   />
 }

@@ -741,7 +741,18 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   "Add to calendar" shares an .ics file; whether a calendar app is offered
   in the share sheet depends on the device. *Unblocks on:* a device check.
   *Hook:* `addToCalendar()` in `muhurta-results.component.ts`; an
-  `Intent.ACTION_INSERT` plugin call would skip the share sheet.
+  `Intent.ACTION_INSERT` plugin call would skip the share sheet. The festival
+  sheet's "Add to calendar" (`festival-sheet.component.ts`) shares the same
+  `exportCalendarFile()` and would get the same fix.
+- [ ] **Analytics and crash reports are wired but off** (2026-10-15).
+  `core/analytics.service.ts` sends to PostHog only when
+  `environment.posthog.key` is set, and the reader's "Share usage and crash
+  reports" switch (on by default) is respected. *Unblocks on:* a PostHog
+  project (EU host assumed) and its public project key in
+  `ui/src/environments/environment.prod.ts`, and a line in the privacy
+  policy naming PostHog as a processor before launch. Native crashes outside
+  the WebView (a plugin's Swift or Kotlin code) are not covered; that needs a
+  native crash SDK if they turn up in store reviews.
 
 ### D. Docs pending a decision
 

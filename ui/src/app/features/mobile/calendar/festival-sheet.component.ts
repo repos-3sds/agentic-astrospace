@@ -1,4 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import { AnalyticsService } from '../../../core/analytics.service';
+import { exportCalendarFile } from '../../../core/calendar-export';
+import { buildIcs } from '../../../core/ics';
 import { FestivalOccurrence } from '../../../core/models';
 import { SheetComponent } from '../sheet/sheet.component';
 
@@ -35,7 +38,14 @@ import { SheetComponent } from '../sheet/sheet.component';
       @if (festival().is_convention_dependent) {
         <p class="mcal-window"><img src="mobile/clock.svg" alt="" aria-hidden="true" />Date may vary by family sampradaya or regional panchangam.</p>
       }
-      <button class="mcal-remind" type="button" (click)="reminded = true">{{ reminded ? 'Reminder set' : 'Remind me that morning' }}</button>
+      <!-- The phone's calendar owns the reminder, so it fires with the app closed;
+           a button that only flipped its own label promised a reminder nothing sent. -->
+      <button class="mcal-remind" type="button" [disabled]="exporting()" (click)="addToCalendar()">
+        {{ exporting() ? 'Opening calendar…' : 'Add to calendar, 7 am reminder' }}
+      </button>
+      @if (exportFailed()) {
+        <p class="mcal-note" role="alert">Could not open your calendar. Try again, or add {{ festival().name }} by hand.</p>
+      }
     </as-sheet>
   `,
   styleUrl: './festival-sheet.component.scss',
@@ -43,7 +53,34 @@ import { SheetComponent } from '../sheet/sheet.component';
 export class FestivalSheetComponent {
   readonly festival = input<FestivalOccurrence>(emptyFestival());
   readonly dismissed = output<void>();
-  reminded = false;
+  private readonly analytics = inject(AnalyticsService);
+  protected readonly exporting = signal(false);
+  protected readonly exportFailed = signal(false);
+
+  protected async addToCalendar(): Promise<void> {
+    const festival = this.festival();
+    this.exporting.set(true);
+    this.exportFailed.set(false);
+    try {
+      const notes = [festival.description, festival.observance_note,
+        festival.is_convention_dependent ? 'Date may vary by family sampradaya or regional panchangam.' : null];
+      const ics = buildIcs([{
+        uid: `festival-${festival.slug}-${festival.occurs_on}@astrospace`,
+        title: festival.name,
+        startIso: festival.occurs_on,
+        endIso: festival.occurs_on,
+        allDay: true,
+        description: notes.filter(Boolean).join(' '),
+        alarmAfterStartMinutes: 7 * 60,
+      }]);
+      await exportCalendarFile(ics, `${festival.slug}-${festival.occurs_on}.ics`, festival.name);
+      this.analytics.track('calendar_exported', { source: 'festival' });
+    } catch {
+      this.exportFailed.set(true);
+    } finally {
+      this.exporting.set(false);
+    }
+  }
 
   protected readonly dayNumber = computed(() => Number(this.festival().occurs_on.slice(8, 10)));
   protected readonly monthShort = computed(() =>

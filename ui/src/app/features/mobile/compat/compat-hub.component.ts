@@ -11,7 +11,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [BackLinkDirective, GenericErrorComponent, RouterLink],
   template: `
-    <a class="mco-back" [asBack]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
+    <a class="mco-back" [asBack]="['/m','family']"><img src="mobile/back.svg" alt="" /><span>Family</span></a>
     <main class="mco-body">
       <header><h1>Compatibility</h1><p>Ashta Koota matching - 36 points, computed honestly</p></header>
       <section class="mco-how"><b>HOW THIS WORKS</b><p>We compare two saved birth profiles across the 8 classical kootas, flag doshas honestly, and show the computed base layer before any interpretation.</p></section>

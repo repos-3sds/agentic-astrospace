@@ -1,0 +1,65 @@
+<header class="appbar">
+  <h1 class="screen-title">Family</h1>
+  <a class="iconbtn" [routerLink]="['/m', 'settings', 'profiles', 'new']" aria-label="Add a person">
+    <span aria-hidden="true">+</span>
+  </a>
+</header>
+
+<main class="body">
+  <p class="lede">Choose whose reading Today and Ask show, or match two people.</p>
+
+  @if (loading()) {
+    <section class="state" aria-busy="true"><b>Loading your people</b><p>Checking the profiles on this account.</p></section>
+  } @else if (error()) {
+    <as-generic-error role="alert" [message]="error()!" (retried)="reload()" />
+  } @else if (!kundlis.kundlis().length) {
+    <section class="state">
+      <b>No one here yet</b>
+      <p>Add yourself first, then the people you read for.</p>
+      <a [routerLink]="['/m', 'settings', 'profiles', 'new']">Add a person</a>
+    </section>
+  } @else {
+    @for (group of groups(); track group.label) {
+      <p class="eyebrow">{{ group.label }}</p>
+      <section class="group" [attr.aria-label]="group.label">
+        @for (person of group.people; track person.id; let last = $last) {
+          <div class="person" [class.is-active]="isActive(person)">
+            <button class="person-main" type="button" (click)="view(person)"
+                    [attr.aria-pressed]="isActive(person)"
+                    [attr.aria-label]="isActive(person) ? person.name + ', showing now' : 'Show ' + person.name + '’s reading'">
+              <span class="avatar" aria-hidden="true">{{ person.name.slice(0, 1).toUpperCase() }}</span>
+              <span class="who">
+                <b>{{ person.name }}</b>
+                <small>{{ relationLabel(person) }} · {{ signs(person) }}</small>
+              </span>
+              @if (isActive(person)) {
+                <em class="viewing">Showing</em>
+              } @else {
+                <span class="switch">Show</span>
+              }
+            </button>
+            <div class="person-actions">
+              @if (!isActive(person)) {
+                <a [routerLink]="['/m', 'compat', 'results']" [queryParams]="{ partner: person.id }"
+                   [attr.aria-label]="'Match ' + person.name + ' with ' + activeName()">Check match</a>
+              }
+              <a [routerLink]="['/m', 'settings', 'profiles', person.id, 'edit']" [attr.aria-label]="'Edit ' + person.name">Edit</a>
+            </div>
+          </div>
+          @if (!last) { <div class="rule"></div> }
+        }
+      </section>
+    }
+
+    <div class="actions">
+      <a class="primary" [routerLink]="['/m', 'settings', 'profiles', 'new']">Add a person</a>
+      <a class="secondary" [routerLink]="['/m', 'compat']">Match two people</a>
+    </div>
+    @if (capacity(); as cap) {
+      <p class="capacity" [class.full]="cap.full">
+        {{ cap.used }} of {{ cap.limit }} profiles on your plan.
+        @if (cap.full) { <a [routerLink]="['/m', 'subscription']">See plans</a> }
+      </p>
+    }
+  }
+</main>

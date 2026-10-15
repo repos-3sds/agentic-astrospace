@@ -51,9 +51,8 @@ export class AddProspectComponent {
         this.error.set('Select your own profile before checking compatibility.');
         return;
       }
-      const created = await this.kundlis.create(payload);
       // Adding a person to compare with must not switch whose app this is.
-      this.kundlis.setActive(previousActive);
+      const created = await this.kundlis.create(payload, { activate: false });
       await this.router.navigate(['/m', 'compat', 'results'], { queryParams: { partner: created.id } });
     } catch (error) {
       this.error.set((error as Error).message);

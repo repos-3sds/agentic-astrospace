@@ -9,11 +9,13 @@ import {
   SourceReference,
   WhyReadingSheetComponent,
 } from '../why-reading/why-reading-sheet.component';
+import { whyDrillDowns } from '../why-reading/drill-downs';
 import { MobileAskStateService } from './mobile-ask-state.service';
 import { AskService } from '../../../core/ask.service';
 import { AskMemoryCandidate, AskStreamEvent, AskTechnicalBasisItem, StructuredReading } from '../../../core/models';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
+import { AnalyticsService } from '../../../core/analytics.service';
 import { ProfileContextFact, ProfileContextService } from '../../../core/profile-context.service';
 import { MobileAskMessage, MobileAskThreadService } from './mobile-ask-thread.service';
 import { AskReportInput, askReportPdf, askReportText, downloadBlob } from '../../../core/ask-report';
@@ -91,6 +93,7 @@ const REFER_OUT_KINDS = new Set(['death', 'health', 'legal', 'money']);
 export class AskAnswerComponent {
   protected readonly navigation = inject(ASK_NAVIGATION);
   protected readonly preferences = inject(PreferencesService);
+  private readonly analytics = inject(AnalyticsService);
   private readonly askState = inject(MobileAskStateService);
   private readonly askService = inject(AskService);
   private readonly entitlements = inject(EntitlementService);
@@ -283,6 +286,15 @@ export class AskAnswerComponent {
     }
     return this.sentences(message?.content ?? this.streamedAnswer());
   });
+
+  protected openWhy(): void {
+    this.whyOpen.set(true);
+    this.analytics.track('why_opened', { surface: 'ask' });
+  }
+
+  /** "Show me why" links, from the factors this answer's own evidence names. */
+  protected readonly drillDowns = computed(() =>
+    whyDrillDowns(this.calculation().flatMap((row) => [row.label, row.value])));
 
   readonly calculation = computed<EvidenceRow[]>(() => {
     const message = this.selectedAssistant() ?? this.latestAssistant();
@@ -836,6 +848,7 @@ export class AskAnswerComponent {
     this.streamEvidence.set([]);
     this.submitError.set(null);
     this.limitDenial.set(null);
+    this.analytics.track('ask_submitted');
 
     const userMessage = this.toChatMessage({
       id: `local-user-${Date.now()}`,
@@ -919,6 +932,7 @@ export class AskAnswerComponent {
           this.streaming.set(false);
         } else if (this.isReferOutEvent(event)) {
           referOutKind = event.kind;
+          this.analytics.track('ask_referred_out', { kind: event.kind });
           this.updateAssistantMessage(assistantId, {
             content: event.answer,
             domain: event.kind,
@@ -1017,6 +1031,7 @@ export class AskAnswerComponent {
         } else if ('done' in event) {
           finalThreadId = event.thread_id ?? finalThreadId;
           referOutKind = event.refer_out_kind;
+          if (!event.refer_out_kind) this.analytics.track('ask_answered', { domain: event.domain ?? null });
           this.streamDomain.set(event.domain);
           this.streamEvidence.set(event.evidence);
           this.updateAssistantMessage(assistantId, {
@@ -1076,6 +1091,7 @@ export class AskAnswerComponent {
       } else if (error instanceof EntitlementLimitError) {
         // Nothing was generated or charged; the question waits for a credit.
         this.limitDenial.set(error.denial);
+        this.analytics.track('limit_reached', { key: error.denial.entitlement });
         this.updateAssistantMessage(assistantId, {
           content: 'This question is saved here. Ask it again once you have a question to use.',
           status: 'limit_reached',

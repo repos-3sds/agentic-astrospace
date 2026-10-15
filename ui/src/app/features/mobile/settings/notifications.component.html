@@ -1,6 +1,6 @@
 <a class="appbar" [asBack]="['/m', 'settings']">
   <img src="mobile/back.svg" alt="" aria-hidden="true" />
-  <span class="crumb">Settings</span>
+  <span class="crumb">More</span>
 </a>
 
 <div class="body">
@@ -50,7 +50,7 @@
     }
   </section>
 
-  @for (pref of prefs(); track pref.id) {
+  @for (pref of visiblePrefs(); track pref.id) {
     <div class="toggle-row">
       <span class="toggle-text">
         <span class="toggle-title">{{ pref.title }}</span>

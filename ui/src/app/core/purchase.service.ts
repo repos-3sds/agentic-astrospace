@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 
 import { environment } from '../../environments/environment';
+import { AnalyticsService } from './analytics.service';
 import { AuthService } from './auth.service';
 import { EntitlementService, StoreProduct } from './entitlement.service';
 
@@ -26,6 +27,7 @@ export type StoreUnavailableReason = 'web' | 'not_configured' | 'failed';
 export class PurchaseService {
   private readonly auth = inject(AuthService);
   private readonly entitlements = inject(EntitlementService);
+  private readonly analytics = inject(AnalyticsService);
 
   readonly available = signal(false);
   readonly unavailableReason = signal<StoreUnavailableReason | null>(null);
@@ -48,13 +50,16 @@ export class PurchaseService {
     const product = this.storeProducts.get(productId);
     if (!this.available() || !product) throw new Error('Purchases are not available on this device yet.');
     const { Purchases } = await import('@revenuecat/purchases-capacitor');
+    this.analytics.track('purchase_started', { product: productId });
     try {
       await Purchases.purchaseStoreProduct({ product: product as never });
     } catch (error) {
       if ((error as { userCancelled?: boolean }).userCancelled) return 'cancelled';
       throw new Error('The store could not complete that purchase. You have not been charged.');
     }
-    return (await this.waitForServer()) ? 'purchased' : 'pending';
+    const outcome = (await this.waitForServer()) ? 'purchased' : 'pending';
+    this.analytics.track('purchase_completed', { product: productId, confirmed: outcome === 'purchased' });
+    return outcome;
   }
 
   async restore(): Promise<boolean> {

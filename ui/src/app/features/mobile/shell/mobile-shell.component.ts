@@ -20,8 +20,19 @@ interface MobileTab {
   icon: string;
 }
 
+/** Screens listed under More in the Ask-first tab bar. */
+const MORE_ROOTS = [
+  '/m/settings', '/m/chart', '/m/explore', '/m/transits', '/m/readings', '/m/notes',
+  '/m/subscription', '/m/notifications', '/m/search', '/m/remedies', '/m/muhurta', '/m/calendar',
+];
+
+function under(path: string, root: string): boolean {
+  return path === root || path.startsWith(`${root}/`);
+}
+
 /**
- * Native app shell: routed content plus the five-tab bar (Figma node 13:66).
+ * Native app shell: routed content plus the tab bar (Figma node 13:66) — four
+ * tabs in the Ask-first modes, five in Practitioner.
  *
  * The shell owns the safe areas. styles.scss has defined --as-safe-* since the
  * mobile UX pass but nothing consumed them, which is why the status bar and
@@ -100,23 +111,7 @@ export class MobileShellComponent {
     ),
   );
 
-  protected readonly tabs = computed(() => {
-    const fixed = [
-      { commands: ['today'], label: 'Today', icon: 'nav-today' },
-    ];
-    if (this.preferences.experienceMode() === 'guided') {
-      return [
-        ...fixed,
-        { commands: ['ask'], label: 'Ask', icon: 'nav-ask' },
-        {
-          commands: ['explore'],
-          label: 'Explore',
-          icon: 'nav-check-square',
-        },
-        { commands: ['calendar'], label: 'Calendar', icon: 'nav-calendar' },
-        { commands: ['settings'], label: 'More', icon: 'nav-more' },
-      ];
-    }
+  protected readonly tabs = computed<MobileTab[]>(() => {
     if (this.preferences.experienceMode() === 'practitioner') {
       // Practitioner keeps transits inside Yantra so Calendar remains a primary
       // daily almanac destination instead of competing with chart workbench tools.
@@ -128,13 +123,14 @@ export class MobileShellComponent {
         { commands: ['settings'], label: 'More', icon: 'figma-yantra-nav-settings' },
       ];
     }
+    // Ask-first (checklist D1): the chart screens are where "Show me why"
+    // lands and are listed under More › Your chart, not given tabs of their own.
     return [
-      ...fixed,
+      { commands: ['today'], label: 'Today', icon: 'nav-today' },
       { commands: ['ask'], label: 'Ask', icon: 'nav-ask' },
-      { commands: ['chart'], label: 'Explore', icon: 'nav-check-square' },
-      { commands: ['calendar'], label: 'Calendar', icon: 'nav-calendar' },
+      { commands: ['family'], label: 'Family', icon: 'nav-family' },
       { commands: ['settings'], label: 'More', icon: 'nav-more' },
-    ] satisfies MobileTab[];
+    ];
   });
 
   protected readonly tabTrack = (_index: number, tab: MobileTab) => tab.commands.join('/');
@@ -148,18 +144,16 @@ export class MobileShellComponent {
     const route = `/m/${tab.commands.join('/')}`;
     const mode = this.preferences.experienceMode();
 
-    if (mode === 'guided') {
-      if (route === '/m/explore') {
-        return (
-          path === '/m/explore' ||
-          path.startsWith('/m/explore/') ||
-          path === '/m/chart' ||
-          path.startsWith('/m/chart/') ||
-          path === '/m/remedies' ||
-          path.startsWith('/m/remedies/')
-        );
+    if (mode !== 'practitioner') {
+      if (route === '/m/family') {
+        return under(path, '/m/family') || under(path, '/m/compat');
       }
-      return path === route || path.startsWith(`${route}/`);
+      if (route === '/m/settings') {
+        // Everything reached from More keeps More lit, so a reader always
+        // knows which tab Back will eventually return them to.
+        return MORE_ROOTS.some((root) => under(path, root));
+      }
+      return under(path, route);
     }
 
     if (mode === 'practitioner') {

@@ -1,17 +1,16 @@
 @let p = profile();
 
-<header class="appbar">
-  <h1 class="screen-title">Explore</h1>
+<as-back-bar back="/m/settings" crumb="More">
   <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search">
     <img src="mobile/search.svg" alt="" aria-hidden="true" />
   </a>
-</header>
+</as-back-bar>
 
 <main class="guided-body">
   <section class="title-block">
     <p>GUIDED COMPANION</p>
     <h2>Life guidance library</h2>
-    <span>Stories, practices, chart basics, and timing chapters in plain language.</span>
+    <span>Stories, chart basics and timing chapters in plain language.</span>
     <button class="profile-chip" type="button" (click)="profileSwitcherOpen.set(true)">
       <span class="avatar" aria-hidden="true">{{ p.initial }}</span>
       <span>{{ p.name }}</span>

@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
+import { PreferencesService } from '../../../core/preferences.service';
 import { AccountPrivacyComponent } from './account-privacy.component';
 
 describe('AccountPrivacyComponent › Change email', () => {
@@ -17,6 +18,7 @@ describe('AccountPrivacyComponent › Change email', () => {
         provideRouter([]),
         { provide: AuthService, useValue: { changeEmail, user: signal({ email: 'old@example.com' }), email: signal('old@example.com') } },
         { provide: KundliStore, useValue: { loaded: () => true, kundlis: () => [] } },
+        { provide: PreferencesService, useValue: { shareUsage: signal(true), experienceMode: signal('balanced') } },
       ],
     }).compileComponents();
   });

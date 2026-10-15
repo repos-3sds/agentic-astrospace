@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
+import { BackBarComponent } from '../shared/back-bar.component';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 
 interface ExploreCard {
@@ -17,7 +18,7 @@ interface ExploreCard {
   selector: 'as-guided-explore',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ProfileSwitcherComponent, RouterLink],
+  imports: [BackBarComponent, ProfileSwitcherComponent, RouterLink],
   templateUrl: './guided-explore.component.html',
   styleUrl: './guided-explore.component.scss',
 })
@@ -35,27 +36,14 @@ export class GuidedExploreComponent {
     };
   });
 
+  // What to Do (remedies) and Muhurthas are Practitioner tools at launch (checklist D1).
   protected readonly cards: ExploreCard[] = [
     {
-      title: 'What to Do',
-      body: 'Small practices, remedies, and timing cues for how to move through the day.',
-      route: ['/m', 'explore', 'what-to-do'],
-      icon: 'remedy-rite',
-      tone: 'gold',
-    },
-    {
-      title: 'Your Chart',
+      title: 'Your chart',
       body: 'See the chart behind your guidance, kept simple enough to understand.',
       route: ['/m', 'chart'],
       icon: 'nav-chart',
       tone: 'good',
-    },
-    {
-      title: 'Muhurthas',
-      body: 'Pick better windows for travel, contracts, purchases, and important starts.',
-      route: ['/m', 'muhurta'],
-      icon: 'figma-yantra-calendar',
-      tone: 'gold',
     },
     {
       title: 'Life chapters',

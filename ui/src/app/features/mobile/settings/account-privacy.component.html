@@ -1,6 +1,6 @@
 <a class="appbar" [asBack]="['/m', 'settings']">
   <img src="mobile/back.svg" alt="" aria-hidden="true" />
-  <span class="crumb">Settings</span>
+  <span class="crumb">More</span>
 </a>
 
 <div class="body">
@@ -44,6 +44,22 @@
   }
   @if (message()) { <p class="status" role="status">{{ message() }}</p> }
   @if (error()) { <p class="status error" role="alert">{{ error() }}</p> }
+
+  <div class="toggle-row">
+    <span class="toggle-text">
+      <span class="toggle-title">Share usage and crash reports</span>
+      <span class="toggle-detail">Which screens are used and what broke, under a random id. Never your name, birth details or questions.</span>
+    </span>
+    <button
+      class="switch"
+      type="button"
+      role="switch"
+      [class.is-on]="preferences.shareUsage()"
+      [attr.aria-checked]="preferences.shareUsage()"
+      aria-label="Share usage and crash reports"
+      (click)="toggleShareUsage()"
+    ></button>
+  </div>
 
   <div class="rule"></div>
 

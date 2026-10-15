@@ -63,7 +63,29 @@ export class SettingsHomeComponent {
     };
   });
 
+  /**
+   * Ask-first modes take the chart screens off the tab bar (checklist D1);
+   * this is where they are listed instead. Practitioner keeps them as tabs,
+   * so the group would only repeat the bar there.
+   */
+  private readonly chartGroup = computed<SettingGroup[]>(() => {
+    const mode = this.preferences.experienceMode();
+    if (mode === 'practitioner') return [];
+    const rows: SettingRow[] = [];
+    if (mode === 'guided') {
+      rows.push({ id: 'explore', icon: 'explore-readings', label: 'Life guidance', value: 'Story, chapters', route: ['/m', 'explore'] });
+    }
+    rows.push(
+      { id: 'chart', icon: 'explore-varga', label: 'Your chart', value: this.kundlis.active()?.ascendant ? `${this.kundlis.active()!.ascendant} rising` : 'Chart & vargas', route: ['/m', 'chart'] },
+      { id: 'periods', icon: 'explore-dasha', label: 'Life periods', value: 'Dashas', route: ['/m', 'chart', 'periods'] },
+      { id: 'transits', icon: 'explore-transit', label: 'Transits', value: 'Now', route: ['/m', 'transits'] },
+      { id: 'readings', icon: 'explore-reference', label: 'Readings', value: 'Track record', route: ['/m', 'readings'] },
+    );
+    return [{ eyebrow: 'CHART & TIMING', rows }];
+  });
+
   readonly groups = computed<SettingGroup[]>(() => [
+    ...this.chartGroup(),
     {
       eyebrow: 'EXPERIENCE',
       rows: [
@@ -130,13 +152,14 @@ export class SettingsHomeComponent {
           value: this.locationLabel(),
           route: ['/m', 'settings', 'location'],
         },
-        {
+        // Festival regions tune the Calendar tab, which only Practitioner has.
+        ...(this.preferences.experienceMode() === 'practitioner' ? [{
           id: 'festivals',
           icon: 'set-festival',
           label: 'Festival calendar',
           value: this.festivalLabel(),
           route: ['/m', 'settings', 'festivals'],
-        },
+        }] : []),
         {
           id: 'conventions',
           icon: 'set-conv',

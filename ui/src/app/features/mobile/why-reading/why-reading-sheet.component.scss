@@ -44,6 +44,37 @@
 .calc-value { @include m-body-strong; color: var(--m-text); margin: 0; text-align: right; }
 .rule { height: 1px; background: var(--m-border); }
 
+.drills {
+  width: 100%;
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+  background: var(--m-raised);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.drill {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 10px 15px;
+  color: var(--m-text);
+  text-decoration: none;
+  img { width: 18px; height: 18px; display: block; flex-shrink: 0; }
+  &:active { background: var(--m-accent-soft); }
+}
+
+.drill-text {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+  b { @include m-body-strong; color: var(--m-accent-strong); }
+  small { @include m-caption; color: var(--m-muted); }
+}
+
 .sources {
   width: 100%;
   display: flex;

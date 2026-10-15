@@ -14,7 +14,10 @@ import { KundliStore } from '../../../core/kundli.store';
 import { BirthDetailsCardComponent } from '../chart/birth-details-card.component';
 import { VedicService } from '../../../core/vedic.service';
 import { ResourceFreshness } from '../../../core/resource-cache';
-import { DailyGuidancePayload, VedicAll, DailyActionRow } from '../../../core/models';
+import { DailyGuidancePayload, VedicAll, DailyActionRow, FestivalOccurrence } from '../../../core/models';
+import { FestivalSheetComponent } from '../calendar/festival-sheet.component';
+import { AnalyticsService } from '../../../core/analytics.service';
+import { TODAY_DRILL_DOWNS, whyDrillDowns } from '../why-reading/drill-downs';
 import { FestivalService } from '../../../core/festival.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { PreferencesService } from '../../../core/preferences.service';
@@ -216,6 +219,7 @@ function practicalClose(text: string): string[] {
     BirthDetailsCardComponent,
     DayGaugeComponent,
     DayQualitySheetComponent,
+    FestivalSheetComponent,
     ListenSheetComponent,
     RouterLink,
     WhyReadingSheetComponent,
@@ -232,6 +236,7 @@ export class TodayComponent {
   protected readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
   private readonly festivals = inject(FestivalService);
+  private readonly analytics = inject(AnalyticsService);
   private readonly route = inject(ActivatedRoute);
   protected readonly preferences = inject(PreferencesService);
 
@@ -288,7 +293,24 @@ export class TodayComponent {
   readonly scoreReason = signal('');
 
   /** Which sheet is showing, if any. One signal so two cannot stack. */
-  readonly openSheet = signal<'quality' | 'why' | 'listen' | null>(null);
+  readonly openSheet = signal<'quality' | 'why' | 'listen' | 'festival' | null>(null);
+
+  /**
+   * The next festival or vrat within two weeks, for the one reminder card
+   * Today carries now that Calendar is a Practitioner tab (checklist D1).
+   * Filtered by the reader's festival regions, like the Calendar list.
+   */
+  readonly upcomingFestival = signal<FestivalOccurrence | null>(null);
+  protected readonly festivalWhen = computed(() => {
+    const festival = this.upcomingFestival();
+    if (!festival) return '';
+    const day = new Date(`${festival.occurs_on}T12:00:00`);
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
+    const days = Math.round((day.getTime() - today.getTime()) / 86_400_000);
+    const date = new Intl.DateTimeFormat('en', { weekday: 'short', day: 'numeric', month: 'short' }).format(day);
+    return days <= 0 ? `Today · ${date}` : days === 1 ? `Tomorrow · ${date}` : `In ${days} days · ${date}`;
+  });
   /** Birth constants for the header strip. Populated from the chart cache that
    * `prefetchChart()` already warms, so this costs no extra request. */
   readonly natal = signal<VedicAll | null>(null);
@@ -303,9 +325,10 @@ export class TodayComponent {
    * Escape, the sheet's own button) and buzzing on each would make closing
    * something feel like a consequence.
    */
-  protected showSheet(kind: 'quality' | 'why' | 'listen'): void {
+  protected showSheet(kind: 'quality' | 'why' | 'listen' | 'festival'): void {
     this.haptics.tap();
     this.openSheet.set(kind);
+    if (kind === 'why') this.analytics.track('why_opened', { surface: 'today' });
   }
 
   /** Audio language, chosen in the Listen sheet — see 23:25. */
@@ -334,6 +357,10 @@ export class TodayComponent {
   // Always shown. A reading whose conventions are hidden is not reproducible —
   // the same chart under a different ayanamsa is a different answer.
   readonly conventions = signal<string[]>([]);
+
+  /** "Show me why" links into the chart screens behind today's reading. */
+  protected readonly drillDowns = computed(() =>
+    whyDrillDowns([...this.calculation().map((row) => row.value), ...this.plainWords()], TODAY_DRILL_DOWNS));
 
   /**
    * Below the fold (20:2). Grouped by how often each fact changes, which is the
@@ -596,7 +623,16 @@ export class TodayComponent {
       const profile = this.kundlis.active();
       const city = place?.city || profile?.birth_city;
       const nation = place?.nation || profile?.birth_nation || 'IN';
-      if (city) void this.festivals.upcoming(city, nation, calendar.start_date, 60);
+      if (!city) return;
+      const window = await this.festivals.upcoming(city, nation, calendar.start_date, 60, this.preferences.festivalRegions());
+      if (this.kundlis.activeId() !== profileId) return;
+      const today = localIsoDate(new Date());
+      const horizon = localIsoDate(new Date(Date.now() + 14 * 86_400_000));
+      this.upcomingFestival.set(
+        window.festivals
+          .filter((festival) => festival.occurs_on >= today && festival.occurs_on <= horizon)
+          .sort((a, b) => a.occurs_on.localeCompare(b.occurs_on))[0] ?? null,
+      );
     } catch {
       // Today should stay usable even if Calendar cannot be warmed in the background.
     }
@@ -609,4 +645,9 @@ export class TodayComponent {
       // Today should stay usable even if the natal chart cannot be warmed.
     }
   }
+}
+
+/** The phone's calendar date as `YYYY-MM-DD`; toISOString() would give UTC's. */
+function localIsoDate(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }

@@ -94,7 +94,7 @@
   text-decoration: none;
 }
 
-.row-left { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.row-left { display: flex; flex-shrink: 0; align-items: center; gap: 11px; max-width: 62%; }
 
 .row-icon {
   width: 34px;
@@ -116,7 +116,7 @@
 
 .row-label { @include m-body-strong; color: var(--m-text); }
 
-.row-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; min-width: 0; }
+.row-right { display: flex; flex: 1 1 auto; justify-content: flex-end; align-items: center; gap: 8px; min-width: 0; }
 
 // The current value, shown without opening the screen. It yields first when a
 // long label and a long value compete for the row.

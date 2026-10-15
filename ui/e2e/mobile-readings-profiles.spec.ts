@@ -920,7 +920,7 @@ test('mobile persona modes change navigation and presentation depth', async ({ p
   await page.getByRole('radio', { name: /Guided/ }).click();
   await expect(page.getByRole('radio', { name: /Guided/ })).toBeChecked();
   await page.goto('/m/ask');
-  await expect(page.getByText('Explore')).toBeVisible();
+  await expect(page.locator('nav[aria-label="Primary"]').getByText('Family')).toBeVisible();
   await expect(page.getByText('Chart', { exact: true })).toHaveCount(0);
   await expect(page.getByText('Ask in plain language.')).toBeVisible();
   await expect(page.getByRole('button', { name: /Money/ })).toHaveCount(0);

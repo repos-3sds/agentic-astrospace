@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
+import { AnalyticsService } from '../../../core/analytics.service';
+import { PreferencesService } from '../../../core/preferences.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 
@@ -29,6 +31,8 @@ export class AccountPrivacyComponent {
   private readonly auth = inject(AuthService);
   private readonly kundlis = inject(KundliStore);
   private readonly router = inject(Router);
+  protected readonly preferences = inject(PreferencesService);
+  private readonly analytics = inject(AnalyticsService);
 
   protected readonly busy = signal<string | null>(null);
   protected readonly message = signal<string | null>(null);
@@ -111,5 +115,12 @@ export class AccountPrivacyComponent {
     } finally {
       this.busy.set(null);
     }
+  }
+
+  /** Turning it off drops anything queued, so nothing more leaves the phone. */
+  protected toggleShareUsage(): void {
+    this.preferences.shareUsage.set(!this.preferences.shareUsage());
+    // With sharing off, flush() discards the queue instead of sending it.
+    this.analytics.flush();
   }
 }
