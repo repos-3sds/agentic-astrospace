@@ -83,11 +83,14 @@ class TestAdminRefusesToFailOpenOnCloudRun:
         monkeypatch.setenv("K_SERVICE", "astrospace-prod")
         assert supabase_configured() is False  # anon key still missing
 
-        dev_user = current_user(_fake_request(), authorization=None)
-        assert dev_user.auth_enabled is False  # unauthenticated request still resolves...
-
         with pytest.raises(HTTPException) as exc:
-            current_admin(dev_user)  # ...but no longer reaches admin.
+            current_user(_fake_request(), authorization=None)  # no dev identity on Cloud Run...
+        assert exc.value.status_code == 503
+
+        dev_user = AuthUser(id=DEV_USER_ID, email="local@astrospace.dev",
+                            role="dev", auth_enabled=False)
+        with pytest.raises(HTTPException) as exc:
+            current_admin(dev_user)  # ...and admin still refuses one if it got through.
 
         assert exc.value.status_code == 503
 
