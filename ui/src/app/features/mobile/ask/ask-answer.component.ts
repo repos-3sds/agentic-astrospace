@@ -17,6 +17,7 @@ import { PreferencesService } from '../../../core/preferences.service';
 import { ProfileContextFact, ProfileContextService } from '../../../core/profile-context.service';
 import { MobileAskMessage, MobileAskThreadService } from './mobile-ask-thread.service';
 import { AskReportInput, askReportPdf, askReportText, downloadBlob } from '../../../core/ask-report';
+import { shareFile } from '../../../core/native-share';
 import { TextRun, cleanPlainText, paragraphRuns } from '../../../core/answer-text';
 
 /**
@@ -1332,7 +1333,8 @@ export class AskAnswerComponent {
   }
 
   /** Builds the same signed report on web and mobile. Browsers download it;
-   * native-capable WebViews hand the actual PDF file to the OS share sheet. */
+   * the native app and share-capable browsers hand the actual PDF file to
+   * the OS share sheet (see `shareFile`). */
   protected async share(): Promise<void> {
     const message = this.selectedAssistant() ?? this.latestAssistant();
     if (!message || this.exportingMessageId()) return;
@@ -1344,18 +1346,11 @@ export class AskAnswerComponent {
       const report = await askReportPdf(this.reportInput(message));
       if (!this.navigation.web) {
         const file = new File([report], filename, { type: 'application/pdf' });
-        if (typeof navigator !== 'undefined' && navigator.share && navigator.canShare?.({ files: [file] })) {
-          try {
-            await navigator.share({
-              title: `Siddha reading for ${this.kundlis.active()?.name ?? 'this profile'}`,
-              text: this.questionFor(message),
-              files: [file],
-            });
-            return;
-          } catch (error) {
-            if ((error as DOMException).name === 'AbortError') return;
-          }
-        }
+        const shared = await shareFile(file, {
+          title: `Siddha reading for ${this.kundlis.active()?.name ?? 'this profile'}`,
+          text: this.questionFor(message),
+        });
+        if (shared) return;
       }
       downloadBlob(report, filename);
     } catch {

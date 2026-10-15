@@ -40,6 +40,17 @@
 				<string>CA92.1</string>
 			</array>
 		</dict>
+		<!-- @capacitor/filesystem writes the shared Ask PDF into the app's own
+		     cache directory and reads its metadata back. C617.1: files inside
+		     the app container only. -->
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
 	</array>
 
 	<key>NSPrivacyCollectedDataTypes</key>

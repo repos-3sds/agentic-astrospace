@@ -104,7 +104,9 @@ uses only HTTPS and standard algorithms (SQLCipher for the on-device cache),
 which fall under the mass-market exemption — confirm that reading against
 the current export rules before the first upload. `PrivacyInfo.xcprivacy`
 declares UserDefaults (CA92.1) for `@capacitor/preferences`; any new plugin
-that touches a required-reason API needs its own entry.
+that touches a required-reason API needs its own entry (file timestamps, C617.1, are
+declared for `@capacitor/filesystem`, which stages the shared Ask PDF in the
+app cache).
 
 **Both.** The Supabase session lives in Keychain / Keystore-backed storage
 (`ui/src/app/core/session-storage.ts`), never in Preferences. Terms and the
