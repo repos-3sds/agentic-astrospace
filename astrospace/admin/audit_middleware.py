@@ -24,6 +24,12 @@ log = logging.getLogger(__name__)
 # background work after it is not reliably run.
 AUDIT_WRITE_TIMEOUT_SECONDS = 3.0
 
+# Machine-to-machine endpoints with no signed-in actor. The RevenueCat webhook
+# authenticates with a shared secret and writes its own audit rows for every
+# applied event; RevenueCat retries anything slow or non-2xx, so nothing here
+# may add latency to it.
+_UNAUDITED_PREFIXES = ("/api/v1/store/revenuecat/",)
+
 _RESOURCE_RE = re.compile(
     r"^/api/v1/(?P<resource>kundlis|readings|settings|ask|admin)"
     r"(?:/(?P<resource_id>[0-9a-f-]{8,}))?"
@@ -83,6 +89,7 @@ class AppAuditMiddleware(BaseHTTPMiddleware):
             request.method in {"POST", "PUT", "PATCH", "DELETE"}
             and request.url.path.startswith("/api/v1/")
             and not request.url.path.startswith("/api/v1/admin/")
+            and not request.url.path.startswith(_UNAUDITED_PREFIXES)
         ):
             match = _RESOURCE_RE.match(request.url.path)
             user = getattr(request.state, "auth_user", None)

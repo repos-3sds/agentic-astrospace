@@ -76,6 +76,26 @@ def test_any_audit_failure_is_logged_not_raised(monkeypatch, caplog):
     assert "request audit write failed" in caplog.text
 
 
+def test_revenuecat_webhook_is_never_audited(monkeypatch):
+    """Shared-secret webhook: no actor, its own audit rows, and RevenueCat
+    retries anything slow — the middleware must not touch it."""
+    calls = []
+
+    class FakeAdmin:
+        def insert(self, table, payload, **kwargs):
+            calls.append(payload)
+
+    monkeypatch.setattr(audit_middleware, "get_admin_client", lambda: FakeAdmin())
+
+    async def hook(request):
+        return JSONResponse({"status": "ignored"})
+
+    app = Starlette(routes=[Route("/api/v1/store/revenuecat/webhook", hook, methods=["POST"])])
+    app.add_middleware(AppAuditMiddleware)
+    assert TestClient(app).post("/api/v1/store/revenuecat/webhook").status_code == 200
+    assert calls == []
+
+
 def test_account_deletion_row_carries_no_email(monkeypatch):
     captured = []
 
