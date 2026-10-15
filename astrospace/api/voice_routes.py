@@ -16,7 +16,16 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..entitlements.resolver import require_entitlement, resolve_entitlements
-from ..voice import SpeechTooLong, SpeechUnavailable, natural_speech
+from ..voice import (
+    MAX_SECTIONS,
+    MAX_TOTAL_CHARS,
+    Section,
+    SpeechTooLong,
+    SpeechUnavailable,
+    TranslationUnavailable,
+    natural_speech,
+    telugu_sections,
+)
 from .auth import CurrentUser
 
 router = APIRouter(prefix="/api/v1/voice", tags=["voice"])
@@ -78,3 +87,29 @@ def create_speech(body: SpeechRequest, user: CurrentUser, db: Session = Depends(
             "X-Speech-Cached": "1" if speech.cached else "0",
         },
     )
+
+
+class SectionBody(BaseModel):
+    label: str = Field(min_length=1, max_length=80)
+    text: str = Field(min_length=1, max_length=MAX_TOTAL_CHARS)
+
+
+class TranslateRequest(BaseModel):
+    sections: list[SectionBody] = Field(min_length=1, max_length=MAX_SECTIONS)
+    language: Literal["te"] = "te"
+
+
+@router.post("/translate")
+def translate_sections(body: TranslateRequest, user: CurrentUser, db: Session = Depends(get_db)):
+    """Telugu text for the Listen sheet, so the Telugu voice reads Telugu words."""
+    require_entitlement(resolve_entitlements(db, user.id), "audio.natural_voice")
+    if sum(len(section.text) for section in body.sections) > MAX_TOTAL_CHARS:
+        raise HTTPException(status_code=413, detail="Too much text to translate at once.")
+    try:
+        sections = telugu_sections([Section(s.label, s.text) for s in body.sections])
+    except TranslationUnavailable:
+        raise HTTPException(status_code=503, detail="Telugu is unavailable right now; reading in English.")
+    return {
+        "language": "te",
+        "sections": [{"label": s.label, "text": s.text} for s in sections],
+    }

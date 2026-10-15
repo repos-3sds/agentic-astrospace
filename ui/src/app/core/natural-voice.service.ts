@@ -34,6 +34,7 @@ export class NaturalVoiceService {
 
   private entitled: { value: boolean; at: number } | null = null;
   private readonly urls = new Map<string, Promise<string>>();
+  private readonly translations = new Map<string, Promise<{ label: string; text: string }[]>>();
 
   async available(): Promise<boolean> {
     if (this.entitled && Date.now() - this.entitled.at < ENTITLEMENT_TTL_MS) {
@@ -48,6 +49,35 @@ export class NaturalVoiceService {
       // Offline or signed out: still allow anything already cached on device.
       return this.entitled?.value ?? false;
     }
+  }
+
+  /**
+   * Telugu text for a brief's sections, so Chirp's Telugu voice reads Telugu
+   * words rather than English in a Telugu accent. Labels stay as given.
+   */
+  async telugu(sections: { label: string; text: string }[]): Promise<{ label: string; text: string }[]> {
+    const key = JSON.stringify(sections);
+    let pending = this.translations.get(key);
+    if (!pending) {
+      pending = this.loadTelugu(sections);
+      this.translations.set(key, pending);
+      pending.catch(() => this.translations.delete(key));
+    }
+    return pending;
+  }
+
+  private async loadTelugu(sections: { label: string; text: string }[]): Promise<{ label: string; text: string }[]> {
+    if (this.connectivity.offline()) throw new Error('offline');
+    const token = await this.auth.getAccessToken();
+    const body = await firstValueFrom(
+      this.http.post<{ sections: { label: string; text: string }[] }>(
+        apiUrl('/api/v1/voice/translate'),
+        { sections, language: 'te' },
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+      ),
+    );
+    if (!body?.sections?.length || body.sections.length !== sections.length) throw new Error('bad translation');
+    return body.sections;
   }
 
   /** An object URL for `text` spoken naturally. Starts the request on first call. */
