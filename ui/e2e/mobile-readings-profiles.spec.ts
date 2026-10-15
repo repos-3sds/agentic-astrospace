@@ -764,13 +764,13 @@ test('mobile chart screens use endpoint-backed chart depth', async ({ page }, te
   await page.goto('/m/chart/vargas');
   await expect(page.getByRole('figure', { name: 'Navamsha kundli chart' })).toBeVisible();
   await page.getByRole('button', { name: 'Moon', exact: true }).click();
-  await expect(page.getByText('D9 · Navamsha')).toBeVisible();
+  await expect(page.locator('.panel').getByText('D9 · Navamsha')).toBeVisible();
   await expect(page.getByText(/It is also marked vargottama in this chart\./)).toBeVisible();
   await page.locator('.panel').press('Escape');
   await page.getByRole('button', { name: 'D10' }).click();
   await expect(page.getByRole('figure', { name: 'Dashamsha kundli chart' })).toBeVisible();
   await page.getByRole('button', { name: 'Moon', exact: true }).click();
-  await expect(page.getByText('D10 · Dashamsha')).toBeVisible();
+  await expect(page.locator('.panel').getByText('D10 · Dashamsha')).toBeVisible();
   await expect(page.getByText(/used for career and public work/)).toBeVisible();
   await page.locator('.panel').press('Escape');
 
@@ -828,14 +828,15 @@ test('mobile notification platform states are explicit and retryable', async ({ 
   await mockMobileApi(page);
 
   await page.goto('/m/settings/notifications');
-  await expect(page.getByText(/They persist on this device/)).toBeVisible();
+  await expect(page.getByText(/Not available on the web/)).toBeVisible();
+  await expect(page.getByText(/Saved on this device and on your account/)).toBeVisible();
   await page.getByRole('switch', { name: 'Morning brief' }).click();
   await page.reload();
   await expect(page.getByRole('switch', { name: 'Morning brief' })).toHaveAttribute('aria-checked', 'false');
 
   await page.goto('/m/notifications');
   await expect(page.getByText(/Notifications are unavailable/)).toBeVisible();
-  await page.getByRole('button', { name: 'Retry' }).click();
+  await page.getByRole('button', { name: 'Try again' }).click();
   await expect(page.getByText('API transit alert')).toBeVisible();
   await page.getByRole('button', { name: /API transit alert/ }).click();
   await expect(page).toHaveURL(/\/m\/transits$/);
