@@ -35,6 +35,14 @@
 
       <p class="rationale">{{ groupReason(group) }}</p>
       <p class="source">{{ sourceLabel(group) }}</p>
+      <!-- Both fields have been in the payload all along; a remedy screen that
+           hides them turns traditional practice into a prescription. -->
+      @if (group.convention_dependent) {
+        <p class="convention">Traditions differ on this practice. Where your family or temple guidance disagrees, follow that.</p>
+      }
+      @if (groupSafetyNote(group); as safety) {
+        <p class="safety">{{ safety }}</p>
+      }
 
       <ul class="practices">
         @for (p of group.practices; track p.practice_slug) {

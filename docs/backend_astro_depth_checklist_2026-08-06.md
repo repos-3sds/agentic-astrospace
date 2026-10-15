@@ -650,6 +650,15 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   sets are `tests/test_refer_out_boundary.py`'s
   `test_lifespan_verdicts_are_caught_in_both_persons` and
   `test_ordinary_third_party_sentences_pass_the_output_net`.
+- [ ] **Ask-by-voice on iOS** (mobile audit item 15, 2026-10-15). Android
+  and browsers recognise speech through `ui/src/app/core/speech.service.ts`;
+  iOS does not, because `@capacitor-community/speech-recognition` 7.0.1
+  ships no `Package.swift` and the iOS project is SPM-only, so the plugin
+  is never linked and the composer hides its microphone there. *Why not:*
+  adding CocoaPods back for one plugin would split the iOS build.
+  *Unblocks on:* a plugin release with SPM support (then `npx cap update`
+  links it; the usage strings are already in `Info.plist`). *Hook:*
+  `SpeechService` constructor, where `available()` decides `supported()`.
 
 ### D. Docs pending a decision
 

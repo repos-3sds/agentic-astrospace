@@ -817,6 +817,7 @@ def get_agent_prompts(user: FullAdminUser):
                 "profile_facts.as_of",
                 "question_tense",
                 "register (experience_mode voice)",
+                "tone_instruction (gentle/direct delivery)",
                 "domain_addendum",
             ],
         },

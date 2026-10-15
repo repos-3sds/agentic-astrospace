@@ -109,6 +109,12 @@ export class MuhurtaResultsComponent {
   readonly place = signal('');
   /** Whose clock the window times are in, stated under the list. */
   readonly clockNote = signal('');
+  /**
+   * The API flags every muhurta result as convention-dependent (sunrise
+   * definition, Choghadiya tables, Abhijit observance all vary by region and
+   * almanac). Rendered as a sentence rather than a boolean nobody can read.
+   */
+  readonly conventionDependent = signal(false);
 
   readonly windows = signal<MuhurtaWindow[]>([]);
 
@@ -140,6 +146,7 @@ export class MuhurtaResultsComponent {
       this.clockNote.set(timingClockNote(payload.place));
       this.note.set(payload.note);
       this.disclaimer.set(payload.disclaimer);
+      this.conventionDependent.set(!!payload.is_convention_dependent);
       this.windows.set(this.extractWindows(payload.results));
     } catch (error) {
       this.error.set((error as Error).message);

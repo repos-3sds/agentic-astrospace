@@ -393,11 +393,14 @@ class AskOrchestrator:
         experience_mode: str = "balanced",
         language: str = "en",
         validate_first: bool = False,
+        tone: str = "gentle",
     ) -> PrepareOutcome:
         """`experience_mode` (guided/balanced/practitioner) selects the
         agent's VOICE only — never its facts, claims, or guardrails. See
         `domain_agent.REGISTERS`. Defaults to balanced so a caller that
-        doesn't supply one still gets the previous behaviour.
+        doesn't supply one still gets the previous behaviour. `tone`
+        (gentle/direct, `domain_agent.TONES`) is the same kind of
+        delivery-only switch.
 
         `validate_first` opts this turn into the validation loop: the agent
         commits to a falsifiable claim about a dated window and asks the reader
@@ -459,6 +462,7 @@ class AskOrchestrator:
             question_tense=routing.tense,
             experience_mode=experience_mode,
             language=language,
+            tone=tone,
         )
         profile_context = context.bundle.get("profile_context") or {}
         return PrepareOutcome(prepared=PreparedRun(

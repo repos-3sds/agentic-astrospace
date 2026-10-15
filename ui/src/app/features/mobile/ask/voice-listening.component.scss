@@ -108,6 +108,11 @@
 @keyframes veil-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes tick { from { transform: scaleY(0.45); } to { transform: scaleY(1); } }
 
+// Once the recogniser has stopped (or refused) the bars hold still: a moving
+// meter over a dead microphone is the hung state the animation was meant to
+// rule out.
+.meter.is-idle .tick { animation: none; transform: scaleY(0.45); }
+
 @media (prefers-reduced-motion: reduce) {
   .veil { animation: none; }
   .tick { animation: none; }

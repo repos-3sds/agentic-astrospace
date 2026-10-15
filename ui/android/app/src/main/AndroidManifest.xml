@@ -58,4 +58,6 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Ask by voice (@capacitor-community/speech-recognition); requested at first use. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 </manifest>

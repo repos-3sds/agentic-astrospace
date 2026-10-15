@@ -120,6 +120,17 @@
   text-transform: capitalize;
 }
 
+.convention,
+.safety {
+  @include m-caption;
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  color: var(--m-text);
+}
+.convention { background: var(--m-accent-soft); }
+.safety { background: var(--m-warn-soft); }
+
 .practices {
   list-style: none;
   margin: 0;

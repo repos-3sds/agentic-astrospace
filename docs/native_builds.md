@@ -104,7 +104,19 @@ uses only HTTPS and standard algorithms (SQLCipher for the on-device cache),
 which fall under the mass-market exemption — confirm that reading against
 the current export rules before the first upload. `PrivacyInfo.xcprivacy`
 declares UserDefaults (CA92.1) for `@capacitor/preferences`; any new plugin
-that touches a required-reason API needs its own entry.
+that touches a required-reason API needs its own entry (file timestamps, C617.1, are
+declared for `@capacitor/filesystem`, which stages the shared Ask PDF in the
+app cache).
+
+**Voice input.** Ask-by-voice uses `@capacitor-community/speech-recognition`
+(`ui/src/app/core/speech.service.ts`). Android links it through Gradle and
+asks for `RECORD_AUDIO` at first use. The plugin ships no `Package.swift`, so
+the SPM-only iOS project does not link it: there `available()` rejects, the
+service reports no support and the composer hides its microphone. Browsers
+with the Web Speech API (Chrome, Safari) get voice without any plugin. When
+the plugin gains SPM support, `npx cap update` picks it up and iOS needs only
+the `NSMicrophoneUsageDescription` and `NSSpeechRecognitionUsageDescription`
+strings already in `Info.plist`.
 
 **Both.** The Supabase session lives in Keychain / Keystore-backed storage
 (`ui/src/app/core/session-storage.ts`), never in Preferences. Terms and the

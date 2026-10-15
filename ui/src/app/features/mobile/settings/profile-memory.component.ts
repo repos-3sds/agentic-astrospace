@@ -6,6 +6,7 @@ import { combineLatest } from 'rxjs';
 import { ASK_NAVIGATION } from '../ask/ask-navigation';
 
 import { KundliStore } from '../../../core/kundli.store';
+import { shareFile } from '../../../core/native-share';
 import { MemoryMode, PreferencesService } from '../../../core/preferences.service';
 import {
   ProfileContextFact,
@@ -162,9 +163,7 @@ export class ProfileMemoryComponent {
         `siddha-profile-memory-${requestedProfile}.json`,
         { type: 'application/json' },
       );
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ title: 'Siddha profile memory', files: [file] });
-      } else {
+      if (!(await shareFile(file, { title: 'Siddha profile memory' }))) {
         const url = URL.createObjectURL(file);
         const link = document.createElement('a');
         link.href = url;

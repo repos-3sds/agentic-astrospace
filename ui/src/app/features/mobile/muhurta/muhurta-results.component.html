@@ -7,6 +7,9 @@
   <header class="intro">
     <h1 class="title">{{ heading() }}</h1>
     <p class="scope">{{ scope() }}</p>
+    @if (conventionDependent()) {
+      <p class="convention" role="note">Window edges depend on the sunrise and Choghadiya conventions in use; another panchanga may shift them by a few minutes.</p>
+    }
   </header>
 
   @if (loading()) {

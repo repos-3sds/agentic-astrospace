@@ -8,19 +8,16 @@
 <div class="top">
   <div class="art"><img src="mobile/language.svg" alt="" aria-hidden="true" /></div>
   <h1>Choose your language</h1>
-  <p>You can change this anytime in Settings.</p>
+  <p>Siddha answers in this language. You can change it anytime in Settings.</p>
   <div class="choices" role="radiogroup" aria-label="Language">
-    <button type="button" role="radio" [class.is-on]="language() === 'English'" [attr.aria-checked]="language() === 'English'" (click)="language.set('English')">
-      <span>English</span><span class="radio"><img [src]="language() === 'English' ? 'mobile/check-language.svg' : 'mobile/radio-language.svg'" alt="" /></span>
+    <button type="button" role="radio" [class.is-on]="language() === 'en'" [attr.aria-checked]="language() === 'en'" (click)="choose('en')">
+      <span>English</span><span class="radio"><img [src]="language() === 'en' ? 'mobile/check-language.svg' : 'mobile/radio-language.svg'" alt="" /></span>
     </button>
-    <!--
-      Telugu is disabled, not hidden. The app has no UI translation and never
-      tells the model which language to answer in, so the toggle changed
-      nothing — a control that silently does nothing is worse than one that
-      says it is not ready. See docs/mobile_screen_build_plan.md.
-    -->
-    <button type="button" class="is-soon" disabled aria-disabled="true">
-      <span><strong>తెలుగు</strong><small>Telugu</small></span><span class="soon">Coming soon</span>
+    <!-- Telugu answers come from the Ask agent in simple Telugu; the app
+         chrome itself stays English. Settings > Language offers the same
+         two choices and writes the same preference. -->
+    <button type="button" role="radio" [class.is-on]="language() === 'te'" [attr.aria-checked]="language() === 'te'" (click)="choose('te')">
+      <span><strong>తెలుగు</strong><small>Telugu</small></span><span class="radio"><img [src]="language() === 'te' ? 'mobile/check-language.svg' : 'mobile/radio-language.svg'" alt="" /></span>
     </button>
   </div>
 </div>

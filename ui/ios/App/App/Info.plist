@@ -39,6 +39,10 @@
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Siddha listens to your question when you tap the microphone, so you can ask by voice instead of typing.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Your spoken question is turned into text on this device or by the platform speech service, and shown to you before it is sent.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>UIRequiredDeviceCapabilities</key>

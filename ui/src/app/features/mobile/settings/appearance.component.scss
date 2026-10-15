@@ -35,6 +35,8 @@
   background: #faf7f0;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 
+  // These swatches depict the other theme, so they stay literal on purpose:
+  // a token would make the dark preview follow whichever theme is active.
   &.dark { background: #0f1117; border-color: #485064; }
   &.system { background: linear-gradient(135deg, #faf7f0 0 49%, #0f1117 51%); }
 }

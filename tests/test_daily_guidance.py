@@ -310,3 +310,15 @@ class TestScoring:
         base_personal["chandrabala"] = {"favourable": False, "chandrashtama": True}
         bad = _score_day(base_personal, ctx)[0]
         assert bad < good
+
+
+class TestMasa:
+    def test_both_month_reckonings_are_stated_with_the_convention(self, guidance):
+        """A client must be able to say which month reckoning it used (amanta
+        vs purnimanta is the first convention CLAUDE.md names), so the daily
+        payload carries both names and the observance note, not one bare name."""
+        masa = guidance["masa"]
+        assert masa["amanta"] and masa["purnimanta"]
+        assert masa["is_convention_dependent"] is True
+        assert "purnimanta" in masa["observance_note"].lower()
+        assert masa["paksha"] in ("Shukla", "Krishna")

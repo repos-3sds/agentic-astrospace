@@ -1,5 +1,30 @@
 @use './styles-mobile';
 
+// Bundled rather than fetched from Google Fonts: the native app must not
+// depend on a third-party request for its type, and the first paint used to
+// wait on it. Latin subsets of the variable faces; see public/fonts/README.md.
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/inter-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/fonts/playfair-display-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('/fonts/playfair-display-latin-italic.woff2') format('woff2');
+}
+
 @font-face {
   font-family: 'Samarkan';
   src: url('/assets/fonts/samarkan.woff2') format('woff2');

@@ -5,6 +5,7 @@ import { AskComposerComponent } from './ask-composer.component';
 import { VoiceListeningComponent } from './voice-listening.component';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
+import { SpeechService } from '../../../core/speech.service';
 
 /** A subject the reader can scope a question to. */
 export interface AskTopic {
@@ -122,14 +123,10 @@ export class AskHomeComponent {
    */
   readonly draft = signal(inject(ActivatedRoute).snapshot.queryParamMap.get('q') ?? '');
 
-  /**
-   * Whether the microphone overlay (25:123) is up.
-   *
-   * Placeholder transcript until speech recognition is wired: the screen has to
-   * be verifiable in both its states, and an always-empty one hides half of it.
-   */
+  /** Whether the microphone overlay (25:123) is up. The transcript inside it
+   * comes live from {@link SpeechService}. */
   readonly listening = signal(false);
-  readonly heard = signal('Is this a good time to change my job');
+  protected readonly speech = inject(SpeechService);
   readonly submitting = signal(false);
   readonly submitError = signal<string | null>(null);
 
@@ -139,10 +136,17 @@ export class AskHomeComponent {
 
   protected startListening(): void {
     this.listening.set(true);
+    void this.speech.start(this.preferences.language());
+  }
+
+  protected stopListening(): void {
+    void this.speech.stop();
+    this.listening.set(false);
   }
 
   /** Voice fills the composer; it does not send. The reader still confirms. */
   protected acceptSpeech(text: string): void {
+    void this.speech.stop();
     this.draft.set(text);
     this.listening.set(false);
   }

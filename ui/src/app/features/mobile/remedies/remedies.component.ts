@@ -52,6 +52,13 @@ export class RemediesComponent {
   protected readonly note = computed(() => this.recommendations()?.note ?? null);
   protected readonly disclaimer = computed(() => this.recommendations()?.disclaimer ?? 'Traditional practice, not a guarantee.');
 
+  /** A group's own safety note, unless it just repeats the page-level disclaimer. */
+  protected groupSafetyNote(group: { safety_note?: string | null }): string | null {
+    const note = group.safety_note?.trim();
+    if (!note) return null;
+    return note === this.disclaimer().trim() ? null : note;
+  }
+
   constructor() {
     effect(() => {
       const activeId = this.kundlis.activeId();

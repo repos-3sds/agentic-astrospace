@@ -333,6 +333,21 @@ export class TodayComponent {
    */
   readonly statSections = signal<StatSection[]>([]);
 
+  /**
+   * The month under both reckonings, as chips. A purnimanta reader in Delhi
+   * and an amanta reader in Hyderabad are looking at the same sky and must
+   * both find their own month name here, with the rule used stated.
+   */
+  private masaChips(masa: DailyGuidancePayload['masa']): string[] {
+    if (!masa?.amanta) return [];
+    const adhika = masa.adhika ? 'Adhika ' : '';
+    const chips = [`Amanta month: ${adhika}${masa.amanta}`];
+    if (masa.purnimanta && masa.purnimanta !== masa.amanta) chips.push(`Purnimanta: ${adhika}${masa.purnimanta}`);
+    if (masa.paksha) chips.push(`${masa.paksha} paksha`);
+    chips.push('Amanta reckoning used');
+    return chips;
+  }
+
   /** Openers for Ask, seeded from the day so the tab is not a blank prompt. */
   readonly askSuggestions = signal<string[]>([]);
 
@@ -493,6 +508,7 @@ export class TodayComponent {
       daily.system,
       this.preferences.ayanamsha(),
       `${daily.provenance.place.city} · ${daily.provenance.place.timezone}`,
+      ...this.masaChips(daily.masa),
     ]);
     this.dashaChain.set(daily.context.dasha_chain.map((level) => ({
       ...level,
