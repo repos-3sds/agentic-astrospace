@@ -69,7 +69,7 @@ export class ThemeService {
     try {
       const { StatusBar, Style } = await import('@capacitor/status-bar');
       await StatusBar.setStyle({ style: dark ? Style.Dark : Style.Light });
-      await StatusBar.setBackgroundColor({ color: dark ? '#05050B' : '#F4F5FA' });
+      await StatusBar.setBackgroundColor({ color: dark ? '#17130F' : '#FAF7F0' });
     } catch {
       // Native chrome should never block theme application.
     }

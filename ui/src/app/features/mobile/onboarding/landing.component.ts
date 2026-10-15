@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ThemeService } from '../../../core/theme.service';
 import { SplashComponent } from '../../../shell/splash/splash.component';
 
 /**
@@ -20,7 +21,7 @@ import { SplashComponent } from '../../../shell/splash/splash.component';
   imports: [RouterLink, SplashComponent],
   template: `
     <div class="landing-hero">
-      <app-splash class="landing-mark" [markOnly]="true" aria-hidden="true" />
+      <app-splash class="landing-mark" [dark]="theme.dark()" [markOnly]="true" aria-hidden="true" />
       <p class="wordmark siddha-brand">Siddha</p>
       <p class="eyebrow">YOUR WAY OF LIFE GUIDE</p>
       <h1 class="headline">Live with rhythm.<br />Move with clarity.</h1>
@@ -43,4 +44,5 @@ import { SplashComponent } from '../../../shell/splash/splash.component';
   host: { class: 'as-mobile' },
 })
 export class LandingComponent {
+  protected readonly theme = inject(ThemeService);
 }

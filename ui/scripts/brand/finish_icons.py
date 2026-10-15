@@ -9,10 +9,8 @@ from PIL import Image
 OUT = os.path.join(tempfile.gettempdir(), 'siddha-icons')
 R = 'android/app/src/main/res/'
 opaque = (
-    ['assets/icon.png', 'assets/splash.png', 'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png']
-    + glob.glob('ios/App/App/Assets.xcassets/Splash.imageset/*.png')
+    ['assets/icon.png', 'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png']
     + glob.glob(R + 'mipmap-*/ic_launcher_background.png')
-    + glob.glob(R + 'drawable*/splash.png')
 )
 for f in opaque:
     Image.open(f).convert('RGB').save(f, optimize=True)

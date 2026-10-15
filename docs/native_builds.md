@@ -135,23 +135,21 @@ the store listings point at the deployed URLs.
 - The native projects are not in CI; `npm run version:check` runs there, a
   native build does not.
 
-## Icon and splash
+## App icon
 
-The app icon, Android adaptive layers, native splash images, PWA icons and
-favicon are all rendered from one drawing, the Nine-Arm Galaxy on space black,
-in `ui/scripts/brand/galaxy.cjs`. The in-app intro
-(`ui/src/app/shell/splash/splash.component.ts`) draws the same geometry live,
-with motion. After changing the drawing, regenerate from `ui/`:
+The app icon (iOS, Android legacy, round and adaptive layers, PWA icons and
+favicon) is the Nine-Arm Galaxy on space black, rendered from one drawing in
+`ui/scripts/brand/galaxy.cjs`. After changing the drawing, regenerate from
+`ui/`:
 
 ```sh
 node scripts/brand/render-icons.cjs && python3 scripts/brand/finish_icons.py
 ```
 
-then mirror any geometry change in the splash component. The galaxy has a dark
-form (space black) and a light form (porcelain); splash images and the Android
-launch theme (`values` / `values-night`) follow the system theme, and the icon
-is always the dark form. Android adaptive
-icons use the PNG layers in `mipmap-*/ic_launcher_{foreground,background}.png`.
+Android adaptive icons use the PNG layers in
+`mipmap-*/ic_launcher_{foreground,background}.png`. The splash screen and the
+onboarding logo are separate and still use the sun-and-orbits mark in
+`ui/src/app/shell/splash/splash.component.ts`.
 
 ## Push notifications
 

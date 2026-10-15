@@ -1,15 +1,11 @@
 // Siddha mark: the Nine-Arm Galaxy. Two dotted spiral arms, nine bright graha
-// stars, a glowing core, on space black. One generator feeds the icon PNGs,
-// the splash and the in-app logo so they can't drift apart.
+// stars, a glowing core, on space black. One generator feeds every icon PNG
+// so the sizes can't drift apart.
 const TAU = Math.PI * 2;
 function rng(seed) { let x = seed; return () => { x = (x * 9301 + 49297) % 233280; return x / 233280; }; }
-function galaxySvg({ background = true, animated = false, size = null, idPrefix = 'sg', bold = false, arms: showArms = true, field: showField = true, zoom: zoomOverride = null, theme = 'dark' } = {}) {
+function galaxySvg({ background = true, animated = false, size = null, idPrefix = 'sg', bold = false, arms: showArms = true, field: showField = true, zoom: zoomOverride = null } = {}) {
   const p = idPrefix;
-  // Light mode redraws the galaxy for a porcelain ground instead of putting
-  // the black tile on it; keep in step with the splash component's --g-* tokens.
-  const c = theme === 'light'
-    ? { dot: '#c18d1a', graha: '#8a5d00', coreB: '#f2c24f', star: '#2b3770', starK: 0.5 }
-    : { dot: '#e9b949', graha: '#fff4d6', coreB: '#ffe7a6', star: '#fff', starK: 1 };
+  const c = { dot: '#e9b949', graha: '#fff4d6', coreB: '#ffe7a6', star: '#fff', starK: 1 };
   // The home-screen icon is seen at 29-60 px, so its dots are drawn heavier and
   // the galaxy fills more of the tile; the motion version keeps the fine detail.
   const dot = bold ? 1.4 : 1, zoom = zoomOverride ?? (bold ? 1.14 : 1);

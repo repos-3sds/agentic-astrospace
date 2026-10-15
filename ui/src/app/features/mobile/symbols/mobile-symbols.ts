@@ -182,5 +182,5 @@ function colorFromName(name: string): string {
   if (key.includes('black')) return '#202431';
   if (key.includes('orange') || key.includes('coral')) return '#df7044';
   if (key.includes('violet') || key.includes('purple')) return '#8b5bd1';
-  return '#9c6c0a';
+  return '#b13f2e';
 }

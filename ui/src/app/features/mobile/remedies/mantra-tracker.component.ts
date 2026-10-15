@@ -18,7 +18,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
  * The geometry is lifted from the export so it lines up exactly:
  *
  *   outer radius 110, band 15.4 wide  ->  stroke-width 15.4, centre r 102.3
- *   track (--m-border), arc (--m-accent)
+ *   track #e6dccd (--m-border), arc #b13f2e (--m-accent)
  *
  * The two exported ellipses are the only assets deliberately not used verbatim.
  *

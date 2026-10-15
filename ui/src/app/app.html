@@ -344,6 +344,6 @@
 @if (showAnimatedSplash()) {
   <div class="animated-splash-overlay" [class.fade-out]="animatedSplashFading()"
        (click)="finishAnimatedSplash()" role="button" tabindex="0" aria-label="Skip intro">
-    <app-splash (finished)="finishAnimatedSplash()"></app-splash>
+    <app-splash [dark]="theme.dark()" (finished)="finishAnimatedSplash()"></app-splash>
   </div>
 }
