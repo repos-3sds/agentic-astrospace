@@ -177,6 +177,7 @@ def test_run_once_schedules_and_delivers(db, monkeypatch):
     import astrospace.notifications.worker as worker
     monkeypatch.setattr(worker, "schedule_morning_briefs",
                         lambda session: schedule_morning_briefs(session, today=date(2020, 1, 1), headline=fake_headline))
+    monkeypatch.setattr(worker, "schedule_window_alerts", lambda session: [])
     summary = run_once(db, {"fcm": FakeTransport()})
     assert summary["scheduled"] == 2
     # A 2020 send time is long past, so both go out on the same run.

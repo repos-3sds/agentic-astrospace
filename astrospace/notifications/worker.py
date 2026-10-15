@@ -20,6 +20,7 @@ from ..db import crud_mobile as cm
 from ..db.models import NotificationJob
 from .morning_brief import schedule_morning_briefs
 from .push import PushMessage, PushTransport, transports_from_env
+from .window_alerts import schedule_window_alerts
 
 log = logging.getLogger("astrospace.notifications")
 
@@ -83,8 +84,9 @@ def deliver_due(db: Session, transports: dict[str, PushTransport] | None = None,
 
 def run_once(db: Session, transports: dict[str, PushTransport] | None = None) -> dict:
     scheduled = schedule_morning_briefs(db)
+    windows = schedule_window_alerts(db)
     delivered = deliver_due(db, transports)
-    summary = {"scheduled": len(scheduled), **delivered}
+    summary = {"scheduled": len(scheduled), "window_alerts": len(windows), **delivered}
     log.info("notifications: %s", summary)
     return summary
 
