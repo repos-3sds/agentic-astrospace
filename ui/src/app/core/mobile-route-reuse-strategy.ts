@@ -12,10 +12,16 @@ interface HandleWithComponent {
  * Footer destinations whose screens are kept alive between visits. Shared
  * with the shell's scroll memory, which restores a retained tab's offset when
  * it re-attaches.
+ *
+ * Covers every persona's tab roots: Today, Ask, Family and More (Ask-first),
+ * Yantra, Dashas and Calendar (Practitioner). Explore is no longer a tab
+ * but is kept, because the guided Explore hub is still a root reached from
+ * More and retaining it costs one handle.
  */
 export const RETAINED_MOBILE_TABS: ReadonlySet<string> = new Set([
   'm/today',
   'm/ask',
+  'm/family',
   'm/explore',
   'm/chart',
   'm/chart/periods',
