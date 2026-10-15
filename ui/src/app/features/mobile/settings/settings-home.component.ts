@@ -244,11 +244,11 @@ export class SettingsHomeComponent {
   private notificationLabel(): string {
     try {
       const stored = JSON.parse(localStorage.getItem(NOTIFICATION_STORAGE_KEY) ?? '[]') as Array<{ id: string; on: boolean }>;
-      if (!stored.length) return 'Local prefs';
+      if (!stored.length) return 'Choose alerts';
       const onCount = stored.filter((row) => row.on).length;
       return `${onCount} selected`;
     } catch {
-      return 'Local prefs';
+      return 'Choose alerts';
     }
   }
 }

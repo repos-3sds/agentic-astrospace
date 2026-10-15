@@ -4,6 +4,13 @@ import { ApiService } from './api.service';
 import { FestivalWindowPayload } from './models';
 import { FestivalRegion } from './preferences.service';
 
+const REGION_LABELS: Record<string, string> = { 'pan-india': 'All India', north: 'North India', south: 'South India' };
+
+/** The festival engine's region ids, as a person would say them. */
+export function festivalRegionsLabel(regions: readonly string[]): string {
+  return regions.map((region) => REGION_LABELS[region] ?? region).join(' · ');
+}
+
 @Injectable({ providedIn: 'root' })
 export class FestivalService {
   private readonly api = inject(ApiService);

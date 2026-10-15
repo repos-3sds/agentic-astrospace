@@ -37,15 +37,15 @@ export type MuhurtaRange = 'week' | 'month' | 'custom';
 export class MuhurtaGoalComponent {
   readonly goals = signal<MuhurtaGoal[]>([
     { id: 'griha_pravesha', label: 'House warming', icon: 'goal-property', detail: 'Griha Pravesha' },
-    { id: 'upanayana', label: 'Upanayana', icon: 'goal-venture', detail: 'Sacred-thread ceremony' },
+    { id: 'upanayana', label: 'Upanayana', icon: 'goal-sacred', detail: 'Sacred-thread ceremony' },
     { id: 'marriage_related', label: 'Marriage-related', icon: 'goal-marriage', detail: 'Engagement or wedding work' },
-    { id: 'namakarana', label: 'Naming ceremony', icon: 'goal-other', detail: 'Namakarana' },
-    { id: 'annaprashana', label: 'First feeding', icon: 'goal-other', detail: 'Annaprashana' },
-    { id: 'vidyarambha', label: 'Start learning', icon: 'goal-contract', detail: 'Vidyarambha' },
-    { id: 'buy_property_gold', label: 'Buy property / gold', icon: 'goal-property', detail: 'Asset purchase' },
+    { id: 'namakarana', label: 'Naming ceremony', icon: 'goal-naming', detail: 'Namakarana' },
+    { id: 'annaprashana', label: 'First feeding', icon: 'goal-feeding', detail: 'Annaprashana' },
+    { id: 'vidyarambha', label: 'Start learning', icon: 'goal-learning', detail: 'Vidyarambha' },
+    { id: 'buy_property_gold', label: 'Buy property / gold', icon: 'goal-gold', detail: 'Asset purchase' },
     { id: 'sign_contract', label: 'Sign a contract', icon: 'goal-contract', detail: 'Agreement or paperwork' },
     { id: 'start_journey', label: 'Start a journey', icon: 'goal-journey', detail: 'Travel departure' },
-    { id: 'start_venture', label: 'Start a venture', icon: 'goal-venture', detail: 'Business beginning' },
+    { id: 'start_venture', label: 'Start a venture', icon: 'goal-launch', detail: 'Business beginning' },
     { id: 'general', label: 'Something else', icon: 'goal-other', detail: 'Tell us the intent' },
   ]);
 

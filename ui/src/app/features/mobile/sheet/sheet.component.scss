@@ -29,7 +29,10 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--m-glass-panel, var(--m-sheet-surface, var(--m-surface)));
+  // Solid, not glass: the glass tint was never paired with a blur, so the
+  // screen behind (Today's Do / Avoid list) read through the profile list
+  // (flow audit 2026-10-15, section 6).
+  background: var(--m-sheet-surface, var(--m-surface));
   border: 1px solid var(--m-glass-border, var(--m-border));
   border-bottom: 0;
   border-radius: 32px 32px 0 0;
@@ -90,10 +93,6 @@
   box-shadow:
     0 -24px 70px rgba(0, 0, 0, 0.58),
     inset 0 1px 0 rgba(238, 240, 250, 0.1);
-}
-
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .panel { background: var(--m-sheet-surface, var(--m-surface)); }
 }
 
 @keyframes scrim-in { from { opacity: 0; } to { opacity: 0.38; } }

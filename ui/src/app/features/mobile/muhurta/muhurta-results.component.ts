@@ -108,7 +108,9 @@ export class MuhurtaResultsComponent {
 
   protected readonly scope = computed(() => {
     const range = this.params().get('range') ?? 'month';
-    return `${RANGE_LABELS[range] ?? RANGE_LABELS['month']} · ${this.dateScope()} · ${this.place()}`;
+    // The place arrives with the results; until then it is left out rather
+    // than leaving a trailing separator.
+    return [RANGE_LABELS[range] ?? RANGE_LABELS['month'], this.dateScope(), this.place()].filter(Boolean).join(' · ');
   });
 
   readonly place = signal('');
