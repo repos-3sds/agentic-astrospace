@@ -48,7 +48,7 @@
       <p class="score">Score {{ w.score }}/100 · {{ w.window }}</p>
 
       <!-- The rule, named. See the class comment on why this is not a score. -->
-      <p class="reason">{{ w.reason }}</p>
+      @if (w.reason) { <p class="reason">{{ w.reason }}</p> }
 
       <div class="factors">
         @if (w.supports.length) {
@@ -66,14 +66,14 @@
       </div>
 
       <div class="actions">
-        <button class="chip" type="button" disabled>
+        <button class="chip" type="button" (click)="addToCalendar(w)" [disabled]="exporting() === w.rank">
           <img src="mobile/calendar.svg" alt="" aria-hidden="true" />
-          <span>Calendar export not available yet</span>
+          <span>{{ exporting() === w.rank ? 'Preparing…' : 'Add to calendar' }}</span>
         </button>
-        <button class="chip" type="button" disabled>
-          <img src="mobile/clock-dark.svg" alt="" aria-hidden="true" />
-          <span>Reminders need native support</span>
-        </button>
+        <span class="action-note">With a reminder 30 minutes before</span>
+        @if (exportFailed() === w.rank) {
+          <span class="action-note is-error" role="alert">Could not make the calendar file. Try again.</span>
+        }
       </div>
     </article>
   }
