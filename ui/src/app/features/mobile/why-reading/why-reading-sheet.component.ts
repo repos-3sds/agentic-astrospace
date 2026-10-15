@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { SheetComponent } from '../sheet/sheet.component';
+import { DrillDown } from './drill-downs';
 
 /** One row of the computed basis behind a reading. */
 export interface EvidenceRow {
@@ -38,7 +40,7 @@ export interface DoAvoidExplainer {
   selector: 'as-why-reading-sheet',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SheetComponent],
+  imports: [RouterLink, SheetComponent],
   templateUrl: './why-reading-sheet.component.html',
   styleUrl: './why-reading-sheet.component.scss',
 })
@@ -53,6 +55,8 @@ export class WhyReadingSheetComponent {
    * Today's reading has Do/Avoid rows to expand. */
   readonly doAvoidExplained = input<DoAvoidExplainer[]>([]);
   readonly conventions = input.required<string[]>();
+  /** "Show me why": the chart screens this reading's evidence points at. */
+  readonly drillDowns = input<DrillDown[]>([]);
   readonly dismissed = output<void>();
   readonly learnTerms = output<void>();
 }

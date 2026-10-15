@@ -16,6 +16,7 @@ import { VedicService } from '../../../core/vedic.service';
 import { ResourceFreshness } from '../../../core/resource-cache';
 import { DailyGuidancePayload, VedicAll, DailyActionRow, FestivalOccurrence } from '../../../core/models';
 import { FestivalSheetComponent } from '../calendar/festival-sheet.component';
+import { TODAY_DRILL_DOWNS, whyDrillDowns } from '../why-reading/drill-downs';
 import { FestivalService } from '../../../core/festival.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { PreferencesService } from '../../../core/preferences.service';
@@ -353,6 +354,10 @@ export class TodayComponent {
   // Always shown. A reading whose conventions are hidden is not reproducible —
   // the same chart under a different ayanamsa is a different answer.
   readonly conventions = signal<string[]>([]);
+
+  /** "Show me why" links into the chart screens behind today's reading. */
+  protected readonly drillDowns = computed(() =>
+    whyDrillDowns([...this.calculation().map((row) => row.value), ...this.plainWords()], TODAY_DRILL_DOWNS));
 
   /**
    * Below the fold (20:2). Grouped by how often each fact changes, which is the

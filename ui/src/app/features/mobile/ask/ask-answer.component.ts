@@ -9,6 +9,7 @@ import {
   SourceReference,
   WhyReadingSheetComponent,
 } from '../why-reading/why-reading-sheet.component';
+import { whyDrillDowns } from '../why-reading/drill-downs';
 import { MobileAskStateService } from './mobile-ask-state.service';
 import { AskService } from '../../../core/ask.service';
 import { AskMemoryCandidate, AskStreamEvent, AskTechnicalBasisItem, StructuredReading } from '../../../core/models';
@@ -283,6 +284,10 @@ export class AskAnswerComponent {
     }
     return this.sentences(message?.content ?? this.streamedAnswer());
   });
+
+  /** "Show me why" links, from the factors this answer's own evidence names. */
+  protected readonly drillDowns = computed(() =>
+    whyDrillDowns(this.calculation().flatMap((row) => [row.label, row.value])));
 
   readonly calculation = computed<EvidenceRow[]>(() => {
     const message = this.selectedAssistant() ?? this.latestAssistant();
