@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
+import { timingClockNote, timingPlaceLabel } from '../../../core/timing-place';
 import { MuhurtaApiWindow, VedicService } from '../../../core/vedic.service';
 
 /** How strongly a window is endorsed. Two levels, not a score. */
@@ -105,7 +106,9 @@ export class MuhurtaResultsComponent {
     return `${RANGE_LABELS[range] ?? RANGE_LABELS['month']} · ${this.dateScope()} · ${this.place()}`;
   });
 
-  readonly place = signal('current panchanga place');
+  readonly place = signal('');
+  /** Whose clock the window times are in, stated under the list. */
+  readonly clockNote = signal('');
 
   readonly windows = signal<MuhurtaWindow[]>([]);
 
@@ -133,7 +136,8 @@ export class MuhurtaResultsComponent {
       const dateTo = this.params().get('date_to') ?? this.isoDate(this.addDays(new Date(), 30));
       const place = this.preferences.panchangaPlace();
       const payload = await this.loadMuhurta(activeId, goal, dateFrom, dateTo, place);
-      this.place.set(place ? `${place.city}, ${place.nation}` : 'current panchanga place');
+      this.place.set(timingPlaceLabel(payload.place) || (place ? `${place.city}, ${place.nation}` : 'birth city'));
+      this.clockNote.set(timingClockNote(payload.place));
       this.note.set(payload.note);
       this.disclaimer.set(payload.disclaimer);
       this.windows.set(this.extractWindows(payload.results));

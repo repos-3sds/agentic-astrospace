@@ -1,0 +1,86 @@
+"""One answer to "where and in whose clock are today's windows computed?"
+
+Three routes (calendar intelligence, personal panchanga, muhurta) each
+resolved the place on their own, and two of them disagreed: Calendar Day
+took a representative city for the viewer's timezone while Muhurta took the
+birth city, so the same build showed Brahma Muhurta at 23:00 on one screen
+and 04:35 on the other. This module is the single rule, and every payload
+built from it says which branch was taken so the screen can label it.
+
+The rule, in order:
+
+1. an explicit ``city``/``nation`` (the panchanga place the user picked);
+2. otherwise, when a viewer ``timezone`` is given and the offline city table
+   has a city in it, that city — "where the phone is", to a first order;
+3. otherwise the kundli's birth city.
+
+Windows are always rendered in the place's own clock, the way Today already
+did: a sunrise-relative window has no meaning in another city's time. The
+viewer timezone only picks the city (rule 2) and decides what "today" is.
+The payload names the place, its timezone and which rule chose it, so every
+screen can say "Hyderabad (birth city) · GMT+5:30" instead of implying the
+times are local to the phone.
+"""
+from dataclasses import dataclass
+from zoneinfo import ZoneInfo
+
+from fastapi import HTTPException
+
+from ..core.cities import city_for_timezone, lookup_city
+
+SOURCE_SELECTED = "selected"
+SOURCE_VIEWER_TIMEZONE = "viewer_timezone"
+SOURCE_BIRTH_CITY = "birth_city"
+
+
+@dataclass(frozen=True)
+class TimingPlace:
+    city: str
+    nation: str
+    lat: float
+    lng: float
+    tz_str: str
+    viewer_tz: str | None
+    source: str
+
+    @property
+    def today_tz(self) -> str:
+        """The clock that decides which calendar day is "today"."""
+        return self.viewer_tz or self.tz_str
+
+    def as_payload(self) -> dict:
+        return {
+            "city": self.city,
+            "nation": self.nation,
+            "timezone": self.tz_str,
+            "source": self.source,
+            "viewer_timezone": self.viewer_tz,
+        }
+
+
+def validate_timezone(tz_str: str | None, fallback: str) -> str:
+    if not tz_str:
+        return fallback
+    try:
+        ZoneInfo(tz_str)
+    except Exception:
+        raise HTTPException(status_code=400, detail=f"Unknown timezone {tz_str!r}")
+    return tz_str
+
+
+def resolve_timing_place(kundli, timezone: str | None = None,
+                         city: str | None = None, nation: str | None = None) -> TimingPlace:
+    viewer_tz = validate_timezone(timezone, "") or None
+    if city:
+        loc_city, loc_nation, source = city, nation or kundli.birth_nation, SOURCE_SELECTED
+    else:
+        viewer_city = city_for_timezone(viewer_tz) if viewer_tz else None
+        if viewer_city:
+            loc_city, loc_nation, source = viewer_city[0], viewer_city[1], SOURCE_VIEWER_TIMEZONE
+        else:
+            loc_city, loc_nation, source = kundli.birth_city, kundli.birth_nation, SOURCE_BIRTH_CITY
+    geo = lookup_city(loc_city, loc_nation)
+    if not geo:
+        raise HTTPException(status_code=422, detail=f"City {loc_city!r} not in offline database.")
+    lat, lng, tz_str = geo
+    return TimingPlace(loc_city, loc_nation, lat, lng, tz_str, viewer_tz, source)

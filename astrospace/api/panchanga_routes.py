@@ -7,7 +7,8 @@ from typing import Optional
 
 from ..db import get_db
 from ..db import crud
-from ..core.cities import city_for_timezone, lookup_city, search_cities
+from ..core.cities import lookup_city, search_cities
+from .timing_place import resolve_timing_place
 from ..core.vedic import LocationError
 from ..core.vedic.panchanga_day import daily_panchanga, personal_panchanga
 from ..core.vedic.chart import VedicChart
@@ -78,19 +79,13 @@ def personal_panchanga_today(
     if not k:
         raise HTTPException(status_code=404, detail="Kundli not found")
 
-    display_tz = _validate_timezone(timezone, "")
-    viewer_city = city_for_timezone(display_tz) if timezone and not city else None
-    loc_city = city or (viewer_city[0] if viewer_city else k.birth_city)
-    loc_nation = nation or (viewer_city[1] if viewer_city else k.birth_nation)
-    geo = lookup_city(loc_city, loc_nation)
-    if not geo:
-        raise HTTPException(status_code=422, detail=f"City {loc_city!r} not in offline database.")
-    lat, lng, tz_str = geo
-    display_tz = _validate_timezone(timezone, tz_str)
-    y, m, d = _parse_date(date, display_tz)
+    place = resolve_timing_place(k, timezone, city, nation)
+    y, m, d = _parse_date(date, place.today_tz)
 
     try:
-        payload = daily_panchanga(y, m, d, loc_city, loc_nation, lat, lng, tz_str, display_tz)
+        payload = daily_panchanga(y, m, d, place.city, place.nation, place.lat, place.lng,
+                                  place.tz_str)
+        payload["place"] = {**payload["place"], **place.as_payload()}
         chart = VedicChart(k.name, k.birth_year, k.birth_month, k.birth_day,
                            k.birth_hour, k.birth_minute, k.birth_city, k.birth_nation)
     except (LocationError, ValueError, OverflowError) as e:

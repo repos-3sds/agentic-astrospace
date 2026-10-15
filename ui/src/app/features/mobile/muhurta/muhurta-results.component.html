@@ -65,6 +65,6 @@
 
   <p class="footnote">
     <img src="mobile/info.svg" alt="" aria-hidden="true" />
-    <span>{{ disclaimer() }}</span>
+    <span>{{ disclaimer() }}@if (clockNote()) { {{ ' ' + clockNote() }}}</span>
   </p>
 </div>

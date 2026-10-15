@@ -8,7 +8,7 @@ from typing import Optional
 
 from ..db import get_db
 from ..db import crud
-from ..core.cities import city_for_timezone, lookup_city
+from .timing_place import resolve_timing_place
 from ..core.vedic import VedicChart, LocationError
 from ..core.vedic.compatibility import gun_milan
 from ..core.vedic.vargas import VARGA_FUNCTIONS
@@ -59,15 +59,6 @@ def _get_kundli(db: Session, kundli_id: str, user_id: str):
         raise HTTPException(status_code=404, detail="Kundli not found")
     return k
 
-
-def _validate_timezone(tz_str: Optional[str], fallback: str) -> str:
-    if not tz_str:
-        return fallback
-    try:
-        ZoneInfo(tz_str)
-    except Exception:
-        raise HTTPException(status_code=400, detail="timezone must be a valid IANA timezone")
-    return tz_str
 
 
 def _reading_calendar_marker(r) -> dict:
@@ -480,30 +471,27 @@ def calendar_intelligence(
 ):
     k = _get_kundli(db, kundli_id, user.id)
     chart = _chart_from_kundli(k, ayanamsha, node_type)
-    display_tz = _validate_timezone(timezone, chart.moment.tz_str)
-    viewer_city = city_for_timezone(display_tz) if timezone and not city else None
-    loc_city = city or (viewer_city[0] if viewer_city else k.birth_city)
-    loc_nation = nation or (viewer_city[1] if viewer_city else k.birth_nation)
-    geo = lookup_city(loc_city, loc_nation)
-    if not geo:
-        raise HTTPException(status_code=422, detail=f"City {loc_city!r} not in offline database.")
-    lat, lng, tz_str = geo
+    place = resolve_timing_place(k, timezone, city, nation)
     calculation_time = (
-        datetime.combine(as_of, time(hour=12), tzinfo=ZoneInfo(display_tz))
+        datetime.combine(as_of, time(hour=12), tzinfo=ZoneInfo(place.tz_str))
         if as_of
-        else datetime.now(ZoneInfo(display_tz))
+        else datetime.now(ZoneInfo(place.today_tz))
     )
     payload = chart.calendar_intelligence(
         as_of=calculation_time,
-        city=loc_city,
-        nation=loc_nation,
-        lat=lat,
-        lng=lng,
-        tz_str=tz_str,
-        display_tz_str=display_tz,
+        city=place.city,
+        nation=place.nation,
+        lat=place.lat,
+        lng=place.lng,
+        tz_str=place.tz_str,
+        display_tz_str=place.tz_str,
         days=days,
         include_practitioner_detail=include_practitioner_detail,
     )
+    # Same resolution as /panchanga/{id}/today, /context/{id}/daily and
+    # /muhurta/{id}; the screen needs `source` to say whose clock this is.
+    payload["place"] = place.as_payload()
+    payload["provenance"]["panchanga_place"] = place.as_payload()
     return _attach_readings_to_calendar(payload, db, kundli_id, user.id)
 
 

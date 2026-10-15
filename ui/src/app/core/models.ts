@@ -1,3 +1,5 @@
+import { TimingPlacePayload } from './timing-place';
+
 export interface PlanetPosition {
   sign: string;
   degree: number;
@@ -1160,7 +1162,8 @@ export interface CalendarIntelligencePayload {
   start_date: string;
   end_date: string;
   timezone: string;
-  place: { city: string; nation: string; timezone: string };
+  /** Where the windows were computed; `source` says which rule chose it. */
+  place: TimingPlacePayload & { nation: string; timezone: string };
   current: {
     dasha: DashaPayload['current'];
     strongest_transit?: TransitAspect | null;
@@ -1195,7 +1198,7 @@ export interface PanchangaWindow {
 
 export interface PanchangaDay {
   date: string;
-  place: { city: string; timezone?: string; calculation_timezone?: string; nation?: string };
+  place: TimingPlacePayload & { calculation_timezone?: string };
   vara: { name: string };
   sunrise: string;
   sunset: string;
