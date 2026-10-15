@@ -12,14 +12,15 @@ import { FestivalSheetComponent } from './festival-sheet.component';
 import { calendarDayCacheOptions } from './calendar-cache-options';
 import { MobileSymbol, nakshatraSymbol, tithiSymbol } from '../symbols/mobile-symbols';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 @Component({
   selector: 'as-calendar-day',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GenericErrorComponent, FestivalSheetComponent, RouterLink],
+  imports: [BackLinkDirective, GenericErrorComponent, FestivalSheetComponent, RouterLink],
   template: `
-    <a class="mcald-back" [routerLink]="['/m','calendar']"><img src="mobile/back.svg" alt="" /><span>Calendar</span></a>
+    <a class="mcald-back" [asBack]="['/m','calendar']"><img src="mobile/back.svg" alt="" /><span>Calendar</span></a>
     <main class="mcald-body">
       @if (loading()) {
         <section class="mcald-state"><b>Loading day</b><p>Checking timing signals for {{ activeName() }}.</p></section>

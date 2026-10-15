@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { PushService } from '../../../core/push.service';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /** One thing the app may notify about. */
 export interface NotificationPref {
@@ -36,7 +36,7 @@ export interface NotificationPref {
   selector: 'as-settings-notifications',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [BackLinkDirective],
   templateUrl: './notifications.component.html',
   styleUrl: './notifications.component.scss',
 })

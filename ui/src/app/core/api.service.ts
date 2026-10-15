@@ -42,6 +42,11 @@ export function friendlyApiMessage(status: number, detail: unknown): string {
   if (status === 0) return NETWORK_MESSAGE;
   if (status === 401 || status === 403) return 'Please sign in again to continue.';
   if (status === 404) return 'We couldn’t find what this screen needs. The profile may have been removed — pick another or try again.';
+  if (status === 409) {
+    return /\b(self|yourself)\b/i.test(raw)
+      ? 'You already have a profile for yourself. Edit it from Settings › Profiles instead of adding another.'
+      : 'That already exists, so nothing was added.';
+  }
   if (status === 408 || status === 504) return 'That took too long to answer. Try again in a moment.';
   if (status === 429) return 'Too many requests right now. Wait a moment and try again.';
   if (status >= 500) return 'The guidance service hit a problem on our side. Try again in a moment.';

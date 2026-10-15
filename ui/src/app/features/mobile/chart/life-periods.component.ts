@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 import { BirthTimeBadgeComponent } from './birth-time-badge.component';
 import { monthYear } from '../format-date';
 import { KundliStore } from '../../../core/kundli.store';
@@ -35,7 +36,7 @@ interface ActivePeriodInsight {
   selector: 'as-life-periods',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GenericErrorComponent, RouterLink, BirthTimeBadgeComponent],
+  imports: [BackLinkDirective, GenericErrorComponent, RouterLink, BirthTimeBadgeComponent],
   templateUrl: './life-periods.component.html',
   styleUrl: './life-periods.component.scss',
 })

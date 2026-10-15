@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
 import { VedicAll } from '../../../core/models';
 import { VedicService } from '../../../core/vedic.service';
 import { BirthDetailsCardComponent } from './birth-details-card.component';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /**
  * The practitioner's birth-details screen — everything stated, nothing assumed.
@@ -18,7 +18,7 @@ import { BirthDetailsCardComponent } from './birth-details-card.component';
 @Component({
   selector: 'as-birth-details-screen',
   standalone: true,
-  imports: [RouterLink, BirthDetailsCardComponent],
+  imports: [BackLinkDirective, BirthDetailsCardComponent],
   templateUrl: './birth-details-screen.component.html',
   styleUrl: './birth-details-screen.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

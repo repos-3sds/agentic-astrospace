@@ -6,6 +6,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { DoshasPayload, ManglikPayload, YogaResult, YogasDoshasPayload } from '../../../core/models';
 import { VedicService } from '../../../core/vedic.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 type Kind = 'yoga' | 'dosha';
 type Filter = 'all' | Kind;
@@ -27,7 +28,7 @@ interface Combination {
   selector: 'as-yogas-doshas',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GenericErrorComponent, RouterLink, YogaLearningSheetComponent, ManglikCancellationSheetComponent],
+  imports: [BackLinkDirective, GenericErrorComponent, RouterLink, YogaLearningSheetComponent, ManglikCancellationSheetComponent],
   templateUrl: './yogas-doshas.component.html',
   styleUrl: './yogas-doshas.component.scss',
 })

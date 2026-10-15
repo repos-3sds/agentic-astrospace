@@ -5,6 +5,7 @@ import {
   PersonaPickerComponent,
 } from '../persona-picker/persona-picker.component';
 import { PreferencesService } from '../../../core/preferences.service';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /**
  * Persona (Figma node 8:2) — step four of onboarding.
@@ -23,11 +24,11 @@ import { PreferencesService } from '../../../core/preferences.service';
   selector: 'as-persona',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PersonaPickerComponent, RouterLink],
+  imports: [BackLinkDirective, PersonaPickerComponent, RouterLink],
   template: `
     <div class="top">
       <header class="topbar">
-        <a class="back" [routerLink]="['/m', 'disclaimers']" aria-label="Back">
+        <a class="back" [asBack]="['/m', 'disclaimers']" aria-label="Back">
           <img src="mobile/back.svg" alt="" aria-hidden="true" />
         </a>
         <p class="step">SETUP 4 OF 6</p>

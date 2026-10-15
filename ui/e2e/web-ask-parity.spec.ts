@@ -120,7 +120,11 @@ for (const width of [1280, 390, 2560]) {
     await expect(host.getByRole('heading', { name: 'What Siddha remembers' })).toBeVisible();
     await expect(host.getByText('Nothing remembered yet')).toBeVisible();
     await page.screenshot({ path: `/tmp/web-ask-memory-${width}.png`, fullPage: true });
+    // Back is history-aware (flow audit 5.2): it returns to the conversation
+    // the memory screen was opened from; "Back to Ask" is the fixed up-link.
     await host.getByRole('link', { name: 'Back', exact: true }).click();
+    await expect(page).toHaveURL(/\/kundli\/a\/ask\/answer\?thread=thread-a$/);
+    await host.getByRole('link', { name: 'Back to Ask' }).click();
     await expect(page).toHaveURL(/\/kundli\/a\/ask$/);
     await host.getByRole('textbox', { name: 'Your question' }).fill('A new career question');
     await host.getByRole('button', { name: 'Send', exact: true }).click();

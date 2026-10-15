@@ -7,6 +7,7 @@ import { PreferencesService } from '../../../core/preferences.service';
 import { timingClockNote, timingPlaceLabel } from '../../../core/timing-place';
 import { MuhurtaApiWindow, VedicService } from '../../../core/vedic.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /** How strongly a window is endorsed. Two levels, not a score. */
 export type WindowQuality = 'best' | 'good';
@@ -79,7 +80,7 @@ const DEPLOYED_GOAL_FALLBACKS: Record<string, string> = {
   selector: 'as-muhurta-results',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GenericErrorComponent, RouterLink],
+  imports: [BackLinkDirective, GenericErrorComponent, RouterLink],
   templateUrl: './muhurta-results.component.html',
   styleUrl: './muhurta-results.component.scss',
 })

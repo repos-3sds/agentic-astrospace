@@ -7,7 +7,7 @@ import { AuthService } from '../../../core/auth.service';
 @Component({
   selector: 'as-reset-password',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [RouterLink, FormsModule],
   templateUrl: './reset-password.component.html',
   styleUrl: './forgot-password.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

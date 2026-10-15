@@ -38,7 +38,7 @@ from ..db.crud_profile_context import (
 )
 from .ask_routes import (
     MAX_HISTORY, AskRequest, _evidence_from_reading, _history_from_thread,
-    _owned_thread, _profile_context_store, _thread_established_domain,
+    _owned_thread, _profile_context_store, _thread_established_domain, _usage_fields,
 )
 from .auth import CurrentUser
 from .context_routes import _chart_from_kundli
@@ -213,7 +213,7 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
     messages.append({"role": "user", "content": body.question})
 
     def persist_turn(content: str, domain: Optional[str], refer_out_kind: Optional[str],
-                     evidence: Optional[dict]) -> Optional[str]:
+                     evidence: Optional[dict], usage: Optional[dict] = None) -> Optional[str]:
         """Shared by every terminal path (refer-out, clarification,
         domain-not-ready, answered) and by the orchestrator's own
         `persist` callback for the success/failure-after-generation path.
@@ -230,7 +230,8 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
                            language=body.language, input_mode=body.input_mode)
         cm.add_ask_message(db, local_thread.id, "assistant", content,
                            language=body.language, domain=domain,
-                           refer_out_kind=refer_out_kind, evidence=evidence or {})
+                           refer_out_kind=refer_out_kind, evidence=evidence or {},
+                           **_usage_fields(usage))
         db.refresh(local_thread)
         return local_thread.id
 
@@ -328,6 +329,7 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
                 profile_context_revision=prepared.profile_context_revision,
                 profile_context_as_of=prepared.profile_context_as_of,
             ),
+            usage=prepared.usage,
         )
 
     def generate_answer_and_memory():

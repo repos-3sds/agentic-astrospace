@@ -9,6 +9,7 @@ import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { buildChartAdapter, PLANET_ABBR, PLANET_NAME, SIGN_ORDER, rashiFallback } from './mobile-chart-data';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /** The three drawing conventions the app can render a chart in. */
 export type ChartStyle = 'Eastern' | 'South' | 'North';
@@ -29,7 +30,7 @@ export type ChartStyle = 'Eastern' | 'South' | 'North';
   selector: 'as-chart-full',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GenericErrorComponent, KundliChartComponent, PlanetSheetComponent, RouterLink],
+  imports: [BackLinkDirective, GenericErrorComponent, KundliChartComponent, PlanetSheetComponent, RouterLink],
   templateUrl: './chart-full.component.html',
   styleUrl: './chart-full.component.scss',
 })

@@ -6,14 +6,15 @@ import { GocharamDomainReading, GocharamMatchedRule, GocharamProfilePayload } fr
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { TransitDetail, TransitDetailComponent } from './transit-detail.component';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 @Component({
   selector: 'as-gochara',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, TransitDetailComponent],
+  imports: [BackLinkDirective, RouterLink, TransitDetailComponent],
   template: `
-    <a class="mtr-back" [routerLink]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
+    <a class="mtr-back" [asBack]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
     <main class="mtr-body">
       <header><h1>What’s moving now</h1><p>Current sky translated into everyday choices</p></header>
       <nav class="mtr-tabs"><span>Gochara</span><a [routerLink]="['/m','transits','full']">Full Transits</a></nav>

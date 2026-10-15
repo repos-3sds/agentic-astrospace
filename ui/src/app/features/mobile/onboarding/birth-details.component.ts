@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { PanchangaCity } from '../../../core/models';
 import { PanchangaService } from '../../../core/panchanga.service';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /** A place the typeahead offers for the birth location. */
 type PlaceMatch = PanchangaCity;
@@ -24,15 +25,27 @@ type PlaceMatch = PanchangaCity;
  * Place is a lookup, not free text: a chart needs coordinates and a timezone at
  * the birth instant, and "Vijayawada" typed into a string field is neither.
  */
+/**
+ * The name typed at Register, carried into the first profile. Stored by the
+ * auth screen in localStorage; Supabase also keeps it in user metadata
+ * (`name` for email sign-up, `full_name` for Google), which is what survives
+ * a reinstall. "My chart" only when nothing is known.
+ */
+export function registeredName(metadata: Record<string, unknown> | undefined | null): string {
+  const stored = (() => { try { return localStorage.getItem('astrospace.onboardingName'); } catch { return null; } })();
+  const fromMeta = [metadata?.['name'], metadata?.['full_name']].find((v) => typeof v === 'string' && v.trim());
+  return (stored?.trim() || (fromMeta as string | undefined)?.trim() || 'My chart');
+}
+
 @Component({
   selector: 'as-birth-details',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [BackLinkDirective],
   template: `
     <div class="top">
       <header class="topbar">
-        <a class="back" [routerLink]="['/m', 'customize']" aria-label="Back">
+        <a class="back" [asBack]="['/m', 'customize']" aria-label="Back">
           <img src="mobile/back.svg" alt="" aria-hidden="true" />
         </a>
         <p class="step">SETUP 6 OF 6</p>
@@ -134,13 +147,7 @@ export class BirthDetailsComponent {
 
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
-  readonly who = signal(
-    `${
-      sessionStorage.getItem('astrospace.onboardingName')
-      || this.auth.user()?.user_metadata?.['name']
-      || 'My chart'
-    }  ·  Myself`,
-  );
+  readonly who = signal(`${registeredName(this.auth.user()?.user_metadata)}  ·  Myself`);
   readonly date = signal('');
   readonly time = signal('');
 
@@ -205,6 +212,17 @@ export class BirthDetailsComponent {
     this.saving.set(true);
     this.error.set(null);
     try {
+      // Re-entering onboarding (system back from Insight, a typed URL) must
+      // not mint a second "self" profile; the route guard redirects before
+      // this screen renders, and this is the belt to its braces.
+      await this.kundlis.load().catch(() => undefined);
+      const existingSelf = this.kundlis.kundlis().find((k) => (k.relation ?? '').toLowerCase() === 'self');
+      if (existingSelf) {
+        this.kundlis.setActive(existingSelf.id);
+        localStorage.removeItem('astrospace.onboardingName');
+        await this.router.navigate(['/m', 'today']);
+        return;
+      }
       const created = await this.kundlis.create({
         name: this.who().split('·')[0].trim(),
         relation: 'self',
@@ -218,7 +236,7 @@ export class BirthDetailsComponent {
         birth_time_accuracy: this.timeIsApproximate() ? 'approximate' : 'exact',
       });
       this.kundlis.setActive(created.id);
-      sessionStorage.removeItem('astrospace.onboardingName');
+      localStorage.removeItem('astrospace.onboardingName');
       await this.router.navigate(['/m', 'insight']);
     } catch (error) {
       this.error.set((error as Error).message);

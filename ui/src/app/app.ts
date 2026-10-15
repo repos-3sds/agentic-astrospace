@@ -25,6 +25,7 @@ import { SplashComponent } from './shell/splash/splash.component';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { PushService } from './core/push.service';
+import { NavigationHistoryService } from './core/navigation-history.service';
 
 /**
  * Screens with nowhere in-app to go back to. Capacitor's hardware back
@@ -77,6 +78,9 @@ export class App implements OnInit, OnDestroy {
   private animatedSplashFadeTimer: ReturnType<typeof setTimeout> | null = null;
   private nativeBootReady = false;
   private animatedSplashFinished = false;
+
+  // Eager so in-app history is counted from the first navigation.
+  private readonly navigationHistory = inject(NavigationHistoryService);
 
   constructor() {
     // Native boot starts on a route that does not depend on auth or the network.

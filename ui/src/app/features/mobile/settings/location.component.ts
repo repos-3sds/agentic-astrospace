@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { PanchangaCity } from '../../../core/models';
 import { PanchangaService } from '../../../core/panchanga.service';
 import { PreferencesService } from '../../../core/preferences.service';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /**
  * Which place the day's timings are computed for. 'current' is not
@@ -28,7 +28,7 @@ export type TimingPlace = 'current' | 'selected';
   selector: 'as-settings-location',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink],
+  imports: [BackLinkDirective, FormsModule],
   templateUrl: './location.component.html',
   styleUrl: './location.component.scss',
 })

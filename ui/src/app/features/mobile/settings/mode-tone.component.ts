@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import {
   PersonaOption,
   PersonaPickerComponent,
 } from '../persona-picker/persona-picker.component';
 import { PreferencesService } from '../../../core/preferences.service';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /**
  * Settings — Mode & tone (Figma node 67:89).
@@ -22,7 +22,7 @@ import { PreferencesService } from '../../../core/preferences.service';
   selector: 'as-settings-mode-tone',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PersonaPickerComponent, RouterLink],
+  imports: [BackLinkDirective, PersonaPickerComponent],
   templateUrl: './mode-tone.component.html',
   styleUrl: './mode-tone.component.scss',
 })

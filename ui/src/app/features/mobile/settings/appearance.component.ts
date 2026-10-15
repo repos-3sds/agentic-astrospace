@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { ThemePreference, ThemeService } from '../../../core/theme.service';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 interface AppearanceOption {
   id: ThemePreference;
@@ -11,7 +11,7 @@ interface AppearanceOption {
 @Component({
   selector: 'as-appearance',
   standalone: true,
-  imports: [RouterLink],
+  imports: [BackLinkDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './appearance.component.html',
   styleUrl: './appearance.component.scss',

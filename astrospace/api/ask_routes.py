@@ -129,6 +129,26 @@ def _message(row) -> dict:
     }
 
 
+def _usage_fields(usage: Optional[dict]) -> dict:
+    """AskMessage columns for the cost of an assistant turn — see
+    migration 20261015120000. Empty (all null) when the turn never reached
+    a model, e.g. a refer-out."""
+    if not usage or not usage.get("calls"):
+        return {}
+    return {
+        "model": usage.get("model"),
+        "latency_ms": usage.get("latency_ms"),
+        "input_tokens": int(usage.get("input_tokens") or 0),
+        "output_tokens": int(usage.get("output_tokens") or 0),
+        "llm_calls": {
+            "provider": usage.get("provider"),
+            "calls": int(usage.get("calls") or 0),
+            "repaired": bool(usage.get("repaired")),
+            "breakdown": list(usage.get("breakdown") or []),
+        },
+    }
+
+
 def _owned_thread(db: Session, thread_id: str, user_id: str):
     thread = cm.get_ask_thread(db, thread_id, user_id)
     if not thread:
@@ -309,7 +329,8 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
 
     def persist_turn(content: str, domain: Optional[str],
                      refer_out_kind: Optional[str],
-                     evidence: Optional[dict]) -> Optional[str]:
+                     evidence: Optional[dict],
+                     usage: Optional[dict] = None) -> Optional[str]:
         """Nothing is written until a terminal outcome exists — see the
         module docstring. `nonlocal thread` (not a local shadow) so the
         response built after this call sees the thread this turn actually
@@ -323,7 +344,8 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
                            language=body.language, input_mode=body.input_mode)
         cm.add_ask_message(db, thread.id, "assistant", content,
                            language=body.language, domain=domain,
-                           refer_out_kind=refer_out_kind, evidence=evidence or {})
+                           refer_out_kind=refer_out_kind, evidence=evidence or {},
+                           **_usage_fields(usage))
         db.refresh(thread)
         return thread.id
 
@@ -419,7 +441,8 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
                                 reading,
                                 profile_context_revision=prepared.profile_context_revision,
                                 profile_context_as_of=prepared.profile_context_as_of,
-                            ))
+                            ),
+                            usage=prepared.usage)
 
     done = None
     for event in orchestrator.run(prepared, messages, persist=persist_prepared):

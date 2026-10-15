@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AskResponseLanguage, PreferencesService } from '../../../core/preferences.service';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 @Component({
   selector: 'as-language',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [BackLinkDirective, RouterLink],
   templateUrl: './language.component.html',
   styleUrl: './language.component.scss',
   host: { class: 'as-mobile' },

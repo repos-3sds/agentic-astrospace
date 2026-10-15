@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { MobileTtsService } from '../../../core/mobile-tts.service';
 import { AskResponseLanguage, PreferencesService } from '../../../core/preferences.service';
 import { HapticsService } from '../../../core/haptics.service';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /** The languages the Ask agent can answer in. */
 export type AppLanguage = AskResponseLanguage;
@@ -33,7 +33,7 @@ const PREVIEW_TEXT =
   selector: 'as-settings-language-audio',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [BackLinkDirective],
   templateUrl: './language-audio.component.html',
   styleUrl: './language-audio.component.scss',
 })

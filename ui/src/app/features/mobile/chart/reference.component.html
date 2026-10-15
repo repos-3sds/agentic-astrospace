@@ -1,4 +1,4 @@
-<a class="ref-appbar" [routerLink]="mode === 'home' ? ['/m','chart'] : ['/m','chart','reference']">
+<a class="ref-appbar" [asBack]="mode === 'home' ? ['/m','chart'] : ['/m','chart','reference']">
   <img src="mobile/back.svg" alt="" /><span>{{ mode === 'home' ? 'Your Chart' : 'Reference' }}</span>
 </a>
 <main>

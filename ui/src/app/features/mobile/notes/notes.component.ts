@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 const STORAGE_KEY = 'astrospace.mobile.notes.draft';
 
@@ -7,9 +7,9 @@ const STORAGE_KEY = 'astrospace.mobile.notes.draft';
   selector: 'as-mobile-notes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [BackLinkDirective],
   template: `
-    <header class="mnote-top"><a [routerLink]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a><em>Local draft</em></header>
+    <header class="mnote-top"><a [asBack]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a><em>Local draft</em></header>
     <main class="mnote-body">
       <header><h1>Notes</h1><p>Local draft only. This is not synced to your <span class="siddha-brand">Siddha</span> account yet.</p></header>
       <textarea
