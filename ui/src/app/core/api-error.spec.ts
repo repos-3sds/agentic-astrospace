@@ -13,6 +13,8 @@ describe('friendlyApiMessage', () => {
     expect(friendlyApiMessage(400, "City 'Mumbaii' not in offline database.")).toContain('place that city');
     expect(friendlyApiMessage(400, "Unknown timezone 'Asia/Nowhere'")).toContain('time zone');
     expect(friendlyApiMessage(400, 'Invalid birth details: hour must be in 0..23')).toContain('birth details');
+    const unresolved = 'We couldn’t find “Mumbaii” in IN. Choose the birth place from the search results.';
+    expect(friendlyApiMessage(422, unresolved)).toBe(unresolved);
     expect(friendlyApiMessage(404, 'Kundli not found')).not.toContain('Kundli');
     expect(friendlyApiMessage(0, '')).toContain('connection');
     expect(friendlyApiMessage(401, 'Not authenticated')).toContain('sign in');
