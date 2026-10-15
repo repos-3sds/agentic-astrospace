@@ -3,6 +3,7 @@ import { ASK_NAVIGATION } from './ask-navigation';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AskComposerComponent } from './ask-composer.component';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /** The domains the app declines to give a verdict in. */
 export type ReferDomain = 'health' | 'legal' | 'money' | 'death';
@@ -80,7 +81,7 @@ const COPY: Record<ReferDomain, ReferCopy> = {
   selector: 'as-ask-refer-out',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AskComposerComponent, RouterLink],
+  imports: [AskComposerComponent, RouterLink, BackLinkDirective],
   templateUrl: './ask-refer-out.component.html',
   styleUrl: './ask-refer-out.component.scss',
 })

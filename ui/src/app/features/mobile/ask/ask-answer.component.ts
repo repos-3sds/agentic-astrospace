@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { ASK_NAVIGATION } from './ask-navigation';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AskComposerComponent } from './ask-composer.component';
 import { ListenSheetComponent } from '../today/listen-sheet.component';
 import {
@@ -24,6 +24,7 @@ import { EntitlementDenial, EntitlementLimitError } from '../../../core/entitlem
 import { EntitlementService } from '../../../core/entitlement.service';
 import { LockedStateComponent } from '../shared/locked-state.component';
 import { TextRun, cleanPlainText, paragraphRuns } from '../../../core/answer-text';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /**
  * How confidently the answer lands. Named, not a number: the point of the dot
@@ -86,7 +87,7 @@ const REFER_OUT_KINDS = new Set(['death', 'health', 'legal', 'money']);
   selector: 'as-ask-answer',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, AskComposerComponent, ListenSheetComponent, WhyReadingSheetComponent, LockedStateComponent],
+  imports: [AskComposerComponent, ListenSheetComponent, WhyReadingSheetComponent, LockedStateComponent, BackLinkDirective],
   templateUrl: './ask-answer.component.html',
   styleUrl: './ask-answer.component.scss',
 })
