@@ -35,7 +35,7 @@
             </span>
           </a>
         } @else {
-          <button class="row" type="button">
+          <button class="row" type="button" (click)="row.legal && openLegal(row.legal)">
             <span class="row-left">
               <span class="row-icon">
                 <img [src]="'mobile/' + row.icon + '.svg'" alt="" aria-hidden="true" />

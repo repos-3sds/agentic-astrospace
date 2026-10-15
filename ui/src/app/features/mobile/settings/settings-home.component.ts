@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
+import { LegalDocument, openLegal } from '../../../core/legal';
 import { ThemeService } from '../../../core/theme.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { PreferencesService } from '../../../core/preferences.service';
@@ -14,6 +15,8 @@ export interface SettingRow {
   value: string;
   /** Present once the destination exists; absent leaves the row inert. */
   route?: string[];
+  /** A legal page served by the API, opened outside the SPA. */
+  legal?: LegalDocument;
 }
 
 /** A titled group of rows. */
@@ -180,7 +183,18 @@ export class SettingsHomeComponent {
         },
       ],
     },
+    {
+      eyebrow: 'ABOUT',
+      rows: [
+        { id: 'terms', icon: 'set-legal', label: 'Terms of Service', value: 'Opens in browser', legal: 'terms' },
+        { id: 'privacy', icon: 'set-legal', label: 'Privacy Policy', value: 'Opens in browser', legal: 'privacy' },
+      ],
+    },
   ]);
+
+  protected openLegal(doc: LegalDocument): void {
+    void openLegal(doc);
+  }
 
   constructor() {
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
