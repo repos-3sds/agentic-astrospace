@@ -31,14 +31,14 @@ import { transitVerdictLabel } from './transit-verdict';
       } @else if (data(); as payload) {
         @if (sadeSati(); as sade) {
           <p class="mtrf-title">SADE SATI</p>
-          <section class="mtrf-copy" [attr.data-tone]="sade.active ? 'warn' : 'good'">
+          <section class="mtrf-copy m-selectable" [attr.data-tone]="sade.active ? 'warn' : 'good'">
             <p><b>{{ sade.active ? 'Active' : 'Not active' }}</b>@if (sade.active && sade.phase) { — {{ sade.phase }} phase }</p>
             <p>{{ sade.active ? 'Use this as a discipline marker: simplify commitments, protect sleep, and do the slow necessary work.' : 'Saturn is not pressing the natal Moon through Sade Sati right now.' }}</p>
             <p>Evidence: Saturn is {{ sade.saturn_house_from_moon }} house(s) from your natal Moon.</p>
           </section>
         }
         <p class="mtrf-title">{{ payload.gochara.interpretation.range_outlook.days }}-DAY RANGE</p>
-        <section class="mtrf-copy">
+        <section class="mtrf-copy m-selectable">
           <p><b>{{ payload.gochara.interpretation.range_outlook.title }}</b></p>
           <p>{{ payload.gochara.interpretation.range_outlook.reading }}</p>
         </section>
@@ -70,7 +70,7 @@ import { transitVerdictLabel } from './transit-verdict';
           }
         </section>
         <p class="mtrf-title">CONVENTION</p>
-        <section class="mtrf-copy"><p>{{ payload.gochara.interpretation.convention.node_treatment }}</p><p>{{ payload.gochara.interpretation.convention.safety }}</p></section>
+        <section class="mtrf-copy m-selectable"><p>{{ payload.gochara.interpretation.convention.node_treatment }}</p><p>{{ payload.gochara.interpretation.convention.safety }}</p></section>
       }
     </main>
     @if(selected()){<as-transit-detail [detail]="selected()!" (dismissed)="selected.set(null)" />}

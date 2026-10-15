@@ -175,7 +175,7 @@
   <div class="explore">
     @for (card of visibleExplore(); track card.id) {
       @if (card.route; as route) {
-        <a class="explore-card" [routerLink]="route" [queryParams]="card.queryParams">
+        <a class="explore-card m-pressable" [routerLink]="route" [queryParams]="card.queryParams">
           <span class="explore-icon">
             <img [src]="'mobile/' + card.icon + '.svg'" alt="" aria-hidden="true" />
           </span>
@@ -183,7 +183,7 @@
           <span class="explore-sub">{{ card.subtitle }}</span>
         </a>
       } @else {
-        <button class="explore-card" type="button">
+        <button class="explore-card m-pressable" type="button">
           <span class="explore-icon">
             <img [src]="'mobile/' + card.icon + '.svg'" alt="" aria-hidden="true" />
           </span>

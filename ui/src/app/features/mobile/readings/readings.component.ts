@@ -222,7 +222,7 @@ export function splitReadings(readings: Reading[]): { current: Reading[]; past: 
                 <b>{{ titleFor(shown) }}</b>
                 <em [class.latest]="isLatestCurrent(shown)">{{ badgeFor(shown) }}</em>
               </div>
-              <div class="mrd-prose" [innerHTML]="shown.content | markdown"></div>
+              <div class="mrd-prose m-selectable" [innerHTML]="shown.content | markdown"></div>
               <hr />
               <footer><small>{{ versionLine(shown) }}</small></footer>
             </article>
@@ -248,7 +248,7 @@ export function splitReadings(readings: Reading[]): { current: Reading[]; past: 
             @for (claim of selectedClaims(); track claim.id) {
               <article [class.checked]="claim.status !== 'pending'">
                 <span>{{ claim.category }}@if (window(claim)) { · {{ window(claim) }}}</span>
-                <p>{{ claim.claim_text }}</p>
+                <p class="m-selectable">{{ claim.claim_text }}</p>
                 <div class="mrd-chips" role="group" [attr.aria-label]="'Did this happen? ' + claim.claim_text">
                   @for (option of reviewOptions; track option.status) {
                     <button type="button" [attr.data-tone]="option.tone"

@@ -29,7 +29,7 @@
             title="Conversation actions"
             (click)="revealedThreadId.set(revealedThreadId() === thread.id ? null : thread.id)"><lucide-icon name="ellipsis-vertical" [size]="20" /></button>
           <article
-            class="askhist-card"
+            class="askhist-card m-pressable"
             [class.is-opening]="opening() === thread.id"
             tabindex="0"
             role="button"

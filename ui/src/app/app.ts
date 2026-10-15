@@ -152,17 +152,28 @@ export class App implements OnInit, OnDestroy {
   }
 
   private installNativeInteractionGuards(): () => void {
-    if (!Capacitor.isNativePlatform()) return () => undefined;
+    // iOS WebKit only applies :active to an element when some touchstart
+    // listener exists in the page, so without this no press state — the
+    // .m-pressable scale included — ever showed on a touch. Passive and a
+    // no-op: it must never delay or claim a scroll.
+    const enableActiveState = () => undefined;
+    document.addEventListener('touchstart', enableActiveState, { passive: true });
+    if (!Capacitor.isNativePlatform()) {
+      return () => document.removeEventListener('touchstart', enableActiveState);
+    }
     document.documentElement.classList.add('as-native-app');
     const preventNativeDrag = (event: Event) => event.preventDefault();
     const preventContextMenu = (event: Event) => {
       const target = event.target as HTMLElement | null;
-      if (target?.closest('input, textarea, [contenteditable="true"]')) return;
+      // Selectable prose (styles-mobile.scss .m-selectable) needs the long
+      // press: on Android it is what starts a text selection.
+      if (target?.closest('input, textarea, [contenteditable="true"], .m-selectable')) return;
       event.preventDefault();
     };
     document.addEventListener('dragstart', preventNativeDrag, { capture: true });
     document.addEventListener('contextmenu', preventContextMenu, { capture: true });
     return () => {
+      document.removeEventListener('touchstart', enableActiveState);
       document.documentElement.classList.remove('as-native-app');
       document.removeEventListener('dragstart', preventNativeDrag, { capture: true });
       document.removeEventListener('contextmenu', preventContextMenu, { capture: true });

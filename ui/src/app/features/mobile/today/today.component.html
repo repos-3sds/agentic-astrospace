@@ -98,7 +98,7 @@
       </div>
     } @else {
       <div class="verdict-row">
-        <button class="gauge-btn" type="button" (click)="showSheet('quality')"
+        <button class="gauge-btn m-pressable" type="button" (click)="showSheet('quality')"
                 aria-label="Why today is a {{ v.score }}">
           <as-day-gauge [score]="v.score" [label]="v.scoreLabel" [attr.data-band]="v.band" />
         </button>
@@ -306,12 +306,12 @@
   <p class="eyebrow section-label">REFLECT WITH <span class="siddha-brand">Siddha</span></p>
   <div class="suggestions">
     @for (q of askSuggestions(); track q) {
-      <a class="suggestion" [routerLink]="['/m', 'ask']" [queryParams]="{ q }">
+      <a class="suggestion m-pressable" [routerLink]="['/m', 'ask']" [queryParams]="{ q }">
         <span class="suggestion-text">{{ q }}</span>
         <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
       </a>
     } @empty {
-      <a class="suggestion" [routerLink]="['/m', 'ask']" [queryParams]="{ q: 'What should I reflect on today?' }">
+      <a class="suggestion m-pressable" [routerLink]="['/m', 'ask']" [queryParams]="{ q: 'What should I reflect on today?' }">
         <span class="suggestion-text">Ask what today is inviting you to notice</span>
         <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
       </a>

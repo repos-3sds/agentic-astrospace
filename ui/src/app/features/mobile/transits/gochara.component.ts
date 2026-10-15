@@ -29,7 +29,7 @@ import { transitVerdictLabel } from './transit-verdict';
         <section class="mtr-overall">
           <b>OVERALL · {{ verdictLabel(payload.gochara.interpretation.synthesis.tone) }}</b>
           <h2>{{ payload.gochara.interpretation.synthesis.headline }}</h2>
-          <p>{{ summary() }}</p>
+          <p class="m-selectable">{{ summary() }}</p>
         </section>
         <button class="mtr-listen" type="button" (click)="listenToTransits(payload)">
           <img src="mobile/play.svg" alt="" aria-hidden="true" />
@@ -37,7 +37,7 @@ import { transitVerdictLabel } from './transit-verdict';
         </button>
         <p class="mtr-title">WHAT THIS MEANS FOR YOU · {{ payload.gochara.interpretation.range_outlook.days }} DAYS</p>
         @for (domain of domains(); track domain.id) {
-          <button type="button" class="mtr-card" (click)="openDomain(domain)">
+          <button type="button" class="mtr-card m-pressable" (click)="openDomain(domain)">
             <div>
               <b>{{ domain.title }}</b>
               <em [attr.data-tone]="domain.tone === 'supportive' ? 'good' : 'warn'">{{ verdictLabel(domain.tone) }}</em>
@@ -49,7 +49,7 @@ import { transitVerdictLabel } from './transit-verdict';
         }
         <p class="mtr-title">PLANET DETAILS · OPTIONAL DEPTH</p>
         @for (rule of baselineRules(); track rule.rule_id) {
-          <button type="button" class="mtr-card" (click)="open(rule)">
+          <button type="button" class="mtr-card m-pressable" (click)="open(rule)">
             <div>
               <b>{{ rule.planet }} in house {{ rule.house }}</b>
               <em [attr.data-tone]="tone(rule)">{{ verdictLabel(rule.effective_verdict) }}</em>

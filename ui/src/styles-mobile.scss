@@ -92,6 +92,21 @@
   --m-tabbar-total: 132px;
   --ask-reading-width: 760px;
 
+  // Motion. Before these, durations of 150, 160, 180, 260 and 420 ms and
+  // 0.9/1.5 s sat side by side with mixed easings. Fast is feedback (a
+  // press), base is a state change (expand, fade), slow is something
+  // entering or leaving the screen (a sheet). Standard eases both ends;
+  // emphasized decelerates hard, for things arriving.
+  --m-dur-fast: 120ms;
+  --m-dur-base: 220ms;
+  --m-dur-slow: 320ms;
+  --m-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --m-ease-emphasized: cubic-bezier(0.22, 1, 0.36, 1);
+
+  // Rounded cards showed WebKit's grey tap rectangle everywhere but the tab
+  // bar. Press feedback comes from .m-pressable instead.
+  -webkit-tap-highlight-color: transparent;
+
   // Paint the ground, not just declare the palette. The shell did this on its
   // own :host, so every screen inside it was fine — but a screen routed outside
   // the shell (onboarding) inherited the web app's theme-reactive background
@@ -189,13 +204,43 @@
 :root.as-native-app .as-mobile * {
   -webkit-touch-callout: none;
   -webkit-user-drag: none;
+  -webkit-user-select: none;
   user-select: none;
 }
 
 :root.as-native-app .as-mobile input,
 :root.as-native-app .as-mobile textarea,
 :root.as-native-app .as-mobile [contenteditable='true'] {
+  -webkit-user-select: text;
   user-select: text;
+}
+
+// Prose a reader may want to quote — a reading, a transit, a remedy — stays
+// selectable inside the otherwise non-selectable app surface. Put the class on
+// the text container, never on a tappable card: a long press there must stay
+// a press, not start a selection.
+:root.as-native-app .as-mobile .m-selectable,
+:root.as-native-app .as-mobile .m-selectable * {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+// Press feedback for real tappables only — cards and buttons that do
+// something. styles.scss used to scale every article and summary on :active,
+// so static text cards shrank under a scrolling thumb. See the m-pressable
+// mixin in mobile-tokens.scss for use inside a component stylesheet.
+.as-mobile .m-pressable {
+  transition: transform var(--m-dur-fast) var(--m-ease-standard);
+}
+
+.as-mobile .m-pressable:active:not(:disabled):not([aria-disabled='true']) {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .as-mobile .m-pressable { transition: none; }
+  .as-mobile .m-pressable:active:not(:disabled):not([aria-disabled='true']) { transform: none; }
 }
 
 .as-mobile,
