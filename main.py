@@ -11,6 +11,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+from astrospace.logging_config import TraceContextMiddleware, configure_logging
+
+# Before anything else logs: JSON lines at INFO on stdout, which Cloud Logging
+# parses. Without it the INFO-level `astrospace.ask.cost` lines were dropped.
+configure_logging()
+
 from astrospace.db.database import init_db
 from astrospace.api.routes import router as core_router
 from astrospace.api.kundli_routes import router as kundli_router
@@ -88,6 +94,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Added last, so it is the outermost layer: every line logged while handling
+# a request, the audit middleware's included, carries the Cloud Trace id.
+app.add_middleware(TraceContextMiddleware)
 
 
 @app.exception_handler(EntitlementDenied)

@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 from google.genai import types
 
-from astrospace.agents.base import BaseAstroAgent
+from astrospace.agents.base import MAX_TOOL_ROUNDS, BaseAstroAgent
 
 
 class GeminiStreamAgent(BaseAstroAgent):
@@ -131,7 +131,7 @@ def test_gemini_parallel_calls_answer_in_one_turn(monkeypatch):
 
 def test_gemini_out_of_tool_rounds_asks_for_text(monkeypatch):
     monkeypatch.setenv("AI_PROVIDER", "gemini")
-    models = RecordingModels([_calls_turn("get_number") for _ in range(8)] + [
+    models = RecordingModels([_calls_turn("get_number") for _ in range(MAX_TOOL_ROUNDS)] + [
         SimpleNamespace(function_calls=[], candidates=[], text="answer from what I have"),
     ])
     agent = GeminiToolAgent()

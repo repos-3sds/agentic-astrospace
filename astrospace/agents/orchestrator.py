@@ -81,6 +81,7 @@ class ContextResult:
 # off the logs for the two weeks the launch plan asks for before quotas are
 # fixed. Nothing in it identifies the reader beyond the thread id.
 cost_log = logging.getLogger("astrospace.ask.cost")
+log = logging.getLogger(__name__)
 
 
 def _usage_summary(usage: dict) -> dict:
@@ -346,6 +347,7 @@ class AskOrchestrator:
                 as_of_date = str((bundle.get("profile_facts") or {}).get("as_of") or "")[:10]
                 projection = self._profile_context_store.projection(domain, as_of_date)
             except Exception:
+                log.exception("profile context projection failed (domain=%s)", domain)
                 projection = empty
                 unavailable = True
 
@@ -372,6 +374,7 @@ class AskOrchestrator:
         try:
             return self._validation_store.probes(domain)
         except Exception:
+            log.exception("validation probe lookup failed (domain=%s)", domain)
             return []
 
     def check_validation(self, prepared_bundle: dict, domain: str) -> dict | None:
@@ -404,6 +407,7 @@ class AskOrchestrator:
                 return None
             probe_id = store.commit(slot, draft)
         except Exception:
+            log.exception("validation probe failed; answering directly (domain=%s)", domain)
             return None
         return {
             "type": "validation_needed",
@@ -522,6 +526,7 @@ class AskOrchestrator:
         try:
             reading = prepared.agent.run_structured_reading(messages)
         except Exception:
+            log.exception("ask generation failed (domain=%s)", prepared.domain)
             return AgentRunResult(reading=None, violations=[], generation_failed=True)
 
         violations = (verify(reading, prepared.bundle, prepared.domain, prepared.tense)
@@ -548,6 +553,7 @@ class AskOrchestrator:
                     ),
                 }])
         except Exception:
+            log.exception("ask repair failed (domain=%s)", prepared.domain)
             return AgentRunResult(reading=None, violations=violations, generation_failed=True)
         reading = repaired
 
@@ -606,7 +612,7 @@ class AskOrchestrator:
                 **_usage_summary(prepared.usage),
             }, default=str))
         except Exception:  # accounting never costs a reader their answer
-            pass
+            log.exception("ask cost log line failed")
 
     def run(
         self, prepared: PreparedRun, messages: list,
