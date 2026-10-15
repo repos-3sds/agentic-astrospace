@@ -8,11 +8,12 @@ import {
   MobileAskThread,
   MobileAskThreadService,
 } from './mobile-ask-thread.service';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 @Component({
   selector: 'as-ask-history',
   standalone: true,
-  imports: [RouterLink, LucideAngularModule],
+  imports: [GenericErrorComponent, RouterLink, LucideAngularModule],
   templateUrl: './ask-history.component.html',
   styleUrl: './ask-history.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -16,7 +16,18 @@
       }
     </section>
   }
-  <main class="content" [class.tabs-hidden]="tabsSuppressed()"><router-outlet /></main>
+  <main class="content" [class.tabs-hidden]="tabsSuppressed()">
+    @if (profilesBlocked()) {
+      <as-generic-error
+        role="alert"
+        message="Your profiles could not be loaded, so there is nothing to show yet. Check your connection and try again."
+        [technicalDetail]="'GET /api/v1/kundlis · ' + kundlis.loadError()"
+        (retried)="retryProfiles()"
+      />
+    } @else {
+      <router-outlet />
+    }
+  </main>
 
   @if (!tabsSuppressed()) {
     <nav class="tabbar" aria-label="Primary">

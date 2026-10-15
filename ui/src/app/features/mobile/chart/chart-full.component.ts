@@ -7,7 +7,8 @@ import { KundliStore } from '../../../core/kundli.store';
 import { BhavaChalitPayload, VargaChart, VedicAll } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
-import { buildChartAdapter, PLANET_ABBR, PLANET_NAME, SIGN_ORDER } from './mobile-chart-data';
+import { buildChartAdapter, PLANET_ABBR, PLANET_NAME, SIGN_ORDER, rashiFallback } from './mobile-chart-data';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 /** The three drawing conventions the app can render a chart in. */
 export type ChartStyle = 'Eastern' | 'South' | 'North';
@@ -28,7 +29,7 @@ export type ChartStyle = 'Eastern' | 'South' | 'North';
   selector: 'as-chart-full',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [KundliChartComponent, PlanetSheetComponent, RouterLink],
+  imports: [GenericErrorComponent, KundliChartComponent, PlanetSheetComponent, RouterLink],
   templateUrl: './chart-full.component.html',
   styleUrl: './chart-full.component.scss',
 })
@@ -57,7 +58,7 @@ export class ChartFullComponent {
     const chart = this.chart();
     if (!chart) return null;
     const vargaId = this.selectedVarga();
-    return chart.vargas?.[vargaId] ?? (vargaId === 'D1' ? this.rashiFallback(chart) : null);
+    return chart.vargas?.[vargaId] ?? (vargaId === 'D1' ? rashiFallback(chart, this.kundlis.active()?.ascendant) : null);
   });
 
   /** Expanded once, so the legend is not a second thing to decode. */
@@ -120,9 +121,6 @@ export class ChartFullComponent {
   private renderedChartId: string | null = null;
 
   constructor() {
-    if (this.route.snapshot.routeConfig?.path === 'chart/vargas') {
-      this.selectedVarga.set('D9');
-    }
     effect(() => {
       const requested = this.queryParams().get('varga')?.toUpperCase();
       if (requested && this.vargas.includes(requested)) {
@@ -228,24 +226,6 @@ export class ChartFullComponent {
     return style === 'south' ? 'South' : style === 'north' ? 'North' : 'Eastern';
   }
 
-  private rashiFallback(data: VedicAll): VargaChart | null {
-    const lagnaSign = this.kundlis.active()?.ascendant ?? data.avkahada?.['rashi'];
-    if (!lagnaSign) return null;
-    return {
-      name: 'Rāśi',
-      signifies: 'Birth chart',
-      verified_rule: true,
-      lagna: { sign: lagnaSign },
-      planets: Object.fromEntries(Object.entries(data.planets ?? {}).map(([planet, row]) => [
-        planet,
-        {
-          sign: row.sign,
-          house: row.house,
-          retrograde: row.retrograde,
-        },
-      ])),
-    };
-  }
 }
 
 const PLANET_SEQUENCE = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];

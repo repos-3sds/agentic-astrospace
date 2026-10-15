@@ -8,6 +8,7 @@ import {
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs';
 import { KundliStore } from '../../../core/kundli.store';
+import { GenericErrorComponent } from '../states/generic-error.component';
 import { PreferencesService } from '../../../core/preferences.service';
 import { SheetOverlayService } from '../../../core/sheet-overlay.service';
 import { HapticsService } from '../../../core/haptics.service';
@@ -31,14 +32,14 @@ interface MobileTab {
   selector: 'as-mobile-shell',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet, RouterLink, GenericErrorComponent],
   templateUrl: './mobile-shell.component.html',
   styleUrl: './mobile-shell.component.scss',
   host: { class: 'as-mobile' },
 })
 export class MobileShellComponent {
   private readonly router = inject(Router);
-  private readonly kundlis = inject(KundliStore);
+  protected readonly kundlis = inject(KundliStore);
   protected readonly preferences = inject(PreferencesService);
   protected readonly overlay = inject(SheetOverlayService);
   private readonly haptics = inject(HapticsService);
@@ -46,6 +47,16 @@ export class MobileShellComponent {
 
   constructor() {
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
+  }
+
+  /** The profile list failed and nothing is cached: every tab would be empty,
+   * so the shell says so once instead of each screen guessing. */
+  protected readonly profilesBlocked = computed(
+    () => !!this.kundlis.loadError() && !this.kundlis.loaded() && this.kundlis.kundlis().length === 0,
+  );
+
+  protected retryProfiles(): void {
+    void this.kundlis.load().catch(() => undefined);
   }
 
   /**

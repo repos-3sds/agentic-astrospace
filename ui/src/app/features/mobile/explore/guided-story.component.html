@@ -12,7 +12,7 @@
   @if (loading()) {
     <section class="story-state"><b>Reading your life map</b><p>Building your story from your saved birth details.</p></section>
   } @else if (error()) {
-    <section class="story-state error" role="alert"><b>Story could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+    <as-generic-error role="alert" [message]="error()!" (retried)="retry()" />
   } @else if (!chart()) {
     <section class="story-state"><b>No active profile</b><p>Add birth details before opening your story.</p><a [routerLink]="['/m','birth-details']">Add birth details</a></section>
   } @else {

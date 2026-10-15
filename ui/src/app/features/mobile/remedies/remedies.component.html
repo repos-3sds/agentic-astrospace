@@ -20,7 +20,7 @@
   @if (loading()) {
     <section class="remedy-state"><b>Loading practices</b><p>Checking active periods, dignity, and traditional practice signals.</p></section>
   } @else if (error()) {
-    <section class="remedy-state error" role="alert"><b>Practices could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+    <as-generic-error role="alert" [message]="error()!" (retried)="retry()" />
   } @else if (!recommendations()) {
     <section class="remedy-state"><b>No active profile</b><p>Select a profile before opening traditional practices.</p></section>
   } @else if (!groups().length) {

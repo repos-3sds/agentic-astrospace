@@ -5,6 +5,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { PredictionClaim, Reading } from '../../../core/models';
 import { ReadingPeriod, ReadingService } from '../../../core/reading.service';
 import { MarkdownPipe } from '../../../shared/markdown.pipe';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 const PERIODS: Array<{ label: string; value: ReadingPeriod }> = [
   { label: 'Today', value: 'daily' },
@@ -17,7 +18,7 @@ const PERIODS: Array<{ label: string; value: ReadingPeriod }> = [
   selector: 'as-mobile-readings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, MarkdownPipe],
+  imports: [GenericErrorComponent, RouterLink, MarkdownPipe],
   template: `
     <a class="mrd-back" [routerLink]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
     <main class="mrd-body">
@@ -43,11 +44,7 @@ const PERIODS: Array<{ label: string; value: ReadingPeriod }> = [
           <p>Checking saved readings for {{ activeName() }}.</p>
         </section>
       } @else if (error()) {
-        <section class="mrd-state error" role="alert">
-          <b>Readings could not load</b>
-          <p>{{ error() }}</p>
-          <button type="button" (click)="reload()">Retry</button>
-        </section>
+        <as-generic-error role="alert" [message]="error()!" (retried)="reload()" />
       } @else if (!activeId()) {
         <section class="mrd-state">
           <b>No active profile</b>

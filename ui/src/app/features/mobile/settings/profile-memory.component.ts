@@ -56,7 +56,7 @@ export class ProfileMemoryComponent {
   );
 
   constructor() {
-    void this.kundlis.load();
+    void this.kundlis.load().catch(() => undefined);
     combineLatest((this.route.pathFromRoot ?? [this.route]).map(route => route.paramMap))
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       this.profileId.set([...params].reverse().find(p => p.has('id'))?.get('id') ?? '');

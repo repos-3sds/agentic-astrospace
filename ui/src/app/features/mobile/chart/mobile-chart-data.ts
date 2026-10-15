@@ -74,6 +74,26 @@ export interface ChartAdapterResult {
   provenance: { label: string; value: string }[];
 }
 
+/**
+ * A D1 chart assembled from the planet table when the payload carries no
+ * `vargas.D1` (older cached responses). `lagnaSign` is the profile's stored
+ * ascendant; the avkahada rashi is the fallback for that.
+ */
+export function rashiFallback(data: VedicAll, lagnaSign: string | null | undefined): VargaChart | null {
+  const sign = lagnaSign ?? data.avkahada?.['rashi'];
+  if (!sign) return null;
+  return {
+    name: 'Rāśi',
+    signifies: 'Birth chart',
+    verified_rule: true,
+    lagna: { sign },
+    planets: Object.fromEntries(Object.entries(data.planets ?? {}).map(([planet, row]) => [
+      planet,
+      { sign: row.sign, house: row.house, retrograde: row.retrograde },
+    ])),
+  };
+}
+
 export function buildChartAdapter(data: VedicAll, profile: Kundli | null, vargaId = 'D1'): ChartAdapterResult {
   const varga = data.vargas?.[vargaId] ?? null;
   const lagnaSign = varga?.lagna?.sign ?? profile?.ascendant ?? data.avkahada?.['rashi'] ?? '—';

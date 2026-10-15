@@ -7,7 +7,7 @@ import { VedicService } from '../../../core/vedic.service';
 import { DashaPayload, VargaChart, VedicAll, birthTimeIsApproximate } from '../../../core/models';
 import { BirthTimeBadgeComponent } from '../chart/birth-time-badge.component';
 import { KundliChartComponent, KundliChartStyle } from '../../../shared/kundli-chart/kundli-chart.component';
-import { buildChartAdapter } from '../chart/mobile-chart-data';
+import { buildChartAdapter, rashiFallback } from '../chart/mobile-chart-data';
 
 /**
  * Traditional, hedged one-line associations for the day's strongest
@@ -98,7 +98,7 @@ export class FirstInsightComponent {
   protected readonly practitionerChart = computed<VargaChart | null>(() => {
     const chart = this.chart();
     if (!chart) return null;
-    return chart.vargas?.['D1'] ?? this.rashiFallback(chart);
+    return chart.vargas?.['D1'] ?? rashiFallback(chart, this.kundlis.active()?.ascendant);
   });
 
   protected readonly birthConstants = computed(() => {
@@ -185,20 +185,6 @@ export class FirstInsightComponent {
     return this.profileLoadPromise;
   }
 
-  private rashiFallback(data: VedicAll): VargaChart | null {
-    const lagnaSign = this.kundlis.active()?.ascendant ?? data.avkahada?.['rashi'];
-    if (!lagnaSign) return null;
-    return {
-      name: 'Rāśi',
-      signifies: 'Birth chart',
-      verified_rule: true,
-      lagna: { sign: lagnaSign },
-      planets: Object.fromEntries(Object.entries(data.planets ?? {}).map(([planet, row]) => [
-        planet,
-        { sign: row.sign, house: row.house, retrograde: row.retrograde },
-      ])),
-    };
-  }
 
   private strengthPhrase(planet: string): string {
     const phrases: Record<string, string> = {

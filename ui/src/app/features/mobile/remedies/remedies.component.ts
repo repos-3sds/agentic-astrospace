@@ -8,6 +8,7 @@ import {
   VedicService,
 } from '../../../core/vedic.service';
 import { PreferencesService } from '../../../core/preferences.service';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 /** What kind of thing in the chart a remedy answers to. */
 export type RemedyTone = 'warn' | 'bad' | 'good';
@@ -37,7 +38,7 @@ export type RemedyTone = 'warn' | 'bad' | 'good';
   selector: 'as-remedies',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [GenericErrorComponent, RouterLink],
   templateUrl: './remedies.component.html',
   styleUrl: './remedies.component.scss',
 })

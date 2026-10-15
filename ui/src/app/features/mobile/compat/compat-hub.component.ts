@@ -2,12 +2,13 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 @Component({
   selector: 'as-compat-hub',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [GenericErrorComponent, RouterLink],
   template: `
     <a class="mco-back" [routerLink]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
     <main class="mco-body">
@@ -18,7 +19,7 @@ import { KundliStore } from '../../../core/kundli.store';
       @if (loading()) {
         <section class="mco-empty"><div aria-hidden="true">...</div><b>Loading profiles</b><p>Checking who can be compared.</p></section>
       } @else if (error()) {
-        <section class="mco-empty error" role="alert"><div aria-hidden="true">!</div><b>Profiles could not load</b><p>{{ error() }}</p><button type="button" (click)="reload()">Retry</button></section>
+        <as-generic-error role="alert" [message]="error()!" (retried)="reload()" />
       } @else if (!partners().length) {
         <section class="mco-empty"><div aria-hidden="true">♡</div><b>No checks yet</b><p>Add another profile to compute your first match.</p></section>
       } @else {

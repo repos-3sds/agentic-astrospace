@@ -4,11 +4,13 @@ import { BirthTimeBadgeComponent } from './birth-time-badge.component';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { ProvenanceSheetComponent } from './provenance-sheet.component';
 import { KundliChartComponent, KundliChartStyle } from '../../../shared/kundli-chart/kundli-chart.component';
+import { monthYear } from '../format-date';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
 import { DashaPayload, VargaChart, VedicAll } from '../../../core/models';
 import { VedicService } from '../../../core/vedic.service';
-import { buildChartAdapter } from './mobile-chart-data';
+import { buildChartAdapter, rashiFallback } from './mobile-chart-data';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 /** One of the three placements the hub leads with. */
 export interface AnglePoint {
@@ -57,7 +59,7 @@ interface YantraTile {
   selector: 'as-chart-hub',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [KundliChartComponent, ProfileSwitcherComponent, ProvenanceSheetComponent, RouterLink, BirthTimeBadgeComponent],
+  imports: [GenericErrorComponent, KundliChartComponent, ProfileSwitcherComponent, ProvenanceSheetComponent, RouterLink, BirthTimeBadgeComponent],
   templateUrl: './chart-hub.component.html',
   styleUrl: './chart-hub.component.scss',
 })
@@ -104,7 +106,7 @@ export class ChartHubComponent {
   readonly rashiChart = computed<VargaChart | null>(() => {
     const chart = this.chart();
     if (!chart) return null;
-    return chart.vargas?.['D1'] ?? this.rashiFallback(chart);
+    return chart.vargas?.['D1'] ?? rashiFallback(chart, this.kundlis.active()?.ascendant);
   });
   readonly provenanceRows = computed(() => this.adapter()?.provenance ?? []);
 
@@ -249,9 +251,9 @@ export class ChartHubComponent {
   protected readonly dashaTiming = computed(() => {
     const current = this.dashaData()?.current;
     const pratyantar = current?.pratyantardasha;
-    if (pratyantar?.end) return `${pratyantar.lord} Pratyantardasha until ${this.monthYear(pratyantar.end)}`;
+    if (pratyantar?.end) return `${pratyantar.lord} Pratyantardasha until ${monthYear(pratyantar.end)}`;
     const antar = current?.antardasha;
-    if (antar?.end) return `${antar.lord} Antardasha until ${this.monthYear(antar.end)}`;
+    if (antar?.end) return `${antar.lord} Antardasha until ${monthYear(antar.end)}`;
     return 'Active period stack from Vimshottari dasha';
   });
 
@@ -356,28 +358,5 @@ export class ChartHubComponent {
     return map[lord] ?? lord;
   }
 
-  private monthYear(value: string): string {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-  }
 
-  private rashiFallback(data: VedicAll): VargaChart | null {
-    const lagnaSign = this.kundlis.active()?.ascendant ?? data.avkahada?.['rashi'];
-    if (!lagnaSign) return null;
-    return {
-      name: 'Rāśi',
-      signifies: 'Birth chart',
-      verified_rule: true,
-      lagna: { sign: lagnaSign },
-      planets: Object.fromEntries(Object.entries(data.planets ?? {}).map(([planet, row]) => [
-        planet,
-        {
-          sign: row.sign,
-          house: row.house,
-          retrograde: row.retrograde,
-        },
-      ])),
-    };
-  }
 }

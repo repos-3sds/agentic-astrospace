@@ -3,10 +3,12 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 import { SIGN_ORDER } from '../../../core/glyphs';
+import { monthYear } from '../format-date';
 import { KundliStore } from '../../../core/kundli.store';
 import { AshtakavargaPayload, CharaDashaPayload, VedicAll, VimshopakaBalaPayload } from '../../../core/models';
 import { VedicService } from '../../../core/vedic.service';
 import { SIGN_SHORT } from './mobile-chart-data';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 type StrengthTab = 'shadbala' | 'ashtakavarga' | 'jaimini' | 'vimshopaka';
 
@@ -31,7 +33,7 @@ interface HouseBindu {
   selector: 'as-strength-advanced',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [GenericErrorComponent, RouterLink],
   templateUrl: './strength-advanced.component.html',
   styleUrl: './strength-advanced.component.scss',
 })
@@ -164,7 +166,7 @@ export class StrengthAdvancedComponent {
   readonly charaRows = computed(() => (this.charaDasha()?.mahadashas ?? []).map((period) => [
     period.sign_name,
     period.lord,
-    `${this.dateLabel(period.start)}–${this.dateLabel(period.end)}`,
+    `${monthYear(period.start)}–${monthYear(period.end)}`,
     period.active ? 'ACTIVE' : `${period.years}y`,
   ]));
   readonly activeChara = computed(() => {
@@ -262,9 +264,4 @@ export class StrengthAdvancedComponent {
     }
   }
 
-  private dateLabel(value: string): string {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value || '—';
-    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-  }
 }

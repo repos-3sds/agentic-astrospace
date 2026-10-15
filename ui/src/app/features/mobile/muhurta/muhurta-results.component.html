@@ -15,7 +15,7 @@
   @if (loading()) {
     <section class="muhurta-state"><b>Finding windows</b><p>Checking panchanga windows for your selected range.</p></section>
   } @else if (error()) {
-    <section class="muhurta-state error" role="alert"><b>Windows could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+    <as-generic-error role="alert" [message]="error()!" (retried)="retry()" />
   } @else if (searched() && !windows().length) {
     <section class="muhurta-state"><b>No windows cleared the bar</b><p>{{ note() || 'Widening the dates usually helps more than settling for a weak slot.' }}</p><a [routerLink]="['/m','muhurta']">Change search</a></section>
   } @else {

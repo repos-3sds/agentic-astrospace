@@ -14,10 +14,7 @@
   @if (loading()) {
     <p class="askhist-state" role="status">Loading your conversations…</p>
   } @else if (error()) {
-    <div class="askhist-state is-error" role="alert">
-      <p>{{ error() }}</p>
-      <button type="button" (click)="load()">Try again</button>
-    </div>
+    <as-generic-error role="alert" [message]="error()!" (retried)="load()" />
   } @else if (!threads().length) {
     <div class="askhist-empty">
       <p class="askhist-empty-title">{{ view() === 'archived' ? 'No archived conversations' : 'No past questions yet' }}</p>

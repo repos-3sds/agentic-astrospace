@@ -7,7 +7,7 @@
   @if (loading()) {
     <section class="varga-state"><b>Loading vargas</b><p>Computing divisional charts from the selected profile.</p></section>
   } @else if (error()) {
-    <section class="varga-state error" role="alert"><b>Vargas could not load</b><p>{{ error() }}</p><button type="button" (click)="retry()">Retry</button></section>
+    <as-generic-error role="alert" [message]="error()!" (retried)="retry()" />
   } @else if (!data()) {
     <section class="varga-state"><b>No active profile</b><p>Select a profile before opening divisional charts.</p><a [routerLink]="['/m','settings','profiles']">Manage profiles</a></section>
   } @else {

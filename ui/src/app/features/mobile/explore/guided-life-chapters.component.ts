@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
 import { DashaPayload, DashaPeriod } from '../../../core/models';
 import { VedicService } from '../../../core/vedic.service';
+import { GenericErrorComponent } from '../states/generic-error.component';
 
 interface TimelineItem {
   title: string;
@@ -31,7 +32,7 @@ interface ChapterInsight {
   selector: 'as-guided-life-chapters',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [GenericErrorComponent, RouterLink],
   templateUrl: './guided-life-chapters.component.html',
   styleUrl: './guided-life-chapters.component.scss',
 })

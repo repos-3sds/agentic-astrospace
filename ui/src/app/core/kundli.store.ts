@@ -11,6 +11,8 @@ export class KundliStore {
 
   readonly kundlis = signal<Kundli[]>([]);
   readonly loaded = signal(false);
+  /** Why the last profile load failed, for the shell to show; null while fine. */
+  readonly loadError = signal<string | null>(null);
   readonly activeId = signal<string | null>(null);
   readonly query = signal('');
 
@@ -61,12 +63,14 @@ export class KundliStore {
     this.kundlis.set([]);
     this.activeId.set(null);
     this.loaded.set(false);
+    this.loadError.set(null);
     this.loadPromise = null;
     this.query.set('');
     this.closeDialog();
   }
 
   private async loadOnce(): Promise<void> {
+    this.loadError.set(null);
     try {
       const kundlis = await this.api.get<Kundli[]>('/kundlis');
       this.kundlis.set(kundlis);
@@ -77,6 +81,7 @@ export class KundliStore {
       this.loaded.set(true);
     } catch (error) {
       this.loadPromise = null;
+      this.loadError.set((error as Error)?.message || 'Your profiles could not be loaded.');
       throw error;
     }
   }
