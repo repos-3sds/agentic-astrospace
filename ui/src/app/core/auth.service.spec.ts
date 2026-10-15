@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Session } from '@supabase/supabase-js';
 
 import { Preferences } from '@capacitor/preferences';
+import { ResourceCacheService } from './resource-cache.service';
 
 import { AuthService } from './auth.service';
 import { ConnectivityService } from './connectivity.service';
@@ -12,6 +13,10 @@ function connectivitySpy(): jasmine.SpyObj<ConnectivityService> {
     'noteRequestSuccess',
     'noteRequestFailure',
   ]);
+}
+
+function cacheSpy(): ResourceCacheService {
+  return jasmine.createSpyObj<ResourceCacheService>('ResourceCacheService', ['clearAll']);
 }
 
 /**
@@ -49,7 +54,7 @@ describe('AuthService native auth callback', () => {
     localStorage.removeItem(DESTINATION_KEY);
 
     router = jasmine.createSpyObj<Router>('Router', ['navigate', 'navigateByUrl']);
-    service = new AuthService(router, connectivitySpy());
+    service = new AuthService(router, connectivitySpy(), cacheSpy());
 
     client = {
       auth: {
@@ -186,7 +191,7 @@ describe('AuthService access-token resilience', () => {
 
   beforeEach(() => {
     router = jasmine.createSpyObj<Router>('Router', ['navigate', 'navigateByUrl']);
-    service = new AuthService(router, connectivitySpy());
+    service = new AuthService(router, connectivitySpy(), cacheSpy());
     service.enabled.set(true);
     (service as any).initPromise = Promise.resolve();
   });
@@ -254,7 +259,7 @@ describe('AuthService offline relaunch', () => {
   beforeEach(async () => {
     await Preferences.clear();
     router = jasmine.createSpyObj<Router>('Router', ['navigate', 'navigateByUrl']);
-    service = new AuthService(router, connectivitySpy());
+    service = new AuthService(router, connectivitySpy(), cacheSpy());
     getSession = jasmine.createSpy('getSession');
     spyOn(service as any, 'buildClient').and.returnValue({
       auth: { getSession, onAuthStateChange: jasmine.createSpy('onAuthStateChange') },
@@ -304,5 +309,22 @@ describe('AuthService offline relaunch', () => {
 
     await expectAsync(service.init()).toBeRejected();
     expect(service.session()).toBeNull();
+  });
+
+  it('wipes the encrypted cache on sign-out so the next account starts clean', async () => {
+    spyOn(window, 'fetch').and.resolveTo(new Response(JSON.stringify(config), { status: 200 }));
+    getSession.and.resolveTo({ data: { session: storedSession }, error: null });
+    const signOut = jasmine.createSpy('signOut').and.resolveTo({ error: null });
+    (service as any).buildClient.and.returnValue({
+      auth: { getSession, signOut, onAuthStateChange: jasmine.createSpy('onAuthStateChange') },
+    });
+    await service.init();
+
+    await service.signOut(['/m', 'start']);
+
+    expect(signOut).toHaveBeenCalledWith({ scope: 'local' });
+    expect(service.session()).toBeNull();
+    expect((service as any).cache.clearAll).toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenCalledWith(['/m', 'start']);
   });
 });

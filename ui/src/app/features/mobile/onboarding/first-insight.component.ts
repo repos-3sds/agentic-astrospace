@@ -4,7 +4,8 @@ import { RouterLink } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
-import { DashaPayload, VargaChart, VedicAll } from '../../../core/models';
+import { DashaPayload, VargaChart, VedicAll, birthTimeIsApproximate } from '../../../core/models';
+import { BirthTimeBadgeComponent } from '../chart/birth-time-badge.component';
 import { KundliChartComponent, KundliChartStyle } from '../../../shared/kundli-chart/kundli-chart.component';
 import { buildChartAdapter } from '../chart/mobile-chart-data';
 
@@ -38,7 +39,7 @@ const STRENGTH_ACTION: Record<string, string> = {
 @Component({
   selector: 'as-first-insight',
   standalone: true,
-  imports: [RouterLink, KundliChartComponent],
+  imports: [RouterLink, KundliChartComponent, BirthTimeBadgeComponent],
   templateUrl: './first-insight.component.html',
   styleUrl: './first-insight.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,7 +47,7 @@ const STRENGTH_ACTION: Record<string, string> = {
 })
 export class FirstInsightComponent {
   protected readonly preferences = inject(PreferencesService);
-  private readonly kundlis = inject(KundliStore);
+  protected readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
 
   protected readonly name = computed(() => this.kundlis.active()?.name ?? '');
@@ -67,7 +68,9 @@ export class FirstInsightComponent {
     const action = this.strengthAction();
     return {
       headline: 'Your cosmic guide is ready',
-      lede: 'We have calculated your unique cosmic footprint using your exact birth time. Let us start aligning your days with your natural rhythm.',
+      lede: birthTimeIsApproximate(this.kundlis.active())
+        ? 'We have calculated your cosmic footprint from an approximate birth time, so the rising sign and houses are our best estimate. Let us start aligning your days with your natural rhythm.'
+        : 'We have calculated your unique cosmic footprint using your exact birth time. Let us start aligning your days with your natural rhythm.',
       strength: strength
         ? `You have ${this.strengthPhrase(strength.planet)}`
         : 'Your personal strengths are ready to explore',

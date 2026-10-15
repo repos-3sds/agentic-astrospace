@@ -49,5 +49,10 @@
   </form>
 
   <p class="magic">Prefer no password? <button type="button" (click)="magicLink()">Email me a secure link</button></p>
-  <p class="terms">By continuing you agree to our Terms &amp; Privacy Policy.</p>
+  <p class="terms">
+    By continuing you agree to our
+    <a [href]="legalUrl('terms')" (click)="openLegal('terms', $event)">Terms of Service</a>
+    and
+    <a [href]="legalUrl('privacy')" (click)="openLegal('privacy', $event)">Privacy Policy</a>.
+  </p>
 </main>

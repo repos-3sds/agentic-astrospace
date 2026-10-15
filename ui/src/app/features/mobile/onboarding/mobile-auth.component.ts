@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
+import { legalUrl, openLegal } from '../../../core/legal';
 
 @Component({
   selector: 'as-mobile-auth',
@@ -27,6 +28,8 @@ export class MobileAuthComponent {
   protected readonly error = signal<string | null>(null);
   protected readonly notice = signal<string | null>(null);
   protected readonly showPassword = signal(false);
+  protected readonly legalUrl = legalUrl;
+  protected readonly openLegal = openLegal;
   protected name = '';
   protected email = '';
   protected password = '';

@@ -7,12 +7,21 @@ export interface PlanetPosition {
   retrograde?: boolean;
 }
 
+/**
+ * How far to trust birth_hour/birth_minute. 'approximate' is the reader's own
+ * admission; 'unknown' means nobody has the time and noon was used. Either
+ * can move the ascendant by a whole sign, so house- and dasha-derived screens
+ * flag it — see birthTimeIsApproximate().
+ */
+export type BirthTimeAccuracy = 'exact' | 'approximate' | 'unknown';
+
 export interface Kundli {
   id: string;
   user_id?: string;
   name: string;
   relation: string;
   notes?: string;
+  birth_time_accuracy?: BirthTimeAccuracy;
   sun_sign?: string;
   moon_sign?: string;
   ascendant?: string;
@@ -41,7 +50,22 @@ export interface KundliPayload {
   birth_minute: number;
   birth_city: string;
   birth_nation: string;
+  birth_time_accuracy?: BirthTimeAccuracy;
   notes?: string;
+}
+
+/**
+ * True when the chart was cast from a time the reader did not vouch for.
+ * Profiles saved before 2026-10-15 carried the flag only as the sentence
+ * "Birth time is approximate." in notes; honour those too rather than
+ * silently promoting them to exact.
+ */
+export function birthTimeIsApproximate(
+  profile: Pick<Kundli, 'birth_time_accuracy' | 'notes'> | null | undefined,
+): boolean {
+  if (!profile) return false;
+  if (profile.birth_time_accuracy) return profile.birth_time_accuracy !== 'exact';
+  return /birth time is approximate/i.test(profile.notes ?? '');
 }
 
 /* ── Vedic /all payload ─────────────────────────────────────────────── */

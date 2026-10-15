@@ -17,5 +17,5 @@ input { @include m-body; width: 100%; box-sizing: border-box; padding: 15px 18px
 .forgot { @include m-caption; align-self: flex-end; color: var(--m-accent-strong); text-decoration: none; }
 .continue { @include m-cta-primary; width: 100%; &:disabled { opacity: .65; } }
 .magic { @include m-body-small; margin: -4px 0 0; color: var(--m-muted); button { @include m-cta-tertiary; } }
-.terms { @include m-caption; margin: -12px 0 0; color: var(--m-muted); text-align: center; }
+.terms { @include m-caption; margin: -12px 0 0; color: var(--m-muted); text-align: center; a { color: var(--m-accent-strong); text-decoration: underline; text-underline-offset: 2px; } }
 .message { @include m-body-small; margin: -4px 0; color: var(--m-good); text-align: center; &.error { color: var(--m-bad); } }

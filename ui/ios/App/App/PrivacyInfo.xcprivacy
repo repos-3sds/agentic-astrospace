@@ -3,17 +3,17 @@
 <!--
   Privacy manifest for SIDDHA.
 
-  NSPrivacyAccessedAPITypes is deliberately EMPTY. A security audit predicted a
-  UserDefaults (CA92.1) declaration would be needed via Capacitor, but this
-  configuration loads only AppPlugin and CAPBrowserPlugin, and `UserDefaults`
-  appears nowhere in Capacitor's Swift sources or in this app's native code —
-  verified by grep, not assumed. Session state lives in WebView localStorage,
-  which is not a required-reason API. Declaring a reason for an API we do not
-  call would be a false statement in a document whose entire purpose is
-  accuracy.
-
-  If a plugin is added later — @capacitor/preferences is the likely one — this
-  file must gain the matching declaration. Check before shipping any new plugin.
+  Where things are stored, as of 2026-10-15:
+  - The Supabase session (access + refresh token) is in the Keychain via
+    capacitor-secure-storage-plugin (ui/src/app/core/session-storage.ts).
+    Keychain is not a required-reason API.
+  - @capacitor/preferences (the cached /auth/config, reader preferences) is
+    UserDefaults, which IS a required-reason API: the CA92.1 declaration below
+    covers it. Add a plugin that touches another listed API and this file must
+    gain its declaration before the next upload, or App Store Connect rejects
+    the build (ITMS-91053).
+  - Charts and guidance are cached in a SQLCipher database
+    (@capacitor-community/sqlite) under Library/CapacitorDatabase.
 
   Collection below matches what the backend actually stores: an account
   identity, and the birth details a chart is computed from. Nothing is used for
@@ -27,9 +27,20 @@
 	<key>NSPrivacyTrackingDomains</key>
 	<array/>
 
-	<!-- None. See the comment above; verified, not assumed. -->
+	<!-- @capacitor/preferences reads and writes UserDefaults. CA92.1: the app
+	     accesses only its own defaults (cached auth config, reader preferences),
+	     nothing shared across apps. -->
 	<key>NSPrivacyAccessedAPITypes</key>
-	<array/>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+	</array>
 
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array>

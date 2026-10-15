@@ -215,7 +215,7 @@ export class BirthDetailsComponent {
         birth_minute: minute,
         birth_city: place.city,
         birth_nation: place.nation,
-        notes: this.timeIsApproximate() ? 'Birth time is approximate.' : undefined,
+        birth_time_accuracy: this.timeIsApproximate() ? 'approximate' : 'exact',
       });
       this.kundlis.setActive(created.id);
       sessionStorage.removeItem('astrospace.onboardingName');

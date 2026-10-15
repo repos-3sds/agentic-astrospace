@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Supabase's session (including the refresh token) lives in the
-         WebView's localStorage, which Android Auto Backup would otherwise
-         copy to the user's Google account unencrypted. Do not re-enable
-         allowBackup without moving the session to Keystore-backed storage
-         first. -->
+    <!-- Supabase's session (including the refresh token) is kept in
+         Keystore-wrapped secure storage (capacitor-secure-storage-plugin, see
+         ui/src/app/core/session-storage.ts). Everything else the app persists
+         — the SQLCipher cache of charts and guidance, preferences, the cached
+         auth config — sits in the app's private files and SharedPreferences,
+         which Auto Backup would copy to the user's Google account. Keep
+         allowBackup off: a fresh install should start from the server, not
+         from a backup of someone else's readings. -->
     <application
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"

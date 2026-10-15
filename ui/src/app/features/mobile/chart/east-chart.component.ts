@@ -92,7 +92,11 @@ export interface PlanetSelection {
   styleUrl: './east-chart.component.scss',
   host: {
     '[class.is-full]': "size() === 'full'",
-    role: 'img',
+    // role="img" hides descendants from assistive tech, which is right for the
+    // static preview and wrong for the full render, whose planet <button>s
+    // are the only way to open the planet sheet. A group keeps the label and
+    // exposes the buttons.
+    '[attr.role]': "interactive() ? 'group' : 'img'",
     '[attr.aria-label]': 'label()',
   },
 })

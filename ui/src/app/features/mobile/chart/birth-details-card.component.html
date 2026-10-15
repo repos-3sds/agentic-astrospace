@@ -7,6 +7,7 @@
     <header class="bd-head">
       @if (personName()) { <h2>{{ personName() }}</h2> }
       <p class="bd-born">{{ born() }}</p>
+      <as-birth-time-badge [profile]="profile()" detail="Rising sign and houses are estimates." />
     </header>
 
     <ul class="bd-headline">

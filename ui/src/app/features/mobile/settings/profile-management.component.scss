@@ -1,7 +1,7 @@
 @use '../mobile-tokens' as *;
 
 :host { display: flex; flex-direction: column; min-height: 100%; background: var(--m-bg); color: var(--m-text); }
-.profiles-appbar { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; padding: 12px 20px; a:first-child { width: 36px; height: 36px; border: 1px solid var(--m-border); border-radius: 999px; display: grid; place-items: center; background: var(--m-surface); } img { width: 16px; height: 16px; } h1 { @include m-title; margin: 0; text-align: center; } .text-link { @include m-body-strong; color: var(--m-accent-strong); text-align: right; text-decoration: none; } }
+.profiles-appbar { display: grid; grid-template-columns: 52px 1fr 52px; align-items: center; padding: 12px 20px; a:first-child { width: 44px; height: 44px; border: 1px solid var(--m-border); border-radius: 999px; display: grid; place-items: center; background: var(--m-surface); } img { width: 16px; height: 16px; } h1 { @include m-title; margin: 0; text-align: center; } .text-link { @include m-body-strong; color: var(--m-accent-strong); text-align: right; text-decoration: none; } }
 .profiles-main { flex: 1; overflow: auto; padding: 12px 20px 18px; }
 .profiles-state { display: flex; flex-direction: column; gap: 8px; padding: 18px; border: 1px solid var(--m-border); border-radius: 20px; background: var(--m-surface); box-shadow: var(--m-shadow-card); b { @include m-body-strong; } p { @include m-body-small; margin: 0; color: var(--m-muted); } button, a { @include m-cta-primary; align-self: flex-start; min-height: 42px; } &.error { border-color: color-mix(in srgb, var(--m-bad) 45%, var(--m-border)); } }
 .profiles-list { display: flex; flex-direction: column; gap: 12px; }

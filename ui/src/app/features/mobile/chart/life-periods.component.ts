@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { BirthTimeBadgeComponent } from './birth-time-badge.component';
 import { KundliStore } from '../../../core/kundli.store';
 import { DashaPayload, DashaPeriod, YoginiDashaPayload, YoginiDashaPeriod } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
@@ -32,13 +33,13 @@ interface ActivePeriodInsight {
   selector: 'as-life-periods',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, BirthTimeBadgeComponent],
   templateUrl: './life-periods.component.html',
   styleUrl: './life-periods.component.scss',
 })
 export class LifePeriodsComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
-  private readonly kundlis = inject(KundliStore);
+  protected readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
   protected readonly preferences = inject(PreferencesService);
   protected readonly data = signal<DashaPayload | null>(null);

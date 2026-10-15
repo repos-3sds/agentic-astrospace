@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { BirthTimeBadgeComponent } from './birth-time-badge.component';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { ProvenanceSheetComponent } from './provenance-sheet.component';
 import { KundliChartComponent, KundliChartStyle } from '../../../shared/kundli-chart/kundli-chart.component';
@@ -56,12 +57,12 @@ interface YantraTile {
   selector: 'as-chart-hub',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [KundliChartComponent, ProfileSwitcherComponent, ProvenanceSheetComponent, RouterLink],
+  imports: [KundliChartComponent, ProfileSwitcherComponent, ProvenanceSheetComponent, RouterLink, BirthTimeBadgeComponent],
   templateUrl: './chart-hub.component.html',
   styleUrl: './chart-hub.component.scss',
 })
 export class ChartHubComponent {
-  private readonly kundlis = inject(KundliStore);
+  protected readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
   protected readonly preferences = inject(PreferencesService);
   protected readonly chart = signal<VedicAll | null>(null);
