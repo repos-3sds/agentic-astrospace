@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { AnalyticsService } from '../../../core/analytics.service';
 import { EntitlementService } from '../../../core/entitlement.service';
 import { HapticsService } from '../../../core/haptics.service';
 import { KundliStore } from '../../../core/kundli.store';
@@ -41,6 +42,7 @@ export class FamilyComponent {
   protected readonly kundlis = inject(KundliStore);
   private readonly entitlements = inject(EntitlementService);
   private readonly haptics = inject(HapticsService);
+  private readonly analytics = inject(AnalyticsService);
 
   protected readonly loading = signal(!this.kundlis.loaded());
   protected readonly error = signal<string | null>(null);
@@ -96,6 +98,7 @@ export class FamilyComponent {
     if (this.isActive(profile)) return;
     this.haptics.select();
     this.kundlis.setActive(profile.id);
+    this.analytics.track('profile_switched', { relation: normalizeProfileRelationship(profile.relation) });
   }
 
   private async load(): Promise<void> {

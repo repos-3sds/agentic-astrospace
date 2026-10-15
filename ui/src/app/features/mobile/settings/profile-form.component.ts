@@ -1,7 +1,10 @@
+import { Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
+import { AnalyticsService } from '../../../core/analytics.service';
+import { NavigationHistoryService } from '../../../core/navigation-history.service';
 import { Kundli, KundliPayload } from '../../../core/models';
 import { ChartComputingComponent } from '../states/chart-computing.component';
 import { BirthDetailsFormComponent } from '../shared/birth-details-form.component';
@@ -49,6 +52,9 @@ export class ProfileFormComponent {
   private readonly kundlis = inject(KundliStore);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
+  private readonly history = inject(NavigationHistoryService);
+  private readonly analytics = inject(AnalyticsService);
 
   protected readonly loading = signal(true);
   protected readonly loadError = signal<string | null>(null);
@@ -73,8 +79,12 @@ export class ProfileFormComponent {
         await this.kundlis.update(id, payload);
       } else {
         await this.kundlis.create(payload, { activate: false });
+        this.analytics.track('profile_added', { relation: payload.relation });
       }
-      await this.router.navigate(['/m', 'settings', 'profiles']);
+      // Back to wherever the form was opened from (Family or Settings ›
+      // Profiles), so saving does not drop the reader on a different tab.
+      if (this.history.canGoBack()) this.location.back();
+      else await this.router.navigate(['/m', 'settings', 'profiles']);
     } catch (error) {
       if (error instanceof EntitlementLimitError) this.limitDenial.set(error.denial);
       else this.error.set((error as Error).message);

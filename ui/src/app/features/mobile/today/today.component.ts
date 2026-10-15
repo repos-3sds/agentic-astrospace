@@ -16,6 +16,7 @@ import { VedicService } from '../../../core/vedic.service';
 import { ResourceFreshness } from '../../../core/resource-cache';
 import { DailyGuidancePayload, VedicAll, DailyActionRow, FestivalOccurrence } from '../../../core/models';
 import { FestivalSheetComponent } from '../calendar/festival-sheet.component';
+import { AnalyticsService } from '../../../core/analytics.service';
 import { TODAY_DRILL_DOWNS, whyDrillDowns } from '../why-reading/drill-downs';
 import { FestivalService } from '../../../core/festival.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
@@ -235,6 +236,7 @@ export class TodayComponent {
   protected readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
   private readonly festivals = inject(FestivalService);
+  private readonly analytics = inject(AnalyticsService);
   private readonly route = inject(ActivatedRoute);
   protected readonly preferences = inject(PreferencesService);
 
@@ -326,6 +328,7 @@ export class TodayComponent {
   protected showSheet(kind: 'quality' | 'why' | 'listen' | 'festival'): void {
     this.haptics.tap();
     this.openSheet.set(kind);
+    if (kind === 'why') this.analytics.track('why_opened', { surface: 'today' });
   }
 
   /** Audio language, chosen in the Listen sheet — see 23:25. */

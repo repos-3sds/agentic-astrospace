@@ -27,7 +27,7 @@
     <p class="eyebrow">SHOW ME WHY</p>
     <nav class="drills" aria-label="Show me why">
       @for (link of drillDowns(); track link.label; let last = $last) {
-        <a class="drill" [routerLink]="link.route" [queryParams]="link.queryParams ?? null" (click)="dismissed.emit()">
+        <a class="drill" [routerLink]="link.route" [queryParams]="link.queryParams ?? null" (click)="follow(link)">
           <span class="drill-text"><b>{{ link.label }}</b><small>{{ link.detail }}</small></span>
           <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
         </a>

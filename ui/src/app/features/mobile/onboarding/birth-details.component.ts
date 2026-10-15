@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { AnalyticsService } from '../../../core/analytics.service';
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { KundliPayload } from '../../../core/models';
@@ -63,6 +64,7 @@ export class BirthDetailsComponent {
   private readonly kundlis = inject(KundliStore);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly analytics = inject(AnalyticsService);
 
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
@@ -89,6 +91,7 @@ export class BirthDetailsComponent {
       const created = await this.kundlis.create({ ...payload, relation: 'self' });
       this.kundlis.setActive(created.id);
       localStorage.removeItem('astrospace.onboardingName');
+      this.analytics.track('onboarding_completed', { birth_time: payload.birth_time_accuracy ?? null });
       await this.router.navigate(['/m', 'insight']);
     } catch (error) {
       this.error.set((error as Error).message);

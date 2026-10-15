@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { AnalyticsService } from '../../../core/analytics.service';
 import { RouterLink } from '@angular/router';
 import { SheetComponent } from '../sheet/sheet.component';
 import { DrillDown } from './drill-downs';
@@ -57,6 +58,12 @@ export class WhyReadingSheetComponent {
   readonly conventions = input.required<string[]>();
   /** "Show me why": the chart screens this reading's evidence points at. */
   readonly drillDowns = input<DrillDown[]>([]);
+  private readonly analytics = inject(AnalyticsService);
+
+  protected follow(link: DrillDown): void {
+    this.analytics.track('why_drilldown', { to: link.route.join('/') });
+    this.dismissed.emit();
+  }
   readonly dismissed = output<void>();
   readonly learnTerms = output<void>();
 }

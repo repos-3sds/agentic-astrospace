@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import { AnalyticsService } from '../../../core/analytics.service';
 import { exportCalendarFile } from '../../../core/calendar-export';
 import { buildIcs } from '../../../core/ics';
 import { FestivalOccurrence } from '../../../core/models';
@@ -52,6 +53,7 @@ import { SheetComponent } from '../sheet/sheet.component';
 export class FestivalSheetComponent {
   readonly festival = input<FestivalOccurrence>(emptyFestival());
   readonly dismissed = output<void>();
+  private readonly analytics = inject(AnalyticsService);
   protected readonly exporting = signal(false);
   protected readonly exportFailed = signal(false);
 
@@ -72,6 +74,7 @@ export class FestivalSheetComponent {
         alarmAfterStartMinutes: 7 * 60,
       }]);
       await exportCalendarFile(ics, `${festival.slug}-${festival.occurs_on}.ics`, festival.name);
+      this.analytics.track('calendar_exported', { source: 'festival' });
     } catch {
       this.exportFailed.set(true);
     } finally {

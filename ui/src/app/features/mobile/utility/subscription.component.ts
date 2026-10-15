@@ -7,6 +7,7 @@ import { EntitlementService, EntitlementSnapshot, StoreProduct } from '../../../
 import { KundliStore } from '../../../core/kundli.store';
 import { openLegal } from '../../../core/legal';
 import { PurchaseService } from '../../../core/purchase.service';
+import { AnalyticsService } from '../../../core/analytics.service';
 import { BackBarComponent } from '../shared/back-bar.component';
 import { GenericErrorComponent } from '../states/generic-error.component';
 
@@ -42,6 +43,7 @@ export class SubscriptionComponent implements OnInit {
   private readonly kundlis = inject(KundliStore);
   private readonly route = inject(ActivatedRoute);
   protected readonly store = inject(PurchaseService);
+  private readonly analytics = inject(AnalyticsService);
 
   private readonly packsSection = viewChild<ElementRef<HTMLElement>>('packsAnchor');
 
@@ -98,6 +100,7 @@ export class SubscriptionComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    this.analytics.track('plans_viewed', { from: this.route.snapshot.queryParamMap.get('from') });
     void this.load();
   }
 

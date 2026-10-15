@@ -17,4 +17,5 @@ export const environment: AppEnvironment = {
   // swaps this to a LAN URL for local backend debugging.
   nativeApiOrigin: 'https://agentic-astrospace-cwuqybpnzq-el.a.run.app',
   revenueCat: { android: '', ios: '' },
+  posthog: { key: '', host: 'https://eu.i.posthog.com' },
 };

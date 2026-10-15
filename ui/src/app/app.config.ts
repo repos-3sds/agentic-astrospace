@@ -1,12 +1,15 @@
 import {
   ApplicationConfig,
+  DestroyRef,
+  ErrorHandler,
   inject,
   importProvidersFrom,
   provideBrowserGlobalErrorListeners,
   provideAppInitializer,
   provideZoneChangeDetection,
 } from '@angular/core';
-import { provideRouter, RouteReuseStrategy } from '@angular/router';
+import { provideRouter, RouteReuseStrategy, Router } from '@angular/router';
+import { AnalyticsService, ReportingErrorHandler } from './core/analytics.service';
 import { MobileRouteReuseStrategy } from './core/mobile-route-reuse-strategy';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
@@ -103,6 +106,8 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideAppInitializer(() => inject(ResourceCacheService).initialize()),
+    provideAppInitializer(() => inject(AnalyticsService).start(inject(Router), inject(DestroyRef))),
+    { provide: ErrorHandler, useClass: ReportingErrorHandler },
     provideZoneChangeDetection({ eventCoalescing: true }),
     { provide: RouteReuseStrategy, useClass: MobileRouteReuseStrategy },
     provideRouter(routes),

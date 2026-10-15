@@ -6,6 +6,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
 import { timingClockNote, timingPlaceLabel } from '../../../core/timing-place';
 import { buildIcs } from '../../../core/ics';
+import { AnalyticsService } from '../../../core/analytics.service';
 import { exportCalendarFile } from '../../../core/calendar-export';
 import { MuhurtaApiWindow, VedicService } from '../../../core/vedic.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
@@ -153,12 +154,15 @@ export class MuhurtaResultsComponent {
         alarmMinutes: 30,
       }]);
       await exportCalendarFile(ics, `muhurta-${w.startIso.slice(0, 10)}.ics`, `Muhurta: ${title}`);
+      this.analytics.track('calendar_exported', { source: 'muhurta' });
     } catch {
       this.exportFailed.set(w.rank);
     } finally {
       this.exporting.set(null);
     }
   }
+
+  private readonly analytics = inject(AnalyticsService);
 
   constructor() {
     void this.load();

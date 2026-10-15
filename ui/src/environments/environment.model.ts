@@ -24,4 +24,11 @@ export interface AppEnvironment {
    * button that cannot work.
    */
   revenueCat?: { android?: string; ios?: string };
+
+  /**
+   * PostHog project key and ingest host for usage events and crash reports
+   * (core/analytics.service.ts). The project key is write-only by design and
+   * safe to ship. Empty means nothing is sent.
+   */
+  posthog?: { key: string; host?: string };
 }
