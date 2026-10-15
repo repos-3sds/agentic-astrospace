@@ -1,21 +1,22 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
 import { Kundli, KundliPayload, PanchangaCity } from '../../../core/models';
 import { ChartComputingComponent } from '../states/chart-computing.component';
 import { BirthPlaceFieldComponent } from './birth-place-field.component';
 import { normalizeProfileRelationship, PROFILE_RELATIONSHIPS } from './profile-fields';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 @Component({
   selector: 'as-profile-form',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink, ChartComputingComponent, BirthPlaceFieldComponent],
+  imports: [BackLinkDirective, FormsModule, ChartComputingComponent, BirthPlaceFieldComponent],
   template: `
     <header class="profiles-appbar">
-      <a routerLink="/m/settings/profiles" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
+      <a asBack="/m/settings/profiles" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
       <h1>{{ editingId() ? 'Edit Profile' : 'Add Profile' }}</h1>
       <span></span>
     </header>

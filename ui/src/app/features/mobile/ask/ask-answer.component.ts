@@ -81,7 +81,7 @@ const REFER_OUT_KINDS = new Set(['death', 'health', 'legal', 'money']);
   selector: 'as-ask-answer',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AskComposerComponent, ListenSheetComponent, RouterLink, WhyReadingSheetComponent],
+  imports: [RouterLink, AskComposerComponent, ListenSheetComponent, WhyReadingSheetComponent],
   templateUrl: './ask-answer.component.html',
   styleUrl: './ask-answer.component.scss',
 })

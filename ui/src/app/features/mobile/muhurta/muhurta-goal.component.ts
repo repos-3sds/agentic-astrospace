@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { PreferencesService } from '../../../core/preferences.service';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /** One thing someone might be planning. */
 export interface MuhurtaGoal {
@@ -29,7 +30,7 @@ export type MuhurtaRange = 'week' | 'month' | 'custom';
   selector: 'as-muhurta-goal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [BackLinkDirective],
   templateUrl: './muhurta-goal.component.html',
   styleUrl: './muhurta-goal.component.scss',
 })

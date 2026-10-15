@@ -1,16 +1,17 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 @Component({
   selector: 'as-add-prospect',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink],
+  imports: [BackLinkDirective, FormsModule],
   template: `
-    <a class="mcof-back" [routerLink]="['/m','compat']"><img src="mobile/back.svg" alt="" /><span>Compatibility</span></a>
+    <a class="mcof-back" [asBack]="['/m','compat']"><img src="mobile/back.svg" alt="" /><span>Compatibility</span></a>
     <form class="mcof-form" (ngSubmit)="submit()">
       <header><h1>Add the person</h1><p>Create a saved profile, then compute the match from real chart data.</p></header>
       <label>NAME<span><img src="mobile/field-who.svg" alt="" /><input name="name" [(ngModel)]="name" autocomplete="name" /></span></label>

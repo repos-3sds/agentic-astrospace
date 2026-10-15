@@ -1,16 +1,16 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import {
   EntitlementCatalog,
   EntitlementService,
   EntitlementSnapshot,
 } from '../../../core/entitlement.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'as-subscription',
   standalone: true,
-  imports: [GenericErrorComponent, RouterLink],
+  imports: [RouterLink, GenericErrorComponent],
   template: `
     <header class="util-appbar">
       <a routerLink="/m/settings" aria-label="Back to settings">

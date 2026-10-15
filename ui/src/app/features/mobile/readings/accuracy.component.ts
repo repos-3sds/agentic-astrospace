@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
 import { PredictionClaim, PredictionClaimStatus } from '../../../core/models';
 import { ReadingService } from '../../../core/reading.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 const REVIEW_STATUSES: Array<{ label: string; status: PredictionClaimStatus; tone: string }> = [
   { label: 'accurate', status: 'accurate', tone: 'good' },
@@ -22,9 +22,9 @@ const COUNT_STATUSES: Array<{ label: string; status: PredictionClaimStatus; tone
   selector: 'as-reading-accuracy',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GenericErrorComponent, RouterLink],
+  imports: [BackLinkDirective, GenericErrorComponent],
   template: `
-    <a class="mra-back" [routerLink]="['/m','readings']"><img src="mobile/back.svg" alt="" /><span>Readings</span></a>
+    <a class="mra-back" [asBack]="['/m','readings']"><img src="mobile/back.svg" alt="" /><span>Readings</span></a>
     <main class="mra-body">
       <header><h1>Track record</h1><p>Only returned prediction claims are counted here.</p></header>
 

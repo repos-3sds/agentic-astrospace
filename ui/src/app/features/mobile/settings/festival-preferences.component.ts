@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { FestivalRegion, PreferencesService } from '../../../core/preferences.service';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 interface FestivalChoice {
   id: FestivalRegion;
@@ -12,7 +12,7 @@ interface FestivalChoice {
   selector: 'as-settings-festivals',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [BackLinkDirective],
   templateUrl: './festival-preferences.component.html',
   styleUrl: './festival-preferences.component.scss',
 })

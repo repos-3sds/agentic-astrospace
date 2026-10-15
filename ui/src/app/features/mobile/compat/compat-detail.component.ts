@@ -5,6 +5,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { CompatibilityPayload } from '../../../core/models';
 import { VedicService } from '../../../core/vedic.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /**
  * Full Compatibility Detail (Figma 215:805) — the eight-Koota breakdown,
@@ -21,7 +22,7 @@ import { GenericErrorComponent } from '../states/generic-error.component';
   selector: 'as-compat-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GenericErrorComponent, RouterLink],
+  imports: [BackLinkDirective, GenericErrorComponent, RouterLink],
   templateUrl: './compat-detail.component.html',
   styleUrl: './compat-detail.component.scss',
 })

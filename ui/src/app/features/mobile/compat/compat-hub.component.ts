@@ -3,14 +3,15 @@ import { RouterLink } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 @Component({
   selector: 'as-compat-hub',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GenericErrorComponent, RouterLink],
+  imports: [BackLinkDirective, GenericErrorComponent, RouterLink],
   template: `
-    <a class="mco-back" [routerLink]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
+    <a class="mco-back" [asBack]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
     <main class="mco-body">
       <header><h1>Compatibility</h1><p>Ashta Koota matching - 36 points, computed honestly</p></header>
       <section class="mco-how"><b>HOW THIS WORKS</b><p>We compare two saved birth profiles across the 8 classical kootas, flag doshas honestly, and show the computed base layer before any interpretation.</p></section>

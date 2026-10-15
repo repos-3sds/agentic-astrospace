@@ -6,14 +6,15 @@ import { CompatibilityPayload } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 @Component({
   selector: 'as-compat-results',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GenericErrorComponent, RouterLink],
+  imports: [BackLinkDirective, GenericErrorComponent, RouterLink],
   template: `
-    <a class="mcor-back" [routerLink]="['/m','compat']"><img src="mobile/back.svg" alt="" /><span>Compatibility</span></a>
+    <a class="mcor-back" [asBack]="['/m','compat']"><img src="mobile/back.svg" alt="" /><span>Compatibility</span></a>
     <main class="mcor-body">
       @if (loading()) {
         <section class="mcor-state"><b>Computing match</b><p>Calculating Gun Milan from both saved profiles.</p></section>

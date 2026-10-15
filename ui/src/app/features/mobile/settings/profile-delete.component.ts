@@ -4,15 +4,16 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 @Component({
   selector: 'as-profile-delete',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GenericErrorComponent, FormsModule, RouterLink],
+  imports: [BackLinkDirective, GenericErrorComponent, FormsModule, RouterLink],
   template: `
     <header class="profiles-appbar">
-      <a routerLink="/m/settings/profiles" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
+      <a asBack="/m/settings/profiles" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
       <h1>Delete Profile</h1>
       <span></span>
     </header>

@@ -8,6 +8,7 @@ import {
   VedicService,
 } from '../../../core/vedic.service';
 import { HapticsService } from '../../../core/haptics.service';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /**
  * Remedy detail — mantra tracker (Figma node 29:109).
@@ -31,7 +32,7 @@ import { HapticsService } from '../../../core/haptics.service';
   selector: 'as-mantra-tracker',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [BackLinkDirective, RouterLink],
   templateUrl: './mantra-tracker.component.html',
   styleUrl: './mantra-tracker.component.scss',
 })

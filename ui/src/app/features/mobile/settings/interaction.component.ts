@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { PreferencesService } from '../../../core/preferences.service';
 import { HapticsService } from '../../../core/haptics.service';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 @Component({
   selector: 'as-settings-interaction',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [BackLinkDirective],
   templateUrl: './interaction.component.html',
   styleUrl: './interaction.component.scss',
 })

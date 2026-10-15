@@ -9,6 +9,7 @@ import { AshtakavargaPayload, CharaDashaPayload, VedicAll, VimshopakaBalaPayload
 import { VedicService } from '../../../core/vedic.service';
 import { SIGN_SHORT } from './mobile-chart-data';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 type StrengthTab = 'shadbala' | 'ashtakavarga' | 'jaimini' | 'vimshopaka';
 
@@ -33,7 +34,7 @@ interface HouseBindu {
   selector: 'as-strength-advanced',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GenericErrorComponent, RouterLink],
+  imports: [BackLinkDirective, GenericErrorComponent, RouterLink],
   templateUrl: './strength-advanced.component.html',
   styleUrl: './strength-advanced.component.scss',
 })

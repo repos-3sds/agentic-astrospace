@@ -6,6 +6,7 @@ import { PredictionClaim, Reading } from '../../../core/models';
 import { ReadingPeriod, ReadingService } from '../../../core/reading.service';
 import { MarkdownPipe } from '../../../shared/markdown.pipe';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 const PERIODS: Array<{ label: string; value: ReadingPeriod }> = [
   { label: 'Today', value: 'daily' },
@@ -18,9 +19,9 @@ const PERIODS: Array<{ label: string; value: ReadingPeriod }> = [
   selector: 'as-mobile-readings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GenericErrorComponent, RouterLink, MarkdownPipe],
+  imports: [BackLinkDirective, GenericErrorComponent, RouterLink, MarkdownPipe],
   template: `
-    <a class="mrd-back" [routerLink]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
+    <a class="mrd-back" [asBack]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
     <main class="mrd-body">
       <header><h1>Readings</h1><p>Generated predictions and the claims you can review later.</p></header>
 

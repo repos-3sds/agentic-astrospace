@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SplashComponent } from '../../../shell/splash/splash.component';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 interface PromiseRow {
   icon: string;
@@ -19,7 +20,7 @@ interface PromiseRow {
   selector: 'as-welcome',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, SplashComponent],
+  imports: [BackLinkDirective, RouterLink, SplashComponent],
   templateUrl: './welcome.component.html',
   styleUrl: './welcome.component.scss',
   // Outside the shell, so the token host class must be applied here or every

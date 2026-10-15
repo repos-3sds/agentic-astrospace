@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /** One of the app's standing limits, and the tone it is stated in. */
 interface Vow {
@@ -31,10 +32,10 @@ interface Vow {
   selector: 'as-disclaimers',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [BackLinkDirective, RouterLink],
   template: `
     <header class="topbar">
-      <a class="back" [routerLink]="['/m', 'welcome']" aria-label="Back">
+      <a class="back" [asBack]="['/m', 'welcome']" aria-label="Back">
         <img src="mobile/back.svg" alt="" aria-hidden="true" />
       </a>
       <p class="step">SETUP 3 OF 6</p>

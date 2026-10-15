@@ -1,17 +1,18 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
 import { PanchangaCity, birthTimeIsApproximate } from '../../../core/models';
 import { ChartComputingComponent } from '../states/chart-computing.component';
 import { BirthPlaceFieldComponent } from './birth-place-field.component';
 import { normalizeProfileRelationship, PROFILE_RELATIONSHIPS } from './profile-fields';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 @Component({
   selector: 'as-edit-birth-details',
   standalone: true,
-  imports: [FormsModule, RouterLink, ChartComputingComponent, BirthPlaceFieldComponent],
+  imports: [BackLinkDirective, FormsModule, ChartComputingComponent, BirthPlaceFieldComponent],
   templateUrl: './edit-birth-details.component.html',
   styleUrl: './edit-birth-details.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

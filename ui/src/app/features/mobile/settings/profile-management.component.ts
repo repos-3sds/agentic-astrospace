@@ -4,15 +4,16 @@ import { RouterLink } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
 import { Kundli } from '../../../core/models';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 @Component({
   selector: 'as-profile-management',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GenericErrorComponent, RouterLink],
+  imports: [BackLinkDirective, GenericErrorComponent, RouterLink],
   template: `
     <header class="profiles-appbar">
-      <a routerLink="/m/settings" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
+      <a asBack="/m/settings" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
       <h1>Manage Profiles</h1>
       <a class="text-link" routerLink="/m/settings/profiles/new">Add</a>
     </header>

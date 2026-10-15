@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { combineLatest } from 'rxjs';
 import { ASK_NAVIGATION } from '../ask/ask-navigation';
 
@@ -14,13 +14,14 @@ import {
   ProfileFactInput,
   ProfileFactKey,
 } from '../../../core/profile-context.service';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 type EditorKind = ProfileFactKey;
 
 @Component({
   selector: 'as-profile-memory',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [BackLinkDirective, FormsModule],
   templateUrl: './profile-memory.component.html',
   styleUrl: './profile-memory.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

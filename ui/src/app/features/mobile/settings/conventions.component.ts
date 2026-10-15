@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import {
   DefaultAyanamsha,
   DefaultChartStyle,
@@ -7,6 +6,7 @@ import {
   PreferencesService,
 } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /** One selectable convention within a group. */
 export interface ConventionChoice {
@@ -44,7 +44,7 @@ export interface ConventionGroup {
   selector: 'as-settings-conventions',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [BackLinkDirective],
   templateUrl: './conventions.component.html',
   styleUrl: './conventions.component.scss',
 })

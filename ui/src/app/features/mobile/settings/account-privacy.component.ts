@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /**
  * Settings — Account & privacy (Figma node 69:180).
@@ -20,7 +21,7 @@ import { KundliStore } from '../../../core/kundli.store';
   selector: 'as-settings-account',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [BackLinkDirective, RouterLink],
   templateUrl: './account-privacy.component.html',
   styleUrl: './account-privacy.component.scss',
 })

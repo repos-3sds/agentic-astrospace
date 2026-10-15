@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { PanchangaCity } from '../../../core/models';
 import { PanchangaService } from '../../../core/panchanga.service';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /** A place the typeahead offers for the birth location. */
 type PlaceMatch = PanchangaCity;
@@ -40,11 +41,11 @@ export function registeredName(metadata: Record<string, unknown> | undefined | n
   selector: 'as-birth-details',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [BackLinkDirective],
   template: `
     <div class="top">
       <header class="topbar">
-        <a class="back" [routerLink]="['/m', 'customize']" aria-label="Back">
+        <a class="back" [asBack]="['/m', 'customize']" aria-label="Back">
           <img src="mobile/back.svg" alt="" aria-hidden="true" />
         </a>
         <p class="step">SETUP 6 OF 6</p>
