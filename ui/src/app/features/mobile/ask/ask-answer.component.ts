@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { ASK_NAVIGATION } from './ask-navigation';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AskComposerComponent } from './ask-composer.component';
 import { ListenSheetComponent } from '../today/listen-sheet.component';
 import {
@@ -88,7 +88,7 @@ const REFER_OUT_KINDS = new Set(['death', 'health', 'legal', 'money']);
   selector: 'as-ask-answer',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AskComposerComponent, ListenSheetComponent, WhyReadingSheetComponent, LockedStateComponent, BackLinkDirective],
+  imports: [RouterLink, AskComposerComponent, ListenSheetComponent, WhyReadingSheetComponent, LockedStateComponent, BackLinkDirective],
   templateUrl: './ask-answer.component.html',
   styleUrl: './ask-answer.component.scss',
 })
