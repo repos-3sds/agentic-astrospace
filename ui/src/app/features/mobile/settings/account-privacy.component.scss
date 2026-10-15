@@ -37,3 +37,33 @@
 .consequence { @include m-caption; color: var(--m-muted); margin: 0; }
 .status { @include m-caption; color: var(--m-good); margin: 0; }
 .status.error { color: var(--m-bad); }
+
+.action-label small { @include m-caption; display: block; margin-top: 2px; color: var(--m-muted); font-weight: 400; }
+.action img.is-open { transform: rotate(90deg); }
+
+// Change email, opened under its row.
+.email-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: -6px;
+  padding: 14px 15px;
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+  background: var(--m-surface);
+  label { @include m-caption; color: var(--m-muted); }
+  input {
+    @include m-body;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 48px;
+    padding: 0 14px;
+    border: 1.2px solid var(--m-border);
+    border-radius: 12px;
+    background: var(--m-bg);
+    color: var(--m-text);
+    &:focus { outline: 2px solid var(--m-accent); outline-offset: 0; }
+  }
+  .hint { @include m-caption; color: var(--m-muted); margin: 0; }
+  .send { @include m-cta-primary; width: 100%; &:disabled { opacity: .6; cursor: wait; } }
+}

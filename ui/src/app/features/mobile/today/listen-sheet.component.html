@@ -63,12 +63,12 @@
           <button
             class="lang"
             type="button"
-            [class.is-on]="lang.label === language()"
+            [class.is-on]="lang.label === currentLanguage()"
             [class.is-soon]="!lang.ready"
             [disabled]="!lang.ready"
-            [attr.aria-pressed]="lang.label === language()"
+            [attr.aria-pressed]="lang.label === currentLanguage()"
             [attr.aria-disabled]="!lang.ready"
-            (click)="lang.ready && languageChanged.emit(lang.label)"
+            (click)="lang.ready && chooseLanguage(lang.label)"
           >{{ lang.label }}</button>
         }
       </div>

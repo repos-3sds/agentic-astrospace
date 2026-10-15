@@ -280,6 +280,23 @@ export class AuthService {
     if (error) throw error;
   }
 
+  /**
+   * Ask Supabase to move the account to a new address. Nothing changes until
+   * the link in the confirmation email is opened (with secure email change on,
+   * the current address gets one too), so the caller says so rather than
+   * reporting the change as done. Flow audit 2026-10-15, item 4.6: the row
+   * used to open the sign-in screen instead.
+   */
+  async changeEmail(email: string, destination = '/m/settings/account'): Promise<void> {
+    await this.init();
+    if (!this.client) throw new Error('Email changes need a signed-in account.');
+    const { error } = await this.client.auth.updateUser(
+      { email },
+      { emailRedirectTo: this.authRedirect(destination) },
+    );
+    if (error) throw error;
+  }
+
   async signOut(destination?: string[]): Promise<void> {
     await this.init();
     if (this.client) {

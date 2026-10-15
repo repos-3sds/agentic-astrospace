@@ -85,3 +85,28 @@ async function waitFor<T>(probe: () => T | undefined): Promise<T> {
   }
   throw new Error('timed out');
 }
+
+describe('NaturalVoiceService.telugu', () => {
+  it('posts the sections once and reuses the answer', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: EntitlementService, useValue: jasmine.createSpyObj('EntitlementService', ['snapshot']) },
+        { provide: AuthService, useValue: { getAccessToken: () => Promise.resolve('token') } },
+      ],
+    });
+    const service = TestBed.inject(NaturalVoiceService);
+    const http = TestBed.inject(HttpTestingController);
+    const sections = [{ label: 'Opening', text: 'Namaste.' }];
+
+    const first = service.telugu(sections);
+    const request = await waitFor(() => http.match('/api/v1/voice/translate')[0]);
+    expect(request.request.body).toEqual({ sections, language: 'te' });
+    request.flush({ language: 'te', sections: [{ label: 'Opening', text: 'నమస్తే.' }] });
+    expect(await first).toEqual([{ label: 'Opening', text: 'నమస్తే.' }]);
+
+    expect(await service.telugu(sections)).toEqual([{ label: 'Opening', text: 'నమస్తే.' }]);
+    http.expectNone('/api/v1/voice/translate');
+  });
+});

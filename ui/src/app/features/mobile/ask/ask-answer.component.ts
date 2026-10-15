@@ -1179,7 +1179,7 @@ export class AskAnswerComponent {
       case 'verification_failed':
       case 'generation_failed':
       case 'fatal_error':
-        return 'GROUNDING';
+        return 'NOT ANSWERED';
       case 'context_unavailable':
         return 'CONTEXT';
       case 'stopped':
