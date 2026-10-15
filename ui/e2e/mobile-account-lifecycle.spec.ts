@@ -37,11 +37,15 @@ test('registers, creates the first chart, logs out, and restores it on return', 
       await route.fulfill({ status: 201, json: created });
       return;
     }
+    if (url.pathname === '/api/v1/panchanga/cities' && request.method() === 'GET') {
+      await route.fulfill({ json: [{ city: 'Vijayawada', nation: 'IN', timezone: 'Asia/Kolkata', lat: 16.5, lng: 80.65, label: 'Vijayawada, Andhra Pradesh, India' }] });
+      return;
+    }
     await route.fulfill({ status: 503, json: { detail: 'Unavailable in lifecycle fixture' } });
   });
 
   await page.goto('/m/start');
-  await page.getByRole('link', { name: 'Get started' }).click();
+  await page.getByRole('link', { name: 'Begin your path' }).click();
   await page.getByRole('textbox', { name: 'YOUR NAME' }).fill('Journey Test');
   await page.getByRole('textbox', { name: 'EMAIL' }).fill('journey@example.com');
   await page.getByRole('textbox', { name: /PASSWORD/ }).fill('Journey123!');
@@ -55,15 +59,20 @@ test('registers, creates the first chart, logs out, and restores it on return', 
   await page.getByRole('link', { name: 'I understand — continue' }).click();
   await expect(page).toHaveURL(/\/m\/persona$/);
   await page.getByRole('link', { name: 'Continue' }).click();
+  await expect(page).toHaveURL(/\/m\/customize$/);
+  await page.getByRole('link', { name: 'Continue' }).click();
 
   await expect(page).toHaveURL(/\/m\/birth-details$/);
   await expect(page.getByRole('textbox', { name: 'WHO IS THIS FOR?' })).toHaveValue(
     /Journey Test/,
   );
+  await page.getByLabel('DATE OF BIRTH').fill('1992-08-15');
+  await page.getByLabel('TIME OF BIRTH').fill('07:20');
   await page.getByRole('textbox', { name: 'PLACE OF BIRTH' }).fill('Vijayawada');
-  await page.getByRole('button', { name: 'Cast my chart' }).click();
+  await page.getByRole('option', { name: /Vijayawada/ }).click();
+  await page.getByRole('button', { name: 'Begin my guide' }).click();
   await expect(page).toHaveURL(/\/m\/insight$/);
-  await page.getByRole('link', { name: 'Continue to Today' }).click();
+  await page.getByRole('link', { name: /Continue to Today/ }).click();
   await expect(page).toHaveURL(/\/m\/today$/);
 
   await page.getByRole('link', { name: 'More' }).click();
@@ -71,7 +80,7 @@ test('registers, creates the first chart, logs out, and restores it on return', 
   await page.getByRole('button', { name: 'Sign out' }).click();
   await expect(page).toHaveURL(/\/m\/start$/);
 
-  await page.getByRole('link', { name: 'I already have a space' }).click();
+  await page.getByRole('link', { name: /I already walk with/ }).click();
   await page.getByRole('textbox', { name: 'EMAIL' }).fill('journey@example.com');
   await page.getByRole('textbox', { name: /PASSWORD/ }).fill('Journey123!');
   await page.getByRole('button', { name: 'Continue', exact: true }).click();

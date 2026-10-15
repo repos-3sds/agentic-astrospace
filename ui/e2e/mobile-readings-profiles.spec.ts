@@ -355,6 +355,44 @@ async function mockMobileApi(page: Page): Promise<{
     },
   };
 
+  const remediesPayload = {
+    count: 2,
+    note: null,
+    disclaimer: 'Traditional practice, not a guarantee.',
+    groups: [
+      {
+        recommendation_id: 'rec-saturn-dasha',
+        trigger: { kind: 'dasha', planet: 'Saturn', level: 'antardasha' },
+        reason_short: 'For your active Saturn period',
+        reason_practitioner: 'Saturn is active in the returned dasha stack (Moon → Saturn → Mercury).',
+        evidence: { lord: 'Saturn', level: 'antardasha' },
+        source_status: 'verified_common',
+        tradition_source: 'Traditional remedial practice',
+        convention_dependent: false,
+        safety_note: 'Traditional practice, not a guarantee.',
+        priority: 1,
+        practices: [
+          { practice_slug: 'shani-mantra', type: 'mantra', title: 'Shani beej mantra', instructions: 'Recite 108 times on Saturday morning.', cadence: 'weekly', target_count: 108, preferred_day: 'Saturday', optional_cost: false, planet: 'Saturn' },
+        ],
+      },
+      {
+        recommendation_id: 'rec-manglik',
+        trigger: { kind: 'dosha', dosha: 'manglik' },
+        reason_short: 'Manglik check',
+        reason_practitioner: 'Mars check returned by API.',
+        evidence: { active: false },
+        source_status: 'verified_common',
+        tradition_source: 'Traditional remedial practice',
+        convention_dependent: false,
+        safety_note: 'A dosha is a flag, not a verdict.',
+        priority: 2,
+        practices: [
+          { practice_slug: 'hanuman-prayer', type: 'deity', title: 'Hanuman prayer', instructions: 'A short prayer on Tuesday.', cadence: 'weekly', target_count: null, preferred_day: 'Tuesday', optional_cost: false, planet: 'Mars' },
+        ],
+      },
+    ],
+  };
+
   await page.route('**/api/v1/**', async (route: Route) => {
     const request = route.request();
     const url = new URL(request.url());
@@ -451,6 +489,51 @@ async function mockMobileApi(page: Page): Promise<{
       return;
     }
 
+    if (url.pathname === '/api/v1/festivals/upcoming' && request.method() === 'GET') {
+      await route.fulfill({ json: {
+        from_date: url.searchParams.get('from_date') ?? '2026-07-01',
+        to_date: '2026-08-31',
+        festivals: [
+          { slug: 'api-devshayani-ekadashi', name: 'API Devshayani Ekadashi', regions: ['pan-india'], description: 'Ekadashi fast returned by the festivals API.', occurs_on: '2026-07-29' },
+          { slug: 'api-raksha-bandhan', name: 'API Raksha Bandhan', regions: ['pan-india'], description: 'Sibling festival returned by the festivals API.', occurs_on: '2026-08-28' },
+        ],
+      } });
+      return;
+    }
+
+    if (url.pathname === '/api/v1/panchanga/cities' && request.method() === 'GET') {
+      await route.fulfill({ json: [{ city: 'Pune', nation: 'IN', timezone: 'Asia/Kolkata', lat: 18.52, lng: 73.86, label: 'Pune, Maharashtra, India' }] });
+      return;
+    }
+
+    if (url.pathname === '/api/v1/muhurta/profile-1' && request.method() === 'GET') {
+      await route.fulfill({ json: {
+        goal: url.searchParams.get('goal'),
+        goal_label: 'Sign a contract',
+        date_from: url.searchParams.get('date_from'),
+        date_to: url.searchParams.get('date_to'),
+        days_scanned: 7,
+        skipped_days: [],
+        count: 1,
+        note: null,
+        is_convention_dependent: true,
+        disclaimer: 'Muhurta windows are traditional timing guidance, not a guarantee.',
+        results: [{
+          date: '2026-07-29', window: 'Abhijit Muhurta', start: '12:05', end: '12:55',
+          start_iso: '2026-07-29T12:05:00+05:30', end_iso: '2026-07-29T12:55:00+05:30',
+          trimmed: false, duration_minutes: 50, score: 84, quality: 'best',
+          why: { supports: ['Abhijit Muhurta returned by the panchanga calculation'], against: [] },
+          vara: 'Budha', nakshatra: 'Rohini',
+        }],
+      } });
+      return;
+    }
+
+    if (url.pathname === '/api/v1/remedies/profile-1' && request.method() === 'GET') {
+      await route.fulfill({ json: remediesPayload });
+      return;
+    }
+
     if (url.pathname === '/api/v1/vedic/profile-1/calendar-intelligence' && request.method() === 'GET') {
       await route.fulfill({ json: calendarPayload });
       return;
@@ -531,13 +614,15 @@ test('mobile Notes and Readings avoid false persistence and load real claims', a
 
   await page.goto('/m/notes');
   await expect(page.getByText('Local draft', { exact: true })).toBeVisible();
-  await expect(page.getByText(/not synced to your AstroSpace account/)).toBeVisible();
+  await expect(page.getByText(/not synced to your Siddha account/)).toBeVisible();
   await expect(page.getByText(/Stored privately on your account/)).toHaveCount(0);
   await expect(page.getByText(/^Saved$/)).toHaveCount(0);
 
+  await expect(page.getByText('Saved on this device')).toBeVisible();
   await page.getByRole('textbox', { name: 'Local draft notes' }).fill('Temporary local note');
   await page.reload();
-  await expect(page.getByRole('textbox', { name: 'Local draft notes' })).toHaveValue('');
+  await expect(page.getByRole('textbox', { name: 'Local draft notes' })).toHaveValue('Temporary local note');
+  await expect(page.getByText(/stays on this device only/)).toBeVisible();
 
   await page.goto('/m/readings');
   await expect(page.getByText('Mercury week reading from the API.')).toBeVisible();
@@ -575,11 +660,11 @@ test('mobile profile management adds, edits, deletes and switches safely', async
 
   await page.getByRole('link', { name: 'Add' }).click();
   await page.getByRole('textbox', { name: 'NAME' }).fill('Mira Rao');
-  await page.getByRole('textbox', { name: 'RELATION' }).fill('child');
+  await page.getByLabel('RELATIONSHIP').selectOption('child');
   await page.getByLabel('DATE OF BIRTH').fill('2018-05-11');
   await page.getByLabel('TIME OF BIRTH').fill('06:45');
-  await page.getByRole('textbox', { name: 'PLACE OF BIRTH' }).fill('Pune');
-  await page.getByRole('textbox', { name: 'COUNTRY CODE' }).fill('IN');
+  await page.getByRole('searchbox', { name: 'PLACE OF BIRTH' }).fill('Pune');
+  await page.getByRole('option', { name: /Pune/ }).click();
   await page.getByRole('button', { name: 'Add Profile' }).click();
   await expect(page).toHaveURL(/\/m\/settings\/profiles$/);
   await expect(page.getByText('Mira Rao')).toBeVisible();
@@ -592,7 +677,7 @@ test('mobile profile management adds, edits, deletes and switches safely', async
 
   await page.goto('/m/settings/profiles/profile-3/delete');
   await expect(page.getByText('The active profile will switch to another available profile after deletion.')).toBeVisible();
-  await page.getByRole('textbox', { name: 'TYPE DELETE TO CONFIRM' }).fill('DELETE');
+  await page.getByRole('textbox', { name: 'TYPE MIRA IYER TO CONFIRM' }).fill('Mira Iyer');
   await page.getByRole('button', { name: 'Delete Profile' }).click();
   await expect(page).toHaveURL(/\/m\/settings\/profiles$/);
   await expect(page.getByText('Mira Iyer')).toHaveCount(0);
@@ -603,16 +688,17 @@ test('mobile calendar uses calendar-intelligence data for month and day views', 
   phoneOnly(testInfo.project.name);
   await page.setViewportSize({ width: 375, height: 812 });
   await mockMobileApi(page);
+  await page.clock.setFixedTime(new Date('2026-07-28T09:00:00+05:30'));
 
   await page.goto('/m/calendar');
-  await expect(page.getByText('July 2026')).toBeVisible();
-  await expect(page.getByText('API transit opening')).toBeVisible();
-  await expect(page.getByText('Mercury supports follow-up calls.')).toBeVisible();
+  await expect(page.getByText('July 2026', { exact: true })).toBeVisible();
+  await expect(page.getByText('API Devshayani Ekadashi')).toBeVisible();
+  await expect(page.getByText('Ekadashi fast returned by the festivals API.')).toBeVisible();
   await expect(page.getByText('Naga Panchami')).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Next month' }).click();
-  await expect(page.getByText('August 2026')).toBeVisible();
-  await expect(page.getByText('August focus')).toBeVisible();
+  await expect(page.getByText('August 2026', { exact: true })).toBeVisible();
+  await expect(page.getByText('API Raksha Bandhan')).toBeVisible();
 
   await page.goto('/m/calendar/day?date=2026-07-29');
   await expect(page.getByRole('heading', { name: 'Wednesday, July 29' })).toBeVisible();
@@ -666,25 +752,31 @@ test('mobile chart screens use endpoint-backed chart depth', async ({ page }, te
   await page.locator('.panel').press('Escape');
 
   await page.goto('/m/chart/full');
-  await page.getByRole('button', { name: /Su in Ar/ }).click();
+  await page.getByRole('button', { name: 'Sun', exact: true }).click();
   await expect(page.getByText('Sun in Aries')).toBeVisible();
   await expect(page.getByText(/computed from the selected profile rather than fixed example text/i)).toBeVisible();
   await page.locator('.panel').press('Escape');
   await page.getByRole('radio', { name: 'South' }).click();
-  await page.getByRole('button', { name: 'Me' }).click();
+  await page.getByRole('button', { name: 'Mercury', exact: true }).click();
   await expect(page.getByText('Mercury in Libra')).toBeVisible();
   await page.locator('.panel').press('Escape');
 
   await page.goto('/m/chart/vargas');
+  await expect(page.getByRole('figure', { name: 'Navamsha kundli chart' })).toBeVisible();
+  await page.getByRole('button', { name: 'Moon', exact: true }).click();
   await expect(page.getByText('D9 · Navamsha')).toBeVisible();
-  await expect(page.getByText('Moon in Taurus is vargottama in this chart.')).toBeVisible();
+  await expect(page.getByText(/It is also marked vargottama in this chart\./)).toBeVisible();
+  await page.locator('.panel').press('Escape');
   await page.getByRole('button', { name: 'D10' }).click();
+  await expect(page.getByRole('figure', { name: 'Dashamsha kundli chart' })).toBeVisible();
+  await page.getByRole('button', { name: 'Moon', exact: true }).click();
   await expect(page.getByText('D10 · Dashamsha')).toBeVisible();
-  await expect(page.getByText('Career and public work')).toBeVisible();
+  await expect(page.getByText(/used for career and public work/)).toBeVisible();
+  await page.locator('.panel').press('Escape');
 
   await page.goto('/m/chart/periods');
-  await expect(page.getByText('Moon → Saturn → Mercury')).toBeVisible();
-  await expect(page.getByText(/As of 2026-07-28/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Moon → Saturn → Mercury' })).toBeVisible();
+  await expect(page.getByText(/Active stack: Moon → Saturn → Mercury · Jul 28, 2026/)).toBeVisible();
   await page.getByRole('tab', { name: 'Yogini' }).click();
   await expect(page.getByRole('heading', { name: 'Dhanya' })).toBeVisible();
 
@@ -694,13 +786,13 @@ test('mobile chart screens use endpoint-backed chart depth', async ({ page }, te
   await expect(page.getByText('Gajakesari Yoga')).toHaveCount(0);
 
   await page.goto('/m/chart/strength');
-  await expect(page.getByText('Sun')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sun' })).toBeVisible();
   await expect(page.getByText('426 virupa · needs 360')).toBeVisible();
   await page.getByRole('button', { name: 'Ashtakavarga' }).click();
   await expect(page.getByText('327 total bindus')).toBeVisible();
   await page.getByRole('button', { name: 'Jaimini' }).click();
-  await expect(page.getByText('Atmakaraka')).toBeVisible();
-  await expect(page.getByText('Bhava Lagna')).toBeVisible();
+  await expect(page.getByText('Atmakaraka', { exact: true })).toBeVisible();
+  await expect(page.getByText('Bhava Lagna', { exact: true })).toBeVisible();
 });
 
 test('mobile remedies and muhurta use available backend-backed inputs honestly', async ({ page }, testInfo) => {
@@ -715,11 +807,13 @@ test('mobile remedies and muhurta use available backend-backed inputs honestly',
   await expect(page.getByText('Mars check returned by API.')).toBeVisible();
   await expect(page.getByText('For Saturn’s friction at work')).toHaveCount(0);
 
+  await page.clock.setFixedTime(new Date('2026-07-28T09:00:00+05:30'));
   await page.goto('/m/muhurta');
   await expect(page.getByText(/Using your current location/)).toHaveCount(0);
+  await page.getByRole('radio', { name: /Sign a contract/ }).click();
   await page.getByRole('radio', { name: 'This week' }).click();
   await page.getByRole('button', { name: 'Find windows' }).click();
-  await expect(page).toHaveURL(/\/m\/muhurta\/results\?goal=contract&range=week$/);
+  await expect(page).toHaveURL(/\/m\/muhurta\/results\?goal=sign_contract&range=week&date_from=2026-07-28&date_to=2026-08-03$/);
   await expect(page.getByText('Wednesday, July 29')).toBeVisible();
   await expect(page.getByText('12:05 – 12:55')).toBeVisible();
   await expect(page.getByText(/Abhijit Muhurta returned by the panchanga calculation/)).toBeVisible();
@@ -734,7 +828,7 @@ test('mobile notification platform states are explicit and retryable', async ({ 
   await mockMobileApi(page);
 
   await page.goto('/m/settings/notifications');
-  await expect(page.getByText(/Notification choices persist on this device/)).toBeVisible();
+  await expect(page.getByText(/They persist on this device/)).toBeVisible();
   await page.getByRole('switch', { name: 'Morning brief' }).click();
   await page.reload();
   await expect(page.getByRole('switch', { name: 'Morning brief' })).toHaveAttribute('aria-checked', 'false');
@@ -755,7 +849,7 @@ test('mobile persona modes change navigation and presentation depth', async ({ p
   await page.goto('/m/settings/mode');
   await page.getByRole('radio', { name: /Guided/ }).click();
   await page.goto('/m/ask');
-  await expect(page.getByText('What to do')).toBeVisible();
+  await expect(page.getByText('Explore')).toBeVisible();
   await expect(page.getByText('Chart', { exact: true })).toHaveCount(0);
   await expect(page.getByText('Ask in plain language.')).toBeVisible();
   await expect(page.getByRole('button', { name: /Money/ })).toHaveCount(0);
@@ -763,9 +857,11 @@ test('mobile persona modes change navigation and presentation depth', async ({ p
 
   await page.goto('/m/settings/mode');
   await page.getByRole('radio', { name: /Practitioner/ }).click();
+  await page.goto('/m/today');
+  await expect(page.locator('nav[aria-label="Primary"]').getByText('Yantra')).toBeVisible();
+  await expect(page.locator('nav[aria-label="Primary"]').getByText('Dashas')).toBeVisible();
   await page.goto('/m/ask');
-  await expect(page.getByText('Periods')).toBeVisible();
-  await expect(page.getByText('Transits')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Back to Yantra' })).toBeVisible();
   await expect(page.getByText('Ask', { exact: true })).toHaveCount(1);
   await expect(page.getByText('Ask with chart context.')).toBeVisible();
   await expect(page.getByText('Technical depth')).toBeVisible();

@@ -81,7 +81,7 @@ for (const width of [1280, 390, 2560]) {
     await expect(host.getByRole('region', { name: 'Save profile memory' })).toBeVisible();
     await host.getByRole('button', { name: 'Copy Answer', exact: true }).click();
     await expect(host.getByRole('button', { name: 'Copied', exact: true })).toBeVisible();
-    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('SIDDHA · STRUCTURED READING');
+    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('SIDDHA · Your way of life guide');
     await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('PROVENANCE');
     const downloadPromise = page.waitForEvent('download');
     await host.getByRole('button', { name: 'Download PDF', exact: true }).click();
@@ -99,6 +99,7 @@ for (const width of [1280, 390, 2560]) {
     await expect(host.locator('.answer').last()).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
     await page.screenshot({ path: `/tmp/web-ask-answer-dark-${width}.png`, fullPage: true, animations: 'disabled' });
     await page.evaluate(() => document.documentElement.classList.remove('app-dark'));
+    await host.locator('as-ask-composer').scrollIntoViewIfNeeded();
     const composer = await host.locator('as-ask-composer').boundingBox();
     const bottomNav = await page.locator('.mobile-bottom-nav').boundingBox();
     if (bottomNav && composer) expect(composer.y + composer.height).toBeLessThanOrEqual(bottomNav.y);
@@ -107,7 +108,7 @@ for (const width of [1280, 390, 2560]) {
     await expect.poll(() => requests.length).toBe(2);
     expect(requests[1].thread_id).toBe('thread-a');
     if (width <= 1100) await host.getByRole('button', { name: 'Toggle conversations' }).click();
-    await host.getByRole('link', { name: 'History', exact: true }).click();
+    await host.getByRole('link', { name: 'View all history', exact: true }).click();
     await host.getByRole('button', { name: 'Conversation actions' }).click();
     await host.getByRole('button', { name: 'Archive', exact: true }).click();
     await host.getByRole('tab', { name: 'Archived', exact: true }).click();
@@ -115,7 +116,7 @@ for (const width of [1280, 390, 2560]) {
     await expect(host.getByRole('button', { name: 'Restore', exact: true })).toBeVisible();
     expect(requests.length).toBe(2);
     if (width <= 1100) await host.getByRole('button', { name: 'Toggle conversations' }).click();
-    await host.getByRole('link', { name: 'Memory', exact: true }).click();
+    await host.getByRole('link', { name: 'What Siddha remembers', exact: true }).click();
     await expect(host.getByRole('heading', { name: 'What Siddha remembers' })).toBeVisible();
     await expect(host.getByText('Nothing remembered yet')).toBeVisible();
     await page.screenshot({ path: `/tmp/web-ask-memory-${width}.png`, fullPage: true });
