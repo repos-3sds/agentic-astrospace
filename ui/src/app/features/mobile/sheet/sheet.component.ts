@@ -1,5 +1,6 @@
 import {
   AfterViewInit,
+  AnimationCallbackEvent,
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
@@ -10,6 +11,14 @@ import {
   viewChild,
 } from '@angular/core';
 import { SheetOverlayService } from '../../../core/sheet-overlay.service';
+
+/** How far (px) a drag must travel before release dismisses, at most. */
+const DISMISS_DISTANCE = 120;
+/** A flick faster than this (px/ms) dismisses whatever the distance. */
+const DISMISS_VELOCITY = 0.5;
+/** Mirrors --m-dur-slow; the fallback if transitionend never fires. */
+const LEAVE_MS = 320;
+const SCRIM_OPACITY = 0.38;
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), ' +
@@ -36,13 +45,22 @@ let nextTitleId = 0;
  * - the dialog is named by its first heading via aria-labelledby, or by
  *   `label` when a consumer has no heading;
  * - a visible 44 px Close button sits in the handle row.
+ *
+ * Motion, also done here once:
+ * - the handle row and any projected <header> drag the panel; release past
+ *   DISMISS_DISTANCE (or a downward flick) dismisses, otherwise it springs
+ *   back;
+ * - every dismissal — including a consumer's own @if turning false — slides
+ *   the panel out and fades the scrim through `animate.leave`, instead of
+ *   the sheet vanishing in one frame;
+ * - scrolling inside the panel never chains to the page behind it.
  */
 @Component({
   selector: 'as-sheet',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="scrim" (click)="dismissed.emit()" aria-hidden="true"></div>
+    <div #scrim class="scrim" (click)="dismissed.emit()" aria-hidden="true"></div>
     <div
       #panel
       class="panel"
@@ -52,6 +70,10 @@ let nextTitleId = 0;
       (keydown.escape)="dismissed.emit()"
       (keydown.tab)="trapTab($event)"
       (keydown.shift.tab)="trapTab($event)"
+      (pointerdown)="dragStart($event)"
+      (pointermove)="dragMove($event)"
+      (pointerup)="dragEnd($event)"
+      (pointercancel)="dragCancel()"
       tabindex="-1"
     >
       <div class="handle-row">
@@ -66,6 +88,9 @@ let nextTitleId = 0;
     </div>
   `,
   styleUrl: './sheet.component.scss',
+  host: {
+    '(animate.leave)': 'leave($event)',
+  },
 })
 export class SheetComponent implements AfterViewInit {
   readonly dismissed = output<void>();
@@ -73,7 +98,9 @@ export class SheetComponent implements AfterViewInit {
   readonly label = input('Details');
 
   private readonly panel = viewChild.required<ElementRef<HTMLElement>>('panel');
+  private readonly scrim = viewChild.required<ElementRef<HTMLElement>>('scrim');
   private opener: HTMLElement | null = null;
+  private drag: { id: number; startY: number; dy: number; lastY: number; lastT: number; velocity: number } | null = null;
 
   constructor() {
     const overlay = inject(SheetOverlayService);
@@ -96,6 +123,105 @@ export class SheetComponent implements AfterViewInit {
     // reader then announces the dialog's name first, and a sighted keyboard
     // user's first Tab lands on Close, which is the right first stop.
     panel.focus({ preventScroll: true });
+  }
+
+  /** A drag starts only on the handle row or a projected header, never on a control. */
+  protected dragStart(event: PointerEvent): void {
+    if (event.button !== 0 || this.drag) return;
+    const panel = this.panel().nativeElement;
+    const target = event.target as HTMLElement | null;
+    if (!target || target.closest('button, a, input, textarea, select, [role="button"]')) return;
+    const zone = target.closest('.handle-row, header');
+    if (!zone || !panel.contains(zone)) return;
+    this.drag = { id: event.pointerId, startY: event.clientY, dy: 0, lastY: event.clientY, lastT: event.timeStamp, velocity: 0 };
+    // Capture keeps the moves coming once the finger leaves the header. It
+    // throws for a pointer the browser no longer tracks; the drag still works.
+    try { panel.setPointerCapture(event.pointerId); } catch { /* see above */ }
+    panel.classList.add('is-dragging');
+  }
+
+  protected dragMove(event: PointerEvent): void {
+    const drag = this.drag;
+    if (!drag || event.pointerId !== drag.id) return;
+    const raw = event.clientY - drag.startY;
+    // Down follows the finger; up resists, so the panel can't be pulled off its edge.
+    drag.dy = raw > 0 ? raw : raw / 6;
+    const dt = event.timeStamp - drag.lastT;
+    // Moves arrive about once a frame; two closer than 4 ms say nothing
+    // reliable about speed.
+    if (dt > 4) drag.velocity = (event.clientY - drag.lastY) / dt;
+    drag.lastY = event.clientY;
+    drag.lastT = event.timeStamp;
+    const panel = this.panel().nativeElement;
+    panel.style.transform = `translateY(${drag.dy}px)`;
+    const progress = Math.max(0, Math.min(1, drag.dy / Math.max(panel.offsetHeight, 1)));
+    this.scrim().nativeElement.style.opacity = String(SCRIM_OPACITY * (1 - progress));
+  }
+
+  protected dragEnd(event: PointerEvent): void {
+    const drag = this.drag;
+    if (!drag || event.pointerId !== drag.id) return;
+    this.drag = null;
+    const panel = this.panel().nativeElement;
+    panel.classList.remove('is-dragging');
+    try { panel.releasePointerCapture(event.pointerId); } catch { /* not captured */ }
+    const threshold = Math.min(DISMISS_DISTANCE, panel.offsetHeight * 0.3);
+    if (drag.dy > threshold || (drag.dy > 12 && drag.velocity > DISMISS_VELOCITY)) {
+      this.dismissed.emit();
+    } else {
+      this.springBack();
+    }
+  }
+
+  protected dragCancel(): void {
+    if (!this.drag) return;
+    this.drag = null;
+    this.panel().nativeElement.classList.remove('is-dragging');
+    this.springBack();
+  }
+
+  /**
+   * `animate.leave` on the host: Angular keeps the element until
+   * animationComplete(), so the slide-out runs whichever path removed the
+   * sheet. It starts from wherever a drag left the panel.
+   */
+  protected leave(event: AnimationCallbackEvent): void {
+    const panel = this.panel().nativeElement;
+    const scrim = this.scrim().nativeElement;
+    const reduced = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reduced || !panel.isConnected) {
+      event.animationComplete();
+      return;
+    }
+    (event.target as HTMLElement).classList.add('is-leaving');
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      panel.removeEventListener('transitionend', onEnd);
+      event.animationComplete();
+    };
+    const onEnd = (e: TransitionEvent) => {
+      if (e.target === panel && e.propertyName === 'transform') finish();
+    };
+    const timer = setTimeout(finish, LEAVE_MS + 80);
+    panel.addEventListener('transitionend', onEnd);
+    // Pin the current position (mid-drag or at rest) before transitioning out.
+    const current = getComputedStyle(panel).transform;
+    panel.style.animation = 'none';
+    panel.style.transform = current === 'none' ? 'translateY(0)' : current;
+    scrim.style.animation = 'none';
+    scrim.style.opacity = getComputedStyle(scrim).opacity;
+    void panel.offsetHeight;
+    panel.style.transform = 'translateY(100%)';
+    scrim.style.opacity = '0';
+  }
+
+  private springBack(): void {
+    const panel = this.panel().nativeElement;
+    panel.style.transform = '';
+    this.scrim().nativeElement.style.opacity = '';
   }
 
   protected trapTab(event: Event): void {

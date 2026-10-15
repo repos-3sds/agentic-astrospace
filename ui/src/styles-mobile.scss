@@ -267,3 +267,9 @@ body.as-keyboard-open as-mobile-shell > .shell > .content {
   padding-bottom: max(8px, var(--m-safe-bottom));
   scroll-padding-bottom: max(8px, var(--m-safe-bottom));
 }
+
+// A sheet's projected header is a drag-to-dismiss zone (SheetComponent). It is
+// projected content, so the sheet's own encapsulated styles cannot reach it.
+as-sheet header {
+  touch-action: none;
+}
