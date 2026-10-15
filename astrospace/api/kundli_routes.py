@@ -101,6 +101,17 @@ def _with_chart_fields(data: dict) -> dict:
 
 @router.post("", status_code=201)
 def create_kundli(body: KundliCreate, user: CurrentUser, db: Session = Depends(get_db)):
+    # One "self" per account. Re-entering onboarding used to mint a second
+    # "My chart · self", which then surfaced in Compatibility as a partner
+    # of itself; the client redirects, this makes the rule hold for every
+    # client. 409 with a sentence the apps show as-is.
+    if body.relation.strip().lower() == "self" and any(
+        (k.relation or "").strip().lower() == "self" for k in crud.list_kundlis(db, user.id)
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail="A profile for yourself already exists. Edit it instead of adding another.",
+        )
     data = _with_chart_fields(body.model_dump())
     data["user_id"] = user.id
     k = crud.create_kundli(db, data)

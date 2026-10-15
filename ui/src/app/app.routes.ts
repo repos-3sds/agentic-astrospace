@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth.guard';
 import { adminGuard } from './core/admin.guard';
 import { nativeAppGuard } from './core/native-app.guard';
+import { onboardedRedirectGuard } from './core/onboarding.guard';
 import { mobileAuthGuard } from './core/mobile-auth.guard';
 import { MOBILE_ROUTES } from './features/mobile/mobile.routes';
 
@@ -173,7 +174,7 @@ export const routes: Routes = [
   // would otherwise swallow every path under /m and redirect it to today.
   {
     path: 'm/start',
-    canActivate: [nativeAppGuard],
+    canActivate: [nativeAppGuard, onboardedRedirectGuard],
     loadComponent: () =>
       import('./features/mobile/onboarding/landing.component').then((m) => m.LandingComponent),
   },
@@ -203,19 +204,19 @@ export const routes: Routes = [
   },
   {
     path: 'm/language',
-    canActivate: [nativeAppGuard],
+    canActivate: [nativeAppGuard, onboardedRedirectGuard],
     loadComponent: () =>
       import('./features/mobile/onboarding/language.component').then((m) => m.LanguageComponent),
   },
   {
     path: 'm/welcome',
-    canActivate: [nativeAppGuard],
+    canActivate: [nativeAppGuard, onboardedRedirectGuard],
     loadComponent: () =>
       import('./features/mobile/onboarding/welcome.component').then((m) => m.WelcomeComponent),
   },
   {
     path: 'm/disclaimers',
-    canActivate: [nativeAppGuard],
+    canActivate: [nativeAppGuard, onboardedRedirectGuard],
     loadComponent: () =>
       import('./features/mobile/onboarding/disclaimers.component').then(
         (m) => m.DisclaimersComponent,
@@ -223,13 +224,13 @@ export const routes: Routes = [
   },
   {
     path: 'm/persona',
-    canActivate: [nativeAppGuard],
+    canActivate: [nativeAppGuard, onboardedRedirectGuard],
     loadComponent: () =>
       import('./features/mobile/onboarding/persona.component').then((m) => m.PersonaComponent),
   },
   {
     path: 'm/customize',
-    canActivate: [nativeAppGuard],
+    canActivate: [nativeAppGuard, onboardedRedirectGuard],
     loadComponent: () =>
       import('./features/mobile/onboarding/customize.component').then(
         (m) => m.CustomizeComponent,
@@ -237,7 +238,7 @@ export const routes: Routes = [
   },
   {
     path: 'm/birth-details',
-    canActivate: [nativeAppGuard],
+    canActivate: [nativeAppGuard, onboardedRedirectGuard],
     loadComponent: () =>
       import('./features/mobile/onboarding/birth-details.component').then(
         (m) => m.BirthDetailsComponent,

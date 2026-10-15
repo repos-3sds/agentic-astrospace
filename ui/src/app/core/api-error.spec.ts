@@ -16,6 +16,7 @@ describe('friendlyApiMessage', () => {
     expect(friendlyApiMessage(404, 'Kundli not found')).not.toContain('Kundli');
     expect(friendlyApiMessage(0, '')).toContain('connection');
     expect(friendlyApiMessage(401, 'Not authenticated')).toContain('sign in');
+    expect(friendlyApiMessage(409, 'A profile for yourself already exists.')).toContain('profile for yourself');
   });
 
   it('keeps the raw detail on the error for diagnostics', () => {
