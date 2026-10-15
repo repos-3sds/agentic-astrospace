@@ -73,8 +73,9 @@
 }
 
 .choice.is-on {
-  border: 1.5px solid var(--m-accent-strong);
+  border: 2px solid var(--m-accent);
   background: var(--m-accent-soft);
+  box-shadow: var(--m-shadow-card);
 }
 
 .choice-left {
@@ -99,11 +100,18 @@
   color: var(--m-muted);
 }
 
-.choice-tick {
-  width: 18px;
-  height: 18px;
-  display: block;
-  flex: 0 0 auto;
+.radio { width: 24px; height: 24px; display: block; flex-shrink: 0; }
+
+.tick {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--m-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  img { width: 14px; height: 14px; display: block; }
 }
 
 .note {
