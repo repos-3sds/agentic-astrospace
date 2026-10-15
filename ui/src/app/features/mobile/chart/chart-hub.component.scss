@@ -137,7 +137,7 @@
 }
 
 .body[data-mode='practitioner'] {
-  min-height: calc(100dvh - var(--m-tabbar-total, 96px));
+  min-height: calc(100dvh - var(--m-tabbar-total) - max(18px, var(--m-safe-bottom)));
   background: var(--yantra-bg);
 }
 

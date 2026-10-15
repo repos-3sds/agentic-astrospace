@@ -134,6 +134,14 @@
   cursor: pointer;
 }
 
+// Frosted-glass recipe shared by the sheet, the tab bar, the Ask composer and
+// the Today cards. One place to tune the blur, and the -webkit- twin that iOS
+// WebKit still needs can't be forgotten at a call site.
+@mixin m-glass($blur: 10px, $saturate: 1.08) {
+  -webkit-backdrop-filter: blur($blur) saturate($saturate);
+  backdrop-filter: blur($blur) saturate($saturate);
+}
+
 // 44 px is the WCAG 2.5.5 / Apple HIG minimum target; pass a smaller size only
 // for a non-interactive glyph.
 @mixin m-icon-button($size: 44px) {
