@@ -52,6 +52,11 @@
   pointer-events: none;
   contain: paint;
   opacity: 0.92;
+  // The rings and planets ran straight through the greeting. Clear an ellipse
+  // behind the name and date, stopping short of the sun behind the avatar.
+  --text-clear: radial-gradient(ellipse 120px 38px at 180px var(--sun-center-y), transparent 58%, #000 100%);
+  -webkit-mask-image: var(--text-clear);
+  mask-image: var(--text-clear);
 }
 
 .celestial-sun,
