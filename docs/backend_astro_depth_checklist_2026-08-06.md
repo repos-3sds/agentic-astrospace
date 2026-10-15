@@ -756,6 +756,33 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   from `docs/` anyway. *Decision needed:* commit, relocate into the real KB
   ingestion path, or delete.
 
+### E. Production hardening left open (2026-10-15)
+
+Follow-ups from the server-hardening pass on the 2026-10-15 production audit
+(section 3). The Ask/stream/voice routes, pool, logging, audit middleware,
+worker and deletion fixes shipped; these did not.
+
+- [ ] **Readings hold a transaction through generation.** *Why not:*
+  `reading_routes.py` was owned by a parallel change (force_refresh limits,
+  labels) and was left alone to avoid a conflicting rewrite. *Unblocks on:*
+  that change landing. *Hook:* call `release_connection(db)` from
+  `astrospace/db/database.py` before the agent call in `reading_routes.py`,
+  then persist through `short_session(db)`, as `ask_routes.py` does.
+- [ ] **Content-Security-Policy.** *Why not:* the other security headers are
+  safe everywhere; a CSP has to be verified against the running SPA, the
+  Supabase auth flow and the Capacitor WebView, and a wrong one is a blank
+  screen in production. *Unblocks on:* a report-only rollout read for a week.
+  *Hook:* `astrospace/api/security_headers.py`.
+- [ ] **Legacy Anthropic clients without limits.** `astrospace/ai/client.py`
+  (`AstroClient`) and `astrospace/knowledge/ingestion/analyzer.py` still use
+  the SDK defaults (600 s, 2 retries). *Why not:* neither is on a reader's
+  request path. *Hook:* reuse `anthropic_client()` from
+  `astrospace/agents/base.py`.
+- [ ] **`BirthInfo` (api/models.py) has no length limits.** *Why not:* it
+  backs the four legacy routes in `routes.py`, which a parallel change
+  rewrote. *Hook:* the same `Field(max_length=...)` bounds as
+  `KundliCreate` in `kundli_routes.py`.
+
 ---
 
 ## Live evaluation pass (2026-08-12)
