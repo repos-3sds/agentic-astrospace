@@ -13,7 +13,7 @@ from astrospace.db import get_db
 from astrospace.db.database import Base
 from astrospace.db.models import EntitlementOverride
 from astrospace.entitlements.resolver import resolve_entitlements
-from astrospace.voice import SpeechUnavailable, detect_language, set_synthesizer_for_tests
+from astrospace.voice import SpeechUnavailable, detect_language, set_synthesizer_for_tests, set_translator_for_tests
 from astrospace.voice.tts import MAX_TEXT_BYTES, SPEAKING_RATE
 
 USER = "voice-test-user"
@@ -124,3 +124,55 @@ def test_detect_language_uses_script_share():
     assert detect_language("Moon in Kanya; Tarabala is supportive.") == "en"
     assert detect_language("చంద్రుడు కన్యా రాశిలో ఉన్నాడు.") == "te"
     assert detect_language("") == "en"
+
+
+BRIEF = [
+    {"label": "Opening", "text": "Namaste, Hawk. Here is your reading for today."},
+    {"label": "Close", "text": "Move with attention, and let the day stay simple."},
+]
+
+
+def test_telugu_brief_needs_natural_voice_and_is_cached(env):
+    client, Session, _ = env
+    calls = []
+
+    def translator(system, prompt):
+        calls.append(prompt)
+        return '["నమస్తే Hawk. ఈ రోజు మీ reading ఇది.", "శ్రద్ధగా ముందుకు వెళ్ళండి, రోజును సరళంగా ఉంచండి."]'
+
+    set_translator_for_tests(translator)
+    try:
+        assert client.post("/api/v1/voice/translate", json={"sections": BRIEF}).status_code == 402
+        _grant_natural_voice(Session)
+
+        response = client.post("/api/v1/voice/translate", json={"sections": BRIEF})
+        assert response.status_code == 200
+        body = response.json()
+        assert body["language"] == "te"
+        assert [s["label"] for s in body["sections"]] == ["Opening", "Close"]
+        assert detect_language(body["sections"][0]["text"]) == "te"
+
+        assert client.post("/api/v1/voice/translate", json={"sections": BRIEF}).status_code == 200
+        assert len(calls) == 1, "the same brief must not be translated twice"
+    finally:
+        set_translator_for_tests(None)
+
+
+@pytest.mark.parametrize("reply", [
+    "Sorry, I can't.",                                  # no JSON
+    '["only one section"]',                             # wrong count
+    '["మీరు ఈ సంవత్సరం చనిపోతారు.", "సరే."]',          # fails the output checks
+])
+def test_bad_or_unsafe_translation_falls_back_to_english(env, reply):
+    client, Session, _ = env
+    _grant_natural_voice(Session)
+
+    def boom(system, prompt):
+        raise RuntimeError("quota")
+
+    for translator in (lambda system, prompt: reply, boom):
+        set_translator_for_tests(translator)
+        try:
+            assert client.post("/api/v1/voice/translate", json={"sections": BRIEF}).status_code == 503
+        finally:
+            set_translator_for_tests(None)

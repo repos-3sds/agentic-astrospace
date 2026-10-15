@@ -705,12 +705,13 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   read/write for the Cloud Run service account. *Hook:* `DAILY_CHAR_BUDGET`
   in `astrospace/api/voice_routes.py`; `_BucketCache` in
   `astrospace/voice/tts.py`.
-- [ ] **Natural voice: Telugu morning brief.** Ask answers already come
-  back in Telugu and are read by the te-IN voice (language is detected from
-  the script), but the Today brief is assembled in English, so the Listen
-  sheet's Telugu chip stays disabled. *Unblocks on:* Telugu brief text.
-  *Hook:* `buildTodayAudioScript()` and the `languages` input of
-  `ListenSheetComponent`.
+- [x] **Natural voice: Telugu morning brief.** Built 2026-10-15: the Listen
+  sheet's Telugu chip asks `POST /api/v1/voice/translate` for a simple-Telugu
+  rendering of the brief's sections (same model and register as Telugu Ask
+  answers, same output safety checks), then Chirp's te-IN voice reads it.
+  Still open: the rendering is cached per server instance only, and the
+  phone-voice fallback drops back to English because device Telugu voices
+  are unreliable.
 
 ### D. Docs pending a decision
 

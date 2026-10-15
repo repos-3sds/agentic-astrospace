@@ -19,6 +19,7 @@ import { NaturalVoiceService, naturalChunks } from '../../../core/natural-voice.
  * Natural voice is generated at 0.95x, which the sheet's default 0.9x setting
  * should play back unchanged; other speeds scale from there on the device.
  */
+const TELUGU = 'తెలుగు';
 const NATURAL_BASE_SPEED = 0.9;
 
 /**
@@ -73,15 +74,7 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
   readonly subtitle = input('Daily guidance · gentle voice');
   readonly script = input('');
   readonly sections = input<AudioReadingSection[]>([]);
-  /**
-   * Audio languages. Telugu is shown but not selectable — there is no Telugu
-   * TTS and the reading itself is generated in English, so choosing it would
-   * have changed nothing audible.
-   */
-  readonly languages = input<{ label: string; ready: boolean }[]>([
-    { label: 'తెలుగు', ready: false },
-    { label: 'English', ready: true },
-  ]);
+  /** The language the parent last chose; Telugu is restored when it can be. */
   readonly language = input('English');
 
   readonly dismissed = output<void>();
@@ -98,6 +91,19 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
    * so a slow network never delays the play button.
    */
   protected readonly mode = signal<'natural' | 'device'>('device');
+  /**
+   * Telugu needs natural voice (Chirp's te-IN voice) and a brief made of
+   * sections the server can render in Telugu. The phone voice has no Telugu
+   * voice it can be relied on for, and the Ask sheet's text is already in the
+   * language it was answered in.
+   */
+  protected readonly chosen = signal<'en' | 'te'>('en');
+  private readonly teluguSections = signal<AudioReadingSection[] | null>(null);
+  protected readonly languages = computed(() => [
+    { label: TELUGU, ready: this.mode() === 'natural' && this.sections().length > 0 },
+    { label: 'English', ready: true },
+  ]);
+  protected readonly currentLanguage = computed(() => (this.chosen() === 'te' ? TELUGU : 'English'));
   protected readonly voiceLabel = computed(() =>
     this.mode() === 'natural' ? 'Natural voice' : 'Phone voice',
   );
@@ -123,7 +129,8 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
   );
   protected readonly speedLabel = computed(() => `${this.speed().toFixed(1)}x`);
   protected readonly effectiveSections = computed<AudioReadingSection[]>(() => {
-    const sections = this.sections().filter((section) => section.text.trim());
+    const telugu = this.chosen() === 'te' ? this.teluguSections() : null;
+    const sections = (telugu ?? this.sections()).filter((section) => section.text.trim());
     return sections.length ? sections : [{ label: 'Reading', text: this.script() }];
   });
   protected readonly scriptText = computed(() =>
@@ -169,7 +176,11 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
       // Never switch voices under a reader who has already pressed play.
       if (ok && !this.playing() && this.chunkIndex() === 0) {
         this.mode.set('natural');
-        void this.naturalVoice.audioUrl(this.prepareForSpeech(this.chunks()[0] ?? '')).catch(() => undefined);
+        if (this.language() === TELUGU && this.sections().length) {
+          void this.chooseLanguage(TELUGU);
+        } else {
+          void this.naturalVoice.audioUrl(this.prepareForSpeech(this.chunks()[0] ?? '')).catch(() => undefined);
+        }
       }
     });
   }
@@ -251,6 +262,38 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
     this.elapsed.set(Math.floor(this.duration() * (start.index / Math.max(1, this.chunks().length))));
     this.status.set(`Ready: ${label}.`);
     if (this.playing()) void this.speakFrom(start.index);
+  }
+
+  protected async chooseLanguage(label: string): Promise<void> {
+    const wanted = label === TELUGU ? 'te' : 'en';
+    if (wanted === this.chosen() && (wanted === 'en' || this.teluguSections())) return;
+    this.resetForSwitch();
+    if (wanted === 'en') {
+      this.chosen.set('en');
+      this.status.set(null);
+      this.languageChanged.emit('English');
+      return;
+    }
+    this.status.set('Preparing Telugu...');
+    try {
+      const sections = await this.naturalVoice.telugu(this.sections().filter((section) => section.text.trim()));
+      if (this.mode() !== 'natural' || this.playing()) return;
+      this.teluguSections.set(sections);
+      this.chosen.set('te');
+      this.status.set('Ready in Telugu.');
+      this.languageChanged.emit(TELUGU);
+      void this.naturalVoice.audioUrl(this.prepareForSpeech(this.chunks()[0] ?? '')).catch(() => undefined);
+    } catch {
+      this.status.set('Telugu is unavailable right now; staying in English.');
+    }
+  }
+
+  private resetForSwitch(): void {
+    this.stop();
+    this.playing.set(false);
+    this.chunkIndex.set(0);
+    this.elapsed.set(0);
+    this.audioIndex = -1;
   }
 
   private clock(seconds: number): string {
@@ -422,6 +465,11 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
     const label = this.activeSectionLabel();
     this.audio?.pause();
     this.mode.set('device');
+    if (this.chosen() === 'te') {
+      // The phone voice can't read the Telugu text well; go back to English.
+      this.chosen.set('en');
+      this.languageChanged.emit('English');
+    }
     const start = this.sectionStarts().find((section) => section.label === label)?.index ?? 0;
     this.status.set('Natural voice is unavailable right now; using the phone voice.');
     if (this.unsupported()) {
