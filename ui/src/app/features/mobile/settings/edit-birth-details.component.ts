@@ -1,18 +1,16 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
-import { PanchangaCity, birthTimeIsApproximate } from '../../../core/models';
+import { KundliPayload } from '../../../core/models';
 import { ChartComputingComponent } from '../states/chart-computing.component';
-import { BirthPlaceFieldComponent } from './birth-place-field.component';
-import { normalizeProfileRelationship, PROFILE_RELATIONSHIPS } from './profile-fields';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { BirthDetailsFormComponent } from '../shared/birth-details-form.component';
 
 @Component({
   selector: 'as-edit-birth-details',
   standalone: true,
-  imports: [BackLinkDirective, FormsModule, ChartComputingComponent, BirthPlaceFieldComponent],
+  imports: [BackLinkDirective, ChartComputingComponent, BirthDetailsFormComponent],
   templateUrl: './edit-birth-details.component.html',
   styleUrl: './edit-birth-details.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -21,20 +19,12 @@ export class EditBirthDetailsComponent {
   private readonly kundlis = inject(KundliStore);
   private readonly router = inject(Router);
 
-  protected name = '';
-  protected date = '';
-  protected time = '';
-  protected city = '';
-  protected nation = '';
-  protected relation = 'self';
-  protected readonly relationships = PROFILE_RELATIONSHIPS;
-  protected readonly initialPlace = signal<Pick<PanchangaCity, 'city' | 'nation'> | null>(null);
-  private placeSelectionRequired = false;
+  protected readonly initial = signal<Partial<KundliPayload> | null>(null);
+  protected readonly hideSelf = signal(false);
   protected readonly loading = signal(true);
+  protected readonly loadError = signal<string | null>(null);
   protected readonly saving = signal(false);
   protected readonly error = signal<string | null>(null);
-  /** Bound to the checkbox; a chart cast from a guess must keep saying so. */
-  protected approximate = false;
 
   constructor() { void this.load(); }
 
@@ -43,51 +33,39 @@ export class EditBirthDetailsComponent {
       await this.kundlis.load();
       const profile = this.kundlis.active();
       if (!profile) throw new Error('No active profile to edit.');
-      this.name = profile.name;
-      this.date = `${profile.birth_year}-${String(profile.birth_month).padStart(2, '0')}-${String(profile.birth_day).padStart(2, '0')}`;
-      this.time = `${String(profile.birth_hour).padStart(2, '0')}:${String(profile.birth_minute).padStart(2, '0')}`;
-      this.city = profile.birth_city;
-      this.nation = profile.birth_nation;
-      this.relation = normalizeProfileRelationship(profile.relation);
-      this.approximate = birthTimeIsApproximate(profile);
-      this.initialPlace.set({ city: this.city, nation: this.nation });
+      this.initial.set({
+        name: profile.name,
+        relation: profile.relation,
+        birth_year: profile.birth_year,
+        birth_month: profile.birth_month,
+        birth_day: profile.birth_day,
+        birth_hour: profile.birth_hour,
+        birth_minute: profile.birth_minute,
+        birth_city: profile.birth_city,
+        birth_nation: profile.birth_nation,
+        birth_time_accuracy: profile.birth_time_accuracy ?? 'exact',
+      });
+      const self = this.kundlis.kundlis().find((item) => (item.relation ?? '').toLowerCase() === 'self');
+      this.hideSelf.set(!!self && self.id !== profile.id);
     } catch (error) {
-      this.error.set((error as Error).message);
+      this.loadError.set((error as Error).message);
     } finally {
       this.loading.set(false);
     }
   }
 
-  protected async save(): Promise<void> {
+  protected async save(payload: KundliPayload): Promise<void> {
     const profile = this.kundlis.active();
-    const [year, month, day] = this.date.split('-').map(Number);
-    const [hour, minute] = this.time.split(':').map(Number);
-    if (!profile || !this.name.trim() || !year || !month || !day || Number.isNaN(hour) || Number.isNaN(minute) || !this.city.trim() || this.placeSelectionRequired) {
-      this.error.set(this.placeSelectionRequired ? 'Choose the birth place from the search results.' : 'Complete each birth detail before saving.');
-      return;
-    }
+    if (!profile) return;
     this.saving.set(true);
     this.error.set(null);
     try {
-      await this.kundlis.update(profile.id, {
-        name: this.name.trim(), birth_year: year, birth_month: month, birth_day: day,
-        birth_hour: hour, birth_minute: minute, birth_city: this.city.trim(),
-        birth_nation: this.nation.trim() || profile.birth_nation, relation: this.relation,
-        birth_time_accuracy: this.approximate ? 'approximate' : 'exact',
-      });
+      await this.kundlis.update(profile.id, payload);
       await this.router.navigate(['/m', 'settings']);
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {
       this.saving.set(false);
-    }
-  }
-
-  protected onPlaceChange(place: PanchangaCity | null): void {
-    this.placeSelectionRequired = !place;
-    if (place) {
-      this.city = place.city;
-      this.nation = place.nation;
     }
   }
 }

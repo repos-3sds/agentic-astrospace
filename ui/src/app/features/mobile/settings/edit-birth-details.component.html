@@ -4,26 +4,18 @@
 </header>
 <main class="editbd-main">
   <aside class="editbd-warning">Updating details will recalculate your entire chart. This impacts your current planetary periods and transit dashboards.</aside>
-  @if (loading()) { <p class="editbd-state">Loading profile…</p> } @else {
-    <form id="edit-birth-form" (ngSubmit)="save()">
-      <label>FULL NAME<input name="name" [(ngModel)]="name" autocomplete="name" /></label>
-      <label>RELATIONSHIP
-        <select name="relation" [(ngModel)]="relation">
-          @for (option of relationships; track option.value) {
-            <option [value]="option.value">{{ option.label }}</option>
-          }
-        </select>
-      </label>
-      <label>DATE OF BIRTH<input name="date" [(ngModel)]="date" type="date" /></label>
-      <label>TIME OF BIRTH<input name="time" [(ngModel)]="time" type="time" /></label>
-      <label class="editbd-check">
-        <input name="approximate" type="checkbox" [(ngModel)]="approximate" />
-        <span>This time is approximate<small>Rising sign, houses and dasha dates will be marked as estimates.</small></span>
-      </label>
-      <as-birth-place-field [initialPlace]="initialPlace()" (placeChange)="onPlaceChange($event)" />
-      @if (error()) { <p class="editbd-error" role="alert">{{ error() }}</p> }
-    </form>
+  @if (loading()) { <p class="editbd-state">Loading profile…</p> }
+  @else if (loadError(); as message) { <p class="editbd-state" role="alert">{{ message }}</p> }
+  @else {
+    <as-birth-details-form
+      [initial]="initial()"
+      [hideSelf]="hideSelf()"
+      submitLabel="Save Changes"
+      busyLabel="Recalculating…"
+      [saving]="saving()"
+      [error]="error()"
+      (submitted)="save($event)"
+    />
   }
 </main>
-<footer><button type="submit" form="edit-birth-form" [disabled]="loading() || saving()">{{ saving() ? 'Recalculating…' : 'Save Changes' }}</button></footer>
 @if (saving()) { <as-chart-computing /> }
