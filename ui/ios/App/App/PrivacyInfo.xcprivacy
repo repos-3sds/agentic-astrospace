@@ -27,9 +27,20 @@
 	<key>NSPrivacyTrackingDomains</key>
 	<array/>
 
-	<!-- None. See the comment above; verified, not assumed. -->
+	<!-- @capacitor/preferences reads and writes UserDefaults. CA92.1: the app
+	     accesses only its own defaults (cached auth config, reader preferences),
+	     nothing shared across apps. -->
 	<key>NSPrivacyAccessedAPITypes</key>
-	<array/>
+	<array>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
+			</array>
+		</dict>
+	</array>
 
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array>
