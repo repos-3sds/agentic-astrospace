@@ -1,5 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Playwright pins each release to one Chromium build and refuses to launch
+// any other, so a machine with a different build installed (a cloud
+// container, a CI image with a system Chromium) cannot run the suite at
+// all. Setting PLAYWRIGHT_CHROMIUM_EXECUTABLE to a Chromium binary makes
+// every project launch that binary instead; leave it unset to use the
+// build `npx playwright install chromium` fetched.
+const executablePath = process.env['PLAYWRIGHT_CHROMIUM_EXECUTABLE'];
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -11,6 +19,7 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:4200',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    ...(executablePath ? { launchOptions: { executablePath } } : {}),
   },
   webServer: {
     command: 'npm start -- --host 127.0.0.1 --port 4200',

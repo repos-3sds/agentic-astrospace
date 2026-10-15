@@ -2,10 +2,12 @@ name: CI
 
 # There was no CI on this repo before this workflow: 674+ backend tests and a
 # growing frontend suite ran only when someone remembered to run them
-# locally. Kept deliberately minimal for now — just the two suites that
-# already exist, gating every push and PR. Anything more (coverage
-# thresholds, lint, the data-contract budget tests) is a follow-up, once this
-# lands green.
+# locally. It started with just the two unit suites. The 2026-10-14 mobile
+# audit found the Playwright suite had 15 of 33 tests failing on main because
+# nothing ran it, and the two native projects disagreeing on their build
+# number because nothing checked it; the two jobs after the unit suites close
+# those gaps. Coverage thresholds, lint and the data-contract budget tests are
+# still follow-ups.
 
 on:
   push:
@@ -55,3 +57,67 @@ jobs:
 
       - name: Run tests
         run: npx ng test --watch=false --browsers=ChromeHeadless
+
+  frontend-build:
+    name: Frontend production build + version check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The native build number is the commit count, so the check needs
+          # the whole history; on a shallow clone the count is the depth.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Native versions agree
+        run: npm run version:check
+
+      - name: Production build
+        # The unit-test job compiles the development configuration; this is
+        # the bundle that actually ships (budgets, optimisation, licenses).
+        run: npm run build
+
+  mobile-e2e:
+    name: Mobile e2e (Playwright, mobile-chrome-360)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run mobile e2e
+        # One phone project is the gate; the specs mock every /api/v1 call
+        # so no backend is started. Config starts `ng serve` itself.
+        run: npx playwright test --project=mobile-chrome-360
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: ui/playwright-report
+          retention-days: 7
