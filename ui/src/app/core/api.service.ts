@@ -9,6 +9,17 @@ import { ConnectivityService } from './connectivity.service';
 // Capacitor WebView, where a relative path resolves inside the app bundle.
 const BASE = () => apiUrl('/api/v1');
 
+/**
+ * A structured refusal: the product declines to answer by design (health,
+ * legal and money intents), so the screen shows a refer-out card and no retry.
+ */
+export class ReferOutError extends Error {
+  override readonly name = 'ReferOutError';
+  constructor(message: string, readonly domain: string | null = null) {
+    super(message);
+  }
+}
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private http = inject(HttpClient);
@@ -63,7 +74,9 @@ export class ApiService {
         // Structured refusals (`{kind: "refer_out", message}` from readings and
         // muhurta) carry a sentence meant for the screen; show that, not JSON.
         if (detail && typeof detail === 'object' && typeof detail.message === 'string') {
-          throw new Error(detail.message);
+          throw detail.kind === 'refer_out'
+            ? new ReferOutError(detail.message, detail.domain)
+            : new Error(detail.message);
         }
         throw new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
       }

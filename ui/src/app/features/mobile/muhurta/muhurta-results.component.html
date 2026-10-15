@@ -14,6 +14,15 @@
 
   @if (loading()) {
     <section class="muhurta-state"><b>Finding windows</b><p>Checking panchanga windows for your selected range.</p></section>
+  } @else if (referOut(); as refusal) {
+    <!-- A refusal by design, not a failure: no retry, and the same boundary
+         every health, legal and money question meets elsewhere in the app. -->
+    <section class="muhurta-state refer-out" role="status">
+      <img src="mobile/shield.svg" alt="" aria-hidden="true" />
+      <b>Not something we time</b>
+      <p>{{ refusal }}</p>
+      <a [routerLink]="['/m','muhurta']">Choose another goal</a>
+    </section>
   } @else if (error()) {
     <as-generic-error role="alert" [message]="error()!" (retried)="retry()" />
   } @else if (searched() && !windows().length) {
