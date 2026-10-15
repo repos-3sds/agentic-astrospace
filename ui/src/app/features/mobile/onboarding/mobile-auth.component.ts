@@ -4,12 +4,13 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { legalUrl, openLegal } from '../../../core/legal';
+import { BackLinkDirective } from '../../../core/back-link.directive';
 
 @Component({
   selector: 'as-mobile-auth',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink],
+  imports: [BackLinkDirective, FormsModule, RouterLink],
   templateUrl: './mobile-auth.component.html',
   styleUrl: './mobile-auth.component.scss',
   host: { class: 'as-mobile' },
@@ -57,6 +58,7 @@ export class MobileAuthComponent {
       }
       await this.auth.init();
       if (!this.auth.enabled()) {
+        this.auth.signedOut.set(false);
         await this.router.navigate(this.mode() === 'signin' ? ['/m', 'today'] : ['/m', 'language']);
       } else if (this.mode() === 'signin') {
         await this.auth.signIn(this.email.trim(), this.password, []);

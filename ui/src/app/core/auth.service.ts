@@ -48,6 +48,12 @@ interface AuthConfig {
 export class AuthService {
   readonly ready = signal(false);
   readonly enabled = signal(false);
+  /**
+   * True from a sign-out until the next sign-in. With auth disabled (dev,
+   * e2e) `isAuthenticated()` is always true, so this is the only way the
+   * onboarding guard can tell a signed-out person from an onboarded one.
+   */
+  readonly signedOut = signal(false);
   readonly session = signal<Session | null>(null);
   readonly user = signal<User | null>(null);
   readonly email = computed(() => this.user()?.email ?? 'Local workspace');
@@ -288,6 +294,7 @@ export class AuthService {
       await this.injector.get(PushService).revoke();
     }
     this.setSession(null);
+    this.signedOut.set(true);
     // The encrypted cache holds the signed-out account's guidance, charts and
     // threads. Until 2026-10-15 it was left on disk until its TTL, so the next
     // person to sign in on a shared phone inherited it. The cache is keyed by
@@ -321,6 +328,7 @@ export class AuthService {
   }
 
   private setSession(session: Session | null): void {
+    if (session) this.signedOut.set(false);
     this.session.set(session);
     this.user.set(session?.user ?? null);
   }

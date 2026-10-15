@@ -22,7 +22,7 @@ export const onboardedRedirectGuard: CanActivateFn = async () => {
   } catch {
     return true;
   }
-  if (auth.enabled() && !auth.isAuthenticated()) return true;
+  if (auth.signedOut() || (auth.enabled() && !auth.isAuthenticated())) return true;
   try {
     await kundlis.load();
   } catch {
