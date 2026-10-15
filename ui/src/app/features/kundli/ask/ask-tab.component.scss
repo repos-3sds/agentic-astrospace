@@ -318,3 +318,18 @@ button { color: var(--m-text); background: transparent; border: 0; cursor: point
   .return-link { width: 36px; padding: 0; justify-content: center; font-size: 0; }
   .profile-switcher { padding-left: 10px; }
 }
+
+/*
+ * At phone width the web shell shows its own app bar and a fixed bottom
+ * nav, and this host sat inside the scrollable content at a full 100dvh,
+ * so the composer pinned to its bottom edge landed under the nav. Size the
+ * host to the space the shell actually leaves so the composer stays above
+ * the nav. The bar and the nav are min-heights their padding can exceed by a
+ * few pixels, hence the extra 12px.
+ */
+@media (max-width: 599px) {
+  :host {
+    height: calc(100dvh - var(--as-mobile-appbar-h) - var(--as-safe-top) - var(--as-mobile-nav-h) - var(--as-safe-bottom) - 12px);
+    min-height: 0;
+  }
+}
