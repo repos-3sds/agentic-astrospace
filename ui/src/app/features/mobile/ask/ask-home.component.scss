@@ -3,9 +3,15 @@
 // The composer is pinned, so the screen is a column that owns its own height
 // rather than a block that grows with its content.
 :host {
+  // The shell's bottom padding clears the tallest scrolling content, which
+  // left the pinned composer floating ~76 px above the 72 px tab bar. Reclaim
+  // that space so the composer sits just above the bar; the negative margin
+  // keeps the shell from scrolling.
+  --ask-tab-gap: calc(var(--m-tabbar-total) + max(18px, var(--m-safe-bottom)) - 72px - max(10px, var(--m-safe-bottom)) - 4px);
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: calc(100% + var(--ask-tab-gap));
+  margin-bottom: calc(-1 * var(--ask-tab-gap));
   min-height: 0;
 }
 

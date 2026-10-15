@@ -63,8 +63,6 @@
 
 .askhist-swipe {
   position: relative;
-  border-radius: 18px;
-  overflow: hidden;
   touch-action: pan-y;
 }
 
@@ -76,9 +74,11 @@
   width: 44px;
   height: 44px;
   border: 0;
-  background: var(--m-surface);
-  color: var(--m-text);
-  font-size: 24px;
+  border-radius: 999px;
+  background: none;
+  color: var(--m-muted);
+  display: grid;
+  place-items: center;
   cursor: pointer;
 }
 .askhist-card .askhist-meta { padding-right: 36px; }
@@ -91,13 +91,8 @@
   background: var(--m-surface);
   box-shadow: 0 5px 18px rgb(62 45 25 / 6%);
   cursor: pointer;
-  transition: transform 180ms ease;
 
   &.is-opening { opacity: 0.65; }
-}
-
-.askhist-swipe.is-revealed .askhist-card {
-  transform: translateX(184px);
 }
 
 .askhist-meta,
@@ -139,12 +134,13 @@
   img { width: 18px; height: 18px; flex-shrink: 0; }
 }
 
+// The actions used to slide the card 184 px right, clipping the question.
+// They now open as a row under the card, which stays fully readable.
 .askhist-actions {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 176px;
   display: grid;
   grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .askhist-archive,
@@ -156,7 +152,8 @@
   cursor: pointer;
   display: grid;
   place-items: center;
-  z-index: 0;
+  min-height: 48px;
+  border-radius: 14px;
 }
 
 .askhist-archive { background: var(--m-accent-strong); }

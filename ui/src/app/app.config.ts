@@ -52,6 +52,7 @@ import {
   LayoutDashboard,
   LayoutGrid,
   Library,
+  EllipsisVertical,
   List,
   LogOut,
   LucideAngularModule,
@@ -120,6 +121,7 @@ export const appConfig: ApplicationConfig = {
     importProvidersFrom(
       LucideAngularModule.pick({
         AlertTriangle,
+        EllipsisVertical,
         Activity,
         ArrowLeft,
         ArrowRight,
