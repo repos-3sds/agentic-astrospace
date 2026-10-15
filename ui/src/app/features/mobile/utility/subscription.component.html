@@ -1,0 +1,110 @@
+<as-back-bar back="/m/settings" crumb="Settings" title="Plans" />
+
+<main class="plans">
+  @if (loading()) {
+    <section class="plans-state" aria-live="polite">Checking your plan…</section>
+  } @else if (error()) {
+    <as-generic-error role="alert" message="Plans could not load. Your current access has not changed." (retried)="load()" />
+  } @else if (current(); as plan) {
+    <section class="current">
+      <span class="eyebrow">YOUR PLAN</span>
+      <h2>{{ planLabel(plan) }}</h2>
+      <p>{{ planSummary(plan) }}</p>
+      <dl class="usage">
+        @for (row of usageRows(); track row.label) {
+          <div><dt>{{ row.label }}</dt><dd>{{ row.value }}</dd></div>
+        }
+      </dl>
+      @if (!enforced()) {
+        <p class="fine">Limits are counted but not applied yet, while purchases are being set up.</p>
+      }
+      @if (isPaid()) {
+        <button class="link-button" type="button" (click)="manage()">Manage or cancel in the store</button>
+      }
+    </section>
+
+    @if (notice(); as n) {
+      <p class="notice" [attr.data-tone]="n.tone" role="status">{{ n.text }}</p>
+    }
+
+    @if (!isPaid()) {
+      <section class="plus" aria-labelledby="plus-title">
+        <h2 id="plus-title">Plus</h2>
+        <p class="lede">More answers, more people, and the full depth of your chart.</p>
+
+        <div class="options" role="radiogroup" aria-label="Plus billing">
+          @for (option of plans(); track option.id) {
+            @let on = option.id === selectedPlan();
+            <button class="option" type="button" role="radio" [class.is-on]="on" [attr.aria-checked]="on" (click)="selectedPlan.set(option.id)">
+              <span class="option-copy">
+                <span class="option-title">
+                  {{ option.months === 12 ? 'Yearly' : 'Monthly' }}
+                  @if (option.months === 12 && yearlySaving(); as saving) { <span class="badge">SAVE {{ saving }}%</span> }
+                </span>
+                <span class="option-price">{{ price(option) }} {{ planCadence(option) }}</span>
+              </span>
+              @if (on) {
+                <span class="tick" aria-hidden="true"><img src="mobile/check.svg" alt="" /></span>
+              } @else {
+                <img class="radio" src="mobile/radio-off.svg" alt="" aria-hidden="true" />
+              }
+            </button>
+          }
+        </div>
+
+        <button class="cta" type="button" [disabled]="!store.available() || !!busy()" (click)="buy(selectedPlan())">
+          {{ busy() === selectedPlan() ? 'Opening the store…' : 'Continue with Plus' }}
+        </button>
+        @if (storeNote(); as note) { <p class="store-note">{{ note }}</p> }
+        <p class="fine">Renews automatically until you cancel in your Google Play or App Store account. Cancel at least a day before renewal to avoid the next charge.</p>
+      </section>
+    }
+
+    <section class="compare" aria-labelledby="compare-title">
+      <h2 id="compare-title">Free and Plus</h2>
+      <div class="table" role="table">
+        <div class="row head" role="row"><span role="columnheader"></span><span role="columnheader">Free</span><span role="columnheader">Plus</span></div>
+        @for (row of compare; track row.label) {
+          <div class="row" role="row">
+            <span role="rowheader">{{ row.label }}</span>
+            @for (cell of [row.free, row.plus]; track $index) {
+              <span role="cell">
+                @if (cell === true) { <img src="mobile/check-accent.svg" alt="Included" /> }
+                @else if (cell === false) { <span class="dash" aria-label="Not included">–</span> }
+                @else { {{ cell }} }
+              </span>
+            }
+          </div>
+        }
+      </div>
+      <h3>Always free</h3>
+      <ul class="free-list">
+        @for (item of alwaysFree; track item) { <li>{{ item }}</li> }
+      </ul>
+    </section>
+
+    <section class="packs" #packsAnchor aria-labelledby="packs-title">
+      <h2 id="packs-title">Question packs</h2>
+      <p class="lede">A few more answers without a subscription. They don’t expire, and they’re used only after your monthly answers.</p>
+      @for (pack of packs(); track pack.id) {
+        <div class="pack">
+          <span><b>{{ pack.questions }} questions</b><small>{{ price(pack) }}, once</small></span>
+          <button type="button" [disabled]="!store.available() || !!busy()" (click)="buy(pack.id)">
+            {{ busy() === pack.id ? 'Opening…' : 'Buy' }}
+          </button>
+        </div>
+      }
+      <p class="fine">Refer-outs, clarifications and answers that fail never use a question.</p>
+    </section>
+
+    <footer class="footer">
+      <button class="link-button" type="button" [disabled]="!store.available() || !!busy()" (click)="restore()">
+        {{ busy() === 'restore' ? 'Restoring…' : 'Restore purchases' }}
+      </button>
+      <span aria-hidden="true">·</span>
+      <button class="link-button" type="button" (click)="openLegal('terms')">Terms</button>
+      <span aria-hidden="true">·</span>
+      <button class="link-button" type="button" (click)="openLegal('privacy')">Privacy</button>
+    </footer>
+  }
+</main>

@@ -16,4 +16,5 @@ export const environment: AppEnvironment = {
   // must therefore use the deployed backend unless a developer intentionally
   // swaps this to a LAN URL for local backend debugging.
   nativeApiOrigin: 'https://agentic-astrospace-cwuqybpnzq-el.a.run.app',
+  revenueCat: { android: '', ios: '' },
 };

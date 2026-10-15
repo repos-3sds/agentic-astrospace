@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { AuthService } from './auth.service';
 import { apiUrl } from './api-origin';
 import { ConnectivityService } from './connectivity.service';
+import { EntitlementLimitError, isEntitlementDenial } from './entitlement-denial';
 
 // Relative on web (the SPA is served same-origin by FastAPI); absolute in a
 // Capacitor WebView, where a relative path resolves inside the app bundle.
@@ -112,6 +113,8 @@ export class ApiService {
     } catch (e) {
       this.connectivity.noteRequestFailure(e);
       if (e instanceof HttpErrorResponse) {
+        // A plan or limit said no: the screen shows a locked state, not an error.
+        if (e.status === 402 && isEntitlementDenial(e.error)) throw new EntitlementLimitError(e.error);
         const detail = (e.error && (e.error.detail || e.error.message)) || e.statusText;
         // Structured refusals (`{kind: "refer_out", message}` from readings and
         // muhurta) carry a sentence meant for the screen; show that, not JSON.

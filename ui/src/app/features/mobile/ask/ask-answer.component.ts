@@ -18,6 +18,9 @@ import { ProfileContextFact, ProfileContextService } from '../../../core/profile
 import { MobileAskMessage, MobileAskThreadService } from './mobile-ask-thread.service';
 import { AskReportInput, askReportPdf, askReportText, downloadBlob } from '../../../core/ask-report';
 import { shareFile } from '../../../core/native-share';
+import { EntitlementDenial, EntitlementLimitError } from '../../../core/entitlement-denial';
+import { EntitlementService } from '../../../core/entitlement.service';
+import { LockedStateComponent } from '../shared/locked-state.component';
 import { TextRun, cleanPlainText, paragraphRuns } from '../../../core/answer-text';
 
 /**
@@ -81,7 +84,7 @@ const REFER_OUT_KINDS = new Set(['death', 'health', 'legal', 'money']);
   selector: 'as-ask-answer',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, AskComposerComponent, ListenSheetComponent, WhyReadingSheetComponent],
+  imports: [RouterLink, AskComposerComponent, ListenSheetComponent, WhyReadingSheetComponent, LockedStateComponent],
   templateUrl: './ask-answer.component.html',
   styleUrl: './ask-answer.component.scss',
 })
@@ -90,6 +93,7 @@ export class AskAnswerComponent {
   protected readonly preferences = inject(PreferencesService);
   private readonly askState = inject(MobileAskStateService);
   private readonly askService = inject(AskService);
+  private readonly entitlements = inject(EntitlementService);
   private readonly threadsApi = inject(MobileAskThreadService);
   private readonly profileContext = inject(ProfileContextService);
   private readonly kundlis = inject(KundliStore);
@@ -256,6 +260,8 @@ export class AskAnswerComponent {
 
   readonly draft = signal('');
   readonly submitError = signal<string | null>(null);
+  /** Set when the monthly answers (and any packs) are used up. */
+  readonly limitDenial = signal<EntitlementDenial | null>(null);
 
   /**
    * The same evidence sheet Today uses (22:23). An answer and a day-reading owe
@@ -829,6 +835,7 @@ export class AskAnswerComponent {
     this.streamDomain.set(null);
     this.streamEvidence.set([]);
     this.submitError.set(null);
+    this.limitDenial.set(null);
 
     const userMessage = this.toChatMessage({
       id: `local-user-${Date.now()}`,
@@ -1066,6 +1073,14 @@ export class AskAnswerComponent {
           status: 'stopped',
           streaming: false,
         });
+      } else if (error instanceof EntitlementLimitError) {
+        // Nothing was generated or charged; the question waits for a credit.
+        this.limitDenial.set(error.denial);
+        this.updateAssistantMessage(assistantId, {
+          content: 'This question is saved here. Ask it again once you have a question to use.',
+          status: 'limit_reached',
+          streaming: false,
+        });
       } else {
         this.submitError.set((error as Error).message);
         this.updateAssistantMessage(assistantId, {
@@ -1079,6 +1094,8 @@ export class AskAnswerComponent {
         this.streaming.set(false);
         this.abortController = null;
       }
+      // Keep the Ask meter honest after every attempt, charged or not.
+      void this.entitlements.refresh();
     }
   }
 
