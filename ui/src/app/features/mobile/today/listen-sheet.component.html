@@ -5,7 +5,7 @@
       <div class="head-text">
         <p class="title">{{ title() }}</p>
         <p class="sub">{{ subtitle() }}</p>
-        <p class="now">Now playing: {{ activeSectionLabel() }}</p>
+        <p class="now">Now playing: {{ activeSectionLabel() }} · {{ voiceLabel() }}</p>
       </div>
     </header>
 
@@ -38,7 +38,7 @@
     </div>
 
     <div class="transport">
-      <button class="skip" type="button" aria-label="Back one sentence" (click)="skip(-1)">
+      <button class="skip" type="button" aria-label="Back one part" (click)="skip(-1)">
         <img src="mobile/rewind.svg" alt="" aria-hidden="true" />
       </button>
       <button class="play" type="button" [attr.aria-label]="playing() ? 'Pause' : 'Play'" (click)="toggle()">
@@ -48,7 +48,7 @@
           <span class="play-triangle" aria-hidden="true"></span>
         }
       </button>
-      <button class="skip" type="button" aria-label="Forward one sentence" (click)="skip(1)">
+      <button class="skip" type="button" aria-label="Forward one part" (click)="skip(1)">
         <img src="mobile/forward.svg" alt="" aria-hidden="true" />
       </button>
     </div>

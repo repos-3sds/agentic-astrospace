@@ -673,6 +673,32 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   `astrospace/notifications/push.py`, where `apns` is a
   `NotConfiguredTransport` with a greppable reason; jobs for those tokens
   stay `pending` and drain once a transport exists.
+- [ ] **Natural voice: overnight pre-generation of the morning brief**
+  (2026-10-15). Chirp 3 HD took 8–13 s for an ~870-character brief, so the
+  Listen sheet asks for audio one section at a time, prefetches the first
+  section when the sheet opens and the next while one plays. Making the
+  whole brief overnight would make play instant, but the brief script is
+  built on the device (`audio-reading-script.ts`), so the server has no
+  text to synthesise yet. *Unblocks on:* the daily notification worker
+  being scheduled, plus a server-side copy of the brief script. *Hook:*
+  `natural_speech()` in `astrospace/voice/tts.py` already caches by text
+  hash, so a worker that warms the same text makes the app's request a hit.
+- [ ] **Natural voice: real metered limit and durable cache.** The speech
+  route caps fresh synthesis at 120k characters per reader per day *per
+  Cloud Run instance*, which stops a runaway client but is not a quota.
+  Durable caching needs a GCS bucket named in `ASTROSPACE_TTS_BUCKET`; with
+  none set, only the per-instance memory cache and the device's Cache
+  Storage are used. *Unblocks on:* CE-1 setting a reviewed
+  `audio.natural_voice` limit, and creating the bucket with object
+  read/write for the Cloud Run service account. *Hook:* `DAILY_CHAR_BUDGET`
+  in `astrospace/api/voice_routes.py`; `_BucketCache` in
+  `astrospace/voice/tts.py`.
+- [ ] **Natural voice: Telugu morning brief.** Ask answers already come
+  back in Telugu and are read by the te-IN voice (language is detected from
+  the script), but the Today brief is assembled in English, so the Listen
+  sheet's Telugu chip stays disabled. *Unblocks on:* Telugu brief text.
+  *Hook:* `buildTodayAudioScript()` and the `languages` input of
+  `ListenSheetComponent`.
 
 ### D. Docs pending a decision
 
