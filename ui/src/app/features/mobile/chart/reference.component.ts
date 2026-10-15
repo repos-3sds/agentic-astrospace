@@ -3,9 +3,26 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
 import { VedicService } from '../../../core/vedic.service';
-import { VedicAll } from '../../../core/models';
+import { AshtakavargaPayload, VedicAll } from '../../../core/models';
 
 type ReferenceMode = 'home' | 'avkahada' | 'grahas' | 'ashtakavarga' | 'favourable';
+
+/** One sign's row in the BAV/SAV matrix: each planet's bindus, then the SAV total. */
+interface AshtaRow {
+  sign: string;
+  short: string;
+  bindus: number[];
+  sav: number;
+}
+
+const SIGN_SHORT: Record<string, string> = {
+  Aries: 'Ari', Taurus: 'Tau', Gemini: 'Gem', Cancer: 'Can', Leo: 'Leo', Virgo: 'Vir',
+  Libra: 'Lib', Scorpio: 'Sco', Sagittarius: 'Sag', Capricorn: 'Cap', Aquarius: 'Aqu', Pisces: 'Pis',
+};
+
+const PLANET_SHORT: Record<string, string> = {
+  Sun: 'Su', Moon: 'Mo', Mars: 'Ma', Mercury: 'Me', Jupiter: 'Ju', Venus: 'Ve', Saturn: 'Sa',
+};
 
 @Component({
   selector: 'as-chart-reference',
@@ -20,7 +37,7 @@ export class ReferenceComponent {
   private readonly vedic = inject(VedicService);
   protected readonly mode = inject(ActivatedRoute).snapshot.data['referenceMode'] as ReferenceMode;
   protected readonly data = signal<VedicAll | null>(null);
-  protected readonly ashtakavarga = signal<unknown>(null);
+  protected readonly ashtakavarga = signal<AshtakavargaPayload | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
 
@@ -50,7 +67,33 @@ export class ReferenceComponent {
     return this.flatten(source);
   });
   protected readonly planets = computed(() => Object.entries(this.data()?.planets ?? {}));
-  protected readonly ashtaRows = computed(() => this.flatten(this.ashtakavarga() ?? {}));
+
+  /**
+   * Ashtakavarga as the classical matrix: one row per sign, one column per
+   * contributing planet (Sun through Saturn), SAV at the end. Until
+   * 2026-10-15 this screen flattened the raw payload into "bav · Sun · 0 = 4"
+   * rows and never showed a table.
+   */
+  protected readonly ashtaPlanets = computed(() => this.ashtakavarga()?.planets ?? []);
+  protected readonly ashtaPlanetShort = computed(() => this.ashtaPlanets().map((planet) => PLANET_SHORT[planet] ?? planet.slice(0, 2)));
+  protected readonly ashtaRows = computed<AshtaRow[]>(() => {
+    const data = this.ashtakavarga();
+    if (!data?.signs?.length) return [];
+    return data.signs.map((row) => ({
+      sign: row.sign,
+      short: SIGN_SHORT[row.sign] ?? row.sign.slice(0, 3),
+      bindus: data.planets.map((planet) => row.bav[planet] ?? 0),
+      sav: row.sav,
+    }));
+  });
+  protected readonly ashtaTotals = computed(() => {
+    const data = this.ashtakavarga();
+    if (!data) return null;
+    return { bav: data.planets.map((planet) => data.totals.bav[planet] ?? 0), sav: data.totals.sav };
+  });
+  protected readonly ashtaStrongest = computed(() => [...this.ashtaRows()].sort((a, b) => b.sav - a.sav).slice(0, 3));
+  protected readonly ashtaWeakest = computed(() => [...this.ashtaRows()].sort((a, b) => a.sav - b.sav).slice(0, 3));
+  protected readonly ashtaPinda = computed(() => this.ashtakavarga()?.pinda_rank ?? []);
 
   constructor() { if (this.mode !== 'home') void this.load(); else this.loading.set(false); }
 
@@ -68,6 +111,11 @@ export class ReferenceComponent {
     } catch (error) {
       this.error.set((error as Error).message);
     } finally { this.loading.set(false); }
+  }
+
+  /** 0..1 heat for a SAV cell: 28 is the classical neutral mark, 18..40 the usual spread. */
+  protected savHeat(sav: number): number {
+    return Math.min(1, Math.max(0, (sav - 18) / 22));
   }
 
   private flatten(value: unknown, prefix = ''): { label: string; value: string }[] {
