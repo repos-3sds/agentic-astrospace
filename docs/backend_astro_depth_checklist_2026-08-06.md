@@ -814,6 +814,43 @@ worker and deletion fixes shipped; these did not.
   rewrote. *Hook:* the same `Field(max_length=...)` bounds as
   `KundliCreate` in `kundli_routes.py`.
 
+### F. Native startup and offline (Tier 1 items 1, 2, 6, 8 of the 2026-10-15 production audit)
+
+Shipped 2026-10-15: cache-first `/auth/config`, bounded session refresh,
+`/settings` off the boot path, `timeout(8s)` + one retry on API GETs
+(`core/http-resilience.interceptor.ts`), native splash held until the web
+intro paints, cached profile list and chart bundle in `ResourceCacheService`,
+sign-out teardown of retained tabs (`core/session-teardown.ts`), the web shell
+and PrimeNG behind a lazy route (initial bundle 1.36 MB → 0.70 MB raw, with an
+`angular.json` budget that errors at 1.2 MB), `@capacitor/keyboard`, and real
+system insets in place of the hard-coded 48 px Android bottom.
+
+- [ ] **Lazy SQLCipher open.** The audit asked for it; it is still an app
+  initializer. *Why not:* the cached profile list and Today are read from
+  that cache before first render, so opening it later only moves the wait.
+  It is ~6 local bridge calls, not network. *Unblocks on:* a device trace
+  showing the open is a meaningful share of cold start. *Hook:*
+  `provideAppInitializer` in `ui/src/app/app.config.ts`.
+- [ ] **Slimmer Supabase client** (~80 KB of realtime/phoenix/storage still in
+  the initial bundle). *Why not:* needs `@supabase/auth-js` used directly and
+  every `SupabaseClient` call site re-checked. *Hook:* `buildClient` in
+  `ui/src/app/core/auth.service.ts`.
+- [ ] **Device-only data on sign-out.** Mobile notes, the mantra tracker and
+  recent searches live in plain localStorage and are not cleared on sign-out.
+  *Why not:* they are the only copy (no server sync), so clearing is data
+  loss. *Unblocks on:* a product decision — sync them, or warn and clear.
+  *Hook:* register a hook with `SessionTeardown`.
+- [ ] **Keyboard and insets on device.** The 48 px Android bottom was removed
+  on the strength of Capacitor 8.4.2's `SystemBars.java` (env() passthrough on
+  WebView ≥ 140, `--safe-area-inset-*` injection, WebView padding otherwise).
+  *Unblocks on:* an Android 15/16 emulator run with gesture and 3-button nav,
+  and an iOS run with the keyboard open in Ask, after `npm run build:native`.
+  *Hook:* `--as-safe-*` in `ui/src/styles.scss`; `NativeKeyboardService`.
+- [ ] **Auth config rotation applies on the next launch.** A revalidated
+  `/auth/config` that differs is stored, not applied, because rebuilding the
+  Supabase client under a live session is riskier. *Hook:* `loadConfig` in
+  `ui/src/app/core/auth.service.ts`.
+
 ---
 
 ## Live evaluation pass (2026-08-12)
