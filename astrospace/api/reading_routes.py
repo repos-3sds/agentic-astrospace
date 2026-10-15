@@ -134,6 +134,7 @@ def _claim_to_dict(c) -> dict:
         "kundli_id": c.kundli_id,
         "reading_id": c.reading_id,
         "reading_type": c.reading_type,
+        "reading_version": (c.reading.version or 1) if c.reading else None,
         "period_label": c.period_label,
         "generated_local_date": c.generated_local_date,
         "target_start_date": c.target_start_date,
@@ -190,6 +191,27 @@ def _claim_confidence(text: str) -> float:
     return round(max(0.25, min(0.9, confidence)), 2)
 
 
+_HEADING = re.compile(r"^\s{0,3}#{1,6}\s+.*$", re.MULTILINE)
+_LIST_MARKER = re.compile(r"^\s*(?:[-*+•]|\d+[.)])\s+", re.MULTILINE)
+_EMPHASIS = re.compile(r"(\*\*|__|\*|_|`)")
+
+
+def _plain_prose(content: str) -> str:
+    """The reading's sentences without its markdown scaffolding.
+
+    Readings are written with `##` section headers. Claims used to be cut
+    from the whitespace-collapsed text, so a header ran into the first
+    sentence after it ("## Career and money A delayed payment…") and that
+    fused string was what people were asked to review. Headers carry no
+    prediction, so they go; list markers and emphasis are unwrapped. One
+    line per paragraph or bullet, so a sentence never spans two of them.
+    """
+    text = _HEADING.sub("", content)
+    text = _LIST_MARKER.sub("", text)
+    text = _EMPHASIS.sub("", text)
+    return text
+
+
 def _extract_prediction_claims(
     content: str,
     *,
@@ -202,8 +224,12 @@ def _extract_prediction_claims(
     target_start_date: str,
     target_end_date: str,
 ) -> list[dict]:
-    normalized = re.sub(r"\s+", " ", content.replace("•", ".")).strip()
-    pieces = re.split(r"(?<=[.!?])\s+|(?:\s+-\s+)", normalized)
+    normalized = re.sub(r"\s+", " ", _plain_prose(content)).strip()
+    pieces = [
+        piece
+        for line in _plain_prose(content).splitlines()
+        for piece in re.split(r"(?<=[.!?])\s+|(?:\s+-\s+)", line.strip())
+    ]
     claims: list[dict] = []
     seen: set[str] = set()
     predictive_terms = re.compile(
@@ -407,6 +433,7 @@ def list_prediction_claims(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     limit: int = Query(default=200, ge=1, le=500),
+    include_superseded: bool = False,
     db: Session = Depends(get_db),
 ):
     if status and status not in CLAIM_STATUSES:
@@ -423,7 +450,34 @@ def list_prediction_claims(
         end_date=end_date,
         limit=limit,
     )
+    if not include_superseded:
+        superseded = _superseded_reading_ids(db, kundli_id, user.id)
+        claims = [c for c in claims if c.status != "pending" or c.reading_id not in superseded]
     return [_claim_to_dict(c) for c in claims]
+
+
+def _superseded_reading_ids(db: Session, kundli_id: str, user_id: str) -> set[str]:
+    """Readings that a newer version of the same period has replaced.
+
+    Every "Generate new" writes a fresh version with its own claims, and the
+    old version's unreviewed claims used to stay in the review queue beside
+    the new ones: the same sentence twice, for a reading the person had
+    already thrown away. Those are hidden by default. A claim someone already
+    reviewed stays, whatever version it came from: that verdict is history.
+    """
+    latest: dict[tuple[str, str | None], tuple] = {}
+    superseded: set[str] = set()
+    for r in crud.get_readings(db, kundli_id, user_id, limit=500):
+        key = (r.reading_type, r.period_label)
+        rank = (r.version or 1, r.generated_at)
+        current = latest.get(key)
+        if current is None or rank > current[0]:
+            if current is not None:
+                superseded.add(current[1])
+            latest[key] = (rank, r.id)
+        else:
+            superseded.add(r.id)
+    return superseded
 
 
 @router.patch("/{kundli_id}/claims/{claim_id}")

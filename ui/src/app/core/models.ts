@@ -1377,6 +1377,8 @@ export interface PredictionClaim {
   kundli_id: string;
   reading_id: string;
   reading_type: string;
+  /** Version of the reading this claim came from; claims of a superseded version are only returned once reviewed. */
+  reading_version?: number | null;
   period_label?: string;
   generated_local_date?: string;
   target_start_date?: string;
