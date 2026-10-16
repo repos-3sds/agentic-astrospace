@@ -1,9 +1,16 @@
 {
   "hosting": {
     "public": "firebase-public",
-    "ignore": ["firebase.json", "**/.*"],
+    "ignore": ["firebase.json", "**/.*", "README.txt"],
+    "cleanUrls": true,
     "rewrites": [
-      { "source": "**", "run": { "serviceId": "agentic-astrospace", "region": "asia-south1" } }
+      { "source": "/api/**", "run": { "serviceId": "agentic-astrospace", "region": "asia-south1" } },
+      { "source": "/legal/**", "run": { "serviceId": "agentic-astrospace", "region": "asia-south1" } },
+      { "source": "/email/**", "run": { "serviceId": "agentic-astrospace", "region": "asia-south1" } },
+      { "source": "**", "destination": "/index.html" }
+    ],
+    "headers": [
+      { "source": "/index.html", "headers": [{ "key": "Cache-Control", "value": "public, max-age=300" }] }
     ]
   }
 }
