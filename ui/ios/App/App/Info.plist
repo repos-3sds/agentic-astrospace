@@ -22,10 +22,10 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>app.astrospace.mobile.auth</string>
+			<string>app.asksiddha.mobile.auth</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>app.astrospace.mobile</string>
+				<string>app.asksiddha.mobile</string>
 			</array>
 		</dict>
 	</array>

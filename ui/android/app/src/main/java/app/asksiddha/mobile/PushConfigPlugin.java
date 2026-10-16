@@ -1,4 +1,4 @@
-package app.astrospace.mobile;
+package app.asksiddha.mobile;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;

@@ -11,7 +11,7 @@ import { ResourceCacheService } from './resource-cache.service';
 import { SessionStorageAdapter, sessionStorageAdapter } from './session-storage';
 import { SessionTeardown } from './session-teardown';
 
-const NATIVE_AUTH_CALLBACK = 'app.astrospace.mobile://auth/callback';
+const NATIVE_AUTH_CALLBACK = 'app.asksiddha.mobile://auth/callback';
 const NATIVE_AUTH_BRIDGE_PATH = '/api/v1/auth/native-callback';
 const NATIVE_AUTH_DESTINATION_KEY = 'astrospace.nativeAuthDestination';
 const NATIVE_AUTH_STATE_KEY = 'astrospace.nativeAuthState';

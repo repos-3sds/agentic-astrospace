@@ -148,7 +148,7 @@ the store listings point at the deployed URLs.
 
 ## Not yet done
 
-- Add `app.astrospace.mobile://auth/callback` to the Supabase Redirect URLs
+- Add `app.asksiddha.mobile://auth/callback` to the Supabase Redirect URLs
   allowlist before testing a real magic link, password recovery, or Google
   return (M11-US02).
 - Complete the Android lifecycle matrix beyond launch, keyboard, route Back,
@@ -197,7 +197,9 @@ Settings › Notifications; the worker that sends is
 A build delivers nothing until these are in place, none of them committed:
 
 - **Android:** `ui/android/app/google-services.json` from the Firebase
-  console. `build.gradle` already applies the google-services plugin only
+  console, downloaded for the Android app registered as
+  `app.asksiddha.mobile`. A file for any other package name fails the
+  build with "No matching client found for package name". `build.gradle` already applies the google-services plugin only
   when the file exists, so a build without it still runs; it just gets no
   token. `POST_NOTIFICATIONS` is declared in the manifest and requested at
   runtime by the plugin.
@@ -227,7 +229,7 @@ Local real-auth configuration is enabled and its API accepts the native
 100% of traffic; the production native preflight now returns HTTP 200.
 
 The iOS and Android projects register
-`app.astrospace.mobile://auth/callback`. OAuth launches in the system browser,
+`app.asksiddha.mobile://auth/callback`. OAuth launches in the system browser,
 PKCE callbacks are exchanged for a Supabase session, magic-link token
 callbacks are accepted, and password recovery lands on `/m/reset-password`.
 Supabase must allowlist the callback URL before those hosted flows can return

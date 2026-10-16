@@ -21,7 +21,7 @@ function cacheSpy(): ResourceCacheService {
 
 /**
  * The native OAuth/magic-link/password-reset callback arrives over a custom
- * URL scheme (`app.astrospace.mobile://auth/callback`) that's registered
+ * URL scheme (`app.asksiddha.mobile://auth/callback`) that's registered
  * BROWSABLE with autoVerify off — reachable from any other installed app or
  * a tapped web link, not just the email Supabase actually sent. The `code`
  * branch is already safe: exchanging a PKCE code for a session requires the
@@ -35,7 +35,7 @@ function cacheSpy(): ResourceCacheService {
 describe('AuthService native auth callback', () => {
   const STATE_KEY = 'astrospace.nativeAuthState';
   const DESTINATION_KEY = 'astrospace.nativeAuthDestination';
-  const CALLBACK_BASE = 'app.astrospace.mobile://auth/callback';
+  const CALLBACK_BASE = 'app.asksiddha.mobile://auth/callback';
 
   let service: AuthService;
   let client: {
