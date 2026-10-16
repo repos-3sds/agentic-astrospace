@@ -14,13 +14,13 @@ import { KundliStore } from '../../../core/kundli.store';
 import { BirthDetailsCardComponent } from '../chart/birth-details-card.component';
 import { VedicService } from '../../../core/vedic.service';
 import { ResourceFreshness } from '../../../core/resource-cache';
-import { DailyGuidancePayload, VedicAll, DailyActionRow, FestivalOccurrence } from '../../../core/models';
+import { DailyBriefResponse, DailyGuidancePayload, VedicAll, DailyActionRow, FestivalOccurrence } from '../../../core/models';
 import { FestivalSheetComponent } from '../calendar/festival-sheet.component';
 import { AnalyticsService } from '../../../core/analytics.service';
 import { TODAY_DRILL_DOWNS, whyDrillDowns } from '../why-reading/drill-downs';
 import { FestivalService } from '../../../core/festival.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
-import { PreferencesService } from '../../../core/preferences.service';
+import { ExperienceMode, PreferencesService, ReadingTone } from '../../../core/preferences.service';
 import { HapticsService } from '../../../core/haptics.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { AudioReadingSection, buildTodayAudioScript } from './audio-reading-script';
@@ -285,9 +285,14 @@ export class TodayComponent {
     dateLabel: string;
     daily: DailyGuidancePayload;
   } | null>(null);
+  /** The agent's brief for the loaded day, once it arrives; null until then. */
+  private readonly agentBrief = signal<{ profileId: string; date: string; brief: NonNullable<DailyBriefResponse['brief']> } | null>(null);
+  private briefRequest = 0;
   protected readonly audioSections = computed<AudioReadingSection[]>(() => {
     const loaded = this.loadedDaily();
     if (!loaded) return [];
+    const agent = this.currentBrief(loaded.daily.date);
+    if (agent?.spoken.length) return agent.spoken.map((section) => ({ ...section }));
     return buildTodayAudioScript({
       ...loaded,
       experienceMode: this.preferences.experienceMode(),
@@ -421,6 +426,15 @@ export class TodayComponent {
       this.preferences.panchangaContextKey();
       if (profilesLoaded) void this.loadToday(profileId);
     });
+    // The agent brief follows the loaded day and the reading style. A changed
+    // tone or experience mode is a different brief, fetched (or reused) here.
+    effect(() => {
+      const loaded = this.loadedDaily();
+      const profileId = this.kundlis.activeId();
+      const tone = this.preferences.tone();
+      const mode = this.preferences.experienceMode();
+      if (loaded && profileId) void this.loadBrief(profileId, loaded.daily.date, tone, mode);
+    });
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
     // Deep-linked from the onboarding Aha screen's "Listen to my first
     // guidance" — arriving with ?listen=1 should open the sheet immediately
@@ -488,6 +502,47 @@ export class TodayComponent {
     const updatedAt = this.cacheUpdatedAt();
     if (!updatedAt) return 'Saved guidance';
     return `Saved ${new Intl.DateTimeFormat('en', { hour: 'numeric', minute: '2-digit' }).format(updatedAt)}`;
+  }
+
+  private currentBrief(date: string): NonNullable<DailyBriefResponse['brief']> | null {
+    const agent = this.agentBrief();
+    return agent && agent.date === date && agent.profileId === this.kundlis.activeId() ? agent.brief : null;
+  }
+
+  private async loadBrief(profileId: string, date: string, tone: ReadingTone, mode: ExperienceMode): Promise<void> {
+    const request = ++this.briefRequest;
+    const current = this.agentBrief();
+    if (current && (current.profileId !== profileId || current.date !== date)) this.agentBrief.set(null);
+    try {
+      const response = await this.vedic.dailyBrief(profileId, date, tone, mode);
+      if (request !== this.briefRequest || this.kundlis.activeId() !== profileId) return;
+      if (!response.brief || response.date !== date) return;
+      this.agentBrief.set({ profileId, date, brief: response.brief });
+      this.applyBrief();
+    } catch {
+      // The templated brief is already on screen; it stays.
+    }
+  }
+
+  /** Puts the agent's wording over the templated cards for the same day. */
+  private applyBrief(): void {
+    const loaded = this.loadedDaily();
+    const brief = loaded ? this.currentBrief(loaded.daily.date) : null;
+    if (!brief) return;
+    this.view.update((view) => view && ({
+      ...view,
+      verdict: brief.headline,
+      detail: brief.summary,
+      doItems: brief.do.map((item) => item.headline),
+      avoidItems: brief.avoid.map((item) => item.headline),
+      nextWindowValue: brief.timing_note,
+    }));
+    this.summary.set(brief.summary);
+    this.plainWords.set([...brief.why, brief.practical_close]);
+    this.doAvoidExplained.set([
+      ...brief.do.map((item) => ({ kind: 'do' as const, headline: item.headline, detail: item.detail })),
+      ...brief.avoid.map((item) => ({ kind: 'avoid' as const, headline: item.headline, detail: item.detail })),
+    ]);
   }
 
   private applyDaily(name: string, city: string, daily: DailyGuidancePayload): void {
@@ -635,6 +690,8 @@ export class TodayComponent {
         ? practitionerQuestion
         : `Explain ${daily.star_of_day.nakshatra} nakshatra in simple words`,
     ]);
+    // A refresh rebuilds the view from the template; put the agent's words back.
+    this.applyBrief();
   }
 
   private async prefetchCalendar(profileId: string): Promise<void> {

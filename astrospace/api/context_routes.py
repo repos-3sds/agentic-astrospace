@@ -1,12 +1,14 @@
 from datetime import datetime
 from functools import lru_cache
-from typing import Optional
+from typing import Literal, Optional
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from ..agents.daily_brief_agent import daily_brief_enabled
+from ..context.daily_brief_store import ensure_brief
 from ..context import KeywordRouter, assemble, daily_guidance, domain_ids
 from .timing_place import resolve_timing_place
 from ..core.vedic import LocationError, VedicChart
@@ -84,21 +86,8 @@ def _cached_daily_guidance(
 
 
 
-@router.get("/{kundli_id}/daily")
-def daily(
-    kundli_id: str,
-    user: CurrentUser,
-    db: Session = Depends(get_db),
-    ayanamsha: str = "lahiri",
-    node_type: str = "mean",
-    as_of: Optional[datetime] = None,
-    timezone: Optional[str] = Query(None, description="Viewer or selected panchanga timezone"),
-    city: Optional[str] = Query(None, description="Optional panchanga place override"),
-    nation: Optional[str] = None,
-):
-    kundli = crud.get_kundli(db, kundli_id, user.id)
-    if not kundli:
-        raise HTTPException(status_code=404, detail="Kundli not found")
+def _daily_payload(kundli, ayanamsha: str, node_type: str, as_of: Optional[datetime],
+                   timezone: Optional[str], city: Optional[str], nation: Optional[str]) -> dict:
     _chart_from_kundli(kundli, ayanamsha, node_type)  # validates the birth details
     # One rule for "where" shared with Calendar Day, personal panchanga and
     # muhurta (api/timing_place.py); the viewer timezone only decides today.
@@ -126,6 +115,59 @@ def daily(
         **cached,
         "provenance": {**cached["provenance"], "place": {**cached["provenance"]["place"], **place.as_payload()}},
     }
+
+
+@router.get("/{kundli_id}/daily")
+def daily(
+    kundli_id: str,
+    user: CurrentUser,
+    db: Session = Depends(get_db),
+    ayanamsha: str = "lahiri",
+    node_type: str = "mean",
+    as_of: Optional[datetime] = None,
+    timezone: Optional[str] = Query(None, description="Viewer or selected panchanga timezone"),
+    city: Optional[str] = Query(None, description="Optional panchanga place override"),
+    nation: Optional[str] = None,
+):
+    kundli = crud.get_kundli(db, kundli_id, user.id)
+    if not kundli:
+        raise HTTPException(status_code=404, detail="Kundli not found")
+    return _daily_payload(kundli, ayanamsha, node_type, as_of, timezone, city, nation)
+
+
+@router.get("/{kundli_id}/daily/brief")
+def daily_brief(
+    kundli_id: str,
+    user: CurrentUser,
+    db: Session = Depends(get_db),
+    ayanamsha: str = "lahiri",
+    node_type: str = "mean",
+    as_of: Optional[datetime] = None,
+    timezone: Optional[str] = Query(None, description="Viewer or selected panchanga timezone"),
+    city: Optional[str] = Query(None, description="Optional panchanga place override"),
+    nation: Optional[str] = None,
+    tone: Literal["gentle", "direct"] = "gentle",
+    mode: Literal["guided", "balanced", "practitioner"] = "balanced",
+):
+    """Today's brief in the agent's words, over the same signals as /daily.
+
+    Normally already written by the notification worker and read from the
+    store (context/daily_brief_store.py). Answers 200 with `brief: null` when
+    the agent is off or could not write a safe brief: the app already shows
+    the templated brief and keeps it.
+    """
+    kundli = crud.get_kundli(db, kundli_id, user.id)
+    if not kundli:
+        raise HTTPException(status_code=404, detail="Kundli not found")
+    payload = _daily_payload(kundli, ayanamsha, node_type, as_of, timezone, city, nation)
+    base = {"date": payload["date"], "valid_until": payload.get("valid_until")}
+    if not daily_brief_enabled():
+        return {**base, "source": "template", "brief": None}
+    value, written_now = ensure_brief(db, kundli, payload, tone=tone, mode=mode,
+                                      ayanamsha=ayanamsha, node_type=node_type, trigger="on_open")
+    if not value:
+        return {**base, "source": "template", "brief": None}
+    return {**base, **value, "cached": not written_now}
 
 
 @router.post("/{kundli_id}")

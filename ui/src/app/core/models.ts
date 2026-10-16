@@ -334,6 +334,44 @@ export interface PanchangaConventions {
   resolved: string[];
 }
 
+export interface DailyBriefItem {
+  headline: string;
+  detail: string;
+}
+
+/**
+ * The agent's wording of today's brief (GET /context/{id}/daily/brief), over
+ * the same signals as DailyGuidancePayload. `brief` is null when the agent is
+ * off or could not write a safe one; the templated brief then stays.
+ * `spoken` is kept under 90 s of listening at 0.9x by the server. A brief is
+ * written once per profile and Vedic day, normally by the worker overnight.
+ */
+export interface DailyBriefResponse {
+  date: string;
+  valid_until: string | null;
+  source: 'agent' | 'template';
+  brief: {
+    headline: string;
+    summary: string;
+    narrative: string;
+    practical_close: string;
+    focus: string;
+    energy: 'drained' | 'fragmented' | 'steady' | 'vibrant';
+    areas: { love: string; money: string; work: string; health: string; growth: string };
+    do: DailyBriefItem[];
+    avoid: DailyBriefItem[];
+    timing_note: string;
+    why: string[];
+    spoken: Array<{ label: 'Opening' | 'Overview' | 'Today' | 'Why' | 'Close'; text: string }>;
+  } | null;
+  spoken_words?: number;
+  listen_seconds?: number;
+  /** Written by the scheduled worker, or on the first open when it had not run yet. */
+  trigger?: 'scheduled' | 'on_open';
+  generated_at?: string;
+  cached?: boolean;
+}
+
 export interface DailyGuidancePayload {
   system: string;
   engine_version: string;

@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from ..db import crud_mobile as cm
 from ..db.models import NotificationJob
+from .daily_briefs import schedule_daily_briefs
 from .morning_brief import schedule_morning_briefs
 from .push import PushMessage, PushTransport, transports_from_env
 from .window_alerts import schedule_window_alerts
@@ -115,11 +116,13 @@ def _step(db: Session, name: str, call, default):
 
 def run_once(db: Session, transports: dict[str, PushTransport] | None = None) -> dict:
     reaped = _step(db, "reap", lambda: cm.reap_stale_notifications(db), 0)
+    # Before the morning briefs, so the brief behind the push is already written.
+    briefs = _step(db, "daily briefs", lambda: schedule_daily_briefs(db), {})
     scheduled = _step(db, "morning briefs", lambda: schedule_morning_briefs(db), [])
     windows = _step(db, "window alerts", lambda: schedule_window_alerts(db), [])
     delivered = _step(db, "delivery", lambda: deliver_due(db, transports),
                       {"sent": 0, "failed": 0, "delivery_failed": True})
-    summary = {"reaped": reaped, "scheduled": len(scheduled),
+    summary = {"reaped": reaped, "daily_briefs": briefs, "scheduled": len(scheduled),
                "window_alerts": len(windows), **delivered}
     log.info("notifications: %s", summary)
     return summary
