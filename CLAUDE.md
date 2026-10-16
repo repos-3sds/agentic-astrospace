@@ -18,6 +18,8 @@ Native packaging is Capacitor over the same bundle — see
 [docs/native_builds.md](docs/native_builds.md). To continue the screen build,
 read [docs/mobile_screen_build_plan.md](docs/mobile_screen_build_plan.md) first;
 it has every Figma node ID, the per-screen recipe, and the traps already hit.
+The public address is asksiddha.app, served through Firebase Hosting; see
+[docs/custom_domain.md](docs/custom_domain.md).
 Email to readers (daily reading, moon and festival days) runs on the same
 notification worker as push; see [docs/email_notifications.md](docs/email_notifications.md).
 

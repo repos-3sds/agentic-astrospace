@@ -1,0 +1,9 @@
+{
+  "hosting": {
+    "public": "firebase-public",
+    "ignore": ["firebase.json", "**/.*"],
+    "rewrites": [
+      { "source": "**", "run": { "serviceId": "agentic-astrospace", "region": "asia-south1" } }
+    ]
+  }
+}
