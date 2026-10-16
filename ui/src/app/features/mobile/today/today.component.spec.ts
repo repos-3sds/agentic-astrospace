@@ -1,4 +1,4 @@
-import { gaugePositionFromScore } from './today.component';
+import { gaugePositionFromScore, muhurtaCountdown } from './today.component';
 
 /**
  * The day gauge was near-empty for every genuine reading until 2026-07-27:
@@ -69,5 +69,25 @@ describe('gaugePositionFromScore', () => {
       expect(position).withContext(`score=${score}`).toBeGreaterThanOrEqual(1);
       expect(position).withContext(`score=${score}`).toBeLessThanOrEqual(100);
     }
+  });
+});
+
+
+describe('muhurtaCountdown', () => {
+  const daily = {
+    date: '2026-10-16',
+    provenance: { place: { timezone: 'Asia/Singapore' } },
+    muhurta_windows: [{ name: 'Rahu Kalam', time: '11:19–12:50', kind: 'inauspicious' }],
+  } as any;
+  const at = (hhmm: string) => new Date(`2026-10-16T${hhmm}:00+08:00`);
+
+  it('counts down to the window, then to its end, then says it ended', () => {
+    expect(muhurtaCountdown(daily, at('10:49'))).toBe('Starts in 30m');
+    expect(muhurtaCountdown(daily, at('12:20'))).toBe('Ends in 30m');
+    expect(muhurtaCountdown(daily, at('15:15'))).toBe('Ended');
+  });
+
+  it('shows nothing on a cached payload for another day', () => {
+    expect(muhurtaCountdown(daily, new Date('2026-10-17T10:00:00+08:00'))).toBe('');
   });
 });

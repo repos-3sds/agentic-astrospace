@@ -138,14 +138,14 @@ function formatDuration(minutes: number): string {
  * conversion — Intl.DateTimeFormat just reads today's wall clock in that
  * timezone rather than the device's own.
  */
-function muhurtaCountdown(daily: DailyGuidancePayload): string {
+export function muhurtaCountdown(daily: DailyGuidancePayload, now: Date = new Date()): string {
   const rahu = daily.muhurta_windows.find((w) => w.name.startsWith('Rahu Kalam'));
   if (!rahu) return '';
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: daily.provenance.place.timezone,
     year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', hour12: false,
-  }).formatToParts(new Date());
+  }).formatToParts(now);
   const part = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
   // The guidance is cached per day; only show a live countdown for the day
   // it actually describes, not a stale "starts in" on yesterday's cache.
@@ -154,7 +154,8 @@ function muhurtaCountdown(daily: DailyGuidancePayload): string {
   const [start, end] = rahu.time.split(/[–-]/).map(minutesSinceMidnight);
   if (nowMinutes < start) return `Starts in ${formatDuration(start - nowMinutes)}`;
   if (nowMinutes < end) return `Ends in ${formatDuration(end - nowMinutes)}`;
-  return '';
+  // Past for today: say so rather than leaving the note's corner blank.
+  return 'Ended';
 }
 
 /** Verdict bands. Named, not numeric, so tone rules can key off them. */
@@ -277,6 +278,8 @@ export class TodayComponent {
     () => this.view()?.greetingName ?? this.kundlis.active()?.name ?? 'there',
   );
   protected readonly headerDate = computed(() => this.view()?.dateLabel ?? 'Today');
+  /** The day the guidance is for, which the timing note opens in the calendar. */
+  protected readonly todayDate = computed(() => this.loadedDaily()?.daily.date ?? '');
   protected readonly greeting = computed(() => `Namaste, ${this.headerName()}`);
   protected readonly listenScript = computed(() =>
     this.audioSections().map((section) => section.text).join(' '),
@@ -416,6 +419,15 @@ export class TodayComponent {
   protected readonly introPlayed = signal(todayIntroPlayed);
 
   constructor() {
+    // "Starts in / Ends in" is a countdown: recompute it each half minute, so
+    // it moves (and turns to "Ended") while Today stays open.
+    const tick = setInterval(() => {
+      const loaded = this.loadedDaily();
+      if (!loaded) return;
+      const next = muhurtaCountdown(loaded.daily);
+      this.view.update((view) => (view && view.nextWindowIn !== next ? { ...view, nextWindowIn: next } : view));
+    }, 30_000);
+    inject(DestroyRef).onDestroy(() => clearInterval(tick));
     if (!todayIntroPlayed) {
       todayIntroPlayed = true;
       const timer = setTimeout(() => this.introPlayed.set(true), TODAY_INTRO_MS);
