@@ -1,7 +1,15 @@
 @let p = profile();
+@let s = snapshot();
 
+<!-- Greeting from the Practitioner board; the avatar switches whose chart this is. -->
 <header class="appbar">
-  <h1 class="screen-title">Explore</h1>
+  <button class="who m-pressable" type="button" (click)="profileSwitcherOpen.set(true)" aria-label="Switch person">
+    <span class="avatar" aria-hidden="true">{{ p.initial }}</span>
+    <span class="who-text">
+      <b>Namaste, {{ p.first }}</b>
+      <span><i aria-hidden="true"></i><em>Tap to switch person</em></span>
+    </span>
+  </button>
   <span class="actions">
     <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search Siddha">
       <img src="mobile/search.svg" alt="" aria-hidden="true" />
@@ -13,43 +21,54 @@
 </header>
 
 <main class="body">
-  <!-- Whose chart every row below opens. -->
-  <button class="person m-pressable" type="button" (click)="profileSwitcherOpen.set(true)">
-    <span class="avatar" aria-hidden="true">{{ p.initial }}</span>
-    <span class="person-text">
-      <span class="person-eyebrow">SHOWING</span>
-      <span class="person-name">{{ p.name }}</span>
+  <!-- Featured card: the cosmic snapshot from the Your Chart design, opening the chart. -->
+  <a class="featured m-pressable" [routerLink]="['/m', 'chart']">
+    <span class="featured-head">
+      <span class="star" aria-hidden="true">
+        <span class="mask" style="--icon-url: url('/mobile/figma-guided-star.svg')"></span>
+      </span>
+      <span class="eyebrow">YOUR COSMIC SNAPSHOT</span>
     </span>
-    <span class="person-switch">Switch</span>
-  </button>
+    <span class="featured-title">{{ s.headline }}</span>
+    <span class="cells">
+      @for (cell of s.cells; track cell.label) {
+        <span class="cell">
+          <small>{{ cell.label }}</small>
+          <b>{{ cell.sign }}</b>
+        </span>
+      }
+    </span>
+    <span class="featured-link">Open your chart (D1) <span aria-hidden="true">→</span></span>
+  </a>
 
   @if (preferences.experienceMode() === 'guided') {
-    <a class="library m-pressable" [routerLink]="['/m', 'explore', 'library']">
-      <img src="mobile/figma-yantra-book-open.svg" alt="" aria-hidden="true" />
-      <span>
-        <b>Life guidance library</b>
-        <small>Your story and life chapters in plain language</small>
+    <a class="story m-pressable" [routerLink]="['/m', 'explore', 'story']">
+      <span class="story-icon" aria-hidden="true">
+        <span class="mask" style="--icon-url: url('/mobile/figma-yantra-book-open.svg')"></span>
+      </span>
+      <span class="story-text">
+        <b>Your story</b>
+        <small>Personality, strengths and life themes in plain words</small>
       </span>
       <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
     </a>
   }
 
-  <nav class="group" aria-label="Explore">
-    @for (row of menu(); track row.id; let last = $last) {
-      <a class="row m-pressable" [routerLink]="row.route">
-        <span class="row-icon">
-          <img [src]="'mobile/' + row.icon + '.svg'" alt="" aria-hidden="true" />
+  <p class="eyebrow">EXPLORE</p>
+  <nav class="grid" aria-label="Explore">
+    @for (tile of tiles(); track tile.id) {
+      <a class="tile m-pressable" [attr.data-tone]="tile.tone" [routerLink]="tile.route">
+        <span class="tile-top">
+          <span class="tile-icon">
+            <span class="mask" [style.--icon-url]="'url(/mobile/' + tile.icon + '.svg)'" aria-hidden="true"></span>
+          </span>
+          @if (tile.locked || tile.partial) {
+            <span class="plus" [class.is-partial]="tile.partial">{{ tile.locked ? 'Plus' : 'Free · Plus' }}</span>
+          }
         </span>
-        <span class="row-copy">
-          <span class="row-label">{{ row.label }}</span>
-          <span class="row-detail">{{ row.detail }}</span>
-        </span>
-        @if (row.locked || row.partial) {
-          <span class="plus" [class.is-partial]="row.partial">{{ row.locked ? 'Plus' : 'Free · Plus' }}</span>
-        }
-        <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
+        <b class="tile-title">{{ tile.label }}</b>
+        <small class="tile-sub">{{ tile.detail }}</small>
       </a>
-      @if (!last) { <div class="rule"></div> }
     }
   </nav>
 </main>

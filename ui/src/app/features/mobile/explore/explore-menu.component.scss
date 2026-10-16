@@ -1,20 +1,62 @@
 @use '../mobile-tokens' as *;
 
+// Three designs in one: the Practitioner board's greeting and tiles (chart-hub
+// .yantra-*), Guided Explore's featured card, and Your Chart's cosmic snapshot.
 :host { display: block; }
+
+.mask {
+  display: block;
+  width: 18px;
+  height: 18px;
+  background: currentColor;
+  mask: var(--icon-url) center / contain no-repeat;
+  -webkit-mask: var(--icon-url) center / contain no-repeat;
+}
 
 .appbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  height: 64px;
-  box-sizing: border-box;
-  padding: 10px 20px;
+  padding: 16px 20px 8px;
 }
 
-.screen-title { @include m-title; color: var(--m-text); margin: 0; }
+.who {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
 
-.actions { display: flex; gap: 8px; }
+.avatar {
+  display: grid;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--m-accent);
+  color: var(--m-on-ink);
+  @include m-body-strong;
+}
+
+.who-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+  b { @include m-body-strong; color: var(--m-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  span { @include m-caption; display: flex; min-width: 0; align-items: center; gap: 5px; color: var(--m-muted); white-space: nowrap; overflow: hidden; }
+  i { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 999px; background: var(--m-accent); }
+  em { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-style: normal; }
+}
+
+.actions { display: flex; flex: 0 0 auto; gap: 8px; }
 
 .iconbtn {
   display: grid;
@@ -31,107 +73,155 @@
 .body {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 8px 20px 16px;
+  gap: 16px;
+  padding: 8px 20px 20px;
 }
 
-.person {
+.eyebrow { @include m-eyebrow; color: var(--m-accent); margin: 0; }
+
+/* Featured snapshot */
+.featured {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 12px 15px;
-  border: 1px solid var(--m-border);
-  border-radius: 18px;
-  background: var(--m-surface);
-  text-align: left;
-  cursor: pointer;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--m-accent) 22%, var(--m-border));
+  border-radius: 24px;
+  background: var(--m-accent-soft);
+  text-decoration: none;
 }
 
-.avatar {
+.featured-head { display: flex; align-items: center; gap: 12px; }
+
+.star {
   display: grid;
-  place-items: center;
-  flex: 0 0 auto;
   width: 40px;
   height: 40px;
-  border-radius: 999px;
-  background: var(--m-accent);
-  color: var(--m-on-ink);
-  @include m-body-strong;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--m-surface);
+  color: var(--m-accent);
 }
 
-.person-text { display: flex; flex: 1 1 auto; min-width: 0; flex-direction: column; gap: 2px; }
-.person-eyebrow { @include m-eyebrow; color: var(--m-muted); }
-.person-name { @include m-body-strong; color: var(--m-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.person-switch { @include m-body-small; color: var(--m-accent-strong); flex: 0 0 auto; }
+// The app's own type tokens only, so this reads like every other screen.
+.featured-title { @include m-title; color: var(--m-text); }
 
-.library {
+.cells {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.cell {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+  padding: 11px 10px;
+  border: 1px solid var(--m-border);
+  border-radius: 14px;
+  background: var(--m-surface);
+  small { @include m-eyebrow; color: var(--m-muted); }
+  b { @include m-body-strong; color: var(--m-text); overflow: hidden; text-overflow: ellipsis; }
+}
+
+.featured-link { @include m-button; color: var(--m-accent-strong); }
+
+/* Guided: Your story */
+.story {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 14px 15px;
-  border-radius: 18px;
-  background: var(--m-accent-soft);
-  text-decoration: none;
-  > img:first-child { width: 22px; height: 22px; flex: 0 0 auto; }
-  span { display: flex; flex: 1 1 auto; flex-direction: column; gap: 2px; min-width: 0; }
-  b { @include m-body-strong; color: var(--m-text); }
-  small { @include m-caption; color: var(--m-muted); }
-}
-
-.group {
   border: 1px solid var(--m-border);
   border-radius: 18px;
   background: var(--m-surface);
-  overflow: hidden;
+  text-decoration: none;
+  .chevron { display: block; flex: 0 0 auto; width: 16px; height: 16px; }
 }
 
-.row {
+.story-icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--m-accent-soft);
+  color: var(--m-accent);
+}
+
+.story-text { display: flex; flex: 1 1 0; min-width: 0; flex-direction: column; gap: 2px; }
+.story-text b { @include m-body-strong; color: var(--m-text); }
+.story-text small { @include m-caption; color: var(--m-muted); }
+
+/* Tiles, as on the Practitioner board */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tile {
   display: flex;
-  align-items: center;
-  gap: 11px;
-  min-height: 60px;
+  min-width: 0;
+  min-height: 112px;
   box-sizing: border-box;
-  padding: 11px 15px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 14px;
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+  background: var(--m-surface);
+  box-shadow: var(--m-shadow-card);
   text-decoration: none;
 }
 
-.row-icon {
+.tile-top {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: var(--m-accent-soft);
-  img { display: block; width: 17px; height: 17px; filter: var(--settings-icon-filter); }
+  align-self: stretch;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
 }
 
-.row-copy { display: flex; flex: 1 1 auto; min-width: 0; flex-direction: column; gap: 2px; }
-.row-label { @include m-body-strong; color: var(--m-text); }
-.row-detail { @include m-caption; color: var(--m-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile-icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--m-raised);
+  color: var(--m-muted);
+  .mask { width: 16px; height: 16px; }
+}
+
+.tile[data-tone='accent'] .tile-icon { color: var(--m-accent); background: var(--m-accent-soft); }
+
+.tile-title { @include m-body-strong; margin-top: 4px; color: var(--m-text); }
+
+.tile-sub {
+  @include m-caption;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--m-muted);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.tile[data-tone='accent'] .tile-sub { color: var(--m-accent-strong); }
+.tile[data-tone='good'] .tile-sub { color: var(--m-good); }
+.tile[data-tone='warn'] .tile-sub { color: var(--m-gold); }
 
 .plus {
   @include m-badge;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
   background: var(--m-accent-soft);
   color: var(--m-accent-strong);
   &.is-partial { background: transparent; border: 1px solid var(--m-border); color: var(--m-muted); }
-}
-
-.chevron {
-  display: block;
-  flex: 0 0 auto;
-  width: 16px;
-  height: 16px;
-  filter: var(--settings-chevron-filter);
-}
-
-.rule { height: 1px; margin-left: 60px; background: var(--m-border); }
-
-:host-context(.app-dark) {
-  .row-icon img { filter: brightness(1.28) saturate(0.95); }
-  .chevron { filter: brightness(1.35) saturate(0.9); }
 }
