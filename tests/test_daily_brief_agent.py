@@ -368,7 +368,7 @@ def test_tomorrows_brief_is_stored_before_midnight(env, agent):
     assert midnight["written"] == 0 and midnight["already"] == 1
 
 
-def test_before_ten_pm_only_today_is_written(env, agent):
+def test_before_the_lookahead_only_today_is_written(env, agent):
     _http, _kundli, factory = env
     with factory() as db:
         _install_app(db)
@@ -490,3 +490,17 @@ def test_the_card_check_leaves_ordinary_words_alone():
     assert dba.card_jargon("Sampat Tarabala and a Rahu transit") == ["sampat", "tarabala", "rahu", "transit"]
     assert dba.card_jargon("Your Chandrabala is strong") == ["chandrabala"]
     assert dba.card_jargon("Keep a calm balance through the transition; marshal your energy.") == []
+
+
+def test_the_lookahead_time_can_be_moved_on_the_worker(env, agent, monkeypatch):
+    _http, _kundli, factory = env
+    afternoon = datetime(2026, 10, 16, 10, 35, tzinfo=timezone.utc)  # 16:05 in Kolkata
+    with factory() as db:
+        _install_app(db)
+        assert daily_briefs.schedule_daily_briefs(db, now=afternoon, prerender=lambda s: 0)["written"] == 1
+        monkeypatch.setenv("DAILY_BRIEF_LOOKAHEAD", "16:00")
+        assert daily_briefs.schedule_daily_briefs(db, now=afternoon, prerender=lambda s: 0)["written"] == 1
+    monkeypatch.setenv("DAILY_BRIEF_LOOKAHEAD", "not a time")
+    assert daily_briefs.lookahead_from() == daily_briefs.DEFAULT_LOOKAHEAD_FROM
+    monkeypatch.delenv("DAILY_BRIEF_LOOKAHEAD")
+    assert str(daily_briefs.lookahead_from()) == "22:30:00"
