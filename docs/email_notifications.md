@@ -40,7 +40,7 @@ Sending is from `Siddha <asksiddha@3senses.design>`, with replies to the same al
 2. Secrets, on **both** the service and the `agentic-astrospace-notifications` job:
    `RESEND_API_KEY`, `EMAIL_LINK_SECRET` (any long random string; changing it breaks links
    in emails already sent). On the service only: `RESEND_WEBHOOK_SECRET`.
-3. Optional env: `EMAIL_FROM`, `EMAIL_REPLY_TO`, `EMAIL_POSTAL_ADDRESS`, `PUBLIC_BASE_URL`.
+3. Optional env: `EMAIL_FROM`, `EMAIL_REPLY_TO`, `EMAIL_POSTAL_ADDRESS` (footer sender line), `PUBLIC_BASE_URL`.
 4. Resend webhook: `<PUBLIC_BASE_URL>/api/v1/email/webhooks/resend`, events
    `email.bounced` and `email.complained`.
 5. Apply `supabase/migrations/20261016120000_add_email_notifications.sql`.

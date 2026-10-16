@@ -123,7 +123,7 @@ class TestLinks:
                                 user_id=ME, category="daily_email")
         assert message.headers["List-Unsubscribe-Post"] == "List-Unsubscribe=One-Click"
         assert message.headers["List-Unsubscribe"].startswith("<https://siddha.test/api/v1/email/unsubscribe?t=")
-        assert "Stop all emails" in message.html and "Kakinada" in message.html
+        assert "Stop all emails" in message.html and "Siddha, 3 Senses Design Studio, India" in message.html
         assert "Stop these emails: https://siddha.test/" in message.text
 
     def test_model_copy_is_escaped(self):

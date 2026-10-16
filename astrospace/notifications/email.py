@@ -11,7 +11,7 @@ Configuration is environment-only, never read from the repo:
     EMAIL_FROM              default "Siddha <asksiddha@3senses.design>"
     EMAIL_REPLY_TO          default asksiddha@3senses.design
     EMAIL_LINK_SECRET       signs unsubscribe links; required to send
-    EMAIL_POSTAL_ADDRESS    footer address (required by anti-spam law)
+    EMAIL_POSTAL_ADDRESS    footer sender line, default "Siddha, 3 Senses Design Studio, India"
     PUBLIC_BASE_URL         where links point, default the Cloud Run URL
 
 Every marketing email carries List-Unsubscribe and List-Unsubscribe-Post
@@ -30,9 +30,7 @@ from typing import Protocol
 
 DEFAULT_FROM = "Siddha <asksiddha@3senses.design>"
 DEFAULT_REPLY_TO = "asksiddha@3senses.design"
-DEFAULT_POSTAL_ADDRESS = (
-    "3 Senses Design Studio, 3rd APSP, Ramanayyapeta, Kakinada, Andhra Pradesh 533005, India"
-)
+DEFAULT_POSTAL_ADDRESS = "Siddha, 3 Senses Design Studio, India"
 DEFAULT_BASE_URL = "https://agentic-astrospace-cwuqybpnzq-el.a.run.app"
 RESEND_ENDPOINT = "https://api.resend.com/emails"
 
