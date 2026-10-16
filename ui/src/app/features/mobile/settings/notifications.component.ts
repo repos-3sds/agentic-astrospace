@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { PushService } from '../../../core/push.service';
+import { EmailCategory, EmailSettingsService } from '../../../core/email-settings.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /** One thing the app may notify about. */
@@ -31,6 +32,10 @@ export interface NotificationPref {
  * - granted: this device is registered and the worker delivers to it.
  * On web there is no push at all, and the card says that rather than offering
  * a button that cannot deliver.
+ *
+ * Email is a separate section with its own switches, both off by default,
+ * and works on web too. Its state lives on the server, because every email
+ * carries a link that can turn it off.
  */
 @Component({
   selector: 'as-settings-notifications',
@@ -74,6 +79,18 @@ export class NotificationsComponent {
   readonly busy = signal(false);
   readonly snoozed = signal(this.isSnoozed());
 
+  private readonly emailSettings = inject(EmailSettingsService);
+  readonly email = this.emailSettings.state;
+  readonly emailError = this.emailSettings.error;
+  readonly emailRows: { id: EmailCategory; title: string; detail: string }[] = [
+    { id: 'daily_email', title: 'Daily reading', detail: 'Your day, in your inbox each morning' },
+    {
+      id: 'festival_email',
+      title: 'Moon and festival days',
+      detail: 'Full moon, new moon and festivals, the evening before',
+    },
+  ];
+
   /** Headline of the delivery card, one per state. */
   readonly deliveryTitle = computed(() => {
     switch (this.permission()) {
@@ -104,6 +121,13 @@ export class NotificationsComponent {
 
   constructor() {
     if (this.nativeApp()) void this.push.refreshPermission();
+    void this.emailSettings.load();
+  }
+
+  protected toggleEmail(id: EmailCategory): void {
+    const state = this.email();
+    if (!state) return;
+    void this.emailSettings.set(id, !state.categories[id]);
   }
 
   protected toggle(id: string): void {

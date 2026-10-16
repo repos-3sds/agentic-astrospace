@@ -75,4 +75,37 @@
       Saved on this device and on your account, ready for when delivery is on.
     }
   </p>
+
+  @if (email(); as mail) {
+    <h2 class="section-title">Email</h2>
+    @if (!mail.deliverable && mail.address) {
+      <p class="email-warn" role="status">
+        Emails to {{ mail.address }} couldn't be delivered, so we've stopped sending them.
+      </p>
+    }
+    @for (row of emailRows; track row.id) {
+      <div class="toggle-row">
+        <span class="toggle-text">
+          <span class="toggle-title">{{ row.title }}</span>
+          <span class="toggle-detail">{{ row.detail }}</span>
+        </span>
+        <button
+          class="switch"
+          type="button"
+          role="switch"
+          [class.is-on]="mail.categories[row.id]"
+          [attr.aria-checked]="mail.categories[row.id]"
+          [attr.aria-label]="row.title + ' by email'"
+          [disabled]="!mail.address"
+          (click)="toggleEmail(row.id)"
+        ></button>
+      </div>
+    }
+    @if (mail.address) {
+      <p class="local-note">Sent to {{ mail.address }}. Every email has a link to stop it.</p>
+    }
+  }
+  @if (emailError(); as err) {
+    <p class="email-warn" role="status">{{ err }}</p>
+  }
 </div>
