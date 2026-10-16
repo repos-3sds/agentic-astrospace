@@ -351,6 +351,8 @@ export interface DailyBriefResponse {
   valid_until: string | null;
   source: 'agent' | 'template';
   brief: {
+    /** Agent-written card header ("Finish what you started"); older briefs lack it. */
+    card_title?: string;
     headline: string;
     summary: string;
     narrative: string;

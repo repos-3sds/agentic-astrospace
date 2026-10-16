@@ -30,7 +30,8 @@ from ..db import crud_mobile as cm
 # v2: plain-action do/avoid titles, a fresh headline, "you" on the reader's
 # own profile, one window in the timing note. A new format is a new key, so the day's
 # stored v1 briefs are written again in the new style rather than kept.
-BRIEF_FORMAT = "agent-brief-v2"
+# v3: an agent-written card header in place of the fixed "What matters today".
+BRIEF_FORMAT = "agent-brief-v3"
 BRIEF_LANGUAGE = "en"
 
 log = logging.getLogger("astrospace.daily_brief")

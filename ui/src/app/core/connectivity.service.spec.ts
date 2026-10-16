@@ -15,8 +15,10 @@ describe('ConnectivityService', () => {
     expect(isReachabilityFailure(new HttpErrorResponse({ status: 500 }))).toBeFalse();
   });
 
-  it('moves offline after a reachability failure but not an HTTP response', () => {
+  it('moves offline after a reachability failure is confirmed, but not on an HTTP response', async () => {
+    spyOn(window, 'fetch').and.rejectWith(new TypeError('Failed to fetch'));
     service.noteRequestFailure(new TypeError('Failed to fetch'));
+    await new Promise((resolve) => setTimeout(resolve));
     expect(service.state()).toBe('offline');
 
     service.noteRequestFailure(new HttpErrorResponse({ status: 503 }));
@@ -25,7 +27,7 @@ describe('ConnectivityService', () => {
 
   it('verifies reachability before returning online', async () => {
     const fetchSpy = spyOn(window, 'fetch').and.resolveTo(new Response('{}', { status: 200 }));
-    service.noteRequestFailure(new TypeError('Failed to fetch'));
+    service.state.set('offline');
 
     const retry = service.retry();
     expect(service.state()).toBe('reconnecting');
@@ -48,6 +50,16 @@ describe('ConnectivityService', () => {
     const retry = service.retry();
     expect(service.state()).toBe('online');
     expect(await retry).toBeTrue();
+    expect(service.state()).toBe('online');
+  });
+
+  it('does not show the banner for one failed request while the server answers', async () => {
+    // An aborted call or a TypeError in a response handler looks like a
+    // network failure; a quiet probe decides before the banner goes up.
+    spyOn(window, 'fetch').and.resolveTo(new Response('{}', { status: 200 }));
+    service.noteRequestFailure(new TypeError('Failed to fetch'));
+    expect(service.state()).toBe('online');
+    await new Promise((resolve) => setTimeout(resolve));
     expect(service.state()).toBe('online');
   });
 });

@@ -87,7 +87,7 @@
       <p class="cache-notice" role="status">{{ cacheAgeLabel() }} · refreshing</p>
     }
     <div class="card-head">
-      <p class="eyebrow">{{ preferences.experienceMode() === 'guided' ? 'YOUR RHYTHM TODAY' : 'WHAT MATTERS TODAY' }}</p>
+      <p class="eyebrow">{{ v.cardTitle || (preferences.experienceMode() === 'guided' ? 'YOUR RHYTHM TODAY' : 'WHAT MATTERS TODAY') }}</p>
       <a class="place" routerLink="/m/settings/location" [attr.aria-label]="'Daily timings for ' + v.placeLong + '. Change'">{{ v.place }}</a>
     </div>
 
