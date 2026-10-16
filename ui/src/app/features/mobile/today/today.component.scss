@@ -45,6 +45,10 @@
   --mars: color-mix(in srgb, var(--m-accent) 76%, #ef7a3a);
   --jupiter: #d1a673;
   --saturn: #8c80bf;
+  --earth: #5f9c95;
+  --uranus: #9cc4bd;
+  --neptune: #6a86b8;
+  --pluto: #b09a84;
   position: fixed;
   inset: 0;
   z-index: 0;
@@ -133,6 +137,12 @@
 .orbit-ring.r3 { width: 220px; height: 220px; }
 .orbit-ring.r4 { width: 300px; height: 300px; }
 .orbit-ring.r5 { width: 390px; height: 390px; }
+// The other four of the nine. Earth slots between Venus and Mars; the outer
+// three sit past Saturn. The first five rings are left exactly where they were.
+.orbit-ring.r-earth { width: 184px; height: 184px; }
+.orbit-ring.r-uranus { width: 480px; height: 480px; }
+.orbit-ring.r-neptune { width: 570px; height: 570px; }
+.orbit-ring.r-pluto { width: 650px; height: 650px; }
 
 .planet {
   --planet-size: 8px;
@@ -193,6 +203,38 @@
   --planet-radius: 195px;
   --planet-angle: 300deg;
   animation-delay: 2.7s;
+}
+
+.planet.earth {
+  --planet-size: 9px;
+  --planet-color: var(--earth);
+  --planet-radius: 92px;
+  --planet-angle: 120deg;
+  animation-delay: 2.85s;
+}
+
+.planet.uranus {
+  --planet-size: 10px;
+  --planet-color: var(--uranus);
+  --planet-radius: 240px;
+  --planet-angle: 30deg;
+  animation-delay: 3s;
+}
+
+.planet.neptune {
+  --planet-size: 10px;
+  --planet-color: var(--neptune);
+  --planet-radius: 285px;
+  --planet-angle: 264deg;
+  animation-delay: 3.15s;
+}
+
+.planet.pluto {
+  --planet-size: 5px;
+  --planet-color: var(--pluto);
+  --planet-radius: 325px;
+  --planet-angle: 192deg;
+  animation-delay: 3.3s;
 }
 
 .saturn-ring {
