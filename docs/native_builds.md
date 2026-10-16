@@ -160,9 +160,11 @@ the store listings point at the deployed URLs.
 
 ## App icon
 
-The app icon is the Nine-Arm Galaxy, rendered from one drawing in
-`ui/scripts/brand/galaxy.cjs` in two forms: night (space black, the install
-default) and day (the app's cream). It follows the theme:
+The app icon is the Nine-Arm Galaxy drawn as gold light ribbons with eight
+flare-star grahas and a bright core, rendered from one canvas drawing in
+`ui/scripts/brand/luminous.cjs` in two forms: night (space black, the install
+default) and day (the app's cream), plus a white silhouette for tinted and
+themed icons. It follows the theme:
 
 - **iOS.** The primary `AppIcon` set carries day (any), dark and tinted
   appearances, so on iOS 18 the home screen follows the device by itself.
