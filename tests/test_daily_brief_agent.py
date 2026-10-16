@@ -34,6 +34,7 @@ def _brief(spoken_words_each: int = 30, avoid_detail: str = "Ketu from the Moon 
            timing: str = "Keep 10:24–11:52 for routine work.") -> dba.DailyBrief:
     words = " ".join(["word"] * (spoken_words_each - 1)) + "."
     return dba.DailyBrief(
+        card_title="Finish what you started",
         headline="A day for finishing things",
         summary="Steady ground for closing open loops.",
         narrative="Your tara favours finishing. The Moon is settled. Jupiter supports you.",
@@ -462,3 +463,11 @@ def test_own_profile_is_you_and_the_headline_is_fresh():
     assert dba.coverage_gaps(third_person, mother, "Reader") == []
     assert dba.brief_input(mother, "Asha", "Friday")["address_as"] == "Asha"
     assert dba.brief_input(payload, "Reader", "Friday")["address_as"] == "you"
+
+
+def test_the_card_header_is_written_fresh_not_fixed():
+    """"What matters today" sat over every card, every day (Hawk, 2026-10-16)."""
+    payload = _payload()
+    assert dba.coverage_gaps(_brief(30), payload) == []
+    fixed = _brief(30).model_copy(update={"card_title": "What matters today"})
+    assert any("card_title" in gap for gap in dba.coverage_gaps(fixed, payload))

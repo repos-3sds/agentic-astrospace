@@ -37,8 +37,18 @@ export class ConnectivityService {
   }
 
   noteRequestFailure(error: unknown): void {
-    if (isReachabilityFailure(error)) this.markOffline();
-    else this.noteRequestSuccess();
+    if (!isReachabilityFailure(error)) {
+      this.noteRequestSuccess();
+    } else if (this.state() === 'online') {
+      // One failed request is not proof the phone is offline: an aborted call,
+      // a server error without CORS headers or a TypeError in a response
+      // handler all look the same. Confirm with a quiet probe first; showing
+      // the banner straight away flashed it on and off over a working
+      // connection.
+      void this.retry();
+    } else {
+      this.markOffline();
+    }
   }
 
   async retry(): Promise<boolean> {

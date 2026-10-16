@@ -376,6 +376,7 @@ describe('TodayComponent loading', () => {
     valid_until: null,
     source: 'agent',
     brief: {
+      card_title: 'Finish what you started',
       headline: 'A steady day',
       summary: 'Keep to the plan.',
       narrative: 'Keep to the plan.',
@@ -447,7 +448,9 @@ describe('TodayComponent loading', () => {
     expect(vedic.cachedDailyGuidanceEntry).toHaveBeenCalledTimes(1);
     expect(vedic.dailyBrief).toHaveBeenCalledTimes(1);
     // The agent's words are on the card, not reverted to the template.
-    expect((today as unknown as { view: () => { verdict: string } }).view().verdict).toBe('A steady day');
+    const view = (today as unknown as { view: () => { verdict: string; cardTitle?: string } }).view();
+    expect(view.verdict).toBe('A steady day');
+    expect(view.cardTitle).toBe('Finish what you started');
   });
 
   it('still reloads when the profile changes', async () => {

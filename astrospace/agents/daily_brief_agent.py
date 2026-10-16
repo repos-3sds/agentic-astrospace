@@ -90,6 +90,9 @@ class LifeAreas(BaseModel):
 
 
 class DailyBrief(BaseModel):
+    card_title: str = Field(description=(
+        "The card's small header above the headline, 2-5 everyday words on what today "
+        "is for, e.g. \"Finish what you started\". Fresh each day; never \"What matters today\"."))
     headline: str = Field(description=(
         "The day in 3-7 words, written fresh for today's signals; never the engine's "
         "headline and never a stock phrase."))
@@ -141,6 +144,9 @@ Ground every line in the signals given:
     Abhijit Muhurta, when given, may go in the spoken script or the focus.
   * headline: fresh for today, 3-7 words, specific to the signals; never the
     engine's headline or a stock phrase like "a day of friction and flow".
+  * card_title: the small header above the headline, 2-5 everyday words on
+    what today is for ("Finish what you started", "Money first, then rest").
+    Fresh each day, different from the headline, never "What matters today".
   * narrative: tara, Moon and transits, then the practical close.
 - Rewrite candidates so they read as written for this person today, not as
   stock phrases.
@@ -235,6 +241,9 @@ def coverage_gaps(brief: "DailyBrief", payload: dict, first_name: str = "") -> l
     engine_headline = ((payload.get("verdict") or {}).get("headline") or "").strip().lower()
     if engine_headline and brief.headline.strip().lower().rstrip(".") == engine_headline:
         gaps.append("a fresh headline for today instead of the engine's")
+    title = brief.card_title.strip().lower().rstrip(".")
+    if title in ("what matters today", "your rhythm today") or title == brief.headline.strip().lower().rstrip("."):
+        gaps.append("a card_title of its own for today, not the fixed header or the headline")
     name = first_name.lower() if first_name else ""
     if name and _is_own_profile(payload):
         named = [brief.headline, brief.summary, brief.focus, brief.timing_note, brief.narrative,

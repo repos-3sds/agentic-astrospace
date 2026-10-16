@@ -193,6 +193,8 @@ export interface TodayView {
   scoreLabel: string;
   verdict: string;
   detail: string;
+  /** The agent's header for the card; the static eyebrow when absent. */
+  cardTitle?: string;
   doItems: string[];
   avoidItems: string[];
   nextWindowLabel: string;
@@ -534,6 +536,7 @@ export class TodayComponent {
     if (!brief) return;
     this.view.update((view) => view && ({
       ...view,
+      cardTitle: brief.card_title || undefined,
       verdict: brief.headline,
       detail: brief.summary,
       doItems: brief.do.map((item) => item.headline),
