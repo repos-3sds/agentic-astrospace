@@ -24,7 +24,8 @@ interface MobileTab {
 /** Screens listed under More in the Ask-first tab bar. */
 const MORE_ROOTS = [
   '/m/settings', '/m/chart', '/m/explore', '/m/transits', '/m/readings', '/m/notes',
-  '/m/subscription', '/m/notifications', '/m/search', '/m/remedies', '/m/muhurta', '/m/calendar',
+  '/m/subscription', '/m/notifications', '/m/search', '/m/remedies', '/m/muhurta',
+  '/m/family', '/m/compat',
 ];
 
 function under(path: string, root: string): boolean {
@@ -33,7 +34,7 @@ function under(path: string, root: string): boolean {
 
 /**
  * Native app shell: routed content plus the tab bar (Figma node 13:66) — four
- * tabs in the Ask-first modes, five in Practitioner.
+ * tabs in the Ask-first modes (Today, Ask, Calendar, More), five in Practitioner.
  *
  * The shell owns the safe areas. styles.scss has defined --as-safe-* since the
  * mobile UX pass but nothing consumed them, which is why the status bar and
@@ -132,12 +133,12 @@ export class MobileShellComponent {
         { commands: ['settings'], label: 'More', icon: 'figma-yantra-nav-settings' },
       ];
     }
-    // Ask-first (checklist D1): the chart screens are where "Show me why"
-    // lands and are listed under More › Your chart, not given tabs of their own.
+    // Ask-first (checklist D1), with Calendar kept as a tab for every reader:
+    // the chart screens and Family are listed under More.
     return [
       { commands: ['today'], label: 'Today', icon: 'nav-today' },
       { commands: ['ask'], label: 'Ask', icon: 'nav-ask' },
-      { commands: ['family'], label: 'Family', icon: 'nav-family' },
+      { commands: ['calendar'], label: 'Calendar', icon: 'nav-calendar' },
       { commands: ['settings'], label: 'More', icon: 'nav-more' },
     ];
   });
@@ -154,9 +155,6 @@ export class MobileShellComponent {
     const mode = this.preferences.experienceMode();
 
     if (mode !== 'practitioner') {
-      if (route === '/m/family') {
-        return under(path, '/m/family') || under(path, '/m/compat');
-      }
       if (route === '/m/settings') {
         // Everything reached from More keeps More lit, so a reader always
         // knows which tab Back will eventually return them to.

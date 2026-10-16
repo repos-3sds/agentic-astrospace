@@ -6,6 +6,7 @@ import { EntitlementService } from '../../../core/entitlement.service';
 import { HapticsService } from '../../../core/haptics.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { Kundli } from '../../../core/models';
+import { BackBarComponent } from '../shared/back-bar.component';
 import { PROFILE_RELATIONSHIPS, normalizeProfileRelationship } from '../settings/profile-fields';
 import { GenericErrorComponent } from '../states/generic-error.component';
 
@@ -34,7 +35,7 @@ interface FamilyGroup {
   selector: 'as-family',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GenericErrorComponent, RouterLink],
+  imports: [BackBarComponent, GenericErrorComponent, RouterLink],
   templateUrl: './family.component.html',
   styleUrl: './family.component.scss',
 })

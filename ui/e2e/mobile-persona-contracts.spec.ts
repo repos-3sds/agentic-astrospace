@@ -3,13 +3,13 @@ import { expect, test } from '@playwright/test';
 const modes = [
   {
     id: 'guided',
-    tabs: ['Today', 'Ask', 'Family', 'More'],
+    tabs: ['Today', 'Ask', 'Calendar', 'More'],
     insight: 'YOUR JOURNEY BEGINS',
     insightCta: 'Continue to Today',
   },
   {
     id: 'balanced',
-    tabs: ['Today', 'Ask', 'Family', 'More'],
+    tabs: ['Today', 'Ask', 'Calendar', 'More'],
     insight: 'YOUR JOURNEY BEGINS',
     insightCta: 'Continue to Today',
   },
