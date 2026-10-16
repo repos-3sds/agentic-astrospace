@@ -3,9 +3,15 @@
 // so the sizes can't drift apart.
 const TAU = Math.PI * 2;
 function rng(seed) { let x = seed; return () => { x = (x * 9301 + 49297) % 233280; return x / 233280; }; }
-function galaxySvg({ background = true, animated = false, size = null, idPrefix = 'sg', bold = false, arms: showArms = true, field: showField = true, zoom: zoomOverride = null } = {}) {
+function galaxySvg({ background = true, animated = false, size = null, idPrefix = 'sg', bold = false, arms: showArms = true, field: showField = true, zoom: zoomOverride = null, theme = 'night' } = {}) {
   const p = idPrefix;
-  const c = { dot: '#e9b949', graha: '#fff4d6', coreB: '#ffe7a6', star: '#fff', starK: 1 };
+  // Night: space black. Day: the app's cream ground, with deeper golds so the
+  // arms hold contrast. Mono: white silhouette for Android themed icons.
+  const c = {
+    night: { dot: '#e9b949', graha: '#fff4d6', coreB: '#ffe7a6', star: '#fff', starK: 1, bg: ['#0d0b18', '#05050b', '#000000'], haze: ['#e9b949', '.18', '#5b3fa0', '.07'], coreDot: '#fff' },
+    day: { dot: '#c18d1a', graha: '#8a5d00', coreB: '#f2c24f', star: '#6b5440', starK: 0.55, bg: ['#fffaf1', '#faf4e8', '#efe5d2'], haze: ['#e9b949', '.3', '#b27234', '.08'], coreDot: '#fffaf0' },
+    mono: { dot: '#fff', graha: '#fff', coreB: '#fff', star: '#fff', starK: 0, bg: ['#000', '#000', '#000'], haze: ['#fff', '0', '#fff', '0'], coreDot: '#fff' },
+  }[theme];
   // The home-screen icon is seen at 29-60 px, so its dots are drawn heavier and
   // the galaxy fills more of the tile; the motion version keeps the fine detail.
   const dot = bold ? 1.4 : 1, zoom = zoomOverride ?? (bold ? 1.14 : 1);
@@ -36,10 +42,10 @@ function galaxySvg({ background = true, animated = false, size = null, idPrefix 
   </style>` : '';
   const dims = size ? ` width="${size}" height="${size}"` : '';
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"${dims} role="img" aria-label="Siddha">${style}<defs>
-  <radialGradient id="${p}-bg" cx="50%" cy="46%" r="75%"><stop offset="0" stop-color="#0d0b18"/><stop offset=".6" stop-color="#05050b"/><stop offset="1" stop-color="#000000"/></radialGradient>
-  <radialGradient id="${p}-haze" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#e9b949" stop-opacity=".18"/><stop offset=".55" stop-color="#5b3fa0" stop-opacity=".07"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+  <radialGradient id="${p}-bg" cx="50%" cy="46%" r="75%"><stop offset="0" stop-color="${c.bg[0]}"/><stop offset=".6" stop-color="${c.bg[1]}"/><stop offset="1" stop-color="${c.bg[2]}"/></radialGradient>
+  <radialGradient id="${p}-haze" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="${c.haze[0]}" stop-opacity="${c.haze[1]}"/><stop offset=".55" stop-color="${c.haze[2]}" stop-opacity="${c.haze[3]}"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
   <radialGradient id="${p}-core"><stop offset="0" stop-color="#ffffff"/><stop offset=".3" stop-color="${c.coreB}"/><stop offset="1" stop-color="#e9b949" stop-opacity="0"/></radialGradient>
   <filter id="${p}-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-</defs>${background ? `<rect width="100" height="100" fill="url(#${p}-bg)"/>` : ''}${showField ? field : ''}${showArms ? `<g transform="translate(50 50) scale(${zoom}) translate(-50 -50)"><ellipse cx="50" cy="50" rx="44" ry="36" fill="url(#${p}-haze)"/><g class="${p}-spin"><g filter="url(#${p}-glow)" transform="rotate(-24 50 50)">${arms}</g></g><g class="${p}-core"><circle cx="50" cy="50" r="11" fill="url(#${p}-core)"/><circle cx="50" cy="50" r="2.6" fill="#fff"/></g></g>` : ''}</svg>`;
+</defs>${background ? `<rect width="100" height="100" fill="url(#${p}-bg)"/>` : ''}${showField ? field : ''}${showArms ? `<g transform="translate(50 50) scale(${zoom}) translate(-50 -50)"><ellipse cx="50" cy="50" rx="44" ry="36" fill="url(#${p}-haze)"/><g class="${p}-spin"><g filter="url(#${p}-glow)" transform="rotate(-24 50 50)">${arms}</g></g><g class="${p}-core"><circle cx="50" cy="50" r="11" fill="url(#${p}-core)"/><circle cx="50" cy="50" r="2.6" fill="${c.coreDot}"/></g></g>` : ''}</svg>`;
 }
 module.exports = { galaxySvg };

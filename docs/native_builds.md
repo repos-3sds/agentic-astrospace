@@ -160,19 +160,34 @@ the store listings point at the deployed URLs.
 
 ## App icon
 
-The app icon (iOS, Android legacy, round and adaptive layers, PWA icons and
-favicon) is the Nine-Arm Galaxy on space black, rendered from one drawing in
-`ui/scripts/brand/galaxy.cjs`. After changing the drawing, regenerate from
-`ui/`:
+The app icon is the Nine-Arm Galaxy, rendered from one drawing in
+`ui/scripts/brand/galaxy.cjs` in two forms: night (space black, the install
+default) and day (the app's cream). It follows the theme:
+
+- **iOS.** The primary `AppIcon` set carries day (any), dark and tinted
+  appearances, so on iOS 18 the home screen follows the device by itself.
+  When the reader picks Light or Dark in Settings → Appearance, `AppIconPlugin`
+  (in `AppDelegate.swift`, registered by `MainViewController`) switches to the
+  alternate `AppIcon-Day` / `AppIcon-Night` sets; System restores the primary.
+  iOS shows a one-line "You have changed the icon" alert on each switch; that
+  cannot be suppressed. The alternates need
+  `ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES` (set on the App target).
+- **Android.** Launchers have no system dark icon, so the manifest declares two
+  `activity-alias` launchers (`.LauncherNight`, `.LauncherDay`) and
+  `AppIconPlugin.java` enables the one matching the resolved theme. The swap
+  happens when the app goes to the background, so it is visible the next time
+  the reader sees the home screen. Both adaptive icons carry a monochrome
+  layer for Android 13+ themed icons.
+- PWA icons and the favicon use the night form.
+
+After changing the drawing, regenerate from `ui/`:
 
 ```sh
 node scripts/brand/render-icons.cjs && python3 scripts/brand/finish_icons.py
 ```
 
-Android adaptive icons use the PNG layers in
-`mipmap-*/ic_launcher_{foreground,background}.png`. The splash screen and the
-onboarding logo are separate and still use the sun-and-orbits mark in
-`ui/src/app/shell/splash/splash.component.ts`.
+The splash screen and the onboarding logo are separate and use the
+sun-and-orbits mark in `ui/src/app/shell/splash/splash.component.ts`.
 
 ## Push notifications
 

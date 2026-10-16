@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Siddha Nine-Arm Galaxy, day form (cream). Used by the .LauncherDay alias when
+     the in-app theme resolves to light; see AppIconPlugin. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@mipmap/ic_launcher_day_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_day_foreground" />
+    <monochrome android:drawable="@mipmap/ic_launcher_monochrome" />
+</adaptive-icon>

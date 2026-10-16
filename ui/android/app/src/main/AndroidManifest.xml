@@ -22,11 +22,6 @@
             android:theme="@style/AppTheme.NoActionBarLaunch"
             android:launchMode="singleTask"
             android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-
             <intent-filter android:autoVerify="false">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -45,6 +40,37 @@
                 />
             </intent-filter>
         </activity>
+
+        <!-- Two launcher entries for the same activity, one per icon. Exactly one is
+             enabled at a time; AppIconPlugin swaps them to follow the in-app theme
+             (night is the install default). Deep links stay on MainActivity. -->
+        <activity-alias
+            android:name=".LauncherNight"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:label="@string/title_activity_main"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".LauncherDay"
+            android:targetActivity=".MainActivity"
+            android:icon="@mipmap/ic_launcher_day"
+            android:roundIcon="@mipmap/ic_launcher_day_round"
+            android:label="@string/title_activity_main"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <provider
             android:name="androidx.core.content.FileProvider"
