@@ -32,11 +32,11 @@ beside the push schedulers on the same `notification_jobs` queue; an email job h
 
 ## Production setup
 
-Sending is from `Siddha <asksiddha@3senses.design>`, with replies to the same alias.
+Sending is from `Siddha <asksiddha@3senses.studio>`, with replies to the same alias.
 
-1. Resend: add the domain `3senses.design`. Its records sit on `send.3senses.design` and
-   `resend._domainkey.3senses.design`, so the alias's own MX and SPF are untouched. Add
-   `_dmarc` (`v=DMARC1; p=none; rua=mailto:asksiddha@3senses.design`) if none exists.
+1. Resend: add the domain `3senses.studio`. Its records sit on `send.3senses.studio` and
+   `resend._domainkey.3senses.studio`, so the alias's own MX and SPF are untouched. Add
+   `_dmarc` (`v=DMARC1; p=none; rua=mailto:asksiddha@3senses.studio`) if none exists.
 2. Secrets, on **both** the service and the `agentic-astrospace-notifications` job:
    `RESEND_API_KEY`, `EMAIL_LINK_SECRET` (any long random string; changing it breaks links
    in emails already sent). On the service only: `RESEND_WEBHOOK_SECRET`.
@@ -45,7 +45,7 @@ Sending is from `Siddha <asksiddha@3senses.design>`, with replies to the same al
    `email.bounced` and `email.complained`.
 5. Apply `supabase/migrations/20261016120000_add_email_notifications.sql`.
 6. Supabase Auth › SMTP: host `smtp.resend.com`, port 465, user `resend`, password the API
-   key, sender `asksiddha@3senses.design`. This moves sign-in emails off Supabase's
+   key, sender `asksiddha@3senses.studio`. This moves sign-in emails off Supabase's
    rate-limited built-in mailer.
 
 Without `RESEND_API_KEY` or `EMAIL_LINK_SECRET` every email job fails with
