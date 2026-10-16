@@ -36,9 +36,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
           @if (!(s.notes ?? []).length) { <p>No additional backend notes were returned.</p> }
         </section>
         <div class="mcor-actions"><button type="button" (click)="share()">{{ shared() ? 'Copied' : 'Share report' }}</button><a [routerLink]="['/m','compat','results','detail']" [queryParams]="{ partner: partnerId() }">Full detail</a></div>
-        @if (preferences.experienceMode() === 'practitioner') {
-          <a class="mcor-muhurta" [routerLink]="['/m','muhurta']">Find a muhurtham</a>
-        }
+        <a class="mcor-muhurta" [routerLink]="['/m','muhurta']">Find a muhurtham</a>
       }
     </main>
   `,

@@ -2,18 +2,6 @@
 
 :host { display: block; }
 
-.appbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  height: 64px;
-  box-sizing: border-box;
-  padding: 10px 20px;
-}
-
-.screen-title { @include m-title; color: var(--m-text); margin: 0; }
-
 .iconbtn {
   display: grid;
   width: 44px;

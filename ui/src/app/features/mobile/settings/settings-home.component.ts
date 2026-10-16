@@ -87,6 +87,25 @@ export class SettingsHomeComponent {
   readonly groups = computed<SettingGroup[]>(() => [
     ...this.chartGroup(),
     {
+      eyebrow: 'FAMILY & PROFILES',
+      rows: [
+        {
+          id: 'family',
+          icon: 'nav-family',
+          label: 'Family',
+          value: 'Switch, match',
+          route: ['/m', 'family'],
+        },
+        {
+          id: 'profiles',
+          icon: 'set-profiles',
+          label: 'Manage profiles',
+          value: `${this.kundlis.kundlis().length} ${this.kundlis.kundlis().length === 1 ? 'profile' : 'profiles'}`,
+          route: ['/m', 'settings', 'profiles'],
+        },
+      ],
+    },
+    {
       eyebrow: 'EXPERIENCE',
       rows: [
         {
@@ -152,32 +171,19 @@ export class SettingsHomeComponent {
           value: this.locationLabel(),
           route: ['/m', 'settings', 'location'],
         },
-        // Festival regions tune the Calendar tab, which only Practitioner has.
-        ...(this.preferences.experienceMode() === 'practitioner' ? [{
+        {
           id: 'festivals',
           icon: 'set-festival',
           label: 'Festival calendar',
           value: this.festivalLabel(),
           route: ['/m', 'settings', 'festivals'],
-        }] : []),
+        },
         {
           id: 'conventions',
           icon: 'set-conv',
           label: 'Conventions',
           value: `${this.ayanamshaLabel()} · ${this.chartStyleLabel()}`,
           route: ['/m', 'settings', 'conventions'],
-        },
-      ],
-    },
-    {
-      eyebrow: 'PROFILES',
-      rows: [
-        {
-          id: 'profiles',
-          icon: 'set-profiles',
-          label: 'Manage profiles',
-          value: `${this.kundlis.kundlis().length} ${this.kundlis.kundlis().length === 1 ? 'profile' : 'profiles'}`,
-          route: ['/m', 'settings', 'profiles'],
         },
       ],
     },

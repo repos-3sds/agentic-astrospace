@@ -85,7 +85,7 @@ describe('NotificationsComponent', () => {
     expect(JSON.parse(localStorage.getItem('astrospace.mobile.notificationPrefs')!)).toContain({ id: 'festivals', on: false });
   });
 
-  it('keeps remedy reminders with Practitioner, where remedies live', () => {
-    expect((fixture.nativeElement as HTMLElement).querySelector('button[aria-label="Remedy reminders"]')).toBeNull();
+  it('offers remedy reminders outside Practitioner too', () => {
+    expect((fixture.nativeElement as HTMLElement).querySelector('button[aria-label="Remedy reminders"]')).not.toBeNull();
   });
 });

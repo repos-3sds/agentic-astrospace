@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { PreferencesService } from '../../../core/preferences.service';
 import { PushService } from '../../../core/push.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 
@@ -68,12 +67,6 @@ export class NotificationsComponent {
   ];
 
   readonly prefs = signal<NotificationPref[]>(this.restorePrefs());
-  private readonly preferences = inject(PreferencesService);
-  /** Remedy practice lives in Practitioner at launch (checklist D1), so its reminder does too. */
-  readonly visiblePrefs = computed(() =>
-    this.preferences.experienceMode() === 'practitioner'
-      ? this.prefs()
-      : this.prefs().filter((pref) => pref.id !== 'remedies'));
   readonly permission = this.push.permission;
   readonly registered = this.push.registered;
   readonly pushError = this.push.error;
