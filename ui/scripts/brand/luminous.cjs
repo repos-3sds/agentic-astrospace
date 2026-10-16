@@ -21,9 +21,8 @@ function drawGalaxy(cv, opt) {
     return 'rgb(' + a.map((v, j) => Math.round(v + (b[j] - v) * k)).join(',') + ')';
   };
   const T = {
-    night: { disp: ['#9a4cff', '#ffae2e', '#fff4dc', '#ffd36a', '#ff6a4a'], rings: ['#ffd36a', '#9a4cff', '#ff6a4a', '#7fd0ff'], hot: '#fffaf0', core: ['#ffffff', '#ffe7a6', '#e07a3a'], halo: '#ffd98a', bg: ['#0d0b18', '#05050b', '#000000'], blend: 'lighter', bloom: [0.45, 0.8], streak: 'cc', glint: 'aa' },
-    day: { disp: ['#5b3aa8', '#a8620c', '#d39a2a', '#b8780e', '#b0441e'], rings: ['#a8620c', '#5b3aa8', '#b0441e', '#b8780e'], hot: '#9a6206', core: ['#fffaf0', '#f2c24f', '#c27a1a'], halo: '#d8961a', streak: '00', glint: '55', ink: 2.2, sphere: ['#fffaf0', '#f0c04f', '#a8740a'], bg: ['#fffaf1', '#faf4e8', '#efe5d2'], blend: 'multiply', bloom: [0.1, 0.25] },
-    mono: { disp: ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff'], rings: ['#ffffff'], hot: '#ffffff', core: ['#ffffff', '#ffffff', '#ffffff'], halo: '#ffffff', bg: null, blend: 'lighter', bloom: [0.3, 0.6], streak: 'cc', glint: 'aa' },
+    night: { disp: ['#9a4cff', '#ffae2e', '#fff4dc', '#ffd36a', '#ff6a4a'], rings: ['#ffd36a', '#9a4cff', '#ff6a4a', '#7fd0ff'], hot: '#fffaf0', core: ['#ffffff', '#ffe7a6', '#e07a3a'], halo: '#ffd98a', bg: ['#0d0b18', '#05050b', '#000000'], bloom: [0.45, 0.8], glint: 'aa' },
+    mono: { disp: ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff'], rings: ['#ffffff'], hot: '#ffffff', core: ['#ffffff', '#ffffff', '#ffffff'], halo: '#ffffff', bg: null, bloom: [0.3, 0.6], glint: 'aa' },
   }[opt.theme || 'night'];
   const S = cv.width, ctx = cv.getContext('2d');
   const u = S / 100 * (opt.zoom || 1.14), cx = S / 2, cy = S / 2, rot = -24 * Math.PI / 180;
@@ -39,7 +38,7 @@ function drawGalaxy(cv, opt) {
   // Light layer, drawn apart and then bloomed onto the ground.
   const L = document.createElement('canvas'); L.width = L.height = S;
   const l = L.getContext('2d');
-  l.globalCompositeOperation = T.blend === 'lighter' ? 'lighter' : 'source-over';
+  l.globalCompositeOperation = 'lighter';
   // Faint orbit rings behind the arms.
   for (let i = 0; i < 9; i++) {
     const rr = 14 + i * 4.2 + gauss() * 0.8;
@@ -63,7 +62,7 @@ function drawGalaxy(cv, opt) {
         pts.push(spiral(arm, t, off * spread, phase));
         if (pts.length > CH || k === SEG) {
           const fade = Math.min(1, k / 12) * Math.pow(1 - k / SEG, 0.5);
-          l.globalAlpha = Math.min(1, (lead ? 0.85 : 0.06 + 0.5 * Math.pow(Math.abs(off) / 2, 1.5)) * (T.ink || 1)) * fade * (1 - t * 0.2);
+          l.globalAlpha = (lead ? 0.85 : 0.06 + 0.5 * Math.pow(Math.abs(off) / 2, 1.5)) * fade * (1 - t * 0.2);
           l.strokeStyle = col; l.lineWidth = w * (1.4 - t * 0.6); l.lineCap = 'butt'; l.lineJoin = 'round';
           l.beginPath(); pts.forEach((p, i) => (i ? l.lineTo(p[0], p[1]) : l.moveTo(p[0], p[1]))); l.stroke();
           pts = [pts[pts.length - 1]];
@@ -83,11 +82,9 @@ function drawGalaxy(cv, opt) {
   let g = l.createRadialGradient(cx, cy, 0, cx, cy, 9 * u);
   g.addColorStop(0, T.core[0]); g.addColorStop(0.12, T.core[1]); g.addColorStop(0.4, T.core[2] + '44'); g.addColorStop(1, T.core[2] + '00');
   l.fillStyle = g; l.beginPath(); l.arc(cx, cy, 9 * u, 0, TAU); l.fill();
-  if (T.streak !== '00') {
   l.save(); l.translate(cx, cy); l.rotate(rot); l.scale(1, 0.035);
-  g = l.createRadialGradient(0, 0, 0, 0, 0, 40 * u); g.addColorStop(0, T.hot + T.streak); g.addColorStop(0.4, T.halo + '44'); g.addColorStop(1, T.halo + '00');
+  g = l.createRadialGradient(0, 0, 0, 0, 0, 40 * u); g.addColorStop(0, T.hot + 'cc'); g.addColorStop(0.4, T.halo + '44'); g.addColorStop(1, T.halo + '00');
   l.fillStyle = g; l.beginPath(); l.arc(0, 0, 40 * u, 0, TAU); l.fill(); l.restore();
-  }
   // Eight graha stars as small flare points, on their own layer so the
   // arm bloom doesn't swell them into blobs.
   const St = document.createElement('canvas'); St.width = St.height = S;
@@ -96,8 +93,8 @@ function drawGalaxy(cv, opt) {
   for (let arm = 0; arm < 2; arm++) GT.forEach((t) => {
     const [x, y] = spiral(arm, t), b = (0.62 - t * 0.18) * u * (opt.star || 1);
     const h = st.createRadialGradient(x, y, 0, x, y, b * 2.6);
-    h.addColorStop(0, T.blend === 'lighter' ? '#ffffff' : T.core[0]); h.addColorStop(0.12, T.blend === 'lighter' ? T.hot : T.core[1]);
-    h.addColorStop(0.3, T.halo + (T.blend === 'lighter' ? '66' : 'aa')); h.addColorStop(1, T.halo + '00');
+    h.addColorStop(0, '#ffffff'); h.addColorStop(0.12, T.hot);
+    h.addColorStop(0.3, T.halo + '66'); h.addColorStop(1, T.halo + '00');
     st.fillStyle = h; st.beginPath(); st.arc(x, y, b * 2.6, 0, TAU); st.fill();
     st.save(); st.translate(x, y); st.rotate(rot);
     for (const sc of [[1, 0.06], [0.06, 1]]) {
@@ -106,20 +103,15 @@ function drawGalaxy(cv, opt) {
       st.fillStyle = q; st.beginPath(); st.arc(0, 0, b * 3.6, 0, TAU); st.fill(); st.restore();
     }
     st.restore();
-    if (T.sphere) { // on a light ground a flare alone reads as a smudge: give it a lit body
-      const sp = st.createRadialGradient(x - b * 0.3, y - b * 0.35, 0, x, y, b * 0.95);
-      sp.addColorStop(0, T.sphere[0]); sp.addColorStop(0.45, T.sphere[1]); sp.addColorStop(1, T.sphere[2]);
-      st.fillStyle = sp; st.beginPath(); st.arc(x, y, b * 0.95, 0, TAU); st.fill();
-    }
   });
   // Bloom: a wide and a tight blurred copy under the sharp layer.
-  ctx.globalCompositeOperation = T.blend === 'lighter' ? 'lighter' : 'multiply';
+  ctx.globalCompositeOperation = 'lighter';
   ctx.filter = `blur(${S / 40}px)`; ctx.globalAlpha = T.bloom[0]; ctx.drawImage(L, 0, 0);
   ctx.filter = `blur(${S / 160}px)`; ctx.globalAlpha = T.bloom[1]; ctx.drawImage(L, 0, 0);
   ctx.filter = 'none'; ctx.globalAlpha = 1;
-  ctx.globalCompositeOperation = T.blend === 'lighter' ? 'lighter' : 'source-over';
+  ctx.globalCompositeOperation = 'lighter';
   ctx.drawImage(L, 0, 0);
-  ctx.globalCompositeOperation = T.blend === 'lighter' ? 'lighter' : 'source-over';
+  ctx.globalCompositeOperation = 'lighter';
   ctx.filter = `blur(${S / 220}px)`; ctx.globalAlpha = 0.5; ctx.drawImage(St, 0, 0);
   ctx.filter = 'none'; ctx.globalAlpha = 1; ctx.drawImage(St, 0, 0);
   ctx.globalCompositeOperation = 'source-over';
