@@ -9,7 +9,7 @@ one. Ownership is enforced by the API layer (astrospace/api/auth.py resolves the
 Supabase bearer token to a user id) and, at the database level, by RLS policies.
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
@@ -865,9 +865,18 @@ def get_cached_daily_guidance(db: Session, kundli_id: str, local_date: date,
         )
         .first()
     )
-    if row and row.expires_at and row.expires_at < datetime.utcnow():
+    if row and row.expires_at and _naive_utc(row.expires_at) < datetime.utcnow():
         return None
     return row
+
+
+def _naive_utc(value: datetime) -> datetime:
+    """Postgres timestamptz comes back aware, SQLite naive; compare both as
+    naive UTC. An aware value against utcnow() raised TypeError, which made
+    every read of a stored daily brief a 500."""
+    if value.tzinfo is None:
+        return value
+    return value.astimezone(timezone.utc).replace(tzinfo=None)
 
 
 def put_cached_daily_guidance(db: Session, kundli_id: str, local_date: date, conventions_hash: str,
