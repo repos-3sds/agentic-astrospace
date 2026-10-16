@@ -66,7 +66,7 @@ def main() -> int:
     print(json.dumps(brief.model_dump(), indent=2, ensure_ascii=False))
     usage = agent.usage_totals()
     print(f"\nspoken words: {words}  (~{listen_seconds(words)} s at 0.9x)")
-    print(f"coverage gaps: {coverage_gaps(brief, payload) or 'none'}")
+    print(f"coverage gaps: {coverage_gaps(brief, payload, first_name) or 'none'}")
     print(f"model: {usage['model']}  calls: {usage['calls']}  "
           f"tokens in/out: {usage['input_tokens']}/{usage['output_tokens']}  time: {elapsed:.1f} s")
     return 0

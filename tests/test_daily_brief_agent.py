@@ -31,7 +31,7 @@ RAHU, ABHIJIT = "10:24", "11:29"
 
 
 def _brief(spoken_words_each: int = 30, avoid_detail: str = "Ketu from the Moon asks for rest.",
-           timing: str = "Keep 10:24–11:52 for routine work; start fresh things in 11:29–12:16.") -> dba.DailyBrief:
+           timing: str = "Keep 10:24–11:52 for routine work.") -> dba.DailyBrief:
     words = " ".join(["word"] * (spoken_words_each - 1)) + "."
     return dba.DailyBrief(
         headline="A day for finishing things",
@@ -107,7 +107,7 @@ def test_a_missing_window_time_is_sent_back_once():
     agent = _Scripted([_brief(30, timing="Go gently around midday."), _brief(30)])
     brief = _write(agent)
     assert RAHU in brief.timing_note
-    assert "Rahu Kalam time" in agent.prompts[1] and "Abhijit" in agent.prompts[1]
+    assert "Rahu Kalam time" in agent.prompts[1]
 
 
 def test_coverage_gaps_names_what_is_missing():
@@ -440,3 +440,25 @@ def test_do_and_avoid_titles_must_be_plain_actions():
     assert any("Sampat" in gap for gap in dba.coverage_gaps(jargon, payload))
     assert any("Try not to push" in gap for gap in dba.coverage_gaps(wordy, payload))
     assert dba.coverage_gaps(_brief(30), payload) == []
+
+
+
+def test_timing_note_is_one_window_and_never_a_name():
+    payload = _payload()
+    two = _brief(30, timing="Keep 10:24–11:52 for routine work; start fresh things in 11:29–12:16.")
+    named = _brief(30, timing="Reader should keep 10:24–11:52 for routine work.")
+    assert any("only Rahu Kalam" in gap for gap in dba.coverage_gaps(two, payload, "Reader"))
+    assert any('"you"' in gap for gap in dba.coverage_gaps(named, payload, "Reader"))
+
+
+def test_own_profile_is_you_and_the_headline_is_fresh():
+    payload = _payload()
+    copied = _brief(30).model_copy(update={"headline": payload["verdict"]["headline"]})
+    third_person = _brief(30).model_copy(update={"summary": "Reader navigates a mixed day."})
+    assert any("fresh headline" in gap for gap in dba.coverage_gaps(copied, payload, "Reader"))
+    assert any('"you"' in gap for gap in dba.coverage_gaps(third_person, payload, "Reader"))
+    # Someone else's profile is written about by name, outside the timing note.
+    mother = {**payload, "relation": "mother"}
+    assert dba.coverage_gaps(third_person, mother, "Reader") == []
+    assert dba.brief_input(mother, "Asha", "Friday")["address_as"] == "Asha"
+    assert dba.brief_input(payload, "Reader", "Friday")["address_as"] == "you"

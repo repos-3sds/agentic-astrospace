@@ -246,10 +246,25 @@ def _score_day(personal: dict, ctx: dict) -> tuple[int, str, str]:
     return score, "caution", "a day to pull back and observe"
 
 
+_HEADLINES = {
+    "supportive": ["a rare window of clarity", "a day that moves with you", "a good day to make it count",
+                   "an open road today", "momentum on your side"],
+    "positive": ["a quietly powerful day", "steady ground to build on", "a day for steady progress",
+                 "small steps, real gains", "a calm, useful day"],
+    "mixed": ["a day of friction and flow", "a day for a light touch", "some give, some pull",
+              "go steady, not fast", "a day to choose your battles"],
+    "caution": ["a day to pull back and observe", "a day to go gently", "slow down and take care",
+                "a quiet day to protect", "hold steady, rest more"],
+}
+
+
 def _verdict(chart, relation: str, day_payload: dict, personal: dict,
              ctx: dict) -> dict:
     words = _subject_words(relation)
     score, tone, headline = _score_day(personal, ctx)
+    # One of several per tone, per person and day: the fixed four read as the
+    # same header every day (Hawk, 2026-10-16). The agent brief writes its own.
+    headline = _pick(f"{chart.moment.jd_ut}-{day_payload['date']}-headline", _HEADLINES[tone])
 
     subject = "you" if words["who"] == "you" else chart.name
     tara = personal.get("tarabala", {})
