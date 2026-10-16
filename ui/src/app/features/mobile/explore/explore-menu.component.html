@@ -13,20 +13,18 @@
 </header>
 
 <main class="body">
-  <!-- Whose chart every row below opens. -->
-  <button class="person m-pressable" type="button" (click)="profileSwitcherOpen.set(true)">
-    <span class="avatar" aria-hidden="true">{{ p.initial }}</span>
-    <span class="person-text">
-      <span class="person-eyebrow">SHOWING</span>
-      <span class="person-name">{{ p.name }}</span>
-    </span>
-    <span class="person-switch">Switch</span>
-  </button>
+  <!-- Whose chart every card below opens; the same signature card as Your chart. -->
+  <section class="signature">
+    <p class="eyebrow">SHOWING</p>
+    <p class="signature-headline">{{ p.name }}</p>
+    @if (p.detail) { <p class="signature-detail">{{ p.detail }}</p> }
+    <button class="switch m-pressable" type="button" (click)="profileSwitcherOpen.set(true)">Switch person</button>
+  </section>
 
   @if (preferences.experienceMode() === 'guided') {
     <a class="library m-pressable" [routerLink]="['/m', 'explore', 'library']">
-      <img src="mobile/figma-yantra-book-open.svg" alt="" aria-hidden="true" />
-      <span>
+      <img class="mark" src="mobile/figma-yantra-book-open.svg" alt="" aria-hidden="true" />
+      <span class="library-text">
         <b>Life guidance library</b>
         <small>Your story and life chapters in plain language</small>
       </span>
@@ -34,22 +32,21 @@
     </a>
   }
 
-  <nav class="group" aria-label="Explore">
-    @for (row of menu(); track row.id; let last = $last) {
-      <a class="row m-pressable" [routerLink]="row.route">
-        <span class="row-icon">
-          <img [src]="'mobile/' + row.icon + '.svg'" alt="" aria-hidden="true" />
+  <p class="eyebrow">EXPLORE YOUR CHART</p>
+  <nav class="explore" aria-label="Explore">
+    @for (card of menu(); track card.id) {
+      <a class="explore-card m-pressable" [routerLink]="card.route">
+        <span class="card-top">
+          <span class="explore-icon">
+            <img [src]="'mobile/' + card.icon + '.svg'" alt="" aria-hidden="true" />
+          </span>
+          @if (card.locked || card.partial) {
+            <span class="plus" [class.is-partial]="card.partial">{{ card.locked ? 'Plus' : 'Free · Plus' }}</span>
+          }
         </span>
-        <span class="row-copy">
-          <span class="row-label">{{ row.label }}</span>
-          <span class="row-detail">{{ row.detail }}</span>
-        </span>
-        @if (row.locked || row.partial) {
-          <span class="plus" [class.is-partial]="row.partial">{{ row.locked ? 'Plus' : 'Free · Plus' }}</span>
-        }
-        <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
+        <span class="explore-title">{{ card.label }}</span>
+        <span class="explore-sub">{{ card.detail }}</span>
       </a>
-      @if (!last) { <div class="rule"></div> }
     }
   </nav>
 </main>

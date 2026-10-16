@@ -33,7 +33,7 @@ describe('ExploreMenuComponent', () => {
 
   it('lists the eight entries in order, with Settings behind the gear', () => {
     const el = render();
-    const labels = [...el.querySelectorAll('.row-label')].map((node) => node.textContent?.trim());
+    const labels = [...el.querySelectorAll('.explore-title')].map((node) => node.textContent?.trim());
     expect(labels).toEqual(['Birth details', 'Your chart', 'Yogas & doshas', 'Compatibility', 'Readings', 'Remedies', 'Muhurtas', 'Notes']);
     expect(el.querySelector('a[aria-label="Settings"]')?.getAttribute('href')).toBe('/m/settings');
     expect(el.querySelector('.plus')).toBeNull();
@@ -42,8 +42,8 @@ describe('ExploreMenuComponent', () => {
   it('marks what Free leaves out once plans are enforced', () => {
     live.set(true);
     const el = render();
-    const marks = [...el.querySelectorAll('.row')].map((row) => [
-      row.querySelector('.row-label')?.textContent?.trim(),
+    const marks = [...el.querySelectorAll('.explore-card')].map((row) => [
+      row.querySelector('.explore-title')?.textContent?.trim(),
       row.querySelector('.plus')?.textContent?.trim() ?? '',
     ]);
     expect(marks).toEqual([

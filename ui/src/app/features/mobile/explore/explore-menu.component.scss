@@ -1,5 +1,7 @@
 @use '../mobile-tokens' as *;
 
+// Laid out like Your chart (chart-hub): signature card on top, then the
+// two-column explore cards. Keep the two in step.
 :host { display: block; }
 
 .appbar {
@@ -31,107 +33,104 @@
 .body {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 8px 20px 16px;
+  gap: 16px;
+  padding: 8px 20px 20px;
 }
 
-.person {
+.eyebrow { @include m-eyebrow; color: var(--m-accent); margin: 0; }
+
+.signature {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 12px 15px;
-  border: 1px solid var(--m-border);
-  border-radius: 18px;
-  background: var(--m-surface);
-  text-align: left;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 17px 18px;
+  border-radius: 22px;
+  background: var(--m-accent-soft);
+}
+
+.signature-headline { @include m-h2; color: var(--m-text); margin: 0; overflow-wrap: anywhere; }
+.signature-detail { @include m-body-small; color: var(--m-muted); margin: 0; }
+
+.switch {
+  @include m-body-small;
+  margin-top: 2px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--m-border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--m-accent-strong);
   cursor: pointer;
 }
-
-.avatar {
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
-  background: var(--m-accent);
-  color: var(--m-on-ink);
-  @include m-body-strong;
-}
-
-.person-text { display: flex; flex: 1 1 auto; min-width: 0; flex-direction: column; gap: 2px; }
-.person-eyebrow { @include m-eyebrow; color: var(--m-muted); }
-.person-name { @include m-body-strong; color: var(--m-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.person-switch { @include m-body-small; color: var(--m-accent-strong); flex: 0 0 auto; }
 
 .library {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 15px;
-  border-radius: 18px;
-  background: var(--m-accent-soft);
+  gap: 11px;
+  padding: 13px 14px 13px 15px;
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+  background: var(--m-raised);
   text-decoration: none;
-  > img:first-child { width: 22px; height: 22px; flex: 0 0 auto; }
-  span { display: flex; flex: 1 1 auto; flex-direction: column; gap: 2px; min-width: 0; }
-  b { @include m-body-strong; color: var(--m-text); }
-  small { @include m-caption; color: var(--m-muted); }
+  .mark { display: block; flex: 0 0 auto; width: 20px; height: 20px; }
+  .chevron { display: block; flex: 0 0 auto; width: 16px; height: 16px; }
 }
 
-.group {
+.library-text { display: flex; flex: 1 1 0; min-width: 0; flex-direction: column; gap: 2px; }
+.library-text b { @include m-body-strong; color: var(--m-text); }
+.library-text small { @include m-caption; color: var(--m-muted); }
+
+.explore {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.explore-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px;
   border: 1px solid var(--m-border);
   border-radius: 18px;
   background: var(--m-surface);
-  overflow: hidden;
-}
-
-.row {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  min-height: 60px;
-  box-sizing: border-box;
-  padding: 11px 15px;
+  text-align: left;
   text-decoration: none;
 }
 
-.row-icon {
+.card-top {
+  display: flex;
+  align-self: stretch;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.explore-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 auto;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
   background: var(--m-accent-soft);
-  img { display: block; width: 17px; height: 17px; filter: var(--settings-icon-filter); }
+  img { display: block; width: 20px; height: 20px; }
 }
 
-.row-copy { display: flex; flex: 1 1 auto; min-width: 0; flex-direction: column; gap: 2px; }
-.row-label { @include m-body-strong; color: var(--m-text); }
-.row-detail { @include m-caption; color: var(--m-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.explore-title { @include m-body-strong; color: var(--m-text); }
+.explore-sub { @include m-caption; color: var(--m-muted); }
 
 .plus {
   @include m-badge;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
   background: var(--m-accent-soft);
   color: var(--m-accent-strong);
   &.is-partial { background: transparent; border: 1px solid var(--m-border); color: var(--m-muted); }
-}
-
-.chevron {
-  display: block;
-  flex: 0 0 auto;
-  width: 16px;
-  height: 16px;
-  filter: var(--settings-chevron-filter);
-}
-
-.rule { height: 1px; margin-left: 60px; background: var(--m-border); }
-
-:host-context(.app-dark) {
-  .row-icon img { filter: brightness(1.28) saturate(0.95); }
-  .chevron { filter: brightness(1.35) saturate(0.9); }
 }
