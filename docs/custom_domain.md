@@ -3,9 +3,19 @@
 Status: canonical. How the public address reaches the Cloud Run service.
 
 The domain is registered at Cloudflare. Cloud Run's own domain mapping isn't offered in
-`asia-south1`, so Firebase Hosting (same Google project) sits in front: `firebase.json`
-forwards every path to the `agentic-astrospace` service. The web app stays same-origin,
-so no CORS change is needed.
+`asia-south1`, so Firebase Hosting (same Google project) sits in front.
+
+asksiddha.app is a **landing page**, not the app: Siddha is Android only and the browser
+version is for the team (Hawk, 2026-10-16). Firebase serves `firebase-public/index.html`
+for every path, and `firebase.json` forwards only these to the `agentic-astrospace`
+service:
+
+- `/api/**`: the email unsubscribe link and anything else that must answer on the domain
+- `/legal/**`: the privacy policy and terms the Play listing links to
+- `/email/**`: the logo in emails
+
+The full web app stays on the Cloud Run address
+(`https://agentic-astrospace-704387401358.asia-south1.run.app`), for the team only.
 
 ## One-time setup
 
@@ -18,8 +28,8 @@ so no CORS change is needed.
    certificate is issued.
 3. Cloud Run, on both the service and the `agentic-astrospace-notifications` job:
    `PUBLIC_BASE_URL=https://asksiddha.app` (email links and the email logo).
-4. Supabase › Authentication › URL configuration: Site URL `https://asksiddha.app`, and
-   add `https://asksiddha.app/**` to the redirect URLs.
+4. Supabase needs no change: nobody signs in on asksiddha.app, and the app's sign-in
+   callback stays on the Cloud Run address.
 
 ## Limits and what stays on the old address
 
