@@ -27,8 +27,10 @@ AUDIT_WRITE_TIMEOUT_SECONDS = 3.0
 # Machine-to-machine endpoints with no signed-in actor. The RevenueCat webhook
 # authenticates with a shared secret and writes its own audit rows for every
 # applied event; RevenueCat retries anything slow or non-2xx, so nothing here
-# may add latency to it.
-_UNAUDITED_PREFIXES = ("/api/v1/store/revenuecat/",)
+# may add latency to it. The email routes under /api/v1/email/ are the same
+# kind (no actor: a Svix-signed webhook and signed unsubscribe links), and
+# an unsubscribe link's token must not be copied into the audit table.
+_UNAUDITED_PREFIXES = ("/api/v1/store/revenuecat/", "/api/v1/email/")
 
 _RESOURCE_RE = re.compile(
     r"^/api/v1/(?P<resource>kundlis|readings|settings|ask|admin)"

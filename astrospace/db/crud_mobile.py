@@ -21,6 +21,7 @@ from .models import (
     AudioRender,
     CompatibilityCheck,
     DailyGuidanceCache,
+    EmailRecipient,
     Festival,
     FestivalOccurrence,
     GlossaryTerm,
@@ -56,7 +57,13 @@ DEFAULT_NOTIFICATION_PREFS: dict[str, dict] = {
     "accuracy_review": {"enabled": True},
     "match_report_ready": {"enabled": True},
     "system": {"enabled": True},
+    # Email categories are opt-in: nothing is emailed until the reader turns
+    # one on in Settings > Notifications > Email.
+    "daily_email": {"enabled": False, "channels": ["email"], "preferred_time": None},
+    "festival_email": {"enabled": False, "channels": ["email"]},
 }
+
+EMAIL_CATEGORIES = ("daily_email", "festival_email")
 
 
 # ── Profile & devices ─────────────────────────────────────────────────────────
@@ -614,6 +621,64 @@ def set_notification_preference(db: Session, user_id: str, category: str,
     db.commit()
     db.refresh(row)
     return row
+
+
+# ── Email recipients ──────────────────────────────────────────────────────────
+
+def get_email_recipient(db: Session, user_id: str) -> EmailRecipient | None:
+    return db.get(EmailRecipient, user_id)
+
+
+def upsert_email_recipient(db: Session, user_id: str, email: str,
+                           timezone: str | None = None) -> EmailRecipient:
+    """Keep the address current. A changed address clears a suppression,
+    since the bounce or complaint was about the old one."""
+    email = email.strip()
+    row = db.get(EmailRecipient, user_id)
+    if row is None:
+        row = EmailRecipient(user_id=user_id, email=email, timezone=timezone)
+        db.add(row)
+    else:
+        if row.email.lower() != email.lower():
+            row.email = email
+            row.suppressed_at = None
+            row.suppressed_reason = None
+        if timezone:
+            row.timezone = timezone
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def suppress_email(db: Session, email: str, reason: str) -> int:
+    """Stop all email to an address (every reader using it). Returns rows hit."""
+    rows = (
+        db.query(EmailRecipient)
+        .filter(func.lower(EmailRecipient.email) == email.strip().lower())
+        .all()
+    )
+    now = datetime.utcnow()
+    for row in rows:
+        if row.suppressed_at is None:
+            row.suppressed_at = now
+            row.suppressed_reason = reason[:200]
+    db.commit()
+    return len(rows)
+
+
+def email_subscribers(db: Session, category: str) -> list[EmailRecipient]:
+    """Readers with this email category on and a deliverable address."""
+    return (
+        db.query(EmailRecipient)
+        .join(NotificationPreference, NotificationPreference.user_id == EmailRecipient.user_id)
+        .filter(
+            NotificationPreference.category == category,
+            NotificationPreference.enabled.is_(True),
+            EmailRecipient.suppressed_at.is_(None),
+        )
+        .order_by(EmailRecipient.user_id)
+        .all()
+    )
 
 
 # ── Notifications: scheduling & delivery ──────────────────────────────────────

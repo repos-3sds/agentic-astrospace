@@ -18,6 +18,8 @@ Native packaging is Capacitor over the same bundle — see
 [docs/native_builds.md](docs/native_builds.md). To continue the screen build,
 read [docs/mobile_screen_build_plan.md](docs/mobile_screen_build_plan.md) first;
 it has every Figma node ID, the per-screen recipe, and the traps already hit.
+Email to readers (daily reading, moon and festival days) runs on the same
+notification worker as push; see [docs/email_notifications.md](docs/email_notifications.md).
 
 ## Non-negotiables
 

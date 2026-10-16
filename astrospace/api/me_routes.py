@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 
 from ..db import crud_mobile as cm, get_db
 from ..db.models import (
-    AskThread, AudioRender, BillingAccount, CompatibilityCheck, DailyGuidanceCache,
+    AskThread, AudioRender, BillingAccount, CompatibilityCheck, DailyGuidanceCache, EmailRecipient,
     EntitlementAuditEvent, EntitlementOverride, Kundli,
     LiveActivity, MuhurtaRequest, NotificationJob, NotificationPreference,
     PlanAssignment, PushToken, QuestionCredit, SavedMuhurta, ShareAsset, SubscriptionGrant,
@@ -214,7 +214,7 @@ def delete_account(payload: AccountDeletionPayload, user: CurrentUser,
 
     for model in (
         CompatibilityCheck, UserObservance, WidgetInstall, LiveActivity,
-        AudioRender, ShareAsset, NotificationPreference,
+        AudioRender, ShareAsset, NotificationPreference, EmailRecipient,
     ):
         db.query(model).filter(model.user_id == user.id).delete(synchronize_session=False)
     if kundli_ids:

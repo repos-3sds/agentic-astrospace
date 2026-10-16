@@ -19,6 +19,8 @@ from sqlalchemy.orm import Session
 from ..db import crud_mobile as cm
 from ..db.models import NotificationJob
 from .daily_briefs import schedule_daily_briefs
+from .email import EmailTransport, email_transport_from_env
+from .email_jobs import deliver_email_job, is_email_job, schedule_emails
 from .morning_brief import schedule_morning_briefs
 from .push import PushMessage, PushTransport, transports_from_env
 from .window_alerts import schedule_window_alerts
@@ -27,10 +29,14 @@ log = logging.getLogger("astrospace.notifications")
 
 
 def deliver_job(db: Session, job: NotificationJob,
-                transports: dict[str, PushTransport]) -> bool:
+                transports: dict[str, PushTransport],
+                email: EmailTransport | None = None) -> bool:
     """Send one job to every active token its user has. One success marks
     the job sent; a job whose every token failed goes back to pending (up to
-    the attempt cap in crud_mobile.mark_notification_failed)."""
+    the attempt cap in crud_mobile.mark_notification_failed). An email job
+    goes to the reader's address instead (email_jobs.deliver_email_job)."""
+    if is_email_job(job):
+        return deliver_email_job(db, job, email or email_transport_from_env())
     tokens = cm.list_active_push_tokens(db, job.user_id)
     if not tokens:
         cm.cancel_notification(db, job.id, reason="no active push token")
@@ -72,18 +78,20 @@ def deliver_job(db: Session, job: NotificationJob,
 
 
 def deliver_due(db: Session, transports: dict[str, PushTransport] | None = None,
-                now: datetime | None = None, limit: int = 100) -> dict[str, int]:
+                now: datetime | None = None, limit: int = 100,
+                email: EmailTransport | None = None) -> dict[str, int]:
     """Deliver every claimed job, each in isolation: one job that raises (a
     transport bug, a bad payload, a lost connection) is rolled back, logged
     and returned to the queue, and the rest of the batch still goes out.
     Before this, the first exception ended the run and left every claimed
     job after it stuck in 'processing' for good."""
     transports = transports or transports_from_env()
+    email = email or email_transport_from_env()
     sent = failed = errored = 0
     for job in cm.claim_due_notifications(db, limit=limit, now=now):
         job_id = job.id
         try:
-            if deliver_job(db, job, transports):
+            if deliver_job(db, job, transports, email):
                 sent += 1
             else:
                 failed += 1
@@ -114,16 +122,19 @@ def _step(db: Session, name: str, call, default):
         return default
 
 
-def run_once(db: Session, transports: dict[str, PushTransport] | None = None) -> dict:
+def run_once(db: Session, transports: dict[str, PushTransport] | None = None,
+             email: EmailTransport | None = None) -> dict:
     reaped = _step(db, "reap", lambda: cm.reap_stale_notifications(db), 0)
     # Before the morning briefs, so the brief behind the push is already written.
     briefs = _step(db, "daily briefs", lambda: schedule_daily_briefs(db), {})
     scheduled = _step(db, "morning briefs", lambda: schedule_morning_briefs(db), [])
     windows = _step(db, "window alerts", lambda: schedule_window_alerts(db), [])
-    delivered = _step(db, "delivery", lambda: deliver_due(db, transports),
+    # After the daily briefs, so the daily email has its brief to send.
+    emails = _step(db, "emails", lambda: schedule_emails(db), {})
+    delivered = _step(db, "delivery", lambda: deliver_due(db, transports, email=email),
                       {"sent": 0, "failed": 0, "delivery_failed": True})
     summary = {"reaped": reaped, "daily_briefs": briefs, "scheduled": len(scheduled),
-               "window_alerts": len(windows), **delivered}
+               "window_alerts": len(windows), "emails": emails, **delivered}
     log.info("notifications: %s", summary)
     return summary
 
@@ -140,11 +151,12 @@ def main(argv: list[str] | None = None) -> int:
     from ..db.database import SessionLocal
 
     transports = transports_from_env()
+    email = email_transport_from_env()
     while True:
         ok = True
         db = SessionLocal()
         try:
-            run_once(db, transports)
+            run_once(db, transports, email)
         except Exception:
             # Per run: a failure (the database unreachable, say) is logged and
             # the loop carries on to the next interval instead of dying.

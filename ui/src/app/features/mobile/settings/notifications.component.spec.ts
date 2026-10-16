@@ -4,6 +4,24 @@ import { signal } from '@angular/core';
 import { NotificationsComponent } from './notifications.component';
 import { PushPermission, PushService } from '../../../core/push.service';
 import { PreferencesService } from '../../../core/preferences.service';
+import { EmailCategory, EmailSettingsService, EmailState } from '../../../core/email-settings.service';
+
+class EmailStub {
+  state = signal<EmailState | null>({
+    address: 'me@example.com',
+    deliverable: true,
+    suppressed_reason: null,
+    categories: { daily_email: false, festival_email: false },
+  });
+  error = signal<string | null>(null);
+  calls: Array<[EmailCategory, boolean]> = [];
+  load = async () => undefined;
+  set = async (id: EmailCategory, on: boolean) => {
+    this.calls.push([id, on]);
+    const s = this.state()!;
+    this.state.set({ ...s, categories: { ...s.categories, [id]: on } });
+  };
+}
 
 class PushStub {
   permission = signal<PushPermission>('prompt');
@@ -23,15 +41,18 @@ class PushStub {
 describe('NotificationsComponent', () => {
   let fixture: ComponentFixture<NotificationsComponent>;
   let push: PushStub;
+  let email: EmailStub;
 
   beforeEach(async () => {
     localStorage.clear();
     push = new PushStub();
+    email = new EmailStub();
     await TestBed.configureTestingModule({
       imports: [NotificationsComponent],
       providers: [
         provideRouter([]),
         { provide: PushService, useValue: push },
+        { provide: EmailSettingsService, useValue: email },
         { provide: PreferencesService, useValue: { experienceMode: signal('balanced') } },
       ],
     }).compileComponents();
@@ -87,5 +108,21 @@ describe('NotificationsComponent', () => {
 
   it('offers remedy reminders outside Practitioner too', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('button[aria-label="Remedy reminders"]')).not.toBeNull();
+  });
+
+  it('lists email choices, both off, and saves a toggle to the account', () => {
+    const daily = (fixture.nativeElement as HTMLElement).querySelector('button[aria-label="Daily reading by email"]') as HTMLButtonElement;
+    expect(daily.getAttribute('aria-checked')).toBe('false');
+    expect(text()).toContain('Sent to me@example.com');
+    daily.click();
+    fixture.detectChanges();
+    expect(email.calls).toEqual([['daily_email', true]]);
+    expect(daily.getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('says when emails to the address bounced', () => {
+    email.state.set({ ...email.state()!, deliverable: false, suppressed_reason: 'hard bounce' });
+    fixture.detectChanges();
+    expect(text()).toContain("couldn't be delivered");
   });
 });

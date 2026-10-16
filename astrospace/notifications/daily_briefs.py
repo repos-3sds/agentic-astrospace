@@ -71,6 +71,10 @@ def _viewer_place(db: Session, user_id: str, settings: dict) -> tuple[str | None
     tokens = sorted(cm.list_active_push_tokens(db, user_id),
                     key=lambda t: t.last_seen_at or datetime.min, reverse=True)
     device_tz = next((t.timezone for t in tokens if t.timezone), None) or prefs.get("timezone")
+    if not device_tz:
+        # An email-only reader: the timezone their app or browser last reported.
+        recipient = cm.get_email_recipient(db, user_id)
+        device_tz = recipient.timezone if recipient else None
     place = settings["panchanga_place"] or {}
     timezone = device_tz
     if settings["timezone_mode"] == "panchanga_place" and place.get("timezone"):
@@ -166,9 +170,11 @@ def schedule_daily_briefs(db: Session, now: datetime | None = None,
         return summary
     started = time.monotonic()
     audio_ready = bool(os.getenv("ASTROSPACE_TTS_BUCKET", "").strip())
+    # Readers with the app, and readers who get the daily reading by email
+    # (who may only use the web app and have no push token).
     user_ids = sorted({
         row.user_id for row in db.query(PushToken.user_id).filter(PushToken.revoked_at.is_(None))
-    })
+    } | {row.user_id for row in cm.email_subscribers(db, "daily_email")})
     for user_id in user_ids:
         settings = _settings(db, user_id)
         timezone, city, nation = _viewer_place(db, user_id, settings)

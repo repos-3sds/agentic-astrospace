@@ -843,6 +843,27 @@ class NotificationPreference(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+class EmailRecipient(Base):
+    """The address the worker emails a reader at, and whether it must stop.
+
+    Kept from the signed-in token whenever the reader opens their email
+    settings or the app registers its device, so a changed sign-in address
+    follows without a separate sync. `suppressed_at` is set by a hard bounce,
+    a spam complaint or an unsubscribe-from-all; nothing goes to it after.
+    """
+
+    __tablename__ = "email_recipients"
+
+    user_id: Mapped[str] = mapped_column(String, primary_key=True)
+    email: Mapped[str] = mapped_column(String, nullable=False)
+    timezone: Mapped[str | None] = mapped_column(String)
+    suppressed_at: Mapped[datetime | None] = mapped_column(DateTime)
+    suppressed_reason: Mapped[str | None] = mapped_column(String)
+    welcomed_at: Mapped[datetime | None] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class NotificationJob(Base):
     __tablename__ = "notification_jobs"
 
