@@ -40,4 +40,14 @@ describe('ConnectivityService', () => {
     expect(await service.retry()).toBeFalse();
     expect(service.state()).toBe('offline');
   });
+
+  it('does not flash "Reconnecting" when the app resumes while online', async () => {
+    // Android fires 'online' and a connected status on every resume.
+    spyOn(window, 'fetch').and.resolveTo(new Response('{}', { status: 200 }));
+    expect(service.state()).toBe('online');
+    const retry = service.retry();
+    expect(service.state()).toBe('online');
+    expect(await retry).toBeTrue();
+    expect(service.state()).toBe('online');
+  });
 });

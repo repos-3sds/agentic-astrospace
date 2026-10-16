@@ -43,7 +43,10 @@ export class ConnectivityService {
 
   async retry(): Promise<boolean> {
     const request = ++this.probeId;
-    this.state.set('reconnecting');
+    // Android fires 'online' and a connected network status every time the
+    // app comes back to the foreground. While already online that probe runs
+    // silently; showing "Reconnecting" for it flashed a banner on every resume.
+    if (this.state() !== 'online') this.state.set('reconnecting');
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5_000);
     try {

@@ -66,7 +66,10 @@ def daily_brief_enabled() -> bool:
 
 
 class BriefItem(BaseModel):
-    headline: str = Field(description="Short card title, at most 8 words, no trailing full stop.")
+    headline: str = Field(description=(
+        "The card title: a plain action in 2-6 everyday words, no full stop, no astrology "
+        "terms. E.g. 'Review numbers and financial plans', 'Focus on routine work', "
+        "'Avoid starting new things', 'Avoid long travel'."))
     detail: str = Field(description="One sentence naming the signal behind this item.")
 
 
@@ -87,7 +90,9 @@ class LifeAreas(BaseModel):
 
 
 class DailyBrief(BaseModel):
-    headline: str = Field(description="The day in at most 8 words.")
+    headline: str = Field(description=(
+        "The day in 3-7 words, written fresh for today's signals; never the engine's "
+        "headline and never a stock phrase."))
     summary: str = Field(description="One or two plain sentences, at most 30 words, under the headline.")
     narrative: str = Field(description="The day in 50-80 words: tara, Moon, slow transits, then the practical close.")
     practical_close: str = Field(description="The narrative's last sentence: what to actually do with the day.")
@@ -96,7 +101,9 @@ class DailyBrief(BaseModel):
     areas: LifeAreas
     do: list[BriefItem] = Field(min_length=1, max_length=3)
     avoid: list[BriefItem] = Field(min_length=1, max_length=3)
-    timing_note: str = Field(description="One sentence on timing, using the real window times given.")
+    timing_note: str = Field(description=(
+        "One short sentence about Rahu Kalam only, with its time: what to keep it for. "
+        "No other window, no name."))
     why: list[str] = Field(min_length=2, max_length=4, description="Plain reasons, one sentence each: tara, Moon, transits, dasha.")
     spoken: list[SpokenSection] = Field(min_length=3, max_length=5)
 
@@ -129,13 +136,27 @@ Ground every line in the signals given:
     transits (supporting or testing), and the running dasha lord.
   * areas: love, money, work, health and growth, one sentence each, each tied
     to a signal or to the day's tone. Health is energy and rest only.
-  * timing_note: Rahu Kalam with its time, plus Abhijit Muhurta with its time
-    when given, as the better window for a fresh start.
+  * timing_note: one window only, Rahu Kalam, with its time. The app shows a
+    countdown for that window next to the note, so a second time confuses.
+    Abhijit Muhurta, when given, may go in the spoken script or the focus.
+  * headline: fresh for today, 3-7 words, specific to the signals; never the
+    engine's headline or a stock phrase like "a day of friction and flow".
   * narrative: tara, Moon and transits, then the practical close.
 - Rewrite candidates so they read as written for this person today, not as
   stock phrases.
-- If `subject` is not "you", write about that person by first name in the
-  third person; otherwise address the reader as "you".
+- Do and avoid titles are for people who know no astrology. Each title is a
+  plain action in 2-6 everyday words: "Review numbers and financial plans",
+  "Focus on routine work", "Avoid starting new things", "Avoid long travel".
+  Never put an astrology term in a title: no tara or its name (Sampat,
+  Sadhaka...), nakshatra, dasha, bala, gochara, Rahu Kalam, muhurta, planet or
+  Sanskrit words. The signal goes in the item's detail, in plain words.
+- When the tara is unfavourable, chandrashtama is true or the day's tone is
+  caution, say what to hold off on in plain words: starting new things,
+  long travel, big purchases or signing commitments.
+- Address the reader as `address_as` says. When it is "you", the profile is
+  the reader's own: say "you", never their name (the spoken Opening's
+  "Namaste, <first name>." is the one exception). Otherwise write about that
+  person by first name in the third person. Never put a name in timing_note.
 
 Boundaries, non-negotiable:
 - Never predict death, lifespan, illness, a medical, legal or investment
@@ -169,6 +190,16 @@ BOUNDARY_NOTE = (
 )
 
 
+# Do/avoid card titles are read by people who know no astrology (Hawk,
+# 2026-10-16): no term here may appear in one, and none runs past 6 words.
+TITLE_MAX_WORDS = 6
+TITLE_JARGON = (
+    "tara", "sampat", "sadhaka", "kshema", "vipat", "pratyari", "vadha", "mitra", "janma",
+    "nakshatra", "dasha", "bala", "gochara", "rahu", "ketu", "kalam", "muhurta", "abhijit",
+    "chandrashtama", "ghatak", "jupiter", "saturn", "mars", "venus", "mercury", "guru",
+    "transit", "lagna", "rashi",
+)
+
 COVERAGE_NOTE = (
     "\n\nYour previous draft left out: {gaps}. Rewrite it covering them, within the same "
     "word limit for the spoken script."
@@ -186,20 +217,40 @@ def _times(window: str) -> list[str]:
     return re.findall(r"\d{1,2}:\d{2}", window)
 
 
-def coverage_gaps(brief: "DailyBrief", payload: dict) -> list[str]:
+def _is_own_profile(payload: dict) -> bool:
+    return (payload.get("relation") or "self").strip().lower() in ("self", "me", "myself")
+
+
+def coverage_gaps(brief: "DailyBrief", payload: dict, first_name: str = "") -> list[str]:
     """What the template covered that this draft does not, where that can be
     checked without reading the prose for meaning."""
     gaps: list[str] = []
     rahu = _window(payload, "Rahu Kalam")
     if rahu and not all(t in brief.timing_note for t in _times(rahu)):
         gaps.append(f"the Rahu Kalam time ({rahu}) in timing_note")
-    abhijit = _window(payload, "Abhijit Muhurta")
-    if abhijit and not all(t in brief.timing_note for t in _times(abhijit)):
-        gaps.append(f"the Abhijit Muhurta time ({abhijit}) in timing_note")
+    others = [t for row in payload.get("muhurta_windows") or [] if row.get("name") != "Rahu Kalam"
+              for t in _times(row.get("time") or "")]
+    if any(t in brief.timing_note for t in others):
+        gaps.append("only Rahu Kalam in timing_note (one window; drop the other time)")
+    engine_headline = ((payload.get("verdict") or {}).get("headline") or "").strip().lower()
+    if engine_headline and brief.headline.strip().lower().rstrip(".") == engine_headline:
+        gaps.append("a fresh headline for today instead of the engine's")
+    name = first_name.lower() if first_name else ""
+    if name and _is_own_profile(payload):
+        named = [brief.headline, brief.summary, brief.focus, brief.timing_note, brief.narrative,
+                 *brief.why, *(f"{i.headline} {i.detail}" for i in [*brief.do, *brief.avoid])]
+        if any(re.search(rf"\b{re.escape(name)}\b", text.lower()) for text in named):
+            gaps.append('"you" instead of the reader\'s name outside the spoken greeting')
+    elif name and re.search(rf"\b{re.escape(name)}\b", brief.timing_note.lower()):
+        gaps.append("no name in timing_note")
     if (payload.get("chandrabala") or {}).get("chandrashtama"):
         moon_text = " ".join([*brief.why, *(f"{i.headline} {i.detail}" for i in brief.avoid)]).lower()
         if "moon" not in moon_text:
             gaps.append("chandrashtama (the Moon's sensitive day) in why or avoid")
+    for item in [*brief.do, *brief.avoid]:
+        title = item.headline.lower()
+        if len(title.split()) > TITLE_MAX_WORDS or any(re.search(rf"\b{w}", title) for w in TITLE_JARGON):
+            gaps.append(f"a plain action title without astrology terms instead of '{item.headline}'")
     if len(brief.do) < min(len(payload.get("do_today") or []), 3):
         gaps.append("one do item per do candidate")
     if len(brief.avoid) < min(len(payload.get("avoid_today") or []), 3):
@@ -264,7 +315,7 @@ def brief_input(payload: dict, first_name: str, date_label: str, place: str | No
     context = payload.get("context") or {}
     return {
         "first_name": first_name,
-        "subject": payload.get("subject"),
+        "address_as": "you" if _is_own_profile(payload) else first_name,
         "relation": payload.get("relation"),
         "date": date_label,
         "place": place or ((payload.get("provenance") or {}).get("place") or {}).get("city"),
@@ -315,7 +366,7 @@ class DailyBriefAgent(BaseAstroAgent):
             if kind:
                 note = BOUNDARY_NOTE.format(kind=kind)
                 continue
-            gaps = coverage_gaps(brief, payload)
+            gaps = coverage_gaps(brief, payload, first_name)
             words = spoken_words(brief)
             if words > SPOKEN_WORD_LIMIT:
                 too_long = brief

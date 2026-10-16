@@ -27,7 +27,10 @@ from sqlalchemy.orm import Session
 from ..agents.daily_brief_agent import DailyBriefAgent, coverage_gaps, listen_seconds, spoken_words
 from ..db import crud_mobile as cm
 
-BRIEF_FORMAT = "agent-brief-v1"
+# v2: plain-action do/avoid titles, a fresh headline, "you" on the reader's
+# own profile, one window in the timing note. A new format is a new key, so the day's
+# stored v1 briefs are written again in the new style rather than kept.
+BRIEF_FORMAT = "agent-brief-v2"
 BRIEF_LANGUAGE = "en"
 
 log = logging.getLogger("astrospace.daily_brief")
@@ -134,7 +137,7 @@ def _write(db: Session, kundli, payload: dict, key: str, *, tone: str, mode: str
             "event": "daily_brief.cost", "status": "written" if brief else "fallback",
             "trigger": trigger, "kundli_id": kundli.id, "date": payload["date"],
             "tone": tone, "mode": mode, "seconds": elapsed, "spoken_words": words,
-            "coverage_gaps": coverage_gaps(brief, payload) if brief else [],
+            "coverage_gaps": coverage_gaps(brief, payload, first_name) if brief else [],
             **{k: usage.get(k) for k in ("provider", "model", "calls", "input_tokens", "output_tokens")},
         }))
     except Exception:  # accounting never costs a reader their brief
