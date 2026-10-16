@@ -31,7 +31,8 @@ from ..db import crud_mobile as cm
 # own profile, one window in the timing note. A new format is a new key, so the day's
 # stored v1 briefs are written again in the new style rather than kept.
 # v3: an agent-written card header in place of the fixed "What matters today".
-BRIEF_FORMAT = "agent-brief-v3"
+# v4: card header, headline, summary and focus in plain words, no astrology terms.
+BRIEF_FORMAT = "agent-brief-v4"
 BRIEF_LANGUAGE = "en"
 
 log = logging.getLogger("astrospace.daily_brief")
