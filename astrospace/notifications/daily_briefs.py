@@ -2,10 +2,11 @@
 
 Runs in the notification worker every 15 minutes. For every user with the app
 installed (an active push token), and for each of their profiles, it writes
-the agent brief for the Vedic day that contains local noon today, in the
+the agent brief for the Vedic day that contains local noon today, and from
+22:00 local the next day's as well, so it is ready at midnight, in the
 reader's saved tone and experience mode, and stores it
 (context/daily_brief_store.py). A day already written is skipped, so after
-the first run past local midnight each later run only picks up what is new: a
+the first run past 22:00 each later run only picks up what is new: a
 profile added, a place or setting changed, a failure to retry.
 
 For Plus readers it also renders the natural-voice audio of the spoken script
@@ -22,7 +23,7 @@ from __future__ import annotations
 import logging
 import os
 import time
-from datetime import datetime, time as dtime
+from datetime import datetime, time as dtime, timedelta
 from typing import Callable
 
 from sqlalchemy.orm import Session
@@ -41,6 +42,9 @@ MAX_PROFILES_PER_USER = 6
 # the job's timeout however many readers there are.
 MAX_BRIEFS_PER_RUN = 40
 RUN_BUDGET_SECONDS = 360
+# From 22:00 local each run also writes tomorrow's brief, so the brief is
+# stored before midnight: eight runs of headroom before the day turns.
+LOOKAHEAD_FROM = dtime(22, 0)
 
 
 def _settings(db: Session, user_id: str) -> dict:
@@ -142,37 +146,42 @@ def schedule_daily_briefs(db: Session, now: datetime | None = None,
         timezone, city, nation = _viewer_place(db, user_id, settings)
         zone = _zone(timezone)
         local_now = (now.astimezone(zone) if now else datetime.now(zone))
-        # Local noon is always inside the Vedic day that began at today's
-        # sunrise, which is the day Today shows from sunrise on.
-        as_of = datetime.combine(local_now.date(), dtime(12, 0), tzinfo=zone)
+        # Local noon is always inside the Vedic day that began at that date's
+        # sunrise. From LOOKAHEAD_FROM the next day is written too, so it is
+        # stored before midnight rather than in the first runs after it.
+        days = [local_now.date()]
+        if local_now.time() >= LOOKAHEAD_FROM:
+            days.append(local_now.date() + timedelta(days=1))
         voice = audio_ready and _natural_voice_allowed(db, user_id)
-        for kundli in crud.list_kundlis(db, user_id)[:MAX_PROFILES_PER_USER]:
-            if summary["written"] >= max_briefs or time.monotonic() - started > budget_seconds:
-                summary["deferred"] += 1
-                continue
-            try:
-                payload = _daily_payload(kundli, settings["ayanamsha"], settings["node_type"],
-                                         as_of, timezone, city, nation)
-                value, written = ensure(db, kundli, payload, tone=settings["tone"], mode=settings["mode"],
-                                        ayanamsha=settings["ayanamsha"], node_type=settings["node_type"],
-                                        trigger="scheduled")
-            except Exception:
-                log.exception("daily brief for kundli %s failed", kundli.id)
-                db.rollback()
-                summary["failed"] += 1
-                continue
-            if not value:
-                summary["failed"] += 1
-                continue
-            summary["written" if written else "already"] += 1
-            if voice and not value.get("audio_prerendered"):
+        for day in days:
+            as_of = datetime.combine(day, dtime(12, 0), tzinfo=zone)
+            for kundli in crud.list_kundlis(db, user_id)[:MAX_PROFILES_PER_USER]:
+                if summary["written"] >= max_briefs or time.monotonic() - started > budget_seconds:
+                    summary["deferred"] += 1
+                    continue
                 try:
-                    prerender(value["brief"]["spoken"])
-                    key = brief_hash(kundli, payload, settings["tone"], settings["mode"],
-                                     settings["ayanamsha"], settings["node_type"])
-                    update_stored(db, kundli.id, payload, key, audio_prerendered=True)
-                    summary["audio"] += 1
+                    payload = _daily_payload(kundli, settings["ayanamsha"], settings["node_type"],
+                                             as_of, timezone, city, nation)
+                    value, written = ensure(db, kundli, payload, tone=settings["tone"], mode=settings["mode"],
+                                            ayanamsha=settings["ayanamsha"], node_type=settings["node_type"],
+                                            trigger="scheduled")
                 except Exception:
-                    log.exception("daily brief audio for kundli %s failed", kundli.id)
+                    log.exception("daily brief for kundli %s failed", kundli.id)
                     db.rollback()
+                    summary["failed"] += 1
+                    continue
+                if not value:
+                    summary["failed"] += 1
+                    continue
+                summary["written" if written else "already"] += 1
+                if voice and not value.get("audio_prerendered"):
+                    try:
+                        prerender(value["brief"]["spoken"])
+                        key = brief_hash(kundli, payload, settings["tone"], settings["mode"],
+                                         settings["ayanamsha"], settings["node_type"])
+                        update_stored(db, kundli.id, payload, key, audio_prerendered=True)
+                        summary["audio"] += 1
+                    except Exception:
+                        log.exception("daily brief audio for kundli %s failed", kundli.id)
+                        db.rollback()
     return summary

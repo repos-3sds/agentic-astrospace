@@ -279,7 +279,8 @@ def brief_input(payload: dict, first_name: str, date_label: str, place: str | No
         "tarabala": payload.get("tarabala"),
         "chandrabala": payload.get("chandrabala"),
         "star_of_day": payload.get("star_of_day"),
-        "dasha_chain": context.get("dasha_chain", [])[:3],
+        # All levels: the engine's Career line reads the finest one (sookshma).
+        "dasha_chain": context.get("dasha_chain", []),
         "active_transits": [
             {k: row.get(k) for k in ("name", "planet", "severity", "av_bindus") if row.get(k) is not None}
             for row in context.get("active_gochara", [])[:4]

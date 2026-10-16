@@ -351,3 +351,26 @@ def test_the_schedule_does_nothing_when_switched_off(env, agent, monkeypatch):
         _install_app(db)
         result = daily_briefs.schedule_daily_briefs(db, prerender=lambda s: 0)
     assert result["written"] == 0 and agent.calls == 0
+
+
+def test_tomorrows_brief_is_stored_before_midnight(env, agent):
+    _http, _kundli, factory = env
+    late = datetime(2026, 10, 16, 17, 0, tzinfo=timezone.utc)        # 22:30 in Kolkata
+    after_midnight = datetime(2026, 10, 16, 18, 40, tzinfo=timezone.utc)  # 00:10 next day
+    with factory() as db:
+        _install_app(db)
+        evening = daily_briefs.schedule_daily_briefs(db, now=late, prerender=lambda s: 0)
+        midnight = daily_briefs.schedule_daily_briefs(db, now=after_midnight, prerender=lambda s: 0)
+        dates = sorted(str(row.local_date) for row in db.query(DailyGuidanceCache).all())
+    assert evening["written"] == 2 and dates == ["2026-10-16", "2026-10-17"]
+    # Past midnight, the new day's brief is already there: nothing to write.
+    assert midnight["written"] == 0 and midnight["already"] == 1
+
+
+def test_before_ten_pm_only_today_is_written(env, agent):
+    _http, _kundli, factory = env
+    with factory() as db:
+        _install_app(db)
+        result = daily_briefs.schedule_daily_briefs(
+            db, now=datetime(2026, 10, 16, 15, 0, tzinfo=timezone.utc), prerender=lambda s: 0)  # 20:30
+    assert result["written"] == 1
