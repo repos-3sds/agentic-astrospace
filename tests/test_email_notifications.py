@@ -123,7 +123,7 @@ class TestLinks:
                                 user_id=ME, category="daily_email")
         assert message.headers["List-Unsubscribe-Post"] == "List-Unsubscribe=One-Click"
         assert message.headers["List-Unsubscribe"].startswith("<https://siddha.test/api/v1/email/unsubscribe?t=")
-        assert "Stop all emails" in message.html and "Siddha, 3 Senses Design Studio, India" in message.html
+        assert "Stop all emails" in message.html and "Siddha, 3 Senses Design Studio, India 533005" in message.html
         assert "Stop these emails: https://siddha.test/" in message.text
 
     def test_model_copy_is_escaped(self):
@@ -189,17 +189,25 @@ class TestDaily:
         _store_brief(db, ME, date(2026, 10, 16))
         assert email_jobs.schedule_daily_emails(db, now=datetime.fromisoformat("2026-10-16T11:30+05:30")) == []
 
-    def test_content_is_plain(self):
-        content = email_jobs.daily_content(BRIEF, date(2026, 10, 16))
-        assert content.lists[0] == ("Good for today", ["Finish routine work"])
-        assert ("Love", "Listen more than you speak.") in content.sections
-        assert content.note == "Keep 10:30 to 12:00 for routine tasks."
+    def test_content_carries_the_whole_brief(self):
+        content = email_jobs.daily_content(BRIEF, date(2026, 10, 16), "Kakinada")
+        blocks = {b["heading"]: b for b in content.blocks}
+        assert content.date_line == "Friday, 16 October · Kakinada"
+        assert content.eyebrow == "Finish what you started" and content.chips == ["Steady energy"]
+        assert blocks["Good for today"]["items"] == [["Finish routine work", "x"]]
+        assert ["Energy", "Rest early."] in blocks["Across your life"]["rows"]
+        assert blocks["Timing"]["body"] == "Keep 10:30 to 12:00 for routine tasks."
+        assert "Why today feels this way" in blocks
+        # Stored as plain data in the job and read back unchanged.
+        assert email_jobs.content_from_payload(email_jobs._content_dict(content)) == content
 
 
 class TestFestival:
     def test_moon_day_copy_names_the_convention(self):
-        content = email_jobs.festival_content(date(2026, 10, 26), {"moon": "full", "festivals": []}, "Kakinada")
+        content = email_jobs.festival_content(date(2026, 10, 26), {"moon": "full", "festivals": []}, "Kakinada",
+                                              [["Sun 8 Nov", "Diwali / Deepavali"]])
         assert content.subject == "Tomorrow is a full moon day"
+        assert [b["heading"] for b in content.blocks] == ["How people mark it", "Something simple to try", "Coming up"]
         assert "Kakinada" in content.note and "temple calendar" in content.note
 
     def test_festival_leads_and_moon_follows(self):
@@ -207,7 +215,7 @@ class TestFestival:
                 "observance_note": None}
         content = email_jobs.festival_content(date(2026, 10, 25), {"moon": "full", "festivals": [fest]}, "Pune")
         assert content.subject == "Tomorrow is Sharad Purnima"
-        assert content.sections[-1][0] == "Also a full moon day"
+        assert content.blocks[-1]["heading"] == "It is also a full moon day"
 
     def test_ordinary_day_sends_nothing(self):
         assert email_jobs.festival_content(date(2026, 10, 27), {"moon": None, "festivals": []}, "Pune") is None
@@ -220,6 +228,11 @@ class TestFestival:
         assert len(jobs) == 1
         assert jobs[0].scheduled_for == datetime(2026, 10, 16, 12, 30)  # 18:00 IST
         assert jobs[0].dedupe_key == f"festival_email:{ME}:2026-10-17"
+
+    def test_coming_up_lists_the_next_fortnight(self):
+        rows = email_jobs.coming_up(date(2026, 10, 25), "Kakinada", "IN")
+        assert ["Mon 26 Oct", "Full moon"] in rows
+        assert all(len(r) == 2 for r in rows)
 
     def test_real_calendar_finds_moon_days(self):
         # Two full and two new moons fall in any 60-day stretch.
@@ -238,7 +251,7 @@ class TestWelcome:
         assert len(jobs) == 1 and jobs[0].category == "system"
         # Their birth time is unknown, so the welcome asks for it.
         content = email_jobs.content_from_payload(jobs[0].payload["content"])
-        assert any(h == "One thing that helps" for h, _ in content.sections)
+        assert any(b.get("heading") == "One thing that helps" for b in content.blocks)
         assert email_jobs.schedule_welcome_emails(db) == []
 
 

@@ -23,6 +23,7 @@ the day differently.
 from __future__ import annotations
 
 import logging
+from dataclasses import asdict, fields
 from datetime import date, datetime, time, timedelta
 from functools import lru_cache
 from zoneinfo import ZoneInfo
@@ -67,32 +68,25 @@ def _queue(db: Session, user_id: str, category: str, when_utc: datetime, content
 
 
 def _content_dict(content: EmailContent) -> dict:
-    return {
-        "subject": content.subject, "preview": content.preview, "heading": content.heading,
-        "intro": content.intro, "sections": [list(s) for s in content.sections],
-        "lists": [[h, list(items)] for h, items in content.lists],
-        "button_label": content.button_label, "button_path": content.button_path,
-        "note": content.note,
-    }
+    return asdict(content)
 
 
 def content_from_payload(data: dict) -> EmailContent:
-    return EmailContent(
-        subject=data["subject"], preview=data.get("preview") or "", heading=data["heading"],
-        intro=data.get("intro") or "",
-        sections=[(s[0], s[1]) for s in data.get("sections") or []],
-        lists=[(h, list(items)) for h, items in data.get("lists") or []],
-        button_label=data.get("button_label") or "Open Siddha",
-        button_path=data.get("button_path") or "/m/today",
-        note=data.get("note"),
-    )
+    known = {f.name for f in fields(EmailContent)}
+    return EmailContent(**{k: v for k, v in data.items() if k in known})
+
+
+def _date_line(day: date, city: str | None) -> str:
+    label = f"{day:%A}, {day.day} {day:%B}"
+    return f"{label} · {city}" if city else label
 
 
 # ── Daily reading ─────────────────────────────────────────────────────────────
 
-def stored_daily_brief(db: Session, kundli_id: str, day: date) -> dict | None:
-    """The newest agent brief stored for this profile and day, whichever
-    conventions it was written under (the worker and Today agree on those)."""
+def stored_daily_brief(db: Session, kundli_id: str, day: date) -> tuple[dict, str | None] | None:
+    """(brief, city) for the newest agent brief stored for this profile and
+    day, whichever conventions it was written under (the worker and Today
+    agree on those)."""
     rows = (
         db.query(DailyGuidanceCache)
         .filter(DailyGuidanceCache.kundli_id == kundli_id, DailyGuidanceCache.local_date == day)
@@ -102,32 +96,51 @@ def stored_daily_brief(db: Session, kundli_id: str, day: date) -> dict | None:
     for row in rows:
         value = row.payload or {}
         if value.get("source") == "agent" and value.get("brief"):
-            return value["brief"]
+            return value["brief"], (row.place or {}).get("city")
     return None
 
 
-def daily_content(brief: dict, day: date) -> EmailContent:
+_ENERGY = {"drained": "Low energy", "fragmented": "Scattered energy",
+           "steady": "Steady energy", "vibrant": "High energy"}
+_AREAS = (("love", "Love"), ("work", "Work"), ("money", "Money"),
+          ("health", "Energy"), ("growth", "Growth"))
+
+
+def daily_content(brief: dict, day: date, city: str | None = None) -> EmailContent:
+    """Everything the Today card holds, written out in full: the day, where
+    to put your energy, each part of life, what suits the day and what to
+    leave (each with its reason), the timing, and why."""
     areas = brief.get("areas") or {}
-    sections: list[tuple[str | None, str]] = [(None, brief.get("narrative") or "")]
-    for key, label in (("love", "Love"), ("work", "Work"), ("money", "Money")):
-        if areas.get(key):
-            sections.append((label, areas[key]))
-    lists = []
+    blocks: list[dict] = [{"type": "text", "heading": "Your day", "body": brief.get("narrative") or ""}]
+    if brief.get("focus"):
+        blocks.append({"type": "callout", "heading": "Where to put your energy", "body": brief["focus"]})
+    rows = [[label, areas[key]] for key, label in _AREAS if areas.get(key)]
+    if rows:
+        blocks.append({"type": "rows", "heading": "Across your life", "rows": rows})
     if brief.get("do"):
-        lists.append(("Good for today", [i["headline"] for i in brief["do"]]))
+        blocks.append({"type": "items", "heading": "Good for today", "tone": "good",
+                       "items": [[i["headline"], i.get("detail") or ""] for i in brief["do"]]})
     if brief.get("avoid"):
-        lists.append(("Better left for another day", [i["headline"] for i in brief["avoid"]]))
+        blocks.append({"type": "items", "heading": "Better left for another day", "tone": "care",
+                       "items": [[i["headline"], i.get("detail") or ""] for i in brief["avoid"]]})
+    if brief.get("timing_note"):
+        blocks.append({"type": "text", "heading": "Timing", "body": brief["timing_note"]})
+    if brief.get("why"):
+        blocks.append({"type": "text", "heading": "Why today feels this way",
+                       "body": "\n\n".join(brief["why"])})
     headline = brief.get("headline") or "Your day is ready"
+    chips = [c for c in (_ENERGY.get(brief.get("energy") or ""),) if c]
     return EmailContent(
         subject=headline,
         preview=brief.get("summary") or "",
+        eyebrow=brief.get("card_title") or "Your day",
         heading=headline,
         intro=brief.get("summary") or "",
-        sections=sections,
-        lists=lists,
-        button_label="See your full day",
+        date_line=_date_line(day, city),
+        chips=chips,
+        blocks=blocks,
+        button_label="Open today in Siddha",
         button_path="/m/today",
-        note=(brief.get("timing_note") or None),
     )
 
 
@@ -146,16 +159,17 @@ def schedule_daily_emails(db: Session, now: datetime | None = None) -> list[Noti
             continue
         if local_now.time() >= DAILY_GIVE_UP_AT:
             continue
-        brief = stored_daily_brief(db, kundli.id, day)
-        if brief is None:
+        found = stored_daily_brief(db, kundli.id, day)
+        if found is None:
             continue  # the brief writer has not reached them yet; next run
+        brief, city = found
         prefs = cm.get_notification_preferences(db, user_id).get("daily_email", {})
         send_at = prefs.get("preferred_time") or DAILY_SEND_TIME
         if isinstance(send_at, str):
             hh, mm = send_at.split(":")[:2]
             send_at = time(int(hh), int(mm))
         when = _utc(datetime.combine(day, send_at, tzinfo=zone))
-        jobs.append(_queue(db, user_id, "daily_email", when, daily_content(brief, day), dedupe_key,
+        jobs.append(_queue(db, user_id, "daily_email", when, daily_content(brief, day, city), dedupe_key,
                            kundli_id=kundli.id, timezone=zone.key))
     return jobs
 
@@ -186,38 +200,73 @@ def days_of_note(day: date, city: str, nation: str) -> dict:
     return {"moon": moon, "festivals": [r for r in rows if r["occurs_on"] == day]}
 
 
-_MOON_LINES = {
-    "full": ("a full moon day",
-             "Many keep a light fast, light a lamp in the evening or spend a quiet moment in "
-             "gratitude. It suits finishing things and giving thanks."),
-    "new": ("a new moon day",
-            "A natural pause in the month. Many remember their elders and ancestors, rest, and "
-            "set an intention for the weeks ahead."),
+_MOON = {
+    "full": {
+        "label": "a full moon day",
+        "what": ("The full moon closes the bright half of the lunar month. For centuries it has been "
+                 "kept as a day of completion: the moon is at its fullest, and so, the tradition says, "
+                 "is what you have been working on."),
+        "custom": ("Many families keep a light fast until the moon rises, light a lamp at dusk, or offer "
+                   "a simple prayer of thanks. Some read or listen to a favourite scripture; others "
+                   "visit a temple or spend a quiet hour outdoors in the moonlight."),
+        "try": ("Finish one thing you have been carrying, and say thank you to someone who helped you "
+                "with it. Keep the evening calm and the meal light."),
+    },
+    "new": {
+        "label": "a new moon day",
+        "what": ("The new moon is the quiet point of the lunar month, when the moon is not seen at all. "
+                 "Traditionally it is a day for rest and remembering, not for big beginnings."),
+        "custom": ("Many families remember their elders and ancestors on this day, often with a small "
+                   "offering of food or water and a moment of silence. It is also a common day for "
+                   "cleaning the home and clearing what is no longer needed."),
+        "try": ("Slow down for an evening. Clear one drawer, one inbox or one worry, and write down a "
+                "single intention for the fortnight ahead."),
+    },
 }
 
 
-def festival_content(day: date, note: dict, city: str) -> EmailContent | None:
+def coming_up(after: date, city: str, nation: str, days: int = 14) -> list[list[str]]:
+    """[[date label, what], ...] for notable days in the window after `after`."""
+    rows = []
+    for offset in range(1, days + 1):
+        day = after + timedelta(days=offset)
+        note = days_of_note(day, city, nation)
+        names = [f["name"] for f in note["festivals"]]
+        if note["moon"]:
+            names.append("Full moon" if note["moon"] == "full" else "New moon")
+        if names:
+            rows.append([f"{day:%a} {day.day} {day:%b}", ", ".join(names)])
+    return rows
+
+
+def festival_content(day: date, note: dict, city: str,
+                     upcoming: list[list[str]] | None = None) -> EmailContent | None:
     moon = note["moon"]
     fests = note["festivals"]
     if not moon and not fests:
         return None
-    weekday = f"{day:%A}"
-    sections: list[tuple[str | None, str]] = []
+    blocks: list[dict] = []
     if fests:
         lead = fests[0]
         subject = f"Tomorrow is {lead['name']}"
-        intro = lead.get("description") or f"{lead['name']} falls on {weekday}."
-        for extra in fests[1:]:
-            sections.append((extra["name"], extra.get("description") or ""))
+        intro = lead.get("description") or f"{lead['name']} falls tomorrow."
+        if len(fests) > 1:
+            blocks.append({"type": "items", "heading": "Also tomorrow",
+                           "items": [[f["name"], f.get("description") or ""] for f in fests[1:]]})
         if lead.get("prep_guidance"):
-            sections.append(("Getting ready", lead["prep_guidance"]))
+            blocks.append({"type": "callout", "heading": "Getting ready", "body": lead["prep_guidance"]})
         if moon:
-            label, line = _MOON_LINES[moon]
-            sections.append((f"Also {label}", line))
+            m = _MOON[moon]
+            blocks.append({"type": "text", "heading": f"It is also {m['label']}",
+                           "body": f"{m['what']}\n\n{m['custom']}"})
     else:
-        label, line = _MOON_LINES[moon]
-        subject = f"Tomorrow is {label}"
-        intro = line
+        m = _MOON[moon]
+        subject = f"Tomorrow is {m['label']}"
+        intro = m["what"]
+        blocks.append({"type": "text", "heading": "How people mark it", "body": m["custom"]})
+        blocks.append({"type": "callout", "heading": "Something simple to try", "body": m["try"]})
+    if upcoming:
+        blocks.append({"type": "rows", "heading": "Coming up", "rows": upcoming})
     notes = [f["observance_note"] for f in fests if f.get("observance_note")]
     convention = (
         f"Dates are worked out for {city}. "
@@ -225,10 +274,13 @@ def festival_content(day: date, note: dict, city: str) -> EmailContent | None:
     )
     return EmailContent(
         subject=subject,
-        preview=f"{weekday} in {city}",
+        preview=intro[:120],
+        # Sent the evening before, so the date is tomorrow's, said as such.
+        eyebrow=f"Tomorrow · {day:%A}, {day.day} {day:%B}",
         heading=subject,
         intro=intro,
-        sections=sections,
+        date_line=city,
+        blocks=blocks,
         button_label="Open your calendar",
         button_path="/m/calendar",
         note=" ".join(notes + [convention]),
@@ -254,8 +306,11 @@ def schedule_festival_emails(db: Session, now: datetime | None = None) -> list[N
             continue
         try:
             place = resolve_timing_place(kundli, zone.key)
-            content = festival_content(tomorrow, days_of_note(tomorrow, place.city, place.nation),
-                                       place.city)
+            note = days_of_note(tomorrow, place.city, place.nation)
+            content = None
+            if note["moon"] or note["festivals"]:
+                content = festival_content(tomorrow, note, place.city,
+                                           coming_up(tomorrow, place.city, place.nation))
         except Exception:
             log.exception("festival email for %s failed", user_id)
             db.rollback()
@@ -273,27 +328,40 @@ def schedule_festival_emails(db: Session, now: datetime | None = None) -> list[N
 def welcome_content(db: Session, user_id: str, prefs: dict) -> EmailContent:
     chosen = []
     if prefs.get("daily_email", {}).get("enabled"):
-        chosen.append("Your daily reading, each morning")
+        chosen.append(["Your daily reading",
+                       "Each morning at 6:30: what the day is for, where to put your energy, how it "
+                       "touches love, work, money and rest, what suits the day and what to leave, "
+                       "and the reasons behind it, worked out from your own chart."])
     if prefs.get("festival_email", {}).get("enabled"):
-        chosen.append("Full moon, new moon and festival days, the evening before")
-    sections: list[tuple[str | None, str]] = []
+        chosen.append(["Moon and festival days",
+                       "The evening before a full moon, a new moon or a major festival: what the day "
+                       "is, how families traditionally mark it, and a simple way to take part, dated "
+                       "for where you are."])
+    blocks: list[dict] = []
+    if chosen:
+        blocks.append({"type": "items", "heading": "What you'll get", "items": chosen})
     kundli = _primary_kundli(db, user_id)
     path = "/m/today"
     if kundli is not None and (kundli.birth_time_accuracy or "exact") != "exact":
-        sections.append((
-            "One thing that helps",
-            "Your birth time is marked as not exact. If you can find it (a birth certificate or a "
-            "family record), add it in the app. It makes the daily reading noticeably more personal.",
-        ))
+        blocks.append({
+            "type": "callout", "heading": "One thing that helps",
+            "body": ("Your birth time is marked as not exact. If you can find it, on a birth "
+                     "certificate or in a family record, add it in the app. It makes the daily "
+                     "reading noticeably more personal."),
+        })
         path = "/m/settings"
+    blocks.append({"type": "text", "heading": "Changing your mind",
+                   "body": ("You can turn any of these off at any time in Settings, then Notifications, "
+                            "or with the link at the bottom of every email. Replies to this address "
+                            "reach a person.")})
     return EmailContent(
         subject="You're set up for Siddha emails",
         preview="Here's what will arrive, and how to change it.",
+        eyebrow="Welcome",
         heading="You're all set",
-        intro="Thanks for turning on emails from Siddha. Here's what you'll get:",
-        lists=[("Coming your way", chosen)] if chosen else [],
-        sections=sections + [(None, "You can change this any time in Settings, Notifications, or "
-                                    "with the link at the bottom of every email.")],
+        intro=("Thanks for turning on emails from Siddha. They are written for you, from your own "
+               "chart and your own place, never generic lines."),
+        blocks=blocks,
         button_label="Open Siddha",
         button_path=path,
     )

@@ -30,7 +30,7 @@ from typing import Protocol
 
 DEFAULT_FROM = "Siddha <asksiddha@3senses.design>"
 DEFAULT_REPLY_TO = "asksiddha@3senses.design"
-DEFAULT_POSTAL_ADDRESS = "Siddha, 3 Senses Design Studio, India"
+DEFAULT_POSTAL_ADDRESS = "Siddha, 3 Senses Design Studio, India 533005"
 DEFAULT_BASE_URL = "https://agentic-astrospace-cwuqybpnzq-el.a.run.app"
 RESEND_ENDPOINT = "https://api.resend.com/emails"
 
@@ -200,15 +200,25 @@ def unsubscribe_headers(user_id: str, category: str) -> dict:
 
 # ── The layout ────────────────────────────────────────────────────────────────
 
-# Fixed light palette, the app's cream and brown. Email clients ignore CSS
-# custom properties and most dark-mode hints, so the colours are literal and
-# chosen to stay readable when a client inverts them.
-_CREAM = "#F6EFE4"
-_CARD = "#FFFDF9"
-_INK = "#2B2118"
-_MUTED = "#6E5F50"
-_BROWN = "#7A4E2D"
-_RULE = "#E6DACB"
+# The app's light palette (ui/src/styles-mobile.scss), written out literally:
+# email clients ignore CSS custom properties and most dark-mode hints.
+_BG = "#FAF7F0"
+_CARD = "#FFFFFF"
+_INK = "#201A14"
+_MUTED = "#756B5E"
+_ACCENT = "#B13F2E"
+_ACCENT_STRONG = "#8F2F22"
+_GOLD = "#7A5218"
+_RULE = "#E6DCCD"
+_SOFT = "#FFFCF6"
+_GOOD_TINT = "#F3F7EE"
+_CARE_TINT = "#FBF1EC"
+_SERIF = "Georgia,'Times New Roman',serif"
+_SANS = "-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
+
+# Served from the SPA's public folder (ui/public/email/), so it is the same
+# URL the app is on. Email clients block or mangle SVG, so it is a PNG.
+LOGO_PATH = "/email/siddha-logo.png"
 
 CATEGORY_LABELS = {
     "daily_email": "your daily reading",
@@ -219,18 +229,79 @@ CATEGORY_LABELS = {
 
 @dataclass(frozen=True)
 class EmailContent:
-    """What one email says. `sections` are (heading or None, paragraph) pairs;
-    `lists` are (heading, short lines) pairs, shown after the sections."""
+    """What one email says, as plain data (it is stored in the job payload).
+
+    `blocks` is a list of dicts, rendered in order:
+      {"type": "text", "heading": str|None, "body": str}       a paragraph
+      {"type": "items", "heading": str, "tone": "good"|"care"|None,
+       "items": [[title, detail], ...]}                        titled points
+      {"type": "rows", "heading": str, "rows": [[label, value], ...]}
+      {"type": "callout", "heading": str|None, "body": str}    a tinted box
+    """
 
     subject: str
     preview: str
     heading: str
     intro: str
-    sections: list[tuple[str | None, str]] = field(default_factory=list)
-    lists: list[tuple[str, list[str]]] = field(default_factory=list)
+    eyebrow: str | None = None
+    date_line: str | None = None
+    chips: list[str] = field(default_factory=list)
+    blocks: list[dict] = field(default_factory=list)
     button_label: str = "Open Siddha"
     button_path: str = "/m/today"
     note: str | None = None
+
+
+def _label(text: str) -> str:
+    return (f'<p style="margin:28px 0 10px;font-family:{_SANS};font-size:12px;letter-spacing:.1em;'
+            f'text-transform:uppercase;color:{_ACCENT_STRONG};font-weight:700">{html.escape(text)}</p>')
+
+
+def _block_html(block: dict) -> str:
+    e = html.escape
+    kind = block.get("type")
+    heading = block.get("heading")
+    out = _label(heading) if heading else ""
+    if kind == "text":
+        for para in str(block.get("body") or "").split("\n\n"):
+            if para.strip():
+                out += f'<p style="margin:0 0 14px;font-size:17px;line-height:1.65;color:{_INK}">{e(para.strip())}</p>'
+    elif kind == "items":
+        tint = {"good": _GOOD_TINT, "care": _CARE_TINT}.get(block.get("tone"), _SOFT)
+        for title, detail in block.get("items") or []:
+            out += (f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
+                    f'style="margin:0 0 10px;background:{tint};border:1px solid {_RULE};border-radius:12px">'
+                    f'<tr><td style="padding:14px 16px">'
+                    f'<p style="margin:0 0 4px;font-family:{_SANS};font-size:16px;font-weight:700;color:{_INK}">{e(title)}</p>')
+            if detail:
+                out += f'<p style="margin:0;font-size:15px;line-height:1.55;color:{_MUTED}">{e(detail)}</p>'
+            out += '</td></tr></table>'
+    elif kind == "rows":
+        rows = "".join(
+            f'<tr><td style="padding:12px 0;border-top:1px solid {_RULE};width:96px;vertical-align:top;'
+            f'font-family:{_SANS};font-size:13px;font-weight:700;letter-spacing:.04em;color:{_GOLD}">{e(label)}</td>'
+            f'<td style="padding:12px 0 12px 12px;border-top:1px solid {_RULE};font-size:16px;line-height:1.6;color:{_INK}">{e(value)}</td></tr>'
+            for label, value in block.get("rows") or []
+        )
+        out += f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0">{rows}</table>'
+    elif kind == "callout":
+        out += (f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
+                f'style="margin:4px 0 0;background:{_SOFT};border-left:4px solid {_ACCENT};border-radius:8px">'
+                f'<tr><td style="padding:14px 16px;font-size:16px;line-height:1.6;color:{_INK}">{e(block.get("body") or "")}</td></tr></table>')
+    return out
+
+
+def _block_text(block: dict) -> list[str]:
+    lines = [block["heading"].upper()] if block.get("heading") else []
+    kind = block.get("type")
+    if kind in ("text", "callout"):
+        lines.append(str(block.get("body") or ""))
+    elif kind == "items":
+        for title, detail in block.get("items") or []:
+            lines.append(f"- {title}" + (f": {detail}" if detail else ""))
+    elif kind == "rows":
+        lines += [f"{label}: {value}" for label, value in block.get("rows") or []]
+    return lines + [""]
 
 
 def render(content: EmailContent, *, user_id: str, category: str) -> tuple[str, str]:
@@ -238,75 +309,74 @@ def render(content: EmailContent, *, user_id: str, category: str) -> tuple[str, 
     copy is model output and is never trusted as markup."""
     e = html.escape
     link = f"{base_url()}{content.button_path}"
+    logo = f"{base_url()}{LOGO_PATH}"
     address = os.getenv("EMAIL_POSTAL_ADDRESS") or DEFAULT_POSTAL_ADDRESS
     label = CATEGORY_LABELS.get(category, "these emails")
     marketing = category != "system"
     unsub_one = unsubscribe_url(user_id, category) if marketing else None
     unsub_all = unsubscribe_url(user_id, ALL_CATEGORIES) if marketing else None
 
-    blocks: list[str] = []
-    for heading, para in content.sections:
-        if heading:
-            blocks.append(
-                f'<p style="margin:20px 0 4px;font-size:13px;letter-spacing:.06em;'
-                f'text-transform:uppercase;color:{_BROWN};font-weight:600">{e(heading)}</p>'
-            )
-        blocks.append(f'<p style="margin:0 0 12px;font-size:16px;line-height:1.55">{e(para)}</p>')
-    for heading, items in content.lists:
-        if not items:
-            continue
-        blocks.append(
-            f'<p style="margin:20px 0 4px;font-size:13px;letter-spacing:.06em;'
-            f'text-transform:uppercase;color:{_BROWN};font-weight:600">{e(heading)}</p>'
-        )
-        lis = "".join(f'<li style="margin:0 0 6px">{e(i)}</li>' for i in items)
-        blocks.append(f'<ul style="margin:0 0 12px;padding-left:20px;font-size:16px;line-height:1.5">{lis}</ul>')
-    if content.note:
-        blocks.append(f'<p style="margin:16px 0 0;font-size:13px;line-height:1.5;color:{_MUTED}">{e(content.note)}</p>')
+    eyebrow = (f'<p style="margin:0 0 10px;font-family:{_SANS};font-size:12px;letter-spacing:.1em;'
+               f'text-transform:uppercase;color:{_ACCENT_STRONG};font-weight:700">{e(content.eyebrow)}</p>'
+               if content.eyebrow else "")
+    chips = "".join(
+        f'<span style="display:inline-block;margin:0 6px 6px 0;padding:5px 12px;border:1px solid {_RULE};'
+        f'border-radius:999px;background:{_SOFT};font-family:{_SANS};font-size:13px;color:{_GOLD}">{e(c)}</span>'
+        for c in content.chips
+    )
+    chips = f'<div style="margin:4px 0 6px">{chips}</div>' if chips else ""
+    date_line = (f'<tr><td style="padding:0 8px 10px;font-family:{_SANS};font-size:13px;color:{_MUTED}">'
+                 f'{e(content.date_line)}</td></tr>' if content.date_line else "")
+    note = (f'<p style="margin:24px 0 0;font-size:14px;line-height:1.55;color:{_MUTED};font-style:italic">'
+            f'{e(content.note)}</p>' if content.note else "")
 
     footer_links = ""
     if marketing:
         footer_links = (
-            f'You get this because you turned on {e(label)} in Siddha. '
+            f'You get this because you turned on {e(label)} in Siddha.<br>'
             f'<a href="{e(unsub_one)}" style="color:{_MUTED}">Stop these emails</a> · '
-            f'<a href="{e(unsub_all)}" style="color:{_MUTED}">Stop all emails</a><br>'
+            f'<a href="{e(unsub_all)}" style="color:{_MUTED}">Stop all emails</a><br><br>'
         )
 
     html_body = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light">
 <title>{e(content.subject)}</title></head>
-<body style="margin:0;padding:0;background:{_CREAM};color:{_INK};font-family:Georgia,'Times New Roman',serif">
+<body style="margin:0;padding:0;background:{_BG};color:{_INK};font-family:{_SERIF}">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0">{e(content.preview)}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:{_CREAM}">
-<tr><td align="center" style="padding:24px 12px">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
-<tr><td style="padding:0 8px 16px;font-size:15px;letter-spacing:.12em;text-transform:uppercase;color:{_BROWN}">Siddha</td></tr>
-<tr><td style="background:{_CARD};border:1px solid {_RULE};border-radius:16px;padding:28px 24px">
-<h1 style="margin:0 0 12px;font-size:26px;line-height:1.25;font-weight:normal;color:{_INK}">{e(content.heading)}</h1>
-<p style="margin:0 0 12px;font-size:17px;line-height:1.55;color:{_INK}">{e(content.intro)}</p>
-{''.join(blocks)}
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0 4px"><tr>
-<td style="background:{_BROWN};border-radius:999px">
-<a href="{e(link)}" style="display:inline-block;padding:12px 24px;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#FFFFFF;text-decoration:none">{e(content.button_label)}</a>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:{_BG}">
+<tr><td align="center" style="padding:28px 12px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px">
+<tr><td align="center" style="padding:0 8px 22px">
+<a href="{e(base_url())}/m/today" style="text-decoration:none"><img src="{e(logo)}" width="220" alt="Siddha" style="display:block;width:220px;max-width:70%;height:auto;border:0;font-family:{_SERIF};font-size:24px;color:{_ACCENT_STRONG}"></a>
+</td></tr>
+{date_line}
+<tr><td style="background:{_CARD};border:1px solid {_RULE};border-radius:20px;padding:32px 26px">
+{eyebrow}<h1 style="margin:0 0 14px;font-size:30px;line-height:1.2;font-weight:normal;color:{_INK}">{e(content.heading)}</h1>
+<p style="margin:0 0 16px;font-size:19px;line-height:1.6;color:{_INK}">{e(content.intro)}</p>
+{chips}{''.join(_block_html(b) for b in content.blocks)}{note}
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:30px 0 4px"><tr>
+<td style="background:{_ACCENT};border-radius:999px">
+<a href="{e(link)}" style="display:inline-block;padding:14px 28px;font-family:{_SANS};font-size:16px;font-weight:600;color:#FFFFFF;text-decoration:none">{e(content.button_label)}</a>
 </td></tr></table>
 </td></tr>
-<tr><td style="padding:20px 8px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:{_MUTED}">
+<tr><td align="center" style="padding:24px 16px 0;font-family:{_SANS};font-size:12px;line-height:1.7;color:{_MUTED}">
 {footer_links}Siddha offers traditional guidance for reflection, not medical, legal or financial advice.<br>
 {e(address)}
 </td></tr>
 </table></td></tr></table>
 </body></html>"""
 
-    text_lines = [content.heading, "", content.intro, ""]
-    for heading, para in content.sections:
-        if heading:
-            text_lines.append(heading.upper())
-        text_lines += [para, ""]
-    for heading, items in content.lists:
-        if items:
-            text_lines.append(heading.upper())
-            text_lines += [f"- {i}" for i in items] + [""]
+    text_lines = []
+    if content.date_line:
+        text_lines += [content.date_line, ""]
+    if content.eyebrow:
+        text_lines.append(content.eyebrow.upper())
+    text_lines += [content.heading, "", content.intro, ""]
+    if content.chips:
+        text_lines += [" · ".join(content.chips), ""]
+    for block in content.blocks:
+        text_lines += _block_text(block)
     if content.note:
         text_lines += [content.note, ""]
     text_lines += [f"{content.button_label}: {link}", "", "--"]
