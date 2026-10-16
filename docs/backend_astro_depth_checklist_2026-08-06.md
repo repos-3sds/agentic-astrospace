@@ -779,7 +779,7 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   vargas, Practitioner mode) is decided by `core/plan-gate.service.ts` from
   the entitlement snapshot, and only once `ASTROSPACE_QUOTAS_ENFORCED` is on.
   The compatibility check count lives on the device. *Unblocks on:* store
-  products live (Plus and the new `astrospace_practitioner_*` ids in
+  products live (Plus and the new `siddha_practitioner_*` ids in
   `entitlements/products.py`, prices ₹599/₹3,999 as placeholders until
   Hawk sets them). *Hook:* `require_entitlement()` on the yogas/doshas,
   compatibility, readings, remedies, muhurta and varga routes, trimming the

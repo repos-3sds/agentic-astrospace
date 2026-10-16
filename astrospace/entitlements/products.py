@@ -28,12 +28,12 @@ class Product:
 PRODUCTS: dict[str, Product] = {
     product.id: product
     for product in (
-        Product("astrospace_plus_monthly", "plan", "Plus, monthly", 299, tier="plus", months=1),
-        Product("astrospace_plus_yearly", "plan", "Plus, yearly", 1999, tier="plus", months=12),
-        Product("astrospace_practitioner_monthly", "plan", "Practitioner, monthly", 599, tier="pro", months=1),
-        Product("astrospace_practitioner_yearly", "plan", "Practitioner, yearly", 3999, tier="pro", months=12),
-        Product("astrospace_questions_3", "question_pack", "3 questions", 99, questions=3),
-        Product("astrospace_questions_15", "question_pack", "15 questions", 399, questions=15),
+        Product("siddha_plus_monthly", "plan", "Plus, monthly", 299, tier="plus", months=1),
+        Product("siddha_plus_yearly", "plan", "Plus, yearly", 1999, tier="plus", months=12),
+        Product("siddha_practitioner_monthly", "plan", "Practitioner, monthly", 599, tier="pro", months=1),
+        Product("siddha_practitioner_yearly", "plan", "Practitioner, yearly", 3999, tier="pro", months=12),
+        Product("siddha_questions_3", "question_pack", "3 questions", 99, questions=3),
+        Product("siddha_questions_15", "question_pack", "15 questions", 399, questions=15),
     )
 }
 

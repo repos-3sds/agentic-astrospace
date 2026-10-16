@@ -19,9 +19,9 @@ const FREE: EntitlementSnapshot = {
 };
 
 const PRODUCTS: StoreProduct[] = [
-  { id: 'astrospace_plus_monthly', kind: 'plan', title: 'Plus, monthly', price_inr: 299, tier: 'plus', months: 1, questions: null },
-  { id: 'astrospace_plus_yearly', kind: 'plan', title: 'Plus, yearly', price_inr: 1999, tier: 'plus', months: 12, questions: null },
-  { id: 'astrospace_questions_3', kind: 'question_pack', title: '3 questions', price_inr: 99, tier: null, months: null, questions: 3 },
+  { id: 'siddha_plus_monthly', kind: 'plan', title: 'Plus, monthly', price_inr: 299, tier: 'plus', months: 1, questions: null },
+  { id: 'siddha_plus_yearly', kind: 'plan', title: 'Plus, yearly', price_inr: 1999, tier: 'plus', months: 12, questions: null },
+  { id: 'siddha_questions_3', kind: 'question_pack', title: '3 questions', price_inr: 99, tier: null, months: null, questions: 3 },
 ];
 
 describe('SubscriptionComponent', () => {
