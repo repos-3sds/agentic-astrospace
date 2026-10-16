@@ -4,7 +4,14 @@
 </a>
 
 <div class="body">
-  @if (loading()) {
+  @if (locked()) {
+    <as-plan-lock
+      plan="practitioner"
+      from="vargas.full"
+      title="Divisional charts"
+      body="D9, D10 and the rest are computed from your D1. Your D1 chart is free; the divisional charts come with the Practitioner plan."
+    />
+  } @else if (loading()) {
     <section class="varga-state"><b>Loading vargas</b><p>Computing divisional charts from the selected profile.</p></section>
   } @else if (error()) {
     <as-generic-error role="alert" [message]="error()!" (retried)="retry()" />

@@ -4,6 +4,8 @@ import { PreferencesService } from '../../../core/preferences.service';
 import { plannedTimingPlace } from '../../../core/timing-place';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
+import { PlanGateService } from '../../../core/plan-gate.service';
+import { PlanLockComponent } from '../shared/plan-lock.component';
 
 /** One thing someone might be planning. */
 export interface MuhurtaGoal {
@@ -32,11 +34,13 @@ export type MuhurtaRange = 'week' | 'month' | 'custom';
   selector: 'as-muhurta-goal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, RouterLink, SelectHapticDirective],
+  imports: [PlanLockComponent, BackLinkDirective, RouterLink, SelectHapticDirective],
   templateUrl: './muhurta-goal.component.html',
   styleUrl: './muhurta-goal.component.scss',
 })
 export class MuhurtaGoalComponent {
+  protected readonly gate = inject(PlanGateService);
+  protected readonly locked = computed(() => !this.gate.allows('muhurta.full'));
   readonly goals = signal<MuhurtaGoal[]>([
     { id: 'griha_pravesha', label: 'House warming', icon: 'goal-property', detail: 'Griha Pravesha' },
     { id: 'upanayana', label: 'Upanayana', icon: 'goal-sacred', detail: 'Sacred-thread ceremony' },

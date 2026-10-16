@@ -30,20 +30,45 @@
           <h2>{{ item.title }}</h2>
           <span class="tag" [attr.data-tone]="item.tone">{{ item.tag }}</span>
         </div>
-        <p>{{ item.summary }}</p>
+        @let detailLocked = item.kind === 'dosha' && item.tone !== 'neutral' && !doshaDetail();
+        @if (detailLocked) {
+          <p class="locked-note">A flag to know about, not a verdict. What it means for you, and the practice that suits it, come with Plus.</p>
+        } @else {
+          <p>{{ item.summary }}</p>
+        }
         @if (item.cancelled) {
           <div class="rule"></div>
           <p class="cancelled"><img src="mobile/yoga-check.svg" alt="" aria-hidden="true" />{{ item.cancelled }}</p>
         }
-        <button class="learn" type="button" (click)="learn(item)">
-          <span>{{ item.id === 'manglik' ? 'View exceptions' : 'Learn this yoga' }}</span>
-          <img src="mobile/yoga-chevron.svg" alt="" aria-hidden="true" />
-        </button>
+        @if (item.id === 'manglik') {
+          <!-- Exceptions are never behind a plan: they are what keeps a flag from reading as a verdict. -->
+          <button class="learn" type="button" (click)="learn(item)">
+            <span>View exceptions</span>
+            <img src="mobile/yoga-chevron.svg" alt="" aria-hidden="true" />
+          </button>
+        } @else if (detailLocked) {
+          <a class="learn" routerLink="/m/subscription" [queryParams]="{ from: 'doshas.detail', plan: 'plus' }">
+            <span>What this means · Plus</span>
+            <img src="mobile/yoga-chevron.svg" alt="" aria-hidden="true" />
+          </a>
+        } @else {
+          <button class="learn" type="button" (click)="learn(item)">
+            <span>{{ item.kind === 'dosha' ? 'Learn about this' : 'Learn this yoga' }}</span>
+            <img src="mobile/yoga-chevron.svg" alt="" aria-hidden="true" />
+          </button>
+        }
       </article>
     } @empty {
       <p class="yd-empty">No {{ filter() === 'all' ? 'yogas or doshas' : filter() + 's' }} were returned for this profile.</p>
     }
   </section>
+  @if (hiddenYogas() && filter() !== 'dosha') {
+    <as-plan-lock
+      [compact]="true"
+      from="yogas.full"
+      [title]="hiddenYogas() + ' more ' + (hiddenYogas() === 1 ? 'yoga' : 'yogas') + ' in this chart'"
+    />
+  }
   }
 </main>
 

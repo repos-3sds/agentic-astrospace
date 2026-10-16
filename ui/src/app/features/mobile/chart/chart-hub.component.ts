@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { RouterLink } from '@angular/router';
 import { BackBarComponent } from '../shared/back-bar.component';
 import { NgTemplateOutlet } from '@angular/common';
+import { PlanGateService } from '../../../core/plan-gate.service';
 import { BirthTimeBadgeComponent } from './birth-time-badge.component';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { ProvenanceSheetComponent } from './provenance-sheet.component';
@@ -43,6 +44,9 @@ interface YantraTile {
   featured?: boolean;
 }
 
+/** Rows of the Explore menu, so the hub does not repeat them outside Practitioner. */
+const ON_EXPLORE_MENU = new Set(['birth-details', 'yoga', 'compat', 'readings', 'remedies', 'muhurta']);
+
 /**
  * Chart Hub (Figma node 35:57) — the Chart tab's home and the entry to the
  * chart flow: hub, full render, planet detail, provenance.
@@ -69,6 +73,7 @@ export class ChartHubComponent {
   protected readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
   protected readonly preferences = inject(PreferencesService);
+  private readonly gate = inject(PlanGateService);
   protected readonly chart = signal<VedicAll | null>(null);
   protected readonly dashas = signal<DashaPayload | null>(null);
   protected readonly loading = signal(true);
@@ -201,13 +206,18 @@ export class ChartHubComponent {
 
   readonly noteCount = signal(0);
   readonly advancedOpen = signal(false);
-  readonly guidedCoreIds = ['remedies', 'muhurta', 'varga', 'yoga', 'transit', 'compat', 'readings'];
-  readonly guidedAdvancedIds = ['dasha', 'strength', 'reference'];
+  readonly guidedCoreIds = ['varga', 'dasha', 'transit'];
+  readonly guidedAdvancedIds = ['strength', 'reference'];
   protected readonly visibleExplore = computed(() => {
-    const cards = this.explore();
-    if (this.preferences.experienceMode() === 'guided') {
-      return cards.filter((card) => this.guidedCoreIds.includes(card.id));
-    }
+    const mode = this.preferences.experienceMode();
+    if (mode === 'practitioner') return this.explore();
+    // The Explore menu already lists these in the Ask-first modes.
+    const cards = this.explore()
+      .filter((card) => !ON_EXPLORE_MENU.has(card.id))
+      .map((card) => card.id === 'varga' && !this.gate.allows('vargas.full')
+        ? { ...card, subtitle: 'D9 and beyond · Practitioner plan' }
+        : card);
+    if (mode === 'guided') return cards.filter((card) => this.guidedCoreIds.includes(card.id));
     return cards;
   });
 

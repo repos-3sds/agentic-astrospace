@@ -8,8 +8,12 @@ import { VedicService } from '../../../core/vedic.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
+import { PlanGateService } from '../../../core/plan-gate.service';
+import { PlanLockComponent } from '../shared/plan-lock.component';
 
 type Kind = 'yoga' | 'dosha';
+
+const FREE_YOGAS = 2;
 type Filter = 'all' | Kind;
 
 interface Combination {
@@ -29,11 +33,12 @@ interface Combination {
   selector: 'as-yogas-doshas',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, RouterLink, YogaLearningSheetComponent, ManglikCancellationSheetComponent, SelectHapticDirective],
+  imports: [PlanLockComponent, BackLinkDirective, GenericErrorComponent, RouterLink, YogaLearningSheetComponent, ManglikCancellationSheetComponent, SelectHapticDirective],
   templateUrl: './yogas-doshas.component.html',
   styleUrl: './yogas-doshas.component.scss',
 })
 export class YogasDoshasComponent {
+  protected readonly gate = inject(PlanGateService);
   private readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
   readonly filter = signal<Filter>('all');
@@ -45,8 +50,17 @@ export class YogasDoshasComponent {
   readonly manglik = computed<ManglikPayload | null>(() => this.data()?.doshas?.manglik ?? null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
+  /** Free shows the first two yogas; Plus shows every one. */
+  protected readonly allYogas = computed(() => this.gate.allows('yogas.full'));
+  /**
+   * Every dosha is listed on every plan, with its tag and any cancellation,
+   * because a dosha is a flag and never hidden. Plus adds what it means.
+   */
+  protected readonly doshaDetail = computed(() => this.gate.allows('doshas.detail'));
+  private readonly yogaItems = computed(() => (this.data()?.yogas.active ?? []).map((yoga) => this.yogaItem(yoga)));
+  protected readonly hiddenYogas = computed(() => this.allYogas() ? 0 : Math.max(0, this.yogaItems().length - FREE_YOGAS));
   readonly items = computed<Combination[]>(() => [
-    ...((this.data()?.yogas.active ?? []).map((yoga) => this.yogaItem(yoga))),
+    ...(this.allYogas() ? this.yogaItems() : this.yogaItems().slice(0, FREE_YOGAS)),
     ...this.doshaItems(this.data()?.doshas ?? null),
   ]);
   readonly visibleItems = computed(() =>

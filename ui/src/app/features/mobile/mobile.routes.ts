@@ -52,6 +52,13 @@ export const MOBILE_ROUTES: Routes = [
   {
     path: 'explore',
     loadComponent: () =>
+      import('./explore/explore-menu.component').then(
+        (m) => m.ExploreMenuComponent,
+      ),
+  },
+  {
+    path: 'explore/library',
+    loadComponent: () =>
       import('./explore/guided-explore.component').then(
         (m) => m.GuidedExploreComponent,
       ),

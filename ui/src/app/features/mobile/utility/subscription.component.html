@@ -1,4 +1,4 @@
-<as-back-bar back="/m/settings" crumb="More" title="Plans" />
+<as-back-bar back="/m/settings" crumb="Settings" title="Plans" />
 
 <main class="plans">
   @if (loading()) {
@@ -27,10 +27,18 @@
       <p class="notice" [attr.data-tone]="n.tone" role="status">{{ n.text }}</p>
     }
 
-    @if (!isPaid()) {
+    @if (canUpgrade()) {
       <section class="plus" aria-labelledby="plus-title">
-        <h2 id="plus-title">Plus</h2>
-        <p class="lede">More answers, more people, and the full depth of your chart.</p>
+        @if (!isPaid()) {
+          <div class="families" role="tablist" aria-label="Plan">
+            <button type="button" role="tab" [class.is-on]="family() === 'plus'" [attr.aria-selected]="family() === 'plus'" (click)="chooseFamily('plus')">Plus</button>
+            <button type="button" role="tab" [class.is-on]="family() === 'pro'" [attr.aria-selected]="family() === 'pro'" (click)="chooseFamily('pro')">Practitioner</button>
+          </div>
+        }
+        <h2 id="plus-title">{{ isPaid() ? 'Move up to Practitioner' : familyName() }}</h2>
+        <p class="lede">{{ family() === 'pro'
+          ? 'Everything in Plus, with every divisional chart, Practitioner mode and the most answers.'
+          : 'More answers and people, every yoga, dosha explanations, full compatibility, readings, remedies and Muhurta.' }}</p>
 
         <div class="options" role="radiogroup" aria-label="Plus billing">
           @for (option of plans(); track option.id) {
@@ -53,7 +61,7 @@
         </div>
 
         <button class="cta" type="button" [disabled]="!store.available() || !!busy()" (click)="buy(selectedPlan())">
-          {{ busy() === selectedPlan() ? 'Opening the store…' : 'Continue with Plus' }}
+          {{ busy() === selectedPlan() ? 'Opening the store…' : 'Continue with ' + familyName() }}
         </button>
         @if (storeNote(); as note) { <p class="store-note">{{ note }}</p> }
         <p class="fine">Renews automatically until you cancel in your Google Play or App Store account. Cancel at least a day before renewal to avoid the next charge.</p>
@@ -61,13 +69,13 @@
     }
 
     <section class="compare" aria-labelledby="compare-title">
-      <h2 id="compare-title">Free and Plus</h2>
+      <h2 id="compare-title">What each plan includes</h2>
       <div class="table" role="table">
-        <div class="row head" role="row"><span role="columnheader"></span><span role="columnheader">Free</span><span role="columnheader">Plus</span></div>
+        <div class="row head" role="row"><span role="columnheader"></span><span role="columnheader">Free</span><span role="columnheader">Plus</span><span role="columnheader">Practi&shy;tioner</span></div>
         @for (row of compare; track row.label) {
           <div class="row" role="row">
             <span role="rowheader">{{ row.label }}</span>
-            @for (cell of [row.free, row.plus]; track $index) {
+            @for (cell of [row.free, row.plus, row.practitioner]; track $index) {
               <span role="cell">
                 @if (cell === true) { <img src="mobile/check-accent.svg" alt="Included" /> }
                 @else if (cell === false) { <span class="dash" aria-label="Not included">–</span> }

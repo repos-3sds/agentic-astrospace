@@ -1,11 +1,16 @@
 @let p = profile();
 
-<header class="appbar">
-  <h1 class="screen-title">More</h1>
-  <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search Siddha">
-    <img src="mobile/search.svg" alt="" aria-hidden="true" />
-  </a>
-</header>
+@if (practitioner()) {
+  <header class="appbar">
+    <h1 class="screen-title">Settings</h1>
+    <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search Siddha">
+      <img src="mobile/search.svg" alt="" aria-hidden="true" />
+    </a>
+  </header>
+} @else {
+  <!-- Behind the gear on Explore in the Ask-first modes. -->
+  <as-back-bar back="/m/explore" crumb="Explore" title="Settings" />
+}
 
 <div class="body">
   <button class="account m-pressable" type="button" (click)="profileSwitcherOpen.set(true)">

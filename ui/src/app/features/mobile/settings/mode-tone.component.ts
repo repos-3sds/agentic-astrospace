@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { PlanGateService } from '../../../core/plan-gate.service';
 import {
   PersonaOption,
   PersonaPickerComponent,
@@ -28,10 +30,21 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
 })
 export class ModeToneComponent {
   private readonly preferences = inject(PreferencesService);
+  private readonly gate = inject(PlanGateService);
+  private readonly router = inject(Router);
   readonly persona = this.preferences.experienceMode;
   readonly tone = this.preferences.tone;
 
-  readonly options: PersonaOption[] = [
+  /** Practitioner mode comes with the Practitioner plan; without it, Plans opens instead. */
+  protected choose(id: PersonaOption['id']): void {
+    if (id === 'practitioner' && !this.gate.allows('practitioner.workflow')) {
+      void this.router.navigate(['/m', 'subscription'], { queryParams: { from: 'practitioner.workflow', plan: 'practitioner' } });
+      return;
+    }
+    this.persona.set(id);
+  }
+
+  readonly options = computed<PersonaOption[]>(() => [
     {
       id: 'guided',
       icon: 'persona-guided',
@@ -52,9 +65,9 @@ export class ModeToneComponent {
       id: 'practitioner',
       icon: 'persona-practitioner',
       title: 'Practitioner',
-      badge: 'ADVANCED',
+      badge: this.gate.allows('practitioner.workflow') ? 'ADVANCED' : 'PLAN',
       badgeTone: 'good',
       detail: 'Full depth for charts, dashas, transits, and study.',
     },
-  ];
+  ]);
 }

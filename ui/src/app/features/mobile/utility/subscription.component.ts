@@ -15,7 +15,10 @@ interface CompareRow {
   label: string;
   free: string | boolean;
   plus: string | boolean;
+  practitioner: string | boolean;
 }
+
+type PlanFamily = 'plus' | 'pro';
 
 /**
  * Plans (D2 hybrid pricing): what the reader has, what Plus adds, and
@@ -51,16 +54,30 @@ export class SubscriptionComponent implements OnInit {
   protected readonly error = signal(false);
   protected readonly current = signal<EntitlementSnapshot | null>(null);
   protected readonly products = signal<StoreProduct[]>([]);
-  protected readonly selectedPlan = signal('astrospace_plus_yearly');
+  /** Which paid plan the picker shows; Practitioner is sold as the "pro" tier. */
+  protected readonly family = signal<PlanFamily>(
+    this.route.snapshot.queryParamMap.get('plan') === 'practitioner' ? 'pro' : 'plus');
+  protected readonly selectedPlan = signal(
+    this.family() === 'pro' ? 'astrospace_practitioner_yearly' : 'astrospace_plus_yearly');
   protected readonly busy = signal<string | null>(null);
   protected readonly notice = signal<{ tone: 'good' | 'info' | 'bad'; text: string } | null>(null);
 
   // Yearly first: it is the better price and the one selected by default.
   protected readonly plans = computed(() =>
-    this.products().filter((p) => p.kind === 'plan').sort((a, b) => (b.months ?? 0) - (a.months ?? 0)));
+    this.products()
+      .filter((p) => p.kind === 'plan' && (p.tier ?? 'plus') === this.family())
+      .sort((a, b) => (b.months ?? 0) - (a.months ?? 0)));
+  protected readonly familyName = computed(() => this.family() === 'pro' ? 'Practitioner' : 'Plus');
+  /** Plus readers can still move up to Practitioner; Practitioner has nothing above it. */
+  protected readonly canUpgrade = computed(() => (this.current()?.access_tier ?? 'free') !== 'pro');
   protected readonly enforced = computed(() => !!this.current()?.quotas_enforced);
   protected readonly packs = computed(() => this.products().filter((p) => p.kind === 'question_pack'));
   protected readonly isPaid = computed(() => (this.current()?.access_tier ?? 'free') !== 'free');
+
+  protected chooseFamily(family: PlanFamily): void {
+    this.family.set(family);
+    this.selectedPlan.set(family === 'pro' ? 'astrospace_practitioner_yearly' : 'astrospace_plus_yearly');
+  }
 
   protected readonly usageRows = computed(() => {
     const snapshot = this.current();
@@ -82,19 +99,24 @@ export class SubscriptionComponent implements OnInit {
   });
 
   protected readonly compare: CompareRow[] = [
-    { label: 'Ask answers', free: '3 a month', plus: '30 a month' },
-    { label: 'Profiles', free: '2', plus: '6' },
-    { label: 'Natural reading voice', free: false, plus: true },
-    { label: 'Full dashas, vargas and transits', free: false, plus: true },
-    { label: 'All festival packs', free: false, plus: true },
-    { label: 'Detailed reports', free: false, plus: true },
+    { label: 'Ask answers', free: '3 a month', plus: '30 a month', practitioner: '100 a month' },
+    { label: 'Profiles', free: '2', plus: '6', practitioner: '20' },
+    { label: 'Yogas', free: '2', plus: 'All', practitioner: 'All' },
+    { label: 'What each dosha means', free: false, plus: true, practitioner: true },
+    { label: 'Compatibility', free: 'Score, 1 a month', plus: 'Full report', practitioner: 'Full report' },
+    { label: 'Readings', free: false, plus: true, practitioner: true },
+    { label: 'Remedies', free: '1 practice', plus: 'Full plan', practitioner: 'Full plan' },
+    { label: 'Muhurta', free: false, plus: true, practitioner: true },
+    { label: 'Natural reading voice', free: false, plus: true, practitioner: true },
+    { label: 'Divisional charts (D2–D60)', free: false, plus: false, practitioner: true },
+    { label: 'Practitioner mode', free: false, plus: false, practitioner: true },
   ];
 
   /** Never behind a plan, so the reader can see that before choosing. */
   protected readonly alwaysFree = [
     'Today, the panchang and the calendar',
-    'Your birth chart and birth signature',
-    'Every dosha, with its cancellations',
+    'Your birth chart (D1) and birth signature',
+    'Every dosha by name, with its cancellations',
     'Safety guidance and where to get real help',
     'Your sources, and your data to export or delete',
   ];
@@ -114,6 +136,7 @@ export class SubscriptionComponent implements OnInit {
         this.kundlis.load().catch(() => undefined),
       ]);
       this.current.set(snapshot);
+      if (snapshot.access_tier === 'plus') this.chooseFamily('pro');
       this.products.set(catalog.products);
       void this.store.init(catalog.products);
     } catch {
