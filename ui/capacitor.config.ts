@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 import type { KeyboardResize } from '@capacitor/keyboard';
 
 const config: CapacitorConfig = {
-  appId: 'app.astrospace.mobile',
+  appId: 'app.asksiddha.mobile',
   appName: 'Siddha',
   // Native bridge arguments can contain private chart/cache payloads. Keep
   // Capacitor's method-data logging disabled in debug and release builds.
@@ -28,7 +28,7 @@ const config: CapacitorConfig = {
     CapacitorSQLite: {
       iosDatabaseLocation: 'Library/CapacitorDatabase',
       iosIsEncryption: true,
-      iosKeychainPrefix: 'app.astrospace.mobile',
+      iosKeychainPrefix: 'app.asksiddha.mobile',
       androidIsEncryption: true,
     },
     SplashScreen: {

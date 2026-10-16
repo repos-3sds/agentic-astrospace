@@ -1,4 +1,4 @@
-package app.astrospace.mobile;
+package app.asksiddha.mobile;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;

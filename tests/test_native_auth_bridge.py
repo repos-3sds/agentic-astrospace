@@ -14,5 +14,5 @@ def test_native_auth_bridge_preserves_pkce_code():
 
     assert response.status_code == 302
     assert response.headers["location"] == (
-        "app.astrospace.mobile://auth/callback?code=abc123&state=provider-state"
+        "app.asksiddha.mobile://auth/callback?code=abc123&state=provider-state"
     )

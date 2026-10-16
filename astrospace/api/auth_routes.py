@@ -9,7 +9,7 @@ from .auth import DEV_USER_ID, CurrentUser, auth_config, running_on_cloud_run
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
-NATIVE_AUTH_CALLBACK = "app.astrospace.mobile://auth/callback"
+NATIVE_AUTH_CALLBACK = "app.asksiddha.mobile://auth/callback"
 
 
 @router.get("/config")

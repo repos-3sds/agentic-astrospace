@@ -12,10 +12,10 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "app.astrospace.mobile"
+    namespace = "app.asksiddha.mobile"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "app.astrospace.mobile"
+        applicationId "app.asksiddha.mobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 436
