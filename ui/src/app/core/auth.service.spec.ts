@@ -377,4 +377,29 @@ describe('AuthService offline relaunch', () => {
     expect((service as any).cache.clearAll).toHaveBeenCalled();
     expect(router.navigate).toHaveBeenCalledWith(['/m', 'start']);
   });
+
+  it('revokes this phone\'s push token while still signed in, then clears the session', async () => {
+    spyOn(window, 'fetch').and.resolveTo(new Response(JSON.stringify(config), { status: 200 }));
+    getSession.and.resolveTo({ data: { session: storedSession }, error: null });
+    const order: string[] = [];
+    const signOut = jasmine.createSpy('signOut').and.callFake(async () => {
+      order.push('signOut');
+      return { error: null };
+    });
+    (service as any).buildClient.and.returnValue({
+      auth: { getSession, signOut, onAuthStateChange: jasmine.createSpy('onAuthStateChange') },
+    });
+    await service.init();
+    spyOn(Capacitor, 'isNativePlatform').and.returnValue(true);
+    const push = { revoke: jasmine.createSpy('revoke').and.callFake(async () => {
+      // The revoke call needs the bearer token: the session must still be there.
+      order.push(service.session() ? 'revoke-signed-in' : 'revoke-signed-out');
+    }) };
+    (service as any).injector = { get: (token: { prototype?: { revoke?: unknown } }) => (token?.prototype?.revoke ? push : null) };
+
+    await service.signOut(['/m', 'start']);
+
+    expect(order).toEqual(['revoke-signed-in', 'signOut']);
+    expect(service.session()).toBeNull();
+  });
 });

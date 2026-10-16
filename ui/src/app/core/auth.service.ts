@@ -55,6 +55,9 @@ interface AuthConfig {
   supabase_anon_key?: string;
 }
 
+/** How long sign-out waits for the push-token revoke before going ahead. */
+const PUSH_REVOKE_MAX_WAIT_MS = 4_000;
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   readonly ready = signal(false);
@@ -339,16 +342,23 @@ export class AuthService {
 
   async signOut(destination?: string[]): Promise<void> {
     await this.init();
-    if (this.client) {
-      const { error } = await this.client.auth.signOut({ scope: 'local' });
-      if (error) throw error;
-    }
     // Revoke before the session goes: the API call needs the bearer token,
     // and a signed-out phone must not keep receiving this account's briefs.
+    // Until 2026-10-16 this ran after auth.signOut() below had already
+    // cleared the session, so every revoke went out unauthenticated, got a
+    // 401, and the old account kept pushing to the phone. Capped, so a slow
+    // network never holds sign-out up; the server also drops dead tokens.
     // Resolved lazily because PushService -> ApiService -> AuthService.
     if (Capacitor.isNativePlatform() && this.injector) {
       const { PushService } = await import('./push.service');
-      await this.injector.get(PushService).revoke();
+      await Promise.race([
+        this.injector.get(PushService).revoke(),
+        new Promise<void>((resolve) => setTimeout(resolve, PUSH_REVOKE_MAX_WAIT_MS)),
+      ]);
+    }
+    if (this.client) {
+      const { error } = await this.client.auth.signOut({ scope: 'local' });
+      if (error) throw error;
     }
     this.setSession(null);
     this.signedOut.set(true);
