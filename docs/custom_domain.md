@@ -17,6 +17,14 @@ service:
 The full web app stays on the Cloud Run address
 (`https://agentic-astrospace-704387401358.asia-south1.run.app`), for the team only.
 
+`firebase-public/delete-account.html` is served at `/delete-account`: the account-deletion
+page the Play Data safety form asks for. The in-app route (`/m/settings/account/delete`)
+can't serve that role, because on this domain it shows the landing page.
+
+On the Cloud Run address, the signed-in web pages admit only admins (an active
+`admin_users` row; `ui/src/app/core/auth.guard.ts`). Anyone else who signs in there is sent
+to the web landing page. The phone app is unaffected: it uses its own `/m` routes.
+
 ## One-time setup
 
 1. `npm i -g firebase-tools && firebase login`, then from the repo root
