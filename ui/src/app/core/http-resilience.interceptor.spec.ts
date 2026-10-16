@@ -5,6 +5,7 @@ import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import {
   API_GET_RETRY_DELAY_MS,
   API_GET_TIMEOUT_MS,
+  API_SLOW_GET_TIMEOUT_MS,
   httpResilienceInterceptor,
 } from './http-resilience.interceptor';
 
@@ -103,5 +104,15 @@ describe('httpResilienceInterceptor', () => {
     req.flush('down', { status: 503, statusText: 'Unavailable' });
     tick(API_GET_RETRY_DELAY_MS);
     backend.expectNone('/assets/i18n/en.json');
+  }));
+
+  it('gives the daily brief time to be written instead of cutting it off at 8 s', fakeAsync(() => {
+    let body: unknown;
+    http.get('/api/v1/context/k/daily/brief?tone=gentle').subscribe((value) => (body = value));
+    tick(API_GET_TIMEOUT_MS + 30_000);
+    const request = backend.expectOne('/api/v1/context/k/daily/brief?tone=gentle');
+    request.flush({ source: 'agent' });
+    expect(body).toEqual({ source: 'agent' });
+    expect(API_SLOW_GET_TIMEOUT_MS).toBeGreaterThan(120_000);
   }));
 });

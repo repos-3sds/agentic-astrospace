@@ -226,15 +226,32 @@ describe('VedicService agent daily brief', () => {
     expect(api.get).toHaveBeenCalledTimes(3);
   });
 
-  it('keeps a written brief on the device, so a relaunch does not ask again', async () => {
+  it('keeps a written brief on the device, so a relaunch shows it at once', async () => {
     api.get.and.resolveTo({ date: '2026-10-16', source: 'agent', brief: { headline: 'h' } } as any);
     await service.dailyBrief('profile-1', '2026-10-16', 'gentle', 'balanced');
     const relaunched = TestBed.runInInjectionContext(() => new VedicService());
     const answer = await relaunched.dailyBrief('profile-1', '2026-10-16', 'gentle', 'balanced');
+    // Shown from the device at once; one background check for a newer brief.
     expect(answer.brief?.headline).toBe('h');
-    expect(api.get).toHaveBeenCalledTimes(1);
+    expect(api.get).toHaveBeenCalledTimes(2);
+    await relaunched.dailyBrief('profile-1', '2026-10-16', 'gentle', 'balanced');
+    expect(api.get).toHaveBeenCalledTimes(2);
     // The next Vedic day is a new brief.
     await relaunched.dailyBrief('profile-1', '2026-10-17', 'gentle', 'balanced');
-    expect(api.get).toHaveBeenCalledTimes(2);
+    expect(api.get).toHaveBeenCalledTimes(3);
+  });
+
+  it('shows a stored brief at once and swaps in a newer one from the server', async () => {
+    api.get.and.resolveTo({ date: '2026-10-16', source: 'agent', generated_at: 'a', brief: { headline: 'old' } } as any);
+    await service.dailyBrief('profile-1', '2026-10-16', 'gentle', 'balanced');
+    api.get.and.resolveTo({ date: '2026-10-16', source: 'agent', generated_at: 'b', brief: { headline: 'new' } } as any);
+    const relaunched = TestBed.runInInjectionContext(() => new VedicService());
+    let fresh: any = null;
+    const shown = await relaunched.dailyBrief('profile-1', '2026-10-16', 'gentle', 'balanced', (value) => (fresh = value));
+    expect(shown.brief?.headline).toBe('old');
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(fresh?.brief?.headline).toBe('new');
+    const later = TestBed.runInInjectionContext(() => new VedicService());
+    expect((await later.dailyBrief('profile-1', '2026-10-16', 'gentle', 'balanced')).brief?.headline).toBe('new');
   });
 });
