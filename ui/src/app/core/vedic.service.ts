@@ -272,18 +272,36 @@ export class VedicService {
    * shows it at once without asking again. A template answer or an error is
    * not kept, so the next open asks again.
    */
-  dailyBrief(kundliId: string, date: string, tone: ReadingTone, mode: ExperienceMode): Promise<DailyBriefResponse> {
+  dailyBrief(
+    kundliId: string,
+    date: string,
+    tone: ReadingTone,
+    mode: ExperienceMode,
+    onFresh?: (value: DailyBriefResponse) => void,
+  ): Promise<DailyBriefResponse> {
     const params = this.dailyParams();
     params.set('tone', tone);
     params.set('mode', mode);
     const key = `${BRIEF_STORAGE_PREFIX}${kundliId}:${date}:${params.toString()}`;
+    const fetchBrief = () =>
+      this.api.get<DailyBriefResponse>(`/context/${kundliId}/daily/brief?${params.toString()}`);
     let cached = this.briefCache.get(key);
     if (!cached) {
       const stored = readStoredBrief(key, date);
       if (stored) {
         cached = Promise.resolve(stored);
+        // Shown at once, then checked once per session: the server may hold
+        // a newer brief for the day (a new brief format, a rewrite), and a
+        // device copy alone would keep the old one until tomorrow.
+        void fetchBrief().then((value) => {
+          if (!value.brief || value.date !== date) return;
+          if (value.generated_at === stored.generated_at && JSON.stringify(value.brief) === JSON.stringify(stored.brief)) return;
+          storeBrief(key, value);
+          this.briefCache.set(key, Promise.resolve(value));
+          onFresh?.(value);
+        }).catch(() => undefined);
       } else {
-        cached = this.api.get<DailyBriefResponse>(`/context/${kundliId}/daily/brief?${params.toString()}`).then((value) => {
+        cached = fetchBrief().then((value) => {
           if (value.brief && value.date === date) storeBrief(key, value);
           else this.briefCache.delete(key);
           return value;

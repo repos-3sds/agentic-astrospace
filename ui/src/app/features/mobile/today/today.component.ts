@@ -519,7 +519,11 @@ export class TodayComponent {
     const current = this.agentBrief();
     if (current && (current.profileId !== profileId || current.date !== date)) this.agentBrief.set(null);
     try {
-      const response = await this.vedic.dailyBrief(profileId, date, tone, mode);
+      const response = await this.vedic.dailyBrief(profileId, date, tone, mode, (fresh) => {
+        if (request !== this.briefRequest || this.kundlis.activeId() !== profileId || !fresh.brief) return;
+        this.agentBrief.set({ profileId, date, brief: fresh.brief });
+        this.applyBrief();
+      });
       if (request !== this.briefRequest || this.kundlis.activeId() !== profileId) return;
       if (!response.brief || response.date !== date) return;
       this.agentBrief.set({ profileId, date, brief: response.brief });

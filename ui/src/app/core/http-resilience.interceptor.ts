@@ -3,6 +3,20 @@ import { TimeoutError, catchError, retry, throwError, timeout, timer } from 'rxj
 
 /** How long an API read may go without an answer before it counts as failed. */
 export const API_GET_TIMEOUT_MS = 8_000;
+/**
+ * Reads that legitimately take longer than API_GET_TIMEOUT_MS. The daily
+ * brief is normally already written and answers at once, but when the
+ * schedule has not reached a profile the server writes it during the request
+ * (two model calls at most, 60 s each); cut off at 8 s, that request could
+ * never succeed and Today kept the template.
+ */
+export const API_SLOW_GET_TIMEOUT_MS = 130_000;
+const SLOW_READS = [/\/daily\/brief(\?|$)/];
+
+export function readTimeoutMs(req: HttpRequest<unknown>): number {
+  return SLOW_READS.some((pattern) => pattern.test(req.url)) ? API_SLOW_GET_TIMEOUT_MS : API_GET_TIMEOUT_MS;
+}
+
 /** Pause before the single retry, long enough for a flapping radio to settle. */
 export const API_GET_RETRY_DELAY_MS = 400;
 
@@ -24,7 +38,7 @@ export const httpResilienceInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     // `each`, not `first`: the fetch backend emits a Sent event immediately,
     // so the clock that matters is the gap until the response arrives.
-    timeout({ each: API_GET_TIMEOUT_MS }),
+    timeout({ each: readTimeoutMs(req) }),
     catchError((error: unknown) =>
       throwError(() =>
         error instanceof TimeoutError
