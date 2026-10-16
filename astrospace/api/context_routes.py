@@ -1,9 +1,3 @@
-import json
-import logging
-import os
-import threading
-import time
-from collections import OrderedDict
 from datetime import datetime
 from functools import lru_cache
 from typing import Literal, Optional
@@ -13,7 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from ..agents.daily_brief_agent import DailyBrief, DailyBriefAgent, listen_seconds, spoken_words
+from ..agents.daily_brief_agent import daily_brief_enabled
+from ..context.daily_brief_store import ensure_brief
 from ..context import KeywordRouter, assemble, daily_guidance, domain_ids
 from .timing_place import resolve_timing_place
 from ..core.vedic import LocationError, VedicChart
@@ -21,9 +16,6 @@ from ..db import crud, get_db
 from .auth import CurrentUser
 
 router = APIRouter(prefix="/api/v1/context", tags=["context-engine"])
-# One JSON line per brief written, like ask.cost, so spend per brief is read
-# from the logs rather than estimated.
-brief_log = logging.getLogger("astrospace.daily_brief")
 
 
 class ContextRequest(BaseModel):
@@ -143,43 +135,6 @@ def daily(
     return _daily_payload(kundli, ayanamsha, node_type, as_of, timezone, city, nation)
 
 
-# Agent-written briefs, one per person, Vedic day, place and reading style.
-# Only successes are kept, so a failed call is retried on the next open; the
-# key carries the birth details so editing them never serves the old brief.
-# Per process: a new Cloud Run instance writes its own on first open, which
-# costs one extra call, not a wrong brief.
-DAILY_BRIEF_CACHE_SIZE = 4096
-_brief_cache: "OrderedDict[tuple, dict]" = OrderedDict()
-_brief_locks: dict[tuple, threading.Lock] = {}
-_brief_guard = threading.Lock()
-
-
-def _brief_key(kundli, payload: dict, tone: str, mode: str) -> tuple:
-    place = payload["provenance"]["place"]
-    return (
-        kundli.id, payload["date"], payload.get("engine_version"),
-        kundli.name, kundli.relation or "", kundli.birth_year, kundli.birth_month, kundli.birth_day,
-        kundli.birth_hour, kundli.birth_minute, kundli.birth_city, kundli.birth_nation,
-        place.get("city"), place.get("timezone"), tone, mode,
-    )
-
-
-def _remember_brief(key: tuple, value: dict) -> None:
-    with _brief_guard:
-        _brief_cache[key] = value
-        _brief_cache.move_to_end(key)
-        while len(_brief_cache) > DAILY_BRIEF_CACHE_SIZE:
-            _brief_cache.popitem(last=False)
-
-
-def _write_brief(kundli, payload: dict, tone: str, mode: str) -> tuple[DailyBrief | None, dict]:
-    first_name = (kundli.name or "").split()[0] if kundli.name else "there"
-    date_label = datetime.fromisoformat(payload["date"]).strftime("%A, %-d %B")
-    agent = DailyBriefAgent()
-    brief = agent.write(payload, first_name=first_name, date_label=date_label, tone=tone, mode=mode)
-    return brief, agent.usage_totals()
-
-
 @router.get("/{kundli_id}/daily/brief")
 def daily_brief(
     kundli_id: str,
@@ -191,64 +146,28 @@ def daily_brief(
     timezone: Optional[str] = Query(None, description="Viewer or selected panchanga timezone"),
     city: Optional[str] = Query(None, description="Optional panchanga place override"),
     nation: Optional[str] = None,
-    tone: Literal["gentle", "direct"] = "direct",
+    tone: Literal["gentle", "direct"] = "gentle",
     mode: Literal["guided", "balanced", "practitioner"] = "balanced",
 ):
     """Today's brief in the agent's words, over the same signals as /daily.
 
-    Answers 200 with `brief: null` when the agent is off or could not write a
-    safe brief: the app already shows the templated brief and keeps it.
+    Normally already written by the notification worker and read from the
+    store (context/daily_brief_store.py). Answers 200 with `brief: null` when
+    the agent is off or could not write a safe brief: the app already shows
+    the templated brief and keeps it.
     """
     kundli = crud.get_kundli(db, kundli_id, user.id)
     if not kundli:
         raise HTTPException(status_code=404, detail="Kundli not found")
     payload = _daily_payload(kundli, ayanamsha, node_type, as_of, timezone, city, nation)
     base = {"date": payload["date"], "valid_until": payload.get("valid_until")}
-    if os.getenv("DAILY_BRIEF_AGENT", "on").strip().lower() in ("off", "0", "false"):
+    if not daily_brief_enabled():
         return {**base, "source": "template", "brief": None}
-
-    key = _brief_key(kundli, payload, tone, mode)
-    with _brief_guard:
-        hit = _brief_cache.get(key)
-        lock = _brief_locks.setdefault(key, threading.Lock())
-    if hit:
-        return {**base, **hit, "cached": True}
-    # Two opens of Today at once wait for one call instead of paying twice.
-    with lock:
-        with _brief_guard:
-            hit = _brief_cache.get(key)
-        if hit:
-            return {**base, **hit, "cached": True}
-        started = time.monotonic()
-        try:
-            brief, usage = _write_brief(kundli, payload, tone, mode)
-        except Exception:
-            brief_log.exception("daily brief generation failed")
-            brief, usage = None, None
-        finally:
-            with _brief_guard:
-                _brief_locks.pop(key, None)
-        elapsed = round(time.monotonic() - started, 2)
-        words = spoken_words(brief) if brief else 0
-        try:
-            brief_log.info(json.dumps({
-                "event": "daily_brief.cost", "status": "written" if brief else "fallback",
-                "kundli_id": kundli.id, "date": payload["date"], "tone": tone, "mode": mode,
-                "seconds": elapsed, "spoken_words": words,
-                **({k: usage[k] for k in ("provider", "model", "calls", "input_tokens", "output_tokens")} if usage else {}),
-            }))
-        except Exception:  # accounting never costs a reader their brief
-            pass
-        if not brief:
-            return {**base, "source": "template", "brief": None}
-        value = {
-            "source": "agent",
-            "brief": brief.model_dump(),
-            "spoken_words": words,
-            "listen_seconds": listen_seconds(words),
-        }
-        _remember_brief(key, value)
-        return {**base, **value, "cached": False}
+    value, written_now = ensure_brief(db, kundli, payload, tone=tone, mode=mode,
+                                      ayanamsha=ayanamsha, node_type=node_type, trigger="on_open")
+    if not value:
+        return {**base, "source": "template", "brief": None}
+    return {**base, **value, "cached": not written_now}
 
 
 @router.post("/{kundli_id}")

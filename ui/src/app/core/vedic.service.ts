@@ -98,6 +98,7 @@ export class VedicService {
     this.dailyCache.clear();
     this.dailyValues.clear();
     this.briefCache.clear();
+    clearStoredBriefs();
     this.calendarCache.clear();
     this.calendarValues.clear();
   }
@@ -265,24 +266,32 @@ export class VedicService {
   }
 
   /**
-   * Today's brief in the agent's words. Kept for the session per profile,
-   * day, place and reading style; a template answer or an error is not kept,
-   * so the next open of Today asks again.
+   * Today's brief in the agent's words for the Vedic day `date` (the loaded
+   * daily payload's date). The server writes it once per day and keeps it;
+   * the app keeps it too, in memory and on the device, so reopening Today
+   * shows it at once without asking again. A template answer or an error is
+   * not kept, so the next open asks again.
    */
-  dailyBrief(kundliId: string, tone: ReadingTone, mode: ExperienceMode): Promise<DailyBriefResponse> {
+  dailyBrief(kundliId: string, date: string, tone: ReadingTone, mode: ExperienceMode): Promise<DailyBriefResponse> {
     const params = this.dailyParams();
     params.set('tone', tone);
     params.set('mode', mode);
-    const key = `${kundliId}:${this.todayKey()}:${params.toString()}`;
+    const key = `${BRIEF_STORAGE_PREFIX}${kundliId}:${date}:${params.toString()}`;
     let cached = this.briefCache.get(key);
     if (!cached) {
-      cached = this.api.get<DailyBriefResponse>(`/context/${kundliId}/daily/brief?${params.toString()}`).then((value) => {
-        if (!value.brief) this.briefCache.delete(key);
-        return value;
-      }).catch((error) => {
-        this.briefCache.delete(key);
-        throw error;
-      });
+      const stored = readStoredBrief(key, date);
+      if (stored) {
+        cached = Promise.resolve(stored);
+      } else {
+        cached = this.api.get<DailyBriefResponse>(`/context/${kundliId}/daily/brief?${params.toString()}`).then((value) => {
+          if (value.brief && value.date === date) storeBrief(key, value);
+          else this.briefCache.delete(key);
+          return value;
+        }).catch((error) => {
+          this.briefCache.delete(key);
+          throw error;
+        });
+      }
       this.briefCache.set(key, cached);
     }
     return cached;
@@ -514,6 +523,7 @@ export class VedicService {
     this.dailyCache.clear();
     this.dailyValues.clear();
     this.briefCache.clear();
+    clearStoredBriefs();
     const scope = this.profileScopes.get(kundliId);
     if (scope) this.resourceCache.deleteProfile(scope.userId, kundliId);
     this.calendarCache.clear();
@@ -533,6 +543,7 @@ export class VedicService {
     this.dailyCache.clear();
     this.dailyValues.clear();
     this.briefCache.clear();
+    clearStoredBriefs();
     this.calendarCache.clear();
     this.calendarValues.clear();
     this.resourceCache.clearAll();
@@ -784,4 +795,48 @@ export interface RemedyRecommendationPractice {
     source_status: string;
     note: string;
   };
+}
+
+const BRIEF_STORAGE_PREFIX = 'astrospace.brief.';
+const BRIEF_STORAGE_LIMIT = 24;
+
+function readStoredBrief(key: string, date: string): DailyBriefResponse | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const value = JSON.parse(raw) as DailyBriefResponse;
+    return value?.brief && value.date === date ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Keeps the newest briefs only: a day's brief is useless the day after. */
+function storeBrief(key: string, value: DailyBriefResponse): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    const keys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k?.startsWith(BRIEF_STORAGE_PREFIX)) keys.push(k);
+    }
+    if (keys.length > BRIEF_STORAGE_LIMIT) {
+      const dated = keys.map((k) => ({ k, date: k.slice(BRIEF_STORAGE_PREFIX.length).split(':')[1] ?? '' }));
+      dated.sort((a, b) => a.date.localeCompare(b.date));
+      for (const { k } of dated.slice(0, keys.length - BRIEF_STORAGE_LIMIT)) localStorage.removeItem(k);
+    }
+  } catch {
+    // Storage full or unavailable: the brief still shows, it just isn't kept.
+  }
+}
+
+function clearStoredBriefs(): void {
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k?.startsWith(BRIEF_STORAGE_PREFIX)) localStorage.removeItem(k);
+    }
+  } catch {
+    // Nothing kept, nothing to clear.
+  }
 }

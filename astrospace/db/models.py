@@ -956,7 +956,10 @@ class DailyGuidanceCache(Base):
                          name="daily_guidance_cache_kundli_date_conv_lang_key"),
     )
 
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=_uuid)
+    # uuid in Postgres (20260725120000). As a plain String the insert sent
+    # varchar and failed with DatatypeMismatch; nothing wrote here until the
+    # stored daily brief did.
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
     kundli_id: Mapped[str] = mapped_column(String, ForeignKey("kundlis.id"), nullable=False, index=True)
     local_date: Mapped[date] = mapped_column(Date, nullable=False)
     conventions_hash: Mapped[str] = mapped_column(String, nullable=False)

@@ -514,7 +514,7 @@ export class TodayComponent {
     const current = this.agentBrief();
     if (current && (current.profileId !== profileId || current.date !== date)) this.agentBrief.set(null);
     try {
-      const response = await this.vedic.dailyBrief(profileId, tone, mode);
+      const response = await this.vedic.dailyBrief(profileId, date, tone, mode);
       if (request !== this.briefRequest || this.kundlis.activeId() !== profileId) return;
       if (!response.brief || response.date !== date) return;
       this.agentBrief.set({ profileId, date, brief: response.brief });
@@ -538,7 +538,7 @@ export class TodayComponent {
       nextWindowValue: brief.timing_note,
     }));
     this.summary.set(brief.summary);
-    this.plainWords.set([...brief.why, brief.focus]);
+    this.plainWords.set([...brief.why, brief.practical_close]);
     this.doAvoidExplained.set([
       ...brief.do.map((item) => ({ kind: 'do' as const, headline: item.headline, detail: item.detail })),
       ...brief.avoid.map((item) => ({ kind: 'avoid' as const, headline: item.headline, detail: item.detail })),

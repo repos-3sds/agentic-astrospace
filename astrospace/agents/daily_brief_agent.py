@@ -7,6 +7,24 @@ phrase tables. Two people with the same tone got the same sentences. This
 agent keeps the computation and replaces only the wording: one structured
 model call, no tools, fed the signals the engine already produced.
 
+What it covers is what the templated brief covers (context/daily.py), so
+nothing a reader had before goes missing:
+
+- the day's verdict and its narrative (`_verdict`), ending in the practical
+  close the Why sheet shows;
+- the tara, the Moon (chandrabala, and chandrashtama when it falls), the slow
+  transits that support or test the chart, and the running dasha lord;
+- do and avoid across the engine's life domains (Finance, Love, Health,
+  Growth, Career) plus the tara row and personal ghatak markers, which reach
+  the model through the engine's do/avoid candidates;
+- energy and the love, money, work, health and growth tones (`_reading`);
+- the timing windows: Rahu Kalam, Yamaganda, Gulika and Abhijit;
+- the plain reasons. The technical reasons stay the engine's own list: they
+  are facts, not wording.
+
+`coverage_gaps` checks the parts that can be checked mechanically and sends
+the draft back once when one is missing.
+
 Two hard limits shape it:
 
 - The spoken script must play in under 90 seconds at the Listen sheet's
@@ -22,6 +40,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import re
 from typing import Literal
 
@@ -41,6 +60,11 @@ SPOKEN_WORD_TARGET = (130, 165)
 SECTION_LABELS = ("Opening", "Overview", "Today", "Why", "Close")
 
 
+def daily_brief_enabled() -> bool:
+    """DAILY_BRIEF_AGENT=off stops every brief being written, scheduled or not."""
+    return os.getenv("DAILY_BRIEF_AGENT", "on").strip().lower() not in ("off", "0", "false")
+
+
 class BriefItem(BaseModel):
     headline: str = Field(description="Short card title, at most 8 words, no trailing full stop.")
     detail: str = Field(description="One sentence naming the signal behind this item.")
@@ -51,14 +75,29 @@ class SpokenSection(BaseModel):
     text: str
 
 
+class LifeAreas(BaseModel):
+    """One sentence per area, as the template's relationship/money/work tones
+    and its Finance/Love/Health/Growth/Career domains did."""
+
+    love: str
+    money: str
+    work: str
+    health: str = Field(description="Energy and rest only; never illness or treatment.")
+    growth: str
+
+
 class DailyBrief(BaseModel):
     headline: str = Field(description="The day in at most 8 words.")
     summary: str = Field(description="One or two plain sentences, at most 30 words, under the headline.")
+    narrative: str = Field(description="The day in 50-80 words: tara, Moon, slow transits, then the practical close.")
+    practical_close: str = Field(description="The narrative's last sentence: what to actually do with the day.")
     focus: str = Field(description="One practical sentence on where to put energy today.")
+    energy: Literal["drained", "fragmented", "steady", "vibrant"]
+    areas: LifeAreas
     do: list[BriefItem] = Field(min_length=1, max_length=3)
     avoid: list[BriefItem] = Field(min_length=1, max_length=3)
     timing_note: str = Field(description="One sentence on timing, using the real window times given.")
-    why: list[str] = Field(min_length=1, max_length=3, description="Plain reasons, one sentence each.")
+    why: list[str] = Field(min_length=2, max_length=4, description="Plain reasons, one sentence each: tara, Moon, transits, dasha.")
     spoken: list[SpokenSection] = Field(min_length=3, max_length=5)
 
 
@@ -77,12 +116,24 @@ astrology is already computed for this one person and given to you as JSON.
 Your job is wording, not calculation.
 
 Ground every line in the signals given:
-- Use only the tara, chandrabala, dasha chain, active transits, muhurta windows
-  and the engine's do/avoid candidates in the JSON. Never invent a placement,
-  transit, yoga or time. Use window times exactly as given.
-- Pick the 2-3 strongest do items and 1-3 avoid items from the candidates.
-  Rewrite them so they read as written for this person today, not as stock
-  phrases. Keep each item's underlying signal.
+- Use only the tara, chandrabala, dasha chain, active transits, muhurta windows,
+  the engine's verdict and its do/avoid candidates in the JSON. Never invent a
+  placement, transit, yoga or time. Use window times exactly as given.
+- Keep the engine's verdict tone. A caution day is not rewritten as a good day,
+  nor the reverse.
+- Cover every area the engine covers:
+  * do: every do candidate's signal, in 1-3 items; avoid: every avoid
+    candidate's signal, in 1-3 items (a chandrashtama or ghatak candidate is
+    always kept). With no avoid candidate, the avoid item is Rahu Kalam.
+  * why: the tara, the Moon (say so when chandrashtama is true), the slow
+    transits (supporting or testing), and the running dasha lord.
+  * areas: love, money, work, health and growth, one sentence each, each tied
+    to a signal or to the day's tone. Health is energy and rest only.
+  * timing_note: Rahu Kalam with its time, plus Abhijit Muhurta with its time
+    when given, as the better window for a fresh start.
+  * narrative: tara, Moon and transits, then the practical close.
+- Rewrite candidates so they read as written for this person today, not as
+  stock phrases.
 - If `subject` is not "you", write about that person by first name in the
   third person; otherwise address the reader as "you".
 
@@ -96,7 +147,9 @@ Boundaries, non-negotiable:
 The `spoken` script is read aloud by a voice. It must:
 - use sections in this order: Opening, Overview, Today, Why, Close (Why may
   be dropped for a guided reader);
-- open with "Namaste, <first name>." and the date;
+- open with "Namaste, <first name>." the date and the place;
+- in Today, say the main do, the main avoid and the Rahu Kalam time; in Why,
+  the tara, the Moon and one transit or dasha signal;
 - total {SPOKEN_WORD_TARGET[0]}-{SPOKEN_WORD_TARGET[1]} words across all sections, and never
   more than {SPOKEN_WORD_LIMIT}. Count them;
 - be plain speech: no markdown, no lists, no emoji, no abbreviations, times
@@ -114,6 +167,44 @@ BOUNDARY_NOTE = (
     "statement about death, lifespan, medical, legal or investment outcomes, or a "
     "dosha or transit as a fixed verdict."
 )
+
+
+COVERAGE_NOTE = (
+    "\n\nYour previous draft left out: {gaps}. Rewrite it covering them, within the same "
+    "word limit for the spoken script."
+)
+
+
+def _window(payload: dict, name: str) -> str | None:
+    for row in payload.get("muhurta_windows") or []:
+        if row.get("name") == name and row.get("time"):
+            return row["time"]
+    return None
+
+
+def _times(window: str) -> list[str]:
+    return re.findall(r"\d{1,2}:\d{2}", window)
+
+
+def coverage_gaps(brief: "DailyBrief", payload: dict) -> list[str]:
+    """What the template covered that this draft does not, where that can be
+    checked without reading the prose for meaning."""
+    gaps: list[str] = []
+    rahu = _window(payload, "Rahu Kalam")
+    if rahu and not all(t in brief.timing_note for t in _times(rahu)):
+        gaps.append(f"the Rahu Kalam time ({rahu}) in timing_note")
+    abhijit = _window(payload, "Abhijit Muhurta")
+    if abhijit and not all(t in brief.timing_note for t in _times(abhijit)):
+        gaps.append(f"the Abhijit Muhurta time ({abhijit}) in timing_note")
+    if (payload.get("chandrabala") or {}).get("chandrashtama"):
+        moon_text = " ".join([*brief.why, *(f"{i.headline} {i.detail}" for i in brief.avoid)]).lower()
+        if "moon" not in moon_text:
+            gaps.append("chandrashtama (the Moon's sensitive day) in why or avoid")
+    if len(brief.do) < min(len(payload.get("do_today") or []), 3):
+        gaps.append("one do item per do candidate")
+    if len(brief.avoid) < min(len(payload.get("avoid_today") or []), 3):
+        gaps.append("one avoid item per avoid candidate")
+    return gaps
 
 
 def word_count(text: str) -> int:
@@ -151,7 +242,9 @@ def trim_spoken(brief: DailyBrief, limit: int = SPOKEN_WORD_LIMIT) -> DailyBrief
 
 
 def brief_boundary(brief: DailyBrief) -> str | None:
-    texts = [brief.headline, brief.summary, brief.focus, brief.timing_note, *brief.why]
+    areas = brief.areas
+    texts = [brief.headline, brief.summary, brief.narrative, brief.practical_close, brief.focus,
+             brief.timing_note, *brief.why, areas.love, areas.money, areas.work, areas.health, areas.growth]
     texts += [f"{item.headline}. {item.detail}" for item in [*brief.do, *brief.avoid]]
     texts += [section.text for section in brief.spoken]
     for text in texts:
@@ -161,7 +254,7 @@ def brief_boundary(brief: DailyBrief) -> str | None:
     return reading_boundary(" ".join(texts))
 
 
-def brief_input(payload: dict, first_name: str, date_label: str) -> dict:
+def brief_input(payload: dict, first_name: str, date_label: str, place: str | None = None) -> dict:
     """The signals the model may use, and nothing it could mistake for more.
 
     KB references, colours, lucky numbers and panchanga detail are left out:
@@ -174,17 +267,21 @@ def brief_input(payload: dict, first_name: str, date_label: str) -> dict:
         "subject": payload.get("subject"),
         "relation": payload.get("relation"),
         "date": date_label,
+        "place": place or ((payload.get("provenance") or {}).get("place") or {}).get("city"),
         "vara": payload.get("vara"),
         "engine_verdict": {
             "tone": payload["verdict"]["tone"],
+            "score": payload["verdict"].get("score"),
             "headline": payload["verdict"]["headline"],
+            "narrative": payload["verdict"].get("text"),
         },
+        "engine_energy": (payload.get("reading") or {}).get("energy"),
         "tarabala": payload.get("tarabala"),
         "chandrabala": payload.get("chandrabala"),
         "star_of_day": payload.get("star_of_day"),
         "dasha_chain": context.get("dasha_chain", [])[:3],
         "active_transits": [
-            {k: row.get(k) for k in ("name", "planet", "severity", "houses", "summary") if row.get(k) is not None}
+            {k: row.get(k) for k in ("name", "planet", "severity", "av_bindus") if row.get(k) is not None}
             for row in context.get("active_gochara", [])[:4]
         ],
         "muhurta_windows": payload.get("muhurta_windows", []),
@@ -198,32 +295,43 @@ class DailyBriefAgent(BaseAstroAgent):
     system_prompt = SYSTEM
     tools = []
 
-    def write(self, payload: dict, *, first_name: str, date_label: str,
-              tone: str = "direct", mode: str = "balanced") -> DailyBrief | None:
+    def write(self, payload: dict, *, first_name: str, date_label: str, place: str | None = None,
+              tone: str = "gentle", mode: str = "balanced") -> DailyBrief | None:
         """One brief, or None when the model could not produce a safe one."""
-        signals = json.dumps(brief_input(payload, first_name, date_label), ensure_ascii=False, default=str)
+        signals = json.dumps(brief_input(payload, first_name, date_label, place), ensure_ascii=False, default=str)
         prompt = (
             f"{MODE_GUIDE.get(mode, MODE_GUIDE['balanced'])}\n"
-            f"{TONE_GUIDE.get(tone, TONE_GUIDE['direct'])}\n\n"
+            f"{TONE_GUIDE.get(tone, TONE_GUIDE['gentle'])}\n\n"
             f"Today's computed signals:\n{signals}"
         )
         note = ""
         too_long: DailyBrief | None = None
-        for _attempt in range(2):
+        last_safe: DailyBrief | None = None
+        for attempt in range(2):
             brief = self.run_structured([{"role": "user", "content": prompt + note}], DailyBrief,
                                         tool_name="deliver_daily_brief")
             kind = brief_boundary(brief)
             if kind:
                 note = BOUNDARY_NOTE.format(kind=kind)
                 continue
+            gaps = coverage_gaps(brief, payload)
             words = spoken_words(brief)
             if words > SPOKEN_WORD_LIMIT:
                 too_long = brief
                 note = OVER_LIMIT_NOTE.format(words=words)
+                if gaps:
+                    note += COVERAGE_NOTE.format(gaps="; ".join(gaps))
+                continue
+            if gaps and attempt == 0:
+                note = COVERAGE_NOTE.format(gaps="; ".join(gaps))
+                too_long = None
+                last_safe = brief
                 continue
             return brief
-        # A safe draft that only ran long is trimmed rather than thrown away.
-        if too_long is None:
-            return None
-        trimmed = trim_spoken(too_long)
-        return None if brief_boundary(trimmed) else trimmed
+        # A safe draft that only ran long is trimmed rather than thrown away;
+        # a safe draft with a coverage gap after its rewrite still beats the
+        # template's stock phrases.
+        if too_long is not None:
+            trimmed = trim_spoken(too_long)
+            return None if brief_boundary(trimmed) else trimmed
+        return last_safe
