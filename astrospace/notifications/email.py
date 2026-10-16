@@ -348,7 +348,7 @@ def render(content: EmailContent, *, user_id: str, category: str) -> tuple[str, 
 <tr><td align="center" style="padding:28px 12px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px">
 <tr><td align="center" style="padding:0 8px 22px">
-<a href="{e(base_url())}/m/today" style="text-decoration:none"><img src="{e(logo)}" width="220" alt="Siddha" style="display:block;width:220px;max-width:70%;height:auto;border:0;font-family:{_SERIF};font-size:24px;color:{_ACCENT_STRONG}"></a>
+<a href="{e(base_url())}/m/today" style="text-decoration:none"><img src="{e(logo)}" width="170" alt="Siddha" style="display:block;margin:0 auto;width:170px;max-width:60%;height:auto;border:0;font-family:{_SERIF};font-size:24px;color:{_ACCENT_STRONG}"></a>
 </td></tr>
 {date_line}
 <tr><td style="background:{_CARD};border:1px solid {_RULE};border-radius:20px;padding:32px 26px">
