@@ -66,7 +66,10 @@ def daily_brief_enabled() -> bool:
 
 
 class BriefItem(BaseModel):
-    headline: str = Field(description="Short card title, at most 8 words, no trailing full stop.")
+    headline: str = Field(description=(
+        "The card title: a plain action in 2-6 everyday words, no full stop, no astrology "
+        "terms. E.g. 'Review numbers and financial plans', 'Focus on routine work', "
+        "'Avoid starting new things', 'Avoid long travel'."))
     detail: str = Field(description="One sentence naming the signal behind this item.")
 
 
@@ -134,6 +137,15 @@ Ground every line in the signals given:
   * narrative: tara, Moon and transits, then the practical close.
 - Rewrite candidates so they read as written for this person today, not as
   stock phrases.
+- Do and avoid titles are for people who know no astrology. Each title is a
+  plain action in 2-6 everyday words: "Review numbers and financial plans",
+  "Focus on routine work", "Avoid starting new things", "Avoid long travel".
+  Never put an astrology term in a title: no tara or its name (Sampat,
+  Sadhaka...), nakshatra, dasha, bala, gochara, Rahu Kalam, muhurta, planet or
+  Sanskrit words. The signal goes in the item's detail, in plain words.
+- When the tara is unfavourable, chandrashtama is true or the day's tone is
+  caution, say what to hold off on in plain words: starting new things,
+  long travel, big purchases or signing commitments.
 - If `subject` is not "you", write about that person by first name in the
   third person; otherwise address the reader as "you".
 
@@ -169,6 +181,16 @@ BOUNDARY_NOTE = (
 )
 
 
+# Do/avoid card titles are read by people who know no astrology (Hawk,
+# 2026-10-16): no term here may appear in one, and none runs past 6 words.
+TITLE_MAX_WORDS = 6
+TITLE_JARGON = (
+    "tara", "sampat", "sadhaka", "kshema", "vipat", "pratyari", "vadha", "mitra", "janma",
+    "nakshatra", "dasha", "bala", "gochara", "rahu", "ketu", "kalam", "muhurta", "abhijit",
+    "chandrashtama", "ghatak", "jupiter", "saturn", "mars", "venus", "mercury", "guru",
+    "transit", "lagna", "rashi",
+)
+
 COVERAGE_NOTE = (
     "\n\nYour previous draft left out: {gaps}. Rewrite it covering them, within the same "
     "word limit for the spoken script."
@@ -200,6 +222,10 @@ def coverage_gaps(brief: "DailyBrief", payload: dict) -> list[str]:
         moon_text = " ".join([*brief.why, *(f"{i.headline} {i.detail}" for i in brief.avoid)]).lower()
         if "moon" not in moon_text:
             gaps.append("chandrashtama (the Moon's sensitive day) in why or avoid")
+    for item in [*brief.do, *brief.avoid]:
+        title = item.headline.lower()
+        if len(title.split()) > TITLE_MAX_WORDS or any(re.search(rf"\b{w}", title) for w in TITLE_JARGON):
+            gaps.append(f"a plain action title without astrology terms instead of '{item.headline}'")
     if len(brief.do) < min(len(payload.get("do_today") or []), 3):
         gaps.append("one do item per do candidate")
     if len(brief.avoid) < min(len(payload.get("avoid_today") or []), 3):

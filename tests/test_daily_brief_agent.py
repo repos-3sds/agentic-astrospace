@@ -427,3 +427,16 @@ def test_the_schedule_uses_the_phones_timezone_over_the_push_preference(env, age
     # What the app sends on a phone in Singapore: its own timezone, no city.
     body = http.get(f"/api/v1/context/{kundli}/daily/brief", params={"timezone": "Asia/Singapore"}).json()
     assert body["trigger"] == "scheduled" and agent.calls == 1
+
+
+def test_do_and_avoid_titles_must_be_plain_actions():
+    payload = _payload()
+    jargon = _brief(30).model_copy(update={"do": [
+        dba.BriefItem(headline="Use your Sampat tara", detail="x"),
+        dba.BriefItem(headline="Plan your money", detail="x"),
+        dba.BriefItem(headline="Take initiative at work", detail="x")]})
+    wordy = _brief(30).model_copy(update={"avoid": [
+        dba.BriefItem(headline="Try not to push yourself too hard physically today", detail="x")]})
+    assert any("Sampat" in gap for gap in dba.coverage_gaps(jargon, payload))
+    assert any("Try not to push" in gap for gap in dba.coverage_gaps(wordy, payload))
+    assert dba.coverage_gaps(_brief(30), payload) == []

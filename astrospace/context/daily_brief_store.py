@@ -27,7 +27,9 @@ from sqlalchemy.orm import Session
 from ..agents.daily_brief_agent import DailyBriefAgent, coverage_gaps, listen_seconds, spoken_words
 from ..db import crud_mobile as cm
 
-BRIEF_FORMAT = "agent-brief-v1"
+# v2: plain-action do/avoid titles. A new format is a new key, so the day's
+# stored v1 briefs are written again in the new style rather than kept.
+BRIEF_FORMAT = "agent-brief-v2"
 BRIEF_LANGUAGE = "en"
 
 log = logging.getLogger("astrospace.daily_brief")

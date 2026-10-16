@@ -149,14 +149,17 @@ class TestDoAvoidAndContext:
         rows = [r for r in guidance["do_today"] + guidance["avoid_today"] if r["source"] == "tarabala"]
         assert rows, "tarabala row missing"
         plain = rows[0]["plain_headline"]
-        assert plain.startswith(("A ", "One "))
+        # A plain action for every reader now, the same as the headline.
+        assert plain == rows[0]["headline"]
         assert "tara" not in plain.lower()
 
     def test_domain_rows_carry_a_domain_and_headline(self, guidance):
         for row in guidance["do_today"] + guidance["avoid_today"]:
             if row["source"] == "domain":
                 assert row["domain"] in ("Finance", "Love", "Health", "Growth", "Career")
-                assert row["headline"].startswith(f"{row['domain']}: ")
+                # A plain action, not "Finance: ..." (Hawk, 2026-10-16).
+                assert not row["headline"].startswith(f"{row['domain']}:")
+                assert len(row["headline"].split()) <= 6
 
     def test_domains_are_capped_at_two_per_side(self, guidance):
         assert len([r for r in guidance["do_today"] if r["source"] == "domain"]) <= 2
@@ -329,3 +332,29 @@ class TestMasa:
         assert masa["is_convention_dependent"] is True
         assert "purnimanta" in masa["observance_note"].lower()
         assert masa["paksha"] in ("Shukla", "Krishna")
+
+
+class TestDoAvoidTitlesArePlain:
+    """Card titles are short plain actions with no astrology terms; the
+    signal behind each stays in its text and the Why sheet."""
+
+    JARGON = ("tara", "nakshatra", "dasha", "bala", "gochara", "kalam", "muhurta",
+              "chandrashtama", "ghatak", "sampat", "sadhaka", "kshema", "vipat",
+              "pratyari", "vadha", "mitra", "janma")
+
+    def test_every_title_is_short_and_plain(self):
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+
+        from astrospace.context import daily_guidance
+        from astrospace.core.vedic import VedicChart
+
+        for args in [("A", 1991, 8, 14, 6, 12, "Vijayawada", "IN"), ("B", 1965, 2, 3, 9, 0, "Hyderabad", "IN"),
+                     ("C", 1988, 11, 30, 22, 45, "Chennai", "IN")]:
+            for day in (10, 16, 22):
+                g = daily_guidance(VedicChart(*args), relation="self",
+                                   as_of=datetime(2026, 10, day, 12, tzinfo=ZoneInfo("Asia/Kolkata")))
+                for row in g["do_today"] + g["avoid_today"]:
+                    title = row["headline"].lower()
+                    assert len(title.split()) <= 6, row["headline"]
+                    assert not any(word in title for word in self.JARGON), row["headline"]

@@ -69,6 +69,22 @@ TARA_PLAIN_HEADLINE = {
     "Parama Mitra": "One of your most fortunate days",
 }
 
+# The Do/Avoid card title for the tara row: what to do with the day, in plain
+# words. Readers do not know what "Sampat tara" means or how to use it
+# (Hawk, 2026-10-16); the tara's name stays in the row's text and the Why
+# sheet, where it comes with its meaning.
+TARA_ACTION = {
+    "Janma": "Keep the day light and simple",
+    "Sampat": "Good day for money and plans",
+    "Vipat": "Avoid risks and new starts",
+    "Kshema": "Focus on routine work",
+    "Pratyari": "Avoid arguments and big moves",
+    "Sadhaka": "Finish pending work",
+    "Vadha": "Avoid new starts and travel",
+    "Mitra": "Meet people, build ties",
+    "Parama Mitra": "Good day to start important things",
+}
+
 
 def _subject_words(relation: str | None) -> dict[str, str]:
     is_self = (relation or "").lower() in ("self", "myself", "me")
@@ -417,12 +433,6 @@ def _pick(seed: str, options: Sequence[str]) -> str:
     return options[int(digest, 16) % len(options)]
 
 
-_TARA_HEADLINE_FRAMES = [
-    "Today's tara: {tara}",
-    "Your tara today: {tara}",
-    "Tara of the day: {tara}",
-]
-
 _CHANDRASHTAMA_REASON = "the Moon is in a sensitive spot from your birth Moon today (chandrashtama)"
 
 _GHATAK_TYPE_LABEL = {
@@ -460,6 +470,20 @@ _CAREER_THEME = {
     "Saturn": "put in the disciplined, unglamorous work",
     "Rahu": "chase the ambitious, unconventional move at work",
     "Ketu": "handle the behind-the-scenes work without needing credit",
+}
+
+# Card titles for the domain rows: short plain actions, no "Finance:" label
+# and no astrology terms. The rotating phrase and its signal stay in `text`.
+_DOMAIN_ACTIONS = {
+    ("Finance", "do"): ["Review numbers and financial plans", "Plan your money calmly", "Sort out pending payments"],
+    ("Finance", "avoid"): ["Avoid big purchases", "Hold off on money risks", "Keep spending small"],
+    ("Love", "do"): ["Have that honest conversation", "Make time for loved ones", "Mend or deepen a bond"],
+    ("Love", "avoid"): ["Avoid forcing hard talks", "Give people some space", "Go easy on expectations"],
+    ("Health", "do"): ["Start a healthy habit", "Rest and recover well", "Keep up your routine care"],
+    ("Health", "avoid"): ["Don't overexert yourself", "Keep the day light", "Avoid late nights"],
+    ("Growth", "do"): ["Learn something new", "Plan the bigger picture", "Read or study quietly"],
+    ("Growth", "avoid"): ["Avoid big decisions today", "Keep plans flexible", "Don't overthink it"],
+    ("Career", "do"): ["Focus on routine work", "Push the task that matters", "Take the first step at work"],
 }
 
 _DOMAIN_PHRASES = {
@@ -542,7 +566,7 @@ def _domain_candidates(ctx: dict, personal: dict, seed_base: str) -> list[dict]:
             "domain": domain,
             "stance": stance,
             "rank": rank,
-            "headline": f"{domain}: {phrase}",
+            "headline": _pick(f"{seed_base}-{domain}-{stance}-action", _DOMAIN_ACTIONS[(domain, stance)]),
             "text": f"{domain}: {phrase} — {reason}.",
         })
 
@@ -597,10 +621,9 @@ def _do_and_avoid(personal: dict, ctx: dict, words: dict,
     tara = personal.get("tarabala", {}).get("tara")
     if tara:
         meaning = TARABALA_MEANING[tara].format(**words)
-        headline = _pick(f"{seed_base}-tarabala-headline", _TARA_HEADLINE_FRAMES).format(tara=tara)
         row = {
-            "headline": headline,
-            "plain_headline": TARA_PLAIN_HEADLINE[tara],
+            "headline": TARA_ACTION[tara],
+            "plain_headline": TARA_ACTION[tara],
             "text": f"Today's tara is {tara} — {meaning}.",
             "source": "tarabala",
         }
