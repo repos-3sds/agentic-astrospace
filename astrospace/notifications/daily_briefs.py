@@ -82,17 +82,40 @@ def _natural_voice_allowed(db: Session, user_id: str) -> bool:
         return False
 
 
+def listen_requests(spoken: list[dict]) -> list[str]:
+    """The exact texts the Listen sheet sends to /voice/speech for this script.
+
+    The sheet joins every section into one script, splits that with
+    naturalChunks, and cleans each piece with prepareForSpeech
+    (listen-sheet.component.ts chunks() / speakNaturalFrom). The audio cache
+    is keyed by the final text, so rendering per section, or skipping the
+    cleanup, would fill the cache with audio the app never asks for.
+    """
+    script = " ".join(section.get("text", "") for section in spoken if section.get("text", "").strip())
+    return [prepare_for_speech(chunk) for chunk in natural_chunks(script)]
+
+
 def prerender_audio(spoken: list[dict]) -> int:
-    """Render each section the way the Listen sheet will request it, so its
-    request is a cache hit. Returns the sections rendered."""
+    """Render the script the way the Listen sheet will request it, so its
+    request is a cache hit. Returns the pieces rendered."""
     from ..voice.tts import natural_speech
 
-    rendered = 0
-    for section in spoken:
-        for chunk in natural_chunks(section.get("text", "")):
-            natural_speech(chunk, "en")
-        rendered += 1
-    return rendered
+    requests = listen_requests(spoken)
+    for text in requests:
+        natural_speech(text, "en")
+    return len(requests)
+
+
+def prepare_for_speech(chunk: str) -> str:
+    """Mirrors prepareForSpeech in listen-sheet.component.ts."""
+    import re
+
+    text = re.sub(r"\bTarabala\b", "Tara bala", chunk)
+    text = re.sub(r"\bChandrabala\b", "Chandra bala", text)
+    text = re.sub(r"\bpanchang\b", "panchangam", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bgochara\b", "gocharam", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s+—\s+", ", ", text)
+    return " ".join(text.split())
 
 
 # Mirrors naturalChunks in ui/src/app/core/natural-voice.service.ts: the audio

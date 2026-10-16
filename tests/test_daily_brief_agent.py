@@ -374,3 +374,20 @@ def test_before_ten_pm_only_today_is_written(env, agent):
         result = daily_briefs.schedule_daily_briefs(
             db, now=datetime(2026, 10, 16, 15, 0, tzinfo=timezone.utc), prerender=lambda s: 0)  # 20:30
     assert result["written"] == 1
+
+
+def test_prerendered_audio_is_keyed_by_the_texts_the_listen_sheet_sends():
+    """The sheet speaks one joined script, split by naturalChunks and cleaned by
+    prepareForSpeech; per-section renders would never be a cache hit."""
+    spoken = [
+        {"label": "Opening", "text": "Namaste, Ravi.  Here is your brief."},
+        {"label": "Overview", "text": "Your Tarabala is strong — and Chandrabala is steady."},
+        {"label": "Close", "text": "Let the day stay light."},
+    ]
+    assert daily_briefs.listen_requests(spoken) == [
+        "Namaste, Ravi. Here is your brief. Your Tara bala is strong, and Chandra bala is steady. "
+        "Let the day stay light."
+    ]
+    long = [{"label": "Overview", "text": "A sentence of some length goes here. " * 60}]
+    pieces = daily_briefs.listen_requests(long)
+    assert len(pieces) > 1 and all(len(piece) <= daily_briefs.NATURAL_CHUNK_MAX_CHARS for piece in pieces)
