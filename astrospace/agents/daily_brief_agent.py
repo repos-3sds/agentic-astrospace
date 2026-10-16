@@ -215,6 +215,26 @@ TITLE_JARGON = (
     "transit", "lagna", "rashi",
 )
 
+# The card check matches whole words, so "balance", "transition" and
+# "marshal" stay plain while "Tarabala", "Chandrabala" and "Rahu" do not.
+CARD_JARGON_PREFIXES = (
+    "tara", "sampat", "sadhaka", "kshema", "vipat", "pratyari", "vadha", "janma", "nakshatra",
+    "dasha", "gochara", "rahu", "ketu", "kalam", "muhurta", "abhijit", "chandrashtama", "ghatak",
+    "lagna", "rashi",
+)
+CARD_JARGON_WORDS = (
+    "transit", "transits", "bala", "guru", "mitra",
+    "jupiter", "saturn", "mars", "venus", "mercury",
+)
+
+
+def card_jargon(text: str) -> list[str]:
+    """Astrology terms in a line of the Today card, as whole words."""
+    return [word for word in re.findall(r"[a-z]+", text.lower())
+            if word in CARD_JARGON_WORDS or word.startswith(CARD_JARGON_PREFIXES)
+            or word.endswith(("bala", "tara"))]
+
+
 COVERAGE_NOTE = (
     "\n\nYour previous draft left out: {gaps}. Rewrite it covering them, within the same "
     "word limit for the spoken script."
@@ -266,8 +286,7 @@ def coverage_gaps(brief: "DailyBrief", payload: dict, first_name: str = "") -> l
         if "moon" not in moon_text:
             gaps.append("chandrashtama (the Moon's sensitive day) in why or avoid")
     for field in ("card_title", "headline", "summary", "focus"):
-        text = getattr(brief, field).lower()
-        found = [w for w in TITLE_JARGON if re.search(rf"\b{w}", text)]
+        found = card_jargon(getattr(brief, field))
         if found:
             gaps.append(f"{field} in plain words without astrology terms ({', '.join(found)})")
     for item in [*brief.do, *brief.avoid]:

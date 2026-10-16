@@ -484,3 +484,9 @@ def test_the_today_card_is_plain_words_whatever_the_level():
     agent = _Scripted([_brief(30)])
     agent.write(payload, first_name="Reader", date_label="Friday", mode="practitioner")
     assert "the Today card stays plain" in agent.prompts[0]
+
+
+def test_the_card_check_leaves_ordinary_words_alone():
+    assert dba.card_jargon("Sampat Tarabala and a Rahu transit") == ["sampat", "tarabala", "rahu", "transit"]
+    assert dba.card_jargon("Your Chandrabala is strong") == ["chandrabala"]
+    assert dba.card_jargon("Keep a calm balance through the transition; marshal your energy.") == []
