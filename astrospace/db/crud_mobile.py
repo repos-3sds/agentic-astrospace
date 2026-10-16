@@ -60,13 +60,19 @@ DEFAULT_NOTIFICATION_PREFS: dict[str, dict] = {
     "accuracy_review": {"enabled": True},
     "match_report_ready": {"enabled": True},
     "system": {"enabled": True},
-    # Email categories are opt-in: nothing is emailed until the reader turns
-    # one on in Settings > Notifications > Email.
+    # Email categories stay off until the reader says yes: the sign-up box
+    # (apply_email_defaults turns them all on, once) or a switch in
+    # Settings > Notifications > Email. A reader with no rows gets nothing.
     "daily_email": {"enabled": False, "channels": ["email"], "preferred_time": None},
     "festival_email": {"enabled": False, "channels": ["email"]},
+    "weekly_email": {"enabled": False, "channels": ["email"]},
+    "monthly_email": {"enabled": False, "channels": ["email"]},
+    "lessons_email": {"enabled": False, "channels": ["email"]},
+    "tips_email": {"enabled": False, "channels": ["email"]},
 }
 
-EMAIL_CATEGORIES = ("daily_email", "festival_email")
+EMAIL_CATEGORIES = ("daily_email", "festival_email", "weekly_email", "monthly_email",
+                    "lessons_email", "tips_email")
 
 
 # ── Profile & devices ─────────────────────────────────────────────────────────
@@ -654,6 +660,35 @@ def upsert_email_recipient(db: Session, user_id: str, email: str,
     db.commit()
     db.refresh(row)
     return row
+
+
+def apply_email_defaults(db: Session, user_id: str, email: str, timezone: str | None,
+                         source: str) -> bool:
+    """Turn every email on for a reader who agreed at sign-up. Returns
+    whether anything changed.
+
+    Only once, and only for a reader who has never chosen: if any email
+    category already has a row (they toggled one, or unsubscribed from a
+    link), their choice stands and nothing is touched. A suppressed address
+    stays suppressed.
+    """
+    chosen = (
+        db.query(NotificationPreference.category)
+        .filter(NotificationPreference.user_id == user_id,
+                NotificationPreference.category.in_(EMAIL_CATEGORIES))
+        .first()
+    )
+    if chosen:
+        return False
+    recipient = upsert_email_recipient(db, user_id, email, timezone=timezone)
+    for category in EMAIL_CATEGORIES:
+        db.add(NotificationPreference(user_id=user_id, category=category, enabled=True,
+                                      channels=["email"]))
+    if recipient.consented_at is None:
+        recipient.consented_at = datetime.utcnow()
+        recipient.consent_source = source[:40]
+    db.commit()
+    return True
 
 
 def suppress_email(db: Session, email: str, reason: str) -> int:

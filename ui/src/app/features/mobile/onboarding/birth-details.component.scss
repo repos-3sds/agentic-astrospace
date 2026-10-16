@@ -24,3 +24,9 @@
 // The form owns its fields and CTA; stretching it pins the CTA to the
 // bottom of the screen on tall phones and lets it scroll on short ones.
 .form { flex: 1 1 auto; }
+
+.consent {
+  @include m-body-small; display: flex; align-items: flex-start; gap: 10px;
+  color: var(--m-text); margin: 0 0 20px;
+  input { flex: none; width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--m-accent-strong); }
+}

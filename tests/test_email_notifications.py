@@ -10,7 +10,7 @@ import hashlib
 import hmac
 import json
 import time as _time
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 
 import pytest
 from fastapi import FastAPI
@@ -23,8 +23,8 @@ from astrospace.api.auth import AuthUser, current_user
 from astrospace.api.email_routes import router as email_router
 from astrospace.db import crud, crud_mobile as cm, get_db
 from astrospace.db.database import Base
-from astrospace.db.models import NotificationJob, NotificationPreference
-from astrospace.notifications import email_jobs
+from astrospace.db.models import NotificationJob, NotificationPreference, PushToken
+from astrospace.notifications import email_jobs, email_series
 from astrospace.notifications.email import (
     EmailContent, EmailResult, NotConfiguredEmail, ResendTransport, build_message,
     email_transport_from_env, read_unsubscribe_token, unsubscribe_token,
@@ -316,7 +316,7 @@ class TestApi:
     def test_settings_default_off_and_toggle(self, client):
         state = client.get("/api/v1/me/email").json()
         assert state["address"] == "me@example.com"
-        assert state["categories"] == {"daily_email": False, "festival_email": False}
+        assert state["categories"] == {c: False for c in cm.EMAIL_CATEGORIES}
         state = client.put("/api/v1/me/email/daily_email",
                            json={"enabled": True, "timezone": "Asia/Kolkata"}).json()
         assert state["categories"]["daily_email"] is True and state["deliverable"] is True
@@ -377,3 +377,196 @@ class TestApi:
                            headers=self._signed(secret, transient)).json()["suppressed"] == 0
         state = client.get("/api/v1/me/email").json()
         assert state["deliverable"] is False and state["suppressed_reason"] == "hard bounce"
+
+    def test_signup_defaults_turn_everything_on_once(self, client, db):
+        state = client.post("/api/v1/me/email/defaults", json={"timezone": "Asia/Kolkata"}).json()
+        assert state["applied"] is True
+        assert all(state["categories"].values())
+        db.expire_all()
+        recipient = cm.get_email_recipient(db, ME)
+        assert recipient.consented_at is not None and recipient.consent_source == "signup"
+        assert recipient.timezone == "Asia/Kolkata"
+        # Calling again (a reinstall, a second onboarding) changes nothing.
+        assert client.post("/api/v1/me/email/defaults", json={}).json()["applied"] is False
+
+    def test_signup_defaults_never_override_a_choice(self, client, db):
+        client.put("/api/v1/me/email/daily_email", json={"enabled": False})
+        state = client.post("/api/v1/me/email/defaults", json={}).json()
+        assert state["applied"] is False
+        assert not any(state["categories"].values())
+
+    def test_signup_defaults_welcome_lists_every_email(self, client, db):
+        client.post("/api/v1/me/email/defaults", json={})
+        db.expire_all()
+        jobs = email_jobs.schedule_welcome_emails(db)
+        content = email_jobs.content_from_payload(jobs[0].payload["content"])
+        what = next(b for b in content.blocks if b.get("heading") == "What you'll get")
+        assert [i[0] for i in what["items"]] == [t for _, t, _ in email_jobs.WELCOME_ITEMS]
+
+    def test_new_categories_unsubscribe(self, client, db):
+        client.post("/api/v1/me/email/defaults", json={})
+        token = unsubscribe_token(ME, "lessons_email")
+        assert "Learn your chart" in client.get(f"/api/v1/email/unsubscribe?t={token}").text
+        client.post(f"/api/v1/email/unsubscribe?t={token}")
+        db.expire_all()
+        prefs = cm.get_notification_preferences(db, ME)
+        assert prefs["lessons_email"]["enabled"] is False and prefs["weekly_email"]["enabled"] is True
+
+
+# ── Outlooks, lessons and tips ────────────────────────────────────────────────
+
+OUTLOOK_MD = """## The theme
+A week for finishing, not starting. Small jobs go well.
+
+## Love and people
+Listen more than you speak.
+
+## Work and money
+- Close open threads
+- **Review** before you buy
+
+## Energy and rest
+Sleep early on Wednesday.
+
+## Something to try
+Clear one drawer.
+
+## Why
+The Moon moves through a quiet part of your chart.
+"""
+
+
+class TestOutlooks:
+    def test_sections_become_blocks(self):
+        content = email_series.outlook_content("weekly", OUTLOOK_MD, date(2026, 10, 19), date(2026, 10, 25))
+        assert content.subject == "Your week ahead, 19 to 25 October"
+        assert content.intro.startswith("A week for finishing")
+        assert content.preview == "A week for finishing, not starting."
+        headings = [b["heading"] for b in content.blocks]
+        assert headings == ["Love and people", "Work and money", "Energy and rest",
+                            "Something to try", "Why this outlook"]
+        work = content.blocks[1]["body"]
+        assert "**" not in work and "• Close open threads" in work
+        assert content.blocks[3]["type"] == "callout"
+
+    def test_month_subject_and_window(self):
+        assert email_series.outlook_window("monthly", date(2026, 11, 1)) == (date(2026, 11, 1), date(2026, 11, 30))
+        content = email_series.outlook_content("monthly", OUTLOOK_MD, date(2026, 11, 1), date(2026, 11, 30))
+        assert content.subject == "Your month ahead: November"
+
+    def test_weekly_written_sunday_evening_for_monday_morning(self, db):
+        _opt_in(db, ME, "weekly_email")
+        calls = []
+
+        def write(kundli, period, as_of):
+            calls.append((period, as_of))
+            return OUTLOOK_MD
+
+        # Saturday: nothing. Sunday 17:00: not yet. Sunday 19:00: written.
+        for when in ("2026-10-17T19:00+05:30", "2026-10-18T17:00+05:30"):
+            assert email_series.schedule_outlook_emails(
+                db, now=datetime.fromisoformat(when), write=write)["weekly"] == 0
+        summary = email_series.schedule_outlook_emails(
+            db, now=datetime.fromisoformat("2026-10-18T19:00+05:30"), write=write)
+        assert summary["weekly"] == 1 and calls[0][0] == "weekly"
+        job = db.query(NotificationJob).filter(NotificationJob.category == "weekly_email").one()
+        # Monday 07:00 IST is 01:30 UTC.
+        assert job.scheduled_for == datetime(2026, 10, 19, 1, 30)
+        assert job.dedupe_key == f"weekly_email:{ME}:2026-10-19"
+        # Once a week.
+        email_series.schedule_outlook_emails(db, now=datetime.fromisoformat("2026-10-19T06:00+05:30"), write=write)
+        assert len(calls) == 1
+
+    def test_gives_up_late_and_retries_a_failed_draft(self, db):
+        _opt_in(db, ME, "monthly_email")
+        assert email_series.schedule_outlook_emails(
+            db, now=datetime.fromisoformat("2026-11-01T06:00+05:30"), write=lambda *a: None)["failed"] == 1
+        assert email_series.schedule_outlook_emails(
+            db, now=datetime.fromisoformat("2026-11-01T12:00+05:30"), write=lambda *a: OUTLOOK_MD)["monthly"] == 0
+        assert email_series.schedule_outlook_emails(
+            db, now=datetime.fromisoformat("2026-11-01T06:15+05:30"), write=lambda *a: OUTLOOK_MD)["monthly"] == 1
+
+    def test_run_cap_defers_the_rest(self, db):
+        _opt_in(db, ME, "weekly_email")
+        _opt_in(db, OTHER, "weekly_email")
+        summary = email_series.schedule_outlook_emails(
+            db, now=datetime.fromisoformat("2026-10-19T05:00+05:30"), write=lambda *a: OUTLOOK_MD, max_per_run=1)
+        assert summary["weekly"] == 1 and summary["deferred"] == 1
+
+
+class TestLessons:
+    def test_eight_lessons_three_days_apart(self, db):
+        _opt_in(db, ME, "lessons_email")
+        start = datetime.fromisoformat("2026-10-20T09:00+05:30")
+        # Not on the day lessons were turned on.
+        db.query(NotificationPreference).filter_by(user_id=ME, category="lessons_email").update(
+            {"updated_at": datetime(2026, 10, 20, 2, 0)})
+        db.commit()
+        assert email_series.schedule_lesson_emails(db, now=start) == []
+        sent = []
+        for day in range(1, 40):
+            jobs = email_series.schedule_lesson_emails(db, now=start + timedelta(days=day))
+            sent += [(day, j) for j in jobs]
+        assert len(sent) == email_series.LESSON_COUNT
+        days = [d for d, _ in sent]
+        assert all(b - a >= email_series.LESSON_GAP_DAYS for a, b in zip(days, days[1:]))
+        first = email_jobs.content_from_payload(sent[0][1].payload["content"])
+        assert first.subject == "Learn your chart, 1 of 8: What a birth chart is"
+        # 09:00 is past 08:00, so the first lesson goes the next morning.
+        assert sent[0][1].scheduled_for.hour == 2 and sent[0][1].scheduled_for.minute == 30
+
+    def test_lessons_use_the_readers_chart(self, db):
+        kundli = crud.list_kundlis(db, OTHER)[0]
+        facts = email_series.chart_facts(kundli)
+        assert facts["time_exact"] is False and facts["sun"] in email_series.SIGN_PLAIN
+        rising = email_series.lesson_content(2, facts)
+        assert facts["lagna"] in rising.blocks[0]["body"]
+        assert any(b.get("heading") == "A note on your birth time" for b in rising.blocks)
+        periods = email_series.lesson_content(7, facts)
+        assert facts["mahadasha"]["lord"] in periods.blocks[0]["body"]
+        last = email_series.lesson_content(8, facts)
+        assert "flag, not a verdict" in last.blocks[0]["heading"].lower()
+        assert "never something you have to pay" in last.blocks[1]["body"]
+
+    def test_lesson_copy_has_no_fear_words(self, db):
+        facts = email_series.chart_facts(crud.list_kundlis(db, ME)[0])
+        for n in range(1, email_series.LESSON_COUNT + 1):
+            content = email_series.lesson_content(n, facts)
+            text = build_message("a@b.c", content, user_id=ME, category="lessons_email").text.lower()
+            for word in ("death", "die ", "curse", "doomed", "malefic"):
+                assert word not in text, (n, word)
+
+
+class TestTips:
+    def test_compatibility_invite_after_a_week_once(self, db):
+        _opt_in(db, ME, "tips_email")
+        kundli = crud.list_kundlis(db, ME)[0]
+        kundli.created_at = datetime(2026, 10, 10)
+        db.commit()
+        assert email_series.schedule_tip_emails(db, now=datetime.fromisoformat("2026-10-15T09:00+05:30")) == []
+        jobs = email_series.schedule_tip_emails(db, now=datetime.fromisoformat("2026-10-18T09:00+05:30"))
+        assert len(jobs) == 1 and jobs[0].dedupe_key == f"compat_invite_email:{ME}"
+        assert jobs[0].deep_link == "/m/compat"
+        assert email_series.schedule_tip_emails(db, now=datetime.fromisoformat("2026-10-25T09:00+05:30")) == []
+
+    def test_no_compatibility_invite_once_someone_is_added(self, db):
+        _opt_in(db, ME, "tips_email")
+        crud.list_kundlis(db, ME)[0].created_at = datetime(2026, 10, 1)
+        crud.create_kundli(db, {
+            "user_id": ME, "name": "Partner", "relation": "partner",
+            "birth_year": 1992, "birth_month": 1, "birth_day": 2, "birth_hour": 3, "birth_minute": 4,
+            "birth_city": "Vijayawada", "birth_nation": "IN",
+        })
+        assert email_series.schedule_tip_emails(db, now=datetime.fromisoformat("2026-10-18T09:00+05:30")) == []
+
+    def test_away_note_after_two_weeks_at_most_monthly(self, db):
+        _opt_in(db, ME, "tips_email")
+        crud.list_kundlis(db, ME)[0].created_at = datetime(2026, 10, 29)  # keeps the compatibility invite out
+        db.add(PushToken(user_id=ME, token="t", provider="fcm", last_seen_at=datetime(2026, 10, 1)))
+        db.commit()
+        assert email_series.schedule_tip_emails(db, now=datetime.fromisoformat("2026-10-10T09:00+05:30")) == []
+        jobs = email_series.schedule_tip_emails(db, now=datetime.fromisoformat("2026-10-16T09:00+05:30"))
+        assert len(jobs) == 1 and jobs[0].dedupe_key.startswith(f"away_email:{ME}:")
+        content = email_jobs.content_from_payload(jobs[0].payload["content"])
+        assert content.subject == "What's ahead in the next two weeks"
+        assert email_series.schedule_tip_emails(db, now=datetime.fromisoformat("2026-10-30T09:00+05:30")) == []

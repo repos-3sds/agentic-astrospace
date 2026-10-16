@@ -35,8 +35,8 @@ export interface NotificationPref {
  * On web there is no push at all, and the card says that rather than offering
  * a button that cannot deliver.
  *
- * Email is a separate section with its own switches, both off by default,
- * and works on web too. Its state lives on the server, because every email
+ * Email is a separate section with its own switches, all off until the reader
+ * says yes (the sign-up box turns them all on), and works on web too. Its state lives on the server, because every email
  * carries a link that can turn it off.
  */
 @Component({
@@ -94,6 +94,10 @@ export class NotificationsComponent {
       title: 'Moon and festival days',
       detail: 'Full moon, new moon and festivals, the evening before',
     },
+    { id: 'weekly_email', title: 'Weekly outlook', detail: 'Your week ahead, every Monday morning' },
+    { id: 'monthly_email', title: 'Monthly outlook', detail: 'The month ahead, on the 1st' },
+    { id: 'lessons_email', title: 'Learn your chart', detail: 'Eight short lessons from your own chart' },
+    { id: 'tips_email', title: 'Tips and reminders', detail: 'Features worth trying, and what is coming up' },
   ];
 
   /** Headline of the delivery card, one per state. */

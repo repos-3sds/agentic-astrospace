@@ -241,7 +241,8 @@ class PeriodAgent(BaseAstroAgent):
             "Stay within the boundaries in your instructions."
         )
 
-    def generate_reading(self, period: str, now: datetime | None = None) -> tuple[str, str | None]:
+    def generate_reading(self, period: str, now: datetime | None = None,
+                         style: str = "") -> tuple[str, str | None]:
         """Return `(content, crossed)`.
 
         `crossed` is None when the reading is clean. When the first draft
@@ -250,9 +251,12 @@ class PeriodAgent(BaseAstroAgent):
         not publish the content. The agent never returns a cleaned-up
         fragment of a bad reading — a reading is cheap to regenerate and a
         half-redacted one still carries the framing that produced the verdict.
+
+        `style` is appended to the prompt; the outlook emails use it to ask
+        for plain words and a fixed set of sections.
         """
         now = now or datetime.now(self.chart.moment.dt_local.tzinfo)
-        prompt = self.reading_prompt(period, now)
+        prompt = self.reading_prompt(period, now) + style
         content = self.run(prompt)
         crossed = reading_boundary(content)
         if crossed is None:

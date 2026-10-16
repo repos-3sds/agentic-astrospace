@@ -223,6 +223,10 @@ LOGO_PATH = "/email/siddha-logo.png"
 CATEGORY_LABELS = {
     "daily_email": "your daily reading",
     "festival_email": "moon and festival days",
+    "weekly_email": "your weekly outlook",
+    "monthly_email": "your monthly outlook",
+    "lessons_email": "the Learn your chart lessons",
+    "tips_email": "tips and reminders",
     "system": "account emails",
 }
 

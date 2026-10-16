@@ -2,6 +2,9 @@
 delivery webhook.
 
 /api/v1/me/email            signed-in: which emails are on, and the address
+/api/v1/me/email/defaults   signed-in, once at the end of onboarding: the
+                            reader ticked the sign-up box, so turn every
+                            email on unless they have already chosen
 /api/v1/email/unsubscribe   public, signed link from every email (GET shows a
                             confirm button; POST is the one-click unsubscribe
                             mail apps send, RFC 8058, and the button's submit)
@@ -81,6 +84,23 @@ def set_email_setting(category: str, payload: EmailSettingUpdate, user: CurrentU
     return _email_state(db, user.id, user.email)
 
 
+class EmailDefaults(BaseModel):
+    timezone: str | None = Field(None, max_length=64)
+    # Where the reader agreed. Only the sign-up box exists today.
+    source: str = Field("signup", max_length=40)
+
+
+@router.post("/api/v1/me/email/defaults")
+def apply_email_defaults(payload: EmailDefaults, user: CurrentUser, db: Session = Depends(get_db)):
+    """The app calls this only when the sign-up box was left ticked. A reader
+    who has already set any email choice keeps it."""
+    applied = False
+    if user.email:
+        applied = cm.apply_email_defaults(db, user.id, user.email, payload.timezone, payload.source)
+    log.info(json.dumps({"event": "email.defaults", "applied": applied}))
+    return {**_email_state(db, user.id, user.email), "applied": applied}
+
+
 # ── Unsubscribe ───────────────────────────────────────────────────────────────
 
 _PAGE = """<!doctype html>
@@ -103,6 +123,10 @@ _PAGE = """<!doctype html>
 _LABELS = {
     "daily_email": "your daily reading emails",
     "festival_email": "moon and festival day emails",
+    "weekly_email": "your weekly outlook emails",
+    "monthly_email": "your monthly outlook emails",
+    "lessons_email": "the Learn your chart lessons",
+    "tips_email": "tips and reminder emails",
     ALL_CATEGORIES: "all emails from Siddha",
 }
 

@@ -50,6 +50,12 @@
         Forgot password?
       </a>
     }
+    @if (mode() === 'register') {
+      <label class="consent">
+        <input type="checkbox" name="emailOptIn" [(ngModel)]="emailOptIn" />
+        <span>Email me my daily reading, weekly outlook and festival days. Turn them off any time.</span>
+      </label>
+    }
     @if (error()) { <p class="message error" role="alert">{{ error() }}</p> }
     @if (notice()) { <p class="message">{{ notice() }}</p> }
     <button class="continue" type="submit" [disabled]="loading()">{{ loading() ? 'Please wait…' : mode() === 'signin' ? 'Continue' : 'Create account' }}</button>

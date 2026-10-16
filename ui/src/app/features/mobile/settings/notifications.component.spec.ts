@@ -12,7 +12,14 @@ class EmailStub {
     address: 'me@example.com',
     deliverable: true,
     suppressed_reason: null,
-    categories: { daily_email: false, festival_email: false },
+    categories: {
+      daily_email: false,
+      festival_email: false,
+      weekly_email: false,
+      monthly_email: false,
+      lessons_email: false,
+      tips_email: false,
+    },
   });
   error = signal<string | null>(null);
   calls: Array<[EmailCategory, boolean]> = [];
@@ -127,7 +134,11 @@ describe('NotificationsComponent', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('button[aria-label="Remedy reminders"]')).not.toBeNull();
   });
 
-  it('lists email choices, both off, and saves a toggle to the account', () => {
+  it('lists every email choice, all off, and saves a toggle to the account', () => {
+    for (const title of ['Weekly outlook', 'Monthly outlook', 'Learn your chart', 'Tips and reminders']) {
+      expect((fixture.nativeElement as HTMLElement).querySelector(`button[aria-label="${title} by email"]`))
+        .withContext(title).not.toBeNull();
+    }
     const daily = (fixture.nativeElement as HTMLElement).querySelector('button[aria-label="Daily reading by email"]') as HTMLButtonElement;
     expect(daily.getAttribute('aria-checked')).toBe('false');
     expect(text()).toContain('Sent to me@example.com');
