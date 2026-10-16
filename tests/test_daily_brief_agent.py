@@ -471,3 +471,16 @@ def test_the_card_header_is_written_fresh_not_fixed():
     assert dba.coverage_gaps(_brief(30), payload) == []
     fixed = _brief(30).model_copy(update={"card_title": "What matters today"})
     assert any("card_title" in gap for gap in dba.coverage_gaps(fixed, payload))
+
+
+def test_the_today_card_is_plain_words_whatever_the_level():
+    payload = _payload()
+    jargon = _brief(30).model_copy(update={
+        "summary": "Sampat Tarabala brings wealth energy, though a Rahu transit asks you to pace yourself."})
+    gaps = dba.coverage_gaps(jargon, payload, "Reader")
+    assert any(gap.startswith("summary in plain words") and "sampat" in gap and "rahu" in gap for gap in gaps)
+    plain = _brief(30).model_copy(update={"summary": "A good day for money and plans; go easy on your body."})
+    assert dba.coverage_gaps(plain, payload, "Reader") == []
+    agent = _Scripted([_brief(30)])
+    agent.write(payload, first_name="Reader", date_label="Friday", mode="practitioner")
+    assert "the Today card stays plain" in agent.prompts[0]

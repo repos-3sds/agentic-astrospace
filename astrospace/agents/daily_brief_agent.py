@@ -96,7 +96,9 @@ class DailyBrief(BaseModel):
     headline: str = Field(description=(
         "The day in 3-7 words, written fresh for today's signals; never the engine's "
         "headline and never a stock phrase."))
-    summary: str = Field(description="One or two plain sentences, at most 30 words, under the headline.")
+    summary: str = Field(description=(
+        "One or two plain sentences, at most 30 words, under the headline, in everyday "
+        "words with no astrology terms."))
     narrative: str = Field(description="The day in 50-80 words: tara, Moon, slow transits, then the practical close.")
     practical_close: str = Field(description="The narrative's last sentence: what to actually do with the day.")
     focus: str = Field(description="One practical sentence on where to put energy today.")
@@ -113,8 +115,8 @@ class DailyBrief(BaseModel):
 
 MODE_GUIDE = {
     "guided": "The reader is new to astrology. Use no Sanskrit terms except a planet's name; explain everything in everyday words.",
-    "balanced": "The reader knows the basics. You may name Tarabala, Chandrabala or a dasha lord once each, with a plain gloss.",
-    "practitioner": "The reader is a practitioner. You may name the tara, the house from the natal Moon, the tithi, the nakshatra and the dasha lords directly.",
+    "balanced": "The reader knows the basics. In why, narrative and the spoken Why you may name Tarabala, Chandrabala or a dasha lord once each, with a plain gloss; the Today card stays plain.",
+    "practitioner": "The reader is a practitioner. In why, narrative and the spoken Why you may name the tara, the house from the natal Moon, the tithi, the nakshatra and the dasha lords directly; the Today card stays plain.",
 }
 TONE_GUIDE = {
     "gentle": "Tone: gentle and warm. Frame cautions as care, never as warnings.",
@@ -150,6 +152,13 @@ Ground every line in the signals given:
   * narrative: tara, Moon and transits, then the practical close.
 - Rewrite candidates so they read as written for this person today, not as
   stock phrases.
+- The Today card is for people who know no astrology, whatever their
+  experience level: card_title, headline, summary and focus are plain everyday
+  words, with no astrology terms (no tara or its name, nakshatra, dasha, bala,
+  gochara, Rahu, Ketu, Jupiter, Saturn or other planets except the Sun and the
+  Moon, transit, Sanskrit). Say what it means for the day instead: "a good day
+  for money and plans", not "Sampat Tarabala brings wealth energy". The
+  astrology belongs in why, narrative and the spoken Why.
 - Do and avoid titles are for people who know no astrology. Each title is a
   plain action in 2-6 everyday words: "Review numbers and financial plans",
   "Focus on routine work", "Avoid starting new things", "Avoid long travel".
@@ -256,6 +265,11 @@ def coverage_gaps(brief: "DailyBrief", payload: dict, first_name: str = "") -> l
         moon_text = " ".join([*brief.why, *(f"{i.headline} {i.detail}" for i in brief.avoid)]).lower()
         if "moon" not in moon_text:
             gaps.append("chandrashtama (the Moon's sensitive day) in why or avoid")
+    for field in ("card_title", "headline", "summary", "focus"):
+        text = getattr(brief, field).lower()
+        found = [w for w in TITLE_JARGON if re.search(rf"\b{w}", text)]
+        if found:
+            gaps.append(f"{field} in plain words without astrology terms ({', '.join(found)})")
     for item in [*brief.do, *brief.avoid]:
         title = item.headline.lower()
         if len(title.split()) > TITLE_MAX_WORDS or any(re.search(rf"\b{w}", title) for w in TITLE_JARGON):
