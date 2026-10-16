@@ -8,8 +8,8 @@ at volume is a new class and an env switch, not a rewrite.
 Configuration is environment-only, never read from the repo:
 
     RESEND_API_KEY          from Secret Manager (resend-api-key); unset = not configured
-    EMAIL_FROM              default "Siddha <asksiddha@3senses.studio>"
-    EMAIL_REPLY_TO          default asksiddha@3senses.studio
+    EMAIL_FROM              default "Siddha <asksiddha@3senses.design>"
+    EMAIL_REPLY_TO          default asksiddha@3senses.design
     EMAIL_LINK_SECRET       signs unsubscribe links; required to send
     EMAIL_POSTAL_ADDRESS    footer sender line, default "Siddha, 3 Senses Design Studio, India"
     PUBLIC_BASE_URL         where links point, default the Cloud Run URL
@@ -28,8 +28,8 @@ import os
 from dataclasses import dataclass, field
 from typing import Protocol
 
-DEFAULT_FROM = "Siddha <asksiddha@3senses.studio>"
-DEFAULT_REPLY_TO = "asksiddha@3senses.studio"
+DEFAULT_FROM = "Siddha <asksiddha@3senses.design>"
+DEFAULT_REPLY_TO = "asksiddha@3senses.design"
 DEFAULT_POSTAL_ADDRESS = "Siddha, 3 Senses Design Studio, India 533005"
 DEFAULT_BASE_URL = "https://agentic-astrospace-cwuqybpnzq-el.a.run.app"
 RESEND_ENDPOINT = "https://api.resend.com/emails"

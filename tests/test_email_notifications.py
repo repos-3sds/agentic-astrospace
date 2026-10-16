@@ -136,7 +136,7 @@ class TestLinks:
         assert isinstance(email_transport_from_env({"RESEND_API_KEY": "k"}), NotConfiguredEmail)
         transport = email_transport_from_env({"RESEND_API_KEY": "k", "EMAIL_LINK_SECRET": "s"})
         assert isinstance(transport, ResendTransport)
-        assert transport.sender == "Siddha <asksiddha@3senses.studio>"
+        assert transport.sender == "Siddha <asksiddha@3senses.design>"
 
     def test_resend_payload(self):
         class Http:
@@ -158,7 +158,7 @@ class TestLinks:
         url, payload, headers = http.call
         assert result.ok and result.provider_message_id == "re_1"
         assert url == "https://api.resend.com/emails" and headers["Authorization"] == "Bearer key"
-        assert payload["to"] == ["a@b.c"] and payload["reply_to"] == "asksiddha@3senses.studio"
+        assert payload["to"] == ["a@b.c"] and payload["reply_to"] == "asksiddha@3senses.design"
         assert "List-Unsubscribe" in payload["headers"]
 
 
