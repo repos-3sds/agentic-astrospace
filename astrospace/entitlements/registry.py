@@ -5,8 +5,14 @@ capability keys and resolved values; neither branches on store product ids.
 
 Quantities follow the hybrid pricing decision (D2, launch plan numbers):
 Free answers 3 grounded questions a month and keeps 2 profiles (D7); Plus
-answers 30 and keeps 6. Pro numbers are provisional, since Pro is not on
-sale yet. Question packs top up Ask beyond the monthly allowance and are
+answers 30 and keeps 6. The "pro" tier is sold as Practitioner.
+
+Explore depth (Hawk, 2026-10-16): Free sees the D1 chart, two yogas, every
+dosha by name with its cancellations, and one compatibility score a month.
+Plus adds the full yoga list, dosha explanations, full compatibility,
+readings, the full remedy plan and Muhurta. Divisional charts beyond D1 are
+Practitioner only. A dosha is never hidden on any plan, and no plan sells
+relief from one. Question packs top up Ask beyond the monthly allowance and are
 held separately (`entitlements/usage.py`). Whether a limit actually blocks is
 `quotas_enforced()`: off until store purchases are live, so nobody meets a
 wall with no way past it.
@@ -19,7 +25,7 @@ from typing import Literal
 AccessTier = Literal["free", "plus", "pro"]
 CapabilityKind = Literal["flag", "limit"]
 
-CATALOG_REVISION = 2
+CATALOG_REVISION = 3
 
 
 @dataclass(frozen=True)
@@ -76,7 +82,13 @@ _CAPABILITIES = (
     _flag("calendar.core", "Core Calendar, set to your location", free=True, plus=True, pro=True, protected=True),
     _flag("chart.d1", "D1 chart and birth signature", free=True, plus=True, pro=True, protected=True),
     _flag("festivals.full", "Full festival packs and custom filters", free=False, plus=True, pro=True),
-    _flag("vargas.full", "Full standard divisional-chart set", free=False, plus=True, pro=True),
+    _flag("vargas.full", "Divisional charts beyond D1", free=False, plus=False, pro=True),
+    _flag("yogas.full", "Every yoga in the chart, not only the first two", free=False, plus=True, pro=True),
+    _flag("doshas.detail", "What each dosha means and the practice that suits it", free=False, plus=True, pro=True),
+    _flag("compatibility.full", "Full compatibility report beyond the score", free=False, plus=True, pro=True),
+    _flag("readings.full", "Period readings and their track record", free=False, plus=True, pro=True),
+    _flag("remedies.full", "The full remedy plan and practice tracker", free=False, plus=True, pro=True),
+    _flag("muhurta.full", "Muhurta, finding a supportive time", free=False, plus=True, pro=True),
     _flag("dashas.full", "Full five-level Dasha navigation", free=False, plus=True, pro=True),
     _flag("transits.full", "Full transit timeline and domain detail", free=False, plus=True, pro=True),
     _flag("audio.natural_voice", "Natural server-made read-aloud voice", free=False, plus=True, pro=True),
@@ -85,6 +97,7 @@ _CAPABILITIES = (
     _flag("reports.practitioner", "Practitioner report templates and export", free=False, plus=False, pro=True),
     _limit("profiles.max", "Maximum active profiles", free=2, plus=6, pro=20),
     _limit("ask.answers.period", "Grounded Ask answers per calendar month", free=3, plus=30, pro=100),
+    _limit("compatibility.checks.period", "People checked for compatibility per calendar month", free=1, plus=None, pro=None),
     _unapproved_limit("compatibility.saved.max", "Maximum saved compatibility comparisons"),
 )
 

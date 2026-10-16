@@ -1,6 +1,6 @@
 <a class="appbar" [asBack]="['/m', 'settings']">
   <img src="mobile/back.svg" alt="" aria-hidden="true" />
-  <span class="crumb">More</span>
+  <span class="crumb">Settings</span>
 </a>
 
 <div class="body">
@@ -9,7 +9,7 @@
     <p class="lede">Change anytime — this adjusts depth and delivery app-wide.</p>
   </header>
 
-  <as-persona-picker [options]="options" [(persona)]="persona" [(tone)]="tone" />
+  <as-persona-picker [options]="options()" [persona]="persona()" (personaChange)="choose($event)" [(tone)]="tone" />
 
   <!--
     The point of the screen. The refer-out boundary is not a preference, and

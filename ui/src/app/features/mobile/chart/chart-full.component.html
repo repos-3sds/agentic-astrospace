@@ -63,6 +63,14 @@
     }
   </div>
 
+  @if (vargaLocked()) {
+    <as-plan-lock
+      plan="practitioner"
+      from="vargas.full"
+      [title]="selectedVarga() + ' and the other divisional charts'"
+      body="Your D1 chart is free. The divisional charts come with the Practitioner plan."
+    />
+  } @else {
   <div class="chart-card">
     <app-kundli-chart
       class="render"
@@ -84,6 +92,7 @@
   </ul>
 
   <p class="hint">Tap a planet to see details</p>
+  }
 
   @if (preferences.experienceMode() === 'practitioner') {
     <section class="data-section">

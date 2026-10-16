@@ -4,6 +4,7 @@ import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { LegalDocument, openLegal } from '../../../core/legal';
 import { ThemeService } from '../../../core/theme.service';
+import { BackBarComponent } from '../shared/back-bar.component';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { PreferencesService } from '../../../core/preferences.service';
 import { plannedTimingPlace } from '../../../core/timing-place';
@@ -41,7 +42,7 @@ const NOTIFICATION_STORAGE_KEY = 'astrospace.mobile.notificationPrefs';
   selector: 'as-settings-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, ProfileSwitcherComponent],
+  imports: [BackBarComponent, RouterLink, ProfileSwitcherComponent],
   templateUrl: './settings-home.component.html',
   styleUrl: './settings-home.component.scss',
 })
@@ -50,6 +51,7 @@ export class SettingsHomeComponent {
   private readonly kundlis = inject(KundliStore);
   private readonly theme = inject(ThemeService);
   private readonly preferences = inject(PreferencesService);
+  protected readonly practitioner = computed(() => this.preferences.experienceMode() === 'practitioner');
   readonly profileSwitcherOpen = signal(false);
 
   readonly profile = computed(() => {
@@ -63,29 +65,7 @@ export class SettingsHomeComponent {
     };
   });
 
-  /**
-   * Ask-first modes take the chart screens off the tab bar (checklist D1);
-   * this is where they are listed instead. Practitioner keeps them as tabs,
-   * so the group would only repeat the bar there.
-   */
-  private readonly chartGroup = computed<SettingGroup[]>(() => {
-    const mode = this.preferences.experienceMode();
-    if (mode === 'practitioner') return [];
-    const rows: SettingRow[] = [];
-    if (mode === 'guided') {
-      rows.push({ id: 'explore', icon: 'explore-readings', label: 'Life guidance', value: 'Story, chapters', route: ['/m', 'explore'] });
-    }
-    rows.push(
-      { id: 'chart', icon: 'explore-varga', label: 'Your chart', value: this.kundlis.active()?.ascendant ? `${this.kundlis.active()!.ascendant} rising` : 'Chart & vargas', route: ['/m', 'chart'] },
-      { id: 'periods', icon: 'explore-dasha', label: 'Life periods', value: 'Dashas', route: ['/m', 'chart', 'periods'] },
-      { id: 'transits', icon: 'explore-transit', label: 'Transits', value: 'Now', route: ['/m', 'transits'] },
-      { id: 'readings', icon: 'explore-reference', label: 'Readings', value: 'Track record', route: ['/m', 'readings'] },
-    );
-    return [{ eyebrow: 'CHART & TIMING', rows }];
-  });
-
   readonly groups = computed<SettingGroup[]>(() => [
-    ...this.chartGroup(),
     {
       eyebrow: 'FAMILY & PROFILES',
       rows: [

@@ -11,6 +11,8 @@ import { buildChartAdapter, PLANET_ABBR, PLANET_NAME, SIGN_ORDER, rashiFallback 
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
+import { PlanLockComponent } from '../shared/plan-lock.component';
+import { PlanGateService } from '../../../core/plan-gate.service';
 
 /** The three drawing conventions the app can render a chart in. */
 export type ChartStyle = 'Eastern' | 'South' | 'North';
@@ -31,7 +33,7 @@ export type ChartStyle = 'Eastern' | 'South' | 'North';
   selector: 'as-chart-full',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, KundliChartComponent, PlanetSheetComponent, RouterLink, SelectHapticDirective],
+  imports: [BackLinkDirective, GenericErrorComponent, KundliChartComponent, PlanLockComponent, PlanetSheetComponent, RouterLink, SelectHapticDirective],
   templateUrl: './chart-full.component.html',
   styleUrl: './chart-full.component.scss',
 })
@@ -46,6 +48,9 @@ export class ChartFullComponent {
   readonly sharedStyle = computed<KundliChartStyle>(() => this.preferences.chartStyle());
   private readonly queryParams = toSignal(this.route.queryParamMap, { requireSync: true });
   readonly selectedVarga = signal('D1');
+  private readonly gate = inject(PlanGateService);
+  /** D1 is free; the divisional charts are on the Practitioner plan. */
+  protected readonly vargaLocked = computed(() => this.selectedVarga() !== 'D1' && !this.gate.allows('vargas.full'));
   protected readonly chart = signal<VedicAll | null>(null);
   protected readonly bhavaChalit = signal<BhavaChalitPayload | null>(null);
   protected readonly loading = signal(true);

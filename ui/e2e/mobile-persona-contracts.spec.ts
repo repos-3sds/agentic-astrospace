@@ -3,19 +3,19 @@ import { expect, test } from '@playwright/test';
 const modes = [
   {
     id: 'guided',
-    tabs: ['Today', 'Ask', 'Calendar', 'More'],
+    tabs: ['Today', 'Ask', 'Calendar', 'Explore'],
     insight: 'YOUR JOURNEY BEGINS',
     insightCta: 'Continue to Today',
   },
   {
     id: 'balanced',
-    tabs: ['Today', 'Ask', 'Calendar', 'More'],
+    tabs: ['Today', 'Ask', 'Calendar', 'Explore'],
     insight: 'YOUR JOURNEY BEGINS',
     insightCta: 'Continue to Today',
   },
   {
     id: 'practitioner',
-    tabs: ['Today', 'Yantra', 'Dashas', 'Calendar', 'More'],
+    tabs: ['Today', 'Yantra', 'Dashas', 'Calendar', 'Settings'],
     insight: 'KUNDLI CALCULATION',
     insightCta: 'Open Practitioner Workbench',
   },

@@ -11,6 +11,14 @@
     </p>
   </header>
 
+  @if (locked()) {
+    <as-plan-lock
+      from="muhurta.full"
+      title="Muhurta"
+      body="Supportive windows for travel, contracts, purchases and important starts, timed to your chart. Today’s Rahu kalam and the panchang stay free on Calendar."
+    />
+  } @else {
+
   <div class="goals" role="radiogroup" asSelectHaptic aria-label="What are you planning?">
     @for (goal of goals(); track goal.id) {
       <button
@@ -92,8 +100,11 @@
     <span>Windows for {{ place() }}</span>
     <span class="place-change">Change</span>
   </a>
+  }
 </div>
 
+@if (!locked()) {
 <button class="find" type="button" [disabled]="!canSearch()" (click)="findWindows()">
   Find windows
 </button>
+}

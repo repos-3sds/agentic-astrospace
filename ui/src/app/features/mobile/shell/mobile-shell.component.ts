@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, viewChild } from '@angular/core';
 import {
   NavigationEnd,
   Router,
@@ -6,6 +6,7 @@ import {
   RouterOutlet,
 } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { PlanGateService } from '../../../core/plan-gate.service';
 import { filter, map, startWith } from 'rxjs';
 import { KundliStore } from '../../../core/kundli.store';
 import { GenericErrorComponent } from '../states/generic-error.component';
@@ -21,8 +22,8 @@ interface MobileTab {
   icon: string;
 }
 
-/** Screens listed under More in the Ask-first tab bar. */
-const MORE_ROOTS = [
+/** Screens reached from the Explore tab (its menu, and Settings behind its gear). */
+const EXPLORE_ROOTS = [
   '/m/settings', '/m/chart', '/m/explore', '/m/transits', '/m/readings', '/m/notes',
   '/m/subscription', '/m/notifications', '/m/search', '/m/remedies', '/m/muhurta',
   '/m/family', '/m/compat',
@@ -34,7 +35,7 @@ function under(path: string, root: string): boolean {
 
 /**
  * Native app shell: routed content plus the tab bar (Figma node 13:66) — four
- * tabs in the Ask-first modes (Today, Ask, Calendar, More), five in Practitioner.
+ * tabs in the Ask-first modes (Today, Ask, Calendar, Explore), five in Practitioner.
  *
  * The shell owns the safe areas. styles.scss has defined --as-safe-* since the
  * mobile UX pass but nothing consumed them, which is why the status bar and
@@ -54,6 +55,15 @@ export class MobileShellComponent {
   private readonly router = inject(Router);
   protected readonly kundlis = inject(KundliStore);
   protected readonly preferences = inject(PreferencesService);
+  private readonly gate = inject(PlanGateService);
+  // Practitioner mode is the Practitioner plan's. Once plans are enforced, a
+  // reader without it (chosen in onboarding, or a plan that lapsed) is shown
+  // Balanced; choosing it again in Settings opens Plans.
+  private readonly practitionerPlan = effect(() => {
+    if (this.preferences.experienceMode() === 'practitioner' && !this.gate.allows('practitioner.workflow')) {
+      this.preferences.experienceMode.set('balanced');
+    }
+  });
   protected readonly overlay = inject(SheetOverlayService);
   private readonly haptics = inject(HapticsService);
   protected readonly connectivity = inject(ConnectivityService);
@@ -130,16 +140,16 @@ export class MobileShellComponent {
         { commands: ['chart'], label: 'Yantra', icon: 'figma-yantra-nav-active' },
         { commands: ['chart', 'periods'], label: 'Dashas', icon: 'figma-yantra-nav-clock' },
         { commands: ['calendar'], label: 'Calendar', icon: 'nav-calendar' },
-        { commands: ['settings'], label: 'More', icon: 'figma-yantra-nav-settings' },
+        { commands: ['settings'], label: 'Settings', icon: 'figma-yantra-nav-settings' },
       ];
     }
-    // Ask-first (checklist D1), with Calendar kept as a tab for every reader:
-    // the chart screens and Family are listed under More.
+    // Ask-first with Calendar for every reader. Explore lists the chart and
+    // its tools; Settings sits behind the gear on Explore (Hawk, 2026-10-16).
     return [
       { commands: ['today'], label: 'Today', icon: 'nav-today' },
       { commands: ['ask'], label: 'Ask', icon: 'nav-ask' },
       { commands: ['calendar'], label: 'Calendar', icon: 'nav-calendar' },
-      { commands: ['settings'], label: 'More', icon: 'nav-more' },
+      { commands: ['explore'], label: 'Explore', icon: 'nav-explore' },
     ];
   });
 
@@ -155,10 +165,10 @@ export class MobileShellComponent {
     const mode = this.preferences.experienceMode();
 
     if (mode !== 'practitioner') {
-      if (route === '/m/settings') {
-        // Everything reached from More keeps More lit, so a reader always
-        // knows which tab Back will eventually return them to.
-        return MORE_ROOTS.some((root) => under(path, root));
+      if (route === '/m/explore') {
+        // Everything reached from Explore keeps Explore lit, so a reader
+        // always knows which tab Back will eventually return them to.
+        return EXPLORE_ROOTS.some((root) => under(path, root));
       }
       return under(path, route);
     }

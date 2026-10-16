@@ -10,6 +10,8 @@ import {
 import { PreferencesService } from '../../../core/preferences.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { PlanGateService } from '../../../core/plan-gate.service';
+import { PlanLockComponent } from '../shared/plan-lock.component';
 
 /** What kind of thing in the chart a remedy answers to. */
 export type RemedyTone = 'warn' | 'bad' | 'good';
@@ -39,11 +41,12 @@ export type RemedyTone = 'warn' | 'bad' | 'good';
   selector: 'as-remedies',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, RouterLink],
+  imports: [PlanLockComponent, BackLinkDirective, GenericErrorComponent, RouterLink],
   templateUrl: './remedies.component.html',
   styleUrl: './remedies.component.scss',
 })
 export class RemediesComponent {
+  protected readonly gate = inject(PlanGateService);
   private readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
   private readonly preferences = inject(PreferencesService);
@@ -51,6 +54,19 @@ export class RemediesComponent {
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly groups = computed(() => this.recommendations()?.groups ?? []);
+  /**
+   * Free gets one traditional practice: the first group's first practice,
+   * with its reason, source and safety note intact. Plus gets the full plan
+   * and the tracker. Nothing here is sold as removing anything.
+   */
+  protected readonly fullPlan = computed(() => this.gate.allows('remedies.full'));
+  protected readonly shownGroups = computed(() =>
+    this.fullPlan() ? this.groups() : this.groups().slice(0, 1).map((group) => ({ ...group, practices: group.practices.slice(0, 1) })));
+  protected readonly hiddenPractices = computed(() => {
+    if (this.fullPlan()) return 0;
+    const total = this.groups().reduce((sum, group) => sum + group.practices.length, 0);
+    return Math.max(0, total - 1);
+  });
   protected readonly note = computed(() => this.recommendations()?.note ?? null);
   protected readonly disclaimer = computed(() => this.recommendations()?.disclaimer ?? 'Traditional practice, not a guarantee.');
 

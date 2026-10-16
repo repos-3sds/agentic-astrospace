@@ -1,0 +1,59 @@
+@let p = profile();
+
+<header class="appbar">
+  <h1 class="screen-title">Explore</h1>
+  <span class="actions">
+    <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search Siddha">
+      <img src="mobile/search.svg" alt="" aria-hidden="true" />
+    </a>
+    <a class="iconbtn" [routerLink]="['/m', 'settings']" aria-label="Settings">
+      <img src="mobile/nav-settings.svg" alt="" aria-hidden="true" />
+    </a>
+  </span>
+</header>
+
+<main class="body">
+  <!-- Whose chart every row below opens. -->
+  <button class="person m-pressable" type="button" (click)="profileSwitcherOpen.set(true)">
+    <span class="avatar" aria-hidden="true">{{ p.initial }}</span>
+    <span class="person-text">
+      <span class="person-eyebrow">SHOWING</span>
+      <span class="person-name">{{ p.name }}</span>
+    </span>
+    <span class="person-switch">Switch</span>
+  </button>
+
+  @if (preferences.experienceMode() === 'guided') {
+    <a class="library m-pressable" [routerLink]="['/m', 'explore', 'library']">
+      <img src="mobile/figma-yantra-book-open.svg" alt="" aria-hidden="true" />
+      <span>
+        <b>Life guidance library</b>
+        <small>Your story and life chapters in plain language</small>
+      </span>
+      <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
+    </a>
+  }
+
+  <nav class="group" aria-label="Explore">
+    @for (row of menu(); track row.id; let last = $last) {
+      <a class="row m-pressable" [routerLink]="row.route">
+        <span class="row-icon">
+          <img [src]="'mobile/' + row.icon + '.svg'" alt="" aria-hidden="true" />
+        </span>
+        <span class="row-copy">
+          <span class="row-label">{{ row.label }}</span>
+          <span class="row-detail">{{ row.detail }}</span>
+        </span>
+        @if (row.locked || row.partial) {
+          <span class="plus" [class.is-partial]="row.partial">{{ row.locked ? 'Plus' : 'Free · Plus' }}</span>
+        }
+        <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
+      </a>
+      @if (!last) { <div class="rule"></div> }
+    }
+  </nav>
+</main>
+
+@if (profileSwitcherOpen()) {
+  <as-profile-switcher (dismissed)="profileSwitcherOpen.set(false)" />
+}

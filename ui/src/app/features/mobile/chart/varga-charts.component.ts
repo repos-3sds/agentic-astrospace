@@ -20,6 +20,8 @@ import { PlanetDetail, PlanetSheetComponent } from './planet-sheet.component';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
+import { PlanGateService } from '../../../core/plan-gate.service';
+import { PlanLockComponent } from '../shared/plan-lock.component';
 
 interface VargaOption {
   id: string;
@@ -38,11 +40,13 @@ interface VargaOption {
   selector: 'as-varga-charts',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, KundliChartComponent, PlanetSheetComponent, RouterLink, SelectHapticDirective],
+  imports: [PlanLockComponent, BackLinkDirective, GenericErrorComponent, KundliChartComponent, PlanetSheetComponent, RouterLink, SelectHapticDirective],
   templateUrl: './varga-charts.component.html',
   styleUrl: './varga-charts.component.scss',
 })
 export class VargaChartsComponent implements AfterViewInit {
+  protected readonly gate = inject(PlanGateService);
+  protected readonly locked = computed(() => !this.gate.allows('vargas.full'));
   @ViewChild('vargaStrip') private readonly vargaStrip?: ElementRef<HTMLElement>;
   private readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
