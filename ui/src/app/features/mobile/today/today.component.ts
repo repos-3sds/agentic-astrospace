@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { timingPlaceLabel } from '../../../core/timing-place';
 import { DayGaugeComponent } from '../day-gauge/day-gauge.component';
@@ -424,7 +424,10 @@ export class TodayComponent {
       const profileId = this.kundlis.activeId();
       // This read is the invalidation boundary for current-place guidance.
       this.preferences.panchangaContextKey();
-      if (profilesLoaded) void this.loadToday(profileId);
+      // Only the reads above may re-run this. loadToday reads and writes
+      // loadedDaily and the brief; tracked, each load re-armed the effect and
+      // Today rebuilt itself in a loop, which showed as constant flicker.
+      if (profilesLoaded) untracked(() => void this.loadToday(profileId));
     });
     // The agent brief follows the loaded day and the reading style. A changed
     // tone or experience mode is a different brief, fetched (or reused) here.
@@ -433,7 +436,7 @@ export class TodayComponent {
       const profileId = this.kundlis.activeId();
       const tone = this.preferences.tone();
       const mode = this.preferences.experienceMode();
-      if (loaded && profileId) void this.loadBrief(profileId, loaded.daily.date, tone, mode);
+      if (loaded && profileId) untracked(() => void this.loadBrief(profileId, loaded.daily.date, tone, mode));
     });
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
     // Deep-linked from the onboarding Aha screen's "Listen to my first
