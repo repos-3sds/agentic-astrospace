@@ -14,6 +14,7 @@ per reader per day, however many runs see it.
   Regional festivals wait for the region preference to reach the server.
 - Welcome: once, when a reader first turns an email on. It confirms what
   they will get, and asks for a birth time when theirs is missing.
+- Weekly and monthly outlooks, Learn your chart and tips: email_series.py.
 
 Copy follows the app's rules: plain words, no fear, no verdicts. Moon days
 are dated by the lunar day in force at sunrise at the reader's place; every
@@ -325,18 +326,28 @@ def schedule_festival_emails(db: Session, now: datetime | None = None) -> list[N
 
 # ── Welcome ───────────────────────────────────────────────────────────────────
 
+WELCOME_ITEMS = (
+    ("daily_email", "Your daily reading",
+     "Each morning at 6:30: what the day is for, where to put your energy, what suits the day and "
+     "what to leave, and the reasons behind it, worked out from your own chart."),
+    ("festival_email", "Moon and festival days",
+     "The evening before a full moon, a new moon or a major festival: what the day is, how families "
+     "traditionally mark it, and a simple way to take part, dated for where you are."),
+    ("weekly_email", "Your week ahead",
+     "Every Monday morning: the theme of the week for love, work and rest, and one thing to try."),
+    ("monthly_email", "Your month ahead",
+     "On the 1st of each month: the shape of the month and where to put your effort."),
+    ("lessons_email", "Learn your chart",
+     "Eight short lessons, a few days apart, each using your own chart: your rising sign, your "
+     "Moon, your birth star and more."),
+    ("tips_email", "Tips and reminders",
+     "Now and then: a feature worth trying, and what is coming up if you have been away a while."),
+)
+
+
 def welcome_content(db: Session, user_id: str, prefs: dict) -> EmailContent:
-    chosen = []
-    if prefs.get("daily_email", {}).get("enabled"):
-        chosen.append(["Your daily reading",
-                       "Each morning at 6:30: what the day is for, where to put your energy, how it "
-                       "touches love, work, money and rest, what suits the day and what to leave, "
-                       "and the reasons behind it, worked out from your own chart."])
-    if prefs.get("festival_email", {}).get("enabled"):
-        chosen.append(["Moon and festival days",
-                       "The evening before a full moon, a new moon or a major festival: what the day "
-                       "is, how families traditionally mark it, and a simple way to take part, dated "
-                       "for where you are."])
+    chosen = [[title, detail] for category, title, detail in WELCOME_ITEMS
+              if prefs.get(category, {}).get("enabled")]
     blocks: list[dict] = []
     if chosen:
         blocks.append({"type": "items", "heading": "What you'll get", "items": chosen})
@@ -359,8 +370,8 @@ def welcome_content(db: Session, user_id: str, prefs: dict) -> EmailContent:
         preview="Here's what will arrive, and how to change it.",
         eyebrow="Welcome",
         heading="You're all set",
-        intro=("Thanks for turning on emails from Siddha. They are written for you, from your own "
-               "chart and your own place, never generic lines."),
+        intro=("Thanks for joining Siddha by email. Everything we send is written for you, from your "
+               "own chart and your own place, never generic lines."),
         blocks=blocks,
         button_label="Open Siddha",
         button_path=path,
@@ -390,11 +401,23 @@ def schedule_welcome_emails(db: Session, now: datetime | None = None) -> list[No
 
 
 def schedule_emails(db: Session, now: datetime | None = None) -> dict:
-    return {
+    from .email_series import schedule_lesson_emails, schedule_outlook_emails, schedule_tip_emails
+
+    summary = {
         "welcome": len(schedule_welcome_emails(db, now)),
         "daily": len(schedule_daily_emails(db, now)),
         "festival": len(schedule_festival_emails(db, now)),
     }
+    # Each set on its own, so one failing never stops the others.
+    for name, run in (("outlook", lambda: schedule_outlook_emails(db, now)),
+                      ("lessons", lambda: len(schedule_lesson_emails(db, now))),
+                      ("tips", lambda: len(schedule_tip_emails(db, now)))):
+        try:
+            summary[name] = run()
+        except Exception:
+            log.exception("%s emails failed", name)
+            db.rollback()
+    return summary
 
 
 # ── Delivery ──────────────────────────────────────────────────────────────────

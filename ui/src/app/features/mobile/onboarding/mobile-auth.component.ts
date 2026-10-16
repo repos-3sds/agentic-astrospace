@@ -6,6 +6,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { legalUrl, openLegal } from '../../../core/legal';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
+import { rememberEmailOptIn } from '../../../core/email-settings.service';
 
 @Component({
   selector: 'as-mobile-auth',
@@ -35,6 +36,17 @@ export class MobileAuthComponent {
   protected name = '';
   protected email = '';
   protected password = '';
+  /**
+   * The sign-up email consent. Ticked by default; the reader can untick it
+   * here, and every email carries a one-click unsubscribe.
+   * Applied at the end of onboarding, once the account exists.
+   */
+  protected emailOptIn = true;
+
+  /** Register only: carry the consent box across the sign-up redirect. */
+  private keepConsent(): void {
+    if (this.mode() === 'register') rememberEmailOptIn(this.emailOptIn);
+  }
 
   protected setMode(mode: 'signin' | 'register'): void {
     this.mode.set(mode);
@@ -57,6 +69,7 @@ export class MobileAuthComponent {
       if (this.mode() === 'register') {
         localStorage.setItem('astrospace.onboardingName', this.name.trim());
       }
+      this.keepConsent();
       await this.auth.init();
       if (!this.auth.enabled()) {
         this.auth.signedOut.set(false);
@@ -91,6 +104,7 @@ export class MobileAuthComponent {
     this.googleLoading.set(true);
     this.error.set(null);
     this.notice.set(null);
+    this.keepConsent();
     try {
       await this.auth.init();
       if (!this.auth.enabled()) {
@@ -112,6 +126,7 @@ export class MobileAuthComponent {
       this.error.set('Enter your email first, then request a magic link.');
       return;
     }
+    this.keepConsent();
     await this.auth.init();
     if (!this.auth.enabled()) {
       this.notice.set('Magic link sent. Check your email.');

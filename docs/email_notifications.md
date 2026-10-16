@@ -8,13 +8,29 @@ Status: canonical. How the app emails readers, what it needs in production, and 
 | --- | --- | --- | --- |
 | Daily reading | `daily_email` | 06:30 (or their `preferred_time`) | the brief the worker already stored for their own profile; skipped if not written by 11:00 |
 | Moon and festival days | `festival_email` | 18:00 the evening before | full and new moons (lunar day at sunrise) and pan-India festivals at their place |
+| Weekly outlook | `weekly_email` | Monday 07:00 | the period agent's weekly reading, with a plain-words style note; written from 18:00 Sunday, given up at 11:00 Monday, 6 per worker run |
+| Monthly outlook | `monthly_email` | the 1st, 07:30 | the same, monthly |
+| Learn your chart | `lessons_email` | 08:00, every 3 days, 8 in all | fixed lessons filled in from the reader's own chart (no model call); the first a day after they agree |
+| Tips: back after a while | `tips_email` | 10:00 | after 14 days without opening the app (devices and push tokens), at most monthly: what is coming up at their place |
+| Tips: compatibility | `tips_email` | 10:00, once | a week after sign-up, only if they have just their own profile |
 | Welcome | `system` | once, when they first turn an email on | what they chose; asks for a birth time when theirs isn't exact |
 
-Both categories are **off by default**. Nothing is emailed until the reader turns one on in
-Settings › Notifications › Email (`/api/v1/me/email`). Consent is checked again at send time.
+Every category starts **off** for a reader with no choice on record. The Register screen has an
+email box, ticked by default; readers who never saw it (Google from the Sign in tab, a magic link)
+see the same box on Birth Details. If it stays ticked, the end of onboarding calls
+`POST /api/v1/me/email/defaults`, which turns every category on, once, and records
+`consented_at` and `consent_source` on `email_recipients`. It does nothing for a reader who has
+already set any email choice. Readers who signed up earlier keep what they chose. Any category
+can be changed in Settings › Notifications › Email (`/api/v1/me/email`), and consent is checked
+again at send time.
+
+Open question for launch: whether a pre-ticked box is valid consent under India's DPDP Act. It
+goes with the legal text for the lawyer's read; unticking the default is a one-line change in
+`mobile-auth.component.ts` and `birth-details.component.ts`.
 
 Code: `astrospace/notifications/email.py` (transport, signed links, layout),
 `astrospace/notifications/email_jobs.py` (schedulers, delivery),
+`astrospace/notifications/email_series.py` (outlooks, lessons, tips),
 `astrospace/api/email_routes.py` (settings, unsubscribe, webhook). The worker runs them
 beside the push schedulers on the same `notification_jobs` queue; an email job has
 `payload.channel = "email"`.
@@ -53,8 +69,7 @@ Without `RESEND_API_KEY` or `EMAIL_LINK_SECRET` every email job fails with
 
 ## Next
 
-Weekly outlook (needs a weekly agent), monthly outlook, transit alerts, the birth chart
-lesson series, compatibility invites and "we miss you". The full category map is in
+Practice reminders, transit alerts and plain-language festival write-ups. The full category map is in
 `/mnt/project-files/plans/email_program_setup_2026-10-16.md` in the project's shared files.
 Regional festivals wait for the festival-region preference to be stored on the server
 (today it is device-only).
