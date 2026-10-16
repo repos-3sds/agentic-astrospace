@@ -160,27 +160,17 @@ the store listings point at the deployed URLs.
 
 ## App icon
 
-The app icon is the Nine-Arm Galaxy drawn as gold light ribbons with eight
-flare-star grahas and a bright core, rendered from one canvas drawing in
-`ui/scripts/brand/luminous.cjs` in two forms: night (space black, the install
-default) and day (the app's cream), plus a white silhouette for tinted and
-themed icons. It follows the theme:
+The app icon is the Nine-Arm Galaxy drawn as gold light ribbons on space
+black, with eight small flare-star grahas and a bright core, rendered from one
+canvas drawing in `ui/scripts/brand/luminous.cjs`. It is the same icon in every
+theme: it does not follow the device or the in-app Light/Dark setting.
 
-- **iOS.** The primary `AppIcon` set carries day (any), dark and tinted
-  appearances, so on iOS 18 the home screen follows the device by itself.
-  When the reader picks Light or Dark in Settings → Appearance, `AppIconPlugin`
-  (in `AppDelegate.swift`, registered by `MainViewController`) switches to the
-  alternate `AppIcon-Day` / `AppIcon-Night` sets; System restores the primary.
-  iOS shows a one-line "You have changed the icon" alert on each switch; that
-  cannot be suppressed. The alternates need
-  `ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES` (set on the App target).
-- **Android.** Launchers have no system dark icon, so the manifest declares two
-  `activity-alias` launchers (`.LauncherNight`, `.LauncherDay`) and
-  `AppIconPlugin.java` enables the one matching the resolved theme. The swap
-  happens when the app goes to the background, so it is visible the next time
-  the reader sees the home screen. Both adaptive icons carry a monochrome
-  layer for Android 13+ themed icons.
-- PWA icons and the favicon use the night form.
+- **iOS.** The `AppIcon` set's light and dark appearances are the same image;
+  the tinted appearance is a white silhouette for when the user turns on
+  tinted icons in iOS 18.
+- **Android.** One launcher icon; the adaptive icon carries a monochrome layer
+  for Android 13+ themed icons, which the user opts into.
+- PWA icons and the favicon use the same drawing.
 
 After changing the drawing, regenerate from `ui/`:
 

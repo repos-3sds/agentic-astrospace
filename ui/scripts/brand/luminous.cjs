@@ -21,9 +21,8 @@ function drawGalaxy(cv, opt) {
     return 'rgb(' + a.map((v, j) => Math.round(v + (b[j] - v) * k)).join(',') + ')';
   };
   const T = {
-    night: { disp: ['#9a4cff', '#ffae2e', '#fff4dc', '#ffd36a', '#ff6a4a'], rings: ['#ffd36a', '#9a4cff', '#ff6a4a', '#7fd0ff'], hot: '#fffaf0', core: ['#ffffff', '#ffe7a6', '#e07a3a'], halo: '#ffd98a', bg: ['#0d0b18', '#05050b', '#000000'], blend: 'lighter', bloom: [0.45, 0.8], streak: 'cc', glint: 'aa' },
-    day: { disp: ['#7a4ad0', '#c87a10', '#ecb440', '#d99a1c', '#d0582e'], rings: ['#c87a10', '#7a4ad0', '#d0582e', '#d99a1c'], hot: '#b87a0c', core: ['#fffaf0', '#f2c24f', '#c27a1a'], halo: '#e0a020', streak: '55', glint: '66', ink: 1.6, sphere: ['#fffaf0', '#f0c04f', '#a8740a'], bg: ['#fffaf1', '#faf4e8', '#efe5d2'], blend: 'multiply', bloom: [0.18, 0.35] },
-    mono: { disp: ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff'], rings: ['#ffffff'], hot: '#ffffff', core: ['#ffffff', '#ffffff', '#ffffff'], halo: '#ffffff', bg: null, blend: 'lighter', bloom: [0.3, 0.6], streak: 'cc', glint: 'aa' },
+    night: { disp: ['#9a4cff', '#ffae2e', '#fff4dc', '#ffd36a', '#ff6a4a'], rings: ['#ffd36a', '#9a4cff', '#ff6a4a', '#7fd0ff'], hot: '#fffaf0', core: ['#ffffff', '#ffe7a6', '#e07a3a'], halo: '#ffd98a', bg: ['#0d0b18', '#05050b', '#000000'], bloom: [0.45, 0.8], glint: 'aa' },
+    mono: { disp: ['#ffffff', '#ffffff', '#ffffff', '#ffffff', '#ffffff'], rings: ['#ffffff'], hot: '#ffffff', core: ['#ffffff', '#ffffff', '#ffffff'], halo: '#ffffff', bg: null, bloom: [0.3, 0.6], glint: 'aa' },
   }[opt.theme || 'night'];
   const S = cv.width, ctx = cv.getContext('2d');
   const u = S / 100 * (opt.zoom || 1.14), cx = S / 2, cy = S / 2, rot = -24 * Math.PI / 180;
@@ -39,7 +38,7 @@ function drawGalaxy(cv, opt) {
   // Light layer, drawn apart and then bloomed onto the ground.
   const L = document.createElement('canvas'); L.width = L.height = S;
   const l = L.getContext('2d');
-  l.globalCompositeOperation = T.blend === 'lighter' ? 'lighter' : 'source-over';
+  l.globalCompositeOperation = 'lighter';
   // Faint orbit rings behind the arms.
   for (let i = 0; i < 9; i++) {
     const rr = 14 + i * 4.2 + gauss() * 0.8;
@@ -63,7 +62,7 @@ function drawGalaxy(cv, opt) {
         pts.push(spiral(arm, t, off * spread, phase));
         if (pts.length > CH || k === SEG) {
           const fade = Math.min(1, k / 12) * Math.pow(1 - k / SEG, 0.5);
-          l.globalAlpha = Math.min(1, (lead ? 0.85 : 0.06 + 0.5 * Math.pow(Math.abs(off) / 2, 1.5)) * (T.ink || 1)) * fade * (1 - t * 0.2);
+          l.globalAlpha = (lead ? 0.85 : 0.06 + 0.5 * Math.pow(Math.abs(off) / 2, 1.5)) * fade * (1 - t * 0.2);
           l.strokeStyle = col; l.lineWidth = w * (1.4 - t * 0.6); l.lineCap = 'butt'; l.lineJoin = 'round';
           l.beginPath(); pts.forEach((p, i) => (i ? l.lineTo(p[0], p[1]) : l.moveTo(p[0], p[1]))); l.stroke();
           pts = [pts[pts.length - 1]];
@@ -84,36 +83,37 @@ function drawGalaxy(cv, opt) {
   g.addColorStop(0, T.core[0]); g.addColorStop(0.12, T.core[1]); g.addColorStop(0.4, T.core[2] + '44'); g.addColorStop(1, T.core[2] + '00');
   l.fillStyle = g; l.beginPath(); l.arc(cx, cy, 9 * u, 0, TAU); l.fill();
   l.save(); l.translate(cx, cy); l.rotate(rot); l.scale(1, 0.035);
-  g = l.createRadialGradient(0, 0, 0, 0, 0, 40 * u); g.addColorStop(0, T.hot + T.streak); g.addColorStop(0.4, T.halo + '44'); g.addColorStop(1, T.halo + '00');
+  g = l.createRadialGradient(0, 0, 0, 0, 0, 40 * u); g.addColorStop(0, T.hot + 'cc'); g.addColorStop(0.4, T.halo + '44'); g.addColorStop(1, T.halo + '00');
   l.fillStyle = g; l.beginPath(); l.arc(0, 0, 40 * u, 0, TAU); l.fill(); l.restore();
-  // Eight graha stars as flare points.
+  // Eight graha stars as small flare points, on their own layer so the
+  // arm bloom doesn't swell them into blobs.
+  const St = document.createElement('canvas'); St.width = St.height = S;
+  const st = St.getContext('2d'); st.globalCompositeOperation = l.globalCompositeOperation;
   const GT = [6, 16, 26, 36].map((k) => k / 45);
   for (let arm = 0; arm < 2; arm++) GT.forEach((t) => {
-    const [x, y] = spiral(arm, t), b = (1.15 - t * 0.3) * u * (opt.star || 1);
-    const h = l.createRadialGradient(x, y, 0, x, y, b * 4);
-    h.addColorStop(0, T.blend === 'lighter' ? '#ffffff' : T.core[0]); h.addColorStop(0.12, T.blend === 'lighter' ? T.hot : T.core[1]);
-    h.addColorStop(0.3, T.halo + (T.blend === 'lighter' ? '66' : 'aa')); h.addColorStop(1, T.halo + '00');
-    l.fillStyle = h; l.beginPath(); l.arc(x, y, b * 4, 0, TAU); l.fill();
-    l.save(); l.translate(x, y); l.rotate(rot);
+    const [x, y] = spiral(arm, t), b = (0.62 - t * 0.18) * u * (opt.star || 1);
+    const h = st.createRadialGradient(x, y, 0, x, y, b * 2.6);
+    h.addColorStop(0, '#ffffff'); h.addColorStop(0.12, T.hot);
+    h.addColorStop(0.3, T.halo + '66'); h.addColorStop(1, T.halo + '00');
+    st.fillStyle = h; st.beginPath(); st.arc(x, y, b * 2.6, 0, TAU); st.fill();
+    st.save(); st.translate(x, y); st.rotate(rot);
     for (const sc of [[1, 0.06], [0.06, 1]]) {
-      l.save(); l.scale(sc[0], sc[1]);
-      const q = l.createRadialGradient(0, 0, 0, 0, 0, b * 5); q.addColorStop(0, T.hot + T.glint); q.addColorStop(1, T.hot + '00');
-      l.fillStyle = q; l.beginPath(); l.arc(0, 0, b * 5, 0, TAU); l.fill(); l.restore();
+      st.save(); st.scale(sc[0], sc[1]);
+      const q = st.createRadialGradient(0, 0, 0, 0, 0, b * 3.6); q.addColorStop(0, T.hot + T.glint); q.addColorStop(1, T.hot + '00');
+      st.fillStyle = q; st.beginPath(); st.arc(0, 0, b * 3.6, 0, TAU); st.fill(); st.restore();
     }
-    l.restore();
-    if (T.sphere) { // on a light ground a flare alone reads as a smudge: give it a lit body
-      const sp = l.createRadialGradient(x - b * 0.3, y - b * 0.35, 0, x, y, b * 0.95);
-      sp.addColorStop(0, T.sphere[0]); sp.addColorStop(0.45, T.sphere[1]); sp.addColorStop(1, T.sphere[2]);
-      l.fillStyle = sp; l.beginPath(); l.arc(x, y, b * 0.95, 0, TAU); l.fill();
-    }
+    st.restore();
   });
   // Bloom: a wide and a tight blurred copy under the sharp layer.
-  ctx.globalCompositeOperation = T.blend === 'lighter' ? 'lighter' : 'multiply';
+  ctx.globalCompositeOperation = 'lighter';
   ctx.filter = `blur(${S / 40}px)`; ctx.globalAlpha = T.bloom[0]; ctx.drawImage(L, 0, 0);
   ctx.filter = `blur(${S / 160}px)`; ctx.globalAlpha = T.bloom[1]; ctx.drawImage(L, 0, 0);
   ctx.filter = 'none'; ctx.globalAlpha = 1;
-  ctx.globalCompositeOperation = T.blend === 'lighter' ? 'lighter' : 'source-over';
+  ctx.globalCompositeOperation = 'lighter';
   ctx.drawImage(L, 0, 0);
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.filter = `blur(${S / 220}px)`; ctx.globalAlpha = 0.5; ctx.drawImage(St, 0, 0);
+  ctx.filter = 'none'; ctx.globalAlpha = 1; ctx.drawImage(St, 0, 0);
   ctx.globalCompositeOperation = 'source-over';
 }
 

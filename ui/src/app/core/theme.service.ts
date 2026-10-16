@@ -1,18 +1,8 @@
 import { Injectable, effect, signal } from '@angular/core';
-import { Capacitor, registerPlugin } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 
 const STORAGE_KEY = 'astrospace-theme';
 export type ThemePreference = 'system' | 'light' | 'dark';
-
-/**
- * Native icon switcher: AppIconPlugin in ios/App/App/AppDelegate.swift and
- * android/.../AppIconPlugin.java. iOS keys off the preference ("system" keeps
- * the primary icon, which follows the device on iOS 18); Android has no
- * system-following icon, so it keys off the resolved theme.
- */
-const AppIcon = registerPlugin<{
-  set(options: { preference: ThemePreference; dark: boolean }): Promise<void>;
-}>('AppIcon');
 
 function prefersDark(): boolean {
   return typeof matchMedia === 'function'
@@ -49,10 +39,6 @@ export class ThemeService {
       void this.applyNativeBars(dark);
     });
 
-    effect(() => {
-      void this.applyAppIcon(this.preference(), this.dark());
-    });
-
     // Follow the device until the reader overrides it.
     if (typeof matchMedia === 'function') {
       matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
@@ -75,15 +61,6 @@ export class ThemeService {
       localStorage.removeItem(STORAGE_KEY);
     } else {
       localStorage.setItem(STORAGE_KEY, preference);
-    }
-  }
-
-  private async applyAppIcon(preference: ThemePreference, dark: boolean): Promise<void> {
-    if (!Capacitor.isNativePlatform()) return;
-    try {
-      await AppIcon.set({ preference, dark });
-    } catch {
-      // An older native build without the plugin keeps its icon.
     }
   }
 
