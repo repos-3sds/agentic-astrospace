@@ -58,7 +58,7 @@ export class SubscriptionComponent implements OnInit {
   protected readonly family = signal<PlanFamily>(
     this.route.snapshot.queryParamMap.get('plan') === 'practitioner' ? 'pro' : 'plus');
   protected readonly selectedPlan = signal(
-    this.family() === 'pro' ? 'astrospace_practitioner_yearly' : 'astrospace_plus_yearly');
+    this.family() === 'pro' ? 'siddha_practitioner_yearly' : 'siddha_plus_yearly');
   protected readonly busy = signal<string | null>(null);
   protected readonly notice = signal<{ tone: 'good' | 'info' | 'bad'; text: string } | null>(null);
 
@@ -76,7 +76,7 @@ export class SubscriptionComponent implements OnInit {
 
   protected chooseFamily(family: PlanFamily): void {
     this.family.set(family);
-    this.selectedPlan.set(family === 'pro' ? 'astrospace_practitioner_yearly' : 'astrospace_plus_yearly');
+    this.selectedPlan.set(family === 'pro' ? 'siddha_practitioner_yearly' : 'siddha_plus_yearly');
   }
 
   protected readonly usageRows = computed(() => {

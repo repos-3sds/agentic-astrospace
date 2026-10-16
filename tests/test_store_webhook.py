@@ -43,7 +43,7 @@ def _ms(dt: datetime) -> int:
     return int(dt.timestamp() * 1000)
 
 
-def _event(kind, product="astrospace_plus_monthly", txn="txn-1", **extra):
+def _event(kind, product="siddha_plus_monthly", txn="txn-1", **extra):
     now = datetime.utcnow()
     return {"event": {
         "id": f"evt-{kind}-{txn}", "type": kind, "app_user_id": USER, "product_id": product,
@@ -94,14 +94,14 @@ def test_refund_revokes_the_plan(env):
 
 def test_question_pack_credits_once_and_refund_revokes(env):
     client, factory = env
-    pack = _event("NON_RENEWING_PURCHASE", product="astrospace_questions_15", txn="pack-1")
+    pack = _event("NON_RENEWING_PURCHASE", product="siddha_questions_15", txn="pack-1")
     for _ in range(2):
         client.post("/api/v1/store/revenuecat/webhook", json=pack, headers=AUTH)
     with factory() as db:
         assert db.query(QuestionCredit).count() == 1
         assert resolve_entitlements(db, USER).question_credits == 15
     client.post("/api/v1/store/revenuecat/webhook",
-                json=_event("CANCELLATION", product="astrospace_questions_15", txn="pack-1",
+                json=_event("CANCELLATION", product="siddha_questions_15", txn="pack-1",
                             cancel_reason="CUSTOMER_SUPPORT"), headers=AUTH)
     with factory() as db:
         assert resolve_entitlements(db, USER).question_credits == 0

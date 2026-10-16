@@ -64,7 +64,7 @@ def _bucket(db):
 def _pack(db, quantity=3, txn="t1"):
     account_id = resolve_entitlements(db, ME).account_id
     db.add(QuestionCredit(
-        billing_account_id=account_id, provider="test", provider_product_id="astrospace_questions_3",
+        billing_account_id=account_id, provider="test", provider_product_id="siddha_questions_3",
         provider_transaction_id=txn, quantity=quantity, remaining=quantity,
     ))
     db.commit()
@@ -181,6 +181,6 @@ def test_third_profile_needs_plus_when_enforced(env, monkeypatch):
 def test_products_list_d2_prices(env):
     client, _, _ = env
     products = {p["id"]: p for p in client.get("/api/v1/entitlements/products").json()["products"]}
-    assert products["astrospace_plus_monthly"]["price_inr"] == 299
-    assert products["astrospace_plus_yearly"]["price_inr"] == 1999
-    assert products["astrospace_questions_3"]["questions"] == 3
+    assert products["siddha_plus_monthly"]["price_inr"] == 299
+    assert products["siddha_plus_yearly"]["price_inr"] == 1999
+    assert products["siddha_questions_3"]["questions"] == 3
