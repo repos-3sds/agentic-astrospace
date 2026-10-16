@@ -334,6 +334,36 @@ export interface PanchangaConventions {
   resolved: string[];
 }
 
+export interface DailyBriefItem {
+  headline: string;
+  detail: string;
+}
+
+/**
+ * The agent's wording of today's brief (GET /context/{id}/daily/brief), over
+ * the same signals as DailyGuidancePayload. `brief` is null when the agent is
+ * off or could not write a safe one; the templated brief then stays.
+ * `spoken` is kept under 90 s of listening at 0.9x by the server.
+ */
+export interface DailyBriefResponse {
+  date: string;
+  valid_until: string | null;
+  source: 'agent' | 'template';
+  brief: {
+    headline: string;
+    summary: string;
+    focus: string;
+    do: DailyBriefItem[];
+    avoid: DailyBriefItem[];
+    timing_note: string;
+    why: string[];
+    spoken: Array<{ label: 'Opening' | 'Overview' | 'Today' | 'Why' | 'Close'; text: string }>;
+  } | null;
+  spoken_words?: number;
+  listen_seconds?: number;
+  cached?: boolean;
+}
+
 export interface DailyGuidancePayload {
   system: string;
   engine_version: string;

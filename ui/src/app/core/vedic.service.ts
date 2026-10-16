@@ -7,6 +7,7 @@ import {
   CalendarIntelligencePayload,
   CharaDashaPayload,
   CompatibilityPayload,
+  DailyBriefResponse,
   DailyGuidancePayload,
   DashaPayload,
   GocharamProfilePayload,
@@ -21,7 +22,7 @@ import {
   YoginiDashaPayload,
   YogasDoshasPayload,
 } from './models';
-import { PreferencesService } from './preferences.service';
+import { ExperienceMode, PreferencesService, ReadingTone } from './preferences.service';
 import { TimingPlacePayload } from './timing-place';
 import {
   CALENDAR_CACHE_POLICY,
@@ -58,6 +59,7 @@ export class VedicService {
   private allValues = new Map<string, VedicAll>();
   private dailyCache = new Map<string, Promise<DailyGuidancePayload>>();
   private dailyValues = new Map<string, DailyGuidancePayload>();
+  private briefCache = new Map<string, Promise<DailyBriefResponse>>();
   private calendarCache = new Map<string, Promise<CalendarIntelligencePayload>>();
   private calendarValues = new Map<string, CalendarIntelligencePayload>();
   private resourceEpoch = 0;
@@ -95,6 +97,7 @@ export class VedicService {
     this.profileScopes.clear();
     this.dailyCache.clear();
     this.dailyValues.clear();
+    this.briefCache.clear();
     this.calendarCache.clear();
     this.calendarValues.clear();
   }
@@ -259,6 +262,30 @@ export class VedicService {
       };
     }
     return null;
+  }
+
+  /**
+   * Today's brief in the agent's words. Kept for the session per profile,
+   * day, place and reading style; a template answer or an error is not kept,
+   * so the next open of Today asks again.
+   */
+  dailyBrief(kundliId: string, tone: ReadingTone, mode: ExperienceMode): Promise<DailyBriefResponse> {
+    const params = this.dailyParams();
+    params.set('tone', tone);
+    params.set('mode', mode);
+    const key = `${kundliId}:${this.todayKey()}:${params.toString()}`;
+    let cached = this.briefCache.get(key);
+    if (!cached) {
+      cached = this.api.get<DailyBriefResponse>(`/context/${kundliId}/daily/brief?${params.toString()}`).then((value) => {
+        if (!value.brief) this.briefCache.delete(key);
+        return value;
+      }).catch((error) => {
+        this.briefCache.delete(key);
+        throw error;
+      });
+      this.briefCache.set(key, cached);
+    }
+    return cached;
   }
 
   refreshDailyGuidance(kundliId: string): Promise<DailyGuidancePayload> {
@@ -486,6 +513,7 @@ export class VedicService {
     // infer ownership from the in-memory key. Clear these small request maps.
     this.dailyCache.clear();
     this.dailyValues.clear();
+    this.briefCache.clear();
     const scope = this.profileScopes.get(kundliId);
     if (scope) this.resourceCache.deleteProfile(scope.userId, kundliId);
     this.calendarCache.clear();
@@ -504,6 +532,7 @@ export class VedicService {
     this.allValues.clear();
     this.dailyCache.clear();
     this.dailyValues.clear();
+    this.briefCache.clear();
     this.calendarCache.clear();
     this.calendarValues.clear();
     this.resourceCache.clearAll();

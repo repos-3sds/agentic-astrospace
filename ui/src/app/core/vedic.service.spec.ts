@@ -188,3 +188,41 @@ describe('VedicService location-sensitive caches', () => {
     expect(Object.keys(localStorage).some((key) => key.startsWith('siddha.resource-cache'))).toBeFalse();
   });
 });
+
+describe('VedicService agent daily brief', () => {
+  let api: jasmine.SpyObj<ApiService>;
+  let service: VedicService;
+
+  beforeEach(() => {
+    localStorage.clear();
+    api = jasmine.createSpyObj<ApiService>('ApiService', ['get', 'put']);
+    TestBed.configureTestingModule({
+      providers: [VedicService, PreferencesService, { provide: ApiService, useValue: api }],
+    });
+    service = TestBed.inject(VedicService);
+  });
+
+  it('asks for the reading style and keeps a written brief for the session', async () => {
+    api.get.and.resolveTo({ date: '2026-10-16', source: 'agent', brief: { headline: 'h' } } as any);
+    await service.dailyBrief('profile-1', 'gentle', 'guided');
+    await service.dailyBrief('profile-1', 'gentle', 'guided');
+    expect(api.get).toHaveBeenCalledTimes(1);
+    expect(api.get.calls.mostRecent().args[0]).toContain('/context/profile-1/daily/brief?');
+    expect(api.get.calls.mostRecent().args[0]).toContain('tone=gentle');
+    expect(api.get.calls.mostRecent().args[0]).toContain('mode=guided');
+
+    await service.dailyBrief('profile-1', 'direct', 'guided');
+    expect(api.get).toHaveBeenCalledTimes(2);
+  });
+
+  it('asks again after a template answer or an error', async () => {
+    api.get.and.resolveTo({ date: '2026-10-16', source: 'template', brief: null } as any);
+    await service.dailyBrief('profile-1', 'direct', 'balanced');
+    api.get.and.rejectWith(new Error('offline'));
+    await expectAsync(service.dailyBrief('profile-1', 'direct', 'balanced')).toBeRejected();
+    api.get.and.resolveTo({ date: '2026-10-16', source: 'agent', brief: { headline: 'h' } } as any);
+    const answer = await service.dailyBrief('profile-1', 'direct', 'balanced');
+    expect(answer.source).toBe('agent');
+    expect(api.get).toHaveBeenCalledTimes(3);
+  });
+});
