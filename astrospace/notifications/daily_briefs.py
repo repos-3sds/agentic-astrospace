@@ -64,8 +64,13 @@ def _settings(db: Session, user_id: str) -> dict:
 def _viewer_place(db: Session, user_id: str, settings: dict) -> tuple[str | None, str | None, str | None]:
     """(timezone, city, nation) as the app sends them."""
     prefs = cm.get_notification_preferences(db, user_id).get(MORNING_CATEGORY, {})
-    tokens = cm.list_active_push_tokens(db, user_id)
-    device_tz = prefs.get("timezone") or next((t.timezone for t in tokens if t.timezone), None)
+    # The app asks with the phone's own timezone, which it reports on every
+    # open with its push token; the newest token is where the phone is now.
+    # The morning-brief preference is a send-time setting and only a fallback:
+    # preferring it wrote briefs for a place the app never asked about.
+    tokens = sorted(cm.list_active_push_tokens(db, user_id),
+                    key=lambda t: t.last_seen_at or datetime.min, reverse=True)
+    device_tz = next((t.timezone for t in tokens if t.timezone), None) or prefs.get("timezone")
     place = settings["panchanga_place"] or {}
     timezone = device_tz
     if settings["timezone_mode"] == "panchanga_place" and place.get("timezone"):

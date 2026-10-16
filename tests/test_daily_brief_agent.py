@@ -391,3 +391,39 @@ def test_prerendered_audio_is_keyed_by_the_texts_the_listen_sheet_sends():
     long = [{"label": "Overview", "text": "A sentence of some length goes here. " * 60}]
     pieces = daily_briefs.listen_requests(long)
     assert len(pieces) > 1 and all(len(piece) <= daily_briefs.NATURAL_CHUNK_MAX_CHARS for piece in pieces)
+
+
+def test_a_stored_brief_with_an_aware_expiry_is_read_not_a_500():
+    """Postgres returns timestamptz aware; comparing it with utcnow() raised
+    TypeError on every read of a stored brief (production, 2026-10-16)."""
+    from types import SimpleNamespace
+
+    from astrospace.db import crud_mobile as cm
+
+    def session_returning(row):
+        query = SimpleNamespace(filter=lambda *a: query, first=lambda: row)
+        return SimpleNamespace(query=lambda model: query)
+
+    live = SimpleNamespace(expires_at=datetime(2030, 1, 1, 5, tzinfo=ZoneInfo("Asia/Kolkata")))
+    stale = SimpleNamespace(expires_at=datetime(2020, 1, 1, tzinfo=timezone.utc))
+    naive = SimpleNamespace(expires_at=datetime(2030, 1, 1))
+    day = datetime(2026, 10, 16).date()
+    assert cm.get_cached_daily_guidance(session_returning(live), "k", day, "h") is live
+    assert cm.get_cached_daily_guidance(session_returning(stale), "k", day, "h") is None
+    assert cm.get_cached_daily_guidance(session_returning(naive), "k", day, "h") is naive
+
+
+def test_the_schedule_uses_the_phones_timezone_over_the_push_preference(env, agent):
+    from astrospace.db.models import NotificationPreference
+
+    http, kundli, factory = env
+    now = datetime(2026, 10, 16, 0, 30, tzinfo=timezone.utc)
+    with factory() as db:
+        _install_app(db, timezone_name="Asia/Singapore")
+        db.add(NotificationPreference(user_id=ME, category="morning_brief", enabled=True,
+                                      timezone="Asia/Kolkata"))
+        db.commit()
+        daily_briefs.schedule_daily_briefs(db, now=now, prerender=lambda s: 0)
+    # What the app sends on a phone in Singapore: its own timezone, no city.
+    body = http.get(f"/api/v1/context/{kundli}/daily/brief", params={"timezone": "Asia/Singapore"}).json()
+    assert body["trigger"] == "scheduled" and agent.calls == 1
