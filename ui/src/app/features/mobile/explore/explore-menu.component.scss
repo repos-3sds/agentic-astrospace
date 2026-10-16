@@ -103,7 +103,8 @@
   color: var(--m-accent);
 }
 
-.featured-title { @include m-h2; color: var(--m-text); }
+// The app's own type tokens only, so this reads like every other screen.
+.featured-title { @include m-title; color: var(--m-text); }
 
 .cells {
   display: grid;
@@ -124,7 +125,7 @@
   b { @include m-body-strong; color: var(--m-text); overflow: hidden; text-overflow: ellipsis; }
 }
 
-.featured-link { @include m-body-strong; color: var(--m-accent-strong); }
+.featured-link { @include m-button; color: var(--m-accent-strong); }
 
 /* Guided: Your story */
 .story {
