@@ -17,10 +17,18 @@ describe('buildAskSuggestions', () => {
     const rows = buildAskSuggestions(daily(), 'balanced');
     expect(rows.length).toBe(3);
     expect(rows[0].prompt).toContain('Mercury period');
-    expect(rows[0].because).toBe('Mercury sub-period within Saturn is running');
+    expect(rows[0].because).toBe('Mercury sub-period within the Saturn major period');
     expect(rows[1].prompt).toContain('Jupiter');
     expect(rows[2].because).toContain('Moon in Hasta today');
     expect(rows[2].because).toContain('caution day');
+  });
+
+  it('names the sub-period, not the deepest level of a five-level chain', () => {
+    const payload = daily();
+    payload.context.dasha_chain = ['Moon', 'Sun', 'Saturn', 'Mars', 'Rahu'].map((lord, i) =>
+      ({ level: ['mahadasha', 'antardasha', 'pratyantardasha', 'sookshmadasha', 'pranadasha'][i], lord })) as never;
+    expect(buildAskSuggestions(payload, 'balanced')[0].because).toBe('Sun sub-period within the Moon major period');
+    expect(buildAskSuggestions(payload, 'practitioner')[0].because).toBe('Running: Moon › Sun › Saturn › Mars › Rahu');
   });
 
   it('never offers the old fixed strings or a financial-verdict prompt', () => {

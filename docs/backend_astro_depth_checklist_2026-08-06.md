@@ -757,13 +757,10 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   round-tripped. Until then usage is counted, never blocked. Hawk's own
   account needs an `entitlement_overrides` row for `ask.answers.period`
   (value null) before enforcement, or testing stops at 3 answers.
-- [ ] **Muhurta: add the window straight into the calendar on Android.**
-  "Add to calendar" shares an .ics file; whether a calendar app is offered
-  in the share sheet depends on the device. *Unblocks on:* a device check.
-  *Hook:* `addToCalendar()` in `muhurta-results.component.ts`; an
-  `Intent.ACTION_INSERT` plugin call would skip the share sheet. The festival
-  sheet's "Add to calendar" (`festival-sheet.component.ts`) shares the same
-  `exportCalendarFile()` and would get the same fix.
+- [x] **Muhurta: add the window straight into the calendar on Android.**
+  Done 2026-10-17 (PR #151): on Android, `addToCalendar()` in
+  `core/calendar-export.ts` opens Google Calendar's add-event form
+  (`googleCalendarUrl()`); iOS and the browser still share an .ics file.
 - [ ] **Analytics and crash reports are wired but off** (2026-10-15).
   `core/analytics.service.ts` sends to PostHog only when
   `environment.posthog.key` is set, and the reader's "Share usage and crash
@@ -886,6 +883,16 @@ system insets in place of the hard-coded 48 px Android bottom.
   `/auth/config` that differs is stored, not applied, because rebuilding the
   Supabase client under a live session is riskier. *Hook:* `loadConfig` in
   `ui/src/app/core/auth.service.ts`.
+- [ ] **First tap after closing a sheet or going back is sometimes ignored**
+  (regression 2026-10-17, M5). Seen on the phone reopening Listen, opening
+  Past questions, and after leaving a Settings sub-page; a second tap works.
+  *Why not:* it is intermittent and does not reproduce in desktop Chromium,
+  and nothing in the code holds input: the sheet sets `pointer-events: none`
+  only while sliding out and is removed after. *Unblocks on:* a trace on the
+  device (chrome://inspect over adb, Performance panel with touch events) to
+  see whether the tap reaches the WebView. *Hook:* `slideOut()` and
+  `restoreFocus()` in `features/mobile/sheet/sheet.component.ts`, and the
+  touch listeners in `installNativeInteractionGuards()` in `app.ts`.
 
 ---
 

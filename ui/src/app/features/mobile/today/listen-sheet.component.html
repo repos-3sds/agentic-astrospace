@@ -5,7 +5,7 @@
       <div class="head-text">
         <p class="title">{{ title() }}</p>
         <p class="sub">{{ subtitle() }}</p>
-        <p class="now">Now playing: {{ activeSectionLabel() }} · {{ voiceLabel() }}</p>
+        <p class="now">{{ playing() ? 'Now playing' : elapsed() > 0 ? 'Paused' : 'Up first' }}: {{ activeSectionLabel() }} · {{ voiceLabel() }}</p>
       </div>
     </header>
 
@@ -33,23 +33,25 @@
     </div>
 
     <div class="times">
-      <p class="time">{{ elapsedLabel() }}</p>
+      <p class="time">{{ preparing() ? 'Preparing…' : elapsedLabel() }}</p>
       <p class="time">{{ remainingLabel() }}</p>
     </div>
 
     <div class="transport">
       <button class="skip" type="button" aria-label="Back one part" (click)="skip(-1)">
-        <img src="mobile/rewind.svg" alt="" aria-hidden="true" />
+        <span class="skip-icon rewind" aria-hidden="true"></span>
       </button>
-      <button class="play" type="button" [attr.aria-label]="playing() ? 'Pause' : 'Play'" (click)="toggle()">
-        @if (playing()) {
+      <button class="play" type="button" [attr.aria-label]="preparing() ? 'Preparing audio' : playing() ? 'Pause' : 'Play'" [attr.aria-busy]="preparing()" (click)="toggle()">
+        @if (preparing()) {
+          <span class="play-spinner" aria-hidden="true"></span>
+        } @else if (playing()) {
           <span class="pause-bars" aria-hidden="true"></span>
         } @else {
           <span class="play-triangle" aria-hidden="true"></span>
         }
       </button>
       <button class="skip" type="button" aria-label="Forward one part" (click)="skip(1)">
-        <img src="mobile/forward.svg" alt="" aria-hidden="true" />
+        <span class="skip-icon forward" aria-hidden="true"></span>
       </button>
     </div>
 

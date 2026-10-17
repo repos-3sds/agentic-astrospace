@@ -57,6 +57,9 @@
       }
     </div>
   }
+  @if (appVersion(); as version) {
+    <p class="app-version">Siddha {{ version }}</p>
+  }
 </div>
 @if (profileSwitcherOpen()) {
   <as-profile-switcher (dismissed)="profileSwitcherOpen.set(false)" />

@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { LegalDocument, openLegal } from '../../../core/legal';
@@ -7,6 +9,7 @@ import { ThemeService } from '../../../core/theme.service';
 import { BackBarComponent } from '../shared/back-bar.component';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { PreferencesService } from '../../../core/preferences.service';
+import { NATURAL_VOICE_NAME, NaturalVoiceService } from '../../../core/natural-voice.service';
 import { plannedTimingPlace } from '../../../core/timing-place';
 
 /** One settings row. `value` is the current state, shown without opening it. */
@@ -199,8 +202,20 @@ export class SettingsHomeComponent {
     void openLegal(doc);
   }
 
+  /** Whether Listen will use Siddha's natural voice; false until known. */
+  private readonly naturalAvailable = signal(false);
+
+  /** "1.0.0 (build 488)" on the phone, so a bug report can say which build. */
+  protected readonly appVersion = signal<string | null>(null);
+
   constructor() {
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
+    if (Capacitor.isNativePlatform()) {
+      void CapacitorApp.getInfo()
+        .then((info) => this.appVersion.set(`${info.version} (build ${info.build})`))
+        .catch(() => undefined);
+    }
+    void inject(NaturalVoiceService).available().then((ok) => this.naturalAvailable.set(ok)).catch(() => undefined);
   }
 
   private modeLabel(): string {
@@ -215,7 +230,10 @@ export class SettingsHomeComponent {
   /** The voice Listen will use; there is no on/off, so never say "on". */
   private voiceLabel(): string {
     const name = this.preferences.voiceName();
-    if (!name) return 'Default voice';
+    // Automatic (null) means the natural voice when the plan has it; this row
+    // said "Default voice" while Listen used it (regression 2026-10-17).
+    if (name === NATURAL_VOICE_NAME || (name == null && this.naturalAvailable())) return 'Siddha natural voice';
+    if (!name) return 'Phone voice';
     // Device voice names carry vendor noise: "Google हिन्दी (India)", "en-in-x-ene-local".
     const short = name.replace(/\s*\(.*\)\s*$/, '').trim();
     return short.length > 18 ? 'Chosen voice' : short;

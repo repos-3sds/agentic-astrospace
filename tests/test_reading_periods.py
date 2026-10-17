@@ -46,10 +46,15 @@ def ist(day: int, hour: int = 10, month: int = 10) -> datetime:
 
 
 class TestPeriodLabel:
-    @pytest.mark.parametrize("day", [12, 13, 15, 18])
-    def test_every_day_of_a_week_shares_its_monday_label(self, day):
-        # Mon Oct 12 .. Sun Oct 18 2026
+    @pytest.mark.parametrize("day", [12, 13, 15, 16])
+    def test_every_weekday_shares_its_monday_label(self, day):
+        # Mon Oct 12 .. Fri Oct 16 2026
         assert _period_label("weekly", ist(day)) == "Week of Oct 12, 2026"
+
+    @pytest.mark.parametrize("day", [17, 18])
+    def test_the_weekend_reads_the_week_ahead(self, day):
+        # Sat Oct 17 and Sun Oct 18: Oct 12-18 is mostly gone.
+        assert _period_label("weekly", ist(day)) == "Week of Oct 19, 2026"
 
     def test_the_next_monday_starts_a_new_week(self):
         assert _period_label("weekly", ist(19)) == "Week of Oct 19, 2026"
@@ -59,11 +64,11 @@ class TestPeriodLabel:
         assert _period_label("weekly", ist(1)) == "Week of Sep 28, 2026"
 
     def test_label_follows_the_kundli_local_date(self):
-        # 20:00 UTC on Sunday Oct 18 is already Monday Oct 19 in India.
-        utc_sunday = datetime(2026, 10, 18, 20, 0, tzinfo=ZoneInfo("UTC"))
-        assert _period_label("weekly", utc_sunday) == "Week of Oct 12, 2026"
-        assert _period_label("weekly", utc_sunday.astimezone(IST)) == "Week of Oct 19, 2026"
-        assert _period_label("daily", utc_sunday.astimezone(IST)) == "2026-10-19"
+        # 20:00 UTC on Friday Oct 16 is already Saturday Oct 17 in India.
+        utc_friday = datetime(2026, 10, 16, 20, 0, tzinfo=ZoneInfo("UTC"))
+        assert _period_label("weekly", utc_friday) == "Week of Oct 12, 2026"
+        assert _period_label("weekly", utc_friday.astimezone(IST)) == "Week of Oct 19, 2026"
+        assert _period_label("daily", utc_friday.astimezone(IST)) == "2026-10-17"
 
     def test_other_periods(self):
         assert _period_label("daily", ist(15)) == "2026-10-15"
@@ -123,7 +128,7 @@ def test_a_weekly_reading_is_reused_for_the_whole_week(env):
     with patch.object(PeriodAgent, "run", return_value=READING) as run:
         with _at(ist(13)):
             first = _generate(env).json()
-        with _at(ist(17)):
+        with _at(ist(16)):
             again = _generate(env).json()
     assert run.call_count == 1, "Friday reuses Tuesday's reading instead of writing a new one"
     assert again["cached"] is True and again["id"] == first["id"]

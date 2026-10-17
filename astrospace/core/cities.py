@@ -394,7 +394,15 @@ def search_cities(query: str = "", limit: int = 80) -> list[dict]:
 
     rows = []
     seen = set()
-    for _, city, nation, (lat, lng, tz) in sorted(matches, key=lambda item: (item[0], item[2] != "in", item[1], item[2])):
+    # Among same-named cities, the one its timezone is named after leads:
+    # London, GB (Europe/London) before London, CA, which came first only
+    # alphabetically (regression 2026-10-17, R3). India stays ahead after that.
+    def tz_named(city: str, tz: str) -> bool:
+        return tz.rsplit("/", 1)[-1].replace("_", " ").lower() == city
+
+    ranked = sorted(matches, key=lambda item: (
+        item[0], not tz_named(item[1], item[3][2]), item[2] != "in", item[1], item[2]))
+    for _, city, nation, (lat, lng, tz) in ranked:
         key = (city, nation)
         if key in seen:
             continue

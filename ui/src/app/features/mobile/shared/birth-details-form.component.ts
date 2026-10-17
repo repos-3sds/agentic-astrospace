@@ -321,7 +321,7 @@ export class BirthDetailsFormComponent implements OnDestroy {
 
   private async searchPlaces(query: string, seq: number): Promise<void> {
     try {
-      const matches = await this.panchanga.cities(query);
+      const matches = await this.panchanga.cities(query, 8);
       if (seq !== this.placeSearchSeq) return;
       this.matches.set(matches.slice(0, 8));
       if (matches.length === 0) this.placeError.set('No place matches that yet. Try the nearest town or city.');

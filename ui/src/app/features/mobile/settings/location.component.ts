@@ -96,8 +96,13 @@ export class LocationComponent {
 
   protected onQuery(value: string): void {
     this.query.set(value);
-    void this.searchCities(value);
+    // Wait for a pause in typing, as the birth-details form does, rather than
+    // asking the server once per keystroke.
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    this.searchTimer = setTimeout(() => void this.searchCities(value), 250);
   }
+
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
 
   protected selectCity(city: PanchangaCity): void {
     this.preferences.setPanchangaPlace(city);
@@ -118,7 +123,7 @@ export class LocationComponent {
     this.searching.set(true);
     this.searchError.set(null);
     try {
-      const cities = await this.panchanga.cities(q);
+      const cities = await this.panchanga.cities(q, 8);
       if (run === this.searchRun) this.suggestions.set(cities.slice(0, 8));
     } catch (error) {
       if (run === this.searchRun) {

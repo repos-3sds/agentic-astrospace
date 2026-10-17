@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { FestivalService, festivalRegionsLabel } from '../../../core/festival.service';
+import { FestivalService, festivalPlace, festivalRegionsLabel } from '../../../core/festival.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { FestivalOccurrence } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
@@ -45,6 +45,8 @@ interface CalendarCell {
               [class.mcal-event]="cell.eventCount > 0"
               [routerLink]="['/m','calendar','day']"
               [queryParams]="{ date: cell.date }"
+              [attr.aria-label]="cellLabel(cell.date, cell.eventCount)"
+              [attr.aria-current]="cell.date === todayDate() ? 'date' : null"
             >{{ cell.day }}</a>
           }
         </section>
@@ -175,6 +177,15 @@ export class CalendarComponent {
 
   protected readonly regionsLabel = festivalRegionsLabel;
 
+  /** A screen reader heard only "17"; say the date and whether anything falls on it. */
+  protected cellLabel(date: string, eventCount: number): string {
+    const [y, m, d] = date.split('-').map(Number);
+    const label = new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
+    const today = date === this.todayDate() ? ', today' : '';
+    const events = eventCount ? `, ${eventCount} ${eventCount === 1 ? 'observance' : 'observances'}` : '';
+    return `${label}${today}${events}`;
+  }
+
   protected monthLabel(): string {
     return new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(this.monthStart());
   }
@@ -208,17 +219,14 @@ export class CalendarComponent {
     forceRefresh = false,
   ): Promise<void> {
     const requestId = ++this.festivalRequestId;
-    const place = this.preferences.panchangaPlace();
-    const profile = this.store.active();
-    const city = place?.city || profile?.birth_city;
-    const nation = place?.nation || profile?.birth_nation || 'IN';
+    const place = festivalPlace(this.preferences, this.store.active());
     this.festivalRows.set([]);
-    if (!city) {
+    if (!place) {
       this.festivalLoading.set(false);
       this.festivalError.set('Set a Panchanga place to load local festivals.');
       return;
     }
-    const cached = forceRefresh ? null : this.festivals.cachedUpcoming(city, nation, fromDate, days, regions);
+    const cached = forceRefresh ? null : this.festivals.cachedUpcoming(place, fromDate, days, regions);
     if (cached) {
       if (requestId !== this.festivalRequestId) return;
       this.festivalRows.set(cached.festivals);
@@ -230,8 +238,8 @@ export class CalendarComponent {
     this.festivalError.set(null);
     try {
       const payload = forceRefresh
-        ? await this.festivals.refreshUpcoming(city, nation, fromDate, days, regions)
-        : await this.festivals.upcoming(city, nation, fromDate, days, regions);
+        ? await this.festivals.refreshUpcoming(place, fromDate, days, regions)
+        : await this.festivals.upcoming(place, fromDate, days, regions);
       if (requestId !== this.festivalRequestId) return;
       this.festivalRows.set(payload.festivals);
     } catch (error) {

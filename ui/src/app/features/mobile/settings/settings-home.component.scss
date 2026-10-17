@@ -149,3 +149,10 @@
     filter: brightness(1.35) saturate(0.9);
   }
 }
+
+.app-version {
+  @include m-caption;
+  margin: 8px 0 0;
+  text-align: center;
+  color: var(--m-muted);
+}

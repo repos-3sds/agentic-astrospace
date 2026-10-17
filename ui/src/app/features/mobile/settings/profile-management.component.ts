@@ -6,6 +6,7 @@ import { Kundli } from '../../../core/models';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackBarComponent } from '../shared/back-bar.component';
 import { profileRelationLabel } from './profile-fields';
+import { birthDate } from '../format-date';
 
 @Component({
   selector: 'as-profile-management',
@@ -72,7 +73,7 @@ export class ProfileManagementComponent {
   }
 
   protected birthSummary(profile: Kundli): string {
-    return `${profile.birth_day}/${profile.birth_month}/${profile.birth_year}, ${String(profile.birth_hour).padStart(2, '0')}:${String(profile.birth_minute).padStart(2, '0')}`;
+    return `${birthDate(profile.birth_day, profile.birth_month, profile.birth_year)}, ${String(profile.birth_hour).padStart(2, '0')}:${String(profile.birth_minute).padStart(2, '0')}`;
   }
 
   private async load(): Promise<void> {

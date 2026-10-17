@@ -74,7 +74,7 @@ TARA_PLAIN_HEADLINE = {
 # (Hawk, 2026-10-16); the tara's name stays in the row's text and the Why
 # sheet, where it comes with its meaning.
 TARA_ACTION = {
-    "Janma": "Keep the day light and simple",
+    "Janma": "Avoid packing the day too full",
     "Sampat": "Good day for money and plans",
     "Vipat": "Avoid risks and new starts",
     "Kshema": "Focus on routine work",
@@ -489,16 +489,20 @@ _CAREER_THEME = {
 
 # Card titles for the domain rows: short plain actions, no "Finance:" label
 # and no astrology terms. The rotating phrase and its signal stay in `text`.
+# Avoid titles say what to avoid; "Keep the day light" sat in the Avoid card
+# reading as a Do, beside the tara's near-identical line, and "Push the task
+# that matters" read as a contradiction on a low-score day (regression
+# 2026-10-17, M1).
 _DOMAIN_ACTIONS = {
     ("Finance", "do"): ["Review numbers and financial plans", "Plan your money calmly", "Sort out pending payments"],
-    ("Finance", "avoid"): ["Avoid big purchases", "Hold off on money risks", "Keep spending small"],
+    ("Finance", "avoid"): ["Avoid big purchases", "Hold off on money risks", "Don't overspend"],
     ("Love", "do"): ["Have that honest conversation", "Make time for loved ones", "Mend or deepen a bond"],
-    ("Love", "avoid"): ["Avoid forcing hard talks", "Give people some space", "Go easy on expectations"],
+    ("Love", "avoid"): ["Avoid forcing hard talks", "Don't crowd people", "Don't expect too much"],
     ("Health", "do"): ["Start a healthy habit", "Rest and recover well", "Keep up your routine care"],
-    ("Health", "avoid"): ["Don't overexert yourself", "Keep the day light", "Avoid late nights"],
+    ("Health", "avoid"): ["Don't overexert yourself", "Avoid a heavy schedule", "Avoid late nights"],
     ("Growth", "do"): ["Learn something new", "Plan the bigger picture", "Read or study quietly"],
-    ("Growth", "avoid"): ["Avoid big decisions today", "Keep plans flexible", "Don't overthink it"],
-    ("Career", "do"): ["Focus on routine work", "Push the task that matters", "Take the first step at work"],
+    ("Growth", "avoid"): ["Avoid big decisions today", "Don't lock in plans yet", "Don't overthink it"],
+    ("Career", "do"): ["Focus on routine work", "Make steady progress at work", "Take the first step at work"],
 }
 
 _DOMAIN_PHRASES = {
@@ -652,7 +656,21 @@ def _do_and_avoid(personal: dict, ctx: dict, words: dict,
     for c in avoid_domains:
         avoid.append({"headline": c["headline"], "text": c["text"], "source": "domain", "domain": c["domain"]})
 
-    return do, avoid
+    return _distinct(do), _distinct(avoid)
+
+
+def _distinct(rows: list[dict]) -> list[dict]:
+    """Drop a row whose title repeats an earlier one, or one is the other cut
+    short ("Keep the day light" under "Keep the day light and simple")."""
+    seen: list[str] = []
+    kept = []
+    for row in rows:
+        title = " ".join(row["headline"].lower().split())
+        if any(title.startswith(prior) or prior.startswith(title) for prior in seen):
+            continue
+        seen.append(title)
+        kept.append(row)
+    return kept
 
 
 def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = None,

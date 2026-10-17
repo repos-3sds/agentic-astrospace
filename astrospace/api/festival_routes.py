@@ -12,11 +12,18 @@ the same arguments give the same answer forever.
 from datetime import date as date_cls, datetime, timedelta
 from functools import lru_cache
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from ..core.cities import city_for_timezone
 from ..core.vedic import LocationError, festivals
+from .auth import current_user
 
-router = APIRouter(prefix="/api/v1/festivals", tags=["festivals"])
+# Signed-in only: an uncached festival year is 15-50 s of server CPU, and
+# anyone could ask for any city (regression 2026-10-17, L5).
+router = APIRouter(
+    prefix="/api/v1/festivals", tags=["festivals"],
+    dependencies=[Depends(current_user)],
+)
 
 _REGIONS = {festivals.NORTH, festivals.SOUTH, festivals.PAN}
 _MIN_YEAR, _MAX_YEAR = 1900, 2100
@@ -103,7 +110,19 @@ def upcoming_festivals(
     from_date: str | None = Query(None, description="YYYY-MM-DD; default today"),
     days: int = Query(60, ge=1, le=365),
     regions: list[str] | None = Query(None),
+    timezone: str | None = Query(
+        None, description="The viewer's timezone, used when city is only the birth-city fallback"),
+    city_is_fallback: bool = Query(
+        False, description="city is the birth city, sent because no timing city is chosen"),
 ):
+    # The same order the day timings use (timing_place.resolve_timing_place):
+    # a chosen city, else the city for the phone's timezone, else the birth
+    # city. Festivals took the birth city while the timings beside them came
+    # from the phone's timezone (regression 2026-10-17, M6).
+    if city_is_fallback and timezone:
+        viewer_city = city_for_timezone(timezone)
+        if viewer_city:
+            city, nation = viewer_city[0], viewer_city[1]
     if from_date:
         try:
             start = datetime.strptime(from_date, "%Y-%m-%d").date()

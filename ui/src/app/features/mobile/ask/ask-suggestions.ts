@@ -18,13 +18,20 @@ export function buildAskSuggestions(daily: DailyGuidancePayload | null, mode: Mo
   if (!daily) return neutral(mode);
   const chain = daily.context?.dasha_chain ?? [];
   const major = chain[0];
-  const current = chain.at(-1);
+  // The sub-period, not the deepest level: the chain runs to the 4th or 5th
+  // level, which lasts days, and "Mars short period within Moon" read as the
+  // main sub-period beside a Moon › Sun stack (regression 2026-10-17, M2).
+  const current = chain[1] ?? major;
   const transit = daily.context?.active_gochara?.[0];
   const nakshatra = daily.star_of_day?.nakshatra;
   const tone = daily.verdict?.tone;
-  const dashaBecause = current
-    ? `${current.lord} ${LEVEL_WORD[current.level] ?? current.level}${major && major.lord !== current.lord ? ` within ${major.lord}` : ''} is running`
-    : undefined;
+  const dashaBecause = !current
+    ? undefined
+    : mode === 'practitioner'
+      ? `Running: ${chain.map((level) => level.lord).join(' › ')}`
+      : current === major
+        ? `${major.lord} major period is running`
+        : `${current.lord} sub-period within the ${major.lord} major period`;
   const dayBecause = nakshatra ? `Moon in ${nakshatra} today${tone ? ` · ${tone === 'caution' ? 'a caution day' : 'a supportive day'}` : ''}` : undefined;
   const transitBecause = transit ? `${transit.planet} transit: ${transit.name}` : dashaBecause;
 
