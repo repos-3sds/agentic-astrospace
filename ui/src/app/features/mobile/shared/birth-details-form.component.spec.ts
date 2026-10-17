@@ -58,7 +58,7 @@ describe('BirthDetailsFormComponent', () => {
     tick(249);
     expect(cities).not.toHaveBeenCalled();
     tick(1);
-    expect(cities).toHaveBeenCalledOnceWith('Pun');
+    expect(cities).toHaveBeenCalledOnceWith('Pun', 8);
     tick();
     internals.choosePlace(pune);
     internals.onSubmit(new Event('submit'));

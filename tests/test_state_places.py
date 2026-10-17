@@ -62,3 +62,8 @@ class TestSearch:
 
     def test_search_returns_bounded_results(self):
         assert len(search_cities("pal", limit=25)) <= 25
+
+
+def test_a_city_its_timezone_is_named_after_leads_its_namesakes():
+    labels = [row["label"] for row in search_cities("london", 5)]
+    assert labels[0].startswith("London, GB")

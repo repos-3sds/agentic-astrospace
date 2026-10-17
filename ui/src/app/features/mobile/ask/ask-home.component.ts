@@ -230,8 +230,11 @@ export class AskHomeComponent {
     if (!q || this.submitting()) {
       return;
     }
-    await this.router.navigate(this.navigation.path('answer'), {
+    const opened = await this.router.navigate(this.navigation.path('answer'), {
       queryParams: { q, topic: this.selectedTopic() ?? undefined, pending: '1' },
     });
+    // Ask is a retained tab: the sent question sat in the box when the reader
+    // came back for the next one (regression 2026-10-17).
+    if (opened && this.draft().trim() === q) this.draft.set('');
   }
 }
