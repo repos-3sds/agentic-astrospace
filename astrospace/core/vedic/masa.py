@@ -111,16 +111,24 @@ def _sun_sign_at(jd: float) -> int:
     return sign_index(sidereal_positions(jd)["Sun"]["lon"])
 
 
-def amanta_masa(jd: float) -> dict:
+def amanta_masa(jd: float, bounds: tuple[float, float] | None = None) -> dict:
     """
     The amanta lunar month containing jd (previous new moon → next new moon).
 
     Returns {name, name_index, adhika, paksha, month_start_jd, month_end_jd,
     purnimanta_name}. name_index is the index into LUNAR_MONTHS of the base
     name (without any "Adhika " prefix), usable for ritu().
+
+    ``bounds`` is the (start, end) new-moon pair from an earlier call whose
+    month also contains jd. Finding the new moons is nearly all of the cost,
+    so a day-by-day scan passes the previous month's bounds while jd is still
+    inside them; the result is identical.
     """
-    start = new_moon_before(jd)
-    end = new_moon_after(jd)
+    if bounds is not None and bounds[0] <= jd < bounds[1]:
+        start, end = bounds
+    else:
+        start = new_moon_before(jd)
+        end = new_moon_after(jd)
 
     r_start = _sun_sign_at(start + _EPS)
     r_end = _sun_sign_at(end - _EPS)

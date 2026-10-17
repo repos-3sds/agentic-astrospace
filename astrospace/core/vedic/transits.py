@@ -7,10 +7,12 @@ from datetime import datetime, timedelta, timezone
 
 import swisseph as swe
 
+from .ashtakavarga import ashtakavarga
 from .gocharam import (
     gochara_rules as generated_gochara_rules,
     gocharam_profile as generated_gocharam_profile,
 )
+from .gocharam.strength import apply_ashtakavarga_context, ashtakavarga_transit_support
 from .nakshatra import nakshatra_of
 from .positions import (
     degree_in_sign,
@@ -151,6 +153,49 @@ def transit_timeline(
     return {
         "next_7_days": [event for event in events if event["date"] <= (start_dt + timedelta(days=7)).date().isoformat()][:18],
         "next_30_days": events[:60],
+    }
+
+
+def transit_signals(
+    natal_positions: dict,
+    natal_lagna_lon: float,
+    as_of: datetime,
+    ayanamsha: str = "lahiri",
+    node_type: str = "mean",
+) -> dict:
+    """The parts of :func:`transit_analysis` a dated calendar needs.
+
+    Active gochara rules, the strongest aspect and the 30-day timeline, without
+    the three-year gocharam profile. That profile is most of transit_analysis's
+    cost and the calendar reads none of it, so tapping a day stays quick.
+    """
+    natal_lagna_sign = sign_index(natal_lagna_lon)
+    natal_moon_sign = sign_index(natal_positions["Moon"]["lon"])
+    transit_positions = sidereal_positions(_jd_from_dt(as_of), ayanamsha, node_type)
+    gochara = generated_gochara_rules(
+        transit_positions, natal_positions, natal_lagna_sign, natal_moon_sign,
+    )
+    # Same Ashtakavarga context gocharam_profile applies, so a rule's
+    # av_context and effective_severity match /transits for the same day.
+    apply_ashtakavarga_context(
+        gochara,
+        ashtakavarga_transit_support(
+            ashtakavarga(natal_positions, natal_lagna_lon), transit_positions,
+        ),
+    )
+    aspects = transit_aspects(natal_positions, transit_positions, limit=36)
+    active_aspects = [row for row in aspects if row["strength"] >= 45]
+    return {
+        "active_rules": gochara["active_rules"],
+        "strongest_aspect": active_aspects[0] if active_aspects else None,
+        "timeline": transit_timeline(
+            natal_positions,
+            natal_lagna_sign,
+            natal_moon_sign,
+            as_of,
+            ayanamsha,
+            node_type,
+        ),
     }
 
 

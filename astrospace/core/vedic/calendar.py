@@ -5,7 +5,7 @@ from .dashas import vimshottari_dasha
 from .nakshatra import nakshatra_of
 from .panchanga_day import daily_panchanga, personal_panchanga
 from .positions import sign_index
-from .transits import transit_analysis
+from .transits import transit_signals
 
 # Bumped when the calendar/festival assembly logic or dataset changes in a
 # way that would make a previously cached response wrong — independent of
@@ -97,13 +97,12 @@ def calendar_intelligence(
     janma_rashi = sign_index(moon_lon)
 
     dasha = vimshottari_dasha(moon_lon, chart.moment.dt_local, start_dt)
-    transits = transit_analysis(
+    transits = transit_signals(
         chart.positions,
         chart.lagna_lon,
         start_dt,
         chart.ayanamsha,
         chart.node_type,
-        dasha_context=dasha.get("current"),
     )
 
     events: list[dict] = []
@@ -129,7 +128,7 @@ def calendar_intelligence(
     events += _period_event_if_inside(current.get("antardasha"), "Antardasha", start_dt, end_dt)
     events += _period_event_if_inside(current.get("pratyantardasha"), "Pratyantardasha", start_dt, end_dt)
 
-    for rule in transits["gochara"]["active_rules"]:
+    for rule in transits["active_rules"]:
         events.append(_event(
             start_dt.date().isoformat(),
             "transit",
@@ -241,7 +240,7 @@ def calendar_intelligence(
         "current": {
             "dasha": current,
             "strongest_transit": transits["strongest_aspect"],
-            "active_rules": transits["gochara"]["active_rules"],
+            "active_rules": transits["active_rules"],
             "panchanga": next((p for p in panchanga_days if p["date"] == start_date), None),
         },
         "panchanga_days": panchanga_days,

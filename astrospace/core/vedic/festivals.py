@@ -513,8 +513,13 @@ FESTIVALS_BY_SLUG = {f["slug"]: f for f in FESTIVALS}
 
 # ── Day scan ─────────────────────────────────────────────────────────────────
 
-def _day_facts(day: date_cls, lat: float, lng: float, tz_str: str) -> dict | None:
-    """Panchanga facts at sunrise for one day, or None if sunrise is undefined."""
+def _day_facts(day: date_cls, lat: float, lng: float, tz_str: str,
+               month_bounds: tuple[float, float] | None = None) -> dict | None:
+    """Panchanga facts at sunrise for one day, or None if sunrise is undefined.
+
+    ``month_bounds`` is the previous day's amanta month (start, end new moons);
+    reusing it while sunrise is still inside saves two new-moon searches a day.
+    """
     span = day_span(day.year, day.month, day.day, lat, lng, tz_str)
     if span is None:
         return None
@@ -523,7 +528,7 @@ def _day_facts(day: date_cls, lat: float, lng: float, tz_str: str) -> dict | Non
     positions = sidereal_positions(rise)
     sun, moon = positions["Sun"]["lon"], positions["Moon"]["lon"]
     tithi = tithi_of(sun, moon)
-    masa = amanta_masa(rise)
+    masa = amanta_masa(rise, month_bounds)
 
     # Tithi at the other two determining moments. Pradosh is taken at sunset;
     # nishita is the midpoint of the night, which is what "midnight" means in
@@ -552,6 +557,7 @@ def _day_facts(day: date_cls, lat: float, lng: float, tz_str: str) -> dict | Non
         "moon_nakshatra": nakshatra_of(moon)["name"],
         "sun_sign": sign_index(sun),
         "weekday": day.weekday(),  # Monday=0 … Sunday=6
+        "month_bounds": (masa["month_start_jd"], masa["month_end_jd"]),
     }
 
 
@@ -566,11 +572,12 @@ def _scan_year(year: int, lat: float, lng: float, tz_str: str,
     start = date_cls(year, 1, 1) - timedelta(days=pad_days)
     end = date_cls(year, 12, 31) + timedelta(days=pad_days)
 
-    facts, cursor = [], start
+    facts, cursor, bounds = [], start, None
     while cursor <= end:
-        row = _day_facts(cursor, lat, lng, tz_str)
+        row = _day_facts(cursor, lat, lng, tz_str, bounds)
         if row is not None:
             facts.append(row)
+            bounds = row["month_bounds"]
         cursor += timedelta(days=1)
     return facts
 

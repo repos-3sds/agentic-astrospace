@@ -28,7 +28,7 @@ from astrospace.core.vedic.ashtakavarga import (
 from astrospace.core.vedic.compatibility import gun_milan
 from astrospace.core.vedic.dashas import vimshottari_dasha
 from astrospace.core.vedic.doshas import manglik_dosha
-from astrospace.core.vedic.transits import gochara_rules, transit_analysis, transit_aspects
+from astrospace.core.vedic.transits import gochara_rules, transit_analysis, transit_aspects, transit_signals
 from astrospace.core.vedic.gocharam import gocharam_profile
 from astrospace.core.vedic.yogas import yoga_summary
 from astrospace.core.vedic.nakshatra import nakshatra_of
@@ -377,6 +377,17 @@ class TestTransitContext:
         assert result["as_of"].startswith("2027-01-15")
         assert result["coverage"]["past_days"] == 30
         assert result["gochara"]["interpretation"]["schema_version"] == "gocharam.interpretation.v3"
+
+    def test_transit_signals_match_the_full_analysis(self):
+        # The calendar reads these three fields through the fast path; they
+        # must be exactly what the full three-year analysis reports.
+        chart = VedicChart("Calendar", 1990, 1, 1, 12, 0, **DELHI)
+        when = datetime(2026, 11, 20, 12, 0, tzinfo=timezone.utc)
+        full = transit_analysis(chart.positions, chart.lagna_lon, when, chart.ayanamsha, chart.node_type)
+        fast = transit_signals(chart.positions, chart.lagna_lon, when, chart.ayanamsha, chart.node_type)
+        assert fast["active_rules"] == full["gochara"]["active_rules"]
+        assert fast["strongest_aspect"] == full["strongest_aspect"]
+        assert fast["timeline"] == full["timeline"]
 
     def test_calendar_intelligence_merges_core_signal_families(self):
         chart = VedicChart("Calendar", 1990, 1, 1, 12, 0, **DELHI)
