@@ -670,20 +670,6 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   *Unblocks on:* a plugin release with SPM support (then `npx cap update`
   links it; the usage strings are already in `Info.plist`). *Hook:*
   `SpeechService` constructor, where `available()` decides `supported()`.
-- [ ] **Push delivery to iOS over APNs directly** (mobile audit item 20,
-  2026-10-15). Registration, preferences, scheduling and delivery are built
-  (`astrospace/notifications/`, `ui/src/app/core/push.service.ts`); the
-  FCM transport sends to Android. iOS tokens from
-  `@capacitor/push-notifications` are raw APNs tokens, and APNs needs
-  HTTP/2 plus an ES256 provider JWT, neither of which is in
-  `requirements.txt` (`h2`, a JWT library). *Why not:* the shorter path is
-  to add the iOS app to the same Firebase project, after which the plugin
-  hands out FCM tokens on both platforms and one transport covers both.
-  *Unblocks on:* that Firebase decision, or adding `httpx[http2]` and an
-  ES256 signer. *Hook:* `transports_from_env()` in
-  `astrospace/notifications/push.py`, where `apns` is a
-  `NotConfiguredTransport` with a greppable reason; jobs for those tokens
-  stay `pending` and drain once a transport exists.
 - [ ] **Natural voice: overnight pre-generation of the morning brief**
   (2026-10-15). Chirp 3 HD took 8–13 s for an ~870-character brief, so the
   Listen sheet asks for audio one section at a time, prefetches the first

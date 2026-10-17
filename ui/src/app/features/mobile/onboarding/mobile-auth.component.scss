@@ -8,6 +8,10 @@ main { display: flex; flex-direction: column; align-items: center; gap: 22px; pa
   button { @include m-segmented-button; }
   .is-on { @include m-selected-pill; }
 }
+// Apple's button rules: black on a light screen, white on a dark one, logo
+// and label in the opposite colour. Fixed colours on purpose, not theme tokens.
+.apple { @include m-cta-secondary; width: 100%; border-color: #000; background: #000; color: #fff; svg { width: 17px; height: 20px; } }
+:host-context(.app-dark) .apple { border-color: #fff; background: #fff; color: #000; }
 .google { @include m-cta-secondary; width: 100%; color: var(--m-text); img { width: 20px; height: 20px; } }
 .or { @include m-caption; width: 100%; display: flex; align-items: center; gap: 12px; color: var(--m-muted); em { font-style: normal; } span { flex: 1; height: 1px; background: var(--m-border); } }
 form { width: 100%; display: flex; flex-direction: column; gap: 14px; }

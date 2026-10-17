@@ -118,6 +118,17 @@ the plugin gains SPM support, `npx cap update` picks it up and iOS needs only
 the `NSMicrophoneUsageDescription` and `NSSpeechRecognitionUsageDescription`
 strings already in `Info.plist`.
 
+**Sign in with Apple.** App Review guideline 4.8 requires it because Google
+sign-in is offered. It runs through Supabase's hosted flow in the system
+browser, like Google, so the app needs no entitlement for it. The button shows
+only on iOS and only once the Supabase project's Apple provider is on
+(`AuthService.appleSignInEnabled()` reads `/auth/v1/settings`). The provider's
+secret is a JWT signed with an Apple key and expires after six months, so it
+must be regenerated in Supabase before then or Apple sign-in stops working.
+
+**iPhone only.** `TARGETED_DEVICE_FAMILY` is 1. iPads still run the app in
+iPhone mode, and the store listing needs no iPad screenshots or iPad review.
+
 **Both.** The Supabase session lives in Keychain / Keystore-backed storage
 (`ui/src/app/core/session-storage.ts`), never in Preferences. Terms and the
 privacy policy are served by the API at `/legal/terms` and `/legal/privacy`;
@@ -199,8 +210,13 @@ A build delivers nothing until these are in place, none of them committed:
   provisioning profile. `ui/ios/App/App/App.entitlements` carries
   `aps-environment` (development; Xcode switches it to production for an
   archive) and `AppDelegate.swift` forwards the APNs token to the plugin.
-  Delivery to that token is deferred until the app joins the Firebase
-  project; see the deferred backlog.
+  The worker sends to Apple directly (`ApnsTransport` in
+  `astrospace/notifications/push.py`); there is no Firebase SDK and no
+  `GoogleService-Info.plist` in the iOS app. It needs an APNs auth key
+  (.p8, Apple Developer > Keys) mounted into the worker as
+  `APNS_KEY_FILE`, with `APNS_KEY_ID` and `APNS_TEAM_ID`. A token is tried
+  on production APNs first (TestFlight, App Store) and then on sandbox
+  (a build run from Xcode).
 - **Server:** `FCM_SERVICE_ACCOUNT_FILE` (and optionally `FCM_PROJECT_ID`)
   in the worker's environment, pointing at a Firebase service-account JSON
   with the Cloud Messaging role. Without it every send fails with

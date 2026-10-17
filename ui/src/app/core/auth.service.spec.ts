@@ -419,3 +419,31 @@ describe('AuthService offline relaunch', () => {
     expect(service.session()).toBeNull();
   });
 });
+
+describe('AuthService Sign in with Apple availability', () => {
+  let service: AuthService;
+
+  beforeEach(() => {
+    service = new AuthService(jasmine.createSpyObj<Router>('Router', ['navigate']), connectivitySpy(), cacheSpy());
+    spyOn(service, 'init').and.resolveTo();
+  });
+
+  it('is on only when the project settings list apple as enabled', async () => {
+    (service as any).supabaseProject = { url: 'https://proj.supabase.co', anonKey: 'anon' };
+    const fetchSpy = spyOn(window, 'fetch').and.resolveTo(
+      new Response(JSON.stringify({ external: { apple: true, google: true } }), { status: 200 }),
+    );
+    expect(await service.appleSignInEnabled()).toBeTrue();
+    expect(fetchSpy.calls.mostRecent().args[0]).toBe('https://proj.supabase.co/auth/v1/settings');
+
+    fetchSpy.and.resolveTo(new Response(JSON.stringify({ external: { apple: false } }), { status: 200 }));
+    expect(await service.appleSignInEnabled()).toBeFalse();
+  });
+
+  it('is off when the settings cannot be read or auth is not set up', async () => {
+    expect(await service.appleSignInEnabled()).toBeFalse();
+    (service as any).supabaseProject = { url: 'https://proj.supabase.co', anonKey: 'anon' };
+    spyOn(window, 'fetch').and.rejectWith(new TypeError('Failed to fetch'));
+    expect(await service.appleSignInEnabled()).toBeFalse();
+  });
+});

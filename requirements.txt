@@ -21,3 +21,6 @@ python-multipart>=0.0.9
 psycopg[binary]>=3.2.0
 sqlalchemy>=2.0.0
 fonttools[woff]>=4.50.0
+# APNs (iOS push) needs HTTP/2 and an ES256-signed provider token.
+httpx[http2]>=0.27.0
+PyJWT[crypto]>=2.8.0
