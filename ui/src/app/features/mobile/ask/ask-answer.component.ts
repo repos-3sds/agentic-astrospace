@@ -65,6 +65,20 @@ interface ChatMessage {
 
 const REFER_OUT_KINDS = new Set(['death', 'health', 'legal', 'money']);
 
+/** Plain names for the life areas the server offers when it needs to know
+ * which one a question is about. The server sends its ids (family_property);
+ * a reader should never see those. */
+const AREA_LABEL: Record<string, string> = {
+  career: 'Work', wealth: 'Money', marriage: 'Relationships', health: 'Health',
+  education: 'Studies', children: 'Children', family_property: 'Family and home',
+  foreign: 'Living abroad', spirituality: 'Spiritual life', litigation: 'Disputes',
+  personality: 'Your nature',
+};
+
+export function areaLabel(id: string): string {
+  return AREA_LABEL[id] ?? id.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+}
+
 /**
  * Ask — Answer view (Figma node 26:54).
  *
@@ -912,7 +926,7 @@ export class AskAnswerComponent {
         } else if (this.isClarificationEvent(event)) {
           const message = event.message || [
             'I need one detail before I answer this properly.',
-            event.options?.length ? `Try asking about ${event.options.join(' or ')}.` : '',
+            event.options?.length ? 'Which part of life is it about?' : '',
           ].filter(Boolean).join(' ');
           this.updateAssistantMessage(assistantId, {
             content: message,
@@ -924,7 +938,7 @@ export class AskAnswerComponent {
           this.streaming.set(false);
         } else if (this.isDomainNotReadyEvent(event)) {
           const label = event.domain_label ?? event.domain ?? 'This specialist';
-          const available = event.available?.length ? ` Try ${event.available.join(' or ')}.` : '';
+          const available = event.available?.length ? ` Try ${event.available.map(areaLabel).join(' or ')}.` : '';
           this.updateAssistantMessage(assistantId, {
             content: event.message || `${label} is not ready yet.${available}`,
             status: 'domain_not_ready',
@@ -1411,6 +1425,8 @@ export class AskAnswerComponent {
    * prefix indefinitely. Uses the thread's original question (`firstUser`),
    * not `latestUser`, since a resend used to drift the "latest" question
    * with each wrapped attempt. */
+  protected readonly areaLabel = areaLabel;
+
   protected async askClarification(option: string): Promise<void> {
     const original = this.firstUser()?.content ?? this.params().get('q') ?? '';
     if (!original || this.streaming()) return;

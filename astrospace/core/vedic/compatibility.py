@@ -212,11 +212,18 @@ def _row(label: str, points: float, max_points: int, note: str, verified: bool =
     }
 
 
+_OBSERVANCE_NOTE = (
+    "Traditions differ on some koota rules: Vashya, the in-between Yoni "
+    "grades, and when a Nadi or Bhakoot dosha counts as cancelled. Another "
+    "astrologer may score this pair a little differently."
+)
+
+
 def _varna(chart_a, chart_b) -> dict:
     a = _av(chart_a, "varna")
     b = _av(chart_b, "varna")
     points = 1 if VARNA_RANK.get(a, 0) >= VARNA_RANK.get(b, 0) else 0
-    return _row("Varna", points, 1, f"{a} with {b}; person1 treated as groom for Varna convention")
+    return _row("Varna", points, 1, f"{a} with {b}, read from the first person's side (the groom's, in marriage matching)")
 
 
 def _vashya(chart_a, chart_b) -> dict:
@@ -225,7 +232,7 @@ def _vashya(chart_a, chart_b) -> dict:
     if a not in VASHYA_MATRIX or b not in VASHYA_MATRIX:
         return _row("Vashya", 0, 2, f"{a} with {b}; vashya group unavailable", verified=False)
     points = VASHYA_MATRIX[a][b]
-    note = f"{a} (person1/groom) with {b} (person2); directional group matrix"
+    note = f"{a} with {b}, read from the first person's side (the groom's, in marriage matching)"
     return _row("Vashya", points, 2, note, verified=False)
 
 
@@ -380,7 +387,7 @@ def _safety_checks(chart_a, chart_b) -> dict:
             "note": (
                 "Both non-Manglik" if neither_manglik else
                 "Both Manglik" if both_manglik else
-                "One profile is Manglik and the other is not — a traditional caution, not a verdict; check net_severity and cancellation exceptions before treating it as a blocker."
+                "One of you is Manglik and the other is not. That is a traditional caution, not a verdict, and several classic exceptions can cancel it."
             ),
         },
         "gandanta": {
@@ -503,10 +510,15 @@ def gun_milan(chart_a, chart_b) -> dict:
         "percent": percent,
         "verdict": verdict,
         "rows": rows,
+        # Shown to readers as written, so plain words only. Rows the
+        # traditions disagree on carry verified=False for the engine's own
+        # bookkeeping; the reader gets the observance note instead.
         "notes": [
-            "This is deterministic compatibility scoring; AI interpretation should explain, not calculate it.",
-            "Vashya, intermediate Yoni grades, and Nadi/Bhakoot cancellation rules are convention-dependent and marked with verified=false until golden-chart validation.",
+            "Varna and Vashya are read from the first person's side, the groom's in marriage matching, so swapping the two people can change those rows.",
+            _OBSERVANCE_NOTE,
         ],
+        "is_convention_dependent": True,
+        "observance_note": _OBSERVANCE_NOTE,
         "profiles": {
             "person1": _compat_profile(chart_a),
             "person2": _compat_profile(chart_b),

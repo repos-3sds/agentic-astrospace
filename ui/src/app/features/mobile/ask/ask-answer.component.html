@@ -311,7 +311,7 @@
           @if (!message.streaming && message.options.length) {
             <div class="followups inline-options">
               @for (option of message.options; track option) {
-                <button class="followup" type="button" (click)="askClarification(option)">{{ option }}</button>
+                <button class="followup" type="button" (click)="askClarification(option)">{{ areaLabel(option) }}</button>
               }
             </div>
           }
