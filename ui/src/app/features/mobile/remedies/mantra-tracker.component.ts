@@ -1,13 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
 import {
+  MantraVoice,
   RemedyRecommendationGroup,
   RemedyRecommendationPractice,
   VedicService,
 } from '../../../core/vedic.service';
 import { HapticsService } from '../../../core/haptics.service';
+import { MobileTtsService } from '../../../core/mobile-tts.service';
+import { NaturalVoiceService } from '../../../core/natural-voice.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
 import { MANTRA_SCRIPTS, MantraScriptService } from './mantra-script';
@@ -43,6 +46,8 @@ export class MantraTrackerComponent {
   private readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
   private readonly haptics = inject(HapticsService);
+  private readonly naturalVoice = inject(NaturalVoiceService);
+  private readonly nativeTts = inject(MobileTtsService);
   protected readonly scripts = inject(MantraScriptService);
   protected readonly scriptOptions = MANTRA_SCRIPTS;
   private readonly params = toSignal(this.route.queryParamMap, { requireSync: true });
@@ -54,6 +59,18 @@ export class MantraTrackerComponent {
   protected readonly count = signal(0);
   protected readonly completedDates = signal<string[]>([]);
   protected readonly mode = signal<'manual' | 'auto'>('manual');
+  protected readonly listen = signal<'idle' | 'loading' | 'playing'>('idle');
+  protected readonly voice = signal<MantraVoice>(readVoice());
+  protected readonly voiceChoices = computed(() => {
+    const voices = this.practice()?.audio?.voices;
+    return voices?.male && voices?.female ? (['male', 'female'] as const) : [];
+  });
+  /** How far through the mantra the voice is, 0 to 1, for the follow-along highlight. */
+  protected readonly progress = signal(0);
+  private player: HTMLAudioElement | null = null;
+  private frame: number | null = null;
+  /** Bumped on every start and stop, so a slow load can't start after Stop. */
+  private listenRun = 0;
 
   protected readonly eyebrow = computed(() => {
     const trigger = this.group()?.trigger;
@@ -75,10 +92,32 @@ export class MantraTrackerComponent {
     const audio = this.practice()?.audio;
     return audio?.text || audio?.transliteration || practice.title;
   });
+  /**
+   * The on-screen mantra as words, each with where it ends as a share of the
+   * text. The voice reads Telugu while the screen may show another script, so
+   * the highlight follows position in the text rather than exact word timing.
+   */
+  protected readonly lyricWords = computed(() => {
+    const words = this.literalPracticeText().split(/\s+/).filter(Boolean);
+    const total = words.reduce((sum, w) => sum + w.length, 0) || 1;
+    let seen = 0;
+    return words.map((text) => {
+      const start = seen / total;
+      seen += text.length;
+      return { text, start };
+    });
+  });
+  protected readonly activeWord = computed(() => {
+    const p = this.progress();
+    const words = this.lyricWords();
+    let index = 0;
+    for (let i = 0; i < words.length; i++) if (words[i].start <= p) index = i;
+    return index;
+  });
   protected readonly hasScripts = computed(() => !!this.practice()?.text);
   protected readonly meaning = computed(() => this.scripts.meaning(this.practice()));
   protected readonly target = computed(() => this.practice()?.target_count ?? (this.practice()?.type === 'deity' ? 1 : 108));
-  protected readonly audioPending = computed(() => this.practice()?.audio?.source_status === 'pending_assets' || !this.practice()?.audio?.audio_url);
+  protected readonly audioPending = computed(() => !this.practice()?.audio?.audio_url);
 
   protected readonly streakLabel = computed(() => {
     const days = this.completedDates().length;
@@ -100,6 +139,121 @@ export class MantraTrackerComponent {
 
   constructor() {
     void this.load();
+    inject(DestroyRef).onDestroy(() => this.stopListening());
+  }
+
+  /**
+   * Reads the mantra aloud once. The recorded track wins when there is one;
+   * otherwise Siddha's natural voice (Plus), otherwise the phone's own voice.
+   * It reads the Telugu script whatever script is on screen: both voices say
+   * Telugu letters as written, while the romanised form gets read as English.
+   */
+  protected async toggleListen(): Promise<void> {
+    if (this.listen() !== 'idle') {
+      this.stopListening();
+      return;
+    }
+    const practice = this.practice();
+    if (!practice) return;
+    this.haptics.tap();
+    const run = ++this.listenRun;
+    this.listen.set('loading');
+    const telugu = practice.text?.te?.trim();
+    const text = telugu || this.literalPracticeText();
+    try {
+      const take = practice.audio?.voices?.[this.voice()] ?? practice.audio ?? null;
+      let url = take?.audio_url ?? null;
+      if (!url && await this.naturalVoice.available()) {
+        url = await this.naturalVoice.audioUrl(text).catch(() => null);
+      }
+      if (run !== this.listenRun) return;
+      if (url) {
+        const player = new Audio(url);
+        this.player = player;
+        player.onended = () => this.finishListening(run);
+        player.onerror = () => this.finishListening(run);
+        await player.play();
+        this.listen.set('playing');
+        // A recorded track has music before and after the voice; follow the voice.
+        const voiceStart = take?.voice_start ?? 0;
+        this.follow(run, () => {
+          const span = take?.voice_seconds || (player.duration - voiceStart);
+          return span > 0 ? Math.max(0, (player.currentTime - voiceStart) / span) : 0;
+        });
+        return;
+      }
+      this.listen.set('playing');
+      // Phone voices don't report their position, so pace the highlight by
+      // an estimate of the reading time at rate 0.8 and hold just short of
+      // the end until the voice actually finishes.
+      const started = performance.now();
+      const estimateMs = Math.max(2500, text.length * 110);
+      this.follow(run, () => Math.min(0.97, (performance.now() - started) / estimateMs));
+      await this.speakOnPhone(text, telugu ? 'te-IN' : 'en-IN');
+      this.finishListening(run);
+    } catch {
+      this.finishListening(run);
+    }
+  }
+
+  protected chooseVoice(voice: MantraVoice): void {
+    if (voice === this.voice()) return;
+    this.stopListening();
+    this.voice.set(voice);
+    try {
+      localStorage.setItem(VOICE_KEY, voice);
+    } catch {
+      // Storage can be unavailable; the choice still holds for this visit.
+    }
+  }
+
+  private async speakOnPhone(text: string, lang: string): Promise<void> {
+    if (this.nativeTts.nativeAvailable()) {
+      await this.nativeTts.speak(text, { lang, rate: 0.8, pitch: 1 });
+      return;
+    }
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    await new Promise<void>((resolve) => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang;
+      utterance.rate = 0.8;
+      utterance.onend = () => resolve();
+      utterance.onerror = () => resolve();
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    });
+  }
+
+  private follow(run: number, position: () => number): void {
+    const tick = () => {
+      if (run !== this.listenRun) return;
+      this.progress.set(position());
+      this.frame = requestAnimationFrame(tick);
+    };
+    tick();
+  }
+
+  private finishListening(run: number): void {
+    if (run !== this.listenRun) return;
+    this.endFollow();
+    this.player = null;
+    this.listen.set('idle');
+  }
+
+  private endFollow(): void {
+    if (this.frame !== null) cancelAnimationFrame(this.frame);
+    this.frame = null;
+    this.progress.set(0);
+  }
+
+  private stopListening(): void {
+    this.listenRun++;
+    this.endFollow();
+    this.player?.pause();
+    this.player = null;
+    void this.nativeTts.stop().catch(() => undefined);
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+    this.listen.set('idle');
   }
 
   /** Counts up to the target and stops. Past 108 the count means nothing. */
@@ -118,9 +272,34 @@ export class MantraTrackerComponent {
 
   protected readonly done = computed(() => this.count() >= this.target());
 
+  /** Takes back one count, for a double tap. Undoing the last one reopens today. */
+  protected undo(): void {
+    const next = Math.max(0, this.count() - 1);
+    if (next === this.count()) return;
+    this.haptics.tap();
+    const dates = this.withoutToday();
+    this.completedDates.set(dates);
+    this.count.set(next);
+    this.persist(next, dates);
+  }
+
   protected resetToday(): void {
+    const dates = this.withoutToday();
+    this.completedDates.set(dates);
     this.count.set(0);
-    this.persist(0, this.completedDates());
+    this.persist(0, dates);
+  }
+
+  private withoutToday(): string[] {
+    const today = this.todayKey();
+    return this.completedDates().filter((d) => d !== today);
+  }
+
+  /** The bottom Completed button: for someone who counted on a mala instead. */
+  protected markCompleted(): void {
+    if (this.done()) return;
+    this.count.set(this.target());
+    this.completeToday();
   }
 
   protected completeToday(): void {
@@ -218,5 +397,15 @@ export class MantraTrackerComponent {
     if (practice.type !== 'deity') return practice.instructions;
     const deity = practice.title.replace(/^Prayer to\s+/i, '').trim();
     return deity ? `Offer a simple prayer to ${deity}. Sit quietly, state your intention, and close with gratitude.` : practice.instructions;
+  }
+}
+
+const VOICE_KEY = 'siddha.mantraVoice:v1';
+
+function readVoice(): MantraVoice {
+  try {
+    return localStorage.getItem(VOICE_KEY) === 'male' ? 'male' : 'female';
+  } catch {
+    return 'female';
   }
 }

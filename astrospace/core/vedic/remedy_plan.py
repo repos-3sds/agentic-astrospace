@@ -30,6 +30,7 @@ Non-negotiables enforced here (design_principles.md §4, §6):
 from __future__ import annotations
 
 import json
+import os
 import re
 from functools import lru_cache
 from pathlib import Path
@@ -107,6 +108,25 @@ def corpus() -> dict[str, dict]:
 
 
 @lru_cache(maxsize=1)
+def recordings() -> dict[str, dict]:
+    """Recited audio per mantra id, from mantra_corpus/mantra_audio.json.
+
+    The files are served from the public site (firebase-public/audio/), not
+    the API, so they cache at the edge and play without a sign-in. A mantra
+    with no entry keeps audio_url null and the app falls back to reading the
+    text aloud.
+    """
+    path = _CORPUS_DIR / "mantra_audio.json"
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _audio_base() -> str:
+    return os.getenv("ASTROSPACE_PUBLIC_AUDIO_BASE", "https://asksiddha.app/audio").rstrip("/")
+
+
+@lru_cache(maxsize=1)
 def bphs_antardasha() -> dict[tuple[str, str], dict]:
     """BPHS dasha/bhukti remedy rows keyed by (mahadasha, antardasha)."""
     data = json.loads((_CORPUS_DIR / "bphs_antardasha.json").read_text(encoding="utf-8"))
@@ -166,17 +186,44 @@ def _practice(mantra_id: str, planet: str | None, applies_to: dict,
              "note": fuller_entry.get("count_note")}
             if fuller_entry else None
         ),
-        "audio": {
-            "text": m["text"]["en"],
-            "transliteration": m["text"]["iast"],
-            "language": "sa",
-            "count_target": count,
-            "loop_seconds": (m.get("audio") or {}).get("est_seconds_per_repetition"),
-            "audio_url": None,
-            "source_status": "pending_assets",
-            "note": "Text is final; recorded audio is a pending content task.",
-        },
+        "audio": _audio_block(m, count),
     }
+
+
+def _audio_block(m: dict, count: int) -> dict:
+    block = {
+        "text": m["text"]["en"],
+        "transliteration": m["text"]["iast"],
+        "language": "sa",
+        "count_target": count,
+        "loop_seconds": (m.get("audio") or {}).get("est_seconds_per_repetition"),
+        "audio_url": None,
+        "source_status": "pending_assets",
+        "note": "Text is final; recorded audio is a pending content task.",
+    }
+    rec = recordings().get(m["id"]) or {}
+    voices = {
+        gender: {
+            "audio_url": f"{_audio_base()}/{take['file']}",
+            "voice_start": take.get("voice_start"),
+            "voice_seconds": take.get("voice_seconds"),
+            "lines": take.get("lines") or [],
+        }
+        for gender, take in rec.items()
+        if gender in ("male", "female") and take.get("file")
+    }
+    if voices:
+        # The flat fields carry one default take for clients that predate
+        # the voice choice; `voices` holds both.
+        default = voices.get("female") or voices["male"]
+        block.update({
+            **default,
+            "voices": voices,
+            # Synthesised recitation, not a trained reciter: say so.
+            "source_status": "tts_recitation",
+            "note": "Recited by a synthetic voice over a soft shruti box drone.",
+        })
+    return block
 
 
 def _houses(positions: dict, lagna_lon: float, planet: str) -> dict[str, list[int]]:

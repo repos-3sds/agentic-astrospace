@@ -1,0 +1,2114 @@
+{
+ "durga-nama": {
+  "male": {
+   "file": "mantras/durga-nama-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 1.75,
+   "seconds": 7.25,
+   "lines": [
+    {
+     "text": "ॐ दुं दुर्गायै नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/durga-nama-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 1.76,
+   "seconds": 7.26,
+   "lines": [
+    {
+     "text": "ॐ दुं दुर्गायै नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "durga-navarna": {
+  "male": {
+   "file": "mantras/durga-navarna-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 2.63,
+   "seconds": 8.13,
+   "lines": [
+    {
+     "text": "ॐ ऐं ह्रीं क्लीं चामुण्डायै विच्चे",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/durga-navarna-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 2.42,
+   "seconds": 7.92,
+   "lines": [
+    {
+     "text": "ॐ ऐं ह्रीं क्लीं चामुण्डायै विच्चे",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "durga-sarvamangala": {
+  "male": {
+   "file": "mantras/durga-sarvamangala-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 7.34,
+   "seconds": 12.84,
+   "lines": [
+    {
+     "text": "सर्वमङ्गलमाङ्गल्ये शिवे सर्वार्थसाधिके",
+     "start": 3.0
+    },
+    {
+     "text": "शरण्ये त्र्यम्बके गौरि नारायणि नमोऽस्तु ते",
+     "start": 7.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/durga-sarvamangala-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 9.38,
+   "seconds": 14.88,
+   "lines": [
+    {
+     "text": "सर्वमङ्गलमाङ्गल्ये शिवे सर्वार्थसाधिके",
+     "start": 3.0
+    },
+    {
+     "text": "शरण्ये त्र्यम्बके गौरि नारायणि नमोऽस्तु ते",
+     "start": 7.69
+    }
+   ]
+  }
+ },
+ "ganesha-nama": {
+  "male": {
+   "file": "mantras/ganesha-nama-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 1.79,
+   "seconds": 7.29,
+   "lines": [
+    {
+     "text": "ॐ गं गणपतये नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/ganesha-nama-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 1.84,
+   "seconds": 7.34,
+   "lines": [
+    {
+     "text": "ॐ गं गणपतये नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "ganesha-vakratunda": {
+  "male": {
+   "file": "mantras/ganesha-vakratunda-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 6.13,
+   "seconds": 11.63,
+   "lines": [
+    {
+     "text": "वक्रतुण्ड महाकाय सूर्यकोटिसमप्रभ",
+     "start": 3.0
+    },
+    {
+     "text": "निर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा",
+     "start": 6.06
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/ganesha-vakratunda-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 7.28,
+   "seconds": 12.78,
+   "lines": [
+    {
+     "text": "वक्रतुण्ड महाकाय सूर्यकोटिसमप्रभ",
+     "start": 3.0
+    },
+    {
+     "text": "निर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा",
+     "start": 6.84
+    }
+   ]
+  }
+ },
+ "gayatri": {
+  "male": {
+   "file": "mantras/gayatri-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 10.0,
+   "seconds": 15.5,
+   "lines": [
+    {
+     "text": "ॐ भूर्भुवः स्वः",
+     "start": 3.0
+    },
+    {
+     "text": "तत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि",
+     "start": 6.24
+    },
+    {
+     "text": "धियो यो नः प्रचोदयात्",
+     "start": 11.08
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/gayatri-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 7.83,
+   "seconds": 13.33,
+   "lines": [
+    {
+     "text": "ॐ भूर्भुवः स्वः",
+     "start": 3.0
+    },
+    {
+     "text": "तत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि",
+     "start": 5.38
+    },
+    {
+     "text": "धियो यो नः प्रचोदयात्",
+     "start": 8.69
+    }
+   ]
+  }
+ },
+ "guru-vandana": {
+  "male": {
+   "file": "mantras/guru-vandana-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 8.6,
+   "seconds": 14.1,
+   "lines": [
+    {
+     "text": "गुरुर्ब्रह्मा गुरुर्विष्णुर्गुरुर्देवो महेश्वरः",
+     "start": 3.0
+    },
+    {
+     "text": "गुरुः साक्षात्परं ब्रह्म तस्मै श्रीगुरवे नमः",
+     "start": 7.69
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/guru-vandana-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 8.81,
+   "seconds": 14.31,
+   "lines": [
+    {
+     "text": "गुरुर्ब्रह्मा गुरुर्विष्णुर्गुरुर्देवो महेश्वरः",
+     "start": 3.0
+    },
+    {
+     "text": "गुरुः साक्षात्परं ब्रह्म तस्मै श्रीगुरवे नमः",
+     "start": 7.59
+    }
+   ]
+  }
+ },
+ "hanuman-manojavam": {
+  "male": {
+   "file": "mantras/hanuman-manojavam-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 9.58,
+   "seconds": 15.08,
+   "lines": [
+    {
+     "text": "मनोजवं मारुततुल्यवेगं जितेन्द्रियं बुद्धिमतां वरिष्ठम्",
+     "start": 3.0
+    },
+    {
+     "text": "वातात्मजं वानरयूथमुख्यं श्रीरामदूतं शरणं प्रपद्ये",
+     "start": 8.14
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/hanuman-manojavam-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 9.96,
+   "seconds": 15.46,
+   "lines": [
+    {
+     "text": "मनोजवं मारुततुल्यवेगं जितेन्द्रियं बुद्धिमतां वरिष्ठम्",
+     "start": 3.0
+    },
+    {
+     "text": "वातात्मजं वानरयूथमुख्यं श्रीरामदूतं शरणं प्रपद्ये",
+     "start": 8.08
+    }
+   ]
+  }
+ },
+ "hanuman-nama": {
+  "male": {
+   "file": "mantras/hanuman-nama-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 1.34,
+   "seconds": 6.84,
+   "lines": [
+    {
+     "text": "ॐ हं हनुमते नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/hanuman-nama-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 1.61,
+   "seconds": 7.11,
+   "lines": [
+    {
+     "text": "ॐ हं हनुमते नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "jupiter-bija": {
+  "male": {
+   "file": "mantras/jupiter-bija-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 3.27,
+   "seconds": 8.77,
+   "lines": [
+    {
+     "text": "ॐ ग्रां ग्रीं ग्रौं सः गुरवे नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/jupiter-bija-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 3.12,
+   "seconds": 8.62,
+   "lines": [
+    {
+     "text": "ॐ ग्रां ग्रीं ग्रौं सः गुरवे नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "jupiter-nama": {
+  "male": {
+   "file": "mantras/jupiter-nama-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 1.29,
+   "seconds": 6.79,
+   "lines": [
+    {
+     "text": "ॐ गुरवे नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/jupiter-nama-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 1.27,
+   "seconds": 6.77,
+   "lines": [
+    {
+     "text": "ॐ गुरवे नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "jupiter-stotra": {
+  "male": {
+   "file": "mantras/jupiter-stotra-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 7.29,
+   "seconds": 12.79,
+   "lines": [
+    {
+     "text": "देवानां च ऋषीणां च गुरुं काञ्चनसन्निभम्",
+     "start": 3.0
+    },
+    {
+     "text": "बुद्धिभूतं त्रिलोकेशं तं नमामि बृहस्पतिम्",
+     "start": 6.61
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/jupiter-stotra-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 7.99,
+   "seconds": 13.49,
+   "lines": [
+    {
+     "text": "देवानां च ऋषीणां च गुरुं काञ्चनसन्निभम्",
+     "start": 3.0
+    },
+    {
+     "text": "बुद्धिभूतं त्रिलोकेशं तं नमामि बृहस्पतिम्",
+     "start": 6.97
+    }
+   ]
+  }
+ },
+ "jupiter-vedic": {
+  "male": {
+   "file": "mantras/jupiter-vedic-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 9.2,
+   "seconds": 14.7,
+   "lines": [
+    {
+     "text": "बृहस्पते अति यदर्यो अर्हाद् द्युमद्विभाति क्रतुमज्जनेषु",
+     "start": 3.0
+    },
+    {
+     "text": "यद्दीदयच्छवस ऋतप्रजात तदस्मासु द्रविणं धेहि चित्रम्",
+     "start": 7.79
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/jupiter-vedic-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 10.6,
+   "seconds": 16.1,
+   "lines": [
+    {
+     "text": "बृहस्पते अति यदर्यो अर्हाद् द्युमद्विभाति क्रतुमज्जनेषु",
+     "start": 3.0
+    },
+    {
+     "text": "यद्दीदयच्छवस ऋतप्रजात तदस्मासु द्रविणं धेहि चित्रम्",
+     "start": 8.32
+    }
+   ]
+  }
+ },
+ "ketu-bija": {
+  "male": {
+   "file": "mantras/ketu-bija-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 3.26,
+   "seconds": 8.76,
+   "lines": [
+    {
+     "text": "ॐ स्रां स्रीं स्रौं सः केतवे नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/ketu-bija-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 3.36,
+   "seconds": 8.86,
+   "lines": [
+    {
+     "text": "ॐ स्रां स्रीं स्रौं सः केतवे नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "ketu-nama": {
+  "male": {
+   "file": "mantras/ketu-nama-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 1.2,
+   "seconds": 6.7,
+   "lines": [
+    {
+     "text": "ॐ केतवे नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/ketu-nama-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 1.32,
+   "seconds": 6.82,
+   "lines": [
+    {
+     "text": "ॐ केतवे नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "ketu-stotra": {
+  "male": {
+   "file": "mantras/ketu-stotra-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 8.93,
+   "seconds": 14.43,
+   "lines": [
+    {
+     "text": "पलाशपुष्पसङ्काशं तारकाग्रहमस्तकम्",
+     "start": 3.0
+    },
+    {
+     "text": "रौद्रं रौद्रात्मकं घोरं तं केतुं प्रणमाम्यहम्",
+     "start": 6.99
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/ketu-stotra-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 8.47,
+   "seconds": 13.97,
+   "lines": [
+    {
+     "text": "पलाशपुष्पसङ्काशं तारकाग्रहमस्तकम्",
+     "start": 3.0
+    },
+    {
+     "text": "रौद्रं रौद्रात्मकं घोरं तं केतुं प्रणमाम्यहम्",
+     "start": 7.37
+    }
+   ]
+  }
+ },
+ "ketu-vedic": {
+  "male": {
+   "file": "mantras/ketu-vedic-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 4.82,
+   "seconds": 10.32,
+   "lines": [
+    {
+     "text": "केतुं कृण्वन्नकेतवे पेशो मर्या अपेशसे",
+     "start": 3.0
+    },
+    {
+     "text": "समुषद्भिरजायथाः",
+     "start": 6.48
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/ketu-vedic-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 5.82,
+   "seconds": 11.32,
+   "lines": [
+    {
+     "text": "केतुं कृण्वन्नकेतवे पेशो मर्या अपेशसे",
+     "start": 3.0
+    },
+    {
+     "text": "समुषद्भिरजायथाः",
+     "start": 7.46
+    }
+   ]
+  }
+ },
+ "lakshmi-nama": {
+  "male": {
+   "file": "mantras/lakshmi-nama-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 2.12,
+   "seconds": 7.62,
+   "lines": [
+    {
+     "text": "ॐ श्रीं महालक्ष्म्यै नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/lakshmi-nama-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 1.95,
+   "seconds": 7.45,
+   "lines": [
+    {
+     "text": "ॐ श्रीं महालक्ष्म्यै नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "mahamrityunjaya": {
+  "male": {
+   "file": "mantras/mahamrityunjaya-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 7.3,
+   "seconds": 12.8,
+   "lines": [
+    {
+     "text": "ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम्",
+     "start": 3.0
+    },
+    {
+     "text": "उर्वारुकमिव बन्धनान्मृत्योर्मुक्षीय माऽमृतात्",
+     "start": 7.04
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/mahamrityunjaya-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 8.11,
+   "seconds": 13.61,
+   "lines": [
+    {
+     "text": "ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम्",
+     "start": 3.0
+    },
+    {
+     "text": "उर्वारुकमिव बन्धनान्मृत्योर्मुक्षीय माऽमृतात्",
+     "start": 7.61
+    }
+   ]
+  }
+ },
+ "mars-bija": {
+  "male": {
+   "file": "mantras/mars-bija-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 3.27,
+   "seconds": 8.77,
+   "lines": [
+    {
+     "text": "ॐ क्रां क्रीं क्रौं सः भौमाय नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/mars-bija-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 3.51,
+   "seconds": 9.01,
+   "lines": [
+    {
+     "text": "ॐ क्रां क्रीं क्रौं सः भौमाय नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "mars-nama": {
+  "male": {
+   "file": "mantras/mars-nama-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 1.57,
+   "seconds": 7.07,
+   "lines": [
+    {
+     "text": "ॐ अङ्गारकाय नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/mars-nama-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 1.59,
+   "seconds": 7.09,
+   "lines": [
+    {
+     "text": "ॐ अङ्गारकाय नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "mars-stotra": {
+  "male": {
+   "file": "mantras/mars-stotra-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 6.85,
+   "seconds": 12.35,
+   "lines": [
+    {
+     "text": "धरणीगर्भसम्भूतं विद्युत्कान्तिसमप्रभम्",
+     "start": 3.0
+    },
+    {
+     "text": "कुमारं शक्तिहस्तं तं मङ्गलं प्रणमाम्यहम्",
+     "start": 6.47
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/mars-stotra-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 7.07,
+   "seconds": 12.57,
+   "lines": [
+    {
+     "text": "धरणीगर्भसम्भूतं विद्युत्कान्तिसमप्रभम्",
+     "start": 3.0
+    },
+    {
+     "text": "कुमारं शक्तिहस्तं तं मङ्गलं प्रणमाम्यहम्",
+     "start": 6.81
+    }
+   ]
+  }
+ },
+ "mars-vedic": {
+  "male": {
+   "file": "mantras/mars-vedic-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 5.24,
+   "seconds": 10.74,
+   "lines": [
+    {
+     "text": "अग्निर्मूर्धा दिवः ककुत्पतिः पृथिव्या अयम्",
+     "start": 3.0
+    },
+    {
+     "text": "अपां रेतांसि जिन्वति",
+     "start": 5.45
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/mars-vedic-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 5.25,
+   "seconds": 10.75,
+   "lines": [
+    {
+     "text": "अग्निर्मूर्धा दिवः ककुत्पतिः पृथिव्या अयम्",
+     "start": 3.0
+    },
+    {
+     "text": "अपां रेतांसि जिन्वति",
+     "start": 6.68
+    }
+   ]
+  }
+ },
+ "mercury-bija": {
+  "male": {
+   "file": "mantras/mercury-bija-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 2.59,
+   "seconds": 8.09,
+   "lines": [
+    {
+     "text": "ॐ ब्रां ब्रीं ब्रौं सः बुधाय नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/mercury-bija-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 2.38,
+   "seconds": 7.88,
+   "lines": [
+    {
+     "text": "ॐ ब्रां ब्रीं ब्रौं सः बुधाय नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "mercury-nama": {
+  "male": {
+   "file": "mantras/mercury-nama-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 1.27,
+   "seconds": 6.77,
+   "lines": [
+    {
+     "text": "ॐ बुधाय नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/mercury-nama-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 1.34,
+   "seconds": 6.84,
+   "lines": [
+    {
+     "text": "ॐ बुधाय नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "mercury-stotra": {
+  "male": {
+   "file": "mantras/mercury-stotra-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 7.44,
+   "seconds": 12.94,
+   "lines": [
+    {
+     "text": "प्रियङ्गुकलिकाश्यामं रूपेणाप्रतिमं बुधम्",
+     "start": 3.0
+    },
+    {
+     "text": "सौम्यं सौम्यगुणोपेतं तं बुधं प्रणमाम्यहम्",
+     "start": 6.79
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/mercury-stotra-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 8.26,
+   "seconds": 13.76,
+   "lines": [
+    {
+     "text": "प्रियङ्गुकलिकाश्यामं रूपेणाप्रतिमं बुधम्",
+     "start": 3.0
+    },
+    {
+     "text": "सौम्यं सौम्यगुणोपेतं तं बुधं प्रणमाम्यहम्",
+     "start": 6.8
+    }
+   ]
+  }
+ },
+ "mercury-vedic": {
+  "male": {
+   "file": "mantras/mercury-vedic-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 10.09,
+   "seconds": 15.59,
+   "lines": [
+    {
+     "text": "उद्बुध्यस्वाग्ने प्रति जागृहि त्वमिष्टापूर्ते सं सृजेथामयं च",
+     "start": 3.0
+    },
+    {
+     "text": "अस्मिन्सधस्थे अध्युत्तरस्मिन्विश्वे देवा यजमानश्च सीदत",
+     "start": 8.86
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/mercury-vedic-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 12.22,
+   "seconds": 17.72,
+   "lines": [
+    {
+     "text": "उद्बुध्यस्वाग्ने प्रति जागृहि त्वमिष्टापूर्ते सं सृजेथामयं च",
+     "start": 3.0
+    },
+    {
+     "text": "अस्मिन्सधस्थे अध्युत्तरस्मिन्विश्वे देवा यजमानश्च सीदत",
+     "start": 10.02
+    }
+   ]
+  }
+ },
+ "mercury-vedic-taittiriya": {
+  "male": {
+   "file": "mantras/mercury-vedic-taittiriya-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 9.69,
+   "seconds": 15.19,
+   "lines": [
+    {
+     "text": "उद्बुध्यस्वाग्ने प्रतिजागृह्येनमिष्टापूर्ते संसृजेथामयं च",
+     "start": 3.0
+    },
+    {
+     "text": "पुनः कृण्वंस्त्वा पितरं युवानमन्वातांसीत्त्वयि तन्तुमेतम्",
+     "start": 8.35
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/mercury-vedic-taittiriya-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 10.71,
+   "seconds": 16.21,
+   "lines": [
+    {
+     "text": "उद्बुध्यस्वाग्ने प्रतिजागृह्येनमिष्टापूर्ते संसृजेथामयं च",
+     "start": 3.0
+    },
+    {
+     "text": "पुनः कृण्वंस्त्वा पितरं युवानमन्वातांसीत्त्वयि तन्तुमेतम्",
+     "start": 8.74
+    }
+   ]
+  }
+ },
+ "moon-bija": {
+  "male": {
+   "file": "mantras/moon-bija-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 3.33,
+   "seconds": 8.83,
+   "lines": [
+    {
+     "text": "ॐ श्रां श्रीं श्रौं सः चन्द्रमसे नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/moon-bija-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 3.38,
+   "seconds": 8.88,
+   "lines": [
+    {
+     "text": "ॐ श्रां श्रीं श्रौं सः चन्द्रमसे नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "moon-nama": {
+  "male": {
+   "file": "mantras/moon-nama-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 1.26,
+   "seconds": 6.76,
+   "lines": [
+    {
+     "text": "ॐ चन्द्राय नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/moon-nama-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 1.44,
+   "seconds": 6.94,
+   "lines": [
+    {
+     "text": "ॐ चन्द्राय नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "moon-stotra": {
+  "male": {
+   "file": "mantras/moon-stotra-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 7.31,
+   "seconds": 12.81,
+   "lines": [
+    {
+     "text": "दधिशङ्खतुषाराभं क्षीरोदार्णवसम्भवम्",
+     "start": 3.0
+    },
+    {
+     "text": "नमामि शशिनं सोमं शम्भोर्मुकुटभूषणम्",
+     "start": 6.92
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/moon-stotra-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 7.65,
+   "seconds": 13.15,
+   "lines": [
+    {
+     "text": "दधिशङ्खतुषाराभं क्षीरोदार्णवसम्भवम्",
+     "start": 3.0
+    },
+    {
+     "text": "नमामि शशिनं सोमं शम्भोर्मुकुटभूषणम्",
+     "start": 7.14
+    }
+   ]
+  }
+ },
+ "moon-vedic": {
+  "male": {
+   "file": "mantras/moon-vedic-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 14.23,
+   "seconds": 19.73,
+   "lines": [
+    {
+     "text": "इमं देवा असपत्नं सुवध्वं महते क्षत्राय महते ज्यैष्ठ्याय महते जानराज्यायेन्द्रस्येन्द्रियाय",
+     "start": 3.0
+    },
+    {
+     "text": "इमममुष्य पुत्रममुष्यै पुत्रमस्यै विश एष वोऽमी राजा सोमोऽस्माकं ब्राह्मणानां राजा",
+     "start": 10.65
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/moon-vedic-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 17.06,
+   "seconds": 22.56,
+   "lines": [
+    {
+     "text": "इमं देवा असपत्नं सुवध्वं महते क्षत्राय महते ज्यैष्ठ्याय महते जानराज्यायेन्द्रस्येन्द्रियाय",
+     "start": 3.0
+    },
+    {
+     "text": "इमममुष्य पुत्रममुष्यै पुत्रमस्यै विश एष वोऽमी राजा सोमोऽस्माकं ब्राह्मणानां राजा",
+     "start": 11.94
+    }
+   ]
+  }
+ },
+ "moon-vedic-taittiriya": {
+  "male": {
+   "file": "mantras/moon-vedic-taittiriya-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 5.85,
+   "seconds": 11.35,
+   "lines": [
+    {
+     "text": "आप्यायस्व समेतु ते विश्वतः सोम वृष्णियम्",
+     "start": 3.0
+    },
+    {
+     "text": "भवा वाजस्य सङ्गथे",
+     "start": 7.22
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/moon-vedic-taittiriya-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 5.53,
+   "seconds": 11.03,
+   "lines": [
+    {
+     "text": "आप्यायस्व समेतु ते विश्वतः सोम वृष्णियम्",
+     "start": 3.0
+    },
+    {
+     "text": "भवा वाजस्य सङ्गथे",
+     "start": 6.75
+    }
+   ]
+  }
+ },
+ "rahu-bija": {
+  "male": {
+   "file": "mantras/rahu-bija-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 2.99,
+   "seconds": 8.49,
+   "lines": [
+    {
+     "text": "ॐ भ्रां भ्रीं भ्रौं सः राहवे नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/rahu-bija-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 2.84,
+   "seconds": 8.34,
+   "lines": [
+    {
+     "text": "ॐ भ्रां भ्रीं भ्रौं सः राहवे नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "rahu-nama": {
+  "male": {
+   "file": "mantras/rahu-nama-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 1.1,
+   "seconds": 6.6,
+   "lines": [
+    {
+     "text": "ॐ राहवे नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/rahu-nama-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 1.34,
+   "seconds": 6.84,
+   "lines": [
+    {
+     "text": "ॐ राहवे नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "rahu-stotra": {
+  "male": {
+   "file": "mantras/rahu-stotra-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 6.72,
+   "seconds": 12.22,
+   "lines": [
+    {
+     "text": "अर्धकायं महावीर्यं चन्द्रादित्यविमर्दनम्",
+     "start": 3.0
+    },
+    {
+     "text": "सिंहिकागर्भसम्भूतं तं राहुं प्रणमाम्यहम्",
+     "start": 6.57
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/rahu-stotra-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 8.39,
+   "seconds": 13.89,
+   "lines": [
+    {
+     "text": "अर्धकायं महावीर्यं चन्द्रादित्यविमर्दनम्",
+     "start": 3.0
+    },
+    {
+     "text": "सिंहिकागर्भसम्भूतं तं राहुं प्रणमाम्यहम्",
+     "start": 7.21
+    }
+   ]
+  }
+ },
+ "rahu-vedic": {
+  "male": {
+   "file": "mantras/rahu-vedic-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 6.1,
+   "seconds": 11.6,
+   "lines": [
+    {
+     "text": "कया नश्चित्र आ भुवदूती सदावृधः सखा",
+     "start": 3.0
+    },
+    {
+     "text": "कया शचिष्ठया वृता",
+     "start": 7.54
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/rahu-vedic-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 6.95,
+   "seconds": 12.45,
+   "lines": [
+    {
+     "text": "कया नश्चित्र आ भुवदूती सदावृधः सखा",
+     "start": 3.0
+    },
+    {
+     "text": "कया शचिष्ठया वृता",
+     "start": 8.39
+    }
+   ]
+  }
+ },
+ "rama-nama-sahasranama-tulya": {
+  "male": {
+   "file": "mantras/rama-nama-sahasranama-tulya-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 5.9,
+   "seconds": 11.4,
+   "lines": [
+    {
+     "text": "श्रीराम राम रामेति रमे रामे मनोरमे",
+     "start": 3.0
+    },
+    {
+     "text": "सहस्रनाम तत्तुल्यं रामनाम वरानने",
+     "start": 6.4
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/rama-nama-sahasranama-tulya-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 6.77,
+   "seconds": 12.27,
+   "lines": [
+    {
+     "text": "श्रीराम राम रामेति रमे रामे मनोरमे",
+     "start": 3.0
+    },
+    {
+     "text": "सहस्रनाम तत्तुल्यं रामनाम वरानने",
+     "start": 6.8
+    }
+   ]
+  }
+ },
+ "rama-taraka": {
+  "male": {
+   "file": "mantras/rama-taraka-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 1.75,
+   "seconds": 7.25,
+   "lines": [
+    {
+     "text": "श्रीराम जय राम जय जय राम",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/rama-taraka-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 3.18,
+   "seconds": 8.68,
+   "lines": [
+    {
+     "text": "श्रीराम जय राम जय जय राम",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "santana-gopala": {
+  "male": {
+   "file": "mantras/santana-gopala-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 6.49,
+   "seconds": 11.99,
+   "lines": [
+    {
+     "text": "देवकीसुत गोविन्द वासुदेव जगत्पते",
+     "start": 3.0
+    },
+    {
+     "text": "देहि मे तनयं कृष्ण त्वामहं शरणं गतः",
+     "start": 6.15
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/santana-gopala-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 7.14,
+   "seconds": 12.64,
+   "lines": [
+    {
+     "text": "देवकीसुत गोविन्द वासुदेव जगत्पते",
+     "start": 3.0
+    },
+    {
+     "text": "देहि मे तनयं कृष्ण त्वामहं शरणं गतः",
+     "start": 6.61
+    }
+   ]
+  }
+ },
+ "saraswati-nama": {
+  "male": {
+   "file": "mantras/saraswati-nama-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 1.66,
+   "seconds": 7.16,
+   "lines": [
+    {
+     "text": "ॐ ऐं सरस्वत्यै नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/saraswati-nama-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 1.68,
+   "seconds": 7.18,
+   "lines": [
+    {
+     "text": "ॐ ऐं सरस्वत्यै नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "saraswati-vidyarambha": {
+  "male": {
+   "file": "mantras/saraswati-vidyarambha-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 5.94,
+   "seconds": 11.44,
+   "lines": [
+    {
+     "text": "सरस्वति नमस्तुभ्यं वरदे कामरूपिणि",
+     "start": 3.0
+    },
+    {
+     "text": "विद्यारम्भं करिष्यामि सिद्धिर्भवतु मे सदा",
+     "start": 6.08
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/saraswati-vidyarambha-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 7.23,
+   "seconds": 12.73,
+   "lines": [
+    {
+     "text": "सरस्वति नमस्तुभ्यं वरदे कामरूपिणि",
+     "start": 3.0
+    },
+    {
+     "text": "विद्यारम्भं करिष्यामि सिद्धिर्भवतु मे सदा",
+     "start": 6.58
+    }
+   ]
+  }
+ },
+ "sarpa-namostu": {
+  "male": {
+   "file": "mantras/sarpa-namostu-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 7.7,
+   "seconds": 13.2,
+   "lines": [
+    {
+     "text": "नमोऽस्तु सर्पेभ्यो ये के च पृथिवीमनु",
+     "start": 3.0
+    },
+    {
+     "text": "ये अन्तरिक्षे ये दिवि तेभ्यः सर्पेभ्यो नमः",
+     "start": 7.14
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/sarpa-namostu-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 7.68,
+   "seconds": 13.18,
+   "lines": [
+    {
+     "text": "नमोऽस्तु सर्पेभ्यो ये के च पृथिवीमनु",
+     "start": 3.0
+    },
+    {
+     "text": "ये अन्तरिक्षे ये दिवि तेभ्यः सर्पेभ्यो नमः",
+     "start": 6.85
+    }
+   ]
+  }
+ },
+ "saturn-bija": {
+  "male": {
+   "file": "mantras/saturn-bija-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 3.68,
+   "seconds": 9.18,
+   "lines": [
+    {
+     "text": "ॐ प्रां प्रीं प्रौं सः शनैश्चराय नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/saturn-bija-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 3.24,
+   "seconds": 8.74,
+   "lines": [
+    {
+     "text": "ॐ प्रां प्रीं प्रौं सः शनैश्चराय नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "saturn-nama": {
+  "male": {
+   "file": "mantras/saturn-nama-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 2.08,
+   "seconds": 7.58,
+   "lines": [
+    {
+     "text": "ॐ शं शनैश्चराय नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/saturn-nama-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 1.95,
+   "seconds": 7.45,
+   "lines": [
+    {
+     "text": "ॐ शं शनैश्चराय नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "saturn-stotra": {
+  "male": {
+   "file": "mantras/saturn-stotra-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 7.7,
+   "seconds": 13.2,
+   "lines": [
+    {
+     "text": "नीलाञ्जनसमाभासं रविपुत्रं यमाग्रजम्",
+     "start": 3.0
+    },
+    {
+     "text": "छायामार्तण्डसम्भूतं तं नमामि शनैश्चरम्",
+     "start": 7.36
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/saturn-stotra-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 7.75,
+   "seconds": 13.25,
+   "lines": [
+    {
+     "text": "नीलाञ्जनसमाभासं रविपुत्रं यमाग्रजम्",
+     "start": 3.0
+    },
+    {
+     "text": "छायामार्तण्डसम्भूतं तं नमामि शनैश्चरम्",
+     "start": 7.08
+    }
+   ]
+  }
+ },
+ "saturn-vedic": {
+  "male": {
+   "file": "mantras/saturn-vedic-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 6.29,
+   "seconds": 11.79,
+   "lines": [
+    {
+     "text": "शं नो देवीरभिष्टय आपो भवन्तु पीतये",
+     "start": 3.0
+    },
+    {
+     "text": "शं योरभि स्रवन्तु नः",
+     "start": 7.15
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/saturn-vedic-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 5.61,
+   "seconds": 11.11,
+   "lines": [
+    {
+     "text": "शं नो देवीरभिष्टय आपो भवन्तु पीतये",
+     "start": 3.0
+    },
+    {
+     "text": "शं योरभि स्रवन्तु नः",
+     "start": 6.82
+    }
+   ]
+  }
+ },
+ "shiva-panchakshari": {
+  "male": {
+   "file": "mantras/shiva-panchakshari-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 0.95,
+   "seconds": 6.45,
+   "lines": [
+    {
+     "text": "ॐ नमः शिवाय",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/shiva-panchakshari-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 1.18,
+   "seconds": 6.68,
+   "lines": [
+    {
+     "text": "ॐ नमः शिवाय",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "skanda-shadakshari": {
+  "male": {
+   "file": "mantras/skanda-shadakshari-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 2.01,
+   "seconds": 7.51,
+   "lines": [
+    {
+     "text": "ॐ शरवणभवाय नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/skanda-shadakshari-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 1.71,
+   "seconds": 7.21,
+   "lines": [
+    {
+     "text": "ॐ शरवणभवाय नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "sri-suktam-1": {
+  "male": {
+   "file": "mantras/sri-suktam-1-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 6.81,
+   "seconds": 12.31,
+   "lines": [
+    {
+     "text": "हिरण्यवर्णां हरिणीं सुवर्णरजतस्रजाम्",
+     "start": 3.0
+    },
+    {
+     "text": "चन्द्रां हिरण्मयीं लक्ष्मीं जातवेदो म आवह",
+     "start": 6.58
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/sri-suktam-1-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 7.12,
+   "seconds": 12.62,
+   "lines": [
+    {
+     "text": "हिरण्यवर्णां हरिणीं सुवर्णरजतस्रजाम्",
+     "start": 3.0
+    },
+    {
+     "text": "चन्द्रां हिरण्मयीं लक्ष्मीं जातवेदो म आवह",
+     "start": 6.72
+    }
+   ]
+  }
+ },
+ "sun-bija": {
+  "male": {
+   "file": "mantras/sun-bija-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 3.24,
+   "seconds": 8.74,
+   "lines": [
+    {
+     "text": "ॐ ह्रां ह्रीं ह्रौं सः सूर्याय नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/sun-bija-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 3.09,
+   "seconds": 8.59,
+   "lines": [
+    {
+     "text": "ॐ ह्रां ह्रीं ह्रौं सः सूर्याय नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "sun-nama": {
+  "male": {
+   "file": "mantras/sun-nama-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 1.46,
+   "seconds": 6.96,
+   "lines": [
+    {
+     "text": "ॐ सूर्याय नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/sun-nama-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 1.2,
+   "seconds": 6.7,
+   "lines": [
+    {
+     "text": "ॐ सूर्याय नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "sun-stotra": {
+  "male": {
+   "file": "mantras/sun-stotra-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 7.29,
+   "seconds": 12.79,
+   "lines": [
+    {
+     "text": "जपाकुसुमसङ्काशं काश्यपेयं महाद्युतिम्",
+     "start": 3.0
+    },
+    {
+     "text": "तमोऽरिं सर्वपापघ्नं प्रणतोऽस्मि दिवाकरम्",
+     "start": 6.52
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/sun-stotra-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 8.01,
+   "seconds": 13.51,
+   "lines": [
+    {
+     "text": "जपाकुसुमसङ्काशं काश्यपेयं महाद्युतिम्",
+     "start": 3.0
+    },
+    {
+     "text": "तमोऽरिं सर्वपापघ्नं प्रणतोऽस्मि दिवाकरम्",
+     "start": 7.2
+    }
+   ]
+  }
+ },
+ "sun-vedic": {
+  "male": {
+   "file": "mantras/sun-vedic-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 8.23,
+   "seconds": 13.73,
+   "lines": [
+    {
+     "text": "आ कृष्णेन रजसा वर्तमानो निवेशयन्नमृतं मर्त्यं च",
+     "start": 3.0
+    },
+    {
+     "text": "हिरण्ययेन सविता रथेना देवो याति भुवनानि पश्यन्",
+     "start": 7.47
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/sun-vedic-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 8.67,
+   "seconds": 14.17,
+   "lines": [
+    {
+     "text": "आ कृष्णेन रजसा वर्तमानो निवेशयन्नमृतं मर्त्यं च",
+     "start": 3.0
+    },
+    {
+     "text": "हिरण्ययेन सविता रथेना देवो याति भुवनानि पश्यन्",
+     "start": 7.56
+    }
+   ]
+  }
+ },
+ "sun-vedic-taittiriya": {
+  "male": {
+   "file": "mantras/sun-vedic-taittiriya-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 9.05,
+   "seconds": 14.55,
+   "lines": [
+    {
+     "text": "आसत्येन रजसा वर्तमानो निवेशयन्नमृतं मर्त्यं च",
+     "start": 3.0
+    },
+    {
+     "text": "हिरण्ययेन सविता रथेना देवो याति भुवना विपश्यन्",
+     "start": 7.88
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/sun-vedic-taittiriya-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 9.25,
+   "seconds": 14.75,
+   "lines": [
+    {
+     "text": "आसत्येन रजसा वर्तमानो निवेशयन्नमृतं मर्त्यं च",
+     "start": 3.0
+    },
+    {
+     "text": "हिरण्ययेन सविता रथेना देवो याति भुवना विपश्यन्",
+     "start": 8.2
+    }
+   ]
+  }
+ },
+ "surya-dvadasha-nama": {
+  "male": {
+   "file": "mantras/surya-dvadasha-nama-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 24.09,
+   "seconds": 29.59,
+   "lines": [
+    {
+     "text": "ॐ मित्राय नमः",
+     "start": 3.0
+    },
+    {
+     "text": "ॐ रवये नमः",
+     "start": 5.26
+    },
+    {
+     "text": "ॐ सूर्याय नमः",
+     "start": 7.31
+    },
+    {
+     "text": "ॐ भानवे नमः",
+     "start": 9.43
+    },
+    {
+     "text": "ॐ खगाय नमः",
+     "start": 11.08
+    },
+    {
+     "text": "ॐ पूष्णे नमः",
+     "start": 13.5
+    },
+    {
+     "text": "ॐ हिरण्यगर्भाय नमः",
+     "start": 15.73
+    },
+    {
+     "text": "ॐ मरीचये नमः",
+     "start": 18.19
+    },
+    {
+     "text": "ॐ आदित्याय नमः",
+     "start": 20.22
+    },
+    {
+     "text": "ॐ सवित्रे नमः",
+     "start": 22.08
+    },
+    {
+     "text": "ॐ अर्काय नमः",
+     "start": 23.77
+    },
+    {
+     "text": "ॐ भास्कराय नमः",
+     "start": 25.51
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/surya-dvadasha-nama-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 22.34,
+   "seconds": 27.84,
+   "lines": [
+    {
+     "text": "ॐ मित्राय नमः",
+     "start": 3.0
+    },
+    {
+     "text": "ॐ रवये नमः",
+     "start": 4.55
+    },
+    {
+     "text": "ॐ सूर्याय नमः",
+     "start": 6.1
+    },
+    {
+     "text": "ॐ भानवे नमः",
+     "start": 7.94
+    },
+    {
+     "text": "ॐ खगाय नमः",
+     "start": 9.94
+    },
+    {
+     "text": "ॐ पूष्णे नमः",
+     "start": 11.42
+    },
+    {
+     "text": "ॐ हिरण्यगर्भाय नमः",
+     "start": 13.16
+    },
+    {
+     "text": "ॐ मरीचये नमः",
+     "start": 15.65
+    },
+    {
+     "text": "ॐ आदित्याय नमः",
+     "start": 17.51
+    },
+    {
+     "text": "ॐ सवित्रे नमः",
+     "start": 19.48
+    },
+    {
+     "text": "ॐ अर्काय नमः",
+     "start": 21.79
+    },
+    {
+     "text": "ॐ भास्कराय नमः",
+     "start": 23.79
+    }
+   ]
+  }
+ },
+ "venus-bija": {
+  "male": {
+   "file": "mantras/venus-bija-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 3.58,
+   "seconds": 9.08,
+   "lines": [
+    {
+     "text": "ॐ द्रां द्रीं द्रौं सः शुक्राय नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/venus-bija-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 3.23,
+   "seconds": 8.73,
+   "lines": [
+    {
+     "text": "ॐ द्रां द्रीं द्रौं सः शुक्राय नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "venus-nama": {
+  "male": {
+   "file": "mantras/venus-nama-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 1.41,
+   "seconds": 6.91,
+   "lines": [
+    {
+     "text": "ॐ शुक्राय नमः",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/venus-nama-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 1.28,
+   "seconds": 6.78,
+   "lines": [
+    {
+     "text": "ॐ शुक्राय नमः",
+     "start": 3.0
+    }
+   ]
+  }
+ },
+ "venus-stotra": {
+  "male": {
+   "file": "mantras/venus-stotra-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 7.28,
+   "seconds": 12.78,
+   "lines": [
+    {
+     "text": "हिमकुन्दमृणालाभं दैत्यानां परमं गुरुम्",
+     "start": 3.0
+    },
+    {
+     "text": "सर्वशास्त्रप्रवक्तारं भार्गवं प्रणमाम्यहम्",
+     "start": 6.76
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/venus-stotra-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 7.65,
+   "seconds": 13.15,
+   "lines": [
+    {
+     "text": "हिमकुन्दमृणालाभं दैत्यानां परमं गुरुम्",
+     "start": 3.0
+    },
+    {
+     "text": "सर्वशास्त्रप्रवक्तारं भार्गवं प्रणमाम्यहम्",
+     "start": 7.11
+    }
+   ]
+  }
+ },
+ "venus-vedic": {
+  "male": {
+   "file": "mantras/venus-vedic-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 12.76,
+   "seconds": 18.26,
+   "lines": [
+    {
+     "text": "अन्नात्परिस्रुतो रसं ब्रह्मणा व्यपिबत्क्षत्रं पयः सोमं प्रजापतिः",
+     "start": 3.0
+    },
+    {
+     "text": "ऋतेन सत्यमिन्द्रियं विपानं शुक्रमन्धस इन्द्रस्येन्द्रियमिदं पयोऽमृतं मधु",
+     "start": 9.39
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/venus-vedic-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 13.51,
+   "seconds": 19.01,
+   "lines": [
+    {
+     "text": "अन्नात्परिस्रुतो रसं ब्रह्मणा व्यपिबत्क्षत्रं पयः सोमं प्रजापतिः",
+     "start": 3.0
+    },
+    {
+     "text": "ऋतेन सत्यमिन्द्रियं विपानं शुक्रमन्धस इन्द्रस्येन्द्रियमिदं पयोऽमृतं मधु",
+     "start": 9.58
+    }
+   ]
+  }
+ },
+ "venus-vedic-taittiriya": {
+  "male": {
+   "file": "mantras/venus-vedic-taittiriya-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 9.77,
+   "seconds": 15.27,
+   "lines": [
+    {
+     "text": "प्र वः शुक्राय भानवे भरध्वम्",
+     "start": 3.0
+    },
+    {
+     "text": "हव्यं मतिं चाग्नये सुपूतम्",
+     "start": 5.53
+    },
+    {
+     "text": "यो दैव्यानि मानुषा जनूंषि",
+     "start": 8.5
+    },
+    {
+     "text": "अन्तर्विश्वानि विद्मना जिगाति",
+     "start": 10.81
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/venus-vedic-taittiriya-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 10.46,
+   "seconds": 15.96,
+   "lines": [
+    {
+     "text": "प्र वः शुक्राय भानवे भरध्वम्",
+     "start": 3.0
+    },
+    {
+     "text": "हव्यं मतिं चाग्नये सुपूतम्",
+     "start": 5.85
+    },
+    {
+     "text": "यो दैव्यानि मानुषा जनूंषि",
+     "start": 8.72
+    },
+    {
+     "text": "अन्तर्विश्वानि विद्मना जिगाति",
+     "start": 11.29
+    }
+   ]
+  }
+ },
+ "vishnu-dvadashakshari": {
+  "male": {
+   "file": "mantras/vishnu-dvadashakshari-male.mp3",
+   "voice": "hi-IN-Chirp3-HD-Fenrir",
+   "voice_start": 3.0,
+   "voice_seconds": 1.99,
+   "seconds": 7.49,
+   "lines": [
+    {
+     "text": "ॐ नमो भगवते वासुदेवाय",
+     "start": 3.0
+    }
+   ]
+  },
+  "female": {
+   "file": "mantras/vishnu-dvadashakshari-female.mp3",
+   "voice": "hi-IN-Chirp3-HD-Aoede",
+   "voice_start": 3.0,
+   "voice_seconds": 1.93,
+   "seconds": 7.43,
+   "lines": [
+    {
+     "text": "ॐ नमो भगवते वासुदेवाय",
+     "start": 3.0
+    }
+   ]
+  }
+ }
+}
