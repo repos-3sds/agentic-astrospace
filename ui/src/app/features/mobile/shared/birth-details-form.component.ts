@@ -159,7 +159,7 @@ type BirthField = 'name' | 'date' | 'time' | 'place';
           }
           @if (chosenPlace(); as place) {
             @if (place.timezone) {
-              <p class="place-status">{{ place.label || place.nation }} · {{ place.timezone }}</p>
+              <p class="place-status">{{ placeLine(place) }}</p>
             }
           }
           @if (placeLoading()) {
@@ -333,6 +333,12 @@ export class BirthDetailsFormComponent implements OnDestroy {
     } finally {
       if (seq === this.placeSearchSeq) this.placeLoading.set(false);
     }
+  }
+
+  /** City search labels already end in the timezone; say it once. */
+  protected placeLine(place: PanchangaCity): string {
+    const label = place.label || place.nation;
+    return label.includes(place.timezone) ? label : `${label} · ${place.timezone}`;
   }
 
   protected choosePlace(match: PanchangaCity): void {
