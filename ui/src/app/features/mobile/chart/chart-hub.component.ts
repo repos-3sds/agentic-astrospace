@@ -215,7 +215,7 @@ export class ChartHubComponent {
     const cards = this.explore()
       .filter((card) => !ON_EXPLORE_MENU.has(card.id))
       .map((card) => card.id === 'varga' && !this.gate.allows('vargas.full')
-        ? { ...card, subtitle: 'D9 and beyond · Practitioner plan' }
+        ? { ...card, subtitle: 'D9 free · D10 and beyond on Practitioner' }
         : card);
     if (mode === 'guided') return cards.filter((card) => this.guidedCoreIds.includes(card.id));
     return cards;

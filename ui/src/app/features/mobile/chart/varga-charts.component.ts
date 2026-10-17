@@ -20,7 +20,7 @@ import { PlanetDetail, PlanetSheetComponent } from './planet-sheet.component';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
-import { PlanGateService } from '../../../core/plan-gate.service';
+import { FREE_VARGAS, PlanGateService } from '../../../core/plan-gate.service';
 import { PlanLockComponent } from '../shared/plan-lock.component';
 
 interface VargaOption {
@@ -46,7 +46,8 @@ interface VargaOption {
 })
 export class VargaChartsComponent implements AfterViewInit {
   protected readonly gate = inject(PlanGateService);
-  protected readonly locked = computed(() => !this.gate.allows('vargas.full'));
+  /** D1 and D9 are on every plan; the other vargas are Practitioner. */
+  protected readonly locked = computed(() => !FREE_VARGAS.has(this.selected()) && !this.gate.allows('vargas.full'));
   @ViewChild('vargaStrip') private readonly vargaStrip?: ElementRef<HTMLElement>;
   private readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);

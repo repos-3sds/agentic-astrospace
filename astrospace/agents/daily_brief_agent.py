@@ -119,8 +119,8 @@ MODE_GUIDE = {
     "practitioner": "The reader is a practitioner. In why, narrative and the spoken Why you may name the tara, the house from the natal Moon, the tithi, the nakshatra and the dasha lords directly; the Today card stays plain.",
 }
 TONE_GUIDE = {
-    "gentle": "Tone: gentle and warm. Frame cautions as care, never as warnings.",
-    "direct": "Tone: direct and clear. Short sentences, no hedging, still kind.",
+    "gentle": "Tone: gentle and warm. Lead with what is steady before what is strained, pair every caution with the step that goes with it, and frame cautions as care, never as warnings.",
+    "direct": "Tone: direct. Say the finding first with no cushioning or preamble, then the step. Short sentences, no softening phrases such as \"you might find\" or \"it may be worth\". Direct is not harsh: no scolding, no drama.",
 }
 
 SYSTEM = f"""You write the daily brief in AstroSpace, a Vedic astrology app. The

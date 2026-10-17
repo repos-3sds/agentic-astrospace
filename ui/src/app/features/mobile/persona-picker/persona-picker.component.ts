@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, model } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, model } from '@angular/core';
 import { HapticsService } from '../../../core/haptics.service';
 
 /** How much depth a reader wants. Drives disclosure, never content. */
@@ -31,6 +31,12 @@ export interface PersonaOption {
  * suppress a dosha, and neither changes the refer-out boundary — the Settings
  * screen says so in as many words.
  */
+/** The same reading in each tone, so the choice is visible before an answer arrives. */
+const TONE_SAMPLES: Record<ToneId, string> = {
+  gentle: '“Work may feel slower this week, and that is all right. Give important papers an extra read before you sign.”',
+  direct: '“Work slows this week. Read important papers twice before you sign.”',
+};
+
 @Component({
   selector: 'as-persona-picker',
   standalone: true,
@@ -81,6 +87,8 @@ export interface PersonaOption {
         >{{ t.label }}</button>
       }
     </div>
+    <!-- The two tones differ in wording only, so show the wording. -->
+    <p class="tone-sample" aria-live="polite">{{ sample() }}</p>
   `,
   styleUrl: './persona-picker.component.scss',
 })
@@ -91,6 +99,8 @@ export class PersonaPickerComponent {
 
   /** Badge text differs by host — RECOMMENDED in onboarding, CURRENT in settings. */
   readonly options = input.required<PersonaOption[]>();
+
+  protected readonly sample = computed(() => TONE_SAMPLES[this.tone()]);
 
   protected readonly tones: { id: ToneId; label: string }[] = [
     { id: 'gentle', label: 'Be gentle' },

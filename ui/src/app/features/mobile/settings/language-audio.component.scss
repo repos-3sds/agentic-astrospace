@@ -76,3 +76,17 @@
   @include m-cta-secondary;
   width: 100%;
 }
+
+.natural {
+  .choice-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  small { @include m-body-small; color: var(--m-muted); }
+}
+
+.plan-badge {
+  @include m-caption;
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--m-accent-soft);
+  color: var(--m-accent-strong);
+}

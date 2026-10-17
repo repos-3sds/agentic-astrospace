@@ -54,6 +54,29 @@
 
   <p class="eyebrow">VOICE</p>
 
+  <!-- The server-made voice, a Plus feature. Shown on every plan so it can be found. -->
+  <button
+    class="choice natural"
+    type="button"
+    [attr.role]="naturalAvailable() ? 'radio' : null"
+    [class.is-on]="naturalSelected()"
+    [attr.aria-checked]="naturalAvailable() ? naturalSelected() : null"
+    [disabled]="naturalAvailable() === null"
+    (click)="chooseNatural()"
+  >
+    <span class="choice-left">
+      <span class="choice-copy">
+        <span class="choice-label">Siddha natural voice</span>
+        <small>{{ naturalAvailable() ? 'A warm, human-sounding voice for your daily reading' : 'Comes with Plus. Your phone’s voice reads aloud until then.' }}</small>
+      </span>
+    </span>
+    @if (naturalAvailable() === false) {
+      <span class="plan-badge">PLUS</span>
+    } @else if (naturalSelected()) {
+      <img class="choice-tick" src="mobile/check-accent.svg" alt="" aria-hidden="true" />
+    }
+  </button>
+
   @if (!nativeAvailable) {
     <p class="voice-note">Voice selection is available when using the app on your phone.</p>
   } @else if (voicesLoading()) {
@@ -78,14 +101,14 @@
         class="choice"
         type="button"
         role="radio"
-        [class.is-on]="isSelected(null)"
-        [attr.aria-checked]="isSelected(null)"
-        (click)="chooseVoice(null)"
+        [class.is-on]="phoneAutoSelected()"
+        [attr.aria-checked]="phoneAutoSelected()"
+        (click)="chooseVoice(naturalAvailable() ? PHONE_AUTO : null)"
       >
         <span class="choice-left">
-          <span class="choice-label">Automatic (recommended)</span>
+          <span class="choice-label">{{ naturalAvailable() ? 'Phone voice, automatic' : 'Automatic (recommended)' }}</span>
         </span>
-        @if (previewing() === null && isSelected(null)) {
+        @if (previewing() === null && phoneAutoSelected()) {
           <img class="choice-tick" src="mobile/check-accent.svg" alt="" aria-hidden="true" />
         }
       </button>
