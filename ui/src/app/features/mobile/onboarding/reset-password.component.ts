@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/auth.service';
+import { authErrorMessage } from './auth-error';
 
 @Component({
   selector: 'as-reset-password',
@@ -38,7 +39,7 @@ export class ResetPasswordComponent {
       await this.auth.updatePassword(this.password);
       await this.router.navigateByUrl('/m/today');
     } catch (error) {
-      this.error.set((error as Error).message);
+      this.error.set(authErrorMessage(error));
     } finally {
       this.loading.set(false);
     }

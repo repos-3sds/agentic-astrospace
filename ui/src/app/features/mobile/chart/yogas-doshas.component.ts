@@ -24,9 +24,15 @@ interface Combination {
   tone: 'good' | 'gold' | 'bad' | 'neutral';
   summary: string;
   cancelled?: string;
+  /** Plain-words observance note for a flag traditions draw differently. */
+  convention?: string;
   source?: string;
   chartFact?: string;
 }
+
+/** Every dosha's thresholds differ between traditions (CLAUDE.md: state the
+ * rule rather than imply false precision). */
+const DOSHA_CONVENTION = 'Traditions draw this line a little differently, so another astrologer may read it differently.';
 
 /** Yogas & Doshas overview and filtering (Figma node 41:87). */
 @Component({
@@ -80,8 +86,8 @@ export class YogasDoshasComponent {
       this.selectedLearning.set({
         title: item.title,
         summary: item.summary,
-        source: item.source ?? 'Source review is not available for this combination yet.',
-        chartFact: item.chartFact ?? item.cancelled ?? 'This combination was returned for your selected chart by the live calculation service.',
+        source: item.source ?? 'No classical source is listed for this combination yet.',
+        chartFact: item.chartFact ?? item.cancelled ?? 'Found in your chart.',
       });
       this.learningOpen.set(true);
     }
@@ -117,11 +123,13 @@ export class YogasDoshasComponent {
       title: yoga.name,
       tag: yoga.strength || this.statusLabel(yoga),
       tone: yoga.category.toLowerCase().includes('caution') ? 'bad' : yoga.verified ? 'good' : 'gold',
-      summary: yoga.rule || yoga.triggers.join(' · ') || 'Backend returned this yoga without additional detail.',
-      cancelled: yoga.notes?.[0],
+      summary: yoga.rule || yoga.triggers.join(' · ') || 'Found in your chart.',
+      // The engine's notes are mostly for whoever maintains the rule
+      // ("subsumed note added when…"); only a real cancellation is the reader's.
+      cancelled: yoga.notes?.find((note) => /^cancelled\b/i.test(note)),
       source: yoga.source_refs?.map((row) => `${row.source}: ${row.detail}`).join(' · ')
         ?? this.statusLabel(yoga),
-      chartFact: yoga.triggers.join(' · ') || yoga.notes?.[0],
+      chartFact: yoga.triggers.join(' · ') || undefined,
     };
   }
 
@@ -137,10 +145,11 @@ export class YogasDoshasComponent {
         tag: doshas.manglik.active ? `FLAG · ${doshas.manglik.net_severity ?? doshas.manglik.severity}` : 'NOT PRESENT',
         tone: doshas.manglik.active ? 'bad' : 'neutral',
         summary: doshas.manglik.rule,
-        cancelled: exception ? `Exception applies: ${exception.detail}` : doshas.manglik.notes?.[0],
+        cancelled: exception ? `Exception applies: ${exception.detail}` : undefined,
+        convention: doshas.manglik.active ? DOSHA_CONVENTION : undefined,
         source: doshas.manglik.source_refs?.map((row) => `${row.source}: ${row.detail}`).join(' · ')
           ?? doshas.manglik.source_status
-          ?? 'Classical source not returned by the backend.',
+          ?? 'No classical source is listed for this flag yet.',
       });
     }
     for (const row of [doshas.gandanta, doshas.grahan].filter(Boolean)) {
@@ -151,10 +160,10 @@ export class YogasDoshasComponent {
         tag: row!.active ? `FLAG · ${row!.severity}` : 'NOT PRESENT',
         tone: row!.active ? 'bad' : 'neutral',
         summary: row!.rule,
-        cancelled: row!.notes?.[0],
+        convention: row!.active ? DOSHA_CONVENTION : undefined,
         source: row!.source_refs?.map((source) => `${source.source}: ${source.detail}`).join(' · ')
           ?? row!.source_status
-          ?? 'Classical source not returned by the backend.',
+          ?? 'No classical source is listed for this flag yet.',
       });
     }
     return items;
