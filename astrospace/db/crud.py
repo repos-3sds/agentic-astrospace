@@ -1,4 +1,5 @@
 from datetime import datetime
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from .models import Kundli, PredictionClaim, Reading, UserSettings
 
@@ -319,12 +320,22 @@ def get_user_settings(db: Session, user_id: str) -> UserSettings | None:
 
 
 def upsert_user_settings(db: Session, user_id: str, data: dict) -> UserSettings:
-    settings = get_user_settings(db, user_id)
-    if not settings:
-        settings = UserSettings(user_id=user_id)
-        db.add(settings)
-    for key, value in data.items():
-        setattr(settings, key, value)
-    db.commit()
-    db.refresh(settings)
-    return settings
+    """Two first saves can race (the app saves on launch and on a toggle);
+    the loser's insert hits user_settings_pkey. It retries once as an
+    update of the row the winner just wrote, instead of answering 500."""
+    for attempt in range(2):
+        settings = get_user_settings(db, user_id)
+        if not settings:
+            settings = UserSettings(user_id=user_id)
+            db.add(settings)
+        for key, value in data.items():
+            setattr(settings, key, value)
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            if attempt:
+                raise
+            continue
+        db.refresh(settings)
+        return settings

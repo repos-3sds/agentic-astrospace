@@ -1,4 +1,6 @@
+import copy
 from datetime import date, datetime, time
+from functools import lru_cache
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -455,6 +457,33 @@ def gocharam(
     return chart.gocharam(scan_days=scan_days, as_of=snapshot)
 
 
+# A 45-day calendar is tens of seconds of CPU on a busy Cloud Run instance,
+# and the app asks for the same window on every open, month swipe and retry.
+# Keyed on the birth details themselves, so editing a profile misses the
+# cache. "Now" is bucketed to 15 minutes, as for daily guidance
+# (context_routes.py); an explicit as_of is exact.
+CALENDAR_BUCKET_MINUTES = 15
+
+
+def _bucketed_now(tz: ZoneInfo) -> datetime:
+    now = datetime.now(tz)
+    return now.replace(minute=now.minute - now.minute % CALENDAR_BUCKET_MINUTES,
+                       second=0, microsecond=0)
+
+
+@lru_cache(maxsize=128)
+def _cached_calendar(name, year, month, day, hour, minute, b_city, b_nation,
+                     ayanamsha, node_type, as_of_iso, city, nation, lat, lng,
+                     tz_str, days, include_practitioner_detail) -> dict:
+    chart = VedicChart(name, year, month, day, hour, minute, b_city, b_nation,
+                       ayanamsha=ayanamsha, node_type=node_type)
+    return chart.calendar_intelligence(
+        as_of=datetime.fromisoformat(as_of_iso), city=city, nation=nation,
+        lat=lat, lng=lng, tz_str=tz_str, display_tz_str=tz_str, days=days,
+        include_practitioner_detail=include_practitioner_detail,
+    )
+
+
 @router.get("/{kundli_id}/calendar-intelligence")
 def calendar_intelligence(
     kundli_id: str,
@@ -470,24 +499,20 @@ def calendar_intelligence(
     db: Session = Depends(get_db),
 ):
     k = _get_kundli(db, kundli_id, user.id)
-    chart = _chart_from_kundli(k, ayanamsha, node_type)
+    _chart_from_kundli(k, ayanamsha, node_type)  # validates the birth details
     place = resolve_timing_place(k, timezone, city, nation)
     calculation_time = (
         datetime.combine(as_of, time(hour=12), tzinfo=ZoneInfo(place.tz_str))
         if as_of
-        else datetime.now(ZoneInfo(place.today_tz))
+        else _bucketed_now(ZoneInfo(place.today_tz))
     )
-    payload = chart.calendar_intelligence(
-        as_of=calculation_time,
-        city=place.city,
-        nation=place.nation,
-        lat=place.lat,
-        lng=place.lng,
-        tz_str=place.tz_str,
-        display_tz_str=place.tz_str,
-        days=days,
-        include_practitioner_detail=include_practitioner_detail,
-    )
+    # Deep copy: the cached dict is shared, and the lines below add to it.
+    payload = copy.deepcopy(_cached_calendar(
+        k.name, k.birth_year, k.birth_month, k.birth_day, k.birth_hour,
+        k.birth_minute, k.birth_city, k.birth_nation, ayanamsha, node_type,
+        calculation_time.isoformat(), place.city, place.nation, place.lat,
+        place.lng, place.tz_str, days, include_practitioner_detail,
+    ))
     # Same resolution as /panchanga/{id}/today, /context/{id}/daily and
     # /muhurta/{id}; the screen needs `source` to say whose clock this is.
     payload["place"] = place.as_payload()

@@ -98,3 +98,25 @@ def test_user_settings_are_per_user():
         assert crud.get_user_settings(db, "user-b").chart_style == "south"
     finally:
         db.close()
+
+
+def test_a_racing_first_settings_save_updates_instead_of_failing(monkeypatch):
+    """Two first saves at once: the second one's lookup ran before the first
+    committed, so its insert collides with user_settings_pkey. It must land
+    as an update, not a 500 (prod logs, 2026-10-17)."""
+    db = _session()
+    try:
+        crud.upsert_user_settings(db, "user-a", {"chart_style": "north"})
+        real_get = crud.get_user_settings
+        calls = {"n": 0}
+
+        def stale_first_lookup(session, user_id):
+            calls["n"] += 1
+            return None if calls["n"] == 1 else real_get(session, user_id)
+
+        monkeypatch.setattr(crud, "get_user_settings", stale_first_lookup)
+        saved = crud.upsert_user_settings(db, "user-a", {"chart_style": "south"})
+        assert saved.chart_style == "south"
+        assert real_get(db, "user-a").chart_style == "south"
+    finally:
+        db.close()
