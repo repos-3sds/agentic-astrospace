@@ -13,7 +13,7 @@ import { SheetComponent } from '../sheet/sheet.component';
 import { AudioReadingSection } from './audio-reading-script';
 import { MobileTtsService } from '../../../core/mobile-tts.service';
 import { PreferencesService } from '../../../core/preferences.service';
-import { NaturalVoiceService, naturalChunks } from '../../../core/natural-voice.service';
+import { NATURAL_VOICE_NAME, NaturalVoiceService, naturalChunks } from '../../../core/natural-voice.service';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 /**
@@ -174,8 +174,11 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
   ngOnInit(): void {
     void this.ensureVoices(false);
     void this.naturalVoice.available().then((ok) => {
+      // A phone voice picked in Language & audio wins over the natural one.
+      const chosen = this.preferences.voiceName();
+      const wantsNatural = chosen === null || chosen === NATURAL_VOICE_NAME;
       // Never switch voices under a reader who has already pressed play.
-      if (ok && !this.playing() && this.chunkIndex() === 0) {
+      if (ok && wantsNatural && !this.playing() && this.chunkIndex() === 0) {
         this.mode.set('natural');
         if (this.language() === TELUGU && this.sections().length) {
           void this.chooseLanguage(TELUGU);

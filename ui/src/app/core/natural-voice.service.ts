@@ -10,6 +10,12 @@ const ENTITLEMENT = 'audio.natural_voice';
 const ENTITLEMENT_TTL_MS = 10 * 60 * 1000;
 const CACHE_NAME = 'natural-voice-v1';
 const CACHE_MAX_ENTRIES = 80;
+/**
+ * Stored in the voiceName preference when the reader picks Siddha's natural
+ * voice. "Automatic" (null) also uses it when the plan includes it; naming a
+ * phone voice opts out.
+ */
+export const NATURAL_VOICE_NAME = 'siddha:natural';
 /** Kept below the server's per-request byte cap even for Telugu (3 bytes/char). */
 export const NATURAL_CHUNK_MAX_CHARS = 1200;
 

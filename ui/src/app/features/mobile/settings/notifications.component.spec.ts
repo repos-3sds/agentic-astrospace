@@ -34,6 +34,8 @@ class PushStub {
   refreshPermission = async () => this.permission();
   enable = async () => { this.enabled += 1; this.permission.set('granted'); this.registered.set(true); return this.permission(); };
   register = async () => undefined;
+  saved: Record<string, boolean> | null = null;
+  loadPreferences = async () => this.saved;
   openSystemSettings = async () => { this.opened += 1; };
   syncPreference = async (id: string, on: boolean) => { this.synced.push([id, on]); };
 }
@@ -71,7 +73,8 @@ describe('NotificationsComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect(push.enabled).toBe(1);
-    expect(text()).toContain('Delivered to this device');
+    expect(text()).toContain('Notifications are on');
+    expect(text()).not.toContain('push token');
     expect(button('Turn on notifications')).toBeUndefined();
   });
 
@@ -104,6 +107,19 @@ describe('NotificationsComponent', () => {
     fixture.detectChanges();
     expect(push.synced).toEqual([['festivals', false]]);
     expect(JSON.parse(localStorage.getItem('astrospace.mobile.notificationPrefs')!)).toContain({ id: 'festivals', on: false });
+  });
+
+  it('shows the switches saved on the account, not the defaults', async () => {
+    push.saved = { morning: false, remedies: true };
+    fixture = TestBed.createComponent(NotificationsComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const checked = (label: string) =>
+      (fixture.nativeElement as HTMLElement).querySelector(`button[aria-label="${label}"]`)?.getAttribute('aria-checked');
+    expect(checked('Morning brief')).toBe('false');
+    expect(checked('Remedy reminders')).toBe('true');
+    expect(checked('Festival reminders')).toBe('true');
   });
 
   it('offers remedy reminders outside Practitioner too', () => {

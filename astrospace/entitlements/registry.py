@@ -10,8 +10,8 @@ answers 30 and keeps 6. The "pro" tier is sold as Practitioner.
 Explore depth (Hawk, 2026-10-16): Free sees the D1 chart, two yogas, every
 dosha by name with its cancellations, and one compatibility score a month.
 Plus adds the full yoga list, dosha explanations, full compatibility,
-readings, the full remedy plan and Muhurta. Divisional charts beyond D1 are
-Practitioner only. A dosha is never hidden on any plan, and no plan sells
+readings, the full remedy plan and Muhurta. D9 is free too (Hawk,
+2026-10-17); the other divisional charts are Practitioner only. A dosha is never hidden on any plan, and no plan sells
 relief from one. Question packs top up Ask beyond the monthly allowance and are
 held separately (`entitlements/usage.py`). Whether a limit actually blocks is
 `quotas_enforced()`: off until store purchases are live, so nobody meets a
@@ -82,7 +82,7 @@ _CAPABILITIES = (
     _flag("calendar.core", "Core Calendar, set to your location", free=True, plus=True, pro=True, protected=True),
     _flag("chart.d1", "D1 chart and birth signature", free=True, plus=True, pro=True, protected=True),
     _flag("festivals.full", "Full festival packs and custom filters", free=False, plus=True, pro=True),
-    _flag("vargas.full", "Divisional charts beyond D1", free=False, plus=False, pro=True),
+    _flag("vargas.full", "Divisional charts beyond D1 and D9", free=False, plus=False, pro=True),
     _flag("yogas.full", "Every yoga in the chart, not only the first two", free=False, plus=True, pro=True),
     _flag("doshas.detail", "What each dosha means and the practice that suits it", free=False, plus=True, pro=True),
     _flag("compatibility.full", "Full compatibility report beyond the score", free=False, plus=True, pro=True),

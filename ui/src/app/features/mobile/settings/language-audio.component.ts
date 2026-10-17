@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { MobileTtsService } from '../../../core/mobile-tts.service';
+import { NATURAL_VOICE_NAME, NaturalVoiceService } from '../../../core/natural-voice.service';
 import { AskResponseLanguage, PreferencesService } from '../../../core/preferences.service';
 import { HapticsService } from '../../../core/haptics.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
@@ -40,7 +42,19 @@ const PREVIEW_TEXT =
 export class LanguageAudioComponent {
   private readonly tts = inject(MobileTtsService);
   private readonly haptics = inject(HapticsService);
+  private readonly naturalVoice = inject(NaturalVoiceService);
+  private readonly router = inject(Router);
   protected readonly preferences = inject(PreferencesService);
+
+  /**
+   * "Automatic" (null) means the natural voice when the plan has it. Once it
+   * does, the phone's own automatic voice needs a name of its own: an empty
+   * one, which the Listen sheet treats as automatic without the natural voice.
+   */
+  protected readonly PHONE_AUTO = '';
+  /** Whether the plan includes Siddha's natural voice; null while checking. */
+  protected readonly naturalAvailable = signal<boolean | null>(null);
+  private sampleAudio: HTMLAudioElement | null = null;
 
   readonly languages: { id: AppLanguage; label: string; detail: string }[] = [
     { id: 'en', label: 'English', detail: 'Natural Indian English' },
@@ -56,6 +70,42 @@ export class LanguageAudioComponent {
 
   constructor() {
     void this.loadVoices();
+    void this.naturalVoice.available().then((ok) => this.naturalAvailable.set(ok));
+  }
+
+  /**
+   * Siddha's natural voice comes with Plus. With it, choosing the row plays a
+   * sample in that voice; without it, the row opens Plans.
+   */
+  protected async chooseNatural(): Promise<void> {
+    this.haptics.select();
+    if (!this.naturalAvailable()) {
+      void this.router.navigate(['/m', 'subscription'], { queryParams: { from: 'audio.natural_voice', plan: 'plus' } });
+      return;
+    }
+    this.preferences.voiceName.set(NATURAL_VOICE_NAME);
+    this.previewing.set(NATURAL_VOICE_NAME);
+    try {
+      await this.tts.stop();
+      this.sampleAudio?.pause();
+      this.sampleAudio = new Audio(await this.naturalVoice.audioUrl(PREVIEW_TEXT));
+      await this.sampleAudio.play();
+    } catch {
+      // The choice is saved even if the sample can't play (offline, muted).
+    } finally {
+      this.previewing.set(null);
+    }
+  }
+
+  protected phoneAutoSelected(): boolean {
+    const name = this.preferences.voiceName();
+    return !this.naturalSelected() && (name === null || name === this.PHONE_AUTO);
+  }
+
+  /** Automatic means the natural voice when the plan has it. */
+  protected naturalSelected(): boolean {
+    const name = this.preferences.voiceName();
+    return !!this.naturalAvailable() && (name === NATURAL_VOICE_NAME || name === null);
   }
 
   protected toggleReadAloud(): void {
@@ -74,6 +124,7 @@ export class LanguageAudioComponent {
 
   protected async chooseVoice(name: string | null): Promise<void> {
     this.haptics.select();
+    this.sampleAudio?.pause();
     await this.preview(name);
     this.preferences.voiceName.set(name);
   }

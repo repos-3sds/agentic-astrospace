@@ -34,3 +34,14 @@
 -keep class net.sqlcipher.** { *; }
 -keep class net.zetetic.** { *; }
 -keep class com.whitestein.securestorage.** { *; }
+
+# Release build 486 crashed on launch once signed in: NPE in
+# Plugin.getPermissionStates, from PushNotificationsPlugin.checkPermissions.
+# Capacitor reads a plugin's permission aliases from its @CapacitorPlugin
+# annotation at runtime. R8 full mode stripped the nested @Permission values
+# (and their annotation class), so the aliases came back null. Keep the
+# annotation attributes, Capacitor's own classes, and the official plugins.
+-keepattributes *Annotation*,RuntimeVisibleAnnotations,RuntimeVisibleParameterAnnotations,AnnotationDefault,Signature,InnerClasses,EnclosingMethod
+-keep class com.getcapacitor.** { *; }
+-keep @interface com.getcapacitor.annotation.** { *; }
+-keep class com.capacitorjs.plugins.** { *; }

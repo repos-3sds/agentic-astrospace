@@ -207,7 +207,7 @@ export class CalendarDayComponent {
     effect(() => {
       const regions = this.preferences.festivalRegions();
       const startDate = this.data()?.start_date;
-      if (startDate) void this.loadFestivals(startDate, 60, regions);
+      if (startDate) void this.loadFestivals(startDate, regions);
     });
   }
 
@@ -434,7 +434,7 @@ export class CalendarDayComponent {
       this.renderedRequestKey = requestKey;
       this.loading.set(false);
       this.detailLoading.set(false);
-      void this.loadFestivals(cached.data.start_date, 60);
+      void this.loadFestivals(cached.data.start_date);
       if (cached.freshness === 'stale') {
         this.staleNotice.set(`Showing saved results for ${cached.data.place.city} while details refresh.`);
         void this.refreshCalendar(id, request);
@@ -455,7 +455,7 @@ export class CalendarDayComponent {
       this.data.set(monthCached.data);
       this.renderedRequestKey = requestKey;
       this.loading.set(false);
-      void this.loadFestivals(monthCached.data.start_date, 60);
+      void this.loadFestivals(monthCached.data.start_date);
       if (!options.includePractitionerDetail) return;
     } else if (this.renderedRequestKey !== requestKey) {
       this.data.set(null);
@@ -471,7 +471,7 @@ export class CalendarDayComponent {
       this.data.set(calendar);
       if (!this.selectedDate()) this.selectedDate.set(calendar.start_date);
       this.renderedRequestKey = requestKey;
-      void this.loadFestivals(calendar.start_date, 60);
+      void this.loadFestivals(calendar.start_date);
     } catch (error) {
       if (request === this.requestId) {
         const fallback = this.vedic.cachedCalendarIntelligenceEntry(id, 1, undefined, dayOptions) ?? monthCached;
@@ -480,7 +480,7 @@ export class CalendarDayComponent {
           if (!this.selectedDate()) this.selectedDate.set(fallback.data.start_date);
           this.renderedRequestKey = requestKey;
           this.staleNotice.set(`Showing last loaded results for ${fallback.data.place.city}. ${this.friendlyError(error)}`);
-          void this.loadFestivals(fallback.data.start_date, 60);
+          void this.loadFestivals(fallback.data.start_date);
         } else {
           this.error.set((error as Error).message);
         }
@@ -505,7 +505,7 @@ export class CalendarDayComponent {
       if (request !== this.requestId || this.activeId() !== id) return;
       this.data.set(calendar);
       if (!this.selectedDate()) this.selectedDate.set(calendar.start_date);
-      void this.loadFestivals(calendar.start_date, 60);
+      void this.loadFestivals(calendar.start_date);
     } catch (error) {
       if (request === this.requestId && this.data()) {
         this.staleNotice.set(`Showing saved results. ${this.friendlyError(error)}`);
@@ -530,12 +530,20 @@ export class CalendarDayComponent {
     }
   }
 
-  private async loadFestivals(fromDate: string, days: number, regions = this.preferences.festivalRegions()): Promise<void> {
+  /**
+   * Festivals for the month the day sits in. That is the window the Calendar
+   * month view already asked for, so a tapped day reads it from cache instead
+   * of asking the server for a fresh window starting on every date.
+   */
+  private async loadFestivals(fallbackDate: string, regions = this.preferences.festivalRegions()): Promise<void> {
+    const date = this.selectedDate() || fallbackDate;
     const place = this.preferences.panchangaPlace();
     const profile = this.store.active();
     const city = place?.city || profile?.birth_city;
     const nation = place?.nation || profile?.birth_nation || 'IN';
-    if (!city) return;
+    if (!city || !/^\d{4}-\d{2}/.test(date)) return;
+    const fromDate = `${date.slice(0, 7)}-01`;
+    const days = new Date(Number(date.slice(0, 4)), Number(date.slice(5, 7)), 0).getDate();
     const cached = this.festivals.cachedUpcoming(city, nation, fromDate, days, regions);
     if (cached) {
       this.festivalRows.set(cached.festivals);

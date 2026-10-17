@@ -125,6 +125,22 @@ class TestDelivery:
         assert message.deep_link == "/m/today"
         assert message.category == "morning_brief"
 
+    def test_delivered_push_lands_in_the_inbox_once(self, db):
+        self._queue(db)
+        deliver_due(db, {"fcm": FakeTransport()}, now=datetime(2026, 10, 16, 6, 0))
+        alerts = cm.list_alerts(db, ME)
+        job = db.query(NotificationJob).filter_by(user_id=ME).one()
+        assert len(alerts) == 1  # two devices, one inbox row
+        assert alerts[0].source_job_id == job.id
+        assert alerts[0].title == job.title
+        assert alerts[0].deep_link == "/m/today"
+        assert alerts[0].category == "morning_brief"
+
+    def test_failed_push_adds_nothing_to_the_inbox(self, db):
+        self._queue(db)
+        deliver_due(db, {"fcm": FakeTransport(fail_all=True)}, now=datetime(2026, 10, 16, 6, 0))
+        assert cm.list_alerts(db, ME) == []
+
     def test_not_due_yet_is_left_alone(self, db):
         self._queue(db)
         result = deliver_due(db, {"fcm": FakeTransport()}, now=datetime(2026, 10, 16, 0, 30))

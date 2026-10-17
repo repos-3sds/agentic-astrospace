@@ -111,6 +111,20 @@ def sidereal_positions(jd_ut: float, ayanamsha: str = "lahiri",
     return out
 
 
+def sun_moon_sidereal(jd_ut: float, ayanamsha: str = "lahiri") -> tuple[float, float]:
+    """Sidereal (Sun, Moon) longitudes, exactly as sidereal_positions gives them.
+
+    Tithi, nakshatra and new-moon searches bisect on these two alone, tens of
+    thousands of times per festival year or Muhurta search; computing all nine
+    grahas for each step was most of that cost.
+    """
+    _set_ayanamsha(ayanamsha)
+    flags = _BASE_FLAGS | swe.FLG_SIDEREAL
+    (sun, *_), _ = swe.calc_ut(jd_ut, swe.SUN, flags)
+    (moon, *_), _ = swe.calc_ut(jd_ut, swe.MOON, flags)
+    return sun % 360.0, moon % 360.0
+
+
 def tropical_sun(jd_ut: float) -> float:
     (lon, *_), _ = swe.calc_ut(jd_ut, swe.SUN, _BASE_FLAGS)
     return lon % 360.0

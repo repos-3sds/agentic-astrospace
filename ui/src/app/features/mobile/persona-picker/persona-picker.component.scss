@@ -99,3 +99,5 @@
     box-shadow: var(--m-shadow-card);
   }
 }
+
+.tone-sample { @include m-body-small; color: var(--m-muted); font-style: italic; margin: 10px 4px 0; }

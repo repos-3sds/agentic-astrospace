@@ -136,6 +136,19 @@ class TestAmantaMasa:
         assert 28.0 < masa["month_end_jd"] - masa["month_start_jd"] < 31.0
         assert masa["month_start_jd"] <= JD_TODAY <= masa["month_end_jd"]
 
+    def test_reused_bounds_give_the_same_month(self, masa):
+        # The festival scan passes the previous day's bounds to skip two
+        # new-moon searches a day; the answer must not change.
+        from astrospace.core.vedic.masa import amanta_masa
+        bounds = (masa["month_start_jd"], masa["month_end_jd"])
+        for jd in (JD_TODAY, masa["month_start_jd"] + 0.5, masa["month_end_jd"] - 0.5):
+            assert amanta_masa(jd, bounds) == amanta_masa(jd)
+
+    def test_bounds_outside_the_month_are_ignored(self, masa):
+        from astrospace.core.vedic.masa import amanta_masa
+        stale = (masa["month_start_jd"] - 40.0, masa["month_start_jd"] - 10.0)
+        assert amanta_masa(JD_TODAY, stale) == amanta_masa(JD_TODAY)
+
     def test_sankranti_inside_bounds_means_not_adhika(self, masa):
         from astrospace.core.vedic.masa import _sun_sign_at
         sign_at_start = _sun_sign_at(masa["month_start_jd"] + 1e-4)

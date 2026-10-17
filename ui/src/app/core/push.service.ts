@@ -132,6 +132,28 @@ export class PushService {
     }
   }
 
+  /**
+   * The account's saved switches, keyed by the screen's ids. The server is the
+   * record the worker reads, so a reinstall or a second phone shows what the
+   * account actually gets rather than the defaults.
+   */
+  async loadPreferences(): Promise<Record<string, boolean> | null> {
+    if (!this.auth.isAuthenticated()) return null;
+    try {
+      const { preferences } = await this.api.get<{ preferences: Record<string, { enabled?: boolean }> }>(
+        '/me/notification-preferences',
+      );
+      const out: Record<string, boolean> = {};
+      for (const [id, category] of Object.entries(PREF_CATEGORY)) {
+        const enabled = preferences[category]?.enabled;
+        if (typeof enabled === 'boolean') out[id] = enabled;
+      }
+      return out;
+    } catch {
+      return null;
+    }
+  }
+
   /** Opens the app's own notification settings when permission was denied. */
   async openSystemSettings(): Promise<void> {
     if (!this.native()) return;

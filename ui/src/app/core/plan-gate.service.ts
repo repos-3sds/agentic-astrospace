@@ -5,14 +5,17 @@ import { EntitlementService } from './entitlement.service';
 /** The plan a locked feature belongs to, as the paywall names it. */
 export type GatedPlan = 'plus' | 'practitioner';
 
+/** Divisional charts every plan opens: D1, and D9 for marriage and strength (Hawk, 2026-10-17). */
+export const FREE_VARGAS: ReadonlySet<string> = new Set(['D1', 'D9']);
+
 const CHECKS_KEY = 'astrospace.compat.checks';
 
 /**
  * Which Explore features this reader's plan opens (Hawk, 2026-10-16).
  *
- * Free: the D1 chart, two yogas, every dosha by name with its cancellations,
+ * Free: the D1 and D9 charts, two yogas, every dosha by name with its cancellations,
  * one compatibility score a month, one remedy practice. Plus: the rest of
- * Explore. Practitioner: divisional charts and Practitioner mode.
+ * Explore. Practitioner: the other divisional charts and Practitioner mode.
  *
  * Gates follow the server's flags but only close once `quotas_enforced` is
  * on, the same switch that makes Ask limits block. Until store purchases are
