@@ -94,7 +94,7 @@ export class NotificationsComponent {
   /** Headline of the delivery card, one per state. */
   readonly deliveryTitle = computed(() => {
     switch (this.permission()) {
-      case 'granted': return this.registered() ? 'Delivered to this device' : 'Registering this device';
+      case 'granted': return 'Notifications are on';
       case 'denied': return 'Notifications are off for Siddha';
       case 'unsupported': return 'Not available on the web';
       default: return 'Notifications are off';
@@ -103,10 +103,10 @@ export class NotificationsComponent {
 
   readonly deliveryState = computed(() => {
     switch (this.permission()) {
+      // Whether the token has reached the server yet is plumbing, not news:
+      // the screen re-registers on open and shows an error only if that fails.
       case 'granted':
-        return this.registered()
-          ? 'Your choices below decide what arrives. Nothing is sent that you did not turn on.'
-          : 'Waiting for the device to hand over its push token. Your choices are saved meanwhile.';
+        return 'Your choices below decide what arrives. Nothing is sent that you did not turn on.';
       case 'denied':
         return 'The system switch for this app is off, so nothing can be delivered until you turn it on in Settings. Your choices here are kept for when you do.';
       case 'unsupported':
@@ -120,8 +120,17 @@ export class NotificationsComponent {
   readonly onCount = computed(() => this.prefs().filter((p) => p.on).length);
 
   constructor() {
-    if (this.nativeApp()) void this.push.refreshPermission();
+    if (this.nativeApp()) void this.recheck();
     void this.emailSettings.load();
+    void this.loadAccountPrefs();
+  }
+
+  /** Switches saved on the account win over this device's copy. */
+  private async loadAccountPrefs(): Promise<void> {
+    const saved = await this.push.loadPreferences();
+    if (!saved) return;
+    this.prefs.update((prefs) => prefs.map((p) => ({ ...p, on: saved[p.id] ?? p.on })));
+    this.persist();
   }
 
   protected toggleEmail(id: EmailCategory): void {

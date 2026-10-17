@@ -178,13 +178,6 @@ export class SettingsHomeComponent {
           route: ['/m', 'settings', 'account'],
         },
         {
-          id: 'notification-center',
-          icon: 'set-inbox',
-          label: 'Notification center',
-          value: 'Recent updates',
-          route: ['/m', 'notifications'],
-        },
-        {
           id: 'subscription',
           icon: 'set-plus',
           label: 'Plans',

@@ -12,7 +12,7 @@ from __future__ import annotations
 import argparse
 import logging
 import time as _time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -26,6 +26,9 @@ from .push import PushMessage, PushTransport, transports_from_env
 from .window_alerts import schedule_window_alerts
 
 log = logging.getLogger("astrospace.notifications")
+
+# How long a delivered push stays in the in-app Notifications list.
+INBOX_KEEP = timedelta(days=14)
 
 
 def deliver_job(db: Session, job: NotificationJob,
@@ -72,9 +75,27 @@ def deliver_job(db: Session, job: NotificationJob,
 
     if any_ok:
         cm.mark_notification_sent(db, job.id)
+        _keep_in_inbox(db, job)
     else:
         cm.mark_notification_failed(db, job.id, "; ".join(errors)[:2000])
     return any_ok
+
+
+def _keep_in_inbox(db: Session, job: NotificationJob) -> None:
+    """Copy a delivered push into the in-app Notifications list.
+
+    A push banner is gone once swiped away; the bell on Today is where it can
+    be read again. Before this, nothing ever wrote that list, so it was always
+    empty. An inbox failure is logged and never undoes the send."""
+    try:
+        cm.create_alert(
+            db, job.user_id, job.category, job.title,
+            kundli_id=job.kundli_id, body=job.body, deep_link=job.deep_link,
+            source_job_id=job.id, expires_at=datetime.utcnow() + INBOX_KEEP,
+        )
+    except Exception:
+        db.rollback()
+        log.exception("could not add notification job %s to the inbox", job.id)
 
 
 def deliver_due(db: Session, transports: dict[str, PushTransport] | None = None,
