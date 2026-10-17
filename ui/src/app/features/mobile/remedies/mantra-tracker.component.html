@@ -12,116 +12,87 @@
   <header class="intro">
     <p class="eyebrow">{{ eyebrow() }}</p>
     <h1 class="mantra">{{ practiceTitle() }}</h1>
-    <p class="context-line">{{ practiceContext() }}</p>
-    @if (hasScripts()) {
-      <nav class="mode-tabs script-tabs" asSelectHaptic aria-label="Mantra script">
-        @for (option of scriptOptions; track option.id) {
-          <button type="button" [class.is-on]="scripts.script() === option.id" (click)="scripts.set(option.id)">{{ option.label }}</button>
-        }
-      </nav>
-    }
-    @if (literalPracticeText()) {
-      <section class="mantra-card" aria-label="Mantra">
-        <div class="mantra-head">
-          <span>{{ practiceTextLabel() }}</span>
-          @if (voiceChoices().length) {
-            <div class="voice-pick" role="group" aria-label="Recitation voice">
-              @for (v of voiceChoices(); track v) {
-                <button type="button" [class.is-on]="voice() === v" [attr.aria-pressed]="voice() === v" (click)="chooseVoice(v)">{{ v === 'male' ? 'Male' : 'Female' }}</button>
-              }
-            </div>
-          }
-          @if (practice()?.type === 'mantra') {
-            <button class="listen" type="button" (click)="toggleListen()"
-                    [class.is-busy]="listen() === 'loading'"
-                    [attr.aria-label]="listen() === 'idle' ? 'Listen to the mantra' : 'Stop'">
-              @if (listen() === 'idle') {
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>
-                <span>Listen</span>
-              } @else {
-                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor"/></svg>
-                <span>{{ listen() === 'loading' ? 'Loading' : 'Stop' }}</span>
-              }
-            </button>
-          }
-        </div>
-        <p class="m-selectable" [attr.lang]="hasScripts() ? (scripts.script() === 'en' ? 'en' : scripts.script()) : null">@if (listen() === 'playing') {@for (word of lyricWords(); track $index) {<span class="lyric" [class.is-sung]="$index < activeWord()" [class.is-now]="$index === activeWord()">{{ word.text }}</span>{{ ' ' }}}} @else {{{ literalPracticeText() }}}</p>
-        @if (meaning(); as m) {
-          <small class="meaning m-selectable">{{ m }}</small>
-        }
-      </section>
-    }
-    <p class="instruction">{{ practice()?.instructions }}</p>
+    <p class="meta">{{ metaLine() }}</p>
   </header>
 
-  <p class="streak">
-    <img src="mobile/streak.svg" alt="" aria-hidden="true" />
-    <span>{{ streakLabel() }}</span>
-  </p>
-
-  <nav class="mode-tabs" asSelectHaptic aria-label="Practice mode">
-    <button type="button" [class.is-on]="mode() === 'manual'" (click)="mode.set('manual')">Manual</button>
-    <button type="button" [class.is-on]="mode() === 'auto'" (click)="mode.set('auto')">Auto</button>
-  </nav>
-
-  @if (mode() === 'auto') {
-    <section class="audio-card" [class.is-pending]="audioPending()">
-      <img src="mobile/audio-art.svg" alt="" aria-hidden="true" />
-      <div>
-        <b>{{ audioPending() ? 'Audio pending' : 'Audio practice' }}</b>
-        <p>{{ audioPending() ? audioNote() : 'Audio is ready for this mantra.' }}</p>
-      </div>
-      <button type="button" [disabled]="audioPending()" (click)="toggleListen()">
-        <img src="mobile/play.svg" alt="" aria-hidden="true" />
-        <span>{{ audioPending() ? 'Not ready' : listen() === 'idle' ? 'Play' : 'Stop' }}</span>
-      </button>
+  @if (literalPracticeText()) {
+    <section class="mantra-card" aria-label="Mantra">
+      @if (hasScripts()) {
+        <nav class="script-pick" asSelectHaptic aria-label="Mantra script">
+          @for (option of scriptOptions; track option.id) {
+            <button type="button" [class.is-on]="scripts.script() === option.id" [attr.aria-pressed]="scripts.script() === option.id" (click)="scripts.set(option.id)">{{ option.label }}</button>
+          }
+        </nav>
+      }
+      <p class="text m-selectable" [attr.lang]="hasScripts() ? (scripts.script() === 'en' ? 'en' : scripts.script()) : null">@if (listen() === 'playing') {@for (word of lyricWords(); track $index) {<span class="lyric" [class.is-sung]="$index < activeWord()" [class.is-now]="$index === activeWord()">{{ word.text }}</span>{{ ' ' }}}} @else {{{ literalPracticeText() }}}</p>
+      @if (meaning(); as m) {
+        <small class="meaning m-selectable">{{ m }}</small>
+      }
     </section>
   }
+  <p class="instruction">{{ practice()?.instructions }}</p>
 
-  @if (mode() === 'manual') {
-  <div class="ring">
-    <svg
-      [attr.viewBox]="'0 0 ' + SIZE + ' ' + SIZE"
-      [attr.width]="SIZE"
-      [attr.height]="SIZE"
-      role="img"
-      [attr.aria-label]="count() + ' of ' + target() + ' repetitions counted'"
-    >
-      <circle
-        class="track"
-        [attr.cx]="C" [attr.cy]="C" [attr.r]="R"
-        [attr.stroke-width]="STROKE" fill="none"
-      />
-      <circle
-        class="arc"
-        [attr.cx]="C" [attr.cy]="C" [attr.r]="R"
-        [attr.stroke-width]="STROKE" fill="none" stroke-linecap="butt"
-        [attr.stroke-dasharray]="CIRCUMFERENCE"
-        [attr.stroke-dashoffset]="dashOffset()"
-        [attr.transform]="'rotate(-90 ' + C + ' ' + C + ')'"
-      />
-    </svg>
-    <div class="readout" aria-hidden="true">
-      <span class="count">{{ count() }}</span>
-      <span class="of">of {{ target() }}</span>
-    </div>
-  </div>
+  <section class="counter" aria-label="Count">
+    <button class="ring" type="button" [disabled]="done()" (click)="tap()"
+            [attr.aria-label]="count() + ' of ' + target() + ' counted. Tap to count one.'">
+      <svg
+        [attr.viewBox]="'0 0 ' + SIZE + ' ' + SIZE"
+        [attr.width]="SIZE"
+        [attr.height]="SIZE"
+        aria-hidden="true"
+      >
+        <circle
+          class="track"
+          [attr.cx]="C" [attr.cy]="C" [attr.r]="R"
+          [attr.stroke-width]="STROKE" fill="none"
+        />
+        <circle
+          class="arc"
+          [attr.cx]="C" [attr.cy]="C" [attr.r]="R"
+          [attr.stroke-width]="STROKE" fill="none" stroke-linecap="butt"
+          [attr.stroke-dasharray]="CIRCUMFERENCE"
+          [attr.stroke-dashoffset]="dashOffset()"
+          [attr.transform]="'rotate(-90 ' + C + ' ' + C + ')'"
+        />
+      </svg>
+      <span class="readout" aria-hidden="true">
+        <span class="count">{{ count() }}</span>
+        <span class="of">of {{ target() }}</span>
+        <span class="hint">{{ done() ? 'Done today' : 'Tap to count' }}</span>
+      </span>
+    </button>
 
-  <button class="count-btn" type="button" [disabled]="done()" (click)="tap()">
-    <img src="mobile/sparkle.svg" alt="" aria-hidden="true" />
-    <span>{{ done() ? 'Completed today' : target() > 1 ? 'Tap to count' : 'Mark done today' }}</span>
-  </button>
-  @if (count() > 0) {
-    <div class="count-actions">
-      @if (target() > 1) {
-        <button class="reset-btn" type="button" (click)="undo()" aria-label="Take back one count">Undo 1</button>
+    <div class="controls">
+      <button class="side" type="button" [class.is-hidden]="count() === 0 || target() <= 1" (click)="undo()" aria-label="Take back one count">Undo 1</button>
+      @if (canChant()) {
+        <button class="auto-play" type="button" (click)="toggleListen()"
+                [class.is-busy]="listen() === 'loading'"
+                [attr.aria-label]="listen() === 'idle' ? 'Chant on repeat and count each round' : 'Stop'">
+          @if (listen() === 'idle') {
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>
+          } @else {
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor"/></svg>
+          }
+        </button>
       }
-      <button class="reset-btn" type="button" (click)="askReset()">{{ resetArmed() ? 'Tap again to reset' : 'Reset count' }}</button>
+      <button class="side" type="button" [class.is-hidden]="count() === 0" (click)="askReset()">{{ resetArmed() ? 'Tap again' : 'Reset' }}</button>
     </div>
-  }
-  }
 
-  <p class="caveat">{{ group()?.safety_note }}</p>
+    @if (canChant()) {
+      <p class="auto-note">{{ listen() === 'idle' ? (done() ? 'Play to listen once' : 'Auto: play repeats and counts each round') : listen() === 'loading' ? 'Loading' : done() ? 'Playing' : 'Chanting round ' + (count() + 1) + ' of ' + target() }}</p>
+      @if (voiceChoices().length) {
+        <div class="voice-pick" role="group" aria-label="Recitation voice">
+          @for (v of voiceChoices(); track v) {
+            <button type="button" [class.is-on]="voice() === v" [attr.aria-pressed]="voice() === v" (click)="chooseVoice(v)">{{ v === 'male' ? 'Male voice' : 'Female voice' }}</button>
+          }
+        </div>
+      }
+    }
+  </section>
+
+  @if (group()?.safety_note; as note) {
+    <p class="caveat">{{ note }}</p>
+  }
   }
 </div>
 
