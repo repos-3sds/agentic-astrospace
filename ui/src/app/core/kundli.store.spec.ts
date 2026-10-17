@@ -57,6 +57,18 @@ describe('KundliStore offline cold start', () => {
 
   afterEach(() => localStorage.clear());
 
+  it('takes the self profile as the owner, else the first one made', async () => {
+    const mine = { ...asha, relation: 'relative', created_at: '2026-09-01' } as Kundli;
+    const friend = { ...ravi, relation: 'friend', created_at: '2026-10-01' } as Kundli;
+    api.get.and.resolveTo([friend, mine]);
+    const store = await boot();
+    await store.load();
+    expect(store.owner()?.id).toBe('k1');
+
+    store.kundlis.set([{ ...friend, relation: 'self' }, mine]);
+    expect(store.owner()?.id).toBe('k2');
+  });
+
   it('caches the profile list after a network load', async () => {
     api.get.and.resolveTo([asha, ravi]);
     const store = await boot();

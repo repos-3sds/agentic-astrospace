@@ -6,6 +6,7 @@ import android.media.AudioAttributes;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.webkit.WebSettings;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -13,11 +14,29 @@ public class MainActivity extends BridgeActivity {
     /** Must match the server (astrospace/notifications/push.py) and the manifest default. */
     static final String BELL_CHANNEL_ID = "siddha_bell";
 
+    /**
+     * The WebView scales text by the system font size, up to 200%. The
+     * designed screens hold up to about 130% (checked on Today, Ask, Calendar
+     * and Explore); past that, names, signs and the month header clip and the
+     * tab labels collide (regression pass, 2026-10-17). Font scale is not in
+     * the manifest's configChanges, so a change recreates the activity and
+     * this runs again.
+     */
+    static final int MAX_TEXT_ZOOM = 130;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(PushConfigPlugin.class);
         super.onCreate(savedInstanceState);
+        capTextZoom();
         createBellChannel();
+    }
+
+    private void capTextZoom() {
+        if (getBridge() == null || getBridge().getWebView() == null) return;
+        WebSettings settings = getBridge().getWebView().getSettings();
+        int system = Math.round(getResources().getConfiguration().fontScale * 100);
+        settings.setTextZoom(Math.min(system, MAX_TEXT_ZOOM));
     }
 
     /**

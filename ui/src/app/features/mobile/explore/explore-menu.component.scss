@@ -50,7 +50,8 @@
   min-width: 0;
   flex-direction: column;
   gap: 1px;
-  b { @include m-body-strong; color: var(--m-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  // Wraps rather than clipping: at a large system font the name is the first thing to go.
+  b { @include m-body-strong; color: var(--m-text); overflow-wrap: anywhere; }
   span { @include m-caption; display: flex; min-width: 0; align-items: center; gap: 5px; color: var(--m-muted); white-space: nowrap; overflow: hidden; }
   i { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 999px; background: var(--m-accent); }
   em { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-style: normal; }
@@ -108,7 +109,11 @@
 
 .cells {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  // In em so the columns grow with the system font size: three across at
+  // normal size, fewer once a sign name would no longer fit in a third.
+  // 6.3em is "Capricorn", the longest sign, plus the cell's padding.
+  font-size: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 6.3em), 1fr));
   gap: 8px;
 }
 
@@ -117,12 +122,12 @@
   min-width: 0;
   flex-direction: column;
   gap: 4px;
-  padding: 11px 10px;
+  padding: 11px 8px;
   border: 1px solid var(--m-border);
   border-radius: 14px;
   background: var(--m-surface);
   small { @include m-eyebrow; color: var(--m-muted); }
-  b { @include m-body-strong; color: var(--m-text); overflow: hidden; text-overflow: ellipsis; }
+  b { @include m-body-strong; font-size: 1em; color: var(--m-text); overflow-wrap: anywhere; }
 }
 
 .featured-link { @include m-button; color: var(--m-accent-strong); }

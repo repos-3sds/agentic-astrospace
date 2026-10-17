@@ -277,10 +277,13 @@ export class TodayComponent {
   protected readonly headerName = computed(
     () => this.view()?.greetingName ?? this.kundlis.active()?.name ?? 'there',
   );
+  // The avatar beside the greeting carries whose chart this is.
   protected readonly headerDate = computed(() => this.view()?.dateLabel ?? 'Today');
   /** The day the guidance is for, which the timing note opens in the calendar. */
   protected readonly todayDate = computed(() => this.loadedDaily()?.daily.date ?? '');
-  protected readonly greeting = computed(() => `Namaste, ${this.headerName()}`);
+  protected readonly greeting = computed(
+    () => `Namaste, ${this.kundlis.owner()?.name.split(' ')[0] ?? this.headerName()}`,
+  );
   protected readonly listenScript = computed(() =>
     this.audioSections().map((section) => section.text).join(' '),
   );
@@ -485,6 +488,13 @@ export class TodayComponent {
         if (cached.freshness === 'stale') void this.refreshToday(profile.id, request);
         return;
       }
+      // Nothing cached for this profile and place: clear the last one rather
+      // than keep it on screen. After a city change the old city's Rahu Kalam
+      // stayed up, counting down on the new clock, until the new day arrived.
+      this.view.set(null);
+      this.muhurtaWindows.set([]);
+      this.panchangaDetails.set(null);
+      this.loadedDaily.set(null);
       this.loading.set(true);
       const daily = await this.vedic.dailyGuidance(profile.id);
       if (request !== this.requestId || this.kundlis.activeId() !== profile.id) return;

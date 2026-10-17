@@ -7,7 +7,7 @@
     <span class="avatar" aria-hidden="true">{{ p.initial }}</span>
     <span class="who-text">
       <b>Namaste, {{ p.first }}</b>
-      <span><i aria-hidden="true"></i><em>Tap to switch person</em></span>
+      <span><i aria-hidden="true"></i><em>{{ p.viewing ? 'Viewing ' + p.viewing + ' · tap to switch' : 'Tap to switch person' }}</em></span>
     </span>
   </button>
   <span class="actions">

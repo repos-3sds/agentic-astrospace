@@ -69,6 +69,10 @@ class PushTokenRegistration(BaseModel):
     environment: str = Field("production", pattern="^(production|sandbox)$")
     locale: str | None = None
     timezone: str | None = None
+    # The token this device registered before, when the OS has since rotated
+    # it. Both stay deliverable for a while, so without this every push went
+    # out twice to the same phone (retest of build 487).
+    replaces: str | None = None
 
 
 class PushTokenRevocation(BaseModel):
@@ -330,8 +334,11 @@ def register_push_token(payload: PushTokenRegistration, user: CurrentUser,
                         db: Session = Depends(get_db)):
     row = cm.upsert_push_token(
         db, user.id, payload.provider, payload.token,
-        **payload.model_dump(exclude={"provider", "token"}, exclude_none=True),
+        **payload.model_dump(exclude={"provider", "token", "replaces"}, exclude_none=True),
     )
+    if payload.replaces and payload.replaces != payload.token and _owned_push_token(
+            db, user.id, payload.provider, payload.replaces):
+        cm.revoke_push_token(db, payload.provider, payload.replaces)
     return {"id": row.id, "provider": row.provider,
             "environment": row.environment, "revoked_at": None}
 

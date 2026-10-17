@@ -121,3 +121,37 @@ def test_real_windows_include_every_named_kind(db):
     names = {w["name"] for w in windows_for(kundli, date(2026, 10, 16), "Asia/Kolkata")}
     assert {"Rahu Kalam", "Yamaganda", "Gulika Kalam", "Durmuhurta",
             "Brahma Muhurta", "Abhijit Muhurta"} <= names
+
+
+def test_city_change_cancels_the_old_place_and_queues_the_new(db):
+    """Retest of build 487: after switching to London, alerts queued for the
+    old place still went out on the old clock."""
+    schedule_window_alerts(db, now=NOW, windows=fake_windows)
+    crud.upsert_user_settings(db, ME, {
+        "timezone_mode": "panchanga_place",
+        "panchanga_place": {"city": "London", "nation": "GB", "timezone": "Europe/London"},
+    })
+    seen = {}
+
+    def london(kundli, day, tz_name, city=None, nation=None):
+        seen.update(city=city, nation=nation, tz=tz_name)
+        return [w("Rahu Kalam", "2026-10-16T13:30:00+01:00", "2026-10-16T15:00:00+01:00")]
+
+    jobs = schedule_window_alerts(db, now=NOW, windows=london)
+    assert seen == {"city": "London", "nation": "GB", "tz": "Europe/London"}
+    assert [j.payload["start"] for j in jobs] == ["2026-10-16T13:30:00+01:00"] * 2
+    pending = db.query(NotificationJob).filter(NotificationJob.status == "pending").all()
+    assert {j.payload["start"] for j in pending} == {"2026-10-16T13:30:00+01:00"}
+
+
+def test_a_failed_day_cancels_nothing(db):
+    schedule_window_alerts(db, now=NOW, windows=fake_windows)
+
+    def broken_tomorrow(kundli, day, tz_name):
+        if day != date(2026, 10, 16):
+            raise ValueError("no ephemeris")
+        return fake_windows(kundli, day, tz_name)
+
+    schedule_window_alerts(db, now=NOW, windows=broken_tomorrow)
+    names = {j.payload["window"] for j in db.query(NotificationJob).filter(NotificationJob.status == "pending")}
+    assert "Brahma Muhurta" in names

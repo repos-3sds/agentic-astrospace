@@ -5,9 +5,8 @@ import { ReferOutError } from '../../../core/api.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
 import { timingClockNote, timingPlaceLabel } from '../../../core/timing-place';
-import { buildIcs } from '../../../core/ics';
 import { AnalyticsService } from '../../../core/analytics.service';
-import { exportCalendarFile } from '../../../core/calendar-export';
+import { addToCalendar as addEventToCalendar } from '../../../core/calendar-export';
 import { MuhurtaApiWindow, VedicService } from '../../../core/vedic.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
@@ -135,16 +134,16 @@ export class MuhurtaResultsComponent {
   protected readonly exportFailed = signal<number | null>(null);
 
   /**
-   * Hands one window to the phone's calendar as an .ics file, with an alert
-   * 30 minutes before. The calendar app owns the reminder, so it fires even
-   * with this app closed.
+   * Hands one window to the phone's calendar (see core/calendar-export.ts).
+   * The calendar app owns the reminder, so it fires even with this app
+   * closed.
    */
   protected async addToCalendar(w: MuhurtaWindow): Promise<void> {
     this.exporting.set(w.rank);
     this.exportFailed.set(null);
     try {
       const title = this.heading().replace(/^Best times (to|for) /, '');
-      const ics = buildIcs([{
+      await addEventToCalendar({
         uid: `muhurta-${w.startIso}@astrospace`,
         title: `Muhurta: ${title}`,
         startIso: w.startIso,
@@ -152,8 +151,7 @@ export class MuhurtaResultsComponent {
         description: `${w.reason} ${this.disclaimer()}`,
         location: this.place(),
         alarmMinutes: 30,
-      }]);
-      await exportCalendarFile(ics, `muhurta-${w.startIso.slice(0, 10)}.ics`, `Muhurta: ${title}`);
+      }, `muhurta-${w.startIso.slice(0, 10)}.ics`);
       this.analytics.track('calendar_exported', { source: 'muhurta' });
     } catch {
       this.exportFailed.set(w.rank);

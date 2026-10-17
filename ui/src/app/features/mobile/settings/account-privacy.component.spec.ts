@@ -69,3 +69,31 @@ describe('AccountPrivacyComponent › Change email', () => {
     expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('already your email');
   });
 });
+
+describe('AccountPrivacyComponent › Sign out', () => {
+  it('asks once before signing out', async () => {
+    const signOut = jasmine.createSpy('signOut').and.resolveTo();
+    const reset = jasmine.createSpy('reset');
+    await TestBed.configureTestingModule({
+      imports: [AccountPrivacyComponent],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: { signOut, user: signal({ email: 'me@example.com' }), email: signal('me@example.com') } },
+        { provide: KundliStore, useValue: { loaded: () => true, kundlis: () => [], reset } },
+        { provide: PreferencesService, useValue: { shareUsage: signal(true), experienceMode: signal('balanced') } },
+      ],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(AccountPrivacyComponent);
+    fixture.detectChanges();
+    const row = [...fixture.nativeElement.querySelectorAll('button.action')]
+      .find((b: HTMLElement) => b.textContent?.includes('Sign out')) as HTMLButtonElement;
+    row.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(signOut).not.toHaveBeenCalled();
+    (fixture.nativeElement.querySelector('[aria-label="Confirm sign out"] .send') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    expect(reset).toHaveBeenCalled();
+    expect(signOut).toHaveBeenCalledOnceWith(['/m', 'start']);
+  });
+});

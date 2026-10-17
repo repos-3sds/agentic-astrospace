@@ -5,6 +5,7 @@ import { Kundli } from '../../../core/models';
 import { KundliStore } from '../../../core/kundli.store';
 import { SheetComponent } from '../sheet/sheet.component';
 import { HapticsService } from '../../../core/haptics.service';
+import { profileRelationLabel } from '../settings/profile-fields';
 
 @Component({
   selector: 'as-profile-switcher',
@@ -24,7 +25,7 @@ import { HapticsService } from '../../../core/haptics.service';
             <span class="profile-avatar">{{ profile.name.slice(0, 1).toUpperCase() }}</span>
             <span class="profile-copy">
               <strong>{{ profile.name }}</strong>
-              <span>{{ profile.relation || 'Profile' }}</span>
+              <span>{{ relationLabel(profile.relation) }}</span>
             </span>
             @if (profile.id === kundlis.activeId()) {
               <span class="profile-check" aria-label="Active">✓</span>
@@ -42,6 +43,7 @@ import { HapticsService } from '../../../core/haptics.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProfileSwitcherComponent {
+  protected readonly relationLabel = profileRelationLabel;
   readonly kundlis = inject(KundliStore);
   readonly dismissed = output<void>();
   private readonly haptics = inject(HapticsService);

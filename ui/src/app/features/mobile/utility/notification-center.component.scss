@@ -1,0 +1,43 @@
+@use '../mobile-tokens' as *;
+
+// Its own sheet: the shared utility sheet styles `main > button` as the
+// Premium page's call to action, which painted every alert row as a faded
+// accent pill (worst in dark mode, retest of build 487).
+:host { display: block; min-height: 100%; background: var(--m-bg); color: var(--m-text); }
+main { padding: 12px 20px 28px; }
+
+.nc-list {
+  display: flex; flex-direction: column;
+  border: 1px solid var(--m-border); border-radius: 18px;
+  background: var(--m-surface); overflow: hidden;
+}
+
+.nc-row {
+  appearance: none; box-sizing: border-box; width: 100%;
+  display: grid; grid-template-columns: 10px 1fr; gap: 4px 12px; align-items: start;
+  margin: 0; padding: 16px 16px 16px 14px;
+  border: 0; border-radius: 0; background: transparent; color: var(--m-text);
+  font: inherit; text-align: left; cursor: pointer;
+  & + & { border-top: 1px solid var(--m-border); }
+  &:disabled { opacity: .62; }
+  &:active { background: var(--m-raised); }
+}
+
+.nc-dot {
+  width: 8px; height: 8px; margin-top: 6px; border-radius: 50%;
+  background: transparent;
+  .unread & { background: var(--m-accent); }
+}
+
+.nc-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.nc-meta { @include m-eyebrow; display: flex; gap: 8px; color: var(--m-accent-strong); }
+.nc-meta time { color: var(--m-muted); }
+.nc-title { @include m-body-strong; color: var(--m-text); }
+.read .nc-title { color: var(--m-muted); }
+.nc-body { @include m-body-small; color: var(--m-muted); }
+
+.nc-empty { @include m-body; color: var(--m-muted); padding: 30px; text-align: center; }
+.nc-error {
+  @include m-body-small; margin-bottom: 10px; padding: 12px 14px;
+  border: 1px solid var(--m-warn); border-radius: 14px; background: var(--m-warn-soft); color: var(--m-warn);
+}
