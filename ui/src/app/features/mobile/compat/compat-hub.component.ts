@@ -14,7 +14,7 @@ import { profileRelationLabel } from '../settings/profile-fields';
   template: `
     <a class="mco-back" [asBack]="['/m','family']"><img src="mobile/back.svg" alt="" /><span>Family</span></a>
     <main class="mco-body">
-      <header><h1>Compatibility</h1><p>Ashta Koota matching - 36 points, computed honestly</p></header>
+      <header><h1>Compatibility</h1><p>Ashta Koota matching: 36 points, computed honestly</p></header>
       <section class="mco-how"><b>HOW THIS WORKS</b><p>We compare two saved birth profiles across the 8 classical kootas, flag doshas honestly, and show the computed base layer before any interpretation.</p></section>
       <a class="mco-primary" [routerLink]="['/m','compat','add']"><span>+</span>Add a person</a>
 

@@ -81,11 +81,13 @@ const NAKSHATRA_SYMBOLS: Record<string, string> = {
 
 const GEM_COLORS: Record<string, string> = {
   ruby: '#c9273a',
-  pearl: '#f4eee3',
+  // Pearl and diamond were near-white and vanished on the pale chip
+  // (regression 2026-10-17); these keep their hue with enough contrast.
+  pearl: '#b8a78c',
   coral: '#e76f51',
   emerald: '#1f9d66',
   'yellow sapphire': '#e2b93f',
-  diamond: '#dbeafe',
+  diamond: '#7f9cc4',
   'blue sapphire': '#2d5bd1',
   hessonite: '#b86f19',
   catseye: '#8b9467',
@@ -135,14 +137,20 @@ export function colorSymbol(name: string, hex?: string): MobileSymbol {
 
 export function gemSymbol(value: string): MobileSymbol {
   const key = normalize(value);
-  const match = Object.keys(GEM_COLORS).find((name) => key.includes(name));
+  const match = longestFirst(GEM_COLORS).find((name) => key.includes(name));
   return { kind: 'gem', glyph: '◆', label: value, color: match ? GEM_COLORS[match] : '#9f8f7b' };
 }
 
 export function directionSymbol(value: string): MobileSymbol {
   const key = normalize(value);
-  const match = Object.keys(DIRECTION_ANGLES).find((name) => key.includes(name));
+  // Longest first: "south east" also contains "east", which matched first
+  // and drew South-East as a plain right arrow (regression 2026-10-17).
+  const match = longestFirst(DIRECTION_ANGLES).find((name) => key.includes(name));
   return { kind: 'direction', glyph: '↑', label: value, angle: match ? DIRECTION_ANGLES[match] : 0 };
+}
+
+function longestFirst(table: Record<string, unknown>): string[] {
+  return Object.keys(table).sort((a, b) => b.length - a.length);
 }
 
 function normalize(value: string): string {

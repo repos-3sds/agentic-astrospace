@@ -1,5 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { LegalDocument, openLegal } from '../../../core/legal';
@@ -203,8 +205,16 @@ export class SettingsHomeComponent {
   /** Whether Listen will use Siddha's natural voice; false until known. */
   private readonly naturalAvailable = signal(false);
 
+  /** "1.0.0 (build 488)" on the phone, so a bug report can say which build. */
+  protected readonly appVersion = signal<string | null>(null);
+
   constructor() {
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
+    if (Capacitor.isNativePlatform()) {
+      void CapacitorApp.getInfo()
+        .then((info) => this.appVersion.set(`${info.version} (build ${info.build})`))
+        .catch(() => undefined);
+    }
     void inject(NaturalVoiceService).available().then((ok) => this.naturalAvailable.set(ok)).catch(() => undefined);
   }
 

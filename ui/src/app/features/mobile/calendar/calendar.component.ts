@@ -45,6 +45,8 @@ interface CalendarCell {
               [class.mcal-event]="cell.eventCount > 0"
               [routerLink]="['/m','calendar','day']"
               [queryParams]="{ date: cell.date }"
+              [attr.aria-label]="cellLabel(cell.date, cell.eventCount)"
+              [attr.aria-current]="cell.date === todayDate() ? 'date' : null"
             >{{ cell.day }}</a>
           }
         </section>
@@ -174,6 +176,15 @@ export class CalendarComponent {
   }
 
   protected readonly regionsLabel = festivalRegionsLabel;
+
+  /** A screen reader heard only "17"; say the date and whether anything falls on it. */
+  protected cellLabel(date: string, eventCount: number): string {
+    const [y, m, d] = date.split('-').map(Number);
+    const label = new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
+    const today = date === this.todayDate() ? ', today' : '';
+    const events = eventCount ? `, ${eventCount} ${eventCount === 1 ? 'observance' : 'observances'}` : '';
+    return `${label}${today}${events}`;
+  }
 
   protected monthLabel(): string {
     return new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(this.monthStart());

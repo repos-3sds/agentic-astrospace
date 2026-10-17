@@ -504,6 +504,9 @@ export class ReadingsComponent {
   protected titleFor(reading: Reading): string {
     const title = periodTitle(reading);
     if (!this.isCurrent(reading)) return title;
+    // On a weekend the server files the week ahead (reading_routes._period_start).
+    const today = new Date().toLocaleDateString('en-CA');
+    if (reading.reading_type === 'weekly' && reading.period_start && reading.period_start > today) return `Week ahead · ${title}`;
     const lead = this.unit().current;
     return `${lead.charAt(0).toUpperCase()}${lead.slice(1)} · ${title}`;
   }

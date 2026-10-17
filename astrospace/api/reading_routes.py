@@ -55,9 +55,14 @@ def _period_start(period: str, local_day: date) -> date:
     Weeks run Monday to Sunday. That is a calendar convention for grouping
     readings, not an astrological one (the Vedic weekday cycle starts on
     Ravivara); it only decides which readings count as "this week".
+
+    On Saturday and Sunday the weekly reading is the week ahead: one asked
+    for on Sat 17 Oct covered 12-18 Oct, five days already gone
+    (regression 2026-10-17).
     """
     if period == "weekly":
-        return local_day - timedelta(days=local_day.weekday())
+        monday = local_day - timedelta(days=local_day.weekday())
+        return monday + timedelta(days=7) if local_day.weekday() >= 5 else monday
     if period == "monthly":
         return local_day.replace(day=1)
     if period == "quarterly":
