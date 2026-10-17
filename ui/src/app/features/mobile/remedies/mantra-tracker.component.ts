@@ -139,7 +139,10 @@ export class MantraTrackerComponent {
 
   constructor() {
     void this.load();
-    inject(DestroyRef).onDestroy(() => this.stopListening());
+    inject(DestroyRef).onDestroy(() => {
+      this.stopListening();
+      if (this.resetTimer) clearTimeout(this.resetTimer);
+    });
   }
 
   /**
@@ -281,6 +284,21 @@ export class MantraTrackerComponent {
     this.completedDates.set(dates);
     this.count.set(next);
     this.persist(next, dates);
+  }
+
+  /** Reset wipes the day's count, so it takes a second tap within 3 s. */
+  protected readonly resetArmed = signal(false);
+  private resetTimer: ReturnType<typeof setTimeout> | null = null;
+
+  protected askReset(): void {
+    if (!this.resetArmed()) {
+      this.resetArmed.set(true);
+      this.resetTimer = setTimeout(() => this.resetArmed.set(false), 3000);
+      return;
+    }
+    if (this.resetTimer) clearTimeout(this.resetTimer);
+    this.resetArmed.set(false);
+    this.resetToday();
   }
 
   protected resetToday(): void {

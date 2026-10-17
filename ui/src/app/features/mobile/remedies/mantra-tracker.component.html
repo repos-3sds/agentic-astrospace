@@ -116,7 +116,7 @@
       @if (target() > 1) {
         <button class="reset-btn" type="button" (click)="undo()" aria-label="Take back one count">Undo 1</button>
       }
-      <button class="reset-btn" type="button" (click)="resetToday()">Reset count</button>
+      <button class="reset-btn" type="button" (click)="askReset()">{{ resetArmed() ? 'Tap again to reset' : 'Reset count' }}</button>
     </div>
   }
   }
