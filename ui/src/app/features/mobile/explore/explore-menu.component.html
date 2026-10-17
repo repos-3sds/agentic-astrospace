@@ -41,6 +41,23 @@
     <span class="featured-link">Open your chart (D1) <span aria-hidden="true">→</span></span>
   </a>
 
+  <!-- Today's Subhashita (Hawk, 2026-10-17): only today's verse, opening to share it. -->
+  <a class="verse m-pressable" [routerLink]="['/m', 'subhashita']">
+    <span class="verse-head">
+      <span class="story-icon" aria-hidden="true">
+        <span class="mask" style="--icon-url: url('/mobile/figma-yantra-book-open.svg')"></span>
+      </span>
+      <span class="eyebrow">TODAY’S SUBHASHITA</span>
+    </span>
+    @if (subhashita.today(); as verse) {
+      <span class="verse-text">“{{ verse.english }}”</span>
+      <span class="verse-source">{{ verse.source }} {{ verse.ref }}</span>
+    } @else {
+      <span class="verse-text">A verse a day from the Gita, Chanakya Niti and the Puranas.</span>
+    }
+    <span class="featured-link">Read and share <span aria-hidden="true">→</span></span>
+  </a>
+
   @if (preferences.experienceMode() === 'guided') {
     <a class="story m-pressable" [routerLink]="['/m', 'explore', 'story']">
       <span class="story-icon" aria-hidden="true">

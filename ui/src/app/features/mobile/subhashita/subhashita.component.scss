@@ -1,0 +1,7 @@
+@use '../mobile-tokens' as *;
+@use '../settings/settings-shared' as shared;
+
+@include shared.settings-screen;
+
+.state { @include m-body; color: var(--m-muted); margin: 0; text-align: center; padding: 24px 0 8px; }
+.retry { @include m-cta-secondary; align-self: center; }

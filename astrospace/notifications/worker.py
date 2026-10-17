@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 from ..db import crud_mobile as cm
 from ..db.models import NotificationJob
 from .daily_briefs import schedule_daily_briefs
+from .daily_subhashita import schedule_daily_subhashita
 from .email import EmailTransport, email_transport_from_env
 from .email_jobs import deliver_email_job, is_email_job, schedule_emails
 from .morning_brief import schedule_morning_briefs
@@ -150,12 +151,14 @@ def run_once(db: Session, transports: dict[str, PushTransport] | None = None,
     briefs = _step(db, "daily briefs", lambda: schedule_daily_briefs(db), {})
     scheduled = _step(db, "morning briefs", lambda: schedule_morning_briefs(db), [])
     windows = _step(db, "window alerts", lambda: schedule_window_alerts(db), [])
+    verses = _step(db, "subhashita", lambda: schedule_daily_subhashita(db), [])
     # After the daily briefs, so the daily email has its brief to send.
     emails = _step(db, "emails", lambda: schedule_emails(db), {})
     delivered = _step(db, "delivery", lambda: deliver_due(db, transports, email=email),
                       {"sent": 0, "failed": 0, "delivery_failed": True})
     summary = {"reaped": reaped, "daily_briefs": briefs, "scheduled": len(scheduled),
-               "window_alerts": len(windows), "emails": emails, **delivered}
+               "window_alerts": len(windows),
+               "subhashita": len(verses), "emails": emails, **delivered}
     log.info("notifications: %s", summary)
     return summary
 

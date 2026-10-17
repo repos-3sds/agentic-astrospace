@@ -51,6 +51,7 @@ export class NotificationsComponent {
   private readonly snoozeKey = 'astrospace.mobile.notificationPrompt.snoozedUntil';
   private readonly defaults: NotificationPref[] = [
     { id: 'morning', title: 'Morning brief', detail: 'Your day, every morning', on: true },
+    { id: 'subhashita', title: 'Today’s Subhashita', detail: 'A verse from the Gita and Chanakya Niti, at 10 am', on: true },
     {
       id: 'windows',
       title: 'Window alerts',

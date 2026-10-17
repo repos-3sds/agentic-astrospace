@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
 import { PlanGateService } from '../../../core/plan-gate.service';
 import { PreferencesService } from '../../../core/preferences.service';
+import { SubhashitaService } from '../../../core/subhashita.service';
 import { VedicService } from '../../../core/vedic.service';
 import { ExploreMenuComponent } from './explore-menu.component';
 
@@ -12,6 +13,7 @@ describe('ExploreMenuComponent', () => {
   const live = signal(false);
   const open = new Set<string>();
   const owner = signal<{ id: string; name: string } | null>(null);
+  const verse = signal<{ date: string; id: string; source: string; ref: string; sanskrit: string; english: string } | null>(null);
 
   function render(): HTMLElement {
     TestBed.configureTestingModule({
@@ -22,6 +24,7 @@ describe('ExploreMenuComponent', () => {
         { provide: VedicService, useValue: {} },
         { provide: PreferencesService, useValue: { experienceMode: signal('balanced') } },
         { provide: PlanGateService, useValue: { live, allows: (key: string) => !live() || open.has(key) } },
+        { provide: SubhashitaService, useValue: { today: verse, load: () => Promise.resolve(verse()) } },
       ],
     });
     const fixture = TestBed.createComponent(ExploreMenuComponent);
@@ -33,6 +36,7 @@ describe('ExploreMenuComponent', () => {
     live.set(false);
     open.clear();
     owner.set(null);
+    verse.set(null);
   });
 
   it('greets the person and lists the eight tiles in order, with Settings behind the gear', () => {
@@ -63,5 +67,15 @@ describe('ExploreMenuComponent', () => {
     const el = render();
     expect(el.querySelector('.who-text b')?.textContent?.trim()).toBe('Namaste, Hawk');
     expect(el.querySelector('.who-text em')?.textContent?.trim()).toBe('Viewing Asha · tap to switch');
+  });
+
+  it('shows today’s Subhashita and opens it to share', () => {
+    verse.set({ date: '2026-10-17', id: 'gita-2-47', source: 'Bhagavad Gita', ref: '2.47', sanskrit: 'कर्मण्येवाधिकारस्ते', english: 'Your part is the work itself, never its fruits.' });
+    const el = render();
+    const card = el.querySelector('a.verse') as HTMLAnchorElement;
+    expect(card.getAttribute('href')).toBe('/m/subhashita');
+    expect(card.textContent).toContain('TODAY’S SUBHASHITA');
+    expect(card.textContent).toContain('Your part is the work itself');
+    expect(card.textContent).toContain('Bhagavad Gita 2.47');
   });
 });
