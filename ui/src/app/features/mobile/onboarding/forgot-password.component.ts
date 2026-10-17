@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../../core/auth.service';
+import { authErrorMessage } from './auth-error';
 
 @Component({
   selector: 'as-forgot-password',
@@ -37,7 +38,7 @@ export class ForgotPasswordComponent {
       // follows this rule, preventing this form from exposing registered users.
       this.sent.set(true);
     } catch (error) {
-      this.error.set((error as Error).message);
+      this.error.set(authErrorMessage(error));
     } finally {
       this.loading.set(false);
     }

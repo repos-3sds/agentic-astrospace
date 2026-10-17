@@ -5,7 +5,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { BehaviorSubject, of } from 'rxjs';
 
-import { AskAnswerComponent } from './ask-answer.component';
+import { AskAnswerComponent, areaLabel } from './ask-answer.component';
 import { PreferencesService, ExperienceMode } from '../../../core/preferences.service';
 import { StructuredReading } from '../../../core/models';
 import { AskService } from '../../../core/ask.service';
@@ -674,5 +674,13 @@ describe('AskAnswerComponent copy answer', () => {
 
     expect((harness.component as any).copiedMessageId()).toBeNull();
     expect((harness.component as any).submitError()).toBe('The answer could not be copied. Please try again.');
+  });
+});
+
+describe('areaLabel', () => {
+  it('names life areas in plain words, never the server id', () => {
+    expect(areaLabel('family_property')).toBe('Family and home');
+    expect(areaLabel('career')).toBe('Work');
+    expect(areaLabel('new_area')).toBe('New area');
   });
 });

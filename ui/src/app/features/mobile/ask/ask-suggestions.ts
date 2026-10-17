@@ -31,21 +31,21 @@ export function buildAskSuggestions(daily: DailyGuidancePayload | null, mode: Mo
   if (mode === 'guided') {
     return [
       { prompt: current ? `What should I focus on at work during my ${current.lord} period?` : 'What should I focus on at work this week?', because: dashaBecause ?? 'Plain-language starter' },
-      { prompt: nakshatra ? `Is today a good day to have a family conversation?` : 'How should I think about a family conversation?', because: dayBecause ?? 'Practical guidance' },
-      { prompt: 'What is one thing to avoid today?', because: dayBecause ?? 'Safety-first daily prompt' },
+      { prompt: nakshatra ? 'Is today a good day for a talk with my family?' : 'How should I approach a talk with my family?', because: dayBecause ?? 'Practical guidance' },
+      { prompt: 'What is one thing to avoid at work today?', because: dayBecause ?? 'Safety-first daily prompt' },
     ];
   }
   if (mode === 'practitioner') {
     return [
-      { prompt: current ? `How does the ${current.lord} ${LEVEL_WORD[current.level] ?? current.level} shape my career factors right now?` : 'Explain my current dasha with natal and transit factors', because: dashaBecause ?? 'Technical depth' },
-      { prompt: transit ? `What does ${transit.planet}'s current transit mean for relationships in my chart?` : 'Which transit rules are driving today’s reading?', because: transitBecause ?? 'Provenance check' },
-      { prompt: nakshatra ? `Is the Moon in ${nakshatra} a good time to start something new?` : 'Compare D1 and D9 factors for this relationship question', because: dayBecause ?? 'Chart-layer prompt' },
+      { prompt: current ? `How does the ${current.lord} ${LEVEL_WORD[current.level] ?? current.level} shape my career factors right now?` : 'Explain my current dasha for my career with natal and transit factors', because: dashaBecause ?? 'Technical depth' },
+      { prompt: transit ? `What does ${transit.planet}'s current transit mean for relationships in my chart?` : 'Which transits are shaping my career today?', because: transitBecause ?? 'Provenance check' },
+      { prompt: nakshatra ? `Is the Moon in ${nakshatra} a good time to start a new business?` : 'Compare D1 and D9 factors for this relationship question', because: dayBecause ?? 'Chart-layer prompt' },
     ];
   }
   return [
     { prompt: current ? `What does my ${current.lord} period mean for work right now?` : 'What should I consider about my career right now?', because: dashaBecause ?? 'From your chart' },
     { prompt: transit ? `How is ${transit.planet}'s transit affecting my relationships?` : 'What does my chart say about relationships?', because: transitBecause ?? 'From your chart' },
-    { prompt: nakshatra ? `Is today a good day to start something new?` : 'Is this a good week to start something new?', because: dayBecause ?? 'From today’s panchanga' },
+    { prompt: nakshatra ? 'Is today a good day to start something new at work?' : 'Is this a good week to start something new at work?', because: dayBecause ?? 'From today’s panchanga' },
   ];
 }
 
@@ -53,20 +53,20 @@ function neutral(mode: Mode): AskSuggestion[] {
   if (mode === 'guided') {
     return [
       { prompt: 'What should I focus on at work this week?', because: 'Plain-language starter' },
-      { prompt: 'What is one thing to avoid today?', because: 'Safety-first daily prompt' },
-      { prompt: 'How should I think about a family conversation?', because: 'Practical guidance' },
+      { prompt: 'What is one thing to avoid at work today?', because: 'Safety-first daily prompt' },
+      { prompt: 'How should I approach a talk with my family?', because: 'Practical guidance' },
     ];
   }
   if (mode === 'practitioner') {
     return [
-      { prompt: 'Explain my current dasha with natal and transit factors', because: 'Technical depth' },
-      { prompt: 'Which transit rules are driving today’s reading?', because: 'Provenance check' },
+      { prompt: 'Explain my current dasha for my career with natal and transit factors', because: 'Technical depth' },
+      { prompt: 'Which transits are shaping my career today?', because: 'Provenance check' },
       { prompt: 'Compare D1 and D9 factors for this relationship question', because: 'Chart-layer prompt' },
     ];
   }
   return [
     { prompt: 'What should I consider about my career right now?' },
     { prompt: 'What does my chart say about relationships?' },
-    { prompt: 'Is this a good week to start something new?' },
+    { prompt: 'Is this a good week to start something new at work?' },
   ];
 }

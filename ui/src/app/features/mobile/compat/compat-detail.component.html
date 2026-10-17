@@ -48,7 +48,7 @@
       }
     </div>
 
-    <p class="mcod-eyebrow">DASHAKOOTA EXTENSION</p>
+    <p class="mcod-eyebrow">SOUTH INDIAN CHECKS</p>
     <p class="mcod-note">{{ dashakootaSummary() }}</p>
     @if (dashakootaRows().length) {
       <div class="mcod-koota-table compact">
@@ -91,8 +91,7 @@
     </div>
 
     <div class="mcod-actions">
-      <button type="button" class="ghost" disabled title="Not yet available">Compare D1/D9</button>
-      <a class="ink" [routerLink]="['/m', 'ask']" [queryParams]="{ q: askNarrativeQuery() }">Gen AI Narrative</a>
+      <a class="ink" [routerLink]="['/m', 'ask']" [queryParams]="{ q: askNarrativeQuery() }">Ask about this match</a>
     </div>
   }
 </main>

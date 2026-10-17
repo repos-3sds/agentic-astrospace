@@ -39,7 +39,7 @@ describe('buildAskSuggestions', () => {
     expect(rows.map((row) => row.prompt)).toEqual([
       'What should I consider about my career right now?',
       'What does my chart say about relationships?',
-      'Is this a good week to start something new?',
+      'Is this a good week to start something new at work?',
     ]);
   });
 });

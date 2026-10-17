@@ -13,10 +13,10 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
  * summary screen (30c, `compat-results`) only shows a slice of.
  *
  * Every figure here already exists in `gun_milan()`'s response; this screen
- * just stops summarizing it. "Compare D1/D9" is a real, not-yet-built
- * feature and stays disabled rather than faked. "Gen AI Narrative" reuses
- * Ask — the only place in the app that generates AI narrative from grounded
- * data — instead of a second, parallel generation path.
+ * just stops summarizing it. A D1/D9 comparison is not built yet, so no
+ * button promises one. "Ask about this match" reuses Ask — the only place in
+ * the app that generates AI narrative from grounded data — instead of a
+ * second, parallel generation path.
  */
 @Component({
   selector: 'as-compat-detail',
@@ -56,11 +56,12 @@ export class CompatDetailComponent {
   protected readonly dashakootaRows = computed(() => this.score()?.dashakoota_extension?.rows ?? []);
   protected readonly dashakootaSummary = computed(() => {
     const extension = this.score()?.dashakoota_extension;
-    if (!extension) return 'Dashakoota extension was not returned for this pair.';
-    const blockers = extension.hard_blockers?.length
-      ? ` Hard blockers: ${extension.hard_blockers.join(', ')}.`
-      : ' No hard blocker was returned by this extension.';
-    return `${extension.total}/${extension.max} on ${extension.system}.${blockers}`;
+    if (!extension) return 'The South Indian checks (Rajju, Vedha, Stree Deergha) are not available for this pair.';
+    const flagged = extension.hard_blockers ?? [];
+    const flags = flagged.length
+      ? ` ${flagged.join(' and ')} ${flagged.length > 1 ? 'are' : 'is'} flagged. South Indian practice looks at the match more carefully when that happens; it is a caution, not a verdict.`
+      : ' Neither Rajju nor Vedha is flagged.';
+    return `${extension.total} of ${extension.max} on the South Indian checks (Rajju, Vedha, Stree Deergha), a separate scale from the 36 points.${flags}`;
   });
 
   constructor() {

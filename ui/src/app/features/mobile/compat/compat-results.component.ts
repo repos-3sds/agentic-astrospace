@@ -31,7 +31,7 @@ import { PlanLockComponent } from '../shared/plan-lock.component';
           body="Free includes one compatibility score a month, and you can reopen that one any time. Plus checks as many people as you like, with the full report."
         />
       } @else if (score(); as s) {
-        <section class="mcor-score"><b>{{ activeName() }} x {{ partnerName() }}</b><div><strong>{{ s.total }}</strong><span>/ {{ s.max }}</span></div><h1>{{ s.verdict }}</h1><p>{{ s.percent }}% from {{ s.rows.length }} returned koota rows.</p></section>
+        <section class="mcor-score"><b>{{ activeName() }} x {{ partnerName() }}</b><div><strong>{{ s.total }}</strong><span>/ {{ s.max }}</span></div><h1>{{ s.verdict }}</h1><p>{{ s.percent }}% across the eight kootas.</p></section>
         @if (!fullReport()) {
           <as-plan-lock
             from="compatibility.full"
@@ -46,10 +46,10 @@ import { PlanLockComponent } from '../shared/plan-lock.component';
           <p class="mcor-title">INPUTS &amp; CANCELLATIONS</p>
           <section class="mcor-flag"><p>{{ s.system }} · active profile {{ activeName() }} · partner {{ partnerName() }}</p></section>
         }
-        <p class="mcor-title">NOTES FROM CALCULATION</p>
+        <p class="mcor-title">HOW THIS WAS SCORED</p>
         <section class="mcor-flag">
+          @if (!marriageMatch()) { <p>Ashta Koota comes from marriage matching. For {{ partnerName() }}, read it as a rough guide to how you get along.</p> }
           @for (note of s.notes ?? []; track note) { <p>{{ note }}</p> }
-          @if (!(s.notes ?? []).length) { <p>No additional backend notes were returned.</p> }
         </section>
         <div class="mcor-actions"><button type="button" (click)="share()">{{ shared() ? 'Copied' : 'Share report' }}</button><a [routerLink]="['/m','compat','results','detail']" [queryParams]="{ partner: partnerId() }">Full detail</a></div>
         <a class="mcor-muhurta" [routerLink]="['/m','muhurta']">Find a muhurtham</a>
@@ -77,6 +77,9 @@ export class CompatResultsComponent {
   /** Free shows the score; Plus shows the report behind it. */
   protected readonly fullReport = computed(() => this.gate.allows('compatibility.full'));
   protected readonly overLimit = signal(false);
+  /** Gun Milan is a marriage system; anyone else gets told how to read it. */
+  protected readonly marriageMatch = computed(() =>
+    ['spouse', 'partner', 'prospect'].includes(this.partner()?.relation ?? 'partner'));
   protected readonly visibleKootas = computed(() => {
     const rows = this.score()?.rows ?? [];
     return this.preferences.experienceMode() === 'practitioner' ? rows : rows.slice(0, 4);

@@ -6,6 +6,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { legalUrl, openLegal } from '../../../core/legal';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
+import { authErrorMessage, looksLikeEmail } from './auth-error';
 
 @Component({
   selector: 'as-mobile-auth',
@@ -81,7 +82,7 @@ export class MobileAuthComponent {
         }
       }
     } catch (error) {
-      this.error.set((error as Error).message);
+      this.error.set(authErrorMessage(error));
     } finally {
       this.loading.set(false);
     }
@@ -108,20 +109,30 @@ export class MobileAuthComponent {
   }
 
   protected async magicLink(): Promise<void> {
-    if (!this.email.trim()) {
-      this.error.set('Enter your email first, then request a magic link.');
+    if (this.loading()) return;
+    this.error.set(null);
+    this.notice.set(null);
+    const email = this.email.trim();
+    if (!email) {
+      this.error.set('Enter your email first, then request a secure link.');
       return;
     }
-    await this.auth.init();
-    if (!this.auth.enabled()) {
-      this.notice.set('Magic link sent. Check your email.');
+    if (!looksLikeEmail(email)) {
+      this.error.set('That email address doesn’t look right. Check it and try again.');
       return;
     }
-    await this.auth.signInWithMagicLink(
-      this.email.trim(),
-      this.mode() === 'signin' ? '/m/today' : '/m/language',
-    );
-    this.notice.set('Magic link sent. Check your email and open it on this device.');
+    this.loading.set(true);
+    try {
+      await this.auth.init();
+      if (this.auth.enabled()) {
+        await this.auth.signInWithMagicLink(email, this.mode() === 'signin' ? '/m/today' : '/m/language');
+      }
+      this.notice.set('Secure link sent. Open it from your email on this device.');
+    } catch (error) {
+      this.error.set(authErrorMessage(error, 'We couldn’t send the link. Try again in a moment.'));
+    } finally {
+      this.loading.set(false);
+    }
   }
 
 }

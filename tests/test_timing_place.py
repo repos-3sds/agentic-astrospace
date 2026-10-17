@@ -143,3 +143,19 @@ class TestEndpointsAgree:
         full = {(w["name"], w["start"], w["end"]) for kind in today["windows"].values() for w in kind}
         assert summary and summary <= full
         assert today["place"]["calculation_timezone"] == "Asia/Kolkata"
+
+
+def test_calendar_is_computed_once_per_window_and_stays_unshared(env):
+    """The app asks for the same calendar window on every open and retry;
+    on Cloud Run each one cost tens of seconds of CPU (2026-10-17 logs)."""
+    from astrospace.api import vedic_routes
+
+    client, kundli_id = env["client"], env["kundli"].id
+    vedic_routes._cached_calendar.cache_clear()
+    params = {"days": 2, "as_of": "2026-07-09"}
+    first = client.get(f"/api/v1/vedic/{kundli_id}/calendar-intelligence", params=params)
+    second = client.get(f"/api/v1/vedic/{kundli_id}/calendar-intelligence", params=params)
+    assert first.status_code == second.status_code == 200
+    assert first.json() == second.json()
+    info = vedic_routes._cached_calendar.cache_info()
+    assert (info.misses, info.hits) == (1, 1)

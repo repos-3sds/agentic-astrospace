@@ -40,6 +40,9 @@
           <div class="rule"></div>
           <p class="cancelled"><img src="mobile/yoga-check.svg" alt="" aria-hidden="true" />{{ item.cancelled }}</p>
         }
+        @if (item.convention) {
+          <p class="convention">{{ item.convention }}</p>
+        }
         @if (item.id === 'manglik') {
           <!-- Exceptions are never behind a plan: they are what keeps a flag from reading as a verdict. -->
           <button class="learn" type="button" (click)="learn(item)">

@@ -49,7 +49,7 @@
       "rule_ids": ["manglik_dosha", "gandanta_dosha", "grahan_dosha", "papa_kartari_yoga"],
       "arudhas": ["A7", "UL"],
       "gochara_planets": ["Jupiter", "Saturn", "Rahu"],
-      "keywords": ["marriage", "spouse", "wife", "husband", "partner", "wedding", "divorce", "relationship", "love", "engagement", "compatibility", "match", "manglik"],
+      "keywords": ["marriage", "spouse", "wife", "husband", "partner", "wedding", "divorce", "relationship", "relationships", "love", "engagement", "compatibility", "match", "manglik"],
       "convention_flags": [],
       "source_refs": ["bphs", "jataka_parijata"]
     },
@@ -110,7 +110,7 @@
       "rule_ids": ["chandra_mangal_yoga", "sunapha_yoga", "anapha_yoga", "durudhara_yoga", "grahan_dosha"],
       "arudhas": ["A4"],
       "gochara_planets": ["Saturn", "Mars"],
-      "keywords": ["mother", "father", "parents", "sibling", "brother", "sister", "home", "house", "property", "land", "vehicle", "car", "relocation", "shifting", "ancestral"],
+      "keywords": ["family", "mother", "father", "parents", "sibling", "brother", "sister", "home", "house", "property", "land", "vehicle", "car", "relocation", "shifting", "ancestral"],
       "convention_flags": ["Father's house is layered across sources, not a single settled convention: BPHS gives the 9th house its own dedicated chapter-length treatment of the father (the strongest textual claim to primacy), the 10th house carries a real secondary co-signification in BPHS's own 10th-house chapter, and Uttara Kalamritam's 4th-house significations list separately names father too. Lead with the 9th house; name the 10th/4th only when the bundle's own evidence points there — see bphs20_ninth_house_father in references.json."],
       "source_refs": ["bphs", "uttara_kalamrita", "phaladeepika"]
     },

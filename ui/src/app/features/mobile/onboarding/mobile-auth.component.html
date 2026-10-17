@@ -48,7 +48,7 @@
     <button class="continue" type="submit" [disabled]="loading()">{{ loading() ? 'Please wait…' : mode() === 'signin' ? 'Continue' : 'Create account' }}</button>
   </form>
 
-  <p class="magic">Prefer no password? <button type="button" (click)="magicLink()">Email me a secure link</button></p>
+  <p class="magic">Prefer no password? <button type="button" [disabled]="loading()" (click)="magicLink()">{{ loading() ? 'Sending…' : 'Email me a secure link' }}</button></p>
   <p class="terms">
     By continuing you agree to our
     <a [href]="legalUrl('terms')" (click)="openLegal('terms', $event)">Terms of Service</a>
