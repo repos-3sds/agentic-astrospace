@@ -24,6 +24,13 @@
       <section class="mantra-card" aria-label="Mantra">
         <div class="mantra-head">
           <span>{{ practiceTextLabel() }}</span>
+          @if (voiceChoices().length) {
+            <div class="voice-pick" role="group" aria-label="Recitation voice">
+              @for (v of voiceChoices(); track v) {
+                <button type="button" [class.is-on]="voice() === v" [attr.aria-pressed]="voice() === v" (click)="chooseVoice(v)">{{ v === 'male' ? 'Male' : 'Female' }}</button>
+              }
+            </div>
+          }
           @if (practice()?.type === 'mantra') {
             <button class="listen" type="button" (click)="toggleListen()"
                     [class.is-busy]="listen() === 'loading'"

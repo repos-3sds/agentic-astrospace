@@ -782,6 +782,14 @@ export interface RemedyPlanPayload extends RemedyRecommendationsPayload {
 }
 
 /** One mantra's text in each script the app shows. */
+export type MantraVoice = 'male' | 'female';
+
+export interface MantraTake {
+  audio_url: string;
+  voice_start: number | null;
+  voice_seconds: number | null;
+}
+
 export interface MantraText {
   te: string;
   en: string;
@@ -848,6 +856,8 @@ export interface RemedyRecommendationPractice {
     /** Where the voice sits in a recorded track, for the follow-along highlight. */
     voice_start?: number | null;
     voice_seconds?: number | null;
+    /** Recorded recitations by voice, when there are any. */
+    voices?: Partial<Record<MantraVoice, MantraTake>>;
   };
 }
 

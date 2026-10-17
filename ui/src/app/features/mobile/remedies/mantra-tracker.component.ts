@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
 import {
+  MantraVoice,
   RemedyRecommendationGroup,
   RemedyRecommendationPractice,
   VedicService,
@@ -59,6 +60,11 @@ export class MantraTrackerComponent {
   protected readonly completedDates = signal<string[]>([]);
   protected readonly mode = signal<'manual' | 'auto'>('manual');
   protected readonly listen = signal<'idle' | 'loading' | 'playing'>('idle');
+  protected readonly voice = signal<MantraVoice>(readVoice());
+  protected readonly voiceChoices = computed(() => {
+    const voices = this.practice()?.audio?.voices;
+    return voices?.male && voices?.female ? (['male', 'female'] as const) : [];
+  });
   /** How far through the mantra the voice is, 0 to 1, for the follow-along highlight. */
   protected readonly progress = signal(0);
   private player: HTMLAudioElement | null = null;
@@ -155,7 +161,8 @@ export class MantraTrackerComponent {
     const telugu = practice.text?.te?.trim();
     const text = telugu || this.literalPracticeText();
     try {
-      let url = practice.audio?.audio_url ?? null;
+      const take = practice.audio?.voices?.[this.voice()] ?? practice.audio ?? null;
+      let url = take?.audio_url ?? null;
       if (!url && await this.naturalVoice.available()) {
         url = await this.naturalVoice.audioUrl(text).catch(() => null);
       }
@@ -168,9 +175,9 @@ export class MantraTrackerComponent {
         await player.play();
         this.listen.set('playing');
         // A recorded track has music before and after the voice; follow the voice.
-        const voiceStart = practice.audio?.voice_start ?? 0;
+        const voiceStart = take?.voice_start ?? 0;
         this.follow(run, () => {
-          const span = practice.audio?.voice_seconds || (player.duration - voiceStart);
+          const span = take?.voice_seconds || (player.duration - voiceStart);
           return span > 0 ? Math.max(0, (player.currentTime - voiceStart) / span) : 0;
         });
         return;
@@ -186,6 +193,17 @@ export class MantraTrackerComponent {
       this.finishListening(run);
     } catch {
       this.finishListening(run);
+    }
+  }
+
+  protected chooseVoice(voice: MantraVoice): void {
+    if (voice === this.voice()) return;
+    this.stopListening();
+    this.voice.set(voice);
+    try {
+      localStorage.setItem(VOICE_KEY, voice);
+    } catch {
+      // Storage can be unavailable; the choice still holds for this visit.
     }
   }
 
@@ -379,5 +397,15 @@ export class MantraTrackerComponent {
     if (practice.type !== 'deity') return practice.instructions;
     const deity = practice.title.replace(/^Prayer to\s+/i, '').trim();
     return deity ? `Offer a simple prayer to ${deity}. Sit quietly, state your intention, and close with gratitude.` : practice.instructions;
+  }
+}
+
+const VOICE_KEY = 'siddha.mantraVoice:v1';
+
+function readVoice(): MantraVoice {
+  try {
+    return localStorage.getItem(VOICE_KEY) === 'male' ? 'male' : 'female';
+  } catch {
+    return 'female';
   }
 }

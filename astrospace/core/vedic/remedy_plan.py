@@ -201,16 +201,27 @@ def _audio_block(m: dict, count: int) -> dict:
         "source_status": "pending_assets",
         "note": "Text is final; recorded audio is a pending content task.",
     }
-    rec = recordings().get(m["id"])
-    if rec:
+    rec = recordings().get(m["id"]) or {}
+    voices = {
+        gender: {
+            "audio_url": f"{_audio_base()}/{take['file']}",
+            "voice_start": take.get("voice_start"),
+            "voice_seconds": take.get("voice_seconds"),
+            "lines": take.get("lines") or [],
+        }
+        for gender, take in rec.items()
+        if gender in ("male", "female") and take.get("file")
+    }
+    if voices:
+        # The flat fields carry one default take for clients that predate
+        # the voice choice; `voices` holds both.
+        default = voices.get("female") or voices["male"]
         block.update({
-            "audio_url": f"{_audio_base()}/{rec['file']}",
+            **default,
+            "voices": voices,
             # Synthesised recitation, not a trained reciter: say so.
             "source_status": "tts_recitation",
-            "note": "Recited by a synthetic voice over a soft veena and tanpura background.",
-            "voice_start": rec.get("voice_start"),
-            "voice_seconds": rec.get("voice_seconds"),
-            "lines": rec.get("lines") or [],
+            "note": "Recited by a synthetic voice over a soft shruti box drone.",
         })
     return block
 

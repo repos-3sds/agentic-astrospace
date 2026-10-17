@@ -241,6 +241,29 @@
   gap: 10px;
 }
 
+.mantra-head > span:first-child { flex: 1 1 auto; }
+
+.mantra-card .voice-pick {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--m-border);
+  border-radius: 999px;
+  background: var(--m-raised);
+
+  button {
+    min-height: 32px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--m-muted);
+    font: inherit;
+    @include m-body-small;
+    cursor: pointer;
+  }
+  button.is-on { background: var(--m-accent-soft); color: var(--m-accent-strong); font-weight: 600; }
+}
+
 .mantra-card .listen {
   flex-shrink: 0;
   display: inline-flex;

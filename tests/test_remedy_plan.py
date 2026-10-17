@@ -121,17 +121,18 @@ def test_no_dasha_still_returns_a_supportive_result():
     assert "not a guarantee" in plan["disclaimer"]
 
 
-def test_recorded_mantra_gets_a_public_audio_url(monkeypatch):
-    rp.recordings.cache_clear()
-    monkeypatch.setattr(rp, "recordings", lambda: {"sun-nama": {
-        "file": "mantras/sun-nama.mp3", "voice_start": 1.5, "voice_seconds": 6.2, "seconds": 10.2,
-    }})
+def test_recorded_mantra_gets_a_public_audio_url_per_voice(monkeypatch):
+    take = lambda g: {"file": f"mantras/sun-nama-{g}.mp3", "voice_start": 3.0, "voice_seconds": 6.2, "seconds": 11.0,
+                      "lines": [{"text": "x", "start": 3.0}]}
+    monkeypatch.setattr(rp, "recordings", lambda: {"sun-nama": {"male": take("male"), "female": take("female")}})
     monkeypatch.setenv("ASTROSPACE_PUBLIC_AUDIO_BASE", "https://example.test/audio/")
-    sun = rp.corpus()["sun-nama"]
-    block = rp._audio_block(sun, 108)
-    assert block["audio_url"] == "https://example.test/audio/mantras/sun-nama.mp3"
+    block = rp._audio_block(rp.corpus()["sun-nama"], 108)
+    assert block["voices"]["male"]["audio_url"] == "https://example.test/audio/mantras/sun-nama-male.mp3"
+    assert block["voices"]["female"]["audio_url"] == "https://example.test/audio/mantras/sun-nama-female.mp3"
+    assert block["audio_url"] == block["voices"]["female"]["audio_url"]
     assert block["source_status"] == "tts_recitation"
-    assert block["voice_start"] == 1.5 and block["voice_seconds"] == 6.2
+    assert block["voice_start"] == 3.0
     # Unrecorded mantras keep saying so rather than pointing at nothing.
     other = next(m for k, m in rp.corpus().items() if k != "sun-nama")
-    assert rp._audio_block(other, 108)["audio_url"] is None
+    block = rp._audio_block(other, 108)
+    assert block["audio_url"] is None and "voices" not in block
