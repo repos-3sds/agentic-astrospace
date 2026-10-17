@@ -13,6 +13,8 @@ export const environment: AppEnvironment = {
    * bundle rather than reaching the server.
    */
   nativeApiOrigin: 'https://agentic-astrospace-cwuqybpnzq-el.a.run.app',
-  revenueCat: { android: '', ios: '' },
+  // Public SDK keys: they ship inside the app and only start purchases;
+  // entitlements come from the server's webhook.
+  revenueCat: { android: 'goog_xsQqJoGZGPQqAEQdSbcTYHukaNl', ios: '' },
   posthog: { key: '', host: 'https://eu.i.posthog.com' },
 };
