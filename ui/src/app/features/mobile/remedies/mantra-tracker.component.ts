@@ -111,7 +111,7 @@ export class MantraTrackerComponent {
   protected readonly hasScripts = computed(() => !!this.practice()?.text);
   protected readonly meaning = computed(() => this.scripts.meaning(this.practice()));
   protected readonly target = computed(() => this.practice()?.target_count ?? (this.practice()?.type === 'deity' ? 1 : 108));
-  protected readonly audioPending = computed(() => this.practice()?.audio?.source_status === 'pending_assets' || !this.practice()?.audio?.audio_url);
+  protected readonly audioPending = computed(() => !this.practice()?.audio?.audio_url);
 
   protected readonly streakLabel = computed(() => {
     const days = this.completedDates().length;
@@ -167,7 +167,12 @@ export class MantraTrackerComponent {
         player.onerror = () => this.finishListening(run);
         await player.play();
         this.listen.set('playing');
-        this.follow(run, () => player.duration > 0 ? player.currentTime / player.duration : 0);
+        // A recorded track has music before and after the voice; follow the voice.
+        const voiceStart = practice.audio?.voice_start ?? 0;
+        this.follow(run, () => {
+          const span = practice.audio?.voice_seconds || (player.duration - voiceStart);
+          return span > 0 ? Math.max(0, (player.currentTime - voiceStart) / span) : 0;
+        });
         return;
       }
       this.listen.set('playing');

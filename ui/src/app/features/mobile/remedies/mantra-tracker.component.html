@@ -64,9 +64,9 @@
         <b>{{ audioPending() ? 'Audio pending' : 'Audio practice' }}</b>
         <p>{{ audioPending() ? audioNote() : 'Audio is ready for this mantra.' }}</p>
       </div>
-      <button type="button" [disabled]="audioPending()">
+      <button type="button" [disabled]="audioPending()" (click)="toggleListen()">
         <img src="mobile/play.svg" alt="" aria-hidden="true" />
-        <span>{{ audioPending() ? 'Not ready' : 'Play 108' }}</span>
+        <span>{{ audioPending() ? 'Not ready' : listen() === 'idle' ? 'Play' : 'Stop' }}</span>
       </button>
     </section>
   }

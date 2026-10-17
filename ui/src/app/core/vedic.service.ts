@@ -845,6 +845,9 @@ export interface RemedyRecommendationPractice {
     audio_url: string | null;
     source_status: string;
     note: string;
+    /** Where the voice sits in a recorded track, for the follow-along highlight. */
+    voice_start?: number | null;
+    voice_seconds?: number | null;
   };
 }
 
