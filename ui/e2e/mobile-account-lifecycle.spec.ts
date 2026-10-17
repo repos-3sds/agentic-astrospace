@@ -79,6 +79,7 @@ test('registers, creates the first chart, logs out, and restores it on return', 
   await page.getByRole('link', { name: 'Settings' }).click();
   await page.getByRole('link', { name: /Account & privacy/ }).click();
   await page.getByRole('button', { name: 'Sign out' }).click();
+  await page.getByRole('group', { name: 'Confirm sign out' }).getByRole('button', { name: 'Sign out' }).click();
   await expect(page).toHaveURL(/\/m\/start$/);
 
   await page.getByRole('link', { name: /I already walk with/ }).click();
