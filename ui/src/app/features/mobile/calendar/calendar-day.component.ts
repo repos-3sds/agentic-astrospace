@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, injec
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
-import { FestivalService, festivalRegionsLabel } from '../../../core/festival.service';
+import { FestivalService, festivalPlace, festivalRegionsLabel } from '../../../core/festival.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { CalendarDaySummary, CalendarEvent, CalendarIntelligencePayload, CalendarPractitionerDayDetail, FestivalOccurrence, PanchangaWindow } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
@@ -537,32 +537,20 @@ export class CalendarDayComponent {
    */
   private async loadFestivals(fallbackDate: string, regions = this.preferences.festivalRegions()): Promise<void> {
     const date = this.selectedDate() || fallbackDate;
-    const place = this.preferences.panchangaPlace();
-    const profile = this.store.active();
-    const city = place?.city || profile?.birth_city;
-    const nation = place?.nation || profile?.birth_nation || 'IN';
-    if (!city || !/^\d{4}-\d{2}/.test(date)) return;
+    const place = festivalPlace(this.preferences, this.store.active());
+    if (!place || !/^\d{4}-\d{2}/.test(date)) return;
     const fromDate = `${date.slice(0, 7)}-01`;
     const days = new Date(Number(date.slice(0, 4)), Number(date.slice(5, 7)), 0).getDate();
-    const cached = this.festivals.cachedUpcoming(city, nation, fromDate, days, regions);
+    const cached = this.festivals.cachedUpcoming(place, fromDate, days, regions);
     if (cached) {
       this.festivalRows.set(cached.festivals);
       return;
     }
     try {
-      const payload = await this.festivals.upcoming(city, nation, fromDate, days, regions);
+      const payload = await this.festivals.upcoming(place, fromDate, days, regions);
       this.festivalRows.set(payload.festivals);
     } catch {
       this.festivalRows.set([]);
-    }
-  }
-
-  private async refreshFestivals(city: string, nation: string, fromDate: string, days: number, regions = this.preferences.festivalRegions()): Promise<void> {
-    try {
-      const payload = await this.festivals.refreshUpcoming(city, nation, fromDate, days, regions);
-      this.festivalRows.set(payload.festivals);
-    } catch {
-      // Keep the cached festival rows visible until a later refresh succeeds.
     }
   }
 

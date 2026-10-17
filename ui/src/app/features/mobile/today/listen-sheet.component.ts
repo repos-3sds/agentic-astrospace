@@ -125,6 +125,13 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
     return Math.max(12, Math.ceil(words / 2.35 / this.speed()));
   });
   protected readonly elapsedLabel = computed(() => this.clock(this.elapsed()));
+  /**
+   * Natural voice takes 9-16 s to make a new day's audio, and the sheet sat at
+   * 0:00 with a play button, so it looked broken (regression 2026-10-17).
+   * Every wait already sets a "Preparing…"/"Starting…" status; the play
+   * button and the clock show it too.
+   */
+  protected readonly preparing = computed(() => /^(Preparing|Starting)/.test(this.status() ?? ''));
   protected readonly remainingLabel = computed(
     () => `-${this.clock(Math.max(0, this.duration() - this.elapsed()))}`,
   );
@@ -281,7 +288,16 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
     this.status.set('Preparing Telugu...');
     try {
       const sections = await this.naturalVoice.telugu(this.sections().filter((section) => section.text.trim()));
-      if (this.mode() !== 'natural' || this.playing()) return;
+      // Both used to return with "Preparing Telugu..." still showing, so the
+      // switch looked like it quietly reverted (regression 2026-10-17, M4).
+      if (this.mode() !== 'natural') {
+        this.status.set('Telugu needs the natural voice, which isn’t available right now; staying in English.');
+        return;
+      }
+      if (this.playing()) {
+        this.status.set('Playing in English. Pause, then choose Telugu again to switch.');
+        return;
+      }
       this.teluguSections.set(sections);
       this.chosen.set('te');
       this.status.set('Ready in Telugu.');

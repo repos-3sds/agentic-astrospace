@@ -68,12 +68,13 @@ def by_name(jobs):
 def test_one_alert_per_upcoming_window_at_lead_time(db):
     jobs = by_name(schedule_window_alerts(db, now=NOW, windows=fake_windows))
     assert set(jobs) == {"Rahu Kalam", "Yamaganda", "Gulika Kalam", "Abhijit Muhurta", "Brahma Muhurta"}
-    # 10:30 IST minus the default 45 minutes is 09:45 IST, 04:15 UTC.
-    assert jobs["Rahu Kalam"].scheduled_for == datetime(2026, 10, 16, 4, 15)
+    # 10:30 IST minus the default 45 minutes is 09:45 IST, 04:15 UTC; queued
+    # half a worker run earlier so it lands on the lead time on average.
+    assert jobs["Rahu Kalam"].scheduled_for == datetime(2026, 10, 16, 4, 7, 30)
     # Lead time already passed but the window has not begun: send now.
     assert jobs["Gulika Kalam"].scheduled_for == NOW
     # Tomorrow's pre-dawn window is queued today.
-    assert jobs["Brahma Muhurta"].scheduled_for == datetime(2026, 10, 16, 22, 25)
+    assert jobs["Brahma Muhurta"].scheduled_for == datetime(2026, 10, 16, 22, 17, 30)
 
 
 def test_copy_states_the_window_without_fear(db):
@@ -94,7 +95,7 @@ def test_rerun_is_idempotent(db):
 def test_lead_time_preference_is_used(db):
     cm.set_notification_preference(db, ME, "window_alert", lead_time_minutes=15)
     jobs = by_name(schedule_window_alerts(db, now=NOW, windows=fake_windows))
-    assert jobs["Rahu Kalam"].scheduled_for == datetime(2026, 10, 16, 4, 45)
+    assert jobs["Rahu Kalam"].scheduled_for == datetime(2026, 10, 16, 4, 37, 30)
 
 
 def test_disabled_preference_is_respected(db):

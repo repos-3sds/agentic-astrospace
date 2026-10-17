@@ -77,7 +77,18 @@
   cursor: pointer;
   line-height: 0;
   flex-shrink: 0;
-  img { width: 30px; height: 30px; display: block; }
+}
+
+// A mask, not an <img>: the icons are drawn in black, and as images they
+// vanished on the dark sheet. As masks they take the theme's text colour.
+.skip-icon {
+  display: block;
+  width: 30px;
+  height: 30px;
+  background: var(--m-text);
+  mask: center / contain no-repeat;
+  &.rewind { mask-image: url('/mobile/rewind.svg'); }
+  &.forward { mask-image: url('/mobile/forward.svg'); }
 }
 
 .play {
@@ -92,6 +103,21 @@
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
+}
+
+.play-spinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid color-mix(in srgb, var(--m-on-ink) 40%, transparent);
+  border-top-color: var(--m-on-ink);
+  border-radius: 999px;
+  animation: play-spin 800ms linear infinite;
+}
+
+@keyframes play-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .play-spinner { animation-duration: 2400ms; }
 }
 
 .play-triangle {

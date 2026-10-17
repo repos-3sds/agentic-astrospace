@@ -325,6 +325,24 @@ class TestFestivalRoutes:
         }).json()
         assert any(f["occurs_on"].startswith("2027-") for f in body["festivals"])
 
+    def test_upcoming_follows_the_phone_timezone_over_a_birth_city_fallback(self, client):
+        body = client.get("/api/v1/festivals/upcoming", params={
+            "city": "Vijayawada", "city_is_fallback": "true", "timezone": "Asia/Singapore",
+            "from_date": "2026-10-01", "days": 20,
+        }).json()
+        assert body["place"]["city"].lower() == "singapore"
+
+    def test_upcoming_keeps_a_chosen_city(self, client):
+        body = client.get("/api/v1/festivals/upcoming", params={
+            "city": "Chennai", "timezone": "Asia/Singapore",
+            "from_date": "2026-10-01", "days": 20,
+        }).json()
+        assert body["place"]["city"] == "Chennai"
+
+    def test_festivals_need_a_signed_in_user(self):
+        from astrospace.api.festival_routes import router
+        assert any(dep.dependency is current_user for dep in router.dependencies)
+
     def test_upcoming_rejects_a_bad_date(self, client):
         r = client.get("/api/v1/festivals/upcoming",
                        params={"city": "Chennai", "from_date": "01-10-2026"})

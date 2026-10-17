@@ -18,7 +18,7 @@ import { DailyBriefResponse, DailyGuidancePayload, VedicAll, DailyActionRow, Fes
 import { FestivalSheetComponent } from '../calendar/festival-sheet.component';
 import { AnalyticsService } from '../../../core/analytics.service';
 import { TODAY_DRILL_DOWNS, whyDrillDowns } from '../why-reading/drill-downs';
-import { FestivalService } from '../../../core/festival.service';
+import { FestivalService, festivalPlace } from '../../../core/festival.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { ExperienceMode, PreferencesService, ReadingTone } from '../../../core/preferences.service';
 import { HapticsService } from '../../../core/haptics.service';
@@ -631,14 +631,22 @@ export class TodayComponent {
         tone: daily.chandrabala.favourable ? 'good' : 'warn',
         explanation: plainChandrabala(daily),
       },
-      ...daily.context.active_gochara.slice(0, 1).map((transit) => ({
-        name: transit.planet,
-        verdict: transit.severity === 'high' ? 'USE CARE' : 'ACTIVE',
-        tone: transit.severity === 'high' ? 'warn' as const : 'good' as const,
-        explanation: transit.severity === 'high'
-          ? `${transit.name} is active, so keep extra patience around the area it touches.`
-          : `${transit.name} is active in the background today.`,
-      })),
+      // Only Guru Bala is "supportive"; every medium rule (Kantaka Shani,
+      // Rahu, Ketu, Mars from the Moon) is a caution, and was shown green
+      // under an ACTIVE pill that read like GOOD (regression 2026-10-17, M3).
+      ...daily.context.active_gochara.slice(0, 1).map((transit) => {
+        const supportive = transit.severity === 'supportive';
+        return {
+          name: transit.planet,
+          verdict: supportive ? 'GOOD' : transit.severity === 'high' ? 'USE CARE' : 'CAUTION',
+          tone: supportive ? 'good' as const : 'warn' as const,
+          explanation: supportive
+            ? `${transit.name} is supporting you in the background today.`
+            : transit.severity === 'high'
+              ? `${transit.name} is active, so keep extra patience around the area it touches.`
+              : `${transit.name} is active, a milder caution around the area it touches.`,
+        };
+      }),
     ]);
     this.scoreReason.set(scoreReason(daily));
     this.summary.set(daily.reading.summary);
@@ -729,12 +737,9 @@ export class TodayComponent {
   private async prefetchCalendar(profileId: string): Promise<void> {
     try {
       const calendar = await this.vedic.calendarIntelligence(profileId, 45);
-      const place = this.preferences.panchangaPlace();
-      const profile = this.kundlis.active();
-      const city = place?.city || profile?.birth_city;
-      const nation = place?.nation || profile?.birth_nation || 'IN';
-      if (!city) return;
-      const window = await this.festivals.upcoming(city, nation, calendar.start_date, 60, this.preferences.festivalRegions());
+      const place = festivalPlace(this.preferences, this.kundlis.active());
+      if (!place) return;
+      const window = await this.festivals.upcoming(place, calendar.start_date, 60, this.preferences.festivalRegions());
       if (this.kundlis.activeId() !== profileId) return;
       const today = localIsoDate(new Date());
       const horizon = localIsoDate(new Date(Date.now() + 14 * 86_400_000));

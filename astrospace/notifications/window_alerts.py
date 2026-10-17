@@ -23,6 +23,11 @@ from .morning_brief import _primary_kundli, _zone
 
 CATEGORY = "window_alert"
 DEFAULT_LEAD_MINUTES = 45
+# The worker sends what is due once every 15 minutes, so a job lands up to
+# 15 minutes after its time: a "45 minutes before" alert arrived 32 minutes
+# before (regression 2026-10-17, N-d). Queuing half a run early centres
+# arrival on the lead time; the copy names the clock time, so early is safe.
+HALF_WORKER_CADENCE = timedelta(minutes=7, seconds=30)
 
 
 def windows_for(kundli, day: date, tz_name: str, city: str | None = None,
@@ -104,7 +109,7 @@ def schedule_window_alerts(db: Session, now: datetime | None = None,
                     start = start.replace(tzinfo=zone)
                 if start <= now_utc:
                     continue
-                send_at = max(start - lead, now_utc)
+                send_at = max(start - lead - HALF_WORKER_CADENCE, now_utc)
                 if _in_quiet_hours(send_at.astimezone(zone),
                                    prefs.get("quiet_hours_start"), prefs.get("quiet_hours_end")):
                     continue

@@ -2,7 +2,36 @@ import { Injectable, inject } from '@angular/core';
 
 import { ApiService } from './api.service';
 import { FestivalWindowPayload } from './models';
-import { FestivalRegion } from './preferences.service';
+import { FestivalRegion, PreferencesService } from './preferences.service';
+
+/**
+ * Where festival sunrises are taken. Mirrors the day timings' rule
+ * (timing_place.resolve_timing_place on the server): the chosen city, else
+ * the city for the phone's timezone, else the birth city. The middle step
+ * only the server can resolve, so a birth city goes up marked as a fallback
+ * with the timezone beside it.
+ */
+export interface FestivalPlace {
+  city: string;
+  nation: string;
+  timezone?: string;
+  fallback?: boolean;
+}
+
+export function festivalPlace(
+  preferences: PreferencesService,
+  profile: { birth_city?: string | null; birth_nation?: string | null } | null | undefined,
+): FestivalPlace | null {
+  const chosen = preferences.panchangaPlace();
+  if (chosen?.city) return { city: chosen.city, nation: chosen.nation || 'IN' };
+  if (!profile?.birth_city) return null;
+  return {
+    city: profile.birth_city,
+    nation: profile.birth_nation || 'IN',
+    timezone: preferences.effectiveTimezone() || undefined,
+    fallback: true,
+  };
+}
 
 const REGION_LABELS: Record<string, string> = { 'pan-india': 'All India', north: 'North India', south: 'South India' };
 
@@ -19,13 +48,12 @@ export class FestivalService {
   private readonly storagePrefix = 'astrospace.festivals:v1:';
 
   upcoming(
-    city: string,
-    nation: string,
+    place: FestivalPlace,
     fromDate: string,
     days: number,
     regions: FestivalRegion[] = [],
   ): Promise<FestivalWindowPayload> {
-    const key = this.cacheKey(city, nation, fromDate, days);
+    const key = this.cacheKey(place, fromDate, days);
     let cached = this.cache.get(key);
     if (!cached) {
       const stored = this.readStored(key);
@@ -50,13 +78,12 @@ export class FestivalService {
   }
 
   refreshUpcoming(
-    city: string,
-    nation: string,
+    place: FestivalPlace,
     fromDate: string,
     days: number,
     regions: FestivalRegion[] = [],
   ): Promise<FestivalWindowPayload> {
-    const key = this.cacheKey(city, nation, fromDate, days);
+    const key = this.cacheKey(place, fromDate, days);
     const request = this.api.get<FestivalWindowPayload>(`/festivals/upcoming?${key}`).then((payload) => {
       this.values.set(key, payload);
       this.writeStored(key, payload);
@@ -70,13 +97,12 @@ export class FestivalService {
   }
 
   cachedUpcoming(
-    city: string,
-    nation: string,
+    place: FestivalPlace,
     fromDate: string,
     days: number,
     regions: FestivalRegion[] = [],
   ): FestivalWindowPayload | null {
-    const key = this.cacheKey(city, nation, fromDate, days);
+    const key = this.cacheKey(place, fromDate, days);
     const memory = this.values.get(key);
     if (memory) return this.filterPayload(memory, regions);
     const stored = this.readStored(key);
@@ -84,13 +110,18 @@ export class FestivalService {
     return stored ? this.filterPayload(stored, regions) : null;
   }
 
-  private cacheKey(city: string, nation: string, fromDate: string, days: number): string {
-    return new URLSearchParams({
-      city,
-      nation,
+  private cacheKey(place: FestivalPlace, fromDate: string, days: number): string {
+    const params = new URLSearchParams({
+      city: place.city,
+      nation: place.nation,
       from_date: fromDate,
       days: String(days),
-    }).toString();
+    });
+    if (place.fallback && place.timezone) {
+      params.set('timezone', place.timezone);
+      params.set('city_is_fallback', 'true');
+    }
+    return params.toString();
   }
 
   private filterPayload(payload: FestivalWindowPayload, regions: FestivalRegion[]): FestivalWindowPayload {

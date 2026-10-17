@@ -7,6 +7,7 @@ import { ThemeService } from '../../../core/theme.service';
 import { BackBarComponent } from '../shared/back-bar.component';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { PreferencesService } from '../../../core/preferences.service';
+import { NATURAL_VOICE_NAME, NaturalVoiceService } from '../../../core/natural-voice.service';
 import { plannedTimingPlace } from '../../../core/timing-place';
 
 /** One settings row. `value` is the current state, shown without opening it. */
@@ -199,8 +200,12 @@ export class SettingsHomeComponent {
     void openLegal(doc);
   }
 
+  /** Whether Listen will use Siddha's natural voice; false until known. */
+  private readonly naturalAvailable = signal(false);
+
   constructor() {
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
+    void inject(NaturalVoiceService).available().then((ok) => this.naturalAvailable.set(ok)).catch(() => undefined);
   }
 
   private modeLabel(): string {
@@ -215,7 +220,10 @@ export class SettingsHomeComponent {
   /** The voice Listen will use; there is no on/off, so never say "on". */
   private voiceLabel(): string {
     const name = this.preferences.voiceName();
-    if (!name) return 'Default voice';
+    // Automatic (null) means the natural voice when the plan has it; this row
+    // said "Default voice" while Listen used it (regression 2026-10-17).
+    if (name === NATURAL_VOICE_NAME || (name == null && this.naturalAvailable())) return 'Siddha natural voice';
+    if (!name) return 'Phone voice';
     // Device voice names carry vendor noise: "Google हिन्दी (India)", "en-in-x-ene-local".
     const short = name.replace(/\s*\(.*\)\s*$/, '').trim();
     return short.length > 18 ? 'Chosen voice' : short;
