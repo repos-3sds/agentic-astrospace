@@ -310,7 +310,10 @@ def test_the_schedule_writes_each_profile_once_in_the_readers_style(env, agent):
 
     # Today then reads the scheduled brief instead of writing one.
     body = http.get(f"/api/v1/context/{kundli}/daily/brief",
-                    params={"timezone": "Asia/Kolkata", "tone": "direct", "mode": "practitioner"}).json()
+                    params={"timezone": "Asia/Kolkata", "tone": "direct", "mode": "practitioner",
+                            # The scheduled day, not the real clock: without it this
+                            # test only passed on 2026-10-16.
+                            "as_of": "2026-10-16T09:00:00+05:30"}).json()
     assert body["trigger"] == "scheduled" and body["cached"] is True
     assert agent.calls == 2
 
@@ -426,7 +429,8 @@ def test_the_schedule_uses_the_phones_timezone_over_the_push_preference(env, age
         db.commit()
         daily_briefs.schedule_daily_briefs(db, now=now, prerender=lambda s: 0)
     # What the app sends on a phone in Singapore: its own timezone, no city.
-    body = http.get(f"/api/v1/context/{kundli}/daily/brief", params={"timezone": "Asia/Singapore"}).json()
+    body = http.get(f"/api/v1/context/{kundli}/daily/brief", params={"timezone": "Asia/Singapore",
+                                                                               "as_of": "2026-10-16T09:00:00+08:00"}).json()
     assert body["trigger"] == "scheduled" and agent.calls == 1
 
 
