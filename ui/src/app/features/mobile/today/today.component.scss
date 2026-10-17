@@ -7,30 +7,9 @@
   overflow: hidden;
 }
 
-:host::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  transition: opacity 1.5s ease;
-  opacity: 0.8;
-}
-
-:host([data-band='steady'])::before {
-  background: radial-gradient(circle at 80% -10%, var(--m-good-soft), transparent 60%),
-              radial-gradient(circle at 20% 110%, var(--m-good-soft), transparent 60%);
-}
-
-:host([data-band='mixed'])::before {
-  background: radial-gradient(circle at 80% -10%, var(--m-warn-soft), transparent 60%),
-              radial-gradient(circle at 20% 110%, var(--m-warn-soft), transparent 60%);
-}
-
-:host([data-band='tough'])::before {
-  background: radial-gradient(circle at 80% -10%, var(--m-bad-soft), transparent 60%),
-              radial-gradient(circle at 20% 110%, var(--m-bad-soft), transparent 60%);
-}
+// No day-band wash. A fixed z-index: -1 layer sat under the shell's ground on
+// Android and never showed; iOS WebKit lifts it in front of the ground, so a
+// Steady day turned the whole page green there. Android's look is the design.
 
 /* App bar — node 13:3 */
 .celestial-sky {

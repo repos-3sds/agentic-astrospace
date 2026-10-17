@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, computed, effect, inject, signal, untracked } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { timingPlaceLabel } from '../../../core/timing-place';
 import { DayGaugeComponent } from '../day-gauge/day-gauge.component';
@@ -431,6 +431,18 @@ export class TodayComponent {
       this.view.update((view) => (view && view.nextWindowIn !== next ? { ...view, nextWindowIn: next } : view));
     }, 30_000);
     inject(DestroyRef).onDestroy(() => clearInterval(tick));
+    // The sky is position: fixed, but iOS WebKit clips fixed descendants of an
+    // overflow scroller to the scroller's box. Inside the shell's .content it
+    // stopped at the status bar, leaving a flat band behind the clock. Lifting
+    // it into .shell (not a scroller) lets it run up behind the clock on both
+    // platforms; Android already painted it there.
+    const host = inject<ElementRef<HTMLElement>>(ElementRef, { optional: true })?.nativeElement;
+    let sky: HTMLElement | null = null;
+    afterNextRender(() => {
+      sky = host?.querySelector<HTMLElement>(':scope > .celestial-sky') ?? null;
+      if (sky) host?.closest('.shell')?.prepend(sky);
+    });
+    inject(DestroyRef).onDestroy(() => sky?.remove());
     if (!todayIntroPlayed) {
       todayIntroPlayed = true;
       const timer = setTimeout(() => this.introPlayed.set(true), TODAY_INTRO_MS);
