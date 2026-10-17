@@ -30,6 +30,12 @@ export class KundliStore {
   readonly active = computed(
     () => this.kundlis().find((k) => k.id === this.activeId()) ?? null,
   );
+  /** The account holder's own profile. Greetings address this person, whose
+   * chart is open notwithstanding: "Namaste, Bhaskar" to the owner reads as
+   * the app mistaking who is holding the phone. */
+  readonly owner = computed(
+    () => this.kundlis().find((k) => (k.relation ?? '').trim().toLowerCase() === 'self') ?? null,
+  );
   private loadPromise: Promise<void> | null = null;
   private readonly activeStorageKey = 'astrospace.activeKundliId';
   /** The list on screen came from the device cache and the server has not confirmed it yet. */

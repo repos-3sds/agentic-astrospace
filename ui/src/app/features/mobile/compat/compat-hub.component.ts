@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { profileRelationLabel } from '../settings/profile-fields';
 
 @Component({
   selector: 'as-compat-hub',
@@ -28,7 +29,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
         @for (profile of partners(); track profile.id) {
           <a class="mco-recent" [routerLink]="['/m','compat','results']" [queryParams]="{ partner: profile.id }">
             <span class="mco-avatar">{{ profile.name.slice(0, 1).toUpperCase() }}</span>
-            <span><b>{{ activeName() }} x {{ profile.name }}</b><small>{{ profile.relation || 'Profile' }} · {{ profile.birth_city }}</small></span>
+            <span><b>{{ activeName() }} x {{ profile.name }}</b><small>{{ relationLabel(profile.relation) }} · {{ profile.birth_city }}</small></span>
             <img src="mobile/chevron.svg" alt="" />
           </a>
         }
@@ -38,6 +39,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
   styleUrl: './compat-hub.component.scss',
 })
 export class CompatHubComponent {
+  protected readonly relationLabel = profileRelationLabel;
   private readonly kundlis = inject(KundliStore);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);

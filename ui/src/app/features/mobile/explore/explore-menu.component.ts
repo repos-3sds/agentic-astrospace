@@ -54,8 +54,15 @@ export class ExploreMenuComponent {
 
   protected readonly profile = computed(() => {
     const k = this.kundlis.active();
+    const owner = this.kundlis.owner();
     const name = k?.name ?? 'Choose a person';
-    return { first: name.split(' ')[0], initial: name.slice(0, 1).toUpperCase() };
+    const first = name.split(' ')[0];
+    return {
+      first: owner?.name.split(' ')[0] ?? first,
+      initial: name.slice(0, 1).toUpperCase(),
+      // The greeting is for the account holder; this says whose chart is open.
+      viewing: owner && k && owner.id !== k.id ? first : null,
+    };
   });
 
   /** Sun, Moon and rising from the computed chart, as Your chart shows them. */

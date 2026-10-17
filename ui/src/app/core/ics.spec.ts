@@ -1,4 +1,4 @@
-import { buildIcs } from './ics';
+import { buildIcs, googleCalendarUrl } from './ics';
 
 describe('buildIcs', () => {
   const now = new Date('2026-10-15T00:00:00Z');
@@ -33,5 +33,23 @@ describe('buildIcs', () => {
   it('folds long lines at 75 octets', () => {
     const ics = buildIcs([{ uid: 'u', title: 'x'.repeat(200), startIso: '2026-10-16T00:00:00Z', endIso: '2026-10-16T01:00:00Z' }], now);
     for (const line of ics.split('\r\n')) expect(new TextEncoder().encode(line).length).toBeLessThanOrEqual(75);
+  });
+});
+
+describe('googleCalendarUrl', () => {
+  it('opens a timed event in UTC, with its notes and place', () => {
+    const url = new URL(googleCalendarUrl({
+      uid: 'u', title: 'Muhurta: start a venture', startIso: '2026-10-20T09:30:00+05:30',
+      endIso: '2026-10-20T10:15:00+05:30', description: 'Strong day', location: 'Kakinada, IN',
+    }));
+    expect(url.searchParams.get('action')).toBe('TEMPLATE');
+    expect(url.searchParams.get('dates')).toBe('20261020T040000Z/20261020T044500Z');
+    expect(url.searchParams.get('details')).toBe('Strong day');
+    expect(url.searchParams.get('location')).toBe('Kakinada, IN');
+  });
+
+  it('gives an all-day festival an exclusive end date', () => {
+    const url = new URL(googleCalendarUrl({ uid: 'u', title: 'Diwali', startIso: '2026-11-08', endIso: '2026-11-08', allDay: true }));
+    expect(url.searchParams.get('dates')).toBe('20261108/20261109');
   });
 });

@@ -5,6 +5,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { Kundli } from '../../../core/models';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackBarComponent } from '../shared/back-bar.component';
+import { profileRelationLabel } from './profile-fields';
 
 @Component({
   selector: 'as-profile-management',
@@ -35,7 +36,7 @@ import { BackBarComponent } from '../shared/back-bar.component';
                 <span class="avatar">{{ profile.name.slice(0, 1).toUpperCase() }}</span>
                 <span>
                   <b>{{ profile.name }}</b>
-                  <small>{{ profile.relation || 'Profile' }} · {{ birthSummary(profile) }}</small>
+                  <small>{{ relationLabel(profile.relation) }} · {{ birthSummary(profile) }}</small>
                 </span>
                 @if (profile.id === kundlis.activeId()) { <em>Active</em> }
               </button>
@@ -53,6 +54,7 @@ import { BackBarComponent } from '../shared/back-bar.component';
   styleUrl: './profile-management.component.scss',
 })
 export class ProfileManagementComponent {
+  protected readonly relationLabel = profileRelationLabel;
   protected readonly kundlis = inject(KundliStore);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);

@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { AnalyticsService } from '../../../core/analytics.service';
-import { exportCalendarFile } from '../../../core/calendar-export';
-import { buildIcs } from '../../../core/ics';
+import { addToCalendar as addEventToCalendar } from '../../../core/calendar-export';
 import { FestivalOccurrence } from '../../../core/models';
 import { SheetComponent } from '../sheet/sheet.component';
 
@@ -64,7 +63,7 @@ export class FestivalSheetComponent {
     try {
       const notes = [festival.description, festival.observance_note,
         festival.is_convention_dependent ? 'Date may vary by family sampradaya or regional panchangam.' : null];
-      const ics = buildIcs([{
+      await addEventToCalendar({
         uid: `festival-${festival.slug}-${festival.occurs_on}@astrospace`,
         title: festival.name,
         startIso: festival.occurs_on,
@@ -72,8 +71,7 @@ export class FestivalSheetComponent {
         allDay: true,
         description: notes.filter(Boolean).join(' '),
         alarmAfterStartMinutes: 7 * 60,
-      }]);
-      await exportCalendarFile(ics, `${festival.slug}-${festival.occurs_on}.ics`, festival.name);
+      }, `${festival.slug}-${festival.occurs_on}.ics`);
       this.analytics.track('calendar_exported', { source: 'festival' });
     } catch {
       this.exportFailed.set(true);

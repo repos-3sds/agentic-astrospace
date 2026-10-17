@@ -21,3 +21,12 @@ export function normalizeProfileRelationship(value: string | null | undefined): 
   if (['brother', 'sister'].includes(relation)) return 'sibling';
   return PROFILE_RELATIONSHIPS.some((option) => option.value === relation) ? relation : 'relative';
 }
+
+/** What a profile is to the account holder, as a label. Stored values are
+ * free text from older builds ("relative", "Mother"), so they are normalised
+ * first rather than shown raw. */
+export function profileRelationLabel(value: string | null | undefined): string {
+  const relation = normalizeProfileRelationship(value);
+  if (relation === 'self') return 'You';
+  return PROFILE_RELATIONSHIPS.find((option) => option.value === relation)?.label ?? 'Profile';
+}

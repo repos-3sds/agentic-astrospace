@@ -1,3 +1,5 @@
+import { Capacitor } from '@capacitor/core';
+import { IcsEvent, buildIcs, googleCalendarUrl } from './ics';
 import { shareFile } from './native-share';
 
 /**
@@ -14,4 +16,20 @@ export async function exportCalendarFile(ics: string, fileName: string, title: s
   link.download = fileName;
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/**
+ * Puts one event in the phone's calendar. On Android that is Google
+ * Calendar's add-event form (an .ics file there only reaches the share
+ * sheet, retest of build 487); everywhere else the .ics file, which iOS
+ * Calendar and desktop calendars open directly.
+ */
+export async function addToCalendar(event: IcsEvent, fileName: string): Promise<void> {
+  if (Capacitor.getPlatform() === 'android') {
+    // The native bridge hands an off-app navigation to the system, which
+    // opens the Calendar app when it claims the link, else the browser.
+    window.location.href = googleCalendarUrl(event);
+    return;
+  }
+  await exportCalendarFile(buildIcs([event]), fileName, event.title);
 }

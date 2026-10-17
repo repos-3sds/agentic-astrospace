@@ -87,3 +87,19 @@ function fold(line: string): string {
   parts.push(current);
   return parts.join('\r\n ');
 }
+
+/**
+ * The same event as a Google Calendar "add event" link. Android has no
+ * calendar of its own to hand an .ics file to, so a file there lands in the
+ * share sheet; this opens the event form in the Calendar app (or the
+ * browser) instead. Google Calendar applies its own default reminder.
+ */
+export function googleCalendarUrl(event: IcsEvent): string {
+  const dates = event.allDay
+    ? `${dateStamp(event.startIso)}/${dateStamp(event.endIso, 1)}`
+    : `${utcStamp(new Date(event.startIso))}/${utcStamp(new Date(event.endIso))}`;
+  const params = new URLSearchParams({ action: 'TEMPLATE', text: event.title, dates });
+  if (event.description) params.set('details', event.description);
+  if (event.location) params.set('location', event.location);
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
