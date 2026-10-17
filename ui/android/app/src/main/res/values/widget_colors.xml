@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Home-screen widgets. The app's light theme (ui/src/styles-mobile.scss);
+     values-night/ holds the dark one, so widgets follow the phone's theme. -->
+<resources>
+    <color name="widget_bg">#FFFCF6</color>
+    <color name="widget_raised">#F4EDE2</color>
+    <color name="widget_border">#E6DCCD</color>
+    <color name="widget_text">#201A14</color>
+    <color name="widget_muted">#756B5E</color>
+    <color name="widget_accent">#B13F2E</color>
+    <color name="widget_accent_soft">#F4E6E2</color>
+    <color name="widget_good">#2F7D57</color>
+    <color name="widget_warn">#8A5210</color>
+    <color name="widget_track">#E6DCCD</color>
+    <color name="widget_on_accent">#FFF8EC</color>
+    <!-- The Subhashita card is the share image in small, the same in both themes. -->
+    <color name="widget_verse_text">#FFF8EC</color>
+    <color name="widget_verse_muted">#D9FFECDC</color>
+</resources>

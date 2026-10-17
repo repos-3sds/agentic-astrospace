@@ -1,0 +1,215 @@
+package app.asksiddha.mobile.widgets;
+
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.RectF;
+import android.net.Uri;
+import android.os.Build;
+import app.asksiddha.mobile.MainActivity;
+import java.util.Calendar;
+import java.util.Locale;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+/** Shared plumbing for the widgets: refresh, taps into the app, and drawing. */
+public final class Widgets {
+
+    public static final String EXTRA_ROUTE = "siddha_route";
+    static final String ACTION_REFRESH = "app.asksiddha.mobile.widgets.REFRESH";
+
+    @SuppressWarnings("unchecked")
+    static final Class<? extends BaseWidget>[] ALL = new Class[] {
+        TodayWidget.class, ListenWidget.class, CalendarWidget.class, TimingWidget.class,
+        MoonWidget.class, MantraWidget.class, AskWidget.class, SubhashitaWidget.class,
+    };
+
+    private Widgets() {}
+
+    /** Redraws every Siddha widget on the home screen. */
+    public static void refreshAll(Context context) {
+        AppWidgetManager manager = AppWidgetManager.getInstance(context);
+        for (Class<? extends BaseWidget> type : ALL) refresh(context, manager, type);
+        scheduleNextRefresh(context);
+    }
+
+    static void refresh(Context context, Class<? extends BaseWidget> type) {
+        refresh(context, AppWidgetManager.getInstance(context), type);
+    }
+
+    private static void refresh(Context context, AppWidgetManager manager, Class<? extends BaseWidget> type) {
+        int[] ids = manager.getAppWidgetIds(new ComponentName(context, type));
+        if (ids == null || ids.length == 0) return;
+        BaseWidget widget;
+        try {
+            widget = type.getDeclaredConstructor().newInstance();
+        } catch (ReflectiveOperationException e) {
+            return;
+        }
+        for (int id : ids) widget.draw(context, manager, id);
+    }
+
+    /**
+     * Wakes the widgets at the next moment their text changes: the next
+     * timing window's start or end, else local midnight. Inexact on purpose,
+     * which needs no special alarm permission; the system's own 30-minute
+     * update (updatePeriodMillis) is the backstop.
+     */
+    static void scheduleNextRefresh(Context context) {
+        AlarmManager alarms = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        if (alarms == null) return;
+        long now = System.currentTimeMillis();
+        long next = nextMidnight(now);
+        JSONObject today = WidgetStore.get(context, "today");
+        JSONArray windows = today == null ? null : today.optJSONArray("windows");
+        if (windows != null) {
+            for (int i = 0; i < windows.length(); i++) {
+                JSONObject w = windows.optJSONObject(i);
+                if (w == null) continue;
+                long start = w.optLong("startMs"), end = w.optLong("endMs");
+                if (start > now && start < next) next = start;
+                if (end > now && end < next) next = end;
+            }
+        }
+        Intent intent = new Intent(context, WidgetRefreshReceiver.class).setAction(ACTION_REFRESH);
+        PendingIntent pending = PendingIntent.getBroadcast(
+            context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        alarms.set(AlarmManager.RTC, next + 1000, pending);
+    }
+
+    static long nextMidnight(long now) {
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(now);
+        c.add(Calendar.DAY_OF_YEAR, 1);
+        c.set(Calendar.HOUR_OF_DAY, 0);
+        c.set(Calendar.MINUTE, 0);
+        c.set(Calendar.SECOND, 5);
+        c.set(Calendar.MILLISECOND, 0);
+        return c.getTimeInMillis();
+    }
+
+    /** Opens the app on a screen (a /m/... path). One PendingIntent per path. */
+    static PendingIntent open(Context context, String route) {
+        Intent intent = new Intent(context, MainActivity.class)
+            .setAction(Intent.ACTION_VIEW)
+            // The data only keeps PendingIntents for different routes apart.
+            .setData(Uri.parse("siddha-widget://open" + route))
+            .putExtra(EXTRA_ROUTE, route)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        return PendingIntent.getActivity(
+            context, route.hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    static PendingIntent broadcast(Context context, Class<?> receiver, String action) {
+        Intent intent = new Intent(context, receiver).setAction(action);
+        return PendingIntent.getBroadcast(
+            context, action.hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    static boolean night(Context context) {
+        int mode = context.getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+        return mode == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+    }
+
+    static int color(Context context, int id) {
+        return Build.VERSION.SDK_INT >= 23 ? context.getColor(id) : context.getResources().getColor(id);
+    }
+
+    static float density(Context context) {
+        return context.getResources().getDisplayMetrics().density;
+    }
+
+    /** The day-quality ring (Figma 103:92): a track and an arc for the score. */
+    static Bitmap ring(Context context, int score, int arcColor, int trackColor, int sizeDp, int strokeDp) {
+        float d = density(context);
+        int size = Math.round(sizeDp * d);
+        float stroke = strokeDp * d;
+        Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(stroke);
+        RectF box = new RectF(stroke / 2, stroke / 2, size - stroke / 2, size - stroke / 2);
+        paint.setColor(trackColor);
+        canvas.drawArc(box, 0, 360, false, paint);
+        paint.setColor(arcColor);
+        paint.setStrokeCap(Paint.Cap.ROUND);
+        float sweep = Math.max(0, Math.min(100, score)) * 3.6f;
+        canvas.drawArc(box, -90, sweep, false, paint);
+        return bitmap;
+    }
+
+    /**
+     * The moon's shape for a day, lit fraction drawn from the mean synodic
+     * month. A picture only: the words beside it (tithi, next full moon) come
+     * from the app's panchanga, never from this approximation.
+     */
+    static Bitmap moon(Context context, long whenMs, int sizeDp) {
+        float d = density(context);
+        int size = Math.round(sizeDp * d);
+        Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        float r = size / 2f * 0.92f, cx = size / 2f, cy = size / 2f;
+        Paint dark = new Paint(Paint.ANTI_ALIAS_FLAG);
+        dark.setColor(Color.argb(70, 160, 150, 140));
+        canvas.drawCircle(cx, cy, r, dark);
+
+        // 2000-01-06 18:14 UTC was a new moon; 29.530589 days per lunation.
+        double age = ((whenMs - 947182440000L) / 86400000.0) % 29.530589;
+        if (age < 0) age += 29.530589;
+        double phase = age / 29.530589;                 // 0 new, 0.5 full
+        double lit = (1 - Math.cos(2 * Math.PI * phase)) / 2;
+        boolean waxing = phase < 0.5;
+
+        Paint light = new Paint(Paint.ANTI_ALIAS_FLAG);
+        light.setColor(Color.rgb(246, 233, 205));
+        Path path = new Path();
+        RectF disc = new RectF(cx - r, cy - r, cx + r, cy + r);
+        // The lit limb is a half disc; the terminator is a half ellipse whose
+        // width runs from r (new or full) through 0 (half).
+        path.arcTo(disc, waxing ? -90 : 90, 180, true);
+        float w = (float) (r * Math.abs(1 - 2 * lit));
+        RectF term = new RectF(cx - w, cy - r, cx + w, cy + r);
+        boolean bulges = lit > 0.5;
+        path.arcTo(term, waxing ? 90 : -90, bulges ? 180 : -180, false);
+        path.close();
+        canvas.drawPath(path, light);
+        return bitmap;
+    }
+
+    /** "in 3 days", "tomorrow", "today" from two YYYY-MM-DD dates. */
+    static String daysUntil(String fromIso, String toIso) {
+        long days = dayNumber(toIso) - dayNumber(fromIso);
+        if (days == 0) return "today";
+        if (days == 1) return "tomorrow";
+        return String.format(Locale.US, "in %d days", days);
+    }
+
+    static long dayNumber(String iso) {
+        try {
+            String[] p = iso.split("-");
+            Calendar c = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"));
+            c.clear();
+            c.set(Integer.parseInt(p[0]), Integer.parseInt(p[1]) - 1, Integer.parseInt(p[2]));
+            return c.getTimeInMillis() / 86400000L;
+        } catch (RuntimeException e) {
+            return 0;
+        }
+    }
+
+    /** "1h 20m" or "38 min", for the timing lines that are not live clocks. */
+    static String duration(long ms) {
+        long minutes = Math.max(1, Math.round(ms / 60000.0));
+        if (minutes < 60) return minutes + " min";
+        long h = minutes / 60, m = minutes % 60;
+        return m == 0 ? h + "h" : h + "h " + m + "m";
+    }
+}

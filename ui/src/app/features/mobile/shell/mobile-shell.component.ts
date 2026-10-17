@@ -19,6 +19,7 @@ import { ConnectivityService } from '../../../core/connectivity.service';
 import { ScrollMemoryDirective } from './scroll-memory.directive';
 import { Subhashita, SubhashitaService } from '../../../core/subhashita.service';
 import { SubhashitaSheetComponent } from '../subhashita/subhashita-sheet.component';
+import { WidgetBridgeService } from '../../../core/widget-bridge.service';
 
 interface MobileTab {
   commands: string[];
@@ -74,11 +75,13 @@ export class MobileShellComponent {
   private readonly scroller = viewChild(ScrollMemoryDirective);
 
   private readonly subhashita = inject(SubhashitaService);
+  private readonly widgets = inject(WidgetBridgeService);
   /** Today's verse while its first-open sheet is up. */
   protected readonly dailyVerse = signal<Subhashita | null>(null);
 
   constructor() {
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
+    this.widgets.start();
     void this.offerDailyVerse();
     // A phone left with the app open overnight comes back without a cold
     // start, so the next morning's first look counts as the day's first open.
@@ -96,6 +99,12 @@ export class MobileShellComponent {
    * reading; not over the verse's own screen or over another sheet.
    */
   private async offerDailyVerse(): Promise<void> {
+    if (this.widgets.enabled) {
+      // The verse widget holds two weeks ahead; each open tops it up.
+      void this.subhashita.load().then((verse) => {
+        if (verse) this.widgets.publishSubhashita(this.subhashita.upcoming());
+      }).catch(() => undefined);
+    }
     if (!this.subhashita.unseenToday()) return;
     if (this.subhashita.neverOffered()) {
       this.subhashita.markSeen();

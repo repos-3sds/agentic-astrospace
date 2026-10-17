@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
@@ -14,6 +14,8 @@ import { NaturalVoiceService } from '../../../core/natural-voice.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
 import { MANTRA_SCRIPTS, MantraScriptService } from './mantra-script';
+import { StoredPractice, WidgetBridgeService } from '../../../core/widget-bridge.service';
+import { localIsoDate } from '../../../core/subhashita.service';
 
 /**
  * Remedy detail — mantra tracker (Figma node 29:109).
@@ -48,6 +50,7 @@ export class MantraTrackerComponent {
   private readonly haptics = inject(HapticsService);
   private readonly naturalVoice = inject(NaturalVoiceService);
   private readonly nativeTts = inject(MobileTtsService);
+  private readonly widgets = inject(WidgetBridgeService);
   protected readonly scripts = inject(MantraScriptService);
   protected readonly scriptOptions = MANTRA_SCRIPTS;
   private readonly params = toSignal(this.route.queryParamMap, { requireSync: true });
@@ -143,6 +146,16 @@ export class MantraTrackerComponent {
 
   constructor() {
     void this.load();
+    // Counted on the widget while this screen stayed open behind it.
+    effect(() => {
+      if (!this.widgets.mantraTapsFolded()) return;
+      untracked(() => {
+        const activeId = this.kundlis.activeId();
+        const recommendationId = this.params().get('recommendation');
+        const practiceSlug = this.params().get('practice');
+        if (activeId && recommendationId && practiceSlug && this.practice()) this.restore(activeId, recommendationId, practiceSlug);
+      });
+    });
     inject(DestroyRef).onDestroy(() => {
       this.stopListening();
       if (this.resetTimer) clearTimeout(this.resetTimer);
@@ -391,7 +404,10 @@ export class MantraTrackerComponent {
       if (!group || !practice) throw new Error('This practice is no longer active for the selected profile.');
       this.group.set(group);
       this.practice.set(practice);
+      // Counts made on the home-screen widget go into the record first.
+      await this.widgets.foldMantraTaps();
       this.restore(activeId, recommendationId, practiceSlug);
+      this.publishWidget();
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {
@@ -410,8 +426,12 @@ export class MantraTrackerComponent {
   private restore(activeId: string, recommendationId: string, practiceSlug: string): void {
     const key = `siddha.remedyPractice:v1:${activeId}:${recommendationId}:${practiceSlug}`;
     try {
-      const stored = JSON.parse(localStorage.getItem(key) || 'null') as { count?: number; completedDates?: string[] } | null;
-      this.count.set(Math.min(this.target(), Math.max(0, stored?.count ?? 0)));
+      const stored = JSON.parse(localStorage.getItem(key) || 'null') as StoredPractice | null;
+      // The count is the day's: a new day starts the practice again. Records
+      // from before the date was stored fall back to when they were written.
+      const day = stored?.date ?? (stored?.updatedAt ? localIsoDate(new Date(stored.updatedAt)) : null);
+      const count = day === this.todayKey() ? stored?.count ?? 0 : 0;
+      this.count.set(Math.min(this.target(), Math.max(0, count)));
       this.completedDates.set(Array.isArray(stored?.completedDates) ? stored.completedDates : []);
     } catch {
       this.count.set(0);
@@ -425,12 +445,35 @@ export class MantraTrackerComponent {
     localStorage.setItem(key, JSON.stringify({
       count,
       completedDates,
+      date: this.todayKey(),
+      target: this.target(),
       updatedAt: new Date().toISOString(),
     }));
+    this.publishWidget(count);
   }
 
+  /** The phone's date; toISOString() gave UTC's, so the day turned over at 5:30 am in India. */
   private todayKey(): string {
-    return new Date().toISOString().slice(0, 10);
+    return localIsoDate();
+  }
+
+  /** The mantra widget counts the practice last opened here. */
+  private publishWidget(count = this.count()): void {
+    const key = this.storageKey();
+    const practice = this.practice();
+    if (!key || !practice || practice.type !== 'mantra') return;
+    const params = new URLSearchParams({
+      recommendation: this.params().get('recommendation') ?? '',
+      practice: this.params().get('practice') ?? '',
+    });
+    this.widgets.publishMantra({
+      key,
+      title: practice.title,
+      target: this.target(),
+      count,
+      date: this.todayKey(),
+      route: `/m/remedies/mantra?${params}`,
+    });
   }
 
   private devotionalFallback(practice: RemedyRecommendationPractice): string {

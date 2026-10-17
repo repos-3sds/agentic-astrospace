@@ -1,12 +1,15 @@
 package app.asksiddha.mobile;
 
 import android.app.NotificationChannel;
+import android.content.Intent;
 import android.app.NotificationManager;
 import android.media.AudioAttributes;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.webkit.WebSettings;
+import app.asksiddha.mobile.widgets.Widgets;
+import app.asksiddha.mobile.widgets.WidgetsPlugin;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -27,9 +30,19 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(PushConfigPlugin.class);
+        registerPlugin(WidgetsPlugin.class);
         super.onCreate(savedInstanceState);
         capTextZoom();
         createBellChannel();
+        WidgetsPlugin.handle(getIntent());
+        Widgets.refreshAll(this);
+    }
+
+    /** A widget tap while the app is already open (singleTask) lands here. */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        WidgetsPlugin.handle(intent);
     }
 
     private void capTextZoom() {

@@ -853,3 +853,27 @@ def catalog() -> list[dict]:
         }
         for f in FESTIVALS
     ]
+
+
+MOON_DAY_NOTE = (
+    "A full or new moon day here is the day whose sunrise falls in the 15th "
+    "tithi of its paksha at this place. Some calendars mark the day the tithi "
+    "begins instead, so a family or temple calendar can be a day apart."
+)
+
+
+def moon_days(year: int, city: str | None = None, nation: str = "IN",
+              lat: float | None = None, lng: float | None = None,
+              tz_str: str | None = None) -> list[dict]:
+    """Full and new moon days of ``year`` at a place, by the tithi at sunrise.
+
+    Rows: ``{"date": date, "moon": "full" | "new"}``, sorted. Convention-
+    dependent (see MOON_DAY_NOTE), so callers ship the note with the dates.
+    The same rule the moon-day emails use (notifications/email_jobs.py).
+    """
+    lat, lng, tz_str = resolve_location(city, nation, lat, lng, tz_str)
+    return [
+        {"date": f["date"], "moon": "full" if f["paksha"] == "Shukla" else "new"}
+        for f in _scan_year(year, lat, lng, tz_str)
+        if f["tithi_number"] == 15 and f["date"].year == year
+    ]

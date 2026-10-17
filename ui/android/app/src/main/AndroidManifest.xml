@@ -58,6 +58,70 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="siddha_bell" />
+
+        <!-- Home-screen widgets; see widgets/Widgets.java. -->
+        <receiver android:name=".widgets.TodayWidget" android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_today_info" />
+        </receiver>
+        <receiver android:name=".widgets.ListenWidget" android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_listen_info" />
+        </receiver>
+        <receiver android:name=".widgets.CalendarWidget" android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_calendar_info" />
+        </receiver>
+        <receiver android:name=".widgets.TimingWidget" android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_timing_info" />
+        </receiver>
+        <receiver android:name=".widgets.MoonWidget" android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_moon_info" />
+        </receiver>
+        <receiver android:name=".widgets.MantraWidget" android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_mantra_info" />
+        </receiver>
+        <receiver android:name=".widgets.AskWidget" android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_ask_info" />
+        </receiver>
+        <receiver android:name=".widgets.SubhashitaWidget" android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_subhashita_info" />
+        </receiver>
+        <receiver android:name=".widgets.WidgetRefreshReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.LOCALE_CHANGED" />
+                <action android:name="app.asksiddha.mobile.widgets.REFRESH" />
+            </intent-filter>
+        </receiver>
+        <!-- Reads today's brief aloud from the Listen widget (phone's own voice). -->
+        <service
+            android:name=".widgets.BriefSpeechService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
     </application>
 
     <!-- Permissions -->
@@ -68,4 +132,9 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Ask by voice (@capacitor-community/speech-recognition); requested at first use. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- The Listen widget reads the day's brief in a media-playback foreground service. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!-- Widgets reschedule their next refresh after a restart. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 </manifest>

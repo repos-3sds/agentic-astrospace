@@ -328,6 +328,16 @@ class TestFestivalRoutes:
         assert all("2026-10-01" <= f["occurs_on"] <= "2026-11-15"
                    for f in body["festivals"])
 
+    def test_moon_days_carry_their_rule(self, client):
+        body = client.get("/api/v1/festivals/moon-days", params={
+            "city": "Chennai", "from_date": "2026-10-01", "days": 60,
+        }).json()
+        assert body["is_convention_dependent"] is True
+        assert "tithi" in body["observance_note"]
+        kinds = [m["moon"] for m in body["moon_days"]]
+        assert kinds.count("full") >= 2 and kinds.count("new") >= 2
+        assert all("2026-10-01" <= m["date"] <= "2026-11-30" for m in body["moon_days"])
+
     def test_upcoming_spans_a_year_boundary(self, client):
         body = client.get("/api/v1/festivals/upcoming", params={
             "city": "Chennai", "from_date": "2026-12-20", "days": 40,

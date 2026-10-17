@@ -255,3 +255,27 @@ class TestQueries:
                                 lat=40.71, lng=-74.01, tz_str="America/New_York")
         assert chennai and newyork
         assert {r["place"]["tz"] for r in newyork} == {"America/New_York"}
+
+
+class TestMoonDays:
+    """Full and new moon days for the widgets: the tithi at sunrise."""
+
+    @pytest.fixture(scope="class")
+    def moons(self):
+        return F.moon_days(2026, **CHENNAI)
+
+    def test_about_a_dozen_of_each_alternating(self, moons):
+        full = [m for m in moons if m["moon"] == "full"]
+        new = [m for m in moons if m["moon"] == "new"]
+        assert 12 <= len(full) <= 13 and 12 <= len(new) <= 13
+        # A kshaya or vriddhi tithi can skip or repeat a sunrise, so two of a
+        # kind may sit a day apart, never further.
+        for a, b in zip(moons, moons[1:]):
+            if a["moon"] == b["moon"]:
+                assert (b["date"] - a["date"]).days <= 2
+        assert all(m["date"].year == 2026 for m in moons)
+
+    def test_buddha_purnima_is_a_full_moon_day(self, moons, y2026):
+        by_slug, _ = y2026
+        full = {m["date"] for m in moons if m["moon"] == "full"}
+        assert by_slug["buddha_purnima"]["occurs_on"] in full
