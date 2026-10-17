@@ -86,3 +86,9 @@ htmlcov/
 *.tar.zst
 # Firebase service-account keys are credentials; keep them outside the repo
 *firebase-adminsdk*.json
+# Google Cloud service-account keys downloaded from the console are named
+# <project-id>-<key-id>.json; one landed in the repo root on 2026-10-16.
+gen-lang-client-*.json
+*service-account*.json
+# Firebase CLI's local deploy cache.
+.firebase/
