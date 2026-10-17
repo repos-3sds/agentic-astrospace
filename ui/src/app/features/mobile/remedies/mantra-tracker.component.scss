@@ -193,6 +193,12 @@
   &:disabled { opacity: 0.55; cursor: default; }
 }
 
+.count-actions {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+}
+
 .reset-btn {
   @include m-cta-tertiary;
 }
@@ -205,14 +211,69 @@
   text-align: center;
 }
 
-/* Reminder — node 29:134. Full-bleed, as the design has it. */
+/* Reminder — node 29:134, now sharing the bottom row with Completed. */
+.bottom-ctas {
+  flex-shrink: 0;
+  display: flex;
+  gap: 10px;
+  margin: 6px 20px 0;
+}
+
 .reminder {
   @include m-cta-secondary;
-  flex-shrink: 0;
-  width: calc(100% - 40px);
-  margin: 6px 20px 0;
+  flex: 1 1 0;
   min-height: 48px;
 }
 
+.complete {
+  @include m-cta-primary;
+  flex: 1 1 0;
+  min-height: 48px;
+
+  &:disabled { opacity: 0.55; cursor: default; }
+}
+
 .script-tabs { margin-top: 6px; }
+.mantra-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mantra-card .listen {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px 0 10px;
+  border: 1px solid var(--m-border);
+  border-radius: 999px;
+  background: var(--m-raised);
+  color: var(--m-accent-strong);
+  font: inherit;
+  cursor: pointer;
+
+  svg { width: 18px; height: 18px; display: block; }
+  span { @include m-body-strong; color: inherit; text-transform: none; letter-spacing: 0; }
+  &.is-busy { opacity: 0.7; }
+}
+
+.mantra-card .lyric {
+  // Undo the eyebrow styling the card gives its label span.
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: none;
+  color: var(--m-muted);
+  border-radius: 6px;
+  transition: color 160ms ease, background-color 160ms ease;
+
+  &.is-sung { color: var(--m-text); }
+  &.is-now {
+    color: var(--m-accent-strong);
+    background: color-mix(in srgb, var(--m-accent-soft) 70%, transparent);
+  }
+}
+
 .mantra-card .meaning { @include m-body-small; color: var(--m-muted); font-style: italic; }

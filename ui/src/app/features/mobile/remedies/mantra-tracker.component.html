@@ -22,8 +22,23 @@
     }
     @if (literalPracticeText()) {
       <section class="mantra-card" aria-label="Mantra">
-        <span>{{ practiceTextLabel() }}</span>
-        <p class="m-selectable" [attr.lang]="hasScripts() ? (scripts.script() === 'en' ? 'en' : scripts.script()) : null">{{ literalPracticeText() }}</p>
+        <div class="mantra-head">
+          <span>{{ practiceTextLabel() }}</span>
+          @if (practice()?.type === 'mantra') {
+            <button class="listen" type="button" (click)="toggleListen()"
+                    [class.is-busy]="listen() === 'loading'"
+                    [attr.aria-label]="listen() === 'idle' ? 'Listen to the mantra' : 'Stop'">
+              @if (listen() === 'idle') {
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>
+                <span>Listen</span>
+              } @else {
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor"/></svg>
+                <span>{{ listen() === 'loading' ? 'Loading' : 'Stop' }}</span>
+              }
+            </button>
+          }
+        </div>
+        <p class="m-selectable" [attr.lang]="hasScripts() ? (scripts.script() === 'en' ? 'en' : scripts.script()) : null">@if (listen() === 'playing') {@for (word of lyricWords(); track $index) {<span class="lyric" [class.is-sung]="$index < activeWord()" [class.is-now]="$index === activeWord()">{{ word.text }}</span>{{ ' ' }}}} @else {{{ literalPracticeText() }}}</p>
         @if (meaning(); as m) {
           <small class="meaning m-selectable">{{ m }}</small>
         }
@@ -89,8 +104,13 @@
     <img src="mobile/sparkle.svg" alt="" aria-hidden="true" />
     <span>{{ done() ? 'Completed today' : target() > 1 ? 'Tap to count' : 'Mark done today' }}</span>
   </button>
-  @if (count() > 0 && !done()) {
-    <button class="reset-btn" type="button" (click)="resetToday()">Reset today</button>
+  @if (count() > 0) {
+    <div class="count-actions">
+      @if (target() > 1) {
+        <button class="reset-btn" type="button" (click)="undo()" aria-label="Take back one count">Undo 1</button>
+      }
+      <button class="reset-btn" type="button" (click)="resetToday()">Reset count</button>
+    </div>
   }
   }
 
@@ -99,7 +119,12 @@
 </div>
 
 @if (!loading() && !error()) {
-  <a class="reminder" [routerLink]="['/m','settings','notifications']">
-    {{ reminderLabel() }}
-  </a>
+  <div class="bottom-ctas">
+    <a class="reminder" [routerLink]="['/m','settings','notifications']" [attr.aria-label]="reminderLabel()">
+      Reminder
+    </a>
+    <button class="complete" type="button" [disabled]="done()" (click)="markCompleted()">
+      {{ done() ? 'Completed ✓' : 'Completed' }}
+    </button>
+  </div>
 }
