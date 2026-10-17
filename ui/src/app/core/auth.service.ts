@@ -144,7 +144,15 @@ export class AuthService {
     } else {
       this.setSession(data.session);
     }
-    this.client.auth.onAuthStateChange((_event, session) => this.setSession(session));
+    this.client.auth.onAuthStateChange((event, session) => {
+      // Only SIGNED_OUT ends a session. supabase-js reports INITIAL_SESSION
+      // with null whenever its own getSession() fails, which is every offline
+      // launch with an expired access token; until 2026-10-17 that null
+      // signed the reader out moments after the stored session above had
+      // kept them in, and an offline launch landed on the welcome screen.
+      if (!session && event !== 'SIGNED_OUT') return;
+      this.setSession(session);
+    });
     this.ready.set(true);
   }
 
@@ -296,6 +304,10 @@ export class AuthService {
   async signInWithGoogle(destination = '/'): Promise<void> {
     await this.init();
     if (!this.client) return;
+    // Offline, the browser would open on Chrome's own "no internet" page.
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      throw new Error('No connection. Check your internet and try again.');
+    }
     const { data, error } = await this.client.auth.signInWithOAuth({
       provider: 'google',
       options: {

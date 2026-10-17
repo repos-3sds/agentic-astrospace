@@ -294,6 +294,22 @@ describe('AuthService offline relaunch', () => {
     expect(service.isAuthenticated()).toBeTrue();
   });
 
+  it('stays signed in when supabase-js then reports the failed offline refresh as a null initial session', async () => {
+    await Preferences.set({ key: CONFIG_KEY, value: JSON.stringify(config) });
+    await Preferences.set({ key: SESSION_KEY, value: JSON.stringify(storedSession) });
+    spyOn(window, 'fetch').and.rejectWith(new TypeError('Failed to fetch'));
+    getSession.and.resolveTo({ data: { session: null }, error: new Error('AuthRetryableFetchError') });
+    const listen = (service as any).buildClient().auth.onAuthStateChange as jasmine.Spy;
+
+    await service.init();
+    const callback = listen.calls.mostRecent().args[0];
+    callback('INITIAL_SESSION', null);
+    expect(service.session()?.user?.id).toBe('u1');
+
+    callback('SIGNED_OUT', null);
+    expect(service.session()).toBeNull();
+  });
+
   it('boots from the cached config without waiting on the network, and revalidates it behind', async () => {
     const rotated = { ...config, supabase_anon_key: 'rotated' };
     await Preferences.set({ key: CONFIG_KEY, value: JSON.stringify(config) });
