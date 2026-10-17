@@ -1,18 +1,25 @@
 """Transports that hand one notification to one device token.
 
-Only FCM (Firebase Cloud Messaging, HTTP v1) is implemented. Android tokens
-are FCM tokens. iOS tokens from @capacitor/push-notifications are raw APNs
-tokens; APNs direct needs HTTP/2 plus an ES256 provider token, and neither
-h2 nor a JWT library is in requirements.txt, so an `apns` row is reported as
-`not configured` rather than silently dropped (see the deferred backlog in
-docs/backend_astro_depth_checklist_2026-08-06.md). The clean route for iOS is
-to register the app with Firebase too, at which point the token the plugin
-hands out is an FCM token and this transport covers both platforms.
+Two providers are implemented:
+
+- FCM (Firebase Cloud Messaging, HTTP v1) for Android, whose tokens are FCM
+  tokens.
+- APNs direct for iOS. @capacitor/push-notifications hands iOS a raw APNs
+  device token, so the worker talks to Apple itself: HTTP/2 to
+  api.push.apple.com, authenticated by an ES256 provider token signed with
+  the team's .p8 key. No Firebase iOS SDK is linked into the app.
 
 Configuration is environment-only, never read from the repo:
 
     FCM_SERVICE_ACCOUNT_FILE   path to a Firebase service-account JSON
     FCM_PROJECT_ID             optional; defaults to the file's project_id
+
+    APNS_KEY_FILE              path to the AuthKey_XXXXXXXXXX.p8 from the
+                               Apple Developer account (Keys > APNs)
+    APNS_KEY_ID                the key's 10-character id
+    APNS_TEAM_ID               the 10-character Apple team id
+    APNS_TOPIC                 optional; the app's bundle id
+                               (default app.asksiddha.mobile)
 """
 from __future__ import annotations
 
@@ -151,6 +158,121 @@ class FcmTransport:
         )
 
 
+APNS_DEFAULT_TOPIC = "app.asksiddha.mobile"
+APNS_HOSTS = {
+    "production": "https://api.push.apple.com",
+    "sandbox": "https://api.sandbox.push.apple.com",
+}
+# Apple rejects a provider token older than an hour and throttles one that is
+# re-signed more often than every 20 minutes.
+APNS_TOKEN_TTL_SECONDS = 50 * 60
+# Reasons that mean the device token will never work again on that host.
+APNS_DEAD_TOKEN_REASONS = {"BadDeviceToken", "Unregistered", "DeviceTokenNotForTopic"}
+
+
+class ApnsTransport:
+    """APNs over HTTP/2 with token (JWT) authentication.
+
+    TestFlight and App Store builds get production tokens; a build run from
+    Xcode gets sandbox tokens, and the app cannot tell which it is. A token
+    is tried on production first and, on BadDeviceToken, on sandbox; it is
+    only reported dead when both reject it.
+    """
+
+    provider = "apns"
+
+    def __init__(self, key_file: str, key_id: str, team_id: str,
+                 topic: str = APNS_DEFAULT_TOPIC, http=None, clock=None):
+        with open(key_file, encoding="utf-8") as fh:
+            self._key = fh.read()
+        self.key_id = key_id
+        self.team_id = team_id
+        self.topic = topic
+        self._http = http
+        self._clock = clock
+        self._jwt: str | None = None
+        self._jwt_issued = 0.0
+
+    def _now(self) -> float:
+        if self._clock is not None:
+            return self._clock()
+        import time
+
+        return time.time()
+
+    def _provider_token(self) -> str:
+        now = self._now()
+        if self._jwt is None or now - self._jwt_issued > APNS_TOKEN_TTL_SECONDS:
+            import jwt  # PyJWT[crypto]
+
+            self._jwt = jwt.encode(
+                {"iss": self.team_id, "iat": int(now)}, self._key,
+                algorithm="ES256", headers={"kid": self.key_id},
+            )
+            self._jwt_issued = now
+        return self._jwt
+
+    def _client(self):
+        if self._http is None:
+            import httpx
+
+            self._http = httpx.Client(http2=True, timeout=10.0)
+        return self._http
+
+    def payload(self, message: PushMessage) -> dict:
+        body: dict = {
+            "aps": {
+                "alert": {"title": message.title, "body": message.body or ""},
+                "sound": "default",
+            },
+        }
+        for key, value in (message.data or {}).items():
+            if str(key) != "aps":
+                body[str(key)] = str(value)
+        if message.deep_link:
+            body["deep_link"] = message.deep_link
+        if message.category:
+            body["category"] = message.category
+        return body
+
+    def _post(self, host: str, token: str, body: dict):
+        return self._client().post(
+            f"{APNS_HOSTS[host]}/3/device/{token}",
+            json=body,
+            headers={
+                "authorization": f"bearer {self._provider_token()}",
+                "apns-topic": self.topic,
+                "apns-push-type": "alert",
+                # 5 = deliver when power allows; a morning brief is not urgent.
+                "apns-priority": "5",
+            },
+        )
+
+    def send(self, token: str, message: PushMessage) -> PushResult:
+        body = self.payload(message)
+        reason = None
+        for host in ("production", "sandbox"):
+            try:
+                response = self._post(host, token, body)
+            except Exception as exc:  # network, key parsing
+                return PushResult(ok=False, error=f"apns: {exc}")
+            if response.status_code == 200:
+                apns_id = response.headers.get("apns-id")
+                return PushResult(ok=True, provider_message_id=apns_id,
+                                  receipt={"apns_id": apns_id, "host": host})
+            try:
+                reason = (response.json() or {}).get("reason")
+            except ValueError:
+                reason = None
+            reason = reason or str(response.status_code)
+            # Only a token from the other environment is worth a second try.
+            if reason != "BadDeviceToken":
+                break
+        dead = reason in APNS_DEAD_TOKEN_REASONS or response.status_code == 410
+        return PushResult(ok=False, error=f"apns {response.status_code}: {reason}",
+                          token_dead=dead, receipt={"reason": reason})
+
+
 def transports_from_env(environ: dict | None = None) -> dict[str, PushTransport]:
     """One transport per provider the API accepts (me_routes.PushTokenRegistration)."""
     env = os.environ if environ is None else environ
@@ -162,8 +284,15 @@ def transports_from_env(environ: dict | None = None) -> dict[str, PushTransport]
         transports["fcm"] = NotConfiguredTransport(
             "fcm", "fcm transport not configured (set FCM_SERVICE_ACCOUNT_FILE)",
         )
-    transports["apns"] = NotConfiguredTransport(
-        "apns", "apns transport not configured (register iOS with Firebase, or build an HTTP/2 APNs client)",
-    )
+    key_file = env.get("APNS_KEY_FILE")
+    key_id, team_id = env.get("APNS_KEY_ID"), env.get("APNS_TEAM_ID")
+    if key_file and os.path.exists(key_file) and key_id and team_id:
+        transports["apns"] = ApnsTransport(
+            key_file, key_id, team_id, env.get("APNS_TOPIC") or APNS_DEFAULT_TOPIC,
+        )
+    else:
+        transports["apns"] = NotConfiguredTransport(
+            "apns", "apns transport not configured (set APNS_KEY_FILE, APNS_KEY_ID and APNS_TEAM_ID)",
+        )
     transports["web"] = NotConfiguredTransport("web")
     return transports

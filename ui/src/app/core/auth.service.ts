@@ -83,6 +83,8 @@ export class AuthService {
    * the session is.
    */
   private readonly sessionStorage: SessionStorageAdapter = sessionStorageAdapter();
+  /** The project the client was built for; public values, used for its settings endpoint. */
+  private supabaseProject: { url: string; anonKey: string } | null = null;
 
   constructor(
     private router: Router,
@@ -116,6 +118,7 @@ export class AuthService {
     }
 
     this.client = this.buildClient(config.supabase_url, config.supabase_anon_key);
+    this.supabaseProject = { url: config.supabase_url, anonKey: config.supabase_anon_key };
     await this.installNativeAuthCallback();
     this.installAutoRefreshLifecycle();
     // Bounded: with an expired access token getSession() refreshes over the
@@ -302,14 +305,51 @@ export class AuthService {
   }
 
   async signInWithGoogle(destination = '/'): Promise<void> {
+    await this.signInWithProvider('google', destination);
+  }
+
+  /**
+   * Sign in with Apple, through Supabase's hosted flow in the system browser,
+   * the same way as Google. App Review (guideline 4.8) requires it on iOS
+   * because Google sign-in is offered; the screen shows it only on iOS and
+   * only once `appleSignInEnabled()` says the project has it switched on.
+   */
+  async signInWithApple(destination = '/'): Promise<void> {
+    await this.signInWithProvider('apple', destination);
+  }
+
+  /**
+   * Whether the Supabase project has the Apple provider switched on, read from
+   * its public settings endpoint. False on any failure, so a button that
+   * would open Supabase's "provider is not enabled" page is never shown.
+   */
+  async appleSignInEnabled(): Promise<boolean> {
+    try {
+      await this.init();
+    } catch {
+      return false;
+    }
+    const project = this.supabaseProject;
+    if (!project) return false;
+    try {
+      const res = await fetch(`${project.url}/auth/v1/settings`, { headers: { apikey: project.anonKey } });
+      if (!res.ok) return false;
+      const settings = (await res.json()) as { external?: Record<string, boolean> };
+      return settings.external?.['apple'] === true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async signInWithProvider(provider: 'google' | 'apple', destination: string): Promise<void> {
     await this.init();
     if (!this.client) return;
-    // Offline, the browser would open on Chrome's own "no internet" page.
+    // Offline, the browser would open on its own "no internet" page.
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
       throw new Error('No connection. Check your internet and try again.');
     }
     const { data, error } = await this.client.auth.signInWithOAuth({
-      provider: 'google',
+      provider,
       options: {
         redirectTo: this.authRedirect(destination),
         skipBrowserRedirect: Capacitor.isNativePlatform(),

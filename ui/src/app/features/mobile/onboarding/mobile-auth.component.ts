@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Capacitor } from '@capacitor/core';
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { legalUrl, openLegal } from '../../../core/legal';
@@ -28,6 +29,9 @@ export class MobileAuthComponent {
   );
   protected readonly loading = signal(false);
   protected readonly googleLoading = signal(false);
+  protected readonly appleLoading = signal(false);
+  /** iOS only, and only once the Supabase project has Apple switched on. */
+  protected readonly appleAvailable = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly notice = signal<string | null>(null);
   protected readonly showPassword = signal(false);
@@ -36,6 +40,12 @@ export class MobileAuthComponent {
   protected name = '';
   protected email = '';
   protected password = '';
+
+  constructor() {
+    if (Capacitor.getPlatform() === 'ios') {
+      void this.auth.appleSignInEnabled().then((on) => this.appleAvailable.set(on));
+    }
+  }
 
   protected setMode(mode: 'signin' | 'register'): void {
     this.mode.set(mode);
@@ -105,6 +115,19 @@ export class MobileAuthComponent {
       this.error.set((error as Error).message || 'Could not open Google sign-in. Try again.');
     } finally {
       this.googleLoading.set(false);
+    }
+  }
+
+  protected async apple(): Promise<void> {
+    this.appleLoading.set(true);
+    this.error.set(null);
+    this.notice.set(null);
+    try {
+      await this.auth.signInWithApple(this.mode() === 'signin' ? '/m/today' : '/m/language');
+    } catch (error) {
+      this.error.set((error as Error).message || 'Could not open Apple sign-in. Try again.');
+    } finally {
+      this.appleLoading.set(false);
     }
   }
 
