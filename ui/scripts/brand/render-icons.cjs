@@ -10,8 +10,10 @@ fs.mkdirSync(OUT, { recursive: true });
 // Each job: [file, w, h, html]. One icon on every theme: the night galaxy on
 // space black, plus a white silhouette for themed / tinted icons.
 const BG = { night: '#000' };
+// How much the galaxy glows: 2 is Hawk's "Brightest" pick (2026-10-17).
+const SHINE = 2;
 const MONO = { theme: 'mono', background: false, weight: 2.2, star: 1.3 };
-const full = (theme, s, o = {}) => luminousPage(s, { theme, fill: BG[theme], ...o });
+const full = (theme, s, o = {}) => luminousPage(s, { theme, fill: BG[theme], shine: SHINE, ...o });
 const jobs = [];
 // iOS (opaque, no rounding: the OS masks it). The light and dark appearances
 // are the same night icon, so the icon never changes with the device theme;
@@ -28,12 +30,12 @@ jobs.push([OUT + '/fav-256.png', 256, 256, full('night', 256)]);
 const dens = { ldpi: .75, mdpi: 1, hdpi: 1.5, xhdpi: 2, xxhdpi: 3, xxxhdpi: 4 };
 for (const [d, k] of Object.entries(dens)) {
   const s = Math.round(48 * k), a = Math.round(108 * k);
-  jobs.push([`${R}/mipmap-${d}/ic_launcher.png`, s, s, luminousPage(s, { theme: 'night', clip: 'rounded' })]);
-  jobs.push([`${R}/mipmap-${d}/ic_launcher_round.png`, s, s, luminousPage(s, { theme: 'night', clip: 'round' })]);
+  jobs.push([`${R}/mipmap-${d}/ic_launcher.png`, s, s, luminousPage(s, { theme: 'night', clip: 'rounded', shine: SHINE })]);
+  jobs.push([`${R}/mipmap-${d}/ic_launcher_round.png`, s, s, luminousPage(s, { theme: 'night', clip: 'round', shine: SHINE })]);
   // Background layer: the full 108dp canvas of ground.
   jobs.push([`${R}/mipmap-${d}/ic_launcher_background.png`, a, a, luminousPage(a, { theme: 'night', arms: false, fill: BG.night })]);
   // Foreground: the galaxy kept inside the 72dp visible circle (spec: 66dp safe zone).
-  jobs.push([`${R}/mipmap-${d}/ic_launcher_foreground.png`, a, a, luminousPage(a, { theme: 'night', background: false, inner: Math.round(a * 70 / 108) })]);
+  jobs.push([`${R}/mipmap-${d}/ic_launcher_foreground.png`, a, a, luminousPage(a, { theme: 'night', background: false, inner: Math.round(a * 70 / 108), shine: SHINE })]);
   // Themed-icon silhouette (Android 13+), shared by both launchers.
   jobs.push([`${R}/mipmap-${d}/ic_launcher_monochrome.png`, a, a, luminousPage(a, { ...MONO, inner: Math.round(a * 70 / 108) })]);
 }

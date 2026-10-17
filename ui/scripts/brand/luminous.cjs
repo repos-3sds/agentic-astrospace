@@ -27,6 +27,9 @@ function drawGalaxy(cv, opt) {
   const S = cv.width, ctx = cv.getContext('2d');
   const u = S / 100 * (opt.zoom || 1.14), cx = S / 2, cy = S / 2, rot = -24 * Math.PI / 180;
   const W = S / 1024 * (opt.weight || 1);
+  // Shine: how much light the drawing gives off (bloom, core, spines, stars).
+  // 1 is the original gold icon; render-icons.cjs sets the shipped level.
+  const SH = opt.shine || 1;
   const map = (x, y) => { const dx = x - 50, dy = y - 50; return [cx + (dx * Math.cos(rot) - dy * Math.sin(rot)) * u, cy + (dx * Math.sin(rot) + dy * Math.cos(rot)) * u]; };
   const spiral = (arm, t, dr = 0, da = 0) => { const a = arm * Math.PI + t * 1.42 * TAU + da, r = 4 + t * 38 + dr; return map(50 + r * Math.cos(a), 50 + r * Math.sin(a) * 0.78); };
   if (opt.background !== false && T.bg) {
@@ -62,7 +65,7 @@ function drawGalaxy(cv, opt) {
         pts.push(spiral(arm, t, off * spread, phase));
         if (pts.length > CH || k === SEG) {
           const fade = Math.min(1, k / 12) * Math.pow(1 - k / SEG, 0.5);
-          l.globalAlpha = (lead ? 0.85 : 0.06 + 0.5 * Math.pow(Math.abs(off) / 2, 1.5)) * fade * (1 - t * 0.2);
+          l.globalAlpha = Math.min(1, (lead ? 0.85 : 0.06 + 0.5 * Math.pow(Math.abs(off) / 2, 1.5)) * fade * (1 - t * 0.2) * (lead ? SH : Math.sqrt(SH)));
           l.strokeStyle = col; l.lineWidth = w * (1.4 - t * 0.6); l.lineCap = 'butt'; l.lineJoin = 'round';
           l.beginPath(); pts.forEach((p, i) => (i ? l.lineTo(p[0], p[1]) : l.moveTo(p[0], p[1]))); l.stroke();
           pts = [pts[pts.length - 1]];
@@ -73,15 +76,16 @@ function drawGalaxy(cv, opt) {
     let prev = null;
     for (let k = 0; k <= SEG; k++) {
       const t = k / SEG * 0.98, p = spiral(arm, t);
-      if (prev) { l.globalAlpha = 0.75 * (1 - t * 0.85); l.strokeStyle = T.hot; l.lineWidth = (1.6 - t * 1.2) * W; l.lineCap = 'round'; l.beginPath(); l.moveTo(prev[0], prev[1]); l.lineTo(p[0], p[1]); l.stroke(); }
+      if (prev) { l.globalAlpha = Math.min(1, 0.75 * SH * (1 - t * 0.85)); l.strokeStyle = T.hot; l.lineWidth = (1.6 - t * 1.2) * W * Math.sqrt(SH); l.lineCap = 'round'; l.beginPath(); l.moveTo(prev[0], prev[1]); l.lineTo(p[0], p[1]); l.stroke(); }
       prev = p;
     }
   }
   // Core, with a thin flare along the galaxy's tilt.
   l.globalAlpha = 1;
-  let g = l.createRadialGradient(cx, cy, 0, cx, cy, 9 * u);
+  const CR = 9 * u * Math.sqrt(SH);
+  let g = l.createRadialGradient(cx, cy, 0, cx, cy, CR);
   g.addColorStop(0, T.core[0]); g.addColorStop(0.12, T.core[1]); g.addColorStop(0.4, T.core[2] + '44'); g.addColorStop(1, T.core[2] + '00');
-  l.fillStyle = g; l.beginPath(); l.arc(cx, cy, 9 * u, 0, TAU); l.fill();
+  l.fillStyle = g; l.beginPath(); l.arc(cx, cy, CR, 0, TAU); l.fill();
   l.save(); l.translate(cx, cy); l.rotate(rot); l.scale(1, 0.035);
   g = l.createRadialGradient(0, 0, 0, 0, 0, 40 * u); g.addColorStop(0, T.hot + 'cc'); g.addColorStop(0.4, T.halo + '44'); g.addColorStop(1, T.halo + '00');
   l.fillStyle = g; l.beginPath(); l.arc(0, 0, 40 * u, 0, TAU); l.fill(); l.restore();
@@ -91,7 +95,7 @@ function drawGalaxy(cv, opt) {
   const st = St.getContext('2d'); st.globalCompositeOperation = l.globalCompositeOperation;
   const GT = [6, 16, 26, 36].map((k) => k / 45);
   for (let arm = 0; arm < 2; arm++) GT.forEach((t) => {
-    const [x, y] = spiral(arm, t), b = (0.62 - t * 0.18) * u * (opt.star || 1);
+    const [x, y] = spiral(arm, t), b = (0.62 - t * 0.18) * u * (opt.star || 1) * Math.pow(SH, 0.35);
     const h = st.createRadialGradient(x, y, 0, x, y, b * 2.6);
     h.addColorStop(0, '#ffffff'); h.addColorStop(0.12, T.hot);
     h.addColorStop(0.3, T.halo + '66'); h.addColorStop(1, T.halo + '00');
@@ -106,8 +110,15 @@ function drawGalaxy(cv, opt) {
   });
   // Bloom: a wide and a tight blurred copy under the sharp layer.
   ctx.globalCompositeOperation = 'lighter';
-  ctx.filter = `blur(${S / 40}px)`; ctx.globalAlpha = T.bloom[0]; ctx.drawImage(L, 0, 0);
-  ctx.filter = `blur(${S / 160}px)`; ctx.globalAlpha = T.bloom[1]; ctx.drawImage(L, 0, 0);
+  ctx.filter = `blur(${S / 40}px)`; ctx.globalAlpha = Math.min(1, T.bloom[0] * SH); ctx.drawImage(L, 0, 0);
+  ctx.filter = `blur(${S / 160}px)`; ctx.globalAlpha = Math.min(1, T.bloom[1] * SH); ctx.drawImage(L, 0, 0);
+  if (SH > 1 && T.bg) {
+    // A soft gold glow around the core, so the whole mark reads as lit.
+    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, S * 0.42);
+    const a = Math.round(Math.min(0.45, 0.22 * (SH - 1)) * 255).toString(16).padStart(2, '0');
+    halo.addColorStop(0, T.halo + a); halo.addColorStop(1, T.halo + '00');
+    ctx.filter = 'none'; ctx.globalAlpha = 1; ctx.fillStyle = halo; ctx.fillRect(0, 0, S, S);
+  }
   ctx.filter = 'none'; ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'lighter';
   ctx.drawImage(L, 0, 0);
