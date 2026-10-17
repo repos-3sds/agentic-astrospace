@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 
 import {
+  API_COMPUTE_GET_TIMEOUT_MS,
   API_GET_RETRY_DELAY_MS,
   API_GET_TIMEOUT_MS,
   API_SLOW_GET_TIMEOUT_MS,
@@ -114,5 +115,39 @@ describe('httpResilienceInterceptor', () => {
     request.flush({ source: 'agent' });
     expect(body).toEqual({ source: 'agent' });
     expect(API_SLOW_GET_TIMEOUT_MS).toBeGreaterThan(120_000);
+  }));
+
+  for (const url of [
+    '/api/v1/muhurta/k?goal=start_venture&date_from=2026-10-17',
+    '/api/v1/vedic/k/calendar-intelligence?days=45',
+    '/api/v1/festivals/upcoming?city=Kakinada&days=31',
+  ]) {
+    it(`lets ${url.split('?')[0]} compute past 8 s`, fakeAsync(() => {
+      let body: unknown;
+      http.get(url).subscribe((value) => (body = value));
+      tick(API_GET_TIMEOUT_MS + 10_000);
+      backend.expectOne(url).flush({ ok: true });
+      expect(body).toEqual({ ok: true });
+    }));
+  }
+
+  it('still cuts off a computing read that never answers', fakeAsync(() => {
+    let failed: unknown;
+    http.get('/api/v1/muhurta/k?goal=general').subscribe({ error: (e) => (failed = e) });
+    backend.expectOne('/api/v1/muhurta/k?goal=general');
+    tick(API_COMPUTE_GET_TIMEOUT_MS + API_GET_RETRY_DELAY_MS);
+    backend.expectOne('/api/v1/muhurta/k?goal=general');
+    tick(API_COMPUTE_GET_TIMEOUT_MS);
+    expect(failed).toBeTruthy();
+  }));
+
+  it('keeps the 8 s limit for the muhurta goal list', fakeAsync(() => {
+    let failed: unknown;
+    http.get('/api/v1/muhurta/goals').subscribe({ error: (e) => (failed = e) });
+    backend.expectOne('/api/v1/muhurta/goals');
+    tick(API_GET_TIMEOUT_MS + API_GET_RETRY_DELAY_MS);
+    backend.expectOne('/api/v1/muhurta/goals');
+    tick(API_GET_TIMEOUT_MS);
+    expect(failed).toBeTruthy();
   }));
 });

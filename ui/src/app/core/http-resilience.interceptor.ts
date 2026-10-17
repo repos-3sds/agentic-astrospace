@@ -12,9 +12,19 @@ export const API_GET_TIMEOUT_MS = 8_000;
  */
 export const API_SLOW_GET_TIMEOUT_MS = 130_000;
 const SLOW_READS = [/\/daily\/brief(\?|$)/];
+/**
+ * Reads that compute a span of days. Each is a few seconds of ephemeris work,
+ * more on a cold server, so 8 s cut them off before they could answer and the
+ * retry started the work again: Muhurta never returned, and a month of
+ * festivals or the calendar failed until Retry found the server warm.
+ */
+export const API_COMPUTE_GET_TIMEOUT_MS = 45_000;
+const COMPUTE_READS = [/\/calendar-intelligence(\?|$)/, /\/muhurta\/(?!goals)[^/?]+(\?|$)/, /\/festivals\/(upcoming|year)/];
 
 export function readTimeoutMs(req: HttpRequest<unknown>): number {
-  return SLOW_READS.some((pattern) => pattern.test(req.url)) ? API_SLOW_GET_TIMEOUT_MS : API_GET_TIMEOUT_MS;
+  if (SLOW_READS.some((pattern) => pattern.test(req.url))) return API_SLOW_GET_TIMEOUT_MS;
+  if (COMPUTE_READS.some((pattern) => pattern.test(req.url))) return API_COMPUTE_GET_TIMEOUT_MS;
+  return API_GET_TIMEOUT_MS;
 }
 
 /** Pause before the single retry, long enough for a flapping radio to settle. */
