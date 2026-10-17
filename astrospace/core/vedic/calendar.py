@@ -187,8 +187,10 @@ def calendar_intelligence(
             "auspicious_count": len(payload["windows"]["auspicious"]),
             "inauspicious_count": len(payload["windows"]["inauspicious"]),
             "windows": {
-                "auspicious": payload["windows"]["auspicious"] if include_practitioner_detail else payload["windows"]["auspicious"][:3],
-                "inauspicious": payload["windows"]["inauspicious"] if include_practitioner_detail else payload["windows"]["inauspicious"][:3],
+                # Every window on every plan and mode. The lists are sorted by
+                # time, so a cap of three dropped the afternoon's Rahu Kalam.
+                "auspicious": payload["windows"]["auspicious"],
+                "inauspicious": payload["windows"]["inauspicious"],
             },
         }
         if include_practitioner_detail:

@@ -17,13 +17,12 @@ import swisseph as swe
 from .constants import NAKSHATRAS, NAKSHATRA_SPAN
 from .nakshatra import nakshatra_of
 from .panchanga import tithi_of, yoga_of, karana_of
-from .positions import jd_to_local, sidereal_positions
+from .positions import jd_to_local, sidereal_positions, sun_moon_sidereal
 
 # ── angle functions ─────────────────────────────────────────────────────────
 
 def _angles(jd: float) -> dict:
-    pos = sidereal_positions(jd)
-    sun, moon = pos["Sun"]["lon"], pos["Moon"]["lon"]
+    sun, moon = sun_moon_sidereal(jd)
     return {
         "tithi": (moon - sun) % 360.0,
         "karana": (moon - sun) % 360.0,

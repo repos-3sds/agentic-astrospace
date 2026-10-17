@@ -378,6 +378,24 @@ class TestTransitContext:
         assert result["coverage"]["past_days"] == 30
         assert result["gochara"]["interpretation"]["schema_version"] == "gocharam.interpretation.v3"
 
+    def test_sun_moon_fast_path_matches_all_grahas(self):
+        from astrospace.core.vedic.positions import sidereal_positions, sun_moon_sidereal
+        for jd in (2461330.25, 2461500.9, 2440000.5):
+            full = sidereal_positions(jd)
+            assert sun_moon_sidereal(jd) == (full["Sun"]["lon"], full["Moon"]["lon"])
+
+    def test_calendar_day_keeps_every_window(self):
+        # A cap of three dropped the afternoon's Rahu Kalam outside Practitioner.
+        chart = VedicChart("Calendar", 1990, 1, 1, 12, 0, **DELHI)
+        result = chart.calendar_intelligence(
+            as_of=datetime(2026, 10, 20, 12, 0, tzinfo=timezone.utc),
+            city="Delhi", nation="IN", **DELHI, display_tz_str="Asia/Kolkata", days=1,
+        )
+        day = result["panchanga_days"][0]
+        assert len(day["windows"]["inauspicious"]) == day["inauspicious_count"]
+        assert len(day["windows"]["auspicious"]) == day["auspicious_count"]
+        assert any("Rahu" in w["name"] for w in day["windows"]["inauspicious"])
+
     def test_transit_signals_match_the_full_analysis(self):
         # The calendar reads these three fields through the fast path; they
         # must be exactly what the full three-year analysis reports.
