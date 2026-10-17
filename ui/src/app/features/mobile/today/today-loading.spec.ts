@@ -1,3 +1,4 @@
+import { NaturalVoiceService } from '../../../core/natural-voice.service';
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
@@ -428,6 +429,7 @@ describe('TodayComponent loading', () => {
         { provide: FestivalService, useValue: {} },
         { provide: AnalyticsService, useValue: { track: () => undefined } },
         { provide: HapticsService, useValue: { tap: () => undefined } },
+        { provide: NaturalVoiceService, useValue: { available: () => Promise.resolve(false) } },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: new Map() } } },
       ],
     });

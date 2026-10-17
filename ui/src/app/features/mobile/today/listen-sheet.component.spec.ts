@@ -21,6 +21,9 @@ describe('ListenSheetComponent languages', () => {
     voice = jasmine.createSpyObj<NaturalVoiceService>('NaturalVoiceService', ['available', 'audioUrl', 'telugu']);
     voice.available.and.resolveTo(natural);
     voice.audioUrl.and.resolveTo('blob:audio');
+    // The sheet translates in the background once natural voice is on; tests
+    // that care resolve this themselves.
+    voice.telugu.and.returnValue(new Promise(() => undefined));
     TestBed.configureTestingModule({
       imports: [ListenSheetComponent],
       providers: [

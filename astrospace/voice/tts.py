@@ -169,27 +169,33 @@ class _BucketCache:
         return f"tts/{key}.mp3"
 
     def get(self, key: str) -> bytes | None:
+        return self.read(self._object(key))
+
+    def put(self, key: str, value: bytes) -> None:
+        self.write(self._object(key), value, "audio/mpeg")
+
+    def read(self, name: str) -> bytes | None:
         from urllib.parse import quote
 
         try:
             response = self._synthesizer._authorized_session().get(
                 f"https://storage.googleapis.com/storage/v1/b/{self._bucket}/o/"
-                f"{quote(self._object(key), safe='')}?alt=media",
+                f"{quote(name, safe='')}?alt=media",
                 timeout=10,
             )
         except Exception:
             return None
         return response.content if response.status_code == 200 else None
 
-    def put(self, key: str, value: bytes) -> None:
+    def write(self, name: str, value: bytes, content_type: str) -> None:
         from urllib.parse import quote
 
         try:
             self._synthesizer._authorized_session().post(
                 f"https://storage.googleapis.com/upload/storage/v1/b/{self._bucket}/o"
-                f"?uploadType=media&name={quote(self._object(key), safe='')}",
+                f"?uploadType=media&name={quote(name, safe='')}",
                 data=value,
-                headers={"Content-Type": "audio/mpeg"},
+                headers={"Content-Type": content_type},
                 timeout=15,
             )
         except Exception:
@@ -227,6 +233,25 @@ def set_synthesizer_for_tests(synthesizer: Synthesizer | None) -> None:
         _synthesizer = synthesizer
         _bucket = None
         _memory = _MemoryCache()
+
+
+def durable_read(name: str) -> bytes | None:
+    """An object from the TTS bucket, or None when there is no bucket or no object."""
+    try:
+        _, bucket = _backends()
+    except Exception:
+        return None
+    return bucket.read(name) if bucket is not None else None
+
+
+def durable_write(name: str, value: bytes, content_type: str) -> None:
+    """Best-effort write to the TTS bucket; does nothing without one."""
+    try:
+        _, bucket = _backends()
+    except Exception:
+        return
+    if bucket is not None:
+        bucket.write(name, value, content_type)
 
 
 def cache_key(text: str, language_code: str, voice: str, rate: float) -> str:

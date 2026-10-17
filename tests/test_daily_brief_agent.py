@@ -168,6 +168,38 @@ def test_audio_chunks_match_the_apps_split():
     assert all(len(c) <= 200 for c in chunks) and " ".join(chunks) == " ".join(long.split())
 
 
+def test_the_first_audio_piece_is_a_short_opening():
+    """The voice starts after the first piece is made, and a 1,000-character
+    piece took 12-16 s, so the first piece is only the opening sentence(s)."""
+    script = "Namaste, Ravi. Here is your day. " + "A longer sentence about the day goes here. " * 30
+    chunks = daily_briefs.natural_chunks(script)
+    assert chunks[0] == "Namaste, Ravi. Here is your day. A longer sentence about the day goes here. " \
+        "A longer sentence about the day goes here."
+    assert len(chunks[0]) <= daily_briefs.NATURAL_FIRST_CHUNK_MAX_CHARS
+    assert " ".join(chunks) == " ".join(script.split())
+
+
+def test_prerender_also_renders_the_telugu_the_sheet_will_ask_for():
+    from astrospace.voice import translate, tts
+
+    rendered: list[str] = []
+
+    class Synth:
+        def synthesize(self, text, language_code, voice, rate):
+            rendered.append(text)
+            return b"mp3"
+
+    tts.set_synthesizer_for_tests(Synth())
+    translate.set_translator_for_tests(lambda system, prompt: '["నమస్తే రవి.", "ఈ రోజు ప్రశాంతంగా ఉంటుంది."]')
+    try:
+        spoken = [{"label": "Opening", "text": "Namaste, Ravi."}, {"label": "Close", "text": "The day is calm."}]
+        assert daily_briefs.prerender_audio(spoken) == 2
+    finally:
+        tts.set_synthesizer_for_tests(None)
+        translate.set_translator_for_tests(None)
+    assert rendered == ["Namaste, Ravi. The day is calm.", "నమస్తే రవి. ఈ రోజు ప్రశాంతంగా ఉంటుంది."]
+
+
 # ── Store, endpoint and schedule ─────────────────────────────────────────────
 
 @pytest.fixture()
