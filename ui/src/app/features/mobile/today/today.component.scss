@@ -40,6 +40,8 @@
   --text-clear: radial-gradient(ellipse 120px 38px at 180px var(--sun-center-y), transparent 58%, #000 100%);
   -webkit-mask-image: var(--text-clear);
   mask-image: var(--text-clear);
+
+  &[hidden] { display: none; }
 }
 
 .celestial-sun,

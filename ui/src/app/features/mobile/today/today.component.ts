@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, computed, effect, inject, signal, untracked } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { timingPlaceLabel } from '../../../core/timing-place';
 import { DayGaugeComponent } from '../day-gauge/day-gauge.component';
 import { DayQualitySheetComponent, DaySignal } from './day-quality-sheet.component';
@@ -442,7 +442,17 @@ export class TodayComponent {
       sky = host?.querySelector<HTMLElement>(':scope > .celestial-sky') ?? null;
       if (sky) host?.closest('.shell')?.prepend(sky);
     });
-    inject(DestroyRef).onDestroy(() => sky?.remove());
+    // Lifted out of Today's host, the sky no longer leaves with it. Today is a
+    // retained tab root: navigating away detaches its view without destroying
+    // it, and the sky stayed painted over every other screen (its sun sat on
+    // the back arrow). Show it only while Today itself is in the page.
+    const navigations = inject(Router).events.subscribe((event) => {
+      if (event instanceof NavigationEnd && sky) sky.hidden = !host?.isConnected;
+    });
+    inject(DestroyRef).onDestroy(() => {
+      navigations.unsubscribe();
+      sky?.remove();
+    });
     if (!todayIntroPlayed) {
       todayIntroPlayed = true;
       const timer = setTimeout(() => this.introPlayed.set(true), TODAY_INTRO_MS);
