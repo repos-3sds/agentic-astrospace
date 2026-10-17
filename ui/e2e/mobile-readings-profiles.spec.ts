@@ -357,6 +357,7 @@ async function mockMobileApi(page: Page): Promise<{
   };
 
   const remediesPayload = {
+    period: { mahadasha: 'Moon', antardasha: 'Saturn', start: '2025-01-01', end: '2026-08-01' },
     count: 2,
     note: null,
     disclaimer: 'Traditional practice, not a guarantee.',
@@ -373,7 +374,11 @@ async function mockMobileApi(page: Page): Promise<{
         safety_note: 'Traditional practice, not a guarantee.',
         priority: 1,
         practices: [
-          { practice_slug: 'shani-mantra', type: 'mantra', title: 'Shani beej mantra', instructions: 'Recite 108 times on Saturday morning.', cadence: 'weekly', target_count: 108, preferred_day: 'Saturday', optional_cost: false, planet: 'Saturn' },
+          {
+            practice_slug: 'saturn-nama', mantra_id: 'saturn-nama', type: 'mantra', title: 'Shani beej mantra', instructions: 'Recite 108 times on Saturday morning.', cadence: 'weekly', target_count: 108, preferred_day: 'Saturday', optional_cost: false, planet: 'Saturn',
+            text: { te: 'ఓం శనైశ్చరాయ నమః', en: 'Om Shanaishcharaya Namah', sa: 'ॐ शनैश्चराय नमः', iast: 'oṃ śanaiścarāya namaḥ' },
+            meaning: { en: 'Om, salutation to Shani.', te: null, hi: null },
+          },
         ],
       },
       {
@@ -548,7 +553,7 @@ async function mockMobileApi(page: Page): Promise<{
       return;
     }
 
-    if (url.pathname === '/api/v1/remedies/profile-1' && request.method() === 'GET') {
+    if (url.pathname === '/api/v1/remedies/profile-1/plan' && request.method() === 'GET') {
       await route.fulfill({ json: remediesPayload });
       return;
     }
@@ -922,6 +927,10 @@ test('mobile remedies and muhurta use available backend-backed inputs honestly',
   await expect(page.getByText('Manglik check')).toBeVisible();
   await expect(page.getByText('Mars check returned by API.')).toBeVisible();
   await expect(page.getByText('For Saturn’s friction at work')).toHaveCount(0);
+  // The mantra is shown as its own text in the chosen script.
+  await expect(page.getByText('Om Shanaishcharaya Namah')).toBeVisible();
+  await page.getByRole('button', { name: 'తెలుగు' }).click();
+  await expect(page.getByText('ఓం శనైశ్చరాయ నమః')).toBeVisible();
 
   await page.clock.setFixedTime(new Date('2026-07-28T09:00:00+05:30'));
   await page.goto('/m/muhurta');
