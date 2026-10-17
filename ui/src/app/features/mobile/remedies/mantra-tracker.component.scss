@@ -117,8 +117,8 @@
 /* Count ring — node 29:123. Redrawn, not the export: it moves on every tap. */
 .ring {
   position: relative;
-  width: 220px;
-  height: 220px;
+  width: 168px;
+  height: 168px;
   flex-shrink: 0;
   padding: 0;
   border: 0;
@@ -150,7 +150,7 @@
 
 .count {
   font-weight: 700;
-  font-size: 52px;
+  font-size: 40px;
   line-height: 1;
   color: var(--m-text);
   // Tabular figures: without them the ring's centre jitters as the count runs
@@ -160,7 +160,7 @@
 
 .of { @include m-body-small; color: var(--m-muted); }
 
-.hint { @include m-caption; color: var(--m-accent-strong); margin-top: 6px; }
+.hint { @include m-caption; color: var(--m-accent-strong); margin-top: 4px; }
 
 /* Undo · auto play · reset, one row under the ring. */
 .controls {

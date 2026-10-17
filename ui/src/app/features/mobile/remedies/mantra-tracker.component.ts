@@ -128,12 +128,12 @@ export class MantraTrackerComponent {
     ].filter(Boolean).join(' · ');
   });
 
-  // Ring geometry, from the 220px export.
-  protected readonly SIZE = 220;
-  protected readonly C = 110;
-  protected readonly R = 102.3;
-  protected readonly STROKE = 15.4;
-  protected readonly CIRCUMFERENCE = 2 * Math.PI * 102.3;
+  // Ring geometry: the 220px export's proportions, scaled down to 168px.
+  protected readonly SIZE = 168;
+  protected readonly C = 84;
+  protected readonly R = 78.1;
+  protected readonly STROKE = 11.8;
+  protected readonly CIRCUMFERENCE = 2 * Math.PI * 78.1;
 
   protected readonly dashOffset = computed(() => {
     const target = this.target();
