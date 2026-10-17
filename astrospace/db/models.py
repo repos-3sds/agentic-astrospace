@@ -860,6 +860,11 @@ class EmailRecipient(Base):
     suppressed_at: Mapped[datetime | None] = mapped_column(DateTime)
     suppressed_reason: Mapped[str | None] = mapped_column(String)
     welcomed_at: Mapped[datetime | None] = mapped_column(DateTime)
+    # When the reader agreed to email, and where ("signup" for the sign-up
+    # box). Set once by the onboarding defaults; a toggle in Settings is its
+    # own record, in notification_preferences.
+    consented_at: Mapped[datetime | None] = mapped_column(DateTime)
+    consent_source: Mapped[str | None] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
