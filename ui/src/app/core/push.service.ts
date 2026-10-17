@@ -1,4 +1,5 @@
 import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Router } from '@angular/router';
 import { Capacitor, registerPlugin } from '@capacitor/core';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
@@ -16,6 +17,7 @@ export const PREF_CATEGORY: Record<string, string> = {
   windows: 'window_alert',
   festivals: 'festival_reminder',
   remedies: 'remedy_reminder',
+  subhashita: 'daily_subhashita',
 };
 
 const TOKEN_KEY = 'astrospace.push.token';
@@ -44,6 +46,7 @@ export const PUSH_NOT_CONFIGURED = 'Push notifications are not set up in this bu
 export class PushService {
   private readonly api = inject(ApiService);
   private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
 
   readonly permission = signal<PushPermission>(Capacitor.isNativePlatform() ? 'prompt' : 'unsupported');
   readonly registered = signal(false);
@@ -188,6 +191,13 @@ export class PushService {
     if (this.listenersInstalled) return;
     this.listenersInstalled = true;
     await plugin.addListener('registration', ({ value }) => void this.storeToken(value));
+    // A tapped push opens the screen it is about (the worker sets deep_link,
+    // e.g. /m/subhashita). Only in-app paths: the data is server-written, but
+    // the app never follows a push off to the web.
+    await plugin.addListener('pushNotificationActionPerformed', ({ notification }) => {
+      const link = (notification.data as Record<string, unknown> | undefined)?.['deep_link'];
+      if (typeof link === 'string' && link.startsWith('/m/')) void this.router.navigateByUrl(link);
+    });
     await plugin.addListener('registrationError', ({ error }) => {
       this.error.set(error || 'The device did not return a push token.');
       this.registered.set(false);

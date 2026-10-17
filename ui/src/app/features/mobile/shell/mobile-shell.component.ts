@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 import {
   NavigationEnd,
   Router,
@@ -15,6 +17,8 @@ import { SheetOverlayService } from '../../../core/sheet-overlay.service';
 import { HapticsService } from '../../../core/haptics.service';
 import { ConnectivityService } from '../../../core/connectivity.service';
 import { ScrollMemoryDirective } from './scroll-memory.directive';
+import { Subhashita, SubhashitaService } from '../../../core/subhashita.service';
+import { SubhashitaSheetComponent } from '../subhashita/subhashita-sheet.component';
 
 interface MobileTab {
   commands: string[];
@@ -26,7 +30,7 @@ interface MobileTab {
 const EXPLORE_ROOTS = [
   '/m/settings', '/m/chart', '/m/explore', '/m/transits', '/m/readings', '/m/notes',
   '/m/subscription', '/m/notifications', '/m/search', '/m/remedies', '/m/muhurta',
-  '/m/family', '/m/compat',
+  '/m/family', '/m/compat', '/m/subhashita',
 ];
 
 function under(path: string, root: string): boolean {
@@ -46,7 +50,7 @@ function under(path: string, root: string): boolean {
   selector: 'as-mobile-shell',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, GenericErrorComponent, ScrollMemoryDirective],
+  imports: [RouterOutlet, RouterLink, GenericErrorComponent, ScrollMemoryDirective, SubhashitaSheetComponent],
   templateUrl: './mobile-shell.component.html',
   styleUrl: './mobile-shell.component.scss',
   host: { class: 'as-mobile' },
@@ -69,8 +73,39 @@ export class MobileShellComponent {
   protected readonly connectivity = inject(ConnectivityService);
   private readonly scroller = viewChild(ScrollMemoryDirective);
 
+  private readonly subhashita = inject(SubhashitaService);
+  /** Today's verse while its first-open sheet is up. */
+  protected readonly dailyVerse = signal<Subhashita | null>(null);
+
   constructor() {
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
+    void this.offerDailyVerse();
+    // A phone left with the app open overnight comes back without a cold
+    // start, so the next morning's first look counts as the day's first open.
+    if (Capacitor.isNativePlatform()) {
+      const listener = CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+        if (isActive) void this.offerDailyVerse();
+      });
+      inject(DestroyRef).onDestroy(() => void listener.then((l) => l.remove()));
+    }
+  }
+
+  /**
+   * Today's Subhashita, once a day on the first open (Hawk, 2026-10-17).
+   * Not on a reader's very first day, which already opens on their first
+   * reading; not over the verse's own screen or over another sheet.
+   */
+  private async offerDailyVerse(): Promise<void> {
+    if (!this.subhashita.unseenToday()) return;
+    if (this.subhashita.neverOffered()) {
+      this.subhashita.markSeen();
+      return;
+    }
+    const verse = await this.subhashita.load();
+    if (!verse || !this.subhashita.unseenToday()) return;
+    this.subhashita.markSeen();
+    if (this.currentPath().startsWith('/m/subhashita') || this.overlay.open()) return;
+    this.dailyVerse.set(verse);
   }
 
   /** The profile list failed and nothing is cached: every tab would be empty,

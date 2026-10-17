@@ -49,6 +49,7 @@ from ..context.validation import score_answer
 # one category that starts off — it only makes sense once a remedy is active.
 DEFAULT_NOTIFICATION_PREFS: dict[str, dict] = {
     "morning_brief": {"enabled": True, "preferred_time": None},
+    "daily_subhashita": {"enabled": True, "preferred_time": None},
     "window_alert": {"enabled": True, "lead_time_minutes": 45},
     "festival_reminder": {"enabled": True, "lead_time_days": 3},
     "remedy_reminder": {"enabled": False},

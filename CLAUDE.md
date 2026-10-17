@@ -46,6 +46,8 @@ and §6:
   `python -m astrospace.db.seed`.
 - Remedy mantra texts (Telugu, English, Devanagari) and the 2-3 remedy
   personal plan: [docs/mantra_corpus.md](docs/mantra_corpus.md).
+- Today's Subhashita (the daily verse, its push, share image and widget) and
+  where each verse was checked: [docs/subhashita_corpus.md](docs/subhashita_corpus.md).
 - Before reading anything out of `Astro Space Knowledge Base/`, check
   [docs/kb_corpus_sources.md](docs/kb_corpus_sources.md) — which books are
   machine-readable and which must be read as images, measured rather than

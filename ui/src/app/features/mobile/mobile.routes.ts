@@ -286,6 +286,14 @@ export const MOBILE_ROUTES: Routes = [
       ),
   },
   {
+    path: 'subhashita',
+    data: { hideMobileTabs: true },
+    loadComponent: () =>
+      import('./subhashita/subhashita.component').then(
+        (m) => m.SubhashitaComponent,
+      ),
+  },
+  {
     path: 'settings/interaction',
     data: { hideMobileTabs: true },
     loadComponent: () =>

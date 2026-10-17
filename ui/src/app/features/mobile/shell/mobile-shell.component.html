@@ -49,4 +49,8 @@
       }
     </nav>
   }
+
+  @if (dailyVerse(); as verse) {
+    <as-subhashita-sheet [verse]="verse" (dismissed)="dailyVerse.set(null)" />
+  }
 </div>

@@ -5,6 +5,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { DashaPayload, VedicAll } from '../../../core/models';
 import { PlanGateService } from '../../../core/plan-gate.service';
 import { PreferencesService } from '../../../core/preferences.service';
+import { SubhashitaService } from '../../../core/subhashita.service';
 import { VedicService } from '../../../core/vedic.service';
 import { buildChartAdapter } from '../chart/mobile-chart-data';
 import { monthYear } from '../format-date';
@@ -47,6 +48,7 @@ export class ExploreMenuComponent {
   private readonly vedic = inject(VedicService);
   private readonly gate = inject(PlanGateService);
   protected readonly preferences = inject(PreferencesService);
+  protected readonly subhashita = inject(SubhashitaService);
 
   protected readonly profileSwitcherOpen = signal(false);
   private readonly chart = signal<VedicAll | null>(null);
@@ -126,6 +128,7 @@ export class ExploreMenuComponent {
   });
 
   constructor() {
+    void this.subhashita.load();
     effect(() => {
       const id = this.kundlis.activeId();
       void this.load(id);
