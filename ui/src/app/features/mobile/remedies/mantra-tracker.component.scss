@@ -213,3 +213,6 @@
   margin: 6px 20px 0;
   min-height: 48px;
 }
+
+.script-tabs { margin-top: 6px; }
+.mantra-card .meaning { @include m-body-small; color: var(--m-muted); font-style: italic; }

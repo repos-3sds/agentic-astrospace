@@ -15,7 +15,7 @@ should pass ``include_manglik=true`` explicitly.
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from ..core.vedic import remedies
+from ..core.vedic import remedies, remedy_plan
 from ..db import crud, get_db
 from .auth import CurrentUser
 from .vedic_routes import _chart_from_kundli
@@ -62,3 +62,19 @@ def remedies_for_kundli(
         include_manglik=include_manglik,
         limit=limit,
     )
+
+
+@router.get("/{kundli_id}/plan")
+def remedy_plan_for_kundli(
+    kundli_id: str,
+    user: CurrentUser,
+    db: Session = Depends(get_db),
+):
+    """Two or three remedies for this profile: its running period, its main
+    life area, and one flag only when the chart actually has one."""
+    kundli = crud.get_kundli(db, kundli_id, user.id)
+    if not kundli:
+        raise HTTPException(status_code=404, detail="Kundli not found")
+
+    chart = _chart_from_kundli(kundli)
+    return remedy_plan.remedy_plan(chart.positions, chart.lagna_lon, chart.dashas())

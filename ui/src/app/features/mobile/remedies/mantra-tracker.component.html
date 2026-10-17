@@ -13,10 +13,20 @@
     <p class="eyebrow">{{ eyebrow() }}</p>
     <h1 class="mantra">{{ practiceTitle() }}</h1>
     <p class="context-line">{{ practiceContext() }}</p>
+    @if (hasScripts()) {
+      <nav class="mode-tabs script-tabs" asSelectHaptic aria-label="Mantra script">
+        @for (option of scriptOptions; track option.id) {
+          <button type="button" [class.is-on]="scripts.script() === option.id" (click)="scripts.set(option.id)">{{ option.label }}</button>
+        }
+      </nav>
+    }
     @if (literalPracticeText()) {
       <section class="mantra-card" aria-label="Mantra">
         <span>{{ practiceTextLabel() }}</span>
-        <p>{{ literalPracticeText() }}</p>
+        <p class="m-selectable" [attr.lang]="hasScripts() ? (scripts.script() === 'en' ? 'en' : scripts.script()) : null">{{ literalPracticeText() }}</p>
+        @if (meaning(); as m) {
+          <small class="meaning m-selectable">{{ m }}</small>
+        }
       </section>
     }
     <p class="instruction">{{ practice()?.instructions }}</p>

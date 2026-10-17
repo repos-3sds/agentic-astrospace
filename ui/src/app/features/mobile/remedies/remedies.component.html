@@ -9,8 +9,8 @@
   <section class="hero">
     <span><img src="mobile/remedy-chant.svg" alt="" aria-hidden="true" /></span>
     <div>
-      <p class="lede">Practices for what’s active in your chart right now.</p>
-      <small>Mantras and prayers can be tracked. Offerings and colours stay as guidance.</small>
+      <p class="lede">Two or three practices picked for this profile right now.</p>
+      <small>One for your current period, one for the part of life it points at, and a flag only if your chart has one.</small>
     </div>
   </section>
   <aside class="scope-note">
@@ -26,6 +26,13 @@
   } @else if (!groups().length) {
     <section class="remedy-state"><b>No specific action returned</b><p>{{ note() || 'Nothing in your chart is asking for a remedy right now.' }}</p></section>
   } @else {
+  @if (hasMantraText()) {
+    <nav class="script-tabs" asSelectHaptic aria-label="Mantra script">
+      @for (option of scriptOptions; track option.id) {
+        <button type="button" [class.is-on]="scripts.script() === option.id" [attr.lang]="option.id === 'en' ? 'en' : option.id === 'te' ? 'te' : 'sa'" (click)="scripts.set(option.id)">{{ option.label }}</button>
+      }
+    </nav>
+  }
   @for (group of shownGroups(); track group.recommendation_id) {
     <article class="remedy">
       <div class="remedy-head">
@@ -34,11 +41,11 @@
       </div>
 
       <p class="rationale m-selectable">{{ groupReason(group) }}</p>
-      <p class="source">{{ sourceLabel(group) }}</p>
+      <p class="source" [class.is-citation]="!!group.slot">{{ sourceLabel(group) }}</p>
       <!-- Both fields have been in the payload all along; a remedy screen that
            hides them turns traditional practice into a prescription. -->
       @if (group.convention_dependent) {
-        <p class="convention m-selectable">Traditions differ on this practice. Where your family or temple guidance disagrees, follow that.</p>
+        <p class="convention m-selectable">{{ group.observance_note ? group.observance_note + ' ' : '' }}Traditions differ on this practice. Where your family or temple guidance disagrees, follow that.</p>
       }
       @if (groupSafetyNote(group); as safety) {
         <p class="safety m-selectable">{{ safety }}</p>
@@ -57,7 +64,19 @@
                   <em>Optional</em>
                 }
               </span>
+              @if (scripts.text(p); as text) {
+                <span class="mantra-text m-selectable" [attr.lang]="scripts.script() === 'te' ? 'te' : scripts.script() === 'sa' ? 'sa' : 'en'">{{ text }}</span>
+              }
+              @if (scripts.meaning(p); as meaning) {
+                <small class="meaning m-selectable">{{ meaning }}</small>
+              }
+              @if (p.observance_note) {
+                <small class="m-selectable">{{ p.observance_note }}</small>
+              }
               <small class="m-selectable">{{ p.instructions }}</small>
+              @if (p.fuller_practice; as fuller) {
+                <small class="m-selectable">Fuller practice, when you have time: {{ fuller.name }}.</small>
+              }
               <span class="practice-meta">{{ practiceMeta(p) }}</span>
             </span>
             @if (isTrackable(p)) {
@@ -78,7 +97,7 @@
     <as-plan-lock
       from="remedies.full"
       [title]="hiddenPractices() + ' more ' + (hiddenPractices() === 1 ? 'practice' : 'practices') + ' for your chart'"
-      body="The full plan of traditional practices for what is active now, with a tracker for mantras and prayers."
+      body="The rest of your plan: a practice for the part of life your period points at, and for any flag in your chart."
     />
   }
   }

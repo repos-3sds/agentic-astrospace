@@ -44,6 +44,8 @@ and §6:
   wrappers; do not move computation into them.
 - Catalog tables are seeded from the engines, never hand-authored:
   `python -m astrospace.db.seed`.
+- Remedy mantra texts (Telugu, English, Devanagari) and the 2-3 remedy
+  personal plan: [docs/mantra_corpus.md](docs/mantra_corpus.md).
 - Before reading anything out of `Astro Space Knowledge Base/`, check
   [docs/kb_corpus_sources.md](docs/kb_corpus_sources.md) — which books are
   machine-readable and which must be read as images, measured rather than

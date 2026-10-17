@@ -504,6 +504,12 @@ export class VedicService {
     return this.api.get<MuhurtaSearchPayload>(`/muhurta/${kundliId}?${params.toString()}`);
   }
 
+  /** The personal plan: at most three remedies for this profile's running
+   * period, its main life area, and one flag only when the chart has one. */
+  remedyPlan(kundliId: string): Promise<RemedyPlanPayload> {
+    return this.cachedDetail<RemedyPlanPayload>('remedies:plan', kundliId, `/remedies/${kundliId}/plan`);
+  }
+
   remedies(
     kundliId: string,
     options: { includeCostly?: boolean; includeManglik?: boolean; limit?: number } = {},
@@ -771,6 +777,18 @@ export interface RemedyRecommendationsPayload {
   disclaimer: string;
 }
 
+export interface RemedyPlanPayload extends RemedyRecommendationsPayload {
+  period: { mahadasha: string | null; antardasha: string | null; start: string | null; end: string | null };
+}
+
+/** One mantra's text in each script the app shows. */
+export interface MantraText {
+  te: string;
+  en: string;
+  sa: string;
+  iast: string;
+}
+
 export interface RemedyRecommendationGroup {
   recommendation_id: string;
   trigger: {
@@ -778,7 +796,13 @@ export interface RemedyRecommendationGroup {
     planet?: string;
     dosha?: string;
     level?: string;
+    mahadasha?: string;
   };
+  /** Plan groups only: why this remedy was picked. */
+  slot?: 'period' | 'life_area' | 'flag';
+  domain?: string;
+  domain_label?: string;
+  observance_note?: string | null;
   reason_short: string;
   reason_practitioner: string;
   evidence: unknown;
@@ -803,6 +827,15 @@ export interface RemedyRecommendationPractice {
   applies_to?: Record<string, string>;
   tradition_source?: string;
   is_convention_dependent?: boolean;
+  /** Plan practices only: the corpus text and its meaning. */
+  mantra_id?: string;
+  deity?: string | null;
+  text?: MantraText;
+  meaning?: { en: string | null; te: string | null; hi: string | null };
+  kb_citation?: string | null;
+  observance_note?: string | null;
+  count_note?: string | null;
+  fuller_practice?: { mantra_id: string; name: string; note: string | null } | null;
   audio?: {
     text: string;
     transliteration: string;
