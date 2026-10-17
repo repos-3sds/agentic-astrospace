@@ -178,22 +178,48 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
   /** Which chunk `audio` holds, so resume after a skip doesn't replay the old one. */
   private audioIndex = -1;
 
+  /**
+   * The entitlement check that picks the voice. Play waits briefly for it:
+   * starting in the phone voice and switching on the next play was the bug
+   * where the first tap read in the phone voice (2026-10-17).
+   */
+  private voiceDecision: Promise<void> | null = null;
+  private voiceDecided = false;
+
   ngOnInit(): void {
     void this.ensureVoices(false);
-    void this.naturalVoice.available().then((ok) => {
+    this.voiceDecision = this.naturalVoice.available().then((ok) => {
+      this.voiceDecided = true;
       // A phone voice picked in Language & audio wins over the natural one.
-      const chosen = this.preferences.voiceName();
-      const wantsNatural = chosen === null || chosen === NATURAL_VOICE_NAME;
       // Never switch voices under a reader who has already pressed play.
-      if (ok && wantsNatural && !this.playing() && this.chunkIndex() === 0) {
+      if (ok && this.wantsNatural() && !this.playing() && this.chunkIndex() === 0) {
         this.mode.set('natural');
         if (this.language() === TELUGU && this.sections().length) {
           void this.chooseLanguage(TELUGU);
         } else {
           void this.naturalVoice.audioUrl(this.prepareForSpeech(this.chunks()[0] ?? '')).catch(() => undefined);
+          this.prefetchTelugu();
         }
       }
-    });
+    }, () => { this.voiceDecided = true; });
+  }
+
+  private wantsNatural(): boolean {
+    const chosen = this.preferences.voiceName();
+    return chosen === null || chosen === NATURAL_VOICE_NAME;
+  }
+
+  /**
+   * Translate in the background and fetch the first Telugu piece, so the
+   * Telugu switch doesn't wait on a model call and a synthesis in a row.
+   */
+  private prefetchTelugu(): void {
+    const sections = this.sections().filter((section) => section.text.trim());
+    if (!sections.length) return;
+    void this.naturalVoice.telugu(sections).then((telugu) => {
+      const first = naturalChunks(telugu.map((section) => section.text).join(' '))[0];
+      if (first) void this.naturalVoice.audioUrl(this.prepareForSpeech(first)).catch(() => undefined);
+    }, () => undefined);
   }
 
   ngOnDestroy(): void {
@@ -243,6 +269,19 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
       this.status.set(null);
       return;
     }
+    if (!this.voiceDecided && this.mode() === 'device' && this.wantsNatural() && this.voiceDecision) {
+      void this.startAfterVoiceDecision();
+      return;
+    }
+    void this.speakFrom(this.chunkIndex());
+  }
+
+  /** Waits up to 3 s for the voice to be chosen, then plays in whichever it is. */
+  private async startAfterVoiceDecision(): Promise<void> {
+    this.status.set('Preparing natural voice...');
+    await Promise.race([this.voiceDecision, new Promise((resolve) => setTimeout(resolve, 3000))]);
+    this.voiceDecided = true;
+    if (this.playing()) return;
     void this.speakFrom(this.chunkIndex());
   }
 

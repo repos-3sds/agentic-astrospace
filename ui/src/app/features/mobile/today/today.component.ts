@@ -10,6 +10,7 @@ import {
   SourceReference,
   WhyReadingSheetComponent,
 } from '../why-reading/why-reading-sheet.component';
+import { NaturalVoiceService } from '../../../core/natural-voice.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { BirthDetailsCardComponent } from '../chart/birth-details-card.component';
 import { VedicService } from '../../../core/vedic.service';
@@ -422,6 +423,9 @@ export class TodayComponent {
   protected readonly introPlayed = signal(todayIntroPlayed);
 
   constructor() {
+    // Ask early whether this reader has the natural voice, so Listen opens
+    // already knowing which voice to use (the answer is kept for 10 minutes).
+    void inject(NaturalVoiceService).available().catch(() => false);
     // "Starts in / Ends in" is a countdown: recompute it each half minute, so
     // it moves (and turns to "Ended") while Today stays open.
     const tick = setInterval(() => {

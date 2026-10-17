@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import re
 import threading
 from collections import OrderedDict
@@ -20,6 +21,8 @@ from dataclasses import dataclass
 from typing import Callable
 
 from ..agents.safety import dosha_overclaim_kind, prohibited_verdict
+
+log = logging.getLogger("astrospace.voice")
 
 MAX_SECTIONS = 8
 MAX_TOTAL_CHARS = 6000
@@ -63,7 +66,33 @@ def _default_translator(system: str, prompt: str) -> str:
 
     agent = BaseAstroAgent()
     agent.system_prompt = system
+    if agent.provider == "gemini":
+        try:
+            return _gemini_quick(agent, prompt)
+        except Exception:
+            log.warning("quick Telugu translation failed; retrying through the agent", exc_info=True)
     return agent.run(prompt)
+
+
+def _gemini_quick(agent, prompt: str) -> str:
+    """One plain call with thinking turned down. Translation needs no
+    reasoning, and with the default thinking a brief took about 16 s
+    (Cloud Run logs, 2026-10-17)."""
+    types = agent._gemini_types()
+    config = types.GenerateContentConfig(
+        system_instruction=agent.system_prompt,
+        max_output_tokens=4096,
+        temperature=0.2,
+        thinking_config=types.ThinkingConfig(thinking_level="low"),
+    )
+    response = agent._gemini_client().models.generate_content(
+        model=agent.model, contents=prompt, config=config,
+    )
+    agent._record_usage(response, "telugu_translation")
+    text = getattr(response, "text", None) or ""
+    if not text.strip():
+        raise TranslationUnavailable("empty quick translation")
+    return text
 
 
 def set_translator_for_tests(translator: Translator | None) -> None:
@@ -101,6 +130,8 @@ def telugu_sections(sections: list[Section]) -> list[Section]:
             _cache.move_to_end(key)
         translator = _translator or _default_translator
     if hit is None:
+        hit = _stored(key, len(texts))
+    if hit is None:
         prompt = json.dumps(texts, ensure_ascii=False)
         try:
             reply = translator(SYSTEM_PROMPT, prompt)
@@ -110,8 +141,43 @@ def telugu_sections(sections: list[Section]) -> list[Section]:
         joined = " ".join(hit)
         if prohibited_verdict(joined) or dosha_overclaim_kind(joined):
             raise TranslationUnavailable("translation failed the output checks")
-        with _lock:
-            _cache[key] = hit
-            while len(_cache) > _CACHE_MAX:
-                _cache.popitem(last=False)
+        _store(key, hit)
+    with _lock:
+        _cache[key] = hit
+        _cache.move_to_end(key)
+        while len(_cache) > _CACHE_MAX:
+            _cache.popitem(last=False)
     return [Section(section.label, text) for section, text in zip(sections, hit)]
+
+
+# The worker translates each brief the night before (daily_briefs.prerender_audio)
+# and the API serves the Listen sheet's request, and they are different
+# processes, so the in-memory cache alone never hits across them. The TTS
+# bucket, when configured, keeps the translation for both.
+def _object(key: str) -> str:
+    return f"te/{key}.json"
+
+
+def _stored(key: str, expected: int) -> list[str] | None:
+    if _translator is not None:  # tests use their own translator, not the bucket
+        return None
+    from .tts import durable_read
+
+    raw = durable_read(_object(key))
+    if not raw:
+        return None
+    try:
+        values = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    if isinstance(values, list) and len(values) == expected and all(isinstance(v, str) and v for v in values):
+        return values
+    return None
+
+
+def _store(key: str, values: list[str]) -> None:
+    if _translator is not None:
+        return
+    from .tts import durable_write
+
+    durable_write(_object(key), json.dumps(values, ensure_ascii=False).encode("utf-8"), "application/json")

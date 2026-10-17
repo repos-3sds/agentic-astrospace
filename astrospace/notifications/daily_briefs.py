@@ -117,13 +117,29 @@ def listen_requests(spoken: list[dict]) -> list[str]:
 
 def prerender_audio(spoken: list[dict]) -> int:
     """Render the script the way the Listen sheet will request it, so its
-    request is a cache hit. Returns the pieces rendered."""
+    request is a cache hit, in English and in Telugu. Returns the pieces
+    rendered.
+
+    Telugu is the sheet's Telugu switch: it translates the same sections
+    (voice.translate, stored in the bucket for the API to reuse) and reads
+    them with the te-IN voice. A failed translation only skips Telugu.
+    """
+    from ..voice.translate import Section, TranslationUnavailable, telugu_sections
     from ..voice.tts import natural_speech
 
     requests = listen_requests(spoken)
     for text in requests:
         natural_speech(text, "en")
-    return len(requests)
+    sections = [s for s in spoken if s.get("text", "").strip()]
+    try:
+        telugu = telugu_sections([Section(s.get("label", ""), s["text"]) for s in sections])
+    except TranslationUnavailable:
+        log.warning("daily brief Telugu translation unavailable; English audio only")
+        return len(requests)
+    telugu_requests = listen_requests([{"label": s.label, "text": s.text} for s in telugu])
+    for text in telugu_requests:
+        natural_speech(text)
+    return len(requests) + len(telugu_requests)
 
 
 def prepare_for_speech(chunk: str) -> str:
@@ -139,8 +155,10 @@ def prepare_for_speech(chunk: str) -> str:
 
 
 # Mirrors naturalChunks in ui/src/app/core/natural-voice.service.ts: the audio
-# cache is keyed by the exact text, so the split must match the app's.
+# cache is keyed by the exact text, so the split must match the app's. The
+# first piece is a short opening so the voice starts quickly.
 NATURAL_CHUNK_MAX_CHARS = 1200
+NATURAL_FIRST_CHUNK_MAX_CHARS = 160
 
 
 def natural_chunks(text: str, max_chars: int = NATURAL_CHUNK_MAX_CHARS) -> list[str]:
@@ -149,11 +167,16 @@ def natural_chunks(text: str, max_chars: int = NATURAL_CHUNK_MAX_CHARS) -> list[
     clean = " ".join(text.split())
     if not clean:
         return []
-    if len(clean) <= max_chars:
+    opening = min(NATURAL_FIRST_CHUNK_MAX_CHARS, max_chars)
+    if len(clean) <= opening:
         return [clean]
-    out: list[str] = []
+    sentences = re.split(r"(?<=[.!?।])\s+", clean)
+    first = sentences.pop(0)
+    while sentences and len(first) + 1 + len(sentences[0]) <= opening:
+        first = f"{first} {sentences.pop(0)}"
+    out: list[str] = [first]
     current = ""
-    for sentence in re.split(r"(?<=[.!?।])\s+", clean):
+    for sentence in sentences:
         if current and len(current) + 1 + len(sentence) > max_chars:
             out.append(current)
             current = ""

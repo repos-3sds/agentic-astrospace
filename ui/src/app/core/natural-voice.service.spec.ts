@@ -23,6 +23,14 @@ describe('naturalChunks', () => {
     expect(chunks.join(' ')).toBe(Array(10).fill(sentence).join(' '));
   });
 
+  it('makes the first piece a short opening so the voice starts quickly', () => {
+    const script = 'Namaste, Ravi. Here is your day. ' + 'A longer sentence about the day goes here. '.repeat(30);
+    const chunks = naturalChunks(script);
+    expect(chunks[0].length).toBeLessThanOrEqual(160);
+    expect(chunks[0].startsWith('Namaste, Ravi. Here is your day.')).toBeTrue();
+    expect(chunks.join(' ')).toBe(script.trim());
+  });
+
   it('returns nothing for blank text', () => {
     expect(naturalChunks('   ')).toEqual([]);
   });

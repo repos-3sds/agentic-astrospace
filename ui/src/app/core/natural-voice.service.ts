@@ -116,13 +116,32 @@ export class NaturalVoiceService {
   }
 }
 
-/** Splits a section into request-sized pieces at sentence ends, never mid-sentence. */
+/**
+ * The first piece is kept short: the server makes each piece in full before
+ * any of it plays, and a 1,000-character first piece took 12-16 s, so a short
+ * opening sentence starts the voice in a second or two while the rest is made
+ * during playback.
+ */
+export const NATURAL_FIRST_CHUNK_MAX_CHARS = 160;
+
+/**
+ * Splits text into request-sized pieces at sentence ends, never mid-sentence:
+ * a short opening piece, then pieces of up to `max` characters.
+ * Mirrored by natural_chunks in astrospace/notifications/daily_briefs.py, which
+ * pre-renders the same pieces; the two must split identically.
+ */
 export function naturalChunks(text: string, max = NATURAL_CHUNK_MAX_CHARS): string[] {
   const clean = text.replace(/\s+/g, ' ').trim();
   if (!clean) return [];
-  if (clean.length <= max) return [clean];
+  const opening = Math.min(NATURAL_FIRST_CHUNK_MAX_CHARS, max);
+  if (clean.length <= opening) return [clean];
   const sentences = clean.split(/(?<=[.!?।])\s+/);
   const out: string[] = [];
+  let first = sentences.shift() ?? '';
+  while (sentences.length && first.length + 1 + sentences[0].length <= opening) {
+    first = `${first} ${sentences.shift()}`;
+  }
+  out.push(first);
   let current = '';
   for (const sentence of sentences) {
     if (current && current.length + 1 + sentence.length > max) {
