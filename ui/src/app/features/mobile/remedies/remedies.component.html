@@ -13,9 +13,6 @@
       <small>One for your current period, one for the part of life it points at, and a flag only if your chart has one.</small>
     </div>
   </section>
-  <aside class="scope-note">
-    {{ disclaimer() }}
-  </aside>
 
   @if (loading()) {
     <section class="remedy-state"><b>Loading practices</b><p>Checking active periods, dignity, and traditional practice signals.</p></section>
@@ -101,4 +98,7 @@
     />
   }
   }
+  <aside class="scope-note">
+    {{ disclaimer() }}
+  </aside>
 </div>

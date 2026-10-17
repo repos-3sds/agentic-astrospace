@@ -58,7 +58,6 @@ export class MantraTrackerComponent {
   protected readonly practice = signal<RemedyRecommendationPractice | null>(null);
   protected readonly count = signal(0);
   protected readonly completedDates = signal<string[]>([]);
-  protected readonly mode = signal<'manual' | 'auto'>('manual');
   protected readonly listen = signal<'idle' | 'loading' | 'playing'>('idle');
   protected readonly voice = signal<MantraVoice>(readVoice());
   protected readonly voiceChoices = computed(() => {
@@ -82,7 +81,6 @@ export class MantraTrackerComponent {
     return `${trigger.kind} · traditional practice`.toUpperCase();
   });
   protected readonly practiceTitle = computed(() => this.practice()?.title ?? 'Selected practice');
-  protected readonly practiceTextLabel = computed(() => this.practice()?.type === 'mantra' ? 'MANTRA' : 'PRACTICE TEXT');
   protected readonly literalPracticeText = computed(() => {
     const practice = this.practice();
     if (!practice) return '';
@@ -117,19 +115,25 @@ export class MantraTrackerComponent {
   protected readonly hasScripts = computed(() => !!this.practice()?.text);
   protected readonly meaning = computed(() => this.scripts.meaning(this.practice()));
   protected readonly target = computed(() => this.practice()?.target_count ?? (this.practice()?.type === 'deity' ? 1 : 108));
-  protected readonly audioPending = computed(() => !this.practice()?.audio?.audio_url);
+  protected readonly canChant = computed(() => this.practice()?.type === 'mantra');
 
-  protected readonly streakLabel = computed(() => {
+  /** One quiet line under the title: when, how many, and the practice history. */
+  protected readonly metaLine = computed(() => {
+    const practice = this.practice();
     const days = this.completedDates().length;
-    return days ? `${days}-day practice history` : 'Start this practice today';
+    return [
+      practice?.preferred_day,
+      practice?.type === 'mantra' ? `${this.target()} times` : 'Prayer',
+      days ? `${days}-day history` : null,
+    ].filter(Boolean).join(' · ');
   });
 
-  // Ring geometry, from the 220px export.
-  protected readonly SIZE = 220;
-  protected readonly C = 110;
-  protected readonly R = 102.3;
-  protected readonly STROKE = 15.4;
-  protected readonly CIRCUMFERENCE = 2 * Math.PI * 102.3;
+  // Ring geometry: the 220px export's proportions, scaled down to 168px.
+  protected readonly SIZE = 168;
+  protected readonly C = 84;
+  protected readonly R = 78.1;
+  protected readonly STROKE = 11.8;
+  protected readonly CIRCUMFERENCE = 2 * Math.PI * 78.1;
 
   protected readonly dashOffset = computed(() => {
     const target = this.target();
@@ -146,10 +150,12 @@ export class MantraTrackerComponent {
   }
 
   /**
-   * Reads the mantra aloud once. The recorded track wins when there is one;
-   * otherwise Siddha's natural voice (Plus), otherwise the phone's own voice.
-   * It reads the Telugu script whatever script is on screen: both voices say
-   * Telugu letters as written, while the romanised form gets read as English.
+   * Auto: chants the mantra on repeat and counts each round, stopping at the
+   * target. The recorded track wins when there is one; otherwise Siddha's
+   * natural voice (Plus), otherwise the phone's own voice. It reads the Telugu
+   * script whatever script is on screen: both voices say Telugu letters as
+   * written, while the romanised form gets read as English. Once today is
+   * already complete it plays one round without counting.
    */
   protected async toggleListen(): Promise<void> {
     if (this.listen() !== 'idle') {
@@ -160,6 +166,7 @@ export class MantraTrackerComponent {
     if (!practice) return;
     this.haptics.tap();
     const run = ++this.listenRun;
+    const counting = !this.done();
     this.listen.set('loading');
     const telugu = practice.text?.te?.trim();
     const text = telugu || this.literalPracticeText();
@@ -173,14 +180,25 @@ export class MantraTrackerComponent {
       if (url) {
         const player = new Audio(url);
         this.player = player;
-        player.onended = () => this.finishListening(run);
+        // A recorded track has drone before and after the voice. The first
+        // round plays the intro; later rounds jump back to just before the
+        // voice and cut just after it, so 108 rounds aren't padded with
+        // 108 intros and outros.
+        const voiceStart = take?.voice_start ?? 0;
+        const voiceSeconds = take?.voice_seconds ?? 0;
+        const loopFrom = Math.max(0, voiceStart - 0.4);
+        const roundEnd = voiceSeconds ? voiceStart + voiceSeconds + 0.6 : Infinity;
+        const again = () => {
+          player.currentTime = loopFrom;
+          void player.play().catch(() => this.finishListening(run));
+        };
+        player.onended = () => this.roundDone(run, counting, again);
         player.onerror = () => this.finishListening(run);
         await player.play();
         this.listen.set('playing');
-        // A recorded track has music before and after the voice; follow the voice.
-        const voiceStart = take?.voice_start ?? 0;
         this.follow(run, () => {
-          const span = take?.voice_seconds || (player.duration - voiceStart);
+          if (player.currentTime >= roundEnd) this.roundDone(run, counting, again);
+          const span = voiceSeconds || (player.duration - voiceStart);
           return span > 0 ? Math.max(0, (player.currentTime - voiceStart) / span) : 0;
         });
         return;
@@ -189,14 +207,29 @@ export class MantraTrackerComponent {
       // Phone voices don't report their position, so pace the highlight by
       // an estimate of the reading time at rate 0.8 and hold just short of
       // the end until the voice actually finishes.
-      const started = performance.now();
       const estimateMs = Math.max(2500, text.length * 110);
-      this.follow(run, () => Math.min(0.97, (performance.now() - started) / estimateMs));
-      await this.speakOnPhone(text, telugu ? 'te-IN' : 'en-IN');
-      this.finishListening(run);
+      let again = true;
+      while (again && run === this.listenRun) {
+        const started = performance.now();
+        this.follow(run, () => Math.min(0.97, (performance.now() - started) / estimateMs));
+        await this.speakOnPhone(text, telugu ? 'te-IN' : 'en-IN');
+        again = false;
+        this.roundDone(run, counting, () => { again = true; });
+      }
     } catch {
       this.finishListening(run);
     }
+  }
+
+  /** One recitation finished: count it, then go again until the target. */
+  private roundDone(run: number, counting: boolean, again: () => void): void {
+    if (run !== this.listenRun) return;
+    if (counting && !this.done()) this.addCount();
+    if (counting && !this.done()) {
+      again();
+      return;
+    }
+    this.finishListening(run);
   }
 
   protected chooseVoice(voice: MantraVoice): void {
@@ -228,6 +261,7 @@ export class MantraTrackerComponent {
   }
 
   private follow(run: number, position: () => number): void {
+    if (this.frame !== null) cancelAnimationFrame(this.frame);
     const tick = () => {
       if (run !== this.listenRun) return;
       this.progress.set(position());
@@ -238,9 +272,8 @@ export class MantraTrackerComponent {
 
   private finishListening(run: number): void {
     if (run !== this.listenRun) return;
-    this.endFollow();
-    this.player = null;
-    this.listen.set('idle');
+    // Retire the run too, so a late ended or error event can't count again.
+    this.stopListening();
   }
 
   private endFollow(): void {
@@ -261,7 +294,12 @@ export class MantraTrackerComponent {
 
   /** Counts up to the target and stops. Past 108 the count means nothing. */
   protected tap(): void {
+    if (this.done()) return;
     this.haptics.tap();
+    this.addCount();
+  }
+
+  private addCount(): void {
     this.count.update((n) => {
       const next = Math.min(this.target(), n + 1);
       if (next >= this.target()) {
@@ -328,22 +366,6 @@ export class MantraTrackerComponent {
     this.completedDates.set(dates);
     this.persist(this.target(), dates);
     this.haptics.success();
-  }
-
-  protected audioNote(): string {
-    return this.practice()?.audio?.note ?? 'Recorded audio is not available yet. Manual counting is ready.';
-  }
-
-  protected practiceContext(): string {
-    const practice = this.practice();
-    const group = this.group();
-    const pieces = [
-      practice?.type === 'mantra' ? `${practice.target_count ?? 108}-count mantra` : 'Prayer practice',
-      practice?.preferred_day,
-      practice?.planet,
-      group?.reason_short,
-    ].filter(Boolean);
-    return pieces.join(' · ');
   }
 
   protected reminderLabel(): string {

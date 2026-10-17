@@ -57,16 +57,18 @@
 }
 .practice-state.error { border-color: var(--m-warn); b { color: var(--m-warn); } }
 
-.intro { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+.intro { width: 100%; display: flex; flex-direction: column; gap: 4px; }
 .eyebrow { @include m-eyebrow; color: var(--m-warn); margin: 0; }
 .mantra { @include m-h1; color: var(--m-text); margin: 0; }
-.context-line { @include m-caption; color: var(--m-muted); margin: 0; }
+.meta { @include m-caption; color: var(--m-muted); margin: 0; }
+
 .mantra-card {
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 6px;
-  padding: 15px 16px;
+  gap: 8px;
+  padding: 14px 16px 16px;
   border: 1px solid var(--m-border);
   border-radius: 20px;
   background:
@@ -74,85 +76,60 @@
     var(--m-raised);
   box-shadow: var(--m-shadow-card);
 
-  span { @include m-eyebrow; color: var(--m-accent-strong); }
-  p {
-    @include m-h2;
+  .text {
+    @include m-title;
+    font-size: 22px;
     margin: 0;
     color: var(--m-text);
     overflow-wrap: anywhere;
   }
 }
-.instruction { @include m-body-small; color: var(--m-muted); margin: 0; }
 
-/* Streak — node 29:119 */
-.streak {
-  width: 100%;
-  box-sizing: border-box;
-  margin: 0;
+/* Script choice as quiet text chips in the card, not a full-width bar. */
+.script-pick {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--m-gold-soft) 70%, var(--m-border) 30%);
-  background: color-mix(in srgb, var(--m-gold-soft) 72%, var(--m-raised) 28%);
-  @include m-body-strong;
-  color: var(--m-gold);
-  img { width: 18px; height: 18px; display: block; flex-shrink: 0; }
-}
-
-.mode-tabs {
-  @include m-segmented-track;
-  width: 100%;
-  border: 1px solid var(--m-border);
-  background: var(--m-raised);
+  gap: 4px;
+  margin: 0 0 2px -8px;
 
   button {
-    @include m-segmented-button;
+    @include m-caption;
+    min-height: 32px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--m-muted);
+    cursor: pointer;
   }
-
-  .is-on {
-    @include m-selected-pill;
-  }
+  .is-on { background: var(--m-accent-soft); color: var(--m-accent-strong); font-weight: 600; }
 }
 
-.audio-card {
-  display: grid;
-  width: 100%;
-  box-sizing: border-box;
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid var(--m-border);
-  border-radius: 18px;
-  background: var(--m-raised);
+.instruction { @include m-body-small; color: var(--m-muted); margin: -6px 0 0; width: 100%; }
+
+.counter {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-
-  > img {
-    width: 44px;
-    height: 44px;
-  }
-
-  b { @include m-body-strong; color: var(--m-text); }
-  p { @include m-caption; color: var(--m-muted); margin: 2px 0 0; }
-
-  button {
-    @include m-cta-primary;
-    grid-column: 1 / -1;
-    gap: 8px;
-    min-height: 44px;
-    img { width: 17px; height: 17px; }
-    &:disabled { opacity: 0.5; }
-  }
+  gap: 10px;
+  margin-top: 4px;
 }
 
 /* Count ring — node 29:123. Redrawn, not the export: it moves on every tap. */
 .ring {
   position: relative;
-  width: 220px;
-  height: 220px;
+  width: 168px;
+  height: 168px;
   flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  @include m-pressable(0.97);
   svg { display: block; }
+  &:disabled { cursor: default; }
 }
 
 .track { stroke: var(--m-border); }
@@ -173,7 +150,7 @@
 
 .count {
   font-weight: 700;
-  font-size: 52px;
+  font-size: 40px;
   line-height: 1;
   color: var(--m-text);
   // Tabular figures: without them the ring's centre jitters as the count runs
@@ -183,25 +160,39 @@
 
 .of { @include m-body-small; color: var(--m-muted); }
 
-/* Tap to count — node 29:129 */
-.count-btn {
-  @include m-cta-primary;
+.hint { @include m-caption; color: var(--m-accent-strong); margin-top: 4px; }
+
+/* Undo · auto play · reset, one row under the ring. */
+.controls {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 18px;
   width: 100%;
-  gap: 10px;
-  img { width: 19px; height: 19px; display: block; }
-
-  &:disabled { opacity: 0.55; cursor: default; }
+  max-width: 300px;
 }
 
-.count-actions {
-  display: flex;
-  justify-content: center;
-  gap: 28px;
-}
-
-.reset-btn {
+.side {
   @include m-cta-tertiary;
+  min-height: 44px;
+  &:first-child { justify-self: end; grid-column: 1; }
+  &:last-child { justify-self: start; grid-column: 3; }
+  &.is-hidden { visibility: hidden; }
 }
+
+.auto-play {
+  @include m-cta-primary;
+  @include m-pressable(0.94);
+  grid-column: 2;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border-radius: 50%;
+  svg { width: 28px; height: 28px; display: block; }
+  &.is-busy { opacity: 0.7; }
+}
+
+.auto-note { @include m-caption; color: var(--m-muted); margin: 0; text-align: center; }
 
 .caveat {
   @include m-caption;
@@ -233,61 +224,7 @@
   &:disabled { opacity: 0.55; cursor: default; }
 }
 
-.script-tabs { margin-top: 6px; }
-.mantra-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.mantra-head > span:first-child { flex: 1 1 auto; }
-
-.mantra-card .voice-pick {
-  display: inline-flex;
-  padding: 2px;
-  border: 1px solid var(--m-border);
-  border-radius: 999px;
-  background: var(--m-raised);
-
-  button {
-    min-height: 32px;
-    padding: 0 10px;
-    border: 0;
-    border-radius: 999px;
-    background: transparent;
-    color: var(--m-muted);
-    font: inherit;
-    @include m-body-small;
-    cursor: pointer;
-  }
-  button.is-on { background: var(--m-accent-soft); color: var(--m-accent-strong); font-weight: 600; }
-}
-
-.mantra-card .listen {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 36px;
-  padding: 0 14px 0 10px;
-  border: 1px solid var(--m-border);
-  border-radius: 999px;
-  background: var(--m-raised);
-  color: var(--m-accent-strong);
-  font: inherit;
-  cursor: pointer;
-
-  svg { width: 18px; height: 18px; display: block; }
-  span { @include m-body-strong; color: inherit; text-transform: none; letter-spacing: 0; }
-  &.is-busy { opacity: 0.7; }
-}
-
 .mantra-card .lyric {
-  // Undo the eyebrow styling the card gives its label span.
-  font: inherit;
-  letter-spacing: inherit;
-  text-transform: none;
   color: var(--m-muted);
   border-radius: 6px;
   transition: color 160ms ease, background-color 160ms ease;
@@ -300,3 +237,23 @@
 }
 
 .mantra-card .meaning { @include m-body-small; color: var(--m-muted); font-style: italic; }
+
+.voice-pick {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--m-border);
+  border-radius: 999px;
+  background: var(--m-raised);
+
+  button {
+    @include m-caption;
+    min-height: 34px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--m-muted);
+    cursor: pointer;
+  }
+  .is-on { background: var(--m-accent-soft); color: var(--m-accent-strong); font-weight: 600; }
+}
