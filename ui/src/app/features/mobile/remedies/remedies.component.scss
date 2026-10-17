@@ -118,6 +118,8 @@
   margin: -5px 0 0;
   color: var(--m-accent-strong);
   text-transform: capitalize;
+  // A book citation keeps its own casing ("tr.", "ch.56").
+  &.is-citation { text-transform: none; }
 }
 
 .convention,
@@ -218,3 +220,23 @@
   background: color-mix(in srgb, var(--m-border) 34%, transparent);
   color: var(--m-muted);
 }
+
+/* Script choice for the mantra text — the same segmented control as the tracker. */
+.script-tabs {
+  @include m-segmented-track;
+  width: 100%;
+  border: 1px solid var(--m-border);
+  background: var(--m-raised);
+
+  button { @include m-segmented-button; }
+  .is-on { @include m-selected-pill; }
+}
+
+.mantra-text {
+  @include m-body-strong;
+  margin-top: 2px;
+  color: var(--m-text);
+  overflow-wrap: anywhere;
+}
+
+.practice .meaning { color: var(--m-text); font-style: italic; }

@@ -140,6 +140,15 @@ class TestRemedyRoutes:
     def test_unknown_kundli_404(self, client):
         assert client.get("/api/v1/remedies/does-not-exist").status_code == 404
 
+    def test_personal_plan_is_at_most_three(self, client, kundli_id):
+        body = client.get(f"/api/v1/remedies/{kundli_id}/plan").json()
+        assert 1 <= body["count"] == len(body["groups"]) <= 3
+        practice = body["groups"][0]["practices"][0]
+        assert set(practice["text"]) == {"te", "en", "sa", "iast"}
+
+    def test_personal_plan_enforces_ownership(self, client, foreign_kundli_id):
+        assert client.get(f"/api/v1/remedies/{foreign_kundli_id}/plan").status_code == 404
+
     def test_another_users_kundli_404(self, client, foreign_kundli_id):
         """Ownership is enforced in the route, not just by RLS."""
         assert client.get(f"/api/v1/remedies/{foreign_kundli_id}").status_code == 404

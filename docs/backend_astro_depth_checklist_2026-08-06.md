@@ -550,6 +550,25 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   opening a small list of its planets. *Hook:* `hitRow()` in
   `ui/src/app/shared/kundli-chart/kundli-chart.component.ts`.
 
+- [ ] **Recorded audio for the remedy mantras** (2026-10-17). The plan
+  (`core/vedic/remedy_plan.py`) ships every text, but `audio_url` is null.
+  *Why not:* needs original recordings; Vedic verses need a svara-trained
+  reciter, not TTS, and label/YouTube audio is copyrighted. *Unblocks on:*
+  commissioned recordings. *Hook:* `_practice()["audio"]`; the corpus
+  `audio.est_seconds_per_repetition` gives loop lengths.
+- [ ] **Full text of the long recitations** (Aditya Hridayam, Hanuman
+  Chalisa, Vishnu Sahasranama, Sri Rudram, Durga Saptashati) (2026-10-17).
+  *Why not:* the plan counts a short verse and names the long text as the
+  "fuller practice"; long texts need proofreading against a licensed
+  edition. *Unblocks on:* a proofread text per book. *Hook:* entries with
+  `text_in_corpus: false` in `core/vedic/mantra_corpus/mantras.json`,
+  `_SHORT_FORM` in `remedy_plan.py`.
+- [ ] **Long-vow mode for mantra counts** (2026-10-17). BPHS ch.84 gives
+  totals (Sun 7,000 … Saturn 23,000) meant to be spread over weeks; the
+  tracker only counts one 108 sitting. *Unblocks on:* a product call that
+  it is wanted. *Hook:* `traditional_count` in the corpus, the tracker's
+  localStorage record.
+
 ### C. Ask/agent layer — one live safety gap, highest priority here
 
 - [x] **`safety.py` third-party death output net** — **CLOSED 2026-08-10**

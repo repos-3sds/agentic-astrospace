@@ -10,6 +10,7 @@ import {
 import { HapticsService } from '../../../core/haptics.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
+import { MANTRA_SCRIPTS, MantraScriptService } from './mantra-script';
 
 /**
  * Remedy detail — mantra tracker (Figma node 29:109).
@@ -42,6 +43,8 @@ export class MantraTrackerComponent {
   private readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
   private readonly haptics = inject(HapticsService);
+  protected readonly scripts = inject(MantraScriptService);
+  protected readonly scriptOptions = MANTRA_SCRIPTS;
   private readonly params = toSignal(this.route.queryParamMap, { requireSync: true });
 
   protected readonly loading = signal(true);
@@ -55,6 +58,9 @@ export class MantraTrackerComponent {
   protected readonly eyebrow = computed(() => {
     const trigger = this.group()?.trigger;
     if (!trigger) return 'TRADITIONAL PRACTICE';
+    const group = this.group();
+    if (group?.slot === 'period' && trigger.mahadasha) return `${trigger.mahadasha}–${trigger.planet} period · traditional practice`.toUpperCase();
+    if (group?.slot === 'life_area' && group.domain_label) return `${group.domain_label} · traditional practice`.toUpperCase();
     if (trigger.kind === 'dasha') return `${trigger.planet ?? 'Planet'} ${trigger.level ?? 'dasha'} · traditional practice`.toUpperCase();
     return `${trigger.kind} · traditional practice`.toUpperCase();
   });
@@ -64,9 +70,13 @@ export class MantraTrackerComponent {
     const practice = this.practice();
     if (!practice) return '';
     if (practice.type !== 'mantra') return this.devotionalFallback(practice);
+    const text = this.scripts.text(practice);
+    if (text) return text;
     const audio = this.practice()?.audio;
     return audio?.text || audio?.transliteration || practice.title;
   });
+  protected readonly hasScripts = computed(() => !!this.practice()?.text);
+  protected readonly meaning = computed(() => this.scripts.meaning(this.practice()));
   protected readonly target = computed(() => this.practice()?.target_count ?? (this.practice()?.type === 'deity' ? 1 : 108));
   protected readonly audioPending = computed(() => this.practice()?.audio?.source_status === 'pending_assets' || !this.practice()?.audio?.audio_url);
 
@@ -131,7 +141,7 @@ export class MantraTrackerComponent {
     const practice = this.practice();
     const group = this.group();
     const pieces = [
-      practice?.type === 'mantra' ? '108-count mantra' : 'Prayer practice',
+      practice?.type === 'mantra' ? `${practice.target_count ?? 108}-count mantra` : 'Prayer practice',
       practice?.preferred_day,
       practice?.planet,
       group?.reason_short,
@@ -156,10 +166,7 @@ export class MantraTrackerComponent {
       const recommendationId = this.params().get('recommendation');
       const practiceSlug = this.params().get('practice');
       if (!recommendationId || !practiceSlug) throw new Error('Practice selection is missing.');
-      const payload = await this.vedic.remedies(activeId, {
-        includeCostly: false,
-        includeManglik: false,
-      });
+      const payload = await this.vedic.remedyPlan(activeId);
       const group = payload.groups.find((row) => row.recommendation_id === recommendationId) ?? null;
       const practice = group?.practices.find((row) => row.practice_slug === practiceSlug) ?? null;
       if (!group || !practice) throw new Error('This practice is no longer active for the selected profile.');

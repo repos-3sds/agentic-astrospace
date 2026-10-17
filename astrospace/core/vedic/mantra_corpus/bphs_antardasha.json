@@ -1,0 +1,1243 @@
+{
+ "meta": {
+  "source": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf)",
+  "chapters": "52-60 (Vimshottari antardasha effects)",
+  "caveat": "BPHS gives these remedies for the adverse case of each sub-period, often framed as averting illness or death. The app must show them as traditional practices for the period, never with that framing."
+ },
+ "rows": [
+  {
+   "mahadasha": "Sun",
+   "antardasha": "Sun",
+   "recommendation_ids": [
+    "dasha-mahadasha-sun",
+    "dasha-antardasha-sun"
+   ],
+   "bphs_prescription": "Mrityunjaya Japa, or worship of the Sun with its mantras and charity",
+   "mantra_ids": [
+    "mahamrityunjaya",
+    "sun-vedic",
+    "sun-nama"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.52, p.493"
+  },
+  {
+   "mahadasha": "Sun",
+   "antardasha": "Moon",
+   "recommendation_ids": [
+    "dasha-mahadasha-sun",
+    "dasha-antardasha-moon"
+   ],
+   "bphs_prescription": "Charity of a white cow and a female buffalo",
+   "mantra_ids": [],
+   "charity": "white cow, female buffalo",
+   "note": "No mantra prescribed; app may fall back to Moon's own mantras.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.52, p.493"
+  },
+  {
+   "mahadasha": "Sun",
+   "antardasha": "Mars",
+   "recommendation_ids": [
+    "dasha-mahadasha-sun",
+    "dasha-antardasha-mars"
+   ],
+   "bphs_prescription": "Recitation of the Vedas, japa, and Vrishotsarga",
+   "mantra_ids": [
+    "mars-vedic"
+   ],
+   "charity": "Vrishotsarga (release of a bull)",
+   "note": "'Japa' unspecified; the Mars Vedic mantra is the closest reading.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.52, p.496"
+  },
+  {
+   "mahadasha": "Sun",
+   "antardasha": "Rahu",
+   "recommendation_ids": [
+    "dasha-mahadasha-sun",
+    "dasha-antardasha-rahu"
+   ],
+   "bphs_prescription": "Worship of Durga, japa, charity of a black cow or female buffalo",
+   "mantra_ids": [
+    "durga-saptashati",
+    "durga-sarvamangala",
+    "durga-navarna"
+   ],
+   "charity": "black cow or female buffalo",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.52, p.496"
+  },
+  {
+   "mahadasha": "Sun",
+   "antardasha": "Jupiter",
+   "recommendation_ids": [
+    "dasha-mahadasha-sun",
+    "dasha-antardasha-jupiter"
+   ],
+   "bphs_prescription": "Charity of gold and a tawny cow; worship of one's chosen deity (Ishta Devata)",
+   "mantra_ids": [],
+   "charity": "gold, tawny cow",
+   "note": "Ishta Devata means the reader's own family deity; no fixed mantra.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.52, p.498"
+  },
+  {
+   "mahadasha": "Sun",
+   "antardasha": "Saturn",
+   "recommendation_ids": [
+    "dasha-mahadasha-sun",
+    "dasha-antardasha-saturn"
+   ],
+   "bphs_prescription": "Charity of a black cow, buffalo, goat; Mrityunjaya Japa",
+   "mantra_ids": [
+    "mahamrityunjaya"
+   ],
+   "charity": "black cow, buffalo, goat",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.52, p.499"
+  },
+  {
+   "mahadasha": "Sun",
+   "antardasha": "Mercury",
+   "recommendation_ids": [
+    "dasha-mahadasha-sun",
+    "dasha-antardasha-mercury"
+   ],
+   "bphs_prescription": "Vishnu Sahasranama; charity of grains and a silver idol",
+   "mantra_ids": [
+    "vishnu-sahasranama",
+    "rama-nama-sahasranama-tulya",
+    "vishnu-dvadashakshari"
+   ],
+   "charity": "grains, silver idol",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.52, p.500"
+  },
+  {
+   "mahadasha": "Sun",
+   "antardasha": "Ketu",
+   "recommendation_ids": [
+    "dasha-mahadasha-sun",
+    "dasha-antardasha-ketu"
+   ],
+   "bphs_prescription": "Mantras of Durga (Shat Chandi patha); charity of a goat",
+   "mantra_ids": [
+    "durga-saptashati",
+    "durga-navarna",
+    "durga-sarvamangala"
+   ],
+   "charity": "goat",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.52, p.501"
+  },
+  {
+   "mahadasha": "Sun",
+   "antardasha": "Venus",
+   "recommendation_ids": [
+    "dasha-mahadasha-sun",
+    "dasha-antardasha-venus"
+   ],
+   "bphs_prescription": "Mrityunjaya Japa, Rudra Japa; charity of a tawny cow or female buffalo",
+   "mantra_ids": [
+    "mahamrityunjaya",
+    "sri-rudram",
+    "shiva-panchakshari"
+   ],
+   "charity": "tawny cow or female buffalo",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.52, p.502"
+  },
+  {
+   "mahadasha": "Moon",
+   "antardasha": "Moon",
+   "recommendation_ids": [
+    "dasha-mahadasha-moon",
+    "dasha-antardasha-moon"
+   ],
+   "bphs_prescription": "Charity of a tawny cow or female buffalo",
+   "mantra_ids": [],
+   "charity": "tawny cow or female buffalo",
+   "note": "No mantra prescribed.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.53, p.504"
+  },
+  {
+   "mahadasha": "Moon",
+   "antardasha": "Mars",
+   "recommendation_ids": [
+    "dasha-mahadasha-moon",
+    "dasha-antardasha-mars"
+   ],
+   "bphs_prescription": "None prescribed",
+   "mantra_ids": [],
+   "charity": null,
+   "note": "Text gives no remedy.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.53, p.504"
+  },
+  {
+   "mahadasha": "Moon",
+   "antardasha": "Rahu",
+   "recommendation_ids": [
+    "dasha-mahadasha-moon",
+    "dasha-antardasha-rahu"
+   ],
+   "bphs_prescription": "Rahu Japa; charity of a goat",
+   "mantra_ids": [
+    "rahu-vedic",
+    "rahu-bija",
+    "rahu-nama"
+   ],
+   "charity": "goat",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.53, p.505"
+  },
+  {
+   "mahadasha": "Moon",
+   "antardasha": "Jupiter",
+   "recommendation_ids": [
+    "dasha-mahadasha-moon",
+    "dasha-antardasha-jupiter"
+   ],
+   "bphs_prescription": "Shiva Sahasranama japa; charity of gold",
+   "mantra_ids": [
+    "shiva-sahasranama",
+    "shiva-panchakshari"
+   ],
+   "charity": "gold",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.53, p.506"
+  },
+  {
+   "mahadasha": "Moon",
+   "antardasha": "Saturn",
+   "recommendation_ids": [
+    "dasha-mahadasha-moon",
+    "dasha-antardasha-saturn"
+   ],
+   "bphs_prescription": "Mrityunjaya Japa; charity of a black cow or female buffalo",
+   "mantra_ids": [
+    "mahamrityunjaya"
+   ],
+   "charity": "black cow or female buffalo",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.53, p.508"
+  },
+  {
+   "mahadasha": "Moon",
+   "antardasha": "Mercury",
+   "recommendation_ids": [
+    "dasha-mahadasha-moon",
+    "dasha-antardasha-mercury"
+   ],
+   "bphs_prescription": "Vishnu Sahasranama; charity of a goat",
+   "mantra_ids": [
+    "vishnu-sahasranama",
+    "rama-nama-sahasranama-tulya"
+   ],
+   "charity": "goat",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.53, p.508"
+  },
+  {
+   "mahadasha": "Moon",
+   "antardasha": "Ketu",
+   "recommendation_ids": [
+    "dasha-mahadasha-moon",
+    "dasha-antardasha-ketu"
+   ],
+   "bphs_prescription": "Mrityunjaya Japa",
+   "mantra_ids": [
+    "mahamrityunjaya"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.53, p.509"
+  },
+  {
+   "mahadasha": "Moon",
+   "antardasha": "Venus",
+   "recommendation_ids": [
+    "dasha-mahadasha-moon",
+    "dasha-antardasha-venus"
+   ],
+   "bphs_prescription": "Rudra Japa; charity of a white cow and silver",
+   "mantra_ids": [
+    "sri-rudram",
+    "shiva-panchakshari"
+   ],
+   "charity": "white cow, silver",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.53, p.510"
+  },
+  {
+   "mahadasha": "Moon",
+   "antardasha": "Sun",
+   "recommendation_ids": [
+    "dasha-mahadasha-moon",
+    "dasha-antardasha-sun"
+   ],
+   "bphs_prescription": "Worship of Shiva",
+   "mantra_ids": [
+    "shiva-panchakshari"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.53, p.512"
+  },
+  {
+   "mahadasha": "Mars",
+   "antardasha": "Mars",
+   "recommendation_ids": [
+    "dasha-mahadasha-mars",
+    "dasha-antardasha-mars"
+   ],
+   "bphs_prescription": "Rudra Japa; charity of a red bull",
+   "mantra_ids": [
+    "sri-rudram",
+    "shiva-panchakshari"
+   ],
+   "charity": "red bull",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.54, p.514"
+  },
+  {
+   "mahadasha": "Mars",
+   "antardasha": "Rahu",
+   "recommendation_ids": [
+    "dasha-mahadasha-mars",
+    "dasha-antardasha-rahu"
+   ],
+   "bphs_prescription": "Naga Puja, feeding Brahmins, Mrityunjaya Japa",
+   "mantra_ids": [
+    "sarpa-namostu",
+    "mahamrityunjaya"
+   ],
+   "charity": "food to Brahmins",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.54, p.515"
+  },
+  {
+   "mahadasha": "Mars",
+   "antardasha": "Jupiter",
+   "recommendation_ids": [
+    "dasha-mahadasha-mars",
+    "dasha-antardasha-jupiter"
+   ],
+   "bphs_prescription": "Shiva Sahasranama",
+   "mantra_ids": [
+    "shiva-sahasranama",
+    "shiva-panchakshari"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.54, p.515"
+  },
+  {
+   "mahadasha": "Mars",
+   "antardasha": "Saturn",
+   "recommendation_ids": [
+    "dasha-mahadasha-mars",
+    "dasha-antardasha-saturn"
+   ],
+   "bphs_prescription": "Mrityunjaya Japa",
+   "mantra_ids": [
+    "mahamrityunjaya"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.54, p.517"
+  },
+  {
+   "mahadasha": "Mars",
+   "antardasha": "Mercury",
+   "recommendation_ids": [
+    "dasha-mahadasha-mars",
+    "dasha-antardasha-mercury"
+   ],
+   "bphs_prescription": "Vishnu Sahasranama; charity of a horse",
+   "mantra_ids": [
+    "vishnu-sahasranama",
+    "rama-nama-sahasranama-tulya"
+   ],
+   "charity": "horse",
+   "note": "Sanskrit (Pathak ed., KB OCR line 3757): 'aśvadānaṃ prakurvīta viṣṇornāmasahasrakam'.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.54, p.518"
+  },
+  {
+   "mahadasha": "Mars",
+   "antardasha": "Ketu",
+   "recommendation_ids": [
+    "dasha-mahadasha-mars",
+    "dasha-antardasha-ketu"
+   ],
+   "bphs_prescription": "None in the text; translator suggests Vishnu Sahasranama and a goat",
+   "mantra_ids": [
+    "vishnu-sahasranama"
+   ],
+   "charity": "goat (translator's suggestion)",
+   "note": "Translator's note, not Parashara. Label as such or show nothing.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.54, p.520"
+  },
+  {
+   "mahadasha": "Mars",
+   "antardasha": "Venus",
+   "recommendation_ids": [
+    "dasha-mahadasha-mars",
+    "dasha-antardasha-venus"
+   ],
+   "bphs_prescription": "Charity of a cow or female buffalo",
+   "mantra_ids": [],
+   "charity": "cow or female buffalo",
+   "note": "No mantra prescribed.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.54, p.521"
+  },
+  {
+   "mahadasha": "Mars",
+   "antardasha": "Sun",
+   "recommendation_ids": [
+    "dasha-mahadasha-mars",
+    "dasha-antardasha-sun"
+   ],
+   "bphs_prescription": "Worship of the Sun in the prescribed manner",
+   "mantra_ids": [
+    "aditya-hridayam",
+    "sun-vedic",
+    "sun-nama"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.54, p.522"
+  },
+  {
+   "mahadasha": "Mars",
+   "antardasha": "Moon",
+   "recommendation_ids": [
+    "dasha-mahadasha-mars",
+    "dasha-antardasha-moon"
+   ],
+   "bphs_prescription": "Mantras of Durga and Lakshmi",
+   "mantra_ids": [
+    "durga-sarvamangala",
+    "lakshmi-nama",
+    "sri-suktam-1"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.54, p.523"
+  },
+  {
+   "mahadasha": "Rahu",
+   "antardasha": "Rahu",
+   "recommendation_ids": [
+    "dasha-mahadasha-rahu",
+    "dasha-antardasha-rahu"
+   ],
+   "bphs_prescription": "Worship of Rahu with his mantras; charity of things ruled by Rahu",
+   "mantra_ids": [
+    "rahu-vedic",
+    "rahu-bija",
+    "rahu-nama",
+    "rahu-stotra"
+   ],
+   "charity": "things ruled by Rahu",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.55, p.525"
+  },
+  {
+   "mahadasha": "Rahu",
+   "antardasha": "Jupiter",
+   "recommendation_ids": [
+    "dasha-mahadasha-rahu",
+    "dasha-antardasha-jupiter"
+   ],
+   "bphs_prescription": "Worship of a golden idol of Shiva",
+   "mantra_ids": [
+    "shiva-panchakshari"
+   ],
+   "charity": "golden Shiva idol",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.55, p.526"
+  },
+  {
+   "mahadasha": "Rahu",
+   "antardasha": "Saturn",
+   "recommendation_ids": [
+    "dasha-mahadasha-rahu",
+    "dasha-antardasha-saturn"
+   ],
+   "bphs_prescription": "Charity of a black cow or she-buffalo",
+   "mantra_ids": [],
+   "charity": "black cow or she-buffalo",
+   "note": "No mantra prescribed.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.55, p.527"
+  },
+  {
+   "mahadasha": "Rahu",
+   "antardasha": "Mercury",
+   "recommendation_ids": [
+    "dasha-mahadasha-rahu",
+    "dasha-antardasha-mercury"
+   ],
+   "bphs_prescription": "Vishnu Sahasranama",
+   "mantra_ids": [
+    "vishnu-sahasranama",
+    "rama-nama-sahasranama-tulya"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.55, p.528"
+  },
+  {
+   "mahadasha": "Rahu",
+   "antardasha": "Ketu",
+   "recommendation_ids": [
+    "dasha-mahadasha-rahu",
+    "dasha-antardasha-ketu"
+   ],
+   "bphs_prescription": "Charity of a goat",
+   "mantra_ids": [],
+   "charity": "goat",
+   "note": "No mantra prescribed.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.55, p.530"
+  },
+  {
+   "mahadasha": "Rahu",
+   "antardasha": "Venus",
+   "recommendation_ids": [
+    "dasha-mahadasha-rahu",
+    "dasha-antardasha-venus"
+   ],
+   "bphs_prescription": "Worship of Durga and Lakshmi",
+   "mantra_ids": [
+    "durga-sarvamangala",
+    "lakshmi-nama",
+    "sri-suktam-1"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.55, p.530"
+  },
+  {
+   "mahadasha": "Rahu",
+   "antardasha": "Sun",
+   "recommendation_ids": [
+    "dasha-mahadasha-rahu",
+    "dasha-antardasha-sun"
+   ],
+   "bphs_prescription": "Worship of the Sun",
+   "mantra_ids": [
+    "aditya-hridayam",
+    "sun-vedic",
+    "sun-nama"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.55, p.532"
+  },
+  {
+   "mahadasha": "Rahu",
+   "antardasha": "Moon",
+   "recommendation_ids": [
+    "dasha-mahadasha-rahu",
+    "dasha-antardasha-moon"
+   ],
+   "bphs_prescription": "Charity of a white cow or female buffalo",
+   "mantra_ids": [],
+   "charity": "white cow or female buffalo",
+   "note": "No mantra prescribed.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.55, p.533"
+  },
+  {
+   "mahadasha": "Rahu",
+   "antardasha": "Mars",
+   "recommendation_ids": [
+    "dasha-mahadasha-rahu",
+    "dasha-antardasha-mars"
+   ],
+   "bphs_prescription": "Charity of a cow or bull",
+   "mantra_ids": [],
+   "charity": "cow or bull",
+   "note": "No mantra prescribed.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.55, p.534"
+  },
+  {
+   "mahadasha": "Jupiter",
+   "antardasha": "Jupiter",
+   "recommendation_ids": [
+    "dasha-mahadasha-jupiter",
+    "dasha-antardasha-jupiter"
+   ],
+   "bphs_prescription": "Rudra Japa and Shiva Sahasranama",
+   "mantra_ids": [
+    "sri-rudram",
+    "shiva-sahasranama",
+    "shiva-panchakshari"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.56, p.536"
+  },
+  {
+   "mahadasha": "Jupiter",
+   "antardasha": "Saturn",
+   "recommendation_ids": [
+    "dasha-mahadasha-jupiter",
+    "dasha-antardasha-saturn"
+   ],
+   "bphs_prescription": "Vishnu Sahasranama; charity of a black cow or female buffalo",
+   "mantra_ids": [
+    "vishnu-sahasranama"
+   ],
+   "charity": "black cow or female buffalo",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.56, p.537"
+  },
+  {
+   "mahadasha": "Jupiter",
+   "antardasha": "Mercury",
+   "recommendation_ids": [
+    "dasha-mahadasha-jupiter",
+    "dasha-antardasha-mercury"
+   ],
+   "bphs_prescription": "Vishnu Sahasranama",
+   "mantra_ids": [
+    "vishnu-sahasranama",
+    "rama-nama-sahasranama-tulya"
+   ],
+   "charity": null,
+   "note": "BPHS frames this as 'prolongation of longevity'; the app must not.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.56, p.538"
+  },
+  {
+   "mahadasha": "Jupiter",
+   "antardasha": "Ketu",
+   "recommendation_ids": [
+    "dasha-mahadasha-jupiter",
+    "dasha-antardasha-ketu"
+   ],
+   "bphs_prescription": "Mrityunjaya Japa",
+   "mantra_ids": [
+    "mahamrityunjaya"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.56, p.540"
+  },
+  {
+   "mahadasha": "Jupiter",
+   "antardasha": "Venus",
+   "recommendation_ids": [
+    "dasha-mahadasha-jupiter",
+    "dasha-antardasha-venus"
+   ],
+   "bphs_prescription": "Charity of a tawny cow or female buffalo",
+   "mantra_ids": [],
+   "charity": "tawny cow or female buffalo",
+   "note": "No mantra prescribed.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.56, p.541"
+  },
+  {
+   "mahadasha": "Jupiter",
+   "antardasha": "Sun",
+   "recommendation_ids": [
+    "dasha-mahadasha-jupiter",
+    "dasha-antardasha-sun"
+   ],
+   "bphs_prescription": "Aditya Hridaya patha",
+   "mantra_ids": [
+    "aditya-hridayam"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.56, p.542"
+  },
+  {
+   "mahadasha": "Jupiter",
+   "antardasha": "Moon",
+   "recommendation_ids": [
+    "dasha-mahadasha-jupiter",
+    "dasha-antardasha-moon"
+   ],
+   "bphs_prescription": "Durga Saptashati patha",
+   "mantra_ids": [
+    "durga-saptashati",
+    "durga-sarvamangala"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.56, p.543"
+  },
+  {
+   "mahadasha": "Jupiter",
+   "antardasha": "Mars",
+   "recommendation_ids": [
+    "dasha-mahadasha-jupiter",
+    "dasha-antardasha-mars"
+   ],
+   "bphs_prescription": "Charity of a bull",
+   "mantra_ids": [],
+   "charity": "bull",
+   "note": "No mantra prescribed.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.56, p.544"
+  },
+  {
+   "mahadasha": "Jupiter",
+   "antardasha": "Rahu",
+   "recommendation_ids": [
+    "dasha-mahadasha-jupiter",
+    "dasha-antardasha-rahu"
+   ],
+   "bphs_prescription": "Mrityunjaya Japa; charity of a goat",
+   "mantra_ids": [
+    "mahamrityunjaya"
+   ],
+   "charity": "goat",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.56, p.545"
+  },
+  {
+   "mahadasha": "Saturn",
+   "antardasha": "Saturn",
+   "recommendation_ids": [
+    "dasha-mahadasha-saturn",
+    "dasha-antardasha-saturn"
+   ],
+   "bphs_prescription": "Mrityunjaya Japa",
+   "mantra_ids": [
+    "mahamrityunjaya"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.57, p.547"
+  },
+  {
+   "mahadasha": "Saturn",
+   "antardasha": "Mercury",
+   "recommendation_ids": [
+    "dasha-mahadasha-saturn",
+    "dasha-antardasha-mercury"
+   ],
+   "bphs_prescription": "Vishnu Sahasranama; charity of grams",
+   "mantra_ids": [
+    "vishnu-sahasranama",
+    "rama-nama-sahasranama-tulya"
+   ],
+   "charity": "gram (chana)",
+   "note": "Heading missing in the PDF text layer; placed by reading the verses (p.~548).",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.57, p.548"
+  },
+  {
+   "mahadasha": "Saturn",
+   "antardasha": "Ketu",
+   "recommendation_ids": [
+    "dasha-mahadasha-saturn",
+    "dasha-antardasha-ketu"
+   ],
+   "bphs_prescription": "Charity of a goat",
+   "mantra_ids": [],
+   "charity": "goat",
+   "note": "No mantra prescribed.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.57, p.549"
+  },
+  {
+   "mahadasha": "Saturn",
+   "antardasha": "Venus",
+   "recommendation_ids": [
+    "dasha-mahadasha-saturn",
+    "dasha-antardasha-venus"
+   ],
+   "bphs_prescription": "Durga Saptashati patha; charity of a cow or female buffalo",
+   "mantra_ids": [
+    "durga-saptashati",
+    "durga-sarvamangala"
+   ],
+   "charity": "cow or female buffalo",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.57, p.550"
+  },
+  {
+   "mahadasha": "Saturn",
+   "antardasha": "Sun",
+   "recommendation_ids": [
+    "dasha-mahadasha-saturn",
+    "dasha-antardasha-sun"
+   ],
+   "bphs_prescription": "Worship of the Sun",
+   "mantra_ids": [
+    "aditya-hridayam",
+    "sun-vedic",
+    "sun-nama"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.57, p.551"
+  },
+  {
+   "mahadasha": "Saturn",
+   "antardasha": "Moon",
+   "recommendation_ids": [
+    "dasha-mahadasha-saturn",
+    "dasha-antardasha-moon"
+   ],
+   "bphs_prescription": "Havana; charity of jaggery, ghee, curd-rice, a cow or female buffalo",
+   "mantra_ids": [],
+   "charity": "jaggery, ghee, curd rice, cow or female buffalo",
+   "note": "Havana is priest-led; no recitable mantra named.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.57, p.552"
+  },
+  {
+   "mahadasha": "Saturn",
+   "antardasha": "Mars",
+   "recommendation_ids": [
+    "dasha-mahadasha-saturn",
+    "dasha-antardasha-mars"
+   ],
+   "bphs_prescription": "Havana; charity of a bull",
+   "mantra_ids": [],
+   "charity": "bull",
+   "note": "Priest-led; no recitable mantra named.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.57, p.554"
+  },
+  {
+   "mahadasha": "Saturn",
+   "antardasha": "Rahu",
+   "recommendation_ids": [
+    "dasha-mahadasha-saturn",
+    "dasha-antardasha-rahu"
+   ],
+   "bphs_prescription": "Mrityunjaya Japa; charity of a goat",
+   "mantra_ids": [
+    "mahamrityunjaya"
+   ],
+   "charity": "goat",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.57, p.555"
+  },
+  {
+   "mahadasha": "Saturn",
+   "antardasha": "Jupiter",
+   "recommendation_ids": [
+    "dasha-mahadasha-saturn",
+    "dasha-antardasha-jupiter"
+   ],
+   "bphs_prescription": "Shiva Sahasranama; charity of gold",
+   "mantra_ids": [
+    "shiva-sahasranama",
+    "shiva-panchakshari"
+   ],
+   "charity": "gold",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.57, p.556"
+  },
+  {
+   "mahadasha": "Mercury",
+   "antardasha": "Mercury",
+   "recommendation_ids": [
+    "dasha-mahadasha-mercury",
+    "dasha-antardasha-mercury"
+   ],
+   "bphs_prescription": "Vishnu Sahasranama",
+   "mantra_ids": [
+    "vishnu-sahasranama",
+    "rama-nama-sahasranama-tulya"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.58, p.558"
+  },
+  {
+   "mahadasha": "Mercury",
+   "antardasha": "Ketu",
+   "recommendation_ids": [
+    "dasha-mahadasha-mercury",
+    "dasha-antardasha-ketu"
+   ],
+   "bphs_prescription": "Charity of a goat",
+   "mantra_ids": [],
+   "charity": "goat",
+   "note": "No mantra prescribed.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.58, p.558"
+  },
+  {
+   "mahadasha": "Mercury",
+   "antardasha": "Venus",
+   "recommendation_ids": [
+    "dasha-mahadasha-mercury",
+    "dasha-antardasha-venus"
+   ],
+   "bphs_prescription": "Mantras of Durga",
+   "mantra_ids": [
+    "durga-sarvamangala",
+    "durga-navarna"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.58, p.559"
+  },
+  {
+   "mahadasha": "Mercury",
+   "antardasha": "Sun",
+   "recommendation_ids": [
+    "dasha-mahadasha-mercury",
+    "dasha-antardasha-sun"
+   ],
+   "bphs_prescription": "Worship of the Sun",
+   "mantra_ids": [
+    "aditya-hridayam",
+    "sun-vedic",
+    "sun-nama"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.58, p.560"
+  },
+  {
+   "mahadasha": "Mercury",
+   "antardasha": "Moon",
+   "recommendation_ids": [
+    "dasha-mahadasha-mercury",
+    "dasha-antardasha-moon"
+   ],
+   "bphs_prescription": "Mantras of Durga; charity of clothes",
+   "mantra_ids": [
+    "durga-sarvamangala",
+    "durga-navarna"
+   ],
+   "charity": "clothes",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.58, p.561"
+  },
+  {
+   "mahadasha": "Mercury",
+   "antardasha": "Mars",
+   "recommendation_ids": [
+    "dasha-mahadasha-mercury",
+    "dasha-antardasha-mars"
+   ],
+   "bphs_prescription": "Mrityunjaya Japa; charity of a cow",
+   "mantra_ids": [
+    "mahamrityunjaya"
+   ],
+   "charity": "cow",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.58, p.562"
+  },
+  {
+   "mahadasha": "Mercury",
+   "antardasha": "Rahu",
+   "recommendation_ids": [
+    "dasha-mahadasha-mercury",
+    "dasha-antardasha-rahu"
+   ],
+   "bphs_prescription": "Mantras of Durga and Lakshmi; charity of a tawny cow or female buffalo",
+   "mantra_ids": [
+    "durga-sarvamangala",
+    "lakshmi-nama"
+   ],
+   "charity": "tawny cow or female buffalo",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.58, p.564"
+  },
+  {
+   "mahadasha": "Mercury",
+   "antardasha": "Jupiter",
+   "recommendation_ids": [
+    "dasha-mahadasha-mercury",
+    "dasha-antardasha-jupiter"
+   ],
+   "bphs_prescription": "Shiva Sahasranama; charity of a cow and gold",
+   "mantra_ids": [
+    "shiva-sahasranama",
+    "shiva-panchakshari"
+   ],
+   "charity": "cow, gold",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.58, p.565"
+  },
+  {
+   "mahadasha": "Mercury",
+   "antardasha": "Saturn",
+   "recommendation_ids": [
+    "dasha-mahadasha-mercury",
+    "dasha-antardasha-saturn"
+   ],
+   "bphs_prescription": "Mrityunjaya Japa; charity of a black cow and female buffalo",
+   "mantra_ids": [
+    "mahamrityunjaya"
+   ],
+   "charity": "black cow, female buffalo",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.58, p.566"
+  },
+  {
+   "mahadasha": "Ketu",
+   "antardasha": "Ketu",
+   "recommendation_ids": [
+    "dasha-mahadasha-ketu",
+    "dasha-antardasha-ketu"
+   ],
+   "bphs_prescription": "Durga Saptashati japa and Mrityunjaya Japa",
+   "mantra_ids": [
+    "durga-saptashati",
+    "mahamrityunjaya"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.59, p.568"
+  },
+  {
+   "mahadasha": "Ketu",
+   "antardasha": "Venus",
+   "recommendation_ids": [
+    "dasha-mahadasha-ketu",
+    "dasha-antardasha-venus"
+   ],
+   "bphs_prescription": "Durga patha; charity of a tawny cow or female buffalo",
+   "mantra_ids": [
+    "durga-saptashati",
+    "durga-sarvamangala"
+   ],
+   "charity": "tawny cow or female buffalo",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.59, p.568"
+  },
+  {
+   "mahadasha": "Ketu",
+   "antardasha": "Sun",
+   "recommendation_ids": [
+    "dasha-mahadasha-ketu",
+    "dasha-antardasha-sun"
+   ],
+   "bphs_prescription": "Charity of a cow and gold",
+   "mantra_ids": [],
+   "charity": "cow, gold",
+   "note": "No mantra prescribed.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.59, p.570"
+  },
+  {
+   "mahadasha": "Ketu",
+   "antardasha": "Moon",
+   "recommendation_ids": [
+    "dasha-mahadasha-ketu",
+    "dasha-antardasha-moon"
+   ],
+   "bphs_prescription": "Mantras of the Moon; charity of things ruled by the Moon",
+   "mantra_ids": [
+    "moon-vedic",
+    "moon-nama",
+    "moon-stotra"
+   ],
+   "charity": "things ruled by the Moon",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.59, p.571"
+  },
+  {
+   "mahadasha": "Ketu",
+   "antardasha": "Mars",
+   "recommendation_ids": [
+    "dasha-mahadasha-ketu",
+    "dasha-antardasha-mars"
+   ],
+   "bphs_prescription": "Charity of a bull",
+   "mantra_ids": [],
+   "charity": "bull",
+   "note": "No mantra prescribed.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.59, p.572"
+  },
+  {
+   "mahadasha": "Ketu",
+   "antardasha": "Rahu",
+   "recommendation_ids": [
+    "dasha-mahadasha-ketu",
+    "dasha-antardasha-rahu"
+   ],
+   "bphs_prescription": "Durga Saptashati patha",
+   "mantra_ids": [
+    "durga-saptashati",
+    "durga-sarvamangala"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.59, p.573"
+  },
+  {
+   "mahadasha": "Ketu",
+   "antardasha": "Jupiter",
+   "recommendation_ids": [
+    "dasha-mahadasha-ketu",
+    "dasha-antardasha-jupiter"
+   ],
+   "bphs_prescription": "Mrityunjaya Japa and Shiva Sahasranama",
+   "mantra_ids": [
+    "mahamrityunjaya",
+    "shiva-sahasranama"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.59, p.574"
+  },
+  {
+   "mahadasha": "Ketu",
+   "antardasha": "Saturn",
+   "recommendation_ids": [
+    "dasha-mahadasha-ketu",
+    "dasha-antardasha-saturn"
+   ],
+   "bphs_prescription": "Havana with sesame; charity of a black cow or female buffalo",
+   "mantra_ids": [],
+   "charity": "sesame, black cow or female buffalo",
+   "note": "Heading missing in the PDF text layer; placed by reading the verses (p.~575). Priest-led.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.59, p.575"
+  },
+  {
+   "mahadasha": "Ketu",
+   "antardasha": "Mercury",
+   "recommendation_ids": [
+    "dasha-mahadasha-ketu",
+    "dasha-antardasha-mercury"
+   ],
+   "bphs_prescription": "Vishnu Sahasranama",
+   "mantra_ids": [
+    "vishnu-sahasranama",
+    "rama-nama-sahasranama-tulya"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.59, p.576"
+  },
+  {
+   "mahadasha": "Venus",
+   "antardasha": "Venus",
+   "recommendation_ids": [
+    "dasha-mahadasha-venus",
+    "dasha-antardasha-venus"
+   ],
+   "bphs_prescription": "Durga patha; charity of a cow",
+   "mantra_ids": [
+    "durga-saptashati",
+    "durga-sarvamangala"
+   ],
+   "charity": "cow",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.60, p.579"
+  },
+  {
+   "mahadasha": "Venus",
+   "antardasha": "Sun",
+   "recommendation_ids": [
+    "dasha-mahadasha-venus",
+    "dasha-antardasha-sun"
+   ],
+   "bphs_prescription": "Worship of the Sun",
+   "mantra_ids": [
+    "aditya-hridayam",
+    "sun-vedic",
+    "sun-nama"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.60, p.580"
+  },
+  {
+   "mahadasha": "Venus",
+   "antardasha": "Moon",
+   "recommendation_ids": [
+    "dasha-mahadasha-venus",
+    "dasha-antardasha-moon"
+   ],
+   "bphs_prescription": "None prescribed",
+   "mantra_ids": [],
+   "charity": null,
+   "note": "Text gives no remedy.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.60, p.581"
+  },
+  {
+   "mahadasha": "Venus",
+   "antardasha": "Mars",
+   "recommendation_ids": [
+    "dasha-mahadasha-venus",
+    "dasha-antardasha-mars"
+   ],
+   "bphs_prescription": "None in the text; translator suggests charity of a bull",
+   "mantra_ids": [],
+   "charity": "bull (translator's suggestion)",
+   "note": "Translator's note, not Parashara.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.60, p.583"
+  },
+  {
+   "mahadasha": "Venus",
+   "antardasha": "Rahu",
+   "recommendation_ids": [
+    "dasha-mahadasha-venus",
+    "dasha-antardasha-rahu"
+   ],
+   "bphs_prescription": "Mrityunjaya Japa",
+   "mantra_ids": [
+    "mahamrityunjaya"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.60, p.583"
+  },
+  {
+   "mahadasha": "Venus",
+   "antardasha": "Jupiter",
+   "recommendation_ids": [
+    "dasha-mahadasha-venus",
+    "dasha-antardasha-jupiter"
+   ],
+   "bphs_prescription": "Mrityunjaya Japa",
+   "mantra_ids": [
+    "mahamrityunjaya"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.60, p.584"
+  },
+  {
+   "mahadasha": "Venus",
+   "antardasha": "Saturn",
+   "recommendation_ids": [
+    "dasha-mahadasha-venus",
+    "dasha-antardasha-saturn"
+   ],
+   "bphs_prescription": "Havana with sesame, Mrityunjaya Japa, Durga Saptashati (self or through a priest)",
+   "mantra_ids": [
+    "mahamrityunjaya",
+    "durga-saptashati"
+   ],
+   "charity": "sesame havana",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.60, p.585"
+  },
+  {
+   "mahadasha": "Venus",
+   "antardasha": "Mercury",
+   "recommendation_ids": [
+    "dasha-mahadasha-venus",
+    "dasha-antardasha-mercury"
+   ],
+   "bphs_prescription": "Vishnu Sahasranama",
+   "mantra_ids": [
+    "vishnu-sahasranama",
+    "rama-nama-sahasranama-tulya"
+   ],
+   "charity": null,
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.60, p.586"
+  },
+  {
+   "mahadasha": "Venus",
+   "antardasha": "Ketu",
+   "recommendation_ids": [
+    "dasha-mahadasha-venus",
+    "dasha-antardasha-ketu"
+   ],
+   "bphs_prescription": "Mrityunjaya Japa; charity of a goat",
+   "mantra_ids": [
+    "mahamrityunjaya"
+   ],
+   "charity": "goat",
+   "note": null,
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.60, p.587"
+  }
+ ]
+}

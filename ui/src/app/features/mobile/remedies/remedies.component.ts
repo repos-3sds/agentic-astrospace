@@ -2,16 +2,18 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { RouterLink } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
 import {
+  RemedyPlanPayload,
   RemedyRecommendationGroup,
   RemedyRecommendationPractice,
-  RemedyRecommendationsPayload,
   VedicService,
 } from '../../../core/vedic.service';
+import { MANTRA_SCRIPTS, MantraScriptService } from './mantra-script';
 import { PreferencesService } from '../../../core/preferences.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { PlanGateService } from '../../../core/plan-gate.service';
 import { PlanLockComponent } from '../shared/plan-lock.component';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 /** What kind of thing in the chart a remedy answers to. */
 export type RemedyTone = 'warn' | 'bad' | 'good';
@@ -36,12 +38,18 @@ export type RemedyTone = 'warn' | 'bad' | 'good';
  *
  * The lede states the limit once for the whole screen, and the per-card line
  * repeats it at the point of action, because that is where someone decides.
+ *
+ * The page shows the personal plan, not the full catalogue: at most three
+ * remedies, one for the running dasha period, one for the life area that
+ * period points at, and one flag only when the chart has one (see
+ * astrospace/core/vedic/remedy_plan.py). Each mantra is shown as its own text
+ * in Telugu script, English letters or Devanagari.
  */
 @Component({
   selector: 'as-remedies',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PlanLockComponent, BackLinkDirective, GenericErrorComponent, RouterLink],
+  imports: [PlanLockComponent, BackLinkDirective, GenericErrorComponent, RouterLink, SelectHapticDirective],
   templateUrl: './remedies.component.html',
   styleUrl: './remedies.component.scss',
 })
@@ -50,14 +58,16 @@ export class RemediesComponent {
   private readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
   private readonly preferences = inject(PreferencesService);
-  protected readonly recommendations = signal<RemedyRecommendationsPayload | null>(null);
+  protected readonly scripts = inject(MantraScriptService);
+  protected readonly scriptOptions = MANTRA_SCRIPTS;
+  protected readonly recommendations = signal<RemedyPlanPayload | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
   protected readonly groups = computed(() => this.recommendations()?.groups ?? []);
   /**
-   * Free gets one traditional practice: the first group's first practice,
-   * with its reason, source and safety note intact. Plus gets the full plan
-   * and the tracker. Nothing here is sold as removing anything.
+   * Free gets one traditional practice: the plan's first remedy, with its
+   * reason, source and safety note intact. Plus gets the whole plan.
+   * Nothing here is sold as removing anything.
    */
   protected readonly fullPlan = computed(() => this.gate.allows('remedies.full'));
   protected readonly shownGroups = computed(() =>
@@ -67,6 +77,7 @@ export class RemediesComponent {
     const total = this.groups().reduce((sum, group) => sum + group.practices.length, 0);
     return Math.max(0, total - 1);
   });
+  protected readonly hasMantraText = computed(() => this.groups().some((group) => group.practices.some((p) => !!p.text)));
   protected readonly note = computed(() => this.recommendations()?.note ?? null);
   protected readonly disclaimer = computed(() => this.recommendations()?.disclaimer ?? 'Traditional practice, not a guarantee.');
 
@@ -106,10 +117,7 @@ export class RemediesComponent {
         this.recommendations.set(null);
         return;
       }
-      this.recommendations.set(await this.vedic.remedies(activeId, {
-        includeCostly: false,
-        includeManglik: false,
-      }));
+      this.recommendations.set(await this.vedic.remedyPlan(activeId));
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {
@@ -119,6 +127,8 @@ export class RemediesComponent {
 
   protected tag(group: RemedyRecommendationGroup): string {
     const trigger = group.trigger;
+    if (group.slot === 'period') return 'THIS PERIOD';
+    if (group.slot === 'life_area') return 'LIFE AREA';
     if (trigger.kind === 'dasha' && trigger.planet) return `${trigger.planet.toUpperCase()} ${trigger.level?.toUpperCase() ?? 'DASHA'}`;
     if (trigger.kind === 'dignity' && trigger.planet) return `${trigger.planet.toUpperCase()} DIGNITY`;
     if (trigger.kind === 'combustion' && trigger.planet) return `${trigger.planet.toUpperCase()} COMBUST`;
@@ -127,6 +137,7 @@ export class RemediesComponent {
   }
 
   protected tone(group: RemedyRecommendationGroup): RemedyTone {
+    if (group.slot === 'life_area') return 'good';
     if (group.trigger.kind === 'dosha') return 'bad';
     if (group.trigger.kind === 'dasha') return 'warn';
     return 'good';
@@ -151,7 +162,7 @@ export class RemediesComponent {
   }
 
   protected practiceCta(practice: RemedyRecommendationPractice): string {
-    if (practice.type === 'mantra') return 'Start 108 practice';
+    if (practice.type === 'mantra') return `Start ${practice.target_count ?? 108} practice`;
     if (practice.type === 'deity') return 'Track prayer';
     return 'Open practice';
   }
@@ -171,6 +182,7 @@ export class RemediesComponent {
   }
 
   protected sourceLabel(group: RemedyRecommendationGroup): string {
+    if (group.slot) return group.tradition_source;
     const status = group.source_status.replaceAll('_', ' ');
     return `${status} · ${group.tradition_source}`;
   }
@@ -181,6 +193,7 @@ export class RemediesComponent {
       practice.cadence,
       practice.preferred_day,
       practice.target_count ? `${practice.target_count} count` : null,
+      practice.deity && practice.text ? practice.deity : null,
     ].filter(Boolean);
     return parts.join(' · ');
   }

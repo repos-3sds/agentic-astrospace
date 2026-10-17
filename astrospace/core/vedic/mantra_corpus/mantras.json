@@ -1,0 +1,4277 @@
+{
+ "meta": {
+  "name": "Siddha mantra corpus",
+  "version": "2026-10-17",
+  "status": "point-in-time research corpus; not yet wired into the app",
+  "fields": "see README.md",
+  "count": 68
+ },
+ "mantras": [
+  {
+   "id": "sun-nama",
+   "name": "Sun nama mantra",
+   "category": "graha_nama",
+   "tier": "simple",
+   "planet": "Sun",
+   "deity": "Sun",
+   "devanagari": "ॐ सूर्याय नमः",
+   "iast": "oṃ sūryāya namaḥ",
+   "telugu": "ఓం సూర్యాయ నమః",
+   "simple_transliteration": "Om Suryaya Namah",
+   "meaning_en": "Om, salutation to Surya, the Sun.",
+   "source_type": "liturgical",
+   "source_citation": "Navagraha puja namaskara formula ('om ... namah'); the form the app ships today (astrospace/core/vedic/remedies.py GRAHA_REMEDIES).",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "verified_attribution",
+   "traditional_count": null,
+   "practical_count": 108,
+   "count_note": "108 per sitting (one mala). No classical count for the nama form; BPHS counts apply to the Vedic mantras.",
+   "preferred_day": "Sunday",
+   "disagreements": null,
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 3,
+    "recording_note": "Loopable single repetition."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "sun-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-sun",
+     "dasha-antardasha-sun",
+     "dignity-debilitated-sun"
+    ],
+    "bphs_antardasha": [
+     "Sun-Sun",
+     "Mars-Sun",
+     "Rahu-Sun",
+     "Saturn-Sun",
+     "Mercury-Sun",
+     "Venus-Sun"
+    ],
+    "gochara_rules": [],
+    "yoga_rules": [],
+    "festival_slugs": [
+     "makar_sankranti",
+     "ratha_saptami"
+    ],
+    "reading_categories": [
+     "career"
+    ]
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "ॐ, सूर्य देव को नमस्कार।",
+   "meaning_te": "ఓం, సూర్య భగవానునికి నమస్కారం.",
+   "text": {
+    "te": "ఓం సూర్యాయ నమః",
+    "en": "Om Suryaya Namah",
+    "sa": "ॐ सूर्याय नमः",
+    "iast": "oṃ sūryāya namaḥ"
+   }
+  },
+  {
+   "id": "sun-bija",
+   "name": "Sun bija mantra",
+   "category": "graha_bija",
+   "tier": "advanced",
+   "planet": "Sun",
+   "deity": "Sun",
+   "devanagari": "ॐ ह्रां ह्रीं ह्रौं सः सूर्याय नमः",
+   "iast": "oṃ hrāṃ hrīṃ hrauṃ saḥ sūryāya namaḥ",
+   "telugu": "ఓం హ్రాం హ్రీం హ్రౌం సః సూర్యాయ నమః",
+   "simple_transliteration": "Om Hraam Hreem Hraum Sah Suryaya Namah",
+   "meaning_en": "Om, seed syllables of Sun, salutation to Sun. Bija syllables carry no dictionary meaning.",
+   "source_type": "tantra",
+   "source_citation": "Tantric navagraha bija mantras as given in ritual manuals (commonly traced to the Mantra Maharnava); no single primary text verified.",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navagrahamantrajapaprayogaHvedoktasabIja.html",
+    "https://www.drikpanchang.com/vedic-mantra/gods/navagraha/navagraha-mantras.html"
+   ],
+   "confidence": "popular_tradition",
+   "traditional_count": 7000,
+   "practical_count": 108,
+   "count_note": "Manuals reuse the BPHS ch.84 count (7,000) for the bija form; some multiply by 4 for Kali Yuga. 108 per sitting.",
+   "preferred_day": "Sunday",
+   "disagreements": null,
+   "app_sensitivity": "Bija mantras are traditionally received from a teacher in many lineages. Label 'traditionally taken with guidance'; keep the nama form as default.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 5,
+    "recording_note": "Loopable; nasal endings (anusvara vs candrabindu) audible, so match the chosen text."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "sun-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-sun",
+     "dasha-antardasha-sun",
+     "dignity-debilitated-sun"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [],
+    "yoga_rules": [],
+    "festival_slugs": [
+     "makar_sankranti",
+     "ratha_saptami"
+    ],
+    "reading_categories": [
+     "career"
+    ]
+   },
+   "checked_against": "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements.",
+   "meaning_hi": "ॐ, सूर्य के बीज अक्षर, सूर्य को नमस्कार। बीज अक्षरों का कोई शब्दकोशीय अर्थ नहीं होता।",
+   "meaning_te": "ఓం, సూర్యుడు బీజాక్షరాలు, సూర్యునికి నమస్కారం. బీజాక్షరాలకు నిఘంటు అర్థం ఉండదు.",
+   "text": {
+    "te": "ఓం హ్రాం హ్రీం హ్రౌం సః సూర్యాయ నమః",
+    "en": "Om Hraam Hreem Hraum Sah Suryaya Namah",
+    "sa": "ॐ ह्रां ह्रीं ह्रौं सः सूर्याय नमः",
+    "iast": "oṃ hrāṃ hrīṃ hrauṃ saḥ sūryāya namaḥ"
+   }
+  },
+  {
+   "id": "sun-vedic",
+   "name": "Sun Vedic mantra (BPHS)",
+   "category": "graha_vedic",
+   "tier": "advanced",
+   "planet": "Sun",
+   "deity": "Sun",
+   "devanagari": "आ कृष्णेन रजसा वर्तमानो निवेशयन्नमृतं मर्त्यं च । हिरण्ययेन सविता रथेना देवो याति भुवनानि पश्यन् ॥",
+   "iast": "ā kṛṣṇena rajasā vartamāno niveśayannamṛtaṃ martyaṃ ca | hiraṇyayena savitā rathenā devo yāti bhuvanāni paśyan ||",
+   "telugu": "ఆ కృష్ణేన రజసా వర్తమానో నివేశయన్నమృతం మర్త్యం చ । హిరణ్యయేన సవితా రథేనా దేవో యాతి భువనాని పశ్యన్ ॥",
+   "simple_transliteration": "A Krishnena Rajasa Vartamano Niveshayann Amritam Martyam Cha, Hiranyayena Savita Rathena Devo Yati Bhuvanani Pashyan",
+   "meaning_en": "Moving through the dark expanse, bringing to rest the immortal and the mortal, the god Savitr comes on his golden chariot, looking upon all the worlds.",
+   "source_type": "shruti",
+   "source_citation": "Rigveda 1.35.2; Shukla Yajurveda (Vajasaneyi) 33.43. Named for Sun in BPHS ch.84 (Graha Shanti) vv.17-18; count from v.19.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.84 vv.17-20, pp.815-816; also ch.91 (eclipse-birth shanti), p.831",
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navagrahamantrajapaprayogaHvedoktasabIja.html",
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "verified_text",
+   "traditional_count": 7000,
+   "practical_count": 108,
+   "count_note": "BPHS ch.84 v.19-20: 7,000. 108 per sitting.",
+   "preferred_day": "Sunday",
+   "disagreements": null,
+   "app_sensitivity": "Vedic mantra: traditionally learnt with svara (accent) from a teacher, and some traditions restrict it to the initiated. Offer as listen-along audio by a trained reciter; do not machine-voice it.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 20,
+    "recording_note": "Record with svara by a Shukla Yajurveda reciter; TTS is not acceptable for accented Vedic text."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "sun-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-sun",
+     "dasha-antardasha-sun",
+     "dignity-debilitated-sun",
+     "dosha-grahan"
+    ],
+    "bphs_antardasha": [
+     "Sun-Sun",
+     "Mars-Sun",
+     "Rahu-Sun",
+     "Saturn-Sun",
+     "Mercury-Sun",
+     "Venus-Sun"
+    ],
+    "gochara_rules": [],
+    "yoga_rules": [],
+    "festival_slugs": [
+     "makar_sankranti",
+     "ratha_saptami"
+    ],
+    "reading_categories": [
+     "career"
+    ]
+   },
+   "checked_against": "Standard Rigveda 1.35.2 text; the online Vajasaneyi page could not be fetched. The South form (sun-vedic-taittiriya) was checked and matches.",
+   "meaning_hi": "अंधकारमय आकाश में चलते हुए, देवताओं और मनुष्यों को उनके स्थान पर स्थापित करते हुए, सविता देव अपने स्वर्णिम रथ पर सब लोकों को देखते हुए आते हैं।",
+   "meaning_te": "చీకటి ఆకాశంలో సంచరిస్తూ, దేవతలను మనుషులను వారి వారి స్థానాల్లో నిలుపుతూ, సవితృ దేవుడు బంగారు రథంపై సకల లోకాలను చూస్తూ వస్తున్నాడు.",
+   "text": {
+    "te": "ఆ కృష్ణేన రజసా వర్తమానో నివేశయన్నమృతం మర్త్యం చ । హిరణ్యయేన సవితా రథేనా దేవో యాతి భువనాని పశ్యన్ ॥",
+    "en": "A Krishnena Rajasa Vartamano Niveshayann Amritam Martyam Cha, Hiranyayena Savita Rathena Devo Yati Bhuvanani Pashyan",
+    "sa": "आ कृष्णेन रजसा वर्तमानो निवेशयन्नमृतं मर्त्यं च । हिरण्ययेन सविता रथेना देवो याति भुवनानि पश्यन् ॥",
+    "iast": "ā kṛṣṇena rajasā vartamāno niveśayannamṛtaṃ martyaṃ ca | hiraṇyayena savitā rathenā devo yāti bhuvanāni paśyan ||"
+   }
+  },
+  {
+   "id": "sun-vedic-taittiriya",
+   "name": "Sun Vedic mantra (Taittiriya / South Indian form)",
+   "category": "graha_vedic",
+   "tier": "advanced",
+   "planet": "Sun",
+   "deity": "Sun",
+   "devanagari": "आसत्येन रजसा वर्तमानो निवेशयन्नमृतं मर्त्यं च । हिरण्ययेन सविता रथेना देवो याति भुवना विपश्यन् ॥",
+   "iast": "āsatyena rajasā vartamāno niveśayannamṛtaṃ martyaṃ ca | hiraṇyayena savitā rathenā devo yāti bhuvanā vipaśyan ||",
+   "telugu": "ఆసత్యేన రజసా వర్తమానో నివేశయన్నమృతం మర్త్యం చ । హిరణ్యయేన సవితా రథేనా దేవో యాతి భువనా విపశ్యన్ ॥",
+   "simple_transliteration": "A Satyena Rajasa Vartamano Niveshayann Amritam Martyam Cha, Hiranyayena Savita Rathena Devo Yati Bhuvana Vipashyan",
+   "meaning_en": "Moving through the region of truth, bringing to rest the immortal and the mortal, the god Savitr comes on his golden chariot, beholding the worlds.",
+   "source_type": "shruti",
+   "source_citation": "Taittiriya Samhita form of Rigveda 1.35.2 ('ā satyena' for 'ā kṛṣṇena'; 'bhuvanā vipaśyan'). Used in the Navagraha Sukta recited in Telugu, Tamil and Kannada temples (Krishna Yajurveda tradition).",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "sources_disagree",
+   "traditional_count": 7000,
+   "practical_count": 108,
+   "count_note": "Same counts are applied by custom; BPHS itself names the Shukla Yajurveda verse.",
+   "preferred_day": "Sunday",
+   "disagreements": "BPHS ch.84 names a different verse for Sun (see sun-vedic). Both are authentic; which one a family uses depends on its Veda shakha. Checked against sanskritdocuments: differences are sandhi only.",
+   "app_sensitivity": "As for the Shukla Yajurveda form: accented, teacher-learnt; listen-along audio only.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 20,
+    "recording_note": "Record with Krishna Yajurveda svara."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "sun-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-sun",
+     "dasha-antardasha-sun",
+     "dignity-debilitated-sun",
+     "dosha-grahan"
+    ],
+    "bphs_antardasha": [
+     "Sun-Sun",
+     "Mars-Sun",
+     "Rahu-Sun",
+     "Saturn-Sun",
+     "Mercury-Sun",
+     "Venus-Sun"
+    ],
+    "gochara_rules": [],
+    "yoga_rules": [],
+    "festival_slugs": [
+     "makar_sankranti",
+     "ratha_saptami"
+    ],
+    "reading_categories": [
+     "career"
+    ]
+   },
+   "checked_against": "Against the Navagraha Sukta at sanskritdocuments: sandhi only.",
+   "meaning_hi": "सत्य के लोक में चलते हुए, देवताओं और मनुष्यों को उनके स्थान पर स्थापित करते हुए, सविता देव अपने स्वर्णिम रथ पर सब लोकों को निहारते हुए आते हैं।",
+   "meaning_te": "సత్య లోకంలో సంచరిస్తూ, దేవతలను మనుషులను వారి వారి స్థానాల్లో నిలుపుతూ, సవితృ దేవుడు బంగారు రథంపై సకల లోకాలను వీక్షిస్తూ వస్తున్నాడు.",
+   "text": {
+    "te": "ఆసత్యేన రజసా వర్తమానో నివేశయన్నమృతం మర్త్యం చ । హిరణ్యయేన సవితా రథేనా దేవో యాతి భువనా విపశ్యన్ ॥",
+    "en": "A Satyena Rajasa Vartamano Niveshayann Amritam Martyam Cha, Hiranyayena Savita Rathena Devo Yati Bhuvana Vipashyan",
+    "sa": "आसत्येन रजसा वर्तमानो निवेशयन्नमृतं मर्त्यं च । हिरण्ययेन सविता रथेना देवो याति भुवना विपश्यन् ॥",
+    "iast": "āsatyena rajasā vartamāno niveśayannamṛtaṃ martyaṃ ca | hiraṇyayena savitā rathenā devo yāti bhuvanā vipaśyan ||"
+   }
+  },
+  {
+   "id": "sun-stotra",
+   "name": "Sun verse, Navagraha Stotra",
+   "category": "graha_stotra",
+   "tier": "simple",
+   "planet": "Sun",
+   "deity": "Sun",
+   "devanagari": "जपाकुसुमसङ्काशं काश्यपेयं महाद्युतिम् । तमोऽरिं सर्वपापघ्नं प्रणतोऽस्मि दिवाकरम् ॥",
+   "iast": "japākusumasaṅkāśaṃ kāśyapeyaṃ mahādyutim | tamo'riṃ sarvapāpaghnaṃ praṇato'smi divākaram ||",
+   "telugu": "జపాకుసుమసంకాశం కాశ్యపేయం మహాద్యుతిమ్ । తమోఽరిం సర్వపాపఘ్నం ప్రణతోఽస్మి దివాకరమ్ ॥",
+   "simple_transliteration": "Japakusuma sankasham kashyapeyam mahadyutim, tamorim sarvapapaghnam pranatosmi divakaram",
+   "meaning_en": "I bow to the maker of day, red as the hibiscus flower, son of Kashyapa, of great radiance, the enemy of darkness who removes all wrongs.",
+   "source_type": "stotra",
+   "source_citation": "Navagraha Stotra, attributed by tradition to Vyasa (colophon: 'iti śrīvyāsaviracitaṃ navagrahastotram'). Not located in a specific Purana.",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navanew.html"
+   ],
+   "confidence": "verified_text",
+   "traditional_count": null,
+   "practical_count": 11,
+   "count_note": "Recited once, 3 or 11 times; the whole 9-verse stotra once daily is common.",
+   "preferred_day": "Sunday",
+   "disagreements": "Orthography only: sanskritdocuments writes anusvara (संकाश, संभव) where this corpus writes the nasal conjunct (सङ्काश, सम्भव). Same pronunciation.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 10,
+    "recording_note": "Unaccented; a clear Sanskrit voice is enough."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "sun-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-sun",
+     "dasha-antardasha-sun",
+     "dignity-debilitated-sun"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [],
+    "yoga_rules": [],
+    "festival_slugs": [
+     "makar_sankranti",
+     "ratha_saptami"
+    ],
+    "reading_categories": [
+     "career"
+    ]
+   },
+   "checked_against": "Word-for-word against sanskritdocuments navanew.html: orthography only.",
+   "meaning_hi": "जपाकुसुम (गुड़हल) के फूल जैसे लाल, कश्यप के पुत्र, महान तेज वाले, अंधकार के शत्रु और सब पापों को हरने वाले दिवाकर (सूर्य) को मैं प्रणाम करता हूँ।",
+   "meaning_te": "మందార పువ్వు వలె ఎర్రనివాడు, కశ్యపుని కుమారుడు, మహా తేజస్సు కలవాడు, చీకటికి శత్రువు, సర్వ పాపాలను పోగొట్టే దివాకరునికి (సూర్యునికి) నమస్కరిస్తున్నాను.",
+   "text": {
+    "te": "జపాకుసుమసంకాశం కాశ్యపేయం మహాద్యుతిమ్ । తమోఽరిం సర్వపాపఘ్నం ప్రణతోఽస్మి దివాకరమ్ ॥",
+    "en": "Japakusuma sankasham kashyapeyam mahadyutim, tamorim sarvapapaghnam pranatosmi divakaram",
+    "sa": "जपाकुसुमसङ्काशं काश्यपेयं महाद्युतिम् । तमोऽरिं सर्वपापघ्नं प्रणतोऽस्मि दिवाकरम् ॥",
+    "iast": "japākusumasaṅkāśaṃ kāśyapeyaṃ mahādyutim | tamo'riṃ sarvapāpaghnaṃ praṇato'smi divākaram ||"
+   }
+  },
+  {
+   "id": "moon-nama",
+   "name": "Moon nama mantra",
+   "category": "graha_nama",
+   "tier": "simple",
+   "planet": "Moon",
+   "deity": "Moon",
+   "devanagari": "ॐ चन्द्राय नमः",
+   "iast": "oṃ candrāya namaḥ",
+   "telugu": "ఓం చంద్రాయ నమః",
+   "simple_transliteration": "Om Chandraya Namah",
+   "meaning_en": "Om, salutation to Chandra, the Moon.",
+   "source_type": "liturgical",
+   "source_citation": "Navagraha puja namaskara formula ('om ... namah'); the form the app ships today (astrospace/core/vedic/remedies.py GRAHA_REMEDIES).",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "verified_attribution",
+   "traditional_count": null,
+   "practical_count": 108,
+   "count_note": "108 per sitting (one mala). No classical count for the nama form; BPHS counts apply to the Vedic mantras.",
+   "preferred_day": "Monday",
+   "disagreements": "Navagraha puja manuals (e.g. the Navagraha Sukta namaskara) use 'Somaya'; 'Chandraya' is equally common. Both are correct.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 3,
+    "recording_note": "Loopable single repetition."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "moon-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-moon",
+     "dasha-antardasha-moon",
+     "dignity-debilitated-moon",
+     "combustion-moon"
+    ],
+    "bphs_antardasha": [
+     "Ketu-Moon"
+    ],
+    "gochara_rules": [],
+    "yoga_rules": [
+     "kemadruma_yoga",
+     "shakata_yoga"
+    ],
+    "festival_slugs": [
+     "sharad_purnima"
+    ],
+    "reading_categories": [
+     "relationship",
+     "spiritual"
+    ]
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "ॐ, चन्द्र देव को नमस्कार।",
+   "meaning_te": "ఓం, చంద్ర దేవునికి నమస్కారం.",
+   "text": {
+    "te": "ఓం చంద్రాయ నమః",
+    "en": "Om Chandraya Namah",
+    "sa": "ॐ चन्द्राय नमः",
+    "iast": "oṃ candrāya namaḥ"
+   }
+  },
+  {
+   "id": "moon-bija",
+   "name": "Moon bija mantra",
+   "category": "graha_bija",
+   "tier": "advanced",
+   "planet": "Moon",
+   "deity": "Moon",
+   "devanagari": "ॐ श्रां श्रीं श्रौं सः चन्द्रमसे नमः",
+   "iast": "oṃ śrāṃ śrīṃ śrauṃ saḥ candramase namaḥ",
+   "telugu": "ఓం శ్రాం శ్రీం శ్రౌం సః చంద్రమసే నమః",
+   "simple_transliteration": "Om Shraam Shreem Shraum Sah Chandramase Namah",
+   "meaning_en": "Om, seed syllables of Moon, salutation to Moon. Bija syllables carry no dictionary meaning.",
+   "source_type": "tantra",
+   "source_citation": "Tantric navagraha bija mantras as given in ritual manuals (commonly traced to the Mantra Maharnava); no single primary text verified.",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navagrahamantrajapaprayogaHvedoktasabIja.html",
+    "https://www.drikpanchang.com/vedic-mantra/gods/navagraha/navagraha-mantras.html"
+   ],
+   "confidence": "sources_disagree",
+   "traditional_count": 11000,
+   "practical_count": 108,
+   "count_note": "Manuals reuse the BPHS ch.84 count (11,000) for the bija form; some multiply by 4 for Kali Yuga. 108 per sitting.",
+   "preferred_day": "Monday",
+   "disagreements": "sanskritdocuments 'Vedokta sabija' prayoga ends with 'Somaya' instead of 'Chandramase'.",
+   "app_sensitivity": "Bija mantras are traditionally received from a teacher in many lineages. Label 'traditionally taken with guidance'; keep the nama form as default.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 5,
+    "recording_note": "Loopable; nasal endings (anusvara vs candrabindu) audible, so match the chosen text."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "moon-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-moon",
+     "dasha-antardasha-moon",
+     "dignity-debilitated-moon",
+     "combustion-moon"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [],
+    "yoga_rules": [
+     "kemadruma_yoga",
+     "shakata_yoga"
+    ],
+    "festival_slugs": [
+     "sharad_purnima"
+    ],
+    "reading_categories": [
+     "relationship",
+     "spiritual"
+    ]
+   },
+   "checked_against": "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements.",
+   "meaning_hi": "ॐ, चन्द्र के बीज अक्षर, चन्द्र को नमस्कार। बीज अक्षरों का कोई शब्दकोशीय अर्थ नहीं होता।",
+   "meaning_te": "ఓం, చంద్రుడు బీజాక్షరాలు, చంద్రునికి నమస్కారం. బీజాక్షరాలకు నిఘంటు అర్థం ఉండదు.",
+   "text": {
+    "te": "ఓం శ్రాం శ్రీం శ్రౌం సః చంద్రమసే నమః",
+    "en": "Om Shraam Shreem Shraum Sah Chandramase Namah",
+    "sa": "ॐ श्रां श्रीं श्रौं सः चन्द्रमसे नमः",
+    "iast": "oṃ śrāṃ śrīṃ śrauṃ saḥ candramase namaḥ"
+   }
+  },
+  {
+   "id": "moon-vedic",
+   "name": "Moon Vedic mantra (BPHS)",
+   "category": "graha_vedic",
+   "tier": "advanced",
+   "planet": "Moon",
+   "deity": "Moon",
+   "devanagari": "इमं देवा असपत्नं सुवध्वं महते क्षत्राय महते ज्यैष्ठ्याय महते जानराज्यायेन्द्रस्येन्द्रियाय । इमममुष्य पुत्रममुष्यै पुत्रमस्यै विश एष वोऽमी राजा सोमोऽस्माकं ब्राह्मणानां राजा ॥",
+   "iast": "imaṃ devā asapatnaṃ suvadhvaṃ mahate kṣatrāya mahate jyaiṣṭhyāya mahate jānarājyāyendrasyendriyāya | imamamuṣya putramamuṣyai putramasyai viśa eṣa vo'mī rājā somo'smākaṃ brāhmaṇānāṃ rājā ||",
+   "telugu": "ఇమం దేవా అసపత్నం సువధ్వం మహతే క్షత్రాయ మహతే జ్యైష్ఠ్యాయ మహతే జానరాజ్యాయేంద్రస్యేంద్రియాయ । ఇమమముష్య పుత్రమముష్యై పుత్రమస్యై విశ ఏష వోఽమీ రాజా సోమోఽస్మాకం బ్రాహ్మణానాం రాజా ॥",
+   "simple_transliteration": "Imam Deva Asapatnam Suvadhvam Mahate Kshatraya Mahate Jyaishthyaya Mahate Janarajyaya Indrasya Indriyaya, Imam Amushya Putram Amushyai Putram Asyai Visha Esha Vo Mi Raja Somo Asmakam Brahmananam Raja",
+   "meaning_en": "O gods, consecrate this one, free of rivals, for great rule, great eminence and great lordship over people, for the strength of Indra. This, O people, is your king; Soma is the king of us Brahmins. (A royal-consecration verse, used for the Moon through the name Soma.)",
+   "source_type": "shruti",
+   "source_citation": "Shukla Yajurveda (Vajasaneyi) 9.40 (repeated at 10.18). Named for Moon in BPHS ch.84 (Graha Shanti) vv.17-18; count from v.19.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.84 vv.17-20, pp.815-816; also ch.91 (eclipse-birth shanti), p.831",
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navagrahamantrajapaprayogaHvedoktasabIja.html",
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "verified_text",
+   "traditional_count": 11000,
+   "practical_count": 108,
+   "count_note": "BPHS ch.84 v.19-20: 11,000. 108 per sitting.",
+   "preferred_day": "Monday",
+   "disagreements": "VS 9.40 ends 'asyai viśa eṣa vo'mī rājā'; some shanti manuals read 'asyai viśe'. Chanted with Vedic accent the text runs as one long sandhi.",
+   "app_sensitivity": "Vedic mantra: traditionally learnt with svara (accent) from a teacher, and some traditions restrict it to the initiated. Offer as listen-along audio by a trained reciter; do not machine-voice it.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 20,
+    "recording_note": "Record with svara by a Shukla Yajurveda reciter; TTS is not acceptable for accented Vedic text."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "moon-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-moon",
+     "dasha-antardasha-moon",
+     "dignity-debilitated-moon",
+     "combustion-moon",
+     "dosha-grahan"
+    ],
+    "bphs_antardasha": [
+     "Ketu-Moon"
+    ],
+    "gochara_rules": [],
+    "yoga_rules": [
+     "kemadruma_yoga",
+     "shakata_yoga"
+    ],
+    "festival_slugs": [
+     "sharad_purnima"
+    ],
+    "reading_categories": [
+     "relationship",
+     "spiritual"
+    ]
+   },
+   "checked_against": "Word-for-word against Vajasaneyi 9.40 at https://vedicscriptures.in/bhashya/16/yajurveda/9/40 (page's unaccented line has two typos; its pada-patha matches this text).",
+   "meaning_hi": "हे देवताओ, इसे बिना प्रतिद्वंद्वी के महान शासन, महान श्रेष्ठता और लोगों के महान नेतृत्व के लिए, इन्द्र के बल के लिए अभिषिक्त करो। हे लोगो, यह तुम्हारा राजा है; सोम हमारा राजा है। (यह राज्याभिषेक का मंत्र है, जो सोम नाम के कारण चन्द्र के लिए प्रयोग होता है।)",
+   "meaning_te": "ఓ దేవతలారా, ఇతనిని ప్రత్యర్థి లేని గొప్ప పాలన కోసం, గొప్ప ఔన్నత్యం కోసం, ప్రజల గొప్ప నాయకత్వం కోసం, ఇంద్రుని బలం కోసం అభిషేకించండి. ఓ ప్రజలారా, ఇతడే మీ రాజు; సోముడే మా రాజు. (ఇది రాజ్యాభిషేక మంత్రం; సోమ అనే పేరు వల్ల చంద్రునికి వాడతారు.)",
+   "text": {
+    "te": "ఇమం దేవా అసపత్నం సువధ్వం మహతే క్షత్రాయ మహతే జ్యైష్ఠ్యాయ మహతే జానరాజ్యాయేంద్రస్యేంద్రియాయ । ఇమమముష్య పుత్రమముష్యై పుత్రమస్యై విశ ఏష వోఽమీ రాజా సోమోఽస్మాకం బ్రాహ్మణానాం రాజా ॥",
+    "en": "Imam Deva Asapatnam Suvadhvam Mahate Kshatraya Mahate Jyaishthyaya Mahate Janarajyaya Indrasya Indriyaya, Imam Amushya Putram Amushyai Putram Asyai Visha Esha Vo Mi Raja Somo Asmakam Brahmananam Raja",
+    "sa": "इमं देवा असपत्नं सुवध्वं महते क्षत्राय महते ज्यैष्ठ्याय महते जानराज्यायेन्द्रस्येन्द्रियाय । इमममुष्य पुत्रममुष्यै पुत्रमस्यै विश एष वोऽमी राजा सोमोऽस्माकं ब्राह्मणानां राजा ॥",
+    "iast": "imaṃ devā asapatnaṃ suvadhvaṃ mahate kṣatrāya mahate jyaiṣṭhyāya mahate jānarājyāyendrasyendriyāya | imamamuṣya putramamuṣyai putramasyai viśa eṣa vo'mī rājā somo'smākaṃ brāhmaṇānāṃ rājā ||"
+   }
+  },
+  {
+   "id": "moon-vedic-taittiriya",
+   "name": "Moon Vedic mantra (Taittiriya / South Indian form)",
+   "category": "graha_vedic",
+   "tier": "advanced",
+   "planet": "Moon",
+   "deity": "Moon",
+   "devanagari": "आप्यायस्व समेतु ते विश्वतः सोम वृष्णियम् । भवा वाजस्य सङ्गथे ॥",
+   "iast": "āpyāyasva sametu te viśvataḥ soma vṛṣṇiyam | bhavā vājasya saṅgathe ||",
+   "telugu": "ఆప్యాయస్వ సమేతు తే విశ్వతః సోమ వృష్ణియమ్ । భవా వాజస్య సంగథే ॥",
+   "simple_transliteration": "Apyayasva Sametu Te Vishvatah Soma Vrishniyam, Bhava Vajasya Sangathe",
+   "meaning_en": "Swell, O Soma; let strength gather in you from every side; be there where vigour gathers.",
+   "source_type": "shruti",
+   "source_citation": "Rigveda 1.91.16 (also in the Taittiriya Samhita). Used in the Navagraha Sukta recited in Telugu, Tamil and Kannada temples (Krishna Yajurveda tradition).",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "sources_disagree",
+   "traditional_count": 11000,
+   "practical_count": 108,
+   "count_note": "Same counts are applied by custom; BPHS itself names the Shukla Yajurveda verse.",
+   "preferred_day": "Monday",
+   "disagreements": "BPHS ch.84 names a different verse for Moon (see moon-vedic). Both are authentic; which one a family uses depends on its Veda shakha. Checked against sanskritdocuments: differences are sandhi only.",
+   "app_sensitivity": "As for the Shukla Yajurveda form: accented, teacher-learnt; listen-along audio only.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 20,
+    "recording_note": "Record with Krishna Yajurveda svara."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "moon-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-moon",
+     "dasha-antardasha-moon",
+     "dignity-debilitated-moon",
+     "combustion-moon",
+     "dosha-grahan"
+    ],
+    "bphs_antardasha": [
+     "Ketu-Moon"
+    ],
+    "gochara_rules": [],
+    "yoga_rules": [
+     "kemadruma_yoga",
+     "shakata_yoga"
+    ],
+    "festival_slugs": [
+     "sharad_purnima"
+    ],
+    "reading_categories": [
+     "relationship",
+     "spiritual"
+    ]
+   },
+   "checked_against": "Against the Navagraha Sukta at sanskritdocuments: sandhi only.",
+   "meaning_hi": "हे सोम, बढ़ो; हर ओर से तुममें बल एकत्र हो; जहाँ शक्ति एकत्र होती है वहाँ उपस्थित रहो।",
+   "meaning_te": "ఓ సోమా, వృద్ధి చెందు; అన్ని వైపుల నుండి నీలో బలం చేరుగాక; శక్తి కూడే చోట నీవు ఉండు.",
+   "text": {
+    "te": "ఆప్యాయస్వ సమేతు తే విశ్వతః సోమ వృష్ణియమ్ । భవా వాజస్య సంగథే ॥",
+    "en": "Apyayasva Sametu Te Vishvatah Soma Vrishniyam, Bhava Vajasya Sangathe",
+    "sa": "आप्यायस्व समेतु ते विश्वतः सोम वृष्णियम् । भवा वाजस्य सङ्गथे ॥",
+    "iast": "āpyāyasva sametu te viśvataḥ soma vṛṣṇiyam | bhavā vājasya saṅgathe ||"
+   }
+  },
+  {
+   "id": "moon-stotra",
+   "name": "Moon verse, Navagraha Stotra",
+   "category": "graha_stotra",
+   "tier": "simple",
+   "planet": "Moon",
+   "deity": "Moon",
+   "devanagari": "दधिशङ्खतुषाराभं क्षीरोदार्णवसम्भवम् । नमामि शशिनं सोमं शम्भोर्मुकुटभूषणम् ॥",
+   "iast": "dadhiśaṅkhatuṣārābhaṃ kṣīrodārṇavasambhavam | namāmi śaśinaṃ somaṃ śambhormukuṭabhūṣaṇam ||",
+   "telugu": "దధిశంఖతుషారాభం క్షీరోదార్ణవసంభవమ్ । నమామి శశినం సోమం శంభోర్ముకుటభూషణమ్ ॥",
+   "simple_transliteration": "Dadhi shankha tusharabham kshirodarnava sambhavam, namami shashinam somam shambhor mukuta bhushanam",
+   "meaning_en": "I bow to Soma, the Moon, white as curd, conch and frost, born from the ocean of milk, the jewel on Shiva's crown.",
+   "source_type": "stotra",
+   "source_citation": "Navagraha Stotra, attributed by tradition to Vyasa (colophon: 'iti śrīvyāsaviracitaṃ navagrahastotram'). Not located in a specific Purana.",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navanew.html"
+   ],
+   "confidence": "verified_text",
+   "traditional_count": null,
+   "practical_count": 11,
+   "count_note": "Recited once, 3 or 11 times; the whole 9-verse stotra once daily is common.",
+   "preferred_day": "Monday",
+   "disagreements": "Orthography only: sanskritdocuments writes anusvara (संकाश, संभव) where this corpus writes the nasal conjunct (सङ्काश, सम्भव). Same pronunciation.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 10,
+    "recording_note": "Unaccented; a clear Sanskrit voice is enough."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "moon-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-moon",
+     "dasha-antardasha-moon",
+     "dignity-debilitated-moon",
+     "combustion-moon"
+    ],
+    "bphs_antardasha": [
+     "Ketu-Moon"
+    ],
+    "gochara_rules": [],
+    "yoga_rules": [
+     "kemadruma_yoga",
+     "shakata_yoga"
+    ],
+    "festival_slugs": [
+     "sharad_purnima"
+    ],
+    "reading_categories": [
+     "relationship",
+     "spiritual"
+    ]
+   },
+   "checked_against": "Word-for-word against sanskritdocuments navanew.html: orthography only.",
+   "meaning_hi": "दही, शंख और हिम जैसे श्वेत, क्षीरसागर से उत्पन्न, शिव के मुकुट के आभूषण, शशि सोम (चन्द्र) को मैं नमन करता हूँ।",
+   "meaning_te": "పెరుగు, శంఖం, మంచు వలె తెల్లనివాడు, పాల సముద్రం నుండి పుట్టినవాడు, శివుని కిరీటానికి ఆభరణమైన శశి సోముడికి (చంద్రునికి) నమస్కరిస్తున్నాను.",
+   "text": {
+    "te": "దధిశంఖతుషారాభం క్షీరోదార్ణవసంభవమ్ । నమామి శశినం సోమం శంభోర్ముకుటభూషణమ్ ॥",
+    "en": "Dadhi shankha tusharabham kshirodarnava sambhavam, namami shashinam somam shambhor mukuta bhushanam",
+    "sa": "दधिशङ्खतुषाराभं क्षीरोदार्णवसम्भवम् । नमामि शशिनं सोमं शम्भोर्मुकुटभूषणम् ॥",
+    "iast": "dadhiśaṅkhatuṣārābhaṃ kṣīrodārṇavasambhavam | namāmi śaśinaṃ somaṃ śambhormukuṭabhūṣaṇam ||"
+   }
+  },
+  {
+   "id": "mars-nama",
+   "name": "Mars nama mantra",
+   "category": "graha_nama",
+   "tier": "simple",
+   "planet": "Mars",
+   "deity": "Mars",
+   "devanagari": "ॐ अङ्गारकाय नमः",
+   "iast": "oṃ aṅgārakāya namaḥ",
+   "telugu": "ఓం అంగారకాయ నమః",
+   "simple_transliteration": "Om Angarakaya Namah",
+   "meaning_en": "Om, salutation to Angaraka, the glowing one (Mars).",
+   "source_type": "liturgical",
+   "source_citation": "Navagraha puja namaskara formula ('om ... namah'); the form the app ships today (astrospace/core/vedic/remedies.py GRAHA_REMEDIES).",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "verified_attribution",
+   "traditional_count": null,
+   "practical_count": 108,
+   "count_note": "108 per sitting (one mala). No classical count for the nama form; BPHS counts apply to the Vedic mantras.",
+   "preferred_day": "Tuesday",
+   "disagreements": "'Om Bhaumaya Namah' and 'Om Mangalaya Namah' are equally common forms.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 3,
+    "recording_note": "Loopable single repetition."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "mars-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-mars",
+     "dasha-antardasha-mars",
+     "dignity-debilitated-mars",
+     "combustion-mars",
+     "dosha-manglik"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [
+     "gochara_mars_moon_trigger"
+    ],
+    "yoga_rules": [],
+    "festival_slugs": [],
+    "reading_categories": [
+     "career"
+    ]
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "ॐ, अंगारक (मंगल), दीप्तिमान ग्रह को नमस्कार।",
+   "meaning_te": "ఓం, ప్రకాశించే అంగారకునికి (కుజునికి) నమస్కారం.",
+   "text": {
+    "te": "ఓం అంగారకాయ నమః",
+    "en": "Om Angarakaya Namah",
+    "sa": "ॐ अङ्गारकाय नमः",
+    "iast": "oṃ aṅgārakāya namaḥ"
+   }
+  },
+  {
+   "id": "mars-bija",
+   "name": "Mars bija mantra",
+   "category": "graha_bija",
+   "tier": "advanced",
+   "planet": "Mars",
+   "deity": "Mars",
+   "devanagari": "ॐ क्रां क्रीं क्रौं सः भौमाय नमः",
+   "iast": "oṃ krāṃ krīṃ krauṃ saḥ bhaumāya namaḥ",
+   "telugu": "ఓం క్రాం క్రీం క్రౌం సః భౌమాయ నమః",
+   "simple_transliteration": "Om Kraam Kreem Kraum Sah Bhaumaya Namah",
+   "meaning_en": "Om, seed syllables of Mars, salutation to Mars. Bija syllables carry no dictionary meaning.",
+   "source_type": "tantra",
+   "source_citation": "Tantric navagraha bija mantras as given in ritual manuals (commonly traced to the Mantra Maharnava); no single primary text verified.",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navagrahamantrajapaprayogaHvedoktasabIja.html",
+    "https://www.drikpanchang.com/vedic-mantra/gods/navagraha/navagraha-mantras.html"
+   ],
+   "confidence": "popular_tradition",
+   "traditional_count": 10000,
+   "practical_count": 108,
+   "count_note": "Manuals reuse the BPHS ch.84 count (10,000) for the bija form; some multiply by 4 for Kali Yuga. 108 per sitting.",
+   "preferred_day": "Tuesday",
+   "disagreements": null,
+   "app_sensitivity": "Bija mantras are traditionally received from a teacher in many lineages. Label 'traditionally taken with guidance'; keep the nama form as default.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 5,
+    "recording_note": "Loopable; nasal endings (anusvara vs candrabindu) audible, so match the chosen text."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "mars-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-mars",
+     "dasha-antardasha-mars",
+     "dignity-debilitated-mars",
+     "combustion-mars",
+     "dosha-manglik"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [
+     "gochara_mars_moon_trigger"
+    ],
+    "yoga_rules": [],
+    "festival_slugs": [],
+    "reading_categories": [
+     "career"
+    ]
+   },
+   "checked_against": "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements.",
+   "meaning_hi": "ॐ, मंगल के बीज अक्षर, मंगल को नमस्कार। बीज अक्षरों का कोई शब्दकोशीय अर्थ नहीं होता।",
+   "meaning_te": "ఓం, కుజుడు (అంగారకుడు) బీజాక్షరాలు, కుజునికి నమస్కారం. బీజాక్షరాలకు నిఘంటు అర్థం ఉండదు.",
+   "text": {
+    "te": "ఓం క్రాం క్రీం క్రౌం సః భౌమాయ నమః",
+    "en": "Om Kraam Kreem Kraum Sah Bhaumaya Namah",
+    "sa": "ॐ क्रां क्रीं क्रौं सः भौमाय नमः",
+    "iast": "oṃ krāṃ krīṃ krauṃ saḥ bhaumāya namaḥ"
+   }
+  },
+  {
+   "id": "mars-vedic",
+   "name": "Mars Vedic mantra (BPHS)",
+   "category": "graha_vedic",
+   "tier": "advanced",
+   "planet": "Mars",
+   "deity": "Mars",
+   "devanagari": "अग्निर्मूर्धा दिवः ककुत्पतिः पृथिव्या अयम् । अपां रेतांसि जिन्वति ॥",
+   "iast": "agnirmūrdhā divaḥ kakutpatiḥ pṛthivyā ayam | apāṃ retāṃsi jinvati ||",
+   "telugu": "అగ్నిర్మూర్ధా దివః కకుత్పతిః పృథివ్యా అయమ్ । అపాం రేతాంసి జిన్వతి ॥",
+   "simple_transliteration": "Agnir Murdha Divah Kakut Patih Prithivya Ayam, Apam Retamsi Jinvati",
+   "meaning_en": "Agni is the head and summit of heaven, this lord of the earth; he quickens the seeds of the waters.",
+   "source_type": "shruti",
+   "source_citation": "Rigveda 8.44.16; Shukla Yajurveda (Vajasaneyi) 3.12. Named for Mars in BPHS ch.84 (Graha Shanti) vv.17-18; count from v.19.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.84 vv.17-20, pp.815-816",
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navagrahamantrajapaprayogaHvedoktasabIja.html",
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "verified_text",
+   "traditional_count": 10000,
+   "practical_count": 108,
+   "count_note": "BPHS v.19 says 'dishah' = 10, i.e. 10,000. Santhanam's printed table says 11,000: a translation slip. sanskritdocuments also gives 10,000.",
+   "preferred_day": "Tuesday",
+   "disagreements": null,
+   "app_sensitivity": "Vedic mantra: traditionally learnt with svara (accent) from a teacher, and some traditions restrict it to the initiated. Offer as listen-along audio by a trained reciter; do not machine-voice it.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 20,
+    "recording_note": "Record with svara by a Shukla Yajurveda reciter; TTS is not acceptable for accented Vedic text."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "mars-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-mars",
+     "dasha-antardasha-mars",
+     "dignity-debilitated-mars",
+     "combustion-mars",
+     "dosha-manglik"
+    ],
+    "bphs_antardasha": [
+     "Sun-Mars"
+    ],
+    "gochara_rules": [
+     "gochara_mars_moon_trigger"
+    ],
+    "yoga_rules": [],
+    "festival_slugs": [],
+    "reading_categories": [
+     "career"
+    ]
+   },
+   "checked_against": "Against the Navagraha Sukta at sanskritdocuments (same verse in both traditions): matches.",
+   "meaning_hi": "अग्नि स्वर्ग के शीर्ष और शिखर हैं, वे पृथ्वी के स्वामी हैं; वे जल के बीजों को जीवन देते हैं।",
+   "meaning_te": "అగ్ని స్వర్గానికి శిరస్సు, శిఖరం; ఆయన భూమికి అధిపతి; జలాల బీజాలకు ప్రాణం పోస్తాడు.",
+   "text": {
+    "te": "అగ్నిర్మూర్ధా దివః కకుత్పతిః పృథివ్యా అయమ్ । అపాం రేతాంసి జిన్వతి ॥",
+    "en": "Agnir Murdha Divah Kakut Patih Prithivya Ayam, Apam Retamsi Jinvati",
+    "sa": "अग्निर्मूर्धा दिवः ककुत्पतिः पृथिव्या अयम् । अपां रेतांसि जिन्वति ॥",
+    "iast": "agnirmūrdhā divaḥ kakutpatiḥ pṛthivyā ayam | apāṃ retāṃsi jinvati ||"
+   }
+  },
+  {
+   "id": "mars-stotra",
+   "name": "Mars verse, Navagraha Stotra",
+   "category": "graha_stotra",
+   "tier": "simple",
+   "planet": "Mars",
+   "deity": "Mars",
+   "devanagari": "धरणीगर्भसम्भूतं विद्युत्कान्तिसमप्रभम् । कुमारं शक्तिहस्तं तं मङ्गलं प्रणमाम्यहम् ॥",
+   "iast": "dharaṇīgarbhasambhūtaṃ vidyutkāntisamaprabham | kumāraṃ śaktihastaṃ taṃ maṅgalaṃ praṇamāmyaham ||",
+   "telugu": "ధరణీగర్భసంభూతం విద్యుత్కాంతిసమప్రభమ్ । కుమారం శక్తిహస్తం తం మంగలం ప్రణమామ్యహమ్ ॥",
+   "simple_transliteration": "Dharani garbha sambhutam vidyut kanti samaprabham, kumaram shakti hastam tam mangalam pranamamyaham",
+   "meaning_en": "I bow to Mangala, born of the Earth, shining like lightning, the youth who holds a spear.",
+   "source_type": "stotra",
+   "source_citation": "Navagraha Stotra, attributed by tradition to Vyasa (colophon: 'iti śrīvyāsaviracitaṃ navagrahastotram'). Not located in a specific Purana.",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navanew.html"
+   ],
+   "confidence": "verified_text",
+   "traditional_count": null,
+   "practical_count": 11,
+   "count_note": "Recited once, 3 or 11 times; the whole 9-verse stotra once daily is common.",
+   "preferred_day": "Tuesday",
+   "disagreements": "Orthography only: sanskritdocuments writes anusvara (संकाश, संभव) where this corpus writes the nasal conjunct (सङ्काश, सम्भव). Same pronunciation.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 10,
+    "recording_note": "Unaccented; a clear Sanskrit voice is enough."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "mars-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-mars",
+     "dasha-antardasha-mars",
+     "dignity-debilitated-mars",
+     "combustion-mars",
+     "dosha-manglik"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [
+     "gochara_mars_moon_trigger"
+    ],
+    "yoga_rules": [],
+    "festival_slugs": [],
+    "reading_categories": [
+     "career"
+    ]
+   },
+   "checked_against": "Word-for-word against sanskritdocuments navanew.html: orthography only.",
+   "meaning_hi": "पृथ्वी के गर्भ से उत्पन्न, बिजली की कांति जैसे प्रकाशमान, हाथ में शक्ति (भाला) धारण करने वाले कुमार मंगल को मैं प्रणाम करता हूँ।",
+   "meaning_te": "భూమి గర్భం నుండి పుట్టినవాడు, మెరుపు కాంతి వలె ప్రకాశించేవాడు, చేతిలో శక్తి ఆయుధం ధరించిన కుమారుడైన మంగళునికి (కుజునికి) నమస్కరిస్తున్నాను.",
+   "text": {
+    "te": "ధరణీగర్భసంభూతం విద్యుత్కాంతిసమప్రభమ్ । కుమారం శక్తిహస్తం తం మంగలం ప్రణమామ్యహమ్ ॥",
+    "en": "Dharani garbha sambhutam vidyut kanti samaprabham, kumaram shakti hastam tam mangalam pranamamyaham",
+    "sa": "धरणीगर्भसम्भूतं विद्युत्कान्तिसमप्रभम् । कुमारं शक्तिहस्तं तं मङ्गलं प्रणमाम्यहम् ॥",
+    "iast": "dharaṇīgarbhasambhūtaṃ vidyutkāntisamaprabham | kumāraṃ śaktihastaṃ taṃ maṅgalaṃ praṇamāmyaham ||"
+   }
+  },
+  {
+   "id": "mercury-nama",
+   "name": "Mercury nama mantra",
+   "category": "graha_nama",
+   "tier": "simple",
+   "planet": "Mercury",
+   "deity": "Mercury",
+   "devanagari": "ॐ बुधाय नमः",
+   "iast": "oṃ budhāya namaḥ",
+   "telugu": "ఓం బుధాయ నమః",
+   "simple_transliteration": "Om Budhaya Namah",
+   "meaning_en": "Om, salutation to Budha, the wise one (Mercury).",
+   "source_type": "liturgical",
+   "source_citation": "Navagraha puja namaskara formula ('om ... namah'); the form the app ships today (astrospace/core/vedic/remedies.py GRAHA_REMEDIES).",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "verified_attribution",
+   "traditional_count": null,
+   "practical_count": 108,
+   "count_note": "108 per sitting (one mala). No classical count for the nama form; BPHS counts apply to the Vedic mantras.",
+   "preferred_day": "Wednesday",
+   "disagreements": null,
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 3,
+    "recording_note": "Loopable single repetition."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "mercury-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-mercury",
+     "dasha-antardasha-mercury",
+     "dignity-debilitated-mercury",
+     "combustion-mercury"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [],
+    "yoga_rules": [],
+    "festival_slugs": [],
+    "reading_categories": [
+     "learning",
+     "career"
+    ]
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "ॐ, ज्ञानी बुध देव को नमस्कार।",
+   "meaning_te": "ఓం, జ్ఞాని అయిన బుధునికి నమస్కారం.",
+   "text": {
+    "te": "ఓం బుధాయ నమః",
+    "en": "Om Budhaya Namah",
+    "sa": "ॐ बुधाय नमः",
+    "iast": "oṃ budhāya namaḥ"
+   }
+  },
+  {
+   "id": "mercury-bija",
+   "name": "Mercury bija mantra",
+   "category": "graha_bija",
+   "tier": "advanced",
+   "planet": "Mercury",
+   "deity": "Mercury",
+   "devanagari": "ॐ ब्रां ब्रीं ब्रौं सः बुधाय नमः",
+   "iast": "oṃ brāṃ brīṃ brauṃ saḥ budhāya namaḥ",
+   "telugu": "ఓం బ్రాం బ్రీం బ్రౌం సః బుధాయ నమః",
+   "simple_transliteration": "Om Braam Breem Braum Sah Budhaya Namah",
+   "meaning_en": "Om, seed syllables of Mercury, salutation to Mercury. Bija syllables carry no dictionary meaning.",
+   "source_type": "tantra",
+   "source_citation": "Tantric navagraha bija mantras as given in ritual manuals (commonly traced to the Mantra Maharnava); no single primary text verified.",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navagrahamantrajapaprayogaHvedoktasabIja.html",
+    "https://www.drikpanchang.com/vedic-mantra/gods/navagraha/navagraha-mantras.html"
+   ],
+   "confidence": "sources_disagree",
+   "traditional_count": 9000,
+   "practical_count": 108,
+   "count_note": "Manuals reuse the BPHS ch.84 count (9,000) for the bija form; some multiply by 4 for Kali Yuga. 108 per sitting.",
+   "preferred_day": "Wednesday",
+   "disagreements": "sanskritdocuments prayoga ends with 'Saumyaya' instead of 'Budhaya'; its japa count is 4,000 against BPHS's 9,000.",
+   "app_sensitivity": "Bija mantras are traditionally received from a teacher in many lineages. Label 'traditionally taken with guidance'; keep the nama form as default.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 5,
+    "recording_note": "Loopable; nasal endings (anusvara vs candrabindu) audible, so match the chosen text."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "mercury-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-mercury",
+     "dasha-antardasha-mercury",
+     "dignity-debilitated-mercury",
+     "combustion-mercury"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [],
+    "yoga_rules": [],
+    "festival_slugs": [],
+    "reading_categories": [
+     "learning",
+     "career"
+    ]
+   },
+   "checked_against": "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements.",
+   "meaning_hi": "ॐ, बुध के बीज अक्षर, बुध को नमस्कार। बीज अक्षरों का कोई शब्दकोशीय अर्थ नहीं होता।",
+   "meaning_te": "ఓం, బుధుడు బీజాక్షరాలు, బుధునికి నమస్కారం. బీజాక్షరాలకు నిఘంటు అర్థం ఉండదు.",
+   "text": {
+    "te": "ఓం బ్రాం బ్రీం బ్రౌం సః బుధాయ నమః",
+    "en": "Om Braam Breem Braum Sah Budhaya Namah",
+    "sa": "ॐ ब्रां ब्रीं ब्रौं सः बुधाय नमः",
+    "iast": "oṃ brāṃ brīṃ brauṃ saḥ budhāya namaḥ"
+   }
+  },
+  {
+   "id": "mercury-vedic",
+   "name": "Mercury Vedic mantra (BPHS)",
+   "category": "graha_vedic",
+   "tier": "advanced",
+   "planet": "Mercury",
+   "deity": "Mercury",
+   "devanagari": "उद्बुध्यस्वाग्ने प्रति जागृहि त्वमिष्टापूर्ते सं सृजेथामयं च । अस्मिन्सधस्थे अध्युत्तरस्मिन्विश्वे देवा यजमानश्च सीदत ॥",
+   "iast": "udbudhyasvāgne prati jāgṛhi tvamiṣṭāpūrte saṃ sṛjethāmayaṃ ca | asminsadhasthe adhyuttarasminviśve devā yajamānaśca sīdata ||",
+   "telugu": "ఉద్బుధ్యస్వాగ్నే ప్రతి జాగృహి త్వమిష్టాపూర్తే సం సృజేథామయం చ । అస్మిన్సధస్థే అధ్యుత్తరస్మిన్విశ్వే దేవా యజమానశ్చ సీదత ॥",
+   "simple_transliteration": "Udbudhyasva Agne Prati Jagrihi Tvam Ishtapurte Sam Srijetham Ayam Cha, Asmin Sadhasthe Adhyuttarasmin Vishve Deva Yajamanashcha Sidata",
+   "meaning_en": "Wake up, O Agni, and keep watch; you and this worshipper together bring offerings and good works to fulfilment. In this higher seat, may all the gods and the worshipper sit.",
+   "source_type": "shruti",
+   "source_citation": "Shukla Yajurveda (Vajasaneyi) 15.54. Named for Mercury in BPHS ch.84 (Graha Shanti) vv.17-18; count from v.19.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.84 vv.17-20, pp.815-816",
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navagrahamantrajapaprayogaHvedoktasabIja.html",
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "verified_text",
+   "traditional_count": 9000,
+   "practical_count": 108,
+   "count_note": "sanskritdocuments 'Vedokta' prayoga gives 4,000 instead of BPHS's 9,000.",
+   "preferred_day": "Wednesday",
+   "disagreements": null,
+   "app_sensitivity": "Vedic mantra: traditionally learnt with svara (accent) from a teacher, and some traditions restrict it to the initiated. Offer as listen-along audio by a trained reciter; do not machine-voice it.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 20,
+    "recording_note": "Record with svara by a Shukla Yajurveda reciter; TTS is not acceptable for accented Vedic text."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "mercury-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-mercury",
+     "dasha-antardasha-mercury",
+     "dignity-debilitated-mercury",
+     "combustion-mercury"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [],
+    "yoga_rules": [],
+    "festival_slugs": [],
+    "reading_categories": [
+     "learning",
+     "career"
+    ]
+   },
+   "checked_against": "Word-for-word against Vajasaneyi 15.54 at https://vedicscriptures.in/bhashya/16/yajurveda/15/54: no differences.",
+   "meaning_hi": "हे अग्नि, जागो और सजग रहो; तुम और यह उपासक मिलकर यज्ञ और सत्कर्मों को पूर्ण करो। इस उच्च आसन पर सब देवता और यजमान विराजें।",
+   "meaning_te": "ఓ అగ్నీ, మేలుకో, జాగరూకుడవై ఉండు; నీవు ఈ ఉపాసకుడు కలిసి యజ్ఞాన్ని సత్కార్యాలను నెరవేర్చండి. ఈ ఉన్నత ఆసనంపై దేవతలందరూ యజమానీ కూర్చుందురుగాక.",
+   "text": {
+    "te": "ఉద్బుధ్యస్వాగ్నే ప్రతి జాగృహి త్వమిష్టాపూర్తే సం సృజేథామయం చ । అస్మిన్సధస్థే అధ్యుత్తరస్మిన్విశ్వే దేవా యజమానశ్చ సీదత ॥",
+    "en": "Udbudhyasva Agne Prati Jagrihi Tvam Ishtapurte Sam Srijetham Ayam Cha, Asmin Sadhasthe Adhyuttarasmin Vishve Deva Yajamanashcha Sidata",
+    "sa": "उद्बुध्यस्वाग्ने प्रति जागृहि त्वमिष्टापूर्ते सं सृजेथामयं च । अस्मिन्सधस्थे अध्युत्तरस्मिन्विश्वे देवा यजमानश्च सीदत ॥",
+    "iast": "udbudhyasvāgne prati jāgṛhi tvamiṣṭāpūrte saṃ sṛjethāmayaṃ ca | asminsadhasthe adhyuttarasminviśve devā yajamānaśca sīdata ||"
+   }
+  },
+  {
+   "id": "mercury-vedic-taittiriya",
+   "name": "Mercury Vedic mantra (Taittiriya / South Indian form)",
+   "category": "graha_vedic",
+   "tier": "advanced",
+   "planet": "Mercury",
+   "deity": "Mercury",
+   "devanagari": "उद्बुध्यस्वाग्ने प्रतिजागृह्येनमिष्टापूर्ते संसृजेथामयं च । पुनः कृण्वंस्त्वा पितरं युवानमन्वातांसीत्त्वयि तन्तुमेतम् ॥",
+   "iast": "udbudhyasvāgne pratijāgṛhyenamiṣṭāpūrte saṃsṛjethāmayaṃ ca | punaḥ kṛṇvaṃstvā pitaraṃ yuvānamanvātāṃsīttvayi tantumetam ||",
+   "telugu": "ఉద్బుధ్యస్వాగ్నే ప్రతిజాగృహ్యేనమిష్టాపూర్తే సంసృజేథామయం చ । పునః కృణ్వంస్త్వా పితరం యువానమన్వాతాంసీత్త్వయి తంతుమేతమ్ ॥",
+   "simple_transliteration": "Udbudhyasva Agne Prati Jagrihi Enam Ishtapurte Sam Srijetham Ayam Cha, Punah Krinvams Tva Pitaram Yuvanam Anvatamsit Tvayi Tantum Etam",
+   "meaning_en": "Wake, O Agni, and watch over this worshipper; together bring offerings and good works to fulfilment. Making the father young again, he has spread this thread of continuity in you.",
+   "source_type": "shruti",
+   "source_citation": "Taittiriya Samhita (Navagraha Sukta form; first half shared with Vajasaneyi 15.54). Used in the Navagraha Sukta recited in Telugu, Tamil and Kannada temples (Krishna Yajurveda tradition).",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "sources_disagree",
+   "traditional_count": 9000,
+   "practical_count": 108,
+   "count_note": "Same counts are applied by custom; BPHS itself names the Shukla Yajurveda verse.",
+   "preferred_day": "Wednesday",
+   "disagreements": "BPHS ch.84 names a different verse for Mercury (see mercury-vedic). Both are authentic; which one a family uses depends on its Veda shakha. Checked against sanskritdocuments: differences are sandhi only.",
+   "app_sensitivity": "As for the Shukla Yajurveda form: accented, teacher-learnt; listen-along audio only.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 20,
+    "recording_note": "Record with Krishna Yajurveda svara."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "mercury-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-mercury",
+     "dasha-antardasha-mercury",
+     "dignity-debilitated-mercury",
+     "combustion-mercury"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [],
+    "yoga_rules": [],
+    "festival_slugs": [],
+    "reading_categories": [
+     "learning",
+     "career"
+    ]
+   },
+   "checked_against": "Against the Navagraha Sukta at sanskritdocuments: sandhi only.",
+   "meaning_hi": "हे अग्नि, जागो और इस उपासक की रक्षा करो; मिलकर यज्ञ और सत्कर्मों को पूर्ण करो। पिता को फिर से युवा बनाते हुए, उसने निरंतरता का यह धागा तुममें फैलाया है।",
+   "meaning_te": "ఓ అగ్నీ, మేలుకో, ఈ ఉపాసకుని కాపాడు; కలిసి యజ్ఞాన్ని సత్కార్యాలను నెరవేర్చండి. తండ్రిని మళ్ళీ యువకునిగా చేస్తూ, కొనసాగింపు అనే ఈ దారాన్ని నీలో విస్తరింపజేశాడు.",
+   "text": {
+    "te": "ఉద్బుధ్యస్వాగ్నే ప్రతిజాగృహ్యేనమిష్టాపూర్తే సంసృజేథామయం చ । పునః కృణ్వంస్త్వా పితరం యువానమన్వాతాంసీత్త్వయి తంతుమేతమ్ ॥",
+    "en": "Udbudhyasva Agne Prati Jagrihi Enam Ishtapurte Sam Srijetham Ayam Cha, Punah Krinvams Tva Pitaram Yuvanam Anvatamsit Tvayi Tantum Etam",
+    "sa": "उद्बुध्यस्वाग्ने प्रतिजागृह्येनमिष्टापूर्ते संसृजेथामयं च । पुनः कृण्वंस्त्वा पितरं युवानमन्वातांसीत्त्वयि तन्तुमेतम् ॥",
+    "iast": "udbudhyasvāgne pratijāgṛhyenamiṣṭāpūrte saṃsṛjethāmayaṃ ca | punaḥ kṛṇvaṃstvā pitaraṃ yuvānamanvātāṃsīttvayi tantumetam ||"
+   }
+  },
+  {
+   "id": "mercury-stotra",
+   "name": "Mercury verse, Navagraha Stotra",
+   "category": "graha_stotra",
+   "tier": "simple",
+   "planet": "Mercury",
+   "deity": "Mercury",
+   "devanagari": "प्रियङ्गुकलिकाश्यामं रूपेणाप्रतिमं बुधम् । सौम्यं सौम्यगुणोपेतं तं बुधं प्रणमाम्यहम् ॥",
+   "iast": "priyaṅgukalikāśyāmaṃ rūpeṇāpratimaṃ budham | saumyaṃ saumyaguṇopetaṃ taṃ budhaṃ praṇamāmyaham ||",
+   "telugu": "ప్రియంగుకలికాశ్యామం రూపేణాప్రతిమం బుధమ్ । సౌమ్యం సౌమ్యగుణోపేతం తం బుధం ప్రణమామ్యహమ్ ॥",
+   "simple_transliteration": "Priyangu kalika shyamam rupenapratimam budham, saumyam saumya gunopetam tam budham pranamamyaham",
+   "meaning_en": "I bow to Budha, dark as the priyangu bud, of matchless form, gentle and full of gentle qualities.",
+   "source_type": "stotra",
+   "source_citation": "Navagraha Stotra, attributed by tradition to Vyasa (colophon: 'iti śrīvyāsaviracitaṃ navagrahastotram'). Not located in a specific Purana.",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navanew.html"
+   ],
+   "confidence": "verified_text",
+   "traditional_count": null,
+   "practical_count": 11,
+   "count_note": "Recited once, 3 or 11 times; the whole 9-verse stotra once daily is common.",
+   "preferred_day": "Wednesday",
+   "disagreements": "Orthography only: sanskritdocuments writes anusvara (संकाश, संभव) where this corpus writes the nasal conjunct (सङ्काश, सम्भव). Same pronunciation.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 10,
+    "recording_note": "Unaccented; a clear Sanskrit voice is enough."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "mercury-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-mercury",
+     "dasha-antardasha-mercury",
+     "dignity-debilitated-mercury",
+     "combustion-mercury"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [],
+    "yoga_rules": [],
+    "festival_slugs": [],
+    "reading_categories": [
+     "learning",
+     "career"
+    ]
+   },
+   "checked_against": "Word-for-word against sanskritdocuments navanew.html: orthography only.",
+   "meaning_hi": "प्रियंगु की कली जैसे श्याम, अनुपम रूप वाले, सौम्य और सौम्य गुणों से युक्त बुध को मैं प्रणाम करता हूँ।",
+   "meaning_te": "ప్రియంగు మొగ్గ వలె నల్లనివాడు, సాటిలేని రూపం కలవాడు, సౌమ్యుడు, సౌమ్య గుణాలు కలిగిన బుధునికి నమస్కరిస్తున్నాను.",
+   "text": {
+    "te": "ప్రియంగుకలికాశ్యామం రూపేణాప్రతిమం బుధమ్ । సౌమ్యం సౌమ్యగుణోపేతం తం బుధం ప్రణమామ్యహమ్ ॥",
+    "en": "Priyangu kalika shyamam rupenapratimam budham, saumyam saumya gunopetam tam budham pranamamyaham",
+    "sa": "प्रियङ्गुकलिकाश्यामं रूपेणाप्रतिमं बुधम् । सौम्यं सौम्यगुणोपेतं तं बुधं प्रणमाम्यहम् ॥",
+    "iast": "priyaṅgukalikāśyāmaṃ rūpeṇāpratimaṃ budham | saumyaṃ saumyaguṇopetaṃ taṃ budhaṃ praṇamāmyaham ||"
+   }
+  },
+  {
+   "id": "jupiter-nama",
+   "name": "Jupiter nama mantra",
+   "category": "graha_nama",
+   "tier": "simple",
+   "planet": "Jupiter",
+   "deity": "Jupiter",
+   "devanagari": "ॐ गुरवे नमः",
+   "iast": "oṃ gurave namaḥ",
+   "telugu": "ఓం గురవే నమః",
+   "simple_transliteration": "Om Gurave Namah",
+   "meaning_en": "Om, salutation to the Guru (Jupiter).",
+   "source_type": "liturgical",
+   "source_citation": "Navagraha puja namaskara formula ('om ... namah'); the form the app ships today (astrospace/core/vedic/remedies.py GRAHA_REMEDIES).",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "verified_attribution",
+   "traditional_count": null,
+   "practical_count": 108,
+   "count_note": "108 per sitting (one mala). No classical count for the nama form; BPHS counts apply to the Vedic mantras.",
+   "preferred_day": "Thursday",
+   "disagreements": "'Om Brihaspataye Namah' is the form used in the Navagraha Sukta namaskara.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 3,
+    "recording_note": "Loopable single repetition."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "jupiter-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-jupiter",
+     "dasha-antardasha-jupiter",
+     "dignity-debilitated-jupiter",
+     "combustion-jupiter"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [],
+    "yoga_rules": [
+     "guru_chandala_yoga",
+     "shakata_yoga"
+    ],
+    "festival_slugs": [
+     "guru_purnima"
+    ],
+    "reading_categories": [
+     "learning",
+     "spiritual",
+     "finance"
+    ]
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "ॐ, गुरु (बृहस्पति) को नमस्कार।",
+   "meaning_te": "ఓం, గురువుకు (బృహస్పతికి) నమస్కారం.",
+   "text": {
+    "te": "ఓం గురవే నమః",
+    "en": "Om Gurave Namah",
+    "sa": "ॐ गुरवे नमः",
+    "iast": "oṃ gurave namaḥ"
+   }
+  },
+  {
+   "id": "jupiter-bija",
+   "name": "Jupiter bija mantra",
+   "category": "graha_bija",
+   "tier": "advanced",
+   "planet": "Jupiter",
+   "deity": "Jupiter",
+   "devanagari": "ॐ ग्रां ग्रीं ग्रौं सः गुरवे नमः",
+   "iast": "oṃ grāṃ grīṃ grauṃ saḥ gurave namaḥ",
+   "telugu": "ఓం గ్రాం గ్రీం గ్రౌం సః గురవే నమః",
+   "simple_transliteration": "Om Graam Greem Graum Sah Gurave Namah",
+   "meaning_en": "Om, seed syllables of Jupiter, salutation to Jupiter. Bija syllables carry no dictionary meaning.",
+   "source_type": "tantra",
+   "source_citation": "Tantric navagraha bija mantras as given in ritual manuals (commonly traced to the Mantra Maharnava); no single primary text verified.",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navagrahamantrajapaprayogaHvedoktasabIja.html",
+    "https://www.drikpanchang.com/vedic-mantra/gods/navagraha/navagraha-mantras.html"
+   ],
+   "confidence": "sources_disagree",
+   "traditional_count": 19000,
+   "practical_count": 108,
+   "count_note": "Manuals reuse the BPHS ch.84 count (19,000) for the bija form; some multiply by 4 for Kali Yuga. 108 per sitting.",
+   "preferred_day": "Thursday",
+   "disagreements": "sanskritdocuments prayoga gives 'hraam hreem hraum' (identical to the Sun's) and 'Brihaspataye'; drikpanchang and most manuals give 'graam greem graum ... Gurave'. Majority form kept.",
+   "app_sensitivity": "Bija mantras are traditionally received from a teacher in many lineages. Label 'traditionally taken with guidance'; keep the nama form as default.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 5,
+    "recording_note": "Loopable; nasal endings (anusvara vs candrabindu) audible, so match the chosen text."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "jupiter-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-jupiter",
+     "dasha-antardasha-jupiter",
+     "dignity-debilitated-jupiter",
+     "combustion-jupiter"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [],
+    "yoga_rules": [
+     "guru_chandala_yoga",
+     "shakata_yoga"
+    ],
+    "festival_slugs": [
+     "guru_purnima"
+    ],
+    "reading_categories": [
+     "learning",
+     "spiritual",
+     "finance"
+    ]
+   },
+   "checked_against": "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements.",
+   "meaning_hi": "ॐ, गुरु (बृहस्पति) के बीज अक्षर, गुरु (बृहस्पति) को नमस्कार। बीज अक्षरों का कोई शब्दकोशीय अर्थ नहीं होता।",
+   "meaning_te": "ఓం, గురువు (బృహస్పతి) బీజాక్షరాలు, గురువుకు నమస్కారం. బీజాక్షరాలకు నిఘంటు అర్థం ఉండదు.",
+   "text": {
+    "te": "ఓం గ్రాం గ్రీం గ్రౌం సః గురవే నమః",
+    "en": "Om Graam Greem Graum Sah Gurave Namah",
+    "sa": "ॐ ग्रां ग्रीं ग्रौं सः गुरवे नमः",
+    "iast": "oṃ grāṃ grīṃ grauṃ saḥ gurave namaḥ"
+   }
+  },
+  {
+   "id": "jupiter-vedic",
+   "name": "Jupiter Vedic mantra (BPHS)",
+   "category": "graha_vedic",
+   "tier": "advanced",
+   "planet": "Jupiter",
+   "deity": "Jupiter",
+   "devanagari": "बृहस्पते अति यदर्यो अर्हाद् द्युमद्विभाति क्रतुमज्जनेषु । यद्दीदयच्छवस ऋतप्रजात तदस्मासु द्रविणं धेहि चित्रम् ॥",
+   "iast": "bṛhaspate ati yadaryo arhād dyumadvibhāti kratumajjaneṣu | yaddīdayacchavasa ṛtaprajāta tadasmāsu draviṇaṃ dhehi citram ||",
+   "telugu": "బృహస్పతే అతి యదర్యో అర్హాద్ ద్యుమద్విభాతి క్రతుమజ్జనేషు । యద్దీదయచ్ఛవస ఋతప్రజాత తదస్మాసు ద్రవిణం ధేహి చిత్రమ్ ॥",
+   "simple_transliteration": "Brihaspate Ati Yad Aryo Arhad Dyumad Vibhati Kratumaj Janeshu, Yad Didayach Chavasa Ritaprajata Tad Asmasu Dravinam Dhehi Chitram",
+   "meaning_en": "O Brihaspati, born of truth: the wealth that surpasses what the noble earn, that shines with wisdom among people and blazes with strength, place that wonderful wealth in us.",
+   "source_type": "shruti",
+   "source_citation": "Rigveda 2.23.15; Shukla Yajurveda (Vajasaneyi) 26.3. Named for Jupiter in BPHS ch.84 (Graha Shanti) vv.17-18; count from v.19.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.84 vv.17-20, pp.815-816",
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navagrahamantrajapaprayogaHvedoktasabIja.html",
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "verified_text",
+   "traditional_count": 19000,
+   "practical_count": 108,
+   "count_note": "BPHS ch.84 v.19-20: 19,000. 108 per sitting.",
+   "preferred_day": "Thursday",
+   "disagreements": "Sandhi: 'yadaryo arhād' (Rigveda) vs 'yadaryā arhād' (Vajasaneyi edition).",
+   "app_sensitivity": "Vedic mantra: traditionally learnt with svara (accent) from a teacher, and some traditions restrict it to the initiated. Offer as listen-along audio by a trained reciter; do not machine-voice it.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 20,
+    "recording_note": "Record with svara by a Shukla Yajurveda reciter; TTS is not acceptable for accented Vedic text."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "jupiter-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-jupiter",
+     "dasha-antardasha-jupiter",
+     "dignity-debilitated-jupiter",
+     "combustion-jupiter"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [],
+    "yoga_rules": [
+     "guru_chandala_yoga",
+     "shakata_yoga"
+    ],
+    "festival_slugs": [
+     "guru_purnima"
+    ],
+    "reading_categories": [
+     "learning",
+     "spiritual",
+     "finance"
+    ]
+   },
+   "checked_against": "Against Vajasaneyi 26.3 at https://vedicscriptures.in/bhashya/16/yajurveda/26/3: sandhi variant 'yadaryā arhād' for 'yadaryo arhād'; the VS verse continues with the ritual formula 'upayāmagṛhīto'si...', which navagraha use omits.",
+   "meaning_hi": "हे सत्य से उत्पन्न बृहस्पति, जो धन श्रेष्ठ जनों की कमाई से भी बढ़कर है, जो लोगों के बीच ज्ञान से चमकता है और बल से दीप्त है, वह अद्भुत धन हममें स्थापित करो।",
+   "meaning_te": "ఓ సత్యం నుండి పుట్టిన బృహస్పతీ, శ్రేష్ఠులు సంపాదించే దానికంటే గొప్పదైన, ప్రజల మధ్య జ్ఞానంతో ప్రకాశించే, బలంతో వెలిగే ఆ అద్భుతమైన సంపదను మాలో నిలుపు.",
+   "text": {
+    "te": "బృహస్పతే అతి యదర్యో అర్హాద్ ద్యుమద్విభాతి క్రతుమజ్జనేషు । యద్దీదయచ్ఛవస ఋతప్రజాత తదస్మాసు ద్రవిణం ధేహి చిత్రమ్ ॥",
+    "en": "Brihaspate Ati Yad Aryo Arhad Dyumad Vibhati Kratumaj Janeshu, Yad Didayach Chavasa Ritaprajata Tad Asmasu Dravinam Dhehi Chitram",
+    "sa": "बृहस्पते अति यदर्यो अर्हाद् द्युमद्विभाति क्रतुमज्जनेषु । यद्दीदयच्छवस ऋतप्रजात तदस्मासु द्रविणं धेहि चित्रम् ॥",
+    "iast": "bṛhaspate ati yadaryo arhād dyumadvibhāti kratumajjaneṣu | yaddīdayacchavasa ṛtaprajāta tadasmāsu draviṇaṃ dhehi citram ||"
+   }
+  },
+  {
+   "id": "jupiter-stotra",
+   "name": "Jupiter verse, Navagraha Stotra",
+   "category": "graha_stotra",
+   "tier": "simple",
+   "planet": "Jupiter",
+   "deity": "Jupiter",
+   "devanagari": "देवानां च ऋषीणां च गुरुं काञ्चनसन्निभम् । बुद्धिभूतं त्रिलोकेशं तं नमामि बृहस्पतिम् ॥",
+   "iast": "devānāṃ ca ṛṣīṇāṃ ca guruṃ kāñcanasannibham | buddhibhūtaṃ trilokeśaṃ taṃ namāmi bṛhaspatim ||",
+   "telugu": "దేవానాం చ ఋషీణాం చ గురుం కాంచనసన్నిభమ్ । బుద్ధిభూతం త్రిలోకేశం తం నమామి బృహస్పతిమ్ ॥",
+   "simple_transliteration": "Devanam cha rishinam cha gurum kanchana sannibham, buddhi bhutam trilokesham tam namami brihaspatim",
+   "meaning_en": "I bow to Brihaspati, teacher of the gods and sages, golden in colour, wisdom itself, lord of the three worlds.",
+   "source_type": "stotra",
+   "source_citation": "Navagraha Stotra, attributed by tradition to Vyasa (colophon: 'iti śrīvyāsaviracitaṃ navagrahastotram'). Not located in a specific Purana.",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navanew.html"
+   ],
+   "confidence": "verified_text",
+   "traditional_count": null,
+   "practical_count": 11,
+   "count_note": "Recited once, 3 or 11 times; the whole 9-verse stotra once daily is common.",
+   "preferred_day": "Thursday",
+   "disagreements": "Orthography only: sanskritdocuments writes anusvara (संकाश, संभव) where this corpus writes the nasal conjunct (सङ्काश, सम्भव). Same pronunciation.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 10,
+    "recording_note": "Unaccented; a clear Sanskrit voice is enough."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "jupiter-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-jupiter",
+     "dasha-antardasha-jupiter",
+     "dignity-debilitated-jupiter",
+     "combustion-jupiter"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [],
+    "yoga_rules": [
+     "guru_chandala_yoga",
+     "shakata_yoga"
+    ],
+    "festival_slugs": [
+     "guru_purnima"
+    ],
+    "reading_categories": [
+     "learning",
+     "spiritual",
+     "finance"
+    ]
+   },
+   "checked_against": "Word-for-word against sanskritdocuments navanew.html: orthography only.",
+   "meaning_hi": "देवताओं और ऋषियों के गुरु, स्वर्ण जैसी आभा वाले, बुद्धि के स्वरूप, तीनों लोकों के स्वामी बृहस्पति को मैं नमन करता हूँ।",
+   "meaning_te": "దేవతలకు ఋషులకు గురువు, బంగారు కాంతి కలవాడు, బుద్ధి స్వరూపుడు, మూడు లోకాలకు అధిపతి అయిన బృహస్పతికి నమస్కరిస్తున్నాను.",
+   "text": {
+    "te": "దేవానాం చ ఋషీణాం చ గురుం కాంచనసన్నిభమ్ । బుద్ధిభూతం త్రిలోకేశం తం నమామి బృహస్పతిమ్ ॥",
+    "en": "Devanam cha rishinam cha gurum kanchana sannibham, buddhi bhutam trilokesham tam namami brihaspatim",
+    "sa": "देवानां च ऋषीणां च गुरुं काञ्चनसन्निभम् । बुद्धिभूतं त्रिलोकेशं तं नमामि बृहस्पतिम् ॥",
+    "iast": "devānāṃ ca ṛṣīṇāṃ ca guruṃ kāñcanasannibham | buddhibhūtaṃ trilokeśaṃ taṃ namāmi bṛhaspatim ||"
+   }
+  },
+  {
+   "id": "venus-nama",
+   "name": "Venus nama mantra",
+   "category": "graha_nama",
+   "tier": "simple",
+   "planet": "Venus",
+   "deity": "Venus",
+   "devanagari": "ॐ शुक्राय नमः",
+   "iast": "oṃ śukrāya namaḥ",
+   "telugu": "ఓం శుక్రాయ నమః",
+   "simple_transliteration": "Om Shukraya Namah",
+   "meaning_en": "Om, salutation to Shukra, the bright one (Venus).",
+   "source_type": "liturgical",
+   "source_citation": "Navagraha puja namaskara formula ('om ... namah'); the form the app ships today (astrospace/core/vedic/remedies.py GRAHA_REMEDIES).",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "verified_attribution",
+   "traditional_count": null,
+   "practical_count": 108,
+   "count_note": "108 per sitting (one mala). No classical count for the nama form; BPHS counts apply to the Vedic mantras.",
+   "preferred_day": "Friday",
+   "disagreements": null,
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 3,
+    "recording_note": "Loopable single repetition."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "venus-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-venus",
+     "dasha-antardasha-venus",
+     "dignity-debilitated-venus",
+     "combustion-venus"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [],
+    "yoga_rules": [],
+    "festival_slugs": [],
+    "reading_categories": [
+     "relationship",
+     "finance"
+    ]
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "ॐ, उज्ज्वल शुक्र देव को नमस्कार।",
+   "meaning_te": "ఓం, ప్రకాశవంతుడైన శుక్రునికి నమస్కారం.",
+   "text": {
+    "te": "ఓం శుక్రాయ నమః",
+    "en": "Om Shukraya Namah",
+    "sa": "ॐ शुक्राय नमः",
+    "iast": "oṃ śukrāya namaḥ"
+   }
+  },
+  {
+   "id": "venus-bija",
+   "name": "Venus bija mantra",
+   "category": "graha_bija",
+   "tier": "advanced",
+   "planet": "Venus",
+   "deity": "Venus",
+   "devanagari": "ॐ द्रां द्रीं द्रौं सः शुक्राय नमः",
+   "iast": "oṃ drāṃ drīṃ drauṃ saḥ śukrāya namaḥ",
+   "telugu": "ఓం ద్రాం ద్రీం ద్రౌం సః శుక్రాయ నమః",
+   "simple_transliteration": "Om Draam Dreem Draum Sah Shukraya Namah",
+   "meaning_en": "Om, seed syllables of Venus, salutation to Venus. Bija syllables carry no dictionary meaning.",
+   "source_type": "tantra",
+   "source_citation": "Tantric navagraha bija mantras as given in ritual manuals (commonly traced to the Mantra Maharnava); no single primary text verified.",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navagrahamantrajapaprayogaHvedoktasabIja.html",
+    "https://www.drikpanchang.com/vedic-mantra/gods/navagraha/navagraha-mantras.html"
+   ],
+   "confidence": "popular_tradition",
+   "traditional_count": 16000,
+   "practical_count": 108,
+   "count_note": "Manuals reuse the BPHS ch.84 count (16,000) for the bija form; some multiply by 4 for Kali Yuga. 108 per sitting.",
+   "preferred_day": "Friday",
+   "disagreements": null,
+   "app_sensitivity": "Bija mantras are traditionally received from a teacher in many lineages. Label 'traditionally taken with guidance'; keep the nama form as default.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 5,
+    "recording_note": "Loopable; nasal endings (anusvara vs candrabindu) audible, so match the chosen text."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "venus-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-venus",
+     "dasha-antardasha-venus",
+     "dignity-debilitated-venus",
+     "combustion-venus"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [],
+    "yoga_rules": [],
+    "festival_slugs": [],
+    "reading_categories": [
+     "relationship",
+     "finance"
+    ]
+   },
+   "checked_against": "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements.",
+   "meaning_hi": "ॐ, शुक्र के बीज अक्षर, शुक्र को नमस्कार। बीज अक्षरों का कोई शब्दकोशीय अर्थ नहीं होता।",
+   "meaning_te": "ఓం, శుక్రుడు బీజాక్షరాలు, శుక్రునికి నమస్కారం. బీజాక్షరాలకు నిఘంటు అర్థం ఉండదు.",
+   "text": {
+    "te": "ఓం ద్రాం ద్రీం ద్రౌం సః శుక్రాయ నమః",
+    "en": "Om Draam Dreem Draum Sah Shukraya Namah",
+    "sa": "ॐ द्रां द्रीं द्रौं सः शुक्राय नमः",
+    "iast": "oṃ drāṃ drīṃ drauṃ saḥ śukrāya namaḥ"
+   }
+  },
+  {
+   "id": "venus-vedic",
+   "name": "Venus Vedic mantra (BPHS)",
+   "category": "graha_vedic",
+   "tier": "advanced",
+   "planet": "Venus",
+   "deity": "Venus",
+   "devanagari": "अन्नात्परिस्रुतो रसं ब्रह्मणा व्यपिबत्क्षत्रं पयः सोमं प्रजापतिः । ऋतेन सत्यमिन्द्रियं विपानं शुक्रमन्धस इन्द्रस्येन्द्रियमिदं पयोऽमृतं मधु ॥",
+   "iast": "annātparisruto rasaṃ brahmaṇā vyapibatkṣatraṃ payaḥ somaṃ prajāpatiḥ | ṛtena satyamindriyaṃ vipānaṃ śukramandhasa indrasyendriyamidaṃ payo'mṛtaṃ madhu ||",
+   "telugu": "అన్నాత్పరిస్రుతో రసం బ్రహ్మణా వ్యపిబత్క్షత్రం పయః సోమం ప్రజాపతిః । ఋతేన సత్యమింద్రియం విపానం శుక్రమంధస ఇంద్రస్యేంద్రియమిదం పయోఽమృతం మధు ॥",
+   "simple_transliteration": "Annat Parisruto Rasam Brahmana Vyapibat Kshatram Payah Somam Prajapatih, Ritena Satyam Indriyam Vipanam Shukram Andhasa Indrasya Indriyam Idam Payo Amritam Madhu",
+   "meaning_en": "From the pressed food Prajapati drank its essence by sacred power: strength, milk, Soma. Through right order, truth; the bright clear juice is Indra's power, this milk, nectar and honey. (An obscure Sautramani verse; the meaning is approximate. Chosen for Venus through the word shukra, 'bright'.)",
+   "source_type": "shruti",
+   "source_citation": "Shukla Yajurveda (Vajasaneyi) 19.75. Named for Venus in BPHS ch.84 (Graha Shanti) vv.17-18; count from v.19.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.84 vv.17-20, pp.815-816",
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navagrahamantrajapaprayogaHvedoktasabIja.html",
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "verified_text",
+   "traditional_count": 16000,
+   "practical_count": 108,
+   "count_note": "BPHS ch.84 v.19-20: 16,000. 108 per sitting.",
+   "preferred_day": "Friday",
+   "disagreements": null,
+   "app_sensitivity": "Vedic mantra: traditionally learnt with svara (accent) from a teacher, and some traditions restrict it to the initiated. Offer as listen-along audio by a trained reciter; do not machine-voice it.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 20,
+    "recording_note": "Record with svara by a Shukla Yajurveda reciter; TTS is not acceptable for accented Vedic text."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "venus-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-venus",
+     "dasha-antardasha-venus",
+     "dignity-debilitated-venus",
+     "combustion-venus"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [],
+    "yoga_rules": [],
+    "festival_slugs": [],
+    "reading_categories": [
+     "relationship",
+     "finance"
+    ]
+   },
+   "checked_against": "Word-for-word against Vajasaneyi 19.75 at https://vedicscriptures.in/bhashya/16/yajurveda/19/75: nasal spelling only.",
+   "meaning_hi": "प्रजापति ने दिव्य शक्ति से अन्न के रस को पिया: बल, दूध, सोम। ऋत से सत्य; यह उज्ज्वल रस इन्द्र की शक्ति है, यह दूध, अमृत और मधु है। (कठिन मंत्र है, अर्थ अनुमानित है; ‘शुक्र’ अर्थात् उज्ज्वल शब्द के कारण शुक्र ग्रह के लिए चुना गया।)",
+   "meaning_te": "ప్రజాపతి దివ్య శక్తితో అన్నం యొక్క సారాన్ని త్రాగాడు: బలం, పాలు, సోమం. ఋతం ద్వారా సత్యం; ఈ ప్రకాశవంతమైన రసం ఇంద్రుని శక్తి, ఇది పాలు, అమృతం, తేనె. (కఠినమైన మంత్రం, అర్థం సుమారుగా; ‘శుక్ర’ అంటే ప్రకాశవంతం అనే పదం వల్ల శుక్ర గ్రహానికి ఎంచుకున్నారు.)",
+   "text": {
+    "te": "అన్నాత్పరిస్రుతో రసం బ్రహ్మణా వ్యపిబత్క్షత్రం పయః సోమం ప్రజాపతిః । ఋతేన సత్యమింద్రియం విపానం శుక్రమంధస ఇంద్రస్యేంద్రియమిదం పయోఽమృతం మధు ॥",
+    "en": "Annat Parisruto Rasam Brahmana Vyapibat Kshatram Payah Somam Prajapatih, Ritena Satyam Indriyam Vipanam Shukram Andhasa Indrasya Indriyam Idam Payo Amritam Madhu",
+    "sa": "अन्नात्परिस्रुतो रसं ब्रह्मणा व्यपिबत्क्षत्रं पयः सोमं प्रजापतिः । ऋतेन सत्यमिन्द्रियं विपानं शुक्रमन्धस इन्द्रस्येन्द्रियमिदं पयोऽमृतं मधु ॥",
+    "iast": "annātparisruto rasaṃ brahmaṇā vyapibatkṣatraṃ payaḥ somaṃ prajāpatiḥ | ṛtena satyamindriyaṃ vipānaṃ śukramandhasa indrasyendriyamidaṃ payo'mṛtaṃ madhu ||"
+   }
+  },
+  {
+   "id": "venus-vedic-taittiriya",
+   "name": "Venus Vedic mantra (Taittiriya / South Indian form)",
+   "category": "graha_vedic",
+   "tier": "advanced",
+   "planet": "Venus",
+   "deity": "Venus",
+   "devanagari": "प्र वः शुक्राय भानवे भरध्वम् । हव्यं मतिं चाग्नये सुपूतम् । यो दैव्यानि मानुषा जनूंषि । अन्तर्विश्वानि विद्मना जिगाति ॥",
+   "iast": "pra vaḥ śukrāya bhānave bharadhvam | havyaṃ matiṃ cāgnaye supūtam | yo daivyāni mānuṣā janūṃṣi | antarviśvāni vidmanā jigāti ||",
+   "telugu": "ప్ర వః శుక్రాయ భానవే భరధ్వమ్ । హవ్యం మతిం చాగ్నయే సుపూతమ్ । యో దైవ్యాని మానుషా జనూంషి । అంతర్విశ్వాని విద్మనా జిగాతి ॥",
+   "simple_transliteration": "Pra Vah Shukraya Bhanave Bharadhvam, Havyam Matim Chagnaye Suputam, Yo Daivyani Manusha Janumshi, Antar Vishvani Vidmana Jigati",
+   "meaning_en": "Bring your offering and a well-purified hymn to the bright, shining Agni, who moves with knowledge among all births, divine and human.",
+   "source_type": "shruti",
+   "source_citation": "Rigveda 7.4.1. Used in the Navagraha Sukta recited in Telugu, Tamil and Kannada temples (Krishna Yajurveda tradition).",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "sources_disagree",
+   "traditional_count": 16000,
+   "practical_count": 108,
+   "count_note": "Same counts are applied by custom; BPHS itself names the Shukla Yajurveda verse.",
+   "preferred_day": "Friday",
+   "disagreements": "BPHS ch.84 names a different verse for Venus (see venus-vedic). Both are authentic; which one a family uses depends on its Veda shakha. Checked against sanskritdocuments: differences are sandhi only.",
+   "app_sensitivity": "As for the Shukla Yajurveda form: accented, teacher-learnt; listen-along audio only.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 20,
+    "recording_note": "Record with Krishna Yajurveda svara."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "venus-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-venus",
+     "dasha-antardasha-venus",
+     "dignity-debilitated-venus",
+     "combustion-venus"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [],
+    "yoga_rules": [],
+    "festival_slugs": [],
+    "reading_categories": [
+     "relationship",
+     "finance"
+    ]
+   },
+   "checked_against": "Against the Navagraha Sukta at sanskritdocuments: sandhi only.",
+   "meaning_hi": "उज्ज्वल, दीप्तिमान अग्नि को अपनी आहुति और पवित्र स्तुति अर्पित करो, जो ज्ञान के साथ सब दिव्य और मानवीय जन्मों के बीच विचरते हैं।",
+   "meaning_te": "ప్రకాశవంతుడు, తేజోమయుడైన అగ్నికి మీ హవిస్సును పవిత్రమైన స్తోత్రాన్ని సమర్పించండి; ఆయన జ్ఞానంతో దివ్య, మానవ జన్మలన్నింటి మధ్య సంచరిస్తాడు.",
+   "text": {
+    "te": "ప్ర వః శుక్రాయ భానవే భరధ్వమ్ । హవ్యం మతిం చాగ్నయే సుపూతమ్ । యో దైవ్యాని మానుషా జనూంషి । అంతర్విశ్వాని విద్మనా జిగాతి ॥",
+    "en": "Pra Vah Shukraya Bhanave Bharadhvam, Havyam Matim Chagnaye Suputam, Yo Daivyani Manusha Janumshi, Antar Vishvani Vidmana Jigati",
+    "sa": "प्र वः शुक्राय भानवे भरध्वम् । हव्यं मतिं चाग्नये सुपूतम् । यो दैव्यानि मानुषा जनूंषि । अन्तर्विश्वानि विद्मना जिगाति ॥",
+    "iast": "pra vaḥ śukrāya bhānave bharadhvam | havyaṃ matiṃ cāgnaye supūtam | yo daivyāni mānuṣā janūṃṣi | antarviśvāni vidmanā jigāti ||"
+   }
+  },
+  {
+   "id": "venus-stotra",
+   "name": "Venus verse, Navagraha Stotra",
+   "category": "graha_stotra",
+   "tier": "simple",
+   "planet": "Venus",
+   "deity": "Venus",
+   "devanagari": "हिमकुन्दमृणालाभं दैत्यानां परमं गुरुम् । सर्वशास्त्रप्रवक्तारं भार्गवं प्रणमाम्यहम् ॥",
+   "iast": "himakundamṛṇālābhaṃ daityānāṃ paramaṃ gurum | sarvaśāstrapravaktāraṃ bhārgavaṃ praṇamāmyaham ||",
+   "telugu": "హిమకుందమృణాలాభం దైత్యానాం పరమం గురుమ్ । సర్వశాస్త్రప్రవక్తారం భార్గవం ప్రణమామ్యహమ్ ॥",
+   "simple_transliteration": "Hima kunda mrinalabham daityanam paramam gurum, sarva shastra pravaktaram bhargavam pranamamyaham",
+   "meaning_en": "I bow to Bhargava (Shukra), white as snow, jasmine and lotus stem, the great teacher of the daityas, who expounds every science.",
+   "source_type": "stotra",
+   "source_citation": "Navagraha Stotra, attributed by tradition to Vyasa (colophon: 'iti śrīvyāsaviracitaṃ navagrahastotram'). Not located in a specific Purana.",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navanew.html"
+   ],
+   "confidence": "verified_text",
+   "traditional_count": null,
+   "practical_count": 11,
+   "count_note": "Recited once, 3 or 11 times; the whole 9-verse stotra once daily is common.",
+   "preferred_day": "Friday",
+   "disagreements": "Orthography only: sanskritdocuments writes anusvara (संकाश, संभव) where this corpus writes the nasal conjunct (सङ्काश, सम्भव). Same pronunciation.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 10,
+    "recording_note": "Unaccented; a clear Sanskrit voice is enough."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "venus-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-venus",
+     "dasha-antardasha-venus",
+     "dignity-debilitated-venus",
+     "combustion-venus"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [],
+    "yoga_rules": [],
+    "festival_slugs": [],
+    "reading_categories": [
+     "relationship",
+     "finance"
+    ]
+   },
+   "checked_against": "Word-for-word against sanskritdocuments navanew.html: orthography only.",
+   "meaning_hi": "हिम, कुंद पुष्प और कमलनाल जैसे श्वेत, दैत्यों के परम गुरु, सब शास्त्रों के व्याख्याता भार्गव (शुक्र) को मैं प्रणाम करता हूँ।",
+   "meaning_te": "మంచు, మల్లె, తామర తూడు వలె తెల్లనివాడు, దైత్యులకు పరమ గురువు, సర్వ శాస్త్రాలను బోధించే భార్గవునికి (శుక్రునికి) నమస్కరిస్తున్నాను.",
+   "text": {
+    "te": "హిమకుందమృణాలాభం దైత్యానాం పరమం గురుమ్ । సర్వశాస్త్రప్రవక్తారం భార్గవం ప్రణమామ్యహమ్ ॥",
+    "en": "Hima kunda mrinalabham daityanam paramam gurum, sarva shastra pravaktaram bhargavam pranamamyaham",
+    "sa": "हिमकुन्दमृणालाभं दैत्यानां परमं गुरुम् । सर्वशास्त्रप्रवक्तारं भार्गवं प्रणमाम्यहम् ॥",
+    "iast": "himakundamṛṇālābhaṃ daityānāṃ paramaṃ gurum | sarvaśāstrapravaktāraṃ bhārgavaṃ praṇamāmyaham ||"
+   }
+  },
+  {
+   "id": "saturn-nama",
+   "name": "Saturn nama mantra",
+   "category": "graha_nama",
+   "tier": "simple",
+   "planet": "Saturn",
+   "deity": "Saturn",
+   "devanagari": "ॐ शं शनैश्चराय नमः",
+   "iast": "oṃ śaṃ śanaiścarāya namaḥ",
+   "telugu": "ఓం శం శనైశ్చరాయ నమః",
+   "simple_transliteration": "Om Sham Shanaishcharaya Namah",
+   "meaning_en": "Om, (seed syllable sham) salutation to Shanaishchara, the slow-moving one (Saturn).",
+   "source_type": "liturgical",
+   "source_citation": "Navagraha puja namaskara formula ('om ... namah'); the form the app ships today (astrospace/core/vedic/remedies.py GRAHA_REMEDIES).",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "verified_attribution",
+   "traditional_count": null,
+   "practical_count": 108,
+   "count_note": "108 per sitting (one mala). No classical count for the nama form; BPHS counts apply to the Vedic mantras.",
+   "preferred_day": "Saturday",
+   "disagreements": "This is a hybrid: it carries the seed syllable 'sham'. The plain form 'Om Shanaishcharaya Namah' is the namaskara form.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 3,
+    "recording_note": "Loopable single repetition."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "saturn-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-saturn",
+     "dasha-antardasha-saturn",
+     "dignity-debilitated-saturn",
+     "combustion-saturn"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [
+     "gochara_sade_sati",
+     "gochara_ashtama_shani",
+     "gochara_kantaka_shani"
+    ],
+    "yoga_rules": [],
+    "festival_slugs": [
+     "shani_jayanti"
+    ],
+    "reading_categories": [
+     "career",
+     "timing"
+    ]
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "ॐ, (बीज अक्षर ‘शं’) धीरे चलने वाले शनैश्चर (शनि) को नमस्कार।",
+   "meaning_te": "ఓం, (బీజాక్షరం ‘శం’) మెల్లగా సంచరించే శనైశ్చరునికి (శనికి) నమస్కారం.",
+   "text": {
+    "te": "ఓం శం శనైశ్చరాయ నమః",
+    "en": "Om Sham Shanaishcharaya Namah",
+    "sa": "ॐ शं शनैश्चराय नमः",
+    "iast": "oṃ śaṃ śanaiścarāya namaḥ"
+   }
+  },
+  {
+   "id": "saturn-bija",
+   "name": "Saturn bija mantra",
+   "category": "graha_bija",
+   "tier": "advanced",
+   "planet": "Saturn",
+   "deity": "Saturn",
+   "devanagari": "ॐ प्रां प्रीं प्रौं सः शनैश्चराय नमः",
+   "iast": "oṃ prāṃ prīṃ prauṃ saḥ śanaiścarāya namaḥ",
+   "telugu": "ఓం ప్రాం ప్రీం ప్రౌం సః శనైశ్చరాయ నమః",
+   "simple_transliteration": "Om Praam Preem Praum Sah Shanaishcharaya Namah",
+   "meaning_en": "Om, seed syllables of Saturn, salutation to Saturn. Bija syllables carry no dictionary meaning.",
+   "source_type": "tantra",
+   "source_citation": "Tantric navagraha bija mantras as given in ritual manuals (commonly traced to the Mantra Maharnava); no single primary text verified.",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navagrahamantrajapaprayogaHvedoktasabIja.html",
+    "https://www.drikpanchang.com/vedic-mantra/gods/navagraha/navagraha-mantras.html"
+   ],
+   "confidence": "sources_disagree",
+   "traditional_count": 23000,
+   "practical_count": 108,
+   "count_note": "Manuals reuse the BPHS ch.84 count (23,000) for the bija form; some multiply by 4 for Kali Yuga. 108 per sitting.",
+   "preferred_day": "Saturday",
+   "disagreements": "sanskritdocuments prayoga gives 'khaam kheem khaum'; drikpanchang and most manuals give 'praam preem praum'. Majority form kept.",
+   "app_sensitivity": "Bija mantras are traditionally received from a teacher in many lineages. Label 'traditionally taken with guidance'; keep the nama form as default.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 5,
+    "recording_note": "Loopable; nasal endings (anusvara vs candrabindu) audible, so match the chosen text."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "saturn-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-saturn",
+     "dasha-antardasha-saturn",
+     "dignity-debilitated-saturn",
+     "combustion-saturn"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [
+     "gochara_sade_sati",
+     "gochara_ashtama_shani",
+     "gochara_kantaka_shani"
+    ],
+    "yoga_rules": [],
+    "festival_slugs": [
+     "shani_jayanti"
+    ],
+    "reading_categories": [
+     "career",
+     "timing"
+    ]
+   },
+   "checked_against": "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements.",
+   "meaning_hi": "ॐ, शनि के बीज अक्षर, शनि को नमस्कार। बीज अक्षरों का कोई शब्दकोशीय अर्थ नहीं होता।",
+   "meaning_te": "ఓం, శని బీజాక్షరాలు, శనికి నమస్కారం. బీజాక్షరాలకు నిఘంటు అర్థం ఉండదు.",
+   "text": {
+    "te": "ఓం ప్రాం ప్రీం ప్రౌం సః శనైశ్చరాయ నమః",
+    "en": "Om Praam Preem Praum Sah Shanaishcharaya Namah",
+    "sa": "ॐ प्रां प्रीं प्रौं सः शनैश्चराय नमः",
+    "iast": "oṃ prāṃ prīṃ prauṃ saḥ śanaiścarāya namaḥ"
+   }
+  },
+  {
+   "id": "saturn-vedic",
+   "name": "Saturn Vedic mantra (BPHS)",
+   "category": "graha_vedic",
+   "tier": "advanced",
+   "planet": "Saturn",
+   "deity": "Saturn",
+   "devanagari": "शं नो देवीरभिष्टय आपो भवन्तु पीतये । शं योरभि स्रवन्तु नः ॥",
+   "iast": "śaṃ no devīrabhiṣṭaya āpo bhavantu pītaye | śaṃ yorabhi sravantu naḥ ||",
+   "telugu": "శం నో దేవీరభిష్టయ ఆపో భవంతు పీతయే । శం యోరభి స్రవంతు నః ॥",
+   "simple_transliteration": "Sham No Devir Abhishtaya Apo Bhavantu Pitaye, Sham Yor Abhi Sravantu Nah",
+   "meaning_en": "May the divine waters be kind to us, for help and for drinking; may they flow towards us with peace and well-being.",
+   "source_type": "shruti",
+   "source_citation": "Rigveda 10.9.4; Shukla Yajurveda (Vajasaneyi) 36.12; Atharvaveda 1.6.1. Named for Saturn in BPHS ch.84 (Graha Shanti) vv.17-18; count from v.19.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.84 vv.17-20, pp.815-816",
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navagrahamantrajapaprayogaHvedoktasabIja.html",
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "verified_text",
+   "traditional_count": 23000,
+   "practical_count": 108,
+   "count_note": "BPHS ch.84 v.19-20: 23,000. 108 per sitting.",
+   "preferred_day": "Saturday",
+   "disagreements": null,
+   "app_sensitivity": "Vedic mantra: traditionally learnt with svara (accent) from a teacher, and some traditions restrict it to the initiated. Offer as listen-along audio by a trained reciter; do not machine-voice it.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 20,
+    "recording_note": "Record with svara by a Shukla Yajurveda reciter; TTS is not acceptable for accented Vedic text."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "saturn-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-saturn",
+     "dasha-antardasha-saturn",
+     "dignity-debilitated-saturn",
+     "combustion-saturn"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [
+     "gochara_sade_sati",
+     "gochara_ashtama_shani",
+     "gochara_kantaka_shani"
+    ],
+    "yoga_rules": [],
+    "festival_slugs": [
+     "shani_jayanti"
+    ],
+    "reading_categories": [
+     "career",
+     "timing"
+    ]
+   },
+   "checked_against": "Against the Navagraha Sukta at sanskritdocuments: matches.",
+   "meaning_hi": "दिव्य जल हमारे लिए कल्याणकारी हों, सहायता और पान के लिए; वे शांति और मंगल के साथ हमारी ओर बहें।",
+   "meaning_te": "దివ్య జలాలు మాకు మేలు చేయుగాక, సహాయానికి, త్రాగడానికి; శాంతితో శుభంతో మా వైపు ప్రవహించుగాక.",
+   "text": {
+    "te": "శం నో దేవీరభిష్టయ ఆపో భవంతు పీతయే । శం యోరభి స్రవంతు నః ॥",
+    "en": "Sham No Devir Abhishtaya Apo Bhavantu Pitaye, Sham Yor Abhi Sravantu Nah",
+    "sa": "शं नो देवीरभिष्टय आपो भवन्तु पीतये । शं योरभि स्रवन्तु नः ॥",
+    "iast": "śaṃ no devīrabhiṣṭaya āpo bhavantu pītaye | śaṃ yorabhi sravantu naḥ ||"
+   }
+  },
+  {
+   "id": "saturn-stotra",
+   "name": "Saturn verse, Navagraha Stotra",
+   "category": "graha_stotra",
+   "tier": "simple",
+   "planet": "Saturn",
+   "deity": "Saturn",
+   "devanagari": "नीलाञ्जनसमाभासं रविपुत्रं यमाग्रजम् । छायामार्तण्डसम्भूतं तं नमामि शनैश्चरम् ॥",
+   "iast": "nīlāñjanasamābhāsaṃ raviputraṃ yamāgrajam | chāyāmārtaṇḍasambhūtaṃ taṃ namāmi śanaiścaram ||",
+   "telugu": "నీలాంజనసమాభాసం రవిపుత్రం యమాగ్రజమ్ । ఛాయామార్తండసంభూతం తం నమామి శనైశ్చరమ్ ॥",
+   "simple_transliteration": "Nilanjana samabhasam ravi putram yamagrajam, chhaya martanda sambhutam tam namami shanaishcharam",
+   "meaning_en": "I bow to Shanaishchara, dark as collyrium, son of the Sun and elder brother of Yama, born of Chhaya and Martanda.",
+   "source_type": "stotra",
+   "source_citation": "Navagraha Stotra, attributed by tradition to Vyasa (colophon: 'iti śrīvyāsaviracitaṃ navagrahastotram'). Not located in a specific Purana.",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navanew.html"
+   ],
+   "confidence": "verified_text",
+   "traditional_count": null,
+   "practical_count": 11,
+   "count_note": "Recited once, 3 or 11 times; the whole 9-verse stotra once daily is common.",
+   "preferred_day": "Saturday",
+   "disagreements": "Orthography only: sanskritdocuments writes anusvara (संकाश, संभव) where this corpus writes the nasal conjunct (सङ्काश, सम्भव). Same pronunciation.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 10,
+    "recording_note": "Unaccented; a clear Sanskrit voice is enough."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "saturn-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-saturn",
+     "dasha-antardasha-saturn",
+     "dignity-debilitated-saturn",
+     "combustion-saturn"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [
+     "gochara_sade_sati",
+     "gochara_ashtama_shani",
+     "gochara_kantaka_shani"
+    ],
+    "yoga_rules": [],
+    "festival_slugs": [
+     "shani_jayanti"
+    ],
+    "reading_categories": [
+     "career",
+     "timing"
+    ]
+   },
+   "checked_against": "Word-for-word against sanskritdocuments navanew.html: orthography only.",
+   "meaning_hi": "नीले अंजन (काजल) जैसी आभा वाले, सूर्य के पुत्र, यम के बड़े भाई, छाया और मार्तण्ड से उत्पन्न शनैश्चर को मैं नमन करता हूँ।",
+   "meaning_te": "నల్లని కాటుక వంటి కాంతి కలవాడు, సూర్యుని కుమారుడు, యముని అన్న, ఛాయా మార్తాండుల నుండి పుట్టిన శనైశ్చరునికి నమస్కరిస్తున్నాను.",
+   "text": {
+    "te": "నీలాంజనసమాభాసం రవిపుత్రం యమాగ్రజమ్ । ఛాయామార్తండసంభూతం తం నమామి శనైశ్చరమ్ ॥",
+    "en": "Nilanjana samabhasam ravi putram yamagrajam, chhaya martanda sambhutam tam namami shanaishcharam",
+    "sa": "नीलाञ्जनसमाभासं रविपुत्रं यमाग्रजम् । छायामार्तण्डसम्भूतं तं नमामि शनैश्चरम् ॥",
+    "iast": "nīlāñjanasamābhāsaṃ raviputraṃ yamāgrajam | chāyāmārtaṇḍasambhūtaṃ taṃ namāmi śanaiścaram ||"
+   }
+  },
+  {
+   "id": "rahu-nama",
+   "name": "Rahu nama mantra",
+   "category": "graha_nama",
+   "tier": "simple",
+   "planet": "Rahu",
+   "deity": "Rahu",
+   "devanagari": "ॐ राहवे नमः",
+   "iast": "oṃ rāhave namaḥ",
+   "telugu": "ఓం రాహవే నమః",
+   "simple_transliteration": "Om Rahave Namah",
+   "meaning_en": "Om, salutation to Rahu.",
+   "source_type": "liturgical",
+   "source_citation": "Navagraha puja namaskara formula ('om ... namah'); the form the app ships today (astrospace/core/vedic/remedies.py GRAHA_REMEDIES).",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "verified_attribution",
+   "traditional_count": null,
+   "practical_count": 108,
+   "count_note": "108 per sitting (one mala). No classical count for the nama form; BPHS counts apply to the Vedic mantras.",
+   "preferred_day": "Saturday",
+   "disagreements": null,
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 3,
+    "recording_note": "Loopable single repetition."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "rahu-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-rahu",
+     "dasha-antardasha-rahu",
+     "dignity-debilitated-rahu",
+     "dosha-grahan"
+    ],
+    "bphs_antardasha": [
+     "Moon-Rahu",
+     "Rahu-Rahu"
+    ],
+    "gochara_rules": [
+     "gochara_rahu_moon_caution"
+    ],
+    "yoga_rules": [
+     "guru_chandala_yoga",
+     "kalasarpa_flag"
+    ],
+    "festival_slugs": [],
+    "reading_categories": [
+     "timing"
+    ]
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "ॐ, राहु को नमस्कार।",
+   "meaning_te": "ఓం, రాహువుకు నమస్కారం.",
+   "text": {
+    "te": "ఓం రాహవే నమః",
+    "en": "Om Rahave Namah",
+    "sa": "ॐ राहवे नमः",
+    "iast": "oṃ rāhave namaḥ"
+   }
+  },
+  {
+   "id": "rahu-bija",
+   "name": "Rahu bija mantra",
+   "category": "graha_bija",
+   "tier": "advanced",
+   "planet": "Rahu",
+   "deity": "Rahu",
+   "devanagari": "ॐ भ्रां भ्रीं भ्रौं सः राहवे नमः",
+   "iast": "oṃ bhrāṃ bhrīṃ bhrauṃ saḥ rāhave namaḥ",
+   "telugu": "ఓం భ్రాం భ్రీం భ్రౌం సః రాహవే నమః",
+   "simple_transliteration": "Om Bhraam Bhreem Bhraum Sah Rahave Namah",
+   "meaning_en": "Om, seed syllables of Rahu, salutation to Rahu. Bija syllables carry no dictionary meaning.",
+   "source_type": "tantra",
+   "source_citation": "Tantric navagraha bija mantras as given in ritual manuals (commonly traced to the Mantra Maharnava); no single primary text verified.",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navagrahamantrajapaprayogaHvedoktasabIja.html",
+    "https://www.drikpanchang.com/vedic-mantra/gods/navagraha/navagraha-mantras.html"
+   ],
+   "confidence": "popular_tradition",
+   "traditional_count": 18000,
+   "practical_count": 108,
+   "count_note": "Manuals reuse the BPHS ch.84 count (18,000) for the bija form; some multiply by 4 for Kali Yuga. 108 per sitting.",
+   "preferred_day": "Saturday",
+   "disagreements": null,
+   "app_sensitivity": "Bija mantras are traditionally received from a teacher in many lineages. Label 'traditionally taken with guidance'; keep the nama form as default.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 5,
+    "recording_note": "Loopable; nasal endings (anusvara vs candrabindu) audible, so match the chosen text."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "rahu-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-rahu",
+     "dasha-antardasha-rahu",
+     "dignity-debilitated-rahu",
+     "dosha-grahan"
+    ],
+    "bphs_antardasha": [
+     "Moon-Rahu",
+     "Rahu-Rahu"
+    ],
+    "gochara_rules": [
+     "gochara_rahu_moon_caution"
+    ],
+    "yoga_rules": [
+     "guru_chandala_yoga",
+     "kalasarpa_flag"
+    ],
+    "festival_slugs": [],
+    "reading_categories": [
+     "timing"
+    ]
+   },
+   "checked_against": "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements.",
+   "meaning_hi": "ॐ, राहु के बीज अक्षर, राहु को नमस्कार। बीज अक्षरों का कोई शब्दकोशीय अर्थ नहीं होता।",
+   "meaning_te": "ఓం, రాహువు బీజాక్షరాలు, రాహువుకు నమస్కారం. బీజాక్షరాలకు నిఘంటు అర్థం ఉండదు.",
+   "text": {
+    "te": "ఓం భ్రాం భ్రీం భ్రౌం సః రాహవే నమః",
+    "en": "Om Bhraam Bhreem Bhraum Sah Rahave Namah",
+    "sa": "ॐ भ्रां भ्रीं भ्रौं सः राहवे नमः",
+    "iast": "oṃ bhrāṃ bhrīṃ bhrauṃ saḥ rāhave namaḥ"
+   }
+  },
+  {
+   "id": "rahu-vedic",
+   "name": "Rahu Vedic mantra (BPHS)",
+   "category": "graha_vedic",
+   "tier": "advanced",
+   "planet": "Rahu",
+   "deity": "Rahu",
+   "devanagari": "कया नश्चित्र आ भुवदूती सदावृधः सखा । कया शचिष्ठया वृता ॥",
+   "iast": "kayā naścitra ā bhuvadūtī sadāvṛdhaḥ sakhā | kayā śaciṣṭhayā vṛtā ||",
+   "telugu": "కయా నశ్చిత్ర ఆ భువదూతీ సదావృధః సఖా । కయా శచిష్ఠయా వృతా ॥",
+   "simple_transliteration": "Kaya Nash Chitra A Bhuvad Uti Sadavridhah Sakha, Kaya Shachishthaya Vrita",
+   "meaning_en": "With what help will the wondrous one, our ever-growing friend, come to us? With what most powerful company?",
+   "source_type": "shruti",
+   "source_citation": "Rigveda 4.31.1; Shukla Yajurveda (Vajasaneyi) 27.39 (and 36.4). Named for Rahu in BPHS ch.84 (Graha Shanti) vv.17-18; count from v.19.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.84 vv.17-20, pp.815-816; also ch.91 (eclipse-birth shanti), p.831",
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navagrahamantrajapaprayogaHvedoktasabIja.html",
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "verified_text",
+   "traditional_count": 18000,
+   "practical_count": 108,
+   "count_note": "BPHS ch.84 v.19-20: 18,000. 108 per sitting.",
+   "preferred_day": "Saturday",
+   "disagreements": null,
+   "app_sensitivity": "Vedic mantra: traditionally learnt with svara (accent) from a teacher, and some traditions restrict it to the initiated. Offer as listen-along audio by a trained reciter; do not machine-voice it.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 20,
+    "recording_note": "Record with svara by a Shukla Yajurveda reciter; TTS is not acceptable for accented Vedic text."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "rahu-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-rahu",
+     "dasha-antardasha-rahu",
+     "dignity-debilitated-rahu",
+     "dosha-grahan"
+    ],
+    "bphs_antardasha": [
+     "Moon-Rahu",
+     "Rahu-Rahu"
+    ],
+    "gochara_rules": [
+     "gochara_rahu_moon_caution"
+    ],
+    "yoga_rules": [
+     "guru_chandala_yoga",
+     "kalasarpa_flag"
+    ],
+    "festival_slugs": [],
+    "reading_categories": [
+     "timing"
+    ]
+   },
+   "checked_against": "Against the Navagraha Sukta at sanskritdocuments: matches.",
+   "meaning_hi": "वह अद्भुत, सदा बढ़ने वाला मित्र किस सहायता के साथ हमारे पास आएगा? किस अत्यंत शक्तिशाली साथ के साथ?",
+   "meaning_te": "ఆ అద్భుతమైన, ఎల్లప్పుడూ వృద్ధి చెందే మిత్రుడు ఏ సహాయంతో మా వద్దకు వస్తాడు? ఏ మహా శక్తివంతమైన తోడుతో?",
+   "text": {
+    "te": "కయా నశ్చిత్ర ఆ భువదూతీ సదావృధః సఖా । కయా శచిష్ఠయా వృతా ॥",
+    "en": "Kaya Nash Chitra A Bhuvad Uti Sadavridhah Sakha, Kaya Shachishthaya Vrita",
+    "sa": "कया नश्चित्र आ भुवदूती सदावृधः सखा । कया शचिष्ठया वृता ॥",
+    "iast": "kayā naścitra ā bhuvadūtī sadāvṛdhaḥ sakhā | kayā śaciṣṭhayā vṛtā ||"
+   }
+  },
+  {
+   "id": "rahu-stotra",
+   "name": "Rahu verse, Navagraha Stotra",
+   "category": "graha_stotra",
+   "tier": "simple",
+   "planet": "Rahu",
+   "deity": "Rahu",
+   "devanagari": "अर्धकायं महावीर्यं चन्द्रादित्यविमर्दनम् । सिंहिकागर्भसम्भूतं तं राहुं प्रणमाम्यहम् ॥",
+   "iast": "ardhakāyaṃ mahāvīryaṃ candrādityavimardanam | siṃhikāgarbhasambhūtaṃ taṃ rāhuṃ praṇamāmyaham ||",
+   "telugu": "అర్ధకాయం మహావీర్యం చంద్రాదిత్యవిమర్దనమ్ । సింహికాగర్భసంభూతం తం రాహుం ప్రణమామ్యహమ్ ॥",
+   "simple_transliteration": "Ardhakayam mahaviryam chandraditya vimardanam, simhika garbha sambhutam tam rahum pranamamyaham",
+   "meaning_en": "I bow to Rahu, the half-bodied one of great strength, who eclipses the Moon and Sun, born of Simhika.",
+   "source_type": "stotra",
+   "source_citation": "Navagraha Stotra, attributed by tradition to Vyasa (colophon: 'iti śrīvyāsaviracitaṃ navagrahastotram'). Not located in a specific Purana.",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navanew.html"
+   ],
+   "confidence": "verified_text",
+   "traditional_count": null,
+   "practical_count": 11,
+   "count_note": "Recited once, 3 or 11 times; the whole 9-verse stotra once daily is common.",
+   "preferred_day": "Saturday",
+   "disagreements": "Orthography only: sanskritdocuments writes anusvara (संकाश, संभव) where this corpus writes the nasal conjunct (सङ्काश, सम्भव). Same pronunciation.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 10,
+    "recording_note": "Unaccented; a clear Sanskrit voice is enough."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "rahu-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-rahu",
+     "dasha-antardasha-rahu",
+     "dignity-debilitated-rahu",
+     "dosha-grahan"
+    ],
+    "bphs_antardasha": [
+     "Rahu-Rahu"
+    ],
+    "gochara_rules": [
+     "gochara_rahu_moon_caution"
+    ],
+    "yoga_rules": [
+     "guru_chandala_yoga",
+     "kalasarpa_flag"
+    ],
+    "festival_slugs": [],
+    "reading_categories": [
+     "timing"
+    ]
+   },
+   "checked_against": "Word-for-word against sanskritdocuments navanew.html: orthography only.",
+   "meaning_hi": "आधे शरीर वाले, महान पराक्रमी, चन्द्र और सूर्य को ग्रसने वाले, सिंहिका के गर्भ से उत्पन्न राहु को मैं प्रणाम करता हूँ।",
+   "meaning_te": "సగం శరీరం కలవాడు, మహా పరాక్రమవంతుడు, చంద్ర సూర్యులను గ్రసించేవాడు, సింహిక గర్భం నుండి పుట్టిన రాహువుకు నమస్కరిస్తున్నాను.",
+   "text": {
+    "te": "అర్ధకాయం మహావీర్యం చంద్రాదిత్యవిమర్దనమ్ । సింహికాగర్భసంభూతం తం రాహుం ప్రణమామ్యహమ్ ॥",
+    "en": "Ardhakayam mahaviryam chandraditya vimardanam, simhika garbha sambhutam tam rahum pranamamyaham",
+    "sa": "अर्धकायं महावीर्यं चन्द्रादित्यविमर्दनम् । सिंहिकागर्भसम्भूतं तं राहुं प्रणमाम्यहम् ॥",
+    "iast": "ardhakāyaṃ mahāvīryaṃ candrādityavimardanam | siṃhikāgarbhasambhūtaṃ taṃ rāhuṃ praṇamāmyaham ||"
+   }
+  },
+  {
+   "id": "ketu-nama",
+   "name": "Ketu nama mantra",
+   "category": "graha_nama",
+   "tier": "simple",
+   "planet": "Ketu",
+   "deity": "Ketu",
+   "devanagari": "ॐ केतवे नमः",
+   "iast": "oṃ ketave namaḥ",
+   "telugu": "ఓం కేతవే నమః",
+   "simple_transliteration": "Om Ketave Namah",
+   "meaning_en": "Om, salutation to Ketu.",
+   "source_type": "liturgical",
+   "source_citation": "Navagraha puja namaskara formula ('om ... namah'); the form the app ships today (astrospace/core/vedic/remedies.py GRAHA_REMEDIES).",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "verified_attribution",
+   "traditional_count": null,
+   "practical_count": 108,
+   "count_note": "108 per sitting (one mala). No classical count for the nama form; BPHS counts apply to the Vedic mantras.",
+   "preferred_day": "Tuesday",
+   "disagreements": null,
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 3,
+    "recording_note": "Loopable single repetition."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "ketu-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-ketu",
+     "dasha-antardasha-ketu",
+     "dignity-debilitated-ketu",
+     "dosha-gandanta"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [
+     "gochara_ketu_moon_caution"
+    ],
+    "yoga_rules": [
+     "kalasarpa_flag"
+    ],
+    "festival_slugs": [],
+    "reading_categories": [
+     "spiritual"
+    ]
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "ॐ, केतु को नमस्कार।",
+   "meaning_te": "ఓం, కేతువుకు నమస్కారం.",
+   "text": {
+    "te": "ఓం కేతవే నమః",
+    "en": "Om Ketave Namah",
+    "sa": "ॐ केतवे नमः",
+    "iast": "oṃ ketave namaḥ"
+   }
+  },
+  {
+   "id": "ketu-bija",
+   "name": "Ketu bija mantra",
+   "category": "graha_bija",
+   "tier": "advanced",
+   "planet": "Ketu",
+   "deity": "Ketu",
+   "devanagari": "ॐ स्रां स्रीं स्रौं सः केतवे नमः",
+   "iast": "oṃ srāṃ srīṃ srauṃ saḥ ketave namaḥ",
+   "telugu": "ఓం స్రాం స్రీం స్రౌం సః కేతవే నమః",
+   "simple_transliteration": "Om Sraam Sreem Sraum Sah Ketave Namah",
+   "meaning_en": "Om, seed syllables of Ketu, salutation to Ketu. Bija syllables carry no dictionary meaning.",
+   "source_type": "tantra",
+   "source_citation": "Tantric navagraha bija mantras as given in ritual manuals (commonly traced to the Mantra Maharnava); no single primary text verified.",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navagrahamantrajapaprayogaHvedoktasabIja.html",
+    "https://www.drikpanchang.com/vedic-mantra/gods/navagraha/navagraha-mantras.html"
+   ],
+   "confidence": "sources_disagree",
+   "traditional_count": 17000,
+   "practical_count": 108,
+   "count_note": "Manuals reuse the BPHS ch.84 count (17,000) for the bija form; some multiply by 4 for Kali Yuga. 108 per sitting.",
+   "preferred_day": "Tuesday",
+   "disagreements": "sanskritdocuments prayoga gives 'praam preem praum' (the common Saturn bija); drikpanchang and most manuals give 'sraam sreem sraum'. Majority form kept.",
+   "app_sensitivity": "Bija mantras are traditionally received from a teacher in many lineages. Label 'traditionally taken with guidance'; keep the nama form as default.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 5,
+    "recording_note": "Loopable; nasal endings (anusvara vs candrabindu) audible, so match the chosen text."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "ketu-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-ketu",
+     "dasha-antardasha-ketu",
+     "dignity-debilitated-ketu",
+     "dosha-gandanta"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [
+     "gochara_ketu_moon_caution"
+    ],
+    "yoga_rules": [
+     "kalasarpa_flag"
+    ],
+    "festival_slugs": [],
+    "reading_categories": [
+     "spiritual"
+    ]
+   },
+   "checked_against": "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements.",
+   "meaning_hi": "ॐ, केतु के बीज अक्षर, केतु को नमस्कार। बीज अक्षरों का कोई शब्दकोशीय अर्थ नहीं होता।",
+   "meaning_te": "ఓం, కేతువు బీజాక్షరాలు, కేతువుకు నమస్కారం. బీజాక్షరాలకు నిఘంటు అర్థం ఉండదు.",
+   "text": {
+    "te": "ఓం స్రాం స్రీం స్రౌం సః కేతవే నమః",
+    "en": "Om Sraam Sreem Sraum Sah Ketave Namah",
+    "sa": "ॐ स्रां स्रीं स्रौं सः केतवे नमः",
+    "iast": "oṃ srāṃ srīṃ srauṃ saḥ ketave namaḥ"
+   }
+  },
+  {
+   "id": "ketu-vedic",
+   "name": "Ketu Vedic mantra (BPHS)",
+   "category": "graha_vedic",
+   "tier": "advanced",
+   "planet": "Ketu",
+   "deity": "Ketu",
+   "devanagari": "केतुं कृण्वन्नकेतवे पेशो मर्या अपेशसे । समुषद्भिरजायथाः ॥",
+   "iast": "ketuṃ kṛṇvannaketave peśo maryā apeśase | samuṣadbhirajāyathāḥ ||",
+   "telugu": "కేతుం కృణ్వన్నకేతవే పేశో మర్యా అపేశసే । సముషద్భిరజాయథాః ॥",
+   "simple_transliteration": "Ketum Krinvann Aketave Pesho Marya Apeshase, Sam Ushadbhir Ajayathah",
+   "meaning_en": "Making light where there was no light, and form where there was no form, you were born, O mortals, together with the dawns.",
+   "source_type": "shruti",
+   "source_citation": "Rigveda 1.6.3; Shukla Yajurveda (Vajasaneyi) 29.37. Named for Ketu in BPHS ch.84 (Graha Shanti) vv.17-18; count from v.19.",
+   "kb_citation": "BPHS, R. Santhanam tr. (KB: PDFs/BPHS-Santhanam-Vol-1.pdf), ch.84 vv.17-20, pp.815-816",
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navagrahamantrajapaprayogaHvedoktasabIja.html",
+    "https://sanskritdocuments.org/doc_veda/navagraha.html"
+   ],
+   "confidence": "verified_text",
+   "traditional_count": 17000,
+   "practical_count": 108,
+   "count_note": "BPHS ch.84 v.19-20: 17,000. 108 per sitting.",
+   "preferred_day": "Tuesday",
+   "disagreements": null,
+   "app_sensitivity": "Vedic mantra: traditionally learnt with svara (accent) from a teacher, and some traditions restrict it to the initiated. Offer as listen-along audio by a trained reciter; do not machine-voice it.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 20,
+    "recording_note": "Record with svara by a Shukla Yajurveda reciter; TTS is not acceptable for accented Vedic text."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "ketu-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-ketu",
+     "dasha-antardasha-ketu",
+     "dignity-debilitated-ketu",
+     "dosha-gandanta"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [
+     "gochara_ketu_moon_caution"
+    ],
+    "yoga_rules": [
+     "kalasarpa_flag"
+    ],
+    "festival_slugs": [],
+    "reading_categories": [
+     "spiritual"
+    ]
+   },
+   "checked_against": "Against the Navagraha Sukta at sanskritdocuments: matches.",
+   "meaning_hi": "जहाँ प्रकाश नहीं था वहाँ प्रकाश करते हुए, जहाँ रूप नहीं था वहाँ रूप देते हुए, हे मनुष्यो, तुम उषाओं के साथ उत्पन्न हुए।",
+   "meaning_te": "వెలుగు లేని చోట వెలుగు నింపుతూ, రూపం లేని చోట రూపం ఇస్తూ, ఓ మానవులారా, మీరు ఉషస్సులతో కలిసి జన్మించారు.",
+   "text": {
+    "te": "కేతుం కృణ్వన్నకేతవే పేశో మర్యా అపేశసే । సముషద్భిరజాయథాః ॥",
+    "en": "Ketum Krinvann Aketave Pesho Marya Apeshase, Sam Ushadbhir Ajayathah",
+    "sa": "केतुं कृण्वन्नकेतवे पेशो मर्या अपेशसे । समुषद्भिरजायथाः ॥",
+    "iast": "ketuṃ kṛṇvannaketave peśo maryā apeśase | samuṣadbhirajāyathāḥ ||"
+   }
+  },
+  {
+   "id": "ketu-stotra",
+   "name": "Ketu verse, Navagraha Stotra",
+   "category": "graha_stotra",
+   "tier": "simple",
+   "planet": "Ketu",
+   "deity": "Ketu",
+   "devanagari": "पलाशपुष्पसङ्काशं तारकाग्रहमस्तकम् । रौद्रं रौद्रात्मकं घोरं तं केतुं प्रणमाम्यहम् ॥",
+   "iast": "palāśapuṣpasaṅkāśaṃ tārakāgrahamastakam | raudraṃ raudrātmakaṃ ghoraṃ taṃ ketuṃ praṇamāmyaham ||",
+   "telugu": "పలాశపుష్పసంకాశం తారకాగ్రహమస్తకమ్ । రౌద్రం రౌద్రాత్మకం ఘోరం తం కేతుం ప్రణమామ్యహమ్ ॥",
+   "simple_transliteration": "Palasha pushpa sankasham taraka graha mastakam, raudram raudratmakam ghoram tam ketum pranamamyaham",
+   "meaning_en": "I bow to Ketu, red as the palasha flower, chief among stars and planets, fierce and formidable.",
+   "source_type": "stotra",
+   "source_citation": "Navagraha Stotra, attributed by tradition to Vyasa (colophon: 'iti śrīvyāsaviracitaṃ navagrahastotram'). Not located in a specific Purana.",
+   "kb_citation": null,
+   "online_refs": [
+    "https://sanskritdocuments.org/doc_z_misc_navagraha/navanew.html"
+   ],
+   "confidence": "verified_text",
+   "traditional_count": null,
+   "practical_count": 11,
+   "count_note": "Recited once, 3 or 11 times; the whole 9-verse stotra once daily is common.",
+   "preferred_day": "Tuesday",
+   "disagreements": "Orthography only: sanskritdocuments writes anusvara (संकाश, संभव) where this corpus writes the nasal conjunct (सङ्काश, सम्भव). Same pronunciation.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 10,
+    "recording_note": "Unaccented; a clear Sanskrit voice is enough."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "ketu-mantra"
+    ],
+    "recommendation_ids": [
+     "dasha-mahadasha-ketu",
+     "dasha-antardasha-ketu",
+     "dignity-debilitated-ketu",
+     "dosha-gandanta"
+    ],
+    "bphs_antardasha": [],
+    "gochara_rules": [
+     "gochara_ketu_moon_caution"
+    ],
+    "yoga_rules": [
+     "kalasarpa_flag"
+    ],
+    "festival_slugs": [],
+    "reading_categories": [
+     "spiritual"
+    ]
+   },
+   "checked_against": "Word-for-word against sanskritdocuments navanew.html: orthography only.",
+   "meaning_hi": "पलाश के फूल जैसे लाल, तारों और ग्रहों में प्रमुख, रौद्र और भयंकर स्वरूप वाले केतु को मैं प्रणाम करता हूँ।",
+   "meaning_te": "మోదుగ పువ్వు వలె ఎర్రనివాడు, నక్షత్రాలు గ్రహాలలో ప్రధానుడు, రౌద్ర స్వరూపుడైన కేతువుకు నమస్కరిస్తున్నాను.",
+   "text": {
+    "te": "పలాశపుష్పసంకాశం తారకాగ్రహమస్తకమ్ । రౌద్రం రౌద్రాత్మకం ఘోరం తం కేతుం ప్రణమామ్యహమ్ ॥",
+    "en": "Palasha pushpa sankasham taraka graha mastakam, raudram raudratmakam ghoram tam ketum pranamamyaham",
+    "sa": "पलाशपुष्पसङ्काशं तारकाग्रहमस्तकम् । रौद्रं रौद्रात्मकं घोरं तं केतुं प्रणमाम्यहम् ॥",
+    "iast": "palāśapuṣpasaṅkāśaṃ tārakāgrahamastakam | raudraṃ raudrātmakaṃ ghoraṃ taṃ ketuṃ praṇamāmyaham ||"
+   }
+  },
+  {
+   "id": "mahamrityunjaya",
+   "name": "Mahamrityunjaya (Tryambakam) mantra",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Shiva (Rudra)",
+   "devanagari": "ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम् । उर्वारुकमिव बन्धनान्मृत्योर्मुक्षीय माऽमृतात् ॥",
+   "iast": "oṃ tryambakaṃ yajāmahe sugandhiṃ puṣṭivardhanam | urvārukamiva bandhanānmṛtyormukṣīya mā'mṛtāt ||",
+   "telugu": "ఓం త్ర్యంబకం యజామహే సుగంధిం పుష్టివర్ధనమ్ । ఉర్వారుకమివ బంధనాన్మృత్యోర్ముక్షీయ మాఽమృతాత్ ॥",
+   "simple_transliteration": "Om Tryambakam Yajamahe Sugandhim Pushtivardhanam, Urvarukamiva Bandhanan Mrityor Mukshiya Mamritat",
+   "meaning_en": "We worship the three-eyed one, fragrant, who increases nourishment. As the ripe cucumber is freed from its stalk, may I be freed from the bonds of mortality, not from immortality.",
+   "source_type": "shruti",
+   "source_citation": "Rigveda 7.59.12; Taittiriya Samhita 1.8.6; Shukla Yajurveda (Vajasaneyi) 3.60. Prescribed as 'Mrityunjaya Japa' in BPHS antardasha chapters (Santhanam tr. ch.52-60) and in the Sankranti-birth shanti (ch.90, 1,008 repetitions).",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "verified_text",
+   "traditional_count": 125000,
+   "practical_count": 108,
+   "count_note": "1.25 lakh is the customary anushthana count in priestly practice; BPHS ch.90 names 1,008 for that rite. Not a BPHS figure for daily japa.",
+   "preferred_day": null,
+   "disagreements": "'Om' prefix is a later liturgical addition (not in the Rigveda). Some manuals add samputa bijas (hraum joom sah); the plain Vedic form is kept here.",
+   "app_sensitivity": "The text mentions mrtyu (death). App copy must present it as a prayer to Shiva for steadiness and well-being, never as protection from death or illness (CLAUDE.md non-negotiables). BPHS's own framing ('prolongation of longevity') must not be surfaced.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 14,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "moon-deity",
+     "saturn-deity"
+    ],
+    "app_deity_for": [
+     "Moon",
+     "Saturn"
+    ],
+    "bphs_antardasha": [
+     "Sun-Sun",
+     "Sun-Saturn",
+     "Sun-Venus",
+     "Moon-Saturn",
+     "Moon-Ketu",
+     "Mars-Rahu",
+     "Mars-Saturn",
+     "Jupiter-Ketu",
+     "Jupiter-Rahu",
+     "Saturn-Saturn",
+     "Saturn-Rahu",
+     "Mercury-Mars",
+     "Mercury-Saturn",
+     "Ketu-Ketu",
+     "Ketu-Jupiter",
+     "Venus-Rahu",
+     "Venus-Jupiter",
+     "Venus-Saturn",
+     "Venus-Ketu"
+    ],
+    "festival_slugs": [
+     "maha_shivaratri"
+    ],
+    "reading_categories": [
+     "health",
+     "spiritual"
+    ],
+    "yoga_rules": [
+     "kalasarpa_flag"
+    ],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Veda references checked at en.wikipedia.org/wiki/Mahamrityunjaya_Mantra.",
+   "meaning_hi": "हम तीन नेत्रों वाले, सुगंधित, पोषण बढ़ाने वाले शिव की उपासना करते हैं। जैसे पका हुआ ककड़ी अपनी बेल से छूट जाता है, वैसे ही मैं नश्वरता के बंधन से मुक्त हो जाऊँ, अमरता से नहीं।",
+   "meaning_te": "మూడు కన్నులు కలవాడు, సుగంధభరితుడు, పోషణను పెంచే శివుని ఆరాధిస్తున్నాము. పండిన దోసకాయ తీగ నుండి విడిపోయినట్లు, నేను నశ్వరత్వ బంధం నుండి విముక్తుడనగుదునుగాక, అమృతత్వం నుండి కాదు.",
+   "text": {
+    "te": "ఓం త్ర్యంబకం యజామహే సుగంధిం పుష్టివర్ధనమ్ । ఉర్వారుకమివ బంధనాన్మృత్యోర్ముక్షీయ మాఽమృతాత్ ॥",
+    "en": "Om Tryambakam Yajamahe Sugandhim Pushtivardhanam, Urvarukamiva Bandhanan Mrityor Mukshiya Mamritat",
+    "sa": "ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम् । उर्वारुकमिव बन्धनान्मृत्योर्मुक्षीय माऽमृतात् ॥",
+    "iast": "oṃ tryambakaṃ yajāmahe sugandhiṃ puṣṭivardhanam | urvārukamiva bandhanānmṛtyormukṣīya mā'mṛtāt ||"
+   }
+  },
+  {
+   "id": "shiva-panchakshari",
+   "name": "Panchakshari (Om Namah Shivaya)",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Shiva",
+   "devanagari": "ॐ नमः शिवाय",
+   "iast": "oṃ namaḥ śivāya",
+   "telugu": "ఓం నమః శివాయ",
+   "simple_transliteration": "Om Namah Shivaya",
+   "meaning_en": "Om, salutation to Shiva, the auspicious one.",
+   "source_type": "shruti",
+   "source_citation": "'namaḥ śivāya ca śivatarāya ca' in Sri Rudram, Taittiriya Samhita 4.5.8.1 (Shukla Yajurveda 16.41); taught as the five-syllable mantra in the Shiva Purana (Vidyeshvara Samhita).",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "verified_attribution",
+   "traditional_count": 500000,
+   "practical_count": 108,
+   "count_note": "Shaiva manuals give 5 lakh (one lakh per syllable) for purashcharana; 108 per sitting is normal practice.",
+   "preferred_day": null,
+   "disagreements": "BPHS's 'Rudra Japa' strictly means reciting Sri Rudram (Namakam-Chamakam); the Panchakshari is the accessible form drawn from it. Treat as an approximation of the BPHS prescription, and say so.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 3,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "moon-deity"
+    ],
+    "app_deity_for": [
+     "Moon"
+    ],
+    "bphs_antardasha": [
+     "Sun-Venus",
+     "Moon-Jupiter",
+     "Moon-Venus",
+     "Moon-Sun",
+     "Mars-Mars",
+     "Mars-Jupiter",
+     "Rahu-Jupiter",
+     "Jupiter-Jupiter",
+     "Saturn-Jupiter",
+     "Mercury-Jupiter"
+    ],
+    "festival_slugs": [
+     "maha_shivaratri",
+     "kartika_purnima",
+     "arudra_darshan"
+    ],
+    "reading_categories": [
+     "spiritual"
+    ],
+    "yoga_rules": [
+     "kemadruma_yoga",
+     "kalasarpa_flag"
+    ],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "ॐ, कल्याणकारी शिव को नमस्कार।",
+   "meaning_te": "ఓం, మంగళకరుడైన శివునికి నమస్కారం.",
+   "text": {
+    "te": "ఓం నమః శివాయ",
+    "en": "Om Namah Shivaya",
+    "sa": "ॐ नमः शिवाय",
+    "iast": "oṃ namaḥ śivāya"
+   }
+  },
+  {
+   "id": "sri-rudram",
+   "name": "Sri Rudram (Namakam and Chamakam)",
+   "category": "recitation_reference",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Rudra (Shiva)",
+   "devanagari": null,
+   "iast": null,
+   "telugu": null,
+   "simple_transliteration": "Sri Rudram",
+   "meaning_en": "The great Yajurvedic litany to Rudra; 'Rudra Japa' in BPHS.",
+   "source_type": "shruti",
+   "source_citation": "Taittiriya Samhita 4.5 (Namakam) and 4.7 (Chamakam); Shukla Yajurveda ch.16 (Rudradhyaya). Prescribed as 'Rudra Japa' in BPHS (Sun-Venus, Moon-Venus, Mars-Mars, Jupiter-Jupiter antardashas) and ch.83 ('Rudriya Japa').",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "verified_attribution",
+   "traditional_count": 11,
+   "practical_count": 1,
+   "count_note": "Ekadasha Rudra (11 recitations) is the customary unit; one recitation takes about 25 to 40 minutes.",
+   "preferred_day": null,
+   "disagreements": null,
+   "app_sensitivity": "Recited with Vedic accent; offer as listen-along audio from a trained reciter rather than as a counter.",
+   "text_in_corpus": false,
+   "audio": {
+    "status": "long_form_reference",
+    "est_seconds_per_repetition": 1800,
+    "recording_note": "Long text: offer as a single listen-along track, not a counter."
+   },
+   "maps_to": {
+    "practice_slugs": [],
+    "app_deity_for": [],
+    "bphs_antardasha": [
+     "Sun-Venus",
+     "Moon-Venus",
+     "Mars-Mars",
+     "Jupiter-Jupiter"
+    ],
+    "festival_slugs": [
+     "maha_shivaratri"
+    ],
+    "reading_categories": [],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "रुद्र (शिव) की महान यजुर्वेदीय स्तुति; बृहत् पाराशर होरा शास्त्र में इसे ‘रुद्र जप’ कहा गया है।",
+   "meaning_te": "రుద్రుని (శివుని) గొప్ప యజుర్వేద స్తుతి; బృహత్ పరాశర హోరా శాస్త్రంలో దీనిని ‘రుద్ర జపం’ అంటారు.",
+   "text": null
+  },
+  {
+   "id": "shiva-sahasranama",
+   "name": "Shiva Sahasranama",
+   "category": "recitation_reference",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Shiva",
+   "devanagari": null,
+   "iast": null,
+   "telugu": null,
+   "simple_transliteration": "Shiva Sahasranama",
+   "meaning_en": "The thousand names of Shiva.",
+   "source_type": "itihasa",
+   "source_citation": "Mahabharata, Anushasana Parva ch.17 (the version taught by Krishna, from Tandi), vulgate numbering. Other versions exist in the Linga Purana and Shiva Purana. Prescribed in BPHS for Moon-Jupiter, Mars-Jupiter, Jupiter-Jupiter, Saturn-Jupiter, Mercury-Jupiter and Ketu-Jupiter antardashas.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "verified_attribution",
+   "traditional_count": null,
+   "practical_count": 1,
+   "count_note": "Recited once per sitting.",
+   "preferred_day": null,
+   "disagreements": "BPHS does not say which of the several Shiva Sahasranamas it means; the Mahabharata version is the most widely recited.",
+   "app_sensitivity": null,
+   "text_in_corpus": false,
+   "audio": {
+    "status": "long_form_reference",
+    "est_seconds_per_repetition": 1500,
+    "recording_note": "Long text: offer as a single listen-along track, not a counter."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "jupiter-deity"
+    ],
+    "app_deity_for": [
+     "Jupiter"
+    ],
+    "bphs_antardasha": [
+     "Moon-Jupiter",
+     "Mars-Jupiter",
+     "Jupiter-Jupiter",
+     "Saturn-Jupiter",
+     "Mercury-Jupiter",
+     "Ketu-Jupiter"
+    ],
+    "festival_slugs": [],
+    "reading_categories": [],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "शिव के एक हज़ार नाम।",
+   "meaning_te": "శివుని వేయి నామాలు.",
+   "text": null
+  },
+  {
+   "id": "vishnu-dvadashakshari",
+   "name": "Dvadashakshari (Om Namo Bhagavate Vasudevaya)",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Vishnu / Krishna",
+   "devanagari": "ॐ नमो भगवते वासुदेवाय",
+   "iast": "oṃ namo bhagavate vāsudevāya",
+   "telugu": "ఓం నమో భగవతే వాసుదేవాయ",
+   "simple_transliteration": "Om Namo Bhagavate Vasudevaya",
+   "meaning_en": "Om, salutation to the Lord Vasudeva.",
+   "source_type": "purana",
+   "source_citation": "Bhagavata Purana 4.8.54 (Narada's instruction to Dhruva); also Vishnu Purana. The app's Krishna Janmashtami sheet already uses it.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "verified_text",
+   "traditional_count": 1200000,
+   "practical_count": 108,
+   "count_note": "Vaishnava manuals give 12 lakh (one lakh per syllable) for purashcharana; 108 per sitting.",
+   "preferred_day": null,
+   "disagreements": null,
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 4,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "mercury-deity"
+    ],
+    "app_deity_for": [
+     "Mercury"
+    ],
+    "bphs_antardasha": [
+     "Sun-Mercury"
+    ],
+    "festival_slugs": [
+     "krishna_janmashtami",
+     "vaikuntha_ekadashi",
+     "devshayani_ekadashi",
+     "devutthana_ekadashi",
+     "gita_jayanti",
+     "nirjala_ekadashi",
+     "putrada_ekadashi"
+    ],
+    "reading_categories": [
+     "spiritual"
+    ],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Bhagavata Purana 4.8.54 checked at vedabase.io.",
+   "meaning_hi": "ॐ, भगवान वासुदेव को नमस्कार।",
+   "meaning_te": "ఓం, భగవంతుడైన వాసుదేవునికి నమస్కారం.",
+   "text": {
+    "te": "ఓం నమో భగవతే వాసుదేవాయ",
+    "en": "Om Namo Bhagavate Vasudevaya",
+    "sa": "ॐ नमो भगवते वासुदेवाय",
+    "iast": "oṃ namo bhagavate vāsudevāya"
+   }
+  },
+  {
+   "id": "vishnu-sahasranama",
+   "name": "Vishnu Sahasranama",
+   "category": "recitation_reference",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Vishnu",
+   "devanagari": null,
+   "iast": null,
+   "telugu": null,
+   "simple_transliteration": "Vishnu Sahasranama",
+   "meaning_en": "The thousand names of Vishnu, taught by Bhishma to Yudhishthira.",
+   "source_type": "itihasa",
+   "source_citation": "Mahabharata, Anushasana Parva ch.149 (vulgate); ch.135 in the BORI critical edition. The BPHS's most frequent recitation prescription: Sun-Mercury, Moon-Mercury, Mars-Mercury, Rahu-Mercury, Jupiter-Saturn, Jupiter-Mercury, Saturn-Mercury, Mercury-Mercury, Ketu-Mercury and Venus-Mercury antardashas.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "verified_attribution",
+   "traditional_count": null,
+   "practical_count": 1,
+   "count_note": "Recited once per sitting (about 25 minutes).",
+   "preferred_day": null,
+   "disagreements": "Chapter number depends on edition (149 vulgate vs 135 critical).",
+   "app_sensitivity": null,
+   "text_in_corpus": false,
+   "audio": {
+    "status": "long_form_reference",
+    "est_seconds_per_repetition": 1500,
+    "recording_note": "Long text: offer as a single listen-along track, not a counter."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "mercury-deity"
+    ],
+    "app_deity_for": [
+     "Mercury"
+    ],
+    "bphs_antardasha": [
+     "Sun-Mercury",
+     "Moon-Mercury",
+     "Mars-Mercury",
+     "Mars-Ketu",
+     "Rahu-Mercury",
+     "Jupiter-Saturn",
+     "Jupiter-Mercury",
+     "Saturn-Mercury",
+     "Mercury-Mercury",
+     "Ketu-Mercury",
+     "Venus-Mercury"
+    ],
+    "festival_slugs": [
+     "vaikuntha_ekadashi",
+     "anant_chaturdashi"
+    ],
+    "reading_categories": [],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "विष्णु के एक हज़ार नाम, जो भीष्म ने युधिष्ठिर को सिखाए।",
+   "meaning_te": "భీష్ముడు ధర్మరాజుకు ఉపదేశించిన విష్ణువు యొక్క వేయి నామాలు.",
+   "text": null
+  },
+  {
+   "id": "rama-nama-sahasranama-tulya",
+   "name": "Sri Rama Rama Rameti",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Rama (Vishnu)",
+   "devanagari": "श्रीराम राम रामेति रमे रामे मनोरमे । सहस्रनाम तत्तुल्यं रामनाम वरानने ॥",
+   "iast": "śrīrāma rāma rāmeti rame rāme manorame | sahasranāma tattulyaṃ rāmanāma varānane ||",
+   "telugu": "శ్రీరామ రామ రామేతి రమే రామే మనోరమే । సహస్రనామ తత్తుల్యం రామనామ వరాననే ॥",
+   "simple_transliteration": "Shri Rama Rama Rameti Rame Rame Manorame, Sahasranama Tattulyam Ramanama Varanane",
+   "meaning_en": "Shiva to Parvati: repeating 'Rama, Rama, Rama' delights the mind; the name of Rama is equal to the thousand names.",
+   "source_type": "purana",
+   "source_citation": "Padma Purana, Uttara Khanda (Shiva to Parvati); recited as the closing verse of the Vishnu Sahasranama.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "tradition_attributed",
+   "traditional_count": null,
+   "practical_count": 3,
+   "count_note": "Traditionally said three times as a short substitute for the full Sahasranama.",
+   "preferred_day": null,
+   "disagreements": "Exact chapter varies by Padma Purana recension. Offering it 'in place of' the Sahasranama is a devotional convention; state it as such.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 10,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "mercury-deity"
+    ],
+    "app_deity_for": [
+     "Mercury"
+    ],
+    "bphs_antardasha": [
+     "Sun-Mercury",
+     "Moon-Mercury",
+     "Mars-Mercury",
+     "Rahu-Mercury",
+     "Jupiter-Mercury",
+     "Saturn-Mercury",
+     "Mercury-Mercury",
+     "Ketu-Mercury",
+     "Venus-Mercury"
+    ],
+    "festival_slugs": [
+     "rama_navami"
+    ],
+    "reading_categories": [],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "शिव पार्वती से कहते हैं: ‘राम, राम, राम’ जपना मन को आनंद देता है; राम का नाम सहस्र नामों के बराबर है।",
+   "meaning_te": "శివుడు పార్వతితో అంటాడు: ‘రామ, రామ, రామ’ అని జపించడం మనసుకు ఆనందం ఇస్తుంది; రామ నామం వేయి నామాలతో సమానం.",
+   "text": {
+    "te": "శ్రీరామ రామ రామేతి రమే రామే మనోరమే । సహస్రనామ తత్తుల్యం రామనామ వరాననే ॥",
+    "en": "Shri Rama Rama Rameti Rame Rame Manorame, Sahasranama Tattulyam Ramanama Varanane",
+    "sa": "श्रीराम राम रामेति रमे रामे मनोरमे । सहस्रनाम तत्तुल्यं रामनाम वरानने ॥",
+    "iast": "śrīrāma rāma rāmeti rame rāme manorame | sahasranāma tattulyaṃ rāmanāma varānane ||"
+   }
+  },
+  {
+   "id": "durga-saptashati",
+   "name": "Durga Saptashati (Devi Mahatmya, Chandi Patha)",
+   "category": "recitation_reference",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Durga",
+   "devanagari": null,
+   "iast": null,
+   "telugu": null,
+   "simple_transliteration": "Durga Saptashati",
+   "meaning_en": "700 verses on the Goddess's victories; 'Durga Patha', 'Chandi Patha' and 'Shat Chandi' in BPHS.",
+   "source_type": "purana",
+   "source_citation": "Markandeya Purana, Devi Mahatmya (13 chapters; numbered 81-93 in most editions, 78-90 in others). Prescribed in BPHS for Sun-Ketu (Shat Chandi), Jupiter-Moon, Saturn-Venus, Ketu-Ketu, Ketu-Venus, Ketu-Rahu, Venus-Venus and Venus-Saturn antardashas.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "verified_attribution",
+   "traditional_count": null,
+   "practical_count": 1,
+   "count_note": "One full patha takes about 2.5 to 3 hours; Shat Chandi is 100 pathas by priests. For the app, a single chapter or the Navarna mantra is the realistic unit.",
+   "preferred_day": null,
+   "disagreements": "Chapter numbering differs between editions.",
+   "app_sensitivity": null,
+   "text_in_corpus": false,
+   "audio": {
+    "status": "long_form_reference",
+    "est_seconds_per_repetition": 9000,
+    "recording_note": "Long text: offer as a single listen-along track, not a counter."
+   },
+   "maps_to": {
+    "practice_slugs": [],
+    "app_deity_for": [],
+    "bphs_antardasha": [
+     "Sun-Rahu",
+     "Sun-Ketu",
+     "Jupiter-Moon",
+     "Saturn-Venus",
+     "Ketu-Ketu",
+     "Ketu-Venus",
+     "Ketu-Rahu",
+     "Venus-Venus",
+     "Venus-Saturn"
+    ],
+    "festival_slugs": [
+     "navratri_begins",
+     "chaitra_navratri",
+     "durga_ashtami"
+    ],
+    "reading_categories": [],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "देवी की विजयों पर 700 श्लोक; बृहत् पाराशर होरा शास्त्र में ‘दुर्गा पाठ’, ‘चण्डी पाठ’ और ‘शत चण्डी’।",
+   "meaning_te": "దేవి విజయాలపై 700 శ్లోకాలు; బృహత్ పరాశర హోరా శాస్త్రంలో ‘దుర్గా పాఠం’, ‘చండీ పాఠం’, ‘శత చండీ’.",
+   "text": null
+  },
+  {
+   "id": "durga-navarna",
+   "name": "Navarna mantra",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Chamunda (Durga)",
+   "devanagari": "ॐ ऐं ह्रीं क्लीं चामुण्डायै विच्चे",
+   "iast": "oṃ aiṃ hrīṃ klīṃ cāmuṇḍāyai vicce",
+   "telugu": "ఓం ఐం హ్రీం క్లీం చాముండాయై విచ్చే",
+   "simple_transliteration": "Om Aim Hreem Kleem Chamundayai Vichche",
+   "meaning_en": "Seed syllables of Saraswati, Lakshmi and Kali joined to a salutation to Chamunda; traditionally read as a prayer for knowledge, prosperity and freedom from fear.",
+   "source_type": "tantra",
+   "source_citation": "Navarna vidhi prefixed to the Durga Saptashati in the standard (Gita Press) recitation order; Devi Bhagavata Purana 7 also describes it.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "tradition_attributed",
+   "traditional_count": 400000,
+   "practical_count": 108,
+   "count_note": "Manuals commonly give 4 lakh for purashcharana; 108 per sitting.",
+   "preferred_day": null,
+   "disagreements": "Strictly nine syllables without 'Om'; many editions prefix 'Om'. The interpretation of 'vichche' differs between commentators.",
+   "app_sensitivity": "A bija mantra: many traditions expect it to be received from a teacher (diksha). Label it 'traditionally taken with guidance' and offer Sarva Mangala as the open alternative.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 5,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "rahu-deity"
+    ],
+    "app_deity_for": [
+     "Rahu"
+    ],
+    "bphs_antardasha": [
+     "Sun-Rahu",
+     "Sun-Ketu",
+     "Mercury-Venus",
+     "Mercury-Moon"
+    ],
+    "festival_slugs": [
+     "navratri_begins",
+     "chaitra_navratri",
+     "durga_ashtami",
+     "ayudha_puja",
+     "vijayadashami"
+    ],
+    "reading_categories": [],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "सरस्वती, लक्ष्मी और काली के बीज अक्षर, चामुण्डा के नमस्कार के साथ; परंपरा में इसे ज्ञान, समृद्धि और निर्भयता की प्रार्थना माना जाता है।",
+   "meaning_te": "సరస్వతి, లక్ష్మి, కాళి బీజాక్షరాలు, చాముండికి నమస్కారంతో కలిసి; సంప్రదాయంలో దీనిని జ్ఞానం, సమృద్ధి, నిర్భయత్వం కోసం ప్రార్థనగా భావిస్తారు.",
+   "text": {
+    "te": "ఓం ఐం హ్రీం క్లీం చాముండాయై విచ్చే",
+    "en": "Om Aim Hreem Kleem Chamundayai Vichche",
+    "sa": "ॐ ऐं ह्रीं क्लीं चामुण्डायै विच्चे",
+    "iast": "oṃ aiṃ hrīṃ klīṃ cāmuṇḍāyai vicce"
+   }
+  },
+  {
+   "id": "durga-sarvamangala",
+   "name": "Sarva Mangala Mangalye",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Durga (Narayani)",
+   "devanagari": "सर्वमङ्गलमाङ्गल्ये शिवे सर्वार्थसाधिके । शरण्ये त्र्यम्बके गौरि नारायणि नमोऽस्तु ते ॥",
+   "iast": "sarvamaṅgalamāṅgalye śive sarvārthasādhike | śaraṇye tryambake gauri nārāyaṇi namo'stu te ||",
+   "telugu": "సర్వమంగలమాంగల్యే శివే సర్వార్థసాధికే । శరణ్యే త్ర్యంబకే గౌరి నారాయణి నమోఽస్తు తే ॥",
+   "simple_transliteration": "Sarva Mangala Mangalye Shive Sarvartha Sadhike, Sharanye Tryambake Gauri Narayani Namostute",
+   "meaning_en": "Auspiciousness of all that is auspicious, O kind one who fulfils every aim, refuge of all, three-eyed Gauri, Narayani, salutations to you.",
+   "source_type": "purana",
+   "source_citation": "Devi Mahatmya (Durga Saptashati) 11.10, the Narayani Stuti; Markandeya Purana.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "verified_attribution",
+   "traditional_count": null,
+   "practical_count": 11,
+   "count_note": "No classical count; 11 or 108 are customary.",
+   "preferred_day": null,
+   "disagreements": "Verse number is 11.10 in most editions; Markandeya Purana chapter numbering varies.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 10,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "venus-deity",
+     "rahu-deity"
+    ],
+    "app_deity_for": [
+     "Venus",
+     "Rahu"
+    ],
+    "bphs_antardasha": [
+     "Sun-Rahu",
+     "Sun-Ketu",
+     "Mars-Moon",
+     "Rahu-Venus",
+     "Jupiter-Moon",
+     "Saturn-Venus",
+     "Mercury-Venus",
+     "Mercury-Moon",
+     "Mercury-Rahu",
+     "Ketu-Venus",
+     "Ketu-Rahu",
+     "Venus-Venus"
+    ],
+    "festival_slugs": [
+     "navratri_begins",
+     "chaitra_navratri",
+     "durga_ashtami",
+     "vijayadashami",
+     "gauri_habba",
+     "hartalika_teej"
+    ],
+    "reading_categories": [
+     "relationship"
+    ],
+    "yoga_rules": [
+     "guru_chandala_yoga"
+    ],
+    "gochara_rules": [
+     "gochara_rahu_moon_caution"
+    ],
+    "recommendation_ids": [
+     "dosha-grahan"
+    ]
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "सब मंगलों में मंगल स्वरूप, कल्याणकारी, सब कामनाएँ पूर्ण करने वाली, सबकी शरण, तीन नेत्रों वाली गौरी नारायणी, तुम्हें नमस्कार है।",
+   "meaning_te": "అన్ని మంగళాలలో మంగళ స్వరూపిణి, శుభకరి, అన్ని కోరికలను తీర్చేదానా, అందరికీ శరణు, మూడు కన్నుల గౌరీ, నారాయణీ, నీకు నమస్కారం.",
+   "text": {
+    "te": "సర్వమంగలమాంగల్యే శివే సర్వార్థసాధికే । శరణ్యే త్ర్యంబకే గౌరి నారాయణి నమోఽస్తు తే ॥",
+    "en": "Sarva Mangala Mangalye Shive Sarvartha Sadhike, Sharanye Tryambake Gauri Narayani Namostute",
+    "sa": "सर्वमङ्गलमाङ्गल्ये शिवे सर्वार्थसाधिके । शरण्ये त्र्यम्बके गौरि नारायणि नमोऽस्तु ते ॥",
+    "iast": "sarvamaṅgalamāṅgalye śive sarvārthasādhike | śaraṇye tryambake gauri nārāyaṇi namo'stu te ||"
+   }
+  },
+  {
+   "id": "durga-nama",
+   "name": "Om Dum Durgayai Namah",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Durga",
+   "devanagari": "ॐ दुं दुर्गायै नमः",
+   "iast": "oṃ duṃ durgāyai namaḥ",
+   "telugu": "ఓం దుం దుర్గాయై నమః",
+   "simple_transliteration": "Om Dum Durgayai Namah",
+   "meaning_en": "Om, (seed syllable dum) salutation to Durga.",
+   "source_type": "popular",
+   "source_citation": "Popular Durga mantra; 'dum' is the Durga bija in tantric manuals. No single primary text located.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "popular_tradition",
+   "traditional_count": null,
+   "practical_count": 108,
+   "count_note": "108 per sitting.",
+   "preferred_day": null,
+   "disagreements": "Attribution not verified to a primary text.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 3,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "rahu-deity"
+    ],
+    "app_deity_for": [
+     "Rahu"
+    ],
+    "bphs_antardasha": [],
+    "festival_slugs": [],
+    "reading_categories": [],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "ॐ, (बीज अक्षर ‘दुं’) दुर्गा को नमस्कार।",
+   "meaning_te": "ఓం, (బీజాక్షరం ‘దుం’) దుర్గాదేవికి నమస్కారం.",
+   "text": {
+    "te": "ఓం దుం దుర్గాయై నమః",
+    "en": "Om Dum Durgayai Namah",
+    "sa": "ॐ दुं दुर्गायै नमः",
+    "iast": "oṃ duṃ durgāyai namaḥ"
+   }
+  },
+  {
+   "id": "lakshmi-nama",
+   "name": "Om Shreem Mahalakshmyai Namah",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Lakshmi",
+   "devanagari": "ॐ श्रीं महालक्ष्म्यै नमः",
+   "iast": "oṃ śrīṃ mahālakṣmyai namaḥ",
+   "telugu": "ఓం శ్రీం మహాలక్ష్మ్యై నమః",
+   "simple_transliteration": "Om Shreem Mahalakshmyai Namah",
+   "meaning_en": "Om, (seed syllable shreem) salutation to the great Lakshmi.",
+   "source_type": "popular",
+   "source_citation": "Popular Lakshmi mantra built on the 'shreem' bija; already used on the app's Diwali sheet. No single primary text located.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "popular_tradition",
+   "traditional_count": null,
+   "practical_count": 108,
+   "count_note": "108 per sitting.",
+   "preferred_day": null,
+   "disagreements": "Attribution not verified to a primary text.",
+   "app_sensitivity": "Never pair with money outcomes ('chant this for wealth'); offer as a prayer of gratitude.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 4,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "venus-deity"
+    ],
+    "app_deity_for": [
+     "Venus"
+    ],
+    "bphs_antardasha": [
+     "Mars-Moon",
+     "Rahu-Venus",
+     "Mercury-Rahu"
+    ],
+    "festival_slugs": [
+     "diwali",
+     "dhanteras",
+     "varalakshmi_vratam",
+     "sharad_purnima",
+     "akshaya_tritiya"
+    ],
+    "reading_categories": [
+     "finance"
+    ],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "ॐ, (बीज अक्षर ‘श्रीं’) महालक्ष्मी को नमस्कार।",
+   "meaning_te": "ఓం, (బీజాక్షరం ‘శ్రీం’) మహాలక్ష్మికి నమస్కారం.",
+   "text": {
+    "te": "ఓం శ్రీం మహాలక్ష్మ్యై నమః",
+    "en": "Om Shreem Mahalakshmyai Namah",
+    "sa": "ॐ श्रीं महालक्ष्म्यै नमः",
+    "iast": "oṃ śrīṃ mahālakṣmyai namaḥ"
+   }
+  },
+  {
+   "id": "sri-suktam-1",
+   "name": "Sri Suktam, verse 1",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Lakshmi (Shri)",
+   "devanagari": "हिरण्यवर्णां हरिणीं सुवर्णरजतस्रजाम् । चन्द्रां हिरण्मयीं लक्ष्मीं जातवेदो म आवह ॥",
+   "iast": "hiraṇyavarṇāṃ hariṇīṃ suvarṇarajatasrajām | candrāṃ hiraṇmayīṃ lakṣmīṃ jātavedo ma āvaha ||",
+   "telugu": "హిరణ్యవర్ణాం హరిణీం సువర్ణరజతస్రజామ్ । చంద్రాం హిరణ్మయీం లక్ష్మీం జాతవేదో మ ఆవహ ॥",
+   "simple_transliteration": "Hiranya Varnam Harinim Suvarna Rajata Srajam, Chandram Hiranmayim Lakshmim Jatavedo Ma Avaha",
+   "meaning_en": "O Jatavedas (Agni), bring to me Lakshmi, golden in colour, lovely as a deer, wearing garlands of gold and silver, radiant as the moon, made of gold.",
+   "source_type": "shruti",
+   "source_citation": "Sri Sukta, Rigveda Khilani (Bashkala recension, appended to Mandala 5), verse 1. BPHS (Santhanam tr. ch.72, p.733) prescribes 'Sri Sookta Japa' for the 27-rekha Ashtakavarga month.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "verified_text",
+   "traditional_count": null,
+   "practical_count": 1,
+   "count_note": "The full 15/16-verse sukta is recited once; verse 1 alone is a reasonable short form.",
+   "preferred_day": null,
+   "disagreements": "The sukta has strata of 15, 16 or more verses depending on recension.",
+   "app_sensitivity": "As for lakshmi-nama: no money promises.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 12,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "venus-deity"
+    ],
+    "app_deity_for": [
+     "Venus"
+    ],
+    "bphs_antardasha": [
+     "Mars-Moon",
+     "Rahu-Venus"
+    ],
+    "festival_slugs": [
+     "diwali",
+     "varalakshmi_vratam"
+    ],
+    "reading_categories": [
+     "finance"
+    ],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "हे जातवेद (अग्नि), स्वर्ण वर्ण वाली, हिरणी जैसी सुंदर, सोने और चाँदी की मालाएँ पहने, चन्द्रमा जैसी उज्ज्वल, स्वर्णमयी लक्ष्मी को मेरे पास लाओ।",
+   "meaning_te": "ఓ జాతవేదా (అగ్నీ), బంగారు వన్నె కలది, లేడి వలె అందమైనది, బంగారు వెండి హారాలు ధరించినది, చంద్రుని వలె ప్రకాశించే, సువర్ణమయి అయిన లక్ష్మిని నా వద్దకు తీసుకురా.",
+   "text": {
+    "te": "హిరణ్యవర్ణాం హరిణీం సువర్ణరజతస్రజామ్ । చంద్రాం హిరణ్మయీం లక్ష్మీం జాతవేదో మ ఆవహ ॥",
+    "en": "Hiranya Varnam Harinim Suvarna Rajata Srajam, Chandram Hiranmayim Lakshmim Jatavedo Ma Avaha",
+    "sa": "हिरण्यवर्णां हरिणीं सुवर्णरजतस्रजाम् । चन्द्रां हिरण्मयीं लक्ष्मीं जातवेदो म आवह ॥",
+    "iast": "hiraṇyavarṇāṃ hariṇīṃ suvarṇarajatasrajām | candrāṃ hiraṇmayīṃ lakṣmīṃ jātavedo ma āvaha ||"
+   }
+  },
+  {
+   "id": "aditya-hridayam",
+   "name": "Aditya Hridayam",
+   "category": "recitation_reference",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Surya",
+   "devanagari": null,
+   "iast": null,
+   "telugu": null,
+   "simple_transliteration": "Aditya Hridayam",
+   "meaning_en": "Hymn to the Sun taught by Agastya to Rama before the final battle.",
+   "source_type": "itihasa",
+   "source_citation": "Valmiki Ramayana, Yuddha Kanda sarga 105 (valmikiramayan.net and southern editions) or 107 (other editions), 31 verses. Prescribed in BPHS for the Jupiter-Sun antardasha (Santhanam tr. ch.56, p.542). Verse 26 says to recite it three times.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "verified_attribution",
+   "traditional_count": 3,
+   "practical_count": 1,
+   "count_note": "Verse 26: 'etat triguṇitaṃ japtvā' (having recited it thrice). One recitation is about 6 minutes.",
+   "preferred_day": null,
+   "disagreements": "Sarga number differs by edition (105 vs 107).",
+   "app_sensitivity": null,
+   "text_in_corpus": false,
+   "audio": {
+    "status": "long_form_reference",
+    "est_seconds_per_repetition": 360,
+    "recording_note": "Long text: offer as a single listen-along track, not a counter."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "sun-deity"
+    ],
+    "app_deity_for": [
+     "Sun"
+    ],
+    "bphs_antardasha": [
+     "Mars-Sun",
+     "Rahu-Sun",
+     "Jupiter-Sun",
+     "Saturn-Sun",
+     "Mercury-Sun",
+     "Venus-Sun"
+    ],
+    "festival_slugs": [
+     "makar_sankranti",
+     "ratha_saptami",
+     "chhath"
+    ],
+    "reading_categories": [
+     "career",
+     "health"
+    ],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "अंतिम युद्ध से पहले अगस्त्य ऋषि द्वारा राम को सिखाया गया सूर्य का स्तोत्र।",
+   "meaning_te": "చివరి యుద్ధానికి ముందు అగస్త్య మహర్షి శ్రీరామునికి ఉపదేశించిన సూర్య స్తోత్రం.",
+   "text": null
+  },
+  {
+   "id": "gayatri",
+   "name": "Gayatri (Savitri) mantra",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Savitr (Surya)",
+   "devanagari": "ॐ भूर्भुवः स्वः । तत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि । धियो यो नः प्रचोदयात् ॥",
+   "iast": "oṃ bhūrbhuvaḥ svaḥ | tatsaviturvareṇyaṃ bhargo devasya dhīmahi | dhiyo yo naḥ pracodayāt ||",
+   "telugu": "ఓం భూర్భువః స్వః । తత్సవితుర్వరేణ్యం భర్గో దేవస్య ధీమహి । ధియో యో నః ప్రచోదయాత్ ॥",
+   "simple_transliteration": "Om Bhur Bhuvah Svah, Tat Savitur Varenyam, Bhargo Devasya Dhimahi, Dhiyo Yo Nah Prachodayat",
+   "meaning_en": "We meditate on the adorable radiance of the divine Savitr; may it inspire our minds.",
+   "source_type": "shruti",
+   "source_citation": "Rigveda 3.62.10 (the vyahritis 'bhur bhuvah svah' are prefixed in Yajurvedic usage, e.g. Vajasaneyi 36.3). BPHS ch.83 prescribes one lakh Gayatri japa (curse remedies).",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "verified_text",
+   "traditional_count": 100000,
+   "practical_count": 108,
+   "count_note": "BPHS ch.83 names one lakh for that remedy; 108 or 1,008 daily is customary.",
+   "preferred_day": null,
+   "disagreements": "Traditions differ on whether it should be chanted only after upanayana and with Vedic accent; many modern teachers open it to all. State the convention.",
+   "app_sensitivity": "Convention-dependent access; offer with that note.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 12,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "sun-deity"
+    ],
+    "app_deity_for": [
+     "Sun"
+    ],
+    "bphs_antardasha": [],
+    "festival_slugs": [
+     "avani_avittam"
+    ],
+    "reading_categories": [
+     "spiritual",
+     "learning"
+    ],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "हम सविता देव के उस वरणीय तेज का ध्यान करते हैं; वह हमारी बुद्धि को प्रेरित करे।",
+   "meaning_te": "సవితృ దేవుని ఆ శ్రేష్ఠమైన తేజస్సును ధ్యానిస్తున్నాము; అది మా బుద్ధిని ప్రేరేపించుగాక.",
+   "text": {
+    "te": "ఓం భూర్భువః స్వః । తత్సవితుర్వరేణ్యం భర్గో దేవస్య ధీమహి । ధియో యో నః ప్రచోదయాత్ ॥",
+    "en": "Om Bhur Bhuvah Svah, Tat Savitur Varenyam, Bhargo Devasya Dhimahi, Dhiyo Yo Nah Prachodayat",
+    "sa": "ॐ भूर्भुवः स्वः । तत्सवितुर्वरेण्यं भर्गो देवस्य धीमहि । धियो यो नः प्रचोदयात् ॥",
+    "iast": "oṃ bhūrbhuvaḥ svaḥ | tatsaviturvareṇyaṃ bhargo devasya dhīmahi | dhiyo yo naḥ pracodayāt ||"
+   }
+  },
+  {
+   "id": "surya-dvadasha-nama",
+   "name": "Twelve names of Surya",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Surya",
+   "devanagari": "ॐ मित्राय नमः । ॐ रवये नमः । ॐ सूर्याय नमः । ॐ भानवे नमः । ॐ खगाय नमः । ॐ पूष्णे नमः । ॐ हिरण्यगर्भाय नमः । ॐ मरीचये नमः । ॐ आदित्याय नमः । ॐ सवित्रे नमः । ॐ अर्काय नमः । ॐ भास्कराय नमः ॥",
+   "iast": "oṃ mitrāya namaḥ | oṃ ravaye namaḥ | oṃ sūryāya namaḥ | oṃ bhānave namaḥ | oṃ khagāya namaḥ | oṃ pūṣṇe namaḥ | oṃ hiraṇyagarbhāya namaḥ | oṃ marīcaye namaḥ | oṃ ādityāya namaḥ | oṃ savitre namaḥ | oṃ arkāya namaḥ | oṃ bhāskarāya namaḥ ||",
+   "telugu": "ఓం మిత్రాయ నమః । ఓం రవయే నమః । ఓం సూర్యాయ నమః । ఓం భానవే నమః । ఓం ఖగాయ నమః । ఓం పూష్ణే నమః । ఓం హిరణ్యగర్భాయ నమః । ఓం మరీచయే నమః । ఓం ఆదిత్యాయ నమః । ఓం సవిత్రే నమః । ఓం అర్కాయ నమః । ఓం భాస్కరాయ నమః ॥",
+   "simple_transliteration": "Om Mitraya Namah, Om Ravaye Namah, Om Suryaya Namah, Om Bhanave Namah, Om Khagaya Namah, Om Pushne Namah, Om Hiranyagarbhaya Namah, Om Marichaye Namah, Om Adityaya Namah, Om Savitre Namah, Om Arkaya Namah, Om Bhaskaraya Namah",
+   "meaning_en": "Twelve salutations to the Sun as friend, shining one, impeller, light-giver, sky-mover, nourisher, golden womb, ray-holder, son of Aditi, enlivener, praiseworthy one and illuminator.",
+   "source_type": "popular",
+   "source_citation": "Surya Namaskara name sequence (popularised by the Aundh tradition); individual names are Vedic epithets.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "popular_tradition",
+   "traditional_count": null,
+   "practical_count": 12,
+   "count_note": "One round = 12 names, often with 12 sun salutations; Ratha Saptami and Sundays.",
+   "preferred_day": null,
+   "disagreements": "Sequence order varies slightly between manuals.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 40,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "sun-deity"
+    ],
+    "app_deity_for": [
+     "Sun"
+    ],
+    "bphs_antardasha": [],
+    "festival_slugs": [
+     "ratha_saptami",
+     "makar_sankranti",
+     "chhath"
+    ],
+    "reading_categories": [],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "सूर्य को बारह नमस्कार: मित्र, प्रकाशमान, प्रेरक, प्रकाश देने वाले, आकाश में चलने वाले, पोषक, हिरण्यगर्भ, किरणों वाले, अदिति के पुत्र, जीवन देने वाले, पूज्य और प्रकाश करने वाले।",
+   "meaning_te": "సూర్యునికి పన్నెండు నమస్కారాలు: మిత్రుడు, ప్రకాశించేవాడు, ప్రేరేపించేవాడు, వెలుగు ఇచ్చేవాడు, ఆకాశంలో సంచరించేవాడు, పోషించేవాడు, హిరణ్యగర్భుడు, కిరణాలు కలవాడు, అదితి కుమారుడు, ప్రాణం ఇచ్చేవాడు, పూజ్యుడు, వెలుగునిచ్చేవాడు.",
+   "text": {
+    "te": "ఓం మిత్రాయ నమః । ఓం రవయే నమః । ఓం సూర్యాయ నమః । ఓం భానవే నమః । ఓం ఖగాయ నమః । ఓం పూష్ణే నమః । ఓం హిరణ్యగర్భాయ నమః । ఓం మరీచయే నమః । ఓం ఆదిత్యాయ నమః । ఓం సవిత్రే నమః । ఓం అర్కాయ నమః । ఓం భాస్కరాయ నమః ॥",
+    "en": "Om Mitraya Namah, Om Ravaye Namah, Om Suryaya Namah, Om Bhanave Namah, Om Khagaya Namah, Om Pushne Namah, Om Hiranyagarbhaya Namah, Om Marichaye Namah, Om Adityaya Namah, Om Savitre Namah, Om Arkaya Namah, Om Bhaskaraya Namah",
+    "sa": "ॐ मित्राय नमः । ॐ रवये नमः । ॐ सूर्याय नमः । ॐ भानवे नमः । ॐ खगाय नमः । ॐ पूष्णे नमः । ॐ हिरण्यगर्भाय नमः । ॐ मरीचये नमः । ॐ आदित्याय नमः । ॐ सवित्रे नमः । ॐ अर्काय नमः । ॐ भास्कराय नमः ॥",
+    "iast": "oṃ mitrāya namaḥ | oṃ ravaye namaḥ | oṃ sūryāya namaḥ | oṃ bhānave namaḥ | oṃ khagāya namaḥ | oṃ pūṣṇe namaḥ | oṃ hiraṇyagarbhāya namaḥ | oṃ marīcaye namaḥ | oṃ ādityāya namaḥ | oṃ savitre namaḥ | oṃ arkāya namaḥ | oṃ bhāskarāya namaḥ ||"
+   }
+  },
+  {
+   "id": "ganesha-nama",
+   "name": "Om Gam Ganapataye Namah",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Ganesha",
+   "devanagari": "ॐ गं गणपतये नमः",
+   "iast": "oṃ gaṃ gaṇapataye namaḥ",
+   "telugu": "ఓం గం గణపతయే నమః",
+   "simple_transliteration": "Om Gam Ganapataye Namah",
+   "meaning_en": "Om, (seed syllable gam) salutation to Ganapati, lord of the hosts.",
+   "source_type": "upanishad",
+   "source_citation": "Built from the Ganapati Atharvashirsha, which teaches 'gam' as Ganapati's seed syllable; already used on the app's Ganesh Chaturthi sheet.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "tradition_attributed",
+   "traditional_count": 400000,
+   "practical_count": 108,
+   "count_note": "Manuals give 4 lakh for purashcharana; 11, 21 or 108 per sitting is customary.",
+   "preferred_day": null,
+   "disagreements": "The exact mantra form is derived from, not quoted in, the Atharvashirsha.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 4,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "ketu-deity"
+    ],
+    "app_deity_for": [
+     "Ketu"
+    ],
+    "bphs_antardasha": [],
+    "festival_slugs": [
+     "ganesh_chaturthi",
+     "anant_chaturdashi"
+    ],
+    "reading_categories": [
+     "learning",
+     "career"
+    ],
+    "yoga_rules": [],
+    "gochara_rules": [
+     "gochara_ketu_moon_caution"
+    ],
+    "recommendation_ids": [
+     "dosha-gandanta"
+    ]
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "ॐ, (बीज अक्षर ‘गं’) गणों के स्वामी गणपति को नमस्कार।",
+   "meaning_te": "ఓం, (బీజాక్షరం ‘గం’) గణాలకు అధిపతి అయిన గణపతికి నమస్కారం.",
+   "text": {
+    "te": "ఓం గం గణపతయే నమః",
+    "en": "Om Gam Ganapataye Namah",
+    "sa": "ॐ गं गणपतये नमः",
+    "iast": "oṃ gaṃ gaṇapataye namaḥ"
+   }
+  },
+  {
+   "id": "ganesha-vakratunda",
+   "name": "Vakratunda Mahakaya",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Ganesha",
+   "devanagari": "वक्रतुण्ड महाकाय सूर्यकोटिसमप्रभ । निर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा ॥",
+   "iast": "vakratuṇḍa mahākāya sūryakoṭisamaprabha | nirvighnaṃ kuru me deva sarvakāryeṣu sarvadā ||",
+   "telugu": "వక్రతుండ మహాకాయ సూర్యకోటిసమప్రభ । నిర్విఘ్నం కురు మే దేవ సర్వకార్యేషు సర్వదా ॥",
+   "simple_transliteration": "Vakratunda Mahakaya Suryakoti Samaprabha, Nirvighnam Kuru Me Deva Sarvakaryeshu Sarvada",
+   "meaning_en": "O curved-trunked one of great body, bright as a million suns: O lord, keep all my work free of obstacles, always.",
+   "source_type": "popular",
+   "source_citation": "Traditional invocation verse; often attributed to the Mudgala Purana, not verified.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "popular_tradition",
+   "traditional_count": null,
+   "practical_count": 3,
+   "count_note": "Said once or three times before beginning anything.",
+   "preferred_day": null,
+   "disagreements": "'Koti surya samaprabha' and 'surya koti samaprabha' both circulate.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 9,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "ketu-deity"
+    ],
+    "app_deity_for": [
+     "Ketu"
+    ],
+    "bphs_antardasha": [],
+    "festival_slugs": [
+     "ganesh_chaturthi"
+    ],
+    "reading_categories": [],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "हे टेढ़ी सूँड वाले, विशाल शरीर वाले, करोड़ों सूर्यों जैसे तेजस्वी देव, मेरे सब कार्यों को सदा विघ्नरहित करो।",
+   "meaning_te": "ఓ వంకర తొండం కలవాడా, పెద్ద శరీరం కలవాడా, కోటి సూర్యుల తేజస్సు కలిగిన దేవా, నా పనులన్నింటినీ ఎల్లప్పుడూ విఘ్నాలు లేకుండా చేయి.",
+   "text": {
+    "te": "వక్రతుండ మహాకాయ సూర్యకోటిసమప్రభ । నిర్విఘ్నం కురు మే దేవ సర్వకార్యేషు సర్వదా ॥",
+    "en": "Vakratunda Mahakaya Suryakoti Samaprabha, Nirvighnam Kuru Me Deva Sarvakaryeshu Sarvada",
+    "sa": "वक्रतुण्ड महाकाय सूर्यकोटिसमप्रभ । निर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा ॥",
+    "iast": "vakratuṇḍa mahākāya sūryakoṭisamaprabha | nirvighnaṃ kuru me deva sarvakāryeṣu sarvadā ||"
+   }
+  },
+  {
+   "id": "hanuman-manojavam",
+   "name": "Manojavam Marutatulyavegam",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Hanuman",
+   "devanagari": "मनोजवं मारुततुल्यवेगं जितेन्द्रियं बुद्धिमतां वरिष्ठम् । वातात्मजं वानरयूथमुख्यं श्रीरामदूतं शरणं प्रपद्ये ॥",
+   "iast": "manojavaṃ mārutatulyavegaṃ jitendriyaṃ buddhimatāṃ variṣṭham | vātātmajaṃ vānarayūthamukhyaṃ śrīrāmadūtaṃ śaraṇaṃ prapadye ||",
+   "telugu": "మనోజవం మారుతతుల్యవేగం జితేంద్రియం బుద్ధిమతాం వరిష్ఠమ్ । వాతాత్మజం వానరయూథముఖ్యం శ్రీరామదూతం శరణం ప్రపద్యే ॥",
+   "simple_transliteration": "Manojavam Maruta Tulya Vegam Jitendriyam Buddhimatam Varishtham, Vatatmajam Vanarayutha Mukhyam Shri Rama Dutam Sharanam Prapadye",
+   "meaning_en": "I take refuge in Rama's messenger, swift as thought and the wind, master of the senses, foremost of the wise, son of the Wind, chief of the vanara host.",
+   "source_type": "stotra",
+   "source_citation": "Rama Raksha Stotra (attributed to Budha Kaushika), closing section.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "tradition_attributed",
+   "traditional_count": null,
+   "practical_count": 11,
+   "count_note": "No classical count; 11 is customary.",
+   "preferred_day": null,
+   "disagreements": "Verse number in the Rama Raksha Stotra varies by edition (about v.33).",
+   "app_sensitivity": "Pairing Hanuman with Saturn or Mars is popular North Indian practice, not BPHS. State the convention.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 12,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "mars-deity",
+     "saturn-deity"
+    ],
+    "app_deity_for": [
+     "Mars",
+     "Saturn"
+    ],
+    "bphs_antardasha": [],
+    "festival_slugs": [
+     "hanuman_jayanti",
+     "hanumath_jayanti_south"
+    ],
+    "reading_categories": [
+     "career"
+    ],
+    "yoga_rules": [],
+    "gochara_rules": [
+     "gochara_sade_sati",
+     "gochara_ashtama_shani",
+     "gochara_kantaka_shani",
+     "gochara_mars_moon_trigger"
+    ],
+    "recommendation_ids": [
+     "dosha-manglik"
+    ]
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "मन के समान तेज़, वायु के समान वेगवान, इंद्रियों को जीतने वाले, बुद्धिमानों में श्रेष्ठ, वायु पुत्र, वानर सेना के प्रमुख, श्रीराम के दूत की मैं शरण लेता हूँ।",
+   "meaning_te": "మనసు వలె వేగం కలవాడు, వాయువుతో సమానమైన వేగం కలవాడు, ఇంద్రియాలను జయించినవాడు, బుద్ధిమంతులలో శ్రేష్ఠుడు, వాయుపుత్రుడు, వానర సేనకు నాయకుడు అయిన శ్రీరామ దూతను శరణు వేడుతున్నాను.",
+   "text": {
+    "te": "మనోజవం మారుతతుల్యవేగం జితేంద్రియం బుద్ధిమతాం వరిష్ఠమ్ । వాతాత్మజం వానరయూథముఖ్యం శ్రీరామదూతం శరణం ప్రపద్యే ॥",
+    "en": "Manojavam Maruta Tulya Vegam Jitendriyam Buddhimatam Varishtham, Vatatmajam Vanarayutha Mukhyam Shri Rama Dutam Sharanam Prapadye",
+    "sa": "मनोजवं मारुततुल्यवेगं जितेन्द्रियं बुद्धिमतां वरिष्ठम् । वातात्मजं वानरयूथमुख्यं श्रीरामदूतं शरणं प्रपद्ये ॥",
+    "iast": "manojavaṃ mārutatulyavegaṃ jitendriyaṃ buddhimatāṃ variṣṭham | vātātmajaṃ vānarayūthamukhyaṃ śrīrāmadūtaṃ śaraṇaṃ prapadye ||"
+   }
+  },
+  {
+   "id": "hanuman-nama",
+   "name": "Om Ham Hanumate Namah",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Hanuman",
+   "devanagari": "ॐ हं हनुमते नमः",
+   "iast": "oṃ haṃ hanumate namaḥ",
+   "telugu": "ఓం హం హనుమతే నమః",
+   "simple_transliteration": "Om Ham Hanumate Namah",
+   "meaning_en": "Om, (seed syllable ham) salutation to Hanuman.",
+   "source_type": "popular",
+   "source_citation": "Popular Hanuman mantra. The app's Hanuman Jayanti sheet uses the plain form 'Om Hanumate Namah'.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "popular_tradition",
+   "traditional_count": null,
+   "practical_count": 108,
+   "count_note": "108 per sitting.",
+   "preferred_day": null,
+   "disagreements": "Plain and bija forms both circulate; attribution not verified to a primary text.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 3,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "mars-deity"
+    ],
+    "app_deity_for": [
+     "Mars"
+    ],
+    "bphs_antardasha": [],
+    "festival_slugs": [
+     "hanuman_jayanti",
+     "hanumath_jayanti_south"
+    ],
+    "reading_categories": [],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "ॐ, (बीज अक्षर ‘हं’) हनुमान को नमस्कार।",
+   "meaning_te": "ఓం, (బీజాక్షరం ‘హం’) హనుమంతునికి నమస్కారం.",
+   "text": {
+    "te": "ఓం హం హనుమతే నమః",
+    "en": "Om Ham Hanumate Namah",
+    "sa": "ॐ हं हनुमते नमः",
+    "iast": "oṃ haṃ hanumate namaḥ"
+   }
+  },
+  {
+   "id": "hanuman-chalisa",
+   "name": "Hanuman Chalisa",
+   "category": "recitation_reference",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Hanuman",
+   "devanagari": null,
+   "iast": null,
+   "telugu": null,
+   "simple_transliteration": "Hanuman Chalisa",
+   "meaning_en": "Forty Awadhi verses in praise of Hanuman.",
+   "source_type": "bhakti",
+   "source_citation": "Goswami Tulsidas (16th century), Awadhi, 40 chaupais with opening and closing dohas. Not Sanskrit and not in BPHS.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "verified_attribution",
+   "traditional_count": null,
+   "practical_count": 1,
+   "count_note": "Once, 7, 11 or 108 times by custom; one recitation is about 8 to 10 minutes.",
+   "preferred_day": null,
+   "disagreements": null,
+   "app_sensitivity": "Popular Saturn remedy in North India; not classical Jyotisha. Label as popular practice.",
+   "text_in_corpus": false,
+   "audio": {
+    "status": "long_form_reference",
+    "est_seconds_per_repetition": 540,
+    "recording_note": "Long text: offer as a single listen-along track, not a counter."
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "saturn-deity"
+    ],
+    "app_deity_for": [
+     "Saturn"
+    ],
+    "bphs_antardasha": [],
+    "festival_slugs": [
+     "hanuman_jayanti"
+    ],
+    "reading_categories": [],
+    "yoga_rules": [],
+    "gochara_rules": [
+     "gochara_sade_sati",
+     "gochara_ashtama_shani",
+     "gochara_kantaka_shani"
+    ],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "हनुमान जी की स्तुति में अवधी भाषा के चालीस छंद।",
+   "meaning_te": "హనుమంతుని స్తుతిస్తూ అవధీ భాషలోని నలభై పద్యాలు.",
+   "text": null
+  },
+  {
+   "id": "sarpa-namostu",
+   "name": "Namostu Sarpebhyah (Sarpa Sukta verse)",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Nagas",
+   "devanagari": "नमोऽस्तु सर्पेभ्यो ये के च पृथिवीमनु । ये अन्तरिक्षे ये दिवि तेभ्यः सर्पेभ्यो नमः ॥",
+   "iast": "namo'stu sarpebhyo ye ke ca pṛthivīmanu | ye antarikṣe ye divi tebhyaḥ sarpebhyo namaḥ ||",
+   "telugu": "నమోఽస్తు సర్పేభ్యో యే కే చ పృథివీమను । యే అంతరిక్షే యే దివి తేభ్యః సర్పేభ్యో నమః ॥",
+   "simple_transliteration": "Namostu Sarpebhyo Ye Ke Cha Prithivim Anu, Ye Antarikshe Ye Divi Tebhyah Sarpebhyo Namah",
+   "meaning_en": "Salutation to the serpents, whichever are on the earth, in the mid-air and in the sky: to those serpents, salutation.",
+   "source_type": "shruti",
+   "source_citation": "Shukla Yajurveda (Vajasaneyi) 13.6; Taittiriya Samhita 4.2.8. Fits BPHS's 'Naga Puja' (Mars-Rahu antardasha, ch.54) and Nag Panchami.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "verified_attribution",
+   "traditional_count": null,
+   "practical_count": 11,
+   "count_note": "No classical count.",
+   "preferred_day": null,
+   "disagreements": null,
+   "app_sensitivity": "Kalasarpa is not a BPHS dosha; if this is shown for it, say the pairing is a modern convention. The app's Nag Panchami copy ('do not disturb living snakes') should stay.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 12,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [],
+    "app_deity_for": [],
+    "bphs_antardasha": [
+     "Mars-Rahu"
+    ],
+    "festival_slugs": [
+     "nag_panchami",
+     "nagula_chavithi"
+    ],
+    "reading_categories": [],
+    "yoga_rules": [
+     "kalasarpa_flag"
+    ],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "पृथ्वी पर, अंतरिक्ष में और आकाश में जो भी सर्प हैं, उन सब सर्पों को नमस्कार।",
+   "meaning_te": "భూమిపై, అంతరిక్షంలో, ఆకాశంలో ఉన్న సర్పాలన్నింటికీ నమస్కారం.",
+   "text": {
+    "te": "నమోఽస్తు సర్పేభ్యో యే కే చ పృథివీమను । యే అంతరిక్షే యే దివి తేభ్యః సర్పేభ్యో నమః ॥",
+    "en": "Namostu Sarpebhyo Ye Ke Cha Prithivim Anu, Ye Antarikshe Ye Divi Tebhyah Sarpebhyo Namah",
+    "sa": "नमोऽस्तु सर्पेभ्यो ये के च पृथिवीमनु । ये अन्तरिक्षे ये दिवि तेभ्यः सर्पेभ्यो नमः ॥",
+    "iast": "namo'stu sarpebhyo ye ke ca pṛthivīmanu | ye antarikṣe ye divi tebhyaḥ sarpebhyo namaḥ ||"
+   }
+  },
+  {
+   "id": "saraswati-vidyarambha",
+   "name": "Saraswati Namastubhyam",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Saraswati",
+   "devanagari": "सरस्वति नमस्तुभ्यं वरदे कामरूपिणि । विद्यारम्भं करिष्यामि सिद्धिर्भवतु मे सदा ॥",
+   "iast": "sarasvati namastubhyaṃ varade kāmarūpiṇi | vidyārambhaṃ kariṣyāmi siddhirbhavatu me sadā ||",
+   "telugu": "సరస్వతి నమస్తుభ్యం వరదే కామరూపిణి । విద్యారంభం కరిష్యామి సిద్ధిర్భవతు మే సదా ॥",
+   "simple_transliteration": "Saraswati Namastubhyam Varade Kamarupini, Vidyarambham Karishyami Siddhir Bhavatu Me Sada",
+   "meaning_en": "Salutation to you, Saraswati, giver of boons, who takes any form at will. I begin my studies; may I always succeed.",
+   "source_type": "popular",
+   "source_citation": "Traditional verse said before study; no primary text located. BPHS (Santhanam tr. ch.72, p.733) prescribes worship of Saraswati for the 25-rekha Ashtakavarga month.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "popular_tradition",
+   "traditional_count": null,
+   "practical_count": 3,
+   "count_note": "Said before study.",
+   "preferred_day": null,
+   "disagreements": null,
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 9,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [],
+    "app_deity_for": [],
+    "bphs_antardasha": [],
+    "festival_slugs": [
+     "vasant_panchami"
+    ],
+    "reading_categories": [
+     "learning"
+    ],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "हे वर देने वाली, इच्छानुसार रूप धारण करने वाली सरस्वती, तुम्हें नमस्कार। मैं विद्या आरंभ कर रहा हूँ; मुझे सदा सफलता मिले।",
+   "meaning_te": "ఓ వరాలు ఇచ్చే, కోరిన రూపం ధరించే సరస్వతీ, నీకు నమస్కారం. నేను విద్యను ప్రారంభిస్తున్నాను; నాకు ఎల్లప్పుడూ సిద్ధి కలుగుగాక.",
+   "text": {
+    "te": "సరస్వతి నమస్తుభ్యం వరదే కామరూపిణి । విద్యారంభం కరిష్యామి సిద్ధిర్భవతు మే సదా ॥",
+    "en": "Saraswati Namastubhyam Varade Kamarupini, Vidyarambham Karishyami Siddhir Bhavatu Me Sada",
+    "sa": "सरस्वति नमस्तुभ्यं वरदे कामरूपिणि । विद्यारम्भं करिष्यामि सिद्धिर्भवतु मे सदा ॥",
+    "iast": "sarasvati namastubhyaṃ varade kāmarūpiṇi | vidyārambhaṃ kariṣyāmi siddhirbhavatu me sadā ||"
+   }
+  },
+  {
+   "id": "saraswati-nama",
+   "name": "Om Aim Saraswatyai Namah",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Saraswati",
+   "devanagari": "ॐ ऐं सरस्वत्यै नमः",
+   "iast": "oṃ aiṃ sarasvatyai namaḥ",
+   "telugu": "ఓం ఐం సరస్వత్యై నమః",
+   "simple_transliteration": "Om Aim Saraswatyai Namah",
+   "meaning_en": "Om, (seed syllable aim) salutation to Saraswati.",
+   "source_type": "popular",
+   "source_citation": "Popular Saraswati mantra built on the 'aim' bija.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "popular_tradition",
+   "traditional_count": null,
+   "practical_count": 108,
+   "count_note": "108 per sitting; Vasant Panchami.",
+   "preferred_day": null,
+   "disagreements": null,
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 3,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [],
+    "app_deity_for": [],
+    "bphs_antardasha": [],
+    "festival_slugs": [
+     "vasant_panchami",
+     "ayudha_puja"
+    ],
+    "reading_categories": [
+     "learning"
+    ],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "ॐ, (बीज अक्षर ‘ऐं’) सरस्वती को नमस्कार।",
+   "meaning_te": "ఓం, (బీజాక్షరం ‘ఐం’) సరస్వతీ దేవికి నమస్కారం.",
+   "text": {
+    "te": "ఓం ఐం సరస్వత్యై నమః",
+    "en": "Om Aim Saraswatyai Namah",
+    "sa": "ॐ ऐं सरस्वत्यै नमः",
+    "iast": "oṃ aiṃ sarasvatyai namaḥ"
+   }
+  },
+  {
+   "id": "guru-vandana",
+   "name": "Gurur Brahma",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Guru",
+   "devanagari": "गुरुर्ब्रह्मा गुरुर्विष्णुर्गुरुर्देवो महेश्वरः । गुरुः साक्षात्परं ब्रह्म तस्मै श्रीगुरवे नमः ॥",
+   "iast": "gururbrahmā gururviṣṇurgururdevo maheśvaraḥ | guruḥ sākṣātparaṃ brahma tasmai śrīgurave namaḥ ||",
+   "telugu": "గురుర్బ్రహ్మా గురుర్విష్ణుర్గురుర్దేవో మహేశ్వరః । గురుః సాక్షాత్పరం బ్రహ్మ తస్మై శ్రీగురవే నమః ॥",
+   "simple_transliteration": "Gurur Brahma Gurur Vishnur Gurur Devo Maheshvarah, Guruh Sakshat Param Brahma Tasmai Shri Gurave Namah",
+   "meaning_en": "The teacher is Brahma, Vishnu and Shiva; the teacher is the supreme itself. Salutation to that teacher.",
+   "source_type": "purana",
+   "source_citation": "Guru Gita (attributed to the Skanda Purana). Used for Guru Purnima; for Jupiter it is a devotional pairing, not a BPHS prescription.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "tradition_attributed",
+   "traditional_count": null,
+   "practical_count": 3,
+   "count_note": "No classical count.",
+   "preferred_day": null,
+   "disagreements": "Second line also circulates as 'gurureva param brahma'.",
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 9,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "jupiter-deity"
+    ],
+    "app_deity_for": [
+     "Jupiter"
+    ],
+    "bphs_antardasha": [],
+    "festival_slugs": [
+     "guru_purnima",
+     "shankara_jayanti"
+    ],
+    "reading_categories": [],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "गुरु ही ब्रह्मा, विष्णु और महेश्वर हैं; गुरु ही साक्षात् परब्रह्म हैं। उन श्री गुरु को नमस्कार।",
+   "meaning_te": "గురువే బ్రహ్మ, విష్ణువు, మహేశ్వరుడు; గురువే సాక్షాత్ పరబ్రహ్మ. ఆ శ్రీ గురువుకు నమస్కారం.",
+   "text": {
+    "te": "గురుర్బ్రహ్మా గురుర్విష్ణుర్గురుర్దేవో మహేశ్వరః । గురుః సాక్షాత్పరం బ్రహ్మ తస్మై శ్రీగురవే నమః ॥",
+    "en": "Gurur Brahma Gurur Vishnur Gurur Devo Maheshvarah, Guruh Sakshat Param Brahma Tasmai Shri Gurave Namah",
+    "sa": "गुरुर्ब्रह्मा गुरुर्विष्णुर्गुरुर्देवो महेश्वरः । गुरुः साक्षात्परं ब्रह्म तस्मै श्रीगुरवे नमः ॥",
+    "iast": "gururbrahmā gururviṣṇurgururdevo maheśvaraḥ | guruḥ sākṣātparaṃ brahma tasmai śrīgurave namaḥ ||"
+   }
+  },
+  {
+   "id": "rama-taraka",
+   "name": "Sri Rama Jaya Rama",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Rama",
+   "devanagari": "श्रीराम जय राम जय जय राम",
+   "iast": "śrīrāma jaya rāma jaya jaya rāma",
+   "telugu": "శ్రీరామ జయ రామ జయ జయ రామ",
+   "simple_transliteration": "Shri Rama Jaya Rama Jaya Jaya Rama",
+   "meaning_en": "Glory to Shri Rama, victory to Rama, victory, victory to Rama.",
+   "source_type": "bhakti",
+   "source_citation": "Thirteen-syllable nama mantra popularised by Samartha Ramdas (17th century); already on the app's Rama Navami sheet.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "tradition_attributed",
+   "traditional_count": 1300000,
+   "practical_count": 108,
+   "count_note": "13 lakh (one per syllable) in Ramdasi practice; 108 per sitting.",
+   "preferred_day": null,
+   "disagreements": null,
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 4,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [],
+    "app_deity_for": [],
+    "bphs_antardasha": [],
+    "festival_slugs": [
+     "rama_navami",
+     "sita_navami"
+    ],
+    "reading_categories": [],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "श्रीराम की जय, राम की जय, जय जय राम।",
+   "meaning_te": "శ్రీరామునికి జయం, రామునికి జయం, జయం జయం రామా.",
+   "text": {
+    "te": "శ్రీరామ జయ రామ జయ జయ రామ",
+    "en": "Shri Rama Jaya Rama Jaya Jaya Rama",
+    "sa": "श्रीराम जय राम जय जय राम",
+    "iast": "śrīrāma jaya rāma jaya jaya rāma"
+   }
+  },
+  {
+   "id": "skanda-shadakshari",
+   "name": "Om Sharavanabhavaya Namah",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Skanda (Murugan)",
+   "devanagari": "ॐ शरवणभवाय नमः",
+   "iast": "oṃ śaravaṇabhavāya namaḥ",
+   "telugu": "ఓం శరవణభవాయ నమః",
+   "simple_transliteration": "Om Saravanabhavaya Namah",
+   "meaning_en": "Om, salutation to the one born in the Sharavana reed-bed (Skanda).",
+   "source_type": "popular",
+   "source_citation": "The six-syllable Murugan mantra of Tamil Shaiva practice. Skanda is the classical presiding deity of Mars in navagraha puja.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "popular_tradition",
+   "traditional_count": null,
+   "practical_count": 108,
+   "count_note": "108 per sitting; Skanda Sashti, Thaipusam, Tuesdays.",
+   "preferred_day": null,
+   "disagreements": null,
+   "app_sensitivity": null,
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 4,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [
+     "mars-deity"
+    ],
+    "app_deity_for": [
+     "Mars"
+    ],
+    "bphs_antardasha": [],
+    "festival_slugs": [
+     "skanda_sashti",
+     "thai_poosam",
+     "subrahmanya_shashthi",
+     "panguni_uthiram"
+    ],
+    "reading_categories": [],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "ॐ, शरवण (सरकंडों के वन) में जन्मे स्कन्द (कार्तिकेय) को नमस्कार।",
+   "meaning_te": "ఓం, శరవణంలో (రెల్లు వనంలో) జన్మించిన స్కందునికి (సుబ్రహ్మణ్యస్వామికి) నమస్కారం.",
+   "text": {
+    "te": "ఓం శరవణభవాయ నమః",
+    "en": "Om Saravanabhavaya Namah",
+    "sa": "ॐ शरवणभवाय नमः",
+    "iast": "oṃ śaravaṇabhavāya namaḥ"
+   }
+  },
+  {
+   "id": "santana-gopala",
+   "name": "Santana Gopala mantra",
+   "category": "deity_or_text",
+   "tier": "simple",
+   "planet": null,
+   "deity": "Krishna (Gopala)",
+   "devanagari": "देवकीसुत गोविन्द वासुदेव जगत्पते । देहि मे तनयं कृष्ण त्वामहं शरणं गतः ॥",
+   "iast": "devakīsuta govinda vāsudeva jagatpate | dehi me tanayaṃ kṛṣṇa tvāmahaṃ śaraṇaṃ gataḥ ||",
+   "telugu": "దేవకీసుత గోవింద వాసుదేవ జగత్పతే । దేహి మే తనయం కృష్ణ త్వామహం శరణం గతః ॥",
+   "simple_transliteration": "Devakisuta Govinda Vasudeva Jagatpate, Dehi Me Tanayam Krishna Tvamaham Sharanam Gatah",
+   "meaning_en": "O son of Devaki, Govinda, Vasudeva, lord of the world: grant me a child, Krishna; I take refuge in you.",
+   "source_type": "popular",
+   "source_citation": "BPHS ch.83 (Santhanam tr., p.811) names 'Santan Gopal mantra' without giving its text; this verse is the form in common use.",
+   "kb_citation": null,
+   "online_refs": [],
+   "confidence": "popular_tradition",
+   "traditional_count": 100000,
+   "practical_count": 108,
+   "count_note": "One lakh is customary.",
+   "preferred_day": null,
+   "disagreements": "BPHS gives the name, not the text; the verse is the popular form.",
+   "app_sensitivity": "Childlessness is a medical matter. Never surface automatically or as a treatment; show only if the reader looks it up, with a 'speak to a doctor' line.",
+   "text_in_corpus": true,
+   "audio": {
+    "status": "needs_recording",
+    "est_seconds_per_repetition": 10,
+    "recording_note": null
+   },
+   "maps_to": {
+    "practice_slugs": [],
+    "app_deity_for": [],
+    "bphs_antardasha": [],
+    "festival_slugs": [],
+    "reading_categories": [],
+    "yoga_rules": [],
+    "gochara_rules": [],
+    "recommendation_ids": []
+   },
+   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "meaning_hi": "हे देवकी पुत्र, गोविन्द, वासुदेव, जगत के स्वामी, हे कृष्ण, मुझे संतान दो; मैं तुम्हारी शरण में हूँ।",
+   "meaning_te": "ఓ దేవకీ నందనా, గోవిందా, వాసుదేవా, జగత్పతీ, ఓ కృష్ణా, నాకు సంతానాన్ని ప్రసాదించు; నిన్ను శరణు వేడుతున్నాను.",
+   "text": {
+    "te": "దేవకీసుత గోవింద వాసుదేవ జగత్పతే । దేహి మే తనయం కృష్ణ త్వామహం శరణం గతః ॥",
+    "en": "Devakisuta Govinda Vasudeva Jagatpate, Dehi Me Tanayam Krishna Tvamaham Sharanam Gatah",
+    "sa": "देवकीसुत गोविन्द वासुदेव जगत्पते । देहि मे तनयं कृष्ण त्वामहं शरणं गतः ॥",
+    "iast": "devakīsuta govinda vāsudeva jagatpate | dehi me tanayaṃ kṛṣṇa tvāmahaṃ śaraṇaṃ gataḥ ||"
+   }
+  }
+ ]
+}
