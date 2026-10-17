@@ -4,4 +4,24 @@
     <string name="title_activity_main">Siddha</string>
     <string name="package_name">app.asksiddha.mobile</string>
     <string name="custom_url_scheme">app.asksiddha.mobile</string>
+    <!-- Home-screen widgets (app/asksiddha/mobile/widgets) -->
+    <string name="widget_ask_prompt">Ask Siddha anything</string>
+    <string name="widget_subhashita_eyebrow">TODAY’S SUBHASHITA</string>
+    <string name="widget_share">Share</string>
+    <string name="widget_today_name">Your day</string>
+    <string name="widget_today_description">Today’s score, headline and timing</string>
+    <string name="widget_listen_name">Listen to your day</string>
+    <string name="widget_listen_description">Play today’s brief from the home screen</string>
+    <string name="widget_calendar_name">Calendar</string>
+    <string name="widget_calendar_description">Tithi, nakshatra and the next festival</string>
+    <string name="widget_timing_name">Timing window</string>
+    <string name="widget_timing_description">Rahu Kalam and today’s windows, counting down</string>
+    <string name="widget_moon_name">Moon</string>
+    <string name="widget_moon_description">The moon today and the next full or new moon</string>
+    <string name="widget_mantra_name">Mantra counter</string>
+    <string name="widget_mantra_description">Count your mantra with a tap</string>
+    <string name="widget_ask_name">Ask Siddha</string>
+    <string name="widget_ask_description">Ask a question from the home screen</string>
+    <string name="widget_subhashita_name">Today’s Subhashita</string>
+    <string name="widget_subhashita_description">A verse a day from the Gita and Chanakya Niti</string>
 </resources>

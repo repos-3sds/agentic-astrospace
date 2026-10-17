@@ -1452,3 +1452,20 @@ Reordered 2026-09-18 by measured OCR rather than assumed availability.
 - **Bulk-ingesting Tier B prose.** The existing paraphrase-and-cite
   discipline is what keeps modern translations usable at all. Nothing here
   proposes relaxing it.
+
+## Deferred backlog — iPhone widgets (2026-10-17)
+
+- [ ] **WidgetKit widgets, lock-screen circular score and the Rahu Kalam
+  Live Activity** (Figma M10: medium widget with the score ring and "Rahu
+  Kalam in 2h", lock-screen circular 72, Live Activity "RAHU KALAM Ends in
+  38 min"). *Why not built:* a widget extension and an App Group need a paid
+  Apple developer team to sign, and Hawk's enrollment is still pending
+  (Apple case 102999679854). *Unblocks when:* the Team ID exists. *Hook:*
+  the app already publishes the same `today`/`calendar`/`subhashita`/`mantra`
+  parts through `WidgetBridgeService` (`ui/src/app/core/widget-bridge.service.ts`);
+  an iOS `SiddhaWidgets` plugin writes them to the App Group's
+  UserDefaults, a SwiftUI `TimelineProvider` reads them, and the Live
+  Activity is started by the app from the `today.windows` entry for Rahu
+  Kalam (ActivityKit, `Text(timerInterval:)` for the countdown). Listen
+  becomes an App Intent (iOS 17) playing AVSpeechSynthesizer audio.
+

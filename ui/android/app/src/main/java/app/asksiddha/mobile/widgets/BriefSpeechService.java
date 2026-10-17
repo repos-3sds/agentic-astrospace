@@ -1,0 +1,161 @@
+package app.asksiddha.mobile.widgets;
+
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ServiceInfo;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
+import app.asksiddha.mobile.R;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import org.json.JSONObject;
+
+/**
+ * Reads today's brief aloud from the Listen widget, with the phone's own
+ * voice, at the same 0.9x the app's Listen sheet uses. A media-playback
+ * foreground service, so it keeps speaking with the screen off and shows a
+ * notification with Stop while it does.
+ *
+ * The text is the one the app's Listen sheet reads (the agent's spoken
+ * script when there is one), sent with the "today" part.
+ */
+public class BriefSpeechService extends Service implements TextToSpeech.OnInitListener {
+
+    static final String ACTION_PLAY = "app.asksiddha.mobile.widgets.LISTEN_PLAY";
+    static final String ACTION_STOP = "app.asksiddha.mobile.widgets.LISTEN_STOP";
+    private static final String CHANNEL_ID = "siddha_listen";
+    private static final int NOTIFICATION_ID = 4201;
+    private static final float RATE = 0.9f;
+
+    private TextToSpeech tts;
+    private List<String> chunks = new ArrayList<>();
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        String action = intent == null ? null : intent.getAction();
+        // startForeground must follow a foreground-service start promptly, even
+        // when the answer is to stop at once.
+        startInForeground();
+        if (ACTION_STOP.equals(action)) {
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+        JSONObject today = WidgetStore.get(this, "today");
+        String text = today == null || !WidgetStore.today().equals(today.optString("date"))
+            ? "" : today.optString("listen");
+        if (text.isEmpty()) {
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+        chunks = split(text, TextToSpeech.getMaxSpeechInputLength() - 100);
+        WidgetStore.setSpeaking(this, true);
+        Widgets.refresh(this, ListenWidget.class);
+        if (tts == null) {
+            tts = new TextToSpeech(getApplicationContext(), this);
+        } else {
+            speak();
+        }
+        return START_NOT_STICKY;
+    }
+
+    @Override
+    public void onInit(int status) {
+        if (status != TextToSpeech.SUCCESS || tts == null) {
+            stopSelf();
+            return;
+        }
+        Locale india = new Locale("en", "IN");
+        if (tts.isLanguageAvailable(india) < TextToSpeech.LANG_AVAILABLE) india = Locale.ENGLISH;
+        tts.setLanguage(india);
+        tts.setSpeechRate(RATE);
+        tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+            @Override public void onStart(String id) {}
+            @Override public void onDone(String id) {
+                if (String.valueOf(chunks.size() - 1).equals(id)) stopSelf();
+            }
+            @Override @Deprecated public void onError(String id) { stopSelf(); }
+        });
+        speak();
+    }
+
+    private void speak() {
+        tts.stop();
+        for (int i = 0; i < chunks.size(); i++) {
+            tts.speak(chunks.get(i), i == 0 ? TextToSpeech.QUEUE_FLUSH : TextToSpeech.QUEUE_ADD,
+                new Bundle(), String.valueOf(i));
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        if (tts != null) {
+            tts.stop();
+            tts.shutdown();
+            tts = null;
+        }
+        WidgetStore.setSpeaking(this, false);
+        Widgets.refresh(this, ListenWidget.class);
+        super.onDestroy();
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    private void startInForeground() {
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        Notification.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (manager != null && manager.getNotificationChannel(CHANNEL_ID) == null) {
+                NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID, "Listen to your day", NotificationManager.IMPORTANCE_LOW);
+                channel.setDescription("Shown while today's brief is read aloud from the widget");
+                channel.setSound(null, null);
+                manager.createNotificationChannel(channel);
+            }
+            builder = new Notification.Builder(this, CHANNEL_ID);
+        } else {
+            builder = new Notification.Builder(this);
+        }
+        PendingIntent stop = ListenWidget.speech(this, ACTION_STOP);
+        Notification notification = builder
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle("Listening to your day")
+            .setContentText("Siddha is reading today’s brief")
+            .setContentIntent(Widgets.open(this, "/m/today"))
+            .setOngoing(true)
+            .addAction(new Notification.Action.Builder(null, "Stop", stop).build())
+            .build();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
+        } else {
+            startForeground(NOTIFICATION_ID, notification);
+        }
+    }
+
+    /** TextToSpeech caps one utterance; break at sentence ends under the cap. */
+    static List<String> split(String text, int max) {
+        List<String> out = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        for (String sentence : text.split("(?<=[.!?])\\s+")) {
+            if (current.length() > 0 && current.length() + sentence.length() + 1 > max) {
+                out.add(current.toString());
+                current.setLength(0);
+            }
+            if (current.length() > 0) current.append(' ');
+            current.append(sentence.length() > max ? sentence.substring(0, max) : sentence);
+        }
+        if (current.length() > 0) out.add(current.toString());
+        return out;
+    }
+}

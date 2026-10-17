@@ -103,6 +103,52 @@ def festivals_for_year(
     }
 
 
+@lru_cache(maxsize=64)
+def _moon_days(year: int, city: str, nation: str) -> tuple[dict, ...]:
+    return tuple(festivals.moon_days(year, city=city, nation=nation))
+
+
+@router.get("/moon-days")
+def moon_days(
+    city: str = Query(..., description="Where sunrise is taken, e.g. Chennai"),
+    nation: str = "IN",
+    from_date: str | None = Query(None, description="YYYY-MM-DD; default today"),
+    days: int = Query(60, ge=1, le=120),
+):
+    """Full and new moon days ahead, for the home-screen widgets.
+
+    The rule is the tithi at sunrise, which not every calendar uses, so the
+    note goes out with the dates rather than implying one right answer.
+    """
+    if from_date:
+        try:
+            start = datetime.strptime(from_date, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="from_date must be YYYY-MM-DD")
+    else:
+        start = date_cls.today()
+    end = start + timedelta(days=days)
+    _validate(start.year, None)
+    _validate(end.year, None)
+    rows: list[dict] = []
+    try:
+        for year in sorted({start.year, end.year}):
+            rows += _moon_days(year, city, nation)
+    except LocationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    return {
+        "from_date": start.isoformat(),
+        "to_date": end.isoformat(),
+        "place": {"city": city, "nation": nation},
+        "is_convention_dependent": True,
+        "observance_note": festivals.MOON_DAY_NOTE,
+        "moon_days": [
+            {"date": r["date"].isoformat(), "moon": r["moon"]}
+            for r in rows if start <= r["date"] <= end
+        ],
+    }
+
+
 @router.get("/upcoming")
 def upcoming_festivals(
     city: str = Query(..., description="Where sunrise is taken, e.g. Chennai"),

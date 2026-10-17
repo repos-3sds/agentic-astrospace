@@ -20,6 +20,7 @@ import { FestivalSheetComponent } from '../calendar/festival-sheet.component';
 import { AnalyticsService } from '../../../core/analytics.service';
 import { TODAY_DRILL_DOWNS, whyDrillDowns } from '../why-reading/drill-downs';
 import { FestivalService, festivalPlace } from '../../../core/festival.service';
+import { WidgetBridgeService, windowSpan } from '../../../core/widget-bridge.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { ExperienceMode, PreferencesService, ReadingTone } from '../../../core/preferences.service';
 import { HapticsService } from '../../../core/haptics.service';
@@ -249,6 +250,7 @@ export class TodayComponent {
   protected readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
   private readonly festivals = inject(FestivalService);
+  private readonly widgets = inject(WidgetBridgeService);
   private readonly analytics = inject(AnalyticsService);
   private readonly route = inject(ActivatedRoute);
   protected readonly preferences = inject(PreferencesService);
@@ -601,6 +603,38 @@ export class TodayComponent {
       ...brief.do.map((item) => ({ kind: 'do' as const, headline: item.headline, detail: item.detail })),
       ...brief.avoid.map((item) => ({ kind: 'avoid' as const, headline: item.headline, detail: item.detail })),
     ]);
+    this.publishWidget();
+  }
+
+  /**
+   * The home-screen widgets show the account holder's own day, whichever
+   * chart was last open: a widget that changed person with the profile
+   * picker would read as the phone owner's day when it isn't.
+   */
+  private publishWidget(): void {
+    const loaded = this.loadedDaily();
+    const view = this.view();
+    const owner = this.kundlis.owner();
+    if (!this.widgets.enabled || !loaded || !view || !owner || owner.id !== this.kundlis.activeId()) return;
+    const { daily } = loaded;
+    const timeZone = daily.provenance.place.timezone;
+    this.widgets.publishToday({
+      date: daily.date,
+      score: view.score,
+      band: view.band,
+      label: view.scoreLabel,
+      headline: view.verdict,
+      summary: view.detail,
+      doItem: view.doItems[0] ?? '',
+      avoidItem: view.avoidItems[0] ?? '',
+      tithi: daily.star_of_day.tithi,
+      nakshatra: daily.star_of_day.nakshatra,
+      windows: daily.muhurta_windows.flatMap((w) => {
+        const span = timeZone ? windowSpan(daily.date, w.time, timeZone) : null;
+        return span ? [{ name: w.name, kind: w.kind, ...span }] : [];
+      }),
+      listen: this.listenScript(),
+    });
   }
 
   private applyDaily(name: string, city: string, daily: DailyGuidancePayload): void {
@@ -758,6 +792,7 @@ export class TodayComponent {
     ]);
     // A refresh rebuilds the view from the template; put the agent's words back.
     this.applyBrief();
+    this.publishWidget();
   }
 
   private async prefetchCalendar(profileId: string): Promise<void> {
@@ -767,6 +802,7 @@ export class TodayComponent {
       if (!place) return;
       const window = await this.festivals.upcoming(place, calendar.start_date, 60, this.preferences.festivalRegions());
       if (this.kundlis.activeId() !== profileId) return;
+      if (this.kundlis.owner()?.id === profileId) void this.widgets.publishCalendar(place, calendar.start_date, window.festivals);
       const today = localIsoDate(new Date());
       const horizon = localIsoDate(new Date(Date.now() + 14 * 86_400_000));
       this.upcomingFestival.set(

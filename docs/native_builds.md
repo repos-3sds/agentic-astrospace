@@ -169,6 +169,51 @@ the store listings point at the deployed URLs.
 - The native projects are not in CI; `npm run version:check` runs there, a
   native build does not.
 
+## Home-screen widgets
+
+Android has eight widgets, all drawn natively from data the app publishes;
+none of them call the server. Code: `ui/android/.../widgets/` and
+`ui/src/app/core/widget-bridge.service.ts`.
+
+| Widget | Shows | Tap |
+| --- | --- | --- |
+| Your day | score ring, label; medium adds headline and timing; large adds summary, one Do, one Avoid | Today |
+| Listen | today's headline and a play/stop button that reads the brief aloud | play/stop |
+| Calendar | tithi, nakshatra, next festival or moon day; 4x4 shows the month | Calendar |
+| Timing | the next window (Rahu Kalam first) with a live countdown | Calendar |
+| Moon | tonight's phase and the next full or new moon | Calendar |
+| Mantra | the practice last opened, today's count; tap the ring to count | the practice |
+| Ask | a search bar into Ask | Ask |
+| Today's Subhashita | today's verse and source | the verse screen, to share |
+
+How it fits together:
+
+- The app publishes JSON "parts" (`today`, `calendar`, `subhashita`,
+  `mantra`) through the `SiddhaWidgets` plugin into SharedPreferences.
+  Today publishes only the account holder's own day, not whichever profile
+  is open. Sign-out clears every part.
+- A part is only shown for its own date, so a phone that hasn't opened the
+  app today shows "Open Siddha" rather than yesterday's reading. Verses go
+  out 14 days ahead, so the verse widget works offline for two weeks.
+- Widgets refresh at the next window boundary or midnight (inexact alarm,
+  no exact-alarm permission), every 30 minutes, and after reboot, time or
+  timezone changes.
+- Mantra taps on the widget are held natively and folded into the tracker's
+  record when the app next opens, so both show one count. The count is per
+  local day.
+- Listen speaks with the phone's own voice (Android TextToSpeech, en-IN,
+  0.9x) in a `mediaPlayback` foreground service with a Stop notification.
+  It reads the same script as the Listen sheet. **Play Console:** App
+  content > Foreground service permissions needs a declaration for
+  media playback ("reads the daily brief aloud when the user taps play on
+  the widget") before an AAB with the widgets can be published.
+- Moon days come from `GET /api/v1/festivals/moon-days` (tithi at sunrise,
+  shipped with its `observance_note`).
+
+iPhone widgets are deferred until the Apple developer account is active;
+see the deferred backlog in
+[backend_astro_depth_checklist_2026-08-06.md](backend_astro_depth_checklist_2026-08-06.md).
+
 ## App icon
 
 The app icon is the Nine-Arm Galaxy drawn as gold light ribbons on space
