@@ -21,7 +21,7 @@ describe('AskHomeComponent ?q handoff', () => {
       providers: [
         provideRouter([]),
         { provide: ActivatedRoute, useValue: { queryParamMap: params.asObservable(), snapshot: { queryParamMap: convertToParamMap({}) } } },
-        { provide: KundliStore, useValue: { loaded: signal(true), load: () => Promise.resolve(), active: signal({ name: 'Mine' }), activeId: signal(null) } },
+        { provide: KundliStore, useValue: { loaded: signal(true), load: () => Promise.resolve(), active: signal({ name: 'Mine' }), owner: signal(null), activeId: signal(null) } },
         { provide: EntitlementService, useValue: { refresh: () => Promise.resolve(), askAllowance: signal(null), current: signal(null) } },
         { provide: VedicService, useValue: { dailyGuidance: () => Promise.resolve(null) } },
         { provide: SpeechService, useValue: { start: () => Promise.resolve(), stop: () => Promise.resolve(), transcript: signal(''), listening: signal(false) } },

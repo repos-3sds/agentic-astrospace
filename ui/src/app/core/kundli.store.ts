@@ -33,9 +33,17 @@ export class KundliStore {
   /** The account holder's own profile. Greetings address this person, whose
    * chart is open notwithstanding: "Namaste, Bhaskar" to the owner reads as
    * the app mistaking who is holding the phone. */
-  readonly owner = computed(
-    () => this.kundlis().find((k) => (k.relation ?? '').trim().toLowerCase() === 'self') ?? null,
-  );
+  readonly owner = computed(() => {
+    const profiles = this.kundlis();
+    const self = profiles.find((k) => (k.relation ?? '').trim().toLowerCase() === 'self');
+    if (self) return self;
+    // Accounts from older builds can lack a "self" row (Hawk's own profile
+    // was stored as "relative"); the first profile made is the holder's.
+    const dated = profiles.filter((k) => k.created_at);
+    return dated.length
+      ? dated.reduce((first, k) => (k.created_at! < first.created_at! ? k : first))
+      : profiles[0] ?? null;
+  });
   private loadPromise: Promise<void> | null = null;
   private readonly activeStorageKey = 'astrospace.activeKundliId';
   /** The list on screen came from the device cache and the server has not confirmed it yet. */

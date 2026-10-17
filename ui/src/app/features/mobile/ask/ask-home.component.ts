@@ -73,7 +73,8 @@ export class AskHomeComponent {
     return `${allowance.remaining} of ${allowance.limit} ${plan}answers left this month${credits}`;
   });
   private readonly router = inject(Router);
-  readonly name = computed(() => this.kundlis.active()?.name ?? 'there');
+  // The account holder, whose chart is open notwithstanding (see KundliStore.owner).
+  readonly name = computed(() => (this.kundlis.owner() ?? this.kundlis.active())?.name.split(' ')[0] ?? 'there');
   protected readonly heading = computed(() => this.navigation.web ? 'What would you like to explore?' : `What’s on your mind, ${this.name()}?`);
   protected readonly lede = computed(() => ({
     guided: 'Ask in plain language. We keep the answer practical and explain unfamiliar terms.',

@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { Capacitor, registerPlugin } from '@capacitor/core';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
@@ -51,9 +51,25 @@ export class PushService {
   readonly native = computed(() => Capacitor.isNativePlatform());
 
   private listenersInstalled = false;
+  private booted = false;
+  private signedInAs: string | null = null;
 
-  /** Called once after auth resolves on native boot. Never prompts. */
+  constructor() {
+    // Boot registers whoever is signed in at launch. Signing out and back in
+    // without a restart left the device with no live token until the next
+    // cold start (retest of build 487), so a new sign-in registers again.
+    effect(() => {
+      const userId = this.auth.session()?.user?.id ?? null;
+      untracked(() => {
+        if (userId && userId !== this.signedInAs && this.booted) void this.init();
+        this.signedInAs = userId;
+      });
+    });
+  }
+
+  /** Called after auth resolves on native boot, and on each later sign-in. Never prompts. */
   async init(): Promise<void> {
+    this.booted = true;
     if (!this.native()) return;
     await this.refreshPermission();
     if (this.permission() === 'granted' && this.auth.isAuthenticated()) {
