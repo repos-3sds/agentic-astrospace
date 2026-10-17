@@ -24,7 +24,10 @@
   padding-bottom: calc(var(--m-tabbar-total) + max(18px, var(--m-safe-bottom)));
   scroll-padding-bottom: calc(var(--m-tabbar-total) + max(18px, var(--m-safe-bottom)));
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  // No -webkit-overflow-scrolling: touch here. On iOS it clips Today's
+  // position: fixed sky to this box (the strip behind the clock stayed a flat
+  // band) and lifts its z-index: -1 day wash in front of the page (a green
+  // cast on Steady days). iOS 13+ scrolls with momentum without it.
   overscroll-behavior-y: contain;
 }
 
