@@ -180,9 +180,17 @@ export class PushService {
 
   private async storeToken(value: string): Promise<void> {
     const provider = Capacitor.getPlatform() === 'ios' ? 'apns' : 'fcm';
+    let previous: string | undefined;
+    try {
+      const stored = JSON.parse(localStorage.getItem(TOKEN_KEY) ?? 'null') as { provider?: string; token?: string } | null;
+      if (stored?.provider === provider && stored.token && stored.token !== value) previous = stored.token;
+    } catch { /* storage unavailable or unreadable */ }
     const registration = {
       provider,
       token: value,
+      // The OS rotated this device's token: retire the old one, or each push
+      // reaches the phone twice.
+      ...(previous ? { replaces: previous } : {}),
       environment: 'production',
       locale: navigator.language,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,

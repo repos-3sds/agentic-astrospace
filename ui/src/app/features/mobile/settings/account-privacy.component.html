@@ -15,7 +15,7 @@
       class="action"
       type="button"
       [disabled]="busy()"
-      [attr.aria-expanded]="action.id === 'email' ? editingEmail() : null"
+      [attr.aria-expanded]="action.id === 'email' ? editingEmail() : action.id === 'signout' ? confirmingSignOut() : null"
       (click)="run(action.id)"
     >
       <span class="action-label">
@@ -40,6 +40,15 @@
           {{ busy() === 'email' ? 'Sending…' : 'Send confirmation link' }}
         </button>
       </form>
+    }
+    @if (action.id === 'signout' && confirmingSignOut()) {
+      <div class="email-form" role="group" aria-label="Confirm sign out">
+        <p class="hint">Sign out of Siddha on this phone? Your profiles and readings stay in your account.</p>
+        <button class="send" type="button" [disabled]="busy()" (click)="run('signout-confirmed')">
+          {{ busy() === 'signout-confirmed' ? 'Signing out…' : 'Sign out' }}
+        </button>
+        <button class="cancel" type="button" (click)="confirmingSignOut.set(false)">Cancel</button>
+      </div>
     }
   }
   @if (message()) { <p class="status" role="status">{{ message() }}</p> }

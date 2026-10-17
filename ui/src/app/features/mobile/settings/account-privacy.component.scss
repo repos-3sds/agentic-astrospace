@@ -67,4 +67,5 @@
   }
   .hint { @include m-caption; color: var(--m-muted); margin: 0; }
   .send { @include m-cta-primary; width: 100%; &:disabled { opacity: .6; cursor: wait; } }
+  .cancel { @include m-cta-tertiary; align-self: center; }
 }

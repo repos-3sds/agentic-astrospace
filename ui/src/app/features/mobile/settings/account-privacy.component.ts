@@ -40,6 +40,8 @@ export class AccountPrivacyComponent {
   /** The inline Change email form under its row. */
   protected readonly editingEmail = signal(false);
   protected readonly newEmail = signal('');
+  /** Sign out asks once: a stray tap in Settings ended the session outright. */
+  protected readonly confirmingSignOut = signal(false);
   // The real address only: `auth.email()` falls back to "Local workspace".
   protected readonly currentEmail = computed(() => this.auth.user()?.email ?? null);
 
@@ -55,6 +57,10 @@ export class AccountPrivacyComponent {
     this.busy.set(id);
     try {
       if (id === 'signout') {
+        this.confirmingSignOut.update((open) => !open);
+        return;
+      }
+      if (id === 'signout-confirmed') {
         this.kundlis.reset();
         await this.auth.signOut(['/m', 'start']);
         return;

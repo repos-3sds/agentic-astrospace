@@ -77,6 +77,7 @@ def env():
             "foreign_remedy": foreign_remedy,
             "foreign_activity": foreign_activity,
             "foreign_token": foreign_token,
+            "Session": Session,
         }
     finally:
         app.dependency_overrides.pop(get_db, None)
@@ -141,6 +142,31 @@ class TestPushTokens:
         r = client.post("/api/v1/me/push-tokens/revoke",
                         json={"provider": "apns", "token": "never-seen"})
         assert r.status_code == 404
+
+    def test_a_rotated_token_retires_the_one_it_replaces(self, client, env):
+        """Both tokens stayed live, so each push reached the phone twice."""
+        client.put("/api/v1/me/push-tokens", json={"provider": "fcm", "token": "tok-old"})
+        r = client.put("/api/v1/me/push-tokens",
+                       json={"provider": "fcm", "token": "tok-new", "replaces": "tok-old"})
+        assert r.status_code == 200
+        db = env["Session"]()
+        try:
+            from astrospace.db.models import PushToken
+            rows = {t.token: t.revoked_at for t in db.query(PushToken).filter(PushToken.token.in_(["tok-old", "tok-new"]))}
+            assert rows["tok-old"] is not None and rows["tok-new"] is None
+        finally:
+            db.close()
+
+    def test_replaces_cannot_retire_another_users_token(self, client, env):
+        client.put("/api/v1/me/push-tokens",
+                   json={"provider": "apns", "token": "tok-x", "replaces": env["foreign_token"]})
+        db = env["Session"]()
+        try:
+            from astrospace.db.models import PushToken
+            foreign = db.query(PushToken).filter(PushToken.token == env["foreign_token"]).one()
+            assert foreign.revoked_at is None
+        finally:
+            db.close()
 
 
 # ── Notification preferences ─────────────────────────────────────────────────
