@@ -1469,6 +1469,17 @@ Reordered 2026-09-18 by measured OCR rather than assumed availability.
   Kalam (ActivityKit, `Text(timerInterval:)` for the countdown). Listen
   becomes an App Intent (iOS 17) playing AVSpeechSynthesizer audio.
 
+- [ ] **Listen widget audio without opening the app.** The widget plays
+  the overnight natural-voice render, but it reaches the phone only when
+  Today opens (`WidgetBridgeService.publishListenAudio`); before that, the
+  widget reads with the phone voice. *Why not built:* fetching from the
+  widget needs a sign-in the native side doesn't hold, and keeping a
+  long-lived token outside the app's auth store is a security decision.
+  *Unblocks when:* a narrow, per-device read token for
+  `/api/v1/voice/speech` (or a signed URL the worker issues with each
+  brief) exists. *Hook:* a WorkManager job after the 22:30 brief, writing
+  through `WidgetStore.saveListenAudio`.
+
 
 ## Deferred backlog — Tier 0 audit follow-ups (2026-10-18)
 
