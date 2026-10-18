@@ -17,24 +17,30 @@ public class MoonWidget extends BaseWidget {
     protected RemoteViews render(Context context, int widthDp, int heightDp) {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_moon);
         views.setOnClickPendingIntent(R.id.widget_root, Widgets.open(context, "/m/calendar"));
-        views.setImageViewBitmap(R.id.moon, Widgets.moon(context, System.currentTimeMillis(), 56));
+        views.setImageViewBitmap(R.id.moon, Widgets.moon(context, System.currentTimeMillis(), 72));
 
         JSONObject today = WidgetStore.get(context, "today");
         boolean fresh = today != null && WidgetStore.today().equals(today.optString("date"));
         views.setTextViewText(R.id.tithi, fresh ? today.optString("tithi") : "The moon today");
-        views.setTextViewText(R.id.next, nextMoon(WidgetStore.get(context, "calendar")));
+        JSONObject next = nextMoon(WidgetStore.get(context, "calendar"));
+        if (next == null) {
+            views.setTextViewText(R.id.next_name, "");
+            views.setTextViewText(R.id.next, "");
+            return views;
+        }
+        boolean full = "full".equals(next.optString("moon"));
+        String date = next.optString("date");
+        String when = Widgets.daysUntil(WidgetStore.today(), date);
+        views.setTextViewText(R.id.next_name, full ? "PURNIMA" : "AMAVASYA");
+        views.setTextViewText(R.id.next, "today".equals(when) ? "Today"
+            : Widgets.shortDate(date) + " · " + when);
         return views;
     }
 
-    static String nextMoon(JSONObject calendar) {
-        if (calendar == null) return "";
+    /** The next full or new moon day from today, as the app's panchanga dates it. */
+    static JSONObject nextMoon(JSONObject calendar) {
+        if (calendar == null) return null;
         JSONArray moons = calendar.optJSONArray("moonDays");
-        String today = WidgetStore.today();
-        JSONObject next = CalendarWidget.firstFrom(moons, today);
-        if (next == null) return "";
-        boolean full = "full".equals(next.optString("moon"));
-        String when = Widgets.daysUntil(today, next.optString("date"));
-        if ("today".equals(when)) return full ? "Purnima today" : "Amavasya today";
-        return (full ? "Purnima " : "Amavasya ") + when;
+        return CalendarWidget.firstFrom(moons, WidgetStore.today());
     }
 }

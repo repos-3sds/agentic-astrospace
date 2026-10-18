@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
@@ -25,6 +24,7 @@ public final class Widgets {
 
     public static final String EXTRA_ROUTE = "siddha_route";
     static final String ACTION_REFRESH = "app.asksiddha.mobile.widgets.REFRESH";
+    static final String ACTION_TICK = "app.asksiddha.mobile.widgets.TICK";
 
     @SuppressWarnings("unchecked")
     static final Class<? extends BaseWidget>[] ALL = new Class[] {
@@ -39,6 +39,44 @@ public final class Widgets {
         AppWidgetManager manager = AppWidgetManager.getInstance(context);
         for (Class<? extends BaseWidget> type : ALL) refresh(context, manager, type);
         scheduleNextRefresh(context);
+        scheduleTick(context);
+    }
+
+    /** The minute tick: only the widgets that count down. */
+    static void tick(Context context) {
+        AppWidgetManager manager = AppWidgetManager.getInstance(context);
+        refresh(context, manager, TimingWidget.class);
+        refresh(context, manager, TodayWidget.class);
+        scheduleTick(context);
+    }
+
+    /**
+     * Redraws the countdowns at the next minute while a window is still ahead
+     * or running and a widget shows one. Not a wakeup alarm: a phone asleep
+     * catches up when its screen comes on, which is when anyone looks.
+     */
+    static void scheduleTick(Context context) {
+        AlarmManager alarms = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        if (alarms == null) return;
+        Intent intent = new Intent(context, WidgetRefreshReceiver.class).setAction(ACTION_TICK);
+        PendingIntent pending = PendingIntent.getBroadcast(
+            context, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        long now = System.currentTimeMillis();
+        JSONObject today = WidgetStore.get(context, "today");
+        boolean counting = today != null && WidgetStore.today().equals(today.optString("date"))
+            && TimingWidget.current(today, now) != null
+            && (has(context, TimingWidget.class) || has(context, TodayWidget.class));
+        if (!counting) {
+            alarms.cancel(pending);
+            return;
+        }
+        long next = (now / 60_000L + 1) * 60_000L;
+        alarms.setWindow(AlarmManager.RTC, next, 10_000L, pending);
+    }
+
+    private static boolean has(Context context, Class<? extends BaseWidget> type) {
+        int[] ids = AppWidgetManager.getInstance(context).getAppWidgetIds(new ComponentName(context, type));
+        return ids != null && ids.length > 0;
     }
 
     static void refresh(Context context, Class<? extends BaseWidget> type) {
@@ -159,7 +197,7 @@ public final class Widgets {
         Canvas canvas = new Canvas(bitmap);
         float r = size / 2f * 0.92f, cx = size / 2f, cy = size / 2f;
         Paint dark = new Paint(Paint.ANTI_ALIAS_FLAG);
-        dark.setColor(Color.argb(70, 160, 150, 140));
+        dark.setColor(color(context, app.asksiddha.mobile.R.color.widget_moon_dark));
         canvas.drawCircle(cx, cy, r, dark);
 
         // 2000-01-06 18:14 UTC was a new moon; 29.530589 days per lunation.
@@ -170,7 +208,7 @@ public final class Widgets {
         boolean waxing = phase < 0.5;
 
         Paint light = new Paint(Paint.ANTI_ALIAS_FLAG);
-        light.setColor(Color.rgb(246, 233, 205));
+        light.setColor(color(context, app.asksiddha.mobile.R.color.widget_moon_lit));
         Path path = new Path();
         RectF disc = new RectF(cx - r, cy - r, cx + r, cy + r);
         // The lit limb is a half disc; the terminator is a half ellipse whose
@@ -202,6 +240,21 @@ public final class Widgets {
             return c.getTimeInMillis() / 86400000L;
         } catch (RuntimeException e) {
             return 0;
+        }
+    }
+
+    /** "10:24" in the phone's own clock style. */
+    static String clock(long ms) {
+        return new java.text.SimpleDateFormat("HH:mm", Locale.ENGLISH).format(new java.util.Date(ms));
+    }
+
+    /** "Sat 25 Oct" from a YYYY-MM-DD date. */
+    static String shortDate(String iso) {
+        try {
+            java.text.SimpleDateFormat in = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            return new java.text.SimpleDateFormat("EEE d MMM", Locale.ENGLISH).format(in.parse(iso));
+        } catch (java.text.ParseException e) {
+            return iso;
         }
     }
 

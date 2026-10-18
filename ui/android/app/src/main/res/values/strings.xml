@@ -8,6 +8,10 @@
     <string name="widget_ask_prompt">Ask Siddha anything</string>
     <string name="widget_subhashita_eyebrow">TODAY’S SUBHASHITA</string>
     <string name="widget_share">Share</string>
+    <string name="widget_today_eyebrow">YOUR DAY</string>
+    <string name="widget_do">Do</string>
+    <string name="widget_avoid">Avoid</string>
+    <string name="widget_calendar_legend">Festival</string>
     <string name="widget_today_name">Your day</string>
     <string name="widget_today_description">Today’s score, headline and timing</string>
     <string name="widget_listen_name">Listen to your day</string>
