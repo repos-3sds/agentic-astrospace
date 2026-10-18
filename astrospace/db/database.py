@@ -105,9 +105,14 @@ def init_db():
     # names keep the original four discoverable at a glance.
     from . import models  # noqa: F401
     from .models import Kundli, PredictionClaim, Reading, UserSettings  # noqa: F401
-    # create_all uses checkfirst=True, so tables already created by the Supabase
-    # migrations are left untouched — this only fills gaps (e.g. local SQLite).
-    Base.metadata.create_all(bind=engine)
+    # Postgres schema comes only from supabase/migrations, which also turn on
+    # RLS and revoke client grants. create_all used to run there too, so a
+    # model merged before its migration shipped as a table with no RLS and
+    # Supabase's default grants. Local SQLite (dev and tests) still builds
+    # from the models; ASTROSPACE_CREATE_TABLES=1 forces it for a scratch
+    # Postgres.
+    if DATABASE_URL.startswith("sqlite") or os.getenv("ASTROSPACE_CREATE_TABLES") == "1":
+        Base.metadata.create_all(bind=engine)
     _migrate_sqlite_kundlis()
     _migrate_sqlite_readings()
     _migrate_sqlite_prediction_claims()

@@ -36,6 +36,7 @@ from ..db import get_db
 from ..db import crud, crud_mobile as cm
 from ..db.crud_profile_context import build_profile_context_projection
 from ..db.database import release_connection, short_session
+from .. import ratelimit
 from ..entitlements.usage import commit_ask_credit, release_ask_credit, reserve_ask_credit
 from .auth import CurrentUser
 from .context_routes import _chart_from_kundli
@@ -495,6 +496,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
     # Only a real answer attempt holds an Ask credit: every terminal state
     # above (refer-out, clarification, not ready) returned without one. A 402
     # here is the structured limit denial, raised before any model call.
+    ratelimit.require(user.id, "ask")  # always on, unlike the plan quota below
     reservation = reserve_ask_credit(db, user.id)
 
     def persist_prepared(reading: Optional[StructuredReading], status: str) -> Optional[str]:

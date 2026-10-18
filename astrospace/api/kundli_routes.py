@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
@@ -7,7 +9,10 @@ from ..db import crud
 from ..entitlements import EntitlementDenied, resolve_entitlements
 from ..core.chart import BirthChart
 from ..core.cities import lookup_city
+from ..core.vedic.positions import LocationError, sidereal_big_three
 from .auth import CurrentUser
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/kundlis", tags=["kundlis"])
 
@@ -62,6 +67,16 @@ class KundliUpdate(BaseModel):
     notes: Optional[str] = Field(default=None, max_length=MAX_NOTES_CHARS)
 
 
+def _stored_or_sidereal(k: Kundli) -> dict:
+    fields = {f: getattr(k, f) for f in (*_BIRTH_FIELDS, "id")}
+    signs = _big_three(fields)
+    return {
+        "sun_sign": signs.get("sun_sign", k.sun_sign),
+        "moon_sign": signs.get("moon_sign", k.moon_sign),
+        "ascendant": signs.get("ascendant", k.ascendant),
+    }
+
+
 def _kundli_to_dict(k: Kundli) -> dict:
     return {
         "id":           k.id,
@@ -76,9 +91,9 @@ def _kundli_to_dict(k: Kundli) -> dict:
         "birth_city":   k.birth_city,
         "birth_nation": k.birth_nation,
         "birth_time_accuracy": k.birth_time_accuracy or "exact",
-        "sun_sign":     k.sun_sign,
-        "moon_sign":    k.moon_sign,
-        "ascendant":    k.ascendant,
+        # Rows saved before 2026-10-18 hold tropical signs; recompute so
+        # every reader gets the sidereal ones without a data migration.
+        **_stored_or_sidereal(k),
         "chart_data":   k.chart_data,
         "notes":        k.notes,
         "created_at":   k.created_at.isoformat() if k.created_at else None,
@@ -108,23 +123,36 @@ def _require_resolvable_place(city: str, nation: str) -> None:
         )
 
 
+def _big_three(data: dict) -> dict:
+    """Sidereal sun/moon/lagna signs for a birth-detail dict, or {} when the
+    place cannot be resolved. Every screen in the app is sidereal (Lahiri);
+    the profile summary must agree with them."""
+    try:
+        return sidereal_big_three(
+            data["birth_year"], data["birth_month"], data["birth_day"],
+            data["birth_hour"], data["birth_minute"],
+            data["birth_city"], data.get("birth_nation") or "IN",
+        )
+    except (LocationError, KeyError, TypeError, ValueError):
+        logger.warning("big three not computed for kundli %s", data.get("id"))
+        return {}
+
+
 def _with_chart_fields(data: dict) -> dict:
     """Compute chart_data + big-three columns for a full birth-detail dict.
-    Leaves them untouched (create: null) if calculation fails."""
+    Leaves them untouched (create: null) if calculation fails.
+
+    chart_data stays the kerykeion payload the legacy web app reads; the
+    big-three columns are sidereal (see _big_three)."""
     try:
         chart = BirthChart(
             data["name"], data["birth_year"], data["birth_month"], data["birth_day"],
             data["birth_hour"], data["birth_minute"], data["birth_city"], data["birth_nation"],
         )
-        chart_dict = chart.to_dict()
-        planets_list = chart_dict.get("planets", [])
-        planets = {p["name"]: p for p in planets_list} if isinstance(planets_list, list) else planets_list
-        data["sun_sign"]   = planets.get("Sun", {}).get("sign")
-        data["moon_sign"]  = planets.get("Moon", {}).get("sign")
-        data["ascendant"]  = chart_dict.get("ascendant")
-        data["chart_data"] = chart_dict
+        data["chart_data"] = chart.to_dict()
     except Exception:
-        import traceback; traceback.print_exc()
+        logger.exception("kerykeion chart_data not computed")
+    data.update(_big_three(data))
     return data
 
 

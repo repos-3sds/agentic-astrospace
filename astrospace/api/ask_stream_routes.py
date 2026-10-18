@@ -44,6 +44,7 @@ from .ask_routes import (
     _owned_thread, _persist_ask_turn, _profile_context_store, _settle_credit,
     _thread_established_domain,
 )
+from .. import ratelimit
 from ..entitlements.usage import commit_ask_credit, release_ask_credit, reserve_ask_credit
 from .auth import CurrentUser
 from .context_routes import _chart_from_kundli
@@ -378,6 +379,7 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
     # Reserved before the response starts, so a reached limit is a plain 402
     # with the structured denial rather than a frame mid-stream. Every
     # terminal envelope above returned without touching a credit.
+    ratelimit.require(user.id, "ask")  # always on, unlike the plan quota below
     reservation = reserve_ask_credit(db, user.id)
     release_connection(db)  # the reservation is ids only; hold nothing into the stream
 

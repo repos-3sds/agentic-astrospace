@@ -32,6 +32,7 @@ export class SessionTeardown {
       }
     }
     clearUserSessionStorage();
+    clearUserLocalStorage();
   }
 }
 
@@ -46,6 +47,22 @@ function clearUserSessionStorage(): void {
     for (const key of Object.keys(sessionStorage)) {
       if (key.startsWith('astrospace')) sessionStorage.removeItem(key);
     }
+  } catch {
+    // Storage can be unavailable (private mode); nothing to clear then.
+  }
+}
+
+/**
+ * Device-wide (localStorage) values that belong to the signed-in person, not
+ * to the phone. Theme, language and onboarding flags stay; these go. Notes
+ * were left behind until 2026-10-18, so the next account to sign in on a
+ * shared phone could read the previous person's private draft.
+ */
+export const USER_LOCAL_STORAGE_KEYS = ['astrospace.mobile.notes.draft'] as const;
+
+function clearUserLocalStorage(): void {
+  try {
+    for (const key of USER_LOCAL_STORAGE_KEYS) localStorage.removeItem(key);
   } catch {
     // Storage can be unavailable (private mode); nothing to clear then.
   }

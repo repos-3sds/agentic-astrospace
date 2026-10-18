@@ -24,6 +24,19 @@ from astrospace.db.models import DailyGuidanceCache, PushToken
 from astrospace.notifications import daily_briefs
 from main import app
 
+
+@pytest.fixture(autouse=True)
+def _today_is_the_test_day(monkeypatch):
+    """On open, only a brief for a day near today may be written (2026-10-18
+    audit, S1). These tests pin their day to 2026-10-16."""
+    from datetime import date
+    from astrospace.api import context_routes
+    monkeypatch.setattr(context_routes, "_utc_today", lambda: date(2026, 10, 16))
+    # Stored briefs expire a day after their Vedic day, measured on the real
+    # clock, so from 2026-10-18 every brief these tests store read as expired
+    # and was written again. Keep them for the test's own day.
+    monkeypatch.setattr(store, "_expiry", lambda payload: None)
+
 ME = "brief-reader"
 AS_OF = "2026-10-16T08:00:00+05:30"
 # Rahu Kalam and Abhijit for the test day and place, from the engine.

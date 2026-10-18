@@ -62,3 +62,13 @@ def _default_repair(self, messages, fields):
 def _repair_defaults_to_the_mocked_generation():
     with patch.object(DomainReadingAgent, "run_structured_repair", new=_default_repair):
         yield
+
+
+@pytest.fixture(autouse=True)
+def _reset_generation_ceilings():
+    """The always-on per-account ceilings (astrospace/ratelimit.py) count in
+    process memory, and many tests reuse one user id; start each test empty."""
+    from astrospace import ratelimit
+    ratelimit.reset()
+    yield
+    ratelimit.reset()

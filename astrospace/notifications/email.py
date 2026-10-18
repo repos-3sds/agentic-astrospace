@@ -304,11 +304,25 @@ def _block_text(block: dict) -> list[str]:
     return lines + [""]
 
 
+def safe_app_path(path: str | None) -> str:
+    """An in-app path, or the Today screen.
+
+    The button link is base_url() + path, so a path such as
+    "@evil.example/login" turned the link into one for another site (URL
+    userinfo), and "//evil.example" into a protocol-relative one. Only a
+    plain absolute path under the app is kept.
+    """
+    if (not path or not path.startswith("/") or path.startswith("//")
+            or any(ch in path for ch in "@\\\r\n\t ")):
+        return "/m/today"
+    return path
+
+
 def render(content: EmailContent, *, user_id: str, category: str) -> tuple[str, str]:
     """(html, text) for one email. Every value is escaped here, once: agent
     copy is model output and is never trusted as markup."""
     e = html.escape
-    link = f"{base_url()}{content.button_path}"
+    link = f"{base_url()}{safe_app_path(content.button_path)}"
     logo = f"{base_url()}{LOGO_PATH}"
     address = os.getenv("EMAIL_POSTAL_ADDRESS") or DEFAULT_POSTAL_ADDRESS
     label = CATEGORY_LABELS.get(category, "these emails")
