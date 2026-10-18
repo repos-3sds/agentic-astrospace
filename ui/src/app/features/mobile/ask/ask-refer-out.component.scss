@@ -17,6 +17,7 @@
 }
 
 .back {
+  @include m-hit-44;
   line-height: 0;
   img { width: 24px; height: 24px; display: block; }
 }

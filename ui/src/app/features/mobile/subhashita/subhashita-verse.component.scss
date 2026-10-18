@@ -122,9 +122,10 @@ figcaption {
 .share { @include m-cta-primary; width: 100%; }
 .words { @include m-cta-secondary; width: 100%; }
 
-.error {
+.error, .status {
   @include m-body-small;
   margin: 0;
   color: var(--m-muted);
   text-align: center;
 }
+.error { color: var(--m-bad); }

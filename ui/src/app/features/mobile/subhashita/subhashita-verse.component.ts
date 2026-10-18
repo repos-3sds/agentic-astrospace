@@ -45,6 +45,8 @@ import { longDate, shareText, storyCardFile } from './story-card';
     </div>
     @if (error()) {
       <p class="error" role="alert">{{ error() }}</p>
+    } @else if (status()) {
+      <p class="status" role="status">{{ status() }}</p>
     }
   `,
   styleUrl: './subhashita-verse.component.scss',
@@ -56,6 +58,8 @@ export class SubhashitaVerseComponent {
   protected readonly title = SUBHASHITA_TITLE;
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
+  /** Good news, kept apart from `error` so it isn't styled or announced as one (D20). */
+  protected readonly status = signal<string | null>(null);
   protected readonly date = longDate;
 
   constructor() {
@@ -88,6 +92,7 @@ export class SubhashitaVerseComponent {
   protected async shareWords(): Promise<void> {
     this.haptics.tap();
     this.error.set(null);
+    this.status.set(null);
     const text = shareText(this.verse());
     try {
       if (Capacitor.isNativePlatform()) {
@@ -96,7 +101,7 @@ export class SubhashitaVerseComponent {
         await navigator.share({ title: SUBHASHITA_TITLE, text });
       } else {
         await navigator.clipboard.writeText(text);
-        this.error.set('Copied. Paste it wherever you like.');
+        this.status.set('Copied. Paste it wherever you like.');
       }
     } catch (err) {
       const message = String((err as Error)?.message ?? '').toLowerCase();

@@ -59,7 +59,7 @@
   .toggle-detail { @include m-caption; color: var(--m-muted); }
 
   .switch {
-    position: relative;
+    @include m-hit-44;
     width: 44px;
     height: 26px;
     flex-shrink: 0;

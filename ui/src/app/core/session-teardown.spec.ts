@@ -8,11 +8,13 @@ describe('SessionTeardown', () => {
 
   it('forgets the signed-out person’s notes but keeps device settings', () => {
     localStorage.setItem('astrospace.mobile.notes.draft', 'private draft');
+    localStorage.setItem('astrospace.mobile.notes.draft.profile-2', 'about Ravi');
     localStorage.setItem('astrospace.theme.test', 'dark');
 
     new SessionTeardown().run();
 
     expect(localStorage.getItem('astrospace.mobile.notes.draft')).toBeNull();
+    expect(localStorage.getItem('astrospace.mobile.notes.draft.profile-2')).toBeNull();
     expect(localStorage.getItem('astrospace.theme.test')).toBe('dark');
   });
 

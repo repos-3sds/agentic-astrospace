@@ -68,6 +68,23 @@
     </div>
   }
 
+  <!-- On this phone only: the sheet is shown by the app, not sent (D8). -->
+  <div class="toggle-row">
+    <span class="toggle-text">
+      <span class="toggle-title">Verse when you open the app</span>
+      <span class="toggle-detail">Today’s Subhashita, once a day, on this phone</span>
+    </span>
+    <button
+      class="switch"
+      type="button"
+      role="switch"
+      [class.is-on]="verse.sheetOn()"
+      [attr.aria-checked]="verse.sheetOn()"
+      aria-label="Verse when you open the app"
+      (click)="verse.setSheetOn(!verse.sheetOn())"
+    ></button>
+  </div>
+
   <p class="local-note">
     @if (permission() === 'granted') {
       Delivered by the Siddha notification service; nothing is sent that you turned off.

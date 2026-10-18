@@ -52,6 +52,6 @@
   }
 
   @if (dailyVerse(); as verse) {
-    <as-subhashita-sheet [verse]="verse" (dismissed)="dailyVerse.set(null)" />
+    <as-subhashita-sheet [verse]="verse" (dismissed)="dailyVerse.set(null)" (turnedOff)="turnOffVerseSheet()" />
   }
 </div>

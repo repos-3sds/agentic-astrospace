@@ -20,6 +20,7 @@ import { ScrollMemoryDirective } from './scroll-memory.directive';
 import { Subhashita, SubhashitaService } from '../../../core/subhashita.service';
 import { SubhashitaSheetComponent } from '../subhashita/subhashita-sheet.component';
 import { WidgetBridgeService } from '../../../core/widget-bridge.service';
+import { deepLinkArrivedAt } from '../../../core/deep-link-arrival';
 
 interface MobileTab {
   commands: string[];
@@ -47,6 +48,9 @@ function under(path: string, root: string): boolean {
  * home indicator showed as bare white bands in the simulator — the WebView's
  * own background, not the app's.
  */
+const VERSE_SHEET_SETTLE_MS = 900;
+const DEEP_LINK_WINDOW_MS = 15_000;
+
 @Component({
   selector: 'as-mobile-shell',
   standalone: true,
@@ -134,16 +138,25 @@ export class MobileShellComponent {
         if (verse) this.widgets.publishSubhashita(this.subhashita.upcoming());
       }).catch(() => undefined);
     }
-    if (!this.subhashita.unseenToday()) return;
+    if (!this.subhashita.sheetOn() || !this.subhashita.unseenToday()) return;
     if (this.subhashita.neverOffered()) {
       this.subhashita.markSeen();
       return;
     }
     const verse = await this.subhashita.load();
+    // A push or widget tap lands its route a moment after a cold start; give
+    // it that moment, and don't cover where the reader asked to go (D8).
+    await new Promise((resolve) => setTimeout(resolve, VERSE_SHEET_SETTLE_MS));
     if (!verse || !this.subhashita.unseenToday()) return;
     this.subhashita.markSeen();
-    if (this.currentPath().startsWith('/m/subhashita') || this.overlay.open()) return;
+    const fromTap = Date.now() - deepLinkArrivedAt() < DEEP_LINK_WINDOW_MS;
+    if (fromTap || this.currentPath().startsWith('/m/subhashita') || this.overlay.open()) return;
     this.dailyVerse.set(verse);
+  }
+
+  protected turnOffVerseSheet(): void {
+    this.subhashita.setSheetOn(false);
+    this.dailyVerse.set(null);
   }
 
   /** The profile list failed and nothing is cached: every tab would be empty,

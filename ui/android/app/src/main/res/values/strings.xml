@@ -7,7 +7,7 @@
     <!-- Home-screen widgets (app/asksiddha/mobile/widgets) -->
     <string name="widget_ask_prompt">Ask Siddha anything</string>
     <string name="widget_subhashita_eyebrow">TODAY’S SUBHASHITA</string>
-    <string name="widget_share">Share</string>
+    <string name="widget_share">Open to share</string>
     <string name="widget_today_eyebrow">YOUR DAY</string>
     <string name="widget_do">Do</string>
     <string name="widget_avoid">Avoid</string>
@@ -27,5 +27,5 @@
     <string name="widget_ask_name">Ask Siddha</string>
     <string name="widget_ask_description">Ask a question from the home screen</string>
     <string name="widget_subhashita_name">Today’s Subhashita</string>
-    <string name="widget_subhashita_description">A verse a day from the Gita and Chanakya Niti</string>
+    <string name="widget_subhashita_description">A verse a day from the Gita, Chanakya Niti and the Puranas</string>
 </resources>

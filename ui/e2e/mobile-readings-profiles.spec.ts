@@ -638,16 +638,18 @@ test('mobile Notes and Readings avoid false persistence and load real claims', a
   await mockMobileApi(page);
 
   await page.goto('/m/notes');
-  await expect(page.getByText('Local draft', { exact: true })).toBeVisible();
-  await expect(page.getByText(/not synced to your Siddha account/)).toBeVisible();
+  await expect(page.getByText('On this phone', { exact: true })).toBeVisible();
+  await expect(page.getByText(/They aren't sent to Siddha/)).toBeVisible();
   await expect(page.getByText(/Stored privately on your account/)).toHaveCount(0);
   await expect(page.getByText(/^Saved$/)).toHaveCount(0);
 
-  await expect(page.getByText('Saved on this device')).toBeVisible();
-  await page.getByRole('textbox', { name: 'Local draft notes' }).fill('Temporary local note');
+  await expect(page.getByText('Saved on this phone')).toBeVisible();
+  const notes = page.getByRole('textbox', { name: /^Notes about / });
+  await notes.fill('Temporary local note');
   await page.reload();
-  await expect(page.getByRole('textbox', { name: 'Local draft notes' })).toHaveValue('Temporary local note');
-  await expect(page.getByText(/stays on this device only/)).toBeVisible();
+  await expect(notes).toHaveValue('Temporary local note');
+  await expect(notes).toHaveAttribute('spellcheck', 'true');
+  await expect(page.getByText(/won't move to a new phone/)).toBeVisible();
 
   await page.goto('/m/readings');
   await expect(page.getByText('Mercury week reading from the API.')).toBeVisible();
