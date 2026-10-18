@@ -48,3 +48,26 @@ to the web landing page. The phone app is unaffected: it uses its own `/m` route
   (`nativeApiOrigin`, and the Android sign-in callback in `AndroidManifest.xml`). That
   address keeps working, and switching it means a new store build, so it waits until the
   domain has proven itself.
+
+## Links that open the app (Android App Links)
+
+Email buttons point at `https://asksiddha.app/m/today`, `/m/calendar` and
+`/m/settings`. On an Android phone with the app installed, those open the app
+on that screen; everywhere else they show the landing page (the `**` rewrite).
+
+- The app claims `https://asksiddha.app/m/*` with an `autoVerify` intent filter
+  (`ui/android/app/src/main/AndroidManifest.xml`), and routes only the screens
+  in `APP_LINK_ROUTES` (`ui/src/app/core/app-links.service.ts`).
+- Android trusts the claim only if `https://asksiddha.app/.well-known/assetlinks.json`
+  lists the SHA-256 fingerprint of the key that signed the installed app. Play
+  re-signs store installs with the **app signing key**; sideloaded APKs carry the
+  **upload key**. List both. Both fingerprints are on Play Console › Setup ›
+  App signing.
+- The file lives at `firebase-public/.well-known/assetlinks.json`, so it ships with
+  a Firebase Hosting deploy. `firebase.json` no longer ignores dot-directories,
+  which would have dropped it.
+- Android checks the file when the app is installed or updated. After the first
+  deploy, reinstall to test: `adb shell pm get-app-links app.asksiddha.mobile`
+  should show `asksiddha.app: verified`.
+- iPhone needs an `apple-app-site-association` file and the Associated Domains
+  entitlement, which both need the Apple Team ID. That waits on Apple enrollment.

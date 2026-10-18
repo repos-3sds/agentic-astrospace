@@ -3,7 +3,7 @@
     "public": "firebase-public",
     "ignore": [
       "firebase.json",
-      "**/.*",
+      "**/.DS_Store",
       "README.txt"
     ],
     "cleanUrls": true,
