@@ -21,6 +21,7 @@ import { Subhashita, SubhashitaService } from '../../../core/subhashita.service'
 import { SubhashitaSheetComponent } from '../subhashita/subhashita-sheet.component';
 import { WidgetBridgeService } from '../../../core/widget-bridge.service';
 import { deepLinkArrivedAt } from '../../../core/deep-link-arrival';
+import { activeTabRoots } from '../../../core/tab-roots';
 
 interface MobileTab {
   commands: string[];
@@ -101,6 +102,8 @@ export class MobileShellComponent {
         if (previous !== null && previous !== path) setTimeout(() => this.focusScreen(), 0);
       });
     });
+    effect(() => activeTabRoots.set(this.tabs().map((tab) => `/m/${tab.commands.join('/')}`)));
+    inject(DestroyRef).onDestroy(() => activeTabRoots.set([]));
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
     this.widgets.start();
     void this.offerDailyVerse();

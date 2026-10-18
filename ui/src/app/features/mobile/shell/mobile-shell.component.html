@@ -36,6 +36,7 @@
         <a
           class="tab"
           [routerLink]="tabLink(tab)"
+          [replaceUrl]="true"
           (click)="onTabClick(tab)"
           [class.is-active]="tabActive(tab)"
           [attr.aria-current]="tabActive(tab) ? 'page' : null"

@@ -1,6 +1,8 @@
-import { Component, OnDestroy, OnInit, afterNextRender, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, afterNextRender, effect, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
-import { Router, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 
@@ -9,6 +11,7 @@ import { NativeKeyboardService } from './core/native-keyboard.service';
 import { NavigationHistoryService } from './core/navigation-history.service';
 import { SheetOverlayService } from './core/sheet-overlay.service';
 import { ThemeService } from './core/theme.service';
+import { activeTabRoots } from './core/tab-roots';
 import { SplashComponent } from './shell/splash/splash.component';
 
 /**
@@ -67,6 +70,25 @@ export class App implements OnInit, OnDestroy {
 
   // Eager so in-app history is counted from the first navigation.
   private readonly navigationHistory = inject(NavigationHistoryService);
+
+  private readonly path = toSignal(
+    this.router.events.pipe(
+      filter((event) => event instanceof NavigationEnd),
+      map(() => this.router.url.split('?')[0]),
+    ),
+    { initialValue: this.router.url.split('?')[0] },
+  );
+
+  /**
+   * At an exit route with no sheet open, Back belongs to Android, so its
+   * predictive back-to-home preview plays instead of an abrupt minimise.
+   * Everywhere else the app's handler below takes Back (nativeness audit N11).
+   */
+  private readonly systemOwnsBack = effect(() => {
+    if (Capacitor.getPlatform() !== 'android') return;
+    const atRoot = NATIVE_EXIT_ROUTES.includes(this.path()) && !this.sheetOverlay.open();
+    void CapacitorApp.toggleBackButtonHandler({ enabled: !atRoot }).catch(() => undefined);
+  });
 
   protected readonly showAnimatedSplash = signal(false);
   /**
@@ -231,6 +253,12 @@ export class App implements OnInit, OnDestroy {
       // open. This replaced a PrimeNG "Close the app?" dialog, which was the
       // only reason the native root pulled PrimeNG in at all.
       void CapacitorApp.minimizeApp();
+      return;
+    }
+    // Tab taps replace the URL, so from a tab other than Today the entry
+    // underneath is whatever came before the tabs. Go to Today instead.
+    if (activeTabRoots().includes(path)) {
+      void this.router.navigateByUrl('/m/today', { replaceUrl: true });
       return;
     }
     // Angular's Location, not Capacitor's default — this pops one entry the

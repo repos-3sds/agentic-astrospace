@@ -26,6 +26,8 @@ import { ASK_NAVIGATION } from './ask-navigation';
     @if (!navigation.web) { <input
       class="field"
       type="text"
+      enterkeyhint="send"
+      autocapitalize="sentences"
       [placeholder]="placeholder()"
       [attr.aria-label]="label()"
       [value]="value()"
