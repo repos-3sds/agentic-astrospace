@@ -31,7 +31,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ..agents.orchestrator import AskOrchestrator, ProfileContextStore
 from ..agents.schema import StructuredReading
-from ..context.taxonomy import TaxonomyError
+from ..context.taxonomy import TaxonomyError, get_domain
 from ..db import get_db
 from ..db import crud, crud_mobile as cm
 from ..db.crud_profile_context import build_profile_context_projection
@@ -312,6 +312,18 @@ def _profile_context_store(db: Session, user_id: str, kundli_id: str) -> Profile
     return ProfileContextStore(projection=projection)
 
 
+def _domain_labels(domain_ids: list[str]) -> list[str]:
+    """Readable names for the clarify reply ("Family & property"), never the
+    internal ids ("family_property") readers were shown before."""
+    labels = []
+    for domain_id in domain_ids:
+        try:
+            labels.append(get_domain(domain_id).name.lower())
+        except Exception:
+            labels.append(domain_id.replace("_", " "))
+    return labels
+
+
 def _evidence_from_reading(
     reading: StructuredReading, *,
     profile_context_revision: int | None = None,
@@ -427,6 +439,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
             experience_mode=body.experience_mode,
             language=body.language,
             tone=body.tone,
+            history=messages,
             # validate_first intentionally not passed through — see docstring.
         )
     except TaxonomyError:
@@ -443,7 +456,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
                         evidence={"safety_policy": "excluded_verdict"})
         elif envelope["type"] == "clarification_needed":
             answer = (
-                f"I can help with: {', '.join(envelope['options'])} right now — "
+                f"I can help with: {', '.join(_domain_labels(envelope['options']))} right now — "
                 "which one is this about?"
             )
             refer_out = None

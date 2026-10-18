@@ -1228,7 +1228,9 @@ export class AskAnswerComponent {
       case 'clarification_needed':
         return 'CLARIFY';
       case 'refer_out':
-        return 'SAFETY';
+        // Off-topic and greeting replies travel as refer-outs but are not a
+        // safety boundary, so they don't wear its label.
+        return isScopeReply(message) ? 'SIDDHA' : 'SAFETY';
       case 'verification_failed':
       case 'generation_failed':
       case 'fatal_error':
@@ -1247,6 +1249,7 @@ export class AskAnswerComponent {
   }
 
   protected answerTone(message: ChatMessage): VerdictTone {
+    if (isScopeReply(message)) return 'warn';
     switch (message.status) {
       case 'answered':
         return 'good';
@@ -1453,4 +1456,10 @@ export class AskAnswerComponent {
     const question = this.latestUser()?.content ?? '';
     if (question && !this.streaming()) void this.askAgain(question);
   }
+}
+
+/** The fixed replies for off-topic questions and greetings (server
+ * `agents/scope.py`), which reuse the refer-out envelope. */
+function isScopeReply(message: ChatMessage): boolean {
+  return message.refer_out_kind === 'out_of_scope' || message.refer_out_kind === 'greeting';
 }
