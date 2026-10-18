@@ -16,6 +16,7 @@ from ..core.vedic.compatibility import gun_milan
 from ..core.vedic.vargas import VARGA_FUNCTIONS
 from ..knowledge.vedic_rules import get_rule, rules_catalog
 from .auth import CurrentUser
+from ..entitlements import EntitlementDenied, resolve_entitlements
 
 router = APIRouter(prefix="/api/v1/vedic", tags=["vedic"])
 
@@ -223,6 +224,31 @@ def vedic_rule_detail(rule_id: str):
     return get_rule(rule_id)
 
 
+# The two divisional charts every plan sees; the rest need `vargas.full`.
+# Mirrors FREE_VARGAS in ui/src/app/core/plan-gate.service.ts.
+FREE_VARGAS = frozenset({"D1", "D9"})
+
+
+def _varga_decision(db: Session, user_id: str):
+    """`vargas.full` for this reader, or None while plan locks are off.
+
+    Like every flag, it only bites once ASTROSPACE_QUOTAS_ENFORCED is on, so
+    the server and the app's PlanGateService agree on when a lock is real.
+    """
+    snapshot = resolve_entitlements(db, user_id)
+    if not snapshot.quotas_enforced:
+        return None
+    decision = snapshot.decide("vargas.full")
+    return None if decision.allowed else decision
+
+
+def _without_locked_vargas(payload: dict, db: Session, user_id: str) -> dict:
+    if not isinstance(payload.get("vargas"), dict) or _varga_decision(db, user_id) is None:
+        return payload
+    payload["vargas"] = {key: value for key, value in payload["vargas"].items() if key in FREE_VARGAS}
+    return payload
+
+
 @router.get("/{kundli_id}/all")
 def full_vedic_chart(
     kundli_id: str,
@@ -231,7 +257,8 @@ def full_vedic_chart(
     node_type: str = "mean",
     db: Session = Depends(get_db),
 ):
-    return _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).to_dict()
+    payload = _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).to_dict()
+    return _without_locked_vargas(payload, db, user.id)
 
 
 @router.get("/{kundli_id}/avkahada")
@@ -543,8 +570,10 @@ def all_vargas(
     db: Session = Depends(get_db),
 ):
     chart = _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type)
-    return {"lagna": chart.lagna_details(), "vargas": chart.all_varga_charts(),
-            "dignities": chart.dignities()}
+    return _without_locked_vargas(
+        {"lagna": chart.lagna_details(), "vargas": chart.all_varga_charts(), "dignities": chart.dignities()},
+        db, user.id,
+    )
 
 
 @router.get("/{kundli_id}/d/{n}")
@@ -562,4 +591,8 @@ def varga_chart(
             status_code=400,
             detail=f"Unknown varga D{n}; available: {sorted(VARGA_FUNCTIONS)}",
         )
+    if varga not in FREE_VARGAS:
+        denied = _varga_decision(db, user.id)
+        if denied is not None:
+            raise EntitlementDenied(denied)
     return _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).varga_chart(varga)

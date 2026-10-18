@@ -12,6 +12,7 @@
 
 <div class="body">
   <div class="intro">
+    @if (!navigation.web) { <as-reading-for /> }
     <h2 class="ask-hero">{{ heading() }}</h2>
     @if (!navigation.web) { <p class="lede">{{ lede() }}</p> }
     <p class="safety">{{ safetyLine() }}</p>

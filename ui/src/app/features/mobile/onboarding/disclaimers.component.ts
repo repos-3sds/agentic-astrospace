@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { PreferencesService } from '../../../core/preferences.service';
 
 /** One of the app's standing limits, and the tone it is stated in. */
 interface Vow {
@@ -67,7 +68,13 @@ interface Vow {
     </div>
 
     <div class="actions">
-      <a class="btn" [routerLink]="['/m', 'persona']">I understand — continue</a>
+      <!-- Asked here, unticked, rather than assumed: the welcome screen
+           promises "your data, your control" (usability audit U20). -->
+      <label class="consent">
+        <input type="checkbox" [checked]="shareUsage()" (change)="shareUsage.set($any($event.target).checked)" />
+        <span>Share anonymous usage and crash reports to help improve Siddha. You can change this in Settings.</span>
+      </label>
+      <a class="btn" [routerLink]="['/m', 'persona']" (click)="recordConsent()">I understand — continue</a>
     </div>
   `,
   styleUrl: './disclaimers.component.scss',
@@ -76,6 +83,14 @@ interface Vow {
   host: { class: 'as-mobile' },
 })
 export class DisclaimersComponent {
+  private readonly preferences = inject(PreferencesService);
+  protected readonly shareUsage = signal(this.preferences.usageAsked() && this.preferences.shareUsage());
+
+  protected recordConsent(): void {
+    this.preferences.shareUsage.set(this.shareUsage());
+    this.preferences.usageAsked.set(true);
+  }
+
   protected readonly vows = signal<Vow[]>([
     {
       icon: 'vow-flag',

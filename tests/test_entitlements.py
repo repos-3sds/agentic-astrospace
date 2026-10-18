@@ -264,3 +264,24 @@ def test_migration_contains_every_authority_table():
         assert f"alter table public.{table} enable row level security" in sql
     assert "revoke all" in sql
     assert "authenticated" in sql
+
+
+def test_divisional_charts_beyond_d1_and_d9_are_held_back_only_when_locks_are_on(env, monkeypatch):
+    from astrospace.api.vedic_routes import _varga_decision, _without_locked_vargas
+
+    _, Session = env
+    db = Session()
+    payload = lambda: {"vargas": {"D1": 1, "D9": 9, "D10": 10, "D60": 60}}
+
+    monkeypatch.delenv("ASTROSPACE_QUOTAS_ENFORCED", raising=False)
+    assert _varga_decision(db, USER) is None
+    assert set(_without_locked_vargas(payload(), db, USER)["vargas"]) == {"D1", "D9", "D10", "D60"}
+
+    monkeypatch.setenv("ASTROSPACE_QUOTAS_ENFORCED", "true")
+    assert _varga_decision(db, USER).entitlement == "vargas.full"
+    assert set(_without_locked_vargas(payload(), db, USER)["vargas"]) == {"D1", "D9"}
+
+    _paid_assignment(db, "practitioner-reader", "pro", datetime.utcnow())
+    assert _varga_decision(db, "practitioner-reader") is None
+    assert set(_without_locked_vargas(payload(), db, "practitioner-reader")["vargas"]) == {"D1", "D9", "D10", "D60"}
+    db.close()

@@ -126,6 +126,7 @@ export class AccountPrivacyComponent {
   /** Turning it off drops anything queued, so nothing more leaves the phone. */
   protected toggleShareUsage(): void {
     this.preferences.shareUsage.set(!this.preferences.shareUsage());
+    this.preferences.usageAsked.set(true);
     // With sharing off, flush() discards the queue instead of sending it.
     this.analytics.flush();
   }

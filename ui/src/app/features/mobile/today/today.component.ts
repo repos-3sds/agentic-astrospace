@@ -22,6 +22,7 @@ import { TODAY_DRILL_DOWNS, whyDrillDowns } from '../why-reading/drill-downs';
 import { FestivalService, festivalPlace } from '../../../core/festival.service';
 import { WidgetBridgeService, windowSpan } from '../../../core/widget-bridge.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
+import { ReadingForComponent } from '../shared/reading-for.component';
 import { ExperienceMode, PreferencesService, ReadingTone } from '../../../core/preferences.service';
 import { HapticsService } from '../../../core/haptics.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
@@ -239,6 +240,7 @@ function practicalClose(text: string): string[] {
     WhyReadingSheetComponent,
     ProfileSwitcherComponent,
     GenericErrorComponent,
+    ReadingForComponent,
   ],
   host: {
     '[attr.data-band]': 'view()?.band || "steady"',

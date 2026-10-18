@@ -45,6 +45,8 @@ const NAV: Array<{ id: ConsoleView; label: string; icon: string }> = [
   { id: 'system', label: 'System health', icon: 'server-cog' },
 ];
 
+const ADMIN_ONLY_VIEWS = new Set<ConsoleView>(['prompts', 'users', 'activity', 'audit']);
+
 @Component({
   selector: 'app-admin-console',
   imports: [
@@ -70,7 +72,9 @@ export class AdminConsoleComponent implements OnInit {
   protected readonly nav = computed(() =>
     this.identity()?.role === 'admin'
       ? NAV
-      : NAV.filter((item) => item.id !== 'prompts'),
+      // Reviewers curate the knowledge base; accounts, activity and the audit
+      // log are for full administrators (the API refuses them too).
+      : NAV.filter((item) => !ADMIN_ONLY_VIEWS.has(item.id)),
   );
   protected readonly overview = signal<AdminOverview | null>(null);
   protected readonly sources = signal<KnowledgeSource[]>([]);

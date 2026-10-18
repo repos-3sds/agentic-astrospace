@@ -1520,3 +1520,14 @@ From the Tier 0 fixes for `/mnt/project-files/audits/end-to-end-2026-10-18/findi
   `status='failed'` row that history shows as "Not answered · Try again"
   and that the replay path skips. *Hook:* `astrospace/api/ask_stream_routes.py`
   failure branch, `ask-answer.component.ts` `failureCopy`.
+- [ ] **Server gates for `dashas.full`, `transits.full`, `festivals.full`**
+  (I-C2, rest). *Why not built:* the app locks nothing behind these flags
+  yet, so a server gate would only hide data the app shows on every plan.
+  `vargas.full` is enforced on the server (`vedic_routes._varga_decision`).
+  *Unblock:* decide what each flag withholds. *Hook:* `vedic_routes.py`,
+  `festival_routes.py`, `entitlements/registry.py`.
+- [ ] **Keep unsubscribe tokens and auth codes out of Cloud Run request logs**
+  (S16, rest). *Why not built:* needs the unsubscribe link moved to a path
+  or POST body with old links still honoured, plus a log exclusion set in
+  the GCP console. Crash stacks are scrubbed and usage sharing is now
+  opt-in. *Hook:* `email_routes.py` unsubscribe, `audit_middleware.py`.

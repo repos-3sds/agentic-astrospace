@@ -46,6 +46,7 @@
 </header>
 
 <div class="body" [attr.data-mode]="preferences.experienceMode()">
+  <as-reading-for />
   @if (loading()) {
     <section class="card skeleton-card" role="status" aria-label="Loading your guidance">
       <div class="card-head">

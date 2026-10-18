@@ -110,3 +110,20 @@
   @include m-cta-primary;
   width: 100%;
 }
+
+.consent {
+  @include m-caption;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  color: var(--m-muted);
+  cursor: pointer;
+  input {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    accent-color: var(--m-accent);
+  }
+}

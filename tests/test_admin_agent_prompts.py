@@ -50,3 +50,23 @@ def test_agent_prompt_registry_rejects_reviewer_access():
 
     assert response.status_code == 403
     assert response.json()["detail"] == "Administrator permission required"
+
+
+import pytest
+
+
+@pytest.mark.parametrize("path", [
+    "/api/v1/admin/users",
+    "/api/v1/admin/users/some-user",
+    "/api/v1/admin/activity",
+    "/api/v1/admin/audit",
+])
+def test_reviewers_cannot_read_user_data(path):
+    # A reviewer curates knowledge-base chunks; accounts, profiles and the
+    # request audit log are for full administrators only (security audit S10).
+    app.dependency_overrides[current_admin] = lambda: _admin("reviewer")
+    try:
+        response = TestClient(app).get(path)
+    finally:
+        app.dependency_overrides.pop(current_admin, None)
+    assert response.status_code == 403

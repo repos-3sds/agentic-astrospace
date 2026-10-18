@@ -200,7 +200,7 @@ def overview(user: AdminUser):
 
 @router.get("/users")
 def list_users(
-    user: AdminUser,
+    user: FullAdminUser,
     q: str | None = Query(default=None, max_length=200),
 ):
     client = _client()
@@ -268,7 +268,7 @@ def list_users(
 
 
 @router.get("/users/{user_id}")
-def user_detail(user_id: str, user: AdminUser):
+def user_detail(user_id: str, user: FullAdminUser):
     client = _client()
 
     def load():
@@ -385,7 +385,7 @@ def update_user_status(user_id: str, body: UserStatusPayload, user: FullAdminUse
 
 
 @router.get("/activity")
-def product_activity(user: AdminUser):
+def product_activity(user: FullAdminUser):
     client = _client()
 
     def load():
@@ -846,7 +846,7 @@ def get_agent_prompts(user: FullAdminUser):
 
 @router.get("/audit")
 def audit_log(
-    user: AdminUser,
+    user: FullAdminUser,
     source_id: str | None = None,
     action: str | None = None,
     actor: str | None = None,
