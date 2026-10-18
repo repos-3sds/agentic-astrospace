@@ -2,72 +2,27 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   EventEmitter,
   Input,
+  OnChanges,
   OnDestroy,
   Output,
+  ViewChild,
 } from '@angular/core';
+import { drawGalaxy } from './galaxy-draw';
 
-let nextSplashId = 0;
-
-/**
- * The launch splash and the landing mark: the app icon's light-ribbon galaxy
- * (ic_launcher, 2026-10-16), turning slowly, with the Siddha wordmark under it.
- * Light and dark are one design in two moods (Hawk, 2026-10-18): soft pastel
- * ribbons on an ivory sunrise in light, gold and cream on near-black in dark.
- * The wordmark is terracotta or gold, never black.
- */
 @Component({
   selector: 'app-splash',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="splash" [class.dark]="dark" [class.mark-only]="markOnly" aria-label="Siddha loading">
-      <svg class="siddha-mark" viewBox="0 0 320 320" role="img" aria-label="Siddha galaxy mark">
-        <defs>
-          <linearGradient [attr.id]="id + 'ribbon'" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" class="r1" stop-opacity="0" />
-            <stop offset="0.35" class="r1" stop-opacity="0.9" />
-            <stop offset="0.6" class="r2" stop-opacity="1" />
-            <stop offset="1" class="r3" stop-opacity="0.15" />
-          </linearGradient>
-          <radialGradient [attr.id]="id + 'core'" cx="50%" cy="50%" r="50%">
-            <stop offset="0" stop-color="#fffbea" />
-            <stop offset="0.35" stop-color="#ffe2a0" />
-            <stop offset="0.7" stop-color="#f0a646" stop-opacity="0.55" />
-            <stop offset="1" stop-color="#f0a646" stop-opacity="0" />
-          </radialGradient>
-          <filter [attr.id]="id + 'glow'" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2.4" result="b" />
-            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-          <filter [attr.id]="id + 'soft'" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="7" />
-          </filter>
-        </defs>
-
-        <circle class="halo" cx="160" cy="160" r="70" [attr.fill]="url('core')" [attr.filter]="url('soft')" />
-        <g class="spin ribbons" [attr.filter]="url('glow')" [attr.stroke]="url('ribbon')">
-          <ellipse cx="160" cy="160" rx="132" ry="74" stroke-width="2.2" transform="rotate(-24 160 160)" />
-          <ellipse cx="160" cy="160" rx="116" ry="62" stroke-width="2.6" transform="rotate(-8 160 160)" />
-          <ellipse cx="160" cy="160" rx="98" ry="52" stroke-width="3" transform="rotate(10 160 160)" />
-          <ellipse cx="160" cy="160" rx="80" ry="42" stroke-width="3.2" transform="rotate(26 160 160)" />
-          <ellipse cx="160" cy="160" rx="62" ry="32" stroke-width="3.4" transform="rotate(42 160 160)" />
-          <circle class="star twinkle" cx="282" cy="108" r="3.6" />
-          <circle class="star twinkle b" cx="58" cy="214" r="3" />
-          <circle class="star twinkle c" cx="236" cy="226" r="2.6" />
-          <circle class="star" cx="96" cy="96" r="2.2" />
-        </g>
-        <g class="spin highlight">
-          <ellipse cx="160" cy="160" rx="116" ry="62" stroke-width="1" transform="rotate(-8 160 160)" />
-          <ellipse cx="160" cy="160" rx="80" ry="42" stroke-width="1.2" transform="rotate(26 160 160)" />
-        </g>
-        <g class="core-arms" [attr.filter]="url('glow')">
-          <path d="M160 160 C 196 128, 214 168, 188 186 C 168 200, 138 194, 128 176" />
-          <path d="M160 160 C 124 192, 106 152, 132 134 C 152 120, 182 126, 192 144" />
-        </g>
-        <circle class="core-dot" cx="160" cy="160" r="12" [attr.filter]="url('glow')" />
-      </svg>
+      <div class="galaxy-mark" role="img" aria-label="Siddha galaxy mark">
+        <div class="halo"></div>
+        <div class="tilt"><canvas #galaxy class="galaxy" width="720" height="720"></canvas></div>
+        <div class="glow"></div>
+      </div>
 
       @if (!markOnly) {
         <div class="copy">
@@ -86,153 +41,169 @@ let nextSplashId = 0;
       }
 
       .splash {
-        /* Light: an ivory sunrise and soft pastel ribbons. */
-        --r1: #e3b46e;
-        --r2: #c97a63;
-        --r3: #b39ac8;
-        --arm: #efbd6b;
-        --star: #d9a273;
-        --wordmark: #b25a45;
-        --tagline: #8a6f5c;
         width: 100%;
         height: 100%;
         display: grid;
         place-items: center;
         align-content: center;
-        gap: 30px;
+        gap: 28px;
         overflow: hidden;
-        color: #3a2a1f;
+        color: #291b12;
         background:
-          radial-gradient(circle at 50% 41%, rgba(255, 224, 170, 0.42), rgba(255, 224, 170, 0) 30%),
-          radial-gradient(120% 70% at 50% 110%, rgba(226, 150, 118, 0.14), transparent 60%),
-          linear-gradient(180deg, #fffcf6 0%, #fcf5ea 60%, #f8ece0 100%);
+          radial-gradient(circle at 50% 38%, rgba(224, 164, 72, 0.24), transparent 28%),
+          radial-gradient(circle at 50% 115%, rgba(177, 63, 46, 0.18), transparent 38%),
+          #fbf5e8;
       }
 
-      .splash.dark {
-        /* Dark: the icon itself, gold and cream light on near-black. */
-        --r1: #f3c978;
-        --r2: #fff1cf;
-        --r3: #a77ad6;
-        --arm: #ffd98a;
-        --star: #fff0c9;
-        --wordmark: #f4d9a6;
-        --tagline: rgba(255, 244, 224, 0.72);
-        color: #fff4e0;
-        background:
-          radial-gradient(circle at 50% 40%, rgba(230, 168, 60, 0.16), transparent 34%),
-          radial-gradient(circle at 50% 115%, rgba(120, 60, 140, 0.18), transparent 42%),
-          #0b0806;
-      }
-
-      .splash.mark-only,
-      .splash.mark-only.dark {
+      .splash.mark-only {
         background: transparent;
         gap: 0;
       }
 
-      .siddha-mark {
-        width: min(64vw, 260px);
+      .splash.dark {
+        color: #fff4e0;
+        background:
+          radial-gradient(circle at 50% 36%, rgba(230, 168, 60, 0.22), transparent 30%),
+          radial-gradient(circle at 50% 115%, rgba(177, 63, 46, 0.22), transparent 40%),
+          #100b06;
+      }
+
+      .splash.mark-only.dark {
+        background: transparent;
+      }
+
+      /* The app icon's galaxy, drawn face-on and tilted here so it can turn
+         without the tilt turning with it. Light theme draws it as soft ink
+         on cream over a sunlit halo; dark theme as light, like the icon. */
+      .galaxy-mark {
+        position: relative;
+        width: min(58vw, 240px);
         aspect-ratio: 1;
-        overflow: visible;
+        display: grid;
+        place-items: center;
       }
 
-      .splash:not(.dark) .siddha-mark {
-        filter: drop-shadow(0 6px 22px rgba(214, 150, 90, 0.18));
+      .halo {
+        position: absolute;
+        inset: -10%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 226, 160, 0.7) 0%, rgba(240, 184, 90, 0.22) 24%, rgba(224, 164, 72, 0.08) 46%, transparent 64%);
+        pointer-events: none;
       }
 
-      .mark-only .siddha-mark {
+      .dark .halo {
+        inset: -6%;
+        background: radial-gradient(circle, rgba(255, 211, 106, 0.16), transparent 62%);
+      }
+
+      .mark-only .galaxy-mark {
         width: 100%;
         height: 100%;
       }
 
-      .r1 { stop-color: var(--r1); }
-      .r2 { stop-color: var(--r2); }
-      .r3 { stop-color: var(--r3); }
-
-      .halo { opacity: 0.9; }
-
-      .ribbons {
-        fill: none;
-        stroke-linecap: round;
+      .tilt {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transform: rotate(-24deg) scaleY(0.78);
       }
 
-      .star {
-        fill: var(--star);
-        stroke: none;
+      .galaxy {
+        width: 100%;
+        height: 100%;
+        display: block;
+        filter: contrast(1.35) saturate(1.05) brightness(0.95);
+        animation: galaxySpin 36s linear infinite;
       }
 
-      /* A fine bright line inside two ribbons, so in light they read as light. */
-      .highlight {
-        fill: none;
-        stroke: #fffaf0;
-        opacity: 0.9;
+      .dark .galaxy {
+        filter: none;
       }
 
-      .dark .highlight { display: none; }
-
-      .core-arms {
-        fill: none;
-        stroke: var(--arm);
-        stroke-width: 5;
-        stroke-linecap: round;
-        transform-origin: 160px 160px;
-        animation: spin 24s linear infinite reverse;
+      .glow {
+        position: absolute;
+        inset: 0;
+        margin: auto;
+        width: 22%;
+        height: 22%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 246, 210, 0.95), rgba(240, 184, 74, 0.45) 45%, transparent 72%);
+        animation: coreBreathe 2.6s ease-in-out infinite;
+        pointer-events: none;
       }
 
-      .core-dot { fill: #fffbea; }
-
-      /* The icon's motion: the galaxy turns slowly, the core counter-turns. */
-      .spin {
-        transform-origin: 160px 160px;
-        animation: spin 48s linear infinite;
+      .dark .glow {
+        background: radial-gradient(circle, rgba(255, 240, 200, 0.55), rgba(255, 200, 110, 0.18) 45%, transparent 70%);
       }
-
-      .twinkle { animation: twinkle 3.6s ease-in-out infinite; }
-      .twinkle.b { animation-delay: 1.2s; }
-      .twinkle.c { animation-delay: 2.4s; }
 
       .copy {
         display: grid;
-        gap: 12px;
+        gap: 8px;
         text-align: center;
         animation: copyRise 720ms ease-out 180ms both;
       }
 
       h1 {
         margin: 0;
-        color: var(--wordmark);
         font-family: 'Samarkan', 'Cormorant Garamond', serif;
-        font-size: clamp(46px, 14vw, 72px);
-        font-weight: 400;
+        font-size: clamp(42px, 13vw, 72px);
+        font-weight: 500;
         letter-spacing: 0;
-        line-height: 1;
+        line-height: 0.94;
+      }
+
+      .splash:not(.dark) h1 {
+        color: #a8583c;
+        background: linear-gradient(180deg, #c98a52 0%, #b0623f 55%, #96482f 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .splash:not(.dark) p {
+        color: #8a6a55;
       }
 
       p {
         margin: 0;
-        color: var(--tagline);
-        font: 600 12.5px/1.4 'Inter', system-ui, sans-serif;
-        letter-spacing: 0.2em;
+        color: color-mix(in srgb, currentColor 70%, transparent);
+        font: 700 13px/1.4 'Inter', system-ui, sans-serif;
+        letter-spacing: 0.16em;
         text-transform: uppercase;
       }
 
-      @keyframes spin {
-        to { transform: rotate(360deg); }
+      @keyframes galaxySpin {
+        to {
+          transform: rotate(-360deg);
+        }
       }
 
-      @keyframes twinkle {
-        50% { opacity: 0.35; }
+      @keyframes coreBreathe {
+        0%,
+        100% {
+          transform: scale(0.92);
+          opacity: 0.85;
+        }
+        50% {
+          transform: scale(1.1);
+          opacity: 1;
+        }
       }
 
       @keyframes copyRise {
-        from { transform: translateY(18px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
+        from {
+          transform: translateY(18px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .spin,
-        .core-arms,
-        .twinkle,
+        .galaxy,
+        .glow,
         .copy {
           animation: none;
         }
@@ -240,28 +211,53 @@ let nextSplashId = 0;
     `,
   ],
 })
-export class SplashComponent implements AfterViewInit, OnDestroy {
-  /** SVG ids are document-wide; the mark is on screen twice (splash and landing). */
-  protected readonly id = `siddha-splash-${nextSplashId++}-`;
+export class SplashComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() dark = false;
   @Input() appName = 'Siddha';
   @Input() tagline = 'Your Guide to Living in Rhythm';
   @Input() duration = 5000;
   @Input() markOnly = false;
   @Output() readonly finished = new EventEmitter<void>();
+  @ViewChild('galaxy') private galaxy?: ElementRef<HTMLCanvasElement>;
 
   private timer: ReturnType<typeof setTimeout> | null = null;
 
+  ngOnChanges(): void {
+    this.paintGalaxy();
+  }
+
   ngAfterViewInit(): void {
+    this.paintGalaxy();
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     this.timer = setTimeout(() => this.finished.emit(), reduceMotion ? 900 : this.duration);
   }
 
-  protected url(name: string): string {
-    return `url(#${this.id}${name})`;
-  }
-
   ngOnDestroy(): void {
     if (this.timer) clearTimeout(this.timer);
+  }
+
+  /** Draw at 1024 px, as the icon does, then scale into the canvas. */
+  private paintGalaxy(): void {
+    const canvas = this.galaxy?.nativeElement;
+    const out = canvas?.getContext('2d');
+    if (!canvas || !out) return;
+    try {
+      const big = document.createElement('canvas');
+      big.width = big.height = 1024;
+      drawGalaxy(big, {
+        theme: this.dark ? 'night' : 'day',
+        background: false,
+        shine: this.dark ? 2 : 1.8,
+        weight: this.dark ? 1 : 1.5,
+        tilt: 0,
+        squash: 1,
+        zoom: 1.02,
+      });
+      out.clearRect(0, 0, canvas.width, canvas.height);
+      out.imageSmoothingQuality = 'high';
+      out.drawImage(big, 0, 0, canvas.width, canvas.height);
+    } catch {
+      // A failed drawing leaves the wordmark and tagline on their own.
+    }
   }
 }
