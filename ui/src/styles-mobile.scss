@@ -324,3 +324,49 @@ as-sheet header {
   .as-mobile .m-collapse.is-open { transition: none; }
   .as-mobile .m-collapse.is-open > .m-collapse-inner { animation: none; overflow: visible; }
 }
+
+// ── Page transitions (N1) ───────────────────────────────────────────────────
+// Set by core/page-transitions.ts on <html> for the length of one View
+// Transition. Push slides in, pop slides back, tab switches crossfade; the
+// tab bar holds still. Android follows the Material shared-axis pattern,
+// iOS the push-from-the-right of UINavigationController.
+@keyframes m-nav-fade-in { from { opacity: 0; } }
+@keyframes m-nav-fade-out { to { opacity: 0; } }
+@keyframes m-nav-axis-in-fwd { from { opacity: 0; transform: translateX(32px); } }
+@keyframes m-nav-axis-out-fwd { to { opacity: 0; transform: translateX(-32px); } }
+@keyframes m-nav-axis-in-back { from { opacity: 0; transform: translateX(-32px); } }
+@keyframes m-nav-axis-out-back { to { opacity: 0; transform: translateX(32px); } }
+@keyframes m-nav-ios-in-fwd { from { transform: translateX(100%); } }
+@keyframes m-nav-ios-out-fwd { to { transform: translateX(-30%); filter: brightness(0.9); } }
+@keyframes m-nav-ios-in-back { from { transform: translateX(-30%); filter: brightness(0.9); } }
+@keyframes m-nav-ios-out-back { to { transform: translateX(100%); } }
+
+html[data-nav]::view-transition-old(root),
+html[data-nav]::view-transition-new(root) {
+  animation-duration: 260ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  animation-fill-mode: both;
+}
+html[data-nav='tab']::view-transition-old(root) { animation: 120ms ease-out both m-nav-fade-out; }
+html[data-nav='tab']::view-transition-new(root) { animation: 180ms 40ms ease-out both m-nav-fade-in; }
+
+html[data-nav='push'][data-nav-os='android']::view-transition-old(root) { animation-name: m-nav-axis-out-fwd; }
+html[data-nav='push'][data-nav-os='android']::view-transition-new(root) { animation-name: m-nav-axis-in-fwd; }
+html[data-nav='pop'][data-nav-os='android']::view-transition-old(root) { animation-name: m-nav-axis-out-back; }
+html[data-nav='pop'][data-nav-os='android']::view-transition-new(root) { animation-name: m-nav-axis-in-back; }
+
+html[data-nav='push'][data-nav-os='ios']::view-transition-old(root) { animation-name: m-nav-ios-out-fwd; }
+html[data-nav='push'][data-nav-os='ios']::view-transition-new(root) { animation-name: m-nav-ios-in-fwd; }
+html[data-nav='pop'][data-nav-os='ios']::view-transition-old(root) { animation-name: m-nav-ios-out-back; z-index: 1; }
+html[data-nav='pop'][data-nav-os='ios']::view-transition-new(root) { animation-name: m-nav-ios-in-back; }
+html[data-nav='push'][data-nav-os='ios']::view-transition-new(root) { box-shadow: -8px 0 24px rgba(0, 0, 0, 0.12); }
+
+::view-transition-group(m-tabbar),
+::view-transition-old(m-tabbar),
+::view-transition-new(m-tabbar) { animation: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) { animation: none !important; }
+}

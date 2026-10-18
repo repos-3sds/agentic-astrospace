@@ -186,6 +186,15 @@ def natural_chunks(text: str, max_chars: int = NATURAL_CHUNK_MAX_CHARS) -> list[
     return out
 
 
+def _rotated(user_ids: list[str], now: datetime | None) -> list[str]:
+    """The readers, starting at a different one each 15-minute run."""
+    if not user_ids:
+        return user_ids
+    moment = now or datetime.now().astimezone()
+    start = int(moment.timestamp() // (15 * 60)) % len(user_ids)
+    return user_ids[start:] + user_ids[:start]
+
+
 def schedule_daily_briefs(db: Session, now: datetime | None = None,
                           ensure: Callable | None = None,
                           prerender: Callable[[list[dict]], int] = prerender_audio,
@@ -209,7 +218,14 @@ def schedule_daily_briefs(db: Session, now: datetime | None = None,
     user_ids = sorted({
         row.user_id for row in db.query(PushToken.user_id).filter(PushToken.revoked_at.is_(None))
     } | {row.user_id for row in cm.email_subscribers(db, "daily_email")})
-    for user_id in user_ids:
+    # Gather the run's work first, then write today's briefs for everyone
+    # before anyone's tomorrow: a reader opening the app now is waiting on
+    # today's. Within each, the starting reader rotates every run (I5), so
+    # when the budget runs out it is not the same readers, the ones whose ids
+    # sort last, who are left to the on-open path night after night.
+    today_items: list[tuple] = []
+    tomorrow_items: list[tuple] = []
+    for user_id in _rotated(user_ids, now):
         settings = _settings(db, user_id)
         timezone, city, nation = _viewer_place(db, user_id, settings)
         zone = _zone(timezone)
@@ -221,35 +237,39 @@ def schedule_daily_briefs(db: Session, now: datetime | None = None,
         if local_now.time() >= lookahead_from():
             days.append(local_now.date() + timedelta(days=1))
         voice = audio_ready and _natural_voice_allowed(db, user_id)
-        for day in days:
+        kundlis = crud.list_kundlis(db, user_id)[:MAX_PROFILES_PER_USER]
+        for index, day in enumerate(days):
             as_of = datetime.combine(day, dtime(12, 0), tzinfo=zone)
-            for kundli in crud.list_kundlis(db, user_id)[:MAX_PROFILES_PER_USER]:
-                if summary["written"] >= max_briefs or time.monotonic() - started > budget_seconds:
-                    summary["deferred"] += 1
-                    continue
-                try:
-                    payload = _daily_payload(kundli, settings["ayanamsha"], settings["node_type"],
-                                             as_of, timezone, city, nation)
-                    value, written = ensure(db, kundli, payload, tone=settings["tone"], mode=settings["mode"],
-                                            ayanamsha=settings["ayanamsha"], node_type=settings["node_type"],
-                                            trigger="scheduled")
-                except Exception:
-                    log.exception("daily brief for kundli %s failed", kundli.id)
-                    db.rollback()
-                    summary["failed"] += 1
-                    continue
-                if not value:
-                    summary["failed"] += 1
-                    continue
-                summary["written" if written else "already"] += 1
-                if voice and not value.get("audio_prerendered"):
-                    try:
-                        prerender(value["brief"]["spoken"])
-                        key = brief_hash(kundli, payload, settings["tone"], settings["mode"],
-                                         settings["ayanamsha"], settings["node_type"])
-                        update_stored(db, kundli.id, payload, key, audio_prerendered=True)
-                        summary["audio"] += 1
-                    except Exception:
-                        log.exception("daily brief audio for kundli %s failed", kundli.id)
-                        db.rollback()
+            bucket = today_items if index == 0 else tomorrow_items
+            bucket.extend((kundli, settings, voice, as_of, timezone, city, nation) for kundli in kundlis)
+
+    for kundli, settings, voice, as_of, timezone, city, nation in today_items + tomorrow_items:
+        if summary["written"] >= max_briefs or time.monotonic() - started > budget_seconds:
+            summary["deferred"] += 1
+            continue
+        try:
+            payload = _daily_payload(kundli, settings["ayanamsha"], settings["node_type"],
+                                     as_of, timezone, city, nation)
+            value, written = ensure(db, kundli, payload, tone=settings["tone"], mode=settings["mode"],
+                                    ayanamsha=settings["ayanamsha"], node_type=settings["node_type"],
+                                    trigger="scheduled")
+        except Exception:
+            log.exception("daily brief for kundli %s failed", kundli.id)
+            db.rollback()
+            summary["failed"] += 1
+            continue
+        if not value:
+            summary["failed"] += 1
+            continue
+        summary["written" if written else "already"] += 1
+        if voice and not value.get("audio_prerendered"):
+            try:
+                prerender(value["brief"]["spoken"])
+                key = brief_hash(kundli, payload, settings["tone"], settings["mode"],
+                                 settings["ayanamsha"], settings["node_type"])
+                update_stored(db, kundli.id, payload, key, audio_prerendered=True)
+                summary["audio"] += 1
+            except Exception:
+                log.exception("daily brief audio for kundli %s failed", kundli.id)
+                db.rollback()
     return summary

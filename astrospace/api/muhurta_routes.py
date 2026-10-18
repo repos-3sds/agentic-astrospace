@@ -72,7 +72,7 @@ def find_muhurta(
     start = _parse_date(date_from, "date_from", today)
     end = _parse_date(date_to, "date_to", start + timedelta(days=14))
 
-    chart = _chart_from_kundli(kundli)
+    chart = _chart_from_kundli(kundli, *crud.chart_convention(db, user.id))
     moon_lon = chart.positions["Moon"]["lon"]
     moon_sign = sign_index(moon_lon)
 

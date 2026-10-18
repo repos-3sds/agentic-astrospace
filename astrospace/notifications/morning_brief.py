@@ -37,7 +37,8 @@ def _primary_kundli(db: Session, user_id: str):
     return next((k for k in kundlis if (k.relation or "").lower() == "self"), kundlis[0])
 
 
-def headline_for(kundli, as_of: datetime, tz_name: str) -> str:
+def headline_for(kundli, as_of: datetime, tz_name: str,
+                 ayanamsha: str = "lahiri", node_type: str = "mean") -> str:
     """The Today verdict headline, computed the same way the Today screen does."""
     from ..api.timing_place import resolve_timing_place
     from ..context.daily import daily_guidance
@@ -46,6 +47,7 @@ def headline_for(kundli, as_of: datetime, tz_name: str) -> str:
     chart = VedicChart(
         kundli.name, kundli.birth_year, kundli.birth_month, kundli.birth_day,
         kundli.birth_hour, kundli.birth_minute, kundli.birth_city, kundli.birth_nation,
+        ayanamsha=ayanamsha, node_type=node_type,
     )
     place = resolve_timing_place(kundli, tz_name)
     payload = daily_guidance(
@@ -89,7 +91,8 @@ def schedule_morning_briefs(db: Session, today: date | None = None,
             jobs.append(existing)
             continue
         try:
-            title = headline(kundli, local_when, zone.key)
+            ayanamsha, node_type = crud.chart_convention(db, user_id)
+            title = headline(kundli, local_when, zone.key, ayanamsha=ayanamsha, node_type=node_type)
         except Exception as exc:  # a bad birth record must not stall everyone else
             jobs.append(cm.schedule_notification(
                 db, user_id, CATEGORY, scheduled_for, "Your day is ready",

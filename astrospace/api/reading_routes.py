@@ -456,9 +456,11 @@ def _generate_and_save(db: Session, k, period: str, label: str, local_date: str,
     kundli_id = k.id
     target_start_date, target_end_date = _period_window(period, now_local)
     try:
+        ayanamsha, node_type = crud.chart_convention(db, user_id)
         chart = VedicChart(
             k.name, k.birth_year, k.birth_month, k.birth_day,
             k.birth_hour, k.birth_minute, k.birth_city, k.birth_nation,
+            ayanamsha=ayanamsha, node_type=node_type,
         )
     except LocationError as e:
         raise HTTPException(status_code=422, detail=str(e))

@@ -98,6 +98,8 @@
 @keyframes connection-spin { to { transform: rotate(360deg); } }
 
 .tabbar {
+  // Held out of the page snapshot so it stays put while pages move (N1).
+  view-transition-name: m-tabbar;
   position: absolute;
   z-index: 20;
   right: 10px;

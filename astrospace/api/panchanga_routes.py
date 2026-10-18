@@ -86,8 +86,10 @@ def personal_panchanga_today(
         payload = daily_panchanga(y, m, d, place.city, place.nation, place.lat, place.lng,
                                   place.tz_str)
         payload["place"] = {**payload["place"], **place.as_payload()}
+        ayanamsha, node_type = crud.chart_convention(db, user.id)
         chart = VedicChart(k.name, k.birth_year, k.birth_month, k.birth_day,
-                           k.birth_hour, k.birth_minute, k.birth_city, k.birth_nation)
+                           k.birth_hour, k.birth_minute, k.birth_city, k.birth_nation,
+                           ayanamsha=ayanamsha, node_type=node_type)
     except (LocationError, ValueError, OverflowError) as e:
         raise HTTPException(status_code=422, detail=str(e))
 

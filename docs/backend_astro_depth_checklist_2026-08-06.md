@@ -1553,3 +1553,14 @@ From the Tier 0 fixes for `/mnt/project-files/audits/end-to-end-2026-10-18/findi
   items of the nativeness audit's on-device checklist. *Hook:*
   `today/listen-sheet.component.ts` `new Audio()`,
   `remedies/mantra-tracker.component.ts` `toggleListen`.
+- [ ] **Daily-brief worker throughput: parallel writes and sharding** (I5,
+  rest). *Why not built:* briefs are written one at a time, about 25-40 per
+  15-minute run, so roughly 150-240 land between 22:30 and midnight. That is
+  ample for today's readers. Each run now writes today's briefs before
+  anyone's tomorrow and starts at a different reader, so a short budget no
+  longer starves the same people. *Unblock:* past about 200 active profiles,
+  write with a bounded pool of 4-8 threads, each on its own session; skip
+  profiles that already have a brief for the date with one anti-join on
+  `daily_guidance_cache` before computing the payload; then shard by
+  `CLOUD_RUN_TASK_INDEX`. *Hook:* `notifications/daily_briefs.py`
+  `schedule_daily_briefs`.

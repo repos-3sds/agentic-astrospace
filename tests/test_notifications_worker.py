@@ -41,7 +41,7 @@ class FakeTransport:
         return PushResult(ok=True, provider_message_id=f"projects/x/messages/{len(self.sent)}")
 
 
-def fake_headline(kundli, as_of, tz_name):
+def fake_headline(kundli, as_of, tz_name, **_convention):
     return f"Steady day for {kundli.name}"
 
 
@@ -98,7 +98,7 @@ class TestScheduling:
         assert [j.user_id for j in jobs] == [ME]
 
     def test_headline_failure_cancels_only_that_job(self, db):
-        def flaky(kundli, as_of, tz_name):
+        def flaky(kundli, as_of, tz_name, **_convention):
             if kundli.user_id == ME:
                 raise ValueError("no such city")
             return "fine"
@@ -216,3 +216,39 @@ def test_uuid_columns_bind_as_uuid_on_postgres(model, column):
 
     col_type = model.__table__.c[column].type
     assert isinstance(col_type.dialect_impl(postgresql.dialect()), Uuid)
+
+
+class TestChartConvention:
+    """The Conventions setting reaches every chart, not only the chart screens (I1)."""
+
+    def test_defaults_without_settings(self, db):
+        assert crud.chart_convention(db, ME) == ("lahiri", "mean")
+
+    def test_reads_the_readers_setting(self, db):
+        crud.upsert_user_settings(db, ME, {"ayanamsha": "raman", "node_type": "true"})
+        assert crud.chart_convention(db, ME) == ("raman", "true")
+        assert crud.chart_convention(db, OTHER) == ("lahiri", "mean")
+
+    def test_unknown_values_fall_back(self, db):
+        crud.upsert_user_settings(db, ME, {"ayanamsha": "made-up", "node_type": "wobbly"})
+        assert crud.chart_convention(db, ME) == ("lahiri", "mean")
+
+    def test_morning_push_headline_uses_it(self, db):
+        crud.upsert_user_settings(db, ME, {"ayanamsha": "krishnamurti", "node_type": "true"})
+        seen = {}
+
+        def capture(kundli, as_of, tz_name, **convention):
+            seen[kundli.user_id] = convention
+            return "fine"
+
+        schedule_morning_briefs(db, today=date(2026, 10, 16), headline=capture)
+        assert seen[ME] == {"ayanamsha": "krishnamurti", "node_type": "true"}
+        assert seen[OTHER] == {"ayanamsha": "lahiri", "node_type": "mean"}
+
+    def test_the_moon_moves_with_the_ayanamsha(self):
+        from astrospace.core.vedic.chart import VedicChart
+
+        args = ("Me", 1991, 8, 14, 6, 12, "Vijayawada", "IN")
+        lahiri = VedicChart(*args).positions["Moon"]["lon"]
+        kp = VedicChart(*args, ayanamsha="krishnamurti").positions["Moon"]["lon"]
+        assert lahiri != kp

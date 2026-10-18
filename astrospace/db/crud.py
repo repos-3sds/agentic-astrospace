@@ -319,6 +319,26 @@ def get_user_settings(db: Session, user_id: str) -> UserSettings | None:
     return db.query(UserSettings).filter(UserSettings.user_id == user_id).first()
 
 
+def chart_convention(db: Session, user_id: str) -> tuple[str, str]:
+    """(ayanamsha, node_type) from the reader's Conventions setting.
+
+    Every engine call that computes a chart for a reader goes through this,
+    so Ask, readings, Panchanga, Muhurta and the morning push use the same
+    chart the chart screens show. Unknown stored values fall back to the
+    defaults rather than failing a request.
+    """
+    from astrospace.core.vedic.positions import AYANAMSHA_MODES
+
+    row = get_user_settings(db, user_id)
+    ayanamsha = (getattr(row, "ayanamsha", None) or "lahiri").lower()
+    node_type = (getattr(row, "node_type", None) or "mean").lower()
+    if ayanamsha not in AYANAMSHA_MODES:
+        ayanamsha = "lahiri"
+    if node_type not in ("mean", "true"):
+        node_type = "mean"
+    return ayanamsha, node_type
+
+
 def upsert_user_settings(db: Session, user_id: str, data: dict) -> UserSettings:
     """Two first saves can race (the app saves on launch and on a toggle);
     the loser's insert hits user_settings_pkey. It retries once as an

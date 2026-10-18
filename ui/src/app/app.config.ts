@@ -8,7 +8,7 @@ import {
   provideAppInitializer,
   provideZoneChangeDetection,
 } from '@angular/core';
-import { provideRouter, RouteReuseStrategy, Router, TitleStrategy } from '@angular/router';
+import { provideRouter, RouteReuseStrategy, Router, TitleStrategy, withViewTransitions } from '@angular/router';
 import { AnalyticsService, ReportingErrorHandler } from './core/analytics.service';
 import { MobileRouteReuseStrategy } from './core/mobile-route-reuse-strategy';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
@@ -100,6 +100,7 @@ import { routes } from './app.routes';
 import { httpResilienceInterceptor } from './core/http-resilience.interceptor';
 import { ResourceCacheService } from './core/resource-cache.service';
 import { SiddhaTitleStrategy } from './core/siddha-title.strategy';
+import { onPageTransition } from './core/page-transitions';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -109,7 +110,7 @@ export const appConfig: ApplicationConfig = {
     { provide: ErrorHandler, useClass: ReportingErrorHandler },
     provideZoneChangeDetection({ eventCoalescing: true }),
     { provide: RouteReuseStrategy, useClass: MobileRouteReuseStrategy },
-    provideRouter(routes),
+    provideRouter(routes, withViewTransitions({ skipInitialTransition: true, onViewTransitionCreated: onPageTransition })),
     { provide: TitleStrategy, useClass: SiddhaTitleStrategy },
     provideHttpClient(withFetch(), withInterceptors([httpResilienceInterceptor])),
     provideAnimationsAsync(),
