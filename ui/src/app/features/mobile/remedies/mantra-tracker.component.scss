@@ -205,6 +205,7 @@
 }
 
 .auto-note { @include m-caption; color: var(--m-muted); margin: 0; text-align: center; }
+.auto-note.is-error { color: var(--m-bad); }
 
 .caveat {
   @include m-caption;

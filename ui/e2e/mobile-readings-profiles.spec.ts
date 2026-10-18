@@ -983,7 +983,7 @@ test('mobile persona modes change navigation and presentation depth', async ({ p
   await expect(page.getByText('Chart', { exact: true })).toHaveCount(0);
   await expect(page.getByText('Ask in plain language.')).toBeVisible();
   await expect(page.getByRole('button', { name: /Money/ })).toHaveCount(0);
-  await expect(page.getByText('Plain-language starter')).toBeVisible();
+  await expect(page.getByText('A good place to start').first()).toBeVisible();
   // A suggestion fills the composer, as on Today; it is not sent (flow audit 5.4).
   const suggestion = page.locator('button.suggestion').first();
   const prompt = (await suggestion.locator('.suggestion-text').evaluate((el) => el.firstChild?.textContent ?? '')).trim();
@@ -1002,6 +1002,6 @@ test('mobile persona modes change navigation and presentation depth', async ({ p
   await expect(page.getByRole('link', { name: 'Back to Yantra' })).toBeVisible();
   await expect(page.getByText('Ask', { exact: true })).toHaveCount(1);
   await expect(page.getByText('Ask with chart context.')).toBeVisible();
-  await expect(page.getByText('Technical depth')).toBeVisible();
+  await expect(page.getByText('Dasha with natal and transit evidence').first()).toBeVisible();
   await expect(page.getByRole('button', { name: /Money/ })).toBeVisible();
 });

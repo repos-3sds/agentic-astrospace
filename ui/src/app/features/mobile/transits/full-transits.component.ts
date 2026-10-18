@@ -34,7 +34,7 @@ import { transitVerdictLabel } from './transit-verdict';
           <section class="mtrf-copy m-selectable" [attr.data-tone]="sade.active ? 'warn' : 'good'">
             <p><b>{{ sade.active ? 'Active' : 'Not active' }}</b>@if (sade.active && sade.phase) { — {{ sade.phase }} phase }</p>
             <p>{{ sade.active ? 'Use this as a discipline marker: simplify commitments, protect sleep, and do the slow necessary work.' : 'Saturn is not pressing the natal Moon through Sade Sati right now.' }}</p>
-            <p>Evidence: Saturn is {{ sade.saturn_house_from_moon }} house(s) from your natal Moon.</p>
+            <p>Evidence: Saturn is in the {{ ordinal(sade.saturn_house_from_moon) }} house from your natal Moon.</p>
           </section>
         }
         <p class="mtrf-title">{{ payload.gochara.interpretation.range_outlook.days }}-DAY RANGE</p>
@@ -49,8 +49,12 @@ import { transitVerdictLabel } from './transit-verdict';
               <span><b>{{ rule.planet }}</b><small>{{ transitPlain(rule) }}</small><small class="mtrf-action">{{ ruleAction(rule) }}</small></span>
               <em>AV {{ avRow(rule)?.bindus ?? '—' }}</em>
               @if (hasVedha(rule)) { <i>VEDHA</i> }
-              @if (classicalFor(rule); as classical) {
-                @if (!classical.favourable) { <i data-tone="warn">UNFAVOURABLE</i> }
+              <!-- The classical Gochara pill is a second verdict vocabulary; it
+                   contradicted the row's own verdict outside Practitioner (U15). -->
+              @if (preferences.experienceMode() === 'practitioner') {
+                @if (classicalFor(rule); as classical) {
+                  @if (!classical.favourable) { <i data-tone="warn">UNFAVOURABLE</i> }
+                }
               }
             </button>
           }
@@ -66,7 +70,7 @@ import { transitVerdictLabel } from './transit-verdict';
         <p class="mtrf-title">ACTIVE WINDOWS</p>
         <section class="mtrf-events">
           @for (window of payload.gochara.timeline.active_windows; track window.rule + window.start_date) {
-            <div [attr.data-tone]="window.tone === 'supportive' ? 'good' : 'warn'"><i></i><small>{{ window.planet }}</small><p>{{ window.rule }} · {{ window.start_date }} → {{ window.end_date }}</p></div>
+            <div [attr.data-tone]="window.tone === 'supportive' ? 'good' : 'warn'"><i></i><small>{{ window.planet }}</small><p>{{ window.rule }} · {{ dayLabel(window.start_date) }} to {{ dayLabel(window.end_date) }}</p></div>
           }
         </section>
         <p class="mtrf-title">CONVENTION</p>
@@ -134,6 +138,19 @@ export class FullTransitsComponent {
     if (this.preferences.experienceMode() === 'guided') return rule.content.guided_summary;
     if (this.preferences.experienceMode() === 'practitioner') return rule.content.practitioner_deep_dive;
     return rule.content.balanced_context;
+  }
+
+  protected ordinal(n: number): string {
+    const tail = n % 100 >= 11 && n % 100 <= 13 ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[n % 10] ?? 'th';
+    return `${n}${tail}`;
+  }
+
+  /** '2026-11-01' -> '1 Nov 2026'. */
+  protected dayLabel(iso: string | null | undefined): string {
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso ?? '');
+    if (!match) return iso ?? '';
+    const month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Number(match[2]) - 1];
+    return `${Number(match[3])} ${month} ${match[1]}`;
   }
 
   protected transitPlain(rule: GocharamMatchedRule): string {

@@ -8,6 +8,11 @@ const LEVEL_WORD: Record<string, string> = {
   mahadasha: 'major period', antardasha: 'sub-period', pratyantardasha: 'sub-sub-period', sookshmadasha: 'short period',
 };
 
+/** The same tone words Today uses; 'mixed' was read as supportive (U23). */
+const TONE_WORD: Record<string, string> = {
+  supportive: 'a supportive day', positive: 'a supportive day', mixed: 'a mixed day', caution: 'a caution day',
+};
+
 /**
  * Three suggestions, one per life area (work, relationships, timing), each
  * grounded in something the daily payload actually says about this
@@ -32,21 +37,21 @@ export function buildAskSuggestions(daily: DailyGuidancePayload | null, mode: Mo
       : current === major
         ? `${major.lord} major period is running`
         : `${current.lord} sub-period within the ${major.lord} major period`;
-  const dayBecause = nakshatra ? `Moon in ${nakshatra} today${tone ? ` · ${tone === 'caution' ? 'a caution day' : 'a supportive day'}` : ''}` : undefined;
+  const dayBecause = nakshatra ? `Moon in ${nakshatra} today${tone ? ` · ${TONE_WORD[tone] ?? 'a mixed day'}` : ''}` : undefined;
   const transitBecause = transit ? `${transit.planet} transit: ${transit.name}` : dashaBecause;
 
   if (mode === 'guided') {
     return [
-      { prompt: current ? `What should I focus on at work during my ${current.lord} period?` : 'What should I focus on at work this week?', because: dashaBecause ?? 'Plain-language starter' },
-      { prompt: nakshatra ? 'Is today a good day for a talk with my family?' : 'How should I approach a talk with my family?', because: dayBecause ?? 'Practical guidance' },
-      { prompt: 'What is one thing to avoid at work today?', because: dayBecause ?? 'Safety-first daily prompt' },
+      { prompt: current ? `What should I focus on at work during my ${current.lord} period?` : 'What should I focus on at work this week?', because: dashaBecause ?? 'A good place to start' },
+      { prompt: nakshatra ? 'Is today a good day for a talk with my family?' : 'How should I approach a talk with my family?', because: dayBecause ?? 'For an everyday decision' },
+      { prompt: 'What is one thing to avoid at work today?', because: dayBecause ?? 'To keep the day on track' },
     ];
   }
   if (mode === 'practitioner') {
     return [
-      { prompt: current ? `How does the ${current.lord} ${LEVEL_WORD[current.level] ?? current.level} shape my career factors right now?` : 'Explain my current dasha for my career with natal and transit factors', because: dashaBecause ?? 'Technical depth' },
-      { prompt: transit ? `What does ${transit.planet}'s current transit mean for relationships in my chart?` : 'Which transits are shaping my career today?', because: transitBecause ?? 'Provenance check' },
-      { prompt: nakshatra ? `Is the Moon in ${nakshatra} a good time to start a new business?` : 'Compare D1 and D9 factors for this relationship question', because: dayBecause ?? 'Chart-layer prompt' },
+      { prompt: current ? `How does the ${current.lord} ${LEVEL_WORD[current.level] ?? current.level} shape my career factors right now?` : 'Explain my current dasha for my career with natal and transit factors', because: dashaBecause ?? 'Dasha with natal and transit evidence' },
+      { prompt: transit ? `What does ${transit.planet}'s current transit mean for relationships in my chart?` : 'Which transits are shaping my career today?', because: transitBecause ?? 'Today’s transits against your chart' },
+      { prompt: nakshatra ? `Is the Moon in ${nakshatra} a good time to start a new business?` : 'Compare D1 and D9 factors for this relationship question', because: dayBecause ?? 'D1 read against D9' },
     ];
   }
   return [
@@ -59,16 +64,16 @@ export function buildAskSuggestions(daily: DailyGuidancePayload | null, mode: Mo
 function neutral(mode: Mode): AskSuggestion[] {
   if (mode === 'guided') {
     return [
-      { prompt: 'What should I focus on at work this week?', because: 'Plain-language starter' },
-      { prompt: 'What is one thing to avoid at work today?', because: 'Safety-first daily prompt' },
-      { prompt: 'How should I approach a talk with my family?', because: 'Practical guidance' },
+      { prompt: 'What should I focus on at work this week?', because: 'A good place to start' },
+      { prompt: 'What is one thing to avoid at work today?', because: 'To keep the day on track' },
+      { prompt: 'How should I approach a talk with my family?', because: 'For an everyday decision' },
     ];
   }
   if (mode === 'practitioner') {
     return [
-      { prompt: 'Explain my current dasha for my career with natal and transit factors', because: 'Technical depth' },
-      { prompt: 'Which transits are shaping my career today?', because: 'Provenance check' },
-      { prompt: 'Compare D1 and D9 factors for this relationship question', because: 'Chart-layer prompt' },
+      { prompt: 'Explain my current dasha for my career with natal and transit factors', because: 'Dasha with natal and transit evidence' },
+      { prompt: 'Which transits are shaping my career today?', because: 'Today’s transits against your chart' },
+      { prompt: 'Compare D1 and D9 factors for this relationship question', because: 'D1 read against D9' },
     ];
   }
   return [

@@ -63,6 +63,8 @@ export class MantraTrackerComponent {
   protected readonly count = signal(0);
   protected readonly completedDates = signal<string[]>([]);
   protected readonly listen = signal<'idle' | 'loading' | 'playing'>('idle');
+  /** Why the last Auto/Listen stopped early; it used to fail in silence (U29). */
+  protected readonly listenError = signal<string | null>(null);
   protected readonly voice = signal<MantraVoice>(readVoice());
   protected readonly voiceChoices = computed(() => {
     const voices = this.practice()?.audio?.voices;
@@ -181,6 +183,7 @@ export class MantraTrackerComponent {
     const practice = this.practice();
     if (!practice) return;
     this.haptics.tap();
+    this.listenError.set(null);
     const run = ++this.listenRun;
     const counting = !this.done();
     this.listen.set('loading');
@@ -206,10 +209,10 @@ export class MantraTrackerComponent {
         const roundEnd = voiceSeconds ? voiceStart + voiceSeconds + 0.6 : Infinity;
         const again = () => {
           player.currentTime = loopFrom;
-          void player.play().catch(() => this.finishListening(run));
+          void player.play().catch(() => this.failListening(run));
         };
         player.onended = () => this.roundDone(run, counting, again);
-        player.onerror = () => this.finishListening(run);
+        player.onerror = () => this.failListening(run);
         await player.play();
         this.listen.set('playing');
         this.follow(run, () => {
@@ -233,7 +236,7 @@ export class MantraTrackerComponent {
         this.roundDone(run, counting, () => { again = true; });
       }
     } catch {
-      this.finishListening(run);
+      this.failListening(run);
     }
   }
 
@@ -264,13 +267,14 @@ export class MantraTrackerComponent {
       await this.nativeTts.speak(text, { lang, rate: 0.8, pitch: 1 });
       return;
     }
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    await new Promise<void>((resolve) => {
+    // No voice at all must not count a round that nobody heard.
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) throw new Error('No voice on this device');
+    await new Promise<void>((resolve, reject) => {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = lang;
       utterance.rate = 0.8;
       utterance.onend = () => resolve();
-      utterance.onerror = () => resolve();
+      utterance.onerror = (event) => (event.error === 'interrupted' || event.error === 'canceled' ? resolve() : reject(new Error(event.error)));
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utterance);
     });
@@ -290,6 +294,16 @@ export class MantraTrackerComponent {
     if (run !== this.listenRun) return;
     // Retire the run too, so a late ended or error event can't count again.
     this.stopListening();
+  }
+
+  private failListening(run: number): void {
+    if (run !== this.listenRun) return;
+    this.stopListening();
+    this.listenError.set(
+      typeof navigator !== 'undefined' && navigator.onLine === false
+        ? 'Couldn’t play the recitation. You’re offline; check your connection and try again.'
+        : 'Couldn’t play the recitation on this phone. Try again, or count by tapping.',
+    );
   }
 
   private endFollow(): void {

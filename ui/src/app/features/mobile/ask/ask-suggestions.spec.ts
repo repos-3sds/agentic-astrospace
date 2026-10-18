@@ -23,6 +23,18 @@ describe('buildAskSuggestions', () => {
     expect(rows[2].because).toContain('caution day');
   });
 
+  it('calls a mixed day mixed, and never shows developer fallback labels (U23)', () => {
+    const payload = daily();
+    (payload.verdict as { tone: string }).tone = 'mixed';
+    expect(buildAskSuggestions(payload, 'balanced')[2].because).toContain('a mixed day');
+    for (const mode of ['guided', 'balanced', 'practitioner'] as const) {
+      const because = buildAskSuggestions(null, mode).map((row) => row.because ?? '').join(' | ');
+      for (const label of ['Plain-language starter', 'Safety-first', 'Technical depth', 'Provenance check', 'Chart-layer prompt']) {
+        expect(because).not.toContain(label);
+      }
+    }
+  });
+
   it('names the sub-period, not the deepest level of a five-level chain', () => {
     const payload = daily();
     payload.context.dasha_chain = ['Moon', 'Sun', 'Saturn', 'Mars', 'Rahu'].map((lord, i) =>

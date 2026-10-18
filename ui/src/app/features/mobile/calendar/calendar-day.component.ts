@@ -14,6 +14,16 @@ import { MobileSymbol, nakshatraSymbol, tithiSymbol } from '../symbols/mobile-sy
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 
+const HARD_TARAS = new Set(['Janma', 'Vadha']);
+
+const ASPECT_WORDS: Record<string, string> = {
+  conjunction: 'meets',
+  opposition: 'faces',
+  square: 'presses on',
+  trine: 'flows with',
+  sextile: 'helps',
+};
+
 @Component({
   selector: 'as-calendar-day',
   standalone: true,
@@ -43,8 +53,8 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
         </header>
 
         @if (day(); as summary) {
-          <section class="mcald-quality" [class.bad]="!summary.tarabala.favourable || !summary.chandrabala.favourable">
-            <span><img src="mobile/cancellation-check.svg" alt="" /></span>
+          <section class="mcald-quality" [class.bad]="dayTone(summary) === 'care'" [class.mixed]="dayTone(summary) === 'mixed'">
+            <span><img [src]="toneIcon(summary)" alt="" /></span>
             <div><b>{{ qualityLabel(summary) }}</b><small>{{ qualityDetail(summary) }}</small></div>
           </section>
 
@@ -133,14 +143,14 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
               }
             </button>
           } @empty {
-            <div><small>NONE</small><b>No major festival returned for this date</b></div>
+            <div><small>NONE</small><b>No festival on this day</b></div>
           }
         </section>
 
         <p class="mcald-title">RELATED SIGNALS</p>
         <section class="mcald-stack">
           @for (event of events(); track event.title + event.date) {
-            <div><small>{{ event.category }}</small><b>{{ event.title }}</b><p>{{ signalSummary(event) }}</p></div>
+            <div><small>{{ event.category }}</small><b>{{ signalTitle(event) }}</b><p>{{ signalSummary(event) }}</p></div>
           } @empty {
             <div><small>NONE</small><b>No profile-specific events returned</b></div>
           }
@@ -249,8 +259,25 @@ export class CalendarDayComponent {
     return nakshatraSymbol(value);
   }
 
+  /**
+   * The same rule that tints the month grid (panchanga_day.day_quality), so a
+   * tapped day never disagrees with its cell (U14): take care on Chandrashtama
+   * or a Janma or Vadha tara, good when both balas are good, mixed otherwise.
+   */
+  protected dayTone(day: CalendarDaySummary): 'good' | 'mixed' | 'care' {
+    if (day.chandrabala.chandrashtama || day.chandrabala.house_from_rashi === 8
+      || HARD_TARAS.has(day.tarabala.tara)) return 'care';
+    return day.tarabala.favourable && day.chandrabala.favourable ? 'good' : 'mixed';
+  }
+
+  protected toneIcon(day: CalendarDaySummary): string {
+    const tone = this.dayTone(day);
+    return tone === 'good' ? 'mobile/cancellation-check.svg' : tone === 'care' ? 'mobile/alert-triangle.svg' : 'mobile/info.svg';
+  }
+
   protected qualityLabel(day: CalendarDaySummary): string {
-    return day.tarabala.favourable && day.chandrabala.favourable ? 'Good day for you' : 'Use extra care today';
+    const tone = this.dayTone(day);
+    return tone === 'good' ? 'Good day for you' : tone === 'care' ? 'Use extra care today' : 'A mixed day';
   }
 
   protected qualityDetail(day: CalendarDaySummary): string {
@@ -557,13 +584,27 @@ export class CalendarDayComponent {
     }
   }
 
+  /** Western aspect words read as plain English outside Practitioner (U14). */
+  protected signalTitle(event: CalendarEvent): string {
+    if (this.preferences.experienceMode() === 'practitioner') return event.title;
+    return event.title.replace(
+      /^(\w+) (conjunction|opposition|square|trine|sextile) natal (\w+)$/i,
+      (_m, moving: string, aspect: string, natal: string) => `${moving} ${ASPECT_WORDS[aspect.toLowerCase()]} your ${natal}`,
+    );
+  }
+
   protected signalSummary(event: CalendarEvent): string {
     if (this.preferences.experienceMode() === 'practitioner') return event.detail;
-    return event.tone === 'challenging' || event.tone === 'hard'
-      ? 'Use care around this timing.'
-      : event.tone === 'supportive'
-        ? 'Supportive timing marker.'
-        : 'Timing marker from your profile.';
+    const hard = event.tone === 'challenging' || event.tone === 'hard';
+    if (event.category === 'dasha') return 'The life period shaping this stretch for you.';
+    if (event.category === 'transit') {
+      return hard
+        ? 'A slower stretch. Go gently with big moves while it lasts.'
+        : event.tone === 'supportive'
+          ? 'A helpful movement for you. A good time to put in effort.'
+          : 'A background movement in your chart. Nothing to act on.';
+    }
+    return hard ? 'Go gently around this time.' : event.tone === 'supportive' ? 'Helpful timing for you.' : 'Background timing from your chart.';
   }
 
   private friendlyError(error: unknown): string {
