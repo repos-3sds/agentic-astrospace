@@ -177,14 +177,14 @@ none of them call the server. Code: `ui/android/.../widgets/` and
 
 | Widget | Shows | Tap |
 | --- | --- | --- |
-| Your day | score ring, label; medium adds headline and timing; large adds summary, one Do, one Avoid | Today |
-| Listen | today's headline and a play/stop button that reads the brief aloud | play/stop |
+| Your day | score ring with the day's word (Steady, Mixed, Take care) under the number; medium adds headline and timing; large adds summary, one Do, one Avoid | Today |
+| Listen | a slim bar: play/stop, the day's word and the brief's length | play/stop |
 | Calendar | tithi, nakshatra, next festival or moon day; 4x4 shows the month | Calendar |
-| Timing | the next window (Rahu Kalam first) with a live countdown | Calendar |
-| Moon | tonight's phase and the next full or new moon | Calendar |
+| Timing | the next window (Rahu Kalam first): "Starts in 1h 16m", its times, and a ring that fills over the 3 hours before it and empties while it runs | Calendar |
+| Moon | tonight's phase, the tithi, and the next Purnima or Amavasya by date | Calendar |
 | Mantra | the practice last opened, today's count; tap the ring to count | the practice |
 | Ask | a search bar into Ask | Ask |
-| Today's Subhashita | today's verse and source | the verse screen, to share |
+| Today's Subhashita | the first Sanskrit line, the plain meaning and the source | the verse screen, to share |
 
 How it fits together:
 
@@ -197,7 +197,14 @@ How it fits together:
   out 14 days ahead, so the verse widget works offline for two weeks.
 - Widgets refresh at the next window boundary or midnight (inexact alarm,
   no exact-alarm permission), every 30 minutes, and after reboot, time or
-  timezone changes.
+  timezone changes. While a window is ahead or running, a per-minute
+  non-wakeup alarm redraws only Timing and Your day, so countdowns read in
+  minutes and never show seconds.
+- Look: cream card by day, deep brown with one gold accent by night
+  (`values/` and `values-night/widget_colors.xml`), in the app's own Inter
+  and Playfair (`res/font/`, static cuts of `ui/public/fonts/`) so launchers
+  don't substitute the phone's font. Font resources need Android 8+; older
+  phones fall back to the system face.
 - Mantra taps on the widget are held natively and folded into the tracker's
   record when the app next opens, so both show one count. The count is per
   local day.

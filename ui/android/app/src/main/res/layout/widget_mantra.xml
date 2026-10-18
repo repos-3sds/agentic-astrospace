@@ -6,24 +6,20 @@
     android:background="@drawable/widget_card"
     android:gravity="center"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="14dp">
 
     <TextView
         android:id="@+id/title"
+        style="@style/WidgetEyebrow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ellipsize="end"
-        android:gravity="center"
-        android:maxLines="1"
-        android:textColor="@color/widget_muted"
-        android:textSize="12sp"
-        android:textStyle="bold" />
+        android:gravity="center" />
 
     <FrameLayout
         android:id="@+id/counter"
-        android:layout_width="84dp"
-        android:layout_height="84dp"
-        android:layout_marginTop="6dp">
+        android:layout_width="92dp"
+        android:layout_height="92dp"
+        android:layout_marginTop="10dp">
 
         <ImageView
             android:id="@+id/ring"
@@ -39,30 +35,28 @@
 
             <TextView
                 android:id="@+id/count"
+                style="@style/WidgetNumber"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:includeFontPadding="false"
-                android:textColor="@color/widget_text"
-                android:textSize="26sp"
-                android:textStyle="bold" />
+                android:textSize="26sp" />
 
             <TextView
                 android:id="@+id/target"
+                style="@style/WidgetBody"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/widget_muted"
+                android:layout_marginTop="2dp"
                 android:textSize="11sp" />
         </LinearLayout>
     </FrameLayout>
 
     <TextView
         android:id="@+id/hint"
+        style="@style/WidgetBody"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:ellipsize="end"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
         android:maxLines="1"
-        android:textColor="@color/widget_accent"
-        android:textSize="12sp"
-        android:textStyle="bold" />
+        android:textSize="12sp" />
 </LinearLayout>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget type, in the app's own bundled faces: launchers otherwise draw
+     widget text in the phone's system font, which on Samsung can be a
+     handwriting face (Hawk, build 499). res/font/ holds static cuts of the
+     app's Inter and Playfair Display (ui/public/fonts/). -->
+<resources>
+    <style name="WidgetEyebrow">
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:letterSpacing">0.16</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/widget_muted</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+    <style name="WidgetTitle">
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/widget_text</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    <style name="WidgetHeadline">
+        <item name="android:fontFamily">@font/playfair_semibold</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:lineSpacingMultiplier">1.08</item>
+        <item name="android:textColor">@color/widget_text</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    <style name="WidgetBody">
+        <item name="android:fontFamily">@font/inter_regular</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:lineSpacingMultiplier">1.15</item>
+        <item name="android:textColor">@color/widget_muted</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    <style name="WidgetNumber">
+        <item name="android:fontFamily">@font/inter_bold</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:textColor">@color/widget_text</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+    <style name="WidgetVerse">
+        <item name="android:fontFamily">@font/playfair_italic</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:lineSpacingMultiplier">1.1</item>
+        <item name="android:textColor">@color/widget_text</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    <style name="WidgetCell">
+        <item name="android:fontFamily">@font/inter_regular</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/widget_text</item>
+        <item name="android:gravity">center</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+</resources>

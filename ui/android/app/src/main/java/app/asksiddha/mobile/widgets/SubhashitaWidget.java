@@ -22,12 +22,22 @@ public class SubhashitaWidget extends BaseWidget {
         if (verse == null) {
             views.setTextViewText(R.id.meaning, "A verse a day from the Bhagavad Gita, Chanakya Niti and the Puranas.");
             views.setTextViewText(R.id.source, "Open Siddha to load today’s verse");
+            views.setViewVisibility(R.id.sanskrit, android.view.View.GONE);
             return views;
         }
         // Older app versions sent no meaning; the verse itself stands in.
         String meaning = verse.optString("meaning");
         views.setTextViewText(R.id.meaning, meaning.isEmpty() ? "“" + verse.optString("english") + "”" : meaning);
-        views.setTextViewText(R.id.source, "— " + verse.optString("source") + " " + verse.optString("ref"));
+        views.setTextViewText(R.id.source, verse.optString("source") + " " + verse.optString("ref"));
+        String line = firstLine(verse.optString("sanskrit"));
+        views.setTextViewText(R.id.sanskrit, line);
+        views.setViewVisibility(R.id.sanskrit, line.isEmpty() ? android.view.View.GONE : android.view.View.VISIBLE);
         return views;
+    }
+
+    /** The verse's first line, without the danda that ends it. */
+    static String firstLine(String sanskrit) {
+        String line = sanskrit == null ? "" : sanskrit.trim().split("\n", 2)[0];
+        return line.replaceAll("[\\s।॥]+$", "").trim();
     }
 }

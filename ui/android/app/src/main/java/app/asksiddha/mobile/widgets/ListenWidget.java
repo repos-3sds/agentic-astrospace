@@ -30,10 +30,21 @@ public class ListenWidget extends BaseWidget {
         }
         views.setImageViewResource(R.id.play, speaking ? R.drawable.widget_ic_stop : R.drawable.widget_ic_play);
         views.setTextViewText(R.id.title, speaking ? "Playing your day" : "Listen to your day");
-        views.setTextViewText(R.id.subtitle, today.optString("headline"));
+        views.setTextViewText(R.id.subtitle, subtitle(today));
         views.setOnClickPendingIntent(R.id.play,
             speech(context, speaking ? BriefSpeechService.ACTION_STOP : BriefSpeechService.ACTION_PLAY));
         return views;
+    }
+
+    /** "Steady day · about 1 min": the brief's length at the 0.9x it is read at. */
+    static String subtitle(JSONObject today) {
+        String label = today.optString("label");
+        String words = today.optString("listen").trim();
+        int count = words.isEmpty() ? 0 : words.split("\\s+").length;
+        // About 150 words a minute at normal speed, so 135 at 0.9x.
+        long minutes = Math.max(1, Math.round(count / 135.0));
+        String day = label.isEmpty() ? "Today" : label.endsWith("care") ? label : label + " day";
+        return day + " · about " + minutes + " min";
     }
 
     static PendingIntent speech(Context context, String action) {

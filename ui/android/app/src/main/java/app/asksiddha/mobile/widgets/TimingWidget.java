@@ -1,8 +1,6 @@
 package app.asksiddha.mobile.widgets;
 
 import android.content.Context;
-import android.os.SystemClock;
-import android.view.View;
 import android.widget.RemoteViews;
 import app.asksiddha.mobile.R;
 import org.json.JSONArray;
@@ -12,7 +10,8 @@ import org.json.JSONObject;
  * One timing window, counting (Figma M10 Live Activity, node 106:92, as a
  * home-screen widget). The window is the one the app's timing note names
  * (Rahu Kalam) while it is ahead or running; after it, the next window of
- * the day. The countdown is a Chronometer, so it ticks without waking the app.
+ * the day. The countdown is in minutes ("Starts in 6h 57m"): a per-minute
+ * tick (Widgets.scheduleTick) redraws it while a window is still ahead.
  */
 public class TimingWidget extends BaseWidget {
 
@@ -26,34 +25,39 @@ public class TimingWidget extends BaseWidget {
         boolean fresh = today != null && WidgetStore.today().equals(today.optString("date"));
         JSONObject window = fresh ? current(today, now) : null;
 
+        int track = Widgets.color(context, R.color.widget_track);
         if (window == null) {
-            views.setImageViewBitmap(R.id.dot, Widgets.ring(context, 100,
-                Widgets.color(context, R.color.widget_track), Widgets.color(context, R.color.widget_track), 36, 5));
+            views.setImageViewBitmap(R.id.dot, Widgets.ring(context, 0, track, track, 44, 5));
             views.setTextViewText(R.id.name, fresh ? "TODAY’S WINDOWS" : "TIMING");
             views.setTextViewText(R.id.status, fresh ? "All done for today" : "Open Siddha for today");
-            views.setViewVisibility(R.id.clock, View.GONE);
-            views.setViewVisibility(R.id.status, View.VISIBLE);
+            views.setTextViewText(R.id.span, fresh ? "Tomorrow’s appear at midnight" : "");
             return views;
         }
 
         long start = window.optLong("startMs"), end = window.optLong("endMs");
         boolean running = now >= start;
         boolean caution = "inauspicious".equals(window.optString("kind"));
-        int tone = Widgets.color(context, caution ? R.color.widget_accent : R.color.widget_good);
-        // The ring empties as a running window runs out, like the Live Activity's.
-        int left = running && end > start ? (int) (100 * (end - now) / (end - start)) : 100;
-        views.setImageViewBitmap(R.id.dot,
-            Widgets.ring(context, left, tone, Widgets.color(context, R.color.widget_track), 36, 5));
+        int tone = Widgets.color(context, caution ? R.color.widget_accent : R.color.widget_band_steady);
+        views.setImageViewBitmap(R.id.dot, Widgets.ring(context, fill(start, end, now), tone, track, 44, 5));
         views.setTextViewText(R.id.name, window.optString("name").toUpperCase(java.util.Locale.ROOT));
-
-        long target = running ? end : start;
-        // Chronometer counts against the elapsed-realtime clock, not the wall clock.
-        long base = SystemClock.elapsedRealtime() + (target - now);
-        views.setChronometer(R.id.clock, base, running ? "Ends in %s" : "Starts in %s", true);
-        views.setChronometerCountDown(R.id.clock, true);
-        views.setViewVisibility(R.id.clock, View.VISIBLE);
-        views.setViewVisibility(R.id.status, View.GONE);
+        views.setTextViewText(R.id.status, running
+            ? "Ends in " + Widgets.duration(end - now)
+            : "Starts in " + Widgets.duration(start - now));
+        views.setTextViewText(R.id.span, Widgets.clock(start) + " – " + Widgets.clock(end));
         return views;
+    }
+
+    /** How long before a window the ring starts filling. */
+    static final long LEAD_MS = 3 * 3600_000L;
+
+    /**
+     * The ring fills over the three hours before a window and is full as it
+     * starts; while it runs it empties, like the Live Activity's.
+     */
+    static int fill(long start, long end, long now) {
+        if (now >= start) return end > start ? (int) (100 * (end - now) / (end - start)) : 0;
+        long ahead = start - now;
+        return ahead >= LEAD_MS ? 4 : (int) (100 - 96 * ahead / LEAD_MS);
     }
 
     /** The window to show: Rahu Kalam until it ends, then the next one ahead. */

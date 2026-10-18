@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Today's Subhashita: the share image in small (same colours in both themes). -->
+<!-- Today's Subhashita on the home screen, in the same card as the other
+     widgets: the first line of the Sanskrit, the plain meaning (which always
+     fits) and the source. The full verse and the status image are a tap away. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/widget_verse_card"
+    android:background="@drawable/widget_card"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:paddingStart="18dp"
+    android:paddingTop="14dp"
+    android:paddingEnd="10dp"
+    android:paddingBottom="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,48 +20,53 @@
         android:orientation="horizontal">
 
         <TextView
+            style="@style/WidgetEyebrow"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:letterSpacing="0.12"
-            android:maxLines="1"
             android:text="@string/widget_subhashita_eyebrow"
-            android:textColor="@color/widget_verse_muted"
-            android:textSize="11sp"
-            android:textStyle="bold" />
+            android:textColor="@color/widget_accent" />
 
         <ImageView
             android:id="@+id/share"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:contentDescription="@string/widget_share"
-            android:padding="6dp"
+            android:padding="9dp"
             android:src="@drawable/widget_ic_share" />
     </LinearLayout>
 
-    <!-- The verse's one-line meaning, which always fits; the full verse is a
-         tap away. A five-line verse cut off mid-sentence read as half a
-         thought (Hawk, 2026-10-18). -->
-    <TextView
-        android:id="@+id/meaning"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="4dp"
         android:layout_weight="1"
-        android:ellipsize="end"
-        android:fontFamily="serif"
         android:gravity="center_vertical"
-        android:maxLines="4"
-        android:textColor="@color/widget_verse_text"
-        android:textSize="17sp"
-        android:textStyle="italic" />
+        android:orientation="vertical"
+        android:paddingEnd="8dp">
+
+        <TextView
+            android:id="@+id/sanskrit"
+            style="@style/WidgetBody"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="serif"
+            android:maxLines="1"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/meaning"
+            style="@style/WidgetVerse"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:maxLines="3"
+            android:textSize="17sp" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/source"
+        style="@style/WidgetEyebrow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:textColor="@color/widget_verse_muted"
-        android:textSize="12sp" />
+        android:textColor="@color/widget_gold" />
 </LinearLayout>

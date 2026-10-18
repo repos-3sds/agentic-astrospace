@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Figma M10 Home Screen Widget (103:92): the day's ring, headline and one timing line. -->
+<!-- Your day, 4x2 (Figma M10 Home Screen Widget, node 103:92). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
@@ -7,30 +7,41 @@
     android:background="@drawable/widget_card"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingStart="16dp"
-    android:paddingEnd="16dp"
-    android:paddingTop="12dp"
-    android:paddingBottom="12dp">
+    android:padding="16dp">
 
-    <FrameLayout
-        android:layout_width="84dp"
-        android:layout_height="84dp">
+        <FrameLayout
+            android:layout_width="88dp"
+            android:layout_height="88dp">
 
-        <ImageView
-            android:id="@+id/ring"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@null" />
+            <ImageView
+                android:id="@+id/ring"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null" />
 
-        <TextView
-            android:id="@+id/score"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:textColor="@color/widget_text"
-            android:textSize="28sp"
-            android:textStyle="bold" />
-    </FrameLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/score"
+                    style="@style/WidgetNumber"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="28sp" />
+
+                <TextView
+                    android:id="@+id/band"
+                    style="@style/WidgetEyebrow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:letterSpacing="0.1"
+                    android:textSize="8sp" />
+            </LinearLayout>
+        </FrameLayout>
 
     <LinearLayout
         android:layout_width="0dp"
@@ -41,37 +52,30 @@
 
         <TextView
             android:id="@+id/eyebrow"
+            style="@style/WidgetEyebrow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:letterSpacing="0.14"
-            android:maxLines="1"
-            android:text="SIDDHA"
-            android:textColor="@color/widget_accent"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            android:text="@string/widget_today_eyebrow"
+            android:textColor="@color/widget_accent" />
 
         <TextView
             android:id="@+id/headline"
+            style="@style/WidgetHeadline"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:ellipsize="end"
-            android:maxLines="2"
-            android:textColor="@color/widget_text"
-            android:textSize="17sp"
-            android:textStyle="bold" />
+            android:layout_marginTop="6dp"
+            android:maxLines="3" />
 
         <TextView
             android:id="@+id/timing"
+            style="@style/WidgetBody"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="8dp"
             android:drawableStart="@drawable/widget_ic_clock"
             android:drawablePadding="6dp"
-            android:ellipsize="end"
             android:gravity="center_vertical"
             android:maxLines="1"
-            android:textColor="@color/widget_warn"
-            android:textSize="13sp" />
+            android:textColor="@color/widget_gold" />
     </LinearLayout>
 </LinearLayout>

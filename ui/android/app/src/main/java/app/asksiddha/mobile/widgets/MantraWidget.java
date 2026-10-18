@@ -24,10 +24,10 @@ public class MantraWidget extends BaseWidget {
         if (mantra == null) {
             views.setTextViewText(R.id.title, "MANTRA");
             views.setImageViewBitmap(R.id.ring, Widgets.ring(context, 0,
-                Widgets.color(context, R.color.widget_accent), Widgets.color(context, R.color.widget_track), 84, 8));
-            views.setTextViewText(R.id.count, "0");
+                Widgets.color(context, R.color.widget_accent), Widgets.color(context, R.color.widget_track), 92, 7));
+            views.setTextViewText(R.id.count, "ॐ");
             views.setTextViewText(R.id.target, "");
-            views.setTextViewText(R.id.hint, "Open a mantra to count");
+            views.setTextViewText(R.id.hint, "Tap to choose a mantra");
             views.setOnClickPendingIntent(R.id.widget_root, Widgets.open(context, "/m/remedies"));
             return views;
         }
@@ -36,11 +36,11 @@ public class MantraWidget extends BaseWidget {
         boolean done = count >= target;
         views.setTextViewText(R.id.title, mantra.optString("title").toUpperCase(java.util.Locale.ROOT));
         views.setImageViewBitmap(R.id.ring, Widgets.ring(context, count * 100 / target,
-            Widgets.color(context, done ? R.color.widget_good : R.color.widget_accent),
-            Widgets.color(context, R.color.widget_track), 84, 8));
+            Widgets.color(context, done ? R.color.widget_band_steady : R.color.widget_accent),
+            Widgets.color(context, R.color.widget_track), 92, 7));
         views.setTextViewText(R.id.count, String.valueOf(count));
         views.setTextViewText(R.id.target, "of " + target);
-        views.setTextViewText(R.id.hint, done ? "Completed today" : "Tap the ring to count");
+        views.setTextViewText(R.id.hint, done ? "Completed today" : count == 0 ? "Tap the ring to count" : (target - count) + " to go");
         views.setOnClickPendingIntent(R.id.widget_root, Widgets.open(context, mantra.optString("route", "/m/remedies")));
         if (!done) views.setOnClickPendingIntent(R.id.counter, Widgets.broadcast(context, MantraWidget.class, ACTION_COUNT));
         return views;
