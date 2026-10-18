@@ -1542,3 +1542,14 @@ From the Tier 0 fixes for `/mnt/project-files/audits/end-to-end-2026-10-18/findi
   or POST body with old links still honoured, plus a log exclusion set in
   the GCP console. Crash stacks are scrubbed and usage sharing is now
   opt-in. *Hook:* `email_routes.py` unsubscribe, `audit_middleware.py`.
+- [ ] **Listen and mantra Auto as native audio** (N5, D10). *Why not built:*
+  both play through WebView `<audio>` and speech, so there are no lock-screen
+  or Bluetooth controls, no audio focus (they play over calls and music), and
+  playback stops when the WebView is suspended. The screen now stays awake
+  while either plays (`core/screen-awake.ts`, Screen Wake Lock API), which
+  covers the common case of the screen timing out mid-chant. *Unblock:* a
+  small Capacitor plugin around Media3 `MediaSessionService` on Android and
+  `AVAudioSession` + Now Playing on iOS, checked on a device with the N5
+  items of the nativeness audit's on-device checklist. *Hook:*
+  `today/listen-sheet.component.ts` `new Audio()`,
+  `remedies/mantra-tracker.component.ts` `toggleListen`.

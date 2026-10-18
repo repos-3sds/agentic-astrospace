@@ -9,7 +9,7 @@ filter (`revoke_push_token`, `end_live_activity`). They are reachable from the
 delivery worker as well as from here, so the ownership check lives in this
 layer — see `_owned_push_token` and the live-activity handler.
 """
-from datetime import datetime, time as time_cls
+from datetime import date as date_cls, datetime, time as time_cls
 import logging
 import os
 from urllib.parse import quote
@@ -28,7 +28,7 @@ from ..db.models import (
     UsageBucket, UserAlert, UserDevice, UserObservance,
     UserProfile, UserRemedy, UserSettings, WidgetInstall,
     ProfileContextAuditEvent, ProfileContextFact, ProfileContextLedger,
-    ProfileContextMutation,
+    ProfileContextMutation, AskMessage, RemedyCompletion,
 )
 from ..admin.audit_middleware import pseudonymous_actor_id
 from ..admin.client import get_admin_client
@@ -173,6 +173,71 @@ def patch_profile(payload: ProfileUpdate, user: CurrentUser,
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
     return _profile(cm.update_user_profile(db, user.id, data))
+
+
+# Columns never handed out, even to their owner: credentials and tokens that
+# act on the account rather than describe it.
+_EXPORT_REDACT = {"token", "unsubscribe_token", "secret", "push_token", "device_token"}
+
+
+def _export_rows(rows) -> list[dict]:
+    out = []
+    for row in rows:
+        item = {}
+        for column in row.__table__.columns:
+            if column.key in _EXPORT_REDACT or column.key.endswith("_token"):
+                continue
+            value = getattr(row, column.key)
+            if isinstance(value, (datetime, date_cls, time_cls)):
+                value = value.isoformat()
+            elif isinstance(value, (bytes, bytearray)):
+                value = None
+            item[column.key] = value
+        out.append(item)
+    return out
+
+
+@router.get("/export")
+def export_account(user: CurrentUser, db: Session = Depends(get_db)):
+    """Everything this account holds, as JSON (usability audit U9).
+
+    The deletion screen names profiles, questions, readings, notes, settings
+    and practice counts as the reader's data; the export used to carry only
+    profiles. Billing ledgers stay out (they are store records, not the
+    reader's content), and so do tokens.
+    """
+    kundlis = db.query(Kundli).filter(Kundli.user_id == user.id).all()
+    kundli_ids = [row.id for row in kundlis]
+    threads = db.query(AskThread).filter(AskThread.user_id == user.id).all()
+    thread_ids = [row.id for row in threads]
+    remedies = db.query(UserRemedy).filter(UserRemedy.user_id == user.id).all()
+    remedy_ids = [row.id for row in remedies]
+    by_user = lambda model: db.query(model).filter(model.user_id == user.id).all()  # noqa: E731
+    return {
+        "exported_at": datetime.utcnow().isoformat() + "Z",
+        "account": {"id": user.id, "email": user.email},
+        "profile": _export_rows(by_user(UserProfile)),
+        "settings": _export_rows(by_user(UserSettings)),
+        "profiles": _export_rows(kundlis),
+        "ask_threads": _export_rows(threads),
+        "ask_messages": _export_rows(
+            db.query(AskMessage).filter(AskMessage.thread_id.in_(thread_ids)).all()
+        ) if thread_ids else [],
+        "remedies": _export_rows(remedies),
+        "remedy_completions": _export_rows(
+            db.query(RemedyCompletion).filter(RemedyCompletion.user_remedy_id.in_(remedy_ids)).all()
+        ) if remedy_ids else [],
+        "saved_muhurtas": _export_rows(by_user(SavedMuhurta)),
+        "muhurta_requests": _export_rows(by_user(MuhurtaRequest)),
+        "compatibility_checks": _export_rows(by_user(CompatibilityCheck)),
+        "observances": _export_rows(by_user(UserObservance)),
+        "alerts": _export_rows(by_user(UserAlert)),
+        "notification_preferences": _export_rows(by_user(NotificationPreference)),
+        "email": _export_rows(by_user(EmailRecipient)),
+        "memory": _export_rows(
+            db.query(ProfileContextFact).filter(ProfileContextFact.profile_id.in_(kundli_ids)).all()
+        ) if kundli_ids else [],
+    }
 
 
 @router.delete("")

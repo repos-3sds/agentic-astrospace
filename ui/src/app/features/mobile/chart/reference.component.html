@@ -29,7 +29,7 @@
   } @else if (mode === 'ashtakavarga') {
     @if (ashtaRows().length) {
       <section class="av-summary">
-        <div><small>SAV total</small><strong>{{ ashtaTotals()?.sav }}</strong><span>of 337</span></div>
+        <div><small>Signs at 28+</small><strong>{{ ashtaSupportive() }}</strong><span>of 12 · SAV {{ ashtaTotals()?.sav }}</span></div>
         <div><small>Strongest signs</small><strong>{{ ashtaStrongest()[0].sign }}</strong><span>{{ ashtaStrongest()[1].short }} · {{ ashtaStrongest()[2].short }}</span></div>
         <div><small>Weakest signs</small><strong>{{ ashtaWeakest()[0].sign }}</strong><span>{{ ashtaWeakest()[1].short }} · {{ ashtaWeakest()[2].short }}</span></div>
       </section>

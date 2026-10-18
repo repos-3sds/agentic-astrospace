@@ -82,7 +82,7 @@ describe('ReferenceComponent (ashtakavarga)', () => {
 
     const foot = el.querySelectorAll('table[aria-label="Bindus by sign and planet"] tfoot td');
     expect(foot[7].textContent?.trim()).toBe(String(payload().totals.sav));
-    expect(el.querySelector('.av-summary')?.textContent).toContain('of 337');
+    expect(el.querySelector('.av-summary')?.textContent).toContain('of 12');
   });
 
   it('ranks shodhya pinda and never shows the old flattened key dump', async () => {

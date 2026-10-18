@@ -1,6 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { ApiService } from '../../../core/api.service';
 
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
@@ -16,6 +17,7 @@ describe('AccountPrivacyComponent › Change email', () => {
       imports: [AccountPrivacyComponent],
       providers: [
         provideRouter([]),
+        { provide: ApiService, useValue: { get: () => Promise.resolve({}) } },
         { provide: AuthService, useValue: { changeEmail, user: signal({ email: 'old@example.com' }), email: signal('old@example.com') } },
         { provide: KundliStore, useValue: { loaded: () => true, kundlis: () => [] } },
         { provide: PreferencesService, useValue: { shareUsage: signal(true), experienceMode: signal('balanced') } },
@@ -78,6 +80,7 @@ describe('AccountPrivacyComponent › Sign out', () => {
       imports: [AccountPrivacyComponent],
       providers: [
         provideRouter([]),
+        { provide: ApiService, useValue: { get: () => Promise.resolve({}) } },
         { provide: AuthService, useValue: { signOut, user: signal({ email: 'me@example.com' }), email: signal('me@example.com') } },
         { provide: KundliStore, useValue: { loaded: () => true, kundlis: () => [], reset } },
         { provide: PreferencesService, useValue: { shareUsage: signal(true), experienceMode: signal('balanced') } },

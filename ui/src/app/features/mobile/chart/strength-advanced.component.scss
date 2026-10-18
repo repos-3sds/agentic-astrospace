@@ -70,7 +70,13 @@
   overflow: hidden; border-radius: 999px; background: var(--m-border);
   span { display: block; height: 100%; border-radius: inherit; background: var(--m-good); }
 }
-.meter { height: 10px; }
+.meter { position: relative; height: 10px; overflow: visible; }
+.meter span { overflow: hidden; }
+/* Each planet's classical minimum, on the shared scale. */
+.min-tick {
+  position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px;
+  border-radius: 1px; background: var(--m-ink);
+}
 .meter span.low { background: var(--m-warn); }
 .planet-tabs {
   display: flex; gap: 8px; width: calc(100% + 20px); overflow-x: auto;

@@ -101,7 +101,7 @@
   <section class="signature">
     <p class="eyebrow">{{ preferences.experienceMode() === 'guided' ? 'YOUR STORY' : preferences.experienceMode() === 'practitioner' ? 'CHART WORKBENCH' : 'YOUR SIGNATURE' }}</p>
     <p class="signature-headline">{{ signature().headline }}</p>
-    <p class="signature-detail">{{ signature().detail }}</p>
+    <p class="signature-detail">{{ signature().detail }}@if (preferences.experienceMode() === 'practitioner' && signature().method) { {{ ' ' + signature().method }}}</p>
     <as-birth-time-badge [profile]="kundlis.active()" detail="Rising sign and house placements may shift by a sign." />
   </section>
 

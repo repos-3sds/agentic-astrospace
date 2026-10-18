@@ -37,7 +37,7 @@
               <span class="status" [class.low]="planet.virupa < planet.minimum">{{ planet.virupa >= planet.minimum ? 'MEETS MIN' : 'BELOW MIN' }}</span>
               <strong>{{ planet.score }}%</strong>
             </div>
-            <div class="meter"><span [class.low]="planet.virupa < planet.minimum" [style.width.%]="planet.score"></span></div>
+            <div class="meter"><span [class.low]="planet.virupa < planet.minimum" [style.width.%]="barWidth(planet)"></span><i class="min-tick" [style.left.%]="minimumAt(planet)" aria-hidden="true"></i></div>
             <p>{{ planet.virupa }} virupa · needs {{ planet.minimum }}</p>
           </article>
         }

@@ -168,7 +168,7 @@ export class RemediesComponent {
   }
 
   protected practiceCta(practice: RemedyRecommendationPractice): string {
-    if (practice.type === 'mantra') return `Start ${practice.target_count ?? 108} practice`;
+    if (practice.type === 'mantra') return `Begin · ${practice.target_count ?? 108} times`;
     if (practice.type === 'deity') return 'Track prayer';
     return 'Open practice';
   }
