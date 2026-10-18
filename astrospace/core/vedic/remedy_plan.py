@@ -317,7 +317,7 @@ def remedy_plan(positions: dict, lagna_lon: float, dasha: dict | None) -> dict:
             # Guided and Balanced read this; the dasha pair and the citation
             # stay behind "Why this practice?" (audit U3).
             "reason_plain": (
-                f"For the stretch of life you're in now"
+                "For the stretch of life you're in now"
                 + (f", until {ad_period['end']}" if ad_period.get("end") else "")
                 + f": a steadying practice for {GRAHA_THEME[ad]}."
             ),

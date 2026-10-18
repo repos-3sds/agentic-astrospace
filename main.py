@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 import os
 
 import uvicorn
@@ -47,7 +48,16 @@ from astrospace.entitlements import EntitlementDenied
 
 _ON_CLOUD_RUN = running_on_cloud_run()
 
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    # A lifespan handler; `on_event("startup")` is deprecated (audit I17).
+    init_db()
+    yield
+
+
 app = FastAPI(
+    lifespan=lifespan,
     title="AstroSpace",
     description="AI-Powered Astrology Engine with Autonomous Agents",
     version="2.0.0",
@@ -195,11 +205,6 @@ else:
             "version": "2.0.0",
             "docs": "/docs",
         }
-
-
-@app.on_event("startup")
-def on_startup():
-    init_db()
 
 
 if __name__ == "__main__":

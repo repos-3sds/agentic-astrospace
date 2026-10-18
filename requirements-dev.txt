@@ -2,3 +2,4 @@
 # installed into the production image; CI installs this file.
 -r requirements.txt
 pytest>=7.0.0
+ruff==0.17.1

@@ -1,3 +1,4 @@
+import copy
 from datetime import date, datetime, timezone as dt_timezone
 from functools import lru_cache
 from typing import Literal, Optional
@@ -110,12 +111,12 @@ def _daily_payload(kundli, ayanamsha: str, node_type: str, as_of: Optional[datet
         )
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
-    # The cache key does not carry `source`, so annotate a copy, never the
-    # cached dict itself.
-    return {
-        **cached,
-        "provenance": {**cached["provenance"], "place": {**cached["provenance"]["place"], **place.as_payload()}},
-    }
+    # A deep copy: callers annotate and reshape the payload, and a change to
+    # a nested value would otherwise reach every later reader of the cached
+    # dict (audit I17).
+    payload = copy.deepcopy(cached)
+    payload["provenance"]["place"].update(place.as_payload())
+    return payload
 
 
 @router.get("/{kundli_id}/daily")

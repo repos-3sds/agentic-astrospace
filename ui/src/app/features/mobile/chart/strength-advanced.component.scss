@@ -40,8 +40,8 @@
   p { @include m-body-small; margin: 0; color: var(--m-muted); }
 }
 .tabs {
-  @include m-segmented-track;
   width: 100%;
+  @include m-segmented-track;
   button {
     @include m-segmented-button;
   }

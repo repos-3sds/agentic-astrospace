@@ -231,9 +231,7 @@
 /* Script choice for the mantra text — the same segmented control as the tracker. */
 .script-tabs {
   @include m-segmented-track;
-  width: 100%;
-  border: 1px solid var(--m-border);
-  background: var(--m-raised);
+  & { width: 100%; border: 1px solid var(--m-border); background: var(--m-raised); }
 
   button { @include m-segmented-button; }
   .is-on { @include m-selected-pill; }

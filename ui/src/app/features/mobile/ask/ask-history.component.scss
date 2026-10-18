@@ -13,8 +13,8 @@
 }
 
 .askhist-tabs {
-  @include m-segmented-track;
   margin-bottom: 14px;
+  @include m-segmented-track;
 
   button {
     @include m-segmented-button;

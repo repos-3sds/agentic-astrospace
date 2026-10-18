@@ -1108,7 +1108,6 @@ class TestFieldScopedRepair:
 
     def test_repair_patch_schema_narrows_required_and_source_enum(self, chart):
         from astrospace.agents.schema import repair_patch_schema
-        bundle = assemble_domain(chart, "career")
         allowed = {"houses", "karakas"}
         schema = repair_patch_schema({"interpretation"}, allowed)
         assert schema["required"] == ["interpretation"]

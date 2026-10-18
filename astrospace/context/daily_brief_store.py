@@ -151,7 +151,7 @@ def _write(db: Session, kundli, payload: dict, key: str, *, tone: str, mode: str
             **{k: usage.get(k) for k in ("provider", "model", "calls", "input_tokens", "output_tokens")},
         }))
     except Exception:  # accounting never costs a reader their brief
-        pass
+        log.warning("daily brief cost line failed", exc_info=True)
     if not brief:
         return None, False
     value = {

@@ -81,8 +81,6 @@ def elements_for_day(rise: float, next_rise: float, tz_str: str) -> dict:
     the element prevailing at sunrise first, then successors that begin
     before next sunrise, each with its end time ("upto").
     """
-    pos = sidereal_positions(rise)
-    sun, moon = pos["Sun"]["lon"], pos["Moon"]["lon"]
     naming = {
         "tithi": lambda i, jd: tithi_of(*_sun_moon(jd))["display"],
         "nakshatra": lambda i, jd: NAKSHATRAS[i],

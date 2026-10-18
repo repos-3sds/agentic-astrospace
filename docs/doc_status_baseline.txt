@@ -1,0 +1,66 @@
+# Point-in-time list: markdown files that predated scripts/check_doc_status.py without a status line. It only shrinks.
+CLAUDE.md
+CONTEXT_ENGINE_MULTI_AGENT_AUDIT_2026-08-08.md
+Codex_Architecture_Draft.md
+Mobile App UI Screens/00-README.md
+Mobile App UI Screens/01-onboarding-activation.md
+Mobile App UI Screens/02-authentication-account.md
+Mobile App UI Screens/03-today-daily-guidance.md
+Mobile App UI Screens/04-ask-question-engine.md
+Mobile App UI Screens/05-what-to-do-remedies-muhurta.md
+Mobile App UI Screens/06-chart-practitioner-depth.md
+Mobile App UI Screens/07-matchmaking-and-calendar.md
+Mobile App UI Screens/08-language-audio-accessibility.md
+Mobile App UI Screens/09-trust-why-learning.md
+Mobile App UI Screens/10-native-platform.md
+Mobile App UI Screens/11-profiles-modes-settings.md
+Mobile App UI Screens/12-safety-refer-out.md
+Mobile App UI Screens/MODULE-MAP.md
+README.md
+VISION.md
+design-thinking/README.md
+design-thinking/capabilities.md
+design-thinking/design_principles.md
+design-thinking/ideation_native_app.md
+design-thinking/persona.md
+design-thinking/product_brief.md
+design-thinking/ux_current_state.md
+docs/admin_console.md
+docs/agent_work_ledger.md
+docs/ask_context_engine_multi_agent_architecture_2026-08-07.md
+docs/ask_full_regression_audit_2026-08-10.md
+docs/astrology_survey.md
+docs/career_kb_bphs_10th_house.md
+docs/career_kb_bphs_karakamsha_astrology_interest.md
+docs/career_kb_brihat_jataka_10th_chapter.md
+docs/career_kb_education_family_litigation_domains.md
+docs/children_kb_bphs_5th_house.md
+docs/commercial_entitlement_architecture_2026-08-14.md
+docs/commercial_readiness_feature_benchmark_2026-08-13.md
+docs/context_engine_taxonomy.md
+docs/dasha_timing_kb_bphs.md
+docs/foreign_kb_bphs_12th_house.md
+docs/gemini_wealth_domain_implementation_plan_2026-08-08.md
+docs/health_kb_bphs_6th_house.md
+docs/health_kb_bphs_ch19_verified.md
+docs/health_kb_bphs_susceptibility_and_injury.md
+docs/knowledge_ingestion.md
+docs/marriage_kb_bphs_7th_house.md
+docs/mobile_ask_thread_ux_acceptance_2026-08-08.md
+docs/mobile_data_contract.md
+docs/mobile_persona_contract.md
+docs/mobile_screen_build_evidence/2026-08-09/README.md
+docs/mobile_ui_full_audit.md
+docs/mobile_ui_regression_audit.md
+docs/mobile_visual_sweep_notes_2026-08-04.md
+docs/native_builds.md
+docs/phaladeepika_crosscheck.md
+docs/practitioner_epics_user_stories_2026-08-06.md
+docs/practitioner_mobile_sweep_2026-08-06.md
+docs/practitioner_mode_upgrade_audit_2026-08-06.md
+docs/profile_context_ledger_architecture_2026-08-14.md
+docs/reliable_native_core_architecture_2026-08-14.md
+docs/vedic_engine_verify_audit_2026-08-08.md
+docs/wealth_kb_bphs_2nd_11th_house.md
+ui/README.md
+ui/ios/App/CapApp-SPM/README.md

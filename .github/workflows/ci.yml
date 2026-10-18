@@ -34,6 +34,14 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
 
+      - name: Lint (ruff)
+        # Rules in ruff.toml; a starting set main passes (audit I10).
+        run: ruff check astrospace main.py scripts tests
+
+      - name: Check doc status lines
+        # A new markdown file must say what it is (CLAUDE.md, audit I14).
+        run: python scripts/check_doc_status.py
+
       - name: Run tests
         # No DATABASE_URL / SUPABASE_* set on purpose: this is the same
         # unconfigured-auth path astrospace/api/auth.py treats as local dev
