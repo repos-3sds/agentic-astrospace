@@ -66,4 +66,16 @@ describe('AnalyticsService', () => {
     expect(screenName('/m/settings/profiles/3f2b1c9e-1d2e-4f5a-9b8c-7d6e5f4a3b2c/edit?x=1')).toBe('/m/settings/profiles/:id/edit');
     expect(screenName('/m/compat/results?partner=abc')).toBe('/m/compat/results');
   });
+
+  it('scrubs emails, ids and query strings from crash stacks', () => {
+    const analytics = TestBed.inject(AnalyticsService);
+    const error = new Error('boom');
+    error.stack = 'Error: boom for a@b.co\n    at https://x.app/m/today?code=secret:10:5 (main.js)\n    at 0a1b2c3d-1111-2222-3333-444455556666';
+    analytics.captureException(error);
+    analytics.flush();
+    const stack = sent().batch[0].properties.$exception_stack_trace_raw as string;
+    expect(stack).not.toContain('a@b.co');
+    expect(stack).not.toContain('secret');
+    expect(stack).not.toContain('0a1b2c3d');
+  });
 });

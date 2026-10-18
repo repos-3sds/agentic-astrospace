@@ -13,6 +13,7 @@ import { EntitlementService } from '../../../core/entitlement.service';
 import { SpeechService } from '../../../core/speech.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
+import { ReadingForComponent, viewingSomeoneElse } from '../shared/reading-for.component';
 
 /** A subject the reader can scope a question to. */
 export interface AskTopic {
@@ -46,11 +47,19 @@ export interface AskSuggestion {
  * either topic that asks for one is answered by the refer-out screen (27:83),
  * so the chips stay and the boundary is enforced where the answer is produced.
  */
+/** "What does my Moon period mean…" → "What does Ravi's Moon period mean…". */
+export function aboutSomeoneElse(prompt: string, name: string): string {
+  return prompt
+    .replace(/\bmy\b/g, `${name}’s`)
+    .replace(/\bMy\b/g, `${name}’s`)
+    .replace(/\bme\b/g, name);
+}
+
 @Component({
   selector: 'as-ask-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AskComposerComponent, VoiceListeningComponent, RouterLink, BackLinkDirective, SelectHapticDirective],
+  imports: [AskComposerComponent, VoiceListeningComponent, RouterLink, BackLinkDirective, SelectHapticDirective, ReadingForComponent],
   templateUrl: './ask-home.component.html',
   styleUrl: './ask-home.component.scss',
 })
@@ -118,7 +127,11 @@ export class AskHomeComponent {
       { prompt: 'Help me understand my current dasha' },
       { prompt: 'What does my chart say about relationships?' },
     ];
-    return buildAskSuggestions(this.daily(), this.preferences.experienceMode());
+    const built = buildAskSuggestions(this.daily(), this.preferences.experienceMode());
+    // The answer comes from the open chart. While that is someone else's,
+    // "my Moon period" would be theirs, so the suggestions name them.
+    const other = viewingSomeoneElse(this.kundlis)?.name.split(' ')[0];
+    return other ? built.map((s) => ({ ...s, prompt: aboutSomeoneElse(s.prompt, other) })) : built;
   });
   protected readonly safetyLine = computed(() =>
     this.preferences.experienceMode() === 'practitioner'

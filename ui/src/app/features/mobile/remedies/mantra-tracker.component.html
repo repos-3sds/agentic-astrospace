@@ -62,24 +62,7 @@
       </span>
     </button>
 
-    <div class="controls">
-      <button class="side" type="button" [class.is-hidden]="count() === 0 || target() <= 1" (click)="undo()" aria-label="Take back one count">Undo 1</button>
-      @if (canChant()) {
-        <button class="auto-play" type="button" (click)="toggleListen()"
-                [class.is-busy]="listen() === 'loading'"
-                [attr.aria-label]="listen() === 'idle' ? 'Chant on repeat and count each round' : 'Stop'">
-          @if (listen() === 'idle') {
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>
-          } @else {
-            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor"/></svg>
-          }
-        </button>
-      }
-      <button class="side" type="button" [class.is-hidden]="count() === 0" (click)="askReset()">{{ resetArmed() ? 'Tap again' : 'Reset' }}</button>
-    </div>
-
     @if (canChant()) {
-      <p class="auto-note">{{ listen() === 'idle' ? (done() ? 'Play to listen once' : 'Auto: play repeats and counts each round') : listen() === 'loading' ? 'Loading' : done() ? 'Playing' : 'Chanting round ' + (count() + 1) + ' of ' + target() }}</p>
       @if (voiceChoices().length) {
         <div class="voice-pick" role="group" aria-label="Recitation voice">
           @for (v of voiceChoices(); track v) {
@@ -97,6 +80,30 @@
 </div>
 
 @if (!loading() && !error()) {
+  <!-- Undo, play and reset sit with the bottom buttons so Auto is in view
+       on a short phone without scrolling past the verse and the ring. -->
+  @if (canChant() || count() > 0) {
+  <div class="dock">
+    <div class="controls">
+      <button class="side" type="button" [class.is-hidden]="count() === 0 || target() <= 1" (click)="undo()" aria-label="Take back one count">Undo 1</button>
+      @if (canChant()) {
+        <button class="auto-play" type="button" (click)="toggleListen()"
+                [class.is-busy]="listen() === 'loading'"
+                [attr.aria-label]="listen() === 'idle' ? 'Chant on repeat and count each round' : 'Stop'">
+          @if (listen() === 'idle') {
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>
+          } @else {
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1.5" fill="currentColor"/></svg>
+          }
+        </button>
+      }
+      <button class="side" type="button" [class.is-hidden]="count() === 0" (click)="askReset()">{{ resetArmed() ? 'Tap again' : 'Reset' }}</button>
+    </div>
+    @if (canChant()) {
+      <p class="auto-note">{{ listen() === 'idle' ? (done() ? 'Play to listen once' : 'Auto: play repeats and counts each round') : listen() === 'loading' ? 'Loading' : done() ? 'Playing' : 'Chanting round ' + (count() + 1) + ' of ' + target() }}</p>
+    }
+  </div>
+  }
   <div class="bottom-ctas">
     <a class="reminder" [routerLink]="['/m','settings','notifications']" [attr.aria-label]="reminderLabel()">
       Reminder

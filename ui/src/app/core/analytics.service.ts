@@ -101,7 +101,9 @@ export class AnalyticsService {
     this.enqueue('$exception', {
       $exception_type: err.name,
       $exception_message: scrub(err.message).slice(0, 500),
-      $exception_stack_trace_raw: (err.stack ?? '').slice(0, 4000),
+      // The stack repeats the message and carries page URLs; both can hold
+      // an email, an id or a query string (security audit S16).
+      $exception_stack_trace_raw: scrub(err.stack ?? '').replace(/\?[^\s)]*/g, '').slice(0, 4000),
       $exception_handled: handled,
       $screen_name: screenName(location.pathname),
     });
