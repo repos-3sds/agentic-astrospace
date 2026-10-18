@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launch screen colours for light; values-night/launch.xml holds dark.
+     Kept equal to the web splash backgrounds (shell/splash/splash.component.ts). -->
+<resources>
+    <color name="launch_background">#FCF5EA</color>
+    <bool name="launch_light_bars">true</bool>
+</resources>

@@ -35,6 +35,12 @@
     pointer-events: none;
   }
 
+// Light theme: the overlay matches the splash's ivory, so its fade-out
+// doesn't flash dark.
+.animated-splash-overlay.light {
+  background: #fcf5ea;
+}
+
   app-splash,
   video {
     width: 100%;
