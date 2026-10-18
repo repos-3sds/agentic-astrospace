@@ -143,7 +143,7 @@ def prerender_audio(spoken: list[dict]) -> int:
 
 
 def prepare_for_speech(chunk: str) -> str:
-    """Mirrors prepareForSpeech in listen-sheet.component.ts."""
+    """Mirrors prepareForSpeech in natural-voice.service.ts."""
     import re
 
     text = re.sub(r"\bTarabala\b", "Tara bala", chunk)

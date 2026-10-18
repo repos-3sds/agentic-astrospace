@@ -13,7 +13,7 @@ import { SheetComponent } from '../sheet/sheet.component';
 import { AudioReadingSection } from './audio-reading-script';
 import { MobileTtsService } from '../../../core/mobile-tts.service';
 import { PreferencesService } from '../../../core/preferences.service';
-import { NATURAL_VOICE_NAME, NaturalVoiceService, naturalChunks } from '../../../core/natural-voice.service';
+import { NATURAL_VOICE_NAME, NaturalVoiceService, naturalChunks, prepareForSpeech } from '../../../core/natural-voice.service';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 /**
@@ -642,13 +642,6 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
   }
 
   private prepareForSpeech(chunk: string): string {
-    return chunk
-      .replace(/\bTarabala\b/g, 'Tara bala')
-      .replace(/\bChandrabala\b/g, 'Chandra bala')
-      .replace(/\bpanchang\b/gi, 'panchangam')
-      .replace(/\bgochara\b/gi, 'gocharam')
-      .replace(/\s+—\s+/g, ', ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    return prepareForSpeech(chunk);
   }
 }

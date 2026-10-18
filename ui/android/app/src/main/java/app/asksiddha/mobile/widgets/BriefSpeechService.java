@@ -13,6 +13,7 @@ import android.content.pm.ServiceInfo;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -20,14 +21,18 @@ import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import androidx.core.content.ContextCompat;
 import app.asksiddha.mobile.R;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import org.json.JSONObject;
 
 /**
- * Reads today's brief aloud from the Listen widget, with the phone's own
- * voice, at the same 0.9x the app's Listen sheet uses. A media-playback
+ * Reads today's brief aloud from the Listen widget. In Siddha's natural voice
+ * when the app has saved today's audio for it (WidgetBridgeService
+ * .publishListenAudio: Plus readers who haven't chosen a phone voice);
+ * otherwise with the phone's own voice, at the same 0.9x the Listen sheet uses. A media-playback
  * foreground service, so it keeps speaking with the screen off and shows a
  * notification with Stop while it does.
  *
@@ -52,6 +57,8 @@ public class BriefSpeechService extends Service implements TextToSpeech.OnInitLi
         .build();
 
     private TextToSpeech tts;
+    private MediaPlayer player;
+    private List<File> natural = new ArrayList<>();
     private List<String> chunks = new ArrayList<>();
     private AudioManager audio;
     private AudioFocusRequest focusRequest;
@@ -86,9 +93,16 @@ public class BriefSpeechService extends Service implements TextToSpeech.OnInitLi
             return START_NOT_STICKY;
         }
         chunks = split(text, TextToSpeech.getMaxSpeechInputLength() - 100);
+        natural = WidgetStore.listenAudio(this, text);
         WidgetStore.setSpeaking(this, true);
         Widgets.refresh(this, ListenWidget.class);
-        if (tts == null) {
+        if (!natural.isEmpty()) {
+            if (!requestFocus()) {
+                stopSelf();
+                return START_NOT_STICKY;
+            }
+            playNatural(0);
+        } else if (tts == null) {
             tts = new TextToSpeech(getApplicationContext(), this);
         } else {
             speak();
@@ -115,6 +129,50 @@ public class BriefSpeechService extends Service implements TextToSpeech.OnInitLi
             @Override @Deprecated public void onError(String id) { stopSelf(); }
         });
         speak();
+    }
+
+    /** Plays the saved pieces in order; a piece that won't play falls back to the phone voice. */
+    private void playNatural(int index) {
+        releasePlayer();
+        if (index >= natural.size()) {
+            stopSelf();
+            return;
+        }
+        MediaPlayer next = new MediaPlayer();
+        player = next;
+        try {
+            next.setAudioAttributes(SPEECH);
+            next.setDataSource(natural.get(index).getAbsolutePath());
+            next.setOnCompletionListener(done -> playNatural(index + 1));
+            next.setOnErrorListener((mp, what, extra) -> {
+                fallBackToPhoneVoice();
+                return true;
+            });
+            next.prepare();
+            next.start();
+        } catch (IOException | RuntimeException e) {
+            fallBackToPhoneVoice();
+        }
+    }
+
+    private void fallBackToPhoneVoice() {
+        releasePlayer();
+        natural = new ArrayList<>();
+        if (tts == null) {
+            tts = new TextToSpeech(getApplicationContext(), this);
+        } else {
+            speak();
+        }
+    }
+
+    private void releasePlayer() {
+        if (player == null) return;
+        try {
+            player.release();
+        } catch (RuntimeException ignored) {
+            // Already released.
+        }
+        player = null;
     }
 
     private void speak() {
@@ -169,6 +227,7 @@ public class BriefSpeechService extends Service implements TextToSpeech.OnInitLi
     @Override
     public void onDestroy() {
         releaseFocus();
+        releasePlayer();
         if (tts != null) {
             tts.stop();
             tts.shutdown();

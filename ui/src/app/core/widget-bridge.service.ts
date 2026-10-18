@@ -4,6 +4,8 @@ import { Capacitor, registerPlugin } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { ApiService } from './api.service';
 import { FestivalPlace } from './festival.service';
+import { NATURAL_VOICE_NAME, NaturalVoiceService, naturalChunks, prepareForSpeech } from './natural-voice.service';
+import { PreferencesService } from './preferences.service';
 import { SessionTeardown } from './session-teardown';
 import { Subhashita, localIsoDate } from './subhashita.service';
 
@@ -50,6 +52,7 @@ interface SiddhaWidgetsPlugin {
   takeMantraTaps(): Promise<MantraTaps>;
   clear(): Promise<void>;
   takePendingRoute(): Promise<{ route: string }>;
+  saveListenAudio(options: { date: string; text: string; parts: string[] }): Promise<void>;
   addListener(event: 'open', handler: (event: { route: string }) => void): Promise<{ remove(): Promise<void> }>;
 }
 
@@ -74,6 +77,8 @@ export class WidgetBridgeService {
   private readonly router = inject(Router);
   private readonly teardown = inject(SessionTeardown);
   private started = false;
+  /** The brief whose audio last went to the widget, so it isn't sent twice. */
+  private listenAudioFor = '';
 
   readonly enabled = Capacitor.getPlatform() === 'android';
   /** Bumped when widget taps land in a stored practice, so an open tracker re-reads it. */
@@ -94,6 +99,37 @@ export class WidgetBridgeService {
 
   publishToday(part: TodayWidgetPart): void {
     this.publish('today', part);
+  }
+
+  /**
+   * Siddha's own voice for the Listen widget. The widget can't sign in, so
+   * the app hands it the same natural audio the Listen sheet plays: one MP3
+   * per piece, from the device or server cache (the worker pre-renders it).
+   * Nothing is sent when the plan has no natural voice or the reader chose a
+   * phone voice; the widget then reads with the phone's voice, as before.
+   */
+  async publishListenAudio(date: string, text: string): Promise<void> {
+    if (!this.enabled || !text.trim()) return;
+    const key = `${date}\n${text}`;
+    if (this.listenAudioFor === key) return;
+    this.listenAudioFor = key;
+    try {
+      const chosen = this.injector.get(PreferencesService).voiceName();
+      const voice = this.injector.get(NaturalVoiceService);
+      if ((chosen !== null && chosen !== NATURAL_VOICE_NAME) || !(await voice.available())) {
+        await SiddhaWidgets.saveListenAudio({ date, text, parts: [] });
+        return;
+      }
+      const parts: string[] = [];
+      for (const chunk of naturalChunks(text)) {
+        const blob = await (await fetch(await voice.audioUrl(prepareForSpeech(chunk)))).blob();
+        parts.push(await base64(blob));
+      }
+      await SiddhaWidgets.saveListenAudio({ date, text, parts });
+    } catch {
+      // Offline or the voice is down: try again on the next publish.
+      this.listenAudioFor = '';
+    }
   }
 
   publishSubhashita(days: readonly Subhashita[]): void {
@@ -158,6 +194,15 @@ export class WidgetBridgeService {
   private go(route: string): void {
     if (route?.startsWith('/m/')) void this.router.navigateByUrl(route);
   }
+}
+
+function base64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).replace(/^data:[^,]*,/, ''));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
 }
 
 /** The mantra tracker's stored record (mantra-tracker.component.ts). */

@@ -47,6 +47,69 @@ public final class WidgetStore {
     /** Signing out must not leave the last account's day on the home screen. */
     public static void clear(Context context) {
         prefs(context).edit().clear().apply();
+        deleteListenAudio(context);
+    }
+
+    // ── Siddha's natural voice for the Listen widget ──
+
+    private static final String LISTEN_AUDIO = "listen.audio";
+
+    private static java.io.File listenDir(Context context) {
+        return new java.io.File(context.getFilesDir(), "listen-audio");
+    }
+
+    private static void deleteListenAudio(Context context) {
+        java.io.File[] files = listenDir(context).listFiles();
+        if (files != null) for (java.io.File f : files) f.delete();
+    }
+
+    /** Replaces the stored audio; an empty list just removes it. */
+    public static boolean saveListenAudio(Context context, String date, String text, java.util.List<byte[]> parts) {
+        prefs(context).edit().remove(LISTEN_AUDIO).commit();
+        deleteListenAudio(context);
+        if (parts.isEmpty()) return true;
+        java.io.File dir = listenDir(context);
+        if (!dir.isDirectory() && !dir.mkdirs()) return false;
+        for (int i = 0; i < parts.size(); i++) {
+            try (java.io.FileOutputStream out = new java.io.FileOutputStream(new java.io.File(dir, "part-" + i + ".mp3"))) {
+                out.write(parts.get(i));
+            } catch (java.io.IOException e) {
+                deleteListenAudio(context);
+                return false;
+            }
+        }
+        JSONObject manifest = new JSONObject();
+        try {
+            manifest.put("date", date);
+            manifest.put("text", text);
+            manifest.put("count", parts.size());
+        } catch (JSONException e) {
+            return false;
+        }
+        prefs(context).edit().putString(LISTEN_AUDIO, manifest.toString()).apply();
+        return true;
+    }
+
+    /**
+     * The natural-voice audio for this text today, in order; empty when there
+     * is none, it is another day's, or the brief has changed since it was made.
+     */
+    public static java.util.List<java.io.File> listenAudio(Context context, String text) {
+        java.util.List<java.io.File> files = new java.util.ArrayList<>();
+        String raw = prefs(context).getString(LISTEN_AUDIO, null);
+        if (raw == null) return files;
+        try {
+            JSONObject manifest = new JSONObject(raw);
+            if (!today().equals(manifest.optString("date")) || !text.equals(manifest.optString("text"))) return files;
+            for (int i = 0; i < manifest.optInt("count"); i++) {
+                java.io.File f = new java.io.File(listenDir(context), "part-" + i + ".mp3");
+                if (!f.isFile()) return new java.util.ArrayList<>();
+                files.add(f);
+            }
+        } catch (JSONException e) {
+            return new java.util.ArrayList<>();
+        }
+        return files;
     }
 
     /** The phone's own calendar day, the same YYYY-MM-DD the app uses. */

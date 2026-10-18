@@ -117,6 +117,22 @@ export class NaturalVoiceService {
 }
 
 /**
+ * The text as it is sent for speech: a few words spelled the way they should
+ * sound. The Listen sheet and the widget audio both use it, so a piece made
+ * for one is the same cached audio for the other.
+ */
+export function prepareForSpeech(chunk: string): string {
+  return chunk
+    .replace(/\bTarabala\b/g, 'Tara bala')
+    .replace(/\bChandrabala\b/g, 'Chandra bala')
+    .replace(/\bpanchang\b/gi, 'panchangam')
+    .replace(/\bgochara\b/gi, 'gocharam')
+    .replace(/\s+—\s+/g, ', ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
  * The first piece is kept short: the server makes each piece in full before
  * any of it plays, and a 1,000-character first piece took 12-16 s, so a short
  * opening sentence starts the voice in a second or two while the rest is made

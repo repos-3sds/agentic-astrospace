@@ -208,9 +208,15 @@ How it fits together:
 - Mantra taps on the widget are held natively and folded into the tracker's
   record when the app next opens, so both show one count. The count is per
   local day.
-- Listen speaks with the phone's own voice (Android TextToSpeech, en-IN,
-  0.9x) in a `mediaPlayback` foreground service with a Stop notification.
-  It reads the same script as the Listen sheet. **Play Console:** App
+- Listen plays Siddha's natural voice (the Listen sheet's Chirp audio) when
+  the reader's plan has it and they haven't picked a phone voice: Today
+  hands the widget one MP3 per piece (`publishListenAudio`, from the
+  device or server cache, which the worker pre-renders), stored in
+  `files/listen-audio/` with the date and text it was made for. Otherwise,
+  or if that audio is stale or won't play, it reads with the phone's own
+  voice (Android TextToSpeech, en-IN, 0.9x). Either way it runs in a
+  `mediaPlayback` foreground service with a Stop notification and reads
+  the same script as the Listen sheet. **Play Console:** App
   content > Foreground service permissions needs a declaration for
   media playback ("reads the daily brief aloud when the user taps play on
   the widget") before an AAB with the widgets can be published.

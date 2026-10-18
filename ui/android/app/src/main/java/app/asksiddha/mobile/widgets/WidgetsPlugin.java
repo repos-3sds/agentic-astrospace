@@ -39,6 +39,33 @@ public class WidgetsPlugin extends Plugin {
         call.resolve();
     }
 
+    /**
+     * Today's brief in Siddha's natural voice, one MP3 per piece, for the
+     * Listen widget. No parts clears it, so the widget reads with the phone's
+     * voice (no plan voice, or the reader chose a phone voice).
+     */
+    @PluginMethod
+    public void saveListenAudio(PluginCall call) {
+        String date = call.getString("date", "");
+        String text = call.getString("text", "");
+        org.json.JSONArray parts = call.getArray("parts");
+        if (parts == null) parts = new org.json.JSONArray();
+        java.util.List<byte[]> audio = new java.util.ArrayList<>();
+        for (int i = 0; i < parts.length(); i++) {
+            try {
+                audio.add(android.util.Base64.decode(parts.optString(i), android.util.Base64.DEFAULT));
+            } catch (IllegalArgumentException e) {
+                call.reject("bad audio");
+                return;
+            }
+        }
+        if (!WidgetStore.saveListenAudio(getContext(), date, text, audio)) {
+            call.reject("could not save audio");
+            return;
+        }
+        call.resolve();
+    }
+
     @PluginMethod
     public void takeMantraTaps(PluginCall call) {
         JSONObject taps = WidgetStore.takeMantraTaps(getContext());
