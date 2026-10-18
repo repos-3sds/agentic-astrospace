@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget-picker preview only (previewLayout, Android 12+): the live
+     layout is widget_moon.xml, whose text is all set at runtime. -->
+<!-- The moon today, large, with the tithi and the next full or new moon by date. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_card"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="14dp">
+
+    <ImageView
+        android:id="@+id/moon"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:contentDescription="@null" />
+
+    <TextView
+        android:id="@+id/tithi"
+        android:text="Shukla Saptami"
+        style="@style/WidgetTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:maxLines="1"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/next_name"
+        android:text="PURNIMA"
+        style="@style/WidgetEyebrow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:gravity="center"
+        android:textColor="@color/widget_gold" />
+
+    <TextView
+        android:id="@+id/next"
+        android:text="Oct 26 · in 8 days · by sunrise"
+        style="@style/WidgetBody"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:gravity="center"
+        android:maxLines="2"
+        android:textSize="12sp" />
+</LinearLayout>

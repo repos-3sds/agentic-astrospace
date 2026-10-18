@@ -5,14 +5,20 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ServiceInfo;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
+import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
+import androidx.core.content.ContextCompat;
 import app.asksiddha.mobile.R;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +33,10 @@ import org.json.JSONObject;
  *
  * The text is the one the app's Listen sheet reads (the agent's spoken
  * script when there is one), sent with the "today" part.
+ *
+ * It behaves like any other player: it takes transient audio focus, so music
+ * pauses while it speaks and resumes after, and it stops for a call, for
+ * another app taking focus, and when headphones are unplugged.
  */
 public class BriefSpeechService extends Service implements TextToSpeech.OnInitListener {
 
@@ -36,8 +46,27 @@ public class BriefSpeechService extends Service implements TextToSpeech.OnInitLi
     private static final int NOTIFICATION_ID = 4201;
     private static final float RATE = 0.9f;
 
+    private static final AudioAttributes SPEECH = new AudioAttributes.Builder()
+        .setUsage(AudioAttributes.USAGE_MEDIA)
+        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+        .build();
+
     private TextToSpeech tts;
     private List<String> chunks = new ArrayList<>();
+    private AudioManager audio;
+    private AudioFocusRequest focusRequest;
+    private boolean noisyRegistered;
+
+    private final AudioManager.OnAudioFocusChangeListener focusListener = change -> {
+        // A call, an alarm or another player: stop rather than talk over it.
+        if (change == AudioManager.AUDIOFOCUS_LOSS || change == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) stopSelf();
+    };
+
+    private final BroadcastReceiver noisy = new BroadcastReceiver() {
+        @Override public void onReceive(Context context, Intent intent) {
+            if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) stopSelf();
+        }
+    };
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -77,6 +106,7 @@ public class BriefSpeechService extends Service implements TextToSpeech.OnInitLi
         if (tts.isLanguageAvailable(india) < TextToSpeech.LANG_AVAILABLE) india = Locale.ENGLISH;
         tts.setLanguage(india);
         tts.setSpeechRate(RATE);
+        tts.setAudioAttributes(SPEECH);
         tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
             @Override public void onStart(String id) {}
             @Override public void onDone(String id) {
@@ -88,6 +118,10 @@ public class BriefSpeechService extends Service implements TextToSpeech.OnInitLi
     }
 
     private void speak() {
+        if (!requestFocus()) {
+            stopSelf();
+            return;
+        }
         tts.stop();
         for (int i = 0; i < chunks.size(); i++) {
             tts.speak(chunks.get(i), i == 0 ? TextToSpeech.QUEUE_FLUSH : TextToSpeech.QUEUE_ADD,
@@ -95,8 +129,46 @@ public class BriefSpeechService extends Service implements TextToSpeech.OnInitLi
         }
     }
 
+    private boolean requestFocus() {
+        if (audio == null) audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (audio == null) return true;
+        if (!noisyRegistered) {
+            ContextCompat.registerReceiver(this, noisy,
+                new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY), ContextCompat.RECEIVER_NOT_EXPORTED);
+            noisyRegistered = true;
+        }
+        int result;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (focusRequest == null) {
+                focusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                    .setAudioAttributes(SPEECH)
+                    .setOnAudioFocusChangeListener(focusListener)
+                    .build();
+            }
+            result = audio.requestAudioFocus(focusRequest);
+        } else {
+            result = audio.requestAudioFocus(focusListener, AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+        }
+        return result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
+    }
+
+    private void releaseFocus() {
+        if (noisyRegistered) {
+            unregisterReceiver(noisy);
+            noisyRegistered = false;
+        }
+        if (audio == null) return;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (focusRequest != null) audio.abandonAudioFocusRequest(focusRequest);
+        } else {
+            audio.abandonAudioFocus(focusListener);
+        }
+    }
+
     @Override
     public void onDestroy() {
+        releaseFocus();
         if (tts != null) {
             tts.stop();
             tts.shutdown();
@@ -129,7 +201,7 @@ public class BriefSpeechService extends Service implements TextToSpeech.OnInitLi
         }
         PendingIntent stop = ListenWidget.speech(this, ACTION_STOP);
         Notification notification = builder
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_stat_siddha)
             .setContentTitle("Listening to your day")
             .setContentText("Siddha is reading today’s brief")
             .setContentIntent(Widgets.open(this, "/m/today"))

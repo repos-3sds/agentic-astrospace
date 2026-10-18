@@ -108,21 +108,26 @@
   align-items: stretch;
   gap: 2px;
   padding: 7px;
+  // Glass, but dense enough that card text behind the labels doesn't read
+  // through: a tint of the raised surface plus a real blur, as native tab
+  // bars do (audit N7).
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.1) 0%, transparent 48%),
-    linear-gradient(180deg, rgba(255, 252, 246, 0.04), transparent);
+    linear-gradient(180deg, rgba(255, 252, 246, 0.04), transparent),
+    color-mix(in srgb, var(--m-raised) 94%, transparent);
   border: 1px solid rgba(255, 255, 255, 0.36);
   border-radius: 24px;
   box-shadow:
     0 18px 46px rgba(65, 42, 20, 0.06),
     inset 0 1px 0 rgba(255, 255, 255, 0.44);
-  @include m-glass(3px, 1.04);
+  @include m-glass(20px, 1.2);
 }
 
 :host-context(.app-dark) .tabbar {
   background:
     linear-gradient(145deg, rgba(255, 248, 236, 0.06) 0%, transparent 48%),
-    linear-gradient(180deg, rgba(36, 29, 23, 0.08), transparent);
+    linear-gradient(180deg, rgba(36, 29, 23, 0.08), transparent),
+    color-mix(in srgb, var(--m-raised) 94%, transparent);
   border-color: rgba(255, 248, 236, 0.12);
   box-shadow:
     0 18px 46px rgba(0, 0, 0, 0.24),
@@ -189,3 +194,17 @@
   .tab { transition: none; }
   .is-reconnecting .network-icon { animation: none; }
 }
+
+// Read by screen readers only: the new screen's name, when it has no h1.
+.screen-announcer {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+// Focus lands on a screen's heading after navigation for screen readers; it
+// is not a control, so no focus ring.
+:host ::ng-deep main.content h1[tabindex='-1']:focus { outline: none; }

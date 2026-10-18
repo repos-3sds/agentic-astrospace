@@ -26,6 +26,7 @@ public class ListenWidget extends BaseWidget {
             views.setTextViewText(R.id.title, "Listen to your day");
             views.setTextViewText(R.id.subtitle, "Open Siddha once today to load it");
             views.setOnClickPendingIntent(R.id.play, Widgets.open(context, "/m/today"));
+            views.setContentDescription(R.id.play, "Open Siddha to load today's reading");
             return views;
         }
         views.setImageViewResource(R.id.play, speaking ? R.drawable.widget_ic_stop : R.drawable.widget_ic_play);
@@ -33,6 +34,8 @@ public class ListenWidget extends BaseWidget {
         views.setTextViewText(R.id.subtitle, subtitle(today));
         views.setOnClickPendingIntent(R.id.play,
             speech(context, speaking ? BriefSpeechService.ACTION_STOP : BriefSpeechService.ACTION_PLAY));
+        // The play button is the widget's only control; TalkBack read it as "unlabelled".
+        views.setContentDescription(R.id.play, speaking ? "Stop reading" : "Play today's reading");
         return views;
     }
 

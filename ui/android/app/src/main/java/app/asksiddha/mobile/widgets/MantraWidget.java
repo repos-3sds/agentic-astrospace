@@ -43,6 +43,9 @@ public class MantraWidget extends BaseWidget {
         views.setTextViewText(R.id.hint, done ? "Completed today" : count == 0 ? "Tap the ring to count" : (target - count) + " to go");
         views.setOnClickPendingIntent(R.id.widget_root, Widgets.open(context, mantra.optString("route", "/m/remedies")));
         if (!done) views.setOnClickPendingIntent(R.id.counter, Widgets.broadcast(context, MantraWidget.class, ACTION_COUNT));
+        views.setContentDescription(R.id.counter, done
+            ? count + " of " + target + ", completed today"
+            : "Count one. " + count + " of " + target);
         return views;
     }
 

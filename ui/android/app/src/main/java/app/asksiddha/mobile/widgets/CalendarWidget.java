@@ -112,6 +112,11 @@ public class CalendarWidget extends BaseWidget {
                     : R.layout.widget_calendar_cell_plain;
                 RemoteViews cell = new RemoteViews(pkg, layout);
                 cell.setTextViewText(R.id.cell, day >= 1 && day <= days ? String.valueOf(day) : "");
+                if (day >= 1 && day <= days && (day == today || marked.contains(iso))) {
+                    // A dot or a filled circle means nothing to TalkBack; say it.
+                    cell.setContentDescription(R.id.cell, day + (day == today ? ", today" : "")
+                        + (marked.contains(iso) ? ", festival" : ""));
+                }
                 row.addView(R.id.row, cell);
             }
             views.addView(R.id.grid, row);

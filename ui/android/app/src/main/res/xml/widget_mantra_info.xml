@@ -10,5 +10,5 @@
     android:targetCellHeight="2"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="1800000"
-    android:previewLayout="@layout/widget_mantra"
+    android:previewLayout="@layout/widget_mantra_preview"
     android:widgetCategory="home_screen" />

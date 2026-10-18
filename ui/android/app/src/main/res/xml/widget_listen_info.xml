@@ -10,5 +10,5 @@
     android:targetCellHeight="1"
     android:resizeMode="horizontal"
     android:updatePeriodMillis="1800000"
-    android:previewLayout="@layout/widget_listen"
+    android:previewLayout="@layout/widget_listen_preview"
     android:widgetCategory="home_screen" />
