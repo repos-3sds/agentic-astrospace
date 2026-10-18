@@ -12,26 +12,46 @@ _SchemaT = TypeVar("_SchemaT", bound=BaseModel)
 def extract_usage(response: Any) -> dict:
     """Token counts from an Anthropic (`usage.input_tokens/output_tokens`)
     or Gemini (`usage_metadata.prompt_token_count/candidates_token_count`)
-    response, as {"input_tokens", "output_tokens"}; zeros when absent."""
+    response, as {"input_tokens", "output_tokens", "cached_tokens"}; zeros
+    when absent. `cached_tokens` is the part of the input the provider
+    billed at its cache rate (about a tenth), so the logs show how much of
+    the spend caching is already saving."""
     usage = getattr(response, "usage", None)
     if usage is not None:
         return {
             "input_tokens": int(getattr(usage, "input_tokens", 0) or 0),
             "output_tokens": int(getattr(usage, "output_tokens", 0) or 0),
+            "cached_tokens": _int(getattr(usage, "cache_read_input_tokens", 0)),
         }
     meta = getattr(response, "usage_metadata", None)
     if meta is not None:
         return {
             "input_tokens": int(getattr(meta, "prompt_token_count", 0) or 0),
             "output_tokens": int(getattr(meta, "candidates_token_count", 0) or 0),
+            "cached_tokens": _int(getattr(meta, "cached_content_token_count", 0)),
         }
-    return {"input_tokens": 0, "output_tokens": 0}
+    return {"input_tokens": 0, "output_tokens": 0, "cached_tokens": 0}
+
+
+def compact_json(value: Any) -> str:
+    """JSON for a prompt: no indentation and no \\u escapes. The model reads
+    exactly the same data as from `indent=2`, and the chart bundle in every
+    Ask prompt comes out about a third fewer characters."""
+    return json.dumps(value, separators=(",", ":"), ensure_ascii=False, default=str)
+
+
+def _int(value: Any) -> int:
+    """A token count from an SDK field that may be None or a mock."""
+    return value if isinstance(value, int) else 0
 
 
 DEFAULT_ANTHROPIC_MODEL = "claude-opus-5"
 DEFAULT_GEMINI_MODEL = "gemini-3.5-flash"
 
 log = logging.getLogger(__name__)
+# One JSON line per model call, from every feature (Ask, the daily brief,
+# Telugu translation, ...), so spend can be read per feature off the logs.
+usage_log = logging.getLogger("astrospace.ai.usage")
 
 # Provider call limits. The SDK defaults were a 600 s timeout with 2 retries
 # (Anthropic) and no timeout at all (Gemini), while Cloud Run cuts the request
@@ -79,19 +99,43 @@ def anthropic_client(api_key: str | None = None):
     return _shared_client(("anthropic", key), build)
 
 
+def gemini_backend() -> str:
+    """"vertex" when GEMINI_BACKEND says so, else "ai_studio" (the default).
+
+    Vertex AI serves the same Gemini models, billed to the Google Cloud
+    project instead of AI Studio's prepaid credit (which ran out on
+    2026-10-17 and stopped every AI feature at once). It signs in as the
+    Cloud Run service account, so there is no API key to set or rotate."""
+    value = os.getenv("GEMINI_BACKEND", "").strip().lower()
+    return "vertex" if value in {"vertex", "vertexai", "vertex_ai"} else "ai_studio"
+
+
 def gemini_client(api_key: str | None = None):
     """The shared Gemini client for this credential, with an explicit timeout."""
+    from google.genai import types
+
+    # HttpOptions.timeout is in milliseconds.
+    http_options = types.HttpOptions(timeout=int(LLM_TIMEOUT_SECONDS * 1000))
+    if gemini_backend() == "vertex" and not api_key:
+        project = os.getenv("GOOGLE_CLOUD_PROJECT", "")
+        location = os.getenv("GOOGLE_CLOUD_LOCATION", "global")
+
+        def build_vertex():
+            from google import genai
+
+            return genai.Client(
+                vertexai=True, project=project or None, location=location,
+                http_options=http_options,
+            )
+
+        return _shared_client(("gemini-vertex", project, location), build_vertex)
+
     key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
 
     def build():
         from google import genai
-        from google.genai import types
 
-        # HttpOptions.timeout is in milliseconds.
-        return genai.Client(
-            api_key=key,
-            http_options=types.HttpOptions(timeout=int(LLM_TIMEOUT_SECONDS * 1000)),
-        )
+        return genai.Client(api_key=key, http_options=http_options)
 
     return _shared_client(("gemini", key), build)
 
@@ -131,10 +175,12 @@ class BaseAstroAgent:
         shape: a response without usage (a stub, an older SDK) records zeros
         rather than raising, because accounting must never cost a reader
         their answer."""
-        self.usage_log.append({
+        entry = {
             "purpose": purpose, "provider": self.provider, "model": self.model,
             **extract_usage(response),
-        })
+        }
+        self.usage_log.append(entry)
+        usage_log.info(json.dumps({"feature": type(self).__name__, **entry}))
 
     def usage_totals(self) -> dict:
         """Sum of `usage_log`, plus the per-call breakdown."""
@@ -144,6 +190,7 @@ class BaseAstroAgent:
             "calls": len(self.usage_log),
             "input_tokens": sum(int(u.get("input_tokens") or 0) for u in self.usage_log),
             "output_tokens": sum(int(u.get("output_tokens") or 0) for u in self.usage_log),
+            "cached_tokens": sum(int(u.get("cached_tokens") or 0) for u in self.usage_log),
             "breakdown": list(self.usage_log),
         }
 

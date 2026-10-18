@@ -72,3 +72,12 @@ def _reset_generation_ceilings():
     ratelimit.reset()
     yield
     ratelimit.reset()
+
+
+@pytest.fixture(autouse=True)
+def _question_sorter_stays_offline(monkeypatch):
+    """The Ask question sorter (agents/scope.py) makes a small model call
+    when AI_PROVIDER=gemini. Tests use its deterministic heuristic instead,
+    for the same reason as the fixtures above: no test may reach a provider
+    by accident. Tests of the sorter itself inject a fake."""
+    monkeypatch.setenv("ASK_SORTER", "off")

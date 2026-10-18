@@ -40,7 +40,7 @@ from ..db.crud_profile_context import (
 )
 from ..db.database import release_connection, short_session
 from .ask_routes import (
-    MAX_HISTORY, AskRequest, _evidence_from_reading, _history_from_thread,
+    MAX_HISTORY, AskRequest, _domain_labels, _evidence_from_reading, _history_from_thread,
     _owned_thread, _persist_ask_turn, _profile_context_store, _settle_credit,
     _thread_established_domain,
 )
@@ -299,7 +299,7 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
         outcome = orchestrator.prepare(
             body.question, thread_domain=thread_domain, domain_override=body.domain_override,
             experience_mode=body.experience_mode, language=body.language,
-            tone=body.tone, validate_first=body.validate_first,
+            tone=body.tone, validate_first=body.validate_first, history=messages,
         )
     except TaxonomyError:
         log.exception("ask stream prepare failed on taxonomy (kundli=%s)", kundli_id)
@@ -336,7 +336,7 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
                 )
             elif envelope["type"] == "clarification_needed":
                 content = (
-                    f"I can help with: {', '.join(envelope['options'])} right now — "
+                    f"I can help with: {', '.join(_domain_labels(envelope['options']))} right now — "
                     "which one is this about?"
                 )
                 thread_id = persist_turn(

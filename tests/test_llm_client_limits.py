@@ -60,6 +60,34 @@ def test_gemini_client_has_an_explicit_timeout(monkeypatch):
     assert captured["http_options"].timeout == 60_000
 
 
+def test_gemini_can_run_on_vertex_ai_without_a_key(monkeypatch):
+    monkeypatch.setattr(base_module, "_clients", {})
+    monkeypatch.setenv("GEMINI_BACKEND", "vertex")
+    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "test-project")
+    monkeypatch.delenv("GOOGLE_CLOUD_LOCATION", raising=False)
+    captured = {}
+
+    class FakeGenaiClient:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+    import google.genai as genai
+    monkeypatch.setattr(genai, "Client", FakeGenaiClient)
+    base_module.gemini_client()
+    assert captured["vertexai"] is True
+    assert captured["project"] == "test-project"
+    assert captured["location"] == "global"
+    assert "api_key" not in captured
+    assert captured["http_options"].timeout == 60_000
+
+
+def test_ai_studio_stays_the_default_backend(monkeypatch):
+    monkeypatch.delenv("GEMINI_BACKEND", raising=False)
+    assert base_module.gemini_backend() == "ai_studio"
+    monkeypatch.setenv("GEMINI_BACKEND", "Vertex")
+    assert base_module.gemini_backend() == "vertex"
+
+
 def test_anthropic_tool_loop_is_capped(monkeypatch):
     monkeypatch.setenv("AI_PROVIDER", "anthropic")
     calls = []

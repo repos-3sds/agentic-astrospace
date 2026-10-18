@@ -87,7 +87,37 @@ prompted.)
 | AI_PROVIDER | yes for Ask | `gemini` for the mobile Ask experience; `anthropic` remains available as a fallback |
 | GEMINI_API_KEY | yes when AI_PROVIDER=gemini | Gemini API key for Ask and agentic explanations |
 | GEMINI_MODEL | no | Defaults to `gemini-3.5-flash` |
+| GEMINI_BACKEND | no | `vertex` runs Gemini on Vertex AI, billed to this Google Cloud project with no API key; unset keeps AI Studio and `GEMINI_API_KEY` |
+| GOOGLE_CLOUD_PROJECT | with `GEMINI_BACKEND=vertex` | the project id, e.g. `gen-lang-client-0058562386` |
+| GOOGLE_CLOUD_LOCATION | no | Vertex AI location; defaults to `global` |
 | ANTHROPIC_API_KEY | yes when AI_PROVIDER=anthropic | Anthropic API key for fallback/provider switch |
+
+## Gemini on Vertex AI
+
+AI Studio bills from prepaid credit, and when it ran out on 2026-10-17 every
+AI feature failed at once. Vertex AI serves the same models on the project's
+normal bill and signs in as the service account. To switch (once):
+
+```bash
+gcloud services enable aiplatform.googleapis.com
+SA=$(gcloud run services describe agentic-astrospace --region asia-south1 \
+  --format='value(spec.template.spec.serviceAccountName)')
+gcloud projects add-iam-policy-binding gen-lang-client-0058562386 \
+  --member "serviceAccount:$SA" --role roles/aiplatform.user
+# Do the same for the notifications job's service account if it differs.
+gcloud run services update agentic-astrospace --region asia-south1 \
+  --update-env-vars GEMINI_BACKEND=vertex,GOOGLE_CLOUD_PROJECT=gen-lang-client-0058562386
+gcloud run jobs update agentic-astrospace-notifications --region asia-south1 \
+  --update-env-vars GEMINI_BACKEND=vertex,GOOGLE_CLOUD_PROJECT=gen-lang-client-0058562386
+```
+
+Then ask one question in the app. To roll back, remove `GEMINI_BACKEND`
+(`--remove-env-vars GEMINI_BACKEND`); `GEMINI_API_KEY` is still used then.
+
+Every model call writes one JSON line to the `astrospace.ai.usage` logger:
+feature, purpose, model, input, output and cached tokens. Searching Logs
+Explorer for `"feature":` lists them, and a log-based metric on those lines
+gives spend per feature.
 
 ## Updating
 

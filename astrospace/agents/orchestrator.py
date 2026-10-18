@@ -28,10 +28,12 @@ from .domain_agent import DomainReadingAgent
 from .intent import QuestionTense, detect_intent, detect_tense
 from .registry import AGENT_REGISTRY, AgentConfig
 from .safety import REFER_OUT_ANSWERS, refer_out_kind
+from .scope import QuestionPlan, fixed_reply, plan_question
 from .schema import AskIntent, StructuredReading
 from .validation_agent import ValidationAgent, ValidationProbeDraft, probe_violations
 from .verifier import quality_violations, safety_violations, verify, verify_coverage, violation_fields
 from ..context import KeywordRouter, assemble_domain
+from ..context.focus import focus_bundle
 from ..context.profile_context import LogicalPreflight, build_logical_preflight
 from ..context.taxonomy import get_domain
 from ..context.validation import validation_slots
@@ -126,6 +128,9 @@ class PreparedRun:
     # without re-reading `bundle["profile_context"]`'s shape.
     profile_context_revision: int = 0
     profile_context_as_of: str | None = None
+    # What kind of question this is (agents/scope.py): sets the answer's
+    # length and what the prose may bring in.
+    question_kind: str = "broad"
     # Set by `run()` before it calls `persist`, so the route's persist
     # closure can store the cost of the answer it is writing without the
     # callback signature changing: {"provider", "model", "calls",
@@ -223,7 +228,8 @@ class AskOrchestrator:
     def __init__(self, chart_loader: Callable[[], VedicChart],
                 router: KeywordRouter | None = None,
                 validation_store: ValidationStore | None = None,
-                profile_context_store: ProfileContextStore | None = None):
+                profile_context_store: ProfileContextStore | None = None,
+                planner: Callable[[str, list[dict] | None], QuestionPlan] | None = None):
         """`chart_loader` is a zero-arg callable the route supplies —
         deferred so a bad-birth-data error only gets raised if a registered
         domain actually needs the chart (never for refer-out, never for
@@ -242,6 +248,8 @@ class AskOrchestrator:
         context is additive, never a hard dependency for answering."""
         self._chart_loader = chart_loader
         self._router = router or KeywordRouter()
+        # Sorts the question before anything is loaded (agents/scope.py).
+        self._planner = planner or plan_question
         self._validation_store = validation_store
         self._profile_context_store = profile_context_store
 
@@ -251,6 +259,7 @@ class AskOrchestrator:
     def route(
         self, question: str, thread_domain: str | None = None,
         domain_override: str | None = None,
+        sorted_domain: str | None = None,
     ) -> RoutingResult:
         """`thread_domain` is the domain the thread last actually answered
         in (the route resolves this from persisted history, if any) — a
@@ -282,6 +291,13 @@ class AskOrchestrator:
         decision = self._router.route(question)
         needs_clarification = _needs_clarification(decision)
         domain = decision.primary
+        # No clear keyword: the sorter's reading of the question ("what about
+        # my love life?" is marriage) comes before the thread's old domain,
+        # because the sorter also saw the thread and can tell a topic switch
+        # from a follow-up.
+        if needs_clarification and sorted_domain and sorted_domain in AGENT_REGISTRY:
+            domain = sorted_domain
+            needs_clarification = False
         if needs_clarification and thread_domain and thread_domain in AGENT_REGISTRY:
             domain = thread_domain
             needs_clarification = False
@@ -297,12 +313,14 @@ class AskOrchestrator:
 
     def assemble_context(self, domain: str, question: str,
                          tense: QuestionTense = "unspecified",
-                         intent: AskIntent | None = None) -> ContextResult:
+                         intent: AskIntent | None = None,
+                         question_kind: str = "broad") -> ContextResult:
         chart = self._chart_loader()
         bundle = assemble_domain(
             chart, domain, question=question, intent=intent,
             validation_probes=self._stored_probes(domain),
         )
+        bundle = focus_bundle(bundle, question_kind, question)
         profile_context = self.check_profile_context(bundle, domain, question, tense)
         bundle["profile_context"] = profile_context.bundle_section
         context_used = [
@@ -428,6 +446,7 @@ class AskOrchestrator:
         language: str = "en",
         validate_first: bool = False,
         tone: str = "gentle",
+        history: list[dict] | None = None,
     ) -> PrepareOutcome:
         """`experience_mode` (guided/balanced/practitioner) selects the
         agent's VOICE only — never its facts, claims, or guardrails. See
@@ -452,7 +471,21 @@ class AskOrchestrator:
                 "answer": REFER_OUT_ANSWERS[safety.refer_out_kind],
             })
 
-        routing = self.route(question, thread_domain=thread_domain, domain_override=domain_override)
+        # Outside the app's theme, or a greeting: a fixed reply, no chart, no
+        # model, no Ask credit (terminal envelopes never reserve one). A
+        # reader who tapped a domain chip has already said what it is about.
+        plan = (QuestionPlan(kind="narrow", method="override") if domain_override
+                else self._planner(question, history))
+        if plan.kind in ("off_topic", "greeting"):
+            log.info("ask question declined as %s (%s)", plan.kind, plan.method)
+            return PrepareOutcome(terminal_envelope={
+                "type": "refer_out",
+                "kind": "out_of_scope" if plan.kind == "off_topic" else "greeting",
+                "answer": fixed_reply(plan.kind, language),
+            })
+
+        routing = self.route(question, thread_domain=thread_domain,
+                             domain_override=domain_override, sorted_domain=plan.domain)
         if routing.needs_clarification:
             return PrepareOutcome(terminal_envelope={
                 "type": "clarification_needed",
@@ -469,7 +502,7 @@ class AskOrchestrator:
             })
 
         context = self.assemble_context(routing.domain, question, routing.tense,
-                                        routing.intent)
+                                        routing.intent, question_kind=plan.kind)
         if context.profile_context_unavailable:
             # A configured ledger failed to answer for this turn — must not
             # fall through to a normal reading, which would look identically
@@ -494,6 +527,7 @@ class AskOrchestrator:
         agent = DomainReadingAgent(
             context.bundle, registry_result.agent_config.domain_addendum,
             question_tense=routing.tense,
+            question_kind=plan.kind,
             experience_mode=experience_mode,
             language=language,
             tone=tone,
@@ -508,6 +542,7 @@ class AskOrchestrator:
             context_used=context.context_used,
             profile_context_revision=profile_context.get("revision", 0),
             profile_context_as_of=profile_context.get("as_of"),
+            question_kind=plan.kind,
         ))
 
     def _agent_run_and_verify(self, prepared: PreparedRun, messages: list) -> AgentRunResult:
@@ -608,7 +643,8 @@ class AskOrchestrator:
         try:
             cost_log.info(json.dumps({
                 "event": "ask.cost", "status": status, "domain": prepared.domain,
-                "intent": prepared.intent, "thread_id": thread_id,
+                "intent": prepared.intent, "question_kind": prepared.question_kind,
+                "thread_id": thread_id,
                 **_usage_summary(prepared.usage),
             }, default=str))
         except Exception:  # accounting never costs a reader their answer

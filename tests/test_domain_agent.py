@@ -1202,3 +1202,20 @@ class TestFieldScopedRepair:
                                   persist=lambda reading, status: "t"))
         assert gen.call_count == 2
         repair.assert_not_called()
+
+
+class TestPromptCarriesTheWholeBundleCompactly:
+    """2026-10-18 token trim: the bundle goes into the system prompt without
+    indentation. Nothing may be dropped — the model must read exactly the
+    data it read from the indented form."""
+
+    def test_the_prompt_holds_the_same_bundle_with_no_indentation(self, chart, monkeypatch):
+        monkeypatch.setenv("AI_PROVIDER", "gemini")
+        bundle = assemble_domain(chart, "career")
+        bundle["references"] = [{"title": "బృహత్ పరాశర హోరా శాస్త్రం"}]
+        prompt = DomainReadingAgent(bundle, AGENT_REGISTRY["career"].domain_addendum).system_prompt
+        compact = json.dumps(bundle, separators=(",", ":"), ensure_ascii=False, default=str)
+        assert compact in prompt
+        assert json.loads(compact) == json.loads(json.dumps(bundle, default=str))
+        assert "బృహత్" in prompt  # Telugu is sent as text, not \u escapes
+        assert len(compact) < 0.8 * len(json.dumps(bundle, indent=2, default=str))
