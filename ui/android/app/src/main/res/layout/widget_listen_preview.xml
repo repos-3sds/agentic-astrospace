@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget-picker preview only (previewLayout, Android 12+): the live
+     layout is widget_listen.xml, whose text is all set at runtime. -->
+<!-- A slim bar centred in its cell, rather than a card filling it. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/widget_root"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_gravity="center_vertical"
+        android:background="@drawable/widget_card"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="10dp"
+        android:paddingEnd="18dp">
+
+        <ImageView
+            android:id="@+id/play"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/widget_accent_circle"
+            android:contentDescription="@string/widget_listen_name"
+            android:padding="12dp"
+            android:src="@drawable/widget_ic_play" />
+
+        <LinearLayout
+            android:id="@+id/text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/title"
+        android:text="Your day, read aloud"
+                style="@style/WidgetTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1" />
+
+            <TextView
+                android:id="@+id/subtitle"
+        android:text="Tap play to listen"
+                style="@style/WidgetBody"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

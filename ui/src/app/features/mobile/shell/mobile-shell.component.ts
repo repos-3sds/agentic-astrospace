@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import {
@@ -79,7 +79,24 @@ export class MobileShellComponent {
   /** Today's verse while its first-open sheet is up. */
   protected readonly dailyVerse = signal<Subhashita | null>(null);
 
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  /** Read once per screen change by the live region when a screen has no h1. */
+  protected readonly screenAnnouncement = signal('');
+  private lastPath: string | null = null;
+
   constructor() {
+    // Screen readers heard nothing when the screen changed and kept reading
+    // from a detached element (audit N14). Like a native push, move focus to
+    // the new screen's heading; query-only changes (a tab inside a screen)
+    // stay where they are.
+    effect(() => {
+      const path = this.currentPath();
+      untracked(() => {
+        const previous = this.lastPath;
+        this.lastPath = path;
+        if (previous !== null && previous !== path) setTimeout(() => this.focusScreen(), 0);
+      });
+    });
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
     this.widgets.start();
     void this.offerDailyVerse();
@@ -91,6 +108,18 @@ export class MobileShellComponent {
       });
       inject(DestroyRef).onDestroy(() => void listener.then((l) => l.remove()));
     }
+  }
+
+  private focusScreen(): void {
+    if (this.overlay.open()) return;
+    const heading = this.host.nativeElement.querySelector<HTMLElement>('main.content h1');
+    if (heading) {
+      if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
+      heading.focus({ preventScroll: true });
+      this.screenAnnouncement.set('');
+      return;
+    }
+    this.screenAnnouncement.set(document.title.replace(/ · Siddha$/, ''));
   }
 
   /**

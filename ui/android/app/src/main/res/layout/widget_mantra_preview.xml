@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget-picker preview only (previewLayout, Android 12+): the live
+     layout is widget_mantra.xml, whose text is all set at runtime. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_card"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="14dp">
+
+    <TextView
+        android:id="@+id/title"
+        android:text="Om Namah Shivaya"
+        style="@style/WidgetEyebrow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center" />
+
+    <FrameLayout
+        android:id="@+id/counter"
+        android:layout_width="92dp"
+        android:layout_height="92dp"
+        android:layout_marginTop="10dp">
+
+        <ImageView
+            android:id="@+id/ring"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/count"
+        android:text="27"
+                style="@style/WidgetNumber"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="26sp" />
+
+            <TextView
+                android:id="@+id/target"
+        android:text="of 108"
+                style="@style/WidgetBody"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textSize="11sp" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/hint"
+        android:text="Tap to count"
+        style="@style/WidgetBody"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:maxLines="1"
+        android:textSize="12sp" />
+</LinearLayout>

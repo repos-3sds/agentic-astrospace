@@ -9,16 +9,19 @@ export const MOBILE_ROUTES: Routes = [
   { path: '', redirectTo: 'today', pathMatch: 'full' },
   {
     path: 'today',
+    title: 'Today',
     loadComponent: () =>
       import('./today/today.component').then((m) => m.TodayComponent),
   },
   {
     path: 'ask',
+    title: 'Ask',
     loadComponent: () =>
       import('./ask/ask-home.component').then((m) => m.AskHomeComponent),
   },
   {
     path: 'ask/history',
+    title: 'Past questions',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./ask/ask-history.component').then(
@@ -27,17 +30,20 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'ask/loading',
+    title: 'Ask',
     data: { hideMobileTabs: true },
     loadComponent: () => import('./ask/ask-loading.component').then((m) => m.AskLoadingComponent),
   },
   {
     path: 'ask/answer',
+    title: 'Answer',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./ask/ask-answer.component').then((m) => m.AskAnswerComponent),
   },
   {
     path: 'ask/refer',
+    title: 'Ask a professional',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./ask/ask-refer-out.component').then(
@@ -46,11 +52,13 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'family',
+    title: 'Family',
     loadComponent: () =>
       import('./family/family.component').then((m) => m.FamilyComponent),
   },
   {
     path: 'explore',
+    title: 'Explore',
     loadComponent: () =>
       import('./explore/explore-menu.component').then(
         (m) => m.ExploreMenuComponent,
@@ -58,6 +66,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'explore/library',
+    title: 'Library',
     loadComponent: () =>
       import('./explore/guided-explore.component').then(
         (m) => m.GuidedExploreComponent,
@@ -65,6 +74,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'explore/story',
+    title: 'Your story',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./explore/guided-story.component').then(
@@ -73,6 +83,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'explore/what-to-do',
+    title: 'What to do',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./remedies/remedies.component').then(
@@ -81,6 +92,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'explore/life-chapters',
+    title: 'Life chapters',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./explore/guided-life-chapters.component').then(
@@ -89,6 +101,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'remedies',
+    title: 'Remedies',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./remedies/remedies.component').then(
@@ -97,6 +110,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'remedies/mantra',
+    title: 'Mantra',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./remedies/mantra-tracker.component').then(
@@ -105,6 +119,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'muhurta',
+    title: 'Muhurtas',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./muhurta/muhurta-goal.component').then(
@@ -113,6 +128,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'muhurta/results',
+    title: 'Good times',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./muhurta/muhurta-results.component').then(
@@ -121,6 +137,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'chart',
+    title: 'Your chart',
     loadComponent: () =>
       import('./chart/chart-hub.component').then(
         (m) => m.ChartHubComponent,
@@ -128,6 +145,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'chart/full',
+    title: 'Full chart',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./chart/chart-full.component').then(
@@ -136,6 +154,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'chart/vargas',
+    title: 'Divisional charts',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./chart/varga-charts.component').then(
@@ -144,6 +163,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'chart/birth-details',
+    title: 'Birth details',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./chart/birth-details-screen.component').then(
@@ -152,31 +172,37 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'chart/reference',
+    title: 'Chart reference',
     data: { referenceMode: 'home', hideMobileTabs: true },
     loadComponent: () => import('./chart/reference.component').then((m) => m.ReferenceComponent),
   },
   {
     path: 'chart/reference/avkahada',
+    title: 'Avakahada',
     data: { referenceMode: 'avkahada', hideMobileTabs: true },
     loadComponent: () => import('./chart/reference.component').then((m) => m.ReferenceComponent),
   },
   {
     path: 'chart/reference/grahas',
+    title: 'Planets',
     data: { referenceMode: 'grahas', hideMobileTabs: true },
     loadComponent: () => import('./chart/reference.component').then((m) => m.ReferenceComponent),
   },
   {
     path: 'chart/reference/ashtakavarga',
+    title: 'Ashtakavarga',
     data: { referenceMode: 'ashtakavarga', hideMobileTabs: true },
     loadComponent: () => import('./chart/reference.component').then((m) => m.ReferenceComponent),
   },
   {
     path: 'chart/reference/favourable',
+    title: 'Favourable points',
     data: { referenceMode: 'favourable', hideMobileTabs: true },
     loadComponent: () => import('./chart/reference.component').then((m) => m.ReferenceComponent),
   },
   {
     path: 'chart/periods',
+    title: 'Life periods',
     loadComponent: () =>
       import('./chart/life-periods.component').then(
         (m) => m.LifePeriodsComponent,
@@ -184,6 +210,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'chart/yogas',
+    title: 'Yogas and doshas',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./chart/yogas-doshas.component').then(
@@ -192,6 +219,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'chart/strength',
+    title: 'Planet strength',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./chart/strength-advanced.component').then(
@@ -200,6 +228,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings',
+    title: 'Settings',
     loadComponent: () =>
       import('./settings/settings-home.component').then(
         (m) => m.SettingsHomeComponent,
@@ -207,6 +236,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/profiles',
+    title: 'Profiles',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/profile-management.component').then(
@@ -215,6 +245,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/profiles/new',
+    title: 'New profile',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/profile-form.component').then(
@@ -223,6 +254,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/profiles/:id/edit',
+    title: 'Edit profile',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/profile-form.component').then(
@@ -231,6 +263,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/profiles/:id/memory',
+    title: 'What Siddha remembers',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/profile-memory.component').then(
@@ -239,6 +272,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/profiles/:id/delete',
+    title: 'Delete profile',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/profile-delete.component').then(
@@ -247,6 +281,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/birth-details',
+    title: 'Birth details',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/edit-birth-details.component').then(
@@ -255,6 +290,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/mode',
+    title: 'Experience',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/mode-tone.component').then(
@@ -263,6 +299,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/appearance',
+    title: 'Appearance',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/appearance.component').then(
@@ -271,6 +308,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/language',
+    title: 'Language',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/language-audio.component').then(
@@ -279,6 +317,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/notifications',
+    title: 'Notifications',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/notifications.component').then(
@@ -287,6 +326,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'subhashita',
+    title: 'Today’s Subhashita',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./subhashita/subhashita.component').then(
@@ -295,6 +335,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/interaction',
+    title: 'Interaction',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/interaction.component').then(
@@ -303,6 +344,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/location',
+    title: 'Location',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/location.component').then(
@@ -311,6 +353,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/festivals',
+    title: 'Festivals',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/festival-preferences.component').then(
@@ -319,6 +362,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/account',
+    title: 'Account',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/account-privacy.component').then(
@@ -327,6 +371,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/account/delete',
+    title: 'Delete account',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/account-deletion.component').then(
@@ -335,6 +380,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/conventions',
+    title: 'Conventions',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/conventions.component').then(
@@ -343,6 +389,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'search',
+    title: 'Search',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./utility/search.component').then(
@@ -351,6 +398,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'notifications',
+    title: 'Notifications',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./utility/notification-center.component').then(
@@ -359,6 +407,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'subscription',
+    title: 'Plans',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./utility/subscription.component').then(
@@ -369,6 +418,7 @@ export const MOBILE_ROUTES: Routes = [
   // contiguous ownership block so parallel feature work rebases cleanly.
   {
     path: 'calendar',
+    title: 'Calendar',
     loadComponent: () =>
       import('./calendar/calendar.component').then(
         (m) => m.CalendarComponent,
@@ -376,6 +426,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'calendar/day',
+    title: 'Day',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./calendar/calendar-day.component').then(
@@ -384,6 +435,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'compat',
+    title: 'Compatibility',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./compat/compat-hub.component').then(
@@ -392,6 +444,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'compat/add',
+    title: 'Add a person',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./compat/add-prospect.component').then(
@@ -400,6 +453,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'compat/results',
+    title: 'Compatibility',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./compat/compat-results.component').then(
@@ -408,6 +462,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'compat/results/detail',
+    title: 'Compatibility detail',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./compat/compat-detail.component').then(
@@ -416,6 +471,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'transits',
+    title: 'Transits',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./transits/gochara.component').then(
@@ -424,6 +480,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'transits/full',
+    title: 'All transits',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./transits/full-transits.component').then(
@@ -432,6 +489,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'readings',
+    title: 'Readings',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./readings/readings.component').then(
@@ -440,6 +498,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'readings/accuracy',
+    title: 'Reading accuracy',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./readings/accuracy.component').then(
@@ -448,6 +507,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'notes',
+    title: 'Notes',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./notes/notes.component').then(

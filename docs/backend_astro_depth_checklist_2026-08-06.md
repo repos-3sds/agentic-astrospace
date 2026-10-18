@@ -1503,3 +1503,12 @@ From the Tier 0 fixes for `/mnt/project-files/audits/end-to-end-2026-10-18/findi
   the terms of each GitHub, GRETIL and SANSKNET e-text read and written
   down, alongside the scholar review. *Hook:* `docs/subhashita_corpus.md`
   "Before launch"; the push stays off by default until both are done.
+- [ ] **Widget picker images for Android 11 and below** (D4, second half).
+  *Why not built:* `previewImage` needs a PNG per widget rendered from a
+  real device; Android 12+ already uses the `*_preview.xml` layouts with
+  sample text. *Hook:* `res/xml/widget_*_info.xml`.
+- [ ] **Android 12+ widget polish** (D18): `@android:id/background` on each
+  widget root and the system corner radius on API 31+. *Why not built:*
+  needs a device to check the launch transition and clipping. The
+  monochrome `ic_stat_siddha` part is done. *Hook:* `res/layout/widget_*.xml`,
+  `res/drawable/widget_card.xml`.

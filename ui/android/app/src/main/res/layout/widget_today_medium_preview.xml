@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget-picker preview only (previewLayout, Android 12+): the live
+     layout is widget_today_medium.xml, whose text is all set at runtime. -->
+<!-- Your day, 4x2 (Figma M10 Home Screen Widget, node 103:92). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_card"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="16dp">
+
+        <FrameLayout
+            android:layout_width="88dp"
+            android:layout_height="88dp">
+
+            <ImageView
+                android:id="@+id/ring"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/score"
+        android:text="72"
+                    style="@style/WidgetNumber"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="28sp" />
+
+                <TextView
+                    android:id="@+id/band"
+        android:text="Steady"
+                    style="@style/WidgetEyebrow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:letterSpacing="0.1"
+                    android:textSize="8sp" />
+            </LinearLayout>
+        </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/eyebrow"
+            style="@style/WidgetEyebrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/widget_today_eyebrow"
+            android:textColor="@color/widget_accent" />
+
+        <TextView
+            android:id="@+id/headline"
+        android:text="A good day to finish what you started."
+            style="@style/WidgetHeadline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:maxLines="3" />
+
+        <TextView
+            android:id="@+id/timing"
+        android:text="Rahu Kalam 1:30 – 3:00 pm"
+            style="@style/WidgetBody"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:drawableStart="@drawable/widget_ic_clock"
+            android:drawablePadding="6dp"
+            android:gravity="center_vertical"
+            android:maxLines="1"
+            android:textColor="@color/widget_gold" />
+    </LinearLayout>
+</LinearLayout>
