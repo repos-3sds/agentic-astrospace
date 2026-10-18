@@ -1,4 +1,5 @@
 import { NaturalVoiceService } from '../../../core/natural-voice.service';
+import { SubhashitaService } from '../../../core/subhashita.service';
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
@@ -430,6 +431,7 @@ describe('TodayComponent loading', () => {
         { provide: AnalyticsService, useValue: { track: () => undefined } },
         { provide: HapticsService, useValue: { tap: () => undefined } },
         { provide: NaturalVoiceService, useValue: { available: () => Promise.resolve(false) } },
+        { provide: SubhashitaService, useValue: { today: () => null } },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: new Map() } } },
       ],
     });

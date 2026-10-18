@@ -177,6 +177,18 @@
     <p class="window-in">{{ v.nextWindowIn }}</p>
   </a>
 
+  @if (subhashita.today(); as verse) {
+    <a class="verse" [routerLink]="['/m', 'subhashita']"
+       [attr.aria-label]="'Today’s Subhashita: ' + verse.english + '. Open to read and share'">
+      <p class="eyebrow verse-eyebrow">Today’s Subhashita</p>
+      <p class="verse-english">“{{ verse.english }}”</p>
+      @if (verse.meaning) {
+        <p class="verse-meaning">{{ verse.meaning }}</p>
+      }
+      <p class="verse-source">— {{ verse.source }} {{ verse.ref }}</p>
+    </a>
+  }
+
   @if (preferences.experienceMode() !== 'practitioner' && upcomingFestival(); as festival) {
     <button class="festival" type="button" (click)="showSheet('festival')"
             [attr.aria-label]="festival.name + ', ' + festivalWhen() + '. Open details'">

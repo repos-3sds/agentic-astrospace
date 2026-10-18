@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input, signal } from '@angular/core';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
 
 import { HapticsService } from '../../../core/haptics.service';
-import { shareFile } from '../../../core/native-share';
+import { prepareShareFile, shareFile } from '../../../core/native-share';
 import { Subhashita, SUBHASHITA_TITLE } from '../../../core/subhashita.service';
 import { longDate, shareText, storyCardFile } from './story-card';
 
@@ -57,6 +57,17 @@ export class SubhashitaVerseComponent {
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly date = longDate;
+
+  constructor() {
+    // Draw and write the card while the reader is still reading the verse,
+    // so Share opens the sheet at once instead of after 3-5 s.
+    effect(() => {
+      const verse = this.verse();
+      const idle = (window as Window & { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback
+        ?? ((cb: () => void) => setTimeout(cb, 300));
+      idle(() => void storyCardFile(verse).then(prepareShareFile).catch(() => undefined));
+    });
+  }
 
   /** The 9:16 picture, for a WhatsApp or Instagram status. */
   protected async shareImage(): Promise<void> {

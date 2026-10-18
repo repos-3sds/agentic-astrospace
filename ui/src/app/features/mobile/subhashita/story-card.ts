@@ -132,12 +132,34 @@ export async function renderStoryCard(verse: Subhashita, canvas = document.creat
   return canvas;
 }
 
-/** The card as a PNG file, ready for the share sheet. */
+/**
+ * The card as a file, drawn once per verse and kept: the verse screen asks for
+ * it as soon as the verse is shown, so "Share to status" hands over a finished
+ * file. Sharing took 3-5 s on a phone when the card was drawn, PNG-encoded
+ * (about 2.5 MB) and pushed through the native bridge only after the tap
+ * (Hawk, 2026-10-18).
+ */
 export async function storyCardFile(verse: Subhashita): Promise<File> {
+  const key = `${verse.date}:${verse.id}`;
+  let pending = prepared.get(key);
+  if (!pending) {
+    pending = renderFile(verse);
+    prepared.set(key, pending);
+    pending.catch(() => prepared.delete(key));
+  }
+  return pending;
+}
+
+
+const prepared = new Map<string, Promise<File>>();
+
+async function renderFile(verse: Subhashita): Promise<File> {
   const canvas = await renderStoryCard(verse);
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+  // JPEG, not PNG: a fifth of the size with no visible loss on a gradient
+  // card, and statuses are recompressed to JPEG by WhatsApp and Instagram anyway.
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));
   if (!blob) throw new Error('This device could not save the image.');
-  return new File([blob], `subhashita-${verse.date}.png`, { type: 'image/png' });
+  return new File([blob], `subhashita-${verse.date}.jpg`, { type: 'image/jpeg' });
 }
 
 /** The words alone, for a share that is text rather than a picture. */

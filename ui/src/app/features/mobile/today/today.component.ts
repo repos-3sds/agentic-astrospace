@@ -25,6 +25,7 @@ import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.c
 import { ReadingForComponent } from '../shared/reading-for.component';
 import { ExperienceMode, PreferencesService, ReadingTone } from '../../../core/preferences.service';
 import { HapticsService } from '../../../core/haptics.service';
+import { SubhashitaService } from '../../../core/subhashita.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { AudioReadingSection, buildTodayAudioScript } from './audio-reading-script';
 import {
@@ -262,6 +263,7 @@ export class TodayComponent {
     return this.preferences.experienceMode() === 'guided' && row.plain_headline ? row.plain_headline : row.headline;
   }
   private readonly haptics = inject(HapticsService);
+  protected readonly subhashita = inject(SubhashitaService);
   private requestId = 0;
   protected readonly whyMode = computed(() => ({
     guided: 'Guided view - the life guidance first, with unfamiliar terms translated.',
