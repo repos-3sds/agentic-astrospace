@@ -125,6 +125,26 @@ def sun_moon_sidereal(jd_ut: float, ayanamsha: str = "lahiri") -> tuple[float, f
     return sun % 360.0, moon % 360.0
 
 
+def sidereal_big_three(year: int, month: int, day: int, hour: int, minute: int,
+                       city: str = None, nation: str = "IN",
+                       ayanamsha: str = "lahiri") -> dict[str, str]:
+    """Sidereal Sun sign, Moon sign (rashi) and lagna sign for a birth.
+
+    The summary a profile row carries (`sun_sign`, `moon_sign`, `ascendant`).
+    These columns used to be filled from the tropical kerykeion chart, so the
+    Family list said "Virgo Moon" while every Vedic screen said Leo.
+    Raises LocationError when the place cannot be resolved.
+    """
+    moment = birth_moment(year, month, day, hour, minute, city, nation)
+    sun, moon = sun_moon_sidereal(moment.jd_ut, ayanamsha)
+    lagna = sidereal_lagna(moment.jd_ut, moment.lat, moment.lng, ayanamsha)
+    return {
+        "sun_sign": sign_name(sign_index(sun)),
+        "moon_sign": sign_name(sign_index(moon)),
+        "ascendant": sign_name(sign_index(lagna)),
+    }
+
+
 def tropical_sun(jd_ut: float) -> float:
     (lon, *_), _ = swe.calc_ut(jd_ut, swe.SUN, _BASE_FLAGS)
     return lon % 360.0

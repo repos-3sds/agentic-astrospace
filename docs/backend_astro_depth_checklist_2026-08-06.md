@@ -1469,3 +1469,24 @@ Reordered 2026-09-18 by measured OCR rather than assumed availability.
   Kalam (ActivityKit, `Text(timerInterval:)` for the countdown). Listen
   becomes an App Intent (iOS 17) playing AVSpeechSynthesizer audio.
 
+
+## Deferred backlog — Tier 0 audit follow-ups (2026-10-18)
+
+From the Tier 0 fixes for `/mnt/project-files/audits/end-to-end-2026-10-18/findings_ranked.md`.
+
+- [ ] **Shared counter for the generation ceilings.** *Why not built:* a
+  Postgres counter needs a new table and migration, and a deploy that runs
+  before the migration would break Ask. The in-process version is a hard
+  bound per Cloud Run instance. *Unblocks when:* a migration-first deploy
+  step exists. *Hook:* `astrospace/ratelimit.py` `take()`; the same
+  `ASTROSPACE_LIMIT_*` settings would apply.
+- [ ] **Release the DB connection during an on-open brief write** (I4,
+  second half). *Why not built:* `_write` saves through the request's
+  session, and moving it to `short_session` touches the worker path too.
+  *Hook:* `astrospace/context/daily_brief_store.py` `_write` / `_save`, the
+  same pattern as `release_connection` in `ask_stream_routes.py`.
+- [ ] **Drop kerykeion.** *Why not built:* the legacy LLM routes and their
+  agents are gone, but the admin-only web app still reads the kerykeion
+  `chart_data` payload stored on each profile (`kundli_routes.py`
+  `_with_chart_fields`). *Unblocks when:* the web chart and overview tabs
+  read `/vedic` instead. Profile big-three columns are already sidereal.

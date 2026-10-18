@@ -5,7 +5,7 @@
       <h2>{{ kundli()?.name || 'Profile' }} compatibility workspace.</h2>
       <p>
         Calculate the 36-point Ashta Koota layer, compare core birth details and
-        D1/D9 charts, then generate the AI interpretation after review.
+        D1/D9 charts. Written interpretations live in the app's Ask tab.
       </p>
     </div>
     <div class="as-hero-stats">
@@ -22,7 +22,7 @@
     </div>
   </section>
 
-  <app-section-card icon="heart-handshake" title="Compatibility workspace" subtitle="points first, AI second">
+  <app-section-card icon="heart-handshake" title="Compatibility workspace" subtitle="computed points and charts">
     <div class="pair">
       <div class="person">
         <label>Person A</label>
@@ -62,7 +62,7 @@
           <h3>{{ s.verdict }}</h3>
           <p>
             {{ s.total }} of {{ s.max }} points from the eight Kootas. This is
-            the computed base layer before the AI interpretation.
+            the computed layer.
           </p>
         </div>
       </section>
@@ -148,30 +148,4 @@
     }
   }
 
-  @if (partnerId()) {
-    <app-section-card icon="bot" title="AI compatibility analysis" subtitle="interpretation after computed points">
-      @if (loading()) {
-        <div class="loading">
-          <p-skeleton height="14px" width="65%" />
-          <p-skeleton height="14px" width="92%" />
-          <p-skeleton height="14px" width="80%" />
-          <span class="as-muted loading-note">Generating interpretation from the pair chart context…</span>
-        </div>
-      } @else if (error()) {
-        <p class="error-copy">Compatibility AI error: {{ error() }}</p>
-      } @else if (result(); as text) {
-        <div class="as-prose result" [innerHTML]="text | markdown"></div>
-      } @else {
-        <div class="ai-cta">
-          <div>
-            <strong>Ready for narrative analysis</strong>
-            <p class="as-muted">
-              The computed score, details, and charts are available above. Generate AI only after reviewing the base layer.
-            </p>
-          </div>
-          <button type="button" (click)="runAi()" [disabled]="!score()">Generate AI analysis</button>
-        </div>
-      }
-    </app-section-card>
-  }
 </div>

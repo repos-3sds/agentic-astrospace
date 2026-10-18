@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { USER_LOCAL_STORAGE_KEYS } from '../../../core/session-teardown';
 
-const STORAGE_KEY = 'astrospace.mobile.notes.draft';
+// Cleared on sign-out and account deletion by SessionTeardown.
+const STORAGE_KEY = USER_LOCAL_STORAGE_KEYS[0];
 
 @Component({
   selector: 'as-mobile-notes',

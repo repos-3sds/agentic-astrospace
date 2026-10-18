@@ -20,6 +20,7 @@ import logging
 import threading
 import time
 from datetime import date, datetime, timedelta, timezone
+from typing import Callable
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -95,10 +96,15 @@ def update_stored(db: Session, kundli_id: str, payload: dict, key: str, **fields
 
 def ensure_brief(db: Session, kundli, payload: dict, *, tone: str, mode: str,
                  ayanamsha: str, node_type: str, trigger: str,
-                 agent_factory=DailyBriefAgent) -> tuple[dict | None, bool]:
+                 agent_factory=DailyBriefAgent,
+                 may_write: Callable[[], bool] | None = None) -> tuple[dict | None, bool]:
     """(brief, written_now). The stored brief when there is one; otherwise
     one written now and stored. (None, False) when it could not be written:
-    nothing is stored, so the next open or the next worker run tries again."""
+    nothing is stored, so the next open or the next worker run tries again.
+
+    `may_write` is asked just before a model call, never for a stored brief;
+    False means "serve the template" (the on-open path uses it for its
+    per-account ceiling)."""
     key = brief_hash(kundli, payload, tone, mode, ayanamsha, node_type)
     found = stored_brief(db, kundli.id, payload, key)
     if found:
@@ -109,6 +115,8 @@ def ensure_brief(db: Session, kundli, payload: dict, *, tone: str, mode: str,
         found = stored_brief(db, kundli.id, payload, key)
         if found:
             return found, False
+        if may_write is not None and not may_write():
+            return None, False
         try:
             return _write(db, kundli, payload, key, tone=tone, mode=mode, trigger=trigger,
                           agent_factory=agent_factory)

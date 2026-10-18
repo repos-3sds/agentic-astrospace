@@ -9,7 +9,6 @@ import { CompatibilityPayload, Kundli, VedicAll } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { KundliChartComponent } from '../../../shared/kundli-chart/kundli-chart.component';
-import { MarkdownPipe } from '../../../shared/markdown.pipe';
 import { SectionCardComponent } from '../../../shared/section-card/section-card.component';
 
 interface CompatDetail {
@@ -30,7 +29,7 @@ interface CompatDetail {
 
 @Component({
   selector: 'app-compat-tab',
-  imports: [FormsModule, Select, Skeleton, MarkdownPipe, SectionCardComponent, KundliChartComponent],
+  imports: [FormsModule, Select, Skeleton, SectionCardComponent, KundliChartComponent],
   templateUrl: './compat-tab.component.html',
   styleUrl: './compat-tab.component.scss',
 })
@@ -68,9 +67,6 @@ export class CompatTabComponent {
   });
   protected readonly score = computed(() => this.compatibility());
 
-  protected readonly result = signal<string | null>(null);
-  protected readonly error = signal<string | null>(null);
-  protected readonly loading = signal(false);
   protected readonly chartLoading = computed(() =>
     !!this.partnerId() && (!this.activeVedic() || !this.partnerVedic() || !this.compatibility()) && !this.chartError(),
   );
@@ -92,8 +88,6 @@ export class CompatTabComponent {
     this.partnerId.set(partnerId);
     this.partnerVedic.set(null);
     this.compatibility.set(null);
-    this.result.set(null);
-    this.error.set(null);
     this.chartError.set(null);
     if (!partnerId) return;
 
@@ -108,40 +102,6 @@ export class CompatTabComponent {
       this.compatibility.set(score);
     } catch (e) {
       this.chartError.set((e as Error).message);
-    }
-  }
-
-  protected async runAi(): Promise<void> {
-    const a = this.store.active();
-    const b = this.partner();
-    if (!a || !b) return;
-
-    const person = (k: Kundli) => ({
-      name: k.name,
-      year: k.birth_year,
-      month: k.birth_month,
-      day: k.birth_day,
-      hour: k.birth_hour,
-      minute: k.birth_minute,
-      city: k.birth_city,
-      nation: k.birth_nation,
-    });
-
-    this.loading.set(true);
-    this.error.set(null);
-    this.result.set(null);
-    try {
-      const data = await this.api.post<Record<string, string>>('/compatibility', {
-        person1: person(a),
-        person2: person(b),
-      });
-      this.result.set(
-        data['compatibility'] || data['analysis'] || data['content'] || JSON.stringify(data),
-      );
-    } catch (e) {
-      this.error.set((e as Error).message);
-    } finally {
-      this.loading.set(false);
     }
   }
 

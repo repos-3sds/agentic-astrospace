@@ -18,7 +18,6 @@ from astrospace.logging_config import TraceContextMiddleware, configure_logging
 configure_logging()
 
 from astrospace.db.database import init_db
-from astrospace.api.routes import router as core_router
 from astrospace.api.kundli_routes import router as kundli_router
 from astrospace.api.reading_routes import router as reading_router
 from astrospace.api.vedic_routes import router as vedic_router
@@ -121,7 +120,6 @@ async def entitlement_denied_handler(_request, exc: EntitlementDenied):
     return JSONResponse(status_code=402, content=exc.decision.denial())
 
 # API routers
-app.include_router(core_router)
 app.include_router(auth_router)
 app.include_router(settings_router)
 app.include_router(kundli_router)

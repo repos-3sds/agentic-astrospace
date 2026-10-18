@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime, timezone as dt_timezone
 from functools import lru_cache
 from typing import Literal, Optional
 from zoneinfo import ZoneInfo
@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from .. import ratelimit
 from ..agents.daily_brief_agent import daily_brief_enabled
 from ..context.daily_brief_store import ensure_brief
 from ..context import KeywordRouter, assemble, daily_guidance, domain_ids
@@ -135,6 +136,25 @@ def daily(
     return _daily_payload(kundli, ayanamsha, node_type, as_of, timezone, city, nation)
 
 
+def _utc_today() -> date:
+    return datetime.now(dt_timezone.utc).date()
+
+
+def _may_write_brief(user_id: str, payload: dict) -> bool:
+    """On open, only today's brief (yesterday or tomorrow allowed for zones
+    either side of UTC) is worth a model call, and only within the account's
+    ceiling. Every query parameter feeds the brief's cache key, so without
+    this a loop over `as_of` dates or cities was one paid call per request.
+    Other days get the templated brief, which the apps already show."""
+    try:
+        day = date.fromisoformat(payload["date"])
+    except (KeyError, TypeError, ValueError):
+        return False
+    if abs((day - _utc_today()).days) > 1:
+        return False
+    return ratelimit.take(user_id, "brief")
+
+
 @router.get("/{kundli_id}/daily/brief")
 def daily_brief(
     kundli_id: str,
@@ -164,7 +184,8 @@ def daily_brief(
     if not daily_brief_enabled():
         return {**base, "source": "template", "brief": None}
     value, written_now = ensure_brief(db, kundli, payload, tone=tone, mode=mode,
-                                      ayanamsha=ayanamsha, node_type=node_type, trigger="on_open")
+                                      ayanamsha=ayanamsha, node_type=node_type, trigger="on_open",
+                                      may_write=lambda: _may_write_brief(user.id, payload))
     if not value:
         return {**base, "source": "template", "brief": None}
     return {**base, **value, "cached": not written_now}

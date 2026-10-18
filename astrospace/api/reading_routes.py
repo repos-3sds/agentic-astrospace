@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from typing import Literal, Optional
+from .. import ratelimit
 from ..db import get_db
 from ..db import crud
 from ..core.cities import lookup_city
@@ -437,7 +438,12 @@ def generate_reading(
             raise HTTPException(status_code=429, detail=NEW_VERSION_LIMIT.format(
                 limit=MAX_NEW_VERSIONS_PER_DAY, period=body.period,
             ))
-        r = _generate_and_save(db, k, body.period, label, local_date, now_local, user.id)
+        ratelimit.require(user.id, "reading")
+        try:
+            r = _generate_and_save(db, k, body.period, label, local_date, now_local, user.id)
+        except Exception:
+            ratelimit.refund(user.id, "reading")
+            raise
         entry.reading_id = r.id
         return {"cached": False, **_reading_to_dict(r, label)}
     finally:

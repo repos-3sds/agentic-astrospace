@@ -58,7 +58,7 @@ and §6:
   `scripts/check_kb_manifest.py`.
 - `.env` holds real credentials. Never read it into the transcript, never commit
   it, and let the user edit it themselves.
-- Run the suite with `.venv/bin/python -m pytest tests/ -q` (1540 passing).
+- Run the suite with `.venv/bin/python -m pytest tests/ -q` (about 2500 passing).
   Frontend: `cd ui && npx ng test --watch=false --browsers=ChromeHeadless`.
 - Work deliberately left unbuilt goes in **one** backlog — the "Deferred
   backlog" section of
