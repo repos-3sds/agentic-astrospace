@@ -100,6 +100,7 @@
       <button class="side" type="button" [class.is-hidden]="count() === 0" (click)="askReset()">{{ resetArmed() ? 'Tap again' : 'Reset' }}</button>
     </div>
     @if (canChant()) {
+      @if (listenError() && listen() === 'idle') { <p class="auto-note is-error" role="status">{{ listenError() }}</p> }
       <p class="auto-note">{{ listen() === 'idle' ? (done() ? 'Play to listen once' : 'Auto: play repeats and counts each round') : listen() === 'loading' ? 'Loading' : done() ? 'Playing' : 'Chanting round ' + (count() + 1) + ' of ' + target() }}</p>
     }
   </div>

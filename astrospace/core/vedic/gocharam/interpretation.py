@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 import json
 from pathlib import Path
 
@@ -366,6 +367,15 @@ def _tone_for(rules: list[dict]) -> str:
     return "neutral"
 
 
+def _day_label(iso: str) -> str:
+    """'2026-11-01' -> '1 Nov 2026', for prose a reader sees (U15)."""
+    try:
+        d = date.fromisoformat(str(iso)[:10])
+    except ValueError:
+        return str(iso)
+    return f"{d.day} {d.strftime('%b')} {d.year}"
+
+
 def _range_outlook(timeline: dict, planets: set[str] | None = None) -> dict:
     days = int(timeline.get("scan_days", 0))
     future = [
@@ -393,8 +403,8 @@ def _range_outlook(timeline: dict, planets: set[str] | None = None) -> dict:
         last = future[-1]
         title = f"{len(future)} named change{'s' if len(future) != 1 else ''} in the next {days} days"
         reading = (
-            f"This {days}-day horizon begins with {first['title']} on {first['date']} "
-            f"and extends through {last['title']} on {last['date']}. "
+            f"This {days}-day horizon begins with {first['title']} on {_day_label(first['date'])} "
+            f"and extends through {last['title']} on {_day_label(last['date'])}. "
             f"It contains {supportive} supportive and {challenging} caution transition"
             f"{'s' if challenging != 1 else ''}."
         )
@@ -409,7 +419,7 @@ def _range_outlook(timeline: dict, planets: set[str] | None = None) -> dict:
         nearest_previous = previous[0]
         previous_title = f"{len(previous)} named change{'s' if len(previous) != 1 else ''} in the previous {days} days"
         previous_reading = (
-            f"The nearest earlier transition is {nearest_previous['title']} on {nearest_previous['date']}. "
+            f"The nearest earlier transition is {nearest_previous['title']} on {_day_label(nearest_previous['date'])}. "
             f"The complete {days}-day backward scan contains {len(previous)} named change"
             f"{'s' if len(previous) != 1 else ''}."
         )

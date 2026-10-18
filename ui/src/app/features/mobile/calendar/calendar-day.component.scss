@@ -7,6 +7,7 @@ header { h1 { @include m-h1; margin: 0 0 3px; color: var(--m-text); } p { @inclu
 .mcald-stale { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--m-gold) 34%, var(--m-border)); border-radius: 16px; background: var(--m-gold-soft); b { @include m-body-strong; color: var(--m-text); white-space: nowrap; } p { @include m-caption; flex: 1 1 0; min-width: 0; margin: 0; color: var(--m-muted); } button { @include m-cta-secondary; min-height: 34px; padding: 0 12px; color: var(--m-gold); background: var(--m-surface); } }
 .mcald-quality { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 18px; background: var(--m-good-soft); }
 .mcald-quality.bad { background: var(--m-gold-soft); }
+.mcald-quality.mixed { background: var(--m-raised); border: 1px solid var(--m-border); }
 .mcald-quality > span { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--m-surface); img { width: 19px; height: 19px; } }
 .mcald-quality div { display: flex; flex-direction: column; gap: 2px; b { @include m-body-strong; color: var(--m-text); } small { @include m-caption; color: var(--m-muted); } }
 .mcald-title { @include m-eyebrow; margin: 0; color: var(--m-muted); &.accent { color: var(--m-accent); } }

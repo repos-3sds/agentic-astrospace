@@ -223,7 +223,7 @@ def _varna(chart_a, chart_b) -> dict:
     a = _av(chart_a, "varna")
     b = _av(chart_b, "varna")
     points = 1 if VARNA_RANK.get(a, 0) >= VARNA_RANK.get(b, 0) else 0
-    return _row("Varna", points, 1, f"{a} with {b}, read from the first person's side (the groom's, in marriage matching)")
+    return _row("Varna", points, 1, f"{a} with {b}, the groom's first (the first person outside marriage matching)")
 
 
 def _vashya(chart_a, chart_b) -> dict:
@@ -232,7 +232,7 @@ def _vashya(chart_a, chart_b) -> dict:
     if a not in VASHYA_MATRIX or b not in VASHYA_MATRIX:
         return _row("Vashya", 0, 2, f"{a} with {b}; vashya group unavailable", verified=False)
     points = VASHYA_MATRIX[a][b]
-    note = f"{a} with {b}, read from the first person's side (the groom's, in marriage matching)"
+    note = f"{a} with {b}, the groom's first (the first person outside marriage matching)"
     return _row("Vashya", points, 2, note, verified=False)
 
 
