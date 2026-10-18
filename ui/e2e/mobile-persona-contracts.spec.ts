@@ -17,7 +17,7 @@ const modes = [
     id: 'practitioner',
     tabs: ['Today', 'Yantra', 'Dashas', 'Calendar', 'Settings'],
     insight: 'KUNDLI CALCULATION',
-    insightCta: 'Open Practitioner Workbench',
+    insightCta: 'Open your chart',
   },
 ] as const;
 

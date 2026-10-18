@@ -314,6 +314,13 @@ def remedy_plan(positions: dict, lagna_lon: float, dasha: dict | None) -> dict:
             "slot": "period",
             "trigger": {"kind": "dasha", "planet": ad, "level": "antardasha", "mahadasha": md},
             "reason_short": f"For your {md}–{ad} period",
+            # Guided and Balanced read this; the dasha pair and the citation
+            # stay behind "Why this practice?" (audit U3).
+            "reason_plain": (
+                f"For the stretch of life you're in now"
+                + (f", until {ad_period['end']}" if ad_period.get("end") else "")
+                + f": a steadying practice for {GRAHA_THEME[ad]}."
+            ),
             "reason_practitioner": (
                 f"{md} mahadasha, {ad} antardasha ({ad_period.get('start')} to "
                 f"{ad_period.get('end')}). "
@@ -348,7 +355,11 @@ def remedy_plan(positions: dict, lagna_lon: float, dasha: dict | None) -> dict:
             "domain_label": area["label"],
             "house": area["house"],
             "trigger": {"kind": "life_area", "house": area["house"], "domain": area["domain"]},
-            "reason_short": f"For {area['label'].lower()}, the area your period points at",
+            "reason_short": f"For {area['label'].lower()}",
+            "reason_plain": (
+                f"Your current period puts weight on {area['label'].lower()}. "
+                "This is the household prayer for that part of life."
+            ),
             "reason_practitioner": "; ".join(area["evidence"]) + " (whole-sign houses).",
             "evidence": {"house": area["house"], "score": area["score"], "basis": area["evidence"]},
             "source_status": "convention_dependent",
@@ -372,6 +383,10 @@ def remedy_plan(positions: dict, lagna_lon: float, dasha: dict | None) -> dict:
             "slot": "flag",
             "trigger": trigger,
             "reason_short": flag["reason_short"],
+            "reason_plain": (
+                "Your chart has this placement, and many families keep a simple "
+                "practice for it. This is a flag, not a verdict."
+            ),
             "reason_practitioner": flag["reason_short"] + ". This is a flag, not a verdict.",
             "framing": "This is a flag, not a verdict.",
             "evidence": trigger,

@@ -183,7 +183,17 @@ export class RemediesComponent {
     return practice.optional_cost ? 'Optional' : 'No tracking';
   }
 
+  protected readonly practitioner = computed(() => this.preferences.experienceMode() === 'practitioner');
+
+  /** Plain words first outside Practitioner; the dasha pair and houses sit behind "Why this practice?". */
   protected groupReason(group: RemedyRecommendationGroup): string {
+    const plain = !this.practitioner() && group.reason_plain;
+    return this.humanizeDates(plain || group.reason_practitioner);
+  }
+
+  /** The practitioner reasoning, when the card led with the plain line. */
+  protected groupWhy(group: RemedyRecommendationGroup): string | null {
+    if (this.practitioner() || !group.reason_plain) return null;
     return this.humanizeDates(group.reason_practitioner);
   }
 

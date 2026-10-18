@@ -812,6 +812,8 @@ export interface RemedyRecommendationGroup {
   domain_label?: string;
   observance_note?: string | null;
   reason_short: string;
+  /** Plan groups only: the reason in plain words, for Guided and Balanced. */
+  reason_plain?: string;
   reason_practitioner: string;
   evidence: unknown;
   source_status: string;

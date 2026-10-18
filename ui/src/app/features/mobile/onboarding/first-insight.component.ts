@@ -93,7 +93,8 @@ export class FirstInsightComponent {
     return planet ? STRENGTH_ACTION[planet] ?? 'take one deliberate, unhurried step' : null;
   });
 
-  protected readonly practitionerStyle = computed<KundliChartStyle>(() => 'north');
+  // The style chosen one step earlier, which promised it "changes how charts are drawn".
+  protected readonly practitionerStyle = computed<KundliChartStyle>(() => this.preferences.chartStyle());
 
   protected readonly practitionerChart = computed<VargaChart | null>(() => {
     const chart = this.chart();
@@ -130,7 +131,7 @@ export class FirstInsightComponent {
     // `ascendant` is tropical and used to win here; the avkahada nakshatra is
     // the Moon's, so the lagna's own nakshatra comes from `lagna`.
     const lagnaDetails = chart?.lagna;
-    const lagna = chart?.vargas?.['D1']?.lagna?.sign ?? lagnaDetails?.sign ?? chart?.avkahada?.['lagna'] ?? 'Not returned';
+    const lagna = chart?.vargas?.['D1']?.lagna?.sign ?? lagnaDetails?.sign ?? chart?.avkahada?.['lagna'] ?? '—';
     const lagnaNakshatra = lagnaDetails?.nakshatra
       ? `${lagnaDetails.nakshatra}${lagnaDetails.nakshatra_pada ? ` ${lagnaDetails.nakshatra_pada}` : ''}`
       : undefined;
@@ -208,7 +209,7 @@ export class FirstInsightComponent {
   }
 
   private planetMetric(planet: { dms?: string; sign?: string; nakshatra?: string; nakshatra_pada?: number } | undefined): string {
-    if (!planet) return 'Not returned';
+    if (!planet) return '—';
     const nakshatra = planet.nakshatra
       ? ` (${planet.nakshatra}${planet.nakshatra_pada ? ` ${planet.nakshatra_pada}` : ''})`
       : '';

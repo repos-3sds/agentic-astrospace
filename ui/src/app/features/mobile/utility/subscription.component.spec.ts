@@ -76,7 +76,7 @@ describe('SubscriptionComponent', () => {
     expect(text).toContain('₹299 a month');
     expect(text).toContain('₹99, once');
     expect(text).toContain('Every dosha by name, with its cancellations');
-    expect(text).toContain('Purchases open once AstroSpace is live');
+    expect(text).toContain('Plans can be bought once Siddha is live');
     const cta = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.cta')!;
     expect(cta.disabled).toBeTrue();
   });

@@ -1512,3 +1512,11 @@ From the Tier 0 fixes for `/mnt/project-files/audits/end-to-end-2026-10-18/findi
   needs a device to check the launch transition and clipping. The
   monochrome `ic_stat_siddha` part is done. *Hook:* `res/layout/widget_*.xml`,
   `res/drawable/widget_card.xml`.
+- [ ] **Keep a failed Ask question in history** (U-ask). *Why not built:*
+  the stream deliberately persists nothing when generation or verification
+  fails, so a failed turn can't be replayed as if it were an answer. The
+  failure copy now says the question is still on screen and that a retry
+  doesn't use an answer. *Unblock:* store the question with a
+  `status='failed'` row that history shows as "Not answered · Try again"
+  and that the replay path skips. *Hook:* `astrospace/api/ask_stream_routes.py`
+  failure branch, `ask-answer.component.ts` `failureCopy`.

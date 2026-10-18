@@ -522,6 +522,8 @@ export interface YoginiDashaPayload {
 
 export interface YogaResult {
   rule_id?: string;
+  /** The KB's plain-words line, shown first outside Practitioner. */
+  lay_explanation?: string;
   name: string;
   category: string;
   active: boolean;
@@ -555,6 +557,8 @@ export interface ManglikException {
 
 export interface ManglikPayload {
   rule_id?: string;
+  /** The KB's plain-words line, shown first outside Practitioner. */
+  lay_explanation?: string;
   name: string;
   active: boolean;
   severity: string;
@@ -588,6 +592,8 @@ export interface GandantaHit {
 
 export interface GandantaPayload {
   rule_id?: string;
+  /** The KB's plain-words line, shown first outside Practitioner. */
+  lay_explanation?: string;
   name: string;
   active: boolean;
   severity: string;
@@ -611,6 +617,8 @@ export interface GrahanHit {
 
 export interface GrahanPayload {
   rule_id?: string;
+  /** The KB's plain-words line, shown first outside Practitioner. */
+  lay_explanation?: string;
   name: string;
   active: boolean;
   severity: string;
@@ -1059,6 +1067,9 @@ export interface GocharamDomainReading {
   title: string;
   tone: 'neutral' | 'supportive' | 'challenging' | 'mixed';
   main_theme: string;
+  /** Plain words for Guided and Balanced: no house numbers or counts. */
+  plain_theme?: string;
+  reading_plain?: string;
   rationale: string;
   reading: string;
   strengths: string[];
@@ -1093,6 +1104,7 @@ export interface GocharamInterpretation {
   synthesis: {
     tone: 'supportive' | 'challenging' | 'mixed' | 'neutral';
     headline: string;
+    plain_headline?: string;
     counts: { supportive: number; mixed: number; challenging: number };
     guided_summary: string;
     balanced_context: string;

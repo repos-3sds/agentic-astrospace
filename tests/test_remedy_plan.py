@@ -115,6 +115,21 @@ def test_flag_only_when_present():
     assert "flag, not a verdict" in flag["safety_note"]
 
 
+@pytest.mark.parametrize("md,ad", [("Venus", "Saturn"), ("Jupiter", "Ketu"), ("Saturn", "Venus")])
+def test_every_group_has_a_plain_reason_without_jargon(md, ad):
+    # Guided and Balanced read reason_plain (audit U3); the dasha pair, house
+    # numbers and the citation stay in reason_practitioner.
+    debilitated = {**BLAND, "Saturn": {"lon": 29.0}}
+    for group in rp.remedy_plan(debilitated, 15.0, _dasha(md, ad))["groups"]:
+        plain = group["reason_plain"]
+        assert plain and plain != group["reason_practitioner"]
+        for jargon in ("mahadasha", "antardasha", "houses?", "BPHS", "whole-sign"):
+            assert not re.search(rf"\b{jargon}\b", plain)
+        assert not re.search(r"\b(1[0-2]|[1-9])(st|nd|rd|th)\b", plain)
+        if group["slot"] == "flag":
+            assert "flag, not a verdict" in plain
+
+
 def test_no_dasha_still_returns_a_supportive_result():
     plan = rp.remedy_plan(BLAND, 15.0, None)
     assert plan["count"] == len(plan["groups"]) <= 1
