@@ -35,6 +35,17 @@
                 <data android:scheme="app.asksiddha.mobile" android:host="auth" android:pathPrefix="/callback" />
             </intent-filter>
 
+            <!-- Email and web links to asksiddha.app/m/... open the app when it is
+                 installed (verified through /.well-known/assetlinks.json on
+                 Firebase Hosting; see docs/custom_domain.md). Without the app,
+                 or before verification, they open the landing page. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="asksiddha.app" android:pathPrefix="/m/" />
+            </intent-filter>
+
             <intent-filter android:autoVerify="false">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

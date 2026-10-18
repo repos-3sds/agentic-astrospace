@@ -22,6 +22,7 @@ import { SubhashitaSheetComponent } from '../subhashita/subhashita-sheet.compone
 import { WidgetBridgeService } from '../../../core/widget-bridge.service';
 import { deepLinkArrivedAt } from '../../../core/deep-link-arrival';
 import { activeTabRoots } from '../../../core/tab-roots';
+import { AppLinksService } from '../../../core/app-links.service';
 
 interface MobileTab {
   commands: string[];
@@ -106,6 +107,7 @@ export class MobileShellComponent {
     inject(DestroyRef).onDestroy(() => activeTabRoots.set([]));
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
     this.widgets.start();
+    inject(AppLinksService).start();
     void this.offerDailyVerse();
     // A phone left with the app open overnight comes back without a cold
     // start, so the next morning's first look counts as the day's first open.
