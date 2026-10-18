@@ -5,6 +5,7 @@ describe('story card', () => {
     date: '2026-10-17', id: 'gita-2-47', source: 'Bhagavad Gita', ref: '2.47',
     sanskrit: 'कर्मण्येवाधिकारस्ते मा फलेषु कदाचन।\nमा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि॥',
     english: 'Your part is the work itself, never its fruits. Do not work for the reward, and do not walk away from the work.',
+    meaning: 'Do your best work and let go of worrying about the outcome.',
   };
 
   it('is a 9:16 status image', async () => {
@@ -21,6 +22,7 @@ describe('story card', () => {
     const text = shareText(verse);
     expect(text).toContain(verse.sanskrit);
     expect(text).toContain('— Bhagavad Gita 2.47');
+    expect(text).toContain(verse.meaning);
     expect(text).toContain('https://asksiddha.app');
   });
 });

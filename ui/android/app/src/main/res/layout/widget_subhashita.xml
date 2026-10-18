@@ -34,18 +34,22 @@
             android:src="@drawable/widget_ic_share" />
     </LinearLayout>
 
+    <!-- The verse's one-line meaning, which always fits; the full verse is a
+         tap away. A five-line verse cut off mid-sentence read as half a
+         thought (Hawk, 2026-10-18). -->
     <TextView
-        android:id="@+id/english"
+        android:id="@+id/meaning"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="4dp"
         android:layout_weight="1"
         android:ellipsize="end"
+        android:fontFamily="serif"
         android:gravity="center_vertical"
-        android:maxLines="5"
+        android:maxLines="4"
         android:textColor="@color/widget_verse_text"
-        android:textSize="16sp"
-        android:textStyle="bold" />
+        android:textSize="17sp"
+        android:textStyle="italic" />
 
     <TextView
         android:id="@+id/source"

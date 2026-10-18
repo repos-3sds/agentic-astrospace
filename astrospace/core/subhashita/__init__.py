@@ -2,7 +2,8 @@
 
 The corpus (``subhashitas.json``) is curated, not generated. Every entry
 carries its source and verse reference and the URL its Sanskrit was checked
-against; the English is a short plain rendering written for this app. The
+against; the English is a short plain rendering written for this app, and the
+meaning is one plain line on what the verse asks of the reader. The
 sources, method and what was left out (and why) are in
 ``docs/subhashita_corpus.md``; ``scripts/subhashita/build_corpus.py`` rebuilds it.
 
@@ -22,7 +23,7 @@ EPOCH = date(2026, 1, 1)
 TITLE = "Today's Subhashita"
 
 _CORPUS = Path(__file__).with_name("subhashitas.json")
-_FIELDS = ("id", "source", "ref", "sanskrit", "english")
+_FIELDS = ("id", "source", "ref", "sanskrit", "english", "meaning")
 
 
 @lru_cache(maxsize=1)

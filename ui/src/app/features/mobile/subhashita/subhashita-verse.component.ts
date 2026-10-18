@@ -19,11 +19,22 @@ import { longDate, shareText, storyCardFile } from './story-card';
   template: `
     @let v = verse();
     <figure class="card">
-      <span class="brand" aria-hidden="true">SIDDHA</span>
-      <figcaption class="eyebrow">{{ title }} · {{ date(v.date) }}</figcaption>
+      <span class="brand" aria-hidden="true">Siddha</span>
+      <span class="ornament" aria-hidden="true"></span>
+      <figcaption>
+        <span class="eyebrow">{{ title }}</span>
+        <span class="date">{{ date(v.date) }}</span>
+      </figcaption>
       <p class="sanskrit" lang="sa">{{ v.sanskrit }}</p>
-      <blockquote class="english">{{ v.english }}</blockquote>
-      <p class="source">— {{ v.source }} {{ v.ref }}</p>
+      <span class="rule" aria-hidden="true"></span>
+      <blockquote class="english">“{{ v.english }}”</blockquote>
+      @if (v.meaning) {
+        <div class="meaning">
+          <span class="label">What it means</span>
+          <p>{{ v.meaning }}</p>
+        </div>
+      }
+      <p class="source">{{ v.source }} {{ v.ref }}</p>
     </figure>
 
     <div class="actions">

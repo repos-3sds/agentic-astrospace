@@ -97,7 +97,7 @@ export class WidgetBridgeService {
 
   publishSubhashita(days: readonly Subhashita[]): void {
     this.publish('subhashita', {
-      days: days.map(({ date, english, source, ref }) => ({ date, english, source, ref })),
+      days: days.map(({ date, english, meaning, source, ref }) => ({ date, english, meaning, source, ref })),
     });
   }
 

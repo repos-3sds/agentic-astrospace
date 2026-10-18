@@ -20,11 +20,13 @@ public class SubhashitaWidget extends BaseWidget {
 
         JSONObject verse = WidgetStore.forToday(WidgetStore.get(context, "subhashita"), "days");
         if (verse == null) {
-            views.setTextViewText(R.id.english, "A verse a day from the Bhagavad Gita, Chanakya Niti and the Puranas.");
+            views.setTextViewText(R.id.meaning, "A verse a day from the Bhagavad Gita, Chanakya Niti and the Puranas.");
             views.setTextViewText(R.id.source, "Open Siddha to load today’s verse");
             return views;
         }
-        views.setTextViewText(R.id.english, "“" + verse.optString("english") + "”");
+        // Older app versions sent no meaning; the verse itself stands in.
+        String meaning = verse.optString("meaning");
+        views.setTextViewText(R.id.meaning, meaning.isEmpty() ? "“" + verse.optString("english") + "”" : meaning);
         views.setTextViewText(R.id.source, "— " + verse.optString("source") + " " + verse.optString("ref"));
         return views;
     }

@@ -4,7 +4,10 @@ Status: canonical. Sources, method and exclusions for Today's Subhashita (astros
 # Quote-of-the-day corpus: sources and method
 
 `quotes.json` holds 122 entries. Each one has `id`, `source`, `ref`, `sanskrit`,
-`english` and `verified_from`. The array is ordered so that no two neighbouring
+`english`, `meaning` and `verified_from`. `meaning` is one plain line on what the
+verse asks of the reader, shown under it on every surface (added 2026-10-18,
+when a verse on its own read to Hawk as half a sentence); the lines live in
+`scripts/subhashita/meanings.json`, which the build script merges in. The array is ordered so that no two neighbouring
 entries share a `source`, and the last entry's source differs from the first, so
 `index = day mod 122` never shows the same source two days running.
 
