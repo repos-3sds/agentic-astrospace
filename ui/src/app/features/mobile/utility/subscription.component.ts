@@ -187,9 +187,9 @@ export class SubscriptionComponent implements OnInit {
   protected storeNote(): string | null {
     switch (this.store.unavailableReason()) {
       case 'web':
-        return 'Plans are bought in the AstroSpace app on your phone, through Google Play or the App Store.';
+        return 'Plans are bought in the Siddha app on your phone, through Google Play or the App Store.';
       case 'not_configured':
-        return 'Purchases open once AstroSpace is live in Google Play and the App Store.';
+        return 'Plans can be bought once Siddha is live in Google Play and the App Store.';
       case 'failed':
         return 'The store did not answer. Check your connection and open Plans again.';
       default:

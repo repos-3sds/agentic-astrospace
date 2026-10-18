@@ -286,6 +286,36 @@ class GocharamInferenceEngine:
         return base
 
 
+# Plain words for Guided and Balanced: what each life area covers and one
+# thing to do, with no house numbers, placement names or witness counts. The
+# evidence stays in `rationale` and in the per-planet rows.
+PLAIN_DOMAIN_WORDS = {
+    "career": ("work, standing and the people you work with",
+               "Finish what you can show, and write down decisions that matter."),
+    "money": ("earning, saving and spending",
+              "Keep spending to plans you made in a calm moment."),
+    "relationships": ("partners, family and the promises between you",
+                      "Say plainly what you need, and keep the promises you make."),
+    "health_energy": ("energy, rest and daily routines",
+                      "Pace the week and protect your sleep."),
+    "learning_travel": ("study, teachers and journeys",
+                        "Give a little regular time to learning something real."),
+    "inner_life": ("your inner steadiness and quiet time",
+                   "Keep a short daily pause for yourself."),
+}
+
+PLAIN_TONE = {
+    "supportive": ("This is an easier stretch for {theme}.",
+                   "Things are broadly on your side right now"),
+    "challenging": ("This stretch asks for more care with {theme}.",
+                    "This is a stretch to take things carefully"),
+    "mixed": ("There is help and some pressure around {theme}.",
+              "Some parts of life are easier right now, others need care"),
+    "neutral": ("Nothing strong is pushing {theme} either way.",
+                "This is a fairly even stretch"),
+}
+
+
 def _synthesis(rules: list[dict]) -> dict:
     baseline = [rule for rule in rules if rule["kind"] == "baseline_placement"]
     supportive = [rule for rule in baseline if rule["effective_verdict"] == "supportive"]
@@ -313,8 +343,10 @@ def _synthesis(rules: list[dict]) -> dict:
             "mixed": len(mixed),
             "challenging": len(challenging),
         },
-        "guided_summary": f"{headline}. Focus on one practical response at a time rather than treating any single transit as a guarantee.",
-        "balanced_context": f"{headline}. The leading placement evidence is {names}. Tap a planet to see what blocks or supports it, how strong it is, and when it moves.",
+        "plain_headline": PLAIN_TONE[tone][1],
+        "guided_summary": f"{headline}. Take one practical step at a time; no single transit is a guarantee.",
+        "balanced_context": f"{headline}. Each life area below says what is easier and what needs care. Tap a planet for the detail.",
+        "evidence_summary": f"Leading placements: {names}." if names else "",
         "practitioner_deep_dive": (
             f"Resolved {len(baseline)} baseline placements: {len(supportive)} supportive, "
             f"{len(mixed)} modified/mixed and {len(challenging)} challenging. "
@@ -444,6 +476,8 @@ def _domain_readings(rules: list[dict], timeline: dict) -> list[dict]:
                 "title": definition["title"],
                 "tone": tone,
                 "main_theme": main_theme,
+                "plain_theme": PLAIN_TONE[tone][0].format(theme=PLAIN_DOMAIN_WORDS[definition["id"]][0]),
+                "reading_plain": PLAIN_DOMAIN_WORDS[definition["id"]][1],
                 "rationale": (
                     f"This domain reads {', '.join(str(h) for h in sorted(definition['houses']))} from "
                     f"the natal Moon because {definition['house_rationale']}. "

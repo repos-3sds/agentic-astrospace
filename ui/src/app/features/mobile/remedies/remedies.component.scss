@@ -113,6 +113,12 @@
 }
 
 .rationale { @include m-body-small; color: var(--m-muted); margin: 0; }
+.why {
+  display: grid;
+  gap: 8px;
+  summary { @include m-caption; color: var(--m-accent-strong); cursor: pointer; }
+  .source { margin: 0; }
+}
 .source {
   @include m-caption;
   margin: -5px 0 0;

@@ -1031,8 +1031,8 @@ export class AskAnswerComponent {
             event.status === 'generation_failed' ? 'generation_failed' : 'verification_failed';
           this.updateAssistantMessage(assistantId, {
             content: status === 'generation_failed'
-              ? 'I could not reach the specialist cleanly enough to produce a grounded answer. Please try again in a moment.'
-              : 'I could not produce an answer that passed Siddha\'s grounding checks. Please try again, or ask a narrower question.',
+              ? 'Siddha couldn’t answer this just now. Your question is still here: tap Try again. It doesn’t use up an answer.'
+              : 'Siddha couldn’t give an answer it was sure of. Tap Try again, or ask a narrower question. It doesn’t use up an answer.',
             domain: event.domain ?? null,
             intent: event.intent ?? null,
             status,

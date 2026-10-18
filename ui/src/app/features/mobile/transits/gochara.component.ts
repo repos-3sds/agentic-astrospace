@@ -28,7 +28,7 @@ import { transitVerdictLabel } from './transit-verdict';
       } @else if (data(); as payload) {
         <section class="mtr-overall">
           <b>OVERALL · {{ verdictLabel(payload.gochara.interpretation.synthesis.tone) }}</b>
-          <h2>{{ payload.gochara.interpretation.synthesis.headline }}</h2>
+          <h2>{{ headline() }}</h2>
           <p class="m-selectable">{{ summary() }}</p>
         </section>
         <button class="mtr-listen" type="button" (click)="listenToTransits(payload)">
@@ -42,7 +42,7 @@ import { transitVerdictLabel } from './transit-verdict';
               <b>{{ domain.title }}</b>
               <em [attr.data-tone]="domain.tone === 'supportive' ? 'good' : 'warn'">{{ verdictLabel(domain.tone) }}</em>
             </div>
-            <small>{{ domain.main_theme }}</small>
+            <small>{{ domainTheme(domain) }}</small>
             <p>{{ domainMeaning(domain) }}</p>
             <strong class="mtr-action">{{ domainAction(domain) }}</strong>
           </button>
@@ -81,6 +81,13 @@ export class GocharaComponent {
     ) ?? [],
   );
   readonly domains = computed(() => this.data()?.gochara.interpretation.domains ?? []);
+  private readonly practitioner = computed(() => this.preferences.experienceMode() === 'practitioner');
+  /** Plain words outside Practitioner; the engine's own headline stays for Practitioner. */
+  readonly headline = computed(() => {
+    const synthesis = this.data()?.gochara.interpretation.synthesis;
+    if (!synthesis) return '';
+    return this.practitioner() ? synthesis.headline : synthesis.plain_headline || synthesis.headline;
+  });
   readonly summary = computed(() => {
     const synthesis = this.data()?.gochara.interpretation.synthesis;
     if (!synthesis) return '';
@@ -121,7 +128,12 @@ export class GocharaComponent {
 
   protected readonly verdictLabel = transitVerdictLabel;
 
+  protected domainTheme(domain: GocharamDomainReading): string {
+    return this.practitioner() ? domain.main_theme : domain.plain_theme || domain.main_theme;
+  }
+
   protected domainMeaning(domain: GocharamDomainReading): string {
+    if (!this.practitioner() && domain.reading_plain) return domain.reading_plain;
     // The reading opens with the main theme, which the card already shows
     // directly above it.
     const reading = domain.reading?.startsWith(domain.main_theme)
@@ -138,6 +150,7 @@ export class GocharaComponent {
 
   protected domainAction(domain: GocharamDomainReading): string {
     const tone = domain.tone === 'supportive' ? 'Use this support' : 'Use care here';
+    if (!this.practitioner()) return `${tone}: ${domain.range_outlook.title}.`;
     const planets = domain.leading_planets.length ? ` Leading signal: ${domain.leading_planets.join(', ')}.` : '';
     return `${tone}: ${domain.range_outlook.title}.${planets}`;
   }

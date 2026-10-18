@@ -228,3 +228,17 @@ def test_baseline_rules_carry_computed_evidence_and_content_status():
         assert aspects, f"missing computed_evidence.special_aspect_houses for {row['id']}"
         expected_len = 3 if row["planet"] in {"Mars", "Jupiter", "Saturn"} else 1
         assert len(aspects) == expected_len, row["id"]
+
+
+def test_plain_transit_copy_has_no_house_numbers_or_counts(profile):
+    import re
+
+    interpretation = profile["gochara"]["interpretation"]
+    synthesis = interpretation["synthesis"]
+    texts = [synthesis["plain_headline"], synthesis["guided_summary"], synthesis["balanced_context"]]
+    for row in interpretation["domains"]:
+        texts += [row["plain_theme"], row["reading_plain"]]
+    for text in texts:
+        assert text
+        assert not re.search(r"\d", text), text
+        assert not re.search(r"\b(house|witness|placement evidence|supportive,)\b", text, re.I), text

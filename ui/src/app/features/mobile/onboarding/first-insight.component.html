@@ -40,7 +40,7 @@
       }
       @case ('practitioner') {
         <p class="kicker">KUNDLI CALCULATION</p>
-        <h1>Varga D1 Chart Rendered</h1>
+        <h1>Your birth chart (D1)</h1>
         <p class="lede practitioner-lede">{{ birthConstants() }}</p>
         <app-kundli-chart [chart]="practitionerChart()" [chartStyle]="practitionerStyle()" />
         <section class="metrics-card">
@@ -89,7 +89,7 @@
 @if (!loading() && hasActiveProfile()) {
   <footer [class.is-practitioner]="ahaMode() === 'practitioner'">
     @if (ahaMode() === 'practitioner') {
-      <a class="primary" routerLink="/m/chart">Open Practitioner Workbench</a>
+      <a class="primary" routerLink="/m/chart">Open your chart</a>
       <a class="secondary" routerLink="/m/transits">See today’s transits</a>
     } @else {
       <a class="listen" routerLink="/m/today" [queryParams]="{ listen: 1 }">

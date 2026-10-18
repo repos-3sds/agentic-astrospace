@@ -5,6 +5,7 @@ import { YogaLearningDetail, YogaLearningSheetComponent } from './yoga-learning-
 import { KundliStore } from '../../../core/kundli.store';
 import { DoshasPayload, ManglikPayload, YogaResult, YogasDoshasPayload } from '../../../core/models';
 import { VedicService } from '../../../core/vedic.service';
+import { PreferencesService } from '../../../core/preferences.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
@@ -47,6 +48,7 @@ export class YogasDoshasComponent {
   protected readonly gate = inject(PlanGateService);
   private readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
+  private readonly preferences = inject(PreferencesService);
   readonly filter = signal<Filter>('all');
   readonly learningOpen = signal(false);
   readonly selectedLearning = signal<YogaLearningDetail | null>(null);
@@ -123,7 +125,7 @@ export class YogasDoshasComponent {
       title: yoga.name,
       tag: yoga.strength || this.statusLabel(yoga),
       tone: yoga.category.toLowerCase().includes('caution') ? 'bad' : yoga.verified ? 'good' : 'gold',
-      summary: yoga.rule || yoga.triggers.join(' · ') || 'Found in your chart.',
+      summary: this.summary(yoga) || yoga.triggers.join(' · ') || 'Found in your chart.',
       // The engine's notes are mostly for whoever maintains the rule
       // ("subsumed note added when…"); only a real cancellation is the reader's.
       cancelled: yoga.notes?.find((note) => /^cancelled\b/i.test(note)),
@@ -144,7 +146,7 @@ export class YogasDoshasComponent {
         title: doshas.manglik.name || 'Manglik Dosha',
         tag: doshas.manglik.active ? `FLAG · ${doshas.manglik.net_severity ?? doshas.manglik.severity}` : 'NOT PRESENT',
         tone: doshas.manglik.active ? 'bad' : 'neutral',
-        summary: doshas.manglik.rule,
+        summary: this.summary(doshas.manglik),
         cancelled: exception ? `Exception applies: ${exception.detail}` : undefined,
         convention: doshas.manglik.active ? DOSHA_CONVENTION : undefined,
         source: doshas.manglik.source_refs?.map((row) => `${row.source}: ${row.detail}`).join(' · ')
@@ -159,7 +161,7 @@ export class YogasDoshasComponent {
         title: row!.name,
         tag: row!.active ? `FLAG · ${row!.severity}` : 'NOT PRESENT',
         tone: row!.active ? 'bad' : 'neutral',
-        summary: row!.rule,
+        summary: this.summary(row!),
         convention: row!.active ? DOSHA_CONVENTION : undefined,
         source: row!.source_refs?.map((source) => `${source.source}: ${source.detail}`).join(' · ')
           ?? row!.source_status
@@ -167,6 +169,16 @@ export class YogasDoshasComponent {
       });
     }
     return items;
+  }
+
+  /**
+   * What the combination means, in plain words, outside Practitioner; the
+   * classical condition stays in Practitioner and under "Learn this yoga"
+   * (audit U4).
+   */
+  private summary(row: { rule: string; lay_explanation?: string }): string {
+    if (this.preferences.experienceMode() !== 'practitioner' && row.lay_explanation) return row.lay_explanation;
+    return row.rule;
   }
 
   private statusLabel(row: YogaResult): string {

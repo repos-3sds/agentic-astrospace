@@ -38,7 +38,15 @@
       </div>
 
       <p class="rationale m-selectable">{{ groupReason(group) }}</p>
-      <p class="source" [class.is-citation]="!!group.slot">{{ sourceLabel(group) }}</p>
+      @if (groupWhy(group); as why) {
+        <details class="why">
+          <summary>Why this practice?</summary>
+          <p class="rationale m-selectable">{{ why }}</p>
+          <p class="source" [class.is-citation]="!!group.slot">{{ sourceLabel(group) }}</p>
+        </details>
+      } @else {
+        <p class="source" [class.is-citation]="!!group.slot">{{ sourceLabel(group) }}</p>
+      }
       <!-- Both fields have been in the payload all along; a remedy screen that
            hides them turns traditional practice into a prescription. -->
       @if (group.convention_dependent) {
