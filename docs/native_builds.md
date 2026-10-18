@@ -141,6 +141,11 @@ in Play Console):
 2. *Data safety*: unchanged unless a new SDK was added since the last upload.
 3. Bump `versionCode`, build the signed AAB on the Mac, and test the build on
    the phone before it goes to closed testing.
+4. *Release notes* for the first build after #161: "Mantra counts now start
+   fresh each day, on your phone's date. A day finished just before the
+   update may show once more, or not at all." Old `completedDates` were UTC
+   dates, and the tracker now uses the local date (D22). This is intended,
+   so the dates are not rewritten.
 
 **Both.** The Supabase session lives in Keychain / Keystore-backed storage
 (`ui/src/app/core/session-storage.ts`), never in Preferences. Terms and the

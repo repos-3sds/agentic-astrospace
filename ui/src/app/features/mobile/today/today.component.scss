@@ -272,11 +272,18 @@
 .who { display: flex; min-width: 0; flex-direction: column; gap: 1px; }
 .name { @include m-body-strong; color: var(--m-text); margin: 0; }
 .date { @include m-caption; color: var(--m-muted); margin: 0; }
-.name,
 .date {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+// A long name wraps to a second line instead of "Namaste, Laks…" (U19).
+.name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 
 .iconbtn {
@@ -380,7 +387,9 @@
     0 18px 46px rgba(0, 0, 0, 0.24);
 }
 
-.card-head { display: flex; align-items: center; justify-content: space-between; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.card-head .eyebrow { min-width: 0; }
+.card-head .place { flex: 0 1 auto; min-width: 0; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .place {
   @include m-caption;
   color: var(--m-muted);

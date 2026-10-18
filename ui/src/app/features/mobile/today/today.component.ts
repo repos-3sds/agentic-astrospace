@@ -267,7 +267,7 @@ export class TodayComponent {
   private requestId = 0;
   protected readonly whyMode = computed(() => ({
     guided: 'Guided view - the life guidance first, with unfamiliar terms translated.',
-    balanced: 'Balanced view - guidance first, the calculation underneath.',
+    balanced: 'Balanced view: guidance first, the calculation underneath.',
     practitioner: 'Practitioner view - exact factors, conventions, and evidence.',
   })[this.preferences.experienceMode()]);
 

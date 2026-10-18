@@ -70,3 +70,13 @@
 }
 
 .assurance { @include m-caption; color: var(--m-muted); text-align: center; margin: 0; }
+
+.deleted {
+  @include m-body-small;
+  margin: 0 0 8px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--m-good-soft);
+  color: var(--m-text);
+  text-align: center;
+}

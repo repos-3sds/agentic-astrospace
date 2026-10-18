@@ -53,6 +53,8 @@ export class SearchComponent {
   // left the computed with no dependency and frozen at its first value.
   protected readonly query=signal('');
   protected readonly groups=GROUPS;
+  /** An empty Search opened blank (U31); these show what it can find. */
+  protected readonly suggestions=['Rahu Kalam','Ekadashi','Diwali','Remedies','Compatibility','Dark mode'];
   protected readonly results=computed(()=>{
     const words=this.query().trim().toLowerCase().split(/\s+/).filter(Boolean);
     if(!words.length)return [];

@@ -215,3 +215,10 @@
 
   &:disabled { opacity: 0.45; cursor: default; }
 }
+
+// At 320 px "Pick dates" ran off the screen; small phones wrap the range
+// chips onto two lines instead of scrolling them (U19).
+@media (max-width: 359px) {
+  .ranges { display: flex; flex-wrap: wrap; overflow: visible; mask-image: none; animation: none; }
+  .range { flex: 1 1 auto; }
+}
