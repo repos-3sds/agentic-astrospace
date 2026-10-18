@@ -9,6 +9,7 @@ import {
   OnDestroy,
   Output,
   ViewChild,
+  inject,
 } from '@angular/core';
 import { drawGalaxy } from './galaxy-draw';
 
@@ -146,7 +147,8 @@ import { drawGalaxy } from './galaxy-draw';
       h1 {
         margin: 0;
         font-family: 'Samarkan', 'Cormorant Garamond', serif;
-        font-size: clamp(42px, 13vw, 72px);
+        /* --text-zoom undoes the phone's font-size setting (matchDesignedTextSize). */
+        font-size: calc(clamp(42px, 13vw, 72px) / var(--text-zoom, 1));
         font-weight: 500;
         letter-spacing: 0;
         line-height: 0.94;
@@ -167,7 +169,7 @@ import { drawGalaxy } from './galaxy-draw';
       p {
         margin: 0;
         color: color-mix(in srgb, currentColor 70%, transparent);
-        font: 700 13px/1.4 'Inter', system-ui, sans-serif;
+        font: 700 calc(13px / var(--text-zoom, 1)) / 1.4 'Inter', system-ui, sans-serif;
         letter-spacing: 0.16em;
         text-transform: uppercase;
       }
@@ -220,6 +222,7 @@ export class SplashComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Output() readonly finished = new EventEmitter<void>();
   @ViewChild('galaxy') private galaxy?: ElementRef<HTMLCanvasElement>;
 
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private timer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnChanges(): void {
@@ -227,9 +230,29 @@ export class SplashComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   ngAfterViewInit(): void {
+    this.matchDesignedTextSize();
     this.paintGalaxy();
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     this.timer = setTimeout(() => this.finished.emit(), reduceMotion ? 900 : this.duration);
+  }
+
+  /**
+   * Android's font-size setting scales WebView text (MainActivity.capTextZoom),
+   * so at 90% the wordmark came out smaller than the design while the mark did
+   * not. The splash is artwork, not reading text: measure the zoom and divide
+   * it back out.
+   */
+  private matchDesignedTextSize(): void {
+    const host = this.host.nativeElement;
+    const probe = document.createElement('span');
+    probe.style.cssText = 'position:absolute;visibility:hidden;font-size:100px;line-height:1;';
+    probe.textContent = 'M';
+    host.appendChild(probe);
+    const zoom = probe.getBoundingClientRect().height / 100;
+    probe.remove();
+    if (zoom > 0.5 && zoom < 2 && Math.abs(zoom - 1) > 0.02) {
+      host.style.setProperty('--text-zoom', zoom.toFixed(3));
+    }
   }
 
   ngOnDestroy(): void {
