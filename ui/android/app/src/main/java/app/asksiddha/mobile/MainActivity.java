@@ -18,6 +18,9 @@ public class MainActivity extends BridgeActivity {
 
     /** Must match the server (astrospace/notifications/push.py) and the manifest default. */
     static final String BELL_CHANNEL_ID = "siddha_bell";
+    /** Window alerts come several times a day: their own channel, at default
+     * importance, so a reader can quiet them and keep the morning reading (N12). */
+    static final String WINDOWS_CHANNEL_ID = "siddha_windows";
 
     /**
      * The WebView scales text by the system font size, up to 200%. The
@@ -36,7 +39,7 @@ public class MainActivity extends BridgeActivity {
         super.onCreate(savedInstanceState);
         matchLaunchScreenToTheme();
         capTextZoom();
-        createBellChannel();
+        createChannels();
         WidgetsPlugin.handle(getIntent());
         Widgets.refreshAll(this);
     }
@@ -82,23 +85,34 @@ public class MainActivity extends BridgeActivity {
     }
 
     /**
-     * Android fixes a channel's sound when the channel is created, so it has
-     * to exist before the first push arrives. Creating an existing channel is
-     * a no-op, and the user can still change the sound in system settings.
+     * Android fixes a channel's sound and importance when the channel is
+     * created, so each has to exist before the first push arrives. Creating
+     * an existing channel only updates its name and description, and the
+     * user can still change the sound in system settings. siddha_bell keeps
+     * its id: it is the manifest default, which older builds and any unknown
+     * channel fall back to.
      */
-    private void createBellChannel() {
+    private void createChannels() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
         NotificationManager manager = getSystemService(NotificationManager.class);
         if (manager == null) return;
-        NotificationChannel channel = new NotificationChannel(
-            BELL_CHANNEL_ID, "Siddha notifications", NotificationManager.IMPORTANCE_HIGH);
-        channel.setDescription("Morning brief, window alerts and reminders");
+        manager.createNotificationChannel(belled(
+            BELL_CHANNEL_ID, "Daily reading and verse", NotificationManager.IMPORTANCE_HIGH,
+            "Your morning reading and today's Subhashita"));
+        manager.createNotificationChannel(belled(
+            WINDOWS_CHANNEL_ID, "Good and careful times", NotificationManager.IMPORTANCE_DEFAULT,
+            "A heads-up before a good or careful window in your day"));
+    }
+
+    private NotificationChannel belled(String id, String name, int importance, String description) {
+        NotificationChannel channel = new NotificationChannel(id, name, importance);
+        channel.setDescription(description);
         Uri sound = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.temple_bell);
         AudioAttributes attributes = new AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_NOTIFICATION)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build();
         channel.setSound(sound, attributes);
-        manager.createNotificationChannel(channel);
+        return channel;
     }
 }

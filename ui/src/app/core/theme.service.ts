@@ -1,5 +1,5 @@
 import { Injectable, effect, signal } from '@angular/core';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, SystemBars, SystemBarsStyle } from '@capacitor/core';
 
 const STORAGE_KEY = 'astrospace-theme';
 export type ThemePreference = 'system' | 'light' | 'dark';
@@ -84,9 +84,10 @@ export class ThemeService {
   private async applyNativeBars(dark: boolean): Promise<void> {
     if (!Capacitor.isNativePlatform()) return;
     try {
-      const { StatusBar, Style } = await import('@capacitor/status-bar');
-      await StatusBar.setStyle({ style: dark ? Style.Dark : Style.Light });
-      await StatusBar.setBackgroundColor({ color: dark ? '#17130F' : '#FAF7F0' });
+      // SystemBars styles the status bar and Android's navigation bar
+      // together; StatusBar left the nav-bar buttons dark on the dark theme.
+      // The app draws edge to edge, so there is no bar colour to set (N10).
+      await SystemBars.setStyle({ style: dark ? SystemBarsStyle.Dark : SystemBarsStyle.Light });
     } catch {
       // Native chrome should never block theme application.
     }

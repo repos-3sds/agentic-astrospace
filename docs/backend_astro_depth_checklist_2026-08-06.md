@@ -1581,3 +1581,57 @@ From the Tier 0 fixes for `/mnt/project-files/audits/end-to-end-2026-10-18/findi
   Add it to `/me/export` and to account deletion, then move each
   `astrospace.mobile.notes.draft.<profile>` into it on first open.
   *Hook:* `ui/src/app/features/mobile/notes/notes.component.ts`.
+
+## Deferred backlog — Tier 2 audit follow-ups (2026-10-18)
+
+From the end-to-end audit (2026-10-18). Each needs a device, a new
+dependency, or is a project rather than a fix.
+
+- [ ] **Worker and Ask layering** (I8). *Why not built:* moving
+  `_daily_payload` and its cache out of `api/context_routes.py` touches the
+  worker, three notification jobs and both Ask routes; no reader-facing
+  change, so it waits for a quiet week. *Unblock:* an
+  `astrospace/context/daily_service.py` raising domain errors, routers
+  mapping them to HTTP; one orchestrator-owned function for terminal texts.
+  *Hook:* `notifications/daily_briefs.py` import of `_daily_payload`.
+- [ ] **One validated settings object** (I9). *Why not built:* 36 env reads
+  in 23 modules; a fail-fast boot check could take Cloud Run down on a
+  variable that is optional today. *Unblock:* `astrospace/config.py` with
+  `pydantic-settings`, warn-only first, fail-fast after one deploy shows
+  no warnings; stop `load_dotenv()` per agent (`agents/base.py`).
+- [ ] **Postgres, Docker and contract tests in CI** (I12). *Why not built:*
+  new CI jobs (a `postgres:16` service applying the schema and migrations,
+  a `docker build`, a response-schema snapshot against `models.ts`, a
+  nightly real-model prompt set) are infrastructure work. *Hook:*
+  `.github/workflows/ci.yml`.
+- [ ] **UI translation layer** (I13). *Why not built:* about 120
+  components; needs Hawk's call on Telugu UI timing. *Unblock:* Transloco,
+  starting with the shell and Today. *Hook:* `ui/src/app/features/mobile/`.
+- [ ] **iOS edge-swipe back** (N2). *Why not built:* needs a
+  `CAPBridgeViewController` subclass and iPhone testing; the iOS build waits
+  on Apple enrollment. *Unblock:* set `allowsBackForwardNavigationGestures`,
+  disabled on `/m/today`. *Hook:* `ui/ios/App/App/Base.lproj/Main.storyboard`.
+- [ ] **Pull to refresh** (N13). *Why not built:* a gesture directive with
+  resistance and a spinner needs a phone to tune. *Hook:* the shell
+  scroller, `shell/scroll-memory.directive.ts`; screens' existing reloads.
+- [ ] **iOS Dynamic Type, WKWebView config, native Apple sign-in, push
+  presentation** (N15, N19, N20, N26). *Why not built:* each needs an
+  iPhone build and new plugins (`@capacitor/text-zoom`,
+  `@capacitor-community/apple-sign-in`). *Hook:* `capacitor.config.ts` `ios`,
+  `core/auth.service.ts`.
+- [ ] **Verified App Links / Universal Links** (N17). *Why not built:*
+  needs the release signing SHA-256 for `assetlinks.json` and the Apple
+  Team ID for the AASA. *Unblock:* both files under `firebase-public/.well-known/`,
+  an `autoVerify` filter for `https://asksiddha.app/m/*`.
+- [ ] **Native add-to-calendar, in-app review, app shortcuts** (N18, N23,
+  N24). *Why not built:* new plugins, each to check on a phone.
+  *Hook:* `core/calendar-export.ts`; Android `res/xml/shortcuts.xml`.
+- [ ] **System splash icon** (N21). *Why not built:* the blank system
+  splash is deliberate: the web intro (#173, #175) takes over at once in
+  the same colour, and an icon would show two splashes. Revisit only if
+  the hand-off is slowed.
+- [ ] **Notification actions** (N12, rest). *Why not built:* a "Listen"
+  action needs a native receiver. Window alerts now have their own channel.
+- [ ] **Conventions and Festival calendar controls** (U30). *Why not built:*
+  it belongs with the single ayanamsha setting (Tier 1 rest), which
+  changes the same screen. *Hook:* `features/mobile/settings/` conventions.

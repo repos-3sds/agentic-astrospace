@@ -37,6 +37,13 @@ FCM_ENDPOINT = "https://fcm.googleapis.com/v1/projects/{project}/messages:send"
 # (ui/android/.../MainActivity.java). Unknown channel ids fall back to the
 # app's default, so an older build still shows the push.
 ANDROID_CHANNEL_ID = "siddha_bell"
+# Window alerts have their own channel at default importance, so a reader can
+# quiet them in system settings and keep the morning reading (audit N12).
+ANDROID_CHANNELS = {"window_alert": "siddha_windows"}
+
+
+def android_channel(category: str | None) -> str:
+    return ANDROID_CHANNELS.get(category or "", ANDROID_CHANNEL_ID)
 FCM_DEAD_TOKEN_CODES = {"UNREGISTERED", "INVALID_ARGUMENT"}
 
 
@@ -123,7 +130,7 @@ class FcmTransport:
                 "data": data,
                 "android": {
                     "priority": "normal",
-                    "notification": {"channel_id": ANDROID_CHANNEL_ID},
+                    "notification": {"channel_id": android_channel(message.category)},
                 },
             }
         }
