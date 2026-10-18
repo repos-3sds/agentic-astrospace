@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 
 import { ApiService } from './api.service';
-import { FestivalWindowPayload } from './models';
+import { FestivalWindowPayload, VratDaysPayload } from './models';
 import { FestivalRegion, PreferencesService } from './preferences.service';
 
 /**
@@ -109,6 +109,19 @@ export class FestivalService {
     if (stored) this.values.set(key, stored);
     return stored ? this.filterPayload(stored, regions) : null;
   }
+
+  /** Ekadashi, Purnima, Amavasya and Pradosham in a window, kept like festivals. */
+  vratDays(place: FestivalPlace, fromDate: string, days: number): Promise<VratDaysPayload> {
+    const key = this.cacheKey(place, fromDate, days);
+    const memory = this.vrats.get(key);
+    if (memory) return memory;
+    const request = this.api.get<VratDaysPayload>(`/festivals/vrat-days?${key}`);
+    this.vrats.set(key, request);
+    request.catch(() => this.vrats.delete(key));
+    return request;
+  }
+
+  private readonly vrats = new Map<string, Promise<VratDaysPayload>>();
 
   private cacheKey(place: FestivalPlace, fromDate: string, days: number): string {
     const params = new URLSearchParams({

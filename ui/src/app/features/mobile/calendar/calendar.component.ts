@@ -3,7 +3,8 @@ import { RouterLink } from '@angular/router';
 
 import { FestivalService, festivalPlace, festivalRegionsLabel } from '../../../core/festival.service';
 import { KundliStore } from '../../../core/kundli.store';
-import { FestivalOccurrence } from '../../../core/models';
+import { DayQuality, FestivalOccurrence, VratDay } from '../../../core/models';
+import { PanchangaService } from '../../../core/panchanga.service';
 import { PreferencesService } from '../../../core/preferences.service';
 import { FestivalSheetComponent } from './festival-sheet.component';
 
@@ -11,6 +12,24 @@ interface CalendarCell {
   date: string;
   day: number;
   eventCount: number;
+  quality: DayQuality['quality'] | null;
+}
+
+/** One row of the month's list: a festival, or a vrat day with its rule. */
+type MonthRow =
+  | { type: 'festival'; date: string; festival: FestivalOccurrence }
+  | { type: 'vrat'; date: string; vrat: VratDay };
+
+const QUALITY_WORDS: Record<DayQuality['quality'], string> = {
+  good: 'a good day for you',
+  mixed: 'a mixed day',
+  care: 'a day to take care',
+};
+
+/** A named festival already covers the vrat (Vaikuntha Ekadashi, Kartika Purnima). */
+function coveredBy(vrat: VratDay, festivals: FestivalOccurrence[]): boolean {
+  const word = vrat.kind === 'pradosham' ? 'pradosh' : vrat.kind;
+  return festivals.some((f) => f.occurs_on === vrat.date && f.name.toLowerCase().includes(word));
 }
 
 @Component({
@@ -43,31 +62,56 @@ interface CalendarCell {
             <a
               [class.mcal-selected]="cell.date === todayDate()"
               [class.mcal-event]="cell.eventCount > 0"
+              [class.mcal-q-good]="cell.quality === 'good'"
+              [class.mcal-q-care]="cell.quality === 'care'"
               [routerLink]="['/m','calendar','day']"
               [queryParams]="{ date: cell.date }"
-              [attr.aria-label]="cellLabel(cell.date, cell.eventCount)"
+              [attr.aria-label]="cellLabel(cell.date, cell.eventCount, cell.quality)"
               [attr.aria-current]="cell.date === todayDate() ? 'date' : null"
             >{{ cell.day }}</a>
           }
         </section>
+        <div class="mcal-legend">
+          @if (qualityByDate().size) {
+            <span><i class="good"></i>Good day for {{ forWhom() }}</span>
+            <span><i class="care"></i>Take care</span>
+          }
+          <span><i class="event"></i>Festival or vrat</span>
+        </div>
+        @if (qualityNote(); as note) {
+          <details class="mcal-about"><summary>What the colours mean</summary><p>{{ note }}</p></details>
+        }
 
-        <p class="mcal-eyebrow">FESTIVALS</p>
+        <p class="mcal-eyebrow">FESTIVALS AND VRAT DAYS</p>
         @if (festivalError()) {
           <section class="mcal-state error"><b>Festivals could not load</b><p>{{ festivalError() }}</p><button type="button" (click)="reload()">Retry</button></section>
         }
-        @for (festival of visibleFestivals(); track festival.slug + festival.occurs_on) {
-          <button class="mcal-observance m-pressable festival" type="button" (click)="selectedFestival.set(festival)">
-            <span class="mcal-date-tile"><b>{{ dayNumber(festival.occurs_on) }}</b><small>{{ monthShort(festival.occurs_on) }}</small></span>
-            <span><b>{{ festival.name }}</b><small>{{ festival.description || festival.prep_guidance || 'Tap for observance details' }}</small><em>{{ regionsLabel(festival.regions) }}@if (festival.is_convention_dependent) { · Varies by tradition }</em></span>
-          </button>
+        @for (row of monthRows(); track row.type + row.date + (row.type === 'festival' ? row.festival.slug : row.vrat.kind)) {
+          @if (row.type === 'festival') {
+            <button class="mcal-observance m-pressable festival" type="button" (click)="selectedFestival.set(row.festival)">
+              <span class="mcal-date-tile"><b>{{ dayNumber(row.date) }}</b><small>{{ monthShort(row.date) }}</small></span>
+              <span><b>{{ row.festival.name }}</b><small>{{ row.festival.description || row.festival.prep_guidance || 'Tap for observance details' }}</small><em>{{ regionsLabel(row.festival.regions) }}@if (row.festival.is_convention_dependent) { · Varies by tradition }</em></span>
+            </button>
+          } @else {
+            <a class="mcal-observance m-pressable vrat" [routerLink]="['/m','calendar','day']" [queryParams]="{ date: row.date }">
+              <span class="mcal-date-tile"><b>{{ dayNumber(row.date) }}</b><small>{{ monthShort(row.date) }}</small></span>
+              <span><b>{{ row.vrat.name }}</b><small>{{ vratLine(row.vrat) }}</small><em>Varies by tradition</em></span>
+            </a>
+          }
         } @empty {
           @if (festivalLoading()) {
             <section class="mcal-observance mcal-skel-row" role="status" aria-label="Loading festivals">
               <span class="mcal-date-tile"></span><span><i></i><i></i><i></i></span>
             </section>
           } @else if (!festivalError()) {
-            <section class="mcal-state"><b>No festivals in this window</b><p>No major Hindu festivals were returned for {{ monthLabel() }}.</p></section>
+            <section class="mcal-state"><b>Nothing in this month</b><p>No festivals or vrat days were returned for {{ monthLabel() }}.</p></section>
           }
+        }
+        @if (vratRules().length) {
+          <details class="mcal-about">
+            <summary>How these dates are worked out</summary>
+            @for (rule of vratRules(); track rule.kind) { <p><b>{{ rule.label }}.</b> {{ rule.note }}</p> }
+          </details>
         }
       }
     </main>
@@ -81,13 +125,22 @@ export class CalendarComponent {
   protected readonly preferences = inject(PreferencesService);
   private readonly store = inject(KundliStore);
   private readonly festivals = inject(FestivalService);
+  private readonly panchanga = inject(PanchangaService);
   private festivalRequestId = 0;
+  private extrasRequestId = 0;
 
   protected readonly weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   protected readonly festivalLoading = signal(false);
   protected readonly festivalError = signal<string | null>(null);
   protected readonly festivalRows = signal<FestivalOccurrence[]>([]);
   protected readonly selectedFestival = signal<FestivalOccurrence | null>(null);
+  protected readonly vratRows = signal<VratDay[]>([]);
+  protected readonly qualityByDate = signal<Map<string, DayQuality['quality']>>(new Map());
+  protected readonly qualityNote = signal<string | null>(null);
+  protected readonly forWhom = computed(() => {
+    const active = this.store.active();
+    return !active || (active.relation || '').toLowerCase() === 'self' ? 'you' : active.name.split(' ')[0];
+  });
   protected readonly visibleMonth = signal(this.todayMonth());
   protected readonly activeId = computed(() => this.store.activeId());
   private monthSwipeStart: { x: number; y: number } | null = null;
@@ -105,21 +158,43 @@ export class CalendarComponent {
       counts[festival.occurs_on] = (counts[festival.occurs_on] ?? 0) + 1;
       return counts;
     }, {});
+    for (const vrat of this.vratRows()) festivalCounts[vrat.date] = (festivalCounts[vrat.date] ?? 0) + 1;
+    const quality = this.qualityByDate();
     return Array.from({ length: days }, (_, index) => {
       const date = this.isoDate(year, month, index + 1);
       return {
         date,
         day: index + 1,
         eventCount: festivalCounts[date] ?? 0,
+        quality: quality.get(date) ?? null,
       };
     });
   });
-  protected readonly visibleFestivals = computed(() => {
+  /** Each vrat kind's rule once, so the dates ship with the convention used. */
+  protected readonly vratRules = computed(() => {
+    const seen = new Map<string, { kind: string; label: string; note: string }>();
+    for (const row of this.monthRows()) {
+      if (row.type !== 'vrat' || seen.has(row.vrat.kind)) continue;
+      const label = row.vrat.kind === 'purnima' || row.vrat.kind === 'amavasya' ? 'Purnima and Amavasya'
+        : row.vrat.kind === 'ekadashi' ? 'Ekadashi' : 'Pradosham';
+      if ([...seen.values()].some((rule) => rule.label === label)) continue;
+      seen.set(row.vrat.kind, { kind: row.vrat.kind, label, note: row.vrat.observance_note });
+    }
+    return [...seen.values()];
+  });
+
+  /** Every festival and vrat day of the month, in date order; no cap (U7). */
+  protected readonly monthRows = computed<MonthRow[]>(() => {
     const month = this.visibleMonth();
-    return this.festivalRows()
-      .filter((festival) => festival.occurs_on.startsWith(month))
-      .sort((a, b) => a.occurs_on.localeCompare(b.occurs_on) || a.name.localeCompare(b.name))
-      .slice(0, 8);
+    const festivals = this.festivalRows().filter((festival) => festival.occurs_on.startsWith(month));
+    const rows: MonthRow[] = [
+      ...festivals.map((festival) => ({ type: 'festival' as const, date: festival.occurs_on, festival })),
+      ...this.vratRows()
+        .filter((vrat) => vrat.date.startsWith(month) && !coveredBy(vrat, festivals))
+        .map((vrat) => ({ type: 'vrat' as const, date: vrat.date, vrat })),
+    ];
+    const name = (row: MonthRow) => (row.type === 'festival' ? row.festival.name : row.vrat.name);
+    return rows.sort((a, b) => a.date.localeCompare(b.date) || name(a).localeCompare(name(b)));
   });
 
   constructor() {
@@ -129,6 +204,12 @@ export class CalendarComponent {
       const regions = this.preferences.festivalRegions();
       const month = this.visibleMonth();
       if (profileId) void this.loadFestivals(`${month}-01`, this.daysInVisibleMonth(), regions);
+    });
+    effect(() => {
+      const profileId = this.activeId();
+      this.preferences.panchangaContextKey();
+      const month = this.visibleMonth();
+      if (profileId) void this.loadMonthExtras(profileId, `${month}-01`, this.daysInVisibleMonth());
     });
   }
 
@@ -168,7 +249,7 @@ export class CalendarComponent {
   }
 
   protected canGoPrevious(): boolean {
-    return this.visibleMonth() > this.todayMonth();
+    return this.visibleMonth() > this.monthOffset(this.todayMonth(), -12);
   }
 
   protected canGoNext(): boolean {
@@ -178,12 +259,41 @@ export class CalendarComponent {
   protected readonly regionsLabel = festivalRegionsLabel;
 
   /** A screen reader heard only "17"; say the date and whether anything falls on it. */
-  protected cellLabel(date: string, eventCount: number): string {
+  protected cellLabel(date: string, eventCount: number, quality: DayQuality['quality'] | null = null): string {
     const [y, m, d] = date.split('-').map(Number);
     const label = new Date(y, m - 1, d).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
     const today = date === this.todayDate() ? ', today' : '';
+    const kind = quality ? `, ${QUALITY_WORDS[quality]}` : '';
     const events = eventCount ? `, ${eventCount} ${eventCount === 1 ? 'observance' : 'observances'}` : '';
-    return `${label}${today}${events}`;
+    return `${label}${today}${kind}${events}`;
+  }
+
+  protected vratLine(vrat: VratDay): string {
+    switch (vrat.kind) {
+      case 'ekadashi': return vrat.paksha === 'Shukla' ? 'Fast of the waxing moon\u2019s 11th day' : 'Fast of the waning moon\u2019s 11th day';
+      case 'purnima': return 'Full moon day';
+      case 'amavasya': return 'New moon day';
+      default: return 'Evening worship of Shiva on the 13th day';
+    }
+  }
+
+  /** Vrat days and the person's day quality: extras, so a failure leaves the festivals alone. */
+  private async loadMonthExtras(profileId: string, fromDate: string, days: number): Promise<void> {
+    const requestId = ++this.extrasRequestId;
+    this.vratRows.set([]);
+    this.qualityByDate.set(new Map());
+    this.qualityNote.set(null);
+    const place = festivalPlace(this.preferences, this.store.active());
+    const [vrats, month] = await Promise.allSettled([
+      place ? this.festivals.vratDays(place, fromDate, days) : Promise.reject(new Error('no place')),
+      this.panchanga.month(profileId, fromDate, days),
+    ]);
+    if (requestId !== this.extrasRequestId) return;
+    if (vrats.status === 'fulfilled') this.vratRows.set(vrats.value.days);
+    if (month.status === 'fulfilled') {
+      this.qualityByDate.set(new Map(month.value.days.map((day) => [day.date, day.quality])));
+      this.qualityNote.set(month.value.note);
+    }
   }
 
   protected monthLabel(): string {

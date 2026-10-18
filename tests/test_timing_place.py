@@ -159,3 +159,30 @@ def test_calendar_is_computed_once_per_window_and_stays_unshared(env):
     assert first.json() == second.json()
     info = vedic_routes._cached_calendar.cache_info()
     assert (info.misses, info.hits) == (1, 1)
+
+
+def test_month_quality_matches_the_day_view(env):
+    """The month grid's tint uses the day view's own Tarabala and
+    Chandrabala, at the same place, for every day asked for (U7)."""
+    client, kundli = env["client"], env["kundli"]
+    month = client.get(f"/api/v1/panchanga/{kundli.id}/month",
+                       params={"from_date": "2026-07-01", "days": 31, "timezone": "Asia/Kolkata"})
+    assert month.status_code == 200
+    body = month.json()
+    assert len(body["days"]) == 31 and body["note"]
+    assert {d["quality"] for d in body["days"]} <= {"good", "mixed", "care"}
+    day = next(d for d in body["days"] if d["date"] == "2026-07-07")
+    today = client.get(f"/api/v1/panchanga/{kundli.id}/today",
+                       params={"date": "2026-07-07", "timezone": "Asia/Kolkata"}).json()["personal"]
+    assert day["tara"] == today["tarabala"]["tara"]
+    assert day["chandrabala_house"] == today["chandrabala"]["house_from_rashi"]
+    assert day["chandrashtama"] == today["chandrabala"]["chandrashtama"]
+    if day["chandrashtama"]:
+        assert day["quality"] == "care"
+
+
+def test_month_quality_rejects_bad_dates(env):
+    client, kundli = env["client"], env["kundli"]
+    assert client.get(f"/api/v1/panchanga/{kundli.id}/month", params={"from_date": "07/01/2026"}).status_code == 400
+    assert client.get(f"/api/v1/panchanga/{kundli.id}/month",
+                      params={"from_date": "2026-07-01", "days": 90}).status_code == 422

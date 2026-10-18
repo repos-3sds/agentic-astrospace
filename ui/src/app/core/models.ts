@@ -1629,3 +1629,35 @@ export type AskStreamEvent =
       refer_out_kind: 'health' | 'legal' | 'money' | 'death' | null;
       evidence: AskEvidenceItem[];
     };
+
+/** One Ekadashi, Purnima, Amavasya or Pradosham day (GET /festivals/vrat-days). */
+export interface VratDay {
+  date: string;
+  kind: 'ekadashi' | 'purnima' | 'amavasya' | 'pradosham';
+  paksha: 'Shukla' | 'Krishna';
+  name: string;
+  is_convention_dependent: boolean;
+  observance_note: string;
+}
+
+export interface VratDaysPayload {
+  from_date: string;
+  to_date: string;
+  days: VratDay[];
+}
+
+/** A person's day quality for the month grid (GET /panchanga/{id}/month). */
+export interface DayQuality {
+  date: string;
+  quality: 'good' | 'mixed' | 'care';
+  tara: string;
+  chandrabala_house: number;
+  chandrashtama: boolean;
+}
+
+export interface MonthQualityPayload {
+  from_date: string;
+  to_date: string;
+  note: string;
+  days: DayQuality[];
+}

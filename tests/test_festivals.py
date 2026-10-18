@@ -279,3 +279,64 @@ class TestMoonDays:
         by_slug, _ = y2026
         full = {m["date"] for m in moons if m["moon"] == "full"}
         assert by_slug["buddha_purnima"]["occurs_on"] in full
+
+
+class TestVratDays:
+    """Monthly Ekadashi, Purnima, Amavasya and Pradosham for Calendar (U7)."""
+
+    @pytest.fixture(scope="class")
+    def vrats(self):
+        return F.vrat_days(2026, **CHENNAI)
+
+    def test_two_ekadashis_and_two_pradoshams_a_month(self, vrats):
+        for kind in ("ekadashi", "pradosham"):
+            rows = [r for r in vrats if r["kind"] == kind]
+            assert 23 <= len(rows) <= 26
+            assert {r["paksha"] for r in rows} == {"Shukla", "Krishna"}
+
+    def test_moon_days_are_the_vrat_purnimas_and_amavasyas(self, vrats):
+        moons = F.moon_days(2026, **CHENNAI)
+        from_vrats = [(r["date"], "full" if r["kind"] == "purnima" else "new")
+                      for r in vrats if r["kind"] in ("purnima", "amavasya")]
+        assert [(m["date"], m["moon"]) for m in moons] == from_vrats
+
+    def test_named_ekadashis_fall_on_a_vrat_ekadashi(self, vrats, y2026):
+        _, rows = y2026
+        ekadashi = {r["date"] for r in vrats if r["kind"] == "ekadashi"}
+        named = [row for row in rows if row["slug"].endswith("_ekadashi")]
+        assert named
+        assert all(row["occurs_on"] in ekadashi for row in named)
+
+    def test_every_kind_states_its_rule(self):
+        assert set(F.VRAT_NOTES) == {"ekadashi", "purnima", "amavasya", "pradosham"}
+        assert all(note.strip() for note in F.VRAT_NOTES.values())
+
+    def test_a_skipped_tithi_still_gets_its_day(self):
+        from datetime import date
+        def fact(d, paksha, n):
+            return {"date": date(2026, 1, d), "paksha": paksha, "tithi_number": n}
+        # Sunrise jumps from Shukla 10 to Shukla 12: Ekadashi never holds at a
+        # sunrise, so the day it falls inside (the 12 sunrise) is the day.
+        facts = [fact(1, "Shukla", 10), fact(2, "Shukla", 12), fact(3, "Shukla", 13)]
+        assert F._tithi_days(facts, "Shukla", 11) == [date(2026, 1, 2)]
+        # Holding at two sunrises gives the first.
+        facts = [fact(1, "Shukla", 11), fact(2, "Shukla", 11), fact(3, "Shukla", 12)]
+        assert F._tithi_days(facts, "Shukla", 11) == [date(2026, 1, 1)]
+
+
+def test_vrat_days_endpoint_carries_the_rule():
+    from fastapi.testclient import TestClient
+    from main import app
+    from astrospace.api.auth import AuthUser, current_user
+
+    app.dependency_overrides[current_user] = lambda: AuthUser(id="u", email="u@x.dev", role="dev")
+    try:
+        r = TestClient(app).get("/api/v1/festivals/vrat-days",
+                                params={"city": "Chennai", "from_date": "2026-12-01", "days": 31})
+    finally:
+        app.dependency_overrides.pop(current_user, None)
+    assert r.status_code == 200
+    days = r.json()["days"]
+    assert {d["kind"] for d in days} == {"ekadashi", "purnima", "amavasya", "pradosham"}
+    assert all(d["is_convention_dependent"] and d["observance_note"] for d in days)
+    assert all("2026-12-01" <= d["date"] <= "2026-12-31" for d in days)

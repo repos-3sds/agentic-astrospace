@@ -1564,3 +1564,11 @@ From the Tier 0 fixes for `/mnt/project-files/audits/end-to-end-2026-10-18/findi
   `daily_guidance_cache` before computing the payload; then shard by
   `CLOUD_RUN_TASK_INDEX`. *Hook:* `notifications/daily_briefs.py`
   `schedule_daily_briefs`.
+- [ ] **Sankashti Chaturthi on the Calendar** (U7, rest). *Why not built:*
+  it is the Krishna Chaturthi that holds at moonrise, and the year scan
+  takes tithis only at sunrise, sunset and the middle of the night.
+  Ekadashi, Purnima, Amavasya and Pradosham are on the Calendar
+  (`festivals.vrat_days`). *Unblock:* add the tithi at moonrise to
+  `_day_facts` from `moontimes`, then a `("sankashti", "Krishna", 4,
+  "moonrise")` row with its own note. *Hook:* `core/vedic/festivals.py`
+  `_day_facts`, `vrat_days`.
