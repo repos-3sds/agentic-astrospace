@@ -7,6 +7,9 @@ export const STORY_HEIGHT = 1920;
 const SIDE = 110;
 const SANS = `'Inter', system-ui, sans-serif`;
 const SERIF = `'Noto Serif Devanagari', 'Noto Sans Devanagari', serif`;
+const ITALIC = `'Playfair Display', Georgia, serif`;
+/** The wordmark face the app uses for its name (styles.scss .siddha-brand). */
+const BRAND = `'Samarkan', 'Playfair Display', serif`;
 
 /** Fixed, so every share of a day's verse is the same picture. */
 const STARS: [number, number, number][] = [
@@ -44,35 +47,43 @@ export async function renderStoryCard(verse: Subhashita, canvas = document.creat
     ctx.fill();
   }
 
-  ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = '#fff4e6';
-  ctx.textAlign = 'left';
-  ctx.font = `700 40px ${SANS}`;
-  drawSpaced(ctx, 'SIDDHA', SIDE, 170, 8);
-
-  // The block is measured first, then centred, so a long verse and a short
-  // one both sit in the middle of the card.
-  const width = STORY_WIDTH - SIDE * 2;
-  const sanskrit = fitLines(ctx, verse.sanskrit.split('\n'), width, SERIF, 44, 30, 6, 400);
-  const english = fitLines(ctx, [verse.english], width, SANS, 76, 48, 7, 700);
-  const sourceLine = `${verse.source} ${verse.ref}`;
-
-  const gap = 70;
-  const height = 30 + 48 + gap + sanskrit.height + gap + english.height + gap + 44;
-  let y = Math.max(320, (STORY_HEIGHT - height) / 2);
-
-  ctx.textAlign = 'center';
   const mid = STORY_WIDTH / 2;
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'center';
+
+  // The app's own wordmark (Samarkan, as on the welcome screen), not spaced
+  // caps: a status is often the first time a friend sees the name.
+  ctx.fillStyle = '#fff4e6';
+  ctx.font = `400 92px ${BRAND}`;
+  ctx.fillText('Siddha', mid, 210);
+
+  // Each block is measured first, then the whole stack is centred, so a
+  // long verse and a short one both sit in the middle of the card.
+  const width = STORY_WIDTH - SIDE * 2;
+  const sanskrit = fitLines(ctx, verse.sanskrit.split('\n'), width, SERIF, 46, 32, 6, 400, false);
+  const english = fitLines(ctx, [verse.english], width - 40, SANS, 54, 40, 6, 600, true);
+  const meaning = verse.meaning
+    ? fitLines(ctx, [verse.meaning], width - 80, ITALIC, 38, 30, 3, 400, true)
+    : null;
+  const sourceLine = `— ${verse.source} ${verse.ref}`;
+
+  const gap = 64;
+  const head = 30 + 46;
+  const rule = meaning ? 44 + 2 + 44 : 0;
+  const height = head + gap + sanskrit.height + gap + english.height
+    + (meaning ? rule + meaning.height : 0) + gap + 40;
+  let y = Math.max(330, (STORY_HEIGHT - height) / 2 - 20);
+
   ctx.fillStyle = 'rgba(255, 236, 220, 0.72)';
-  ctx.font = `500 30px ${SANS}`;
+  ctx.font = `500 28px ${SANS}`;
   y += 30;
-  drawSpaced(ctx, SUBHASHITA_TITLE.toUpperCase(), mid, y, 4, 'center');
+  drawSpaced(ctx, SUBHASHITA_TITLE.toUpperCase(), mid, y, 5, 'center');
   ctx.font = `400 30px ${SANS}`;
-  y += 48;
+  y += 46;
   ctx.fillText(longDate(verse.date), mid, y);
   y += gap;
 
-  ctx.fillStyle = 'rgba(255, 236, 220, 0.82)';
+  ctx.fillStyle = 'rgba(255, 236, 220, 0.9)';
   ctx.font = `400 ${sanskrit.size}px ${SERIF}`;
   for (const line of sanskrit.lines) {
     y += sanskrit.lineHeight;
@@ -81,19 +92,32 @@ export async function renderStoryCard(verse: Subhashita, canvas = document.creat
   y += gap;
 
   ctx.fillStyle = '#fff8ec';
-  ctx.font = `700 ${english.size}px ${SANS}`;
+  ctx.font = `600 ${english.size}px ${SANS}`;
   for (const line of english.lines) {
     y += english.lineHeight;
     ctx.fillText(line, mid, y);
   }
+
+  if (meaning) {
+    y += 44;
+    ctx.fillStyle = 'rgba(240, 195, 107, 0.7)';
+    ctx.fillRect(mid - 40, y, 80, 2);
+    y += 2 + 44;
+    ctx.fillStyle = 'rgba(255, 236, 220, 0.8)';
+    ctx.font = `italic 400 ${meaning.size}px ${ITALIC}`;
+    for (const line of meaning.lines) {
+      y += meaning.lineHeight;
+      ctx.fillText(line, mid, y);
+    }
+  }
   y += gap;
 
-  ctx.fillStyle = 'rgba(255, 236, 220, 0.8)';
-  ctx.font = `500 38px ${SANS}`;
-  ctx.fillText(`— ${sourceLine}`, mid, y + 38);
+  ctx.fillStyle = 'rgba(255, 236, 220, 0.72)';
+  ctx.font = `500 34px ${SANS}`;
+  ctx.fillText(sourceLine, mid, y + 34);
 
-  ctx.fillStyle = 'rgba(255, 236, 220, 0.66)';
-  ctx.font = `400 32px ${SANS}`;
+  ctx.fillStyle = 'rgba(255, 236, 220, 0.6)';
+  ctx.font = `400 30px ${SANS}`;
   ctx.fillText('A verse a day in the Siddha app · asksiddha.app', mid, STORY_HEIGHT - 120);
   return canvas;
 }
@@ -108,7 +132,8 @@ export async function storyCardFile(verse: Subhashita): Promise<File> {
 
 /** The words alone, for a share that is text rather than a picture. */
 export function shareText(verse: Subhashita): string {
-  return `${verse.sanskrit}\n\n“${verse.english}”\n— ${verse.source} ${verse.ref}\n\n${SUBHASHITA_TITLE}, from the Siddha app: https://asksiddha.app`;
+  const meaning = verse.meaning ? `\n${verse.meaning}\n` : '';
+  return `${verse.sanskrit}\n\n“${verse.english}”\n— ${verse.source} ${verse.ref}\n${meaning}\n${SUBHASHITA_TITLE}, from the Siddha app: https://asksiddha.app`;
 }
 
 /** "Friday, 17 October", built from the parts so no timezone can move the day. */
@@ -120,19 +145,36 @@ export function longDate(iso: string): string {
 
 interface Fitted { lines: string[]; size: number; lineHeight: number; height: number }
 
-/** Wraps to the width, shrinking the type until it fits in `maxLines`. */
+/**
+ * Wraps to the width, shrinking the type until it fits in `maxLines`. With
+ * `balance`, the same number of lines is then spread evenly (the narrowest
+ * width that still needs no more lines), so a verse doesn't end on a stub.
+ */
 function fitLines(ctx: CanvasRenderingContext2D, paragraphs: string[], width: number, family: string,
-                  largest: number, smallest: number, maxLines: number, weight: number): Fitted {
+                  largest: number, smallest: number, maxLines: number, weight: number | string,
+                  balance: boolean): Fitted {
   let size = largest;
   for (;;) {
     ctx.font = `${weight} ${size}px ${family}`;
-    const lines = paragraphs.flatMap((p) => wrap(ctx, p, width));
+    let lines = paragraphs.flatMap((p) => wrap(ctx, p, width));
     if (lines.length <= maxLines || size <= smallest) {
-      const lineHeight = Math.round(size * 1.28);
+      if (balance && lines.length > 1) lines = balanced(ctx, paragraphs, width, lines.length);
+      const lineHeight = Math.round(size * 1.34);
       return { lines, size, lineHeight, height: lines.length * lineHeight };
     }
     size -= 2;
   }
+}
+
+function balanced(ctx: CanvasRenderingContext2D, paragraphs: string[], width: number, count: number): string[] {
+  let low = width * 0.5;
+  let high = width;
+  while (high - low > 4) {
+    const trial = (low + high) / 2;
+    if (paragraphs.flatMap((p) => wrap(ctx, p, trial)).length <= count) high = trial;
+    else low = trial;
+  }
+  return paragraphs.flatMap((p) => wrap(ctx, p, high));
 }
 
 function wrap(ctx: CanvasRenderingContext2D, text: string, width: number): string[] {
@@ -171,7 +213,9 @@ async function fontsReady(): Promise<void> {
   if (!fonts) return;
   try {
     await Promise.all([
-      fonts.load(`700 76px ${SANS}`),
+      fonts.load(`600 54px ${SANS}`),
+      fonts.load(`400 92px ${BRAND}`, 'Siddha'),
+      fonts.load(`italic 400 38px ${ITALIC}`),
       fonts.load(`500 30px ${SANS}`),
       fonts.load(`400 44px ${SERIF}`, 'धर्म'),
     ]);

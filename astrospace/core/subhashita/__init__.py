@@ -22,7 +22,7 @@ EPOCH = date(2026, 1, 1)
 TITLE = "Today's Subhashita"
 
 _CORPUS = Path(__file__).with_name("subhashitas.json")
-_FIELDS = ("id", "source", "ref", "sanskrit", "english")
+_FIELDS = ("id", "source", "ref", "sanskrit", "english", "meaning")
 
 
 @lru_cache(maxsize=1)

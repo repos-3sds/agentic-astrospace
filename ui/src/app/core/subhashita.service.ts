@@ -9,6 +9,8 @@ export interface Subhashita {
   ref: string;
   sanskrit: string;
   english: string;
+  /** What the verse points to, in plain words; absent on verses cached before 2026-10-18. */
+  meaning?: string;
 }
 
 export const SUBHASHITA_TITLE = 'Today’s Subhashita';

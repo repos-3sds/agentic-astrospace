@@ -27,10 +27,12 @@ class TestCorpus:
         rows = subhashita.corpus()
         assert rows
         for row in rows:
-            for field in ("id", "source", "ref", "sanskrit", "english"):
+            for field in ("id", "source", "ref", "sanskrit", "english", "meaning"):
                 assert row[field].strip(), (row["id"], field)
             # Long enough to mean something, short enough for a status card.
             assert 20 <= len(row["english"]) <= 200, row["id"]
+            # The plain "what it means" line fits under the verse on the card.
+            assert 20 <= len(row["meaning"]) <= 110, row["id"]
             # The Sanskrit is Devanagari, not a transliteration.
             assert any("ऀ" <= ch <= "ॿ" for ch in row["sanskrit"]), row["id"]
 
@@ -132,3 +134,13 @@ class TestPush:
 
     def test_on_by_default(self):
         assert cm.DEFAULT_NOTIFICATION_PREFS[CATEGORY]["enabled"] is True
+
+
+def test_the_api_serves_the_meaning_with_the_verse():
+    from datetime import date
+
+    verse = subhashita.for_day(date(2026, 10, 18))
+    assert verse["id"] == "bhagavata-7-5-23"
+    # Read as half a sentence on 2026-10-18; it now says what the list is.
+    assert verse["english"].startswith("Devotion has nine forms:")
+    assert verse["meaning"].startswith("These are the nine ways of devotion")

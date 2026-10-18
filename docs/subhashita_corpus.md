@@ -4,7 +4,7 @@ Status: canonical. Sources, method and exclusions for Today's Subhashita (astros
 # Quote-of-the-day corpus: sources and method
 
 `quotes.json` holds 122 entries. Each one has `id`, `source`, `ref`, `sanskrit`,
-`english` and `verified_from`. The array is ordered so that no two neighbouring
+`english`, `meaning` and `verified_from`. The array is ordered so that no two neighbouring
 entries share a `source`, and the last entry's source differs from the first, so
 `index = day mod 122` never shows the same source two days running.
 
@@ -62,6 +62,16 @@ GRETIL's verse labels, such as `॥ गर्प्_१,१११।२४ ॥`.
 - Markandeya 85.23 and 91.9 are from the Devi Mahatmya, which sits inside the Markandeya Purana. Its own chapter numbering differs: MarkP 85 is Devi Mahatmya ch. 5 and MarkP 91 is ch. 11. The `ref` uses the Markandeya numbering, as the source file does. 91.9 (सर्वमङ्गलमाङ्गल्ये) is usually cited as Devi Mahatmya 11.10.
 - Markandeya 58.71 comes from a passage advising conduct when the planets afflict someone (ग्रहपीडा). It is relevant to the app, and it is advice about conduct, not a remedy you pay for.
 - Normalisation: GRETIL separates words with spaces and hyphens. I joined them back mechanically: hyphens removed, a final consonant with virama + space + next word fused, a space before avagraha removed. For example, `एतावज् जन्म-साफल्यं` became `एतावज्जन्मसाफल्यं`, and `दैत्याःसमताम्` (VP 1.17.90) became `दैत्याः समताम्`. No letters were changed. One space in the source was kept: `सर्वपाप प्रणाशनम्` in Bhagavata 12.13.23.
+
+## Meaning lines
+
+Each verse also carries `meaning`: one plain line (at most 110 characters) on what
+it points to or how to live it today, shown under the translation on the card and
+in the app. Added 2026-10-18 after Bhagavata 7.5.23, a bare list of the nine ways
+of devotion, read as half a sentence. The lines live in
+`scripts/subhashita/meanings.py`; they are practical, never a prediction or a
+fear. The same day, Bhagavata 7.5.23 and Gita 16.2 were reworded as complete
+sentences ("Devotion has nine forms: …", "… mark a good heart.").
 
 ## English renderings
 These are my own short, plain renderings, written for this corpus and not copied

@@ -5,6 +5,7 @@
     "ref": "2.14",
     "sanskrit": "मात्रास्पर्शास्तु कौन्तेय शीतोष्णसुखदुःखदाः ।\nआगमापायिनोऽनित्यास्तांस्तितिक्षस्व भारत ॥",
     "english": "Heat and cold, pleasure and pain come from the senses meeting the world. They come and they go; none of them lasts. Bear them with patience.",
+    "meaning": "Today's discomfort is passing weather. Meet it with patience, not panic.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_2_slok_14.json"
   },
   {
@@ -13,6 +14,7 @@
     "ref": "1.16",
     "sanskrit": "विषादप्यमृतं ग्राह्यममेध्यादपि काञ्चनम् ।\nअमित्रादपि सद्वृत्तं बालादपि सुभाषितम् ॥",
     "english": "Take nectar even from poison, gold even from dirt, good conduct even from a rival, and wise words even from a child.",
+    "meaning": "Learn from anyone and anything; wisdom doesn't check where it comes from.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -21,6 +23,7 @@
     "ref": "1.2.6",
     "sanskrit": "स वै पुंसां परो धर्मो यतो भक्तिरधोक्षजे ।\nअहैतुक्यप्रतिहता ययात्मा सुप्रसीदति ॥",
     "english": "The highest dharma for anyone is the one that awakens selfless, unbroken devotion to the Divine. Through it, the self becomes truly at peace.",
+    "meaning": "The practice that matters most is the one that makes you more loving, not more proud.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/bhagp/bhagavata-purana_1.md"
   },
   {
@@ -29,6 +32,7 @@
     "ref": "2.40",
     "sanskrit": "नेहाभिक्रमनाशोऽस्ति प्रत्यवायो न विद्यते ।\nस्वल्पमप्यस्य धर्मस्य त्रायते महतो भयात् ॥",
     "english": "On this path no effort is ever lost, and nothing you do here works against you. Even a little of it protects you from great fear.",
+    "meaning": "No sincere effort is wasted. Even a small start today counts.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_2_slok_40.json"
   },
   {
@@ -37,6 +41,7 @@
     "ref": "2.5",
     "sanskrit": "परोक्षे कार्यहन्तारं प्रत्यक्षे प्रियवादिनम् ।\nवर्जयेत्तादृशं मित्रं विषकुम्भं पयोमुखम् ॥",
     "english": "Steer clear of a friend who undoes your work behind your back and speaks sweetly to your face: a pot of poison with milk on top.",
+    "meaning": "Judge people by what they do when you're not looking, not by sweet words.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -45,6 +50,7 @@
     "ref": "2.47",
     "sanskrit": "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन ।\nमा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि ॥",
     "english": "Your right is to the work alone, never to its fruits. Don't let results be your reason for acting, and don't let that turn you toward doing nothing.",
+    "meaning": "Put your heart into the work and loosen your grip on the outcome.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_2_slok_47.json"
   },
   {
@@ -53,6 +59,7 @@
     "ref": "2.7",
     "sanskrit": "मनसा चिन्तितं कार्यं वाचा नैव प्रकाशयेत् ।\nमन्त्रेण रक्षयेद्गूढं कार्ये चापि नियोजयेत् ॥",
     "english": "What you have planned in your mind, don't announce in words. Guard it quietly with careful thought, and then put it into action.",
+    "meaning": "Plans grow best in quiet. Think it through, then act; announce later.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -61,6 +68,7 @@
     "ref": "2.48",
     "sanskrit": "योगस्थः कुरु कर्माणि सङ्गं त्यक्त्वा धनञ्जय ।\nसिद्ध्यसिद्ध्योः समो भूत्वा समत्वं योग उच्यते ॥",
     "english": "Rooted in yourself, do your work and let go of clinging. Stay the same in success and failure. That evenness is what yoga means.",
+    "meaning": "Do your best, then stay steady whether it works or not. That calm is the practice.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_2_slok_48.json"
   },
   {
@@ -69,6 +77,7 @@
     "ref": "1.108.12",
     "sanskrit": "उत्तमैः सह साङ्गत्यं पण्डितैः सह सत्कथाम् ।\nअलुब्धैः सह मित्रत्वं कुर्वाणो नावसीदति ॥",
     "english": "One who keeps company with the noble, good conversation with the wise and friendship with the unselfish never comes to grief.",
+    "meaning": "The people you spend time with shape your days. Choose good company.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/garuda-purana_part_1.md"
   },
   {
@@ -77,6 +86,7 @@
     "ref": "2.9",
     "sanskrit": "शैले शैले च माणिक्यं मौक्तिकं न गजे गजे ।\nसाधवो न हि सर्वत्र चन्दनं न वने वने ॥",
     "english": "Not every mountain holds rubies, not every elephant a pearl, not every forest sandalwood. Good people, too, are not found everywhere.",
+    "meaning": "Rare things are rare. When you find a truly good person, value them.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -85,6 +95,7 @@
     "ref": "2.50",
     "sanskrit": "बुद्धियुक्तो जहातीह उभे सुकृतदुष्कृते ।\nतस्माद्योगाय युज्यस्व योगः कर्मसु कौशलम् ॥",
     "english": "One whose understanding is steady leaves behind both good and bad deeds, even here. So give yourself to yoga: yoga is skill in action.",
+    "meaning": "A steady mind turns ordinary work into skilful work.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_2_slok_50.json"
   },
   {
@@ -93,6 +104,7 @@
     "ref": "2.13",
     "sanskrit": "श्लोकेन वा तदर्धेन तदर्धार्धाक्षरेण वा ।\nअबन्ध्यं दिवसं कुर्याद्दानाध्ययनकर्मभिः ॥",
     "english": "Don't let a day go to waste. Learn a verse, half a verse, a quarter, even a single letter, and fill it with giving, study and good work.",
+    "meaning": "Learn one small thing and do one good thing today; small days add up.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -101,6 +113,7 @@
     "ref": "2.55",
     "sanskrit": "प्रजहाति यदा कामान्सर्वान्पार्थ मनोगतान् ।\nआत्मन्येवात्मना तुष्टः स्थितप्रज्ञस्तदोच्यते ॥",
     "english": "When a person lets go of every craving in the mind and is content in the Self, by the Self, they are called steady in wisdom.",
+    "meaning": "Contentment from within is what makes a mind steady.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_2_slok_55.json"
   },
   {
@@ -109,6 +122,7 @@
     "ref": "1.8.25",
     "sanskrit": "विपदः सन्तु ताः शश्वत्तत्र तत्र जगद्गुरो ।\nभवतो दर्शनं यत्स्यादपुनर्भवदर्शनम् ॥",
     "english": "Let hardships come again and again, O Teacher of the world, if in each of them I get to see You: the sight that ends the round of rebirth.",
+    "meaning": "Hard times can bring us closer to what matters most, if we let them.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/bhagp/bhagavata-purana_1.md"
   },
   {
@@ -117,6 +131,7 @@
     "ref": "2.56",
     "sanskrit": "दुःखेष्वनुद्विग्नमनाः सुखेषु विगतस्पृहः ।\nवीतरागभयक्रोधः स्थितधीर्मुनिरुच्यते ॥",
     "english": "Not shaken by sorrow, not hungry for pleasure, free of attachment, fear and anger: such a person is called a sage of steady mind.",
+    "meaning": "Not swept away by sorrow or pleasure: that steadiness is wisdom in action.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_2_slok_56.json"
   },
   {
@@ -125,6 +140,7 @@
     "ref": "3.4",
     "sanskrit": "दुर्जनस्य च सर्पस्य वरं सर्पो न दुर्जनः ।\nसर्पो दंशति काले तु दुर्जनस्तु पदे पदे ॥",
     "english": "Between a wicked person and a snake, the snake is better: a snake bites only when its time comes, the wicked one at every step.",
+    "meaning": "Keep a wise distance from people who hurt others by habit.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -133,6 +149,7 @@
     "ref": "2.58",
     "sanskrit": "यदा संहरते चायं कूर्मोऽङ्गानीव सर्वशः ।\nइन्द्रियाणीन्द्रियार्थेभ्यस्तस्य प्रज्ञा प्रतिष्ठिता ॥",
     "english": "Like a tortoise drawing in its limbs, one who can draw the senses back from what pulls at them has wisdom that stands firm.",
+    "meaning": "Like a tortoise, learn to pull back from what distracts you.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_2_slok_58.json"
   },
   {
@@ -141,6 +158,7 @@
     "ref": "3.6",
     "sanskrit": "प्रलये भिन्नमर्यादा भवन्ति किल सागराः ।\nसागरा भेदमिच्छन्ति प्रलयेऽपि न साधवः ॥",
     "english": "At the end of an age even the oceans break their shores. Good people never break their bounds, not even then.",
+    "meaning": "Good people keep their limits even when everything else gives way.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -149,6 +167,7 @@
     "ref": "2.62",
     "sanskrit": "ध्यायतो विषयान्पुंसः सङ्गस्तेषूपजायते ।\nसङ्गात्सञ्जायते कामः कामात्क्रोधोऽभिजायते ॥",
     "english": "Keep dwelling on things and attachment to them grows. Attachment gives birth to desire, and desire gives birth to anger.",
+    "meaning": "Watch what you keep thinking about; it quietly becomes what you want.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_2_slok_62.json"
   },
   {
@@ -157,6 +176,7 @@
     "ref": "1.109.4",
     "sanskrit": "चलत्येकेन पादेन तिष्ठत्येकेन बुद्धिमान् ।\nन परीक्ष्य परं स्थानं पूर्वमायतनं त्यजेत् ॥",
     "english": "The wise move one foot while keeping the other planted. Don't leave your old place before you have looked over the new one.",
+    "meaning": "Make changes carefully: check the new ground before leaving the old.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/garuda-purana_part_1.md"
   },
   {
@@ -165,6 +185,7 @@
     "ref": "3.8",
     "sanskrit": "रूपयौवनसम्पन्ना विशालकुलसम्भवाः ।\nविद्याहीना न शोभन्ते निर्गन्धाः किंशुका यथा ॥",
     "english": "Beauty, youth and a great family name don't shine without learning, like palash flowers: bright, but without fragrance.",
+    "meaning": "Looks and name fade without learning. Keep growing what's inside.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -173,6 +194,7 @@
     "ref": "2.63",
     "sanskrit": "क्रोधाद्भवति सम्मोहः सम्मोहात्स्मृतिविभ्रमः ।\nस्मृतिभ्रंशाद् बुद्धिनाशो बुद्धिनाशात्प्रणश्यति ॥",
     "english": "Anger brings confusion, confusion scatters memory, a scattered memory ruins understanding, and when understanding is lost, a person is lost.",
+    "meaning": "Anger clouds judgement. Pause before you speak or decide.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_2_slok_63.json"
   },
   {
@@ -181,6 +203,7 @@
     "ref": "3.11",
     "sanskrit": "उद्योगे नास्ति दारिद्र्यं जपतो नास्ति पातकम् ।\nमौनेन कलहो नास्ति नास्ति जागरिते भयम् ॥",
     "english": "Effort keeps poverty away, prayer keeps wrongdoing away, silence keeps quarrels away, and alertness keeps fear away.",
+    "meaning": "Effort, prayer, quiet and alertness each protect you from a different trouble.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -189,6 +212,7 @@
     "ref": "2.65",
     "sanskrit": "प्रसादे सर्वदुःखानां हानिरस्योपजायते ।\nप्रसन्नचेतसो ह्याशु बुद्धिः पर्यवतिष्ठते ॥",
     "english": "In that inner calm, every sorrow falls away. For one whose heart is clear, understanding soon becomes steady.",
+    "meaning": "Calm comes first; clear understanding follows it.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_2_slok_65.json"
   },
   {
@@ -197,6 +221,7 @@
     "ref": "1.17.90",
     "sanskrit": "असारसंसारविवर्तनेषु मा यात तोषं प्रसभं ब्रवीमि ।\nसर्वत्र दैत्याः समतामुपैत समत्वमाराधनमच्युतस्य ॥",
     "english": "Don't take delight in the empty turns of this world, I tell you plainly. Look on all as equal everywhere: evenness of mind is itself the worship of God.",
+    "meaning": "Seeing everyone as equal is itself a form of worship.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/visnu-purana.md"
   },
   {
@@ -205,6 +230,7 @@
     "ref": "2.66",
     "sanskrit": "नास्ति बुद्धिरयुक्तस्य न चायुक्तस्य भावना ।\nन चाभावयतः शान्तिरशान्तस्य कुतः सुखम् ॥",
     "english": "Without inner discipline there is no clear understanding and no deep reflection. Without reflection there is no peace. Without peace, where is happiness?",
+    "meaning": "Peace needs a disciplined mind; happiness needs peace. Start with discipline.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_2_slok_66.json"
   },
   {
@@ -213,6 +239,7 @@
     "ref": "3.13",
     "sanskrit": "को हि भारः समर्थानां किं दूरं व्यवसायिनाम् ।\nको विदेशः सुविद्यानां कः परः प्रियवादिनाम् ॥",
     "english": "What is too heavy for the capable? What is too far for the determined? What land is foreign to the learned? Who is a stranger to the kind-spoken?",
+    "meaning": "Ability, resolve, learning and kind words open almost every door.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -221,6 +248,7 @@
     "ref": "2.70",
     "sanskrit": "आपूर्यमाणमचलप्रतिष्ठं\nसमुद्रमापः प्रविशन्ति यद्वत् ।\nतद्वत्कामा यं प्रविशन्ति सर्वे\nस शान्तिमाप्नोति न कामकामी ॥",
     "english": "Rivers keep pouring into the ocean, yet it stays full and still. One whom desires enter like that finds peace, not one who chases desires.",
+    "meaning": "Let desires come and go like rivers into the sea; stay full and still.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_2_slok_70.json"
   },
   {
@@ -229,6 +257,7 @@
     "ref": "3.14",
     "sanskrit": "एकेनापि सुवृक्षेण पुष्पितेन सुगन्धिना ।\nवासितं तद्वनं सर्वं सुपुत्रेण कुलं यथा ॥",
     "english": "One flowering, fragrant tree perfumes a whole forest. In the same way, one worthy child brings fragrance to a whole family.",
+    "meaning": "One good person lifts everyone around them.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -237,6 +266,7 @@
     "ref": "2.71",
     "sanskrit": "विहाय कामान्यः सर्वान्पुमांश्चरति निःस्पृहः ।\nनिर्ममो निरहङ्कारः स शान्तिमधिगच्छति ॥",
     "english": "One who sets aside every craving and moves through life free of longing, without 'mine' and without ego, comes to peace.",
+    "meaning": "Letting go of 'mine' and ego is where peace begins.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_2_slok_71.json"
   },
   {
@@ -245,6 +275,7 @@
     "ref": "58.71",
     "sanskrit": "अद्रोहः सर्वभूतेषु मैत्रीं कुर्याच्च पण्डितः ।\nवर्जयेदसतीं वाचमतिवादांस्तथैव च ॥",
     "english": "Bear ill will toward no being, and offer friendship. Steer clear of untrue words and of hurtful, excessive talk.",
+    "meaning": "Wish no one harm, offer friendship, and keep your words true and kind.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/markandeya-purana_adhyayas_1-93.md"
   },
   {
@@ -253,6 +284,7 @@
     "ref": "4.3",
     "sanskrit": "दर्शनध्यानसंस्पर्शैर्मत्सी कूर्मी च पक्षिणी ।\nशिशुं पालयते नित्यं तथा सज्जनसङ्गतिः ॥",
     "english": "As a fish, a tortoise and a bird care for their young by sight, by thought and by touch, the company of good people cares for us.",
+    "meaning": "Good company looks after you quietly, the way a mother looks after her young.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -261,6 +293,7 @@
     "ref": "3.8",
     "sanskrit": "नियतं कुरु कर्म त्वं कर्म ज्यायो ह्यकर्मणः ।\nशरीरयात्रापि च ते न प्रसिद्ध्येदकर्मणः ॥",
     "english": "Do the work that is yours to do; action is better than inaction. Without action you could not even keep your body going.",
+    "meaning": "Do the work in front of you; action beats waiting.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_3_slok_8.json"
   },
   {
@@ -269,6 +302,7 @@
     "ref": "4.5",
     "sanskrit": "कामधेनुगुणा विद्या ह्यकाले फलदायिनी ।\nप्रवासे मातृसदृशी विद्या गुप्तं धनं स्मृतम् ॥",
     "english": "Learning is like the wish-fulfilling cow: it gives even out of season. Far from home it looks after you like a mother. It is hidden wealth.",
+    "meaning": "Learning is wealth no one can take, and it looks after you anywhere.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -277,6 +311,7 @@
     "ref": "3.19",
     "sanskrit": "तस्मादसक्तः सततं कार्यं कर्म समाचर ।\nअसक्तो ह्याचरन्कर्म परमाप्नोति पूरुषः ॥",
     "english": "So, without attachment, keep doing the work that needs doing. By acting without attachment, a person reaches the highest.",
+    "meaning": "Keep doing what needs doing, without clinging to the reward.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_3_slok_19.json"
   },
   {
@@ -285,6 +320,7 @@
     "ref": "4.31.14",
     "sanskrit": "यथा तरोर्मूलनिषेचनेन तृप्यन्ति तत्स्कन्धभुजोपशाखाः ।\nप्राणोपहाराच्च यथेन्द्रियाणां तथैव सर्वार्हणमच्युतेज्या ॥",
     "english": "Water a tree's root and its trunk and branches are all nourished; feed the life-breath and every sense is fed. So, worshipping the Divine honours all.",
+    "meaning": "Care for the root and the whole tree flourishes: tend to what's essential.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/bhagp/bhagavata-purana_4.md"
   },
   {
@@ -293,6 +329,7 @@
     "ref": "3.21",
     "sanskrit": "यद्यदाचरति श्रेष्ठस्तत्तदेवेतरो जनः ।\nस यत्प्रमाणं कुरुते लोकस्तदनुवर्तते ॥",
     "english": "Whatever the best among us do, others follow. Whatever standard they set, the world goes along with it.",
+    "meaning": "Others copy what you do. Set an example worth following.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_3_slok_21.json"
   },
   {
@@ -301,6 +338,7 @@
     "ref": "4.6",
     "sanskrit": "एकोऽपि गुणवान्पुत्रो निर्गुणेन शतेन किम् ।\nएकश्चन्द्रस्तमो हन्ति न च ताराः सहस्रशः ॥",
     "english": "One child with good qualities is worth more than a hundred without. One moon dispels the dark; thousands of stars do not.",
+    "meaning": "One person of real quality outshines a crowd.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -309,6 +347,7 @@
     "ref": "3.37",
     "sanskrit": "काम एष क्रोध एष रजोगुणसमुद्भवः ।\nमहाशनो महापाप्मा विद्ध्येनमिह वैरिणम् ॥",
     "english": "It is desire, it is anger, born of restless passion: never satisfied and the root of much wrong. Know this to be the enemy here.",
+    "meaning": "Unchecked desire and anger are the real enemies to watch for within.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_3_slok_37.json"
   },
   {
@@ -317,6 +356,7 @@
     "ref": "4.18",
     "sanskrit": "कः कालः कानि मित्राणि को देशः कौ व्ययागमौ ।\nकश्चाहं का च मे शक्तिरिति चिन्त्यं मुहुर्मुहुः ॥",
     "english": "Ask yourself again and again: What time is it? Who are my friends? Where am I? What comes in and what goes out? Who am I, and what is my strength?",
+    "meaning": "Pause today to ask: where am I, who is with me, and what is my strength?",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -325,6 +365,7 @@
     "ref": "4.7",
     "sanskrit": "यदा यदा हि धर्मस्य ग्लानिर्भवति भारत ।\nअभ्युत्थानमधर्मस्य तदात्मानं सृजाम्यहम् ॥",
     "english": "Whenever goodness fades and wrongdoing rises, I bring Myself forth into the world.",
+    "meaning": "Whenever goodness fades, it is renewed. Hope is never lost.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_4_slok_7.json"
   },
   {
@@ -333,6 +374,7 @@
     "ref": "1.110.16",
     "sanskrit": "कदर्थितस्यापि हि धैर्यवृत्तेर्न शक्यते सर्वगुणप्रमाथः ।\nअधः खलेनापि कृतस्य वह्नेर्नाधः शिखा याति कदाचिदेव ॥",
     "english": "Even when harassed, a person of steady courage can't be stripped of their goodness. Turn a flame upside down and it still burns upward.",
+    "meaning": "Like a flame that always points up, a good person stays good under pressure.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/garuda-purana_part_1.md"
   },
   {
@@ -341,6 +383,7 @@
     "ref": "5.2",
     "sanskrit": "यथा चतुर्भिः कनकं परीक्ष्यते\nनिघर्षणच्छेदनतापताडनैः ।\nतथा चतुर्भिः पुरुषः परीक्ष्यते\nत्यागेन शीलेन गुणेन कर्मणा ॥",
     "english": "Gold is tested four ways: rubbing, cutting, heating and beating. A person is tested four ways too: by generosity, conduct, qualities and deeds.",
+    "meaning": "A person shows their worth in generosity, conduct, qualities and deeds.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -349,6 +392,7 @@
     "ref": "4.11",
     "sanskrit": "ये यथा मां प्रपद्यन्ते तांस्तथैव भजाम्यहम् ।\nमम वर्त्मानुवर्तन्ते मनुष्याः पार्थ सर्वशः ॥",
     "english": "However people approach Me, I receive them in that same way. Everywhere, people are walking My path.",
+    "meaning": "Every sincere path is welcomed; there is more than one way to the Divine.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_4_slok_11.json"
   },
   {
@@ -357,6 +401,7 @@
     "ref": "5.4",
     "sanskrit": "एकोदरसमुद्भूता एकनक्षत्रजातकाः ।\nन भवन्ति समाः शीले यथा बदरकण्टकाः ॥",
     "english": "Born of the same mother, even under the same birth star, people are not alike in character, like the berries and thorns of one bush.",
+    "meaning": "Even siblings differ in nature. Meet each person as they are.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -365,6 +410,7 @@
     "ref": "4.24",
     "sanskrit": "ब्रह्मार्पणं ब्रह्म हविर्ब्रह्माग्नौ ब्रह्मणा हुतम् ।\nब्रह्मैव तेन गन्तव्यं ब्रह्मकर्मसमाधिना ॥",
     "english": "The offering is the Divine, the oblation is the Divine, poured by the Divine into the Divine fire. One who sees the Divine in every act reaches the Divine.",
+    "meaning": "See the sacred in ordinary acts and every act becomes an offering.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_4_slok_24.json"
   },
   {
@@ -372,7 +418,8 @@
     "source": "Bhagavata Purana",
     "ref": "7.5.23",
     "sanskrit": "श्रवणं कीर्तनं विष्णोः स्मरणं पादसेवनम् ।\nअर्चनं वन्दनं दास्यं सख्यमात्मनिवेदनम् ॥",
-    "english": "Hearing of Vishnu, singing of Him, remembering Him, serving His feet, worship, bowing down, service, friendship, and offering your whole self.",
+    "english": "Devotion has nine forms: hearing of Vishnu, singing of Him, remembering Him, serving His feet, worship, bowing, service, friendship and offering your whole self.",
+    "meaning": "These are the nine ways of devotion. Pick one, such as remembering or serving, and practise it today.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/bhagp/bhagavata-purana_7.md"
   },
   {
@@ -381,6 +428,7 @@
     "ref": "5.8",
     "sanskrit": "अभ्यासाद्धार्यते विद्या कुलं शीलेन धार्यते ।\nगुणेन ज्ञायते त्वार्यः कोपो नेत्रेण गम्यते ॥",
     "english": "Learning is kept alive by practice, a family's name by good conduct. A noble person is known by their qualities, and anger shows in the eyes.",
+    "meaning": "Practice keeps learning alive, and conduct keeps a good name.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -389,6 +437,7 @@
     "ref": "4.34",
     "sanskrit": "तद्विद्धि प्रणिपातेन परिप्रश्नेन सेवया ।\nउपदेक्ष्यन्ति ते ज्ञानं ज्ञानिनस्तत्त्वदर्शिनः ॥",
     "english": "Learn it through humble respect, honest questions and service. The wise, who have seen the truth, will teach you.",
+    "meaning": "Learn with humility: ask honest questions, and listen to those who know.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_4_slok_34.json"
   },
   {
@@ -397,6 +446,7 @@
     "ref": "5.11",
     "sanskrit": "दारिद्र्यनाशनं दानं शीलं दुर्गतिनाशनम् ।\nअज्ञाननाशिनी प्रज्ञा भावना भयनाशिनी ॥",
     "english": "Giving ends poverty, good conduct ends misfortune, wisdom ends ignorance, and steady reflection ends fear.",
+    "meaning": "Giving, good conduct, wisdom and reflection each ease a different hardship.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -405,6 +455,7 @@
     "ref": "4.36",
     "sanskrit": "अपि चेदसि पापेभ्यः सर्वेभ्यः पापकृत्तमः ।\nसर्वं ज्ञानप्लवेनैव वृजिनं सन्तरिष्यसि ॥",
     "english": "Even if you were the worst wrongdoer of all, the raft of knowledge alone would carry you across every wrong.",
+    "meaning": "No mistake is too big for understanding to carry you past it.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_4_slok_36.json"
   },
   {
@@ -413,6 +464,7 @@
     "ref": "1.110.30",
     "sanskrit": "न सर्ववित्कश्चिदिहास्ति लोके नात्यन्तमूर्खो भुवि चापि कश्चित् ।\nज्ञानेन नीचोत्तममध्यमेन योऽयं विजानाति स तेन विद्वान् ॥",
     "english": "No one here knows everything, and no one is a complete fool. Whatever a person knows, humble, middling or high, in that they are learned.",
+    "meaning": "Everyone knows something. Respect what each person can teach you.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/garuda-purana_part_1.md"
   },
   {
@@ -421,6 +473,7 @@
     "ref": "4.38",
     "sanskrit": "न हि ज्ञानेन सदृशं पवित्रमिह विद्यते ।\nतत्स्वयं योगसंसिद्धः कालेनात्मनि विन्दति ॥",
     "english": "Nothing in this world purifies like knowledge. One made whole through yoga finds it within, in time.",
+    "meaning": "Understanding is the deepest cleanser, and it ripens with practice.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_4_slok_38.json"
   },
   {
@@ -429,6 +482,7 @@
     "ref": "5.19",
     "sanskrit": "सत्येन धार्यते पृथ्वी सत्येन तपते रविः ।\nसत्येन वाति वायुश्च सर्वं सत्ये प्रतिष्ठितम् ॥",
     "english": "By truth the earth is upheld, by truth the sun shines, by truth the wind blows. Everything rests on truth.",
+    "meaning": "Truth holds everything up. Build on it.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -437,6 +491,7 @@
     "ref": "4.39",
     "sanskrit": "श्रद्धावाँल्लभते ज्ञानं तत्परः संयतेन्द्रियः ।\nज्ञानं लब्ध्वा परां शान्तिमचिरेणाधिगच्छति ॥",
     "english": "One who has faith, gives themselves to it and masters the senses gains knowledge, and having gained it, soon finds the highest peace.",
+    "meaning": "Faith, commitment and self-control lead to knowledge, and knowledge to peace.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_4_slok_39.json"
   },
   {
@@ -445,6 +500,7 @@
     "ref": "6.9",
     "sanskrit": "स्वयं कर्म करोत्यात्मा स्वयं तत्फलमश्नुते ।\nस्वयं भ्रमति संसारे स्वयं तस्माद्विमुच्यते ॥",
     "english": "The self does its own deeds and tastes their fruit itself. It wanders through the world on its own, and on its own it is set free.",
+    "meaning": "You walk your own path and shape your own results.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -453,6 +509,7 @@
     "ref": "5.10",
     "sanskrit": "ब्रह्मण्याधाय कर्माणि सङ्गं त्यक्त्वा करोति यः ।\nलिप्यते न स पापेन पद्मपत्रमिवाम्भसा ॥",
     "english": "One who acts without clinging and offers every act to the Divine is untouched by wrong, as a lotus leaf is untouched by water.",
+    "meaning": "Act without clinging and, like a lotus leaf, you stay untouched by the mud.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_5_slok_10.json"
   },
   {
@@ -461,6 +518,7 @@
     "ref": "1.19.41",
     "sanskrit": "तत्कर्म यन्न बन्धाय सा विद्या या विमुक्तये ।\nआयासायापरं कर्म विद्यान्या शिल्पनैपुणम् ॥",
     "english": "True action is action that doesn't bind; true knowledge is knowledge that sets you free. Other action is only toil; other knowledge only a craft.",
+    "meaning": "Real knowledge frees you; real action doesn't bind you.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/visnu-purana.md"
   },
   {
@@ -469,6 +527,7 @@
     "ref": "6.16",
     "sanskrit": "प्रभूतं कार्यमल्पं वा यन्नरः कर्तुमिच्छति ।\nसर्वारम्भेण तत्कार्यं सिंहादेकं प्रचक्षते ॥",
     "english": "Whatever you set out to do, big or small, do it with your whole effort. That is the one lesson to learn from the lion.",
+    "meaning": "Whatever you take on today, big or small, give it your full effort.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -477,6 +536,7 @@
     "ref": "5.29",
     "sanskrit": "भोक्तारं यज्ञतपसां सर्वलोकमहेश्वरम् ।\nसुहृदं सर्वभूतानां ज्ञात्वा मां शान्तिमृच्छति ॥",
     "english": "Knowing Me as the one who receives every offering and discipline, the great Lord of all worlds and the friend of every being, a person finds peace.",
+    "meaning": "Knowing the Divine as a friend to every being brings peace.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_5_slok_29.json"
   },
   {
@@ -485,6 +545,7 @@
     "ref": "7.3",
     "sanskrit": "सन्तोषामृततृप्तानां यत्सुखं शान्तिरेव च ।\nन च तद्धनलुब्धानामितश्चेतश्च धावताम् ॥",
     "english": "The peace and joy of those filled with the nectar of contentment never come to those who run here and there, greedy for money.",
+    "meaning": "Contentment brings a peace that chasing money never can.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -493,6 +554,7 @@
     "ref": "6.5",
     "sanskrit": "उद्धरेदात्मनात्मानं नात्मानमवसादयेत् ।\nआत्मैव ह्यात्मनो बन्धुरात्मैव रिपुरात्मनः ॥",
     "english": "Lift yourself up by your own effort; don't let yourself sink. You alone are your own friend, and you alone can be your own enemy.",
+    "meaning": "Lift yourself up. You can be your own best friend.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_6_slok_5.json"
   },
   {
@@ -501,6 +563,7 @@
     "ref": "85.23",
     "sanskrit": "या देवी सर्वभूतेषु शान्तिरूपेण संस्थिता ।\nनमस्तस्यै नमस्तस्यै नमस्तस्यै नमो नमः ॥",
     "english": "To the Goddess who dwells in every being as peace: salutations to Her, salutations to Her, salutations to Her, again and again.",
+    "meaning": "A salutation to peace itself. Pause and bow to the peace within you.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/markandeya-purana_adhyayas_1-93.md"
   },
   {
@@ -509,6 +572,7 @@
     "ref": "6.6",
     "sanskrit": "बन्धुरात्मात्मनस्तस्य येनात्मैवात्मना जितः ।\nअनात्मनस्तु शत्रुत्वे वर्तेतात्मैव शत्रुवत् ॥",
     "english": "For one who has mastered themselves, the self is a friend. For one who has not, their own self behaves like an enemy.",
+    "meaning": "Mastering yourself turns your own mind into a friend.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_6_slok_6.json"
   },
   {
@@ -517,6 +581,7 @@
     "ref": "8.11",
     "sanskrit": "न देवो विद्यते काष्ठे न पाषाणे न मृन्मये ।\nभावे हि विद्यते देवस्तस्माद्भावो हि कारणम् ॥",
     "english": "God is not in wood, nor in stone, nor in clay. God lives in heartfelt devotion, so it is the feeling within that truly matters.",
+    "meaning": "What makes devotion real is the feeling in the heart, not the object.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -525,6 +590,7 @@
     "ref": "6.9",
     "sanskrit": "सुहृन्मित्रार्युदासीनमध्यस्थद्वेष्यबन्धुषु ।\nसाधुष्वपि च पापेषु समबुद्धिर्विशिष्यते ॥",
     "english": "One who looks with the same even mind on well-wishers, friends, foes, strangers, rivals, relatives, the good and the wrongdoers stands out.",
+    "meaning": "Treat friend and stranger with the same even mind.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_6_slok_9.json"
   },
   {
@@ -533,6 +599,7 @@
     "ref": "8.15",
     "sanskrit": "गुणो भूषयते रूपं शीलं भूषयते कुलम् ।\nसिद्धिर्भूषयते विद्यां भोगो भूषयते धनम् ॥",
     "english": "Virtue adorns beauty, good conduct adorns a family, accomplishment adorns learning, and putting it to good use adorns wealth.",
+    "meaning": "Each good thing is made beautiful by using it well.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -541,6 +608,7 @@
     "ref": "6.17",
     "sanskrit": "युक्ताहारविहारस्य युक्तचेष्टस्य कर्मसु ।\nयुक्तस्वप्नावबोधस्य योगो भवति दुःखहा ॥",
     "english": "For one who is balanced in eating and in play, balanced in effort at work, balanced in sleep and in waking, yoga becomes the end of sorrow.",
+    "meaning": "Balance in food, rest, work and play is itself the practice.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_6_slok_17.json"
   },
   {
@@ -549,6 +617,7 @@
     "ref": "9.1",
     "sanskrit": "मुक्तिमिच्छसि चेत्तात विषयान्विषवत्त्यज ।\nक्षमार्जवदयाशौचं सत्यं पीयूषवत्पिब ॥",
     "english": "If you want freedom, my friend, leave sense-cravings like poison, and drink in patience, honesty, kindness, purity and truth like nectar.",
+    "meaning": "Drop what poisons you; drink in patience, honesty and kindness.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -557,6 +626,7 @@
     "ref": "9.21.12",
     "sanskrit": "न कामयेऽहं गतिमीश्वरात्परामष्टर्द्धियुक्तामपुनर्भवं वा ।\nआर्तिं प्रपद्येऽखिलदेहभाजामन्तःस्थितो येन भवन्त्यदुःखाः ॥",
     "english": "I don't ask God for the highest state, its powers, or release from rebirth. I would take on the pain of all beings, so that they may be free of sorrow.",
+    "meaning": "The highest wish is to ease others' sorrow.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/bhagp/bhagavata-purana_9.md"
   },
   {
@@ -565,6 +635,7 @@
     "ref": "6.19",
     "sanskrit": "यथा दीपो निवातस्थो नेङ्गते सोपमा स्मृता ।\nयोगिनो यतचित्तस्य युञ्जतो योगमात्मनः ॥",
     "english": "Like a lamp in a windless place that does not flicker: that is the picture of a disciplined mind absorbed in meditation.",
+    "meaning": "A steady mind is like a lamp that doesn't flicker in still air.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_6_slok_19.json"
   },
   {
@@ -573,6 +644,7 @@
     "ref": "9.14",
     "sanskrit": "दरिद्रता धीरतया विराजते\nकुवस्त्रता शुभ्रतया विराजते ।\nकदन्नता चोष्णतया विराजते\nकुरूपता शीलतया विराजते ॥",
     "english": "Poverty shines through courage, plain clothes through cleanliness, simple food when served warm, and plain looks through good character.",
+    "meaning": "Courage, cleanliness and good character dignify any situation.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -581,6 +653,7 @@
     "ref": "6.26",
     "sanskrit": "यतो यतो निश्चरति मनश्चञ्चलमस्थिरम् ।\nततस्ततो नियम्यैतदात्मन्येव वशं नयेत् ॥",
     "english": "Wherever the restless, unsteady mind wanders off to, gently bring it back from there and settle it within the Self.",
+    "meaning": "When the mind wanders, gently bring it back, again and again.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_6_slok_26.json"
   },
   {
@@ -589,6 +662,7 @@
     "ref": "1.111.24",
     "sanskrit": "धीराः कष्टमनुप्राप्य न भवन्ति विषादिनः ।\nप्रविश्य वदनं राहोः किं नोदति पुनः शशी ॥",
     "english": "The steady don't despair when hardship comes. Doesn't the moon rise again after Rahu swallows it?",
+    "meaning": "Hard times pass, as the moon returns after an eclipse.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/garuda-purana_part_1.md"
   },
   {
@@ -597,6 +671,7 @@
     "ref": "6.30",
     "sanskrit": "यो मां पश्यति सर्वत्र सर्वं च मयि पश्यति ।\nतस्याहं न प्रणश्यामि स च मे न प्रणश्यति ॥",
     "english": "One who sees Me everywhere and sees everything in Me: I am never lost to them, and they are never lost to Me.",
+    "meaning": "See the Divine everywhere and you are never alone.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_6_slok_30.json"
   },
   {
@@ -605,6 +680,7 @@
     "ref": "10.1",
     "sanskrit": "धनहीनो न हीनश्च धनिकः स सुनिश्चयः ।\nविद्यारत्नेन हीनो यः स हीनः सर्ववस्तुषु ॥",
     "english": "Lacking money doesn't make you lacking; such a person may still be truly rich. One who lacks the jewel of learning lacks in everything.",
+    "meaning": "Money can be lost and regained; learning is the lasting wealth.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -613,6 +689,7 @@
     "ref": "6.32",
     "sanskrit": "आत्मौपम्येन सर्वत्र समं पश्यति योऽर्जुन ।\nसुखं वा यदि वा दुःखं स योगी परमो मतः ॥",
     "english": "One who sees every being as they see themselves, feeling others' joy and sorrow as their own, is counted the highest yogi.",
+    "meaning": "Feel others' joy and sorrow as your own; that is the highest practice.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_6_slok_32.json"
   },
   {
@@ -621,6 +698,7 @@
     "ref": "10.3",
     "sanskrit": "सुखार्थी चेत्त्यजेद्विद्यां विद्यार्थी चेत्त्यजेत्सुखम् ।\nसुखार्थिनः कुतो विद्या सुखं विद्यार्थिनः कुतः ॥",
     "english": "If you want comfort, give up learning; if you want learning, give up comfort. Where is learning for the comfort-seeker, or comfort for the learner?",
+    "meaning": "Real learning asks for effort; comfort and growth rarely come together.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -629,6 +707,7 @@
     "ref": "6.35",
     "sanskrit": "असंशयं महाबाहो मनो दुर्निग्रहं चलम् ।\nअभ्यासेन तु कौन्तेय वैराग्येण च गृह्यते ॥",
     "english": "Yes, the mind is restless and hard to hold. But with steady practice and letting go, it can be held.",
+    "meaning": "The mind is restless, but practice and letting go can steady it.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_6_slok_35.json"
   },
   {
@@ -637,6 +716,7 @@
     "ref": "10.9",
     "sanskrit": "यस्य नास्ति स्वयं प्रज्ञा शास्त्रं तस्य करोति किम् ।\nलोचनाभ्यां विहीनस्य दर्पणः किं करिष्यति ॥",
     "english": "What can books do for someone with no understanding of their own? What can a mirror do for someone without eyes?",
+    "meaning": "Books help only those willing to understand. Bring your own attention.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -645,6 +725,7 @@
     "ref": "10.22.35",
     "sanskrit": "एतावज्जन्मसाफल्यं देहिनामिह देहिषु ।\nप्राणैरर्थैर्धिया वाचा श्रेयआचरणं सदा ॥",
     "english": "This is what makes a life worthwhile: always doing good for others with your life, your means, your understanding and your words.",
+    "meaning": "A life is worthwhile when it is used for the good of others.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/bhagp/bhagavata-purana_10.md"
   },
   {
@@ -653,6 +734,7 @@
     "ref": "6.40",
     "sanskrit": "पार्थ नैवेह नामुत्र विनाशस्तस्य विद्यते ।\nन हि कल्याणकृत्कश्चिद् दुर्गतिं तात गच्छति ॥",
     "english": "No one who does good ever comes to a bad end, dear one, neither in this world nor the next.",
+    "meaning": "Doing good never leads to ruin. Keep going.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_6_slok_40.json"
   },
   {
@@ -661,6 +743,7 @@
     "ref": "10.16",
     "sanskrit": "बुद्धिर्यस्य बलं तस्य निर्बुद्धेश्च कुतो बलम् ।\nवने सिंहो यदोन्मत्तः शशकेन निपातितः ॥",
     "english": "Intelligence is strength; without it, where is strength? In the forest, a proud and reckless lion was brought down by a hare.",
+    "meaning": "Clear thinking beats brute strength.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -669,6 +752,7 @@
     "ref": "9.22",
     "sanskrit": "अनन्याश्चिन्तयन्तो मां ये जनाः पर्युपासते ।\nतेषां नित्याभियुक्तानां योगक्षेमं वहाम्यहम् ॥",
     "english": "Those who think of Me alone and worship Me, always devoted: I bring them what they lack and keep safe what they have.",
+    "meaning": "Steady devotion is met with care for what you need.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_9_slok_22.json"
   },
   {
@@ -677,6 +761,7 @@
     "ref": "11.1",
     "sanskrit": "दातृत्वं प्रियवक्तृत्वं धीरत्वमुचितज्ञता ।\nअभ्यासेन न लभ्यन्ते चत्वारः सहजा गुणाः ॥",
     "english": "Generosity, kind speech, courage and a sense of what is fitting are not gained by practice. These four are inborn.",
+    "meaning": "Generosity, kind speech, courage and good sense are qualities to treasure.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -685,6 +770,7 @@
     "ref": "9.26",
     "sanskrit": "पत्रं पुष्पं फलं तोयं यो मे भक्त्या प्रयच्छति ।\nतदहं भक्त्युपहृतमश्नामि प्रयतात्मनः ॥",
     "english": "A leaf, a flower, a fruit, a little water: whatever is offered to Me with love by a sincere heart, I gladly accept.",
+    "meaning": "Even the smallest offering given with love is enough.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_9_slok_26.json"
   },
   {
@@ -693,6 +779,7 @@
     "ref": "1.113.9",
     "sanskrit": "वनेऽपि दोषाः प्रभवन्ति रागिणां गृहेऽपि पञ्चेन्द्रियनिग्रहस्तपः ।\nअकुत्सिते कर्मणि यः प्रवर्तते निवृत्तरागस्य गृहं तपोवनम् ॥",
     "english": "For a craving mind, faults arise even in the forest. At home, mastering the senses is itself austerity. For one free of craving, doing honest work, home is a hermitage.",
+    "meaning": "Peace depends on the mind, not the place; a calm mind makes any home sacred.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/garuda-purana_part_1.md"
   },
   {
@@ -701,6 +788,7 @@
     "ref": "9.29",
     "sanskrit": "समोऽहं सर्वभूतेषु न मे द्वेष्योऽस्ति न प्रियः ।\nये भजन्ति तु मां भक्त्या मयि ते तेषु चाप्यहम् ॥",
     "english": "I am the same to all beings; no one is hateful or dear to Me. But those who worship Me with love are in Me, and I am in them.",
+    "meaning": "The Divine is equal to all, and close to those who love.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_9_slok_29.json"
   },
   {
@@ -709,6 +797,7 @@
     "ref": "12.7",
     "sanskrit": "सत्सङ्गाद्भवति हि साधुना खलानां\nसाधूनां नहि खलसङ्गतः खलत्वम् ।\nआमोदं कुसुमभवं मृदेव धत्ते\nमृद्गन्धं नहि कुसुमानि धारयन्ति ॥",
     "english": "In good company even the unkind grow good, but the good don't turn bad in bad company. Earth takes on a flower's fragrance; flowers never smell of earth.",
+    "meaning": "Good company lifts people up; goodness rubs off.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -717,6 +806,7 @@
     "ref": "9.31",
     "sanskrit": "क्षिप्रं भवति धर्मात्मा शश्वच्छान्तिं निगच्छति ।\nकौन्तेय प्रतिजानीहि न मे भक्तः प्रणश्यति ॥",
     "english": "Soon they become good at heart and reach lasting peace. Know this for certain: one who loves Me is never lost.",
+    "meaning": "Love for the Divine steadily makes a person good at heart.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_9_slok_31.json"
   },
   {
@@ -725,6 +815,7 @@
     "ref": "12.8",
     "sanskrit": "साधूनां दर्शनं पुण्यं तीर्थभूता हि साधवः ।\nकालेन फलते तीर्थं सद्यः साधुसमागमः ॥",
     "english": "Just seeing good people is a blessing; they are living places of pilgrimage. A pilgrimage bears fruit in time, good company at once.",
+    "meaning": "Time with good people blesses you at once.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -733,6 +824,7 @@
     "ref": "91.9",
     "sanskrit": "सर्वमङ्गलमाङ्गल्ये शिवे सर्वार्थसाधिके ।\nशरण्ये त्र्यम्बके गौरि नारायणि नमोऽस्तु ते ॥",
     "english": "O auspicious one, the blessing within every blessing, who brings every aim to fulfilment, our refuge, three-eyed Gauri, Narayani: salutations to you.",
+    "meaning": "A prayer to the Mother who brings every good aim to fulfilment.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/markandeya-purana_adhyayas_1-93.md"
   },
   {
@@ -741,6 +833,7 @@
     "ref": "10.20",
     "sanskrit": "अहमात्मा गुडाकेश सर्वभूताशयस्थितः ।\nअहमादिश्च मध्यं च भूतानामन्त एव च ॥",
     "english": "I am the Self, seated in the heart of every being. I am their beginning, their middle and their end.",
+    "meaning": "The Divine lives in every heart, from beginning to end.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_10_slok_20.json"
   },
   {
@@ -749,6 +842,7 @@
     "ref": "12.11",
     "sanskrit": "सत्यं माता पिता ज्ञानं धर्मो भ्राता दया सखा ।\nशान्तिः पत्नी क्षमा पुत्रः षडेते मम बान्धवाः ॥",
     "english": "Truth is my mother, knowledge my father, dharma my brother, compassion my friend, peace my spouse, forgiveness my child. These six are my family.",
+    "meaning": "Truth, knowledge, dharma, compassion, peace and forgiveness: a family worth keeping close.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -757,6 +851,7 @@
     "ref": "12.14",
     "sanskrit": "सन्तुष्टः सततं योगी यतात्मा दृढनिश्चयः ।\nमय्यर्पितमनोबुद्धिर्यो मद्भक्तः स मे प्रियः ॥",
     "english": "Always content, self-controlled, firm in resolve, with mind and understanding given to Me: that devotee is dear to Me.",
+    "meaning": "Contentment, self-control and steady resolve make a devotee dear.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_12_slok_14.json"
   },
   {
@@ -765,6 +860,7 @@
     "ref": "12.22",
     "sanskrit": "जलबिन्दुनिपातेन क्रमशः पूर्यते घटः ।\nस हेतुः सर्वविद्यानां धर्मस्य च धनस्य च ॥",
     "english": "Drop by drop, a pot is filled. That is the secret of all learning, of goodness and of wealth.",
+    "meaning": "Small, steady steps fill any pot: learning, goodness or savings.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -773,6 +869,7 @@
     "ref": "12.15",
     "sanskrit": "यस्मान्नोद्विजते लोको लोकान्नोद्विजते च यः ।\nहर्षामर्षभयोद्वेगैर्मुक्तो यः स च मे प्रियः ॥",
     "english": "One who troubles no one and is not troubled by anyone, free from elation, envy, fear and anxiety: that person is dear to Me.",
+    "meaning": "Trouble no one and don't be easily troubled; that calm is precious.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_12_slok_15.json"
   },
   {
@@ -781,6 +878,7 @@
     "ref": "11.2.36",
     "sanskrit": "कायेन वाचा मनसेन्द्रियैर्वा बुद्ध्यात्मना वानुसृतस्वभावात् ।\nकरोति यद्यत्सकलं परस्मै नारायणायेति समर्पयेत्तत् ॥",
     "english": "Whatever you do, with body, speech, mind, senses, intellect or by your own nature, offer all of it to the Divine, saying: this is for Narayana.",
+    "meaning": "Offer whatever you do today as a gift, and ordinary work becomes devotion.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/bhagp/bhagavata-purana_11.md"
   },
   {
@@ -789,6 +887,7 @@
     "ref": "12.19",
     "sanskrit": "तुल्यनिन्दास्तुतिर्मौनी सन्तुष्टो येन केनचित् ।\nअनिकेतः स्थिरमतिर्भक्तिमान्मे प्रियो नरः ॥",
     "english": "Even in blame and praise, quiet, content with whatever comes, not tied to one place, steady in mind and full of devotion: that person is dear to Me.",
+    "meaning": "Steady through praise and blame, content with what comes: that is devotion.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_12_slok_19.json"
   },
   {
@@ -797,6 +896,7 @@
     "ref": "13.2",
     "sanskrit": "गते शोको न कर्तव्यो भविष्यं नैव चिन्तयेत् ।\nवर्तमानेन कालेन वर्तयन्ति विचक्षणाः ॥",
     "english": "Don't grieve over what is past, and don't brood over what is to come. The wise live by the present moment.",
+    "meaning": "Let the past go and don't fear the future; live today well.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -804,7 +904,8 @@
     "source": "Bhagavad Gita",
     "ref": "16.2",
     "sanskrit": "अहिंसा सत्यमक्रोधस्त्यागः शान्तिरपैशुनम् ।\nदया भूतेष्वलोलुप्त्वं मार्दवं ह्रीरचापलम् ॥",
-    "english": "Non-violence, truth, freedom from anger, letting go, calm, no backbiting, kindness to all beings, no greed, gentleness, modesty and steadiness.",
+    "english": "Non-violence, truth, freedom from anger, letting go, calm, no backbiting, kindness to all, no greed, gentleness, modesty and steadiness mark a good heart.",
+    "meaning": "These are the qualities of a good-hearted person. Practise one of them today.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_16_slok_2.json"
   },
   {
@@ -813,6 +914,7 @@
     "ref": "13.12",
     "sanskrit": "बन्धाय विषयासङ्गो मुक्त्यै निर्विषयं मनः ।\nमन एव मनुष्याणां कारणं बन्धमोक्षयोः ॥",
     "english": "Clinging to sense-pleasures binds; a mind free of them is free. The mind alone is the cause of a person's bondage and freedom.",
+    "meaning": "Freedom and bondage both begin in the mind.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -821,6 +923,7 @@
     "ref": "1.113.13",
     "sanskrit": "विप्राणां भूषणं विद्या पृथिव्या भूषणं नृपः ।\nनभसो भूषणं चन्द्रः शीलं सर्वस्य भूषणम् ॥",
     "english": "Learning adorns the scholar, a good ruler adorns the land, the moon adorns the sky, but good character adorns everyone.",
+    "meaning": "Good character suits everyone, in every role.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/garuda-purana_part_1.md"
   },
   {
@@ -829,6 +932,7 @@
     "ref": "16.21",
     "sanskrit": "त्रिविधं नरकस्येदं द्वारं नाशनमात्मनः ।\nकामः क्रोधस्तथा लोभस्तस्मादेतत्त्रयं त्यजेत् ॥",
     "english": "Desire, anger and greed: these three are the gateways to one's own ruin. So let all three go.",
+    "meaning": "Desire, anger and greed lead to harm. Notice them and let them go.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_16_slok_21.json"
   },
   {
@@ -837,6 +941,7 @@
     "ref": "13.15",
     "sanskrit": "यथा धेनुसहस्रेषु वत्सो गच्छति मातरम् ।\nतथा यच्च कृतं कर्म कर्तारमनुगच्छति ॥",
     "english": "As a calf finds its own mother among a thousand cows, the deeds a person has done find their way back to the doer.",
+    "meaning": "What you do finds its way back to you. Act well.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -845,6 +950,7 @@
     "ref": "17.3",
     "sanskrit": "सत्त्वानुरूपा सर्वस्य श्रद्धा भवति भारत ।\nश्रद्धामयोऽयं पुरुषो यो यच्छ्रद्धः स एव सः ॥",
     "english": "Everyone's faith takes the shape of their nature. A person is made of their faith: as their faith is, so are they.",
+    "meaning": "You become what you truly trust in. Choose your faith with care.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_17_slok_3.json"
   },
   {
@@ -853,6 +959,7 @@
     "ref": "14.1",
     "sanskrit": "पृथिव्यां त्रीणि रत्नानि जलमन्नं सुभाषितम् ।\nमूढैः पाषाणखण्डेषु रत्नसञ्ज्ञा विधीयते ॥",
     "english": "The earth has three jewels: water, food and wise words. Only the foolish call pieces of stone jewels.",
+    "meaning": "Water, food and wise words are the real treasures.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -861,6 +968,7 @@
     "ref": "17.15",
     "sanskrit": "अनुद्वेगकरं वाक्यं सत्यं प्रियहितं च यत् ।\nस्वाध्यायाभ्यसनं चैव वाङ्मयं तप उच्यते ॥",
     "english": "Words that hurt no one and are true, kind and helpful, along with regular study: this is called the discipline of speech.",
+    "meaning": "Speak true, kind and helpful words; that is a discipline in itself.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_17_slok_15.json"
   },
   {
@@ -869,6 +977,7 @@
     "ref": "12.13.23",
     "sanskrit": "नामसङ्कीर्तनं यस्य सर्वपाप प्रणाशनम् ।\nप्रणामो दुःखशमनस्तं नमामि हरिं परम् ॥",
     "english": "I bow to Hari, the Supreme, whose name, sung aloud, washes away every wrong, and to whom a simple bow brings sorrow to rest.",
+    "meaning": "A heartfelt prayer or a simple bow can bring sorrow to rest.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/bhagp/bhagavata-purana_12.md"
   },
   {
@@ -877,6 +986,7 @@
     "ref": "17.16",
     "sanskrit": "मनः प्रसादः सौम्यत्वं मौनमात्मविनिग्रहः ।\nभावसंशुद्धिरित्येतत्तपो मानसमुच्यते ॥",
     "english": "A clear and calm mind, gentleness, silence, self-control and a pure heart: this is called the discipline of the mind.",
+    "meaning": "A calm, gentle and pure mind is a practice to cultivate daily.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_17_slok_16.json"
   },
   {
@@ -885,6 +995,7 @@
     "ref": "14.4",
     "sanskrit": "बहूनां चैव सत्त्वानां समवायो रिपुञ्जयः ।\nवर्षाधाराधरो मेघस्तृणैरपि निवार्यते ॥",
     "english": "Many together can overcome any foe. Even blades of grass, woven together, hold back the rain of a storm cloud.",
+    "meaning": "Together we're strong; even grass woven together holds back a storm.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -893,6 +1004,7 @@
     "ref": "17.20",
     "sanskrit": "दातव्यमिति यद्दानं दीयतेऽनुपकारिणे ।\nदेशे काले च पात्रे च तद्दानं सात्त्विकं स्मृतम् ॥",
     "english": "A gift given simply because giving is right, to one who cannot repay, at the right place and time, to a worthy person: that is pure giving.",
+    "meaning": "Give because it's right, not for a return.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_17_slok_20.json"
   },
   {
@@ -901,6 +1013,7 @@
     "ref": "14.8",
     "sanskrit": "दाने तपसि शौर्ये वा विज्ञाने विनये नये ।\nविस्मयो नहि कर्तव्यो बहुरत्ना वसुन्धरा ॥",
     "english": "Never be too amazed by anyone's generosity, discipline, courage, knowledge, humility or good judgement. The earth holds many jewels.",
+    "meaning": "Admire good qualities, but remember the world is full of them.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -909,6 +1022,7 @@
     "ref": "1.113.34",
     "sanskrit": "नाल्पा भवति सद्विद्या दीयमानापि वर्धते ।\nकूपस्थमिव पानीयं भवत्येव बहूदकम् ॥",
     "english": "True learning never runs low; it grows as you give it away, like water in a well that keeps filling as it is drawn.",
+    "meaning": "Share what you know; knowledge grows when it's given.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/garuda-purana_part_1.md"
   },
   {
@@ -917,6 +1031,7 @@
     "ref": "18.46",
     "sanskrit": "यतः प्रवृत्तिर्भूतानां येन सर्वमिदं ततम् ।\nस्वकर्मणा तमभ्यर्च्य सिद्धिं विन्दति मानवः ॥",
     "english": "The One from whom all beings arise and who pervades all this: by honouring Him through your own work, you find fulfilment.",
+    "meaning": "Doing your own work well is a way of honouring the Divine.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_18_slok_46.json"
   },
   {
@@ -925,6 +1040,7 @@
     "ref": "14.9",
     "sanskrit": "दूरस्थोऽपि न दूरस्थो यो यस्य मनसि स्थितः ।\nयो यस्य हृदये नास्ति समीपस्थोऽपि दूरतः ॥",
     "english": "One who lives in your heart is never far, even far away. One who is not in your heart is distant, even standing beside you.",
+    "meaning": "Closeness is about the heart, not distance.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -933,6 +1049,7 @@
     "ref": "18.48",
     "sanskrit": "सहजं कर्म कौन्तेय सदोषमपि न त्यजेत् ।\nसर्वारम्भा हि दोषेण धूमेनाग्निरिवावृताः ॥",
     "english": "Don't abandon the work that is natural to you, even if it has flaws. Every undertaking carries some flaw, as fire comes wrapped in smoke.",
+    "meaning": "No work is flawless. Do your own work well anyway.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_18_slok_48.json"
   },
   {
@@ -941,6 +1058,7 @@
     "ref": "15.10",
     "sanskrit": "अनन्तशास्त्रं बहुलाश्च विद्याः\nस्वल्पश्च कालो बहुविघ्नता च ।\nयत्सारभूतं तदुपासनीयं\nहंसो यथा क्षीरमिवाम्बुमध्यात् ॥",
     "english": "Scriptures are endless and branches of learning many, but time is short and obstacles are many. Take the essence, as the swan draws milk from water.",
+    "meaning": "Time is short: take the essence and leave the rest, like a swan.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   },
   {
@@ -949,6 +1067,7 @@
     "ref": "18.63",
     "sanskrit": "इति ते ज्ञानमाख्यातं गुह्याद्गुह्यतरं मया ।\nविमृश्यैतदशेषेण यथेच्छसि तथा कुरु ॥",
     "english": "I have shared with you wisdom deeper than any secret. Reflect on it fully, then do as you choose.",
+    "meaning": "Wisdom is offered, not forced. Reflect, then choose your path.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_18_slok_63.json"
   },
   {
@@ -957,6 +1076,7 @@
     "ref": "1.113.42",
     "sanskrit": "न प्रहृष्यति सम्मानैर्नावमानैः प्रकुप्यति ।\nन क्रुद्धः परुषं ब्रूयादेतत्साधोस्तु लक्षणम् ॥",
     "english": "Not puffed up by honour, not angered by insult, and never harsh in speech even when angry: these are the marks of a good person.",
+    "meaning": "Stay humble when honoured, calm when insulted, and kind in speech.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/gretil_devanAgarI/1_sanskr/3_purana/garuda-purana_part_1.md"
   },
   {
@@ -965,6 +1085,7 @@
     "ref": "18.66",
     "sanskrit": "सर्वधर्मान्परित्यज्य मामेकं शरणं व्रज ।\nअहं त्वा सर्वपापेभ्यो मोक्षयिष्यामि मा शुचः ॥",
     "english": "Let go of every other duty and take refuge in Me alone. I will free you from all wrongs. Do not grieve.",
+    "meaning": "Let go and trust. You don't have to carry everything alone.",
     "verified_from": "https://raw.githubusercontent.com/vedicscriptures/bhagavad-gita-data/main/slok/bhagavadgita_chapter_18_slok_66.json"
   },
   {
@@ -973,6 +1094,7 @@
     "ref": "17.12",
     "sanskrit": "दानेन पाणिर्न तु कङ्कणेन\nस्नानेन शुद्धिर्न तु चन्दनेन ।\nमानेन तृप्तिर्न तु भोजनेन\nज्ञानेन मुक्तिर्न तु मण्डनेन ॥",
     "english": "Hands are graced by giving, not bangles; you are cleansed by bathing, not sandal paste; fed by respect, not food; freed by knowledge, not finery.",
+    "meaning": "Real ornaments are giving, respect and knowledge, not things you wear.",
     "verified_from": "https://raw.githubusercontent.com/sanskrit/raw_etexts/master/mixed/ebhAratI-sampat/subhAShitasangrahaH/subhAShitasangrahasambaddhapustakAni/chANakyaH/chANakyanItidarpaNam.md"
   }
 ]

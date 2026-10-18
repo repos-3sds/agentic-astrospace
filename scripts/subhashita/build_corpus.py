@@ -53,7 +53,7 @@ GITA = {
 '12.14': "Always content, self-controlled, firm in resolve, with mind and understanding given to Me: that devotee is dear to Me.",
 '12.15': "One who troubles no one and is not troubled by anyone, free from elation, envy, fear and anxiety: that person is dear to Me.",
 '12.19': "Even in blame and praise, quiet, content with whatever comes, not tied to one place, steady in mind and full of devotion: that person is dear to Me.",
-'16.2': "Non-violence, truth, freedom from anger, letting go, calm, no backbiting, kindness to all beings, no greed, gentleness, modesty and steadiness.",
+'16.2': "Non-violence, truth, freedom from anger, letting go, calm, no backbiting, kindness to all, no greed, gentleness, modesty and steadiness mark a good heart.",
 '16.21': "Desire, anger and greed: these three are the gateways to one's own ruin. So let all three go.",
 '17.3': "Everyone's faith takes the shape of their nature. A person is made of their faith: as their faith is, so are they.",
 '17.15': "Words that hurt no one and are true, kind and helpful, along with regular study: this is called the discipline of speech.",
@@ -118,7 +118,7 @@ PURANA = [
 ('Bhagavata Purana', '1.2.6', 'bhagp/bhagavata-purana_1.md', "The highest dharma for anyone is the one that awakens selfless, unbroken devotion to the Divine. Through it, the self becomes truly at peace."),
 ('Bhagavata Purana', '1.8.25', 'bhagp/bhagavata-purana_1.md', "Let hardships come again and again, O Teacher of the world, if in each of them I get to see You: the sight that ends the round of rebirth."),
 ('Bhagavata Purana', '4.31.14', 'bhagp/bhagavata-purana_4.md', "Water a tree's root and its trunk and branches are all nourished; feed the life-breath and every sense is fed. So, worshipping the Divine honours all."),
-('Bhagavata Purana', '7.5.23', 'bhagp/bhagavata-purana_7.md', "Hearing of Vishnu, singing of Him, remembering Him, serving His feet, worship, bowing down, service, friendship, and offering your whole self."),
+('Bhagavata Purana', '7.5.23', 'bhagp/bhagavata-purana_7.md', "Devotion has nine forms: hearing of Vishnu, singing of Him, remembering Him, serving His feet, worship, bowing, service, friendship and offering your whole self."),
 ('Bhagavata Purana', '9.21.12', 'bhagp/bhagavata-purana_9.md', "I don't ask God for the highest state, its powers, or release from rebirth. I would take on the pain of all beings, so that they may be free of sorrow."),
 ('Bhagavata Purana', '10.22.35', 'bhagp/bhagavata-purana_10.md', "This is what makes a life worthwhile: always doing good for others with your life, your means, your understanding and your words."),
 ('Bhagavata Purana', '11.2.36', 'bhagp/bhagavata-purana_11.md', "Whatever you do, with body, speech, mind, senses, intellect or by your own nature, offer all of it to the Divine, saying: this is for Narayana."),
@@ -255,10 +255,17 @@ for i in range(N):
 # the app wraps (day mod length), so the last entry must not share a source with the first
 if res[-1]['source'] == res[0]['source']:
     res[-1], res[-2] = res[-2], res[-1]
+# the "what it means for you" line under each verse (scripts/subhashita/meanings.py)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from meanings import MEANINGS, MEANING_MAX
+res = [{**{k: e[k] for k in ('id', 'source', 'ref', 'sanskrit', 'english')},
+        'meaning': MEANINGS[e['id']], 'verified_from': e['verified_from']} for e in res]
 # checks
 ids = [e['id'] for e in res]; assert len(ids) == len(set(ids))
+assert set(MEANINGS) == set(ids), sorted(set(MEANINGS) ^ set(ids))
 for e in res:
     assert len(e['english']) <= 180, (e['id'], len(e['english']))
+    assert len(e['meaning']) <= MEANING_MAX, (e['id'], len(e['meaning']))
     assert e['sanskrit'].endswith('॥'), e['id']
     assert re.search(r'[a-zA-Z0-9|]', e['sanskrit']) is None, e['id']
 adj = sum(1 for a, b in zip(res, res[1:] + res[:1]) if a['source'] == b['source'])
