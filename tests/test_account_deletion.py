@@ -112,3 +112,16 @@ def test_deletes_only_the_authenticated_user(deletion_client):
         assert db.query(ProfileContextFact).filter_by(user_id=user_id).count() == 0
         assert db.query(ProfileContextMutation).filter_by(user_id=user_id).count() == 0
         assert db.query(ProfileContextAuditEvent).filter_by(user_id=user_id).count() == 0
+
+
+def test_export_carries_only_the_callers_data(deletion_client):
+    client, _, user_id, _ = deletion_client
+    response = client.get("/api/v1/me/export")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["account"]["id"] == user_id
+    assert [row["name"] for row in body["profiles"]] == ["Mine"]
+    assert body["profile"][0]["display_name"] == "Delete Me"
+    for key in ("ask_threads", "ask_messages", "remedies", "remedy_completions", "settings", "memory"):
+        assert isinstance(body[key], list)
+    assert "Theirs" not in response.text and "Keep Me" not in response.text

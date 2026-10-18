@@ -78,6 +78,20 @@ export class StrengthAdvancedComponent {
     }));
   });
 
+  /**
+   * Bars share one scale, the strongest planet's virupa, with a tick at each
+   * planet's own minimum. Filled to the ratio, every planet that met its
+   * minimum read as the same full green bar (usability audit U26).
+   */
+  readonly strengthScale = computed(() =>
+    Math.max(1, ...this.strengths().map((p) => Math.max(p.virupa, p.minimum))));
+  protected barWidth(planet: PlanetStrength): number {
+    return Math.min(100, (planet.virupa / this.strengthScale()) * 100);
+  }
+  protected minimumAt(planet: PlanetStrength): number {
+    return Math.min(100, (planet.minimum / this.strengthScale()) * 100);
+  }
+
   readonly planets = computed(() => ['SAV', ...(this.ashtakavarga()?.planets ?? [])]);
   readonly houses = computed<HouseBindu[]>(() => {
     const values = this.avPlanet() === 'SAV'

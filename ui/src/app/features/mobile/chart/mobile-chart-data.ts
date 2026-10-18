@@ -136,7 +136,8 @@ export function buildChartAdapter(data: VedicAll, profile: Kundli | null, vargaI
   ];
   const signature = {
     headline: `${angles[0].sign} Sun, ${angles[1].sign} Moon, ${lagnaSign} rising.`,
-    detail: `${profile?.name ?? 'This profile'} is drawn from your birth details with the ${data.meta?.ayanamsha?.name ?? 'selected'} ayanamsha.`,
+    detail: `${profile?.name ?? 'This profile'}’s chart, worked out from the birth date, time and place.`,
+    method: `Sidereal, ${data.meta?.ayanamsha?.name ?? 'selected'} ayanamsha.`,
   };
 
   return { cells, details, angles, signature, provenance: provenanceRows(data, profile) };

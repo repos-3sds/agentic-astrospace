@@ -213,6 +213,9 @@ export class ReferenceComponent {
     if (!data) return null;
     return { bav: data.planets.map((planet) => data.totals.bav[planet] ?? 0), sav: data.totals.sav };
   });
+  /** The classical SAV total is always 337, so "337 of 337" said nothing
+   * (U26). How many signs reach the supportive 28 bindus differs per chart. */
+  protected readonly ashtaSupportive = computed(() => this.ashtaRows().filter((row) => row.sav >= 28).length);
   protected readonly ashtaStrongest = computed(() => [...this.ashtaRows()].sort((a, b) => b.sav - a.sav).slice(0, 3));
   protected readonly ashtaWeakest = computed(() => [...this.ashtaRows()].sort((a, b) => a.sav - b.sav).slice(0, 3));
   protected readonly ashtaPinda = computed(() => this.ashtakavarga()?.pinda_rank ?? []);

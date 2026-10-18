@@ -110,7 +110,7 @@ export class ExploreMenuComponent {
         detail: maha?.end ? `${maha.lord} period until ${monthYear(maha.end)}` : 'Your current chapter',
         tone: 'accent', icon: 'figma-yantra-clock', route: guided ? ['/m', 'explore', 'life-chapters'] : ['/m', 'chart', 'periods'],
       },
-      { id: 'compat', label: 'Compatibility', detail: 'Gun Milan matching', tone: 'muted', icon: 'explore-compat', route: ['/m', 'compat'], gate: 'compatibility.full', partial: 'Score, 1 a month' },
+      { id: 'compat', label: 'Compatibility', detail: this.preferences.experienceMode() === 'practitioner' ? 'Gun Milan matching' : 'Match two charts', tone: 'muted', icon: 'explore-compat', route: ['/m', 'compat'], gate: 'compatibility.full', partial: 'Score, 1 a month' },
       { id: 'readings', label: 'Readings', detail: 'Period readings', tone: 'muted', icon: 'figma-yantra-file-text', route: ['/m', 'readings'], gate: 'readings.full' },
       { id: 'remedies', label: 'Remedies', detail: 'Traditional practices', tone: 'good', icon: 'figma-yantra-sun', route: ['/m', 'remedies'], gate: 'remedies.full', partial: '1 practice, every flag' },
       { id: 'muhurta', label: 'Muhurtas', detail: 'Find a good time', tone: 'warn', icon: 'figma-yantra-calendar', route: ['/m', 'muhurta'], gate: 'muhurta.full' },

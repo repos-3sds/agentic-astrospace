@@ -5,6 +5,8 @@ import { AnalyticsService } from '../../../core/analytics.service';
 import { PreferencesService } from '../../../core/preferences.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { ApiService } from '../../../core/api.service';
+import { shareFile } from '../../../core/native-share';
 
 /**
  * Settings — Account & privacy (Figma node 69:180).
@@ -28,6 +30,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
   styleUrl: './account-privacy.component.scss',
 })
 export class AccountPrivacyComponent {
+  private readonly api = inject(ApiService);
   private readonly auth = inject(AuthService);
   private readonly kundlis = inject(KundliStore);
   private readonly router = inject(Router);
@@ -66,19 +69,25 @@ export class AccountPrivacyComponent {
         return;
       }
       if (id === 'export') {
-        if (!this.kundlis.loaded()) await this.kundlis.load();
-        const payload = JSON.stringify({
-          exportedAt: new Date().toISOString(),
-          account: { email: this.auth.email() },
-          profiles: this.kundlis.kundlis(),
-        }, null, 2);
-        const url = URL.createObjectURL(new Blob([payload], { type: 'application/json' }));
-        const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = `siddha-export-${new Date().toISOString().slice(0, 10)}.json`;
-        anchor.click();
-        URL.revokeObjectURL(url);
-        this.message.set('Your data export is ready.');
+        // Everything the account holds, from the server (U9), plus the Notes
+        // draft that only lives on this phone. Shared through the OS sheet:
+        // Android's WebView ignores <a download> on a blob URL, so the old
+        // "Your data export is ready" appeared while nothing was saved.
+        const data = await this.api.get<Record<string, unknown>>('/me/export');
+        let notes: string | null = null;
+        try { notes = localStorage.getItem('astrospace.mobile.notes.draft'); } catch { /* blocked */ }
+        const name = `siddha-export-${new Date().toISOString().slice(0, 10)}.json`;
+        const file = new File([JSON.stringify({ ...data, notes_on_this_device: notes }, null, 2)], name, { type: 'application/json' });
+        const shared = await shareFile(file, { title: 'Your Siddha data' });
+        if (!shared) {
+          const url = URL.createObjectURL(file);
+          const anchor = document.createElement('a');
+          anchor.href = url;
+          anchor.download = name;
+          anchor.click();
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+        this.message.set(shared ? 'Your data was handed to the share sheet.' : 'Your data was downloaded.');
         return;
       }
       if (id === 'email') {

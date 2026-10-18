@@ -129,6 +129,19 @@ must be regenerated in Supabase before then or Apple sign-in stops working.
 **iPhone only.** `TARGETED_DEVICE_FAMILY` is 1. iPads still run the app in
 iPhone mode, and the store listing needs no iPad screenshots or iPad review.
 
+**Play release checklist.** Before any AAB goes to a Play track (owner: Hawk,
+in Play Console):
+
+1. *App content > Foreground service permissions*: declare **Media playback**
+   for `BriefSpeechService` (the Listen widget reads today's brief aloud with
+   a Stop notification). Play wants a short screen recording: add the Listen
+   widget, tap it, show the notification with Stop, tap Stop. Without the
+   declaration the upload is rejected because of
+   `FOREGROUND_SERVICE_MEDIA_PLAYBACK` in the manifest.
+2. *Data safety*: unchanged unless a new SDK was added since the last upload.
+3. Bump `versionCode`, build the signed AAB on the Mac, and test the build on
+   the phone before it goes to closed testing.
+
 **Both.** The Supabase session lives in Keychain / Keystore-backed storage
 (`ui/src/app/core/session-storage.ts`), never in Preferences. Terms and the
 privacy policy are served by the API at `/legal/terms` and `/legal/privacy`;

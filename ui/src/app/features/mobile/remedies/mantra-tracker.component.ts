@@ -13,6 +13,7 @@ import { MobileTtsService } from '../../../core/mobile-tts.service';
 import { NaturalVoiceService } from '../../../core/natural-voice.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
+import { keepScreenAwakeWhile } from '../../../core/screen-awake';
 import { MANTRA_SCRIPTS, MantraScriptService } from './mantra-script';
 import { StoredPractice, WidgetBridgeService } from '../../../core/widget-bridge.service';
 import { localIsoDate } from '../../../core/subhashita.service';
@@ -145,15 +146,17 @@ export class MantraTrackerComponent {
   });
 
   constructor() {
+    // 108 rounds outlast the screen timeout, and a locked screen stops Auto.
+    keepScreenAwakeWhile(computed(() => this.listen() !== 'idle'), inject(DestroyRef));
     void this.load();
     // Counted on the widget while this screen stayed open behind it.
     effect(() => {
       if (!this.widgets.mantraTapsFolded()) return;
       untracked(() => {
         const activeId = this.kundlis.activeId();
-        const recommendationId = this.params().get('recommendation');
-        const practiceSlug = this.params().get('practice');
-        if (activeId && recommendationId && practiceSlug && this.practice()) this.restore(activeId, recommendationId, practiceSlug);
+        const group = this.group();
+        const practice = this.practice();
+        if (activeId && group && practice) this.restore(activeId, group.recommendation_id, practice.practice_slug);
       });
     });
     inject(DestroyRef).onDestroy(() => {
@@ -397,16 +400,21 @@ export class MantraTrackerComponent {
       if (!activeId) throw new Error('Select a profile before opening a practice.');
       const recommendationId = this.params().get('recommendation');
       const practiceSlug = this.params().get('practice');
-      if (!recommendationId || !practiceSlug) throw new Error('Practice selection is missing.');
       const payload = await this.vedic.remedyPlan(activeId);
-      const group = payload.groups.find((row) => row.recommendation_id === recommendationId) ?? null;
-      const practice = group?.practices.find((row) => row.practice_slug === practiceSlug) ?? null;
+      // A bare open (a widget, search, an old link) starts the plan's first
+      // practice instead of "Practice selection is missing" (U25).
+      const group = recommendationId
+        ? payload.groups.find((row) => row.recommendation_id === recommendationId) ?? null
+        : payload.groups.find((row) => row.practices.length) ?? null;
+      const practice = practiceSlug
+        ? group?.practices.find((row) => row.practice_slug === practiceSlug) ?? null
+        : group?.practices[0] ?? null;
       if (!group || !practice) throw new Error('This practice is no longer active for the selected profile.');
       this.group.set(group);
       this.practice.set(practice);
       // Counts made on the home-screen widget go into the record first.
       await this.widgets.foldMantraTaps();
-      this.restore(activeId, recommendationId, practiceSlug);
+      this.restore(activeId, group.recommendation_id, practice.practice_slug);
       this.publishWidget();
     } catch (error) {
       this.error.set((error as Error).message);

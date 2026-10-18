@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   OnDestroy,
   OnInit,
   computed,
@@ -15,6 +16,7 @@ import { MobileTtsService } from '../../../core/mobile-tts.service';
 import { PreferencesService } from '../../../core/preferences.service';
 import { NATURAL_VOICE_NAME, NaturalVoiceService, naturalChunks, prepareForSpeech } from '../../../core/natural-voice.service';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
+import { keepScreenAwakeWhile } from '../../../core/screen-awake';
 
 /**
  * Natural voice is generated at 0.95x, which the sheet's default 0.9x setting
@@ -160,6 +162,11 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
 
   /** Transport state for browser/OS text-to-speech. */
   readonly playing = signal(false);
+
+  constructor() {
+    // A locked screen suspends the WebView and cuts the reading off mid-way.
+    keepScreenAwakeWhile(this.playing, inject(DestroyRef));
+  }
   protected readonly unsupported = computed(
     () =>
       this.mode() !== 'natural' &&

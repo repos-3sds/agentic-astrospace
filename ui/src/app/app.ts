@@ -24,6 +24,19 @@ const NATIVE_EXIT_ROUTES = ['/m/today', '/m/start'];
 
 const ANIMATED_SPLASH_FADE_MS = 360;
 
+const INTRO_SEEN_KEY = 'siddha.introSeen';
+
+function firstLaunch(): boolean {
+  try {
+    if (localStorage.getItem(INTRO_SEEN_KEY)) return false;
+    localStorage.setItem(INTRO_SEEN_KEY, '1');
+  } catch {
+    // Storage blocked: play the short intro rather than the long one forever.
+    return false;
+  }
+  return true;
+}
+
 /**
  * The root: a router outlet, the native launch intro, and the native
  * plumbing (back button, insets, keyboard, splash hand-off).
@@ -56,6 +69,12 @@ export class App implements OnInit, OnDestroy {
   private readonly navigationHistory = inject(NavigationHistoryService);
 
   protected readonly showAnimatedSplash = signal(false);
+  /**
+   * The full five-second intro plays on the first launch only. After that a
+   * short one covers boot, so the app is not five seconds from content on
+   * every cold start (nativeness audit N6). Tap still skips either.
+   */
+  protected readonly splashDuration = signal(firstLaunch() ? 5000 : 1600);
   protected readonly animatedSplashFading = signal(false);
 
   constructor() {

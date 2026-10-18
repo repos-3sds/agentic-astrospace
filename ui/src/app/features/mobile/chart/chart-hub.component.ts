@@ -61,6 +61,16 @@ const ON_EXPLORE_MENU = new Set(['birth-details', 'yoga', 'compat', 'readings', 
  * because that is where "where did this come from" gets asked, and Epic J
  * requires the answer be one tap away rather than buried in settings.
  */
+/** Card subtitles in plain words for Guided and Balanced; Practitioner keeps
+ * the classical names (usability audit U27). */
+const PLAIN_SUBTITLES: Record<string, string> = {
+  'birth-details': 'Rising sign, Moon sign and birth star',
+  varga: 'Your birth chart and finer charts',
+  dasha: 'The chapters of your life',
+  strength: 'How strong each planet is',
+  compat: 'Match two charts',
+};
+
 @Component({
   selector: 'as-chart-hub',
   standalone: true,
@@ -87,7 +97,7 @@ export class ChartHubComponent {
     const chart = this.chart();
     return chart ? buildChartAdapter(chart, this.kundlis.active()) : null;
   });
-  readonly signature = computed(() => this.adapter()?.signature ?? {
+  readonly signature = computed<{ headline: string; detail: string; method?: string }>(() => this.adapter()?.signature ?? {
     headline: 'Select a profile to compute your chart.',
     detail: 'Planet placements will load from your saved birth details.',
   });
@@ -214,8 +224,9 @@ export class ChartHubComponent {
     // The Explore menu already lists these in the Ask-first modes.
     const cards = this.explore()
       .filter((card) => !ON_EXPLORE_MENU.has(card.id))
+      .map((card) => ({ ...card, subtitle: PLAIN_SUBTITLES[card.id] ?? card.subtitle }))
       .map((card) => card.id === 'varga' && !this.gate.allows('vargas.full')
-        ? { ...card, subtitle: 'D9 free · D10 and beyond on Practitioner' }
+        ? { ...card, subtitle: 'Birth chart free · finer charts on Practitioner' }
         : card);
     if (mode === 'guided') return cards.filter((card) => this.guidedCoreIds.includes(card.id));
     return cards;
@@ -228,7 +239,9 @@ export class ChartHubComponent {
    */
   protected readonly advancedExplore = computed(() =>
     this.preferences.experienceMode() === 'guided'
-      ? this.explore().filter((card) => this.guidedAdvancedIds.includes(card.id))
+      ? this.explore()
+        .filter((card) => this.guidedAdvancedIds.includes(card.id))
+        .map((card) => ({ ...card, subtitle: PLAIN_SUBTITLES[card.id] ?? card.subtitle }))
       : [],
   );
 
