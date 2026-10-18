@@ -8,50 +8,65 @@ import {
   Output,
 } from '@angular/core';
 
+let nextSplashId = 0;
+
+/**
+ * The launch splash and the landing mark: the app icon's light-ribbon galaxy
+ * (ic_launcher, 2026-10-16), turning slowly, with the Siddha wordmark under it.
+ * Light and dark are one design in two moods (Hawk, 2026-10-18): soft pastel
+ * ribbons on an ivory sunrise in light, gold and cream on near-black in dark.
+ * The wordmark is terracotta or gold, never black.
+ */
 @Component({
   selector: 'app-splash',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="splash" [class.dark]="dark" [class.mark-only]="markOnly" aria-label="Siddha loading">
-      <svg class="siddha-mark" viewBox="0 0 320 320" role="img" aria-label="Siddha solar system mark">
+      <svg class="siddha-mark" viewBox="0 0 320 320" role="img" aria-label="Siddha galaxy mark">
         <defs>
-          <radialGradient id="splashSun" cx="50%" cy="42%" r="58%">
-            <stop offset="0%" stop-color="#fff6c7" />
-            <stop offset="48%" stop-color="#e6a83c" />
-            <stop offset="100%" stop-color="#b64a2d" />
-          </radialGradient>
-          <linearGradient id="splashOrbit" x1="56" x2="264" y1="80" y2="240">
-            <stop offset="0%" stop-color="#d7b06a" stop-opacity="0.22" />
-            <stop offset="52%" stop-color="#f3dcc3" stop-opacity="0.68" />
-            <stop offset="100%" stop-color="#b94733" stop-opacity="0.22" />
+          <linearGradient [attr.id]="id + 'ribbon'" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" class="r1" stop-opacity="0" />
+            <stop offset="0.35" class="r1" stop-opacity="0.9" />
+            <stop offset="0.6" class="r2" stop-opacity="1" />
+            <stop offset="1" class="r3" stop-opacity="0.15" />
           </linearGradient>
-          <filter id="splashGlow" x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur stdDeviation="9" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
+          <radialGradient [attr.id]="id + 'core'" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#fffbea" />
+            <stop offset="0.35" stop-color="#ffe2a0" />
+            <stop offset="0.7" stop-color="#f0a646" stop-opacity="0.55" />
+            <stop offset="1" stop-color="#f0a646" stop-opacity="0" />
+          </radialGradient>
+          <filter [attr.id]="id + 'glow'" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2.4" result="b" />
+            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          <filter [attr.id]="id + 'soft'" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="7" />
           </filter>
         </defs>
 
-        <circle class="outer-halo" cx="160" cy="160" r="118" />
-        <g class="orbit orbit-one">
-          <ellipse cx="160" cy="160" rx="102" ry="42" />
-          <circle class="planet planet-one" cx="262" cy="160" r="8" />
+        <circle class="halo" cx="160" cy="160" r="70" [attr.fill]="url('core')" [attr.filter]="url('soft')" />
+        <g class="spin ribbons" [attr.filter]="url('glow')" [attr.stroke]="url('ribbon')">
+          <ellipse cx="160" cy="160" rx="132" ry="74" stroke-width="2.2" transform="rotate(-24 160 160)" />
+          <ellipse cx="160" cy="160" rx="116" ry="62" stroke-width="2.6" transform="rotate(-8 160 160)" />
+          <ellipse cx="160" cy="160" rx="98" ry="52" stroke-width="3" transform="rotate(10 160 160)" />
+          <ellipse cx="160" cy="160" rx="80" ry="42" stroke-width="3.2" transform="rotate(26 160 160)" />
+          <ellipse cx="160" cy="160" rx="62" ry="32" stroke-width="3.4" transform="rotate(42 160 160)" />
+          <circle class="star twinkle" cx="282" cy="108" r="3.6" />
+          <circle class="star twinkle b" cx="58" cy="214" r="3" />
+          <circle class="star twinkle c" cx="236" cy="226" r="2.6" />
+          <circle class="star" cx="96" cy="96" r="2.2" />
         </g>
-        <g class="orbit orbit-two">
-          <ellipse cx="160" cy="160" rx="88" ry="32" />
-          <circle class="planet planet-two" cx="72" cy="160" r="5" />
+        <g class="spin highlight">
+          <ellipse cx="160" cy="160" rx="116" ry="62" stroke-width="1" transform="rotate(-8 160 160)" />
+          <ellipse cx="160" cy="160" rx="80" ry="42" stroke-width="1.2" transform="rotate(26 160 160)" />
         </g>
-        <g class="orbit orbit-three">
-          <ellipse cx="160" cy="160" rx="72" ry="116" />
-          <circle class="planet planet-three" cx="160" cy="44" r="6" />
+        <g class="core-arms" [attr.filter]="url('glow')">
+          <path d="M160 160 C 196 128, 214 168, 188 186 C 168 200, 138 194, 128 176" />
+          <path d="M160 160 C 124 192, 106 152, 132 134 C 152 120, 182 126, 192 144" />
         </g>
-        <circle class="sun" cx="160" cy="160" r="36" />
-        <circle class="sun-core" cx="160" cy="160" r="17" />
-        <path class="ray ray-a" d="M160 78v34M160 208v34M78 160h34M208 160h34" />
-        <path class="ray ray-b" d="M102 102l24 24M194 194l24 24M218 102l-24 24M126 194l-24 24" />
+        <circle class="core-dot" cx="160" cy="160" r="12" [attr.filter]="url('glow')" />
       </svg>
 
       @if (!markOnly) {
@@ -71,41 +86,58 @@ import {
       }
 
       .splash {
+        /* Light: an ivory sunrise and soft pastel ribbons. */
+        --r1: #e3b46e;
+        --r2: #c97a63;
+        --r3: #b39ac8;
+        --arm: #efbd6b;
+        --star: #d9a273;
+        --wordmark: #b25a45;
+        --tagline: #8a6f5c;
         width: 100%;
         height: 100%;
         display: grid;
         place-items: center;
         align-content: center;
-        gap: 28px;
+        gap: 30px;
         overflow: hidden;
-        color: #291b12;
+        color: #3a2a1f;
         background:
-          radial-gradient(circle at 50% 38%, rgba(224, 164, 72, 0.24), transparent 28%),
-          radial-gradient(circle at 50% 115%, rgba(177, 63, 46, 0.18), transparent 38%),
-          #fbf5e8;
+          radial-gradient(circle at 50% 41%, rgba(255, 224, 170, 0.42), rgba(255, 224, 170, 0) 30%),
+          radial-gradient(120% 70% at 50% 110%, rgba(226, 150, 118, 0.14), transparent 60%),
+          linear-gradient(180deg, #fffcf6 0%, #fcf5ea 60%, #f8ece0 100%);
       }
 
-      .splash.mark-only {
+      .splash.dark {
+        /* Dark: the icon itself, gold and cream light on near-black. */
+        --r1: #f3c978;
+        --r2: #fff1cf;
+        --r3: #a77ad6;
+        --arm: #ffd98a;
+        --star: #fff0c9;
+        --wordmark: #f4d9a6;
+        --tagline: rgba(255, 244, 224, 0.72);
+        color: #fff4e0;
+        background:
+          radial-gradient(circle at 50% 40%, rgba(230, 168, 60, 0.16), transparent 34%),
+          radial-gradient(circle at 50% 115%, rgba(120, 60, 140, 0.18), transparent 42%),
+          #0b0806;
+      }
+
+      .splash.mark-only,
+      .splash.mark-only.dark {
         background: transparent;
         gap: 0;
       }
 
-      .splash.dark {
-        color: #fff4e0;
-        background:
-          radial-gradient(circle at 50% 36%, rgba(230, 168, 60, 0.22), transparent 30%),
-          radial-gradient(circle at 50% 115%, rgba(177, 63, 46, 0.22), transparent 40%),
-          #100b06;
-      }
-
-      .splash.mark-only.dark {
-        background: transparent;
-      }
-
       .siddha-mark {
-        width: min(58vw, 240px);
+        width: min(64vw, 260px);
         aspect-ratio: 1;
         overflow: visible;
+      }
+
+      .splash:not(.dark) .siddha-mark {
+        filter: drop-shadow(0 6px 22px rgba(214, 150, 90, 0.18));
       }
 
       .mark-only .siddha-mark {
@@ -113,128 +145,94 @@ import {
         height: 100%;
       }
 
-      .outer-halo {
+      .r1 { stop-color: var(--r1); }
+      .r2 { stop-color: var(--r2); }
+      .r3 { stop-color: var(--r3); }
+
+      .halo { opacity: 0.9; }
+
+      .ribbons {
         fill: none;
-        stroke: rgba(178, 114, 52, 0.16);
-        stroke-width: 1.5;
-      }
-
-      .orbit {
-        transform-box: fill-box;
-        transform-origin: center;
-        animation: orbitSpin 8s linear infinite;
-      }
-
-      .orbit-two {
-        animation-duration: 11s;
-        animation-direction: reverse;
-      }
-
-      .orbit-three {
-        animation-duration: 13s;
-      }
-
-      .orbit ellipse {
-        fill: none;
-        stroke: url(#splashOrbit);
-        stroke-width: 2;
-      }
-
-      .planet {
-        fill: #f5d69a;
-        filter: url(#splashGlow);
-      }
-
-      .planet-two {
-        fill: #bc6a48;
-      }
-
-      .planet-three {
-        fill: #fff1c7;
-      }
-
-      .sun {
-        fill: url(#splashSun);
-        filter: url(#splashGlow);
-        transform-box: fill-box;
-        transform-origin: center;
-        animation: sunBreathe 2.4s ease-in-out infinite;
-      }
-
-      .sun-core {
-        fill: rgba(255, 247, 208, 0.86);
-      }
-
-      .ray {
-        fill: none;
-        stroke: currentColor;
         stroke-linecap: round;
-        stroke-width: 3;
-        opacity: 0.36;
-        transform-box: fill-box;
-        transform-origin: center;
       }
 
-      .ray-b {
-        opacity: 0.24;
+      .star {
+        fill: var(--star);
+        stroke: none;
       }
+
+      /* A fine bright line inside two ribbons, so in light they read as light. */
+      .highlight {
+        fill: none;
+        stroke: #fffaf0;
+        opacity: 0.9;
+      }
+
+      .dark .highlight { display: none; }
+
+      .core-arms {
+        fill: none;
+        stroke: var(--arm);
+        stroke-width: 5;
+        stroke-linecap: round;
+        transform-origin: 160px 160px;
+        animation: spin 24s linear infinite reverse;
+      }
+
+      .core-dot { fill: #fffbea; }
+
+      /* The icon's motion: the galaxy turns slowly, the core counter-turns. */
+      .spin {
+        transform-origin: 160px 160px;
+        animation: spin 48s linear infinite;
+      }
+
+      .twinkle { animation: twinkle 3.6s ease-in-out infinite; }
+      .twinkle.b { animation-delay: 1.2s; }
+      .twinkle.c { animation-delay: 2.4s; }
 
       .copy {
         display: grid;
-        gap: 8px;
+        gap: 12px;
         text-align: center;
         animation: copyRise 720ms ease-out 180ms both;
       }
 
       h1 {
         margin: 0;
+        color: var(--wordmark);
         font-family: 'Samarkan', 'Cormorant Garamond', serif;
-        font-size: clamp(42px, 13vw, 72px);
-        font-weight: 500;
+        font-size: clamp(46px, 14vw, 72px);
+        font-weight: 400;
         letter-spacing: 0;
-        line-height: 0.94;
+        line-height: 1;
       }
 
       p {
         margin: 0;
-        color: color-mix(in srgb, currentColor 70%, transparent);
-        font: 700 13px/1.4 'Inter', system-ui, sans-serif;
-        letter-spacing: 0.16em;
+        color: var(--tagline);
+        font: 600 12.5px/1.4 'Inter', system-ui, sans-serif;
+        letter-spacing: 0.2em;
         text-transform: uppercase;
       }
 
-      @keyframes sunBreathe {
-        0%,
-        100% {
-          transform: scale(0.96);
-          opacity: 0.94;
-        }
-        50% {
-          transform: scale(1.08);
-          opacity: 1;
-        }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
       }
 
-      @keyframes orbitSpin {
-        to {
-          transform: rotate(360deg);
-        }
+      @keyframes twinkle {
+        50% { opacity: 0.35; }
       }
 
       @keyframes copyRise {
-        from {
-          transform: translateY(18px);
-          opacity: 0;
-        }
-        to {
-          transform: translateY(0);
-          opacity: 1;
-        }
+        from { transform: translateY(18px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .orbit,
-        .sun,
+        .spin,
+        .core-arms,
+        .twinkle,
         .copy {
           animation: none;
         }
@@ -243,6 +241,8 @@ import {
   ],
 })
 export class SplashComponent implements AfterViewInit, OnDestroy {
+  /** SVG ids are document-wide; the mark is on screen twice (splash and landing). */
+  protected readonly id = `siddha-splash-${nextSplashId++}-`;
   @Input() dark = false;
   @Input() appName = 'Siddha';
   @Input() tagline = 'Your Guide to Living in Rhythm';
@@ -255,6 +255,10 @@ export class SplashComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     this.timer = setTimeout(() => this.finished.emit(), reduceMotion ? 900 : this.duration);
+  }
+
+  protected url(name: string): string {
+    return `url(#${this.id}${name})`;
   }
 
   ngOnDestroy(): void {
