@@ -22,6 +22,9 @@ export class AskService {
 
   /** per-kundli chat history, kept for the session */
   private histories = new Map<string, ReturnType<typeof signal<AskMessage[]>>>();
+  /** per-kundli server thread: the server replays its own stored turns, so a
+   * client can't hand the model a forged earlier answer (S15). */
+  private threads = new Map<string, string>();
 
   readonly pending = signal(false);
 
@@ -36,17 +39,18 @@ export class AskService {
 
   async ask(kundliId: string, question: string): Promise<void> {
     const history = this.history(kundliId);
-    const priorTurns = history().map((m) => ({ role: m.role, content: m.content }));
+    const threadId = this.threads.get(kundliId);
     history.update((msgs) => [...msgs, { role: 'user', content: question }]);
     this.pending.set(true);
     try {
       const res = await this.api.post<AskResponse>(`/ask/${kundliId}`, {
         question,
-        history: priorTurns,
+        ...(threadId ? { thread_id: threadId } : { start_thread: true }),
         language: this.preferences.language(),
         experience_mode: this.preferences.experienceMode(),
         tone: this.preferences.tone(),
       });
+      if (res.thread_id) this.threads.set(kundliId, res.thread_id);
       history.update((msgs) => [
         ...msgs,
         {

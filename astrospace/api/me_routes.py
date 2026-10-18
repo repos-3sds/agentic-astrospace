@@ -19,7 +19,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from ..db import crud_mobile as cm, get_db
+from ..db import crud, crud_mobile as cm, get_db
 from ..db.models import (
     AskThread, AudioRender, BillingAccount, CompatibilityCheck, DailyGuidanceCache, EmailRecipient,
     EntitlementAuditEvent, EntitlementOverride, Kundli,
@@ -45,40 +45,46 @@ ALERT_SEVERITIES = {"info", "attention"}
 
 # ── Payloads ─────────────────────────────────────────────────────────────────
 
+# Free-text fields had no upper bound (audit S17).
+_TOKEN_MAX = 4096
+_URL_MAX = 2048
+_SHORT_MAX = 100
+
+
 class ProfileUpdate(BaseModel):
-    display_name: str | None = None
-    avatar_url: str | None = None
-    locale: str | None = None
-    timezone: str | None = None
+    display_name: str | None = Field(None, max_length=200)
+    avatar_url: str | None = Field(None, max_length=_URL_MAX)
+    locale: str | None = Field(None, max_length=35)
+    timezone: str | None = Field(None, max_length=64)
     marketing_opt_in: bool | None = None
 
 
 class DeviceRegistration(BaseModel):
     device_id: str = Field(..., min_length=1, max_length=200)
     platform: str = Field(..., pattern="^(ios|android|web)$")
-    model: str | None = None
-    os_version: str | None = None
-    app_version: str | None = None
-    locale: str | None = None
-    timezone: str | None = None
+    model: str | None = Field(None, max_length=_SHORT_MAX)
+    os_version: str | None = Field(None, max_length=_SHORT_MAX)
+    app_version: str | None = Field(None, max_length=_SHORT_MAX)
+    locale: str | None = Field(None, max_length=35)
+    timezone: str | None = Field(None, max_length=64)
 
 
 class PushTokenRegistration(BaseModel):
     provider: str = Field(..., pattern="^(apns|fcm|web)$")
-    token: str = Field(..., min_length=1)
-    device_id: str | None = None
+    token: str = Field(..., min_length=1, max_length=_TOKEN_MAX)
+    device_id: str | None = Field(None, max_length=200)
     environment: str = Field("production", pattern="^(production|sandbox)$")
-    locale: str | None = None
-    timezone: str | None = None
+    locale: str | None = Field(None, max_length=35)
+    timezone: str | None = Field(None, max_length=64)
     # The token this device registered before, when the OS has since rotated
     # it. Both stay deliverable for a while, so without this every push went
     # out twice to the same phone (retest of build 487).
-    replaces: str | None = None
+    replaces: str | None = Field(None, max_length=_TOKEN_MAX)
 
 
 class PushTokenRevocation(BaseModel):
     provider: str = Field(..., pattern="^(apns|fcm|web)$")
-    token: str = Field(..., min_length=1)
+    token: str = Field(..., min_length=1, max_length=_TOKEN_MAX)
 
 
 class NotificationPreferenceUpdate(BaseModel):
@@ -98,18 +104,18 @@ class LiveActivityStart(BaseModel):
     kind: str = Field(..., min_length=1, max_length=64)
     starts_at: datetime
     ends_at: datetime
-    device_id: str | None = None
-    kundli_id: str | None = None
-    activity_token: str | None = None
-    push_to_start_token: str | None = None
+    device_id: str | None = Field(None, max_length=200)
+    kundli_id: str | None = Field(None, max_length=64)
+    activity_token: str | None = Field(None, max_length=_TOKEN_MAX)
+    push_to_start_token: str | None = Field(None, max_length=_TOKEN_MAX)
     state: dict | None = None
 
 
 class WidgetInstallPayload(BaseModel):
     kind: str = Field(..., min_length=1, max_length=64)
-    family: str | None = None
-    device_id: str | None = None
-    kundli_id: str | None = None
+    family: str | None = Field(None, max_length=64)
+    device_id: str | None = Field(None, max_length=200)
+    kundli_id: str | None = Field(None, max_length=64)
     settings: dict | None = None
 
 
@@ -500,11 +506,18 @@ def dismiss_alert(alert_id: str, user: CurrentUser, db: Session = Depends(get_db
 
 # ── Native surfaces ──────────────────────────────────────────────────────────
 
+def _require_own_kundli(db: Session, kundli_id: str | None, user_id: str) -> None:
+    """A widget or live activity may name only the caller's own profile (S17)."""
+    if kundli_id and not crud.get_kundli(db, kundli_id, user_id):
+        raise HTTPException(status_code=404, detail="Kundli not found")
+
+
 @router.post("/live-activities")
 def start_live_activity(payload: LiveActivityStart, user: CurrentUser,
                         db: Session = Depends(get_db)):
     if payload.ends_at <= payload.starts_at:
         raise HTTPException(status_code=400, detail="ends_at must be after starts_at")
+    _require_own_kundli(db, payload.kundli_id, user.id)
     row = cm.start_live_activity(
         db, user.id, payload.kind, payload.starts_at, payload.ends_at,
         **payload.model_dump(exclude={"kind", "starts_at", "ends_at"},
@@ -545,6 +558,7 @@ def end_live_activity(activity_id: str, user: CurrentUser,
 @router.post("/widgets")
 def install_widget(payload: WidgetInstallPayload, user: CurrentUser,
                    db: Session = Depends(get_db)):
+    _require_own_kundli(db, payload.kundli_id, user.id)
     row = cm.upsert_widget_install(
         db, user.id, payload.kind,
         **payload.model_dump(exclude={"kind"}, exclude_none=True),

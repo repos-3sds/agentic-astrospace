@@ -1,8 +1,9 @@
 """Ask-AI.
 
-Conversations can be stateless (the client supplies `history`, as the web app
-does) or persisted server-side as threads, which is what the mobile app needs
-so a conversation survives leaving the screen.
+A question is either one-off or part of a server-side thread; both apps use
+threads to continue a conversation. A client-supplied `history` is still
+accepted for older clients but never replayed to the model (audit S15): only
+turns the server stored itself can stand as the model's earlier answers.
 
 Why writes happen only after a successful generation
 ----------------------------------------------------
@@ -60,6 +61,7 @@ class HistoryTurn(BaseModel):
 
 class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=MAX_QUESTION_CHARS)
+    # Deprecated (S15): validated for older clients, never sent to the model.
     history: Optional[list[HistoryTurn]] = None
 
     @field_validator("history", mode="before")
@@ -395,8 +397,11 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
         # could otherwise rewrite the conversation on the way in.
         turns = _history_from_thread(db, thread.id)
     else:
-        turns = [{"role": t.role, "content": t.content}
-                 for t in (body.history or [])]
+        # Client `history` is accepted but never replayed: its assistant turns
+        # reached the model as its own earlier answers, so a forged one could
+        # steer it past the safety gates (audit S15). Both apps now continue
+        # a conversation through a server thread.
+        turns = []
 
     messages = turns[-MAX_HISTORY:]
     # a valid conversation must start with a user turn

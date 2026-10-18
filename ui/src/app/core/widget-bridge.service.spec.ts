@@ -1,4 +1,4 @@
-import { applyMantraTaps, wallClockToEpoch, windowSpan } from './widget-bridge.service';
+import { applyMantraTaps, isWidgetRoute, wallClockToEpoch, windowSpan } from './widget-bridge.service';
 
 describe('widget bridge', () => {
   describe('wallClockToEpoch', () => {
@@ -59,5 +59,18 @@ describe('widget bridge', () => {
       applyMantraTaps(key, 2, '2026-10-17');
       expect(read().count).toBe(2);
     });
+  });
+});
+
+describe('isWidgetRoute (D15)', () => {
+  it('opens only the widgets’ own screens', () => {
+    expect(isWidgetRoute('/m/today')).toBeTrue();
+    expect(isWidgetRoute('/m/subhashita')).toBeTrue();
+    expect(isWidgetRoute('/m/remedies/mantra?recommendation=r-1&practice=om_namah&profile=abc')).toBeTrue();
+    expect(isWidgetRoute('/m/ask/loading?q=when%20will%20I%20die')).toBeFalse();
+    expect(isWidgetRoute('/m/settings/account/delete')).toBeFalse();
+    expect(isWidgetRoute('/m/remedies/mantra?next=/m/ask')).toBeFalse();
+    expect(isWidgetRoute('/m/remedies/mantra?practice=a%20b')).toBeFalse();
+    expect(isWidgetRoute('https://evil.example/m/today')).toBeFalse();
   });
 });

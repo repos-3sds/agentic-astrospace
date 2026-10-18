@@ -14,6 +14,11 @@ on:
     branches: ['**']
   pull_request:
 
+# Read-only: the jobs only check out and test. Without this the token took
+# the repository default, possibly read/write (audit S20).
+permissions:
+  contents: read
+
 jobs:
   backend:
     name: Backend tests (pytest)

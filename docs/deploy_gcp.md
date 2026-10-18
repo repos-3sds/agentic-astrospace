@@ -65,6 +65,33 @@ gcloud run services update agentic-astrospace --region asia-south1 \
 (Grant the Cloud Run service account `roles/secretmanager.secretAccessor` if
 prompted.)
 
+### Every credential is a secret, not an env var
+
+Anyone with Viewer on the project can read `--set-env-vars` values with
+`gcloud run services describe` (2026-10-18 security audit S19). Only
+non-secret settings belong there. Move each credential the same way as
+`DATABASE_URL`, once, for both the API service and the notifications job:
+
+The credentials are `GEMINI_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`,
+`REVENUECAT_WEBHOOK_AUTH`, `RESEND_API_KEY` and `EMAIL_LINK_SECRET`. For each
+one (Gemini shown), paste the value at the silent prompt, then bind it:
+
+```bash
+read -rs VALUE && printf %s "$VALUE" | gcloud secrets create astrospace-gemini-api-key --data-file=- && unset VALUE
+gcloud run services update agentic-astrospace --region asia-south1 \
+  --remove-env-vars GEMINI_API_KEY \
+  --set-secrets "GEMINI_API_KEY=astrospace-gemini-api-key:latest"
+gcloud run jobs update agentic-astrospace-notifications --region asia-south1 \
+  --remove-env-vars GEMINI_API_KEY \
+  --set-secrets "GEMINI_API_KEY=astrospace-gemini-api-key:latest"
+```
+
+Check with `gcloud run services describe agentic-astrospace --region
+asia-south1 --format=yaml`: every credential should show `secretKeyRef`.
+Running both as a dedicated service account with only
+`roles/secretmanager.secretAccessor` and `roles/cloudsql.client` (if used)
+is the follow-up, and so is a non-owner database role for the app.
+
 ## After first deploy
 
 1. Note the service URL (`https://astrospace-....run.app`) and add it to

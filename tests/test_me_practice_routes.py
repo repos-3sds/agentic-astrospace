@@ -271,6 +271,21 @@ class TestNativeSurfaces:
         }).json()
         assert body["kind"] == "today"
 
+    def test_widget_and_live_activity_refuse_another_users_kundli(self, client, env):
+        """Audit S17: a kundli_id was accepted without an ownership check."""
+        r = client.post("/api/v1/me/widgets", json={"kind": "today", "kundli_id": env["foreign_kundli"]})
+        assert r.status_code == 404
+        now = datetime.utcnow()
+        r = client.post("/api/v1/me/live-activities", json={
+            "kind": "window", "kundli_id": env["foreign_kundli"],
+            "starts_at": now.isoformat(), "ends_at": (now + timedelta(hours=1)).isoformat(),
+        })
+        assert r.status_code == 404
+
+    def test_push_token_length_is_bounded(self, client):
+        r = client.put("/api/v1/me/push-tokens", json={"provider": "fcm", "token": "x" * 5000})
+        assert r.status_code == 422
+
 
 # ── Practice: remedies ───────────────────────────────────────────────────────
 
