@@ -94,6 +94,10 @@ def db():
     session = sessionmaker(autocommit=False, autoflush=False, bind=engine)()
     cm.upsert_push_token(session, ME, "fcm", "tok-me", timezone="Asia/Kolkata")
     cm.upsert_push_token(session, OTHER, "fcm", "tok-other", timezone="Europe/London")
+    # The push starts off (see test_off_by_default_until_the_scholar_review);
+    # these readers turned it on.
+    cm.set_notification_preference(session, ME, CATEGORY, enabled=True)
+    cm.set_notification_preference(session, OTHER, CATEGORY, enabled=True)
     yield session
     session.close()
 
@@ -133,5 +137,11 @@ class TestPush:
         # India's day is over for the verse; London is still at 10:30 in the morning.
         assert [j.user_id for j in jobs] == [OTHER]
 
-    def test_on_by_default(self):
-        assert cm.DEFAULT_NOTIFICATION_PREFS[CATEGORY]["enabled"] is True
+    def test_nobody_is_sent_one_without_turning_it_on(self, db):
+        db.query(cm.NotificationPreference).delete()
+        db.commit()
+        assert schedule_daily_subhashita(db, now=EARLY) == []
+
+    def test_off_by_default_until_the_scholar_review(self):
+        # docs/subhashita_corpus.md "Before launch": flip this once it is done.
+        assert cm.DEFAULT_NOTIFICATION_PREFS[CATEGORY]["enabled"] is False

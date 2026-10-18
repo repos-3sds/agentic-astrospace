@@ -23,7 +23,7 @@ from astrospace.api.auth import AuthUser, current_user
 from astrospace.api.email_routes import router as email_router
 from astrospace.db import crud, crud_mobile as cm, get_db
 from astrospace.db.database import Base
-from astrospace.db.models import NotificationJob
+from astrospace.db.models import NotificationJob, NotificationPreference
 from astrospace.notifications import email_jobs
 from astrospace.notifications.email import (
     EmailContent, EmailResult, NotConfiguredEmail, ResendTransport, build_message,
@@ -344,6 +344,13 @@ class TestApi:
         prefs = cm.get_notification_preferences(db, ME)
         assert not prefs["daily_email"]["enabled"] and not prefs["festival_email"]["enabled"]
         assert client.post("/api/v1/email/unsubscribe?t=nope").status_code == 400
+
+    def test_old_link_after_account_deletion_writes_nothing(self, client, db):
+        # No recipient row: the account was deleted, or was never emailed.
+        token = unsubscribe_token("deleted-reader", "all")
+        done = client.post("/api/v1/email/unsubscribe", data={"t": token})
+        assert done.status_code == 200 and "Done" in done.text
+        assert db.query(NotificationPreference).filter_by(user_id="deleted-reader").count() == 0
 
     def _signed(self, secret_b64, body, stamp=None):
         stamp = str(stamp or int(_time.time()))

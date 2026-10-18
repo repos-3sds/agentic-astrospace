@@ -58,7 +58,7 @@ interface CalendarCell {
         @for (festival of visibleFestivals(); track festival.slug + festival.occurs_on) {
           <button class="mcal-observance m-pressable festival" type="button" (click)="selectedFestival.set(festival)">
             <span class="mcal-date-tile"><b>{{ dayNumber(festival.occurs_on) }}</b><small>{{ monthShort(festival.occurs_on) }}</small></span>
-            <span><b>{{ festival.name }}</b><small>{{ festival.description || festival.prep_guidance || 'Tap for observance details' }}</small><em>{{ regionsLabel(festival.regions) }}</em></span>
+            <span><b>{{ festival.name }}</b><small>{{ festival.description || festival.prep_guidance || 'Tap for observance details' }}</small><em>{{ regionsLabel(festival.regions) }}@if (festival.is_convention_dependent) { · Varies by tradition }</em></span>
           </button>
         } @empty {
           @if (festivalLoading()) {

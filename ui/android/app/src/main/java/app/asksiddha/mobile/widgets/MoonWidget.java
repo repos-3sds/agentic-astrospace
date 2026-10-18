@@ -32,8 +32,11 @@ public class MoonWidget extends BaseWidget {
         String date = next.optString("date");
         String when = Widgets.daysUntil(WidgetStore.today(), date);
         views.setTextViewText(R.id.next_name, full ? "PURNIMA" : "AMAVASYA");
-        views.setTextViewText(R.id.next, "today".equals(when) ? "Today"
-            : Widgets.shortDate(date) + " · " + when);
+        // The day is the one whose sunrise falls in the 15th tithi; some
+        // calendars use the day the tithi begins, so the rule rides along.
+        String rule = next.optBoolean("approx", true) ? " · by sunrise" : "";
+        views.setTextViewText(R.id.next, ("today".equals(when) ? "Today"
+            : Widgets.shortDate(date) + " · " + when) + rule);
         return views;
     }
 

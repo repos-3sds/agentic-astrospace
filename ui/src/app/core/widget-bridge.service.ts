@@ -57,6 +57,7 @@ interface SiddhaWidgetsPlugin {
 const SiddhaWidgets = registerPlugin<SiddhaWidgetsPlugin>('SiddhaWidgets');
 
 interface MoonDaysPayload {
+  is_convention_dependent?: boolean;
   moon_days: { date: string; moon: 'full' | 'new' }[];
 }
 
@@ -101,18 +102,29 @@ export class WidgetBridgeService {
     });
   }
 
-  /** Festivals are the ones Today already loaded; moon days are fetched here. */
-  async publishCalendar(place: FestivalPlace, fromDate: string, festivals: readonly { name: string; occurs_on: string }[]): Promise<void> {
+  /**
+   * Festivals are the ones Today already loaded; moon days are fetched here.
+   * Each date keeps whether it depends on a convention (`approx`), so the
+   * widget line can say so: there is no room for the full note, and the tap
+   * opens the calendar, where it is shown.
+   */
+  async publishCalendar(
+    place: FestivalPlace,
+    fromDate: string,
+    festivals: readonly { name: string; occurs_on: string; is_convention_dependent?: boolean }[],
+  ): Promise<void> {
     if (!this.enabled) return;
-    let moonDays: MoonDaysPayload['moon_days'] = [];
+    let moonDays: { date: string; moon: 'full' | 'new'; approx: boolean }[] = [];
     try {
       const query = new URLSearchParams({ city: place.city, nation: place.nation, from_date: fromDate, days: '60' });
-      moonDays = (await this.injector.get(ApiService).get<MoonDaysPayload>(`/festivals/moon-days?${query}`)).moon_days;
+      const payload = await this.injector.get(ApiService).get<MoonDaysPayload>(`/festivals/moon-days?${query}`);
+      const approx = payload.is_convention_dependent !== false;
+      moonDays = payload.moon_days.map((d) => ({ ...d, approx }));
     } catch {
       // The festivals still go out; the moon widget waits for the next try.
     }
     this.publish('calendar', {
-      festivals: festivals.map((f) => ({ date: f.occurs_on, name: f.name })),
+      festivals: festivals.map((f) => ({ date: f.occurs_on, name: f.name, approx: !!f.is_convention_dependent })),
       moonDays,
     });
   }

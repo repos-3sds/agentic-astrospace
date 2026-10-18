@@ -161,3 +161,32 @@ def test_audit_erasure_failure_does_not_block_deletion(env, monkeypatch):
     assert _delete(client).status_code == 200
     with factory() as db:
         assert db.get(UserProfile, USER) is None
+
+
+def test_store_customer_is_deleted_when_revenuecat_is_set_up(env, monkeypatch):
+    client, _factory, _patches = env
+    monkeypatch.setenv("REVENUECAT_SECRET_API_KEY", "sk_test")
+    calls = []
+
+    def fake_delete(url, headers, timeout):
+        calls.append(url)
+        return _Response(200)
+
+    monkeypatch.setattr(me_routes.requests, "delete", fake_delete)
+    assert _delete(client).status_code == 200
+    assert f"https://api.revenuecat.com/v1/subscribers/{USER}" in calls
+
+
+def test_store_outage_does_not_block_deletion(env, monkeypatch):
+    client, factory, _patches = env
+    monkeypatch.setenv("REVENUECAT_SECRET_API_KEY", "sk_test")
+
+    def fake_delete(url, headers, timeout):
+        if "revenuecat" in url:
+            raise requests.ConnectionError("store down")
+        return _Response(204)
+
+    monkeypatch.setattr(me_routes.requests, "delete", fake_delete)
+    assert _delete(client).status_code == 200
+    with factory() as db:
+        assert db.get(UserProfile, USER) is None

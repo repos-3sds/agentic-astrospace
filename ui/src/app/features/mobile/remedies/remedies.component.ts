@@ -65,17 +65,23 @@ export class RemediesComponent {
   protected readonly error = signal<string | null>(null);
   protected readonly groups = computed(() => this.recommendations()?.groups ?? []);
   /**
-   * Free gets one traditional practice: the plan's first remedy, with its
-   * reason, source and safety note intact. Plus gets the whole plan.
-   * Nothing here is sold as removing anything.
+   * Free gets one traditional practice from the plan's first group, plus one
+   * for every dosha the chart flags, each with its reason, source and safety
+   * note intact. A flagged dosha's remedy is never behind a plan: that would
+   * read as paying to remove it. Plus gets the whole plan.
    */
   protected readonly fullPlan = computed(() => this.gate.allows('remedies.full'));
   protected readonly shownGroups = computed(() =>
-    this.fullPlan() ? this.groups() : this.groups().slice(0, 1).map((group) => ({ ...group, practices: group.practices.slice(0, 1) })));
+    this.fullPlan()
+      ? this.groups()
+      : this.groups()
+        .filter((group, index) => index === 0 || group.trigger.kind === 'dosha')
+        .map((group) => ({ ...group, practices: group.practices.slice(0, 1) })));
   protected readonly hiddenPractices = computed(() => {
     if (this.fullPlan()) return 0;
     const total = this.groups().reduce((sum, group) => sum + group.practices.length, 0);
-    return Math.max(0, total - 1);
+    const shown = this.shownGroups().reduce((sum, group) => sum + group.practices.length, 0);
+    return Math.max(0, total - shown);
   });
   protected readonly hasMantraText = computed(() => this.groups().some((group) => group.practices.some((p) => !!p.text)));
   protected readonly note = computed(() => this.recommendations()?.note ?? null);

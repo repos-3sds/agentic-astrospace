@@ -105,7 +105,7 @@ export class SubscriptionComponent implements OnInit {
     { label: 'What each dosha means', free: false, plus: true, practitioner: true },
     { label: 'Compatibility', free: 'Score, 1 a month', plus: 'Full report', practitioner: 'Full report' },
     { label: 'Readings', free: false, plus: true, practitioner: true },
-    { label: 'Remedies', free: '1 practice', plus: 'Full plan', practitioner: 'Full plan' },
+    { label: 'Remedies', free: '1 practice + one per flag', plus: 'Full plan', practitioner: 'Full plan' },
     { label: 'Muhurta', free: false, plus: true, practitioner: true },
     { label: 'Natural reading voice', free: false, plus: true, practitioner: true },
     { label: 'Divisional charts (D2–D60)', free: false, plus: false, practitioner: true },
