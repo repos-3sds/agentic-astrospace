@@ -129,6 +129,18 @@
   white-space: nowrap;
 }
 
+// At 375 px values cut to "Sign out, d…"; on narrow phones they wrap to two
+// right-aligned lines instead (U19).
+@media (max-width: 413px) {
+  .row-value {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
+    text-align: right;
+  }
+}
+
 .chevron {
   width: 16px;
   height: 16px;

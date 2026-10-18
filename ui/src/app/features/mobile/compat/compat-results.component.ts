@@ -46,7 +46,7 @@ import { PlanLockComponent } from '../shared/plan-lock.component';
             title="The full report"
             body="Each of the eight kootas, what matters most for this pair, the notes behind the score, and a shareable report."
           />
-          <a class="mcor-muhurta" [routerLink]="['/m','muhurta']">Find a muhurtham</a>
+          <a class="mcor-muhurta" [routerLink]="['/m','muhurta']">Find a muhurta</a>
         } @else {
         <p class="mcor-title">WHAT MATTERS MOST HERE</p>
         <section class="mcor-list">@for (row of visibleKootas(); track row.label) { <div><b>{{ row.label }}</b><span>{{ row.points }} / {{ row.max }}</span><p>{{ row.note }}</p></div> }</section>
@@ -60,7 +60,7 @@ import { PlanLockComponent } from '../shared/plan-lock.component';
           @for (note of s.notes ?? []; track note) { <p>{{ note }}</p> }
         </section>
         <div class="mcor-actions"><button type="button" (click)="share()">{{ shared() ? 'Copied' : 'Share report' }}</button><a [routerLink]="['/m','compat','results','detail']" [queryParams]="{ partner: partnerId(), groom: partnerIsGroom() ? 'partner' : null }">Full detail</a></div>
-        <a class="mcor-muhurta" [routerLink]="['/m','muhurta']">Find a muhurtham</a>
+        <a class="mcor-muhurta" [routerLink]="['/m','muhurta']">Find a muhurta</a>
         }
       }
     </main>

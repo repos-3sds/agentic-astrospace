@@ -24,6 +24,19 @@ const ASPECT_WORDS: Record<string, string> = {
   sextile: 'helps',
 };
 
+/**
+ * A malformed ?date= looped on "Check the date" with only Try again (U33);
+ * it now opens today instead.
+ */
+function validDate(raw: string | null): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw ?? '');
+  if (!match) return '';
+  const [year, month, day] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  const date = new Date(Date.UTC(year, month - 1, day));
+  const real = date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+  return real && year >= 1900 && year <= 2100 ? raw! : '';
+}
+
 @Component({
   selector: 'as-calendar-day',
   standalone: true,
@@ -187,7 +200,7 @@ export class CalendarDayComponent {
   protected readonly festivalRows = signal<FestivalOccurrence[]>([]);
   protected readonly selectedFestival = signal<FestivalOccurrence | null>(null);
   protected readonly staleNotice = signal<string | null>(null);
-  protected readonly selectedDate = signal(this.route.snapshot.queryParamMap.get('date') ?? '');
+  protected readonly selectedDate = signal(validDate(this.route.snapshot.queryParamMap.get('date')));
   protected readonly activeId = computed(() => this.store.activeId());
   protected readonly activeName = computed(() => this.store.active()?.name ?? 'this profile');
   protected readonly day = computed<CalendarDaySummary | null>(() => {
@@ -207,7 +220,7 @@ export class CalendarDayComponent {
     this.route.queryParamMap
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((params) => {
-        this.selectedDate.set(params.get('date') ?? '');
+        this.selectedDate.set(validDate(params.get('date')));
       });
 
     effect(() => {

@@ -20,6 +20,9 @@ import { SplashComponent } from '../../../shell/splash/splash.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, SplashComponent],
   template: `
+    @if (deleted) {
+      <p class="deleted" role="status">Your account and everything in it have been deleted.</p>
+    }
     <div class="landing-hero">
       <app-splash class="landing-mark" [dark]="theme.dark()" [markOnly]="true" aria-hidden="true" />
       <p class="wordmark siddha-brand">Siddha</p>
@@ -45,4 +48,19 @@ import { SplashComponent } from '../../../shell/splash/splash.component';
 })
 export class LandingComponent {
   protected readonly theme = inject(ThemeService);
+  /** Set by account deletion, read once: nothing said the deletion went through (U32). */
+  protected readonly deleted = takeDeletedFlag();
+}
+
+// Not under 'astrospace.': sign-out clears those from sessionStorage.
+export const ACCOUNT_DELETED_FLAG = 'siddha.accountDeleted';
+
+function takeDeletedFlag(): boolean {
+  try {
+    const set = sessionStorage.getItem(ACCOUNT_DELETED_FLAG) === '1';
+    sessionStorage.removeItem(ACCOUNT_DELETED_FLAG);
+    return set;
+  } catch {
+    return false;
+  }
 }
