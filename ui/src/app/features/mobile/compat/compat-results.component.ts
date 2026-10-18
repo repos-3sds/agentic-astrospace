@@ -31,6 +31,14 @@ import { PlanLockComponent } from '../shared/plan-lock.component';
           body="Free includes one compatibility score a month, and you can reopen that one any time. Plus checks as many people as you like, with the full report."
         />
       } @else if (score(); as s) {
+        @if (marriageMatch()) {
+          <!-- Varna and Vashya are read from the groom's side (U16). -->
+          <div class="mcor-side" role="radiogroup" aria-label="Who is the groom?">
+            <span>Groom</span>
+            <button type="button" role="radio" [attr.aria-checked]="!partnerIsGroom()" [class.on]="!partnerIsGroom()" (click)="setGroom(false)">{{ activeName() }}</button>
+            <button type="button" role="radio" [attr.aria-checked]="partnerIsGroom()" [class.on]="partnerIsGroom()" (click)="setGroom(true)">{{ partnerName() }}</button>
+          </div>
+        }
         <section class="mcor-score"><b>{{ activeName() }} x {{ partnerName() }}</b><div><strong>{{ s.total }}</strong><span>/ {{ s.max }}</span></div><h1>{{ s.verdict }}</h1><p>{{ s.percent }}% across the eight kootas.</p></section>
         @if (!fullReport()) {
           <as-plan-lock
@@ -51,7 +59,7 @@ import { PlanLockComponent } from '../shared/plan-lock.component';
           @if (!marriageMatch()) { <p>Ashta Koota comes from marriage matching. For {{ partnerName() }}, read it as a rough guide to how you get along.</p> }
           @for (note of s.notes ?? []; track note) { <p>{{ note }}</p> }
         </section>
-        <div class="mcor-actions"><button type="button" (click)="share()">{{ shared() ? 'Copied' : 'Share report' }}</button><a [routerLink]="['/m','compat','results','detail']" [queryParams]="{ partner: partnerId() }">Full detail</a></div>
+        <div class="mcor-actions"><button type="button" (click)="share()">{{ shared() ? 'Copied' : 'Share report' }}</button><a [routerLink]="['/m','compat','results','detail']" [queryParams]="{ partner: partnerId(), groom: partnerIsGroom() ? 'partner' : null }">Full detail</a></div>
         <a class="mcor-muhurta" [routerLink]="['/m','muhurta']">Find a muhurtham</a>
         }
       }
@@ -77,6 +85,8 @@ export class CompatResultsComponent {
   /** Free shows the score; Plus shows the report behind it. */
   protected readonly fullReport = computed(() => this.gate.allows('compatibility.full'));
   protected readonly overLimit = signal(false);
+  /** Classical matching reads from the groom's side; it was always the reader's. */
+  protected readonly partnerIsGroom = signal(this.route.snapshot.queryParamMap.get('groom') === 'partner');
   /** Gun Milan is a marriage system; anyone else gets told how to read it. */
   protected readonly marriageMatch = computed(() =>
     ['spouse', 'partner', 'prospect'].includes(this.partner()?.relation ?? 'partner'));
@@ -86,6 +96,12 @@ export class CompatResultsComponent {
   });
 
   constructor() {
+    void this.load();
+  }
+
+  protected setGroom(partner: boolean): void {
+    if (partner === this.partnerIsGroom()) return;
+    this.partnerIsGroom.set(partner);
     void this.load();
   }
 
@@ -114,7 +130,10 @@ export class CompatResultsComponent {
         this.overLimit.set(true);
         return;
       }
-      this.score.set(await this.vedic.compatibility(activeId, partnerId));
+      const groomFirst = this.partnerIsGroom() && this.marriageMatch();
+      this.score.set(groomFirst
+        ? await this.vedic.compatibility(partnerId, activeId)
+        : await this.vedic.compatibility(activeId, partnerId));
       this.gate.recordCompatibility(partnerId);
     } catch (error) {
       this.error.set((error as Error).message);

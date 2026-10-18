@@ -313,6 +313,26 @@ class TestMuhurta:
         scores = [r["score"] for r in out["results"]]
         assert scores == sorted(scores, reverse=True), "results must be rank-ordered"
 
+    def test_business_goals_put_daytime_windows_first(self, chart):
+        """A venture or contract at 22:31 isn't usable (U24): night windows
+        are marked, and rank below daytime ones of equal standing."""
+        for goal in ("start_venture", "sign_contract", "buy_property_gold"):
+            results = self._find(chart, goal=goal, start=date(2026, 11, 1), end=date(2026, 11, 30),
+                                 limit=20)["results"]
+            assert results and not results[0]["night"]
+            for r in results:
+                if r["night"]:
+                    assert any("night" in reason.lower() for reason in r["why"]["against"])
+        journey = self._find(chart, goal="start_journey", limit=20)["results"]
+        assert not any("offices" in reason for r in journey for reason in r["why"]["against"])
+
+    def test_night_is_any_part_outside_six_to_nine(self):
+        from datetime import datetime as dt
+        assert muhurta._is_night(dt(2026, 11, 6, 22, 31), dt(2026, 11, 7, 0, 10))
+        assert muhurta._is_night(dt(2026, 11, 6, 5, 30), dt(2026, 11, 6, 6, 40))
+        assert not muhurta._is_night(dt(2026, 11, 6, 11, 36), dt(2026, 11, 6, 12, 24))
+        assert not muhurta._is_night(dt(2026, 11, 6, 19, 30), dt(2026, 11, 6, 21, 0))
+
     def test_every_result_explains_itself(self, chart):
         for result in self._find(chart)["results"]:
             assert result["why"]["supports"] or result["why"]["against"]

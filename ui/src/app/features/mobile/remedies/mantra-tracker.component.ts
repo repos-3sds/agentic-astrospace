@@ -396,6 +396,12 @@ export class MantraTrackerComponent {
     this.error.set(null);
     try {
       await this.kundlis.load();
+      // A widget tap names whose practice it is (D7): open that profile,
+      // not whichever one was viewed last.
+      const named = this.params().get('profile');
+      if (named && named !== this.kundlis.activeId() && this.kundlis.kundlis().some((k) => k.id === named)) {
+        this.kundlis.setActive(named);
+      }
       const activeId = this.kundlis.activeId();
       if (!activeId) throw new Error('Select a profile before opening a practice.');
       const recommendationId = this.params().get('recommendation');
@@ -424,9 +430,10 @@ export class MantraTrackerComponent {
   }
 
   private storageKey(): string | null {
+    // From what is on screen, not the link: a bare open picks a practice.
     const activeId = this.kundlis.activeId();
-    const recommendationId = this.params().get('recommendation');
-    const practiceSlug = this.params().get('practice');
+    const recommendationId = this.group()?.recommendation_id;
+    const practiceSlug = this.practice()?.practice_slug;
     if (!activeId || !recommendationId || !practiceSlug) return null;
     return `siddha.remedyPractice:v1:${activeId}:${recommendationId}:${practiceSlug}`;
   }
@@ -470,13 +477,17 @@ export class MantraTrackerComponent {
     const key = this.storageKey();
     const practice = this.practice();
     if (!key || !practice || practice.type !== 'mantra') return;
+    const profile = this.kundlis.active();
     const params = new URLSearchParams({
-      recommendation: this.params().get('recommendation') ?? '',
-      practice: this.params().get('practice') ?? '',
+      recommendation: this.group()?.recommendation_id ?? '',
+      practice: practice.practice_slug,
+      profile: profile?.id ?? '',
     });
+    // Someone else's practice says whose it is on the home screen (D7).
+    const own = !profile || (profile.relation || '').toLowerCase() === 'self';
     this.widgets.publishMantra({
       key,
-      title: practice.title,
+      title: own ? practice.title : `${profile.name.split(' ')[0]}: ${practice.title}`,
       target: this.target(),
       count,
       date: this.todayKey(),

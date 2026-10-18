@@ -762,6 +762,8 @@ export interface MuhurtaApiWindow {
   start_iso: string;
   end_iso: string;
   trimmed: boolean;
+  /** Any part before 06:00 or after 21:00 at the place. */
+  night?: boolean;
   duration_minutes: number;
   score: number;
   quality: 'best' | 'good' | 'workable';
