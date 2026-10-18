@@ -1,8 +1,11 @@
 # Deploying AstroSpace to Google Cloud Run
 
+Status: canonical deploy guide for the API service and the notification worker.
+
 Single-container deployment: the Dockerfile builds the Angular SPA and serves
-it plus the FastAPI API from one Cloud Run service. AI features are not wired
-into the product yet, so no ANTHROPIC_API_KEY is needed in production.
+it plus the FastAPI API from one Cloud Run service. Ask and the daily brief use
+Gemini (`AI_PROVIDER=gemini`, `GEMINI_API_KEY`); no ANTHROPIC_API_KEY is needed
+in production.
 
 ## Architecture
 
@@ -91,6 +94,16 @@ asia-south1 --format=yaml`: every credential should show `secretKeyRef`.
 Running both as a dedicated service account with only
 `roles/secretmanager.secretAccessor` and `roles/cloudsql.client` (if used)
 is the follow-up, and so is a non-owner database role for the app.
+
+## Notification worker
+
+Push, email and the agent-written daily brief all come from one worker:
+`python -m astrospace.notifications.worker --once`. In production it is the
+Cloud Run job `agentic-astrospace-notifications` (asia-south1), built from the
+same image and run every 15 minutes by a scheduler trigger. It needs the same
+database secret as the API, its own `GEMINI_API_KEY` for briefs, and the FCM
+service-account secret (`fcm-service-account`). Merging to main deploys
+neither the service nor the job; both are redeployed by hand from the Mac.
 
 ## After first deploy
 

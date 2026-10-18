@@ -129,7 +129,7 @@
    375 the three labels no longer fit on one line each and "This week" breaks
    in half. Tightened just enough to keep them single-line, which is what the
    design's own nowrap was asking for. */
-.ranges { @include m-segmented-track; gap: 6px; background: transparent; padding: 0; }
+.ranges { @include m-segmented-track; & { gap: 6px; background: transparent; padding: 0; } }
 
 .range {
   @include m-segmented-button;

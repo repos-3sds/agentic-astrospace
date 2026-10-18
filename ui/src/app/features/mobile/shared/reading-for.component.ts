@@ -31,18 +31,18 @@ import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.c
     :host { display: contents; }
     .reading-for {
       @include m-body-small;
-      @include m-pressable(0.98);
       display: inline-flex;
       align-items: center;
       gap: 8px;
       align-self: flex-start;
-      min-height: 36px;
+      min-height: 44px;
       padding: 4px 12px 4px 4px;
       border: 1px solid var(--m-border);
       border-radius: 999px;
       background: var(--m-raised);
       color: var(--m-text);
       cursor: pointer;
+      @include m-pressable(0.98);
       b { font-weight: 600; }
     }
     .mark {

@@ -1,0 +1,9 @@
+# A starting rule set that main passes today (audit I10): syntax errors,
+# undefined names, redefinitions, unused locals, silent `except: pass`, and
+# blocking calls in async code. Widen it a rule at a time; F401 and B904 are
+# next and each needs a cleanup pass first.
+target-version = "py312"
+extend-exclude = ["ui", "Astro Space Knowledge Base"]
+
+[lint]
+select = ["E9", "F63", "F7", "F82", "F811", "F541", "F841", "S110", "ASYNC"]

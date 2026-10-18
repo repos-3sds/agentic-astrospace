@@ -85,7 +85,7 @@ The listen sheet estimates duration as `words / 2.35 / speed` seconds (`listen-s
 - `payload` = the agent fields, plus `source: "agent" | "template"`, `model`, token usage and `generated_at`.
 - `expires_at` = the engine's `valid_until` (next sunrise).
 
-**Scheduler:** the notification worker (`python -m astrospace.notifications.worker --once`) is not scheduled in production yet. Schedule it every 15 minutes, either as Cloud Scheduler hitting a Cloud Run Job, or a Cloud Run Job with a cron trigger.
+**Scheduler:** the notification worker (`python -m astrospace.notifications.worker --once`) runs in production as the Cloud Run job `agentic-astrospace-notifications` (asia-south1), every 15 minutes. It has been live since 2026-10-16; see `docs/deploy_gcp.md`, "Notification worker".
 
 - Add one stage, `prepare_daily_briefs`, before `schedule_morning_briefs`.
 - For each profile that should have a brief, when the profile's local time is between 60 and 15 minutes before its morning push time (default 07:00):

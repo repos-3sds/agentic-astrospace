@@ -24,6 +24,7 @@ import os
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -141,6 +142,16 @@ def unsubscribe_page(t: str | None = None):
     )
 
 
+def _unsubscribe(db: Session, user_id: str, category: str) -> None:
+    # Every reader we email has a recipient row. Without one the account is
+    # gone (deletion removes it), and writing preferences would bring rows
+    # back for a deleted person; the page reads the same either way.
+    if db.get(EmailRecipient, user_id) is not None:
+        categories = cm.EMAIL_CATEGORIES if category == ALL_CATEGORIES else (category,)
+        for c in categories:
+            cm.set_notification_preference(db, user_id, c, enabled=False, channels=["email"])
+
+
 @router.post("/api/v1/email/unsubscribe", response_class=HTMLResponse)
 async def unsubscribe(request: Request, t: str | None = None, db: Session = Depends(get_db)):
     token = t
@@ -151,13 +162,9 @@ async def unsubscribe(request: Request, t: str | None = None, db: Session = Depe
     if not parsed:
         return _invalid()
     user_id, category = parsed
-    # Every reader we email has a recipient row. Without one the account is
-    # gone (deletion removes it), and writing preferences would bring rows
-    # back for a deleted person; the page reads the same either way.
-    if db.get(EmailRecipient, user_id) is not None:
-        categories = cm.EMAIL_CATEGORIES if category == ALL_CATEGORIES else (category,)
-        for c in categories:
-            cm.set_notification_preference(db, user_id, c, enabled=False, channels=["email"])
+    # The form read is async; the DB work is not, so it runs off the event
+    # loop (audit I11).
+    await run_in_threadpool(_unsubscribe, db, user_id, category)
     log.info(json.dumps({"event": "email.unsubscribed", "category": category}))
     return _page(
         "Unsubscribed",
@@ -192,6 +199,10 @@ def verify_svix(secret: str, headers, body: bytes, now: float | None = None) -> 
     return False
 
 
+def _suppress_all(db: Session, addresses: list, reason: str) -> int:
+    return sum(cm.suppress_email(db, address, reason) for address in addresses)
+
+
 @router.post("/api/v1/email/webhooks/resend")
 async def resend_webhook(request: Request, db: Session = Depends(get_db)):
     secret = (os.getenv("RESEND_WEBHOOK_SECRET") or "").strip()
@@ -217,7 +228,6 @@ async def resend_webhook(request: Request, db: Session = Depends(get_db)):
             reason = "hard bounce"
     suppressed = 0
     if reason:
-        for address in data.get("to") or []:
-            suppressed += cm.suppress_email(db, address, reason)
+        suppressed = await run_in_threadpool(_suppress_all, db, data.get("to") or [], reason)
     log.info(json.dumps({"event": "email.webhook", "type": kind, "suppressed": suppressed}))
     return {"ok": True, "suppressed": suppressed}

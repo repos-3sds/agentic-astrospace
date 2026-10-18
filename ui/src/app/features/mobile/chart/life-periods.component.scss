@@ -65,8 +65,8 @@
 }
 
 .system, .levels {
-  @include m-segmented-track;
   width: 100%;
+  @include m-segmented-track;
 
   button {
     @include m-segmented-button;

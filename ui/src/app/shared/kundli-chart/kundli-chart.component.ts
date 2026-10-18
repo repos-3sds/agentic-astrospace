@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 
 import { SIGN_ORDER, signMeta } from '../../core/glyphs';
 import { PlanetConditionAnnotation, PlanetConditionCode, VargaChart } from '../../core/models';
@@ -114,6 +114,8 @@ const EASTERN_SIGN_POINTS: Record<string, {
 };
 
 @Component({
+  // Signal inputs only, so OnPush is safe; the mobile chart screens render these (audit I16).
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-kundli-chart',
   templateUrl: './kundli-chart.component.html',
   styleUrl: './kundli-chart.component.scss',

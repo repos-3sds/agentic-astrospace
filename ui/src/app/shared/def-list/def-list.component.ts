@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { Tag } from 'primeng/tag';
 
 export interface DefRow {
@@ -13,6 +13,8 @@ export interface DefRow {
 }
 
 @Component({
+  // Signal inputs only, so OnPush is safe; the mobile chart screens render these (audit I16).
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-def-list',
   imports: [Tag],
   templateUrl: './def-list.component.html',

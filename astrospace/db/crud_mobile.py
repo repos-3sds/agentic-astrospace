@@ -150,7 +150,10 @@ def add_ask_message(db: Session, thread_id: str, role: str, content: str,
     thread = db.get(AskThread, thread_id)
     if thread:
         thread.last_message_at = datetime.utcnow()
-        thread.message_count = (thread.message_count or 0) + 1
+        # Incremented in SQL: a read-modify-write lost a count when two turns
+        # landed at once (audit I17).
+        thread.message_count = func.coalesce(AskThread.message_count, 0) + 1
+        db.flush()  # apply it now, so a second message in the same transaction counts too
         # First user message doubles as the thread title.
         if not thread.title and role == "user":
             thread.title = f"{content[:79].rstrip()}…" if len(content) > 80 else content

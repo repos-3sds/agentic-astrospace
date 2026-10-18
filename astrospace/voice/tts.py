@@ -21,12 +21,15 @@ Design points that are easy to undo by accident:
 from __future__ import annotations
 
 import hashlib
+import logging
 import os
 import re
 import threading
 from collections import OrderedDict
 from dataclasses import dataclass
 from typing import Literal, Protocol
+
+log = logging.getLogger(__name__)
 
 Language = Literal["en", "te"]
 
@@ -199,7 +202,8 @@ class _BucketCache:
                 timeout=15,
             )
         except Exception:
-            pass
+            # The audio still plays; only the cache misses next time (audit I10).
+            log.warning("tts cache write failed for %s", name, exc_info=True)
 
 
 @dataclass(frozen=True)

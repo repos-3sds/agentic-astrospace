@@ -4,7 +4,7 @@
 .topbar { height: 24px; a, img { display: block; width: 24px; height: 24px; } }
 main { display: flex; flex-direction: column; align-items: center; gap: 22px; padding-top: 22px; }
 .heading { text-align: center; h1 { @include m-h1; margin: 0 0 6px; } p { @include m-body; margin: 0; color: var(--m-muted); } }
-.switch { @include m-segmented-track; width: 100%;
+.switch { width: 100%; @include m-segmented-track;
   button { @include m-segmented-button; }
   .is-on { @include m-selected-pill; }
 }

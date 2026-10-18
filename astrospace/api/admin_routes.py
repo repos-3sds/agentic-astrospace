@@ -9,6 +9,7 @@ from typing import Literal
 from uuid import uuid4
 
 from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, Query, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
 
 from ..admin.client import AdminStorageError, get_admin_client
@@ -965,7 +966,9 @@ async def upload_source(
         )
         return {"run_id": run["id"], "status": "queued", "source_key": source_key}
 
-    return _safe(queue)
+    # A 100 MB synchronous upload stalled every request on the instance,
+    # streams included, while it ran on the event loop (audit I11).
+    return await run_in_threadpool(_safe, queue)
 
 
 @router.post("/sources/{source_id}/reprocess")
