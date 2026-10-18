@@ -38,6 +38,7 @@ export class ThemeService {
       document.documentElement.classList.toggle('app-dark', dark);
       void this.applyNativeBars(dark);
     });
+    effect(() => void this.shareWithLaunchScreen(this.preference()));
 
     // Follow the device until the reader overrides it.
     if (typeof matchMedia === 'function') {
@@ -61,6 +62,22 @@ export class ThemeService {
       localStorage.removeItem(STORAGE_KEY);
     } else {
       localStorage.setItem(STORAGE_KEY, preference);
+    }
+  }
+
+  /**
+   * Android draws its launch screen before the WebView exists, in the phone's
+   * light or dark, not the app's: a light-themed app on a dark phone opened
+   * on black, then faded to the ivory splash. MainActivity reads this key
+   * (Capacitor Preferences, same name) and tells Android the app's mode.
+   */
+  private async shareWithLaunchScreen(preference: ThemePreference): Promise<void> {
+    if (Capacitor.getPlatform() !== 'android') return;
+    try {
+      const { Preferences } = await import('@capacitor/preferences');
+      await Preferences.set({ key: STORAGE_KEY, value: preference });
+    } catch {
+      // The launch screen then follows the phone, as before.
     }
   }
 

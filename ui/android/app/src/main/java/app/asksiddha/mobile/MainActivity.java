@@ -1,6 +1,8 @@
 package app.asksiddha.mobile;
 
 import android.app.NotificationChannel;
+import android.app.UiModeManager;
+import android.content.Context;
 import android.content.Intent;
 import android.app.NotificationManager;
 import android.media.AudioAttributes;
@@ -32,6 +34,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(PushConfigPlugin.class);
         registerPlugin(WidgetsPlugin.class);
         super.onCreate(savedInstanceState);
+        matchLaunchScreenToTheme();
         capTextZoom();
         createBellChannel();
         WidgetsPlugin.handle(getIntent());
@@ -43,6 +46,32 @@ public class MainActivity extends BridgeActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         WidgetsPlugin.handle(intent);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // The reader may have changed the theme in this visit; the next
+        // launch screen should already show it.
+        matchLaunchScreenToTheme();
+    }
+
+    /**
+     * Android draws the launch screen before the app runs, in the phone's
+     * light or dark mode. A light-themed app on a dark phone opened on black
+     * and then faded to the ivory splash. ThemeService stores the reader's
+     * choice under this key; from Android 12 the system uses the app's own
+     * night mode for the launch screen.
+     */
+    private void matchLaunchScreenToTheme() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return;
+        UiModeManager modes = (UiModeManager) getSystemService(Context.UI_MODE_SERVICE);
+        if (modes == null) return;
+        String theme = getSharedPreferences("CapacitorStorage", MODE_PRIVATE).getString("astrospace-theme", "system");
+        int mode = "light".equals(theme) ? UiModeManager.MODE_NIGHT_NO
+            : "dark".equals(theme) ? UiModeManager.MODE_NIGHT_YES
+            : UiModeManager.MODE_NIGHT_AUTO;
+        modes.setApplicationNightMode(mode);
     }
 
     private void capTextZoom() {
