@@ -17,6 +17,7 @@ export const SUBHASHITA_TITLE = 'Today’s Subhashita';
 
 const CACHE_KEY = 'astrospace.subhashita.days';
 const SEEN_KEY = 'astrospace.subhashita.seenOn';
+const SHEET_OFF_KEY = 'astrospace.subhashita.sheetOff';
 /** Fetched ahead, so the verse (and the home-screen widget) work offline for two weeks. */
 const DAYS_AHEAD = 14;
 
@@ -87,6 +88,21 @@ export class SubhashitaService {
   markSeen(): void {
     try { localStorage.setItem(SEEN_KEY, localIsoDate()); } catch { /* storage unavailable */ }
   }
+
+  /** Whether the verse sheet opens on the day's first open (D8). On unless turned off. */
+  readonly sheetOn = signal(readSheetOn());
+
+  setSheetOn(on: boolean): void {
+    this.sheetOn.set(on);
+    try {
+      if (on) localStorage.removeItem(SHEET_OFF_KEY);
+      else localStorage.setItem(SHEET_OFF_KEY, '1');
+    } catch { /* storage unavailable; holds for this visit */ }
+  }
+}
+
+function readSheetOn(): boolean {
+  try { return localStorage.getItem(SHEET_OFF_KEY) === null; } catch { return true; }
 }
 
 function readCache(): Subhashita[] {

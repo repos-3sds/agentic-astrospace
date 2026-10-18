@@ -60,9 +60,18 @@ function clearUserSessionStorage(): void {
  */
 export const USER_LOCAL_STORAGE_KEYS = ['astrospace.mobile.notes.draft'] as const;
 
+/** Per-profile Notes live under this prefix (U22); all of them go too. */
+export const USER_LOCAL_STORAGE_PREFIXES = ['astrospace.mobile.notes.'] as const;
+
 function clearUserLocalStorage(): void {
   try {
     for (const key of USER_LOCAL_STORAGE_KEYS) localStorage.removeItem(key);
+    const prefixed: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && USER_LOCAL_STORAGE_PREFIXES.some((prefix) => key.startsWith(prefix))) prefixed.push(key);
+    }
+    for (const key of prefixed) localStorage.removeItem(key);
   } catch {
     // Storage can be unavailable (private mode); nothing to clear then.
   }

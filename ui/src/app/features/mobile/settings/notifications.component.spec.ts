@@ -5,6 +5,7 @@ import { NotificationsComponent } from './notifications.component';
 import { PushPermission, PushService } from '../../../core/push.service';
 import { PreferencesService } from '../../../core/preferences.service';
 import { EmailCategory, EmailSettingsService, EmailState } from '../../../core/email-settings.service';
+import { SubhashitaService } from '../../../core/subhashita.service';
 
 class EmailStub {
   state = signal<EmailState | null>({
@@ -55,6 +56,7 @@ describe('NotificationsComponent', () => {
         provideRouter([]),
         { provide: PushService, useValue: push },
         { provide: EmailSettingsService, useValue: email },
+        { provide: SubhashitaService, useValue: { sheetOn: signal(true), setSheetOn: () => undefined } },
         { provide: PreferencesService, useValue: { experienceMode: signal('balanced') } },
       ],
     }).compileComponents();

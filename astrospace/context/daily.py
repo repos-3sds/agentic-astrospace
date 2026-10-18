@@ -289,7 +289,7 @@ def _verdict(chart, relation: str, day_payload: dict, personal: dict,
     if ctx["supportive_rules"]:
         sentences.append("A long-term cosmic tailwind is at your back. Lean into the momentum.")
     elif ctx["challenging_rules"]:
-        sentences.append("A heavy planetary anchor is dragging. Patience isn't optional today.")
+        sentences.append("A slow-moving planet is asking for patience today.")
     else:
         sentences.append("The deep sky is quiet. The day is what you make of it.")
 
@@ -303,7 +303,7 @@ def _verdict(chart, relation: str, day_payload: dict, personal: dict,
         "supportive": "take the shot—the window won't stay open forever",
         "positive": "keep your head down and let the current do the work",
         "mixed": "play it cool, hold your boundaries, and don't overreach",
-        "caution": "disappear into the background until the weather breaks",
+        "caution": "keep the day simple and let the bigger moves wait",
     }[tone]
     sentences.append(f"Practically, {caution_clause}. Overall, {closing}.")
 
@@ -332,7 +332,7 @@ def _plain_why(day_payload: dict, personal: dict, ctx: dict, words: dict) -> lis
         why.append("Your personal timing marker points inward. It's a day for reflection, not action.")
 
     if chandra.get("chandrashtama"):
-        why.append("The Moon sits in its most vulnerable house for you. Emotions will run hot.")
+        why.append("The Moon is in its hardest place for you today. Feelings may run stronger than usual, so give yourself room.")
     elif chandra.get("favourable"):
         why.append(f"The Moon sits comfortably from {poss} birth sign, anchoring your mood.")
     else:
@@ -341,7 +341,7 @@ def _plain_why(day_payload: dict, personal: dict, ctx: dict, words: dict) -> lis
     if ctx["supportive_rules"]:
         why.append("A slow-moving transit is actively supporting your chart, granting long-term clarity.")
     elif ctx["challenging_rules"]:
-        why.append("A heavy outer planet is testing your chart. Slow, deliberate choices are required.")
+        why.append("A slow-moving planet is asking for patience in one part of your life. Take decisions one at a time.")
     else:
         why.append("No major outer planet transit is pressing on your chart. The daily weather rules.")
     return why
@@ -392,7 +392,7 @@ def _reading(chart, relation: str, day_payload: dict, personal: dict, ctx: dict,
         "supportive": f"The stars are handing {subject} the wheel.",
         "positive": f"The sky clears, making way for steady movement for {subject}.",
         "mixed": f"The sky is conflicted, demanding a delicate touch from {subject}.",
-        "caution": f"The sky is heavy. It's a day for {subject} to retreat and observe.",
+        "caution": f"A quieter day for {subject}. Keep plans simple and go gently.",
     }[tone]
     timing_note = (
         f"Avoid starting anything crucial during {rahu_time}. Use that window to clean house instead."
@@ -659,6 +659,36 @@ def _do_and_avoid(personal: dict, ctx: dict, words: dict,
     return _distinct(do), _distinct(avoid)
 
 
+# On a caution day a Do line that pushes for a start contradicted the card
+# ("retreat and observe" above "Take the first step at work"); it softens to
+# the same action at a smaller size (audit U21).
+_GENTLE_DO = {
+    "Take the first step at work": "Take one small step at work",
+    "Make steady progress at work": "Keep work steady and small",
+    "Start a healthy habit": "Keep up a gentle routine",
+    "Have that honest conversation": "Keep conversations kind and brief",
+    "Mend or deepen a bond": "Be kind to those close",
+    "Learn something new": "Read or study quietly",
+    "Plan the bigger picture": "Note ideas now, decide later",
+    "Review numbers and financial plans": "Look over your numbers, decide later",
+    "Plan your money calmly": "Look over your money, decide later",
+    "Good day to start important things": "Keep any new start small",
+    "Good day for money and plans": "Plan calmly, decide later",
+}
+
+
+def _gentle_do(rows: list[dict]) -> list[dict]:
+    out = []
+    for row in rows:
+        gentle = _GENTLE_DO.get(row["headline"])
+        if gentle:
+            row = {**row, "headline": gentle}
+            if "plain_headline" in row:
+                row["plain_headline"] = gentle
+        out.append(row)
+    return _distinct(out)
+
+
 def _distinct(rows: list[dict]) -> list[dict]:
     """Drop a row whose title repeats an earlier one, or one is the other cut
     short ("Keep the day light" under "Keep the day light and simple")."""
@@ -740,6 +770,8 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
     # Vedic day get identical do/avoid phrasing, not a coin-flip on the hour.
     seed_base = f"{chart.moment.jd_ut}-{vedic_date.isoformat()}"
     do_today, avoid_today = _do_and_avoid(personal, ctx, words, seed_base)
+    if verdict["tone"] == "caution":
+        do_today = _gentle_do(do_today)
     reading = _reading(chart, relation or "", day_payload, personal, ctx,
                        verdict, do_today, avoid_today)
 

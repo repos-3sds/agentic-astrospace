@@ -214,7 +214,6 @@ export class ChartHubComponent {
     },
   ]);
 
-  readonly noteCount = signal(0);
   readonly advancedOpen = signal(false);
   readonly guidedCoreIds = ['varga', 'dasha', 'transit'];
   readonly guidedAdvancedIds = ['strength', 'reference'];
@@ -304,7 +303,7 @@ export class ChartHubComponent {
       { title: 'Reference', subtitle: 'Avkahada · Ghatak · Fav', tone: 'muted', icon: 'figma-yantra-book-open', route: ['/m', 'chart', 'reference'] },
       { title: 'Compatibility', subtitle: 'Gun Milan matching', tone: 'muted', icon: 'figma-yantra-users', route: ['/m', 'compat'] },
       { title: 'Readings', subtitle: 'Latest predictions', tone: 'muted', icon: 'figma-yantra-file-text', route: ['/m', 'readings'] },
-      { title: 'Notes', subtitle: `${this.noteCount()} notes`, tone: 'muted', icon: 'figma-yantra-edit-3', route: ['/m', 'notes'] },
+      { title: 'Notes', subtitle: 'Private, on this phone', tone: 'muted', icon: 'figma-yantra-edit-3', route: ['/m', 'notes'] },
       { title: 'Remedies', subtitle: 'Active practices', tone: 'good', icon: 'figma-yantra-sun', route: ['/m', 'remedies'] },
       { title: 'Muhurta', subtitle: 'Next windows', tone: 'warn', icon: 'figma-yantra-calendar', route: ['/m', 'muhurta'] },
     ];

@@ -8,6 +8,7 @@ import { NATURAL_VOICE_NAME, NaturalVoiceService, naturalChunks, prepareForSpeec
 import { PreferencesService } from './preferences.service';
 import { SessionTeardown } from './session-teardown';
 import { Subhashita, localIsoDate } from './subhashita.service';
+import { noteDeepLink } from './deep-link-arrival';
 
 /**
  * What the home-screen widgets show, as the app last saw it. Each part is
@@ -192,7 +193,10 @@ export class WidgetBridgeService {
   }
 
   private go(route: string): void {
-    if (route?.startsWith('/m/')) void this.router.navigateByUrl(route);
+    if (route?.startsWith('/m/')) {
+      noteDeepLink();
+      void this.router.navigateByUrl(route);
+    }
   }
 }
 

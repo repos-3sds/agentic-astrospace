@@ -1572,3 +1572,12 @@ From the Tier 0 fixes for `/mnt/project-files/audits/end-to-end-2026-10-18/findi
   `_day_facts` from `moontimes`, then a `("sankashti", "Krishna", 4,
   "moonrise")` row with its own note. *Hook:* `core/vedic/festivals.py`
   `_day_facts`, `vrat_days`.
+- [ ] **Notes as a synced, dated journal** (U22, rest). *Why not built:*
+  it needs a table, CRUD routes, export and deletion coverage, and
+  conflict handling for two phones. That is a feature, not an audit fix.
+  Notes are now one per profile, on the phone, with input aids on, and
+  the copy says they aren't backed up. *Unblock:* a `notes` table
+  (user_id, kundli_id, created_at, body), with routes under `/me/notes`.
+  Add it to `/me/export` and to account deletion, then move each
+  `astrospace.mobile.notes.draft.<profile>` into it on first open.
+  *Hook:* `ui/src/app/features/mobile/notes/notes.component.ts`.

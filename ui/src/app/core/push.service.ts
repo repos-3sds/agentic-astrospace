@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { Capacitor, registerPlugin } from '@capacitor/core';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
+import { noteDeepLink } from './deep-link-arrival';
 
 /** Mirrors the native permission states; 'unsupported' is the web build. */
 export type PushPermission = 'prompt' | 'granted' | 'denied' | 'unsupported';
@@ -196,7 +197,10 @@ export class PushService {
     // the app never follows a push off to the web.
     await plugin.addListener('pushNotificationActionPerformed', ({ notification }) => {
       const link = (notification.data as Record<string, unknown> | undefined)?.['deep_link'];
-      if (typeof link === 'string' && link.startsWith('/m/')) void this.router.navigateByUrl(link);
+      if (typeof link === 'string' && link.startsWith('/m/')) {
+        noteDeepLink();
+        void this.router.navigateByUrl(link);
+      }
     });
     await plugin.addListener('registrationError', ({ error }) => {
       this.error.set(error || 'The device did not return a push token.');

@@ -21,6 +21,18 @@ import { shareFile } from '../../../core/native-share';
  * notes and history should not be one tap from a settings list. Wiring it needs
  * a confirm — that is a design question, not something to invent here.
  */
+/** Every Notes draft on this phone, keyed by storage key (one per profile). */
+function notesOnThisDevice(): Record<string, string> {
+  const notes: Record<string, string> = {};
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('astrospace.mobile.notes.')) notes[key] = localStorage.getItem(key) ?? '';
+    }
+  } catch { /* blocked */ }
+  return notes;
+}
+
 @Component({
   selector: 'as-settings-account',
   standalone: true,
@@ -74,8 +86,7 @@ export class AccountPrivacyComponent {
         // Android's WebView ignores <a download> on a blob URL, so the old
         // "Your data export is ready" appeared while nothing was saved.
         const data = await this.api.get<Record<string, unknown>>('/me/export');
-        let notes: string | null = null;
-        try { notes = localStorage.getItem('astrospace.mobile.notes.draft'); } catch { /* blocked */ }
+        const notes = notesOnThisDevice();
         const name = `siddha-export-${new Date().toISOString().slice(0, 10)}.json`;
         const file = new File([JSON.stringify({ ...data, notes_on_this_device: notes }, null, 2)], name, { type: 'application/json' });
         const shared = await shareFile(file, { title: 'Your Siddha data' });

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { PushService } from '../../../core/push.service';
 import { EmailCategory, EmailSettingsService } from '../../../core/email-settings.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { SubhashitaService } from '../../../core/subhashita.service';
 
 /** One thing the app may notify about. */
 export interface NotificationPref {
@@ -47,6 +48,7 @@ export interface NotificationPref {
 })
 export class NotificationsComponent {
   private readonly push = inject(PushService);
+  protected readonly verse = inject(SubhashitaService);
   private readonly storageKey = 'astrospace.mobile.notificationPrefs';
   private readonly snoozeKey = 'astrospace.mobile.notificationPrompt.snoozedUntil';
   private readonly defaults: NotificationPref[] = [

@@ -1,6 +1,6 @@
 @use '../mobile-tokens' as *;
 :host { display: block; padding-bottom: 24px; }
-.mnote-top { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 10px; a { @include m-body-strong; display: flex; align-items: center; gap: 12px; color: var(--m-muted); text-decoration: none; } img { width: 24px; height: 24px; } em { @include m-caption; padding: 5px 10px; border-radius: 999px; color: var(--m-accent-strong); background: var(--m-accent-soft); font-size: 11px; font-style: normal; } }
+.mnote-top { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 10px; a { @include m-body-strong; @include m-hit-44; display: flex; align-items: center; gap: 12px; color: var(--m-muted); text-decoration: none; } img { width: 24px; height: 24px; } em { @include m-caption; padding: 5px 10px; border-radius: 999px; color: var(--m-accent-strong); background: var(--m-accent-soft); font-size: 11px; font-style: normal; } }
 .mnote-body { display: flex; flex-direction: column; gap: 14px; padding: 4px 20px 16px; }
 .mnote-body > header { h1 { @include m-h1; margin: 0 0 3px; } p { @include m-body-small; margin: 0; color: var(--m-muted); } }
 // outline-color alone never wins against WKWebView's native blue focus ring —
@@ -26,4 +26,4 @@ textarea {
   }
 }
 .mnote-meta { @include m-caption; display: flex; justify-content: space-between; color: var(--m-muted); }
-.mnote-private { @include m-caption; display: flex; gap: 8px; margin: 0; color: var(--m-muted); span { flex: 1; } }
+.mnote-private { @include m-caption; display: flex; gap: 8px; margin: 0; color: var(--m-muted); img { width: 16px; height: 16px; flex: none; margin-top: 1px; } span { flex: 1; } }
