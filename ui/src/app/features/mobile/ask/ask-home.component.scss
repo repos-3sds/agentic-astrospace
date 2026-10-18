@@ -15,6 +15,13 @@
   min-height: 0;
 }
 
+// Practitioner Ask has no tab bar (MobileShellComponent.layoutWithoutTabs), so
+// there is no tab-bar padding to reclaim. Reclaiming it anyway made the host
+// taller than the screen and pushed the composer below the fold.
+:host-context(.tabs-hidden) {
+  --ask-tab-gap: 0px;
+}
+
 /* App bar — node 25:26 */
 .appbar {
   flex-shrink: 0;
