@@ -258,7 +258,7 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
             raise HTTPException(status_code=400, detail="Thread belongs to a different kundli")
         turns = _history_from_thread(db, thread.id)
     else:
-        turns = [{"role": t.role, "content": t.content} for t in (body.history or [])]
+        turns = []  # client history is never replayed (S15); see ask_routes.ask
 
     messages = turns[-MAX_HISTORY:]
     while messages and messages[0]["role"] != "user":

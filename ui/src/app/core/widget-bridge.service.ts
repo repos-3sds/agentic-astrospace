@@ -193,7 +193,7 @@ export class WidgetBridgeService {
   }
 
   private go(route: string): void {
-    if (route?.startsWith('/m/')) {
+    if (isWidgetRoute(route)) {
       noteDeepLink();
       void this.router.navigateByUrl(route);
     }
@@ -268,4 +268,25 @@ export function windowSpan(date: string, time: string, timeZone: string): { star
   let endMs = wallClockToEpoch(date, end, timeZone);
   if (endMs <= startMs) endMs += 86_400_000;
   return { startMs, endMs };
+}
+
+/** Screens a widget opens. Exported for the spec. */
+export const WIDGET_ROUTES = new Set(['/m/today', '/m/ask', '/m/calendar', '/m/remedies', '/m/subhashita']);
+const MANTRA_PARAM = /^[\w-]{0,64}$/;
+
+/**
+ * MainActivity is exported (it is the launcher), so any installed app can
+ * send it a `siddha_route` extra. Only the widgets' own screens pass, and
+ * the mantra route only with its three id parameters (audit D15).
+ */
+export function isWidgetRoute(route: string | null | undefined): boolean {
+  if (!route) return false;
+  if (WIDGET_ROUTES.has(route)) return true;
+  const [path, query = '', ...rest] = route.split('?');
+  if (path !== '/m/remedies/mantra' || rest.length) return false;
+  const params = new URLSearchParams(query);
+  for (const [key, value] of params) {
+    if (!['recommendation', 'practice', 'profile'].includes(key) || !MANTRA_PARAM.test(value)) return false;
+  }
+  return true;
 }
