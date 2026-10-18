@@ -8,7 +8,10 @@ const SIDE = 120;
 const MID = STORY_WIDTH / 2;
 const SANS = `'Inter', system-ui, sans-serif`;
 const DISPLAY = `'Playfair Display', Georgia, serif`;
-const SERIF = `'Noto Serif Devanagari', 'Noto Sans Devanagari', serif`;
+// The iOS faces are named outright. Left to system fallback, WebKit's canvas
+// measured the Devanagari as if in the primary face, nearly zero wide, so
+// centred lines started at the middle and ran off the right edge.
+const SERIF = `'Noto Serif Devanagari', 'Noto Sans Devanagari', 'Kohinoor Devanagari', 'Devanagari Sangam MN', serif`;
 /** The brand wordmark face, the same one as the welcome screen's "Siddha". */
 const BRAND = `'Samarkan', 'Cormorant Garamond', serif`;
 
@@ -196,9 +199,25 @@ function fitLines(ctx: CanvasRenderingContext2D, paragraphs: string[], width: nu
 function drawLines(ctx: CanvasRenderingContext2D, fitted: Fitted, y: number): number {
   for (const line of fitted.lines) {
     y += fitted.lineHeight;
-    ctx.fillText(line, MID, y - Math.round(fitted.lineHeight - fitted.size) / 2);
+    drawCentred(ctx, line, y - Math.round(fitted.lineHeight - fitted.size) / 2);
   }
   return y;
+}
+
+/**
+ * Centres by measuring rather than by textAlign, and keeps the line on the
+ * card: if a device still reports a width that can't be right (narrower than
+ * a third of the type size per character), the line starts at the margin
+ * instead of the middle.
+ */
+function drawCentred(ctx: CanvasRenderingContext2D, line: string, y: number): void {
+  const previous = ctx.textAlign;
+  ctx.textAlign = 'left';
+  const size = Number(/(\d+)px/.exec(ctx.font)?.[1] ?? 0);
+  const width = ctx.measureText(line).width;
+  const plausible = width >= [...line].length * size * 0.2;
+  ctx.fillText(line, plausible ? MID - width / 2 : SIDE, y);
+  ctx.textAlign = previous;
 }
 
 /** A short rule with a dot in the middle, under the wordmark. */
