@@ -160,6 +160,35 @@ def daily_panchanga(year: int, month: int, day: int,
     }
 
 
+# Only the two taras the texts treat as hardest tint a day "take care";
+# Vipat and Pratyari read as mixed, so the month isn't half warnings.
+TARABALA_HARD = {"Janma", "Vadha"}
+
+DAY_QUALITY_NOTE = (
+    "Day quality is Tarabala (the Moon's nakshatra counted from the birth "
+    "nakshatra) with Chandrabala (its sign counted from the birth Moon sign), "
+    "both at sunrise. Good: both favourable. Take care: Janma or Vadha tara, "
+    "or the 8th sign from the birth Moon (chandrashtama). Mixed: anything "
+    "else. A general guide for the day, not a verdict on it."
+)
+
+
+def day_quality(moon_nakshatra_index: int, moon_sign_index: int,
+                janma_nakshatra_index: int, janma_rashi_index: int) -> dict:
+    """The good / mixed / care tint of one day for one person (U7), from the
+    same Tarabala and Chandrabala the day view shows (personal_panchanga)."""
+    tara = TARABALA_NAMES[(moon_nakshatra_index - janma_nakshatra_index) % 27 % 9]
+    house = (moon_sign_index - janma_rashi_index) % 12 + 1
+    if house == 8 or tara in TARABALA_HARD:
+        quality = "care"
+    elif tara in TARABALA_GOOD and house in CHANDRABALA_GOOD:
+        quality = "good"
+    else:
+        quality = "mixed"
+    return {"quality": quality, "tara": tara, "chandrabala_house": house,
+            "chandrashtama": house == 8}
+
+
 def personal_panchanga(day_payload: dict, janma_nakshatra_index: int,
                        janma_rashi_index: int, ghatak_moon_sign: int = None) -> dict:
     """

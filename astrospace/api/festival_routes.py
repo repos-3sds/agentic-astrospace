@@ -149,6 +149,62 @@ def moon_days(
     }
 
 
+@lru_cache(maxsize=64)
+def _vrat_days(year: int, city: str, nation: str) -> tuple[dict, ...]:
+    return tuple(festivals.vrat_days(year, city=city, nation=nation))
+
+
+@router.get("/vrat-days")
+def vrat_days(
+    city: str = Query(..., description="Where sunrise is taken, e.g. Chennai"),
+    nation: str = "IN",
+    from_date: str | None = Query(None, description="YYYY-MM-DD; default today"),
+    days: int = Query(31, ge=1, le=62),
+    timezone: str | None = Query(
+        None, description="The viewer's timezone, used when city is only the birth-city fallback"),
+    city_is_fallback: bool = Query(
+        False, description="city is the birth city, sent because no timing city is chosen"),
+):
+    """Ekadashi, Purnima, Amavasya and Pradosham in a window, for Calendar (U7).
+
+    Each row carries the rule used: every one of these days has more than one
+    defensible answer. The place follows the same order as /upcoming.
+    """
+    if city_is_fallback and timezone:
+        viewer_city = city_for_timezone(timezone)
+        if viewer_city:
+            city, nation = viewer_city[0], viewer_city[1]
+    if from_date:
+        try:
+            start = datetime.strptime(from_date, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="from_date must be YYYY-MM-DD")
+    else:
+        start = date_cls.today()
+    end = start + timedelta(days=days - 1)
+    _validate(start.year, None)
+    _validate(end.year, None)
+    rows: list[dict] = []
+    try:
+        for year in sorted({start.year, end.year}):
+            rows += _vrat_days(year, city, nation)
+    except LocationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    return {
+        "from_date": start.isoformat(),
+        "to_date": end.isoformat(),
+        "place": {"city": city, "nation": nation},
+        "days": [
+            {
+                "date": r["date"].isoformat(), "kind": r["kind"], "paksha": r["paksha"],
+                "name": r["name"], "is_convention_dependent": True,
+                "observance_note": festivals.VRAT_NOTES[r["kind"]],
+            }
+            for r in rows if start <= r["date"] <= end
+        ],
+    }
+
+
 @router.get("/upcoming")
 def upcoming_festivals(
     city: str = Query(..., description="Where sunrise is taken, e.g. Chennai"),

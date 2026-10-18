@@ -555,6 +555,7 @@ def _day_facts(day: date_cls, lat: float, lng: float, tz_str: str,
         "purnimanta_month": masa["purnimanta_name"],
         "adhika": masa["adhika"],
         "moon_nakshatra": nakshatra_of(moon)["name"],
+        "moon_sign": sign_index(moon),
         "sun_sign": sign_index(sun),
         "weekday": day.weekday(),  # Monday=0 … Sunday=6
         "month_bounds": (masa["month_start_jd"], masa["month_end_jd"]),
@@ -861,6 +862,94 @@ MOON_DAY_NOTE = (
     "begins instead, so a family or temple calendar can be a day apart."
 )
 
+# The monthly vrat days a family checks (U7). Each kind states the rule used,
+# because each has more than one defensible answer.
+VRAT_NOTES = {
+    "ekadashi": ("The day whose sunrise falls in Ekadashi, the Smarta rule. "
+                 + _EKADASHI_NOTE),
+    "purnima": MOON_DAY_NOTE,
+    "amavasya": MOON_DAY_NOTE,
+    "pradosham": ("The day Trayodashi holds at sunset, the pradosha time. When "
+                  "it holds at sunset on two days, the first is given; some "
+                  "calendars use the second."),
+}
+VRAT_NAMES = {
+    "ekadashi": "Ekadashi",
+    "purnima": "Purnima",
+    "amavasya": "Amavasya",
+    "pradosham": "Pradosham",
+}
+
+
+def _abs_at(fact: dict, at: str = "sunrise") -> int:
+    tithi_field, paksha_field = _AT_FIELDS[at]
+    return _abs_tithi(fact[paksha_field], fact[tithi_field])
+
+
+def _tithi_days(facts: list[dict], paksha: str, number: int, at: str = "sunrise") -> list[date_cls]:
+    """Days on which a tithi holds at the given moment, one per paksha.
+
+    The tithi that holds at the moment marks the day. When it holds on two
+    days (vriddhi) the first is kept. When it holds on none (kshaya: it began
+    after one moment and ended before the next) the day it falls inside is
+    used, which is the day whose moment shows the next tithi.
+    """
+    want = _abs_tithi(paksha, number)
+    days: list[date_cls] = []
+    previous = None
+    for fact in facts:
+        here = _abs_at(fact, at)
+        if here == want:
+            if previous is None or _abs_at(previous, at) != want:
+                days.append(fact["date"])
+        elif previous is not None:
+            before = _abs_at(previous, at)
+            # Skipped: the moment jumped from the tithi before to the one after.
+            if (want - before) % 30 == 1 and (here - want) % 30 == 1:
+                days.append(fact["date"])
+        previous = fact
+    return days
+
+
+def vrat_days(year: int, city: str | None = None, nation: str = "IN",
+              lat: float | None = None, lng: float | None = None,
+              tz_str: str | None = None) -> list[dict]:
+    """Ekadashi (both pakshas), Purnima, Amavasya and Pradosham of ``year``.
+
+    Rows: ``{"date", "kind", "paksha", "name"}``, sorted. Every kind is
+    convention-dependent; ``VRAT_NOTES[kind]`` states the rule used.
+    """
+    lat, lng, tz_str = resolve_location(city, nation, lat, lng, tz_str)
+    facts = _scan_year(year, lat, lng, tz_str)
+    rows: list[dict] = []
+    for kind, paksha, number, at in (
+        ("ekadashi", "Shukla", 11, "sunrise"),
+        ("ekadashi", "Krishna", 11, "sunrise"),
+        ("purnima", "Shukla", 15, "sunrise"),
+        ("amavasya", "Krishna", 15, "sunrise"),
+        ("pradosham", "Shukla", 13, "pradosh"),
+        ("pradosham", "Krishna", 13, "pradosh"),
+    ):
+        for day in _tithi_days(facts, paksha, number, at):
+            if day.year == year:
+                rows.append({"date": day, "kind": kind, "paksha": paksha,
+                             "name": f"{paksha} {VRAT_NAMES[kind]}" if kind in ("ekadashi", "pradosham")
+                             else VRAT_NAMES[kind]})
+    rows.sort(key=lambda r: (r["date"], r["kind"]))
+    return rows
+
+
+def moon_signs(year: int, city: str | None = None, nation: str = "IN",
+               lat: float | None = None, lng: float | None = None,
+               tz_str: str | None = None) -> dict[date_cls, tuple[int, int]]:
+    """{date: (moon nakshatra index, moon sign index)} at each sunrise of ``year``,
+    for the personal day quality on the month grid."""
+    lat, lng, tz_str = resolve_location(city, nation, lat, lng, tz_str)
+    return {
+        f["date"]: (NAKSHATRAS.index(f["moon_nakshatra"]), f["moon_sign"])
+        for f in _scan_year(year, lat, lng, tz_str) if f["date"].year == year
+    }
+
 
 def moon_days(year: int, city: str | None = None, nation: str = "IN",
               lat: float | None = None, lng: float | None = None,
@@ -869,11 +958,11 @@ def moon_days(year: int, city: str | None = None, nation: str = "IN",
 
     Rows: ``{"date": date, "moon": "full" | "new"}``, sorted. Convention-
     dependent (see MOON_DAY_NOTE), so callers ship the note with the dates.
-    The same rule the moon-day emails use (notifications/email_jobs.py).
+    The same rule the moon-day emails use (notifications/email_jobs.py), and
+    the Calendar's Purnima and Amavasya (vrat_days).
     """
-    lat, lng, tz_str = resolve_location(city, nation, lat, lng, tz_str)
     return [
-        {"date": f["date"], "moon": "full" if f["paksha"] == "Shukla" else "new"}
-        for f in _scan_year(year, lat, lng, tz_str)
-        if f["tithi_number"] == 15 and f["date"].year == year
+        {"date": r["date"], "moon": "full" if r["kind"] == "purnima" else "new"}
+        for r in vrat_days(year, city, nation, lat, lng, tz_str)
+        if r["kind"] in ("purnima", "amavasya")
     ]

@@ -21,8 +21,25 @@
   .mcal-weekday { @include m-caption; height: 20px; color: var(--m-muted); }
   .mcal-selected { border-radius: 50%; color: var(--m-on-ink); background: var(--m-ink); }
   .mcal-empty-day { color: var(--m-muted); opacity: 0.55; }
+  // Day quality (U7): a soft disc behind the number. Today's ink disc wins.
+  .mcal-q-good:not(.mcal-selected) { border-radius: 50%; background: var(--m-good-soft); color: var(--m-good); }
+  .mcal-q-care:not(.mcal-selected) { border-radius: 50%; background: var(--m-warn-soft); color: var(--m-warn); }
   .mcal-event { position: relative; }
   .mcal-event::after { content: ''; position: absolute; bottom: 2px; width: 4px; height: 4px; border-radius: 50%; background: var(--m-accent); }
+}
+.mcal-legend {
+  display: flex; flex-wrap: wrap; gap: 6px 14px; margin: -6px 2px 0;
+  span { @include m-caption; display: inline-flex; align-items: center; gap: 6px; color: var(--m-muted); }
+  i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+  .good { background: var(--m-good-soft); box-shadow: inset 0 0 0 1.5px var(--m-good); }
+  .care { background: var(--m-warn-soft); box-shadow: inset 0 0 0 1.5px var(--m-warn); }
+  .event { width: 5px; height: 5px; margin: 0 2.5px; background: var(--m-accent); }
+}
+.mcal-about {
+  margin: -6px 2px 0;
+  summary { @include m-caption; cursor: pointer; color: var(--m-accent-strong); }
+  p { @include m-caption; margin: 6px 0 0; color: var(--m-muted); }
+  b { color: var(--m-text); }
 }
 .mcal-eyebrow { @include m-eyebrow; margin: 0; color: var(--m-accent); }
 .mcal-observance {
@@ -35,6 +52,7 @@
   em { @include m-caption; color: var(--m-accent-strong); font-style: normal; }
   &.festival { cursor: pointer; }
   &.festival .mcal-date-tile { background: var(--m-gold-soft); color: var(--m-gold); }
+  &.vrat .mcal-date-tile { background: var(--m-accent-soft); color: var(--m-accent-strong); }
 }
 .mcal-date-tile {
   display: flex; flex: 0 0 auto; flex-direction: column; align-items: center; justify-content: center;
