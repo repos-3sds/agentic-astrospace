@@ -27,10 +27,13 @@ class TestCorpus:
         rows = subhashita.corpus()
         assert rows
         for row in rows:
-            for field in ("id", "source", "ref", "sanskrit", "english"):
+            for field in ("id", "source", "ref", "sanskrit", "english", "meaning"):
                 assert row[field].strip(), (row["id"], field)
             # Long enough to mean something, short enough for a status card.
             assert 20 <= len(row["english"]) <= 200, row["id"]
+            # The meaning is one plain line under the verse, a full sentence.
+            assert 15 <= len(row["meaning"]) <= 100, row["id"]
+            assert row["meaning"][0].isupper() and row["meaning"].endswith("."), row["id"]
             # The Sanskrit is Devanagari, not a transliteration.
             assert any("ऀ" <= ch <= "ॿ" for ch in row["sanskrit"]), row["id"]
 

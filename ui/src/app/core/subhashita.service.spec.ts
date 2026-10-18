@@ -5,7 +5,7 @@ import { localIsoDate, SubhashitaService } from './subhashita.service';
 
 describe('SubhashitaService', () => {
   const today = localIsoDate();
-  const day = (date: string) => ({ date, id: `v-${date}`, source: 'Chanakya Niti', ref: '1.1', sanskrit: 'धर्म', english: 'A verse for the day.' });
+  const day = (date: string) => ({ date, id: `v-${date}`, source: 'Chanakya Niti', ref: '1.1', sanskrit: 'धर्म', english: 'A verse for the day.', meaning: 'A plain line.' });
   let calls: string[];
 
   function make(): SubhashitaService {

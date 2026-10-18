@@ -50,7 +50,8 @@
       <span class="eyebrow">TODAY’S SUBHASHITA</span>
     </span>
     @if (subhashita.today(); as verse) {
-      <span class="verse-text">“{{ verse.english }}”</span>
+      <!-- The meaning, which fits whole; the full verse is one tap away. -->
+      <span class="verse-text">{{ verse.meaning || '“' + verse.english + '”' }}</span>
       <span class="verse-source">{{ verse.source }} {{ verse.ref }}</span>
     } @else {
       <span class="verse-text">A verse a day from the Gita, Chanakya Niti and the Puranas.</span>

@@ -9,6 +9,8 @@ export interface Subhashita {
   ref: string;
   sanskrit: string;
   english: string;
+  /** One plain line on what the verse asks of the reader. */
+  meaning: string;
 }
 
 export const SUBHASHITA_TITLE = 'Today’s Subhashita';
@@ -49,7 +51,8 @@ export class SubhashitaService {
     const today = localIsoDate();
     this.date.set(today);
     const cachedAhead = this.days().filter((d) => d.date >= today).length;
-    if (this.today() && cachedAhead >= DAYS_AHEAD / 2) return this.today();
+    // Verses cached before meanings existed (2026-10-18) are fetched again.
+    if (this.today()?.meaning && cachedAhead >= DAYS_AHEAD / 2) return this.today();
     try {
       const response = await this.api.get<{ items: Subhashita[] }>(
         `/subhashita?start=${today}&days=${DAYS_AHEAD}`,
