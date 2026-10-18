@@ -18,53 +18,11 @@ import { drawGalaxy } from './galaxy-draw';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="splash" [class.dark]="dark" [class.mark-only]="markOnly" aria-label="Siddha loading">
-      @if (!markOnly) {
-        <div class="galaxy-mark" role="img" aria-label="Siddha galaxy mark">
-          <div class="halo"></div>
-          <div class="tilt"><canvas #galaxy class="galaxy" width="720" height="720"></canvas></div>
-          <div class="glow"></div>
-        </div>
-      } @else {
-      <svg class="siddha-mark" viewBox="0 0 320 320" role="img" aria-label="Siddha solar system mark">
-        <defs>
-          <radialGradient id="splashSun" cx="50%" cy="42%" r="58%">
-            <stop offset="0%" stop-color="#fff6c7" />
-            <stop offset="48%" stop-color="#e6a83c" />
-            <stop offset="100%" stop-color="#b64a2d" />
-          </radialGradient>
-          <linearGradient id="splashOrbit" x1="56" x2="264" y1="80" y2="240">
-            <stop offset="0%" stop-color="#d7b06a" stop-opacity="0.22" />
-            <stop offset="52%" stop-color="#f3dcc3" stop-opacity="0.68" />
-            <stop offset="100%" stop-color="#b94733" stop-opacity="0.22" />
-          </linearGradient>
-          <filter id="splashGlow" x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur stdDeviation="9" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        <circle class="outer-halo" cx="160" cy="160" r="118" />
-        <g class="orbit orbit-one">
-          <ellipse cx="160" cy="160" rx="102" ry="42" />
-          <circle class="planet planet-one" cx="262" cy="160" r="8" />
-        </g>
-        <g class="orbit orbit-two">
-          <ellipse cx="160" cy="160" rx="88" ry="32" />
-          <circle class="planet planet-two" cx="72" cy="160" r="5" />
-        </g>
-        <g class="orbit orbit-three">
-          <ellipse cx="160" cy="160" rx="72" ry="116" />
-          <circle class="planet planet-three" cx="160" cy="44" r="6" />
-        </g>
-        <circle class="sun" cx="160" cy="160" r="36" />
-        <circle class="sun-core" cx="160" cy="160" r="17" />
-        <path class="ray ray-a" d="M160 78v34M160 208v34M78 160h34M208 160h34" />
-        <path class="ray ray-b" d="M102 102l24 24M194 194l24 24M218 102l-24 24M126 194l-24 24" />
-      </svg>
-      }
+      <div class="galaxy-mark" role="img" aria-label="Siddha galaxy mark">
+        <div class="halo"></div>
+        <div class="tilt"><canvas #galaxy class="galaxy" width="720" height="720"></canvas></div>
+        <div class="glow"></div>
+      </div>
 
       @if (!markOnly) {
         <div class="copy">
@@ -114,17 +72,6 @@ import { drawGalaxy } from './galaxy-draw';
         background: transparent;
       }
 
-      .siddha-mark {
-        width: min(58vw, 240px);
-        aspect-ratio: 1;
-        overflow: visible;
-      }
-
-      .mark-only .siddha-mark {
-        width: 100%;
-        height: 100%;
-      }
-
       /* The app icon's galaxy, drawn face-on and tilted here so it can turn
          without the tilt turning with it. Light theme draws it as soft ink
          on cream over a sunlit halo; dark theme as light, like the icon. */
@@ -147,6 +94,11 @@ import { drawGalaxy } from './galaxy-draw';
       .dark .halo {
         inset: -6%;
         background: radial-gradient(circle, rgba(255, 211, 106, 0.16), transparent 62%);
+      }
+
+      .mark-only .galaxy-mark {
+        width: 100%;
+        height: 100%;
       }
 
       .tilt {
@@ -182,72 +134,6 @@ import { drawGalaxy } from './galaxy-draw';
 
       .dark .glow {
         background: radial-gradient(circle, rgba(255, 240, 200, 0.55), rgba(255, 200, 110, 0.18) 45%, transparent 70%);
-      }
-
-      .outer-halo {
-        fill: none;
-        stroke: rgba(178, 114, 52, 0.16);
-        stroke-width: 1.5;
-      }
-
-      .orbit {
-        transform-box: fill-box;
-        transform-origin: center;
-        animation: orbitSpin 8s linear infinite;
-      }
-
-      .orbit-two {
-        animation-duration: 11s;
-        animation-direction: reverse;
-      }
-
-      .orbit-three {
-        animation-duration: 13s;
-      }
-
-      .orbit ellipse {
-        fill: none;
-        stroke: url(#splashOrbit);
-        stroke-width: 2;
-      }
-
-      .planet {
-        fill: #f5d69a;
-        filter: url(#splashGlow);
-      }
-
-      .planet-two {
-        fill: #bc6a48;
-      }
-
-      .planet-three {
-        fill: #fff1c7;
-      }
-
-      .sun {
-        fill: url(#splashSun);
-        filter: url(#splashGlow);
-        transform-box: fill-box;
-        transform-origin: center;
-        animation: sunBreathe 2.4s ease-in-out infinite;
-      }
-
-      .sun-core {
-        fill: rgba(255, 247, 208, 0.86);
-      }
-
-      .ray {
-        fill: none;
-        stroke: currentColor;
-        stroke-linecap: round;
-        stroke-width: 3;
-        opacity: 0.36;
-        transform-box: fill-box;
-        transform-origin: center;
-      }
-
-      .ray-b {
-        opacity: 0.24;
       }
 
       .copy {
@@ -286,18 +172,6 @@ import { drawGalaxy } from './galaxy-draw';
         text-transform: uppercase;
       }
 
-      @keyframes sunBreathe {
-        0%,
-        100% {
-          transform: scale(0.96);
-          opacity: 0.94;
-        }
-        50% {
-          transform: scale(1.08);
-          opacity: 1;
-        }
-      }
-
       @keyframes galaxySpin {
         to {
           transform: rotate(-360deg);
@@ -316,12 +190,6 @@ import { drawGalaxy } from './galaxy-draw';
         }
       }
 
-      @keyframes orbitSpin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
       @keyframes copyRise {
         from {
           transform: translateY(18px);
@@ -334,8 +202,6 @@ import { drawGalaxy } from './galaxy-draw';
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .orbit,
-        .sun,
         .galaxy,
         .glow,
         .copy {
