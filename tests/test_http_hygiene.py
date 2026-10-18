@@ -162,9 +162,17 @@ def test_supabase_outage_does_not_echo_exception_text(monkeypatch):
     def boom(*args, **kwargs):
         raise requests.ConnectionError("HTTPSConnectionPool(host='secret-project.supabase.co')")
 
-    monkeypatch.setattr(auth_module.requests, "get", boom)
+    import time
+
+    import jwt
+
+    monkeypatch.delenv("SUPABASE_JWT_SECRET", raising=False)
+    monkeypatch.setattr(auth_module._http, "get", boom)
+    auth_module._remote_cache.clear()
+    # A well-formed token the server can't check locally, so it asks Supabase.
+    token = jwt.encode({"sub": "u", "exp": int(time.time()) + 600}, "x" * 40, algorithm="HS256")
     response = TestClient(main.app).get(
-        "/api/v1/kundlis", headers={"Authorization": "Bearer t"},
+        "/api/v1/kundlis", headers={"Authorization": f"Bearer {token}"},
     )
     assert response.status_code == 503
     assert "secret-project" not in response.text

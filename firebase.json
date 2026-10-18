@@ -1,17 +1,83 @@
 {
   "hosting": {
     "public": "firebase-public",
-    "ignore": ["firebase.json", "**/.*", "README.txt"],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "README.txt"
+    ],
     "cleanUrls": true,
     "rewrites": [
-      { "source": "/api/**", "run": { "serviceId": "agentic-astrospace", "region": "asia-south1" } },
-      { "source": "/legal/**", "run": { "serviceId": "agentic-astrospace", "region": "asia-south1" } },
-      { "source": "/email/**", "run": { "serviceId": "agentic-astrospace", "region": "asia-south1" } },
-      { "source": "**", "destination": "/index.html" }
+      {
+        "source": "/api/**",
+        "run": {
+          "serviceId": "agentic-astrospace",
+          "region": "asia-south1"
+        }
+      },
+      {
+        "source": "/legal/**",
+        "run": {
+          "serviceId": "agentic-astrospace",
+          "region": "asia-south1"
+        }
+      },
+      {
+        "source": "/email/**",
+        "run": {
+          "serviceId": "agentic-astrospace",
+          "region": "asia-south1"
+        }
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
     ],
     "headers": [
-      { "source": "/index.html", "headers": [{ "key": "Cache-Control", "value": "public, max-age=300" }] },
-      { "source": "/audio/**", "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }] }
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin-when-cross-origin"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          },
+          {
+            "key": "Strict-Transport-Security",
+            "value": "max-age=15552000"
+          },
+          {
+            "key": "Content-Security-Policy-Report-Only",
+            "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; media-src 'self'; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+          }
+        ]
+      },
+      {
+        "source": "/index.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=300"
+          }
+        ]
+      },
+      {
+        "source": "/audio/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=604800"
+          }
+        ]
+      }
     ]
   }
 }
