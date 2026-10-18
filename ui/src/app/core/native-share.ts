@@ -20,10 +20,9 @@ export interface ShareFileOptions {
  */
 export async function shareFile(file: File, options: ShareFileOptions): Promise<boolean> {
   if (Capacitor.isNativePlatform()) {
-    const data = await blobToBase64(file);
-    const written = await Filesystem.writeFile({ path: file.name, data, directory: Directory.Cache });
+    const uri = await writeToCache(file);
     try {
-      await Share.share({ title: options.title, text: options.text, files: [written.uri] });
+      await Share.share({ title: options.title, text: options.text, files: [uri] });
     } catch (error) {
       if (!isUserCancel(error)) throw error;
     }
@@ -38,6 +37,29 @@ export async function shareFile(file: File, options: ShareFileOptions): Promise<
     return true;
   }
   return false;
+}
+
+/**
+ * Writes the file to the app cache ahead of a share, so the share sheet opens
+ * at once when the user taps. Safe to call more than once for the same file.
+ */
+export function prepareShareFile(file: File): void {
+  if (Capacitor.isNativePlatform()) void writeToCache(file).catch(() => undefined);
+}
+
+const written = new Map<string, Promise<string>>();
+
+function writeToCache(file: File): Promise<string> {
+  const key = `${file.name}:${file.size}:${file.lastModified}`;
+  let pending = written.get(key);
+  if (!pending) {
+    pending = blobToBase64(file)
+      .then((data) => Filesystem.writeFile({ path: file.name, data, directory: Directory.Cache }))
+      .then((result) => result.uri);
+    written.set(key, pending);
+    pending.catch(() => written.delete(key));
+  }
+  return pending;
 }
 
 function isUserCancel(error: unknown): boolean {
