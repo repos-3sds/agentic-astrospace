@@ -833,6 +833,7 @@ def assemble(chart, domains: list[str], *, question: str | None = None,
             "moon_sign": sign_name(moon_sign),
             "moon_nakshatra": nakshatra_of(chart.positions["Moon"]["lon"])["name"],
             "ayanamsha": chart.ayanamsha,
+            "node_type": chart.node_type,
         },
         "domains": sections,
         "provenance": {

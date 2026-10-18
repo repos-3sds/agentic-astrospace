@@ -6,7 +6,7 @@ the templated brief covered, a script that plays in under 90 s at 0.9x,
 nothing that crosses a boundary, one brief per profile per day written on a
 schedule and kept), not what a model happens to write.
 """
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -557,3 +557,29 @@ def test_the_lookahead_time_can_be_moved_on_the_worker(env, agent, monkeypatch):
     assert daily_briefs.lookahead_from() == daily_briefs.DEFAULT_LOOKAHEAD_FROM
     monkeypatch.delenv("DAILY_BRIEF_LOOKAHEAD")
     assert str(daily_briefs.lookahead_from()) == "22:30:00"
+
+
+def test_todays_briefs_come_before_anyones_tomorrow(env, agent):
+    """With the budget short at 22:30, every profile gets today's first (I5)."""
+    _http, _kundli, factory = env
+    late = datetime(2026, 10, 16, 17, 0, tzinfo=timezone.utc)  # 22:30 in Kolkata
+    with factory() as db:
+        _install_app(db)
+        crud.create_kundli(db, {
+            "user_id": ME, "name": "Asha", "relation": "mother",
+            "birth_year": 1965, "birth_month": 2, "birth_day": 3, "birth_hour": 9, "birth_minute": 0,
+            "birth_city": "Hyderabad", "birth_nation": "IN",
+        })
+        result = daily_briefs.schedule_daily_briefs(db, now=late, prerender=lambda s: 0, max_briefs=2)
+        dates = sorted(str(row.local_date) for row in db.query(DailyGuidanceCache).all())
+    assert result["written"] == 2 and result["deferred"] == 2
+    assert dates == ["2026-10-16", "2026-10-16"]
+
+
+def test_each_run_starts_with_a_different_reader():
+    ids = ["a", "b", "c"]
+    base = datetime(2026, 10, 16, 0, 0, tzinfo=timezone.utc)
+    firsts = {daily_briefs._rotated(ids, base + timedelta(minutes=15 * n))[0] for n in range(3)}
+    assert firsts == {"a", "b", "c"}
+    assert sorted(daily_briefs._rotated(ids, base)) == ids
+    assert daily_briefs._rotated([], base) == []

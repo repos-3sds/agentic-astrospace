@@ -289,8 +289,10 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
 
     thread_domain = _thread_established_domain(db, thread.id) if thread else None
 
+    # Read now: the chart may load after the connection is released.
+    convention = crud.chart_convention(db, user.id)
     orchestrator = AskOrchestrator(
-        chart_loader=lambda: _chart_from_kundli(k, "lahiri", "mean"),
+        chart_loader=lambda: _chart_from_kundli(k, *convention),
         validation_store=_validation_store(db, user.id, kundli_id,
                                            thread.id if thread else None),
         profile_context_store=_profile_context_store(db, user.id, kundli_id),
