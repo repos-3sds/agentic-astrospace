@@ -203,7 +203,11 @@ def test_prerender_also_renders_the_telugu_the_sheet_will_ask_for():
 # ── Store, endpoint and schedule ─────────────────────────────────────────────
 
 @pytest.fixture()
-def env():
+def env(monkeypatch):
+    # Briefs here are for AS_OF's day, and a stored brief expires a day after
+    # it against the real clock; without this every test that reads one back
+    # starts failing two days after AS_OF. Expiry has its own test below.
+    monkeypatch.setattr(store, "_expiry", lambda payload: None)
     engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False},
                            poolclass=StaticPool)
     Base.metadata.create_all(bind=engine)
