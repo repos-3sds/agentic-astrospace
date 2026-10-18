@@ -27,11 +27,10 @@ contaminate the only evidence this loop collects.
 """
 from __future__ import annotations
 
-import json
 
 from pydantic import BaseModel, Field
 
-from .base import BaseAstroAgent
+from .base import BaseAstroAgent, compact_json
 
 # Candidate keys the agent may NOT commit to. "skip" is the reader's decline
 # and "neither" is a null result — both are legitimate ANSWERS, and neither is
@@ -127,8 +126,8 @@ class ValidationAgent(BaseAstroAgent):
         anchor = slot.get("anchor") or {}
         self.system_prompt = _SYSTEM.format(
             domain_name=bundle.get("domain_name", bundle.get("domain", "")),
-            slot_json=json.dumps(slot, indent=2, default=str),
-            bundle_json=json.dumps(bundle, indent=2, default=str),
+            slot_json=compact_json(slot),
+            bundle_json=compact_json(bundle),
             anchor_start=anchor.get("start", "the window start"),
             anchor_end=anchor.get("end", "the window end"),
         )

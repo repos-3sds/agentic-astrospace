@@ -10,9 +10,8 @@ deterministic, verified chart output — the agent explains it, it does not
 recalculate it. That also means this agent needs no tool-call round trip
 before it can answer.
 """
-import json
 
-from .base import BaseAstroAgent
+from .base import BaseAstroAgent, compact_json
 from .schema import StructuredReading, StructuredReadingPatch, reading_tool_schema, repair_patch_schema
 from .verifier import valid_sources
 
@@ -437,7 +436,7 @@ class DomainReadingAgent(BaseAstroAgent):
         profile_facts = bundle.get("profile_facts") or {}
         self.system_prompt = _BASE_SYSTEM.format(
             domain_name=bundle.get("domain_name", bundle.get("domain", "")),
-            bundle_json=json.dumps(bundle, indent=2, default=str),
+            bundle_json=compact_json(bundle),
             profile_context_block=_format_profile_context_block(bundle),
             domain_addendum=domain_addendum,
             age_years=profile_facts.get("age_years", "unknown"),

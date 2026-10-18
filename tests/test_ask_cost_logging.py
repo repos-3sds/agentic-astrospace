@@ -30,9 +30,36 @@ class _Schema(StructuredReading):
 def test_extract_usage_reads_both_providers_and_tolerates_neither():
     anthropic = SimpleNamespace(usage=SimpleNamespace(input_tokens=1200, output_tokens=340))
     gemini = SimpleNamespace(usage_metadata=SimpleNamespace(prompt_token_count=900, candidates_token_count=210))
-    assert extract_usage(anthropic) == {"input_tokens": 1200, "output_tokens": 340}
-    assert extract_usage(gemini) == {"input_tokens": 900, "output_tokens": 210}
-    assert extract_usage(object()) == {"input_tokens": 0, "output_tokens": 0}
+    zero_cache = {"cached_tokens": 0}
+    assert extract_usage(anthropic) == {"input_tokens": 1200, "output_tokens": 340, **zero_cache}
+    assert extract_usage(gemini) == {"input_tokens": 900, "output_tokens": 210, **zero_cache}
+    assert extract_usage(object()) == {"input_tokens": 0, "output_tokens": 0, **zero_cache}
+
+
+def test_extract_usage_reports_the_cached_part_of_the_input():
+    gemini = SimpleNamespace(usage_metadata=SimpleNamespace(
+        prompt_token_count=40_000, candidates_token_count=900, cached_content_token_count=32_000))
+    anthropic = SimpleNamespace(usage=SimpleNamespace(
+        input_tokens=500, output_tokens=40, cache_read_input_tokens=12_000))
+    assert extract_usage(gemini)["cached_tokens"] == 32_000
+    assert extract_usage(anthropic)["cached_tokens"] == 12_000
+
+
+def test_every_model_call_logs_one_usage_line_naming_its_feature(monkeypatch, caplog):
+    monkeypatch.setenv("AI_PROVIDER", "anthropic")
+
+    class BriefAgent(BaseAstroAgent):
+        pass
+
+    agent = BriefAgent()
+    response = SimpleNamespace(usage=SimpleNamespace(input_tokens=2300, output_tokens=800))
+    with caplog.at_level("INFO", logger="astrospace.ai.usage"):
+        agent._record_usage(response, "daily_brief")
+    lines = [json.loads(r.getMessage()) for r in caplog.records if r.name == "astrospace.ai.usage"]
+    assert lines == [{
+        "feature": "BriefAgent", "purpose": "daily_brief", "provider": "anthropic",
+        "model": agent.model, "input_tokens": 2300, "output_tokens": 800, "cached_tokens": 0,
+    }]
 
 
 def test_structured_call_records_usage_on_the_agent(monkeypatch):
