@@ -94,7 +94,10 @@ export class CompatDetailComponent {
       const activeId = this.kundlis.activeId();
       const partnerId = this.partnerId();
       if (!activeId || !partnerId) return;
-      this.score.set(await this.vedic.compatibility(activeId, partnerId));
+      const partnerIsGroom = this.route.snapshot.queryParamMap.get('groom') === 'partner';
+      this.score.set(partnerIsGroom
+        ? await this.vedic.compatibility(partnerId, activeId)
+        : await this.vedic.compatibility(activeId, partnerId));
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {

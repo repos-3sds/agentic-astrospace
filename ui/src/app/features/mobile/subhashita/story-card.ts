@@ -211,10 +211,24 @@ function ornament(ctx: CanvasRenderingContext2D, y: number): void {
   ctx.fill();
 }
 
+/**
+ * The words a line may break between. A danda (। ॥) and a verse number
+ * after it stay with the word before, so a long pada never leaves a lone
+ * "।" on a line of its own (D11).
+ */
+export function wrapWords(text: string): string[] {
+  const words: string[] = [];
+  for (const word of text.split(/\s+/).filter(Boolean)) {
+    if (words.length && /^[।॥][\d०-९.।॥]*$/.test(word)) words[words.length - 1] += ` ${word}`;
+    else words.push(word);
+  }
+  return words;
+}
+
 function wrap(ctx: CanvasRenderingContext2D, text: string, width: number): string[] {
   const lines: string[] = [];
   let line = '';
-  for (const word of text.split(/\s+/).filter(Boolean)) {
+  for (const word of wrapWords(text)) {
     const next = line ? `${line} ${word}` : word;
     if (line && ctx.measureText(next).width > width) {
       lines.push(line);

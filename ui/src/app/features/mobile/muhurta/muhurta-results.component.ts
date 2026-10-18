@@ -228,7 +228,7 @@ export class MuhurtaResultsComponent {
         rank: index + 1,
         date: this.dateLabel(window.date),
         quality: window.quality === 'best' ? 'best' : 'good',
-        time: `${window.start} – ${window.end}`,
+        time: `${window.start} – ${window.end}${window.night ? " · Night" : ""}`,
         score: window.score,
         window: window.window,
         supports: window.why.supports,

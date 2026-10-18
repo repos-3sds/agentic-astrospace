@@ -81,8 +81,12 @@ class TestApi:
         assert client.get("/api/v1/subhashita", params={"days": 32}).status_code == 422
 
     def test_no_sign_in_needed(self, client):
-        # A verse shared to a status can be opened by someone without an account.
         assert client.get("/api/v1/subhashita/today").status_code == 200
+
+    def test_out_of_range_dates_are_400_not_500(self, client):
+        # 9999-12-25 plus a run of days used to overflow (D16).
+        assert client.get("/api/v1/subhashita", params={"start": "9999-12-25"}).status_code == 400
+        assert client.get("/api/v1/subhashita/today", params={"date": "0001-01-01"}).status_code == 400
 
 
 @pytest.fixture

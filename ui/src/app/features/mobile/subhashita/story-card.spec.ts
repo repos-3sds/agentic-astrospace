@@ -1,4 +1,4 @@
-import { longDate, renderStoryCard, shareText, STORY_HEIGHT, STORY_WIDTH } from './story-card';
+import { longDate, renderStoryCard, shareText, STORY_HEIGHT, STORY_WIDTH, wrapWords } from './story-card';
 
 describe('story card', () => {
   const verse = {
@@ -24,5 +24,10 @@ describe('story card', () => {
     expect(text).toContain('— Bhagavad Gita 2.47');
     expect(text).toContain(verse.meaning);
     expect(text).toContain('https://asksiddha.app');
+  });
+
+  it('keeps a danda with the word before it (D11)', () => {
+    expect(wrapWords('यत्र नार्यस्तु पूज्यन्ते ।')).toEqual(['यत्र', 'नार्यस्तु', 'पूज्यन्ते ।']);
+    expect(wrapWords('रमन्ते तत्र देवताः ॥ ३.५६ ॥')).toEqual(['रमन्ते', 'तत्र', 'देवताः ॥', '३.५६ ॥']);
   });
 });

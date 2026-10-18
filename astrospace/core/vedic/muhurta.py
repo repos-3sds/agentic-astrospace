@@ -39,6 +39,7 @@ RIKTA_TITHIS = {4, 9, 14}
 
 GOALS: dict[str, dict] = {
     "buy_property_gold": {
+        "daytime": True,
         "label": "Buy property or gold",
         "prefer_vara": ["Thursday", "Friday"],
         "prefer_nakshatra": ["Rohini", "Pushya", "Uttara Phalguni", "Uttara Ashadha",
@@ -46,6 +47,7 @@ GOALS: dict[str, dict] = {
         "avoid_tithi": RIKTA_TITHIS,
     },
     "sign_contract": {
+        "daytime": True,
         "label": "Sign a contract",
         "prefer_vara": ["Wednesday", "Thursday"],
         "prefer_nakshatra": ["Hasta", "Chitra", "Anuradha", "Uttara Phalguni",
@@ -99,6 +101,7 @@ GOALS: dict[str, dict] = {
         "avoid_tithi": RIKTA_TITHIS,
     },
     "start_venture": {
+        "daytime": True,
         "label": "Start a new venture",
         "prefer_vara": ["Wednesday", "Thursday", "Friday"],
         "prefer_nakshatra": ["Ashwini", "Rohini", "Pushya", "Hasta", "Chitra",
@@ -258,6 +261,16 @@ def _score_day(day: dict, personal: dict, goal: dict) -> tuple[int, list[str], l
     return delta, plus, minus
 
 
+DAY_STARTS, DAY_ENDS = 6, 21  # local hours
+
+
+def _is_night(start: datetime, end: datetime) -> bool:
+    """A window any part of which falls before 06:00 or after 21:00 local."""
+    if end.date() != start.date():
+        return True
+    return start.hour < DAY_STARTS or (end.hour, end.minute) > (DAY_ENDS, 0)
+
+
 def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
          janma_nakshatra_index: int, janma_rashi_index: int,
          ghatak_moon_sign: int | None = None,
@@ -355,6 +368,13 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
                 score -= 10
                 minus.append(window["note"])
 
+            # Business goals need offices, banks and registrars open (U24):
+            # a 22:31 window is no use for signing or registering.
+            night = _is_night(clear_start, clear_end)
+            if night and goal.get("daytime"):
+                score -= 15
+                minus.append("At night, when offices, banks and registrars are closed")
+
             score = max(0, min(100, score))
             if score < _MIN_SCORE:
                 continue
@@ -367,6 +387,7 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
                 "start_iso": clear_start.isoformat(),
                 "end_iso": clear_end.isoformat(),
                 "trimmed": trimmed,
+                "night": night,
                 "duration_minutes": int((clear_end - clear_start).total_seconds() // 60),
                 "score": score,
                 "quality": ("best" if score >= _BEST_SCORE
