@@ -128,6 +128,9 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
               <small>{{ regionsLabel(festival.regions) }}</small>
               <b>{{ festival.name }}</b>
               <p>{{ festival.description || festival.prep_guidance || 'Tap for observance details.' }}</p>
+              @if (festival.is_convention_dependent) {
+                <p class="convention">Varies by tradition. {{ festival.observance_note || 'Date may vary by family sampradaya or regional panchangam.' }}</p>
+              }
             </button>
           } @empty {
             <div><small>NONE</small><b>No major festival returned for this date</b></div>

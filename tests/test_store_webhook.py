@@ -49,7 +49,7 @@ def _event(kind, product="siddha_plus_monthly", txn="txn-1", **extra):
         "id": f"evt-{kind}-{txn}", "type": kind, "app_user_id": USER, "product_id": product,
         "transaction_id": txn, "original_transaction_id": txn,
         "purchased_at_ms": _ms(now), "expiration_at_ms": _ms(now + timedelta(days=30)),
-        "environment": "SANDBOX", "store": "PLAY_STORE", **extra,
+        "environment": "PRODUCTION", "store": "PLAY_STORE", **extra,
     }}
 
 
@@ -114,3 +114,53 @@ def test_unknown_product_and_anonymous_buyer_are_acknowledged_not_applied(env):
         assert client.post("/api/v1/store/revenuecat/webhook", json=body, headers=AUTH).json()["status"] == "ignored"
     with factory() as db:
         assert resolve_entitlements(db, USER).access_tier == "free"
+
+
+def _post(client, body):
+    return client.post("/api/v1/store/revenuecat/webhook", json=body, headers=AUTH).json()["status"]
+
+
+def test_sandbox_purchase_is_acknowledged_not_applied(env):
+    client, factory = env
+    assert _post(client, _event("INITIAL_PURCHASE", environment="SANDBOX")) == "ignored_sandbox"
+    with factory() as db:
+        assert resolve_entitlements(db, USER).access_tier == "free"
+
+
+def test_sandbox_applies_when_a_test_deployment_opts_in(env, monkeypatch):
+    client, factory = env
+    monkeypatch.setenv("REVENUECAT_ACCEPT_SANDBOX", "1")
+    assert _post(client, _event("INITIAL_PURCHASE", environment="SANDBOX")) == "activated"
+    with factory() as db:
+        assert resolve_entitlements(db, USER).access_tier == "plus"
+
+
+def test_transfer_moves_the_plan_and_packs_to_the_new_account(env):
+    client, factory = env
+    other = "restoring-user"
+    assert _post(client, _event("INITIAL_PURCHASE")) == "activated"
+    assert _post(client, _event("NON_RENEWING_PURCHASE", product="siddha_questions_3", txn="pack-1")) == "credited"
+    transfer = {"event": {
+        "id": "evt-transfer", "type": "TRANSFER", "environment": "PRODUCTION", "store": "PLAY_STORE",
+        "transferred_from": [USER], "transferred_to": [other],
+    }}
+    assert _post(client, transfer) == "transferred"
+    with factory() as db:
+        assert resolve_entitlements(db, USER).access_tier == "free"
+        assert resolve_entitlements(db, other).access_tier == "plus"
+        credit = db.query(QuestionCredit).one()
+        assert credit.billing_account_id == resolve_entitlements(db, other).account_id
+    # A renewal for the new owner lands on the moved grant.
+    renewal = _event("RENEWAL")
+    renewal["event"]["app_user_id"] = other
+    assert _post(client, renewal) == "activated"
+    with factory() as db:
+        assert resolve_entitlements(db, other).access_tier == "plus"
+        assert resolve_entitlements(db, USER).access_tier == "free"
+
+
+def test_transfer_with_nothing_to_move_is_acknowledged(env):
+    client, _ = env
+    transfer = {"event": {"id": "evt-t2", "type": "TRANSFER", "environment": "PRODUCTION",
+                          "transferred_from": ["nobody"], "transferred_to": ["someone"]}}
+    assert _post(client, transfer) == "nothing_to_transfer"

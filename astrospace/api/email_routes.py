@@ -29,6 +29,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from ..db import crud_mobile as cm, get_db
+from ..db.models import EmailRecipient
 from ..notifications.email import ALL_CATEGORIES, read_unsubscribe_token
 from .auth import CurrentUser
 
@@ -150,9 +151,13 @@ async def unsubscribe(request: Request, t: str | None = None, db: Session = Depe
     if not parsed:
         return _invalid()
     user_id, category = parsed
-    categories = cm.EMAIL_CATEGORIES if category == ALL_CATEGORIES else (category,)
-    for c in categories:
-        cm.set_notification_preference(db, user_id, c, enabled=False, channels=["email"])
+    # Every reader we email has a recipient row. Without one the account is
+    # gone (deletion removes it), and writing preferences would bring rows
+    # back for a deleted person; the page reads the same either way.
+    if db.get(EmailRecipient, user_id) is not None:
+        categories = cm.EMAIL_CATEGORIES if category == ALL_CATEGORIES else (category,)
+        for c in categories:
+            cm.set_notification_preference(db, user_id, c, enabled=False, channels=["email"])
     log.info(json.dumps({"event": "email.unsubscribed", "category": category}))
     return _page(
         "Unsubscribed",

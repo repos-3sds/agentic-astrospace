@@ -93,6 +93,12 @@ printed edition the app will cite; and (c) that each English rendering is faithf
 The renderings are deliberately short and loose. They are not translations to
 quote in scholarship.
 
+Until that review is done, the daily verse push starts **off** for everyone
+(`DEFAULT_NOTIFICATION_PREFS` in `astrospace/db/crud_mobile.py`, and the
+Settings > Notifications default). Readers can turn it on; the verse on Today,
+the share image and the widget are unchanged. Flip both defaults, and
+`test_off_by_default_until_the_scholar_review`, once the review is in.
+
 ## Regenerating
 
 `scripts/subhashita/build_corpus.py <download dir> <out.json>` rebuilds the file from the fetched sources; the English renderings live in the script. Copy its output to `astrospace/core/subhashita/subhashitas.json`. Adding verses: keep the source alternation, and keep each English line at 200 characters or fewer (tests/test_subhashita.py enforces the length).

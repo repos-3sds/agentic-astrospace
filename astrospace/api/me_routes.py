@@ -12,6 +12,7 @@ layer — see `_owned_push_token` and the live-activity handler.
 from datetime import datetime, time as time_cls
 import logging
 import os
+from urllib.parse import quote
 import requests
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -254,6 +255,7 @@ def delete_account(payload: AccountDeletionPayload, user: CurrentUser,
     db.commit()
 
     _erase_request_audit(user.id)
+    _delete_store_customer(user.id)
 
     if user.auth_enabled and not _delete_auth_user(user.id, service_key):
         # The data is already gone; only the sign-in remains. A retry of this
@@ -284,6 +286,30 @@ def _delete_auth_user(user_id: str, service_key: str) -> bool:
             return True
         log.error("auth user deletion attempt %d returned %d", attempt, response.status_code)
     return False
+
+
+REVENUECAT_API = "https://api.revenuecat.com/v1/subscribers"
+
+
+def _delete_store_customer(user_id: str) -> None:
+    """Remove this person's RevenueCat customer, whose app_user_id is their
+    Supabase id. Best effort, like the audit erasure: the store keeps its own
+    receipts either way, and an outage must not block the deletion. Skipped
+    until REVENUECAT_SECRET_API_KEY is set (no purchases are live yet)."""
+    key = os.getenv("REVENUECAT_SECRET_API_KEY", "").strip()
+    if not key:
+        return
+    try:
+        response = requests.delete(
+            f"{REVENUECAT_API}/{quote(user_id, safe='')}",
+            headers={"Authorization": f"Bearer {key}"}, timeout=8,
+        )
+    except requests.RequestException:
+        log.exception("store customer deletion failed; delete it in RevenueCat by hand")
+        return
+    if response.status_code not in {200, 204, 404}:
+        log.error("store customer deletion returned %d; delete it in RevenueCat by hand",
+                  response.status_code)
 
 
 def _erase_request_audit(user_id: str) -> None:

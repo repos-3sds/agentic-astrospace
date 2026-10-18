@@ -45,11 +45,13 @@ from .models import (
 )
 from ..context.validation import score_answer
 
-# Defaults mirror the Settings > Notifications screen. Remedy reminders are the
-# one category that starts off — it only makes sense once a remedy is active.
+# Defaults mirror the Settings > Notifications screen. Remedy reminders start
+# off: they only make sense once a remedy is active. The daily verse push
+# starts off until a Sanskrit scholar has read the corpus, which
+# docs/subhashita_corpus.md asks for before launch; readers can turn it on.
 DEFAULT_NOTIFICATION_PREFS: dict[str, dict] = {
     "morning_brief": {"enabled": True, "preferred_time": None},
-    "daily_subhashita": {"enabled": True, "preferred_time": None},
+    "daily_subhashita": {"enabled": False, "preferred_time": None},
     "window_alert": {"enabled": True, "lead_time_minutes": 45},
     "festival_reminder": {"enabled": True, "lead_time_days": 3},
     "remedy_reminder": {"enabled": False},

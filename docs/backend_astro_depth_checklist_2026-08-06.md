@@ -1490,3 +1490,16 @@ From the Tier 0 fixes for `/mnt/project-files/audits/end-to-end-2026-10-18/findi
   `chart_data` payload stored on each profile (`kundli_routes.py`
   `_with_chart_fields`). *Unblocks when:* the web chart and overview tabs
   read `/vedic` instead. Profile big-three columns are already sidereal.
+- [ ] **Erase read-aloud audio and processor logs on account deletion**
+  (S12, rest). *Why not built:* the TTS cache in `ASTROSPACE_TTS_BUCKET` is
+  keyed by content hash, so one person's files can't be found; the fix is a
+  30-day lifecycle rule on the bucket, which is a production change
+  (`gsutil lifecycle set`). Resend keeps its own message logs. *Unblocks
+  when:* Hawk OKs the bucket rule, and the privacy policy lists each
+  processor and its retention. *Hook:* `astrospace/voice/tts.py`;
+  RevenueCat deletion is already in `me_routes._delete_store_customer`
+  (needs `REVENUECAT_SECRET_API_KEY` set on Cloud Run).
+- [ ] **Record the verse sources' licences** (D12). *Why not built:* needs
+  the terms of each GitHub, GRETIL and SANSKNET e-text read and written
+  down, alongside the scholar review. *Hook:* `docs/subhashita_corpus.md`
+  "Before launch"; the push stays off by default until both are done.

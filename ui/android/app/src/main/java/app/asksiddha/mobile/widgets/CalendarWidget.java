@@ -57,9 +57,11 @@ public class CalendarWidget extends BaseWidget {
             || (moon != null && moon.optString("date").compareTo(festival.optString("date")) < 0);
         if (moonFirst) {
             String name = "full".equals(moon.optString("moon")) ? "Full moon" : "New moon";
-            return name + " · " + Widgets.daysUntil(today, moon.optString("date"));
+            return name + " · " + Widgets.daysUntil(today, moon.optString("date"))
+                + (moon.optBoolean("approx", true) ? " · by sunrise" : "");
         }
-        return festival.optString("name") + " · " + Widgets.daysUntil(today, festival.optString("date"));
+        return festival.optString("name") + " · " + Widgets.daysUntil(today, festival.optString("date"))
+            + (festival.optBoolean("approx", false) ? " · varies by tradition" : "");
     }
 
     static JSONObject firstFrom(JSONArray rows, String fromIso) {

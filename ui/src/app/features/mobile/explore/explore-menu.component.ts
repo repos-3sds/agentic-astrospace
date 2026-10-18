@@ -112,7 +112,7 @@ export class ExploreMenuComponent {
       },
       { id: 'compat', label: 'Compatibility', detail: 'Gun Milan matching', tone: 'muted', icon: 'explore-compat', route: ['/m', 'compat'], gate: 'compatibility.full', partial: 'Score, 1 a month' },
       { id: 'readings', label: 'Readings', detail: 'Period readings', tone: 'muted', icon: 'figma-yantra-file-text', route: ['/m', 'readings'], gate: 'readings.full' },
-      { id: 'remedies', label: 'Remedies', detail: 'Traditional practices', tone: 'good', icon: 'figma-yantra-sun', route: ['/m', 'remedies'], gate: 'remedies.full', partial: '1 practice' },
+      { id: 'remedies', label: 'Remedies', detail: 'Traditional practices', tone: 'good', icon: 'figma-yantra-sun', route: ['/m', 'remedies'], gate: 'remedies.full', partial: '1 practice, every flag' },
       { id: 'muhurta', label: 'Muhurtas', detail: 'Find a good time', tone: 'warn', icon: 'figma-yantra-calendar', route: ['/m', 'muhurta'], gate: 'muhurta.full' },
       { id: 'notes', label: 'Notes', detail: 'Your private reflections', tone: 'muted', icon: 'figma-yantra-edit-3', route: ['/m', 'notes'] },
     ];
