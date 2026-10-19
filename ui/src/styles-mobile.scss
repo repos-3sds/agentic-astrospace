@@ -223,14 +223,18 @@
 // light (Liquid Glass at night, Cream Glass by day), so the routed screen is
 // see-through and the shell's ground shows. Inner elements that need to be
 // opaque still are.
-.as-mobile router-outlet + * {
+//
+// The theme prefix on these glass rules looks redundant but carries weight:
+// it matches either theme with the specificity the dark-only rules had, so
+// they still beat each component's own solid fill.
+:is(:root.app-dark, :root:not(.app-dark)) .as-mobile router-outlet + * {
   background: transparent;
 }
 
 // The cards that read as glass. One list rather than a mixin in each
 // component so the whole look can be tuned, or reverted, in one place.
 // Both themes share it; the tokens differ.
-.as-mobile :is(
+:is(:root.app-dark, :root:not(.app-dark)) .as-mobile :is(
   section.card:not(.skeleton-card),
   .birth-signature,
   button.why,
@@ -257,11 +261,11 @@
 }
 
 // Tinted glass keeps the meaning a solid fill used to carry.
-.as-mobile .advice-card.do { --m-glass-tint: linear-gradient(180deg, var(--m-good-soft), transparent 70%); }
-.as-mobile .advice-card.avoid { --m-glass-tint: linear-gradient(180deg, var(--m-bad-soft), transparent 70%); }
-.as-mobile a.window { --m-glass-tint: linear-gradient(180deg, var(--m-warn-soft), transparent 80%); }
-.as-mobile a.featured,
-.as-mobile .yantra-tile.is-featured { --m-glass-tint: linear-gradient(135deg, var(--m-accent-soft), transparent 80%); }
+:is(:root.app-dark, :root:not(.app-dark)) .as-mobile .advice-card.do { --m-glass-tint: linear-gradient(180deg, var(--m-good-soft), transparent 70%); }
+:is(:root.app-dark, :root:not(.app-dark)) .as-mobile .advice-card.avoid { --m-glass-tint: linear-gradient(180deg, var(--m-bad-soft), transparent 70%); }
+:is(:root.app-dark, :root:not(.app-dark)) .as-mobile a.window { --m-glass-tint: linear-gradient(180deg, var(--m-warn-soft), transparent 80%); }
+:is(:root.app-dark, :root:not(.app-dark)) .as-mobile a.featured,
+:is(:root.app-dark, :root:not(.app-dark)) .as-mobile .yantra-tile.is-featured { --m-glass-tint: linear-gradient(135deg, var(--m-accent-soft), transparent 80%); }
 
 .as-mobile img[src$='back.svg'] {
   filter: var(--m-back-icon-filter);
