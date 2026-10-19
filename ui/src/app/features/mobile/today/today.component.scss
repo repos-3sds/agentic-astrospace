@@ -341,48 +341,25 @@
 
 .body > .card:not(.skeleton-card),
 .body .birth-signature {
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.1) 0%, transparent 48%),
-    linear-gradient(180deg, rgba(255, 252, 246, 0.04), transparent);
-  border-color: rgba(255, 255, 255, 0.36);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.44),
-    0 18px 46px rgba(65, 42, 20, 0.06);
-  @include m-glass(3px, 1.04);
-}
-
-// Dark glass comes from the shared Liquid Glass tokens (styles-mobile.scss).
-:host-context(.app-dark) .body > .card:not(.skeleton-card),
-:host-context(.app-dark) .body .birth-signature {
   background: var(--m-glass-card);
   border-color: var(--m-glass-hairline);
   box-shadow:
     inset 0 1px 0 var(--m-glass-sheen),
     inset 1px 0 0 var(--m-glass-sheen-side),
-    0 16px 40px rgba(0, 0, 0, 0.32);
+    0 16px 40px var(--m-glass-drop);
 }
 
+// Glass comes from the shared theme tokens (styles-mobile.scss): Cream Glass
+// by day, Liquid Glass at night.
 .body as-generic-error,
 .mtoday-empty {
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.1) 0%, transparent 48%),
-    linear-gradient(180deg, rgba(255, 252, 246, 0.04), transparent) !important;
-  border: 1px solid rgba(255, 255, 255, 0.36);
+  background: var(--m-glass-card) !important;
+  border: 1px solid var(--m-glass-hairline);
   border-radius: 32px;
   overflow: hidden;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.44),
-    0 18px 46px rgba(65, 42, 20, 0.06);
-  @include m-glass(3px, 1.04);
-}
-
-:host-context(.app-dark) .body as-generic-error,
-:host-context(.app-dark) .mtoday-empty {
-  background: var(--m-glass-card) !important;
-  border-color: var(--m-glass-hairline);
-  box-shadow:
     inset 0 1px 0 var(--m-glass-sheen),
-    0 16px 40px rgba(0, 0, 0, 0.32);
+    0 16px 40px var(--m-glass-drop);
 }
 
 .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
