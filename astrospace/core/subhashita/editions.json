@@ -1,0 +1,83 @@
+{
+  "thomson-gita-1855": {
+    "title": "The Bhagavad-gita, or a Discourse between Krishna and Arjuna (Sanskrit text)",
+    "editor": "J. Cockburn Thomson",
+    "publisher": "Stephen Austin",
+    "place": "Hertford",
+    "year": 1855,
+    "archive_id": "bhagavadgtorsacr00thomuoft",
+    "note": "Mula text only. Printed with split sandhi (word ends kept apart), which the build joins."
+  },
+  "anandashrama-gita-1909": {
+    "title": "Srimad Bhagavad Gita with Shankara's bhashya and Anandagiri's tika (Anandashrama Sanskrit Series 34)",
+    "editor": null,
+    "publisher": "Anandashrama (H. N. Apte)",
+    "place": "Poona",
+    "year": 1909,
+    "archive_id": "ksu.g48.srimadbhagavadgi0000hari_v34",
+    "note": "Used for the two verses where Thomson 1855 prints a minority reading."
+  },
+  "mihirachandra-chanakya-1899": {
+    "title": "Chanakya Niti Darpana with Hindi bhasha tika",
+    "editor": "Pandit Mihirachandra (Mehar Chand Sharma)",
+    "publisher": "Khemraj Shrikrishnadas, Shri Venkateshvara Press",
+    "place": "Bombay",
+    "year": 1899,
+    "archive_id": "ksu.t3672.chanakyaneethida0000pand",
+    "note": "Imprint reads samvat 1956, shaka 1821 (1899 CE); the archive metadata's 1821 is the shaka year."
+  },
+  "jivananda-garuda-1890": {
+    "title": "Garuda Purana",
+    "editor": "Jivananda Vidyasagara",
+    "publisher": "Jivananda Vidyasagara",
+    "place": "Calcutta",
+    "year": 1890,
+    "archive_id": "kakp_garuda-purana-jibananda-vidyasagara-1890-jivananda-vidyasagar-calcutta",
+    "note": "Year as given in the scan's title. A second scan of the same edition is qbfk_garuda-purana-jivananda-vidyasagara-1890-jivananda-vidyasagar-calcutta."
+  },
+  "jivananda-vishnu-1882": {
+    "title": "Vishnu Purana with the commentary of Sridharaswami",
+    "editor": "Jivananda Vidyasagara",
+    "publisher": "Jivananda Vidyasagara",
+    "place": "Calcutta",
+    "year": 1882,
+    "archive_id": "vnjg_vishnu-purana-with-commentary-of-sridharaswami-jibananda-vidyasagara-1882-jivana",
+    "note": "Year as given in the scan's title."
+  },
+  "jivananda-markandeya-1879": {
+    "title": "Markandeya Purana",
+    "editor": "Jivananda Vidyasagara",
+    "publisher": "Jivananda Vidyasagara",
+    "place": "Calcutta",
+    "year": 1879,
+    "archive_id": "in.ernet.dli.2015.553733",
+    "note": "Includes the Devi Mahatmya. A second scan is tzeo_markandeya-purana-jibananda-vidyasagara-1879-jivananda-vidyasagar-calcutta."
+  },
+  "burnouf-bhagavata-1840": {
+    "title": "Le Bhagavata Purana, tome premier",
+    "editor": "Eugene Burnouf",
+    "publisher": "Imprimerie Royale",
+    "place": "Paris",
+    "year": 1840,
+    "archive_id": "bub_gb_fYnyaem3Wj4C",
+    "note": "Devanagari text facing a French translation; covers the first skandhas."
+  },
+  "bhagavata-bombay-1916": {
+    "title": "Srimad Bhagavatam, mula text with variant readings, vol. II (skandhas 8-12)",
+    "editor": "T. R. Krishnacharya",
+    "publisher": "Nirnaya Sagar Press",
+    "place": "Bombay",
+    "year": 1916,
+    "archive_id": "ksu.q3133.srimadbhagavatam0000trkr",
+    "note": "Footnotes give manuscript variants."
+  },
+  "khemraj-bhagavata-1924": {
+    "title": "Srimad Bhagavata with Hindi bhasha tika",
+    "editor": null,
+    "publisher": "Khemraj Shrikrishnadas",
+    "place": "Bombay",
+    "year": 1924,
+    "archive_id": "bhagavat-with-bhasha-tika-1924-khemraj",
+    "note": "Year as given in the scan's title. Used for skandhas 4 and 7, which the 1916 volume does not cover."
+  }
+}

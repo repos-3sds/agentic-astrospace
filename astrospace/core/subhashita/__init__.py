@@ -1,8 +1,9 @@
 """Today's Subhashita: one verse a day from the Gita, Chanakya Niti and the Puranas.
 
 The corpus (``subhashitas.json``) is curated, not generated. Every entry
-carries its source and verse reference and the URL its Sanskrit was checked
-against; the English is a short plain rendering written for this app, and the
+carries its source and verse reference and its provenance: the pre-1931
+print edition (``editions.json``) its Sanskrit was keyed from, with a link
+to the scanned page; the English is a short plain rendering written for this app, and the
 meaning is one plain line on what the verse asks of the reader. The
 sources, method and what was left out (and why) are in
 ``docs/subhashita_corpus.md``; ``scripts/subhashita/build_corpus.py`` rebuilds it.
