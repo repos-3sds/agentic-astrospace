@@ -3,7 +3,9 @@
 The verse for a date is fixed by its day count, so every surface (API,
 push, widget) agrees without coordinating, and only today's is shown.
 """
+import json
 from datetime import date, datetime, time, timedelta, timezone
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -36,6 +38,23 @@ class TestCorpus:
             assert row["meaning"][0].isupper() and row["meaning"].endswith("."), row["id"]
             # The Sanskrit is Devanagari, not a transliteration.
             assert any("ऀ" <= ch <= "ॿ" for ch in row["sanskrit"]), row["id"]
+
+    def test_every_verse_is_keyed_from_a_public_domain_print(self):
+        # D12: the Sanskrit is re-keyed from a print published before 1931,
+        # and each entry links the scanned page it was read from.
+        here = Path(subhashita.__file__).parent
+        editions = json.loads((here / "editions.json").read_text(encoding="utf-8"))
+        for edition in editions.values():
+            assert edition["year"] < 1931 and edition["archive_id"], edition
+        rows = json.loads((here / "subhashitas.json").read_text(encoding="utf-8"))
+        assert len(rows) == len(subhashita.corpus())
+        for row in rows:
+            prov = row["provenance"]
+            assert prov["edition"] in editions, row["id"]
+            archive_id = editions[prov["edition"]]["archive_id"]
+            assert prov["scan_page_url"].startswith(
+                f"https://archive.org/details/{archive_id}/page/n"
+            ), row["id"]
 
     def test_ids_are_unique(self):
         ids = [row["id"] for row in subhashita.corpus()]
