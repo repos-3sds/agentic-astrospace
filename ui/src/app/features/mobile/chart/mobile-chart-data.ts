@@ -194,6 +194,7 @@ function provenanceRows(data: VedicAll, profile: Kundli | null): { label: string
     { label: 'House system', value: provenance?.house_system ?? 'Whole-sign' },
     { label: 'Calculation place', value: provenance?.calculation_place?.city ?? data.meta?.place ?? profile?.birth_city ?? '—' },
     { label: 'Birth time confidence', value: birthTimeIsApproximate(profile) ? 'Approximate' : 'Provided' },
+    { label: 'Place data', value: 'GeoNames (geonames.org), CC BY 4.0' },
   ];
 }
 
