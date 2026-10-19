@@ -67,3 +67,49 @@ class TestSearch:
 def test_a_city_its_timezone_is_named_after_leads_its_namesakes():
     labels = [row["label"] for row in search_cities("london", 5)]
     assert labels[0].startswith("London, GB")
+
+
+class TestUSCanada:
+    """GeoNames cities500 layer for the US and Canada (scripts/build_world_places.py)."""
+
+    def test_dataset_covers_both_countries_with_their_own_timezones(self):
+        from astrospace.core.cities import _world_places
+        rows = _world_places()
+        countries = {row[4] for row in rows}
+        assert countries == {"US", "CA"} and len(rows) > 20000
+        zones = {row[6] for row in rows}
+        assert {"America/St_Johns", "Pacific/Honolulu", "America/Regina",
+                "America/Phoenix", "America/Anchorage"} <= zones
+
+    def test_towns_beyond_the_curated_table_resolve(self):
+        assert lookup_city("Fargo", "US")[2] == "America/Chicago"
+        assert lookup_city("Saskatoon", "CA")[2] == "America/Regina"
+        assert lookup_city("Montreal", "CA")[2] == "America/Toronto"  # diacritics folded
+
+    def test_state_suffix_picks_the_namesake_that_was_chosen(self):
+        il = lookup_city("Springfield, IL", "US")
+        ma = lookup_city("Springfield, Massachusetts", "US")
+        assert il[0] != ma[0]
+        assert ma[2] == "America/New_York" and il[2] == "America/Chicago"
+        assert lookup_city("Portland, ME", "US")[2] == "America/New_York"
+
+    def test_curated_entries_still_win_and_nation_is_respected(self):
+        assert lookup_city("Portland", "US")[2] == "America/Los_Angeles"
+        # Vancouver, US must not fall through to the curated Vancouver, BC.
+        assert abs(lookup_city("Vancouver", "US")[0] - 45.64) < 0.05
+        assert lookup_city("Fargo", "IN") is None
+
+    def test_search_returns_values_lookup_accepts(self):
+        rows = search_cities("springfield", 8)
+        assert len({row["city"] for row in rows}) == len(rows) > 3
+        for row in rows:
+            lat, lng, tz = lookup_city(row["city"], row["nation"])
+            assert (lat, lng, tz) == (row["lat"], row["lng"], row["timezone"])
+
+    def test_curated_city_hides_its_geonames_duplicate(self):
+        cities = [row["city"] for row in search_cities("new york", 8)]
+        assert "New York" in cities and "New York City, NY" not in cities
+
+    def test_india_still_leads_short_prefixes(self):
+        rows = search_cities("kari", 5)
+        assert rows[0]["nation"] == "IN"
