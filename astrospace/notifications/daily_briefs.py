@@ -1,18 +1,31 @@
 """Write each profile's daily brief before the reader opens Today.
 
-Runs in the notification worker every 15 minutes. For every user with the app
-installed (an active push token), and for each of their profiles, it writes
-the agent brief for the Vedic day that contains local noon today, and from
+Runs in the notification worker every 15 minutes. For every reader who opened
+the app in the last ACTIVE_DAYS days (a push token refreshed since then) or
+gets the daily reading by email, it writes the agent brief for their own
+profile (relation "self", else their first) for the Vedic day that contains
+local noon today, and from
 22:30 local the next day's as well, so it is ready at midnight, in the
 reader's saved tone and experience mode, and stores it
 (context/daily_brief_store.py). A day already written is skipped, so after
 the first run past 22:30 each later run only picks up what is new: a
 profile added, a place or setting changed, a failure to retry.
 
-For Plus readers it also renders the natural-voice audio of the spoken script
-into the durable TTS bucket, so tapping Listen plays at once instead of
-waiting 8-13 s for synthesis. Without ASTROSPACE_TTS_BUCKET the audio would
-only land in this worker's memory, so it is skipped.
+Briefs cost money whether or not anyone reads them (Hawk, 2026-10-19, unit
+economics in the "Subscriptions and plan locks" thread), so the worker writes
+only what is likely to be read. Other profiles' briefs are written when the
+reader opens them (the Today endpoint writes and stores one on open). A Free
+reader without the daily email gets none from the worker once plan limits
+are on: their brief is written on the days they open the app. A token
+refreshes on every cold start (push.service.ts init), so a reader who stops
+opening the app drops out after ACTIVE_DAYS.
+
+Read-aloud audio is recorded when a reader taps Listen, for the language they
+chose, and cached in the TTS bucket for the day. Pre-recording English and
+Telugu for every brief cost about ₹5 a brief, mostly never played.
+DAILY_BRIEF_PRERENDER_AUDIO=1 on the worker turns the old pre-recording back
+on for Plus readers; it needs ASTROSPACE_TTS_BUCKET, without which the audio
+would only land in this worker's memory.
 
 The place, ayanamsha and node type are resolved the way the app asks for
 them (vedic.service.ts dailyParams), so the stored brief is the one Today
@@ -23,7 +36,7 @@ from __future__ import annotations
 import logging
 import os
 import time
-from datetime import datetime, time as dtime, timedelta
+from datetime import datetime, time as dtime, timedelta, timezone as dt_timezone
 from typing import Callable
 
 from sqlalchemy.orm import Session
@@ -32,11 +45,13 @@ from ..agents.daily_brief_agent import daily_brief_enabled
 from ..context.daily_brief_store import brief_hash, ensure_brief, update_stored
 from ..db import crud, crud_mobile as cm
 from ..db.models import PushToken
-from .morning_brief import CATEGORY as MORNING_CATEGORY, _zone
+from .morning_brief import CATEGORY as MORNING_CATEGORY, _primary_kundli, _zone
 
 log = logging.getLogger("astrospace.notifications")
 
-MAX_PROFILES_PER_USER = 6
+# A reader whose push token has not been refreshed for this long has stopped
+# opening the app, and gets no brief until they come back.
+ACTIVE_DAYS = 7
 # One worker run writes at most this many briefs and stops after this many
 # seconds; the next run 15 minutes later carries on. Keeps a run well inside
 # the job's timeout however many readers there are.
@@ -186,6 +201,23 @@ def natural_chunks(text: str, max_chars: int = NATURAL_CHUNK_MAX_CHARS) -> list[
     return out
 
 
+def prerender_enabled() -> bool:
+    return os.getenv("DAILY_BRIEF_PRERENDER_AUDIO", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _briefed_without_opening(db: Session, user_id: str) -> bool:
+    """Whether the worker writes this reader's brief before they open the app.
+    Free readers get theirs on open once plan limits are on."""
+    from ..entitlements import plan_lock
+
+    try:
+        return plan_lock(db, user_id, "readings.full") is None
+    except Exception:
+        log.exception("plan check for %s failed; briefing as before", user_id)
+        db.rollback()
+        return True
+
+
 def _rotated(user_ids: list[str], now: datetime | None) -> list[str]:
     """The readers, starting at a different one each 15-minute run."""
     if not user_ids:
@@ -212,12 +244,19 @@ def schedule_daily_briefs(db: Session, now: datetime | None = None,
     if not daily_brief_enabled():
         return summary
     started = time.monotonic()
-    audio_ready = bool(os.getenv("ASTROSPACE_TTS_BUCKET", "").strip())
-    # Readers with the app, and readers who get the daily reading by email
-    # (who may only use the web app and have no push token).
-    user_ids = sorted({
-        row.user_id for row in db.query(PushToken.user_id).filter(PushToken.revoked_at.is_(None))
-    } | {row.user_id for row in cm.email_subscribers(db, "daily_email")})
+    audio_ready = prerender_enabled() and bool(os.getenv("ASTROSPACE_TTS_BUCKET", "").strip())
+    utc_now = (now.astimezone(dt_timezone.utc) if now else datetime.now(dt_timezone.utc)).replace(tzinfo=None)
+    # Readers who opened the app lately (and are on a plan that is briefed
+    # ahead), and readers who get the daily reading by email (who may only
+    # use the web app and have no push token).
+    app_readers = {
+        row.user_id for row in db.query(PushToken.user_id).filter(
+            PushToken.revoked_at.is_(None),
+            PushToken.last_seen_at >= utc_now - timedelta(days=ACTIVE_DAYS),
+        )
+    }
+    emailed = {row.user_id for row in cm.email_subscribers(db, "daily_email")}
+    user_ids = sorted({uid for uid in app_readers if _briefed_without_opening(db, uid)} | emailed)
     # Gather the run's work first, then write today's briefs for everyone
     # before anyone's tomorrow: a reader opening the app now is waiting on
     # today's. Within each, the starting reader rotates every run (I5), so
@@ -237,7 +276,8 @@ def schedule_daily_briefs(db: Session, now: datetime | None = None,
         if local_now.time() >= lookahead_from():
             days.append(local_now.date() + timedelta(days=1))
         voice = audio_ready and _natural_voice_allowed(db, user_id)
-        kundlis = crud.list_kundlis(db, user_id)[:MAX_PROFILES_PER_USER]
+        own = _primary_kundli(db, user_id)
+        kundlis = [own] if own else []
         for index, day in enumerate(days):
             as_of = datetime.combine(day, dtime(12, 0), tzinfo=zone)
             bucket = today_items if index == 0 else tomorrow_items
