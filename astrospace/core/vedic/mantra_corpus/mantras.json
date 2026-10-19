@@ -1,7 +1,72 @@
 {
  "meta": {
   "name": "Siddha mantra corpus",
-  "version": "2026-10-17",
+  "version": "2026-10-19",
+  "editions": {
+   "bsr-1912": {
+    "title": "Bṛhatstotraratnākara",
+    "editor": null,
+    "publisher": "Tukaram Javaji, Nirnaya Sagar Press",
+    "place": "Bombay",
+    "year": 1912,
+    "archive_id": "Brihat_Stotra_Ratnakara_1912",
+    "note": "7th edition (सप्तमावृत्तिः); title page dated शके १८३४ / सन १९१२."
+   },
+   "weber-vs-1852": {
+    "title": "The Vâjasaneyi-Sanhitâ in the Mâdhyandina and the Kâṇva-çâkhâ, with the commentary of Mahîdhara",
+    "editor": "Albrecht Weber",
+    "publisher": "Williams & Norgate; Ferd. Dümmler",
+    "place": "London; Berlin",
+    "year": 1852,
+    "archive_id": "in.ernet.dli.2015.486971",
+    "note": "The White Yajurveda, part I. Madhyandina text with svara marks; the corpus does not reproduce the accents."
+   },
+   "muller-rv-1873-v1": {
+    "title": "The Hymns of the Rig-Veda in the Samhita and Pada Texts, vol. 1",
+    "editor": "F. Max Müller",
+    "publisher": "Trübner & Co.",
+    "place": "London",
+    "year": 1873,
+    "archive_id": "hymnsrigvedains00unkngoog",
+    "note": "Archive metadata says 1877; the imprint in the scan reads 1873. Mandalas 1-6."
+   },
+   "muller-rv-1873-v2": {
+    "title": "The Hymns of the Rig-Veda in the Samhita and Pada Texts, vol. 2",
+    "editor": "F. Max Müller",
+    "publisher": "Trübner & Co.",
+    "place": "London",
+    "year": 1873,
+    "archive_id": "hymnsrigvedains02mlgoog",
+    "note": "Same edition as vol. 1; mandalas 7-10."
+   },
+   "weber-ts-1871": {
+    "title": "Die Taittirîya-Saṃhitâ, Theil 1 (Indische Studien 11)",
+    "editor": "Albrecht Weber",
+    "publisher": "F. A. Brockhaus",
+    "place": "Leipzig",
+    "year": 1871,
+    "archive_id": "10996666bsb",
+    "note": "Kandas 1-4, printed in roman transliteration. Keyed into Devanagari word for word, keeping Weber's word division."
+   },
+   "guru-gita-1886": {
+    "title": "Gurugītāstotram",
+    "editor": null,
+    "publisher": "Samvad Gyan Ratnakar Press",
+    "place": "Calcutta",
+    "year": 1886,
+    "archive_id": "GuruGitaStotraCalcutta1886SamvadGyanRatnakarPress",
+    "note": "Small devotional print; the page numbers are the print's own."
+   },
+   "jivananda-markandeya-1879": {
+    "title": "Markandeya Purana",
+    "editor": "Jivananda Vidyasagara",
+    "publisher": "Jivananda Vidyasagara",
+    "place": "Calcutta",
+    "year": 1879,
+    "archive_id": "in.ernet.dli.2015.553733",
+    "note": "Includes the Devi Mahatmya. Also the Subhashita corpus's edition for Markandeya 91.9."
+   }
+  },
   "status": "point-in-time research corpus; not yet wired into the app",
   "fields": "see README.md",
   "count": 68
@@ -65,7 +130,10 @@
      "career"
     ]
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, सूर्य देव को नमस्कार।",
    "meaning_te": "ఓం, సూర్య భగవానునికి నమస్కారం.",
    "text": {
@@ -127,7 +195,10 @@
      "career"
     ]
    },
-   "checked_against": "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, सूर्य के बीज अक्षर, सूर्य को नमस्कार। बीज अक्षरों का कोई शब्दकोशीय अर्थ नहीं होता।",
    "meaning_te": "ఓం, సూర్యుడు బీజాక్షరాలు, సూర్యునికి నమస్కారం. బీజాక్షరాలకు నిఘంటు అర్థం ఉండదు.",
    "text": {
@@ -197,7 +268,13 @@
      "career"
     ]
    },
-   "checked_against": "Standard Rigveda 1.35.2 text; the online Vajasaneyi page could not be fetched. The South form (sun-vedic-taittiriya) was checked and matches.",
+   "provenance": {
+    "kind": "print",
+    "edition": "weber-vs-1852",
+    "scan_page_url": "https://archive.org/details/in.ernet.dli.2015.486971/page/n978/mode/1up",
+    "page": "880",
+    "note": "VS 33.43"
+   },
    "meaning_hi": "अंधकारमय आकाश में चलते हुए, देवताओं और मनुष्यों को उनके स्थान पर स्थापित करते हुए, सविता देव अपने स्वर्णिम रथ पर सब लोकों को देखते हुए आते हैं।",
    "meaning_te": "చీకటి ఆకాశంలో సంచరిస్తూ, దేవతలను మనుషులను వారి వారి స్థానాల్లో నిలుపుతూ, సవితృ దేవుడు బంగారు రథంపై సకల లోకాలను చూస్తూ వస్తున్నాడు.",
    "text": {
@@ -214,9 +291,9 @@
    "tier": "advanced",
    "planet": "Sun",
    "deity": "Sun",
-   "devanagari": "आसत्येन रजसा वर्तमानो निवेशयन्नमृतं मर्त्यं च । हिरण्ययेन सविता रथेना देवो याति भुवना विपश्यन् ॥",
-   "iast": "āsatyena rajasā vartamāno niveśayannamṛtaṃ martyaṃ ca | hiraṇyayena savitā rathenā devo yāti bhuvanā vipaśyan ||",
-   "telugu": "ఆసత్యేన రజసా వర్తమానో నివేశయన్నమృతం మర్త్యం చ । హిరణ్యయేన సవితా రథేనా దేవో యాతి భువనా విపశ్యన్ ॥",
+   "devanagari": "आ सत्येन रजसा वर्तमानो निवेशयन्नमृतं मर्त्यं च । हिरण्ययेन सविता रथेना देवो याति भुवना विपश्यन् ॥",
+   "iast": "ā satyena rajasā vartamāno niveśayannamṛtaṃ martyaṃ ca | hiraṇyayena savitā rathenā devo yāti bhuvanā vipaśyan ||",
+   "telugu": "ఆ సత్యేన రజసా వర్తమానో నివేశయన్నమృతం మర్త్యం చ । హిరణ్యయేన సవితా రథేనా దేవో యాతి భువనా విపశ్యన్ ॥",
    "simple_transliteration": "A Satyena Rajasa Vartamano Niveshayann Amritam Martyam Cha, Hiranyayena Savita Rathena Devo Yati Bhuvana Vipashyan",
    "meaning_en": "Moving through the region of truth, bringing to rest the immortal and the mortal, the god Savitr comes on his golden chariot, beholding the worlds.",
    "source_type": "shruti",
@@ -230,7 +307,7 @@
    "practical_count": 108,
    "count_note": "Same counts are applied by custom; BPHS itself names the Shukla Yajurveda verse.",
    "preferred_day": "Sunday",
-   "disagreements": "BPHS ch.84 names a different verse for Sun (see sun-vedic). Both are authentic; which one a family uses depends on its Veda shakha. Checked against sanskritdocuments: differences are sandhi only.",
+   "disagreements": "BPHS ch.84 names a different verse for Sun (see sun-vedic). Both are authentic; which one a family uses depends on its Veda shakha.",
    "app_sensitivity": "As for the Shukla Yajurveda form: accented, teacher-learnt; listen-along audio only.",
    "text_in_corpus": true,
    "audio": {
@@ -266,14 +343,20 @@
      "career"
     ]
    },
-   "checked_against": "Against the Navagraha Sukta at sanskritdocuments: sandhi only.",
+   "provenance": {
+    "kind": "print",
+    "edition": "weber-ts-1871",
+    "scan_page_url": "https://archive.org/details/10996666bsb/page/n315/mode/1up",
+    "page": "302",
+    "note": "TS 3.4.11 f; printed in roman: ā satyena rajasā vartamāno ni-veśayann amṛtam martyaṃ ca | hiraṇyayena savitā rathenā devo yāti bhuvanā vi-paśyan"
+   },
    "meaning_hi": "सत्य के लोक में चलते हुए, देवताओं और मनुष्यों को उनके स्थान पर स्थापित करते हुए, सविता देव अपने स्वर्णिम रथ पर सब लोकों को निहारते हुए आते हैं।",
    "meaning_te": "సత్య లోకంలో సంచరిస్తూ, దేవతలను మనుషులను వారి వారి స్థానాల్లో నిలుపుతూ, సవితృ దేవుడు బంగారు రథంపై సకల లోకాలను వీక్షిస్తూ వస్తున్నాడు.",
    "text": {
-    "te": "ఆసత్యేన రజసా వర్తమానో నివేశయన్నమృతం మర్త్యం చ । హిరణ్యయేన సవితా రథేనా దేవో యాతి భువనా విపశ్యన్ ॥",
+    "te": "ఆ సత్యేన రజసా వర్తమానో నివేశయన్నమృతం మర్త్యం చ । హిరణ్యయేన సవితా రథేనా దేవో యాతి భువనా విపశ్యన్ ॥",
     "en": "A Satyena Rajasa Vartamano Niveshayann Amritam Martyam Cha, Hiranyayena Savita Rathena Devo Yati Bhuvana Vipashyan",
-    "sa": "आसत्येन रजसा वर्तमानो निवेशयन्नमृतं मर्त्यं च । हिरण्ययेन सविता रथेना देवो याति भुवना विपश्यन् ॥",
-    "iast": "āsatyena rajasā vartamāno niveśayannamṛtaṃ martyaṃ ca | hiraṇyayena savitā rathenā devo yāti bhuvanā vipaśyan ||"
+    "sa": "आ सत्येन रजसा वर्तमानो निवेशयन्नमृतं मर्त्यं च । हिरण्ययेन सविता रथेना देवो याति भुवना विपश्यन् ॥",
+    "iast": "ā satyena rajasā vartamāno niveśayannamṛtaṃ martyaṃ ca | hiraṇyayena savitā rathenā devo yāti bhuvanā vipaśyan ||"
    }
   },
   {
@@ -327,7 +410,13 @@
      "career"
     ]
    },
-   "checked_against": "Word-for-word against sanskritdocuments navanew.html: orthography only.",
+   "provenance": {
+    "kind": "print",
+    "edition": "bsr-1912",
+    "scan_page_url": "https://archive.org/details/Brihat_Stotra_Ratnakara_1912/page/n360/mode/1up",
+    "page": "357",
+    "note": "Navagraha Stotra (stotra no. 171), v.1"
+   },
    "meaning_hi": "जपाकुसुम (गुड़हल) के फूल जैसे लाल, कश्यप के पुत्र, महान तेज वाले, अंधकार के शत्रु और सब पापों को हरने वाले दिवाकर (सूर्य) को मैं प्रणाम करता हूँ।",
    "meaning_te": "మందార పువ్వు వలె ఎర్రనివాడు, కశ్యపుని కుమారుడు, మహా తేజస్సు కలవాడు, చీకటికి శత్రువు, సర్వ పాపాలను పోగొట్టే దివాకరునికి (సూర్యునికి) నమస్కరిస్తున్నాను.",
    "text": {
@@ -394,7 +483,10 @@
      "spiritual"
     ]
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, चन्द्र देव को नमस्कार।",
    "meaning_te": "ఓం, చంద్ర దేవునికి నమస్కారం.",
    "text": {
@@ -460,7 +552,10 @@
      "spiritual"
     ]
    },
-   "checked_against": "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, चन्द्र के बीज अक्षर, चन्द्र को नमस्कार। बीज अक्षरों का कोई शब्दकोशीय अर्थ नहीं होता।",
    "meaning_te": "ఓం, చంద్రుడు బీజాక్షరాలు, చంద్రునికి నమస్కారం. బీజాక్షరాలకు నిఘంటు అర్థం ఉండదు.",
    "text": {
@@ -529,7 +624,13 @@
      "spiritual"
     ]
    },
-   "checked_against": "Word-for-word against Vajasaneyi 9.40 at https://vedicscriptures.in/bhashya/16/yajurveda/9/40 (page's unaccented line has two typos; its pada-patha matches this text).",
+   "provenance": {
+    "kind": "print",
+    "edition": "weber-vs-1852",
+    "scan_page_url": "https://archive.org/details/in.ernet.dli.2015.486971/page/n372/mode/1up",
+    "page": null,
+    "note": "VS 9.40"
+   },
    "meaning_hi": "हे देवताओ, इसे बिना प्रतिद्वंद्वी के महान शासन, महान श्रेष्ठता और लोगों के महान नेतृत्व के लिए, इन्द्र के बल के लिए अभिषिक्त करो। हे लोगो, यह तुम्हारा राजा है; सोम हमारा राजा है। (यह राज्याभिषेक का मंत्र है, जो सोम नाम के कारण चन्द्र के लिए प्रयोग होता है।)",
    "meaning_te": "ఓ దేవతలారా, ఇతనిని ప్రత్యర్థి లేని గొప్ప పాలన కోసం, గొప్ప ఔన్నత్యం కోసం, ప్రజల గొప్ప నాయకత్వం కోసం, ఇంద్రుని బలం కోసం అభిషేకించండి. ఓ ప్రజలారా, ఇతడే మీ రాజు; సోముడే మా రాజు. (ఇది రాజ్యాభిషేక మంత్రం; సోమ అనే పేరు వల్ల చంద్రునికి వాడతారు.)",
    "text": {
@@ -546,10 +647,10 @@
    "tier": "advanced",
    "planet": "Moon",
    "deity": "Moon",
-   "devanagari": "आप्यायस्व समेतु ते विश्वतः सोम वृष्णियम् । भवा वाजस्य सङ्गथे ॥",
-   "iast": "āpyāyasva sametu te viśvataḥ soma vṛṣṇiyam | bhavā vājasya saṅgathe ||",
-   "telugu": "ఆప్యాయస్వ సమేతు తే విశ్వతః సోమ వృష్ణియమ్ । భవా వాజస్య సంగథే ॥",
-   "simple_transliteration": "Apyayasva Sametu Te Vishvatah Soma Vrishniyam, Bhava Vajasya Sangathe",
+   "devanagari": "आ प्यायस्व समेतु ते विश्वतः सोम वृष्ण्यम् । भवा वाजस्य सङ्गथे ॥",
+   "iast": "ā pyāyasva sametu te viśvataḥ soma vṛṣṇyam | bhavā vājasya saṅgathe ||",
+   "telugu": "ఆ ప్యాయస్వ సమేతు తే విశ్వతః సోమ వృష్ణ్యమ్ । భవా వాజస్య సంగథే ॥",
+   "simple_transliteration": "A Pyayasva Sametu Te Vishvatah Soma Vrishnyam, Bhava Vajasya Sangathe",
    "meaning_en": "Swell, O Soma; let strength gather in you from every side; be there where vigour gathers.",
    "source_type": "shruti",
    "source_citation": "Rigveda 1.91.16 (also in the Taittiriya Samhita). Used in the Navagraha Sukta recited in Telugu, Tamil and Kannada temples (Krishna Yajurveda tradition).",
@@ -562,7 +663,7 @@
    "practical_count": 108,
    "count_note": "Same counts are applied by custom; BPHS itself names the Shukla Yajurveda verse.",
    "preferred_day": "Monday",
-   "disagreements": "BPHS ch.84 names a different verse for Moon (see moon-vedic). Both are authentic; which one a family uses depends on its Veda shakha. Checked against sanskritdocuments: differences are sandhi only.",
+   "disagreements": "BPHS ch.84 names a different verse for Moon (see moon-vedic). Both are authentic; which one a family uses depends on its Veda shakha.",
    "app_sensitivity": "As for the Shukla Yajurveda form: accented, teacher-learnt; listen-along audio only.",
    "text_in_corpus": true,
    "audio": {
@@ -597,14 +698,20 @@
      "spiritual"
     ]
    },
-   "checked_against": "Against the Navagraha Sukta at sanskritdocuments: sandhi only.",
+   "provenance": {
+    "kind": "print",
+    "edition": "muller-rv-1873-v1",
+    "scan_page_url": "https://archive.org/details/hymnsrigvedains00unkngoog/page/n159/mode/1up",
+    "page": "74",
+    "note": "RV 1.91.16"
+   },
    "meaning_hi": "हे सोम, बढ़ो; हर ओर से तुममें बल एकत्र हो; जहाँ शक्ति एकत्र होती है वहाँ उपस्थित रहो।",
    "meaning_te": "ఓ సోమా, వృద్ధి చెందు; అన్ని వైపుల నుండి నీలో బలం చేరుగాక; శక్తి కూడే చోట నీవు ఉండు.",
    "text": {
-    "te": "ఆప్యాయస్వ సమేతు తే విశ్వతః సోమ వృష్ణియమ్ । భవా వాజస్య సంగథే ॥",
-    "en": "Apyayasva Sametu Te Vishvatah Soma Vrishniyam, Bhava Vajasya Sangathe",
-    "sa": "आप्यायस्व समेतु ते विश्वतः सोम वृष्णियम् । भवा वाजस्य सङ्गथे ॥",
-    "iast": "āpyāyasva sametu te viśvataḥ soma vṛṣṇiyam | bhavā vājasya saṅgathe ||"
+    "te": "ఆ ప్యాయస్వ సమేతు తే విశ్వతః సోమ వృష్ణ్యమ్ । భవా వాజస్య సంగథే ॥",
+    "en": "A Pyayasva Sametu Te Vishvatah Soma Vrishnyam, Bhava Vajasya Sangathe",
+    "sa": "आ प्यायस्व समेतु ते विश्वतः सोम वृष्ण्यम् । भवा वाजस्य सङ्गथे ॥",
+    "iast": "ā pyāyasva sametu te viśvataḥ soma vṛṣṇyam | bhavā vājasya saṅgathe ||"
    }
   },
   {
@@ -664,7 +771,13 @@
      "spiritual"
     ]
    },
-   "checked_against": "Word-for-word against sanskritdocuments navanew.html: orthography only.",
+   "provenance": {
+    "kind": "print",
+    "edition": "bsr-1912",
+    "scan_page_url": "https://archive.org/details/Brihat_Stotra_Ratnakara_1912/page/n360/mode/1up",
+    "page": "357",
+    "note": "v.2"
+   },
    "meaning_hi": "दही, शंख और हिम जैसे श्वेत, क्षीरसागर से उत्पन्न, शिव के मुकुट के आभूषण, शशि सोम (चन्द्र) को मैं नमन करता हूँ।",
    "meaning_te": "పెరుగు, శంఖం, మంచు వలె తెల్లనివాడు, పాల సముద్రం నుండి పుట్టినవాడు, శివుని కిరీటానికి ఆభరణమైన శశి సోముడికి (చంద్రునికి) నమస్కరిస్తున్నాను.",
    "text": {
@@ -726,7 +839,10 @@
      "career"
     ]
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, अंगारक (मंगल), दीप्तिमान ग्रह को नमस्कार।",
    "meaning_te": "ఓం, ప్రకాశించే అంగారకునికి (కుజునికి) నమస్కారం.",
    "text": {
@@ -789,7 +905,10 @@
      "career"
     ]
    },
-   "checked_against": "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, मंगल के बीज अक्षर, मंगल को नमस्कार। बीज अक्षरों का कोई शब्दकोशीय अर्थ नहीं होता।",
    "meaning_te": "ఓం, కుజుడు (అంగారకుడు) బీజాక్షరాలు, కుజునికి నమస్కారం. బీజాక్షరాలకు నిఘంటు అర్థం ఉండదు.",
    "text": {
@@ -854,7 +973,13 @@
      "career"
     ]
    },
-   "checked_against": "Against the Navagraha Sukta at sanskritdocuments (same verse in both traditions): matches.",
+   "provenance": {
+    "kind": "print",
+    "edition": "weber-vs-1852",
+    "scan_page_url": "https://archive.org/details/in.ernet.dli.2015.486971/page/n162/mode/1up",
+    "page": "66",
+    "note": "VS 3.12"
+   },
    "meaning_hi": "अग्नि स्वर्ग के शीर्ष और शिखर हैं, वे पृथ्वी के स्वामी हैं; वे जल के बीजों को जीवन देते हैं।",
    "meaning_te": "అగ్ని స్వర్గానికి శిరస్సు, శిఖరం; ఆయన భూమికి అధిపతి; జలాల బీజాలకు ప్రాణం పోస్తాడు.",
    "text": {
@@ -916,7 +1041,13 @@
      "career"
     ]
    },
-   "checked_against": "Word-for-word against sanskritdocuments navanew.html: orthography only.",
+   "provenance": {
+    "kind": "print",
+    "edition": "bsr-1912",
+    "scan_page_url": "https://archive.org/details/Brihat_Stotra_Ratnakara_1912/page/n360/mode/1up",
+    "page": "357",
+    "note": "v.3"
+   },
    "meaning_hi": "पृथ्वी के गर्भ से उत्पन्न, बिजली की कांति जैसे प्रकाशमान, हाथ में शक्ति (भाला) धारण करने वाले कुमार मंगल को मैं प्रणाम करता हूँ।",
    "meaning_te": "భూమి గర్భం నుండి పుట్టినవాడు, మెరుపు కాంతి వలె ప్రకాశించేవాడు, చేతిలో శక్తి ఆయుధం ధరించిన కుమారుడైన మంగళునికి (కుజునికి) నమస్కరిస్తున్నాను.",
    "text": {
@@ -976,7 +1107,10 @@
      "career"
     ]
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, ज्ञानी बुध देव को नमस्कार।",
    "meaning_te": "ఓం, జ్ఞాని అయిన బుధునికి నమస్కారం.",
    "text": {
@@ -1037,7 +1171,10 @@
      "career"
     ]
    },
-   "checked_against": "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, बुध के बीज अक्षर, बुध को नमस्कार। बीज अक्षरों का कोई शब्दकोशीय अर्थ नहीं होता।",
    "meaning_te": "ఓం, బుధుడు బీజాక్షరాలు, బుధునికి నమస్కారం. బీజాక్షరాలకు నిఘంటు అర్థం ఉండదు.",
    "text": {
@@ -1054,10 +1191,10 @@
    "tier": "advanced",
    "planet": "Mercury",
    "deity": "Mercury",
-   "devanagari": "उद्बुध्यस्वाग्ने प्रति जागृहि त्वमिष्टापूर्ते सं सृजेथामयं च । अस्मिन्सधस्थे अध्युत्तरस्मिन्विश्वे देवा यजमानश्च सीदत ॥",
-   "iast": "udbudhyasvāgne prati jāgṛhi tvamiṣṭāpūrte saṃ sṛjethāmayaṃ ca | asminsadhasthe adhyuttarasminviśve devā yajamānaśca sīdata ||",
-   "telugu": "ఉద్బుధ్యస్వాగ్నే ప్రతి జాగృహి త్వమిష్టాపూర్తే సం సృజేథామయం చ । అస్మిన్సధస్థే అధ్యుత్తరస్మిన్విశ్వే దేవా యజమానశ్చ సీదత ॥",
-   "simple_transliteration": "Udbudhyasva Agne Prati Jagrihi Tvam Ishtapurte Sam Srijetham Ayam Cha, Asmin Sadhasthe Adhyuttarasmin Vishve Deva Yajamanashcha Sidata",
+   "devanagari": "उद्बुध्यस्वाग्ने प्रतिजागृहि त्वमिष्टापूर्ते संसृजेथामयं च । अस्मिन्त्सधस्थे अध्युत्तरस्मिन्विश्वे देवा यजमानश्च सीदत ॥",
+   "iast": "udbudhyasvāgne pratijāgṛhi tvamiṣṭāpūrte saṃsṛjethāmayaṃ ca | asmintsadhasthe adhyuttarasminviśve devā yajamānaśca sīdata ||",
+   "telugu": "ఉద్బుధ్యస్వాగ్నే ప్రతిజాగృహి త్వమిష్టాపూర్తే సంసృజేథామయం చ । అస్మింత్సధస్థే అధ్యుత్తరస్మిన్విశ్వే దేవా యజమానశ్చ సీదత ॥",
+   "simple_transliteration": "Udbudhyasva Agne Prati Jagrihi Tvam Ishtapurte Sam Srijetham Ayam Cha, Asmint Sadhasthe Adhyuttarasmin Vishve Deva Yajamanashcha Sidata",
    "meaning_en": "Wake up, O Agni, and keep watch; you and this worshipper together bring offerings and good works to fulfilment. In this higher seat, may all the gods and the worshipper sit.",
    "source_type": "shruti",
    "source_citation": "Shukla Yajurveda (Vajasaneyi) 15.54. Named for Mercury in BPHS ch.84 (Graha Shanti) vv.17-18; count from v.19.",
@@ -1098,14 +1235,20 @@
      "career"
     ]
    },
-   "checked_against": "Word-for-word against Vajasaneyi 15.54 at https://vedicscriptures.in/bhashya/16/yajurveda/15/54: no differences.",
+   "provenance": {
+    "kind": "print",
+    "edition": "weber-vs-1852",
+    "scan_page_url": "https://archive.org/details/in.ernet.dli.2015.486971/page/n580/mode/1up",
+    "page": "484",
+    "note": "VS 15.54"
+   },
    "meaning_hi": "हे अग्नि, जागो और सजग रहो; तुम और यह उपासक मिलकर यज्ञ और सत्कर्मों को पूर्ण करो। इस उच्च आसन पर सब देवता और यजमान विराजें।",
    "meaning_te": "ఓ అగ్నీ, మేలుకో, జాగరూకుడవై ఉండు; నీవు ఈ ఉపాసకుడు కలిసి యజ్ఞాన్ని సత్కార్యాలను నెరవేర్చండి. ఈ ఉన్నత ఆసనంపై దేవతలందరూ యజమానీ కూర్చుందురుగాక.",
    "text": {
-    "te": "ఉద్బుధ్యస్వాగ్నే ప్రతి జాగృహి త్వమిష్టాపూర్తే సం సృజేథామయం చ । అస్మిన్సధస్థే అధ్యుత్తరస్మిన్విశ్వే దేవా యజమానశ్చ సీదత ॥",
-    "en": "Udbudhyasva Agne Prati Jagrihi Tvam Ishtapurte Sam Srijetham Ayam Cha, Asmin Sadhasthe Adhyuttarasmin Vishve Deva Yajamanashcha Sidata",
-    "sa": "उद्बुध्यस्वाग्ने प्रति जागृहि त्वमिष्टापूर्ते सं सृजेथामयं च । अस्मिन्सधस्थे अध्युत्तरस्मिन्विश्वे देवा यजमानश्च सीदत ॥",
-    "iast": "udbudhyasvāgne prati jāgṛhi tvamiṣṭāpūrte saṃ sṛjethāmayaṃ ca | asminsadhasthe adhyuttarasminviśve devā yajamānaśca sīdata ||"
+    "te": "ఉద్బుధ్యస్వాగ్నే ప్రతిజాగృహి త్వమిష్టాపూర్తే సంసృజేథామయం చ । అస్మింత్సధస్థే అధ్యుత్తరస్మిన్విశ్వే దేవా యజమానశ్చ సీదత ॥",
+    "en": "Udbudhyasva Agne Prati Jagrihi Tvam Ishtapurte Sam Srijetham Ayam Cha, Asmint Sadhasthe Adhyuttarasmin Vishve Deva Yajamanashcha Sidata",
+    "sa": "उद्बुध्यस्वाग्ने प्रतिजागृहि त्वमिष्टापूर्ते संसृजेथामयं च । अस्मिन्त्सधस्थे अध्युत्तरस्मिन्विश्वे देवा यजमानश्च सीदत ॥",
+    "iast": "udbudhyasvāgne pratijāgṛhi tvamiṣṭāpūrte saṃsṛjethāmayaṃ ca | asmintsadhasthe adhyuttarasminviśve devā yajamānaśca sīdata ||"
    }
   },
   {
@@ -1115,9 +1258,9 @@
    "tier": "advanced",
    "planet": "Mercury",
    "deity": "Mercury",
-   "devanagari": "उद्बुध्यस्वाग्ने प्रतिजागृह्येनमिष्टापूर्ते संसृजेथामयं च । पुनः कृण्वंस्त्वा पितरं युवानमन्वातांसीत्त्वयि तन्तुमेतम् ॥",
-   "iast": "udbudhyasvāgne pratijāgṛhyenamiṣṭāpūrte saṃsṛjethāmayaṃ ca | punaḥ kṛṇvaṃstvā pitaraṃ yuvānamanvātāṃsīttvayi tantumetam ||",
-   "telugu": "ఉద్బుధ్యస్వాగ్నే ప్రతిజాగృహ్యేనమిష్టాపూర్తే సంసృజేథామయం చ । పునః కృణ్వంస్త్వా పితరం యువానమన్వాతాంసీత్త్వయి తంతుమేతమ్ ॥",
+   "devanagari": "उद्बुध्यस्वाग्ने प्रति जागृह्येनमिष्टापूर्ते सं सृजेथामयं च । पुनः कृण्वंस्त्वा पितरं युवानमन्वातांसीत्त्वयि तन्तुमेतम् ॥",
+   "iast": "udbudhyasvāgne prati jāgṛhyenamiṣṭāpūrte saṃ sṛjethāmayaṃ ca | punaḥ kṛṇvaṃstvā pitaraṃ yuvānamanvātāṃsīttvayi tantumetam ||",
+   "telugu": "ఉద్బుధ్యస్వాగ్నే ప్రతి జాగృహ్యేనమిష్టాపూర్తే సం సృజేథామయం చ । పునః కృణ్వంస్త్వా పితరం యువానమన్వాతాంసీత్త్వయి తంతుమేతమ్ ॥",
    "simple_transliteration": "Udbudhyasva Agne Prati Jagrihi Enam Ishtapurte Sam Srijetham Ayam Cha, Punah Krinvams Tva Pitaram Yuvanam Anvatamsit Tvayi Tantum Etam",
    "meaning_en": "Wake, O Agni, and watch over this worshipper; together bring offerings and good works to fulfilment. Making the father young again, he has spread this thread of continuity in you.",
    "source_type": "shruti",
@@ -1131,7 +1274,7 @@
    "practical_count": 108,
    "count_note": "Same counts are applied by custom; BPHS itself names the Shukla Yajurveda verse.",
    "preferred_day": "Wednesday",
-   "disagreements": "BPHS ch.84 names a different verse for Mercury (see mercury-vedic). Both are authentic; which one a family uses depends on its Veda shakha. Checked against sanskritdocuments: differences are sandhi only.",
+   "disagreements": "BPHS ch.84 names a different verse for Mercury (see mercury-vedic). Both are authentic; which one a family uses depends on its Veda shakha.",
    "app_sensitivity": "As for the Shukla Yajurveda form: accented, teacher-learnt; listen-along audio only.",
    "text_in_corpus": true,
    "audio": {
@@ -1158,14 +1301,20 @@
      "career"
     ]
    },
-   "checked_against": "Against the Navagraha Sukta at sanskritdocuments: sandhi only.",
+   "provenance": {
+    "kind": "print",
+    "edition": "weber-ts-1871",
+    "scan_page_url": "https://archive.org/details/10996666bsb/page/n423/mode/1up",
+    "page": "410",
+    "note": "TS 4.7.13 m; printed in roman: ud budhyasvāgne prati jāgṛhy enam iṣṭāpūrte saṃ sṛjethām ayaṃ ca | punaḥ kṛṇvaṃs tvā pitaraṃ yuvānam anv-ātāṃsīt tvayi tantum etam"
+   },
    "meaning_hi": "हे अग्नि, जागो और इस उपासक की रक्षा करो; मिलकर यज्ञ और सत्कर्मों को पूर्ण करो। पिता को फिर से युवा बनाते हुए, उसने निरंतरता का यह धागा तुममें फैलाया है।",
    "meaning_te": "ఓ అగ్నీ, మేలుకో, ఈ ఉపాసకుని కాపాడు; కలిసి యజ్ఞాన్ని సత్కార్యాలను నెరవేర్చండి. తండ్రిని మళ్ళీ యువకునిగా చేస్తూ, కొనసాగింపు అనే ఈ దారాన్ని నీలో విస్తరింపజేశాడు.",
    "text": {
-    "te": "ఉద్బుధ్యస్వాగ్నే ప్రతిజాగృహ్యేనమిష్టాపూర్తే సంసృజేథామయం చ । పునః కృణ్వంస్త్వా పితరం యువానమన్వాతాంసీత్త్వయి తంతుమేతమ్ ॥",
+    "te": "ఉద్బుధ్యస్వాగ్నే ప్రతి జాగృహ్యేనమిష్టాపూర్తే సం సృజేథామయం చ । పునః కృణ్వంస్త్వా పితరం యువానమన్వాతాంసీత్త్వయి తంతుమేతమ్ ॥",
     "en": "Udbudhyasva Agne Prati Jagrihi Enam Ishtapurte Sam Srijetham Ayam Cha, Punah Krinvams Tva Pitaram Yuvanam Anvatamsit Tvayi Tantum Etam",
-    "sa": "उद्बुध्यस्वाग्ने प्रतिजागृह्येनमिष्टापूर्ते संसृजेथामयं च । पुनः कृण्वंस्त्वा पितरं युवानमन्वातांसीत्त्वयि तन्तुमेतम् ॥",
-    "iast": "udbudhyasvāgne pratijāgṛhyenamiṣṭāpūrte saṃsṛjethāmayaṃ ca | punaḥ kṛṇvaṃstvā pitaraṃ yuvānamanvātāṃsīttvayi tantumetam ||"
+    "sa": "उद्बुध्यस्वाग्ने प्रति जागृह्येनमिष्टापूर्ते सं सृजेथामयं च । पुनः कृण्वंस्त्वा पितरं युवानमन्वातांसीत्त्वयि तन्तुमेतम् ॥",
+    "iast": "udbudhyasvāgne prati jāgṛhyenamiṣṭāpūrte saṃ sṛjethāmayaṃ ca | punaḥ kṛṇvaṃstvā pitaraṃ yuvānamanvātāṃsīttvayi tantumetam ||"
    }
   },
   {
@@ -1218,7 +1367,13 @@
      "career"
     ]
    },
-   "checked_against": "Word-for-word against sanskritdocuments navanew.html: orthography only.",
+   "provenance": {
+    "kind": "print",
+    "edition": "bsr-1912",
+    "scan_page_url": "https://archive.org/details/Brihat_Stotra_Ratnakara_1912/page/n360/mode/1up",
+    "page": "357",
+    "note": "v.4"
+   },
    "meaning_hi": "प्रियंगु की कली जैसे श्याम, अनुपम रूप वाले, सौम्य और सौम्य गुणों से युक्त बुध को मैं प्रणाम करता हूँ।",
    "meaning_te": "ప్రియంగు మొగ్గ వలె నల్లనివాడు, సాటిలేని రూపం కలవాడు, సౌమ్యుడు, సౌమ్య గుణాలు కలిగిన బుధునికి నమస్కరిస్తున్నాను.",
    "text": {
@@ -1284,7 +1439,10 @@
      "finance"
     ]
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, गुरु (बृहस्पति) को नमस्कार।",
    "meaning_te": "ఓం, గురువుకు (బృహస్పతికి) నమస్కారం.",
    "text": {
@@ -1351,7 +1509,10 @@
      "finance"
     ]
    },
-   "checked_against": "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, गुरु (बृहस्पति) के बीज अक्षर, गुरु (बृहस्पति) को नमस्कार। बीज अक्षरों का कोई शब्दकोशीय अर्थ नहीं होता।",
    "meaning_te": "ఓం, గురువు (బృహస్పతి) బీజాక్షరాలు, గురువుకు నమస్కారం. బీజాక్షరాలకు నిఘంటు అర్థం ఉండదు.",
    "text": {
@@ -1368,9 +1529,9 @@
    "tier": "advanced",
    "planet": "Jupiter",
    "deity": "Jupiter",
-   "devanagari": "बृहस्पते अति यदर्यो अर्हाद् द्युमद्विभाति क्रतुमज्जनेषु । यद्दीदयच्छवस ऋतप्रजात तदस्मासु द्रविणं धेहि चित्रम् ॥",
-   "iast": "bṛhaspate ati yadaryo arhād dyumadvibhāti kratumajjaneṣu | yaddīdayacchavasa ṛtaprajāta tadasmāsu draviṇaṃ dhehi citram ||",
-   "telugu": "బృహస్పతే అతి యదర్యో అర్హాద్ ద్యుమద్విభాతి క్రతుమజ్జనేషు । యద్దీదయచ్ఛవస ఋతప్రజాత తదస్మాసు ద్రవిణం ధేహి చిత్రమ్ ॥",
+   "devanagari": "बृहस्पते अति यदर्यो अर्हाद्द्युमद्विभाति क्रतुमज्जनेषु । यद्दीदयच्छवस ऋतप्रजात तदस्मासु द्रविणं धेहि चित्रम् ॥",
+   "iast": "bṛhaspate ati yadaryo arhāddyumadvibhāti kratumajjaneṣu | yaddīdayacchavasa ṛtaprajāta tadasmāsu draviṇaṃ dhehi citram ||",
+   "telugu": "బృహస్పతే అతి యదర్యో అర్హాద్ద్యుమద్విభాతి క్రతుమజ్జనేషు । యద్దీదయచ్ఛవస ఋతప్రజాత తదస్మాసు ద్రవిణం ధేహి చిత్రమ్ ॥",
    "simple_transliteration": "Brihaspate Ati Yad Aryo Arhad Dyumad Vibhati Kratumaj Janeshu, Yad Didayach Chavasa Ritaprajata Tad Asmasu Dravinam Dhehi Chitram",
    "meaning_en": "O Brihaspati, born of truth: the wealth that surpasses what the noble earn, that shines with wisdom among people and blazes with strength, place that wonderful wealth in us.",
    "source_type": "shruti",
@@ -1385,7 +1546,7 @@
    "practical_count": 108,
    "count_note": "BPHS ch.84 v.19-20: 19,000. 108 per sitting.",
    "preferred_day": "Thursday",
-   "disagreements": "Sandhi: 'yadaryo arhād' (Rigveda) vs 'yadaryā arhād' (Vajasaneyi edition).",
+   "disagreements": "Some modern Vajasaneyi editions read 'yadaryā arhād'; Weber's 1852 print reads 'yadaryo arhād', as the Rigveda does.",
    "app_sensitivity": "Vedic mantra: traditionally learnt with svara (accent) from a teacher, and some traditions restrict it to the initiated. Offer as listen-along audio by a trained reciter; do not machine-voice it.",
    "text_in_corpus": true,
    "audio": {
@@ -1418,14 +1579,20 @@
      "finance"
     ]
    },
-   "checked_against": "Against Vajasaneyi 26.3 at https://vedicscriptures.in/bhashya/16/yajurveda/26/3: sandhi variant 'yadaryā arhād' for 'yadaryo arhād'; the VS verse continues with the ritual formula 'upayāmagṛhīto'si...', which navagraha use omits.",
+   "provenance": {
+    "kind": "print",
+    "edition": "weber-vs-1852",
+    "scan_page_url": "https://archive.org/details/in.ernet.dli.2015.486971/page/n872/mode/1up",
+    "page": "774",
+    "note": "VS 26.3; the verse goes on with the ritual formula उपयामगृहीतोऽसि, which navagraha use leaves out"
+   },
    "meaning_hi": "हे सत्य से उत्पन्न बृहस्पति, जो धन श्रेष्ठ जनों की कमाई से भी बढ़कर है, जो लोगों के बीच ज्ञान से चमकता है और बल से दीप्त है, वह अद्भुत धन हममें स्थापित करो।",
    "meaning_te": "ఓ సత్యం నుండి పుట్టిన బృహస్పతీ, శ్రేష్ఠులు సంపాదించే దానికంటే గొప్పదైన, ప్రజల మధ్య జ్ఞానంతో ప్రకాశించే, బలంతో వెలిగే ఆ అద్భుతమైన సంపదను మాలో నిలుపు.",
    "text": {
-    "te": "బృహస్పతే అతి యదర్యో అర్హాద్ ద్యుమద్విభాతి క్రతుమజ్జనేషు । యద్దీదయచ్ఛవస ఋతప్రజాత తదస్మాసు ద్రవిణం ధేహి చిత్రమ్ ॥",
+    "te": "బృహస్పతే అతి యదర్యో అర్హాద్ద్యుమద్విభాతి క్రతుమజ్జనేషు । యద్దీదయచ్ఛవస ఋతప్రజాత తదస్మాసు ద్రవిణం ధేహి చిత్రమ్ ॥",
     "en": "Brihaspate Ati Yad Aryo Arhad Dyumad Vibhati Kratumaj Janeshu, Yad Didayach Chavasa Ritaprajata Tad Asmasu Dravinam Dhehi Chitram",
-    "sa": "बृहस्पते अति यदर्यो अर्हाद् द्युमद्विभाति क्रतुमज्जनेषु । यद्दीदयच्छवस ऋतप्रजात तदस्मासु द्रविणं धेहि चित्रम् ॥",
-    "iast": "bṛhaspate ati yadaryo arhād dyumadvibhāti kratumajjaneṣu | yaddīdayacchavasa ṛtaprajāta tadasmāsu draviṇaṃ dhehi citram ||"
+    "sa": "बृहस्पते अति यदर्यो अर्हाद्द्युमद्विभाति क्रतुमज्जनेषु । यद्दीदयच्छवस ऋतप्रजात तदस्मासु द्रविणं धेहि चित्रम् ॥",
+    "iast": "bṛhaspate ati yadaryo arhāddyumadvibhāti kratumajjaneṣu | yaddīdayacchavasa ṛtaprajāta tadasmāsu draviṇaṃ dhehi citram ||"
    }
   },
   {
@@ -1484,7 +1651,13 @@
      "finance"
     ]
    },
-   "checked_against": "Word-for-word against sanskritdocuments navanew.html: orthography only.",
+   "provenance": {
+    "kind": "print",
+    "edition": "bsr-1912",
+    "scan_page_url": "https://archive.org/details/Brihat_Stotra_Ratnakara_1912/page/n360/mode/1up",
+    "page": "357",
+    "note": "v.5"
+   },
    "meaning_hi": "देवताओं और ऋषियों के गुरु, स्वर्ण जैसी आभा वाले, बुद्धि के स्वरूप, तीनों लोकों के स्वामी बृहस्पति को मैं नमन करता हूँ।",
    "meaning_te": "దేవతలకు ఋషులకు గురువు, బంగారు కాంతి కలవాడు, బుద్ధి స్వరూపుడు, మూడు లోకాలకు అధిపతి అయిన బృహస్పతికి నమస్కరిస్తున్నాను.",
    "text": {
@@ -1544,7 +1717,10 @@
      "finance"
     ]
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, उज्ज्वल शुक्र देव को नमस्कार।",
    "meaning_te": "ఓం, ప్రకాశవంతుడైన శుక్రునికి నమస్కారం.",
    "text": {
@@ -1605,7 +1781,10 @@
      "finance"
     ]
    },
-   "checked_against": "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, शुक्र के बीज अक्षर, शुक्र को नमस्कार। बीज अक्षरों का कोई शब्दकोशीय अर्थ नहीं होता।",
    "meaning_te": "ఓం, శుక్రుడు బీజాక్షరాలు, శుక్రునికి నమస్కారం. బీజాక్షరాలకు నిఘంటు అర్థం ఉండదు.",
    "text": {
@@ -1666,7 +1845,13 @@
      "finance"
     ]
    },
-   "checked_against": "Word-for-word against Vajasaneyi 19.75 at https://vedicscriptures.in/bhashya/16/yajurveda/19/75: nasal spelling only.",
+   "provenance": {
+    "kind": "print",
+    "edition": "weber-vs-1852",
+    "scan_page_url": "https://archive.org/details/in.ernet.dli.2015.486971/page/n726/mode/1up",
+    "page": "628",
+    "note": "VS 19.75; the print abbreviates the refrain, keyed in full from VS 19.72 (leaf 725, p.627)"
+   },
    "meaning_hi": "प्रजापति ने दिव्य शक्ति से अन्न के रस को पिया: बल, दूध, सोम। ऋत से सत्य; यह उज्ज्वल रस इन्द्र की शक्ति है, यह दूध, अमृत और मधु है। (कठिन मंत्र है, अर्थ अनुमानित है; ‘शुक्र’ अर्थात् उज्ज्वल शब्द के कारण शुक्र ग्रह के लिए चुना गया।)",
    "meaning_te": "ప్రజాపతి దివ్య శక్తితో అన్నం యొక్క సారాన్ని త్రాగాడు: బలం, పాలు, సోమం. ఋతం ద్వారా సత్యం; ఈ ప్రకాశవంతమైన రసం ఇంద్రుని శక్తి, ఇది పాలు, అమృతం, తేనె. (కఠినమైన మంత్రం, అర్థం సుమారుగా; ‘శుక్ర’ అంటే ప్రకాశవంతం అనే పదం వల్ల శుక్ర గ్రహానికి ఎంచుకున్నారు.)",
    "text": {
@@ -1683,10 +1868,10 @@
    "tier": "advanced",
    "planet": "Venus",
    "deity": "Venus",
-   "devanagari": "प्र वः शुक्राय भानवे भरध्वम् । हव्यं मतिं चाग्नये सुपूतम् । यो दैव्यानि मानुषा जनूंषि । अन्तर्विश्वानि विद्मना जिगाति ॥",
-   "iast": "pra vaḥ śukrāya bhānave bharadhvam | havyaṃ matiṃ cāgnaye supūtam | yo daivyāni mānuṣā janūṃṣi | antarviśvāni vidmanā jigāti ||",
-   "telugu": "ప్ర వః శుక్రాయ భానవే భరధ్వమ్ । హవ్యం మతిం చాగ్నయే సుపూతమ్ । యో దైవ్యాని మానుషా జనూంషి । అంతర్విశ్వాని విద్మనా జిగాతి ॥",
-   "simple_transliteration": "Pra Vah Shukraya Bhanave Bharadhvam, Havyam Matim Chagnaye Suputam, Yo Daivyani Manusha Janumshi, Antar Vishvani Vidmana Jigati",
+   "devanagari": "प्र वः शुक्राय भानवे भरध्वं हव्यं मतिं चाग्नये सुपूतम् । यो दैव्यानि मानुषा जनूंष्यन्तर्विश्वानि विद्मना जिगाति ॥",
+   "iast": "pra vaḥ śukrāya bhānave bharadhvaṃ havyaṃ matiṃ cāgnaye supūtam | yo daivyāni mānuṣā janūṃṣyantarviśvāni vidmanā jigāti ||",
+   "telugu": "ప్ర వః శుక్రాయ భానవే భరధ్వం హవ్యం మతిం చాగ్నయే సుపూతమ్ । యో దైవ్యాని మానుషా జనూంష్యంతర్విశ్వాని విద్మనా జిగాతి ॥",
+   "simple_transliteration": "Pra Vah Shukraya Bhanave Bharadhvam Havyam Matim Chagnaye Suputam, Yo Daivyani Manusha Janumshy Antar Vishvani Vidmana Jigati",
    "meaning_en": "Bring your offering and a well-purified hymn to the bright, shining Agni, who moves with knowledge among all births, divine and human.",
    "source_type": "shruti",
    "source_citation": "Rigveda 7.4.1. Used in the Navagraha Sukta recited in Telugu, Tamil and Kannada temples (Krishna Yajurveda tradition).",
@@ -1699,7 +1884,7 @@
    "practical_count": 108,
    "count_note": "Same counts are applied by custom; BPHS itself names the Shukla Yajurveda verse.",
    "preferred_day": "Friday",
-   "disagreements": "BPHS ch.84 names a different verse for Venus (see venus-vedic). Both are authentic; which one a family uses depends on its Veda shakha. Checked against sanskritdocuments: differences are sandhi only.",
+   "disagreements": "BPHS ch.84 names a different verse for Venus (see venus-vedic). Both are authentic; which one a family uses depends on its Veda shakha.",
    "app_sensitivity": "As for the Shukla Yajurveda form: accented, teacher-learnt; listen-along audio only.",
    "text_in_corpus": true,
    "audio": {
@@ -1726,14 +1911,20 @@
      "finance"
     ]
    },
-   "checked_against": "Against the Navagraha Sukta at sanskritdocuments: sandhi only.",
+   "provenance": {
+    "kind": "print",
+    "edition": "muller-rv-1873-v2",
+    "scan_page_url": "https://archive.org/details/hymnsrigvedains02mlgoog/page/n15/mode/1up",
+    "page": "4",
+    "note": "RV 7.4.1 (samhita text; the pada text is on leaf 16)"
+   },
    "meaning_hi": "उज्ज्वल, दीप्तिमान अग्नि को अपनी आहुति और पवित्र स्तुति अर्पित करो, जो ज्ञान के साथ सब दिव्य और मानवीय जन्मों के बीच विचरते हैं।",
    "meaning_te": "ప్రకాశవంతుడు, తేజోమయుడైన అగ్నికి మీ హవిస్సును పవిత్రమైన స్తోత్రాన్ని సమర్పించండి; ఆయన జ్ఞానంతో దివ్య, మానవ జన్మలన్నింటి మధ్య సంచరిస్తాడు.",
    "text": {
-    "te": "ప్ర వః శుక్రాయ భానవే భరధ్వమ్ । హవ్యం మతిం చాగ్నయే సుపూతమ్ । యో దైవ్యాని మానుషా జనూంషి । అంతర్విశ్వాని విద్మనా జిగాతి ॥",
-    "en": "Pra Vah Shukraya Bhanave Bharadhvam, Havyam Matim Chagnaye Suputam, Yo Daivyani Manusha Janumshi, Antar Vishvani Vidmana Jigati",
-    "sa": "प्र वः शुक्राय भानवे भरध्वम् । हव्यं मतिं चाग्नये सुपूतम् । यो दैव्यानि मानुषा जनूंषि । अन्तर्विश्वानि विद्मना जिगाति ॥",
-    "iast": "pra vaḥ śukrāya bhānave bharadhvam | havyaṃ matiṃ cāgnaye supūtam | yo daivyāni mānuṣā janūṃṣi | antarviśvāni vidmanā jigāti ||"
+    "te": "ప్ర వః శుక్రాయ భానవే భరధ్వం హవ్యం మతిం చాగ్నయే సుపూతమ్ । యో దైవ్యాని మానుషా జనూంష్యంతర్విశ్వాని విద్మనా జిగాతి ॥",
+    "en": "Pra Vah Shukraya Bhanave Bharadhvam Havyam Matim Chagnaye Suputam, Yo Daivyani Manusha Janumshy Antar Vishvani Vidmana Jigati",
+    "sa": "प्र वः शुक्राय भानवे भरध्वं हव्यं मतिं चाग्नये सुपूतम् । यो दैव्यानि मानुषा जनूंष्यन्तर्विश्वानि विद्मना जिगाति ॥",
+    "iast": "pra vaḥ śukrāya bhānave bharadhvaṃ havyaṃ matiṃ cāgnaye supūtam | yo daivyāni mānuṣā janūṃṣyantarviśvāni vidmanā jigāti ||"
    }
   },
   {
@@ -1786,7 +1977,13 @@
      "finance"
     ]
    },
-   "checked_against": "Word-for-word against sanskritdocuments navanew.html: orthography only.",
+   "provenance": {
+    "kind": "print",
+    "edition": "bsr-1912",
+    "scan_page_url": "https://archive.org/details/Brihat_Stotra_Ratnakara_1912/page/n360/mode/1up",
+    "page": "357",
+    "note": "v.6"
+   },
    "meaning_hi": "हिम, कुंद पुष्प और कमलनाल जैसे श्वेत, दैत्यों के परम गुरु, सब शास्त्रों के व्याख्याता भार्गव (शुक्र) को मैं प्रणाम करता हूँ।",
    "meaning_te": "మంచు, మల్లె, తామర తూడు వలె తెల్లనివాడు, దైత్యులకు పరమ గురువు, సర్వ శాస్త్రాలను బోధించే భార్గవునికి (శుక్రునికి) నమస్కరిస్తున్నాను.",
    "text": {
@@ -1852,7 +2049,10 @@
      "timing"
     ]
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, (बीज अक्षर ‘शं’) धीरे चलने वाले शनैश्चर (शनि) को नमस्कार।",
    "meaning_te": "ఓం, (బీజాక్షరం ‘శం’) మెల్లగా సంచరించే శనైశ్చరునికి (శనికి) నమస్కారం.",
    "text": {
@@ -1919,7 +2119,10 @@
      "timing"
     ]
    },
-   "checked_against": "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, शनि के बीज अक्षर, शनि को नमस्कार। बीज अक्षरों का कोई शब्दकोशीय अर्थ नहीं होता।",
    "meaning_te": "ఓం, శని బీజాక్షరాలు, శనికి నమస్కారం. బీజాక్షరాలకు నిఘంటు అర్థం ఉండదు.",
    "text": {
@@ -1936,9 +2139,9 @@
    "tier": "advanced",
    "planet": "Saturn",
    "deity": "Saturn",
-   "devanagari": "शं नो देवीरभिष्टय आपो भवन्तु पीतये । शं योरभि स्रवन्तु नः ॥",
-   "iast": "śaṃ no devīrabhiṣṭaya āpo bhavantu pītaye | śaṃ yorabhi sravantu naḥ ||",
-   "telugu": "శం నో దేవీరభిష్టయ ఆపో భవంతు పీతయే । శం యోరభి స్రవంతు నః ॥",
+   "devanagari": "शं नो देवीरभिष्टय आपो भवन्तु पीतये । शं योरभिस्रवन्तु नः ॥",
+   "iast": "śaṃ no devīrabhiṣṭaya āpo bhavantu pītaye | śaṃ yorabhisravantu naḥ ||",
+   "telugu": "శం నో దేవీరభిష్టయ ఆపో భవంతు పీతయే । శం యోరభిస్రవంతు నః ॥",
    "simple_transliteration": "Sham No Devir Abhishtaya Apo Bhavantu Pitaye, Sham Yor Abhi Sravantu Nah",
    "meaning_en": "May the divine waters be kind to us, for help and for drinking; may they flow towards us with peace and well-being.",
    "source_type": "shruti",
@@ -1986,14 +2189,20 @@
      "timing"
     ]
    },
-   "checked_against": "Against the Navagraha Sukta at sanskritdocuments: matches.",
+   "provenance": {
+    "kind": "print",
+    "edition": "weber-vs-1852",
+    "scan_page_url": "https://archive.org/details/in.ernet.dli.2015.486971/page/n1039/mode/1up",
+    "page": "941",
+    "note": "VS 36.12"
+   },
    "meaning_hi": "दिव्य जल हमारे लिए कल्याणकारी हों, सहायता और पान के लिए; वे शांति और मंगल के साथ हमारी ओर बहें।",
    "meaning_te": "దివ్య జలాలు మాకు మేలు చేయుగాక, సహాయానికి, త్రాగడానికి; శాంతితో శుభంతో మా వైపు ప్రవహించుగాక.",
    "text": {
-    "te": "శం నో దేవీరభిష్టయ ఆపో భవంతు పీతయే । శం యోరభి స్రవంతు నః ॥",
+    "te": "శం నో దేవీరభిష్టయ ఆపో భవంతు పీతయే । శం యోరభిస్రవంతు నః ॥",
     "en": "Sham No Devir Abhishtaya Apo Bhavantu Pitaye, Sham Yor Abhi Sravantu Nah",
-    "sa": "शं नो देवीरभिष्टय आपो भवन्तु पीतये । शं योरभि स्रवन्तु नः ॥",
-    "iast": "śaṃ no devīrabhiṣṭaya āpo bhavantu pītaye | śaṃ yorabhi sravantu naḥ ||"
+    "sa": "शं नो देवीरभिष्टय आपो भवन्तु पीतये । शं योरभिस्रवन्तु नः ॥",
+    "iast": "śaṃ no devīrabhiṣṭaya āpo bhavantu pītaye | śaṃ yorabhisravantu naḥ ||"
    }
   },
   {
@@ -2052,7 +2261,13 @@
      "timing"
     ]
    },
-   "checked_against": "Word-for-word against sanskritdocuments navanew.html: orthography only.",
+   "provenance": {
+    "kind": "print",
+    "edition": "bsr-1912",
+    "scan_page_url": "https://archive.org/details/Brihat_Stotra_Ratnakara_1912/page/n360/mode/1up",
+    "page": "357",
+    "note": "v.7"
+   },
    "meaning_hi": "नीले अंजन (काजल) जैसी आभा वाले, सूर्य के पुत्र, यम के बड़े भाई, छाया और मार्तण्ड से उत्पन्न शनैश्चर को मैं नमन करता हूँ।",
    "meaning_te": "నల్లని కాటుక వంటి కాంతి కలవాడు, సూర్యుని కుమారుడు, యముని అన్న, ఛాయా మార్తాండుల నుండి పుట్టిన శనైశ్చరునికి నమస్కరిస్తున్నాను.",
    "text": {
@@ -2119,7 +2334,10 @@
      "timing"
     ]
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, राहु को नमस्कार।",
    "meaning_te": "ఓం, రాహువుకు నమస్కారం.",
    "text": {
@@ -2187,7 +2405,10 @@
      "timing"
     ]
    },
-   "checked_against": "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, राहु के बीज अक्षर, राहु को नमस्कार। बीज अक्षरों का कोई शब्दकोशीय अर्थ नहीं होता।",
    "meaning_te": "ఓం, రాహువు బీజాక్షరాలు, రాహువుకు నమస్కారం. బీజాక్షరాలకు నిఘంటు అర్థం ఉండదు.",
    "text": {
@@ -2204,9 +2425,9 @@
    "tier": "advanced",
    "planet": "Rahu",
    "deity": "Rahu",
-   "devanagari": "कया नश्चित्र आ भुवदूती सदावृधः सखा । कया शचिष्ठया वृता ॥",
-   "iast": "kayā naścitra ā bhuvadūtī sadāvṛdhaḥ sakhā | kayā śaciṣṭhayā vṛtā ||",
-   "telugu": "కయా నశ్చిత్ర ఆ భువదూతీ సదావృధః సఖా । కయా శచిష్ఠయా వృతా ॥",
+   "devanagari": "कया नश्चित्र आभुवदूती सदावृधः सखा । कया शचिष्ठया वृता ॥",
+   "iast": "kayā naścitra ābhuvadūtī sadāvṛdhaḥ sakhā | kayā śaciṣṭhayā vṛtā ||",
+   "telugu": "కయా నశ్చిత్ర ఆభువదూతీ సదావృధః సఖా । కయా శచిష్ఠయా వృతా ॥",
    "simple_transliteration": "Kaya Nash Chitra A Bhuvad Uti Sadavridhah Sakha, Kaya Shachishthaya Vrita",
    "meaning_en": "With what help will the wondrous one, our ever-growing friend, come to us? With what most powerful company?",
    "source_type": "shruti",
@@ -2255,14 +2476,20 @@
      "timing"
     ]
    },
-   "checked_against": "Against the Navagraha Sukta at sanskritdocuments: matches.",
+   "provenance": {
+    "kind": "print",
+    "edition": "weber-vs-1852",
+    "scan_page_url": "https://archive.org/details/in.ernet.dli.2015.486971/page/n893/mode/1up",
+    "page": "795",
+    "note": "VS 27.39"
+   },
    "meaning_hi": "वह अद्भुत, सदा बढ़ने वाला मित्र किस सहायता के साथ हमारे पास आएगा? किस अत्यंत शक्तिशाली साथ के साथ?",
    "meaning_te": "ఆ అద్భుతమైన, ఎల్లప్పుడూ వృద్ధి చెందే మిత్రుడు ఏ సహాయంతో మా వద్దకు వస్తాడు? ఏ మహా శక్తివంతమైన తోడుతో?",
    "text": {
-    "te": "కయా నశ్చిత్ర ఆ భువదూతీ సదావృధః సఖా । కయా శచిష్ఠయా వృతా ॥",
+    "te": "కయా నశ్చిత్ర ఆభువదూతీ సదావృధః సఖా । కయా శచిష్ఠయా వృతా ॥",
     "en": "Kaya Nash Chitra A Bhuvad Uti Sadavridhah Sakha, Kaya Shachishthaya Vrita",
-    "sa": "कया नश्चित्र आ भुवदूती सदावृधः सखा । कया शचिष्ठया वृता ॥",
-    "iast": "kayā naścitra ā bhuvadūtī sadāvṛdhaḥ sakhā | kayā śaciṣṭhayā vṛtā ||"
+    "sa": "कया नश्चित्र आभुवदूती सदावृधः सखा । कया शचिष्ठया वृता ॥",
+    "iast": "kayā naścitra ābhuvadūtī sadāvṛdhaḥ sakhā | kayā śaciṣṭhayā vṛtā ||"
    }
   },
   {
@@ -2321,7 +2548,13 @@
      "timing"
     ]
    },
-   "checked_against": "Word-for-word against sanskritdocuments navanew.html: orthography only.",
+   "provenance": {
+    "kind": "print",
+    "edition": "bsr-1912",
+    "scan_page_url": "https://archive.org/details/Brihat_Stotra_Ratnakara_1912/page/n360/mode/1up",
+    "page": "357",
+    "note": "v.8"
+   },
    "meaning_hi": "आधे शरीर वाले, महान पराक्रमी, चन्द्र और सूर्य को ग्रसने वाले, सिंहिका के गर्भ से उत्पन्न राहु को मैं प्रणाम करता हूँ।",
    "meaning_te": "సగం శరీరం కలవాడు, మహా పరాక్రమవంతుడు, చంద్ర సూర్యులను గ్రసించేవాడు, సింహిక గర్భం నుండి పుట్టిన రాహువుకు నమస్కరిస్తున్నాను.",
    "text": {
@@ -2384,7 +2617,10 @@
      "spiritual"
     ]
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, केतु को नमस्कार।",
    "meaning_te": "ఓం, కేతువుకు నమస్కారం.",
    "text": {
@@ -2448,7 +2684,10 @@
      "spiritual"
     ]
    },
-   "checked_against": "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, केतु के बीज अक्षर, केतु को नमस्कार। बीज अक्षरों का कोई शब्दकोशीय अर्थ नहीं होता।",
    "meaning_te": "ఓం, కేతువు బీజాక్షరాలు, కేతువుకు నమస్కారం. బీజాక్షరాలకు నిఘంటు అర్థం ఉండదు.",
    "text": {
@@ -2512,7 +2751,13 @@
      "spiritual"
     ]
    },
-   "checked_against": "Against the Navagraha Sukta at sanskritdocuments: matches.",
+   "provenance": {
+    "kind": "print",
+    "edition": "weber-vs-1852",
+    "scan_page_url": "https://archive.org/details/in.ernet.dli.2015.486971/page/n927/mode/1up",
+    "page": "821",
+    "note": "VS 29.37"
+   },
    "meaning_hi": "जहाँ प्रकाश नहीं था वहाँ प्रकाश करते हुए, जहाँ रूप नहीं था वहाँ रूप देते हुए, हे मनुष्यो, तुम उषाओं के साथ उत्पन्न हुए।",
    "meaning_te": "వెలుగు లేని చోట వెలుగు నింపుతూ, రూపం లేని చోట రూపం ఇస్తూ, ఓ మానవులారా, మీరు ఉషస్సులతో కలిసి జన్మించారు.",
    "text": {
@@ -2575,7 +2820,13 @@
      "spiritual"
     ]
    },
-   "checked_against": "Word-for-word against sanskritdocuments navanew.html: orthography only.",
+   "provenance": {
+    "kind": "print",
+    "edition": "bsr-1912",
+    "scan_page_url": "https://archive.org/details/Brihat_Stotra_Ratnakara_1912/page/n360/mode/1up",
+    "page": "357",
+    "note": "v.9"
+   },
    "meaning_hi": "पलाश के फूल जैसे लाल, तारों और ग्रहों में प्रमुख, रौद्र और भयंकर स्वरूप वाले केतु को मैं प्रणाम करता हूँ।",
    "meaning_te": "మోదుగ పువ్వు వలె ఎర్రనివాడు, నక్షత్రాలు గ్రహాలలో ప్రధానుడు, రౌద్ర స్వరూపుడైన కేతువుకు నమస్కరిస్తున్నాను.",
    "text": {
@@ -2592,9 +2843,9 @@
    "tier": "simple",
    "planet": null,
    "deity": "Shiva (Rudra)",
-   "devanagari": "ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम् । उर्वारुकमिव बन्धनान्मृत्योर्मुक्षीय माऽमृतात् ॥",
-   "iast": "oṃ tryambakaṃ yajāmahe sugandhiṃ puṣṭivardhanam | urvārukamiva bandhanānmṛtyormukṣīya mā'mṛtāt ||",
-   "telugu": "ఓం త్ర్యంబకం యజామహే సుగంధిం పుష్టివర్ధనమ్ । ఉర్వారుకమివ బంధనాన్మృత్యోర్ముక్షీయ మాఽమృతాత్ ॥",
+   "devanagari": "ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम् । उर्वारुकमिव बन्धनान्मृत्योर्मुक्षीय मामृतात् ॥",
+   "iast": "oṃ tryambakaṃ yajāmahe sugandhiṃ puṣṭivardhanam | urvārukamiva bandhanānmṛtyormukṣīya māmṛtāt ||",
+   "telugu": "ఓం త్ర్యంబకం యజామహే సుగంధిం పుష్టివర్ధనమ్ । ఉర్వారుకమివ బంధనాన్మృత్యోర్ముక్షీయ మామృతాత్ ॥",
    "simple_transliteration": "Om Tryambakam Yajamahe Sugandhim Pushtivardhanam, Urvarukamiva Bandhanan Mrityor Mukshiya Mamritat",
    "meaning_en": "We worship the three-eyed one, fragrant, who increases nourishment. As the ripe cucumber is freed from its stalk, may I be freed from the bonds of mortality, not from immortality.",
    "source_type": "shruti",
@@ -2606,7 +2857,7 @@
    "practical_count": 108,
    "count_note": "1.25 lakh is the customary anushthana count in priestly practice; BPHS ch.90 names 1,008 for that rite. Not a BPHS figure for daily japa.",
    "preferred_day": null,
-   "disagreements": "'Om' prefix is a later liturgical addition (not in the Rigveda). Some manuals add samputa bijas (hraum joom sah); the plain Vedic form is kept here.",
+   "disagreements": "'Om' prefix is a later liturgical addition (not in the Rigveda). Weber's 1852 Vajasaneyi reads 'māmṛtāt' with no avagraha (followed here); many modern books write 'mā'mṛtāt'. Some manuals add samputa bijas (hraum joom sah); the plain Vedic form is kept here.",
    "app_sensitivity": "The text mentions mrtyu (death). App copy must present it as a prayer to Shiva for steadiness and well-being, never as protection from death or illness (CLAUDE.md non-negotiables). BPHS's own framing ('prolongation of longevity') must not be surfaced.",
    "text_in_corpus": true,
    "audio": {
@@ -2657,14 +2908,20 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Veda references checked at en.wikipedia.org/wiki/Mahamrityunjaya_Mantra.",
+   "provenance": {
+    "kind": "print",
+    "edition": "weber-vs-1852",
+    "scan_page_url": "https://archive.org/details/in.ernet.dli.2015.486971/page/n187/mode/1up",
+    "page": "91",
+    "note": "VS 3.60a"
+   },
    "meaning_hi": "हम तीन नेत्रों वाले, सुगंधित, पोषण बढ़ाने वाले शिव की उपासना करते हैं। जैसे पका हुआ ककड़ी अपनी बेल से छूट जाता है, वैसे ही मैं नश्वरता के बंधन से मुक्त हो जाऊँ, अमरता से नहीं।",
    "meaning_te": "మూడు కన్నులు కలవాడు, సుగంధభరితుడు, పోషణను పెంచే శివుని ఆరాధిస్తున్నాము. పండిన దోసకాయ తీగ నుండి విడిపోయినట్లు, నేను నశ్వరత్వ బంధం నుండి విముక్తుడనగుదునుగాక, అమృతత్వం నుండి కాదు.",
    "text": {
-    "te": "ఓం త్ర్యంబకం యజామహే సుగంధిం పుష్టివర్ధనమ్ । ఉర్వారుకమివ బంధనాన్మృత్యోర్ముక్షీయ మాఽమృతాత్ ॥",
+    "te": "ఓం త్ర్యంబకం యజామహే సుగంధిం పుష్టివర్ధనమ్ । ఉర్వారుకమివ బంధనాన్మృత్యోర్ముక్షీయ మామృతాత్ ॥",
     "en": "Om Tryambakam Yajamahe Sugandhim Pushtivardhanam, Urvarukamiva Bandhanan Mrityor Mukshiya Mamritat",
-    "sa": "ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम् । उर्वारुकमिव बन्धनान्मृत्योर्मुक्षीय माऽमृतात् ॥",
-    "iast": "oṃ tryambakaṃ yajāmahe sugandhiṃ puṣṭivardhanam | urvārukamiva bandhanānmṛtyormukṣīya mā'mṛtāt ||"
+    "sa": "ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम् । उर्वारुकमिव बन्धनान्मृत्योर्मुक्षीय मामृतात् ॥",
+    "iast": "oṃ tryambakaṃ yajāmahe sugandhiṃ puṣṭivardhanam | urvārukamiva bandhanānmṛtyormukṣīya māmṛtāt ||"
    }
   },
   {
@@ -2730,7 +2987,10 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, कल्याणकारी शिव को नमस्कार।",
    "meaning_te": "ఓం, మంగళకరుడైన శివునికి నమస్కారం.",
    "text": {
@@ -2786,7 +3046,10 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "reference_only",
+    "note": "Named as a practice; the corpus ships no text for it."
+   },
    "meaning_hi": "रुद्र (शिव) की महान यजुर्वेदीय स्तुति; बृहत् पाराशर होरा शास्त्र में इसे ‘रुद्र जप’ कहा गया है।",
    "meaning_te": "రుద్రుని (శివుని) గొప్ప యజుర్వేద స్తుతి; బృహత్ పరాశర హోరా శాస్త్రంలో దీనిని ‘రుద్ర జపం’ అంటారు.",
    "text": null
@@ -2841,7 +3104,10 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "reference_only",
+    "note": "Named as a practice; the corpus ships no text for it."
+   },
    "meaning_hi": "शिव के एक हज़ार नाम।",
    "meaning_te": "శివుని వేయి నామాలు.",
    "text": null
@@ -2901,7 +3167,10 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Bhagavata Purana 4.8.54 checked at vedabase.io.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, भगवान वासुदेव को नमस्कार।",
    "meaning_te": "ఓం, భగవంతుడైన వాసుదేవునికి నమస్కారం.",
    "text": {
@@ -2969,25 +3238,28 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "reference_only",
+    "note": "Named as a practice; the corpus ships no text for it."
+   },
    "meaning_hi": "विष्णु के एक हज़ार नाम, जो भीष्म ने युधिष्ठिर को सिखाए।",
    "meaning_te": "భీష్ముడు ధర్మరాజుకు ఉపదేశించిన విష్ణువు యొక్క వేయి నామాలు.",
    "text": null
   },
   {
    "id": "rama-nama-sahasranama-tulya",
-   "name": "Sri Rama Rama Rameti",
+   "name": "Rama Rameti Rameti",
    "category": "deity_or_text",
    "tier": "simple",
    "planet": null,
    "deity": "Rama (Vishnu)",
-   "devanagari": "श्रीराम राम रामेति रमे रामे मनोरमे । सहस्रनाम तत्तुल्यं रामनाम वरानने ॥",
-   "iast": "śrīrāma rāma rāmeti rame rāme manorame | sahasranāma tattulyaṃ rāmanāma varānane ||",
-   "telugu": "శ్రీరామ రామ రామేతి రమే రామే మనోరమే । సహస్రనామ తత్తుల్యం రామనామ వరాననే ॥",
-   "simple_transliteration": "Shri Rama Rama Rameti Rame Rame Manorame, Sahasranama Tattulyam Ramanama Varanane",
+   "devanagari": "राम रामेति रामेति रमे रामे मनोरमे । सहस्रनाम तत्तुल्यं रामनाम वरानने ॥",
+   "iast": "rāma rāmeti rāmeti rame rāme manorame | sahasranāma tattulyaṃ rāmanāma varānane ||",
+   "telugu": "రామ రామేతి రామేతి రమే రామే మనోరమే । సహస్రనామ తత్తుల్యం రామనామ వరాననే ॥",
+   "simple_transliteration": "Rama Rameti Rameti Rame Rame Manorame, Sahasranama Tattulyam Ramanama Varanane",
    "meaning_en": "Shiva to Parvati: repeating 'Rama, Rama, Rama' delights the mind; the name of Rama is equal to the thousand names.",
    "source_type": "purana",
-   "source_citation": "Padma Purana, Uttara Khanda (Shiva to Parvati); recited as the closing verse of the Vishnu Sahasranama.",
+   "source_citation": "Padma Purana, Uttara Khanda (Shiva to Parvati); recited as the closing verse of the Vishnu Sahasranama, and closes the Rama Raksha Stotra.",
    "kb_citation": null,
    "online_refs": [],
    "confidence": "tradition_attributed",
@@ -2995,7 +3267,7 @@
    "practical_count": 3,
    "count_note": "Traditionally said three times as a short substitute for the full Sahasranama.",
    "preferred_day": null,
-   "disagreements": "Exact chapter varies by Padma Purana recension. Offering it 'in place of' the Sahasranama is a devotional convention; state it as such.",
+   "disagreements": "Widely recited as 'Sri Rama Rama Rameti'; the 1912 Brihat Stotra Ratnakara (Rama Raksha Stotra v.38) reads 'Rama Rameti Rameti', followed here. Exact chapter varies by Padma Purana recension. Offering it 'in place of' the Sahasranama is a devotional convention; state it as such.",
    "app_sensitivity": null,
    "text_in_corpus": true,
    "audio": {
@@ -3029,14 +3301,20 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "print",
+    "edition": "bsr-1912",
+    "scan_page_url": "https://archive.org/details/Brihat_Stotra_Ratnakara_1912/page/n257/mode/1up",
+    "page": "250",
+    "note": "Rama Raksha Stotra v.38; the print opens राम रामेति, not श्रीराम राम रामेति"
+   },
    "meaning_hi": "शिव पार्वती से कहते हैं: ‘राम, राम, राम’ जपना मन को आनंद देता है; राम का नाम सहस्र नामों के बराबर है।",
    "meaning_te": "శివుడు పార్వతితో అంటాడు: ‘రామ, రామ, రామ’ అని జపించడం మనసుకు ఆనందం ఇస్తుంది; రామ నామం వేయి నామాలతో సమానం.",
    "text": {
-    "te": "శ్రీరామ రామ రామేతి రమే రామే మనోరమే । సహస్రనామ తత్తుల్యం రామనామ వరాననే ॥",
-    "en": "Shri Rama Rama Rameti Rame Rame Manorame, Sahasranama Tattulyam Ramanama Varanane",
-    "sa": "श्रीराम राम रामेति रमे रामे मनोरमे । सहस्रनाम तत्तुल्यं रामनाम वरानने ॥",
-    "iast": "śrīrāma rāma rāmeti rame rāme manorame | sahasranāma tattulyaṃ rāmanāma varānane ||"
+    "te": "రామ రామేతి రామేతి రమే రామే మనోరమే । సహస్రనామ తత్తుల్యం రామనామ వరాననే ॥",
+    "en": "Rama Rameti Rameti Rame Rame Manorame, Sahasranama Tattulyam Ramanama Varanane",
+    "sa": "राम रामेति रामेति रमे रामे मनोरमे । सहस्रनाम तत्तुल्यं रामनाम वरानने ॥",
+    "iast": "rāma rāmeti rāmeti rame rāme manorame | sahasranāma tattulyaṃ rāmanāma varānane ||"
    }
   },
   {
@@ -3092,7 +3370,10 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "reference_only",
+    "note": "Named as a practice; the corpus ships no text for it."
+   },
    "meaning_hi": "देवी की विजयों पर 700 श्लोक; बृहत् पाराशर होरा शास्त्र में ‘दुर्गा पाठ’, ‘चण्डी पाठ’ और ‘शत चण्डी’।",
    "meaning_te": "దేవి విజయాలపై 700 శ్లోకాలు; బృహత్ పరాశర హోరా శాస్త్రంలో ‘దుర్గా పాఠం’, ‘చండీ పాఠం’, ‘శత చండీ’.",
    "text": null
@@ -3151,7 +3432,10 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "सरस्वती, लक्ष्मी और काली के बीज अक्षर, चामुण्डा के नमस्कार के साथ; परंपरा में इसे ज्ञान, समृद्धि और निर्भयता की प्रार्थना माना जाता है।",
    "meaning_te": "సరస్వతి, లక్ష్మి, కాళి బీజాక్షరాలు, చాముండికి నమస్కారంతో కలిసి; సంప్రదాయంలో దీనిని జ్ఞానం, సమృద్ధి, నిర్భయత్వం కోసం ప్రార్థనగా భావిస్తారు.",
    "text": {
@@ -3168,9 +3452,9 @@
    "tier": "simple",
    "planet": null,
    "deity": "Durga (Narayani)",
-   "devanagari": "सर्वमङ्गलमाङ्गल्ये शिवे सर्वार्थसाधिके । शरण्ये त्र्यम्बके गौरि नारायणि नमोऽस्तु ते ॥",
-   "iast": "sarvamaṅgalamāṅgalye śive sarvārthasādhike | śaraṇye tryambake gauri nārāyaṇi namo'stu te ||",
-   "telugu": "సర్వమంగలమాంగల్యే శివే సర్వార్థసాధికే । శరణ్యే త్ర్యంబకే గౌరి నారాయణి నమోఽస్తు తే ॥",
+   "devanagari": "सर्वमङ्गलमङ्गल्ये शिवे सर्वार्थसाधिके । शरण्ये त्र्यम्बके गौरि नारायणि नमोऽस्तु ते ॥",
+   "iast": "sarvamaṅgalamaṅgalye śive sarvārthasādhike | śaraṇye tryambake gauri nārāyaṇi namo'stu te ||",
+   "telugu": "సర్వమంగలమంగల్యే శివే సర్వార్థసాధికే । శరణ్యే త్ర్యంబకే గౌరి నారాయణి నమోఽస్తు తే ॥",
    "simple_transliteration": "Sarva Mangala Mangalye Shive Sarvartha Sadhike, Sharanye Tryambake Gauri Narayani Namostute",
    "meaning_en": "Auspiciousness of all that is auspicious, O kind one who fulfils every aim, refuge of all, three-eyed Gauri, Narayani, salutations to you.",
    "source_type": "purana",
@@ -3182,7 +3466,7 @@
    "practical_count": 11,
    "count_note": "No classical count; 11 or 108 are customary.",
    "preferred_day": null,
-   "disagreements": "Verse number is 11.10 in most editions; Markandeya Purana chapter numbering varies.",
+   "disagreements": "Jivananda's 1879 print reads 'sarvamaṅgalamaṅgalye' (followed here); many modern editions read '-māṅgalye'. Verse number is 11.10 in most editions; Markandeya Purana chapter numbering varies.",
    "app_sensitivity": null,
    "text_in_corpus": true,
    "audio": {
@@ -3234,14 +3518,20 @@
      "dosha-grahan"
     ]
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "print",
+    "edition": "jivananda-markandeya-1879",
+    "scan_page_url": "https://archive.org/details/in.ernet.dli.2015.553733/page/n449/mode/1up",
+    "page": "443",
+    "note": "Devi Mahatmya 11.10 (Markandeya 91.9); both scans read मङ्गल्ये, not माङ्गल्ये"
+   },
    "meaning_hi": "सब मंगलों में मंगल स्वरूप, कल्याणकारी, सब कामनाएँ पूर्ण करने वाली, सबकी शरण, तीन नेत्रों वाली गौरी नारायणी, तुम्हें नमस्कार है।",
    "meaning_te": "అన్ని మంగళాలలో మంగళ స్వరూపిణి, శుభకరి, అన్ని కోరికలను తీర్చేదానా, అందరికీ శరణు, మూడు కన్నుల గౌరీ, నారాయణీ, నీకు నమస్కారం.",
    "text": {
-    "te": "సర్వమంగలమాంగల్యే శివే సర్వార్థసాధికే । శరణ్యే త్ర్యంబకే గౌరి నారాయణి నమోఽస్తు తే ॥",
+    "te": "సర్వమంగలమంగల్యే శివే సర్వార్థసాధికే । శరణ్యే త్ర్యంబకే గౌరి నారాయణి నమోఽస్తు తే ॥",
     "en": "Sarva Mangala Mangalye Shive Sarvartha Sadhike, Sharanye Tryambake Gauri Narayani Namostute",
-    "sa": "सर्वमङ्गलमाङ्गल्ये शिवे सर्वार्थसाधिके । शरण्ये त्र्यम्बके गौरि नारायणि नमोऽस्तु ते ॥",
-    "iast": "sarvamaṅgalamāṅgalye śive sarvārthasādhike | śaraṇye tryambake gauri nārāyaṇi namo'stu te ||"
+    "sa": "सर्वमङ्गलमङ्गल्ये शिवे सर्वार्थसाधिके । शरण्ये त्र्यम्बके गौरि नारायणि नमोऽस्तु ते ॥",
+    "iast": "sarvamaṅgalamaṅgalye śive sarvārthasādhike | śaraṇye tryambake gauri nārāyaṇi namo'stu te ||"
    }
   },
   {
@@ -3287,7 +3577,10 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, (बीज अक्षर ‘दुं’) दुर्गा को नमस्कार।",
    "meaning_te": "ఓం, (బీజాక్షరం ‘దుం’) దుర్గాదేవికి నమస్కారం.",
    "text": {
@@ -3352,7 +3645,10 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, (बीज अक्षर ‘श्रीं’) महालक्ष्मी को नमस्कार।",
    "meaning_te": "ఓం, (బీజాక్షరం ‘శ్రీం’) మహాలక్ష్మికి నమస్కారం.",
    "text": {
@@ -3413,7 +3709,10 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "no_print_located",
+    "note": "The Sri Sukta is a Rigveda khila; no pre-1931 print of it was found in this pass (Scheftelowitz 1906 is the candidate)."
+   },
    "meaning_hi": "हे जातवेद (अग्नि), स्वर्ण वर्ण वाली, हिरणी जैसी सुंदर, सोने और चाँदी की मालाएँ पहने, चन्द्रमा जैसी उज्ज्वल, स्वर्णमयी लक्ष्मी को मेरे पास लाओ।",
    "meaning_te": "ఓ జాతవేదా (అగ్నీ), బంగారు వన్నె కలది, లేడి వలె అందమైనది, బంగారు వెండి హారాలు ధరించినది, చంద్రుని వలె ప్రకాశించే, సువర్ణమయి అయిన లక్ష్మిని నా వద్దకు తీసుకురా.",
    "text": {
@@ -3480,7 +3779,10 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "reference_only",
+    "note": "Named as a practice; the corpus ships no text for it."
+   },
    "meaning_hi": "अंतिम युद्ध से पहले अगस्त्य ऋषि द्वारा राम को सिखाया गया सूर्य का स्तोत्र।",
    "meaning_te": "చివరి యుద్ధానికి ముందు అగస్త్య మహర్షి శ్రీరామునికి ఉపదేశించిన సూర్య స్తోత్రం.",
    "text": null
@@ -3533,7 +3835,13 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "print",
+    "edition": "weber-vs-1852",
+    "scan_page_url": "https://archive.org/details/in.ernet.dli.2015.486971/page/n175/mode/1up",
+    "page": "71",
+    "note": "VS 3.35; the vyahritis भूर्भुवः स्वः head VS 36.3 (leaf 1037, p.931) and VS 3.37 on this page"
+   },
    "meaning_hi": "हम सविता देव के उस वरणीय तेज का ध्यान करते हैं; वह हमारी बुद्धि को प्रेरित करे।",
    "meaning_te": "సవితృ దేవుని ఆ శ్రేష్ఠమైన తేజస్సును ధ్యానిస్తున్నాము; అది మా బుద్ధిని ప్రేరేపించుగాక.",
    "text": {
@@ -3590,7 +3898,10 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "सूर्य को बारह नमस्कार: मित्र, प्रकाशमान, प्रेरक, प्रकाश देने वाले, आकाश में चलने वाले, पोषक, हिरण्यगर्भ, किरणों वाले, अदिति के पुत्र, जीवन देने वाले, पूज्य और प्रकाश करने वाले।",
    "meaning_te": "సూర్యునికి పన్నెండు నమస్కారాలు: మిత్రుడు, ప్రకాశించేవాడు, ప్రేరేపించేవాడు, వెలుగు ఇచ్చేవాడు, ఆకాశంలో సంచరించేవాడు, పోషించేవాడు, హిరణ్యగర్భుడు, కిరణాలు కలవాడు, అదితి కుమారుడు, ప్రాణం ఇచ్చేవాడు, పూజ్యుడు, వెలుగునిచ్చేవాడు.",
    "text": {
@@ -3653,7 +3964,10 @@
      "dosha-gandanta"
     ]
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, (बीज अक्षर ‘गं’) गणों के स्वामी गणपति को नमस्कार।",
    "meaning_te": "ఓం, (బీజాక్షరం ‘గం’) గణాలకు అధిపతి అయిన గణపతికి నమస్కారం.",
    "text": {
@@ -3708,7 +4022,10 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "no_print_located",
+    "note": "A popular invocation; no pre-1931 print was found in this pass."
+   },
    "meaning_hi": "हे टेढ़ी सूँड वाले, विशाल शरीर वाले, करोड़ों सूर्यों जैसे तेजस्वी देव, मेरे सब कार्यों को सदा विघ्नरहित करो।",
    "meaning_te": "ఓ వంకర తొండం కలవాడా, పెద్ద శరీరం కలవాడా, కోటి సూర్యుల తేజస్సు కలిగిన దేవా, నా పనులన్నింటినీ ఎల్లప్పుడూ విఘ్నాలు లేకుండా చేయి.",
    "text": {
@@ -3775,7 +4092,13 @@
      "dosha-manglik"
     ]
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "print",
+    "edition": "bsr-1912",
+    "scan_page_url": "https://archive.org/details/Brihat_Stotra_Ratnakara_1912/page/n257/mode/1up",
+    "page": "250",
+    "note": "Rama Raksha Stotra v.33"
+   },
    "meaning_hi": "मन के समान तेज़, वायु के समान वेगवान, इंद्रियों को जीतने वाले, बुद्धिमानों में श्रेष्ठ, वायु पुत्र, वानर सेना के प्रमुख, श्रीराम के दूत की मैं शरण लेता हूँ।",
    "meaning_te": "మనసు వలె వేగం కలవాడు, వాయువుతో సమానమైన వేగం కలవాడు, ఇంద్రియాలను జయించినవాడు, బుద్ధిమంతులలో శ్రేష్ఠుడు, వాయుపుత్రుడు, వానర సేనకు నాయకుడు అయిన శ్రీరామ దూతను శరణు వేడుతున్నాను.",
    "text": {
@@ -3831,7 +4154,10 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, (बीज अक्षर ‘हं’) हनुमान को नमस्कार।",
    "meaning_te": "ఓం, (బీజాక్షరం ‘హం’) హనుమంతునికి నమస్కారం.",
    "text": {
@@ -3890,7 +4216,10 @@
     ],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "reference_only",
+    "note": "Named as a practice; the corpus ships no text for it."
+   },
    "meaning_hi": "हनुमान जी की स्तुति में अवधी भाषा के चालीस छंद।",
    "meaning_te": "హనుమంతుని స్తుతిస్తూ అవధీ భాషలోని నలభై పద్యాలు.",
    "text": null
@@ -3941,7 +4270,13 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "print",
+    "edition": "weber-vs-1852",
+    "scan_page_url": "https://archive.org/details/in.ernet.dli.2015.486971/page/n500/mode/1up",
+    "page": "404",
+    "note": "VS 13.6"
+   },
    "meaning_hi": "पृथ्वी पर, अंतरिक्ष में और आकाश में जो भी सर्प हैं, उन सब सर्पों को नमस्कार।",
    "meaning_te": "భూమిపై, అంతరిక్షంలో, ఆకాశంలో ఉన్న సర్పాలన్నింటికీ నమస్కారం.",
    "text": {
@@ -3994,7 +4329,10 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "no_print_located",
+    "note": "A popular verse said before study; no pre-1931 print was found in this pass."
+   },
    "meaning_hi": "हे वर देने वाली, इच्छानुसार रूप धारण करने वाली सरस्वती, तुम्हें नमस्कार। मैं विद्या आरंभ कर रहा हूँ; मुझे सदा सफलता मिले।",
    "meaning_te": "ఓ వరాలు ఇచ్చే, కోరిన రూపం ధరించే సరస్వతీ, నీకు నమస్కారం. నేను విద్యను ప్రారంభిస్తున్నాను; నాకు ఎల్లప్పుడూ సిద్ధి కలుగుగాక.",
    "text": {
@@ -4048,7 +4386,10 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, (बीज अक्षर ‘ऐं’) सरस्वती को नमस्कार।",
    "meaning_te": "ఓం, (బీజాక్షరం ‘ఐం’) సరస్వతీ దేవికి నమస్కారం.",
    "text": {
@@ -4065,10 +4406,10 @@
    "tier": "simple",
    "planet": null,
    "deity": "Guru",
-   "devanagari": "गुरुर्ब्रह्मा गुरुर्विष्णुर्गुरुर्देवो महेश्वरः । गुरुः साक्षात्परं ब्रह्म तस्मै श्रीगुरवे नमः ॥",
-   "iast": "gururbrahmā gururviṣṇurgururdevo maheśvaraḥ | guruḥ sākṣātparaṃ brahma tasmai śrīgurave namaḥ ||",
-   "telugu": "గురుర్బ్రహ్మా గురుర్విష్ణుర్గురుర్దేవో మహేశ్వరః । గురుః సాక్షాత్పరం బ్రహ్మ తస్మై శ్రీగురవే నమః ॥",
-   "simple_transliteration": "Gurur Brahma Gurur Vishnur Gurur Devo Maheshvarah, Guruh Sakshat Param Brahma Tasmai Shri Gurave Namah",
+   "devanagari": "गुरुर्ब्रह्मा गुरुर्विष्णुर्गुरुर्देवो महेश्वरः । गुरुरेव परं ब्रह्म तस्मै श्रीगुरवे नमः ॥",
+   "iast": "gururbrahmā gururviṣṇurgururdevo maheśvaraḥ | gurureva paraṃ brahma tasmai śrīgurave namaḥ ||",
+   "telugu": "గురుర్బ్రహ్మా గురుర్విష్ణుర్గురుర్దేవో మహేశ్వరః । గురురేవ పరం బ్రహ్మ తస్మై శ్రీగురవే నమః ॥",
+   "simple_transliteration": "Gurur Brahma Gurur Vishnur Gurur Devo Maheshvarah, Gurureva Param Brahma Tasmai Shri Gurave Namah",
    "meaning_en": "The teacher is Brahma, Vishnu and Shiva; the teacher is the supreme itself. Salutation to that teacher.",
    "source_type": "purana",
    "source_citation": "Guru Gita (attributed to the Skanda Purana). Used for Guru Purnima; for Jupiter it is a devotional pairing, not a BPHS prescription.",
@@ -4079,7 +4420,7 @@
    "practical_count": 3,
    "count_note": "No classical count.",
    "preferred_day": null,
-   "disagreements": "Second line also circulates as 'gurureva param brahma'.",
+   "disagreements": "The 1886 Calcutta Guru Gita reads 'gurureva param brahma'; the second line also circulates as 'guruh sakshat param brahma'.",
    "app_sensitivity": null,
    "text_in_corpus": true,
    "audio": {
@@ -4104,14 +4445,20 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "print",
+    "edition": "guru-gita-1886",
+    "scan_page_url": "https://archive.org/details/GuruGitaStotraCalcutta1886SamvadGyanRatnakarPress/page/n8/mode/1up",
+    "page": "5",
+    "note": "the print reads गुरुरेव परं ब्रह्म, not गुरुः साक्षात्परं ब्रह्म; no second pre-1931 print was found; its dandas run a half-line out of step and are regularised"
+   },
    "meaning_hi": "गुरु ही ब्रह्मा, विष्णु और महेश्वर हैं; गुरु ही साक्षात् परब्रह्म हैं। उन श्री गुरु को नमस्कार।",
    "meaning_te": "గురువే బ్రహ్మ, విష్ణువు, మహేశ్వరుడు; గురువే సాక్షాత్ పరబ్రహ్మ. ఆ శ్రీ గురువుకు నమస్కారం.",
    "text": {
-    "te": "గురుర్బ్రహ్మా గురుర్విష్ణుర్గురుర్దేవో మహేశ్వరః । గురుః సాక్షాత్పరం బ్రహ్మ తస్మై శ్రీగురవే నమః ॥",
-    "en": "Gurur Brahma Gurur Vishnur Gurur Devo Maheshvarah, Guruh Sakshat Param Brahma Tasmai Shri Gurave Namah",
-    "sa": "गुरुर्ब्रह्मा गुरुर्विष्णुर्गुरुर्देवो महेश्वरः । गुरुः साक्षात्परं ब्रह्म तस्मै श्रीगुरवे नमः ॥",
-    "iast": "gururbrahmā gururviṣṇurgururdevo maheśvaraḥ | guruḥ sākṣātparaṃ brahma tasmai śrīgurave namaḥ ||"
+    "te": "గురుర్బ్రహ్మా గురుర్విష్ణుర్గురుర్దేవో మహేశ్వరః । గురురేవ పరం బ్రహ్మ తస్మై శ్రీగురవే నమః ॥",
+    "en": "Gurur Brahma Gurur Vishnur Gurur Devo Maheshvarah, Gurureva Param Brahma Tasmai Shri Gurave Namah",
+    "sa": "गुरुर्ब्रह्मा गुरुर्विष्णुर्गुरुर्देवो महेश्वरः । गुरुरेव परं ब्रह्म तस्मै श्रीगुरवे नमः ॥",
+    "iast": "gururbrahmā gururviṣṇurgururdevo maheśvaraḥ | gurureva paraṃ brahma tasmai śrīgurave namaḥ ||"
    }
   },
   {
@@ -4156,7 +4503,10 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "श्रीराम की जय, राम की जय, जय जय राम।",
    "meaning_te": "శ్రీరామునికి జయం, రామునికి జయం, జయం జయం రామా.",
    "text": {
@@ -4214,7 +4564,10 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "formula",
+    "note": "A short devotional formula (a name with a salutation or seed syllables), not a verse; no edition text to key it from."
+   },
    "meaning_hi": "ॐ, शरवण (सरकंडों के वन) में जन्मे स्कन्द (कार्तिकेय) को नमस्कार।",
    "meaning_te": "ఓం, శరవణంలో (రెల్లు వనంలో) జన్మించిన స్కందునికి (సుబ్రహ్మణ్యస్వామికి) నమస్కారం.",
    "text": {
@@ -4263,7 +4616,10 @@
     "gochara_rules": [],
     "recommendation_ids": []
    },
-   "checked_against": "Not checked against an online edition in this pass; text from the standard recension.",
+   "provenance": {
+    "kind": "no_print_located",
+    "note": "BPHS names the mantra without its text; no pre-1931 print of this verse was found in this pass."
+   },
    "meaning_hi": "हे देवकी पुत्र, गोविन्द, वासुदेव, जगत के स्वामी, हे कृष्ण, मुझे संतान दो; मैं तुम्हारी शरण में हूँ।",
    "meaning_te": "ఓ దేవకీ నందనా, గోవిందా, వాసుదేవా, జగత్పతీ, ఓ కృష్ణా, నాకు సంతానాన్ని ప్రసాదించు; నిన్ను శరణు వేడుతున్నాను.",
    "text": {

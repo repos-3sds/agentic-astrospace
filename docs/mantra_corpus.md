@@ -47,10 +47,47 @@ The old `GET /api/v1/remedies/{kundli_id}` catalogue is unchanged.
 - BPHS 84.19 gives Mars 10,000 japa (*diśaḥ* = 10); Santhanam's printed table says 11,000.
 - Telugu temples recite the Taittiriya Navagraha Sukta, which differs from BPHS
   for the Sun, Moon, Mercury and Venus. Both are in the corpus (`*-vedic-taittiriya`).
-- The nine nama mantras and 20 short deity texts were not compared with an online
-  edition; a Sanskrit reader should proofread before wide release.
+
+## Where each text was read (D12)
+
+Every verse the corpus ships is keyed from a print published before 1931 and
+links the scanned page it was read from. The transcriptions are in
+`scripts/mantra_corpus/rekey/transcriptions.tsv` in the print's own spelling;
+`rekey/editions.json` lists the editions and is copied into `meta.editions`;
+each mantra carries a `provenance` object.
+
+| `provenance.kind` | Count | What it means |
+| --- | --- | --- |
+| `print` | 29 | Keyed from the page at `scan_page_url` (all Navagraha Stotra and Vedic verses, Mahamrityunjaya, Gayatri, Sarpa sukta, Manojavam, Rama nama, Guru vandana, Sarvamangala). |
+| `formula` | 29 | Nama, bija and other short name-plus-salutation formulas. There is no edition text to key. |
+| `reference_only` | 6 | Long recitations named as practices; no text shipped. |
+| `no_print_located` | 4 | Sri Sukta v.1, Vakratunda, Saraswati vidyarambha, Santana Gopala. No pre-1931 print found yet; the text is unchanged. |
+
+| Edition | Used for |
+| --- | --- |
+| Brihat Stotra Ratnakara, 7th ed., Nirnaya Sagar, Bombay 1912 | Navagraha Stotra (p.357), Rama Raksha vv.33, 38 (p.250) |
+| Weber, Vajasaneyi Samhita, London/Berlin 1852 | the nine BPHS Vedic verses, Mahamrityunjaya, Sarpa sukta, Gayatri |
+| Max Müller, Hymns of the Rig-Veda, London 1873 | RV 1.91.16 and 7.4.1 (Moon and Venus, Taittiriya forms) |
+| Weber, Die Taittirîya-Saṃhitâ, Leipzig 1871 (roman script) | TS 3.4.11 and 4.7.13 (Sun and Mercury, Taittiriya forms) |
+| Guru Gita, Samvad Gyan Ratnakar Press, Calcutta 1886 | Guru vandana |
+| Jivananda, Markandeya Purana, Calcutta 1879 | Sarvamangala (Devi Mahatmya 11.10) |
+
+The print's reading wins where it differs from the popular one; each such case
+is stated in `disagreements`. Rama nama opens "राम रामेति रामेति", Guru vandana
+reads "गुरुरेव परं ब्रह्म", Sarvamangala reads "मङ्गल्ये", and Mahamrityunjaya
+reads "मामृतात्". "ॐ" before Gayatri and Mahamrityunjaya is the reciter's
+prefix and is not in the print.
+
+Spelling is normalised by `rekey/normalise.py`: the Subhashita rules (see
+[subhashita_corpus.md](subhashita_corpus.md)), plus two for Weber's Madhyandina
+print. Its ꣳ before a sibilant is written ं, and its avagraha before an
+independent vowel (येऽअन्तरिक्षे) is written as a space. Vedic accent marks are
+not reproduced.
 
 ## Regenerate
+
+To correct a text, edit its row in `rekey/transcriptions.tsv`, not
+`corpus_data.py`; the transcription overrides it at build time.
 
 ```
 python3 -m pip install indic-transliteration
