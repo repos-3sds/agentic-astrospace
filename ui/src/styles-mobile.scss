@@ -16,8 +16,14 @@
   --m-bg: #faf7f0;
   --m-surface: #fffcf6;
   --m-raised: #ffffff;
+  // "Cream Glass" (Hawk's pick, 2026-10-19): the original cream ground with a
+  // warm morning-sun glow at the top and two faint warm blooms lower down,
+  // so the frosted cards below have light to sit in.
   --m-app-ground:
-    linear-gradient(180deg, #fffaf1 0%, #faf7f0 42%, #f3eee4 100%);
+    radial-gradient(70% 34% at 80% 0%, rgba(255, 196, 120, 0.42), transparent 72%),
+    radial-gradient(55% 34% at 0% 45%, rgba(232, 140, 110, 0.18), transparent 70%),
+    radial-gradient(60% 34% at 100% 85%, rgba(214, 180, 120, 0.2), transparent 70%),
+    linear-gradient(180deg, #fff8ec 0%, #faf4e8 50%, #f3ebdc 100%);
   --m-frost:
     linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 252, 246, 0.78));
   --m-footer-glass: rgba(255, 252, 246, 0.58);
@@ -27,6 +33,14 @@
   --m-glass-panel: rgba(255, 252, 246, 0.82);
   --m-glass-control: rgba(255, 255, 255, 0.62);
   --m-glass-border: rgba(255, 255, 255, 0.72);
+  // The glass card recipe (see the glass block below). Frosted cream rather
+  // than clear: the cards stay readable over the glow without a backdrop blur.
+  --m-glass-card: linear-gradient(160deg, rgba(255, 253, 248, 0.88), rgba(255, 250, 240, 0.55));
+  --m-glass-hairline: rgba(255, 255, 255, 0.92);
+  --m-glass-sheen: #ffffff;
+  --m-glass-sheen-side: rgba(255, 255, 255, 0.6);
+  --m-glass-drop: rgba(110, 70, 30, 0.09);
+  --m-tabbar-glass: linear-gradient(180deg, rgba(255, 253, 248, 0.97), rgba(255, 248, 236, 0.93));
   --m-border: #e6dccd;
   --m-border-strong: #d5c6b4;
 
@@ -166,6 +180,7 @@
   --m-glass-hairline: rgba(255, 255, 255, 0.14);
   --m-glass-sheen: rgba(255, 255, 255, 0.28);
   --m-glass-sheen-side: rgba(255, 255, 255, 0.08);
+  --m-glass-drop: rgba(0, 0, 0, 0.32);
   --m-tabbar-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)), rgba(16, 16, 18, 0.88);
   --m-tab-active: rgba(255, 255, 255, 0.12);
   --m-tab-active-text: #ffffff;
@@ -204,17 +219,18 @@
   --settings-chevron-filter: brightness(1.5) saturate(0.6);
 }
 
-// Liquid Glass, dark only. Screens paint --m-bg on their own :host, which
-// would hide the ground's light; in dark the routed screen is see-through so
-// the shell's ground shows. Inner elements that need to be opaque still are.
-:root.app-dark .as-mobile router-outlet + * {
+// Screens paint --m-bg on their own :host, which would hide the ground's
+// light (Liquid Glass at night, Cream Glass by day), so the routed screen is
+// see-through and the shell's ground shows. Inner elements that need to be
+// opaque still are.
+.as-mobile router-outlet + * {
   background: transparent;
 }
 
 // The cards that read as glass. One list rather than a mixin in each
 // component so the whole look can be tuned, or reverted, in one place.
-// Light mode keeps each component's own solid cards.
-:root.app-dark .as-mobile :is(
+// Both themes share it; the tokens differ.
+.as-mobile :is(
   section.card:not(.skeleton-card),
   .birth-signature,
   button.why,
@@ -237,15 +253,15 @@
   box-shadow:
     inset 0 1px 0 var(--m-glass-sheen),
     inset 1px 0 0 var(--m-glass-sheen-side),
-    0 16px 40px rgba(0, 0, 0, 0.32);
+    0 16px 40px var(--m-glass-drop);
 }
 
 // Tinted glass keeps the meaning a solid fill used to carry.
-:root.app-dark .as-mobile .advice-card.do { --m-glass-tint: linear-gradient(180deg, var(--m-good-soft), transparent 70%); }
-:root.app-dark .as-mobile .advice-card.avoid { --m-glass-tint: linear-gradient(180deg, var(--m-bad-soft), transparent 70%); }
-:root.app-dark .as-mobile a.window { --m-glass-tint: linear-gradient(180deg, var(--m-warn-soft), transparent 80%); }
-:root.app-dark .as-mobile a.featured,
-:root.app-dark .as-mobile .yantra-tile.is-featured { --m-glass-tint: linear-gradient(135deg, var(--m-accent-soft), transparent 80%); }
+.as-mobile .advice-card.do { --m-glass-tint: linear-gradient(180deg, var(--m-good-soft), transparent 70%); }
+.as-mobile .advice-card.avoid { --m-glass-tint: linear-gradient(180deg, var(--m-bad-soft), transparent 70%); }
+.as-mobile a.window { --m-glass-tint: linear-gradient(180deg, var(--m-warn-soft), transparent 80%); }
+.as-mobile a.featured,
+.as-mobile .yantra-tile.is-featured { --m-glass-tint: linear-gradient(135deg, var(--m-accent-soft), transparent 80%); }
 
 .as-mobile img[src$='back.svg'] {
   filter: var(--m-back-icon-filter);
