@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from ..core.vedic import remedies, remedy_plan
 from ..db import crud, get_db
+from ..entitlements import plan_lock
 from .auth import CurrentUser
 from .vedic_routes import _chart_from_kundli
 
@@ -77,4 +78,25 @@ def remedy_plan_for_kundli(
         raise HTTPException(status_code=404, detail="Kundli not found")
 
     chart = _chart_from_kundli(kundli)
-    return remedy_plan.remedy_plan(chart.positions, chart.lagna_lon, chart.dashas())
+    plan = remedy_plan.remedy_plan(chart.positions, chart.lagna_lon, chart.dashas())
+    if plan_lock(db, user.id, "remedies.full") is not None:
+        plan = _free_plan(plan)
+    return plan
+
+
+def _free_plan(plan: dict) -> dict:
+    """Free keeps the first remedy and any dosha's, one practice each.
+
+    Mirrors `shownGroups` in ui/src/app/features/mobile/remedies/remedies.component.ts.
+    A flagged dosha's practice is never behind a plan, so that a remedy never
+    reads as paying to remove a dosha; `locked_practices` counts the rest.
+    """
+    groups = plan.get("groups") or []
+    total = sum(len(group.get("practices") or []) for group in groups)
+    kept = [
+        {**group, "practices": (group.get("practices") or [])[:1]}
+        for index, group in enumerate(groups)
+        if index == 0 or (group.get("trigger") or {}).get("kind") == "dosha"
+    ]
+    shown = sum(len(group["practices"]) for group in kept)
+    return {**plan, "groups": kept, "count": len(kept), "locked_practices": total - shown}

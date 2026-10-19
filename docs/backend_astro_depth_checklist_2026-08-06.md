@@ -775,18 +775,21 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   policy naming PostHog as a processor before launch. Native crashes outside
   the WebView (a plugin's Swift or Kotlin code) are not covered; that needs a
   native crash SDK if they turn up in store reviews.
-- [ ] **Explore plan gates are enforced in the app, not by the API**
-  (2026-10-16). Free/Plus/Practitioner depth (two yogas, dosha detail,
-  compatibility report and one check a month, readings, remedies, Muhurta,
-  vargas, Practitioner mode) is decided by `core/plan-gate.service.ts` from
-  the entitlement snapshot, and only once `ASTROSPACE_QUOTAS_ENFORCED` is on.
-  The compatibility check count lives on the device. *Unblocks on:* store
-  products live (Plus and the new `siddha_practitioner_*` ids in
-  `entitlements/products.py`, prices ₹599/₹3,999 as placeholders until
-  Hawk sets them). *Hook:* `require_entitlement()` on the yogas/doshas,
-  compatibility, readings, remedies, muhurta and varga routes, trimming the
-  payload for Free rather than refusing it, and a `UsageBucket` keyed
-  `compatibility.checks.period` like Ask's.
+- [ ] **Two Explore plan gates are still enforced only in the app**
+  (2026-10-16; narrowed 2026-10-19). Once `ASTROSPACE_QUOTAS_ENFORCED` is
+  on, the API itself refuses readings and Muhurta to Free (402), and trims
+  yogas past the first two, the remedy plan to its free practice, and
+  vargas beyond D1/D9 (`plan_lock()` / `require_plan()` in
+  `entitlements/resolver.py`). Still app-only: dosha detail (the meaning
+  text is the public `/vedic/rules` catalogue anyway) and compatibility,
+  where the full report and the one-person-a-month count live in
+  `core/plan-gate.service.ts`, the count on the device. *Why not built:*
+  the Gun Milan rows carry Nadi and Bhakoot dosha, and trimming them
+  server-side would hide a dosha, so the free payload needs deciding first.
+  *Unblocks on:* a decision on which compatibility fields Free gets (keep
+  `safety_checks` and any dosha row). *Hook:* `compatibility()` in
+  `api/vedic_routes.py`, and a `UsageBucket` keyed
+  `compatibility.checks.period` with the distinct partner ids, like Ask's.
 
 - [ ] **Native app micro-interactions left after the 2026-10-15 pass**
   (production audit §5). Scroll memory, sheet drag and exit, press states,

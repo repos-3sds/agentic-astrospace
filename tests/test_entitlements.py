@@ -285,3 +285,64 @@ def test_divisional_charts_beyond_d1_and_d9_are_held_back_only_when_locks_are_on
     assert _varga_decision(db, "practitioner-reader") is None
     assert set(_without_locked_vargas(payload(), db, "practitioner-reader")["vargas"]) == {"D1", "D9", "D10", "D60"}
     db.close()
+
+
+def test_free_keeps_the_first_two_yogas_once_locks_are_on(env, monkeypatch):
+    from astrospace.api.vedic_routes import _without_locked_yogas
+
+    _, Session = env
+    db = Session()
+    yogas = [{"name": f"Yoga {n}", "active": True} for n in range(5)]
+    inactive = {"name": "Dormant", "active": False}
+    summary = lambda: {"active_count": 5, "active": list(yogas), "all": [*yogas, inactive]}
+
+    monkeypatch.delenv("ASTROSPACE_QUOTAS_ENFORCED", raising=False)
+    assert len(_without_locked_yogas(summary(), db, USER)["active"]) == 5
+
+    monkeypatch.setenv("ASTROSPACE_QUOTAS_ENFORCED", "true")
+    trimmed = _without_locked_yogas(summary(), db, USER)
+    assert [y["name"] for y in trimmed["active"]] == ["Yoga 0", "Yoga 1"]
+    assert [y["name"] for y in trimmed["all"]] == ["Yoga 0", "Yoga 1", "Dormant"]
+    assert trimmed["locked_count"] == 3
+    assert trimmed["active_count"] == 5
+
+    _paid_assignment(db, "plus-reader", "plus", datetime.utcnow())
+    assert len(_without_locked_yogas(summary(), db, "plus-reader")["active"]) == 5
+    db.close()
+
+
+def test_free_remedy_plan_keeps_the_first_practice_and_every_dosha():
+    from astrospace.api.remedy_routes import _free_plan
+
+    plan = {
+        "groups": [
+            {"trigger": {"kind": "dasha"}, "practices": ["a1", "a2"]},
+            {"trigger": {"kind": "life_area"}, "practices": ["b1"]},
+            {"trigger": {"kind": "dosha", "dosha": "manglik"}, "practices": ["c1", "c2"]},
+        ],
+        "count": 3,
+    }
+    free = _free_plan(plan)
+    assert [g["practices"] for g in free["groups"]] == [["a1"], ["c1"]]
+    assert free["count"] == 2
+    assert free["locked_practices"] == 3
+
+
+@pytest.mark.parametrize("method,path", [
+    ("POST", "/api/v1/readings/k1/generate"),
+    ("GET", "/api/v1/readings/k1"),
+    ("GET", "/api/v1/readings/k1/claims"),
+    ("GET", "/api/v1/readings/k1/latest/weekly"),
+    ("GET", "/api/v1/muhurta/k1?goal=marriage"),
+])
+def test_readings_and_muhurta_refuse_free_only_once_locks_are_on(env, monkeypatch, method, path):
+    client, _ = env
+    body = {"period": "weekly"} if method == "POST" else None
+
+    monkeypatch.delenv("ASTROSPACE_QUOTAS_ENFORCED", raising=False)
+    assert client.request(method, path, json=body).status_code == 404  # no such profile, but not locked
+
+    monkeypatch.setenv("ASTROSPACE_QUOTAS_ENFORCED", "true")
+    response = client.request(method, path, json=body)
+    assert response.status_code == 402
+    assert response.json()["code"] == "entitlement_required"

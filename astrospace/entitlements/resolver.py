@@ -240,3 +240,23 @@ def require_entitlement(snapshot: EntitlementSnapshot, key: str) -> EntitlementD
     if not decision.allowed:
         raise EntitlementDenied(decision)
     return decision
+
+
+def plan_lock(db: Session, user_id: str, key: str) -> EntitlementDecision | None:
+    """The denial for a plan flag this reader lacks, or None.
+
+    None as well while ASTROSPACE_QUOTAS_ENFORCED is off, so a route and the
+    app's PlanGateService agree on when a lock is real.
+    """
+    snapshot = resolve_entitlements(db, user_id)
+    if not snapshot.quotas_enforced:
+        return None
+    decision = snapshot.decide(key)
+    return None if decision.allowed else decision
+
+
+def require_plan(db: Session, user_id: str, key: str) -> None:
+    """Refuse the whole route (402) when `plan_lock` says the plan lacks `key`."""
+    denied = plan_lock(db, user_id, key)
+    if denied is not None:
+        raise EntitlementDenied(denied)

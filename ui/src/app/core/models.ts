@@ -546,6 +546,8 @@ export interface YogasPayload {
   all: YogaResult[];
   categories: Record<string, number>;
   conventions?: Record<string, string>;
+  /** Active yogas the server left out because the plan shows only the first two. */
+  locked_count?: number;
 }
 
 export interface ManglikException {

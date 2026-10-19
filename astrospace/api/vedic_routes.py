@@ -16,7 +16,7 @@ from ..core.vedic.compatibility import gun_milan
 from ..core.vedic.vargas import VARGA_FUNCTIONS
 from ..knowledge.vedic_rules import get_rule, rules_catalog
 from .auth import CurrentUser
-from ..entitlements import EntitlementDenied, resolve_entitlements
+from ..entitlements import EntitlementDenied, plan_lock
 
 router = APIRouter(prefix="/api/v1/vedic", tags=["vedic"])
 
@@ -230,16 +230,29 @@ FREE_VARGAS = frozenset({"D1", "D9"})
 
 
 def _varga_decision(db: Session, user_id: str):
-    """`vargas.full` for this reader, or None while plan locks are off.
+    """`vargas.full` for this reader, or None while plan locks are off."""
+    return plan_lock(db, user_id, "vargas.full")
 
-    Like every flag, it only bites once ASTROSPACE_QUOTAS_ENFORCED is on, so
-    the server and the app's PlanGateService agree on when a lock is real.
+
+# Yogas every plan sees in full; the rest need `yogas.full`.
+# Mirrors FREE_YOGAS in ui/src/app/features/mobile/chart/yogas-doshas.component.ts.
+FREE_YOGAS = 2
+
+
+def _without_locked_yogas(summary: dict, db: Session, user_id: str) -> dict:
+    """Free keeps the first two active yogas and a count of the rest.
+
+    Doshas are never trimmed: a dosha is a flag on every plan.
     """
-    snapshot = resolve_entitlements(db, user_id)
-    if not snapshot.quotas_enforced:
-        return None
-    decision = snapshot.decide("vargas.full")
-    return None if decision.allowed else decision
+    active = summary.get("active")
+    if not isinstance(active, list) or plan_lock(db, user_id, "yogas.full") is None:
+        return summary
+    kept, locked = active[:FREE_YOGAS], active[FREE_YOGAS:]
+    locked_ids = {id(yoga) for yoga in locked}
+    summary["active"] = kept
+    summary["all"] = [yoga for yoga in summary.get("all", []) if id(yoga) not in locked_ids]
+    summary["locked_count"] = len(locked)
+    return summary
 
 
 def _without_locked_vargas(payload: dict, db: Session, user_id: str) -> dict:
@@ -258,6 +271,8 @@ def full_vedic_chart(
     db: Session = Depends(get_db),
 ):
     payload = _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).to_dict()
+    if isinstance(payload.get("yogas"), dict):
+        payload["yogas"] = _without_locked_yogas(payload["yogas"], db, user.id)
     return _without_locked_vargas(payload, db, user.id)
 
 
@@ -356,7 +371,9 @@ def yogas(
     node_type: str = "mean",
     db: Session = Depends(get_db),
 ):
-    return _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).yogas()
+    return _without_locked_yogas(
+        _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).yogas(), db, user.id,
+    )
 
 
 @router.get("/{kundli_id}/yogas-doshas")
@@ -368,7 +385,7 @@ def yogas_doshas(
     db: Session = Depends(get_db),
 ):
     chart = _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type)
-    return {"yogas": chart.yogas(), "doshas": chart.doshas()}
+    return {"yogas": _without_locked_yogas(chart.yogas(), db, user.id), "doshas": chart.doshas()}
 
 
 @router.get("/{kundli_id}/jaimini")

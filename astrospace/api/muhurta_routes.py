@@ -23,6 +23,7 @@ from ..core.vedic.constants import NAKSHATRAS
 from ..core.vedic.nakshatra import nakshatra_of
 from ..core.vedic.positions import sign_index
 from ..db import crud, get_db
+from ..entitlements import require_plan
 from .auth import CurrentUser
 from .timing_place import resolve_timing_place
 from .vedic_routes import _chart_from_kundli
@@ -61,6 +62,7 @@ def find_muhurta(
     limit: int = Query(5, ge=1, le=20),
     db: Session = Depends(get_db),
 ):
+    require_plan(db, user.id, "muhurta.full")
     kundli = crud.get_kundli(db, kundli_id, user.id)
     if not kundli:
         raise HTTPException(status_code=404, detail="Kundli not found")

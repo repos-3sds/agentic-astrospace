@@ -1,6 +1,7 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, effect, inject } from '@angular/core';
 
 import { ApiService } from './api.service';
+import { EntitlementService } from './entitlement.service';
 import {
   AshtakavargaPayload,
   BhavaChalitPayload,
@@ -40,6 +41,10 @@ import { SessionTeardown } from './session-teardown';
 // checks. A mismatch makes every cached read look incompatible and get
 // discarded: from #98 until 2026-10-15 the server said 1.1 and this said
 // 1.0, so Today never served from cache and an offline launch had nothing.
+/** Flags whose answer changes what the chart routes send (`api/vedic_routes.py`, `api/remedy_routes.py`). */
+const PLAN_SHAPED = ['vargas.full', 'yogas.full', 'remedies.full'] as const;
+const PLAN_SHAPE_KEY = 'astrospace.vedic.plan-shape';
+
 const DAILY_GUIDANCE_ENGINE_VERSION = 'daily-guidance-1.1';
 const CALENDAR_ENGINE_VERSION = 'calendar-intelligence-1.0';
 const CALENDAR_DATASET_VERSION = 'astrospace-calendar-2026.08.14';
@@ -69,6 +74,25 @@ export class VedicService {
   constructor() {
     this.resourceCache.discardLegacyUnscopedCaches();
     inject(SessionTeardown).register(() => this.invalidateAll());
+    // Once locks are on, the server trims charts and remedy plans to the
+    // reader's plan, so a purchase, a lapse or the switch itself must drop
+    // what was cached under the old plan, including the copy kept on disk.
+    const entitlements = inject(EntitlementService);
+    effect(() => {
+      const snapshot = entitlements.current();
+      if (!snapshot) return;
+      const shape = snapshot.quotas_enforced
+        ? PLAN_SHAPED.map((key) => (snapshot.entitlements[key] === true ? 1 : 0)).join('')
+        : 'open';
+      let previous: string | null = null;
+      try {
+        previous = localStorage.getItem(PLAN_SHAPE_KEY);
+        localStorage.setItem(PLAN_SHAPE_KEY, shape);
+      } catch {
+        // Without storage, only an in-session change is noticed.
+      }
+      if (previous !== null && previous !== shape) this.invalidateAll();
+    });
   }
 
   configureProfile(profile: Pick<Kundli, 'id' | 'user_id' | 'updated_at'>): void {
@@ -781,6 +805,8 @@ export interface RemedyRecommendationsPayload {
 
 export interface RemedyPlanPayload extends RemedyRecommendationsPayload {
   period: { mahadasha: string | null; antardasha: string | null; start: string | null; end: string | null };
+  /** Practices the server left out because the plan shows only the free one. */
+  locked_practices?: number;
 }
 
 /** One mantra's text in each script the app shows. */

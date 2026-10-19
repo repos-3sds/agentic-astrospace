@@ -66,7 +66,10 @@ export class YogasDoshasComponent {
    */
   protected readonly doshaDetail = computed(() => this.gate.allows('doshas.detail'));
   private readonly yogaItems = computed(() => (this.data()?.yogas.active ?? []).map((yoga) => this.yogaItem(yoga)));
-  protected readonly hiddenYogas = computed(() => this.allYogas() ? 0 : Math.max(0, this.yogaItems().length - FREE_YOGAS));
+  /** Yogas past the first two, whether trimmed here or already by the server. */
+  protected readonly hiddenYogas = computed(() => this.allYogas()
+    ? 0
+    : Math.max(0, this.yogaItems().length - FREE_YOGAS) + (this.data()?.yogas.locked_count ?? 0));
   readonly items = computed<Combination[]>(() => [
     ...(this.allYogas() ? this.yogaItems() : this.yogaItems().slice(0, FREE_YOGAS)),
     ...this.doshaItems(this.data()?.doshas ?? null),
