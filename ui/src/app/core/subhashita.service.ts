@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { ApiService } from './api.service';
+import { AuthService } from './auth.service';
 
 /** One verse, as /api/v1/subhashita returns it (astrospace/core/subhashita). */
 export interface Subhashita {
@@ -16,6 +17,7 @@ export interface Subhashita {
 export const SUBHASHITA_TITLE = 'Today’s Subhashita';
 
 const CACHE_KEY = 'astrospace.subhashita.days';
+const CACHE_OWNER_KEY = 'astrospace.subhashita.daysFor';
 const SEEN_KEY = 'astrospace.subhashita.seenOn';
 const SHEET_OFF_KEY = 'astrospace.subhashita.sheetOff';
 /** Fetched ahead, so the verse (and the home-screen widget) work offline for two weeks. */
@@ -29,7 +31,8 @@ export function localIsoDate(date: Date = new Date()): string {
 
 /**
  * Today's Subhashita: one verse a day from the Gita, Chanakya Niti and the
- * Puranas, the same for every reader on a date.
+ * Puranas. Each account has its own rotation (Hawk, 2026-10-19), so the
+ * cache remembers whose verses it holds and refetches for another account.
  *
  * Only today's verse is ever shown (Hawk, 2026-10-17: "no need to show
  * yesterdays"); the days ahead are cached so the verse opens without the
@@ -38,6 +41,7 @@ export function localIsoDate(date: Date = new Date()): string {
 @Injectable({ providedIn: 'root' })
 export class SubhashitaService {
   private readonly api = inject(ApiService);
+  private readonly auth = inject(AuthService);
 
   private readonly days = signal<Subhashita[]>(readCache());
   private readonly date = signal(localIsoDate());
@@ -51,15 +55,19 @@ export class SubhashitaService {
   async load(): Promise<Subhashita | null> {
     const today = localIsoDate();
     this.date.set(today);
+    const reader = this.auth.user()?.id ?? '';
     const cachedAhead = this.days().filter((d) => d.date >= today).length;
-    // Verses cached before meanings existed (2026-10-18) are fetched again.
-    if (this.today()?.meaning && cachedAhead >= DAYS_AHEAD / 2) return this.today();
+    // Verses cached before meanings existed (2026-10-18), or for another
+    // account, are fetched again.
+    if (this.today()?.meaning && cachedAhead >= DAYS_AHEAD / 2 && readCacheOwner() === reader) {
+      return this.today();
+    }
     try {
       const response = await this.api.get<{ items: Subhashita[] }>(
         `/subhashita?start=${today}&days=${DAYS_AHEAD}`,
       );
       this.days.set(response.items);
-      writeCache(response.items);
+      writeCache(response.items, reader);
       this.error.set(null);
     } catch (err) {
       this.error.set(err instanceof Error ? err.message : String(err));
@@ -114,6 +122,14 @@ function readCache(): Subhashita[] {
   }
 }
 
-function writeCache(rows: Subhashita[]): void {
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify(rows)); } catch { /* storage unavailable */ }
+/** The account the cached verses were fetched for; null before this was kept (shared verses). */
+function readCacheOwner(): string | null {
+  try { return localStorage.getItem(CACHE_OWNER_KEY); } catch { return null; }
+}
+
+function writeCache(rows: Subhashita[], reader: string): void {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(rows));
+    localStorage.setItem(CACHE_OWNER_KEY, reader);
+  } catch { /* storage unavailable */ }
 }

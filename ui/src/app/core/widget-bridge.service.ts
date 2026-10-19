@@ -105,9 +105,11 @@ export class WidgetBridgeService {
   /**
    * Siddha's own voice for the Listen widget. The widget can't sign in, so
    * the app hands it the same natural audio the Listen sheet plays: one MP3
-   * per piece, from the device or server cache (the worker pre-renders it).
-   * Nothing is sent when the plan has no natural voice or the reader chose a
-   * phone voice; the widget then reads with the phone's voice, as before.
+   * per piece, only once the reader has played it in the app that day and it
+   * is on the device. Making audio just to fill the widget cost a synthesis
+   * on every open (cost fix, Hawk 2026-10-19), so until then, and when the
+   * plan has no natural voice or the reader chose a phone voice, the widget
+   * reads with the phone's voice, as before.
    */
   async publishListenAudio(date: string, text: string): Promise<void> {
     if (!this.enabled || !text.trim()) return;
@@ -123,7 +125,13 @@ export class WidgetBridgeService {
       }
       const parts: string[] = [];
       for (const chunk of naturalChunks(text)) {
-        const blob = await (await fetch(await voice.audioUrl(prepareForSpeech(chunk)))).blob();
+        const blob = await voice.cached(prepareForSpeech(chunk));
+        if (!blob) {
+          // Not listened to yet: phone voice for now, and look again next publish.
+          await SiddhaWidgets.saveListenAudio({ date, text, parts: [] });
+          this.listenAudioFor = '';
+          return;
+        }
         parts.push(await base64(blob));
       }
       await SiddhaWidgets.saveListenAudio({ date, text, parts });

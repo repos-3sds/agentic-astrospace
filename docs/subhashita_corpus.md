@@ -9,7 +9,9 @@ verse asks of the reader, shown under it on every surface (added 2026-10-18,
 when a verse on its own read to Hawk as half a sentence); the lines live in
 `scripts/subhashita/meanings.json`, which the build script merges in. The array is ordered so that no two neighbouring
 entries share a `source`, and the last entry's source differs from the first, so
-`index = day mod 122` never shows the same source two days running.
+`index = (day + reader offset) mod 122` never shows the same source two days running.
+The offset comes from the account id (Hawk, 2026-10-19: each account gets its own
+verse on a date, not the same one for everyone); signed out it is 0.
 
 | Source | Count |
 | --- | --- |

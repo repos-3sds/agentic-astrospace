@@ -1,7 +1,7 @@
 """Queue one Today's Subhashita push per user per day.
 
-The verse is the same for everyone on a date (astrospace.core.subhashita),
-so this needs no chart and no ephemeris: only the reader's local date and
+Each reader's verse comes from their own rotation (astrospace.core.subhashita),
+the same one the app shows them, so this needs no chart and no ephemeris: only the reader's local date and
 time. It goes out at 10:00 local (Hawk, 2026-10-17), unless the reader set
 their own time. Once the early afternoon has passed (LAST_QUEUE_TIME)
 nothing is queued for that day: a verse arriving at 9 pm because someone
@@ -61,7 +61,7 @@ def schedule_daily_subhashita(db: Session, today: date | None = None,
         if day == local_now.date() and local_now.time() >= max(send_at, LAST_QUEUE_TIME):
             continue
         local_when = datetime.combine(day, send_at, tzinfo=zone)
-        verse = subhashita.for_day(day)
+        verse = subhashita.for_day(day, user_id)
         jobs.append(cm.schedule_notification(
             db, user_id, CATEGORY,
             local_when.astimezone(ZoneInfo("UTC")).replace(tzinfo=None),
