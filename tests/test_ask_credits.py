@@ -184,3 +184,6 @@ def test_products_list_d2_prices(env):
     assert products["siddha_plus_monthly"]["price_inr"] == 299
     assert products["siddha_plus_yearly"]["price_inr"] == 1999
     assert products["siddha_questions_3"]["questions"] == 3
+    assert products["siddha_questions_3"]["price_inr"] == 129
+    assert products["siddha_questions_1"]["price_inr"] == 49
+    assert "siddha_questions_15" not in products

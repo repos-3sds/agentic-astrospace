@@ -32,8 +32,9 @@ PRODUCTS: dict[str, Product] = {
         Product("siddha_plus_yearly", "plan", "Plus, yearly", 1999, tier="plus", months=12),
         Product("siddha_practitioner_monthly", "plan", "Practitioner, monthly", 599, tier="pro", months=1),
         Product("siddha_practitioner_yearly", "plan", "Practitioner, yearly", 3999, tier="pro", months=12),
-        Product("siddha_questions_3", "question_pack", "3 questions", 99, questions=3),
-        Product("siddha_questions_15", "question_pack", "15 questions", 399, questions=15),
+        # Hawk, 2026-10-19: one question for ₹49, three for ₹129, no larger pack.
+        Product("siddha_questions_1", "question_pack", "1 question", 49, questions=1),
+        Product("siddha_questions_3", "question_pack", "3 questions", 129, questions=3),
     )
 }
 

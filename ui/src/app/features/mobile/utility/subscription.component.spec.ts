@@ -21,7 +21,7 @@ const FREE: EntitlementSnapshot = {
 const PRODUCTS: StoreProduct[] = [
   { id: 'siddha_plus_monthly', kind: 'plan', title: 'Plus, monthly', price_inr: 299, tier: 'plus', months: 1, questions: null },
   { id: 'siddha_plus_yearly', kind: 'plan', title: 'Plus, yearly', price_inr: 1999, tier: 'plus', months: 12, questions: null },
-  { id: 'siddha_questions_3', kind: 'question_pack', title: '3 questions', price_inr: 99, tier: null, months: null, questions: 3 },
+  { id: 'siddha_questions_3', kind: 'question_pack', title: '3 questions', price_inr: 129, tier: null, months: null, questions: 3 },
 ];
 
 describe('SubscriptionComponent', () => {
@@ -74,7 +74,7 @@ describe('SubscriptionComponent', () => {
     expect(text).toContain('1 of 2');
     expect(text).toContain('₹1,999 a year');
     expect(text).toContain('₹299 a month');
-    expect(text).toContain('₹99, once');
+    expect(text).toContain('₹129, once');
     expect(text).toContain('Every dosha by name, with its cancellations');
     expect(text).toContain('Plans can be bought once Siddha is live');
     const cta = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.cta')!;
