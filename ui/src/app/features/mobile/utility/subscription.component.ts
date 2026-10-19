@@ -58,11 +58,11 @@ export class SubscriptionComponent implements OnInit {
   protected readonly family = signal<PlanFamily>(
     this.route.snapshot.queryParamMap.get('plan') === 'practitioner' ? 'pro' : 'plus');
   protected readonly selectedPlan = signal(
-    this.family() === 'pro' ? 'siddha_practitioner_yearly' : 'siddha_plus_yearly');
+    this.family() === 'pro' ? 'siddha_practitioner_monthly' : 'siddha_plus_monthly');
   protected readonly busy = signal<string | null>(null);
   protected readonly notice = signal<{ tone: 'good' | 'info' | 'bad'; text: string } | null>(null);
 
-  // Yearly first: it is the better price and the one selected by default.
+  // Monthly only since 2026-10-19; a yearly plan, if one returns, sorts first.
   protected readonly plans = computed(() =>
     this.products()
       .filter((p) => p.kind === 'plan' && (p.tier ?? 'plus') === this.family())
@@ -76,7 +76,7 @@ export class SubscriptionComponent implements OnInit {
 
   protected chooseFamily(family: PlanFamily): void {
     this.family.set(family);
-    this.selectedPlan.set(family === 'pro' ? 'siddha_practitioner_yearly' : 'siddha_plus_yearly');
+    this.selectedPlan.set(family === 'pro' ? 'siddha_practitioner_monthly' : 'siddha_plus_monthly');
   }
 
   protected readonly usageRows = computed(() => {
@@ -85,7 +85,7 @@ export class SubscriptionComponent implements OnInit {
     const ask = this.entitlements.askAllowance();
     const profileLimit = snapshot.entitlements['profiles.max'];
     const rows: { label: string; value: string }[] = [];
-    if (ask) rows.push({ label: 'Answers this month', value: `${ask.used} of ${ask.limit}` });
+    if (ask && ask.limit > 0) rows.push({ label: 'Answers this month', value: `${ask.used} of ${ask.limit}` });
     if (typeof profileLimit === 'number') {
       const held = this.kundlis.kundlis().length;
       // Profiles made before limits existed are kept; only adding is limited.
@@ -94,13 +94,13 @@ export class SubscriptionComponent implements OnInit {
         value: held > profileLimit ? `${held} · ${profileLimit} included` : `${held} of ${profileLimit}`,
       });
     }
-    rows.push({ label: 'Bought questions', value: `${snapshot.question_credits ?? 0} left` });
+    rows.push({ label: 'Extra questions', value: `${snapshot.question_credits ?? 0} left` });
     return rows;
   });
 
   protected readonly compare: CompareRow[] = [
-    { label: 'Ask answers', free: '3 a month', plus: '30 a month', practitioner: '100 a month' },
-    { label: 'Profiles', free: '2', plus: '6', practitioner: '20' },
+    { label: 'Ask answers', free: '1 to try', plus: '5 a month', practitioner: '15 a month' },
+    { label: 'Profiles', free: '1', plus: '3', practitioner: '10' },
     { label: 'Yogas', free: '2', plus: 'All', practitioner: 'All' },
     { label: 'What each dosha means', free: false, plus: true, practitioner: true },
     { label: 'Compatibility', free: 'Score, 1 a month', plus: 'Full report', practitioner: 'Full report' },

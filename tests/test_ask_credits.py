@@ -1,6 +1,7 @@
-"""D2 hybrid pricing: Ask credits are reserved before an answer, spent only
+"""Ask credits are reserved before an answer, spent only
 when a verified answer is delivered, and never spent on a refusal, refer-out
-or failure. Monthly allowance first, then question packs."""
+or failure. Monthly allowance first, then the welcome question and
+question packs, oldest first."""
 from datetime import datetime
 from unittest.mock import patch
 
@@ -57,6 +58,10 @@ def env():
         app.dependency_overrides.pop(current_user, None)
 
 
+def _welcome(db):
+    return db.query(QuestionCredit).filter_by(provider="welcome").one()
+
+
 def _bucket(db):
     return db.query(UsageBucket).filter_by(entitlement_key="ask.answers.period").one()
 
@@ -76,18 +81,22 @@ def test_month_bounds_roll_over_the_year():
     assert (start, end) == (datetime(2026, 12, 1), datetime(2027, 1, 1))
 
 
-def test_allowance_then_pack_then_limit_when_enforced(env, monkeypatch):
+def test_free_gets_one_welcome_question_then_packs_then_limit(env, monkeypatch):
     monkeypatch.setenv("ASTROSPACE_QUOTAS_ENFORCED", "true")
     _, factory, _ = env
     with factory() as db:
-        for _ in range(3):
-            commit_ask_credit(db, reserve_ask_credit(db, ME))
-        assert _bucket(db).consumed == 3
+        assert resolve_entitlements(db, ME).question_credits == 1
+        held = reserve_ask_credit(db, ME)
+        assert held.row_id == _welcome(db).id
+        commit_ask_credit(db, held)
+        assert _welcome(db).remaining == 0
+        # Never renewed: a second read does not grant another.
+        assert resolve_entitlements(db, ME).question_credits == 0
         _pack(db, quantity=1)
         held = reserve_ask_credit(db, ME)
         assert held.kind == "pack"
         commit_ask_credit(db, held)
-        assert db.query(QuestionCredit).one().remaining == 0
+        assert db.query(QuestionCredit).filter_by(provider="test").one().remaining == 0
         with pytest.raises(EntitlementDenied) as denied:
             reserve_ask_credit(db, ME)
         assert denied.value.decision.denial()["code"] == "entitlement_limit_reached"
@@ -99,12 +108,11 @@ def test_released_credits_come_back(env, monkeypatch):
     _, factory, _ = env
     with factory() as db:
         _pack(db, quantity=2)
-        for _ in range(3):
-            commit_ask_credit(db, reserve_ask_credit(db, ME))
+        commit_ask_credit(db, reserve_ask_credit(db, ME))  # the welcome question
         held = reserve_ask_credit(db, ME)
         release_ask_credit(db, held)
         release_ask_credit(db, held)  # idempotent
-        assert db.query(QuestionCredit).one().remaining == 2
+        assert db.query(QuestionCredit).filter_by(provider="test").one().remaining == 2
         assert resolve_entitlements(db, ME).question_credits == 2
 
 
@@ -114,7 +122,8 @@ def test_not_enforced_counts_but_never_blocks(env, monkeypatch):
     with factory() as db:
         for _ in range(5):
             commit_ask_credit(db, reserve_ask_credit(db, ME))
-        assert _bucket(db).consumed == 5
+        assert _welcome(db).remaining == 0
+        assert _bucket(db).consumed == 4
         decision = resolve_entitlements(db, ME).decide("ask.answers.period")
         assert decision.allowed and decision.reason == "not_enforced"
 
@@ -125,7 +134,7 @@ def test_answered_question_spends_one_credit(env):
         response = client.post(f"/api/v1/ask/{kundli}", json={"question": "How is my career progressing?"})
     assert response.json()["status"] == "answered"
     with factory() as db:
-        assert (_bucket(db).consumed, _bucket(db).reserved) == (1, 0)
+        assert _welcome(db).remaining == 0
 
 
 def test_failed_answer_is_not_charged(env):
@@ -138,7 +147,7 @@ def test_failed_answer_is_not_charged(env):
         response = client.post(f"/api/v1/ask/{kundli}", json={"question": "How is my career progressing?"})
     assert response.status_code == 502
     with factory() as db:
-        assert (_bucket(db).consumed, _bucket(db).reserved) == (0, 0)
+        assert _welcome(db).remaining == 1
 
 
 def test_refer_out_never_touches_a_credit(env):
@@ -157,32 +166,37 @@ def test_streamed_answer_spends_and_limit_is_a_402_before_streaming(env, monkeyp
             body = "".join(response.iter_text())
     assert '"status": "answered"' in body
     with factory() as db:
-        assert (_bucket(db).consumed, _bucket(db).reserved) == (1, 0)
-        bucket = _bucket(db)
-        bucket.consumed = 3
-        db.commit()
+        assert _welcome(db).remaining == 0
     monkeypatch.setenv("ASTROSPACE_QUOTAS_ENFORCED", "true")
     denied = client.post(f"/api/v1/ask/{kundli}/stream", json={"question": "How is my career progressing?"})
     assert denied.status_code == 402
     assert denied.json()["code"] == "entitlement_limit_reached"
 
 
-def test_third_profile_needs_plus_when_enforced(env, monkeypatch):
+def test_second_profile_needs_plus_when_enforced(env, monkeypatch):
     client, _, _ = env
     partner = {**BIRTH, "name": "Partner", "relation": "spouse"}
-    assert client.post("/api/v1/kundlis", json=partner).status_code == 201
     monkeypatch.setenv("ASTROSPACE_QUOTAS_ENFORCED", "true")
-    third = client.post("/api/v1/kundlis", json={**partner, "name": "Child", "relation": "child"})
-    assert third.status_code == 402
-    assert third.json()["entitlement"] == "profiles.max"
-    assert third.json()["upgrade_options"][0] == "plus"
+    second = client.post("/api/v1/kundlis", json=partner)
+    assert second.status_code == 402
+    assert second.json()["entitlement"] == "profiles.max"
+    assert second.json()["upgrade_options"][0] == "plus"
+
+
+def test_plan_allowances():
+    from astrospace.entitlements.registry import capability_registry
+
+    ask, profiles = capability_registry["ask.answers.period"], capability_registry["profiles.max"]
+    assert [ask.value_for(t) for t in ("free", "plus", "pro")] == [0, 5, 15]
+    assert [profiles.value_for(t) for t in ("free", "plus", "pro")] == [1, 3, 10]
 
 
 def test_products_list_d2_prices(env):
     client, _, _ = env
     products = {p["id"]: p for p in client.get("/api/v1/entitlements/products").json()["products"]}
-    assert products["siddha_plus_monthly"]["price_inr"] == 299
-    assert products["siddha_plus_yearly"]["price_inr"] == 1999
+    assert products["siddha_plus_monthly"]["price_inr"] == 199
+    assert products["siddha_practitioner_monthly"]["price_inr"] == 699
+    assert not [p for p in products.values() if p["months"] == 12]
     assert products["siddha_questions_3"]["questions"] == 3
     assert products["siddha_questions_3"]["price_inr"] == 129
     assert products["siddha_questions_1"]["price_inr"] == 49

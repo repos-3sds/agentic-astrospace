@@ -77,6 +77,10 @@ export class AskHomeComponent {
   protected readonly allowanceLine = computed(() => {
     const allowance = this.entitlements.askAllowance();
     if (!allowance?.enforced) return null;
+    if (allowance.limit === 0) {
+      // Free has no monthly answers, only the one welcome question and packs.
+      return allowance.credits ? `${allowance.credits} question${allowance.credits === 1 ? '' : 's'} left` : null;
+    }
     const plan = this.entitlements.current()?.access_tier === 'free' ? 'free ' : '';
     const credits = allowance.credits ? ` · ${allowance.credits} bought question${allowance.credits === 1 ? '' : 's'}` : '';
     return `${allowance.remaining} of ${allowance.limit} ${plan}answers left this month${credits}`;

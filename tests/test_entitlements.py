@@ -14,6 +14,7 @@ from astrospace.db.models import (
     BillingAccount,
     EntitlementOverride,
     PlanAssignment,
+    QuestionCredit,
     SubscriptionGrant,
     UsageBucket,
 )
@@ -91,11 +92,11 @@ def test_registry_keeps_truth_safety_and_reliability_in_every_tier():
         assert all(item.value_for(tier) is True for tier in ("free", "plus", "pro"))
 
 
-def test_hybrid_pricing_limits_follow_d2_and_d7():
+def test_plan_limits_follow_hawks_2026_10_19_prices():
     ask = capability_registry["ask.answers.period"]
-    assert (ask.value_for("free"), ask.value_for("plus")) == (3, 30)
+    assert (ask.value_for("free"), ask.value_for("plus"), ask.value_for("pro")) == (0, 5, 15)
     profiles = capability_registry["profiles.max"]
-    assert (profiles.value_for("free"), profiles.value_for("plus")) == (2, 6)
+    assert (profiles.value_for("free"), profiles.value_for("plus"), profiles.value_for("pro")) == (1, 3, 10)
     # Not part of D2: represented, never enforced.
     saved = capability_registry["compatibility.saved.max"]
     assert all(saved.value_for(tier) is None for tier in ("free", "plus", "pro"))
@@ -109,8 +110,10 @@ def test_free_snapshot_is_created_server_side_and_unknown_keys_fail_closed(env):
     assert snapshot.source == "free_default"
     assert snapshot.entitlements["today.core"] is True
     assert snapshot.entitlements["reports.detailed"] is False
-    assert snapshot.decide("ask.answers.period").reason == "available"
-    assert snapshot.decide("ask.answers.period").remaining == 3
+    # No monthly allowance on Free, only the one welcome question.
+    assert snapshot.question_credits == 1
+    assert snapshot.decide("ask.answers.period").reason == "question_credit"
+    assert snapshot.decide("ask.answers.period").remaining == 0
     assert snapshot.decide("made.up.capability").allowed is False
     assert db.query(BillingAccount).filter_by(owner_user_id=USER).count() == 1
     db.close()
@@ -202,6 +205,7 @@ def test_usage_decision_includes_authoritative_period(env, monkeypatch):
         reserved=1,
         consumed=1,
     ))
+    db.query(QuestionCredit).filter_by(billing_account_id=account.id).update({"remaining": 0})
     db.commit()
     decision = resolve_entitlements(db, USER, now=now).decide("ask.answers.period")
     assert decision.allowed is False
