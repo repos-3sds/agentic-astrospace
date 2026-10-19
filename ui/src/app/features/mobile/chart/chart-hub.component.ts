@@ -10,7 +10,7 @@ import { KundliChartComponent, KundliChartStyle } from '../../../shared/kundli-c
 import { monthYear } from '../format-date';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
-import { DashaPayload, VargaChart, VedicAll } from '../../../core/models';
+import { DashaPayload, DashaPeriod, VargaChart, VedicAll } from '../../../core/models';
 import { VedicService } from '../../../core/vedic.service';
 import { buildChartAdapter, rashiFallback } from './mobile-chart-data';
 import { GenericErrorComponent } from '../states/generic-error.component';
@@ -43,6 +43,10 @@ interface YantraTile {
   active?: boolean;
   featured?: boolean;
 }
+
+const PLANET_GLYPHS: Record<string, string> = {
+  Sun: '☉', Moon: '☽', Mars: '♂', Mercury: '☿', Jupiter: '♃', Venus: '♀', Saturn: '♄', Rahu: '☊', Ketu: '☋',
+};
 
 /** Rows of the Explore menu, so the hub does not repeat them outside Practitioner. */
 const ON_EXPLORE_MENU = new Set(['birth-details', 'yoga', 'compat', 'readings', 'remedies', 'muhurta']);
@@ -258,33 +262,14 @@ export class ChartHubComponent {
 
   protected readonly practitionerConfig = computed(() => {
     const chart = this.chart();
+    const house = String(chart?.provenance?.house_system ?? 'Whole-sign');
+    const zone = chart?.provenance?.timezone ?? chart?.meta?.place ?? 'Local time';
     return [
       chart?.meta?.ayanamsha?.name ?? 'Lahiri',
-      `${this.preferences.nodeType() === 'true' ? 'True' : 'Mean'} Node`,
-      chart?.provenance?.house_system ?? 'Whole-Sign',
-      chart?.provenance?.timezone ?? chart?.meta?.place ?? 'Local time',
+      `${this.preferences.nodeType() === 'true' ? 'True' : 'Mean'} node`,
+      /whole/i.test(house) ? 'Whole-sign' : house,
+      /^Asia\/(Kolkata|Calcutta)$/.test(zone) ? 'IST' : zone,
     ].join(' · ');
-  });
-
-  protected readonly dashaChain = computed(() => {
-    const current = this.dashaData()?.current;
-    return [
-      { lord: current?.mahadasha?.lord, short: 'Mahā', active: false },
-      { lord: current?.antardasha?.lord, short: 'Antar', active: false },
-      { lord: current?.pratyantardasha?.lord, short: 'Prat', active: true },
-      { lord: current?.sookshmadasha?.lord, short: 'Sookshma', active: false },
-    ]
-      .filter((row): row is { lord: string; short: string; active: boolean } => !!row.lord)
-      .map((row) => ({ ...row, lord: this.shortLord(row.lord) }));
-  });
-
-  protected readonly dashaTiming = computed(() => {
-    const current = this.dashaData()?.current;
-    const pratyantar = current?.pratyantardasha;
-    if (pratyantar?.end) return `${pratyantar.lord} Pratyantardasha until ${monthYear(pratyantar.end)}`;
-    const antar = current?.antardasha;
-    if (antar?.end) return `${antar.lord} Antardasha until ${monthYear(antar.end)}`;
-    return 'Active period stack from Vimshottari dasha';
   });
 
   protected readonly yantraTiles = computed<YantraTile[]>(() => {
@@ -308,6 +293,62 @@ export class ChartHubComponent {
       { title: 'Muhurta', subtitle: 'Next windows', tone: 'warn', icon: 'figma-yantra-calendar', route: ['/m', 'muhurta'] },
     ];
   });
+
+
+  /** Time-of-day greeting for the Yantra header. */
+  protected readonly greeting = computed(() => {
+    const hour = new Date().getHours();
+    return hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  });
+
+  protected readonly birthStar = computed(() => {
+    const star = this.dashaData()?.birth_nakshatra;
+    return star ? `${star.name} ${star.pada}` : '—';
+  });
+
+  protected angleSign(label: string): string {
+    return this.angles().find((angle) => angle.label === label)?.sign ?? '—';
+  }
+
+  /**
+   * The Dasha clock: each running period with how far through it is. The
+   * first row is the Mahadasha drawn as the ring; the rest are bars.
+   */
+  protected readonly dashaRows = computed(() => {
+    const current = this.dashaData()?.current;
+    const now = Date.now();
+    const levels: [string, DashaPeriod | null | undefined][] = [
+      ['Mahādasha', current?.mahadasha],
+      ['Antardasha', current?.antardasha],
+      ['Pratyantar', current?.pratyantardasha],
+      ['Sookshma', current?.sookshmadasha],
+    ];
+    return levels
+      .filter((entry): entry is [string, DashaPeriod] => !!entry[1])
+      .map(([level, period]) => {
+        const start = Date.parse(period.start);
+        const end = Date.parse(period.end);
+        const pct = end > start ? Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100)) : 0;
+        return {
+          level,
+          lord: period.lord,
+          pct: Math.round(pct),
+          end: monthYear(period.end),
+          startYear: period.start.slice(0, 4),
+          endYear: period.end.slice(0, 4),
+        };
+      });
+  });
+
+  /** stroke-dasharray for the Mahadasha ring (r = 42). */
+  protected readonly ringDash = computed(() => {
+    const circumference = 2 * Math.PI * 42;
+    return `${(circumference * (this.dashaRows()[0]?.pct ?? 0)) / 100} ${circumference}`;
+  });
+
+  protected glyph(lord: string): string {
+    return PLANET_GLYPHS[lord] ?? '✦';
+  }
 
   /** The provenance sheet (36:247), shared with the full render. */
   readonly provenanceOpen = signal(false);
@@ -383,10 +424,6 @@ export class ChartHubComponent {
     }
   }
 
-  private shortLord(lord: string): string {
-    const map: Record<string, string> = { Jupiter: 'Jup', Mercury: 'Merc', Venus: 'Ven', Saturn: 'Sat' };
-    return map[lord] ?? lord;
-  }
 
 
 }

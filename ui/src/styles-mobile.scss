@@ -135,64 +135,117 @@
 }
 
 :root.app-dark .as-mobile {
-  // Warm near-black, on the same axis as the web app's proven --as-bg dark
-  // value, rather than the blue-slate this used to sit on — the light theme
-  // is warm cream/rust/brown and the dark theme should read as that brand at
-  // night, not a different, colder app.
-  --m-bg: #15110d;
-  --m-surface: #241d17;
-  --m-raised: #30271f;
+  // "Liquid Glass" (Hawk's pick, 2026-10-19). Neutral near-black with three
+  // soft light blobs — rose, amber, blue — behind glossy glass cards. The
+  // blobs live in the ground, not in the cards, so a card's gloss is its own
+  // gradient plus a bright top edge; no per-card backdrop blur is needed,
+  // which keeps scrolling cheap on Android WebViews. The previous warm brown
+  // dark theme is in git history (styles-mobile.scss before this change).
+  --m-bg: #060607;
+  // Translucent on purpose: a surface lets the ground's light through.
+  // Sheets and anything that must hide what is under it use the solid
+  // --m-sheet-* values instead.
+  --m-surface: rgba(255, 255, 255, 0.06);
+  --m-raised: rgba(255, 255, 255, 0.1);
   --m-app-ground:
-    linear-gradient(180deg, #19120d 0%, #15110d 48%, #100c09 100%);
+    radial-gradient(55% 28% at 85% 6%, rgba(255, 120, 150, 0.3), transparent 70%),
+    radial-gradient(60% 30% at 5% 30%, rgba(255, 170, 90, 0.2), transparent 70%),
+    radial-gradient(60% 30% at 90% 70%, rgba(110, 140, 255, 0.18), transparent 70%),
+    linear-gradient(180deg, #0a0a0c 0%, #050506 100%);
   --m-frost:
-    linear-gradient(180deg, rgba(54, 43, 34, 0.9), rgba(32, 25, 19, 0.82));
-  --m-footer-glass: rgba(38, 30, 24, 0.54);
-  --m-footer-shine: rgba(255, 248, 236, 0.12);
-  --m-sheet-surface: #211a15;
-  --m-sheet-raised: #332920;
-  --m-glass-panel: rgba(33, 26, 21, 0.76);
-  --m-glass-control: rgba(255, 248, 236, 0.08);
-  --m-glass-border: rgba(255, 248, 236, 0.14);
-  --m-border: #4b3d30;
-  --m-border-strong: #74604b;
-  --m-text: #f4efe7;
-  --m-muted: #b3a494;
-  --m-ink: #f5efe6;
-  --m-on-ink: #201a14;
-  --m-muted-on-ink: #6b5d4c;
-  --m-accent-on-ink: #b84333;
+    linear-gradient(180deg, rgba(40, 40, 44, 0.75), rgba(24, 24, 27, 0.65));
+  --m-footer-glass: rgba(24, 24, 27, 0.6);
+  --m-footer-shine: rgba(255, 255, 255, 0.14);
+  --m-sheet-surface: #141416;
+  --m-sheet-raised: #1d1d20;
+  --m-glass-panel: rgba(24, 24, 27, 0.65);
+  --m-glass-control: rgba(255, 255, 255, 0.08);
+  --m-glass-border: rgba(255, 255, 255, 0.14);
+  // The glass card recipe (see the dark-only block below).
+  --m-glass-card: linear-gradient(135deg, rgba(255, 255, 255, 0.13) 0%, rgba(255, 255, 255, 0.05) 38%, rgba(255, 255, 255, 0.025) 100%);
+  --m-glass-hairline: rgba(255, 255, 255, 0.14);
+  --m-glass-sheen: rgba(255, 255, 255, 0.28);
+  --m-glass-sheen-side: rgba(255, 255, 255, 0.08);
+  --m-tabbar-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)), rgba(16, 16, 18, 0.88);
+  --m-tab-active: rgba(255, 255, 255, 0.12);
+  --m-tab-active-text: #ffffff;
+  --m-border: rgba(255, 255, 255, 0.1);
+  --m-border-strong: rgba(255, 255, 255, 0.22);
+  --m-text: #f7f7f8;
+  --m-muted: #a8a8b3;
+  --m-ink: #f7f7f8;
+  --m-on-ink: #0a0a0c;
+  --m-muted-on-ink: #52525b;
+  --m-accent-on-ink: #c2410c;
   --m-ink-raised: rgba(255, 255, 255, 0.04);
   --m-ink-control: rgba(255, 255, 255, 0.08);
-  --m-accent: #e27666;
-  // Was #ff9b8d — a pale salmon that read as a different, pastel color
-  // family. This keeps the same saturated rust/coral the light theme uses,
-  // just lightened enough for contrast, and matches the web app's own
-  // --as-accent-strong dark value so the brand red is consistent app-wide.
-  --m-accent-strong: #ff846d;
-  --m-accent-soft: rgba(82, 44, 36, 0.78);
-  --m-primary-cta: #b13f2e;
-  --m-on-primary: #fff8ec;
-  --m-good: #82d1aa;
-  --m-good-soft: #163626;
-  --m-bad: #ff8f8a;
-  --m-bad-soft: #452421;
-  --m-warn: #f0c36b;
-  --m-warn-soft: #443318;
-  --m-gold: #dfb45e;
-  --m-gold-soft: #433316;
+  // Peach-rose: the warm brand accent, tuned for a neutral black ground.
+  --m-accent: #ff9b85;
+  --m-accent-strong: #ffb4a2;
+  --m-accent-soft: rgba(255, 155, 133, 0.14);
+  --m-primary-cta: linear-gradient(135deg, #ffb48a 0%, #ff7a8a 100%);
+  --m-on-primary: #1c0a08;
+  --m-good: #5eead4;
+  --m-good-soft: rgba(94, 234, 212, 0.12);
+  --m-bad: #fda4af;
+  --m-bad-soft: rgba(253, 164, 175, 0.12);
+  --m-warn: #fcd34d;
+  --m-warn-soft: rgba(252, 211, 77, 0.12);
+  --m-gold: #f3c77a;
+  --m-gold-soft: rgba(243, 199, 122, 0.13);
   --m-on-gold: #2b1608;
-  // A dark drop-shadow under a light element on a near-black background is
-  // invisible — it contributes nothing, so raised controls read as flat
-  // cutouts instead of lifted. Depth in dark UI comes from a highlight, not a
-  // darker shadow: a soft top-edge sheen plus a wider, low-alpha ambient
-  // shadow for grounding.
-  --m-shadow-card: 0 1px 0 rgba(255, 248, 236, 0.04) inset, 0 12px 34px rgba(0, 0, 0, 0.55);
-  --m-shadow-soft: 0 1px 0 rgba(255, 248, 236, 0.06) inset, 0 20px 60px rgba(0, 0, 0, 0.55);
-  --m-back-icon-filter: invert(88%) sepia(9%) saturate(430%) hue-rotate(343deg) brightness(92%) contrast(88%);
-  // #B13F2E glyphs → close to --m-accent (#e27666) on dark ground.
-  --settings-icon-filter: brightness(1.3) saturate(0.7);
-  --settings-chevron-filter: brightness(1.3) saturate(0.7);
+  // Depth in dark UI comes from a highlight, not a darker shadow: a bright
+  // top edge plus a wide, low-alpha ambient shadow for grounding.
+  --m-shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 14px 40px rgba(0, 0, 0, 0.5);
+  --m-shadow-soft: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 20px 60px rgba(0, 0, 0, 0.55);
+  --m-back-icon-filter: invert(78%) sepia(28%) saturate(900%) hue-rotate(312deg) brightness(104%);
+  // #B13F2E glyphs → close to --m-accent (#ff9b85) on dark ground.
+  --settings-icon-filter: brightness(1.5) saturate(0.6);
+  --settings-chevron-filter: brightness(1.5) saturate(0.6);
 }
+
+// Liquid Glass, dark only. Screens paint --m-bg on their own :host, which
+// would hide the ground's light; in dark the routed screen is see-through so
+// the shell's ground shows. Inner elements that need to be opaque still are.
+:root.app-dark .as-mobile router-outlet + * {
+  background: transparent;
+}
+
+// The cards that read as glass. One list rather than a mixin in each
+// component so the whole look can be tuned, or reverted, in one place.
+// Light mode keeps each component's own solid cards.
+:root.app-dark .as-mobile :is(
+  section.card:not(.skeleton-card),
+  .birth-signature,
+  button.why,
+  button.festival,
+  .advice-card,
+  a.window,
+  a.featured,
+  a.verse,
+  a.tile,
+  button.suggestion,
+  as-ask-composer,
+  section.mcal-grid,
+  .mcal-observance,
+  .yantra-tile,
+  .period-box,
+  .dasha-clock
+) {
+  background: var(--m-glass-tint, linear-gradient(transparent, transparent)), var(--m-glass-card);
+  border-color: var(--m-glass-hairline);
+  box-shadow:
+    inset 0 1px 0 var(--m-glass-sheen),
+    inset 1px 0 0 var(--m-glass-sheen-side),
+    0 16px 40px rgba(0, 0, 0, 0.32);
+}
+
+// Tinted glass keeps the meaning a solid fill used to carry.
+:root.app-dark .as-mobile .advice-card.do { --m-glass-tint: linear-gradient(180deg, var(--m-good-soft), transparent 70%); }
+:root.app-dark .as-mobile .advice-card.avoid { --m-glass-tint: linear-gradient(180deg, var(--m-bad-soft), transparent 70%); }
+:root.app-dark .as-mobile a.window { --m-glass-tint: linear-gradient(180deg, var(--m-warn-soft), transparent 80%); }
+:root.app-dark .as-mobile a.featured,
+:root.app-dark .as-mobile .yantra-tile.is-featured { --m-glass-tint: linear-gradient(135deg, var(--m-accent-soft), transparent 80%); }
 
 .as-mobile img[src$='back.svg'] {
   filter: var(--m-back-icon-filter);
