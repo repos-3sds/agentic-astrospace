@@ -30,45 +30,72 @@
 
 .screen-title { @include m-title; color: var(--m-text); margin: 0; }
 
-.yantra-appbar {
+/* Practitioner header — the person first, as the Figma board (214:155) opens. */
+.yantra-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 16px 20px 8px;
-  background: var(--yantra-bg);
-}
-
-.yantra-profile {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 12px;
-  padding: 0;
-  border: 0;
-  background: none;
-  text-align: left;
+  gap: 10px;
+  padding: 14px 20px 10px;
 }
 
 .yantra-who {
   display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--yantra-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.yantra-avatar {
+  @include m-body-strong;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--m-on-gold);
+  // The same lit-gold orb as Today's avatar, so the two tabs read as one app.
+  background: radial-gradient(circle at 35% 30%, #ffe7a8, var(--m-gold) 55%, #9a6a22 100%);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--m-gold) 35%, transparent),
+    0 0 22px color-mix(in srgb, var(--m-gold) 40%, transparent);
+}
+
+.yantra-who-text {
+  display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 1px;
-  b { @include m-body-strong; color: var(--yantra-text); }
-  span {
-    @include m-caption;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    color: var(--yantra-muted);
+  small { @include m-caption; color: var(--yantra-muted); }
+  b {
+    @include m-title;
+    font-size: 19px;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-  i {
-    width: 6px;
-    height: 6px;
-    border-radius: 999px;
-    background: var(--yantra-red);
-  }
+}
+
+.yantra-switch { margin-top: 14px; color: var(--yantra-muted); font-size: 16px; }
+
+.yantra-mode {
+  @include m-micro;
+  flex: none;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--m-gold) 40%, transparent);
+  border-radius: 999px;
+  color: var(--m-gold);
+  background: color-mix(in srgb, var(--m-gold) 10%, transparent);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .settings-btn {
@@ -141,6 +168,9 @@
   background: var(--yantra-bg);
 }
 
+// Dark Liquid Glass: let the shell's lit ground show behind the Yantra tab.
+:host-context(.app-dark) .body[data-mode='practitioner'] { background: transparent; }
+
 .chart-state {
   display: flex;
   min-height: 54vh;
@@ -197,63 +227,132 @@
 .signature-detail { @include m-body-small; color: var(--m-muted); margin: 0; }
 
 .config-line {
-  @include m-caption;
-  margin: -4px 0 0;
+  @include m-micro;
+  margin: -6px 0 0;
   color: var(--yantra-muted);
+  letter-spacing: 0.04em;
+  text-align: center;
 }
 
-.period-stack {
+/* Dasha clock — the running Mahadasha as a ring, the shorter periods as bars. */
+.dasha-clock {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.period-box {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px;
+  gap: 14px;
+  padding: 16px;
   border: 1px solid var(--yantra-border);
-  border-radius: 16px;
-  background: var(--yantra-surface);
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--m-gold) 12%, transparent), transparent 55%),
+    var(--yantra-surface);
+  box-shadow: var(--m-shadow-card);
 }
 
-.period-chain {
-  display: flex;
-  flex-wrap: wrap;
+.clock-top {
+  position: relative;
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
   align-items: center;
-  gap: 4px;
+  gap: 14px;
 }
 
-.period-pill {
-  @include m-caption;
-  display: inline-flex;
-  align-items: baseline;
-  gap: 3px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  color: var(--yantra-red-dark);
-  background: var(--yantra-red-soft);
-  b { font-weight: 700; }
-  &.is-active {
-    color: var(--m-on-ink);
-    background: var(--yantra-red);
+.clock-ring {
+  width: 92px;
+  height: 92px;
+  transform: rotate(-90deg);
+  circle { fill: none; stroke-width: 7; }
+  .track { stroke: color-mix(in srgb, var(--yantra-text) 10%, transparent); }
+  .fill {
+    stroke: var(--m-gold);
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--m-gold) 60%, transparent));
   }
 }
 
-.period-sep { @include m-caption; color: var(--yantra-muted); }
-.period-rule { height: 1px; background: var(--yantra-border); }
-.period-timing {
+// Planet glyphs need a symbol font; the app's text faces don't carry them.
+%planet-glyph {
+  font-family: 'Noto Sans Symbols 2', 'Noto Sans Symbols', 'Segoe UI Symbol', 'Apple Symbols', 'DejaVu Sans', sans-serif;
+  font-style: normal;
+  color: var(--m-gold);
+}
+
+.clock-glyph {
+  @extend %planet-glyph;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 92px;
+  height: 92px;
+  display: grid;
+  place-items: center;
+  font-size: 36px;
+}
+
+.clock-copy {
+  min-width: 0;
+  h2 { @include m-h2; margin: 4px 0 2px; font-size: 24px; color: var(--yantra-text); }
+}
+
+.clock-sub { @include m-caption; margin: 0; color: var(--yantra-muted); }
+
+.clock-bars { display: grid; gap: 10px; }
+
+.clock-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  row-gap: 5px;
+}
+
+.bar-label {
   @include m-caption;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
   color: var(--yantra-muted);
+  em { @extend %planet-glyph; margin-right: 4px; }
+  b { margin-right: 4px; font-weight: 600; color: var(--yantra-text); }
+}
+
+.bar-end { @include m-caption; color: var(--yantra-muted); }
+
+.bar-track {
+  grid-column: 1 / -1;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--yantra-text) 9%, transparent);
+  i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--yantra-red), var(--m-gold));
+  }
+}
+
+.clock-sky {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  span {
+    @include m-caption;
+    display: flex;
+    flex-direction: column;
+    padding: 8px 10px;
+    overflow: hidden;
+    border: 1px solid var(--yantra-border);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--yantra-text) 5%, transparent);
+    color: var(--yantra-text);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  small {
+    @include m-micro;
+    color: var(--yantra-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
 }
 
 .settings-icon { width: 18px; height: 18px; }
-.clock-icon { width: 12px; height: 12px; flex: 0 0 auto; }
 
 .yantra-grid {
   display: grid;
@@ -639,75 +738,3 @@
   .skel { animation: none; }
 }
 
-/* ---- DESIGN SAMPLE ONLY: Yantra top previews ---- */
-.s-head {
-  display: flex; align-items: center; gap: 10px;
-  padding: 14px 20px 10px;
-}
-.s-who { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; border: 0; padding: 0; background: none; text-align: left; cursor: pointer; color: var(--m-text); }
-.s-avatar {
-  width: 44px; height: 44px; border-radius: 999px; display: grid; place-items: center; flex: none;
-  @include m-body-strong; color: var(--m-on-gold);
-  background: radial-gradient(circle at 35% 30%, #ffe7a8, var(--m-gold) 55%, #9a6a22 100%);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--m-gold) 35%, transparent), 0 0 22px color-mix(in srgb, var(--m-gold) 40%, transparent);
-}
-.s-who-text { display: flex; flex-direction: column; min-width: 0;
-  small { @include m-caption; color: var(--m-muted); }
-  b { @include m-title; font-size: 19px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-}
-.s-switch { color: var(--m-muted); font-size: 16px; margin-top: 14px; }
-.s-mode {
-  @include m-micro; letter-spacing: .12em; text-transform: uppercase;
-  padding: 6px 10px; border-radius: 999px; color: var(--m-gold);
-  border: 1px solid color-mix(in srgb, var(--m-gold) 40%, transparent);
-  background: color-mix(in srgb, var(--m-gold) 10%, transparent);
-}
-
-.s-passport, .s-clock {
-  border: 1px solid var(--m-border); border-radius: 24px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--m-gold) 12%, transparent), transparent 55%), var(--m-surface);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), var(--m-shadow-card);
-  -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
-}
-.s-passport {
-  display: grid; grid-template-columns: 150px 1fr; gap: 14px; padding: 14px;
-}
-.s-mini { width: 150px; height: 150px; border-radius: 16px; overflow: hidden; background: color-mix(in srgb, var(--m-bg) 60%, transparent);
-  app-kundli-chart { display: block; width: 100%; height: 100%; }
-}
-.s-facts { margin: 0; display: grid; gap: 8px; align-content: center;
-  div { display: flex; flex-direction: column; }
-  dt { @include m-micro; color: var(--m-muted); text-transform: uppercase; letter-spacing: .08em; }
-  dd { margin: 0; @include m-body-strong; font-size: 15px; line-height: 1.25; color: var(--m-text);
-    small { @include m-caption; color: var(--m-muted); font-weight: 500; } }
-}
-.s-chips { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
-  span { @include m-micro; padding: 5px 9px; border-radius: 999px; color: var(--m-muted); border: 1px solid var(--m-border); }
-  .s-open { @include m-micro; margin-left: auto; color: var(--m-accent-strong); text-decoration: none; padding: 5px 0; }
-}
-
-.s-clock { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
-.s-clock-top { position: relative; display: grid; grid-template-columns: 92px 1fr; gap: 14px; align-items: center; }
-.s-ring { width: 92px; height: 92px; transform: rotate(-90deg);
-  circle { fill: none; stroke-width: 7; }
-  .track { stroke: color-mix(in srgb, var(--m-text) 10%, transparent); }
-  .fill { stroke: var(--m-gold); stroke-linecap: round; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--m-gold) 60%, transparent)); }
-}
-.s-glyph { position: absolute; left: 0; top: 0; width: 92px; height: 92px; display: grid; place-items: center; font-size: 36px; color: var(--m-gold); font-family: 'Noto Sans Symbols 2', 'Noto Sans Symbols', 'Segoe UI Symbol', 'Apple Symbols', 'DejaVu Sans', sans-serif; }
-.s-clock-copy { min-width: 0;
-  h2 { @include m-h2; font-size: 24px; margin: 4px 0 2px; color: var(--m-text); }
-  .s-sub { @include m-caption; margin: 0; color: var(--m-muted); }
-}
-.s-bars { display: grid; gap: 10px; }
-.s-bar { display: grid; grid-template-columns: 1fr auto; row-gap: 5px;
-  .s-bar-label { @include m-caption; color: var(--m-muted); b { color: var(--m-text); font-weight: 600; margin-right: 4px; } em { font-style: normal; font-family: 'Noto Sans Symbols 2', 'Segoe UI Symbol', 'DejaVu Sans', sans-serif; color: var(--m-gold); margin-right: 4px; } }
-  .s-bar-end { @include m-caption; color: var(--m-muted); }
-  .s-track { grid-column: 1 / -1; height: 5px; border-radius: 999px; background: color-mix(in srgb, var(--m-text) 9%, transparent); overflow: hidden;
-    i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--m-accent), var(--m-gold)); } }
-}
-.s-sky { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
-  span { display: flex; flex-direction: column; padding: 8px 10px; border-radius: 14px; background: color-mix(in srgb, var(--m-text) 5%, transparent); border: 1px solid var(--m-border);
-    @include m-caption; font-weight: 600; color: var(--m-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    small { @include m-micro; font-weight: 600; color: var(--m-muted); text-transform: uppercase; letter-spacing: .08em; } }
-}
-.s-config { @include m-micro; margin: -6px 0 0; color: var(--m-muted); text-align: center; letter-spacing: .04em; }

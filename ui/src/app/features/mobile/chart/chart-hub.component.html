@@ -1,21 +1,15 @@
-@if (preferences.experienceMode() === 'practitioner' && sampleTop) {
-<header class="s-head">
-  <button class="s-who" type="button" (click)="profileSwitcherOpen.set(true)" aria-label="Switch person">
-    <span class="s-avatar">{{ profileInitial() }}</span>
-    <span class="s-who-text">
+@if (preferences.experienceMode() === 'practitioner') {
+<!-- Practitioner's home tab opens with the person, as the Figma board (214:155) does. -->
+<header class="yantra-head">
+  <button class="yantra-who" type="button" (click)="profileSwitcherOpen.set(true)" [attr.aria-label]="'Reading ' + profileName() + '. Switch person'">
+    <span class="yantra-avatar" aria-hidden="true">{{ profileInitial() }}</span>
+    <span class="yantra-who-text">
       <small>{{ greeting() }}</small>
       <b>{{ profileName() }}</b>
     </span>
-    <span class="s-switch" aria-hidden="true">⌄</span>
+    <span class="yantra-switch" aria-hidden="true">⌄</span>
   </button>
-  <span class="s-mode">Yantra</span>
-  <a class="settings-btn" [routerLink]="['/m', 'search']" aria-label="Search Siddha">
-    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="8.75" cy="8.75" r="5.75"></circle><path d="m13 13 4 4"></path></svg>
-  </a>
-</header>
-} @else if (preferences.experienceMode() === 'practitioner') {
-<header class="appbar">
-  <h1 class="screen-title">{{ screenTitle() }}</h1>
+  <h1 class="yantra-mode">{{ screenTitle() }}</h1>
   <a class="settings-btn" [routerLink]="['/m', 'search']" aria-label="Search Siddha">
     <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <circle cx="8.75" cy="8.75" r="5.75"></circle>
@@ -63,78 +57,40 @@
     <section class="chart-state"><b>No active profile</b><p>Add or select a profile before opening chart workbench.</p><a [routerLink]="['/m','settings','profiles']">Manage profiles</a></section>
   } @else {
   @if (preferences.experienceMode() === 'practitioner') {
-    @if (sampleTop === 'a') {
-    <section class="s-passport">
-      <div class="s-mini">
-        <app-kundli-chart [chart]="rashiChart()" [chartStyle]="sharedStyle()" [annotations]="chart()?.planet_annotations || {}" />
-      </div>
-      <dl class="s-facts">
-        <div><dt>Lagna</dt><dd>{{ angleOf('ASCENDANT')?.sign }}</dd></div>
-        <div><dt>Moon · Rashi</dt><dd>{{ angleOf('MOON')?.sign }} <small>{{ shortDeg(angleOf('MOON')?.degree) }}</small></dd></div>
-        <div><dt>Birth star</dt><dd>{{ birthStar() }}</dd></div>
-        <div><dt>Sun</dt><dd>{{ angleOf('SUN')?.sign }} <small>{{ shortDeg(angleOf('SUN')?.degree) }}</small></dd></div>
-      </dl>
-      <div class="s-chips">
-        @for (c of configChips(); track c) { <span>{{ c }}</span> }
-        <a class="s-open" [routerLink]="['/m', 'chart', 'full']">D1 → D60 ›</a>
-      </div>
-    </section>
-    } @else if (sampleTop === 'b') {
-    <section class="s-clock">
-      <div class="s-clock-top">
-        <svg class="s-ring" viewBox="0 0 100 100" aria-hidden="true">
-          <circle cx="50" cy="50" r="42" class="track"></circle>
-          <circle cx="50" cy="50" r="42" class="fill" [attr.stroke-dasharray]="ringDash()"></circle>
-        </svg>
-        <span class="s-glyph">{{ glyph[dashaRows()[0]?.lord ?? ''] ?? '✦' }}</span>
-        <div class="s-clock-copy">
-          <p class="eyebrow">MAHĀDASHA · {{ dashaRows()[0]?.startYear }}–{{ dashaRows()[0]?.endYear }}</p>
-          <h2>{{ dashaRows()[0]?.lord }} period</h2>
-          <p class="s-sub">{{ dashaRows()[0]?.pct }}% through · ends {{ dashaRows()[0]?.end }}</p>
-        </div>
-      </div>
-      <div class="s-bars">
-        @for (row of dashaRows().slice(1); track row.level) {
-          <div class="s-bar">
-            <span class="s-bar-label"><em>{{ glyph[row.lord] }}</em><b>{{ row.lord }}</b> {{ row.level }}</span>
-            <span class="s-bar-end">to {{ row.end }}</span>
-            <span class="s-track"><i [style.width.%]="row.pct"></i></span>
+    <!-- Dasha clock: where this person is in Vimshottari right now. -->
+    <section class="dasha-clock" aria-label="Current dasha periods">
+      @if (dashaRows().length) {
+        <div class="clock-top">
+          <svg class="clock-ring" viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="42" class="track"></circle>
+            <circle cx="50" cy="50" r="42" class="fill" [attr.stroke-dasharray]="ringDash()"></circle>
+          </svg>
+          <span class="clock-glyph" aria-hidden="true">{{ glyph(dashaRows()[0].lord) }}</span>
+          <div class="clock-copy">
+            <p class="eyebrow">MAHĀDASHA · {{ dashaRows()[0].startYear }}–{{ dashaRows()[0].endYear }}</p>
+            <h2>{{ dashaRows()[0].lord }} period</h2>
+            <p class="clock-sub">{{ dashaRows()[0].pct }}% through · ends {{ dashaRows()[0].end }}</p>
           </div>
-        }
-      </div>
-      <div class="s-sky">
-        <span><small>Lagna</small>{{ angleOf('ASCENDANT')?.sign }}</span>
-        <span><small>Moon</small>{{ angleOf('MOON')?.sign }}</span>
-        <span><small>Star</small>{{ birthStarShort() }}</span>
-      </div>
-    </section>
-    <p class="s-config">{{ configChips().join(' · ') }}</p>
-    } @else {
-    <p class="config-line">{{ practitionerConfig() }}</p>
-    }
-
-    @if (sampleTop !== 'b') {
-    <section class="period-stack">
-      <p class="eyebrow">ACTIVE PERIOD STACK (DASHA)</p>
-      <div class="period-box">
-        <div class="period-chain">
-          @for (row of dashaChain(); track row.lord + row.short; let last = $last) {
-            <span class="period-pill" [class.is-active]="row.active">
-              {{ row.lord }} <b>{{ row.short }}</b>
-            </span>
-            @if (!last) { <span class="period-sep">›</span> }
-          } @empty {
-            <span class="period-pill is-active">Dasha <b>loading</b></span>
+        </div>
+        <div class="clock-bars">
+          @for (row of dashaRows().slice(1); track row.level) {
+            <div class="clock-bar">
+              <span class="bar-label"><em aria-hidden="true">{{ glyph(row.lord) }}</em><b>{{ row.lord }}</b> {{ row.level }}</span>
+              <span class="bar-end">to {{ row.end }}</span>
+              <span class="bar-track" role="progressbar" [attr.aria-label]="row.lord + ' ' + row.level" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="row.pct"><i [style.width.%]="row.pct"></i></span>
+            </div>
           }
         </div>
-        <div class="period-rule"></div>
-        <p class="period-timing">
-          <span class="yantra-mask-icon clock-icon" style="--icon-url: url('/mobile/figma-yantra-clock.svg')" aria-hidden="true"></span>
-          <span>{{ dashaTiming() }}</span>
-        </p>
+      } @else {
+        <p class="clock-sub">Dasha periods are loading.</p>
+      }
+      <div class="clock-sky">
+        <span><small>Lagna</small>{{ angleSign('ASCENDANT') }}</span>
+        <span><small>Moon</small>{{ angleSign('MOON') }}</span>
+        <span><small>Star</small>{{ birthStar() }}</span>
       </div>
     </section>
-    }
+    <p class="config-line">{{ practitionerConfig() }}</p>
 
     <p class="eyebrow">YANTRA · EXPLORE</p>
     <div class="yantra-grid">
