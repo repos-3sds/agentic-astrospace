@@ -15,6 +15,13 @@
   min-height: 0;
 }
 
+// Practitioner opens Ask without a tab bar (MobileShell.layoutWithoutTabs), so
+// there is no bar to sit on and no padding to reclaim. Keeping the gap there
+// pushed the composer ~64 px below the screen edge.
+:host-context(.content.tabs-hidden) {
+  --ask-tab-gap: 0px;
+}
+
 /* App bar — node 25:26 */
 .appbar {
   flex-shrink: 0;
