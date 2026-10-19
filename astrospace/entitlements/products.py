@@ -28,10 +28,10 @@ class Product:
 PRODUCTS: dict[str, Product] = {
     product.id: product
     for product in (
-        # Hawk, 2026-10-19: monthly only, no yearly plans; one question for
+        # Hawk, 2026-10-19: monthly only (Plus ₹299, Practitioner ₹999), no yearly plans; one question for
         # ₹49, three for ₹129, no larger pack.
-        Product("siddha_plus_monthly", "plan", "Plus, monthly", 199, tier="plus", months=1),
-        Product("siddha_practitioner_monthly", "plan", "Practitioner, monthly", 699, tier="pro", months=1),
+        Product("siddha_plus_monthly", "plan", "Plus, monthly", 299, tier="plus", months=1),
+        Product("siddha_practitioner_monthly", "plan", "Practitioner, monthly", 999, tier="pro", months=1),
         Product("siddha_questions_1", "question_pack", "1 question", 49, questions=1),
         Product("siddha_questions_3", "question_pack", "3 questions", 129, questions=3),
     )

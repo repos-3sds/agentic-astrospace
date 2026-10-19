@@ -194,8 +194,8 @@ def test_plan_allowances():
 def test_products_list_d2_prices(env):
     client, _, _ = env
     products = {p["id"]: p for p in client.get("/api/v1/entitlements/products").json()["products"]}
-    assert products["siddha_plus_monthly"]["price_inr"] == 199
-    assert products["siddha_practitioner_monthly"]["price_inr"] == 699
+    assert products["siddha_plus_monthly"]["price_inr"] == 299
+    assert products["siddha_practitioner_monthly"]["price_inr"] == 999
     assert not [p for p in products.values() if p["months"] == 12]
     assert products["siddha_questions_3"]["questions"] == 3
     assert products["siddha_questions_3"]["price_inr"] == 129
