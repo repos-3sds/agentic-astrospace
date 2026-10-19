@@ -16,8 +16,14 @@
   --m-bg: #faf7f0;
   --m-surface: #fffcf6;
   --m-raised: #ffffff;
+  // "Cream Glass" (Hawk's pick, 2026-10-19): the day twin of Liquid Glass.
+  // The same cream ground lit by a saffron morning glow at the top, with
+  // faint rose and gold lower down, behind glossy white glass cards.
   --m-app-ground:
-    linear-gradient(180deg, #fffaf1 0%, #faf7f0 42%, #f3eee4 100%);
+    radial-gradient(70% 26% at 88% 2%, rgba(255, 178, 102, 0.3), transparent 70%),
+    radial-gradient(55% 26% at 0% 30%, rgba(236, 140, 120, 0.13), transparent 70%),
+    radial-gradient(60% 28% at 100% 74%, rgba(226, 184, 104, 0.16), transparent 70%),
+    linear-gradient(180deg, #fffaf1 0%, #faf6ee 42%, #f3ede2 100%);
   --m-frost:
     linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 252, 246, 0.78));
   --m-footer-glass: rgba(255, 252, 246, 0.58);
@@ -27,6 +33,19 @@
   --m-glass-panel: rgba(255, 252, 246, 0.82);
   --m-glass-control: rgba(255, 255, 255, 0.62);
   --m-glass-border: rgba(255, 255, 255, 0.72);
+  // The glass card recipe (the block after the dark tokens). On a light
+  // ground glass must stay mostly opaque or text loses contrast, so the gloss
+  // comes from a white-to-cream sweep, a pure white top edge and a warm
+  // shadow rather than from transparency.
+  --m-glass-card: linear-gradient(135deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 253, 248, 0.8) 42%, rgba(255, 250, 241, 0.7) 100%);
+  --m-glass-hairline: rgba(196, 172, 142, 0.34);
+  --m-glass-sheen: #ffffff;
+  --m-glass-sheen-side: rgba(255, 255, 255, 0.7);
+  --m-glass-shadow: 0 12px 32px rgba(120, 72, 30, 0.09), 0 2px 6px rgba(120, 72, 30, 0.04);
+  --m-tabbar-glass:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.36)),
+    rgba(255, 250, 242, 0.74);
+  --m-tabbar-shadow: 0 18px 46px rgba(120, 72, 30, 0.12), inset 0 1px 0 #ffffff;
   --m-border: #e6dccd;
   --m-border-strong: #d5c6b4;
 
@@ -166,7 +185,9 @@
   --m-glass-hairline: rgba(255, 255, 255, 0.14);
   --m-glass-sheen: rgba(255, 255, 255, 0.28);
   --m-glass-sheen-side: rgba(255, 255, 255, 0.08);
+  --m-glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.32);
   --m-tabbar-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)), rgba(16, 16, 18, 0.88);
+  --m-tabbar-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 var(--m-glass-sheen);
   --m-tab-active: rgba(255, 255, 255, 0.12);
   --m-tab-active-text: #ffffff;
   --m-border: rgba(255, 255, 255, 0.1);
@@ -204,17 +225,22 @@
   --settings-chevron-filter: brightness(1.5) saturate(0.6);
 }
 
-// Liquid Glass, dark only. Screens paint --m-bg on their own :host, which
-// would hide the ground's light; in dark the routed screen is see-through so
-// the shell's ground shows. Inner elements that need to be opaque still are.
-:root.app-dark .as-mobile router-outlet + * {
+// Glass, both themes (Liquid Glass by night, Cream Glass by day). Screens
+// paint --m-bg on their own :host, which would hide the ground's light, so the
+// routed screen is see-through and the shell's ground shows. Inner elements
+// that need to be opaque still are.
+//
+// The theme prefix below looks redundant but carries weight: ":is(:root.app-dark,
+// :root:not(.app-dark))" matches either theme with the specificity the
+// dark-only rules had, so these still beat each component's own solid fill.
+:is(:root.app-dark, :root:not(.app-dark)) .as-mobile router-outlet + * {
   background: transparent;
 }
 
 // The cards that read as glass. One list rather than a mixin in each
-// component so the whole look can be tuned, or reverted, in one place.
-// Light mode keeps each component's own solid cards.
-:root.app-dark .as-mobile :is(
+// component so the whole look can be tuned, or reverted, in one place. Each
+// theme supplies its own --m-glass-* values above.
+:is(:root.app-dark, :root:not(.app-dark)) .as-mobile :is(
   section.card:not(.skeleton-card),
   .birth-signature,
   button.why,
@@ -237,15 +263,15 @@
   box-shadow:
     inset 0 1px 0 var(--m-glass-sheen),
     inset 1px 0 0 var(--m-glass-sheen-side),
-    0 16px 40px rgba(0, 0, 0, 0.32);
+    var(--m-glass-shadow);
 }
 
 // Tinted glass keeps the meaning a solid fill used to carry.
-:root.app-dark .as-mobile .advice-card.do { --m-glass-tint: linear-gradient(180deg, var(--m-good-soft), transparent 70%); }
-:root.app-dark .as-mobile .advice-card.avoid { --m-glass-tint: linear-gradient(180deg, var(--m-bad-soft), transparent 70%); }
-:root.app-dark .as-mobile a.window { --m-glass-tint: linear-gradient(180deg, var(--m-warn-soft), transparent 80%); }
-:root.app-dark .as-mobile a.featured,
-:root.app-dark .as-mobile .yantra-tile.is-featured { --m-glass-tint: linear-gradient(135deg, var(--m-accent-soft), transparent 80%); }
+:is(:root.app-dark, :root:not(.app-dark)) .as-mobile .advice-card.do { --m-glass-tint: linear-gradient(180deg, var(--m-good-soft), transparent 70%); }
+:is(:root.app-dark, :root:not(.app-dark)) .as-mobile .advice-card.avoid { --m-glass-tint: linear-gradient(180deg, var(--m-bad-soft), transparent 70%); }
+:is(:root.app-dark, :root:not(.app-dark)) .as-mobile a.window { --m-glass-tint: linear-gradient(180deg, var(--m-warn-soft), transparent 80%); }
+:is(:root.app-dark, :root:not(.app-dark)) .as-mobile a.featured,
+:is(:root.app-dark, :root:not(.app-dark)) .as-mobile .yantra-tile.is-featured { --m-glass-tint: linear-gradient(135deg, var(--m-accent-soft), transparent 80%); }
 
 .as-mobile img[src$='back.svg'] {
   filter: var(--m-back-icon-filter);

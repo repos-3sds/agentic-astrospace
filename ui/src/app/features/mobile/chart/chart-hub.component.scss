@@ -165,11 +165,9 @@
 
 .body[data-mode='practitioner'] {
   min-height: calc(100dvh - var(--m-tabbar-total) - max(18px, var(--m-safe-bottom)));
-  background: var(--yantra-bg);
+  // Glass in both themes: let the shell's lit ground show behind the Yantra tab.
+  background: transparent;
 }
-
-// Dark Liquid Glass: let the shell's lit ground show behind the Yantra tab.
-:host-context(.app-dark) .body[data-mode='practitioner'] { background: transparent; }
 
 .chart-state {
   display: flex;
