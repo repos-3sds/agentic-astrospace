@@ -4,6 +4,12 @@ In addition to the curated worldwide table below, a complete GeoNames-derived
 populated-places dataset for selected Indian states (currently Andhra Pradesh
 and Telangana, ~36k villages/towns) is loaded lazily from
 data/state_places.json.gz — regenerate with scripts/build_state_places.py.
+
+Every populated place of 500+ people in the US and Canada (~25k, with the
+GeoNames timezone of each) is loaded the same way from
+data/world_places.json.gz — regenerate with scripts/build_world_places.py.
+Those places are stored as "Name, ST" (Springfield, IL) so a saved profile
+resolves to the same town it was picked as, not its most populous namesake.
 """
 
 from __future__ import annotations
@@ -17,6 +23,34 @@ from pathlib import Path
 
 _STATE_PLACES_PATH = Path(__file__).parent / "data" / "state_places.json.gz"
 _STATE_NAMES = {"AP": "Andhra Pradesh", "TS": "Telangana"}
+_WORLD_PLACES_PATH = Path(__file__).parent / "data" / "world_places.json.gz"
+_REGION_NAMES: dict[str, dict[str, str]] = {
+    "us": {
+        "AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas",
+        "CA": "California", "CO": "Colorado", "CT": "Connecticut",
+        "DE": "Delaware", "DC": "District of Columbia", "FL": "Florida",
+        "GA": "Georgia", "HI": "Hawaii", "ID": "Idaho", "IL": "Illinois",
+        "IN": "Indiana", "IA": "Iowa", "KS": "Kansas", "KY": "Kentucky",
+        "LA": "Louisiana", "ME": "Maine", "MD": "Maryland",
+        "MA": "Massachusetts", "MI": "Michigan", "MN": "Minnesota",
+        "MS": "Mississippi", "MO": "Missouri", "MT": "Montana",
+        "NE": "Nebraska", "NV": "Nevada", "NH": "New Hampshire",
+        "NJ": "New Jersey", "NM": "New Mexico", "NY": "New York",
+        "NC": "North Carolina", "ND": "North Dakota", "OH": "Ohio",
+        "OK": "Oklahoma", "OR": "Oregon", "PA": "Pennsylvania",
+        "RI": "Rhode Island", "SC": "South Carolina", "SD": "South Dakota",
+        "TN": "Tennessee", "TX": "Texas", "UT": "Utah", "VT": "Vermont",
+        "VA": "Virginia", "WA": "Washington", "WV": "West Virginia",
+        "WI": "Wisconsin", "WY": "Wyoming",
+    },
+    "ca": {
+        "AB": "Alberta", "BC": "British Columbia", "MB": "Manitoba",
+        "NB": "New Brunswick", "NL": "Newfoundland and Labrador",
+        "NS": "Nova Scotia", "ON": "Ontario", "PE": "Prince Edward Island",
+        "QC": "Quebec", "SK": "Saskatchewan", "YT": "Yukon",
+        "NT": "Northwest Territories", "NU": "Nunavut",
+    },
+}
 
 # (city_lower, nation_lower) -> (lat, lng, timezone)
 _CITIES: dict[tuple[str, str], tuple[float, float, str]] = {
@@ -339,8 +373,12 @@ def lookup_city(city: str, nation: str = "US") -> tuple[float, float, str] | Non
     result = _CITIES.get(key)
     if result:
         return result
-    # Try city-only match (first nation that matches)
     city_lower = _normalize(city)
+    # Country-level dataset (US, Canada): "Springfield, IL" or plain "Austin".
+    world = _lookup_world_place(city_lower, _normalize(nation))
+    if world:
+        return world
+    # Try city-only match (first nation that matches)
     for (c, n), v in _CITIES.items():
         if c == city_lower:
             return v
@@ -363,6 +401,73 @@ def lookup_city(city: str, nation: str = "US") -> tuple[float, float, str] | Non
                 if key.startswith(city_lower):
                     return index[key]
     return None
+
+
+@lru_cache(maxsize=1)
+def _world_places() -> list[list]:
+    """[name, lat, lng, region, country, population, tz] rows,
+    population-sorted."""
+    if not _WORLD_PLACES_PATH.exists():
+        return []
+    with gzip.open(_WORLD_PLACES_PATH, "rt", encoding="utf-8") as fh:
+        return json.load(fh)["places"]
+
+
+@lru_cache(maxsize=1)
+def _world_places_index() -> dict[tuple, list]:
+    """(name, country) and (name, region, country) -> row, all normalized;
+    the most populous namesake wins the region-less key."""
+    index: dict[tuple, list] = {}
+    for row in _world_places():
+        name, region, country = _normalize(row[0]), row[3].lower(), row[4].lower()
+        index.setdefault((name, country), row)
+        index.setdefault((name, region, country), row)
+    return index
+
+
+@lru_cache(maxsize=1)
+def _world_search_rows() -> list[tuple[str, list]]:
+    return [(_normalize(row[0]), row) for row in _world_places()]
+
+
+def _region_code(region: str, country: str) -> str:
+    """'IL', 'il' or 'Illinois' -> 'il'; '' when it names no region."""
+    names = _REGION_NAMES.get(country, {})
+    region = region.strip()
+    if region.upper() in names:
+        return region.lower()
+    for code, full in names.items():
+        if _normalize(full) == region:
+            return code.lower()
+    return ""
+
+
+def _lookup_world_place(city: str, nation: str) -> tuple[float, float, str] | None:
+    if nation not in _REGION_NAMES:
+        return None
+    index = _world_places_index()
+    row = None
+    if "," in city:
+        name, region = (part.strip() for part in city.rsplit(",", 1))
+        code = _region_code(region, nation)
+        if code:
+            row = index.get((name, code, nation))
+    if row is None:
+        row = index.get((city, nation))
+    return (row[1], row[2], row[6]) if row else None
+
+
+def _world_place_dict(row: list) -> dict:
+    name, lat, lng, region, country, _, tz = row
+    region_name = _REGION_NAMES.get(country.lower(), {}).get(region, region)
+    return {
+        "city": f"{name}, {region}",
+        "nation": country,
+        "timezone": tz,
+        "lat": lat,
+        "lng": lng,
+        "label": f"{region_name}, {country} · {tz}",
+    }
 
 
 def city_for_timezone(tz_str: str) -> tuple[str, str, float, float, str] | None:
@@ -419,21 +524,57 @@ def search_cities(query: str = "", limit: int = 80) -> list[dict]:
             break
 
     if q and len(rows) < limit:
-        rows.extend(_search_state_places(q, limit - len(rows),
-                                         exclude={(r["city"].lower(), r["nation"].lower()) for r in rows}))
+        remaining = limit - len(rows)
+        state = _search_state_places(
+            q, remaining, exclude={(r["city"].lower(), r["nation"].lower()) for r in rows})
+        world = _search_world_places(q, remaining, curated=rows)
+        # Exact names first, then prefixes, then substrings; within each,
+        # India before the US and Canada, matching the curated ordering.
+        for bucket in range(3):
+            rows.extend(state[bucket] + world[bucket])
+        rows = rows[:limit]
     return rows
 
 
-def _search_state_places(q: str, limit: int, exclude: set) -> list[dict]:
+def _search_world_places(q: str, limit: int, curated: list[dict]) -> tuple[list, list, list]:
+    """Prefix/substring search over the US/Canada dataset, population-ordered.
+    A curated entry at the same spot (within ~2 km) hides its duplicate:
+    "New York" already covers GeoNames' "New York City"."""
+    taken = [(r["nation"].lower(), r["lat"], r["lng"]) for r in curated]
+    exact, prefix, contains = [], [], []
+    for name_l, row in _world_search_rows():
+        if name_l == q:
+            bucket = exact
+        elif name_l.startswith(q):
+            bucket = prefix
+        elif q in name_l:
+            bucket = contains
+        else:
+            continue
+        country = row[4].lower()
+        if any(n == country and abs(lat - row[1]) < 0.02 and abs(lng - row[2]) < 0.02
+               for n, lat, lng in taken):
+            continue
+        bucket.append(_world_place_dict(row))
+        if len(exact) + len(prefix) >= limit and bucket is not contains:
+            break
+    return exact[:limit], prefix[:limit], contains[:limit]
+
+
+@lru_cache(maxsize=1)
+def _state_search_rows() -> list[tuple[str, list[str], list]]:
+    """Normalized once, not on every keystroke."""
+    return [(_normalize(row[0]), [_normalize(alt) for alt in (row[6] if len(row) > 6 else [])], row)
+            for row in _state_places()]
+
+
+def _search_state_places(q: str, limit: int, exclude: set) -> tuple[list, list, list]:
     """Prefix/substring search over the state-level dataset. Entries are
     population-sorted, so bigger towns surface first; district + state in the
-    label disambiguates same-named villages."""
+    label disambiguates same-named villages. Returns (exact, prefix, contains)."""
     exact, prefix, contains = [], [], []
-    for row in _state_places():
+    for name_l, alt_l, row in _state_search_rows():
         name, lat, lng, district, state = row[0], row[1], row[2], row[3], row[4]
-        alternates = row[6] if len(row) > 6 else []
-        name_l = _normalize(name)
-        alt_l = [_normalize(alt) for alt in alternates]
         if name_l == q or q in alt_l:
             bucket = exact
         elif name_l.startswith(q) or any(alt.startswith(q) for alt in alt_l):
@@ -456,4 +597,4 @@ def _search_state_places(q: str, limit: int, exclude: set) -> list[dict]:
         })
         if len(exact) + len(prefix) >= limit and bucket is not contains:
             break
-    return (exact + prefix + contains)[:limit]
+    return exact[:limit], prefix[:limit], contains[:limit]

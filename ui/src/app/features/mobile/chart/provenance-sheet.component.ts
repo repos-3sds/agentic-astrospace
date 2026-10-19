@@ -35,6 +35,7 @@ export class ProvenanceSheetComponent {
     { label: 'House system', value: 'Whole-sign' },
     { label: 'Calculation place', value: 'Vijayawada, India' },
     { label: 'Birth time confidence', value: 'High' },
+    { label: 'Place data', value: 'GeoNames (geonames.org), CC BY 4.0' },
   ]);
 
   readonly dismissed = output<void>();
