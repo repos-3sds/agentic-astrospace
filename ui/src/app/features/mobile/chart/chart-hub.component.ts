@@ -309,6 +309,51 @@ export class ChartHubComponent {
     ];
   });
 
+
+  // ---- DESIGN SAMPLE ONLY (Yantra top previews; not for merge) ----
+  protected readonly sampleTop = (() => { try { return localStorage.getItem('sample.yantraTop'); } catch { return null; } })();
+  protected readonly greeting = computed(() => {
+    const h = new Date().getHours();
+    return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  });
+  protected readonly configChips = computed(() => {
+    const chart = this.chart();
+    const house = String(chart?.provenance?.house_system ?? 'Whole-sign');
+    return [
+      chart?.meta?.ayanamsha?.name ?? 'Lahiri',
+      `${this.preferences.nodeType() === 'true' ? 'True' : 'Mean'} node`,
+      /whole/i.test(house) ? 'Whole-sign' : house,
+      chart?.provenance?.timezone === 'Asia/Kolkata' ? 'IST' : (chart?.provenance?.timezone ?? 'Local'),
+    ];
+  });
+  protected readonly birthStar = computed(() => {
+    const n = this.dashaData()?.birth_nakshatra;
+    return n ? `${n.name} · pada ${n.pada}` : '—';
+  });
+  protected readonly birthStarShort = computed(() => {
+    const n = this.dashaData()?.birth_nakshatra;
+    return n ? `${n.name} ${n.pada}` : '—';
+  });
+  protected shortDeg(d?: string): string { return (d ?? '').replace(/(\d+°\d+)'.*$/, "$1′"); }
+  protected readonly angleOf = (label: string) => this.angles().find((a) => a.label === label);
+  protected readonly dashaRows = computed(() => {
+    const c = this.dashaData()?.current;
+    const now = Date.now();
+    const rows: [string, import('../../../core/models').DashaPeriod | null | undefined][] = [
+      ['Mahādasha', c?.mahadasha], ['Antardasha', c?.antardasha], ['Pratyantar', c?.pratyantardasha], ['Sookshma', c?.sookshmadasha],
+    ];
+    return rows.filter(([, p]) => !!p).map(([level, p]) => {
+      const s = Date.parse(p!.start), e = Date.parse(p!.end);
+      const pct = Math.min(100, Math.max(0, ((now - s) / (e - s)) * 100));
+      return { level, lord: p!.lord, pct: Math.round(pct), start: monthYear(p!.start), end: monthYear(p!.end), startYear: p!.start.slice(0, 4), endYear: p!.end.slice(0, 4) };
+    });
+  });
+  protected readonly ringDash = computed(() => {
+    const c = 2 * Math.PI * 42;
+    return `${(c * (this.dashaRows()[0]?.pct ?? 0)) / 100} ${c}`;
+  });
+  protected readonly glyph: Record<string, string> = { Sun: '☉', Moon: '☽', Mars: '♂', Mercury: '☿', Jupiter: '♃', Venus: '♀', Saturn: '♄', Rahu: '☊', Ketu: '☋' };
+
   /** The provenance sheet (36:247), shared with the full render. */
   readonly provenanceOpen = signal(false);
   readonly profileSwitcherOpen = signal(false);
