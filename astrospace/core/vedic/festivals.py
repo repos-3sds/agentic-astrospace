@@ -60,6 +60,7 @@ from __future__ import annotations
 
 from datetime import date as date_cls, timedelta
 
+from . import festival_guidance
 from .constants import LUNAR_MONTHS, NAKSHATRAS
 from .masa import amanta_masa
 from .nakshatra import nakshatra_of
@@ -145,9 +146,16 @@ FESTIVALS: list[dict] = [
        local_names={"te": "ఉగాది", "ta": "யுகாதி", "mr": "गुढी पाडवा"},
        description="Lunar new year in the Deccan and Maharashtra.",
        prep="Prepare Ugadi pachadi; clean and decorate the doorway."),
-    _f("gauri_habba", "Gauri Habba / Cheti Chand", _lunar("Chaitra", "Shukla", 3),
-       regions=[SOUTH],
-       description="Gauri worship in Karnataka; Cheti Chand for Sindhis."),
+    # The slug predates the name fix and is kept so stored ids survive a
+    # re-seed. Chaitra Shukla Tritiya is Gangaur; Karnataka's Gowri Habba is
+    # Bhadrapada Shukla Tritiya, kept under hartalika_teej.
+    _f("gauri_habba", "Gangaur / Gauri Tritiya", _lunar("Chaitra", "Shukla", 3),
+       regions=[NORTH],
+       description="Gauri worship of Rajasthan and Madhya Pradesh, closing 18 days of Gangaur.",
+       observance_note="Karnataka's Gowri Habba is a different day: the day "
+                       "before Ganesh Chaturthi. Sindhi Cheti Chand usually "
+                       "falls a day earlier, on the new moon's first sighting.",
+       convention_dependent=True),
     _f("rama_navami", "Rama Navami", _lunar("Chaitra", "Shukla", 9),
        regions=[PAN],
        local_names={"te": "శ్రీరామ నవమి", "ta": "ராம நவமி"},
@@ -416,9 +424,10 @@ FESTIVALS: list[dict] = [
        regions=[NORTH], description="Teej of the Bundelkhand and Braj regions."),
 
     # Bhadrapada / Purattasi
-    _f("hartalika_teej", "Hartalika Teej", _lunar("Bhadrapada", "Shukla", 3),
-       regions=[NORTH],
-       description="Fast for Parvati, the day before Ganesh Chaturthi."),
+    _f("hartalika_teej", "Hartalika Teej / Gowri Habba", _lunar("Bhadrapada", "Shukla", 3),
+       regions=[NORTH, SOUTH], local_names={"kn": "ಗೌರಿ ಹಬ್ಬ"},
+       description="Fast for Parvati, the day before Ganesh Chaturthi; "
+                   "Gowri Habba in Karnataka."),
     _f("rishi_panchami", "Rishi Panchami", _lunar("Bhadrapada", "Shukla", 5),
        regions=[PAN], description="Honouring the seven rishis."),
     _f("anant_chaturdashi", "Anant Chaturdashi / Ganesh Visarjan",
@@ -808,6 +817,7 @@ def occurrences(year: int, *, city: str | None = None, nation: str = "IN",
                 "regions": festival["regions"],
                 "description": festival["description"],
                 "prep_guidance": festival["prep_guidance"],
+                "guidance": festival_guidance.for_festival(festival["slug"]),
                 "occurs_on": occurs_on,
                 "observance_note": note,
                 "is_convention_dependent": (

@@ -129,6 +129,15 @@ Security requirements:
 
 ## Console Areas
 
+### Tester pulse
+
+Administrators only. For the friends-and-family test: every account with its last
+sign-in, birth charts, question count and last question time, newest sign-in first;
+tiles for accounts, active today, readers who have asked, and questions today; and new
+accounts and questions per day over 14 days. Days are India days. A reader is named by
+their own chart (relation `self`). Question text is never sent to the console. The page
+refreshes every minute while open. Code: `astrospace/admin/tester_pulse.py`.
+
 ### Overview
 
 The overview combines:
@@ -365,6 +374,7 @@ All routes use the `/api/v1/admin` prefix.
 | `GET /users/{id}` | Reviewer | Inspect one user |
 | `POST /users/{id}/status` | Admin | Suspend or restore account |
 | `GET /activity` | Reviewer | Recent product activity |
+| `GET /testers` | Admin | Tester pulse: sign-ins and questions per account |
 | `GET /system` | Reviewer | Counts and ingestion health |
 | `GET /sources` | Reviewer | Search and list sources |
 | `GET /sources/{id}` | Reviewer | Source, sections, chunks, runs |

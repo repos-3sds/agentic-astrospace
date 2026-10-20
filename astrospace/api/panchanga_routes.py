@@ -9,7 +9,7 @@ from typing import Optional
 from ..db import get_db
 from ..db import crud
 from ..core.cities import lookup_city, search_cities
-from .timing_place import resolve_timing_place
+from .timing_place import resolve_timing_place, validate_timezone
 from ..core.vedic import LocationError
 from ..core.vedic import festivals
 from ..core.vedic.panchanga_day import DAY_QUALITY_NOTE, daily_panchanga, day_quality, personal_panchanga
@@ -34,13 +34,9 @@ def _parse_date(date_str: Optional[str], tz_str: str) -> tuple[int, int, int]:
 
 
 def _validate_timezone(tz_str: Optional[str], fallback: str) -> str:
-    if not tz_str:
-        return fallback
-    try:
-        ZoneInfo(tz_str)
-    except Exception:
-        raise HTTPException(status_code=400, detail="timezone must be a valid IANA timezone")
-    return tz_str
+    # Same rule as the personal routes (timing_place.validate_timezone): an
+    # unreadable zone from the phone falls back to the city's own clock.
+    return validate_timezone(tz_str, fallback)
 
 
 @router.get("/cities")

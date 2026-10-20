@@ -60,7 +60,7 @@ export function friendlyApiMessage(status: number, detail: unknown): string {
   if (status === 422 && /birth place from the search results/i.test(raw)) return raw;
   if (status === 422 || Array.isArray(detail)) return 'Some of the details sent weren’t valid. Check the date, time and place and try again.';
   if (/\bcity\b/i.test(raw)) return 'We couldn’t place that city. Check the place of birth and try again.';
-  if (/timezone/i.test(raw)) return 'We couldn’t work out the time zone for that place. Check the place of birth and try again.';
+  if (/timezone/i.test(raw)) return 'We couldn’t tell your time zone. Go to Settings › Location, pick your city, and try again.';
   if (/birth details/i.test(raw)) return 'The saved birth details could not be used. Check the date, time and place of birth.';
   if (/must be YYYY-MM-DD|date must be/i.test(raw)) return 'That date couldn’t be read. Pick the date again.';
   return 'That request couldn’t be completed. Check the details and try again.';

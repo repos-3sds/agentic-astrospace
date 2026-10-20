@@ -1,13 +1,13 @@
-<a class="appbar" [asBack]="['/m', 'remedies']">
+<a class="appbar" [asBack]="['/m', 'explore']">
   <img src="mobile/back.svg" alt="" aria-hidden="true" />
-  <span class="crumb">What to do</span>
+  <span class="crumb">Back</span>
 </a>
 
 <div class="body">
   <header class="intro">
     <h1 class="title">Find the best time</h1>
     <p class="lede">
-      Pick what you’re planning — we’ll find windows that suit your chart.
+      Pick what you’re planning. We’ll find times that suit your chart, in the hours it can actually happen.
     </p>
   </header>
 
@@ -19,8 +19,21 @@
     />
   } @else {
 
+  <div class="categories" role="tablist" aria-label="Kind of plan">
+    @for (c of categories; track c.id) {
+      <button
+        type="button"
+        role="tab"
+        class="category"
+        [class.is-on]="c.id === category()"
+        [attr.aria-selected]="c.id === category()"
+        (click)="selectCategory(c.id)"
+      >{{ c.label }}</button>
+    }
+  </div>
+
   <div class="goals" role="radiogroup" asSelectHaptic aria-label="What are you planning?">
-    @for (goal of goals(); track goal.id) {
+    @for (goal of visibleGoals(); track goal.id) {
       <button
         class="goal"
         type="button"
@@ -47,12 +60,53 @@
         id="muhurta-intent"
         rows="3"
         maxlength="120"
-        placeholder="Example: start a community satsang, register a course, move office..."
+        placeholder="Example: car delivery, community satsang, move office..."
         [value]="customIntent()"
         (input)="customIntent.set($any($event.target).value)"
       ></textarea>
-      <p>For custom intents we use a general panchanga screen unless the activity matches a specific ceremony above.</p>
+      <p>We use the rules of the closest plan above when your words name one (a car, a house, a wedding), and say which we used.</p>
     </section>
+  }
+
+  @if (whose() !== 'self' && profiles().length > 1) {
+    <section class="panel" aria-label="Whose chart">
+      <label class="panel-label" for="muhurta-person">{{ whoseLabel() }}</label>
+      <select id="muhurta-person" [value]="effectivePersonId()" (change)="personId.set($any($event.target).value)">
+        @for (k of profiles(); track k.id) {
+          <option [value]="k.id" [selected]="k.id === effectivePersonId()">{{ k.name }}</option>
+        }
+      </select>
+      @if (whose() === 'couple') {
+        <label class="panel-label" for="muhurta-partner">And their partner</label>
+        <select id="muhurta-partner" [value]="effectivePartnerId() ?? ''" (change)="partnerId.set($any($event.target).value || null)">
+          <option value="" [selected]="!effectivePartnerId()">Not in my profiles</option>
+          @for (k of partnerOptions(); track k.id) {
+            <option [value]="k.id" [selected]="k.id === effectivePartnerId()">{{ k.name }}</option>
+          }
+        </select>
+        <p class="panel-note">With both charts we check the Moon and star for each of you.</p>
+      }
+    </section>
+  }
+
+  @if (selectedGoal() === 'marriage_related') {
+    <p class="eyebrow">CEREMONY</p>
+    <div class="ranges" role="radiogroup" asSelectHaptic aria-label="Ceremony time">
+      @for (c of [{ id: '', label: 'Either' }, { id: 'day', label: 'By day' }, { id: 'night', label: 'Evening or night' }]; track c.id) {
+        <button class="range" type="button" role="radio" [class.is-on]="ceremony() === c.id"
+          [attr.aria-checked]="ceremony() === c.id" (click)="ceremony.set($any(c.id))">{{ c.label }}</button>
+      }
+    </div>
+  }
+
+  @if (selectedGoal() === 'start_journey') {
+    <p class="eyebrow">WHICH WAY</p>
+    <div class="ranges" role="radiogroup" asSelectHaptic aria-label="Direction of travel">
+      @for (d of [{ id: '', label: 'Any' }, { id: 'north', label: 'North' }, { id: 'south', label: 'South' }, { id: 'east', label: 'East' }, { id: 'west', label: 'West' }]; track d.id) {
+        <button class="range" type="button" role="radio" [class.is-on]="direction() === d.id"
+          [attr.aria-checked]="direction() === d.id" (click)="direction.set($any(d.id))">{{ d.label }}</button>
+      }
+    </div>
   }
 
   <p class="eyebrow">WHEN</p>
@@ -73,43 +127,75 @@
     <section class="date-range" aria-label="Choose date range">
       <label>
         <span>From</span>
-        <input
-          type="date"
-          [value]="customFrom()"
-          [attr.max]="lastDate()"
-          (input)="setCustomFrom($any($event.target).value)"
-        />
+        <input type="date" [value]="customFrom()" [attr.max]="lastDate()" (input)="setCustomFrom($any($event.target).value)" />
       </label>
       <label>
         <span>To</span>
-        <input
-          type="date"
-          [value]="customTo()"
-          [min]="customFrom()"
-          [attr.max]="lastDate()"
-          (input)="setCustomTo($any($event.target).value)"
-        />
+        <input type="date" [value]="customTo()" [min]="customFrom()" [attr.max]="lastDate()" (input)="setCustomTo($any($event.target).value)" />
       </label>
     </section>
-    @if (horizon(); as days) {
-      <p class="horizon">Your plan searches the next {{ days }} days. Plus looks as far ahead as you like.</p>
-    }
+  }
+  @if (range() === 'date') {
+    <section class="date-range is-single" aria-label="The date you already have">
+      <label>
+        <span>The date you already have</span>
+        <input type="date" [value]="fixedDate()" [min]="today" [attr.max]="lastDate()" (input)="fixedDate.set($any($event.target).value)" />
+      </label>
+    </section>
+    <p class="horizon">For a date set by someone else (a joining day, a flight, a registration slot), we show the best hours on it.</p>
+  }
+  @if ((range() === 'custom' || range() === 'date') && horizon(); as days) {
+    <p class="horizon">Your plan searches the next {{ days }} days. Plus looks as far ahead as you like.</p>
+  }
+
+  <button class="options-toggle" type="button" [attr.aria-expanded]="showOptions()" (click)="showOptions.set(!showOptions())">
+    <span>More options</span>
+    <img src="mobile/caret-down.svg" alt="" aria-hidden="true" [class.is-open]="showOptions()" />
+  </button>
+  @if (showOptions()) {
+    <section class="panel" aria-label="More options">
+      <p class="panel-label">Days to skip</p>
+      <div class="days">
+        @for (d of weekdays; track d) {
+          <button type="button" class="day" [class.is-on]="avoidDays().includes(d)" [attr.aria-pressed]="avoidDays().includes(d)"
+            (click)="toggleAvoid(d)">{{ d.slice(0, 3) }}</button>
+        }
+      </div>
+      <p class="panel-note">Some families avoid Tuesday and Saturday for vehicles and new starts.</p>
+      @if (goal()?.season) {
+        <label class="switch-row" for="muhurta-season">
+          <span>
+            <b>Follow Chaturmas, Kharmas and similar rules</b>
+            <small>Leaves out the months many families wait through for this. Turn off if yours does not.</small>
+          </span>
+          <input id="muhurta-season" type="checkbox" [checked]="observeSeason()" (change)="observeSeason.set($any($event.target).checked)" />
+        </label>
+      }
+    </section>
   }
 
   <!--
     Stated, not assumed: a muhurta is sunrise-relative, so the same instant is a
     different window in another city.
   -->
-  <a class="place" routerLink="/m/settings/location">
+  <div class="place">
     <img src="mobile/pin.svg" alt="" aria-hidden="true" />
-    <span>Windows for {{ place() }}</span>
-    <span class="place-change">Change</span>
-  </a>
+    <span>Times for {{ place() }}</span>
+    @if (eventPlace()) {
+      <button type="button" class="place-change" (click)="clearPlace()">Reset</button>
+    } @else {
+      <button type="button" class="place-change" (click)="choosingPlace.set(!choosingPlace())">Where will it happen?</button>
+    }
+  </div>
+  @if (choosingPlace()) {
+    <as-city-picker label="WHERE WILL THIS HAPPEN?" inputId="muhurta-place" placeholder="Search city" (picked)="pickPlace($event)" />
+    <a class="horizon" routerLink="/m/settings/location">Or change the city for the whole app</a>
+  }
   }
 </div>
 
 @if (!locked()) {
 <button class="find" type="button" [disabled]="!canSearch()" (click)="findWindows()">
-  Find windows
+  Find times
 </button>
 }

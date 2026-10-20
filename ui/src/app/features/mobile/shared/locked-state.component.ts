@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { EntitlementDenial } from '../../../core/entitlement-denial';
+import { PurchaseService } from '../../../core/purchase.service';
 
 /**
  * The one card for "a plan or limit stopped this": Ask's monthly answers,
@@ -57,6 +58,9 @@ import { EntitlementDenial } from '../../../core/entitlement-denial';
 })
 export class LockedStateComponent {
   readonly denial = input.required<EntitlementDenial>();
+  private readonly store = inject(PurchaseService);
+  /** The store's own price for one question, in the reader's currency; Play's India price until it loads. */
+  private readonly questionPrice = computed(() => this.store.prices()['siddha_questions_1'] ?? '₹50');
 
   protected readonly isAsk = computed(() => this.denial().entitlement === 'ask.answers.period');
 
@@ -75,7 +79,7 @@ export class LockedStateComponent {
     const back = resetSentence(d.resets_at);
     if (d.entitlement === 'ask.answers.period') {
       return welcomeOnly(d)
-        ? 'Your free question is used. Plus gives you 5 answers a month, or buy a question for ₹49.'
+        ? `Your free question is used. Plus gives you 5 answers a month, or buy a question for ${this.questionPrice()}.`
         : `Your answers for this month are used.${back} A question pack adds more right away.`;
     }
     if (d.entitlement === 'profiles.max') {

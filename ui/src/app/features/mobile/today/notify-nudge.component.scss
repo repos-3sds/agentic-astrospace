@@ -1,0 +1,45 @@
+@use '../mobile-tokens' as *;
+:host { display: contents; }
+.nudge {
+  display: flex;
+  gap: 12px;
+  padding: 14px 15px;
+  border: 1px solid var(--m-border);
+  border-radius: 18px;
+  background: var(--m-surface);
+  box-shadow: var(--m-shadow-card);
+}
+.nudge-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--m-gold-soft);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  img { width: 20px; height: 20px; display: block; }
+}
+.nudge-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.nudge-title { @include m-body-strong; color: var(--m-text); margin: 0; }
+.nudge-detail { @include m-caption; color: var(--m-muted); margin: 0; }
+.nudge-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+button {
+  min-height: 40px;
+  border: 1px solid var(--m-border-strong);
+  border-radius: 999px;
+  padding: 8px 14px;
+  color: var(--m-accent-strong);
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+  &:disabled { opacity: 0.6; }
+}
+// --m-on-gold is fixed dark in both themes, so on the light theme's dark
+// gold it was unreadable. The primary CTA pair flips with the theme.
+button.primary {
+  border-color: transparent;
+  background: var(--m-primary-cta);
+  color: var(--m-on-primary);
+}

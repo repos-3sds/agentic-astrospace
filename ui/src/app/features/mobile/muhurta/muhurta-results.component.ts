@@ -7,22 +7,34 @@ import { PreferencesService } from '../../../core/preferences.service';
 import { timingClockNote, timingPlaceLabel } from '../../../core/timing-place';
 import { AnalyticsService } from '../../../core/analytics.service';
 import { addToCalendar as addEventToCalendar } from '../../../core/calendar-export';
-import { MuhurtaApiWindow, VedicService } from '../../../core/vedic.service';
+import { MuhurtaApiWindow, MuhurtaSearchOptions, MuhurtaSearchPayload, VedicService } from '../../../core/vedic.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { localIsoDate } from './muhurta-goal.component';
 
-/** How strongly a window is endorsed. Two levels, not a score. */
-export type WindowQuality = 'best' | 'good';
+/** How strongly a window is endorsed, in words. */
+export type WindowQuality = 'best' | 'good' | 'workable';
+
+export const QUALITY_WORDS: Record<WindowQuality, string> = {
+  best: 'Excellent',
+  good: 'Good',
+  workable: 'Usable',
+};
 
 export interface MuhurtaWindow {
   rank: number;
   date: string;
   quality: WindowQuality;
+  qualityLabel: string;
   time: string;
   score: number;
   window: string;
   supports: string[];
   against: string[];
+  /** The classical names behind the plain reasons. */
+  terms: string[];
+  badges: string[];
+  tags: string[];
   /** The rule that produced this window, named. */
   reason: string;
   startIso: string;
@@ -36,16 +48,27 @@ export interface MuhurtaWindow {
  * matter".
  */
 const GOAL_PHRASES: Record<string, string> = {
-  buy_property_gold: 'buy property or gold',
+  buy_vehicle: 'buy or take delivery of a vehicle',
+  buy_gold: 'buy gold or jewellery',
+  buy_property_gold: 'buy property',
+  property_registration: 'register property',
   sign_contract: 'sign a contract',
+  start_venture: 'open a shop or business',
+  join_job: 'join a new job',
+  move_rented_home: 'move into a rented home',
   start_journey: 'start a journey',
+  start_sadhana: 'start a vrat, japa or practice',
   griha_pravesha: 'do Griha Pravesha',
+  bhoomi_puja: 'do bhoomi puja',
   upanayana: 'perform Upanayana',
   namakarana: 'hold Namakarana',
   annaprashana: 'hold Annaprashana',
+  mundan: 'do the first haircut (mundan)',
+  karnavedha: 'do ear piercing',
+  seemantham: 'hold the baby shower',
   vidyarambha: 'begin learning',
-  start_venture: 'start a new venture',
-  marriage_related: 'plan something marriage-related',
+  marriage_related: 'hold the wedding',
+  engagement: 'hold the engagement',
   general: 'do what you’re planning',
 };
 
@@ -54,32 +77,24 @@ const RANGE_LABELS: Record<string, string> = {
   month: 'This month',
   fortnight: 'Next 2 weeks',
   custom: 'Your dates',
+  date: 'Your date',
 };
 
-const DEPLOYED_GOAL_FALLBACKS: Record<string, string> = {
-  griha_pravesha: 'buy_property_gold',
-  upanayana: 'general',
-  namakarana: 'general',
-  annaprashana: 'general',
-  vidyarambha: 'start_venture',
-};
+const PAGE = 8;
 
 /**
  * Muhurta — Results (Figma node 31:57).
  *
- * Ranked windows for one stated purpose. Each carries the rule that produced
- * it — "Amrit Kalam overlaps a favourable Choghadiya", "Strong Abhijit
- * muhurta" — rather than a bare score, because those rules are exactly the
- * convention-dependent part: Choghadiya, Abhijit and the sunrise the whole
- * scheme hangs off all have more than one defensible reckoning. Naming the
- * rule is what lets a reader who follows a different tradition see that it is
- * a different tradition, and not a mistake. The place is in the subheading for
- * the same reason: a muhurta is sunrise-relative and does not travel.
+ * Ranked times for one stated purpose. Each says, in plain words, what
+ * supports it and what needs care, with the classical names one tap away
+ * ("Why this time?") — those names are exactly the convention-dependent
+ * part, and naming them lets a reader who follows another tradition see that
+ * it is a different tradition, not a mistake. What the search left out
+ * (night hours for a showroom, Chaturmas for a wedding) is said up top, so a
+ * short list never reads as a broken one.
  *
  * The closing line — timing supports the intent, the decision and diligence
- * are still the reader's — is the screen's point, not its disclaimer. An
- * auspicious window is not a warranty, and a contract signed in one is still a
- * contract someone has to read.
+ * are still the reader's — is the screen's point, not its disclaimer.
  */
 @Component({
   selector: 'as-muhurta-results',
@@ -97,18 +112,27 @@ export class MuhurtaResultsComponent {
   private readonly vedic = inject(VedicService);
   private readonly preferences = inject(PreferencesService);
   protected readonly loading = signal(true);
+  protected readonly loadingMore = signal(false);
   protected readonly error = signal<string | null>(null);
   /** The backend's refer-out sentence for an excluded intent; not an error. */
   protected readonly referOut = signal<string | null>(null);
   protected readonly searched = signal(false);
-  protected readonly note = signal<string | null>(null);
-  protected readonly disclaimer = signal('Timing supports your intent — the decision and diligence are still yours.');
+  protected readonly notes = signal<string[]>([]);
+  protected readonly nextGood = signal<MuhurtaSearchPayload['next_good']>(null);
+  protected readonly moreAvailable = signal(0);
+  protected readonly rulesNote = signal<string | null>(null);
+  protected readonly observanceNote = signal<string | null>(null);
+  protected readonly disclaimer = signal('Timing supports your intent; the decision and the care are still yours.');
+  protected readonly open = signal<number | null>(null);
+  protected readonly practitioner = computed(() => this.preferences.experienceMode() === 'practitioner');
+  private limit = PAGE;
 
   protected readonly heading = computed(() => {
     const goal = this.params().get('goal') ?? 'sign_contract';
     const intent = this.params().get('intent')?.trim();
-    if (goal === 'general' && intent) return `Best times for ${intent}`;
-    return `Best times to ${GOAL_PHRASES[goal] ?? GOAL_PHRASES['general']}`;
+    const when = this.params().get('range') === 'date' ? ` on ${this.shortDate(this.params().get('date_from') ?? '')}` : '';
+    if (goal === 'general' && intent) return `Best times for ${intent}${when}`;
+    return `Best times to ${GOAL_PHRASES[goal] ?? GOAL_PHRASES['general']}${when}`;
   });
 
   protected readonly scope = computed(() => {
@@ -118,14 +142,18 @@ export class MuhurtaResultsComponent {
     return [RANGE_LABELS[range] ?? RANGE_LABELS['month'], this.dateScope(), this.place()].filter(Boolean).join(' · ');
   });
 
+  /** Whose chart the times were checked against. */
+  protected readonly forWhom = computed(() => {
+    const names = [this.params().get('person'), this.params().get('partner')]
+      .filter(Boolean)
+      .map((id) => this.kundlis.kundlis().find((k) => k.id === id)?.name)
+      .filter(Boolean);
+    return names.length ? `Checked against ${names.join(' and ')}’s chart${names.length > 1 ? 's' : ''}.` : '';
+  });
+
   readonly place = signal('');
   /** Whose clock the window times are in, stated under the list. */
   readonly clockNote = signal('');
-  /**
-   * The API flags every muhurta result as convention-dependent (sunrise
-   * definition, Choghadiya tables, Abhijit observance all vary by region and
-   * almanac). Rendered as a sentence rather than a boolean nobody can read.
-   */
   readonly conventionDependent = signal(false);
 
   readonly windows = signal<MuhurtaWindow[]>([]);
@@ -171,26 +199,51 @@ export class MuhurtaResultsComponent {
     void this.load();
   }
 
-  private async load(): Promise<void> {
-    this.loading.set(true);
+  protected showMore(): void {
+    this.limit += PAGE;
+    void this.load(true);
+  }
+
+  protected toggle(rank: number): void {
+    this.open.set(this.open() === rank ? null : rank);
+  }
+
+  private async load(more = false): Promise<void> {
+    (more ? this.loadingMore : this.loading).set(true);
     this.error.set(null);
     this.referOut.set(null);
-    this.searched.set(false);
+    if (!more) this.searched.set(false);
     try {
       await this.kundlis.load();
-      const activeId = this.kundlis.activeId();
+      const p = this.params();
+      const activeId = p.get('person') || this.kundlis.activeId();
       if (!activeId) {
         this.windows.set([]);
         return;
       }
-      const goal = this.params().get('goal') ?? 'sign_contract';
-      const dateFrom = this.params().get('date_from') ?? this.isoDate(new Date());
-      const dateTo = this.params().get('date_to') ?? this.isoDate(this.addDays(new Date(), 30));
-      const place = this.preferences.panchangaPlace();
-      const payload = await this.loadMuhurta(activeId, goal, dateFrom, dateTo, place);
+      const goal = p.get('goal') ?? 'sign_contract';
+      const dateFrom = p.get('date_from') ?? localIsoDate(new Date());
+      const dateTo = p.get('date_to') ?? localIsoDate(addDays(new Date(), 30));
+      const eventCity = p.get('city');
+      const place = eventCity ? { city: eventCity, nation: p.get('nation') ?? 'IN' } : this.preferences.panchangaPlace();
+      const intent = goal === 'general' ? p.get('intent') : null;
+      const options: MuhurtaSearchOptions = {
+        partnerId: p.get('partner'),
+        ceremony: (p.get('ceremony') as MuhurtaSearchOptions['ceremony']) ?? null,
+        direction: (p.get('direction') as MuhurtaSearchOptions['direction']) ?? null,
+        avoid: (p.get('avoid') ?? '').split(',').filter(Boolean),
+        observeSeason: p.get('season') !== 'off',
+      };
+      const payload = await this.vedic.muhurta(activeId, goal, dateFrom, dateTo, place, this.limit, intent, options);
       this.place.set(timingPlaceLabel(payload.place) || (place ? `${place.city}, ${place.nation}` : 'birth city'));
       this.clockNote.set(timingClockNote(payload.place));
-      this.note.set(payload.note);
+      this.notes.set(payload.notes ?? (payload.note ? [payload.note] : []));
+      this.nextGood.set(payload.next_good ?? null);
+      this.moreAvailable.set(payload.more_available ?? 0);
+      this.observanceNote.set(payload.observance_note ?? null);
+      this.rulesNote.set(goal === 'general' && intent && payload.rules_goal && payload.rules_goal !== 'general'
+        ? `For “${intent}” we used the rules for: ${payload.rules_label}.`
+        : null);
       this.disclaimer.set(payload.disclaimer);
       this.conventionDependent.set(!!payload.is_convention_dependent);
       this.windows.set(this.extractWindows(payload.results));
@@ -200,59 +253,49 @@ export class MuhurtaResultsComponent {
     } finally {
       this.searched.set(true);
       this.loading.set(false);
-    }
-  }
-
-  private async loadMuhurta(
-    activeId: string,
-    goal: string,
-    dateFrom: string,
-    dateTo: string,
-    place: { city: string; nation: string } | null,
-  ) {
-    try {
-      return await this.vedic.muhurta(activeId, goal, dateFrom, dateTo, place);
-    } catch (error) {
-      const fallback = DEPLOYED_GOAL_FALLBACKS[goal];
-      const message = (error as Error).message ?? '';
-      if (!fallback || !message.toLowerCase().includes('unknown goal')) throw error;
-      const payload = await this.vedic.muhurta(activeId, fallback, dateFrom, dateTo, place);
-      return {
-        ...payload,
-        note: payload.note ?? `Using the closest available panchanga rules for ${GOAL_PHRASES[goal] ?? 'this intent'} until the dedicated backend rule is live.`,
-      };
+      this.loadingMore.set(false);
     }
   }
 
   private extractWindows(results: MuhurtaApiWindow[]): MuhurtaWindow[] {
-    return results.map((window, index) => ({
+    return results.map((window, index) => {
+      const quality: WindowQuality = window.quality ?? 'workable';
+      const tags = [
+        window.night ? 'Night' : null,
+        window.weekend ? 'Weekend' : null,
+      ].filter(Boolean) as string[];
+      return {
         rank: index + 1,
         date: this.dateLabel(window.date),
-        quality: window.quality === 'best' ? 'best' : 'good',
-        time: `${window.start} – ${window.end}${window.night ? " · Night" : ""}`,
+        quality,
+        qualityLabel: window.label ?? QUALITY_WORDS[quality],
+        time: `${window.start} – ${window.end}`,
         score: window.score,
         window: window.window,
         supports: window.why.supports,
         against: window.why.against,
+        terms: window.why.terms ?? [],
+        badges: window.badges ?? [],
+        tags,
         reason: this.reason(window),
         startIso: window.start_iso,
         endIso: window.end_iso,
-      }));
+      };
+    });
   }
 
   private reason(window: MuhurtaApiWindow): string {
-    // The window name and score already sit on the line above.
     const parts = [
-      window.vara ? `${window.vara} vara` : null,
+      window.vara ?? null,
       window.nakshatra ? `${window.nakshatra} nakshatra` : null,
-      window.trimmed ? 'trimmed around avoid-windows' : null,
+      window.trimmed ? 'shortened around times to avoid' : null,
     ].filter(Boolean) as string[];
     if (!parts.length) return '';
     const text = parts.join(' · ');
     return `${text.charAt(0).toUpperCase()}${text.slice(1)}.`;
   }
 
-  private dateLabel(value: string): string {
+  protected dateLabel(value: string): string {
     const date = new Date(`${value}T12:00:00`);
     if (Number.isNaN(date.getTime())) return value;
     return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
@@ -266,19 +309,15 @@ export class MuhurtaResultsComponent {
     return `${this.shortDate(from)} - ${this.shortDate(to)}`;
   }
 
-  private shortDate(value: string): string {
+  protected shortDate(value: string): string {
     const date = new Date(`${value}T12:00:00`);
     if (Number.isNaN(date.getTime())) return value;
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
+}
 
-  private addDays(date: Date, days: number): Date {
-    const next = new Date(date);
-    next.setDate(next.getDate() + days);
-    return next;
-  }
-
-  private isoDate(date: Date): string {
-    return date.toISOString().slice(0, 10);
-  }
+function addDays(date: Date, days: number): Date {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
 }

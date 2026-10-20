@@ -24,3 +24,7 @@ fonttools[woff]>=4.50.0
 # APNs (iOS push) needs HTTP/2 and an ES256-signed provider token.
 httpx[http2]>=0.27.0
 PyJWT[crypto]>=2.8.0
+# The full IANA tz database, old names included. The python:3.12-slim image
+# is Debian trixie, whose tzdata leaves out names like Asia/Calcutta (what
+# Android reports for India); zoneinfo falls back to this package for them.
+tzdata>=2024.1

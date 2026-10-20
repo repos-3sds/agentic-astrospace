@@ -31,7 +31,7 @@ import { SheetComponent } from '../sheet/sheet.component';
       </section>
       <p class="mcal-eyebrow">MANTRA / PRAYER</p>
       <section class="mcal-mantra">
-        <b>{{ mantra().title }}</b>
+        @for (name of mantra().titles; track name) { <b>{{ name }}</b> }
         <p>{{ mantra().detail }}</p>
       </section>
       @if (festival().is_convention_dependent) {
@@ -88,6 +88,8 @@ export class FestivalSheetComponent {
     new Intl.DateTimeFormat('en', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(`${this.festival().occurs_on}T12:00:00`)),
   );
   protected readonly practiceSteps = computed(() => {
+    const todo = this.festival().guidance?.todo;
+    if (todo?.length) return todo;
     const prep = this.festival().prep_guidance;
     return [
       prep || 'Keep the observance simple: clean the space, light a lamp, and offer prayer according to your family practice.',
@@ -97,6 +99,9 @@ export class FestivalSheetComponent {
   });
   protected readonly howSteps = computed(() => {
     const festival = this.festival();
+    // The observance note already sits in its own box above, so it is not repeated here.
+    const how = festival.guidance?.how;
+    if (how) return [how, 'Your family or temple custom comes first.'];
     return [
       festival.observance_note || 'Follow your family or temple convention first when it differs from app guidance.',
       'Keep the observance proportionate: clean space, simple offering, short prayer, and charity if appropriate.',
@@ -120,7 +125,20 @@ function emptyFestival(): FestivalOccurrence {
   };
 }
 
-function mantraFor(festival: FestivalOccurrence): { title: string; detail: string } {
+function mantraFor(festival: FestivalOccurrence): { titles: string[]; detail: string } {
+  const guidance = festival.guidance;
+  if (guidance) {
+    return guidance.mantras.length
+      ? { titles: guidance.mantras.map((m) => m.name),
+          detail: 'Pick one. Chant a short mantra 11 or 108 times, or read or listen to a longer prayer once.' }
+      : { titles: ['No set mantra'], detail: 'A short prayer in your own words is enough.' };
+  }
+  const { title, detail } = guessMantra(festival);
+  return { titles: [title], detail };
+}
+
+/** Older servers send no guidance; guess from the festival's name. */
+function guessMantra(festival: FestivalOccurrence): { title: string; detail: string } {
   const key = `${festival.slug} ${festival.name}`.toLowerCase();
   if (key.includes('ganesh') || key.includes('vinayaka')) {
     return { title: 'Om Gam Ganapataye Namah', detail: 'Chant gently 11 or 108 times, or simply offer a sincere Ganesha prayer.' };
@@ -143,7 +161,7 @@ function mantraFor(festival: FestivalOccurrence): { title: string; detail: strin
   if (key.includes('nag') || key.includes('naga')) {
     return { title: 'Om Namo Bhagavate Vasuki Devaya', detail: 'Offer respect without handling or disturbing living snakes; temple prayer is safest.' };
   }
-  if (key.includes('guru')) {
+  if (key.includes('guru') && !key.includes('nanak')) {
     return { title: 'Guru Vandana', detail: 'Offer gratitude to teachers, elders, and sources of knowledge; a personal prayer is enough.' };
   }
   return { title: 'Simple nama-japa or silent prayer', detail: 'Use the deity/name associated with your family tradition, or sit quietly with a lamp for a few minutes.' };

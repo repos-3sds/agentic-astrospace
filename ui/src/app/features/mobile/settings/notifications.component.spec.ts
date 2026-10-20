@@ -31,13 +31,11 @@ class PushStub {
   native = signal(true);
   synced: Array<[string, boolean]> = [];
   enabled = 0;
-  opened = 0;
   refreshPermission = async () => this.permission();
   enable = async () => { this.enabled += 1; this.permission.set('granted'); this.registered.set(true); return this.permission(); };
   register = async () => undefined;
   saved: Record<string, boolean> | null = null;
   loadPreferences = async () => this.saved;
-  openSystemSettings = async () => { this.opened += 1; };
   syncPreference = async (id: string, on: boolean) => { this.synced.push([id, on]); };
 }
 
@@ -80,15 +78,16 @@ describe('NotificationsComponent', () => {
     expect(button('Turn on notifications')).toBeUndefined();
   });
 
-  it('shows the denied screen with a way to system settings and a way out', async () => {
+  it('shows the denied screen with a one-tap way on and a way out', async () => {
+    push.enable = async () => { push.enabled += 1; return push.permission(); };
     push.permission.set('denied');
     fixture.detectChanges();
     expect(text()).toContain('Notifications are off for Siddha');
-    expect(button('Open Settings')).toBeTruthy();
+    expect(button('Turn on notifications')).toBeTruthy();
     expect(button('Remind me later')).toBeTruthy();
-    button('Open Settings')!.click();
+    button('Turn on notifications')!.click();
     await fixture.whenStable();
-    expect(push.opened).toBe(1);
+    expect(push.enabled).toBe(1);
     button('Remind me later')!.click();
     fixture.detectChanges();
     expect(button('Remind me later')).toBeUndefined();
@@ -100,7 +99,7 @@ describe('NotificationsComponent', () => {
     fixture.detectChanges();
     expect(text()).toContain('Not available on the web');
     expect(button('Turn on notifications')).toBeUndefined();
-    expect(button('Open Settings')).toBeUndefined();
+    expect(button('Remind me later')).toBeUndefined();
   });
 
   it('syncs a toggle to the account as well as the device', () => {

@@ -179,3 +179,52 @@
   color: var(--m-muted);
   img { width: 16px; height: 16px; display: block; flex-shrink: 0; }
 }
+
+/* What the search left out, said before the list. */
+.notes {
+  margin: 0;
+  padding: 10px 12px 10px 28px;
+  border-radius: 14px;
+  background: var(--m-accent-soft);
+  color: var(--m-text);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  li { @include m-body-small; }
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: -4px;
+  span { @include m-caption; padding: 3px 8px; border-radius: 999px; }
+  .badge { background: var(--m-good-soft); color: var(--m-good); }
+  .tag { background: var(--m-raised); color: var(--m-muted); }
+}
+
+.why-toggle {
+  align-self: flex-start;
+  border: 0;
+  padding: 0;
+  background: none;
+  @include m-body-small;
+  color: var(--m-accent-strong);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.terms {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  li { @include m-caption; color: var(--m-muted); }
+}
+
+.more {
+  @include m-cta-secondary;
+  min-height: 44px;
+  color: var(--m-text);
+}

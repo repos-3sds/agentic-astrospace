@@ -11,6 +11,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from .base import BaseAstroAgent
+from .style import PLAIN_INDIAN_ENGLISH
 from ..core.cities import lookup_city
 from ..core.vedic.chart import VedicChart
 from ..core.vedic.vargas import VARGA_FUNCTIONS, VARGA_INFO
@@ -38,7 +39,7 @@ Grounding rules — non-negotiable:
 5. Be warm, practical, and concise (under ~350 words unless asked for depth).
 6. The engine's D5/D6/D8/D11 varga rules and some panchanga tables await
    validation — if you rely on one, add a one-line caveat.
-"""
+""" + PLAIN_INDIAN_ENGLISH
 
 
 class VedicQAAgent(BaseAstroAgent):

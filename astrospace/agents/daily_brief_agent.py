@@ -48,6 +48,7 @@ from pydantic import BaseModel, Field
 
 from .base import BaseAstroAgent
 from .period_agent import reading_boundary
+from .style import PLAIN_INDIAN_ENGLISH
 
 # Words a second the Listen sheet assumes at 1x, and its default speed.
 LISTEN_WORDS_PER_SECOND = 2.35
@@ -192,7 +193,7 @@ The `spoken` script is read aloud by a voice. It must:
   written as a voice would say them ("ten twenty-four to eleven fifty-two").
 
 Deliver the result by calling the tool once.
-"""
+""" + PLAIN_INDIAN_ENGLISH
 
 OVER_LIMIT_NOTE = (
     "\n\nYour previous spoken script was {words} words. Rewrite it to "

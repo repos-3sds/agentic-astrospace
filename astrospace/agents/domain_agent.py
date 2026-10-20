@@ -12,6 +12,7 @@ before it can answer.
 """
 
 from .base import BaseAstroAgent, compact_json
+from .style import PLAIN_INDIAN_ENGLISH
 from .schema import StructuredReading, StructuredReadingPatch, reading_tool_schema, repair_patch_schema
 from .verifier import valid_sources
 
@@ -94,7 +95,7 @@ REGISTERS = {
 }
 
 _LANGUAGE_ENGLISH = """
-ANSWER LANGUAGE — English. Write the reading in natural Indian English."""
+ANSWER LANGUAGE — English. Write the reading in simple Indian English.""" + PLAIN_INDIAN_ENGLISH
 
 _LANGUAGE_TELUGU = """
 ANSWER LANGUAGE — Telugu. Write every user-facing field of the structured reading in simple,

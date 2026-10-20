@@ -313,18 +313,48 @@ class TestMuhurta:
         scores = [r["score"] for r in out["results"]]
         assert scores == sorted(scores, reverse=True), "results must be rank-ordered"
 
-    def test_business_goals_put_daytime_windows_first(self, chart):
-        """A venture or contract at 22:31 isn't usable (U24): night windows
-        are marked, and rank below daytime ones of equal standing."""
-        for goal in ("start_venture", "sign_contract", "buy_property_gold"):
-            results = self._find(chart, goal=goal, start=date(2026, 11, 1), end=date(2026, 11, 30),
-                                 limit=20)["results"]
-            assert results and not results[0]["night"]
-            for r in results:
-                if r["night"]:
-                    assert any("night" in reason.lower() for reason in r["why"]["against"])
-        journey = self._find(chart, goal="start_journey", limit=20)["results"]
-        assert not any("offices" in reason for r in journey for reason in r["why"]["against"])
+    def test_errand_goals_only_offer_errand_hours(self, chart):
+        """A contract at 22:31 or a car delivery at 01:40 isn't usable (U24):
+        daytime goals keep to 8 am - 8 pm and the note says so."""
+        for goal in ("start_venture", "sign_contract", "buy_property_gold", "buy_vehicle", "general"):
+            out = self._find(chart, goal=goal, start=date(2026, 11, 1), end=date(2026, 11, 30), limit=20)
+            assert out["results"]
+            start_h, end_h = out["hours"]
+            for r in out["results"]:
+                assert not r["night"]
+                assert f"{int(start_h):02d}:00" <= r["start"] and r["end"] <= f"{int(end_h):02d}:00"
+            assert muhurta.GOALS[goal]["hours_note"] in out["note"]
+        journey = self._find(chart, goal="start_journey", limit=20)
+        assert journey["hours"] is None
+        assert "are shown" not in (journey["note"] or "")
+
+    def test_typed_car_delivery_gets_vehicle_rules_and_daytime_slots(self, chart):
+        """The reported case: "Purchase and Delivery of the New Car" over a
+        month gave two night slots scoring 50."""
+        out = self._find(chart, goal="general", start=date(2026, 10, 20), end=date(2026, 11, 19),
+                         intent="Purchase and Delivery of the New Car")
+        assert out["rules_goal"] == "buy_vehicle"
+        assert len(out["results"]) == 5
+        assert all(not r["night"] and r["score"] >= muhurta._MIN_SCORE for r in out["results"])
+
+    def test_intent_mapping(self):
+        assert muhurta.goal_for_intent("Bring home my new scooter") == "buy_vehicle"
+        assert muhurta.goal_for_intent("gruhapravesam") == "griha_pravesha"
+        assert muhurta.goal_for_intent("Meet an old friend") is None
+
+    def test_typed_refer_out_topic_is_refused(self, chart):
+        with pytest.raises(muhurta.ExcludedGoalError):
+            self._find(chart, goal="general", intent="my knee surgery")
+        # A whole-word check: a courtyard is not a court case.
+        assert self._find(chart, goal="general", intent="tile the courtyard")["goal"] == "general"
+
+    def test_one_hour_is_offered_once(self, chart):
+        out = self._find(chart, goal="general", start=date(2026, 10, 20), end=date(2026, 11, 19), limit=20)
+        by_day: dict = {}
+        for r in out["results"]:
+            for other in by_day.get(r["date"], []):
+                assert not muhurta._overlaps(r["start_iso"], r["end_iso"], other["start_iso"], other["end_iso"])
+            by_day.setdefault(r["date"], []).append(r)
 
     def test_night_is_any_part_outside_six_to_nine(self):
         from datetime import datetime as dt
@@ -346,7 +376,8 @@ class TestMuhurta:
         assert trimmed, "expected at least one trimmed window in this range"
         for result in trimmed:
             assert result["start_iso"] < result["end_iso"]
-            assert any("Trimmed to avoid" in a for a in result["why"]["against"])
+            assert any("Trimmed to avoid" in t for t in result["why"]["terms"])
+            assert any("Shortened to keep clear" in a for a in result["why"]["against"])
 
     def test_amrit_kalam_base_matches_despite_nakshatra_suffix(self):
         """Windows arrive as 'Amrit Kalam (Uttara Ashadha)' — prefix match."""
@@ -390,6 +421,121 @@ class TestMuhurta:
         assert "decision" in out["disclaimer"]
         assert "qualified professional" in out["disclaimer"]
         assert out["is_convention_dependent"] is True
+
+    def test_reasons_are_plain_and_terms_are_kept_apart(self, chart):
+        """Plain lines for everyone (agents/style.py); the classical names sit
+        in `terms` for the "Why this time?" detail and Practitioner mode."""
+        out = self._find(chart, goal="buy_vehicle", start=date(2026, 11, 1), end=date(2026, 11, 20))
+        for r in out["results"]:
+            plain = " ".join(r["why"]["supports"] + r["why"]["against"])
+            for jargon in ("Tarabala", "Chandrabala", "Rikta", "Ghatak"):
+                assert jargon not in plain
+            assert any(t.startswith("Nakshatra:") for t in r["why"]["terms"])
+            assert r["label"] in {"Excellent", "Good", "Usable"}
+
+    def test_slots_are_judged_on_the_star_in_force_at_the_time(self, chart):
+        """A slot's nakshatra is the one at its midpoint, not at sunrise."""
+        out = self._find(chart, goal="start_journey", start=date(2026, 10, 21), end=date(2026, 10, 21), limit=20)
+        # 21 Oct 2026 in Vijayawada: Dhanishta until about 19:48, then Shatabhisha.
+        same_day = [r for r in out["results"] if r["start_iso"][:10] == "2026-10-21"]
+        assert {r["nakshatra"] for r in same_day if r["end"] <= "19:30"} <= {"Dhanishta"}
+        assert {r["nakshatra"] for r in same_day if r["start"] >= "20:15"} <= {"Shatabhisha"}
+        from datetime import datetime as dt
+        for r in out["results"]:
+            start, end = dt.fromisoformat(r["start_iso"]), dt.fromisoformat(r["end_iso"])
+            assert r["nakshatra"] == muhurta._moment_facts(start + (end - start) / 2)["nakshatra"]
+        ist = dt.fromisoformat("2026-10-21T12:00:00+05:30").tzinfo
+        assert muhurta._moment_facts(dt(2026, 10, 21, 12, 0, tzinfo=ist))["nakshatra"] == "Dhanishta"
+        assert muhurta._moment_facts(dt(2026, 10, 21, 22, 0, tzinfo=ist))["nakshatra"] == "Shatabhisha"
+
+    def test_results_are_spread_across_days(self, chart):
+        out = self._find(chart, goal="general", start=date(2026, 10, 20), end=date(2026, 11, 19), limit=10)
+        per_day: dict = {}
+        for r in out["results"]:
+            per_day[r["date"]] = per_day.get(r["date"], 0) + 1
+        assert max(per_day.values()) <= 2
+        assert len(per_day) >= 5
+
+    def test_season_rules_leave_days_out_and_say_so(self, chart):
+        """Chaturmas runs to Prabodhini Ekadashi (about 20-21 Nov 2026), and
+        Venus is combust around its late-October conjunction: no wedding
+        times then, with the reason stated and a way to turn it off."""
+        out = self._find(chart, goal="marriage_related", start=date(2026, 10, 25), end=date(2026, 11, 5))
+        assert out["results"] == []
+        assert any("Chaturmas" in n for n in out["notes"])
+        relaxed = self._find(chart, goal="marriage_related", start=date(2026, 10, 25),
+                             end=date(2026, 11, 5), observe_season=False)
+        assert relaxed["results"]
+        assert relaxed["season_rules"] == []
+
+    def test_chaturmas_bounds(self):
+        assert muhurta._in_chaturmas("Ashadha", "Shukla", 11)
+        assert not muhurta._in_chaturmas("Ashadha", "Shukla", 10)
+        assert muhurta._in_chaturmas("Bhadrapada", "Krishna", 3)
+        assert muhurta._in_chaturmas("Kartika", "Shukla", 11)
+        assert not muhurta._in_chaturmas("Kartika", "Shukla", 12)
+        assert not muhurta._in_chaturmas("Margashirsha", "Shukla", 1)
+
+    def test_next_good_date_after_a_thin_range(self, chart):
+        out = self._find(chart, goal="marriage_related", start=date(2026, 11, 1),
+                         end=date(2026, 11, 7), look_ahead_days=60)
+        assert out["results"] == []
+        assert out["next_good"] and out["next_good"]["date"] > "2026-11-07"
+
+    def test_wedding_ceremony_hours(self, chart):
+        day = self._find(chart, goal="marriage_related", start=date(2026, 12, 1), end=date(2026, 12, 12),
+                         ceremony="day", limit=20)
+        night = self._find(chart, goal="marriage_related", start=date(2026, 12, 1), end=date(2026, 12, 12),
+                           ceremony="night", limit=20)
+        assert day["hours"] == [6, 18] and night["hours"] == [17, 30]
+        assert all(r["start"] >= "06:00" and r["end"] <= "18:00" for r in day["results"])
+        assert all(r["start"] >= "17:00" or r["start"] < "06:00" for r in night["results"])
+
+    def test_couple_is_checked_for_both(self, chart):
+        alone = self._find(chart, goal="engagement", start=date(2026, 12, 1), end=date(2026, 12, 20), limit=20)
+        both = self._find(chart, goal="engagement", start=date(2026, 12, 1), end=date(2026, 12, 20), limit=20,
+                          partner={"nak": (chart["nak_index"] + 13) % 27,
+                                   "rashi": (chart["rashi_index"] + 6) % 12, "name": "Ravi"})
+        assert any("Ravi" in t for r in both["results"] for t in r["why"]["terms"])
+        assert alone["results"] != both["results"]
+
+    def test_avoided_weekdays_and_disha_shool(self, chart):
+        out = self._find(chart, goal="buy_vehicle", start=date(2026, 11, 1), end=date(2026, 11, 30),
+                         limit=20, avoid_weekdays=["Tuesday", "Saturday"])
+        assert all(r["vara"] not in ("Tuesday", "Saturday") for r in out["results"])
+        assert any("Saturday" in n for n in out["notes"])
+        trip = self._find(chart, goal="start_journey", start=date(2026, 11, 1), end=date(2026, 11, 14),
+                          limit=20, direction="east")
+        assert all(r["vara"] not in ("Monday", "Saturday") for r in trip["results"])
+        assert any("disha shool" in n for n in trip["notes"])
+
+    def test_special_days(self):
+        facts = {"nakshatra": "Pushya", "tithi_number": 5}
+        assert muhurta._special_days("Thursday", facts) == ["Guru Pushya"]
+        assert muhurta._special_days("Sunday", facts) == ["Ravi Pushya"]
+        assert muhurta._special_days("Saturday", {"nakshatra": "Rohini", "tithi_number": 3}) == ["Amrit Siddhi"]
+        assert muhurta._special_days("Tuesday", {"nakshatra": "Krittika", "tithi_number": 7}) == ["Tripushkar"]
+
+    def test_child_ceremony_age_note(self, chart):
+        out = self._find(chart, goal="annaprashana", start=date(2026, 11, 1), end=date(2026, 11, 7),
+                         birth_date=date(2026, 6, 1))
+        assert any("6th month" in n for n in out["notes"])
+
+    @pytest.mark.parametrize("words,goal", [
+        ("Purchase and Delivery of the New Car", "buy_vehicle"),
+        ("buying gold for Dhanteras", "buy_gold"),
+        ("registration of our flat", "property_registration"),
+        ("shifting to a rented house", "move_rented_home"),
+        ("my daughter's naming", "namakarana"),
+        ("start ekadashi vrat", "start_sadhana"),
+    ])
+    def test_more_typed_purposes_find_their_goal(self, words, goal):
+        assert muhurta.goal_for_intent(words) == goal
+
+    @pytest.mark.parametrize("words", ["C-section date", "my IVF transfer", "bail hearing", "take a home loan"])
+    def test_more_typed_refer_out_topics(self, chart, words):
+        with pytest.raises(muhurta.ExcludedGoalError):
+            self._find(chart, goal="general", intent=words)
 
     def test_goal_catalog_shape_matches_muhurta_goals_table(self):
         rows = muhurta.goal_catalog()

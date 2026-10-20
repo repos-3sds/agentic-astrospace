@@ -7,6 +7,8 @@
   <header class="intro">
     <h1 class="title">{{ heading() }}</h1>
     <p class="scope">{{ scope() }}</p>
+    @if (forWhom()) { <p class="scope">{{ forWhom() }}</p> }
+    @if (rulesNote(); as rules) { <p class="scope">{{ rules }}</p> }
     @if (conventionDependent()) {
       <p class="convention" role="note">Window edges depend on the sunrise and Choghadiya conventions in use; another panchanga may shift them by a few minutes.</p>
     }
@@ -29,9 +31,23 @@
     </section>
   } @else if (error()) {
     <as-generic-error role="alert" [message]="error()!" (retried)="retry()" />
-  } @else if (searched() && !windows().length) {
-    <section class="muhurta-state"><b>No windows cleared the bar</b><p>{{ note() || 'Widening the dates usually helps more than settling for a weak slot.' }}</p><a [routerLink]="['/m','muhurta']">Change search</a></section>
   } @else {
+  @if (notes().length) {
+    <ul class="notes" role="note">
+      @for (n of notes(); track n) { <li>{{ n }}</li> }
+    </ul>
+  }
+  @if (searched() && !windows().length) {
+    <section class="muhurta-state">
+      <b>No good times in these dates</b>
+      @if (nextGood(); as next) {
+        <p>The next good time is {{ dateLabel(next.date) }}, {{ next.start }} – {{ next.end }} ({{ next.label }}).</p>
+      } @else {
+        <p>Widening the dates usually helps more than settling for a weak time.</p>
+      }
+      <a [routerLink]="['/m','muhurta']">Change search</a>
+    </section>
+  }
   @for (w of windows(); track w.rank) {
     <article class="window" [class.is-top]="w.rank === 1">
       <div class="window-head">
@@ -39,13 +55,17 @@
           <span class="rank" [class.is-top]="w.rank === 1">#{{ w.rank }}</span>
           <p class="date">{{ w.date }}</p>
         </div>
-        <span class="quality" [attr.data-quality]="w.quality">
-          {{ w.quality === 'best' ? 'BEST' : 'GOOD' }}
-        </span>
+        <span class="quality" [attr.data-quality]="w.quality">{{ w.qualityLabel }}</span>
       </div>
 
       <p class="time">{{ w.time }}</p>
-      <p class="score">Score {{ w.score }}/100 · {{ w.window }}</p>
+      @if (w.tags.length || w.badges.length) {
+        <div class="tags">
+          @for (b of w.badges; track b) { <span class="badge">{{ b }}</span> }
+          @for (t of w.tags; track t) { <span class="tag">{{ t }}</span> }
+        </div>
+      }
+      @if (practitioner()) { <p class="score">Score {{ w.score }}/100 · {{ w.window }}</p> }
 
       <!-- The rule, named. See the class comment on why this is not a score. -->
       @if (w.reason) { <p class="reason">{{ w.reason }}</p> }
@@ -65,6 +85,17 @@
         }
       </div>
 
+      @if (w.terms.length) {
+        <button class="why-toggle" type="button" (click)="toggle(w.rank)" [attr.aria-expanded]="open() === w.rank">
+          {{ open() === w.rank ? 'Hide the details' : 'Why this time?' }}
+        </button>
+        @if (open() === w.rank) {
+          <ul class="terms">
+            @for (t of w.terms; track t) { <li>{{ t }}</li> }
+          </ul>
+        }
+      }
+
       <div class="actions">
         <button class="chip" type="button" (click)="addToCalendar(w)" [disabled]="exporting() === w.rank">
           <img src="mobile/calendar.svg" alt="" aria-hidden="true" />
@@ -77,6 +108,12 @@
       </div>
     </article>
   }
+  @if (moreAvailable() > 0) {
+    <button class="more" type="button" (click)="showMore()" [disabled]="loadingMore()">
+      {{ loadingMore() ? 'Finding more…' : 'Show more times' }}
+    </button>
+  }
+  @if (observanceNote(); as obs) { <p class="footnote"><span>{{ obs }}</span></p> }
   }
 
   <p class="footnote">

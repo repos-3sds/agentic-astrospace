@@ -15,7 +15,7 @@ from functools import lru_cache
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ..core.cities import city_for_timezone
-from ..core.vedic import LocationError, festivals
+from ..core.vedic import LocationError, festival_guidance, festivals
 from .auth import current_user
 
 # Signed-in only: an uncached festival year is 15-50 s of server CPU, and
@@ -199,6 +199,7 @@ def vrat_days(
                 "date": r["date"].isoformat(), "kind": r["kind"], "paksha": r["paksha"],
                 "name": r["name"], "is_convention_dependent": True,
                 "observance_note": festivals.VRAT_NOTES[r["kind"]],
+                "guidance": festival_guidance.for_vrat(r["kind"]),
             }
             for r in rows if start <= r["date"] <= end
         ],

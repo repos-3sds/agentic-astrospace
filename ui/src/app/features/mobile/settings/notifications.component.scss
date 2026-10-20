@@ -26,10 +26,12 @@
     font-weight: 600;
     &:disabled { opacity: 0.6; }
   }
+  // --m-on-gold is fixed dark in both themes, so on the light theme's dark
+  // gold it was unreadable. The primary CTA pair flips with the theme.
   button.primary {
-    border-color: var(--m-gold);
-    background: var(--m-gold);
-    color: var(--m-on-gold);
+    border-color: transparent;
+    background: var(--m-primary-cta);
+    color: var(--m-on-primary);
   }
   .actions {
     display: flex;

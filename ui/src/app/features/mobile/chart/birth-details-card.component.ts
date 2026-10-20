@@ -68,7 +68,9 @@ export class BirthDetailsCardComponent {
     const nakshatra = this.text('nakshatra');
     const pada = this.text('charan');
     return [
-      { label: guided ? 'Rising sign' : 'Lagna', value: this.text('lagna') ?? '—' },
+      // The degree is what two programs actually disagree on: a few arc-minutes
+      // here moves the D7-D60 lagnas long before it moves the sign.
+      { label: guided ? 'Rising sign' : 'Lagna', value: this.text('lagna') ?? '—', note: this.chart()?.lagna?.dms ?? undefined },
       { label: guided ? 'Moon sign' : 'Rashi', value: this.text('rashi') ?? '—' },
       {
         // Pada as a separate note, not appended: "Pushya · pada 4" wrapped onto

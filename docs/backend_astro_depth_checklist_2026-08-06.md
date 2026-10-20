@@ -1679,3 +1679,54 @@ dependency, or is a project rather than a fix.
   `COUNTRIES` in `scripts/build_world_places.py`, region names to
   `_REGION_NAMES` in `core/cities.py`, and rebuild from GeoNames
   `cities500`.
+
+## Deferred backlog — festival guidance follow-ups (2026-10-20)
+
+Every festival and vrat kind now carries short to-dos and prayer names
+(`core/vedic/festival_guidance.py`). Left out on purpose:
+
+- [ ] **Festivals the Calendar does not list.** Sankashti Chaturthi (monthly,
+  Krishna Chaturthi at moonrise), Masik Shivaratri, Bonalu (Telangana, Sundays
+  of Ashada), Bengal's Durga Puja days (Shashthi to Dashami), Vat Purnima as
+  its own row, Telugu Hanuman Jayanti (Vaishakha Krishna Dashami), Sindhi
+  Cheti Chand. *Why not built:* each needs a date rule and an anchor test
+  against a published panchangam, and Bonalu and Sankashti need rule types
+  the engine lacks (weekday-in-lunar-month; tithi at moonrise). *Unblocks
+  when:* one panchangam per region is chosen as the check. *Hook:* `FESTIVALS`
+  in `core/vedic/festivals.py` plus a matching `_g(...)` entry; the guidance
+  test fails until both exist.
+- [ ] **Open a corpus mantra from the festival sheet.** Names that carry a
+  `corpus_id` have text, meaning and sometimes audio in
+  `mantra_corpus/mantras.json`, but the mantra screen only opens from a
+  profile's remedy plan (`/m/remedies/mantra?recommendation=…`). *Why not
+  built:* the screen is keyed to a recommendation group and its streak, not
+  to a bare mantra. *Unblocks when:* a read-only "mantra by id" view is
+  agreed. *Hook:* `mantraFor` in `ui/.../calendar/festival-sheet.component.ts`.
+- [ ] **Telugu and Hindi copy.** The guidance is English only; the sheet shows
+  it in every language. *Hook:* add per-language lists beside each entry.
+
+## Deferred backlog — Muhurta (2026-10-20)
+
+From the Muhurta audit (batches A–E built; these were left out on purpose).
+
+- [ ] **Read the phone's location for timings.** Today the place is the city
+  the reader picks (onboarding "Where do you live now?", Settings, or the
+  Muhurta screen's "Where will it happen?"), else the birth city. Reading the
+  device's position needs `@capacitor/geolocation`, a permission prompt on
+  both stores, and a privacy-label change. Unblock: Hawk agrees to the extra
+  permission. Hook: `PreferencesService.setPanchangaPlace` and
+  `ui/src/app/core/timing-place.ts`.
+- [ ] **Goal rules checked against Muhurta Chintamani.** The per-goal weekday,
+  nakshatra and tithi lists in `astrospace/core/vedic/muhurta.py` (`GOALS`)
+  follow common panchang practice, not a page-cited text. Unblock: a
+  machine-readable Muhurta Chintamani (none in the KB yet; check
+  `docs/kb_corpus_sources.md`). Hook: add a `source` field per goal.
+- [ ] **Sarvartha Siddhi and Amrit Siddhi by full table.** Only Amrit Siddhi
+  (weekday + nakshatra pairs), Guru/Ravi Pushya and Dwi/Tripushkar are marked
+  (`_special_days`). Sarvartha Siddhi has regional tables that disagree.
+  Unblock: pick one printed table and cite it. Hook: `_special_days`.
+- [ ] **A tester teaser for the longer search range.** Testers search 14 days
+  and get no "next good time" beyond it. Showing a locked hint was not built
+  because the tester access matrix is frozen
+  (`/mnt/project-files/plans/access_matrix_2026-10-20.md`). Unblock: Hawk's OK.
+  Hook: `look_ahead_days` in `astrospace/api/muhurta_routes.py`.

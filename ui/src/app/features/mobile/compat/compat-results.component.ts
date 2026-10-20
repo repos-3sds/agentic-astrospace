@@ -59,7 +59,7 @@ import { PlanLockComponent } from '../shared/plan-lock.component';
           @if (!marriageMatch()) { <p>Ashta Koota comes from marriage matching. For {{ partnerName() }}, read it as a rough guide to how you get along.</p> }
           @for (note of s.notes ?? []; track note) { <p>{{ note }}</p> }
         </section>
-        <div class="mcor-actions"><button type="button" (click)="share()">{{ shared() ? 'Copied' : 'Share report' }}</button><a [routerLink]="['/m','compat','results','detail']" [queryParams]="{ partner: partnerId(), groom: partnerIsGroom() ? 'partner' : null }">Full detail</a></div>
+        <div class="mcor-actions"><button type="button" (click)="share()">{{ shared() ? 'Copied' : 'Share report' }}</button><a [routerLink]="['/m','compat','results','detail']" [queryParams]="{ partner: partnerId(), groom: partnerIsGroom() ? 'partner' : null }">What helps, in full</a></div>
         <a class="mcor-muhurta" [routerLink]="['/m','muhurta']">Find a muhurta</a>
         }
       }
