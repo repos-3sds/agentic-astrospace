@@ -13,7 +13,8 @@ import { AuthService } from './auth.service';
  * asksiddha.app is a landing page (firebase-public/) and the web app is the
  * owner's own tool on the direct Cloud Run address. So a production web
  * visitor also has to be an admin (an active admin_users row, checked by
- * /admin/me). Anyone else signed in is sent to the web landing page.
+ * /admin/me). Anyone else signed in is sent to the web landing page, with
+ * `?owner_only=1` so it can say why rather than look like a dead button.
  *
  * Like nativeAppGuard this is a visibility boundary, not a security one: the
  * API serves every signed-in user their own data whichever client asks, which
@@ -30,6 +31,6 @@ export const authGuard: CanActivateFn = async () => {
     await admin.me();
     return true;
   } catch {
-    return router.createUrlTree(['/']);
+    return router.createUrlTree(['/'], { queryParams: { owner_only: '1' } });
   }
 };

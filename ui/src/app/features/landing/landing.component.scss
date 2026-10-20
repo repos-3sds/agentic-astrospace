@@ -741,3 +741,33 @@ h1 {
     min-height: auto;
   }
 }
+
+// Shown when authGuard sent a non-owner account back here (?owner_only=1).
+.owner-only {
+  display: grid;
+  gap: 12px;
+  max-width: 640px;
+  padding: 14px 16px;
+  border: 1px solid var(--lp-border-strong);
+  border-radius: 14px;
+  background: var(--lp-glass);
+  color: var(--lp-text);
+
+  p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  button {
+    width: fit-content;
+    padding: 8px 14px;
+    border: 1px solid var(--lp-accent);
+    border-radius: 999px;
+    color: var(--lp-accent);
+    background: transparent;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+}
