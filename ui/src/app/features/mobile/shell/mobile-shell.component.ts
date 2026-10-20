@@ -30,20 +30,23 @@ interface MobileTab {
   icon: string;
 }
 
-/** Screens reached from the Explore tab (its menu, and Settings behind its gear). */
+/** Screens reached from the Explore tab's menu. */
 const EXPLORE_ROOTS = [
-  '/m/settings', '/m/chart', '/m/explore', '/m/transits', '/m/readings', '/m/notes',
-  '/m/subscription', '/m/notifications', '/m/search', '/m/remedies', '/m/muhurta',
-  '/m/family', '/m/compat', '/m/subhashita',
+  '/m/chart', '/m/explore', '/m/transits', '/m/readings', '/m/notes',
+  '/m/notifications', '/m/search', '/m/remedies', '/m/muhurta',
+  '/m/compat', '/m/subhashita',
 ];
+
+/** Screens reached from the Settings tab: its rows, Family and Plans. */
+const SETTINGS_ROOTS = ['/m/settings', '/m/family', '/m/subscription'];
 
 function under(path: string, root: string): boolean {
   return path === root || path.startsWith(`${root}/`);
 }
 
 /**
- * Native app shell: routed content plus the tab bar (Figma node 13:66) — four
- * tabs in the Ask-first modes (Today, Ask, Calendar, Explore), five in Practitioner.
+ * Native app shell: routed content plus the tab bar (Figma node 13:66) — five
+ * tabs in every mode, Settings always last on the far right.
  *
  * The shell owns the safe areas. styles.scss has defined --as-safe-* since the
  * mobile UX pass but nothing consumed them, which is why the status bar and
@@ -239,12 +242,13 @@ export class MobileShellComponent {
       ];
     }
     // Ask-first with Calendar for every reader. Explore lists the chart and
-    // its tools; Settings sits behind the gear on Explore (Hawk, 2026-10-16).
+    // its tools; Settings is the fifth tab, as in Practitioner (Hawk, 2026-10-20).
     return [
       { commands: ['today'], label: 'Today', icon: 'nav-today' },
       { commands: ['ask'], label: 'Ask', icon: 'nav-ask' },
       { commands: ['calendar'], label: 'Calendar', icon: 'nav-calendar' },
       { commands: ['explore'], label: 'Explore', icon: 'nav-explore' },
+      { commands: ['settings'], label: 'Settings', icon: 'nav-settings' },
     ];
   });
 
@@ -264,6 +268,9 @@ export class MobileShellComponent {
         // Everything reached from Explore keeps Explore lit, so a reader
         // always knows which tab Back will eventually return them to.
         return EXPLORE_ROOTS.some((root) => under(path, root));
+      }
+      if (route === '/m/settings') {
+        return SETTINGS_ROOTS.some((root) => under(path, root));
       }
       return under(path, route);
     }

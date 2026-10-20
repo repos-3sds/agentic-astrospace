@@ -30,7 +30,7 @@ interface ExploreTile {
  * The Explore tab in Guided and Balanced (Hawk, 2026-10-16). It combines
  * three designs Hawk picked: the Practitioner board's greeting and live
  * tiles, Guided Explore's featured card, and the cosmic snapshot from the
- * Your Chart design. Settings sits behind the gear.
+ * Your Chart design. Settings is its own tab.
  *
  * Tiles a plan does not include stay listed with a Plus mark, so the reader
  * can see what there is, and open to a screen that says what Plus adds.

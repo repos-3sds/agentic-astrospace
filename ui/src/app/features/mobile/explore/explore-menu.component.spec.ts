@@ -39,13 +39,13 @@ describe('ExploreMenuComponent', () => {
     verse.set(null);
   });
 
-  it('greets the person and lists the eight tiles in order, with Settings behind the gear', () => {
+  it('greets the person and lists the eight tiles in order; Settings is a tab, not a gear here', () => {
     const el = render();
     const labels = [...el.querySelectorAll('.tile-title')].map((node) => node.textContent?.trim());
     expect(labels).toEqual(['Birth details', 'Yogas & doshas', 'Life periods', 'Compatibility', 'Readings', 'Remedies', 'Muhurtas', 'Notes']);
     expect(el.querySelector('.who-text b')?.textContent?.trim()).toBe('Namaste, Asha');
     expect(el.querySelector('.featured')?.getAttribute('href')).toBe('/m/chart');
-    expect(el.querySelector('a[aria-label="Settings"]')?.getAttribute('href')).toBe('/m/settings');
+    expect(el.querySelector('a[aria-label="Settings"]')).toBeNull();
     expect(el.querySelector('.plus')).toBeNull();
   });
 

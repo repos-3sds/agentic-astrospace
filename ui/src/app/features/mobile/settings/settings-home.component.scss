@@ -37,7 +37,7 @@
   padding: 8px 20px 16px;
 }
 
-.eyebrow { @include m-eyebrow; color: var(--m-muted); margin: 0; }
+.eyebrow { @include m-eyebrow; color: var(--m-muted); margin: 6px 0 -8px; }
 
 /* Account card — node 66:95 */
 .account {
@@ -84,17 +84,15 @@
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 13px 15px;
+  gap: 12px;
+  min-height: 60px;
+  padding: 12px 15px;
   border: 0;
   background: none;
   cursor: pointer;
   text-align: left;
   text-decoration: none;
 }
-
-.row-left { display: flex; flex-shrink: 0; align-items: center; gap: 11px; max-width: 62%; }
 
 .row-icon {
   width: 34px;
@@ -114,32 +112,13 @@
   }
 }
 
+.row-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+
 .row-label { @include m-body-strong; color: var(--m-text); }
 
-.row-right { display: flex; flex: 1 1 auto; justify-content: flex-end; align-items: center; gap: 8px; min-width: 0; }
-
-// The current value, shown without opening the screen. It yields first when a
-// long label and a long value compete for the row.
-.row-value {
-  @include m-body-small;
-  color: var(--m-muted);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-// At 375 px values cut to "Sign out, d…"; on narrow phones they wrap to two
-// right-aligned lines instead (U19).
-@media (max-width: 413px) {
-  .row-value {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    white-space: normal;
-    text-align: right;
-  }
-}
+// The current value, shown under the label so neither is squeezed: it read
+// "Essent…" and split over two lines at 130% text when they shared one line.
+.row-value { @include m-caption; color: var(--m-muted); overflow-wrap: anywhere; }
 
 .chevron {
   width: 16px;

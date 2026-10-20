@@ -290,7 +290,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/mode',
-    title: 'Experience',
+    title: 'Detail and tone',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/mode-tone.component').then(
@@ -299,7 +299,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/appearance',
-    title: 'Appearance',
+    title: 'Light or dark',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/appearance.component').then(
@@ -308,7 +308,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/language',
-    title: 'Language',
+    title: 'Language and voice',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/language-audio.component').then(
@@ -335,7 +335,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/interaction',
-    title: 'Interaction',
+    title: 'Vibration',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/interaction.component').then(
@@ -344,7 +344,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/location',
-    title: 'Location',
+    title: 'City for timings',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/location.component').then(
@@ -353,7 +353,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/festivals',
-    title: 'Festivals',
+    title: 'Festivals to show',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/festival-preferences.component').then(
@@ -380,7 +380,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/conventions',
-    title: 'Conventions',
+    title: 'Chart method',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/conventions.component').then(
