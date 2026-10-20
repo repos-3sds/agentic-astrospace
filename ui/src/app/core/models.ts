@@ -1449,6 +1449,29 @@ export interface CompatibilityPayload {
   guidance?: CoupleGuidance;
 }
 
+/**
+ * The "About you two" section, written by an agent from both charts and the
+ * classical rules they meet (agents/compat_insight_agent.py). Plain words only.
+ */
+export interface CoupleInsight {
+  headline: string;
+  summary: string;
+  bond: { title: string; detail: string }[];
+  care: { title: string; detail: string; step: string }[];
+  each: { name: string; how_they_care: string; what_helps: string }[];
+  this_period: string;
+  /** Classical rule ids the agent relied on; kept for checking, never shown. */
+  rules_used?: string[];
+}
+
+export interface CompatibilityInsightPayload {
+  /** "agent" when written; "template" or "locked" leave the fixed guidance in place. */
+  source: 'agent' | 'template' | 'locked';
+  insight: CoupleInsight | null;
+  stage?: 'married' | 'planning';
+  cached?: boolean;
+}
+
 /* ── AI payloads ────────────────────────────────────────────────────── */
 
 export interface Reading {

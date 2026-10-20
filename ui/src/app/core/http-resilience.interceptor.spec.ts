@@ -117,6 +117,15 @@ describe('httpResilienceInterceptor', () => {
     expect(API_SLOW_GET_TIMEOUT_MS).toBeGreaterThan(120_000);
   }));
 
+  it('gives a couple\'s "About you two" section time to be written', fakeAsync(() => {
+    const url = '/api/v1/vedic/a/compatibility/b/insight?stage=married&ayanamsha=lahiri';
+    let body: unknown;
+    http.get(url).subscribe((value) => (body = value));
+    tick(API_GET_TIMEOUT_MS + 30_000);
+    backend.expectOne(url).flush({ source: 'agent' });
+    expect(body).toEqual({ source: 'agent' });
+  }));
+
   for (const url of [
     '/api/v1/muhurta/k?goal=start_venture&date_from=2026-10-17',
     '/api/v1/vedic/k/calendar-intelligence?days=45',

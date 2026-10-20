@@ -6,13 +6,15 @@ from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import Optional
+from typing import Literal, Optional
 
 from ..db import get_db
 from ..db import crud
 from .timing_place import resolve_timing_place
 from ..core.vedic import VedicChart, LocationError
 from ..core.vedic.compatibility import gun_milan
+from ..agents.compat_insight_agent import compat_insight_enabled
+from ..context import compat_insight_store
 from ..core.vedic.vargas import VARGA_FUNCTIONS
 from ..knowledge.vedic_rules import get_rule, rules_catalog
 from .auth import CurrentUser
@@ -576,6 +578,40 @@ def compatibility(
     chart_a = _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type)
     chart_b = _chart_from_kundli(_get_kundli(db, partner_id, user.id), ayanamsha, node_type)
     return gun_milan(chart_a, chart_b)
+
+
+@router.get("/{kundli_id}/compatibility/{partner_id}/insight")
+def compatibility_insight(
+    kundli_id: str,
+    partner_id: str,
+    user: CurrentUser,
+    stage: Literal["married", "planning"] = "married",
+    ayanamsha: str = "lahiri",
+    node_type: str = "mean",
+    db: Session = Depends(get_db),
+):
+    """The "About you two" section of the full report, in the agent's words.
+
+    Written the first time a pair is opened and kept (context/
+    compat_insight_store.py). Answers 200 with `insight: null` when the plan
+    lacks the full report, the agent is off, or no safe section could be
+    written: the app keeps the fixed guidance gun_milan() already returned.
+    """
+    kundli = _get_kundli(db, kundli_id, user.id)
+    partner = _get_kundli(db, partner_id, user.id)
+    if plan_lock(db, user.id, "compatibility.full") is not None:
+        return {"source": "locked", "insight": None}
+    if not compat_insight_enabled():
+        return {"source": "template", "insight": None}
+    chart_a = _chart_from_kundli(kundli, ayanamsha, node_type)
+    chart_b = _chart_from_kundli(partner, ayanamsha, node_type)
+    value, written_now = compat_insight_store.ensure_insight(
+        db, user.id, kundli, partner, chart_a, chart_b, gun_milan(chart_a, chart_b),
+        stage=stage, ayanamsha=ayanamsha, node_type=node_type,
+    )
+    if not value:
+        return {"source": "template", "insight": None}
+    return {**value, "cached": not written_now}
 
 
 @router.get("/{kundli_id}/vargas")

@@ -8,10 +8,11 @@ export const API_GET_TIMEOUT_MS = 8_000;
  * brief is normally already written and answers at once, but when the
  * schedule has not reached a profile the server writes it during the request
  * (two model calls at most, 60 s each); cut off at 8 s, that request could
- * never succeed and Today kept the template.
+ * never succeed and Today kept the template. A couple's "About you two"
+ * section is written the same way the first time a pair is opened.
  */
 export const API_SLOW_GET_TIMEOUT_MS = 130_000;
-const SLOW_READS = [/\/daily\/brief(\?|$)/];
+const SLOW_READS = [/\/daily\/brief(\?|$)/, /\/compatibility\/[^/?]+\/insight(\?|$)/];
 /**
  * Reads that compute a span of days. Each is a few seconds of ephemeris work,
  * more on a cold server, so 8 s cut them off before they could answer and the

@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { KundliStore } from '../../../core/kundli.store';
-import { CompatibilityPayload } from '../../../core/models';
+import { CompatibilityPayload, CoupleGuidancePractice, CoupleInsight } from '../../../core/models';
+import { PlanGateService } from '../../../core/plan-gate.service';
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
@@ -23,6 +24,12 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
  * leads with the server's plain couple guidance (what already works, where a
  * little care helps, something for each of you) and keeps every koota term
  * under one "Why this?" fold, open by default only in Practitioner mode.
+ *
+ * That guidance is fixed text per koota, so two couples with the same weak
+ * kootas read the same lines. On the full report an agent now writes an
+ * "About you two" section from both charts (7th house, Venus, the periods
+ * each person is running) and it replaces the fixed lists once it arrives.
+ * The traditional practices stay the engine's own, listed below it.
  */
 @Component({
   selector: 'as-compat-detail',
@@ -37,6 +44,7 @@ export class CompatDetailComponent {
   private readonly vedic = inject(VedicService);
   private readonly route = inject(ActivatedRoute);
   private readonly preferences = inject(PreferencesService);
+  private readonly gate = inject(PlanGateService);
 
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
@@ -50,6 +58,18 @@ export class CompatDetailComponent {
   private readonly marriedChoice = signal<boolean | null>(readMarried(this.partnerId()));
   protected readonly married = computed(() => this.marriedChoice() ?? this.partner()?.relation === 'spouse');
   protected readonly guidance = computed(() => this.score()?.guidance ?? null);
+  protected readonly insight = signal<CoupleInsight | null>(null);
+  protected readonly insightLoading = signal(false);
+  private insightRequest = 0;
+  /** The engine's free practices, kept when the agent's section replaces the fixed lists. */
+  protected readonly practices = computed(() => {
+    const g = this.guidance();
+    if (!g) return [] as { who: string; practice: CoupleGuidancePractice }[];
+    return [
+      ...g.focus_areas.filter((item) => item.practice).map((item) => ({ who: 'Together', practice: item.practice! })),
+      ...g.for_each.filter((person) => person.practice).map((person) => ({ who: person.name, practice: person.practice! })),
+    ];
+  });
 
   /** A row reads as "cancelled" when the engine's own note says so — no new detection, just surfacing it. */
   protected readonly cancellations = computed(() =>
@@ -87,8 +107,10 @@ export class CompatDetailComponent {
   }
 
   protected setMarried(married: boolean): void {
+    if (married === this.married()) return;
     this.marriedChoice.set(married);
     writeMarried(this.partnerId(), married);
+    void this.loadInsight();
   }
 
   /**
@@ -128,14 +150,41 @@ export class CompatDetailComponent {
       const activeId = this.kundlis.activeId();
       const partnerId = this.partnerId();
       if (!activeId || !partnerId) return;
-      const partnerIsGroom = this.route.snapshot.queryParamMap.get('groom') === 'partner';
-      this.score.set(partnerIsGroom
-        ? await this.vedic.compatibility(partnerId, activeId)
-        : await this.vedic.compatibility(activeId, partnerId));
+      const [first, second] = this.pair(activeId, partnerId);
+      this.score.set(await this.vedic.compatibility(first, second));
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {
       this.loading.set(false);
+    }
+    void this.loadInsight();
+  }
+
+  /** The groom's chart goes first, as gun_milan() reads Varna and Vashya from that side. */
+  private pair(activeId: string, partnerId: string): [string, string] {
+    const partnerIsGroom = this.route.snapshot.queryParamMap.get('groom') === 'partner';
+    return partnerIsGroom ? [partnerId, activeId] : [activeId, partnerId];
+  }
+
+  /**
+   * Written on the server the first time a pair is opened (up to half a
+   * minute), then stored. Any failure keeps the fixed guidance on screen.
+   */
+  private async loadInsight(): Promise<void> {
+    const request = ++this.insightRequest;
+    this.insight.set(null);
+    const activeId = this.kundlis.activeId();
+    const partnerId = this.partnerId();
+    if (!this.score() || !activeId || !partnerId || !this.gate.allows('compatibility.full')) return;
+    this.insightLoading.set(true);
+    try {
+      const [first, second] = this.pair(activeId, partnerId);
+      const payload = await this.vedic.compatibilityInsight(first, second, this.married() ? 'married' : 'planning');
+      if (request === this.insightRequest) this.insight.set(payload.insight ?? null);
+    } catch {
+      // The fixed guidance is already showing.
+    } finally {
+      if (request === this.insightRequest) this.insightLoading.set(false);
     }
   }
 }

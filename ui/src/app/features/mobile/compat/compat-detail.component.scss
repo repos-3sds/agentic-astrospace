@@ -189,6 +189,21 @@
   p { margin-top: 6px !important; }
 }
 
+/* The agent's "About you two" lead: the couple's own headline and summary. */
+.mcod-insight {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 15px;
+  border: 1px solid var(--m-accent);
+  border-radius: 16px;
+  background: var(--m-accent-soft);
+
+  h2 { @include m-h2; margin: 0; color: var(--m-text); }
+  p { @include m-body-small; margin: 0; color: var(--m-text); }
+}
+.mcod-insight-wait { @include m-body-small; margin: 0; color: var(--m-muted); font-style: italic; }
+
 .mcod-why {
   display: flex;
   flex-direction: column;
