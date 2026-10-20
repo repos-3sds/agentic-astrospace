@@ -9,6 +9,7 @@ including the old web app's /m/..., shows the landing page. See
 docs/custom_domain.md.
 
 The screenshots in img/screens/ are real captures of the app's /m screens
-(main 6110097, 2026-10-20) with a made-up sample profile, one per theme;
-the page picks the light or dark one from the visitor's system theme.
-Retake them when the screens change rather than editing them.
+(main 6110097, 2026-10-20) with a made-up sample profile, one per theme,
+with a phone status bar added on top. The page picks the light or dark one
+from the visitor's system theme and draws a Galaxy S25 Ultra frame around
+them in CSS. Retake them when the screens change rather than editing them.
