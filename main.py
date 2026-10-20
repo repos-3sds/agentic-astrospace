@@ -38,6 +38,7 @@ from astrospace.api.profile_context_routes import router as profile_context_rout
 from astrospace.api.entitlement_routes import router as entitlement_router
 from astrospace.api.legal_routes import router as legal_router
 from astrospace.api.store_routes import router as store_router
+from astrospace.api.web_store_routes import router as web_store_router
 from astrospace.api.email_routes import router as email_router
 from astrospace.api.voice_routes import router as voice_router
 from astrospace.api.subhashita_routes import router as subhashita_router
@@ -152,6 +153,7 @@ app.include_router(subhashita_router)
 # Terms + Privacy Policy pages; must precede the SPA mount like /api/health.
 app.include_router(legal_router)
 app.include_router(store_router)
+app.include_router(web_store_router)
 app.include_router(email_router)
 
 # Registered before the "/" SPA mount — Starlette matches in registration
