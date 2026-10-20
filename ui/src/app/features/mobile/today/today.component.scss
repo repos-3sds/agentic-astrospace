@@ -235,7 +235,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  // min-height, not height: at a large font size on a narrow phone the
+  // greeting takes two lines, and a fixed 64px cut off its first.
+  min-height: 64px;
   box-sizing: border-box;
   padding: 10px 20px;
 }

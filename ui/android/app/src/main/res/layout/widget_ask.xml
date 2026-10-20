@@ -28,6 +28,7 @@
             android:layout_marginStart="12dp"
             android:layout_weight="1"
             android:maxLines="1"
+            android:id="@+id/prompt"
             android:text="@string/widget_ask_prompt"
             android:textSize="15sp" />
 

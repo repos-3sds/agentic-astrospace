@@ -91,7 +91,7 @@ public class CalendarWidget extends BaseWidget {
         for (String d : new String[] {"S", "M", "T", "W", "T", "F", "S"}) {
             RemoteViews cell = new RemoteViews(pkg, R.layout.widget_calendar_cell_head);
             cell.setTextViewText(R.id.cell, d);
-            head.addView(R.id.row, cell);
+            head.addView(R.id.row, Widgets.capText(context, cell));
         }
         views.addView(R.id.grid, head);
 
@@ -117,7 +117,7 @@ public class CalendarWidget extends BaseWidget {
                     cell.setContentDescription(R.id.cell, day + (day == today ? ", today" : "")
                         + (marked.contains(iso) ? ", festival" : ""));
                 }
-                row.addView(R.id.row, cell);
+                row.addView(R.id.row, Widgets.capText(context, cell));
             }
             views.addView(R.id.grid, row);
         }

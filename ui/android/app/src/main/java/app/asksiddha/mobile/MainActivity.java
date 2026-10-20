@@ -26,11 +26,13 @@ public class MainActivity extends BridgeActivity {
      * The WebView scales text by the system font size, up to 200%. The
      * designed screens hold up to about 130% (checked on Today, Ask, Calendar
      * and Explore); past that, names, signs and the month header clip and the
-     * tab labels collide (regression pass, 2026-10-17). Font scale is not in
+     * tab labels collide (regression pass, 2026-10-17). Hawk chose 115%
+     * (2026-10-20) so the screens keep their designed look; the home-screen
+     * widgets use the same cap (Widgets.capText). Font scale is not in
      * the manifest's configChanges, so a change recreates the activity and
      * this runs again.
      */
-    static final int MAX_TEXT_ZOOM = 130;
+    public static final int MAX_TEXT_ZOOM = 115;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

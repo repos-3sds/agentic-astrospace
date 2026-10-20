@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -13,6 +14,13 @@ import android.graphics.Path;
 import android.graphics.RectF;
 import android.net.Uri;
 import android.os.Build;
+import android.util.SparseArray;
+import android.util.TypedValue;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.RemoteViews;
+import android.widget.TextView;
 import app.asksiddha.mobile.MainActivity;
 import java.util.Calendar;
 import java.util.Locale;
@@ -93,6 +101,57 @@ public final class Widgets {
             return;
         }
         for (int id : ids) widget.draw(context, manager, id);
+    }
+
+    /**
+     * Widget text is in sp, so it follows the phone's font size, which goes
+     * to 200% on Android 14 and past that on Samsung. A widget is a fixed
+     * cell: at those sizes titles clip and the timing line falls off the
+     * bottom. Past the app's own cap (MainActivity.MAX_TEXT_ZOOM) each text
+     * is set to the size it has at the cap, measured by inflating the same
+     * layout at that font scale, so Android 14's non-linear scaling is kept.
+     * Only text views with an id can be reached; every widget text has one.
+     */
+    static RemoteViews capText(Context context, RemoteViews views) {
+        Configuration config = context.getResources().getConfiguration();
+        float cap = MainActivity.MAX_TEXT_ZOOM / 100f;
+        if (config.fontScale <= cap) return views;
+        SparseArray<Float> sizes = cappedSizes(context, config, cap, views.getLayoutId());
+        for (int i = 0; i < sizes.size(); i++) {
+            views.setTextViewTextSize(sizes.keyAt(i), TypedValue.COMPLEX_UNIT_PX, sizes.valueAt(i));
+        }
+        return views;
+    }
+
+    private static final SparseArray<SparseArray<Float>> cappedSizes = new SparseArray<>();
+    private static float cappedFor = 0f;
+
+    /** Text sizes in px, by view id, for a layout drawn at the capped font scale. */
+    private static synchronized SparseArray<Float> cappedSizes(
+            Context context, Configuration config, float cap, int layout) {
+        if (cappedFor != config.fontScale) {
+            cappedSizes.clear();
+            cappedFor = config.fontScale;
+        }
+        SparseArray<Float> sizes = cappedSizes.get(layout);
+        if (sizes != null) return sizes;
+        Configuration capped = new Configuration(config);
+        capped.fontScale = cap;
+        Context at = context.createConfigurationContext(capped);
+        sizes = new SparseArray<>();
+        collectTextSizes(LayoutInflater.from(at).inflate(layout, null), sizes);
+        cappedSizes.put(layout, sizes);
+        return sizes;
+    }
+
+    private static void collectTextSizes(View view, SparseArray<Float> sizes) {
+        if (view instanceof TextView && view.getId() != View.NO_ID) {
+            sizes.put(view.getId(), ((TextView) view).getTextSize());
+        }
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) collectTextSizes(group.getChildAt(i), sizes);
+        }
     }
 
     /**
