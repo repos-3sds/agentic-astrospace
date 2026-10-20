@@ -66,6 +66,7 @@ interface ChartRegion {
  */
 const HOUSE_SIZE = 12.5;
 const SIGN_SIZE = 14;
+const EASTERN_SIGN_SIZE = 13.5;
 const PLANET_MAX = 15.5;
 const PLANET_MIN = 10;
 /** Only for a stellium in a small house; smaller type beats text across the lines. */
@@ -129,14 +130,16 @@ const SOUTH_SIGN_POINTS: Record<string, { col: number; row: number }> = {
  * cells split by diagonals through the outer corners (TL/BR on x=y-style
  * lines, TR/BL on x+y=400-style lines).
  *
- * Signs are fixed, as Bengali and Odia charts draw them: Aries in the top
- * middle box and the rest anticlockwise, so the Lagna is wherever its sign
- * is. Before 2026-10-20 the app had Taurus on top running clockwise, which
- * is no tradition's chart (Hawk caught it).
+ * Zones are keyed by the sign that sits there in the classic Bengali/Odia
+ * chart (Aries in the top middle box, the rest anticlockwise). Siddha draws
+ * the Lagna-centred variant Hawk chose on 2026-10-20: house 1 takes the top
+ * middle box and houses 2-12 follow anticlockwise, so house h sits in the
+ * zone of the h-th sign and each box says which sign it holds. (Before that
+ * the app had Taurus on top running clockwise, which is no tradition's chart.)
  *
  * Per zone: `poly` is the zone's outline and `anchor` where its planets sit
- * when there is room; (labelX, labelY) pins the house number into the zone's
- * outer pocket, inside the viewBox so nothing clips.
+ * when there is room; (labelX, labelY) pins the house number and sign number into
+ * the zone's outer pocket, inside the viewBox so nothing clips.
  */
 const EASTERN_ZONES: Record<string, {
   poly: Point[];
@@ -325,15 +328,24 @@ export class KundliChartComponent {
     const options = this.options(zoom);
     const houseSize = HOUSE_SIZE * zoom;
     return SIGN_ORDER.map((sign) => {
-      const zone = EASTERN_ZONES[sign];
+      const house = this.houseForSign(lagnaIndex, sign);
+      const zone = EASTERN_ZONES[SIGN_ORDER[(house || 1) - 1]];
       const entries = sign === chart.lagna.sign
         ? [this.lagnaEntry('As'), ...(bySign.get(sign) ?? [])]
         : (bySign.get(sign) ?? []);
-      const houseText = `H${this.houseForSign(lagnaIndex, sign)}`;
-      // Eastern signs never move, so only the house number is written.
-      // Keep it inside the frame however large the text is.
-      const houseY = Math.min(Math.max(zone.labelY, 4 + houseSize * 0.6), 396 - houseSize * 0.6);
-      const exclude = [labelBox(zone.labelX, houseY, measure(houseText, houseSize, 'label'), houseSize, zone.labelAlign)];
+      const houseText = `H${house}`;
+      // The signs move with the Lagna here, so each box names its sign by
+      // number under the house number, as the North chart does.
+      const signText = String(SIGN_ORDER.indexOf(sign) + 1);
+      const signSize = EASTERN_SIGN_SIZE * zoom;
+      const spacing = Math.max(houseSize, signSize) * 1.15;
+      // Keep the two-line label inside the frame however large the text is.
+      const houseY = Math.min(Math.max(zone.labelY, 4 + houseSize * 0.6), 396 - spacing - signSize * 0.6);
+      const signY = houseY + spacing;
+      const exclude = [
+        labelBox(zone.labelX, houseY, measure(houseText, houseSize, 'label'), houseSize, zone.labelAlign),
+        labelBox(zone.labelX, signY, measure(signText, signSize, 'sign'), signSize, zone.labelAlign),
+      ];
       const fit = fitRegion({
         poly: zone.poly,
         anchor: zone.anchor,
@@ -344,6 +356,7 @@ export class KundliChartComponent {
         key: `e${sign}`,
         labels: [
           { text: houseText, cls: 'house-number', x: zone.labelX, y: houseY, size: HOUSE_SIZE, anchor: zone.labelAlign, fill: null },
+          { text: signText, cls: 'sign-label', x: zone.labelX, y: signY, size: EASTERN_SIGN_SIZE, anchor: zone.labelAlign, fill: signMeta(sign).color },
         ],
         entries: this.placeEntries(entries, fit, zoom),
       };
