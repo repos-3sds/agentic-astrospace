@@ -32,7 +32,7 @@ def _charts():
             VedicChart("Meera", 1993, 8, 22, 21, 15, "Chennai", "IN"))
 
 
-def _insight(why_extra: str = "", detail: str = "You both meet new people in a soft, caring way.") -> cia.CoupleInsight:
+def _insight(rules: list[str] | None = None, detail: str = "You both meet new people in a soft, caring way.") -> cia.CoupleInsight:
     return cia.CoupleInsight(
         headline="Same way of seeing life, different speed",
         summary="Ravi and Meera, you start from the same place. Ravi speaks fast and Meera keeps things inside.",
@@ -43,7 +43,7 @@ def _insight(why_extra: str = "", detail: str = "You both meet new people in a s
         each=[cia.PersonNote(name="Ravi", how_they_care="Ravi shows care by doing.", what_helps="Ask him one direct question."),
               cia.PersonNote(name="Meera", how_they_care="Meera shows care through warmth.", what_helps="Thank her out loud.")],
         this_period="Ravi is in a Jupiter period until 2027 and Meera in a steady Saturn period.",
-        why=["You both have Pisces rising (Lagna).", "Both 7th houses are Virgo.", "Gana is 1 of 6." + why_extra],
+        rules_used=rules or ["bphs_seventh_kalatra", "bphs_venus_karaka_seventh"],
     )
 
 
@@ -73,6 +73,70 @@ def test_the_input_carries_what_the_kootas_never_use():
     assert ravi["running_period"]["mahadasha"] == {"lord": "Jupiter", "ends": "2027-12-07"}
     assert meera["running_period"]["antardasha"]["lord"] == "Venus"
     assert len(signals["kootas"]) == 8 and signals["stage"] == "married"
+
+
+def test_each_person_gets_only_the_classical_rules_their_chart_meets():
+    ravi, meera = _signals()["people"]
+    ravi_ids = [rule["id"] for rule in ravi["classical_rules"]]
+    meera_ids = [rule["id"] for rule in meera["classical_rules"]]
+    # Ravi's 7th lord Mercury is debilitated in his 1st; nothing sits in his 7th.
+    assert "bphs18_4_seventh_lord_strength" in ravi_ids
+    assert "bphs18_16_malefic_on_seventh" not in ravi_ids
+    # Meera has Mars in her 7th and is running a Venus sub-period.
+    assert {"bphs18_16_malefic_on_seventh", "phal10_malefic_seventh_harm"} <= set(meera_ids)
+    assert "phal10_marriage_dasha_timing" in meera_ids
+    # Neither 7th lord sits in a dusthana, the 7th or the 8th.
+    for ids in (ravi_ids, meera_ids):
+        assert not {"bphs18_2_seventh_lord_dusthana", "bphs24_79_seventh_lord_in_seventh",
+                    "bphs24_80_seventh_lord_in_eighth"} & set(ids)
+    malefic = next(r for r in meera["classical_rules"] if r["id"] == "bphs18_16_malefic_on_seventh")
+    assert malefic["applies_because"] == "Mars in the 7th house" and "Never as harm" in malefic["read_as"]
+
+
+def test_every_picked_rule_is_a_stored_marriage_reference():
+    from astrospace.context.kb import get_knowledge_base
+    stored = {ref.ref_id: ref.statement for ref in get_knowledge_base().retrieve(["marriage"], limit=100)}
+    for person in _signals()["people"]:
+        for rule in person["classical_rules"]:
+            assert stored[rule["id"]] == rule["rule"]
+
+
+@pytest.mark.parametrize("house,dignity,expected", [
+    (8, "Neutral", {"bphs18_2_seventh_lord_dusthana", "bphs24_80_seventh_lord_in_eighth", "bphs18_4_seventh_lord_strength"}),
+    (7, "Own", {"bphs24_79_seventh_lord_in_seventh", "bphs18_4_seventh_lord_strength"}),
+    (12, "Exalted", {"bphs18_2_seventh_lord_dusthana", "bphs18_4_seventh_lord_strength"}),
+])
+def test_the_seventh_lord_placement_picks_its_rule(house, dignity, expected):
+    from astrospace.agents.compat_classics import classical_rules
+    planets = {"Venus": {"sign": "Taurus", "house": 3}, "Jupiter": {"sign": "Leo", "house": 6},
+               "Saturn": {"sign": "Aries", "house": house}}
+    rules = classical_rules(planets, {"Saturn": {"dignity": dignity}}, "Saturn", {}, {})
+    ids = {rule["id"] for rule in rules}
+    assert expected <= ids
+    # A 7th lord in the 12th is weak whatever its sign dignity.
+    if house == 12:
+        assert "weak" in next(r for r in rules if r["id"] == "bphs18_4_seventh_lord_strength")["applies_because"]
+
+
+def test_strong_seventh_lord_in_jupiters_aspect_adds_phaladeepika():
+    from astrospace.agents.compat_classics import classical_rules
+    planets = {"Venus": {"sign": "Taurus", "house": 2}, "Jupiter": {"sign": "Aries", "house": 1},
+               "Mars": {"sign": "Libra", "house": 7}}
+    ids = {r["id"] for r in classical_rules(planets, {"Mars": {"dignity": "Own"}}, "Mars", {}, {})}
+    assert "phal10_strong_seventh_lord_marriage" in ids and "bphs24_79_seventh_lord_in_seventh" in ids
+    # Mars is the 7th lord in its own house, not a malefic sitting on the 7th.
+    assert "bphs18_16_malefic_on_seventh" not in ids
+
+
+def test_kootas_carry_their_standard_meaning():
+    kootas = _signals()["kootas"]
+    assert all(row.get("meaning") for row in kootas)
+
+
+def test_a_rule_id_that_was_not_given_is_sent_back():
+    agent = _Scripted([_insight(rules=["bphs_seventh_kalatra", "bphs_made_up_rule"]), _insight()])
+    assert agent.write(_signals()).rules_used == ["bphs_seventh_kalatra", "bphs_venus_karaka_seventh"]
+    assert "bphs_made_up_rule" in agent.prompts[1]
 
 
 def test_the_prompt_carries_the_shared_simple_english_rule():

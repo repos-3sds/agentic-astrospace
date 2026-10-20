@@ -12,9 +12,17 @@ It is wording, not calculation: one structured model call, no tools, fed only
 what the engine produced. The fixed guidance stays as the fallback, so a model
 outage or a draft that crosses a boundary costs the reader nothing.
 
+Grounding (Hawk, 2026-10-20: "ground with relevancy and accuracy based on
+classics and standard rules", sources not shown on screen): each person's
+marriage picture is read only through the BPHS and Phaladeepika rules that
+compat_classics.py finds their chart actually meets, and each koota through
+its standard meaning. The model names the rule ids it relied on in
+``rules_used``, and an id it was not given sends the draft back.
+
 Rules (design_principles.md §4 and §6, agents/style.py):
 
-* Simple English for Indian readers; terms only in ``why``.
+* Simple English for Indian readers, with no astrology terms on screen
+  except planet names in the period line.
 * No verdict on whether to marry or stay married. A dosha is a flag.
 * No health, longevity, legal or money verdicts; practices are free.
 """
@@ -28,13 +36,15 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from .base import BaseAstroAgent
+from .compat_classics import classical_rules
 from .daily_brief_agent import card_jargon
 from .period_agent import reading_boundary
 from .style import PLAIN_INDIAN_ENGLISH
+from ..core.vedic.compatibility_guidance import _FLAG_TEXT, _KOOTA_TEXT
 from ..core.vedic.constants import SIGN_LORDS, SIGNS
 
 # Bump when the prompt or schema changes, so saved sections are rewritten.
-INSIGHT_VERSION = 1
+INSIGHT_VERSION = 2
 
 
 def compat_insight_enabled() -> bool:
@@ -54,8 +64,8 @@ class CareItem(InsightItem):
 class PersonNote(BaseModel):
     name: str
     how_they_care: str = Field(description=(
-        "Two plain sentences on how this person shows love and what they need, read from "
-        "their own 7th house, its lord, Venus and Moon. No astrology terms."))
+        "Two plain sentences on how this person shows love and what they need, read through "
+        "the classical rules given for them and their Venus and Moon. No astrology terms."))
     what_helps: str = Field(description="One plain sentence the partner can do for them.")
 
 
@@ -68,9 +78,9 @@ class CoupleInsight(BaseModel):
     this_period: str = Field(description=(
         "Two or three plain sentences on the periods both are running now and what that "
         "means for the two of them, with the years the periods end."))
-    why: list[str] = Field(min_length=3, max_length=6, description=(
-        "The astrology behind the lines above, one sentence each. Terms allowed here, each "
-        "with a few plain words after it the first time."))
+    rules_used: list[str] = Field(min_length=2, description=(
+        "The ids of the classical rules (from each person's classical_rules) the lines above "
+        "rely on. Only ids that were given. Not shown to the reader."))
 
 
 SYSTEM = """You write the "About you two" section of a couple's compatibility
@@ -81,6 +91,18 @@ Ground every line in the JSON:
 - Use only the koota rows, safety checks, each person's rising sign, Moon,
   7th house (its sign, its lord and where the lord sits), planets in the 7th,
   Venus, and the running periods. Never invent a placement, yoga, date or score.
+- Interpret through the rules given, not from memory:
+  * a koota through its `meaning` (standard matching practice);
+  * each person's marriage picture only through their `classical_rules`.
+    These are rules from the classical texts (BPHS, Phaladeepika) that code
+    has already found their chart meets, each with why it applies. Do not
+    bring in any other classical rule, yoga or combination. The plain nature
+    of a sign or planet (Venus for love and comfort, Mars for drive, a fire
+    sign as direct) is standard and may be used.
+  * When a rule has `read_as`, deliver it that way. A rule that does not fit
+    the stage or adds nothing may be left out; never stretch one.
+  * List the ids you relied on in rules_used. Never name a book, verse or
+    rule on screen.
 - What makes this personal is what the koota score does not see: each person's
   own 7th house and Venus (how they love, what they need from a partner), and
   how their two current periods fit together. Use those. Do not just restate
@@ -97,10 +119,9 @@ Ground every line in the JSON:
 - this_period: both running periods by planet name is allowed here only as
   "a Jupiter period", with the year it ends; say what the overlap means for
   the two of them in daily life.
-- Plain everyday words in headline, summary, every title, how_they_care,
-  what_helps and step: no Sanskrit, no koota, dosha, nakshatra, rashi, lagna,
-  dasha or house numbers. Planet names only in this_period and why.
-- why: the astrology behind your lines, with terms and a plain gloss.
+- Plain everyday words everywhere the reader sees: no Sanskrit, no koota,
+  dosha, nakshatra, rashi, lagna, dasha or house numbers. Planet names only
+  in this_period.
 - `stage` says whether they are married or planning to marry. Write for that
   stage. For "married", never discuss whether they should have married. For
   "planning", never say whether they should marry; give understanding and
@@ -162,6 +183,7 @@ def person_input(chart, profile: dict, as_of: datetime | None = None) -> dict:
                 "dignity": (dignities.get(name) or {}).get("dignity")}
 
     manglik = (chart.doshas() or {}).get("manglik") or {}
+    running = _running(chart, as_of)
     return {
         "name": (profile.get("name") or chart.name or "").split(" ")[0],
         "rising_sign": lagna["sign"],
@@ -176,8 +198,19 @@ def person_input(chart, profile: dict, as_of: datetime | None = None) -> dict:
         "venus": place("Venus"),
         "mars": place("Mars"),
         "manglik": {"active": bool(manglik.get("active")), "net_severity": manglik.get("net_severity")},
-        "running_period": _running(chart, as_of),
+        "running_period": running,
+        "classical_rules": classical_rules(planets, dignities, seventh_lord, manglik, running),
     }
+
+
+def _with_meaning(row: dict, table: dict) -> dict:
+    """A koota row with its standard meaning; the matching rules are standard
+    practice, not in any book we hold (compat_classics.py)."""
+    out = {k: row.get(k) for k in ("label", "points", "max", "note")}
+    term = (table.get(row.get("label")) or {}).get("term")
+    if term:
+        out["meaning"] = term
+    return out
 
 
 def insight_input(chart_a, chart_b, result: dict, stage: str = "married",
@@ -187,8 +220,8 @@ def insight_input(chart_a, chart_b, result: dict, stage: str = "married",
     return {
         "stage": "married" if stage == "married" else "planning",
         "score": {"total": result.get("total"), "max": result.get("max")},
-        "kootas": [{k: row.get(k) for k in ("label", "points", "max", "note")} for row in result.get("rows") or []],
-        "extra_checks": [{k: row.get(k) for k in ("label", "points", "max", "note")} for row in extension.get("rows") or []],
+        "kootas": [_with_meaning(row, _KOOTA_TEXT) for row in result.get("rows") or []],
+        "extra_checks": [_with_meaning(row, _FLAG_TEXT) for row in extension.get("rows") or []],
         "safety_checks": result.get("safety_checks"),
         "people": [
             person_input(chart_a, profiles.get("person1") or {}, as_of),
@@ -198,7 +231,7 @@ def insight_input(chart_a, chart_b, result: dict, stage: str = "married",
 
 
 def insight_texts(insight: CoupleInsight) -> list[str]:
-    texts = [insight.headline, insight.summary, insight.this_period, *insight.why]
+    texts = [insight.headline, insight.summary, insight.this_period]
     texts += [f"{i.title}. {i.detail}" for i in insight.bond]
     texts += [f"{i.title}. {i.detail} {i.step}" for i in insight.care]
     texts += [f"{p.how_they_care} {p.what_helps}" for p in insight.each]
@@ -237,6 +270,10 @@ def insight_gaps(insight: CoupleInsight, signals: dict) -> list[str]:
         found = plain_words_jargon(f"{item.title} {item.step if isinstance(item, CareItem) else ''}")
         if found:
             gaps.append(f"a plain title and step for '{item.title}'")
+    given = {rule["id"] for person in signals["people"] for rule in person.get("classical_rules") or []}
+    unknown = [rule_id for rule_id in insight.rules_used if rule_id not in given]
+    if unknown:
+        gaps.append(f"rules_used with only the ids given (not {', '.join(unknown)})")
     names = [p["name"] for p in signals["people"] if p.get("name")]
     whole = " ".join(insight_texts(insight)).lower()
     for name in names:

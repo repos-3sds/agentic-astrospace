@@ -203,7 +203,6 @@
   p { @include m-body-small; margin: 0; color: var(--m-text); }
 }
 .mcod-insight-wait { @include m-body-small; margin: 0; color: var(--m-muted); font-style: italic; }
-.mcod-body > .mcod-why-line p { @include m-body-small; margin: 0; color: var(--m-muted); }
 
 .mcod-why {
   display: flex;

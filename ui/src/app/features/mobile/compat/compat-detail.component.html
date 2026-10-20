@@ -79,11 +79,6 @@
         }
       }
 
-      <details class="mcod-why-line">
-        <summary>Why this?</summary>
-        @for (line of ai.why; track line) { <p>{{ line }}</p> }
-      </details>
-
       @if (guidance(); as g) { <p class="mcod-note">{{ g.closing_note }}</p> }
     } @else if (guidance(); as g) {
       @if (insightLoading()) {
