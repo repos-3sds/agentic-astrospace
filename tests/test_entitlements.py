@@ -426,6 +426,7 @@ def test_tester_muhurta_searches_the_next_two_weeks_only(env, monkeypatch):
 
     def fake_find(goal, start, end, **kwargs):
         seen["range"] = (start, end)
+        seen["look_ahead"] = kwargs.get("look_ahead_days")
         return {"windows": []}
 
     monkeypatch.setattr(muhurta_routes.muhurta, "find", fake_find)
@@ -439,6 +440,8 @@ def test_tester_muhurta_searches_the_next_two_weeks_only(env, monkeypatch):
     body = client.get(f"/api/v1/muhurta/{kundli}", params={**params, "date_to": "2099-01-01"}).json()
     start, end = seen["range"]
     assert (end - start).days == 13 and body["capped_to"] == end.isoformat()
+    # The frozen tester matrix: no peeking at dates past the horizon.
+    assert seen["look_ahead"] == 0
     far = client.get(f"/api/v1/muhurta/{kundli}", params={**params, "date_from": "2099-01-01"})
     assert far.status_code == 400
     monkeypatch.delenv("ASTROSPACE_QUOTAS_ENFORCED")

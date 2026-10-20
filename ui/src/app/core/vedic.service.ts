@@ -513,6 +513,7 @@ export class VedicService {
     place?: { city: string; nation: string } | null,
     limit = 5,
     intent?: string | null,
+    options: MuhurtaSearchOptions = {},
   ): Promise<MuhurtaSearchPayload> {
     const params = new URLSearchParams({
       goal,
@@ -529,6 +530,11 @@ export class VedicService {
     if (timezone) params.set('timezone', timezone);
     if (place?.city) params.set('city', place.city);
     if (place?.nation) params.set('nation', place.nation);
+    if (options.partnerId) params.set('partner_id', options.partnerId);
+    if (options.ceremony) params.set('ceremony', options.ceremony);
+    if (options.direction) params.set('direction', options.direction);
+    if (options.avoid?.length) params.set('avoid', options.avoid.join(','));
+    if (options.observeSeason === false) params.set('observe_season', 'false');
     return this.api.get<MuhurtaSearchPayload>(`/muhurta/${kundliId}?${params.toString()}`);
   }
 
@@ -766,18 +772,40 @@ export class VedicService {
   }
 }
 
+export interface MuhurtaSearchOptions {
+  partnerId?: string | null;
+  ceremony?: 'day' | 'night' | null;
+  direction?: 'north' | 'south' | 'east' | 'west' | null;
+  avoid?: string[];
+  observeSeason?: boolean;
+}
+
 export interface MuhurtaSearchPayload {
   goal: string;
   goal_label: string;
+  /** The goal whose rules were used (a typed purpose maps to one). */
+  rules_goal?: string;
+  rules_label?: string;
+  whose?: string;
   date_from: string;
   date_to: string;
   days_scanned: number;
   skipped_days: { date: string; reason: string }[];
   results: MuhurtaApiWindow[];
   count: number;
+  /** Slots that cleared the bar but were not returned (raise `limit`). */
+  more_available?: number;
+  /** The first good slot after the range, when the range was thin. */
+  next_good?: { date: string; start: string; end: string; score: number; quality: string; label: string } | null;
+  /** What was left out and why, one plain sentence each. */
+  notes?: string[];
   note: string | null;
+  hours?: number[] | null;
+  season_rules?: string[];
   is_convention_dependent: boolean;
+  observance_note?: string;
   disclaimer: string;
+  capped_to?: string;
   /** Where the windows apply, in whose clock, and which rule chose it. */
   place?: TimingPlacePayload;
 }
@@ -795,7 +823,13 @@ export interface MuhurtaApiWindow {
   duration_minutes: number;
   score: number;
   quality: 'best' | 'good' | 'workable';
-  why: { supports: string[]; against: string[] };
+  /** Excellent / Good / Usable. */
+  label?: string;
+  weekend?: boolean;
+  /** Special days: Guru Pushya, Amrit Siddhi, a festival. */
+  badges?: string[];
+  tithi?: string | null;
+  why: { supports: string[]; against: string[]; terms?: string[] };
   vara: string | null;
   nakshatra: string | null;
 }

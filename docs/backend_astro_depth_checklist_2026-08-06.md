@@ -1704,3 +1704,29 @@ Every festival and vrat kind now carries short to-dos and prayer names
   agreed. *Hook:* `mantraFor` in `ui/.../calendar/festival-sheet.component.ts`.
 - [ ] **Telugu and Hindi copy.** The guidance is English only; the sheet shows
   it in every language. *Hook:* add per-language lists beside each entry.
+
+## Deferred backlog — Muhurta (2026-10-20)
+
+From the Muhurta audit (batches A–E built; these were left out on purpose).
+
+- [ ] **Read the phone's location for timings.** Today the place is the city
+  the reader picks (onboarding "Where do you live now?", Settings, or the
+  Muhurta screen's "Where will it happen?"), else the birth city. Reading the
+  device's position needs `@capacitor/geolocation`, a permission prompt on
+  both stores, and a privacy-label change. Unblock: Hawk agrees to the extra
+  permission. Hook: `PreferencesService.setPanchangaPlace` and
+  `ui/src/app/core/timing-place.ts`.
+- [ ] **Goal rules checked against Muhurta Chintamani.** The per-goal weekday,
+  nakshatra and tithi lists in `astrospace/core/vedic/muhurta.py` (`GOALS`)
+  follow common panchang practice, not a page-cited text. Unblock: a
+  machine-readable Muhurta Chintamani (none in the KB yet; check
+  `docs/kb_corpus_sources.md`). Hook: add a `source` field per goal.
+- [ ] **Sarvartha Siddhi and Amrit Siddhi by full table.** Only Amrit Siddhi
+  (weekday + nakshatra pairs), Guru/Ravi Pushya and Dwi/Tripushkar are marked
+  (`_special_days`). Sarvartha Siddhi has regional tables that disagree.
+  Unblock: pick one printed table and cite it. Hook: `_special_days`.
+- [ ] **A tester teaser for the longer search range.** Testers search 14 days
+  and get no "next good time" beyond it. Showing a locked hint was not built
+  because the tester access matrix is frozen
+  (`/mnt/project-files/plans/access_matrix_2026-10-20.md`). Unblock: Hawk's OK.
+  Hook: `look_ahead_days` in `astrospace/api/muhurta_routes.py`.

@@ -125,3 +125,12 @@
   width: 100%;
   flex-shrink: 0;
 }
+
+.home-place {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  .note { margin: 0; }
+}
+.subhead { @include m-body-strong; color: var(--m-text); margin: 0; }

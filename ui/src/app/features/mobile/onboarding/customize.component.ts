@@ -3,6 +3,8 @@ import { RouterLink } from '@angular/router';
 import { DefaultChartStyle, PreferencesService } from '../../../core/preferences.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
+import { CityPickerComponent } from '../shared/city-picker.component';
+import { PanchangaCity } from '../../../core/models';
 
 interface ChartStyleChoice {
   id: DefaultChartStyle;
@@ -21,7 +23,7 @@ interface ChartStyleChoice {
   selector: 'as-customize',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, RouterLink, SelectHapticDirective],
+  imports: [BackLinkDirective, CityPickerComponent, RouterLink, SelectHapticDirective],
   templateUrl: './customize.component.html',
   styleUrl: './customize.component.scss',
   host: { class: 'as-mobile' },
@@ -37,5 +39,15 @@ export class CustomizeComponent {
 
   protected chooseChartStyle(id: DefaultChartStyle): void {
     this.preferences.chartStyle.set(id);
+  }
+
+  /**
+   * Where the reader lives now. Without it, timings fall back to the birth
+   * city (or the phone's zone), which is how a tester in another country got
+   * night-time muhurtas.
+   */
+  protected chooseHome(city: PanchangaCity): void {
+    this.preferences.setPanchangaPlace(city);
+    this.preferences.timezoneMode.set('panchanga_place');
   }
 }

@@ -245,3 +245,11 @@
 }
 
 .practice .meaning { color: var(--m-text); font-style: italic; }
+
+.start-day {
+  @include m-cta-secondary;
+  align-self: flex-start;
+  min-height: 40px;
+  color: var(--m-text);
+  text-decoration: none;
+}

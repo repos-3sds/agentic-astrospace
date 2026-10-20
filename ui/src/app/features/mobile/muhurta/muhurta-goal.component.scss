@@ -224,3 +224,112 @@
 }
 
 .horizon { @include m-body; color: var(--m-muted); margin: 0; }
+
+/* Kind-of-plan tabs: six groups keep 22 goals to a short grid. */
+.categories {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-inline: -20px;
+  padding-inline: 20px;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.category {
+  @include m-body-small;
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1.2px solid var(--m-border-strong);
+  border-radius: 999px;
+  background: none;
+  color: var(--m-text);
+  white-space: nowrap;
+
+  &.is-on {
+    @include m-selected-pill;
+    border-color: var(--m-ink);
+  }
+}
+
+.goal { min-height: 96px; }
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--m-border);
+  border-radius: 18px;
+  background: var(--m-raised);
+
+  select {
+    @include m-body;
+    min-height: 46px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 12px;
+    border: 1px solid var(--m-border);
+    border-radius: 14px;
+    background: var(--m-surface);
+    color: var(--m-text);
+  }
+}
+
+.panel-label { @include m-body-strong; color: var(--m-text); margin: 0; }
+.panel-note { @include m-caption; color: var(--m-muted); margin: 0; }
+
+.days { display: flex; flex-wrap: wrap; gap: 6px; }
+.day {
+  @include m-body-small;
+  min-width: 48px;
+  min-height: 40px;
+  border: 1.2px solid var(--m-border-strong);
+  border-radius: 12px;
+  background: var(--m-surface);
+  color: var(--m-text);
+  &.is-on { background: var(--m-accent-soft); border-color: var(--m-accent); color: var(--m-accent-strong); }
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 6px;
+  span { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  b { @include m-body-strong; color: var(--m-text); }
+  small { @include m-caption; color: var(--m-muted); }
+  input { width: 22px; height: 22px; flex-shrink: 0; accent-color: var(--m-accent); }
+}
+
+.options-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  @include m-body-strong;
+  color: var(--m-accent-strong);
+  img { width: 16px; height: 16px; transition: transform 160ms ease; }
+  img.is-open { transform: rotate(180deg); }
+}
+
+.date-range.is-single { grid-template-columns: minmax(0, 1fr); }
+
+.place button.place-change { border: 0; background: none; padding: 0; text-align: right; }
+
+@media (prefers-reduced-motion: reduce) {
+  .options-toggle img { transition: none; }
+}
+
+// The column scrolls, so nothing in it should shrink: without this the tabs
+// and the place row were squashed to a sliver once the grid overflowed.
+.body > * { flex-shrink: 0; }
+
+// The place line can be long ("the listed city nearest your phone's time
+// zone…"), so the action sits under it instead of squeezing it.
+.place { flex-wrap: wrap; }
+.place button.place-change { flex-basis: 100%; text-align: left; padding-left: 28px; }

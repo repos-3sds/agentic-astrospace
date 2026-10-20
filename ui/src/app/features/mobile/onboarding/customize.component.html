@@ -38,6 +38,12 @@
       </button>
     }
   </div>
+  <div class="home-place">
+    <h2 class="subhead">Where do you live now?</h2>
+    <p class="note">Optional. Daily timings and good times are worked out for this city. Leave it empty to use your birth city.</p>
+    <as-city-picker label="CITY" placeholder="Search your city" inputId="home-city"
+      [initial]="preferences.panchangaPlace()?.label ?? ''" (picked)="chooseHome($event)" />
+  </div>
   <p class="note">Festival calendar, language, haptics, and convention settings stay available in Settings.</p>
 </div>
 
