@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.asksiddha.mobile",
+      "sha256_cert_fingerprints": [
+        "21:5D:4F:03:F1:9E:80:82:8E:92:1B:76:7A:8C:CA:B1:B2:21:F6:C3:3C:9A:8D:1B:3D:4A:CF:48:FD:F3:BB:C6",
+        "1D:3C:A8:7D:E3:D6:07:4F:CE:A0:55:8C:DE:FC:33:BB:46:2A:FB:8E:CB:55:86:C7:DE:3A:B7:65:A6:33:88:39"
+      ]
+    }
+  }
+]
