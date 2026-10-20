@@ -234,12 +234,40 @@ def run_upload(aab: Path, track: str, notes: str | None, key_path: str | None = 
     return 0
 
 
+def run_assign(version_code: int, track: str, notes: str | None, key_path: str | None = None,
+               changes_not_sent_for_review: bool = False) -> int:
+    """Put a bundle Play already holds on a track, without uploading it again.
+
+    Play keeps every uploaded bundle and refuses a second upload of the same
+    versionCode, so moving a build from internal to closed testing is this,
+    not a re-upload.
+    """
+    check_track(track)
+    edit = Edit(access_token(load_key(key_path)))
+    edit.open()
+    try:
+        before = highest_version(edit.track(track))
+        if version_code <= before:
+            raise PlayError(f"versionCode {version_code} is not above {before}, already on {track}")
+        print(f"Releasing versionCode {version_code} to {track}…", flush=True)
+        edit.set_release(track, version_code, notes)
+        edit.commit(changes_not_sent_for_review)
+        edit.id = None
+    except BaseException:
+        edit.discard()
+        raise
+    print(f"Done: versionCode {version_code} is live on the {track} track (status completed).")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Upload an AAB to a Play testing track.")
     parser.add_argument("aab", nargs="?", type=Path, help="path to the signed .aab")
     parser.add_argument("--track", default="internal", help="internal (default) or alpha")
     parser.add_argument("--notes", help=f"release notes ({NOTES_LANGUAGE}), up to 500 characters")
     parser.add_argument("--key", help=f"service-account JSON (default ${KEY_ENV} or {DEFAULT_KEY})")
+    parser.add_argument("--version-code", type=int,
+                        help="release a bundle Play already holds (e.g. promote internal to alpha); no upload")
     parser.add_argument("--check", action="store_true", help="verify access and show the track; change nothing")
     parser.add_argument("--changes-not-sent-for-review", action="store_true",
                         help="commit without sending for review (only if Play asks for it)")
@@ -249,8 +277,13 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.check:
             return run_check(args.track, args.key)
+        if args.version_code is not None:
+            if args.aab:
+                parser.error("give either the .aab path or --version-code, not both")
+            return run_assign(args.version_code, args.track, args.notes, args.key,
+                              args.changes_not_sent_for_review)
         if not args.aab:
-            parser.error("give the .aab path, or --check")
+            parser.error("give the .aab path, --version-code, or --check")
         return run_upload(args.aab, args.track, args.notes, args.key, args.changes_not_sent_for_review)
     except PlayError as exc:
         print(f"play_upload: {exc}", file=sys.stderr)

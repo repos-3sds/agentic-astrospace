@@ -187,8 +187,11 @@ working variant of it (a different JDK path, `npm install` instead of `npm ci`),
 keep that. The last line is the new step, and it prints
 `Done: versionCode N is live on the internal track`.
 Internal testers get the update from the Play Store app within minutes. To put
-the same build on closed testing, run it again with `--track alpha`; Google
-reviews closed-testing releases before testers see them.
+the same build on closed testing, release the bundle Play already holds:
+`python3 scripts/play_upload.py --version-code N --track alpha --notes "…"`.
+Uploading the .aab again fails, because Play refuses a versionCode it has
+already received. Google reviews closed-testing releases before testers see
+them.
 
 `python3 scripts/play_upload.py --check` verifies the key and access and shows
 what each track holds, without changing anything; run it first after rotating
