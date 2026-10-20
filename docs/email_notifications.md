@@ -9,7 +9,6 @@ Status: canonical. How the app emails readers, what it needs in production, and 
 | Daily reading | `daily_email` | 06:30 (or their `preferred_time`) | the brief the worker already stored for their own profile; skipped if not written by 11:00 |
 | Moon and festival days | `festival_email` | 18:00 the evening before | full and new moons (lunar day at sunrise) and pan-India festivals at their place |
 | Welcome | `system` | once, when they first turn an email on | what they chose; asks for a birth time when theirs isn't exact |
-
 | Team alert | `owner_alert` | within one worker run | a reader's first sign-in, and their first Ask question; to `OWNER_ALERT_EMAILS`, never to the reader |
 
 The team alert (`astrospace/notifications/owner_alerts.py`) is for the friends-and-family test.
