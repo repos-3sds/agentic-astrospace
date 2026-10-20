@@ -175,6 +175,16 @@ def get_latest_period_reading(
     return q.order_by(Reading.version.desc(), Reading.generated_at.desc()).first()
 
 
+def count_readings_written(db: Session, user_id: str, since: datetime) -> int:
+    """Period readings written for any of this user's profiles since `since`
+    (UTC), new versions included: the monthly Readings allowance."""
+    return (
+        db.query(Reading).join(Kundli)
+        .filter(Kundli.user_id == user_id, Reading.generated_at >= since)
+        .count()
+    )
+
+
 def count_new_period_versions(
     db: Session,
     kundli_id: str,

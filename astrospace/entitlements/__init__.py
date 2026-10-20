@@ -8,6 +8,7 @@ from .resolver import (
     plan_lock,
     require_entitlement,
     require_plan,
+    require_turn,
     resolve_entitlements,
 )
 
@@ -20,5 +21,6 @@ __all__ = [
     "plan_lock",
     "require_entitlement",
     "require_plan",
+    "require_turn",
     "resolve_entitlements",
 ]

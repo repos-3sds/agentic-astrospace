@@ -15,7 +15,7 @@ from ..db.models import (
     SubscriptionGrant,
     UsageBucket,
 )
-from .registry import CATALOG_REVISION, capability_registry, quotas_enforced
+from .registry import CATALOG_REVISION, capability_registry, free_values, quotas_enforced
 
 
 @dataclass(frozen=True)
@@ -34,6 +34,7 @@ class EntitlementDecision:
             "entitlement": self.entitlement,
             "access_tier": self.access_tier,
             "remaining": self.remaining,
+            "limit": self.value if isinstance(self.value, int) and not isinstance(self.value, bool) else None,
             "resets_at": self.resets_at,
             "upgrade_options": ["plus", "pro"] if self.access_tier == "free" else ["pro"],
         }
@@ -199,7 +200,10 @@ def resolve_entitlements(db: Session, user_id: str, *, now: datetime | None = No
     tier = assignment.access_tier if assignment else "free"
     topology = assignment.account_topology if assignment else account.kind
     revision = max(account.entitlement_revision, assignment.revision if assignment else 0)
-    values = {key: definition.value_for(tier) for key, definition in capability_registry.items()}
+    values = (
+        free_values() if tier == "free"
+        else {key: definition.value_for(tier) for key, definition in capability_registry.items()}
+    )
 
     overrides = db.query(EntitlementOverride).filter(
         EntitlementOverride.billing_account_id == account.id,
@@ -289,3 +293,22 @@ def require_plan(db: Session, user_id: str, key: str) -> None:
     denied = plan_lock(db, user_id, key)
     if denied is not None:
         raise EntitlementDenied(denied)
+
+
+def require_turn(db: Session, user_id: str, key: str, used_this_month: int,
+                 *, now: datetime | None = None) -> None:
+    """Refuse (402) when a monthly limit `key` is used up, counted by the caller.
+
+    For limits whose count already lives in the caller's own rows (readings
+    written this month), so no usage bucket has to mirror them.
+    """
+    from .usage import month_bounds
+
+    snapshot = resolve_entitlements(db, user_id)
+    decision = snapshot.decide_capacity(key, used_this_month)
+    if not decision.allowed:
+        _, _, period_end = month_bounds(now or datetime.utcnow())
+        raise EntitlementDenied(EntitlementDecision(
+            False, key, decision.value, decision.reason, decision.access_tier,
+            remaining=0, resets_at=period_end.isoformat(),
+        ))

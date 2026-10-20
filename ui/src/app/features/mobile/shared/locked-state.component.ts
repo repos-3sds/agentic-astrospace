@@ -63,9 +63,10 @@ export class LockedStateComponent {
   protected readonly title = computed(() => {
     const d = this.denial();
     if (d.entitlement === 'ask.answers.period') {
-      return d.access_tier === 'free' ? 'Your free question is used' : 'You’ve used this month’s answers';
+      return welcomeOnly(d) ? 'Your free question is used' : 'You’ve used this month’s answers';
     }
     if (d.entitlement === 'profiles.max') return 'Your profiles are full';
+    if (d.entitlement === 'readings.period') return 'You’ve used this month’s readings';
     return 'Part of Plus';
   });
 
@@ -73,17 +74,25 @@ export class LockedStateComponent {
     const d = this.denial();
     const back = resetSentence(d.resets_at);
     if (d.entitlement === 'ask.answers.period') {
-      return d.access_tier === 'free'
+      return welcomeOnly(d)
         ? 'Your free question is used. Plus gives you 5 answers a month, or buy a question for ₹49.'
-        : `Your plan’s answers for this month are used.${back} A question pack adds more right away.`;
+        : `Your answers for this month are used.${back} A question pack adds more right away.`;
     }
     if (d.entitlement === 'profiles.max') {
       return d.access_tier === 'free'
         ? 'Free keeps 1 profile. Plus keeps 3, or remove one you no longer need.'
         : 'Your plan’s profile slots are in use. Remove one you no longer need to add another.';
     }
+    if (d.entitlement === 'readings.period') {
+      return `Your free readings for this month are used.${back} Plus writes a reading for every period.`;
+    }
     return 'This is included with Plus. Everything about safety, your sources and your own data stays free.';
   });
+}
+
+/** Free with no monthly allowance: only the one welcome question. */
+function welcomeOnly(d: EntitlementDenial): boolean {
+  return d.access_tier === 'free' && !d.limit;
 }
 
 function resetSentence(resetsAt: string | null): string {

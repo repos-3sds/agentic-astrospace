@@ -18,7 +18,8 @@ from ..core.vedic.chart import VedicChart
 from ..core.vedic.positions import LocationError
 from ..agents.period_agent import PeriodAgent
 from ..agents.safety import REFER_OUT_ANSWERS
-from ..entitlements import require_plan
+from ..entitlements import require_plan, require_turn
+from ..entitlements.usage import month_bounds
 from .auth import CurrentUser
 
 router = APIRouter(prefix="/api/v1/readings", tags=["readings"])
@@ -440,6 +441,10 @@ def generate_reading(
             raise HTTPException(status_code=429, detail=NEW_VERSION_LIMIT.format(
                 limit=MAX_NEW_VERSIONS_PER_DAY, period=body.period,
             ))
+        # Only a reading actually written counts; a cached one is free.
+        _, month_start, _ = month_bounds(datetime.utcnow())
+        require_turn(db, user.id, "readings.period",
+                     crud.count_readings_written(db, user.id, month_start))
         ratelimit.require(user.id, "reading")
         try:
             r = _generate_and_save(db, k, body.period, label, local_date, now_local, user.id)
