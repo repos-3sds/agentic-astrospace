@@ -1,139 +1,63 @@
 @if (chart(); as c) {
   <figure class="kundli-chart" [attr.aria-label]="c.name + ' kundli chart'">
-    @if (chartStyle() === 'north') {
-      <svg viewBox="0 0 400 400" role="img">
-        <title>{{ c.name }} north Indian chart</title>
-        <path class="chart-fill" d="M20 20H380V380H20Z" />
-        <path class="chart-line strong" d="M20 20H380V380H20Z" />
-        <path class="chart-line" d="M20 20L380 380M380 20L20 380" />
-        <path class="chart-line strong" d="M200 20L380 200L200 380L20 200Z" />
-        <path class="chart-line" d="M20 20L200 200L380 20M380 380L200 200L20 380" />
-
-        @for (house of houses(); track house.house) {
-          <g class="house" [attr.transform]="'translate(' + house.x + ' ' + house.y + ')'">
-            <text class="house-number" x="0" y="-24">H{{ house.house }}</text>
-            <text class="sign-label" x="0" y="-7" [attr.fill]="house.signColor">
-              {{ house.signLabel }}
-            </text>
-            @for (entry of house.entries; track entry.key; let i = $index) {
-              <g
-                class="planet-hit"
-                [class.interactive]="interactive() && entry.key !== 'Lagna'"
-                [attr.tabindex]="interactive() && entry.key !== 'Lagna' ? 0 : null"
-                [attr.role]="interactive() && entry.key !== 'Lagna' ? 'button' : null"
-                [attr.aria-label]="entry.key"
-                (click)="selectPlanet(entry)"
-                (keydown.enter)="selectPlanet(entry)"
-                (keydown.space)="selectPlanet(entry)"
-              >
-                @let southHit = hitRow(i, house.entries.length, 10, 13);
-                <rect [attr.x]="-hitWidth / 2" [attr.y]="southHit.y" [attr.width]="hitWidth" [attr.height]="southHit.h" rx="3" />
-                <text class="planet-line" x="0" [attr.y]="10 + i * 13">
-                  <tspan>{{ entry.label }}</tspan>
-                  @for (annotation of entry.annotations; track annotation.code) {
-                    <tspan [attr.class]="'condition-symbol ' + annotation.tone" dx="3">
-                      {{ annotation.symbol }}
-                    </tspan>
-                  }
-                </text>
-              </g>
-            }
-          </g>
+    <svg viewBox="0 0 400 400" role="img">
+      @switch (chartStyle()) {
+        @case ('north') {
+          <title>{{ c.name }} north Indian chart</title>
+          <path class="chart-fill" d="M20 20H380V380H20Z" />
+          <path class="chart-line strong" d="M20 20H380V380H20Z" />
+          <path class="chart-line" d="M20 20L380 380M380 20L20 380" />
+          <path class="chart-line strong" d="M200 20L380 200L200 380L20 200Z" />
+          <path class="chart-line" d="M20 20L200 200L380 20M380 380L200 200L20 380" />
         }
-      </svg>
-    } @else if (chartStyle() === 'eastern') {
-      <svg viewBox="0 0 400 400" role="img">
-        <title>{{ c.name }} eastern Indian chart</title>
-        <path class="chart-fill" d="M0 0H400V400H0Z" />
-        <path class="chart-line strong" d="M0 0H400V400H0Z" />
-        <path class="chart-line" d="M133.33 0V400M266.67 0V400M0 133.33H400M0 266.67H400" />
-        <path class="chart-line" d="M0 0L133.33 133.33M266.67 133.33L400 0M0 400L133.33 266.67M266.67 266.67L400 400" />
-
-        @for (cell of easternCells(); track cell.sign) {
-          <g
-            class="eastern-cell"
-            [attr.transform]="'translate(' + cell.x + ' ' + cell.y + ')'"
-          >
-            @for (entry of cell.entries; track entry.key; let i = $index) {
-              <g
-                class="planet-hit"
-                [class.interactive]="interactive() && entry.key !== 'Lagna'"
-                [attr.tabindex]="interactive() && entry.key !== 'Lagna' ? 0 : null"
-                [attr.role]="interactive() && entry.key !== 'Lagna' ? 'button' : null"
-                [attr.aria-label]="entry.key"
-                (click)="selectPlanet(entry)"
-                (keydown.enter)="selectPlanet(entry)"
-                (keydown.space)="selectPlanet(entry)"
-              >
-                @let northHit = hitRow(i, cell.entries.length, 0, 13);
-                <rect [attr.x]="hitX(cell.planetAlign)" [attr.y]="northHit.y" [attr.width]="hitWidth" [attr.height]="northHit.h" rx="3" />
-                <text
-                  class="planet-line"
-                  x="0"
-                  [attr.y]="i * 13"
-                  [attr.text-anchor]="cell.planetAlign"
-                >
-                  <tspan>{{ entry.label }}</tspan>
-                  @for (annotation of entry.annotations; track annotation.code) {
-                    <tspan [attr.class]="'condition-symbol ' + annotation.tone" dx="3">
-                      {{ annotation.symbol }}
-                    </tspan>
-                  }
-                </text>
-              </g>
-            }
-          </g>
-          <text class="house-number eastern-house" [attr.x]="cell.labelX" [attr.y]="cell.labelY" [attr.text-anchor]="cell.labelAlign">
-            H{{ cell.house }}
-          </text>
-          <text class="sign-label eastern-sign" [attr.x]="cell.labelX" [attr.y]="cell.labelY + 14" [attr.text-anchor]="cell.labelAlign" [attr.fill]="cell.signColor">
-            {{ cell.signLabel }}
-          </text>
+        @case ('eastern') {
+          <title>{{ c.name }} eastern Indian chart</title>
+          <path class="chart-fill" d="M0 0H400V400H0Z" />
+          <path class="chart-line strong" d="M0 0H400V400H0Z" />
+          <path class="chart-line" d="M133.33 0V400M266.67 0V400M0 133.33H400M0 266.67H400" />
+          <path class="chart-line" d="M0 0L133.33 133.33M266.67 133.33L400 0M0 400L133.33 266.67M266.67 266.67L400 400" />
         }
-      </svg>
-    } @else {
-      <svg viewBox="0 0 400 400" role="img">
-        <title>{{ c.name }} south Indian chart</title>
-        <path class="chart-fill" d="M0 0H400V400H0Z" />
-        <path class="chart-line strong" d="M0 0H400V400H0Z" />
-        <path class="chart-line" d="M100 0V400M200 0V100M200 300V400M300 0V400M0 100H400M0 200H100M300 200H400M0 300H400" />
+        @default {
+          <title>{{ c.name }} south Indian chart</title>
+          <path class="chart-fill" d="M0 0H400V400H0Z" />
+          <path class="chart-line strong" d="M0 0H400V400H0Z" />
+          <path class="chart-line" d="M100 0V400M200 0V100M200 300V400M300 0V400M0 100H400M0 200H100M300 200H400M0 300H400" />
+        }
+      }
 
-        @for (cell of southCells(); track cell.sign) {
+      @for (region of regions(); track region.key) {
+        @for (label of region.labels; track label.cls) {
+          <text
+            [attr.class]="label.cls"
+            [attr.x]="label.x"
+            [attr.y]="label.y"
+            [attr.text-anchor]="label.anchor"
+            [attr.fill]="label.fill"
+            [style.font-size.px]="label.size"
+          >{{ label.text }}</text>
+        }
+        @for (placed of region.entries; track placed.entry.key) {
           <g
-            class="south-cell"
-            [attr.transform]="'translate(' + (cell.x + 50) + ' ' + (cell.y + 50) + ')'"
+            class="planet-hit"
+            [class.interactive]="interactive() && placed.entry.key !== 'Lagna'"
+            [attr.tabindex]="interactive() && placed.entry.key !== 'Lagna' ? 0 : null"
+            [attr.role]="interactive() && placed.entry.key !== 'Lagna' ? 'button' : null"
+            [attr.aria-label]="placed.entry.key"
+            (click)="selectPlanet(placed.entry)"
+            (keydown.enter)="selectPlanet(placed.entry)"
+            (keydown.space)="selectPlanet(placed.entry)"
           >
-            <text class="house-number corner-label top-left" x="-42" y="-36">H{{ cell.house }}</text>
-            @for (entry of cell.entries; track entry.key; let i = $index) {
-              <g
-                class="planet-hit"
-                [class.interactive]="interactive() && entry.key !== 'Lagna'"
-                [attr.tabindex]="interactive() && entry.key !== 'Lagna' ? 0 : null"
-                [attr.role]="interactive() && entry.key !== 'Lagna' ? 'button' : null"
-                [attr.aria-label]="entry.key"
-                (click)="selectPlanet(entry)"
-                (keydown.enter)="selectPlanet(entry)"
-                (keydown.space)="selectPlanet(entry)"
-              >
-                @let eastHit = hitRow(i, cell.entries.length, -12, 12);
-                <rect [attr.x]="-hitWidth / 2" [attr.y]="eastHit.y" [attr.width]="hitWidth" [attr.height]="eastHit.h" rx="3" />
-                <text class="planet-line" x="0" [attr.y]="-12 + i * 12">
-                  <tspan>{{ entry.label }}</tspan>
-                  @for (annotation of entry.annotations; track annotation.code) {
-                    <tspan [attr.class]="'condition-symbol ' + annotation.tone" dx="3">
-                      {{ annotation.symbol }}
-                    </tspan>
-                  }
-                </text>
-              </g>
-            }
-            <text class="sign-label corner-label bottom-right" x="38" y="32" [attr.fill]="cell.signColor">
-              {{ cell.signLabel }}
+            <rect [attr.x]="placed.hit.x" [attr.y]="placed.hit.y" [attr.width]="placed.hit.w" [attr.height]="placed.hit.h" rx="3" />
+            <text class="planet-line" [attr.x]="placed.x" [attr.y]="placed.y" [style.font-size.px]="placed.size">
+              <tspan>{{ placed.entry.label }}</tspan>
+              @for (annotation of placed.entry.annotations; track annotation.code) {
+                <tspan [attr.class]="'condition-symbol ' + annotation.tone" dx="3" [style.font-size.px]="placed.symbolSize">{{ annotation.symbol }}</tspan>
+              }
             </text>
           </g>
         }
-      </svg>
-    }
+      }
+    </svg>
   </figure>
   <div class="chart-legend" aria-label="Planet condition legend">
     <span><b>↑</b> Exalted</span>

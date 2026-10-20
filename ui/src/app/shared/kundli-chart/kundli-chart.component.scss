@@ -2,11 +2,6 @@
   display: block;
   width: 100%;
   max-width: 560px;
-  --kundli-house-font: 10.5px;
-  --kundli-sign-font: 11.5px;
-  --kundli-eastern-sign-font: 9.8px;
-  --kundli-planet-font: 10.4px;
-  --kundli-condition-font: 9px;
 }
 
 .kundli-chart {
@@ -27,11 +22,6 @@
   :host {
     max-width: min(100%, 388px);
     margin-inline: auto;
-    --kundli-house-font: 11.2px;
-    --kundli-sign-font: 12.4px;
-    --kundli-eastern-sign-font: 10.8px;
-    --kundli-planet-font: 11.35px;
-    --kundli-condition-font: 9.8px;
   }
 }
 
@@ -52,75 +42,21 @@
   }
 }
 
-.house {
-  pointer-events: auto;
-  text {
-    text-anchor: middle;
-    dominant-baseline: middle;
-  }
-}
-
-.south-cell {
-  pointer-events: auto;
-
-  text {
-    text-anchor: middle;
-    dominant-baseline: middle;
-  }
-}
-
-.eastern-cell {
-  pointer-events: auto;
-
-  text {
-    dominant-baseline: middle;
-  }
+// Type sizes and positions are set per house by the component, which fits
+// each house's writing inside its own outline (kundli-chart-layout.ts).
+.kundli-chart text {
+  dominant-baseline: middle;
 }
 
 .house-number {
   fill: var(--as-muted);
-  font-size: var(--kundli-house-font);
   font-weight: 700;
   letter-spacing: 0.08em;
 }
 
 .sign-label {
   font-family: var(--as-font-display);
-  font-size: var(--kundli-sign-font);
   font-weight: 700;
-}
-
-.corner-label {
-  dominant-baseline: middle;
-
-  &.top-left {
-    text-anchor: start;
-  }
-
-  &.bottom-right {
-    text-anchor: end;
-  }
-}
-
-.south-cell .corner-label {
-  dominant-baseline: middle;
-
-  &.top-left {
-    text-anchor: start;
-  }
-
-  &.bottom-right {
-    text-anchor: end;
-  }
-}
-
-.eastern-house {
-  dominant-baseline: middle;
-}
-
-.eastern-sign {
-  dominant-baseline: middle;
-  font-size: var(--kundli-eastern-sign-font);
 }
 
 .planet-hit {
@@ -149,13 +85,12 @@
 
 .planet-line {
   fill: var(--as-text);
-  font-size: var(--kundli-planet-font);
   font-weight: 650;
+  text-anchor: middle;
   pointer-events: none;
 }
 
 .condition-symbol {
-  font-size: var(--kundli-condition-font);
   font-weight: 900;
 
   &.good {
