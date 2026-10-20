@@ -1,39 +1,29 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 
 import { SIGN_ORDER, signMeta } from '../../core/glyphs';
 import { PlanetConditionAnnotation, PlanetConditionCode, VargaChart } from '../../core/models';
+import {
+  Box,
+  estimateText,
+  fitRegion,
+  FitOptions,
+  FitRegion,
+  labelBox,
+  MeasureText,
+  Point,
+} from './kundli-chart-layout';
 
 export type KundliChartStyle = 'north' | 'south' | 'eastern';
-
-interface HousePoint {
-  house: number;
-  x: number;
-  y: number;
-}
-
-interface HouseView extends HousePoint {
-  sign: string;
-  signLabel: string;
-  signColor: string;
-  entries: PlanetEntry[];
-}
-
-interface SouthCell {
-  sign: string;
-  signLabel: string;
-  signColor: string;
-  house: number;
-  x: number;
-  y: number;
-  entries: PlanetEntry[];
-}
-
-interface EasternCell extends SouthCell {
-  labelX: number;
-  labelY: number;
-  labelAlign: 'start' | 'middle' | 'end';
-  planetAlign: 'start' | 'middle' | 'end';
-}
 
 interface PlanetEntry {
   key: string;
@@ -41,19 +31,83 @@ interface PlanetEntry {
   annotations: PlanetConditionAnnotation[];
 }
 
-const HOUSE_POINTS: HousePoint[] = [
-  { house: 1, x: 200, y: 82 },
-  { house: 2, x: 112, y: 54 },
-  { house: 3, x: 55, y: 112 },
-  { house: 4, x: 86, y: 200 },
-  { house: 5, x: 55, y: 288 },
-  { house: 6, x: 112, y: 346 },
-  { house: 7, x: 200, y: 318 },
-  { house: 8, x: 288, y: 346 },
-  { house: 9, x: 345, y: 288 },
-  { house: 10, x: 314, y: 200 },
-  { house: 11, x: 345, y: 112 },
-  { house: 12, x: 288, y: 54 },
+/** A fixed label: house number or sign. */
+interface ChartLabel {
+  text: string;
+  cls: 'house-number' | 'sign-label';
+  x: number;
+  y: number;
+  /** Font size to write, in chart units (before the phone's text zoom). */
+  size: number;
+  anchor: 'start' | 'middle' | 'end';
+  fill: string | null;
+}
+
+interface PlacedEntry {
+  entry: PlanetEntry;
+  x: number;
+  y: number;
+  size: number;
+  symbolSize: number;
+  hit: Box;
+}
+
+interface ChartRegion {
+  key: string;
+  labels: ChartLabel[];
+  entries: PlacedEntry[];
+}
+
+/**
+ * Type sizes in chart units (the SVG is 400 wide, drawn about 316-350 px on a
+ * phone, so 15.5 units is about 12-13.5 px). Tester feedback 2026-10-20: the
+ * old 10-11 units read at 8-9 px and were too small to read inside the chart.
+ * Planets shrink toward PLANET_MIN only in a house too crowded to hold them.
+ */
+const HOUSE_SIZE = 12.5;
+const SIGN_SIZE = 14;
+const EASTERN_SIGN_SIZE = 12.5;
+const PLANET_MAX = 15.5;
+const PLANET_MIN = 10;
+/** Only for a stellium in a small house; smaller type beats text across the lines. */
+const PLANET_FLOOR = 8;
+const SYMBOL_RATIO = 0.82;
+const SYMBOL_GAP = 3;
+
+/**
+ * Tap targets for the planet labels, in chart units (54 units is about 45 px
+ * on a phone). Flow audit 2026-10-15, section 6: they were 37 x 12 px.
+ *
+ * Each target stays centred on its own label, so a tap on a label always
+ * lands on that planet. Rows of a stack abut at the row spacing; the stack's
+ * first and last rows grow outward until the stack is 54 units tall, so a lone
+ * planet is a full 44 px target. Side by side columns split the width.
+ */
+const HIT = 54;
+
+const A = 133.33;
+const B = 266.67;
+
+interface NorthHouse {
+  house: number;
+  poly: Point[];
+  anchor: Point;
+}
+
+/** North diamond: frame 20-380, centre 200; houses run anticlockwise from the top diamond. */
+const NORTH_HOUSES: NorthHouse[] = [
+  { house: 1, poly: [[200, 20], [290, 110], [200, 200], [110, 110]], anchor: [200, 104] },
+  { house: 2, poly: [[20, 20], [200, 20], [110, 110]], anchor: [110, 54] },
+  { house: 3, poly: [[20, 20], [110, 110], [20, 200]], anchor: [56, 110] },
+  { house: 4, poly: [[20, 200], [110, 110], [200, 200], [110, 290]], anchor: [104, 200] },
+  { house: 5, poly: [[20, 200], [110, 290], [20, 380]], anchor: [56, 290] },
+  { house: 6, poly: [[20, 380], [110, 290], [200, 380]], anchor: [110, 344] },
+  { house: 7, poly: [[200, 380], [110, 290], [200, 200], [290, 290]], anchor: [200, 296] },
+  { house: 8, poly: [[200, 380], [290, 290], [380, 380]], anchor: [290, 344] },
+  { house: 9, poly: [[380, 380], [290, 290], [380, 200]], anchor: [344, 290] },
+  { house: 10, poly: [[380, 200], [290, 290], [200, 200], [290, 110]], anchor: [296, 200] },
+  { house: 11, poly: [[380, 200], [290, 110], [380, 20]], anchor: [344, 110] },
+  { house: 12, poly: [[380, 20], [290, 110], [200, 20]], anchor: [290, 54] },
 ];
 
 const SOUTH_SIGN_POINTS: Record<string, { col: number; row: number }> = {
@@ -76,42 +130,59 @@ const SOUTH_SIGN_POINTS: Record<string, { col: number; row: number }> = {
  * cells split by diagonals through the outer corners (TL/BR on x=y-style
  * lines, TR/BL on x+y=400-style lines).
  *
- * Per zone: (x, y) anchors the planet stack — the stack is VERTICALLY
- * CENTERED on this point (see easternCells) so stelliums stay inside their
- * triangle; (labelX, labelY) pins the two-line H#/sign label block into the
- * zone's outer pocket, ≥8px inside the viewBox so nothing clips. Anchors
- * were chosen so a 5-planet stack stays on the correct side of each
- * diagonal (planet row height 13, half-width ≈16 at middle anchor).
+ * Per zone: `poly` is the zone's outline and `anchor` where its planets sit
+ * when there is room; (labelX, labelY) pins the two-line H#/sign label block
+ * into the zone's outer pocket, inside the viewBox so nothing clips.
  */
-const EASTERN_SIGN_POINTS: Record<string, {
-  x: number;
-  y: number;
+const EASTERN_ZONES: Record<string, {
+  poly: Point[];
+  anchor: Point;
   labelX: number;
   labelY: number;
   labelAlign: 'start' | 'middle' | 'end';
-  planetAlign: 'start' | 'middle' | 'end';
 }> = {
   // Top-left corner: Pisces upper-right triangle, Aries lower-left.
-  Pisces: { x: 98, y: 60, labelX: 126, labelY: 16, labelAlign: 'end', planetAlign: 'middle' },
-  Aries: { x: 36, y: 82, labelX: 8, labelY: 110, labelAlign: 'start', planetAlign: 'middle' },
+  Pisces: { poly: [[0, 0], [A, 0], [A, A]], anchor: [96, 56], labelX: 126, labelY: 16, labelAlign: 'end' },
+  Aries: { poly: [[0, 0], [A, A], [0, A]], anchor: [38, 82], labelX: 8, labelY: 104, labelAlign: 'start' },
   // Top edge.
-  Taurus: { x: 200, y: 72, labelX: 140, labelY: 16, labelAlign: 'start', planetAlign: 'middle' },
+  Taurus: { poly: [[A, 0], [B, 0], [B, A], [A, A]], anchor: [200, 76], labelX: 140, labelY: 16, labelAlign: 'start' },
   // Top-right corner: Gemini upper-left triangle, Cancer lower-right.
-  Gemini: { x: 302, y: 58, labelX: 274, labelY: 16, labelAlign: 'start', planetAlign: 'middle' },
-  Cancer: { x: 364, y: 74, labelX: 392, labelY: 110, labelAlign: 'end', planetAlign: 'middle' },
+  Gemini: { poly: [[B, 0], [400, 0], [B, A]], anchor: [304, 56], labelX: 274, labelY: 16, labelAlign: 'start' },
+  Cancer: { poly: [[400, 0], [400, A], [B, A]], anchor: [362, 82], labelX: 392, labelY: 104, labelAlign: 'end' },
   // Right edge.
-  Leo: { x: 334, y: 205, labelX: 392, labelY: 149, labelAlign: 'end', planetAlign: 'middle' },
+  Leo: { poly: [[B, A], [400, A], [400, B], [B, B]], anchor: [324, 212], labelX: 392, labelY: 149, labelAlign: 'end' },
   // Bottom-right corner: Virgo upper-right triangle, Libra lower-left.
-  Virgo: { x: 366, y: 324, labelX: 392, labelY: 282, labelAlign: 'end', planetAlign: 'middle' },
-  Libra: { x: 300, y: 338, labelX: 274, labelY: 370, labelAlign: 'start', planetAlign: 'middle' },
+  Virgo: { poly: [[B, B], [400, B], [400, 400]], anchor: [362, 318], labelX: 392, labelY: 282, labelAlign: 'end' },
+  Libra: { poly: [[B, B], [400, 400], [B, 400]], anchor: [304, 344], labelX: 274, labelY: 366, labelAlign: 'start' },
   // Bottom edge.
-  Scorpio: { x: 200, y: 330, labelX: 140, labelY: 358, labelAlign: 'start', planetAlign: 'middle' },
+  Scorpio: { poly: [[A, B], [B, B], [B, 400], [A, 400]], anchor: [212, 318], labelX: 140, labelY: 358, labelAlign: 'start' },
   // Bottom-left corner: Sagittarius lower-right triangle, Capricorn upper-left.
-  Sagittarius: { x: 100, y: 340, labelX: 126, labelY: 370, labelAlign: 'end', planetAlign: 'middle' },
-  Capricorn: { x: 36, y: 324, labelX: 8, labelY: 282, labelAlign: 'start', planetAlign: 'middle' },
+  Sagittarius: { poly: [[A, B], [A, 400], [0, 400]], anchor: [96, 344], labelX: 126, labelY: 366, labelAlign: 'end' },
+  Capricorn: { poly: [[0, B], [A, B], [0, 400]], anchor: [38, 318], labelX: 8, labelY: 282, labelAlign: 'start' },
   // Left edge.
-  Aquarius: { x: 66, y: 205, labelX: 8, labelY: 149, labelAlign: 'start', planetAlign: 'middle' },
+  Aquarius: { poly: [[0, A], [A, A], [A, B], [0, B]], anchor: [76, 212], labelX: 8, labelY: 149, labelAlign: 'start' },
 };
+
+/**
+ * The phone's text zoom as applied to this page: Android's font-size setting
+ * scales WebView text, SVG text included (MainActivity.capTextZoom caps it at
+ * 130%). Measured once, the way the splash does it.
+ */
+let measuredTextZoom: number | null = null;
+
+function textZoom(): number {
+  if (measuredTextZoom !== null) return measuredTextZoom;
+  if (typeof document === 'undefined' || !document.body) return 1;
+  const probe = document.createElement('span');
+  probe.setAttribute('data-text-zoom-probe', '');
+  probe.style.cssText = 'position:absolute;visibility:hidden;font-size:100px;line-height:1;';
+  probe.textContent = 'M';
+  document.body.appendChild(probe);
+  const zoom = probe.getBoundingClientRect().height / 100;
+  probe.remove();
+  measuredTextZoom = zoom > 0.5 && zoom < 2.5 ? zoom : 1;
+  return measuredTextZoom;
+}
 
 @Component({
   // Signal inputs only, so OnPush is safe; the mobile chart screens render these (audit I16).
@@ -127,126 +198,220 @@ export class KundliChartComponent {
   readonly interactive = input(false);
   readonly planetSelected = output<string>();
 
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  /** Bumped when web fonts finish loading, so widths are measured again. */
+  private readonly fontsReady = signal(0);
+  private readonly zoom = signal(1);
+  private readonly widthCache = new Map<string, number>();
+  private context: CanvasRenderingContext2D | null = null;
+
+  constructor() {
+    afterNextRender(() => {
+      this.zoom.set(textZoom());
+      this.fontsReady.update((n) => n + 1);
+      document.fonts?.ready.then(() => {
+        this.widthCache.clear();
+        this.fontsReady.update((n) => n + 1);
+      });
+    });
+  }
+
   protected selectPlanet(entry: PlanetEntry): void {
     if (this.interactive()) this.planetSelected.emit(entry.key);
   }
 
-  /**
-   * Tap targets for the planet labels, in chart units (the SVG is 400 wide,
-   * about 337 px on a phone, so 54 units is about 45 px). Flow audit
-   * 2026-10-15, section 6: they were 37 x 12 px.
-   *
-   * Each target stays centred on its own label, so a tap on a label always
-   * lands on that planet. Rows of a stack abut at the label spacing; the
-   * stack's first and last rows grow outward until the stack is 54 units
-   * tall, so a lone planet is a full 44 px target. Middle rows of a stack of
-   * three or more keep the label spacing: making them taller would mean
-   * spacing the labels further apart.
-   */
-  protected static readonly HIT = 54;
-
-  protected hitX(anchor: 'start' | 'middle' | 'end'): number {
-    if (anchor === 'start') return -4;
-    if (anchor === 'end') return 4 - KundliChartComponent.HIT;
-    return -KundliChartComponent.HIT / 2;
-  }
-
-  /** `base` is the first row's text baseline, `step` the row spacing. */
-  protected hitRow(i: number, count: number, base: number, step: number): { y: number; h: number } {
-    const extra = Math.max(0, KundliChartComponent.HIT - step * count) / 2;
-    let y = base - 1 + i * step - step / 2;
-    let h = step;
-    if (i === 0) { y -= extra; h += extra; }
-    if (i === count - 1) h += extra;
-    return { y, h };
-  }
-
-  protected readonly hitWidth = KundliChartComponent.HIT;
-
-  protected readonly houses = computed<HouseView[]>(() => {
+  protected readonly regions = computed<ChartRegion[]>(() => {
     const chart = this.chart();
     if (!chart) return [];
-
-    const planetsByHouse = new Map<number, PlanetEntry[]>();
-    for (const [planet, position] of Object.entries(chart.planets)) {
-      const house = position.house;
-      planetsByHouse.set(house, [...(planetsByHouse.get(house) ?? []), this.entryForPlanet(planet)]);
-    }
-
-    const lagnaIndex = SIGN_ORDER.indexOf(chart.lagna.sign);
-    return HOUSE_POINTS.map((point) => {
-      const sign = this.signForHouse(lagnaIndex, chart.lagna.sign, point.house);
-      const meta = signMeta(sign);
-      const planets = point.house === 1
-        ? [this.lagnaEntry(), ...(planetsByHouse.get(point.house) ?? [])]
-        : (planetsByHouse.get(point.house) ?? []);
-      return {
-        ...point,
-        sign,
-        signLabel: this.signShortName(sign),
-        signColor: meta.color,
-        entries: planets,
-      };
-    });
+    this.fontsReady();
+    const zoom = this.zoom();
+    const measure = this.measurer();
+    const style = this.chartStyle();
+    if (style === 'north') return this.northRegions(chart, zoom, measure);
+    if (style === 'eastern') return this.easternRegions(chart, zoom, measure);
+    return this.southRegions(chart, zoom, measure);
   });
 
-  protected readonly southCells = computed<SouthCell[]>(() => {
-    const chart = this.chart();
-    if (!chart) return [];
+  private options(zoom: number): FitOptions {
+    return {
+      maxSize: PLANET_MAX * zoom,
+      // A crowded house never drops below today's size at normal text, so a
+      // large-text reader keeps a little of their zoom there too.
+      minSize: Math.min(PLANET_MAX, PLANET_MIN * zoom),
+      floorSize: PLANET_FLOOR,
+      symbolRatio: SYMBOL_RATIO,
+      symbolGap: SYMBOL_GAP,
+      margin: 3,
+    };
+  }
 
-    const planetsBySign = new Map<string, PlanetEntry[]>();
+  private northRegions(chart: VargaChart, zoom: number, measure: MeasureText): ChartRegion[] {
+    const byHouse = new Map<number, PlanetEntry[]>();
     for (const [planet, position] of Object.entries(chart.planets)) {
-      planetsBySign.set(position.sign, [...(planetsBySign.get(position.sign) ?? []), this.entryForPlanet(planet)]);
+      byHouse.set(position.house, [...(byHouse.get(position.house) ?? []), this.entryForPlanet(planet)]);
     }
-
     const lagnaIndex = SIGN_ORDER.indexOf(chart.lagna.sign);
+    const options = this.options(zoom);
+    return NORTH_HOUSES.map((house) => {
+      const sign = this.signForHouse(lagnaIndex, chart.lagna.sign, house.house);
+      const entries = house.house === 1
+        ? [this.lagnaEntry(), ...(byHouse.get(house.house) ?? [])]
+        : (byHouse.get(house.house) ?? []);
+      const houseText = `H${house.house}`;
+      const signText = this.signShortName(sign);
+      const region: FitRegion = {
+        poly: house.poly,
+        anchor: house.anchor,
+        header: [
+          { text: houseText, size: HOUSE_SIZE * zoom, kind: 'label' },
+          { text: signText, size: SIGN_SIZE * zoom, kind: 'sign' },
+        ],
+        entries: entries.map((entry) => this.fitEntry(entry)),
+      };
+      const fit = fitRegion(region, measure, options);
+      return {
+        key: `n${house.house}`,
+        labels: [
+          { text: houseText, cls: 'house-number', x: fit.header[0].x, y: fit.header[0].y, size: fit.header[0].size / zoom, anchor: 'middle', fill: null },
+          { text: signText, cls: 'sign-label', x: fit.header[1].x, y: fit.header[1].y, size: fit.header[1].size / zoom, anchor: 'middle', fill: signMeta(sign).color },
+        ],
+        entries: this.placeEntries(entries, fit, zoom),
+      };
+    });
+  }
+
+  private southRegions(chart: VargaChart, zoom: number, measure: MeasureText): ChartRegion[] {
+    const bySign = this.planetsBySign(chart);
+    const lagnaIndex = SIGN_ORDER.indexOf(chart.lagna.sign);
+    const options = this.options(zoom);
     return SIGN_ORDER.map((sign) => {
       const point = SOUTH_SIGN_POINTS[sign];
-      const meta = signMeta(sign);
-      const planets = sign === chart.lagna.sign
-        ? [this.lagnaEntry(), ...(planetsBySign.get(sign) ?? [])]
-        : (planetsBySign.get(sign) ?? []);
+      const x0 = point.col * 100;
+      const y0 = point.row * 100;
+      const entries = sign === chart.lagna.sign
+        ? [this.lagnaEntry(), ...(bySign.get(sign) ?? [])]
+        : (bySign.get(sign) ?? []);
+      const houseText = `H${this.houseForSign(lagnaIndex, sign)}`;
+      const signText = this.signShortName(sign);
+      // Corner labels: house top-left, sign bottom-right, each 8 units in.
+      const houseY = y0 + 8 + HOUSE_SIZE * zoom * 0.6;
+      const signY = y0 + 92 - SIGN_SIZE * zoom * 0.6;
+      const houseBox = labelBox(x0 + 8, houseY, measure(houseText, HOUSE_SIZE * zoom, 'label'), HOUSE_SIZE * zoom, 'start');
+      const signBox = labelBox(x0 + 92, signY, measure(signText, SIGN_SIZE * zoom, 'sign'), SIGN_SIZE * zoom, 'end');
+      const fit = fitRegion({
+        poly: [[x0, y0], [x0 + 100, y0], [x0 + 100, y0 + 100], [x0, y0 + 100]],
+        anchor: [x0 + 50, y0 + 48],
+        exclude: [houseBox, signBox],
+        entries: entries.map((entry) => this.fitEntry(entry)),
+      }, measure, options);
       return {
-        sign,
-        signLabel: this.signShortName(sign),
-        signColor: meta.color,
-        house: this.houseForSign(lagnaIndex, sign),
-        x: point.col * 100,
-        y: point.row * 100,
-        entries: planets,
+        key: `s${sign}`,
+        labels: [
+          { text: houseText, cls: 'house-number', x: x0 + 8, y: houseY, size: HOUSE_SIZE, anchor: 'start', fill: null },
+          { text: signText, cls: 'sign-label', x: x0 + 92, y: signY, size: SIGN_SIZE, anchor: 'end', fill: signMeta(sign).color },
+        ],
+        entries: this.placeEntries(entries, fit, zoom),
       };
     });
-  });
+  }
 
-  protected readonly easternCells = computed<EasternCell[]>(() => {
-    const chart = this.chart();
-    if (!chart) return [];
-
-    const planetsBySign = this.planetsBySign(chart);
+  private easternRegions(chart: VargaChart, zoom: number, measure: MeasureText): ChartRegion[] {
+    const bySign = this.planetsBySign(chart);
     const lagnaIndex = SIGN_ORDER.indexOf(chart.lagna.sign);
+    const options = this.options(zoom);
+    const houseSize = HOUSE_SIZE * zoom;
+    const signSize = EASTERN_SIGN_SIZE * zoom;
+    const spacing = Math.max(houseSize, signSize) * 1.15;
     return SIGN_ORDER.map((sign) => {
-      const point = EASTERN_SIGN_POINTS[sign];
-      const meta = signMeta(sign);
-      const planets = sign === chart.lagna.sign
-        ? [this.lagnaEntry('As'), ...(planetsBySign.get(sign) ?? [])]
-        : (planetsBySign.get(sign) ?? []);
+      const zone = EASTERN_ZONES[sign];
+      const entries = sign === chart.lagna.sign
+        ? [this.lagnaEntry('As'), ...(bySign.get(sign) ?? [])]
+        : (bySign.get(sign) ?? []);
+      const houseText = `H${this.houseForSign(lagnaIndex, sign)}`;
+      const signText = this.signShortName(sign);
+      // Keep the two-line label inside the frame however large the text is.
+      const houseY = Math.min(Math.max(zone.labelY, 4 + houseSize * 0.6), 396 - spacing - signSize * 0.6);
+      const signY = houseY + spacing;
+      const exclude = [
+        labelBox(zone.labelX, houseY, measure(houseText, houseSize, 'label'), houseSize, zone.labelAlign),
+        labelBox(zone.labelX, signY, measure(signText, signSize, 'sign'), signSize, zone.labelAlign),
+      ];
+      const fit = fitRegion({
+        poly: zone.poly,
+        anchor: zone.anchor,
+        exclude,
+        entries: entries.map((entry) => this.fitEntry(entry)),
+      }, measure, options);
       return {
-        sign,
-        signLabel: this.signShortName(sign),
-        signColor: meta.color,
-        house: this.houseForSign(lagnaIndex, sign),
-        x: point.x,
-        // Center the planet stack vertically on the zone anchor so large
-        // stelliums stay inside their (triangular) zone.
-        y: point.y - ((planets.length - 1) * 13) / 2 + 4,
-        labelX: point.labelX,
-        labelY: point.labelY,
-        labelAlign: point.labelAlign,
-        planetAlign: point.planetAlign,
-        entries: planets,
+        key: `e${sign}`,
+        labels: [
+          { text: houseText, cls: 'house-number', x: zone.labelX, y: houseY, size: HOUSE_SIZE, anchor: zone.labelAlign, fill: null },
+          { text: signText, cls: 'sign-label', x: zone.labelX, y: signY, size: EASTERN_SIGN_SIZE, anchor: zone.labelAlign, fill: signMeta(sign).color },
+        ],
+        entries: this.placeEntries(entries, fit, zoom),
       };
     });
-  });
+  }
+
+  private fitEntry(entry: PlanetEntry) {
+    return { label: entry.label, symbols: entry.annotations.map((annotation) => annotation.symbol) };
+  }
+
+  /** Turns a fit (rendered sizes) into what to write (sizes before text zoom) plus tap targets. */
+  private placeEntries(entries: PlanetEntry[], fit: ReturnType<typeof fitRegion>, zoom: number): PlacedEntry[] {
+    const extra = Math.max(0, HIT - fit.rowHeight * fit.rows) / 2;
+    const width = fit.columns === 1 ? HIT : Math.min(HIT, fit.columnPitch);
+    return entries.map((entry, i) => {
+      const placed = fit.entries[i];
+      const row = Math.floor(i / fit.columns);
+      let y = placed.y - fit.rowHeight / 2;
+      let h = fit.rowHeight;
+      if (row === 0) { y -= extra; h += extra; }
+      if (row === fit.rows - 1) h += extra;
+      return {
+        entry,
+        x: placed.x,
+        y: placed.y,
+        size: placed.size / zoom,
+        symbolSize: (placed.size * SYMBOL_RATIO) / zoom,
+        hit: { x: placed.x - width / 2, y, w: width, h },
+      };
+    });
+  }
+
+  /** Text widths from the fonts actually in use, falling back to estimates. */
+  private measurer(): MeasureText {
+    if (!this.context && typeof document !== 'undefined') {
+      try {
+        this.context = document.createElement('canvas').getContext('2d');
+      } catch {
+        this.context = null;
+      }
+    }
+    const context = this.context;
+    if (!context || typeof getComputedStyle === 'undefined') return estimateText;
+    const styles = getComputedStyle(this.host.nativeElement);
+    const body = styles.fontFamily || 'sans-serif';
+    const display = styles.getPropertyValue('--as-font-display').trim() || body;
+    const fonts = {
+      planet: `650 100px ${body}`,
+      symbol: `900 100px ${body}`,
+      label: `700 100px ${body}`,
+      sign: `700 100px ${display}`,
+    };
+    return (text, size, kind) => {
+      const key = `${kind}|${text}`;
+      let width = this.widthCache.get(key);
+      if (width === undefined) {
+        context.font = fonts[kind];
+        width = context.measureText(text).width;
+        // House numbers are tracked out 0.08em per letter.
+        if (kind === 'label') width += [...text].length * 8;
+        this.widthCache.set(key, width);
+      }
+      return (width * size) / 100;
+    };
+  }
 
   private planetsBySign(chart: VargaChart): Map<string, PlanetEntry[]> {
     const planetsBySign = new Map<string, PlanetEntry[]>();
