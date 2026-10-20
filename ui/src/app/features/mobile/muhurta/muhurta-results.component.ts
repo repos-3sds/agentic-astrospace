@@ -52,6 +52,7 @@ const GOAL_PHRASES: Record<string, string> = {
 const RANGE_LABELS: Record<string, string> = {
   week: 'This week',
   month: 'This month',
+  fortnight: 'Next 2 weeks',
   custom: 'Your dates',
 };
 

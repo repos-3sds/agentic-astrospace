@@ -222,3 +222,5 @@
   .ranges { display: flex; flex-wrap: wrap; overflow: visible; mask-image: none; animation: none; }
   .range { flex: 1 1 auto; }
 }
+
+.horizon { @include m-body; color: var(--m-muted); margin: 0; }

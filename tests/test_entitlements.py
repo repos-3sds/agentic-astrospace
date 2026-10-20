@@ -361,11 +361,16 @@ def test_testers_get_plus_but_not_practitioner_with_a_teaser_of_ask_and_readings
         monkeypatch.setenv("ASTROSPACE_TESTERS_GET_PLUS", "1")
         tester = resolve_entitlements(db, USER)
     assert tester.access_tier == "free"
+    as_free = {"remedies.full", "doshas.detail", "dashas.full", "transits.full", "compatibility.checks.period"}
     for key, definition in capability_registry.items():
-        if key in ("ask.answers.period", "readings.period"):
+        if key in ("ask.answers.period", "readings.period", "muhurta.days_ahead"):
             continue
-        assert tester.entitlements[key] == definition.value_for("plus"), key
+        expected = definition.value_for("free" if key in as_free else "plus")
+        assert tester.entitlements[key] == expected, key
     assert tester.entitlements["vargas.full"] is False  # Practitioner stays paid
+    assert tester.entitlements["compatibility.full"] is True  # the full report, 1 person a month
+    assert tester.entitlements["compatibility.checks.period"] == 1
+    assert tester.entitlements["muhurta.days_ahead"] == 14
     assert tester.entitlements["ask.answers.period"] == 3
     assert tester.entitlements["readings.period"] == 3
 
@@ -406,3 +411,36 @@ def test_tester_readings_stop_after_three_a_month_once_locks_are_on(env, monkeyp
     assert denied.json()["resets_at"] and denied.json()["limit"] == 3
     monkeypatch.delenv("ASTROSPACE_QUOTAS_ENFORCED")
     assert generate().status_code == 503  # counted, never blocking, while locks are off
+
+
+def test_tester_muhurta_searches_the_next_two_weeks_only(env, monkeypatch):
+    from datetime import date
+
+    from astrospace.api import muhurta_routes
+    from astrospace.db import crud
+
+    client, Session = env
+    monkeypatch.setenv("ASTROSPACE_TESTERS_GET_PLUS", "1")
+    monkeypatch.setenv("ASTROSPACE_QUOTAS_ENFORCED", "true")
+    seen = {}
+
+    def fake_find(goal, start, end, **kwargs):
+        seen["range"] = (start, end)
+        return {"windows": []}
+
+    monkeypatch.setattr(muhurta_routes.muhurta, "find", fake_find)
+    with Session() as db:
+        kundli = crud.create_kundli(db, {
+            "user_id": USER, "name": "Me", "relation": "self",
+            "birth_year": 1991, "birth_month": 8, "birth_day": 14, "birth_hour": 6, "birth_minute": 12,
+            "birth_city": "Vijayawada", "birth_nation": "IN",
+        }).id
+    params = {"goal": "griha_pravesha", "timezone": "Asia/Kolkata"}
+    body = client.get(f"/api/v1/muhurta/{kundli}", params={**params, "date_to": "2099-01-01"}).json()
+    start, end = seen["range"]
+    assert (end - start).days == 13 and body["capped_to"] == end.isoformat()
+    far = client.get(f"/api/v1/muhurta/{kundli}", params={**params, "date_from": "2099-01-01"})
+    assert far.status_code == 400
+    monkeypatch.delenv("ASTROSPACE_QUOTAS_ENFORCED")
+    client.get(f"/api/v1/muhurta/{kundli}", params={**params, "date_to": "2099-01-01"})
+    assert seen["range"][1] == date(2099, 1, 1)

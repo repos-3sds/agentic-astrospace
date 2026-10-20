@@ -13,12 +13,14 @@ import { VedicService } from '../../../core/vedic.service';
 import { TransitDetail, TransitDetailComponent } from './transit-detail.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { transitVerdictLabel } from './transit-verdict';
+import { PlanGateService } from '../../../core/plan-gate.service';
+import { PlanLockComponent } from '../shared/plan-lock.component';
 
 @Component({
   selector: 'as-full-transits',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, RouterLink, TransitDetailComponent],
+  imports: [BackLinkDirective, RouterLink, TransitDetailComponent, PlanLockComponent],
   template: `
     <a class="mtrf-back" [asBack]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
     <main class="mtrf-body">
@@ -37,6 +39,14 @@ import { transitVerdictLabel } from './transit-verdict';
             <p>Evidence: Saturn is in the {{ ordinal(sade.saturn_house_from_moon) }} house from your natal Moon.</p>
           </section>
         }
+        <!-- Sade Sati above is a flag and stays on every plan; the rest is Plus. -->
+        @if (!full()) {
+          <as-plan-lock
+            from="transits.full"
+            title="The full transit picture"
+            body="Every planet's placement, the special overlays and the dated windows ahead. Gochara shows what this month's transits mean for you."
+          />
+        } @else {
         <p class="mtrf-title">{{ payload.gochara.interpretation.range_outlook.days }}-DAY RANGE</p>
         <section class="mtrf-copy m-selectable">
           <p><b>{{ payload.gochara.interpretation.range_outlook.title }}</b></p>
@@ -75,6 +85,7 @@ import { transitVerdictLabel } from './transit-verdict';
         </section>
         <p class="mtrf-title">CONVENTION</p>
         <section class="mtrf-copy m-selectable"><p>{{ payload.gochara.interpretation.convention.node_treatment }}</p><p>{{ payload.gochara.interpretation.convention.safety }}</p></section>
+        }
       }
     </main>
     @if(selected()){<as-transit-detail [detail]="selected()!" (dismissed)="selected.set(null)" />}
@@ -85,6 +96,8 @@ export class FullTransitsComponent {
   private readonly store = inject(KundliStore);
   private readonly vedic = inject(VedicService);
   protected readonly preferences = inject(PreferencesService);
+  private readonly gate = inject(PlanGateService);
+  protected readonly full = computed(() => this.gate.allows('transits.full'));
   readonly data = signal<GocharamProfilePayload | null>(null);
   readonly selected = signal<TransitDetail | null>(null);
   readonly loading = signal(false);

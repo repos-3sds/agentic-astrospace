@@ -16,7 +16,7 @@ export interface MuhurtaGoal {
 }
 
 /** How far out to search. `custom` hands off to a date picker. */
-export type MuhurtaRange = 'week' | 'month' | 'custom';
+export type MuhurtaRange = 'week' | 'month' | 'fortnight' | 'custom';
 
 /**
  * Muhurta — Choose a goal (Figma node 30:56).
@@ -61,11 +61,21 @@ export class MuhurtaGoalComponent {
   readonly customTo = signal(this.isoDate(this.addDays(new Date(), 14)));
   readonly customIntent = signal('');
 
-  readonly ranges: { id: MuhurtaRange; label: string }[] = [
+  /** Days ahead this plan may search (testers: 14), or null for no cap. */
+  protected readonly horizon = computed(() => this.gate.limit('muhurta.days_ahead'));
+  /** The last date a search may reach, as YYYY-MM-DD, or null. */
+  protected readonly lastDate = computed(() => {
+    const days = this.horizon();
+    return days ? this.isoDate(this.addDays(new Date(), days - 1)) : null;
+  });
+
+  readonly ranges = computed<{ id: MuhurtaRange; label: string }[]>(() => [
     { id: 'week', label: 'This week' },
-    { id: 'month', label: 'This month' },
+    this.horizon()
+      ? { id: 'fortnight', label: horizonLabel(this.horizon()!) }
+      : { id: 'month', label: 'This month' },
     { id: 'custom', label: 'Pick dates' },
-  ];
+  ]);
 
   /**
    * Muhurta is local by definition — a window is sunrise-relative, so the same
@@ -84,7 +94,8 @@ export class MuhurtaGoalComponent {
     if (this.range() !== 'custom') return true;
     const from = this.customFrom();
     const to = this.customTo();
-    return !!from && !!to && from <= to;
+    const last = this.lastDate();
+    return !!from && !!to && from <= to && (!last || to <= last);
   });
 
   private readonly router = inject(Router);
@@ -99,7 +110,7 @@ export class MuhurtaGoalComponent {
       queryParams: {
         goal: this.selectedGoal() === 'general' ? 'general' : this.selectedGoal(),
         intent: this.selectedGoal() === 'general' ? intent : null,
-        range: this.range(),
+        range: this.range() === 'month' && this.horizon() ? 'fortnight' : this.range(),
         date_from: dates.from,
         date_to: dates.to,
       },
@@ -128,7 +139,8 @@ export class MuhurtaGoalComponent {
     if (this.range() === 'custom') {
       return { from: this.customFrom(), to: this.customTo() };
     }
-    return { from: this.isoDate(today), to: this.isoDate(this.addDays(today, 30)) };
+    const days = this.horizon();
+    return { from: this.isoDate(today), to: this.isoDate(this.addDays(today, days ? days - 1 : 30)) };
   }
 
   private addDays(date: Date, days: number): Date {
@@ -140,4 +152,8 @@ export class MuhurtaGoalComponent {
   private isoDate(date: Date): string {
     return date.toISOString().slice(0, 10);
   }
+}
+
+function horizonLabel(days: number): string {
+  return days % 7 === 0 ? `Next ${days / 7} weeks` : `Next ${days} days`;
 }

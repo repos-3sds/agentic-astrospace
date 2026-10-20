@@ -17,6 +17,8 @@ import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
+import { PlanGateService } from '../../../core/plan-gate.service';
+import { PlanLockComponent } from '../shared/plan-lock.component';
 
 interface Period {
   name: string;
@@ -39,7 +41,7 @@ type DashaLevel = 'maha' | 'antar' | 'pratyantar' | 'sookshma' | 'prana';
   selector: 'as-life-periods',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackBarComponent, GenericErrorComponent, RouterLink, BirthTimeBadgeComponent, SelectHapticDirective],
+  imports: [BackBarComponent, GenericErrorComponent, RouterLink, BirthTimeBadgeComponent, SelectHapticDirective, PlanLockComponent],
   templateUrl: './life-periods.component.html',
   styleUrl: './life-periods.component.scss',
 })
@@ -48,6 +50,9 @@ export class LifePeriodsComponent {
   protected readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
   protected readonly preferences = inject(PreferencesService);
+  private readonly gate = inject(PlanGateService);
+  /** Free and testers see the current Maha and Antar dasha; deeper levels and Yogini are Plus. */
+  protected readonly full = computed(() => this.gate.allows('dashas.full'));
   protected readonly data = signal<DashaPayload | null>(null);
   protected readonly yogini = signal<YoginiDashaPayload | null>(null);
   protected readonly loading = signal(true);
@@ -73,7 +78,8 @@ export class LifePeriodsComponent {
   });
   readonly activePath = computed(() => {
     const current = this.data()?.current;
-    return [current?.mahadasha?.lord, current?.antardasha?.lord, current?.pratyantardasha?.lord].filter(Boolean).join(' → ') || 'No active dasha';
+    const chain = [current?.mahadasha?.lord, current?.antardasha?.lord, this.full() ? current?.pratyantardasha?.lord : null];
+    return chain.filter(Boolean).join(' → ') || 'No active dasha';
   });
   readonly activeYogini = computed(() => this.yogini()?.current.mahadasha?.lord ?? this.yogini()?.mahadashas.find((period) => period.active)?.lord ?? 'No active Yogini');
   readonly activeInsight = computed<ActivePeriodInsight>(() => {
@@ -93,9 +99,9 @@ export class LifePeriodsComponent {
       current?.pratyantardasha?.lord,
       current?.sookshmadasha?.lord,
       current?.pranadasha?.lord,
-    ].filter(Boolean) as string[];
+    ].slice(0, this.full() ? 5 : 2).filter(Boolean) as string[];
     const lead = current?.mahadasha?.lord ?? chain[0] ?? 'Current';
-    const near = current?.pratyantardasha?.lord ?? current?.antardasha?.lord ?? lead;
+    const near = (this.full() ? current?.pratyantardasha?.lord : null) ?? current?.antardasha?.lord ?? lead;
     return {
       title: `${lead} sets the chapter; ${near} colors the moment`,
       body: `${this.periodMeaning({ name: lead, dates: '' })} ${near !== lead ? this.periodMeaning({ name: near, dates: '' }) : ''}`.trim(),
@@ -113,7 +119,7 @@ export class LifePeriodsComponent {
   // Balanced the three-level stack, and Practitioner the full five.
   readonly levelTabs = computed<readonly DashaLevel[]>(() => {
     const mode = this.preferences.experienceMode();
-    if (mode === 'guided') return ['maha', 'antar'];
+    if (mode === 'guided' || !this.full()) return ['maha', 'antar'];
     if (mode === 'practitioner') return ['maha', 'antar', 'pratyantar', 'sookshma', 'prana'];
     return ['maha', 'antar', 'pratyantar'];
   });

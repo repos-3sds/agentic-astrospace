@@ -40,7 +40,7 @@
     <as-birth-time-badge [profile]="kundlis.active()" detail="Period start and end dates are estimates." />
   </header>
 
-  @if (preferences.experienceMode() !== 'guided') {
+  @if (preferences.experienceMode() !== 'guided' && full()) {
   <div class="system" role="tablist" asSelectHaptic aria-label="Dasha system">
     <button
       type="button"
@@ -148,6 +148,15 @@
       </button>
     }
   </div>
+
+  @if (!full()) {
+    <as-plan-lock
+      from="dashas.full"
+      title="Deeper Dasha levels"
+      body="Pratyantar and the finer periods inside it, and the Yogini cross-check, come with Plus."
+      [compact]="true"
+    />
+  }
 
   @if (system() === 'yogini') {
     <p class="hint text-only">8 yoginis, 36-year cycle — repeats through life</p>
