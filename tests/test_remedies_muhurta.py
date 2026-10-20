@@ -313,18 +313,46 @@ class TestMuhurta:
         scores = [r["score"] for r in out["results"]]
         assert scores == sorted(scores, reverse=True), "results must be rank-ordered"
 
-    def test_business_goals_put_daytime_windows_first(self, chart):
-        """A venture or contract at 22:31 isn't usable (U24): night windows
-        are marked, and rank below daytime ones of equal standing."""
-        for goal in ("start_venture", "sign_contract", "buy_property_gold"):
-            results = self._find(chart, goal=goal, start=date(2026, 11, 1), end=date(2026, 11, 30),
-                                 limit=20)["results"]
-            assert results and not results[0]["night"]
-            for r in results:
-                if r["night"]:
-                    assert any("night" in reason.lower() for reason in r["why"]["against"])
-        journey = self._find(chart, goal="start_journey", limit=20)["results"]
-        assert not any("offices" in reason for r in journey for reason in r["why"]["against"])
+    def test_errand_goals_only_offer_errand_hours(self, chart):
+        """A contract at 22:31 or a car delivery at 01:40 isn't usable (U24):
+        daytime goals keep to 8 am - 8 pm and the note says so."""
+        for goal in ("start_venture", "sign_contract", "buy_property_gold", "buy_vehicle", "general"):
+            out = self._find(chart, goal=goal, start=date(2026, 11, 1), end=date(2026, 11, 30), limit=20)
+            assert out["results"]
+            for r in out["results"]:
+                assert not r["night"]
+                assert "08:00" <= r["start"] and r["end"] <= "20:00"
+            assert "8 am and 8 pm" in out["note"]
+        journey = self._find(chart, goal="start_journey", limit=20)
+        assert "8 am" not in (journey["note"] or "")
+
+    def test_typed_car_delivery_gets_vehicle_rules_and_daytime_slots(self, chart):
+        """The reported case: "Purchase and Delivery of the New Car" over a
+        month gave two night slots scoring 50."""
+        out = self._find(chart, goal="general", start=date(2026, 10, 20), end=date(2026, 11, 19),
+                         intent="Purchase and Delivery of the New Car")
+        assert out["rules_goal"] == "buy_vehicle"
+        assert len(out["results"]) == 5
+        assert all(not r["night"] and r["score"] >= muhurta._MIN_SCORE for r in out["results"])
+
+    def test_intent_mapping(self):
+        assert muhurta.goal_for_intent("Bring home my new scooter") == "buy_vehicle"
+        assert muhurta.goal_for_intent("gruhapravesam") == "griha_pravesha"
+        assert muhurta.goal_for_intent("Meet an old friend") is None
+
+    def test_typed_refer_out_topic_is_refused(self, chart):
+        with pytest.raises(muhurta.ExcludedGoalError):
+            self._find(chart, goal="general", intent="my knee surgery")
+        # A whole-word check: a courtyard is not a court case.
+        assert self._find(chart, goal="general", intent="tile the courtyard")["goal"] == "general"
+
+    def test_one_hour_is_offered_once(self, chart):
+        out = self._find(chart, goal="general", start=date(2026, 10, 20), end=date(2026, 11, 19), limit=20)
+        by_day: dict = {}
+        for r in out["results"]:
+            for other in by_day.get(r["date"], []):
+                assert not muhurta._overlaps(r["start_iso"], r["end_iso"], other["start_iso"], other["end_iso"])
+            by_day.setdefault(r["date"], []).append(r)
 
     def test_night_is_any_part_outside_six_to_nine(self):
         from datetime import datetime as dt

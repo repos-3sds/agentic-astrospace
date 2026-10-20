@@ -103,7 +103,6 @@ class TestResolver:
         assert (place.city, place.source, place.viewer_tz) == ("Hyderabad", "birth_city", None)
 
     @pytest.mark.parametrize("legacy, current", [
-        ("Asia/Calcutta", "Asia/Kolkata"),
         ("Asia/Katmandu", "Asia/Kathmandu"),
         ("US/Eastern", "America/New_York"),
     ])
@@ -112,6 +111,16 @@ class TestResolver:
         assert place.viewer_tz == current
         assert place.source == "viewer_timezone"
         assert place.tz_str == current
+
+    def test_phone_in_the_birth_citys_zone_keeps_the_birth_city(self, env):
+        # Android reports India as Asia/Calcutta. A zone names a country, not
+        # a town; the table's first Indian city is Mumbai, and Rahu Kalam in
+        # Kolkata starts an hour before Mumbai's, so a Hyderabad-born reader
+        # on "follows phone" stays on Hyderabad.
+        for tz in ("Asia/Calcutta", "Asia/Kolkata"):
+            place = resolve_timing_place(env["kundli"], tz)
+            assert (place.city, place.source) == ("Hyderabad", "birth_city")
+            assert place.viewer_tz == "Asia/Kolkata"
 
 
 class TestEndpointsAgree:

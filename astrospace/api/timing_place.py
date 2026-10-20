@@ -10,8 +10,10 @@ built from it says which branch was taken so the screen can label it.
 The rule, in order:
 
 1. an explicit ``city``/``nation`` (the panchanga place the user picked);
-2. otherwise, when a viewer ``timezone`` is given and the offline city table
-   has a city in it, that city — "where the phone is", to a first order;
+2. otherwise, when a viewer ``timezone`` is given that is not the birth
+   city's own and the offline city table has a city in it, that city —
+   "where the phone is", to a first order (a zone names a country, not a
+   town, so within the birth city's zone the birth city is the better guess);
 3. otherwise the kundli's birth city.
 
 Windows are always rendered in the place's own clock, the way Today already
@@ -72,8 +74,17 @@ def validate_timezone(tz_str: str | None, fallback: str) -> str:
 def resolve_timing_place(kundli, timezone: str | None = None,
                          city: str | None = None, nation: str | None = None) -> TimingPlace:
     viewer_tz = validate_timezone(timezone, "") or None
+    birth_geo = None
+    if not city and viewer_tz:
+        birth_geo = lookup_city(kundli.birth_city, kundli.birth_nation)
     if city:
         loc_city, loc_nation, source = city, nation or kundli.birth_nation, SOURCE_SELECTED
+    elif birth_geo and birth_geo[2] == viewer_tz:
+        # The zone says the phone is in the birth city's country, and the
+        # birth city is a better guess at the town than the first city the
+        # table lists for the zone (Mumbai, for every Indian reader): Rahu
+        # Kalam in Kolkata starts an hour before Mumbai's.
+        loc_city, loc_nation, source = kundli.birth_city, kundli.birth_nation, SOURCE_BIRTH_CITY
     else:
         viewer_city = city_for_timezone(viewer_tz) if viewer_tz else None
         if viewer_city:

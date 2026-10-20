@@ -53,6 +53,8 @@ def find_muhurta(
     kundli_id: str,
     user: CurrentUser,
     goal: str = Query(..., description="A slug from /goals"),
+    intent: str | None = Query(None, max_length=200,
+                               description="The reader's own words for a 'general' search"),
     date_from: str | None = Query(None, description="YYYY-MM-DD; default today"),
     date_to: str | None = Query(None, description="YYYY-MM-DD; default +14 days"),
     city: str | None = Query(
@@ -96,6 +98,7 @@ def find_muhurta(
             janma_nakshatra_index=NAKSHATRAS.index(nakshatra_of(moon_lon)["name"]),
             janma_rashi_index=moon_sign,
             ghatak_moon_sign=moon_sign,
+            intent=intent,
             city=place.city,
             nation=place.nation,
             lat=place.lat,
