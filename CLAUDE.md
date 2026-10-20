@@ -22,6 +22,8 @@ The public address is asksiddha.app, served through Firebase Hosting; see
 [docs/custom_domain.md](docs/custom_domain.md).
 Email to readers (daily reading, moon and festival days) runs on the same
 notification worker as push; see [docs/email_notifications.md](docs/email_notifications.md).
+Plans can also be bought on the website (asksiddha.app/buy, Razorpay); the app
+must never point to that. See [docs/razorpay_web_checkout.md](docs/razorpay_web_checkout.md).
 
 ## Non-negotiables
 

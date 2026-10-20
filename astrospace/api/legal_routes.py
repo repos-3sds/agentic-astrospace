@@ -25,10 +25,11 @@ from fastapi.responses import HTMLResponse
 router = APIRouter(tags=["legal"])
 
 LEGAL_DIR = Path(__file__).resolve().parent.parent / "legal"
-LAST_UPDATED = "17 October 2026"
+LAST_UPDATED = "20 October 2026"
 DOCUMENTS = {
     "terms": ("terms.html", "Terms of Service"),
     "privacy": ("privacy.html", "Privacy Policy"),
+    "refunds": ("refunds.html", "Refund and Cancellation Policy"),
 }
 
 _PAGE = """<!doctype html>
@@ -52,7 +53,7 @@ _PAGE = """<!doctype html>
 </head>
 <body>
 <main>
-<nav><a href="/legal/terms">Terms of Service</a><a href="/legal/privacy">Privacy Policy</a></nav>
+<nav><a href="/legal/terms">Terms of Service</a><a href="/legal/privacy">Privacy Policy</a><a href="/legal/refunds">Refunds</a></nav>
 {body}
 </main>
 </body>

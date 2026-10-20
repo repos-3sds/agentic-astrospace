@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Buy Siddha Plus</title>
+<meta name="description" content="Buy Siddha Plus, Practitioner or extra questions with UPI, card or net banking. It unlocks in the Siddha app on the same account.">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#060607" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#fff8ec" media="(prefers-color-scheme: light)">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" sizes="64x64" href="/img/icon-64.png">
+<link rel="preload" href="/fonts/samarkan.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  @font-face { font-family: "Samarkan"; src: url("/fonts/samarkan.woff2") format("woff2"); font-display: swap; }
+
+  /* Same Liquid Glass / Cream Glass tokens as the landing page. */
+  :root {
+    --bg: #060607;
+    --ground:
+      radial-gradient(48rem 28rem at 88% -4rem, rgba(255, 120, 150, 0.22), transparent 70%),
+      radial-gradient(44rem 30rem at -8% 22rem, rgba(255, 170, 90, 0.16), transparent 70%),
+      #060607;
+    --text: #f7f7f8;
+    --muted: #a8a8b3;
+    --faint: #75757f;
+    --accent: #ff9b85;
+    --good: #5eead4;
+    --bad: #ff8a8a;
+    --card: linear-gradient(135deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.045) 40%, rgba(255, 255, 255, 0.02) 100%);
+    --hairline: rgba(255, 255, 255, 0.13);
+    --sheen: rgba(255, 255, 255, 0.24);
+    --drop: rgba(0, 0, 0, 0.4);
+    --chip: rgba(255, 255, 255, 0.07);
+    --ink: #f7f7f8;
+    --on-ink: #0a0a0c;
+    --orb: transparent;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #faf4e8;
+      --ground:
+        radial-gradient(52rem 30rem at 84% -6rem, rgba(255, 196, 120, 0.45), transparent 72%),
+        radial-gradient(40rem 30rem at -6% 26rem, rgba(232, 140, 110, 0.16), transparent 70%),
+        linear-gradient(180deg, #fff8ec 0%, #faf4e8 50%, #f3ebdc 100%);
+      --text: #201a14;
+      --muted: #6e6457;
+      --faint: #93877a;
+      --accent: #b13f2e;
+      --good: #2f7d57;
+      --bad: #b3261e;
+      --card: linear-gradient(160deg, rgba(255, 253, 248, 0.92), rgba(255, 250, 240, 0.6));
+      --hairline: rgba(160, 120, 80, 0.16);
+      --sheen: #ffffff;
+      --drop: rgba(110, 70, 30, 0.1);
+      --chip: rgba(255, 255, 255, 0.7);
+      --ink: #20150e;
+      --on-ink: #fff8ec;
+      --orb: #08080a;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; overflow-x: clip; }
+  body {
+    background: var(--ground);
+    background-color: var(--bg);
+    color: var(--text);
+    font: 400 17px/1.6 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  a { color: inherit; }
+  [hidden] { display: none !important; }
+  .wrap { max-width: 880px; margin: 0 auto; padding-left: 16px; padding-right: 16px; }
+  .glass {
+    background: var(--card);
+    border: 1px solid var(--hairline);
+    border-radius: 24px;
+    box-shadow: inset 0 1px 0 var(--sheen), 0 18px 44px var(--drop);
+  }
+  .galaxy { border-radius: 50%; background: var(--orb); overflow: hidden; display: inline-block; width: 40px; height: 40px; }
+  .galaxy img { width: 100%; height: 100%; display: block; mix-blend-mode: screen; -webkit-mask-image: radial-gradient(closest-side, #000 82%, transparent); mask-image: radial-gradient(closest-side, #000 82%, transparent); }
+  .wordmark { font-family: "Samarkan", "Playfair Display", serif; font-weight: 400; letter-spacing: 0.5px; }
+
+  header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 18px; padding-bottom: 18px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .brand .wordmark { font-size: 30px; line-height: 1; padding-top: 4px; }
+  .top a.small { font-size: 15px; color: var(--muted); text-decoration: none; }
+
+  main { padding-bottom: 72px; }
+  h1 { font: 600 clamp(32px, 6vw, 48px)/1.1 "Playfair Display", Georgia, serif; margin: 24px 0 12px; letter-spacing: -0.5px; }
+  h2 { font: 600 22px/1.25 "Playfair Display", Georgia, serif; margin: 0 0 6px; }
+  .lede { color: var(--muted); max-width: 40rem; margin: 0 0 28px; }
+  .panel { padding: 24px; margin-bottom: 20px; }
+  .panel p { margin: 0 0 12px; }
+  .muted { color: var(--muted); }
+  .fine { color: var(--faint); font-size: 14.5px; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    font: 600 16px/1 Inter, system-ui, sans-serif; padding: 14px 20px; border-radius: 16px;
+    border: 1px solid var(--hairline); background: var(--chip); color: var(--text); cursor: pointer;
+    text-decoration: none; min-height: 48px;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--ink); color: var(--on-ink); border-color: transparent; }
+  .btn.primary:hover { opacity: 0.92; }
+  .btn[disabled] { opacity: 0.5; cursor: default; }
+  .btn.link { background: none; border: none; padding: 0; min-height: 0; color: var(--accent); font-weight: 600; }
+  .btn svg { width: 20px; height: 20px; }
+
+  .signin { display: grid; gap: 14px; max-width: 26rem; }
+  .or { color: var(--faint); font-size: 14px; text-align: center; }
+  form.email { display: flex; gap: 10px; flex-wrap: wrap; }
+  form.email input {
+    flex: 1 1 14rem; min-width: 0; font: 400 16px/1.2 Inter, sans-serif; color: var(--text);
+    background: var(--chip); border: 1px solid var(--hairline); border-radius: 14px; padding: 13px 14px;
+  }
+  form.email input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .who { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+  .who > span { min-width: 0; }
+  .who b { display: block; font-weight: 600; overflow-wrap: anywhere; }
+  .status { margin-top: 10px; display: grid; gap: 8px; }
+  .status .row { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
+
+  .plans { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; }
+  .plan { padding: 24px; display: flex; flex-direction: column; gap: 6px; }
+  .plan.featured { border-color: var(--accent); }
+  .plan .price { font: 700 32px/1.1 Inter, system-ui, sans-serif; letter-spacing: -0.5px; margin: 4px 0; }
+  .plan .price small { font: 400 15px/1 Inter, sans-serif; color: var(--muted); }
+  .plan ul { margin: 6px 0 16px; padding-left: 20px; color: var(--muted); font-size: 15.5px; }
+  .plan .btn { margin-top: auto; width: 100%; }
+  .packs { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+
+  .notice { padding: 14px 18px; border-radius: 16px; border: 1px solid var(--hairline); margin-bottom: 20px; background: var(--chip); }
+  .notice[data-tone="good"] { border-color: var(--good); }
+  .notice[data-tone="bad"] { border-color: var(--bad); }
+  .testmode { border: 1px dashed var(--accent); color: var(--muted); padding: 10px 14px; border-radius: 14px; font-size: 14.5px; margin-bottom: 20px; }
+
+  footer { border-top: 1px solid var(--hairline); color: var(--muted); font-size: 14px; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 22px; justify-content: space-between; padding-top: 26px; padding-bottom: 40px; }
+  footer nav { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+  footer a { text-decoration: none; }
+  footer a:hover, .top a.small:hover { color: var(--text); }
+
+  @media (max-width: 640px) {
+    .plans { grid-template-columns: 1fr; }
+    .panel, .plan { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+  <header class="wrap top">
+    <a class="brand" href="/" aria-label="Siddha home">
+      <span class="galaxy"><img src="/img/galaxy-96.webp" width="40" height="40" alt=""></span>
+      <span class="wordmark">siddha</span>
+    </a>
+    <a class="small" href="/">Home</a>
+  </header>
+
+  <main class="wrap">
+    <h1>Siddha Plus, on the web.</h1>
+    <p class="lede">Pay with UPI, card or net banking. Your plan turns on in the Siddha app as soon as you open it with the same account. No hidden charges, and you can stop renewing any time.</p>
+
+    <p class="testmode" id="testmode" hidden>Test mode: payments here use Razorpay's test system and no real money is taken.</p>
+    <p class="notice" id="notice" role="status" hidden></p>
+
+    <section class="glass panel" id="loading">
+      <p class="muted">Loading…</p>
+    </section>
+
+    <section class="glass panel" id="closed" hidden>
+      <h2>Opening soon</h2>
+      <p class="muted">Buying on the website is not open yet. For now, plans are bought in the Siddha app through Google Play.</p>
+      <a class="btn" href="/">Back to Siddha</a>
+    </section>
+
+    <section class="glass panel" id="signin" hidden>
+      <h2>Sign in first</h2>
+      <p class="muted">Use the same account you use in the Siddha app, so your plan lands in the right place.</p>
+      <div class="signin">
+        <button class="btn primary" type="button" id="google">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.6 12.3c0-.8-.1-1.5-.2-2.2H12v4.2h5.9c-.3 1.4-1 2.5-2.2 3.3v2.7h3.6c2.1-1.9 3.3-4.8 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.6-2.7c-1 .7-2.2 1.1-3.7 1.1-2.9 0-5.3-1.9-6.2-4.6H2.1v2.8C3.9 20.5 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.8 14.1c-.2-.7-.4-1.4-.4-2.1s.1-1.4.4-2.1V7.1H2.1C1.4 8.6 1 10.2 1 12s.4 3.4 1.1 4.9l3.7-2.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.2-3.2C17.5 2.1 15 1 12 1 7.7 1 3.9 3.5 2.1 7.1l3.7 2.8c.9-2.6 3.3-4.5 6.2-4.5z"/></svg>
+          Continue with Google
+        </button>
+        <p class="or">or</p>
+        <form class="email" id="email-form">
+          <label class="fine" for="email" hidden>Email address</label>
+          <input type="email" id="email" name="email" autocomplete="email" placeholder="Your Siddha email" required>
+          <button class="btn" type="submit">Email me a link</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="glass panel" id="account" hidden>
+      <div class="who">
+        <span>Signed in as <b id="who-email"></b></span>
+        <button class="btn link" type="button" id="signout">Sign out</button>
+      </div>
+      <div class="status" id="status"></div>
+    </section>
+
+    <section id="shop" hidden>
+      <div class="plans" id="plans"></div>
+      <section class="glass panel" id="packs-panel" hidden>
+        <h2>Extra questions</h2>
+        <p class="muted">For one more answer without a plan. They never expire, and a question Siddha cannot answer is never used up.</p>
+        <div class="packs" id="packs"></div>
+      </section>
+    </section>
+
+    <p class="fine">Prices are in Indian rupees and include any taxes. Plans renew every month through a UPI or card mandate until you stop them here; the plan then stays on until the end of the month you paid for. See the <a href="/legal/refunds">refund and cancellation policy</a> and <a href="/legal/terms">terms</a>. Payments are processed by Razorpay; we never see your card, UPI or bank details.</p>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 Siddha · 3 Senses Design Studio, India</span>
+      <nav><a href="mailto:asksiddha@3senses.design">Contact</a><a href="/legal/privacy">Privacy</a><a href="/legal/terms">Terms</a><a href="/legal/refunds">Refunds</a></nav>
+    </div>
+  </footer>
+  <script src="/js/buy.js"></script>
+</body>
+</html>

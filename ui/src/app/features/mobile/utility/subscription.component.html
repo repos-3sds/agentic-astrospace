@@ -18,7 +18,7 @@
       @if (!enforced()) {
         <p class="fine">Everything is open to you free during early access.</p>
       }
-      @if (isPaid()) {
+      @if (storeManaged()) {
         <button class="link-button" type="button" (click)="manage()">Manage or cancel in the store</button>
       }
     </section>

@@ -73,6 +73,8 @@ export class SubscriptionComponent implements OnInit {
   protected readonly enforced = computed(() => !!this.current()?.quotas_enforced);
   protected readonly packs = computed(() => this.products().filter((p) => p.kind === 'question_pack'));
   protected readonly isPaid = computed(() => (this.current()?.access_tier ?? 'free') !== 'free');
+  /** Paid through Google Play or the App Store, so the store's page can manage it. */
+  protected readonly storeManaged = computed(() => this.isPaid() && this.current()?.source === 'revenuecat');
 
   protected chooseFamily(family: PlanFamily): void {
     this.family.set(family);
@@ -177,7 +179,11 @@ export class SubscriptionComponent implements OnInit {
     if (plan.access_tier !== 'free' && plan.expires_at) {
       const date = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
         .format(new Date(plan.expires_at.endsWith('Z') ? plan.expires_at : `${plan.expires_at}Z`));
-      return `Renews or ends on ${date}, as set in your store account.`;
+      // Google Play's payments policy: no link or pointer to buying outside the app,
+      // only the plain fact that this plan is managed where it was bought.
+      return plan.source === 'razorpay'
+        ? `Renews or ends on ${date}. This plan was not bought in Google Play, so it is managed where you bought it.`
+        : `Renews or ends on ${date}, as set in your store account.`;
     }
     if (plan.access_tier === 'plus') return 'Deeper guidance, more answers and more profiles.';
     if (plan.access_tier === 'pro') return 'Everything in Plus, with the practitioner workflow.';

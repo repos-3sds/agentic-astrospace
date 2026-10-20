@@ -32,6 +32,7 @@ from ..db.models import (
 )
 from ..admin.audit_middleware import pseudonymous_actor_id
 from ..admin.client import get_admin_client
+from ..entitlements import razorpay
 from .auth import CurrentUser
 
 router = APIRouter(prefix="/api/v1/me", tags=["me"])
@@ -308,6 +309,8 @@ def delete_account(payload: AccountDeletionPayload, user: CurrentUser,
         db.delete(row)
     db.query(UserSettings).filter(UserSettings.user_id == user.id).delete(synchronize_session=False)
     db.query(UserProfile).filter(UserProfile.user_id == user.id).delete(synchronize_session=False)
+    # Stop any website subscription before its records go (best effort).
+    razorpay.cancel_for_deleted_account(db, user.id)
     # CE-2 creates a Free billing account on first entitlement resolution. No
     # store transactions exist yet, so delete the complete commercial
     # foundation record. CE-3 must replace this with the approved legal/audit

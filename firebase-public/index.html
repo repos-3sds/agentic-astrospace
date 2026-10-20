@@ -253,6 +253,9 @@
   .plan .price small { font: 400 15px/1 Inter, sans-serif; color: var(--muted); }
   .plan .ticks { margin-top: 16px; }
   .plan.plus { border-color: var(--accent); }
+  .plan .web-buy { display: inline-flex; margin-top: 22px; color: var(--accent); font-weight: 600; text-decoration: none; padding: 12px 18px; border-radius: 14px; border: 1px solid var(--accent); }
+  .plan .web-buy:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+  .plan .web-buy[hidden] { display: none; }
   .fine { color: var(--faint); font-size: 14px; margin: 18px 0 0; max-width: 52em; }
 
   /* FAQ */
@@ -556,6 +559,7 @@
             <li><span>Muhurta, full compatibility, all yogas and dasha levels</span></li>
             <li><span>Siddha's natural voice, and charts for 3 people</span></li>
           </ul>
+          <a class="web-buy" href="/buy?plan=plus" data-web-buy hidden>Get Plus on the web</a>
         </div>
         <div class="plan glass">
           <h3>Siddha Practitioner</h3>
@@ -568,9 +572,10 @@
             <li><span>Practitioner mode with the full technical detail</span></li>
             <li><span>Charts for up to 10 people</span></li>
           </ul>
+          <a class="web-buy" href="/buy?plan=practitioner" data-web-buy hidden>Get Practitioner on the web</a>
         </div>
       </div>
-      <p class="fine">Need one more answer? Extra questions are <span data-usd="$2.99">₹50</span> each, or <span data-usd="$6.99">₹130</span> for 3. Cancel any time in Google Play. <span data-usd="Prices are in US dollars; Google Play shows the amount in your own currency.">Prices are for India.</span></p>
+      <p class="fine">Need one more answer? Extra questions are <span data-usd="$2.99">₹50</span> each, or <span data-usd="$6.99">₹130</span> for 3. Cancel any time. <span data-usd="Prices are in US dollars; Google Play shows the amount in your own currency.">Prices are for India.</span></p>
     </section>
 
     <section class="wrap" id="invite">
@@ -632,9 +637,10 @@
   <footer>
     <div class="wrap">
       <span>© 2026 Siddha · 3 Senses Design Studio, India</span>
-      <nav><a href="mailto:asksiddha@3senses.design">Contact</a><a href="/legal/privacy">Privacy</a><a href="/legal/terms">Terms</a><a href="/delete-account">Delete account</a></nav>
+      <nav><a href="mailto:asksiddha@3senses.design">Contact</a><a href="/legal/privacy">Privacy</a><a href="/legal/terms">Terms</a><a href="/legal/refunds">Refunds</a><a href="/delete-account">Delete account</a></nav>
     </div>
   </footer>
   <script src="/js/prices.js"></script>
+  <script src="/js/web-buy.js" defer></script>
 </body>
 </html>

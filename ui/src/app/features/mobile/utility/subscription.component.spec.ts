@@ -81,6 +81,23 @@ describe('SubscriptionComponent', () => {
     expect(cta.disabled).toBeTrue();
   });
 
+  it('sends a store plan to the store, and a website plan nowhere', async () => {
+    const paid = (source: string): EntitlementSnapshot => ({
+      ...FREE, access_tier: 'plus', status: 'active', source, expires_at: '2026-11-20T00:00:00',
+    });
+    snapshot.and.callFake(async () => { current.set(paid('revenuecat')); return paid('revenuecat'); });
+    let text = await render();
+    expect(text).toContain('Manage or cancel in the store');
+
+    snapshot.and.callFake(async () => { current.set(paid('razorpay')); return paid('razorpay'); });
+    fixture = TestBed.createComponent(SubscriptionComponent);
+    text = await render();
+    expect(text).not.toContain('Manage or cancel in the store');
+    expect(text).toContain('not bought in Google Play');
+    // Play's payments policy: the app never points to buying on the website.
+    expect(text).not.toMatch(/asksiddha\.app|website|razorpay/i);
+  });
+
   it('renders an honest retry state without implying access changed', async () => {
     snapshot.and.rejectWith(new Error('offline'));
     const text = await render();
