@@ -132,7 +132,9 @@ export function buildChartAdapter(data: VedicAll, profile: Kundli | null, vargaI
     // Sidereal only: the profile's stored sun_sign / moon_sign are tropical.
     { label: 'SUN', sign: sun?.sign ?? '—', degree: degreeLabel(sun) },
     { label: 'MOON', sign: moon?.sign ?? data.avkahada?.['rashi'] ?? '—', degree: degreeLabel(moon) },
-    { label: 'ASCENDANT', sign: lagnaSign, degree: data.meta?.sidereal_time ? 'from birth time' : 'computed' },
+    // The lagna degree decides every varga lagna, so a practitioner comparing
+    // with another program needs it, not just the sign.
+    { label: 'ASCENDANT', sign: lagnaSign, degree: data.lagna?.dms ?? (data.meta?.sidereal_time ? 'from birth time' : 'computed') },
   ];
   const signature = {
     headline: `${angles[0].sign} Sun, ${angles[1].sign} Moon, ${lagnaSign} rising.`,
