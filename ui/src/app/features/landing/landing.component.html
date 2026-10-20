@@ -24,6 +24,15 @@
 
   <section class="hero">
     <div class="hero-copy">
+      @if (ownerOnly() && auth.session()) {
+        <div class="owner-only" role="status">
+          <p>
+            The browser version of <span class="siddha-brand">SIDDHA</span> is open only to the owner account.
+            You are signed in as <strong>{{ auth.email() }}</strong>. Use the Android app, or switch to the owner account.
+          </p>
+          <button type="button" (click)="switchAccount()">Sign out and switch account</button>
+        </div>
+      }
       <div class="hero-kicker">
         <span class="pulse-dot"></span>
         A way of life guide for rhythm, clarity and right action
