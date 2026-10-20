@@ -27,7 +27,7 @@ from typing import Literal
 AccessTier = Literal["free", "plus", "pro"]
 CapabilityKind = Literal["flag", "limit"]
 
-CATALOG_REVISION = 4
+CATALOG_REVISION = 5
 
 
 @dataclass(frozen=True)
@@ -99,6 +99,9 @@ _CAPABILITIES = (
     _flag("reports.practitioner", "Practitioner report templates and export", free=False, plus=False, pro=True),
     _limit("profiles.max", "Maximum active profiles", free=1, plus=3, pro=10),
     _limit("ask.answers.period", "Grounded Ask answers per calendar month", free=0, plus=5, pro=15),
+    # Only counts once Readings are open to a plan without readings.full
+    # limits of its own, i.e. Free during the tester phase (below).
+    _limit("readings.period", "Period readings written per calendar month", free=0, plus=None, pro=None),
     _limit("compatibility.checks.period", "People checked for compatibility per calendar month", free=1, plus=None, pro=None),
     _unapproved_limit("compatibility.saved.max", "Maximum saved compatibility comparisons"),
 )
@@ -114,6 +117,26 @@ def quotas_enforced() -> bool:
     is a way to buy more.
     """
     return os.getenv("ASTROSPACE_QUOTAS_ENFORCED", "").lower() in {"1", "true", "yes"}
+
+
+# Tester phase (Hawk, 2026-10-20): Free readers get everything Plus has,
+# not Practitioner, except Ask and Readings, which stay a teaser of a few
+# turns. On with ASTROSPACE_TESTERS_GET_PLUS while the app is in closed
+# testing; off, Free is the Free plan above.
+TESTER_TURNS = MappingProxyType({"ask.answers.period": 0, "readings.period": 3})
+
+
+def testers_get_plus() -> bool:
+    return os.getenv("ASTROSPACE_TESTERS_GET_PLUS", "").lower() in {"1", "true", "yes"}
+
+
+def free_values() -> dict:
+    """What a Free account resolves to right now."""
+    if not testers_get_plus():
+        return {key: definition.value_for("free") for key, definition in capability_registry.items()}
+    values = {key: definition.value_for("plus") for key, definition in capability_registry.items()}
+    values.update(TESTER_TURNS)
+    return values
 
 
 def public_registry() -> dict:

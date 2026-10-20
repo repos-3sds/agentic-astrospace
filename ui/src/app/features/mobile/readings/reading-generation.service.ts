@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 
+import { EntitlementDenial, EntitlementLimitError } from '../../../core/entitlement-denial';
 import { Reading } from '../../../core/models';
 import { ReadingPeriod, ReadingService } from '../../../core/reading.service';
 
@@ -14,6 +15,8 @@ export interface GenerationJob {
   error?: string;
   /** HTTP status of a failed run; 429 is the daily new-version allowance. */
   errorStatus?: number;
+  /** Set when the month's readings are used up (402). */
+  denial?: EntitlementDenial;
 }
 
 export function generationKey(kundliId: string, period: ReadingPeriod): string {
@@ -51,6 +54,7 @@ export class ReadingGenerationService {
         status: 'error',
         error: (error as Error)?.message ?? String(error),
         errorStatus: (error as { status?: number })?.status,
+        denial: error instanceof EntitlementLimitError ? error.denial : undefined,
       }),
     );
   }

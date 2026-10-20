@@ -350,3 +350,59 @@ def test_readings_and_muhurta_refuse_free_only_once_locks_are_on(env, monkeypatc
     response = client.request(method, path, json=body)
     assert response.status_code == 402
     assert response.json()["code"] == "entitlement_required"
+
+
+def test_testers_get_plus_but_not_practitioner_with_a_teaser_of_ask_and_readings(env, monkeypatch):
+    """Hawk, 2026-10-20: closed testers get Plus, with Ask and Readings kept to a few turns."""
+    _, Session = env
+    with Session() as db:
+        free = resolve_entitlements(db, USER).entitlements
+        assert free["readings.full"] is False and free["profiles.max"] == 1
+        monkeypatch.setenv("ASTROSPACE_TESTERS_GET_PLUS", "1")
+        tester = resolve_entitlements(db, USER)
+    assert tester.access_tier == "free"
+    for key, definition in capability_registry.items():
+        if key in ("ask.answers.period", "readings.period"):
+            continue
+        assert tester.entitlements[key] == definition.value_for("plus"), key
+    assert tester.entitlements["vargas.full"] is False  # Practitioner stays paid
+    assert tester.entitlements["ask.answers.period"] == 0  # the welcome question only
+    assert tester.entitlements["readings.period"] == 3
+
+
+def test_tester_readings_stop_after_three_a_month_once_locks_are_on(env, monkeypatch):
+    from fastapi import HTTPException
+
+    from astrospace.api import reading_routes
+    from astrospace.db import crud
+    from astrospace.db.models import Reading
+
+    client, Session = env
+    monkeypatch.setenv("ASTROSPACE_TESTERS_GET_PLUS", "1")
+    monkeypatch.setenv("ASTROSPACE_QUOTAS_ENFORCED", "true")
+
+    def not_written(*args, **kwargs):
+        raise HTTPException(status_code=503, detail="stub")
+
+    monkeypatch.setattr(reading_routes, "_generate_and_save", not_written)
+    with Session() as db:
+        kundli = crud.create_kundli(db, {
+            "user_id": USER, "name": "Me", "relation": "self",
+            "birth_year": 1991, "birth_month": 8, "birth_day": 14, "birth_hour": 6, "birth_minute": 12,
+            "birth_city": "Vijayawada", "birth_nation": "IN",
+        }).id
+        for n in range(2):
+            db.add(Reading(kundli_id=kundli, reading_type="daily", period_label=f"old-{n}", content="x"))
+        db.commit()
+    generate = lambda: client.post(f"/api/v1/readings/{kundli}/generate", json={"period": "weekly"})
+    assert generate().status_code == 503  # third reading allowed through to the writer
+    with Session() as db:
+        db.add(Reading(kundli_id=kundli, reading_type="monthly", period_label="old-3", content="x"))
+        db.commit()
+    denied = generate()
+    assert denied.status_code == 402
+    assert denied.json()["entitlement"] == "readings.period"
+    assert denied.json()["code"] == "entitlement_limit_reached"
+    assert denied.json()["resets_at"]
+    monkeypatch.delenv("ASTROSPACE_QUOTAS_ENFORCED")
+    assert generate().status_code == 503  # counted, never blocking, while locks are off

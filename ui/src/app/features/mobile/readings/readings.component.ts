@@ -19,6 +19,8 @@ import { PredictionClaim, PredictionClaimStatus, Reading } from '../../../core/m
 import { ReadingPeriod, ReadingService } from '../../../core/reading.service';
 import { MarkdownPipe } from '../../../shared/markdown.pipe';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { EntitlementDenial } from '../../../core/entitlement-denial';
+import { LockedStateComponent } from '../shared/locked-state.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SheetComponent } from '../sheet/sheet.component';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
@@ -125,7 +127,7 @@ export function splitReadings(readings: Reading[]): { current: Reading[]; past: 
   selector: 'as-mobile-readings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PlanLockComponent, BackLinkDirective, GenericErrorComponent, RouterLink, MarkdownPipe, SheetComponent, SelectHapticDirective],
+  imports: [PlanLockComponent, LockedStateComponent, BackLinkDirective, GenericErrorComponent, RouterLink, MarkdownPipe, SheetComponent, SelectHapticDirective],
   template: `
     <a class="mrd-back" [asBack]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
     <main class="mrd-body">
@@ -153,7 +155,9 @@ export function splitReadings(readings: Reading[]): { current: Reading[]; past: 
         }
       </nav>
 
-      @if (generateError(); as message) {
+      @if (generateDenial(); as denial) {
+        <as-locked-state [denial]="denial" />
+      } @else if (generateError(); as message) {
         @if (generateLimited()) {
           <!-- The daily allowance, not a failure: nothing to retry today. -->
           <section class="mrd-state" role="status">
@@ -348,6 +352,8 @@ export class ReadingsComponent {
   protected readonly loadError = signal<string | null>(null);
   protected readonly generateError = signal<string | null>(null);
   protected readonly generateLimited = signal(false);
+  /** The month's readings are used up: the plans card, not an error to retry. */
+  protected readonly generateDenial = signal<EntitlementDenial | null>(null);
   protected readonly confirming = signal(false);
   protected lastForce = false;
   private readonly now = signal(Date.now());
@@ -475,6 +481,7 @@ export class ReadingsComponent {
     this.lastForce = force;
     this.generateError.set(null);
     this.generateLimited.set(false);
+    this.generateDenial.set(null);
     this.generation.start(id, this.period(), force);
   }
 
@@ -561,6 +568,7 @@ export class ReadingsComponent {
     if (job.status === 'error') {
       this.lastForce = job.force;
       this.generateLimited.set(job.errorStatus === 429);
+      this.generateDenial.set(job.denial ?? null);
       this.generateError.set(job.error ?? 'Your reading couldn’t be written just now.');
       this.haptics.error();
       return;
@@ -568,6 +576,7 @@ export class ReadingsComponent {
     const reading = job.reading;
     if (!reading) return;
     this.generateError.set(null);
+    this.generateDenial.set(null);
     this.readings.update((items) => [{ ...reading, is_current_period: true }, ...items.filter((item) => item.id !== reading.id)]);
     this.selectedId.set(reading.id);
     this.haptics.success();
@@ -580,6 +589,7 @@ export class ReadingsComponent {
     this.loadError.set(null);
     this.generateError.set(null);
     this.generateLimited.set(false);
+    this.generateDenial.set(null);
     this.confirming.set(false);
     this.marker.reset();
     this.selectedId.set(null);

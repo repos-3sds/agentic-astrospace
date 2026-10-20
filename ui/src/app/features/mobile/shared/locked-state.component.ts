@@ -66,6 +66,7 @@ export class LockedStateComponent {
       return d.access_tier === 'free' ? 'Your free question is used' : 'You’ve used this month’s answers';
     }
     if (d.entitlement === 'profiles.max') return 'Your profiles are full';
+    if (d.entitlement === 'readings.period') return 'You’ve used this month’s readings';
     return 'Part of Plus';
   });
 
@@ -81,6 +82,9 @@ export class LockedStateComponent {
       return d.access_tier === 'free'
         ? 'Free keeps 1 profile. Plus keeps 3, or remove one you no longer need.'
         : 'Your plan’s profile slots are in use. Remove one you no longer need to add another.';
+    }
+    if (d.entitlement === 'readings.period') {
+      return `Your free readings for this month are used.${back} Plus writes a reading for every period.`;
     }
     return 'This is included with Plus. Everything about safety, your sources and your own data stays free.';
   });
