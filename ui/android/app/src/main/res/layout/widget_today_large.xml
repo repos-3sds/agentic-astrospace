@@ -93,6 +93,7 @@
             style="@style/WidgetEyebrow"
             android:layout_width="52dp"
             android:layout_height="wrap_content"
+            android:id="@+id/do_label"
             android:text="@string/widget_do"
             android:textColor="@color/widget_do" />
 
@@ -118,6 +119,7 @@
             style="@style/WidgetEyebrow"
             android:layout_width="52dp"
             android:layout_height="wrap_content"
+            android:id="@+id/avoid_label"
             android:text="@string/widget_avoid"
             android:textColor="@color/widget_avoid" />
 

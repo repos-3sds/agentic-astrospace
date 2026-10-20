@@ -30,7 +30,7 @@ public class MainActivity extends BridgeActivity {
      * the manifest's configChanges, so a change recreates the activity and
      * this runs again.
      */
-    static final int MAX_TEXT_ZOOM = 130;
+    public static final int MAX_TEXT_ZOOM = 130;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

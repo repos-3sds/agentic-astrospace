@@ -35,7 +35,7 @@ public abstract class BaseWidget extends AppWidgetProvider {
         int width = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0);
         int height = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0);
         try {
-            manager.updateAppWidget(id, render(context, width, height));
+            manager.updateAppWidget(id, Widgets.capText(context, render(context, width, height)));
         } catch (RuntimeException e) {
             // A widget that cannot draw keeps its last picture; the app is unaffected.
             android.util.Log.w("SiddhaWidgets", "could not draw " + getClass().getSimpleName(), e);
