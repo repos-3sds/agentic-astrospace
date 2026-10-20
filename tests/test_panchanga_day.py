@@ -244,13 +244,21 @@ class TestAPI:
         assert {"Tirupati", "Tirunelveli", "Tiruppur"} <= names
         assert all(row["timezone"] == "Asia/Kolkata" for row in rows if row["nation"] == "IN")
 
-    def test_bad_timezone_400(self):
+    def test_bad_timezone_falls_back_to_the_city_clock(self):
         from fastapi.testclient import TestClient
         from main import app
         client = TestClient(app)
         r = client.get("/api/v1/panchanga/today",
                        params={"city": "Rajahmundry", "timezone": "Mars/Olympus"})
-        assert r.status_code == 400
+        assert r.status_code == 200
+
+    def test_android_india_zone_name_is_accepted(self):
+        from fastapi.testclient import TestClient
+        from main import app
+        client = TestClient(app)
+        r = client.get("/api/v1/panchanga/today",
+                       params={"city": "Rajahmundry", "timezone": "Asia/Calcutta"})
+        assert r.status_code == 200
 
     def test_unknown_city_422(self):
         from fastapi.testclient import TestClient

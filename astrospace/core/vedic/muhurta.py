@@ -19,6 +19,7 @@ Design constraints (design_principles.md §4):
 """
 from __future__ import annotations
 
+import re
 from datetime import date as date_cls, datetime, timedelta
 
 from .constants import NAKSHATRAS
@@ -116,19 +117,59 @@ GOALS: dict[str, dict] = {
                              "Uttara Ashadha", "Uttara Bhadrapada", "Revati"],
         "avoid_tithi": RIKTA_TITHIS,
     },
+    "buy_vehicle": {
+        # Vahana muhurta. Only reached from a typed intent for now ("new car
+        # delivery"); the picker has no tile for it yet.
+        "daytime": True,
+        "label": "Buy or take delivery of a vehicle",
+        "prefer_vara": ["Monday", "Wednesday", "Thursday", "Friday"],
+        "prefer_nakshatra": ["Ashwini", "Rohini", "Mrigashira", "Punarvasu",
+                             "Pushya", "Hasta", "Chitra", "Swati", "Anuradha",
+                             "Shravana", "Dhanishta", "Shatabhisha", "Revati"],
+        "avoid_tithi": RIKTA_TITHIS,
+    },
     "general": {
+        # A typed purpose is nearly always an errand in the world (a delivery,
+        # a purchase, a meeting), so it is daytime, and it is scored on the
+        # weekdays and nakshatras held good for most auspicious work. With no
+        # preferences at all, no day could score above about half, and the
+        # only windows left were Amrit Kalam at 01:40.
+        "daytime": True,
         "label": "Something else",
-        "prefer_vara": [],
-        "prefer_nakshatra": [],
+        "prefer_vara": ["Monday", "Wednesday", "Thursday", "Friday"],
+        "prefer_nakshatra": ["Ashwini", "Rohini", "Mrigashira", "Punarvasu",
+                             "Pushya", "Uttara Phalguni", "Hasta", "Chitra",
+                             "Swati", "Anuradha", "Uttara Ashadha", "Shravana",
+                             "Dhanishta", "Uttara Bhadrapada", "Revati"],
         "avoid_tithi": RIKTA_TITHIS,
     },
 }
+
+# A typed "Something else" purpose that plainly names a goal with its own
+# rules is scored by those rules. First match wins; order puts the specific
+# ahead of the broad ("car delivery" is a vehicle, not a journey).
+INTENT_GOALS: list[tuple[str, str]] = [
+    (r"\b(car|cars|vehicle|bike|motor ?bike|motorcycle|scooter|scooty|"
+     r"two[- ]wheeler|tractor|truck|lorry|suv|jeep|auto ?rickshaw)\b", "buy_vehicle"),
+    (r"\b(house ?warming|griha|gruha|gr[iu]hapravesh?\w*)\b", "griha_pravesha"),
+    (r"\b(wedding|marriage|engagement|nischitartham|betrothal)\b", "marriage_related"),
+    (r"\b(gold|jewel\w*|property|land|plot|flat|apartment|villa)\b", "buy_property_gold"),
+    (r"\b(contract|agreement|deed|sign|signing|registration)\b", "sign_contract"),
+    (r"\b(shop|store|business|office|company|startup|venture|opening)\b", "start_venture"),
+    (r"\b(journey|travel|trip|pilgrimage|yatra)\b", "start_journey"),
+]
+
+NIGHT_DROPPED_NOTE = (
+    "Only times between 8 am and 8 pm are shown, since shops, showrooms, "
+    "offices and banks are closed outside them."
+)
 
 # Intents that must never be answered with a muhurta — these refer out instead.
 EXCLUDED_INTENTS = {
     "medical": "health",
     "treatment": "health",
     "surgery": "health",
+    "surgeries": "health",
     "litigation": "legal",
     "court": "legal",
     "lawsuit": "legal",
@@ -157,9 +198,24 @@ _WINDOW_BASE = {
     "Godhuli": 20,
 }
 
-_MIN_SCORE = 45          # below this a window is not offered at all
-_BEST_SCORE = 72         # at or above this a window is labelled "best"
-_GOOD_SCORE = 58
+# Daytime Choghadiya periods held good for starting things. They give a
+# daytime option on days whose classical windows fall at night or are covered
+# by Rahu Kalam or Bhadra.
+_GOOD_CHOGHADIYA_BASE = {"Amrit": 26, "Shubh": 24, "Labh": 24}
+
+# Points are summed from the window's base and the day's factors, then shown
+# out of 100 where 100 is everything aligned: Abhijit on a preferred weekday
+# and nakshatra with tarabala and chandrabala both strong (34+10+12+10+8).
+# Shown as the raw sum, the best possible window read "74/100" and a sound
+# one "50/100", which testers took as "only half good".
+_FULL_MARKS = 74
+_MIN_SCORE = 60          # below this a window is not offered at all
+_BEST_SCORE = 85         # at or above this a window is labelled "best"
+_GOOD_SCORE = 75
+
+# Errand hours for daytime goals: a showroom, bank or registrar is open from
+# about 8 am to 8 pm, so a 06:10 or 20:36 slot is trimmed to them or left out.
+ERRAND_STARTS, ERRAND_ENDS = 8, 20
 
 
 # Windows carry a qualifier in the name (e.g. "Amrit Kalam (Uttara Ashadha)"),
@@ -271,8 +327,40 @@ def _is_night(start: datetime, end: datetime) -> bool:
     return start.hour < DAY_STARTS or (end.hour, end.minute) > (DAY_ENDS, 0)
 
 
+def _excluded_domain(text: str, *, whole_words: bool) -> str | None:
+    lowered = (text or "").lower()
+    for token, domain in EXCLUDED_INTENTS.items():
+        # Whole words, with room for a plural: "courts", not "courtyard".
+        if (re.search(rf"\b{token}\w{{0,2}}\b", lowered) if whole_words else token in lowered):
+            return domain
+    return None
+
+
+def goal_for_intent(intent: str | None) -> str | None:
+    """The goal a typed purpose names, or None when it names none."""
+    lowered = (intent or "").lower()
+    for pattern, slug in INTENT_GOALS:
+        if re.search(pattern, lowered):
+            return slug
+    return None
+
+
+def _candidate_windows(day: dict) -> list[dict]:
+    """The day's named auspicious windows plus its good daytime Choghadiyas."""
+    windows = list((day.get("windows") or {}).get("auspicious") or [])
+    for period in (day.get("choghadiya") or {}).get("day") or []:
+        if period.get("name") in _GOOD_CHOGHADIYA_BASE:
+            windows.append({
+                "name": f"{period['name']} Choghadiya",
+                "start_iso": period["start_iso"],
+                "end_iso": period["end_iso"],
+            })
+    return windows
+
+
 def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
          janma_nakshatra_index: int, janma_rashi_index: int,
+         intent: str | None = None,
          ghatak_moon_sign: int | None = None,
          city: str | None = None, nation: str = "IN",
          lat: float | None = None, lng: float | None = None,
@@ -282,6 +370,8 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
 
     Args:
         goal_slug: a key of :data:`GOALS`.
+        intent: the reader's own words for a "general" search. Checked for
+            refer-out topics, and scored by a goal's rules when it names one.
         date_from / date_to: inclusive search range.
         janma_nakshatra_index / janma_rashi_index: from the person's kundli;
             drive tarabala and chandrabala.
@@ -295,14 +385,19 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
         ExcludedGoalError: for health/legal/financial intents.
         ValueError: for an unknown goal or an inverted/oversized range.
     """
-    lowered = (goal_slug or "").lower()
-    for token, domain in EXCLUDED_INTENTS.items():
-        if token in lowered:
-            raise ExcludedGoalError(domain)
+    domain = _excluded_domain(goal_slug, whole_words=False)
+    if domain is None and intent:
+        domain = _excluded_domain(intent, whole_words=True)
+    if domain:
+        raise ExcludedGoalError(domain)
 
     goal = GOALS.get(goal_slug)
     if goal is None:
         raise ValueError(f"Unknown goal '{goal_slug}'. Known: {sorted(GOALS)}")
+    rules_slug = goal_slug
+    if goal_slug == "general" and intent:
+        rules_slug = goal_for_intent(intent) or goal_slug
+    goal = GOALS[rules_slug]
     if date_to < date_from:
         raise ValueError("date_to must not be before date_from")
     span = (date_to - date_from).days + 1
@@ -310,6 +405,7 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
         raise ValueError(f"Range too large ({span} days); max is {max_days}")
 
     candidates: list[dict] = []
+    night_dropped = 0
     days_scanned = 0
     skipped: list[dict] = []
 
@@ -333,8 +429,11 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
         windows = day.get("windows") or {}
         inauspicious = windows.get("inauspicious") or []
 
-        for window in windows.get("auspicious") or []:
-            score = _base_for(window["name"]) + day_delta
+        for window in _candidate_windows(day):
+            choghadiya = window["name"].removesuffix(" Choghadiya")
+            base = (_GOOD_CHOGHADIYA_BASE[choghadiya] if window["name"].endswith(" Choghadiya")
+                    else _base_for(window["name"]))
+            score = base + day_delta
             plus = list(day_plus)
             minus = list(day_minus)
 
@@ -368,14 +467,19 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
                 score -= 10
                 minus.append(window["note"])
 
-            # Business goals need offices, banks and registrars open (U24):
-            # a 22:31 window is no use for signing or registering.
+            # Errands need shops, offices, banks and registrars open (U24): a
+            # 22:31 window is no use for signing a deed or taking delivery of
+            # a car, so it is not offered at all, and the note says why.
+            if goal.get("daytime"):
+                open_at = clear_start.replace(hour=ERRAND_STARTS, minute=0, second=0, microsecond=0)
+                close_at = clear_start.replace(hour=ERRAND_ENDS, minute=0, second=0, microsecond=0)
+                clear_start, clear_end = max(clear_start, open_at), min(clear_end, close_at)
+                if clear_end - clear_start < timedelta(minutes=_MIN_USABLE_MINUTES):
+                    night_dropped += 1
+                    continue
             night = _is_night(clear_start, clear_end)
-            if night and goal.get("daytime"):
-                score -= 15
-                minus.append("At night, when offices, banks and registrars are closed")
 
-            score = max(0, min(100, score))
+            score = max(0, min(100, round(score * 100 / _FULL_MARKS)))
             if score < _MIN_SCORE:
                 continue
 
@@ -398,22 +502,36 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
             })
 
     candidates.sort(key=lambda c: (-c["score"], c["start_iso"]))
-    results = candidates[:limit]
+    # Amrit Kalam and an Amrit Choghadiya often cover the same hour; offer
+    # that hour once, under its better score, and fill the list with others.
+    results: list[dict] = []
+    for c in candidates:
+        if len(results) >= limit:
+            break
+        if any(r["date"] == c["date"] and _overlaps(r["start_iso"], r["end_iso"],
+                                                    c["start_iso"], c["end_iso"])
+               for r in results):
+            continue
+        results.append(c)
+
+    notes = []
+    if not results:
+        notes.append("No window in this range clears the bar. Widening the dates "
+                     "usually helps more than settling for a weak slot.")
+    if night_dropped:
+        notes.append(NIGHT_DROPPED_NOTE)
 
     return {
         "goal": goal_slug,
         "goal_label": goal["label"],
+        "rules_goal": rules_slug,
         "date_from": date_from.isoformat(),
         "date_to": date_to.isoformat(),
         "days_scanned": days_scanned,
         "skipped_days": skipped,
         "results": results,
         "count": len(results),
-        "note": (
-            None if results else
-            "No window in this range clears the bar. Widening the dates usually "
-            "helps more than settling for a weak slot."
-        ),
+        "note": " ".join(notes) or None,
         "is_convention_dependent": True,
         "disclaimer": (
             "Timing supports your intent — the decision and the diligence are "

@@ -211,7 +211,8 @@ export class MuhurtaResultsComponent {
     place: { city: string; nation: string } | null,
   ) {
     try {
-      return await this.vedic.muhurta(activeId, goal, dateFrom, dateTo, place);
+      const intent = goal === 'general' ? this.params().get('intent') : null;
+      return await this.vedic.muhurta(activeId, goal, dateFrom, dateTo, place, 5, intent);
     } catch (error) {
       const fallback = DEPLOYED_GOAL_FALLBACKS[goal];
       const message = (error as Error).message ?? '';

@@ -10,8 +10,10 @@ built from it says which branch was taken so the screen can label it.
 The rule, in order:
 
 1. an explicit ``city``/``nation`` (the panchanga place the user picked);
-2. otherwise, when a viewer ``timezone`` is given and the offline city table
-   has a city in it, that city — "where the phone is", to a first order;
+2. otherwise, when a viewer ``timezone`` is given that is not the birth
+   city's own and the offline city table has a city in it, that city —
+   "where the phone is", to a first order (a zone names a country, not a
+   town, so within the birth city's zone the birth city is the better guess);
 3. otherwise the kundli's birth city.
 
 Windows are always rendered in the place's own clock, the way Today already
@@ -22,11 +24,10 @@ screen can say "Hyderabad (birth city) · GMT+5:30" instead of implying the
 times are local to the phone.
 """
 from dataclasses import dataclass
-from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException
 
-from ..core.cities import city_for_timezone, lookup_city
+from ..core.cities import canonical_timezone, city_for_timezone, lookup_city
 
 SOURCE_SELECTED = "selected"
 SOURCE_VIEWER_TIMEZONE = "viewer_timezone"
@@ -59,20 +60,31 @@ class TimingPlace:
 
 
 def validate_timezone(tz_str: str | None, fallback: str) -> str:
-    if not tz_str:
-        return fallback
-    try:
-        ZoneInfo(tz_str)
-    except Exception:
-        raise HTTPException(status_code=400, detail=f"Unknown timezone {tz_str!r}")
-    return tz_str
+    """The viewer's zone under its current name, or ``fallback``.
+
+    The zone comes from the phone, not from anything the reader typed, so a
+    name the server cannot read is dropped rather than refused: the place
+    falls through to the next rule (the birth city) and the screen still
+    loads. Refusing it once showed testers "We couldn't work out the time
+    zone" on every Muhurta search, with nothing they could change.
+    """
+    return canonical_timezone(tz_str) or fallback
 
 
 def resolve_timing_place(kundli, timezone: str | None = None,
                          city: str | None = None, nation: str | None = None) -> TimingPlace:
     viewer_tz = validate_timezone(timezone, "") or None
+    birth_geo = None
+    if not city and viewer_tz:
+        birth_geo = lookup_city(kundli.birth_city, kundli.birth_nation)
     if city:
         loc_city, loc_nation, source = city, nation or kundli.birth_nation, SOURCE_SELECTED
+    elif birth_geo and birth_geo[2] == viewer_tz:
+        # The zone says the phone is in the birth city's country, and the
+        # birth city is a better guess at the town than the first city the
+        # table lists for the zone (Mumbai, for every Indian reader): Rahu
+        # Kalam in Kolkata starts an hour before Mumbai's.
+        loc_city, loc_nation, source = kundli.birth_city, kundli.birth_nation, SOURCE_BIRTH_CITY
     else:
         viewer_city = city_for_timezone(viewer_tz) if viewer_tz else None
         if viewer_city:

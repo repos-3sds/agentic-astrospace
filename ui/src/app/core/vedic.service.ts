@@ -512,6 +512,7 @@ export class VedicService {
     dateTo: string,
     place?: { city: string; nation: string } | null,
     limit = 5,
+    intent?: string | null,
   ): Promise<MuhurtaSearchPayload> {
     const params = new URLSearchParams({
       goal,
@@ -519,6 +520,9 @@ export class VedicService {
       date_to: dateTo,
       limit: String(limit),
     });
+    // A typed purpose ("new car delivery") is scored by the goal it names
+    // and checked for refer-out topics on the server.
+    if (intent?.trim()) params.set('intent', intent.trim());
     // Same inputs as Calendar Day and Today, so the server resolves the
     // same place for all three (see api/timing_place.py).
     const timezone = this.prefs.effectiveTimezone();
