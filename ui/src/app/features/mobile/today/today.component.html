@@ -177,6 +177,8 @@
     <p class="window-in">{{ v.nextWindowIn }}</p>
   </a>
 
+  <as-notify-nudge />
+
   @if (subhashita.today(); as verse) {
     <a class="verse" [routerLink]="['/m', 'subhashita']"
        [attr.aria-label]="'Today’s Subhashita: ' + verse.english + '. Open to read and share'">

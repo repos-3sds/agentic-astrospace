@@ -38,8 +38,8 @@ export class AppBootService {
     try {
       await this.auth.init();
       if (!this.auth.isAuthenticated()) return;
-      // Re-registers the device token if permission was granted earlier.
-      // Never prompts: the OS dialog belongs to Settings > Notifications.
+      // Re-registers the device token if permission was granted earlier,
+      // or asks the system question if it has not been answered yet.
       void this.push.init();
       if (Capacitor.isNativePlatform() && this.router.url.split('?')[0] === '/m/start') {
         await this.router.navigateByUrl('/m');
