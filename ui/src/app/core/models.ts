@@ -1365,6 +1365,38 @@ export interface CompatibilityScoreRow {
   verified?: boolean;
 }
 
+/** One practice in the couple guidance: traditional, free and optional. */
+export interface CoupleGuidancePractice {
+  title: string;
+  day: string | null;
+  instructions: string;
+}
+
+/**
+ * Plain guidance read off the koota rows (compatibility_guidance.py). Terms
+ * live only in each `why`, which the screen keeps under a "Why this?" fold.
+ */
+export interface CoupleGuidance {
+  strengths: { key: string; area: string; line: string; why: string }[];
+  focus_areas: {
+    key: string;
+    area: string;
+    meaning: string;
+    together: string[];
+    practice: CoupleGuidancePractice | null;
+    why: string;
+  }[];
+  for_each: {
+    name: string;
+    temperament: string | null;
+    practice: CoupleGuidancePractice | null;
+    why: string | null;
+  }[];
+  closing_note: string;
+  is_convention_dependent?: boolean;
+  observance_note?: string | null;
+}
+
 export interface CompatibilityPayload {
   system: string;
   total: number;
@@ -1397,6 +1429,9 @@ export interface CompatibilityPayload {
     hard_blockers: string[];
     notes?: string[];
   };
+  observance_note?: string;
+  /** Absent from servers older than the couple guidance; the screen falls back. */
+  guidance?: CoupleGuidance;
 }
 
 /* ── AI payloads ────────────────────────────────────────────────────── */
