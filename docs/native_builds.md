@@ -139,13 +139,65 @@ in Play Console):
    declaration the upload is rejected because of
    `FOREGROUND_SERVICE_MEDIA_PLAYBACK` in the manifest.
 2. *Data safety*: unchanged unless a new SDK was added since the last upload.
-3. Bump `versionCode`, build the signed AAB on the Mac, and test the build on
-   the phone before it goes to closed testing.
+3. Build the signed AAB on the Mac (`versionCode` is the commit count, set by
+   `npm run version:sync`), upload it to internal testing with
+   `scripts/play_upload.py` (below), and test the build on the phone before it
+   goes to closed testing.
 4. *Release notes* for the first build after #161: "Mantra counts now start
    fresh each day, on your phone's date. A day finished just before the
    update may show once more, or not at all." Old `completedDates` were UTC
    dates, and the tracker now uses the local date (D22). This is intended,
    so the dates are not rewritten.
+
+**Uploading to Play.** `scripts/play_upload.py` sends a signed AAB to a
+testing track and rolls it out (status `completed`), so nobody drags files into
+Play Console. It needs only Python 3 and `openssl`, both already on the Mac:
+nothing to install. It authenticates as the service account
+`play-publisher@gen-lang-client-0058562386.iam.gserviceaccount.com`, whose
+Play Console access is this app only, "Release apps to testing tracks" plus
+read-only, with no production or financial rights. The key lives outside the
+repo at `~/.config/astrospace/play-publisher.json` (chmod 600; override with
+`PLAY_SERVICE_ACCOUNT_JSON`). Never print it, copy it into the repo, or paste
+it into a thread; `.gitignore` also blocks `*service-account*.json`.
+
+The script accepts only `internal` (default) and `alpha` (closed testing) and
+refuses `production` before making any request. It does everything inside one
+Play edit and deletes the edit if any step fails, so a failed run leaves Play
+unchanged. It refuses a `versionCode` that is not above what the track already
+holds; since `versionCode` counts commits, that means building from a newer
+commit, never hand-editing the number.
+
+"Build AAB from latest main" on the Mac, end to end:
+
+```bash
+cd ~/Documents/agentic-astrospace
+git checkout main && git pull --ff-only origin main
+cd ui && npm ci && npm run build:native
+cd android
+JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ./gradlew bundleRelease
+cd ../..
+AAB=ui/android/app/build/outputs/bundle/release/app-release.aab
+VC=$(git rev-list --count HEAD)
+cp "$AAB" ~/Documents/AskSiddha-builds/asksiddha-$VC.aab
+python3 scripts/play_upload.py "$AAB" --notes "What changed, in one or two plain lines."
+```
+
+Everything above the last line is the existing build; if the Mac has a
+working variant of it (a different JDK path, `npm install` instead of `npm ci`),
+keep that. The last line is the new step, and it prints
+`Done: versionCode N is live on the internal track`.
+Internal testers get the update from the Play Store app within minutes. To put
+the same build on closed testing, run it again with `--track alpha`; Google
+reviews closed-testing releases before testers see them.
+
+`python3 scripts/play_upload.py --check` verifies the key and access and shows
+what each track holds, without changing anything; run it first after rotating
+the key. Release notes are optional, go out in `en-IN` (the listing's default
+language) and are capped at 500 characters. If a commit fails with "Changes
+cannot be sent for review automatically", rerun with
+`--changes-not-sent-for-review` and send the changes for review in Play
+Console. Uploading does not replace the checklist above: the foreground
+service declaration and Data safety are still answered in Play Console.
 
 **Both.** The Supabase session lives in Keychain / Keystore-backed storage
 (`ui/src/app/core/session-storage.ts`), never in Preferences. Terms and the
