@@ -6,7 +6,7 @@
 <title>Delete your Siddha account</title>
 <meta name="description" content="How to delete your Siddha account and everything in it, with or without the app.">
 <meta name="theme-color" content="#15110d">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2315110d'/%3E%3Cellipse cx='20' cy='20' rx='16' ry='8' fill='none' stroke='%23f0c36b' stroke-opacity='.6' transform='rotate(-20 20 20)'/%3E%3Ccircle cx='20' cy='20' r='7' fill='%23f6c46a'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="64x64" href="/img/icon-64.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
@@ -19,6 +19,7 @@
     --muted: #b3a494;
     --gold: #f0c36b;
     --accent: #e27666;
+  }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--text); overflow-x: clip; }
   body {
@@ -28,11 +29,14 @@
     background:
       radial-gradient(60rem 40rem at 50% -10rem, rgba(240, 195, 107, 0.16), transparent 60%),
       var(--bg);
+  }
   a { color: inherit; }
   .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
   header.top { display: flex; align-items: center; justify-content: space-between; padding: 22px 20px; }
   .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font: 600 22px/1 "Playfair Display", Georgia, serif; letter-spacing: 0.5px; }
-  .brand .mark { width: 34px; height: 34px; }
+  .brand .mark { width: 34px; height: 34px; border-radius: 50%; }
+  .brand .wordmark { font: 400 28px/1 "Samarkan", "Playfair Display", serif; padding-top: 4px; }
+  @font-face { font-family: "Samarkan"; src: url("/fonts/samarkan.woff2") format("woff2"); font-display: swap; }
   .top a.small { font-size: 14px; color: var(--muted); text-decoration: none; }
   footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
   footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 22px; justify-content: space-between; padding: 26px 20px 40px; }
@@ -51,7 +55,7 @@
 </head>
 <body>
   <header class="wrap top">
-    <a class="brand" href="/"><svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><defs><radialGradient id="g" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff6dc"/><stop offset=".45" stop-color="#f6c46a"/><stop offset="1" stop-color="#d9622c"/></radialGradient></defs><ellipse cx="20" cy="20" rx="17" ry="9" fill="none" stroke="#f0c36b" stroke-opacity=".45" transform="rotate(-20 20 20)"/><circle cx="20" cy="20" r="7" fill="url(#g)"/><circle cx="35" cy="15" r="1.8" fill="#fff0c9"/></svg>Siddha</a>
+    <a class="brand" href="/" aria-label="Siddha home"><img class="mark" src="/img/galaxy-96.webp" width="34" height="34" alt=""><span class="wordmark">siddha</span></a>
     <a class="small" href="/">Home</a>
   </header>
 

@@ -3,177 +3,606 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Siddha · Your guide to living in rhythm</title>
-<meta name="description" content="Siddha reads your Vedic birth chart and the day's sky, and tells you in plain words what today is good for, what to go easy on, and why. Free on Android.">
-<meta name="theme-color" content="#15110d">
-<meta property="og:title" content="Siddha · Your guide to living in rhythm">
-<meta property="og:description" content="Your day, read from your own Vedic chart, in plain words. Free on Android.">
-<meta property="og:image" content="https://asksiddha.app/siddha-logo.png">
+<title>Siddha · Calm, honest Vedic astrology</title>
+<meta name="description" content="Siddha reads your Vedic birth chart and today's sky and tells you in plain words what the day is good for. Ask a question and get a personal answer in minutes. No fear, no paid pujas, no rush.">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#060607" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#fff8ec" media="(prefers-color-scheme: light)">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Siddha · Calm, honest Vedic astrology">
+<meta property="og:description" content="Your day and your questions, read from your own chart, in plain words. No fear, no paid pujas, no rush.">
+<meta property="og:image" content="https://asksiddha.app/img/og-1200x630.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" content="https://asksiddha.app/">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2315110d'/%3E%3Cellipse cx='20' cy='20' rx='16' ry='8' fill='none' stroke='%23f0c36b' stroke-opacity='.6' transform='rotate(-20 20 20)'/%3E%3Ccircle cx='20' cy='20' r='7' fill='%23f6c46a'/%3E%3C/svg%3E">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" sizes="64x64" href="/img/icon-64.png">
+<link rel="apple-touch-icon" href="/img/icon-192.png">
+<link rel="preload" href="/fonts/samarkan.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&family=Noto+Sans+Telugu:wght@500;600&display=swap" rel="stylesheet">
 <style>
+  @font-face { font-family: "Samarkan"; src: url("/fonts/samarkan.woff2") format("woff2"); font-display: swap; }
+
+  /* "Liquid Glass", the app's dark theme: near-black, three soft lights
+     (rose, amber, blue) in the ground, glossy glass cards on top. */
   :root {
-    --bg: #15110d;
-    --surface: #241d17;
-    --line: rgba(240, 195, 107, 0.16);
-    --text: #f4efe7;
-    --muted: #b3a494;
-    --gold: #f0c36b;
-    --accent: #e27666;
+    --bg: #060607;
+    --ground:
+      radial-gradient(48rem 28rem at 88% -4rem, rgba(255, 120, 150, 0.22), transparent 70%),
+      radial-gradient(44rem 30rem at -8% 22rem, rgba(255, 170, 90, 0.16), transparent 70%),
+      radial-gradient(50rem 34rem at 100% 120rem, rgba(110, 140, 255, 0.12), transparent 70%),
+      #060607;
+    --text: #f7f7f8;
+    --muted: #a8a8b3;
+    --faint: #75757f;
+    --accent: #ff9b85;
+    --gold: #f3c77a;
+    --good: #5eead4;
+    --card: linear-gradient(135deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.045) 40%, rgba(255, 255, 255, 0.02) 100%);
+    --hairline: rgba(255, 255, 255, 0.13);
+    --sheen: rgba(255, 255, 255, 0.24);
+    --drop: rgba(0, 0, 0, 0.4);
+    --chip: rgba(255, 255, 255, 0.07);
+    --ink: #f7f7f8;
+    --on-ink: #0a0a0c;
+    --strike: rgba(255, 155, 133, 0.55);
+    --orb: transparent;
   }
+  /* "Cream Glass", the app's light theme: cream and rust, a warm morning
+     glow at the top, frosted cream cards. */
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #faf4e8;
+      --ground:
+        radial-gradient(52rem 30rem at 84% -6rem, rgba(255, 196, 120, 0.45), transparent 72%),
+        radial-gradient(40rem 30rem at -6% 26rem, rgba(232, 140, 110, 0.16), transparent 70%),
+        radial-gradient(50rem 34rem at 100% 120rem, rgba(214, 180, 120, 0.2), transparent 70%),
+        linear-gradient(180deg, #fff8ec 0%, #faf4e8 50%, #f3ebdc 100%);
+      --text: #201a14;
+      --muted: #6e6457;
+      --faint: #93877a;
+      --accent: #b13f2e;
+      --gold: #7a5218;
+      --good: #2f7d57;
+      --card: linear-gradient(160deg, rgba(255, 253, 248, 0.92), rgba(255, 250, 240, 0.6));
+      --hairline: rgba(160, 120, 80, 0.16);
+      --sheen: #ffffff;
+      --drop: rgba(110, 70, 30, 0.1);
+      --chip: rgba(255, 255, 255, 0.7);
+      --ink: #20150e;
+      --on-ink: #fff8ec;
+      --strike: rgba(177, 63, 46, 0.45);
+      --orb: #08080a;
+    }
+  }
+
   * { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--bg); color: var(--text); overflow-x: clip; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  html, body { margin: 0; overflow-x: clip; }
   body {
+    background: var(--ground);
+    background-color: var(--bg);
+    color: var(--text);
     font: 400 17px/1.6 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
-    background:
-      radial-gradient(60rem 40rem at 50% -10rem, rgba(240, 195, 107, 0.16), transparent 60%),
-      var(--bg);
   }
   a { color: inherit; }
-  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+  img { display: block; max-width: 100%; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding-left: 20px; padding-right: 20px; }
+  .serif { font-family: "Playfair Display", Georgia, serif; }
+  .te { font-family: "Noto Sans Telugu", Inter, sans-serif; }
 
-  header.top { display: flex; align-items: center; justify-content: space-between; padding: 22px 20px; }
-  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font: 600 22px/1 "Playfair Display", Georgia, serif; letter-spacing: 0.5px; }
-  .brand .mark { width: 34px; height: 34px; }
-  .top a.small { font-size: 14px; color: var(--muted); text-decoration: none; }
+  .glass {
+    background: var(--card);
+    border: 1px solid var(--hairline);
+    border-radius: 24px;
+    box-shadow: inset 0 1px 0 var(--sheen), 0 18px 44px var(--drop);
+  }
 
-  .hero { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 40px; align-items: center; padding-top: 48px; padding-bottom: 72px; }
-  .eyebrow { color: var(--gold); font-size: 13px; font-weight: 600; letter-spacing: 2.4px; text-transform: uppercase; margin: 0 0 14px; }
-  h1 { font: 600 clamp(36px, 5.4vw, 60px)/1.08 "Playfair Display", Georgia, serif; margin: 0 0 18px; }
-  .lede { color: var(--muted); font-size: 19px; max-width: 34em; margin: 0 0 30px; }
+  /* Brand: the app's galaxy icon and the Samarkan wordmark. On cream the
+     galaxy sits in a dark orb, as it does on the light splash. */
+  .galaxy { border-radius: 50%; background: var(--orb); overflow: hidden; }
+  .galaxy img { width: 100%; height: 100%; mix-blend-mode: screen; -webkit-mask-image: radial-gradient(closest-side, #000 82%, transparent); mask-image: radial-gradient(closest-side, #000 82%, transparent); }
+  .wordmark { font-family: "Samarkan", "Playfair Display", serif; font-weight: 400; letter-spacing: 0.5px; }
 
+  header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 18px; padding-bottom: 18px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .brand .galaxy { width: 40px; height: 40px; }
+  .brand .wordmark { font-size: 30px; line-height: 1; padding-top: 4px; }
+  .top nav { display: flex; align-items: center; gap: 22px; font-size: 15px; }
+  .top nav a { text-decoration: none; color: var(--muted); }
+  .top nav a:hover { color: var(--text); }
+  .top nav .pill { color: var(--on-ink); background: var(--ink); padding: 9px 16px; border-radius: 999px; font-weight: 600; }
+  .top nav .pill:hover { color: var(--on-ink); opacity: 0.9; }
+
+  /* Hero */
+  .hero { display: grid; grid-template-columns: 1.08fr 0.92fr; gap: 48px; align-items: center; padding-top: 40px; padding-bottom: 88px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: var(--accent); font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 18px; }
+  .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 12px currentColor; }
+  h1 { font: 600 clamp(32px, 4.6vw, 54px)/1.08 "Playfair Display", Georgia, serif; margin: 0 0 22px; letter-spacing: -0.5px; }
+  h1 em { font-style: italic; color: var(--accent); white-space: nowrap; }
+  .lede { color: var(--muted); font-size: 19px; max-width: 32em; margin: 0 0 30px; }
+  .lede b { color: var(--text); font-weight: 600; }
+
+  .ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
   .play {
     display: inline-flex; align-items: center; gap: 12px;
-    background: var(--text); color: var(--bg); text-decoration: none;
-    padding: 14px 22px 14px 18px; border-radius: 14px; font-weight: 600;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    background: var(--ink); color: var(--on-ink); text-decoration: none;
+    padding: 13px 22px 13px 18px; border-radius: 16px; font-weight: 600;
+    box-shadow: 0 12px 30px var(--drop);
+    transition: transform 0.15s ease;
   }
-  .play:hover { transform: translateY(-1px); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45); }
+  .play:hover { transform: translateY(-2px); }
   .play svg { width: 26px; height: 26px; flex: none; }
   .play span { display: flex; flex-direction: column; line-height: 1.15; }
   .play small { font-size: 11px; font-weight: 500; letter-spacing: 0.6px; text-transform: uppercase; opacity: 0.7; }
   .play b { font-size: 19px; }
-  .note { color: var(--muted); font-size: 14px; margin: 14px 0 0; }
+  .play.soon { background: transparent; color: var(--text); border: 1px solid var(--hairline); box-shadow: none; cursor: default; }
+  .play.soon:hover { transform: none; }
+  .play.soon svg { color: var(--text); }
+  .note { color: var(--faint); font-size: 14px; margin: 16px 0 0; max-width: 34em; }
+  .note a { color: var(--muted); }
 
-  /* The splash's sun and orbits, drawn rather than shipped as an image. */
-  .sky { position: relative; aspect-ratio: 1; max-width: 420px; width: 100%; margin: 0 auto; }
-  .sky .ring { position: absolute; inset: 0; border: 1px solid var(--line); border-radius: 50%; }
-  .sky .ring.r2 { inset: 14%; transform: rotate(-18deg) scaleY(0.62); border-color: rgba(240, 195, 107, 0.28); }
-  .sky .ring.r3 { inset: 26%; transform: rotate(24deg) scaleY(0.55); border-color: rgba(240, 195, 107, 0.22); }
-  .sky .sun {
-    position: absolute; inset: 38%; border-radius: 50%;
-    background: radial-gradient(circle at 50% 50%, #fff6dc 0 28%, #f6c46a 45%, #d9622c 78%, rgba(217, 98, 44, 0) 100%);
-    box-shadow: 0 0 80px 18px rgba(240, 165, 80, 0.35);
-  }
-  .sky .p { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: #fff0c9; box-shadow: 0 0 18px 4px rgba(255, 220, 150, 0.55); }
-  .sky .p.a { top: 30%; left: 8%; }
-  .sky .p.b { bottom: 24%; right: 12%; width: 9px; height: 9px; }
-  .sky .p.c { bottom: 36%; left: 62%; width: 7px; height: 7px; background: #e27666; box-shadow: 0 0 14px 3px rgba(226, 118, 102, 0.5); }
+  .stage { position: relative; display: grid; place-items: center; min-height: 560px; }
+  .stage .galaxy.big { position: absolute; width: 560px; height: 560px; max-width: 120%; opacity: 0.9; top: 50%; left: 50%; translate: -50% -52%; filter: blur(0.3px); }
+  @media (prefers-color-scheme: light) { .stage .galaxy.big { background: transparent; opacity: 0.55; } .stage .galaxy.big img { mix-blend-mode: multiply; filter: invert(1) hue-rotate(180deg) saturate(1.4); } }
   @media (prefers-reduced-motion: no-preference) {
-    .sky .orbit { position: absolute; inset: 0; animation: turn 60s linear infinite; }
-    @keyframes turn { to { transform: rotate(360deg); } }
+    .spin img { animation: turn 140s linear infinite; }
+    @keyframes turn { to { rotate: 360deg; } }
   }
 
-  section.features { padding-top: 24px; padding-bottom: 72px; }
-  section.features h2, section.how h2 { font: 600 30px/1.2 "Playfair Display", Georgia, serif; margin: 0 0 26px; }
-  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 22px; }
-  .card h3 { font-size: 17px; font-weight: 600; margin: 0 0 6px; }
-  .card p { color: var(--muted); font-size: 15px; margin: 0; }
-  .card .k { color: var(--gold); font-size: 12px; font-weight: 600; letter-spacing: 1.8px; text-transform: uppercase; margin: 0 0 10px; }
+  /* Phone: a real screenshot in a Galaxy S25 Ultra body, drawn to scale
+     (19.5:9 screen, thin even bezel, centred punch-hole camera, titanium
+     frame with the volume rocker and power key on the right). Sizes are in
+     cqw so every phone keeps its proportions at any width. */
+  .phone {
+    position: relative; width: 290px; container-type: inline-size;
+    border-radius: 12.5% / 5.8%;
+    background: linear-gradient(135deg, #6b6e74 0%, #2c2e32 22%, #4a4d52 52%, #232428 78%, #5c5f65 100%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), 0 40px 80px -20px rgba(0, 0, 0, 0.6), 0 10px 30px rgba(0, 0, 0, 0.25);
+  }
+  .phone picture { display: block; margin: 1.1cqw; padding: 2.1cqw; background: #000; border-radius: 11.4cqw; }
+  .phone img { width: 100%; height: auto; border-radius: 9.3cqw; }
+  .phone::after {
+    content: ""; position: absolute; left: 50%; top: 5.75cqw; width: 3.3cqw; height: 3.3cqw; translate: -50% 0; border-radius: 50%;
+    background: radial-gradient(circle at 40% 38%, #3a4152 0 18%, #0b0c10 30% 100%);
+    box-shadow: 0 0 0 0.35cqw #000;
+  }
+  .phone::before {
+    content: ""; position: absolute; right: -0.75cqw; top: 21%; width: 0.9cqw; height: 21%; border-radius: 0 0.6cqw 0.6cqw 0;
+    background: linear-gradient(180deg, #55585e 0 52%, transparent 52% 64%, #55585e 64% 100%);
+  }
+  .phone.sm { width: 230px; }
+  .stage .phone { z-index: 1; }
 
-  section.how { padding-bottom: 72px; }
-  .how ol { list-style: none; counter-reset: s; margin: 0; padding: 0; display: grid; gap: 14px; max-width: 720px; }
-  .how li { counter-increment: s; display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: start; }
-  .how li::before { content: counter(s); width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; color: var(--gold); font-weight: 600; }
-  .how li b { display: block; }
-  .how li span { color: var(--muted); font-size: 15px; }
+  /* Sections */
+  section { padding-top: 40px; padding-bottom: 88px; }
+  .kicker { color: var(--accent); font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 12px; }
+  h2 { font: 600 clamp(32px, 4.4vw, 48px)/1.1 "Playfair Display", Georgia, serif; margin: 0 0 16px; letter-spacing: -0.3px; }
+  .sub { color: var(--muted); font-size: 18px; max-width: 40em; margin: 0 0 36px; }
+  h3 { font-size: 19px; font-weight: 600; margin: 0 0 6px; line-height: 1.35; }
 
-  .cta { text-align: center; padding: 56px 20px 72px; border-top: 1px solid var(--line); }
-  .cta h2 { font: 600 32px/1.2 "Playfair Display", Georgia, serif; margin: 0 0 22px; }
+  /* The antidote */
+  .versus { display: grid; gap: 12px; }
+  .vrow { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 18px; padding: 18px 22px; }
+  .vrow .them { color: var(--muted); font-style: italic; display: grid; grid-template-columns: 22px 1fr; gap: 10px; }
+  .vrow .them::before { content: "✕"; font-style: normal; color: var(--strike); font-weight: 700; }
+  .vrow .arrow { color: var(--accent); font-size: 20px; }
+  .vrow .us { font-weight: 500; }
+  .vhead { display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px; padding: 0 23px 4px; font-size: 12px; font-weight: 600; letter-spacing: 1.6px; text-transform: uppercase; color: var(--faint); }
+  .vhead span:last-child { color: var(--good); }
+  .vhead i { width: 20px; }
 
-  footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
-  footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 22px; justify-content: space-between; padding: 26px 20px 40px; }
-  footer nav { display: flex; gap: 18px; }
+  /* Feature rows */
+  .feature { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
+  .feature + .feature { margin-top: 96px; }
+  .feature.flip .copy { order: 2; }
+  .feature .shots { display: flex; justify-content: center; gap: 22px; }
+  .feature .shots .phone:nth-child(2) { margin-top: 56px; }
+  .ticks { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 10px; }
+  .ticks li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; color: var(--muted); font-size: 16px; }
+  .ticks li::before { content: ""; width: 18px; height: 18px; margin-top: 3px; border-radius: 50%; background: radial-gradient(circle, var(--accent) 0 3px, transparent 4px), var(--chip); border: 1px solid var(--hairline); }
+  .ticks b { color: var(--text); font-weight: 600; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase; color: var(--gold); border: 1px solid var(--hairline); background: var(--chip); padding: 4px 10px; border-radius: 999px; margin: 0 0 16px; }
+
+  /* Calendar spotlight gets a full-width glass band. */
+  .spot { padding: 48px; }
+  .spot .feature { gap: 40px; }
+
+  /* Explore: four phones in a row that scrolls on small screens. */
+  .rail { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .rail figure { margin: 0; display: grid; justify-items: center; gap: 14px; }
+  .rail .phone { width: 100%; max-width: 240px; }
+  .rail figcaption { text-align: center; }
+  .rail figcaption b { display: block; font-size: 16px; }
+  .rail figcaption span { color: var(--muted); font-size: 14px; }
+
+  .more { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 34px; justify-content: center; }
+  .more span { padding: 8px 14px; border-radius: 999px; background: var(--chip); border: 1px solid var(--hairline); font-size: 14px; color: var(--muted); }
+
+  /* Small cards */
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid3 .glass { padding: 24px; }
+  .grid3 p { color: var(--muted); font-size: 15.5px; margin: 0; }
+  .big-te { font-size: 30px; line-height: 1.3; margin: 0 0 8px; color: var(--accent); }
+
+  /* Promises */
+  .promises { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .promise { display: grid; grid-template-columns: 44px 1fr; gap: 14px; padding: 22px; }
+  .promise .ic { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: var(--chip); border: 1px solid var(--hairline); color: var(--accent); }
+  .promise .ic svg { width: 22px; height: 22px; }
+  .promise p { color: var(--muted); font-size: 15.5px; margin: 0; }
+
+  /* Plans */
+  .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .plan .for { color: var(--muted); font-size: 14.5px; margin: 0; }
+  .plan { padding: 28px; }
+  .plan .price { font: 700 34px/1.1 Inter, system-ui, sans-serif; letter-spacing: -0.5px; margin: 6px 0 4px; }
+  .plan .price small { font: 400 15px/1 Inter, sans-serif; color: var(--muted); }
+  .plan .ticks { margin-top: 16px; }
+  .plan.plus { border-color: var(--accent); }
+  .fine { color: var(--faint); font-size: 14px; margin: 18px 0 0; max-width: 52em; }
+
+  /* FAQ */
+  .faq { max-width: 820px; display: grid; gap: 10px; }
+  .faq details { padding: 0; border-radius: 18px; }
+  .faq summary { cursor: pointer; list-style: none; padding: 18px 22px; font-weight: 600; display: flex; justify-content: space-between; gap: 16px; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "+"; color: var(--accent); font-size: 22px; line-height: 1; }
+  .faq details[open] summary::after { content: "–"; }
+  .faq details p { margin: 0; padding: 0 22px 20px; color: var(--muted); font-size: 16px; }
+  .faq a { color: var(--accent); }
+
+  /* Closing call */
+  .closing { text-align: center; display: grid; justify-items: center; padding: 56px 24px; }
+  .closing .galaxy { width: 120px; height: 120px; margin-bottom: 18px; }
+  .closing .ctas { justify-content: center; }
+  .closing .big-mark { font-size: clamp(56px, 9vw, 88px); line-height: 1; margin: 0 0 14px; letter-spacing: 1px; }
+  .closing .motto { margin: 0 0 30px; color: var(--muted); font-size: 13px; font-weight: 600; letter-spacing: 2.6px; text-transform: uppercase; }
+
+  footer { border-top: 1px solid var(--hairline); color: var(--muted); font-size: 14px; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; align-items: center; padding-top: 26px; padding-bottom: 40px; }
+  footer nav { display: flex; flex-wrap: wrap; gap: 18px; }
   footer a { text-decoration: none; }
-  footer a:hover, .top a.small:hover { color: var(--text); }
+  footer a:hover { color: var(--text); }
 
-  @media (max-width: 820px) {
-    .hero { grid-template-columns: 1fr; padding-top: 24px; padding-bottom: 56px; text-align: center; }
-    .hero .lede { margin-left: auto; margin-right: auto; }
-    .sky { max-width: 280px; order: -1; }
-    .grid { grid-template-columns: 1fr; }
+  @media (max-width: 900px) {
+    .hero, .feature { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+    .stage { overflow-x: clip; margin: 0 -20px; }
+    .feature .shots .phone.sm { width: calc(50% - 8px); max-width: 230px; }
+    .hero { padding-top: 16px; text-align: center; }
+    .hero .lede, .hero .note { margin-left: auto; margin-right: auto; }
+    .hero .ctas { justify-content: center; }
+    .eyebrow { justify-content: center; }
+    .stage { min-height: 500px; }
+    .stage .galaxy.big { width: 480px; height: 480px; }
+    .feature.flip .copy { order: 0; }
+    .feature + .feature { margin-top: 72px; }
+    .spot { padding: 28px 20px; }
+    .grid3, .promises, .plans { grid-template-columns: 1fr; }
+    .rail { grid-template-columns: repeat(4, 220px); overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 12px; margin: 0 -20px; padding-left: 20px; padding-right: 20px; }
+    .rail figure { scroll-snap-align: center; }
+    .vrow, .vhead { grid-template-columns: 1fr; gap: 6px; }
+    .vrow .arrow, .vhead i, .vhead span:last-child { display: none; }
+    .top nav a:not(.pill) { display: none; }
+  }
+  @media (max-width: 480px) {
+    .phone { width: 250px; }
+    .feature .shots { gap: 14px; }
+    .feature .shots .phone:nth-child(2) { margin-top: 40px; }
+    section { padding-bottom: 64px; }
   }
 </style>
 </head>
 <body>
   <header class="wrap top">
-    <a class="brand" href="/"><svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><defs><radialGradient id="g" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff6dc"/><stop offset=".45" stop-color="#f6c46a"/><stop offset="1" stop-color="#d9622c"/></radialGradient></defs><ellipse cx="20" cy="20" rx="17" ry="9" fill="none" stroke="#f0c36b" stroke-opacity=".45" transform="rotate(-20 20 20)"/><circle cx="20" cy="20" r="7" fill="url(#g)"/><circle cx="35" cy="15" r="1.8" fill="#fff0c9"/></svg>Siddha</a>
-    <a class="small" href="#get">Get the app</a>
+    <a class="brand" href="/" aria-label="Siddha home">
+      <span class="galaxy"><img src="/img/galaxy-96.webp" width="40" height="40" alt=""></span>
+      <span class="wordmark">siddha</span>
+    </a>
+    <nav>
+      <a href="#why">Why Siddha</a>
+      <a href="#calendar">Calendar</a>
+      <a href="#plans">Plans</a>
+      <a href="#faq">Questions</a>
+      <a class="pill" href="#get">Get the app</a>
+    </nav>
   </header>
 
   <main>
     <section class="wrap hero">
       <div>
-        <p class="eyebrow">Your guide to living in rhythm</p>
-        <h1>Your day, read from your own chart.</h1>
-        <p class="lede">Siddha reads your Vedic birth chart against today's sky and tells you, in plain words, what the day is good for, what to go easy on, and why. Ready every morning before you wake.</p>
-        <a class="play" id="get" href="https://play.google.com/store/apps/details?id=app.asksiddha.mobile">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#34a853" d="M3.6 1.8 13.5 12l-9.9 10.2c-.4-.2-.6-.6-.6-1.1V2.9c0-.5.2-.9.6-1.1z"/><path fill="#fbbc04" d="m16.8 15.3-3.3-3.3 3.3-3.3 3.8 2.2c1.1.6 1.1 1.6 0 2.2z"/><path fill="#ea4335" d="M16.8 15.3 13.5 12 3.6 22.2c.4.2.9.2 1.4-.1z"/><path fill="#4285f4" d="M16.8 8.7 5 1.9c-.5-.3-1-.3-1.4-.1L13.5 12z"/></svg>
-          <span><small>Get it on</small><b>Google Play</b></span>
-        </a>
-        <p class="note">Free on Android. iPhone is coming.</p>
+        <p class="eyebrow">Vedic astrology, in plain words</p>
+        <h1>Calm answers from your own chart. <em>No fear. No rush.</em></h1>
+        <p class="lede">Siddha reads your birth chart and today's sky, and tells you simply what the day is good for, what to go slow on, and why. Ask anything on your mind and get <b>a personal answer in minutes</b>, not after days of waiting.</p>
+        <div class="ctas" id="get">
+          <a class="play" href="https://play.google.com/store/apps/details?id=app.asksiddha.mobile">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#34a853" d="M3.6 1.8 13.5 12l-9.9 10.2c-.4-.2-.6-.6-.6-1.1V2.9c0-.5.2-.9.6-1.1z"/><path fill="#fbbc04" d="m16.8 15.3-3.3-3.3 3.3-3.3 3.8 2.2c1.1.6 1.1 1.6 0 2.2z"/><path fill="#ea4335" d="M16.8 15.3 13.5 12 3.6 22.2c.4.2.9.2 1.4-.1z"/><path fill="#4285f4" d="M16.8 8.7 5 1.9c-.5-.3-1-.3-1.4-.1L13.5 12z"/></svg>
+            <span><small>Get it on</small><b>Google Play</b></span>
+          </a>
+          <span class="play soon" aria-label="App Store, coming soon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8 1.5 0 1.9.8 3.2.8 1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8 0 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1.1.1 2.1-.6 2.8-1.4z"/></svg>
+            <span><small>Coming soon on the</small><b>App Store</b></span>
+          </span>
+        </div>
+        <p class="note">Free to start on Android. The iPhone app is coming soon.</p>
       </div>
-      <div class="sky" aria-hidden="true">
-        <div class="ring"></div>
-        <div class="orbit"><div class="ring r2"></div><div class="p a"></div></div>
-        <div class="ring r3"></div>
-        <div class="p b"></div><div class="p c"></div>
-        <div class="sun"></div>
-      </div>
-    </section>
-
-    <section class="wrap features">
-      <h2>What Siddha does for you</h2>
-      <div class="grid">
-        <article class="card"><p class="k">Every morning</p><h3>A daily brief made for you</h3><p>What today suits and what to leave for another day, written fresh from your chart, not copied from a sun-sign column.</p></article>
-        <article class="card"><p class="k">Listen</p><h3>Hear your day in a minute</h3><p>A short spoken brief in a natural voice, in English or Telugu, for the walk or the commute.</p></article>
-        <article class="card"><p class="k">Timing</p><h3>Know the day's windows</h3><p>Rahu Kalam and the better hours for a fresh start, with a countdown so you don't have to remember.</p></article>
-        <article class="card"><p class="k">Ask</p><h3>Ask about what's on your mind</h3><p>Work, money, family, a decision you're weighing. Answers grounded in your chart, with the reasoning shown.</p></article>
-        <article class="card"><p class="k">Calendar</p><h3>Panchang, festivals and vrats</h3><p>Tithi, nakshatra and the festivals ahead for your place, with the convention used stated plainly.</p></article>
-        <article class="card"><p class="k">Family</p><h3>Everyone you care about</h3><p>Keep charts for your family and read each person's day and match side by side.</p></article>
+      <div class="stage">
+        <span class="galaxy big spin" aria-hidden="true"><img src="/img/galaxy-512.webp" width="512" height="512" alt=""></span>
+        <div class="phone">
+          <picture>
+            <source media="(prefers-color-scheme: light)" srcset="/img/screens/today-light.webp">
+            <img src="/img/screens/today-dark.webp" width="780" height="1688" alt="Siddha's Today screen: a day score, what to do and avoid today, and a timing note.">
+          </picture>
+        </div>
       </div>
     </section>
 
-    <section class="wrap how">
-      <h2>Start in a minute</h2>
-      <ol>
-        <li><div><b>Install Siddha from Google Play</b><span>Free to start, no card needed.</span></div></li>
-        <li><div><b>Add your birth date, time and place</b><span>Siddha computes your sidereal chart with Swiss Ephemeris precision.</span></div></li>
-        <li><div><b>Open Today</b><span>Your brief is ready, and a new one is waiting every morning.</span></div></li>
-      </ol>
+    <section class="wrap" id="why">
+      <p class="kicker">Why Siddha</p>
+      <h2>Astrology without the scare.</h2>
+      <p class="sub">Reels and "expert" videos often sell fear: a dangerous dosha, a bad year ahead, a costly puja to fix it. Siddha does the opposite. It is calm, it shows its reasons, and it never asks you to pay to remove anything.</p>
+      <div class="versus">
+        <div class="vhead"><span>What you often hear</span><i></i><span>What Siddha does</span></div>
+        <div class="vrow glass"><span class="them">"This dosha will ruin your marriage."</span><span class="arrow" aria-hidden="true">→</span><span class="us">A dosha is a flag, not a verdict. We name it, show what softens it, and stop there.</span></div>
+        <div class="vrow glass"><span class="them">"Pay for this special puja to remove it."</span><span class="arrow" aria-hidden="true">→</span><span class="us">Remedies are simple traditional practice: a mantra, a prayer, a good habit. Nothing to buy.</span></div>
+        <div class="vrow glass"><span class="them">"Book a call. The astrologer will reply in 2 days."</span><span class="arrow" aria-hidden="true">→</span><span class="us">Ask any time. A personal answer from your own chart, in minutes.</span></div>
+        <div class="vrow glass"><span class="them">"100% guaranteed prediction!"</span><span class="arrow" aria-hidden="true">→</span><span class="us">Honest guidance, with the reasons shown. Where traditions differ, we tell you which rule we used.</span></div>
+        <div class="vrow glass"><span class="them">"Offer ends tonight. Hurry!"</span><span class="arrow" aria-hidden="true">→</span><span class="us">No countdowns, no pressure. Free to start, and one simple plan if you want more.</span></div>
+      </div>
     </section>
 
-    <section class="cta">
-      <h2>Live the day in rhythm.</h2>
-      <a class="play" href="https://play.google.com/store/apps/details?id=app.asksiddha.mobile">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#34a853" d="M3.6 1.8 13.5 12l-9.9 10.2c-.4-.2-.6-.6-.6-1.1V2.9c0-.5.2-.9.6-1.1z"/><path fill="#fbbc04" d="m16.8 15.3-3.3-3.3 3.3-3.3 3.8 2.2c1.1.6 1.1 1.6 0 2.2z"/><path fill="#ea4335" d="M16.8 15.3 13.5 12 3.6 22.2c.4.2.9.2 1.4-.1z"/><path fill="#4285f4" d="M16.8 8.7 5 1.9c-.5-.3-1-.3-1.4-.1L13.5 12z"/></svg>
-        <span><small>Get it on</small><b>Google Play</b></span>
-      </a>
+    <section class="wrap">
+      <div class="feature">
+        <div class="copy">
+          <span class="tag">Today</span>
+          <h2>Your day, ready each morning.</h2>
+          <p class="sub">A short brief made from your chart, not a sun-sign column. Read it in a minute, or listen to it on the way to work.</p>
+          <ul class="ticks">
+            <li><span><b>What to do and what to avoid</b>, in short, plain lines.</span></li>
+            <li><span><b>One timing note</b> for the hour to watch, with a countdown.</span></li>
+            <li><span><b>Today's Panchang</b> at a glance: tithi, nakshatra, and the next festival.</span></li>
+            <li><span><b>"Why this reading?"</b> shows the astrology behind it, for when you want it.</span></li>
+            <li><span><b>Listen in English or <span class="te">తెలుగు</span></b>, in a natural voice.</span></li>
+          </ul>
+        </div>
+        <div class="shots">
+          <div class="phone">
+            <picture>
+              <source media="(prefers-color-scheme: light)" srcset="/img/screens/today2-light.webp">
+              <img src="/img/screens/today2-dark.webp" width="780" height="1688" loading="lazy" alt="Today, further down: a timing note with a countdown, the next festival, and today's Panchang.">
+            </picture>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature flip">
+        <div class="shots">
+          <div class="phone">
+            <picture>
+              <source media="(prefers-color-scheme: light)" srcset="/img/screens/ask-light.webp">
+              <img src="/img/screens/ask-dark.webp" width="780" height="1688" loading="lazy" alt="Ask: topic chips for work, marriage, money, child and health, with questions suggested from your chart.">
+            </picture>
+          </div>
+        </div>
+        <div class="copy">
+          <span class="tag">Ask</span>
+          <h2>Ask what is on your mind.</h2>
+          <p class="sub">Work, marriage, money, your child, a date you are planning. Siddha reads your chart and answers in plain words, usually within a few minutes. No appointment, no waiting.</p>
+          <ul class="ticks">
+            <li><span><b>Personal,</b> from your own birth chart and your current period.</span></li>
+            <li><span><b>Suggested questions</b> based on what is active for you right now.</span></li>
+            <li><span><b>Safe by design.</b> For health, legal or money decisions, Siddha gives timing only and points you to a qualified professional.</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap" id="calendar">
+      <div class="glass spot">
+        <div class="feature">
+          <div class="copy">
+            <span class="tag">Calendar</span>
+            <h2>A calendar that knows your chart.</h2>
+            <p class="sub">The Panchang most apps show is the same for everyone. Siddha's is yours: each day is marked good for you or take care, from your own stars.</p>
+            <ul class="ticks">
+              <li><span><b>Tap any day</b> for its full timeline: Brahma Muhurta, Rahu Kalam, Yamaganda, Abhijit, Amrit Kalam.</span></li>
+              <li><span><b>Festivals and vrat days</b> for your place: Ekadashi, Pradosham, Amavasya and more.</span></li>
+              <li><span><b>Honest about tradition.</b> Where dates differ by custom, it says "Varies by tradition" and tells you the rule used.</span></li>
+              <li><span><b>Times in your city's local time,</b> worked out for where you are.</span></li>
+            </ul>
+          </div>
+          <div class="shots">
+            <div class="phone sm">
+              <picture>
+                <source media="(prefers-color-scheme: light)" srcset="/img/screens/calendar-light.webp">
+                <img src="/img/screens/calendar-dark.webp" width="780" height="1688" loading="lazy" alt="Calendar month view with days coloured good for you or take care, and the month's festivals.">
+              </picture>
+            </div>
+            <div class="phone sm">
+              <picture>
+                <source media="(prefers-color-scheme: light)" srcset="/img/screens/day-light.webp">
+                <img src="/img/screens/day-dark.webp" width="780" height="1688" loading="lazy" alt="One day in the calendar: good day for you, and the timeline of good and avoid periods.">
+              </picture>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <p class="kicker">Explore</p>
+      <h2>Go deeper, when you want to.</h2>
+      <p class="sub">Everything a good family astrologer would look at, explained simply. Kept one tap away so it never crowds your day.</p>
+      <div class="rail">
+        <figure>
+          <div class="phone">
+            <picture><source media="(prefers-color-scheme: light)" srcset="/img/screens/chart-light.webp"><img src="/img/screens/chart-dark.webp" width="780" height="1688" loading="lazy" alt="Your chart: Sun, Moon and rising sign, with the Rashi chart in South Indian style."></picture>
+          </div>
+          <figcaption><b>Your chart</b><span>North or South Indian style</span></figcaption>
+        </figure>
+        <figure>
+          <div class="phone">
+            <picture><source media="(prefers-color-scheme: light)" srcset="/img/screens/yogas-light.webp"><img src="/img/screens/yogas-dark.webp" width="780" height="1688" loading="lazy" alt="Yogas and doshas found in the chart, each explained in one or two lines."></picture>
+          </div>
+          <figcaption><b>Yogas &amp; doshas</b><span>Strengths and flags, explained</span></figcaption>
+        </figure>
+        <figure>
+          <div class="phone">
+            <picture><source media="(prefers-color-scheme: light)" srcset="/img/screens/mantra-light.webp"><img src="/img/screens/mantra-dark.webp" width="780" height="1688" loading="lazy" alt="A mantra shown in Telugu script with its meaning and a 108-count tracker."></picture>
+          </div>
+          <figcaption><b>Remedies &amp; mantras</b><span>In Telugu, English or Sanskrit</span></figcaption>
+        </figure>
+        <figure>
+          <div class="phone">
+            <picture><source media="(prefers-color-scheme: light)" srcset="/img/screens/muhurta-light.webp"><img src="/img/screens/muhurta-dark.webp" width="780" height="1688" loading="lazy" alt="Muhurta: pick what you are planning, such as house warming, naming or starting to learn."></picture>
+          </div>
+          <figcaption><b>Muhurta</b><span>Good times for big days</span></figcaption>
+        </figure>
+      </div>
+      <div class="more" aria-label="Also in Explore">
+        <span>Compatibility</span><span>Dasha periods</span><span>Transits and Sade Sati</span><span>Daily, weekly and monthly readings</span><span>Today's Subhashita</span><span>Charts for your family</span><span>Private notes</span>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="grid3">
+        <div class="glass">
+          <p class="big-te te">తెలుగులో కూడా</p>
+          <h3>Made for Telugu homes too</h3>
+          <p>Read your day and hear it in simple Telugu. Mantras are written in Telugu, English and Sanskrit script.</p>
+        </div>
+        <div class="glass">
+          <p class="big-te serif">Listen</p>
+          <h3>A natural, calm voice</h3>
+          <p>Hear your day's brief in about a minute, read in a warm, natural voice, not a robot.</p>
+        </div>
+        <div class="glass">
+          <p class="big-te serif">Precise</p>
+          <h3>Worked out properly</h3>
+          <p>Sidereal charts with the Lahiri ayanamsha, computed with the Swiss Ephemeris, the same engine serious astrologers use.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <p class="kicker">Our promises</p>
+      <h2>What Siddha will never do.</h2>
+      <p class="sub">These are rules built into the app, not just words on this page.</p>
+      <div class="promises">
+        <div class="promise glass">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
+          <div><h3>No fear-selling</h3><p>No predictions about death or lifespan. No scary words to make you pay.</p></div>
+        </div>
+        <div class="promise glass">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 8l8 8"/></svg></span>
+          <div><h3>No "pay to remove"</h3><p>Remedies are free traditional practice. We never sell pujas, stones or fixes.</p></div>
+        </div>
+        <div class="promise glass">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></svg></span>
+          <div><h3>Professionals for serious matters</h3><p>Health, legal and money decisions go to a qualified doctor, lawyer or adviser. Siddha only shares timing.</p></div>
+        </div>
+        <div class="promise glass">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/></svg></span>
+          <div><h3>Reasons, not riddles</h3><p>Every reading can show why. Where traditions differ, we say so and name the rule we used.</p></div>
+        </div>
+        <div class="promise glass">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+          <div><h3>No rush</h3><p>No countdown offers, no endless notifications. Open it when you want it.</p></div>
+        </div>
+        <div class="promise glass">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span>
+          <div><h3>Your data is yours</h3><p>Birth details stay private. Delete your account and everything in it any time. <a href="/delete-account" style="color:var(--accent)">How</a></p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap" id="plans">
+      <p class="kicker">Plans</p>
+      <h2>Free to start. Fair after that.</h2>
+      <p class="sub">No hidden charges and no surprise offers. Pay only if you want more.</p>
+      <div class="plans">
+        <div class="plan glass">
+          <h3>Free</h3>
+          <p class="price"><span data-usd="$0">₹0</span></p>
+          <ul class="ticks">
+            <li><span>Your daily brief and Today screen</span></li>
+            <li><span>The full Calendar and Panchang</span></li>
+            <li><span>Your birth chart (D1 and D9)</span></li>
+            <li><span>Doshas by name, with what cancels them</span></li>
+            <li><span>One question to Ask, on us</span></li>
+          </ul>
+        </div>
+        <div class="plan glass plus">
+          <h3>Siddha Plus</h3>
+          <p class="price"><span data-usd="$9.99">₹300</span> <small>a month</small></p>
+          <ul class="ticks">
+            <li><span>5 questions a month in Ask</span></li>
+            <li><span>Daily, weekly and monthly readings</span></li>
+            <li><span>Full remedy plan with mantras and a tracker</span></li>
+            <li><span>Muhurta, full compatibility, all yogas and dasha levels</span></li>
+            <li><span>Siddha's natural voice, and charts for 3 people</span></li>
+          </ul>
+        </div>
+        <div class="plan glass">
+          <h3>Siddha Practitioner</h3>
+          <p class="price"><span data-usd="$24.99">₹1,000</span> <small>a month</small></p>
+          <p class="for">For astrologers and serious students.</p>
+          <ul class="ticks">
+            <li><span>Everything in Plus</span></li>
+            <li><span>15 questions a month in Ask</span></li>
+            <li><span>All divisional charts, beyond D1 and D9</span></li>
+            <li><span>Practitioner mode with the full technical detail</span></li>
+            <li><span>Charts for up to 10 people</span></li>
+          </ul>
+        </div>
+      </div>
+      <p class="fine">Need one more answer? Extra questions are <span data-usd="$2.99">₹50</span> each, or <span data-usd="$6.99">₹130</span> for 3. Cancel any time in Google Play. <span data-usd="Prices are in US dollars; Google Play shows the amount in your own currency.">Prices are for India.</span></p>
+    </section>
+
+    <section class="wrap" id="faq">
+      <p class="kicker">Questions</p>
+      <h2>Good to know.</h2>
+      <div class="faq">
+        <details class="glass"><summary>Is Siddha a real astrologer?</summary><p>Siddha is an app. Your chart is calculated exactly from your birth date, time and place, and the readings follow classical texts such as the Brihat Parashara Hora Shastra. The words are written by AI and checked against strict rules: plain language, no fear, no verdicts on health, money or legal matters.</p></details>
+        <details class="glass"><summary>How fast do I get an answer in Ask?</summary><p>Usually within a few minutes. There is no queue and no appointment.</p></details>
+        <details class="glass"><summary>Can Siddha tell me exactly what will happen?</summary><p>No app or astrologer honestly can. Siddha shows tendencies and good timing, with the reasons, so you can plan calmly. Treat it as guidance, not a guarantee.</p></details>
+        <details class="glass"><summary>Which languages does it support?</summary><p>English and Telugu today. Mantras can be shown in Telugu, English or Sanskrit script.</p></details>
+        <details class="glass"><summary>Do I need my exact birth time?</summary><p>An exact time gives the best chart. If you only know it roughly, mark it as approximate. Siddha still works, and your chart shows that the time is approximate.</p></details>
+        <details class="glass"><summary>Is it on iPhone?</summary><p>Coming soon. Siddha is on Android today, and the iPhone app is on the way to the App Store.</p></details>
+        <details class="glass"><summary>How do I delete my data?</summary><p>In the app, go to Explore, then Settings, then Account &amp; privacy. Or see <a href="/delete-account">how to delete your account</a> without the app. Read our <a href="/legal/privacy">Privacy Policy</a>.</p></details>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="glass closing">
+        <span class="galaxy spin" aria-hidden="true"><img src="/img/galaxy-512.webp" width="120" height="120" alt=""></span>
+        <h2 class="wordmark big-mark">siddha</h2>
+        <p class="motto">Your guide to living in rhythm</p>
+        <div class="ctas">
+          <a class="play" href="https://play.google.com/store/apps/details?id=app.asksiddha.mobile">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#34a853" d="M3.6 1.8 13.5 12l-9.9 10.2c-.4-.2-.6-.6-.6-1.1V2.9c0-.5.2-.9.6-1.1z"/><path fill="#fbbc04" d="m16.8 15.3-3.3-3.3 3.3-3.3 3.8 2.2c1.1.6 1.1 1.6 0 2.2z"/><path fill="#ea4335" d="M16.8 15.3 13.5 12 3.6 22.2c.4.2.9.2 1.4-.1z"/><path fill="#4285f4" d="M16.8 8.7 5 1.9c-.5-.3-1-.3-1.4-.1L13.5 12z"/></svg>
+            <span><small>Get it on</small><b>Google Play</b></span>
+          </a>
+          <span class="play soon" aria-label="App Store, coming soon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8 1.5 0 1.9.8 3.2.8 1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8 0 0-2.5-1-2.5-3.9zM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1.1.1 2.1-.6 2.8-1.4z"/></svg>
+            <span><small>Coming soon on the</small><b>App Store</b></span>
+          </span>
+        </div>
+      </div>
     </section>
   </main>
 
   <footer>
     <div class="wrap">
-      <span>© 2026 Siddha</span>
-      <nav><a href="/legal/privacy">Privacy</a><a href="/legal/terms">Terms</a><a href="/delete-account">Delete account</a></nav>
+      <span>© 2026 Siddha · 3 Senses Design Studio, India</span>
+      <nav><a href="mailto:asksiddha@3senses.design">Contact</a><a href="/legal/privacy">Privacy</a><a href="/legal/terms">Terms</a><a href="/delete-account">Delete account</a></nav>
     </div>
   </footer>
+  <script src="/js/prices.js"></script>
 </body>
 </html>
