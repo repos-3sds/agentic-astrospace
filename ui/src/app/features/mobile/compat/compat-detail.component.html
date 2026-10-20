@@ -30,7 +30,65 @@
       <p class="mcod-meaning">{{ scoreMeaning(s) }}</p>
     </section>
 
-    @if (guidance(); as g) {
+    @if (insight(); as ai) {
+      <p class="mcod-eyebrow">ABOUT YOU TWO</p>
+      <section class="mcod-insight">
+        <h2>{{ ai.headline }}</h2>
+        <p>{{ ai.summary }}</p>
+      </section>
+
+      <p class="mcod-eyebrow">WHAT ALREADY WORKS</p>
+      <ul class="mcod-strengths">
+        @for (item of ai.bond; track item.title) {
+          <li><b>{{ item.title }}.</b> {{ item.detail }}</li>
+        }
+      </ul>
+
+      @if (ai.care.length) {
+        <p class="mcod-eyebrow">{{ married() ? 'WHERE A LITTLE CARE HELPS' : 'WHAT TO TALK ABOUT FIRST' }}</p>
+        @for (item of ai.care; track item.title) {
+          <section class="mcod-care">
+            <h2>{{ item.title }}</h2>
+            <p>{{ item.detail }}</p>
+            <p class="mcod-care-label">This week</p>
+            <p>{{ item.step }}</p>
+          </section>
+        }
+      }
+
+      <p class="mcod-eyebrow">ABOUT EACH OF YOU</p>
+      @for (person of ai.each; track person.name) {
+        <section class="mcod-care">
+          <h2>{{ person.name }}</h2>
+          <p>{{ person.how_they_care }}</p>
+          <p class="mcod-care-label">What helps</p>
+          <p>{{ person.what_helps }}</p>
+        </section>
+      }
+
+      <p class="mcod-eyebrow">THIS PERIOD FOR THE TWO OF YOU</p>
+      <section class="mcod-care"><p>{{ ai.this_period }}</p></section>
+
+      @if (practices().length) {
+        <p class="mcod-eyebrow">SIMPLE PRACTICES</p>
+        @for (item of practices(); track item.practice.title) {
+          <div class="mcod-practice">
+            <b>{{ item.practice.title }} · {{ item.who }}</b>
+            <span>{{ item.practice.instructions }}</span>
+          </div>
+        }
+      }
+
+      <details class="mcod-why-line">
+        <summary>Why this?</summary>
+        @for (line of ai.why; track line) { <p>{{ line }}</p> }
+      </details>
+
+      @if (guidance(); as g) { <p class="mcod-note">{{ g.closing_note }}</p> }
+    } @else if (guidance(); as g) {
+      @if (insightLoading()) {
+        <p class="mcod-insight-wait" role="status">Writing a note for the two of you from both charts. This takes a few seconds the first time.</p>
+      }
       @if (g.strengths.length) {
         <p class="mcod-eyebrow">WHAT ALREADY WORKS</p>
         <ul class="mcod-strengths">

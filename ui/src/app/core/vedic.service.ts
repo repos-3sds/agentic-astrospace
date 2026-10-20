@@ -7,7 +7,7 @@ import {
   BhavaChalitPayload,
   CalendarIntelligencePayload,
   CharaDashaPayload,
-  CompatibilityPayload,
+  CompatibilityInsightPayload, CompatibilityPayload,
   DailyBriefResponse,
   DailyGuidancePayload,
   DashaPayload,
@@ -502,6 +502,13 @@ export class VedicService {
   compatibility(kundliId: string, partnerId: string): Promise<CompatibilityPayload> {
     return this.api.get<CompatibilityPayload>(
       `/vedic/${kundliId}/compatibility/${partnerId}?${this.calcParams()}`,
+    );
+  }
+
+  /** The agent-written "About you two" section; `insight` is null when the fixed guidance stays. */
+  compatibilityInsight(kundliId: string, partnerId: string, stage: 'married' | 'planning'): Promise<CompatibilityInsightPayload> {
+    return this.api.get<CompatibilityInsightPayload>(
+      `/vedic/${kundliId}/compatibility/${partnerId}/insight?stage=${stage}&${this.calcParams()}`,
     );
   }
 

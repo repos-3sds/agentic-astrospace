@@ -806,6 +806,31 @@ class CompatibilityCheck(Base):
     partner: Mapped["Kundli"] = relationship("Kundli", foreign_keys=[partner_kundli_id])
 
 
+class CompatibilityInsight(Base):
+    """The agent-written "About you two" section of a full compatibility report
+    (agents/compat_insight_agent.py), written once per pair and kept. `key`
+    hashes everything that changes the words (both people's birth details,
+    conventions, married or planning, and both running periods), so a change
+    to any of them is a new row, never the old text served."""
+
+    __tablename__ = "compatibility_insights"
+    __table_args__ = (
+        UniqueConstraint("kundli_id", "partner_kundli_id", "key",
+                         name="compatibility_insights_pair_key"),
+    )
+
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
+    user_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    kundli_id: Mapped[str] = mapped_column(
+        String, ForeignKey("kundlis.id", ondelete="CASCADE"), nullable=False, index=True)
+    partner_kundli_id: Mapped[str] = mapped_column(
+        String, ForeignKey("kundlis.id", ondelete="CASCADE"), nullable=False)
+    key: Mapped[str] = mapped_column(String, nullable=False)
+    stage: Mapped[str] = mapped_column(String, nullable=False, default="married")
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
 # ── Notifications & alerts ────────────────────────────────────────────────────
 
 class PushToken(Base):
