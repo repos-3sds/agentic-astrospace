@@ -81,7 +81,8 @@ export class RemediesComponent {
     if (this.fullPlan()) return 0;
     const total = this.groups().reduce((sum, group) => sum + group.practices.length, 0);
     const shown = this.shownGroups().reduce((sum, group) => sum + group.practices.length, 0);
-    return Math.max(0, total - shown);
+    // Once locks are on the server sends only the free practices and counts the rest.
+    return Math.max(0, total - shown) + (this.recommendations()?.locked_practices ?? 0);
   });
   protected readonly hasMantraText = computed(() => this.groups().some((group) => group.practices.some((p) => !!p.text)));
   protected readonly note = computed(() => this.recommendations()?.note ?? null);

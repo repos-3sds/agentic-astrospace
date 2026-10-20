@@ -5,7 +5,9 @@ from .resolver import (
     EntitlementDecision,
     EntitlementDenied,
     EntitlementSnapshot,
+    plan_lock,
     require_entitlement,
+    require_plan,
     resolve_entitlements,
 )
 
@@ -15,6 +17,8 @@ __all__ = [
     "EntitlementDenied",
     "EntitlementSnapshot",
     "capability_registry",
+    "plan_lock",
     "require_entitlement",
+    "require_plan",
     "resolve_entitlements",
 ]

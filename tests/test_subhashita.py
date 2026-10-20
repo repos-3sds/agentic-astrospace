@@ -72,6 +72,18 @@ class TestCorpus:
         assert len(set(seen)) == len(rows)
         assert subhashita.for_day(start + timedelta(days=len(rows)))["id"] == seen[0]
 
+    def test_each_account_has_its_own_rotation(self):
+        rows = subhashita.corpus()
+        start = date(2026, 10, 17)
+        readers = [f"reader-{n}" for n in range(20)]
+        todays = {subhashita.for_day(start, r)["id"] for r in readers}
+        assert len(todays) > 10  # not one verse for everyone
+        assert subhashita.for_day(start, "reader-1") == subhashita.for_day(start, "reader-1")
+        assert subhashita.for_day(start, None) == subhashita.for_day(start)
+        seen = [subhashita.for_day(start + timedelta(days=n), "reader-1") for n in range(len(rows))]
+        assert len({v["id"] for v in seen}) == len(rows)
+        assert all(a["source"] != b["source"] for a, b in zip(seen, seen[1:]))
+
 
 @pytest.fixture
 def client():
@@ -98,6 +110,26 @@ class TestApi:
 
     def test_run_is_capped(self, client):
         assert client.get("/api/v1/subhashita", params={"days": 32}).status_code == 422
+
+    def test_a_signed_in_reader_gets_their_own_verse(self, client):
+        from astrospace.api.subhashita_routes import reader_id
+        from main import app
+
+        app.dependency_overrides[reader_id] = lambda: "reader-1"
+        try:
+            body = client.get("/api/v1/subhashita/today", params={"date": "2026-10-17"}).json()
+            items = client.get("/api/v1/subhashita", params={"start": "2026-10-17", "days": 2}).json()["items"]
+        finally:
+            app.dependency_overrides.pop(reader_id, None)
+        assert body["id"] == subhashita.for_day(date(2026, 10, 17), "reader-1")["id"]
+        assert items[0]["id"] == body["id"]
+
+    def test_a_bad_token_still_gets_a_verse(self, client, monkeypatch):
+        monkeypatch.setattr("astrospace.api.subhashita_routes.supabase_configured", lambda: True)
+        response = client.get("/api/v1/subhashita/today", params={"date": "2026-10-17"},
+                              headers={"Authorization": "Bearer not-a-token"})
+        assert response.status_code == 200
+        assert response.json()["id"] == subhashita.for_day(date(2026, 10, 17))["id"]
 
     def test_no_sign_in_needed(self, client):
         assert client.get("/api/v1/subhashita/today").status_code == 200
@@ -136,7 +168,10 @@ class TestPush:
         # 10:00 IST is 04:30 UTC; 10:00 BST is 09:00 UTC.
         assert by_user[ME].scheduled_for == datetime(2026, 10, 17, 4, 30)
         assert by_user[OTHER].scheduled_for == datetime(2026, 10, 17, 9, 0)
-        verse = subhashita.for_day(date(2026, 10, 17))
+        # Each reader's push carries their own verse, the one the app shows them.
+        verse = subhashita.for_day(date(2026, 10, 17), ME)
+        assert by_user[ME].payload["subhashita_id"] == verse["id"]
+        assert by_user[OTHER].payload["subhashita_id"] == subhashita.for_day(date(2026, 10, 17), OTHER)["id"]
         assert by_user[ME].title == "Today's Subhashita"
         assert by_user[ME].body == f"{verse['english']} ({verse['source']} {verse['ref']})"
         assert by_user[ME].deep_link == "/m/subhashita"

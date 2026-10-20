@@ -340,12 +340,26 @@ def _install_app(db, timezone_name="Asia/Kolkata"):
     db.commit()
 
 
-def test_the_schedule_writes_each_profile_once_in_the_readers_style(env, agent):
+def _second_reader(db, last_seen: datetime | None = None):
+    crud.create_kundli(db, {
+        "user_id": "other-reader", "name": "Asha", "relation": "self",
+        "birth_year": 1965, "birth_month": 2, "birth_day": 3, "birth_hour": 9, "birth_minute": 0,
+        "birth_city": "Hyderabad", "birth_nation": "IN",
+    })
+    token = PushToken(user_id="other-reader", provider="fcm", token="t-2", timezone="Asia/Kolkata")
+    if last_seen:
+        token.last_seen_at = last_seen
+    db.add(token)
+    db.commit()
+
+
+def test_the_schedule_writes_the_readers_own_profile_once_in_their_style(env, agent):
     http, kundli, factory = env
     now = datetime(2026, 10, 16, 0, 30, tzinfo=timezone.utc)  # 06:00 in Kolkata
     with factory() as db:
         _install_app(db)
         crud.upsert_user_settings(db, ME, {"tone": "direct", "experience_mode": "practitioner"})
+        # Added after the reader's own: written when opened, not ahead.
         crud.create_kundli(db, {
             "user_id": ME, "name": "Asha", "relation": "mother",
             "birth_year": 1965, "birth_month": 2, "birth_day": 3, "birth_hour": 9, "birth_minute": 0,
@@ -353,8 +367,9 @@ def test_the_schedule_writes_each_profile_once_in_the_readers_style(env, agent):
         })
         first = daily_briefs.schedule_daily_briefs(db, now=now, prerender=lambda spoken: 0)
         second = daily_briefs.schedule_daily_briefs(db, now=now, prerender=lambda spoken: 0)
-    assert first["written"] == 2 and second == {**second, "written": 0, "already": 2}
-    assert agent.calls == 2
+        written = [row.kundli_id for row in db.query(DailyGuidanceCache).all()]
+    assert first["written"] == 1 and second == {**second, "written": 0, "already": 1}
+    assert agent.calls == 1 and written == [kundli]
     assert agent.last_kw["tone"] == "direct" and agent.last_kw["mode"] == "practitioner"
 
     # Today then reads the scheduled brief instead of writing one.
@@ -364,7 +379,7 @@ def test_the_schedule_writes_each_profile_once_in_the_readers_style(env, agent):
                             # test only passed on 2026-10-16.
                             "as_of": "2026-10-16T09:00:00+05:30"}).json()
     assert body["trigger"] == "scheduled" and body["cached"] is True
-    assert agent.calls == 2
+    assert agent.calls == 1
 
 
 def test_the_schedule_prerenders_audio_only_for_natural_voice_readers(env, agent, monkeypatch):
@@ -372,6 +387,7 @@ def test_the_schedule_prerenders_audio_only_for_natural_voice_readers(env, agent
     now = datetime(2026, 10, 16, 0, 30, tzinfo=timezone.utc)
     rendered = []
     monkeypatch.setenv("ASTROSPACE_TTS_BUCKET", "tts-bucket")
+    monkeypatch.setenv("DAILY_BRIEF_PRERENDER_AUDIO", "1")
     with factory() as db:
         _install_app(db)
         monkeypatch.setattr(daily_briefs, "_natural_voice_allowed", lambda db, user_id: False)
@@ -388,11 +404,7 @@ def test_the_schedule_stops_at_its_budget(env, agent):
     now = datetime(2026, 10, 16, 0, 30, tzinfo=timezone.utc)
     with factory() as db:
         _install_app(db)
-        crud.create_kundli(db, {
-            "user_id": ME, "name": "Asha", "relation": "mother",
-            "birth_year": 1965, "birth_month": 2, "birth_day": 3, "birth_hour": 9, "birth_minute": 0,
-            "birth_city": "Hyderabad", "birth_nation": "IN",
-        })
+        _second_reader(db)
         result = daily_briefs.schedule_daily_briefs(db, now=now, prerender=lambda s: 0, max_briefs=1)
     assert result["written"] == 1 and result["deferred"] == 1
 
@@ -565,11 +577,7 @@ def test_todays_briefs_come_before_anyones_tomorrow(env, agent):
     late = datetime(2026, 10, 16, 17, 0, tzinfo=timezone.utc)  # 22:30 in Kolkata
     with factory() as db:
         _install_app(db)
-        crud.create_kundli(db, {
-            "user_id": ME, "name": "Asha", "relation": "mother",
-            "birth_year": 1965, "birth_month": 2, "birth_day": 3, "birth_hour": 9, "birth_minute": 0,
-            "birth_city": "Hyderabad", "birth_nation": "IN",
-        })
+        _second_reader(db)
         result = daily_briefs.schedule_daily_briefs(db, now=late, prerender=lambda s: 0, max_briefs=2)
         dates = sorted(str(row.local_date) for row in db.query(DailyGuidanceCache).all())
     assert result["written"] == 2 and result["deferred"] == 2
@@ -583,3 +591,44 @@ def test_each_run_starts_with_a_different_reader():
     assert firsts == {"a", "b", "c"}
     assert sorted(daily_briefs._rotated(ids, base)) == ids
     assert daily_briefs._rotated([], base) == []
+
+
+def test_audio_is_not_recorded_ahead_unless_the_worker_opts_in(env, agent, monkeypatch):
+    """Listen records the language the reader picks, on tap (cost fix, 2026-10-19)."""
+    _http, _kundli, factory = env
+    now = datetime(2026, 10, 16, 0, 30, tzinfo=timezone.utc)
+    rendered = []
+    monkeypatch.setenv("ASTROSPACE_TTS_BUCKET", "tts-bucket")
+    monkeypatch.delenv("DAILY_BRIEF_PRERENDER_AUDIO", raising=False)
+    monkeypatch.setattr(daily_briefs, "_natural_voice_allowed", lambda db, user_id: True)
+    with factory() as db:
+        _install_app(db)
+        result = daily_briefs.schedule_daily_briefs(db, now=now, prerender=rendered.append)
+    assert result["written"] == 1 and result["audio"] == 0 and rendered == []
+
+
+def test_readers_who_stopped_opening_the_app_get_no_brief(env, agent):
+    _http, _kundli, factory = env
+    now = datetime(2026, 10, 16, 0, 30, tzinfo=timezone.utc)
+    with factory() as db:
+        _install_app(db)
+        _second_reader(db, last_seen=datetime(2026, 10, 8, 0, 0))  # 8 days before
+        result = daily_briefs.schedule_daily_briefs(db, now=now, prerender=lambda s: 0)
+        written = {row.kundli_id for row in db.query(DailyGuidanceCache).all()}
+    assert result["written"] == 1 and len(written) == 1
+
+
+def test_free_readers_are_briefed_on_open_once_limits_are_on(env, agent, monkeypatch):
+    from astrospace.db.models import EmailRecipient, NotificationPreference
+
+    _http, _kundli, factory = env
+    now = datetime(2026, 10, 16, 0, 30, tzinfo=timezone.utc)
+    monkeypatch.setenv("ASTROSPACE_QUOTAS_ENFORCED", "true")
+    with factory() as db:
+        _install_app(db)
+        assert daily_briefs.schedule_daily_briefs(db, now=now, prerender=lambda s: 0)["written"] == 0
+        # The daily email is the brief, so an email reader is still written for.
+        db.add(EmailRecipient(user_id=ME, email="me@example.com"))
+        db.add(NotificationPreference(user_id=ME, category="daily_email", enabled=True))
+        db.commit()
+        assert daily_briefs.schedule_daily_briefs(db, now=now, prerender=lambda s: 0)["written"] == 1

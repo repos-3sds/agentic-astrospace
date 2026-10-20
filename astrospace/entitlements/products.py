@@ -4,7 +4,7 @@ Store product ids are the only place commerce meets capability: a purchase
 resolves to either a plan (tier for a period) or a number of Ask question
 credits, and nothing downstream reads a product id again.
 
-Prices here are the D2 launch prices in rupees, shown before the store has
+Prices here are the launch prices in rupees, shown before the store has
 answered. The store's own localised price always replaces them on the phone
 (`ui/src/app/core/purchase.service.ts`), because the store is what charges.
 """
@@ -28,12 +28,12 @@ class Product:
 PRODUCTS: dict[str, Product] = {
     product.id: product
     for product in (
+        # Hawk, 2026-10-19: monthly only (Plus ₹299, Practitioner ₹999), no yearly plans; one question for
+        # ₹49, three for ₹129, no larger pack.
         Product("siddha_plus_monthly", "plan", "Plus, monthly", 299, tier="plus", months=1),
-        Product("siddha_plus_yearly", "plan", "Plus, yearly", 1999, tier="plus", months=12),
-        Product("siddha_practitioner_monthly", "plan", "Practitioner, monthly", 599, tier="pro", months=1),
-        Product("siddha_practitioner_yearly", "plan", "Practitioner, yearly", 3999, tier="pro", months=12),
-        Product("siddha_questions_3", "question_pack", "3 questions", 99, questions=3),
-        Product("siddha_questions_15", "question_pack", "15 questions", 399, questions=15),
+        Product("siddha_practitioner_monthly", "plan", "Practitioner, monthly", 999, tier="pro", months=1),
+        Product("siddha_questions_1", "question_pack", "1 question", 49, questions=1),
+        Product("siddha_questions_3", "question_pack", "3 questions", 129, questions=3),
     )
 }
 

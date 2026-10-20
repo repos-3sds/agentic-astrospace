@@ -18,6 +18,7 @@ from ..core.vedic.chart import VedicChart
 from ..core.vedic.positions import LocationError
 from ..agents.period_agent import PeriodAgent
 from ..agents.safety import REFER_OUT_ANSWERS
+from ..entitlements import require_plan
 from .auth import CurrentUser
 
 router = APIRouter(prefix="/api/v1/readings", tags=["readings"])
@@ -402,6 +403,7 @@ def generate_reading(
     user: CurrentUser,
     db: Session = Depends(get_db),
 ):
+    require_plan(db, user.id, "readings.full")
     if body.period not in VALID_PERIODS:
         raise HTTPException(status_code=400, detail=f"period must be one of {sorted(VALID_PERIODS)}")
 
@@ -531,6 +533,7 @@ def list_readings(
     generated_date: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
+    require_plan(db, user.id, "readings.full")
     k = crud.get_kundli(db, kundli_id, user.id)
     if not k:
         raise HTTPException(status_code=404, detail="Kundli not found")
@@ -577,6 +580,7 @@ def list_prediction_claims(
     include_superseded: bool = False,
     db: Session = Depends(get_db),
 ):
+    require_plan(db, user.id, "readings.full")
     if status and status not in CLAIM_STATUSES:
         raise HTTPException(status_code=400, detail=f"status must be one of {sorted(CLAIM_STATUSES)}")
     k = crud.get_kundli(db, kundli_id, user.id)
@@ -647,6 +651,7 @@ def update_prediction_claim(
 
 @router.get("/{kundli_id}/latest/{period}")
 def latest_reading(kundli_id: str, period: str, user: CurrentUser, db: Session = Depends(get_db)):
+    require_plan(db, user.id, "readings.full")
     if period not in VALID_PERIODS:
         raise HTTPException(status_code=400, detail=f"period must be one of {sorted(VALID_PERIODS)}")
     k = crud.get_kundli(db, kundli_id, user.id)

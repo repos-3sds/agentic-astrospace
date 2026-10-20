@@ -86,6 +86,11 @@ export class NaturalVoiceService {
     return body.sections;
   }
 
+  /** Audio for `text` already on this device, or null: never asks the server. */
+  async cached(text: string): Promise<Blob | null> {
+    return readCache(await cacheKey(text));
+  }
+
   /** An object URL for `text` spoken naturally. Starts the request on first call. */
   audioUrl(text: string): Promise<string> {
     let pending = this.urls.get(text);

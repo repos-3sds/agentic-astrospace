@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
 import { ApiService } from './api.service';
+import { EntitlementService } from './entitlement.service';
 import { PreferencesService } from './preferences.service';
 import { VedicService } from './vedic.service';
 
@@ -253,5 +254,50 @@ describe('VedicService agent daily brief', () => {
     expect(fresh?.brief?.headline).toBe('new');
     const later = TestBed.runInInjectionContext(() => new VedicService());
     expect((await later.dailyBrief('profile-1', '2026-10-16', 'gentle', 'balanced')).brief?.headline).toBe('new');
+  });
+});
+
+describe('VedicService plan-shaped caches', () => {
+  let api: jasmine.SpyObj<ApiService>;
+  let service: VedicService;
+  let entitlements: EntitlementService;
+
+  const snapshot = (enforced: boolean, plus: boolean) => ({
+    quotas_enforced: enforced,
+    entitlements: { 'vargas.full': false, 'yogas.full': plus, 'remedies.full': plus },
+  }) as any;
+
+  beforeEach(() => {
+    localStorage.clear();
+    api = jasmine.createSpyObj<ApiService>('ApiService', ['get', 'put']);
+    api.get.and.resolveTo({ groups: [] } as any);
+    TestBed.configureTestingModule({
+      providers: [VedicService, PreferencesService, { provide: ApiService, useValue: api }],
+    });
+    service = TestBed.inject(VedicService);
+    entitlements = TestBed.inject(EntitlementService);
+  });
+
+  it('refetches a trimmed remedy plan once the plan opens it', async () => {
+    entitlements.current.set(snapshot(true, false));
+    TestBed.tick();
+    await service.remedyPlan('profile-1');
+    await service.remedyPlan('profile-1');
+    expect(api.get).toHaveBeenCalledTimes(1);
+
+    entitlements.current.set(snapshot(true, true));
+    TestBed.tick();
+    await service.remedyPlan('profile-1');
+    expect(api.get).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the cache when only the snapshot is refreshed', async () => {
+    entitlements.current.set(snapshot(false, false));
+    TestBed.tick();
+    await service.remedyPlan('profile-1');
+    entitlements.current.set(snapshot(false, true));
+    TestBed.tick();
+    await service.remedyPlan('profile-1');
+    expect(api.get).toHaveBeenCalledTimes(1);
   });
 });

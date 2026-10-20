@@ -74,7 +74,7 @@ def test_subscription_lifecycle(env):
     with factory() as db:
         snapshot = resolve_entitlements(db, USER)
         assert snapshot.access_tier == "plus"
-        assert snapshot.entitlements["ask.answers.period"] == 30
+        assert snapshot.entitlements["ask.answers.period"] == 5
     assert post(_event("CANCELLATION", cancel_reason="UNSUBSCRIBE")) == "will_not_renew"
     with factory() as db:
         assert resolve_entitlements(db, USER).access_tier == "plus"
@@ -94,17 +94,17 @@ def test_refund_revokes_the_plan(env):
 
 def test_question_pack_credits_once_and_refund_revokes(env):
     client, factory = env
-    pack = _event("NON_RENEWING_PURCHASE", product="siddha_questions_15", txn="pack-1")
+    pack = _event("NON_RENEWING_PURCHASE", product="siddha_questions_3", txn="pack-1")
     for _ in range(2):
         client.post("/api/v1/store/revenuecat/webhook", json=pack, headers=AUTH)
     with factory() as db:
-        assert db.query(QuestionCredit).count() == 1
-        assert resolve_entitlements(db, USER).question_credits == 15
+        assert db.query(QuestionCredit).filter_by(provider="revenuecat").count() == 1
+        assert resolve_entitlements(db, USER).question_credits == 3 + 1  # the pack and the welcome question
     client.post("/api/v1/store/revenuecat/webhook",
-                json=_event("CANCELLATION", product="siddha_questions_15", txn="pack-1",
+                json=_event("CANCELLATION", product="siddha_questions_3", txn="pack-1",
                             cancel_reason="CUSTOMER_SUPPORT"), headers=AUTH)
     with factory() as db:
-        assert resolve_entitlements(db, USER).question_credits == 0
+        assert resolve_entitlements(db, USER).question_credits == 1  # only the welcome question
 
 
 def test_unknown_product_and_anonymous_buyer_are_acknowledged_not_applied(env):
@@ -148,7 +148,7 @@ def test_transfer_moves_the_plan_and_packs_to_the_new_account(env):
     with factory() as db:
         assert resolve_entitlements(db, USER).access_tier == "free"
         assert resolve_entitlements(db, other).access_tier == "plus"
-        credit = db.query(QuestionCredit).one()
+        credit = db.query(QuestionCredit).filter_by(provider="revenuecat").one()
         assert credit.billing_account_id == resolve_entitlements(db, other).account_id
     # A renewal for the new owner lands on the moved grant.
     renewal = _event("RENEWAL")

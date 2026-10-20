@@ -3,9 +3,11 @@
 This registry is policy, not storefront copy. Mobile and backend code consume
 capability keys and resolved values; neither branches on store product ids.
 
-Quantities follow the hybrid pricing decision (D2, launch plan numbers):
-Free answers 3 grounded questions a month and keeps 2 profiles (D7); Plus
-answers 30 and keeps 6. The "pro" tier is sold as Practitioner.
+Quantities are Hawk's of 2026-10-19: Free has no monthly Ask allowance,
+only one welcome question per account (`entitlements/welcome.py`), and
+keeps 1 profile; Plus answers 5 a month and keeps 3; Practitioner answers
+15 and keeps 10. Beyond the allowance every plan buys question packs. The
+"pro" tier is sold as Practitioner.
 
 Explore depth (Hawk, 2026-10-16): Free sees the D1 chart, two yogas, every
 dosha by name with its cancellations, and one compatibility score a month.
@@ -25,7 +27,7 @@ from typing import Literal
 AccessTier = Literal["free", "plus", "pro"]
 CapabilityKind = Literal["flag", "limit"]
 
-CATALOG_REVISION = 3
+CATALOG_REVISION = 4
 
 
 @dataclass(frozen=True)
@@ -95,8 +97,8 @@ _CAPABILITIES = (
     _flag("reports.detailed", "Detailed personal reports", free=False, plus=True, pro=True),
     _flag("practitioner.workflow", "Advanced practitioner workflow", free=False, plus=False, pro=True),
     _flag("reports.practitioner", "Practitioner report templates and export", free=False, plus=False, pro=True),
-    _limit("profiles.max", "Maximum active profiles", free=2, plus=6, pro=20),
-    _limit("ask.answers.period", "Grounded Ask answers per calendar month", free=3, plus=30, pro=100),
+    _limit("profiles.max", "Maximum active profiles", free=1, plus=3, pro=10),
+    _limit("ask.answers.period", "Grounded Ask answers per calendar month", free=0, plus=5, pro=15),
     _limit("compatibility.checks.period", "People checked for compatibility per calendar month", free=1, plus=None, pro=None),
     _unapproved_limit("compatibility.saved.max", "Maximum saved compatibility comparisons"),
 )

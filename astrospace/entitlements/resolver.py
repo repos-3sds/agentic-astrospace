@@ -137,9 +137,38 @@ def _billing_account(db: Session, user_id: str) -> BillingAccount:
     return account
 
 
+WELCOME_PROVIDER = "welcome"
+
+
+def _ensure_welcome_question(db: Session, account: BillingAccount) -> None:
+    """One free Ask question per account, once, never renewed (Hawk, 2026-10-19).
+
+    Held as a one-question credit so it is spent after any monthly allowance
+    and before bought packs, through the same claim as a pack. Keyed by the
+    account, so deleting and re-creating the credit row is the only way to
+    grant a second one.
+    """
+    txn = f"welcome:{account.id}"
+    exists = db.query(QuestionCredit.id).filter_by(
+        provider=WELCOME_PROVIDER, provider_transaction_id=txn,
+    ).first()
+    if exists:
+        return
+    db.add(QuestionCredit(
+        billing_account_id=account.id, provider=WELCOME_PROVIDER,
+        provider_product_id="welcome_question", provider_transaction_id=txn,
+        quantity=1, remaining=1,
+    ))
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+
+
 def resolve_entitlements(db: Session, user_id: str, *, now: datetime | None = None) -> EntitlementSnapshot:
     now = now or datetime.utcnow()
     account = _billing_account(db, user_id)
+    _ensure_welcome_question(db, account)
     assignment = db.query(PlanAssignment).filter(
         PlanAssignment.billing_account_id == account.id,
         PlanAssignment.effective_at <= now,
@@ -240,3 +269,23 @@ def require_entitlement(snapshot: EntitlementSnapshot, key: str) -> EntitlementD
     if not decision.allowed:
         raise EntitlementDenied(decision)
     return decision
+
+
+def plan_lock(db: Session, user_id: str, key: str) -> EntitlementDecision | None:
+    """The denial for a plan flag this reader lacks, or None.
+
+    None as well while ASTROSPACE_QUOTAS_ENFORCED is off, so a route and the
+    app's PlanGateService agree on when a lock is real.
+    """
+    snapshot = resolve_entitlements(db, user_id)
+    if not snapshot.quotas_enforced:
+        return None
+    decision = snapshot.decide(key)
+    return None if decision.allowed else decision
+
+
+def require_plan(db: Session, user_id: str, key: str) -> None:
+    """Refuse the whole route (402) when `plan_lock` says the plan lacks `key`."""
+    denied = plan_lock(db, user_id, key)
+    if denied is not None:
+        raise EntitlementDenied(denied)

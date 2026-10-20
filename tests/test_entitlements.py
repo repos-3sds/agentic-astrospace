@@ -14,6 +14,7 @@ from astrospace.db.models import (
     BillingAccount,
     EntitlementOverride,
     PlanAssignment,
+    QuestionCredit,
     SubscriptionGrant,
     UsageBucket,
 )
@@ -91,11 +92,11 @@ def test_registry_keeps_truth_safety_and_reliability_in_every_tier():
         assert all(item.value_for(tier) is True for tier in ("free", "plus", "pro"))
 
 
-def test_hybrid_pricing_limits_follow_d2_and_d7():
+def test_plan_limits_follow_hawks_2026_10_19_prices():
     ask = capability_registry["ask.answers.period"]
-    assert (ask.value_for("free"), ask.value_for("plus")) == (3, 30)
+    assert (ask.value_for("free"), ask.value_for("plus"), ask.value_for("pro")) == (0, 5, 15)
     profiles = capability_registry["profiles.max"]
-    assert (profiles.value_for("free"), profiles.value_for("plus")) == (2, 6)
+    assert (profiles.value_for("free"), profiles.value_for("plus"), profiles.value_for("pro")) == (1, 3, 10)
     # Not part of D2: represented, never enforced.
     saved = capability_registry["compatibility.saved.max"]
     assert all(saved.value_for(tier) is None for tier in ("free", "plus", "pro"))
@@ -109,8 +110,10 @@ def test_free_snapshot_is_created_server_side_and_unknown_keys_fail_closed(env):
     assert snapshot.source == "free_default"
     assert snapshot.entitlements["today.core"] is True
     assert snapshot.entitlements["reports.detailed"] is False
-    assert snapshot.decide("ask.answers.period").reason == "available"
-    assert snapshot.decide("ask.answers.period").remaining == 3
+    # No monthly allowance on Free, only the one welcome question.
+    assert snapshot.question_credits == 1
+    assert snapshot.decide("ask.answers.period").reason == "question_credit"
+    assert snapshot.decide("ask.answers.period").remaining == 0
     assert snapshot.decide("made.up.capability").allowed is False
     assert db.query(BillingAccount).filter_by(owner_user_id=USER).count() == 1
     db.close()
@@ -202,6 +205,7 @@ def test_usage_decision_includes_authoritative_period(env, monkeypatch):
         reserved=1,
         consumed=1,
     ))
+    db.query(QuestionCredit).filter_by(billing_account_id=account.id).update({"remaining": 0})
     db.commit()
     decision = resolve_entitlements(db, USER, now=now).decide("ask.answers.period")
     assert decision.allowed is False
@@ -285,3 +289,64 @@ def test_divisional_charts_beyond_d1_and_d9_are_held_back_only_when_locks_are_on
     assert _varga_decision(db, "practitioner-reader") is None
     assert set(_without_locked_vargas(payload(), db, "practitioner-reader")["vargas"]) == {"D1", "D9", "D10", "D60"}
     db.close()
+
+
+def test_free_keeps_the_first_two_yogas_once_locks_are_on(env, monkeypatch):
+    from astrospace.api.vedic_routes import _without_locked_yogas
+
+    _, Session = env
+    db = Session()
+    yogas = [{"name": f"Yoga {n}", "active": True} for n in range(5)]
+    inactive = {"name": "Dormant", "active": False}
+    summary = lambda: {"active_count": 5, "active": list(yogas), "all": [*yogas, inactive]}
+
+    monkeypatch.delenv("ASTROSPACE_QUOTAS_ENFORCED", raising=False)
+    assert len(_without_locked_yogas(summary(), db, USER)["active"]) == 5
+
+    monkeypatch.setenv("ASTROSPACE_QUOTAS_ENFORCED", "true")
+    trimmed = _without_locked_yogas(summary(), db, USER)
+    assert [y["name"] for y in trimmed["active"]] == ["Yoga 0", "Yoga 1"]
+    assert [y["name"] for y in trimmed["all"]] == ["Yoga 0", "Yoga 1", "Dormant"]
+    assert trimmed["locked_count"] == 3
+    assert trimmed["active_count"] == 5
+
+    _paid_assignment(db, "plus-reader", "plus", datetime.utcnow())
+    assert len(_without_locked_yogas(summary(), db, "plus-reader")["active"]) == 5
+    db.close()
+
+
+def test_free_remedy_plan_keeps_the_first_practice_and_every_dosha():
+    from astrospace.api.remedy_routes import _free_plan
+
+    plan = {
+        "groups": [
+            {"trigger": {"kind": "dasha"}, "practices": ["a1", "a2"]},
+            {"trigger": {"kind": "life_area"}, "practices": ["b1"]},
+            {"trigger": {"kind": "dosha", "dosha": "manglik"}, "practices": ["c1", "c2"]},
+        ],
+        "count": 3,
+    }
+    free = _free_plan(plan)
+    assert [g["practices"] for g in free["groups"]] == [["a1"], ["c1"]]
+    assert free["count"] == 2
+    assert free["locked_practices"] == 3
+
+
+@pytest.mark.parametrize("method,path", [
+    ("POST", "/api/v1/readings/k1/generate"),
+    ("GET", "/api/v1/readings/k1"),
+    ("GET", "/api/v1/readings/k1/claims"),
+    ("GET", "/api/v1/readings/k1/latest/weekly"),
+    ("GET", "/api/v1/muhurta/k1?goal=marriage"),
+])
+def test_readings_and_muhurta_refuse_free_only_once_locks_are_on(env, monkeypatch, method, path):
+    client, _ = env
+    body = {"period": "weekly"} if method == "POST" else None
+
+    monkeypatch.delenv("ASTROSPACE_QUOTAS_ENFORCED", raising=False)
+    assert client.request(method, path, json=body).status_code == 404  # no such profile, but not locked
+
+    monkeypatch.setenv("ASTROSPACE_QUOTAS_ENFORCED", "true")
+    response = client.request(method, path, json=body)
+    assert response.status_code == 402
+    assert response.json()["code"] == "entitlement_required"
