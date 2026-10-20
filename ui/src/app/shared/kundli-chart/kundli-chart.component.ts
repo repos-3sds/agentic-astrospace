@@ -173,7 +173,7 @@ const EASTERN_ZONES: Record<string, {
 /**
  * The phone's text zoom as applied to this page: Android's font-size setting
  * scales WebView text, SVG text included (MainActivity.capTextZoom caps it at
- * 130%). Measured once, the way the splash does it.
+ * 115%). Measured once, the way the splash does it.
  */
 let measuredTextZoom: number | null = null;
 
