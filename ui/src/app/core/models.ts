@@ -1211,6 +1211,21 @@ export interface FestivalOccurrence {
   occurs_on: string;
   observance_note?: string | null;
   is_convention_dependent?: boolean;
+  /** Short steps and prayer names for the festival sheet; absent from older servers. */
+  guidance?: FestivalGuidance | null;
+}
+
+/** A prayer to recite, by name; corpus_id points at the app's mantra corpus. */
+export interface FestivalMantra {
+  name: string;
+  corpus_id: string | null;
+}
+
+/** What to do on a festival or vrat day (festival_guidance.py). */
+export interface FestivalGuidance {
+  todo: string[];
+  how: string | null;
+  mantras: FestivalMantra[];
 }
 
 export interface FestivalWindowPayload {
@@ -1675,6 +1690,7 @@ export interface VratDay {
   name: string;
   is_convention_dependent: boolean;
   observance_note: string;
+  guidance?: FestivalGuidance | null;
 }
 
 export interface VratDaysPayload {

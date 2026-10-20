@@ -45,7 +45,9 @@ describe('CalendarComponent', () => {
             vratDays: (_place: unknown, fromDate: string) => Promise.resolve({
               days: [
                 { date: fromDate.slice(0, 8) + '11', kind: 'ekadashi', paksha: 'Shukla', name: 'Shukla Ekadashi',
-                  is_convention_dependent: true, observance_note: 'Smarta rule.' },
+                  is_convention_dependent: true, observance_note: 'Smarta rule.',
+                  guidance: { todo: ['Pray to Vishnu.', 'A simple meal also counts.'], how: 'Break the fast the next morning.',
+                    mantras: [{ name: 'Vishnu Sahasranama', corpus_id: 'vishnu-sahasranama' }] } },
                 { date: fromDate.slice(0, 8) + '15', kind: 'purnima', paksha: 'Shukla', name: 'Purnima',
                   is_convention_dependent: true, observance_note: 'Sunrise rule.' },
               ],
@@ -98,6 +100,23 @@ describe('CalendarComponent', () => {
     expect(el.querySelector('.mcal-about:last-of-type')?.textContent).toContain('Smarta rule.');
     expect(el.querySelector('.mcal-legend')?.textContent).toContain('Take care');
     expect(el.querySelector('.mcal-about')?.textContent).toContain('Tarabala');
+  });
+
+  it('opens a vrat day in the festival sheet with its steps and prayer names', async () => {
+    fixture.detectChanges();
+    resolveFestivals?.({ count: 0, festivals: [] });
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+
+    (el.querySelector('.mcal-observance.vrat') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const steps = Array.from(el.querySelectorAll('.mcal-prepare li')).map((li) => li.textContent?.trim());
+    expect(steps).toEqual(['Pray to Vishnu.', 'A simple meal also counts.']);
+    expect(el.querySelector('.mcal-how')?.textContent).toContain('Break the fast the next morning.');
+    expect(el.querySelector('.mcal-mantra')?.textContent).toContain('Vishnu Sahasranama');
+    expect(el.querySelector('.mcal-note')?.textContent).toContain('Smarta rule.');
   });
 
   it('can go back a year', () => {

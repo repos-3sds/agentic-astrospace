@@ -1679,3 +1679,28 @@ dependency, or is a project rather than a fix.
   `COUNTRIES` in `scripts/build_world_places.py`, region names to
   `_REGION_NAMES` in `core/cities.py`, and rebuild from GeoNames
   `cities500`.
+
+## Deferred backlog — festival guidance follow-ups (2026-10-20)
+
+Every festival and vrat kind now carries short to-dos and prayer names
+(`core/vedic/festival_guidance.py`). Left out on purpose:
+
+- [ ] **Festivals the Calendar does not list.** Sankashti Chaturthi (monthly,
+  Krishna Chaturthi at moonrise), Masik Shivaratri, Bonalu (Telangana, Sundays
+  of Ashada), Bengal's Durga Puja days (Shashthi to Dashami), Vat Purnima as
+  its own row, Telugu Hanuman Jayanti (Vaishakha Krishna Dashami), Sindhi
+  Cheti Chand. *Why not built:* each needs a date rule and an anchor test
+  against a published panchangam, and Bonalu and Sankashti need rule types
+  the engine lacks (weekday-in-lunar-month; tithi at moonrise). *Unblocks
+  when:* one panchangam per region is chosen as the check. *Hook:* `FESTIVALS`
+  in `core/vedic/festivals.py` plus a matching `_g(...)` entry; the guidance
+  test fails until both exist.
+- [ ] **Open a corpus mantra from the festival sheet.** Names that carry a
+  `corpus_id` have text, meaning and sometimes audio in
+  `mantra_corpus/mantras.json`, but the mantra screen only opens from a
+  profile's remedy plan (`/m/remedies/mantra?recommendation=…`). *Why not
+  built:* the screen is keyed to a recommendation group and its streak, not
+  to a bare mantra. *Unblocks when:* a read-only "mantra by id" view is
+  agreed. *Hook:* `mantraFor` in `ui/.../calendar/festival-sheet.component.ts`.
+- [ ] **Telugu and Hindi copy.** The guidance is English only; the sheet shows
+  it in every language. *Hook:* add per-language lists beside each entry.

@@ -93,10 +93,10 @@ function coveredBy(vrat: VratDay, festivals: FestivalOccurrence[]): boolean {
               <span><b>{{ row.festival.name }}</b><small>{{ row.festival.description || row.festival.prep_guidance || 'Tap for observance details' }}</small><em>{{ regionsLabel(row.festival.regions) }}@if (row.festival.is_convention_dependent) { · Varies by tradition }</em></span>
             </button>
           } @else {
-            <a class="mcal-observance m-pressable vrat" [routerLink]="['/m','calendar','day']" [queryParams]="{ date: row.date }">
+            <button class="mcal-observance m-pressable vrat" type="button" (click)="selectedFestival.set(vratAsFestival(row.vrat))">
               <span class="mcal-date-tile"><b>{{ dayNumber(row.date) }}</b><small>{{ monthShort(row.date) }}</small></span>
               <span><b>{{ row.vrat.name }}</b><small>{{ vratLine(row.vrat) }}</small><em>Varies by tradition</em></span>
-            </a>
+            </button>
           }
         } @empty {
           @if (festivalLoading()) {
@@ -266,6 +266,21 @@ export class CalendarComponent {
     const kind = quality ? `, ${QUALITY_WORDS[quality]}` : '';
     const events = eventCount ? `, ${eventCount} ${eventCount === 1 ? 'observance' : 'observances'}` : '';
     return `${label}${today}${kind}${events}`;
+  }
+
+  /** A vrat day opens the same sheet as a festival, with its own steps and rule. */
+  protected vratAsFestival(vrat: VratDay): FestivalOccurrence {
+    return {
+      slug: `vrat-${vrat.kind}-${vrat.paksha.toLowerCase()}`,
+      name: vrat.name,
+      regions: ['pan-india'],
+      description: this.vratLine(vrat),
+      prep_guidance: null,
+      occurs_on: vrat.date,
+      observance_note: vrat.observance_note,
+      is_convention_dependent: vrat.is_convention_dependent,
+      guidance: vrat.guidance ?? null,
+    };
   }
 
   protected vratLine(vrat: VratDay): string {
