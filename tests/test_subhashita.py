@@ -124,6 +124,22 @@ class TestApi:
         assert body["id"] == subhashita.for_day(date(2026, 10, 17), "reader-1")["id"]
         assert items[0]["id"] == body["id"]
 
+    def test_each_response_says_whose_rotation_it_is(self, client):
+        # The app files its cache under this, not under the account it asked
+        # as: a run fetched while the API still served the shared rotation
+        # (or with an expired token) must not pass for the reader's own.
+        from astrospace.api.subhashita_routes import reader_id
+        from main import app
+
+        assert client.get("/api/v1/subhashita", params={"days": 1}).json()["reader"] is None
+        app.dependency_overrides[reader_id] = lambda: "reader-1"
+        try:
+            run = client.get("/api/v1/subhashita", params={"days": 1}).json()
+            one = client.get("/api/v1/subhashita/today").json()
+        finally:
+            app.dependency_overrides.pop(reader_id, None)
+        assert run["reader"] == one["reader"] == "reader-1"
+
     def test_a_bad_token_still_gets_a_verse(self, client, monkeypatch):
         monkeypatch.setattr("astrospace.api.subhashita_routes.supabase_configured", lambda: True)
         response = client.get("/api/v1/subhashita/today", params={"date": "2026-10-17"},
