@@ -32,6 +32,7 @@ from .scope import QuestionPlan, fixed_reply, plan_question
 from .schema import AskIntent, StructuredReading
 from .validation_agent import ValidationAgent, ValidationProbeDraft, probe_violations
 from .verifier import quality_violations, safety_violations, verify, verify_coverage, violation_fields
+from ..context.muhurta_search import muhurta_section
 from ..context import KeywordRouter, assemble_domain
 from ..context.focus import focus_bundle
 from ..context.profile_context import LogicalPreflight, build_logical_preflight
@@ -44,6 +45,7 @@ SCHEMA_VERSION = "ask_structured_v1"
 _BUNDLE_TOP_LEVEL_SECTIONS = (
     "houses", "karakas", "jaimini_karakas", "arudhas", "vargas",
     "yogas", "doshas", "dasha_relevance", "gochara", "references",
+    "muhurta_search",
 )
 
 
@@ -321,6 +323,10 @@ class AskOrchestrator:
             validation_probes=self._stored_probes(domain),
         )
         bundle = focus_bundle(bundle, question_kind, question)
+        # "When is a good time to..." gets the Muhurta screen's real slots.
+        search = muhurta_section(chart, question)
+        if search:
+            bundle["muhurta_search"] = search
         profile_context = self.check_profile_context(bundle, domain, question, tense)
         bundle["profile_context"] = profile_context.bundle_section
         context_used = [

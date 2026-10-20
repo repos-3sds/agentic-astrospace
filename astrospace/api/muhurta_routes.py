@@ -30,6 +30,7 @@ from .vedic_routes import _chart_from_kundli
 
 router = APIRouter(prefix="/api/v1/muhurta", tags=["muhurta"])
 
+MUHURTA_MAX_DAYS = 184
 MUHURTA_HORIZON = "Your plan searches the next {days} days. Pick dates inside them, or see plans for more."
 
 
@@ -63,7 +64,12 @@ def find_muhurta(
     ),
     nation: str | None = None,
     timezone: str | None = Query(None, description="Viewer IANA timezone; picks the city when none is given"),
-    limit: int = Query(5, ge=1, le=20),
+    partner_id: str | None = Query(None, description="Second profile for a couple (wedding, engagement)"),
+    ceremony: str | None = Query(None, pattern="^(day|night)$", description="Wedding held by day or by night"),
+    direction: str | None = Query(None, pattern="^(north|south|east|west)$", description="Journey direction"),
+    avoid: str | None = Query(None, max_length=80, description="Comma-separated weekdays the family avoids"),
+    observe_season: bool = Query(True, description="Leave out Chaturmas, Kharmas and the like where the goal observes them"),
+    limit: int = Query(5, ge=1, le=30),
     db: Session = Depends(get_db),
 ):
     require_plan(db, user.id, "muhurta.full")
@@ -81,7 +87,8 @@ def find_muhurta(
     snapshot = resolve_entitlements(db, user.id)
     horizon = snapshot.entitlements.get("muhurta.days_ahead")
     capped_to = None
-    if snapshot.quotas_enforced and isinstance(horizon, int):
+    capped = snapshot.quotas_enforced and isinstance(horizon, int)
+    if capped:
         last = today + timedelta(days=horizon - 1)
         if start > last:
             raise HTTPException(status_code=400, detail=MUHURTA_HORIZON.format(days=horizon))
@@ -92,6 +99,15 @@ def find_muhurta(
     moon_lon = chart.positions["Moon"]["lon"]
     moon_sign = sign_index(moon_lon)
 
+    partner = None
+    if partner_id:
+        other = crud.get_kundli(db, partner_id, user.id)
+        if not other:
+            raise HTTPException(status_code=404, detail="Partner profile not found")
+        other_moon = _chart_from_kundli(other, *crud.chart_convention(db, user.id)).positions["Moon"]["lon"]
+        partner = {"nak": NAKSHATRAS.index(nakshatra_of(other_moon)["name"]),
+                   "rashi": sign_index(other_moon), "name": other.name.split()[0] if other.name else None}
+
     try:
         payload = muhurta.find(
             goal, start, end,
@@ -99,12 +115,23 @@ def find_muhurta(
             janma_rashi_index=moon_sign,
             ghatak_moon_sign=moon_sign,
             intent=intent,
+            partner=partner,
+            ceremony=ceremony,
+            direction=direction,
+            avoid_weekdays=[w.strip() for w in (avoid or "").split(",") if w.strip()],
+            observe_season=observe_season,
+            birth_date=date_cls(kundli.birth_year, kundli.birth_month, kundli.birth_day),
             city=place.city,
             nation=place.nation,
             lat=place.lat,
             lng=place.lng,
             tz_str=place.tz_str,
             limit=limit,
+            # Weddings and upanayana are planned months out; a plan without a
+            # horizon may search half a year. A capped plan (testers) keeps
+            # its horizon and is not shown dates past it (frozen access matrix).
+            max_days=MUHURTA_MAX_DAYS if not capped else 62,
+            look_ahead_days=0 if capped else 90,
         )
         payload["place"] = place.as_payload()
         if capped_to:

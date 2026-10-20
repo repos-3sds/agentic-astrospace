@@ -117,6 +117,8 @@ def _tense_conflict(text: str, as_of_year: int, safe_years: set[int]) -> bool:
 # evidence) as long as that section actually exists in the bundle handed to
 # the agent. Citation-shaped sources are checked against the bundle's real
 # references/source_passages instead — see `valid_sources`.
+_OPTIONAL_SECTION_NAMES = {"muhurta_search"}
+
 _BUNDLE_SECTION_NAMES = {
     "houses", "karakas", "vargas", "yogas", "doshas",
     "dasha_relevance", "gochara", "jaimini_karakas", "arudhas",
@@ -168,7 +170,10 @@ def valid_sources(bundle: dict) -> set[str]:
         f["ref"] for f in (bundle.get("profile_context") or {}).get("facts", [])
         if f.get("ref")
     }
-    return _BUNDLE_SECTION_NAMES | ref_ids | chunk_ids | fact_refs
+    # Sections only some questions carry ("good time to..." gets real Muhurta
+    # slots, context/muhurta_search.py) are citable when present.
+    optional = {name for name in _OPTIONAL_SECTION_NAMES if bundle.get(name)}
+    return _BUNDLE_SECTION_NAMES | optional | ref_ids | chunk_ids | fact_refs
 
 
 class Violation(str):

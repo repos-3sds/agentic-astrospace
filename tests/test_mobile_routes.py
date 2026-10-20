@@ -204,6 +204,21 @@ class TestMuhurtaRoutes:
         assert scores == sorted(scores, reverse=True)
         assert body["is_convention_dependent"] is True
 
+    def test_couple_and_ceremony_options(self, client, kundli_id):
+        r = client.get(f"/api/v1/muhurta/{kundli_id}", params={
+            "goal": "marriage_related", "date_from": "2026-12-01", "date_to": "2026-12-20",
+            "partner_id": kundli_id, "ceremony": "night", "avoid": "Tuesday,Saturday",
+        })
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert body["hours"] == [17, 30] and body["whose"] == "couple"
+        assert all(w["vara"] not in ("Tuesday", "Saturday") for w in body["results"])
+
+    def test_unknown_partner_404(self, client, kundli_id):
+        r = client.get(f"/api/v1/muhurta/{kundli_id}", params={
+            "goal": "engagement", "partner_id": "00000000-0000-0000-0000-000000000000"})
+        assert r.status_code == 404
+
     def test_defaults_to_a_two_week_window_from_today(self, client, kundli_id):
         r = client.get(f"/api/v1/muhurta/{kundli_id}", params={"goal": "start_journey"})
         assert r.status_code == 200
