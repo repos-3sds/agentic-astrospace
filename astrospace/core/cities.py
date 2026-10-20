@@ -20,6 +20,7 @@ import re
 import unicodedata
 from functools import lru_cache
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 _STATE_PLACES_PATH = Path(__file__).parent / "data" / "state_places.json.gz"
 _STATE_NAMES = {"AP": "Andhra Pradesh", "TS": "Telangana"}
@@ -470,8 +471,58 @@ def _world_place_dict(row: list) -> dict:
     }
 
 
+# Old zone names that phones still send. Android's WebView reports India as
+# "Asia/Calcutta" (ICU keeps the old name), but Debian trixie, which the
+# server image is built on, moved those names into tzdata-legacy and does not
+# install them, so ZoneInfo("Asia/Calcutta") failed on Cloud Run and every
+# timing screen refused the request. Mapping them here also lets
+# city_for_timezone() find the city, which only knows the current names.
+_LEGACY_TIMEZONES = {
+    "Asia/Calcutta": "Asia/Kolkata",
+    "Asia/Katmandu": "Asia/Kathmandu",
+    "Asia/Saigon": "Asia/Ho_Chi_Minh",
+    "Asia/Rangoon": "Asia/Yangon",
+    "Asia/Dacca": "Asia/Dhaka",
+    "Asia/Thimbu": "Asia/Thimphu",
+    "Asia/Ulan_Bator": "Asia/Ulaanbaatar",
+    "Asia/Macao": "Asia/Macau",
+    "Asia/Ujung_Pandang": "Asia/Makassar",
+    "Europe/Kiev": "Europe/Kyiv",
+    "Atlantic/Faeroe": "Atlantic/Faroe",
+    "America/Buenos_Aires": "America/Argentina/Buenos_Aires",
+    "America/Indianapolis": "America/Indiana/Indianapolis",
+    "America/Louisville": "America/Kentucky/Louisville",
+    "Pacific/Truk": "Pacific/Chuuk",
+    "Pacific/Ponape": "Pacific/Pohnpei",
+    "US/Eastern": "America/New_York",
+    "US/Central": "America/Chicago",
+    "US/Mountain": "America/Denver",
+    "US/Pacific": "America/Los_Angeles",
+    "Canada/Eastern": "America/Toronto",
+    "Canada/Pacific": "America/Vancouver",
+}
+
+
+def canonical_timezone(tz_str: str | None) -> str | None:
+    """The current IANA name for ``tz_str``, or None when it is not a zone.
+
+    Old names are mapped to the ones the server's tz database ships, so a
+    phone that reports "Asia/Calcutta" gets "Asia/Kolkata".
+    """
+    if not tz_str or not tz_str.strip():
+        return None
+    name = tz_str.strip()
+    name = _LEGACY_TIMEZONES.get(name, name)
+    try:
+        ZoneInfo(name)
+    except Exception:
+        return None
+    return name
+
+
 def city_for_timezone(tz_str: str) -> tuple[str, str, float, float, str] | None:
     """Return a representative city for an IANA timezone."""
+    tz_str = _LEGACY_TIMEZONES.get(tz_str, tz_str)
     for (city, nation), (lat, lng, tz) in _CITIES.items():
         if tz == tz_str:
             return city.title(), nation.upper(), lat, lng, tz

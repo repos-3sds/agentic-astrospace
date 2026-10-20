@@ -96,11 +96,22 @@ class TestResolver:
         assert (place.city, place.source, place.viewer_tz) == ("Hyderabad", "birth_city", None)
         assert place.today_tz == "Asia/Kolkata"
 
-    def test_unknown_timezone_is_a_400(self, env):
-        from fastapi import HTTPException
-        with pytest.raises(HTTPException) as exc:
-            resolve_timing_place(env["kundli"], "Mars/Olympus")
-        assert exc.value.status_code == 400
+    def test_unknown_timezone_falls_back_to_birth_city(self, env):
+        # The zone comes from the phone; the reader cannot fix it, so the
+        # screen loads for the birth city instead of refusing.
+        place = resolve_timing_place(env["kundli"], "Mars/Olympus")
+        assert (place.city, place.source, place.viewer_tz) == ("Hyderabad", "birth_city", None)
+
+    @pytest.mark.parametrize("legacy, current", [
+        ("Asia/Calcutta", "Asia/Kolkata"),
+        ("Asia/Katmandu", "Asia/Kathmandu"),
+        ("US/Eastern", "America/New_York"),
+    ])
+    def test_old_zone_names_from_android_are_read_as_current(self, env, legacy, current):
+        place = resolve_timing_place(env["kundli"], legacy)
+        assert place.viewer_tz == current
+        assert place.source == "viewer_timezone"
+        assert place.tz_str == current
 
 
 class TestEndpointsAgree:

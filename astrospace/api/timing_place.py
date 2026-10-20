@@ -22,11 +22,10 @@ screen can say "Hyderabad (birth city) · GMT+5:30" instead of implying the
 times are local to the phone.
 """
 from dataclasses import dataclass
-from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException
 
-from ..core.cities import city_for_timezone, lookup_city
+from ..core.cities import canonical_timezone, city_for_timezone, lookup_city
 
 SOURCE_SELECTED = "selected"
 SOURCE_VIEWER_TIMEZONE = "viewer_timezone"
@@ -59,13 +58,15 @@ class TimingPlace:
 
 
 def validate_timezone(tz_str: str | None, fallback: str) -> str:
-    if not tz_str:
-        return fallback
-    try:
-        ZoneInfo(tz_str)
-    except Exception:
-        raise HTTPException(status_code=400, detail=f"Unknown timezone {tz_str!r}")
-    return tz_str
+    """The viewer's zone under its current name, or ``fallback``.
+
+    The zone comes from the phone, not from anything the reader typed, so a
+    name the server cannot read is dropped rather than refused: the place
+    falls through to the next rule (the birth city) and the screen still
+    loads. Refusing it once showed testers "We couldn't work out the time
+    zone" on every Muhurta search, with nothing they could change.
+    """
+    return canonical_timezone(tz_str) or fallback
 
 
 def resolve_timing_place(kundli, timezone: str | None = None,
