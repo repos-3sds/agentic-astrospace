@@ -23,6 +23,14 @@ export const PREF_CATEGORY: Record<string, string> = {
 
 const TOKEN_KEY = 'astrospace.push.token';
 
+/**
+ * A request answered faster than this came back without the system dialog
+ * ever showing: Android after a second "Don't allow" (or a dismissed dialog,
+ * which Capacitor records as denied), iOS after any earlier no. A person
+ * tapping a button in a dialog takes well over half a second.
+ */
+const NO_DIALOG_MS = 600;
+
 /** Native check in ui/android/.../PushConfigPlugin.java. Android only. */
 const PushConfig = registerPlugin<{ available(): Promise<{ available: boolean }> }>('PushConfig');
 
@@ -55,6 +63,7 @@ export class PushService {
   readonly native = computed(() => Capacitor.isNativePlatform());
 
   private listenersInstalled = false;
+  private askedThisLaunch = false;
   private booted = false;
   private signedInAs: string | null = null;
 
@@ -69,15 +78,52 @@ export class PushService {
         this.signedInAs = userId;
       });
     });
+    // Coming back from the phone's settings is how a denied reader turns
+    // notifications on, so look again whenever the app comes to the front.
+    // Before this the screen still said "off" until it was reopened.
+    if (this.native()) {
+      void import('@capacitor/app')
+        .then(({ App }) => App.addListener('appStateChange', ({ isActive }) => {
+          if (isActive && this.booted) void this.init();
+        }))
+        .catch(() => undefined);
+    }
   }
 
-  /** Called after auth resolves on native boot, and on each later sign-in. Never prompts. */
+  /**
+   * Called after auth resolves on native boot, on each later sign-in and
+   * whenever the app comes back to the front. Registers the device if
+   * notifications are allowed; if the reader has not answered the system
+   * question yet, asks it, once per launch.
+   */
   async init(): Promise<void> {
     this.booted = true;
     if (!this.native()) return;
     await this.refreshPermission();
-    if (this.permission() === 'granted' && this.auth.isAuthenticated()) {
+    if (!this.auth.isAuthenticated()) return;
+    if (this.permission() === 'granted') {
       await this.register();
+    } else if (this.permission() === 'prompt' && !this.askedThisLaunch) {
+      await this.askOnLaunch();
+    }
+  }
+
+  /**
+   * The system question when the app opens (Hawk, 2026-10-20: testers never
+   * found the switch in Settings, and without notifications nobody comes
+   * back). Only while unanswered: after a no, Android shows it once more on a
+   * later launch and then stops on its own, and iOS never shows it twice.
+   * Never sends anyone to Settings uninvited; that is the button's job.
+   */
+  private async askOnLaunch(): Promise<void> {
+    this.askedThisLaunch = true;
+    try {
+      const { PushNotifications } = await import('@capacitor/push-notifications');
+      const { receive } = await PushNotifications.requestPermissions();
+      this.permission.set(receive === 'prompt-with-rationale' ? 'prompt' : receive);
+      if (receive === 'granted') await this.register();
+    } catch (err) {
+      this.error.set(describe(err));
     }
   }
 
@@ -94,16 +140,28 @@ export class PushService {
   }
 
   /**
-   * The one place the OS prompt is shown: from the settings screen, when the
-   * reader taps "Turn on notifications". Opt-in, never on launch.
+   * "Turn on notifications", wherever it is offered (the Today card and
+   * Settings > Notifications). Asks the system first, every
+   * time: Capacitor records a dismissed dialog as denied although Android
+   * will still show it again. If the system answers without showing its
+   * dialog, the reader cannot be asked from inside the app any more, so this
+   * opens Siddha's page in the phone's notification settings instead of
+   * doing nothing (tester report on build 537).
    */
   async enable(): Promise<PushPermission> {
     if (!this.native()) return 'unsupported';
+    const before = this.permission();
     try {
       const { PushNotifications } = await import('@capacitor/push-notifications');
+      const started = Date.now();
       const { receive } = await PushNotifications.requestPermissions();
-      this.permission.set(receive === 'prompt-with-rationale' ? 'prompt' : receive);
-      if (receive === 'granted') await this.register();
+      const state: PushPermission = receive === 'prompt-with-rationale' ? 'prompt' : receive;
+      this.permission.set(state);
+      if (state === 'granted') {
+        if (this.auth.isAuthenticated()) await this.register();
+      } else if (before === 'denied' || Date.now() - started < NO_DIALOG_MS) {
+        await this.openSystemSettings();
+      }
     } catch (err) {
       this.error.set(describe(err));
     }

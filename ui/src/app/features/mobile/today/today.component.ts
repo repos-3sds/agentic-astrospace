@@ -23,6 +23,7 @@ import { FestivalService, festivalPlace } from '../../../core/festival.service';
 import { WidgetBridgeService, windowSpan } from '../../../core/widget-bridge.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { ReadingForComponent } from '../shared/reading-for.component';
+import { NotifyNudgeComponent } from './notify-nudge.component';
 import { ExperienceMode, PreferencesService, ReadingTone } from '../../../core/preferences.service';
 import { HapticsService } from '../../../core/haptics.service';
 import { SubhashitaService } from '../../../core/subhashita.service';
@@ -242,6 +243,7 @@ function practicalClose(text: string): string[] {
     ProfileSwitcherComponent,
     GenericErrorComponent,
     ReadingForComponent,
+    NotifyNudgeComponent,
   ],
   host: {
     '[attr.data-band]': 'view()?.band || "steady"',

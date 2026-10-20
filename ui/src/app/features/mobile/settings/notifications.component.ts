@@ -26,10 +26,11 @@ export interface NotificationPref {
  * mantra tracker never warns about breaking one.
  *
  * Delivery has three states, and the screen names each one honestly:
- * - prompt: nothing asked yet. One button shows the OS dialog, here and only
- *   here, never on launch.
- * - denied: the OS said no. The app cannot ask again, so the card says where
- *   the switch lives and opens it; "Remind me later" is the other way out.
+ * - prompt: not answered yet. The app asks once per launch (PushService.init),
+ *   and the button here shows the OS dialog too.
+ * - denied: the OS said no. The same button tries the dialog once more and,
+ *   when the system will not show it, opens Siddha's notification settings;
+ *   "Remind me later" is the other way out.
  * - granted: this device is registered and the worker delivers to it.
  * On web there is no push at all, and the card says that rather than offering
  * a button that cannot deliver.
@@ -112,11 +113,11 @@ export class NotificationsComponent {
       case 'granted':
         return 'Your choices below decide what arrives. Nothing is sent that you did not turn on.';
       case 'denied':
-        return 'The system switch for this app is off, so nothing can be delivered until you turn it on in Settings. Your choices here are kept for when you do.';
+        return 'Your phone is blocking notifications from Siddha. Tap the button and turn on Allow notifications. Your choices here are kept.';
       case 'unsupported':
         return 'Push delivery is a feature of the Siddha app on your phone. Your choices are saved for it.';
       default:
-        return 'Turn them on to get your morning brief and the alerts you choose. You will be asked once by the system.';
+        return 'Turn them on to get your morning brief and the alerts you choose.';
     }
   });
 
@@ -152,7 +153,7 @@ export class NotificationsComponent {
     if (pref) void this.push.syncPreference(id, pref.on);
   }
 
-  /** The one place the OS prompt is shown. */
+  /** Shows the OS prompt, or opens the phone's settings when it will not show. */
   protected async enable(): Promise<void> {
     this.busy.set(true);
     try {
@@ -160,10 +161,6 @@ export class NotificationsComponent {
     } finally {
       this.busy.set(false);
     }
-  }
-
-  protected async openSettings(): Promise<void> {
-    await this.push.openSystemSettings();
   }
 
   /** The way out of the denied card that is not "go change a system setting". */

@@ -31,12 +31,12 @@
 
     @if (permission() === 'denied') {
       <ol class="steps">
-        <li>Open the system settings for Siddha.</li>
-        <li>Turn on <b>Allow notifications</b>.</li>
+        <li>Tap <b>Turn on notifications</b>.</li>
+        <li>If your phone's settings open, turn on <b>Allow notifications</b>.</li>
         <li>Come back here; the card updates on its own.</li>
       </ol>
       <div class="actions">
-        <button type="button" class="primary" (click)="openSettings()">Open Settings</button>
+        <button type="button" class="primary" (click)="enable()" [disabled]="busy()">Turn on notifications</button>
         @if (!snoozed()) {
           <button type="button" (click)="remindLater()">Remind me later</button>
         } @else {
