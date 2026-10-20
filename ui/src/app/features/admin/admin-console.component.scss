@@ -2593,3 +2593,130 @@ a {
     line-height: 1.5;
   }
 }
+
+// ── Tester pulse ─────────────────────────────────────────────────────────────
+
+.pulse-asof {
+  color: var(--as-muted);
+  font-size: 12px;
+  margin-right: auto;
+}
+
+.pulse-daily,
+.pulse-people {
+  margin-top: 14px;
+}
+
+.pulse-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  white-space: nowrap;
+  color: var(--as-muted);
+  font-size: 11.5px;
+
+  i {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    margin-right: 6px;
+    border-radius: 2px;
+    vertical-align: -1px;
+  }
+}
+
+.pulse-legend i.accounts,
+.pulse-pair .accounts {
+  background: var(--as-accent);
+}
+
+.pulse-legend i.questions,
+.pulse-pair .questions {
+  background: var(--as-good);
+}
+
+.pulse-bars {
+  display: grid;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  gap: 6px;
+  padding: 8px 16px 14px;
+}
+
+.pulse-day {
+  display: grid;
+  gap: 4px;
+  text-align: center;
+
+  small {
+    color: var(--as-muted);
+    font-size: 10.5px;
+  }
+}
+
+.pulse-pair {
+  height: 120px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  border-bottom: 1px solid var(--as-border);
+
+  span {
+    width: 40%;
+    min-height: 0;
+    border-radius: 3px 3px 0 0;
+  }
+}
+
+.pulse-table-wrap {
+  overflow-x: auto;
+}
+
+.pulse-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--as-border);
+    color: var(--as-muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--as-border);
+    white-space: nowrap;
+    vertical-align: middle;
+
+    strong,
+    small {
+      display: block;
+    }
+
+    small {
+      color: var(--as-muted);
+      font-size: 11.5px;
+    }
+  }
+
+  .n {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (max-width: 760px) {
+  .pulse-table .opt {
+    display: none;
+  }
+
+  .pulse-bars {
+    gap: 3px;
+    padding: 8px 8px 12px;
+  }
+}

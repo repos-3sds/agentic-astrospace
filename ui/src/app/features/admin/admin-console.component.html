@@ -43,6 +43,7 @@
         <h1>
           @switch (view()) {
             @case ('overview') { <span class="siddha-brand">SIDDHA</span> operations }
+            @case ('testers') { Tester pulse }
             @case ('users') { Users & access }
             @case ('activity') { Product activity }
             @case ('sources') { Source library }
@@ -321,6 +322,66 @@
               </aside>
             }
           </section>
+        }
+
+        @case ('testers') {
+          @if (testers(); as pulse) {
+            <section class="toolbar">
+              <span class="pulse-asof">Updated {{ pulse.as_of | date: 'MMM d, HH:mm' }} · refreshes every minute</span>
+              <button type="button" class="button secondary" (click)="loadTesters()">
+                <lucide-icon name="refresh-cw" [size]="15" /> Refresh
+              </button>
+            </section>
+            <section class="metric-grid">
+              <article><span>Accounts</span><strong>{{ pulse.summary.accounts }}</strong><small>{{ pulse.summary.joined_today }} joined today</small></article>
+              <article><span>Active today</span><strong>{{ pulse.summary.active_today }}</strong><small>signed in or asked, India time</small></article>
+              <article><span>Have asked</span><strong>{{ pulse.summary.asked_ever }}</strong><small>{{ pulse.summary.first_question_today }} asked for the first time today</small></article>
+              <article><span>Questions today</span><strong>{{ pulse.summary.questions_today }}</strong><small>{{ pulse.summary.never_asked }} accounts have never asked</small></article>
+            </section>
+            <article class="workspace-panel pulse-daily">
+              <div class="panel-head"><div><span class="eyebrow">Last 14 days, India time</span><h2>New accounts and questions</h2></div>
+                <div class="pulse-legend"><span><i class="accounts"></i>New accounts</span><span><i class="questions"></i>Questions</span></div>
+              </div>
+              <div class="pulse-bars">
+                @for (d of pulse.daily; track d.day) {
+                  <div class="pulse-day" [title]="(d.day | date: 'MMM d') + ': ' + d.new_accounts + ' new, ' + d.questions + ' questions'">
+                    <div class="pulse-pair">
+                      <span class="accounts" [style.height.%]="(d.new_accounts / testersMax()) * 100"></span>
+                      <span class="questions" [style.height.%]="(d.questions / testersMax()) * 100"></span>
+                    </div>
+                    <small>{{ d.day | date: 'd' }}</small>
+                  </div>
+                }
+              </div>
+            </article>
+            <article class="workspace-panel pulse-people">
+              <div class="panel-head"><div><span class="eyebrow">Newest sign-in first</span><h2>Each reader</h2></div></div>
+              <div class="pulse-table-wrap">
+                <table class="pulse-table">
+                  <thead><tr><th>Reader</th><th>Status</th><th>Last sign-in</th><th class="opt">Joined</th><th class="n">Charts</th><th class="n">Questions</th><th class="opt">Last question</th></tr></thead>
+                  <tbody>
+                    @for (p of pulse.people; track p.id) {
+                      <tr>
+                        <td><strong>{{ p.name || 'No chart yet' }}</strong><small>{{ p.email }}</small></td>
+                        <td>
+                          @if (p.joined_today) { <span class="status" data-status="published">Joined today</span> }
+                          @else if (p.active_today) { <span class="status" data-status="ready">Active today</span> }
+                          @else { <span class="status">Quiet</span> }
+                        </td>
+                        <td>{{ p.last_sign_in_at ? (p.last_sign_in_at | date: 'MMM d, HH:mm') : 'Never' }}</td>
+                        <td class="opt">{{ p.created_at | date: 'MMM d' }}</td>
+                        <td class="n">{{ p.charts }}</td>
+                        <td class="n">{{ p.questions }}</td>
+                        <td class="opt">{{ p.last_question_at ? (p.last_question_at | date: 'MMM d, HH:mm') : '—' }}</td>
+                      </tr>
+                    } @empty {
+                      <tr><td colspan="7"><div class="empty-state">No accounts yet.</div></td></tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          }
         }
 
         @case ('activity') {
