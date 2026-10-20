@@ -191,3 +191,32 @@ def test_key_path_defaults_to_the_mac_location(tmp_path, monkeypatch):
     with pytest.raises(play_upload.PlayError) as exc:
         play_upload.load_key()
     assert ".config/astrospace/play-publisher.json" in str(exc.value)
+
+
+@needs_openssl
+def test_version_code_releases_an_uploaded_bundle_without_uploading(key_file, monkeypatch, capsys):
+    fake = FakePlay(track_codes=("537",))
+    monkeypatch.setattr(play_upload, "_request", fake)
+    assert play_upload.main(["--version-code", "550", "--track", "alpha", "--key", str(key_file)]) == 0
+    assert fake.methods() == [
+        ("POST", ""), ("GET", "/e1/tracks/alpha"), ("PUT", "/e1/tracks/alpha"), ("POST", "/e1:commit"),
+    ]
+    assert not any("/bundles" in u for _, u, _ in fake.calls)
+    put_body = json.loads(next(b for m, _, b in fake.calls if m == "PUT"))
+    assert put_body["releases"][0]["versionCodes"] == ["550"]
+    assert "versionCode 550 is live on the alpha track" in capsys.readouterr().out
+
+
+@needs_openssl
+def test_version_code_not_above_the_track_discards_the_edit(key_file, monkeypatch, capsys):
+    fake = FakePlay(track_codes=("550",))
+    monkeypatch.setattr(play_upload, "_request", fake)
+    assert play_upload.main(["--version-code", "550", "--key", str(key_file)]) == 1
+    assert fake.methods()[-1] == ("DELETE", "/e1")
+    assert "not above 550" in capsys.readouterr().err
+
+
+def test_version_code_and_aab_together_are_refused(aab, monkeypatch):
+    monkeypatch.setattr(play_upload, "_request", FakePlay())
+    with pytest.raises(SystemExit):
+        play_upload.main([str(aab), "--version-code", "550"])
