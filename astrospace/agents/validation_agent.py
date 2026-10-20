@@ -31,6 +31,7 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 from .base import BaseAstroAgent, compact_json
+from .style import PLAIN_INDIAN_ENGLISH
 
 # Candidate keys the agent may NOT commit to. "skip" is the reader's decline
 # and "neither" is a null result — both are legitimate ANSWERS, and neither is
@@ -113,7 +114,7 @@ Hard rules:
   happened to them — that is the entire reason you are asking.
 - Never ask about death, illness, or a legal or financial verdict, about the reader or about
   anyone in their family, in any phrasing.
-- No preamble, no reassurance, no reading. One claim, one question, the options."""
+- No preamble, no reassurance, no reading. One claim, one question, the options.""" + PLAIN_INDIAN_ENGLISH
 
 
 class ValidationAgent(BaseAstroAgent):
