@@ -39,6 +39,13 @@ export class PlanGateService {
     return snapshot.entitlements[key] === true;
   }
 
+  /** A numeric plan limit (e.g. how many days ahead Muhurta searches), or null when none applies. */
+  limit(key: string): number | null {
+    const snapshot = this.entitlements.current();
+    const value = snapshot?.entitlements[key];
+    return snapshot?.quotas_enforced && typeof value === 'number' ? value : null;
+  }
+
   /**
    * Whether this reader may open a compatibility report for `partnerId` this
    * month. Free counts distinct people per calendar month on the device;

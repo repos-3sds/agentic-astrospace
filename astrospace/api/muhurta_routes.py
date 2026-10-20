@@ -23,12 +23,14 @@ from ..core.vedic.constants import NAKSHATRAS
 from ..core.vedic.nakshatra import nakshatra_of
 from ..core.vedic.positions import sign_index
 from ..db import crud, get_db
-from ..entitlements import require_plan
+from ..entitlements import require_plan, resolve_entitlements
 from .auth import CurrentUser
 from .timing_place import resolve_timing_place
 from .vedic_routes import _chart_from_kundli
 
 router = APIRouter(prefix="/api/v1/muhurta", tags=["muhurta"])
+
+MUHURTA_HORIZON = "Your plan searches the next {days} days. Pick dates inside them, or see plans for more."
 
 
 def _parse_date(value: str | None, field: str, default: date_cls) -> date_cls:
@@ -73,6 +75,16 @@ def find_muhurta(
     today = datetime.now(ZoneInfo(place.today_tz)).date()
     start = _parse_date(date_from, "date_from", today)
     end = _parse_date(date_to, "date_to", start + timedelta(days=14))
+    # A plan with a horizon (testers: two weeks) searches up to it, not past.
+    snapshot = resolve_entitlements(db, user.id)
+    horizon = snapshot.entitlements.get("muhurta.days_ahead")
+    capped_to = None
+    if snapshot.quotas_enforced and isinstance(horizon, int):
+        last = today + timedelta(days=horizon - 1)
+        if start > last:
+            raise HTTPException(status_code=400, detail=MUHURTA_HORIZON.format(days=horizon))
+        if end > last:
+            end, capped_to = last, last.isoformat()
 
     chart = _chart_from_kundli(kundli, *crud.chart_convention(db, user.id))
     moon_lon = chart.positions["Moon"]["lon"]
@@ -92,6 +104,8 @@ def find_muhurta(
             limit=limit,
         )
         payload["place"] = place.as_payload()
+        if capped_to:
+            payload["capped_to"] = capped_to
         return payload
     except muhurta.ExcludedGoalError as e:
         # Not a failure — the product declines to time these, by design.

@@ -57,14 +57,14 @@
 
   <p class="eyebrow">WHEN</p>
   <div class="ranges" role="radiogroup" asSelectHaptic aria-label="When">
-    @for (r of ranges; track r.id) {
+    @for (r of ranges(); track r.id) {
       <button
         class="range"
         type="button"
         role="radio"
-        [class.is-on]="r.id === range()"
-        [attr.aria-checked]="r.id === range()"
-        (click)="range.set(r.id)"
+        [class.is-on]="r.id === range() || (r.id === 'fortnight' && range() === 'month')"
+        [attr.aria-checked]="r.id === range() || (r.id === 'fortnight' && range() === 'month')"
+        (click)="range.set(r.id === 'fortnight' ? 'month' : r.id)"
       >{{ r.label }}</button>
     }
   </div>
@@ -76,6 +76,7 @@
         <input
           type="date"
           [value]="customFrom()"
+          [attr.max]="lastDate()"
           (input)="setCustomFrom($any($event.target).value)"
         />
       </label>
@@ -85,10 +86,14 @@
           type="date"
           [value]="customTo()"
           [min]="customFrom()"
+          [attr.max]="lastDate()"
           (input)="setCustomTo($any($event.target).value)"
         />
       </label>
     </section>
+    @if (horizon(); as days) {
+      <p class="horizon">Your plan searches the next {{ days }} days. Plus looks as far ahead as you like.</p>
+    }
   }
 
   <!--

@@ -27,7 +27,7 @@ from typing import Literal
 AccessTier = Literal["free", "plus", "pro"]
 CapabilityKind = Literal["flag", "limit"]
 
-CATALOG_REVISION = 5
+CATALOG_REVISION = 6
 
 
 @dataclass(frozen=True)
@@ -102,6 +102,8 @@ _CAPABILITIES = (
     # Only counts once Readings are open to a plan without readings.full
     # limits of its own, i.e. Free during the tester phase (below).
     _limit("readings.period", "Period readings written per calendar month", free=0, plus=None, pro=None),
+    # How far ahead Muhurta may search, in days; None is no cap.
+    _limit("muhurta.days_ahead", "How many days ahead Muhurta searches", free=None, plus=None, pro=None),
     _limit("compatibility.checks.period", "People checked for compatibility per calendar month", free=1, plus=None, pro=None),
     _unapproved_limit("compatibility.saved.max", "Maximum saved compatibility comparisons"),
 )
@@ -119,11 +121,20 @@ def quotas_enforced() -> bool:
     return os.getenv("ASTROSPACE_QUOTAS_ENFORCED", "").lower() in {"1", "true", "yes"}
 
 
-# Tester phase (Hawk, 2026-10-20): Free readers get everything Plus has,
-# not Practitioner, except Ask and Readings, which stay a teaser: 3 answers
-# and 3 readings a month (the welcome question comes on top, once). On with ASTROSPACE_TESTERS_GET_PLUS while the app is in closed
-# testing; off, Free is the Free plan above.
-TESTER_TURNS = MappingProxyType({"ask.answers.period": 3, "readings.period": 3})
+# Tester phase (Hawk, 2026-10-20): Free readers get Plus, not Practitioner,
+# with Ask and Readings as a teaser (3 answers and 3 readings a month; the
+# welcome question comes on top, once) and Muhurta searching the next two
+# weeks only. Remedies, Doshas, Dashas and transits stay as on Free, and
+# Compatibility is one person a month (with the full report). On with
+# ASTROSPACE_TESTERS_GET_PLUS while the app is in closed testing; off, Free
+# is the Free plan above.
+TESTER_TURNS = MappingProxyType({
+    "ask.answers.period": 3,
+    "readings.period": 3,
+    "muhurta.days_ahead": 14,
+})
+TESTER_AS_FREE = ("remedies.full", "doshas.detail", "dashas.full", "transits.full",
+                  "compatibility.checks.period")
 
 
 def testers_get_plus() -> bool:
@@ -135,6 +146,7 @@ def free_values() -> dict:
     if not testers_get_plus():
         return {key: definition.value_for("free") for key, definition in capability_registry.items()}
     values = {key: definition.value_for("plus") for key, definition in capability_registry.items()}
+    values.update({key: capability_registry[key].value_for("free") for key in TESTER_AS_FREE})
     values.update(TESTER_TURNS)
     return values
 
