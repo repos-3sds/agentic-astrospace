@@ -137,9 +137,13 @@ export class MobileShellComponent {
    * reading; not over the verse's own screen or over another sheet.
    */
   private async offerDailyVerse(): Promise<void> {
+    // Every open moves the verse on to today's date, so the Today card never
+    // keeps yesterday's on a phone left open overnight. Cheap: the cache
+    // answers unless it is short or holds another rotation.
+    const loaded = this.subhashita.load();
     if (this.widgets.enabled) {
       // The verse widget holds two weeks ahead; each open tops it up.
-      void this.subhashita.load().then((verse) => {
+      void loaded.then((verse) => {
         if (verse) this.widgets.publishSubhashita(this.subhashita.upcoming());
       }).catch(() => undefined);
     }
@@ -148,7 +152,7 @@ export class MobileShellComponent {
       this.subhashita.markSeen();
       return;
     }
-    const verse = await this.subhashita.load();
+    const verse = await loaded;
     // A push or widget tap lands its route a moment after a cold start; give
     // it that moment, and don't cover where the reader asked to go (D8).
     await new Promise((resolve) => setTimeout(resolve, VERSE_SHEET_SETTLE_MS));

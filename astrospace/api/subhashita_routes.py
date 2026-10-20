@@ -3,6 +3,9 @@
 Thin wrapper over :mod:`astrospace.core.subhashita`. Open without sign-in:
 the corpus is static and a lookup costs nothing. A signed-in reader gets
 their own rotation; a missing or bad token gets the shared one, not a 401.
+Each response says whose rotation it is (``reader``: the account id, or null
+for the shared one), so the app files its cache under the account the server
+actually used rather than the one it hoped for.
 
 The reader's own calendar date decides the verse, so the app sends it.
 Without one, India's date is used (most readers), not the server's UTC date,
@@ -44,7 +47,7 @@ def reader_id(authorization: Annotated[str | None, Header(alias="Authorization")
 @router.get("/today")
 def today(day: date | None = Query(None, alias="date"),
           reader: str | None = Depends(reader_id)) -> dict:
-    return {**subhashita.for_day(_day(day), reader), "title": subhashita.TITLE}
+    return {**subhashita.for_day(_day(day), reader), "title": subhashita.TITLE, "reader": reader}
 
 
 @router.get("")
@@ -57,5 +60,6 @@ def upcoming(
     first = _day(start)
     return {
         "title": subhashita.TITLE,
+        "reader": reader,
         "items": [subhashita.for_day(first + timedelta(days=n), reader) for n in range(days)],
     }

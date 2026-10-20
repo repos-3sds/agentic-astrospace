@@ -17,7 +17,10 @@ export interface Subhashita {
 export const SUBHASHITA_TITLE = 'Today’s Subhashita';
 
 const CACHE_KEY = 'astrospace.subhashita.days';
-const CACHE_OWNER_KEY = 'astrospace.subhashita.daysFor';
+// Renamed from `daysFor` on 2026-10-20: caches filed under that key by build
+// 550 may hold the shared rotation under the reader's name, so they are
+// fetched again once.
+const CACHE_OWNER_KEY = 'astrospace.subhashita.daysFrom';
 const SEEN_KEY = 'astrospace.subhashita.seenOn';
 const SHEET_OFF_KEY = 'astrospace.subhashita.sheetOff';
 /** Fetched ahead, so the verse (and the home-screen widget) work offline for two weeks. */
@@ -63,11 +66,15 @@ export class SubhashitaService {
       return this.today();
     }
     try {
-      const response = await this.api.get<{ items: Subhashita[] }>(
+      const response = await this.api.get<{ items: Subhashita[]; reader?: string | null }>(
         `/subhashita?start=${today}&days=${DAYS_AHEAD}`,
       );
       this.days.set(response.items);
-      writeCache(response.items, reader);
+      // Filed under the rotation the server actually used. A run fetched
+      // before the server knew per-account verses, or with a token it
+      // rejected, is the shared one; filed under the reader it passed for
+      // theirs and kept them on it for a week (2026-10-20, Hawk saw it).
+      writeCache(response.items, response.reader ?? '');
       this.error.set(null);
     } catch (err) {
       this.error.set(err instanceof Error ? err.message : String(err));
