@@ -54,6 +54,8 @@ describe('authGuard', () => {
   it('sends any other signed-in web user to the landing page', async () => {
     admin.me.and.rejectWith(new Error('403'));
     expect(await run()).toBe(landingTree);
+    // Flagged, so the landing page says why instead of looking like a dead button.
+    expect(router.createUrlTree).toHaveBeenCalledWith(['/'], { queryParams: { owner_only: '1' } });
   });
 
   it('keeps development builds open', async () => {
