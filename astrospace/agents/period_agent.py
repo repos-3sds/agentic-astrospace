@@ -13,6 +13,7 @@ it produced. Both are fixed here; see `reading_boundary()` and the route.
 from datetime import datetime, timedelta, timezone
 
 from .base import BaseAstroAgent
+from .style import PLAIN_INDIAN_ENGLISH
 from .safety import dosha_overclaim_kind, prohibited_verdict
 from ..core.vedic.chart import VedicChart
 from ..core.vedic.nakshatra import nakshatra_of
@@ -49,7 +50,7 @@ Boundaries — non-negotiable:
 
 Be specific, personal and practical. Use plain language a non-expert can follow, and
 structure the reading with markdown section headers.
-"""
+""" + PLAIN_INDIAN_ENGLISH
 
 READING_GUARD_RETRY_NOTE = (
     "\n\nIMPORTANT: your previous draft crossed a boundary ({kind}). Rewrite the "
