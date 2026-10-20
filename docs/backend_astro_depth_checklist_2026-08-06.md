@@ -1705,6 +1705,38 @@ Every festival and vrat kind now carries short to-dos and prayer names
 - [ ] **Telugu and Hindi copy.** The guidance is English only; the sheet shows
   it in every language. *Hook:* add per-language lists beside each entry.
 
+## Deferred backlog — festival day rules (2026-10-20)
+
+Vijayadashami 2026 showed on the 21st while India kept the 20th: the engine
+took the tithi at sunrise for festivals fixed by a daytime window. Fixed with
+`madhyahna` / `aparahna` window rules (Vijayadashami with the Shravana
+tie-break, Ganesh Chaturthi, Rama Navami), pradosh for Dhanteras and Holika
+Dahan, Holi as the day after Holika Dahan, and one date per vriddhi run.
+Anchored against published New Delhi dates 2022-2026 in
+`tests/test_festivals.py::TestKalaRules`. Left out on purpose:
+
+- [ ] **Holika Dahan's Bhadra and second-day rules.** When Bhadra covers the
+  first evening, or Purnima runs three prahars into the second day without
+  reaching dusk, some panchangams move the fire (2026: 2 vs 3 March). *Why not
+  built:* needs karana (Bhadra = Vishti) timing in the day scan and a choice
+  of authority. *Hook:* `holika_dahan` rule in `core/vedic/festivals.py`.
+- [ ] **Janmashtami by nishita and Rohini.** Still the Ashtami at sunrise;
+  correct for 2024-2026 but the Smarta date differs in years like 2023 (6 vs 7
+  Sep). *Why not built:* Smarta and Vaishnava (ISKCON) dates genuinely
+  differ; the note says so. *Unblocks when:* we pick one or show both.
+  *Hook:* `krishna_janmashtami`; a `nishita` window like `_KALA_WINDOWS`.
+- [ ] **Pradosh as a window, not the sunset instant.** Diwali and Dhanteras
+  test the tithi at sunset only; the classical pradosh is about 2 h 24 min
+  after sunset, with "covers more of pradosh" tie-breaks when Amavasya holds
+  at dusk on both days (2024, 2025). The first day is kept, which matched
+  most of India both years. *Hook:* `_day_facts` / `_KALA_WINDOWS`.
+- [ ] **Choti Diwali when Chaturdashi and Amavasya share a day** (2026: 8
+  Nov). Naraka Chaturdashi follows Chaturdashi at dawn, as the south keeps it;
+  North Indian calendars often list Choti Diwali on the day before. *Hook:*
+  `naraka_chaturdashi`.
+- [ ] **Durga Ashtami and Maha Navami** still use sunrise; Bengal reckons
+  Sandhi Puja and Navami by the tithi's span. Not seen wrong for 2026.
+
 ## Deferred backlog — Muhurta (2026-10-20)
 
 From the Muhurta audit (batches A–E built; these were left out on purpose).
