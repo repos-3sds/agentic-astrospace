@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
@@ -16,6 +16,7 @@ import {
   KnowledgeChunk,
   KnowledgeSource,
   RetrievalScope,
+  TesterPulse,
   TaxonomyDomain,
 } from '../../core/admin.service';
 import { AuthService } from '../../core/auth.service';
@@ -24,6 +25,7 @@ import { AdminAgentPromptsComponent } from './admin-agent-prompts.component';
 
 type ConsoleView =
   | 'overview'
+  | 'testers'
   | 'users'
   | 'activity'
   | 'sources'
@@ -35,6 +37,7 @@ type ConsoleView =
 
 const NAV: Array<{ id: ConsoleView; label: string; icon: string }> = [
   { id: 'overview', label: 'Overview', icon: 'layout-dashboard' },
+  { id: 'testers', label: 'Tester pulse', icon: 'radar' },
   { id: 'users', label: 'Users', icon: 'users' },
   { id: 'activity', label: 'Product activity', icon: 'activity' },
   { id: 'sources', label: 'Knowledge sources', icon: 'library' },
@@ -45,7 +48,7 @@ const NAV: Array<{ id: ConsoleView; label: string; icon: string }> = [
   { id: 'system', label: 'System health', icon: 'server-cog' },
 ];
 
-const ADMIN_ONLY_VIEWS = new Set<ConsoleView>(['prompts', 'users', 'activity', 'audit']);
+const ADMIN_ONLY_VIEWS = new Set<ConsoleView>(['testers', 'prompts', 'users', 'activity', 'audit']);
 
 @Component({
   selector: 'app-admin-console',
@@ -60,7 +63,7 @@ const ADMIN_ONLY_VIEWS = new Set<ConsoleView>(['prompts', 'users', 'activity', '
   templateUrl: './admin-console.component.html',
   styleUrl: './admin-console.component.scss',
 })
-export class AdminConsoleComponent implements OnInit {
+export class AdminConsoleComponent implements OnInit, OnDestroy {
   private admin = inject(AdminService);
   private auth = inject(AuthService);
   private messages = inject(MessageService);
@@ -82,6 +85,11 @@ export class AdminConsoleComponent implements OnInit {
   protected readonly selectedUser = signal<AdminUserRow | null>(null);
   protected readonly userDetail = signal<Record<string, any> | null>(null);
   protected readonly activity = signal<Record<string, any> | null>(null);
+  protected readonly testers = signal<TesterPulse | null>(null);
+  protected readonly testersMax = computed(() =>
+    Math.max(1, ...(this.testers()?.daily ?? []).map((d) => Math.max(d.new_accounts, d.questions))),
+  );
+  private testersTimer: ReturnType<typeof setInterval> | null = null;
   protected readonly system = signal<Record<string, any> | null>(null);
   protected readonly chunks = signal<KnowledgeChunk[]>([]);
   protected readonly audit = signal<AuditEntry[]>([]);
@@ -131,9 +139,19 @@ export class AdminConsoleComponent implements OnInit {
     await this.loadInitial();
   }
 
+  ngOnDestroy(): void {
+    this.stopTestersRefresh();
+  }
+
   protected async switchView(view: ConsoleView): Promise<void> {
     this.view.set(view);
     this.selectedChunk.set(null);
+    this.stopTestersRefresh();
+    if (view === 'testers') {
+      await this.loadTesters();
+      // Live while open: a tester signing in shows up within a minute.
+      this.testersTimer = setInterval(() => void this.refreshTesters(), 60_000);
+    }
     if (view === 'overview') await this.loadOverview();
     if (view === 'users') await this.loadUsers();
     if (view === 'activity') await this.loadActivity();
@@ -176,6 +194,24 @@ export class AdminConsoleComponent implements OnInit {
     await this.run(async () =>
       this.users.set(await this.admin.users(this.userQuery.trim())),
     );
+  }
+
+  protected async loadTesters(): Promise<void> {
+    await this.run(async () => this.testers.set(await this.admin.testers()));
+  }
+
+  private async refreshTesters(): Promise<void> {
+    // Quiet background refresh: keep the last good numbers if one call fails.
+    try {
+      this.testers.set(await this.admin.testers());
+    } catch {
+      /* the next tick retries */
+    }
+  }
+
+  private stopTestersRefresh(): void {
+    if (this.testersTimer) clearInterval(this.testersTimer);
+    this.testersTimer = null;
   }
 
   protected async loadActivity(): Promise<void> {

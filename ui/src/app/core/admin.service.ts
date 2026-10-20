@@ -11,6 +11,34 @@ export type RetrievalScope =
   | 'devotional'
   | 'out_of_domain';
 
+export interface TesterPerson {
+  id: string;
+  name: string | null;
+  email: string | null;
+  created_at: string | null;
+  last_sign_in_at: string | null;
+  joined_today: boolean;
+  active_today: boolean;
+  charts: number;
+  questions: number;
+  last_question_at: string | null;
+}
+
+export interface TesterPulse {
+  as_of: string;
+  summary: {
+    accounts: number;
+    joined_today: number;
+    active_today: number;
+    asked_ever: number;
+    first_question_today: number;
+    questions_today: number;
+    never_asked: number;
+  };
+  daily: Array<{ day: string; new_accounts: number; questions: number }>;
+  people: TesterPerson[];
+}
+
 export interface AdminIdentity {
   id: string;
   email: string;
@@ -186,6 +214,10 @@ export class AdminService {
     reason: string,
   ): Promise<Record<string, any>> {
     return this.api.put(`/admin/access/${id}`, { role, active, reason });
+  }
+
+  testers(): Promise<TesterPulse> {
+    return this.api.get('/admin/testers');
   }
 
   activity(): Promise<Record<string, any>> {

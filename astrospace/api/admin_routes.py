@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from ..admin.client import AdminStorageError, get_admin_client
 from ..admin.ingestion_jobs import run_ingestion_job
 from ..admin.security import AdminUser, FullAdminUser
+from ..admin.tester_pulse import tester_pulse
 from ..agents.domain_agent import _BASE_SYSTEM
 from ..agents.registry import AGENT_REGISTRY
 from ..context.source_retriever import SupabaseSourceRetriever
@@ -434,6 +435,30 @@ def product_activity(user: FullAdminUser):
             "remedies": remedies[:30],
             "muhurta_requests": muhurta[:30],
         }
+
+    return _safe(load)
+
+
+@router.get("/testers")
+def tester_activity(user: FullAdminUser):
+    """Sign-ins and questions per reader, for the friends-and-family test.
+
+    Full administrators only: it lists every account's sign-in address.
+    Counts and times only; no question text leaves the database.
+    """
+    client = _client()
+
+    def load():
+        return tester_pulse(
+            client.auth_users(),
+            client.rows("kundlis", params={
+                "select": "id,user_id,kind,relation,name,archived_at",
+            }),
+            client.rows("ask_threads", params={"select": "id,user_id"}),
+            client.rows("ask_messages", params={
+                "select": "thread_id,created_at", "role": "eq.user",
+            }),
+        )
 
     return _safe(load)
 
