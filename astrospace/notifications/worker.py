@@ -23,6 +23,7 @@ from .daily_subhashita import schedule_daily_subhashita
 from .email import EmailTransport, email_transport_from_env
 from .email_jobs import deliver_email_job, is_email_job, schedule_emails
 from .morning_brief import schedule_morning_briefs
+from .owner_alerts import deliver_owner_job, is_owner_job, schedule_owner_alerts
 from .push import PushMessage, PushTransport, transports_from_env
 from .window_alerts import schedule_window_alerts
 
@@ -41,6 +42,8 @@ def deliver_job(db: Session, job: NotificationJob,
     goes to the reader's address instead (email_jobs.deliver_email_job)."""
     if is_email_job(job):
         return deliver_email_job(db, job, email or email_transport_from_env())
+    if is_owner_job(job):
+        return deliver_owner_job(db, job, email or email_transport_from_env())
     tokens = cm.list_active_push_tokens(db, job.user_id)
     if not tokens:
         cm.cancel_notification(db, job.id, reason="no active push token")
@@ -154,11 +157,13 @@ def run_once(db: Session, transports: dict[str, PushTransport] | None = None,
     verses = _step(db, "subhashita", lambda: schedule_daily_subhashita(db), [])
     # After the daily briefs, so the daily email has its brief to send.
     emails = _step(db, "emails", lambda: schedule_emails(db), {})
+    owner = _step(db, "owner alerts", lambda: schedule_owner_alerts(db), {})
     delivered = _step(db, "delivery", lambda: deliver_due(db, transports, email=email),
                       {"sent": 0, "failed": 0, "delivery_failed": True})
     summary = {"reaped": reaped, "daily_briefs": briefs, "scheduled": len(scheduled),
                "window_alerts": len(windows),
-               "subhashita": len(verses), "emails": emails, **delivered}
+               "subhashita": len(verses), "emails": emails,
+               "owner_alerts": owner, **delivered}
     log.info("notifications: %s", summary)
     return summary
 
