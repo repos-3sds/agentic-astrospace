@@ -937,9 +937,11 @@ test('mobile remedies and muhurta use available backend-backed inputs honestly',
   await page.clock.setFixedTime(new Date('2026-07-28T09:00:00+05:30'));
   await page.goto('/m/muhurta');
   await expect(page.getByText(/Using your current location/)).toHaveCount(0);
+  // Goals sit under group tabs; a contract is a Work plan.
+  await page.getByRole('tab', { name: 'Work' }).click();
   await page.getByRole('radio', { name: /Sign a contract/ }).click();
   await page.getByRole('radio', { name: 'This week' }).click();
-  await page.getByRole('button', { name: 'Find windows' }).click();
+  await page.getByRole('button', { name: 'Find times' }).click();
   await expect(page).toHaveURL(/\/m\/muhurta\/results\?goal=sign_contract&range=week&date_from=2026-07-28&date_to=2026-08-03$/);
   await expect(page.getByText('Wednesday, July 29')).toBeVisible();
   await expect(page.getByText('12:05 – 12:55')).toBeVisible();
