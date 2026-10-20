@@ -66,6 +66,7 @@ interface ChartRegion {
  */
 const HOUSE_SIZE = 12.5;
 const SIGN_SIZE = 14;
+const EASTERN_SIGN_SIZE = 13.5;
 const PLANET_MAX = 15.5;
 const PLANET_MIN = 10;
 /** Only for a stellium in a small house; smaller type beats text across the lines. */
@@ -129,9 +130,16 @@ const SOUTH_SIGN_POINTS: Record<string, { col: number; row: number }> = {
  * cells split by diagonals through the outer corners (TL/BR on x=y-style
  * lines, TR/BL on x+y=400-style lines).
  *
+ * Zones are keyed by the sign that sits there in the classic Bengali/Odia
+ * chart (Aries in the top middle box, the rest anticlockwise). Siddha draws
+ * the Lagna-centred variant Hawk chose on 2026-10-20: house 1 takes the top
+ * middle box and houses 2-12 follow anticlockwise, so house h sits in the
+ * zone of the h-th sign and each box says which sign it holds. (Before that
+ * the app had Taurus on top running clockwise, which is no tradition's chart.)
+ *
  * Per zone: `poly` is the zone's outline and `anchor` where its planets sit
- * when there is room; (labelX, labelY) pins the house number into the zone's
- * outer pocket, inside the viewBox so nothing clips.
+ * when there is room; (labelX, labelY) pins the house number and sign number into
+ * the zone's outer pocket, inside the viewBox so nothing clips.
  */
 const EASTERN_ZONES: Record<string, {
   poly: Point[];
@@ -140,26 +148,26 @@ const EASTERN_ZONES: Record<string, {
   labelY: number;
   labelAlign: 'start' | 'middle' | 'end';
 }> = {
-  // Top-left corner: Pisces upper-right triangle, Aries lower-left.
-  Pisces: { poly: [[0, 0], [A, 0], [A, A]], anchor: [96, 56], labelX: 126, labelY: 16, labelAlign: 'end' },
-  Aries: { poly: [[0, 0], [A, A], [0, A]], anchor: [38, 82], labelX: 8, labelY: 104, labelAlign: 'start' },
   // Top edge.
-  Taurus: { poly: [[A, 0], [B, 0], [B, A], [A, A]], anchor: [200, 76], labelX: 140, labelY: 16, labelAlign: 'start' },
-  // Top-right corner: Gemini upper-left triangle, Cancer lower-right.
-  Gemini: { poly: [[B, 0], [400, 0], [B, A]], anchor: [304, 56], labelX: 274, labelY: 16, labelAlign: 'start' },
-  Cancer: { poly: [[400, 0], [400, A], [B, A]], anchor: [362, 82], labelX: 392, labelY: 104, labelAlign: 'end' },
-  // Right edge.
-  Leo: { poly: [[B, A], [400, A], [400, B], [B, B]], anchor: [324, 212], labelX: 392, labelY: 149, labelAlign: 'end' },
-  // Bottom-right corner: Virgo upper-right triangle, Libra lower-left.
-  Virgo: { poly: [[B, B], [400, B], [400, 400]], anchor: [362, 318], labelX: 392, labelY: 282, labelAlign: 'end' },
-  Libra: { poly: [[B, B], [400, 400], [B, 400]], anchor: [304, 344], labelX: 274, labelY: 366, labelAlign: 'start' },
-  // Bottom edge.
-  Scorpio: { poly: [[A, B], [B, B], [B, 400], [A, 400]], anchor: [212, 318], labelX: 140, labelY: 358, labelAlign: 'start' },
-  // Bottom-left corner: Sagittarius lower-right triangle, Capricorn upper-left.
-  Sagittarius: { poly: [[A, B], [A, 400], [0, 400]], anchor: [96, 344], labelX: 126, labelY: 366, labelAlign: 'end' },
-  Capricorn: { poly: [[0, B], [A, B], [0, 400]], anchor: [38, 318], labelX: 8, labelY: 282, labelAlign: 'start' },
+  Aries: { poly: [[A, 0], [B, 0], [B, A], [A, A]], anchor: [200, 76], labelX: 140, labelY: 16, labelAlign: 'start' },
+  // Top-left corner: Taurus upper-right triangle, Gemini lower-left.
+  Taurus: { poly: [[0, 0], [A, 0], [A, A]], anchor: [96, 56], labelX: 126, labelY: 16, labelAlign: 'end' },
+  Gemini: { poly: [[0, 0], [A, A], [0, A]], anchor: [38, 82], labelX: 8, labelY: 104, labelAlign: 'start' },
   // Left edge.
-  Aquarius: { poly: [[0, A], [A, A], [A, B], [0, B]], anchor: [76, 212], labelX: 8, labelY: 149, labelAlign: 'start' },
+  Cancer: { poly: [[0, A], [A, A], [A, B], [0, B]], anchor: [76, 212], labelX: 8, labelY: 149, labelAlign: 'start' },
+  // Bottom-left corner: Leo upper-left triangle, Virgo lower-right.
+  Leo: { poly: [[0, B], [A, B], [0, 400]], anchor: [38, 318], labelX: 8, labelY: 282, labelAlign: 'start' },
+  Virgo: { poly: [[A, B], [A, 400], [0, 400]], anchor: [96, 344], labelX: 126, labelY: 366, labelAlign: 'end' },
+  // Bottom edge.
+  Libra: { poly: [[A, B], [B, B], [B, 400], [A, 400]], anchor: [212, 318], labelX: 140, labelY: 358, labelAlign: 'start' },
+  // Bottom-right corner: Scorpio lower-left triangle, Sagittarius upper-right.
+  Scorpio: { poly: [[B, B], [400, 400], [B, 400]], anchor: [304, 344], labelX: 274, labelY: 366, labelAlign: 'start' },
+  Sagittarius: { poly: [[B, B], [400, B], [400, 400]], anchor: [362, 318], labelX: 392, labelY: 282, labelAlign: 'end' },
+  // Right edge.
+  Capricorn: { poly: [[B, A], [400, A], [400, B], [B, B]], anchor: [324, 212], labelX: 392, labelY: 149, labelAlign: 'end' },
+  // Top-right corner: Aquarius lower-right triangle, Pisces upper-left.
+  Aquarius: { poly: [[400, 0], [400, A], [B, A]], anchor: [362, 82], labelX: 392, labelY: 104, labelAlign: 'end' },
+  Pisces: { poly: [[B, 0], [400, 0], [B, A]], anchor: [304, 56], labelX: 274, labelY: 16, labelAlign: 'start' },
 };
 
 /**
@@ -320,15 +328,24 @@ export class KundliChartComponent {
     const options = this.options(zoom);
     const houseSize = HOUSE_SIZE * zoom;
     return SIGN_ORDER.map((sign) => {
-      const zone = EASTERN_ZONES[sign];
+      const house = this.houseForSign(lagnaIndex, sign);
+      const zone = EASTERN_ZONES[SIGN_ORDER[(house || 1) - 1]];
       const entries = sign === chart.lagna.sign
         ? [this.lagnaEntry('As'), ...(bySign.get(sign) ?? [])]
         : (bySign.get(sign) ?? []);
-      const houseText = `H${this.houseForSign(lagnaIndex, sign)}`;
-      // Eastern signs never move, so only the house number is written.
-      // Keep it inside the frame however large the text is.
-      const houseY = Math.min(Math.max(zone.labelY, 4 + houseSize * 0.6), 396 - houseSize * 0.6);
-      const exclude = [labelBox(zone.labelX, houseY, measure(houseText, houseSize, 'label'), houseSize, zone.labelAlign)];
+      const houseText = `H${house}`;
+      // The signs move with the Lagna here, so each box names its sign by
+      // number under the house number, as the North chart does.
+      const signText = String(SIGN_ORDER.indexOf(sign) + 1);
+      const signSize = EASTERN_SIGN_SIZE * zoom;
+      const spacing = Math.max(houseSize, signSize) * 1.15;
+      // Keep the two-line label inside the frame however large the text is.
+      const houseY = Math.min(Math.max(zone.labelY, 4 + houseSize * 0.6), 396 - spacing - signSize * 0.6);
+      const signY = houseY + spacing;
+      const exclude = [
+        labelBox(zone.labelX, houseY, measure(houseText, houseSize, 'label'), houseSize, zone.labelAlign),
+        labelBox(zone.labelX, signY, measure(signText, signSize, 'sign'), signSize, zone.labelAlign),
+      ];
       const fit = fitRegion({
         poly: zone.poly,
         anchor: zone.anchor,
@@ -339,6 +356,7 @@ export class KundliChartComponent {
         key: `e${sign}`,
         labels: [
           { text: houseText, cls: 'house-number', x: zone.labelX, y: houseY, size: HOUSE_SIZE, anchor: zone.labelAlign, fill: null },
+          { text: signText, cls: 'sign-label', x: zone.labelX, y: signY, size: EASTERN_SIGN_SIZE, anchor: zone.labelAlign, fill: signMeta(sign).color },
         ],
         entries: this.placeEntries(entries, fit, zoom),
       };
