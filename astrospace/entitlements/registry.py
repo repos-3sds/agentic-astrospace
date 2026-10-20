@@ -120,10 +120,10 @@ def quotas_enforced() -> bool:
 
 
 # Tester phase (Hawk, 2026-10-20): Free readers get everything Plus has,
-# not Practitioner, except Ask and Readings, which stay a teaser of a few
-# turns. On with ASTROSPACE_TESTERS_GET_PLUS while the app is in closed
+# not Practitioner, except Ask and Readings, which stay a teaser: 3 answers
+# and 3 readings a month (the welcome question comes on top, once). On with ASTROSPACE_TESTERS_GET_PLUS while the app is in closed
 # testing; off, Free is the Free plan above.
-TESTER_TURNS = MappingProxyType({"ask.answers.period": 0, "readings.period": 3})
+TESTER_TURNS = MappingProxyType({"ask.answers.period": 3, "readings.period": 3})
 
 
 def testers_get_plus() -> bool:

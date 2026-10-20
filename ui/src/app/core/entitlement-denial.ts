@@ -11,6 +11,8 @@ export interface EntitlementDenial {
   entitlement: string;
   access_tier: AccessTier;
   remaining: number | null;
+  /** The monthly allowance that ran out; absent from older servers. */
+  limit?: number | null;
   resets_at: string | null;
   upgrade_options: AccessTier[];
 }

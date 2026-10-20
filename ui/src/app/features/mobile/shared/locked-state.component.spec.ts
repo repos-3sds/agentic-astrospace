@@ -34,6 +34,15 @@ describe('LockedStateComponent', () => {
     expect(text).toContain('1 November');
   });
 
+  it('tells a tester with a monthly allowance when answers come back', () => {
+    const text = render({
+      code: 'entitlement_limit_reached', entitlement: 'ask.answers.period', access_tier: 'free',
+      remaining: 0, limit: 3, resets_at: '2026-11-01T00:00:00', upgrade_options: ['plus', 'pro'],
+    });
+    expect(text).toContain('You’ve used this month’s answers');
+    expect(text).not.toContain('Your free question is used');
+  });
+
   it('explains the profile limit', () => {
     const text = render({
       code: 'entitlement_limit_reached', entitlement: 'profiles.max', access_tier: 'free',

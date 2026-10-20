@@ -353,7 +353,7 @@ def test_readings_and_muhurta_refuse_free_only_once_locks_are_on(env, monkeypatc
 
 
 def test_testers_get_plus_but_not_practitioner_with_a_teaser_of_ask_and_readings(env, monkeypatch):
-    """Hawk, 2026-10-20: closed testers get Plus, with Ask and Readings kept to a few turns."""
+    """Hawk, 2026-10-20: closed testers get Plus, with 3 questions and 3 readings a month."""
     _, Session = env
     with Session() as db:
         free = resolve_entitlements(db, USER).entitlements
@@ -366,7 +366,7 @@ def test_testers_get_plus_but_not_practitioner_with_a_teaser_of_ask_and_readings
             continue
         assert tester.entitlements[key] == definition.value_for("plus"), key
     assert tester.entitlements["vargas.full"] is False  # Practitioner stays paid
-    assert tester.entitlements["ask.answers.period"] == 0  # the welcome question only
+    assert tester.entitlements["ask.answers.period"] == 3
     assert tester.entitlements["readings.period"] == 3
 
 
@@ -403,6 +403,6 @@ def test_tester_readings_stop_after_three_a_month_once_locks_are_on(env, monkeyp
     assert denied.status_code == 402
     assert denied.json()["entitlement"] == "readings.period"
     assert denied.json()["code"] == "entitlement_limit_reached"
-    assert denied.json()["resets_at"]
+    assert denied.json()["resets_at"] and denied.json()["limit"] == 3
     monkeypatch.delenv("ASTROSPACE_QUOTAS_ENFORCED")
     assert generate().status_code == 503  # counted, never blocking, while locks are off

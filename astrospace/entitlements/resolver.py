@@ -34,6 +34,7 @@ class EntitlementDecision:
             "entitlement": self.entitlement,
             "access_tier": self.access_tier,
             "remaining": self.remaining,
+            "limit": self.value if isinstance(self.value, int) and not isinstance(self.value, bool) else None,
             "resets_at": self.resets_at,
             "upgrade_options": ["plus", "pro"] if self.access_tier == "free" else ["pro"],
         }
