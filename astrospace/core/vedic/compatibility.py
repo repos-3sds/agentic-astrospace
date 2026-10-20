@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from .constants import NAKSHATRAS, NATURAL_RELATIONS, SIGNS, SIGN_LORDS
+from .compatibility_guidance import couple_guidance
 from .doshas import gandanta_dosha, manglik_dosha
 
 VARNA_RANK = {"Shudra": 1, "Vaishya": 2, "Kshatriya": 3, "Brahmin": 4}
@@ -223,7 +224,7 @@ def _varna(chart_a, chart_b) -> dict:
     a = _av(chart_a, "varna")
     b = _av(chart_b, "varna")
     points = 1 if VARNA_RANK.get(a, 0) >= VARNA_RANK.get(b, 0) else 0
-    return _row("Varna", points, 1, f"{a} with {b}, the groom's first (the first person outside marriage matching)")
+    return _row("Varna", points, 1, f"{a} (groom's side) with {b}")
 
 
 def _vashya(chart_a, chart_b) -> dict:
@@ -232,8 +233,7 @@ def _vashya(chart_a, chart_b) -> dict:
     if a not in VASHYA_MATRIX or b not in VASHYA_MATRIX:
         return _row("Vashya", 0, 2, f"{a} with {b}; vashya group unavailable", verified=False)
     points = VASHYA_MATRIX[a][b]
-    note = f"{a} with {b}, the groom's first (the first person outside marriage matching)"
-    return _row("Vashya", points, 2, note, verified=False)
+    return _row("Vashya", points, 2, f"{a} (groom's side) with {b}", verified=False)
 
 
 def _tara(chart_a, chart_b) -> dict:
@@ -385,8 +385,8 @@ def _safety_checks(chart_a, chart_b) -> dict:
             "person2_net_severity": manglik_b["net_severity"],
             "match": manglik_match,
             "note": (
-                "Both non-Manglik" if neither_manglik else
-                "Both Manglik" if both_manglik else
+                "Neither of you is Manglik, so this check does not apply." if neither_manglik else
+                "You are both Manglik. Tradition says the two balance each other, so this is not a concern for the match." if both_manglik else
                 "One of you is Manglik and the other is not. That is a traditional caution, not a verdict, and several classic exceptions can cancel it."
             ),
         },
@@ -503,7 +503,7 @@ def gun_milan(chart_a, chart_b) -> dict:
         "Borderline, inspect deeply" if total >= 18 else
         "Needs careful review"
     )
-    return {
+    result = {
         "system": "Ashta Koota / Gun Milan",
         "total": total,
         "max": max_points,
@@ -529,6 +529,11 @@ def gun_milan(chart_a, chart_b) -> dict:
         # dashakoota_extension()'s own docstring for why they don't mix.
         "dashakoota_extension": dashakoota_extension(chart_a, chart_b),
     }
+    # Plain habits and practices for the couple, read off the rows above
+    # (compatibility_guidance.py). The screen leads with this; the kootas
+    # sit under its "Why this?" fold.
+    result["guidance"] = couple_guidance(result)
+    return result
 
 
 def _compat_profile(chart) -> dict:

@@ -18,77 +18,144 @@
     </div>
     <p class="mcod-pair-names">{{ activeName() }} &amp; {{ partnerName() }}</p>
 
+    <div class="mcod-side" role="radiogroup" aria-label="Are you already married?">
+      <button type="button" role="radio" [attr.aria-checked]="married()" [class.on]="married()" (click)="setMarried(true)">Already married</button>
+      <button type="button" role="radio" [attr.aria-checked]="!married()" [class.on]="!married()" (click)="setMarried(false)">Planning to marry</button>
+    </div>
+
     <section class="mcod-score">
       <p class="eyebrow">GUN MILAN SCORE</p>
       <div><strong>{{ s.total }}</strong><span>/ {{ s.max }}</span></div>
-      <p class="verdict">{{ s.verdict }}</p>
+      @if (!married()) { <p class="verdict">{{ s.verdict }}</p> }
       <p class="mcod-meaning">{{ scoreMeaning(s) }}</p>
     </section>
 
-    <p class="mcod-eyebrow">WHAT THIS MEANS</p>
-    <div class="mcod-note-list">
-      @for (row of strongestRows(); track row.label) {
-        <p class="mcod-note good"><b>{{ row.label }}</b> supports the match. {{ row.note || 'This area returned a stronger score.' }}</p>
+    @if (guidance(); as g) {
+      @if (g.strengths.length) {
+        <p class="mcod-eyebrow">WHAT ALREADY WORKS</p>
+        <ul class="mcod-strengths">
+          @for (item of g.strengths; track item.key) {
+            <li><b>{{ item.area }}.</b> {{ item.line }}</li>
+          }
+        </ul>
       }
-      @for (row of cautionRows(); track row.label) {
-        <p class="mcod-note"><b>{{ row.label }}</b> needs attention. {{ row.note || 'Talk through this area before making conclusions.' }}</p>
-      }
-    </div>
 
-    <p class="mcod-eyebrow">EIGHT KOOTAS BREAKDOWN</p>
-    <div class="mcod-koota-table">
-      @for (row of s.rows; track row.label) {
-        <div class="mcod-koota-row">
-          <span class="mcod-koota-label">{{ row.label }}</span>
-          <span class="mcod-koota-score">{{ row.points }}/{{ row.max }}</span>
-          <span class="mcod-koota-status" [attr.data-status]="rowStatus(row)">
-            {{ rowStatus(row) === 'full' ? '✓' : rowStatus(row) === 'caution' ? 'CAUTION' : 'PARTIAL' }}
-          </span>
-        </div>
+      @if (g.focus_areas.length) {
+        <p class="mcod-eyebrow">{{ married() ? 'WHERE A LITTLE CARE HELPS' : 'WHAT TO TALK ABOUT FIRST' }}</p>
+        @for (item of g.focus_areas; track item.key) {
+          <section class="mcod-care">
+            <h2>{{ item.area }}</h2>
+            <p>{{ item.meaning }}</p>
+            <p class="mcod-care-label">Together</p>
+            <ul>
+              @for (step of item.together; track step) { <li>{{ step }}</li> }
+            </ul>
+            @if (item.practice; as practice) {
+              <div class="mcod-practice">
+                <b>{{ practice.title }}</b>
+                <span>{{ practice.instructions }}</span>
+              </div>
+            }
+            <details class="mcod-why-line">
+              <summary>Why this?</summary>
+              <p>{{ item.why }}</p>
+            </details>
+          </section>
+        }
       }
-    </div>
 
-    <p class="mcod-eyebrow">SOUTH INDIAN CHECKS</p>
-    <p class="mcod-note">{{ dashakootaSummary() }}</p>
-    @if (dashakootaRows().length) {
-      <div class="mcod-koota-table compact">
-        @for (row of dashakootaRows(); track row.label) {
+      <p class="mcod-eyebrow">FOR EACH OF YOU</p>
+      @for (person of g.for_each; track person.name) {
+        <section class="mcod-care">
+          <h2>{{ person.name }}</h2>
+          @if (person.temperament) { <p>{{ person.temperament }}</p> }
+          @if (person.practice; as practice) {
+            <div class="mcod-practice">
+              <b>{{ practice.title }}</b>
+              <span>{{ practice.instructions }}</span>
+            </div>
+          }
+          @if (person.why) {
+            <details class="mcod-why-line">
+              <summary>Why this?</summary>
+              <p>{{ person.why }}</p>
+            </details>
+          }
+        </section>
+      }
+
+      <p class="mcod-note">{{ g.closing_note }}</p>
+    } @else {
+      <p class="mcod-eyebrow">WHAT THIS MEANS</p>
+      <div class="mcod-note-list">
+        @for (row of strongestRows(); track row.label) {
+          <p class="mcod-note good"><b>{{ row.label }}</b> supports the match. {{ row.note || 'This area returned a stronger score.' }}</p>
+        }
+        @for (row of cautionRows(); track row.label) {
+          <p class="mcod-note"><b>{{ row.label }}</b> needs attention. {{ row.note || 'Talk through this area before making conclusions.' }}</p>
+        }
+      </div>
+    }
+
+    <details class="mcod-why" [open]="practitioner() || !guidance()">
+      <summary>Why this? The full astrology behind the score</summary>
+
+      <p class="mcod-eyebrow">EIGHT KOOTAS BREAKDOWN</p>
+      <div class="mcod-koota-table">
+        @for (row of s.rows; track row.label) {
           <div class="mcod-koota-row">
             <span class="mcod-koota-label">{{ row.label }}</span>
             <span class="mcod-koota-score">{{ row.points }}/{{ row.max }}</span>
-            <span class="mcod-koota-status" [attr.data-status]="rowStatus(row)">
-              {{ rowStatus(row) === 'full' ? '✓' : rowStatus(row) === 'caution' ? 'CAUTION' : 'PARTIAL' }}
-            </span>
+            <span class="mcod-koota-status" [attr.data-status]="rowStatus(row)">{{ rowStatusLabel(row) }}</span>
           </div>
         }
       </div>
-    }
 
-    @if (cancellations().length) {
-      <p class="mcod-eyebrow">SPECIAL CANCELLATIONS</p>
-      <div class="mcod-note-list">
-        @for (row of cancellations(); track row.label) {
-          <p class="mcod-note good"><b>{{ row.label }}</b> — {{ row.note }}</p>
-        }
-      </div>
-    }
+      <p class="mcod-eyebrow">SOUTH INDIAN CHECKS</p>
+      <p class="mcod-note">{{ dashakootaSummary() }}</p>
+      @if (dashakootaRows().length) {
+        <div class="mcod-koota-table compact">
+          @for (row of dashakootaRows(); track row.label) {
+            <div class="mcod-koota-row">
+              <span class="mcod-koota-label">{{ row.label }}</span>
+              <span class="mcod-koota-score">{{ row.points }}/{{ row.max }}</span>
+              <span class="mcod-koota-status" [attr.data-status]="rowStatus(row)">{{ rowStatusLabel(row) }}</span>
+            </div>
+          }
+        </div>
+      }
 
-    <p class="mcod-eyebrow">SAFETY CHECKS</p>
-    <div class="mcod-safety">
-      <div class="mcod-safety-row">
-        <span>Manglik</span>
-        <span class="mcod-safety-badge" [attr.data-ok]="s.safety_checks.manglik.match">
-          {{ s.safety_checks.manglik.match ? 'Match' : 'Review' }}
-        </span>
+      @if (cancellations().length) {
+        <p class="mcod-eyebrow">SPECIAL CANCELLATIONS</p>
+        <div class="mcod-note-list">
+          @for (row of cancellations(); track row.label) {
+            <p class="mcod-note good"><b>{{ row.label }}</b> — {{ row.note }}</p>
+          }
+        </div>
+      }
+
+      <p class="mcod-eyebrow">SAFETY CHECKS</p>
+      <div class="mcod-safety">
+        <div class="mcod-safety-row">
+          <span>Manglik</span>
+          <span class="mcod-safety-badge" [attr.data-ok]="s.safety_checks.manglik.match">{{ manglikBadge(s) }}</span>
+        </div>
+        <p class="mcod-note">{{ s.safety_checks.manglik.note }}</p>
+        <div class="mcod-safety-row">
+          <span>Gandanta</span>
+          <span class="mcod-safety-badge" [attr.data-ok]="s.safety_checks.gandanta.clear">
+            {{ s.safety_checks.gandanta.clear ? 'Clear' : 'Review' }}
+          </span>
+        </div>
+        <p class="mcod-note">
+          {{ s.safety_checks.gandanta.clear
+            ? 'Neither of you was born with the Moon at a sign-and-star joint (Gandanta).'
+            : 'One of you was born with the Moon at a sign-and-star joint (Gandanta). It is a traditional flag, not a verdict.' }}
+        </p>
       </div>
-      <p class="mcod-note">{{ s.safety_checks.manglik.note }}</p>
-      <div class="mcod-safety-row">
-        <span>Gandanta / Grahan Checks</span>
-        <span class="mcod-safety-badge" [attr.data-ok]="s.safety_checks.gandanta.clear">
-          {{ s.safety_checks.gandanta.clear ? 'Clear' : 'Review' }}
-        </span>
-      </div>
-    </div>
+
+      @if (s.observance_note) { <p class="mcod-note">{{ s.observance_note }}</p> }
+    </details>
 
     <div class="mcod-actions">
       <a class="ink" [routerLink]="['/m', 'ask']" [queryParams]="{ q: askNarrativeQuery() }">Ask about this match</a>

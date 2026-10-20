@@ -1,0 +1,239 @@
+{
+ "rows": [
+  {
+   "label": "Varna",
+   "points": 1,
+   "max": 1,
+   "note": "Brahmin (groom's side) with Kshatriya",
+   "verified": true
+  },
+  {
+   "label": "Vashya",
+   "points": 1,
+   "max": 2,
+   "note": "Manava (groom's side) with Chatushpada",
+   "verified": false
+  },
+  {
+   "label": "Tara",
+   "points": 1.5,
+   "max": 3,
+   "note": "Jyeshtha ↔ Moola",
+   "verified": true
+  },
+  {
+   "label": "Yoni",
+   "points": 0,
+   "max": 4,
+   "note": "Deer with Dog; sworn enemy",
+   "verified": true
+  },
+  {
+   "label": "Graha Maitri",
+   "points": 5,
+   "max": 5,
+   "note": "Mars with Jupiter",
+   "verified": true
+  },
+  {
+   "label": "Gana",
+   "points": 1,
+   "max": 6,
+   "note": "Deva with Rakshasa",
+   "verified": true
+  },
+  {
+   "label": "Bhakoot",
+   "points": 7,
+   "max": 7,
+   "note": "Scorpio 2/12 Sagittarius; bhakoot dosha cancelled: rashi lords Mars and Jupiter are mutual natural friends",
+   "verified": false
+  },
+  {
+   "label": "Nadi",
+   "points": 8,
+   "max": 8,
+   "note": "Antya with Aadi",
+   "verified": true
+  }
+ ],
+ "profiles": {
+  "person1": {
+   "name": "Kamalesh",
+   "rashi": "Scorpio",
+   "rashi_lord": "Mars",
+   "gana": "Rakshasa"
+  },
+  "person2": {
+   "name": "Sai Madhuri",
+   "rashi": "Sagittarius",
+   "rashi_lord": "Jupiter",
+   "gana": "Deva"
+  }
+ },
+ "safety_checks": {
+  "manglik": {
+   "person1_active": true,
+   "person1_net_severity": "low",
+   "person2_active": true,
+   "person2_net_severity": "low",
+   "match": true,
+   "note": "You are both Manglik. Tradition says the two balance each other, so this is not a concern for the match."
+  },
+  "gandanta": {
+   "person1_active": false,
+   "person2_active": false,
+   "clear": true
+  }
+ },
+ "dashakoota_extension": {
+  "system": "Dashakoota extension",
+  "total": 6,
+  "max": 6,
+  "hard_blockers": [],
+  "rows": [
+   {
+    "label": "Rajju",
+    "points": 2,
+    "max": 2,
+    "note": "",
+    "verified": false
+   },
+   {
+    "label": "Vedha",
+    "points": 2,
+    "max": 2,
+    "note": "",
+    "verified": false
+   },
+   {
+    "label": "Stree Deergha",
+    "points": 2,
+    "max": 2,
+    "note": "",
+    "verified": false
+   }
+  ]
+ },
+ "observance_note": "Traditions differ on some koota rules: Vashya, the in-between Yoni grades, and when a Nadi or Bhakoot dosha counts as cancelled. Another astrologer may score this pair a little differently.",
+ "system": "Ashta Koota / Gun Milan",
+ "total": 24.5,
+ "max": 36,
+ "percent": 68,
+ "verdict": "Promising match",
+ "notes": [
+  "Varna and Vashya are read from the first person's side, the groom's in marriage matching, so swapping the two people can change those rows."
+ ],
+ "is_convention_dependent": true,
+ "guidance": {
+  "strengths": [
+   {
+    "key": "varna",
+    "area": "Work and duty",
+    "line": "You look at duty and work in a similar way.",
+    "why": "Varna 1 of 1 (Brahmin (groom's side) with Kshatriya). Varna groups each Moon sign by its outlook on work and duty."
+   },
+   {
+    "key": "graha_maitri",
+    "area": "Friendship and understanding",
+    "line": "Your minds understand each other. Lean on this when you talk about harder things.",
+    "why": "Graha Maitri 5 of 5 (Mars with Jupiter). Graha Maitri is the friendship between the planets that rule your two Moon signs."
+   },
+   {
+    "key": "bhakoot",
+    "area": "Shared plans for the home",
+    "line": "Your plans for home and family tend to line up.",
+    "why": "Bhakoot 7 of 7 (Scorpio 2/12 Sagittarius; bhakoot dosha cancelled: rashi lords Mars and Jupiter are mutual natural friends). Bhakoot looks at how your two Moon signs sit from each other."
+   },
+   {
+    "key": "nadi",
+    "area": "Energy and daily rhythm",
+    "line": "Your energy and daily rhythms balance each other.",
+    "why": "Nadi 8 of 8 (Antya with Aadi). Nadi compares the energy type of your two birth stars. Tradition links it with family wellbeing; for any health question, please see a doctor."
+   }
+  ],
+  "focus_areas": [
+   {
+    "key": "yoni",
+    "area": "Closeness and affection",
+    "meaning": "You may show love in different ways. One may want time together, the other words or help.",
+    "together": [
+     "Spend 15 minutes a day together with your phones away.",
+     "Once a week, ask each other: what made you feel cared for this week?"
+    ],
+    "practice": {
+     "title": "Friday prayer together",
+     "day": "Friday",
+     "instructions": "Pray together to Lakshmi and Narayana, or to Radha and Krishna if that is your family custom. Offer a sweet and share it."
+    },
+    "why": "Yoni 0 of 4 (Deer with Dog; sworn enemy). Yoni compares the animal symbols of your two birth stars. It is read for comfort and closeness with each other."
+   },
+   {
+    "key": "gana",
+    "area": "How you each react",
+    "meaning": "Your natures are different. What feels normal to one of you can feel hard to the other.",
+    "together": [
+     "When a talk gets heated, stop and come back to it after an hour.",
+     "Keep one quiet time each day, like evening tea, to talk about the day."
+    ],
+    "practice": {
+     "title": "Monday lamp for Shiva and Parvati",
+     "day": "Monday",
+     "instructions": "Light a lamp together in the evening and say Om Namah Shivaya 11 times."
+    },
+    "why": "Gana 1 of 6 (Deva with Rakshasa). Gana is your basic nature: Deva (gentle), Manushya (practical) or Rakshasa (strong-willed)."
+   },
+   {
+    "key": "vashya",
+    "area": "Give and take",
+    "meaning": "One of you may lead more often, and the other may feel pulled along.",
+    "together": [
+     "Take turns deciding small things like food, outings and weekend plans.",
+     "For big decisions, let each person speak fully before you decide."
+    ],
+    "practice": null,
+    "why": "Vashya 1 of 2 (Manava (groom's side) with Chatushpada). Vashya is about who naturally leans on whom."
+   },
+   {
+    "key": "tara",
+    "area": "Support in hard weeks",
+    "meaning": "Some weeks one of you may feel low while the other feels fine.",
+    "together": [
+     "When one of you is low, the other takes the lead at home that week.",
+     "Avoid big decisions on a day when either of you feels low."
+    ],
+    "practice": {
+     "title": "Monday prayer for the Moon",
+     "day": "Monday",
+     "instructions": "Offer water or milk at a Shiva temple or at home, and say Om Chandraya Namah 11 times."
+    },
+    "why": "Tara 1.5 of 3 (Jyeshtha ↔ Moola). Tara counts from one birth star (nakshatra) to the other."
+   }
+  ],
+  "for_each": [
+   {
+    "name": "Kamalesh",
+    "temperament": "You are strong-willed and direct by nature. Before you react, take three slow breaths. Say sorry quickly after a sharp word.",
+    "practice": {
+     "title": "Mars mantra",
+     "day": "Tuesday",
+     "instructions": "Say Om Angarakaya Namah 11 times on Tuesdays."
+    },
+    "why": "Mars rules your Moon sign (Scorpio), the sign that shapes how you feel."
+   },
+   {
+    "name": "Sai Madhuri",
+    "temperament": "You are gentle by nature and keep the peace. Say what you need early, kindly and clearly. Do not keep it inside.",
+    "practice": {
+     "title": "Jupiter mantra",
+     "day": "Thursday",
+     "instructions": "Say Om Gurave Namah 11 times on Thursdays."
+    },
+    "why": "Jupiter rules your Moon sign (Sagittarius), the sign that shapes how you feel."
+   }
+  ],
+  "closing_note": "No couple scores full marks. These are small habits and free, traditional practices, not fixes you must pay for. If things feel very hard, talk to a trusted elder or a family counsellor.",
+  "is_convention_dependent": true,
+  "observance_note": "Traditions differ on some koota rules: Vashya, the in-between Yoni grades, and when a Nadi or Bhakoot dosha counts as cancelled. Another astrologer may score this pair a little differently."
+ }
+}
