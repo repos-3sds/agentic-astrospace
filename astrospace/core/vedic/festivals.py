@@ -34,6 +34,13 @@ using it everywhere puts real festivals on the wrong day:
   so the sunrise rule lands a day late.
 * **pradosh** (evening) — Lakshmi Puja on Diwali. Amavasya arrives during the
   day, so the sunrise rule again lands a day late.
+* **madhyahna** (midday, the third fifth of daylight) — Rama Navami and
+  Ganesh Chaturthi. When the tithi begins in the morning, the sunrise rule
+  lands a day late (Ganesh Chaturthi 2026: 14 Sep, not 15).
+* **aparahna** (afternoon, the fourth fifth of daylight) — Vijayadashami,
+  with Shravana nakshatra able to move it to the second day. Dashami began
+  at 12:50 IST on 20 Oct 2026, so the sunrise rule put Dussehra on the 21st
+  while India kept it on the 20th.
 * **sunset rule** for Sankrantis — the solar month begins on the ingress day
   when the crossing precedes sunset. Taking the next sunrise unconditionally
   puts Pongal and Puthandu a day late.
@@ -65,7 +72,8 @@ from .constants import LUNAR_MONTHS, NAKSHATRAS
 from .masa import amanta_masa
 from .nakshatra import nakshatra_of
 from .panchanga import tithi_of
-from .positions import day_span, resolve_location, sidereal_positions, sign_index
+from .positions import (day_span, resolve_location, sidereal_positions, sign_index,
+                        sun_moon_sidereal)
 
 # Tithi numbers are 1..15 within a paksha. These aliases make rules readable.
 PURNIMA = 15
@@ -90,17 +98,38 @@ def _f(slug, name, rule, *, regions, local_names=None, description=None,
     }
 
 
-def _lunar(month, paksha, tithi, reckoning="amanta", at="sunrise"):
+def _lunar(month, paksha, tithi, reckoning="amanta", at="sunrise", **kala):
     """Tithi-based rule.
 
     ``reckoning`` says which system ``month`` is named in. ``at`` is the moment
     the tithi must be current: most festivals use ``"sunrise"``, but some are
-    fixed by ``"pradosh"`` (evening, e.g. Lakshmi Puja on Diwali) or
-    ``"nishita"`` (midnight, e.g. Maha Shivaratri) — using sunrise for those
-    lands a day early or late.
+    fixed by ``"pradosh"`` (evening, e.g. Dhanteras and Lakshmi Puja on
+    Diwali) or ``"nishita"`` (midnight, e.g. Maha Shivaratri) — using sunrise
+    for those lands a day early or late.
+
+    ``"madhyahna"`` and ``"aparahna"`` are windows, not instants (see
+    :data:`_KALA_WINDOWS`), and are resolved by kala-vyapti: the day whose
+    window the tithi touches. ``kala`` then says what to do when it touches
+    both days' windows (``both="first"``) or neither (``neither="first"`` for
+    the day the tithi begins, ``"sunrise"`` for the day it holds at sunrise),
+    and ``nakshatra`` names a star that, held in the second day's window,
+    moves the observance there (Shravana for Vijayadashami).
     """
-    return {"type": "lunar_tithi", "month": month, "paksha": paksha,
+    rule = {"type": "lunar_tithi", "month": month, "paksha": paksha,
             "tithi": tithi, "reckoning": reckoning, "at": at}
+    if at in _KALA_WINDOWS:
+        rule["both"] = kala.get("both", "first")
+        rule["neither"] = kala.get("neither", "sunrise")
+        if kala.get("nakshatra"):
+            rule["nakshatra"] = kala["nakshatra"]
+    elif kala:
+        raise ValueError(f"kala options only apply to {sorted(_KALA_WINDOWS)}")
+    return rule
+
+
+# Day windows as fractions of sunrise→sunset, the classical five-fold division
+# (pratah, sangava, madhyahna, aparahna, sayahna).
+_KALA_WINDOWS = {"madhyahna": (2 / 5, 3 / 5), "aparahna": (3 / 5, 4 / 5)}
 
 
 def _solar(sign, offset=0):
@@ -122,6 +151,16 @@ def _nak_in_solar(nakshatra, sign, which="first"):
     """
     return {"type": "nakshatra_in_solar_month", "nakshatra": nakshatra,
             "sign": sign, "which": which}
+
+
+def _day_after(slug, days=1):
+    """A fixed number of days after another festival (Holi after Holika Dahan).
+
+    Holi is the morning after the bonfire. Reading it as the Pratipada at
+    sunrise instead put it two days after Holika Dahan whenever Purnima still
+    held at the next sunrise (2022, 2024, 2025).
+    """
+    return {"type": "day_after_festival", "slug": slug, "days": days}
 
 
 def _weekday_before(month, paksha, tithi, weekday, reckoning="amanta"):
@@ -156,11 +195,15 @@ FESTIVALS: list[dict] = [
                        "before Ganesh Chaturthi. Sindhi Cheti Chand usually "
                        "falls a day earlier, on the new moon's first sighting.",
        convention_dependent=True),
-    _f("rama_navami", "Rama Navami", _lunar("Chaitra", "Shukla", 9),
+    _f("rama_navami", "Rama Navami", _lunar("Chaitra", "Shukla", 9, at="madhyahna"),
        regions=[PAN],
        local_names={"te": "శ్రీరామ నవమి", "ta": "ராம நவமி"},
        description="Birth of Rama.",
-       prep="Panakam and vada pappu are offered in the Telugu tradition."),
+       prep="Panakam and vada pappu are offered in the Telugu tradition.",
+       observance_note="Kept on the day Navami holds at midday (madhyahna), "
+                       "when Rama was born, not by the tithi at sunrise. "
+                       "Some Vaishnava calendars keep the next day.",
+       convention_dependent=True),
     _f("hanuman_jayanti", "Hanuman Jayanti", _lunar("Chaitra", "Shukla", PURNIMA),
        regions=[NORTH],
        description="Birth of Hanuman (North Indian reckoning).",
@@ -230,10 +273,14 @@ FESTIVALS: list[dict] = [
 
     # ── Bhadrapada ───────────────────────────────────────────────────────────
     _f("ganesh_chaturthi", "Ganesh Chaturthi / Vinayaka Chavithi",
-       _lunar("Bhadrapada", "Shukla", 4), regions=[PAN],
+       _lunar("Bhadrapada", "Shukla", 4, at="madhyahna"), regions=[PAN],
        local_names={"te": "వినాయక చవితి", "mr": "गणेश चतुर्थी"},
        description="Installation and worship of Ganesha.",
-       prep="Clay idol, patri (21 leaves), and undrallu/modak."),
+       prep="Clay idol, patri (21 leaves), and undrallu/modak.",
+       observance_note="Kept on the day Chaturthi holds at midday "
+                       "(madhyahna), the time of the Ganesha puja, not by "
+                       "the tithi at sunrise.",
+       convention_dependent=True),
     _f("onam", "Onam (Thiruvonam)", _nak_in_solar("Shravana", 4),
        regions=[SOUTH], local_names={"ml": "ഓണം"},
        description="Kerala harvest festival, on Thiruvonam nakshatra in Chingam.",
@@ -253,9 +300,16 @@ FESTIVALS: list[dict] = [
        local_names={"ta": "ஆயுத பூஜை", "te": "ఆయుధ పూజ"},
        description="Tools, instruments and vehicles are honoured."),
     _f("vijayadashami", "Vijayadashami / Dussehra",
-       _lunar("Ashwina", "Shukla", 10), regions=[PAN],
+       _lunar("Ashwina", "Shukla", 10, at="aparahna", both="first",
+              neither="first", nakshatra="Shravana"),
+       regions=[PAN],
        local_names={"te": "విజయదశమి", "ta": "விஜயதசமி"},
-       description="Victory of good over evil; an auspicious day to begin learning."),
+       description="Victory of good over evil; an auspicious day to begin learning.",
+       observance_note="Kept on the day Dashami holds in the afternoon "
+                       "(aparahna), not by the tithi at sunrise. If it holds "
+                       "then on both days the first is kept, unless Shravana "
+                       "nakshatra holds that afternoon only on the second.",
+       convention_dependent=True),
     _f("sharad_purnima", "Sharad Purnima", _lunar("Ashwina", "Shukla", PURNIMA),
        regions=[NORTH], description="Kojagari Purnima."),
     _f("karva_chauth", "Karva Chauth", _lunar("Kartika", "Krishna", 4,
@@ -267,9 +321,11 @@ FESTIVALS: list[dict] = [
 
     # ── Kartika (Diwali cluster) ─────────────────────────────────────────────
     _f("dhanteras", "Dhanteras", _lunar("Kartika", "Krishna", 13,
-                                        reckoning="purnimanta"),
+                                        reckoning="purnimanta", at="pradosh"),
        regions=[PAN], description="Dhanvantari Trayodashi; start of the Diwali sequence.",
-       observance_note="Trayodashi is the 13th tithi.",
+       observance_note="Kept on the day Trayodashi (the 13th tithi) holds at "
+                       "dusk (pradosh), when the Yama deepam is lit, not by "
+                       "the tithi at sunrise.",
        convention_dependent=True),
     _f("naraka_chaturdashi", "Naraka Chaturdashi / Choti Diwali",
        _lunar("Kartika", "Krishna", 14, reckoning="purnimanta"),
@@ -345,16 +401,20 @@ FESTIVALS: list[dict] = [
        prep="Fast and night vigil; abhishekam through the four praharas.",
        observance_note="Fixed by nishita kala (midnight), not sunrise.",
        convention_dependent=True),
-    _f("holika_dahan", "Holika Dahan", _lunar("Phalguna", "Shukla", PURNIMA),
+    _f("holika_dahan", "Holika Dahan",
+       _lunar("Phalguna", "Shukla", PURNIMA, at="pradosh"),
        regions=[NORTH], description="Bonfire on the eve of Holi.",
-       observance_note="Lit during pradosh, avoiding Bhadra.",
+       observance_note="Kept on the evening Purnima holds at dusk "
+                       "(pradosh), not by the tithi at sunrise. The fire is "
+                       "lit avoiding Bhadra, which can push it late into "
+                       "the night; Holi follows on the next Pratipada.",
        convention_dependent=True),
-    _f("holi", "Holi / Dhulandi",
-       _lunar("Chaitra", "Krishna", 1, reckoning="purnimanta"),
+    _f("holi", "Holi / Dhulandi", _day_after("holika_dahan"),
        regions=[NORTH], local_names={"hi": "होली"},
        description="Festival of colours, the day after Holika Dahan.",
-       observance_note="Chaitra Krishna Pratipada (purnimanta) — under amanta "
-                       "reckoning the same day is Phalguna Krishna Pratipada.",
+       observance_note="The morning after Holika Dahan: Chaitra Krishna "
+                       "Pratipada (purnimanta), which amanta reckoning calls "
+                       "Phalguna Krishna Pratipada.",
        convention_dependent=True),
     # ── Regional and secondary observances ───────────────────────────────────
     # A second block so the primary list above stays scannable; `occurrences`
@@ -549,6 +609,21 @@ def _day_facts(day: date_cls, lat: float, lng: float, tz_str: str,
     pradosh = _tithi_at(sets)
     nishita = _tithi_at((sets + next_rise) / 2.0)
 
+    # Daytime windows (madhyahna, aparahna): the tithi and Moon nakshatra at
+    # each edge. A window is ~2.5 h and a tithi or nakshatra lasts ~19 h or
+    # more, so at most one boundary falls inside and the edges settle whether
+    # the window is touched at all.
+    def _edge(jd):
+        sun_lon, moon_lon = sun_moon_sidereal(jd)
+        return tithi_of(sun_lon, moon_lon)["index"], nakshatra_of(moon_lon)["name"]
+
+    kala = {}
+    for name, (lo, hi) in _KALA_WINDOWS.items():
+        start = _edge(rise + (sets - rise) * lo)
+        end = _edge(rise + (sets - rise) * hi)
+        kala[name] = {"tithis": (start[0], end[0]),
+                      "nakshatras": (start[1], end[1])}
+
     return {
         "date": day,
         "jd_sunrise": rise,
@@ -568,6 +643,7 @@ def _day_facts(day: date_cls, lat: float, lng: float, tz_str: str,
         "sun_sign": sign_index(sun),
         "weekday": day.weekday(),  # Monday=0 … Sunday=6
         "month_bounds": (masa["month_start_jd"], masa["month_end_jd"]),
+        "kala": kala,
     }
 
 
@@ -611,7 +687,81 @@ _AT_FIELDS = {
 }
 
 
+def _match_kala(rule: dict, facts: list[dict]) -> list[date_cls]:
+    """Kala-vyapti: the day whose daytime window the tithi touches.
+
+    The tithi is located by its sunrise days (with the kshaya fallback) via
+    :func:`_match_lunar` at sunrise; each run of those, with the day before
+    it, is the pair of days the tithi can touch. Of those, the days whose
+    window holds the tithi at either edge decide:
+
+    * one day → that day;
+    * both → the one whose whole window it holds, else ``rule["both"]``
+      (the first, by default);
+    * neither → ``rule["neither"]``: ``"first"`` is the day the tithi
+      begins, ``"sunrise"`` the day it holds at sunrise.
+
+    ``rule["nakshatra"]`` then moves a first-day choice to the second day when
+    that nakshatra holds in the second day's window and not the first's — the
+    Shravana rule that put Vijayadashami 2022 on 5 Oct although Dashami had
+    left the afternoon by then.
+    """
+    window = rule["at"]
+    target = _abs_tithi(rule["paksha"], rule["tithi"])
+    by_date = {f["date"]: f for f in facts}
+
+    def cover(fact) -> int:
+        """2 if the tithi spans the whole window, 1 if part, 0 if none."""
+        return fact["kala"][window]["tithis"].count(target)
+
+    def star(fact) -> bool:
+        return rule.get("nakshatra") in fact["kala"][window]["nakshatras"]
+
+    sunrise_rule = {**rule, "at": "sunrise"}
+    for key in ("both", "neither", "nakshatra"):
+        sunrise_rule.pop(key, None)
+    anchors = _match_lunar(sunrise_rule, facts)
+
+    # A tithi current at two sunrises (vriddhi) gives two consecutive anchors;
+    # they are one observance, so runs are resolved together.
+    runs: list[list[date_cls]] = []
+    for anchor in anchors:
+        if runs and anchor - runs[-1][-1] == timedelta(days=1):
+            runs[-1].append(anchor)
+        else:
+            runs.append([anchor])
+
+    hits: list[date_cls] = []
+    for run in runs:
+        # A kshaya anchor: the tithi begins and ends inside that one day.
+        if _abs_at(by_date[run[0]]) != target:
+            hits.append(run[0])
+            continue
+        before = by_date.get(run[0] - timedelta(days=1))
+        days = ([before] if before else []) + [by_date[d] for d in run]
+        touched = [f for f in days if cover(f)]
+        # A day whose whole window holds the tithi beats one it only grazes:
+        # Ganesh Chaturthi 2023 began at 12:39 on 18 Sep, inside that day's
+        # midday, and was kept on the 19th, which it held all midday.
+        best = max((cover(f) for f in touched), default=0)
+        touched = [f for f in touched if cover(f) == best]
+        if touched:
+            pick = touched[0] if rule["both"] == "first" else touched[-1]
+        else:
+            pick = days[0] if rule["neither"] == "first" else by_date[run[0]]
+        later = [f for f in days if f["date"] > pick["date"]
+                 and _abs_at(f) == target]
+        if rule.get("nakshatra") and not star(pick):
+            starred = [f for f in later if star(f)]
+            if starred:
+                pick = starred[0]
+        hits.append(pick["date"])
+    return sorted(set(hits))
+
+
 def _match_lunar(rule: dict, facts: list[dict]) -> list[date_cls]:
+    if rule.get("at") in _KALA_WINDOWS:
+        return _match_kala(rule, facts)
     field = _month_field(rule)
     tithi_field, paksha_field = _AT_FIELDS[rule.get("at", "sunrise")]
     target = _abs_tithi(rule["paksha"], rule["tithi"])
@@ -647,7 +797,23 @@ def _match_lunar(rule: dict, facts: list[dict]) -> list[date_cls]:
         if (before + 1) % 30 == target and (after - 1) % 30 == target:
             hits.append(earlier["date"])
 
-    return sorted(set(hits))
+    return _first_of_runs(hits)
+
+
+def _first_of_runs(hits: list[date_cls]) -> list[date_cls]:
+    """One date per run of consecutive days, the first.
+
+    A tithi longer than a day (vriddhi) can hold at the determining moment on
+    two days running — Amavasya at pradosh on 20 and 21 Oct 2025 gave Diwali
+    twice. That is one observance, and the first day is the common rule.
+    """
+    out: list[date_cls] = []
+    previous = None
+    for day in sorted(set(hits)):
+        if previous is None or day - previous != timedelta(days=1):
+            out.append(day)
+        previous = day
+    return out
 
 
 def _ingress_jd(sign: int, lo: float, hi: float) -> float:
@@ -729,11 +895,19 @@ def _match_weekday_before(rule: dict, facts: list[dict]) -> list[date_cls]:
     return hits
 
 
+def _match_day_after(rule: dict, facts: list[dict]) -> list[date_cls]:
+    """The anchor festival's dates, shifted by ``rule["days"]``."""
+    anchor = FESTIVALS_BY_SLUG[rule["slug"]]["rule"]
+    return [d + timedelta(days=rule["days"])
+            for d in _MATCHERS[anchor["type"]](anchor, facts)]
+
+
 _MATCHERS = {
     "lunar_tithi": _match_lunar,
     "solar_sankranti": _match_solar,
     "nakshatra_in_solar_month": _match_nakshatra_in_solar,
     "weekday_before_tithi": _match_weekday_before,
+    "day_after_festival": _match_day_after,
 }
 
 

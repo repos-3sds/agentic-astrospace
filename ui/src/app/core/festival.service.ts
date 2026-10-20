@@ -45,7 +45,11 @@ export class FestivalService {
   private readonly api = inject(ApiService);
   private readonly cache = new Map<string, Promise<FestivalWindowPayload>>();
   private readonly values = new Map<string, FestivalWindowPayload>();
-  private readonly storagePrefix = 'astrospace.festivals:v1:';
+  // v2: entries carry the time they were saved. v1 entries were kept forever,
+  // so a corrected date (Dussehra 2026, a day late) never reached a phone that
+  // had already opened that month.
+  private readonly storagePrefix = 'astrospace.festivals:v2:';
+  private readonly storedMaxAgeMs = 24 * 60 * 60 * 1000;
 
   upcoming(
     place: FestivalPlace,
@@ -70,6 +74,9 @@ export class FestivalService {
         return payload;
       }).catch((error) => {
         this.cache.delete(key);
+        // Offline: an older copy beats an error.
+        const stale = this.readStored(key, true);
+        if (stale) return stale;
         throw error;
       });
       this.cache.set(key, cached);
@@ -147,11 +154,15 @@ export class FestivalService {
     return { ...payload, count: festivals.length, festivals };
   }
 
-  private readStored(key: string): FestivalWindowPayload | null {
+  /** A stored window, or null when missing or (unless allowStale) over a day old. */
+  private readStored(key: string, allowStale = false): FestivalWindowPayload | null {
     try {
       const raw = localStorage.getItem(`${this.storagePrefix}${key}`);
       if (!raw) return null;
-      return JSON.parse(raw) as FestivalWindowPayload;
+      const entry = JSON.parse(raw) as { savedAt?: number; payload?: FestivalWindowPayload };
+      if (!entry.payload || typeof entry.savedAt !== 'number') return null;
+      if (!allowStale && Date.now() - entry.savedAt > this.storedMaxAgeMs) return null;
+      return entry.payload;
     } catch {
       return null;
     }
@@ -159,7 +170,7 @@ export class FestivalService {
 
   private writeStored(key: string, value: FestivalWindowPayload): void {
     try {
-      localStorage.setItem(`${this.storagePrefix}${key}`, JSON.stringify(value));
+      localStorage.setItem(`${this.storagePrefix}${key}`, JSON.stringify({ savedAt: Date.now(), payload: value }));
     } catch {
       // Keep the in-memory cache even if device storage is unavailable.
     }

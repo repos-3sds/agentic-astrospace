@@ -3,8 +3,10 @@
 The valuable assertions here are the *anchors*: a handful of 2026 dates that
 are independently known, chosen because each one breaks a different way if a
 rule is wrong. Maha Shivaratri catches nishita-vs-sunrise, Diwali catches
-pradosh, Holi catches amanta-vs-purnimanta, Ugadi catches kshaya tithi, and
-Pongal catches the Sankranti sunset rule. Every one of those started out wrong.
+pradosh, Ugadi catches kshaya tithi, Pongal catches the Sankranti sunset
+rule, and Vijayadashami, Ganesh Chaturthi and Rama Navami catch the daytime
+kala windows. Every one of those started out wrong; Vijayadashami 2026 was
+shown a day late on the day itself.
 
 The rest check that the engine stays self-consistent: each computed date's
 panchanga actually satisfies the rule that produced it.
@@ -48,15 +50,17 @@ class TestKnownDates:
     @pytest.mark.parametrize("slug,expected,what", [
         ("maha_shivaratri", date(2026, 2, 15), "nishita kala, not sunrise"),
         ("diwali", date(2026, 11, 8), "Amavasya at pradosh, not sunrise"),
-        ("holika_dahan", date(2026, 3, 3), "Phalguna Purnima"),
-        ("holi", date(2026, 3, 4), "purnimanta Chaitra Krishna Pratipada"),
+        ("holika_dahan", date(2026, 3, 2), "Purnima at pradosh, not sunrise"),
+        ("holi", date(2026, 3, 3), "the morning after Holika Dahan"),
         ("ugadi", date(2026, 3, 19), "kshaya tithi — Pratipada touches no sunrise"),
         ("tulsi_vivah", date(2026, 11, 21), "kshaya tithi — Dwadashi is skipped"),
         ("makar_sankranti", date(2026, 1, 14), "Sankranti before sunset"),
         ("tamil_puthandu", date(2026, 4, 14), "Mesha ingress before sunset"),
         ("krishna_janmashtami", date(2026, 9, 4), "amanta Shravana Krishna Ashtami"),
-        ("ganesh_chaturthi", date(2026, 9, 15), "Bhadrapada Shukla Chaturthi"),
-        ("vijayadashami", date(2026, 10, 21), "Ashwina Shukla Dashami"),
+        ("ganesh_chaturthi", date(2026, 9, 14), "Chaturthi at madhyahna"),
+        ("rama_navami", date(2026, 3, 26), "Navami at madhyahna"),
+        ("vijayadashami", date(2026, 10, 20), "Dashami at aparahna"),
+        ("dhanteras", date(2026, 11, 6), "Trayodashi at pradosh"),
         ("onam", date(2026, 8, 26), "Thiruvonam in Chingam"),
     ])
     def test_anchor_dates(self, y2026, slug, expected, what):
@@ -90,13 +94,90 @@ class TestOrdering:
         span = _on(y2026, "anant_chaturdashi") - _on(y2026, "ganesh_chaturthi")
         assert timedelta(days=9) <= span <= timedelta(days=11)
 
-    def test_hartalika_teej_precedes_ganesh_chaturthi(self, y2026):
-        assert _on(y2026, "hartalika_teej") < _on(y2026, "ganesh_chaturthi")
+    def test_hartalika_teej_does_not_follow_ganesh_chaturthi(self, y2026):
+        # Same day in 2026: Tritiya holds at sunrise on 14 Sep and gives way
+        # to Chaturthi at 07:07, which then holds all midday.
+        assert _on(y2026, "hartalika_teej") <= _on(y2026, "ganesh_chaturthi")
 
     def test_festivals_sharing_a_tithi_share_a_date(self, y2026):
         """Guru Nanak Jayanti and Kartika Purnima are the same tithi."""
         assert _on(y2026, "guru_nanak_jayanti") == _on(y2026, "kartika_purnima")
         assert _on(y2026, "vat_savitri") == _on(y2026, "shani_jayanti")
+
+
+# Published dates for New Delhi, one rule per column, across years where the
+# rule decides something. Each of these was a day off under the sunrise rule
+# (or appeared on two days) before the kala windows were added.
+_DELHI_KNOWN = [
+    # Aparahna: Dashami began at 12:50 on 20 Oct 2026, ended 14:12 next day.
+    ("vijayadashami", date(2026, 10, 20)),
+    # Dashami left the afternoon on 5 Oct, but Shravana held there that day.
+    ("vijayadashami", date(2022, 10, 5)),
+    ("vijayadashami", date(2023, 10, 24)),
+    ("vijayadashami", date(2024, 10, 12)),
+    ("vijayadashami", date(2025, 10, 2)),
+    # Madhyahna, whole window beating a grazed one.
+    ("ganesh_chaturthi", date(2023, 9, 19)),
+    ("ganesh_chaturthi", date(2024, 9, 7)),
+    ("ganesh_chaturthi", date(2026, 9, 14)),
+    ("rama_navami", date(2024, 4, 17)),
+    ("rama_navami", date(2025, 4, 6)),
+    ("rama_navami", date(2026, 3, 26)),
+    # Pradosh.
+    ("dhanteras", date(2024, 10, 29)),
+    ("dhanteras", date(2025, 10, 18)),
+    ("dhanteras", date(2026, 11, 6)),
+    ("holika_dahan", date(2024, 3, 24)),
+    ("holika_dahan", date(2025, 3, 13)),
+    ("holi", date(2024, 3, 25)),
+    ("holi", date(2025, 3, 14)),
+    # Amavasya held at dusk on both days; the first is kept, once.
+    ("diwali", date(2025, 10, 20)),
+]
+
+
+@pytest.fixture(scope="module")
+def delhi_years():
+    years = sorted({d.year for _, d in _DELHI_KNOWN})
+    slugs = sorted({s for s, _ in _DELHI_KNOWN})
+    return {y: F.occurrences(y, city="New Delhi", nation="IN", slugs=slugs)
+            for y in years}
+
+
+class TestKalaRules:
+    @pytest.mark.parametrize("slug,expected", _DELHI_KNOWN,
+                             ids=[f"{s}-{d.year}" for s, d in _DELHI_KNOWN])
+    def test_published_new_delhi_dates(self, delhi_years, slug, expected):
+        got = [r["occurs_on"] for r in delhi_years[expected.year]
+               if r["slug"] == slug]
+        assert got == [expected]
+
+    def test_dussehra_2026_is_the_20th_in_the_south_too(self):
+        for city in ("Hyderabad", "Chennai", "Bengaluru"):
+            rows = F.occurrences(2026, city=city, nation="IN",
+                                 slugs=["vijayadashami"])
+            assert [r["occurs_on"] for r in rows] == [date(2026, 10, 20)], city
+
+    def test_no_festival_lands_on_two_consecutive_days(self):
+        for year in (2024, 2025):
+            rows = F.occurrences(year, city="New Delhi", nation="IN")
+            seen: dict[str, list[date]] = {}
+            for r in rows:
+                seen.setdefault(r["slug"], []).append(r["occurs_on"])
+            for slug, days in seen.items():
+                for a, b in zip(days, days[1:]):
+                    assert b - a > timedelta(days=1), (slug, a, b)
+
+    def test_kala_options_are_refused_on_instant_rules(self):
+        with pytest.raises(ValueError):
+            F._lunar("Ashwina", "Shukla", 10, both="first")
+
+    def test_window_rules_state_the_rule_they_use(self):
+        for slug in ("vijayadashami", "ganesh_chaturthi", "rama_navami",
+                     "dhanteras", "holika_dahan"):
+            festival = F.FESTIVALS_BY_SLUG[slug]
+            assert "not by the tithi at sunrise" in festival["observance_note"]
+            assert festival["is_convention_dependent"]
 
 
 # ── Self-consistency ─────────────────────────────────────────────────────────
@@ -114,6 +195,15 @@ class TestRulesAreSatisfied:
         for row in rows:
             rule = row["rule"]
             if rule["type"] != "lunar_tithi":
+                continue
+            if rule["at"] in F._KALA_WINDOWS:
+                # A window rule: the tithi must touch the chosen day's window
+                # or, failing that, the day itself (sunrise to sunrise).
+                fact = by_date[row["occurs_on"]]
+                target = F._abs_tithi(rule["paksha"], rule["tithi"])
+                nxt = by_date[row["occurs_on"] + timedelta(days=1)]
+                assert (target in fact["kala"][rule["at"]]["tithis"]
+                        or target in (F._abs_at(fact), F._abs_at(nxt))), row["slug"]
                 continue
             fact = by_date[row["occurs_on"]]
             tithi_field, paksha_field = F._AT_FIELDS[rule.get("at", "sunrise")]
@@ -189,7 +279,9 @@ class TestCatalog:
             assert 1 <= rule["tithi"] <= 15
             assert rule["reckoning"] in ("amanta", "purnimanta")
         if rule["type"] == "lunar_tithi":
-            assert rule["at"] in F._AT_FIELDS
+            assert rule["at"] in F._AT_FIELDS or rule["at"] in F._KALA_WINDOWS
+        if rule["type"] == "day_after_festival":
+            assert rule["slug"] in F.FESTIVALS_BY_SLUG
         if rule["type"] == "solar_sankranti":
             assert 0 <= rule["sign"] <= 11
         if rule["type"] == "nakshatra_in_solar_month":
