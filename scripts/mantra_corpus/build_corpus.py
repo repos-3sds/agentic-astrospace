@@ -164,26 +164,47 @@ for r in rows:
     m["yoga_rules"] = YOGA_D.get(r["id"], []); m["gochara_rules"] = GOCH_D.get(r["id"], [])
     m["recommendation_ids"] = DOSHA_D.get(r["id"], [])
 
-VS = "https://vedicscriptures.in/bhashya/16/yajurveda/"
-CHECKED = {
- "moon-vedic": f"Word-for-word against Vajasaneyi 9.40 at {VS}9/40 (page's unaccented line has two typos; its pada-patha matches this text).",
- "mercury-vedic": f"Word-for-word against Vajasaneyi 15.54 at {VS}15/54: no differences.",
- "jupiter-vedic": f"Against Vajasaneyi 26.3 at {VS}26/3: sandhi variant 'yadaryā arhād' for 'yadaryo arhād'; the VS verse continues with the ritual formula 'upayāmagṛhīto'si...', which navagraha use omits.",
- "venus-vedic": f"Word-for-word against Vajasaneyi 19.75 at {VS}19/75: nasal spelling only.",
- "mars-vedic": "Against the Navagraha Sukta at sanskritdocuments (same verse in both traditions): matches.",
- "saturn-vedic": "Against the Navagraha Sukta at sanskritdocuments: matches.",
- "rahu-vedic": "Against the Navagraha Sukta at sanskritdocuments: matches.",
- "ketu-vedic": "Against the Navagraha Sukta at sanskritdocuments: matches.",
- "sun-vedic": "Standard Rigveda 1.35.2 text; the online Vajasaneyi page could not be fetched. The South form (sun-vedic-taittiriya) was checked and matches.",
- "vishnu-dvadashakshari": "Bhagavata Purana 4.8.54 checked at vedabase.io.",
- "mahamrityunjaya": "Veda references checked at en.wikipedia.org/wiki/Mahamrityunjaya_Mantra.",
+# Every verse text is keyed from a public-domain print (pre-1931), page by page;
+# see rekey/transcriptions.tsv and docs/mantra_corpus.md. The print's text,
+# normalised to corpus spelling, replaces the text in corpus_data.
+from rekey.normalise import normalise
+REKEY_DIR = os.path.join(os.path.dirname(__file__), "rekey")
+EDITIONS = json.load(open(os.path.join(REKEY_DIR, "editions.json"), encoding="utf-8"))
+SCAN = "https://archive.org/details/{}/page/n{}/mode/1up"
+# 'Om' is said before these two but is not part of the printed verse.
+RECITER_PREFIX = {"gayatri": "ॐ ", "mahamrityunjaya": "ॐ "}
+REKEY = {}
+for line in open(os.path.join(REKEY_DIR, "transcriptions.tsv"), encoding="utf-8"):
+    if line.startswith("#") or not line.strip(): continue
+    vid, ed, leaf, page, text, note = line.rstrip("\n").split("\t")
+    REKEY[vid] = (RECITER_PREFIX.get(vid, "") + normalise(text.replace("\\n", " ")),
+                  {"kind": "print", "edition": ed, "scan_page_url": SCAN.format(EDITIONS[ed]["archive_id"], leaf),
+                   "page": page or None, "note": note})
+
+FORMULA = ("A short devotional formula (a name with a salutation or seed syllables), not a verse; "
+           "no edition text to key it from.")
+FORMULAS = {"shiva-panchakshari", "vishnu-dvadashakshari", "durga-navarna", "durga-nama", "lakshmi-nama",
+            "ganesha-nama", "hanuman-nama", "saraswati-nama", "rama-taraka", "skanda-shadakshari", "surya-dvadasha-nama"}
+NOT_LOCATED = {
+ "sri-suktam-1": "The Sri Sukta is a Rigveda khila; no pre-1931 print of it was found in this pass (Scheftelowitz 1906 is the candidate).",
+ "ganesha-vakratunda": "A popular invocation; no pre-1931 print was found in this pass.",
+ "saraswati-vidyarambha": "A popular verse said before study; no pre-1931 print was found in this pass.",
+ "santana-gopala": "BPHS names the mantra without its text; no pre-1931 print of this verse was found in this pass.",
 }
 for r in rows:
-    if r["category"] == "graha_stotra": r["checked_against"] = "Word-for-word against sanskritdocuments navanew.html: orthography only."
-    elif r["category"] == "graha_bija": r["checked_against"] = "Against sanskritdocuments Vedokta sabija prayoga and drikpanchang; see disagreements."
-    elif r["id"].endswith("-vedic-taittiriya"): r["checked_against"] = "Against the Navagraha Sukta at sanskritdocuments: sandhi only."
-    else: r["checked_against"] = CHECKED.get(r["id"], "Not checked against an online edition in this pass; text from the standard recension.")
-    if r["id"] == "jupiter-vedic": r["disagreements"] = "Sandhi: 'yadaryo arhād' (Rigveda) vs 'yadaryā arhād' (Vajasaneyi edition)."
+    if r["id"] in REKEY:
+        dev, prov = REKEY[r["id"]]
+        r.update(devanagari=dev, iast=iast(dev), telugu=telugu(dev), provenance=prov)
+    elif r["id"] in NOT_LOCATED:
+        r["provenance"] = {"kind": "no_print_located", "note": NOT_LOCATED[r["id"]]}
+    elif r["devanagari"] is None:
+        r["provenance"] = {"kind": "reference_only", "note": "Named as a practice; the corpus ships no text for it."}
+    else:
+        assert r["category"] in ("graha_nama", "graha_bija") or r["id"] in FORMULAS, f"{r['id']} has no print transcription"
+        r["provenance"] = {"kind": "formula", "note": FORMULA}
+    if r["id"] == "jupiter-vedic": r["disagreements"] = "Some modern Vajasaneyi editions read 'yadaryā arhād'; Weber's 1852 print reads 'yadaryo arhād', as the Rigveda does."
+    if r["id"].endswith("-vedic-taittiriya"):
+        r["disagreements"] = r["disagreements"].replace(" Checked against sanskritdocuments: differences are sandhi only.", "")
 
 from meanings_i18n import MEANINGS, bija as bija_meaning
 for r in rows:
@@ -198,18 +219,20 @@ for (md, ad), (_, mids, _, _) in AD.items():
     for i in mids: assert i in ids, (md, ad, i)
 
 os.makedirs(OUT, exist_ok=True)
-meta = {"name": "Siddha mantra corpus", "version": "2026-10-17", "status": "point-in-time research corpus; not yet wired into the app",
+meta = {"name": "Siddha mantra corpus", "version": "2026-10-19", "editions": EDITIONS, "status": "point-in-time research corpus; not yet wired into the app",
         "fields": "see README.md", "count": len(rows)}
 json.dump({"meta": meta, "mantras": rows}, open(f"{OUT}/mantras.json", "w"), ensure_ascii=False, indent=1)
 cols = ["id", "name", "category", "tier", "planet", "deity", "devanagari", "iast", "telugu", "simple_transliteration",
         "meaning_en", "meaning_hi", "meaning_te", "source_type", "source_citation", "kb_citation", "confidence", "traditional_count", "practical_count",
-        "count_note", "preferred_day", "disagreements", "app_sensitivity", "checked_against", "practice_slugs", "recommendation_ids",
+        "count_note", "preferred_day", "disagreements", "app_sensitivity", "provenance_kind", "provenance_page_url", "practice_slugs", "recommendation_ids",
         "bphs_antardasha", "gochara_rules", "yoga_rules", "festival_slugs", "reading_categories", "audio_status", "audio_est_seconds"]
 with open(f"{OUT}/mantras.csv", "w", newline="", encoding="utf-8") as f:
     w = csv.writer(f); w.writerow(cols)
     for r in rows:
         flat = dict(r)
         flat.update({k: "|".join(v) for k, v in r["maps_to"].items()})
+        flat["provenance_kind"] = r["provenance"]["kind"]
+        flat["provenance_page_url"] = r["provenance"].get("scan_page_url", "")
         flat["audio_status"] = r["audio"]["status"]
         flat["audio_est_seconds"] = r["audio"]["est_seconds_per_repetition"]
         w.writerow([flat.get(c, "") for c in cols])

@@ -1,0 +1,65 @@
+{
+ "bsr-1912": {
+  "title": "Bṛhatstotraratnākara",
+  "editor": null,
+  "publisher": "Tukaram Javaji, Nirnaya Sagar Press",
+  "place": "Bombay",
+  "year": 1912,
+  "archive_id": "Brihat_Stotra_Ratnakara_1912",
+  "note": "7th edition (सप्तमावृत्तिः); title page dated शके १८३४ / सन १९१२."
+ },
+ "weber-vs-1852": {
+  "title": "The Vâjasaneyi-Sanhitâ in the Mâdhyandina and the Kâṇva-çâkhâ, with the commentary of Mahîdhara",
+  "editor": "Albrecht Weber",
+  "publisher": "Williams & Norgate; Ferd. Dümmler",
+  "place": "London; Berlin",
+  "year": 1852,
+  "archive_id": "in.ernet.dli.2015.486971",
+  "note": "The White Yajurveda, part I. Madhyandina text with svara marks; the corpus does not reproduce the accents."
+ },
+ "muller-rv-1873-v1": {
+  "title": "The Hymns of the Rig-Veda in the Samhita and Pada Texts, vol. 1",
+  "editor": "F. Max Müller",
+  "publisher": "Trübner & Co.",
+  "place": "London",
+  "year": 1873,
+  "archive_id": "hymnsrigvedains00unkngoog",
+  "note": "Archive metadata says 1877; the imprint in the scan reads 1873. Mandalas 1-6."
+ },
+ "muller-rv-1873-v2": {
+  "title": "The Hymns of the Rig-Veda in the Samhita and Pada Texts, vol. 2",
+  "editor": "F. Max Müller",
+  "publisher": "Trübner & Co.",
+  "place": "London",
+  "year": 1873,
+  "archive_id": "hymnsrigvedains02mlgoog",
+  "note": "Same edition as vol. 1; mandalas 7-10."
+ },
+ "weber-ts-1871": {
+  "title": "Die Taittirîya-Saṃhitâ, Theil 1 (Indische Studien 11)",
+  "editor": "Albrecht Weber",
+  "publisher": "F. A. Brockhaus",
+  "place": "Leipzig",
+  "year": 1871,
+  "archive_id": "10996666bsb",
+  "note": "Kandas 1-4, printed in roman transliteration. Keyed into Devanagari word for word, keeping Weber's word division."
+ },
+ "guru-gita-1886": {
+  "title": "Gurugītāstotram",
+  "editor": null,
+  "publisher": "Samvad Gyan Ratnakar Press",
+  "place": "Calcutta",
+  "year": 1886,
+  "archive_id": "GuruGitaStotraCalcutta1886SamvadGyanRatnakarPress",
+  "note": "Small devotional print; the page numbers are the print's own."
+ },
+ "jivananda-markandeya-1879": {
+  "title": "Markandeya Purana",
+  "editor": "Jivananda Vidyasagara",
+  "publisher": "Jivananda Vidyasagara",
+  "place": "Calcutta",
+  "year": 1879,
+  "archive_id": "in.ernet.dli.2015.553733",
+  "note": "Includes the Devi Mahatmya. Also the Subhashita corpus's edition for Markandeya 91.9."
+ }
+}

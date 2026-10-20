@@ -3,6 +3,7 @@ period and the life area it points at, with texts from the mantra corpus."""
 from __future__ import annotations
 
 import itertools
+import json
 import re
 from datetime import datetime
 
@@ -151,3 +152,21 @@ def test_recorded_mantra_gets_a_public_audio_url_per_voice(monkeypatch):
     other = next(m for k, m in rp.corpus().items() if k != "sun-nama")
     block = rp._audio_block(other, 108)
     assert block["audio_url"] is None and "voices" not in block
+
+
+def test_every_mantra_verse_is_keyed_from_a_public_domain_print():
+    # D12: verse texts are re-keyed from prints published before 1931, each
+    # linking the scanned page; short formulas and long references say why not.
+    data = json.loads((rp._CORPUS_DIR / "mantras.json").read_text(encoding="utf-8"))
+    editions = data["meta"]["editions"]
+    for edition in editions.values():
+        assert edition["year"] < 1931 and edition["archive_id"], edition
+    kinds = {"print", "formula", "reference_only", "no_print_located"}
+    for m in data["mantras"]:
+        prov = m["provenance"]
+        assert prov["kind"] in kinds, m["id"]
+        if prov["kind"] == "print":
+            archive_id = editions[prov["edition"]]["archive_id"]
+            assert prov["scan_page_url"].startswith(f"https://archive.org/details/{archive_id}/page/n"), m["id"]
+        if m["category"] in ("graha_vedic", "graha_stotra"):
+            assert prov["kind"] == "print", m["id"]
