@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { FestivalService, festivalPlace, festivalRegionsLabel } from '../../../core/festival.service';
@@ -6,6 +6,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { DayQuality, FestivalOccurrence, VratDay } from '../../../core/models';
 import { PanchangaService } from '../../../core/panchanga.service';
 import { PreferencesService } from '../../../core/preferences.service';
+import { PullRefreshService } from '../../../core/pull-refresh.service';
 import { FestivalSheetComponent } from './festival-sheet.component';
 
 interface CalendarCell {
@@ -198,6 +199,7 @@ export class CalendarComponent {
   });
 
   constructor() {
+    inject(DestroyRef).onDestroy(inject(PullRefreshService).register('/m/calendar', () => this.pullRefresh()));
     effect(() => {
       const profileId = this.activeId();
       this.preferences.panchangaContextKey();
@@ -216,6 +218,18 @@ export class CalendarComponent {
   protected reload(): void {
     const month = this.visibleMonth();
     void this.loadFestivals(`${month}-01`, this.daysInVisibleMonth(), this.preferences.festivalRegions(), true);
+  }
+
+  /** Pulled down: the visible month's festivals past the cache, and its day marks. */
+  private pullRefresh(): Promise<unknown> {
+    const month = this.visibleMonth();
+    const from = `${month}-01`;
+    const days = this.daysInVisibleMonth();
+    const profileId = this.activeId();
+    return Promise.all([
+      this.loadFestivals(from, days, this.preferences.festivalRegions(), true),
+      profileId ? this.loadMonthExtras(profileId, from, days) : null,
+    ]);
   }
 
   protected shiftMonth(delta: number): void {

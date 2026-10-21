@@ -28,4 +28,11 @@
     <string name="widget_ask_description">Ask a question from the home screen</string>
     <string name="widget_subhashita_name">Today’s Subhashita</string>
     <string name="widget_subhashita_description">A verse a day from the Gita, Chanakya Niti and the Puranas</string>
+    <!-- Long-press app shortcuts (xml/shortcuts.xml). Short labels fit about 10 characters. -->
+    <string name="shortcut_ask_short">Ask</string>
+    <string name="shortcut_ask_long">Ask a question</string>
+    <string name="shortcut_calendar_short">Calendar</string>
+    <string name="shortcut_calendar_long">Festivals and good days</string>
+    <string name="shortcut_today_short">Today</string>
+    <string name="shortcut_today_long">Your day</string>
 </resources>

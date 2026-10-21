@@ -26,6 +26,7 @@ import { ReadingForComponent } from '../shared/reading-for.component';
 import { NotifyNudgeComponent } from './notify-nudge.component';
 import { ExperienceMode, PreferencesService, ReadingTone } from '../../../core/preferences.service';
 import { HapticsService } from '../../../core/haptics.service';
+import { PullRefreshService } from '../../../core/pull-refresh.service';
 import { SubhashitaService } from '../../../core/subhashita.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { AudioReadingSection, buildTodayAudioScript } from './audio-reading-script';
@@ -431,6 +432,7 @@ export class TodayComponent {
   protected readonly introPlayed = signal(todayIntroPlayed);
 
   constructor() {
+    inject(DestroyRef).onDestroy(inject(PullRefreshService).register('/m/today', () => this.pullRefresh()));
     // Ask early whether this reader has the natural voice, so Listen opens
     // already knowing which voice to use (the answer is kept for 10 minutes).
     void inject(NaturalVoiceService).available().catch(() => false);
@@ -542,6 +544,17 @@ export class TodayComponent {
     } finally {
       if (request === this.requestId) this.loading.set(false);
     }
+  }
+
+  /**
+   * Pulled down: fetch today again past the cache. With nothing on screen
+   * (an error, or a first load still out) it is the ordinary load instead.
+   */
+  private async pullRefresh(): Promise<void> {
+    const profileId = this.kundlis.activeId();
+    if (!profileId) return;
+    if (!this.view() || this.loadError()) return this.loadToday(profileId);
+    return this.refreshToday(profileId, ++this.requestId);
   }
 
   private async refreshToday(profileId: string, request: number): Promise<void> {

@@ -289,7 +289,7 @@ def festival_content(day: date, note: dict, city: str,
 
 
 def schedule_festival_emails(db: Session, now: datetime | None = None) -> list[NotificationJob]:
-    from ..api.timing_place import resolve_timing_place
+    from ..context.timing_place import resolve_timing_place
 
     jobs: list[NotificationJob] = []
     for recipient in cm.email_subscribers(db, "festival_email"):

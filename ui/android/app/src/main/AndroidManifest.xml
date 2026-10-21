@@ -27,6 +27,8 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Long-press the icon: Ask, Calendar, Today (audit N24). -->
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
 
             <intent-filter android:autoVerify="false">
                 <action android:name="android.intent.action.VIEW" />

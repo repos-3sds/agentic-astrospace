@@ -13,6 +13,7 @@ import { calendarDayCacheOptions } from './calendar-cache-options';
 import { MobileSymbol, nakshatraSymbol, tithiSymbol } from '../symbols/mobile-symbols';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { PullRefreshService } from '../../../core/pull-refresh.service';
 
 const HARD_TARAS = new Set(['Janma', 'Vadha']);
 
@@ -217,6 +218,7 @@ export class CalendarDayComponent {
   });
 
   constructor() {
+    inject(DestroyRef).onDestroy(inject(PullRefreshService).register('/m/calendar/day', () => this.load(this.activeId(), true)));
     this.route.queryParamMap
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((params) => {

@@ -237,7 +237,7 @@ def schedule_daily_briefs(db: Session, now: datetime | None = None,
     `ensure` and `prerender` are injectable so tests need neither a model
     nor the TTS service.
     """
-    from ..api.context_routes import _daily_payload
+    from ..context.daily_service import daily_payload
 
     ensure = ensure or ensure_brief
     summary = {"written": 0, "already": 0, "failed": 0, "audio": 0, "deferred": 0}
@@ -288,8 +288,8 @@ def schedule_daily_briefs(db: Session, now: datetime | None = None,
             summary["deferred"] += 1
             continue
         try:
-            payload = _daily_payload(kundli, settings["ayanamsha"], settings["node_type"],
-                                     as_of, timezone, city, nation)
+            payload = daily_payload(kundli, settings["ayanamsha"], settings["node_type"],
+                                    as_of, timezone, city, nation)
             value, written = ensure(db, kundli, payload, tone=settings["tone"], mode=settings["mode"],
                                     ayanamsha=settings["ayanamsha"], node_type=settings["node_type"],
                                     trigger="scheduled")

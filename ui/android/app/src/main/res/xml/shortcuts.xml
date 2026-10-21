@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Long-press the app icon (nativeness audit N24): straight to Ask, Calendar
+  or Today. Each opens an https://asksiddha.app/m/... link aimed at
+  MainActivity, the same path an email button takes, so AppLinksService
+  routes it and only screens on its allowlist can be reached. Static
+  shortcuts launch with a cleared task, so a shortcut always lands on that
+  tab rather than on whatever the app last showed.
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="ask"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_ask"
+        android:shortcutShortLabel="@string/shortcut_ask_short"
+        android:shortcutLongLabel="@string/shortcut_ask_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://asksiddha.app/m/ask"
+            android:targetPackage="app.asksiddha.mobile"
+            android:targetClass="app.asksiddha.mobile.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="calendar"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_calendar"
+        android:shortcutShortLabel="@string/shortcut_calendar_short"
+        android:shortcutLongLabel="@string/shortcut_calendar_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://asksiddha.app/m/calendar"
+            android:targetPackage="app.asksiddha.mobile"
+            android:targetClass="app.asksiddha.mobile.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="today"
+        android:enabled="true"
+        android:icon="@drawable/shortcut_today"
+        android:shortcutShortLabel="@string/shortcut_today_short"
+        android:shortcutLongLabel="@string/shortcut_today_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://asksiddha.app/m/today"
+            android:targetPackage="app.asksiddha.mobile"
+            android:targetClass="app.asksiddha.mobile.MainActivity" />
+    </shortcut>
+</shortcuts>

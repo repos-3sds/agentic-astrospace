@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press app shortcuts (xml/shortcuts.xml): the widget palette, so the
+     shortcut discs match the widgets beside them. values-night/ has the dark pair. -->
+<resources>
+    <color name="shortcut_disc">#FFFCF6</color>
+    <color name="shortcut_glyph">#8F2F22</color>
+</resources>

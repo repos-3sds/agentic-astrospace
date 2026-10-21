@@ -173,9 +173,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--once", action="store_true", help="schedule and deliver once, then exit")
     parser.add_argument("--interval", type=int, default=900, help="seconds between runs (default 900)")
     args = parser.parse_args(argv)
+    from ..config import log_environment_problems
     from ..logging_config import configure_logging
 
     configure_logging()
+    log_environment_problems()
 
     from ..db.database import SessionLocal
 

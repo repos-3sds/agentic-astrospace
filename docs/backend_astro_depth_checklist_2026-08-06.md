@@ -1610,24 +1610,33 @@ From the Tier 0 fixes for `/mnt/project-files/audits/end-to-end-2026-10-18/findi
 ## Deferred backlog — Tier 2 audit follow-ups (2026-10-18)
 
 From the end-to-end audit (2026-10-18). Each needs a device, a new
-dependency, or is a project rather than a fix.
+dependency, or is a project rather than a fix. Rechecked 2026-10-21: the
+items marked done shipped in the "Audit follow-ups" batch.
 
-- [ ] **Worker and Ask layering** (I8). *Why not built:* moving
-  `_daily_payload` and its cache out of `api/context_routes.py` touches the
-  worker, three notification jobs and both Ask routes; no reader-facing
-  change, so it waits for a quiet week. *Unblock:* an
-  `astrospace/context/daily_service.py` raising domain errors, routers
-  mapping them to HTTP; one orchestrator-owned function for terminal texts.
-  *Hook:* `notifications/daily_briefs.py` import of `_daily_payload`.
-- [ ] **One validated settings object** (I9). *Why not built:* 36 env reads
-  in 23 modules; a fail-fast boot check could take Cloud Run down on a
-  variable that is optional today. *Unblock:* `astrospace/config.py` with
-  `pydantic-settings`, warn-only first, fail-fast after one deploy shows
-  no warnings; stop `load_dotenv()` per agent (`agents/base.py`).
-- [ ] **Postgres, Docker and contract tests in CI** (I12). *Why not built:*
-  new CI jobs (a `postgres:16` service applying the schema and migrations,
-  a `docker build`, a response-schema snapshot against `models.ts`, a
-  nightly real-model prompt set) are infrastructure work. *Hook:*
+- [x] **Worker and Ask layering** (I8), first half. Today's payload and its
+  cache are `context/daily_service.py`, the timing-place rule is
+  `context/timing_place.py`; both raise domain errors the routers map to 422,
+  and no notification job imports `api/` (`tests/test_daily_service_layering.py`).
+- [ ] **One orchestrator-owned function for Ask's terminal texts** (I8, rest).
+  *Why not built:* touches both Ask routes and their streamed replies; no
+  reader-facing change. *Hook:* `api/ask_routes.py`, `api/ask_stream_routes.py`.
+- [x] **Environment check at boot** (I9), warn-only half. `astrospace/config.py`
+  lists the variables and logs a warning for a flag that means the opposite
+  of what it says (`ASTROSPACE_QUOTAS_ENFORCED=on` is off), a bad number or
+  email list, or a missing database or key on Cloud Run. Never raises.
+- [ ] **One validated settings object** (I9, rest). *Why not built:* the
+  reads still live in ~30 modules. *Unblock:* one deploy whose logs show no
+  `config:` warnings; then move the reads onto one object in
+  `astrospace/config.py`, make it fail fast, and stop `load_dotenv()` per
+  agent (`agents/base.py`; `cli.py` and `main.py` already load it).
+- [x] **Postgres and Docker in CI** (I12). The `postgres-migrations` job
+  builds a pgvector Postgres from `scripts/ci/supabase_shim.sql`, the base
+  schema and every migration, then `scripts/check_schema_drift.py` checks
+  every model table and column exists and every public table has RLS on.
+  The `docker` job builds the Cloud Run image and checks it boots.
+- [ ] **Response-schema snapshot and a real-model prompt set in CI** (I12,
+  rest). *Why not built:* the snapshot needs a generator for `models.ts`;
+  the prompt set needs a model key in CI and a budget. *Hook:*
   `.github/workflows/ci.yml`.
 - [ ] **UI translation layer** (I13). *Why not built:* about 120
   components; needs Hawk's call on Telugu UI timing. *Unblock:* Transloco,
@@ -1636,21 +1645,25 @@ dependency, or is a project rather than a fix.
   `CAPBridgeViewController` subclass and iPhone testing; the iOS build waits
   on Apple enrollment. *Unblock:* set `allowsBackForwardNavigationGestures`,
   disabled on `/m/today`. *Hook:* `ui/ios/App/App/Base.lproj/Main.storyboard`.
-- [ ] **Pull to refresh** (N13). *Why not built:* a gesture directive with
-  resistance and a spinner needs a phone to tune. *Hook:* the shell
-  scroller, `shell/scroll-memory.directive.ts`; screens' existing reloads.
+- [x] **Pull to refresh** (N13) on Today, Calendar and the Calendar day:
+  `shell/pull-refresh.directive.ts`, screens register in
+  `core/pull-refresh.service.ts`. *Still to do:* tune the resistance on a
+  phone; add other screens by registering their reload.
 - [ ] **iOS Dynamic Type, WKWebView config, native Apple sign-in, push
   presentation** (N15, N19, N20, N26). *Why not built:* each needs an
   iPhone build and new plugins (`@capacitor/text-zoom`,
   `@capacitor-community/apple-sign-in`). *Hook:* `capacitor.config.ts` `ios`,
   `core/auth.service.ts`.
-- [ ] **Verified App Links / Universal Links** (N17). *Why not built:*
-  needs the release signing SHA-256 for `assetlinks.json` and the Apple
-  Team ID for the AASA. *Unblock:* both files under `firebase-public/.well-known/`,
-  an `autoVerify` filter for `https://asksiddha.app/m/*`.
-- [ ] **Native add-to-calendar, in-app review, app shortcuts** (N18, N23,
-  N24). *Why not built:* new plugins, each to check on a phone.
-  *Hook:* `core/calendar-export.ts`; Android `res/xml/shortcuts.xml`.
+- [x] **Verified App Links** (N17), Android: `assetlinks.json` with both
+  signing keys and the `autoVerify` filter for `https://asksiddha.app/m/*`
+  (#203).
+- [ ] **Universal Links** (N17, iOS). *Why not built:* needs the Apple Team
+  ID for the AASA file. *Hook:* `firebase-public/.well-known/`.
+- [x] **App shortcuts** (N24), Android: long-press the icon for Ask, Calendar,
+  Today (`res/xml/shortcuts.xml`), through the App Links route allowlist.
+  *Still to do:* check on a phone.
+- [ ] **Native add-to-calendar, in-app review** (N18, N23). *Why not built:*
+  new plugins, each to check on a phone. *Hook:* `core/calendar-export.ts`.
 - [ ] **System splash icon** (N21). *Why not built:* the blank system
   splash is deliberate: the web intro (#173, #175) takes over at once in
   the same colour, and an icon would show two splashes. Revisit only if
@@ -1659,7 +1672,8 @@ dependency, or is a project rather than a fix.
   action needs a native receiver. Window alerts now have their own channel.
 - [ ] **Conventions and Festival calendar controls** (U30). *Why not built:*
   it belongs with the single ayanamsha setting (Tier 1 rest), which
-  changes the same screen. *Hook:* `features/mobile/settings/` conventions.
+  changes the same screen; also waits for the Settings tab PR (#226).
+  *Hook:* `features/mobile/settings/` conventions.
 
 
 ## Deferred backlog — place search, remaining coverage (2026-10-21)
