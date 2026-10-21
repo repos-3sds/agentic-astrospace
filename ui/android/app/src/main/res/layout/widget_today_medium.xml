@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Your day, 4x2 (Figma M10 Home Screen Widget, node 103:92). -->
+<!-- Your day, 4x2: the ring, the day's headline and the next window as a
+     glass chip, on the Liquid Glass / Cream Glass card. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
@@ -7,41 +8,39 @@
     android:background="@drawable/widget_card"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:padding="16dp">
+    android:padding="18dp">
 
-        <FrameLayout
-            android:layout_width="88dp"
-            android:layout_height="88dp">
+    <FrameLayout
+        android:layout_width="100dp"
+        android:layout_height="100dp">
 
-            <ImageView
-                android:id="@+id/ring"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:contentDescription="@null" />
+        <ImageView
+            android:id="@+id/ring"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:orientation="vertical">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/score"
-                    style="@style/WidgetNumber"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="28sp" />
+            <TextView
+                android:id="@+id/score"
+                style="@style/WidgetNumber"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="30sp" />
 
-                <TextView
-                    android:id="@+id/band"
-                    style="@style/WidgetEyebrow"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:letterSpacing="0.1"
-                    android:textSize="8sp" />
-            </LinearLayout>
-        </FrameLayout>
+            <TextView
+                android:id="@+id/band"
+                style="@style/WidgetBand"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp" />
+        </LinearLayout>
+    </FrameLayout>
 
     <LinearLayout
         android:layout_width="0dp"
@@ -68,14 +67,9 @@
 
         <TextView
             android:id="@+id/timing"
-            style="@style/WidgetBody"
-            android:layout_width="match_parent"
+            style="@style/WidgetChip"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:drawableStart="@drawable/widget_ic_clock"
-            android:drawablePadding="6dp"
-            android:gravity="center_vertical"
-            android:maxLines="1"
-            android:textColor="@color/widget_gold" />
+                android:layout_marginTop="10dp" />
     </LinearLayout>
 </LinearLayout>

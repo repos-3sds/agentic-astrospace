@@ -1,77 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Widget-picker preview only (previewLayout, Android 12+): the live
      layout is widget_subhashita.xml, whose text is all set at runtime. -->
-<!-- Today's Subhashita on the home screen, in the same card as the other
-     widgets: the first line of the Sanskrit, the plain meaning (which always
-     fits) and the source. The full verse and the status image are a tap away. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Today's Subhashita, 4x2: the app's Subhashita card (subhashita-verse.component)
+     in small. The first line of the Sanskrit, the plain meaning in gold, and
+     the source, centred on the card's own red-to-dark ground in both themes. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/widget_card"
-    android:orientation="vertical"
-    android:paddingStart="18dp"
-    android:paddingTop="14dp"
-    android:paddingEnd="10dp"
-    android:paddingBottom="16dp">
+    android:background="@drawable/widget_subhashita_card">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingStart="26dp"
+        android:paddingTop="14dp"
+        android:paddingEnd="26dp"
+        android:paddingBottom="14dp">
 
         <TextView
+            android:id="@+id/eyebrow"
             style="@style/WidgetEyebrow"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:gravity="center"
+            android:letterSpacing="0.2"
             android:text="@string/widget_subhashita_eyebrow"
-            android:textColor="@color/widget_accent" />
-
-        <ImageView
-            android:id="@+id/share"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:contentDescription="@string/widget_share"
-            android:padding="9dp"
-            android:src="@drawable/widget_ic_share" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:gravity="center_vertical"
-        android:orientation="vertical"
-        android:paddingEnd="8dp">
+            android:textColor="#BDFFECDC" />
 
         <TextView
             android:id="@+id/sanskrit"
-        android:text="मात्रास्पर्शास्तु कौन्तेय शीतोष्णसुखदुःखदाः ।"
+            android:text="मात्रास्पर्शास्तु कौन्तेय शीतोष्णसुखदुःखदाः"
             style="@style/WidgetBody"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_marginTop="8dp"
             android:fontFamily="serif"
+            android:lineSpacingMultiplier="1.3"
             android:maxLines="1"
+            android:textColor="#DBFFECDC"
             android:textSize="13sp" />
+
+        <View
+            android:layout_width="28dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="#B3F2C98A" />
 
         <TextView
             android:id="@+id/meaning"
-        android:text="Good times and hard times both pass. Stay patient through them."
-            style="@style/WidgetVerse"
+            android:text="Good times and hard times both pass. Stay patient through them."
+            style="@style/WidgetTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:fontFamily="@font/inter_semibold"
+            android:lineSpacingMultiplier="1.12"
             android:maxLines="3"
-            android:textSize="17sp" />
+            android:textColor="#F2C98A"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/source"
+            android:text="Bhagavad Gita 2.14"
+            style="@style/WidgetEyebrow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_marginTop="10dp"
+            android:textColor="#BDFFECDC" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/source"
-        android:text="Bhagavad Gita 2.14"
-        style="@style/WidgetEyebrow"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="@color/widget_gold" />
-</LinearLayout>
+
+    <ImageView
+        android:id="@+id/share"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/widget_share_bubble"
+        android:contentDescription="@string/widget_share"
+        android:padding="8dp"
+        android:src="@drawable/widget_ic_share_light" />
+</FrameLayout>

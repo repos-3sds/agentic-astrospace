@@ -1,24 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Home-screen widgets, in the app's own palette (ui/src/styles-mobile.scss):
-     cream and rust by day; values-night/ holds the dark one, deep brown with
-     one gold accent, so widgets follow the phone's theme. -->
+     "Cream Glass" by day, a cream ground with a warm sun glow; values-night/
+     holds "Liquid Glass", near-black with rose, amber and blue light behind
+     glass (Hawk's picks, 2026-10-19). Widgets follow the phone's theme. -->
 <resources>
-    <color name="widget_bg_top">#FFFCF6</color>
-    <color name="widget_bg_bottom">#F7EFE3</color>
+    <color name="widget_bg_top">#FFFAF1</color>
+    <color name="widget_bg_bottom">#F8F0E3</color>
+    <!-- The card's glows (widget_card.xml): sun top right, rose on the left.
+         The third glow is the dark theme's blue; there is none by day. -->
+    <color name="widget_glow_1">#73FFC478</color>
+    <color name="widget_glow_1_end">#00FFC478</color>
+    <color name="widget_glow_2">#2EE88C6E</color>
+    <color name="widget_glow_2_end">#00E88C6E</color>
+    <color name="widget_glow_3">#00FFFFFF</color>
+    <color name="widget_glow_3_end">#00FFFFFF</color>
+    <color name="widget_hairline">#E6FFFFFF</color>
+    <!-- Frosted glass inside a card: chips, the date box, Do and Avoid. -->
+    <color name="widget_glass">#9EFFFFFF</color>
     <color name="widget_raised">#F1E7D8</color>
     <color name="widget_text">#201A14</color>
-    <color name="widget_muted">#756B5E</color>
-    <!-- The one accent: rust by day, gold by night. -->
+    <color name="widget_muted">#6E6457</color>
+    <!-- The one accent: rust by day, peach-rose by night. -->
     <color name="widget_accent">#B13F2E</color>
+    <color name="widget_accent_end">#B13F2E</color>
     <color name="widget_on_accent">#FFF8EC</color>
     <color name="widget_gold">#7A5218</color>
-    <color name="widget_track">#EADFCF</color>
-    <!-- Day bands for the score ring: steady, mixed, take care. -->
+    <color name="widget_track">#24785A32</color>
+    <!-- Day bands for the score ring, as the Today screen's dial: steady, mixed, take care. -->
     <color name="widget_band_steady">#2F7D57</color>
-    <color name="widget_band_mixed">#A0661A</color>
-    <color name="widget_band_tough">#B13F2E</color>
+    <color name="widget_band_mixed">#8A5210</color>
+    <color name="widget_band_tough">#A33A3A</color>
     <color name="widget_do">#2F7D57</color>
-    <color name="widget_avoid">#B13F2E</color>
+    <color name="widget_avoid">#A33A3A</color>
+    <!-- Calendar day tints, as the Calendar tab: good day, take care. -->
+    <color name="widget_good">#2F7D57</color>
+    <color name="widget_good_soft">#E3EFE7</color>
+    <color name="widget_warn">#8A5210</color>
+    <color name="widget_warn_soft">#F4E8D2</color>
+    <color name="widget_good_soft_end">#00E3EFE7</color>
+    <color name="widget_bad_soft_end">#00F6E4E1</color>
+    <color name="widget_bad_soft">#F6E4E1</color>
     <!-- The moon's unlit part. -->
     <color name="widget_moon_dark">#E7DCCB</color>
     <color name="widget_moon_lit">#C9A15A</color>

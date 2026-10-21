@@ -7,9 +7,10 @@ import app.asksiddha.mobile.R;
 import org.json.JSONObject;
 
 /**
- * Your day: the score ring, the headline and one timing line (Figma M10
- * Home Screen Widget, node 103:92). Small shows the ring; medium adds the
- * headline; large adds the summary and one Do and one Avoid.
+ * Your day: the score ring, the headline and one timing line, on the app's
+ * glass card (Liquid Glass at night, Cream Glass by day). Small shows the
+ * ring; medium adds the date and headline; large adds the tithi, the summary
+ * and one Do and one Avoid as the Today screen's tinted cards.
  */
 public class TodayWidget extends BaseWidget {
 
@@ -26,9 +27,9 @@ public class TodayWidget extends BaseWidget {
         int score = fresh ? today.optInt("score", 0) : 0;
         String band = fresh ? today.optString("band") : "";
         int arc = bandColor(context, band);
-        int ringSize = layout == R.layout.widget_today_small ? 84 : layout == R.layout.widget_today_medium ? 88 : 80;
+        int ringSize = layout == R.layout.widget_today_small ? 96 : layout == R.layout.widget_today_medium ? 100 : 92;
         views.setImageViewBitmap(R.id.ring,
-            Widgets.ring(context, score, arc, Widgets.color(context, R.color.widget_track), ringSize, 7));
+            Widgets.ring(context, score, arc, Widgets.color(context, R.color.widget_track), ringSize, 8));
         views.setTextViewText(R.id.score, fresh ? String.valueOf(score) : "–");
         // The word under the number says what the score means ("Steady").
         views.setTextViewText(R.id.band, fresh ? today.optString("label") : "");
@@ -43,8 +44,16 @@ public class TodayWidget extends BaseWidget {
         views.setTextViewText(R.id.headline, fresh
             ? today.optString("headline")
             : "Open Siddha to see your day");
+        String date = Widgets.shortDate(WidgetStore.today());
+
+        if (layout == R.layout.widget_today_medium) {
+            // "YOUR DAY · WED 21 OCT": the style sets the capitals.
+            views.setTextViewText(R.id.eyebrow, "Your day · " + date);
+        }
 
         if (layout == R.layout.widget_today_large) {
+            String tithi = fresh ? today.optString("tithi") : "";
+            views.setTextViewText(R.id.date_line, tithi.isEmpty() ? date : date + " · " + tithi);
             views.setTextViewText(R.id.summary, fresh ? today.optString("summary") : "");
             String doItem = fresh ? item(today.optString("doItem"), "Do") : "";
             String avoidItem = fresh ? item(today.optString("avoidItem"), "Avoid") : "";

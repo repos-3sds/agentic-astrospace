@@ -822,7 +822,7 @@ export class TodayComponent {
       if (!place) return;
       const window = await this.festivals.upcoming(place, calendar.start_date, 60, this.preferences.festivalRegions());
       if (this.kundlis.activeId() !== profileId) return;
-      if (this.kundlis.owner()?.id === profileId) void this.widgets.publishCalendar(place, calendar.start_date, window.festivals);
+      if (this.kundlis.owner()?.id === profileId) void this.widgets.publishCalendar(place, calendar.start_date, window.festivals, { profileId, days: calendar.panchanga_days });
       const today = localIsoDate(new Date());
       const horizon = localIsoDate(new Date(Date.now() + 14 * 86_400_000));
       this.upcomingFestival.set(

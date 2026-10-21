@@ -3,7 +3,9 @@ import { Router } from '@angular/router';
 import { Capacitor, registerPlugin } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { ApiService } from './api.service';
-import { FestivalPlace } from './festival.service';
+import { FestivalPlace, FestivalService } from './festival.service';
+import { CalendarDaySummary, DayQuality } from './models';
+import { PanchangaService } from './panchanga.service';
 import { NATURAL_VOICE_NAME, NaturalVoiceService, naturalChunks, prepareForSpeech } from './natural-voice.service';
 import { PreferencesService } from './preferences.service';
 import { SessionTeardown } from './session-teardown';
@@ -148,29 +150,43 @@ export class WidgetBridgeService {
   }
 
   /**
-   * Festivals are the ones Today already loaded; moon days are fetched here.
-   * Each date keeps whether it depends on a convention (`approx`), so the
-   * widget line can say so: there is no room for the full note, and the tap
-   * opens the calendar, where it is shown.
+   * Festivals are the ones Today already loaded; moon days, vrat days and the
+   * reader's day quality for the week are fetched here. Each date keeps
+   * whether it depends on a convention (`approx`), so the widget line can say
+   * so: there is no room for the full note, and the tap opens the calendar,
+   * where it is shown. The week strip (CalendarWidget.java) tints each of the
+   * next seven days good / take care exactly as the Calendar tab does, from
+   * the same /panchanga/{id}/month, and shows each day's tithi from the
+   * calendar Today already loaded.
    */
   async publishCalendar(
     place: FestivalPlace,
     fromDate: string,
     festivals: readonly { name: string; occurs_on: string; is_convention_dependent?: boolean }[],
+    week?: { profileId: string; days: readonly CalendarDaySummary[] },
   ): Promise<void> {
     if (!this.enabled) return;
+    const today = localIsoDate();
+    const query = new URLSearchParams({ city: place.city, nation: place.nation, from_date: fromDate, days: '60' });
+    const [moons, qualities, vrats] = await Promise.allSettled([
+      this.injector.get(ApiService).get<MoonDaysPayload>(`/festivals/moon-days?${query}`),
+      week ? this.injector.get(PanchangaService).month(week.profileId, today, 7) : Promise.reject(new Error('no profile')),
+      this.injector.get(FestivalService).vratDays(place, today, 7),
+    ]);
+    // Each extra is optional: the festivals still go out, and the widget
+    // shows a plain day where a tint or a vrat did not arrive.
     let moonDays: { date: string; moon: 'full' | 'new'; approx: boolean }[] = [];
-    try {
-      const query = new URLSearchParams({ city: place.city, nation: place.nation, from_date: fromDate, days: '60' });
-      const payload = await this.injector.get(ApiService).get<MoonDaysPayload>(`/festivals/moon-days?${query}`);
-      const approx = payload.is_convention_dependent !== false;
-      moonDays = payload.moon_days.map((d) => ({ ...d, approx }));
-    } catch {
-      // The festivals still go out; the moon widget waits for the next try.
+    if (moons.status === 'fulfilled') {
+      const approx = moons.value.is_convention_dependent !== false;
+      moonDays = moons.value.moon_days.map((d) => ({ ...d, approx }));
     }
     this.publish('calendar', {
       festivals: festivals.map((f) => ({ date: f.occurs_on, name: f.name, approx: !!f.is_convention_dependent })),
       moonDays,
+      vrats: vrats.status === 'fulfilled'
+        ? vrats.value.days.map((v) => ({ date: v.date, name: v.name, approx: v.is_convention_dependent }))
+        : [],
+      days: weekDays(today, week?.days ?? [], qualities.status === 'fulfilled' ? qualities.value.days : []),
     });
   }
 
@@ -276,6 +292,24 @@ export function windowSpan(date: string, time: string, timeZone: string): { star
   let endMs = wallClockToEpoch(date, end, timeZone);
   if (endMs <= startMs) endMs += 86_400_000;
   return { startMs, endMs };
+}
+
+/**
+ * The calendar widget's seven days from `from`: each day's tithi and the
+ * reader's day quality, where the app has them. Exported for the spec.
+ */
+export function weekDays(
+  from: string,
+  days: readonly Pick<CalendarDaySummary, 'date' | 'tithi'>[],
+  qualities: readonly Pick<DayQuality, 'date' | 'quality'>[],
+): { date: string; tithi: string; quality: DayQuality['quality'] | '' }[] {
+  const tithi = new Map(days.map((d) => [d.date, d.tithi]));
+  const quality = new Map(qualities.map((q) => [q.date, q.quality]));
+  const [y, m, d] = from.split('-').map(Number);
+  return Array.from({ length: 7 }, (_, i) => {
+    const date = new Date(Date.UTC(y, m - 1, d + i)).toISOString().slice(0, 10);
+    return { date, tithi: tithi.get(date) ?? '', quality: quality.get(date) ?? '' };
+  });
 }
 
 /** Screens a widget opens. Exported for the spec. */

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A still sound wave beside the play button on the square Listen widget. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="54dp" android:height="20dp" android:viewportWidth="54" android:viewportHeight="20">
+    <path android:strokeColor="@color/widget_accent" android:strokeWidth="3" android:strokeLineCap="round"
+        android:strokeAlpha="0.7"
+        android:pathData="M2,7v6 M8,4v12 M14,6v8 M20,2v16 M26,5v10 M32,3v14 M38,7v6 M44,4.5v11 M50,6.5v7" />
+</vector>

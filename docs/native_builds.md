@@ -250,14 +250,14 @@ none of them call the server. Code: `ui/android/.../widgets/` and
 
 | Widget | Shows | Tap |
 | --- | --- | --- |
-| Your day | score ring with the day's word (Steady, Mixed, Take care) under the number; medium adds headline and timing; large adds summary, one Do, one Avoid | Today |
-| Listen | a slim bar: play/stop, the day's word and the brief's length | play/stop |
-| Calendar | tithi, nakshatra, next festival or moon day; 4x4 shows the month | Calendar |
+| Your day | score ring with the day's word (Steady, Mixed, Take care) under the number; medium adds the date, headline and a timing chip; large adds the tithi, summary, and one Do and one Avoid as tinted glass cards | Today |
+| Listen | 2x2 by default: a big play/stop button, the day's word and the brief's length; 4x2 adds the day's headline; squashed to one row, a slim bar | play/stop |
+| Calendar | the next 7 days, tinted good day / take care as the Calendar tab, with a dot for a festival or vrat and the week's festivals listed (one row at 4x2, more when taller); at 2x2, today alone with its tithi and day quality. No month view (Hawk, 2026-10-21) | Calendar |
 | Timing | the next window (Rahu Kalam first): "Starts in 1h 16m", its times, and a ring that fills over the 3 hours before it and empties while it runs | Calendar |
 | Moon | tonight's phase, the tithi, and the next Purnima or Amavasya by date | Calendar |
 | Mantra | the practice last opened, today's count; tap the ring to count | the practice |
 | Ask | a search bar into Ask | Ask |
-| Today's Subhashita | the first Sanskrit line, the plain meaning and the source | the verse screen, to share |
+| Today's Subhashita | the app's Subhashita card (same red-to-dark ground in both themes): the first Sanskrit line, the plain meaning in gold and the source; 4x3 and up, the whole card with wordmark, full verse, English and meaning | the verse screen, to share |
 
 How it fits together:
 
@@ -273,11 +273,21 @@ How it fits together:
   timezone changes. While a window is ahead or running, a per-minute
   non-wakeup alarm redraws only Timing and Your day, so countdowns read in
   minutes and never show seconds.
-- Look: cream card by day, deep brown with one gold accent by night
-  (`values/` and `values-night/widget_colors.xml`), in the app's own Inter
-  and Playfair (`res/font/`, static cuts of `ui/public/fonts/`) so launchers
-  don't substitute the phone's font. Font resources need Android 8+; older
-  phones fall back to the system face.
+- Look: the app's two themes, Cream Glass by day and Liquid Glass by night
+  (`values/` and `values-night/widget_colors.xml`; the card is
+  `drawable/widget_card.xml`, a ground plus the theme's radial glows and a
+  hairline edge), in the app's own Inter and Playfair (`res/font/`, static
+  cuts of `ui/public/fonts/`) so launchers don't substitute the phone's
+  font. The Subhashita wordmark is Samarkan cut down to the letters of
+  "Siddha" (`res/font/samarkan_wordmark.ttf`). Font resources need Android
+  8+; older phones fall back to the system face.
+- Text size: widget text follows the phone's font size only between 100%
+  and 115% (`Widgets.MIN_TEXT_SCALE`, `MainActivity.MAX_TEXT_ZOOM`); outside
+  that it is drawn at the nearer limit. The smallest widget text is 10sp.
+- The calendar part also carries `days` (each of the next 7 days' tithi and
+  the reader's good / mixed / care quality from `/panchanga/{id}/month`, as
+  the Calendar tab) and `vrats` (`/festivals/vrat-days`), both fetched by
+  `publishCalendar`; a day without them draws plain.
 - Mantra taps on the widget are held natively and folded into the tracker's
   record when the app next opens, so both show one count. The count is per
   local day.

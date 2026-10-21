@@ -104,19 +104,31 @@ public final class Widgets {
     }
 
     /**
+     * The smallest font scale widget text is drawn at. Below the phone's
+     * normal size (Samsung goes down to about 80%) a widget's 10sp eyebrows
+     * and day labels become hard to read, and the card does not grow any
+     * room from the smaller text, so they stay at their designed size.
+     */
+    static final float MIN_TEXT_SCALE = 1.0f;
+
+    /**
      * Widget text is in sp, so it follows the phone's font size, which goes
-     * to 200% on Android 14 and past that on Samsung. A widget is a fixed
-     * cell: at those sizes titles clip and the timing line falls off the
-     * bottom. Past the app's own cap (MainActivity.MAX_TEXT_ZOOM) each text
-     * is set to the size it has at the cap, measured by inflating the same
-     * layout at that font scale, so Android 14's non-linear scaling is kept.
-     * Only text views with an id can be reached; every widget text has one.
+     * to 200% on Android 14 and past that on Samsung, and down to about 80%.
+     * A widget is a fixed cell: at the large sizes titles clip and the timing
+     * line falls off the bottom; at the small ones the eyebrows are unreadable.
+     * So widget text follows the phone only between MIN_TEXT_SCALE (100%) and
+     * the app's own cap (MainActivity.MAX_TEXT_ZOOM, 115%) (Hawk, 2026-10-21).
+     * Outside that range each text is set to the size it has at the nearer
+     * limit, measured by inflating the same layout at that font scale, so
+     * Android 14's non-linear scaling is kept. Only text views with an id can
+     * be reached; every widget text has one.
      */
     static RemoteViews capText(Context context, RemoteViews views) {
         Configuration config = context.getResources().getConfiguration();
         float cap = MainActivity.MAX_TEXT_ZOOM / 100f;
-        if (config.fontScale <= cap) return views;
-        SparseArray<Float> sizes = cappedSizes(context, config, cap, views.getLayoutId());
+        float scale = Math.max(MIN_TEXT_SCALE, Math.min(cap, config.fontScale));
+        if (scale == config.fontScale) return views;
+        SparseArray<Float> sizes = cappedSizes(context, config, scale, views.getLayoutId());
         for (int i = 0; i < sizes.size(); i++) {
             views.setTextViewTextSize(sizes.keyAt(i), TypedValue.COMPLEX_UNIT_PX, sizes.valueAt(i));
         }
@@ -126,9 +138,9 @@ public final class Widgets {
     private static final SparseArray<SparseArray<Float>> cappedSizes = new SparseArray<>();
     private static float cappedFor = 0f;
 
-    /** Text sizes in px, by view id, for a layout drawn at the capped font scale. */
+    /** Text sizes in px, by view id, for a layout drawn at the clamped font scale. */
     private static synchronized SparseArray<Float> cappedSizes(
-            Context context, Configuration config, float cap, int layout) {
+            Context context, Configuration config, float scale, int layout) {
         if (cappedFor != config.fontScale) {
             cappedSizes.clear();
             cappedFor = config.fontScale;
@@ -136,7 +148,7 @@ public final class Widgets {
         SparseArray<Float> sizes = cappedSizes.get(layout);
         if (sizes != null) return sizes;
         Configuration capped = new Configuration(config);
-        capped.fontScale = cap;
+        capped.fontScale = scale;
         Context at = context.createConfigurationContext(capped);
         sizes = new SparseArray<>();
         collectTextSizes(LayoutInflater.from(at).inflate(layout, null), sizes);
@@ -314,6 +326,16 @@ public final class Widgets {
             return new java.text.SimpleDateFormat("EEE d MMM", Locale.ENGLISH).format(in.parse(iso));
         } catch (java.text.ParseException e) {
             return iso;
+        }
+    }
+
+    /** "Wednesday, 21 October" from a YYYY-MM-DD date, as the Subhashita card dates a verse. */
+    static String longDate(String iso) {
+        try {
+            java.text.SimpleDateFormat in = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            return new java.text.SimpleDateFormat("EEEE, d MMMM", Locale.ENGLISH).format(in.parse(iso));
+        } catch (java.text.ParseException e) {
+            return "";
         }
     }
 
