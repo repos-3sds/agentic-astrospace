@@ -44,6 +44,7 @@
           @switch (view()) {
             @case ('overview') { <span class="siddha-brand">SIDDHA</span> operations }
             @case ('testers') { Tester pulse }
+            @case ('reports') { Answer reports }
             @case ('users') { Users & access }
             @case ('activity') { Product activity }
             @case ('sources') { Source library }
@@ -807,6 +808,10 @@
               }
             </div>
           </section>
+        }
+
+        @case ('reports') {
+          <app-admin-answer-reports />
         }
 
         @case ('prompts') {

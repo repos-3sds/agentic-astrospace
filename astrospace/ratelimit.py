@@ -44,6 +44,12 @@ LIMITS: dict[str, Limit] = {
         per_day=24, per_minute=6,
         message="Today’s reading is being prepared. Please try again in a little while.",
     ),
+    # Reports cost no model call; this only stops one account flooding the
+    # team's inbox.
+    "report": Limit(
+        per_day=30, per_minute=5,
+        message="Thank you. You’ve sent many reports in a short time. Please try again a little later.",
+    ),
     "reading": Limit(
         per_day=30, per_minute=6,
         message="You’ve made many new readings today. Please try again tomorrow.",

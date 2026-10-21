@@ -27,6 +27,23 @@ export interface MobileAskThreadDetail {
   messages: MobileAskMessage[];
 }
 
+/** Why a reader reported an answer; the server keeps the same five. */
+export type AnswerReportReason = 'wrong' | 'harmful' | 'offensive' | 'advice' | 'other';
+
+/** "Report this answer" (Google Play's rule for AI-generated content). The
+ * answer and question are sent as the reader saw them, so the report stays
+ * readable after the conversation is deleted. */
+export interface AnswerReport {
+  reason: AnswerReportReason;
+  note?: string | null;
+  answer: string;
+  question?: string | null;
+  thread_id?: string | null;
+  message_id?: string | null;
+  experience_mode?: 'guided' | 'balanced' | 'practitioner';
+  language?: 'en' | 'te';
+}
+
 @Injectable({ providedIn: 'root' })
 export class MobileAskThreadService {
   private readonly api = inject(ApiService);
@@ -50,6 +67,10 @@ export class MobileAskThreadService {
 
   async restore(threadId: string): Promise<void> {
     await this.api.post(`/ask/threads/${encodeURIComponent(threadId)}/restore`, {});
+  }
+
+  async report(report: AnswerReport): Promise<void> {
+    await this.api.post('/ask/reports', report);
   }
 
   async delete(threadId: string): Promise<void> {

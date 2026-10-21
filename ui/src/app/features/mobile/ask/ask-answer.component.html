@@ -345,6 +345,17 @@
             }
           </div>
         }
+        @if (!message.streaming && (message.reading || (message.content && message.status === 'answered'))) {
+          @if (reportedIds().has(message.id)) {
+            <p class="report-link is-done">Reported. Thank you.</p>
+          } @else {
+            <button class="report-link" type="button" (click)="$event.stopPropagation(); openReport(message)">
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/></svg>
+              <span>Report this answer</span>
+            </button>
+          }
+        }
+
       </article>
     }
   }
@@ -407,6 +418,14 @@
     [conventions]="conventions()"
     [drillDowns]="drillDowns()"
     (dismissed)="whyOpen.set(false)"
+  />
+}
+
+@if (reporting(); as context) {
+  <as-report-answer-sheet
+    [context]="context"
+    (reported)="markReported()"
+    (dismissed)="reporting.set(null)"
   />
 }
 

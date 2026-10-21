@@ -545,6 +545,39 @@ class AskMessage(Base):
     thread: Mapped["AskThread"] = relationship("AskThread", back_populates="messages")
 
 
+class AnswerReport(Base):
+    """A reader's "Report this answer" on an Ask answer (Google Play's rule
+    for AI-generated content). The question and answer are copied in when the
+    report is made, so deleting the conversation leaves the report readable;
+    the thread and message links go null then. Read only in /admin."""
+
+    __tablename__ = "answer_reports"
+    __table_args__ = (
+        CheckConstraint(
+            "reason IN ('wrong', 'harmful', 'offensive', 'advice', 'other')",
+            name="answer_reports_reason_check",
+        ),
+        CheckConstraint("status IN ('open', 'reviewed')", name="answer_reports_status_check"),
+    )
+
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
+    user_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    thread_id: Mapped[str | None] = mapped_column(
+        _UuidString, ForeignKey("ask_threads.id", ondelete="SET NULL"))
+    message_id: Mapped[str | None] = mapped_column(
+        _UuidString, ForeignKey("ask_messages.id", ondelete="SET NULL"))
+    reason: Mapped[str] = mapped_column(String, nullable=False)
+    note: Mapped[str | None] = mapped_column(Text)
+    question: Mapped[str | None] = mapped_column(Text)
+    answer: Mapped[str] = mapped_column(Text, nullable=False)
+    experience_mode: Mapped[str | None] = mapped_column(String)
+    language: Mapped[str | None] = mapped_column(String)
+    status: Mapped[str] = mapped_column(String, nullable=False, default="open")
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime)
+    reviewed_by: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
 class ValidationProbe(Base):
     """One commit-before-ask validation turn.
 

@@ -26,6 +26,7 @@ import { LockedStateComponent } from '../shared/locked-state.component';
 import { TextRun, cleanPlainText, paragraphRuns } from '../../../core/answer-text';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { HapticsService } from '../../../core/haptics.service';
+import { AnswerReportContext, ReportAnswerSheetComponent } from './report-answer-sheet.component';
 
 /**
  * How confidently the answer lands. Named, not a number: the point of the dot
@@ -102,7 +103,7 @@ export function areaLabel(id: string): string {
   selector: 'as-ask-answer',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, AskComposerComponent, ListenSheetComponent, WhyReadingSheetComponent, LockedStateComponent, BackLinkDirective],
+  imports: [RouterLink, AskComposerComponent, ListenSheetComponent, WhyReadingSheetComponent, LockedStateComponent, BackLinkDirective, ReportAnswerSheetComponent],
   templateUrl: './ask-answer.component.html',
   styleUrl: './ask-answer.component.scss',
 })
@@ -351,6 +352,10 @@ export class AskAnswerComponent {
 
   /** Reuses Today's audio sheet — one player, not a second one for answers. */
   readonly listenOpen = signal(false);
+  /** The answer being reported, while the report sheet is open. */
+  readonly reporting = signal<AnswerReportContext | null>(null);
+  /** Answers reported in this visit, so the link can say so. */
+  readonly reportedIds = signal<ReadonlySet<string>>(new Set());
 
   /** Guards against re-streaming the same (thread, question) pair when the
    * effect below re-fires — e.g. once `startStream` updates the URL with a
@@ -1354,6 +1359,29 @@ export class AskAnswerComponent {
       fallbackContent: this.normaliseAnswerText(message.content),
     };
   }
+
+  /** Opens "Report this answer" with what the reader saw. Google Play's
+   * rule for AI-generated content; see report-answer-sheet.component.ts. */
+  protected openReport(message: ChatMessage): void {
+    const answer = askReportText(this.reportInput(message)) || this.normaliseAnswerText(message.content);
+    if (!answer) return;
+    this.reporting.set({
+      answer,
+      question: this.questionFor(message) || null,
+      thread_id: this.activeThreadId() ?? this.params().get('thread'),
+      message_id: message.id,
+      experience_mode: this.preferences.experienceMode(),
+      language: this.preferences.language(),
+    });
+    this.reportingId = message.id;
+  }
+
+  protected markReported(): void {
+    if (!this.reportingId) return;
+    this.reportedIds.update(ids => new Set(ids).add(this.reportingId!));
+  }
+
+  private reportingId: string | null = null;
 
   protected editQuestion(message: ChatMessage): void {
     this.draft.set(message.content);

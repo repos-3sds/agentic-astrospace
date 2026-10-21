@@ -684,3 +684,26 @@ describe('areaLabel', () => {
     expect(areaLabel('new_area')).toBe('New area');
   });
 });
+
+describe('AskAnswerComponent report this answer', () => {
+  afterEach(() => TestBed.resetTestingModule());
+
+  it('opens the report with the answer as the reader saw it and its question', () => {
+    const component = createComponent();
+    setMode(component, 'guided');
+    const answer = messageWithReading(FULL_READING);
+    (component as any).messages.set([
+      { ...messageWithReading(null), id: 'q1', role: 'user', content: 'Should I change jobs now?' },
+      answer,
+    ]);
+    (component as any).openReport(answer);
+    const context = component.reporting()!;
+    expect(context.question).toBe('Should I change jobs now?');
+    expect(context.answer).toContain('Your chart holds real career strength');
+    expect(context.message_id).toBe('m1');
+    expect(context.experience_mode).toBe('guided');
+
+    (component as any).markReported();
+    expect(component.reportedIds().has('m1')).toBeTrue();
+  });
+});

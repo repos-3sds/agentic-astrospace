@@ -25,6 +25,7 @@ short session (`short_session`) in a single transaction (`add_ask_turn`).
 import logging
 from datetime import datetime
 from typing import Optional, Literal
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -35,6 +36,7 @@ from ..agents.schema import StructuredReading
 from ..context.taxonomy import TaxonomyError, get_domain
 from ..db import get_db
 from ..db import crud, crud_mobile as cm
+from ..db.models import AnswerReport, AskMessage
 from ..db.crud_profile_context import build_profile_context_projection
 from ..db.database import release_connection, short_session
 from .. import ratelimit
@@ -266,6 +268,58 @@ def delete_thread(thread_id: str, user: CurrentUser,
     if not cm.delete_ask_thread(db, thread_id, user.id):
         raise HTTPException(status_code=404, detail="Thread not found")
     return {"deleted": True}
+
+
+# ── Report this answer ───────────────────────────────────────────────────────
+# Google Play requires apps with AI-generated content to let readers flag an
+# answer from inside the app. Declared before /{kundli_id} so "reports" is
+# never read as a kundli id. The team hears about each report from the
+# notifications worker (notifications/owner_alerts.py) and reads it in /admin.
+
+class AnswerReportRequest(BaseModel):
+    reason: Literal["wrong", "harmful", "offensive", "advice", "other"]
+    note: Optional[str] = Field(None, max_length=1000)
+    # What the reader saw, copied in so the report stays readable after the
+    # conversation is deleted.
+    answer: str = Field(min_length=1, max_length=20000)
+    question: Optional[str] = Field(None, max_length=MAX_QUESTION_CHARS)
+    thread_id: Optional[str] = Field(None, max_length=64)
+    message_id: Optional[str] = Field(None, max_length=64)
+    experience_mode: Optional[Literal["guided", "balanced", "practitioner"]] = None
+    language: Optional[Literal["en", "te"]] = None
+
+
+@router.post("/reports", status_code=201)
+def report_answer(body: AnswerReportRequest, user: CurrentUser,
+                  db: Session = Depends(get_db)):
+    ratelimit.require(user.id, "report")
+    # Link the thread and message only when they are the reader's own; a
+    # streamed answer the app has not reloaded still carries a local id.
+    thread = (cm.get_ask_thread(db, body.thread_id, user.id)
+              if body.thread_id and _is_uuid(body.thread_id) else None)
+    message_id = None
+    if thread and body.message_id:
+        message = db.get(AskMessage, body.message_id) if _is_uuid(body.message_id) else None
+        if message and message.thread_id == thread.id and message.role == "assistant":
+            message_id = message.id
+    note = (body.note or "").strip() or None
+    report = AnswerReport(
+        user_id=user.id, thread_id=thread.id if thread else None, message_id=message_id,
+        reason=body.reason, note=note, question=body.question, answer=body.answer,
+        experience_mode=body.experience_mode, language=body.language,
+    )
+    db.add(report)
+    db.commit()
+    log.info("answer reported: %s (%s)", report.id, body.reason)
+    return {"id": report.id, "received": True}
+
+
+def _is_uuid(value: str) -> bool:
+    try:
+        UUID(value)
+    except ValueError:
+        return False
+    return True
 
 
 # ── Ask ──────────────────────────────────────────────────────────────────────

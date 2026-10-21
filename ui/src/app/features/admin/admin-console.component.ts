@@ -22,10 +22,12 @@ import {
 import { AuthService } from '../../core/auth.service';
 import { ThemeService } from '../../core/theme.service';
 import { AdminAgentPromptsComponent } from './admin-agent-prompts.component';
+import { AdminAnswerReportsComponent } from './admin-answer-reports.component';
 
 type ConsoleView =
   | 'overview'
   | 'testers'
+  | 'reports'
   | 'users'
   | 'activity'
   | 'sources'
@@ -38,6 +40,7 @@ type ConsoleView =
 const NAV: Array<{ id: ConsoleView; label: string; icon: string }> = [
   { id: 'overview', label: 'Overview', icon: 'layout-dashboard' },
   { id: 'testers', label: 'Tester pulse', icon: 'radar' },
+  { id: 'reports', label: 'Answer reports', icon: 'flag' },
   { id: 'users', label: 'Users', icon: 'users' },
   { id: 'activity', label: 'Product activity', icon: 'activity' },
   { id: 'sources', label: 'Knowledge sources', icon: 'library' },
@@ -48,7 +51,7 @@ const NAV: Array<{ id: ConsoleView; label: string; icon: string }> = [
   { id: 'system', label: 'System health', icon: 'server-cog' },
 ];
 
-const ADMIN_ONLY_VIEWS = new Set<ConsoleView>(['testers', 'prompts', 'users', 'activity', 'audit']);
+const ADMIN_ONLY_VIEWS = new Set<ConsoleView>(['testers', 'reports', 'prompts', 'users', 'activity', 'audit']);
 
 @Component({
   selector: 'app-admin-console',
@@ -59,6 +62,7 @@ const ADMIN_ONLY_VIEWS = new Set<ConsoleView>(['testers', 'prompts', 'users', 'a
     LucideAngularModule,
     Toast,
     AdminAgentPromptsComponent,
+    AdminAnswerReportsComponent,
   ],
   templateUrl: './admin-console.component.html',
   styleUrl: './admin-console.component.scss',

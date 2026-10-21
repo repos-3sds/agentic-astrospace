@@ -819,3 +819,23 @@ as-ask-composer.answer-composer {
 :host-context(.app-dark) .listen-brief img {
   filter: var(--m-back-icon-filter);
 }
+
+/* "Report this answer" (Google Play's rule for AI-generated content): quiet,
+   under every finished answer, so it is there without competing with the
+   answer's own actions. */
+.report-link {
+  @include m-caption;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin: 2px 0 -8px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: var(--m-muted);
+  cursor: pointer;
+
+  &.is-done { cursor: default; margin: 2px 0 -4px; min-height: 0; padding: 12px 2px; }
+}
