@@ -5,7 +5,7 @@ import { Capacitor } from '@capacitor/core';
 /** How a navigation should move: deeper, back out, or across tabs. */
 export type PageMotion = 'push' | 'pop' | 'tab';
 
-const TAB_ROOTS = new Set(['/m/today', '/m/ask', '/m/calendar', '/m/explore']);
+const TAB_ROOTS = new Set(['/m/today', '/m/ask', '/m/calendar', '/m/explore', '/m/settings']);
 
 function path(url: string): string {
   return url.split(/[?#]/)[0].replace(/\/+$/, '') || '/';

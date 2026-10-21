@@ -6,7 +6,7 @@ import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { LegalDocument, openLegal } from '../../../core/legal';
 import { ThemeService } from '../../../core/theme.service';
-import { BackBarComponent } from '../shared/back-bar.component';
+import { EntitlementService } from '../../../core/entitlement.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { PreferencesService } from '../../../core/preferences.service';
 import { NATURAL_VOICE_NAME, NaturalVoiceService } from '../../../core/natural-voice.service';
@@ -33,7 +33,7 @@ export interface SettingGroup {
 const NOTIFICATION_STORAGE_KEY = 'astrospace.mobile.notificationPrefs';
 
 /**
- * Settings — Home (Figma node 66:89), the More tab's destination.
+ * Settings — Home (Figma node 66:89), the fifth tab in every mode.
  *
  * Every row states its current value on the right, so the common question —
  * "which ayanamsha am I on?" — is answered by looking rather than by opening
@@ -45,7 +45,7 @@ const NOTIFICATION_STORAGE_KEY = 'astrospace.mobile.notificationPrefs';
   selector: 'as-settings-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackBarComponent, RouterLink, ProfileSwitcherComponent],
+  imports: [RouterLink, ProfileSwitcherComponent],
   templateUrl: './settings-home.component.html',
   styleUrl: './settings-home.component.scss',
 })
@@ -54,7 +54,7 @@ export class SettingsHomeComponent {
   private readonly kundlis = inject(KundliStore);
   private readonly theme = inject(ThemeService);
   private readonly preferences = inject(PreferencesService);
-  protected readonly practitioner = computed(() => this.preferences.experienceMode() === 'practitioner');
+  private readonly entitlements = inject(EntitlementService);
   readonly profileSwitcherOpen = signal(false);
 
   readonly profile = computed(() => {
@@ -68,132 +68,137 @@ export class SettingsHomeComponent {
     };
   });
 
+  /**
+   * Six plainly named sections, most-used first (Hawk, 2026-10-20). Labels
+   * say what a row changes rather than the engine's word for it: "Chart
+   * method", not "Conventions"; "Vibration", not "Interaction".
+   */
   readonly groups = computed<SettingGroup[]>(() => [
     {
-      eyebrow: 'FAMILY & PROFILES',
+      eyebrow: 'YOU AND YOUR FAMILY',
       rows: [
         {
           id: 'family',
           icon: 'nav-family',
           label: 'Family',
-          value: 'Switch, match',
+          value: 'Switch person, add someone',
           route: ['/m', 'family'],
         },
         {
           id: 'profiles',
           icon: 'set-profiles',
           label: 'Manage profiles',
-          value: `${this.kundlis.kundlis().length} ${this.kundlis.kundlis().length === 1 ? 'profile' : 'profiles'}`,
+          value: `${this.kundlis.kundlis().length} saved · edit or remove`,
           route: ['/m', 'settings', 'profiles'],
         },
-      ],
-    },
-    {
-      eyebrow: 'EXPERIENCE',
-      rows: [
         {
           id: 'memory',
-          icon: 'set-profiles',
-          label: 'Memory',
+          icon: 'set-inbox',
+          label: 'What Siddha remembers',
           value: !this.preferences.memoryEnabled()
             ? 'Off'
-            : this.preferences.memoryMode() === 'automatic' ? 'Automatic' : 'Ask every time',
+            : this.preferences.memoryMode() === 'automatic' ? 'Saves details on its own' : 'Asks before saving',
           route: this.kundlis.active()?.id
             ? ['/m', 'settings', 'profiles', this.kundlis.active()!.id, 'memory']
             : ['/m', 'settings', 'profiles'],
         },
+      ],
+    },
+    {
+      eyebrow: 'YOUR PLAN',
+      rows: [
         {
-          id: 'appearance',
-          icon: 'set-appearance',
-          label: 'Appearance',
-          value: this.theme.preference()[0].toUpperCase() + this.theme.preference().slice(1),
-          route: ['/m', 'settings', 'appearance'],
-        },
-        {
-          id: 'mode',
-          icon: 'set-tone',
-          label: 'Mode & tone',
-          value: `${this.modeLabel()} · ${this.toneLabel()}`,
-          route: ['/m', 'settings', 'mode'],
+          id: 'subscription',
+          icon: 'set-plus',
+          label: 'Plan and purchases',
+          value: this.planLabel(),
+          route: ['/m', 'subscription'],
         },
       ],
     },
     {
-      eyebrow: 'LANGUAGE & AUDIO',
+      eyebrow: 'ALERTS',
       rows: [
+        {
+          id: 'notifications',
+          icon: 'set-notif',
+          label: 'Notifications and emails',
+          value: this.notificationLabel(),
+          route: ['/m', 'settings', 'notifications'],
+        },
+      ],
+    },
+    {
+      eyebrow: 'LOOK AND FEEL',
+      rows: [
+        {
+          id: 'appearance',
+          icon: 'set-appearance',
+          label: 'Light or dark',
+          value: this.themeLabel(),
+          route: ['/m', 'settings', 'appearance'],
+        },
         {
           id: 'language',
           icon: 'set-lang',
-          label: 'Language & audio',
+          label: 'Language and voice',
           value: `${this.languageLabel()} · ${this.preferences.readAloud() ? this.voiceLabel() : 'Listen off'}`,
           route: ['/m', 'settings', 'language'],
         },
         {
           id: 'interaction',
           icon: 'set-interaction',
-          label: 'Interaction',
-          value: this.preferences.hapticsEnabled() ? 'Haptics on' : 'Haptics off',
+          label: 'Vibration',
+          value: this.preferences.hapticsEnabled() ? 'On for taps' : 'Off',
           route: ['/m', 'settings', 'interaction'],
         },
       ],
     },
     {
-      eyebrow: 'NOTIFICATIONS, LOCATION & CONVENTIONS',
+      eyebrow: 'READINGS AND ASTROLOGY',
       rows: [
         {
-          id: 'notifications',
-          icon: 'set-notif',
-          label: 'Notifications',
-          value: this.notificationLabel(),
-          route: ['/m', 'settings', 'notifications'],
+          id: 'mode',
+          icon: 'set-tone',
+          label: 'Detail and tone',
+          value: `${this.modeLabel()} · ${this.toneLabel()}`,
+          route: ['/m', 'settings', 'mode'],
         },
         {
           id: 'location',
           icon: 'set-loc',
-          label: 'Location',
+          label: 'City for timings',
           value: this.locationLabel(),
           route: ['/m', 'settings', 'location'],
         },
         {
           id: 'festivals',
           icon: 'set-festival',
-          label: 'Festival calendar',
+          label: 'Festivals to show',
           value: this.festivalLabel(),
           route: ['/m', 'settings', 'festivals'],
         },
         {
           id: 'conventions',
           icon: 'set-conv',
-          label: 'Conventions',
-          value: `${this.ayanamshaLabel()} · ${this.chartStyleLabel()}`,
+          label: 'Chart method',
+          value: `${this.ayanamshaLabel()} · ${this.chartStyleLabel()} chart`,
           route: ['/m', 'settings', 'conventions'],
         },
       ],
     },
     {
-      eyebrow: 'ACCOUNT & PRIVACY',
+      eyebrow: 'ACCOUNT AND PRIVACY',
       rows: [
         {
           id: 'account',
           icon: 'set-account',
-          label: 'Account & privacy',
-          value: 'Sign out, delete',
+          label: 'Account',
+          value: 'Email, your data, sign out, delete',
           route: ['/m', 'settings', 'account'],
         },
-        {
-          id: 'subscription',
-          icon: 'set-plus',
-          label: 'Plans',
-          value: 'Access and billing',
-          route: ['/m', 'subscription'],
-        },
-      ],
-    },
-    {
-      eyebrow: 'ABOUT',
-      rows: [
-        { id: 'terms', icon: 'set-legal', label: 'Terms of Service', value: 'Opens in browser', legal: 'terms' },
-        { id: 'privacy', icon: 'set-legal', label: 'Privacy Policy', value: 'Opens in browser', legal: 'privacy' },
+        { id: 'terms', icon: 'set-legal', label: 'Terms of Service', value: 'Opens in your browser', legal: 'terms' },
+        { id: 'privacy', icon: 'set-legal', label: 'Privacy Policy', value: 'Opens in your browser', legal: 'privacy' },
       ],
     },
   ]);
@@ -218,6 +223,18 @@ export class SettingsHomeComponent {
     void inject(NaturalVoiceService).available().then((ok) => this.naturalAvailable.set(ok)).catch(() => undefined);
   }
 
+  /** The plan by name once the server has said; never a guessed "Free". */
+  private planLabel(): string {
+    const tier = this.entitlements.current()?.access_tier;
+    const name = tier === 'pro' ? 'Practitioner' : tier === 'plus' ? 'Plus' : tier === 'free' ? 'Free' : null;
+    return name ? `${name} · see plans, buy questions` : 'See plans, buy questions';
+  }
+
+  private themeLabel(): string {
+    const theme = this.theme.preference();
+    return theme === 'system' ? 'Same as phone' : theme === 'dark' ? 'Dark' : 'Light';
+  }
+
   private modeLabel(): string {
     const mode = this.preferences.experienceMode();
     return mode === 'guided' ? 'Guided' : mode === 'practitioner' ? 'Practitioner' : 'Balanced';
@@ -239,7 +256,7 @@ export class SettingsHomeComponent {
     return short.length > 18 ? 'Chosen voice' : short;
   }
 
-    private languageLabel(): string {
+  private languageLabel(): string {
     return this.preferences.language() === 'te' ? 'Telugu' : 'English';
   }
 
@@ -271,11 +288,11 @@ export class SettingsHomeComponent {
   private notificationLabel(): string {
     try {
       const stored = JSON.parse(localStorage.getItem(NOTIFICATION_STORAGE_KEY) ?? '[]') as Array<{ id: string; on: boolean }>;
-      if (!stored.length) return 'Choose alerts';
+      if (!stored.length) return 'Daily reading, festivals, reminders';
       const onCount = stored.filter((row) => row.on).length;
-      return `${onCount} selected`;
+      return onCount ? `${onCount} turned on` : 'All off';
     } catch {
-      return 'Choose alerts';
+      return 'Daily reading, festivals, reminders';
     }
   }
 }

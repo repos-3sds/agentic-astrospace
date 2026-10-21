@@ -31,12 +31,16 @@ const ENTRIES: SearchEntry[] = [
   { title: 'Compatibility', detail: 'Ashta Koota matching', link: '/m/compat', group: 'TOOLS', keywords: 'match matching marriage partner kundli milan guna koota' },
   { title: 'Practitioner reference', detail: 'Avkahada, grahas and tables', link: '/m/chart/reference', group: 'REFERENCE', keywords: 'ashtakavarga avkahada grahas tables' },
   { title: 'Notifications', detail: 'Alerts you have received', link: '/m/notifications', group: 'SETTINGS', keywords: 'alerts inbox' },
-  { title: 'Notification settings', detail: 'Morning brief, window alerts, email', link: '/m/settings/notifications', group: 'SETTINGS', keywords: 'push alerts reminders email brief quiet hours' },
-  { title: 'Location', detail: 'The city your timings use', link: '/m/settings/location', group: 'SETTINGS', keywords: 'city place timezone' },
-  { title: 'Language & audio', detail: 'Telugu, English and the voice', link: '/m/settings/language', group: 'SETTINGS', keywords: 'telugu english voice listen' },
-  { title: 'Appearance', detail: 'Light, dark or system', link: '/m/settings/appearance', group: 'SETTINGS', keywords: 'dark mode light theme' },
-  { title: 'Plans', detail: 'Free, Plus and Practitioner', link: '/m/subscription', group: 'SETTINGS', keywords: 'subscription upgrade plus price pay' },
-  { title: 'Account & privacy', detail: 'Email, sign out, delete account', link: '/m/settings/account', group: 'SETTINGS', keywords: 'sign out logout email password delete privacy' },
+  { title: 'Notifications and emails', detail: 'Morning brief, window alerts, email', link: '/m/settings/notifications', group: 'SETTINGS', keywords: 'push alerts reminders email brief quiet hours' },
+  { title: 'City for timings', detail: 'The city your timings use', link: '/m/settings/location', group: 'SETTINGS', keywords: 'city place timezone' },
+  { title: 'Language and voice', detail: 'Telugu, English and the voice', link: '/m/settings/language', group: 'SETTINGS', keywords: 'telugu english voice listen' },
+  { title: 'Light or dark', detail: 'Light, dark or same as phone', link: '/m/settings/appearance', group: 'SETTINGS', keywords: 'dark mode light theme' },
+  { title: 'Chart method', detail: 'Ayanamsha, nodes and chart style', link: '/m/settings/conventions', group: 'SETTINGS', keywords: 'conventions ayanamsha lahiri raman kp north south eastern rahu node' },
+  { title: 'Festivals to show', detail: 'Essentials, North or South family festivals', link: '/m/settings/festivals', group: 'SETTINGS', keywords: 'festival calendar region vrat' },
+  { title: 'Detail and tone', detail: 'Guided, Balanced or Practitioner; gentle or direct', link: '/m/settings/mode', group: 'SETTINGS', keywords: 'mode tone guided balanced practitioner experience' },
+  { title: 'Vibration', detail: 'A light buzz on taps', link: '/m/settings/interaction', group: 'SETTINGS', keywords: 'haptics vibrate interaction' },
+  { title: 'Plan and purchases', detail: 'Free, Plus and Practitioner', link: '/m/subscription', group: 'SETTINGS', keywords: 'subscription upgrade plus price pay' },
+  { title: 'Account', detail: 'Email, download your data, sign out, delete', link: '/m/settings/account', group: 'SETTINGS', keywords: 'sign out logout email password delete privacy' },
 ];
 
 const GROUPS = ['READINGS', 'ASK', 'TRANSITS', 'CHART', 'TOOLS', 'REFERENCE', 'SETTINGS'];
