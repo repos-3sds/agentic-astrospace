@@ -25,7 +25,8 @@ import org.json.JSONObject;
  * days from today, each tinted as the Calendar tab tints it (good day for you,
  * take care) with a dot for a festival or vrat, and the week's festivals
  * listed under it; taller shows more of them. Made small (2x2) it shows today
- * alone. Hawk (2026-10-21) found a month grid not useful as a widget.
+ * alone. Hawk (2026-10-21) found a month grid not useful as a widget and
+ * chose this over a day-only widget, which repeats Your day.
  */
 public class CalendarWidget extends BaseWidget {
 
@@ -49,7 +50,7 @@ public class CalendarWidget extends BaseWidget {
         RemoteViews views;
         if (widthDp > 0 && widthDp < 200) {
             views = new RemoteViews(context.getPackageName(), R.layout.widget_calendar_small);
-            drawDay(context, views, fresh ? today : null, calendar, false);
+            drawDay(context, views, fresh ? today : null, calendar);
         } else {
             views = new RemoteViews(context.getPackageName(), R.layout.widget_calendar_week);
             drawWeek(context, views, fresh ? today : null, calendar, heightDp);
@@ -58,23 +59,15 @@ public class CalendarWidget extends BaseWidget {
         return views;
     }
 
-    /** Today on its own: the 2x2 widget, and the 4x2 day layout when `full`. */
-    static void drawDay(Context context, RemoteViews views, JSONObject today, JSONObject calendar, boolean full) {
+    /** Today on its own, for the calendar made small (2x2). */
+    static void drawDay(Context context, RemoteViews views, JSONObject today, JSONObject calendar) {
         Date now = new Date();
-        String iso = WidgetStore.today();
-        JSONObject day = dayRow(calendar, iso);
-        String weekday = new SimpleDateFormat("EEE", Locale.ENGLISH).format(now);
-        String month = new SimpleDateFormat("MMMM", Locale.ENGLISH).format(now);
-        views.setTextViewText(R.id.weekday, full ? weekday : weekday + " · " + month);
+        JSONObject day = dayRow(calendar, WidgetStore.today());
+        views.setTextViewText(R.id.weekday, new SimpleDateFormat("EEE · MMMM", Locale.ENGLISH).format(now));
         views.setTextViewText(R.id.day, new SimpleDateFormat("d", Locale.ENGLISH).format(now));
         String tithi = today != null ? today.optString("tithi") : day != null ? day.optString("tithi") : "";
         views.setTextViewText(R.id.tithi, tithi.isEmpty() ? "Open Siddha for today" : tithi);
         quality(context, views, day == null ? "" : day.optString("quality"));
-        if (full) {
-            views.setTextViewText(R.id.month, month);
-            views.setTextViewText(R.id.nakshatra, today != null ? today.optString("nakshatra") + " nakshatra" : "");
-            views.setTextViewText(R.id.next, nextLine(calendar));
-        }
     }
 
     /** "Good day for you" or "Take care today" as a tinted chip; nothing on a mixed day. */
