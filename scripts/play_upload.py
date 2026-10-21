@@ -11,6 +11,10 @@ repo's .venv or the system python3 with nothing to install.
 
 The service-account key is read from $PLAY_SERVICE_ACCOUNT_JSON, defaulting to
 ~/.config/astrospace/play-publisher.json. Its contents are never printed.
+GitHub Actions has no key at all: it signs in to Google through Workload
+Identity Federation as the same service account and passes the short-lived
+token in $PLAY_ACCESS_TOKEN, which is used instead of a key when set
+(.github/workflows/ship.yml).
 
 Only the internal and alpha (closed testing) tracks are accepted. Production is
 refused here on purpose, and the service account has no production access
@@ -34,6 +38,7 @@ from pathlib import Path
 PACKAGE = "app.asksiddha.mobile"
 DEFAULT_KEY = "~/.config/astrospace/play-publisher.json"
 KEY_ENV = "PLAY_SERVICE_ACCOUNT_JSON"
+TOKEN_ENV = "PLAY_ACCESS_TOKEN"
 ALLOWED_TRACKS = ("internal", "alpha")
 # The listing's default language (store/play/play_console_setup.md).
 NOTES_LANGUAGE = "en-IN"
@@ -136,6 +141,15 @@ def access_token(key: dict) -> str:
     return data["access_token"]
 
 
+def get_token(key_path: str | None = None) -> str:
+    """A token from $PLAY_ACCESS_TOKEN (CI), else one signed with the key file.
+    An explicit --key wins, so a Mac run is never steered by a stray variable."""
+    token = os.environ.get(TOKEN_ENV, "").strip()
+    if token and not key_path:
+        return token
+    return access_token(load_key(key_path))
+
+
 class Edit:
     """One Play edit: everything inside it is invisible until commit, and a
     failed run deletes it so nothing half-done is left behind."""
@@ -201,7 +215,7 @@ def check_track(track: str) -> None:
 
 def run_check(track: str, key_path: str | None = None) -> int:
     check_track(track)
-    edit = Edit(access_token(load_key(key_path)))
+    edit = Edit(get_token(key_path))
     edit.open()
     try:
         print(f"Access OK for {PACKAGE}. {track} track: {describe(edit.track(track))}.")
@@ -211,14 +225,20 @@ def run_check(track: str, key_path: str | None = None) -> int:
 
 
 def run_upload(aab: Path, track: str, notes: str | None, key_path: str | None = None,
-               changes_not_sent_for_review: bool = False) -> int:
+               changes_not_sent_for_review: bool = False, skip_if_not_above: int | None = None) -> int:
     check_track(track)
     if aab.suffix != ".aab" or not aab.is_file():
         raise PlayError(f"{aab} is not an .aab file")
-    edit = Edit(access_token(load_key(key_path)))
+    edit = Edit(get_token(key_path))
     edit.open()
     try:
         before = highest_version(edit.track(track))
+        if skip_if_not_above is not None and skip_if_not_above <= before:
+            # The Mac may already have sent this commit (or a newer one).
+            print(f"Skipped: {track} already holds versionCode {before}, "
+                  f"not below this build's {skip_if_not_above}.")
+            edit.discard()
+            return 0
         print(f"Uploading {aab.name} ({aab.stat().st_size / 1_048_576:.1f} MB) to {track}…", flush=True)
         version_code = edit.upload_bundle(aab)
         if version_code <= before:
@@ -243,7 +263,7 @@ def run_assign(version_code: int, track: str, notes: str | None, key_path: str |
     not a re-upload.
     """
     check_track(track)
-    edit = Edit(access_token(load_key(key_path)))
+    edit = Edit(get_token(key_path))
     edit.open()
     try:
         before = highest_version(edit.track(track))
@@ -271,6 +291,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--check", action="store_true", help="verify access and show the track; change nothing")
     parser.add_argument("--changes-not-sent-for-review", action="store_true",
                         help="commit without sending for review (only if Play asks for it)")
+    parser.add_argument("--skip-if-not-above", type=int, metavar="VERSION_CODE",
+                        help="exit cleanly, uploading nothing, when the track already holds this "
+                             "versionCode or a higher one (CI passes the build's commit count)")
     args = parser.parse_args(argv)
     if args.notes and len(args.notes) > 500:
         parser.error("release notes are limited to 500 characters")
@@ -284,7 +307,8 @@ def main(argv: list[str] | None = None) -> int:
                               args.changes_not_sent_for_review)
         if not args.aab:
             parser.error("give the .aab path, --version-code, or --check")
-        return run_upload(args.aab, args.track, args.notes, args.key, args.changes_not_sent_for_review)
+        return run_upload(args.aab, args.track, args.notes, args.key, args.changes_not_sent_for_review,
+                          args.skip_if_not_above)
     except PlayError as exc:
         print(f"play_upload: {exc}", file=sys.stderr)
         return 1

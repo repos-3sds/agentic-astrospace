@@ -102,8 +102,9 @@ Push, email and the agent-written daily brief all come from one worker:
 Cloud Run job `agentic-astrospace-notifications` (asia-south1), built from the
 same image and run every 15 minutes by a scheduler trigger. It needs the same
 database secret as the API, its own `GEMINI_API_KEY` for briefs, and the FCM
-service-account secret (`fcm-service-account`). Merging to main deploys
-neither the service nor the job; both are redeployed by hand from the Mac.
+service-account secret (`fcm-service-account`). Merging to main redeploys
+both onto the new image once CI is green, without touching env vars or
+secrets ([ship_from_github.md](ship_from_github.md)).
 
 ## After first deploy
 
