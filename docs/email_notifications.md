@@ -65,9 +65,12 @@ Sending is from `Siddha <asksiddha@3senses.design>`, with replies to the same al
 4. Resend webhook: `<PUBLIC_BASE_URL>/api/v1/email/webhooks/resend`, events
    `email.bounced` and `email.complained`.
 5. Apply `supabase/migrations/20261016120000_add_email_notifications.sql`.
-6. Supabase Auth › SMTP: host `smtp.resend.com`, port 465, user `resend`, password the API
-   key, sender `asksiddha@3senses.design`. This moves sign-in emails off Supabase's
-   rate-limited built-in mailer.
+6. Sign-in emails (Supabase Auth): `python3 scripts/auth_emails.py apply` sets Resend SMTP
+   (`smtp.resend.com`, port 465, user `resend`, sender `Siddha <asksiddha@3senses.design>`)
+   and the six Siddha templates in `supabase/templates/` on the live project in one call. It
+   asks for a Supabase access token and the Resend key, hidden, and prints neither. This
+   moves sign-in emails off Supabase's built-in mailer (2 an hour) and sets the limit to 100.
+   Edit copy in the script, then `build` to refresh the files, which a test keeps in step.
 
 Without `RESEND_API_KEY` or `EMAIL_LINK_SECRET` every email job fails with
 "email transport not configured" and stays pending, so adding them later drains the queue.
