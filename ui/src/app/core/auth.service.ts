@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { App as CapacitorApp, URLOpenListenerEvent } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
+import { SocialLogin } from '@capgo/capacitor-social-login';
 import { createClient, Session, SupabaseClient, User } from '@supabase/supabase-js';
 import { apiUrl } from './api-origin';
 import { Preferences } from '@capacitor/preferences';
@@ -49,10 +50,25 @@ function randomNonce(): string {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+/** SHA-256 of a string as lowercase hex, the form Google puts in an ID token's nonce. */
+export async function sha256Hex(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** Android reports USER_CANCELLED; iOS's GIDSignIn says "The user canceled the sign-in flow." */
+function isSignInCancel(error: unknown): boolean {
+  const { code, message } = (error ?? {}) as { code?: unknown; message?: unknown };
+  return code === 'USER_CANCELLED' || /cancel/i.test(String(message ?? ''));
+}
+
 interface AuthConfig {
   enabled: boolean;
   supabase_url?: string;
   supabase_anon_key?: string;
+  /** Public OAuth client IDs; with them the phone apps use Google's own sign-in sheet. */
+  google_web_client_id?: string | null;
+  google_ios_client_id?: string | null;
 }
 
 /** How long sign-out waits for the push-token revoke before going ahead. */
@@ -85,6 +101,10 @@ export class AuthService {
   private readonly sessionStorage: SessionStorageAdapter = sessionStorageAdapter();
   /** The project the client was built for; public values, used for its settings endpoint. */
   private supabaseProject: { url: string; anonKey: string } | null = null;
+  private googleClientIds: { web: string; ios: string | null } | null = null;
+  private socialLoginReady: Promise<void> | null = null;
+  /** The native Google plugin; a field so specs can hand in a fake. */
+  protected socialLogin: Pick<typeof SocialLogin, 'initialize' | 'login' | 'logout'> = SocialLogin;
 
   constructor(
     private router: Router,
@@ -119,6 +139,9 @@ export class AuthService {
 
     this.client = this.buildClient(config.supabase_url, config.supabase_anon_key);
     this.supabaseProject = { url: config.supabase_url, anonKey: config.supabase_anon_key };
+    this.googleClientIds = config.google_web_client_id
+      ? { web: config.google_web_client_id, ios: config.google_ios_client_id ?? null }
+      : null;
     await this.installNativeAuthCallback();
     this.installAutoRefreshLifecycle();
     // Bounded: with an expired access token getSession() refreshes over the
@@ -304,8 +327,77 @@ export class AuthService {
     if (error) throw error;
   }
 
+  /**
+   * On a phone, Google's own sign-in sheet (Credential Manager on Android,
+   * the Google Sign-In SDK on iOS), whose ID token goes straight to Supabase.
+   * No browser page opens, so the reader never sees the Supabase project
+   * address that Google shows for the hosted flow. Anything short of a
+   * cancel falls back to the hosted flow, so a Cloud Console setup that is
+   * not finished yet costs nothing worse than the old behaviour.
+   */
   async signInWithGoogle(destination = '/'): Promise<void> {
+    await this.init();
+    if (!this.client) return;
+    if (await this.signInWithNativeGoogle(destination)) return;
     await this.signInWithProvider('google', destination);
+  }
+
+  /** True when the native sheet finished (signed in or cancelled); false means use the browser. */
+  private async signInWithNativeGoogle(destination: string): Promise<boolean> {
+    const ids = this.googleClientIds;
+    const platform = Capacitor.getPlatform();
+    if (!this.client || !ids || !Capacitor.isNativePlatform()) return false;
+    // iOS needs its own client, plus that client's reversed ID as a URL
+    // scheme in Info.plist; until both exist the server leaves it unset.
+    if (platform === 'ios' && !ids.ios) return false;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      throw new Error('No connection. Check your internet and try again.');
+    }
+    // Google signs the hash into the token; Supabase is given the raw value
+    // and checks one against the other, so a captured token can't be replayed.
+    const rawNonce = randomNonce();
+    let idToken: string | null = null;
+    try {
+      await this.initSocialLogin(ids);
+      const login = await this.socialLogin.login({
+        provider: 'google',
+        options: { nonce: await sha256Hex(rawNonce) },
+      });
+      idToken = 'idToken' in login.result ? login.result.idToken : null;
+    } catch (error) {
+      if (isSignInCancel(error)) return true;
+      console.warn('Native Google sign-in unavailable; using the browser', error);
+      return false;
+    }
+    if (!idToken) return false;
+    const { data, error } = await this.client.auth.signInWithIdToken({
+      provider: 'google',
+      token: idToken,
+      nonce: rawNonce,
+    });
+    if (error) {
+      // Typically the iOS client ID missing from Supabase's authorised list.
+      console.warn('Supabase refused the native Google token; using the browser', error);
+      return false;
+    }
+    this.setSession(data.session);
+    await this.router.navigateByUrl(destination);
+    return true;
+  }
+
+  private initSocialLogin(ids: { web: string; ios: string | null }): Promise<void> {
+    this.socialLoginReady ??= this.socialLogin.initialize({
+      google: {
+        webClientId: ids.web,
+        iOSClientId: ids.ios ?? undefined,
+        iOSServerClientId: ids.web,
+        mode: 'online',
+      },
+    }).catch((error) => {
+      this.socialLoginReady = null;
+      throw error;
+    });
+    return this.socialLoginReady;
   }
 
   /**
@@ -412,6 +504,8 @@ export class AuthService {
       const { error } = await this.client.auth.signOut({ scope: 'local' });
       if (error) throw error;
     }
+    // So the next person on this phone picks their own Google account.
+    if (this.socialLoginReady) void this.socialLogin.logout({ provider: 'google' }).catch(() => undefined);
     this.setSession(null);
     this.signedOut.set(true);
     // Retained tab views, the profile list and every other per-user value

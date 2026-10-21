@@ -122,6 +122,8 @@ neither the service nor the job; both are redeployed by hand from the Mac.
 | DATABASE_URL | yes | Supabase pooler URI (secret) |
 | SUPABASE_URL | yes | https://YOUR-PROJECT.supabase.co |
 | SUPABASE_ANON_KEY | yes | anon public key (safe to expose; it's shipped to browsers anyway) |
+| GOOGLE_OAUTH_WEB_CLIENT_ID | no | the Web OAuth client ID Supabase's Google provider uses; with it the phone apps sign in through Google's own sheet instead of the browser (see docs/native_builds.md "Native Google sign-in") |
+| GOOGLE_OAUTH_IOS_CLIENT_ID | no | the iOS OAuth client ID; set only once Info.plist carries its reversed ID as a URL scheme |
 | ALLOWED_ORIGINS | no | extra CORS origins, comma-separated (SPA is same-origin; only needed for a split frontend later) |
 | GEONAMES_USERNAME | no | only if online geocoding fallback is wanted |
 | AI_PROVIDER | yes for Ask | `gemini` for the mobile Ask experience; `anthropic` remains available as a fallback |

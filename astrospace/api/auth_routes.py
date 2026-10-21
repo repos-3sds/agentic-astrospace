@@ -19,6 +19,8 @@ def config():
         "enabled": cfg["enabled"],
         "supabase_url": cfg["url"],
         "supabase_anon_key": cfg["anon_key"],
+        "google_web_client_id": cfg["google_web_client_id"],
+        "google_ios_client_id": cfg["google_ios_client_id"],
     }
 
 
