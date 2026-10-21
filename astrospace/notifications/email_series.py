@@ -572,7 +572,7 @@ def compat_content() -> EmailContent:
 
 
 def schedule_tip_emails(db: Session, now: datetime | None = None) -> list[NotificationJob]:
-    from ..api.timing_place import resolve_timing_place
+    from ..context.timing_place import resolve_timing_place
     from .email_jobs import coming_up
 
     jobs: list[NotificationJob] = []

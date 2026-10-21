@@ -40,7 +40,7 @@ def _primary_kundli(db: Session, user_id: str):
 def headline_for(kundli, as_of: datetime, tz_name: str,
                  ayanamsha: str = "lahiri", node_type: str = "mean") -> str:
     """The Today verdict headline, computed the same way the Today screen does."""
-    from ..api.timing_place import resolve_timing_place
+    from ..context.timing_place import resolve_timing_place
     from ..context.daily import daily_guidance
     from ..core.vedic.chart import VedicChart
 

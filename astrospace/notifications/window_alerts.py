@@ -33,7 +33,7 @@ HALF_WORKER_CADENCE = timedelta(minutes=7, seconds=30)
 def windows_for(kundli, day: date, tz_name: str, city: str | None = None,
                 nation: str | None = None) -> list[dict]:
     """The day's named windows at the reader's timing place, as Today shows them."""
-    from ..api.timing_place import resolve_timing_place
+    from ..context.timing_place import resolve_timing_place
     from ..core.vedic.panchanga_day import daily_panchanga
 
     place = resolve_timing_place(kundli, tz_name, city, nation)

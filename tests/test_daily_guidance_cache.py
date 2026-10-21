@@ -12,7 +12,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from astrospace.api import context_routes
+from astrospace.context import daily_service
 from astrospace.api.auth import AuthUser, current_user
 from astrospace.db import crud, get_db
 from astrospace.db.database import Base
@@ -27,8 +27,8 @@ def test_now_is_bucketed_to_the_quarter_hour(monkeypatch):
         def now(cls, tz=None):
             return datetime(2026, 10, 15, 6, 44, 59, 999999, tzinfo=tz)
 
-    monkeypatch.setattr(context_routes, "datetime", Clock)
-    bucket = context_routes._bucketed_now(ZoneInfo("Asia/Kolkata"))
+    monkeypatch.setattr(daily_service, "datetime", Clock)
+    bucket = daily_service.bucketed_now(ZoneInfo("Asia/Kolkata"))
     assert (bucket.hour, bucket.minute, bucket.second, bucket.microsecond) == (6, 30, 0, 0)
 
 
@@ -70,11 +70,11 @@ def test_repeat_requests_share_one_computation(client, monkeypatch):
         calls.append(as_of)
         return {"as_of": as_of.isoformat(), "provenance": {"place": {}}}
 
-    monkeypatch.setattr(context_routes, "daily_guidance", fake_guidance)
-    context_routes._cached_daily_guidance.cache_clear()
+    monkeypatch.setattr(daily_service, "daily_guidance", fake_guidance)
+    daily_service.cached_daily_guidance.cache_clear()
     first = test_client.get(f"/api/v1/context/{kundli}/daily")
     second = test_client.get(f"/api/v1/context/{kundli}/daily")
     assert first.status_code == second.status_code == 200
     assert len(calls) == 1
     assert calls[0].second == 0 and calls[0].microsecond == 0
-    context_routes._cached_daily_guidance.cache_clear()
+    daily_service.cached_daily_guidance.cache_clear()
