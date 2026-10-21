@@ -9,6 +9,7 @@ import { AnalyticsService } from '../../../core/analytics.service';
 import { addToCalendar as addEventToCalendar } from '../../../core/calendar-export';
 import { MuhurtaApiWindow, MuhurtaSearchOptions, MuhurtaSearchPayload, VedicService } from '../../../core/vedic.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { PlanLockComponent } from '../shared/plan-lock.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { localIsoDate } from './muhurta-goal.component';
 
@@ -100,7 +101,7 @@ const PAGE = 8;
   selector: 'as-muhurta-results',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, RouterLink],
+  imports: [BackLinkDirective, GenericErrorComponent, PlanLockComponent, RouterLink],
   templateUrl: './muhurta-results.component.html',
   styleUrl: './muhurta-results.component.scss',
 })
@@ -119,6 +120,8 @@ export class MuhurtaResultsComponent {
   protected readonly searched = signal(false);
   protected readonly notes = signal<string[]>([]);
   protected readonly nextGood = signal<MuhurtaSearchPayload['next_good']>(null);
+  /** Past a capped plan's two weeks: the date only, the time behind Plus. */
+  protected readonly lockedNext = signal<MuhurtaSearchPayload['locked_next']>(null);
   protected readonly moreAvailable = signal(0);
   protected readonly rulesNote = signal<string | null>(null);
   protected readonly observanceNote = signal<string | null>(null);
@@ -239,6 +242,7 @@ export class MuhurtaResultsComponent {
       this.clockNote.set(timingClockNote(payload.place));
       this.notes.set(payload.notes ?? (payload.note ? [payload.note] : []));
       this.nextGood.set(payload.next_good ?? null);
+      this.lockedNext.set(payload.locked_next ?? null);
       this.moreAvailable.set(payload.more_available ?? 0);
       this.observanceNote.set(payload.observance_note ?? null);
       this.rulesNote.set(goal === 'general' && intent && payload.rules_goal && payload.rules_goal !== 'general'

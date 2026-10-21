@@ -14,7 +14,8 @@ and the other avoid-windows, and scores each block on:
   the middle of the block, not at sunrise, so a 22:31 slot is judged on the
   star actually in force then;
 * the **person** (or both people, for a marriage): tarabala and chandrabala;
-* **special days**: Guru/Ravi Pushya, Amrit Siddhi, Dwi/Tripushkar, and the
+* **special days**: Guru/Ravi Pushya, Amrit Siddhi, Sarvartha Siddhi,
+  Dwi/Tripushkar, and the
   festival days a purpose is traditionally done on;
 * **season rules** a family priest checks first for the big samskaras:
   Jupiter or Venus combust, adhika masa, Kharmas and Chaturmas.
@@ -59,6 +60,11 @@ from .positions import (
 #   prefer_vara      weekdays that traditionally suit the purpose
 #   prefer_nakshatra nakshatras favoured for it
 #   avoid_tithi      tithi numbers (1-15 within a paksha) avoided
+#   shun_vara        weekdays the text rules out: marked down, not dropped
+#   avoid_lagna      rising signs ruled out even when the lagna type fits
+#   source           the Muhurta Chintamani verses the lists follow (1907
+#                    Venkateshwar Press print); None where the book gives no
+#                    rule for the purpose and common panchang practice is used
 #   hours            (start, end) local hours the purpose can happen in; an
 #                    end above 24 runs past midnight. None is any hour.
 #   hours_note       what the hours leave out, in plain words
@@ -86,9 +92,24 @@ _GENERAL_NAKSHATRAS = ["Ashwini", "Rohini", "Mrigashira", "Punarvasu", "Pushya",
                        "Uttara Bhadrapada", "Revati"]
 _SAMSKARA_NAKSHATRAS = ["Ashwini", "Rohini", "Mrigashira", "Punarvasu", "Pushya",
                         "Hasta", "Chitra", "Swati", "Anuradha", "Shravana", "Revati"]
-_FIXED_NAKSHATRAS = ["Rohini", "Mrigashira", "Uttara Phalguni", "Chitra",
-                     "Anuradha", "Uttara Ashadha", "Dhanishta",
-                     "Uttara Bhadrapada", "Revati"]
+# Muhurta Chintamani's star groups (chapter 1).
+_DHRUVA = ["Rohini", "Uttara Phalguni", "Uttara Ashadha", "Uttara Bhadrapada"]
+_MRIDU = ["Mrigashira", "Chitra", "Anuradha", "Revati"]
+_KSHIPRA = ["Ashwini", "Pushya", "Hasta"]
+_CHARA = ["Punarvasu", "Swati", "Shravana", "Dhanishta", "Shatabhisha"]
+_THREE_PURVAS = ["Purva Phalguni", "Purva Ashadha", "Purva Bhadrapada"]
+
+
+def _stars(*groups) -> list[str]:
+    """Star groups and single stars, in zodiac order, without repeats."""
+    names = {n for g in groups for n in ([g] if isinstance(g, str) else g)}
+    unknown = names - set(NAKSHATRAS)
+    assert not unknown, unknown
+    return [n for n in NAKSHATRAS if n in names]
+
+
+_SAMSKARA_STARS = _stars(_MRIDU, _DHRUVA, _KSHIPRA, _CHARA)
+_MC = "Muhurta Chintamani {} (1907 Venkateshwar Press print)"
 
 GOALS: dict[str, dict] = {
     # ── Purchases and errands ──
@@ -96,28 +117,34 @@ GOALS: dict[str, dict] = {
         "category": "purchase",
         "label": "Buy or take delivery of a vehicle",
         "prefer_vara": ["Monday", "Wednesday", "Thursday", "Friday"],
-        "prefer_nakshatra": ["Ashwini", "Rohini", "Mrigashira", "Punarvasu",
-                             "Pushya", "Hasta", "Chitra", "Swati", "Anuradha",
-                             "Shravana", "Dhanishta", "Shatabhisha", "Revati"],
+        # 2.16 (buying: Revati, Shatabhisha, Ashwini, Swati, Shravana,
+        # Chitra) and 2.18 (a mount to ride: kshipra, Revati, Mrigashira,
+        # Swati, Shatabhisha, Punarvasu; not rikta, not Tuesday).
+        "prefer_nakshatra": _stars(_KSHIPRA, "Revati", "Mrigashira", "Swati",
+                                   "Shatabhisha", "Punarvasu", "Shravana", "Chitra"),
         "avoid_tithi": RIKTA_TITHIS,
+        "shun_vara": ["Tuesday"],
         "hours": (9, 19),
         "hours_note": _ERRANDS.format(start="9 am", end="7 pm", places="showrooms"),
         "hora": "Venus",
         "festivals": ["dhanteras", "akshaya_tritiya", "vijayadashami"],
         "special": True,
+        "source": _MC.format("2.16, 2.18"),
     },
     "buy_gold": {
         "category": "purchase",
         "label": "Buy gold or jewellery",
         "prefer_vara": ["Sunday", "Monday", "Wednesday", "Thursday", "Friday"],
-        "prefer_nakshatra": ["Ashwini", "Rohini", "Pushya", "Hasta", "Chitra",
-                             "Swati", "Anuradha", "Shravana", "Dhanishta", "Revati"],
+        # 2.19 (ornaments: Tripushkar, chara, kshipra, dhruva, Revati; never
+        # the fierce or sharp stars) and 2.16 (buying) for Chitra.
+        "prefer_nakshatra": _stars(_CHARA, _KSHIPRA, _DHRUVA, "Revati", "Chitra"),
         "avoid_tithi": RIKTA_TITHIS,
         "hours": (10, 21),
         "hours_note": _ERRANDS.format(start="10 am", end="9 pm", places="jewellery shops"),
         "hora": "Venus",
         "festivals": ["akshaya_tritiya", "dhanteras"],
         "special": True,
+        "source": _MC.format("2.16, 2.19"),
     },
     "buy_property_gold": {
         "category": "purchase",
@@ -163,13 +190,16 @@ GOALS: dict[str, dict] = {
         "category": "work",
         "label": "Open a shop or start a business",
         "prefer_vara": ["Wednesday", "Thursday", "Friday"],
-        "prefer_nakshatra": ["Ashwini", "Rohini", "Pushya", "Hasta", "Chitra",
-                             "Anuradha", "Uttara Phalguni", "Uttara Ashadha",
-                             "Uttara Bhadrapada", "Shravana", "Revati"],
+        # 2.17: Anuradha, dhruva and kshipra; not rikta, not Tuesday, not
+        # with Aquarius rising.
+        "prefer_nakshatra": _stars(_DHRUVA, _KSHIPRA, "Anuradha"),
         "avoid_tithi": RIKTA_TITHIS,
+        "shun_vara": ["Tuesday"],
         "hours": (7, 20),
         "hours_note": "Only times between 7 am and 8 pm are shown, when a shop or office opening can be held.",
         "lagna": "fixed",
+        "avoid_lagna": {10: "Aquarius rising is avoided for opening a shop"},
+        "source": _MC.format("2.17"),
         "hora": "Mercury",
         "festivals": ["akshaya_tritiya", "dhanteras", "diwali", "vijayadashami"],
         "special": True,
@@ -177,8 +207,11 @@ GOALS: dict[str, dict] = {
     "join_job": {
         "category": "work",
         "label": "Join a new job",
-        "prefer_vara": ["Monday", "Wednesday", "Thursday", "Friday"],
-        "prefer_nakshatra": _GENERAL_NAKSHATRAS,
+        # 2.26: entering service on kshipra stars or Anuradha, on a
+        # Wednesday, Friday, Sunday or Thursday.
+        "prefer_vara": ["Sunday", "Wednesday", "Thursday", "Friday"],
+        "prefer_nakshatra": _stars(_KSHIPRA, "Anuradha"),
+        "source": _MC.format("2.26"),
         "avoid_tithi": RIKTA_TITHIS,
         "hours": (8, 19),
         "hours_note": _ERRANDS.format(start="8 am", end="7 pm", places="offices"),
@@ -188,8 +221,13 @@ GOALS: dict[str, dict] = {
         "category": "home",
         "label": "Move into a rented home",
         "prefer_vara": ["Monday", "Wednesday", "Thursday", "Friday"],
-        "prefer_nakshatra": _FIXED_NAKSHATRAS + ["Pushya", "Hasta", "Shravana"],
+        # 13.2: entering a house already lived in adds Shatabhisha, Pushya,
+        # Swati and Dhanishta to the mridu and dhruva stars.
+        "prefer_nakshatra": _stars(_MRIDU, _DHRUVA, "Shatabhisha", "Pushya",
+                                   "Swati", "Dhanishta"),
         "avoid_tithi": RIKTA_TITHIS | {15},
+        "shun_vara": ["Sunday", "Tuesday"],
+        "source": _MC.format("13.1-13.2"),
         "hours": (6, 20),
         "hours_note": "Only times between 6 am and 8 pm are shown, when a move can be made.",
     },
@@ -198,7 +236,10 @@ GOALS: dict[str, dict] = {
         "category": "home",
         "label": "Griha Pravesha / house warming",
         "prefer_vara": ["Monday", "Wednesday", "Thursday", "Friday"],
-        "prefer_nakshatra": _FIXED_NAKSHATRAS,
+        # 13.1: mridu and dhruva stars; not Sunday or Tuesday.
+        "prefer_nakshatra": _stars(_MRIDU, _DHRUVA),
+        "shun_vara": ["Sunday", "Tuesday"],
+        "source": _MC.format("13.1-13.4"),
         "avoid_tithi": RIKTA_TITHIS | {15},
         "hours": (6, 13),
         "hours_note": "Only morning times are shown (from Brahma Muhurta to 1 pm), when griha pravesha is usually done.",
@@ -214,8 +255,14 @@ GOALS: dict[str, dict] = {
         "category": "home",
         "label": "Bhoomi puja / start building",
         "prefer_vara": ["Monday", "Wednesday", "Thursday", "Friday"],
-        "prefer_nakshatra": _FIXED_NAKSHATRAS + ["Pushya", "Hasta", "Swati", "Shatabhisha"],
-        "avoid_tithi": RIKTA_TITHIS | {15},
+        # 12.15, 12.18: dhruva, mridu, Shatabhisha, Swati, Dhanishta, Hasta,
+        # Pushya; not Sunday or Tuesday; the commentary also rules out the
+        # first and eighth lunar days.
+        "prefer_nakshatra": _stars(_DHRUVA, _MRIDU, "Shatabhisha", "Swati",
+                                   "Dhanishta", "Hasta", "Pushya"),
+        "avoid_tithi": RIKTA_TITHIS | {1, 8, 15},
+        "shun_vara": ["Sunday", "Tuesday"],
+        "source": _MC.format("12.15, 12.18"),
         "hours": (6, 12),
         "hours_note": "Only morning times (6 am to noon) are shown, when bhoomi puja is usually done.",
         "shukla": True,
@@ -257,10 +304,14 @@ GOALS: dict[str, dict] = {
     "seemantham": {
         "category": "family",
         "label": "Seemantham / baby shower",
-        "prefer_vara": ["Monday", "Wednesday", "Thursday", "Friday"],
-        "prefer_nakshatra": ["Pushya", "Punarvasu", "Hasta", "Mrigashira",
-                             "Shravana", "Moola", "Rohini"],
-        "avoid_tithi": RIKTA_TITHIS | {15},
+        # 5.8: Thursday, Tuesday or Sunday; Mrigashira, Pushya, Moola,
+        # Shravana, Hasta, Punarvasu, or else dhruva stars and Revati; not
+        # the 4th, 6th, 8th, 9th, 12th, 14th or a new or full moon.
+        "prefer_vara": ["Sunday", "Tuesday", "Thursday"],
+        "prefer_nakshatra": _stars("Mrigashira", "Pushya", "Moola", "Shravana",
+                                   "Hasta", "Punarvasu", _DHRUVA, "Revati"),
+        "avoid_tithi": RIKTA_TITHIS | {6, 8, 12, 15},
+        "source": _MC.format("5.8"),
         "hours": (7, 13),
         "hours_note": "Only morning times (7 am to 1 pm) are shown, when the ceremony is usually held.",
         "shukla": True,
@@ -270,7 +321,9 @@ GOALS: dict[str, dict] = {
         "category": "family",
         "label": "Namakarana / naming",
         "prefer_vara": ["Monday", "Wednesday", "Thursday", "Friday"],
-        "prefer_nakshatra": _SAMSKARA_NAKSHATRAS,
+        # 5.11: mridu, dhruva, kshipra and chara stars.
+        "prefer_nakshatra": _SAMSKARA_STARS,
+        "source": _MC.format("5.11"),
         "avoid_tithi": RIKTA_TITHIS | {15},
         "hours": (7, 13),
         "hours_note": "Only morning times (7 am to 1 pm) are shown, when relatives can gather.",
@@ -280,9 +333,13 @@ GOALS: dict[str, dict] = {
         "category": "family",
         "label": "Annaprashana",
         "prefer_vara": ["Monday", "Wednesday", "Thursday", "Friday"],
-        "prefer_nakshatra": ["Ashwini", "Rohini", "Mrigashira", "Punarvasu",
-                             "Pushya", "Hasta", "Swati", "Anuradha", "Revati"],
-        "avoid_tithi": RIKTA_TITHIS | {15},
+        # 5.17: fixed, soft, light and moving stars; not the 1st, 4th, 6th,
+        # 8th, 9th, 11th, 12th, 14th or a new or full moon; not Saturday,
+        # Tuesday or Sunday.
+        "prefer_nakshatra": _SAMSKARA_STARS,
+        "avoid_tithi": RIKTA_TITHIS | {1, 6, 8, 11, 12, 15},
+        "shun_vara": ["Sunday", "Tuesday", "Saturday"],
+        "source": _MC.format("5.17"),
         "hours": (7, 13),
         "hours_note": "Only morning times (7 am to 1 pm) are shown, when the first meal is usually given.",
         "shukla": True,
@@ -295,7 +352,10 @@ GOALS: dict[str, dict] = {
         "prefer_nakshatra": ["Ashwini", "Mrigashira", "Punarvasu", "Pushya",
                              "Hasta", "Chitra", "Swati", "Jyeshtha", "Shravana",
                              "Dhanishta", "Shatabhisha", "Revati"],
-        "avoid_tithi": RIKTA_TITHIS | {15},
+        # 5.29: mridu, chara, laghu and Jyeshtha; not rikta, the 1st, the 6th
+        # or a parva day.
+        "avoid_tithi": RIKTA_TITHIS | {1, 6, 15},
+        "source": _MC.format("5.29"),
         "hours": (6, 12),
         "hours_note": "Only morning times (6 am to noon) are shown, when mundan is usually done.",
         "shukla": True,
@@ -312,16 +372,24 @@ GOALS: dict[str, dict] = {
         "avoid_tithi": RIKTA_TITHIS | {15},
         "hours": (8, 17),
         "hours_note": "Only daytime (8 am to 5 pm) is shown.",
+        # 5.24 also leaves out Chaitra, Pausha and Hari's sleep (Chaturmas).
+        "season": frozenset({"kharmas", "chaturmas"}),
+        "source": _MC.format("5.24"),
         "whose": "child",
     },
     "upanayana": {
         "category": "family",
         "label": "Upanayana",
-        "prefer_vara": ["Wednesday", "Thursday", "Friday"],
-        "prefer_nakshatra": ["Ashwini", "Rohini", "Mrigashira", "Punarvasu",
-                             "Pushya", "Hasta", "Chitra", "Swati",
-                             "Anuradha", "Shravana", "Revati"],
-        "avoid_tithi": RIKTA_TITHIS | {15},
+        # 5.40: kshipra, dhruva, chara and mridu stars, Ashlesha, Moola, the
+        # three Purvas and Ardra; Sunday, Wednesday, Thursday, Friday or
+        # Monday; the 2nd, 3rd, 5th, 10th, 11th or 12th (the first third of
+        # the dark half is also allowed, which a 1-15 tithi set cannot say);
+        # never the afternoon.
+        "prefer_vara": ["Sunday", "Monday", "Wednesday", "Thursday", "Friday"],
+        "prefer_nakshatra": _stars(_SAMSKARA_STARS, "Ashlesha", "Moola",
+                                   _THREE_PURVAS, "Ardra"),
+        "avoid_tithi": RIKTA_TITHIS | {6, 7, 8, 13, 15},
+        "source": _MC.format("5.39-5.40"),
         "hours": (6, 13),
         "hours_note": "Only morning times (6 am to 1 pm) are shown, when upanayana is held.",
         "shukla": True,
@@ -333,11 +401,14 @@ GOALS: dict[str, dict] = {
     "vidyarambha": {
         "category": "family",
         "label": "Vidyarambha / start learning",
-        "prefer_vara": ["Wednesday", "Thursday", "Friday"],
-        "prefer_nakshatra": ["Ashwini", "Rohini", "Mrigashira", "Punarvasu",
-                             "Pushya", "Hasta", "Chitra", "Swati", "Shravana",
-                             "Revati"],
-        "avoid_tithi": RIKTA_TITHIS,
+        # 5.37 (a child's first letters): laghu stars, Shravana, Swati,
+        # Revati, Punarvasu, Ardra, Chitra, Anuradha; Monday, Wednesday,
+        # Thursday or Friday; the 2nd, 3rd, 5th, 6th, 10th, 11th or 12th.
+        "prefer_vara": ["Monday", "Wednesday", "Thursday", "Friday"],
+        "prefer_nakshatra": _stars(_KSHIPRA, "Shravana", "Swati", "Revati",
+                                   "Punarvasu", "Ardra", "Chitra", "Anuradha"),
+        "avoid_tithi": RIKTA_TITHIS | {1, 7, 8, 13, 15},
+        "source": _MC.format("5.37"),
         "hours": (6, 12),
         "hours_note": "Only morning times (6 am to noon) are shown, when learning is traditionally begun.",
         "hora": "Mercury",
@@ -349,9 +420,12 @@ GOALS: dict[str, dict] = {
         "category": "travel",
         "label": "Start a journey",
         "prefer_vara": ["Monday", "Wednesday", "Thursday", "Friday"],
+        # 11.9: these nine stars; not the 6th, 8th, 12th, rikta, new or full
+        # moon (nor the bright 1st, which a 1-15 tithi set cannot say).
         "prefer_nakshatra": ["Ashwini", "Mrigashira", "Punarvasu", "Pushya",
                              "Hasta", "Anuradha", "Shravana", "Dhanishta", "Revati"],
-        "avoid_tithi": RIKTA_TITHIS,
+        "avoid_tithi": RIKTA_TITHIS | {6, 8, 12, 15},
+        "source": _MC.format("11.9"),
         "hours": None,
         "lagna": "movable",
         "travel": True,
@@ -504,10 +578,25 @@ _MALEFICS = ("Sun", "Mars", "Saturn", "Rahu", "Ketu")
 _BAD_YOGAS = {"Vyatipata", "Vaidhriti"}
 
 # Special days from weekday + nakshatra (and tithi for the Pushkar yogas).
-# Commonly listed panchang tables; convention-dependent like the rest.
-_AMRIT_SIDDHI = {"Sunday": "Hasta", "Monday": "Mrigashira", "Tuesday": "Ashwini",
-                 "Wednesday": "Anuradha", "Thursday": "Pushya", "Friday": "Revati",
-                 "Saturday": "Rohini"}
+# Amrit Siddhi follows the table in the Muhurta Chintamani commentary (1907
+# print, p. 12), which pairs Monday with Shravana; most printed panchangs
+# pair it with Mrigashira, so Monday takes either.
+_AMRIT_SIDDHI = {"Sunday": {"Hasta"}, "Monday": {"Mrigashira", "Shravana"},
+                 "Tuesday": {"Ashwini"}, "Wednesday": {"Anuradha"},
+                 "Thursday": {"Pushya"}, "Friday": {"Revati"}, "Saturday": {"Rohini"}}
+# Sarvartha Siddhi, "for every purpose": Muhurta Chintamani 1.28-29, as the
+# verse gives it. The Hindi commentary's Friday has Purva Phalguni for
+# Shravana, and its Wednesday line is garbled in the print; the verse wins.
+_SARVARTHA_SIDDHI = {
+    "Sunday": {"Hasta", "Moola", "Uttara Phalguni", "Uttara Ashadha",
+               "Uttara Bhadrapada", "Pushya", "Ashwini"},
+    "Monday": {"Shravana", "Rohini", "Mrigashira", "Pushya", "Anuradha"},
+    "Tuesday": {"Ashwini", "Uttara Bhadrapada", "Krittika", "Ashlesha"},
+    "Wednesday": {"Rohini", "Anuradha", "Hasta", "Krittika", "Mrigashira"},
+    "Thursday": {"Revati", "Anuradha", "Ashwini", "Punarvasu", "Pushya"},
+    "Friday": {"Revati", "Anuradha", "Ashwini", "Punarvasu", "Shravana"},
+    "Saturday": {"Shravana", "Rohini", "Swati"},
+}
 _PUSHKAR_VARAS = {"Sunday", "Tuesday", "Saturday"}
 _BHADRA_TITHIS = {2, 7, 12}
 _TRIPUSHKAR_NAKS = {"Krittika", "Punarvasu", "Uttara Phalguni", "Vishakha",
@@ -534,7 +623,8 @@ SEASON_TEXT = {
 _DIRECTIONS = {"north", "south", "east", "west"}
 
 OBSERVANCE_NOTE = (
-    "Rules used: weekday, nakshatra and tithi at the time of each slot; Rahu "
+    "Rules used: weekday, nakshatra and tithi at the time of each slot, with "
+    "the lists for each purpose taken from the classical muhurta texts; Rahu "
     "Kalam, Yamaganda, Gulika, Durmuhurta, Varjya and Bhadra cut out; your "
     "tarabala and chandrabala. Muhurta tables differ by region and family "
     "tradition, and some families also avoid particular weekdays or months. "
@@ -684,13 +774,17 @@ def _special_days(vara: str, facts: dict) -> list[str]:
         found.append("Guru Pushya")
     if nak == "Pushya" and vara == "Sunday":
         found.append("Ravi Pushya")
-    if _AMRIT_SIDDHI.get(vara) == nak and "Guru Pushya" not in found:
+    if nak in _AMRIT_SIDDHI.get(vara, ()) and "Guru Pushya" not in found:
         found.append("Amrit Siddhi")
     if vara in _PUSHKAR_VARAS and tithi in _BHADRA_TITHIS:
         if nak in _TRIPUSHKAR_NAKS:
             found.append("Tripushkar")
         elif nak in _DWIPUSHKAR_NAKS:
             found.append("Dwipushkar")
+    # The broadest of the weekday-star pairings; named only when nothing
+    # stronger already covers the day.
+    if not found and nak in _SARVARTHA_SIDDHI.get(vara, ()):
+        found.append("Sarvartha Siddhi")
     return found
 
 
@@ -824,7 +918,9 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
          lat: float | None = None, lng: float | None = None,
          tz_str: str | None = None,
          limit: int = 5, max_days: int = 62,
-         look_ahead_days: int = 0) -> dict:
+         look_ahead_days: int = 0,
+         locked_from: date_cls | None = None,
+         locked_days: int = 0) -> dict:
     """Find and rank good times for a purpose over a date range.
 
     Args:
@@ -846,6 +942,10 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
         max_days: guard against unbounded ranges.
         look_ahead_days: when the range has fewer than three good slots, look
             this many days past it for the next good date.
+        locked_from / locked_days: for a plan with a horizon, the first good
+            date from ``locked_from`` on, returned as ``locked_next`` with
+            the date and quality only. The time stays with the plan that
+            can see it.
 
     Raises:
         ExcludedGoalError: for health/legal/financial intents.
@@ -895,6 +995,18 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
         if good:
             next_good = {k: good[0][k] for k in ("date", "start", "end", "score", "quality", "label")}
 
+    locked_next = None
+    # Two weeks at a time: the first good date is usually in the first.
+    for offset in range(0, locked_days if locked_from else 0, 14):
+        ahead = _scan(goal, rules_slug, locked_from + timedelta(days=offset),
+                      min(14, locked_days - offset), me, partner, ghatak_moon_sign,
+                      hours, avoid, direction, observe, lat, lng, tz_str, city, nation)
+        good = sorted((c for c in ahead["candidates"] if c["score"] >= _GOOD_SCORE),
+                      key=lambda c: c["start_iso"])
+        if good:
+            locked_next = {"date": good[0]["date"], "quality": good[0]["quality"]}
+            break
+
     notes = []
     if not results:
         notes.append("No time in these dates clears the bar. Widening the dates "
@@ -933,12 +1045,14 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
         "count": len(results),
         "more_available": more,
         "next_good": next_good,
+        "locked_next": locked_next,
         "notes": notes,
         "note": " ".join(notes) or None,
         "hours": list(hours) if hours else None,
         "season_rules": sorted(observe),
         "is_convention_dependent": True,
         "observance_note": OBSERVANCE_NOTE,
+        "rules_source": goal.get("source"),
         "disclaimer": (
             "Timing supports your intent; the decision and the care are still "
             "yours. Muhurta is not offered for health, legal or financial "
@@ -1129,13 +1243,19 @@ def _score_block(goal, day, vara, block, start, end, me, partner, amrit, festiva
                 terms.append("Lagna shuddhi: 7th and 8th clear of malefics")
         else:
             signs, why = _LAGNA_TYPES[lagna_rule]
-            if lagna in signs:
+            if lagna in goal.get("avoid_lagna", {}):
+                points -= 6
+                minus.append(goal["avoid_lagna"][lagna])
+            elif lagna in signs:
                 points += 6
                 plus.append(f"Rising sign is {why}")
 
     if goal["prefer_vara"] and vara in goal["prefer_vara"]:
         points += 10
         plus.append(f"{vara} suits this")
+    elif vara in goal.get("shun_vara", ()):
+        points -= 8
+        minus.append(f"{vara} is a day the old rules avoid for this")
     terms.append(f"Vara: {vara}")
     if goal["prefer_nakshatra"] and facts["nakshatra"] in goal["prefer_nakshatra"]:
         points += 12
@@ -1164,6 +1284,8 @@ def _score_block(goal, day, vara, block, start, end, me, partner, amrit, festiva
             lift = 10 if goal.get("special") else 4
         elif special == "Amrit Siddhi":
             lift = 6
+        elif special == "Sarvartha Siddhi":
+            lift = 4
         else:  # Pushkar yogas multiply what is begun: good for buying only
             lift = 6 if goal.get("special") else 0
         if lift:

@@ -101,3 +101,24 @@ Jataka**, **Phaladeepika**, **Uttara Kalamritam**, and a **nakshatra** text.
 Per-book structure and extraction bounds live in `docs/kb_manifests/`, gated by
 `scripts/check_kb_manifest.py`. A manifest may not claim a book is readable
 without a measured number, and may not measure below 60%.
+
+## Outside the KB folder: Muhurta Chintamani (1907)
+
+Not in `Astro Space Knowledge Base/`. Ramacharya's Muhurta Chintamani with
+Mahidhara Sharma's Hindi tika, Khemraj Krishnadas (Venkateshwar Press),
+Samvat 1964 / 1907; CC0 scan at archive.org
+`MuhurtaChintamaniVenkateshwarPress1906ShriKrishnaMuseumKurukshetra` (133 MB).
+The text layer is only the digitiser's watermark and the archive.org OCR is
+garbled Devanagari, so it is **vision only**: render pages and read them.
+Printed page N is PDF page N + 17. Cloud threads cannot reach archive.org; the
+copy used came through the Mac.
+
+Verses read so far, and the goal each one sets in
+`astrospace/core/vedic/muhurta.py` (`GOALS[...]["source"]`): 1.28-29
+Sarvartha Siddhi; the Amrit Siddhi table in the commentary (p. 12); 2.16-2.19
+buying, shop opening, vehicles, ornaments; 2.26 joining service; 5.8
+simantonnayana; 5.11 naming; 5.17 annaprashana; 5.24 karnavedha; 5.29 chaula;
+5.37-38 akshara and vidyarambha; 5.39-42 upanayana; 11.9 journeys; 12.15,
+12.18 house building; 13.1-13.4 house entry. Not yet read: the vivaha star
+verse (chapter 6, past the guna-milan verses around p. 77) and sandhi/treaty
+for contracts (p. 37).
