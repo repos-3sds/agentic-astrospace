@@ -53,6 +53,13 @@ const config: CapacitorConfig = {
       // plugin has no config key for it.
       resize: 'native' as KeyboardResize,
     },
+    SocialLogin: {
+      // Google only (native sign-in sheet, see AuthService.signInWithGoogle).
+      // Apple stays on Supabase's hosted flow; Facebook off also keeps its
+      // SDK and the AD_ID permission out of the build.
+      providers: { google: true, facebook: false, apple: false, twitter: false },
+      logLevel: 1,
+    },
     PushNotifications: {
       // Without this a push that lands while the app is open is delivered to
       // the listener but never shown, so the morning brief silently vanishes.

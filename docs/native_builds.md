@@ -242,6 +242,52 @@ the store listings point at the deployed URLs.
 - The native projects are not in CI; `npm run version:check` runs there, a
   native build does not.
 
+## Native Google sign-in
+
+Google's consent screen and its "You shared some Google Account data with ..."
+email name the host the OAuth redirect runs through, which for Supabase's
+hosted flow is `wcaqjhqckipgkvhbiwjt.supabase.co`. On a phone the app now uses
+Google's own sign-in sheet instead (`@capgo/capacitor-social-login`:
+Credential Manager on Android, the Google Sign-In SDK on iOS) and hands the ID
+token to Supabase with `signInWithIdToken`, so no Supabase page opens.
+`AuthService.signInWithGoogle` falls back to the hosted browser flow on any
+failure other than a cancel, and whenever the server sends no client IDs, so a
+half-finished setup behaves exactly like before. Web sign-in is unchanged.
+
+The nonce: the app sends `sha256(raw)` to Google, which signs it into the ID
+token, and gives Supabase the raw value, which checks one against the other.
+Leave Supabase's "Skip nonce checks" off.
+
+Setup, all in Google Cloud project `gen-lang-client-0058562386` (the one that
+owns the Web client Supabase's Google provider uses):
+
+1. **Android OAuth clients** (Google Auth Platform → Clients → Create →
+   Android), package `app.asksiddha.mobile`, one per signing certificate:
+   - the **Play app signing key** SHA-1 (Play Console → Test and release →
+     App integrity → App signing key certificate). Every Play-installed build
+     is signed with this one.
+   - the **upload key** SHA-1 (`keytool -list -v -keystore
+     ui/android/upload-key.jks`), for AABs/APKs installed by hand.
+   - optionally the debug key (`cd ui/android && ./gradlew signingReport`).
+   The Android client IDs are not used anywhere in code.
+2. **API env**: `GOOGLE_OAUTH_WEB_CLIENT_ID=<the Web client ID>` on the Cloud
+   Run service (it is public; it already ships in every Google sign-in URL).
+   The app reads it from `/api/v1/auth/config`, caches it, and uses it from
+   the next launch after it first sees it.
+3. **iOS** (when building for iPhone): create an iOS OAuth client with bundle
+   ID `app.asksiddha.mobile`; add its reversed ID
+   (`com.googleusercontent.apps.<...>`) to `ui/ios/App/App/Info.plist`
+   under `CFBundleURLTypes` → `CFBundleURLSchemes`; add the iOS client ID to
+   Supabase → Authentication → Providers → Google → "Client IDs" after the
+   Web one (comma-separated), then set `GOOGLE_OAUTH_IOS_CLIENT_ID`. Until
+   then iOS keeps the browser flow.
+
+`capacitor.config.ts` bundles the Google provider only; Facebook is off, which
+also keeps the `AD_ID` permission out of the Android build. On Android a
+`[28444] Developer console is not set up correctly` in Logcat (tag
+`GoogleProvider`) means the SHA-1 of the installed build is not on an Android
+client; the app quietly uses the browser meanwhile.
+
 ## Home-screen widgets
 
 Android has eight widgets, all drawn natively from data the app publishes;

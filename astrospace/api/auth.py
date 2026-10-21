@@ -158,6 +158,10 @@ def auth_config() -> dict:
         "enabled": supabase_configured(),
         "url": os.getenv("SUPABASE_URL"),
         "anon_key": os.getenv("SUPABASE_ANON_KEY"),
+        # Public OAuth client IDs for native Google sign-in on the phone apps.
+        # Unset, the apps keep using Supabase's browser flow.
+        "google_web_client_id": os.getenv("GOOGLE_OAUTH_WEB_CLIENT_ID") or None,
+        "google_ios_client_id": os.getenv("GOOGLE_OAUTH_IOS_CLIENT_ID") or None,
     }
 
 

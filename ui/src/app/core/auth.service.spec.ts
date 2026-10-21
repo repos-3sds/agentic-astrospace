@@ -5,7 +5,7 @@ import { Session } from '@supabase/supabase-js';
 import { Preferences } from '@capacitor/preferences';
 import { ResourceCacheService } from './resource-cache.service';
 
-import { AuthService } from './auth.service';
+import { AuthService, sha256Hex } from './auth.service';
 import { ConnectivityService } from './connectivity.service';
 
 function connectivitySpy(): jasmine.SpyObj<ConnectivityService> {
@@ -445,5 +445,94 @@ describe('AuthService Sign in with Apple availability', () => {
     (service as any).supabaseProject = { url: 'https://proj.supabase.co', anonKey: 'anon' };
     spyOn(window, 'fetch').and.rejectWith(new TypeError('Failed to fetch'));
     expect(await service.appleSignInEnabled()).toBeFalse();
+  });
+});
+
+describe('AuthService native Google sign-in', () => {
+  const WEB_ID = '704-web.apps.googleusercontent.com';
+  let service: AuthService;
+  let router: jasmine.SpyObj<Router>;
+  let socialLogin: { initialize: jasmine.Spy; login: jasmine.Spy; logout: jasmine.Spy };
+  let client: { auth: { signInWithIdToken: jasmine.Spy; signInWithOAuth: jasmine.Spy } };
+  let platform: jasmine.Spy;
+  const fakeSession = { access_token: 'live-token', user: { id: 'u1' } } as any;
+
+  beforeEach(() => {
+    spyOn(Capacitor, 'isNativePlatform').and.returnValue(true);
+    platform = spyOn(Capacitor, 'getPlatform').and.returnValue('android');
+    router = jasmine.createSpyObj<Router>('Router', ['navigate', 'navigateByUrl']);
+    service = new AuthService(router, connectivitySpy(), cacheSpy());
+    spyOn(service, 'init').and.resolveTo();
+    socialLogin = {
+      initialize: jasmine.createSpy('initialize').and.resolveTo(),
+      login: jasmine
+        .createSpy('login')
+        .and.resolveTo({ provider: 'google', result: { responseType: 'online', idToken: 'google-id-token' } }),
+      logout: jasmine.createSpy('logout').and.resolveTo(),
+    };
+    client = {
+      auth: {
+        signInWithIdToken: jasmine
+          .createSpy('signInWithIdToken')
+          .and.resolveTo({ data: { session: fakeSession }, error: null }),
+        signInWithOAuth: jasmine
+          .createSpy('signInWithOAuth')
+          .and.resolveTo({ data: { url: null }, error: null }),
+      },
+    };
+    (service as any).client = client;
+    (service as any).socialLogin = socialLogin;
+    (service as any).googleClientIds = { web: WEB_ID, ios: null };
+  });
+
+  it('signs in with the Google sheet, hashing the nonce Google sees', async () => {
+    await service.signInWithGoogle('/m/today');
+
+    expect(socialLogin.initialize).toHaveBeenCalledWith(
+      jasmine.objectContaining({ google: jasmine.objectContaining({ webClientId: WEB_ID }) }),
+    );
+    const sentNonce = socialLogin.login.calls.mostRecent().args[0].options.nonce;
+    const idTokenArgs = client.auth.signInWithIdToken.calls.mostRecent().args[0];
+    expect(idTokenArgs.provider).toBe('google');
+    expect(idTokenArgs.token).toBe('google-id-token');
+    expect(sentNonce).toBe(await sha256Hex(idTokenArgs.nonce));
+    expect(sentNonce).not.toBe(idTokenArgs.nonce);
+    expect(service.session()).toBe(fakeSession);
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/m/today');
+    expect(client.auth.signInWithOAuth).not.toHaveBeenCalled();
+  });
+
+  it('does nothing more when the reader cancels the sheet', async () => {
+    socialLogin.login.and.rejectWith(Object.assign(new Error('Google Sign-In cancelled by user'), { code: 'USER_CANCELLED' }));
+    await service.signInWithGoogle('/m/today');
+    expect(client.auth.signInWithIdToken).not.toHaveBeenCalled();
+    expect(client.auth.signInWithOAuth).not.toHaveBeenCalled();
+  });
+
+  it('falls back to the browser when the Google setup is not finished', async () => {
+    socialLogin.login.and.rejectWith(new Error('[28444] Developer console is not set up correctly'));
+    await service.signInWithGoogle('/m/today');
+    expect(client.auth.signInWithOAuth).toHaveBeenCalledWith(jasmine.objectContaining({ provider: 'google' }));
+  });
+
+  it('falls back to the browser when Supabase refuses the token', async () => {
+    client.auth.signInWithIdToken.and.resolveTo({ data: { session: null }, error: new Error('Unacceptable audience') });
+    await service.signInWithGoogle('/m/today');
+    expect(client.auth.signInWithOAuth).toHaveBeenCalled();
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
+  });
+
+  it('uses the browser on iOS until an iOS client ID is configured', async () => {
+    platform.and.returnValue('ios');
+    await service.signInWithGoogle('/m/today');
+    expect(socialLogin.login).not.toHaveBeenCalled();
+    expect(client.auth.signInWithOAuth).toHaveBeenCalled();
+  });
+
+  it('uses the browser when the server sends no Google client IDs', async () => {
+    (service as any).googleClientIds = null;
+    await service.signInWithGoogle('/m/today');
+    expect(socialLogin.login).not.toHaveBeenCalled();
+    expect(client.auth.signInWithOAuth).toHaveBeenCalled();
   });
 });
