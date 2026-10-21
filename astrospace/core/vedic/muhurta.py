@@ -109,6 +109,9 @@ def _stars(*groups) -> list[str]:
 
 
 _SAMSKARA_STARS = _stars(_MRIDU, _DHRUVA, _KSHIPRA, _CHARA)
+_VIVAHA_STARS = _stars("Mrigashira", "Hasta", "Moola", "Anuradha", "Magha",
+                       "Rohini", "Revati", "Uttara Phalguni", "Uttara Ashadha",
+                       "Uttara Bhadrapada", "Swati")
 _MC = "Muhurta Chintamani {} (1907 Venkateshwar Press print)"
 
 GOALS: dict[str, dict] = {
@@ -178,10 +181,14 @@ GOALS: dict[str, dict] = {
     "sign_contract": {
         "category": "work",
         "label": "Sign a contract",
-        "prefer_vara": ["Wednesday", "Thursday"],
-        "prefer_nakshatra": ["Hasta", "Chitra", "Anuradha", "Uttara Phalguni",
-                             "Uttara Ashadha", "Shravana"],
+        # 2.42 is the nearest rule the book has: sandhana, making an alliance
+        # or a friendship, on Pushya, Anuradha or Purva Phalguni, on a
+        # benefic weekday, with Venus in or aspecting the lagna. (Its 8th and
+        # 12th lunar days are preferred there; rikta days stay avoided.)
+        "prefer_vara": ["Monday", "Wednesday", "Thursday", "Friday"],
+        "prefer_nakshatra": _stars("Pushya", "Purva Phalguni", "Anuradha"),
         "avoid_tithi": RIKTA_TITHIS,
+        "source": _MC.format("2.42"),
         "hours": (9, 19),
         "hours_note": _ERRANDS.format(start="9 am", end="7 pm", places="offices"),
         "hora": "Mercury",
@@ -276,11 +283,14 @@ GOALS: dict[str, dict] = {
     "marriage_related": {
         "category": "family",
         "label": "Wedding",
+        # 6.53: Mrigashira, Hasta, Moola, Anuradha, Magha, Rohini, Revati,
+        # the three Uttaras and Swati, free of vedha, on a benefic weekday;
+        # not rikta or Amavasya (the full moon is allowed). 6.13 gives the
+        # months, which the season rules already cover.
         "prefer_vara": ["Monday", "Wednesday", "Thursday", "Friday"],
-        "prefer_nakshatra": ["Rohini", "Mrigashira", "Magha", "Uttara Phalguni",
-                             "Hasta", "Swati", "Anuradha", "Moola",
-                             "Uttara Ashadha", "Uttara Bhadrapada", "Revati"],
-        "avoid_tithi": RIKTA_TITHIS | {15},
+        "prefer_nakshatra": _VIVAHA_STARS,
+        "avoid_tithi": RIKTA_TITHIS,  # Amavasya is always avoided
+        "source": _MC.format("6.13, 6.53"),
         "hours": None,
         "season": _SEASON_SAMSKARA,
         "lagna": "marriage",
@@ -290,10 +300,13 @@ GOALS: dict[str, dict] = {
     "engagement": {
         "category": "family",
         "label": "Engagement",
-        "prefer_vara": ["Monday", "Wednesday", "Thursday", "Friday", "Sunday"],
-        "prefer_nakshatra": ["Rohini", "Mrigashira", "Magha", "Uttara Phalguni",
-                             "Hasta", "Swati", "Anuradha", "Moola",
-                             "Uttara Ashadha", "Uttara Bhadrapada", "Revati"],
+        # 6.10-6.11: choosing the bride and the groom (sagai, vagdana) on the
+        # wedding stars and also Uttara Ashadha, Swati, Shravana, the three
+        # Purvas, Anuradha, Dhanishta and Krittika, on a benefic day.
+        "prefer_vara": ["Monday", "Wednesday", "Thursday", "Friday"],
+        "prefer_nakshatra": _stars(_VIVAHA_STARS, "Shravana", _THREE_PURVAS,
+                                   "Dhanishta", "Krittika"),
+        "source": _MC.format("6.10-6.11"),
         "avoid_tithi": RIKTA_TITHIS,
         "hours": (9, 21),
         "hours_note": "Only times between 9 am and 9 pm are shown, when families usually meet.",

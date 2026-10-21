@@ -1787,9 +1787,10 @@ From the Muhurta audit (batches A–E built; these were left out on purpose).
   *Built 2026-10-21:* read from the page images; 15 goals now follow and cite
   their verses (`source`, returned as `rules_source`), with `shun_vara`
   (weekdays the book rules out, marked down, not dropped) and `avoid_lagna`
-  (Aquarius for a shop). Still on common practice, no verse read yet:
-  wedding and engagement (chapter 6 star verse), contract (p. 37),
-  property purchase and registration, sadhana. Verses read are listed in
+  (Aquarius for a shop). Then wedding (6.13, 6.53), engagement (6.10-6.11)
+  and contract (2.42, the alliance verse, the nearest rule the book has).
+  Still on common practice because the book has no rule for them: property
+  purchase and registration, sadhana. Verses read are listed in
   `docs/kb_corpus_sources.md`. Not expressible yet: upanayana's "first third
   of the dark half" and the journey's "bright first" (tithi sets are 1-15
   without a paksha).
