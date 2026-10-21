@@ -128,6 +128,76 @@ def test_strong_seventh_lord_in_jupiters_aspect_adds_phaladeepika():
     assert "bphs18_16_malefic_on_seventh" not in ids
 
 
+def _upapada_case(**signs):
+    """Aries rising, Jupiter in Taurus: the Upapada falls in Cancer. Everything
+    else sits in Gemini or Sagittarius, from where nothing aspects Cancer."""
+    from astrospace.agents.compat_classics import upapada_facts
+    at = {"Sun": 2, "Moon": 2, "Mars": 2, "Mercury": 2, "Jupiter": 1, "Venus": 2,
+          "Saturn": 2, "Rahu": 2, "Ketu": 8, **signs}
+    positions = {name: {"lon": sign * 30 + 10.0} for name, sign in at.items()}
+    return upapada_facts(0, positions, {})
+
+
+def _ids(rules):
+    return {rule["id"] for rule in rules}
+
+
+def test_a_benefic_in_the_upapada_picks_bphs_and_uttara_kalamritam():
+    from astrospace.agents.compat_classics import classical_rules
+    facts = _upapada_case(Venus=3)
+    assert facts["upapada"]["sign"] == "Cancer" and facts["upapada"]["benefic_in"] == ["Venus"]
+    ids = _ids(classical_rules({}, {}, "Venus", {}, {}, upapada=facts))
+    assert {"bphs30_1_upapada_benefic", "uk4_39_upapada_benefic_character"} <= ids
+    assert "bphs30_4_upapada_malefic" not in ids
+
+
+def test_a_malefic_on_the_upapada_goes_out_softened_and_a_benefic_eases_it():
+    from astrospace.agents.compat_classics import classical_rules
+    strained = classical_rules({}, {}, "Venus", {}, {}, upapada=_upapada_case(Saturn=3))
+    rule = next(r for r in strained if r["id"] == "bphs30_4_upapada_malefic")
+    assert rule["applies_because"] == "Upapada in Cancer with Saturn"
+    assert "Never as being without a partner" in rule["read_as"]
+    eased = _ids(classical_rules({}, {}, "Venus", {}, {}, upapada=_upapada_case(Saturn=3, Venus=3)))
+    assert "bphs30_5_upapada_benefic_relief" in eased and "bphs30_4_upapada_malefic" not in eased
+
+
+def test_an_exalted_or_friendly_sun_is_no_malefic_on_the_upapada():
+    from astrospace.agents.compat_classics import upapada_facts
+    positions = {name: {"lon": sign * 30 + 10.0} for name, sign in
+                 {"Sun": 3, "Moon": 2, "Mars": 2, "Mercury": 2, "Jupiter": 1, "Venus": 2,
+                  "Saturn": 2, "Rahu": 2, "Ketu": 8}.items()}
+    assert upapada_facts(0, positions, {"Sun": {"dignity": "Neutral"}})["upapada"]["malefic_on"] == ["Sun"]
+    assert upapada_facts(0, positions, {"Sun": {"dignity": "Friend"}})["upapada"]["malefic_on"] == []
+
+
+def test_the_real_pair_meets_its_upapada_and_navamsa_rules():
+    ravi, meera = _signals()["people"]
+    ravi_ids, meera_ids = _ids(ravi["classical_rules"]), _ids(meera["classical_rules"])
+    # Ravi: Upapada Sagittarius in Mars's aspect; its lord Jupiter exalted in Cancer.
+    assert ravi["upapada"]["sign"] == "Sagittarius" and ravi["upapada"]["lord"]["dignity"] == "Exalted"
+    assert {"bphs30_4_upapada_malefic", "bphs30_14_upapada_lord_exalted"} <= ravi_ids
+    # Both have Venus vargottama; Meera runs a Venus sub-period on it.
+    for person, ids in ((ravi, ravi_ids), (meera, meera_ids)):
+        assert person["navamsa"]["venus"]["vargottama"]
+        assert {"bphs7_navamsa_for_spouse", "phal9_vargottama_own_house"} <= ids
+    assert "phal20_vargottama_dasha_favourable" in meera_ids
+    assert "phal20_vargottama_dasha_favourable" not in ravi_ids
+
+
+def test_upapada_rules_state_their_convention():
+    import json
+    from pathlib import Path
+    refs = json.loads(Path("astrospace/context/references.json").read_text(encoding="utf-8"))["references"]
+    upapada = [ref for ref in refs if "upapada" in ref["ref_id"]]
+    assert len(upapada) == 7
+    assert all(ref["status"] == "convention_dependent" and "12th house" in ref["observance_note"]
+               for ref in upapada)
+
+
+def test_upapada_and_navamsa_words_never_reach_the_reader():
+    assert set(cia.plain_words_jargon("Your Upapada and Navamsha are vargottama")) >= {"upapada", "navamsha", "vargottama"}
+
+
 def test_kootas_carry_their_standard_meaning():
     kootas = _signals()["kootas"]
     assert all(row.get("meaning") for row in kootas)

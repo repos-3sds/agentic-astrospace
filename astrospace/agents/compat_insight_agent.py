@@ -36,7 +36,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from .base import BaseAstroAgent
-from .compat_classics import classical_rules
+from .compat_classics import classical_rules, navamsa_facts, upapada_facts
 from .daily_brief_agent import card_jargon
 from .period_agent import reading_boundary
 from .style import PLAIN_INDIAN_ENGLISH
@@ -45,7 +45,7 @@ from ..core.vedic.constants import SIGN_LORDS, SIGNS
 from ..config import flag
 
 # Bump when the prompt or schema changes, so saved sections are rewritten.
-INSIGHT_VERSION = 2
+INSIGHT_VERSION = 3
 
 
 def compat_insight_enabled() -> bool:
@@ -91,11 +91,14 @@ both people and given to you as JSON. Your job is wording, not calculation.
 Ground every line in the JSON:
 - Use only the koota rows, safety checks, each person's rising sign, Moon,
   7th house (its sign, its lord and where the lord sits), planets in the 7th,
-  Venus, and the running periods. Never invent a placement, yoga, date or score.
+  Venus, Upapada (the sign read for commitment and the partner), Navamsa
+  (the divisional chart read for married life), and the running periods.
+  Never invent a placement, yoga, date or score.
 - Interpret through the rules given, not from memory:
   * a koota through its `meaning` (standard matching practice);
   * each person's marriage picture only through their `classical_rules`.
-    These are rules from the classical texts (BPHS, Phaladeepika) that code
+    These are rules from the classical texts (BPHS, Phaladeepika, Uttara
+    Kalamritam) that code
     has already found their chart meets, each with why it applies. Do not
     bring in any other classical rule, yoga or combination. The plain nature
     of a sign or planet (Venus for love and comfort, Mars for drive, a fire
@@ -105,8 +108,9 @@ Ground every line in the JSON:
   * List the ids you relied on in rules_used. Never name a book, verse or
     rule on screen.
 - What makes this personal is what the koota score does not see: each person's
-  own 7th house and Venus (how they love, what they need from a partner), and
-  how their two current periods fit together. Use those. Do not just restate
+  own 7th house and Venus (how they love, what they need from a partner), their
+  Upapada and Navamsa rules (how they hold a commitment), and how their two
+  current periods fit together. Use those. Do not just restate
   the koota rows; the app already lists them.
 - Name both people by first name. Write to the couple as "you two" or "the
   two of you". Never compare them as better or worse.
@@ -121,7 +125,8 @@ Ground every line in the JSON:
   "a Jupiter period", with the year it ends; say what the overlap means for
   the two of them in daily life.
 - Plain everyday words everywhere the reader sees: no Sanskrit, no koota,
-  dosha, nakshatra, rashi, lagna, dasha or house numbers. Planet names only
+  dosha, nakshatra, rashi, lagna, dasha, upapada, navamsa, vargottama or
+  house numbers. Planet names only
   in this_period.
 - `stage` says whether they are married or planning to marry. Write for that
   stage. For "married", never discuss whether they should have married. For
@@ -185,6 +190,9 @@ def person_input(chart, profile: dict, as_of: datetime | None = None) -> dict:
 
     manglik = (chart.doshas() or {}).get("manglik") or {}
     running = _running(chart, as_of)
+    upapada = upapada_facts(int(chart.lagna_lon // 30), chart.positions, dignities)
+    navamsa = navamsa_facts(chart.positions, chart.lagna_lon, seventh_lord,
+                            chart.planetary_conditions()["rows"])
     return {
         "name": (profile.get("name") or chart.name or "").split(" ")[0],
         "rising_sign": lagna["sign"],
@@ -200,7 +208,20 @@ def person_input(chart, profile: dict, as_of: datetime | None = None) -> dict:
         "mars": place("Mars"),
         "manglik": {"active": bool(manglik.get("active")), "net_severity": manglik.get("net_severity")},
         "running_period": running,
-        "classical_rules": classical_rules(planets, dignities, seventh_lord, manglik, running),
+        "upapada": {
+            "sign": upapada["upapada"]["sign"],
+            "planets_in_it": upapada["upapada"]["planets_in_it"],
+            "aspected_by": upapada["upapada"]["aspected_by"],
+            "lord": upapada["upapada_lord"],
+            "second_from_it": {k: upapada["second_from_upapada"][k] for k in ("sign", "planets_in_it")},
+        },
+        "navamsa": {
+            "seventh_sign": navamsa["seventh_sign"],
+            "seventh_lord": navamsa["seventh_lord"],
+            "venus": navamsa["venus"],
+        },
+        "classical_rules": classical_rules(planets, dignities, seventh_lord, manglik, running,
+                                           upapada=upapada, navamsa=navamsa),
     }
 
 
@@ -251,7 +272,8 @@ def insight_boundary(insight: CoupleInsight) -> str | None:
 
 # Matching terms the Today card's check (card_jargon) has no reason to know.
 _MATCH_TERMS = ("koota", "kuta", "varna", "vashya", "yoni", "maitri", "gana", "bhakoot", "nadi",
-                "manglik", "dosha", "gandanta", "rajju", "vedha", "deergha", "guna", "milan")
+                "manglik", "dosha", "gandanta", "rajju", "vedha", "deergha", "guna", "milan",
+                "upapada", "navams", "vargottam", "arudha", "darapada")
 
 
 def plain_words_jargon(text: str) -> list[str]:
