@@ -1662,23 +1662,32 @@ dependency, or is a project rather than a fix.
   changes the same screen. *Hook:* `features/mobile/settings/` conventions.
 
 
-## Deferred backlog — place search beyond India, the US and Canada (2026-10-19)
+## Deferred backlog — place search, remaining coverage (2026-10-21)
 
-- [ ] **The rest of the world in place search.** The US and Canada now carry
-  every GeoNames place of 500+ people (~25k, `data/world_places.json.gz`);
-  elsewhere only the ~70 curated foreign cities in `core/cities.py` resolve.
-  *Why not built:* the same layer for every country is ~235k rows
-  (~3.5 MB gzipped), which needs (1) region names for every country's
-  admin1 codes (GeoNames `admin1CodesASCII.txt`, not in the `geonamescache`
-  package the US/CA build used), (2) a prefix index instead of the linear
-  scan (fine at 60k rows, ~20 ms; not at 300k), and (3) a check of Cloud Run
-  memory with the table loaded. Ranking also needs a decision: India and
-  then population works for two countries, not for 246.
-  *Unblocks when:* someone picks the country order (Gulf, UK, Australia,
-  Singapore, Nepal are the diaspora-first candidates). *Hook:* add codes to
-  `COUNTRIES` in `scripts/build_world_places.py`, region names to
-  `_REGION_NAMES` in `core/cities.py`, and rebuild from GeoNames
-  `cities500`.
+Built 2026-10-21: every GeoNames place of 500+ people in the rest of India,
+the US, Canada, the UK, Ireland, the Gulf, Singapore, Malaysia, Australia,
+New Zealand and Europe (124k rows, `data/world_places.json.gz`, 2.7 MB; about
++105 MB server memory once loaded, ~30-45 ms per search, first search loads
+the file in ~2 s).
+
+- [ ] **Village-level India beyond AP/Telangana.** Outside AP/TS, India has
+  only cities500 (~6.5k places), because GeoNames leaves most Indian villages
+  without a population. *Why not built:* the full `IN.txt` dump is needed and
+  download.geonames.org is blocked from the cloud containers. *Unblocks
+  when:* `IN.zip` and `admin2Codes.txt` are downloaded on the Mac. *Hook:*
+  add admin1 codes to `STATES` in `scripts/build_state_places.py` (labels
+  come from `_STATE_NAMES` in `core/cities.py`); watch memory, every state
+  is ~15-20k rows.
+- [ ] **The rest of the world** (Nepal, Sri Lanka, Bangladesh, Pakistan,
+  Africa, the Caribbean, East Asia, the Americas). *Why not built:* not in
+  the diaspora-first list. *Hook:* add codes to `COUNTRIES` in
+  `scripts/build_world_places.py` (region-name fixes in
+  `_REGION_OVERRIDES`) and rebuild; past ~250k rows the linear search scan
+  wants a prefix index.
+- [ ] **Local-language spellings** (München, Köln). Only GeoNames' main
+  name is indexed, because its alternate names are noisy for these
+  countries (abbreviations, other places' names). *Hook:* a vetted alias
+  list per country in the builder.
 
 ## Deferred backlog — festival guidance follow-ups (2026-10-20)
 
