@@ -28,7 +28,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
-from ..agents.orchestrator import AskOrchestrator, ValidationStore
+from ..agents.orchestrator import AskOrchestrator, ValidationStore, terminal_turn
 from ..agents.schema import StructuredReading
 from ..agents.validation_agent import ValidationProbeDraft
 from ..context.taxonomy import TaxonomyError
@@ -40,7 +40,7 @@ from ..db.crud_profile_context import (
 )
 from ..db.database import release_connection, short_session
 from .ask_routes import (
-    MAX_HISTORY, AskRequest, _domain_labels, _evidence_from_reading, _history_from_thread,
+    MAX_HISTORY, AskRequest, _evidence_from_reading, _history_from_thread,
     _owned_thread, _persist_ask_turn, _profile_context_store, _settle_credit,
     _thread_established_domain,
 )
@@ -317,61 +317,9 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
         envelope = outcome.terminal_envelope
 
         def generate_terminal():
-            if envelope["type"] == "refer_out":
-                thread_id = persist_turn(
-                    envelope["answer"], domain=None, refer_out_kind=envelope["kind"],
-                    evidence={"safety_policy": "excluded_verdict"},
-                )
-            elif envelope["type"] == "validation_needed":
-                # The stored turn carries the question and the options, never
-                # the committed claim — thread history is replayed back to the
-                # model on later turns, and a claim visible there would let a
-                # future reading quietly launder its own prediction as
-                # evidence. The commitment lives in validation_probes, which
-                # nothing replays.
-                thread_id = persist_turn(
-                    envelope["question"], domain=envelope["domain"], refer_out_kind=None,
-                    evidence={"status": "validation_needed",
-                              "probe_id": envelope["probe_id"],
-                              "slot_id": envelope["slot_id"],
-                              "options": envelope["options"]},
-                )
-            elif envelope["type"] == "clarification_needed":
-                content = (
-                    f"I can help with: {', '.join(_domain_labels(envelope['options']))} right now — "
-                    "which one is this about?"
-                )
-                thread_id = persist_turn(
-                    content, domain=None, refer_out_kind=None,
-                    evidence={"clarification_options": envelope["options"]},
-                )
-            elif envelope["type"] == "context_unavailable":
-                # A configured ProfileContextStore raised for this turn (see
-                # orchestrator.py's check_profile_context()) — the reader's
-                # saved facts couldn't be checked, so this must not fall
-                # through to a reading that would look identically confident
-                # whether or not they were enforced. No fact values are
-                # surfaced here.
-                content = (
-                    "I couldn't check your saved profile context just now, so I'm holding "
-                    "off on this answer rather than risk missing something you've already "
-                    "told me. Please try again in a moment."
-                )
-                thread_id = persist_turn(
-                    content, domain=envelope["domain"], refer_out_kind=None,
-                    evidence={"status": "context_unavailable", "retryable": True},
-                )
-            elif envelope["type"] == "domain_not_ready":
-                content = (
-                    f"{envelope['domain_label']} isn't ready yet. "
-                    f"I can currently help with: {', '.join(envelope['available'])}."
-                )
-                thread_id = persist_turn(
-                    content, domain=envelope["domain"], refer_out_kind=None,
-                    evidence={"status": "domain_not_ready", "available": envelope["available"]},
-                )
-            else:
-                raise ValueError(f"Unhandled orchestrator terminal state: {envelope['type']!r}")
+            turn = terminal_turn(envelope)
+            thread_id = persist_turn(turn.content, domain=turn.domain,
+                                     refer_out_kind=turn.refer_out_kind, evidence=turn.evidence)
             yield {**envelope, "thread_id": thread_id}
 
         return StreamingResponse(_with_heartbeat(_safe_stream(generate_terminal())),

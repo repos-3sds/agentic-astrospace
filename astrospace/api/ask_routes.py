@@ -30,7 +30,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field, field_validator
 
-from ..agents.orchestrator import AskOrchestrator, ProfileContextStore
+from ..agents.orchestrator import AskOrchestrator, ProfileContextStore, terminal_turn
 from ..agents.schema import StructuredReading
 from ..context.taxonomy import TaxonomyError, get_domain
 from ..db import get_db
@@ -314,18 +314,6 @@ def _profile_context_store(db: Session, user_id: str, kundli_id: str) -> Profile
     return ProfileContextStore(projection=projection)
 
 
-def _domain_labels(domain_ids: list[str]) -> list[str]:
-    """Readable names for the clarify reply ("Family & property"), never the
-    internal ids ("family_property") readers were shown before."""
-    labels = []
-    for domain_id in domain_ids:
-        try:
-            labels.append(get_domain(domain_id).name.lower())
-        except Exception:
-            labels.append(domain_id.replace("_", " "))
-    return labels
-
-
 def _evidence_from_reading(
     reading: StructuredReading, *,
     profile_context_revision: int | None = None,
@@ -456,47 +444,12 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
     if outcome.terminal_envelope is not None:
         envelope = outcome.terminal_envelope
         status = envelope["type"]
-        if envelope["type"] == "refer_out":
-            answer = envelope["answer"]
-            refer_out = envelope["kind"]
-            persist_turn(answer, domain=None, refer_out_kind=refer_out,
-                        evidence={"safety_policy": "excluded_verdict"})
-        elif envelope["type"] == "clarification_needed":
-            answer = (
-                f"I can help with: {', '.join(_domain_labels(envelope['options']))} right now — "
-                "which one is this about?"
-            )
-            refer_out = None
-            persist_turn(answer, domain=None, refer_out_kind=None,
-                        evidence={"clarification_options": envelope["options"]})
-        elif envelope["type"] == "context_unavailable":
-            # A configured ProfileContextStore raised for this turn (see
-            # orchestrator.py's check_profile_context()) — the reader's
-            # saved facts couldn't be checked, so this must not fall through
-            # to a reading that would look identically confident whether or
-            # not they were enforced. No fact values are surfaced here.
-            answer = (
-                "I couldn't check your saved profile context just now, so I'm holding off "
-                "on this answer rather than risk missing something you've already told me. "
-                "Please try again in a moment."
-            )
-            refer_out = None
-            persist_turn(answer, domain=envelope["domain"], refer_out_kind=None,
-                        evidence={"status": "context_unavailable", "retryable": True})
-        elif envelope["type"] == "domain_not_ready":
-            answer = (
-                f"{envelope['domain_label']} isn't ready yet. "
-                f"I can currently help with: {', '.join(envelope['available'])}."
-            )
-            refer_out = None
-            persist_turn(answer, domain=envelope["domain"], refer_out_kind=None,
-                        evidence={"status": "domain_not_ready",
-                                  "available": envelope["available"]})
-        else:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Unhandled orchestrator terminal state: {envelope['type']!r}",
-            )
+        try:
+            turn = terminal_turn(envelope)
+        except ValueError as e:
+            raise HTTPException(status_code=500, detail=str(e))
+        answer, refer_out = turn.content, turn.refer_out_kind
+        persist_turn(answer, domain=turn.domain, refer_out_kind=refer_out, evidence=turn.evidence)
         return {
             "answer": answer,
             "tools_used": [],

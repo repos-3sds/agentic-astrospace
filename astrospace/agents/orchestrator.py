@@ -195,6 +195,71 @@ class PrepareOutcome:
     prepared: PreparedRun | None = None
 
 
+@dataclass(frozen=True)
+class TerminalTurn:
+    """What a terminal envelope says to the reader, and how the turn is stored."""
+    content: str
+    domain: str | None
+    refer_out_kind: str | None
+    evidence: dict
+
+
+def domain_labels(domain_ids: list[str]) -> list[str]:
+    """Readable names for the clarify reply ("Family & property"), never the
+    internal ids ("family_property") readers were shown before."""
+    labels = []
+    for domain_id in domain_ids:
+        try:
+            labels.append(get_domain(domain_id).name.lower())
+        except Exception:
+            labels.append(domain_id.replace("_", " "))
+    return labels
+
+
+def terminal_turn(envelope: dict) -> TerminalTurn:
+    """The reader-facing text for every terminal state `prepare()` can end in.
+
+    Both Ask routes (the JSON one and the stream) used to write these texts
+    each on their own, and had drifted: only the stream knew
+    validation_needed (audit I8). Raises ValueError on a state this does not
+    know, so a new one cannot reach a reader as an empty answer.
+    """
+    kind = envelope["type"]
+    if kind == "refer_out":
+        return TerminalTurn(envelope["answer"], None, envelope["kind"],
+                            {"safety_policy": "excluded_verdict"})
+    if kind == "validation_needed":
+        # The stored turn carries the question and the options, never the
+        # committed claim: thread history is replayed to the model on later
+        # turns, and a claim visible there would let a future reading launder
+        # its own prediction as evidence. The commitment lives in
+        # validation_probes, which nothing replays.
+        return TerminalTurn(envelope["question"], envelope["domain"], None,
+                            {"status": "validation_needed", "probe_id": envelope["probe_id"],
+                             "slot_id": envelope["slot_id"], "options": envelope["options"]})
+    if kind == "clarification_needed":
+        return TerminalTurn(
+            f"I can help with: {', '.join(domain_labels(envelope['options']))} right now — "
+            "which one is this about?",
+            None, None, {"clarification_options": envelope["options"]})
+    if kind == "context_unavailable":
+        # A configured ProfileContextStore raised for this turn (see
+        # check_profile_context()): the reader's saved facts could not be
+        # checked, so this must not fall through to a reading that would look
+        # just as confident either way. No fact values are surfaced.
+        return TerminalTurn(
+            "I couldn't check your saved profile context just now, so I'm holding off "
+            "on this answer rather than risk missing something you've already told me. "
+            "Please try again in a moment.",
+            envelope["domain"], None, {"status": "context_unavailable", "retryable": True})
+    if kind == "domain_not_ready":
+        return TerminalTurn(
+            f"{envelope['domain_label']} isn't ready yet. "
+            f"I can currently help with: {', '.join(envelope['available'])}.",
+            envelope["domain"], None, {"status": "domain_not_ready", "available": envelope["available"]})
+    raise ValueError(f"Unhandled orchestrator terminal state: {kind!r}")
+
+
 # Ties (per the three-way design review): a single keyword hit is only
 # "medium" confidence in KeywordRouter's scoring, not "low" — a lone,
 # possibly-spurious match must not answer as confidently as a clean one.
