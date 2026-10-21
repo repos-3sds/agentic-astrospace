@@ -76,7 +76,7 @@ class TestUSCanada:
         from astrospace.core.cities import _world_places
         rows = _world_places()
         countries = {row[4] for row in rows}
-        assert countries == {"US", "CA"} and len(rows) > 20000
+        assert {"US", "CA"} <= countries and len(rows) > 100000
         zones = {row[6] for row in rows}
         assert {"America/St_Johns", "Pacific/Honolulu", "America/Regina",
                 "America/Phoenix", "America/Anchorage"} <= zones
@@ -113,3 +113,45 @@ class TestUSCanada:
     def test_india_still_leads_short_prefixes(self):
         rows = search_cities("kari", 5)
         assert rows[0]["nation"] == "IN"
+
+
+class TestIndiaAndDiaspora:
+    """The same layer for the rest of India, the UK, the Gulf, Singapore,
+    Malaysia, Australia, New Zealand and Europe."""
+
+    def test_rest_of_india_resolves_with_state_names(self):
+        assert lookup_city("Nanded", "IN") is not None
+        maharashtra = lookup_city("Aurangabad", "IN")
+        bihar = lookup_city("Aurangabad, Bihar", "IN")
+        assert 24 < bihar[0] < 25.5 and 19 < maharashtra[0] < 20.5
+
+    def test_ap_ts_villages_keep_answering_their_bare_names(self):
+        # The village layer still wins over the all-India layer.
+        assert lookup_city("Pithapuram", "IN") is not None
+        from astrospace.core.cities import _world_places
+        regions = {row[3] for row in _world_places() if row[4] == "IN"}
+        assert "Andhra Pradesh" not in regions and "Telangana" not in regions
+
+    def test_diaspora_cities_carry_their_own_zones(self):
+        assert lookup_city("Leicester", "GB")[2] == "Europe/London"
+        assert lookup_city("Sharjah", "AE")[2] == "Asia/Dubai"
+        assert lookup_city("Klang", "MY")[2] == "Asia/Kuala_Lumpur"
+        assert lookup_city("Frankfurt am Main", "DE")[2] == "Europe/Berlin"
+        assert lookup_city("Auckland", "NZ")[2] == "Pacific/Auckland"
+
+    def test_same_name_in_two_countries_stays_apart(self):
+        assert lookup_city("Perth", "AU")[2] == "Australia/Perth"
+        assert lookup_city("Perth, Scotland", "GB")[2] == "Europe/London"
+
+    def test_every_world_result_round_trips_through_lookup(self):
+        for query in ("perth", "leic", "aurang", "kuala", "sharj", "frank", "dub"):
+            for row in search_cities(query, 8):
+                geo = lookup_city(row["city"], row["nation"])
+                assert geo is not None, row
+                assert (geo[0], geo[1]) == (row["lat"], row["lng"]), row
+
+    def test_big_foreign_cities_beat_villages_but_not_indian_towns(self):
+        cities = [row["city"] for row in search_cities("dub", 8)]
+        assert cities.count("Dubai") == 1 and any(c.startswith("Dublin") for c in cities)
+        names = [row["city"] for row in search_cities("dubb", 5)]
+        assert all(row["nation"] == "IN" for row in search_cities("dubb", 5)), names
