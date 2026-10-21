@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- App shortcut icon: the Today tab glyph (public/mobile/nav-today.svg) on the
+     launcher's 48dp shortcut disc, glyph in the middle 24dp. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp" android:height="48dp" android:viewportWidth="48" android:viewportHeight="48">
+    <path android:fillColor="@color/shortcut_disc" android:pathData="M24,2a22,22 0,1 0,0.01 0z" />
+    <group android:translateX="12" android:translateY="12" android:scaleX="1.0435" android:scaleY="1.0435">
+        <path android:fillColor="@color/shortcut_glyph" android:pathData="M11.5 15.3333C13.6171 15.3333 15.3333 13.6171 15.3333 11.5C15.3333 9.38291 13.6171 7.66667 11.5 7.66667C9.38291 7.66667 7.66667 9.38291 7.66667 11.5C7.66667 13.6171 9.38291 15.3333 11.5 15.3333Z" />
+        <path android:fillColor="#00000000" android:strokeColor="@color/shortcut_glyph" android:strokeWidth="1.62917" android:strokeLineCap="round"
+            android:pathData="M11.5 2.39583V4.79167M11.5 18.2083V20.6042M2.39583 11.5H4.79167M18.2083 11.5H20.6042M4.79167 4.79167L6.42083 6.42083M16.5792 16.5792L18.2083 18.2083M18.2083 4.79167L16.5792 6.42083M6.42083 16.5792L4.79167 18.2083" />
+    </group>
+</vector>

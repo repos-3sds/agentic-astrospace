@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark pair for the shortcut discs, from values-night/widget_colors.xml. -->
+<resources>
+    <color name="shortcut_disc">#2C231B</color>
+    <color name="shortcut_glyph">#DFB45E</color>
+</resources>
