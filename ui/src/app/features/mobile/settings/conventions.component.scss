@@ -1,4 +1,10 @@
 @use './settings-shared' as shared;
+@use '../mobile-tokens' as *;
 
 @include shared.settings-screen;
 @include shared.settings-choice;
+
+.group { display: flex; flex-direction: column; gap: 8px; }
+.group .eyebrow { margin: 4px 0 0; }
+.group-note { @include m-caption; margin: -2px 0 2px; color: var(--m-muted); }
+.choice { justify-content: flex-start; gap: 12px; }

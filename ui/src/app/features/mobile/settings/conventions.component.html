@@ -12,30 +12,30 @@
   </header>
 
   @for (group of groups; track group.key) {
-    <p class="eyebrow">{{ group.eyebrow }}</p>
-    @for (choice of group.choices; track choice.id) {
-      @let on = selected(group.key) === choice.id;
-      <button
-        class="choice"
-        type="button"
-        role="radio"
-        asSelectHaptic
-        [class.is-on]="on"
-        [attr.aria-checked]="on"
-        (click)="choose(group.key, choice.id)"
-      >
-        <span class="choice-left">
-          <img
-            [src]="'mobile/opt-' + group.glyph + (on ? '-on' : '') + '.svg'"
-            alt=""
-            aria-hidden="true"
-          />
-          <span class="choice-label">{{ choice.label }}</span>
-        </span>
-        @if (on) {
-          <img class="choice-tick" src="mobile/check-accent.svg" alt="" aria-hidden="true" />
-        }
-      </button>
-    }
+    <section class="group" role="radiogroup" [attr.aria-labelledby]="'conv-' + group.key">
+      <h2 class="eyebrow" [id]="'conv-' + group.key">{{ group.eyebrow }}</h2>
+      <p class="group-note">{{ group.note }}</p>
+      @for (choice of group.choices; track choice.id) {
+        @let on = selected(group.key) === choice.id;
+        <button
+          class="choice"
+          type="button"
+          role="radio"
+          asSelectHaptic
+          [class.is-on]="on"
+          [attr.aria-checked]="on"
+          (click)="choose(group.key, choice.id)"
+        >
+          <span class="mark radio" aria-hidden="true"></span>
+          <span class="choice-copy">
+            <span class="choice-label">{{ choice.label }}</span>
+            <span class="choice-detail">{{ choice.detail }}</span>
+          </span>
+          @if (choice.isDefault) {
+            <span class="choice-default">Default</span>
+          }
+        </button>
+      }
+    </section>
   }
 </div>

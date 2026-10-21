@@ -1611,36 +1611,49 @@ From the Tier 0 fixes for `/mnt/project-files/audits/end-to-end-2026-10-18/findi
 
 From the end-to-end audit (2026-10-18). Each needs a device, a new
 dependency, or is a project rather than a fix. Rechecked 2026-10-21: the
-items marked done shipped in the "Audit follow-ups" batch.
+items marked done shipped in the two "Audit follow-ups" batches (#229 and
+the batch after it).
 
 - [x] **Worker and Ask layering** (I8), first half. Today's payload and its
   cache are `context/daily_service.py`, the timing-place rule is
   `context/timing_place.py`; both raise domain errors the routers map to 422,
   and no notification job imports `api/` (`tests/test_daily_service_layering.py`).
-- [ ] **One orchestrator-owned function for Ask's terminal texts** (I8, rest).
-  *Why not built:* touches both Ask routes and their streamed replies; no
-  reader-facing change. *Hook:* `api/ask_routes.py`, `api/ask_stream_routes.py`.
+- [x] **One orchestrator-owned function for Ask's terminal texts** (I8, rest).
+  `terminal_turn()` in `agents/orchestrator.py` gives both Ask routes the
+  same text for refer-out, validation, clarification, missing context and
+  not-ready domains (`tests/test_ask_terminal_turn.py`).
 - [x] **Environment check at boot** (I9), warn-only half. `astrospace/config.py`
   lists the variables and logs a warning for a flag that means the opposite
   of what it says (`ASTROSPACE_QUOTAS_ENFORCED=on` is off), a bad number or
   email list, or a missing database or key on Cloud Run. Never raises.
-- [ ] **One validated settings object** (I9, rest). *Why not built:* the
-  reads still live in ~30 modules. *Unblock:* one deploy whose logs show no
-  `config:` warnings; then move the reads onto one object in
-  `astrospace/config.py`, make it fail fast, and stop `load_dotenv()` per
-  agent (`agents/base.py`; `cli.py` and `main.py` already load it).
+- [x] **One rule per flag** (I9, part of the rest). Every on/off and
+  whole-number variable in `VARS` is read through `config.flag()` /
+  `config.integer()`; a test fails if a module reads one directly.
+- [ ] **Fail fast on a bad environment** (I9, rest). *Why not built:* the
+  boot check is still warn-only. *Unblock:* one deploy whose logs show no
+  `config:` warnings; then let `check_environment()` refuse to boot, move
+  the text keys onto the same table, and stop `load_dotenv()` per agent
+  (`agents/base.py`; `cli.py` and `main.py` already load it).
 - [x] **Postgres and Docker in CI** (I12). The `postgres-migrations` job
   builds a pgvector Postgres from `scripts/ci/supabase_shim.sql`, the base
   schema and every migration, then `scripts/check_schema_drift.py` checks
   every model table and column exists and every public table has RLS on.
   The `docker` job builds the Cloud Run image and checks it boots.
-- [ ] **Response-schema snapshot and a real-model prompt set in CI** (I12,
-  rest). *Why not built:* the snapshot needs a generator for `models.ts`;
-  the prompt set needs a model key in CI and a budget. *Hook:*
-  `.github/workflows/ci.yml`.
-- [ ] **UI translation layer** (I13). *Why not built:* about 120
-  components; needs Hawk's call on Telugu UI timing. *Unblock:* Transloco,
-  starting with the shell and Today. *Hook:* `ui/src/app/features/mobile/`.
+- [x] **App/server contract check** (I12, rest). `tests/test_frontend_contract.py`
+  reads the interfaces in `ui/src/app/core/models.ts` and checks real
+  responses from eight routes against them. It found Indu Lagna typed as
+  the wrong shape (shown as "Leo undefined"), now fixed. Add a route to
+  `ROUTES` when a screen starts reading it.
+- [ ] **A real-model prompt set in CI** (I12, rest). *Why not built:* needs
+  a model key in CI and a budget. *Hook:* `.github/workflows/ci.yml`.
+- [x] **UI translation groundwork** (I13). `core/i18n/`: an English
+  dictionary, a `t` pipe and `I18nService`; the tab bar and offline banner
+  read from it. No library, no language switch shown.
+- [ ] **Telugu UI** (I13, rest). *Why not built:* a Telugu table written by
+  machine would read badly; about 120 components still hold English
+  strings. *Unblock:* a native Telugu reader to write and check `te.ts`;
+  then move screens onto keys, Today first, and add 'te' to
+  `UI_LANGUAGES`. *Hook:* `ui/src/app/core/i18n/`.
 - [ ] **iOS edge-swipe back** (N2). *Why not built:* needs a
   `CAPBridgeViewController` subclass and iPhone testing; the iOS build waits
   on Apple enrollment. *Unblock:* set `allowsBackForwardNavigationGestures`,
@@ -1662,18 +1675,27 @@ items marked done shipped in the "Audit follow-ups" batch.
 - [x] **App shortcuts** (N24), Android: long-press the icon for Ask, Calendar,
   Today (`res/xml/shortcuts.xml`), through the App Links route allowlist.
   *Still to do:* check on a phone.
-- [ ] **Native add-to-calendar, in-app review** (N18, N23). *Why not built:*
-  new plugins, each to check on a phone. *Hook:* `core/calendar-export.ts`.
+- [x] **Native add-to-calendar, in-app review** (N18, N23), Android.
+  `NativeCalendarPlugin` opens the phone's calendar with the event filled
+  in (Google Calendar link as fallback); `InAppReviewPlugin` uses Play's
+  review sheet, asked by `core/rating-prompt.service.ts` only after 5
+  active days and 3 good moments, at most once in 120 days. *Still to do:*
+  check both on a phone; iOS versions wait on the Apple build.
 - [ ] **System splash icon** (N21). *Why not built:* the blank system
   splash is deliberate: the web intro (#173, #175) takes over at once in
   the same colour, and an icon would show two splashes. Revisit only if
   the hand-off is slowed.
-- [ ] **Notification actions** (N12, rest). *Why not built:* a "Listen"
-  action needs a native receiver. Window alerts now have their own channel.
-- [ ] **Conventions and Festival calendar controls** (U30). *Why not built:*
-  it belongs with the single ayanamsha setting (Tier 1 rest), which
-  changes the same screen; also waits for the Settings tab PR (#226).
-  *Hook:* `features/mobile/settings/` conventions.
+- [ ] **Notification actions** (N12, rest). *Why not built:* pushes are
+  sent as FCM notification messages, which Android draws itself, so they
+  cannot carry action buttons. A "Listen" button means sending data-only
+  messages and drawing them in a custom `FirebaseMessagingService`, which
+  replaces how every push is shown. *Unblock:* decide that is worth it;
+  then add the service and an action receiver. *Hook:*
+  `astrospace/notifications/`, `ui/android/app/src/main/`. Window alerts
+  already have their own channel.
+- [x] **Conventions and Festival calendar controls** (U30). Chart method
+  is one-choice groups with round marks, a plain note per choice and the
+  default marked; Festivals to show is ticked rows, at least one kept.
 
 
 ## Deferred backlog — place search, remaining coverage (2026-10-21)

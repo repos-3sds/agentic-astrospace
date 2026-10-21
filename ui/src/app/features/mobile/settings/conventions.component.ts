@@ -13,14 +13,17 @@ import { SelectHapticDirective } from '../shared/select-haptic.directive';
 export interface ConventionChoice {
   id: string;
   label: string;
+  /** One plain line on who uses it, so the choice is recognisable. */
+  detail: string;
+  isDefault?: boolean;
 }
 
 /** A group of mutually exclusive conventions. */
 export interface ConventionGroup {
   key: 'ayanamsha' | 'nodes' | 'style';
   eyebrow: string;
-  /** Glyph shape for the group — circle, dash, square, per the design. */
-  glyph: 'circle' | 'dash' | 'square';
+  /** What the group changes, in plain words. */
+  note: string;
   choices: ConventionChoice[];
 }
 
@@ -53,34 +56,39 @@ export class ConventionsComponent {
   protected readonly preferences = inject(PreferencesService);
   private readonly vedic = inject(VedicService);
 
+  /**
+   * Every group is a pick-one, so every row is the same round radio (U30:
+   * the design's circle, dash and square glyphs read as three different
+   * kinds of control, and the square looked like a multi-select).
+   */
   readonly groups: ConventionGroup[] = [
     {
       key: 'ayanamsha',
       eyebrow: 'AYANAMSHA',
-      glyph: 'circle',
+      note: 'Where the zodiac starts. Changes planet degrees a little, and sometimes a sign.',
       choices: [
-        { id: 'lahiri', label: 'Lahiri' },
-        { id: 'raman', label: 'Raman' },
-        { id: 'krishnamurti', label: 'KP' },
+        { id: 'lahiri', label: 'Lahiri', detail: 'Used by most Indian panchangams and the Government of India.', isDefault: true },
+        { id: 'raman', label: 'Raman', detail: 'From B. V. Raman’s books. Differs from Lahiri by about 1½°.' },
+        { id: 'krishnamurti', label: 'KP', detail: 'Krishnamurti Paddhati, for KP astrologers.' },
       ],
     },
     {
       key: 'nodes',
-      eyebrow: 'NODE TYPE',
-      glyph: 'dash',
+      eyebrow: 'RAHU AND KETU',
+      note: 'How Rahu and Ketu are placed. The two differ by under 2°.',
       choices: [
-        { id: 'mean', label: 'Mean' },
-        { id: 'true', label: 'True' },
+        { id: 'mean', label: 'Mean', detail: 'The smooth average position. Used by most panchangams.', isDefault: true },
+        { id: 'true', label: 'True', detail: 'The exact position on the day, with its small wobble.' },
       ],
     },
     {
       key: 'style',
-      eyebrow: 'CHART STYLE',
-      glyph: 'square',
+      eyebrow: 'CHART DRAWING',
+      note: 'Only how the chart is drawn. The planets stay the same.',
       choices: [
-        { id: 'eastern', label: 'Eastern' },
-        { id: 'south', label: 'South Indian' },
-        { id: 'north', label: 'North Indian' },
+        { id: 'south', label: 'South Indian', detail: 'Signs fixed in a square. Common in the South.', isDefault: true },
+        { id: 'north', label: 'North Indian', detail: 'Houses fixed in a diamond. Common in the North.' },
+        { id: 'eastern', label: 'Eastern', detail: 'Used in Bengal, Odisha and Assam.' },
       ],
     },
   ];
