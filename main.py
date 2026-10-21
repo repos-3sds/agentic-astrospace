@@ -18,6 +18,12 @@ from astrospace.logging_config import TraceContextMiddleware, configure_logging
 # parses. Without it the INFO-level `astrospace.ask.cost` lines were dropped.
 configure_logging()
 
+# Warn-only (audit I9): a mistyped flag or number shows in the boot logs
+# instead of silently meaning something else. Never stops the server.
+from astrospace.config import log_environment_problems  # noqa: E402
+
+log_environment_problems()
+
 from astrospace.db.database import init_db
 from astrospace.api.kundli_routes import router as kundli_router
 from astrospace.api.reading_routes import router as reading_router
