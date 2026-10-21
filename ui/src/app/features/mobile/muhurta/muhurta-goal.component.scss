@@ -332,4 +332,5 @@
 // The place line can be long ("the listed city nearest your phone's time
 // zone…"), so the action sits under it instead of squeezing it.
 .place { flex-wrap: wrap; }
+.place span:first-of-type { flex: 1 1 0; }
 .place button.place-change { flex-basis: 100%; text-align: left; padding-left: 28px; }

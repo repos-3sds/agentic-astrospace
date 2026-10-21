@@ -53,6 +53,11 @@ export class PanchangaService {
 
   private readonly cityResults = new Map<string, Promise<PanchangaCity[]>>();
 
+  /** The nearest place the server knows to an approximate position. */
+  nearestCity(lat: number, lng: number): Promise<PanchangaCity> {
+    return this.api.post<PanchangaCity>('/panchanga/cities/nearest', { lat, lng });
+  }
+
   browserTimezone(): string {
     return this.prefs.effectiveTimezone();
   }

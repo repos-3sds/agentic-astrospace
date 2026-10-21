@@ -39,6 +39,10 @@
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>When you tap Use my location, Siddha reads your approximate location once to find the nearest city for sunrise and daily timings. The location itself is not saved.</string>
+	<key>NSLocationDefaultAccuracyReduced</key>
+	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Siddha listens to your question when you tap the microphone, so you can ask by voice instead of typing.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>

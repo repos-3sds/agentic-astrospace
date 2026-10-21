@@ -1750,24 +1750,50 @@ Anchored against published New Delhi dates 2022-2026 in
 
 From the Muhurta audit (batches A–E built; these were left out on purpose).
 
-- [ ] **Read the phone's location for timings.** Today the place is the city
-  the reader picks (onboarding "Where do you live now?", Settings, or the
-  Muhurta screen's "Where will it happen?"), else the birth city. Reading the
-  device's position needs `@capacitor/geolocation`, a permission prompt on
-  both stores, and a privacy-label change. Unblock: Hawk agrees to the extra
-  permission. Hook: `PreferencesService.setPanchangaPlace` and
-  `ui/src/app/core/timing-place.ts`.
-- [ ] **Goal rules checked against Muhurta Chintamani.** The per-goal weekday,
+- [x] **Read the phone's location for timings.** Built 2026-10-21: "Use my
+  location" in the shared city picker (onboarding and the Muhurta screen's
+  "Where will it happen?"). Approximate only (Android declares
+  `ACCESS_COARSE_LOCATION` and nothing finer; iOS
+  `NSLocationDefaultAccuracyReduced`), read once on tap, rounded to ~1 km,
+  turned into a city by `POST /api/v1/panchanga/cities/nearest`
+  (`core/cities.nearest_city`) and not stored. Settings › Location does not
+  offer it yet. Store forms: approximate location, processed ephemerally.
+- [x] **Goal rules checked against Muhurta Chintamani.** The per-goal weekday,
   nakshatra and tithi lists in `astrospace/core/vedic/muhurta.py` (`GOALS`)
   follow common panchang practice, not a page-cited text. Unblock: a
   machine-readable Muhurta Chintamani (none in the KB yet; check
   `docs/kb_corpus_sources.md`). Hook: add a `source` field per goal.
-- [ ] **Sarvartha Siddhi and Amrit Siddhi by full table.** Only Amrit Siddhi
+  *Found 2026-10-21:* a public-domain print exists, Muhurta Chintamani with
+  Mahidhara Sharma's Hindi tika, Khemraj Krishnadas (Venkateshwar Press),
+  Samvat 1964 / 1907, CC0 scan at archive.org
+  `MuhurtaChintamaniVenkateshwarPress1906ShriKrishnaMuseumKurukshetra`. Its
+  OCR text layer is garbled, so it must be read as page images like the other
+  image-only books. Cloud threads cannot reach archive.org (network policy);
+  the PDF (133 MB) has to come in through the Mac or an allowed domain.
+  *Built 2026-10-21:* read from the page images; 15 goals now follow and cite
+  their verses (`source`, returned as `rules_source`), with `shun_vara`
+  (weekdays the book rules out, marked down, not dropped) and `avoid_lagna`
+  (Aquarius for a shop). Still on common practice, no verse read yet:
+  wedding and engagement (chapter 6 star verse), contract (p. 37),
+  property purchase and registration, sadhana. Verses read are listed in
+  `docs/kb_corpus_sources.md`. Not expressible yet: upanayana's "first third
+  of the dark half" and the journey's "bright first" (tithi sets are 1-15
+  without a paksha).
+- [x] **Sarvartha Siddhi and Amrit Siddhi by full table.** Only Amrit Siddhi
   (weekday + nakshatra pairs), Guru/Ravi Pushya and Dwi/Tripushkar are marked
   (`_special_days`). Sarvartha Siddhi has regional tables that disagree.
   Unblock: pick one printed table and cite it. Hook: `_special_days`.
-- [ ] **A tester teaser for the longer search range.** Testers search 14 days
+  The 1907 Muhurta Chintamani print above is the candidate table; same
+  blocker.
+  *Built 2026-10-21:* Sarvartha Siddhi from verse 1.28-29 (the Hindi
+  commentary differs on Friday and is garbled on Wednesday; the verse is
+  followed), shown only when no stronger special day applies. Amrit Siddhi's
+  Monday takes Shravana (the print's table) or Mrigashira (most panchangs).
+- [x] **A tester teaser for the longer search range.** Testers search 14 days
   and get no "next good time" beyond it. Showing a locked hint was not built
   because the tester access matrix is frozen
   (`/mnt/project-files/plans/access_matrix_2026-10-20.md`). Unblock: Hawk's OK.
   Hook: `look_ahead_days` in `astrospace/api/muhurta_routes.py`.
+  *Built 2026-10-21 (Hawk chose "Add the locked hint"):* a capped plan gets
+  `locked_next` (date and quality, never the time) for the first good date
+  in the 60 days past its horizon, shown as a Plus lock card on results.

@@ -132,6 +132,10 @@ def find_muhurta(
             # its horizon and is not shown dates past it (frozen access matrix).
             max_days=MUHURTA_MAX_DAYS if not capped else 62,
             look_ahead_days=0 if capped else 90,
+            # ...but is told that a good date lies past it, and which day;
+            # the time is part of Plus (Hawk's call, 2026-10-21).
+            locked_from=last + timedelta(days=1) if capped else None,
+            locked_days=60,
         )
         payload["place"] = place.as_payload()
         if capped_to:

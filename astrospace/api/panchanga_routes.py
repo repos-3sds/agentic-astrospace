@@ -3,12 +3,13 @@ from functools import lru_cache
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from typing import Optional
 
 from ..db import get_db
 from ..db import crud
-from ..core.cities import lookup_city, search_cities
+from ..core.cities import lookup_city, nearest_city, search_cities
 from .timing_place import resolve_timing_place, validate_timezone
 from ..core.vedic import LocationError
 from ..core.vedic import festivals
@@ -42,6 +43,22 @@ def _validate_timezone(tz_str: Optional[str], fallback: str) -> str:
 @router.get("/cities")
 def panchanga_cities(q: str = "", limit: int = Query(200, ge=1, le=300)):
     return search_cities(q, limit)
+
+
+class _Position(BaseModel):
+    lat: float = Field(ge=-90, le=90)
+    lng: float = Field(ge=-180, le=180)
+
+
+@router.post("/cities/nearest")
+def panchanga_nearest_city(position: _Position):
+    """ "Use my location": the nearest known place to the phone's approximate
+    position. A POST body, not query parameters, so the coordinates stay out
+    of request logs; nothing here stores them."""
+    row = nearest_city(position.lat, position.lng)
+    if row is None:
+        raise HTTPException(status_code=404, detail="No known place near this position.")
+    return row
 
 
 @router.get("/today")

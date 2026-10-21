@@ -164,4 +164,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <!-- Widgets reschedule their next refresh after a restart. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- "Use my location": approximate only, asked when the reader taps the
+         button, read once to find the nearest city. FINE is deliberately not
+         declared, so @capacitor/geolocation asks for approximate location. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 </manifest>

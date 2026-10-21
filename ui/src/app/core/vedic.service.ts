@@ -804,6 +804,8 @@ export interface MuhurtaSearchPayload {
   more_available?: number;
   /** The first good slot after the range, when the range was thin. */
   next_good?: { date: string; start: string; end: string; score: number; quality: string; label: string } | null;
+  /** A plan with a horizon: the first good date past it. The time is not sent. */
+  locked_next?: { date: string; quality: string } | null;
   /** What was left out and why, one plain sentence each. */
   notes?: string[];
   note: string | null;

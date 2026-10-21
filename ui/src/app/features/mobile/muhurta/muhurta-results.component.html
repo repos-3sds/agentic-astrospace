@@ -108,6 +108,15 @@
       </div>
     </article>
   }
+  @if (lockedNext(); as locked) {
+    <as-plan-lock
+      class="locked-next"
+      from="muhurta.days_ahead"
+      [compact]="true"
+      [title]="'There’s a good date on ' + dateLabel(locked.date)"
+      body="Plus shows its time, and dates further ahead."
+    />
+  }
   @if (moreAvailable() > 0) {
     <button class="more" type="button" (click)="showMore()" [disabled]="loadingMore()">
       {{ loadingMore() ? 'Finding more…' : 'Show more times' }}

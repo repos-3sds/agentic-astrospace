@@ -414,7 +414,7 @@ def test_tester_readings_stop_after_three_a_month_once_locks_are_on(env, monkeyp
 
 
 def test_tester_muhurta_searches_the_next_two_weeks_only(env, monkeypatch):
-    from datetime import date
+    from datetime import date, timedelta
 
     from astrospace.api import muhurta_routes
     from astrospace.db import crud
@@ -427,6 +427,7 @@ def test_tester_muhurta_searches_the_next_two_weeks_only(env, monkeypatch):
     def fake_find(goal, start, end, **kwargs):
         seen["range"] = (start, end)
         seen["look_ahead"] = kwargs.get("look_ahead_days")
+        seen["locked_from"] = kwargs.get("locked_from")
         return {"windows": []}
 
     monkeypatch.setattr(muhurta_routes.muhurta, "find", fake_find)
@@ -440,10 +441,13 @@ def test_tester_muhurta_searches_the_next_two_weeks_only(env, monkeypatch):
     body = client.get(f"/api/v1/muhurta/{kundli}", params={**params, "date_to": "2099-01-01"}).json()
     start, end = seen["range"]
     assert (end - start).days == 13 and body["capped_to"] == end.isoformat()
-    # The frozen tester matrix: no peeking at dates past the horizon.
+    # The frozen tester matrix: no times past the horizon...
     assert seen["look_ahead"] == 0
+    # ...but the first good date past it, without its time (Hawk, 2026-10-21).
+    assert seen["locked_from"] == end + timedelta(days=1)
     far = client.get(f"/api/v1/muhurta/{kundli}", params={**params, "date_from": "2099-01-01"})
     assert far.status_code == 400
     monkeypatch.delenv("ASTROSPACE_QUOTAS_ENFORCED")
     client.get(f"/api/v1/muhurta/{kundli}", params={**params, "date_to": "2099-01-01"})
     assert seen["range"][1] == date(2099, 1, 1)
+    assert seen["locked_from"] is None
