@@ -25,7 +25,7 @@ def test_sources_cite_the_print_or_are_left_empty():
     for slug in cited:
         assert G[slug]["source"].startswith("Muhurta Chintamani "), slug
     # No verse read for these yet: common practice, and no false citation.
-    for slug in ("sign_contract", "start_sadhana", "general", "property_registration"):
+    for slug in ("start_sadhana", "general", "property_registration"):
         assert not G[slug].get("source"), slug
 
 
@@ -131,3 +131,19 @@ def test_locked_next_gives_the_date_and_never_the_time():
     assert set(locked) == {"date", "quality"}
     assert locked["date"] >= "2026-11-16"
     assert muhurta.find("general", date(2026, 11, 2), date(2026, 11, 3), **args)["locked_next"] is None
+
+
+def test_wedding_6_53_and_engagement_6_10():
+    wed = G["marriage_related"]
+    assert set(wed["prefer_nakshatra"]) == {
+        "Mrigashira", "Hasta", "Moola", "Anuradha", "Magha", "Rohini", "Revati",
+        "Uttara Phalguni", "Uttara Ashadha", "Uttara Bhadrapada", "Swati"}
+    assert wed["avoid_tithi"] == muhurta.RIKTA_TITHIS  # full moon allowed
+    eng = set(G["engagement"]["prefer_nakshatra"])
+    assert set(wed["prefer_nakshatra"]) | {"Krittika", "Shravana", "Dhanishta",
+                                           "Purva Ashadha"} <= eng
+    assert "Sunday" not in G["engagement"]["prefer_vara"]
+
+
+def test_contract_2_42():
+    assert set(G["sign_contract"]["prefer_nakshatra"]) == {"Pushya", "Anuradha", "Purva Phalguni"}

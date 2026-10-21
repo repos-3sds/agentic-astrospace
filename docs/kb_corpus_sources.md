@@ -116,9 +116,10 @@ copy used came through the Mac.
 Verses read so far, and the goal each one sets in
 `astrospace/core/vedic/muhurta.py` (`GOALS[...]["source"]`): 1.28-29
 Sarvartha Siddhi; the Amrit Siddhi table in the commentary (p. 12); 2.16-2.19
-buying, shop opening, vehicles, ornaments; 2.26 joining service; 5.8
+buying, shop opening, vehicles, ornaments; 2.26 joining service; 2.42
+sandhana (alliances, used for contracts); 6.10-6.11 choosing bride and groom
+(engagement); 6.13 wedding months; 6.53 wedding stars (p. 89); 5.8
 simantonnayana; 5.11 naming; 5.17 annaprashana; 5.24 karnavedha; 5.29 chaula;
 5.37-38 akshara and vidyarambha; 5.39-42 upanayana; 11.9 journeys; 12.15,
-12.18 house building; 13.1-13.4 house entry. Not yet read: the vivaha star
-verse (chapter 6, past the guna-milan verses around p. 77) and sandhi/treaty
-for contracts (p. 37).
+12.18 house building; 13.1-13.4 house entry. Every goal with a classical rule now cites it; property
+purchase and registration, sadhana and "something else" have none in the book.
