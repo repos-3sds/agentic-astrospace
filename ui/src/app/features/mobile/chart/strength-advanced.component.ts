@@ -176,7 +176,7 @@ export class StrengthAdvancedComponent {
       ['Hora Lagna', 'Wealth & resources', data?.hora_lagna ? `${data.hora_lagna.sign_name} ${data.hora_lagna.dms}` : '—'],
       ['Ghati Lagna', 'Power & position', data?.ghati_lagna ? `${data.ghati_lagna.sign_name} ${data.ghati_lagna.dms}` : '—'],
       ['Bhrigu Bindu', 'Karmic pressure point', data?.bhrigu_bindu ? `${data.bhrigu_bindu.sign_name} ${data.bhrigu_bindu.dms}` : '—'],
-      ['Indu Lagna', 'Wealth potential lens', data?.indu_lagna ? `${data.indu_lagna.sign_name} ${data.indu_lagna.dms}` : '—'],
+      ['Indu Lagna', 'Wealth potential lens', data?.indu_lagna ? data.indu_lagna.sign_name : '—'],
     ];
   });
   readonly charaRows = computed(() => (this.charaDasha()?.mahadashas ?? []).map((period) => [

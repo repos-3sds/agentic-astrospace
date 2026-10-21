@@ -215,6 +215,13 @@ export interface SpecialLagnaPoint {
   dms: string;
 }
 
+export interface InduLagnaPoint {
+  sign: number;
+  sign_name: string;
+  kala_sum: number;
+  count: number;
+}
+
 export interface SpecialLagnasPayload {
   hours_since_sunrise?: number;
   ghatis_since_sunrise?: number;
@@ -222,7 +229,8 @@ export interface SpecialLagnasPayload {
   hora_lagna?: SpecialLagnaPoint;
   ghati_lagna?: SpecialLagnaPoint;
   bhrigu_bindu?: SpecialLagnaPoint;
-  indu_lagna?: SpecialLagnaPoint;
+  /** A whole sign, not a degree: the Kala count lands on a sign. */
+  indu_lagna?: InduLagnaPoint;
   lagna?: SpecialLagnaPoint;
   notes?: string[];
   error?: string;
