@@ -24,6 +24,7 @@ import { WidgetBridgeService } from '../../../core/widget-bridge.service';
 import { deepLinkArrivedAt } from '../../../core/deep-link-arrival';
 import { activeTabRoots } from '../../../core/tab-roots';
 import { AppLinksService } from '../../../core/app-links.service';
+import { RatingPromptService } from '../../../core/rating-prompt.service';
 
 interface MobileTab {
   commands: string[];
@@ -95,6 +96,11 @@ export class MobileShellComponent {
   private lastPath: string | null = null;
 
   constructor() {
+    // Play's rating card, if this reader is due one (core/rating-prompt.service.ts):
+    // a few seconds after the app settles, never over a screen being read.
+    const ratingPrompt = inject(RatingPromptService);
+    const rating = setTimeout(() => void ratingPrompt.onAppOpen(), 4000);
+    inject(DestroyRef).onDestroy(() => clearTimeout(rating));
     // Screen readers heard nothing when the screen changed and kept reading
     // from a detached element (audit N14). Like a native push, move focus to
     // the new screen's heading; query-only changes (a tab inside a screen)

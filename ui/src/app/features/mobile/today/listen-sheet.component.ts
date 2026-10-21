@@ -14,6 +14,7 @@ import { SheetComponent } from '../sheet/sheet.component';
 import { AudioReadingSection } from './audio-reading-script';
 import { MobileTtsService } from '../../../core/mobile-tts.service';
 import { PreferencesService } from '../../../core/preferences.service';
+import { RatingPromptService } from '../../../core/rating-prompt.service';
 import { NATURAL_VOICE_NAME, NaturalVoiceService, naturalChunks, prepareForSpeech } from '../../../core/natural-voice.service';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
 import { keepScreenAwakeWhile } from '../../../core/screen-awake';
@@ -72,6 +73,7 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
   private readonly nativeTts = inject(MobileTtsService);
   private readonly naturalVoice = inject(NaturalVoiceService);
   private readonly preferences = inject(PreferencesService);
+  private readonly ratingPrompt = inject(RatingPromptService);
 
   readonly title = input.required<string>();
   readonly subtitle = input('Daily guidance · gentle voice');
@@ -635,6 +637,7 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
   }
 
   private finishPlayback(): void {
+    this.ratingPrompt.goodMoment();
     this.clearNextSentenceTimer();
     this.playing.set(false);
     this.elapsed.set(this.duration());
