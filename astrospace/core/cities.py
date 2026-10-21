@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import gzip
 import json
+import math
 import re
 import unicodedata
 from functools import lru_cache
@@ -526,6 +527,46 @@ def city_for_timezone(tz_str: str) -> tuple[str, str, float, float, str] | None:
     for (city, nation), (lat, lng, tz) in _CITIES.items():
         if tz == tz_str:
             return city.title(), nation.upper(), lat, lng, tz
+    return None
+
+
+def _km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """Great-circle distance; the haversine is cheap enough for 50k rows."""
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dp, dl = p2 - p1, math.radians(lng2 - lng1)
+    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return 6371.0 * 2 * math.asin(min(1.0, math.sqrt(a)))
+
+
+def nearest_city(lat: float, lng: float) -> dict | None:
+    """The nearest place the offline databases know, as a search_cities() row
+    plus `distance_km`, for "Use my location".
+
+    Only a place that lookup_city() resolves back to the same spot is
+    returned: the timing routes look places up by name, and a village whose
+    name a bigger namesake owns would otherwise give that namesake's sunrise.
+    """
+    candidates: list[tuple[float, dict]] = []
+    for (city, nation), (c_lat, c_lng, tz) in _CITIES.items():
+        candidates.append((_km(lat, lng, c_lat, c_lng), {
+            "city": city.title(), "nation": nation.upper(), "timezone": tz,
+            "lat": c_lat, "lng": c_lng, "label": f"{city.title()}, {nation.upper()} · {tz}",
+        }))
+    for row in _state_places():
+        name, p_lat, p_lng, district, state = row[0], row[1], row[2], row[3], row[4]
+        state_name = _STATE_NAMES.get(state, state)
+        where = f"{district}, {state_name}" if district else state_name
+        candidates.append((_km(lat, lng, p_lat, p_lng), {
+            "city": name, "nation": "IN", "timezone": "Asia/Kolkata",
+            "lat": p_lat, "lng": p_lng, "label": f"{name} · {where}",
+        }))
+    for row in _world_places():
+        candidates.append((_km(lat, lng, row[1], row[2]), _world_place_dict(row)))
+    candidates.sort(key=lambda item: item[0])
+    for distance, row in candidates[:25]:
+        geo = lookup_city(row["city"], row["nation"])
+        if geo and _km(geo[0], geo[1], row["lat"], row["lng"]) < 5:
+            return {**row, "distance_km": round(distance, 1)}
     return None
 
 

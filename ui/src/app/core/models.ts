@@ -1370,6 +1370,8 @@ export interface PanchangaCity {
   lat: number;
   lng: number;
   label: string;
+  /** Only from "Use my location": how far the phone is from this place. */
+  distance_km?: number;
 }
 
 export interface CompatibilityScoreRow {

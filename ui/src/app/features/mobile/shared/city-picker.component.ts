@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { PanchangaCity } from '../../../core/models';
 import { PanchangaService } from '../../../core/panchanga.service';
+import { approximatePosition } from '../../../core/device-location';
 
 /**
  * A city search box with a short list of matches, as Settings › Location has.
@@ -23,6 +24,17 @@ import { PanchangaService } from '../../../core/panchanga.service';
         [placeholder]="placeholder()"
       />
     </label>
+    @if (locate()) {
+      <button type="button" class="locate" (click)="useLocation()" [disabled]="locating()">
+        <img src="mobile/pin.svg" alt="" aria-hidden="true" />
+        <span>{{ locating() ? 'Finding where you are…' : 'Use my location' }}</span>
+      </button>
+      @if (found(); as near) {
+        <p class="search-note">
+          Using {{ near.city }}@if ((near.distance_km ?? 0) > 30) {, the nearest place we know ({{ near.distance_km }} km away)}.
+        </p>
+      }
+    }
     @if (searching()) {
       <p class="search-note">Searching cities…</p>
     } @else if (error()) {
@@ -50,12 +62,16 @@ export class CityPickerComponent {
   readonly placeholder = input('Search city');
   readonly inputId = input('city-picker');
   readonly initial = input('');
+  /** Offer "Use my location" (read once, approximate, never stored). */
+  readonly locate = input(true);
   readonly picked = output<PanchangaCity>();
 
   protected readonly query = signal('');
   protected readonly suggestions = signal<PanchangaCity[]>([]);
   protected readonly searching = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly locating = signal(false);
+  protected readonly found = signal<PanchangaCity | null>(null);
   private timer: ReturnType<typeof setTimeout> | null = null;
   private run = 0;
 
@@ -72,7 +88,25 @@ export class CityPickerComponent {
   protected choose(city: PanchangaCity): void {
     this.query.set(city.label);
     this.suggestions.set([]);
+    this.found.set(null);
     this.picked.emit(city);
+  }
+
+  /** The phone's approximate position, turned into the nearest known city. */
+  protected async useLocation(): Promise<void> {
+    this.locating.set(true);
+    this.error.set(null);
+    this.suggestions.set([]);
+    try {
+      const { lat, lng } = await approximatePosition();
+      const city = await this.panchanga.nearestCity(lat, lng);
+      this.choose(city);
+      this.found.set(city);
+    } catch (error) {
+      this.error.set((error as Error).message);
+    } finally {
+      this.locating.set(false);
+    }
   }
 
   private async search(value: string): Promise<void> {

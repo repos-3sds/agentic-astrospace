@@ -1741,22 +1741,32 @@ Anchored against published New Delhi dates 2022-2026 in
 
 From the Muhurta audit (batches A–E built; these were left out on purpose).
 
-- [ ] **Read the phone's location for timings.** Today the place is the city
-  the reader picks (onboarding "Where do you live now?", Settings, or the
-  Muhurta screen's "Where will it happen?"), else the birth city. Reading the
-  device's position needs `@capacitor/geolocation`, a permission prompt on
-  both stores, and a privacy-label change. Unblock: Hawk agrees to the extra
-  permission. Hook: `PreferencesService.setPanchangaPlace` and
-  `ui/src/app/core/timing-place.ts`.
+- [x] **Read the phone's location for timings.** Built 2026-10-21: "Use my
+  location" in the shared city picker (onboarding and the Muhurta screen's
+  "Where will it happen?"). Approximate only (Android declares
+  `ACCESS_COARSE_LOCATION` and nothing finer; iOS
+  `NSLocationDefaultAccuracyReduced`), read once on tap, rounded to ~1 km,
+  turned into a city by `POST /api/v1/panchanga/cities/nearest`
+  (`core/cities.nearest_city`) and not stored. Settings › Location does not
+  offer it yet. Store forms: approximate location, processed ephemerally.
 - [ ] **Goal rules checked against Muhurta Chintamani.** The per-goal weekday,
   nakshatra and tithi lists in `astrospace/core/vedic/muhurta.py` (`GOALS`)
   follow common panchang practice, not a page-cited text. Unblock: a
   machine-readable Muhurta Chintamani (none in the KB yet; check
   `docs/kb_corpus_sources.md`). Hook: add a `source` field per goal.
+  *Found 2026-10-21:* a public-domain print exists, Muhurta Chintamani with
+  Mahidhara Sharma's Hindi tika, Khemraj Krishnadas (Venkateshwar Press),
+  Samvat 1964 / 1907, CC0 scan at archive.org
+  `MuhurtaChintamaniVenkateshwarPress1906ShriKrishnaMuseumKurukshetra`. Its
+  OCR text layer is garbled, so it must be read as page images like the other
+  image-only books. Cloud threads cannot reach archive.org (network policy);
+  the PDF (133 MB) has to come in through the Mac or an allowed domain.
 - [ ] **Sarvartha Siddhi and Amrit Siddhi by full table.** Only Amrit Siddhi
   (weekday + nakshatra pairs), Guru/Ravi Pushya and Dwi/Tripushkar are marked
   (`_special_days`). Sarvartha Siddhi has regional tables that disagree.
   Unblock: pick one printed table and cite it. Hook: `_special_days`.
+  The 1907 Muhurta Chintamani print above is the candidate table; same
+  blocker.
 - [ ] **A tester teaser for the longer search range.** Testers search 14 days
   and get no "next good time" beyond it. Showing a locked hint was not built
   because the tester access matrix is frozen

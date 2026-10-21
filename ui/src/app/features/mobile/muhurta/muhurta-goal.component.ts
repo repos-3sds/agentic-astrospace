@@ -173,7 +173,14 @@ export class MuhurtaGoalComponent {
   private readonly preferences = inject(PreferencesService);
   readonly place = computed(() => {
     const event = this.eventPlace();
-    if (event) return `${event.city}, where it will happen`;
+    if (event) {
+      // From "Use my location" far from any known place: say so, since the
+      // times are that place's, not the reader's.
+      if ((event.distance_km ?? 0) > 30) {
+        return `${event.city}, the nearest place we know (${Math.round(event.distance_km!)} km away)`;
+      }
+      return `${event.city}, where it will happen`;
+    }
     // The sentence is written to stand alone; here it follows "Times for".
     return plannedTimingPlace(this.preferences.panchangaPlace(), this.preferences.browserTimezone()).sentence
       .replace(/^The /, 'the ');

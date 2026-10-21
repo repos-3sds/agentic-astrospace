@@ -62,3 +62,19 @@
   color: var(--m-muted);
   &.is-error { color: var(--m-bad); }
 }
+
+.locate {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1.2px solid var(--m-border-strong);
+  border-radius: 999px;
+  background: var(--m-surface);
+  @include m-body-small;
+  color: var(--m-text);
+  img { width: 16px; height: 16px; display: block; }
+  &:disabled { opacity: 0.6; }
+}
