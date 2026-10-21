@@ -23,6 +23,7 @@ import os
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Literal
+from ..config import flag
 
 AccessTier = Literal["free", "plus", "pro"]
 CapabilityKind = Literal["flag", "limit"]
@@ -118,7 +119,7 @@ def quotas_enforced() -> bool:
     so the count is real from day one but no reader is stopped before there
     is a way to buy more.
     """
-    return os.getenv("ASTROSPACE_QUOTAS_ENFORCED", "").lower() in {"1", "true", "yes"}
+    return flag("ASTROSPACE_QUOTAS_ENFORCED")
 
 
 # Tester phase (Hawk, 2026-10-20): Free readers get Plus, not Practitioner,
@@ -138,7 +139,7 @@ TESTER_AS_FREE = ("remedies.full", "doshas.detail", "dashas.full", "transits.ful
 
 
 def testers_get_plus() -> bool:
-    return os.getenv("ASTROSPACE_TESTERS_GET_PLUS", "").lower() in {"1", "true", "yes"}
+    return flag("ASTROSPACE_TESTERS_GET_PLUS")
 
 
 def free_values() -> dict:

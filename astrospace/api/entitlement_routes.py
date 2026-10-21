@@ -9,6 +9,7 @@ from ..entitlements.products import public_products
 from ..entitlements.registry import capability_registry, public_registry, quotas_enforced
 from ..entitlements.resolver import require_entitlement, resolve_entitlements
 from .auth import CurrentUser
+from ..config import flag
 
 router = APIRouter(prefix="/api/v1/entitlements", tags=["entitlements"])
 
@@ -59,7 +60,7 @@ def probe_entitlement_gate(
     db: Session = Depends(get_db),
 ):
     """Exercise a real server gate before any store integration is enabled."""
-    if os.getenv("ASTROSPACE_ENTITLEMENT_PROBES", "").lower() not in {"1", "true", "yes"}:
+    if not flag("ASTROSPACE_ENTITLEMENT_PROBES"):
         raise HTTPException(status_code=404, detail="Not found")
     require_entitlement(resolve_entitlements(db, user.id), entitlement_key)
     return {"allowed": True, "entitlement": entitlement_key}

@@ -10,6 +10,7 @@ from typing import Annotated
 import jwt
 import requests
 from fastapi import Depends, Header, HTTPException, Request
+from ..config import flag
 
 DEV_USER_ID = "local-dev-user"
 log = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ def running_on_cloud_run() -> bool:
 
 
 def supabase_configured() -> bool:
-    bypass = os.getenv("ASTROSPACE_DEV_AUTH_BYPASS", "").lower() in {"1", "true", "yes"}
+    bypass = flag("ASTROSPACE_DEV_AUTH_BYPASS")
     if bypass and not running_on_cloud_run():
         return False
     return bool(os.getenv("SUPABASE_URL") and os.getenv("SUPABASE_ANON_KEY"))

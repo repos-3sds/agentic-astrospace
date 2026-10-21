@@ -38,3 +38,33 @@ def test_cloud_run_needs_its_database_and_keys():
 
 def test_never_raises_on_odd_input():
     assert isinstance(check_environment({"DAILY_BRIEF_AGENT": "", "PORT": "-1"}), list)
+
+
+def test_prerender_audio_takes_on_without_a_warning():
+    from astrospace.config import flag
+    assert check_environment({"DAILY_BRIEF_PRERENDER_AUDIO": "on"}) == []
+    assert flag("DAILY_BRIEF_PRERENDER_AUDIO", {"DAILY_BRIEF_PRERENDER_AUDIO": "on"}) is True
+
+
+def test_flag_and_integer_keep_the_old_rules():
+    from astrospace.config import flag, integer
+    assert flag("ASTROSPACE_QUOTAS_ENFORCED", {"ASTROSPACE_QUOTAS_ENFORCED": "1"}) is True
+    assert flag("ASTROSPACE_QUOTAS_ENFORCED", {"ASTROSPACE_QUOTAS_ENFORCED": "on"}) is False
+    assert flag("ASTROSPACE_QUOTAS_ENFORCED", {}) is False
+    assert flag("DAILY_BRIEF_AGENT", {}) is True
+    assert flag("DAILY_BRIEF_AGENT", {"DAILY_BRIEF_AGENT": "off"}) is False
+    assert integer("DB_POOL_SIZE", 5, {"DB_POOL_SIZE": "ten"}) == 5
+    assert integer("DB_POOL_SIZE", 5, {"DB_POOL_SIZE": "8"}) == 8
+
+
+def test_flags_and_numbers_are_read_only_through_config():
+    """A module parsing a flag on its own is how the two rules drifted."""
+    import re
+    from pathlib import Path
+    from astrospace.config import VARS
+    names = [var.name for var in VARS if var.kind in ("opt_in", "opt_out", "int")]
+    pattern = re.compile(r"(getenv|environ\.get|environ\[)\(?\s*\"(" + "|".join(names) + r")\"")
+    root = Path(__file__).resolve().parents[1]
+    offenders = [str(path.relative_to(root)) for path in (root / "astrospace").rglob("*.py")
+                 if path.name != "config.py" and pattern.search(path.read_text())]
+    assert offenders == []

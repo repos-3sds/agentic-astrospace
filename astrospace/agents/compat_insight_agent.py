@@ -42,6 +42,7 @@ from .period_agent import reading_boundary
 from .style import PLAIN_INDIAN_ENGLISH
 from ..core.vedic.compatibility_guidance import _FLAG_TEXT, _KOOTA_TEXT
 from ..core.vedic.constants import SIGN_LORDS, SIGNS
+from ..config import flag
 
 # Bump when the prompt or schema changes, so saved sections are rewritten.
 INSIGHT_VERSION = 2
@@ -49,7 +50,7 @@ INSIGHT_VERSION = 2
 
 def compat_insight_enabled() -> bool:
     """COMPAT_INSIGHT_AGENT=off falls back to the fixed guidance everywhere."""
-    return os.getenv("COMPAT_INSIGHT_AGENT", "on").strip().lower() not in ("off", "0", "false")
+    return flag("COMPAT_INSIGHT_AGENT")
 
 
 class InsightItem(BaseModel):

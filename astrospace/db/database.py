@@ -5,6 +5,8 @@ from typing import Iterator
 from sqlalchemy import inspect, text
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker, DeclarativeBase
+from ..config import integer
+
 
 def _database_url() -> str:
     """Return the SQLAlchemy database URL.
@@ -51,8 +53,8 @@ def engine_options(url: str) -> dict:
         "connect_args": {"prepare_threshold": None},
         "pool_pre_ping": True,
         "pool_recycle": 300,
-        "pool_size": int(os.getenv("DB_POOL_SIZE", "5")),
-        "max_overflow": int(os.getenv("DB_MAX_OVERFLOW", "5")),
+        "pool_size": integer("DB_POOL_SIZE", 5),
+        "max_overflow": integer("DB_MAX_OVERFLOW", 5),
         "pool_timeout": 30,
     }
 

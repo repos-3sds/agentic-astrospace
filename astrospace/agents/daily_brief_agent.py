@@ -49,6 +49,7 @@ from pydantic import BaseModel, Field
 from .base import BaseAstroAgent
 from .period_agent import reading_boundary
 from .style import PLAIN_INDIAN_ENGLISH
+from ..config import flag
 
 # Words a second the Listen sheet assumes at 1x, and its default speed.
 LISTEN_WORDS_PER_SECOND = 2.35
@@ -63,7 +64,7 @@ SECTION_LABELS = ("Opening", "Overview", "Today", "Why", "Close")
 
 def daily_brief_enabled() -> bool:
     """DAILY_BRIEF_AGENT=off stops every brief being written, scheduled or not."""
-    return os.getenv("DAILY_BRIEF_AGENT", "on").strip().lower() not in ("off", "0", "false")
+    return flag("DAILY_BRIEF_AGENT")
 
 
 class BriefItem(BaseModel):
