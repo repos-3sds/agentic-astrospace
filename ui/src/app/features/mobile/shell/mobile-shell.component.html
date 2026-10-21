@@ -17,7 +17,7 @@
     </section>
   }
   <p class="screen-announcer" aria-live="polite">{{ screenAnnouncement() }}</p>
-  <main class="content" asScrollMemory [class.tabs-hidden]="layoutWithoutTabs()">
+  <main class="content" asScrollMemory asPullRefresh [class.tabs-hidden]="layoutWithoutTabs()">
     @if (profilesBlocked()) {
       <as-generic-error
         role="alert"

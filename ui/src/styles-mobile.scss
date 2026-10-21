@@ -398,6 +398,53 @@ as-sheet header {
   .as-mobile .m-collapse.is-open > .m-collapse-inner { animation: none; overflow: visible; }
 }
 
+// ── Pull to refresh (N13) ───────────────────────────────────────────────────
+// Made by features/mobile/shell/pull-refresh.directive.ts beside the shell's
+// scroller, so it lives here: a created element has no encapsulation
+// attribute. Solid sheet colours, because the dark --m-raised is see-through.
+.as-mobile .m-pull-refresh {
+  position: absolute;
+  z-index: 20;
+  left: 50%;
+  top: calc(var(--m-safe-top) - 44px);
+  width: 40px;
+  height: 40px;
+  margin-left: -20px;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--m-sheet-raised);
+  border: 1px solid var(--m-border);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(var(--pull-y, 0px));
+  transition: transform 220ms var(--m-ease-standard, ease), opacity 160ms ease;
+}
+.as-mobile .m-pull-refresh.is-visible { opacity: 1; }
+// While the finger moves, the indicator follows it with no easing lag.
+.as-mobile .m-pull-refresh.is-visible:not(.is-spinning) { transition: opacity 160ms ease; }
+.as-mobile .m-pull-refresh-arc {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  // The arc fills with the pull, then spins as a three-quarter ring.
+  background: conic-gradient(var(--m-accent) calc(var(--pull-progress, 0) * 360deg), transparent 0);
+  -webkit-mask: radial-gradient(circle, transparent 7px, #000 7.5px);
+  mask: radial-gradient(circle, transparent 7px, #000 7.5px);
+  opacity: calc(0.45 + var(--pull-progress, 0) * 0.55);
+}
+.as-mobile .m-pull-refresh.is-spinning .m-pull-refresh-arc {
+  background: conic-gradient(var(--m-accent) 270deg, transparent 0);
+  opacity: 1;
+  animation: m-pull-spin 0.8s linear infinite;
+}
+@keyframes m-pull-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .as-mobile .m-pull-refresh.is-spinning .m-pull-refresh-arc { animation-duration: 2.4s; }
+}
+
 // ── Page transitions (N1) ───────────────────────────────────────────────────
 // Set by core/page-transitions.ts on <html> for the length of one View
 // Transition. Push slides in, pop slides back, tab switches crossfade; the

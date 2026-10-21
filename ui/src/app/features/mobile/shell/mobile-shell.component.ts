@@ -17,6 +17,7 @@ import { SheetOverlayService } from '../../../core/sheet-overlay.service';
 import { HapticsService } from '../../../core/haptics.service';
 import { ConnectivityService } from '../../../core/connectivity.service';
 import { ScrollMemoryDirective } from './scroll-memory.directive';
+import { PullRefreshDirective } from './pull-refresh.directive';
 import { Subhashita, SubhashitaService } from '../../../core/subhashita.service';
 import { SubhashitaSheetComponent } from '../subhashita/subhashita-sheet.component';
 import { WidgetBridgeService } from '../../../core/widget-bridge.service';
@@ -57,7 +58,7 @@ const DEEP_LINK_WINDOW_MS = 15_000;
   selector: 'as-mobile-shell',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, GenericErrorComponent, ScrollMemoryDirective, SubhashitaSheetComponent],
+  imports: [RouterOutlet, RouterLink, GenericErrorComponent, ScrollMemoryDirective, PullRefreshDirective, SubhashitaSheetComponent],
   templateUrl: './mobile-shell.component.html',
   styleUrl: './mobile-shell.component.scss',
   host: { class: 'as-mobile' },
