@@ -21,7 +21,7 @@ from sqlalchemy.orm import Session
 
 from ..db import crud, crud_mobile as cm, get_db
 from ..db.models import (
-    AskThread, AudioRender, BillingAccount, CompatibilityCheck, CompatibilityInsight, DailyGuidanceCache, EmailRecipient,
+    AnswerReport, AskThread, AudioRender, BillingAccount, CompatibilityCheck, CompatibilityInsight, DailyGuidanceCache, EmailRecipient,
     EntitlementAuditEvent, EntitlementOverride, Kundli,
     LiveActivity, MuhurtaRequest, NotificationJob, NotificationPreference,
     PlanAssignment, PushToken, QuestionCredit, SavedMuhurta, ShareAsset, SubscriptionGrant,
@@ -238,6 +238,7 @@ def export_account(user: CurrentUser, db: Session = Depends(get_db)):
         "muhurta_requests": _export_rows(by_user(MuhurtaRequest)),
         "compatibility_checks": _export_rows(by_user(CompatibilityCheck)),
         "compatibility_insights": _export_rows(by_user(CompatibilityInsight)),
+        "answer_reports": _export_rows(by_user(AnswerReport)),
         "observances": _export_rows(by_user(UserObservance)),
         "alerts": _export_rows(by_user(UserAlert)),
         "notification_preferences": _export_rows(by_user(NotificationPreference)),
@@ -285,6 +286,8 @@ def delete_account(payload: AccountDeletionPayload, user: CurrentUser,
     db.query(PushToken).filter(PushToken.user_id == user.id).delete(synchronize_session=False)
     db.query(SavedMuhurta).filter(SavedMuhurta.user_id == user.id).delete(synchronize_session=False)
     db.query(MuhurtaRequest).filter(MuhurtaRequest.user_id == user.id).delete(synchronize_session=False)
+    # Reports point at Ask messages, so they go first.
+    db.query(AnswerReport).filter(AnswerReport.user_id == user.id).delete(synchronize_session=False)
     for row in db.query(AskThread).filter(AskThread.user_id == user.id).all():
         db.delete(row)
     for row in db.query(UserRemedy).filter(UserRemedy.user_id == user.id).all():

@@ -84,7 +84,7 @@ def test_first_sign_in_mails_the_team_once(db):
 
 def test_old_accounts_are_not_mailed(db):
     _join(db, "u1", NOW - timedelta(days=3), "old@example.com")
-    assert schedule_owner_alerts(db, NOW, environ=TEAM) == {"joined": 0, "first_question": 0}
+    assert schedule_owner_alerts(db, NOW, environ=TEAM) == {"joined": 0, "first_question": 0, "answer_report": 0}
 
 
 def test_first_question_says_when_not_what(db):

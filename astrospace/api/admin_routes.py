@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from collections import Counter
+from datetime import datetime, timezone
 import logging
 from pathlib import Path
 import re
 import tempfile
 from typing import Literal
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, Query, UploadFile
 from fastapi.concurrency import run_in_threadpool
@@ -71,6 +72,10 @@ class AccessPayload(BaseModel):
     role: Literal["admin", "reviewer"]
     active: bool = True
     reason: str = Field(min_length=3, max_length=1000)
+
+
+class ReportStatusPayload(BaseModel):
+    status: Literal["open", "reviewed"]
 
 
 class UserStatusPayload(BaseModel):
@@ -461,6 +466,65 @@ def tester_activity(user: FullAdminUser):
         )
 
     return _safe(load)
+
+
+@router.get("/reports")
+def answer_reports(
+    user: FullAdminUser,
+    status: Literal["open", "reviewed", "all"] = "open",
+    limit: int = Query(100, ge=1, le=500),
+):
+    """Readers' "Report this answer" on Ask, newest first.
+
+    Full administrators only: each row carries the reported question and
+    answer and the reader's sign-in address.
+    """
+    client = _client()
+
+    def load():
+        params = {
+            "select": (
+                "id,user_id,thread_id,message_id,reason,note,question,answer,"
+                "experience_mode,language,status,reviewed_at,reviewed_by,created_at"
+            ),
+            "order": "created_at.desc",
+            "limit": limit,
+        }
+        if status != "all":
+            params["status"] = f"eq.{status}"
+        rows = client.rows("answer_reports", params=params)
+        emails = {str(u["id"]): u.get("email") for u in client.auth_users()} if rows else {}
+        open_count = len(client.rows("answer_reports", params={
+            "select": "id", "status": "eq.open",
+        }))
+        return {
+            "open": open_count,
+            "reports": [{**row, "email": emails.get(str(row["user_id"]))} for row in rows],
+        }
+
+    return _safe(load)
+
+
+@router.post("/reports/{report_id}/status")
+def update_answer_report(report_id: str, body: ReportStatusPayload, user: FullAdminUser):
+    try:
+        UUID(report_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail="Report not found") from None
+    client = _client()
+
+    def update():
+        reviewed = body.status == "reviewed"
+        rows = client.patch("answer_reports", params={"id": f"eq.{report_id}"}, payload={
+            "status": body.status,
+            "reviewed_at": datetime.now(timezone.utc).isoformat() if reviewed else None,
+            "reviewed_by": (user.email or user.id) if reviewed else None,
+        })
+        if not rows:
+            raise HTTPException(status_code=404, detail="Report not found")
+        return rows[0]
+
+    return _safe(update)
 
 
 @router.get("/system")

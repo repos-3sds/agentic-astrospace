@@ -1,4 +1,5 @@
-"""Email the team when a reader first signs in or asks their first question.
+"""Email the team when a reader first signs in, asks their first question,
+or reports an answer.
 
 For the friends-and-family test: the people running it want to know, within
 one worker run, that an invite turned into a sign-in and a sign-in into a
@@ -13,7 +14,8 @@ event, and delivered here rather than to the reader.
 
 The email names the reader by their sign-in address and says when. It never
 carries what they asked: the team gets the fact of a first question, not its
-words.
+words. A report carries the reason the reader chose and their own note, which
+they wrote for the team; the reported question and answer stay in /admin.
 """
 from __future__ import annotations
 
@@ -27,7 +29,7 @@ from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
 from ..db import crud_mobile as cm
-from ..db.models import AskMessage, AskThread, BillingAccount, EmailRecipient, NotificationJob
+from ..db.models import AnswerReport, AskMessage, AskThread, BillingAccount, EmailRecipient, NotificationJob
 from .email import EmailMessage, EmailTransport
 
 log = logging.getLogger("astrospace.notifications")
@@ -94,10 +96,30 @@ def _team_time(at: datetime) -> str:
     return local.astimezone(TEAM_TIMEZONE).strftime("%-d %b, %H:%M IST")
 
 
+# The reasons a reader can pick on "Report this answer", as the team reads them.
+REPORT_REASON_LABELS = {
+    "wrong": "Wrong or made up",
+    "harmful": "Harmful or frightening",
+    "offensive": "Rude or offensive",
+    "advice": "Health, legal or money advice",
+    "other": "Something else",
+}
+
+
+def _new_reports(db: Session, since: datetime) -> list[AnswerReport]:
+    return (
+        db.query(AnswerReport)
+        .filter(AnswerReport.created_at >= since)
+        .order_by(AnswerReport.created_at)
+        .all()
+    )
+
+
 def _queue(db: Session, user_id: str, kind: str, subject: str, line: str,
-           to: list[str], now: datetime) -> NotificationJob:
+           to: list[str], now: datetime, key: str | None = None) -> NotificationJob:
     return cm.schedule_notification(
-        db, user_id, CATEGORY, now, subject, dedupe_key=f"{CATEGORY}:{kind}:{user_id}",
+        db, user_id, CATEGORY, now, subject,
+        dedupe_key=f"{CATEGORY}:{kind}:{key or user_id}",
         body=line, payload={"channel": CHANNEL, "to": to, "kind": kind},
     )
 
@@ -120,7 +142,20 @@ def schedule_owner_alerts(db: Session, now: datetime | None = None,
         _queue(db, user_id, "first_question", f"First question: {who}",
                f"{who} asked Siddha their first question at {_team_time(at)}.", to, now)
         questions += 1
-    return {"joined": joined, "first_question": questions}
+    reports = 0
+    for report in _new_reports(db, since):
+        who = _address_for(db, report.user_id) or f"reader {report.user_id[:8]}"
+        reason = REPORT_REASON_LABELS.get(report.reason, report.reason)
+        line = (f"{who} reported an Ask answer at {_team_time(report.created_at)}. "
+                f"Reason: {reason}.")
+        if report.note:
+            line += f" Their note: \u201c{report.note}\u201d"
+        line += " Read it in Admin, under Answer reports."
+        # One email per report, however many runs see it.
+        _queue(db, report.user_id, "answer_report", f"Answer reported: {reason}",
+               line, to, now, key=report.id)
+        reports += 1
+    return {"joined": joined, "first_question": questions, "answer_report": reports}
 
 
 def is_owner_job(job: NotificationJob) -> bool:

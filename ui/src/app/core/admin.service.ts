@@ -179,6 +179,30 @@ export interface AgentPromptRegistry {
   editable: boolean;
 }
 
+/** A reader's "Report this answer" on Ask (GET /admin/reports). */
+export interface AnswerReportRow {
+  id: string;
+  user_id: string;
+  email: string | null;
+  thread_id: string | null;
+  message_id: string | null;
+  reason: 'wrong' | 'harmful' | 'offensive' | 'advice' | 'other';
+  note: string | null;
+  question: string | null;
+  answer: string;
+  experience_mode: string | null;
+  language: string | null;
+  status: 'open' | 'reviewed';
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  created_at: string;
+}
+
+export interface AnswerReports {
+  open: number;
+  reports: AnswerReportRow[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private api = inject(ApiService);
@@ -218,6 +242,14 @@ export class AdminService {
 
   testers(): Promise<TesterPulse> {
     return this.api.get('/admin/testers');
+  }
+
+  answerReports(status: 'open' | 'reviewed' | 'all' = 'open'): Promise<AnswerReports> {
+    return this.api.get(`/admin/reports?status=${status}`);
+  }
+
+  setAnswerReportStatus(id: string, status: 'open' | 'reviewed'): Promise<AnswerReportRow> {
+    return this.api.post(`/admin/reports/${encodeURIComponent(id)}/status`, { status });
   }
 
   activity(): Promise<Record<string, any>> {
