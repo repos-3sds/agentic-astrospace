@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The card's ornament under the wordmark: two gold strokes and a dot. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="52dp" android:height="5dp" android:viewportWidth="52" android:viewportHeight="5">
+    <path android:fillColor="#BFF2C98A" android:pathData="M0,2h21v1h-21z M31,2h21v1h-21z" />
+    <path android:fillColor="#E6F2C98A" android:pathData="M26,0.5a2,2 0,1 0,0.01 0z" />
+</vector>

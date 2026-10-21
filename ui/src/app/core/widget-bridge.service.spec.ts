@@ -1,4 +1,4 @@
-import { applyMantraTaps, isWidgetRoute, wallClockToEpoch, windowSpan } from './widget-bridge.service';
+import { applyMantraTaps, isWidgetRoute, wallClockToEpoch, weekDays, windowSpan } from './widget-bridge.service';
 
 describe('widget bridge', () => {
   describe('wallClockToEpoch', () => {
@@ -28,6 +28,22 @@ describe('widget bridge', () => {
 
     it('skips a window it cannot read', () => {
       expect(windowSpan('2026-10-17', 'all day', 'Asia/Kolkata')).toBeNull();
+    });
+  });
+
+  describe('weekDays', () => {
+    it('gives the calendar widget seven days from today, across a month end', () => {
+      const days = weekDays('2026-10-28', [{ date: '2026-10-28', tithi: 'Krishna Tritiya' }], [
+        { date: '2026-10-28', quality: 'good' },
+        { date: '2026-11-01', quality: 'care' },
+      ]);
+      expect(days.map((d) => d.date)).toEqual([
+        '2026-10-28', '2026-10-29', '2026-10-30', '2026-10-31', '2026-11-01', '2026-11-02', '2026-11-03',
+      ]);
+      expect(days[0]).toEqual({ date: '2026-10-28', tithi: 'Krishna Tritiya', quality: 'good' });
+      expect(days[4].quality).toBe('care');
+      // A day the app has nothing for is drawn plain, never guessed.
+      expect(days[1]).toEqual({ date: '2026-10-29', tithi: '', quality: '' });
     });
   });
 

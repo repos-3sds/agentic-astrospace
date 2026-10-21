@@ -22,7 +22,7 @@
     </style>
     <style name="WidgetHeadline">
         <item name="android:fontFamily">@font/playfair_semibold</item>
-        <item name="android:textSize">17sp</item>
+        <item name="android:textSize">18sp</item>
         <item name="android:lineSpacingMultiplier">1.08</item>
         <item name="android:textColor">@color/widget_text</item>
         <item name="android:ellipsize">end</item>
@@ -52,6 +52,36 @@
         <item name="android:textSize">12sp</item>
         <item name="android:textColor">@color/widget_text</item>
         <item name="android:gravity">center</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+    <!-- The word under the ring's number ("Steady"): 10sp, the floor for any widget text. -->
+    <style name="WidgetBand">
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+    <!-- A glass chip with the clock: Today's next window. -->
+    <style name="WidgetChip">
+        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/widget_gold</item>
+        <item name="android:background">@drawable/widget_pill</item>
+        <item name="android:drawableStart">@drawable/widget_ic_clock</item>
+        <item name="android:drawablePadding">6dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+    <!-- The Subhashita card's Siddha wordmark, as on the app card and status image. -->
+    <style name="WidgetWordmark">
+        <item name="android:fontFamily">@font/samarkan_wordmark</item>
+        <item name="android:textSize">28sp</item>
+        <item name="android:textColor">#FFF4E6</item>
         <item name="android:includeFontPadding">false</item>
     </style>
 </resources>

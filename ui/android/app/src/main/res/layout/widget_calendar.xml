@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Calendar, medium: today's date and panchang, and what is coming. -->
+<!-- Calendar as one day, 4x2: the date in a glass box, then the tithi,
+     nakshatra, how the day is for you, and the next festival. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
@@ -10,10 +11,10 @@
     android:padding="16dp">
 
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:minWidth="64dp"
+        android:layout_width="78dp"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_glass"
+        android:gravity="center"
         android:orientation="vertical">
 
         <TextView
@@ -30,6 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:includeFontPadding="false"
+            android:maxLines="1"
             android:textSize="40sp" />
 
         <TextView
@@ -37,19 +39,14 @@
             style="@style/WidgetBody"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:maxLines="1"
             android:textSize="12sp" />
     </LinearLayout>
-
-    <View
-        android:layout_width="1dp"
-        android:layout_height="64dp"
-        android:layout_marginStart="14dp"
-        android:background="@color/widget_track" />
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="14dp"
+        android:layout_marginStart="16dp"
         android:layout_weight="1"
         android:orientation="vertical">
 
@@ -58,14 +55,28 @@
             style="@style/WidgetTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:maxLines="1" />
+            android:maxLines="1"
+            android:textSize="16sp" />
 
         <TextView
             android:id="@+id/nakshatra"
             style="@style/WidgetBody"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
             android:maxLines="1" />
+
+        <TextView
+            android:id="@+id/quality"
+            style="@style/WidgetBand"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:paddingStart="10dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="4dp"
+            android:textSize="12sp" />
 
         <TextView
             android:id="@+id/next"
@@ -74,7 +85,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:fontFamily="@font/inter_semibold"
-            android:maxLines="2"
-            android:textColor="@color/widget_gold" />
+            android:maxLines="1"
+            android:textColor="@color/widget_accent" />
     </LinearLayout>
 </LinearLayout>

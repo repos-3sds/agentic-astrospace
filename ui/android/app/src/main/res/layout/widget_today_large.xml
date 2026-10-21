@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Your day, 4x3 and up: the medium card plus the summary, one Do and one Avoid. -->
+<!-- Your day, 4x3 and up: the medium card plus the summary, and one Do and
+     one Avoid as the Today screen's two tinted glass cards. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
@@ -11,66 +12,73 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/eyebrow"
+            style="@style/WidgetEyebrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/widget_today_eyebrow"
+            android:textColor="@color/widget_accent" />
+
+        <TextView
+            android:id="@+id/date_line"
+            style="@style/WidgetEyebrow"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:gravity="end" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-            <FrameLayout
-                android:layout_width="80dp"
-                android:layout_height="80dp">
-    
-                <ImageView
-                    android:id="@+id/ring"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:contentDescription="@null" />
-    
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:orientation="vertical">
-    
-                    <TextView
-                        android:id="@+id/score"
-                        style="@style/WidgetNumber"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="26sp" />
-    
-                    <TextView
-                        android:id="@+id/band"
-                        style="@style/WidgetEyebrow"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp"
-                        android:letterSpacing="0.1"
-                        android:textSize="8sp" />
-                </LinearLayout>
-            </FrameLayout>
+        <FrameLayout
+            android:layout_width="92dp"
+            android:layout_height="92dp">
 
-        <LinearLayout
+            <ImageView
+                android:id="@+id/ring"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/score"
+                    style="@style/WidgetNumber"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="28sp" />
+
+                <TextView
+                    android:id="@+id/band"
+                    style="@style/WidgetBand"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/headline"
+            style="@style/WidgetHeadline"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/eyebrow"
-                style="@style/WidgetEyebrow"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/widget_today_eyebrow"
-                android:textColor="@color/widget_accent" />
-
-            <TextView
-                android:id="@+id/headline"
-                style="@style/WidgetHeadline"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:maxLines="2" />
-        </LinearLayout>
+            android:maxLines="3" />
     </LinearLayout>
 
     <TextView
@@ -78,70 +86,80 @@
         style="@style/WidgetBody"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
+        android:layout_marginTop="12dp"
         android:maxLines="3" />
 
     <LinearLayout
-        android:id="@+id/do_row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:baselineAligned="true"
         android:orientation="horizontal">
 
-        <TextView
-            style="@style/WidgetEyebrow"
-            android:layout_width="52dp"
-            android:layout_height="wrap_content"
-            android:id="@+id/do_label"
-            android:text="@string/widget_do"
-            android:textColor="@color/widget_do" />
-
-        <TextView
-            android:id="@+id/do_item"
-            style="@style/WidgetTitle"
+        <LinearLayout
+            android:id="@+id/do_row"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:maxLines="1"
-            android:textSize="13sp" />
+            android:background="@drawable/widget_glass_do"
+            android:orientation="vertical"
+            android:padding="11dp">
+
+            <TextView
+                android:id="@+id/do_label"
+                style="@style/WidgetEyebrow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/widget_do"
+                android:textColor="@color/widget_do" />
+
+            <TextView
+                android:id="@+id/do_item"
+                style="@style/WidgetTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:maxLines="2"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/avoid_row"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:background="@drawable/widget_glass_avoid"
+            android:orientation="vertical"
+            android:padding="11dp">
+
+            <TextView
+                android:id="@+id/avoid_label"
+                style="@style/WidgetEyebrow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/widget_avoid"
+                android:textColor="@color/widget_avoid" />
+
+            <TextView
+                android:id="@+id/avoid_item"
+                style="@style/WidgetTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:maxLines="2"
+                android:textSize="13sp" />
+        </LinearLayout>
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/avoid_row"
+    <View
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:baselineAligned="true"
-        android:orientation="horizontal">
-
-        <TextView
-            style="@style/WidgetEyebrow"
-            android:layout_width="52dp"
-            android:layout_height="wrap_content"
-            android:id="@+id/avoid_label"
-            android:text="@string/widget_avoid"
-            android:textColor="@color/widget_avoid" />
-
-        <TextView
-            android:id="@+id/avoid_item"
-            style="@style/WidgetTitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:maxLines="1"
-            android:textSize="13sp" />
-    </LinearLayout>
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:minHeight="10dp" />
 
     <TextView
         android:id="@+id/timing"
-        style="@style/WidgetBody"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:drawableStart="@drawable/widget_ic_clock"
-        android:drawablePadding="6dp"
-        android:gravity="center_vertical"
-        android:maxLines="1"
-        android:textColor="@color/widget_gold" />
+        style="@style/WidgetChip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 </LinearLayout>

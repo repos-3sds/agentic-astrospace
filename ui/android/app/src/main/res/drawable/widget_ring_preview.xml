@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The score ring at 72, for the widget picker's preview only. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp" android:height="100dp" android:viewportWidth="100" android:viewportHeight="100">
+    <path android:strokeColor="@color/widget_track" android:strokeWidth="8" android:fillColor="#00000000"
+        android:pathData="M50,4a46,46 0,1 1,-0.01 0z" />
+    <path android:strokeColor="@color/widget_band_steady" android:strokeWidth="8" android:fillColor="#00000000"
+        android:strokeLineCap="round"
+        android:pathData="M50,4A46,46 0,1 1,4.81 58.62" />
+</vector>

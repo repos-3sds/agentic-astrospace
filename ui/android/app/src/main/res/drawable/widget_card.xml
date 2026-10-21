@@ -1,7 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A soft top-to-bottom gradient and no stroke, in both themes. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <gradient android:type="linear" android:angle="270"
-        android:startColor="@color/widget_bg_top" android:endColor="@color/widget_bg_bottom" />
-    <corners android:radius="24dp" />
-</shape>
+<!-- The glass card (styles-mobile.scss, the app ground and glass card tokens):
+     a soft ground, the theme's lights as radial glows, and a bright hairline
+     edge. Every layer carries the corner radius so the glows stay inside. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:type="linear" android:angle="270"
+                android:startColor="@color/widget_bg_top" android:endColor="@color/widget_bg_bottom" />
+            <corners android:radius="24dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:type="radial" android:centerX="0.92" android:centerY="0"
+                android:gradientRadius="75%"
+                android:startColor="@color/widget_glow_1" android:endColor="@color/widget_glow_1_end" />
+            <corners android:radius="24dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:type="radial" android:centerX="0" android:centerY="0.65"
+                android:gradientRadius="70%"
+                android:startColor="@color/widget_glow_2" android:endColor="@color/widget_glow_2_end" />
+            <corners android:radius="24dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:type="radial" android:centerX="1" android:centerY="1"
+                android:gradientRadius="75%"
+                android:startColor="@color/widget_glow_3" android:endColor="@color/widget_glow_3_end" />
+            <corners android:radius="24dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <stroke android:width="1dp" android:color="@color/widget_hairline" />
+            <corners android:radius="24dp" />
+        </shape>
+    </item>
+</layer-list>

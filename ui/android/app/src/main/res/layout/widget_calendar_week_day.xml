@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One day in the week strip: weekday, the date in its tint, a festival dot. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/weekday"
+        style="@style/WidgetEyebrow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:letterSpacing="0.06" />
+
+    <TextView
+        android:id="@+id/date"
+        style="@style/WidgetCell"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_marginTop="5dp"
+        android:fontFamily="@font/inter_semibold"
+        android:textSize="14sp" />
+
+    <ImageView
+        android:id="@+id/dot"
+        android:layout_width="5dp"
+        android:layout_height="5dp"
+        android:layout_marginTop="4dp"
+        android:contentDescription="@null"
+        android:src="@drawable/widget_event_dot" />
+</LinearLayout>

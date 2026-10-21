@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Subhashita card's own colours (subhashita-verse.component.scss and the
+     status image, story-card.ts): rust into near-black with four small
+     stars. Fixed in both themes, as in the app, so it reads as the same card. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:type="linear" android:angle="270"
+                android:startColor="#C9402C" android:centerColor="#5E2017" android:centerY="0.42"
+                android:endColor="#1A120E" />
+            <corners android:radius="24dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:type="radial" android:centerX="0" android:centerY="0"
+                android:gradientRadius="80%" android:startColor="#33E85A3A" android:endColor="#00E85A3A" />
+            <corners android:radius="24dp" />
+        </shape>
+    </item>
+    <item android:gravity="top|end" android:top="12dp" android:right="56dp" android:width="3dp" android:height="3dp">
+        <shape android:shape="oval"><solid android:color="#8CFFF0E1" /></shape>
+    </item>
+    <item android:gravity="center_vertical|start" android:left="12dp" android:width="3dp" android:height="3dp">
+        <shape android:shape="oval"><solid android:color="#73FFF0E1" /></shape>
+    </item>
+    <item android:gravity="bottom|end" android:bottom="40dp" android:right="14dp" android:width="3dp" android:height="3dp">
+        <shape android:shape="oval"><solid android:color="#73FFF0E1" /></shape>
+    </item>
+    <item android:gravity="bottom|start" android:bottom="14dp" android:left="22dp" android:width="3dp" android:height="3dp">
+        <shape android:shape="oval"><solid android:color="#73FFF0E1" /></shape>
+    </item>
+</layer-list>

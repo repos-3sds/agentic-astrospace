@@ -1,20 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The app's dark theme: deep brown, cream text, gold as the one accent. -->
+<!-- "Liquid Glass": near-black, three soft lights behind glass, peach-rose accent. -->
 <resources>
-    <color name="widget_bg_top">#2C231B</color>
-    <color name="widget_bg_bottom">#1B1511</color>
-    <color name="widget_raised">#3A2E23</color>
-    <color name="widget_text">#F4EFE7</color>
-    <color name="widget_muted">#B3A494</color>
-    <color name="widget_accent">#DFB45E</color>
-    <color name="widget_on_accent">#1B1511</color>
-    <color name="widget_gold">#DFB45E</color>
-    <color name="widget_track">#43362A</color>
-    <color name="widget_band_steady">#DFB45E</color>
-    <color name="widget_band_mixed">#E09A52</color>
-    <color name="widget_band_tough">#E07A62</color>
-    <color name="widget_do">#DFB45E</color>
-    <color name="widget_avoid">#E07A62</color>
-    <color name="widget_moon_dark">#3F3227</color>
+    <color name="widget_bg_top">#121215</color>
+    <color name="widget_bg_bottom">#08080A</color>
+    <color name="widget_glow_1">#52FF7896</color>
+    <color name="widget_glow_1_end">#00FF7896</color>
+    <color name="widget_glow_2">#2EFFAA5A</color>
+    <color name="widget_glow_2_end">#00FFAA5A</color>
+    <color name="widget_glow_3">#336E8CFF</color>
+    <color name="widget_glow_3_end">#006E8CFF</color>
+    <color name="widget_hairline">#29FFFFFF</color>
+    <color name="widget_glass">#12FFFFFF</color>
+    <color name="widget_raised">#1AFFFFFF</color>
+    <color name="widget_text">#F7F7F8</color>
+    <color name="widget_muted">#A8A8B3</color>
+    <color name="widget_accent">#FF9B85</color>
+    <color name="widget_accent_end">#FF7A8A</color>
+    <color name="widget_on_accent">#1C0A08</color>
+    <color name="widget_gold">#F3C77A</color>
+    <color name="widget_track">#1FFFFFFF</color>
+    <color name="widget_band_steady">#5EEAD4</color>
+    <color name="widget_band_mixed">#FCD34D</color>
+    <color name="widget_band_tough">#FDA4AF</color>
+    <color name="widget_do">#5EEAD4</color>
+    <color name="widget_avoid">#FDA4AF</color>
+    <color name="widget_good">#5EEAD4</color>
+    <color name="widget_good_soft">#245EEAD4</color>
+    <color name="widget_warn">#FCD34D</color>
+    <color name="widget_warn_soft">#24FCD34D</color>
+    <color name="widget_good_soft_end">#005EEAD4</color>
+    <color name="widget_bad_soft_end">#00FDA4AF</color>
+    <color name="widget_bad_soft">#24FDA4AF</color>
+    <color name="widget_moon_dark">#2A2A30</color>
     <color name="widget_moon_lit">#F3E3BE</color>
 </resources>

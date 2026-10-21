@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Listen, 4x2 and up: the play button beside today's headline. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_card"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="18dp">
+
+    <ImageView
+        android:id="@+id/play"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:background="@drawable/widget_accent_circle"
+        android:contentDescription="@string/widget_listen_name"
+        android:padding="20dp"
+        android:src="@drawable/widget_ic_play" />
+
+    <LinearLayout
+        android:id="@+id/text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/title"
+            style="@style/WidgetEyebrow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/widget_accent" />
+
+        <TextView
+            android:id="@+id/headline"
+            style="@style/WidgetHeadline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:maxLines="3" />
+
+        <TextView
+            android:id="@+id/subtitle"
+            style="@style/WidgetBody"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:maxLines="1"
+            android:textSize="12sp" />
+    </LinearLayout>
+</LinearLayout>
