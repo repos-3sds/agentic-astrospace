@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FestivalRegion, PreferencesService } from '../../../core/preferences.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 interface FestivalChoice {
   id: FestivalRegion;
@@ -8,11 +9,17 @@ interface FestivalChoice {
   detail: string;
 }
 
+/**
+ * Settings — Festivals to show. A multi-select, so every row is a square
+ * tick box (U30). The preset chips that repeated the same choice above the
+ * cards are gone: two controls for one setting left readers unsure which
+ * one counted.
+ */
 @Component({
   selector: 'as-settings-festivals',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective],
+  imports: [BackLinkDirective, SelectHapticDirective],
   templateUrl: './festival-preferences.component.html',
   styleUrl: './festival-preferences.component.scss',
 })
@@ -20,9 +27,9 @@ export class FestivalPreferencesComponent {
   protected readonly preferences = inject(PreferencesService);
 
   protected readonly choices: FestivalChoice[] = [
-    { id: 'pan-india', title: 'Pan-India essentials', detail: 'Diwali, Holi, Navaratri, Ekadashi and widely observed festivals.' },
-    { id: 'north', title: 'North Indian / Purnimanta', detail: 'North-style lunar month convention and northern observance dates.' },
-    { id: 'south', title: 'South Indian / Amanta', detail: 'Telugu, Tamil, Kannada, Malayali, Deccan and Gujarat-style observance families.' },
+    { id: 'pan-india', title: 'All-India festivals', detail: 'Diwali, Holi, Navaratri, Ekadashi and others kept across India.' },
+    { id: 'north', title: 'North Indian', detail: 'Months end on the full moon (Purnimanta), with northern festival dates.' },
+    { id: 'south', title: 'South Indian', detail: 'Months end on the new moon (Amanta). Telugu, Tamil, Kannada, Malayali, Marathi and Gujarati homes.' },
   ];
 
   protected selected(id: FestivalRegion): boolean {
@@ -33,9 +40,5 @@ export class FestivalPreferencesComponent {
     const current = this.preferences.festivalRegions();
     const next = current.includes(id) ? current.filter((region) => region !== id) : [...current, id];
     this.preferences.festivalRegions.set(next.length ? next : ['pan-india']);
-  }
-
-  protected selectPreset(regions: FestivalRegion[]): void {
-    this.preferences.festivalRegions.set([...new Set(regions)]);
   }
 }

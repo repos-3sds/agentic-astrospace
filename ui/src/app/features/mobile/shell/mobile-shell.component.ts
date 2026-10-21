@@ -24,10 +24,14 @@ import { WidgetBridgeService } from '../../../core/widget-bridge.service';
 import { deepLinkArrivedAt } from '../../../core/deep-link-arrival';
 import { activeTabRoots } from '../../../core/tab-roots';
 import { AppLinksService } from '../../../core/app-links.service';
+import { RatingPromptService } from '../../../core/rating-prompt.service';
+import { TextKey } from '../../../core/i18n/en';
+import { TranslatePipe } from '../../../core/i18n/i18n.service';
 
 interface MobileTab {
   commands: string[];
-  label: string;
+  /** A key into core/i18n/en.ts, shown through the `t` pipe. */
+  label: TextKey;
   icon: string;
 }
 
@@ -61,7 +65,7 @@ const DEEP_LINK_WINDOW_MS = 15_000;
   selector: 'as-mobile-shell',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, GenericErrorComponent, ScrollMemoryDirective, PullRefreshDirective, SubhashitaSheetComponent],
+  imports: [RouterOutlet, RouterLink, GenericErrorComponent, ScrollMemoryDirective, PullRefreshDirective, SubhashitaSheetComponent, TranslatePipe],
   templateUrl: './mobile-shell.component.html',
   styleUrl: './mobile-shell.component.scss',
   host: { class: 'as-mobile' },
@@ -95,6 +99,11 @@ export class MobileShellComponent {
   private lastPath: string | null = null;
 
   constructor() {
+    // Play's rating card, if this reader is due one (core/rating-prompt.service.ts):
+    // a few seconds after the app settles, never over a screen being read.
+    const ratingPrompt = inject(RatingPromptService);
+    const rating = setTimeout(() => void ratingPrompt.onAppOpen(), 4000);
+    inject(DestroyRef).onDestroy(() => clearTimeout(rating));
     // Screen readers heard nothing when the screen changed and kept reading
     // from a detached element (audit N14). Like a native push, move focus to
     // the new screen's heading; query-only changes (a tab inside a screen)
@@ -235,21 +244,21 @@ export class MobileShellComponent {
       // Practitioner keeps transits inside Yantra so Calendar remains a primary
       // daily almanac destination instead of competing with chart workbench tools.
       return [
-        { commands: ['today'], label: 'Today', icon: 'figma-yantra-nav-sun' },
-        { commands: ['chart'], label: 'Yantra', icon: 'figma-yantra-nav-active' },
-        { commands: ['chart', 'periods'], label: 'Dashas', icon: 'figma-yantra-nav-clock' },
-        { commands: ['calendar'], label: 'Calendar', icon: 'nav-calendar' },
-        { commands: ['settings'], label: 'Settings', icon: 'figma-yantra-nav-settings' },
+        { commands: ['today'], label: 'tab.today', icon: 'figma-yantra-nav-sun' },
+        { commands: ['chart'], label: 'tab.yantra', icon: 'figma-yantra-nav-active' },
+        { commands: ['chart', 'periods'], label: 'tab.dashas', icon: 'figma-yantra-nav-clock' },
+        { commands: ['calendar'], label: 'tab.calendar', icon: 'nav-calendar' },
+        { commands: ['settings'], label: 'tab.settings', icon: 'figma-yantra-nav-settings' },
       ];
     }
     // Ask-first with Calendar for every reader. Explore lists the chart and
     // its tools; Settings is the fifth tab, as in Practitioner (Hawk, 2026-10-20).
     return [
-      { commands: ['today'], label: 'Today', icon: 'nav-today' },
-      { commands: ['ask'], label: 'Ask', icon: 'nav-ask' },
-      { commands: ['calendar'], label: 'Calendar', icon: 'nav-calendar' },
-      { commands: ['explore'], label: 'Explore', icon: 'nav-explore' },
-      { commands: ['settings'], label: 'Settings', icon: 'nav-settings' },
+      { commands: ['today'], label: 'tab.today', icon: 'nav-today' },
+      { commands: ['ask'], label: 'tab.ask', icon: 'nav-ask' },
+      { commands: ['calendar'], label: 'tab.calendar', icon: 'nav-calendar' },
+      { commands: ['explore'], label: 'tab.explore', icon: 'nav-explore' },
+      { commands: ['settings'], label: 'tab.settings', icon: 'nav-settings' },
     ];
   });
 

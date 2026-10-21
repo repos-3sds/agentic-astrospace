@@ -6,27 +6,29 @@
 <div class="body">
   <header class="intro">
     <h1 class="title">Festivals to show</h1>
-    <p class="lede">Choose the observance families your home follows. Pick more than one for multi-ethnic families.</p>
+    <p class="lede">Tick every tradition your home follows. You can pick more than one.</p>
   </header>
 
-  <section class="presets" aria-label="Quick festival presets">
-    <button type="button" (click)="selectPreset(['pan-india'])">Essentials</button>
-    <button type="button" (click)="selectPreset(['pan-india', 'north'])">North family</button>
-    <button type="button" (click)="selectPreset(['pan-india', 'south'])">South family</button>
-    <button type="button" (click)="selectPreset(['pan-india', 'north', 'south'])">Multi-ethnic</button>
-  </section>
-
-  <section class="choices" aria-label="Festival families">
+  <section class="choices" role="group" aria-label="Festival traditions">
     @for (choice of choices; track choice.id) {
-      <button class="choice" type="button" [class.is-on]="selected(choice.id)" [attr.aria-pressed]="selected(choice.id)" (click)="toggle(choice.id)">
+      @let on = selected(choice.id);
+      <button
+        class="choice"
+        type="button"
+        role="checkbox"
+        asSelectHaptic
+        [class.is-on]="on"
+        [attr.aria-checked]="on"
+        (click)="toggle(choice.id)"
+      >
+        <span class="mark box" aria-hidden="true">{{ on ? '✓' : '' }}</span>
         <span class="choice-copy">
-          <span class="choice-title">{{ choice.title }}</span>
+          <span class="choice-label">{{ choice.title }}</span>
           <span class="choice-detail">{{ choice.detail }}</span>
         </span>
-        <span class="check" aria-hidden="true">{{ selected(choice.id) ? '✓' : '' }}</span>
       </button>
     }
   </section>
 
-  <p class="local-note">Calendar fetches use these choices. Location still controls sunrise and date boundaries.</p>
+  <p class="local-note">At least one stays ticked. Festival dates follow sunrise in your city.</p>
 </div>

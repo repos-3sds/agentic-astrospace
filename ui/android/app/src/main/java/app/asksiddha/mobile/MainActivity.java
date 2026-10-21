@@ -38,6 +38,8 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(PushConfigPlugin.class);
         registerPlugin(WidgetsPlugin.class);
+        registerPlugin(NativeCalendarPlugin.class);
+        registerPlugin(InAppReviewPlugin.class);
         super.onCreate(savedInstanceState);
         matchLaunchScreenToTheme();
         capTextZoom();

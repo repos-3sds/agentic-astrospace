@@ -39,6 +39,7 @@ from ..db.models import (
 )
 from ..entitlements.products import PRODUCTS
 from ..entitlements.resolver import _billing_account
+from ..config import flag
 
 log = logging.getLogger("astrospace.store")
 router = APIRouter(prefix="/api/v1/store", tags=["store"])
@@ -130,7 +131,7 @@ def _apply_plan(db: Session, account: BillingAccount, event: dict, product, now:
 def _accepts(event: dict) -> bool:
     if event.get("environment", "PRODUCTION") == "PRODUCTION":
         return True
-    return os.getenv("REVENUECAT_ACCEPT_SANDBOX", "").strip().lower() in {"1", "true", "yes"}
+    return flag("REVENUECAT_ACCEPT_SANDBOX")
 
 
 def _existing_account(db: Session, user_id: str) -> BillingAccount | None:

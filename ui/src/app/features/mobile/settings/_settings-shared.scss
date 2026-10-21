@@ -136,4 +136,32 @@
   .choice-left img { width: 18px; height: 18px; display: block; flex-shrink: 0; }
   .choice-label { @include m-body-strong; color: var(--m-text); }
   .choice-tick { width: 18px; height: 18px; display: block; flex-shrink: 0; }
+
+  // One mark per kind of choice (U30): a round radio where only one can be
+  // picked, a square box where several can. Drawn from tokens so both themes
+  // get the accent; the old glyph files carried a fixed light-theme red.
+  .choice-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto; }
+  .choice-detail { @include m-caption; color: var(--m-muted); }
+  .choice-default { @include m-caption; color: var(--m-accent-strong); font-weight: 650; }
+  .mark {
+    width: 20px;
+    height: 20px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border: 1.6px solid var(--m-border-strong);
+    color: var(--m-on-primary, #fff);
+  }
+  .mark.radio { border-radius: 50%; }
+  .mark.box { border-radius: 6px; font-size: 13px; font-weight: 800; line-height: 1; }
+  .choice.is-on .mark { border-color: var(--m-accent); }
+  .choice.is-on .mark.radio::after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--m-accent);
+  }
+  .choice.is-on .mark.box { background: var(--m-accent); }
 }

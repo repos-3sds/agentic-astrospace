@@ -46,6 +46,7 @@ from ..context.daily_brief_store import brief_hash, ensure_brief, update_stored
 from ..db import crud, crud_mobile as cm
 from ..db.models import PushToken
 from .morning_brief import CATEGORY as MORNING_CATEGORY, _primary_kundli, _zone
+from ..config import flag
 
 log = logging.getLogger("astrospace.notifications")
 
@@ -202,7 +203,7 @@ def natural_chunks(text: str, max_chars: int = NATURAL_CHUNK_MAX_CHARS) -> list[
 
 
 def prerender_enabled() -> bool:
-    return os.getenv("DAILY_BRIEF_PRERENDER_AUDIO", "").strip().lower() in {"1", "true", "yes", "on"}
+    return flag("DAILY_BRIEF_PRERENDER_AUDIO")
 
 
 def _briefed_without_opening(db: Session, user_id: str) -> bool:

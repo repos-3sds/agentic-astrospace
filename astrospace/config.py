@@ -39,6 +39,8 @@ class Var:
     choices: frozenset[str] = frozenset()
     # Expected to be set on the Cloud Run API service.
     cloud: bool = False
+    # An opt-in flag that also takes "on" (DAILY_BRIEF_PRERENDER_AUDIO always has).
+    accepts_on: bool = False
 
 
 VARS: tuple[Var, ...] = (
@@ -82,7 +84,7 @@ VARS: tuple[Var, ...] = (
     Var("COMPAT_INSIGHT_AGENT", "opt_out"),
     # Worker, push, email, audio
     Var("DAILY_BRIEF_LOOKAHEAD", "hhmm"),
-    Var("DAILY_BRIEF_PRERENDER_AUDIO", "opt_in"),
+    Var("DAILY_BRIEF_PRERENDER_AUDIO", "opt_in", accepts_on=True),
     Var("ASTROSPACE_TTS_BUCKET"),
     Var("ASTROSPACE_TTS_PROJECT"),
     Var("ASTROSPACE_PUBLIC_AUDIO_BASE", "url"),
@@ -109,7 +111,7 @@ def _problem(var: Var, raw: str) -> str | None:
     if var.kind in ("opt_in", "opt_out"):
         if lowered not in FLAG_WORDS:
             return f"{var.name}={value!r} is not a flag value; use 1 or 0"
-        if var.kind == "opt_in" and lowered == "on":
+        if var.kind == "opt_in" and lowered == "on" and not var.accepts_on:
             return f"{var.name}=on reads as OFF (this flag is on only for 1, true or yes)"
         if var.kind == "opt_out" and lowered == "no":
             return f"{var.name}=no reads as ON (this flag is off only for off, 0 or false)"
@@ -132,6 +134,38 @@ def _problem(var: Var, raw: str) -> str | None:
     if value != raw:
         return f"{var.name} has spaces or a newline around it"
     return None
+
+
+_BY_NAME = {var.name: var for var in VARS}
+
+
+def flag(name: str, env: Mapping[str, str] | None = None) -> bool:
+    """An on/off variable read by its one rule from VARS.
+
+    Opt-in flags are on only for 1/true/yes (and "on" where the variable
+    accepts it); opt-out flags are off only for off/0/false. Every module
+    reads its flag through here, so the rule cannot differ by caller
+    (tests/test_config_check.py holds that).
+    """
+    var = _BY_NAME[name]
+    raw = ((os.environ if env is None else env).get(name) or "").strip().lower()
+    if var.kind == "opt_in":
+        return raw in OPT_IN or (var.accepts_on and raw == "on")
+    if var.kind == "opt_out":
+        return raw not in OPT_OUT
+    raise KeyError(f"{name} is not a flag")
+
+
+def integer(name: str, default: int, env: Mapping[str, str] | None = None) -> int:
+    """A whole-number variable, or `default` when unset or not a number (the
+    boot check has already logged the second case)."""
+    if _BY_NAME[name].kind != "int":
+        raise KeyError(f"{name} is not a number")
+    raw = ((os.environ if env is None else env).get(name) or "").strip()
+    try:
+        return int(raw) if raw else default
+    except ValueError:
+        return default
 
 
 def check_environment(env: Mapping[str, str] | None = None) -> list[str]:

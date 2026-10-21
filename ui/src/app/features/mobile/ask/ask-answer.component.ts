@@ -16,6 +16,7 @@ import { AskMemoryCandidate, AskStreamEvent, AskTechnicalBasisItem, StructuredRe
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
 import { AnalyticsService } from '../../../core/analytics.service';
+import { RatingPromptService } from '../../../core/rating-prompt.service';
 import { ProfileContextFact, ProfileContextService } from '../../../core/profile-context.service';
 import { MobileAskMessage, MobileAskThreadService } from './mobile-ask-thread.service';
 import { AskReportInput, askReportPdf, askReportText, downloadBlob } from '../../../core/ask-report';
@@ -111,6 +112,7 @@ export class AskAnswerComponent {
   protected readonly navigation = inject(ASK_NAVIGATION);
   protected readonly preferences = inject(PreferencesService);
   private readonly analytics = inject(AnalyticsService);
+  private readonly ratingPrompt = inject(RatingPromptService);
   private readonly askState = inject(MobileAskStateService);
   private readonly askService = inject(AskService);
   private readonly entitlements = inject(EntitlementService);
@@ -1054,7 +1056,10 @@ export class AskAnswerComponent {
         } else if ('done' in event) {
           finalThreadId = event.thread_id ?? finalThreadId;
           referOutKind = event.refer_out_kind;
-          if (!event.refer_out_kind) this.analytics.track('ask_answered', { domain: event.domain ?? null });
+          if (!event.refer_out_kind) {
+            this.analytics.track('ask_answered', { domain: event.domain ?? null });
+            this.ratingPrompt.goodMoment();
+          }
           this.streamDomain.set(event.domain);
           this.streamEvidence.set(event.evidence);
           this.updateAssistantMessage(assistantId, {
