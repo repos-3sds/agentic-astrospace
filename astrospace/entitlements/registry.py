@@ -123,14 +123,14 @@ def quotas_enforced() -> bool:
 
 
 # Tester phase (Hawk, 2026-10-20): Free readers get Plus, not Practitioner,
-# with Ask and Readings as a teaser (3 answers and 3 readings a month; the
-# welcome question comes on top, once) and Muhurta searching the next two
+# with Ask and Readings as a teaser (3 readings a month, and 10 Ask answers
+# since Hawk raised it on 2026-10-22; the welcome question comes on top, once) and Muhurta searching the next two
 # weeks only. Remedies, Doshas, Dashas and transits stay as on Free, and
 # Compatibility is one person a month (with the full report). On with
 # ASTROSPACE_TESTERS_GET_PLUS while the app is in closed testing; off, Free
 # is the Free plan above.
 TESTER_TURNS = MappingProxyType({
-    "ask.answers.period": 3,
+    "ask.answers.period": 10,
     "readings.period": 3,
     "muhurta.days_ahead": 14,
 })
