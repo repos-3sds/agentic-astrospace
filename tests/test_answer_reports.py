@@ -161,7 +161,9 @@ class FakeEmail:
 
 def test_team_is_mailed_once_per_report_with_reason_and_note_only(env):
     _, Session, _ = env
-    now = datetime(2026, 10, 21, 9, 0)
+    # A day ahead of the real clock, so the fixture's own questions (made at
+    # the real clock) fall outside the lookback and only the reports count.
+    now = datetime.utcnow() + timedelta(days=1)
     with Session() as db:
         for note in ("It frightened my mother.", None):
             db.add(AnswerReport(user_id=ME, reason="harmful", note=note,
