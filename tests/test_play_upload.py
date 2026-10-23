@@ -220,3 +220,46 @@ def test_version_code_and_aab_together_are_refused(aab, monkeypatch):
     monkeypatch.setattr(play_upload, "_request", FakePlay())
     with pytest.raises(SystemExit):
         play_upload.main([str(aab), "--version-code", "550"])
+
+
+def test_access_token_env_replaces_the_key_file(tmp_path, aab, monkeypatch):
+    # GitHub Actions signs in through Workload Identity Federation and has no key file.
+    fake = FakePlay()
+    tokens = []
+
+    def recording(method, url, *, token=None, **kwargs):
+        tokens.append(token)
+        return fake(method, url, token=token, **kwargs)
+
+    monkeypatch.setattr(play_upload, "_request", recording)
+    monkeypatch.setenv("PLAY_SERVICE_ACCOUNT_JSON", str(tmp_path / "nope.json"))
+    monkeypatch.setenv("PLAY_ACCESS_TOKEN", "wif-token")
+    assert play_upload.main([str(aab)]) == 0
+    assert not any(u.endswith("/token") for _, u, _ in fake.calls)
+    assert set(tokens) == {"wif-token"}
+
+
+@needs_openssl
+def test_explicit_key_wins_over_the_token_env(key_file, aab, monkeypatch):
+    fake = FakePlay()
+    monkeypatch.setattr(play_upload, "_request", fake)
+    monkeypatch.setenv("PLAY_ACCESS_TOKEN", "wif-token")
+    assert play_upload.main([str(aab), "--key", str(key_file)]) == 0
+    assert any(u.endswith("/token") for _, u, _ in fake.calls)
+
+
+def test_skip_if_not_above_uploads_nothing_when_the_track_is_ahead(aab, monkeypatch, capsys):
+    fake = FakePlay(track_codes=("600",))
+    monkeypatch.setattr(play_upload, "_request", fake)
+    monkeypatch.setenv("PLAY_ACCESS_TOKEN", "wif-token")
+    assert play_upload.main([str(aab), "--skip-if-not-above", "600"]) == 0
+    assert fake.methods() == [("POST", ""), ("GET", "/e1/tracks/internal"), ("DELETE", "/e1")]
+    assert "Skipped" in capsys.readouterr().out
+
+
+def test_skip_if_not_above_uploads_when_the_build_is_newer(aab, monkeypatch):
+    fake = FakePlay(version_code=601, track_codes=("600",))
+    monkeypatch.setattr(play_upload, "_request", fake)
+    monkeypatch.setenv("PLAY_ACCESS_TOKEN", "wif-token")
+    assert play_upload.main([str(aab), "--skip-if-not-above", "601"]) == 0
+    assert ("POST", "/e1:commit") in fake.methods()

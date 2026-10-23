@@ -1,0 +1,363 @@
+name: Ship
+
+# Every merge to main ships itself once CI is green: the API image to Cloud
+# Run, the notifications job onto the same image, Firebase Hosting when the
+# website changed, and a signed AAB to Play internal testing when the app
+# changed. Before this, the Mac did all four by hand after each merge, and a
+# Mac that was asleep or offline meant nothing shipped. Setup and the one-time
+# steps are in docs/ship_from_github.md.
+#
+# What it never does: change env vars or secrets on Cloud Run (only the image
+# moves), apply a Supabase migration (a merge that adds one stops here until
+# it is applied and the run is restarted by hand), or touch any Play track
+# but internal (scripts/play_upload.py refuses production, and the service
+# account has no production rights either).
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      migrations_applied:
+        description: 'The new Supabase migrations in this range are applied to production'
+        type: boolean
+        default: false
+      ship_everything:
+        description: 'Deploy the server and hosting and upload an AAB even if those files did not change'
+        type: boolean
+        default: false
+  # A pull request that edits this file runs it as a dry run: the image and
+  # an unsigned AAB are built, nothing signs in to Google and nothing ships.
+  pull_request:
+    paths:
+      - .github/workflows/ship.yml
+      - scripts/play_upload.py
+
+# One ship at a time, in merge order. A newer merge waits for the running one
+# instead of cancelling it halfway through a deploy.
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('ship-dry-{0}', github.ref) || 'ship-main' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read     # find the last successful ship, to know what changed since
+  id-token: write   # Workload Identity Federation: no Google key in GitHub
+
+env:
+  PROJECT_ID: gen-lang-client-0058562386
+  REGION: asia-south1
+  SERVICE: agentic-astrospace
+  WORKER_JOB: agentic-astrospace-notifications
+  IMAGE_REPO: asia-south1-docker.pkg.dev/gen-lang-client-0058562386/cloud-run-source-deploy/agentic-astrospace
+  API_URL: https://agentic-astrospace-cwuqybpnzq-el.a.run.app
+  DEPLOYER_SA: github-deployer@gen-lang-client-0058562386.iam.gserviceaccount.com
+  PLAY_SA: play-publisher@gen-lang-client-0058562386.iam.gserviceaccount.com
+
+jobs:
+  plan:
+    name: What changed
+    # Only a green CI run from a push to main ships; a red one ships nothing.
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.plan.outputs.sha }}
+      dry: ${{ steps.plan.outputs.dry }}
+      server: ${{ steps.plan.outputs.server }}
+      hosting: ${{ steps.plan.outputs.hosting }}
+      android: ${{ steps.plan.outputs.android }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Work out what to ship
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          MIGRATIONS_APPLIED: ${{ inputs.migrations_applied }}
+          SHIP_EVERYTHING: ${{ inputs.ship_everything }}
+        run: |
+          set -euo pipefail
+          SHA=$(git rev-parse HEAD)
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
+          if [ "$EVENT" = pull_request ]; then
+            echo "Dry run for a pull request: build everything, ship nothing."
+            { echo dry=true; echo server=true; echo hosting=false; echo android=true; } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo dry=false >> "$GITHUB_OUTPUT"
+
+          # CI runs can finish out of order. Shipping an older commit after a
+          # newer one would roll the server back, so only the tip of main ships;
+          # the newer commit's own run ships everything since the last ship.
+          git fetch -q origin main
+          TIP=$(git rev-parse origin/main)
+          if [ "$SHA" != "$TIP" ]; then
+            echo "::notice::$SHA is no longer the tip of main ($TIP); its run will ship this too."
+            { echo server=false; echo hosting=false; echo android=false; } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Diff against the last ship that fully succeeded, so a failed run's
+          # changes are carried into the next one rather than lost.
+          BASE=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ship.yml/runs?branch=main&status=success&per_page=30" \
+            --jq "[.workflow_runs[] | select(.head_sha != \"$SHA\" and .event != \"pull_request\") | .head_sha][0] // empty")
+          if [ -z "$BASE" ] || ! git merge-base --is-ancestor "$BASE" "$SHA"; then
+            BASE=$(git rev-parse "$SHA~1")
+          fi
+          echo "Changes since $BASE:"
+          git diff --name-only "$BASE" "$SHA" | tee changed.txt
+
+          if [ "$SHIP_EVERYTHING" = true ]; then
+            { echo server=true; echo hosting=true; echo android=true; } >> "$GITHUB_OUTPUT"
+          else
+            has() {
+              local hits
+              hits=$(grep -E "$1" changed.txt | grep -vE "${2:-^$}" || true)
+              [ -n "$hits" ] && echo true || echo false
+            }
+            echo "server=$(has '^(astrospace/|main\.py$|setup\.py$|requirements\.txt$|Dockerfile$|\.dockerignore$|ui/)' '^ui/(android|ios|e2e)/|\.spec\.ts$')" >> "$GITHUB_OUTPUT"
+            echo "hosting=$(has '^(firebase\.json$|firebase-public/)')" >> "$GITHUB_OUTPUT"
+            echo "android=$(has '^ui/' '^ui/(ios|e2e)/|\.spec\.ts$')" >> "$GITHUB_OUTPUT"
+          fi
+
+          # Migrations are applied by a person (Mac: supabase db push, or the
+          # SQL Editor), never from here. New code can depend on a new table,
+          # so nothing ships until someone says the migration is in.
+          NEW_MIGRATIONS=$(git diff --name-only --diff-filter=A "$BASE" "$SHA" -- supabase/migrations)
+          if [ -n "$NEW_MIGRATIONS" ] && [ "$MIGRATIONS_APPLIED" != true ]; then
+            for f in $NEW_MIGRATIONS; do echo "::error file=$f::New migration, not applied by CI: $f"; done
+            {
+              echo "### Stopped: new Supabase migration"
+              echo
+              echo "This range adds:"
+              for f in $NEW_MIGRATIONS; do echo "- \`$f\`"; done
+              echo
+              echo "Apply it to production first, then **Actions › Ship › Run workflow** on main"
+              echo "with *migrations applied* ticked. Nothing was deployed."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+  server:
+    name: API + worker (Cloud Run)
+    needs: plan
+    if: needs.plan.outputs.server == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+
+      - id: image
+        run: echo "image=$IMAGE_REPO:${{ needs.plan.outputs.sha }}" >> "$GITHUB_OUTPUT"
+
+      - id: auth
+        if: needs.plan.outputs.dry != 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOYER_SA }}
+
+      - if: needs.plan.outputs.dry != 'true'
+        uses: google-github-actions/setup-gcloud@v2
+
+      - if: needs.plan.outputs.dry != 'true'
+        run: gcloud auth configure-docker asia-south1-docker.pkg.dev --quiet
+
+      - uses: docker/setup-buildx-action@v3
+
+      # The same Dockerfile `gcloud run deploy --source .` built on Cloud
+      # Build, from a clean checkout, so nothing untracked on a laptop can
+      # slip into the image.
+      - name: Build${{ needs.plan.outputs.dry != 'true' && ' and push' || '' }} the image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ needs.plan.outputs.dry != 'true' }}
+          tags: ${{ steps.image.outputs.image }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy the API (image only; env vars and secrets untouched)
+        if: needs.plan.outputs.dry != 'true'
+        run: |
+          gcloud run deploy "$SERVICE" --image "${{ steps.image.outputs.image }}" \
+            --region "$REGION" --project "$PROJECT_ID" --quiet
+
+      - name: API answers health
+        if: needs.plan.outputs.dry != 'true'
+        run: |
+          for i in $(seq 1 20); do
+            if curl -fsS "$API_URL/api/health"; then echo; exit 0; fi
+            sleep 6
+          done
+          echo "::error::$API_URL/api/health did not answer after the deploy"
+          exit 1
+
+      - name: Move the notifications job onto the API's image
+        if: needs.plan.outputs.dry != 'true'
+        run: |
+          gcloud run jobs update "$WORKER_JOB" --image "${{ steps.image.outputs.image }}" \
+            --region "$REGION" --project "$PROJECT_ID" --quiet
+
+      - name: Summary
+        if: needs.plan.outputs.dry != 'true'
+        run: |
+          REV=$(gcloud run services describe "$SERVICE" --region "$REGION" --project "$PROJECT_ID" \
+            --format='value(status.latestReadyRevisionName)')
+          {
+            echo "### Server shipped"
+            echo "- API revision \`$REV\`"
+            echo "- Worker job \`$WORKER_JOB\` on the same image"
+            echo "- Image \`${{ steps.image.outputs.image }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  hosting:
+    name: Website (Firebase Hosting)
+    needs: [plan, server]
+    # After the server, because Hosting rewrites /api to it; skipped server is fine.
+    if: >-
+      !cancelled() && needs.plan.outputs.hosting == 'true' && needs.plan.outputs.dry != 'true' &&
+      needs.server.result != 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOYER_SA }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Deploy hosting
+        run: |
+          npx --yes firebase-tools@14 deploy --only hosting --project "$PROJECT_ID" \
+            --non-interactive --message "${{ needs.plan.outputs.sha }}"
+          echo "### Website shipped (asksiddha.app)" >> "$GITHUB_STEP_SUMMARY"
+
+  android:
+    name: AAB to Play internal testing
+    needs: [plan, server]
+    # After the server, so a new build never reaches phones before the API it
+    # talks to. A skipped server deploy (app-only change) is fine.
+    if: >-
+      !cancelled() && needs.plan.outputs.android == 'true' && needs.server.result != 'failure'
+    runs-on: ubuntu-latest
+    env:
+      DRY: ${{ needs.plan.outputs.dry }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+          # versionCode is the commit count; a shallow clone would count the depth.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Signing key and Firebase config from secrets
+        if: env.DRY != 'true'
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_B64 }}
+          KEYSTORE_PROPERTIES: ${{ secrets.ANDROID_KEYSTORE_PROPERTIES }}
+          GOOGLE_SERVICES_B64: ${{ secrets.ANDROID_GOOGLE_SERVICES_JSON_B64 }}
+        run: |
+          set -euo pipefail
+          # The existing upload key enrolled in Play App Signing. A build
+          # signed with any other key is refused by Play, so a missing secret
+          # stops here rather than producing an unusable bundle.
+          for name in KEYSTORE_B64 KEYSTORE_PROPERTIES GOOGLE_SERVICES_B64; do
+            if [ -z "${!name}" ]; then
+              echo "::error::GitHub secret for $name is not set (docs/ship_from_github.md)"; exit 1
+            fi
+          done
+          umask 077
+          printf %s "$KEYSTORE_B64" | base64 -d > ui/android/upload-key.jks
+          # The Mac's file may point storeFile elsewhere; here the key sits next to it.
+          printf '%s\n' "$KEYSTORE_PROPERTIES" | grep -v '^storeFile=' > ui/android/keystore.properties
+          echo 'storeFile=upload-key.jks' >> ui/android/keystore.properties
+          # Without it the push plugin is not applied and notifications never arrive.
+          printf %s "$GOOGLE_SERVICES_B64" | base64 -d > ui/android/app/google-services.json
+
+      - name: Web bundle into the Android project
+        working-directory: ui
+        # build:native without the iOS sync, which needs a Mac.
+        run: |
+          npm ci
+          npm run version:sync
+          npm run build
+          node scripts/clean-generated-artifacts.mjs --before-cap-sync
+          npx cap sync android
+          node scripts/clean-generated-artifacts.mjs --after-cap-sync
+
+      - name: versionCode is the commit count
+        id: vc
+        run: |
+          VC=$(git rev-list --count HEAD)
+          grep -q "versionCode $VC\$" ui/android/app/build.gradle || {
+            echo "::error::ui/android/app/build.gradle does not carry versionCode $VC"; exit 1; }
+          echo "vc=$VC" >> "$GITHUB_OUTPUT"
+
+      - name: Build the ${{ env.DRY == 'true' && 'unsigned' || 'signed' }} AAB
+        working-directory: ui/android
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: Upload key fingerprint (public; must match Play's upload certificate)
+        if: env.DRY != 'true'
+        run: keytool -printcert -jarfile ui/android/app/build/outputs/bundle/release/app-release.aab | grep -E 'SHA1|SHA256'
+
+      - name: Keep the AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: asksiddha-${{ steps.vc.outputs.vc }}${{ env.DRY == 'true' && '-unsigned' || '' }}
+          path: ui/android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+      - id: play-auth
+        if: env.DRY != 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.PLAY_SA }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/androidpublisher
+          create_credentials_file: false
+
+      - name: Upload to internal testing
+        if: env.DRY != 'true'
+        env:
+          PLAY_ACCESS_TOKEN: ${{ steps.play-auth.outputs.access_token }}
+          VC: ${{ steps.vc.outputs.vc }}
+        run: |
+          NOTES=$(git log -1 --format=%s | cut -c1-480)
+          # --skip-if-not-above: if the Mac already sent this commit, do nothing.
+          python3 scripts/play_upload.py ui/android/app/build/outputs/bundle/release/app-release.aab \
+            --track internal --notes "$NOTES" --skip-if-not-above "$VC" | tee play.txt
+          echo "### AAB versionCode $VC" >> "$GITHUB_STEP_SUMMARY"
+          cat play.txt >> "$GITHUB_STEP_SUMMARY"

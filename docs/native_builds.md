@@ -239,8 +239,10 @@ the store listings point at the deployed URLs.
   and callback-intent delivery (M11-US03).
 - Push credentials (M11-US04). The code is in place on both sides; what a
   build needs is below under "Push notifications".
-- The native projects are not in CI; `npm run version:check` runs there, a
-  native build does not.
+- iOS is not built in CI. Android is: every merge that changes `ui/` builds
+  the signed AAB and uploads it to internal testing
+  ([ship_from_github.md](ship_from_github.md)), so the Mac recipe above is the
+  fallback, not the routine.
 
 ## Native Google sign-in
 
