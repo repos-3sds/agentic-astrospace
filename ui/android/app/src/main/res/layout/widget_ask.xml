@@ -4,38 +4,52 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
+    <FrameLayout
         android:id="@+id/widget_root"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:layout_gravity="center_vertical"
-        android:background="@drawable/widget_card"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="10dp"
-        android:paddingEnd="18dp">
+        android:layout_gravity="center_vertical">
 
+        <!-- The card, behind the content: the reader's opacity setting fades it
+             (Widgets.applyOpacity) and leaves the text as it is. -->
         <ImageView
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:id="@+id/widget_bg"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:contentDescription="@null"
-            android:src="@mipmap/ic_launcher_round" />
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_card" />
 
-        <TextView
-            style="@style/WidgetBody"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_weight="1"
-            android:maxLines="1"
-            android:id="@+id/prompt"
-            android:text="@string/widget_ask_prompt"
-            android:textSize="15sp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="10dp"
+            android:paddingEnd="18dp">
 
-        <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:contentDescription="@null"
-            android:src="@drawable/widget_ic_search" />
-    </LinearLayout>
+            <ImageView
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:contentDescription="@null"
+                android:src="@mipmap/ic_launcher_round" />
+
+            <TextView
+                style="@style/WidgetBody"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:maxLines="1"
+                android:id="@+id/prompt"
+                android:text="@string/widget_ask_prompt"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:contentDescription="@null"
+                android:src="@drawable/widget_ic_search" />
+        </LinearLayout>
+    </FrameLayout>
 </FrameLayout>

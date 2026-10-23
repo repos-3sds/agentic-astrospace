@@ -5,131 +5,145 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/widget_subhashita_card">
+    android:layout_height="match_parent">
 
-    <LinearLayout
+    <!-- The card, behind the content: the reader's opacity setting fades it
+         (Widgets.applyOpacity) and leaves the text as it is. -->
+    <ImageView
+        android:id="@+id/widget_bg"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:paddingStart="24dp"
-        android:paddingTop="16dp"
-        android:paddingEnd="24dp"
-        android:paddingBottom="16dp">
+        android:contentDescription="@null"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_subhashita_card" />
 
-        <TextView
-            android:id="@+id/wordmark"
-            style="@style/WidgetWordmark"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Siddha"
-            android:importantForAccessibility="no" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingStart="24dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="24dp"
+            android:paddingBottom="16dp">
+
+            <TextView
+                android:id="@+id/wordmark"
+                style="@style/WidgetWordmark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Siddha"
+                android:importantForAccessibility="no" />
+
+
+            <ImageView
+                android:layout_width="52dp"
+                android:layout_height="5dp"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="10dp"
+                android:contentDescription="@null"
+                android:src="@drawable/widget_ornament" />
+
+            <TextView
+                android:id="@+id/eyebrow"
+                style="@style/WidgetEyebrow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:letterSpacing="0.2"
+                android:text="@string/widget_subhashita_eyebrow"
+                android:textColor="#BDFFECDC" />
+
+            <TextView
+                android:id="@+id/date"
+                style="@style/WidgetBody"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginTop="3dp"
+                android:maxLines="1"
+                android:textColor="#BDFFECDC"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/sanskrit"
+                style="@style/WidgetBody"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginTop="10dp"
+                android:fontFamily="serif"
+                android:lineSpacingMultiplier="1.3"
+                android:maxLines="4"
+                android:textColor="#DBFFECDC"
+                android:textSize="13sp" />
+
+            <FrameLayout
+                android:layout_width="28dp"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="#B3F2C98A" />
+
+            <TextView
+                android:id="@+id/english"
+                style="@style/WidgetVerse"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:maxLines="4"
+                android:textColor="#FFF8EC"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/meaning_label"
+                style="@style/WidgetEyebrow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginTop="10dp"
+                android:letterSpacing="0.2"
+                android:text="@string/widget_subhashita_meaning"
+                android:textColor="#CCF2C98A" />
+
+            <TextView
+                android:id="@+id/meaning"
+                style="@style/WidgetTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/inter_semibold"
+                android:lineSpacingMultiplier="1.12"
+                android:maxLines="3"
+                android:textColor="#F2C98A"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/source"
+                style="@style/WidgetEyebrow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginTop="10dp"
+                android:textColor="#BDFFECDC" />
+        </LinearLayout>
 
 
         <ImageView
-            android:layout_width="52dp"
-            android:layout_height="5dp"
-            android:layout_marginTop="6dp"
-            android:layout_marginBottom="10dp"
-            android:contentDescription="@null"
-            android:src="@drawable/widget_ornament" />
-
-        <TextView
-            android:id="@+id/eyebrow"
-            style="@style/WidgetEyebrow"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:letterSpacing="0.2"
-            android:text="@string/widget_subhashita_eyebrow"
-            android:textColor="#BDFFECDC" />
-
-        <TextView
-            android:id="@+id/date"
-            style="@style/WidgetBody"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:layout_marginTop="3dp"
-            android:maxLines="1"
-            android:textColor="#BDFFECDC"
-            android:textSize="12sp" />
-
-        <TextView
-            android:id="@+id/sanskrit"
-            style="@style/WidgetBody"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
+            android:id="@+id/share"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_gravity="top|end"
             android:layout_marginTop="10dp"
-            android:fontFamily="serif"
-            android:lineSpacingMultiplier="1.3"
-            android:maxLines="4"
-            android:textColor="#DBFFECDC"
-            android:textSize="13sp" />
-
-        <View
-            android:layout_width="28dp"
-            android:layout_height="1dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp"
-            android:background="#B3F2C98A" />
-
-        <TextView
-            android:id="@+id/english"
-            style="@style/WidgetVerse"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:maxLines="4"
-            android:textColor="#FFF8EC"
-            android:textSize="16sp" />
-
-        <TextView
-            android:id="@+id/meaning_label"
-            style="@style/WidgetEyebrow"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:layout_marginTop="10dp"
-            android:letterSpacing="0.2"
-            android:text="@string/widget_subhashita_meaning"
-            android:textColor="#CCF2C98A" />
-
-        <TextView
-            android:id="@+id/meaning"
-            style="@style/WidgetTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:layout_marginTop="4dp"
-            android:fontFamily="@font/inter_semibold"
-            android:lineSpacingMultiplier="1.12"
-            android:maxLines="3"
-            android:textColor="#F2C98A"
-            android:textSize="13sp" />
-
-        <TextView
-            android:id="@+id/source"
-            style="@style/WidgetEyebrow"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:layout_marginTop="10dp"
-            android:textColor="#BDFFECDC" />
-    </LinearLayout>
-
-
-    <ImageView
-        android:id="@+id/share"
-        android:layout_width="34dp"
-        android:layout_height="34dp"
-        android:layout_gravity="top|end"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="10dp"
-        android:background="@drawable/widget_share_bubble"
-        android:contentDescription="@string/widget_share"
-        android:padding="8dp"
-        android:src="@drawable/widget_ic_share_light" />
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/widget_share_bubble"
+            android:contentDescription="@string/widget_share"
+            android:padding="8dp"
+            android:src="@drawable/widget_ic_share_light" />
+    </FrameLayout>
 </FrameLayout>

@@ -28,7 +28,9 @@ public class ListenWidget extends BaseWidget {
         JSONObject today = WidgetStore.get(context, "today");
         boolean fresh = today != null && WidgetStore.today().equals(today.optString("date"))
             && !today.optString("listen").isEmpty();
-        boolean speaking = WidgetStore.speaking(context);
+        // The stored flag outlives a killed process; only a live service is reading.
+        boolean speaking = WidgetStore.speaking(context) && BriefSpeechService.isRunning();
+        if (WidgetStore.speaking(context) && !speaking) WidgetStore.setSpeaking(context, false);
 
         if (!fresh) {
             views.setImageViewResource(R.id.play, R.drawable.widget_ic_play);
@@ -66,7 +68,7 @@ public class ListenWidget extends BaseWidget {
                 views.setTextViewText(R.id.subtitle, subtitle(today));
         }
         views.setOnClickPendingIntent(R.id.play,
-            speech(context, speaking ? BriefSpeechService.ACTION_STOP : BriefSpeechService.ACTION_PLAY));
+            speech(context, BriefSpeechService.ACTION_TOGGLE));
         // The play button is the widget's only control; TalkBack read it as "unlabelled".
         views.setContentDescription(R.id.play, speaking ? "Stop reading" : "Play today's reading");
         return views;
