@@ -55,7 +55,7 @@ _CA_PROVINCES = {
 }
 
 _REGION_OVERRIDES: dict[str, dict[str, str]] = {
-    "IN": {"07": "Delhi", "12": "Jammu and Kashmir", "41": "Ladakh",
+    "IN": {"02": "Andhra Pradesh", "40": "Telangana", "07": "Delhi", "12": "Jammu and Kashmir", "41": "Ladakh",
            "14": "Lakshadweep", "22": "Puducherry",
            "52": "Dadra and Nagar Haveli and Daman and Diu"},
     "AE": {"01": "Abu Dhabi", "02": "Ajman", "03": "Dubai", "04": "Fujairah",

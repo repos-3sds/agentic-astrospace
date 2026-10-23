@@ -1709,11 +1709,16 @@ the file in ~2 s).
 - [ ] **Village-level India beyond AP/Telangana.** Outside AP/TS, India has
   only cities500 (~6.5k places), because GeoNames leaves most Indian villages
   without a population. *Why not built:* the full `IN.txt` dump is needed and
-  download.geonames.org is blocked from the cloud containers. *Unblocks
-  when:* `IN.zip` and `admin2Codes.txt` are downloaded on the Mac. *Hook:*
-  add admin1 codes to `STATES` in `scripts/build_state_places.py` (labels
-  come from `_STATE_NAMES` in `core/cities.py`); watch memory, every state
-  is ~15-20k rows.
+  download.geonames.org is blocked from the cloud containers. *Code ready
+  (2026-10-21):* `scripts/build_india_places.py` builds all of India into
+  `data/india_places.tsv.gz`, which `core/cities.py` streams into compact
+  arrays (600k synthetic rows: +67 MB, ~18 ms per search). Places save as
+  "Name, District"; bare AP/TS names saved before resolve as they did.
+  *Unblocks when:* `IN.zip`, `admin1CodesASCII.txt` and `admin2Codes.txt`
+  are downloaded on the Mac. *Then:* run the builder, take `"IN"` out of
+  `COUNTRIES` in `scripts/build_world_places.py` and rebuild that file
+  (`geonamescache` + `reverse_geocoder` from PyPI), and check that every
+  India "Name, Region" the old world file holds still resolves nearby.
 - [ ] **The rest of the world** (Nepal, Sri Lanka, Bangladesh, Pakistan,
   Africa, the Caribbean, East Asia, the Americas). *Why not built:* not in
   the diaspora-first list. *Hook:* add codes to `COUNTRIES` in
