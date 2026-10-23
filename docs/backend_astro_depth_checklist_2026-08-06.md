@@ -1834,3 +1834,19 @@ From the Muhurta audit (batches A–E built; these were left out on purpose).
   *Built 2026-10-21 (Hawk chose "Add the locked hint"):* a capped plan gets
   `locked_next` (date and quality, never the time) for the first good date
   in the 60 days past its horizon, shown as a Plus lock card on results.
+
+## Deferred backlog — WhatsApp sent from code (2026-10-23)
+
+- [ ] **Release announcements to WhatsApp without a person.** *Why not
+  built:* Channels and Business-app broadcast lists have no API; the
+  WhatsApp Business Platform via a provider (AiSensy, Interakt, Gupshup)
+  costs a plan from about ₹999 a month plus about ₹0.9 + GST per marketing
+  message, needs Meta business verification and approved templates, and
+  still cannot post to a Channel. For about 23 testers the free route (the
+  browser thread pasting the texts, on Hawk's yes) is enough. *Unblocks
+  when:* public launch, and Hawk picks a provider. *Hook:*
+  `astrospace/notifications/release_announcements.py` already writes
+  `whatsapp_broadcast`; a provider transport would send it as an approved
+  template from `POST /api/v1/releases/announce`, to readers who opted in to
+  WhatsApp (a new preference category). See
+  [release_announcements.md](release_announcements.md).

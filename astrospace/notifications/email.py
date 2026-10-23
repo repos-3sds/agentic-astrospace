@@ -291,7 +291,7 @@ def _block_html(block: dict) -> str:
     elif kind == "callout":
         out += (f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
                 f'style="margin:4px 0 0;background:{_SOFT};border-left:4px solid {_ACCENT};border-radius:8px">'
-                f'<tr><td style="padding:14px 16px;font-size:16px;line-height:1.6;color:{_INK}">{e(block.get("body") or "")}</td></tr></table>')
+                f'<tr><td style="padding:14px 16px;font-size:16px;line-height:1.6;color:{_INK};white-space:pre-line">{e(block.get("body") or "")}</td></tr></table>')
     return out
 
 
