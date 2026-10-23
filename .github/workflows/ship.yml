@@ -349,13 +349,66 @@ jobs:
           access_token_scopes: https://www.googleapis.com/auth/androidpublisher
           create_credentials_file: false
 
+      # What's new for testers (docs/release_announcements.md): the merged
+      # pull requests since the build closed testers hold, in plain words,
+      # and a preview email to the team. Nothing reaches readers here, and a
+      # failure never stops the upload; Play then gets the commit subject.
+      - name: Build testers have now
+        id: testers
+        if: env.DRY != 'true'
+        continue-on-error: true
+        env:
+          PLAY_ACCESS_TOKEN: ${{ steps.play-auth.outputs.access_token }}
+        run: echo "vc=$(python3 scripts/play_upload.py --track alpha --highest)" >> "$GITHUB_OUTPUT"
+
+      - id: release-auth
+        if: env.DRY != 'true'
+        continue-on-error: true
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOYER_SA }}
+          token_format: id_token
+          id_token_audience: ${{ env.API_URL }}
+          id_token_include_email: true
+          create_credentials_file: false
+
+      - name: Draft what's new
+        if: env.DRY != 'true' && steps.release-auth.outcome == 'success'
+        continue-on-error: true
+        env:
+          TOKEN: ${{ steps.release-auth.outputs.id_token }}
+          VC: ${{ steps.vc.outputs.vc }}
+          SINCE: ${{ steps.testers.outputs.vc || '0' }}
+        run: |
+          set -euo pipefail
+          python3 scripts/release_changes.py --since "$SINCE" > changes.json
+          jq -n --argjson vc "$VC" --slurpfile c changes.json '{version_code: $vc, changes: $c[0]}' |
+            curl -fsS -X POST "$API_URL/api/v1/releases/draft" -H "Authorization: Bearer $TOKEN" \
+              -H 'Content-Type: application/json' --data @- > release-notes.json
+          {
+            echo "### What's new (draft, since build $SINCE)"
+            jq -r '.notes[] | "- " + .' release-notes.json
+            echo
+            echo "Preview emailed to the team. Testers get it on \"broadcast update\" (Actions › Announce)."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the draft
+        if: hashFiles('release-notes.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes-${{ steps.vc.outputs.vc }}
+          path: release-notes.json
+          retention-days: 90
+
       - name: Upload to internal testing
         if: env.DRY != 'true'
         env:
           PLAY_ACCESS_TOKEN: ${{ steps.play-auth.outputs.access_token }}
           VC: ${{ steps.vc.outputs.vc }}
         run: |
-          NOTES=$(git log -1 --format=%s | cut -c1-480)
+          NOTES=$(jq -r '.play_notes // empty' release-notes.json 2>/dev/null || true)
+          [ -n "$NOTES" ] || NOTES=$(git log -1 --format=%s | cut -c1-480)
           # --skip-if-not-above: if the Mac already sent this commit, do nothing.
           python3 scripts/play_upload.py ui/android/app/build/outputs/bundle/release/app-release.aab \
             --track internal --notes "$NOTES" --skip-if-not-above "$VC" | tee play.txt

@@ -164,16 +164,25 @@ def is_owner_job(job: NotificationJob) -> bool:
 
 def deliver_owner_job(db: Session, job: NotificationJob, transport: EmailTransport) -> bool:
     payload = job.payload or {}
-    to = payload.get("to") or []
+    # A job queued by the API (release previews) carries no addresses: the
+    # team's list lives on the worker job, so it is read here.
+    to = payload.get("to") or owner_addresses()
     if not to:
         cm.cancel_notification(db, job.id, reason="no team address")
         return False
-    line = job.body or job.title
-    body = f"{line}\n"
-    message_html = (
-        f'<p style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;font-size:15px">'
-        f"{html.escape(line)}</p>"
-    )
+    if payload.get("content"):
+        from .email import render
+        from .email_jobs import content_from_payload
+
+        message_html, body = render(content_from_payload(payload["content"]),
+                                    user_id=job.user_id, category="system")
+    else:
+        line = job.body or job.title
+        body = f"{line}\n"
+        message_html = (
+            f'<p style="font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;font-size:15px">'
+            f"{html.escape(line)}</p>"
+        )
     ok = True
     errors: list[str] = []
     for address in to:

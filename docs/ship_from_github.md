@@ -20,6 +20,10 @@ internal testing without the Mac (`.github/workflows/ship.yml`).
 Hosting and the AAB wait for the server, so a build never reaches phones
 before the API it calls.
 
+Each upload also drafts "what's new" for testers and emails the team a
+preview; testers hear about it only through *Actions › Announce*, on Hawk's
+word. See [release_announcements.md](release_announcements.md).
+
 Only the image moves on Cloud Run. Env vars, secrets, scaling and the service
 account stay exactly as set by hand, because `deploy --image` and
 `jobs update --image` change nothing else.

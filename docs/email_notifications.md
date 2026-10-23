@@ -14,6 +14,7 @@ Status: canonical. How the app emails readers, what it needs in production, and 
 | Tips: back after a while | `tips_email` | 10:00 | after 14 days without opening the app (devices and push tokens), at most monthly: what is coming up at their place |
 | Tips: compatibility | `tips_email` | 10:00, once | a week after sign-up, only if they have just their own profile |
 | Welcome | `system` | once, when they first turn an email on | what they chose; asks for a birth time when theirs isn't exact |
+| What's new | `tips_email` | on "broadcast update", 9 am to 8 pm | plain notes for the build on closed testing; see [release_announcements.md](release_announcements.md) |
 | Team alert | `owner_alert` | within one worker run | a reader's first sign-in, and their first Ask question; to `OWNER_ALERT_EMAILS`, never to the reader |
 
 The team alert (`astrospace/notifications/owner_alerts.py`) is for the friends-and-family test.

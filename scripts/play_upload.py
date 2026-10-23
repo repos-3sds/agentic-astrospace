@@ -224,6 +224,19 @@ def run_check(track: str, key_path: str | None = None) -> int:
     return 0
 
 
+def run_highest(track: str, key_path: str | None = None) -> int:
+    """Print the highest versionCode on a track (0 when empty), for CI to
+    know which build testers have now. Opens an edit only to read."""
+    check_track(track)
+    edit = Edit(get_token(key_path))
+    edit.open()
+    try:
+        print(highest_version(edit.track(track)))
+    finally:
+        edit.discard()
+    return 0
+
+
 def run_upload(aab: Path, track: str, notes: str | None, key_path: str | None = None,
                changes_not_sent_for_review: bool = False, skip_if_not_above: int | None = None) -> int:
     check_track(track)
@@ -289,6 +302,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--version-code", type=int,
                         help="release a bundle Play already holds (e.g. promote internal to alpha); no upload")
     parser.add_argument("--check", action="store_true", help="verify access and show the track; change nothing")
+    parser.add_argument("--highest", action="store_true",
+                        help="print the highest versionCode on --track and change nothing")
     parser.add_argument("--changes-not-sent-for-review", action="store_true",
                         help="commit without sending for review (only if Play asks for it)")
     parser.add_argument("--skip-if-not-above", type=int, metavar="VERSION_CODE",
@@ -300,6 +315,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.check:
             return run_check(args.track, args.key)
+        if args.highest:
+            return run_highest(args.track, args.key)
         if args.version_code is not None:
             if args.aab:
                 parser.error("give either the .aab path or --version-code, not both")
