@@ -79,3 +79,69 @@
 }
 
 .note { margin: 0; @include m-caption; color: var(--m-muted); }
+
+// Home-screen widget opacity (Android only).
+.widgets-eyebrow { margin-top: 14px; }
+
+.opacity-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--m-border);
+  border-radius: 18px;
+  background: var(--m-surface);
+}
+
+.opacity-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.opacity-value { @include m-body-strong; color: var(--m-accent-strong); font-variant-numeric: tabular-nums; }
+
+.opacity-preview {
+  position: relative;
+  height: 64px;
+  overflow: hidden;
+  border-radius: 14px;
+  // A stand-in wallpaper, literal on purpose: it is the phone's, not ours.
+  background: linear-gradient(120deg, #3a5a7a 0%, #c8734a 45%, #e8c27a 70%, #4b7a5a 100%);
+}
+
+.opacity-card-sample {
+  position: absolute;
+  inset: 10px 14px;
+  border-radius: 12px;
+  // The page ground, not --m-raised: in dark that is itself see-through,
+  // and the widget card is solid at 100%.
+  background: var(--m-bg);
+  border: 1px solid var(--m-border);
+}
+
+.opacity-text-sample {
+  @include m-body-strong;
+  position: absolute;
+  inset: 10px 14px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  color: var(--m-text);
+}
+
+.opacity-slider {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--m-accent);
+  min-height: 32px;
+}
+
+.opacity-ends {
+  @include m-caption;
+  display: flex;
+  justify-content: space-between;
+  margin-top: -6px;
+  color: var(--m-muted);
+}

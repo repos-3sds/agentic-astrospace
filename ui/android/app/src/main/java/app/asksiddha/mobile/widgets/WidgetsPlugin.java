@@ -83,6 +83,26 @@ public class WidgetsPlugin extends Plugin {
         call.resolve();
     }
 
+    /** How solid the widget cards are, 0 to 100; kept through sign-out. */
+    @PluginMethod
+    public void getOpacity(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("percent", WidgetStore.opacity(getContext()));
+        call.resolve(result);
+    }
+
+    @PluginMethod
+    public void setOpacity(PluginCall call) {
+        Integer percent = call.getInt("percent");
+        if (percent == null) {
+            call.reject("percent is required");
+            return;
+        }
+        WidgetStore.setOpacity(getContext(), percent);
+        Widgets.refreshAll(getContext());
+        call.resolve();
+    }
+
     /** The route a widget opened the app with, if the event was missed. */
     @PluginMethod
     public void takePendingRoute(PluginCall call) {

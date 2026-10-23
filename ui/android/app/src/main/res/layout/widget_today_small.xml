@@ -1,54 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Your day, 2x2: the score ring with its band, and the next window under it. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/widget_card"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="14dp">
+    android:layout_height="match_parent">
 
-    <FrameLayout
-        android:layout_width="96dp"
-        android:layout_height="96dp">
-
-        <ImageView
-            android:id="@+id/ring"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@null" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/score"
-                style="@style/WidgetNumber"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="28sp" />
-
-            <TextView
-                android:id="@+id/band"
-                style="@style/WidgetBand"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp" />
-        </LinearLayout>
-    </FrameLayout>
-
-    <TextView
-        android:id="@+id/timing"
-        style="@style/WidgetBody"
+    <!-- The card, behind the content: the reader's opacity setting fades it
+         (Widgets.applyOpacity) and leaves the text as it is. -->
+    <ImageView
+        android:id="@+id/widget_bg"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_card" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:gravity="center"
-        android:maxLines="2"
-        android:textColor="@color/widget_gold"
-        android:textSize="12sp" />
-</LinearLayout>
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <FrameLayout
+            android:layout_width="96dp"
+            android:layout_height="96dp">
+
+            <ImageView
+                android:id="@+id/ring"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/score"
+                    style="@style/WidgetNumber"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="28sp" />
+
+                <TextView
+                    android:id="@+id/band"
+                    style="@style/WidgetBand"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/timing"
+            style="@style/WidgetBody"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:maxLines="2"
+            android:textColor="@color/widget_gold"
+            android:textSize="12sp" />
+    </LinearLayout>
+</FrameLayout>

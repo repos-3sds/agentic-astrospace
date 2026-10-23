@@ -56,6 +56,8 @@ interface SiddhaWidgetsPlugin {
   clear(): Promise<void>;
   takePendingRoute(): Promise<{ route: string }>;
   saveListenAudio(options: { date: string; text: string; parts: string[] }): Promise<void>;
+  getOpacity(): Promise<{ percent: number }>;
+  setOpacity(options: { percent: number }): Promise<void>;
   addListener(event: 'open', handler: (event: { route: string }) => void): Promise<{ remove(): Promise<void> }>;
 }
 
@@ -98,6 +100,22 @@ export class WidgetBridgeService {
       if (isActive) void this.foldMantraTaps();
     }).catch(() => undefined);
     this.teardown.register(() => void SiddhaWidgets.clear().catch(() => undefined));
+  }
+
+  /** How solid the widget cards are, 0 (clear) to 100; null off Android or on failure. */
+  async opacity(): Promise<number | null> {
+    if (!this.enabled) return null;
+    try {
+      return (await SiddhaWidgets.getOpacity()).percent;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Stored on the phone and kept through sign-out; every widget redraws. */
+  async setOpacity(percent: number): Promise<void> {
+    if (!this.enabled) return;
+    await SiddhaWidgets.setOpacity({ percent: Math.round(Math.min(100, Math.max(0, percent))) }).catch(() => undefined);
   }
 
   publishToday(part: TodayWidgetPart): void {

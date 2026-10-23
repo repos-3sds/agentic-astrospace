@@ -1,62 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/widget_card"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="14dp">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/title"
-        style="@style/WidgetEyebrow"
+    <!-- The card, behind the content: the reader's opacity setting fades it
+         (Widgets.applyOpacity) and leaves the text as it is. -->
+    <ImageView
+        android:id="@+id/widget_bg"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center" />
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_card" />
 
-    <FrameLayout
-        android:id="@+id/counter"
-        android:layout_width="92dp"
-        android:layout_height="92dp"
-        android:layout_marginTop="10dp">
-
-        <ImageView
-            android:id="@+id/ring"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@null" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/count"
-                style="@style/WidgetNumber"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="26sp" />
-
-            <TextView
-                android:id="@+id/target"
-                style="@style/WidgetBody"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:textSize="11sp" />
-        </LinearLayout>
-    </FrameLayout>
-
-    <TextView
-        android:id="@+id/hint"
-        style="@style/WidgetBody"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:gravity="center"
-        android:maxLines="1"
-        android:textSize="12sp" />
-</LinearLayout>
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <TextView
+            android:id="@+id/title"
+            style="@style/WidgetEyebrow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center" />
+
+        <FrameLayout
+            android:id="@+id/counter"
+            android:layout_width="92dp"
+            android:layout_height="92dp"
+            android:layout_marginTop="10dp">
+
+            <ImageView
+                android:id="@+id/ring"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/count"
+                    style="@style/WidgetNumber"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="26sp" />
+
+                <TextView
+                    android:id="@+id/target"
+                    style="@style/WidgetBody"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/hint"
+            style="@style/WidgetBody"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:maxLines="1"
+            android:textSize="12sp" />
+    </LinearLayout>
+</FrameLayout>

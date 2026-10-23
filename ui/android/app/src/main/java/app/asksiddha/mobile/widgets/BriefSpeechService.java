@@ -45,8 +45,22 @@ import org.json.JSONObject;
  */
 public class BriefSpeechService extends Service implements TextToSpeech.OnInitListener {
 
-    static final String ACTION_PLAY = "app.asksiddha.mobile.widgets.LISTEN_PLAY";
     static final String ACTION_STOP = "app.asksiddha.mobile.widgets.LISTEN_STOP";
+    /**
+     * The widget's button: stop if this service is reading, else play. The
+     * service decides, not the widget's last picture, which can be stale: a
+     * redraw after the process was killed mid-reading (a resize does one)
+     * showed Stop with nothing playing, so the tap did nothing (Hawk,
+     * 2026-10-23).
+     */
+    static final String ACTION_TOGGLE = "app.asksiddha.mobile.widgets.LISTEN_TOGGLE";
+
+    /** True from a play until onDestroy, in this process only, so a killed process reads false. */
+    private static volatile boolean running;
+
+    static boolean isRunning() {
+        return running;
+    }
     private static final String CHANNEL_ID = "siddha_listen";
     private static final int NOTIFICATION_ID = 4201;
     private static final float RATE = 0.9f;
@@ -81,7 +95,7 @@ public class BriefSpeechService extends Service implements TextToSpeech.OnInitLi
         // startForeground must follow a foreground-service start promptly, even
         // when the answer is to stop at once.
         startInForeground();
-        if (ACTION_STOP.equals(action)) {
+        if (ACTION_STOP.equals(action) || (ACTION_TOGGLE.equals(action) && running)) {
             stopSelf();
             return START_NOT_STICKY;
         }
@@ -94,6 +108,7 @@ public class BriefSpeechService extends Service implements TextToSpeech.OnInitLi
         }
         chunks = split(text, TextToSpeech.getMaxSpeechInputLength() - 100);
         natural = WidgetStore.listenAudio(this, text);
+        running = true;
         WidgetStore.setSpeaking(this, true);
         Widgets.refresh(this, ListenWidget.class);
         if (!natural.isEmpty()) {
@@ -233,6 +248,7 @@ public class BriefSpeechService extends Service implements TextToSpeech.OnInitLi
             tts.shutdown();
             tts = null;
         }
+        running = false;
         WidgetStore.setSpeaking(this, false);
         Widgets.refresh(this, ListenWidget.class);
         super.onDestroy();

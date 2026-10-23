@@ -34,4 +34,32 @@
   </div>
 
   <p class="note">System follows your phone automatically when its appearance changes.</p>
+
+  @if (widgetOpacity() !== null) {
+    <p class="eyebrow widgets-eyebrow">HOME SCREEN WIDGETS</p>
+    <div class="opacity-card">
+      <div class="opacity-head">
+        <label class="choice-label" for="widget-opacity">Widget background</label>
+        <span class="opacity-value">{{ widgetOpacity() }}%</span>
+      </div>
+      <div class="opacity-preview" aria-hidden="true">
+        <span class="opacity-card-sample" [style.opacity]="widgetOpacity()! / 100"></span>
+        <span class="opacity-text-sample">Your day</span>
+      </div>
+      <input
+        id="widget-opacity"
+        class="opacity-slider"
+        type="range"
+        min="0"
+        max="100"
+        step="10"
+        [value]="widgetOpacity()"
+        [attr.aria-valuetext]="widgetOpacity() + ' percent solid'"
+        (input)="previewOpacity($event)"
+        (change)="saveOpacity($event)"
+      />
+      <div class="opacity-ends" aria-hidden="true"><span>See-through</span><span>Solid</span></div>
+    </div>
+    <p class="note">Lower it to let your wallpaper show behind Siddha's widgets. The words stay as they are. On a busy wallpaper, keep it above half so they are easy to read.</p>
+  }
 </main>

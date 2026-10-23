@@ -22,6 +22,7 @@ import android.view.ViewGroup;
 import android.widget.RemoteViews;
 import android.widget.TextView;
 import app.asksiddha.mobile.MainActivity;
+import app.asksiddha.mobile.R;
 import java.util.Calendar;
 import java.util.Locale;
 import org.json.JSONArray;
@@ -101,6 +102,17 @@ public final class Widgets {
             return;
         }
         for (int id : ids) widget.draw(context, manager, id);
+    }
+
+    /**
+     * Fades the card behind a widget to the reader's setting, as Samsung's own
+     * widgets do. Every top-level widget layout puts its card in an ImageView
+     * with id widget_bg under the content, so only the card fades and the text
+     * stays at full strength.
+     */
+    static RemoteViews applyOpacity(Context context, RemoteViews views) {
+        views.setInt(R.id.widget_bg, "setImageAlpha", Math.round(255f * WidgetStore.opacity(context) / 100f));
+        return views;
     }
 
     /**

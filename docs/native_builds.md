@@ -327,6 +327,17 @@ How it fits together:
   font. The Subhashita wordmark is Samarkan cut down to the letters of
   "Siddha" (`res/font/samarkan_wordmark.ttf`). Font resources need Android
   8+; older phones fall back to the system face.
+- Layouts: only views RemoteViews can inflate (`FrameLayout`, `LinearLayout`,
+  `TextView`, `ImageView` and the other @RemoteView classes). A plain
+  `<View>` or `<Space>` builds and passes aapt, then the launcher says
+  "Couldn't add widget"; that broke Calendar, Subhashita and the large Your
+  day in #230. Use an empty `FrameLayout`. `tests/test_android_widgets.py`
+  checks every widget layout.
+- Opacity: each widget's card is an `ImageView` (`widget_bg`) under the
+  content, faded by `Widgets.applyOpacity` to the reader's setting
+  (Settings > Light or dark > Home screen widgets, 0-100%, Android only).
+  It is stored in its own prefs file (`siddha_widget_look`), so signing out
+  keeps it; the text is never faded.
 - Text size: widget text follows the phone's font size only between 100%
   and 115% (`Widgets.MIN_TEXT_SCALE`, `MainActivity.MAX_TEXT_ZOOM`); outside
   that it is drawn at the nearer limit. The smallest widget text is 10sp.
@@ -345,7 +356,10 @@ How it fits together:
   or if that audio is stale or won't play, it reads with the phone's own
   voice (Android TextToSpeech, en-IN, 0.9x). Either way it runs in a
   `mediaPlayback` foreground service with a Stop notification and reads
-  the same script as the Listen sheet. **Play Console:** App
+  the same script as the Listen sheet. The play button sends one toggle
+  and the service decides: a resize or a killed process can leave the
+  widget showing the wrong state, and a separate play and stop let a tap
+  on the wrong picture do nothing. **Play Console:** App
   content > Foreground service permissions needs a declaration for
   media playback ("reads the daily brief aloud when the user taps play on
   the widget") before an AAB with the widgets can be published.

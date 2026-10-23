@@ -177,4 +177,20 @@ public final class WidgetStore {
     public static void setSpeaking(Context context, boolean speaking) {
         prefs(context).edit().putBoolean(SPEAKING, speaking).apply();
     }
+
+    // ── Look: kept apart from the parts so signing out does not reset it ──
+
+    private static final String LOOK = "siddha_widget_look";
+    private static final String OPACITY = "card.opacity";
+    /** How solid the widget card is, 0 (clear) to 100 (solid, the default). */
+    public static int opacity(Context context) {
+        return context.getApplicationContext().getSharedPreferences(LOOK, Context.MODE_PRIVATE)
+            .getInt(OPACITY, 100);
+    }
+
+    public static void setOpacity(Context context, int percent) {
+        int clamped = Math.max(0, Math.min(100, percent));
+        context.getApplicationContext().getSharedPreferences(LOOK, Context.MODE_PRIVATE)
+            .edit().putInt(OPACITY, clamped).apply();
+    }
 }
