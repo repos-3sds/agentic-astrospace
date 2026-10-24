@@ -28,7 +28,7 @@ from ..config import flag
 AccessTier = Literal["free", "plus", "pro"]
 CapabilityKind = Literal["flag", "limit"]
 
-CATALOG_REVISION = 6
+CATALOG_REVISION = 7
 
 
 @dataclass(frozen=True)
@@ -93,6 +93,7 @@ _CAPABILITIES = (
     _flag("remedies.full", "The full remedy plan and practice tracker", free=False, plus=True, pro=True),
     _flag("muhurta.full", "Muhurta, finding a supportive time", free=False, plus=True, pro=True),
     _flag("dashas.full", "Full five-level Dasha navigation", free=False, plus=True, pro=True),
+    _flag("dashas.variants", "Vimshottari variants: Tribhagi, Tara and Lagna starts", free=False, plus=False, pro=True),
     _flag("transits.full", "Full transit timeline and domain detail", free=False, plus=True, pro=True),
     _flag("audio.natural_voice", "Natural server-made read-aloud voice", free=False, plus=True, pro=True),
     _flag("reports.detailed", "Detailed personal reports", free=False, plus=True, pro=True),

@@ -27,7 +27,9 @@ interface TextSizeOption {
 export class TextSizeComponent {
   protected readonly textSize = inject(TextSizeService);
   protected readonly options: TextSizeOption[] = [
-    { id: 0, label: 'Same as phone', detail: 'Follows your phone, up to standard size' },
+    this.textSize.readsPhone
+      ? { id: 0, label: 'Same as phone', detail: 'Follows your phone, up to standard size' }
+      : { id: 0, label: 'Same as phone', detail: 'Standard size' },
     { id: 90, label: 'Small', detail: 'More fits on each screen' },
     { id: 100, label: 'Standard', detail: 'As Siddha was designed' },
     { id: 115, label: 'Large', detail: 'Easier to read' },

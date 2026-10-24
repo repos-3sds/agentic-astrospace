@@ -73,13 +73,18 @@ def _clip_to_birth(periods: list[dict], birth: datetime) -> None:
 
 
 def vimshottari_dasha(moon_lon: float, birth_dt: datetime,
-                      as_of: datetime | None = None) -> dict:
+                      as_of: datetime | None = None, *, scale: float = 1.0,
+                      system: str = "Vimshottari") -> dict:
     """Return Vimshottari mahadasha/antardasha/pratyantardasha timeline.
 
     The birth nakshatra lord starts the sequence. The remaining balance of
     that mahadasha is proportional to the untraversed part of the Moon's
     nakshatra at birth. Durations use the traditional 120-year Vimshottari
     cycle with a 365.25-day civil year for deterministic date arithmetic.
+
+    ``scale`` shrinks every mahadasha (Tribhagi uses 1/3, a 40-year cycle
+    repeated); the timeline still covers 120 years from birth. Sub-periods
+    keep their Vimshottari proportions, so they shrink with their parent.
 
     The birth mahadasha began before birth, when the Moon entered its
     nakshatra. Its antardashas (and every finer level) run from that
@@ -92,17 +97,17 @@ def vimshottari_dasha(moon_lon: float, birth_dt: datetime,
     nak = nakshatra_of(moon_lon)
     birth_lord = nak["lord"]
     elapsed_fraction = nak["degree_in_nakshatra"] / NAKSHATRA_SPAN
-    balance_years = VIMSHOTTARI_YEARS[birth_lord] * (1.0 - elapsed_fraction)
+    balance_years = VIMSHOTTARI_YEARS[birth_lord] * (1.0 - elapsed_fraction) * scale
 
     # Periods before birth are never "active", even for an as_of before birth.
     if as_of is not None and as_of < birth_dt:
         as_of = None
 
     mahadashas = []
-    cursor = _add_years(birth_dt, -VIMSHOTTARI_YEARS[birth_lord] * elapsed_fraction)
-    for cycle in range(2):
+    cursor = _add_years(birth_dt, -VIMSHOTTARI_YEARS[birth_lord] * scale * elapsed_fraction)
+    for cycle in range(int(round(1 / scale)) + 1):
         for lord in _sequence_from(birth_lord):
-            years = VIMSHOTTARI_YEARS[lord]
+            years = VIMSHOTTARI_YEARS[lord] * scale
             p = _period(lord, cursor, years, as_of)
             p["antardashas"] = _sub_periods(lord, cursor, years, as_of)
             mahadashas.append(p)
@@ -145,8 +150,8 @@ def vimshottari_dasha(moon_lon: float, birth_dt: datetime,
         _clip_to_birth(chain, birth_dt)
 
     return {
-        "system": "Vimshottari",
-        "cycle_years": 120,
+        "system": system,
+        "cycle_years": round(120 * scale, 6),
         "birth_nakshatra": {
             "name": nak["name"],
             "lord": birth_lord,
