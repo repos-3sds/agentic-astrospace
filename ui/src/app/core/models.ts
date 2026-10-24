@@ -691,6 +691,16 @@ export interface DashaPayload {
   };
 }
 
+/** Practitioner Vimshottari variants (astrospace/core/vedic/dasha_variants.py). */
+export type DashaVariantKey = 'tribhagi' | 'kshema' | 'utpanna' | 'adhana' | 'd1_lagna' | 'd9_lagna' | 'd10_lagna';
+
+export interface DashaVariantPayload extends DashaPayload {
+  variant: DashaVariantKey;
+  seed: { point: string; longitude: number };
+  is_convention_dependent: boolean;
+  observance_note: string;
+}
+
 export interface AshtakavargaPayload {
   planets: string[];
   sources: string[];
