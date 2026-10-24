@@ -13,7 +13,7 @@ from .positions import (
 )
 from .nakshatra import nakshatra_of
 from .panchanga import panchanga_of
-from .vargas import VARGA_FUNCTIONS, VARGA_INFO, UNVERIFIED_VARGAS
+from .vargas import VARGA_FUNCTIONS, VARGA_INFO, UNVERIFIED_VARGAS, varga_longitude
 from .strength import all_dignities, planetary_conditions, shadbala
 from .avkahada import avkahada_chakra
 from .ghatak import ghatak_of
@@ -174,6 +174,7 @@ class VedicChart:
                 "vargottama": varga == "D9" and s == d1_signs[planet],
                 # judged on this varga's signs, not the D1 dignity repeated
                 "dignity": dignity_in_varga(planet, varga, self.positions),
+                **_varga_degree(varga, data["lon"]),
             }
             if varga == "D60":
                 planets[planet]["deity"] = d60_deity(data["lon"])
@@ -189,8 +190,19 @@ class VedicChart:
                 "sign": sign_name(lagna_sign),
                 "sign_sanskrit": sign_name_sanskrit(lagna_sign),
                 "sign_index": lagna_sign,
+                **_varga_degree(varga, self.lagna_lon),
             },
             "planets": planets,
+            # D1 degrees are the planet's real position; a varga degree is not
+            "degree_convention": None if varga == "D1" else {
+                "is_convention_dependent": True,
+                "observance_note": (
+                    "Degree and nakshatra here use the varga longitude: how far the planet "
+                    "has moved through its division, spread over the whole sign "
+                    "(the Jagannatha Hora convention). Classical texts place a planet "
+                    "in a divisional chart by sign only."
+                ),
+            },
         }
 
     def all_varga_charts(self) -> dict:
@@ -465,3 +477,16 @@ class VedicChart:
             "argala": self.argala(),
             "masa": self.masa(),
         }
+
+
+def _varga_degree(varga: str, lon: float) -> dict:
+    """Degree within sign and nakshatra of a longitude inside a varga."""
+    vlon = varga_longitude(varga, lon)
+    nak = nakshatra_of(vlon)
+    return {
+        "longitude": round(vlon, 4),
+        "degree_in_sign": round(degree_in_sign(vlon), 4),
+        "dms": to_dms(degree_in_sign(vlon)),
+        "nakshatra": nak["name"],
+        "nakshatra_pada": nak["pada"],
+    }

@@ -74,35 +74,35 @@ export class ChartFullComponent {
     name: PLANET_NAME[abbr] ?? detail.title.split(' in ')[0],
   })));
 
-  /**
-   * D1 rows carry degree and nakshatra. A divisional chart places each planet
-   * by sign only, so its rows show the varga's own sign, house and dignity
-   * instead of repeating D1's under every chip.
-   */
   readonly isRashi = computed(() => this.selectedVarga() === 'D1');
 
+  /**
+   * One row per graha for the selected chip. D1 is the planet's real
+   * position; a varga row carries that varga's own sign, house, degree,
+   * nakshatra and dignity, so D1 to D60 no longer read the same.
+   */
   readonly planetRows = computed(() => {
     const chart = this.chart();
     if (!chart) return [];
-    const dignities = chart.dignities ?? {};
-    return PLANET_SEQUENCE
-      .filter((planet) => chart.planets?.[planet])
-      .map((planet) => {
-        const row = chart.planets[planet];
-        return {
-          planet,
-          sign: row.sign ?? '—',
-          degree: row.dms ?? (typeof row.degree_in_sign === 'number' ? `${row.degree_in_sign.toFixed(2)}°` : '—'),
-          nakshatra: row.nakshatra ?? '—',
-          pada: row.nakshatra_pada ?? '—',
-          dignity: titleCase(dignities[planet]?.dignity) || '—',
-          retrograde: row.retrograde ? 'R' : '—',
-        };
-      });
-  });
-
-  readonly vargaRows = computed(() => {
-    const planets = this.chart()?.vargas?.[this.selectedVarga()]?.planets;
+    if (this.isRashi()) {
+      const dignities = chart.dignities ?? {};
+      return PLANET_SEQUENCE
+        .filter((planet) => chart.planets?.[planet])
+        .map((planet) => {
+          const row = chart.planets[planet];
+          return {
+            planet,
+            sign: row.sign ?? '—',
+            house: row.house ?? '—',
+            degree: row.dms ?? formatDegree(row.degree_in_sign),
+            nakshatra: row.nakshatra ?? '—',
+            pada: row.nakshatra_pada ?? '—',
+            dignity: titleCase(dignities[planet]?.dignity) || '—',
+            retrograde: row.retrograde ? 'R' : '—',
+          };
+        });
+    }
+    const planets = chart.vargas?.[this.selectedVarga()]?.planets;
     if (!planets) return [];
     return PLANET_SEQUENCE
       .filter((planet) => planets[planet])
@@ -112,11 +112,18 @@ export class ChartFullComponent {
           planet,
           sign: row.sign ?? '—',
           house: row.house ?? '—',
+          degree: row.dms ?? formatDegree(row.degree_in_sign),
+          nakshatra: row.nakshatra ?? '—',
+          pada: row.nakshatra_pada ?? '—',
           dignity: titleCase(row.dignity) || '—',
           retrograde: row.retrograde ? 'R' : '—',
         };
       });
   });
+
+  /** The engine's own wording for how a varga degree is reckoned. */
+  readonly degreeNote = computed(() =>
+    this.chart()?.vargas?.[this.selectedVarga()]?.degree_convention?.observance_note ?? null);
 
   readonly houseLords = computed(() => {
     const chart = this.chart();
@@ -275,6 +282,10 @@ const SIGN_LORD: Record<string, string> = {
   Aquarius: 'Saturn',
   Pisces: 'Jupiter',
 };
+
+function formatDegree(value?: number): string {
+  return typeof value === 'number' ? `${value.toFixed(2)}°` : '—';
+}
 
 function titleCase(value?: string): string {
   if (!value) return '';

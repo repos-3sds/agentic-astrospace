@@ -31,6 +31,8 @@ D1 longitudes from the engine, then each varga sign worked from BPHS ch. 6:
 import pytest
 
 from astrospace.core.vedic.chart import VedicChart
+from astrospace.core.vedic.nakshatra import nakshatra_of
+from astrospace.core.vedic.vargas import VARGA_FUNCTIONS, varga_longitude
 
 D1 = {
     "Sun": "Cancer", "Moon": "Aquarius", "Mars": "Libra", "Mercury": "Cancer",
@@ -98,3 +100,48 @@ def test_every_varga_carries_a_dignity_for_every_planet(chart):
     for varga, payload in chart.all_varga_charts().items():
         for planet, row in payload["planets"].items():
             assert row["dignity"], (varga, planet)
+
+
+# ── Degree and nakshatra inside a varga ─────────────────────────────────────
+# Sun is at Cancer 28.62 in D1. 28.62 x 9 = 257.57, so it is 0.57 of the way
+# through its 9th navamsha: Pisces 17.57, which is Revati (346.67-360) pada 1.
+# The same Sun in D10: 28.62 x 10 = 286.19 -> 0.54 through the 10th part:
+# Sagittarius 16.19, Purva Ashadha (253.33-266.67) pada 1.
+
+def test_varga_degree_and_nakshatra_follow_the_planet_into_the_varga(chart):
+    sun9 = chart.varga_chart("D9")["planets"]["Sun"]
+    assert sun9["nakshatra"] == "Revati" and sun9["nakshatra_pada"] == 1
+    assert sun9["degree_in_sign"] == pytest.approx(17.57, abs=0.01)
+    sun10 = chart.varga_chart("D10")["planets"]["Sun"]
+    assert sun10["nakshatra"] == "Purva Ashadha" and sun10["nakshatra_pada"] == 1
+    assert sun10["degree_in_sign"] == pytest.approx(16.19, abs=0.01)
+
+
+def test_d1_degree_and_nakshatra_are_the_real_position(chart):
+    d1 = chart.varga_chart("D1")["planets"]
+    for planet, data in chart.positions.items():
+        assert d1[planet]["nakshatra"] == nakshatra_of(data["lon"])["name"]
+        assert d1[planet]["longitude"] == pytest.approx(data["lon"], abs=1e-4)
+    assert chart.varga_chart("D1")["degree_convention"] is None
+    assert chart.varga_chart("D9")["degree_convention"]["is_convention_dependent"] is True
+
+
+@pytest.mark.parametrize("varga", [v for v in VARGA_FUNCTIONS if v not in ("D1", "D30")])
+def test_equal_varga_degree_is_degree_times_n_mod_30(varga):
+    n = int(varga[1:])
+    for i in range(1, 3600):
+        lon = i / 10 + 0.0123
+        expected = (lon % 30) * n % 30
+        got = varga_longitude(varga, lon)
+        assert int(got // 30) == VARGA_FUNCTIONS[varga](lon), (varga, lon)
+        assert got % 30 == pytest.approx(expected, abs=1e-6), (varga, lon)
+
+
+@pytest.mark.parametrize("lon, expected", [
+    (14.0, 255.0),        # Aries 14: 10-18 part (Sagittarius), halfway -> Sag 15
+    (43.0, 333.75),       # Taurus 13: 12-20 part (Pisces), 1/8 in -> Pisces 3.75
+    (2.5, 15.0),          # Aries 2.5: 0-5 part (Aries), halfway -> Aries 15
+    (59.0, 7 * 30 + 24),  # Taurus 29: 25-30 part (Scorpio), 4/5 in -> Scorpio 24
+])
+def test_d30_degree_spreads_each_unequal_part_over_the_sign(lon, expected):
+    assert varga_longitude("D30", lon) == pytest.approx(expected)

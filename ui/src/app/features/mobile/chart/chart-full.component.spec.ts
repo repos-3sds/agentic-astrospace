@@ -21,7 +21,8 @@ const CHART = {
   vargas: {
     D9: {
       name: 'Navamsha', signifies: '', verified_rule: true, lagna: { sign: 'Gemini' },
-      planets: { Sun: { sign: 'Pisces', house: 10, retrograde: false, dignity: 'Neutral' } },
+      planets: { Sun: { sign: 'Pisces', house: 10, retrograde: false, dignity: 'Neutral', dms: '17°34\'15"', nakshatra: 'Revati', nakshatra_pada: 1 } },
+      degree_convention: { is_convention_dependent: true, observance_note: 'Varga longitude convention.' },
     },
     D10: {
       name: 'Dashamsha', signifies: '', verified_rule: true, lagna: { sign: 'Libra' },
@@ -33,8 +34,8 @@ const CHART = {
 type Rows = {
   selectedVarga: { set(v: string): void };
   isRashi: () => boolean;
-  planetRows: () => Array<{ sign: string; degree: string }>;
-  vargaRows: () => Array<{ planet: string; sign: string; house: number | string; dignity: string }>;
+  planetRows: () => Array<{ planet: string; sign: string; house: number | string; degree: string; nakshatra: string; pada: number | string; dignity: string }>;
+  degreeNote: () => string | null;
   chart: { set(v: VedicAll): void };
 };
 
@@ -60,21 +61,26 @@ describe('ChartFullComponent planetary positions', () => {
   it('shows D1 degree and nakshatra on D1', () => {
     component.selectedVarga.set('D1');
     expect(component.isRashi()).toBeTrue();
-    expect(component.planetRows()[0]).toEqual(jasmine.objectContaining({ sign: 'Cancer', degree: '28°37\'10"' }));
+    expect(component.planetRows()[0]).toEqual(jasmine.objectContaining({ sign: 'Cancer', house: 12, degree: '28°37\'10"', nakshatra: 'Ashlesha' }));
+    expect(component.degreeNote()).toBeNull();
   });
 
-  it('shows each varga its own sign, house and dignity', () => {
+  it('shows each varga its own sign, house, degree, nakshatra and dignity', () => {
     component.selectedVarga.set('D9');
     expect(component.isRashi()).toBeFalse();
-    expect(component.vargaRows()).toEqual([{ planet: 'Sun', sign: 'Pisces', house: 10, dignity: 'Neutral', retrograde: '—' }] as never);
+    expect(component.planetRows()[0]).toEqual(jasmine.objectContaining({
+      planet: 'Sun', sign: 'Pisces', house: 10, degree: '17°34\'15"', nakshatra: 'Revati', pada: 1, dignity: 'Neutral',
+    }));
+    expect(component.degreeNote()).toContain('convention');
 
     component.selectedVarga.set('D10');
-    expect(component.vargaRows()[0].sign).toBe('Sagittarius');
-    expect(component.vargaRows()[0].house).toBe(3);
+    expect(component.planetRows()[0].sign).toBe('Sagittarius');
+    expect(component.planetRows()[0].house).toBe(3);
+    expect(component.planetRows()[0].degree).toBe('—');
   });
 
   it('shows no rows rather than D1 values when a varga is missing', () => {
     component.selectedVarga.set('D60');
-    expect(component.vargaRows()).toEqual([]);
+    expect(component.planetRows()).toEqual([]);
   });
 });
