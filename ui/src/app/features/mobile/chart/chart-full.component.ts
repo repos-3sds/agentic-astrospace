@@ -74,6 +74,13 @@ export class ChartFullComponent {
     name: PLANET_NAME[abbr] ?? detail.title.split(' in ')[0],
   })));
 
+  /**
+   * D1 rows carry degree and nakshatra. A divisional chart places each planet
+   * by sign only, so its rows show the varga's own sign, house and dignity
+   * instead of repeating D1's under every chip.
+   */
+  readonly isRashi = computed(() => this.selectedVarga() === 'D1');
+
   readonly planetRows = computed(() => {
     const chart = this.chart();
     if (!chart) return [];
@@ -89,6 +96,23 @@ export class ChartFullComponent {
           nakshatra: row.nakshatra ?? '—',
           pada: row.nakshatra_pada ?? '—',
           dignity: titleCase(dignities[planet]?.dignity) || '—',
+          retrograde: row.retrograde ? 'R' : '—',
+        };
+      });
+  });
+
+  readonly vargaRows = computed(() => {
+    const planets = this.chart()?.vargas?.[this.selectedVarga()]?.planets;
+    if (!planets) return [];
+    return PLANET_SEQUENCE
+      .filter((planet) => planets[planet])
+      .map((planet) => {
+        const row = planets[planet];
+        return {
+          planet,
+          sign: row.sign ?? '—',
+          house: row.house ?? '—',
+          dignity: titleCase(row.dignity) || '—',
           retrograde: row.retrograde ? 'R' : '—',
         };
       });

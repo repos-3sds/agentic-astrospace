@@ -261,6 +261,17 @@
   &:last-child { border-bottom: 0; }
 }
 
+// A varga table has no degree or nakshatra, so it fits the card without the
+// sideways scroll the D1 table needs.
+.positions-table.varga-table { width: 100%; }
+
+.positions-row.varga-row {
+  grid-template-columns: 60px minmax(0, 1fr) 40px minmax(0, 1.15fr) 14px;
+  gap: 6px;
+  min-width: 0;
+  padding: 10px 8px;
+}
+
 button.positions-row {
   cursor: pointer;
 }

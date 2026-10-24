@@ -91,7 +91,7 @@ export interface VargaChart {
   lagna: { sign: string };
   planets: Record<
     string,
-    { sign: string; sign_index?: number; house: number; retrograde?: boolean; vargottama?: boolean }
+    { sign: string; sign_index?: number; house: number; retrograde?: boolean; vargottama?: boolean; dignity?: string }
   >;
 }
 

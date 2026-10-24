@@ -36,7 +36,7 @@ from .shayanadi import all_shayanadi_avasthas
 from .argala import all_argala
 from .shashtyamsha import d60_deity
 from .yogini import yogini_dasha
-from .vimshopaka import vimshopaka_bala as vimshopaka_bala_of
+from .vimshopaka import dignity_in_varga, vimshopaka_bala as vimshopaka_bala_of
 from .chara_dasha import chara_dasha as chara_dasha_of
 from .bhava_chalit import bhava_chalit as bhava_chalit_of
 from .masa import amanta_masa, samvatsara, ritu, ayana
@@ -172,6 +172,8 @@ class VedicChart:
                 "house": house_from_lagna(s, lagna_sign),
                 "retrograde": data["retrograde"],
                 "vargottama": varga == "D9" and s == d1_signs[planet],
+                # judged on this varga's signs, not the D1 dignity repeated
+                "dignity": dignity_in_varga(planet, varga, self.positions),
             }
             if varga == "D60":
                 planets[planet]["deity"] = d60_deity(data["lon"])

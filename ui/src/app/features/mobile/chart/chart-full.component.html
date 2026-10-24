@@ -94,11 +94,12 @@
   <p class="hint">Tap a planet to see details</p>
   }
 
-  @if (preferences.experienceMode() === 'practitioner') {
+  @if (preferences.experienceMode() === 'practitioner' && !vargaLocked()) {
     <section class="data-section">
-      <p class="section-title">PLANETARY POSITIONS</p>
+      <p class="section-title">PLANETARY POSITIONS · {{ selectedVarga() }}</p>
       <div class="data-card positions-card">
-        <div class="positions-scroll" tabindex="0" aria-label="Planetary positions table">
+        <div class="positions-scroll" tabindex="0" [attr.aria-label]="'Planetary positions in ' + selectedVarga()">
+          @if (isRashi()) {
           <div class="positions-table">
             <div class="positions-row positions-head">
               <span>Graha</span>
@@ -121,8 +122,33 @@
               </button>
             }
           </div>
+          } @else {
+          <div class="positions-table varga-table">
+            <div class="positions-row varga-row positions-head">
+              <span>Graha</span>
+              <span>Sign</span>
+              <span>House</span>
+              <span>Dignity</span>
+              <span>R</span>
+            </div>
+            @for (row of vargaRows(); track row.planet) {
+              <button class="positions-row varga-row" type="button" (click)="openPlanetRow(row.planet)">
+                <span class="accent">{{ row.planet }}</span>
+                <span>{{ row.sign }}</span>
+                <span>{{ row.house }}</span>
+                <span>{{ row.dignity }}</span>
+                <span [class.accent]="row.retrograde === 'R'">{{ row.retrograde }}</span>
+              </button>
+            } @empty {
+              <div class="positions-row varga-row"><span>Not returned for this chart</span></div>
+            }
+          </div>
+          }
         </div>
       </div>
+      @if (!isRashi()) {
+        <p class="hint">A divisional chart places each planet by sign. Degree and nakshatra come from the planet’s actual position, shown under D1.</p>
+      }
     </section>
 
     <section class="data-section">
