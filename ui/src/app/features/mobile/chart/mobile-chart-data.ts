@@ -180,6 +180,10 @@ function planetDetail(
       isDivisional
         ? `${planet} falls in ${sign} in the ${vargaId} ${varga?.name ?? 'divisional'} chart${varga?.signifies ? `, which is used for ${varga.signifies.toLowerCase()}` : ''}.`
         : `${planet} is in ${row.sign}${row.nakshatra ? `, ${row.nakshatra} pada ${row.nakshatra_pada}` : ''}.`,
+      isDivisional && vargaRow?.nakshatra
+        ? `In this chart it is at ${vargaRow.dms ?? sign}, ${vargaRow.nakshatra} pada ${vargaRow.nakshatra_pada}.`
+        : null,
+      isDivisional && vargaRow?.dignity ? `Its dignity here is ${vargaRow.dignity.toLowerCase()}.` : null,
       (vargaRow?.retrograde ?? row.retrograde) ? 'It is marked retrograde in the returned calculation.' : null,
       vargaRow?.vargottama ? 'It is also marked vargottama in this chart.' : null,
       `This detail is computed from the selected profile rather than fixed example text.`,

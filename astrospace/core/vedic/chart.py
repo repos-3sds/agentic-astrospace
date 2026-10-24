@@ -161,6 +161,11 @@ class VedicChart:
     def varga_chart(self, varga: str) -> dict:
         fn = VARGA_FUNCTIONS[varga]
         lagna_sign = fn(self.lagna_lon)
+        d1_annotations = self.planet_annotations() if varga == "D1" else None
+        combust = set()
+        if varga != "D1" and VARGA_SHOWS_COMBUST:
+            combust = {p for p, rows in self.planet_annotations().items()
+                       if any(r["code"] == "combust" for r in rows)}
         planets = {}
         d1_signs = {p: sign_index(d["lon"]) for p, d in self.positions.items()}
         for planet, data in self.positions.items():
@@ -176,6 +181,10 @@ class VedicChart:
                 "dignity": dignity_in_varga(planet, varga, self.positions),
                 **_varga_degree(varga, data["lon"]),
             }
+            planets[planet]["annotations"] = (
+                d1_annotations[planet] if d1_annotations is not None
+                else _varga_annotations(planets[planet], planet in combust)
+            )
             if varga == "D60":
                 planets[planet]["deity"] = d60_deity(data["lon"])
         return {
@@ -477,6 +486,27 @@ class VedicChart:
             "argala": self.argala(),
             "masa": self.masa(),
         }
+
+
+# Which symbols a divisional chart draws. Dignity is judged in the varga's
+# own signs. Retrograde is the planet's motion at birth, so it is the same in
+# every chart (as in BPHS practice and Jagannatha Hora). Combustion is
+# measured against the Sun in the birth chart, so it is marked on D1 only.
+VARGA_SHOWS_RETROGRADE = True
+VARGA_SHOWS_COMBUST = False
+
+
+def _varga_annotations(row: dict, combust: bool = False) -> list[dict]:
+    rows = []
+    if row["dignity"] == "Exalted":
+        rows.append({"code": "exalted", "symbol": "↑", "label": "Exalted", "tone": "good"})
+    elif row["dignity"] == "Debilitated":
+        rows.append({"code": "debilitated", "symbol": "↓", "label": "Debilitated", "tone": "bad"})
+    if VARGA_SHOWS_RETROGRADE and row["retrograde"]:
+        rows.append({"code": "retrograde", "symbol": "↺", "label": "Retrograde", "tone": "neutral"})
+    if combust:
+        rows.append({"code": "combust", "symbol": "☼", "label": "Combust", "tone": "warn"})
+    return rows
 
 
 def _varga_degree(varga: str, lon: float) -> dict:

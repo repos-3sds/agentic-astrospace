@@ -444,6 +444,15 @@ export class KundliChartComponent {
   private entryForPlanet(planet: string): PlanetEntry {
     const chartPlanet = this.chart()?.planets[planet];
     const automatic: PlanetConditionAnnotation[] = [];
+    // A chart that carries its own symbols (each varga, judged in its own
+    // signs) wins over the D1 symbols passed in, which used to be drawn on
+    // every divisional chart.
+    if (chartPlanet?.annotations) {
+      if (chartPlanet.vargottama) {
+        automatic.push({ code: 'vargottama', symbol: '✦', label: 'Vargottama', tone: 'good' });
+      }
+      return { key: planet, label: this.planetShortName(planet), annotations: this.mergeAnnotations(chartPlanet.annotations, automatic) };
+    }
     if (chartPlanet?.retrograde) {
       automatic.push({ code: 'retrograde', symbol: '↺', label: 'Retrograde', tone: 'neutral' });
     }

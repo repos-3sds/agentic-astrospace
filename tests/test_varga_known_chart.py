@@ -145,3 +145,45 @@ def test_equal_varga_degree_is_degree_times_n_mod_30(varga):
 ])
 def test_d30_degree_spreads_each_unequal_part_over_the_sign(lon, expected):
     assert varga_longitude("D30", lon) == pytest.approx(expected)
+
+
+# ── Symbols drawn inside each chart ─────────────────────────────────────────
+
+def _symbols(payload):
+    return {p: {a["code"] for a in row["annotations"]} for p, row in payload["planets"].items()}
+
+
+def test_d1_symbols_are_the_birth_chart_annotations(chart):
+    d1 = chart.varga_chart("D1")["planets"]
+    for planet, rows in chart.planet_annotations().items():
+        assert d1[planet]["annotations"] == rows
+
+
+def test_exalted_and_debilitated_arrows_are_judged_in_each_varga(chart):
+    # Venus is debilitated in D1 (Virgo) but sits in Capricorn in D9; Mercury
+    # and Saturn are debilitated in D9 (Pisces, Aries), not in D1.
+    d1, d9 = _symbols(chart.varga_chart("D1")), _symbols(chart.varga_chart("D9"))
+    assert "debilitated" in d1["Venus"] and "debilitated" not in d9["Venus"]
+    assert "debilitated" in d9["Mercury"] and "debilitated" not in d1["Mercury"]
+    assert "debilitated" in d9["Saturn"]
+    assert "debilitated" in _symbols(chart.varga_chart("D10"))["Moon"]
+
+
+def test_retrograde_follows_the_planet_and_combust_stays_on_d1(chart):
+    d1 = _symbols(chart.varga_chart("D1"))
+    assert "combust" in d1["Mercury"]
+    for varga in VARGA_FUNCTIONS:
+        if varga == "D1":
+            continue
+        symbols = _symbols(chart.varga_chart(varga))
+        assert all("combust" not in codes for codes in symbols.values()), varga
+        for planet, data in chart.positions.items():
+            assert ("retrograde" in symbols[planet]) == bool(data["retrograde"]), (varga, planet)
+
+
+def test_every_arrow_matches_that_chart_dignity(chart):
+    for varga, payload in chart.all_varga_charts().items():
+        for planet, row in payload["planets"].items():
+            codes = {a["code"] for a in row["annotations"]}
+            assert ("exalted" in codes) == (row["dignity"] == "Exalted"), (varga, planet)
+            assert ("debilitated" in codes) == (row["dignity"] == "Debilitated"), (varga, planet)
