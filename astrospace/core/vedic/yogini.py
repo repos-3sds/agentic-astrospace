@@ -6,13 +6,16 @@ mod 8 maps 1=Mangala, 2=Pingala, ... 7=Siddha, 0=Sankata (Ashwini = 1).
 The first period's balance is proportional to the untraversed part of
 the nakshatra, exactly as in Vimshottari. Antardashas run the 8 yoginis
 in cycle order starting from the mahadasha's own yogini, each sized
-years/36 of the mahadasha. 365.25-day years for deterministic dates.
+years/36 of the mahadasha; the birth mahadasha's antardashas run from its
+notional start before birth, as in Vimshottari. 365.25-day years for
+deterministic dates.
 """
 from __future__ import annotations
 
 from datetime import datetime, timedelta
 
 from .constants import NAKSHATRA_SPAN
+from .dashas import _clip_to_birth
 from .nakshatra import nakshatra_of
 
 # (yogini, planet, years) in cycle order.
@@ -69,8 +72,9 @@ def yogini_dasha(moon_lon: float, birth_dt: datetime,
     Starting yogini from the Moon's nakshatra number (Ashwini = 1):
     remainder (number + 3) mod 8, with 1 = Mangala .. 0 = Sankata. The
     first mahadasha's balance is proportional to the untraversed fraction
-    of the nakshatra; its antardashas are spread proportionally over the
-    balance (same simplification as vimshottari_dasha).
+    of the nakshatra. Its antardashas run from the mahadasha's notional
+    start before birth; those over at birth are dropped and the running one
+    starts at birth (same rule as vimshottari_dasha).
     """
     nak = nakshatra_of(moon_lon)
     rem = (nak["number"] + 3) % 8
@@ -78,20 +82,21 @@ def yogini_dasha(moon_lon: float, birth_dt: datetime,
     elapsed_fraction = nak["degree_in_nakshatra"] / NAKSHATRA_SPAN
     balance_years = YOGINIS[start_idx][2] * (1.0 - elapsed_fraction)
 
+    if as_of is not None and as_of < birth_dt:
+        as_of = None
+
     mahadashas = []
-    cursor = birth_dt
+    cursor = _add_years(birth_dt, -YOGINIS[start_idx][2] * elapsed_fraction)
     idx = start_idx
-    first = True
     horizon_days = int(3 * CYCLE_YEARS * DAYS_PER_YEAR)  # 108 years
     while (cursor - birth_dt).days < horizon_days:
-        years = balance_years if first else float(YOGINIS[idx % 8][2])
-        if years > 0:
-            p = _period(idx, cursor, years, as_of)
-            p["antardashas"] = _antardashas(idx % 8, cursor, years, as_of)
-            mahadashas.append(p)
-            cursor = datetime.fromisoformat(p["end"])
-        first = False
+        years = float(YOGINIS[idx % 8][2])
+        p = _period(idx, cursor, years, as_of)
+        p["antardashas"] = _antardashas(idx % 8, cursor, years, as_of)
+        mahadashas.append(p)
+        cursor = datetime.fromisoformat(p["end"])
         idx += 1
+    _clip_to_birth(mahadashas, birth_dt)
 
     active_md = next((p for p in mahadashas if p["active"]), None)
     active_ad = None
