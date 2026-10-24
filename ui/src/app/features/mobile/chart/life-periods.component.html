@@ -30,7 +30,11 @@
         @if (system() === 'yogini') {
           Yogini dasha — an alternate 36-year period system
         } @else {
-          Vimshottari dasha — five levels, computed from Moon
+          @if (start() === 'standard') {
+            Vimshottari dasha — five levels, computed from Moon
+          } @else {
+            {{ data()?.system }} — five levels
+          }
         }
       </p>
     }
@@ -75,7 +79,30 @@
     </section>
     <p class="cycle-title">FULL 36-YEAR CYCLE</p>
   } @else {
-    @if (preferences.experienceMode() !== 'guided') {
+    @if (preferences.experienceMode() !== 'guided' && variantsAllowed()) {
+      <label class="start-from">
+        <span>Start from</span>
+        <select
+          [value]="start()"
+          [disabled]="variantLoading()"
+          (change)="chooseStart($any($event.target).value)"
+          aria-label="Start Vimshottari from"
+        >
+          @for (option of starts; track option.key) {
+            <option [value]="option.key" [selected]="option.key === start()">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+      @if (variantLoading()) {
+        <p class="gloss" role="status">Computing…</p>
+      }
+      @if (variantError(); as message) {
+        <p class="gloss variant-error" role="alert">{{ message }}</p>
+      }
+    }
+    @if (variantNote(); as note) {
+      <p class="gloss">{{ note }}</p>
+    } @else if (preferences.experienceMode() !== 'guided') {
       <p class="gloss">Vimshottari — the primary period system used here.</p>
     }
     <section class="active-period">

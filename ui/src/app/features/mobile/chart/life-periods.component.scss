@@ -167,3 +167,26 @@
 }
 
 .text-only { display: block; }
+
+.start-from {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  span { @include m-caption; color: var(--m-muted); }
+  select {
+    @include m-body-small;
+    flex: 1 1 auto;
+    max-width: 240px;
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    border: 1px solid var(--m-border);
+    border-radius: 12px;
+    background: var(--m-surface);
+    color: var(--m-text);
+  }
+}
+
+.variant-error { color: var(--m-warn); }

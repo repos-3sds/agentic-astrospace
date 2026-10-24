@@ -19,6 +19,7 @@ from .avkahada import avkahada_chakra
 from .ghatak import ghatak_of
 from .favourable import favourable_points
 from .dashas import vimshottari_dasha
+from .dasha_variants import vimshottari_variant
 from .ashtakavarga import ashtakavarga
 from .doshas import dosha_summary
 from .yogas import yoga_summary
@@ -252,6 +253,13 @@ class VedicChart:
         as_of = as_of or datetime.now(self.moment.dt_local.tzinfo)
         return vimshottari_dasha(
             self.positions["Moon"]["lon"], self.moment.dt_local, as_of,
+        )
+
+    def dasha_variant(self, variant: str, as_of: datetime = None) -> dict:
+        as_of = as_of or datetime.now(self.moment.dt_local.tzinfo)
+        return vimshottari_variant(
+            variant, self.positions["Moon"]["lon"], self.lagna_lon,
+            self.moment.dt_local, as_of,
         )
 
     def yogini_dashas(self) -> dict:

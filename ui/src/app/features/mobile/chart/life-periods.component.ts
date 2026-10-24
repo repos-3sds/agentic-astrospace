@@ -12,7 +12,7 @@ import { BackBarComponent } from '../shared/back-bar.component';
 import { BirthTimeBadgeComponent } from './birth-time-badge.component';
 import { monthYear } from '../format-date';
 import { KundliStore } from '../../../core/kundli.store';
-import { DashaPayload, DashaPeriod, YoginiDashaPayload, YoginiDashaPeriod } from '../../../core/models';
+import { DashaPayload, DashaPeriod, DashaVariantKey, DashaVariantPayload, YoginiDashaPayload, YoginiDashaPeriod } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
@@ -26,6 +26,20 @@ interface Period {
   active?: boolean;
   source?: DashaPeriod | YoginiDashaPeriod;
 }
+
+type VimshottariStart = 'standard' | DashaVariantKey;
+
+/** The Practitioner "Start from" list; labels follow astrospace/core/vedic/dasha_variants.py. */
+const VIMSHOTTARI_STARTS: readonly { key: VimshottariStart; label: string; seed: string }[] = [
+  { key: 'standard', label: 'Moon (standard)', seed: 'Moon nakshatra balance' },
+  { key: 'tribhagi', label: 'Tribhagi (40-year cycle)', seed: 'Moon nakshatra balance, each period a third as long' },
+  { key: 'kshema', label: 'Kshema Tara (4th star)', seed: 'started from Kshema Tara, the 4th star from the Moon' },
+  { key: 'utpanna', label: 'Utpanna Tara (5th star)', seed: 'started from Utpanna Tara, the 5th star from the Moon' },
+  { key: 'adhana', label: 'Adhana Tara (8th star)', seed: 'started from Adhana Tara, the 8th star from the Moon' },
+  { key: 'd1_lagna', label: 'D1 Lagna', seed: 'started from the D1 Lagna' },
+  { key: 'd9_lagna', label: 'D9 Lagna', seed: 'started from the D9 (Navamsha) Lagna' },
+  { key: 'd10_lagna', label: 'D10 Lagna', seed: 'started from the D10 (Dashamsha) Lagna' },
+];
 
 interface ActivePeriodInsight {
   title: string;
@@ -53,7 +67,17 @@ export class LifePeriodsComponent {
   private readonly gate = inject(PlanGateService);
   /** Free and testers see the current Maha and Antar dasha; deeper levels and Yogini are Plus. */
   protected readonly full = computed(() => this.gate.allows('dashas.full'));
+  /** Vimshottari from another starting point, or Tribhagi: Practitioner plan only. */
+  protected readonly variantsAllowed = computed(() => this.gate.allows('dashas.variants'));
+  protected readonly starts = VIMSHOTTARI_STARTS;
+  readonly start = signal<VimshottariStart>('standard');
+  protected readonly variantLoading = signal(false);
+  protected readonly variantError = signal<string | null>(null);
+  /** The standard Moon-star dasha, kept so switching back costs nothing. */
+  private standard: DashaPayload | null = null;
   protected readonly data = signal<DashaPayload | null>(null);
+  protected readonly variantNote = computed(() => (this.data() as DashaVariantPayload | null)?.observance_note ?? null);
+  protected readonly startOption = computed(() => VIMSHOTTARI_STARTS.find((row) => row.key === this.start()) ?? VIMSHOTTARI_STARTS[0]);
   protected readonly yogini = signal<YoginiDashaPayload | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
@@ -106,7 +130,7 @@ export class LifePeriodsComponent {
       title: `${lead} sets the chapter; ${near} colors the moment`,
       body: `${this.periodMeaning({ name: lead, dates: '' })} ${near !== lead ? this.periodMeaning({ name: near, dates: '' }) : ''}`.trim(),
       action: this.periodAction(near),
-      evidence: `Active stack: ${chain.join(' → ') || 'not returned'} · ${this.asOfLabel(this.data()?.as_of)} · Moon nakshatra balance`,
+      evidence: `Active stack: ${chain.join(' → ') || 'not returned'} · ${this.asOfLabel(this.data()?.as_of)} · ${this.startOption().seed}`,
     };
   });
   readonly mahaCrumb = computed(() => this.selectedMaha()?.lord ?? this.data()?.current.mahadasha?.lord ?? 'selected maha');
@@ -141,6 +165,36 @@ export class LifePeriodsComponent {
     this.resetScroll();
   }
 
+  protected async chooseStart(key: VimshottariStart): Promise<void> {
+    this.start.set(key);
+    this.variantError.set(null);
+    const activeId = this.kundlis.activeId();
+    if (key === 'standard' || !activeId) {
+      if (this.standard) this.showDashas(this.standard);
+      return;
+    }
+    this.variantLoading.set(true);
+    try {
+      const payload = await this.vedic.dashaVariant(activeId, key);
+      if (this.start() === key && this.kundlis.activeId() === activeId) this.showDashas(payload);
+    } catch (error) {
+      if (this.start() !== key) return;
+      this.variantError.set((error as Error).message || 'Could not compute this dasha.');
+      this.start.set('standard');
+      if (this.standard) this.showDashas(this.standard);
+    } finally {
+      this.variantLoading.set(false);
+    }
+  }
+
+  private showDashas(dashas: DashaPayload): void {
+    this.data.set(dashas);
+    const maha = dashas.current.mahadasha ?? dashas.mahadashas[0] ?? null;
+    const antar = dashas.current.antardasha ?? maha?.antardashas?.[0] ?? null;
+    this.selectedMaha.set(maha);
+    this.selectedAntar.set(antar);
+  }
+
   protected chooseLevel(level: DashaLevel): void {
     this.system.set('vimshottari');
     this.level.set(level);
@@ -173,6 +227,7 @@ export class LifePeriodsComponent {
       const activeId = this.kundlis.activeId();
       if (expectedActiveId && activeId !== expectedActiveId) return;
       if (!activeId) {
+        this.standard = null;
         this.data.set(null);
         this.yogini.set(null);
         return;
@@ -182,12 +237,11 @@ export class LifePeriodsComponent {
         cached?.dashas ? Promise.resolve(cached.dashas) : this.vedic.dashas(activeId),
         this.vedic.yoginiDashas(activeId).catch(() => null),
       ]);
-      this.data.set(dashas);
+      this.standard = dashas;
+      this.start.set('standard');
+      this.variantError.set(null);
       this.yogini.set(yogini);
-      const maha = dashas.current.mahadasha ?? dashas.mahadashas[0] ?? null;
-      const antar = dashas.current.antardasha ?? maha?.antardashas?.[0] ?? null;
-      this.selectedMaha.set(maha);
-      this.selectedAntar.set(antar);
+      this.showDashas(dashas);
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {
