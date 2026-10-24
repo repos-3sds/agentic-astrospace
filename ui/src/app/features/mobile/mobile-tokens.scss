@@ -15,9 +15,10 @@
 // Display type: the Figma frames are 375 wide. Below that a headline shrinks
 // with the screen instead of taking more lines, and the phone's font-size
 // setting (--text-zoom, core/text-zoom.ts) is divided back out, because a
-// 26-44px headline needs no enlarging. Reading text keeps both. On a 360-wide
-// phone at 115% font size the two together had turned four-word headlines
-// into four lines (testers' screenshots, 2026-10-24).
+// 26-44px headline needs no enlarging. Reading text keeps both (font size up
+// to MainActivity.MAX_TEXT_ZOOM). On a 360-wide phone at 115% font size the
+// two together had turned four-word headlines into four lines (testers'
+// screenshots, 2026-10-24).
 @function m-display-size($px) {
   $vw: math.div(math.round(math.div($px, 375px) * 100000), 1000) * 1vw;
   @return calc(min(#{$px}, #{$vw}) / var(--text-zoom, 1));

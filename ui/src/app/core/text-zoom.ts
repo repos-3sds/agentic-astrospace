@@ -1,6 +1,6 @@
 /**
  * Android's font-size setting scales every piece of WebView text
- * (MainActivity.capTextZoom caps it at 115%). Reading text should follow it;
+ * (MainActivity.capTextZoom caps it at 102%). Reading text should follow it;
  * the big display type should not, because it is already large and was the
  * first thing to crowd a 360-wide phone. Measure the zoom once and publish it
  * as --text-zoom, which the display mixins in mobile-tokens.scss divide back
