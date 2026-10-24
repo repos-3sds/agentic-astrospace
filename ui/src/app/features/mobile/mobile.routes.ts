@@ -307,6 +307,15 @@ export const MOBILE_ROUTES: Routes = [
       ),
   },
   {
+    path: 'settings/text-size',
+    title: 'Text size',
+    data: { hideMobileTabs: true },
+    loadComponent: () =>
+      import('./settings/text-size.component').then(
+        (m) => m.TextSizeComponent,
+      ),
+  },
+  {
     path: 'settings/language',
     title: 'Language and voice',
     data: { hideMobileTabs: true },

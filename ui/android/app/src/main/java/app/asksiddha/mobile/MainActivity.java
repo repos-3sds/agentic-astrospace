@@ -31,9 +31,10 @@ public class MainActivity extends BridgeActivity {
      * (2026-10-24) after testers' 360-wide phones at 115% showed every screen
      * about 1.3x larger than designed. Headlines ignore the setting entirely
      * (m-display-size in mobile-tokens.scss). The home-screen widgets use the
-     * same cap (Widgets.capText). Font scale is not in
-     * the manifest's configChanges, so a change recreates the activity and
-     * this runs again.
+     * same cap (Widgets.capText). A reader who wants another size for Siddha
+     * alone sets it in Settings > Text size (TextSizePlugin), which replaces
+     * the phone's setting here. Font scale is not in the manifest's
+     * configChanges, so a change recreates the activity and this runs again.
      */
     public static final int MAX_TEXT_ZOOM = 102;
 
@@ -43,9 +44,10 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(WidgetsPlugin.class);
         registerPlugin(NativeCalendarPlugin.class);
         registerPlugin(InAppReviewPlugin.class);
+        registerPlugin(TextSizePlugin.class);
         super.onCreate(savedInstanceState);
         matchLaunchScreenToTheme();
-        capTextZoom();
+        applyTextZoom();
         createChannels();
         WidgetsPlugin.handle(getIntent());
         Widgets.refreshAll(this);
@@ -84,11 +86,12 @@ public class MainActivity extends BridgeActivity {
         modes.setApplicationNightMode(mode);
     }
 
-    private void capTextZoom() {
+    void applyTextZoom() {
         if (getBridge() == null || getBridge().getWebView() == null) return;
         WebSettings settings = getBridge().getWebView().getSettings();
+        int chosen = TextSizePlugin.chosen(this);
         int system = Math.round(getResources().getConfiguration().fontScale * 100);
-        settings.setTextZoom(Math.min(system, MAX_TEXT_ZOOM));
+        settings.setTextZoom(chosen != 0 ? chosen : Math.min(system, MAX_TEXT_ZOOM));
     }
 
     /**

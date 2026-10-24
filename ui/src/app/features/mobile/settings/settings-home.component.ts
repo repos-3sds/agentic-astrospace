@@ -6,6 +6,7 @@ import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { LegalDocument, openLegal } from '../../../core/legal';
 import { ThemeService } from '../../../core/theme.service';
+import { TextSizeService } from '../../../core/text-size.service';
 import { EntitlementService } from '../../../core/entitlement.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { PreferencesService } from '../../../core/preferences.service';
@@ -53,6 +54,7 @@ export class SettingsHomeComponent {
   private readonly auth = inject(AuthService);
   private readonly kundlis = inject(KundliStore);
   private readonly theme = inject(ThemeService);
+  private readonly textSize = inject(TextSizeService);
   private readonly preferences = inject(PreferencesService);
   private readonly entitlements = inject(EntitlementService);
   readonly profileSwitcherOpen = signal(false);
@@ -138,6 +140,13 @@ export class SettingsHomeComponent {
           value: this.themeLabel(),
           route: ['/m', 'settings', 'appearance'],
         },
+        ...(this.textSize.available ? [{
+          id: 'text-size',
+          icon: 'set-text',
+          label: 'Text size',
+          value: this.textSizeLabel(),
+          route: ['/m', 'settings', 'text-size'],
+        }] : []),
         {
           id: 'language',
           icon: 'set-lang',
@@ -215,6 +224,7 @@ export class SettingsHomeComponent {
 
   constructor() {
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
+    void this.textSize.load();
     if (Capacitor.isNativePlatform()) {
       void CapacitorApp.getInfo()
         .then((info) => this.appVersion.set(`${info.version} (build ${info.build})`))
@@ -228,6 +238,12 @@ export class SettingsHomeComponent {
     const tier = this.entitlements.current()?.access_tier;
     const name = tier === 'pro' ? 'Practitioner' : tier === 'plus' ? 'Plus' : tier === 'free' ? 'Free' : null;
     return name ? `${name} · see plans, buy questions` : 'See plans, buy questions';
+  }
+
+  private textSizeLabel(): string {
+    const choice = this.textSize.choice();
+    return choice === 90 ? 'Small' : choice === 100 ? 'Standard' : choice === 115 ? 'Large'
+      : choice === 130 ? 'Extra large' : 'Same as phone';
   }
 
   private themeLabel(): string {
