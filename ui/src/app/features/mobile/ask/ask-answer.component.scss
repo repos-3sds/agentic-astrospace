@@ -274,7 +274,7 @@
 .practitioner-verdict .verdict {
   @include m-title;
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 21px;
+  font-size: m-display-size(21px);
   line-height: 1.22;
   font-weight: 600;
 }
