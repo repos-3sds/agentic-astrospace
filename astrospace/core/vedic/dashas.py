@@ -52,6 +52,26 @@ def _attach_pratyantardashas(mahadashas: list[dict], as_of: datetime | None) -> 
             ad["pratyantardashas"] = _sub_periods(ad["lord"], start, ad["years"], as_of)
 
 
+def _clip_to_birth(periods: list[dict], birth: datetime) -> None:
+    """Drop periods that ended before birth and start the running one at birth.
+
+    In place, so the ``current`` chain keeps pointing at the same dicts.
+    """
+    kept = []
+    for p in periods:
+        end = datetime.fromisoformat(p["end"])
+        if end <= birth:
+            continue
+        if datetime.fromisoformat(p["start"]) < birth:
+            p["start"] = birth.isoformat()
+            p["years"] = round((end - birth).total_seconds() / 86400.0 / DAYS_PER_YEAR, 6)
+        for key in ("antardashas", "pratyantardashas"):
+            if key in p:
+                _clip_to_birth(p[key], birth)
+        kept.append(p)
+    periods[:] = kept
+
+
 def vimshottari_dasha(moon_lon: float, birth_dt: datetime,
                       as_of: datetime | None = None) -> dict:
     """Return Vimshottari mahadasha/antardasha/pratyantardasha timeline.
@@ -60,26 +80,33 @@ def vimshottari_dasha(moon_lon: float, birth_dt: datetime,
     that mahadasha is proportional to the untraversed part of the Moon's
     nakshatra at birth. Durations use the traditional 120-year Vimshottari
     cycle with a 365.25-day civil year for deterministic date arithmetic.
+
+    The birth mahadasha began before birth, when the Moon entered its
+    nakshatra. Its antardashas (and every finer level) run from that
+    notional start in full Vimshottari proportion; the ones already over
+    at birth are dropped and the one running is clipped to start at birth,
+    as in Jagannatha Hora and other standard software. Spreading them over
+    the balance instead puts every sub-period of the birth mahadasha on
+    the wrong dates.
     """
     nak = nakshatra_of(moon_lon)
     birth_lord = nak["lord"]
     elapsed_fraction = nak["degree_in_nakshatra"] / NAKSHATRA_SPAN
     balance_years = VIMSHOTTARI_YEARS[birth_lord] * (1.0 - elapsed_fraction)
 
+    # Periods before birth are never "active", even for an as_of before birth.
+    if as_of is not None and as_of < birth_dt:
+        as_of = None
+
     mahadashas = []
-    cursor = birth_dt
-    first = True
+    cursor = _add_years(birth_dt, -VIMSHOTTARI_YEARS[birth_lord] * elapsed_fraction)
     for cycle in range(2):
         for lord in _sequence_from(birth_lord):
-            years = balance_years if first else VIMSHOTTARI_YEARS[lord]
-            if years <= 0:
-                first = False
-                continue
+            years = VIMSHOTTARI_YEARS[lord]
             p = _period(lord, cursor, years, as_of)
             p["antardashas"] = _sub_periods(lord, cursor, years, as_of)
             mahadashas.append(p)
             cursor = datetime.fromisoformat(p["end"])
-            first = False
         if (cursor - birth_dt).days >= int(120 * DAYS_PER_YEAR):
             break
 
@@ -112,6 +139,10 @@ def vimshottari_dasha(moon_lon: float, birth_dt: datetime,
                 active_sd["years"], as_of,
             )
             active_prd = next((p for p in pranadashas if p["active"]), None)
+
+    _clip_to_birth(mahadashas, birth_dt)
+    for chain in (sookshmadashas, pranadashas):
+        _clip_to_birth(chain, birth_dt)
 
     return {
         "system": "Vimshottari",
