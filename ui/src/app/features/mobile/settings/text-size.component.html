@@ -36,5 +36,5 @@
     }
   </div>
 
-  <p class="note">Headlines keep their size so each screen stays easy to scan. Your phone is set to {{ textSize.phonePercent() }}%.</p>
+  <p class="note">Headlines keep their size so each screen stays easy to scan.@if (textSize.readsPhone) { Your phone is set to {{ textSize.phonePercent() }}%.}</p>
 </main>
