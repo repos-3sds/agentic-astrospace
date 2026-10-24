@@ -190,21 +190,6 @@ VARGA_FUNCTIONS = {
     "D45": d45, "D60": d60,
 }
 
-
-def varga_longitude(lon: float, varga: str) -> float:
-    """A point's longitude inside a varga chart, not just its sign.
-
-    The varga sign from the BPHS rule above, plus the position within the
-    division stretched to a full 30 degrees (the usual Jagannatha Hora
-    convention). For D9 this equals lon * 9 mod 360. Used to seed a dasha
-    from a varga lagna, which needs a nakshatra and not only a sign.
-    """
-    n = int(varga[1:])
-    sign = VARGA_FUNCTIONS[varga](lon)
-    s, m = _parts(lon, n)
-    within = (lon % 30.0) * n / 30.0 - m
-    return (sign * 30.0 + min(max(within, 0.0), 1.0) * 30.0) % 360.0
-
 VARGA_INFO = {
     "D1":  {"name": "Rashi",            "signifies": "Physical self, all life matters"},
     "D2":  {"name": "Hora",             "signifies": "Wealth, financial prosperity"},

@@ -464,7 +464,9 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   comparing a competitor's dasha list). `dasha_variants.py`: Tribhagi,
   Kshema/Utpanna/Adhana Tara starts, and D1/D9/D10 Lagna starts, each a
   thin wrapper over `vimshottari_dasha` (new `scale` argument; varga
-  lagnas via `vargas.varga_longitude`). Route
+  lagnas via `dasha_variants.varga_lagna_longitude`, same JHora convention
+  as the varga-table `vargas.varga_longitude` from #246; fold into that one
+  once both are on main). Route
   `/vedic/{id}/dasha-variants/{variant}`, plan flag `dashas.variants`
   (Practitioner only), "Start from" select on the Life periods screen.
   Flagged `is_convention_dependent`.
@@ -473,7 +475,7 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   long buries the useful starts, and few teachers read them. *Unblocks
   on:* a practitioner asking for a specific one. *Hook:* one more branch
   in `dasha_variants.vimshottari_variant` seeding from
-  `positions[planet]["lon"]` (through `varga_longitude` for D9/D10).
+  `positions[planet]["lon"]` (through `varga_lagna_longitude` for D9/D10).
 - [x] **Karakamsha** — **CLOSED 2026-09-01**. `jaimini.karakamsha()`:
   Atmakaraka's D9 sign, who occupies it, and who occupies the 5th sign
   from it, wired into `VedicChart.jaimini()` and exposed domain-

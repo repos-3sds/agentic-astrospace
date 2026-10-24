@@ -16,3 +16,11 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 export function birthDate(day: number, month: number, year: number): string {
   return `${day} ${MONTHS[month - 1] ?? month} ${year}`;
 }
+
+/** "6 Oct 2026": day, short month, year, for exact period boundaries. */
+export function dayMonthYear(value: string | null | undefined): string {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return `${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+}

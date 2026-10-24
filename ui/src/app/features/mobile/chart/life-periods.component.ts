@@ -10,7 +10,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { BackBarComponent } from '../shared/back-bar.component';
 import { BirthTimeBadgeComponent } from './birth-time-badge.component';
-import { monthYear } from '../format-date';
+import { dayMonthYear, monthYear } from '../format-date';
 import { KundliStore } from '../../../core/kundli.store';
 import { DashaPayload, DashaPeriod, DashaVariantKey, DashaVariantPayload, YoginiDashaPayload, YoginiDashaPeriod } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
@@ -31,7 +31,7 @@ type VimshottariStart = 'standard' | DashaVariantKey;
 
 /** The Practitioner "Start from" list; labels follow astrospace/core/vedic/dasha_variants.py. */
 const VIMSHOTTARI_STARTS: readonly { key: VimshottariStart; label: string; seed: string }[] = [
-  { key: 'standard', label: 'Moon (standard)', seed: 'Moon nakshatra balance' },
+  { key: 'standard', label: 'Moon star (standard)', seed: 'Moon nakshatra balance' },
   { key: 'tribhagi', label: 'Tribhagi (40-year cycle)', seed: 'Moon nakshatra balance, each period a third as long' },
   { key: 'kshema', label: 'Kshema Tara (4th star)', seed: 'started from Kshema Tara, the 4th star from the Moon' },
   { key: 'utpanna', label: 'Utpanna Tara (5th star)', seed: 'started from Utpanna Tara, the 5th star from the Moon' },
@@ -40,6 +40,26 @@ const VIMSHOTTARI_STARTS: readonly { key: VimshottariStart; label: string; seed:
   { key: 'd9_lagna', label: 'D9 Lagna', seed: 'started from the D9 (Navamsha) Lagna' },
   { key: 'd10_lagna', label: 'D10 Lagna', seed: 'started from the D10 (Dashamsha) Lagna' },
 ];
+
+/** One row of the Practitioner period tree: Maha, Antar or Pratyantar. */
+interface TreeRow {
+  key: string;
+  level: 0 | 1 | 2;
+  lord: string;
+  start: string;
+  end: string;
+  age: string;
+  active: boolean;
+  expandable: boolean;
+  open: boolean;
+}
+
+interface ChainRow {
+  level: string;
+  lord: string;
+  start: string;
+  end: string;
+}
 
 interface ActivePeriodInsight {
   title: string;
@@ -84,6 +104,11 @@ export class LifePeriodsComponent {
 
   readonly system = signal<'vimshottari' | 'yogini'>('vimshottari');
   readonly level = signal<DashaLevel>('antar');
+
+  /** Practitioner sees one dense screen: the active chain, then an inline tree. */
+  protected readonly practitioner = computed(() => this.preferences.experienceMode() === 'practitioner');
+  /** Tree rows opened by tap, keyed by level and start; the active chain opens itself. */
+  private readonly opened = signal<ReadonlySet<string>>(new Set());
 
   readonly selectedMaha = signal<DashaPeriod | null>(null);
   readonly selectedAntar = signal<DashaPeriod | null>(null);
@@ -133,6 +158,61 @@ export class LifePeriodsComponent {
       evidence: `Active stack: ${chain.join(' → ') || 'not returned'} · ${this.asOfLabel(this.data()?.as_of)} · ${this.startOption().seed}`,
     };
   });
+  readonly chain = computed<ChainRow[]>(() => {
+    const row = (level: string, period?: { lord: string; start: string; end: string } | null): ChainRow | null =>
+      period ? { level, lord: period.lord, start: dayMonthYear(period.start), end: dayMonthYear(period.end) } : null;
+    if (this.system() === 'yogini') {
+      const current = this.yogini()?.current;
+      return [row('Maha', current?.mahadasha), row('Antar', current?.antardasha)].filter(Boolean) as ChainRow[];
+    }
+    const current = this.data()?.current;
+    return [
+      row('Maha', current?.mahadasha),
+      row('Antar', current?.antardasha),
+      row('Pratyantar', current?.pratyantardasha),
+      row('Sookshma', current?.sookshmadasha),
+      row('Prana', current?.pranadasha),
+    ].slice(0, this.full() ? 5 : 2).filter(Boolean) as ChainRow[];
+  });
+
+  readonly tree = computed<TreeRow[]>(() => {
+    type Node = { lord: string; start: string; end: string; active: boolean; antardashas?: Node[]; pratyantardashas?: Node[] };
+    const mahas: Node[] = this.system() === 'yogini' ? (this.yogini()?.mahadashas ?? []) : (this.data()?.mahadashas ?? []);
+    const birth = mahas[0] ? new Date(mahas[0].start).getTime() : NaN;
+    const opened = this.opened();
+    const maxLevel = this.system() === 'yogini' || !this.full() ? 1 : 2;
+    const rows: TreeRow[] = [];
+    const walk = (nodes: Node[], level: 0 | 1 | 2): void => {
+      for (const node of nodes) {
+        const key = `${level}:${node.start}`;
+        const children = level === 0 ? node.antardashas : level === 1 ? node.pratyantardashas : undefined;
+        const expandable = level < maxLevel && !!children?.length;
+        const open = expandable && (opened.has(key) ? !node.active : node.active);
+        rows.push({
+          key, level, lord: node.lord, active: node.active, expandable, open,
+          start: dayMonthYear(node.start), end: dayMonthYear(node.end),
+          age: this.ageAt(node.start, birth),
+        });
+        if (open && children) walk(children, (level + 1) as 1 | 2);
+      }
+    };
+    walk(mahas, 0);
+    return rows;
+  });
+
+  protected toggle(row: TreeRow): void {
+    if (!row.expandable) return;
+    const next = new Set(this.opened());
+    if (next.has(row.key)) next.delete(row.key);
+    else next.add(row.key);
+    this.opened.set(next);
+  }
+
+  private ageAt(start: string, birth: number): string {
+    const years = (new Date(start).getTime() - birth) / (365.25 * 86400000);
+    return Number.isFinite(years) ? `${Math.max(0, Math.floor(years))}` : '';
+  }
+
   readonly mahaCrumb = computed(() => this.selectedMaha()?.lord ?? this.data()?.current.mahadasha?.lord ?? 'selected maha');
   readonly antarCrumb = computed(() => this.selectedAntar()?.lord ?? this.data()?.current.antardasha?.lord ?? 'selected antar');
   readonly pratyantarCrumb = computed(() => this.data()?.current.pratyantardasha?.lord ?? 'selected pratyantar');
@@ -189,6 +269,7 @@ export class LifePeriodsComponent {
 
   private showDashas(dashas: DashaPayload): void {
     this.data.set(dashas);
+    this.opened.set(new Set());
     const maha = dashas.current.mahadasha ?? dashas.mahadashas[0] ?? null;
     const antar = dashas.current.antardasha ?? maha?.antardashas?.[0] ?? null;
     this.selectedMaha.set(maha);

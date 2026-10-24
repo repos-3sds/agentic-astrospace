@@ -4,9 +4,14 @@ from datetime import datetime, timedelta
 import pytest
 
 from astrospace.core.vedic.constants import NAKSHATRA_SPAN
-from astrospace.core.vedic.dasha_variants import VARIANTS, variant_catalog, vimshottari_variant
+from astrospace.core.vedic.dasha_variants import (
+    VARIANTS,
+    varga_lagna_longitude,
+    variant_catalog,
+    vimshottari_variant,
+)
 from astrospace.core.vedic.dashas import vimshottari_dasha
-from astrospace.core.vedic.vargas import VARGA_FUNCTIONS, varga_longitude
+from astrospace.core.vedic.vargas import VARGA_FUNCTIONS
 from astrospace.entitlements.registry import capability_registry
 
 BIRTH = datetime(1990, 1, 1, 6, 0)
@@ -55,13 +60,13 @@ def test_lagna_starts_seed_from_the_varga_lagna():
     d9 = vimshottari_variant("d9_lagna", 0.0, lagna, BIRTH, AS_OF)
     assert d9["seed"]["longitude"] == pytest.approx((lagna * 9) % 360)
     d10 = vimshottari_variant("d10_lagna", 0.0, lagna, BIRTH, AS_OF)
-    assert _lords(d10) == _lords(vimshottari_dasha(varga_longitude(lagna, "D10"), BIRTH, AS_OF))
+    assert _lords(d10) == _lords(vimshottari_dasha(varga_lagna_longitude(lagna, "D10"), BIRTH, AS_OF))
 
 
 @pytest.mark.parametrize("varga", ["D1", "D9", "D10"])
 def test_varga_longitude_lands_in_the_varga_sign(varga):
     for lon in [0.0, 3.3, 47.3, 123.45, 200.1, 299.99, 359.9]:
-        assert int(varga_longitude(lon, varga) // 30) == VARGA_FUNCTIONS[varga](lon)
+        assert int(varga_lagna_longitude(lon, varga) // 30) == VARGA_FUNCTIONS[varga](lon)
 
 
 def test_every_variant_says_it_is_convention_dependent():

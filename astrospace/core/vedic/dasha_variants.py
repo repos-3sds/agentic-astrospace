@@ -13,7 +13,7 @@ engine.
   balance of the first period, stays the Moon's own.
 - Lagna starts. The lagna's longitude in D1, D9 or D10 seeds the dasha.
   A varga lagna needs a full longitude, not only a sign; see
-  ``vargas.varga_longitude`` for the convention.
+  ``varga_lagna_longitude`` for the convention.
 - Tribhagi. Every mahadasha is a third of its Vimshottari length, a 40-year
   cycle that runs three times over a 120-year life.
 
@@ -26,7 +26,7 @@ from datetime import datetime
 
 from .constants import NAKSHATRA_SPAN
 from .dashas import vimshottari_dasha
-from .vargas import varga_longitude
+from .vargas import VARGA_FUNCTIONS
 
 # key -> (label, how the start is found)
 TARA_STEPS = {"kshema": ("Kshema Tara", 3), "utpanna": ("Utpanna Tara", 4), "adhana": ("Adhana Tara", 7)}
@@ -37,6 +37,20 @@ VARIANTS = {
     **{key: f"Vimshottari from {label}" for key, (label, _) in TARA_STEPS.items()},
     **{key: f"Vimshottari from {varga} Lagna" for key, varga in LAGNA_VARGAS.items()},
 }
+
+def varga_lagna_longitude(lon: float, varga: str) -> float:
+    """A point's longitude inside a varga chart, not just its sign.
+
+    The varga sign from the BPHS rule, plus the position within the
+    division stretched to a full 30 degrees (the Jagannatha Hora
+    convention). For D9 this equals lon * 9 mod 360.
+    """
+    n = int(varga[1:])
+    sign = VARGA_FUNCTIONS[varga](lon)
+    d = lon % 30.0
+    within = d * n / 30.0 - min(int(d * n / 30.0), n - 1)
+    return (sign * 30.0 + min(max(within, 0.0), 1.0) * 30.0) % 360.0
+
 
 OBSERVANCE_NOTE = (
     "One of several Vimshottari variants used by practitioners. "
@@ -60,7 +74,7 @@ def vimshottari_variant(variant: str, moon_lon: float, lagna_lon: float,
             seed_lon, seed = (moon_lon + steps * NAKSHATRA_SPAN) % 360.0, name
         else:
             varga = LAGNA_VARGAS[variant]
-            seed_lon, seed = varga_longitude(lagna_lon, varga), f"{varga} Lagna"
+            seed_lon, seed = varga_lagna_longitude(lagna_lon, varga), f"{varga} Lagna"
         payload = vimshottari_dasha(seed_lon, birth_dt, as_of, system=label)
     payload["variant"] = variant
     payload["seed"] = {"point": seed, "longitude": round(seed_lon, 6)}

@@ -22,6 +22,7 @@ function payload(lord: string, extra: Record<string, unknown> = {}): DashaPayloa
 describe('LifePeriodsComponent Vimshottari starts', () => {
   let allows: (key: string) => boolean;
   let variant: jasmine.Spy;
+  let mode: string;
 
   async function setup(): Promise<ComponentFixture<LifePeriodsComponent>> {
     variant = jasmine.createSpy('dashaVariant').and.resolveTo(
@@ -41,7 +42,7 @@ describe('LifePeriodsComponent Vimshottari starts', () => {
             dashaVariant: variant,
           },
         },
-        { provide: PreferencesService, useValue: { experienceMode: signal('practitioner') } },
+        { provide: PreferencesService, useValue: { experienceMode: signal(mode) } },
         { provide: PlanGateService, useValue: { allows: (key: string) => allows(key), live: signal(true) } },
       ],
     });
@@ -54,6 +55,7 @@ describe('LifePeriodsComponent Vimshottari starts', () => {
 
   it('offers the Start from list to a Practitioner plan and shows the chosen variant', async () => {
     allows = () => true;
+    mode = 'balanced';
     const fixture = await setup();
     const select = fixture.nativeElement.querySelector('.start-from select') as HTMLSelectElement;
     expect(select).toBeTruthy();
@@ -71,8 +73,22 @@ describe('LifePeriodsComponent Vimshottari starts', () => {
 
   it('hides the Start from list without the Practitioner plan', async () => {
     allows = (key) => key !== 'dashas.variants';
+    mode = 'balanced';
     const fixture = await setup();
     expect(fixture.nativeElement.querySelector('.active-period h2').textContent).toContain('Saturn');
     expect(fixture.nativeElement.querySelector('.start-from')).toBeNull();
+  });
+
+  it('gives Practitioner one dense screen: the running chain and an inline tree', async () => {
+    allows = () => true;
+    mode = 'practitioner';
+    const fixture = await setup();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.active-period')).toBeNull();
+    expect(el.querySelector('.levels')).toBeNull();
+    expect(el.querySelector('.chain-row b')?.textContent).toBe('Saturn');
+    const nodes = () => Array.from(el.querySelectorAll('.tree .node'));
+    expect(nodes().length).toBe(1);
+    expect(el.querySelector('.start-select')).toBeTruthy();
   });
 });
