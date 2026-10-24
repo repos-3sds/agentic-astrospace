@@ -31,7 +31,7 @@
 
 .wordmark {
   font-family: 'Samarkan', 'Cormorant Garamond', serif;
-  font-size: 34px;
+  font-size: m-display-size(34px);
   line-height: 0.95;
   color: var(--m-accent-strong);
   margin: 0;
@@ -41,7 +41,7 @@
 
 .headline {
   @include m-hero;
-  font-size: 40px;
+  font-size: m-display-size(40px);
   color: var(--m-text);
   text-align: center;
   margin: 0;

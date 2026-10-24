@@ -129,7 +129,7 @@ public final class Widgets {
      * A widget is a fixed cell: at the large sizes titles clip and the timing
      * line falls off the bottom; at the small ones the eyebrows are unreadable.
      * So widget text follows the phone only between MIN_TEXT_SCALE (100%) and
-     * the app's own cap (MainActivity.MAX_TEXT_ZOOM, 115%) (Hawk, 2026-10-21).
+     * the app's own cap (MainActivity.MAX_TEXT_ZOOM, 102% since 2026-10-24) (Hawk, 2026-10-21).
      * Outside that range each text is set to the size it has at the nearer
      * limit, measured by inflating the same layout at that font scale, so
      * Android 14's non-linear scaling is kept. Only text views with an id can

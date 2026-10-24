@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 
 import { SIGN_ORDER, signMeta } from '../../core/glyphs';
+import { currentTextZoom } from '../../core/text-zoom';
 import { PlanetConditionAnnotation, PlanetConditionCode, VargaChart } from '../../core/models';
 import {
   Box,
@@ -170,27 +171,6 @@ const EASTERN_ZONES: Record<string, {
   Pisces: { poly: [[B, 0], [400, 0], [B, A]], anchor: [304, 56], labelX: 274, labelY: 16, labelAlign: 'start' },
 };
 
-/**
- * The phone's text zoom as applied to this page: Android's font-size setting
- * scales WebView text, SVG text included (MainActivity.capTextZoom caps it at
- * 115%). Measured once, the way the splash does it.
- */
-let measuredTextZoom: number | null = null;
-
-function textZoom(): number {
-  if (measuredTextZoom !== null) return measuredTextZoom;
-  if (typeof document === 'undefined' || !document.body) return 1;
-  const probe = document.createElement('span');
-  probe.setAttribute('data-text-zoom-probe', '');
-  probe.style.cssText = 'position:absolute;visibility:hidden;font-size:100px;line-height:1;';
-  probe.textContent = 'M';
-  document.body.appendChild(probe);
-  const zoom = probe.getBoundingClientRect().height / 100;
-  probe.remove();
-  measuredTextZoom = zoom > 0.5 && zoom < 2.5 ? zoom : 1;
-  return measuredTextZoom;
-}
-
 @Component({
   // Signal inputs only, so OnPush is safe; the mobile chart screens render these (audit I16).
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -214,7 +194,8 @@ export class KundliChartComponent {
 
   constructor() {
     afterNextRender(() => {
-      this.zoom.set(textZoom());
+      // The WebView's text zoom (core/text-zoom.ts), SVG text included.
+      this.zoom.set(currentTextZoom());
       this.fontsReady.update((n) => n + 1);
       document.fonts?.ready.then(() => {
         this.widthCache.clear();

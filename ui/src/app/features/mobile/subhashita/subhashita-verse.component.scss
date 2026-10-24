@@ -27,7 +27,7 @@
 // The brand wordmark, in the same face as the welcome screen's.
 .brand {
   font-family: 'Samarkan', 'Cormorant Garamond', serif;
-  font-size: 34px;
+  font-size: m-display-size(34px);
   line-height: 1.1;
   color: #fff4e6;
 }

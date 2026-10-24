@@ -237,7 +237,7 @@ export class SplashComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   /**
-   * Android's font-size setting scales WebView text (MainActivity.capTextZoom),
+   * Android's font-size setting scales WebView text (MainActivity.applyTextZoom),
    * so at 90% the wordmark came out smaller than the design while the mark did
    * not. The splash is artwork, not reading text: measure the zoom and divide
    * it back out.

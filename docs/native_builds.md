@@ -341,8 +341,13 @@ How it fits together:
   It is stored in its own prefs file (`siddha_widget_look`), so signing out
   keeps it; the text is never faded.
 - Text size: widget text follows the phone's font size only between 100%
-  and 115% (`Widgets.MIN_TEXT_SCALE`, `MainActivity.MAX_TEXT_ZOOM`); outside
+  and 102% (`Widgets.MIN_TEXT_SCALE`, `MainActivity.MAX_TEXT_ZOOM`); outside
   that it is drawn at the nearer limit. The smallest widget text is 10sp.
+- In the app itself, Settings > Text size (Android only, `TextSizePlugin`)
+  lets a reader pick 90/100/115/130% for Siddha alone, stored in the
+  `siddha_text_size` prefs and applied by `MainActivity.applyTextZoom` before
+  the first screen draws. "Same as phone" follows the phone up to 102%.
+  Headlines ignore both (`m-display-size`). Widgets keep following the phone.
 - The calendar part also carries `days` (each of the next 7 days' tithi and
   the reader's good / mixed / care quality from `/panchanga/{id}/month`, as
   the Calendar tab) and `vrats` (`/festivals/vrat-days`), both fetched by

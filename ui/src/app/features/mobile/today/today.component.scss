@@ -545,6 +545,12 @@
 .window-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
 .window-value { @include m-body-strong; color: var(--m-text); margin: 0; }
 .window-in { @include m-body-strong; color: var(--m-warn); margin: 0; flex-shrink: 0; }
+// Beside the note, the countdown left a 360-wide phone one word per line of
+// advice. Under 400 it drops below the note, lined up with its text.
+@media (max-width: 400px) {
+  .window { flex-wrap: wrap; row-gap: 6px; }
+  .window-in { flex-basis: 100%; padding-left: 48px; }
+}
 
 /* The one festival or vrat reminder Today carries (checklist D1). */
 .festival {
@@ -973,7 +979,7 @@
   }
 }
 
-.mtoday-empty-mark { color: var(--m-accent); font-size: 30px; }
+.mtoday-empty-mark { color: var(--m-accent); font-size: m-display-size(30px); }
 
 /* Practitioner Board — Figma 212:751, distinct from the Guided/Balanced
    layout rather than a relabeled version of it. */

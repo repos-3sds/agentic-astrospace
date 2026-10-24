@@ -14,7 +14,7 @@
  * must, to smaller type; a quiet house keeps the full size.
  *
  * Sizes are in chart units as RENDERED, so they include the phone's text zoom
- * (Android scales WebView text, SVG text included, up to 115%). The caller
+ * (Android scales WebView text, SVG text included, up to 102%). The caller
  * divides by the zoom before writing font sizes, so the text the WebView draws
  * is the text that was fitted.
  */
