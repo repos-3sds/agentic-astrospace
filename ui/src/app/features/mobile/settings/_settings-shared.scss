@@ -81,7 +81,10 @@
     width: 20px;
     height: 20px;
     border-radius: 999px;
-    background: var(--m-raised);
+    // A solid knob in both themes. --m-raised is 10% white in dark, so on the
+    // coral track the knob vanished and on looked like off (Hawk, 2026-10-25).
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
     transition: transform 160ms ease-out;
   }
 

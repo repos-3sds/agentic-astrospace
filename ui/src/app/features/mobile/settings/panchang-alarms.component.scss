@@ -23,6 +23,31 @@
 .place-name { @include m-body-strong; color: var(--m-text); }
 .place-change { @include m-body-strong; color: var(--m-accent-strong); }
 
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 15px;
+  border: 1px solid var(--m-warn);
+  border-radius: 16px;
+  background: var(--m-surface);
+  b { color: var(--m-text); font-weight: 600; }
+  p { @include m-body-small; margin: 0; color: var(--m-muted); }
+  button.primary {
+    align-self: flex-start;
+    border: 0;
+    border-radius: 999px;
+    padding: 10px 14px;
+    background: var(--m-primary-cta);
+    color: var(--m-on-primary);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    &:disabled { opacity: 0.6; }
+  }
+}
+.error { @include m-caption; margin: 0; color: var(--m-warn); }
+
 .group-title { margin: 10px 0 0; }
 
 .rows { display: flex; flex-direction: column; gap: 8px; }

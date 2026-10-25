@@ -21,6 +21,10 @@ public class MainActivity extends BridgeActivity {
     /** Window alerts come several times a day: their own channel, at default
      * importance, so a reader can quiet them and keep the morning reading (N12). */
     static final String WINDOWS_CHANNEL_ID = "siddha_windows";
+    /** Panchang alarms set to ring: the alarm stream, so silent mode does not mute them. */
+    static final String ALARM_CHANNEL_ID = "siddha_alarm";
+    /** Panchang alarms set to silent, and "it has ended" notes: on screen, no sound. */
+    static final String QUIET_CHANNEL_ID = "siddha_quiet";
 
     /**
      * The WebView scales text by the system font size, up to 200%. The
@@ -112,6 +116,31 @@ public class MainActivity extends BridgeActivity {
         manager.createNotificationChannel(belled(
             WINDOWS_CHANNEL_ID, "Good and careful times", NotificationManager.IMPORTANCE_DEFAULT,
             "A heads-up before a good or careful window in your day"));
+        manager.createNotificationChannel(alarmChannel());
+        NotificationChannel quiet = new NotificationChannel(
+            QUIET_CHANNEL_ID, "Quiet panchang alarms", NotificationManager.IMPORTANCE_LOW);
+        quiet.setDescription("Timings you chose to see without a sound");
+        quiet.setSound(null, null);
+        manager.createNotificationChannel(quiet);
+    }
+
+    /**
+     * The "Alarm" style: thirty seconds of temple bell on the alarm stream,
+     * which plays when the ringer is on silent and is let through by Do Not
+     * Disturb wherever alarms are. Bypassing DND outright is left to the user.
+     */
+    private NotificationChannel alarmChannel() {
+        NotificationChannel channel = new NotificationChannel(
+            ALARM_CHANNEL_ID, "Panchang alarms", NotificationManager.IMPORTANCE_HIGH);
+        channel.setDescription("Timings you chose to ring like an alarm, such as Brahma Muhurta");
+        Uri sound = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.alarm_bell);
+        AudioAttributes attributes = new AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_ALARM)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build();
+        channel.setSound(sound, attributes);
+        channel.enableVibration(true);
+        return channel;
     }
 
     private NotificationChannel belled(String id, String name, int importance, String description) {

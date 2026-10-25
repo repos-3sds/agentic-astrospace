@@ -17,6 +17,26 @@
     <span class="place-change">Change</span>
   </a>
 
+  @if (blocked()) {
+    <section class="notice" role="status">
+      <b>Notifications are off for Siddha</b>
+      <p>Your alarms can't show until they're on.</p>
+      <button type="button" class="primary" (click)="enableNotifications()" [disabled]="busy()">
+        {{ busy() ? 'Asking…' : 'Turn on notifications' }}
+      </button>
+    </section>
+  } @else if (inexact()) {
+    <section class="notice" role="status">
+      <b>Let alarms ring on time</b>
+      <p>Without this, your phone may hold them back by a few minutes. Turn on <b>Allow setting alarms and reminders</b> for Siddha.</p>
+      <button type="button" class="primary" (click)="allowExact()">Open the setting</button>
+    </section>
+  }
+
+  @if (error(); as err) {
+    <p class="error" role="status">{{ err }}</p>
+  }
+
   @for (group of [
     { key: 'good', label: 'GOOD TIMES', rows: good() },
     { key: 'careful', label: 'CAREFUL TIMES', rows: careful() }
@@ -94,7 +114,11 @@
   }
 
   <p class="local-note">
-    Alarms are set on this phone for the next 14 days, so they ring on time even without internet.
-    Open Siddha now and then to keep them going.
+    @if (native) {
+      Alarms are set on this phone for the next 14 days, so they ring on time even without internet.
+      Open Siddha now and then to keep them going.
+    } @else {
+      Alarms ring from the Siddha app on your phone. Choices made here are saved on this device.
+    }
   </p>
 </div>

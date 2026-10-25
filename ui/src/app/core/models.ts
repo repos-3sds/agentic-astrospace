@@ -1386,6 +1386,17 @@ export interface PanchangaDay {
   };
 }
 
+/** GET /panchanga/{id}/timings: the days ahead, for on-device alarms. */
+export interface TimingsPayload {
+  place: TimingPlacePayload;
+  days: {
+    date: string;
+    sunrise_iso: string;
+    sunset_iso: string;
+    windows: { auspicious: PanchangaWindow[]; inauspicious: PanchangaWindow[] };
+  }[];
+}
+
 export interface PanchangaCity {
   city: string;
   nation: string;

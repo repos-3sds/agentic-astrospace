@@ -313,7 +313,7 @@ export class SettingsHomeComponent {
     try {
       const stored = JSON.parse(localStorage.getItem(NOTIFICATION_STORAGE_KEY) ?? '[]') as Array<{ id: string; on: boolean }>;
       if (!stored.length) return 'Daily reading, festivals, reminders';
-      const onCount = stored.filter((row) => row.on).length;
+      const onCount = stored.filter((row) => row.on && row.id !== 'windows').length;
       return onCount ? `${onCount} turned on` : 'All off';
     } catch {
       return 'Daily reading, festivals, reminders';

@@ -112,6 +112,10 @@ def daily_panchanga(year: int, month: int, day: int,
         "sunrise": jd_to_local(rise, display_tz_str).strftime("%H:%M"),
         "sunset": jd_to_local(sets, display_tz_str).strftime("%H:%M"),
         "next_sunrise": jd_to_local(next_rise, display_tz_str).strftime("%H:%M"),
+        # Full timestamps for the phone's on-device alarms, which schedule
+        # days ahead and cannot rebuild a date from "HH:MM" across midnight.
+        "sunrise_iso": jd_to_local(rise, display_tz_str).isoformat(),
+        "sunset_iso": jd_to_local(sets, display_tz_str).isoformat(),
         "moon_rashi_at_sunrise": sign_name(sign_index(moon_at_rise)),
         "moonrise": (jd_to_local(moonrise_jd, display_tz_str).strftime("%H:%M")
                      if moonrise_jd is not None else None),
