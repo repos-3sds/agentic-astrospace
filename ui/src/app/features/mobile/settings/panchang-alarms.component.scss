@@ -1,0 +1,97 @@
+@use './settings-shared' as shared;
+@use '../mobile-tokens' as *;
+
+@include shared.settings-screen;
+@include shared.settings-switch;
+@include shared.settings-segmented;
+@include shared.settings-choice;
+
+.body { gap: 12px; }
+
+.place {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 15px;
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+  background: var(--m-surface);
+  text-decoration: none;
+}
+.place-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.place-name { @include m-body-strong; color: var(--m-text); }
+.place-change { @include m-body-strong; color: var(--m-accent-strong); }
+
+.group-title { margin: 10px 0 0; }
+
+.rows { display: flex; flex-direction: column; gap: 8px; }
+
+.alarm {
+  border: 1px solid var(--m-border);
+  border-radius: 16px;
+  background: var(--m-raised);
+  &.is-on { border-color: var(--m-border-strong); }
+}
+
+.alarm-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 15px;
+}
+
+.alarm-text {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.alarm-title {
+  @include m-body-strong;
+  color: var(--m-text);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 8px;
+}
+.today-time { @include m-caption; color: var(--m-muted); font-variant-numeric: tabular-nums; }
+.alarm-detail { @include m-caption; color: var(--m-muted); }
+.alarm-summary { @include m-caption; color: var(--m-accent-strong); font-weight: 600; }
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 15px 15px;
+  border-top: 1px solid var(--m-border);
+}
+.editor-label { @include m-eyebrow; color: var(--m-muted); margin-top: 10px; }
+.editor-hint { @include m-caption; color: var(--m-muted); }
+.segment { padding-left: 4px; padding-right: 4px; white-space: nowrap; }
+.choice-list { display: flex; flex-direction: column; gap: 6px; }
+.choice { padding: 10px 13px; }
+
+.end-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.local-note {
+  margin: 8px 0 0;
+  color: var(--m-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}

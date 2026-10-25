@@ -32,6 +32,7 @@ export interface SettingGroup {
 }
 
 const NOTIFICATION_STORAGE_KEY = 'astrospace.mobile.notificationPrefs';
+const ALARM_STORAGE_KEY = 'astrospace.mobile.panchangAlarms';
 
 /**
  * Settings — Home (Figma node 66:89), the fifth tab in every mode.
@@ -127,6 +128,13 @@ export class SettingsHomeComponent {
           label: 'Notifications and emails',
           value: this.notificationLabel(),
           route: ['/m', 'settings', 'notifications'],
+        },
+        {
+          id: 'alarms',
+          icon: 'set-notif',
+          label: 'Panchang alarms',
+          value: this.alarmLabel(),
+          route: ['/m', 'settings', 'alarms'],
         },
       ],
     },
@@ -309,6 +317,17 @@ export class SettingsHomeComponent {
       return onCount ? `${onCount} turned on` : 'All off';
     } catch {
       return 'Daily reading, festivals, reminders';
+    }
+  }
+
+  private alarmLabel(): string {
+    try {
+      const stored = JSON.parse(localStorage.getItem(ALARM_STORAGE_KEY) ?? '[]') as Array<{ on: boolean }>;
+      if (!stored.length) return 'Rahu Kalam, Abhijit';
+      const onCount = stored.filter((row) => row.on).length;
+      return onCount ? `${onCount} turned on` : 'All off';
+    } catch {
+      return 'Rahu Kalam, Abhijit';
     }
   }
 }
