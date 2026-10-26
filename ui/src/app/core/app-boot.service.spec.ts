@@ -5,6 +5,7 @@ import { AppBootService } from './app-boot.service';
 import { AuthService } from './auth.service';
 import { KundliStore } from './kundli.store';
 import { PreferencesService } from './preferences.service';
+import { PanchangAlarmService } from './panchang-alarm.service';
 import { PushService } from './push.service';
 
 describe('AppBootService', () => {
@@ -28,6 +29,7 @@ describe('AppBootService', () => {
         { provide: KundliStore, useValue: store },
         { provide: PreferencesService, useValue: prefs },
         { provide: PushService, useValue: { init: () => Promise.resolve() } },
+        { provide: PanchangAlarmService, useValue: { init: () => Promise.resolve() } },
         { provide: Router, useValue: { url: '/m/today', navigateByUrl: () => Promise.resolve(true) } },
       ],
     });

@@ -325,6 +325,15 @@ export const MOBILE_ROUTES: Routes = [
       ),
   },
   {
+    path: 'settings/alarms',
+    title: 'Panchang alarms',
+    data: { hideMobileTabs: true },
+    loadComponent: () =>
+      import('./settings/panchang-alarms.component').then(
+        (m) => m.PanchangAlarmsComponent,
+      ),
+  },
+  {
     path: 'settings/notifications',
     title: 'Notifications',
     data: { hideMobileTabs: true },
