@@ -3,15 +3,17 @@ name: Ship
 # Every merge to main ships itself once CI is green: the API image to Cloud
 # Run, the notifications job onto the same image, Firebase Hosting when the
 # website changed, and a signed AAB to Play internal testing when the app
-# changed. Before this, the Mac did all four by hand after each merge, and a
-# Mac that was asleep or offline meant nothing shipped. Setup and the one-time
-# steps are in docs/ship_from_github.md.
+# changed, and a signed iOS build to TestFlight when the app changed. Before
+# this, the Mac did all of it by hand after each merge, and a Mac that was
+# asleep or offline meant nothing shipped. Setup and the one-time steps are in
+# docs/ship_from_github.md and docs/ship_ios_testflight.md.
 #
 # What it never does: change env vars or secrets on Cloud Run (only the image
 # moves), apply a Supabase migration (a merge that adds one stops here until
 # it is applied and the run is restarted by hand), or touch any Play track
 # but internal (scripts/play_upload.py refuses production, and the service
-# account has no production rights either).
+# account has no production rights either), or send an iOS build anywhere
+# past TestFlight (scripts/asc.py has no review, release or tester calls).
 
 on:
   workflow_run:
@@ -25,7 +27,7 @@ on:
         type: boolean
         default: false
       ship_everything:
-        description: 'Deploy the server and hosting and upload an AAB even if those files did not change'
+        description: 'Deploy the server and hosting and upload an AAB and an iOS build even if those files did not change'
         type: boolean
         default: false
   # A pull request that edits this file runs it as a dry run: the image and
@@ -34,6 +36,7 @@ on:
     paths:
       - .github/workflows/ship.yml
       - scripts/play_upload.py
+      - scripts/asc.py
 
 # One ship at a time, in merge order. A newer merge waits for the running one
 # instead of cancelling it halfway through a deploy.
@@ -70,6 +73,7 @@ jobs:
       server: ${{ steps.plan.outputs.server }}
       hosting: ${{ steps.plan.outputs.hosting }}
       android: ${{ steps.plan.outputs.android }}
+      ios: ${{ steps.plan.outputs.ios }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -90,7 +94,7 @@ jobs:
 
           if [ "$EVENT" = pull_request ]; then
             echo "Dry run for a pull request: build everything, ship nothing."
-            { echo dry=true; echo server=true; echo hosting=false; echo android=true; } >> "$GITHUB_OUTPUT"
+            { echo dry=true; echo server=true; echo hosting=false; echo android=true; echo ios=true; } >> "$GITHUB_OUTPUT"
             exit 0
           fi
           echo dry=false >> "$GITHUB_OUTPUT"
@@ -102,7 +106,7 @@ jobs:
           TIP=$(git rev-parse origin/main)
           if [ "$SHA" != "$TIP" ]; then
             echo "::notice::$SHA is no longer the tip of main ($TIP); its run will ship this too."
-            { echo server=false; echo hosting=false; echo android=false; } >> "$GITHUB_OUTPUT"
+            { echo server=false; echo hosting=false; echo android=false; echo ios=false; } >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -117,7 +121,7 @@ jobs:
           git diff --name-only "$BASE" "$SHA" | tee changed.txt
 
           if [ "$SHIP_EVERYTHING" = true ]; then
-            { echo server=true; echo hosting=true; echo android=true; } >> "$GITHUB_OUTPUT"
+            { echo server=true; echo hosting=true; echo android=true; echo ios=true; } >> "$GITHUB_OUTPUT"
           else
             has() {
               local hits
@@ -127,6 +131,7 @@ jobs:
             echo "server=$(has '^(astrospace/|main\.py$|setup\.py$|requirements\.txt$|Dockerfile$|\.dockerignore$|ui/)' '^ui/(android|ios|e2e)/|\.spec\.ts$')" >> "$GITHUB_OUTPUT"
             echo "hosting=$(has '^(firebase\.json$|firebase-public/)')" >> "$GITHUB_OUTPUT"
             echo "android=$(has '^ui/' '^ui/(ios|e2e)/|\.spec\.ts$')" >> "$GITHUB_OUTPUT"
+            echo "ios=$(has '^ui/' '^ui/(android|e2e)/|\.spec\.ts$')" >> "$GITHUB_OUTPUT"
           fi
 
           # Migrations are applied by a person (Mac: supabase db push, or the
@@ -414,3 +419,247 @@ jobs:
             --track internal --notes "$NOTES" --skip-if-not-above "$VC" | tee play.txt
           echo "### AAB versionCode $VC" >> "$GITHUB_STEP_SUMMARY"
           cat play.txt >> "$GITHUB_STEP_SUMMARY"
+
+  ios:
+    name: iOS build to TestFlight
+    needs: [plan, server]
+    # After the server, like the AAB. Upload only: the internal TestFlight
+    # group picks it up by itself; the external group, App Review and any App
+    # Store release stay decisions made in App Store Connect by a person.
+    if: >-
+      !cancelled() && needs.plan.outputs.ios == 'true' && needs.server.result != 'failure'
+    # Free for a public repository. Xcode 26 is what Apple requires uploads to
+    # be built with.
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      DRY: ${{ needs.plan.outputs.dry }}
+      TEAM_ID: 65G6LHRKWB
+      BUNDLE_ID: app.asksiddha.mobile
+      PROJECT: ui/ios/App/App.xcodeproj
+      KEYCHAIN: ${{ github.workspace }}/../ship.keychain-db
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+          # The build number is the commit count; a shallow clone would count the depth.
+          fetch-depth: 0
+
+      - name: Newest Xcode 26
+        run: |
+          XC=$(ls -d /Applications/Xcode_26*.app | grep -viE 'beta|_rc' | sort -V | tail -1)
+          sudo xcode-select -s "$XC/Contents/Developer"
+          xcodebuild -version
+
+      - name: App Store Connect key from secrets
+        if: env.DRY != 'true'
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_B64: ${{ secrets.ASC_KEY_P8_B64 }}
+          P12_B64: ${{ secrets.IOS_DIST_P12_B64 }}
+          P12_PASSWORD: ${{ secrets.IOS_DIST_P12_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for name in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8_B64 P12_B64 P12_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::GitHub secret for $name is not set (docs/ship_ios_testflight.md)"; exit 1
+            fi
+          done
+          # altool looks for the key here by its ID; asc.py is pointed at it.
+          umask 077
+          mkdir -p ~/.appstoreconnect/private_keys
+          KEY_FILE=~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8
+          printf %s "$ASC_KEY_P8_B64" | base64 --decode > "$KEY_FILE"
+          { echo "ASC_KEY_ID=$ASC_KEY_ID"; echo "ASC_ISSUER_ID=$ASC_ISSUER_ID"; echo "ASC_KEY_FILE=$KEY_FILE"; } >> "$GITHUB_ENV"
+
+      - name: Build number is the commit count
+        id: vc
+        run: |
+          set -euo pipefail
+          VC=$(git rev-list --count HEAD)
+          echo "vc=$VC" >> "$GITHUB_OUTPUT"
+          if [ "$DRY" = true ]; then echo go=true >> "$GITHUB_OUTPUT"; exit 0; fi
+          # If the Mac already uploaded this commit (or a later one), Apple
+          # would refuse the same number again. Nothing to do.
+          LATEST=$(python3 scripts/asc.py latest-build)
+          if [ "$LATEST" -ge "$VC" ]; then
+            echo "::notice::App Store Connect already has build $LATEST; $VC is not above it. Skipped."
+            echo "### iOS: skipped (build $LATEST already in App Store Connect, this is $VC)" >> "$GITHUB_STEP_SUMMARY"
+            echo go=false >> "$GITHUB_OUTPUT"
+          else
+            echo go=true >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.vc.outputs.go == 'true'
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Web bundle into the iOS project
+        if: steps.vc.outputs.go == 'true'
+        working-directory: ui
+        run: |
+          npm ci
+          npm run version:sync
+          npm run build
+          node scripts/clean-generated-artifacts.mjs --before-cap-sync
+          npx cap sync ios
+          node scripts/clean-generated-artifacts.mjs --after-cap-sync
+          grep -q "CURRENT_PROJECT_VERSION = ${{ steps.vc.outputs.vc }};" ios/App/App.xcodeproj/project.pbxproj || {
+            echo "::error::project.pbxproj does not carry build ${{ steps.vc.outputs.vc }}"; exit 1; }
+
+      - name: Distribution certificate into a throwaway keychain
+        if: steps.vc.outputs.go == 'true' && env.DRY != 'true'
+        env:
+          P12_B64: ${{ secrets.IOS_DIST_P12_B64 }}
+          P12_PASSWORD: ${{ secrets.IOS_DIST_P12_PASSWORD }}
+        run: |
+          set -euo pipefail
+          KC_PASS=$(openssl rand -hex 16)
+          security create-keychain -p "$KC_PASS" "$KEYCHAIN"
+          security set-keychain-settings -lut 7200 "$KEYCHAIN"
+          security unlock-keychain -p "$KC_PASS" "$KEYCHAIN"
+          umask 077
+          printf %s "$P12_B64" | base64 --decode > "$RUNNER_TEMP/dist.p12"
+          security import "$RUNNER_TEMP/dist.p12" -k "$KEYCHAIN" -P "$P12_PASSWORD" -f pkcs12 \
+            -T /usr/bin/codesign -T /usr/bin/security
+          rm -f "$RUNNER_TEMP/dist.p12"
+          # Apple's intermediate, in case the image lacks it; codesign needs the chain.
+          curl -fsSL https://www.apple.com/certificateauthority/AppleWWDRCAG3.cer -o "$RUNNER_TEMP/wwdr.cer"
+          security import "$RUNNER_TEMP/wwdr.cer" -k "$KEYCHAIN" || true
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PASS" "$KEYCHAIN" >/dev/null
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          security find-identity -v -p codesigning "$KEYCHAIN" | grep -q "Apple Distribution" || {
+            echo "::error::No Apple Distribution identity in the p12 (docs/ship_ios_testflight.md)"; exit 1; }
+
+      - name: App Store provisioning profile (found or made by asc.py)
+        id: profile
+        if: steps.vc.outputs.go == 'true' && env.DRY != 'true'
+        run: |
+          set -euo pipefail
+          SERIAL=$(security find-certificate -c "Apple Distribution" -p "$KEYCHAIN" | openssl x509 -noout -serial)
+          python3 scripts/asc.py profile --serial "$SERIAL" --out "$RUNNER_TEMP/ci.mobileprovision" > profile.txt
+          NAME=$(sed -n 's/^name=//p' profile.txt)
+          UUID=$(sed -n 's/^uuid=//p' profile.txt)
+          for d in "$HOME/Library/MobileDevice/Provisioning Profiles" \
+                   "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+            mkdir -p "$d"; cp "$RUNNER_TEMP/ci.mobileprovision" "$d/$UUID.mobileprovision"
+          done
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "Profile: $NAME ($UUID)"
+
+      - name: Sign the app target with that profile (this checkout only)
+        if: steps.vc.outputs.go == 'true' && env.DRY != 'true'
+        env:
+          PROFILE_NAME: ${{ steps.profile.outputs.name }}
+        # The Mac signs automatically through Xcode's account. A runner has no
+        # account, so only the App target's Release settings switch to manual
+        # signing here. Passing these on the xcodebuild command line instead
+        # would apply them to the Swift packages too, which refuse profiles.
+        run: |
+          python3 - <<'PY'
+          import os, pathlib, sys
+          proj = pathlib.Path(os.environ["PROJECT"]) / "project.pbxproj"
+          text = proj.read_text()
+          # The App target's Release configuration (PBXNativeTarget "App").
+          marker = "504EC3181FED79650016851F /* Release */ = {"
+          if marker not in text:
+              sys.exit("::error::App target Release configuration not found; update ship.yml's marker")
+          start = text.index(marker)
+          end = text.index("name = Release;", start)
+          block = text[start:end]
+          if "CODE_SIGN_STYLE = Automatic;" not in block:
+              sys.exit("::error::App target Release no longer uses automatic signing; update ship.yml")
+          manual = "\n\t\t\t\t".join([
+              "CODE_SIGN_STYLE = Manual;",
+              'CODE_SIGN_IDENTITY = "Apple Distribution";',
+              f"DEVELOPMENT_TEAM = {os.environ['TEAM_ID']};",
+              f"PROVISIONING_PROFILE_SPECIFIER = \"{os.environ['PROFILE_NAME']}\";",
+          ])
+          proj.write_text(text[:start] + block.replace("CODE_SIGN_STYLE = Automatic;", manual) + text[end:])
+          # TestFlight and the App Store use production push; the committed
+          # file says development for runs from Xcode.
+          ent = pathlib.Path("ui/ios/App/App/App.entitlements")
+          ent.write_text(ent.read_text().replace(
+              "<key>aps-environment</key>\n\t<string>development</string>",
+              "<key>aps-environment</key>\n\t<string>production</string>"))
+          if "<string>production</string>" not in ent.read_text():
+              sys.exit("::error::could not set aps-environment to production")
+          PY
+
+      - name: Archive${{ env.DRY == 'true' && ' (unsigned, dry run)' || '' }}
+        if: steps.vc.outputs.go == 'true'
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if [ "$DRY" = true ]; then
+            EXTRA=(CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO)
+          else
+            EXTRA=(OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN")
+          fi
+          xcodebuild -project "$PROJECT" -scheme App -configuration Release \
+            -destination generic/platform=iOS \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            -quiet archive "${EXTRA[@]}"
+
+      - name: Export the IPA
+        if: steps.vc.outputs.go == 'true' && env.DRY != 'true'
+        env:
+          PROFILE_NAME: ${{ steps.profile.outputs.name }}
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>export</string>
+            <key>teamID</key><string>$TEAM_ID</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict><key>$BUNDLE_ID</key><string>$PROFILE_NAME</string></dict>
+            <key>uploadSymbols</key><true/>
+            <!-- The build number is the commit count; Xcode must not change it. -->
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          PLIST
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" -quiet
+          ls -l "$RUNNER_TEMP/export"
+
+      - name: Keep the IPA
+        if: steps.vc.outputs.go == 'true' && env.DRY != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: asksiddha-ios-${{ steps.vc.outputs.vc }}
+          path: ${{ runner.temp }}/export/*.ipa
+          retention-days: 30
+
+      - name: Upload to TestFlight
+        if: steps.vc.outputs.go == 'true' && env.DRY != 'true'
+        env:
+          VC: ${{ steps.vc.outputs.vc }}
+        run: |
+          set -euo pipefail
+          IPA=$(ls "$RUNNER_TEMP"/export/*.ipa | head -1)
+          xcrun altool --upload-app --type ios --file "$IPA" \
+            --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
+          {
+            echo "### iOS build $VC uploaded to TestFlight"
+            echo "- Apple processes it in about 10 to 30 minutes; the internal group \"Siddha Team\" then gets it."
+            echo "- The external group (\"Friends and family\") needs it added in App Store Connect, which may ask for Beta App Review."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove the keychain and key
+        if: always()
+        run: |
+          security delete-keychain "$KEYCHAIN" 2>/dev/null || true
+          rm -rf ~/.appstoreconnect "$RUNNER_TEMP/ci.mobileprovision"
