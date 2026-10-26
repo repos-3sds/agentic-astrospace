@@ -94,6 +94,9 @@ a few; if it reports too many, revoke an unused one in Certificates, Identifiers
 & Profiles. Then run *Actions › Ship › Run workflow* on main with **ship
 everything** ticked to prove the whole path.
 
+Until the setup is done, the job notes *not set up yet* and skips, so the
+server and Android keep shipping green.
+
 ## When it fails
 
 The run summary names the step.
