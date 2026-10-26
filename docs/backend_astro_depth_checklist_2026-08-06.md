@@ -1866,3 +1866,21 @@ From the Muhurta audit (batches A–E built; these were left out on purpose).
   template from `POST /api/v1/releases/announce`, to readers who opted in to
   WhatsApp (a new preference category). See
   [release_announcements.md](release_announcements.md).
+
+## Deferred backlog — Ask colour advice (2026-10-26)
+
+- [ ] **Saturn for Virgo ascendant: neutral or helpful?** `FUNCTIONAL_BY_LAGNA[5]`
+  lists Saturn as neither benefic nor malefic, so `functional_planets()` puts
+  black and dark blue in `neutral` for Virgo. A practising astrologer reading a
+  Virgo tester's chart counted blue and black as good (Saturn rules the 5th, a
+  trikona, as well as the 6th). *Why not built:* the standard list was kept until
+  Hawk decides; changing it moves every Virgo chart's "good planets" on the
+  Favourable screen too, not only Ask. *Unblocks when:* Hawk (or his mother) says
+  which convention to follow. *Hook:* `astrospace/core/vedic/constants.py`
+  `FUNCTIONAL_BY_LAGNA`, pinned by
+  `tests/test_ask_pushback.py::TestFunctionalColours::test_saturn_stays_neutral_for_virgo_until_decided`.
+- [ ] **Live pushback eval in CI.** `scripts/eval_ask_pushback.py` runs the
+  pushback cases against the real model with a judge call. *Why not built:* CI
+  has no model key and each run costs about three calls per case. *Unblocks
+  when:* a model key is added to GitHub secrets and a nightly budget is agreed.
+  *Hook:* `tests/fixtures/ask_pushback_cases.json`.

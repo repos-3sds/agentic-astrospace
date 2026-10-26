@@ -39,6 +39,7 @@ from ..core.vedic.positions import (
     degree_in_sign, house_from_lagna, sign_index, sign_name,
 )
 from ..core.vedic.strength import all_dignities, combustion_status
+from ..core.vedic.favourable import functional_planets
 from ..core.vedic.positions import sidereal_positions
 from ..core.vedic.dasha_phase import dasha_emphasis, emphasis_window
 from ..core.vedic.vargas import varga_sign
@@ -780,6 +781,11 @@ def assemble_domain(chart, domain_id: str, *, tier: str = "primary",
         "jaimini_karakas": jaimini_karakas,
         "jaimini_karaka_array": jaimini_karaka_array,
         "karakamsha": karakamsha_section,
+        # Domain-independent like the two above: which grahas help or work
+        # against this lagna, and the colours, days and stone that follow.
+        # Without it Ask improvised a colour rule per turn and argued both
+        # sides of red for the same chart (favourable.functional_planets).
+        "functional_planets": functional_planets(lagna_sign),
         "arudhas": arudhas,
         "vargas": _varga_placements(spec, focus_planets, positions, chart.lagna_lon),
         "yogas": _filter_rules(yogas_payload.get("all", []), spec),
