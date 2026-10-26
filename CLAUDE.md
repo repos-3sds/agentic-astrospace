@@ -19,7 +19,8 @@ Native packaging is Capacitor over the same bundle — see
 read [docs/mobile_screen_build_plan.md](docs/mobile_screen_build_plan.md) first;
 it has every Figma node ID, the per-screen recipe, and the traps already hit.
 Every merge to main ships itself once CI is green (API, worker, Hosting, AAB to
-internal testing); see [docs/ship_from_github.md](docs/ship_from_github.md).
+internal testing, iOS build to TestFlight); see [docs/ship_from_github.md](docs/ship_from_github.md)
+and [docs/ship_ios_testflight.md](docs/ship_ios_testflight.md).
 The public address is asksiddha.app, served through Firebase Hosting; see
 [docs/custom_domain.md](docs/custom_domain.md).
 Email to readers (daily reading, moon and festival days) runs on the same

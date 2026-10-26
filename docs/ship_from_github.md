@@ -1,7 +1,7 @@
 # Shipping from GitHub on every merge
 
-Status: canonical. How main reaches Cloud Run, Firebase Hosting and Play
-internal testing without the Mac (`.github/workflows/ship.yml`).
+Status: canonical. How main reaches Cloud Run, Firebase Hosting, Play
+internal testing and TestFlight without the Mac (`.github/workflows/ship.yml`).
 
 ## What happens on a merge
 
@@ -16,8 +16,9 @@ internal testing without the Mac (`.github/workflows/ship.yml`).
 | `astrospace/`, `main.py`, `requirements.txt`, `Dockerfile`, `ui/` (not `ui/android`, `ui/ios`, `ui/e2e`, specs) | Docker image built in GitHub, pushed to Artifact Registry, `gcloud run deploy --image` on `agentic-astrospace`, health check, then `gcloud run jobs update --image` on `agentic-astrospace-notifications` |
 | `firebase.json`, `firebase-public/` | `firebase deploy --only hosting` (asksiddha.app) |
 | `ui/` (not `ui/ios`, `ui/e2e`, specs) | Signed AAB, versionCode = commit count, uploaded to **internal** testing with `scripts/play_upload.py`; the AAB is kept as a run artifact for 30 days |
+| `ui/` (not `ui/android`, `ui/e2e`, specs) | Signed iOS build, build number = commit count, uploaded to **TestFlight**; see [ship_ios_testflight.md](ship_ios_testflight.md) |
 
-Hosting and the AAB wait for the server, so a build never reaches phones
+Hosting, the AAB and the iOS build wait for the server, so a build never reaches phones
 before the API it calls.
 
 Each upload also drafts "what's new" for testers and emails the team a
