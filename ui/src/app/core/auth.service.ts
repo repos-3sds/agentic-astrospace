@@ -56,10 +56,13 @@ export async function sha256Hex(value: string): Promise<string> {
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-/** Android reports USER_CANCELLED; iOS's GIDSignIn says "The user canceled the sign-in flow." */
+/**
+ * Android reports USER_CANCELLED; iOS's GIDSignIn says "The user canceled the
+ * sign-in flow."; Apple's sheet reports AuthorizationError 1001.
+ */
 function isSignInCancel(error: unknown): boolean {
   const { code, message } = (error ?? {}) as { code?: unknown; message?: unknown };
-  return code === 'USER_CANCELLED' || /cancel/i.test(String(message ?? ''));
+  return code === 'USER_CANCELLED' || /cancel|AuthorizationError error 1001/i.test(String(message ?? ''));
 }
 
 interface AuthConfig {
@@ -103,6 +106,7 @@ export class AuthService {
   private supabaseProject: { url: string; anonKey: string } | null = null;
   private googleClientIds: { web: string; ios: string | null } | null = null;
   private socialLoginReady: Promise<void> | null = null;
+  private appleLoginReady: Promise<void> | null = null;
   /** The native Google plugin; a field so specs can hand in a fake. */
   protected socialLogin: Pick<typeof SocialLogin, 'initialize' | 'login' | 'logout'> = SocialLogin;
 
@@ -401,13 +405,66 @@ export class AuthService {
   }
 
   /**
-   * Sign in with Apple, through Supabase's hosted flow in the system browser,
-   * the same way as Google. App Review (guideline 4.8) requires it on iOS
-   * because Google sign-in is offered; the screen shows it only on iOS and
-   * only once `appleSignInEnabled()` says the project has it switched on.
+   * Sign in with Apple. App Review (guideline 4.8) requires it on iOS because
+   * Google sign-in is offered; the screen shows it only on iOS and only once
+   * `appleSignInEnabled()` says the project has it switched on.
+   *
+   * On the iPhone this is Apple's own sheet, which names Siddha and shows its
+   * icon; its identity token goes straight to Supabase. The hosted flow
+   * opened a browser page that named the Supabase project address instead
+   * (Hawk, 2026-10-26). Anything short of a cancel falls back to that flow.
    */
   async signInWithApple(destination = '/'): Promise<void> {
+    await this.init();
+    if (!this.client) return;
+    if (await this.signInWithNativeApple(destination)) return;
     await this.signInWithProvider('apple', destination);
+  }
+
+  /** True when Apple's sheet finished (signed in or cancelled); false means use the browser. */
+  private async signInWithNativeApple(destination: string): Promise<boolean> {
+    if (!this.client || Capacitor.getPlatform() !== 'ios') return false;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      throw new Error('No connection. Check your internet and try again.');
+    }
+    // As with Google: Apple puts the hash in the token, Supabase gets the raw value.
+    const rawNonce = randomNonce();
+    let idToken: string | null = null;
+    let fullName: string | null = null;
+    try {
+      this.appleLoginReady ??= this.socialLogin.initialize({ apple: { redirectUrl: '' } }).catch((error) => {
+        this.appleLoginReady = null;
+        throw error;
+      });
+      await this.appleLoginReady;
+      const login = await this.socialLogin.login({
+        provider: 'apple',
+        options: { scopes: ['name', 'email'], nonce: await sha256Hex(rawNonce) },
+      });
+      const result = login.result as { idToken?: string | null; profile?: { givenName?: string | null; familyName?: string | null } };
+      idToken = result.idToken ?? null;
+      // Apple sends the name on the first sign-in only, and never in the token.
+      fullName = [result.profile?.givenName, result.profile?.familyName].filter(Boolean).join(' ') || null;
+    } catch (error) {
+      if (isSignInCancel(error)) return true;
+      console.warn('Native Apple sign-in unavailable; using the browser', error);
+      return false;
+    }
+    if (!idToken) return false;
+    const { data, error } = await this.client.auth.signInWithIdToken({
+      provider: 'apple',
+      token: idToken,
+      nonce: rawNonce,
+    });
+    if (error) {
+      // Typically the bundle ID missing from Supabase's Apple "Client IDs".
+      console.warn('Supabase refused the native Apple token; using the browser', error);
+      return false;
+    }
+    this.setSession(data.session);
+    if (fullName) void this.client.auth.updateUser({ data: { full_name: fullName } }).catch(() => undefined);
+    await this.router.navigateByUrl(destination);
+    return true;
   }
 
   /**
