@@ -119,12 +119,21 @@ the `NSMicrophoneUsageDescription` and `NSSpeechRecognitionUsageDescription`
 strings already in `Info.plist`.
 
 **Sign in with Apple.** App Review guideline 4.8 requires it because Google
-sign-in is offered. It runs through Supabase's hosted flow in the system
-browser, like Google, so the app needs no entitlement for it. The button shows
-only on iOS and only once the Supabase project's Apple provider is on
-(`AuthService.appleSignInEnabled()` reads `/auth/v1/settings`). The provider's
-secret is a JWT signed with an Apple key and expires after six months, so it
-must be regenerated in Supabase before then or Apple sign-in stops working.
+sign-in is offered. On the iPhone it is Apple's own sheet, which names Siddha
+(`@capgo/capacitor-social-login`, the `com.apple.developer.applesignin`
+entitlement), and its identity token goes to Supabase with
+`signInWithIdToken`; the hosted browser flow, which shows the Supabase project
+address, is only the fallback. The button shows only on iOS and only once the
+Supabase project's Apple provider is on (`AuthService.appleSignInEnabled()`
+reads `/auth/v1/settings`). Setup, done 2026-10-26: Services ID
+`app.asksiddha.signin` (return URL
+`https://wcaqjhqckipgkvhbiwjt.supabase.co/auth/v1/callback`), Sign in with Apple
+key `U2QUZJ7JRJ`, and Supabase's Apple "Client IDs"
+`app.asksiddha.signin,app.asksiddha.mobile` (the bundle ID is what the native
+sheet's token is issued to). The provider's OAuth secret, used only by the
+browser fallback, is a JWT signed with that key and expires after six months;
+regenerate it before then (a script for it was given to the owner) or the
+fallback stops working.
 
 **iPhone only.** `TARGETED_DEVICE_FAMILY` is 1. iPads still run the app in
 iPhone mode, and the store listing needs no iPad screenshots or iPad review.

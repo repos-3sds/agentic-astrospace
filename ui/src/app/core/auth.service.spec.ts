@@ -536,3 +536,73 @@ describe('AuthService native Google sign-in', () => {
     expect(client.auth.signInWithOAuth).toHaveBeenCalled();
   });
 });
+
+describe('AuthService native Sign in with Apple', () => {
+  let service: AuthService;
+  let router: jasmine.SpyObj<Router>;
+  let socialLogin: { initialize: jasmine.Spy; login: jasmine.Spy; logout: jasmine.Spy };
+  let client: { auth: { signInWithIdToken: jasmine.Spy; signInWithOAuth: jasmine.Spy; updateUser: jasmine.Spy } };
+  let platform: jasmine.Spy;
+  const fakeSession = { access_token: 'live-token', user: { id: 'u1' } } as any;
+
+  beforeEach(() => {
+    spyOn(Capacitor, 'isNativePlatform').and.returnValue(true);
+    platform = spyOn(Capacitor, 'getPlatform').and.returnValue('ios');
+    router = jasmine.createSpyObj<Router>('Router', ['navigate', 'navigateByUrl']);
+    service = new AuthService(router, connectivitySpy(), cacheSpy());
+    spyOn(service, 'init').and.resolveTo();
+    socialLogin = {
+      initialize: jasmine.createSpy('initialize').and.resolveTo(),
+      login: jasmine.createSpy('login').and.resolveTo({
+        provider: 'apple',
+        result: { idToken: 'apple-id-token', profile: { user: 'x', email: null, givenName: 'Kavya', familyName: 'Rao' } },
+      }),
+      logout: jasmine.createSpy('logout').and.resolveTo(),
+    };
+    client = {
+      auth: {
+        signInWithIdToken: jasmine.createSpy('signInWithIdToken').and.resolveTo({ data: { session: fakeSession }, error: null }),
+        signInWithOAuth: jasmine.createSpy('signInWithOAuth').and.resolveTo({ data: { url: null }, error: null }),
+        updateUser: jasmine.createSpy('updateUser').and.resolveTo({ data: {}, error: null }),
+      },
+    };
+    (service as any).client = client;
+    (service as any).socialLogin = socialLogin;
+  });
+
+  it("signs in with Apple's sheet, hashing the nonce Apple sees, and keeps the first-time name", async () => {
+    await service.signInWithApple('/m/today');
+
+    expect(socialLogin.initialize).toHaveBeenCalledWith({ apple: { redirectUrl: '' } });
+    const sentNonce = socialLogin.login.calls.mostRecent().args[0].options.nonce;
+    const idTokenArgs = client.auth.signInWithIdToken.calls.mostRecent().args[0];
+    expect(idTokenArgs.provider).toBe('apple');
+    expect(idTokenArgs.token).toBe('apple-id-token');
+    expect(sentNonce).toBe(await sha256Hex(idTokenArgs.nonce));
+    expect(client.auth.updateUser).toHaveBeenCalledWith({ data: { full_name: 'Kavya Rao' } });
+    expect(service.session()).toBe(fakeSession);
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/m/today');
+    expect(client.auth.signInWithOAuth).not.toHaveBeenCalled();
+  });
+
+  it('does nothing more when the reader cancels the sheet', async () => {
+    socialLogin.login.and.rejectWith(new Error('The operation couldn’t be completed. (com.apple.AuthenticationServices.AuthorizationError error 1001.)'));
+    await service.signInWithApple('/m/today');
+    expect(client.auth.signInWithIdToken).not.toHaveBeenCalled();
+    expect(client.auth.signInWithOAuth).not.toHaveBeenCalled();
+  });
+
+  it('falls back to the browser when the sheet fails or Supabase refuses the token', async () => {
+    client.auth.signInWithIdToken.and.resolveTo({ data: { session: null }, error: new Error('Unacceptable audience') });
+    await service.signInWithApple('/m/today');
+    expect(client.auth.signInWithOAuth).toHaveBeenCalledWith(jasmine.objectContaining({ provider: 'apple' }));
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
+  });
+
+  it('keeps the browser flow off iOS', async () => {
+    platform.and.returnValue('android');
+    await service.signInWithApple('/m/today');
+    expect(socialLogin.login).not.toHaveBeenCalled();
+    expect(client.auth.signInWithOAuth).toHaveBeenCalled();
+  });
+});
