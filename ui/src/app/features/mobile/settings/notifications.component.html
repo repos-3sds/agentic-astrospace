@@ -45,6 +45,15 @@
       </div>
     }
 
+    @if (permission() === 'granted' && registered()) {
+      <button type="button" (click)="sendTest()" [disabled]="busy()">
+        {{ busy() ? 'Sending…' : 'Send a test notification' }}
+      </button>
+      @if (testNote(); as note) {
+        <p role="status">{{ note }}</p>
+      }
+    }
+
     @if (pushError(); as err) {
       <p class="delivery-error">{{ err }}</p>
     }

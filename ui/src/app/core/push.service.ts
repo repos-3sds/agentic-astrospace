@@ -211,6 +211,22 @@ export class PushService {
   }
 
   /**
+   * Queues a test push for this account. The server hands it to the same
+   * worker as every real notification, so it arriving proves the whole path;
+   * the worker runs every 15 minutes. Resolves to what the screen should say.
+   */
+  async sendTest(): Promise<string> {
+    try {
+      await this.api.post('/me/test-notification', {});
+      return 'Test queued. It reaches this phone within 15 minutes.';
+    } catch (err) {
+      const status = (err as { status?: number })?.status;
+      if (status === 409) return 'This phone isn’t registered for notifications yet. Close and reopen Siddha, then try again.';
+      return 'Couldn’t queue the test. Check your connection and try again.';
+    }
+  }
+
+  /**
    * The account's saved switches, keyed by the screen's ids. The server is the
    * record the worker reads, so a reinstall or a second phone shows what the
    * account actually gets rather than the defaults.

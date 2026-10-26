@@ -167,6 +167,18 @@ export class NotificationsComponent {
     }
   }
 
+  /** What the last "Send a test notification" tap came back with. */
+  readonly testNote = signal<string | null>(null);
+
+  protected async sendTest(): Promise<void> {
+    this.busy.set(true);
+    try {
+      this.testNote.set(await this.push.sendTest());
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
   /** The way out of the denied card that is not "go change a system setting". */
   protected remindLater(): void {
     const until = Date.now() + 7 * 24 * 60 * 60 * 1000;

@@ -44,6 +44,8 @@ class PushStub {
   saved: Record<string, boolean> | null = null;
   loadPreferences = async () => this.saved;
   syncPreference = async (id: string, on: boolean) => { this.synced.push([id, on]); };
+  tests = 0;
+  sendTest = async () => { this.tests += 1; return 'Test queued. It reaches this phone within 15 minutes.'; };
 }
 
 describe('NotificationsComponent', () => {
@@ -99,6 +101,18 @@ describe('NotificationsComponent', () => {
     fixture.detectChanges();
     expect(button('Remind me later')).toBeUndefined();
     expect(button('Check again')).toBeTruthy();
+  });
+
+  it('offers a test notification only once this phone is registered', async () => {
+    expect(button('Send a test notification')).toBeUndefined();
+    push.permission.set('granted');
+    push.registered.set(true);
+    fixture.detectChanges();
+    button('Send a test notification')!.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(push.tests).toBe(1);
+    expect(text()).toContain('within 15 minutes');
   });
 
   it('says web has no push instead of offering a button', () => {
