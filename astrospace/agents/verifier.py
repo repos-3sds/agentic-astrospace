@@ -138,6 +138,9 @@ _BUNDLE_SECTION_NAMES = {
     # (assembler.py; BPHS "Effects of Karakamsha", Santhanam ch.33 /
     # Sharma ch.35, cross-verified in both translations).
     "jaimini_karaka_array", "karakamsha",
+    # Helpful/difficult grahas for the lagna and the colours that follow
+    # (favourable.functional_planets) — what colour/gem/day advice cites.
+    "functional_planets",
 }
 
 

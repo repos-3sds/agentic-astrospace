@@ -478,11 +478,11 @@ export class AskAnswerComponent {
     return `Profile: Active · Scope: ${domain}${scope && scope !== domain ? ` (${scope})` : ''}`;
   }
 
+  /** The badge reports how sure the reading is, never whether its news is
+   * good: it used to say "Favourable" for any high-confidence answer, so a
+   * reading that said "avoid this colour" wore a green "Favourable" tag. */
   protected practitionerVerdictLabel(message: ChatMessage): string {
-    const confidence = message.reading?.confidence ?? 'medium';
-    if (String(confidence).toLowerCase() === 'high') return 'Favourable';
-    if (String(confidence).toLowerCase() === 'low') return 'Needs care';
-    return 'Qualified';
+    return this.confidenceLabel(message.reading?.confidence ?? 'medium');
   }
 
   protected answerHeadline(message: ChatMessage): string {

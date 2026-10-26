@@ -30,6 +30,7 @@ from .registry import AGENT_REGISTRY, AgentConfig
 from .safety import REFER_OUT_ANSWERS, refer_out_kind
 from .scope import QuestionPlan, fixed_reply, plan_question
 from .schema import AskIntent, StructuredReading
+from .stance import detect_pushback
 from .validation_agent import ValidationAgent, ValidationProbeDraft, probe_violations
 from .verifier import quality_violations, safety_violations, verify, verify_coverage, violation_fields
 from ..context.muhurta_search import muhurta_section
@@ -39,6 +40,8 @@ from ..context.profile_context import LogicalPreflight, build_logical_preflight
 from ..context.taxonomy import get_domain
 from ..context.validation import validation_slots
 from ..core.vedic.chart import VedicChart
+from ..core.vedic.favourable import shade_verdicts
+from ..core.vedic.positions import sign_index
 
 SCHEMA_VERSION = "ask_structured_v1"
 
@@ -216,6 +219,14 @@ def domain_labels(domain_ids: list[str]) -> list[str]:
     return labels
 
 
+def _recent_reader_text(question: str, history: list[dict] | None) -> str:
+    """The question plus the reader's last few turns: a shade list given two
+    turns ago is still what "which of these?" is about."""
+    earlier = [str(turn.get("content") or "") for turn in (history or [])[-6:]
+               if turn.get("role") == "user"]
+    return "\n".join([*earlier, question])
+
+
 def terminal_turn(envelope: dict) -> TerminalTurn:
     """The reader-facing text for every terminal state `prepare()` can end in.
 
@@ -381,13 +392,22 @@ class AskOrchestrator:
     def assemble_context(self, domain: str, question: str,
                          tense: QuestionTense = "unspecified",
                          intent: AskIntent | None = None,
-                         question_kind: str = "broad") -> ContextResult:
+                         question_kind: str = "broad",
+                         history: list[dict] | None = None) -> ContextResult:
         chart = self._chart_loader()
         bundle = assemble_domain(
             chart, domain, question=question, intent=intent,
             validation_probes=self._stored_probes(domain),
         )
         bundle = focus_bundle(bundle, question_kind, question)
+        # Shades the reader named this turn or in their recent turns, each
+        # sorted in code, so "But I like Magma Red" meets the same verdict
+        # the list of colours got two turns earlier.
+        shades = shade_verdicts(_recent_reader_text(question, history),
+                                sign_index(chart.lagna_lon))
+        if shades:
+            bundle["functional_planets"] = {**bundle["functional_planets"],
+                                            "shades_asked": shades}
         # "When is a good time to..." gets the Muhurta screen's real slots.
         search = muhurta_section(chart, question)
         if search:
@@ -573,7 +593,8 @@ class AskOrchestrator:
             })
 
         context = self.assemble_context(routing.domain, question, routing.tense,
-                                        routing.intent, question_kind=plan.kind)
+                                        routing.intent, question_kind=plan.kind,
+                                        history=history)
         if context.profile_context_unavailable:
             # A configured ledger failed to answer for this turn — must not
             # fall through to a normal reading, which would look identically
@@ -602,6 +623,7 @@ class AskOrchestrator:
             experience_mode=experience_mode,
             language=language,
             tone=tone,
+            pushback=detect_pushback(question),
         )
         profile_context = context.bundle.get("profile_context") or {}
         return PrepareOutcome(prepared=PreparedRun(

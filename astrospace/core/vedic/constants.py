@@ -325,6 +325,26 @@ PLANET_COLORS = {
     "Ketu": ("Earth Brown", "#8A5A34"),
 }
 
+# Colour FAMILIES per graha, for choosing things (a car, clothes, a wall),
+# where one swatch is too narrow: a reader asking about "Magma Red" or
+# "Pewter Olive" needs to know which graha the shade belongs to. Classical
+# lists agree on the core (Sun copper/orange, Moon white, Mars red, Mercury
+# green, Jupiter yellow, Venus white/variegated, Saturn black/dark blue);
+# the lighter shades are common Indian practice. Rahu and Ketu are given only
+# the shades no classical graha already owns, so a node never decides a
+# colour another graha rules. Used by favourable.functional_colours().
+PLANET_COLOUR_FAMILIES = {
+    "Sun": ["orange", "saffron", "copper"],
+    "Moon": ["white", "silver", "pearl"],
+    "Mars": ["red", "maroon", "coral"],
+    "Mercury": ["green", "olive green", "emerald"],
+    "Jupiter": ["yellow", "gold"],
+    "Venus": ["white", "cream", "pastel shades"],
+    "Saturn": ["black", "dark blue", "navy", "dark grey"],
+    "Rahu": ["smoky grey"],
+    "Ketu": ["brown", "multicolour"],
+}
+
 # Numerology number ruled by each graha — the inverse of NUMEROLOGY below.
 # (Sun 1, Moon 2, Jupiter 3, Rahu 4, Mercury 5, Venus 6, Ketu 7, Saturn 8, Mars 9.)
 PLANET_NUMBER = {
