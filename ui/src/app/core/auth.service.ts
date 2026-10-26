@@ -56,10 +56,14 @@ export async function sha256Hex(value: string): Promise<string> {
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-/** Android reports USER_CANCELLED; iOS's GIDSignIn says "The user canceled the sign-in flow." */
+/**
+ * Android reports USER_CANCELLED; iOS's GIDSignIn says "The user canceled the
+ * sign-in flow."; Apple's sheet only gives ASAuthorizationError 1001 (canceled).
+ */
 function isSignInCancel(error: unknown): boolean {
   const { code, message } = (error ?? {}) as { code?: unknown; message?: unknown };
-  return code === 'USER_CANCELLED' || /cancel/i.test(String(message ?? ''));
+  const text = String(message ?? '');
+  return code === 'USER_CANCELLED' || /cancel/i.test(text) || /AuthorizationError error 1001/.test(text);
 }
 
 interface AuthConfig {
@@ -385,14 +389,20 @@ export class AuthService {
     return true;
   }
 
-  private initSocialLogin(ids: { web: string; ios: string | null }): Promise<void> {
+  private initSocialLogin(ids: { web: string; ios: string | null } | null): Promise<void> {
+    // One initialize for both providers: the plugin keeps only the last call's
+    // set, and Apple on iOS needs no IDs (the bundle ID is its client).
+    const ios = Capacitor.getPlatform() === 'ios';
     this.socialLoginReady ??= this.socialLogin.initialize({
-      google: {
-        webClientId: ids.web,
-        iOSClientId: ids.ios ?? undefined,
-        iOSServerClientId: ids.web,
-        mode: 'online',
-      },
+      ...(ids ? {
+        google: {
+          webClientId: ids.web,
+          iOSClientId: ids.ios ?? undefined,
+          iOSServerClientId: ids.web,
+          mode: 'online' as const,
+        },
+      } : {}),
+      ...(ios ? { apple: {} } : {}),
     }).catch((error) => {
       this.socialLoginReady = null;
       throw error;
@@ -401,13 +411,58 @@ export class AuthService {
   }
 
   /**
-   * Sign in with Apple, through Supabase's hosted flow in the system browser,
-   * the same way as Google. App Review (guideline 4.8) requires it on iOS
-   * because Google sign-in is offered; the screen shows it only on iOS and
-   * only once `appleSignInEnabled()` says the project has it switched on.
+   * Sign in with Apple. App Review (guideline 4.8) requires it on iOS because
+   * Google sign-in is offered; the screen shows it only on iOS and only once
+   * `appleSignInEnabled()` says the project has it switched on.
+   *
+   * On the iPhone it is Apple's own sheet, which names Siddha; its ID token
+   * goes straight to Supabase (Client IDs: the bundle ID). The hosted flow
+   * showed "wcaqjhqckipgkvhbiwjt.supabase.co" on Apple's page and needed a
+   * Services ID plus a secret that expires every six months. That flow stays
+   * as the fallback for anything other than a cancel.
    */
   async signInWithApple(destination = '/'): Promise<void> {
+    await this.init();
+    if (!this.client) return;
+    if (await this.signInWithNativeApple(destination)) return;
     await this.signInWithProvider('apple', destination);
+  }
+
+  /** True when Apple's sheet finished (signed in or cancelled); false means use the browser. */
+  private async signInWithNativeApple(destination: string): Promise<boolean> {
+    if (!this.client || Capacitor.getPlatform() !== 'ios') return false;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      throw new Error('No connection. Check your internet and try again.');
+    }
+    // As for Google: Apple signs the hash in, Supabase checks the raw value.
+    const rawNonce = randomNonce();
+    let idToken: string | null = null;
+    try {
+      await this.initSocialLogin(this.googleClientIds);
+      const login = await this.socialLogin.login({
+        provider: 'apple',
+        options: { scopes: ['email', 'name'], nonce: await sha256Hex(rawNonce) },
+      });
+      idToken = 'idToken' in login.result ? login.result.idToken : null;
+    } catch (error) {
+      if (isSignInCancel(error)) return true;
+      console.warn('Native Apple sign-in unavailable; using the browser', error);
+      return false;
+    }
+    if (!idToken) return false;
+    const { data, error } = await this.client.auth.signInWithIdToken({
+      provider: 'apple',
+      token: idToken,
+      nonce: rawNonce,
+    });
+    if (error) {
+      // Typically the bundle ID missing from the Apple provider's Client IDs.
+      console.warn('Supabase refused the Apple token; using the browser', error);
+      return false;
+    }
+    this.setSession(data.session);
+    await this.router.navigateByUrl(destination);
+    return true;
   }
 
   /**

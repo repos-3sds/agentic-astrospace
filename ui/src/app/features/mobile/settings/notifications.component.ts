@@ -167,6 +167,28 @@ export class NotificationsComponent {
     }
   }
 
+  readonly testing = signal(false);
+  readonly testResult = signal<string | null>(null);
+
+  /** Proof that delivery works end to end, without waiting for the morning brief. */
+  protected async sendTest(): Promise<void> {
+    this.testing.set(true);
+    this.testResult.set(null);
+    try {
+      if (!this.registered()) await this.push.register();
+      const outcome = await this.push.sendTest();
+      this.testResult.set(
+        outcome === 'sent' ? 'Sent. It should arrive in a few seconds.'
+          : outcome === 'queued' ? 'On its way. It can take up to 15 minutes to arrive.'
+          : 'It could not be delivered to this phone. Try turning notifications off and on.',
+      );
+    } catch (error) {
+      this.testResult.set(error instanceof Error ? error.message : 'Could not send a test. Try again.');
+    } finally {
+      this.testing.set(false);
+    }
+  }
+
   /** The way out of the denied card that is not "go change a system setting". */
   protected remindLater(): void {
     const until = Date.now() + 7 * 24 * 60 * 60 * 1000;

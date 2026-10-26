@@ -57,6 +57,10 @@
   }
 }
 .delivery.muted b { color: var(--m-muted); }
+.test-result {
+  color: var(--m-text) !important;
+  font-size: 13px;
+}
 .delivery-error {
   color: var(--m-warn) !important;
   font-size: 12px;

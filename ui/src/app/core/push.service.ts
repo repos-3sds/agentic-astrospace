@@ -199,6 +199,17 @@ export class PushService {
     }
   }
 
+  /**
+   * Asks the server to push "Test from Siddha" to this account's phones.
+   * 'sent' when it went out now; 'queued' when the notification service sends
+   * it on its next run (within 15 minutes). Throws with the server's words.
+   */
+  async sendTest(): Promise<'sent' | 'queued' | 'failed'> {
+    const { status } = await this.api.post<{ status: string }>('/me/push-tokens/test', {});
+    if (status === 'pending' || status === 'processing' || status === 'queued') return 'queued';
+    return status === 'sent' ? 'sent' : 'failed';
+  }
+
   /** Preference toggles go to the server too, so the worker can honour them. */
   async syncPreference(id: string, on: boolean): Promise<void> {
     const category = PREF_CATEGORY[id];

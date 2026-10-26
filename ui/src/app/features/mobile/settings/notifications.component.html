@@ -45,6 +45,17 @@
       </div>
     }
 
+    @if (permission() === 'granted') {
+      <div class="actions">
+        <button type="button" (click)="sendTest()" [disabled]="testing()">
+          {{ testing() ? 'Sending…' : 'Send a test notification' }}
+        </button>
+      </div>
+      @if (testResult(); as result) {
+        <p class="test-result">{{ result }}</p>
+      }
+    }
+
     @if (pushError(); as err) {
       <p class="delivery-error">{{ err }}</p>
     }

@@ -456,6 +456,49 @@ def revoke_push_token(payload: PushTokenRevocation, user: CurrentUser,
     return {"revoked": True}
 
 
+# One test per this long, so the button can't be used to spam a phone.
+TEST_PUSH_EVERY_MINUTES = 5
+
+
+@router.post("/push-tokens/test")
+def send_test_push(user: CurrentUser, db: Session = Depends(get_db)):
+    """Send "this is a test" to every phone the reader is signed in on.
+
+    Delivered here when this process holds a transport for each of the
+    reader's providers; otherwise queued for the notification worker, whose
+    next run (every 15 minutes) sends it. The answer says which, so the screen
+    never claims a send that has not happened. Through the worker's own
+    `deliver_job`, so a dead token is revoked the same way as for a brief.
+    """
+    from ..notifications.push import NotConfiguredTransport, transports_from_env
+    from ..notifications.worker import deliver_job
+
+    tokens = cm.list_active_push_tokens(db, user.id)
+    if not tokens:
+        raise HTTPException(
+            status_code=409,
+            detail="This phone hasn't registered for notifications yet. Turn them on above, then try again.",
+        )
+    now = datetime.utcnow()
+    slot = int(now.timestamp() // (TEST_PUSH_EVERY_MINUTES * 60))
+    job = cm.schedule_notification(
+        db, user.id, "test", now, "Test from Siddha",
+        dedupe_key=f"test:{user.id}:{slot}",
+        body="Notifications are working on this phone.",
+        deep_link="/m/settings/notifications",
+    )
+    if job.status != "pending":
+        return {"status": job.status, "job_id": job.id}
+    transports = transports_from_env()
+    if any(isinstance(transports.get(t.provider), NotConfiguredTransport) or t.provider not in transports
+           for t in tokens):
+        return {"status": "queued", "job_id": job.id}
+    job.status = "processing"
+    db.commit()
+    sent = deliver_job(db, job, transports)
+    return {"status": "sent" if sent else "failed", "job_id": job.id}
+
+
 # ── Notification preferences ─────────────────────────────────────────────────
 
 @router.get("/notification-preferences")

@@ -5,10 +5,16 @@
   Store and TestFlight archives; "development" is for a device run from Xcode.
   The provisioning profile must carry the capability too, or APNs returns
   no token and Settings > Notifications shows "Registering this device".
+  Sign in with Apple: the native sheet (AuthService.signInWithApple) fails
+  with error 1000 without it. The App ID carries the capability too.
 -->
 <plist version="1.0">
 <dict>
 	<key>aps-environment</key>
 	<string>development</string>
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
 </dict>
 </plist>

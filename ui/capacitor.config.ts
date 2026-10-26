@@ -54,10 +54,10 @@ const config: CapacitorConfig = {
       resize: 'native' as KeyboardResize,
     },
     SocialLogin: {
-      // Google only (native sign-in sheet, see AuthService.signInWithGoogle).
-      // Apple stays on Supabase's hosted flow; Facebook off also keeps its
-      // SDK and the AD_ID permission out of the build.
-      providers: { google: true, facebook: false, apple: false, twitter: false },
+      // Google and Apple use the native sheets (AuthService.signInWithGoogle,
+      // signInWithApple; Apple is used on iOS only). Facebook off also keeps
+      // its SDK and the AD_ID permission out of the build.
+      providers: { google: true, facebook: false, apple: true, twitter: false },
       logLevel: 1,
     },
     PushNotifications: {

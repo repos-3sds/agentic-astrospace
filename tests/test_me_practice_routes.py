@@ -131,6 +131,38 @@ class TestPushTokens:
                            json={"provider": "apns", "token": "tok-mine"}
                            ).json() == {"revoked": True}
 
+    def test_test_push_without_a_token_says_so(self, client):
+        r = client.post("/api/v1/me/push-tokens/test", json={})
+        assert r.status_code == 409
+
+    def test_test_push_is_queued_without_a_transport(self, client, monkeypatch):
+        """No APNs key on this process: the worker sends it on its next run."""
+        for name in ("APNS_KEY_FILE", "FCM_SERVICE_ACCOUNT_FILE"):
+            monkeypatch.delenv(name, raising=False)
+        client.put("/api/v1/me/push-tokens", json={"provider": "apns", "token": "tok-test"})
+        first = client.post("/api/v1/me/push-tokens/test", json={}).json()
+        assert first["status"] == "queued"
+        # A second tap inside the window is the same job, not another push.
+        again = client.post("/api/v1/me/push-tokens/test", json={}).json()
+        assert again["job_id"] == first["job_id"]
+
+    def test_test_push_is_sent_now_with_a_transport(self, client, monkeypatch):
+        from astrospace.notifications import push
+        sent = []
+
+        class Fake:
+            provider = "apns"
+
+            def send(self, token, message):
+                sent.append((token, message.title))
+                return push.PushResult(ok=True, provider_message_id="m1")
+
+        monkeypatch.setattr(push, "transports_from_env", lambda: {"apns": Fake()})
+        client.put("/api/v1/me/push-tokens", json={"provider": "apns", "token": "tok-now"})
+        r = client.post("/api/v1/me/push-tokens/test", json={})
+        assert r.json()["status"] == "sent"
+        assert ("tok-now", "Test from Siddha") in sent
+
     def test_cannot_revoke_another_users_token(self, client, env):
         """revoke_push_token() filters on (provider, token) only — the route
         must not let a caller silence someone else's device."""
