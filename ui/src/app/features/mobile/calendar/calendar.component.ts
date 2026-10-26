@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { FestivalService, festivalPlace, festivalRegionsLabel } from '../../../core/festival.service';
 import { KundliStore } from '../../../core/kundli.store';
@@ -8,6 +9,8 @@ import { PanchangaService } from '../../../core/panchanga.service';
 import { PreferencesService } from '../../../core/preferences.service';
 import { PullRefreshService } from '../../../core/pull-refresh.service';
 import { FestivalSheetComponent } from './festival-sheet.component';
+import { CalendarDayComponent } from './calendar-day.component';
+import { tabletLayout, wideLayout } from '../../../core/screen-size';
 
 interface CalendarCell {
   date: string;
@@ -37,8 +40,9 @@ function coveredBy(vrat: VratDay, festivals: FestivalOccurrence[]): boolean {
   selector: 'as-mobile-calendar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FestivalSheetComponent, RouterLink],
+  imports: [FestivalSheetComponent, RouterLink, CalendarDayComponent],
   template: `
+    <div class="mcal-month">
     <header class="mcal-top">
       <h1>Calendar</h1>
       <div>
@@ -61,12 +65,14 @@ function coveredBy(vrat: VratDay, festivals: FestivalOccurrence[]): boolean {
           @for (_ of blanks(); track $index) { <span></span> }
           @for (cell of cells(); track cell.date) {
             <a
-              [class.mcal-selected]="cell.date === todayDate()"
+              [class.mcal-selected]="cell.date === selectedDate()"
+              [class.mcal-today]="cell.date === todayDate()"
               [class.mcal-event]="cell.eventCount > 0"
               [class.mcal-q-good]="cell.quality === 'good'"
               [class.mcal-q-care]="cell.quality === 'care'"
-              [routerLink]="['/m','calendar','day']"
+              [routerLink]="tablet() ? ['/m','calendar'] : ['/m','calendar','day']"
               [queryParams]="{ date: cell.date }"
+              [replaceUrl]="tablet()"
               [attr.aria-label]="cellLabel(cell.date, cell.eventCount, cell.quality)"
               [attr.aria-current]="cell.date === todayDate() ? 'date' : null"
             >{{ cell.day }}</a>
@@ -81,6 +87,9 @@ function coveredBy(vrat: VratDay, festivals: FestivalOccurrence[]): boolean {
         </div>
         @if (qualityNote(); as note) {
           <details class="mcal-about"><summary>What the colours mean</summary><p>{{ note }}</p></details>
+        }
+        @if (tablet() && !wide()) {
+          <section class="mcal-day-pane" aria-label="Chosen day"><as-calendar-day [embedded]="true" /></section>
         }
 
         <p class="mcal-eyebrow">FESTIVALS AND VRAT DAYS</p>
@@ -116,6 +125,10 @@ function coveredBy(vrat: VratDay, festivals: FestivalOccurrence[]): boolean {
         }
       }
     </main>
+    </div>
+    @if (wide() && activeId()) {
+      <section class="mcal-day-pane" aria-label="Chosen day"><as-calendar-day [embedded]="true" /></section>
+    }
     @if (selectedFestival(); as festival) {
       <as-festival-sheet [festival]="festival" (dismissed)="selectedFestival.set(null)" />
     }
@@ -143,6 +156,14 @@ export class CalendarComponent {
     return !active || (active.relation || '').toLowerCase() === 'self' ? 'you' : active.name.split(' ')[0];
   });
   protected readonly visibleMonth = signal(this.todayMonth());
+  /**
+   * Tablets show the chosen day beside the month (below it in portrait), so a
+   * tap picks a date here instead of opening the day screen. Phones mark today.
+   */
+  protected readonly tablet = tabletLayout();
+  protected readonly wide = wideLayout();
+  private readonly pickedDate = signal<string | null>(null);
+  protected readonly selectedDate = computed(() => (this.tablet() && this.pickedDate()) || this.todayDate());
   protected readonly activeId = computed(() => this.store.activeId());
   private monthSwipeStart: { x: number; y: number } | null = null;
 
@@ -200,6 +221,13 @@ export class CalendarComponent {
 
   constructor() {
     inject(DestroyRef).onDestroy(inject(PullRefreshService).register('/m/calendar', () => this.pullRefresh()));
+    inject(ActivatedRoute).queryParamMap
+      .pipe(takeUntilDestroyed())
+      .subscribe((params) => {
+        const date = params.get('date');
+        this.pickedDate.set(date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null);
+        if (date && this.tablet() && /^\d{4}-\d{2}$/.test(date.slice(0, 7))) this.visibleMonth.set(date.slice(0, 7));
+      });
     effect(() => {
       const profileId = this.activeId();
       this.preferences.panchangaContextKey();

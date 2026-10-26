@@ -37,11 +37,27 @@
   opacity: 0.92;
   // The rings and planets ran straight through the greeting. Clear an ellipse
   // behind the name and date, stopping short of the sun behind the avatar.
-  --text-clear: radial-gradient(ellipse 120px 38px at 180px var(--sun-center-y), transparent 58%, #000 100%);
+  --text-clear: radial-gradient(ellipse 120px 38px at calc(var(--sun-center-x) + 139px) var(--sun-center-y), transparent 58%, #000 100%);
   -webkit-mask-image: var(--text-clear);
   mask-image: var(--text-clear);
 
   &[hidden] { display: none; }
+}
+
+// Tablets: the sun follows the greeting into the reading column (it sat
+// under the side rail otherwise) and the system is drawn a size up, so it
+// reads as a sky over the page rather than a corner badge.
+@include m-tablet {
+  .celestial-sky {
+    --today-col: 760px;
+    --today-col-left: calc(var(--m-rail-space, 0px) + max(0px, (100vw - var(--m-rail-space, 0px) - var(--today-col)) / 2));
+    --sun-center-x: calc(var(--today-col-left) + 41px);
+    --orbit-scale: 1.3;
+  }
+}
+
+@include m-wide {
+  .celestial-sky { --today-col: 1180px; --orbit-scale: 1.45; }
 }
 
 .celestial-sun,
@@ -86,22 +102,24 @@
   background: radial-gradient(circle, color-mix(in srgb, var(--m-gold) 34%, transparent), transparent 72%);
   filter: blur(62px);
   opacity: 0.5;
+  // The corona breathes slowly once the sun is up; nothing else moves on it.
+  animation: today-sun-breathe 7s ease-in-out 2s infinite;
 }
 
 .orbit-system {
   width: 390px;
   height: 390px;
   opacity: 0;
-  transform: translate(-50%, -50%) scale(0.15);
+  transform: translate(-50%, -50%) scale(calc(0.15 * var(--orbit-scale, 1)));
   transform-origin: center;
   animation: today-orbit-materialize 1s cubic-bezier(0.18, 0.84, 0.28, 1) 1.8s both;
 }
 
+// Each planet keeps its own pace (inner ones quicker, as in the sky) instead
+// of the whole system turning as one disc.
 .orbit-rotor {
   position: absolute;
   inset: 0;
-  transform-origin: center;
-  animation: today-orbit-rotate 8s linear 2s infinite;
 }
 
 .orbit-ring {
@@ -137,13 +155,20 @@
   height: var(--planet-size);
   margin: calc(var(--planet-size) / -2) 0 0 calc(var(--planet-size) / -2);
   border-radius: 999px;
+  --pop-delay: 2.1s;
+  --orbit-period: 20s;
   opacity: 0;
+  // Lit on the side facing the sun: the planet's own x axis points away from
+  // the sun, so the highlight sits left and the far side falls into shade.
   background:
-    radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.68) 0 16%, transparent 32%),
-    radial-gradient(circle, color-mix(in srgb, var(--planet-color) 74%, #fff7da) 0 18%, var(--planet-color) 55%, color-mix(in srgb, var(--planet-color) 72%, #1e120b) 100%);
+    radial-gradient(circle at 26% 50%, rgba(255, 255, 255, 0.7) 0 14%, transparent 34%),
+    radial-gradient(circle at 34% 50%, color-mix(in srgb, var(--planet-color) 70%, #fff7da) 0 20%, var(--planet-color) 56%, color-mix(in srgb, var(--planet-color) 64%, #1e120b) 100%);
   box-shadow: 0 0 4px 1px color-mix(in srgb, var(--planet-color) 30%, transparent);
-  transform: rotate(var(--planet-angle)) translateX(var(--planet-radius)) scale(0);
-  animation: today-planet-pop 0.52s cubic-bezier(0.2, 0.9, 0.28, 1.24) both;
+  transform: rotate(var(--planet-angle)) translateX(var(--planet-radius));
+  scale: 0;
+  animation:
+    today-planet-pop 0.52s cubic-bezier(0.2, 0.9, 0.28, 1.24) var(--pop-delay) both,
+    today-planet-orbit var(--orbit-period) linear var(--pop-delay) infinite;
 }
 
 .planet.mercury {
@@ -151,7 +176,8 @@
   --planet-color: var(--mercury);
   --planet-radius: 45px;
   --planet-angle: 12deg;
-  animation-delay: 2.1s;
+  --pop-delay: 2.1s;
+  --orbit-period: 7s;
 }
 
 .planet.venus {
@@ -159,7 +185,8 @@
   --planet-color: var(--venus);
   --planet-radius: 75px;
   --planet-angle: 84deg;
-  animation-delay: 2.25s;
+  --pop-delay: 2.25s;
+  --orbit-period: 11s;
 }
 
 .planet.mars {
@@ -167,7 +194,8 @@
   --planet-color: var(--mars);
   --planet-radius: 110px;
   --planet-angle: 156deg;
-  animation-delay: 2.4s;
+  --pop-delay: 2.4s;
+  --orbit-period: 20s;
 }
 
 .planet.jupiter {
@@ -175,7 +203,8 @@
   --planet-color: var(--jupiter);
   --planet-radius: 150px;
   --planet-angle: 228deg;
-  animation-delay: 2.55s;
+  --pop-delay: 2.55s;
+  --orbit-period: 34s;
 }
 
 .planet.saturn {
@@ -183,7 +212,8 @@
   --planet-color: var(--saturn);
   --planet-radius: 195px;
   --planet-angle: 300deg;
-  animation-delay: 2.7s;
+  --pop-delay: 2.7s;
+  --orbit-period: 46s;
 }
 
 .planet.earth {
@@ -191,7 +221,8 @@
   --planet-color: var(--earth);
   --planet-radius: 92px;
   --planet-angle: 120deg;
-  animation-delay: 2.85s;
+  --pop-delay: 2.85s;
+  --orbit-period: 15s;
 }
 
 .planet.uranus {
@@ -199,7 +230,8 @@
   --planet-color: var(--uranus);
   --planet-radius: 240px;
   --planet-angle: 30deg;
-  animation-delay: 3s;
+  --pop-delay: 3s;
+  --orbit-period: 62s;
 }
 
 .planet.neptune {
@@ -207,7 +239,8 @@
   --planet-color: var(--neptune);
   --planet-radius: 285px;
   --planet-angle: 264deg;
-  animation-delay: 3.15s;
+  --pop-delay: 3.15s;
+  --orbit-period: 78s;
 }
 
 .planet.pluto {
@@ -215,7 +248,8 @@
   --planet-color: var(--pluto);
   --planet-radius: 325px;
   --planet-angle: 192deg;
-  animation-delay: 3.3s;
+  --pop-delay: 3.3s;
+  --orbit-period: 96s;
 }
 
 .saturn-ring {
@@ -226,7 +260,9 @@
   height: 6px;
   border: 1px solid color-mix(in srgb, var(--saturn) 52%, transparent);
   border-radius: 999px;
-  transform: translate(-50%, -50%) rotate(-12deg);
+  // Turned back as Saturn goes round, so the ring keeps one tilt in the sky.
+  transform: translate(-50%, -50%) rotate(calc(-12deg - var(--planet-angle)));
+  animation: today-ring-level var(--orbit-period) linear var(--pop-delay) infinite;
 }
 
 .appbar {
@@ -326,6 +362,28 @@
   padding: 8px 24px 32px;
 }
 
+// The two columns of a wide tablet. On phones and narrow tablets they are
+// not boxes at all, so the page keeps its one column and its gaps.
+.col { display: contents; }
+
+@include m-wide {
+  .body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+    column-gap: 24px;
+    align-items: start;
+
+    > * { grid-column: 1 / -1; }
+    > .col {
+      grid-column: auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+  }
+}
+
 .eyebrow { @include m-eyebrow; color: var(--m-accent); margin: 0; }
 .eyebrow.warn { color: var(--m-warn); }
 
@@ -341,7 +399,7 @@
   gap: 20px;
 }
 
-.body > .card:not(.skeleton-card),
+.body .card:not(.skeleton-card),
 .body .birth-signature {
   background: var(--m-glass-card);
   border-color: var(--m-glass-hairline);
@@ -874,7 +932,7 @@
 @keyframes today-orbit-materialize {
   0% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.15);
+    transform: translate(-50%, -50%) scale(calc(0.15 * var(--orbit-scale, 1)));
   }
   20% {
     opacity: 0;
@@ -884,33 +942,34 @@
   }
   100% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, -50%) scale(var(--orbit-scale, 1));
   }
 }
 
-@keyframes today-orbit-rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
+// The pop owns opacity and scale; the orbit owns transform, so both run at once.
 @keyframes today-planet-pop {
-  0% {
-    opacity: 0;
-    transform: rotate(var(--planet-angle)) translateX(var(--planet-radius)) scale(0);
-  }
-  62% {
-    opacity: 1;
-    transform: rotate(var(--planet-angle)) translateX(var(--planet-radius)) scale(1.4);
-  }
-  100% {
-    opacity: 1;
-    transform: rotate(var(--planet-angle)) translateX(var(--planet-radius)) scale(1);
-  }
+  0% { opacity: 0; scale: 0; }
+  62% { opacity: 1; scale: 1.4; }
+  100% { opacity: 1; scale: 1; }
+}
+
+@keyframes today-planet-orbit {
+  from { transform: rotate(var(--planet-angle)) translateX(var(--planet-radius)); }
+  to { transform: rotate(calc(var(--planet-angle) + 360deg)) translateX(var(--planet-radius)); }
+}
+
+@keyframes today-ring-level {
+  from { transform: translate(-50%, -50%) rotate(calc(-12deg - var(--planet-angle))); }
+  to { transform: translate(-50%, -50%) rotate(calc(-12deg - var(--planet-angle) - 360deg)); }
+}
+
+@keyframes today-sun-breathe {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.78; }
 }
 
 // After the first play this session: the sky's final frame, no entrance.
-// The rotor's own delay is left alone — changing it on a running animation
-// jumps the orbit by a quarter turn.
+// The planets keep going round.
 .celestial-sky.intro-played {
   .celestial-sun {
     animation: none;
@@ -921,21 +980,23 @@
   .orbit-system {
     animation: none;
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, -50%) scale(var(--orbit-scale, 1));
   }
   .planet {
-    animation: none;
+    --pop-delay: 0s;
     opacity: 1;
-    transform: rotate(var(--planet-angle)) translateX(var(--planet-radius)) scale(1);
+    scale: 1;
+    animation: today-planet-orbit var(--orbit-period) linear infinite;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .skel { animation: none; }
   .celestial-sun,
+  .celestial-sun::after,
   .orbit-system,
-  .orbit-rotor,
-  .planet {
+  .planet,
+  .saturn-ring {
     animation: none;
   }
   .celestial-sun {
@@ -944,12 +1005,13 @@
   }
   .orbit-system {
     opacity: 0.78;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, -50%) scale(var(--orbit-scale, 1));
   }
   .planet {
     opacity: 1;
-    transform: rotate(var(--planet-angle)) translateX(var(--planet-radius)) scale(1);
+    scale: 1;
   }
+  .celestial-sky.intro-played .planet { animation: none; }
 }
 
 .mtoday-empty {
