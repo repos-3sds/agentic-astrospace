@@ -285,13 +285,15 @@ owns the Web client Supabase's Google provider uses):
    Run service (it is public; it already ships in every Google sign-in URL).
    The app reads it from `/api/v1/auth/config`, caches it, and uses it from
    the next launch after it first sees it.
-3. **iOS** (when building for iPhone): create an iOS OAuth client with bundle
-   ID `app.asksiddha.mobile`; add its reversed ID
-   (`com.googleusercontent.apps.<...>`) to `ui/ios/App/App/Info.plist`
-   under `CFBundleURLTypes` → `CFBundleURLSchemes`; add the iOS client ID to
-   Supabase → Authentication → Providers → Google → "Client IDs" after the
-   Web one (comma-separated), then set `GOOGLE_OAUTH_IOS_CLIENT_ID`. Until
-   then iOS keeps the browser flow.
+3. **iOS** (done 2026-10-26): the iOS OAuth client "Siddha iOS"
+   (`704387401358-ut69pqph9d7l60vh845kga4fevd8lmc4`, bundle ID
+   `app.asksiddha.mobile`, team `65G6LHRKWB`); its reversed ID
+   (`com.googleusercontent.apps.704387401358-ut69pqph9d7l60vh845kga4fevd8lmc4`)
+   is a `CFBundleURLSchemes` entry in both `Info.plist` and `Info-Debug.plist`;
+   the iOS client ID follows the Web one in Supabase → Authentication →
+   Providers → Google → "Client IDs". The last step is
+   `GOOGLE_OAUTH_IOS_CLIENT_ID` on the Cloud Run service; until the API
+   returns it, iOS keeps the browser flow.
 
 `capacitor.config.ts` bundles the Google provider only; Facebook is off, which
 also keeps the `AD_ID` permission out of the Android build. On Android a
