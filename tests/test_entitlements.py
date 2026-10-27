@@ -363,7 +363,7 @@ def test_testers_get_plus_but_not_practitioner_with_a_teaser_of_ask_and_readings
     assert tester.access_tier == "free"
     as_free = {"remedies.full", "doshas.detail", "dashas.full", "transits.full", "compatibility.checks.period"}
     for key, definition in capability_registry.items():
-        if key in ("ask.answers.period", "readings.period", "muhurta.days_ahead"):
+        if key in ("ask.answers.period", "readings.period", "muhurta.days_ahead", "profiles.max"):
             continue
         expected = definition.value_for("free" if key in as_free else "plus")
         assert tester.entitlements[key] == expected, key
@@ -373,6 +373,7 @@ def test_testers_get_plus_but_not_practitioner_with_a_teaser_of_ask_and_readings
     assert tester.entitlements["muhurta.days_ahead"] == 14
     assert tester.entitlements["ask.answers.period"] == 10
     assert tester.entitlements["readings.period"] == 3
+    assert tester.entitlements["profiles.max"] == 5  # own profile plus 4 others (2026-10-27)
 
 
 def test_tester_readings_stop_after_three_a_month_once_locks_are_on(env, monkeypatch):
