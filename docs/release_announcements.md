@@ -24,6 +24,13 @@ server, and WhatsApp texts for the channel and the testers' broadcast list.
    `POST /api/v1/releases/announce`, which queues one email per reader with
    **tips and reminders** email on, and a team email with the WhatsApp texts.
    The run summary shows the texts too.
+   **Every update carries a poster** (Hawk, 2026-10-27). Make it first: a
+   1080x1440 picture in the brand style (template in the project files,
+   `marketing/release-announcements/`), saved as a JPEG under
+   `ui/public/email/updates/` and merged, so the app serves it. Then run
+   Announce with `poster` set to its path (`/email/updates/<name>.jpg`): the
+   reader email opens with it. Only pictures under `/email/` on the app's own
+   site are allowed in an email.
 3. **WhatsApp.** The thread sends the channel post and broadcast message (and
    a poster, when there is one) to the coordinator, which passes them to the
    thread that drives WhatsApp Web in Hawk's Chrome. That thread posts only

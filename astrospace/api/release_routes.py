@@ -65,6 +65,8 @@ class DraftBody(BaseModel):
 class AnnounceBody(BaseModel):
     version_code: int = Field(gt=0)
     notes: list[str] = Field(max_length=ra.MAX_NOTES)
+    # The update's poster, a picture the app serves under /email/updates/.
+    poster: str | None = Field(default=None, pattern=r"^/email/updates/[a-z0-9-]+\.(jpg|png)$")
 
 
 @router.post("/draft")
@@ -83,7 +85,7 @@ def announce(body: AnnounceBody, _: str = Depends(release_caller), db: Session =
     if bad:
         raise HTTPException(422, {"message": "a note breaks a copy rule", "notes": bad})
     ann = ra.announcement(body.version_code, notes)
-    readers = ra.queue_reader_emails(db, body.version_code, notes)
+    readers = ra.queue_reader_emails(db, body.version_code, notes, poster=body.poster)
     ra.queue_team_email(db, body.version_code, ann, stage="sent", readers=readers)
     log.info("release %s announced: %s reader emails queued", body.version_code, readers)
     return {**ann, "reader_emails_queued": readers}
