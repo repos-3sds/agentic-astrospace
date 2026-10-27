@@ -102,7 +102,7 @@ weeks). Xcode writes `Package.resolved` on first resolve; commit it once it
 exists. `Info.plist` declares `ITSAppUsesNonExemptEncryption = false`: the app
 uses only HTTPS and standard algorithms (SQLCipher for the on-device cache),
 which fall under the mass-market exemption — confirm that reading against
-the current export rules before the first upload. `PrivacyInfo.xcprivacy`
+the current export rules before the first upload. Location has both purpose strings, `NSLocationWhenInUseUsageDescription` and `NSLocationAlwaysAndWhenInUseUsageDescription`, although the app only ever asks for when-in-use: the geolocation plugin's code references the always API, and Apple's upload check (ITMS-90683, build 588) wants a string for every API the binary references. `PrivacyInfo.xcprivacy`
 declares UserDefaults (CA92.1) for `@capacitor/preferences`; any new plugin
 that touches a required-reason API needs its own entry (file timestamps, C617.1, are
 declared for `@capacitor/filesystem`, which stages the shared Ask PDF in the
