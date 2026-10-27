@@ -147,3 +147,9 @@
   text-align: center;
   color: var(--m-muted);
 }
+
+// Wide Settings shows this list beside the page it opened (shell
+// .pane-list); the open page's row stays lit.
+.row.is-current {
+  background: var(--m-accent-soft);
+}

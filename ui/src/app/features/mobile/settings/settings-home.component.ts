@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { AuthService } from '../../../core/auth.service';
@@ -47,7 +47,7 @@ const ALARM_STORAGE_KEY = 'astrospace.mobile.panchangAlarms';
   selector: 'as-settings-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, ProfileSwitcherComponent],
+  imports: [RouterLink, RouterLinkActive, ProfileSwitcherComponent],
   templateUrl: './settings-home.component.html',
   styleUrl: './settings-home.component.scss',
 })

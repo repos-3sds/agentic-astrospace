@@ -736,3 +736,41 @@
   .skel { animation: none; }
 }
 
+
+// Tablets: the D1 chart at a size where planet names read (220 was drawn for
+// a 375 phone). Wide tablets set it beside everything else, held in view
+// while the cards scroll. Practitioner's Yantra and Guided keep one column.
+@include m-tablet {
+  .preview { width: min(400px, 100%); }
+}
+
+@include m-wide {
+  .body:not([data-mode='practitioner']):has(> .rashi) {
+    display: grid;
+    grid-template-columns: minmax(360px, 460px) minmax(0, 1fr);
+    column-gap: 24px;
+    align-items: start;
+
+    > * { grid-column: 2; min-width: 0; }
+    > .rashi {
+      grid-column: 1;
+      grid-row: 1 / span 8;
+      position: sticky;
+      top: 12px;
+    }
+  }
+
+  .body[data-mode='practitioner'],
+  .body:not(:has(> .rashi)) {
+    max-width: 760px;
+    margin-inline: auto;
+  }
+}
+
+// Across a hinge: the chart on the left screen, the cards on the right.
+@include m-spanned {
+  .body:not([data-mode='practitioner']):has(> .rashi) {
+    grid-template-columns: calc(var(--m-first-pane) - 32px) minmax(0, 1fr);
+    column-gap: calc(var(--m-hinge-gap) + 32px);
+  }
+}

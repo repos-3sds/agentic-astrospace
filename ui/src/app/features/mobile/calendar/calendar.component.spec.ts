@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
@@ -7,6 +7,12 @@ import { KundliStore } from '../../../core/kundli.store';
 import { PanchangaService } from '../../../core/panchanga.service';
 import { PreferencesService } from '../../../core/preferences.service';
 import { CalendarComponent } from './calendar.component';
+import { CalendarDayComponent } from './calendar-day.component';
+
+// The test browser is wide enough for the tablet layout, which shows the
+// chosen day beside the month; that screen has its own spec.
+@Component({ selector: 'as-calendar-day', template: '' })
+class CalendarDayStub { readonly embedded = input(false); }
 
 describe('CalendarComponent', () => {
   let fixture: ComponentFixture<CalendarComponent>;
@@ -67,7 +73,12 @@ describe('CalendarComponent', () => {
           },
         },
       ],
-    }).compileComponents();
+    })
+      .overrideComponent(CalendarComponent, {
+        remove: { imports: [CalendarDayComponent] },
+        add: { imports: [CalendarDayStub] },
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(CalendarComponent);
   });

@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { FestivalService, festivalPlace, festivalRegionsLabel } from '../../../core/festival.service';
 import { KundliStore } from '../../../core/kundli.store';
@@ -14,6 +14,7 @@ import { MobileSymbol, nakshatraSymbol, tithiSymbol } from '../symbols/mobile-sy
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { PullRefreshService } from '../../../core/pull-refresh.service';
+import { tabletLayout } from '../../../core/screen-size';
 
 const HARD_TARAS = new Set(['Janma', 'Vadha']);
 
@@ -44,7 +45,9 @@ function validDate(raw: string | null): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [BackLinkDirective, GenericErrorComponent, FestivalSheetComponent, RouterLink],
   template: `
-    <a class="mcald-back" [asBack]="['/m','calendar']"><img src="mobile/back.svg" alt="" /><span>Calendar</span></a>
+    @if (!embedded()) {
+      <a class="mcald-back" [asBack]="['/m','calendar']"><img src="mobile/back.svg" alt="" /><span>Calendar</span></a>
+    }
     <main class="mcald-body">
       @if (loading()) {
         <section class="mcald-state"><b>Loading day</b><p>Checking timing signals for {{ activeName() }}.</p></section>
@@ -191,6 +194,8 @@ export class CalendarDayComponent {
   private readonly festivals = inject(FestivalService);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  /** Shown inside Calendar on tablets, beside or below the month. */
+  readonly embedded = input(false);
   private requestId = 0;
   private renderedRequestKey: string | null = null;
 
@@ -219,6 +224,15 @@ export class CalendarDayComponent {
 
   constructor() {
     inject(DestroyRef).onDestroy(inject(PullRefreshService).register('/m/calendar/day', () => this.load(this.activeId(), true)));
+    // On a tablet the day lives inside Calendar, so a link here (Today's
+    // timing note, a push) opens Calendar on that date instead.
+    const router = inject(Router);
+    const tablet = tabletLayout();
+    effect(() => {
+      if (this.embedded() || !tablet()) return;
+      const date = untracked(() => this.selectedDate());
+      void router.navigate(['/m', 'calendar'], { queryParams: date ? { date } : {}, replaceUrl: true });
+    });
     this.route.queryParamMap
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((params) => {

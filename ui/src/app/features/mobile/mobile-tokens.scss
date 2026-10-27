@@ -24,6 +24,19 @@
   @return calc(min(#{$px}, #{$vw}) / var(--text-zoom, 1));
 }
 
+// Tablet layouts (core/screen-size.ts holds the same numbers). The layout
+// follows the window, so an iPad in Split View or an Android tablet in
+// multi-window gets what fits its space. Under 600 is the phone, unchanged.
+$m-tablet: 600px;
+$m-wide: 900px;
+@mixin m-tablet { @media (min-width: $m-tablet) { @content; } }
+@mixin m-wide { @media (min-width: $m-wide) { @content; } }
+// A dual-screen phone opened flat with the app across both screens (Surface
+// Duo), or a foldable that reports its hinge: two side-by-side viewport
+// segments. Two-pane screens split at the hinge instead of across it; the
+// shell publishes the hinge as --m-hinge-* (mobile-shell.component.scss).
+@mixin m-spanned { @media (min-width: $m-tablet) and (horizontal-viewport-segments: 2) { @content; } }
+
 // Type ramp, named after the Figma text styles so the mapping is checkable.
 @mixin m-eyebrow {
   font-family: 'Inter', system-ui, sans-serif;

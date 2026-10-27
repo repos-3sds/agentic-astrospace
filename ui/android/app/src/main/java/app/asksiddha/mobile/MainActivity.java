@@ -4,6 +4,7 @@ import android.app.NotificationChannel;
 import android.app.UiModeManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.app.NotificationManager;
 import android.media.AudioAttributes;
 import android.net.Uri;
@@ -50,11 +51,24 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(InAppReviewPlugin.class);
         registerPlugin(TextSizePlugin.class);
         super.onCreate(savedInstanceState);
+        holdPhonesUpright();
         matchLaunchScreenToTheme();
         applyTextZoom();
         createChannels();
         WidgetsPlugin.handle(getIntent());
         Widgets.refreshAll(this);
+    }
+
+    /**
+     * Phones stay in portrait, as on iPhone; the phone screens were drawn for
+     * it. Tablets (600dp and wider at their narrowest) turn freely and get the
+     * tablet layout. Android 16 ignores a lock on large screens anyway, so
+     * this is the only place it could apply.
+     */
+    private void holdPhonesUpright() {
+        if (getResources().getConfiguration().smallestScreenWidthDp < 600) {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
     }
 
     /** A widget tap while the app is already open (singleTask) lands here. */
