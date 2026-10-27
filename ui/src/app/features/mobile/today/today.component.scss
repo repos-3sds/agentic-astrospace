@@ -384,6 +384,15 @@
   }
 }
 
+// Across a hinge: your day on the left screen, the rest on the right, each
+// column kept clear of the hinge.
+@include m-spanned {
+  .body {
+    grid-template-columns: calc(var(--m-first-pane) - 36px) minmax(0, 1fr);
+    column-gap: calc(var(--m-hinge-gap) + 36px);
+  }
+}
+
 .eyebrow { @include m-eyebrow; color: var(--m-accent); margin: 0; }
 .eyebrow.warn { color: var(--m-warn); }
 

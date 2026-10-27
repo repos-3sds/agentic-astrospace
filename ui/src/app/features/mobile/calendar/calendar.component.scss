@@ -133,3 +133,12 @@
     border-left: 1px solid var(--m-glass-hairline, var(--m-border));
   }
 }
+
+// Across a hinge: the month on the left screen, the day on the right.
+@include m-spanned {
+  :host {
+    grid-template-columns: var(--m-first-pane) minmax(0, 1fr);
+    column-gap: var(--m-hinge-gap);
+  }
+  .mcal-day-pane { border-left: 0; }
+}

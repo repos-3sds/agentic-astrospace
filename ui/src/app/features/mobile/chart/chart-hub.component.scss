@@ -766,3 +766,11 @@
     margin-inline: auto;
   }
 }
+
+// Across a hinge: the chart on the left screen, the cards on the right.
+@include m-spanned {
+  .body:not([data-mode='practitioner']):has(> .rashi) {
+    grid-template-columns: calc(var(--m-first-pane) - 32px) minmax(0, 1fr);
+    column-gap: calc(var(--m-hinge-gap) + 32px);
+  }
+}

@@ -85,6 +85,29 @@ $rail-gap: 12px;
   }
 }
 
+// Spanned across a hinge: where the left screen ends and the right begins,
+// and how much of the left screen is left after the rail. Single-pane screens
+// move to the right screen rather than run under the hinge; two-pane screens
+// put one pane on each side.
+@include m-spanned {
+  :host(.as-mobile) {
+    --m-hinge-start: env(viewport-segment-right 0 0, 50vw);
+    --m-hinge-end: env(viewport-segment-left 1 0, 50vw);
+    --m-hinge-gap: calc(var(--m-hinge-end) - var(--m-hinge-start));
+    --m-first-pane: calc(var(--m-hinge-start) - var(--m-rail-space));
+  }
+
+  .content.content ::ng-deep > :not(router-outlet, .pane-empty, as-today, as-mobile-calendar, as-chart-hub) {
+    max-width: env(viewport-segment-width 1 0, 540px);
+    margin-left: calc(var(--m-hinge-end) - var(--m-rail-space));
+    margin-right: 0;
+  }
+
+  .panes .pane-list { flex-basis: var(--m-first-pane); border-right: 0; }
+  .panes.has-list .content.content ::ng-deep > * { margin-left: var(--m-hinge-gap); }
+  .panes.has-list .pane-empty { margin-left: var(--m-hinge-gap); }
+}
+
 // Wide Settings: the list keeps its own scroll on the left; the page on the
 // right is the routed screen, as before.
 .pane-list {

@@ -70,6 +70,17 @@
   }
 }
 
+// Across a hinge: on the right screen, never folded over the hinge.
+@include m-spanned {
+  .panel {
+    left: env(viewport-segment-left 1 0, 50%);
+    right: auto;
+    width: calc(env(viewport-segment-width 1 0, 50%) - 48px);
+    margin-left: 24px;
+    margin-right: 0;
+  }
+}
+
 // Following the finger: no easing between pointer moves.
 .panel.is-dragging { transition: none; }
 
