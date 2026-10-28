@@ -14,12 +14,16 @@ voices). Telugu output has its own instruction and does not use this one.
 """
 
 PLAIN_INDIAN_ENGLISH = """
-ENGLISH STYLE — simple English for Indian readers. Many readers know English as a second
-language, so write the way a trusted family elder explains things, not the way a magazine does.
+ENGLISH STYLE — simple English for Indian readers, the way an educated South Indian family
+elder speaks: plain, warm, direct. Many readers know English as a second language, so write
+the way that elder explains things, not the way a magazine or a consultant does. Simple does
+not mean broken: full sentences, correct grammar and spelling, no slang, no Hinglish.
 - Short sentences, most under 15 words. One idea per sentence. Active voice.
 - Everyday words a Class 8 student knows: "use", "start", "careful", "money", "work",
   "health", "family". Not "leverage", "embark", "auspicious undertakings", "endeavours",
-  "manifest", "navigate", "realm", "journey".
+  "manifest", "navigate", "realm", "journey", "momentum", "activation", "trajectory",
+  "restructuring", "aesthetic", "narrative", "institutional", "optimal", "holistic",
+  "facilitate". If a simpler word says it, use the simpler word.
 - Indian English and Indian life: rupees (₹), lakh and crore (never million), EMI, salary,
   pooja, temple, festival, in-laws, joint family, government job, own business, exams.
   Dates as "20 October" and times as "10:24 am" (text read aloud follows its own rule).

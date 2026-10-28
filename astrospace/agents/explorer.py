@@ -216,6 +216,10 @@ class ChartExplorer(BaseAstroAgent):
         calls += [("house", {"number": primary, "view": "moon"}),
                   ("house", {"number": primary, "view": "sun"}),
                   ("varga", {"division": self.plan["varga"]}),
+                  # D9 is read for every question (dignity, Karakamsha, the
+                  # 10th lord's navamsha); the model always fetched it itself,
+                  # which cost a round.
+                  *([("varga", {"division": "D9"})] if self.plan["varga"] != "D9" else []),
                   ("jaimini", {}),
                   ("nakshatra", {}),
                   ("ashtakavarga", {}),
@@ -243,6 +247,11 @@ class ChartExplorer(BaseAstroAgent):
             except Exception:  # progress lines never cost the reader an answer
                 log.exception("explorer progress callback failed")
         return self.chart_tools.call(name, inputs or {})
+
+    def _loop_done(self) -> bool:
+        # An accepted submission is the result; the model's "done" turn
+        # after it cost ~15 s and 1k tokens in the 2026-10-28 run.
+        return self.submitted is not None
 
     def required_rules(self) -> set[str]:
         """Every A and B rule the model has been shown this turn."""
