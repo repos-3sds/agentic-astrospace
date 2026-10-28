@@ -95,7 +95,9 @@ jobs:
           xcrun simctl io "$UDID" screenshot "$OUT/after-30s.png" || true
           kill $LOGPID 2>/dev/null || true
           cp ~/Library/Logs/DiagnosticReports/App*.ips "$OUT/" 2>/dev/null || true
-          if xcrun simctl spawn "$UDID" launchctl list | grep -q "UIKitApplication:$BUNDLE_ID"; then
+          # To a file first: grep -q closing the pipe early fails it under pipefail.
+          xcrun simctl spawn "$UDID" launchctl list > "$OUT/launchctl.txt" 2>&1 || true
+          if grep -q "UIKitApplication:$BUNDLE_ID" "$OUT/launchctl.txt"; then
             echo "### iOS launch check: still running after 30 s" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "::error::Siddha is not running 30 s after launch (crash report in the launch-check artifact)"
