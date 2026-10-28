@@ -98,7 +98,8 @@ test('panchang alarms: a switch changes only itself and no row moves', async ({ 
   await switches.nth(1).click();
   await switches.nth(3).click();
   await switches.nth(4).click();
-  expect(await read()).toBe('011110100000');
+  // A tap lands on the next frame; wait for it rather than reading at once.
+  await expect.poll(read).toBe('011110100000');
   // Turning one on used to open its editor and push every row below down.
   expect(await tops()).toEqual(before);
 });
