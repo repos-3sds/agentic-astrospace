@@ -118,6 +118,13 @@
           <p class="headline">{{ v.verdict }}</p>
           <p class="detail">{{ v.detail }}</p>
         </div>
+      </div>  <div class="band-key" aria-label="Score bands">
+        @for (b of bandKey; track b.band) {
+          <span class="band-chip" [attr.data-band]="b.band" [class.on]="b.band === v.band">
+            <span class="band-range">{{ b.range }}</span>
+            <span class="band-name">{{ b.label }}</span>
+          </span>
+        }
       </div>
     }
 

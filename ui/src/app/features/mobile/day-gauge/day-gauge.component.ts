@@ -1,6 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, input, effect, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 
+/** [band, from, to] on the 0-100 dial. */
+export const DAY_BANDS: [string, number, number][] = [
+  ['tough', 0, 30],
+  ['mixed', 30, 50],
+  ['steady', 50, 70],
+  ['good', 70, 100],
+];
+
 /**
  * Day-quality gauge (Figma node 13:20).
  *
@@ -22,13 +30,18 @@ import { DecimalPipe } from '@angular/common';
   template: `
     <svg [attr.viewBox]="'0 0 ' + SIZE + ' ' + SIZE" [attr.width]="SIZE" [attr.height]="SIZE"
          role="img" [attr.aria-label]="label() + ', ' + score() + ' out of 100'">
-      <circle class="track" [attr.cx]="C" [attr.cy]="C" [attr.r]="R"
-              [attr.stroke-width]="STROKE" fill="none" />
-      <circle class="arc" [attr.cx]="C" [attr.cy]="C" [attr.r]="R"
-              [attr.stroke-width]="STROKE" fill="none" stroke-linecap="butt"
-              [attr.stroke-dasharray]="CIRCUMFERENCE"
-              [attr.stroke-dashoffset]="dashOffset()"
-              [attr.transform]="'rotate(-90 ' + C + ' ' + C + ')'" />
+      @for (seg of SEGMENTS; track seg.band) {
+        <circle class="track" [attr.data-seg]="seg.band" [attr.cx]="C" [attr.cy]="C" [attr.r]="R"
+                [attr.stroke-width]="STROKE" fill="none"
+                [attr.stroke-dasharray]="seg.dash" [attr.stroke-dashoffset]="seg.offset"
+                [attr.transform]="'rotate(-90 ' + C + ' ' + C + ')'" />
+      }
+      @for (seg of arcs(); track $index) {
+        <circle class="arc" [attr.cx]="C" [attr.cy]="C" [attr.r]="R"
+                [attr.stroke-width]="STROKE" fill="none" stroke-linecap="butt"
+                [attr.stroke-dasharray]="seg.dash" [attr.stroke-dashoffset]="seg.offset"
+                [attr.transform]="'rotate(-90 ' + C + ' ' + C + ')'" />
+      }
     </svg>
     <div class="readout" aria-hidden="true">
       <span class="score">{{ animatedScore() | number:'1.0-0' }}</span>
@@ -47,6 +60,17 @@ export class DayGaugeComponent {
   protected readonly STROKE = 11.44;
   protected readonly CIRCUMFERENCE = 2 * Math.PI * 46.28;
 
+  /**
+   * The unfilled ring is tinted by band (Take care 0-29, Mixed 30-49, Steady
+   * 50-69, Good 70-100), with a hairline gap at each boundary, so the reader
+   * can see which band the score sits in and how near the next one it is.
+   */
+  protected readonly SEGMENTS = DAY_BANDS.map(([band, from, to]) => {
+    const gap = 1.6;
+    const len = ((to - from) / 100) * this.CIRCUMFERENCE - gap;
+    return { band, dash: `${len} ${this.CIRCUMFERENCE}`, offset: -((from / 100) * this.CIRCUMFERENCE + gap / 2) };
+  });
+
   protected readonly animatedScore = signal(0);
 
   constructor() {
@@ -56,6 +80,17 @@ export class DayGaugeComponent {
       setTimeout(() => this.animatedScore.set(target), 50);
     });
   }
+
+  /** The filled arc, broken at the same band gaps as the track. */
+  protected readonly arcs = computed(() => {
+    const value = Math.min(100, Math.max(0, this.animatedScore()));
+    const gap = 1.6;
+    return DAY_BANDS.filter(([, from]) => value > from).map(([, from, to]) => {
+      const end = Math.min(value, to);
+      const len = Math.max(0, ((end - from) / 100) * this.CIRCUMFERENCE - (end === to ? gap : gap / 2));
+      return { dash: `${len} ${this.CIRCUMFERENCE}`, offset: -((from / 100) * this.CIRCUMFERENCE + gap / 2) };
+    });
+  });
 
   protected readonly dashOffset = computed(() => {
     const clamped = Math.min(100, Math.max(0, this.animatedScore()));

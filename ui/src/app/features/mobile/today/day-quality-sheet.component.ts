@@ -32,4 +32,11 @@ export class DayQualitySheetComponent {
   readonly summary = input.required<string>();
   readonly reason = input.required<string>();
   readonly dismissed = output<void>();
+  // MOCKUP ONLY
+  protected readonly bands = [
+    { band: 'good', from: 70, to: 100, label: 'Good', rubric: 'Things line up for you. A good day to begin something.' },
+    { band: 'steady', from: 50, to: 69, label: 'Steady', rubric: 'A normal, workable day. Keep your routine going.' },
+    { band: 'mixed', from: 30, to: 49, label: 'Mixed', rubric: 'Some help, some pull. Go at your pace, skip big risks.' },
+    { band: 'tough', from: 0, to: 29, label: 'Go gently', rubric: 'A quiet day. Keep it simple and save big moves for later.' },
+  ];
 }

@@ -90,6 +90,13 @@ export function gaugePositionFromScore(score: number): number {
   return Math.round(floor + within * (ceiling - floor));
 }
 
+// MOCKUP ONLY
+function mockScore(): number { return Number(localStorage.getItem('mock-day-score') ?? 52); }
+export function bandOf(score: number): DayBand {
+  return score >= 70 ? 'good' : score >= 50 ? 'steady' : score >= 30 ? 'mixed' : 'tough';
+}
+export const BAND_LABEL: Record<DayBand, string> = { good: 'Good', steady: 'Steady', mixed: 'Mixed', tough: 'Go gently' };
+
 function scoreReason(daily: DailyGuidancePayload): string {
   const highTransits = daily.context.active_gochara.filter((row) => row.severity === 'high').length;
   const difficultWindows = daily.muhurta_windows.filter((row) => row.kind === 'inauspicious').length;
@@ -165,7 +172,7 @@ export function muhurtaCountdown(daily: DailyGuidancePayload, now: Date = new Da
 }
 
 /** Verdict bands. Named, not numeric, so tone rules can key off them. */
-export type DayBand = 'steady' | 'mixed' | 'tough';
+export type DayBand = 'good' | 'steady' | 'mixed' | 'tough';
 
 /** One labelled fact in the panchang grids below the fold. */
 export interface StatCell {
@@ -320,6 +327,13 @@ export class TodayComponent {
 
   readonly summary = signal('');
   readonly scoreReason = signal('');
+  // MOCKUP ONLY
+  protected readonly bandKey = [
+    { band: 'tough', range: '0–29', label: 'Go gently' },
+    { band: 'mixed', range: '30–49', label: 'Mixed' },
+    { band: 'steady', range: '50–69', label: 'Steady' },
+    { band: 'good', range: '70–100', label: 'Good' },
+  ];
 
   /** Which sheet is showing, if any. One signal so two cannot stack. */
   readonly openSheet = signal<'quality' | 'why' | 'listen' | 'festival' | null>(null);
@@ -637,7 +651,7 @@ export class TodayComponent {
     this.widgets.publishToday({
       date: daily.date,
       score: view.score,
-      band: view.band,
+      band: view.band === 'good' ? 'steady' : view.band,
       label: view.scoreLabel,
       headline: view.verdict,
       summary: view.detail,
@@ -674,9 +688,10 @@ export class TodayComponent {
       dateLabel,
       place: daily.provenance.place.city || city,
       placeLong: timingPlaceLabel(daily.provenance.place) || city,
-      score: gaugePositionFromScore(daily.verdict.score),
-      band,
-      scoreLabel: band === 'steady' ? 'Steady' : band === 'mixed' ? 'Mixed' : 'Take care',
+      // MOCKUP ONLY: score supplied by the review harness.
+      score: mockScore(),
+      band: bandOf(mockScore()),
+      scoreLabel: BAND_LABEL[bandOf(mockScore())],
       verdict: daily.verdict.headline,
       // reading.summary, not verdict.text. The card is designed for two lines
       // (~90 chars) and verdict.text runs to ~470 — it pushed the Listen button

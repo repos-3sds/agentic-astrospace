@@ -1155,3 +1155,27 @@
   margin: 0 0 8px;
   color: var(--m-muted);
 }
+
+// MOCKUP ONLY: band key under the gauge row.
+.band-key {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 12px;
+}
+.band-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 5px 2px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  color: var(--m-muted);
+  .band-range { font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .band-name { font-size: 11px; }
+  &.on { border-color: currentColor; }
+  &.on[data-band='tough']  { color: var(--m-bad);  background: var(--m-bad-soft); }
+  &.on[data-band='mixed']  { color: var(--m-warn); background: var(--m-warn-soft); }
+  &.on[data-band='steady'], &.on[data-band='good'] { color: var(--m-good); background: var(--m-good-soft); }
+}
