@@ -1,5 +1,13 @@
 import { DestroyRef, Directive, ElementRef, inject } from '@angular/core';
-import { NavigationEnd, NavigationStart, Router } from '@angular/router';
+import {
+  NavigationCancel,
+  NavigationCancellationCode,
+  NavigationEnd,
+  NavigationError,
+  NavigationSkipped,
+  NavigationStart,
+  Router,
+} from '@angular/router';
 import { RETAINED_MOBILE_TABS } from '../../../core/mobile-route-reuse-strategy';
 
 /** How long a restore keeps retrying while a rebuilt screen loads its content. */
@@ -20,7 +28,9 @@ const MAX_ENTRIES = 60;
  *
  * The rule is the native one:
  * - leaving a screen remembers its offset, keyed by URL;
- * - back (popstate) restores the offset of the screen returned to;
+ * - back (popstate) restores the offset of the screen returned to, and so
+ *   does a tab press that returns to a screen left earlier (it navigates
+ *   with `state.restoreScroll`);
  * - a retained tab root (MobileRouteReuseStrategy) re-attaching restores
  *   where it was, whichever way it was reached;
  * - any other forward navigation starts at the top;
@@ -48,20 +58,42 @@ export class ScrollMemoryDirective {
    */
   private currentUrl = '';
   private fromPath = '';
-  private popstate = false;
+  private returning = false;
+  /** Between a NavigationStart and the NavigationEnd that completes it. */
+  private inFlight = false;
   private frame = 0;
 
   constructor() {
     const sub = this.router.events.subscribe((event) => {
       if (event instanceof NavigationStart) {
         this.cancelRestore();
+        const state = this.router.getCurrentNavigation()?.extras.state as { restoreScroll?: boolean } | undefined;
+        const returning = event.navigationTrigger === 'popstate' || state?.restoreScroll === true;
+        if (this.inFlight) {
+          // A navigation started before the last one ended: Ask removing a
+          // handed-off `?q=` from its URL while it is still being shown.
+          // By now the old screen is detached and the scroller holds the
+          // new one's offset (0 on a short screen), so saving here would
+          // overwrite the position of the screen the reader actually left;
+          // Today then reopened at the top (Deepak, 2026-10-28).
+          this.returning ||= returning;
+          return;
+        }
+        this.inFlight = true;
         const leaving = this.currentUrl || this.router.url;
         this.fromPath = pathOf(leaving);
         this.remember(this.keyFor(leaving), this.host.scrollTop);
-        this.popstate = event.navigationTrigger === 'popstate';
+        this.returning = returning;
       } else if (event instanceof NavigationEnd) {
+        this.inFlight = false;
         this.currentUrl = event.urlAfterRedirects;
         this.settle(event.urlAfterRedirects);
+      } else if (
+        event instanceof NavigationError
+        || event instanceof NavigationSkipped
+        || (event instanceof NavigationCancel && event.code !== NavigationCancellationCode.SupersededByNewNavigation)
+      ) {
+        this.inFlight = false;
       }
     });
     const cancel = () => this.cancelRestore();
@@ -91,8 +123,8 @@ export class ScrollMemoryDirective {
     const path = pathOf(url);
     if (path === this.fromPath) return;
     const saved = this.positions.get(this.keyFor(url));
-    const restore = saved !== undefined && (this.popstate || isRetainedTab(path));
-    this.popstate = false;
+    const restore = saved !== undefined && (this.returning || isRetainedTab(path));
+    this.returning = false;
     this.holdAt(restore ? saved : 0);
   }
 

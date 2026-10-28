@@ -331,3 +331,10 @@ $rail-gap: 12px;
 // Focus lands on a screen's heading after navigation for screen readers; it
 // is not a control, so no focus ring.
 :host ::ng-deep main.content h1[tabindex='-1']:focus { outline: none; }
+
+// The iPhone edge swipe (EdgeSwipeBackDirective) moves the panes with the
+// finger; the edge shadow is UIKit's cue that a screen is being pulled away.
+.panes.is-swiping-back {
+  box-shadow: -12px 0 24px rgba(0, 0, 0, 0.28);
+  will-change: transform;
+}

@@ -46,7 +46,9 @@ export function onPageTransition(info: ViewTransitionInfo): void {
   const toUrl = target ? router.serializeUrl(target) : '';
   const motion = reducedMotion() ? null : pageMotion(fromUrl, toUrl, navigation?.trigger);
   const root = document.documentElement;
-  if (!motion) {
+  // An iPhone edge swipe has already slid the screen off under the finger
+  // (EdgeSwipeBackDirective); a second slide would replay it.
+  if (!motion || root.dataset['swipeBack']) {
     info.transition.skipTransition();
     return;
   }
