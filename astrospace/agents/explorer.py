@@ -32,6 +32,8 @@ import logging
 from datetime import date
 from typing import Callable
 
+from pydantic import BaseModel, ConfigDict
+
 from .ask_tools import TOOL_SPECS, ChartTools, summarize_call
 from .base import BaseAstroAgent, compact_json
 from .style import PLAIN_INDIAN_ENGLISH
@@ -158,8 +160,20 @@ def _today(bundle: dict) -> date:
         return date.today()
 
 
+class _Findings(BaseModel):
+    """Shape check for a forced submit_findings call; SUBMIT_SPEC is what
+    the model is shown."""
+    model_config = ConfigDict(extra="allow")
+    rule_verdicts: list = []
+    reader_facts: list = []
+    findings: list = []
+
+
 class ChartExplorer(BaseAstroAgent):
     tools = [*TOOL_SPECS, SUBMIT_SPEC]
+    # submit_findings is a large call and Gemini's thinking shares this cap;
+    # at 4096 the explorer's last turn came back empty (2026-10-28 A/B).
+    max_output_tokens = 16384
 
     def __init__(self, tools: ChartTools, question: str, bundle: dict, question_kind: str = "broad",
                  experience_mode: str = "balanced", history: list[str] | None = None,
@@ -253,6 +267,25 @@ class ChartExplorer(BaseAstroAgent):
         self.submitted = findings
         return {"accepted": True, "do": "Done. Reply with the single word: done."}
 
+    def _force_submit(self) -> None:
+        """The loop ended without an accepted submit_findings (the model went
+        quiet, ran out of rounds, or was refused twice): one more call that
+        can only be submit_findings, over everything looked up so far."""
+        looked_up = [{"ref": c.get("ref"), "result": c.get("result")} for c in self.chart_tools.calls]
+        rules = sorted(self.required_rules())
+        try:
+            found = self.run_structured([{
+                "role": "user",
+                "content": "Everything looked up for this question:\n" + compact_json(looked_up)
+                           + "\n\nNow call submit_findings. Give a verdict for each of these rules: "
+                           + (", ".join(rules) or "(none)")
+                           + ". Fill reader_facts from what the reader said before.",
+            }], _Findings, tool_name="submit_findings", input_schema=SUBMIT_SPEC["input_schema"])
+        except Exception:
+            log.exception("explorer forced submit failed")
+            return
+        self.submitted = found.model_dump()
+
     # Run -------------------------------------------------------------------
 
     def explore(self) -> dict:
@@ -267,6 +300,8 @@ class ChartExplorer(BaseAstroAgent):
                        + "\n\nWork through every point of view, call more tools for anything still "
                          "open, then call submit_findings.",
         }])
+        if self.submitted is None:
+            self._force_submit()
         found = self.submitted or {}
         verdicts = {
             row["id"]: {"verdict": row["verdict"], "why": str(row.get("why") or "")[:400]}

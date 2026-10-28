@@ -265,3 +265,51 @@ class TestOrchestrator:
         explorer = ChartExplorer(ChartTools(chart), "q", {"domain": "career"},
                                  history=["I never did a job in my life."])
         assert "I never did a job in my life." in explorer.system_prompt
+
+    def test_a_quiet_model_is_made_to_hand_in_its_findings(self, chart):
+        """2026-10-28 A/B: the model's last turn came back empty, so nothing
+        was submitted and the reader's history was never used."""
+        explorer = ChartExplorer(ChartTools(chart), "q", {"domain": "career"},
+                                 history=["I never did a job in my life."])
+        forced: list[dict] = []
+
+        def structured(self, messages, schema, tool_name="deliver_result", input_schema=None):
+            forced.append({"tool": tool_name, "content": messages[0]["content"]})
+            return schema.model_validate({
+                "rule_verdicts": [{"id": r, "verdict": "holds", "why": "x"} for r in sorted(self.required_rules())],
+                "reader_facts": ["Has never had a job"], "findings": ["Slow start [tool:house(10)]"]})
+
+        with patch.object(ChartExplorer, "run_messages", return_value=("", [])), \
+                patch.object(ChartExplorer, "run_structured", structured):
+            result = explorer.explore()
+        assert forced and forced[0]["tool"] == "submit_findings"
+        assert "pattern:CAR-" in forced[0]["content"]
+        assert result["submitted"] and result["reader_facts"] == ["Has never had a job"]
+        assert result["verdicts"] and "Slow start" in result["notes"]
+
+    def test_explorer_has_room_for_its_last_call(self):
+        assert ChartExplorer.max_output_tokens >= 16384
+
+
+class TestReaderSaidBefore:
+    def test_cleans_old_prefix_repeats_and_the_current_question(self):
+        from astrospace.agents.orchestrator import reader_said_before
+        said = reader_said_before([
+            "When can she start earning money",
+            "/old When can she start  earning money",
+            "I never did a job in my life.",
+            "/old I never did a job in my life.",
+            "",
+        ], "When can she start earning money")
+        assert said == ["I never did a job in my life."]
+
+    def test_reaches_the_writer_even_if_exploring_fails(self, chart):
+        orchestrator = AskOrchestrator(
+            chart_loader=lambda: chart,
+            planner=lambda question, history: QuestionPlan(kind="broad", domain="career", method="test"),
+        )
+        with patch.object(AskOrchestrator, "check_validation", return_value=None):
+            prepared = orchestrator.prepare("When can I start earning?", explore=True,
+                                            explore_history=["I never did a job in my life."]).prepared
+        assert prepared.bundle["reader_said_before"] == ["I never did a job in my life."]
+        assert "WHAT THE READER SAID BEFORE" in prepared.agent.system_prompt
