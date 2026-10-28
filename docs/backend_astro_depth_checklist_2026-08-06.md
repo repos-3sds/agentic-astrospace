@@ -1918,3 +1918,16 @@ From the Muhurta audit (batches A–E built; these were left out on purpose).
   `ui/ios/App/App/App.entitlements` and the AASA file (team `65G6LHRKWB`,
   paths `/open`, `/m/*`). *Code hook:* `AuthService.isNativeAuthCallback`
   already accepts `https://asksiddha.app/open`.
+
+## Deferred backlog — clock change notice switch (2026-10-28)
+
+- [ ] **A Settings switch for the clock change notice.** The push goes to any
+  reader in a daylight-saving zone who has at least one notification on.
+  *Why not built:* a per-category switch needs `clock_change` added to the
+  `notification_preferences_category_check` constraint (a migration, which
+  pauses auto-ship) and a new app build, and the first notice was due
+  31 Oct 2026. *Unblock:* add the category to the constraint, to
+  `DEFAULT_NOTIFICATION_PREFS` and to `PREF_CATEGORY` in
+  `ui/src/app/core/push.service.ts`, with a row on the Notifications screen.
+  *Code hook:* `clock_change._wants_push` already reads
+  `prefs["clock_change"]["enabled"]`.
