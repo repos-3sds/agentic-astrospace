@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input, output } from '@angular/core';
+import { AskDepthService } from './ask-depth.service';
 import { ASK_NAVIGATION } from './ask-navigation';
 
 /**
@@ -8,6 +9,9 @@ import { ASK_NAVIGATION } from './ask-navigation';
  * seated: Ask Home floats it inset over the suggestions, the thread screens run
  * it edge to edge. That is the `inset` input; everything else is identical, and
  * keeping one copy is what stops the send button from drifting between screens.
+ *
+ * The "Deep" chip is the Fast / Deep switch (AskDepthService): off is today's
+ * quick answer, on reads the chart from every side, like a thinking mode.
  */
 @Component({
   selector: 'as-ask-composer',
@@ -23,12 +27,22 @@ import { ASK_NAVIGATION } from './ask-navigation';
         <span class="composer-icon mic-icon" aria-hidden="true"></span>
       </button>
     }
+    <button
+      class="depth"
+      type="button"
+      [class.on]="deep()"
+      [attr.aria-pressed]="deep()"
+      [attr.aria-label]="deep() ? 'Deep answer on: reads your chart from every side, about a minute' : 'Deep answer off: quick answer'"
+      (click)="depthService.toggle()"
+    >
+      <span class="composer-icon deep-icon" aria-hidden="true"></span>
+    </button>
     @if (!navigation.web) { <input
       class="field"
       type="text"
       enterkeyhint="send"
       autocapitalize="sentences"
-      [placeholder]="placeholder()"
+      [placeholder]="deep() ? 'Ask in depth…' : placeholder()"
       [attr.aria-label]="label()"
       [value]="value()"
       (input)="valueChange.emit($any($event.target).value)"
@@ -49,6 +63,8 @@ import { ASK_NAVIGATION } from './ask-navigation';
 })
 export class AskComposerComponent {
   protected readonly navigation = inject(ASK_NAVIGATION);
+  protected readonly depthService = inject(AskDepthService);
+  protected readonly deep = computed(() => this.depthService.depth() === 'deep');
   protected onWebKey(event: KeyboardEvent): void {
     if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
       event.preventDefault();

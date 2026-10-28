@@ -61,6 +61,30 @@
   mask: var(--composer-icon) center / contain no-repeat;
 }
 
+.depth {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid var(--m-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--m-muted);
+  cursor: pointer;
+  transition: background 140ms, color 140ms, border-color 140ms;
+
+  &.on {
+    border-color: color-mix(in srgb, var(--m-accent) 55%, transparent);
+    background: var(--m-accent-soft);
+    color: var(--m-accent-strong);
+  }
+}
+
+.deep-icon { --composer-icon: url('/mobile/deep.svg'); width: 17px; height: 17px; }
+
 .mic-icon { --composer-icon: url('/mobile/mic.svg'); width: 18px; height: 18px; }
 .send-icon { --composer-icon: url('/mobile/send.svg'); width: 17px; height: 17px; }
 
@@ -102,6 +126,7 @@
     line-height: 22px;
     font-size: 15px;
   }
+  .depth { order: 1; }
   .mic { order: 2; width: 44px; height: 44px; background: transparent; border: 0; }
   .send { order: 3; width: 44px; height: 44px; }
   &:focus-within { border-color: color-mix(in srgb, var(--m-accent) 72%, var(--m-border)); box-shadow: 0 20px 54px color-mix(in srgb, #000 16%, transparent); }

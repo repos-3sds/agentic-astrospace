@@ -30,6 +30,7 @@ import { TextRun, cleanPlainText, paragraphRuns } from '../../../core/answer-tex
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { HapticsService } from '../../../core/haptics.service';
 import { AnswerReportContext, ReportAnswerSheetComponent } from './report-answer-sheet.component';
+import { AskDepthService } from './ask-depth.service';
 
 /**
  * How confidently the answer lands. Named, not a number: the point of the dot
@@ -115,6 +116,7 @@ export function areaLabel(id: string): string {
 export class AskAnswerComponent {
   protected readonly navigation = inject(ASK_NAVIGATION);
   protected readonly preferences = inject(PreferencesService);
+  private readonly askDepth = inject(AskDepthService);
   private readonly analytics = inject(AnalyticsService);
   private readonly ratingPrompt = inject(RatingPromptService);
   private readonly askState = inject(MobileAskStateService);
@@ -958,6 +960,7 @@ export class AskAnswerComponent {
         tone: this.preferences.tone(),
         input_mode: 'text',
         domain_override: forceDomain,
+        depth: this.askDepth.depth(),
       }, controller.signal)) {
         if (controller.signal.aborted || this.kundlis.active()?.id !== profile.id) {
           controller.abort();

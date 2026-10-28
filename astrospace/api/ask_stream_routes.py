@@ -249,7 +249,7 @@ def _validation_store(db: Session, user_id: str, kundli_id: str,
 @router.post("/{kundli_id}/stream")
 def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
                db: Session = Depends(get_db)):
-    explore, body.question = choose_engine(user.email, body.question)
+    explore, body.question = choose_engine(user.email, body.question, body.depth)
     k = crud.get_kundli(db, kundli_id, user.id)
     if not k:
         raise HTTPException(status_code=404, detail="Kundli not found")

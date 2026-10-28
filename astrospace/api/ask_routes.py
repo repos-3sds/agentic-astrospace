@@ -104,6 +104,13 @@ class AskRequest(BaseModel):
                     "does not change its score. Only honoured by the "
                     "streamed v2 orchestrator (ask_stream_routes.py).",
     )
+    depth: Optional[Literal["fast", "deep"]] = Field(
+        None,
+        description="Fast: today's Ask. Deep: the chart read from every side "
+                    "(agents/explorer.py), with how it was weighed. Both cost "
+                    "one question. Left out by app builds from before the "
+                    "switch, which keep the ASK_AGENT_EMAILS rule.",
+    )
     experience_mode: Literal["guided", "balanced", "practitioner"] = Field(
         "balanced",
         description="The reader's own preference (PreferencesService's "
@@ -487,7 +494,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
     is never honoured on this route — same restriction the field's own
     docstring already states ("Only honoured by the streamed v2
     orchestrator") — so `validation_needed` cannot occur here."""
-    explore, body.question = choose_engine(user.email, body.question)
+    explore, body.question = choose_engine(user.email, body.question, body.depth)
     k = crud.get_kundli(db, kundli_id, user.id)
     if not k:
         raise HTTPException(status_code=404, detail="Kundli not found")

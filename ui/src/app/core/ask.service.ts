@@ -111,6 +111,8 @@ export class AskService {
        * repeating "career" in a question that already said it once doesn't
        * change anything, and a tie against another domain never resolves. */
       domain_override?: string;
+      /** Fast (today's Ask) or Deep (the chart read from every side); one question either way. */
+      depth?: 'fast' | 'deep';
     },
     signal?: AbortSignal,
   ): AsyncGenerator<AskStreamEvent> {
