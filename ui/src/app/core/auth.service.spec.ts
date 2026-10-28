@@ -183,6 +183,53 @@ describe('AuthService native auth callback', () => {
 
     expect(client.auth.setSession).not.toHaveBeenCalled();
   });
+
+  describe('links from sign-in emails', () => {
+    it('sends every email link to the open page on asksiddha.app, never the web app', () => {
+      expect((service as any).emailLinkRedirect('/m/language', 'confirm')).toBe('https://asksiddha.app/open?from=confirm');
+      expect((service as any).emailLinkRedirect('/m/reset-password', 'reset')).toBe('https://asksiddha.app/open?from=reset');
+      expect(localStorage.getItem(DESTINATION_KEY)).toBe('/m/reset-password');
+    });
+
+    it('signs the reader in and carries on when the confirm link is opened on this phone', async () => {
+      localStorage.setItem(DESTINATION_KEY, '/m/language');
+      await (service as any).handleNativeAuthCallback(`${CALLBACK_BASE}?from=confirm&code=xyz`);
+      expect(service.session()).toBe(fakeSession);
+      expect(router.navigateByUrl).toHaveBeenCalledWith('/m/language');
+      expect(router.navigate).not.toHaveBeenCalled();
+    });
+
+    it('says the email is confirmed when this phone cannot finish the sign-in', async () => {
+      client.auth.exchangeCodeForSession.and.resolveTo({ data: { session: null }, error: new Error('code verifier not found') });
+      await (service as any).handleNativeAuthCallback(`${CALLBACK_BASE}?from=confirm&code=xyz`);
+      expect(router.navigate).toHaveBeenCalledWith(['/m', 'auth'], { queryParams: { link: 'confirmed' } });
+    });
+
+    it('says the link did not work when Supabase refused it', async () => {
+      await (service as any).handleNativeAuthCallback(
+        `${CALLBACK_BASE}?from=confirm&error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired`,
+      );
+      expect(client.auth.exchangeCodeForSession).not.toHaveBeenCalled();
+      expect(router.navigate).toHaveBeenCalledWith(['/m', 'auth'], { queryParams: { link: 'expired' } });
+    });
+
+    it('says the link did not work when a sign-in code cannot be redeemed', async () => {
+      client.auth.exchangeCodeForSession.and.resolveTo({ data: { session: null }, error: new Error('expired') });
+      await (service as any).handleNativeAuthCallback(`${CALLBACK_BASE}?from=signin&code=xyz`);
+      expect(router.navigate).toHaveBeenCalledWith(['/m', 'auth'], { queryParams: { link: 'expired' } });
+    });
+
+    it('just opens the app for a plain "Open app" tap', async () => {
+      await (service as any).handleNativeAuthCallback(CALLBACK_BASE);
+      expect(router.navigate).not.toHaveBeenCalled();
+      expect(router.navigateByUrl).not.toHaveBeenCalled();
+    });
+
+    it('accepts the open page itself, for an Android App Link', async () => {
+      await (service as any).handleNativeAuthCallback('https://asksiddha.app/open?from=signin&code=xyz');
+      expect(client.auth.exchangeCodeForSession).toHaveBeenCalledWith('xyz');
+    });
+  });
 });
 
 describe('AuthService access-token resilience', () => {

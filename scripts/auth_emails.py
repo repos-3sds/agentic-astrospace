@@ -8,6 +8,11 @@ keeps them in the repo, in the same layout as the reader emails
 
     python scripts/auth_emails.py build   # writes supabase/templates/*.html
     python scripts/auth_emails.py apply   # sets SMTP + templates on the live project
+    python scripts/auth_emails.py urls    # points sign-in links at asksiddha.app/open
+
+`urls` asks only for the access token, shows the Site URL and redirect
+allow-list before and after, and changes nothing until you type y. It only
+ever adds to the allow-list.
 
 `apply` asks for two secrets and never prints them: a Supabase personal
 access token (supabase.com/dashboard/account/tokens) and the Resend API key.
@@ -158,6 +163,67 @@ def auth_config(emails: dict[str, tuple[str, str]], resend_key: str) -> dict:
     return body
 
 
+# Where sign-in email links land (firebase-public/open.html). Also the Site
+# URL, which Supabase falls back to when a link names no allowed redirect:
+# until 2026-10-28 that was the Cloud Run web app, so a reader who confirmed
+# their email from a phone was left on the owner's web tool.
+OPEN_PAGE = f"{SITE}/open"
+OWNER_WEB = "https://agentic-astrospace-cwuqybpnzq-el.a.run.app"
+REDIRECTS = [
+    OPEN_PAGE,
+    # Google and Apple sign-in in the app's own browser sheet.
+    "app.asksiddha.mobile://auth/callback",
+    # The owner's own web sign-ins, which return to /app.
+    f"{OWNER_WEB}/**",
+]
+
+
+def url_config(current: dict) -> dict:
+    """Site URL to the open page; every redirect in REDIRECTS allowed, none removed."""
+    existing = [u.strip() for u in (current.get("uri_allow_list") or "").split(",") if u.strip()]
+    merged = existing + [u for u in REDIRECTS if u not in existing]
+    return {"site_url": OPEN_PAGE, "uri_allow_list": ",".join(merged)}
+
+
+def _api(token: str, method: str, body: dict | None = None) -> dict:
+    request = urllib.request.Request(
+        f"https://api.supabase.com/v1/projects/{PROJECT_REF}/config/auth",
+        data=json.dumps(body).encode() if body is not None else None,
+        method=method,
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(request, timeout=30) as response:
+        return json.loads(response.read() or b"{}")
+
+
+def urls() -> int:
+    token = getpass.getpass("Supabase access token (input hidden): ").strip()
+    if not token:
+        print("Stopped: no token. Nothing changed.")
+        return 1
+    try:
+        current = _api(token, "GET")
+    except urllib.error.HTTPError as error:
+        print(f"Supabase said no ({error.code}): {error.read().decode()[:400]}")
+        return 1
+    wanted = url_config(current)
+    print(f"Site URL now:   {current.get('site_url')}")
+    print(f"Site URL after: {wanted['site_url']}")
+    print("Redirect URLs after (existing ones kept):")
+    for url in wanted["uri_allow_list"].split(","):
+        print(f"  {url}")
+    if input("Apply these? [y/N] ").strip().lower() != "y":
+        print("Nothing changed.")
+        return 0
+    try:
+        result = _api(token, "PATCH", wanted)
+    except urllib.error.HTTPError as error:
+        print(f"Supabase said no ({error.code}): {error.read().decode()[:400]}")
+        return 1
+    print(f"Done. Site URL is {result.get('site_url')}.")
+    return 0
+
+
 def apply() -> int:
     emails = build()
     print(f"Templates written to {TEMPLATES}")
@@ -191,6 +257,8 @@ if __name__ == "__main__":
         print(f"Templates written to {TEMPLATES}")
     elif command == "apply":
         sys.exit(apply())
+    elif command == "urls":
+        sys.exit(urls())
     else:
         print(__doc__)
         sys.exit(2)

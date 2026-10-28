@@ -46,3 +46,11 @@ input { @include m-body; width: 100%; box-sizing: border-box; padding: 15px 18px
   button { @include m-body-small; margin-top: 10px; padding: 0; border: 0; background: none; color: var(--m-accent-strong); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; &:disabled { opacity: .7; } }
   .resent { margin-top: 8px; font-weight: 600; }
 }
+// Done, not waiting (an email link confirmed the address): the same card in
+// the theme's "good" colour instead of rust.
+.confirm-callout.is-done {
+  border-color: var(--m-good);
+  background: var(--m-glass-card), var(--m-good-soft);
+  box-shadow: 0 0 0 4px var(--m-good-soft), 0 14px 34px var(--m-glass-drop);
+  svg, h2 { color: var(--m-good); }
+}
