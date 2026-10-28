@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { FestivalService, festivalPlace, festivalRegionsLabel } from '../../../core/festival.service';
 import { KundliStore } from '../../../core/kundli.store';
@@ -43,7 +43,7 @@ function validDate(raw: string | null): string {
   selector: 'as-calendar-day',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, FestivalSheetComponent, RouterLink],
+  imports: [BackLinkDirective, GenericErrorComponent, FestivalSheetComponent],
   template: `
     @if (!embedded()) {
       <a class="mcald-back" [asBack]="['/m','calendar']"><img src="mobile/back.svg" alt="" /><span>Calendar</span></a>
@@ -75,32 +75,14 @@ function validDate(raw: string | null): string {
             <div><b>{{ qualityLabel(summary) }}</b><small>{{ qualityDetail(summary) }}</small></div>
           </section>
 
-          @if (preferences.experienceMode() === 'guided') {
-            <p class="mcald-title accent">WHAT TO NOTICE</p>
-            <section class="mcald-guided">
-              <article>
-                <img src="mobile/trending-up.svg" alt="" aria-hidden="true" />
-                <span><small>GOOD WINDOW</small><b>{{ guidedGoodWindow(summary) }}</b></span>
-              </article>
-              <article>
-                <img src="mobile/alert-triangle.svg" alt="" aria-hidden="true" />
-                <span><small>USE CARE</small><b>{{ guidedAvoidWindow(summary) }}</b></span>
-              </article>
-              <a [routerLink]="['/m', 'ask']" [queryParams]="{ q: 'What should I do on ' + dateLabel(selectedDate()) + '?' }">
-                Ask about this date
-                <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
-              </a>
-            </section>
-          } @else {
-            <p class="mcald-title accent">DAY TIMELINE</p>
-            <section class="mcald-list">
-              @for (row of windows(summary); track row.name + row.start_iso) {
-                <div [class.bad]="row.tone === 'bad'"><i></i><span><b>{{ row.name }}</b><small>{{ row.start }} - {{ row.end }}</small></span><em>{{ row.tone === 'bad' ? 'AVOID' : 'GOOD' }}</em></div>
-              } @empty {
-                <p>No timing windows were returned for this day.</p>
-              }
-            </section>
-          }
+          <p class="mcald-title accent">DAY TIMELINE</p>
+          <section class="mcald-list">
+            @for (row of windows(summary); track row.name + row.start_iso) {
+              <div [class.bad]="row.tone === 'bad'"><i></i><span><b>{{ row.name }}</b><small>{{ row.start }} - {{ row.end }}</small></span><em>{{ row.tone === 'bad' ? 'AVOID' : 'GOOD' }}</em></div>
+            } @empty {
+              <p>No timing windows were returned for this day.</p>
+            }
+          </section>
 
           @if (preferences.experienceMode() === 'practitioner') {
             <p class="mcald-title">PANCHANGA DETAIL</p>
@@ -164,16 +146,17 @@ function validDate(raw: string | null): string {
           }
         </section>
 
-        <p class="mcald-title">RELATED SIGNALS</p>
-        <section class="mcald-stack">
-          @for (event of events(); track event.title + event.date) {
-            <div><small>{{ event.category }}</small><b>{{ signalTitle(event) }}</b><p>{{ signalSummary(event) }}</p></div>
-          } @empty {
-            <div><small>NONE</small><b>No profile-specific events returned</b></div>
-          }
-        </section>
-
+        <!-- Guided is Balanced without these two technical sections. -->
         @if (preferences.experienceMode() !== 'guided') {
+          <p class="mcald-title">RELATED SIGNALS</p>
+          <section class="mcald-stack">
+            @for (event of events(); track event.title + event.date) {
+              <div><small>{{ event.category }}</small><b>{{ signalTitle(event) }}</b><p>{{ signalSummary(event) }}</p></div>
+            } @empty {
+              <div><small>NONE</small><b>No profile-specific events returned</b></div>
+            }
+          </section>
+
           <p class="mcald-title">ACTIVE PERIOD STACK</p>
           <section class="mcald-stack">
             @for (row of periods(calendar); track row[0]) { <div><small>{{ row[0] }}</small><b>{{ row[1] }}</b></div> }
@@ -319,16 +302,6 @@ export class CalendarDayComponent {
       ...(windows.auspicious ?? []).map((window) => ({ ...window, tone: 'good' as const })),
       ...(windows.inauspicious ?? []).map((window) => ({ ...window, tone: 'bad' as const })),
     ].sort((a, b) => a.start_iso.localeCompare(b.start_iso));
-  }
-
-  protected guidedGoodWindow(day: CalendarDaySummary): string {
-    const good = day.windows.auspicious[0];
-    return good ? `${good.name}, ${good.start} - ${good.end}` : 'No special good window returned for this day.';
-  }
-
-  protected guidedAvoidWindow(day: CalendarDaySummary): string {
-    const caution = day.windows.inauspicious[0];
-    return caution ? `${caution.name}, ${caution.start} - ${caution.end}` : 'No major caution window returned for this day.';
   }
 
   protected practitionerWindowRows(day: CalendarDaySummary): { label: string; value: string; note: string }[] {
