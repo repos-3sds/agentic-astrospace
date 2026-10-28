@@ -10,6 +10,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { PlanGateService } from '../../../core/plan-gate.service';
 import { filter, map, startWith } from 'rxjs';
 import { KundliStore } from '../../../core/kundli.store';
+import { ProfileWarmupService } from '../../../core/profile-warmup.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { PreferencesService } from '../../../core/preferences.service';
 import { SheetOverlayService } from '../../../core/sheet-overlay.service';
@@ -143,6 +144,8 @@ export class MobileShellComponent {
     effect(() => activeTabRoots.set(this.tabs().map((tab) => `/m/${tab.commands.join('/')}`)));
     inject(DestroyRef).onDestroy(() => activeTabRoots.set([]));
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
+    // Every saved profile's day and chart, ready before the switcher is opened.
+    inject(ProfileWarmupService).start(inject(DestroyRef));
     this.widgets.start();
     inject(AppLinksService).start();
     void this.offerDailyVerse();

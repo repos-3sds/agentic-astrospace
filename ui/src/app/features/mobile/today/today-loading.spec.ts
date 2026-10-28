@@ -396,8 +396,9 @@ describe('TodayComponent loading', () => {
 
   beforeEach(() => {
     vedic = jasmine.createSpyObj<VedicService>('VedicService', [
-      'cachedDailyGuidanceEntry', 'refreshDailyGuidance', 'dailyGuidance', 'dailyBrief', 'calendarIntelligence', 'all',
+      'cachedDailyGuidanceEntry', 'refreshDailyGuidance', 'dailyGuidance', 'dailyBrief', 'calendarIntelligence', 'all', 'cachedAll',
     ]);
+    vedic.cachedAll.and.returnValue(null);
     vedic.cachedDailyGuidanceEntry.and.returnValue({ data: DAILY_FIXTURE, freshness: 'fresh', storedAt: Date.now() } as never);
     vedic.dailyBrief.and.resolveTo(brief);
     vedic.calendarIntelligence.and.rejectWith(new Error('offline'));
@@ -413,6 +414,7 @@ describe('TodayComponent loading', () => {
             activeId: signal('p1'),
             kundlis: signal([profile, other]),
             active: signal(profile),
+            owner: signal(profile),
             load: () => Promise.resolve(),
           },
         },
@@ -464,5 +466,35 @@ describe('TodayComponent loading', () => {
     store.activeId.set('p2');
     await settle();
     expect(vedic.cachedDailyGuidanceEntry.calls.allArgs()).toEqual([['p1'], ['p2']]);
+  });
+
+  it('never keeps the last profile\'s birth chart up under the new name', async () => {
+    const p1Chart = { subject: 'p1 chart' } as never;
+    const p2Chart = { subject: 'p2 chart' } as never;
+    vedic.cachedAll.and.callFake((id: string) => (id === 'p1' ? p1Chart : null));
+    const today = TestBed.runInInjectionContext(() => new TodayComponent());
+    await settle();
+    const natal = (today as unknown as { natal: () => unknown }).natal;
+    expect(natal()).toBe(p1Chart);
+    let resolveP2!: (value: never) => void;
+    vedic.all.and.returnValue(new Promise((resolve) => (resolveP2 = resolve)));
+    const store = TestBed.inject(KundliStore) as unknown as { activeId: ReturnType<typeof signal<string>> };
+    store.activeId.set('p2');
+    await settle();
+    // Cleared at the switch, not when the new chart happens to land.
+    expect(natal()).toBeNull();
+    resolveP2(p2Chart);
+    await settle();
+    expect(natal()).toBe(p2Chart);
+  });
+
+  it('asks for the day, chart and calendar together when nothing is cached', async () => {
+    vedic.cachedDailyGuidanceEntry.and.returnValue(null);
+    vedic.dailyGuidance.and.returnValue(new Promise(() => undefined));
+    TestBed.runInInjectionContext(() => new TodayComponent());
+    await settle();
+    expect(vedic.dailyGuidance).toHaveBeenCalledWith('p1');
+    expect(vedic.all).toHaveBeenCalledWith('p1');
+    expect(vedic.calendarIntelligence).toHaveBeenCalled();
   });
 });

@@ -48,6 +48,14 @@ export interface EmailState {
  * email can be turned off from a link in the email itself, so a copy on the
  * device would go stale. Every category starts off; nothing is emailed until
  * the reader says yes, with the sign-up box (applySignupDefaults) or a switch.
+ *
+ * What the screen shows is the server's last answer with every switch still
+ * on its way overlaid on top. Each PUT answers with the whole state, so
+ * letting an answer replace the screen outright made switches the reader had
+ * just tapped flip back, then on again as their own answers landed (Deepak,
+ * 2026-10-28, on a slow connection). Calls go one at a time, so each answer
+ * is newer than the last; a tap superseded by a later tap on the same switch
+ * is never sent.
  */
 @Injectable({ providedIn: 'root' })
 export class EmailSettingsService {
@@ -57,14 +65,23 @@ export class EmailSettingsService {
   readonly state = signal<EmailState | null>(null);
   readonly error = signal<string | null>(null);
 
-  async load(): Promise<void> {
-    if (!this.auth.isAuthenticated()) return;
-    try {
-      this.state.set(await this.api.get<EmailState>('/me/email'));
-      this.error.set(null);
-    } catch {
-      this.error.set('Email settings could not be loaded. Check your connection and try again.');
-    }
+  /** The server's last answer, before pending taps are laid over it. */
+  private confirmed: EmailState | null = null;
+  /** Taps not yet answered, by switch; `seq` tells the latest tap apart. */
+  private readonly pending = new Map<EmailCategory, { enabled: boolean; seq: number }>();
+  private seq = 0;
+  private queue: Promise<unknown> = Promise.resolve();
+
+  load(): Promise<void> {
+    if (!this.auth.isAuthenticated()) return Promise.resolve();
+    return this.enqueue(async () => {
+      try {
+        this.confirm(await this.api.get<EmailState>('/me/email'));
+        this.error.set(null);
+      } catch {
+        this.error.set('Email settings could not be loaded. Check your connection and try again.');
+      }
+    });
   }
 
   /**
@@ -72,26 +89,61 @@ export class EmailSettingsService {
    * does nothing if they have already made any email choice. Never throws;
    * onboarding must not wait on or fail because of email.
    */
-  async applySignupDefaults(): Promise<void> {
-    if (!this.auth.isAuthenticated()) return;
-    try {
-      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      this.state.set(await this.api.post<EmailState>('/me/email/defaults', { timezone, source: 'signup' }));
-    } catch {
-      // Left off; the reader can still turn emails on in Settings.
-    }
+  applySignupDefaults(): Promise<void> {
+    if (!this.auth.isAuthenticated()) return Promise.resolve();
+    return this.enqueue(async () => {
+      try {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        this.confirm(await this.api.post<EmailState>('/me/email/defaults', { timezone, source: 'signup' }));
+      } catch {
+        // Left off; the reader can still turn emails on in Settings.
+      }
+    });
   }
 
-  async set(category: EmailCategory, enabled: boolean): Promise<void> {
-    const before = this.state();
-    if (before) this.state.set({ ...before, categories: { ...before.categories, [category]: enabled } });
-    try {
-      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      this.state.set(await this.api.put<EmailState>(`/me/email/${category}`, { enabled, timezone }));
-      this.error.set(null);
-    } catch {
-      this.state.set(before);
-      this.error.set('That change was not saved. Try again.');
-    }
+  /** Flips one switch at once; the server catches up behind it. */
+  set(category: EmailCategory, enabled: boolean): Promise<void> {
+    const seq = ++this.seq;
+    this.pending.set(category, { enabled, seq });
+    this.show();
+    return this.enqueue(async () => {
+      // A later tap on the same switch carries the value to send.
+      if (this.pending.get(category)?.seq !== seq) return;
+      try {
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const fresh = await this.api.put<EmailState>(`/me/email/${category}`, { enabled, timezone });
+        this.settle(category, seq);
+        this.confirm(fresh);
+        this.error.set(null);
+      } catch {
+        // Only this switch goes back; any other tap still in flight stays.
+        this.settle(category, seq);
+        this.show();
+        this.error.set('That change was not saved. Try again.');
+      }
+    });
+  }
+
+  private enqueue(job: () => Promise<void>): Promise<void> {
+    const run = this.queue.then(job);
+    this.queue = run.catch(() => undefined);
+    return run;
+  }
+
+  private settle(category: EmailCategory, seq: number): void {
+    if (this.pending.get(category)?.seq === seq) this.pending.delete(category);
+  }
+
+  private confirm(fresh: EmailState): void {
+    this.confirmed = fresh;
+    this.show();
+  }
+
+  private show(): void {
+    const base = this.confirmed ?? this.state();
+    if (!base) return;
+    const categories = { ...base.categories };
+    for (const [category, { enabled }] of this.pending) categories[category] = enabled;
+    this.state.set({ ...base, categories });
   }
 }

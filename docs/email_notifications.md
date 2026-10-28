@@ -14,6 +14,7 @@ Status: canonical. How the app emails readers, what it needs in production, and 
 | Tips: back after a while | `tips_email` | 10:00 | after 14 days without opening the app (devices and push tokens), at most monthly: what is coming up at their place |
 | Tips: compatibility | `tips_email` | 10:00, once | a week after sign-up, only if they have just their own profile |
 | Welcome | `system` | once, when they first turn an email on | what they chose; asks for a birth time when theirs isn't exact |
+| Clocks change tonight | `daily_email` | 18:00 the evening before a daylight-saving change | only for a reader with no phone to push to; everyone else gets it as a push. See below |
 | What's new | `tips_email` | on "broadcast update", 9 am to 8 pm | plain notes for the build on closed testing; see [release_announcements.md](release_announcements.md) |
 | Team alert | `owner_alert` | within one worker run | a reader's first sign-in, and their first Ask question; to `OWNER_ALERT_EMAILS`, never to the reader |
 
@@ -40,6 +41,19 @@ Code: `astrospace/notifications/email.py` (transport, signed links, layout),
 `astrospace/api/email_routes.py` (settings, unsubscribe, webhook). The worker runs them
 beside the push schedulers on the same `notification_jobs` queue; an email job has
 `payload.channel = "email"`.
+
+### Clock changes (push, and email as a fallback)
+
+`astrospace/notifications/clock_change.py`. India has no daylight saving, so this only reaches
+readers whose phone is in a zone that has it. The tz database says when each zone changes. At
+18:00 local the evening before (sent at once if a run first sees it later, never after 21:00),
+the reader gets "Clocks go back one hour tonight / At 2 am it becomes 1 am. Your Rahu Kalam,
+sunrise and alarms will follow the new time on their own." The zone is the one on the phone
+they used last. A reader with every push switch off gets nothing; one with only window alerts
+off still hears it (the phone's own alarms turn those off). A reader with no phone and the daily
+reading email on gets the same words by email instead. `CLOCK_CHANGE_NOTICES=off` on the
+notifications job stops it everywhere. It has no Settings switch of its own yet: see the
+deferred backlog.
 
 ## Rules the code enforces
 
