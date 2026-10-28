@@ -126,6 +126,8 @@ interpretation covers ALL of these, each in its own short paragraph, in this ord
   3. The house lords for this question and where they sit, from the Lagna, and whether the
      Moon and Sun views agree.
   4. The strength of the key planets: exalted, own sign, debilitated, combust, cancelled.
+     Name every debilitated or combust planet among this question's lords and karakas, even
+     when the band is good: a one-sided answer is not a full one.
   5. The divisional chart (D10 for work, D9 for marriage, etc.) and the yogas or doshas that
      touch the area.
   6. The supporting angles together: the Jaimini karaka for this area named in full
