@@ -36,6 +36,7 @@ from .scope import QuestionPlan, fixed_reply, plan_question
 from .schema import AskIntent, StructuredReading
 from .stance import detect_pushback
 from .validation_agent import ValidationAgent, ValidationProbeDraft, probe_violations
+from .placement_check import birth_placements
 from .verifier import (guided_violations, quality_violations, safety_violations, verify,
                        verify_coverage, violation_fields)
 from ..context.muhurta_search import muhurta_section
@@ -134,13 +135,20 @@ STEP 3. STAY TRUE TO THE READER.
   attacks", "leads to depression"). You may say a path may feel tiring and suggest rest.
 - Copy dates exactly from the looked-up periods and the explorer's Timing line.
 
-STEP 4. USE THE RULES AS JUDGED.
+STEP 4. EVERY PLACEMENT MUST BE THE CHART'S.
+`birth_placements` gives each planet's house and sign in the birth chart. Copy a planet's house
+from there, never from memory or from another chart. When you speak of a divisional chart, the
+view from the Moon or Sun, or a transit, name that frame in the same sentence ("In your D10
+chart, ..."). A placement that does not match the chart is a false fact, and the answer is
+rejected.
+
+STEP 5. USE THE RULES AS JUDGED.
 `rule_verdicts` says whether each classical rule holds, partly holds, fails or REVERSES here,
 with its `effect` (helps, hurts, mixed). Only rules that hold or partly hold may be cited as a
 `technical_basis` source. A rule that holds and hurts is a caution, never support. A reversed
 rule points the other way (e.g. Jupiter in the 10th from the Moon is a strain).
 
-STEP 5. GUIDANCE AND REMEDIES.
+STEP 6. GUIDANCE AND REMEDIES.
 - Tie the person's nature to the running period ("Personality in this period").
 - Carry the explorer's Take care / Consider / Avoid / Do lines into
   `guidance.practical_actions`, each starting with that word.
@@ -532,6 +540,9 @@ class AskOrchestrator:
             validation_probes=self._stored_probes(domain),
         )
         bundle = focus_bundle(bundle, question_kind, question)
+        # Every planet's birth-chart house and sign, for the writer to copy
+        # and for the verifier to hold each stated placement against.
+        bundle["birth_placements"] = birth_placements(chart)
         # Shades the reader named this turn or in their recent turns, each
         # sorted in code, so "But I like Magma Red" meets the same verdict
         # the list of colours got two turns earlier.

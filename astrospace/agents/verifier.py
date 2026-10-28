@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import re
 
+from .placement_check import wrong_placements
+
 from .safety import _negation_precedes, _normalize, dosha_overclaim_kind, prohibited_verdict
 from .schema import StructuredReading
 
@@ -587,10 +589,22 @@ def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
     # reading, it is a trust violation, exactly like an invented citation.
     violations.extend(_blocked_frame_violations(reading, bundle))
     violations.extend(_discovery_violations(reading, bundle))
+    placements = bundle.get("birth_placements") or {}
+    if placements:
+        checked = [*text_to_check, *(("technical_basis", item.factor) for item in reading.technical_basis)]
+        for field, text in checked:
+            for planet, stated, actual, sentence in wrong_placements(text, placements):
+                violations.append(Violation(
+                    f"wrong placement: the birth chart has {planet} in the {_ordinal(actual)} house, "
+                    f"not the {_ordinal(stated)}, in: {sentence!r}", "safety", field))
     violations.extend(band_violations(reading, bundle))
     violations.extend(bindu_lean_violations(reading, bundle))
 
     return violations
+
+
+def _ordinal(n: int) -> str:
+    return f"{n}{'th' if 10 <= n % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
 
 
 # The tool-using Ask weighs every angle in code into one band; the answer's

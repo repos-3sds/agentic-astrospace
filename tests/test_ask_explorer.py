@@ -515,3 +515,50 @@ class TestLilliputV2AnswerFixes:
         assert str(config.thinking_config.thinking_level).endswith("LOW")
         assert config.http_options.timeout == 75_000
         assert D.gemini_thinking_level is None and D.gemini_timeout_s is None
+
+
+class TestPlacementsMatchTheChart:
+    """2026-10-28: "Rahu touches your 5th house" for a chart with Rahu in the 12th."""
+
+    KAVYA = {p: {"house": h} for p, h in dict(Moon=1, Sun=5, Mercury=5, Venus=5, Jupiter=4,
+                                                Saturn=6, Ketu=6, Mars=12, Rahu=12).items()}
+
+    def test_reads_birth_chart_placements_and_skips_other_frames(self):
+        from astrospace.agents.placement_check import stated_placements as said
+        claims = lambda t: [c[:2] for c in said(t)]
+        assert claims("Your 5th house holds your ascendant lord Venus along with Mercury and Sun.") == \
+            [("Venus", 5), ("Mercury", 5), ("Sun", 5)]
+        assert claims("Your 5th lord Saturn sits in your 6th house with Ketu.") == [("Saturn", 6), ("Ketu", 6)]
+        assert claims("Mercury and Venus are both combust in the fifth house.") == [("Mercury", 5), ("Venus", 5)]
+        assert claims("Rahu touches your 5th house, a fit for AI tools.") == [("Rahu", 5)]
+        for other in ("In your D10 chart, Rahu sits in the 10th house.",
+                      "From the Moon, Mars is in the 8th house.",
+                      "Jupiter is now moving through your 10th house.",
+                      "Venus is lord of your 1st house.",
+                      "Saturn aspects your 10th house.",
+                      "Rahu is not in your 5th house."):
+            assert claims(other) == [], other
+
+    def test_a_wrong_placement_is_a_safety_violation(self):
+        from astrospace.agents.verifier import verify
+        bundle = {"birth_placements": self.KAVYA, "references": [{"ref_id": "houses"}]}
+        wrong = _reading("houses").model_copy(update={"interpretation":
+            "It can work. Rahu touches your 5th house, showing a fit for AI tools."})
+        found = [v for v in verify(wrong, bundle, "marriage") if "wrong placement" in v]
+        assert found and found[0].severity == "safety" and "12th house, not the 5th" in found[0]
+        right = _reading("houses").model_copy(update={"interpretation":
+            "It can work. Your 2nd lord Mars sits in the 12th house with Rahu."})
+        assert not [v for v in verify(right, bundle, "marriage") if "wrong placement" in v]
+
+    def test_every_bundle_carries_the_birth_placements(self, chart):
+        from astrospace.agents.placement_check import birth_placements
+        placements = birth_placements(chart)
+        assert set(placements) == {"Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn",
+                                   "Rahu", "Ketu"}
+        assert all(1 <= row["house"] <= 12 for row in placements.values())
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart,
+                                       planner=lambda q, h: QuestionPlan(kind="broad", domain="career",
+                                                                         method="test"))
+        with patch.object(AskOrchestrator, "check_validation", return_value=None):
+            prepared = orchestrator.prepare("Will I get a promotion at work?").prepared
+        assert prepared.bundle["birth_placements"] == placements
