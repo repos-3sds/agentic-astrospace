@@ -387,6 +387,8 @@ export interface DailyBriefResponse {
   cached?: boolean;
 }
 
+export interface DayScoreParts { base: number; star: number; moon: number; transits: number }
+
 export interface DailyGuidancePayload {
   system: string;
   engine_version: string;
@@ -405,9 +407,16 @@ export interface DailyGuidancePayload {
   vara: string;
   verdict: {
     tone: 'supportive' | 'positive' | 'mixed' | 'caution';
-    /** 0-100, an ordinary day near 50. Readings cached before 2026-10-28 carry the old signed tally and no score_parts. */
+    /**
+     * The old signed tally, kept for app builds from before 2026-10-28 that
+     * draw the ring from it. Read day_score instead.
+     */
     score: number;
-    score_parts?: { base: number; star: number; moon: number; transits: number };
+    /** 0-100, an ordinary day near 50. Absent from readings cached before 2026-10-28. */
+    day_score?: number;
+    day_score_parts?: DayScoreParts;
+    /** Sent only on 2026-10-28, before day_score: score was then 0-100. */
+    score_parts?: DayScoreParts;
     headline: string;
     text: string;
     word_count: number;

@@ -366,7 +366,7 @@ def brief_input(payload: dict, first_name: str, date_label: str, place: str | No
         "vara": payload.get("vara"),
         "engine_verdict": {
             "tone": payload["verdict"]["tone"],
-            "score": payload["verdict"].get("score"),
+            "score": payload["verdict"].get("day_score", payload["verdict"].get("score")),
             "headline": payload["verdict"]["headline"],
             "narrative": payload["verdict"].get("text"),
         },

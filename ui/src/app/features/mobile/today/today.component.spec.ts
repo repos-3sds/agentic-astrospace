@@ -17,8 +17,12 @@ function bandRange(tone: Tone): [number, number] {
 
 describe('dayScorePosition', () => {
   it('shows the engine score as it is', () => {
-    expect(dayScorePosition({ tone: 'positive', score: 61, score_parts: parts } as never)).toBe(61);
-    expect(dayScorePosition({ tone: 'supportive', score: 120, score_parts: parts } as never)).toBe(100);
+    expect(dayScorePosition({ tone: 'positive', score: 2.4, day_score: 61, day_score_parts: parts } as never)).toBe(61);
+    expect(dayScorePosition({ tone: 'supportive', score: 7, day_score: 120, day_score_parts: parts } as never)).toBe(100);
+  });
+
+  it('reads a 0-100 score sent before day_score existed', () => {
+    expect(dayScorePosition({ tone: 'positive', score: 58, score_parts: parts } as never)).toBe(58);
   });
 
   it('places an old cached tally inside its own band', () => {
