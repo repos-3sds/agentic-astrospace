@@ -9,41 +9,76 @@
     <section class="story-state"><b>Reading your life map</b><p>Building your story from your saved birth details.</p></section>
   } @else if (error()) {
     <as-generic-error role="alert" [message]="error()!" (retried)="retry()" />
-  } @else if (!chart()) {
+  } @else if (noProfile() || !chart()) {
     <section class="story-state"><b>No active profile</b><p>Add birth details before opening your story.</p><a [routerLink]="['/m','birth-details']">Add birth details</a></section>
   } @else {
     <!-- The story starts with who it is about. Guided tone: rising sign, moon
          sign, birth star — the words a person would use, not the Sanskrit. -->
     <as-birth-details-card [chart]="chart()" density="compact" tone="guided" />
 
-    <section class="hero">
-      <p>YOUR LIFE MAP</p>
-      <h2>{{ signature().headline }}</h2>
-      <span>{{ signature().detail }}</span>
-    </section>
+    @if (story(); as story) {
+      <section class="hero">
+        <p>YOUR STORY</p>
+        <h2>{{ story.headline }}</h2>
+        @if (story.summary) {
+          <span>{{ story.summary }}</span>
+        }
+      </section>
 
-    <section class="story-cards" aria-label="Your story areas">
-      @for (card of cards(); track card.title) {
-        <article class="story-card" [attr.data-tone]="card.tone">
-          <div class="card-title">
-            <h2>{{ card.title }}</h2>
-            @if (card.badge) {
-              <span class="badge">{{ card.badge }}</span>
-            }
-          </div>
-          <p>{{ card.text }}</p>
-          <div class="practice">
-            <b>Use it this way</b>
-            <span>{{ card.practice }}</span>
-          </div>
-          <small>{{ card.source }}</small>
-        </article>
+      <section class="traits" aria-labelledby="traits-title">
+        <h2 id="traits-title">Personality traits</h2>
+        <ul>
+          @for (trait of story.traits; track $index) {
+            <li>
+              @if (trait.title) {
+                <b>{{ trait.title }}</b>
+              }
+              <span>{{ trait.detail }}</span>
+            </li>
+          }
+        </ul>
+        <div class="grow">
+          <b>Grow gently</b>
+          <span>{{ story.growth }}</span>
+        </div>
+      </section>
+
+      <section class="story-cards" aria-label="Your life areas">
+        @for (area of story.areas; track area.key) {
+          <article class="story-card" [attr.data-tone]="area.tone">
+            <div class="card-title">
+              <h2>{{ area.title }}</h2>
+              @if (badge(area); as label) {
+                <span class="badge">{{ label }}</span>
+              }
+            </div>
+            <p>{{ area.text }}</p>
+            <div class="practice">
+              <b>Try this</b>
+              <span>{{ area.tip }}</span>
+            </div>
+          </article>
+        }
+      </section>
+
+      @if (story.chapter) {
+        <a class="chapter" [routerLink]="['/m', 'explore', 'life-chapters']">
+          <p>YOUR CURRENT CHAPTER</p>
+          <span>{{ story.chapter }}</span>
+          <b>See all your life chapters <span aria-hidden="true">→</span></b>
+        </a>
       }
-    </section>
 
-    <a class="full-chart" [routerLink]="['/m','chart']">
-      <span>Explore the full chart behind this</span>
-      <b aria-hidden="true">→</b>
-    </a>
+      <a class="full-chart" [routerLink]="['/m','chart']">
+        <span>Explore the full chart behind this</span>
+        <b aria-hidden="true">→</b>
+      </a>
+    } @else if (writing()) {
+      <section class="writing" role="status">
+        <span class="pulse" aria-hidden="true"></span>
+        <b>Writing your story</b>
+        <p>Reading your whole chart. The first time takes up to half a minute.</p>
+      </section>
+    }
   }
 </main>

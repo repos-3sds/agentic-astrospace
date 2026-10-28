@@ -14,6 +14,7 @@ import {
   GocharamProfilePayload,
   JaiminiPayload,
   Kundli,
+  LifeStoryPayload,
   MasaPayload,
   SpecialLagnasPayload,
   TransitAnalysisPayload,
@@ -517,6 +518,11 @@ export class VedicService {
     return this.api.get<CompatibilityPayload>(
       `/vedic/${kundliId}/compatibility/${partnerId}?${this.calcParams()}`,
     );
+  }
+
+  /** Your Story, written once per profile from the chart's classical rules (the code backup when the agent can't). */
+  story(kundliId: string): Promise<LifeStoryPayload> {
+    return this.api.get<LifeStoryPayload>(`/vedic/${kundliId}/story?${this.calcParams()}`);
   }
 
   /** The agent-written "About you two" section; `insight` is null when the fixed guidance stays. */
