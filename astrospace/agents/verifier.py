@@ -561,7 +561,9 @@ def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
             violations.append(Violation(f"prohibited verdict ({crossed}) in: {text!r}", "safety", field))
         dosha_crossed = dosha_overclaim_kind(text)
         if dosha_crossed == "health_outcome_overclaim":
-            violations.append(Violation(f"health outcome overclaim in: {text!r}", "safety", field))
+            violations.append(Violation(
+                f"health outcome overclaim in: {_offending_sentence(text, dosha_overclaim_kind)!r}",
+                "safety", field))
         elif dosha_crossed:
             violations.append(Violation(f"dosha overclaim in: {text!r}", "safety", field))
 
@@ -651,6 +653,16 @@ def band_violations(reading: StructuredReading, bundle: dict) -> list[Violation]
 
 _BINDU_MENTION = re.compile(r"\b(?:ashtakavarga|bindus?|sav)\b|\b\d{2} (?:points|bindus)\b",
                             re.IGNORECASE)
+
+
+def _offending_sentence(text: str, check) -> str:
+    """The first sentence of `text` that `check` flags, so a repair prompt
+    names the one sentence to fix rather than the whole interpretation
+    (Lilliput v7 quoted 400 words)."""
+    for sentence in re.split(r"(?<=[.!?])\s+|\n+", text or ""):
+        if sentence.strip() and check(sentence):
+            return sentence.strip()
+    return text
 
 
 def bindu_lean_violations(reading: StructuredReading, bundle: dict) -> list[Violation]:

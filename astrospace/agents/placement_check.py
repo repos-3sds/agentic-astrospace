@@ -49,6 +49,12 @@ _HOUSE_HOLDS = re.compile(
 
 _CLAUSE_START = re.compile(r"[;:—]|\b(?:but|while|whereas|although|though|however|which|where)\b",
                            re.IGNORECASE)
+# "Venus and Mercury are combust by the Sun, and your 2nd lord (Mars) sits in
+# the 12th": a finished clause (a verb, then a comma) before the claim belongs
+# to other planets, so the claim's subject starts after it.
+_FINISHED_CLAUSE = re.compile(
+    r"\b(?:is|are|was|were|sits?|has|have|holds?|gives?|shows?|makes?|forms?|rules?|"
+    r"aspects?|joins?|stays?|brings?|creates?|supports?)\b[^,;]*,", re.IGNORECASE)
 _NEGATION = re.compile(r"\b(?:not|no|never|neither|nor)\b", re.IGNORECASE)
 # "Venus is lord of your 1st house" names lordship, not a placement.
 _NOT_PLACEMENT = re.compile(r"\b(?:lord|lords|ruler|rules|ruling|owner|owns|aspect|aspects|"
@@ -95,6 +101,9 @@ def stated_placements(text: str) -> list[tuple[str, int, str]]:
             previous_end = match.end()
             boundaries = list(_CLAUSE_START.finditer(head))
             subject = head[boundaries[-1].end():] if boundaries else head
+            finished = list(_FINISHED_CLAUSE.finditer(subject))
+            if finished:
+                subject = subject[finished[-1].end():]
             matched = sentence[match.start():match.end()]
             if house is None or _NEGATION.search(matched) or _NOT_PLACEMENT.search(matched):
                 continue

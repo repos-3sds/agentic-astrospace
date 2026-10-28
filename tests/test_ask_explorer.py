@@ -494,7 +494,8 @@ class TestLilliputV2AnswerFixes:
         assert "HOW YOU MUST JUDGE" in tools_prompt and "28+ bindus" in tools_prompt
         assert "a low bindu count alone never makes the answer" in tools_prompt
         assert "HOW TO BUILD THIS ANSWER" in EXPLORED_NOTE and "Your FIRST sentence" in EXPLORED_NOTE
-        assert "AT MOST ONCE" in EXPLORED_NOTE and "anxiety" in EXPLORED_NOTE
+        assert "ONE sentence of the whole" in EXPLORED_NOTE and "anxiety" in EXPLORED_NOTE
+        assert "Amatyakaraka for work" in EXPLORED_NOTE
 
     def test_an_answer_built_on_bindus_is_sent_back(self):
         from astrospace.agents.verifier import bindu_lean_violations
@@ -538,6 +539,23 @@ class TestPlacementsMatchTheChart:
                       "Saturn aspects your 10th house.",
                       "Rahu is not in your 5th house."):
             assert claims(other) == [], other
+
+    def test_a_finished_clause_does_not_lend_its_planets_to_the_next_claim(self):
+        # Lilliput v7 run A was withheld over this correct sentence.
+        from astrospace.agents.placement_check import stated_placements, wrong_placements
+        sentence = ("However, Venus and Mercury are combust by the Sun, and your 2nd lord of earnings "
+                    "(Mars) sits in the 12th house in Virgo.")
+        assert [c[:2] for c in stated_placements(sentence)] == [("Mars", 12)]
+        assert wrong_placements(sentence, self.KAVYA) == []
+        assert [c[:2] for c in stated_placements("The Sun, Mercury and Venus sit in your 5th house.")] == \
+            [("Sun", 5), ("Mercury", 5), ("Venus", 5)]
+
+    def test_a_health_violation_quotes_the_one_sentence(self):
+        from astrospace.agents.safety import dosha_overclaim_kind
+        from astrospace.agents.verifier import _offending_sentence
+        text = "Your period favours media. Tight targets can easily trigger anxiety or panic attacks. Go slow."
+        assert _offending_sentence(text, dosha_overclaim_kind) == \
+            "Tight targets can easily trigger anxiety or panic attacks."
 
     def test_two_claims_in_one_sentence_keep_their_own_planets(self):
         from astrospace.agents.placement_check import stated_placements as said
