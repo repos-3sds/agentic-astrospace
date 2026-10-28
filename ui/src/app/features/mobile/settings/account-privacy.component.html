@@ -9,7 +9,10 @@
     <p class="lede">Your data, in your control.</p>
   </header>
 
-  <!-- Export first: data you cannot take with you is not yours. -->
+  <a class="action" routerLink="/m/subscription">
+    <span class="action-label">Plan and purchases <small>{{ planLabel() }}</small></span>
+    <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
+  </a>
   @for (action of actions; track action.id) {
     <button
       class="action"

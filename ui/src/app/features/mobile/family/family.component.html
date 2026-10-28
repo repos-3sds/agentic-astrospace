@@ -60,5 +60,7 @@
         @if (cap.full) { <a [routerLink]="['/m', 'subscription']">See plans</a> }
       </p>
     }
+    <!-- Settings no longer lists profiles on its own (2026-10-28); removing someone starts here. -->
+    <p class="capacity"><a [routerLink]="['/m', 'settings', 'profiles']">Manage profiles</a></p>
   }
 </main>

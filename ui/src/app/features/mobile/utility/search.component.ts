@@ -40,7 +40,7 @@ const ENTRIES: SearchEntry[] = [
   { title: 'Detail and tone', detail: 'Guided, Balanced or Practitioner; gentle or direct', link: '/m/settings/mode', group: 'SETTINGS', keywords: 'mode tone guided balanced practitioner experience' },
   { title: 'Vibration', detail: 'A light buzz on taps', link: '/m/settings/interaction', group: 'SETTINGS', keywords: 'haptics vibrate interaction' },
   { title: 'Plan and purchases', detail: 'Free, Plus and Practitioner', link: '/m/subscription', group: 'SETTINGS', keywords: 'subscription upgrade plus price pay' },
-  { title: 'Account', detail: 'Email, download your data, sign out, delete', link: '/m/settings/account', group: 'SETTINGS', keywords: 'sign out logout email password delete privacy' },
+  { title: 'Account', detail: 'Plan, email, download your data, sign out, delete', link: '/m/settings/account', group: 'SETTINGS', keywords: 'sign out logout email password delete privacy' },
 ];
 
 const GROUPS = ['READINGS', 'ASK', 'TRANSITS', 'CHART', 'TOOLS', 'REFERENCE', 'SETTINGS'];

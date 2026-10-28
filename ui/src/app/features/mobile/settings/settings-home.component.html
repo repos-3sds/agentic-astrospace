@@ -1,58 +1,56 @@
 @let p = profile();
 
-<!-- The fifth tab in every mode (Hawk, 2026-10-20), so no Back here. -->
-<header class="appbar">
-  <h1 class="screen-title">Settings</h1>
-  <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search Siddha">
-    <img src="mobile/search.svg" alt="" aria-hidden="true" />
-  </a>
-</header>
+@if (section === 'home') {
+  <!-- The fifth tab in every mode (Hawk, 2026-10-20), so no Back here. -->
+  <header class="appbar">
+    <h1 class="screen-title">Settings</h1>
+    <a class="iconbtn" [routerLink]="['/m', 'search']" aria-label="Search Siddha">
+      <img src="mobile/search.svg" alt="" aria-hidden="true" />
+    </a>
+  </header>
+} @else {
+  <as-back-bar crumb="Settings" [back]="['/m', 'settings']"
+    [title]="section === 'astrology' ? 'Astrology preferences' : 'Look and language'"
+    [lede]="section === 'astrology' ? 'How charts and timings are worked out. Most people never change these.' : 'How Siddha looks, sounds and feels.'" />
+}
 
 <div class="body">
-  <button class="account m-pressable" type="button" (click)="profileSwitcherOpen.set(true)">
-    <span class="avatar" aria-hidden="true">{{ p.initial }}</span>
-    <span class="account-text">
-      <span class="account-name">{{ p.name }}</span>
-      <span class="account-email">{{ p.email }}</span>
-    </span>
-    <img class="chevron lg" src="mobile/chevron.svg" alt="" aria-hidden="true" />
-  </button>
+  @if (section === 'home') {
+    <a class="account m-pressable" [routerLink]="['/m', 'settings', 'account']" aria-label="Account">
+      <span class="avatar" aria-hidden="true">{{ p.initial }}</span>
+      <span class="account-text">
+        <span class="account-name">{{ p.name }}</span>
+        <span class="account-email">{{ p.email }}</span>
+      </span>
+      @if (planName(); as plan) { <span class="plan-pill">{{ plan }}</span> }
+      <img class="chevron lg" src="mobile/chevron.svg" alt="" aria-hidden="true" />
+    </a>
+  }
 
   @for (group of groups(); track group.eyebrow) {
-    <h2 class="eyebrow">{{ group.eyebrow }}</h2>
+    @if (group.eyebrow) { <h2 class="eyebrow">{{ group.eyebrow }}</h2> }
     <div class="group">
       @for (row of group.rows; track row.id; let last = $last) {
-        @if (row.route; as route) {
-          <a class="row m-pressable" [routerLink]="route" routerLinkActive="is-current">
-            <span class="row-icon">
-              <img [src]="'mobile/' + row.icon + '.svg'" alt="" aria-hidden="true" />
-            </span>
-            <span class="row-text">
-              <span class="row-label">{{ row.label }}</span>
-              <span class="row-value">{{ row.value }}</span>
-            </span>
-            <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
-          </a>
-        } @else {
-          <button class="row m-pressable" type="button" (click)="row.legal && openLegal(row.legal)">
-            <span class="row-icon">
-              <img [src]="'mobile/' + row.icon + '.svg'" alt="" aria-hidden="true" />
-            </span>
-            <span class="row-text">
-              <span class="row-label">{{ row.label }}</span>
-              <span class="row-value">{{ row.value }}</span>
-            </span>
-            <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
-          </button>
-        }
+        <a class="row m-pressable" [routerLink]="row.route" routerLinkActive="is-current">
+          <span class="row-icon">
+            <img [src]="'mobile/' + row.icon + '.svg'" alt="" aria-hidden="true" />
+          </span>
+          <span class="row-text">
+            <span class="row-label">{{ row.label }}</span>
+            <span class="row-value">{{ row.value }}</span>
+          </span>
+          <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
+        </a>
         @if (!last) { <div class="rule"></div> }
       }
     </div>
   }
-  @if (appVersion(); as version) {
-    <p class="app-version">Siddha {{ version }}</p>
+
+  @if (section === 'home') {
+    <footer class="legal-foot">
+      <button type="button" class="legal-link" (click)="openLegal('terms')">Terms</button>
+      <span class="app-version">@if (appVersion(); as version) { Siddha {{ version }} }</span>
+      <button type="button" class="legal-link" (click)="openLegal('privacy')">Privacy</button>
+    </footer>
   }
 </div>
-@if (profileSwitcherOpen()) {
-  <as-profile-switcher (dismissed)="profileSwitcherOpen.set(false)" />
-}
