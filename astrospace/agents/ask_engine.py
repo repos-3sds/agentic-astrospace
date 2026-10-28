@@ -4,9 +4,10 @@ ASK_ENGINE   bundle (default) | agent
     bundle: today's Ask for everyone except the accounts in ASK_AGENT_EMAILS.
     agent:  the tool-using Ask (agents/explorer.py) for everyone.
 ASK_AGENT_EMAILS   comma-separated accounts that get the tool-using Ask while
-    ASK_ENGINE is bundle. Unset means the owner's account only, so the
-    prototype can be tried in production without any env change; set it to
-    an empty string to turn it off for everyone.
+    ASK_ENGINE is bundle. Unset means DEFAULT_AGENT_EMAILS (the owner and
+    the testers he named), so the prototype can be tried in production
+    without any env change; set it to an empty string to turn it off for
+    everyone.
 
 A reader who has the tool-using Ask can get today's Ask for one question by
 starting it with "/old ", to compare the two on the same question.
@@ -15,7 +16,8 @@ from __future__ import annotations
 
 import os
 
-OWNER_EMAILS = "vikramadityavss@gmail.com"
+# The owner, plus Srikavya (owner's word, 2026-10-28).
+DEFAULT_AGENT_EMAILS = "vikramadityavss@gmail.com,srikavya2697@gmail.com"
 
 
 def uses_agent(email: str | None) -> bool:
@@ -23,7 +25,7 @@ def uses_agent(email: str | None) -> bool:
         return True
     allowed = {
         value.strip().lower()
-        for value in os.getenv("ASK_AGENT_EMAILS", OWNER_EMAILS).split(",")
+        for value in os.getenv("ASK_AGENT_EMAILS", DEFAULT_AGENT_EMAILS).split(",")
         if value.strip()
     }
     return bool(email) and email.strip().lower() in allowed
