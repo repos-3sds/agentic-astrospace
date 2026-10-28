@@ -651,7 +651,11 @@ export class TodayComponent {
       }),
       listen: this.listenScript(),
     });
-    void this.widgets.publishListenAudio(daily.date, this.listenScript());
+    void this.widgets.publishListenAudio(
+      daily.date,
+      this.listenScript(),
+      this.audioSections().map((section) => section.text).filter((text) => text.trim()),
+    );
   }
 
   private applyDaily(name: string, city: string, daily: DailyGuidancePayload): void {

@@ -121,14 +121,18 @@ def _natural_voice_allowed(db: Session, user_id: str) -> bool:
 def listen_requests(spoken: list[dict]) -> list[str]:
     """The exact texts the Listen sheet sends to /voice/speech for this script.
 
-    The sheet joins every section into one script, splits that with
-    naturalChunks, and cleans each piece with prepareForSpeech
-    (listen-sheet.component.ts chunks() / speakNaturalFrom). The audio cache
-    is keyed by the final text, so rendering per section, or skipping the
+    The sheet splits each section on its own with naturalChunks (sectionChunks
+    in natural-voice.service.ts), so every section chip starts at a piece of
+    its own, and cleans each piece with prepareForSpeech. The audio cache is
+    keyed by the final text, so splitting the joined script, or skipping the
     cleanup, would fill the cache with audio the app never asks for.
     """
-    script = " ".join(section.get("text", "") for section in spoken if section.get("text", "").strip())
-    return [prepare_for_speech(chunk) for chunk in natural_chunks(script)]
+    return [
+        prepare_for_speech(chunk)
+        for section in spoken
+        if section.get("text", "").strip()
+        for chunk in natural_chunks(section["text"])
+    ]
 
 
 def prerender_audio(spoken: list[dict]) -> int:

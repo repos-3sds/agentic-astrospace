@@ -6,7 +6,7 @@ import { ApiService } from './api.service';
 import { FestivalPlace, FestivalService } from './festival.service';
 import { CalendarDaySummary, DayQuality } from './models';
 import { PanchangaService } from './panchanga.service';
-import { NATURAL_VOICE_NAME, NaturalVoiceService, naturalChunks, prepareForSpeech } from './natural-voice.service';
+import { NATURAL_VOICE_NAME, NaturalVoiceService, prepareForSpeech, sectionChunks } from './natural-voice.service';
 import { PreferencesService } from './preferences.service';
 import { SessionTeardown } from './session-teardown';
 import { Subhashita, localIsoDate } from './subhashita.service';
@@ -131,7 +131,7 @@ export class WidgetBridgeService {
    * plan has no natural voice or the reader chose a phone voice, the widget
    * reads with the phone's voice, as before.
    */
-  async publishListenAudio(date: string, text: string): Promise<void> {
+  async publishListenAudio(date: string, text: string, sections: readonly string[] = [text]): Promise<void> {
     if (!this.enabled || !text.trim()) return;
     const key = `${date}\n${text}`;
     if (this.listenAudioFor === key) return;
@@ -144,7 +144,8 @@ export class WidgetBridgeService {
         return;
       }
       const parts: string[] = [];
-      for (const chunk of naturalChunks(text)) {
+      // Split per section, as the Listen sheet asks for it, so the pieces are the cached ones.
+      for (const chunk of sectionChunks(sections)) {
         const blob = await voice.cached(prepareForSpeech(chunk));
         if (!blob) {
           // Not listened to yet: phone voice for now, and look again next publish.

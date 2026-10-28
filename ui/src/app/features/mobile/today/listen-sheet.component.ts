@@ -15,7 +15,7 @@ import { AudioReadingSection } from './audio-reading-script';
 import { MobileTtsService } from '../../../core/mobile-tts.service';
 import { PreferencesService } from '../../../core/preferences.service';
 import { RatingPromptService } from '../../../core/rating-prompt.service';
-import { NATURAL_VOICE_NAME, NaturalVoiceService, naturalChunks, prepareForSpeech } from '../../../core/natural-voice.service';
+import { NATURAL_VOICE_NAME, NaturalVoiceService, naturalChunks, prepareForSpeech, sectionChunks } from '../../../core/natural-voice.service';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
 import { keepScreenAwakeWhile } from '../../../core/screen-awake';
 
@@ -194,6 +194,14 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
    */
   private voiceDecision: Promise<void> | null = null;
   private voiceDecided = false;
+  /**
+   * Set on the first play. From then on the voice is fixed for this sheet: a
+   * late entitlement answer used to switch a paused reading to the other
+   * voice on resume, so the voice changed between pause and play.
+   */
+  private started = false;
+  /** Natural audio has played at least once; a later hiccup retries it rather than switching voice. */
+  private naturalPlayed = false;
 
   ngOnInit(): void {
     void this.ensureVoices(false);
@@ -201,8 +209,11 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
       this.voiceDecided = true;
       // A phone voice picked in Language & audio wins over the natural one.
       // Never switch voices under a reader who has already pressed play.
-      if (ok && this.wantsNatural() && !this.playing() && this.chunkIndex() === 0) {
+      if (ok && this.wantsNatural() && !this.started) {
+        // The two voices split text differently; keep the chosen section.
+        const label = this.activeSectionLabel();
         this.mode.set('natural');
+        this.chunkIndex.set(this.sectionStarts().find((section) => section.label === label)?.index ?? 0);
         if (this.language() === TELUGU && this.sections().length) {
           void this.chooseLanguage(TELUGU);
         } else {
@@ -226,7 +237,7 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
     const sections = this.sections().filter((section) => section.text.trim());
     if (!sections.length) return;
     void this.naturalVoice.telugu(sections).then((telugu) => {
-      const first = naturalChunks(telugu.map((section) => section.text).join(' '))[0];
+      const first = sectionChunks(telugu.map((section) => section.text))[0];
       if (first) void this.naturalVoice.audioUrl(this.prepareForSpeech(first)).catch(() => undefined);
     }, () => undefined);
   }
@@ -266,7 +277,8 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
           this.status.set(null);
         },
         () => {
-          if (run === this.playbackRun) this.fallBackToDevice();
+          // WebKit can drop a paused element's media; fetch the part again.
+          if (run === this.playbackRun) void this.speakFrom(this.chunkIndex());
         },
       );
       return;
@@ -278,11 +290,7 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
       this.status.set(null);
       return;
     }
-    if (!this.voiceDecided && this.mode() === 'device' && this.wantsNatural() && this.voiceDecision) {
-      void this.startAfterVoiceDecision();
-      return;
-    }
-    void this.speakFrom(this.chunkIndex());
+    this.play();
   }
 
   /** Waits up to 3 s for the voice to be chosen, then plays in whichever it is. */
@@ -291,6 +299,15 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
     await Promise.race([this.voiceDecision, new Promise((resolve) => setTimeout(resolve, 3000))]);
     this.voiceDecided = true;
     if (this.playing()) return;
+    void this.speakFrom(this.chunkIndex());
+  }
+
+  /** Starts (or restarts) playback at the current piece, waiting for the voice choice if it is still out. */
+  private play(): void {
+    if (!this.voiceDecided && this.mode() === 'device' && this.wantsNatural() && this.voiceDecision) {
+      void this.startAfterVoiceDecision();
+      return;
+    }
     void this.speakFrom(this.chunkIndex());
   }
 
@@ -319,8 +336,9 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
     if (!start) return;
     this.chunkIndex.set(start.index);
     this.elapsed.set(Math.floor(this.duration() * (start.index / Math.max(1, this.chunks().length))));
-    this.status.set(`Ready: ${label}.`);
-    if (this.playing()) void this.speakFrom(start.index);
+    // A chip is "play from here": selecting one and then finding play did
+    // nothing was the tester report (2026-10-28).
+    this.play();
   }
 
   protected async chooseLanguage(label: string): Promise<void> {
@@ -369,8 +387,9 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
     return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
   }
 
+  /** Every piece, section by section, so sectionStarts indexes into exactly this list. */
   private chunks(): string[] {
-    return this.chunksFor(this.scriptText());
+    return this.effectiveSections().flatMap((section) => this.chunksFor(section.text));
   }
 
   /**
@@ -400,6 +419,8 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
       this.status.set('Nothing to read yet.');
       return;
     }
+    index = Math.min(chunks.length - 1, Math.max(0, index));
+    this.started = true;
     this.clearStartWatch();
     this.clearNextSentenceTimer();
     if (this.mode() === 'natural') {
@@ -486,11 +507,12 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
     this.audio?.pause();
     this.stopTimer();
     this.status.set('Preparing natural voice...');
+    const text = this.prepareForSpeech(chunks[index]);
     let url: string;
     try {
-      url = await this.naturalVoice.audioUrl(this.prepareForSpeech(chunks[index]));
+      url = await this.naturalVoice.audioUrl(text).catch(() => this.naturalVoice.audioUrl(text));
     } catch {
-      if (run === this.playbackRun) this.fallBackToDevice();
+      if (run === this.playbackRun) this.naturalFailed();
       return;
     }
     if (run !== this.playbackRun) return;
@@ -506,7 +528,7 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
       this.finishPlayback();
     };
     audio.onerror = () => {
-      if (run === this.playbackRun) this.fallBackToDevice();
+      if (run === this.playbackRun) this.naturalFailed();
     };
     audio.src = url;
     this.audioIndex = index;
@@ -514,10 +536,11 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
     try {
       await audio.play();
     } catch {
-      if (run === this.playbackRun) this.fallBackToDevice();
+      if (run === this.playbackRun) this.naturalFailed();
       return;
     }
     if (run !== this.playbackRun) return;
+    this.naturalPlayed = true;
     this.playing.set(true);
     this.status.set(null);
     this.startTimer();
@@ -528,7 +551,25 @@ export class ListenSheetComponent implements OnDestroy, OnInit {
     }
   }
 
-  /** Natural voice failed (offline, provider down): carry on with the phone voice. */
+  /**
+   * A natural piece couldn't be had or played. Before any natural audio has
+   * played, the phone voice takes over for the whole session. Once the reader
+   * has heard Siddha's voice, switching mid-reading is the bug testers heard,
+   * so the reading pauses on that part and play tries it again.
+   */
+  private naturalFailed(): void {
+    if (!this.naturalPlayed) {
+      this.fallBackToDevice();
+      return;
+    }
+    this.audio?.pause();
+    this.audioIndex = -1;
+    this.playing.set(false);
+    this.stopTimer();
+    this.status.set('Couldn’t load the next part. Check your connection, then tap play.');
+  }
+
+  /** Natural voice failed before it ever played (offline, provider down): use the phone voice. */
   private fallBackToDevice(): void {
     const label = this.activeSectionLabel();
     this.audio?.pause();

@@ -206,11 +206,11 @@ def test_prerender_also_renders_the_telugu_the_sheet_will_ask_for():
     translate.set_translator_for_tests(lambda system, prompt: '["నమస్తే రవి.", "ఈ రోజు ప్రశాంతంగా ఉంటుంది."]')
     try:
         spoken = [{"label": "Opening", "text": "Namaste, Ravi."}, {"label": "Close", "text": "The day is calm."}]
-        assert daily_briefs.prerender_audio(spoken) == 2
+        assert daily_briefs.prerender_audio(spoken) == 4
     finally:
         tts.set_synthesizer_for_tests(None)
         translate.set_translator_for_tests(None)
-    assert rendered == ["Namaste, Ravi. The day is calm.", "నమస్తే రవి. ఈ రోజు ప్రశాంతంగా ఉంటుంది."]
+    assert rendered == ["Namaste, Ravi.", "The day is calm.", "నమస్తే రవి.", "ఈ రోజు ప్రశాంతంగా ఉంటుంది."]
 
 
 # ── Store, endpoint and schedule ─────────────────────────────────────────────
@@ -442,16 +442,19 @@ def test_before_the_lookahead_only_today_is_written(env, agent):
 
 
 def test_prerendered_audio_is_keyed_by_the_texts_the_listen_sheet_sends():
-    """The sheet speaks one joined script, split by naturalChunks and cleaned by
-    prepareForSpeech; per-section renders would never be a cache hit."""
+    """The sheet splits each section on its own (so each chip starts a piece)
+    and cleans each piece with prepareForSpeech; a joined-script split would
+    never be a cache hit."""
     spoken = [
         {"label": "Opening", "text": "Namaste, Ravi.  Here is your brief."},
         {"label": "Overview", "text": "Your Tarabala is strong — and Chandrabala is steady."},
+        {"label": "Why", "text": "   "},
         {"label": "Close", "text": "Let the day stay light."},
     ]
     assert daily_briefs.listen_requests(spoken) == [
-        "Namaste, Ravi. Here is your brief. Your Tara bala is strong, and Chandra bala is steady. "
-        "Let the day stay light."
+        "Namaste, Ravi. Here is your brief.",
+        "Your Tara bala is strong, and Chandra bala is steady.",
+        "Let the day stay light.",
     ]
     long = [{"label": "Overview", "text": "A sentence of some length goes here. " * 60}]
     pieces = daily_briefs.listen_requests(long)
