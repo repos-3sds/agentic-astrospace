@@ -36,29 +36,29 @@ test('Settings leads with Account and keeps legal links in the footer', async ({
 
   const eyebrows = page.locator('h2.eyebrow');
   await expect(eyebrows).toHaveText(['YOU AND YOUR FAMILY', 'ALERTS', 'READINGS', 'APP']);
-  for (const gone of ['Manage profiles', 'Chart method', 'Light or dark', 'Terms of Service', 'Privacy Policy']) {
+  for (const gone of ['Manage profiles', 'Chart Method', 'Light or Dark', 'Terms of Service', 'Privacy Policy']) {
     await expect(page.getByText(gone, { exact: true })).toHaveCount(0);
   }
   await expect(page.locator('.legal-foot button')).toHaveText(['Terms', 'Privacy']);
 
-  // My birth details edits the reader's own profile, not the one being viewed.
-  const mine = page.getByRole('link', { name: /My birth details/ });
+  // My Birth Details edits the reader's own profile, not the one being viewed.
+  const mine = page.getByRole('link', { name: /My Birth Details/ });
   await expect(mine).toHaveAttribute('href', '/m/settings/profiles/a/edit');
   await expect(mine).toContainText('14 Mar 1990 · Pune');
 
   await card.click();
   await expect(page).toHaveURL(/\/m\/settings\/account$/);
-  await expect(page.locator('.action-label').first()).toContainText('Plan and purchases');
+  await expect(page.locator('.action-label').first()).toContainText('Plan and Purchases');
 });
 
 test('rows set once live one level down', async ({ page }) => {
   await page.goto('/m/settings');
-  await page.getByRole('link', { name: /Astrology preferences/ }).click();
+  await page.getByRole('link', { name: /Astrology Preferences/ }).click();
   await expect(page).toHaveURL(/\/m\/settings\/astrology$/);
-  await expect(page.locator('.row-label')).toHaveText(['City for timings', 'Festivals to show', 'Chart method']);
+  await expect(page.locator('.row-label')).toHaveText(['City for Timings', 'Festivals to Show', 'Chart Method']);
 
   await page.goto('/m/settings/look');
-  await expect(page.locator('.row-label')).toContainText(['Light or dark', 'Language and voice', 'Vibration']);
+  await expect(page.locator('.row-label')).toContainText(['Light or Dark', 'Language and Voice', 'Vibration']);
 });
 
 test('an older account with no "self" row names its first profile', async ({ page }) => {
@@ -70,5 +70,5 @@ test('an older account with no "self" row names its first profile', async ({ pag
   await page.route('**/api/v1/kundlis', (route) => route.fulfill({ json: older }));
   await page.goto('/m/settings');
   await expect(page.getByRole('link', { name: 'Account' })).toContainText('Kiran');
-  await expect(page.getByRole('link', { name: /My birth details/ })).toHaveAttribute('href', '/m/settings/profiles/a/edit');
+  await expect(page.getByRole('link', { name: /My Birth Details/ })).toHaveAttribute('href', '/m/settings/profiles/a/edit');
 });

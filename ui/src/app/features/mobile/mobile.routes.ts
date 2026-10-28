@@ -236,14 +236,14 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/astrology',
-    title: 'Astrology preferences',
+    title: 'Astrology Preferences',
     data: { section: 'astrology', hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/settings-home.component').then((m) => m.SettingsHomeComponent),
   },
   {
     path: 'settings/look',
-    title: 'Look and language',
+    title: 'Look and Language',
     data: { section: 'look', hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/settings-home.component').then((m) => m.SettingsHomeComponent),
@@ -277,7 +277,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/profiles/:id/memory',
-    title: 'What Siddha remembers',
+    title: 'What Siddha Remembers',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/profile-memory.component').then(
@@ -304,7 +304,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/mode',
-    title: 'Detail and tone',
+    title: 'Detail and Tone',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/mode-tone.component').then(
@@ -313,7 +313,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/appearance',
-    title: 'Light or dark',
+    title: 'Light or Dark',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/appearance.component').then(
@@ -322,7 +322,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/text-size',
-    title: 'Text size',
+    title: 'Text Size',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/text-size.component').then(
@@ -331,7 +331,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/language',
-    title: 'Language and voice',
+    title: 'Language and Voice',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/language-audio.component').then(
@@ -340,7 +340,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/alarms',
-    title: 'Panchang alarms',
+    title: 'Panchang Alarms',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/panchang-alarms.component').then(
@@ -376,7 +376,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/location',
-    title: 'City for timings',
+    title: 'City for Timings',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/location.component').then(
@@ -385,7 +385,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/festivals',
-    title: 'Festivals to show',
+    title: 'Festivals to Show',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/festival-preferences.component').then(
@@ -403,7 +403,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/account/delete',
-    title: 'Delete account',
+    title: 'Delete Account',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/account-deletion.component').then(
@@ -412,7 +412,7 @@ export const MOBILE_ROUTES: Routes = [
   },
   {
     path: 'settings/conventions',
-    title: 'Chart method',
+    title: 'Chart Method',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/conventions.component').then(

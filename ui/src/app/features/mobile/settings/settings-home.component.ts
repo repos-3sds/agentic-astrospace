@@ -121,7 +121,7 @@ export class SettingsHomeComponent {
           {
             id: 'me',
             icon: 'set-profiles',
-            label: 'My birth details',
+            label: 'My Birth Details',
             value: this.birthLabel(),
             route: this.selfProfile() ? ['/m', 'settings', 'profiles', this.selfProfile()!.id, 'edit'] : ['/m', 'settings', 'profiles', 'new'],
           },
@@ -135,7 +135,7 @@ export class SettingsHomeComponent {
           {
             id: 'memory',
             icon: 'set-inbox',
-            label: 'What Siddha remembers',
+            label: 'What Siddha Remembers',
             value: !this.preferences.memoryEnabled()
               ? 'Off'
               : this.preferences.memoryMode() === 'automatic' ? 'Saves details on its own' : 'Asks before saving',
@@ -148,21 +148,21 @@ export class SettingsHomeComponent {
       {
         eyebrow: 'ALERTS',
         rows: [
-          { id: 'notifications', icon: 'set-notif', label: 'Notifications and emails', value: this.notificationLabel(), route: ['/m', 'settings', 'notifications'] },
-          { id: 'alarms', icon: 'set-notif', label: 'Panchang alarms', value: this.alarmLabel(), route: ['/m', 'settings', 'alarms'] },
+          { id: 'notifications', icon: 'set-notif', label: 'Notifications and Emails', value: this.notificationLabel(), route: ['/m', 'settings', 'notifications'] },
+          { id: 'alarms', icon: 'set-notif', label: 'Panchang Alarms', value: this.alarmLabel(), route: ['/m', 'settings', 'alarms'] },
         ],
       },
       {
         eyebrow: 'READINGS',
         rows: [
-          { id: 'mode', icon: 'set-tone', label: 'Detail and tone', value: `${this.modeLabel()} · ${this.toneLabel()}`, route: ['/m', 'settings', 'mode'] },
-          { id: 'astrology', icon: 'set-conv', label: 'Astrology preferences', value: astro.map((r) => r.value).join(' · '), route: ['/m', 'settings', 'astrology'] },
+          { id: 'mode', icon: 'set-tone', label: 'Detail and Tone', value: `${this.modeLabel()} · ${this.toneLabel()}`, route: ['/m', 'settings', 'mode'] },
+          { id: 'astrology', icon: 'set-conv', label: 'Astrology Preferences', value: astro.map((r) => r.value).join(' · '), route: ['/m', 'settings', 'astrology'] },
         ],
       },
       {
         eyebrow: 'APP',
         rows: [
-          { id: 'look', icon: 'set-appearance', label: 'Look and language', value: `${this.themeLabel()} · ${this.languageLabel()} · ${look.length > 3 ? 'text size, ' : ''}vibration`, route: ['/m', 'settings', 'look'] },
+          { id: 'look', icon: 'set-appearance', label: 'Look and Language', value: `${this.themeLabel()} · ${this.languageLabel()} · ${look.length > 3 ? 'text size, ' : ''}vibration`, route: ['/m', 'settings', 'look'] },
         ],
       },
     ];
@@ -170,17 +170,17 @@ export class SettingsHomeComponent {
 
   private astrologyRows(): SettingRow[] {
     return [
-      { id: 'location', icon: 'set-loc', label: 'City for timings', value: this.locationLabel(), route: ['/m', 'settings', 'location'] },
-      { id: 'festivals', icon: 'set-festival', label: 'Festivals to show', value: this.festivalLabel(), route: ['/m', 'settings', 'festivals'] },
-      { id: 'conventions', icon: 'set-conv', label: 'Chart method', value: `${this.ayanamshaLabel()} · ${this.chartStyleLabel()} chart`, route: ['/m', 'settings', 'conventions'] },
+      { id: 'location', icon: 'set-loc', label: 'City for Timings', value: this.locationLabel(), route: ['/m', 'settings', 'location'] },
+      { id: 'festivals', icon: 'set-festival', label: 'Festivals to Show', value: this.festivalLabel(), route: ['/m', 'settings', 'festivals'] },
+      { id: 'conventions', icon: 'set-conv', label: 'Chart Method', value: `${this.ayanamshaLabel()} · ${this.chartStyleLabel()} chart`, route: ['/m', 'settings', 'conventions'] },
     ];
   }
 
   private lookRows(): SettingRow[] {
     return [
-      { id: 'appearance', icon: 'set-appearance', label: 'Light or dark', value: this.themeLabel(), route: ['/m', 'settings', 'appearance'] },
-      ...(this.textSize.available ? [{ id: 'text-size', icon: 'set-text', label: 'Text size', value: this.textSizeLabel(), route: ['/m', 'settings', 'text-size'] }] : []),
-      { id: 'language', icon: 'set-lang', label: 'Language and voice', value: `${this.languageLabel()} · ${this.preferences.readAloud() ? this.voiceLabel() : 'Listen off'}`, route: ['/m', 'settings', 'language'] },
+      { id: 'appearance', icon: 'set-appearance', label: 'Light or Dark', value: this.themeLabel(), route: ['/m', 'settings', 'appearance'] },
+      ...(this.textSize.available ? [{ id: 'text-size', icon: 'set-text', label: 'Text Size', value: this.textSizeLabel(), route: ['/m', 'settings', 'text-size'] }] : []),
+      { id: 'language', icon: 'set-lang', label: 'Language and Voice', value: `${this.languageLabel()} · ${this.preferences.readAloud() ? this.voiceLabel() : 'Listen off'}`, route: ['/m', 'settings', 'language'] },
       { id: 'interaction', icon: 'set-interaction', label: 'Vibration', value: this.preferences.hapticsEnabled() ? 'On for taps' : 'Off', route: ['/m', 'settings', 'interaction'] },
     ];
   }
