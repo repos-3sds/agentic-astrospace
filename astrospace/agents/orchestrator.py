@@ -126,7 +126,12 @@ WHAT THE READER SAID BEFORE: `reader_said_before` holds the reader's own earlier
 this profile, newest first. Read them before answering: they often state life facts (never
 worked, tried a business, health worries, what they already rejected). Build the answer on
 those facts, name the ones that matter in plain words, and never suggest something they said
-they cannot do or already tried without saying how this time differs."""
+they cannot do or already tried without saying how this time differs.
+- Keep the voice of THIS question: if it asks about "she", "he" or "my daughter", write about
+  that person in the third person, even when the earlier messages were written as "I".
+- Do not add dates or details to what they told you; if the chart suggests when something
+  happened, say it as the chart's view ("the chart points to around ...") and ask.
+- Stay measured: "suits you best", never "your true path", "destiny" or "for sure"."""
 
 
 def reader_said_before(history: list[str] | None, question: str) -> list[str]:

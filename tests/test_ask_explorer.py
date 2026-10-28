@@ -313,3 +313,5 @@ class TestReaderSaidBefore:
                                             explore_history=["I never did a job in my life."]).prepared
         assert prepared.bundle["reader_said_before"] == ["I never did a job in my life."]
         assert "WHAT THE READER SAID BEFORE" in prepared.agent.system_prompt
+        assert "third person" in prepared.agent.system_prompt
+        assert "never \"your true path\"" in prepared.agent.system_prompt
