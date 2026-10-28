@@ -135,8 +135,13 @@ browser fallback, is a JWT signed with that key and expires after six months;
 regenerate it before then (a script for it was given to the owner) or the
 fallback stops working.
 
-**iPhone only.** `TARGETED_DEVICE_FAMILY` is 1. iPads still run the app in
-iPhone mode, and the store listing needs no iPad screenshots or iPad review.
+**iPhone and iPad.** `TARGETED_DEVICE_FAMILY` is `1,2` (since build 587 was
+approved, 2026-10-28). iPhones stay portrait; iPads turn to all four
+orientations, which Split View and Stage Manager need. The tablet layout
+(side rail, two panes) follows window width, so an iPad in narrow Split View
+gets the phone layout. Once an App Store version ships with iPad support it
+cannot be dropped, and App Store review then needs 13-inch iPad screenshots
+in the listing; TestFlight builds need neither.
 
 **Play release checklist.** Before any AAB goes to a Play track (owner: Hawk,
 in Play Console):
