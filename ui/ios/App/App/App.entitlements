@@ -8,6 +8,9 @@
 
   Sign in with Apple capability, for Apple's own sign-in sheet
   (AuthService.signInWithApple). Automatic signing adds it to the App ID.
+
+  App Group shared with the widget extension (Shared/WidgetGroup.swift); the
+  App ID carries it in Apple Developer.
 -->
 <plist version="1.0">
 <dict>
@@ -16,6 +19,10 @@
 	<key>com.apple.developer.applesignin</key>
 	<array>
 		<string>Default</string>
+	</array>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.app.asksiddha.mobile</string>
 	</array>
 </dict>
 </plist>

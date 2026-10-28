@@ -16,12 +16,15 @@ runner with the newest Xcode 26, after the server deploy:
 2. `npm ci`, `version:sync`, the production web build, `npx cap sync ios`.
 3. The CI distribution certificate goes into a throwaway keychain.
    `scripts/asc.py profile` finds an active App Store profile for
-   `app.asksiddha.mobile` with that certificate, or makes one. It looks every
-   time because Apple invalidates a profile whenever the App ID's capabilities
-   change.
-4. In that checkout only, the App target's Release settings switch from
-   automatic to manual signing with that profile, and `aps-environment` becomes
-   `production`. Nothing is committed back.
+   `app.asksiddha.mobile` with that certificate, or makes one, and does the
+   same for the home-screen widget extension's App ID
+   `app.asksiddha.mobile.widgets` (`--bundle`). It looks every time because
+   Apple invalidates a profile whenever the App ID's capabilities change. Both
+   App IDs carry the App Group `group.app.asksiddha.mobile`, set up by hand in
+   Apple Developer (2026-10-28): Apple's API can't create App Groups.
+4. In that checkout only, the App and SiddhaWidgets targets' Release settings
+   switch from automatic to manual signing with those profiles, and
+   `aps-environment` becomes `production`. Nothing is committed back.
 5. Archive, export the IPA (kept 30 days as a run artifact), upload with
    `xcrun altool` using the App Store Connect API key.
 

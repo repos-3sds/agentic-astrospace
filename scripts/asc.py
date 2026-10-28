@@ -9,6 +9,7 @@ nothing to install:
     python3 scripts/asc.py check                       # key works, app is visible
     python3 scripts/asc.py latest-build                # highest build number Apple holds
     python3 scripts/asc.py profile --serial 1A2B... --out ci.mobileprovision
+    python3 scripts/asc.py profile --bundle app.asksiddha.mobile.widgets --serial 1A2B... --out w.mobileprovision
     python3 scripts/asc.py create-cert --out-dir DIR   # one-time setup, Mac only
 
 The API key comes from $ASC_KEY_ID, $ASC_ISSUER_ID and either $ASC_KEY_FILE
@@ -37,6 +38,9 @@ from pathlib import Path
 
 APP_ID = "6827191709"            # "Siddha: Astrology | Life Guide"
 BUNDLE_ID = "app.asksiddha.mobile"
+# The home-screen widget extension (ui/ios/App/SiddhaWidgets) has its own App
+# ID and so its own App Store profile, signed by the same certificate.
+WIDGETS_BUNDLE_ID = "app.asksiddha.mobile.widgets"
 API = "https://api.appstoreconnect.apple.com/v1"
 PROFILE_PREFIX = "Siddha CI App Store"
 
@@ -206,9 +210,9 @@ def pick_profile(profiles: list[dict], bundle_pk: str, cert_pk: str) -> dict | N
     return None
 
 
-def ensure_profile(token: str, serial: str) -> dict:
+def ensure_profile(token: str, serial: str, identifier: str = BUNDLE_ID) -> dict:
     cert = find_certificate(token, serial)
-    bundle = find_bundle_id(token)
+    bundle = find_bundle_id(token, identifier)
     data = _get("/profiles", token, **{"filter[profileType]": "IOS_APP_STORE",
                                        "filter[profileState]": "ACTIVE",
                                        "include": "bundleId,certificates",
@@ -218,7 +222,7 @@ def ensure_profile(token: str, serial: str) -> dict:
         return profile
     body = {"data": {
         "type": "profiles",
-        "attributes": {"name": f"{PROFILE_PREFIX} {time.strftime('%Y-%m-%d %H%M', time.gmtime())}",
+        "attributes": {"name": f"{profile_prefix(identifier)} {time.strftime('%Y-%m-%d %H%M', time.gmtime())}",
                        "profileType": "IOS_APP_STORE"},
         "relationships": {
             "bundleId": {"data": {"type": "bundleIds", "id": bundle["id"]}},
@@ -226,6 +230,11 @@ def ensure_profile(token: str, serial: str) -> dict:
         },
     }}
     return _request("POST", "/profiles", token, body)["data"]
+
+
+def profile_prefix(identifier: str) -> str:
+    """Profile names are unique on the team, so each App ID gets its own prefix."""
+    return PROFILE_PREFIX if identifier == BUNDLE_ID else f"{PROFILE_PREFIX} {identifier.rsplit('.', 1)[-1].title()}"
 
 
 def create_certificate(token: str, out_dir: Path, p12_password: str) -> str:
@@ -268,6 +277,8 @@ def main(argv: list[str] | None = None) -> int:
     prof = sub.add_parser("profile", help="find or create the App Store profile for the CI certificate")
     prof.add_argument("--serial", required=True, help="serial number of the distribution certificate")
     prof.add_argument("--out", required=True, type=Path, help="where to write the .mobileprovision")
+    prof.add_argument("--bundle", default=BUNDLE_ID, choices=[BUNDLE_ID, WIDGETS_BUNDLE_ID],
+                      help="the App ID the profile is for (default: the app)")
     cert = sub.add_parser("create-cert", help="one-time: new distribution certificate + p12")
     cert.add_argument("--out-dir", required=True, type=Path)
     args = parser.parse_args(argv)
@@ -280,7 +291,7 @@ def main(argv: list[str] | None = None) -> int:
         elif args.cmd == "latest-build":
             print(latest_build(token))
         elif args.cmd == "profile":
-            profile = ensure_profile(token, args.serial)
+            profile = ensure_profile(token, args.serial, args.bundle)
             attrs = profile["attributes"]
             args.out.write_bytes(base64.b64decode(attrs["profileContent"]))
             print(f"name={attrs['name']}")

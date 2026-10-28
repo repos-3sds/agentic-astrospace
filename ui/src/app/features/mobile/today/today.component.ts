@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, computed, effect, inject, signal, untracked } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { timingPlaceHint, timingPlaceLabel } from '../../../core/timing-place';
 import { DayGaugeComponent } from '../day-gauge/day-gauge.component';
@@ -508,11 +509,13 @@ export class TodayComponent {
     });
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
     // Deep-linked from the onboarding Aha screen's "Listen to my first
-    // guidance" — arriving with ?listen=1 should open the sheet immediately
-    // rather than land on a plain Today with no explanation of the link.
-    if (this.route.snapshot.queryParamMap.get('listen') === '1') {
-      this.openSheet.set('listen');
-    }
+    // guidance", and from the iPhone Listen widget — arriving with ?listen=1
+    // should open the sheet immediately rather than land on a plain Today
+    // with no explanation of the link. The widget can open it while Today is
+    // already showing, so this follows the query, not just the first one.
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      if (params.get('listen') === '1') this.openSheet.set('listen');
+    });
   }
 
   protected async loadToday(profileId = this.kundlis.activeId()): Promise<void> {
@@ -672,8 +675,15 @@ export class TodayComponent {
       summary: view.detail,
       doItem: view.doItems[0] ?? '',
       avoidItem: view.avoidItems[0] ?? '',
+      doItems: view.doItems.slice(0, 2),
+      avoidItems: view.avoidItems.slice(0, 2),
       tithi: daily.star_of_day.tithi,
       nakshatra: daily.star_of_day.nakshatra,
+      yoga: daily.panchanga_details?.yoga ?? '',
+      moonSign: daily.star_of_day.moon_rashi,
+      masa: widgetMasa(daily.masa),
+      // The reading is valid from sunrise to the next sunrise.
+      sunriseMs: daily.valid_from ? Date.parse(daily.valid_from) || null : null,
       windows: daily.muhurta_windows.flatMap((w) => {
         const span = timeZone ? windowSpan(daily.date, w.time, timeZone) : null;
         return span ? [{ name: w.name, kind: w.kind, ...span }] : [];
@@ -897,4 +907,14 @@ export class TodayComponent {
 /** The phone's calendar date as `YYYY-MM-DD`; toISOString() would give UTC's. */
 function localIsoDate(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+/**
+ * The month line for the calendar widget. Which month a day falls in depends
+ * on the reckoning (Amanta or Purnimanta), so the line names the rule it uses.
+ */
+export function widgetMasa(masa: DailyGuidancePayload['masa']): string {
+  if (!masa?.amanta) return '';
+  const month = `${masa.adhika ? 'Adhika ' : ''}${masa.amanta} (Amanta)`;
+  return masa.paksha ? `${month} · ${masa.paksha} paksha` : month;
 }

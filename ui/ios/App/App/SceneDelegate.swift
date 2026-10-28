@@ -38,6 +38,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         for context in URLContexts {
+            // A widget tap goes to the widgets plugin, not to the web layer's
+            // link handling (SiddhaWidgetsPlugin.handle).
+            if SiddhaWidgetsPlugin.handle(url: context.url) { continue }
             var options: [UIApplication.OpenURLOptionsKey: Any] = [:]
             options[.sourceApplication] = context.options.sourceApplication
             options[.annotation] = context.options.annotation

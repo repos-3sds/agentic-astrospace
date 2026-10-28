@@ -69,6 +69,19 @@ jobs:
             echo "## Libraries the binary loads"; otool -L "$APP/App"
           } | tee "$OUT/linkage.txt"
 
+      - name: Draw the home-screen widgets
+        # Every widget face in both themes, from the extension's own views on
+        # the sample day (ui/ios/WidgetPreview/render.swift). Kept in the
+        # artifact under widgets/; sheet-light.png and sheet-dark.png show
+        # them all at once.
+        run: |
+          set -euo pipefail
+          W=ui/ios/App/SiddhaWidgets
+          xcrun swiftc -parse-as-library -O \
+            ui/ios/App/Shared/WidgetGroup.swift "$W/Model.swift" "$W/Theme.swift" "$W/Views.swift" "$W/Sample.swift" \
+            ui/ios/WidgetPreview/render.swift -o "$RUNNER_TEMP/render-widgets"
+          "$RUNNER_TEMP/render-widgets" "$OUT/widgets" "$W/Fonts"
+
       - name: Open it and keep watching
         run: |
           set -uo pipefail

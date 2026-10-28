@@ -1,4 +1,4 @@
-import { applyMantraTaps, isWidgetRoute, wallClockToEpoch, weekDays, windowSpan } from './widget-bridge.service';
+import { applyMantraTaps, isWidgetRoute, monthDays, wallClockToEpoch, weekDays, windowSpan } from './widget-bridge.service';
 
 describe('widget bridge', () => {
   describe('wallClockToEpoch', () => {
@@ -88,5 +88,19 @@ describe('isWidgetRoute (D15)', () => {
     expect(isWidgetRoute('/m/remedies/mantra?next=/m/ask')).toBeFalse();
     expect(isWidgetRoute('/m/remedies/mantra?practice=a%20b')).toBeFalse();
     expect(isWidgetRoute('https://evil.example/m/today')).toBeFalse();
+  });
+
+  it('lets the iPhone Listen widget open the Listen sheet, and nothing else on Today', () => {
+    expect(isWidgetRoute('/m/today?listen=1')).toBeTrue();
+    expect(isWidgetRoute('/m/today?listen=1&next=/m/ask')).toBeFalse();
+  });
+});
+
+describe('monthDays', () => {
+  it('lists every day of the month with the qualities that arrived', () => {
+    const days = monthDays('2026-02-18', [{ date: '2026-02-01', quality: 'good' }, { date: '2026-03-01', quality: 'care' }]);
+    expect(days.length).toBe(28);
+    expect(days[0]).toEqual({ date: '2026-02-01', quality: 'good' });
+    expect(days[27]).toEqual({ date: '2026-02-28', quality: '' });
   });
 });

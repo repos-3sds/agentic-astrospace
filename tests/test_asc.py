@@ -121,6 +121,31 @@ def test_ensure_profile_creates_one_when_none_fits(monkeypatch):
     assert body["data"]["attributes"]["profileType"] == "IOS_APP_STORE"
 
 
+def test_widget_extension_gets_its_own_profile(monkeypatch):
+    calls = []
+
+    def fake(method, path, token, body=None):
+        calls.append((method, path.split("?")[0], body))
+        if path.startswith("/certificates"):
+            return {"data": [{"id": "C1", "attributes": {"serialNumber": "0A1B2C"}}]}
+        if path.startswith("/bundleIds"):
+            return {"data": [{"id": "B1", "attributes": {"identifier": "app.asksiddha.mobile"}},
+                             {"id": "B2", "attributes": {"identifier": "app.asksiddha.mobile.widgets"}}]}
+        if method == "GET" and path.startswith("/profiles"):
+            # The app's own profile carries the certificate but not this App ID.
+            return {"data": [_profile("app", bundle="B1")]}
+        if method == "POST" and path == "/profiles":
+            return {"data": _profile("new")}
+        raise AssertionError(path)
+
+    monkeypatch.setattr(asc, "_request", fake)
+    profile = asc.ensure_profile("t", "0A1B2C", asc.WIDGETS_BUNDLE_ID)
+    assert profile["id"] == "new"
+    body = calls[-1][2]["data"]
+    assert body["relationships"]["bundleId"]["data"]["id"] == "B2"
+    assert body["attributes"]["name"].startswith("Siddha CI App Store Widgets ")
+
+
 def test_unknown_certificate_is_a_clear_error(monkeypatch):
     monkeypatch.setattr(asc, "_request", lambda *a, **k: {"data": []})
     with pytest.raises(asc.AscError, match="no distribution certificate"):
