@@ -1871,22 +1871,15 @@ From the Muhurta audit (batches A–E built; these were left out on purpose).
 
 ## Deferred backlog — Ask colour advice (2026-10-26)
 
-- [ ] **Saturn for Virgo ascendant: neutral or helpful?** `FUNCTIONAL_BY_LAGNA[5]`
-  lists Saturn as neither benefic nor malefic, so `functional_planets()` puts
-  black and dark blue in `neutral` for Virgo. A practising astrologer reading a
-  Virgo tester's chart counted blue and black as good (Saturn rules the 5th, a
-  trikona, as well as the 6th). BPHS ch.36 vv.31-32 (G.C. Sharma) names only
-  Mercury and Venus as Virgo's benefics and Mars, Jupiter and Moon as malefics,
-  and leaves Saturn out; Sharma's note says Saturn's moolatrikona (Aquarius)
-  is the 6th, so it mostly gives 6th-house results. So the classics support
-  neutral; the astrologer's reading is a living-tradition difference (from a
-  research thread's OCR reading, not yet re-checked against the page).
-  *Why not built:* the standard list was kept until
-  Hawk decides; changing it moves every Virgo chart's "good planets" on the
-  Favourable screen too, not only Ask. *Unblocks when:* Hawk (or his mother) says
-  which convention to follow. *Hook:* `astrospace/core/vedic/constants.py`
-  `FUNCTIONAL_BY_LAGNA`, pinned by
-  `tests/test_ask_pushback.py::TestFunctionalColours::test_saturn_stays_neutral_for_virgo_until_decided`.
+- [x] **Saturn for Virgo ascendant: neutral, per the classics (decided
+  2026-10-27).** Hawk's rule for colours: always follow the classics. BPHS
+  ch.36 vv.31-32 (G.C. Sharma) names only Mercury and Venus as Virgo's
+  benefics and Mars, Jupiter and Moon as malefics, and leaves Saturn out;
+  Sharma's note says Saturn's moolatrikona (Aquarius) is the 6th, so it mostly
+  gives 6th-house results. So `FUNCTIONAL_BY_LAGNA[5]` stays as it is, and black
+  and dark blue stay `neutral` for Virgo, even though a practising astrologer
+  counted them as good for one Virgo tester. Pinned by
+  `tests/test_ask_pushback.py::TestFunctionalColours::test_saturn_is_neutral_for_virgo_per_bphs`.
 - [ ] **Live pushback eval in CI.** `scripts/eval_ask_pushback.py` runs the
   pushback cases against the real model with a judge call. *Why not built:* CI
   has no model key and each run costs about three calls per case. *Unblocks

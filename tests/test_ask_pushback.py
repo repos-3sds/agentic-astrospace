@@ -60,10 +60,11 @@ class TestFunctionalColours:
         # "Green ... white manchivi": Mercury is the ascendant lord, Venus rules the 9th.
         assert {"green", "olive green", "white"} <= suit
 
-    def test_saturn_stays_neutral_for_virgo_until_decided(self):
-        # The astrologer counts blue and black as good too (Saturn rules the
-        # 5th). The engine's standard list keeps Saturn neutral for Virgo; this
-        # pins that so a change is a decision, not a drift.
+    def test_saturn_is_neutral_for_virgo_per_bphs(self):
+        # BPHS ch.36 names only Mercury and Venus as Virgo's benefics and
+        # leaves Saturn out (its moolatrikona is the 6th). Hawk's rule is to
+        # follow the classics for colours, so black and blue stay neutral
+        # even where a living astrologer counts them as good.
         neutral = {row["colour"] for row in functional_planets(VIRGO)["colours"]["neutral"]}
         assert {"black", "dark blue"} <= neutral
 
