@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, computed, effect, inject, signal, untracked } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
-import { timingPlaceLabel } from '../../../core/timing-place';
+import { timingPlaceHint, timingPlaceLabel } from '../../../core/timing-place';
 import { DayGaugeComponent } from '../day-gauge/day-gauge.component';
 import { DayQualitySheetComponent, DaySignal } from './day-quality-sheet.component';
 import { ListenSheetComponent } from './listen-sheet.component';
@@ -187,6 +187,9 @@ export interface StatSection {
   cells: StatCell[];
   presentation?: 'grid' | 'signature';
 }
+
+/** The place-hint wording last dismissed; a new city or reason shows again. */
+const PLACE_HINT_KEY = 'as.today.place-hint-dismissed';
 
 export interface TodayView {
   greetingName: string;
@@ -382,6 +385,8 @@ export class TodayComponent {
   protected readonly panchangaDetails = signal<DailyGuidancePayload['panchanga_details'] | null>(null);
   protected readonly criticalTransits = signal<DailyGuidancePayload['context']['active_gochara']>([]);
   protected readonly muhurtaWindows = signal<DailyGuidancePayload['muhurta_windows']>([]);
+  /** "Times are for Toronto, a guess…": shown until the reader dismisses that wording. */
+  protected readonly placeHint = signal('');
 
   // Always shown. A reading whose conventions are hidden is not reproducible —
   // the same chart under a different ayanamsa is a different answer.
@@ -658,6 +663,25 @@ export class TodayComponent {
     );
   }
 
+  protected dismissPlaceHint(): void {
+    const hint = this.placeHint();
+    if (!hint) return;
+    try {
+      localStorage.setItem(PLACE_HINT_KEY, hint);
+    } catch {
+      // Private mode: the hint simply comes back next time.
+    }
+    this.placeHint.set('');
+  }
+
+  private hintDismissed(hint: string): boolean {
+    try {
+      return localStorage.getItem(PLACE_HINT_KEY) === hint;
+    } catch {
+      return false;
+    }
+  }
+
   private applyDaily(name: string, city: string, daily: DailyGuidancePayload): void {
     const band: DayBand = daily.verdict.tone === 'caution'
       ? 'tough'
@@ -668,6 +692,8 @@ export class TodayComponent {
       month: 'long',
       timeZone: 'UTC',
     }).format(new Date(`${daily.date}T00:00:00Z`));
+    const hint = timingPlaceHint(daily.provenance.place);
+    this.placeHint.set(hint && !this.hintDismissed(hint) ? hint : '');
     this.view.set({
       greetingName: name,
       initial: name.slice(0, 1).toUpperCase(),

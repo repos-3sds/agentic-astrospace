@@ -39,7 +39,7 @@ def fake_windows(kundli, day, tz_name):
         w("Durmuhurta", "2026-10-16T08:40:00+05:30", "2026-10-16T09:28:00+05:30"),  # already begun
         w("Gulika Kalam", "2026-10-16T09:20:00+05:30", "2026-10-16T10:50:00+05:30"),  # lead time passed
         w("Abhijit Muhurta", "2026-10-16T11:45:00+05:30", "2026-10-16T12:33:00+05:30", "auspicious",
-          note="Not observed on Wednesday"),
+          note="A good window for important starts"),
     ]
 
 
@@ -81,7 +81,7 @@ def test_copy_states_the_window_without_fear(db):
     jobs = by_name(schedule_window_alerts(db, now=NOW, windows=fake_windows))
     assert jobs["Rahu Kalam"].title == "Rahu Kalam at 10:30"
     assert jobs["Rahu Kalam"].body == "Rahu Kalam runs 10:30–12:00."
-    assert jobs["Abhijit Muhurta"].body.endswith("Not observed on Wednesday.")
+    assert jobs["Abhijit Muhurta"].body.endswith("A good window for important starts.")
     assert all(j.deep_link == "/m/today" for j in jobs.values())
 
 

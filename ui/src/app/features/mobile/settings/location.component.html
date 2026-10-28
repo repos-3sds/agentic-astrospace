@@ -46,6 +46,16 @@
     />
   </label>
 
+  <button type="button" class="locate" (click)="useLocation()" [disabled]="locating()">
+    <img src="mobile/pin.svg" alt="" aria-hidden="true" />
+    <span>{{ locating() ? 'Finding where you are…' : 'Use my location' }}</span>
+  </button>
+  @if (found(); as near) {
+    <p class="search-note">
+      Using {{ near.city }}@if ((near.distance_km ?? 0) > 30) {, the nearest place we know ({{ near.distance_km }} km away)}.
+    </p>
+  }
+
   @if (searching()) {
     <p class="search-note">Searching cities…</p>
   } @else if (searchError()) {

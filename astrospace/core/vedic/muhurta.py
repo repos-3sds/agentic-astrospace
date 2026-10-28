@@ -43,6 +43,8 @@ from __future__ import annotations
 import re
 from datetime import date as date_cls, datetime, timedelta, timezone
 
+from zoneinfo import ZoneInfo
+
 import swisseph as swe
 
 from .constants import NAKSHATRAS, NAKSHATRA_SPAN, TITHI_NAMES, VARA_NAMES, YOGA_NAMES
@@ -653,8 +655,13 @@ def _base_for(name: str) -> int:
 
 
 def _overlaps(a_start: str, a_end: str, b_start: str, b_end: str) -> bool:
-    """True when two ISO local-time ranges intersect."""
-    return a_start < b_end and b_start < a_end
+    """True when two ISO local-time ranges intersect.
+
+    Compared as instants, not strings: across a clock change the two sides
+    carry different UTC offsets, and "01:30-04:00" sorts before
+    "01:10-05:00" though it happens 40 minutes later."""
+    a0, a1, b0, b1 = map(datetime.fromisoformat, (a_start, a_end, b_start, b_end))
+    return a0 < b1 and b0 < a1
 
 
 def _clear_span(window: dict, inauspicious: list[dict]) -> tuple[datetime, datetime] | None:
@@ -857,6 +864,8 @@ def _hours_window(day_date: date_cls, hours, tz) -> tuple[datetime, datetime] | 
     if hours is None:
         return None
     start_h, end_h = hours
+    # Wall-clock hours in the city's zone: "06:00 to 22:00" stays that on
+    # the day the clocks change, which an offset from midnight would not.
     midnight = datetime(day_date.year, day_date.month, day_date.day, tzinfo=tz)
     return midnight + timedelta(hours=start_h), midnight + timedelta(hours=end_h)
 
@@ -886,13 +895,19 @@ def _blocks(day: dict, goal: dict, hours) -> list[dict]:
         blocks.insert(0, {"start": datetime.fromisoformat(brahma["start_iso"]),
                           "end": datetime.fromisoformat(brahma["end_iso"]),
                           "name": "Brahma Muhurta", "night": True, "brahma": True})
+    # The steps above are added to sunrise's fixed UTC offset; a night that
+    # crosses a clock change (2 am, 1 Nov 2026 in Toronto) would print its
+    # late blocks an hour off. Same instants, shown on the city's own clock.
+    zone = ZoneInfo(day["place"]["timezone"])
+    for block in blocks:
+        block["start"] = block["start"].astimezone(zone)
+        block["end"] = block["end"].astimezone(zone)
     return blocks
 
 
 def _covering(rows: list[dict], moment: datetime) -> dict | None:
-    iso = moment.isoformat()
     for row in rows:
-        if row["start_iso"] <= iso < row["end_iso"]:
+        if datetime.fromisoformat(row["start_iso"]) <= moment < datetime.fromisoformat(row["end_iso"]):
             return row
     return None
 
@@ -1111,7 +1126,7 @@ def _scan(goal, rules_slug, date_from, span, me, partner, ghatak_moon_sign,
         ghatak = [a["type"] for a in (personal.get("ghatak_alerts") or []) if a.get("matched")]
         inauspicious = day["windows"]["inauspicious"]
         amrit = [w for w in day["windows"]["auspicious"] if w["name"].startswith("Amrit Kalam")]
-        window = _hours_window(day_date, hours, rise.tzinfo)
+        window = _hours_window(day_date, hours, ZoneInfo(day["place"]["timezone"]))
         festival = festival_dates.get(day_date)
         day_chandrashtama = False
 

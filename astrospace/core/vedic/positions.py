@@ -75,6 +75,41 @@ def birth_moment(year: int, month: int, day: int, hour: int, minute: int,
                        lat=lat, lng=lng, tz_str=tz_str)
 
 
+def local_clock_status(dt_local: datetime) -> dict:
+    """What the birth place's clock was doing at a local birth time.
+
+    The tz database carries every historical change (India's +06:30 war time
+    1942-45, Sri Lanka 1996-2006, Bangladesh 2009, US/UK/Canada summer time),
+    so the UTC instant is already right for an ordinary time. Two local times
+    are not ordinary: on a fall-back night the hour repeats, and on a
+    spring-forward night an hour never happens. Python reads the first of a
+    repeated hour and a skipped time on the clock before the change; this
+    says so rather than letting either pass as certain.
+    """
+    offset = dt_local.utcoffset()
+    other = dt_local.replace(fold=1 - dt_local.fold).utcoffset()
+    roundtrip = dt_local.astimezone(timezone.utc).astimezone(dt_local.tzinfo)
+    status, note = "normal", None
+    if roundtrip.replace(tzinfo=None) != dt_local.replace(tzinfo=None):
+        status = "skipped"
+        note = (f"{dt_local:%H:%M} did not happen on this date here: the clocks went "
+                f"forward. It is read as {roundtrip:%H:%M} on the new clock.")
+    elif other != offset:
+        status = "repeated"
+        note = (f"{dt_local:%H:%M} happened twice on this date here: the clocks went "
+                f"back. The chart uses the first {dt_local:%H:%M} (before the change); "
+                f"a birth in the second is an hour later.")
+    dst = dt_local.dst()
+    total = int(offset.total_seconds() // 60) if offset is not None else 0
+    sign = "+" if total >= 0 else "-"
+    return {
+        "utc_offset": f"{sign}{abs(total) // 60:02d}:{abs(total) % 60:02d}",
+        "daylight_saving": bool(dst),
+        "status": status,
+        "note": note,
+    }
+
+
 def _set_ayanamsha(ayanamsha: str) -> None:
     try:
         mode = AYANAMSHA_MODES[ayanamsha.lower()]

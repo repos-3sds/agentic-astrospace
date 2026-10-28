@@ -1,4 +1,4 @@
-import { plannedTimingPlace, timingClockNote, timingPlaceLabel, timezoneShortName } from './timing-place';
+import { plannedTimingPlace, timingClockNote, timingPlaceHint, timingPlaceLabel, timezoneShortName } from './timing-place';
 
 describe('timing place labels', () => {
   const at = new Date('2026-07-07T06:00:00Z');
@@ -34,5 +34,18 @@ describe('timing place labels', () => {
       short: 'Follows phone',
       sentence: 'The listed city nearest your phone’s timezone (GMT+5:30), or your birth city',
     });
+  });
+
+  it('nudges when the city is a guess or the phone has changed zone', () => {
+    expect(timingPlaceHint({ city: 'Toronto', timezone: 'America/Toronto', source: 'viewer_timezone' }))
+      .toContain('a guess from your phone');
+    expect(timingPlaceHint({ city: 'Hyderabad', timezone: 'Asia/Kolkata', source: 'birth_city' }))
+      .toContain('your birth city');
+    expect(timingPlaceHint({
+      city: 'Hyderabad', timezone: 'Asia/Kolkata', source: 'selected', viewer_timezone: 'Asia/Singapore',
+    })).toContain('Travelling?');
+    expect(timingPlaceHint({
+      city: 'Kolkata', timezone: 'Asia/Kolkata', source: 'selected', viewer_timezone: 'Asia/Kolkata',
+    })).toBe('');
   });
 });

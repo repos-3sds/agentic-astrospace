@@ -102,6 +102,12 @@
       <p class="eyebrow">{{ v.cardTitle || (preferences.experienceMode() === 'guided' ? 'YOUR RHYTHM TODAY' : 'WHAT MATTERS TODAY') }}</p>
       <a class="place" routerLink="/m/settings/location" [attr.aria-label]="'Daily timings for ' + v.placeLong + '. Change'">{{ v.place }}</a>
     </div>
+    @if (placeHint(); as hint) {
+      <div class="place-hint">
+        <a routerLink="/m/settings/location">{{ hint }}</a>
+        <button type="button" class="place-hint-close" aria-label="Dismiss" (click)="dismissPlaceHint()">×</button>
+      </div>
+    }
 
     @if (preferences.experienceMode() === 'guided') {
       <div class="verdict verdict-guided">

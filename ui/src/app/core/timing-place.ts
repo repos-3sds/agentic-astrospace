@@ -75,3 +75,25 @@ export function timingClockNote(place: TimingPlacePayload | null | undefined, at
   if (!differs) return `Times are ${place.city} local time${clock ? ` (${clock})` : ''}.`;
   return `Times are ${place.city} local time${clock ? ` (${clock})` : ''}, not your phone’s (${timezoneShortName(place.viewer_timezone ?? undefined, at)}).`;
 }
+
+/**
+ * A nudge under Today's place label when the city is a guess. A timezone
+ * names a country, not a town (all of India is one zone, and Kolkata's
+ * sunrise is an hour before Mumbai's), so a guessed city can put every
+ * window tens of minutes off; a chosen city on a phone now in another zone
+ * means the reader is likely travelling. Empty when nothing needs saying.
+ */
+export function timingPlaceHint(place: TimingPlacePayload | null | undefined): string {
+  if (!place?.city) return '';
+  if (place.source === 'viewer_timezone') {
+    return `Times are for ${place.city}, a guess from your phone’s time zone. Set your city for exact times.`;
+  }
+  if (place.source === 'birth_city') {
+    return `Times are for ${place.city}, your birth city. Somewhere else today? Set your city.`;
+  }
+  if (place.source === 'selected' && place.viewer_timezone && place.timezone
+      && place.viewer_timezone !== place.timezone) {
+    return `Your phone is on a different clock from ${place.city}. Travelling? Update your city.`;
+  }
+  return '';
+}

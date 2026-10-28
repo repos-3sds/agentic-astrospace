@@ -4,13 +4,16 @@ import { PanchangaCity } from '../../../core/models';
 import { PanchangaService } from '../../../core/panchanga.service';
 import { PreferencesService } from '../../../core/preferences.service';
 import { timezoneShortName } from '../../../core/timing-place';
+import { approximatePosition } from '../../../core/device-location';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
 
 /**
  * Which place the day's timings are computed for. 'current' is not
- * geolocation (there is none): the server picks a listed city in the phone's
- * timezone, or the birth city, and the copy says so.
+ * geolocation: the server picks a listed city in the phone's timezone, or the
+ * birth city, and the copy says so. A zone is not a town (all of India is one
+ * zone; Kolkata's sunrise is an hour before Mumbai's), so "Use my location"
+ * reads the phone's approximate position once and pins the nearest city.
  */
 export type TimingPlace = 'current' | 'selected';
 
@@ -43,6 +46,8 @@ export class LocationComponent {
   readonly suggestions = signal<PanchangaCity[]>([]);
   readonly searching = signal(false);
   readonly searchError = signal<string | null>(null);
+  readonly locating = signal(false);
+  readonly found = signal<PanchangaCity | null>(null);
   readonly selectedPlace = computed(() => this.preferences.panchangaPlace());
   readonly currentTimezone = computed(() => this.preferences.browserTimezone());
   readonly selectedLabel = computed(() => this.selectedPlace()?.label ?? 'Search for a city below');
@@ -75,6 +80,7 @@ export class LocationComponent {
   }
 
   protected useCurrentLocation(): void {
+    this.found.set(null);
     this.preferences.timezoneMode.set('browser');
     this.preferences.setPanchangaPlace(null);
     this.query.set('');
@@ -103,6 +109,23 @@ export class LocationComponent {
   }
 
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** The phone's approximate position, read once, turned into the nearest known city. */
+  protected async useLocation(): Promise<void> {
+    this.locating.set(true);
+    this.searchError.set(null);
+    this.suggestions.set([]);
+    try {
+      const { lat, lng } = await approximatePosition();
+      const city = await this.panchanga.nearestCity(lat, lng);
+      this.selectCity(city);
+      this.found.set(city);
+    } catch (error) {
+      this.searchError.set((error as Error).message);
+    } finally {
+      this.locating.set(false);
+    }
+  }
 
   protected selectCity(city: PanchangaCity): void {
     this.preferences.setPanchangaPlace(city);

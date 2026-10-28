@@ -77,26 +77,35 @@ def validate_timezone(tz_str: str | None, fallback: str) -> str:
     return canonical_timezone(tz_str) or fallback
 
 
+def choose_place(birth_city: str, birth_nation: str, viewer_tz: str | None,
+                 city: str | None = None, nation: str | None = None) -> tuple[str, str, str]:
+    """(city, nation, source) by the rule above, before any lookup.
+
+    Split out so routes that hold a birth city but no kundli (festivals)
+    pick the same town as the day timings beside them: the festival list
+    once took the first city in the phone's zone (Mumbai, for every Indian
+    reader) while Today used the birth city in the same zone."""
+    if city:
+        return city, nation or birth_nation, SOURCE_SELECTED
+    if viewer_tz:
+        birth_geo = lookup_city(birth_city, birth_nation)
+        if birth_geo and birth_geo[2] == viewer_tz:
+            # The zone says the phone is in the birth city's country, and the
+            # birth city is a better guess at the town than the first city the
+            # table lists for the zone (Mumbai, for every Indian reader): Rahu
+            # Kalam in Kolkata starts an hour before Mumbai's.
+            return birth_city, birth_nation, SOURCE_BIRTH_CITY
+        viewer_city = city_for_timezone(viewer_tz)
+        if viewer_city:
+            return viewer_city[0], viewer_city[1], SOURCE_VIEWER_TIMEZONE
+    return birth_city, birth_nation, SOURCE_BIRTH_CITY
+
+
 def resolve_timing_place(kundli, timezone: str | None = None,
                          city: str | None = None, nation: str | None = None) -> TimingPlace:
     viewer_tz = validate_timezone(timezone, "") or None
-    birth_geo = None
-    if not city and viewer_tz:
-        birth_geo = lookup_city(kundli.birth_city, kundli.birth_nation)
-    if city:
-        loc_city, loc_nation, source = city, nation or kundli.birth_nation, SOURCE_SELECTED
-    elif birth_geo and birth_geo[2] == viewer_tz:
-        # The zone says the phone is in the birth city's country, and the
-        # birth city is a better guess at the town than the first city the
-        # table lists for the zone (Mumbai, for every Indian reader): Rahu
-        # Kalam in Kolkata starts an hour before Mumbai's.
-        loc_city, loc_nation, source = kundli.birth_city, kundli.birth_nation, SOURCE_BIRTH_CITY
-    else:
-        viewer_city = city_for_timezone(viewer_tz) if viewer_tz else None
-        if viewer_city:
-            loc_city, loc_nation, source = viewer_city[0], viewer_city[1], SOURCE_VIEWER_TIMEZONE
-        else:
-            loc_city, loc_nation, source = kundli.birth_city, kundli.birth_nation, SOURCE_BIRTH_CITY
+    loc_city, loc_nation, source = choose_place(
+        kundli.birth_city, kundli.birth_nation, viewer_tz, city, nation)
     geo = lookup_city(loc_city, loc_nation)
     if not geo:
         raise PlaceNotFound(f"City {loc_city!r} not in offline database.")

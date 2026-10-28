@@ -445,6 +445,32 @@
   margin: -12px 0 -12px -12px;
 }
 
+.place-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: -4px 0 4px;
+  a {
+    @include m-caption;
+    flex: 1 1 auto;
+    color: var(--m-muted);
+    text-decoration: underline dotted color-mix(in srgb, var(--m-muted) 60%, transparent);
+    text-underline-offset: 3px;
+  }
+}
+.place-hint-close {
+  flex: 0 0 auto;
+  // Small glyph, full-size target.
+  min-width: 32px;
+  min-height: 32px;
+  margin: -8px -8px -8px 0;
+  border: 0;
+  background: transparent;
+  color: var(--m-muted);
+  font-size: 18px;
+  line-height: 1;
+}
+
 .verdict-row { display: flex; align-items: center; gap: 18px; }
 
 .gauge-btn {
