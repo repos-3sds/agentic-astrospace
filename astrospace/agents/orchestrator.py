@@ -780,10 +780,15 @@ class AskOrchestrator:
             context.bundle["reader_said_before"] = said
 
         def build_agent(bundle: dict) -> DomainReadingAgent:
+            # A narrow question's "100 to 150 words, at most three reasons"
+            # fought the explored answer's nine parts (2026-10-28, Hawk: the
+            # answers shrank). Once the chart has been read from every side,
+            # the writer gives the full consultation.
+            kind = "broad" if bundle.get("explored") and plan.kind == "narrow" else plan.kind
             agent = DomainReadingAgent(
                 bundle, registry_result.agent_config.domain_addendum,
                 question_tense=routing.tense,
-                question_kind=plan.kind,
+                question_kind=kind,
                 experience_mode=experience_mode,
                 language=language,
                 tone=tone,
