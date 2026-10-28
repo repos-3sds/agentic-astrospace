@@ -1,4 +1,4 @@
-import { authErrorMessage, looksLikeEmail } from './auth-error';
+import { authErrorMessage, isEmailNotConfirmed, looksLikeEmail } from './auth-error';
 
 describe('auth errors', () => {
   it('turns Supabase’s developer wording into plain words', () => {
@@ -15,5 +15,12 @@ describe('auth errors', () => {
   it('catches an obvious typo before sending', () => {
     expect(looksLikeEmail('notanemail')).toBeFalse();
     expect(looksLikeEmail(' reader@example.com ')).toBeTrue();
+  });
+
+  it('spots an unconfirmed account by code or by message', () => {
+    expect(isEmailNotConfirmed({ code: 'email_not_confirmed', message: '' })).toBeTrue();
+    expect(isEmailNotConfirmed(new Error('Email not confirmed'))).toBeTrue();
+    expect(isEmailNotConfirmed(new Error('Invalid login credentials'))).toBeFalse();
+    expect(isEmailNotConfirmed(null)).toBeFalse();
   });
 });

@@ -27,3 +27,22 @@ input { @include m-body; width: 100%; box-sizing: border-box; padding: 15px 18px
 .magic { @include m-body-small; margin: -4px 0 0; color: var(--m-muted); button { @include m-cta-tertiary; } }
 .terms { @include m-caption; margin: -12px 0 0; color: var(--m-muted); text-align: center; a { color: var(--m-accent-strong); text-decoration: underline; text-underline-offset: 2px; } }
 .message { @include m-body-small; margin: -4px 0; color: var(--m-good); text-align: center; &.error { color: var(--m-bad); } }
+
+// The one notice a reader must not miss: their account does nothing until the
+// email link is opened. Solid fill, not a soft tint, so it reads at a glance
+// against the glass in both themes. Amber rather than the accent or gold:
+// accent is the Continue button, gold means "declining to answer".
+.confirm-callout {
+  --callout-bg: #f6c453;
+  --callout-on: #2b1608;
+  width: 100%; box-sizing: border-box; display: flex; gap: 14px; align-items: flex-start;
+  padding: 16px 18px; border-radius: 20px; background: var(--callout-bg); color: var(--callout-on);
+  box-shadow: 0 10px 28px rgba(160, 100, 10, 0.28);
+  svg { flex: none; width: 28px; height: 28px; margin-top: 1px; }
+  h2 { @include m-body; margin: 0 0 4px; font-weight: 700; color: inherit; }
+  p { @include m-body-small; margin: 0; color: inherit; }
+  strong { display: block; margin-bottom: 2px; font-weight: 700; overflow-wrap: anywhere; }
+  button { @include m-body-small; margin-top: 10px; padding: 0; border: 0; background: none; color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; &:disabled { opacity: .7; } }
+  .resent { margin-top: 8px; font-weight: 600; }
+}
+:host-context(.app-dark) .confirm-callout { --callout-bg: #fcd34d; --callout-on: #1c1204; box-shadow: 0 10px 32px rgba(252, 211, 77, 0.22); }
