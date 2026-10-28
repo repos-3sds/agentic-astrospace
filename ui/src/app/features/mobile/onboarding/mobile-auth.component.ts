@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
@@ -43,6 +44,13 @@ export class MobileAuthComponent {
   protected readonly confirmEmail = signal<string | null>(null);
   protected readonly resendState = signal<'idle' | 'sending' | 'sent'>('idle');
   protected readonly resendError = signal<string | null>(null);
+  /**
+   * What an email link did, when it brought the reader here rather than
+   * signing them in (AuthService.handleNativeAuthCallback): the address is
+   * confirmed but this phone could not finish the sign-in, or the link had
+   * expired or was already used.
+   */
+  protected readonly linkResult = signal<'confirmed' | 'expired' | null>(null);
   protected readonly showPassword = signal(false);
   protected readonly legalUrl = legalUrl;
   protected readonly openLegal = openLegal;
@@ -62,6 +70,17 @@ export class MobileAuthComponent {
   }
 
   constructor() {
+    // A subscription, not the snapshot: the link can arrive while this
+    // screen is already open, waiting for the reader to confirm.
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      const link = params.get('link');
+      if (link !== 'confirmed' && link !== 'expired') return;
+      this.mode.set('signin');
+      this.error.set(null);
+      this.notice.set(null);
+      this.showConfirm(null);
+      this.linkResult.set(link);
+    });
     if (Capacitor.getPlatform() === 'ios') {
       void this.auth.appleSignInEnabled().then((on) => this.appleAvailable.set(on));
     }
@@ -72,9 +91,11 @@ export class MobileAuthComponent {
     this.error.set(null);
     this.notice.set(null);
     this.showConfirm(null);
+    this.linkResult.set(null);
   }
 
   private showConfirm(email: string | null): void {
+    if (email) this.linkResult.set(null);
     this.confirmEmail.set(email);
     this.resendState.set('idle');
     this.resendError.set(null);

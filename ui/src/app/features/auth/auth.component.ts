@@ -1,12 +1,13 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 
 import { AuthService } from '../../core/auth.service';
+import { browserPlatform, openAppHref, openSiddhaApp } from '../../core/open-app';
 
 @Component({
   selector: 'app-auth',
@@ -18,8 +19,16 @@ export class AuthComponent {
   protected readonly auth = inject(AuthService);
   private router = inject(Router);
 
-  protected mode: 'signin' | 'signup' = 'signin';
-  protected name = '';
+  /**
+   * This page is the owner's way into the web app; readers belong in the
+   * phone app. So there is no sign-up here (an account made in a browser
+   * only led to a confirm email and a page that would not let them in), and
+   * the first thing a reader sees is a way to open the app.
+   */
+  protected readonly ownerOnly = inject(ActivatedRoute).snapshot.queryParamMap.get('owner_only') === '1';
+  protected readonly platform = browserPlatform();
+  protected readonly openAppHref = openAppHref(this.platform);
+  protected readonly openSiddhaApp = openSiddhaApp;
   protected email = '';
   protected password = '';
   protected readonly loading = signal(false);
@@ -39,15 +48,7 @@ export class AuthComponent {
     this.error.set(null);
     this.notice.set(null);
     try {
-      if (this.mode === 'signin') {
-        await this.auth.signIn(this.email.trim(), this.password);
-      } else {
-        await this.auth.signUp(this.email.trim(), this.password, this.name.trim());
-        if (!this.auth.session()) {
-          this.notice.set('Check your email to confirm your account, then sign in.');
-          this.mode = 'signin';
-        }
-      }
+      await this.auth.signIn(this.email.trim(), this.password);
     } catch (e) {
       this.error.set((e as Error).message);
     } finally {
@@ -65,7 +66,7 @@ export class AuthComponent {
     this.error.set(null);
     this.notice.set(null);
     try {
-      await this.auth.signInWithMagicLink(email);
+      await this.auth.signInWithMagicLink(email, '/app');
       this.notice.set('Magic link sent. Check your email and open the link on this device.');
     } catch (e) {
       this.error.set((e as Error).message);
@@ -79,7 +80,7 @@ export class AuthComponent {
     this.error.set(null);
     this.notice.set(null);
     try {
-      await this.auth.signInWithGoogle();
+      await this.auth.signInWithGoogle('/app');
     } catch (e) {
       this.error.set((e as Error).message);
       this.googleLoading.set(false);

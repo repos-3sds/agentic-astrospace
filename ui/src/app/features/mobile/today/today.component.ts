@@ -271,6 +271,8 @@ export class TodayComponent {
   private readonly haptics = inject(HapticsService);
   protected readonly subhashita = inject(SubhashitaService);
   private requestId = 0;
+  /** Whose reading is on screen, so a switch knows to clear the last person's. */
+  private shownProfileId: string | null = null;
   protected readonly whyMode = computed(() => ({
     guided: 'Guided view - the life guidance first, with unfamiliar terms translated.',
     balanced: 'Balanced view: guidance first, the calculation underneath.',
@@ -514,6 +516,14 @@ export class TodayComponent {
         this.emptyProfile.set(true);
         return;
       }
+      if (profile.id !== this.shownProfileId) {
+        // A different person: nothing of the last one may stay up under the
+        // new name. The birth card kept the previous profile's date, place
+        // and lagna until the new chart arrived (2026-10-28).
+        this.shownProfileId = profile.id;
+        this.natal.set(this.vedic.cachedAll(profile.id));
+        this.upcomingFestival.set(null);
+      }
       const cached = this.vedic.cachedDailyGuidanceEntry(profile.id);
       if (cached) {
         if (request !== this.requestId || this.kundlis.activeId() !== profile.id) return;
@@ -534,13 +544,15 @@ export class TodayComponent {
       this.panchangaDetails.set(null);
       this.loadedDaily.set(null);
       this.loading.set(true);
+      // The chart and calendar do not depend on the day: ask for all three
+      // at once rather than one round trip after another.
+      void this.prefetchCalendar(profile.id);
+      void this.prefetchChart(profile.id);
       const daily = await this.vedic.dailyGuidance(profile.id);
       if (request !== this.requestId || this.kundlis.activeId() !== profile.id) return;
       this.applyDaily(profile.name, profile.birth_city, daily);
       this.cacheFreshness.set('fresh');
       this.cacheUpdatedAt.set(Date.now());
-      void this.prefetchCalendar(profile.id);
-      void this.prefetchChart(profile.id);
     } catch (error) {
       if (request === this.requestId) this.loadError.set((error as Error).message);
     } finally {
@@ -864,7 +876,8 @@ export class TodayComponent {
 
   private async prefetchChart(profileId: string): Promise<void> {
     try {
-      this.natal.set(await this.vedic.all(profileId));
+      const natal = await this.vedic.all(profileId);
+      if (this.kundlis.activeId() === profileId) this.natal.set(natal);
     } catch {
       // Today should stay usable even if the natal chart cannot be warmed.
     }

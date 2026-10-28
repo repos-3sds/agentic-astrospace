@@ -82,3 +82,40 @@ function neutral(mode: Mode): AskSuggestion[] {
     { prompt: 'Is this a good week to start something new at work?' },
   ];
 }
+
+/**
+ * What a topic chip shows until this profile's own list arrives (or on the
+ * web app, which has no chart-built list). Neutral on purpose: nothing here
+ * claims a fact about the chart, and nothing assumes the reader is married or
+ * has children. Each names its topic so the answer never has to ask which
+ * area was meant. The chart-built lists come from
+ * astrospace/core/vedic/ask_suggestions.py; a topic added there needs a row
+ * here and a chip in AskHomeComponent.
+ */
+export const TOPIC_FALLBACK: Record<string, AskSuggestion[]> = {
+  work: [
+    { prompt: 'What does my current period mean for my work?' },
+    { prompt: 'Which months in the coming year look better for my work?' },
+    { prompt: 'What kind of work suits my chart best?' },
+  ],
+  marriage: [
+    { prompt: 'What does my current period mean for marriage and partnership?' },
+    { prompt: 'Which months in the coming year look better for marriage and partnership?' },
+    { prompt: 'What does my chart say about my partner’s nature?' },
+  ],
+  money: [
+    { prompt: 'What does my current period mean for money and savings?' },
+    { prompt: 'Which months in the coming year look better for money and savings?' },
+    { prompt: 'Where does money come to me most easily, by my chart?' },
+  ],
+  child: [
+    { prompt: 'What does my current period mean for children?' },
+    { prompt: 'Which months in the coming year look better for children?' },
+    { prompt: 'What does my chart say about children?' },
+  ],
+  health: [
+    { prompt: 'What does my current period mean for my health and energy?' },
+    { prompt: 'Which months in the coming year look better for my health and energy?' },
+    { prompt: 'What simple daily routine suits my health right now?' },
+  ],
+};

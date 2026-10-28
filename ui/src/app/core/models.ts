@@ -481,6 +481,15 @@ export interface DailyGuidancePayload {
   };
 }
 
+/** GET /ask/{kundli_id}/suggestions — questions built from this profile's
+ * chart today (astrospace/core/vedic/ask_suggestions.py). */
+export interface AskSuggestionsPayload {
+  as_of: string;
+  topics: { id: string; label: string }[];
+  general: { prompt: string; because?: string }[];
+  by_topic: Record<string, { prompt: string; because?: string }[]>;
+}
+
 export interface MasaPayload {
   name: string;
   name_index: number;

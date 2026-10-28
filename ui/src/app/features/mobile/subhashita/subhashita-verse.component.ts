@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 
 import { HapticsService } from '../../../core/haptics.service';
 import { prepareShareFile, shareFile } from '../../../core/native-share';
+import { shareInviteText } from '../../../core/share-invite';
 import { Subhashita, SUBHASHITA_TITLE } from '../../../core/subhashita.service';
 import { longDate, shareText, storyCardFile } from './story-card';
 
@@ -73,14 +74,18 @@ export class SubhashitaVerseComponent {
     });
   }
 
-  /** The 9:16 picture, for a WhatsApp or Instagram status. */
+  /**
+   * The 9:16 picture, for a WhatsApp or Instagram status. The invite line goes
+   * with it as text, which WhatsApp shows as the caption, so the link is one
+   * a friend can tap rather than only read off the image.
+   */
   protected async shareImage(): Promise<void> {
     this.haptics.tap();
     this.busy.set(true);
     this.error.set(null);
     try {
       const file = await storyCardFile(this.verse());
-      const shared = await shareFile(file, { title: SUBHASHITA_TITLE });
+      const shared = await shareFile(file, { title: SUBHASHITA_TITLE, text: shareInviteText() });
       if (!shared) download(file);
     } catch (err) {
       this.error.set(err instanceof Error ? err.message : 'The image could not be shared.');

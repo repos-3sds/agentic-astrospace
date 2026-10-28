@@ -34,3 +34,30 @@ def test_config_body_sets_resend_smtp_and_every_template():
     assert body["smtp_admin_email"] == "asksiddha@3senses.design" and body["smtp_sender_name"] == "Siddha"
     for key in emails:
         assert body[f"mailer_subjects_{key}"] and body[f"mailer_templates_{key}_content"] == "<html/>"
+
+
+def test_urls_send_links_to_the_open_page_and_only_ever_add():
+    current = {"site_url": "https://agentic-astrospace-cwuqybpnzq-el.a.run.app",
+               "uri_allow_list": "https://example.test/keep,app.asksiddha.mobile://auth/callback"}
+    wanted = auth_emails.url_config(current)
+    assert wanted["site_url"] == "https://asksiddha.app/open"
+    allowed = wanted["uri_allow_list"].split(",")
+    assert allowed[:2] == ["https://example.test/keep", "app.asksiddha.mobile://auth/callback"]
+    assert "https://asksiddha.app/open" in allowed
+    assert len(allowed) == len(set(allowed))
+    assert auth_emails.url_config({})["uri_allow_list"].split(",") == auth_emails.REDIRECTS
+
+
+def test_open_page_matches_the_app():
+    """The app sends email links to this page; Hosting must serve it and /m/ links."""
+    import json
+    service = (ROOT / "ui/src/app/core/auth.service.ts").read_text()
+    assert f"EMAIL_LINK_PAGE = '{auth_emails.OPEN_PAGE}'" in service
+    assert (ROOT / "firebase-public/open.html").exists()
+    rewrites = json.loads((ROOT / "firebase.json").read_text())["hosting"]["rewrites"]
+    sources = [r["source"] for r in rewrites]
+    assert {"source": "/m/**", "destination": "/open.html"} in rewrites
+    assert sources.index("/m/**") < sources.index("**")
+    # Never forward a token: the app redeems a one-time PKCE code instead.
+    script = (ROOT / "firebase-public/js/open-app.js").read_text()
+    assert "access_token" not in script and "refresh_token" not in script

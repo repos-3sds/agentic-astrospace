@@ -4,7 +4,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { PrimeNG } from 'primeng/config';
 
 import { adminGuard } from '../../core/admin.guard';
-import { authGuard } from '../../core/auth.guard';
+import { authGuard, webLandingGuard } from '../../core/auth.guard';
 import { CelestialPreset } from '../../theme';
 import { WebShellComponent } from './web-shell.component';
 
@@ -40,6 +40,8 @@ export const WEB_SHELL_ROUTES: Routes = [
     children: [
       {
         path: '',
+        pathMatch: 'full',
+        canActivate: [webLandingGuard],
         loadComponent: () =>
           import('../../features/landing/landing.component').then((m) => m.LandingComponent),
       },

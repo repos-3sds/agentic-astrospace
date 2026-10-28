@@ -90,7 +90,22 @@
 }
 .today-time { @include m-caption; color: var(--m-muted); font-variant-numeric: tabular-nums; }
 .alarm-detail { @include m-caption; color: var(--m-muted); }
-.alarm-summary { @include m-caption; color: var(--m-accent-strong); font-weight: 600; }
+.alarm-summary {
+  @include m-caption;
+  color: var(--m-accent-strong);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+// Says the summary opens "when" and "how"; turning a switch on no longer does.
+.summary-chevron {
+  width: 12px;
+  height: 12px;
+  filter: var(--settings-icon-filter);
+  transition: transform 160ms ease-out;
+  &.is-open { transform: rotate(90deg); }
+}
 
 .editor {
   display: flex;

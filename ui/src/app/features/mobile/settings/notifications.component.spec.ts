@@ -144,6 +144,23 @@ describe('NotificationsComponent', () => {
     expect(checked('Festival reminders')).toBe('true');
   });
 
+  it('keeps a switch tapped before the account answered', async () => {
+    let answer!: (saved: Record<string, boolean>) => void;
+    push.loadPreferences = () => new Promise((resolve) => (answer = resolve));
+    fixture = TestBed.createComponent(NotificationsComponent);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    const checked = (label: string) => el.querySelector(`button[aria-label="${label}"]`)?.getAttribute('aria-checked');
+    (el.querySelector('button[aria-label="Festival reminders"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(checked('Festival reminders')).toBe('false');
+    answer({ festivals: true, morning: false });
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(checked('Festival reminders')).toBe('false');
+    expect(checked('Morning brief')).toBe('false');
+  });
+
   it('offers remedy reminders outside Practitioner too', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('button[aria-label="Remedy reminders"]')).not.toBeNull();
   });

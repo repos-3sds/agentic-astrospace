@@ -20,7 +20,20 @@ const SLOW_READS = [/\/daily\/brief(\?|$)/, /\/compatibility\/[^/?]+\/insight(\?
  * festivals or the calendar failed until Retry found the server warm.
  */
 export const API_COMPUTE_GET_TIMEOUT_MS = 45_000;
-const COMPUTE_READS = [/\/calendar-intelligence(\?|$)/, /\/muhurta\/(?!goals)[^/?]+(\?|$)/, /\/festivals\/(upcoming|year)/];
+/**
+ * A profile's day and natal chart are the first thing a profile switch asks
+ * for, and when the API has scaled to zero the answer waits for the server to
+ * start (10-20 s). At 8 s the read was cut off, retried from scratch, cut off
+ * again, and Today showed "Unable to load this view" for a profile that was
+ * fine (2026-10-28). The work itself is well under a second once up.
+ */
+const COMPUTE_READS = [
+  /\/calendar-intelligence(\?|$)/,
+  /\/muhurta\/(?!goals)[^/?]+(\?|$)/,
+  /\/festivals\/(upcoming|year)/,
+  /\/context\/[^/?]+\/daily(\?|$)/,
+  /\/vedic\/[^/?]+\/all(\?|$)/,
+];
 
 export function readTimeoutMs(req: HttpRequest<unknown>): number {
   if (SLOW_READS.some((pattern) => pattern.test(req.url))) return API_SLOW_GET_TIMEOUT_MS;

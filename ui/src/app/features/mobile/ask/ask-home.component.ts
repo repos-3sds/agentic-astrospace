@@ -8,7 +8,9 @@ import { VoiceListeningComponent } from './voice-listening.component';
 import { KundliStore } from '../../../core/kundli.store';
 import { DailyGuidancePayload } from '../../../core/models';
 import { VedicService } from '../../../core/vedic.service';
-import { buildAskSuggestions } from './ask-suggestions';
+import { TOPIC_FALLBACK, buildAskSuggestions } from './ask-suggestions';
+import { AskService } from '../../../core/ask.service';
+import { AskSuggestionsPayload } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
 import { EntitlementService } from '../../../core/entitlement.service';
 import { SpeechService } from '../../../core/speech.service';
@@ -68,6 +70,7 @@ export class AskHomeComponent {
   protected readonly navigation = inject(ASK_NAVIGATION);
   private readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
+  private readonly askService = inject(AskService);
   protected readonly preferences = inject(PreferencesService);
   private readonly entitlements = inject(EntitlementService);
 
@@ -112,6 +115,13 @@ export class AskHomeComponent {
 
   readonly selectedTopic = signal<string | null>(null);
 
+  /** "SUGGESTED FOR YOU · WORK" once a chip is on, so the swap is visible. */
+  protected readonly eyebrow = computed(() => {
+    if (this.navigation.web) return 'A few places to begin';
+    const topic = this.allTopics.find((t) => t.id === this.selectedTopic());
+    return topic ? `SUGGESTED FOR YOU · ${topic.id === 'child' ? 'CHILDREN' : topic.label.toUpperCase()}` : 'SUGGESTED FOR YOU RIGHT NOW';
+  });
+
   /**
    * Seeded from the chart and the day, per the design's own heading — "right
    * now" is a claim, so these have to move when the dasha or the transit does.
@@ -126,18 +136,37 @@ export class AskHomeComponent {
    * prompts rather than fabricated ones.
    */
   private readonly daily = signal<DailyGuidancePayload | null>(null);
+  /**
+   * The chart-built lists (GET /ask/{id}/suggestions): one general list and
+   * one per topic chip, from the running dasha and sub-period, the next one
+   * if it starts soon, Saturn and Jupiter over the topic's houses, Sade Sati,
+   * a yoga the period wakes up, and what the reader has told us (married,
+   * children). Until it arrives, the daily-payload list and the neutral topic
+   * lists stand in. Until 2026-10-28 the chips only highlighted and the list
+   * never changed.
+   */
+  private readonly personal = signal<AskSuggestionsPayload | null>(null);
   readonly suggestions = computed<AskSuggestion[]>(() => {
+    const topic = this.selectedTopic();
+    if (topic) {
+      const list = this.personal()?.by_topic[topic] ?? TOPIC_FALLBACK[topic] ?? [];
+      return this.forOpenChart(list);
+    }
     if (this.navigation.web) return [
       { prompt: 'What should I consider about my career right now?' },
       { prompt: 'Help me understand my current dasha' },
       { prompt: 'What does my chart say about relationships?' },
     ];
-    const built = buildAskSuggestions(this.daily(), this.preferences.experienceMode());
-    // The answer comes from the open chart. While that is someone else's,
-    // "my Moon period" would be theirs, so the suggestions name them.
-    const other = viewingSomeoneElse(this.kundlis)?.name.split(' ')[0];
-    return other ? built.map((s) => ({ ...s, prompt: aboutSomeoneElse(s.prompt, other) })) : built;
+    return this.forOpenChart(this.personal()?.general ?? buildAskSuggestions(this.daily(), this.preferences.experienceMode()));
   });
+
+  /** The answer comes from the open chart. While that is someone else's,
+   * "my Moon period" would be theirs, so the suggestions name them. */
+  private forOpenChart(list: AskSuggestion[]): AskSuggestion[] {
+    if (this.navigation.web) return list;
+    const other = viewingSomeoneElse(this.kundlis)?.name.split(' ')[0];
+    return other ? list.map((s) => ({ ...s, prompt: aboutSomeoneElse(s.prompt, other) })) : list;
+  }
   protected readonly safetyLine = computed(() =>
     this.preferences.experienceMode() === 'practitioner'
       ? 'Safety boundary unchanged: medical, legal and financial verdicts still refer out.'
@@ -205,6 +234,17 @@ export class AskHomeComponent {
       if (!id || this.navigation.web) return;
       void this.vedic.dailyGuidance(id)
         .then((payload) => { if (this.kundlis.activeId() === id) this.daily.set(payload); })
+        .catch(() => undefined);
+    });
+    effect(() => {
+      const id = this.kundlis.activeId();
+      const mode = this.preferences.experienceMode();
+      this.personal.set(null);
+      if (!id || this.navigation.web) return;
+      void this.askService.suggestions(id, mode)
+        .then((payload) => {
+          if (this.kundlis.activeId() === id && this.preferences.experienceMode() === mode) this.personal.set(payload);
+        })
         .catch(() => undefined);
     });
   }

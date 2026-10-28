@@ -1933,3 +1933,20 @@ meta. Left open:
 - [ ] **Moonrise/moonset** differ from Drik by up to ~5 minutes (Hyderabad
   2026-08-26). Not shown in the native app; check the rise definition before
   showing it.
+
+## Deferred backlog — iOS universal links for sign-in emails (2026-10-28)
+
+- [ ] **Open asksiddha.app/open and /m/* links straight into the iPhone app.**
+  Sign-in emails now land on `https://asksiddha.app/open`
+  (`firebase-public/open.html`), whose "Open Siddha" button uses the custom
+  scheme; Android also claims `/open` as a verified App Link. iOS needs one
+  extra tap because it has no universal links yet. *Why not built:* it needs
+  the Associated Domains capability on the App ID and in the App Store
+  provisioning profile that `ship.yml` signs with, plus
+  `/.well-known/apple-app-site-association` on Hosting; a capability change
+  done wrong stops the TestFlight upload, so it wants its own change.
+  *Unblock:* turn on Associated Domains for `app.asksiddha.mobile` in the
+  Apple Developer portal, then add `applinks:asksiddha.app` to
+  `ui/ios/App/App/App.entitlements` and the AASA file (team `65G6LHRKWB`,
+  paths `/open`, `/m/*`). *Code hook:* `AuthService.isNativeAuthCallback`
+  already accepts `https://asksiddha.app/open`.

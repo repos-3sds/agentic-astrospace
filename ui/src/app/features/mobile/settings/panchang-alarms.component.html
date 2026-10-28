@@ -53,7 +53,10 @@
                 @if (todayTime(alarm); as t) { <span class="today-time">{{ t }}</span> }
               </span>
               @if (alarm.on) {
-                <span class="alarm-summary">{{ summary(alarm) }}</span>
+                <span class="alarm-summary">
+                  {{ summary(alarm) }}
+                  <img class="summary-chevron" [class.is-open]="open() === alarm.id" src="mobile/chevron.svg" alt="" aria-hidden="true" />
+                </span>
               } @else {
                 <span class="alarm-detail">{{ alarm.detail }}</span>
               }
