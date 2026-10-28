@@ -7,7 +7,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { legalUrl, openLegal } from '../../../core/legal';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
-import { authErrorMessage, looksLikeEmail } from './auth-error';
+import { authErrorMessage, isEmailNotConfirmed, looksLikeEmail } from './auth-error';
 import { rememberEmailOptIn } from '../../../core/email-settings.service';
 
 @Component({
@@ -35,6 +35,14 @@ export class MobileAuthComponent {
   protected readonly appleAvailable = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly notice = signal<string | null>(null);
+  /**
+   * The address still waiting for its confirmation link, set after sign-up
+   * and when sign-in is refused for it. Shown as one bright callout near the
+   * top, because two faint lines above Continue were easy to miss.
+   */
+  protected readonly confirmEmail = signal<string | null>(null);
+  protected readonly resendState = signal<'idle' | 'sending' | 'sent'>('idle');
+  protected readonly resendError = signal<string | null>(null);
   protected readonly showPassword = signal(false);
   protected readonly legalUrl = legalUrl;
   protected readonly openLegal = openLegal;
@@ -63,6 +71,27 @@ export class MobileAuthComponent {
     this.mode.set(mode);
     this.error.set(null);
     this.notice.set(null);
+    this.showConfirm(null);
+  }
+
+  private showConfirm(email: string | null): void {
+    this.confirmEmail.set(email);
+    this.resendState.set('idle');
+    this.resendError.set(null);
+  }
+
+  protected async resendConfirmation(): Promise<void> {
+    const email = this.confirmEmail();
+    if (!email || this.resendState() === 'sending') return;
+    this.resendState.set('sending');
+    this.resendError.set(null);
+    try {
+      await this.auth.resendConfirmation(email);
+      this.resendState.set('sent');
+    } catch (error) {
+      this.resendState.set('idle');
+      this.resendError.set(authErrorMessage(error, 'We couldn’t send it again. Try in a minute.'));
+    }
   }
 
   protected async submit(): Promise<void> {
@@ -72,6 +101,7 @@ export class MobileAuthComponent {
     }
     this.loading.set(true);
     this.error.set(null);
+    this.notice.set(null);
     try {
       // localStorage, not sessionStorage: with email confirmation on, the
       // person leaves the app to confirm and signs in afresh, by which time a
@@ -100,12 +130,16 @@ export class MobileAuthComponent {
           ['/m', 'language'],
         );
         if (!this.auth.session()) {
-          this.notice.set('Check your email to confirm your account, then sign in.');
           this.mode.set('signin');
+          this.showConfirm(this.email.trim());
         }
       }
     } catch (error) {
-      this.error.set(authErrorMessage(error));
+      if (isEmailNotConfirmed(error)) {
+        this.showConfirm(this.email.trim());
+      } else {
+        this.error.set(authErrorMessage(error));
+      }
     } finally {
       this.loading.set(false);
     }

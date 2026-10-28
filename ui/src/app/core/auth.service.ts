@@ -319,6 +319,14 @@ export class AuthService {
     if (data.session) await this.router.navigate(destination);
   }
 
+  /** Sends the sign-up confirmation email again, for an account not yet confirmed. */
+  async resendConfirmation(email: string): Promise<void> {
+    await this.init();
+    if (!this.client) return;
+    const { error } = await this.client.auth.resend({ type: 'signup', email });
+    if (error) throw error;
+  }
+
   async signInWithMagicLink(email: string, destination = '/'): Promise<void> {
     await this.init();
     if (!this.client) return;
