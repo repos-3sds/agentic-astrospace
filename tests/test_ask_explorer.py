@@ -92,9 +92,10 @@ class TestSwitch:
     def test_off_for_everyone_when_the_list_is_empty(self):
         assert not uses_agent("vikramadityavss@gmail.com")
 
-    def test_owner_only_by_default(self, monkeypatch):
+    def test_owner_and_named_testers_by_default(self, monkeypatch):
         monkeypatch.delenv("ASK_AGENT_EMAILS")
         assert uses_agent("VikramadityaVSS@gmail.com")
+        assert uses_agent("srikavya2697@gmail.com")
         assert not uses_agent("someone@example.com")
         assert not uses_agent(None)
 
