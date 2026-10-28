@@ -139,6 +139,24 @@ def test_reader_emails_go_only_to_tips_subscribers_once(db, email_env):
     assert "Widgets now add." in message.text
 
 
+def test_the_update_poster_leads_the_email_from_our_own_site(db, email_env):
+    _reader(db, "asha")
+    ra.queue_reader_emails(db, 588, ["Panchang alarms"], now=NOW,
+                           poster="/email/updates/panchang-alarms.jpg")
+    transport = FakeEmail()
+    deliver_due(db, transports={}, email=transport, now=NOW)
+    [message] = transport.sent
+    assert '/email/updates/panchang-alarms.jpg" alt="What&#x27;s new in Siddha"' in message.html
+    assert message.html.index("panchang-alarms.jpg") < message.html.index("Panchang alarms.")
+    assert "[What's new in Siddha]" in message.text
+
+
+@pytest.mark.parametrize("src", ["https://evil.example/x.png", "/email/../secret", "//evil/x.png", None])
+def test_an_image_from_anywhere_else_is_dropped(src):
+    from astrospace.notifications.email import _block_html
+    assert "<img" not in _block_html({"type": "image", "src": src, "alt": "x"})
+
+
 def test_a_reader_who_turns_tips_off_before_sending_gets_nothing(db, email_env):
     _reader(db, "asha")
     ra.queue_reader_emails(db, 580, ["Widgets now add"], now=NOW)
@@ -227,6 +245,22 @@ def test_announce_queues_readers_and_refuses_a_rule_breaking_note(client, db):
                   json={"version_code": 580, "notes": ["Widgets now add"]})
     assert r.status_code == 200 and r.json()["reader_emails_queued"] == 1
     assert sorted(j.user_id for j in db.query(NotificationJob).all()) == ["asha", ra.TEAM_USER]
+
+
+def test_announce_takes_only_a_poster_under_email_updates(client, db):
+    http, _ = client
+    headers = {"Authorization": "Bearer t"}
+    r = http.post("/api/v1/releases/announce", headers=headers,
+                  json={"version_code": 588, "notes": ["Panchang alarms"], "poster": "https://x.example/p.png"})
+    assert r.status_code == 422
+    _reader(db, "asha")
+    r = http.post("/api/v1/releases/announce", headers=headers,
+                  json={"version_code": 588, "notes": ["Panchang alarms"],
+                        "poster": "/email/updates/panchang-alarms.jpg"})
+    assert r.status_code == 200
+    job = next(j for j in db.query(NotificationJob).all() if j.user_id == "asha")
+    assert job.payload["content"]["blocks"][0] == {
+        "type": "image", "src": "/email/updates/panchang-alarms.jpg", "alt": "What's new in Siddha"}
 
 
 # ── Changes between two builds ────────────────────────────────────────────────

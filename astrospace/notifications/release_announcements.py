@@ -176,7 +176,7 @@ def whatsapp_broadcast(notes: list[str]) -> str:
     return "\n".join(lines)
 
 
-def reader_email(notes: list[str]) -> EmailContent:
+def reader_email(notes: list[str], poster: str | None = None) -> EmailContent:
     items = [[n + ".", ""] for n in notes] or [["Small fixes and improvements.", ""]]
     return EmailContent(
         subject="New in Siddha: " + (notes[0] if notes else "small fixes and improvements"),
@@ -185,7 +185,8 @@ def reader_email(notes: list[str]) -> EmailContent:
         heading="A new version is ready",
         intro=("Thank you for testing Siddha. The new version is on its way to your phone "
                "through the Play Store. Here is what changed."),
-        blocks=[
+        # Hawk (2026-10-27): every update goes out with its poster.
+        blocks=([{"type": "image", "src": poster, "alt": "What's new in Siddha"}] if poster else []) + [
             {"type": "items", "heading": "In this version", "tone": "good", "items": items},
             {"type": "text", "heading": "Getting it",
              "body": ("Open the Play Store, find Siddha and tap Update. If it isn't there yet, "
@@ -220,9 +221,9 @@ def _send_time(local_now: datetime) -> datetime:
 
 
 def queue_reader_emails(db: Session, version_code: int, notes: list[str],
-                        now: datetime | None = None) -> int:
+                        now: datetime | None = None, poster: str | None = None) -> int:
     """One email per consenting reader per version, however often this runs."""
-    content = reader_email(notes)
+    content = reader_email(notes, poster)
     queued = 0
     for recipient in cm.email_subscribers(db, CATEGORY):
         key = f"release_email:{recipient.user_id}:{version_code}"

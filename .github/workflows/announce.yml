@@ -29,6 +29,10 @@ on:
         description: 'Your own notes instead of the draft, one per line (blank: use the draft)'
         type: string
         default: ''
+      poster:
+        description: 'The update poster, as served by the app (e.g. /email/updates/panchang-alarms.jpg; add the file under ui/public/email/updates/ first)'
+        type: string
+        default: ''
       send_emails:
         description: 'Email readers (off: only work out and show the texts)'
         type: boolean
@@ -140,9 +144,11 @@ jobs:
         env:
           TOKEN: ${{ steps.release-auth.outputs.id_token }}
           VC: ${{ steps.which.outputs.vc }}
+          POSTER: ${{ inputs.poster }}
         run: |
           set -euo pipefail
-          jq --argjson vc "$VC" '{version_code: $vc, notes: .notes}' release-notes.json |
+          jq --argjson vc "$VC" --arg poster "$POSTER" \
+            '{version_code: $vc, notes: .notes} + (if $poster == "" then {} else {poster: $poster} end)' release-notes.json |
             curl -fsS -X POST "$API_URL/api/v1/releases/announce" -H "Authorization: Bearer $TOKEN" \
               -H 'Content-Type: application/json' --data @- > announced.json
           echo "Reader emails queued: $(jq .reader_emails_queued announced.json)"

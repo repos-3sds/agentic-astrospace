@@ -243,6 +243,9 @@ class EmailContent:
        "items": [[title, detail], ...]}                        titled points
       {"type": "rows", "heading": str, "rows": [[label, value], ...]}
       {"type": "callout", "heading": str|None, "body": str}    a tinted box
+      {"type": "image", "src": "/email/...", "alt": str}       a full-width picture
+    The image src is a path under /email/ on the app's own site, so an email
+    never loads a picture from anywhere else.
     """
 
     subject: str
@@ -290,11 +293,25 @@ def _block_html(block: dict) -> str:
             for label, value in block.get("rows") or []
         )
         out += f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0">{rows}</table>'
+    elif kind == "image":
+        src = safe_email_image(block.get("src"))
+        if src:
+            out += (f'<img src="{e(base_url() + src)}" alt="{e(block.get("alt") or "")}" width="560" '
+                    f'style="display:block;width:100%;max-width:560px;height:auto;margin:4px 0 8px;'
+                    f'border:0;border-radius:14px">')
     elif kind == "callout":
         out += (f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
                 f'style="margin:4px 0 0;background:{_SOFT};border-left:4px solid {_ACCENT};border-radius:8px">'
                 f'<tr><td style="padding:14px 16px;font-size:16px;line-height:1.6;color:{_INK};white-space:pre-line">{e(block.get("body") or "")}</td></tr></table>')
     return out
+
+
+def safe_email_image(src: str | None) -> str | None:
+    """A picture path under /email/ on our own site, or None."""
+    if (not src or not src.startswith("/email/") or ".." in src
+            or any(ch in src for ch in "@\\\r\n\t \"'<>?#")):
+        return None
+    return src
 
 
 def _block_text(block: dict) -> list[str]:
@@ -307,6 +324,11 @@ def _block_text(block: dict) -> list[str]:
             lines.append(f"- {title}" + (f": {detail}" if detail else ""))
     elif kind == "rows":
         lines += [f"{label}: {value}" for label, value in block.get("rows") or []]
+    elif kind == "image":
+        # The plain-text part has no pictures; say what it showed, if anything.
+        if not block.get("alt"):
+            return lines
+        lines.append(f"[{block['alt']}]")
     return lines + [""]
 
 
