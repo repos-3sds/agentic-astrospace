@@ -169,6 +169,12 @@ class BaseAstroAgent:
             self.provider = "anthropic"
             self.model = os.getenv("ANTHROPIC_MODEL", self.model)
 
+    def _loop_done(self) -> bool:
+        """An agent whose last tool call already holds its result (the Ask
+        explorer's accepted submit_findings) says so here, and the tool loop
+        stops without another model turn."""
+        return False
+
     def run(self, user_input: str) -> str:
         text, _tools = self.run_messages([{"role": "user", "content": user_input}])
         return text
@@ -353,6 +359,8 @@ class BaseAstroAgent:
                             "content": json.dumps(result),
                         })
                 messages.append({"role": "user", "content": tool_results})
+                if self._loop_done():
+                    return "", tools_used
                 continue
 
             break
@@ -501,6 +509,8 @@ class BaseAstroAgent:
                     response={"result": result},
                 ))
             contents.append(types.Content(role="user", parts=response_parts))
+            if self._loop_done():
+                return "", tools_used
 
         # Out of tool rounds: ask once more with tools off so the model writes
         # its answer from what it already fetched, rather than handing the

@@ -142,3 +142,28 @@ def test_gemini_out_of_tool_rounds_asks_for_text(monkeypatch):
     assert answer == "answer from what I have"
     final = models.calls[-1]["config"]
     assert final.tool_config.function_calling_config.mode == types.FunctionCallingConfigMode.NONE
+
+
+class GeminiStopAfterToolAgent(GeminiToolAgent):
+    def _loop_done(self):
+        return "get_number" in self._seen
+
+    def _dispatch_tool(self, name, inputs):
+        self._seen = [*getattr(self, "_seen", []), name]
+        return super()._dispatch_tool(name, inputs)
+
+    _seen: list = []
+
+
+def test_gemini_loop_stops_when_the_agent_says_it_is_done(monkeypatch):
+    """No further model turn once the agent's result is in hand (the Ask
+    explorer's accepted submit_findings)."""
+    monkeypatch.setenv("AI_PROVIDER", "gemini")
+    models = RecordingModels([_calls_turn("get_number")])
+    agent = GeminiStopAfterToolAgent()
+    agent.client = FakeClient(models)
+
+    answer, tools_used = agent.run_messages([{"role": "user", "content": "call it"}])
+
+    assert (answer, tools_used) == ("", ["get_number"])
+    assert len(models.calls) == 1

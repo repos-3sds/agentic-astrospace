@@ -255,7 +255,7 @@ class TestOrchestrator:
         explorer = ChartExplorer(ChartTools(chart), "q", {"domain": "career"})
         refs = [r["ref"] for r in explorer.run_core()]
         assert {"tool:chart_overview", "tool:strengths", "tool:house(10)", "tool:house(6)",
-                "tool:house(10,moon)", "tool:house(10,sun)", "tool:varga(D10)", "tool:jaimini",
+                "tool:house(10,moon)", "tool:house(10,sun)", "tool:varga(D10)", "tool:varga(D9)", "tool:jaimini",
                 "tool:nakshatra", "tool:ashtakavarga", "tool:dasha_at", "tool:transits",
                 "tool:yogas_doshas", "tool:classical_patterns(career)"} <= set(refs)
         timeline = next(c for c in explorer.chart_tools.calls if c["tool"] == "dasha_timeline")
@@ -315,3 +315,16 @@ class TestReaderSaidBefore:
         assert "WHAT THE READER SAID BEFORE" in prepared.agent.system_prompt
         assert "third person" in prepared.agent.system_prompt
         assert "never \"your true path\"" in prepared.agent.system_prompt
+
+
+class TestStopsWhenSubmitted:
+    def test_no_model_turn_after_an_accepted_submission(self, chart):
+        """The loop returns as soon as submit_findings is accepted instead of
+        asking the model for a closing "done" (one call, ~15 s)."""
+        explorer = ChartExplorer(ChartTools(chart), "q", {"domain": "career"})
+        assert explorer._loop_done() is False
+        explorer._dispatch_tool("classical_patterns", {"area": "career"})
+        explorer._dispatch_tool("submit_findings", {
+            "rule_verdicts": [{"id": r, "verdict": "holds", "why": "x"} for r in explorer.required_rules()],
+            "reader_facts": [], "findings": []})
+        assert explorer._loop_done() is True
