@@ -175,6 +175,18 @@ export function naturalChunks(text: string, max = NATURAL_CHUNK_MAX_CHARS): stri
   return out;
 }
 
+/**
+ * The pieces a sectioned reading is spoken in: each section split on its own,
+ * so every section starts at a piece of its own and its chip can play from
+ * there. Splitting the joined script left a whole brief in two or three
+ * pieces, so most chips pointed past the end and play fell over to the phone
+ * voice (tester report, 2026-10-28). Mirrored by listen_requests in
+ * astrospace/notifications/daily_briefs.py.
+ */
+export function sectionChunks(texts: readonly string[], max = NATURAL_CHUNK_MAX_CHARS): string[] {
+  return texts.flatMap((text) => naturalChunks(text, max));
+}
+
 async function cacheKey(text: string): Promise<string> {
   try {
     const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
