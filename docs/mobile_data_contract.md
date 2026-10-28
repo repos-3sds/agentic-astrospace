@@ -49,8 +49,10 @@ Three budget kinds:
 1. **Derive, never assert.** No total stated beside the data it summarises.
    Compute it from the same array the user is looking at. (The 337 bug.)
 2. **No invented precision.** If the engine returns a band, do not render a
-   percentage. See `gaugePositionFromScore` — it maps through the band so the
-   ring and the label cannot disagree.
+   percentage. The day score has been a real 0-100 engine value since
+   2026-10-28 (ordinary day near 50); `dayScorePosition` shows it as is and
+   only maps old cached tallies through their band, so the ring and the label
+   cannot disagree.
 3. **One mapping, one place.** An engine field gets exactly one interpretation
    in the app. Two screens interpreting `score` separately is how they drift.
 4. **Conventions travel with values.** Anything convention-dependent carries
@@ -118,8 +120,9 @@ Taken from a live payload on :8010, profile `d6c3ccd9…`, 2026-07-27.
 
 | field | measured | budget | note |
 | --- | --- | --- | --- |
-| `verdict.score` | `-4` | **signed tally, unbounded** | map via `gaugePositionFromScore`, never clamp |
-| `verdict.tone` | `caution` | `supportive\|positive\|mixed\|caution` | the real output; the band drives the label |
+| `verdict.score` | `66` (2026-10-28) | **0-100, ordinary day near 50** | via `dayScorePosition`; was a signed tally (`-4`) before 2026-10-28 |
+| `verdict.score_parts` | `{base 50, star 15, moon -4, transits 5}` | sums to `score` | absent on readings cached before 2026-10-28 |
+| `verdict.tone` | `caution` | `supportive\|positive\|mixed\|caution` | band from score: 70 / 50 / 30; labels Good / Steady / Mixed / Go gently |
 | `verdict.headline` | 38 | ≤ 60 | H2, two lines |
 | `verdict.text` | **469** | **sheet only** | overflowed the card once already |
 | `reading.summary` | 68 | ≤ 110 | this is the card's detail line |
@@ -178,7 +181,7 @@ live payload, because the breakage travels engine → UI:
 ```ts
 expect(daily.reading.summary.length).toBeLessThanOrEqual(110);
 expect(sav.reduce((a, b) => a + b, 0)).toBe(337);
-expect(bandOf(gaugePositionFromScore(daily.verdict.score))).toBe(daily.verdict.tone);
+expect(BAND_OF_TONE[daily.verdict.tone]).toBe(bandOf(dayScorePosition(daily.verdict)));
 ```
 
 The UI currently has **one** spec file against 100 backend routes and 31 Python

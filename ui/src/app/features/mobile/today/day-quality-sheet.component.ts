@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { SheetComponent } from '../sheet/sheet.component';
+import type { DayBand } from './today.component';
 
 /** One computed contributor to the day score. */
 export interface DaySignal {
@@ -17,6 +18,10 @@ export interface DaySignal {
  * contributing signal is named, graded and explained in plain language. That is
  * the design principle about data honesty, so the signals are listed
  * individually rather than summarised into one sentence.
+ *
+ * It also says what each band means (testers could not tell what a "26"
+ * meant, 2026-10-28). Hawk wanted these lines here only, not on the Today
+ * screen itself.
  */
 @Component({
   selector: 'as-day-quality-sheet',
@@ -28,8 +33,16 @@ export interface DaySignal {
 })
 export class DayQualitySheetComponent {
   readonly score = input.required<number>();
+  readonly band = input.required<DayBand>();
   readonly signals = input.required<DaySignal[]>();
   readonly summary = input.required<string>();
   readonly reason = input.required<string>();
   readonly dismissed = output<void>();
+
+  protected readonly bands: { band: DayBand; range: string; label: string; rubric: string }[] = [
+    { band: 'good', range: '70–100', label: 'Good', rubric: 'Things line up for you. A good day to begin something.' },
+    { band: 'steady', range: '50–69', label: 'Steady', rubric: 'A normal, workable day. Keep your routine going.' },
+    { band: 'mixed', range: '30–49', label: 'Mixed', rubric: 'Some help, some pull. Go at your pace, skip big risks.' },
+    { band: 'tough', range: '0–29', label: 'Go gently', rubric: 'A quiet day. Keep it simple and save big moves for later.' },
+  ];
 }

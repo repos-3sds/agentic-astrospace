@@ -314,7 +314,7 @@ none of them call the server. Code: `ui/android/.../widgets/` and
 
 | Widget | Shows | Tap |
 | --- | --- | --- |
-| Your day | score ring with the day's word (Steady, Mixed, Take care) under the number; medium adds the date, headline and a timing chip; large adds the tithi, summary, and one Do and one Avoid as tinted glass cards | Today |
+| Your day | score ring with the day's word (Good, Steady, Mixed, Go gently) under the number; medium adds the date, headline and a timing chip; large adds the tithi, summary, and one Do and one Avoid as tinted glass cards | Today |
 | Listen | 2x2 by default: a big play/stop button, the day's word and the brief's length; 4x2 adds the day's headline; squashed to one row, a slim bar | play/stop |
 | Calendar | the next 7 days, tinted good day / take care as the Calendar tab, with a dot for a festival or vrat and the week's festivals listed (one row at 4x2, more when taller); at 2x2, today alone with its tithi and day quality. No month view (Hawk, 2026-10-21) | Calendar |
 | Timing | the next window (Rahu Kalam first): "Starts in 1h 16m", its times, and a ring that fills over the 3 hours before it and empties while it runs | Calendar |

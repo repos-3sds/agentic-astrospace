@@ -57,40 +57,48 @@ const DASHA_LEVEL_SHORT: Record<string, string> = {
 };
 
 /**
- * Turns the engine's day score into a gauge position.
+ * Where the day sits on the 0-100 dial.
  *
- * `_score_day` in astrospace/context/daily.py returns an **unbounded signed
- * integer** — tara contributes ±2, chandrabala −3…+1, and every supportive or
- * challenging rule shifts it further. Its meaningful output is the *band*
- * (supportive ≥3, positive ≥1, mixed ≥−1, else caution); the raw number is an
- * internal tally, not a percentage.
- *
- * Clamping it into 0–100, which is what this used to do, meant a real day
- * scoring −4 rendered as an empty ring reading 0, and even an excellent +5 day
- * rendered as 5. The gauge was near-empty for every genuine reading.
- *
- * So the score is mapped through its own band into that band's slice of the
- * dial. The number shown is a position on a four-band indicator, not a
- * percentage of anything — and because it is derived from the same threshold
- * that picks the label, the ring and the words can never disagree.
+ * The engine scores the day 0-100 with an ordinary day near 50 (see
+ * _score_day in astrospace/context/daily.py). A reading cached before that
+ * change carries the old signed tally (-11..+5) and no score_parts; for those
+ * the tally's band is placed in that band's slice of the new dial, so the
+ * ring and the label still agree until the cache refreshes.
  */
-export function gaugePositionFromScore(score: number): number {
-  // [lower score bound, gauge floor, gauge ceiling] per band, mirroring the
-  // thresholds in _score_day so the two stay in step.
-  const bands: [number, number, number][] = [
-    [3, 76, 100],   // supportive
-    [1, 51, 75],    // positive
-    [-1, 26, 50],   // mixed
-    [-Infinity, 1, 25], // caution
-  ];
-  const [lower, floor, ceiling] = bands.find(([min]) => score >= min)!;
-  // Spread the band across its slice, saturating four points beyond its start.
-  const span = Number.isFinite(lower) ? 4 : 4;
-  const within = Math.min(1, Math.max(0, (score - (Number.isFinite(lower) ? lower : -6)) / span));
-  return Math.round(floor + within * (ceiling - floor));
+export function dayScorePosition(verdict: DailyGuidancePayload['verdict']): number {
+  if (verdict.score_parts) return Math.round(Math.min(100, Math.max(0, verdict.score)));
+  const legacy: Record<DailyGuidancePayload['verdict']['tone'], number> = {
+    supportive: 75, positive: 58, mixed: 40, caution: 25,
+  };
+  return legacy[verdict.tone];
+}
+
+export const BAND_OF_TONE: Record<DailyGuidancePayload['verdict']['tone'], DayBand> = {
+  supportive: 'good', positive: 'steady', mixed: 'mixed', caution: 'tough',
+};
+
+export const BAND_LABEL: Record<DayBand, string> = {
+  good: 'Good', steady: 'Steady', mixed: 'Mixed', tough: 'Go gently',
+};
+
+/** "Why today is a 55", in words: which of the three signals lifted it and which held it back. */
+function scoreReasonFromParts(parts: NonNullable<DailyGuidancePayload['verdict']['score_parts']>): string {
+  const up: string[] = [];
+  const down: string[] = [];
+  (parts.star > 0 ? up : down).push(parts.star > 0 ? 'the day’s star is with you' : 'the day’s star is not with you');
+  if (parts.moon > 0) up.push('your Moon is steady');
+  else down.push(parts.moon <= -12 ? 'the Moon is in a sensitive place for you' : 'your Moon is quieter than usual');
+  if (parts.transits > 0) up.push('the slow planets are helping');
+  if (parts.transits < 0) down.push('the slow planets add some pressure');
+  const join = (items: string[]) => items.length > 1 ? `${items.slice(0, -1).join(', ')} and ${items.at(-1)}` : items[0];
+  const sentences = ['Every day starts at 50.'];
+  if (up.length) sentences.push(`It goes up because ${join(up)}.`);
+  if (down.length) sentences.push(`${up.length ? 'It comes down because' : 'It comes down today because'} ${join(down)}.`);
+  return sentences.join(' ');
 }
 
 function scoreReason(daily: DailyGuidancePayload): string {
+  if (daily.verdict.score_parts) return scoreReasonFromParts(daily.verdict.score_parts);
   const highTransits = daily.context.active_gochara.filter((row) => row.severity === 'high').length;
   const difficultWindows = daily.muhurta_windows.filter((row) => row.kind === 'inauspicious').length;
   const supportiveWindows = daily.muhurta_windows.filter((row) => row.kind === 'auspicious').length;
@@ -165,7 +173,7 @@ export function muhurtaCountdown(daily: DailyGuidancePayload, now: Date = new Da
 }
 
 /** Verdict bands. Named, not numeric, so tone rules can key off them. */
-export type DayBand = 'steady' | 'mixed' | 'tough';
+export type DayBand = 'good' | 'steady' | 'mixed' | 'tough';
 
 /** One labelled fact in the panchang grids below the fold. */
 export interface StatCell {
@@ -649,7 +657,8 @@ export class TodayComponent {
     this.widgets.publishToday({
       date: daily.date,
       score: view.score,
-      band: view.band,
+      // The widgets draw three colours; Good shares Steady's.
+      band: view.band === 'good' ? 'steady' : view.band,
       label: view.scoreLabel,
       headline: view.verdict,
       summary: view.detail,
@@ -671,9 +680,7 @@ export class TodayComponent {
   }
 
   private applyDaily(name: string, city: string, daily: DailyGuidancePayload): void {
-    const band: DayBand = daily.verdict.tone === 'caution'
-      ? 'tough'
-      : daily.verdict.tone === 'mixed' ? 'mixed' : 'steady';
+    const band = BAND_OF_TONE[daily.verdict.tone];
     const dateLabel = new Intl.DateTimeFormat('en', {
       weekday: 'long',
       day: 'numeric',
@@ -686,9 +693,9 @@ export class TodayComponent {
       dateLabel,
       place: daily.provenance.place.city || city,
       placeLong: timingPlaceLabel(daily.provenance.place) || city,
-      score: gaugePositionFromScore(daily.verdict.score),
+      score: dayScorePosition(daily.verdict),
       band,
-      scoreLabel: band === 'steady' ? 'Steady' : band === 'mixed' ? 'Mixed' : 'Take care',
+      scoreLabel: BAND_LABEL[band],
       verdict: daily.verdict.headline,
       // reading.summary, not verdict.text. The card is designed for two lines
       // (~90 chars) and verdict.text runs to ~470 — it pushed the Listen button
