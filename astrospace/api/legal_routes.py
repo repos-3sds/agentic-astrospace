@@ -25,7 +25,7 @@ from fastapi.responses import HTMLResponse
 router = APIRouter(tags=["legal"])
 
 LEGAL_DIR = Path(__file__).resolve().parent.parent / "legal"
-LAST_UPDATED = "20 October 2026"
+LAST_UPDATED = "28 October 2026"
 DOCUMENTS = {
     "terms": ("terms.html", "Terms of Service"),
     "privacy": ("privacy.html", "Privacy Policy"),

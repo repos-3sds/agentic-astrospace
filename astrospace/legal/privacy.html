@@ -12,8 +12,16 @@ software actually does; when the software changes, so does this page.</p>
   in with Google we receive the email address and name Google shares.</li>
   <li><strong>Birth details</strong>: the date, time, place and
   time-accuracy you enter for yourself and for any other profiles you add.
-  This is the data every chart is computed from. We never read your device's
-  location; the app requests no location permission.</li>
+  This is the data every chart is computed from.</li>
+  <li><strong>Approximate location</strong>, only when you tap
+  <em>Use my location</em>: the app reads your phone's approximate position
+  once and sends it to our server, which returns the nearest known city for
+  sunrise and daily timings. The position is not saved or logged, and the app
+  never reads your location in the background.</li>
+  <li><strong>Voice</strong>, only when you tap the microphone: your phone's
+  own speech service (Google on Android, Apple on iPhone) turns what you say
+  into text, which is shown to you before it is sent. We receive the text, not
+  the recording.</li>
   <li><strong>Questions and readings</strong>: the questions you ask, the
   answers generated for you, saved readings and any notes you write.</li>
   <li><strong>Preferences</strong>: experience mode, tone, language, theme,
@@ -43,11 +51,17 @@ models.</p>
 <h2>3. Who processes it</h2>
 <ul>
   <li><strong>Supabase</strong> hosts the database and authentication
-  service where your account and content are stored.</li>
+  service where your account and content are stored. The database is
+  in Seoul, South Korea, encrypted at rest, and every table is locked so
+  each account can reach only its own rows.</li>
   <li><strong>AI model providers</strong> (currently Anthropic and Google)
   receive the text of a question together with the chart context needed to
   answer it, and return the answer. They process this on our behalf under
-  their API terms and do not receive your email address.</li>
+  their API terms and do not receive your email address. If you use
+  translation, the text being translated is sent the same way.</li>
+  <li><strong>Google Cloud</strong> runs our server (in Mumbai, India) and
+  turns the text of your daily reading into audio when you play it
+  (Google Text-to-Speech). Text-to-Speech receives only the reading's text.</li>
   <li><strong>Apple and Google</strong> deliver push notifications if you
   enable them.</li>
   <li><strong>Resend</strong> delivers the emails you turn on (your daily
