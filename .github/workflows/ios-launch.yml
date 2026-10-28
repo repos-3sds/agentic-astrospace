@@ -127,18 +127,34 @@ jobs:
           path: launch-check/
           retention-days: 14
 
-      - name: Widget sheets in the log
-        # The same sheets as small JPEGs, base64 between markers, for
-        # reviewers whose network can reach the job log but not the artifact
-        # store. Last step, so a log tail picks them up.
-        if: always()
+  widget-previews:
+    # The widget renders again, as a git ref (refs/previews/widgets-pr-N)
+    # rather than only an artifact: some reviewers' networks reach GitHub's
+    # git but not its artifact store. Only this job can write, and it runs no
+    # code from the branch; it just copies the PNGs the launch job drew.
+    name: Widget renders as a git ref
+    needs: launch
+    if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: ios-launch-check
+          path: launch-check
+      - name: Push the renders
+        env:
+          REF: refs/previews/widgets-pr-${{ github.event.pull_request.number }}
+          TOKEN: ${{ github.token }}
         run: |
-          set -uo pipefail
-          for name in sheet-light sheet-dark sheet-empty-light sheet-empty-dark; do
-            src="$OUT/widgets/$name.png"
-            [ -f "$src" ] || continue
-            sips -s format jpeg -s formatOptions 72 -Z 2200 "$src" --out "$RUNNER_TEMP/$name.jpg" >/dev/null
-            echo "WIDGET-SHEET-BEGIN $name"
-            base64 -i "$RUNNER_TEMP/$name.jpg" | fold -w 4000
-            echo "WIDGET-SHEET-END $name"
-          done
+          set -euo pipefail
+          [ -d launch-check/widgets ] || { echo "no widget renders"; exit 0; }
+          mkdir previews && cd previews
+          cp ../launch-check/widgets/*.png .
+          git init -q
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com add .
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com \
+            commit -qm "Widget renders for ${{ github.event.pull_request.head.sha }}"
+          git push -f "https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git" "HEAD:${REF}"
