@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Open Siddha</title>
+<meta name="description" content="Open the Siddha app on your phone.">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#15110d">
+<link rel="icon" type="image/png" sizes="64x64" href="/img/icon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+<!--
+  Where every sign-in email lands (confirm, sign-in link, reset password,
+  change email): AuthService.emailLinkRedirect in the app, and /m/* links in
+  reader emails opened where the app cannot claim them (firebase.json).
+  Copy is chosen by ?from= and by any error Supabase put on the link.
+-->
+<style>
+  :root {
+    --bg: #15110d;
+    --surface: #241d17;
+    --line: rgba(240, 195, 107, 0.16);
+    --text: #f4efe7;
+    --muted: #b3a494;
+    --gold: #f0c36b;
+    --good: #86efac;
+    --warn: #fcd34d;
+    --ink: #f4efe7;
+    --on-ink: #15110d;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #faf7f0;
+      --surface: #ffffff;
+      --line: rgba(32, 26, 20, 0.12);
+      --text: #201a14;
+      --muted: #6f6457;
+      --gold: #8f5f12;
+      --good: #1f7a44;
+      --warn: #8a5a00;
+      --ink: #201a14;
+      --on-ink: #faf7f0;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); overflow-x: clip; }
+  body {
+    font: 400 17px/1.6 Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background:
+      radial-gradient(60rem 40rem at 50% -10rem, rgba(240, 195, 107, 0.16), transparent 60%),
+      var(--bg);
+  }
+  a { color: inherit; }
+  @font-face { font-family: "Samarkan"; src: url("/fonts/samarkan.woff2") format("woff2"); font-display: swap; }
+  header {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: max(18px, env(safe-area-inset-top)) 16px 18px;
+    max-width: 640px; width: 100%; margin: 0 auto;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .brand img { width: 34px; height: 34px; border-radius: 50%; }
+  .brand span { font: 400 28px/1 "Samarkan", "Playfair Display", serif; padding-top: 4px; }
+  .pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 44px; padding: 0 18px; border-radius: 999px;
+    background: var(--ink); color: var(--on-ink); font-weight: 600; font-size: 15px; text-decoration: none;
+  }
+  main {
+    flex: 1; width: 100%; max-width: 520px; margin: 0 auto;
+    padding: 24px 16px 48px; display: flex; flex-direction: column; justify-content: center;
+  }
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 28px;
+    padding: 32px 24px; text-align: center;
+  }
+  .badge {
+    width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 50%;
+    display: grid; place-items: center; background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good);
+  }
+  .badge svg { width: 34px; height: 34px; }
+  [data-state="error"] .badge { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+  [data-state="open"] .badge { background: none; }
+  .badge img { width: 64px; height: 64px; border-radius: 50%; }
+  h1 { font: 600 clamp(28px, 7vw, 36px)/1.15 "Playfair Display", Georgia, serif; margin: 0 0 10px; }
+  p { margin: 0 0 8px; color: var(--muted); }
+  .cta {
+    display: flex; align-items: center; justify-content: center; width: 100%;
+    min-height: 56px; margin-top: 22px; border-radius: 999px;
+    background: var(--ink); color: var(--on-ink); font-weight: 600; font-size: 17px; text-decoration: none;
+  }
+  .desktop-note { margin-top: 20px; padding: 14px 16px; border-radius: 16px; border: 1px dashed var(--line); font-size: 15px; }
+  .get { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 15px; }
+  .get a { color: var(--gold); font-weight: 600; }
+  .get.is-forward { border-top: 0; margin-top: 18px; padding: 16px; border-radius: 16px; background: color-mix(in srgb, var(--gold) 12%, transparent); }
+  [hidden] { display: none !important; }
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 0 16px max(24px, env(safe-area-inset-bottom)); }
+  footer a { text-decoration: none; margin: 0 8px; }
+</style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/" aria-label="Siddha home"><img src="/img/galaxy-96.webp" width="34" height="34" alt=""><span>siddha</span></a>
+    <a class="pill" id="open-top" href="#get" hidden>Open app</a>
+  </header>
+
+  <main>
+    <section class="card" id="card" data-state="open" aria-live="polite">
+      <div class="badge" id="badge"><img src="/img/galaxy-96.webp" width="64" height="64" alt=""></div>
+      <h1 id="title">Open Siddha</h1>
+      <p id="body">Siddha lives in the app on your phone.</p>
+      <a class="cta" id="open-main" href="#get" hidden>Open Siddha</a>
+      <p class="desktop-note" id="desktop-note" hidden>Open this email on the phone where Siddha is installed, and tap the button there.</p>
+      <p class="get" id="get">
+        <span id="get-text">Don't have Siddha yet?</span>
+        <a id="get-link" href="https://play.google.com/store/apps/details?id=app.asksiddha.mobile" rel="noopener">Get the app</a>
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <a href="/">Home</a><a href="/legal/privacy">Privacy</a><a href="mailto:asksiddha@3senses.design">Help</a>
+  </footer>
+
+  <script src="/js/open-app.js"></script>
+  <script src="/js/open-page.js"></script>
+</body>
+</html>

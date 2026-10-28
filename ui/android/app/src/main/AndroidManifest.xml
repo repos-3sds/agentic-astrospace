@@ -46,6 +46,10 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="asksiddha.app" android:pathPrefix="/m/" />
+                <!-- Sign-in email links land on asksiddha.app/open?code=…; with the
+                     app installed Android can hand them straight over
+                     (AuthService.isNativeAuthCallback). -->
+                <data android:scheme="https" android:host="asksiddha.app" android:path="/open" />
             </intent-filter>
 
             <intent-filter android:autoVerify="false">

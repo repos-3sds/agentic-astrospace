@@ -13,8 +13,10 @@ import { AuthService } from './auth.service';
  * asksiddha.app is a landing page (firebase-public/) and the web app is the
  * owner's own tool on the direct Cloud Run address. So a production web
  * visitor also has to be an admin (an active admin_users row, checked by
- * /admin/me). Anyone else signed in is sent to the web landing page, with
- * `?owner_only=1` so it can say why rather than look like a dead button.
+ * /admin/me). Anyone else is signed out of the browser again and sent to the
+ * sign-in page with `?owner_only=1`, which says the app is where they belong.
+ * Until 2026-10-28 they stayed signed in on a landing page whose "Open app"
+ * button led straight back here, so it looked dead.
  *
  * Like nativeAppGuard this is a visibility boundary, not a security one: the
  * API serves every signed-in user their own data whichever client asks, which
@@ -27,10 +29,44 @@ export const authGuard: CanActivateFn = async () => {
   await auth.init();
   if (!auth.isAuthenticated()) return router.createUrlTree(['/auth']);
   if (Capacitor.isNativePlatform() || !environment.production) return true;
+  if (await isOwner(admin)) return true;
+  await auth.signOut();
+  return router.createUrlTree(['/auth'], { queryParams: { owner_only: '1' } });
+};
+
+/**
+ * The web landing page at '/'. In production it is not shown at all: the
+ * public site is asksiddha.app, so a visitor goes there and the owner goes
+ * straight into the web app. Development builds keep the page.
+ */
+export const webLandingGuard: CanActivateFn = async () => {
+  if (Capacitor.isNativePlatform() || !environment.production) return true;
+  const auth = inject(AuthService);
+  const admin = inject(AdminService);
+  const router = inject(Router);
+  await auth.init();
+  if (auth.isAuthenticated() && (await isOwner(admin))) {
+    return router.createUrlTree(['/app']);
+  }
+  if (auth.isAuthenticated()) await auth.signOut();
+  leaveForPublicSite();
+  return false;
+};
+
+async function isOwner(admin: AdminService): Promise<boolean> {
   try {
     await admin.me();
     return true;
   } catch {
-    return router.createUrlTree(['/'], { queryParams: { owner_only: '1' } });
+    return false;
   }
-};
+}
+
+export const PUBLIC_SITE = 'https://asksiddha.app/';
+
+/** A seam for tests: leaving the page cannot be undone inside Karma. */
+export const publicSite = { go: (url: string) => window.location.replace(url) };
+
+function leaveForPublicSite(): void {
+  publicSite.go(PUBLIC_SITE);
+}

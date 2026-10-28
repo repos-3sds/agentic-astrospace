@@ -12,7 +12,8 @@ Configuration is environment-only, never read from the repo:
     EMAIL_REPLY_TO          default asksiddha@3senses.design
     EMAIL_LINK_SECRET       signs unsubscribe links; required to send
     EMAIL_POSTAL_ADDRESS    footer sender line, default "Siddha, 3 Senses Design Studio, India"
-    PUBLIC_BASE_URL         where links point, default the Cloud Run URL
+    PUBLIC_BASE_URL         where links point, default https://asksiddha.app (Firebase
+                            Hosting passes /api and /email through to Cloud Run)
 
 Every marketing email carries List-Unsubscribe and List-Unsubscribe-Post
 (RFC 8058), which Gmail and Yahoo require of bulk senders: one tap in the
@@ -31,7 +32,8 @@ from typing import Protocol
 DEFAULT_FROM = "Siddha <asksiddha@3senses.design>"
 DEFAULT_REPLY_TO = "asksiddha@3senses.design"
 DEFAULT_POSTAL_ADDRESS = "Siddha, 3 Senses Design Studio, India 533005"
-DEFAULT_BASE_URL = "https://agentic-astrospace-cwuqybpnzq-el.a.run.app"
+# Never the Cloud Run address: readers see these links (2026-10-28).
+DEFAULT_BASE_URL = "https://asksiddha.app"
 RESEND_ENDPOINT = "https://api.resend.com/emails"
 
 # Unsubscribe scope for "stop every email", alongside the per-category ones.

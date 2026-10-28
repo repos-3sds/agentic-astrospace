@@ -37,6 +37,24 @@
     </section>
   }
 
+  @if (linkResult() === 'confirmed') {
+    <section class="confirm-callout is-done" role="status" aria-live="polite">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m8 12.5 2.6 2.6L16 9.7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div>
+        <h2>Email confirmed</h2>
+        <p>Your account is ready. Sign in below to continue.</p>
+      </div>
+    </section>
+  } @else if (linkResult() === 'expired') {
+    <section class="confirm-callout" role="status" aria-live="polite">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5v5.5M12 16.5v.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <div>
+        <h2>That link didn’t work</h2>
+        <p>It may have expired or been used already. Sign in below, or ask for a new link.</p>
+      </div>
+    </section>
+  }
+
   @if (appleAvailable()) {
     <button class="apple" type="button" [disabled]="appleLoading()" (click)="apple()">
       <svg viewBox="0 0 17 20" aria-hidden="true"><path fill="currentColor" d="M14.06 10.63c-.02-2.2 1.8-3.26 1.88-3.31-1.03-1.5-2.62-1.7-3.19-1.73-1.36-.14-2.65.8-3.34.8-.69 0-1.75-.78-2.88-.76-1.48.02-2.85.86-3.61 2.19-1.54 2.67-.39 6.62 1.11 8.79.73 1.06 1.6 2.25 2.75 2.21 1.1-.04 1.52-.71 2.85-.71 1.33 0 1.71.71 2.88.69 1.19-.02 1.94-1.08 2.67-2.14.84-1.23 1.19-2.42 1.21-2.48-.03-.01-2.32-.89-2.33-3.55ZM11.86 4.18c.61-.74 1.02-1.76.91-2.78-.88.04-1.94.59-2.57 1.32-.56.65-1.06 1.69-.93 2.69.98.08 1.98-.5 2.59-1.23Z"/></svg>

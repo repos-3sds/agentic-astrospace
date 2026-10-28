@@ -135,13 +135,51 @@ input,
   }
 }
 
-.mode-switch {
-  border: 0;
-  color: var(--as-accent-strong);
-  background: transparent;
-  font: inherit;
+
+// Phones only (the template leaves it out on a desktop): a row of its own
+// above the panel, so the panel can never cover it.
+.open-app-pill {
+  justify-self: end;
+  align-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  color: var(--as-bg);
+  background: var(--as-text);
   font-weight: 600;
-  cursor: pointer;
+  text-decoration: none;
+}
+
+.reader-note {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--as-radius);
+  border: 1px solid var(--as-border);
+  background: var(--as-surface-2, transparent);
+
+  p { margin: 0; line-height: 1.5; }
+
+  &.is-alert {
+    color: var(--as-warn);
+    background: var(--as-warn-soft);
+    border-color: transparent;
+  }
+}
+
+.reader-open {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  color: var(--as-bg);
+  background: var(--as-text);
+  font-weight: 600;
+  text-decoration: none;
 }
 
 .notice,

@@ -8,6 +8,32 @@
   <meta name="color-scheme" content="light dark">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <script>
+    // A sign-in email link that fell back to this address (Supabase's Site
+    // URL, the Cloud Run web app) belongs to a reader using the app, not to
+    // the owner's web tool. Send it to the "Email confirmed, open Siddha"
+    // page on the public site before Angular boots, so the web client never
+    // tries to sign the reader in here. Only the bare root: the owner's own
+    // web sign-ins return to /app. Emails sent before 2026-10-28 all land
+    // here, because sign-up asked for no redirect at all.
+    (function () {
+      try {
+        if (!/\.run\.app$/.test(location.hostname) || location.pathname !== '/') return;
+        var all = location.search + '&' + location.hash.replace(/^#/, '');
+        if (!/(^|[?&])(code|error|error_description|access_token|token_hash)=/.test(all)) return;
+        var params = new URLSearchParams(location.search);
+        new URLSearchParams(location.hash.replace(/^#/, '')).forEach(function (v, k) {
+          if (k !== 'access_token' && k !== 'refresh_token' && !params.has(k)) params.set(k, v);
+        });
+        params.delete('access_token');
+        params.delete('refresh_token');
+        if (!params.has('from')) params.set('from', 'confirm');
+        location.replace('https://asksiddha.app/open?' + params.toString());
+      } catch (e) {
+        // Leave the page as it is; the landing guard still sends visitors on.
+      }
+    })();
+  </script>
+  <script>
     // Resolve the theme before first paint.
     //
     // `class="app-dark"` used to be hardcoded on <html>, which contradicted

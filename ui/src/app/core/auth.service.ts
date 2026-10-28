@@ -14,6 +14,18 @@ import { SessionTeardown } from './session-teardown';
 
 const NATIVE_AUTH_CALLBACK = 'app.asksiddha.mobile://auth/callback';
 const NATIVE_AUTH_BRIDGE_PATH = '/api/v1/auth/native-callback';
+/**
+ * Where links in sign-in emails land: a small page on the public site that
+ * says what happened and has one "Open Siddha" button (firebase-public/open.html).
+ * Email links are tapped in a mail app, so they open in the phone's browser,
+ * not in the in-app sheet an OAuth sign-in uses; sending them straight to the
+ * custom scheme failed silently in Gmail's browser and left no way back when
+ * the link had expired. Without a redirect at all, Supabase fell back to its
+ * Site URL, the Cloud Run web app, which is the owner's tool, not the reader's.
+ */
+export const EMAIL_LINK_PAGE = 'https://asksiddha.app/open';
+/** Which email a link came from, so the open page and the app can word what happened. */
+export type EmailLinkKind = 'confirm' | 'signin' | 'reset' | 'email';
 const NATIVE_AUTH_DESTINATION_KEY = 'astrospace.nativeAuthDestination';
 const NATIVE_AUTH_STATE_KEY = 'astrospace.nativeAuthState';
 // Long enough to survive a slow inbox check, short enough to bound how long a
@@ -312,7 +324,10 @@ export class AuthService {
     const { data, error } = await this.client.auth.signUp({
       email,
       password,
-      options: { data: { name } },
+      options: {
+        data: { name },
+        emailRedirectTo: this.emailLinkRedirect('/' + destination.join('/').replace(/^\/+/, ''), 'confirm'),
+      },
     });
     if (error) throw error;
     this.setSession(data.session);
@@ -320,10 +335,14 @@ export class AuthService {
   }
 
   /** Sends the sign-up confirmation email again, for an account not yet confirmed. */
-  async resendConfirmation(email: string): Promise<void> {
+  async resendConfirmation(email: string, destination = '/m/language'): Promise<void> {
     await this.init();
     if (!this.client) return;
-    const { error } = await this.client.auth.resend({ type: 'signup', email });
+    const { error } = await this.client.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: this.emailLinkRedirect(destination, 'confirm') },
+    });
     if (error) throw error;
   }
 
@@ -333,7 +352,7 @@ export class AuthService {
     const { error } = await this.client.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: this.authRedirect(destination),
+        emailRedirectTo: this.emailLinkRedirect(destination, 'signin'),
       },
     });
     if (error) throw error;
@@ -520,7 +539,7 @@ export class AuthService {
     await this.init();
     if (!this.client) return;
     const { error } = await this.client.auth.resetPasswordForEmail(email, {
-      redirectTo: this.authRedirect(destination),
+      redirectTo: this.emailLinkRedirect(destination, 'reset'),
     });
     if (error) throw error;
   }
@@ -544,7 +563,7 @@ export class AuthService {
     if (!this.client) throw new Error('Email changes need a signed-in account.');
     const { error } = await this.client.auth.updateUser(
       { email },
-      { emailRedirectTo: this.authRedirect(destination) },
+      { emailRedirectTo: this.emailLinkRedirect(destination, 'email') },
     );
     if (error) throw error;
   }
@@ -632,6 +651,18 @@ export class AuthService {
   }
 
   /**
+   * The redirect for a link sent by email. On the web it is the page the
+   * owner asked from. In the app it is the open page on asksiddha.app, which
+   * hands the link's code to the app through the custom scheme; the code is
+   * only redeemable here, because the PKCE verifier never leaves this device.
+   */
+  private emailLinkRedirect(destination: string, kind: EmailLinkKind): string {
+    if (!Capacitor.isNativePlatform()) return this.authRedirect(destination);
+    localStorage.setItem(NATIVE_AUTH_DESTINATION_KEY, destination);
+    return `${EMAIL_LINK_PAGE}?from=${kind}`;
+  }
+
+  /**
    * A random, one-time value bound to the auth flow this app instance just
    * started. Every legitimate callback carries it back; a URL fired by
    * another app or a tapped link has no way to know it, so anything without
@@ -673,6 +704,37 @@ export class AuthService {
     if (!this.client || !this.isNativeAuthCallback(url)) return;
     await this.closeNativeAuthBrowser();
     const parsed = new URL(url);
+    // Set only by the email open page (asksiddha.app/open). An email link has
+    // no screen of its own to report on, so whatever happens here the reader
+    // lands somewhere that says so; OAuth callbacks keep reporting through
+    // the sign-in button that started them.
+    const from = parsed.searchParams.get('from') as EmailLinkKind | null;
+    if (!from) {
+      await this.finishNativeAuthCallback(parsed);
+      return;
+    }
+    let signedIn = false;
+    try {
+      signedIn = await this.finishNativeAuthCallback(parsed);
+    } catch (error) {
+      console.error('Email link sign-in failed', error);
+    }
+    if (signedIn) return;
+    const fragment = new URLSearchParams(parsed.hash.replace(/^#/, ''));
+    const failed = !!(parsed.searchParams.get('error') ?? fragment.get('error'));
+    // A confirm link confirms the address on Supabase's side before it gets
+    // here; only the sign-in that rides on it can fail (another phone, or the
+    // app reinstalled since). So unless Supabase said the link itself was
+    // bad, the account is confirmed and a normal sign-in finishes the job.
+    let link: 'confirmed' | 'expired' | null = null;
+    if (from === 'confirm' && !failed) link = 'confirmed';
+    else if (failed || parsed.searchParams.has('code')) link = 'expired';
+    if (link) await this.router.navigate(['/m', 'auth'], { queryParams: { link } });
+  }
+
+  /** True when the callback left a session behind. */
+  private async finishNativeAuthCallback(parsed: URL): Promise<boolean> {
+    if (!this.client) return false;
     const fragment = new URLSearchParams(parsed.hash.replace(/^#/, ''));
     const errorDescription =
       parsed.searchParams.get('error_description') ?? fragment.get('error_description');
@@ -714,16 +776,21 @@ export class AuthService {
         sessionEstablished = !!data.session;
       }
     }
-    if (!sessionEstablished) return;
+    if (!sessionEstablished) return false;
 
     await Browser.close().catch(() => undefined);
     const destination = localStorage.getItem(NATIVE_AUTH_DESTINATION_KEY) || '/m/today';
     localStorage.removeItem(NATIVE_AUTH_DESTINATION_KEY);
     await this.router.navigateByUrl(destination);
+    return true;
   }
 
   private isNativeAuthCallback(url: string): boolean {
-    return url.startsWith(NATIVE_AUTH_CALLBACK) || url.startsWith(apiUrl(NATIVE_AUTH_BRIDGE_PATH));
+    // The open page itself counts too: on Android, a verified App Link can
+    // hand https://asksiddha.app/open?code=… straight to the app.
+    return url.startsWith(NATIVE_AUTH_CALLBACK)
+      || url.startsWith(apiUrl(NATIVE_AUTH_BRIDGE_PATH))
+      || url.startsWith(EMAIL_LINK_PAGE);
   }
 
   private async closeNativeAuthBrowser(): Promise<void> {

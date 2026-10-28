@@ -45,4 +45,7 @@ input { @include m-body; width: 100%; box-sizing: border-box; padding: 15px 18px
   button { @include m-body-small; margin-top: 10px; padding: 0; border: 0; background: none; color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; &:disabled { opacity: .7; } }
   .resent { margin-top: 8px; font-weight: 600; }
 }
+// Done, not waiting: same weight, the theme's own "good" green.
+.confirm-callout.is-done { --callout-bg: #9fd8b0; --callout-on: #0f2a18; box-shadow: 0 10px 28px rgba(40, 120, 70, 0.24); }
 :host-context(.app-dark) .confirm-callout { --callout-bg: #fcd34d; --callout-on: #1c1204; box-shadow: 0 10px 32px rgba(252, 211, 77, 0.22); }
+:host-context(.app-dark) .confirm-callout.is-done { --callout-bg: #86efac; --callout-on: #052e16; box-shadow: 0 10px 32px rgba(134, 239, 172, 0.2); }
