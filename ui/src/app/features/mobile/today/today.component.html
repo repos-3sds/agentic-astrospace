@@ -26,8 +26,8 @@
 
 <header class="appbar">
   <button class="identity" type="button" (click)="profileSwitcherOpen.set(true)" aria-label="Switch profile">
-    <!-- The sun sits here (the sky behind); nothing is printed over it (Hawk, 2026-10-26). -->
-    <div class="avatar" aria-hidden="true"></div>
+    <!-- The profile's initial sits on the sun (the sky behind), on every device (Hawk, 2026-10-28). -->
+    <div class="avatar" aria-hidden="true">{{ headerInitial() }}</div>
     <div class="who">
       <p class="name">{{ greeting() }}</p>
       <p class="date">{{ headerDate() }}</p>
