@@ -18,7 +18,13 @@
 export interface TextRun {
   text: string;
   bold: boolean;
+  /** A Guided reading's "[2]": the chart reason behind the sentence it
+   * ends, which is `technical_basis[marker - 1]`. Rendered as a tappable
+   * chip; `text` is empty, so a renderer without chips shows nothing. */
+  marker?: number;
 }
+
+const MARKER = /\s?\[(\d{1,2})\]([.,;:!?]?)/g;
 
 function normalizeStructure(text: string): string {
   return String(text || '')
@@ -37,6 +43,7 @@ function normalizeStructure(text: string): string {
 export function cleanPlainText(text: string): string {
   return normalizeStructure(
     String(text || '')
+      .replace(MARKER, '$2')
       .replace(/\*\*(.*?)\*\*/g, '$1')
       .replace(/__(.*?)__/g, '$1'),
   );
@@ -46,6 +53,25 @@ export function cleanPlainText(text: string): string {
  * runs, preserving every character outside the `**...**`/`__...__` markers
  * exactly (including surrounding spaces, so words never fuse together). */
 export function parseRuns(line: string): TextRun[] {
+  const runs: TextRun[] = [];
+  for (const run of parseBoldRuns(line)) {
+    let cursor = 0;
+    MARKER.lastIndex = 0;
+    let match: RegExpExecArray | null;
+    while ((match = MARKER.exec(run.text))) {
+      // "slowly [1]." reads as "slowly. ①": punctuation stays with its words,
+      // the chip trails the sentence.
+      const before = run.text.slice(cursor, match.index) + match[2];
+      if (before) runs.push({ text: before, bold: run.bold });
+      runs.push({ text: '', bold: false, marker: Number(match[1]) });
+      cursor = MARKER.lastIndex;
+    }
+    if (cursor < run.text.length) runs.push({ text: run.text.slice(cursor), bold: run.bold });
+  }
+  return runs;
+}
+
+function parseBoldRuns(line: string): TextRun[] {
   const runs: TextRun[] = [];
   const pattern = /\*\*(.+?)\*\*|__(.+?)__/g;
   let cursor = 0;

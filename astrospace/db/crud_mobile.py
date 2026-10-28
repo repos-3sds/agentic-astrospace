@@ -218,6 +218,23 @@ def get_thread_messages(db: Session, thread_id: str, limit: int = 200) -> list[A
     )
 
 
+def recent_profile_questions(db: Session, user_id: str, kundli_id: str,
+                             exclude_thread_id: str | None = None, limit: int = 12) -> list[str]:
+    """The reader's own recent questions about one profile across all its
+    Ask threads, newest first. The tool-using Ask reads them for life facts
+    the reader already told Siddha ("I never did a job") in other chats."""
+    query = (
+        db.query(AskMessage.content)
+        .join(AskThread, AskThread.id == AskMessage.thread_id)
+        .filter(AskThread.user_id == user_id, AskThread.kundli_id == kundli_id,
+                AskMessage.role == "user")
+    )
+    if exclude_thread_id:
+        query = query.filter(AskMessage.thread_id != exclude_thread_id)
+    rows = query.order_by(AskMessage.created_at.desc()).limit(limit).all()
+    return [(row[0] or "")[:400] for row in rows]
+
+
 def archive_ask_thread(db: Session, thread_id: str, user_id: str) -> bool:
     thread = get_ask_thread(db, thread_id, user_id)
     if not thread:

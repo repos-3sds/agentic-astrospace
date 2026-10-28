@@ -528,6 +528,52 @@ export class AskAnswerComponent {
     return paragraphRuns(reading.interpretation ?? '');
   }
 
+  /** Guided's tappable "[n]" chips: which marker is open, per message. One
+   * at a time, so the reading stays calm; tapping it again closes it. */
+  private readonly openMarkers = signal<Record<string, number>>({});
+
+  protected basisFor(reading: StructuredReading, marker: number): AskTechnicalBasisItem | null {
+    return reading.technical_basis?.[marker - 1] ?? null;
+  }
+
+  protected isMarkerOpen(message: ChatMessage, marker: number): boolean {
+    return this.openMarkers()[message.id] === marker;
+  }
+
+  protected openMarkerNumber(message: ChatMessage): number | null {
+    return this.openMarkers()[message.id] ?? null;
+  }
+
+  protected toggleMarker(message: ChatMessage, marker: number): void {
+    this.openMarkers.update((open) => {
+      const next = { ...open };
+      if (next[message.id] === marker) delete next[message.id];
+      else next[message.id] = marker;
+      return next;
+    });
+  }
+
+  /** The open marker's chart reason, shown under the paragraph that holds it. */
+  protected openBasisIn(
+    message: ChatMessage,
+    reading: StructuredReading,
+    para: TextRun[],
+  ): AskTechnicalBasisItem | null {
+    const marker = this.openMarkerNumber(message);
+    if (!marker || !para.some((run) => run.marker === marker)) return null;
+    return this.basisFor(reading, marker);
+  }
+
+  protected hasMarkers(reading: StructuredReading): boolean {
+    return this.readingParagraphRuns(reading).some((para) =>
+      para.some((run) => !!run.marker && !!this.basisFor(reading, run.marker)),
+    );
+  }
+
+  protected plainSummary(reading: StructuredReading): string {
+    return cleanPlainText(reading.summary_and_assurance ?? '');
+  }
+
   /** Full `practical_actions` (falling back to `follow_up_questions` when
    * the reading has none) — the same list, unsliced, for Guided, Balanced,
    * and Practitioner alike. Was previously Guided-only and capped at 2

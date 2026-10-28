@@ -1464,3 +1464,24 @@ class TestPrimaryEvidenceCoverage:
         from astrospace.agents.verifier import safety_violations
         bad = self._reading("You will die young.")
         assert safety_violations(verify(bad, career_bundle_2026, "career"))
+
+
+class TestGuidedViolations:
+    """Guided readers see plain words; chart reasons sit behind [n] markers."""
+
+    def test_plain_prose_with_matching_markers_passes(self):
+        from astrospace.agents.verifier import guided_violations
+        reading = _reading(interpretation="Work picks up slowly through steady effort [1].")
+        assert guided_violations(reading) == []
+
+    def test_chart_terms_in_prose_are_quality_violations(self):
+        from astrospace.agents.verifier import guided_violations, safety_violations
+        reading = _reading(interpretation="Your 10th house lord is debilitated in the Jupiter mahadasha.")
+        found = guided_violations(reading)
+        assert len(found) == 1 and "10th house" in found[0] and "mahadasha" in found[0]
+        assert safety_violations(found) == []
+
+    def test_marker_without_a_basis_item_is_flagged(self):
+        from astrospace.agents.verifier import guided_violations
+        reading = _reading(interpretation="Work picks up slowly [3].")
+        assert any("[3]" in v for v in guided_violations(reading))

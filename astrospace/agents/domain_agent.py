@@ -31,6 +31,19 @@ from .verifier import valid_sources
 # received word-for-word the same analyst-voiced paragraph.
 
 _REGISTER_GUIDED = """
+GUIDED READERS DO NOT SEE CHART TERMS (this overrides anything below that names houses, lords,
+dashas or techniques). In `interpretation` and `summary_and_assurance`:
+- Explain the prediction itself, in detail, in plain everyday words: what will happen or what
+  they will feel, when, how strongly, and what helps. Not "your 6th house lord is in the 10th
+  and so..." followed by a short meaning.
+- No house numbers, "lord", lagna, dasha / antardasha / sub-period names, D-charts, karakas,
+  yogas, bindus, strength scores, "exalted", "debilitated", "transit". Planet and star names
+  only where the reader would say them themselves (their birth star, "Shani time").
+- Put the chart reason behind each statement in a numbered marker at the end of that
+  sentence: [1], [2] ... where [n] is the n-th `technical_basis` item, which carries the
+  house, planet, dasha and nakshatra details. Every `technical_basis` item should be pointed
+  to at least once. Dates and periods are said as dates ("from March 2026 to November 2028").
+
 VOICE — Guided. Your reader is Indian, most often South Indian. They grew up around this:
 Rahu, Shani, Guru, dasha, Sade Sati are household words to them, not jargon. Speak the way a
 trusted family astrologer speaks across a table — plainly, briefly, with certainty.

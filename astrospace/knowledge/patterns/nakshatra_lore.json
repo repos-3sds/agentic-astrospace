@@ -1,0 +1,254 @@
+{
+ "status": "Research lore for the tool-using Ask (agents/ask_tools.py tool_nakshatra). Classical Moon-in-star traits from Brihat Jataka ch.XVI; rows with classical_checked_in_print false (Ashwini to Punarvasu) were not found in the OCR and must be verified against the printed book. story_gloss is modern deity-story practice (tier H), never classical.",
+ "rules": [
+  "Predict by the Moon's strength: weak Moon = faint traces of the star's traits; strong Moon = full.",
+  "Moon, its sign and the sign lord all strong = portrait fully holds; two of three = partly; one = traces; none = nothing.",
+  "Hasta, Swati, Vishakha and Shatabhisha have two readings; never present one as certain.",
+  "Classically only the Moon's star has trait verses; for Lagna and other planets the star is colour (deity, lord, story), and must be called practice."
+ ],
+ "nakshatras": [
+  {
+   "index": 0,
+   "name": "Ashwini",
+   "lord": "Ketu",
+   "deity": "Ashwini Kumaras",
+   "classical_traits": "fond of ornaments, handsome, popular, able, intelligent",
+   "classical_checked_in_print": false,
+   "story_gloss": "healer, fast starter, impatient"
+  },
+  {
+   "index": 1,
+   "name": "Bharani",
+   "lord": "Venus",
+   "deity": "Yama",
+   "classical_traits": "firm in resolve, truthful, healthy, happy, able",
+   "classical_checked_in_print": false,
+   "story_gloss": "bearer of burdens, discipline, endings"
+  },
+  {
+   "index": 2,
+   "name": "Krittika",
+   "lord": "Sun",
+   "deity": "Agni",
+   "classical_traits": "big eater, fond of others' partners, bright, famous",
+   "classical_checked_in_print": false,
+   "story_gloss": "sharp, cutting, purifying fire"
+  },
+  {
+   "index": 3,
+   "name": "Rohini",
+   "lord": "Moon",
+   "deity": "Brahma/Prajapati",
+   "classical_traits": "truthful, clean, sweet speech, steady mind, good looks",
+   "classical_checked_in_print": false,
+   "story_gloss": "growth, charm, attachment"
+  },
+  {
+   "index": 4,
+   "name": "Mrigashira",
+   "lord": "Mars",
+   "deity": "Soma",
+   "classical_traits": "fickle, timid, clever, eloquent, wealthy, pleasure-loving",
+   "classical_checked_in_print": false,
+   "story_gloss": "seeker, searching mind"
+  },
+  {
+   "index": 5,
+   "name": "Ardra",
+   "lord": "Rahu",
+   "deity": "Rudra",
+   "classical_traits": "ungrateful, insincere, cruel, sinful, proud",
+   "classical_checked_in_print": false,
+   "story_gloss": "storm, tears then clarity"
+  },
+  {
+   "index": 6,
+   "name": "Punarvasu",
+   "lord": "Jupiter",
+   "deity": "Aditi",
+   "classical_traits": "self-controlled, happy, good-natured, slow, sickly, thirsty, content with little",
+   "classical_checked_in_print": false,
+   "story_gloss": "return of light, renewal"
+  },
+  {
+   "index": 7,
+   "name": "Pushya",
+   "lord": "Saturn",
+   "deity": "Brihaspati",
+   "classical_traits": "control over passions, popular, learned, rich, charitable",
+   "classical_checked_in_print": true,
+   "story_gloss": "nourisher, caretaker"
+  },
+  {
+   "index": 8,
+   "name": "Ashlesha",
+   "lord": "Mercury",
+   "deity": "Nagas",
+   "classical_traits": "dissimulator, clever in selfishness, sinful, ungrateful, a cheat",
+   "classical_checked_in_print": true,
+   "story_gloss": "clinging, hypnotic, serpent wisdom"
+  },
+  {
+   "index": 9,
+   "name": "Magha",
+   "lord": "Ketu",
+   "deity": "Pitris",
+   "classical_traits": "many servants, great wealth, respects elders and gods, enterprising",
+   "classical_checked_in_print": true,
+   "story_gloss": "ancestral pride, throne"
+  },
+  {
+   "index": 10,
+   "name": "Purva Phalguni",
+   "lord": "Venus",
+   "deity": "Bhaga",
+   "classical_traits": "sweet speech, liberal, handsome, fond of travel, serves a ruler",
+   "classical_checked_in_print": true,
+   "story_gloss": "pleasure, rest, creativity"
+  },
+  {
+   "index": 11,
+   "name": "Uttara Phalguni",
+   "lord": "Sun",
+   "deity": "Aryaman",
+   "classical_traits": "popular, self-acquired property, enjoying, happy",
+   "classical_checked_in_print": true,
+   "story_gloss": "contracts, friendship, patronage"
+  },
+  {
+   "index": 12,
+   "name": "Hasta",
+   "lord": "Moon",
+   "deity": "Savitar",
+   "classical_traits": "enterprising, intelligent (or shameless), drunkard, cruel, thievish (two readings)",
+   "classical_checked_in_print": true,
+   "story_gloss": "skilled hands, craft, wit"
+  },
+  {
+   "index": 13,
+   "name": "Chitra",
+   "lord": "Mars",
+   "deity": "Vishwakarma/Tvashtar",
+   "classical_traits": "varied clothes and garlands, good looks and limbs",
+   "classical_checked_in_print": true,
+   "story_gloss": "design, brilliance, vanity"
+  },
+  {
+   "index": 14,
+   "name": "Swati",
+   "lord": "Rahu",
+   "deity": "Vayu",
+   "classical_traits": "polite, merchant, kind-hearted (or thirsty), sweet-tongued, generous",
+   "classical_checked_in_print": true,
+   "story_gloss": "independence, scattered like wind"
+  },
+  {
+   "index": 15,
+   "name": "Vishakha",
+   "lord": "Jupiter",
+   "deity": "Indra-Agni",
+   "classical_traits": "jealous, avaricious, handsome, clever speaker (or money-maker), quarrelsome",
+   "classical_checked_in_print": true,
+   "story_gloss": "single-pointed ambition"
+  },
+  {
+   "index": 16,
+   "name": "Anuradha",
+   "lord": "Saturn",
+   "deity": "Mitra",
+   "classical_traits": "a chief, lives abroad, cannot bear hunger, fond of travel",
+   "classical_checked_in_print": true,
+   "story_gloss": "devotion, friendship, following"
+  },
+  {
+   "index": 17,
+   "name": "Jyeshtha",
+   "lord": "Mercury",
+   "deity": "Indra",
+   "classical_traits": "few friends, contented, charitable, very irritable",
+   "classical_checked_in_print": true,
+   "story_gloss": "eldest, protective, proud"
+  },
+  {
+   "index": 18,
+   "name": "Moola",
+   "lord": "Ketu",
+   "deity": "Nirriti",
+   "classical_traits": "proud, rich, happy, good, steady, enjoying",
+   "classical_checked_in_print": true,
+   "story_gloss": "roots, uprooting, investigation"
+  },
+  {
+   "index": 19,
+   "name": "Purva Ashadha",
+   "lord": "Venus",
+   "deity": "Apas",
+   "classical_traits": "good and pleasant spouse, proud, steady friend",
+   "classical_checked_in_print": true,
+   "story_gloss": "invincible, declaration"
+  },
+  {
+   "index": 20,
+   "name": "Uttara Ashadha",
+   "lord": "Sun",
+   "deity": "Vishwadevas",
+   "classical_traits": "polite, knowing, virtuous, many friends, grateful, popular",
+   "classical_checked_in_print": true,
+   "story_gloss": "late but lasting victory"
+  },
+  {
+   "index": 21,
+   "name": "Shravana",
+   "lord": "Moon",
+   "deity": "Vishnu",
+   "classical_traits": "rich surroundings, learned, good and liberal (or liberal to spouse), renowned",
+   "classical_checked_in_print": true,
+   "story_gloss": "listening, learning, Saraswati"
+  },
+  {
+   "index": 22,
+   "name": "Dhanishta",
+   "lord": "Mars",
+   "deity": "Vasus",
+   "classical_traits": "liberal, rich, courageous, fond of music and money",
+   "classical_checked_in_print": true,
+   "story_gloss": "rhythm, wealth, group"
+  },
+  {
+   "index": 23,
+   "name": "Shatabhisha",
+   "lord": "Rahu",
+   "deity": "Varuna",
+   "classical_traits": "plain and truthful, sorrow through women, kills enemies, adventurous, irreconcilable (two readings)",
+   "classical_checked_in_print": true,
+   "story_gloss": "hundred healers, secrecy"
+  },
+  {
+   "index": 24,
+   "name": "Purva Bhadrapada",
+   "lord": "Jupiter",
+   "deity": "Aja Ekapada",
+   "classical_traits": "sorrowful, loss of money through women, skilful, miserly",
+   "classical_checked_in_print": true,
+   "story_gloss": "fierce austerity, transformation"
+  },
+  {
+   "index": 25,
+   "name": "Uttara Bhadrapada",
+   "lord": "Saturn",
+   "deity": "Ahir Budhnya",
+   "classical_traits": "good speaker, happy, many children and grandchildren, wins over enemies, charitable",
+   "classical_checked_in_print": true,
+   "story_gloss": "depth, serpent of the deep, patience"
+  },
+  {
+   "index": 26,
+   "name": "Revati",
+   "lord": "Mercury",
+   "deity": "Pushan",
+   "classical_traits": "well-developed limbs, popular, courageous, clean, wealthy",
+   "classical_checked_in_print": true,
+   "story_gloss": "guide of travellers, completion"
+  }
+ ]
+}

@@ -305,6 +305,8 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
             experience_mode=body.experience_mode, language=body.language,
             tone=body.tone, validate_first=body.validate_first, history=messages,
             explore=explore,
+            explore_history=(cm.recent_profile_questions(db, user.id, kundli_id)
+                             if explore else None),
         )
     except TaxonomyError:
         log.exception("ask stream prepare failed on taxonomy (kundli=%s)", kundli_id)

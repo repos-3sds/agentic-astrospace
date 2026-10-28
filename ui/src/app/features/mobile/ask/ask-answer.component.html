@@ -86,20 +86,40 @@
                 @for (para of readingParagraphRuns(reading); track $index) {
                   <p class="reading-paragraph">
                     @for (run of para; track $index) {
-                      @if (run.bold) {
+                      @if (run.marker && basisFor(reading, run.marker)) {
+                        <button
+                          type="button"
+                          class="reason-marker"
+                          [class.open]="isMarkerOpen(message, run.marker)"
+                          [attr.aria-expanded]="isMarkerOpen(message, run.marker)"
+                          [attr.aria-label]="'Chart reason ' + run.marker"
+                          (click)="toggleMarker(message, run.marker)"
+                        >{{ run.marker }}</button>
+                      } @else if (run.bold) {
                         <strong class="side-heading">{{ run.text }}</strong>
                       } @else {
                         {{ run.text }}
                       }
                     }
                   </p>
+                  @if (openBasisIn(message, reading, para); as basis) {
+                    <div class="reason-note" role="note">
+                      <span class="reason-number">{{ openMarkerNumber(message) }}</span>
+                      <div>
+                        <p class="reason-factor">{{ basis.factor }}</p>
+                        <p class="reason-reading">{{ basis.reading }}</p>
+                      </div>
+                    </div>
+                  }
                 }
                 @if (reading.summary_and_assurance) {
-                  <p class="assurance-line">{{ reading.summary_and_assurance }}</p>
+                  <p class="assurance-line">{{ plainSummary(reading) }}</p>
                 }
               </section>
 
-              @if (guidedTechnicalHint(message); as hint) {
+              @if (hasMarkers(reading)) {
+                <p class="technical-hint">Tap a number to see the chart reason behind that line.</p>
+              } @else if (guidedTechnicalHint(message); as hint) {
                 <p class="technical-hint">{{ hint }}</p>
               }
 

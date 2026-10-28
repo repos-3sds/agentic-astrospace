@@ -36,7 +36,8 @@ from .scope import QuestionPlan, fixed_reply, plan_question
 from .schema import AskIntent, StructuredReading
 from .stance import detect_pushback
 from .validation_agent import ValidationAgent, ValidationProbeDraft, probe_violations
-from .verifier import quality_violations, safety_violations, verify, verify_coverage, violation_fields
+from .verifier import (guided_violations, quality_violations, safety_violations, verify,
+                       verify_coverage, violation_fields)
 from ..context.muhurta_search import muhurta_section
 from ..context import KeywordRouter, assemble_domain
 from ..context.focus import focus_bundle
@@ -96,15 +97,27 @@ log = logging.getLogger(__name__)
 
 # The tool-using Ask's exploring step gives up after this long and the turn
 # carries on over the plain bundle.
-EXPLORE_TIMEOUT_S = 60
+EXPLORE_TIMEOUT_S = 90
 
 EXPLORED_NOTE = """
 
 LOOKED UP FOR THIS QUESTION: the bundle's `explored` list holds chart lookups made for this
-exact question, each with a `ref` (e.g. "tool:house(7)") and `explorer_notes` sums them up.
-Use them like any other bundle section. A `technical_basis` source may be one of those refs, or
-a "pattern:..." id from a classical_patterns lookup. Tier H patterns are practice, not classics:
-say so in plain words if you lean on one. Never name a book in the reader-facing text."""
+exact question, each with a `ref` (e.g. "tool:house(7)"). `explorer_notes` sums them up,
+`rule_verdicts` says for each classical rule whether it holds, partly holds, fails or REVERSES
+for this chart, and `reader_facts` is what the reader has told Siddha about their life.
+- Use the lookups like any other bundle section; weigh dignity, the three lagnas, the varga,
+  nakshatras and the sub-sub period timing they show.
+- A rule marked fails or reverses must not be used for the claim it was written for; a reversed
+  rule points the other way (e.g. Jupiter in the 10th from the Moon is a strain). Only rules
+  marked holds or partly may be cited as a `technical_basis` source.
+- Start from `reader_facts`: never assume a life the reader has said they do not have.
+- Tie the person's nature to the running periods ("Personality in this period"), and carry the
+  explorer's Take care / Consider / Avoid / Do lines into `guidance.practical_actions`, each
+  starting with that word, when the question asks what to do or what lies ahead.
+- `guidance.remedies`: 1-2 only, taken from the "Remedy ..." lines (the reader's remedy plan),
+  with the mantra in English letters and why it fits them. Never invent a remedy.
+- Tier H patterns and nakshatra deity stories are practice, not classics: say so in plain words
+  if you lean on one. Never name a book in the reader-facing text."""
 
 
 def _usage_summary(usage: dict) -> dict:
@@ -164,6 +177,9 @@ class PreparedRun:
     explorer_factory: Callable | None = None
     agent_factory: Callable | None = None
     explore_usage: list = field(default_factory=list)
+    # guided / balanced / practitioner: Guided answers are also checked for
+    # chart terms in the prose (verifier.guided_violations).
+    experience_mode: str = "balanced"
 
 
 @dataclass
@@ -339,6 +355,8 @@ def exploration_trace(prepared: "PreparedRun") -> dict | None:
                       if (c.get("result") or {}).get("patterns") else {})}
                   for c in calls],
         "notes": prepared.bundle.get("explorer_notes") or "",
+        "rule_verdicts": prepared.bundle.get("rule_verdicts") or {},
+        "reader_facts": prepared.bundle.get("reader_facts") or [],
     }
 
 
@@ -581,6 +599,7 @@ class AskOrchestrator:
         tone: str = "gentle",
         history: list[dict] | None = None,
         explore: bool = False,
+        explore_history: list[str] | None = None,
     ) -> PrepareOutcome:
         """`experience_mode` (guided/balanced/practitioner) selects the
         agent's VOICE only — never its facts, claims, or guardrails. See
@@ -688,7 +707,7 @@ class AskOrchestrator:
                 tz = (chart.meta() or {}).get("timezone") or "Asia/Kolkata"
                 return ChartExplorer(ChartTools(chart, tz, retriever), question, bundle,
                                      question_kind=kind, experience_mode=experience_mode,
-                                     on_tool=on_tool)
+                                     history=explore_history, on_tool=on_tool)
         profile_context = context.bundle.get("profile_context") or {}
         return PrepareOutcome(prepared=PreparedRun(
             domain=routing.domain,
@@ -702,6 +721,7 @@ class AskOrchestrator:
             question_kind=plan.kind,
             explorer_factory=explorer_factory,
             agent_factory=build_agent if explorer_factory else None,
+            experience_mode=experience_mode,
         ))
 
     def _agent_run_and_verify(self, prepared: PreparedRun, messages: list) -> AgentRunResult:
@@ -733,8 +753,7 @@ class AskOrchestrator:
             log.exception("ask generation failed (domain=%s)", prepared.domain)
             return AgentRunResult(reading=None, violations=[], generation_failed=True)
 
-        violations = (verify(reading, prepared.bundle, prepared.domain, prepared.tense)
-                      + verify_coverage(reading, prepared.bundle))
+        violations = self._check(prepared, reading)
         if not violations:
             return AgentRunResult(reading=reading, violations=[])
 
@@ -761,8 +780,7 @@ class AskOrchestrator:
             return AgentRunResult(reading=None, violations=violations, generation_failed=True)
         reading = repaired
 
-        violations = (verify(reading, prepared.bundle, prepared.domain, prepared.tense)
-                      + verify_coverage(reading, prepared.bundle))
+        violations = self._check(prepared, reading)
         if not violations:
             return AgentRunResult(reading=reading, violations=[])
 
@@ -778,6 +796,14 @@ class AskOrchestrator:
             return AgentRunResult(reading=None, violations=violations)
         return AgentRunResult(reading=reading, violations=[],
                               quality_shortfall=quality_violations(violations))
+
+    @staticmethod
+    def _check(prepared: PreparedRun, reading: StructuredReading) -> list[str]:
+        violations = (verify(reading, prepared.bundle, prepared.domain, prepared.tense)
+                      + verify_coverage(reading, prepared.bundle))
+        if prepared.experience_mode == "guided":
+            violations += guided_violations(reading)
+        return violations
 
     def _scoped_repair(self, prepared: PreparedRun, messages: list, original: StructuredReading,
                        violations: list[str], fields: set[str]) -> StructuredReading:
@@ -865,6 +891,10 @@ class AskOrchestrator:
         bundle["explored"] = found["explored"]
         if found.get("notes"):
             bundle["explorer_notes"] = found["notes"]
+        if found.get("submitted"):
+            bundle["rule_verdicts"] = found.get("verdicts") or {}
+        if found.get("reader_facts"):
+            bundle["reader_facts"] = found["reader_facts"]
         if found.get("passages"):
             known = {p.get("chunk_id") for p in bundle.get("source_passages") or []}
             bundle["source_passages"] = [

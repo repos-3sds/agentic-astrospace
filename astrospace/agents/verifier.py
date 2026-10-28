@@ -123,8 +123,9 @@ def _explored_values(bundle: dict):
 
 def explored_refs(bundle: dict) -> set[str]:
     """Citable refs the exploring agent's tool calls returned this turn: one
-    per call, plus one per classical pattern it was shown. Absent unless the
-    turn explored, so the bundle path's citable set is unchanged."""
+    per call, plus one per classical pattern it was shown and judged to hold.
+    Absent unless the turn explored, so the bundle path's citable set is
+    unchanged."""
     refs: set[str] = set()
     for call in bundle.get("explored") or []:
         if call.get("ref"):
@@ -132,6 +133,13 @@ def explored_refs(bundle: dict) -> set[str]:
         for row in (call.get("result") or {}).get("patterns") or []:
             if isinstance(row, dict) and row.get("id"):
                 refs.add(row["id"])
+    # Once the explorer has judged the rules, only those that hold (fully or
+    # partly) for this chart may back a claim; a rule that fails or points
+    # the other way cannot be cited for the claim it was written for.
+    verdicts = bundle.get("rule_verdicts")
+    if isinstance(verdicts, dict):
+        refs = {ref for ref in refs if not ref.startswith("pattern:")
+                or (verdicts.get(ref) or {}).get("verdict") in ("holds", "partly")}
     return refs
 
 
@@ -253,6 +261,43 @@ class Violation(str):
         obj.severity = severity
         obj.field = field
         return obj
+
+
+# Guided readers asked (2026-10-28) for the prediction in plain words, with the
+# chart reasons tucked behind numbered markers ("[1]") that open the matching
+# `technical_basis` item. These are the terms that must stay behind a marker.
+_GUIDED_JARGON_RE = re.compile(
+    r"\b(?:\d{1,2}(?:st|nd|rd|th)\s+(?:house|lord|bhava)|house\s+\d{1,2}|lagna|ascendant|"
+    r"[\w-]*(?:maha)?dasha|antardasha|pratyantar\w*|bhukti|D(?:1|2|3|4|7|9|10|12|16|20|24|27|30|40|45|60)\b|"
+    r"navamsa|navamsha|dashamsha|amatyakaraka|atmakaraka|darakaraka|karaka|yogakaraka|"
+    r"ashtakavarga|bindus?|shadbala|vimshopaka|exalted|debilitated|combust|retrograde|"
+    r"transit(?:ing|s)?|gochara|[\w-]+\s+yoga|sub-period|major period)\b",
+    re.IGNORECASE,
+)
+_MARKER_RE = re.compile(r"\[(\d{1,2})\]")
+
+
+def guided_violations(reading: StructuredReading) -> list[str]:
+    """Guided mode only: chart terms in the reader-facing prose, and markers
+    that point at no `technical_basis` item. Quality, not safety: a reading
+    that still says "10th house" after the repair attempt ships."""
+    out: list[str] = []
+    for field_name in ("interpretation", "summary_and_assurance"):
+        text = _MARKER_RE.sub("", getattr(reading, field_name) or "")
+        hits = sorted({m.group(0).lower() for m in _GUIDED_JARGON_RE.finditer(text)})
+        if hits:
+            out.append(Violation(
+                f"Guided mode: `{field_name}` uses chart terms ({', '.join(hits[:8])}). Say the "
+                "prediction in plain everyday words and put each chart reason behind a numbered "
+                "marker like [1] that matches the technical_basis item.",
+                severity="quality", field=field_name))
+        for match in _MARKER_RE.finditer(getattr(reading, field_name) or ""):
+            if not 1 <= int(match.group(1)) <= len(reading.technical_basis):
+                out.append(Violation(
+                    f"Guided mode: marker [{match.group(1)}] in `{field_name}` has no technical_basis item.",
+                    severity="quality", field=field_name))
+                break
+    return out
 
 
 def safety_violations(violations: list[str]) -> list[str]:
