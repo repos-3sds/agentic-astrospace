@@ -28,7 +28,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
-from ..agents.orchestrator import AskOrchestrator, ValidationStore, terminal_turn
+from ..agents.orchestrator import AskOrchestrator, ValidationStore, exploration_trace, terminal_turn
 from ..agents.schema import StructuredReading
 from ..agents.validation_agent import ValidationProbeDraft
 from ..context.taxonomy import TaxonomyError
@@ -46,7 +46,7 @@ from .ask_routes import (
 )
 from .. import ratelimit
 from ..entitlements.usage import commit_ask_credit, release_ask_credit, reserve_ask_credit
-from ..agents.ask_engine import uses_agent
+from ..agents.ask_engine import choose_engine
 from .auth import CurrentUser
 from .context_routes import _chart_from_kundli
 
@@ -248,6 +248,7 @@ def _validation_store(db: Session, user_id: str, kundli_id: str,
 @router.post("/{kundli_id}/stream")
 def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
                db: Session = Depends(get_db)):
+    explore, body.question = choose_engine(user.email, body.question)
     k = crud.get_kundli(db, kundli_id, user.id)
     if not k:
         raise HTTPException(status_code=404, detail="Kundli not found")
@@ -303,7 +304,7 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
             body.question, thread_domain=thread_domain, domain_override=body.domain_override,
             experience_mode=body.experience_mode, language=body.language,
             tone=body.tone, validate_first=body.validate_first, history=messages,
-            explore=uses_agent(user.email),
+            explore=explore,
         )
     except TaxonomyError:
         log.exception("ask stream prepare failed on taxonomy (kundli=%s)", kundli_id)
@@ -346,6 +347,7 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
                 reading,
                 profile_context_revision=prepared.profile_context_revision,
                 profile_context_as_of=prepared.profile_context_as_of,
+                exploration=exploration_trace(prepared),
             ),
             usage=prepared.usage,
         )
