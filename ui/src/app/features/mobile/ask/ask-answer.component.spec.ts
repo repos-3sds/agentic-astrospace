@@ -128,6 +128,26 @@ describe('AskAnswerComponent profile context provenance', () => {
     expect(message.profile_context_as_of).toBe('2026-08-13');
   });
 
+  it('restores the angle scorecard from persisted history evidence', () => {
+    const component = createComponent();
+    const weighing = {
+      angles: [{ key: 'dasha', label: 'Dasha periods', plain_label: 'Your current time period', call: 'good', weight: 4, why: 'x' }],
+      overall: { score: 1.4, band: 'good' },
+    };
+    const withIt = (component as any).toChatMessage({
+      id: 'saved-w', role: 'assistant', content: 'Saved', domain: 'career',
+      refer_out_kind: null, created_at: '2026-10-28T01:00:00Z',
+      evidence: { structured_reading: FULL_READING, weighing },
+    });
+    expect(withIt.weighing).toEqual(weighing);
+    const without = (component as any).toChatMessage({
+      id: 'saved-n', role: 'assistant', content: 'Saved', domain: 'career',
+      refer_out_kind: null, created_at: '2026-10-28T01:00:00Z',
+      evidence: { structured_reading: FULL_READING, weighing: { angles: [] } },
+    });
+    expect(without.weighing).toBeNull();
+  });
+
   it('restores a context-unavailable terminal message as a warning, not an answer', () => {
     const component = createComponent();
     const message = (component as any).toChatMessage({

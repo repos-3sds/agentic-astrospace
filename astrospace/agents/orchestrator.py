@@ -111,6 +111,14 @@ for this chart, and `reader_facts` is what the reader has told Siddha about thei
   rule points the other way (e.g. Jupiter in the 10th from the Moon is a strain). Only rules
   marked holds or partly may be cited as a `technical_basis` source.
 - Start from `reader_facts`: never assume a life the reader has said they do not have.
+- Each rule verdict carries an `effect` (helps, hurts, mixed) for this question; a rule that
+  holds and hurts is a caution, never support.
+- The explorer judged every angle ("Angle ..." lines) and the code weighed them into one
+  "Overall" line. Your verdict follows that Overall band (good, moderately good, mixed, weak,
+  avoid for now); never let one angle or one number decide. Walk the reader through the main
+  angles in plain words, the strongest for and against, then the combined view. Set
+  confidence to medium when the band is mixed or moderately good.
+- Copy dates from the looked-up periods and the explorer's Timing line exactly.
 - Tie the person's nature to the running periods ("Personality in this period"), and carry the
   explorer's Take care / Consider / Avoid / Do lines into `guidance.practical_actions`, each
   starting with that word, when the question asks what to do or what lies ahead.
@@ -212,6 +220,8 @@ class PreparedRun:
     # guided / balanced / practitioner: Guided answers are also checked for
     # chart terms in the prose (verifier.guided_violations).
     experience_mode: str = "balanced"
+    # The explorer's angle-by-angle weighing for the reader (explorer.weighing_view).
+    weighing: dict | None = None
 
 
 @dataclass
@@ -389,6 +399,8 @@ def exploration_trace(prepared: "PreparedRun") -> dict | None:
         "notes": prepared.bundle.get("explorer_notes") or "",
         "rule_verdicts": prepared.bundle.get("rule_verdicts") or {},
         "reader_facts": prepared.bundle.get("reader_facts") or [],
+        "overall_view": prepared.bundle.get("overall_view"),
+        "weighing": prepared.weighing,
     }
 
 
@@ -933,6 +945,10 @@ class AskOrchestrator:
             bundle["rule_verdicts"] = found.get("verdicts") or {}
         if found.get("reader_facts"):
             bundle["reader_facts"] = found["reader_facts"]
+        if found.get("overall"):
+            bundle["overall_view"] = found["overall"]
+        if found.get("weighing"):
+            prepared.weighing = found["weighing"]
         if found.get("passages"):
             known = {p.get("chunk_id") for p in bundle.get("source_passages") or []}
             bundle["source_passages"] = [
@@ -995,6 +1011,9 @@ class AskOrchestrator:
             "profile_context_revision": prepared.profile_context_revision,
             "profile_context_as_of": prepared.profile_context_as_of,
             "reading": result.reading.model_dump(),
+            # The tool-using Ask's angle-by-angle weighing, shown under the
+            # answer ("How we weighed it"). Absent on today's Ask.
+            **({"weighing": prepared.weighing} if prepared.weighing else {}),
             "usage": _usage_summary(result.usage),
             # Present only when a quality check survived the repair attempt.
             # The reading shipped anyway (see AgentRunResult.quality_shortfall)

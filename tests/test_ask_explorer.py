@@ -134,6 +134,11 @@ class TestVerifier:
         assert {2028, 2031} <= _period_boundary_years(self.BUNDLE)
 
 
+def _all_angles(call="good"):
+    from astrospace.agents.explorer import ANGLES
+    return [{"angle": a, "call": call, "weight": w, "why": "x"} for a, (_l, w) in ANGLES.items()]
+
+
 def _fake_explore_loop(self, messages):
     """Stands in for the model: one extra look-up, then a complete submission
     (MAR-02 judged reversed, everything else holds)."""
@@ -141,8 +146,10 @@ def _fake_explore_loop(self, messages):
     plan_id = next(c for c in self.chart_tools.calls if c["tool"] == "remedies")["result"]["plan"][0]["mantra_id"]
     verdicts = [{"id": rid, "verdict": "reverses" if rid == "pattern:MAR-02" else "holds", "why": "x"}
                 for rid in sorted(self.required_rules())]
+    from astrospace.agents.explorer import ANGLES
+    angles = [{"angle": a, "call": "good", "weight": w, "why": "x"} for a, (_l, w) in ANGLES.items()]
     assert self._dispatch_tool("submit_findings", {
-        "rule_verdicts": verdicts, "reader_facts": ["Has never had a job"],
+        "rule_verdicts": verdicts, "reader_facts": ["Has never had a job"], "angles": angles,
         "findings": ["7th lord Jupiter in the 1st [tool:house(7)]"],
         "timing": "Venus-Venus sub-sub period [tool:dasha_at]",
         "guidance": {"avoid": ["Big new commitments in the Ketu sub-sub period [tool:dasha_at]"]},
@@ -205,6 +212,10 @@ class TestOrchestrator:
         assert {"tool:house(7,moon)", "tool:house(7,sun)", "tool:varga(D9)", "tool:nakshatra",
                 "tool:jaimini", "tool:classical_patterns(marriage)"} <= set(refs)
         assert trace["rule_verdicts"]["pattern:MAR-01"]["verdict"] == "holds"
+        # "How we weighed it": every angle and the combined band reach the app.
+        weighing = done["weighing"]
+        assert len(weighing["angles"]) == 10 and weighing["overall"]["band"] == "good"
+        assert weighing["angles"][0]["plain_label"] and trace["weighing"] == weighing
 
     def test_an_invented_tool_ref_is_still_rejected(self, chart):
         orchestrator, prepared = self._prepare(chart, explore=True)
@@ -249,7 +260,7 @@ class TestOrchestrator:
         assert refused["accepted"] is False and set(refused["missing_verdicts"]) == required
         accepted = explorer._dispatch_tool("submit_findings", {
             "rule_verdicts": [{"id": r, "verdict": "fails", "why": "x"} for r in required],
-            "reader_facts": [], "findings": []})
+            "reader_facts": [], "findings": [], "angles": _all_angles()})
         assert accepted["accepted"] is True and explorer.submitted is not None
 
     def test_core_lookups_cover_every_point_of_view(self, chart):
@@ -327,5 +338,77 @@ class TestStopsWhenSubmitted:
         explorer._dispatch_tool("classical_patterns", {"area": "career"})
         explorer._dispatch_tool("submit_findings", {
             "rule_verdicts": [{"id": r, "verdict": "holds", "why": "x"} for r in explorer.required_rules()],
-            "reader_facts": [], "findings": []})
+            "reader_facts": [], "findings": [], "angles": _all_angles()})
         assert explorer._loop_done() is True
+
+
+class TestLilliputTraceFixes:
+    """From the 2026-10-28 trace of the "Lilliput" question."""
+
+    def test_one_ref_per_look_up_and_aliases_are_citable(self, chart):
+        tools = ChartTools(chart)
+        assert tools.call("house", {"number": 1, "view": "lagna"})["ref"] == "tool:house(1)"
+        assert tools.call("house", {"view": "moon", "number": 3})["ref"] == "tool:house(3,moon)"
+        sources = valid_sources({"explored": tools.calls})
+        assert {"tool:house(1,lagna)", "tool:house(lagna,1)", "tool:house(moon,3)"} <= sources
+
+    def test_earning_questions_load_career_and_wealth_rules(self, chart):
+        explorer = ChartExplorer(ChartTools(chart), "q", {"domain": "career"})
+        areas = [args["area"] for name, args in explorer.core_calls() if name == "classical_patterns"]
+        assert areas == ["career", "wealth"]
+
+    def test_every_angle_is_judged_and_code_weighs_them(self, chart):
+        from astrospace.agents.explorer import ANGLES
+        explorer = ChartExplorer(ChartTools(chart), "q", {"domain": "career"})
+        explorer._dispatch_tool("classical_patterns", {"area": "career"})
+        verdicts = [{"id": r, "verdict": "holds", "effect": "hurts", "why": "x"}
+                    for r in sorted(explorer.required_rules())]
+        refused = explorer._dispatch_tool("submit_findings", {
+            "rule_verdicts": verdicts, "reader_facts": [], "findings": [],
+            "angles": [{"angle": "ashtakavarga", "call": "bad", "weight": 2, "why": "17 bindus"}]})
+        assert refused["accepted"] is False and "dasha" in refused["missing_angles"]
+
+        calls = {"ashtakavarga": "bad", "dasha": "good", "yogas_doshas": "good", "lagna_houses": "good",
+                 "dignity_strength": "moderate", "varga": "neutral", "moon_sun_view": "moderate",
+                 "jaimini": "good", "transits": "mixed", "nakshatra": "good"}
+        angles = [{"angle": a, "call": c, "weight": ANGLES[a][1], "why": "x"} for a, c in calls.items()]
+
+        def loop(self, messages):
+            judged = [{"id": r, "verdict": "holds", "effect": "hurts", "why": "x"}
+                      for r in sorted(self.required_rules())]
+            assert self._dispatch_tool("submit_findings", {
+                "rule_verdicts": judged, "reader_facts": [], "findings": [], "angles": angles})["accepted"]
+            return "", []
+
+        with patch.object(ChartExplorer, "run_messages", loop):
+            result = explorer.explore()
+        assert all(v["effect"] == "hurts" for v in result["verdicts"].values())
+        # One bad angle (bindus) does not outweigh the rest.
+        assert result["overall"]["band"] in ("good", "moderately good")
+        assert "Angle Ashtakavarga bindus: bad (weight 2)" in result["notes"]
+        assert "Overall, all angles weighed: " in result["notes"]
+
+    def test_combining_angles(self):
+        from astrospace.agents.explorer import combine_angles
+        assert combine_angles([]) is None
+        assert combine_angles([{"angle": "dasha", "call": "bad", "weight": 4}])["band"] == \
+            "unfavourable, avoid for now"
+        mixed = combine_angles([{"angle": "dasha", "call": "good", "weight": 4},
+                                {"angle": "lagna_houses", "call": "bad", "weight": 4}])
+        assert mixed == {"score": 0.0, "band": "mixed"}
+
+    def test_sorter_files_a_channel_or_side_project_under_career(self):
+        from astrospace.agents.scope import _SortResult
+        description = _SortResult.model_fields["domain"].description
+        assert "YouTube" in description and "personality is only" in description
+
+
+def test_weighing_view_hides_internal_refs():
+    from astrospace.agents.explorer import weighing_view
+    view = weighing_view([{"angle": "dasha", "call": "good", "weight": 9,
+                           "why": "Venus sub-period supports work [tool:dasha_at] and pattern:CAR-09"}],
+                         {"score": 2.0, "band": "good"})
+    row = view["angles"][0]
+    assert row["weight"] == 5 and row["plain_label"] == "Your current time period"
+    assert "tool:" not in row["why"] and "pattern:" not in row["why"]
+    assert weighing_view([], {"score": 0, "band": "mixed"}) is None

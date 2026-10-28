@@ -15,8 +15,10 @@ turn's tools returned (see verifier.valid_sources and `explored`).
 """
 from __future__ import annotations
 
+import inspect
 import json
 import logging
+import re
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
@@ -183,12 +185,24 @@ class ChartTools:
         self.calls.append({"ref": ref, "tool": name, "args": args or {}, "result": result})
         return result
 
-    @staticmethod
-    def _ref(name: str, args: dict) -> str:
-        if not args:
+    def _ref(self, name: str, args: dict) -> str:
+        """One spelling per look-up: arguments in signature order, defaults
+        left out, so house(1) and house(number=1, view="lagna") share a ref."""
+        method = getattr(self, f"tool_{name}", None)
+        values = list((args or {}).values())
+        if method is not None:
+            try:
+                params = list(inspect.signature(method).parameters.values())
+                bound = inspect.signature(method).bind(**(args or {}))
+                bound.apply_defaults()
+                values = [bound.arguments[p.name] for p in params
+                          if p.name in bound.arguments and bound.arguments[p.name] != p.default]
+            except TypeError:
+                pass
+        if not values:
             return f"tool:{name}"
-        tail = ",".join(f"{value}" for value in args.values())
-        return f"tool:{name}({tail})"[:120]
+        return f"tool:{name}({','.join(str(v) for v in values)})"[:120]
+
 
     # Birth chart -----------------------------------------------------------
 
@@ -527,3 +541,13 @@ def _ordinal(n: int) -> str:
     else:
         suffix = {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
     return f"{n}{suffix}"
+
+
+def ref_aliases(ref: str) -> set[str]:
+    """Other spellings the writer uses for a house look-up: the default view
+    named ("house(1,lagna)") or the arguments swapped ("house(lagna,1)")."""
+    match = re.fullmatch(r"tool:house\((\d{1,2})(?:,(moon|sun))?\)", ref)
+    if not match:
+        return set()
+    number, view = match.group(1), match.group(2) or "lagna"
+    return {f"tool:house({number},{view})", f"tool:house({view},{number})"} - {ref}

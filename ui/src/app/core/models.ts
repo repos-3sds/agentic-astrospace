@@ -1699,7 +1699,24 @@ export interface AskStructuredSuccessEnvelope {
    * rendered normally; never surface these verifier notes to the reader. */
   quality_shortfall?: string[];
   reading: StructuredReading;
+  /** Tool-using Ask only: every point of view judged and weighted, then
+   * combined into one call. Shown under the answer as "How we weighed it". */
+  weighing?: AskWeighing;
   thread_id: string | null;
+}
+
+export interface AskWeighingAngle {
+  key: string;
+  label: string;
+  plain_label: string;
+  call: 'good' | 'moderate' | 'neutral' | 'mixed' | 'weak' | 'bad' | string;
+  weight: number;
+  why: string;
+}
+
+export interface AskWeighing {
+  angles: AskWeighingAngle[];
+  overall: { score: number; band: string };
 }
 
 export interface AskStructuredFailureEnvelope {

@@ -114,6 +114,10 @@
                 <p class="technical-hint">{{ hint }}</p>
               }
 
+              @if (message.weighing; as weighing) {
+                <as-ask-weighing-card [weighing]="weighing" [plain]="true" />
+              }
+
               @if (readingActions(reading).length) {
                 <div class="answer-section action-panel">
                   <h2>What to do</h2>
@@ -174,6 +178,10 @@
                   <p class="assurance-line">{{ reading.summary_and_assurance }}</p>
                 }
               </section>
+
+              @if (message.weighing; as weighing) {
+                <as-ask-weighing-card [weighing]="weighing" />
+              }
 
               @if (readingActions(reading).length) {
                 <div class="answer-section action-panel">
@@ -252,6 +260,10 @@
                   <p class="assurance-line">{{ reading.summary_and_assurance }}</p>
                 }
               </section>
+
+              @if (message.weighing; as weighing) {
+                <as-ask-weighing-card [weighing]="weighing" />
+              }
 
               @if (readingActions(reading).length) {
                 <div class="answer-section action-panel">

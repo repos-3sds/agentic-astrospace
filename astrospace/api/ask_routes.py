@@ -445,6 +445,9 @@ def _evidence_from_reading(
         # what it looked up and the notes it wrote, so a reading can be
         # explained afterwards. Absent on today's Ask.
         evidence["exploration"] = exploration
+        if exploration.get("weighing"):
+            # Read back by the app for "How we weighed it" on reopened threads.
+            evidence["weighing"] = exploration["weighing"]
     return evidence
 
 
