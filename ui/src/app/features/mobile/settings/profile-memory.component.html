@@ -1,6 +1,6 @@
 <header class="memory-appbar">
   <a [asBack]="backRoute()" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
-  <div><h1>What Siddha remembers</h1><p>{{ profile()?.name || 'Profile' }}</p></div>
+  <div><h1>What Siddha Remembers</h1><p>{{ profile()?.name || 'Profile' }}</p></div>
   <button type="button" aria-label="Export profile memory" [disabled]="busy()" (click)="exportMemory()">Export</button>
 </header>
 

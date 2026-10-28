@@ -72,9 +72,9 @@ export class AccountPrivacyComponent {
   protected readonly currentEmail = computed(() => this.auth.user()?.email ?? null);
 
   protected readonly actions = [
-    { id: 'email', label: 'Change email' },
-    { id: 'export', label: 'Export my data' },
-    { id: 'signout', label: 'Sign out' },
+    { id: 'email', label: 'Change Email' },
+    { id: 'export', label: 'Export My Data' },
+    { id: 'signout', label: 'Sign Out' },
   ];
 
   protected async run(id: string): Promise<void> {

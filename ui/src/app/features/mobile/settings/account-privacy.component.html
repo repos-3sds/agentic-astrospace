@@ -10,7 +10,7 @@
   </header>
 
   <a class="action" routerLink="/m/subscription">
-    <span class="action-label">Plan and purchases <small>{{ planLabel() }}</small></span>
+    <span class="action-label">Plan and Purchases <small>{{ planLabel() }}</small></span>
     <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
   </a>
   @for (action of actions; track action.id) {
@@ -59,7 +59,7 @@
 
   <div class="toggle-row">
     <span class="toggle-text">
-      <span class="toggle-title">Share usage and crash reports</span>
+      <span class="toggle-title">Share Usage and Crash Reports</span>
       <span class="toggle-detail">Which screens are used and what broke, under a random id. Never your name, birth details or questions.</span>
     </span>
     <button
@@ -68,7 +68,7 @@
       role="switch"
       [class.is-on]="preferences.shareUsage()"
       [attr.aria-checked]="preferences.shareUsage()"
-      aria-label="Share usage and crash reports"
+      aria-label="Share Usage and Crash Reports"
       (click)="toggleShareUsage()"
     ></button>
   </div>
@@ -80,7 +80,7 @@
     notes and history irreversibly — see the class comment.
   -->
   <a class="action danger" routerLink="/m/settings/account/delete">
-    <span class="action-label">Delete account</span>
+    <span class="action-label">Delete Account</span>
     <img src="mobile/chevron-bad.svg" alt="" aria-hidden="true" />
   </a>
 

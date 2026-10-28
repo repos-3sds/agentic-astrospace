@@ -28,7 +28,7 @@ describe('AccountPrivacyComponent › Change email', () => {
   function open() {
     const fixture = TestBed.createComponent(AccountPrivacyComponent);
     fixture.detectChanges();
-    const row = [...fixture.nativeElement.querySelectorAll('button.action')].find((b: HTMLElement) => b.textContent?.includes('Change email')) as HTMLButtonElement;
+    const row = [...fixture.nativeElement.querySelectorAll('button.action')].find((b: HTMLElement) => b.textContent?.includes('Change Email')) as HTMLButtonElement;
     row.click();
     return { fixture, row };
   }
@@ -89,7 +89,7 @@ describe('AccountPrivacyComponent › Sign out', () => {
     const fixture = TestBed.createComponent(AccountPrivacyComponent);
     fixture.detectChanges();
     const row = [...fixture.nativeElement.querySelectorAll('button.action')]
-      .find((b: HTMLElement) => b.textContent?.includes('Sign out')) as HTMLButtonElement;
+      .find((b: HTMLElement) => b.textContent?.includes('Sign Out')) as HTMLButtonElement;
     row.click();
     await fixture.whenStable();
     fixture.detectChanges();
