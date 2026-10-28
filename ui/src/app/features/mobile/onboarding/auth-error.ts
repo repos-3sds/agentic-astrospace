@@ -4,6 +4,13 @@ export function looksLikeEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
+/** Sign-in refused because the account's email link was never opened. */
+export function isEmailNotConfirmed(error: unknown): boolean {
+  const raw = (error as { message?: string; code?: string } | null);
+  return raw?.code === 'email_not_confirmed'
+    || (raw?.message ?? '').toLowerCase().includes('email not confirmed');
+}
+
 /**
  * Supabase's auth errors are written for developers ("Unable to validate
  * email address: invalid format"). Map the ones a reader can hit to plain

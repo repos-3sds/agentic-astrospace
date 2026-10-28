@@ -27,3 +27,22 @@ input { @include m-body; width: 100%; box-sizing: border-box; padding: 15px 18px
 .magic { @include m-body-small; margin: -4px 0 0; color: var(--m-muted); button { @include m-cta-tertiary; } }
 .terms { @include m-caption; margin: -12px 0 0; color: var(--m-muted); text-align: center; a { color: var(--m-accent-strong); text-decoration: underline; text-underline-offset: 2px; } }
 .message { @include m-body-small; margin: -4px 0; color: var(--m-good); text-align: center; &.error { color: var(--m-bad); } }
+
+// The one notice a reader must not miss: their account does nothing until the
+// email link is opened. A frosted glass card like the rest of the app, set
+// apart by a rust outline, a soft rust halo and a rust heading, icon and link,
+// so it is spotted at a glance in both themes without becoming a second
+// Continue button.
+.confirm-callout {
+  @include m-glass(14px);
+  width: 100%; box-sizing: border-box; display: flex; gap: 14px; align-items: flex-start;
+  padding: 16px 18px; border: 1.5px solid var(--m-accent); border-radius: 20px;
+  background: var(--m-glass-card), var(--m-accent-soft); color: var(--m-text);
+  box-shadow: 0 0 0 4px var(--m-accent-soft), 0 14px 34px var(--m-glass-drop);
+  svg { flex: none; width: 28px; height: 28px; margin-top: 1px; color: var(--m-accent-strong); }
+  h2 { @include m-body; margin: 0 0 4px; font-weight: 700; color: var(--m-accent-strong); }
+  p { @include m-body-small; margin: 0; color: inherit; }
+  strong { display: block; margin-bottom: 2px; font-weight: 700; overflow-wrap: anywhere; }
+  button { @include m-body-small; margin-top: 10px; padding: 0; border: 0; background: none; color: var(--m-accent-strong); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; &:disabled { opacity: .7; } }
+  .resent { margin-top: 8px; font-weight: 600; }
+}
