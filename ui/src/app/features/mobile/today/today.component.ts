@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, computed, effect, inject, signal, untracked } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { timingPlaceHint, timingPlaceLabel } from '../../../core/timing-place';
@@ -48,6 +49,9 @@ import {
 let todayIntroPlayed = false;
 /** The last planet lands at 2.7 s + 0.52 s (today.component.scss). */
 const TODAY_INTRO_MS = 3300;
+
+// Matches $m-wide in mobile-tokens.scss, where Today becomes two columns.
+const TWO_COLUMNS: MediaQueryList | null = globalThis.matchMedia?.('(min-width: 900px)') ?? null;
 
 /** Figma 212:751's dasha-chain chips ("Moon Mahā › Rahu Antar › Jup Prat › Ven Sookshma"). */
 const DASHA_LEVEL_SHORT: Record<string, string> = {
@@ -261,6 +265,7 @@ function practicalClose(text: string): string[] {
     GenericErrorComponent,
     ReadingForComponent,
     NotifyNudgeComponent,
+    NgTemplateOutlet,
   ],
   host: {
     '[attr.data-band]': 'view()?.band || "steady"',
@@ -368,6 +373,21 @@ export class TodayComponent {
   readonly profileSwitcherOpen = signal(false);
   readonly detailsOpen = signal(false);
 
+  /** True while Today shows two columns (the m-wide breakpoint, 900px). */
+  private readonly twoColumns = signal(TWO_COLUMNS?.matches ?? false);
+
+  /**
+   * On a wide tablet the day column ended at "Why this reading?" while the
+   * other column ran on through the panchang and birth signature, leaving a
+   * tall empty space on the left (Hawk, iPad, 2026-10-28). When the right
+   * column is the long one, the Subhashita and "Reflect with Siddha" move
+   * under the day card instead. Guided keeps its details shut, so its
+   * columns are already even until the reader opens them. Phones keep one
+   * column in the old order.
+   */
+  readonly fillDayColumn = computed(() =>
+    this.twoColumns() && (this.preferences.experienceMode() !== 'guided' || this.detailsOpen()));
+
   /**
    * Open a sheet with a confirming tap.
    *
@@ -452,6 +472,11 @@ export class TodayComponent {
   protected readonly introPlayed = signal(todayIntroPlayed);
 
   constructor() {
+    if (TWO_COLUMNS) {
+      const follow = (event: MediaQueryListEvent) => this.twoColumns.set(event.matches);
+      TWO_COLUMNS.addEventListener('change', follow);
+      inject(DestroyRef).onDestroy(() => TWO_COLUMNS.removeEventListener('change', follow));
+    }
     inject(DestroyRef).onDestroy(inject(PullRefreshService).register('/m/today', () => this.pullRefresh()));
     // Ask early whether this reader has the natural voice, so Listen opens
     // already knowing which voice to use (the answer is kept for 10 minutes).
