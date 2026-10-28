@@ -37,6 +37,7 @@ from pydantic import BaseModel, ConfigDict
 
 from .ask_tools import TOOL_SPECS, ChartTools, summarize_call
 from .base import BaseAstroAgent, compact_json
+from .placement_check import birth_placements, drop_false_sentences
 from .style import PLAIN_INDIAN_ENGLISH
 
 log = logging.getLogger(__name__)
@@ -77,10 +78,23 @@ ANGLE_PLAIN = {
     "ashtakavarga": "Planet support score",
     "nakshatra": "Your birth stars",
 }
-_REF = re.compile(r"\s*\[?tool:[^\],;]*\)?\]?|\s*\[?pattern:[A-Z]+-\d+\]?")
+_REF = re.compile(r"tool:\w+(?:\([^)]*\))?|pattern:[A-Z]+-\d+")
+_EMPTY_GROUP = re.compile(r"[\[(]\s*(?:[,;]\s*)*[\])]")
+_EXTRA_COMMAS = re.compile(r"\s*([,;])(?:\s*[,;])+")
 
 
-def weighing_view(angles: list[dict] | None, overall: dict | None) -> dict | None:
+def _plain_why(text: str) -> str:
+    """Drops tool and pattern refs from an angle's reason, then the empty
+    brackets and runs of commas they leave behind."""
+    text = _REF.sub("", text)
+    text = _EMPTY_GROUP.sub("", text)
+    text = _EXTRA_COMMAS.sub(r"\1", text)
+    text = re.sub(r"\s+([,;.])", r"\1", text)
+    return re.sub(r"\s{2,}", " ", text).strip(" ,;")
+
+
+def weighing_view(angles: list[dict] | None, overall: dict | None,
+                  placements: dict | None = None) -> dict | None:
     """The reader-facing "How we weighed it" card: each angle's call and
     weight in a fixed order, its reason without internal refs, and the
     combined band."""
@@ -96,7 +110,7 @@ def weighing_view(angles: list[dict] | None, overall: dict | None) -> dict | Non
             "key": key, "label": label, "plain_label": ANGLE_PLAIN[key],
             "call": row["call"],
             "weight": max(1, min(5, int(row.get("weight") or default_weight))),
-            "why": _REF.sub("", str(row.get("why") or "")).strip()[:300],
+            "why": drop_false_sentences(_plain_why(str(row.get("why") or "")), placements or {})[:300],
         })
     return {"angles": rows, "overall": overall}
 
@@ -189,6 +203,18 @@ Life area: {domain_name} ({domain}). Question kind: {kind}. Today is {as_of}.
 WHAT THE READER HAS TOLD SIDDHA BEFORE (their own words, from other chats on this profile):
 {history}
 
+=== HOW YOU MUST JUDGE (read this first, follow it every time) ===
+A. Judge EVERY point of view before forming any view. No single fact, number or rule decides.
+B. Weigh by influence. The running period, the house lords and the strength of the key planets
+   matter most (weight 4). The divisional chart, the Moon and Sun views and the yogas come next
+   (3). Jaimini, transits and Ashtakavarga support (2). The birth star colours (1).
+C. Ashtakavarga is a support, not a judge. Bindus confirm or soften what the lords and periods
+   show; a low bindu count alone never makes the answer "no".
+D. Judge the area's MAIN houses for this question. A weak supporting house (e.g. the 5th for
+   work or earning) lowers a call one step at most.
+E. Use the same yardstick every time (step 7b), so the same chart gets the same calls.
+F. When the evidence inside an angle points both ways, the call is "mixed", not "weak".
+
 ALREADY LOOKED UP FOR YOU (in the first message): every planet's dignity and strength, the
 {houses} houses from the Lagna and from the Moon and the Sun, the {varga}, the Jaimini karakas,
 the birth stars (nakshatras) of the Lagna and every planet, the dasha running now with the next
@@ -202,8 +228,8 @@ Work through every point of view before you finish:
 2. THREE LAGNAS. Judge the area's houses from the Lagna, the Moon and the Sun. Where they
    agree the result is firm; where they differ, say so.
 3. HOUSE, LORD, KARAKA, VARGA. The house, where its lord sits and how strong it is, the
-   karaka, and the same house and lord in the {varga}. Use Ashtakavarga bindus as weight
-   (28+ supportive).
+   karaka, and the same house and lord in the {varga}. Ashtakavarga bindus support this
+   (28+ supportive); they never override the lord and the period.
 4. JAIMINI. The relevant chara karaka and arudha (e.g. Amatyakaraka for work, Darakaraka and
    Upapada for marriage).
 5. TIMING. Mahadasha, antardasha AND pratyantardasha (sub-sub period) windows, with which
@@ -218,7 +244,8 @@ Work through every point of view before you finish:
 7. RULES. For EVERY A and B rule shown, decide: holds, partly, fails (conditions not met), or
    reverses (the chart shows the opposite). In `why`, name the rule's condition and whether
    this chart meets it; a chart fact alone is not a test. Also give its `effect` for this
-   question: helps, hurts or mixed. A rule about a weakness that holds HURTS. Use C and H
+   question: helps, hurts or mixed. A rule about a weakness that holds HURTS; when it fails, the
+   weakness is absent, which helps a little. A strength rule that fails helps nothing. Use C and H
    rules only as supporting colour and say they are practice.
 7b. EVERY ANGLE, THEN WEIGH. Judge each angle on its own first: good, moderate, neutral,
    mixed, weak or bad, for this question. The angles and their starting weights (1-5):
@@ -226,14 +253,27 @@ Work through every point of view before you finish:
    Raise or lower a weight for this chart when an angle is unusually strong or weak here
    (e.g. a debilitated key lord, a very strong yoga) and say why. Submit ALL angles. Code
    combines them into one overall call; never let one angle or one number decide alone.
+   Call each angle by the same yardstick every time, so the same chart gets the same calls:
+   - Judge from the area's MAIN houses (the area's house list above). A weak supporting house
+     (e.g. the 5th for a career question) pulls a call down one step at most; it never makes
+     an angle weak or bad on its own when the main houses are strong.
+   - Ashtakavarga: a main house at 28+ bindus is good, 25-27 moderate, 22-24 mixed, under 22
+     weak. Call the angle by the main houses together, then adjust one step for the rest.
+   - Strength: a key lord exalted or own sign is good; debilitated or deeply combust is weak,
+     unless cancelled (neecha bhanga) - then moderate. Several key lords split: mixed.
+   - Dasha: good when the running lords rule or aspect the main houses and are strong; mixed
+     when one helps and one is weak.
 8. THE READER'S LIFE. Use what they have told Siddha. If they say they have never worked, the
    answer must start from that, not assume a career already running. Record their facts as
-   they said them; never add dates or details they did not give.
+   they said them; never add dates or details they did not give (no "faceless", no "another"
+   when they did not say so).
 9. PERSONALITY x PERIOD. Tie the person's nature (Lagna and its lord, Moon and its star,
    Atmakaraka) to what the running maha, antar and sub-sub lords and today's transits stir in
    that nature. Say how this person in particular will feel and act in this period.
 10. GUIDANCE. From all of the above, list what to TAKE CARE of, what to CONSIDER, what to AVOID
-   and what to DO (implement), each tied to a planet, period or house with its ref.
+   and what to DO (implement), each tied to a planet, period or house with its ref: 4 to 6
+   lines, at least one of each kind. Put them in `findings`, each starting with its word.
+   Keep every line short: the angles already carry your reasons, so do not repeat them.
 11. REMEDIES. Pick 1-2 from the remedies look-up that fit this reader's situation best (the
    period lord, the stressed area, a flag) and say why in their terms. Never invent one.
 
@@ -268,6 +308,11 @@ class ChartExplorer(BaseAstroAgent):
     # submit_findings is a large call and Gemini's thinking shares this cap;
     # at 4096 the explorer's last turn came back empty (2026-10-28 A/B).
     max_output_tokens = 16384
+    # Every lookup is already done in code; the model's job is judging, not
+    # searching. At default thinking the final submit ran past the 60 s
+    # per-call limit (504 DEADLINE_EXCEEDED on 4 of 4 Lilliput re-runs).
+    gemini_thinking_level = "low"
+    gemini_timeout_s = 75
 
     def __init__(self, tools: ChartTools, question: str, bundle: dict, question_kind: str = "broad",
                  experience_mode: str = "balanced", history: list[str] | None = None,
@@ -389,7 +434,8 @@ class ChartExplorer(BaseAstroAgent):
                 "content": "Everything looked up for this question:\n" + compact_json(looked_up)
                            + "\n\nNow call submit_findings. Give a verdict for each of these rules: "
                            + (", ".join(rules) or "(none)")
-                           + ". Fill reader_facts from what the reader said before.",
+                           + ". Judge every angle (" + ", ".join(ANGLES) + ") with a call and weight. "
+                           + "Fill reader_facts from what the reader said before.",
             }], _Findings, tool_name="submit_findings", input_schema=SUBMIT_SPEC["input_schema"])
         except Exception:
             log.exception("explorer forced submit failed")
@@ -403,15 +449,25 @@ class ChartExplorer(BaseAstroAgent):
         "explored", "passages", "verdicts", "reader_facts"} for the bundle;
         `explored` is every call with the result the model saw."""
         core = self.run_core()
-        notes, _used = self.run_messages([{
-            "role": "user",
-            "content": "Core look-ups for this question (each has a ref you can cite):\n"
-                       + compact_json(core)
-                       + "\n\nWork through every point of view, call more tools for anything still "
-                         "open, then call submit_findings.",
-        }])
+        notes, loop_failed = "", False
+        try:
+            notes, _used = self.run_messages([{
+                "role": "user",
+                "content": "Core look-ups for this question (each has a ref you can cite):\n"
+                           + compact_json(core)
+                           + "\n\nWork through every point of view, call more tools for anything still "
+                             "open, then call submit_findings.",
+            }])
+        except Exception:
+            # A provider error mid-loop (Gemini 504 DEADLINE_EXCEEDED twice in
+            # the Lilliput re-run) used to throw away every look-up and the
+            # weighing with it. Submit over what was gathered instead.
+            log.exception("explorer tool loop failed; submitting over what was looked up")
+            loop_failed = True
         if self.submitted is None:
             self._force_submit()
+        if loop_failed and self.submitted is None:
+            raise RuntimeError("explorer failed and could not submit")
         found = self.submitted or {}
         verdicts = {
             row["id"]: {"verdict": row["verdict"],
@@ -420,12 +476,17 @@ class ChartExplorer(BaseAstroAgent):
             for row in found.get("rule_verdicts") or []
             if isinstance(row, dict) and row.get("id") and row.get("verdict") in VERDICTS
         }
-        lines = [*(found.get("findings") or [])]
+        try:
+            placements = birth_placements(self.chart_tools.chart)
+        except Exception:  # a check, never a reason to lose the findings
+            placements = {}
+        lines = [drop_false_sentences(str(line), placements) for line in found.get("findings") or []]
         overall = combine_angles(found.get("angles") or [])
         for row in found.get("angles") or []:
             if isinstance(row, dict) and row.get("angle") in ANGLES:
+                why = drop_false_sentences(str(row.get("why", "")), placements)
                 lines.append(f"Angle {ANGLES[row['angle']][0]}: {row.get('call')} "
-                             f"(weight {row.get('weight')}) - {row.get('why', '')}")
+                             f"(weight {row.get('weight')}) - {why}")
         if overall:
             lines.append(f"Overall, all angles weighed: {overall['band']} (score {overall['score']} "
                          "on a -2 to +2 scale)")
@@ -452,7 +513,7 @@ class ChartExplorer(BaseAstroAgent):
             "reader_facts": [str(f)[:300] for f in found.get("reader_facts") or []][:10],
             "submitted": self.submitted is not None,
             "overall": overall,
-            "weighing": weighing_view(found.get("angles"), overall),
+            "weighing": weighing_view(found.get("angles"), overall, placements),
         }
 
 

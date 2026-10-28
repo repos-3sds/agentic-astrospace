@@ -412,3 +412,223 @@ def test_weighing_view_hides_internal_refs():
     assert row["weight"] == 5 and row["plain_label"] == "Your current time period"
     assert "tool:" not in row["why"] and "pattern:" not in row["why"]
     assert weighing_view([], {"score": 0, "band": "mixed"}) is None
+
+
+class TestLilliputRerunFixes:
+    """From the 2026-10-28 re-run of the "Lilliput" question on main."""
+
+    def test_sorter_domain_beats_a_stray_keyword(self):
+        orchestrator = AskOrchestrator.__new__(AskOrchestrator)
+        from astrospace.context import KeywordRouter
+        orchestrator._router = KeywordRouter()
+        question = "She makes AI characters for her Lilliput YouTube channel. Can she earn from it?"
+        assert orchestrator.route(question).domain == "career"
+        assert orchestrator.route("Her AI character videos, will they pay?",
+                                  sorted_domain="career").domain == "career"
+        # Two keyword hits for one area still beat the sorter.
+        assert orchestrator.route("Tell me about my character and traits",
+                                  sorted_domain="career").domain == "personality"
+
+    def test_angle_reasons_lose_refs_and_leftover_commas(self):
+        from astrospace.agents.explorer import weighing_view
+        view = weighing_view([
+            {"angle": "lagna_houses", "call": "mixed", "weight": 4,
+             "why": "1st strong (Moon) [tool:house(1,lagna), tool:ashtakavarga()],,,"},
+            {"angle": "moon_sun_view", "call": "moderate", "weight": 3,
+             "why": "Moon chart same as Lagna [tool:house(1,moon),tool:house(1,sun)]"},
+        ], {"score": 0.5, "band": "moderately good"})
+        assert [a["why"] for a in view["angles"]] == ["1st strong (Moon)", "Moon chart same as Lagna"]
+
+    def test_a_provider_error_mid_loop_still_submits_the_weighing(self, chart):
+        explorer = ChartExplorer(ChartTools(chart), "q", {"domain": "career"})
+
+        def loop(self, messages):
+            raise RuntimeError("504 DEADLINE_EXCEEDED")
+
+        def forced(self, messages, model, **kwargs):
+            assert "Judge every angle" in messages[0]["content"]
+            return model(rule_verdicts=[], reader_facts=[], findings=[], angles=_all_angles())
+
+        with patch.object(ChartExplorer, "run_messages", loop), \
+                patch.object(ChartExplorer, "run_structured", forced):
+            result = explorer.explore()
+        assert result["overall"]["band"] == "good" and result["explored"]
+
+        with patch.object(ChartExplorer, "run_messages", loop), \
+                patch.object(ChartExplorer, "run_structured", side_effect=RuntimeError("down")):
+            with pytest.raises(RuntimeError):
+                ChartExplorer(ChartTools(chart), "q", {"domain": "career"}).explore()
+
+
+class TestLilliputV2AnswerFixes:
+    """From the second Lilliput re-run (band mixed, answer a flat no)."""
+
+    def test_a_flat_no_under_a_mixed_band_is_sent_back(self):
+        from astrospace.agents.verifier import band_violations
+        reading = _reading("houses")
+        bundle = {"overall_view": {"score": 0.07, "band": "mixed"}}
+        flat = reading.model_copy(update={"interpretation":
+            "Starting an AI Lilliput YouTube channel will not suit you and will not help you earn money. More."})
+        found = band_violations(flat, bundle)
+        assert found and found[0].severity == "quality" and found[0].field == "interpretation"
+        fair = reading.model_copy(update={"interpretation":
+            "The channel can work only as a side project for now. It will not pay steadily this year."})
+        assert band_violations(fair, bundle) == []
+        assert band_violations(flat, {"overall_view": {"band": "unfavourable, avoid for now"}}) == []
+        sure = reading.model_copy(update={"summary_and_assurance": "You will definitely earn from it."})
+        assert band_violations(sure, bundle)[0].field == "summary_and_assurance"
+        assert band_violations(flat, {}) == []
+
+    def test_mind_outcomes_are_health_overclaims(self):
+        from astrospace.agents.safety import dosha_overclaim_kind
+        assert dosha_overclaim_kind(
+            "Working alone triggers mental exhaustion and anxiety attacks.") == "health_outcome_overclaim"
+        assert dosha_overclaim_kind("It will cause anxiety.") == "health_outcome_overclaim"
+        assert dosha_overclaim_kind("Protect your mental health with a fixed routine.") is None
+        assert dosha_overclaim_kind("This does not mean it will cause anxiety.") is None
+
+    def test_prompts_carry_the_yardstick_and_the_band_opening(self):
+        from astrospace.agents.explorer import ChartExplorer as E
+        from astrospace.agents.orchestrator import EXPLORED_NOTE
+        tools_prompt = E(ChartTools.__new__(ChartTools), "q", {}).system_prompt
+        assert "HOW YOU MUST JUDGE" in tools_prompt and "28+ bindus" in tools_prompt
+        assert "a low bindu count alone never makes the answer" in tools_prompt
+        assert "HOW TO BUILD THIS ANSWER" in EXPLORED_NOTE and "Your FIRST sentence" in EXPLORED_NOTE
+        assert "ONE sentence of the whole" in EXPLORED_NOTE and "anxiety" in EXPLORED_NOTE
+        assert "Amatyakaraka for work" in EXPLORED_NOTE
+
+    def test_an_answer_built_on_bindus_is_sent_back(self):
+        from astrospace.agents.verifier import bindu_lean_violations
+        bundle = {"overall_view": {"band": "mixed"}}
+        heavy = _reading("houses").model_copy(update={"interpretation":
+            "Your 5th house has a very low Ashtakavarga score of only 17 points. "
+            "Your 3rd house has a high 42 points and your 10th house has 35 points."})
+        assert bindu_lean_violations(heavy, bundle)[0].severity == "quality"
+        light = _reading("houses").model_copy(update={"interpretation":
+            "Your Jupiter period runs your 10th lord. The 10th house is also well supported (35 bindus)."})
+        assert bindu_lean_violations(light, bundle) == []
+        assert bindu_lean_violations(heavy, {}) == []
+
+    def test_explorer_thinks_less_and_waits_longer_per_call(self, chart):
+        from astrospace.agents.domain_agent import DomainReadingAgent as D
+        explorer = ChartExplorer(ChartTools(chart), "q", {"domain": "career"})
+        config = explorer._gemini_config()
+        assert str(config.thinking_config.thinking_level).endswith("LOW")
+        assert config.http_options.timeout == 75_000
+        assert D.gemini_thinking_level is None and D.gemini_timeout_s is None
+
+
+class TestPlacementsMatchTheChart:
+    """2026-10-28: "Rahu touches your 5th house" for a chart with Rahu in the 12th."""
+
+    KAVYA = {p: {"house": h} for p, h in dict(Moon=1, Sun=5, Mercury=5, Venus=5, Jupiter=4,
+                                                Saturn=6, Ketu=6, Mars=12, Rahu=12).items()}
+
+    def test_reads_birth_chart_placements_and_skips_other_frames(self):
+        from astrospace.agents.placement_check import stated_placements as said
+        claims = lambda t: [c[:2] for c in said(t)]
+        assert claims("Your 5th house holds your ascendant lord Venus along with Mercury and Sun.") == \
+            [("Venus", 5), ("Mercury", 5), ("Sun", 5)]
+        assert claims("Your 5th lord Saturn sits in your 6th house with Ketu.") == [("Saturn", 6), ("Ketu", 6)]
+        assert claims("Mercury and Venus are both combust in the fifth house.") == [("Mercury", 5), ("Venus", 5)]
+        assert claims("Rahu touches your 5th house, a fit for AI tools.") == [("Rahu", 5)]
+        for other in ("In your D10 chart, Rahu sits in the 10th house.",
+                      "From the Moon, Mars is in the 8th house.",
+                      "Jupiter is now moving through your 10th house.",
+                      "Venus is lord of your 1st house.",
+                      "Saturn aspects your 10th house.",
+                      "Rahu is not in your 5th house."):
+            assert claims(other) == [], other
+
+    def test_a_finished_clause_does_not_lend_its_planets_to_the_next_claim(self):
+        # Lilliput v7 run A was withheld over this correct sentence.
+        from astrospace.agents.placement_check import stated_placements, wrong_placements
+        sentence = ("However, Venus and Mercury are combust by the Sun, and your 2nd lord of earnings "
+                    "(Mars) sits in the 12th house in Virgo.")
+        assert [c[:2] for c in stated_placements(sentence)] == [("Mars", 12)]
+        assert wrong_placements(sentence, self.KAVYA) == []
+        assert [c[:2] for c in stated_placements("The Sun, Mercury and Venus sit in your 5th house.")] == \
+            [("Sun", 5), ("Mercury", 5), ("Venus", 5)]
+
+    def test_one_sentence_naming_ashtakavarga_and_bindus_is_one_mention(self):
+        from astrospace.agents.verifier import bindu_lean_violations
+        reading = _reading().model_copy(update={"interpretation": "Yes, with care. In Ashtakavarga, your 10th house holds 35 bindus."})
+        assert bindu_lean_violations(reading, {"overall_view": "x"}) == []
+        reading = _reading().model_copy(update={"interpretation": "Your 10th has 35 bindus. Your 3rd has 42 bindus."})
+        assert bindu_lean_violations(reading, {"overall_view": "x"})
+
+    def test_a_health_violation_quotes_the_one_sentence(self):
+        from astrospace.agents.safety import dosha_overclaim_kind
+        from astrospace.agents.verifier import _offending_sentence
+        text = "Your period favours media. Tight targets can easily trigger anxiety or panic attacks. Go slow."
+        assert _offending_sentence(text, dosha_overclaim_kind) == \
+            "Tight targets can easily trigger anxiety or panic attacks."
+
+    def test_two_claims_in_one_sentence_keep_their_own_planets(self):
+        from astrospace.agents.placement_check import stated_placements as said
+        sentence = ("Amatyakaraka Jupiter is debilitated in the 4th house and Atmakaraka Rahu is in "
+                    "the 12th house.")
+        assert [c[:2] for c in said(sentence)] == [("Jupiter", 4), ("Rahu", 12)]
+        assert [c[:2] for c in said("Your 2nd lord Mars sits in the 12th house with Rahu.")] == \
+            [("Mars", 12), ("Rahu", 12)]
+
+    def test_a_sign_paired_with_the_wrong_house_is_caught(self):
+        from astrospace.agents.placement_check import wrong_sign_houses, drop_false_sentences
+        signs = {"Moon": {"house": 1, "sign": "Libra"}, "Mars": {"house": 12, "sign": "Virgo"}}
+        assert [w[:3] for w in wrong_sign_houses("AL in Gemini (3rd house of media).", signs)] == \
+            [("Gemini", 3, 9)]
+        assert wrong_sign_houses("Rahu in 12th Virgo. Jupiter in 4th Capricorn.", signs) == []
+        assert drop_false_sentences("Karakamsha is fine. AL in Gemini (3rd house). Moon is strong.",
+                                    signs) == "Karakamsha is fine. Moon is strong."
+
+    def test_a_wrong_placement_is_a_safety_violation(self):
+        from astrospace.agents.verifier import verify
+        bundle = {"birth_placements": self.KAVYA, "references": [{"ref_id": "houses"}]}
+        wrong = _reading("houses").model_copy(update={"interpretation":
+            "It can work. Rahu touches your 5th house, showing a fit for AI tools."})
+        found = [v for v in verify(wrong, bundle, "marriage") if "wrong placement" in v]
+        assert found and found[0].severity == "safety" and "12th house, not the 5th" in found[0]
+        right = _reading("houses").model_copy(update={"interpretation":
+            "It can work. Your 2nd lord Mars sits in the 12th house with Rahu."})
+        assert not [v for v in verify(right, bundle, "marriage") if "wrong placement" in v]
+
+    def test_every_bundle_carries_the_birth_placements(self, chart):
+        from astrospace.agents.placement_check import birth_placements
+        placements = birth_placements(chart)
+        assert set(placements) == {"Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn",
+                                   "Rahu", "Ketu"}
+        assert all(1 <= row["house"] <= 12 for row in placements.values())
+        orchestrator = AskOrchestrator(chart_loader=lambda: chart,
+                                       planner=lambda q, h: QuestionPlan(kind="broad", domain="career",
+                                                                         method="test"))
+        with patch.object(AskOrchestrator, "check_validation", return_value=None):
+            prepared = orchestrator.prepare("Will I get a promotion at work?").prepared
+        assert prepared.bundle["birth_placements"] == placements
+
+
+class TestAnswersStayFull:
+    """2026-10-28: after the band and bindu checks the answers shrank to three reasons."""
+
+    def test_a_thin_answer_and_missing_action_kinds_are_sent_back(self):
+        from astrospace.agents.verifier import depth_violations
+        bundle = {"overall_view": {"band": "moderately good"}}
+        thin = _reading("houses").model_copy(update={
+            "interpretation": "Yes, with care. Your 2nd lord Mars sits in the 12th house."})
+        found = depth_violations(thin, bundle)
+        assert found[0].field == "interpretation" and "running period" in found[0]
+        assert found[1].field == "guidance"
+        full = thin.model_copy(update={
+            "interpretation": (
+                "Yes, with care. Your Jupiter-Venus period runs to November 2028. Your 10th lord "
+                "Moon sits in your 1st house. Venus is combust. In your D10 chart Rahu is in the "
+                "10th. A Raja yoga joins the 1st and 9th lords. Your birth star Chitra gives craft."),
+            "guidance": thin.guidance.model_copy(update={"practical_actions": [
+                "Take care: keep a simple routine.", "Consider: post weekly.",
+                "Avoid: chasing quick views.", "Do: build a library of stories."]})})
+        assert depth_violations(full, bundle) == []
+        assert depth_violations(thin, {}) == []
+
+    def test_the_writer_is_given_the_full_layout(self):
+        from astrospace.agents.orchestrator import EXPLORED_NOTE
+        assert "thin is a failure" in EXPLORED_NOTE and "Personality in this period" in EXPLORED_NOTE
+        assert "at least one" in EXPLORED_NOTE

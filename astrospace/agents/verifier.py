@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import re
 
+from .placement_check import wrong_placements, wrong_sign_houses
+
 from .safety import _negation_precedes, _normalize, dosha_overclaim_kind, prohibited_verdict
 from .schema import StructuredReading
 
@@ -559,7 +561,9 @@ def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
             violations.append(Violation(f"prohibited verdict ({crossed}) in: {text!r}", "safety", field))
         dosha_crossed = dosha_overclaim_kind(text)
         if dosha_crossed == "health_outcome_overclaim":
-            violations.append(Violation(f"health outcome overclaim in: {text!r}", "safety", field))
+            violations.append(Violation(
+                f"health outcome overclaim in: {_offending_sentence(text, dosha_overclaim_kind)!r}",
+                "safety", field))
         elif dosha_crossed:
             violations.append(Violation(f"dosha overclaim in: {text!r}", "safety", field))
 
@@ -587,8 +591,133 @@ def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
     # reading, it is a trust violation, exactly like an invented citation.
     violations.extend(_blocked_frame_violations(reading, bundle))
     violations.extend(_discovery_violations(reading, bundle))
+    placements = bundle.get("birth_placements") or {}
+    if placements:
+        checked = [*text_to_check, *(("technical_basis", item.factor) for item in reading.technical_basis)]
+        for field, text in checked:
+            for planet, stated, actual, sentence in wrong_placements(text, placements):
+                violations.append(Violation(
+                    f"wrong placement: the birth chart has {planet} in the {_ordinal(actual)} house, "
+                    f"not the {_ordinal(stated)}, in: {sentence!r}", "safety", field))
+            for sign, stated, actual, sentence in wrong_sign_houses(text, placements):
+                violations.append(Violation(
+                    f"wrong house for a sign: {sign} is the {_ordinal(actual)} house in this birth "
+                    f"chart, not the {_ordinal(stated)}, in: {sentence!r}", "safety", field))
+    violations.extend(band_violations(reading, bundle))
+    violations.extend(bindu_lean_violations(reading, bundle))
 
     return violations
+
+
+def _ordinal(n: int) -> str:
+    return f"{n}{'th' if 10 <= n % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
+
+
+# The tool-using Ask weighs every angle in code into one band; the answer's
+# opening must not overturn it (2026-10-28: band "mixed", answer "will not
+# suit you and will not help you earn").
+_FLAT_NO = re.compile(
+    r"\b(?:will not|won't|does not|doesn't|do not|cannot|can't|is not|isn't)\b[^.]{0,40}?"
+    r"\b(?:suit|help|work|succeed|earn|fit|advisable|recommended|good)", re.IGNORECASE)
+_FLAT_YES = re.compile(
+    r"\b(?:will (?:definitely|surely|certainly)|is (?:sure|certain|guaranteed) to|guaranteed)\b",
+    re.IGNORECASE)
+_NOT_NEGATIVE_BANDS = {"good", "moderately good", "mixed"}
+_NOT_POSITIVE_BANDS = {"mixed", "weak, go carefully", "unfavourable, avoid for now"}
+
+
+def _opening(text: str) -> str:
+    return re.split(r"(?<=[.!?])\s", text.strip(), maxsplit=1)[0]
+
+
+def band_violations(reading: StructuredReading, bundle: dict) -> list[Violation]:
+    """Quality severity: the first sentence of the interpretation and the
+    summary may not flatly contradict the weighed band."""
+    band = ((bundle.get("overall_view") or {}).get("band") or "").strip()
+    if not band:
+        return []
+    found: list[Violation] = []
+    for field, text in (("interpretation", reading.interpretation),
+                        ("summary_and_assurance", reading.summary_and_assurance)):
+        first = _opening(text or "")
+        if band in _NOT_NEGATIVE_BANDS and _FLAT_NO.search(first):
+            found.append(Violation(
+                f"the weighed view is {band!r}, but the opening says a flat no: {first!r}. "
+                f"Open with the band in plain words and the conditions", "quality", field))
+        elif band in _NOT_POSITIVE_BANDS and _FLAT_YES.search(first):
+            found.append(Violation(
+                f"the weighed view is {band!r}, but the opening promises a sure yes: {first!r}",
+                "quality", field))
+    return found
+
+
+_BINDU_MENTION = re.compile(r"\b(?:ashtakavarga|bindus?|sav)\b|\b\d{2} (?:points|bindus)\b",
+                            re.IGNORECASE)
+
+
+def _offending_sentence(text: str, check) -> str:
+    """The first sentence of `text` that `check` flags, so a repair prompt
+    names the one sentence to fix rather than the whole interpretation
+    (Lilliput v7 quoted 400 words)."""
+    for sentence in re.split(r"(?<=[.!?])\s+|\n+", text or ""):
+        if sentence.strip() and check(sentence):
+            return sentence.strip()
+    return text
+
+
+def bindu_lean_violations(reading: StructuredReading, bundle: dict) -> list[Violation]:
+    """Quality severity, tool-using Ask only: Ashtakavarga is one light angle
+    (weight 2 of about 30), so the answer may mention bindus once at most
+    (2026-10-28: three of four reasons were bindu counts)."""
+    if not bundle.get("overall_view"):
+        return []
+    text = " ".join([reading.interpretation or "", reading.summary_and_assurance or ""])
+    # Sentences, not hits: "In Ashtakavarga, your 10th house holds 35 bindus"
+    # is the one allowed mention (Lilliput v8 flagged it as two).
+    sentences = [s for s in re.split(r"(?<=[.!?])\s+|\n+", text) if _BINDU_MENTION.search(s)]
+    if len(sentences) > 1:
+        return [Violation(
+            "the answer leans on Ashtakavarga bindus; mention them once at most and lead with "
+            "the running period, the house lords and planet strength", "quality", "interpretation")]
+    return []
+
+
+# What a full consultation touches (tool-using Ask, Balanced and Practitioner;
+# Guided carries the chart reasons behind markers instead). 2026-10-28: after
+# the band and bindu checks the answers shrank to three reasons.
+_DEPTH_TOPICS = {
+    "the running period": r"\b(?:dasha|mahadasha|antardasha|sub-period|sub period|period)\b",
+    "the house lords": r"\blord\b",
+    "planet strength": r"\b(?:exalted|debilitated|combust|own sign|strong|weak|retrograde)\b",
+    "the divisional chart": r"\b(?:D\d{1,2}|dashamsha|navamsha|divisional)\b",
+    "yogas or doshas": r"\b(?:yoga|dosha|manglik)\b",
+    "the birth star": r"\b(?:nakshatra|birth star|star)\b",
+    "timing": r"\b(?:19|20)\d{2}\b",
+}
+_ACTION_KINDS = ("take care", "consider", "avoid", "do")
+
+
+def depth_violations(reading: StructuredReading, bundle: dict) -> list[Violation]:
+    """Quality severity, tool-using Ask only: the interpretation must cover
+    the heavy angles and timing, and the actions every kind."""
+    if not bundle.get("overall_view"):
+        return []
+    text = " ".join([reading.interpretation or "", reading.summary_and_assurance or ""])
+    missing = [name for name, pattern in _DEPTH_TOPICS.items()
+               if not re.search(pattern, text, re.IGNORECASE)]
+    found: list[Violation] = []
+    if missing:
+        found.append(Violation(
+            "the answer is too thin: it never covers " + ", ".join(missing)
+            + ". Give each its own short paragraph, as Step 2 lays out", "quality", "interpretation"))
+    starts = {a.strip().lower().split(":")[0] for a in reading.guidance.practical_actions}
+    lacking = [k for k in _ACTION_KINDS
+               if not any(s == k or s.startswith(k + " ") for s in starts)]
+    if lacking:
+        found.append(Violation(
+            "practical_actions need at least one line starting with each of Take care, Consider, "
+            "Avoid, Do; missing: " + ", ".join(lacking), "quality", "guidance"))
+    return found
 
 
 def verify_coverage(reading: StructuredReading, bundle: dict) -> list[Violation]:

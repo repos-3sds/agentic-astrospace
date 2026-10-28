@@ -36,7 +36,8 @@ from .scope import QuestionPlan, fixed_reply, plan_question
 from .schema import AskIntent, StructuredReading
 from .stance import detect_pushback
 from .validation_agent import ValidationAgent, ValidationProbeDraft, probe_violations
-from .verifier import (guided_violations, quality_violations, safety_violations, verify,
+from .placement_check import birth_placements
+from .verifier import (depth_violations, guided_violations, quality_violations, safety_violations, verify,
                        verify_coverage, violation_fields)
 from ..context.muhurta_search import muhurta_section
 from ..context import KeywordRouter, assemble_domain
@@ -97,35 +98,83 @@ log = logging.getLogger(__name__)
 
 # The tool-using Ask's exploring step gives up after this long and the turn
 # carries on over the plain bundle.
-EXPLORE_TIMEOUT_S = 90
+EXPLORE_TIMEOUT_S = 120
 
 EXPLORED_NOTE = """
 
-LOOKED UP FOR THIS QUESTION: the bundle's `explored` list holds chart lookups made for this
-exact question, each with a `ref` (e.g. "tool:house(7)"). `explorer_notes` sums them up,
-`rule_verdicts` says for each classical rule whether it holds, partly holds, fails or REVERSES
-for this chart, and `reader_facts` is what the reader has told Siddha about their life.
-- Use the lookups like any other bundle section; weigh dignity, the three lagnas, the varga,
-  nakshatras and the sub-sub period timing they show.
-- A rule marked fails or reverses must not be used for the claim it was written for; a reversed
-  rule points the other way (e.g. Jupiter in the 10th from the Moon is a strain). Only rules
-  marked holds or partly may be cited as a `technical_basis` source.
-- Start from `reader_facts`: never assume a life the reader has said they do not have.
-- Each rule verdict carries an `effect` (helps, hurts, mixed) for this question; a rule that
-  holds and hurts is a caution, never support.
-- The explorer judged every angle ("Angle ..." lines) and the code weighed them into one
-  "Overall" line. Your verdict follows that Overall band (good, moderately good, mixed, weak,
-  avoid for now); never let one angle or one number decide. Walk the reader through the main
-  angles in plain words, the strongest for and against, then the combined view. Set
-  confidence to medium when the band is mixed or moderately good.
-- Copy dates from the looked-up periods and the explorer's Timing line exactly.
-- Tie the person's nature to the running periods ("Personality in this period"), and carry the
-  explorer's Take care / Consider / Avoid / Do lines into `guidance.practical_actions`, each
-  starting with that word, when the question asks what to do or what lies ahead.
-- `guidance.remedies`: 1-2 only, taken from the "Remedy ..." lines (the reader's remedy plan),
-  with the mantra in English letters and why it fits them. Never invent a remedy.
-- Tier H patterns and nakshatra deity stories are practice, not classics: say so in plain words
-  if you lean on one. Never name a book in the reader-facing text."""
+=== HOW TO BUILD THIS ANSWER (overrides any general rule above where they differ) ===
+A senior astrologer has already read this chart from every side for this exact question. You
+are writing up that judgement, not making a new one. Follow these steps in order.
+
+STEP 1. TAKE THE VERDICT FROM THE WEIGHING, NOT FROM ANY SINGLE FACT.
+`explorer_notes` holds one "Angle ..." line per point of view, each with a call and a weight,
+and one "Overall, all angles weighed: <band>" line computed in code. That band IS your verdict.
+Your FIRST sentence says it in plain words:
+  good             -> "Yes, this suits you ..."
+  moderately good  -> "Yes, with care ..."
+  mixed            -> "It can work, but only if ..." or "Partly ..."
+  weak             -> "Not now, unless ..."
+  avoid for now    -> "No, not now ..."
+Never open a mixed or better band with "will not", "does not suit" or "cannot". Never open a
+mixed or worse band with "will definitely". Confidence is medium for mixed and moderately good.
+
+STEP 2. A FULL CONSULTATION, IN ORDER OF WEIGHT. Short is not safe; thin is a failure. The
+interpretation covers ALL of these, each in its own short paragraph, in this order:
+  1. The verdict sentence (Step 1) and one line on why, in their terms.
+  2. The running period: maha, antar and sub-sub lords, the houses they rule and sit in, and
+     what that stirs for this question now.
+  3. The house lords for this question and where they sit, from the Lagna, and whether the
+     Moon and Sun views agree.
+  4. The strength of the key planets: exalted, own sign, debilitated, combust, cancelled.
+     Name every debilitated or combust planet among this question's lords and karakas, even
+     when the band is good: a one-sided answer is not a full one.
+  5. The divisional chart (D10 for work, D9 for marriage, etc.) and the yogas or doshas that
+     touch the area.
+  6. The supporting angles together: the Jaimini karaka for this area named in full
+     (Amatyakaraka for work, Darakaraka for marriage, Putrakaraka for children, Atmakaraka for
+     the self) with its planet and state, transits, the birth star and its story, and
+     Ashtakavarga. The words "Ashtakavarga" or "bindus" appear in ONE sentence of the whole
+     answer at most, and never as a main reason.
+  7. Personality in this period: how this person's nature meets what the period stirs.
+  8. Timing: the windows that help and the ones that ask for care, with dates copied exactly.
+  9. The combined view: the strongest reason for, the strongest against, and how they net out.
+Write it in simple words, but do not drop any of the nine. About 300-450 words in Balanced and
+Practitioner. In Guided the same nine points in plain words, chart reasons behind [n] markers.
+
+STEP 3. STAY TRUE TO THE READER.
+- Start from `reader_facts`; never assume a life they said they do not have.
+- Describe their plan in their own words. Never add details they did not give.
+- Never state a health or mind effect as an outcome ("will cause anxiety", "triggers anxiety
+  attacks", "leads to depression"). Do not use the words anxiety, panic, depression,
+  breakdown or insomnia anywhere, the actions included. You may say a path may feel tiring
+  and suggest rest.
+- Copy dates exactly from the looked-up periods and the explorer's Timing line.
+
+STEP 4. EVERY PLACEMENT MUST BE THE CHART'S.
+`birth_placements` gives each planet's house and sign in the birth chart. Copy a planet's house
+from there, never from memory or from another chart. When you speak of a divisional chart, the
+view from the Moon or Sun, or a transit, name that frame in the same sentence ("In your D10
+chart, ..."). A placement that does not match the chart is a false fact, and the answer is
+rejected.
+
+STEP 5. USE THE RULES AS JUDGED.
+`rule_verdicts` says whether each classical rule holds, partly holds, fails or REVERSES here,
+with its `effect` (helps, hurts, mixed). Only rules that hold or partly hold may be cited as a
+`technical_basis` source. A rule that holds and hurts is a caution, never support. A reversed
+rule points the other way (e.g. Jupiter in the 10th from the Moon is a strain).
+
+STEP 6. GUIDANCE AND REMEDIES.
+- Tie the person's nature to the running period ("Personality in this period").
+- Carry the explorer's Take care / Consider / Avoid / Do lines into
+  `guidance.practical_actions`, each starting with that word: 4 to 6 lines, with at least one
+  of each kind.
+- `guidance.remedies`: 1-2 only, from the "Remedy ..." lines, mantra in English letters, with
+  why it fits them. Never invent a remedy.
+- Tier H patterns and nakshatra deity stories are practice, not classics: say so if you lean
+  on one. Never name a book in the reader-facing text.
+
+LOOKED UP FOR THIS QUESTION: the bundle's `explored` list holds every lookup with its `ref`
+(e.g. "tool:house(7)"); cite those refs like any other bundle section."""
 
 
 READER_SAID_NOTE = """
@@ -472,11 +521,14 @@ class AskOrchestrator:
         decision = self._router.route(question)
         needs_clarification = _needs_clarification(decision)
         domain = decision.primary
-        # No clear keyword: the sorter's reading of the question ("what about
-        # my love life?" is marriage) comes before the thread's old domain,
-        # because the sorter also saw the thread and can tell a topic switch
-        # from a follow-up.
-        if needs_clarification and sorted_domain and sorted_domain in AGENT_REGISTRY:
+        # The sorter read the question's meaning, so it wins over a lone
+        # keyword hit: "AI characters for her YouTube channel, can she earn?"
+        # matched personality on "character" alone. Two or more hits for one
+        # area ("promotion at work") still win. The sorter also comes before
+        # the thread's old domain, because it saw the thread and can tell a
+        # topic switch from a follow-up.
+        if (sorted_domain and sorted_domain in AGENT_REGISTRY
+                and (needs_clarification or decision.confidence != "high")):
             domain = sorted_domain
             needs_clarification = False
         if needs_clarification and thread_domain and thread_domain in AGENT_REGISTRY:
@@ -504,6 +556,9 @@ class AskOrchestrator:
             validation_probes=self._stored_probes(domain),
         )
         bundle = focus_bundle(bundle, question_kind, question)
+        # Every planet's birth-chart house and sign, for the writer to copy
+        # and for the verifier to hold each stated placement against.
+        bundle["birth_placements"] = birth_placements(chart)
         # Shades the reader named this turn or in their recent turns, each
         # sorted in code, so "But I like Magma Red" meets the same verdict
         # the list of colours got two turns earlier.
@@ -727,10 +782,15 @@ class AskOrchestrator:
             context.bundle["reader_said_before"] = said
 
         def build_agent(bundle: dict) -> DomainReadingAgent:
+            # A narrow question's "100 to 150 words, at most three reasons"
+            # fought the explored answer's nine parts (2026-10-28, Hawk: the
+            # answers shrank). Once the chart has been read from every side,
+            # the writer gives the full consultation.
+            kind = "broad" if bundle.get("explored") and plan.kind == "narrow" else plan.kind
             agent = DomainReadingAgent(
                 bundle, registry_result.agent_config.domain_addendum,
                 question_tense=routing.tense,
-                question_kind=plan.kind,
+                question_kind=kind,
                 experience_mode=experience_mode,
                 language=language,
                 tone=tone,
@@ -853,6 +913,8 @@ class AskOrchestrator:
                       + verify_coverage(reading, prepared.bundle))
         if prepared.experience_mode == "guided":
             violations += guided_violations(reading)
+        else:
+            violations += depth_violations(reading, prepared.bundle)
         return violations
 
     def _scoped_repair(self, prepared: PreparedRun, messages: list, original: StructuredReading,
