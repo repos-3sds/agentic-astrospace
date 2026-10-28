@@ -28,7 +28,7 @@ from ..config import flag
 AccessTier = Literal["free", "plus", "pro"]
 CapabilityKind = Literal["flag", "limit"]
 
-CATALOG_REVISION = 6
+CATALOG_REVISION = 7
 
 
 @dataclass(frozen=True)
@@ -93,6 +93,7 @@ _CAPABILITIES = (
     _flag("remedies.full", "The full remedy plan and practice tracker", free=False, plus=True, pro=True),
     _flag("muhurta.full", "Muhurta, finding a supportive time", free=False, plus=True, pro=True),
     _flag("dashas.full", "Full five-level Dasha navigation", free=False, plus=True, pro=True),
+    _flag("dashas.variants", "Vimshottari variants: Tribhagi, Tara and Lagna starts", free=False, plus=False, pro=True),
     _flag("transits.full", "Full transit timeline and domain detail", free=False, plus=True, pro=True),
     _flag("audio.natural_voice", "Natural server-made read-aloud voice", free=False, plus=True, pro=True),
     _flag("reports.detailed", "Detailed personal reports", free=False, plus=True, pro=True),
@@ -123,16 +124,18 @@ def quotas_enforced() -> bool:
 
 
 # Tester phase (Hawk, 2026-10-20): Free readers get Plus, not Practitioner,
-# with Ask and Readings as a teaser (3 answers and 3 readings a month; the
-# welcome question comes on top, once) and Muhurta searching the next two
-# weeks only. Remedies, Doshas, Dashas and transits stay as on Free, and
+# with Ask and Readings as a teaser (3 readings a month, and 10 Ask answers
+# since Hawk raised it on 2026-10-22; the welcome question comes on top, once) and Muhurta searching the next two
+# weeks only. Profiles are 5 (your own plus 4 others, Hawk 2026-10-27) where
+# Plus keeps 3. Remedies, Doshas, Dashas and transits stay as on Free, and
 # Compatibility is one person a month (with the full report). On with
 # ASTROSPACE_TESTERS_GET_PLUS while the app is in closed testing; off, Free
 # is the Free plan above.
 TESTER_TURNS = MappingProxyType({
-    "ask.answers.period": 3,
+    "ask.answers.period": 10,
     "readings.period": 3,
     "muhurta.days_ahead": 14,
+    "profiles.max": 5,
 })
 TESTER_AS_FREE = ("remedies.full", "doshas.detail", "dashas.full", "transits.full",
                   "compatibility.checks.period")

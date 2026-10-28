@@ -183,6 +183,40 @@ def d60(lon: float) -> int:
     return (s + m) % 12
 
 
+_D30_PARTS = {
+    True:  ((0, 5, 0), (5, 10, 10), (10, 18, 8), (18, 25, 2), (25, 30, 6)),
+    False: ((0, 5, 1), (5, 12, 5), (12, 20, 11), (20, 25, 9), (25, 30, 7)),
+}
+
+
+def varga_longitude(varga: str, lon: float) -> float:
+    """
+    Longitude of a planet inside a divisional chart (0..360).
+
+    How far the planet has moved through its division is spread over the
+    whole varga sign: 40% of the way through a navamsha is 12° of the
+    navamsha sign. For equal divisions this is (degree x n) mod 30, the
+    convention Jagannatha Hora and Parashara's Light use for varga degrees and
+    varga nakshatras. BPHS itself places a planet in a varga by sign only, so
+    the degree and nakshatra this yields are a convention, not a classical
+    rule; the payload says so.
+    """
+    lon = lon % 360.0
+    sign = varga_sign(varga, lon)
+    if varga == "D1":
+        return lon
+    d = lon % 30.0
+    if varga == "D30":
+        odd = int(lon // 30) % 2 == 0
+        start, end, _ = next(p for p in _D30_PARTS[odd] if d < p[1] or p[1] == 30)
+        fraction = (d - start) / (end - start)
+    else:
+        n = int(varga[1:])
+        scaled = d * n / 30.0
+        fraction = scaled - min(int(scaled), n - 1)
+    return sign * 30.0 + min(fraction, 1.0 - 1e-9) * 30.0
+
+
 VARGA_FUNCTIONS = {
     "D1": d1, "D2": d2, "D3": d3, "D4": d4, "D5": d5, "D6": d6, "D7": d7,
     "D8": d8, "D9": d9, "D10": d10, "D11": d11, "D12": d12, "D16": d16,

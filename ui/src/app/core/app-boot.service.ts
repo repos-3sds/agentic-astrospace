@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { AuthService } from './auth.service';
 import { KundliStore } from './kundli.store';
 import { PreferencesService } from './preferences.service';
+import { PanchangAlarmService } from './panchang-alarm.service';
 import { PushService } from './push.service';
 
 /**
@@ -28,6 +29,7 @@ export class AppBootService {
   private readonly store = inject(KundliStore);
   private readonly prefs = inject(PreferencesService);
   private readonly push = inject(PushService);
+  private readonly alarms = inject(PanchangAlarmService);
   private readonly router = inject(Router);
 
   /** Why boot failed, for whichever shell is on screen to say so; null while fine. */
@@ -49,6 +51,8 @@ export class AppBootService {
         void this.prefs.syncCloud().catch(() => undefined);
       }
       await this.store.load();
+      // Tops up the fortnight of panchang alarms on the phone.
+      void this.alarms.init();
     } catch (e) {
       this.error.set((e as Error)?.message || 'Could not load your profiles.');
     }

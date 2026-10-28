@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 
 import { SIGN_ORDER, signMeta } from '../../core/glyphs';
+import { currentTextZoom } from '../../core/text-zoom';
 import { PlanetConditionAnnotation, PlanetConditionCode, VargaChart } from '../../core/models';
 import {
   Box,
@@ -131,11 +132,10 @@ const SOUTH_SIGN_POINTS: Record<string, { col: number; row: number }> = {
  * lines, TR/BL on x+y=400-style lines).
  *
  * Zones are keyed by the sign that sits there in the classic Bengali/Odia
- * chart (Aries in the top middle box, the rest anticlockwise). Siddha draws
- * the Lagna-centred variant Hawk chose on 2026-10-20: house 1 takes the top
- * middle box and houses 2-12 follow anticlockwise, so house h sits in the
- * zone of the h-th sign and each box says which sign it holds. (Before that
- * the app had Taurus on top running clockwise, which is no tradition's chart.)
+ * chart: Aries (Mesha) fixed in the top middle box, the rest anticlockwise.
+ * Signs never move; the Lagna's box is marked "As" and each box carries its
+ * house number. Hawk asked for this on 2026-10-24, replacing the Lagna-top
+ * variant of 2026-10-20 (and before that, Taurus on top running clockwise).
  *
  * Per zone: `poly` is the zone's outline and `anchor` where its planets sit
  * when there is room; (labelX, labelY) pins the house number and sign number into
@@ -170,27 +170,6 @@ const EASTERN_ZONES: Record<string, {
   Pisces: { poly: [[B, 0], [400, 0], [B, A]], anchor: [304, 56], labelX: 274, labelY: 16, labelAlign: 'start' },
 };
 
-/**
- * The phone's text zoom as applied to this page: Android's font-size setting
- * scales WebView text, SVG text included (MainActivity.capTextZoom caps it at
- * 115%). Measured once, the way the splash does it.
- */
-let measuredTextZoom: number | null = null;
-
-function textZoom(): number {
-  if (measuredTextZoom !== null) return measuredTextZoom;
-  if (typeof document === 'undefined' || !document.body) return 1;
-  const probe = document.createElement('span');
-  probe.setAttribute('data-text-zoom-probe', '');
-  probe.style.cssText = 'position:absolute;visibility:hidden;font-size:100px;line-height:1;';
-  probe.textContent = 'M';
-  document.body.appendChild(probe);
-  const zoom = probe.getBoundingClientRect().height / 100;
-  probe.remove();
-  measuredTextZoom = zoom > 0.5 && zoom < 2.5 ? zoom : 1;
-  return measuredTextZoom;
-}
-
 @Component({
   // Signal inputs only, so OnPush is safe; the mobile chart screens render these (audit I16).
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -214,7 +193,8 @@ export class KundliChartComponent {
 
   constructor() {
     afterNextRender(() => {
-      this.zoom.set(textZoom());
+      // The WebView's text zoom (core/text-zoom.ts), SVG text included.
+      this.zoom.set(currentTextZoom());
       this.fontsReady.update((n) => n + 1);
       document.fonts?.ready.then(() => {
         this.widthCache.clear();
@@ -329,13 +309,13 @@ export class KundliChartComponent {
     const houseSize = HOUSE_SIZE * zoom;
     return SIGN_ORDER.map((sign) => {
       const house = this.houseForSign(lagnaIndex, sign);
-      const zone = EASTERN_ZONES[SIGN_ORDER[(house || 1) - 1]];
+      const zone = EASTERN_ZONES[sign];
       const entries = sign === chart.lagna.sign
         ? [this.lagnaEntry('As'), ...(bySign.get(sign) ?? [])]
         : (bySign.get(sign) ?? []);
       const houseText = `H${house}`;
-      // The signs move with the Lagna here, so each box names its sign by
-      // number under the house number, as the North chart does.
+      // Each box also names its sign by number under the house number, in the
+      // sign's colour, as the North chart does.
       const signText = String(SIGN_ORDER.indexOf(sign) + 1);
       const signSize = EASTERN_SIGN_SIZE * zoom;
       const spacing = Math.max(houseSize, signSize) * 1.15;
@@ -463,6 +443,15 @@ export class KundliChartComponent {
   private entryForPlanet(planet: string): PlanetEntry {
     const chartPlanet = this.chart()?.planets[planet];
     const automatic: PlanetConditionAnnotation[] = [];
+    // A chart that carries its own symbols (each varga, judged in its own
+    // signs) wins over the D1 symbols passed in, which used to be drawn on
+    // every divisional chart.
+    if (chartPlanet?.annotations) {
+      if (chartPlanet.vargottama) {
+        automatic.push({ code: 'vargottama', symbol: '✦', label: 'Vargottama', tone: 'good' });
+      }
+      return { key: planet, label: this.planetShortName(planet), annotations: this.mergeAnnotations(chartPlanet.annotations, automatic) };
+    }
     if (chartPlanet?.retrograde) {
       automatic.push({ code: 'retrograde', symbol: '↺', label: 'Retrograde', tone: 'neutral' });
     }

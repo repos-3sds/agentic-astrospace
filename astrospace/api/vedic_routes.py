@@ -18,7 +18,8 @@ from ..context import compat_insight_store
 from ..core.vedic.vargas import VARGA_FUNCTIONS
 from ..knowledge.vedic_rules import get_rule, rules_catalog
 from .auth import CurrentUser
-from ..entitlements import EntitlementDenied, plan_lock
+from ..entitlements import EntitlementDenied, plan_lock, require_plan
+from ..core.vedic.dasha_variants import VARIANTS as DASHA_VARIANTS
 
 router = APIRouter(prefix="/api/v1/vedic", tags=["vedic"])
 
@@ -445,6 +446,22 @@ def masa(
     db: Session = Depends(get_db),
 ):
     return _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).masa()
+
+
+@router.get("/{kundli_id}/dasha-variants/{variant}")
+def dasha_variant(
+    kundli_id: str,
+    variant: str,
+    user: CurrentUser,
+    ayanamsha: str = "lahiri",
+    node_type: str = "mean",
+    db: Session = Depends(get_db),
+):
+    """A Vimshottari variant (Tribhagi, a Tara start or a Lagna start), Practitioner only."""
+    if variant not in DASHA_VARIANTS:
+        raise HTTPException(status_code=404, detail="Unknown dasha variant")
+    require_plan(db, user.id, "dashas.variants")
+    return _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type).dasha_variant(variant)
 
 
 @router.get("/{kundli_id}/yogini-dashas")

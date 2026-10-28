@@ -456,6 +456,46 @@ def revoke_push_token(payload: PushTokenRevocation, user: CurrentUser,
     return {"revoked": True}
 
 
+# One test per reader per window: a second tap inside it returns the queued
+# job instead of stacking up pushes.
+TEST_PUSH_WINDOW_MINUTES = 5
+
+
+@router.post("/test-notification")
+def send_test_notification(user: CurrentUser, db: Session = Depends(get_db)):
+    """Settings > Notifications > "Send a test notification".
+
+    Queues an ordinary notification job, due now, for this reader only. The
+    worker delivers it on its next run like any other job, through the same
+    transports (FCM, APNs) and the same per-token delivery records, so a test
+    that arrives proves the real path end to end. The API itself holds no push
+    credentials. 409 when this account has no phone registered for push.
+    """
+    tokens = cm.list_active_push_tokens(db, user.id)
+    if not tokens:
+        raise HTTPException(
+            status_code=409,
+            detail="No phone is registered for notifications on this account yet. "
+                   "Open Siddha on your phone and allow notifications first.",
+        )
+    now = datetime.utcnow()
+    window = int(now.timestamp()) // (TEST_PUSH_WINDOW_MINUTES * 60)
+    job = cm.schedule_notification(
+        db, user.id, "system", now,
+        title="Test notification from Siddha",
+        body="If you can read this, notifications reach this phone.",
+        deep_link="/m/settings/notifications",
+        dedupe_key=f"test_push:{user.id}:{window}",
+        payload={"kind": "test"},
+    )
+    return {
+        "id": job.id,
+        "status": job.status,
+        "devices": sorted({t.provider for t in tokens}),
+        "within_minutes": 15,
+    }
+
+
 # ── Notification preferences ─────────────────────────────────────────────────
 
 @router.get("/notification-preferences")

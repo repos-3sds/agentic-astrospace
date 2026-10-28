@@ -25,7 +25,7 @@ class TechnicalBasisItem(BaseModel):
         description="Either a KB reference/passage id from the context bundle's `references`/"
                     "`source_passages`, or one of the bundle's own section names "
                     "(houses, karakas, vargas, yogas, doshas, dasha_relevance, gochara, "
-                    "jaimini_karakas, jaimini_karaka_array, karakamsha, arudhas, profile_facts, "
+                    "jaimini_karakas, jaimini_karaka_array, karakamsha, functional_planets, arudhas, profile_facts, "
                     "profile_context, retrospect, timeline) — never an invented citation."
     )
 

@@ -17,18 +17,31 @@
     </section>
   }
   <p class="screen-announcer" aria-live="polite">{{ screenAnnouncement() }}</p>
-  <main class="content" asScrollMemory asPullRefresh [class.tabs-hidden]="layoutWithoutTabs()">
-    @if (profilesBlocked()) {
-      <as-generic-error
-        role="alert"
-        message="Your profiles could not be loaded, so there is nothing to show yet. Check your connection and try again."
-        [technicalDetail]="'GET /api/v1/kundlis · ' + kundlis.loadError()"
-        (retried)="retryProfiles()"
-      />
-    } @else {
-      <router-outlet />
+  <div class="panes" [class.has-list]="settingsPane()">
+    @if (settingsPane()) {
+      <aside class="pane-list" aria-label="Settings">
+        <as-settings-home />
+      </aside>
     }
-  </main>
+    <main class="content" asScrollMemory asPullRefresh [class.tabs-hidden]="layoutWithoutTabs()" [class.settings-root]="settingsPane() && settingsRoot()">
+      @if (profilesBlocked()) {
+        <as-generic-error
+          role="alert"
+          message="Your profiles could not be loaded, so there is nothing to show yet. Check your connection and try again."
+          [technicalDetail]="'GET /api/v1/kundlis · ' + kundlis.loadError()"
+          (retried)="retryProfiles()"
+        />
+      } @else {
+        <router-outlet />
+        @if (settingsPane() && settingsRoot()) {
+          <section class="pane-empty">
+            <img src="mobile/nav-settings.svg" alt="" aria-hidden="true" />
+            <p>Choose a setting on the left.</p>
+          </section>
+        }
+      }
+    </main>
+  </div>
 
   @if (!tabsSuppressed()) {
     <nav class="tabbar" aria-label="Primary">

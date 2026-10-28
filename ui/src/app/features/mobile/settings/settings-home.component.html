@@ -23,7 +23,7 @@
     <div class="group">
       @for (row of group.rows; track row.id; let last = $last) {
         @if (row.route; as route) {
-          <a class="row m-pressable" [routerLink]="route">
+          <a class="row m-pressable" [routerLink]="route" routerLinkActive="is-current">
             <span class="row-icon">
               <img [src]="'mobile/' + row.icon + '.svg'" alt="" aria-hidden="true" />
             </span>

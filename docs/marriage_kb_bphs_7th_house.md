@@ -153,3 +153,46 @@ these ship as single-source.
   belongs with spirituality.
 - **Manglik / Kuja dosha** — not in these chapters; it lives in the dosha engine
   already and is framed descriptively there.
+
+## Upapada and Navamsa (2026-10-21)
+
+Added for the couple report's "About you two" section
+(`astrospace/agents/compat_classics.py`). Eleven references, all under
+`marriage` in `context/references.json`. Read from Santhanam ch.30 (PDF pages
+252-258, printed 242-245) and ch.7 (printed 62, 65), the Uttara Kalamritam OCR
+export (Kanda IV sl.39-40, export pages 103-104) and the Phaladeepika OCR
+export (IX.20 page 141, XX.22 page 245).
+
+| ref_id | Source | Fires when |
+| --- | --- | --- |
+| `bphs30_1_upapada_benefic` | S 30.1-4 | a natural benefic in or aspecting the Upapada |
+| `bphs30_4_upapada_malefic` | S 30.4-6 | Upapada in a sign of the Sun, Mars or Saturn, or a malefic in or aspecting it, and no benefic; served softened through `READ_AS` |
+| `bphs30_5_upapada_benefic_relief` | S 30.5 | the same strain with a benefic present; replaces 30.4 |
+| `bphs30_7_second_from_upapada_benefic` | S 30.7, 30.15 | the 2nd from the Upapada is a benefic's sign or has a benefic in or on it |
+| `bphs30_14_upapada_lord_exalted` | S 30.14 | the Upapada's lord is exalted |
+| `uk4_39_upapada_benefic_character` | UK IV.39 | a natural benefic in the Upapada |
+| `uk4_40_darapada_upapada_benefic` | UK IV.40 | benefics on both the Darapada (A7) and the Upapada, malefics on neither |
+| `bphs7_navamsa_for_spouse` | S 7.1-8 | always: the Navamsa is the chart for the spouse |
+| `bphs7_vimsopaka_varga_dignity` | S 7.17-25 | the 7th lord or Venus is strong or weak by Navamsa dignity |
+| `phal9_vargottama_own_house` | Phal IX.20 | the 7th lord or Venus is vargottama |
+| `phal20_vargottama_dasha_favourable` | Phal XX.22 | the running maha- or sub-period lord is vargottama and is the 7th lord, Venus or in the 7th |
+
+**Conventions (stated in every Upapada reference's `observance_note`).** The
+Upapada is the arudha of the 12th house for every rising sign, as S 30.2 reads
+and `jaimini.upapada()` computes. Santhanam's own note prefers the 2nd house
+for an even rising sign, after some Jaimini commentaries; that variant is not
+used. Aspects are Parashari graha drishti (`yogas._planet_aspects`), not Jaimini
+sign aspects. Benefics are the natural benefics Jupiter, Venus and Mercury (UK's
+note to IV.39); the Sun is a malefic only when not exalted, own or friendly
+(S 30.6).
+
+**Not ingested, deliberately.** Most of these verses are about losing a wife.
+Left out: S 30.8-13 and UK IV.38-40's loss-of-wife, wife-count and lifespan
+clauses; S 30.16-22, the wife's named illnesses; S 30.24-30, sons and daughters
+read from the Upapada; S 30.9-10, many wives from Taurus or Gemini; the reverse
+halves of S 30.14 (a debilitated lord, a low family) and UK IV.39 (a debilitated
+malefic). Brihat Jataka's stri-jataka husband table (7th sign from the Navamsa
+lagna) and Phaladeepika XI.3 were read and left out: both are rules for a
+woman's chart only, and half of each is widowhood. BPHS 30.4's harsh half was
+kept only because it has a neutral core (commitment is strained) and a stated
+cancellation (30.5); it never reaches a reader in its own words.

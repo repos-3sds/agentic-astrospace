@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { LegalDocument, openLegal } from '../../../core/legal';
 import { ThemeService } from '../../../core/theme.service';
+import { TextSizeService } from '../../../core/text-size.service';
 import { EntitlementService } from '../../../core/entitlement.service';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { PreferencesService } from '../../../core/preferences.service';
@@ -31,6 +32,7 @@ export interface SettingGroup {
 }
 
 const NOTIFICATION_STORAGE_KEY = 'astrospace.mobile.notificationPrefs';
+const ALARM_STORAGE_KEY = 'astrospace.mobile.panchangAlarms';
 
 /**
  * Settings — Home (Figma node 66:89), the fifth tab in every mode.
@@ -45,7 +47,7 @@ const NOTIFICATION_STORAGE_KEY = 'astrospace.mobile.notificationPrefs';
   selector: 'as-settings-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, ProfileSwitcherComponent],
+  imports: [RouterLink, RouterLinkActive, ProfileSwitcherComponent],
   templateUrl: './settings-home.component.html',
   styleUrl: './settings-home.component.scss',
 })
@@ -53,6 +55,7 @@ export class SettingsHomeComponent {
   private readonly auth = inject(AuthService);
   private readonly kundlis = inject(KundliStore);
   private readonly theme = inject(ThemeService);
+  private readonly textSize = inject(TextSizeService);
   private readonly preferences = inject(PreferencesService);
   private readonly entitlements = inject(EntitlementService);
   readonly profileSwitcherOpen = signal(false);
@@ -126,6 +129,13 @@ export class SettingsHomeComponent {
           value: this.notificationLabel(),
           route: ['/m', 'settings', 'notifications'],
         },
+        {
+          id: 'alarms',
+          icon: 'set-notif',
+          label: 'Panchang alarms',
+          value: this.alarmLabel(),
+          route: ['/m', 'settings', 'alarms'],
+        },
       ],
     },
     {
@@ -138,6 +148,13 @@ export class SettingsHomeComponent {
           value: this.themeLabel(),
           route: ['/m', 'settings', 'appearance'],
         },
+        ...(this.textSize.available ? [{
+          id: 'text-size',
+          icon: 'set-text',
+          label: 'Text size',
+          value: this.textSizeLabel(),
+          route: ['/m', 'settings', 'text-size'],
+        }] : []),
         {
           id: 'language',
           icon: 'set-lang',
@@ -215,6 +232,7 @@ export class SettingsHomeComponent {
 
   constructor() {
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
+    void this.textSize.load();
     if (Capacitor.isNativePlatform()) {
       void CapacitorApp.getInfo()
         .then((info) => this.appVersion.set(`${info.version} (build ${info.build})`))
@@ -228,6 +246,12 @@ export class SettingsHomeComponent {
     const tier = this.entitlements.current()?.access_tier;
     const name = tier === 'pro' ? 'Practitioner' : tier === 'plus' ? 'Plus' : tier === 'free' ? 'Free' : null;
     return name ? `${name} · see plans, buy questions` : 'See plans, buy questions';
+  }
+
+  private textSizeLabel(): string {
+    const choice = this.textSize.choice();
+    return choice === 90 ? 'Small' : choice === 100 ? 'Standard' : choice === 115 ? 'Large'
+      : choice === 130 ? 'Extra large' : 'Same as phone';
   }
 
   private themeLabel(): string {
@@ -289,10 +313,21 @@ export class SettingsHomeComponent {
     try {
       const stored = JSON.parse(localStorage.getItem(NOTIFICATION_STORAGE_KEY) ?? '[]') as Array<{ id: string; on: boolean }>;
       if (!stored.length) return 'Daily reading, festivals, reminders';
-      const onCount = stored.filter((row) => row.on).length;
+      const onCount = stored.filter((row) => row.on && row.id !== 'windows').length;
       return onCount ? `${onCount} turned on` : 'All off';
     } catch {
       return 'Daily reading, festivals, reminders';
+    }
+  }
+
+  private alarmLabel(): string {
+    try {
+      const stored = JSON.parse(localStorage.getItem(ALARM_STORAGE_KEY) ?? '[]') as Array<{ on: boolean }>;
+      if (!stored.length) return 'Rahu Kalam, Abhijit';
+      const onCount = stored.filter((row) => row.on).length;
+      return onCount ? `${onCount} turned on` : 'All off';
+    } catch {
+      return 'Rahu Kalam, Abhijit';
     }
   }
 }

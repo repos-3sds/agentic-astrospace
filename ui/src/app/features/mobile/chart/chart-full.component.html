@@ -94,15 +94,16 @@
   <p class="hint">Tap a planet to see details</p>
   }
 
-  @if (preferences.experienceMode() === 'practitioner') {
+  @if (preferences.experienceMode() === 'practitioner' && !vargaLocked()) {
     <section class="data-section">
-      <p class="section-title">PLANETARY POSITIONS</p>
+      <p class="section-title">PLANETARY POSITIONS · {{ selectedVarga() }}</p>
       <div class="data-card positions-card">
-        <div class="positions-scroll" tabindex="0" aria-label="Planetary positions table">
+        <div class="positions-scroll" tabindex="0" [attr.aria-label]="'Planetary positions in ' + selectedVarga()">
           <div class="positions-table">
             <div class="positions-row positions-head">
               <span>Graha</span>
               <span>Sign</span>
+              <span>House</span>
               <span>Degree</span>
               <span>Nakshatra</span>
               <span>Pada</span>
@@ -113,16 +114,22 @@
               <button class="positions-row" type="button" (click)="openPlanetRow(row.planet)">
                 <span class="accent">{{ row.planet }}</span>
                 <span>{{ row.sign }}</span>
+                <span>{{ row.house }}</span>
                 <span>{{ row.degree }}</span>
                 <span>{{ row.nakshatra }}</span>
                 <span>{{ row.pada }}</span>
                 <span>{{ row.dignity }}</span>
                 <span [class.accent]="row.retrograde === 'R'">{{ row.retrograde }}</span>
               </button>
+            } @empty {
+              <div class="positions-row"><span>Not returned for this chart</span></div>
             }
           </div>
         </div>
       </div>
+      @if (degreeNote(); as note) {
+        <p class="hint">{{ note }}</p>
+      }
     </section>
 
     <section class="data-section">

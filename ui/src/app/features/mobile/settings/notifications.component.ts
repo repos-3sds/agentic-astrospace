@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { PushService } from '../../../core/push.service';
 import { EmailCategory, EmailSettingsService } from '../../../core/email-settings.service';
+import { RouterLink } from '@angular/router';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SubhashitaService } from '../../../core/subhashita.service';
 
@@ -20,6 +21,9 @@ export interface NotificationPref {
  * something bad will happen in it. An astrology app that can push notifications
  * is one keystroke away from monetising dread, so what it will not send belongs
  * on the screen where you choose what it does.
+ *
+ * Timing alerts (Rahu Kalam, Brahma Muhurta and the rest) moved to Panchang
+ * alarms, which the phone schedules itself; this screen links there.
  *
  * Remedy reminders default off. A practice someone chose is theirs to remember;
  * nagging about a streak is how a practice becomes a debt — the same reason the
@@ -43,7 +47,7 @@ export interface NotificationPref {
   selector: 'as-settings-notifications',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective],
+  imports: [BackLinkDirective, RouterLink],
   templateUrl: './notifications.component.html',
   styleUrl: './notifications.component.scss',
 })
@@ -56,12 +60,6 @@ export class NotificationsComponent {
     { id: 'morning', title: 'Morning brief', detail: 'Your day, every morning', on: true },
     // Off until a Sanskrit scholar has read the verses (docs/subhashita_corpus.md).
     { id: 'subhashita', title: 'Today’s Subhashita', detail: 'A verse from the Gita, Chanakya Niti and the Puranas, at 10 am', on: false },
-    {
-      id: 'windows',
-      title: 'Window alerts',
-      detail: 'Before Rahu Kalam and other windows',
-      on: true,
-    },
     {
       id: 'festivals',
       title: 'Festival reminders',
@@ -162,6 +160,18 @@ export class NotificationsComponent {
     this.busy.set(true);
     try {
       await this.push.enable();
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  /** What the last "Send a test notification" tap came back with. */
+  readonly testNote = signal<string | null>(null);
+
+  protected async sendTest(): Promise<void> {
+    this.busy.set(true);
+    try {
+      this.testNote.set(await this.push.sendTest());
     } finally {
       this.busy.set(false);
     }

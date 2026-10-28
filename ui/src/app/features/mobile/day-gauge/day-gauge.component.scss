@@ -41,7 +41,7 @@ svg { display: block; }
 
 .score {
   font-weight: 700;
-  font-size: 30px;
+  font-size: m-display-size(30px);
   line-height: 1;
   color: var(--m-text);
 }

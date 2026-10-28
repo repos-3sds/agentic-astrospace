@@ -53,6 +53,34 @@
   animation: panel-in var(--m-dur-slow) var(--m-ease-emphasized);
 }
 
+// Tablets: a floating card above the bottom edge instead of a full-width
+// sheet, as iPad and Android tablets present forms and details.
+@include m-tablet {
+  .panel {
+    right: 0;
+    left: 0;
+    bottom: max(24px, var(--m-safe-bottom));
+    width: min(600px, calc(100% - 48px));
+    margin-inline: auto;
+    box-sizing: border-box;
+    border-bottom: 1px solid var(--m-glass-border, var(--m-border));
+    border-radius: 32px;
+    padding-bottom: 28px;
+    max-height: min(88%, 900px);
+  }
+}
+
+// Across a hinge: on the right screen, never folded over the hinge.
+@include m-spanned {
+  .panel {
+    left: env(viewport-segment-left 1 0, 50%);
+    right: auto;
+    width: calc(env(viewport-segment-width 1 0, 50%) - 48px);
+    margin-left: 24px;
+    margin-right: 0;
+  }
+}
+
 // Following the finger: no easing between pointer moves.
 .panel.is-dragging { transition: none; }
 

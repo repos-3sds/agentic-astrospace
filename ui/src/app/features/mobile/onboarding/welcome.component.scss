@@ -52,7 +52,7 @@ main {
 }
 
 .wordmark {
-  font-size: 32px;
+  font-size: m-display-size(32px);
   line-height: .95;
   color: var(--m-accent-strong);
   margin: 0;

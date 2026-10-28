@@ -169,6 +169,38 @@ class TestPushTokens:
             db.close()
 
 
+# ── Test notification ────────────────────────────────────────────────────────
+
+class TestTestNotification:
+    def test_without_a_registered_phone_409(self, client):
+        app.dependency_overrides[current_user] = lambda: AuthUser(
+            id="test-user-no-phone", email="nophone@astrospace.dev", role="dev")
+        try:
+            r = client.post("/api/v1/me/test-notification")
+        finally:
+            app.dependency_overrides[current_user] = lambda: AuthUser(
+                id=ME, email="me@astrospace.dev", role="dev")
+        assert r.status_code == 409
+
+    def test_queues_one_job_due_now_for_this_reader_only(self, client, env):
+        client.put("/api/v1/me/push-tokens", json={"provider": "apns", "token": "tok-test-push"})
+        first = client.post("/api/v1/me/test-notification")
+        assert first.status_code == 200
+        assert "apns" in first.json()["devices"]
+        # A second tap in the same window is the same job, not a second push.
+        assert client.post("/api/v1/me/test-notification").json()["id"] == first.json()["id"]
+        db = env["Session"]()
+        try:
+            from astrospace.db.models import NotificationJob
+            job = db.query(NotificationJob).filter(NotificationJob.id == first.json()["id"]).one()
+            assert job.user_id == ME
+            assert job.status == "pending"
+            assert job.scheduled_for <= datetime.utcnow()
+            assert job in cm.claim_due_notifications(db, limit=50)
+        finally:
+            db.close()
+
+
 # ── Notification preferences ─────────────────────────────────────────────────
 
 class TestNotificationPreferences:

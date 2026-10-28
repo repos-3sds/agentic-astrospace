@@ -281,9 +281,6 @@ export class TodayComponent {
   readonly cacheFreshness = signal<ResourceFreshness | null>(null);
   readonly cacheUpdatedAt = signal<number | null>(null);
 
-  protected readonly headerInitial = computed(
-    () => this.view()?.initial ?? this.kundlis.active()?.name.slice(0, 1).toUpperCase() ?? 'A',
-  );
   protected readonly headerName = computed(
     () => this.view()?.greetingName ?? this.kundlis.active()?.name ?? 'there',
   );

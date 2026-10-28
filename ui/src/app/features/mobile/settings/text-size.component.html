@@ -1,0 +1,40 @@
+<a class="appbar" [asBack]="['/m', 'settings']">
+  <img src="mobile/back.svg" alt="" aria-hidden="true" />
+  <span class="crumb">Settings</span>
+</a>
+
+<main class="body">
+  <div class="intro">
+    <h1 class="title">Text size</h1>
+    <p class="lede">Make the words in <span class="siddha-brand">Siddha</span> larger or smaller. Other apps on your phone stay as they are.</p>
+  </div>
+
+  <div class="sample" aria-hidden="true">
+    <p class="sample-eyebrow">WHAT MATTERS TODAY</p>
+    <p class="sample-headline">Slow down and take care</p>
+    <p class="sample-body">A quieter day for you. Keep plans simple and go gently.</p>
+  </div>
+
+  <p class="eyebrow">SIZE</p>
+  <div class="choices" role="radiogroup" asSelectHaptic aria-label="Text size">
+    @for (option of options; track option.id) {
+      <button
+        class="choice"
+        type="button"
+        role="radio"
+        [class.is-on]="textSize.choice() === option.id"
+        [attr.aria-checked]="textSize.choice() === option.id"
+        (click)="select(option.id)"
+      >
+        <span class="glyph" aria-hidden="true" [style.font-size.px]="option.id ? 18 * option.id / 100 : 18">Aa</span>
+        <span class="choice-copy">
+          <span class="choice-label">{{ option.label }}</span>
+          <span class="choice-detail">{{ option.detail }}</span>
+        </span>
+        <span class="radio" aria-hidden="true"></span>
+      </button>
+    }
+  </div>
+
+  <p class="note">Headlines keep their size so each screen stays easy to scan.@if (textSize.readsPhone) { Your phone is set to {{ textSize.phonePercent() }}%.}</p>
+</main>

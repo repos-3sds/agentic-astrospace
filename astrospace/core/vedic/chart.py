@@ -13,12 +13,13 @@ from .positions import (
 )
 from .nakshatra import nakshatra_of
 from .panchanga import panchanga_of
-from .vargas import VARGA_FUNCTIONS, VARGA_INFO, UNVERIFIED_VARGAS
+from .vargas import VARGA_FUNCTIONS, VARGA_INFO, UNVERIFIED_VARGAS, varga_longitude
 from .strength import all_dignities, planetary_conditions, shadbala
 from .avkahada import avkahada_chakra
 from .ghatak import ghatak_of
 from .favourable import favourable_points
 from .dashas import vimshottari_dasha
+from .dasha_variants import vimshottari_variant
 from .ashtakavarga import ashtakavarga
 from .doshas import dosha_summary
 from .yogas import yoga_summary
@@ -36,7 +37,7 @@ from .shayanadi import all_shayanadi_avasthas
 from .argala import all_argala
 from .shashtyamsha import d60_deity
 from .yogini import yogini_dasha
-from .vimshopaka import vimshopaka_bala as vimshopaka_bala_of
+from .vimshopaka import dignity_in_varga, vimshopaka_bala as vimshopaka_bala_of
 from .chara_dasha import chara_dasha as chara_dasha_of
 from .bhava_chalit import bhava_chalit as bhava_chalit_of
 from .masa import amanta_masa, samvatsara, ritu, ayana
@@ -161,6 +162,11 @@ class VedicChart:
     def varga_chart(self, varga: str) -> dict:
         fn = VARGA_FUNCTIONS[varga]
         lagna_sign = fn(self.lagna_lon)
+        d1_annotations = self.planet_annotations() if varga == "D1" else None
+        combust = set()
+        if varga != "D1" and VARGA_SHOWS_COMBUST:
+            combust = {p for p, rows in self.planet_annotations().items()
+                       if any(r["code"] == "combust" for r in rows)}
         planets = {}
         d1_signs = {p: sign_index(d["lon"]) for p, d in self.positions.items()}
         for planet, data in self.positions.items():
@@ -172,7 +178,14 @@ class VedicChart:
                 "house": house_from_lagna(s, lagna_sign),
                 "retrograde": data["retrograde"],
                 "vargottama": varga == "D9" and s == d1_signs[planet],
+                # judged on this varga's signs, not the D1 dignity repeated
+                "dignity": dignity_in_varga(planet, varga, self.positions),
+                **_varga_degree(varga, data["lon"]),
             }
+            planets[planet]["annotations"] = (
+                d1_annotations[planet] if d1_annotations is not None
+                else _varga_annotations(planets[planet], planet in combust)
+            )
             if varga == "D60":
                 planets[planet]["deity"] = d60_deity(data["lon"])
         return {
@@ -187,8 +200,19 @@ class VedicChart:
                 "sign": sign_name(lagna_sign),
                 "sign_sanskrit": sign_name_sanskrit(lagna_sign),
                 "sign_index": lagna_sign,
+                **_varga_degree(varga, self.lagna_lon),
             },
             "planets": planets,
+            # D1 degrees are the planet's real position; a varga degree is not
+            "degree_convention": None if varga == "D1" else {
+                "is_convention_dependent": True,
+                "observance_note": (
+                    "Degree and nakshatra here use the varga longitude: how far the planet "
+                    "has moved through its division, spread over the whole sign "
+                    "(the Jagannatha Hora convention). Classical texts place a planet "
+                    "in a divisional chart by sign only."
+                ),
+            },
         }
 
     def all_varga_charts(self) -> dict:
@@ -252,6 +276,13 @@ class VedicChart:
         as_of = as_of or datetime.now(self.moment.dt_local.tzinfo)
         return vimshottari_dasha(
             self.positions["Moon"]["lon"], self.moment.dt_local, as_of,
+        )
+
+    def dasha_variant(self, variant: str, as_of: datetime = None) -> dict:
+        as_of = as_of or datetime.now(self.moment.dt_local.tzinfo)
+        return vimshottari_variant(
+            variant, self.positions["Moon"]["lon"], self.lagna_lon,
+            self.moment.dt_local, as_of,
         )
 
     def yogini_dashas(self) -> dict:
@@ -463,3 +494,37 @@ class VedicChart:
             "argala": self.argala(),
             "masa": self.masa(),
         }
+
+
+# Which symbols a divisional chart draws. Dignity is judged in the varga's
+# own signs. Retrograde is the planet's motion at birth, so it is the same in
+# every chart (as in BPHS practice and Jagannatha Hora). Combustion is
+# measured against the Sun in the birth chart, so it is marked on D1 only.
+VARGA_SHOWS_RETROGRADE = True
+VARGA_SHOWS_COMBUST = False
+
+
+def _varga_annotations(row: dict, combust: bool = False) -> list[dict]:
+    rows = []
+    if row["dignity"] == "Exalted":
+        rows.append({"code": "exalted", "symbol": "↑", "label": "Exalted", "tone": "good"})
+    elif row["dignity"] == "Debilitated":
+        rows.append({"code": "debilitated", "symbol": "↓", "label": "Debilitated", "tone": "bad"})
+    if VARGA_SHOWS_RETROGRADE and row["retrograde"]:
+        rows.append({"code": "retrograde", "symbol": "↺", "label": "Retrograde", "tone": "neutral"})
+    if combust:
+        rows.append({"code": "combust", "symbol": "☼", "label": "Combust", "tone": "warn"})
+    return rows
+
+
+def _varga_degree(varga: str, lon: float) -> dict:
+    """Degree within sign and nakshatra of a longitude inside a varga."""
+    vlon = varga_longitude(varga, lon)
+    nak = nakshatra_of(vlon)
+    return {
+        "longitude": round(vlon, 4),
+        "degree_in_sign": round(degree_in_sign(vlon), 4),
+        "dms": to_dms(degree_in_sign(vlon)),
+        "nakshatra": nak["name"],
+        "nakshatra_pada": nak["pada"],
+    }

@@ -246,7 +246,7 @@
 .positions-row {
   display: grid;
   // Nakshatra fits "Uttara Bhadrapada" at caption size; it clipped at 92 px (U34).
-  grid-template-columns: 78px 62px 74px 128px 40px 78px 28px;
+  grid-template-columns: 78px 78px 44px 74px 128px 40px 96px 28px;
   gap: 8px;
   align-items: center;
   width: 100%;

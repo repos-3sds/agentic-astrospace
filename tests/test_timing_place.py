@@ -206,3 +206,27 @@ def test_month_quality_rejects_bad_dates(env):
     assert client.get(f"/api/v1/panchanga/{kundli.id}/month", params={"from_date": "07/01/2026"}).status_code == 400
     assert client.get(f"/api/v1/panchanga/{kundli.id}/month",
                       params={"from_date": "2026-07-01", "days": 90}).status_code == 422
+
+
+def test_alarm_timings_match_the_day_view(env):
+    """The phone's panchang alarms are filled from /timings; each day must
+    carry the windows /today shows for that date, at the same place."""
+    client, kundli = env["client"], env["kundli"]
+    resp = client.get(f"/api/v1/panchanga/{kundli.id}/timings",
+                      params={"from_date": "2026-07-06", "days": 3, "timezone": "Asia/Kolkata"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert [d["date"] for d in body["days"]] == ["2026-07-06", "2026-07-07", "2026-07-08"]
+    today = client.get(f"/api/v1/panchanga/{kundli.id}/today",
+                       params={"date": "2026-07-07", "timezone": "Asia/Kolkata"}).json()
+    day = body["days"][1]
+    assert day["windows"] == today["windows"]
+    assert day["sunrise_iso"].startswith("2026-07-07T") and day["sunrise_iso"][11:16] == today["sunrise"]
+    assert day["sunset_iso"][11:16] == today["sunset"]
+    assert body["place"]["city"] == today["place"]["city"]
+
+
+def test_alarm_timings_cap_at_a_fortnight(env):
+    client, kundli = env["client"], env["kundli"]
+    assert client.get(f"/api/v1/panchanga/{kundli.id}/timings", params={"days": 15}).status_code == 422
+    assert client.get(f"/api/v1/panchanga/{kundli.id}/timings", params={"from_date": "bad"}).status_code == 400

@@ -1,0 +1,115 @@
+name: iOS launch check
+
+# Build 587 went to TestFlight green and crashed the moment testers opened it
+# on iOS 27 (2026-10-28: no scene lifecycle, see SceneDelegate.swift). A green
+# archive says nothing about launch, so this builds the same Release
+# configuration for the newest simulator the runner has, opens it, and fails
+# if the app is not still running half a minute later. The crash report, the
+# app's log and a screenshot are kept either way. It only catches what that
+# simulator's iOS enforces.
+
+on:
+  pull_request:
+    paths:
+      - 'ui/**'
+      - .github/workflows/ios-launch.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-launch-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  launch:
+    name: Open the Release build in the iOS simulator
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      PROJECT: ui/ios/App/App.xcodeproj
+      BUNDLE_ID: app.asksiddha.mobile
+      OUT: ${{ github.workspace }}/launch-check
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Newest Xcode 26
+        run: |
+          XC=$(ls -d /Applications/Xcode_26*.app | grep -viE 'beta|_rc' | sort -V | tail -1)
+          sudo xcode-select -s "$XC/Contents/Developer"
+          xcodebuild -version
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Web bundle into the iOS project
+        working-directory: ui
+        run: |
+          npm ci
+          npm run build
+          node scripts/clean-generated-artifacts.mjs --before-cap-sync
+          npx cap sync ios
+          node scripts/clean-generated-artifacts.mjs --after-cap-sync
+
+      - name: Build Release for the simulator
+        run: |
+          set -euo pipefail
+          xcodebuild -project "$PROJECT" -scheme App -configuration Release \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/dd" -quiet build CODE_SIGNING_ALLOWED=NO
+          APP="$RUNNER_TEMP/dd/Build/Products/Release-iphonesimulator/App.app"
+          echo "APP=$APP" >> "$GITHUB_ENV"
+          mkdir -p "$OUT"
+          {
+            echo "## Frameworks embedded"; ls "$APP/Frameworks" 2>&1 || true
+            echo "## Libraries the binary loads"; otool -L "$APP/App"
+          } | tee "$OUT/linkage.txt"
+
+      - name: Open it and keep watching
+        run: |
+          set -uo pipefail
+          UDID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          import re
+          def ver(rt):
+              return [int(n) for n in re.findall(r"\d+", rt.split("iOS")[-1])]
+          rts = sorted((rt for rt in json.load(sys.stdin)["devices"].items() if "iOS" in rt[0] and rt[1]),
+                       key=lambda kv: ver(kv[0]))
+          devs = rts[-1][1]
+          phones = [d for d in devs if d["name"].startswith("iPhone")]
+          print((phones or devs)[-1]["udid"], rts[-1][0], file=sys.stderr)
+          print((phones or devs)[-1]["udid"])')
+          echo "Simulator $UDID"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" "$APP"
+          xcrun simctl spawn "$UDID" log stream --style compact \
+            --predicate 'process == "App"' > "$OUT/app-log.txt" 2>&1 &
+          LOGPID=$!
+          xcrun simctl launch "$UDID" "$BUNDLE_ID"
+          sleep 30
+          xcrun simctl io "$UDID" screenshot "$OUT/after-30s.png" || true
+          kill $LOGPID 2>/dev/null || true
+          cp ~/Library/Logs/DiagnosticReports/App*.ips "$OUT/" 2>/dev/null || true
+          # To a file first: grep -q closing the pipe early fails it under pipefail.
+          xcrun simctl spawn "$UDID" launchctl list > "$OUT/launchctl.txt" 2>&1 || true
+          if grep -q "UIKitApplication:$BUNDLE_ID" "$OUT/launchctl.txt"; then
+            echo "### iOS launch check: still running after 30 s" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error::Siddha is not running 30 s after launch (crash report in the launch-check artifact)"
+            for f in "$OUT"/App*.ips; do [ -f "$f" ] && head -c 6000 "$f"; done
+            tail -100 "$OUT/app-log.txt"
+            exit 1
+          fi
+
+      - name: Keep the evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-launch-check
+          path: launch-check/
+          retention-days: 14

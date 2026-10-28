@@ -92,3 +92,8 @@
   line-height: 1.45;
 }
 .switch:disabled { opacity: 0.5; cursor: default; }
+
+.link-row {
+  text-decoration: none;
+  .chevron { width: 18px; height: 18px; flex-shrink: 0; filter: var(--settings-icon-filter); }
+}

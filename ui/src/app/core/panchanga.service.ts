@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 
 import { ApiService } from './api.service';
-import { MonthQualityPayload, PanchangaCity, PanchangaDay } from './models';
+import { MonthQualityPayload, PanchangaCity, PanchangaDay, TimingsPayload } from './models';
 import { PreferencesService } from './preferences.service';
 
 @Injectable({ providedIn: 'root' })
@@ -15,6 +15,15 @@ export class PanchangaService {
     if (selectedPlace?.city) params.set('city', selectedPlace.city);
     if (selectedPlace?.nation) params.set('nation', selectedPlace.nation);
     return this.api.get<PanchangaDay>(`/panchanga/${kundliId}/today?${params.toString()}`);
+  }
+
+  /** Sunrise, sunset and named windows for the days ahead, for the phone's alarms. */
+  timings(kundliId: string, days = 14): Promise<TimingsPayload> {
+    const selectedPlace = this.prefs.panchangaPlace();
+    const params = new URLSearchParams({ days: String(days), timezone: this.browserTimezone() });
+    if (selectedPlace?.city) params.set('city', selectedPlace.city);
+    if (selectedPlace?.nation) params.set('nation', selectedPlace.nation);
+    return this.api.get<TimingsPayload>(`/panchanga/${kundliId}/timings?${params.toString()}`);
   }
 
   /** Good / mixed / take-care for each day of a window, for the month grid. */

@@ -31,6 +31,12 @@ const config: CapacitorConfig = {
       iosKeychainPrefix: 'app.asksiddha.mobile',
       androidIsEncryption: true,
     },
+    LocalNotifications: {
+      // Panchang alarms (PanchangAlarmService): the same monochrome mark and
+      // accent as pushes, so a scheduled alarm looks like the rest of Siddha.
+      smallIcon: 'ic_stat_siddha',
+      iconColor: '#9A6B22',
+    },
     SplashScreen: {
       // Held until the web intro has painted: App calls SplashScreen.hide()
       // from afterNextRender (and again, as a safety net, when boot settles).
@@ -54,10 +60,10 @@ const config: CapacitorConfig = {
       resize: 'native' as KeyboardResize,
     },
     SocialLogin: {
-      // Google only (native sign-in sheet, see AuthService.signInWithGoogle).
-      // Apple stays on Supabase's hosted flow; Facebook off also keeps its
-      // SDK and the AD_ID permission out of the build.
-      providers: { google: true, facebook: false, apple: false, twitter: false },
+      // Google and Apple use their own sign-in sheets (AuthService
+      // signInWithGoogle / signInWithApple); Apple is called on iOS only.
+      // Facebook off also keeps its SDK and the AD_ID permission out of the build.
+      providers: { google: true, facebook: false, apple: true, twitter: false },
       logLevel: 1,
     },
     PushNotifications: {

@@ -44,7 +44,7 @@
             android:textColor="#DBFFECDC"
             android:textSize="13sp" />
 
-        <View
+        <FrameLayout
             android:layout_width="28dp"
             android:layout_height="1dp"
             android:layout_marginTop="8dp"

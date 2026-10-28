@@ -21,6 +21,8 @@ import {
   VedicAll,
   VimshopakaBalaPayload,
   YoginiDashaPayload,
+  DashaVariantKey,
+  DashaVariantPayload,
   YogasDoshasPayload,
 } from './models';
 import { ExperienceMode, PreferencesService, ReadingTone } from './preferences.service';
@@ -184,6 +186,10 @@ export class VedicService {
 
   yoginiDashas(kundliId: string): Promise<YoginiDashaPayload> {
     return this.cachedDetail<YoginiDashaPayload>('yogini-dashas', kundliId, `/vedic/${kundliId}/yogini-dashas?${this.calcParams()}`);
+  }
+
+  dashaVariant(kundliId: string, variant: DashaVariantKey): Promise<DashaVariantPayload> {
+    return this.cachedDetail<DashaVariantPayload>(`dasha-variant-${variant}`, kundliId, `/vedic/${kundliId}/dasha-variants/${variant}?${this.calcParams()}`);
   }
 
   jaimini(kundliId: string): Promise<JaiminiPayload> {

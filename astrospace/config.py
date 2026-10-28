@@ -97,6 +97,8 @@ VARS: tuple[Var, ...] = (
     Var("EMAIL_REPLY_TO"),
     Var("EMAIL_POSTAL_ADDRESS"),
     Var("OWNER_ALERT_EMAILS", "email_list"),
+    Var("RELEASE_CALLER"),
+    Var("RELEASE_TOKEN_AUDIENCE", "url"),
     Var("LEGAL_OPERATOR_NAME"),
     Var("LEGAL_CONTACT_EMAIL"),
 )

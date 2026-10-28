@@ -122,6 +122,47 @@ def personal_panchanga_today(
     return payload
 
 
+TIMINGS_MAX_DAYS = 14
+
+
+@router.get("/{kundli_id}/timings")
+def personal_timings(
+    kundli_id: str,
+    user: CurrentUser,
+    from_date: Optional[str] = Query(None, description="YYYY-MM-DD; default: today at the timing place"),
+    days: int = Query(TIMINGS_MAX_DAYS, ge=1, le=TIMINGS_MAX_DAYS),
+    city: Optional[str] = Query(None, description="Override location; default as /today"),
+    nation: Optional[str] = None,
+    timezone: Optional[str] = Query(None, description="Viewer IANA timezone, e.g. Asia/Singapore"),
+    db: Session = Depends(get_db),
+):
+    """Sunrise, sunset and the named windows for the days ahead, at the same
+    place and on the same clock as /today, for the phone's panchang alarms.
+
+    The alarms are scheduled on the device so they ring without a network;
+    this is the one call that fills them, a fortnight at a time."""
+    k = crud.get_kundli(db, kundli_id, user.id)
+    if not k:
+        raise HTTPException(status_code=404, detail="Kundli not found")
+    place = resolve_timing_place(k, timezone, city, nation)
+    start = date_cls(*_parse_date(from_date, place.today_tz))
+    out = []
+    try:
+        for offset in range(days):
+            day = start + timedelta(days=offset)
+            payload = daily_panchanga(day.year, day.month, day.day, place.city, place.nation,
+                                      place.lat, place.lng, place.tz_str)
+            out.append({
+                "date": payload["date"],
+                "sunrise_iso": payload["sunrise_iso"],
+                "sunset_iso": payload["sunset_iso"],
+                "windows": payload["windows"],
+            })
+    except (LocationError, ValueError, OverflowError) as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    return {"place": place.as_payload(), "days": out}
+
+
 @lru_cache(maxsize=32)
 def _moon_at_sunrise(year: int, city: str, nation: str) -> dict:
     return festivals.moon_signs(year, city=city, nation=nation)

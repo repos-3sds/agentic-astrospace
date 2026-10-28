@@ -1,10 +1,26 @@
 @use '../mobile-tokens' as *;
 
+$rail-inset: 12px;
+$rail-width: 80px;
+$rail-gap: 12px;
+
 :host {
   display: block;
   height: 100%;
   background: var(--m-app-ground, var(--m-bg));
   color: var(--m-text);
+}
+
+// Tablets: the five tabs move to a rail down the left edge, as native tablet
+// apps do, and stay there on pushed screens too. Nothing reserves room at the
+// bottom any more, so every screen that subtracts the tab bar gets it back.
+// --m-rail-space is how far content starts from the left edge; Today's sun
+// and Calendar's panes measure from it.
+@include m-tablet {
+  :host(.as-mobile) {
+    --m-tabbar-total: 0px;
+    --m-rail-space: calc(#{$rail-inset + $rail-width + $rail-gap} + env(safe-area-inset-left, 0px));
+  }
 }
 
 .shell {
@@ -17,8 +33,15 @@
   background: var(--m-app-ground, var(--m-bg));
 }
 
+.panes {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+}
+
 .content {
   flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
   box-sizing: border-box;
   padding-bottom: calc(var(--m-tabbar-total) + max(18px, var(--m-safe-bottom)));
@@ -34,6 +57,83 @@
 .content.tabs-hidden {
   padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
   scroll-padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+}
+
+@include m-tablet {
+  .shell { padding-left: var(--m-rail-space); }
+  .content,
+  .content.tabs-hidden {
+    padding-bottom: max(24px, var(--m-safe-bottom));
+    scroll-padding-bottom: max(24px, var(--m-safe-bottom));
+  }
+  .network-banner { margin-inline: 24px; }
+}
+
+// A reading column on tablets: phone screens were drawn for 375 and read
+// badly as 1100-wide bands. Today, Calendar and the chart hub lay themselves
+// out in two columns on wide tablets and take the full width there.
+@include m-tablet {
+  .content ::ng-deep > :not(router-outlet, .pane-empty) {
+    max-width: 760px;
+    margin-inline: auto;
+  }
+}
+
+@include m-wide {
+  .content.content ::ng-deep > :is(as-today, as-mobile-calendar, as-chart-hub) {
+    max-width: 1180px;
+  }
+}
+
+// Spanned across a hinge: where the left screen ends and the right begins,
+// and how much of the left screen is left after the rail. Single-pane screens
+// move to the right screen rather than run under the hinge; two-pane screens
+// put one pane on each side.
+@include m-spanned {
+  :host(.as-mobile) {
+    --m-hinge-start: env(viewport-segment-right 0 0, 50vw);
+    --m-hinge-end: env(viewport-segment-left 1 0, 50vw);
+    --m-hinge-gap: calc(var(--m-hinge-end) - var(--m-hinge-start));
+    --m-first-pane: calc(var(--m-hinge-start) - var(--m-rail-space));
+  }
+
+  .content.content ::ng-deep > :not(router-outlet, .pane-empty, as-today, as-mobile-calendar, as-chart-hub) {
+    max-width: env(viewport-segment-width 1 0, 540px);
+    margin-left: calc(var(--m-hinge-end) - var(--m-rail-space));
+    margin-right: 0;
+  }
+
+  .panes .pane-list { flex-basis: var(--m-first-pane); border-right: 0; }
+  .panes.has-list .content.content ::ng-deep > * { margin-left: var(--m-hinge-gap); }
+  .panes.has-list .pane-empty { margin-left: var(--m-hinge-gap); }
+}
+
+// Wide Settings: the list keeps its own scroll on the left; the page on the
+// right is the routed screen, as before.
+.pane-list {
+  flex: 0 0 380px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding-bottom: max(24px, var(--m-safe-bottom));
+  border-right: 1px solid var(--m-glass-hairline, var(--m-border));
+}
+
+.content.settings-root ::ng-deep > as-settings-home { display: none; }
+
+.pane-empty {
+  height: 100%;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--m-muted);
+  @include m-body;
+
+  img { width: 32px; height: 32px; opacity: 0.5; filter: var(--settings-icon-filter, none); }
+  p { margin: 0; }
 }
 
 .network-banner {
@@ -177,6 +277,28 @@
     box-shadow:
       inset 0 1px 0 color-mix(in srgb, var(--m-footer-shine) 72%, transparent),
       0 8px 20px rgba(32, 21, 14, 0.08);
+  }
+}
+
+@include m-tablet {
+  .tabbar {
+    top: calc(var(--m-safe-top) + #{$rail-inset});
+    right: auto;
+    bottom: max(#{$rail-inset}, var(--m-safe-bottom));
+    left: calc(#{$rail-inset} + env(safe-area-inset-left, 0px));
+    width: $rail-width;
+    box-sizing: border-box;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 6px;
+    padding: 10px 8px;
+    border-radius: 28px;
+  }
+
+  .tab {
+    flex: 0 0 auto;
+    min-height: 64px;
+    padding: 8px 2px;
   }
 }
 

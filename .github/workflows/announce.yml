@@ -1,0 +1,167 @@
+name: Announce
+
+# "Broadcast update": tell testers what is new in the build on closed testing
+# (docs/release_announcements.md). Run by hand, or by a Claude thread, only on
+# Hawk's word; nothing starts it on its own.
+#
+# It emails every reader who has "tips and reminders" email on (consent and
+# unsubscribe as for every other email), and emails the team the WhatsApp
+# channel post and broadcast message to paste. WhatsApp itself has no API for
+# channels or Business-app broadcast lists, so this never posts there.
+#
+# The notes are the ones previewed when the build went to internal testing
+# (ship.yml keeps them as the artifact release-notes-<versionCode>), unless
+# the run is given its own. One email per reader per build, however many
+# times this runs.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_code:
+        description: 'Build to announce (blank: the one on closed testing)'
+        type: string
+        default: ''
+      promote_to_closed:
+        description: 'Release this build to closed testing first (needs Hawk''s word for that too)'
+        type: boolean
+        default: false
+      notes:
+        description: 'Your own notes instead of the draft, one per line (blank: use the draft)'
+        type: string
+        default: ''
+      send_emails:
+        description: 'Email readers (off: only work out and show the texts)'
+        type: boolean
+        default: true
+
+concurrency:
+  group: announce
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read     # the draft notes artifact from the Ship run
+  id-token: write   # Workload Identity Federation, as in ship.yml
+
+env:
+  API_URL: https://agentic-astrospace-cwuqybpnzq-el.a.run.app
+  DEPLOYER_SA: github-deployer@gen-lang-client-0058562386.iam.gserviceaccount.com
+  PLAY_SA: play-publisher@gen-lang-client-0058562386.iam.gserviceaccount.com
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    # Only from main: the WIF provider admits main and nothing else.
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: play-auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.PLAY_SA }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/androidpublisher
+          create_credentials_file: false
+
+      - name: Which build
+        id: which
+        env:
+          PLAY_ACCESS_TOKEN: ${{ steps.play-auth.outputs.access_token }}
+          WANTED: ${{ inputs.version_code }}
+          PROMOTE: ${{ inputs.promote_to_closed }}
+        run: |
+          set -euo pipefail
+          CLOSED=$(python3 scripts/play_upload.py --track alpha --highest)
+          INTERNAL=$(python3 scripts/play_upload.py --track internal --highest)
+          VC=${WANTED:-$([ "$PROMOTE" = true ] && echo "$INTERNAL" || echo "$CLOSED")}
+          echo "Closed testing has $CLOSED, internal $INTERNAL; announcing $VC."
+          if [ "$PROMOTE" != true ] && [ "$VC" -gt "$CLOSED" ]; then
+            echo "::error::Build $VC is not on closed testing (it has $CLOSED). Testers could not get it yet. Release it to closed first, or tick 'promote_to_closed'."
+            exit 1
+          fi
+          { echo "vc=$VC"; echo "closed=$CLOSED"; } >> "$GITHUB_OUTPUT"
+
+      - id: release-auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOYER_SA }}
+          token_format: id_token
+          id_token_audience: ${{ env.API_URL }}
+          id_token_include_email: true
+          create_credentials_file: false
+
+      - name: The notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TOKEN: ${{ steps.release-auth.outputs.id_token }}
+          VC: ${{ steps.which.outputs.vc }}
+          SINCE: ${{ steps.which.outputs.closed }}
+          OWN_NOTES: ${{ inputs.notes }}
+        run: |
+          set -euo pipefail
+          if [ -n "$OWN_NOTES" ]; then
+            printf '%s\n' "$OWN_NOTES" | tr '|' '\n' | sed 's/^[[:space:]•-]*//; s/[[:space:]]*$//' | grep -v '^$' |
+              jq -R . | jq -s '{notes: .}' > release-notes.json
+            echo "Using the notes given to this run."
+          else
+            URL=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=release-notes-$VC&per_page=1" \
+              --jq '.artifacts[0].archive_download_url // empty')
+            if [ -n "$URL" ]; then
+              gh api "$URL" > notes.zip && unzip -o -q notes.zip
+              echo "Using the draft previewed when build $VC went to internal testing."
+            else
+              # No draft kept (older build, or the draft step failed): write one now.
+              [ "$SINCE" -lt "$VC" ] || SINCE=0
+              python3 scripts/release_changes.py --since "$SINCE" --to-version "$VC" > changes.json
+              jq -n --argjson vc "$VC" --slurpfile c changes.json '{version_code: $vc, changes: $c[0]}' |
+                curl -fsS -X POST "$API_URL/api/v1/releases/draft" -H "Authorization: Bearer $TOKEN" \
+                  -H 'Content-Type: application/json' --data @- > release-notes.json
+              echo "No kept draft for $VC; wrote one now."
+            fi
+          fi
+          jq -r '.notes[] | "- " + .' release-notes.json
+
+      - name: Release to closed testing
+        if: inputs.promote_to_closed && steps.which.outputs.vc != steps.which.outputs.closed
+        env:
+          PLAY_ACCESS_TOKEN: ${{ steps.play-auth.outputs.access_token }}
+          VC: ${{ steps.which.outputs.vc }}
+        run: |
+          NOTES=$(jq -r '.notes | map("• " + . + ".") | join("\n")' release-notes.json | cut -c1-500)
+          python3 scripts/play_upload.py --version-code "$VC" --track alpha --notes "$NOTES"
+
+      - name: Email readers, and the team the WhatsApp texts
+        if: inputs.send_emails
+        env:
+          TOKEN: ${{ steps.release-auth.outputs.id_token }}
+          VC: ${{ steps.which.outputs.vc }}
+        run: |
+          set -euo pipefail
+          jq --argjson vc "$VC" '{version_code: $vc, notes: .notes}' release-notes.json |
+            curl -fsS -X POST "$API_URL/api/v1/releases/announce" -H "Authorization: Bearer $TOKEN" \
+              -H 'Content-Type: application/json' --data @- > announced.json
+          echo "Reader emails queued: $(jq .reader_emails_queued announced.json)"
+
+      - name: Summary
+        if: always() && hashFiles('release-notes.json') != ''
+        env:
+          VC: ${{ steps.which.outputs.vc }}
+        run: |
+          {
+            echo "### Build $VC: what's new"
+            jq -r '.notes[] | "- " + .' release-notes.json
+            if [ -f announced.json ]; then
+              echo
+              echo "Reader emails queued: $(jq .reader_emails_queued announced.json) (they go out in the next worker run, 9 am to 8 pm their time)."
+              echo
+              echo "#### WhatsApp channel post"
+              echo '```'; jq -r .whatsapp_channel announced.json; echo '```'
+              echo "#### WhatsApp broadcast to testers"
+              echo '```'; jq -r .whatsapp_broadcast announced.json; echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

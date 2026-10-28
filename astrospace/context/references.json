@@ -15,7 +15,8 @@
     "2026-08-13: wealth KB extraction pass -- BPHS ch.13 (2nd house), ch.22 (11th house), ch.24.13-24 (2nd lord), ch.24.121-132 (11th lord). 34 new references. See docs/wealth_kb_bphs_2nd_11th_house.md.",
     "2026-09-18: four references cited texts absent from the corpus (charak_medical, light_on_relationships, jaimini_sutras x2). Every CLAIM was left exactly as written and only the CITATION moved, after confirming BPHS supports each one in the owned text: 'the Karaka or Significator of wife (Venus)' for the marriage rule, 'the 6th House, the House of disease' plus Saturn-as-delay and Mars-as-significator-of-wounds for the health rule, and the chara-karaka degree-ordering passage naming Putra Karaka, plus the Karakamsha navamsha chapter, for the two Jaimini rules. Two ref_ids were renamed because they named the source they no longer cite. Guarded from here by test_every_cited_source_is_actually_in_the_corpus.",
     "2026-09-19 (Phase 0, Saravali mining): added 7 references from the Saravali OCR export, which held 98k readable words at 94.9% — the most accurate text in the corpus — and had exactly ONE reference mined from it. Scope is narrower than the plan assumed: the copy we hold is Vol 1 (chapters 1-26 — planetary characters, yogas, planets-in-rasis) and does NOT contain the bhava-effect chapters, so only intellect_communication, field_of_study and debts could be honestly grounded. relocation (0 hits), domestic_peace, research and education-breaks are not in this volume; children material here is framed around progeny denial and deliberately not ingested; Rahu/Ketu significations are disease and fear vocabulary, so karmic_axis stays ungrounded. Statements are our own paraphrase; locations carry a sloka only where the text actually numbered one.",
-    "2026-09-19 (Phase 0, BPHS pass): closed children.relationship_with_children and education.research from BPHS Sharma Vol 1 (214k words, ch.1-46, carries the bhava-effect chapters Saravali Vol 1 lacks). education.breaks was attempted and DELIBERATELY LEFT OPEN: the only supporting material is a single worked example in Sharma's own commentary for one ascendant (debilitated 5th lord in the 4th), not a mula sloka — grounding a product claim on one modern commentator's illustration is weaker than leaving the subdomain honestly empty."
+    "2026-09-19 (Phase 0, BPHS pass): closed children.relationship_with_children and education.research from BPHS Sharma Vol 1 (214k words, ch.1-46, carries the bhava-effect chapters Saravali Vol 1 lacks). education.breaks was attempted and DELIBERATELY LEFT OPEN: the only supporting material is a single worked example in Sharma's own commentary for one ascendant (debilitated 5th lord in the 4th), not a mula sloka — grounding a product claim on one modern commentator's illustration is weaker than leaving the subdomain honestly empty.",
+    "2026-10-21 (couple report, Upapada and Navamsa): 11 marriage references from BPHS ch.30 and ch.7 (Santhanam), Uttara Kalamritam Kanda IV sl.39-40 and Phaladeepika IX.20 / XX.22. Only married-happiness and partner-nature content was stored. DELIBERATELY NOT INGESTED: BPHS 30.8-13 and UK IV.38-40's loss-of-wife, number-of-wives and wife's-lifespan clauses; BPHS 30.16-22 (the wife's named illnesses); BPHS 30.24-30 (sons and daughters from the Upapada); BPHS 30.9-10's Taurus/Gemini many-wives rule; the reverse halves of 30.14 (debilitated lord, low family) and UK IV.39 (debilitated malefic). Brihat Jataka's stri-jataka 7th-navamsa husband table and Phaladeepika XI.3 were read and left out: they are rules for a woman's chart only, and half of each is widowhood. See docs/marriage_kb_bphs_7th_house.md, 'Upapada and Navamsa'."
   ],
   "references": [
     {
@@ -3027,6 +3028,230 @@
       ],
       "status": "convention_dependent",
       "observance_note": "Two honest limits. The same sloka pairs this knowledge indication with a run of adverse character and health descriptions; only the knowledge half is carried, per the flag-not-verdict rule. And BPHS has no 'research' category of its own — mapping the 8th house to research and investigation is a modern reading of a classical significator, so this is supporting evidence, not a pinpoint classical rule."
+    },
+    {
+      "ref_id": "bphs30_1_upapada_benefic",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "harmony_discord",
+        "spouse_nature"
+      ],
+      "statement": "When the Upapada (the arudha of the 12th house) is joined or aspected by a benefic, married life and family life bring full happiness.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.30 v.1-4, p.242 (Santhanam trans.)"
+      },
+      "tags": [
+        "arudha:UL",
+        "benefic"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Upapada is taken as the arudha of the 12th house for every rising sign, as BPHS 30.2 reads; Santhanam's note prefers the 2nd house for an even rising sign after some Jaimini commentaries, and that variant is not used. Aspects are Parashari graha drishti, not Jaimini sign aspects; benefics are the natural benefics Jupiter, Venus and Mercury."
+    },
+    {
+      "ref_id": "bphs30_4_upapada_malefic",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "harmony_discord"
+      ],
+      "statement": "When the Upapada is in a malefic's sign, or joined or aspected by a malefic with no benefic link, married happiness is strained and the person can turn away from family life. The Sun counts as a malefic here only when debilitated or in an enemy's sign (v.6).",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.30 v.4-6, p.242 (Santhanam trans.)"
+      },
+      "tags": [
+        "arudha:UL",
+        "malefic"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Upapada is taken as the arudha of the 12th house for every rising sign, as BPHS 30.2 reads; Santhanam's note prefers the 2nd house for an even rising sign after some Jaimini commentaries, and that variant is not used. Aspects are Parashari graha drishti, not Jaimini sign aspects; benefics are the natural benefics Jupiter, Venus and Mercury."
+    },
+    {
+      "ref_id": "bphs30_5_upapada_benefic_relief",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "harmony_discord"
+      ],
+      "statement": "A benefic's aspect on, or conjunction with, the Upapada removes the strain that malefics bring there.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.30 v.5, p.242 (Santhanam trans.)"
+      },
+      "tags": [
+        "arudha:UL",
+        "benefic",
+        "malefic"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Upapada is taken as the arudha of the 12th house for every rising sign, as BPHS 30.2 reads; Santhanam's note prefers the 2nd house for an even rising sign after some Jaimini commentaries, and that variant is not used. Aspects are Parashari graha drishti, not Jaimini sign aspects; benefics are the natural benefics Jupiter, Venus and Mercury."
+    },
+    {
+      "ref_id": "bphs30_7_second_from_upapada_benefic",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "harmony_discord",
+        "spouse_nature"
+      ],
+      "statement": "When the 2nd from the Upapada is a benefic's sign, or holds or receives a benefic, the same good results for married life follow, and the partner is fortunate and virtuous (v.15).",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.30 v.7 and v.15, pp.243-244 (Santhanam trans.)"
+      },
+      "tags": [
+        "arudha:UL",
+        "benefic"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Upapada is taken as the arudha of the 12th house for every rising sign, as BPHS 30.2 reads; Santhanam's note prefers the 2nd house for an even rising sign after some Jaimini commentaries, and that variant is not used. Aspects are Parashari graha drishti, not Jaimini sign aspects; benefics are the natural benefics Jupiter, Venus and Mercury."
+    },
+    {
+      "ref_id": "bphs30_14_upapada_lord_exalted",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "spouse_nature"
+      ],
+      "statement": "When the lord of the Upapada is exalted, the partner comes from a good family.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.30 v.14, p.244 (Santhanam trans.)"
+      },
+      "tags": [
+        "arudha:UL",
+        "exaltation"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Upapada is taken as the arudha of the 12th house for every rising sign, as BPHS 30.2 reads; Santhanam's note prefers the 2nd house for an even rising sign after some Jaimini commentaries, and that variant is not used. Aspects are Parashari graha drishti, not Jaimini sign aspects; benefics are the natural benefics Jupiter, Venus and Mercury."
+    },
+    {
+      "ref_id": "uk4_39_upapada_benefic_character",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "spouse_nature"
+      ],
+      "statement": "A natural benefic in the Upapada gives a partner of good character and good qualities.",
+      "source": {
+        "text_key": "uttara_kalamrita",
+        "location": "Kanda IV, shloka 39, OCR export page 103"
+      },
+      "tags": [
+        "arudha:UL",
+        "benefic"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Upapada is taken as the arudha of the 12th house for every rising sign, as BPHS 30.2 reads; Santhanam's note prefers the 2nd house for an even rising sign after some Jaimini commentaries, and that variant is not used. Aspects are Parashari graha drishti, not Jaimini sign aspects; benefics are the natural benefics Jupiter, Venus and Mercury."
+    },
+    {
+      "ref_id": "uk4_40_darapada_upapada_benefic",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "harmony_discord",
+        "spouse_nature"
+      ],
+      "statement": "Married life is read from both the Darapada (arudha of the 7th) and the Upapada; when both carry benefic influence, the partner brings happiness and upholds the family.",
+      "source": {
+        "text_key": "uttara_kalamrita",
+        "location": "Kanda IV, shloka 40, OCR export page 104"
+      },
+      "tags": [
+        "arudha:A7",
+        "arudha:UL",
+        "benefic"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Upapada is taken as the arudha of the 12th house for every rising sign, as BPHS 30.2 reads; Santhanam's note prefers the 2nd house for an even rising sign after some Jaimini commentaries, and that variant is not used. Aspects are Parashari graha drishti, not Jaimini sign aspects; benefics are the natural benefics Jupiter, Venus and Mercury."
+    },
+    {
+      "ref_id": "bphs7_navamsa_for_spouse",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "spouse_nature",
+        "harmony_discord"
+      ],
+      "statement": "The Navamsa (D9) is the divisional chart read for the spouse and married life, alongside the birth chart.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.7 v.1-8, p.62 (Santhanam trans.)"
+      },
+      "tags": [
+        "varga:D9"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "bphs7_vimsopaka_varga_dignity",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "spouse_nature",
+        "harmony_discord"
+      ],
+      "statement": "A planet gains strength from its own, exalted and friendly divisions and loses it in enemy divisions; its dignity in the Navamsa counts toward how fully it gives its results.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.7 v.17-25, p.65 (Santhanam trans.)"
+      },
+      "tags": [
+        "varga:D9",
+        "dignity"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "phal9_vargottama_own_house",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "harmony_discord"
+      ],
+      "statement": "A planet in a Vargottama navamsa (the same sign in the birth chart and the Navamsa) gives results like a planet in its own house.",
+      "source": {
+        "text_key": "phaladeepika",
+        "location": "Adhyaya IX sloka 20, OCR export page 141 (Sastri trans.)"
+      },
+      "tags": [
+        "varga:D9",
+        "vargottama"
+      ],
+      "status": "verified_common"
+    },
+    {
+      "ref_id": "phal20_vargottama_dasha_favourable",
+      "domains": [
+        "marriage"
+      ],
+      "subdomains": [
+        "harmony_discord",
+        "timing_of_marriage"
+      ],
+      "statement": "The dasha of a planet in a Vargottama navamsa gives favourable results; they are mixed if that planet is combust or debilitated.",
+      "source": {
+        "text_key": "phaladeepika",
+        "location": "Adhyaya XX sloka 22, OCR export page 245 (Sastri trans.)"
+      },
+      "tags": [
+        "varga:D9",
+        "vargottama",
+        "dasha"
+      ],
+      "status": "verified_common"
     }
   ]
 }

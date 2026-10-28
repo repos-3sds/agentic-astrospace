@@ -26,7 +26,8 @@
 
 <header class="appbar">
   <button class="identity" type="button" (click)="profileSwitcherOpen.set(true)" aria-label="Switch profile">
-    <div class="avatar" aria-hidden="true">{{ headerInitial() }}</div>
+    <!-- The sun sits here (the sky behind); nothing is printed over it (Hawk, 2026-10-26). -->
+    <div class="avatar" aria-hidden="true"></div>
     <div class="who">
       <p class="name">{{ greeting() }}</p>
       <p class="date">{{ headerDate() }}</p>
@@ -91,6 +92,8 @@
       <a [routerLink]="['/m', 'birth-details']">Add birth details</a>
     </section>
   } @else if (view(); as v) {
+  <!-- Two columns on wide tablets (.col is display: contents on phones). -->
+  <div class="col col-day">
   <section class="card">
     @if (cacheFreshness() === 'stale') {
       <p class="cache-notice" role="status">{{ cacheAgeLabel() }} · refreshing</p>
@@ -164,7 +167,9 @@
     </span>
     <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
   </button>
+  </div>
 
+  <div class="col col-more">
   <a class="window" [routerLink]="['/m', 'calendar', 'day']" [queryParams]="{ date: todayDate() }"
      [attr.aria-label]="v.nextWindowLabel + ': ' + v.nextWindowValue + (v.nextWindowIn ? ', ' + v.nextWindowIn : '') + '. Open today in the calendar'">
     <div class="window-icon" aria-hidden="true">
@@ -288,6 +293,7 @@
       </section>
     }
   }
+  </div>
   </div>
   </div>
 

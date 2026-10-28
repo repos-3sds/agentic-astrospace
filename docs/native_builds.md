@@ -102,7 +102,7 @@ weeks). Xcode writes `Package.resolved` on first resolve; commit it once it
 exists. `Info.plist` declares `ITSAppUsesNonExemptEncryption = false`: the app
 uses only HTTPS and standard algorithms (SQLCipher for the on-device cache),
 which fall under the mass-market exemption — confirm that reading against
-the current export rules before the first upload. `PrivacyInfo.xcprivacy`
+the current export rules before the first upload. Location has both purpose strings, `NSLocationWhenInUseUsageDescription` and `NSLocationAlwaysAndWhenInUseUsageDescription`, although the app only ever asks for when-in-use: the geolocation plugin's code references the always API, and Apple's upload check (ITMS-90683, build 588) wants a string for every API the binary references. `PrivacyInfo.xcprivacy`
 declares UserDefaults (CA92.1) for `@capacitor/preferences`; any new plugin
 that touches a required-reason API needs its own entry (file timestamps, C617.1, are
 declared for `@capacitor/filesystem`, which stages the shared Ask PDF in the
@@ -119,12 +119,21 @@ the `NSMicrophoneUsageDescription` and `NSSpeechRecognitionUsageDescription`
 strings already in `Info.plist`.
 
 **Sign in with Apple.** App Review guideline 4.8 requires it because Google
-sign-in is offered. It runs through Supabase's hosted flow in the system
-browser, like Google, so the app needs no entitlement for it. The button shows
-only on iOS and only once the Supabase project's Apple provider is on
-(`AuthService.appleSignInEnabled()` reads `/auth/v1/settings`). The provider's
-secret is a JWT signed with an Apple key and expires after six months, so it
-must be regenerated in Supabase before then or Apple sign-in stops working.
+sign-in is offered. On the iPhone it is Apple's own sheet, which names Siddha
+(`@capgo/capacitor-social-login`, the `com.apple.developer.applesignin`
+entitlement), and its identity token goes to Supabase with
+`signInWithIdToken`; the hosted browser flow, which shows the Supabase project
+address, is only the fallback. The button shows only on iOS and only once the
+Supabase project's Apple provider is on (`AuthService.appleSignInEnabled()`
+reads `/auth/v1/settings`). Setup, done 2026-10-26: Services ID
+`app.asksiddha.signin` (return URL
+`https://wcaqjhqckipgkvhbiwjt.supabase.co/auth/v1/callback`), Sign in with Apple
+key `U2QUZJ7JRJ`, and Supabase's Apple "Client IDs"
+`app.asksiddha.signin,app.asksiddha.mobile` (the bundle ID is what the native
+sheet's token is issued to). The provider's OAuth secret, used only by the
+browser fallback, is a JWT signed with that key and expires after six months;
+regenerate it before then (a script for it was given to the owner) or the
+fallback stops working.
 
 **iPhone only.** `TARGETED_DEVICE_FAMILY` is 1. iPads still run the app in
 iPhone mode, and the store listing needs no iPad screenshots or iPad review.
@@ -239,8 +248,10 @@ the store listings point at the deployed URLs.
   and callback-intent delivery (M11-US03).
 - Push credentials (M11-US04). The code is in place on both sides; what a
   build needs is below under "Push notifications".
-- The native projects are not in CI; `npm run version:check` runs there, a
-  native build does not.
+- iOS is not built in CI. Android is: every merge that changes `ui/` builds
+  the signed AAB and uploads it to internal testing
+  ([ship_from_github.md](ship_from_github.md)), so the Mac recipe above is the
+  fallback, not the routine.
 
 ## Native Google sign-in
 
@@ -274,13 +285,15 @@ owns the Web client Supabase's Google provider uses):
    Run service (it is public; it already ships in every Google sign-in URL).
    The app reads it from `/api/v1/auth/config`, caches it, and uses it from
    the next launch after it first sees it.
-3. **iOS** (when building for iPhone): create an iOS OAuth client with bundle
-   ID `app.asksiddha.mobile`; add its reversed ID
-   (`com.googleusercontent.apps.<...>`) to `ui/ios/App/App/Info.plist`
-   under `CFBundleURLTypes` → `CFBundleURLSchemes`; add the iOS client ID to
-   Supabase → Authentication → Providers → Google → "Client IDs" after the
-   Web one (comma-separated), then set `GOOGLE_OAUTH_IOS_CLIENT_ID`. Until
-   then iOS keeps the browser flow.
+3. **iOS** (done 2026-10-26): the iOS OAuth client "Siddha iOS"
+   (`704387401358-ut69pqph9d7l60vh845kga4fevd8lmc4`, bundle ID
+   `app.asksiddha.mobile`, team `65G6LHRKWB`); its reversed ID
+   (`com.googleusercontent.apps.704387401358-ut69pqph9d7l60vh845kga4fevd8lmc4`)
+   is a `CFBundleURLSchemes` entry in both `Info.plist` and `Info-Debug.plist`;
+   the iOS client ID follows the Web one in Supabase → Authentication →
+   Providers → Google → "Client IDs". The last step is
+   `GOOGLE_OAUTH_IOS_CLIENT_ID` on the Cloud Run service; until the API
+   returns it, iOS keeps the browser flow.
 
 `capacitor.config.ts` bundles the Google provider only; Facebook is off, which
 also keeps the `AD_ID` permission out of the Android build. On Android a
@@ -327,9 +340,25 @@ How it fits together:
   font. The Subhashita wordmark is Samarkan cut down to the letters of
   "Siddha" (`res/font/samarkan_wordmark.ttf`). Font resources need Android
   8+; older phones fall back to the system face.
+- Layouts: only views RemoteViews can inflate (`FrameLayout`, `LinearLayout`,
+  `TextView`, `ImageView` and the other @RemoteView classes). A plain
+  `<View>` or `<Space>` builds and passes aapt, then the launcher says
+  "Couldn't add widget"; that broke Calendar, Subhashita and the large Your
+  day in #230. Use an empty `FrameLayout`. `tests/test_android_widgets.py`
+  checks every widget layout.
+- Opacity: each widget's card is an `ImageView` (`widget_bg`) under the
+  content, faded by `Widgets.applyOpacity` to the reader's setting
+  (Settings > Light or dark > Home screen widgets, 0-100%, Android only).
+  It is stored in its own prefs file (`siddha_widget_look`), so signing out
+  keeps it; the text is never faded.
 - Text size: widget text follows the phone's font size only between 100%
-  and 115% (`Widgets.MIN_TEXT_SCALE`, `MainActivity.MAX_TEXT_ZOOM`); outside
+  and 102% (`Widgets.MIN_TEXT_SCALE`, `MainActivity.MAX_TEXT_ZOOM`); outside
   that it is drawn at the nearer limit. The smallest widget text is 10sp.
+- In the app itself, Settings > Text size (Android only, `TextSizePlugin`)
+  lets a reader pick 90/100/115/130% for Siddha alone, stored in the
+  `siddha_text_size` prefs and applied by `MainActivity.applyTextZoom` before
+  the first screen draws. "Same as phone" follows the phone up to 102%.
+  Headlines ignore both (`m-display-size`). Widgets keep following the phone.
 - The calendar part also carries `days` (each of the next 7 days' tithi and
   the reader's good / mixed / care quality from `/panchanga/{id}/month`, as
   the Calendar tab) and `vrats` (`/festivals/vrat-days`), both fetched by
@@ -345,7 +374,10 @@ How it fits together:
   or if that audio is stale or won't play, it reads with the phone's own
   voice (Android TextToSpeech, en-IN, 0.9x). Either way it runs in a
   `mediaPlayback` foreground service with a Stop notification and reads
-  the same script as the Listen sheet. **Play Console:** App
+  the same script as the Listen sheet. The play button sends one toggle
+  and the service decides: a resize or a killed process can leave the
+  widget showing the wrong state, and a separate play and stop let a tap
+  on the wrong picture do nothing. **Play Console:** App
   content > Foreground service permissions needs a declaration for
   media playback ("reads the daily brief aloud when the user taps play on
   the widget") before an AAB with the widgets can be published.

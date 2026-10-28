@@ -91,8 +91,13 @@ export interface VargaChart {
   lagna: { sign: string };
   planets: Record<
     string,
-    { sign: string; sign_index?: number; house: number; retrograde?: boolean; vargottama?: boolean }
+    {
+      sign: string; sign_index?: number; house: number; retrograde?: boolean; vargottama?: boolean; dignity?: string;
+      degree_in_sign?: number; dms?: string; nakshatra?: string; nakshatra_pada?: number;
+      annotations?: PlanetConditionAnnotation[];
+    }
   >;
+  degree_convention?: { is_convention_dependent: boolean; observance_note: string } | null;
 }
 
 export interface CalculationProvenance {
@@ -684,6 +689,16 @@ export interface DashaPayload {
     pranadasha?: DashaPeriod | null;
     pranadashas?: DashaPeriod[];
   };
+}
+
+/** Practitioner Vimshottari variants (astrospace/core/vedic/dasha_variants.py). */
+export type DashaVariantKey = 'tribhagi' | 'kshema' | 'utpanna' | 'adhana' | 'd1_lagna' | 'd9_lagna' | 'd10_lagna';
+
+export interface DashaVariantPayload extends DashaPayload {
+  variant: DashaVariantKey;
+  seed: { point: string; longitude: number };
+  is_convention_dependent: boolean;
+  observance_note: string;
 }
 
 export interface AshtakavargaPayload {
@@ -1369,6 +1384,17 @@ export interface PanchangaDay {
     chandrabala: { favourable: boolean; chandrashtama: boolean; house_from_rashi: number };
     ghatak_alerts: { matched: boolean; type: string; ghatak_value: unknown }[];
   };
+}
+
+/** GET /panchanga/{id}/timings: the days ahead, for on-device alarms. */
+export interface TimingsPayload {
+  place: TimingPlacePayload;
+  days: {
+    date: string;
+    sunrise_iso: string;
+    sunset_iso: string;
+    windows: { auspicious: PanchangaWindow[]; inauspicious: PanchangaWindow[] };
+  }[];
 }
 
 export interface PanchangaCity {

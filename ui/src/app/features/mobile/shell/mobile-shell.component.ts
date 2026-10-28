@@ -27,6 +27,8 @@ import { AppLinksService } from '../../../core/app-links.service';
 import { RatingPromptService } from '../../../core/rating-prompt.service';
 import { TextKey } from '../../../core/i18n/en';
 import { TranslatePipe } from '../../../core/i18n/i18n.service';
+import { tabletLayout, wideLayout } from '../../../core/screen-size';
+import { SettingsHomeComponent } from '../settings/settings-home.component';
 
 interface MobileTab {
   commands: string[];
@@ -65,7 +67,7 @@ const DEEP_LINK_WINDOW_MS = 15_000;
   selector: 'as-mobile-shell',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, GenericErrorComponent, ScrollMemoryDirective, PullRefreshDirective, SubhashitaSheetComponent, TranslatePipe],
+  imports: [RouterOutlet, RouterLink, GenericErrorComponent, ScrollMemoryDirective, PullRefreshDirective, SubhashitaSheetComponent, SettingsHomeComponent, TranslatePipe],
   templateUrl: './mobile-shell.component.html',
   styleUrl: './mobile-shell.component.scss',
   host: { class: 'as-mobile' },
@@ -237,7 +239,21 @@ export class MobileShellComponent {
    * SheetOverlayService) but must not change the layout: `.content` keeps
    * its bottom padding, so the page behind the scrim does not jump.
    */
-  protected readonly tabsSuppressed = computed(() => this.layoutWithoutTabs() || this.overlay.open());
+  protected readonly tabsSuppressed = computed(
+    () => (this.layoutWithoutTabs() && !this.tablet()) || this.overlay.open(),
+  );
+
+  /** Tablet width: the tabs are a side rail, kept on pushed screens too. */
+  protected readonly tablet = tabletLayout();
+  private readonly wide = wideLayout();
+
+  /**
+   * Wide tablets show Settings as the iPad Settings app does: the list on the
+   * left, the chosen page on the right. Practitioner's Settings tab is the
+   * same list.
+   */
+  protected readonly settingsPane = computed(() => this.wide() && under(this.currentPath(), '/m/settings'));
+  protected readonly settingsRoot = computed(() => this.currentPath() === '/m/settings');
 
   protected readonly tabs = computed<MobileTab[]>(() => {
     if (this.preferences.experienceMode() === 'practitioner') {

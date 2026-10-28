@@ -20,6 +20,81 @@
     <as-generic-error role="alert" [message]="error()!" (retried)="retry()" />
   } @else if (!data()) {
     <section class="period-state"><b>No active profile</b><p>Select a profile before opening life periods.</p><a [routerLink]="['/m','settings','profiles']">Manage profiles</a></section>
+  } @else if (practitioner()) {
+  <div class="prac-controls">
+    @if (full()) {
+      <div class="system compact" role="tablist" asSelectHaptic aria-label="Dasha system">
+        <button type="button" role="tab" [class.is-on]="system() === 'vimshottari'" [attr.aria-selected]="system() === 'vimshottari'" (click)="chooseSystem('vimshottari')">Vimshottari</button>
+        <button type="button" role="tab" [class.is-on]="system() === 'yogini'" [attr.aria-selected]="system() === 'yogini'" (click)="chooseSystem('yogini')">Yogini</button>
+      </div>
+    }
+    @if (system() === 'vimshottari' && variantsAllowed()) {
+      <select
+        class="start-select"
+        [value]="start()"
+        [disabled]="variantLoading()"
+        (change)="chooseStart($any($event.target).value)"
+        aria-label="Start Vimshottari from"
+      >
+        @for (option of starts; track option.key) {
+          <option [value]="option.key" [selected]="option.key === start()">{{ option.label }}</option>
+        }
+      </select>
+    }
+  </div>
+  <p class="prac-meta">
+    @if (system() === 'yogini') { Yogini · 36-year cycle · Moon nakshatra } @else { {{ data()?.system }} · {{ startOption().seed }} }
+    @if (variantLoading()) { · computing… }
+  </p>
+  @if (variantError(); as message) { <p class="gloss variant-error" role="alert">{{ message }}</p> }
+  @if (system() === 'vimshottari' && variantNote(); as note) { <p class="gloss">{{ note }}</p> }
+  <as-birth-time-badge [profile]="kundlis.active()" detail="Period start and end dates are estimates." />
+
+  <section class="chain" aria-label="Running now">
+    <p class="eyebrow">RUNNING NOW</p>
+    @for (row of chain(); track row.level) {
+      <div class="chain-row">
+        <span class="chain-level">{{ row.level }}</span>
+        <b>{{ row.lord }}</b>
+        <span class="chain-dates">until {{ row.end }}</span>
+      </div>
+    } @empty {
+      <p class="gloss">No running period on today's date.</p>
+    }
+  </section>
+
+  <div class="tree" role="tree" aria-label="All periods">
+    <div class="tree-head" aria-hidden="true"><span>Period</span><span>Starts</span><span>Ends</span><span>Age</span></div>
+    @for (row of tree(); track row.key) {
+      <button
+        type="button"
+        role="treeitem"
+        class="node"
+        [class.lvl-1]="row.level === 1"
+        [class.lvl-2]="row.level === 2"
+        [class.is-active]="row.active"
+        [attr.aria-level]="row.level + 1"
+        [attr.aria-expanded]="row.expandable ? row.open : null"
+        (click)="toggle(row)"
+      >
+        <span class="node-lord">
+          <i class="caret" [class.is-open]="row.open" [class.is-leaf]="!row.expandable" aria-hidden="true"></i>{{ row.lord }}
+        </span>
+        <span>{{ row.start }}</span>
+        <span>{{ row.end }}</span>
+        <span class="node-age">{{ row.age }}</span>
+      </button>
+    }
+  </div>
+
+  @if (!full()) {
+    <as-plan-lock
+      from="dashas.full"
+      title="Deeper Dasha levels"
+      body="Pratyantar and the finer periods inside it, and the Yogini cross-check, come with Plus."
+      [compact]="true"
+    />
+  }
   } @else {
   <header class="heading">
     <h2>Life periods</h2>
@@ -30,7 +105,11 @@
         @if (system() === 'yogini') {
           Yogini dasha — an alternate 36-year period system
         } @else {
-          Vimshottari dasha — five levels, computed from Moon
+          @if (start() === 'standard') {
+            Vimshottari dasha — five levels, computed from Moon
+          } @else {
+            {{ data()?.system }} — five levels
+          }
         }
       </p>
     }
@@ -75,7 +154,30 @@
     </section>
     <p class="cycle-title">FULL 36-YEAR CYCLE</p>
   } @else {
-    @if (preferences.experienceMode() !== 'guided') {
+    @if (preferences.experienceMode() !== 'guided' && variantsAllowed()) {
+      <label class="start-from">
+        <span>Start from</span>
+        <select
+          [value]="start()"
+          [disabled]="variantLoading()"
+          (change)="chooseStart($any($event.target).value)"
+          aria-label="Start Vimshottari from"
+        >
+          @for (option of starts; track option.key) {
+            <option [value]="option.key" [selected]="option.key === start()">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+      @if (variantLoading()) {
+        <p class="gloss" role="status">Computing…</p>
+      }
+      @if (variantError(); as message) {
+        <p class="gloss variant-error" role="alert">{{ message }}</p>
+      }
+    }
+    @if (variantNote(); as note) {
+      <p class="gloss">{{ note }}</p>
+    } @else if (preferences.experienceMode() !== 'guided') {
       <p class="gloss">Vimshottari — the primary period system used here.</p>
     }
     <section class="active-period">

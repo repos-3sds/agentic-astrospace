@@ -307,12 +307,30 @@ export const MOBILE_ROUTES: Routes = [
       ),
   },
   {
+    path: 'settings/text-size',
+    title: 'Text size',
+    data: { hideMobileTabs: true },
+    loadComponent: () =>
+      import('./settings/text-size.component').then(
+        (m) => m.TextSizeComponent,
+      ),
+  },
+  {
     path: 'settings/language',
     title: 'Language and voice',
     data: { hideMobileTabs: true },
     loadComponent: () =>
       import('./settings/language-audio.component').then(
         (m) => m.LanguageAudioComponent,
+      ),
+  },
+  {
+    path: 'settings/alarms',
+    title: 'Panchang alarms',
+    data: { hideMobileTabs: true },
+    loadComponent: () =>
+      import('./settings/panchang-alarms.component').then(
+        (m) => m.PanchangAlarmsComponent,
       ),
   },
   {

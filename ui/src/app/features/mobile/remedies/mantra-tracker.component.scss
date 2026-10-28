@@ -150,7 +150,7 @@
 
 .count {
   font-weight: 700;
-  font-size: 40px;
+  font-size: m-display-size(40px);
   line-height: 1;
   color: var(--m-text);
   // Tabular figures: without them the ring's centre jitters as the count runs

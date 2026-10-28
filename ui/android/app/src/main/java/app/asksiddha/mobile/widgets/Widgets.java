@@ -22,6 +22,7 @@ import android.view.ViewGroup;
 import android.widget.RemoteViews;
 import android.widget.TextView;
 import app.asksiddha.mobile.MainActivity;
+import app.asksiddha.mobile.R;
 import java.util.Calendar;
 import java.util.Locale;
 import org.json.JSONArray;
@@ -104,6 +105,17 @@ public final class Widgets {
     }
 
     /**
+     * Fades the card behind a widget to the reader's setting, as Samsung's own
+     * widgets do. Every top-level widget layout puts its card in an ImageView
+     * with id widget_bg under the content, so only the card fades and the text
+     * stays at full strength.
+     */
+    static RemoteViews applyOpacity(Context context, RemoteViews views) {
+        views.setInt(R.id.widget_bg, "setImageAlpha", Math.round(255f * WidgetStore.opacity(context) / 100f));
+        return views;
+    }
+
+    /**
      * The smallest font scale widget text is drawn at. Below the phone's
      * normal size (Samsung goes down to about 80%) a widget's 10sp eyebrows
      * and day labels become hard to read, and the card does not grow any
@@ -117,7 +129,7 @@ public final class Widgets {
      * A widget is a fixed cell: at the large sizes titles clip and the timing
      * line falls off the bottom; at the small ones the eyebrows are unreadable.
      * So widget text follows the phone only between MIN_TEXT_SCALE (100%) and
-     * the app's own cap (MainActivity.MAX_TEXT_ZOOM, 115%) (Hawk, 2026-10-21).
+     * the app's own cap (MainActivity.MAX_TEXT_ZOOM, 102% since 2026-10-24) (Hawk, 2026-10-21).
      * Outside that range each text is set to the size it has at the nearer
      * limit, measured by inflating the same layout at that font scale, so
      * Android 14's non-linear scaling is kept. Only text views with an id can

@@ -1,75 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Your day, 4x2: the ring, the day's headline and the next window as a
      glass chip, on the Liquid Glass / Cream Glass card. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/widget_card"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:padding="18dp">
+    android:layout_height="match_parent">
 
-    <FrameLayout
-        android:layout_width="100dp"
-        android:layout_height="100dp">
+    <!-- The card, behind the content: the reader's opacity setting fades it
+         (Widgets.applyOpacity) and leaves the text as it is. -->
+    <ImageView
+        android:id="@+id/widget_bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_card" />
 
-        <ImageView
-            android:id="@+id/ring"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@null" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="18dp">
+
+        <FrameLayout
+            android:layout_width="100dp"
+            android:layout_height="100dp">
+
+            <ImageView
+                android:id="@+id/ring"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/score"
+                    style="@style/WidgetNumber"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="30sp" />
+
+                <TextView
+                    android:id="@+id/band"
+                    style="@style/WidgetBand"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp" />
+            </LinearLayout>
+        </FrameLayout>
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_weight="1"
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/score"
-                style="@style/WidgetNumber"
+                android:id="@+id/eyebrow"
+                style="@style/WidgetEyebrow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="30sp" />
+                android:text="@string/widget_today_eyebrow"
+                android:textColor="@color/widget_accent" />
 
             <TextView
-                android:id="@+id/band"
-                style="@style/WidgetBand"
+                android:id="@+id/headline"
+                style="@style/WidgetHeadline"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:maxLines="3" />
+
+            <TextView
+                android:id="@+id/timing"
+                style="@style/WidgetChip"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="3dp" />
-        </LinearLayout>
-    </FrameLayout>
-
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_weight="1"
-        android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/eyebrow"
-            style="@style/WidgetEyebrow"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/widget_today_eyebrow"
-            android:textColor="@color/widget_accent" />
-
-        <TextView
-            android:id="@+id/headline"
-            style="@style/WidgetHeadline"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:maxLines="3" />
-
-        <TextView
-            android:id="@+id/timing"
-            style="@style/WidgetChip"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
                 android:layout_marginTop="10dp" />
+        </LinearLayout>
     </LinearLayout>
-</LinearLayout>
+</FrameLayout>

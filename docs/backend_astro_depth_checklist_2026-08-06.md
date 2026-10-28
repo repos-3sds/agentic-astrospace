@@ -460,6 +460,22 @@ prompt rule 4a covering `convention_dependent` fields + Argala outcomes.
   that actually consume Abhijit; neither exists here. This is the missing
   consumer that would give `abhijit.py` live value beyond description.
   *Hook:* `abhijit.py` is what either should read from.
+- [x] **Vimshottari variants** — **CLOSED 2026-10-24** (Hawk, after
+  comparing a competitor's dasha list). `dasha_variants.py`: Tribhagi,
+  Kshema/Utpanna/Adhana Tara starts, and D1/D9/D10 Lagna starts, each a
+  thin wrapper over `vimshottari_dasha` (new `scale` argument; varga
+  lagnas via `dasha_variants.varga_lagna_longitude`, same JHora convention
+  as the varga-table `vargas.varga_longitude` from #246; fold into that one
+  once both are on main). Route
+  `/vedic/{id}/dasha-variants/{variant}`, plan flag `dashas.variants`
+  (Practitioner only), "Start from" select on the Life periods screen.
+  Flagged `is_convention_dependent`.
+- [ ] **Vimshottari started from a planet** (Sun..Ketu in D1, D9, D10 — 27
+  variants in the competitor's list). Deliberately left out: a list that
+  long buries the useful starts, and few teachers read them. *Unblocks
+  on:* a practitioner asking for a specific one. *Hook:* one more branch
+  in `dasha_variants.vimshottari_variant` seeding from
+  `positions[planet]["lon"]` (through `varga_lagna_longitude` for D9/D10).
 - [x] **Karakamsha** — **CLOSED 2026-09-01**. `jaimini.karakamsha()`:
   Atmakaraka's D9 sign, who occupies it, and who occupies the 5th sign
   from it, wired into `VedicChart.jaimini()` and exposed domain-
@@ -1839,3 +1855,52 @@ From the Muhurta audit (batches A–E built; these were left out on purpose).
   *Built 2026-10-21 (Hawk chose "Add the locked hint"):* a capped plan gets
   `locked_next` (date and quality, never the time) for the first good date
   in the 60 days past its horizon, shown as a Plus lock card on results.
+
+## Deferred backlog — WhatsApp sent from code (2026-10-23)
+
+- [ ] **Release announcements to WhatsApp without a person.** *Why not
+  built:* Channels and Business-app broadcast lists have no API; the
+  WhatsApp Business Platform via a provider (AiSensy, Interakt, Gupshup)
+  costs a plan from about ₹999 a month plus about ₹0.9 + GST per marketing
+  message, needs Meta business verification and approved templates, and
+  still cannot post to a Channel. For about 23 testers the free route (the
+  browser thread pasting the texts, on Hawk's yes) is enough. *Unblocks
+  when:* public launch, and Hawk picks a provider. *Hook:*
+  `astrospace/notifications/release_announcements.py` already writes
+  `whatsapp_broadcast`; a provider transport would send it as an approved
+  template from `POST /api/v1/releases/announce`, to readers who opted in to
+  WhatsApp (a new preference category). See
+  [release_announcements.md](release_announcements.md).
+
+## Deferred backlog — Ask colour advice (2026-10-26)
+
+- [ ] **Saturn for Virgo ascendant: neutral or helpful?** `FUNCTIONAL_BY_LAGNA[5]`
+  lists Saturn as neither benefic nor malefic, so `functional_planets()` puts
+  black and dark blue in `neutral` for Virgo. A practising astrologer reading a
+  Virgo tester's chart counted blue and black as good (Saturn rules the 5th, a
+  trikona, as well as the 6th). BPHS ch.36 vv.31-32 (G.C. Sharma) names only
+  Mercury and Venus as Virgo's benefics and Mars, Jupiter and Moon as malefics,
+  and leaves Saturn out; Sharma's note says Saturn's moolatrikona (Aquarius)
+  is the 6th, so it mostly gives 6th-house results. So the classics support
+  neutral; the astrologer's reading is a living-tradition difference (from a
+  research thread's OCR reading, not yet re-checked against the page).
+  *Why not built:* the standard list was kept until
+  Hawk decides; changing it moves every Virgo chart's "good planets" on the
+  Favourable screen too, not only Ask. *Unblocks when:* Hawk (or his mother) says
+  which convention to follow. *Hook:* `astrospace/core/vedic/constants.py`
+  `FUNCTIONAL_BY_LAGNA`, pinned by
+  `tests/test_ask_pushback.py::TestFunctionalColours::test_saturn_stays_neutral_for_virgo_until_decided`.
+- [ ] **Live pushback eval in CI.** `scripts/eval_ask_pushback.py` runs the
+  pushback cases against the real model with a judge call. *Why not built:* CI
+  has no model key and each run costs about three calls per case. *Unblocks
+  when:* a model key is added to GitHub secrets and a nightly budget is agreed.
+  *Hook:* `tests/fixtures/ask_pushback_cases.json`.
+- [ ] **Favourable screen colour uses one swatch and a non-classical Venus.**
+  `favourable_points()["lucky_color"]` is only the lagna lord's `PLANET_COLORS`
+  entry and ignores the functional list; `PLANET_COLORS` gives Venus "Blush
+  Pink", where Brihat Jataka II.4-5 and Phaladeepika II.9-13 give white or
+  variegated. Ask now uses `functional_planets()` / `PLANET_COLOUR_FAMILIES`
+  (Venus white, Saturn black), so the screen and Ask can name different
+  colours. *Why not built:* out of the Ask fix's scope and changes a screen
+  readers already see. *Unblocks when:* Hawk agrees the screen should show the
+  same suit/avoid colours. *Hook:* `favourable.py` `favourable_points()`.
