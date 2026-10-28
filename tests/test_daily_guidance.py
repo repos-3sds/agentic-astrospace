@@ -321,6 +321,44 @@ class TestScoring:
         bad = _score_day(base_personal, ctx)[0]
         assert bad < good
 
+    @staticmethod
+    def _day(tara, moon, challenging=3, supportive=0):
+        personal = {
+            "tarabala": {"tara": tara},
+            "chandrabala": {"favourable": moon == "good", "chandrashtama": moon == "chandrashtama"},
+            "ghatak_alerts": [],
+        }
+        ctx = {"supportive_rules": [{"severity": "supportive"}] * supportive,
+               "challenging_rules": [{"severity": "medium"}] * challenging}
+        return _score_day(personal, ctx)
+
+    def test_score_is_on_a_0_to_100_dial_centred_on_50(self):
+        # Hawk 2026-10-28: an average day is 50. Typical background transit
+        # pressure (three medium rules) with a good star and an ordinary Moon
+        # is an ordinary day, and lands in Steady.
+        score, tone, _ = self._day("Sampat", "ordinary")
+        assert 50 <= score < 70 and tone == "positive"
+        for args in [("Sampat", "good", 0, 4), ("Vipat", "chandrashtama", 8, 0)]:
+            assert 0 <= self._day(*args)[0] <= 100
+
+    def test_low_only_when_all_three_signals_are_poor(self):
+        # Star and Moon both at their worst, transits at the usual background:
+        # still Mixed, not the bottom band.
+        score, tone, _ = self._day("Vipat", "chandrashtama", challenging=3)
+        assert score >= 30 and tone == "mixed"
+        # All three poor: the bottom band.
+        score, tone, _ = self._day("Vipat", "chandrashtama", challenging=6)
+        assert score < 30 and tone == "caution"
+
+    def test_good_day_is_70_or_more(self):
+        score, tone, _ = self._day("Sampat", "good")
+        assert score >= 70 and tone == "supportive"
+
+    def test_verdict_carries_its_parts(self, guidance):
+        v = guidance["verdict"]
+        assert sum(v["score_parts"].values()) == v["score"] or v["score"] in (0, 100)
+        assert v["score_parts"]["base"] == 50
+
 
 class TestMasa:
     def test_both_month_reckonings_are_stated_with_the_convention(self, guidance):

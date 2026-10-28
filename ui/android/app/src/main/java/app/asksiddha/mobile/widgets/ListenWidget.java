@@ -79,10 +79,10 @@ public class ListenWidget extends BaseWidget {
         return dayLabel(today) + " · about " + minutes(today) + " min";
     }
 
-    /** "Steady day", or the label itself when it already reads whole ("Take care"). */
+    /** "Steady day", or the label itself when it already reads whole ("Go gently", "Take care"). */
     static String dayLabel(JSONObject today) {
         String label = today.optString("label");
-        return label.isEmpty() ? "Today" : label.endsWith("care") ? label : label + " day";
+        return label.isEmpty() ? "Today" : label.endsWith("care") || label.endsWith("gently") ? label : label + " day";
     }
 
     static long minutes(JSONObject today) {

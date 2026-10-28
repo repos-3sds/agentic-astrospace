@@ -1,8 +1,20 @@
 <as-sheet (dismissed)="dismissed.emit()">
   <header class="head">
     <p class="title">Why today is a {{ score() }}</p>
-    <p class="sub">Your day-quality gives extra weight to the signals that affect you most.</p>
+    <p class="sub">An ordinary day is about 50. It rises when your star, your Moon and the slow planets help you.</p>
   </header>
+
+  <div class="bands">
+    @for (b of bands; track b.band) {
+      <div class="band-row" [attr.data-band]="b.band" [class.on]="b.band === band()">
+        <span class="band-range">{{ b.range }}</span>
+        <div class="band-text">
+          <p class="band-name">{{ b.label }}@if (b.band === band()) { <span class="you">Today</span> }</p>
+          <p class="band-rubric">{{ b.rubric }}</p>
+        </div>
+      </div>
+    }
+  </div>
 
   <p class="reason">{{ reason() }}</p>
 

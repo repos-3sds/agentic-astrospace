@@ -405,7 +405,9 @@ export interface DailyGuidancePayload {
   vara: string;
   verdict: {
     tone: 'supportive' | 'positive' | 'mixed' | 'caution';
+    /** 0-100, an ordinary day near 50. Readings cached before 2026-10-28 carry the old signed tally and no score_parts. */
     score: number;
+    score_parts?: { base: number; star: number; moon: number; transits: number };
     headline: string;
     text: string;
     word_count: number;

@@ -13,15 +13,20 @@ svg { display: block; }
 // Hardcoded #e6dccd was the light theme's --m-border, so the unfilled part of
 // the ring stayed pale cream in dark mode — brighter than the score it frames.
 .track { stroke: var(--m-border); }
+.track[data-seg='tough']  { stroke: color-mix(in srgb, var(--m-bad) 22%, transparent); }
+.track[data-seg='mixed']  { stroke: color-mix(in srgb, var(--m-warn) 24%, transparent); }
+.track[data-seg='steady'] { stroke: color-mix(in srgb, var(--m-good) 20%, transparent); }
+.track[data-seg='good']   { stroke: color-mix(in srgb, var(--m-good) 32%, transparent); }
 
 // Colour follows the verdict band rather than being fixed green, so a hard day
 // does not render in a reassuring colour.
 .arc {
   stroke: var(--m-good);
-  transition: stroke-dashoffset 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: stroke-dasharray 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-:host([data-band='steady']) .arc { stroke: var(--m-good); }
+:host([data-band='good']),
+:host([data-band='steady']) { .arc { stroke: var(--m-good); } }
 :host([data-band='mixed'])  .arc { stroke: var(--m-warn); }
 :host([data-band='tough'])  .arc { stroke: var(--m-bad); }
 

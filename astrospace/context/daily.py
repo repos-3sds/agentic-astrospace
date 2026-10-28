@@ -214,36 +214,66 @@ def assemble_daily_context(chart, as_of: datetime, day_payload: dict,
     }
 
 
-def _score_day(personal: dict, ctx: dict) -> tuple[int, str, str]:
+# The day score is 0-100 and an ordinary day sits near 50 (Hawk, 2026-10-28:
+# "an avg day should be 50", and it should only fall low when all three
+# signals are poor). It starts at 50 and each of the three signals moves it:
+#
+#   star of the day (tarabala)   +15 favourable, -5 birth star, -8 otherwise
+#   Moon (chandrabala)           +10 favourable, -4 otherwise, -12 chandrashtama
+#   slow planets (gochara)       -10 .. +10, see _transit_points
+#
+# Measured over 2026 for five sample charts, the middle day lands at 53-62,
+# about a quarter of days are Good, and every day under 30 had all three
+# signals poor. It replaced a signed tally (-11..+5) that the app spread over
+# four equal quarters of the dial, which put 43-82% of days under "Take care"
+# and made an ordinary mixed day read 26.
+_SCORE_BASE = 50
+_TARA_POINTS = {"favourable": 15, "janma": -5, "other": -8}
+_MOON_POINTS = {"favourable": 10, "other": -4, "chandrashtama": -12}
+# A slow planet in a medium-severity place sits on a chart for months, so most
+# charts carry about -3 of transit pressure on any day (measured, same sample).
+# That is the background, not today's news: points count from there.
+_TRANSIT_BACKGROUND = -3
+_TRANSIT_STEP = 2.5
+_TRANSIT_CAP = 10
+
+# [lower bound, tone]. The tone names predate the 0-100 scale and are what the
+# headlines, closings and the brief agent key off. The app labels them
+# Good / Steady / Mixed / Go gently.
+DAY_BANDS = ((70, "supportive"), (50, "positive"), (30, "mixed"), (0, "caution"))
+
+
+def _transit_points(personal: dict, ctx: dict) -> int:
+    net = len(ctx["supportive_rules"])
+    net -= sum(2 if rule.get("severity") == "high" else 1 for rule in ctx["challenging_rules"])
+    net -= len([a for a in personal.get("ghatak_alerts", []) if a.get("matched")])
+    points = round((net - _TRANSIT_BACKGROUND) * _TRANSIT_STEP)
+    return max(-_TRANSIT_CAP, min(_TRANSIT_CAP, points))
+
+
+def _score_parts(personal: dict, ctx: dict) -> dict:
     tara = personal.get("tarabala", {})
     chandra = personal.get("chandrabala", {})
-    score = 0
     if tara.get("tara") in _FAVOURABLE_TARAS:
-        score += 2
+        star = _TARA_POINTS["favourable"]
     elif tara.get("tara") == "Janma":
-        score -= 1
+        star = _TARA_POINTS["janma"]
     else:
-        score -= 2
+        star = _TARA_POINTS["other"]
     if chandra.get("chandrashtama"):
-        score -= 3
+        moon = _MOON_POINTS["chandrashtama"]
     elif chandra.get("favourable"):
-        score += 1
+        moon = _MOON_POINTS["favourable"]
     else:
-        score -= 1
-    for rule in ctx["supportive_rules"]:
-        score += 1
-    for rule in ctx["challenging_rules"]:
-        score -= 2 if rule.get("severity") == "high" else 1
-    matched = [a for a in personal.get("ghatak_alerts", []) if a.get("matched")]
-    score -= len(matched)
+        moon = _MOON_POINTS["other"]
+    return {"base": _SCORE_BASE, "star": star, "moon": moon, "transits": _transit_points(personal, ctx)}
 
-    if score >= 3:
-        return score, "supportive", "a rare window of clarity"
-    if score >= 1:
-        return score, "positive", "a quietly powerful day"
-    if score >= -1:
-        return score, "mixed", "a day of friction and flow"
-    return score, "caution", "a day to pull back and observe"
+
+def _score_day(personal: dict, ctx: dict) -> tuple[int, str, str]:
+    parts = _score_parts(personal, ctx)
+    score = max(0, min(100, sum(parts.values())))
+    tone = next(tone for floor, tone in DAY_BANDS if score >= floor)
+    return score, tone, _HEADLINES[tone][0]
 
 
 _HEADLINES = {
@@ -311,6 +341,7 @@ def _verdict(chart, relation: str, day_payload: dict, personal: dict,
     return {
         "tone": tone,
         "score": score,
+        "score_parts": _score_parts(personal, ctx),
         "headline": headline.capitalize(),
         "text": text,
         "word_count": len(text.split()),

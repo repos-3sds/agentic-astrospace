@@ -379,6 +379,7 @@
 @if (openSheet() === 'quality' && view(); as v) {
   <as-day-quality-sheet
     [score]="v.score"
+    [band]="v.band"
     [signals]="signals()"
     [summary]="summary()"
     [reason]="scoreReason()"
