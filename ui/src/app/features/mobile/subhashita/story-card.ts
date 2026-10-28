@@ -1,4 +1,5 @@
 import { Subhashita, SUBHASHITA_TITLE } from '../../../core/subhashita.service';
+import { shareInviteText } from '../../../core/share-invite';
 
 /** WhatsApp and Instagram statuses are 9:16; 1080 wide is what both keep sharp. */
 export const STORY_WIDTH = 1080;
@@ -168,7 +169,7 @@ async function renderFile(verse: Subhashita): Promise<File> {
 /** The words alone, for a share that is text rather than a picture. */
 export function shareText(verse: Subhashita): string {
   const meaning = verse.meaning ? `\n\n${verse.meaning}` : '';
-  return `${verse.sanskrit}\n\n“${verse.english}”\n— ${verse.source} ${verse.ref}${meaning}\n\n${SUBHASHITA_TITLE}, from the Siddha app: https://asksiddha.app`;
+  return `${verse.sanskrit}\n\n“${verse.english}”\n— ${verse.source} ${verse.ref}${meaning}\n\n${SUBHASHITA_TITLE}, from the Siddha app.\n${shareInviteText()}`;
 }
 
 /** "Friday, 17 October", built from the parts so no timezone can move the day. */

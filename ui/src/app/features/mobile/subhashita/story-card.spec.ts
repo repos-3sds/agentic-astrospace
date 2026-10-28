@@ -1,3 +1,4 @@
+import { shareInviteText } from '../../../core/share-invite';
 import { longDate, renderStoryCard, shareText, STORY_HEIGHT, STORY_WIDTH, wrapWords } from './story-card';
 
 describe('story card', () => {
@@ -24,6 +25,7 @@ describe('story card', () => {
     expect(text).toContain('— Bhagavad Gita 2.47');
     expect(text).toContain(verse.meaning);
     expect(text).toContain('https://asksiddha.app');
+    expect(text).toContain(shareInviteText());
   });
 
   it('keeps a danda with the word before it (D11)', () => {
