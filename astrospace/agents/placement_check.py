@@ -38,7 +38,9 @@ _IN_HOUSE = re.compile(
     re.IGNORECASE)
 # "Venus in your 5th house", with no verb.
 _BARE_IN_HOUSE = re.compile(
-    _PLANET + r"\s+(?:\(\w+\)\s+)?in\s+(?:your|the|her|his|their)\s+(?:" + _ORDINAL + r")\s+house\b",
+    _PLANET + r"\s+(?:\(\w+\)\s+)?in\s+(?:(?:your|the|her|his|their)\s+)?(?:" + _ORDINAL + r")\s+"
+    r"(?:house\b|(?=(?:Aries|Taurus|Gemini|Cancer|Leo|Virgo|Libra|Scorpio|Sagittarius|Capricorn|"
+    r"Aquarius|Pisces)\b))",
     re.IGNORECASE)
 # "your 5th house holds / has / hosts Venus, Mercury and the Sun"
 _HOUSE_HOLDS = re.compile(
@@ -52,7 +54,7 @@ _NEGATION = re.compile(r"\b(?:not|no|never|neither|nor)\b", re.IGNORECASE)
 _NOT_PLACEMENT = re.compile(r"\b(?:lord|lords|ruler|rules|ruling|owner|owns|aspect|aspects|"
                             r"aspecting|looks? at|karaka)\b", re.IGNORECASE)
 # "... in the 6th house with Ketu and Saturn"
-_WITH = re.compile(r"^\s*,?\s*(?:together |along )?(?:with|alongside|beside|next to|and)\b",
+_WITH = re.compile(r"^\s*,?\s*(?:together |along )?(?:with|alongside|beside|next to)\b",
                    re.IGNORECASE)
 
 
@@ -84,9 +86,13 @@ def stated_placements(text: str) -> list[tuple[str, int, str]]:
     for sentence in _sentences(text):
         if _OTHER_FRAME.search(sentence):
             continue
+        previous_end = 0
         for match in _IN_HOUSE.finditer(sentence):
             house = _house(match, 1, 2)
-            head = sentence[:match.start()]
+            # "Jupiter is in the 4th house and Rahu is in the 12th": the
+            # second claim's subject starts after the first claim.
+            head = sentence[previous_end:match.start()]
+            previous_end = match.end()
             boundaries = list(_CLAUSE_START.finditer(head))
             subject = head[boundaries[-1].end():] if boundaries else head
             matched = sentence[match.start():match.end()]
@@ -95,9 +101,10 @@ def stated_placements(text: str) -> list[tuple[str, int, str]]:
             tail = sentence[match.end():]
             companions = []
             if _WITH.match(tail):
-                stop = _CLAUSE_START.search(tail) or re.search(r",\s+(?!and\b)", tail[1:])
-                companions = _planets_in(tail[:stop.start() + (0 if _CLAUSE_START.search(tail) else 1)]
-                                         if stop else tail)
+                stop = re.search(r"[;:—,]|\b(?:but|while|which|where|so|showing|giving|making|"
+                                 r"is|are|sits?|gives?|shows?)\b", tail[_WITH.match(tail).end():])
+                rest = tail[_WITH.match(tail).end():]
+                companions = _planets_in(rest[:stop.start()] if stop else rest)
             for planet in [*_planets_in(subject), *companions]:
                 claims.append((planet, house, sentence.strip()))
         for match in _BARE_IN_HOUSE.finditer(sentence):
@@ -133,3 +140,57 @@ def birth_placements(chart) -> dict:
     details = chart.planet_details() or {}
     return {planet: {"house": row.get("house"), "sign": row.get("sign")}
             for planet in PLANETS if (row := details.get(planet))}
+
+
+SIGNS = ("Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio",
+         "Sagittarius", "Capricorn", "Aquarius", "Pisces")
+_SIGN = r"\b(" + "|".join(SIGNS) + r")\b"
+# "Gemini (3rd house)", "the 3rd house (Gemini)", "12th Virgo", "4th house, Capricorn"
+_SIGN_HOUSE = [
+    (re.compile(_SIGN + r"\s*\(\s*(?:the\s+|your\s+)?(?:" + _ORDINAL + r")(?:\s+house)?\b", re.IGNORECASE),
+     1, 2, 3),
+    (re.compile(r"(?:" + _ORDINAL + r")(?:\s+house)?\s*[(,]?\s*(?:in\s+)?" + _SIGN, re.IGNORECASE),
+     3, 1, 2),
+]
+
+
+def lagna_sign(placements: dict) -> int | None:
+    """The Lagna's sign index, read back from any planet's sign and house."""
+    for row in placements.values():
+        sign, house = (row or {}).get("sign"), (row or {}).get("house")
+        if sign in SIGNS and house:
+            return (SIGNS.index(sign) - (int(house) - 1)) % 12
+    return None
+
+
+def wrong_sign_houses(text: str, placements: dict) -> list[tuple[str, int, int, str]]:
+    """(sign, stated house, real house, sentence) where the text pairs a sign
+    with a birth-chart house number that does not match the Lagna."""
+    base = lagna_sign(placements)
+    if base is None:
+        return []
+    wrong = []
+    for sentence in _sentences(text):
+        if _OTHER_FRAME.search(sentence):
+            continue
+        for pattern, sign_group, digits_group, word_group in _SIGN_HOUSE:
+            for match in pattern.finditer(sentence):
+                house = _house(match, digits_group, word_group)
+                sign = match.group(sign_group).capitalize()
+                if house is None:
+                    continue
+                actual = (SIGNS.index(sign) - base) % 12 + 1
+                if actual != house:
+                    wrong.append((sign, house, actual, sentence.strip()))
+    return list(dict.fromkeys(wrong))
+
+
+def drop_false_sentences(text: str, placements: dict) -> str:
+    """The text without any sentence that misplaces a planet or pairs a sign
+    with the wrong house. For model text that cannot be sent back for repair
+    (the angle reasons on the "How we weighed it" card)."""
+    if not placements:
+        return text
+    kept = [s for s in _sentences(text)
+            if not wrong_placements(s, placements) and not wrong_sign_houses(s, placements)]
+    return " ".join(kept)

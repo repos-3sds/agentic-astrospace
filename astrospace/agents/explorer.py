@@ -37,6 +37,7 @@ from pydantic import BaseModel, ConfigDict
 
 from .ask_tools import TOOL_SPECS, ChartTools, summarize_call
 from .base import BaseAstroAgent, compact_json
+from .placement_check import birth_placements, drop_false_sentences
 from .style import PLAIN_INDIAN_ENGLISH
 
 log = logging.getLogger(__name__)
@@ -92,7 +93,8 @@ def _plain_why(text: str) -> str:
     return re.sub(r"\s{2,}", " ", text).strip(" ,;")
 
 
-def weighing_view(angles: list[dict] | None, overall: dict | None) -> dict | None:
+def weighing_view(angles: list[dict] | None, overall: dict | None,
+                  placements: dict | None = None) -> dict | None:
     """The reader-facing "How we weighed it" card: each angle's call and
     weight in a fixed order, its reason without internal refs, and the
     combined band."""
@@ -108,7 +110,7 @@ def weighing_view(angles: list[dict] | None, overall: dict | None) -> dict | Non
             "key": key, "label": label, "plain_label": ANGLE_PLAIN[key],
             "call": row["call"],
             "weight": max(1, min(5, int(row.get("weight") or default_weight))),
-            "why": _plain_why(str(row.get("why") or ""))[:300],
+            "why": drop_false_sentences(_plain_why(str(row.get("why") or "")), placements or {})[:300],
         })
     return {"angles": rows, "overall": overall}
 
@@ -472,12 +474,17 @@ class ChartExplorer(BaseAstroAgent):
             for row in found.get("rule_verdicts") or []
             if isinstance(row, dict) and row.get("id") and row.get("verdict") in VERDICTS
         }
-        lines = [*(found.get("findings") or [])]
+        try:
+            placements = birth_placements(self.chart_tools.chart)
+        except Exception:  # a check, never a reason to lose the findings
+            placements = {}
+        lines = [drop_false_sentences(str(line), placements) for line in found.get("findings") or []]
         overall = combine_angles(found.get("angles") or [])
         for row in found.get("angles") or []:
             if isinstance(row, dict) and row.get("angle") in ANGLES:
+                why = drop_false_sentences(str(row.get("why", "")), placements)
                 lines.append(f"Angle {ANGLES[row['angle']][0]}: {row.get('call')} "
-                             f"(weight {row.get('weight')}) - {row.get('why', '')}")
+                             f"(weight {row.get('weight')}) - {why}")
         if overall:
             lines.append(f"Overall, all angles weighed: {overall['band']} (score {overall['score']} "
                          "on a -2 to +2 scale)")
@@ -504,7 +511,7 @@ class ChartExplorer(BaseAstroAgent):
             "reader_facts": [str(f)[:300] for f in found.get("reader_facts") or []][:10],
             "submitted": self.submitted is not None,
             "overall": overall,
-            "weighing": weighing_view(found.get("angles"), overall),
+            "weighing": weighing_view(found.get("angles"), overall, placements),
         }
 
 

@@ -539,6 +539,23 @@ class TestPlacementsMatchTheChart:
                       "Rahu is not in your 5th house."):
             assert claims(other) == [], other
 
+    def test_two_claims_in_one_sentence_keep_their_own_planets(self):
+        from astrospace.agents.placement_check import stated_placements as said
+        sentence = ("Amatyakaraka Jupiter is debilitated in the 4th house and Atmakaraka Rahu is in "
+                    "the 12th house.")
+        assert [c[:2] for c in said(sentence)] == [("Jupiter", 4), ("Rahu", 12)]
+        assert [c[:2] for c in said("Your 2nd lord Mars sits in the 12th house with Rahu.")] == \
+            [("Mars", 12), ("Rahu", 12)]
+
+    def test_a_sign_paired_with_the_wrong_house_is_caught(self):
+        from astrospace.agents.placement_check import wrong_sign_houses, drop_false_sentences
+        signs = {"Moon": {"house": 1, "sign": "Libra"}, "Mars": {"house": 12, "sign": "Virgo"}}
+        assert [w[:3] for w in wrong_sign_houses("AL in Gemini (3rd house of media).", signs)] == \
+            [("Gemini", 3, 9)]
+        assert wrong_sign_houses("Rahu in 12th Virgo. Jupiter in 4th Capricorn.", signs) == []
+        assert drop_false_sentences("Karakamsha is fine. AL in Gemini (3rd house). Moon is strong.",
+                                    signs) == "Karakamsha is fine. Moon is strong."
+
     def test_a_wrong_placement_is_a_safety_violation(self):
         from astrospace.agents.verifier import verify
         bundle = {"birth_placements": self.KAVYA, "references": [{"ref_id": "houses"}]}

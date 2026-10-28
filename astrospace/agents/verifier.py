@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import re
 
-from .placement_check import wrong_placements
+from .placement_check import wrong_placements, wrong_sign_houses
 
 from .safety import _negation_precedes, _normalize, dosha_overclaim_kind, prohibited_verdict
 from .schema import StructuredReading
@@ -597,6 +597,10 @@ def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
                 violations.append(Violation(
                     f"wrong placement: the birth chart has {planet} in the {_ordinal(actual)} house, "
                     f"not the {_ordinal(stated)}, in: {sentence!r}", "safety", field))
+            for sign, stated, actual, sentence in wrong_sign_houses(text, placements):
+                violations.append(Violation(
+                    f"wrong house for a sign: {sign} is the {_ordinal(actual)} house in this birth "
+                    f"chart, not the {_ordinal(stated)}, in: {sentence!r}", "safety", field))
     violations.extend(band_violations(reading, bundle))
     violations.extend(bindu_lean_violations(reading, bundle))
 
