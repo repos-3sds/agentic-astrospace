@@ -248,6 +248,9 @@ export class VedicService {
         if (this.canCommitResource(requestEpoch, identity, currentIdentity)) {
           this.dailyValues.set(cacheKey, value);
           if (identity) this.cacheDailyGuidance(identity, value);
+        } else {
+          // Answered for a profile revision or place that has since changed.
+          this.dailyCache.delete(cacheKey);
         }
         return value;
       }).catch((e) => {
@@ -279,8 +282,13 @@ export class VedicService {
         this.dailyValues.set(cacheKey, stored.data);
         return stored;
       }
-      this.dailyValues.delete(cacheKey);
-      this.dailyCache.delete(cacheKey);
+      // A value that has left the device cache has expired; drop it. A
+      // request still in flight (the profile warm-up's, say) is kept, so the
+      // screen that asks next joins it rather than starting a second one.
+      if (memory) {
+        this.dailyValues.delete(cacheKey);
+        this.dailyCache.delete(cacheKey);
+      }
       return null;
     }
     if (memory) {

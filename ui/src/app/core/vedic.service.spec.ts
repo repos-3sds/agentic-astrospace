@@ -78,6 +78,18 @@ describe('VedicService location-sensitive caches', () => {
     expect(api.get).toHaveBeenCalledTimes(2);
   });
 
+  it('lets a screen join a warm-up request still in flight instead of starting another', async () => {
+    let answer!: (value: unknown) => void;
+    api.get.and.returnValue(new Promise((resolve) => (answer = resolve)) as never);
+    const warmup = service.dailyGuidance('profile-1');
+    // Today switches to the profile while the warm-up is still out.
+    expect(service.cachedDailyGuidanceEntry('profile-1')).toBeNull();
+    const screen = service.dailyGuidance('profile-1');
+    expect(api.get).toHaveBeenCalledTimes(1);
+    answer({ date: '2026-08-11' });
+    expect(await screen).toEqual(await warmup);
+  });
+
   it('does not resurrect hard-expired Today data from a suspended WebView memory cache', async () => {
     const clock = spyOn(Date, 'now').and.returnValue(1_000);
     await service.dailyGuidance('profile-1');

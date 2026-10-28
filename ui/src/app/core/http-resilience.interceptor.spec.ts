@@ -130,6 +130,9 @@ describe('httpResilienceInterceptor', () => {
     '/api/v1/muhurta/k?goal=start_venture&date_from=2026-10-17',
     '/api/v1/vedic/k/calendar-intelligence?days=45',
     '/api/v1/festivals/upcoming?city=Kakinada&days=31',
+    // A profile switch on a server waking from idle (2026-10-28).
+    '/api/v1/context/k/daily?timezone=Asia%2FKolkata',
+    '/api/v1/vedic/k/all?ayanamsha=lahiri&node_type=mean',
   ]) {
     it(`lets ${url.split('?')[0]} compute past 8 s`, fakeAsync(() => {
       let body: unknown;
