@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  The App Group the app publishes the widgets' parts into (Shared/WidgetGroup.swift).
+  App ID app.asksiddha.mobile.widgets carries it in Apple Developer.
+-->
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.app.asksiddha.mobile</string>
+	</array>
+</dict>
+</plist>

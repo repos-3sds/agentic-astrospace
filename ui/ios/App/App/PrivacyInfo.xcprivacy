@@ -29,7 +29,8 @@
 
 	<!-- @capacitor/preferences reads and writes UserDefaults. CA92.1: the app
 	     accesses only its own defaults (cached auth config, reader preferences),
-	     nothing shared across apps. -->
+	     nothing shared across apps. 1C8F.1: the home-screen widgets' parts go
+	     into this app's own App Group defaults (SiddhaWidgetsPlugin). -->
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
 		<dict>
@@ -38,6 +39,7 @@
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
 				<string>CA92.1</string>
+				<string>1C8F.1</string>
 			</array>
 		</dict>
 		<!-- @capacitor/filesystem writes the shared Ask PDF into the app's own

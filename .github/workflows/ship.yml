@@ -436,6 +436,7 @@ jobs:
       DRY: ${{ needs.plan.outputs.dry }}
       TEAM_ID: 65G6LHRKWB
       BUNDLE_ID: app.asksiddha.mobile
+      WIDGETS_BUNDLE_ID: app.asksiddha.mobile.widgets
       PROJECT: ui/ios/App/App.xcodeproj
       KEYCHAIN: ${{ github.workspace }}/../ship.keychain-db
     steps:
@@ -558,45 +559,57 @@ jobs:
         run: |
           set -euo pipefail
           SERIAL=$(security find-certificate -c "Apple Distribution" -p "$KEYCHAIN" | openssl x509 -noout -serial)
-          python3 scripts/asc.py profile --serial "$SERIAL" --out "$RUNNER_TEMP/ci.mobileprovision" > profile.txt
-          NAME=$(sed -n 's/^name=//p' profile.txt)
-          UUID=$(sed -n 's/^uuid=//p' profile.txt)
-          for d in "$HOME/Library/MobileDevice/Provisioning Profiles" \
-                   "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
-            mkdir -p "$d"; cp "$RUNNER_TEMP/ci.mobileprovision" "$d/$UUID.mobileprovision"
-          done
-          echo "name=$NAME" >> "$GITHUB_OUTPUT"
-          echo "Profile: $NAME ($UUID)"
+          # One profile for the app and one for the widget extension
+          # (ui/ios/App/SiddhaWidgets), both signed by the same certificate.
+          install() {
+            python3 scripts/asc.py profile --bundle "$1" --serial "$SERIAL" --out "$RUNNER_TEMP/$2.mobileprovision" > "$2.txt"
+            NAME=$(sed -n 's/^name=//p' "$2.txt")
+            UUID=$(sed -n 's/^uuid=//p' "$2.txt")
+            for d in "$HOME/Library/MobileDevice/Provisioning Profiles" \
+                     "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+              mkdir -p "$d"; cp "$RUNNER_TEMP/$2.mobileprovision" "$d/$UUID.mobileprovision"
+            done
+            echo "$3=$NAME" >> "$GITHUB_OUTPUT"
+            echo "Profile for $1: $NAME ($UUID)"
+          }
+          install "$BUNDLE_ID" ci name
+          install "$WIDGETS_BUNDLE_ID" ci-widgets widgets
 
-      - name: Sign the app target with that profile (this checkout only)
+      - name: Sign the app and widget targets with those profiles (this checkout only)
         if: steps.vc.outputs.go == 'true' && env.DRY != 'true'
         env:
           PROFILE_NAME: ${{ steps.profile.outputs.name }}
+          WIDGETS_PROFILE_NAME: ${{ steps.profile.outputs.widgets }}
         # The Mac signs automatically through Xcode's account. A runner has no
-        # account, so only the App target's Release settings switch to manual
-        # signing here. Passing these on the xcodebuild command line instead
+        # account, so only the App and SiddhaWidgets targets' Release settings
+        # switch to manual signing here. Passing these on the xcodebuild command line instead
         # would apply them to the Swift packages too, which refuse profiles.
         run: |
           python3 - <<'PY'
           import os, pathlib, sys
           proj = pathlib.Path(os.environ["PROJECT"]) / "project.pbxproj"
           text = proj.read_text()
-          # The App target's Release configuration (PBXNativeTarget "App").
-          marker = "504EC3181FED79650016851F /* Release */ = {"
-          if marker not in text:
-              sys.exit("::error::App target Release configuration not found; update ship.yml's marker")
-          start = text.index(marker)
-          end = text.index("name = Release;", start)
-          block = text[start:end]
-          if "CODE_SIGN_STYLE = Automatic;" not in block:
-              sys.exit("::error::App target Release no longer uses automatic signing; update ship.yml")
-          manual = "\n\t\t\t\t".join([
-              "CODE_SIGN_STYLE = Manual;",
-              'CODE_SIGN_IDENTITY = "Apple Distribution";',
-              f"DEVELOPMENT_TEAM = {os.environ['TEAM_ID']};",
-              f"PROVISIONING_PROFILE_SPECIFIER = \"{os.environ['PROFILE_NAME']}\";",
-          ])
-          proj.write_text(text[:start] + block.replace("CODE_SIGN_STYLE = Automatic;", manual) + text[end:])
+          # Each target's Release configuration: PBXNativeTarget "App", then
+          # the widget extension "SiddhaWidgets".
+          for target, marker, profile in [
+              ("App", "504EC3181FED79650016851F /* Release */ = {", os.environ["PROFILE_NAME"]),
+              ("SiddhaWidgets", "A1D9E7300000000000000028 /* Release */ = {", os.environ["WIDGETS_PROFILE_NAME"]),
+          ]:
+              if marker not in text:
+                  sys.exit(f"::error::{target} target Release configuration not found; update ship.yml's marker")
+              start = text.index(marker)
+              end = text.index("name = Release;", start)
+              block = text[start:end]
+              if "CODE_SIGN_STYLE = Automatic;" not in block:
+                  sys.exit(f"::error::{target} target Release no longer uses automatic signing; update ship.yml")
+              manual = "\n\t\t\t\t".join([
+                  "CODE_SIGN_STYLE = Manual;",
+                  'CODE_SIGN_IDENTITY = "Apple Distribution";',
+                  f"DEVELOPMENT_TEAM = {os.environ['TEAM_ID']};",
+                  f"PROVISIONING_PROFILE_SPECIFIER = \"{profile}\";",
+              ])
+              text = text[:start] + block.replace("CODE_SIGN_STYLE = Automatic;", manual) + text[end:]
+          proj.write_text(text)
           # TestFlight and the App Store use production push; the committed
           # file says development for runs from Xcode.
           ent = pathlib.Path("ui/ios/App/App/App.entitlements")
@@ -627,6 +640,7 @@ jobs:
         if: steps.vc.outputs.go == 'true' && env.DRY != 'true'
         env:
           PROFILE_NAME: ${{ steps.profile.outputs.name }}
+          WIDGETS_PROFILE_NAME: ${{ steps.profile.outputs.widgets }}
         run: |
           set -euo pipefail
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
@@ -640,7 +654,10 @@ jobs:
             <key>signingStyle</key><string>manual</string>
             <key>signingCertificate</key><string>Apple Distribution</string>
             <key>provisioningProfiles</key>
-            <dict><key>$BUNDLE_ID</key><string>$PROFILE_NAME</string></dict>
+            <dict>
+              <key>$BUNDLE_ID</key><string>$PROFILE_NAME</string>
+              <key>$WIDGETS_BUNDLE_ID</key><string>$WIDGETS_PROFILE_NAME</string>
+            </dict>
             <key>uploadSymbols</key><true/>
             <!-- The build number is the commit count; Xcode must not change it. -->
             <key>manageAppVersionAndBuildNumber</key><false/>
@@ -679,4 +696,4 @@ jobs:
         if: always()
         run: |
           security delete-keychain "$KEYCHAIN" 2>/dev/null || true
-          rm -rf ~/.appstoreconnect "$RUNNER_TEMP/ci.mobileprovision"
+          rm -rf ~/.appstoreconnect "$RUNNER_TEMP/ci.mobileprovision" "$RUNNER_TEMP/ci-widgets.mobileprovision"

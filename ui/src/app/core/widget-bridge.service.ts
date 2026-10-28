@@ -14,8 +14,9 @@ import { noteDeepLink } from './deep-link-arrival';
 
 /**
  * What the home-screen widgets show, as the app last saw it. Each part is
- * stored on the phone (ui/android/.../widgets/WidgetStore.java) so the
- * widgets draw without the app running; the field names are read there.
+ * stored on the phone (ui/android/.../widgets/WidgetStore.java; on iPhone the
+ * App Group, ui/ios/App/Shared/WidgetGroup.swift) so the widgets draw without
+ * the app running; the field names are read there.
  */
 export interface TodayWidgetPart {
   /** The day the reading is for; widgets show nothing stale past it. */
@@ -27,8 +28,18 @@ export interface TodayWidgetPart {
   summary: string;
   doItem: string;
   avoidItem: string;
+  /** Up to two of each, for the large iPhone widget; Android reads doItem/avoidItem. */
+  doItems: string[];
+  avoidItems: string[];
   tithi: string;
   nakshatra: string;
+  yoga: string;
+  /** The Moon's sign today (Kanya). */
+  moonSign: string;
+  /** "Kartika · Krishna paksha", by the month reckoning the reader follows. */
+  masa: string;
+  /** Sunrise at the reader's place, where the timeline bar starts. */
+  sunriseMs: number | null;
   windows: { name: string; kind: string; startMs: number; endMs: number }[];
   /** What the Listen widget reads aloud: the same script as the Listen sheet. */
   listen: string;
@@ -61,7 +72,7 @@ interface SiddhaWidgetsPlugin {
   addListener(event: 'open', handler: (event: { route: string }) => void): Promise<{ remove(): Promise<void> }>;
 }
 
-/** Native side: ui/android/.../widgets/WidgetsPlugin.java. Android only for now. */
+/** Native side: ui/android/.../widgets/WidgetsPlugin.java and ui/ios/App/App/SiddhaWidgetsPlugin.swift. */
 const SiddhaWidgets = registerPlugin<SiddhaWidgetsPlugin>('SiddhaWidgets');
 
 interface MoonDaysPayload {
@@ -70,14 +81,15 @@ interface MoonDaysPayload {
 }
 
 /**
- * Keeps the Android home-screen widgets in step with the app: Today publishes
- * the owner's day, the tracker publishes the practice last opened, and the
- * verses and calendar go out as the app loads them. Every call is a no-op off
- * Android, and a failure never reaches the screen that made it.
+ * Keeps the home-screen widgets (Android, and iPhone and iPad) in step with
+ * the app: Today publishes the owner's day, the tracker publishes the
+ * practice last opened, and the verses and calendar go out as the app loads
+ * them. Every call is a no-op on the web, and a failure never reaches the
+ * screen that made it.
  */
 @Injectable({ providedIn: 'root' })
 export class WidgetBridgeService {
-  // Resolved on first use: off Android nothing here needs the network.
+  // Resolved on first use: on the web nothing here needs the network.
   private readonly injector = inject(Injector);
   private readonly router = inject(Router);
   private readonly teardown = inject(SessionTeardown);
@@ -85,7 +97,7 @@ export class WidgetBridgeService {
   /** The brief whose audio last went to the widget, so it isn't sent twice. */
   private listenAudioFor = '';
 
-  readonly enabled = Capacitor.getPlatform() === 'android';
+  readonly enabled = ['android', 'ios'].includes(Capacitor.getPlatform());
   /** Bumped when widget taps land in a stored practice, so an open tracker re-reads it. */
   readonly mantraTapsFolded = signal(0);
 
@@ -102,7 +114,7 @@ export class WidgetBridgeService {
     this.teardown.register(() => void SiddhaWidgets.clear().catch(() => undefined));
   }
 
-  /** How solid the widget cards are, 0 (clear) to 100; null off Android or on failure. */
+  /** How solid the widget cards are, 0 (clear) to 100; null on the web or on failure. */
   async opacity(): Promise<number | null> {
     if (!this.enabled) return null;
     try {
@@ -176,7 +188,9 @@ export class WidgetBridgeService {
    * where it is shown. The week strip (CalendarWidget.java) tints each of the
    * next seven days good / take care exactly as the Calendar tab does, from
    * the same /panchanga/{id}/month, and shows each day's tithi from the
-   * calendar Today already loaded.
+   * calendar Today already loaded. The month grid of the large iPhone
+   * widget takes the same tints for the whole of this month, so the one
+   * request runs from the 1st to a week past today (at most 37 days).
    */
   async publishCalendar(
     place: FestivalPlace,
@@ -186,10 +200,13 @@ export class WidgetBridgeService {
   ): Promise<void> {
     if (!this.enabled) return;
     const today = localIsoDate();
+    const monthStart = `${today.slice(0, 8)}01`;
     const query = new URLSearchParams({ city: place.city, nation: place.nation, from_date: fromDate, days: '60' });
     const [moons, qualities, vrats] = await Promise.allSettled([
       this.injector.get(ApiService).get<MoonDaysPayload>(`/festivals/moon-days?${query}`),
-      week ? this.injector.get(PanchangaService).month(week.profileId, today, 7) : Promise.reject(new Error('no profile')),
+      week
+        ? this.injector.get(PanchangaService).month(week.profileId, monthStart, Number(today.slice(8)) - 1 + 7)
+        : Promise.reject(new Error('no profile')),
       this.injector.get(FestivalService).vratDays(place, today, 7),
     ]);
     // Each extra is optional: the festivals still go out, and the widget
@@ -206,6 +223,7 @@ export class WidgetBridgeService {
         ? vrats.value.days.map((v) => ({ date: v.date, name: v.name, approx: v.is_convention_dependent }))
         : [],
       days: weekDays(today, week?.days ?? [], qualities.status === 'fulfilled' ? qualities.value.days : []),
+      month: monthDays(today, qualities.status === 'fulfilled' ? qualities.value.days : []),
     });
   }
 
@@ -331,8 +349,26 @@ export function weekDays(
   });
 }
 
+/** Every day of the month `today` is in, tinted where the quality arrived. */
+export function monthDays(
+  today: string,
+  qualities: readonly Pick<DayQuality, 'date' | 'quality'>[],
+): { date: string; quality: DayQuality['quality'] | '' }[] {
+  const quality = new Map(qualities.map((q) => [q.date, q.quality]));
+  const [y, m] = today.split('-').map(Number);
+  const length = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  return Array.from({ length }, (_, i) => {
+    const date = `${today.slice(0, 8)}${String(i + 1).padStart(2, '0')}`;
+    return { date, quality: quality.get(date) ?? '' };
+  });
+}
+
 /** Screens a widget opens. Exported for the spec. */
-export const WIDGET_ROUTES = new Set(['/m/today', '/m/ask', '/m/calendar', '/m/remedies', '/m/subhashita']);
+export const WIDGET_ROUTES = new Set([
+  '/m/today', '/m/ask', '/m/calendar', '/m/remedies', '/m/subhashita',
+  // The iPhone Listen widget opens Today's Listen sheet.
+  '/m/today?listen=1',
+]);
 const MANTRA_PARAM = /^[\w-]{0,64}$/;
 
 /**

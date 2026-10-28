@@ -1,4 +1,4 @@
-import { BAND_LABEL, BAND_OF_TONE, dayScorePosition, muhurtaCountdown } from './today.component';
+import { BAND_LABEL, BAND_OF_TONE, dayScorePosition, muhurtaCountdown, widgetMasa } from './today.component';
 import { DAY_BANDS } from '../day-gauge/day-gauge.component';
 
 /**
@@ -59,5 +59,13 @@ describe('muhurtaCountdown', () => {
 
   it('shows nothing on a cached payload for another day', () => {
     expect(muhurtaCountdown(daily, new Date('2026-10-17T10:00:00+08:00'))).toBe('');
+  });
+});
+
+describe('widgetMasa', () => {
+  it('names the Amanta rule it uses', () => {
+    expect(widgetMasa({ amanta: 'Kartika', purnimanta: 'Margashirsha', adhika: false, paksha: 'Krishna', is_convention_dependent: true, observance_note: '' }))
+      .toBe('Kartika (Amanta) · Krishna paksha');
+    expect(widgetMasa(null)).toBe('');
   });
 });
