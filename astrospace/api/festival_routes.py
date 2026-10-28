@@ -14,7 +14,7 @@ from functools import lru_cache
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from ..core.cities import city_for_timezone
+from ..context.timing_place import choose_place, validate_timezone
 from ..core.vedic import LocationError, festival_guidance, festivals
 from .auth import current_user
 
@@ -170,10 +170,8 @@ def vrat_days(
     Each row carries the rule used: every one of these days has more than one
     defensible answer. The place follows the same order as /upcoming.
     """
-    if city_is_fallback and timezone:
-        viewer_city = city_for_timezone(timezone)
-        if viewer_city:
-            city, nation = viewer_city[0], viewer_city[1]
+    if city_is_fallback:
+        city, nation, _source = choose_place(city, nation, validate_timezone(timezone, "") or None)
     if from_date:
         try:
             start = datetime.strptime(from_date, "%Y-%m-%d").date()
@@ -222,10 +220,8 @@ def upcoming_festivals(
     # a chosen city, else the city for the phone's timezone, else the birth
     # city. Festivals took the birth city while the timings beside them came
     # from the phone's timezone (regression 2026-10-17, M6).
-    if city_is_fallback and timezone:
-        viewer_city = city_for_timezone(timezone)
-        if viewer_city:
-            city, nation = viewer_city[0], viewer_city[1]
+    if city_is_fallback:
+        city, nation, _source = choose_place(city, nation, validate_timezone(timezone, "") or None)
     if from_date:
         try:
             start = datetime.strptime(from_date, "%Y-%m-%d").date()

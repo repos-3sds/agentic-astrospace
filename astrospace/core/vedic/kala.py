@@ -10,7 +10,7 @@ Conventions (all VERIFY against DrikPanchang before treating as final):
   Tuesday additionally has a night durmuhurta (7th of 15 night muhurtas).
 - Brahma Muhurta: 14th muhurta of the NIGHT — from sunrise minus two
   night-muhurtas to sunrise minus one.
-- Abhijit: 8th muhurta of the day; traditionally not observed on Wednesday.
+- Abhijit: 8th muhurta of the day; not observed on Wednesday, so omitted.
 - Choghadiya: day and night each split into 8; sequence cycles from the
   weekday-lord's block.
 - Hora: day and night each split into 12; Chaldean lord sequence starting
@@ -100,9 +100,12 @@ def kala_windows(rise: float, sets: float, next_rise: float,
     auspicious.append(_window(rise - 2 * night_step, rise - night_step, tz_str,
                               "Brahma Muhurta", "auspicious"))
 
-    s, e = _day_muhurta(rise, sets, 8)
-    abhijit_note = "Not observed on Wednesday" if vara_idx == 3 else None
-    auspicious.append(_window(s, e, tz_str, "Abhijit Muhurta", "auspicious", abhijit_note))
+    # Not observed on Wednesday, when the same muhurta is the day's
+    # Durmuhurta: DrikPanchang lists Abhijit as "None" that day, and a window
+    # that is good and bad at once rang the Abhijit alarm into Durmuhurta.
+    if vara_idx != 3:
+        s, e = _day_muhurta(rise, sets, 8)
+        auspicious.append(_window(s, e, tz_str, "Abhijit Muhurta", "auspicious"))
 
     # Godhuli — the muhurta straddling sunset (last day muhurta into dusk)
     auspicious.append(_window(sets - (sets - rise) / 30.0, sets + night_step / 2,

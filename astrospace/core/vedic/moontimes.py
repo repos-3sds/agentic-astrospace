@@ -129,19 +129,33 @@ def _sun_moon(jd: float) -> tuple[float, float]:
 # and the entire Amrit Kalam table remain UNCONFIRMED against an
 # independent source — upgrading the whole table to "verified" on the
 # strength of a partial match would overclaim, so it stays VERIFY.
+#
+# 2026-10-28 audit against DrikPanchang day pages (Hyderabad, Kolkata,
+# Singapore and others): Varjya now also confirmed for Rohini, Anuradha,
+# Moola, Purva Ashadha, Shravana, Dhanishta and Purva Bhadrapada, and Moola's
+# second Varjya at ghati 56 added. Amrit Kalam had two wrong entries,
+# Mrigashira 26 -> 38 and Ardra 45 -> 35 (Drik: Singapore 2026-10-30 03:33,
+# Kolkata 2026-10-30 21:58); confirmed for Ashwini, Krittika, Rohini,
+# Mrigashira, Ardra, Punarvasu, Pushya, Magha, the Phalgunis, Hasta,
+# Anuradha, Jyeshtha, Moola, both Ashadhas, Shravana and Purva Bhadrapada.
+# The rest stay VERIFY: Drik refused further fetches that day.
 VARJYA_START_GHATI = [
     50, 24, 30, 40, 14, 21, 30, 20, 32, 30, 20, 18, 21, 20,
     14, 14, 10, 14, 20, 24, 20, 10, 10, 18, 16, 24, 30,
 ]
 AMRIT_START_GHATI = [
-    42, 48, 54, 52, 26, 45, 54, 44, 56, 54, 44, 42, 45, 44,
+    42, 48, 54, 52, 38, 35, 54, 44, 56, 54, 44, 42, 45, 44,
     38, 38, 34, 38, 44, 48, 44, 34, 34, 42, 40, 48, 54,
 ]
+# Moola carries a second Varjya at its 56th ghati, running to the
+# nakshatra's end; DrikPanchang lists both (Hyderabad 2026-11-13).
+VARJYA_EXTRA_START_GHATI = {NAKSHATRAS.index("Moola"): [56]}
 _GHATI_DURATION = 4.0
 
 
 def _nakshatra_portion_windows(rise: float, next_rise: float, tz_str: str,
-                               table: list, name: str, kind: str) -> list:
+                               table: list, name: str, kind: str,
+                               extra: dict | None = None) -> list:
     """Windows at tabled ghati-fractions of each nakshatra overlapping the day."""
     windows = []
     # nakshatra prevailing at sunrise, plus any that begin before next sunrise
@@ -154,18 +168,19 @@ def _nakshatra_portion_windows(rise: float, next_rise: float, tz_str: str,
         else:
             start_jd = jd
         span = end_jd - start_jd
-        w_start = start_jd + span * (table[idx_now] / 60.0)
-        w_end = w_start + span * (_GHATI_DURATION / 60.0)
-        if w_end > rise and w_start < next_rise:  # overlaps the Vedic day
-            windows.append({
-                "name": f"{name} ({NAKSHATRAS[idx_now]})",
-                "kind": kind,
-                "start": jd_to_local(w_start, tz_str).strftime("%H:%M"),
-                "end": jd_to_local(w_end, tz_str).strftime("%H:%M"),
-                "start_iso": jd_to_local(w_start, tz_str).isoformat(),
-                "end_iso": jd_to_local(w_end, tz_str).isoformat(),
-                "verified": False,
-            })
+        for ghati in [table[idx_now], *(extra or {}).get(idx_now, [])]:
+            w_start = start_jd + span * (ghati / 60.0)
+            w_end = w_start + span * (_GHATI_DURATION / 60.0)
+            if w_end > rise and w_start < next_rise:  # overlaps the Vedic day
+                windows.append({
+                    "name": f"{name} ({NAKSHATRAS[idx_now]})",
+                    "kind": kind,
+                    "start": jd_to_local(w_start, tz_str).strftime("%H:%M"),
+                    "end": jd_to_local(w_end, tz_str).strftime("%H:%M"),
+                    "start_iso": jd_to_local(w_start, tz_str).isoformat(),
+                    "end_iso": jd_to_local(w_end, tz_str).isoformat(),
+                    "verified": False,
+                })
         if end_jd >= next_rise:
             break
         jd = end_jd + 1e-5
@@ -174,7 +189,8 @@ def _nakshatra_portion_windows(rise: float, next_rise: float, tz_str: str,
 
 def varjya_windows(rise: float, next_rise: float, tz_str: str) -> list:
     return _nakshatra_portion_windows(rise, next_rise, tz_str,
-                                      VARJYA_START_GHATI, "Varjya", "inauspicious")
+                                      VARJYA_START_GHATI, "Varjya", "inauspicious",
+                                      VARJYA_EXTRA_START_GHATI)
 
 
 def amrit_kalam_windows(rise: float, next_rise: float, tz_str: str) -> list:

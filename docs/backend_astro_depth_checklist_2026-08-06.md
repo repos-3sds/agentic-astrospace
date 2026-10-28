@@ -1902,6 +1902,38 @@ From the Muhurta audit (batches A–E built; these were left out on purpose).
   readers already see. *Unblocks when:* Hawk agrees the screen should show the
   same suit/avoid colours. *Hook:* `favourable.py` `favourable_points()`.
 
+## Deferred backlog — panchanga timings audit (2026-10-28)
+
+Audit of day timings against DrikPanchang (16 city-days) and an independent
+NOAA sunrise calculation (15 cities, every day of 2026, max 0.3 min outside
+Iceland). Fixed in the same PR: Amrit Kalam for Mrigashira and Ardra, Moola's
+second Varjya, no Abhijit on Wednesday, Muhurta night slots across a clock
+change, festivals on the same city as Today, "Use my location" in Settings →
+Location, a Today hint when the city is a guess, and `birth_clock` in chart
+meta. Left open:
+
+- [ ] **Follow the phone's location on every open.** Today a city is found
+  only when the reader taps "Use my location" and is then pinned. Following
+  it automatically needs the iOS/Android permission text changed (it says the
+  location is read once, on tap) and Hawk's yes. Hook:
+  `ui/src/app/features/mobile/settings/location.component.ts` `useLocation()`.
+- [ ] **Show `birth_clock.note` on the birth details card** when a birth time
+  fell in a repeated or skipped hour, with a way to pick the second 1:30.
+  Engine: `positions.local_clock_status`; card:
+  `features/mobile/chart/birth-details-card.component.ts`.
+- [ ] **Godhuli convention.** Ours runs from half a muhurta before sunset to
+  half a night-muhurta after; DrikPanchang shows sunset to about 24 minutes
+  after. Both are defensible; the alarm rings ~24 min earlier than Drik's.
+  Needs a rule choice. Hook: `kala.kala_windows`.
+- [ ] **Amrit Kalam still unconfirmed** for Bharani, Ashlesha, Chitra, Swati,
+  Vishakha, Dhanishta, Shatabhisha, Uttara Bhadrapada, Revati; Varjya for
+  Bharani and Uttara Bhadrapada. DrikPanchang rate-limited the fetches; one
+  Drik page (Hyderabad 2026-11-06) also showed an unlabelled 04:43-06:17
+  range at the start of Chitra that needs a second look.
+- [ ] **Moonrise/moonset** differ from Drik by up to ~5 minutes (Hyderabad
+  2026-08-26). Not shown in the native app; check the rise definition before
+  showing it.
+
 ## Deferred backlog — iOS universal links for sign-in emails (2026-10-28)
 
 - [ ] **Open asksiddha.app/open and /m/* links straight into the iPhone app.**

@@ -94,4 +94,27 @@ describe('panchang alarms', () => {
     expect(clock('00:05')).toBe('12:05 am');
     expect(clock('12:30')).toBe('12:30 pm');
   });
+
+  it('rings at the city clock time on both sides of a clock change', () => {
+    // Toronto falls back at 2 am on 1 Nov 2026: the server sends each
+    // day's ISO with its own offset, and the phone rings at that instant.
+    const toronto: TimingsPayload = {
+      place: { city: 'Toronto', nation: 'CA' } as TimingsPayload['place'],
+      days: [
+        { date: '2026-10-31', sunrise_iso: '2026-10-31T07:51:00-04:00', sunset_iso: '2026-10-31T18:10:00-04:00',
+          windows: { auspicious: [], inauspicious: [{ name: 'Rahu Kalam', start: '09:46', end: '11:03',
+            start_iso: '2026-10-31T09:46:00-04:00', end_iso: '2026-10-31T11:03:00-04:00' }] } },
+        { date: '2026-11-01', sunrise_iso: '2026-11-01T06:52:00-05:00', sunset_iso: '2026-11-01T17:09:00-05:00',
+          windows: { auspicious: [], inauspicious: [{ name: 'Rahu Kalam', start: '15:52', end: '17:09',
+            start_iso: '2026-11-01T15:52:00-05:00', end_iso: '2026-11-01T17:09:00-05:00' }] } },
+      ],
+    };
+    const list = buildNotifications(toronto, [alarm('rahu', { lead: 0 })], new Date('2026-10-31T00:00:00-04:00'), true);
+    expect(list.map((n) => n.schedule!.at!.toISOString())).toEqual([
+      '2026-10-31T13:46:00.000Z',
+      '2026-11-01T20:52:00.000Z',
+    ]);
+    expect(list.map((n) => n.body!.slice(0, 7))).toEqual(['9:46 am', '3:52 pm']);
+  });
 });
+

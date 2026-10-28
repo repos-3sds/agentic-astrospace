@@ -6,7 +6,7 @@ and favourable points.
 from datetime import datetime
 
 from .positions import (
-    birth_moment, sidereal_positions, sidereal_lagna, sidereal_mc, tropical_sun,
+    birth_moment, local_clock_status, sidereal_positions, sidereal_lagna, sidereal_mc, tropical_sun,
     ayanamsha_value, local_mean_time, local_sidereal_time, obliquity,
     sign_index, sign_name, sign_name_sanskrit, sign_lord, degree_in_sign,
     to_dms, house_from_lagna, sunrise_jd,
@@ -83,6 +83,9 @@ class VedicChart:
             "latitude": m.lat,
             "longitude": m.lng,
             "timezone": m.tz_str,
+            # UTC offset in force at the birth (war time and summer time
+            # included) and a note when the clock time repeated or was skipped.
+            "birth_clock": local_clock_status(m.dt_local),
             "julian_day_ut": m.jd_ut,
             "ayanamsha": {"name": self.ayanamsha.title(), "value": ayan, "dms": to_dms(ayan)},
             "node_type": self.node_type,
