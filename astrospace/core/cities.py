@@ -1,9 +1,10 @@
 """Offline city lookup with common cities, falls back to None (online GeoNames).
 
-In addition to the curated worldwide table below, a complete GeoNames-derived
-populated-places dataset for selected Indian states (currently Andhra Pradesh
-and Telangana, ~36k villages/towns) is loaded lazily from
-data/state_places.json.gz — regenerate with scripts/build_state_places.py.
+In addition to the curated worldwide table below, a village-level
+GeoNames-derived populated-places dataset for India (currently Andhra Pradesh
+and Telangana, ~35k villages/towns; built for all of India once the dump is
+downloaded) is loaded lazily from data/india_places.tsv.gz — regenerate with
+scripts/build_india_places.py. Those places save as "Rampur, Bareilly".
 
 Every populated place of 500+ people in the rest of India, the US and
 Canada, the UK and Ireland, the Gulf, Singapore, Malaysia, Australia, New
@@ -17,16 +18,20 @@ resolves to the same town it was picked as, not its most populous namesake.
 from __future__ import annotations
 
 import gzip
+import io
 import json
 import math
 import re
 import unicodedata
+from array import array
+from bisect import bisect_right
 from functools import lru_cache
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-_STATE_PLACES_PATH = Path(__file__).parent / "data" / "state_places.json.gz"
-_STATE_NAMES = {"AP": "Andhra Pradesh", "TS": "Telangana"}
+_INDIA_PLACES_PATH = Path(__file__).parent / "data" / "india_places.tsv.gz"
+# Bare names saved before the rest of India arrived meant these states.
+_LEGACY_BARE_STATES = frozenset({"Andhra Pradesh", "Telangana"})
 _WORLD_PLACES_PATH = Path(__file__).parent / "data" / "world_places.json.gz"
 _REGION_NAMES: dict[str, dict[str, str]] = {
     "us": {
@@ -342,33 +347,190 @@ def _normalize(value: str) -> str:
     return re.sub(r"\s+", " ", folded.strip().lower().replace(".", "")).strip()
 
 
-@lru_cache(maxsize=1)
-def _state_places() -> list[list]:
-    """[name, lat, lng, district, state, population, alternates] rows,
-    population-sorted."""
-    if not _STATE_PLACES_PATH.exists():
-        return []
-    with gzip.open(_STATE_PLACES_PATH, "rt", encoding="utf-8") as fh:
-        return json.load(fh)["places"]
+class _IndiaPlaces:
+    """The village-level India layer, held compactly: ~15x the old
+    AP/Telangana layer as Python lists would not fit a 1 GiB instance.
+
+    Names live in two newline-joined strings, as written and normalized, so
+    a search is a C-speed str.find rather than a loop over rows; row numbers
+    come back from the match offset by bisection. Rows are population-sorted,
+    so the first match is the biggest place.
+    """
+
+    def __init__(self, path: Path):
+        self.lat, self.lng = array("d"), array("d")
+        self.pop, self.district = array("L"), array("L")
+        self.districts: list[tuple[str, str]] = []
+        names, norms, alts = io.StringIO(), io.StringIO(), io.StringIO()
+        self._name_at, self._norm_at, self._alt_at = array("L"), array("L"), array("L")
+        self._alt_row = array("L")
+        norms.write("\n")
+        alts.write("\n")
+        name_pos, norm_pos, alt_pos = 0, 1, 1
+        if path.exists():
+            with gzip.open(path, "rt", encoding="utf-8") as fh:
+                meta = json.loads(fh.readline()[2:])
+                self.districts = [tuple(pair) for pair in meta["districts"]]
+                for row, line in enumerate(fh):
+                    name, lat, lng, district, pop, alternates = line.rstrip("\n").split("\t")
+                    self.lat.append(float(lat))
+                    self.lng.append(float(lng))
+                    self.district.append(int(district))
+                    self.pop.append(int(pop))
+                    self._name_at.append(name_pos)
+                    names.write(name + "\n")
+                    name_pos += len(name) + 1
+                    norm = _normalize(name)
+                    self._norm_at.append(norm_pos)
+                    norms.write(norm + "\n")
+                    norm_pos += len(norm) + 1
+                    for alt in alternates.split("|") if alternates else ():
+                        alt = _normalize(alt)
+                        self._alt_at.append(alt_pos)
+                        self._alt_row.append(row)
+                        alts.write(alt + "\n")
+                        alt_pos += len(alt) + 1
+        self._name_at.append(name_pos)
+        self._names, self._norms, self._alts = names.getvalue(), norms.getvalue(), alts.getvalue()
+        # A district name two states share (Aurangabad, Bilaspur, Hamirpur)
+        # needs its state in the saved place name to come back to the same one.
+        seen: dict[str, set[str]] = {}
+        for district, state in self.districts:
+            seen.setdefault(_normalize(district), set()).add(state)
+        self._shared_districts = {name for name, states in seen.items() if len(states) > 1}
+
+    def __len__(self) -> int:
+        return len(self.lat)
+
+    def name(self, row: int) -> str:
+        return self._names[self._name_at[row]:self._name_at[row + 1] - 1]
+
+    def where(self, row: int) -> tuple[str, str]:
+        """(district, state); district may be ""."""
+        return self.districts[self.district[row]]
+
+    def geo(self, row: int) -> tuple[float, float, str]:
+        return (self.lat[row], self.lng[row], "Asia/Kolkata")
+
+    def city(self, row: int) -> str:
+        """The place as a profile saves it: "Rampur, Bareilly", or the state
+        where the district says nothing more ("Nagpur, Maharashtra"), with
+        both for a district name two states share."""
+        name, (district, state) = self.name(row), self.where(row)
+        if not district or _normalize(district) == _normalize(name):
+            return f"{name}, {state}"
+        if _normalize(district) in self._shared_districts:
+            return f"{name}, {district}, {state}"
+        return f"{name}, {district}"
+
+    def _rows(self, blob: str, starts: array, needle: str, limit: int,
+              inside: bool = False, owner: array | None = None) -> list[int]:
+        """Rows whose name (or alternate, with `owner`) contains `needle`,
+        in row order, at most `limit`. `needle` carries its own newlines for
+        whole-name and prefix matches; `inside` skips matches at the start of
+        a name. str.find with that check beats a look-behind regex ~10x over
+        all of India, even for a common prefix ("ram") that starts tens of
+        thousands of names."""
+        rows: list[int] = []
+        seen: set[int] = set()
+        skip = 1 if needle.startswith("\n") else 0
+        positions = self._find_all(blob, needle)
+        if inside:
+            positions = (pos for pos in positions if blob[pos - 1] != "\n")
+        for pos in positions:
+            index = bisect_right(starts, pos + skip) - 1
+            row = owner[index] if owner is not None else index
+            if row not in seen:
+                seen.add(row)
+                rows.append(row)
+                if len(rows) >= limit:
+                    break
+        return rows
+
+    @staticmethod
+    def _find_all(blob: str, needle: str):
+        pos = blob.find(needle)
+        while pos != -1:
+            yield pos
+            pos = blob.find(needle, pos + 1)
+
+    def _matching(self, needle: str, limit: int, inside: bool = False) -> list[int]:
+        names = self._rows(self._norms, self._norm_at, needle, limit, inside)
+        alts = self._rows(self._alts, self._alt_at, needle, limit, inside, self._alt_row)
+        return sorted(set(names) | set(alts))[:limit]
+
+    def named(self, name: str, written_first: bool = True) -> list[int]:
+        """Rows named `name` (normalized) in population order: by default the
+        written name before any alternate spelling, since that is what a
+        profile saves; otherwise both alike, as the AP/Telangana lookup has
+        always ranked them."""
+        if not name or "\n" in name:
+            return []
+        needle = f"\n{name}\n"
+        primary = self._rows(self._norms, self._norm_at, needle, len(self) or 1)
+        alternate = self._rows(self._alts, self._alt_at, needle, len(self) or 1,
+                               owner=self._alt_row)
+        if not written_first:
+            return sorted(set(primary) | set(alternate))
+        taken = set(primary)
+        return primary + [row for row in alternate if row not in taken]
+
+    def lookup(self, city: str) -> int | None:
+        """The row for a saved or typed place: "Rampur, Bareilly",
+        "Aurangabad, Bihar", "Rampur, Bareilly, Uttar Pradesh", or a bare name.
+        A bare name keeps answering an AP/Telangana village first: profiles
+        saved before the rest of India arrived hold those as bare names."""
+        parts = [part.strip() for part in city.split(",")]
+        if len(parts) > 1:
+            qualifiers = {part for part in parts[1:] if part}
+            for row in self.named(parts[0]):
+                district, state = self.where(row)
+                if qualifiers <= {_normalize(district), _normalize(state)}:
+                    return row
+            return None
+        # Ranked as before, so a chart saved then does not move.
+        rows = self.named(parts[0], written_first=False)
+        for row in rows:
+            if self.where(row)[1] in _LEGACY_BARE_STATES:
+                return row
+        return rows[0] if rows else None
+
+    def search(self, q: str, limit: int) -> tuple[list[int], list[int], list[int]]:
+        """(exact, prefix, contains) rows for a normalized query."""
+        if not q or "\n" in q:
+            return [], [], []
+        exact = self._matching(f"\n{q}\n", limit)
+        taken = set(exact)
+        prefix = [row for row in self._matching(f"\n{q}", limit + len(exact))
+                  if row not in taken][:limit]
+        taken.update(prefix)
+        contains = [row for row in self._matching(q, limit + len(taken), inside=True)
+                    if row not in taken][:limit]
+        return exact, prefix, contains
+
+    def legacy_rows(self, needle: str) -> list[int]:
+        """AP/Telangana rows matching a newline-delimited needle, for the
+        lookup fallbacks that predate the rest of India."""
+        rows = self._matching(needle, len(self) or 1)
+        return [row for row in rows if self.where(row)[1] in _LEGACY_BARE_STATES]
 
 
 @lru_cache(maxsize=1)
-def _state_places_index() -> dict[str, tuple[float, float, str]]:
-    """normalized name/alternate -> (lat, lng, tz); most populous wins."""
-    index: dict[str, tuple[float, float, str]] = {}
-    for row in _state_places():
-        name, lat, lng = row[0], row[1], row[2]
-        geo = (lat, lng, "Asia/Kolkata")
-        index.setdefault(_normalize(name), geo)
-        for alt in (row[6] if len(row) > 6 else []):
-            index.setdefault(_normalize(alt), geo)
-    return index
+def _india_places() -> _IndiaPlaces:
+    return _IndiaPlaces(_INDIA_PLACES_PATH)
 
 
-@lru_cache(maxsize=1)
-def _state_places_keys() -> list[str]:
-    """Index keys in population order, for prefix fallback in lookups."""
-    return list(_state_places_index().keys())
+def _india_place_dict(places: _IndiaPlaces, row: int) -> dict:
+    name, (district, state) = places.name(row), places.where(row)
+    where = f"{district}, {state}" if district else state
+    return {
+        "city": places.city(row),
+        "nation": "IN",
+        "timezone": "Asia/Kolkata",
+        "lat": places.lat[row],
+        "lng": places.lng[row],
+        "label": f"{name} · {where}",
+    }
 
 
 def lookup_city(city: str, nation: str = "US") -> tuple[float, float, str] | None:
@@ -379,13 +541,16 @@ def lookup_city(city: str, nation: str = "US") -> tuple[float, float, str] | Non
         return result
     city_lower = _normalize(city)
     nation_lower = _normalize(nation)
-    # AP/TS villages answer a bare Indian name before the all-India layer, so
-    # a profile saved from that layer keeps resolving to the same village.
-    if nation_lower in ("in", ""):
-        exact = _state_places_index().get(city_lower)
-        if exact:
-            return exact
-    # Country-level dataset: "Springfield, IL", "Aurangabad, Bihar" or "Austin".
+    india = _india_places() if nation_lower in ("in", "") else None
+    # Village-level India: "Rampur, Bareilly", "Aurangabad, Bihar", or a bare
+    # name. With no nation given, only a bare AP/Telangana name answers here,
+    # as before the rest of India arrived; others wait for the curated table.
+    if india is not None:
+        row = india.lookup(city_lower)
+        if row is not None and (nation_lower == "in" or "," not in city_lower and
+                                india.where(row)[1] in _LEGACY_BARE_STATES):
+            return india.geo(row)
+    # Country-level dataset: "Springfield, IL", "Perth, Scotland" or "Austin".
     world = _lookup_world_place(city_lower, nation_lower)
     if world:
         return world
@@ -393,21 +558,21 @@ def lookup_city(city: str, nation: str = "US") -> tuple[float, float, str] | Non
     for (c, n), v in _CITIES.items():
         if c == city_lower:
             return v
-    # Complete state-level dataset (AP/TS villages and towns).
-    if nation_lower in ("in", ""):
-        index = _state_places_index()
-        # Telugu transliteration tolerance: trailing y<->i (Kamareddy/Kamareddi,
-        # Metpally/Metpalli).
+    if india is not None and city_lower:
+        if row is not None:
+            return india.geo(row)
+        # Telugu transliteration tolerance, AP/Telangana only as before:
+        # trailing y<->i (Kamareddy/Kamareddi, Metpally/Metpalli).
         if city_lower[-1:] in ("y", "i"):
             swapped = city_lower[:-1] + ("i" if city_lower.endswith("y") else "y")
-            hit = index.get(swapped)
-            if hit:
-                return hit
+            hits = india.legacy_rows(f"\n{swapped}\n")
+            if hits:
+                return india.geo(hits[0])
         # Then accept a prefix match (e.g. "Sangareddy" -> "Sangareddypeta").
         if len(city_lower) >= 5:
-            for key in _state_places_keys():
-                if key.startswith(city_lower):
-                    return index[key]
+            hits = india.legacy_rows(f"\n{city_lower}")
+            if hits:
+                return india.geo(hits[0])
     return None
 
 
@@ -575,15 +740,16 @@ def nearest_city(lat: float, lng: float) -> dict | None:
             "city": city.title(), "nation": nation.upper(), "timezone": tz,
             "lat": c_lat, "lng": c_lng, "label": f"{city.title()}, {nation.upper()} · {tz}",
         }))
-    for row in _state_places():
-        name, p_lat, p_lng, district, state = row[0], row[1], row[2], row[3], row[4]
-        state_name = _STATE_NAMES.get(state, state)
-        where = f"{district}, {state_name}" if district else state_name
-        candidates.append((_km(lat, lng, p_lat, p_lng), {
-            "city": name, "nation": "IN", "timezone": "Asia/Kolkata",
-            "lat": p_lat, "lng": p_lng, "label": f"{name} · {where}",
-        }))
-    for row in _world_places():
+    india = _india_places()
+    # Half a degree is ~55 km: a box first, so the haversine runs on a few
+    # hundred villages, not all of India.
+    for row, (p_lat, p_lng) in enumerate(zip(india.lat, india.lng)):
+        if abs(p_lat - lat) < 0.5 and abs(p_lng - lng) < 0.5:
+            candidates.append((_km(lat, lng, p_lat, p_lng), _india_place_dict(india, row)))
+    world = [row for row in _world_places() if _near(lat, lng, row, 0.5)]
+    if not world and len(candidates) == len(_CITIES):
+        world = _world_places()  # nothing within ~55 km: widen to everywhere
+    for row in world:
         candidates.append((_km(lat, lng, row[1], row[2]), _world_place_dict(row)))
     candidates.sort(key=lambda item: item[0])
     for distance, row in candidates[:25]:
@@ -640,8 +806,7 @@ def search_cities(query: str = "", limit: int = 80) -> list[dict]:
 
     if q and len(rows) < limit:
         remaining = limit - len(rows)
-        state = _search_state_places(
-            q, remaining, exclude={(r["city"].lower(), r["nation"].lower()) for r in rows})
+        state = _search_india_places(q, remaining, curated=rows)
         world = _search_world_places(q, remaining, curated=rows)
         # Exact names first, then prefixes, then substrings; within each, by
         # population with Indian places weighted up (see _search_weight).
@@ -698,41 +863,22 @@ def _search_world_places(q: str, limit: int, curated: list[dict]) -> tuple[list,
     return exact[:limit], prefix[:limit], contains[:limit]
 
 
-@lru_cache(maxsize=1)
-def _state_search_rows() -> list[tuple[str, list[str], list]]:
-    """Normalized once, not on every keystroke."""
-    return [(_normalize(row[0]), [_normalize(alt) for alt in (row[6] if len(row) > 6 else [])], row)
-            for row in _state_places()]
-
-
-def _search_state_places(q: str, limit: int, exclude: set) -> tuple[list, list, list]:
-    """Prefix/substring search over the state-level dataset. Entries are
-    population-sorted, so bigger towns surface first; district + state in the
-    label disambiguates same-named villages. Returns (exact, prefix, contains),
-    each a list of (weight, place) pairs."""
-    exact, prefix, contains = [], [], []
-    for name_l, alt_l, row in _state_search_rows():
-        name, lat, lng, district, state = row[0], row[1], row[2], row[3], row[4]
-        if name_l == q or q in alt_l:
-            bucket = exact
-        elif name_l.startswith(q) or any(alt.startswith(q) for alt in alt_l):
-            bucket = prefix
-        elif q in name_l or any(q in alt for alt in alt_l):
-            bucket = contains
-        else:
-            continue
-        if (name_l, "in") in exclude:
-            continue
-        state_name = _STATE_NAMES.get(state, state)
-        where = f"{district}, {state_name}" if district else state_name
-        bucket.append((_search_weight(row[5], "IN"), {
-            "city": name,
-            "nation": "IN",
-            "timezone": "Asia/Kolkata",
-            "lat": lat,
-            "lng": lng,
-            "label": f"{name} · {where}",
-        }))
-        if len(exact) + len(prefix) >= limit and bucket is not contains:
-            break
-    return exact[:limit], prefix[:limit], contains[:limit]
+def _search_india_places(q: str, limit: int, curated: list[dict]) -> tuple[list, list, list]:
+    """Search over the village-level India layer as (exact, prefix,
+    contains), each a list of (weight, place) pairs, biggest first; district
+    and state in the label tell same-named villages apart. A curated Indian
+    city hides its duplicate here as in _search_world_places."""
+    india = _india_places()
+    taken = [(_normalize(r["city"]), r["lat"], r["lng"]) for r in curated if r["nation"] == "IN"]
+    buckets = []
+    for rows in india.search(q, limit):
+        bucket = []
+        for row in rows:
+            name, lat, lng = _normalize(india.name(row)), india.lat[row], india.lng[row]
+            if any(abs(lat - c_lat) < (0.3 if c == name else 0.02) and
+                   abs(lng - c_lng) < (0.3 if c == name else 0.02)
+                   for c, c_lat, c_lng in taken):
+                continue
+            bucket.append((_search_weight(india.pop[row], "IN"), _india_place_dict(india, row)))
+        buckets.append(bucket)
+    return buckets[0], buckets[1], buckets[2]

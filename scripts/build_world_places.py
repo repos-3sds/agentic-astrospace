@@ -1,7 +1,6 @@
 """
 Build the country-level populated-places dataset for the city search/lookup in
-astrospace/core/cities.py: India outside AP/Telangana, the US and Canada, the
-UK and Ireland, the Gulf, Singapore, Malaysia, Australia, New Zealand and
+astrospace/core/cities.py: the US and Canada, the UK and Ireland, the Gulf, Singapore, Malaysia, Australia, New Zealand and
 Europe.
 
 Usage:
@@ -37,11 +36,10 @@ from pathlib import Path
 EUROPE = ["AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR",
           "HU", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI",
           "ES", "SE", "CH", "NO", "IS"]
-COUNTRIES = ["IN", "US", "CA", "GB", "IE", "AE", "SA", "QA", "KW", "OM", "BH",
+# India comes from the village-level layer (build_india_places.py), so a
+# town is not listed twice.
+COUNTRIES = ["US", "CA", "GB", "IE", "AE", "SA", "QA", "KW", "OM", "BH",
              "SG", "MY", "AU", "NZ", *EUROPE]
-
-# AP and Telangana come from the village-level layer (build_state_places.py).
-SKIP_REGIONS = {("IN", "02"), ("IN", "40")}
 
 # Countries shown without a region: city-states, or first levels so fine they
 # name the town itself.
@@ -55,7 +53,7 @@ _CA_PROVINCES = {
 }
 
 _REGION_OVERRIDES: dict[str, dict[str, str]] = {
-    "IN": {"07": "Delhi", "12": "Jammu and Kashmir", "41": "Ladakh",
+    "IN": {"01": "Andaman and Nicobar Islands", "02": "Andhra Pradesh", "40": "Telangana", "07": "Delhi", "12": "Jammu and Kashmir", "41": "Ladakh",
            "14": "Lakshadweep", "22": "Puducherry",
            "52": "Dadra and Nagar Haveli and Daman and Diu"},
     "AE": {"01": "Abu Dhabi", "02": "Ajman", "03": "Dubai", "04": "Fujairah",
@@ -143,8 +141,6 @@ def build(source: Path, rg_csv: Path) -> list[list]:
     names = region_names(records, rg_csv)
     best: dict[tuple[str, str, str], list] = {}
     for name, lat, lng, country, admin1, population, tz in records:
-        if (country, admin1) in SKIP_REGIONS:
-            continue
         name = name.strip()
         region = region_for(country, admin1, names)
         if not name or (country in ("US", "CA") and not region):

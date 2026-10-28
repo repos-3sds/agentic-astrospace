@@ -1,6 +1,7 @@
-"""Complete AP/Telangana populated-places coverage in the city lookup."""
+"""Village-level India populated places in the city lookup: all of India from
+the GeoNames dump, with AP/Telangana names saved before still resolving."""
 from astrospace.core.cities import (
-    _state_places, lookup_city, search_cities,
+    _india_places, _normalize, lookup_city, search_cities,
 )
 
 # A spread of towns and smaller places across both states that must resolve.
@@ -14,14 +15,15 @@ AP_TS_PLACES = [
 
 class TestDataset:
     def test_dataset_loads_and_is_complete_scale(self):
-        places = _state_places()
-        assert len(places) > 30000, "AP+TS dataset should carry village-level coverage"
+        places = _india_places()
+        assert len(places) > 400000, "all of India should carry village-level coverage"
+        assert len({state for _, state in places.districts}) == 36
 
     def test_all_rows_have_coordinates_in_india(self):
-        for row in _state_places()[:5000]:
-            name, lat, lng, state = row[0], row[1], row[2], row[4]
-            assert 5.0 < lat < 25.0 and 74.0 < lng < 88.0, (name, lat, lng)
-            assert state in ("AP", "TS")
+        places = _india_places()
+        for row in range(0, len(places), 50):
+            name, lat, lng = places.name(row), places.lat[row], places.lng[row]
+            assert 6.0 < lat < 37.5 and 68.0 < lng < 97.5, (name, lat, lng)
 
 
 class TestLookup:
@@ -126,11 +128,34 @@ class TestIndiaAndDiaspora:
         assert 24 < bihar[0] < 25.5 and 19 < maharashtra[0] < 20.5
 
     def test_ap_ts_villages_keep_answering_their_bare_names(self):
-        # The village layer still wins over the all-India layer.
         assert lookup_city("Pithapuram", "IN") is not None
+        # India lives in the village layer only, so no town is listed twice.
         from astrospace.core.cities import _world_places
-        regions = {row[3] for row in _world_places() if row[4] == "IN"}
-        assert "Andhra Pradesh" not in regions and "Telangana" not in regions
+        assert not [row for row in _world_places() if row[4] == "IN"]
+
+    def test_places_saved_from_the_country_level_layer_stay_put(self):
+        # "Name, State" as the old cities500 layer saved them, with where
+        # they resolved then: a chart saved before must not move.
+        saved = {
+            "Nashik, Maharashtra": (19.9973, 73.791),
+            "Shillong, Meghalaya": (25.5689, 91.8831),
+            "Port Blair, Andaman and Nicobar Islands": (11.6661, 92.7464),
+            "Mahabaleshwar, Maharashtra": (17.56, 73.4),
+            # Same-sized namesakes: the administrative seat, as before.
+            "Nautan, Bihar": (26.7203, 84.4754),
+            "Neemuch, Rajasthan": (24.4764, 74.8624),
+            "Raga, Arunachal Pradesh": (27.7993, 94.0743),
+        }
+        for city, (lat, lng) in saved.items():
+            geo = lookup_city(city, "IN")
+            assert geo is not None, city
+            assert abs(geo[0] - lat) < 0.05 and abs(geo[1] - lng) < 0.05, (city, geo)
+
+    def test_villages_beyond_ap_ts_are_searchable(self):
+        rows = search_cities("mawsynram", 5)
+        assert rows and "Meghalaya" in rows[0]["label"]
+        geo = lookup_city(rows[0]["city"], "IN")
+        assert (geo[0], geo[1]) == (rows[0]["lat"], rows[0]["lng"])
 
     def test_diaspora_cities_carry_their_own_zones(self):
         assert lookup_city("Leicester", "GB")[2] == "Europe/London"
@@ -155,3 +180,139 @@ class TestIndiaAndDiaspora:
         assert cities.count("Dubai") == 1 and any(c.startswith("Dublin") for c in cities)
         names = [row["city"] for row in search_cities("dubb", 5)]
         assert all(row["nation"] == "IN" for row in search_cities("dubb", 5)), names
+
+
+class TestAllIndiaLayer:
+    """The village layer as it grows to all of India (scripts/build_india_places.py):
+    places save as "Name, District" so namesakes stay apart, and bare AP/TS
+    names saved before keep resolving where they did."""
+
+    def test_search_results_round_trip_to_the_village_picked(self):
+        for query in ("guntur", "kari", "rampur", "aurang"):
+            for row in search_cities(query, 30):
+                geo = lookup_city(row["city"], row["nation"])
+                assert geo is not None, row
+                assert (geo[0], geo[1]) == (row["lat"], row["lng"]), row
+
+    def test_a_namesake_far_from_the_curated_city_is_offered_with_its_district(self):
+        cities = [row["city"] for row in search_cities("guntur", 30)]
+        assert "Guntur" in cities
+        assert any(city.startswith("Guntur, ") for city in cities)
+
+    def test_bare_names_saved_before_still_resolve(self):
+        assert lookup_city("Bhainsa", "IN") is not None
+        assert lookup_city("Pithapuram", "") is not None
+
+    def test_qualifier_must_match(self):
+        assert lookup_city("Bhainsa, Nirmal", "IN") is not None
+        assert lookup_city("Bhainsa, Kerala", "IN") is None or \
+            lookup_city("Bhainsa, Kerala", "IN") != lookup_city("Bhainsa, Nirmal", "IN")
+
+
+def _write_dump(tmp_path):
+    def place(gid, name, lat, lng, admin1, admin2, pop, alts=""):
+        cols = [str(gid), name, name, alts, str(lat), str(lng), "P", "PPL", "IN", "",
+                admin1, admin2, "", "", str(pop), "", "", "Asia/Kolkata", "2024-01-01"]
+        return "\t".join(cols)
+    (tmp_path / "IN.txt").write_text("\n".join([
+        place(1, "Rampur", 28.8, 79.0, "36", "001", 300000),
+        place(2, "Rampur", 25.6, 85.1, "34", "002", 10),
+        place(3, "Rāmpur", 25.7, 85.2, "34", "002", 0),  # same district, folded: one kept
+        place(4, "Aurangabad", 24.75, 84.37, "34", "003", 100000),
+        place(5, "Aurangabad", 19.88, 75.34, "16", "004", 1200000, "Sambhajinagar"),
+        place(6, "Bhainsa", 19.1, 77.96, "40", "005", 50000),
+        place(7, "Hill, Top", 30.0, 78.0, "39", "", 0),
+    ]) + "\n", encoding="utf-8")
+    (tmp_path / "admin1.txt").write_text("\n".join([
+        "IN.36\tUttar Pradesh\tUttar Pradesh\t1", "IN.34\tBihar\tBihar\t2",
+        "IN.16\tMaharashtra\tMaharashtra\t3", "IN.40\tTelangana\tTelangana\t4",
+        "IN.39\tUttarakhand\tUttarakhand\t5",
+    ]), encoding="utf-8")
+    (tmp_path / "admin2.txt").write_text("\n".join([
+        "IN.36.001\tRampur\tRampur\t1", "IN.34.002\tPatna\tPatna\t2",
+        "IN.34.003\tAurangabad\tAurangabad\t3", "IN.16.004\tAurangabad\tAurangabad\t4",
+        "IN.40.005\tNirmal\tNirmal\t5",
+    ]), encoding="utf-8")
+
+
+class TestIndiaBuilder:
+    """build_india_places.py output, read back by the compact loader."""
+
+    def _places(self, tmp_path, monkeypatch, extra: str = ""):
+        import importlib.util
+        import sys
+        from pathlib import Path
+        from astrospace.core import cities
+        _write_dump(tmp_path)
+        if extra:
+            with (tmp_path / "IN.txt").open("a") as fh:
+                fh.write(extra + "\n")
+        script = Path(__file__).resolve().parent.parent / "scripts" / "build_india_places.py"
+        sys.path.insert(0, str(script.parent))
+        spec = importlib.util.spec_from_file_location("build_india_places", script)
+        builder = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(builder)
+        out = tmp_path / "india_places.tsv.gz"
+        monkeypatch.setattr(builder, "OUT", out)
+        monkeypatch.setattr(sys, "argv", ["x", str(tmp_path / "IN.txt"),
+                                          str(tmp_path / "admin1.txt"), str(tmp_path / "admin2.txt")])
+        builder.main()
+        return cities._IndiaPlaces(out)
+
+    def test_rows_and_saved_names(self, tmp_path, monkeypatch):
+        places = self._places(tmp_path, monkeypatch)
+        assert len(places) == 6  # the second Patna Rampur folds into the first
+        by_city = {places.city(row): row for row in range(len(places))}
+        # District named after the town: the state says more.
+        assert "Rampur, Uttar Pradesh" in by_city
+        assert "Rampur, Patna" in by_city
+        assert "Aurangabad, Maharashtra" in by_city and "Aurangabad, Bihar" in by_city
+        assert "Bhainsa, Nirmal" in by_city
+        assert "Hill Top, Uttarakhand" in by_city  # commas would split the saved name
+
+    def test_lookup_forms(self, tmp_path, monkeypatch):
+        places = self._places(tmp_path, monkeypatch)
+        for row in range(len(places)):
+            assert places.lookup(_normalize(places.city(row))) == row
+        bihar = places.lookup("aurangabad, bihar")
+        assert places.where(bihar)[1] == "Bihar"
+        assert places.lookup("aurangabad") == places.lookup("aurangabad, maharashtra")
+        assert places.lookup("sambhajinagar") == places.lookup("aurangabad, maharashtra")
+        assert places.lookup("rampur, kerala") is None
+        # Bare names lean to AP/Telangana, where they were saved before.
+        assert places.where(places.lookup("bhainsa"))[1] == "Telangana"
+
+    def test_search_buckets(self, tmp_path, monkeypatch):
+        places = self._places(tmp_path, monkeypatch)
+        exact, prefix, contains = places.search("rampur", 10)
+        assert len(exact) == 2 and not prefix and not contains
+        assert places.search("ramp", 10)[1] == exact
+        assert [places.name(r) for r in places.search("ampu", 10)[2]] == ["Rampur", "Rampur"]
+
+    @staticmethod
+    def _stray(gid: int, admin1: str, feature: str = "PPL", lat: float = 20, admin2: str = "") -> str:
+        return "\t".join([str(gid), f"Newtown{gid}", f"Newtown{gid}", "", str(lat), "80", "P",
+                          feature, "IN", "", admin1, admin2, "", "", "0", "", "",
+                          "Asia/Kolkata", "x"])
+
+    def test_unknown_state_code_stops_the_build(self, tmp_path, monkeypatch):
+        import pytest
+        newstate = "\n".join(self._stray(100 + i, "99") for i in range(100))
+        with pytest.raises(SystemExit, match="99"):
+            self._places(tmp_path, monkeypatch, extra=newstate)
+
+    def test_a_few_places_with_no_state_are_left_out(self, tmp_path, monkeypatch):
+        strays = "\n".join([self._stray(9, "00"), self._stray(10, ""), self._stray(11, "04")])
+        assert len(self._places(tmp_path, monkeypatch, extra=strays)) == 6
+
+    def test_an_administrative_seat_leads_same_sized_namesakes(self, tmp_path, monkeypatch):
+        # Two unpopulated "Newtown12" in one district fold to the seat, which
+        # also leads an unpopulated namesake elsewhere in the state.
+        seat = "\n".join([
+            self._stray(12, "34", lat=25.1, admin2="002").replace("Newtown12", "Nautan"),
+            self._stray(13, "34", "PPLA3", lat=25.2, admin2="002").replace("Newtown13", "Nautan"),
+            self._stray(14, "34", lat=25.3, admin2="003").replace("Newtown14", "Nautan"),
+        ])
+        places = self._places(tmp_path, monkeypatch, extra=seat)
+        assert len(places) == 8
+        assert places.lat[places.lookup("nautan, bihar")] == 25.2
