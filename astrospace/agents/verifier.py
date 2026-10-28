@@ -672,7 +672,10 @@ def bindu_lean_violations(reading: StructuredReading, bundle: dict) -> list[Viol
     if not bundle.get("overall_view"):
         return []
     text = " ".join([reading.interpretation or "", reading.summary_and_assurance or ""])
-    if len(_BINDU_MENTION.findall(text)) > 1:
+    # Sentences, not hits: "In Ashtakavarga, your 10th house holds 35 bindus"
+    # is the one allowed mention (Lilliput v8 flagged it as two).
+    sentences = [s for s in re.split(r"(?<=[.!?])\s+|\n+", text) if _BINDU_MENTION.search(s)]
+    if len(sentences) > 1:
         return [Violation(
             "the answer leans on Ashtakavarga bindus; mention them once at most and lead with "
             "the running period, the house lords and planet strength", "quality", "interpretation")]

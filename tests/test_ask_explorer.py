@@ -550,6 +550,13 @@ class TestPlacementsMatchTheChart:
         assert [c[:2] for c in stated_placements("The Sun, Mercury and Venus sit in your 5th house.")] == \
             [("Sun", 5), ("Mercury", 5), ("Venus", 5)]
 
+    def test_one_sentence_naming_ashtakavarga_and_bindus_is_one_mention(self):
+        from astrospace.agents.verifier import bindu_lean_violations
+        reading = _reading().model_copy(update={"interpretation": "Yes, with care. In Ashtakavarga, your 10th house holds 35 bindus."})
+        assert bindu_lean_violations(reading, {"overall_view": "x"}) == []
+        reading = _reading().model_copy(update={"interpretation": "Your 10th has 35 bindus. Your 3rd has 42 bindus."})
+        assert bindu_lean_violations(reading, {"overall_view": "x"})
+
     def test_a_health_violation_quotes_the_one_sentence(self):
         from astrospace.agents.safety import dosha_overclaim_kind
         from astrospace.agents.verifier import _offending_sentence
