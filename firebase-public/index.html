@@ -189,6 +189,35 @@
   .phone.sm { width: 230px; }
   .stage .phone { z-index: 1; }
 
+  /* iPhone: the same screenshots in an iPhone 16 Pro body (rounder corners,
+     slimmer bezel, Dynamic Island, action button and volume keys on the
+     left, side key on the right). The screenshots' status bar leaves the
+     middle clear, so the island sits over empty sky. */
+  .phone.iphone {
+    border-radius: 15.5% / 7.2%;
+    background: linear-gradient(135deg, #8a8580 0%, #3b3936 20%, #6d6862 50%, #34322f 80%, #8a8580 100%);
+  }
+  .phone.iphone picture { margin: 1.2cqw; padding: 1.6cqw; border-radius: 14.2cqw; }
+  .phone.iphone img { border-radius: 12.6cqw; }
+  .phone.iphone::after {
+    top: 4.4cqw; width: 25cqw; height: 7.2cqw; border-radius: 99px;
+    background: #000; box-shadow: none;
+  }
+  .phone.iphone::before {
+    right: auto; left: -0.75cqw; top: 15%; height: 22%; border-radius: 0.6cqw 0 0 0.6cqw;
+    background: linear-gradient(180deg, #6d6862 0 16%, transparent 16% 30%, #6d6862 30% 62%, transparent 62% 70%, #6d6862 70% 100%);
+  }
+  .phone.iphone picture::after {
+    content: ""; position: absolute; right: -0.75cqw; top: 26%; width: 0.9cqw; height: 13%; border-radius: 0 0.6cqw 0.6cqw 0;
+    background: #6d6862;
+  }
+
+  /* Hero: an Android phone in front, an iPhone just behind it. */
+  .stage .pair { display: grid; }
+  .stage .pair > .phone { grid-area: 1 / 1; }
+  .stage .pair > .phone:first-child { translate: -22% 0; }
+  .stage .pair > .phone.iphone { translate: 30% -6%; scale: 0.88; z-index: 0; }
+
   /* Sections */
   section { padding-top: 40px; padding-bottom: 88px; }
   .kicker { color: var(--accent); font-size: 13px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 12px; }
@@ -211,7 +240,7 @@
   .feature { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; }
   .feature + .feature { margin-top: 96px; }
   .feature.flip .copy { order: 2; }
-  .feature .shots { display: flex; justify-content: center; gap: 22px; }
+  .feature .shots { display: flex; justify-content: center; align-items: flex-start; gap: 22px; }
   .feature .shots .phone:nth-child(2) { margin-top: 56px; }
   .ticks { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 10px; }
   .ticks li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; color: var(--muted); font-size: 16px; }
@@ -293,6 +322,8 @@
     .eyebrow { justify-content: center; }
     .stage { min-height: 500px; }
     .stage .galaxy.big { width: 480px; height: 480px; }
+    .stage .pair > .phone:first-child { translate: -16% 0; }
+    .stage .pair > .phone.iphone { translate: 20% -6%; }
     .feature.flip .copy { order: 0; }
     .feature + .feature { margin-top: 72px; }
     .spot { padding: 28px 20px; }
@@ -348,11 +379,19 @@
       </div>
       <div class="stage">
         <span class="galaxy big spin" aria-hidden="true"><img src="/img/galaxy-512.webp" width="512" height="512" alt=""></span>
-        <div class="phone">
-          <picture>
-            <source media="(prefers-color-scheme: light)" srcset="/img/screens/today-light.webp">
-            <img src="/img/screens/today-dark.webp" width="780" height="1688" alt="Siddha's Today screen: a day score, what to do and avoid today, and a timing note.">
-          </picture>
+        <div class="pair">
+          <div class="phone">
+            <picture>
+              <source media="(prefers-color-scheme: light)" srcset="/img/screens/today-light.webp">
+              <img src="/img/screens/today-dark.webp" width="780" height="1688" alt="Siddha's Today screen on Android: a day score, what to do and avoid today, and a timing note.">
+            </picture>
+          </div>
+          <div class="phone iphone">
+            <picture>
+              <source media="(prefers-color-scheme: light)" srcset="/img/screens/calendar-light.webp">
+              <img src="/img/screens/calendar-dark.webp" width="780" height="1688" alt="Siddha's Calendar on iPhone, with days marked good for you or take care.">
+            </picture>
+          </div>
         </div>
       </div>
     </section>
@@ -397,7 +436,7 @@
 
       <div class="feature flip">
         <div class="shots">
-          <div class="phone">
+          <div class="phone iphone">
             <picture>
               <source media="(prefers-color-scheme: light)" srcset="/img/screens/ask-light.webp">
               <img src="/img/screens/ask-dark.webp" width="780" height="1688" loading="lazy" alt="Ask: topic chips for work, marriage, money, child and health, with questions suggested from your chart.">
@@ -438,7 +477,7 @@
                 <img src="/img/screens/calendar-dark.webp" width="780" height="1688" loading="lazy" alt="Calendar month view with days coloured good for you or take care, and the month's festivals.">
               </picture>
             </div>
-            <div class="phone sm">
+            <div class="phone sm iphone">
               <picture>
                 <source media="(prefers-color-scheme: light)" srcset="/img/screens/day-light.webp">
                 <img src="/img/screens/day-dark.webp" width="780" height="1688" loading="lazy" alt="One day in the calendar: good day for you, and the timeline of good and avoid periods.">
@@ -461,7 +500,7 @@
           <figcaption><b>Your chart</b><span>North or South Indian style</span></figcaption>
         </figure>
         <figure>
-          <div class="phone">
+          <div class="phone iphone">
             <picture><source media="(prefers-color-scheme: light)" srcset="/img/screens/yogas-light.webp"><img src="/img/screens/yogas-dark.webp" width="780" height="1688" loading="lazy" alt="Yogas and doshas found in the chart, each explained in one or two lines."></picture>
           </div>
           <figcaption><b>Yogas &amp; doshas</b><span>Strengths and flags, explained</span></figcaption>
@@ -473,7 +512,7 @@
           <figcaption><b>Remedies &amp; mantras</b><span>In Telugu, English or Sanskrit</span></figcaption>
         </figure>
         <figure>
-          <div class="phone">
+          <div class="phone iphone">
             <picture><source media="(prefers-color-scheme: light)" srcset="/img/screens/muhurta-light.webp"><img src="/img/screens/muhurta-dark.webp" width="780" height="1688" loading="lazy" alt="Muhurta: pick what you are planning, such as house warming, naming or starting to learn."></picture>
           </div>
           <figcaption><b>Muhurta</b><span>Good times for big days</span></figcaption>
