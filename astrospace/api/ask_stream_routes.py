@@ -46,6 +46,7 @@ from .ask_routes import (
 )
 from .. import ratelimit
 from ..entitlements.usage import commit_ask_credit, release_ask_credit, reserve_ask_credit
+from ..agents.ask_engine import uses_agent
 from .auth import CurrentUser
 from .context_routes import _chart_from_kundli
 
@@ -302,6 +303,7 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
             body.question, thread_domain=thread_domain, domain_override=body.domain_override,
             experience_mode=body.experience_mode, language=body.language,
             tone=body.tone, validate_first=body.validate_first, history=messages,
+            explore=uses_agent(user.email),
         )
     except TaxonomyError:
         log.exception("ask stream prepare failed on taxonomy (kundli=%s)", kundli_id)

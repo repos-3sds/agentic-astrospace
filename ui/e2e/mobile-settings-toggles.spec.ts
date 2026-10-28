@@ -95,8 +95,8 @@ test('panchang alarms: a switch changes only itself and no row moves', async ({ 
 
   const before = await tops();
   expect(await read()).toBe('001000100000');
-  // Each tap lands before the next: on CI the first turn-on's permission
-  // check can still be settling when an unchecked tap follows.
+  // Each click returns before the screen re-renders: wait for the switch's
+  // own state, never read the row right after the tap.
   for (const index of [1, 3, 4]) {
     await switches.nth(index).click();
     await expect(switches.nth(index)).toHaveAttribute('aria-checked', 'true');

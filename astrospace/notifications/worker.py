@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from ..db import crud_mobile as cm
 from ..db.models import NotificationJob
+from .clock_change import schedule_clock_change_notices
 from .daily_briefs import schedule_daily_briefs
 from .daily_subhashita import schedule_daily_subhashita
 from .email import EmailTransport, email_transport_from_env
@@ -155,6 +156,7 @@ def run_once(db: Session, transports: dict[str, PushTransport] | None = None,
     scheduled = _step(db, "morning briefs", lambda: schedule_morning_briefs(db), [])
     windows = _step(db, "window alerts", lambda: schedule_window_alerts(db), [])
     verses = _step(db, "subhashita", lambda: schedule_daily_subhashita(db), [])
+    clocks = _step(db, "clock changes", lambda: schedule_clock_change_notices(db), [])
     # After the daily briefs, so the daily email has its brief to send.
     emails = _step(db, "emails", lambda: schedule_emails(db), {})
     owner = _step(db, "owner alerts", lambda: schedule_owner_alerts(db), {})
@@ -162,7 +164,7 @@ def run_once(db: Session, transports: dict[str, PushTransport] | None = None,
                       {"sent": 0, "failed": 0, "delivery_failed": True})
     summary = {"reaped": reaped, "daily_briefs": briefs, "scheduled": len(scheduled),
                "window_alerts": len(windows),
-               "subhashita": len(verses), "emails": emails,
+               "subhashita": len(verses), "clock_changes": len(clocks), "emails": emails,
                "owner_alerts": owner, **delivered}
     log.info("notifications: %s", summary)
     return summary

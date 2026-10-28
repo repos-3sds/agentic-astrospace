@@ -144,6 +144,7 @@ class BaseAstroAgent:
     model = DEFAULT_ANTHROPIC_MODEL
     system_prompt = ""
     tools = []
+    max_tool_rounds = MAX_TOOL_ROUNDS
 
     def __init__(self, api_key: str = None):
         from dotenv import load_dotenv
@@ -319,7 +320,7 @@ class BaseAstroAgent:
         messages = list(messages)
         tools_used = []
 
-        for _round in range(MAX_TOOL_ROUNDS):
+        for _round in range(self.max_tool_rounds):
             response = self._anthropic_client().messages.create(
                 model=self.model,
                 max_tokens=4096,
@@ -352,14 +353,14 @@ class BaseAstroAgent:
 
             break
         else:
-            log.warning("anthropic tool loop hit the %d-round cap", MAX_TOOL_ROUNDS)
+            log.warning("anthropic tool loop hit the %d-round cap", self.max_tool_rounds)
 
         return "Unable to generate a response.", tools_used
 
     def _run_messages_stream_anthropic(self, messages: list) -> Iterator[str]:
         messages = list(messages)
 
-        for _round in range(MAX_TOOL_ROUNDS):
+        for _round in range(self.max_tool_rounds):
             with self._anthropic_client().messages.stream(
                 model=self.model,
                 max_tokens=4096,
@@ -387,7 +388,7 @@ class BaseAstroAgent:
                 continue
 
             return
-        log.warning("anthropic streamed tool loop hit the %d-round cap", MAX_TOOL_ROUNDS)
+        log.warning("anthropic streamed tool loop hit the %d-round cap", self.max_tool_rounds)
 
     # Gemini provider -----------------------------------------------------
 
@@ -462,7 +463,7 @@ class BaseAstroAgent:
         contents = self._gemini_contents_from_messages(messages)
         tools_used = []
 
-        for _ in range(MAX_TOOL_ROUNDS):
+        for _ in range(self.max_tool_rounds):
             response = self._gemini_client().models.generate_content(
                 model=self.model,
                 contents=contents,
