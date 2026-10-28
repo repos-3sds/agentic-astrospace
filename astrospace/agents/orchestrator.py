@@ -454,6 +454,14 @@ def exploration_trace(prepared: "PreparedRun") -> dict | None:
     }
 
 
+def _log_violations(stage: str, domain: str, violations: list) -> None:
+    """Which checks failed, so a withheld answer can be traced from the log
+    (2026-10-28: a health answer was withheld and nothing said why). The
+    rule names only, never the reader's question or the quoted sentence."""
+    log.info("ask verifier %s (domain=%s): %s", stage, domain, " | ".join(
+        f"{getattr(v, 'severity', '?')}: {str(v).split(' in: ')[0][:160]}" for v in violations))
+
+
 class AskOrchestrator:
     def __init__(self, chart_loader: Callable[[], VedicChart],
                 router: KeywordRouter | None = None,
@@ -868,6 +876,7 @@ class AskOrchestrator:
         violations = self._check(prepared, reading)
         if not violations:
             return AgentRunResult(reading=reading, violations=[])
+        _log_violations("first draft", prepared.domain, violations)
 
         # Exactly one repair attempt — hard cap, no open-ended retry loop.
         # D2: scoped when every surviving violation is attributable to a
@@ -895,6 +904,7 @@ class AskOrchestrator:
         violations = self._check(prepared, reading)
         if not violations:
             return AgentRunResult(reading=reading, violations=[])
+        _log_violations("after repair", prepared.domain, violations)
 
         # The repair did not clear everything. What happens next depends on
         # WHICH violations survived, and the split is the whole point of
