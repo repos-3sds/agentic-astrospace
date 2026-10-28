@@ -365,6 +365,9 @@
 // The two columns of a wide tablet. On phones and narrow tablets they are
 // not boxes at all, so the page keeps its one column and its gaps.
 .col { display: contents; }
+// "Reflect with Siddha" is a label and a list; the wrapper only lets the pair
+// move into the day column together (fillDayColumn), it is never a box.
+.reflect { display: contents; }
 
 @include m-wide {
   .body {
@@ -602,10 +605,33 @@
   color: var(--m-muted);
 }
 
+.verse-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
 .verse-source {
   @include m-caption;
   margin: 0;
   color: var(--m-muted);
+}
+
+// The card opens the verse with its Share to status, which nothing on the
+// card said (Hawk, 2026-10-28). A quiet line, not a button: the whole card
+// is the tap target.
+.verse-share-hint {
+  @include m-caption;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  color: var(--m-muted);
+  opacity: 0.8;
+  white-space: nowrap;
+  svg { width: 13px; height: 13px; display: block; flex-shrink: 0; }
 }
 
 /* Next window — node 13:57 */

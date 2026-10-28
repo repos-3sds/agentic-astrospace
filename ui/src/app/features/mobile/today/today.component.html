@@ -173,6 +173,11 @@
     </span>
     <img class="chevron" src="mobile/chevron.svg" alt="" aria-hidden="true" />
   </button>
+
+  @if (fillDayColumn()) {
+    <ng-container [ngTemplateOutlet]="verseCard" />
+    <ng-container [ngTemplateOutlet]="reflect" />
+  }
   </div>
 
   <div class="col col-more">
@@ -190,17 +195,7 @@
 
   <as-notify-nudge />
 
-  @if (subhashita.today(); as verse) {
-    <a class="verse" [routerLink]="['/m', 'subhashita']"
-       [attr.aria-label]="'Today’s Subhashita: ' + verse.english + '. Open to read and share'">
-      <p class="eyebrow verse-eyebrow">Today’s Subhashita</p>
-      <p class="verse-english">“{{ verse.english }}”</p>
-      @if (verse.meaning) {
-        <p class="verse-meaning">{{ verse.meaning }}</p>
-      }
-      <p class="verse-source">— {{ verse.source }} {{ verse.ref }}</p>
-    </a>
-  }
+  @if (!fillDayColumn()) { <ng-container [ngTemplateOutlet]="verseCard" /> }
 
   @if (preferences.experienceMode() !== 'practitioner' && upcomingFestival(); as festival) {
     <button class="festival" type="button" (click)="showSheet('festival')"
@@ -352,20 +347,7 @@
     </div>
   }
 
-  <p class="eyebrow section-label">REFLECT WITH <span class="siddha-brand">Siddha</span></p>
-  <div class="suggestions">
-    @for (q of askSuggestions(); track q) {
-      <a class="suggestion m-pressable" [routerLink]="['/m', 'ask']" [queryParams]="{ q }">
-        <span class="suggestion-text">{{ q }}</span>
-        <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
-      </a>
-    } @empty {
-      <a class="suggestion m-pressable" [routerLink]="['/m', 'ask']" [queryParams]="{ q: 'What should I reflect on today?' }">
-        <span class="suggestion-text">Ask what today is inviting you to notice</span>
-        <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
-      </a>
-    }
-  </div>
+  @if (!fillDayColumn()) { <ng-container [ngTemplateOutlet]="reflect" /> }
   } @else if (!loading() && !loadError()) {
     <section class="mtoday-empty">
       <span class="mtoday-empty-mark" aria-hidden="true">✦</span>
@@ -375,6 +357,48 @@
     </section>
   }
 </div>
+
+<!-- Placed in the day column on wide tablets, in their phone spots otherwise
+     (fillDayColumn in today.component.ts). -->
+<ng-template #verseCard>
+  @if (subhashita.today(); as verse) {
+    <a class="verse" [routerLink]="['/m', 'subhashita']"
+       [attr.aria-label]="'Today’s Subhashita: ' + verse.english + '. Open to read and share'">
+      <p class="eyebrow verse-eyebrow">Today’s Subhashita</p>
+      <p class="verse-english">“{{ verse.english }}”</p>
+      @if (verse.meaning) {
+        <p class="verse-meaning">{{ verse.meaning }}</p>
+      }
+      <span class="verse-foot">
+        <span class="verse-source">— {{ verse.source }} {{ verse.ref }}</span>
+        <span class="verse-share-hint" aria-hidden="true">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 10V2.5M5.5 5 8 2.5 10.5 5M5 7.5H4.5A1.5 1.5 0 0 0 3 9v3.5A1.5 1.5 0 0 0 4.5 14h7a1.5 1.5 0 0 0 1.5-1.5V9a1.5 1.5 0 0 0-1.5-1.5H11" />
+          </svg>Tap to share card
+        </span>
+      </span>
+    </a>
+  }
+</ng-template>
+
+<ng-template #reflect>
+  <div class="reflect">
+    <p class="eyebrow section-label">REFLECT WITH <span class="siddha-brand">Siddha</span></p>
+    <div class="suggestions">
+      @for (q of askSuggestions(); track q) {
+        <a class="suggestion m-pressable" [routerLink]="['/m', 'ask']" [queryParams]="{ q }">
+          <span class="suggestion-text">{{ q }}</span>
+          <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
+        </a>
+      } @empty {
+        <a class="suggestion m-pressable" [routerLink]="['/m', 'ask']" [queryParams]="{ q: 'What should I reflect on today?' }">
+          <span class="suggestion-text">Ask what today is inviting you to notice</span>
+          <img src="mobile/chevron.svg" alt="" aria-hidden="true" />
+        </a>
+      }
+    </div>
+  </div>
+</ng-template>
 
 @if (openSheet() === 'quality' && view(); as v) {
   <as-day-quality-sheet
