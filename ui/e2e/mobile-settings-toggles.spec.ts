@@ -95,9 +95,12 @@ test('panchang alarms: a switch changes only itself and no row moves', async ({ 
 
   const before = await tops();
   expect(await read()).toBe('001000100000');
-  await switches.nth(1).click();
-  await switches.nth(3).click();
-  await switches.nth(4).click();
+  // Each click returns before the screen re-renders: wait for the switch's
+  // own state, never read the row right after the tap.
+  for (const index of [1, 3, 4]) {
+    await switches.nth(index).click();
+    await expect(switches.nth(index)).toHaveAttribute('aria-checked', 'true');
+  }
   expect(await read()).toBe('011110100000');
   // Turning one on used to open its editor and push every row below down.
   expect(await tops()).toEqual(before);
