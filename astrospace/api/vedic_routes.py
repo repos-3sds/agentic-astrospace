@@ -14,7 +14,9 @@ from .timing_place import resolve_timing_place
 from ..core.vedic import VedicChart, LocationError
 from ..core.vedic.compatibility import gun_milan
 from ..agents.compat_insight_agent import compat_insight_enabled
-from ..context import compat_insight_store
+from ..agents.story_agent import story_agent_enabled, story_input
+from ..agents.story_classics import fallback_story
+from ..context import compat_insight_store, life_story_store
 from ..core.vedic.vargas import VARGA_FUNCTIONS
 from ..knowledge.vedic_rules import get_rule, rules_catalog
 from .auth import CurrentUser
@@ -629,6 +631,34 @@ def compatibility_insight(
     if not value:
         return {"source": "template", "insight": None}
     return {**value, "cached": not written_now}
+
+
+@router.get("/{kundli_id}/story")
+def life_story(
+    kundli_id: str,
+    user: CurrentUser,
+    ayanamsha: str = "lahiri",
+    node_type: str = "mean",
+    db: Session = Depends(get_db),
+):
+    """Your Story (Guided mode): personality traits, four life areas and the
+    current chapter, read from this chart through the classical rules it meets.
+
+    Written by the agent the first time it is opened and kept
+    (context/life_story_store.py). When the agent is off or no safe story
+    could be written, the same shape comes from the code backup, built from
+    this chart's own placements, with `source: "template"`.
+    """
+    kundli = _get_kundli(db, kundli_id, user.id)
+    chart = _chart_from_kundli(kundli, ayanamsha, node_type)
+    signals = story_input(chart)
+    if story_agent_enabled():
+        value, written_now = life_story_store.ensure_story(
+            db, user.id, kundli, signals, ayanamsha=ayanamsha, node_type=node_type,
+        )
+        if value:
+            return {**value, "cached": not written_now}
+    return {"source": "template", "story": fallback_story(signals["_facts"]), "cached": False}
 
 
 @router.get("/{kundli_id}/vargas")

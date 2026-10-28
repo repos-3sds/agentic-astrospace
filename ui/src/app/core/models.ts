@@ -1517,6 +1517,33 @@ export interface CompatibilityInsightPayload {
   cached?: boolean;
 }
 
+/** Your Story (Guided mode, Explore). Badges come from the chart, never the model. */
+export interface LifeStoryArea {
+  key: 'work' | 'relationships' | 'money' | 'energy';
+  title: string;
+  text: string;
+  tip: string;
+  /** strong: the house lord is strong; gentle: it asks for patience; steady: neither. */
+  tone: 'strong' | 'steady' | 'gentle';
+}
+
+export interface LifeStory {
+  headline: string;
+  summary: string | null;
+  /** The code backup has no titles, only sentences. */
+  traits: { title: string | null; detail: string }[];
+  growth: string;
+  areas: LifeStoryArea[];
+  chapter: string | null;
+}
+
+export interface LifeStoryPayload {
+  /** "agent" when written by the story agent; "template" is the code backup from the same chart. */
+  source: 'agent' | 'template';
+  story: LifeStory;
+  cached?: boolean;
+}
+
 /* ── AI payloads ────────────────────────────────────────────────────── */
 
 export interface Reading {

@@ -23,7 +23,7 @@ from ..db import crud, crud_mobile as cm, get_db
 from ..db.models import (
     AnswerReport, AskThread, AudioRender, BillingAccount, CompatibilityCheck, CompatibilityInsight, DailyGuidanceCache, EmailRecipient,
     EntitlementAuditEvent, EntitlementOverride, Kundli,
-    LiveActivity, MuhurtaRequest, NotificationJob, NotificationPreference,
+    LifeStory, LiveActivity, MuhurtaRequest, NotificationJob, NotificationPreference,
     PlanAssignment, PushToken, QuestionCredit, SavedMuhurta, ShareAsset, SubscriptionGrant,
     UsageBucket, UserAlert, UserDevice, UserObservance,
     UserProfile, UserRemedy, UserSettings, WidgetInstall,
@@ -238,6 +238,7 @@ def export_account(user: CurrentUser, db: Session = Depends(get_db)):
         "muhurta_requests": _export_rows(by_user(MuhurtaRequest)),
         "compatibility_checks": _export_rows(by_user(CompatibilityCheck)),
         "compatibility_insights": _export_rows(by_user(CompatibilityInsight)),
+        "life_stories": _export_rows(by_user(LifeStory)),
         "answer_reports": _export_rows(by_user(AnswerReport)),
         "observances": _export_rows(by_user(UserObservance)),
         "alerts": _export_rows(by_user(UserAlert)),
@@ -294,7 +295,7 @@ def delete_account(payload: AccountDeletionPayload, user: CurrentUser,
         db.delete(row)
 
     for model in (
-        CompatibilityCheck, CompatibilityInsight, UserObservance, WidgetInstall, LiveActivity,
+        CompatibilityCheck, CompatibilityInsight, LifeStory, UserObservance, WidgetInstall, LiveActivity,
         AudioRender, ShareAsset, NotificationPreference, EmailRecipient,
     ):
         db.query(model).filter(model.user_id == user.id).delete(synchronize_session=False)

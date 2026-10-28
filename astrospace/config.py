@@ -84,6 +84,7 @@ VARS: tuple[Var, ...] = (
     Var("ASK_SORTER", "choice", frozenset({"off", "heuristic", "0", "false", "ai", "on", "1", "true", ""})),
     Var("DAILY_BRIEF_AGENT", "opt_out"),
     Var("COMPAT_INSIGHT_AGENT", "opt_out"),
+    Var("LIFE_STORY_AGENT", "opt_out"),
     # Worker, push, email, audio
     Var("DAILY_BRIEF_LOOKAHEAD", "hhmm"),
     Var("DAILY_BRIEF_PRERENDER_AUDIO", "opt_in", accepts_on=True),

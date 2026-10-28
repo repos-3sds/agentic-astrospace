@@ -1,0 +1,1129 @@
+{
+  "notes": [
+    "Placement rules: one classical reading per rising sign, ascendant-lord house, Moon sign and Moon star. Same schema as references.json.",
+    "Kept out of references.json on purpose: retrieval there is by domain, so the Ask assembler would hand a personality question all 56 placements, most of them for other charts. These are only ever picked for the placement a chart actually has (agents/story_classics.py).",
+    "Read from the books on 2026-10-28: BPHS ch.4 and ch.26 (Sharma trans., OCR export), Brihat Jataka ch.XVI and ch.XVII (Suryanarain Rao trans., OCR export). statement is a paraphrase, never copied translation text; only character and life-direction parts of each verse are carried."
+  ],
+  "references": [
+    {
+      "ref_id": "bphs4_lagna_aries",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Aries rising: a movable, male (krura) sign ruled by Mars, with Rajas predominant. Movable signs incline a person to be active and practical rather than reflective, quick to take offence but quick to let it go; a male sign rising gives an assertive, outgoing bearing.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.4 v.5 and v.6-7, nature of the signs (Sharma trans.)"
+      },
+      "tags": [
+        "house:1",
+        "sign:Aries"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The verses classify each sign (movable, fixed or dual; male or female; its guna where the translation states one). What each class means for temperament is the translator's note to v.5, carried as the standard reading; the dual-sign line follows that note's logic."
+    },
+    {
+      "ref_id": "bphs4_lagna_taurus",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Taurus rising: a fixed, female (saumya) sign ruled by Venus, with Rajas predominant. Fixed signs incline a person to be reflective and steady rather than restless, slow to take offence but slow to let it go; a female sign rising gives gentleness, grace and a yielding nature.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.4 v.5 and v.8, nature of the signs (Sharma trans.)"
+      },
+      "tags": [
+        "house:1",
+        "sign:Taurus"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The verses classify each sign (movable, fixed or dual; male or female; its guna where the translation states one). What each class means for temperament is the translator's note to v.5, carried as the standard reading; the dual-sign line follows that note's logic."
+    },
+    {
+      "ref_id": "bphs4_lagna_gemini",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Gemini rising: a dual, male (krura) sign ruled by Mercury. Dual signs share the movable and the fixed natures, active and reflective by turns; a male sign rising gives an assertive, outgoing bearing.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.4 v.5 and v.9, nature of the signs (Sharma trans.)"
+      },
+      "tags": [
+        "house:1",
+        "sign:Gemini"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The verses classify each sign (movable, fixed or dual; male or female; its guna where the translation states one). What each class means for temperament is the translator's note to v.5, carried as the standard reading; the dual-sign line follows that note's logic. The translation names no guna for Gemini, so none is stored."
+    },
+    {
+      "ref_id": "bphs4_lagna_cancer",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Cancer rising: a movable, female (saumya) sign ruled by Moon, with Sattva predominant. Movable signs incline a person to be active and practical rather than reflective, quick to take offence but quick to let it go; a female sign rising gives gentleness, grace and a yielding nature.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.4 v.5 and v.10-11, nature of the signs (Sharma trans.)"
+      },
+      "tags": [
+        "house:1",
+        "sign:Cancer"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The verses classify each sign (movable, fixed or dual; male or female; its guna where the translation states one). What each class means for temperament is the translator's note to v.5, carried as the standard reading; the dual-sign line follows that note's logic."
+    },
+    {
+      "ref_id": "bphs4_lagna_leo",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Leo rising: a fixed, male (krura) sign ruled by Sun, with Sattva predominant. Fixed signs incline a person to be reflective and steady rather than restless, slow to take offence but slow to let it go; a male sign rising gives an assertive, outgoing bearing.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.4 v.5 and v.12, nature of the signs (Sharma trans.)"
+      },
+      "tags": [
+        "house:1",
+        "sign:Leo"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The verses classify each sign (movable, fixed or dual; male or female; its guna where the translation states one). What each class means for temperament is the translator's note to v.5, carried as the standard reading; the dual-sign line follows that note's logic."
+    },
+    {
+      "ref_id": "bphs4_lagna_virgo",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Virgo rising: a dual, female (saumya) sign ruled by Mercury, with Tamas predominant. Dual signs share the movable and the fixed natures, active and reflective by turns; a female sign rising gives gentleness, grace and a yielding nature.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.4 v.5 and v.13-14, nature of the signs (Sharma trans.)"
+      },
+      "tags": [
+        "house:1",
+        "sign:Virgo"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The verses classify each sign (movable, fixed or dual; male or female; its guna where the translation states one). What each class means for temperament is the translator's note to v.5, carried as the standard reading; the dual-sign line follows that note's logic."
+    },
+    {
+      "ref_id": "bphs4_lagna_libra",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Libra rising: a movable, male (krura) sign ruled by Venus, with Rajas predominant. Movable signs incline a person to be active and practical rather than reflective, quick to take offence but quick to let it go; a male sign rising gives an assertive, outgoing bearing.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.4 v.5 and v.15-16, nature of the signs (Sharma trans.)"
+      },
+      "tags": [
+        "house:1",
+        "sign:Libra"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The verses classify each sign (movable, fixed or dual; male or female; its guna where the translation states one). What each class means for temperament is the translator's note to v.5, carried as the standard reading; the dual-sign line follows that note's logic."
+    },
+    {
+      "ref_id": "bphs4_lagna_scorpio",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Scorpio rising: a fixed, female (saumya) sign ruled by Mars. Fixed signs incline a person to be reflective and steady rather than restless, slow to take offence but slow to let it go; a female sign rising gives gentleness, grace and a yielding nature.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.4 v.5 and v.15-16, nature of the signs (Sharma trans.)"
+      },
+      "tags": [
+        "house:1",
+        "sign:Scorpio"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The verses classify each sign (movable, fixed or dual; male or female; its guna where the translation states one). What each class means for temperament is the translator's note to v.5, carried as the standard reading; the dual-sign line follows that note's logic. The translation names no guna for Scorpio, so none is stored."
+    },
+    {
+      "ref_id": "bphs4_lagna_sagittarius",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Sagittarius rising: a dual, male (krura) sign ruled by Jupiter, with Sattva predominant. Dual signs share the movable and the fixed natures, active and reflective by turns; a male sign rising gives an assertive, outgoing bearing.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.4 v.5 and v.17-18, nature of the signs (Sharma trans.)"
+      },
+      "tags": [
+        "house:1",
+        "sign:Sagittarius"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The verses classify each sign (movable, fixed or dual; male or female; its guna where the translation states one). What each class means for temperament is the translator's note to v.5, carried as the standard reading; the dual-sign line follows that note's logic."
+    },
+    {
+      "ref_id": "bphs4_lagna_capricorn",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Capricorn rising: a movable, female (saumya) sign ruled by Saturn, with Tamas predominant. Movable signs incline a person to be active and practical rather than reflective, quick to take offence but quick to let it go; a female sign rising gives gentleness, grace and a yielding nature.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.4 v.5 and v.19-20, nature of the signs (Sharma trans.)"
+      },
+      "tags": [
+        "house:1",
+        "sign:Capricorn"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The verses classify each sign (movable, fixed or dual; male or female; its guna where the translation states one). What each class means for temperament is the translator's note to v.5, carried as the standard reading; the dual-sign line follows that note's logic."
+    },
+    {
+      "ref_id": "bphs4_lagna_aquarius",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Aquarius rising: a fixed, male (krura) sign ruled by Saturn, with Tamas predominant. Fixed signs incline a person to be reflective and steady rather than restless, slow to take offence but slow to let it go; a male sign rising gives an assertive, outgoing bearing.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.4 v.5 and v.21, nature of the signs (Sharma trans.)"
+      },
+      "tags": [
+        "house:1",
+        "sign:Aquarius"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The verses classify each sign (movable, fixed or dual; male or female; its guna where the translation states one). What each class means for temperament is the translator's note to v.5, carried as the standard reading; the dual-sign line follows that note's logic."
+    },
+    {
+      "ref_id": "bphs4_lagna_pisces",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Pisces rising: a dual, female (saumya) sign ruled by Jupiter, with Sattva predominant. Dual signs share the movable and the fixed natures, active and reflective by turns; a female sign rising gives gentleness, grace and a yielding nature.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.4 v.5 and v.22-24, nature of the signs (Sharma trans.)"
+      },
+      "tags": [
+        "house:1",
+        "sign:Pisces"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The verses classify each sign (movable, fixed or dual; male or female; its guna where the translation states one). What each class means for temperament is the translator's note to v.5, carried as the standard reading; the dual-sign line follows that note's logic."
+    },
+    {
+      "ref_id": "bphs26_1_lagna_lord_in_1",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "The ascendant lord in the 1st house indicates physical comfort and capability, a thoughtful and intelligent mind that can also be restless.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.1, effects of the Ascendant lord in the houses (Sharma trans.)"
+      },
+      "tags": [
+        "house:1",
+        "lord:1"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Only the character and life-direction part of the sloka is carried. The same verse's lines on more than one wife are not carried."
+    },
+    {
+      "ref_id": "bphs26_2_lagna_lord_in_2",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "The ascendant lord in the 2nd house indicates gains, learning, contentment, good conduct, a sense of right and wrong, and honour.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.2, effects of the Ascendant lord in the houses (Sharma trans.)"
+      },
+      "tags": [
+        "house:2",
+        "lord:1"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Only the character and life-direction part of the sloka is carried. The verse's line on many wives is not carried."
+    },
+    {
+      "ref_id": "bphs26_3_lagna_lord_in_3",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "The ascendant lord in the 3rd house indicates courage like a lion's, honour, intelligence and contentment.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.3, effects of the Ascendant lord in the houses (Sharma trans.)"
+      },
+      "tags": [
+        "house:3",
+        "lord:1"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Only the character and life-direction part of the sloka is carried. The verse's line on two wives is not carried."
+    },
+    {
+      "ref_id": "bphs26_4_lagna_lord_in_4",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "The ascendant lord in the 4th house indicates happiness through both parents, many siblings, good qualities and charm.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.4, effects of the Ascendant lord in the houses (Sharma trans.)"
+      },
+      "tags": [
+        "house:4",
+        "lord:1"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Only the character and life-direction part of the sloka is carried. The verse's line on desire is not carried."
+    },
+    {
+      "ref_id": "bphs26_5_lagna_lord_in_5",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "The ascendant lord in the 5th house indicates honour, a quick temper, and favour from those in authority.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.5, effects of the Ascendant lord in the houses (Sharma trans.)"
+      },
+      "tags": [
+        "house:5",
+        "lord:1"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Only the character and life-direction part of the sloka is carried. The verse's lines on children are not carried; children are outside this rule's use."
+    },
+    {
+      "ref_id": "bphs26_6_lagna_lord_in_6",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "The ascendant lord in the 6th house indicates less bodily ease, and trouble from opponents when the lord is afflicted without benefic aspect.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.6, effects of the Ascendant lord in the houses (Sharma trans.)"
+      },
+      "tags": [
+        "house:6",
+        "lord:1"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Only the character and life-direction part of the sloka is carried. Carried for temperament only: a life where comfort is earned through effort and opposition is met head-on."
+    },
+    {
+      "ref_id": "bphs26_7_lagna_lord_in_7",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "The ascendant lord in the 7th house indicates when the lord is a benefic, a wandering, detached streak or a rise to high position.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.7, effects of the Ascendant lord in the houses (Sharma trans.)"
+      },
+      "tags": [
+        "house:7",
+        "lord:1"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Only the character and life-direction part of the sloka is carried. The verse's line for a malefic lord concerns the spouse's life and is not carried."
+    },
+    {
+      "ref_id": "bphs26_8_lagna_lord_in_8",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "The ascendant lord in the 8th house indicates knowledge of hidden and occult subjects and a fierce temper.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.8, effects of the Ascendant lord in the houses (Sharma trans.)"
+      },
+      "tags": [
+        "house:8",
+        "lord:1"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Only the character and life-direction part of the sloka is carried. The same verse's lines on sickness, theft, gambling and other people's spouses are not carried."
+    },
+    {
+      "ref_id": "bphs26_9_lagna_lord_in_9",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "The ascendant lord in the 9th house indicates good fortune, being liked by people, devotion, skilful eloquent speech, and a family and means.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.9, effects of the Ascendant lord in the houses (Sharma trans.)"
+      },
+      "tags": [
+        "house:9",
+        "lord:1"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Only the character and life-direction part of the sloka is carried."
+    },
+    {
+      "ref_id": "bphs26_10_lagna_lord_in_10",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "The ascendant lord in the 10th house indicates happiness through the father, favour from authority, fame among people and self-earned wealth.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.10, effects of the Ascendant lord in the houses (Sharma trans.)"
+      },
+      "tags": [
+        "house:10",
+        "lord:1"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Only the character and life-direction part of the sloka is carried."
+    },
+    {
+      "ref_id": "bphs26_11_lagna_lord_in_11",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "The ascendant lord in the 11th house indicates constant gains, good qualities and fame.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.11, effects of the Ascendant lord in the houses (Sharma trans.)"
+      },
+      "tags": [
+        "house:11",
+        "lord:1"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Only the character and life-direction part of the sloka is carried. The verse's line on many wives is not carried."
+    },
+    {
+      "ref_id": "bphs26_12_lagna_lord_in_12",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "The ascendant lord in the 12th house indicates less bodily ease and, when the 12th has no benefic link, money spent without return and much anger.",
+      "source": {
+        "text_key": "bphs",
+        "location": "ch.26 v.12, effects of the Ascendant lord in the houses (Sharma trans.)"
+      },
+      "tags": [
+        "house:12",
+        "lord:1"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Only the character and life-direction part of the sloka is carried. Carried as a caution to guard energy and money, never as loss."
+    },
+    {
+      "ref_id": "bj17_1_moon_in_aries",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "emotional_patterns"
+      ],
+      "statement": "The Moon in Aries at birth indicates courage, self-respect, a fondness for travel, being quickly angered but easily calmed, changeable fortune, and standing first among siblings. These show fully when the Moon, its sign and the sign's lord are strong, and only faintly when they are weak (st.13).",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVII st.1 and st.13, Rasisiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "sign:Aries"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The stanza mixes body marks, sexual traits and character; only the character and life-pattern indications are carried, and harsher words are delivered softened."
+    },
+    {
+      "ref_id": "bj17_2_moon_in_taurus",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "emotional_patterns"
+      ],
+      "statement": "The Moon in Taurus at birth indicates generosity, patience and the capacity for hard work, popularity, firm friendships, and more happiness in the middle and later part of life. These show fully when the Moon, its sign and the sign's lord are strong, and only faintly when they are weak (st.13).",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVII st.2 and st.13, Rasisiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "sign:Taurus"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The stanza mixes body marks, sexual traits and character; only the character and life-pattern indications are carried, and harsher words are delivered softened."
+    },
+    {
+      "ref_id": "bj17_3_moon_in_gemini",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "emotional_patterns"
+      ],
+      "statement": "The Moon in Gemini at birth indicates wit, skill in reading people, learning, sweet speech, a love of music and dance, and fitness for the work of a go-between. These show fully when the Moon, its sign and the sign's lord are strong, and only faintly when they are weak (st.13).",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVII st.3 and st.13, Rasisiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "sign:Gemini"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The stanza mixes body marks, sexual traits and character; only the character and life-pattern indications are carried, and harsher words are delivered softened."
+    },
+    {
+      "ref_id": "bj17_4_moon_in_cancer",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "emotional_patterns"
+      ],
+      "statement": "The Moon in Cancer at birth indicates devotion to friends, being won over by kind words, many homes, a love of water and gardens, wealth that waxes and wanes, and an interest in astrology. These show fully when the Moon, its sign and the sign's lord are strong, and only faintly when they are weak (st.13).",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVII st.4 and st.13, Rasisiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "sign:Cancer"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The stanza mixes body marks, sexual traits and character; only the character and life-pattern indications are carried, and harsher words are delivered softened."
+    },
+    {
+      "ref_id": "bj17_5_moon_in_leo",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "emotional_patterns"
+      ],
+      "statement": "The Moon in Leo at birth indicates generosity, courage, a firm and proud mind, displeasure that lasts long, devotion to the mother, and a love of open wild country. These show fully when the Moon, its sign and the sign's lord are strong, and only faintly when they are weak (st.13).",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVII st.5 and st.13, Rasisiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "sign:Leo"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The stanza mixes body marks, sexual traits and character; only the character and life-pattern indications are carried, and harsher words are delivered softened."
+    },
+    {
+      "ref_id": "bj17_6_moon_in_virgo",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "emotional_patterns"
+      ],
+      "statement": "The Moon in Virgo at birth indicates modesty, truthfulness, sweet and calm speech, charity, skill in the arts, learning and intelligence, and residence away from home. These show fully when the Moon, its sign and the sign's lord are strong, and only faintly when they are weak (st.13).",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVII st.6 and st.13, Rasisiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "sign:Virgo"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The stanza mixes body marks, sexual traits and character; only the character and life-pattern indications are carried, and harsher words are delivered softened."
+    },
+    {
+      "ref_id": "bj17_7_moon_in_libra",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "emotional_patterns"
+      ],
+      "statement": "The Moon in Libra at birth indicates devotion to God and to good people, intelligence, cleanliness, skill in trade, travel, and helping relatives who do not always return it. These show fully when the Moon, its sign and the sign's lord are strong, and only faintly when they are weak (st.13).",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVII st.7 and st.13, Rasisiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "sign:Libra"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The stanza mixes body marks, sexual traits and character; only the character and life-pattern indications are carried, and harsher words are delivered softened."
+    },
+    {
+      "ref_id": "bj17_8_moon_in_scorpio",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "emotional_patterns"
+      ],
+      "statement": "The Moon in Scorpio at birth indicates separation from parents and teacher, respect from people in power, and a hidden, intense nature. These show fully when the Moon, its sign and the sign's lord are strong, and only faintly when they are weak (st.13).",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVII st.8 and st.13, Rasisiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "sign:Scorpio"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The stanza mixes body marks, sexual traits and character; only the character and life-pattern indications are carried, and harsher words are delivered softened."
+    },
+    {
+      "ref_id": "bj17_9_moon_in_sagittarius",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "emotional_patterns"
+      ],
+      "statement": "The Moon in Sagittarius at birth indicates liberality, eloquence and a gift for poetry, hard work, skill in fine arts, high intelligence, knowledge of right conduct, and being won over by fair means and kind words. These show fully when the Moon, its sign and the sign's lord are strong, and only faintly when they are weak (st.13).",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVII st.9 and st.13, Rasisiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "sign:Sagittarius"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The stanza mixes body marks, sexual traits and character; only the character and life-pattern indications are carried, and harsher words are delivered softened."
+    },
+    {
+      "ref_id": "bj17_10_moon_in_capricorn",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "emotional_patterns"
+      ],
+      "statement": "The Moon in Capricorn at birth indicates pleasing spouse and children, a grasping intelligence, popularity, learning and a gift for poetry, alongside idleness and a miserly streak. These show fully when the Moon, its sign and the sign's lord are strong, and only faintly when they are weak (st.13).",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVII st.10 and st.13, Rasisiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "sign:Capricorn"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The stanza mixes body marks, sexual traits and character; only the character and life-pattern indications are carried, and harsher words are delivered softened."
+    },
+    {
+      "ref_id": "bj17_11_moon_in_aquarius",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "emotional_patterns"
+      ],
+      "statement": "The Moon in Aquarius at birth indicates stubbornness, a love of flowers, scents and friends, changeable fortune, and the strength to bear fatigue on the road. These show fully when the Moon, its sign and the sign's lord are strong, and only faintly when they are weak (st.13).",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVII st.11 and st.13, Rasisiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "sign:Aquarius"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The stanza mixes body marks, sexual traits and character; only the character and life-pattern indications are carried, and harsher words are delivered softened."
+    },
+    {
+      "ref_id": "bj17_12_moon_in_pisces",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "emotional_patterns"
+      ],
+      "statement": "The Moon in Pisces at birth indicates fondness for spouse and fine clothes, overcoming enemies, charm, learning and wealth. These show fully when the Moon, its sign and the sign's lord are strong, and only faintly when they are weak (st.13).",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVII st.12 and st.13, Rasisiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "sign:Pisces"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "The stanza mixes body marks, sexual traits and character; only the character and life-pattern indications are carried, and harsher words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_5_moon_star_pushya",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Pushya indicates control over the passions, popularity, learning, wealth and charity. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.5 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Pushya"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_5_moon_star_ashlesha",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Ashlesha indicates cunning and self-interest, a guarded nature that can turn ungrateful. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.5 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Ashlesha"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_6_moon_star_magha",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Magha indicates many helpers and much wealth, respect for elders and the gods, and great enterprise. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.6 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Magha"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_6_moon_star_purva_phalguni",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Purva Phalguni indicates sweet speech, generosity, good looks, a love of travel and service to those in power. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.6 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Purva Phalguni"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_7_moon_star_uttara_phalguni",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Uttara Phalguni indicates popularity, self-acquired property, and enjoyment and happiness. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.7 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Uttara Phalguni"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_7_moon_star_hasta",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Hasta indicates enterprise and intelligence. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.7 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Hasta"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_8_moon_star_chitra",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Chitra indicates fine clothes and garlands, good looks and fine limbs. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.8 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Chitra"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_8_moon_star_swati",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Swati indicates politeness, skill in trade, a kind heart, sweet speech and generosity. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.8 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Swati"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_9_moon_star_vishakha",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Vishakha indicates clever speech or skill in making money, good looks, and a jealous, grasping and quarrelsome streak. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.9 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Vishakha"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_9_moon_star_anuradha",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Anuradha indicates leadership, living in foreign lands and a love of travel. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.9 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Anuradha"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_10_moon_star_jyeshtha",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Jyeshtha indicates few friends, contentment, charity and a very quick temper. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.10 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Jyeshtha"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_10_moon_star_moola",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Moola indicates pride, wealth, happiness, goodness, steadiness and enjoyment. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.10 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Moola"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_11_moon_star_purva_ashadha",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Purva Ashadha indicates a good and pleasant spouse, pride, and steady friendship. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.11 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Purva Ashadha"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_11_moon_star_uttara_ashadha",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Uttara Ashadha indicates politeness, knowledge, virtue, many friends, gratitude and popularity. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.11 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Uttara Ashadha"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_12_moon_star_shravana",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Shravana indicates learning, goodness, liberality, wealth and renown. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.12 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Shravana"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_12_moon_star_dhanishta",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Dhanishta indicates liberality, wealth, courage and a love of music. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.12 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Dhanishta"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_13_moon_star_shatabhisha",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Shatabhisha indicates plain and truthful ways, an adventurous spirit, overcoming enemies, and being hard to reconcile. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.13 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Shatabhisha"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_13_moon_star_purva_bhadrapada",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Purva Bhadrapada indicates sorrow, skill and a miserly streak. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.13 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Purva Bhadrapada"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_14_moon_star_uttara_bhadrapada",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Uttara Bhadrapada indicates good speech, happiness, a large family, success over enemies and charity. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.14 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Uttara Bhadrapada"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    },
+    {
+      "ref_id": "bj16_14_moon_star_revati",
+      "domains": [
+        "personality"
+      ],
+      "subdomains": [
+        "core_temperament"
+      ],
+      "statement": "Birth with the Moon in Revati indicates a well-formed body, popularity, courage, cleanliness and wealth. These show strongly when the Moon is strong and only faintly when it is weak.",
+      "source": {
+        "text_key": "brihat_jataka",
+        "location": "ch.XVI st.14 with the translator's note, Rikshasiladhyaya (Suryanarain Rao trans.)"
+      },
+      "tags": [
+        "planet:Moon",
+        "nakshatra:Revati"
+      ],
+      "status": "convention_dependent",
+      "observance_note": "Stanzas 1-4 (Ashwini to Punarvasu) are missing from the OCR copy we hold, so those seven stars have no stored rule. Where the translator gives two readings, the milder one is carried; harsh words are delivered softened."
+    }
+  ]
+}

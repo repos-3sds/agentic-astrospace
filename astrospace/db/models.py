@@ -864,6 +864,26 @@ class CompatibilityInsight(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
+class LifeStory(Base):
+    """The agent-written Your Story for one profile (agents/story_agent.py),
+    written once and kept. `key` hashes everything that changes the words
+    (birth details, conventions, the prompt version and the running periods),
+    so a change to any of them is a new row, never the old text served."""
+
+    __tablename__ = "life_stories"
+    __table_args__ = (
+        UniqueConstraint("kundli_id", "key", name="life_stories_kundli_key"),
+    )
+
+    id: Mapped[str] = mapped_column(_UuidString, primary_key=True, default=_uuid)
+    user_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    kundli_id: Mapped[str] = mapped_column(
+        String, ForeignKey("kundlis.id", ondelete="CASCADE"), nullable=False, index=True)
+    key: Mapped[str] = mapped_column(String, nullable=False)
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
 # ── Notifications & alerts ────────────────────────────────────────────────────
 
 class PushToken(Base):

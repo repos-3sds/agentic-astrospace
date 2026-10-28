@@ -1931,3 +1931,23 @@ From the Muhurta audit (batches A–E built; these were left out on purpose).
   `ui/src/app/core/push.service.ts`, with a row on the Notifications screen.
   *Code hook:* `clock_change._wants_push` already reads
   `prefs["clock_change"]["enabled"]`.
+
+## Deferred backlog — Your Story classics rules (2026-10-28)
+
+- [ ] **Birth-star rules for Ashwini to Punarvasu.** Your Story reads the
+  Moon's birth star from Brihat Jataka ch. XVI st. 5-14
+  (`bj16_*_moon_star_*` in `astrospace/context/placement_references.json`).
+  *Why not built:* the only machine-readable copy we have (the OCR export of
+  the Suryanarain Rao translation) starts ch. XVI at stanza 5, so the first
+  seven stars have no verse; a chart with the Moon there simply gets no star
+  rule, and nothing is made up. *Unblock:* read st. 1-4 from the page images
+  of that book (see `docs/kb_corpus_sources.md`) or another pre-1931 print,
+  and add the seven entries in the same shape. *Code hook:*
+  `STAR_PLAIN` and `personality_picks` in `astrospace/agents/story_classics.py`.
+- [ ] **Code backup area lines are per tone, not per chart.** When the agent
+  is off or fails, each life-area card reads one of three lines for its
+  tone, so two charts with the same tones read alike there (traits, growth
+  and chapter still come from the chart). *Why not built:* the agent is the
+  personal path; the backup only has to be true and calm. *Unblock:* add
+  per-house-lord lines to `AREA_PLAIN` if the backup ends up serving often
+  (watch `life_story.cost` status `fallback`).
