@@ -20,11 +20,15 @@ from __future__ import annotations
 
 import json
 import logging
+import queue
+import threading
 import time
 from dataclasses import dataclass, field
 from typing import Callable, Iterator
 
+from .ask_tools import ChartTools, summarize_call
 from .domain_agent import DomainReadingAgent
+from .explorer import ChartExplorer
 from .intent import QuestionTense, detect_intent, detect_tense
 from .registry import AGENT_REGISTRY, AgentConfig
 from .safety import REFER_OUT_ANSWERS, refer_out_kind
@@ -90,6 +94,18 @@ class ContextResult:
 cost_log = logging.getLogger("astrospace.ask.cost")
 log = logging.getLogger(__name__)
 
+# The tool-using Ask's exploring step gives up after this long and the turn
+# carries on over the plain bundle.
+EXPLORE_TIMEOUT_S = 60
+
+EXPLORED_NOTE = """
+
+LOOKED UP FOR THIS QUESTION: the bundle's `explored` list holds chart lookups made for this
+exact question, each with a `ref` (e.g. "tool:house(7)") and `explorer_notes` sums them up.
+Use them like any other bundle section. A `technical_basis` source may be one of those refs, or
+a "pattern:..." id from a classical_patterns lookup. Tier H patterns are practice, not classics:
+say so in plain words if you lean on one. Never name a book in the reader-facing text."""
+
 
 def _usage_summary(usage: dict) -> dict:
     """The persisted/streamed shape: totals without the per-call breakdown."""
@@ -141,6 +157,13 @@ class PreparedRun:
     # callback signature changing: {"provider", "model", "calls",
     # "input_tokens", "output_tokens", "repaired", "latency_ms", "breakdown"}.
     usage: dict = field(default_factory=dict)
+    # Set only when this turn uses the tool-using Ask (agents/ask_engine.py).
+    # `explorer_factory(on_tool)` builds the exploring agent; after it runs,
+    # `agent_factory(bundle)` rebuilds the specialist over the bundle with
+    # the explored results in it.
+    explorer_factory: Callable | None = None
+    agent_factory: Callable | None = None
+    explore_usage: list = field(default_factory=list)
 
 
 @dataclass
@@ -330,6 +353,7 @@ class AskOrchestrator:
         self._planner = planner or plan_question
         self._validation_store = validation_store
         self._profile_context_store = profile_context_store
+        self._chart: VedicChart | None = None
 
     def check_safety(self, question: str) -> SafetyResult:
         return SafetyResult(refer_out_kind=refer_out_kind(question))
@@ -395,6 +419,7 @@ class AskOrchestrator:
                          question_kind: str = "broad",
                          history: list[dict] | None = None) -> ContextResult:
         chart = self._chart_loader()
+        self._chart = chart
         bundle = assemble_domain(
             chart, domain, question=question, intent=intent,
             validation_probes=self._stored_probes(domain),
@@ -538,6 +563,7 @@ class AskOrchestrator:
         validate_first: bool = False,
         tone: str = "gentle",
         history: list[dict] | None = None,
+        explore: bool = False,
     ) -> PrepareOutcome:
         """`experience_mode` (guided/balanced/practitioner) selects the
         agent's VOICE only — never its facts, claims, or guardrails. See
@@ -616,15 +642,36 @@ class AskOrchestrator:
             if probe_envelope is not None:
                 return PrepareOutcome(terminal_envelope=probe_envelope)
 
-        agent = DomainReadingAgent(
-            context.bundle, registry_result.agent_config.domain_addendum,
-            question_tense=routing.tense,
-            question_kind=plan.kind,
-            experience_mode=experience_mode,
-            language=language,
-            tone=tone,
-            pushback=detect_pushback(question),
-        )
+        def build_agent(bundle: dict) -> DomainReadingAgent:
+            agent = DomainReadingAgent(
+                bundle, registry_result.agent_config.domain_addendum,
+                question_tense=routing.tense,
+                question_kind=plan.kind,
+                experience_mode=experience_mode,
+                language=language,
+                tone=tone,
+                pushback=detect_pushback(question),
+            )
+            if bundle.get("explored"):
+                agent.system_prompt += EXPLORED_NOTE
+            return agent
+
+        agent = build_agent(context.bundle)
+        explorer_factory = None
+        if explore and self._chart is not None:
+            chart, bundle, kind = self._chart, context.bundle, plan.kind
+
+            def explorer_factory(on_tool):
+                from ..context.source_retriever import get_source_retriever
+                try:
+                    retriever = get_source_retriever()
+                except Exception:
+                    log.exception("classics search unavailable for the explorer")
+                    retriever = None
+                tz = (chart.meta() or {}).get("timezone") or "Asia/Kolkata"
+                return ChartExplorer(ChartTools(chart, tz, retriever), question, bundle,
+                                     question_kind=kind, experience_mode=experience_mode,
+                                     on_tool=on_tool)
         profile_context = context.bundle.get("profile_context") or {}
         return PrepareOutcome(prepared=PreparedRun(
             domain=routing.domain,
@@ -636,16 +683,28 @@ class AskOrchestrator:
             profile_context_revision=profile_context.get("revision", 0),
             profile_context_as_of=profile_context.get("as_of"),
             question_kind=plan.kind,
+            explorer_factory=explorer_factory,
+            agent_factory=build_agent if explorer_factory else None,
         ))
 
     def _agent_run_and_verify(self, prepared: PreparedRun, messages: list) -> AgentRunResult:
         started = time.monotonic()
         result = self._generate_and_verify(prepared, messages)
         totals = getattr(prepared.agent, "usage_totals", lambda: {})() or {}
+        # Two or more specialist calls means the single repair attempt ran.
+        repaired = int(totals.get("calls") or 0) >= 2
+        if prepared.explore_usage and totals:
+            explore = prepared.explore_usage
+            totals = {
+                **totals,
+                "calls": int(totals.get("calls") or 0) + len(explore),
+                **{key: int(totals.get(key) or 0) + sum(int(u.get(key) or 0) for u in explore)
+                   for key in ("input_tokens", "output_tokens", "cached_tokens")},
+                "breakdown": [*explore, *(totals.get("breakdown") or [])],
+            }
         result.usage = {
             **totals,
-            # Two or more calls means the single repair attempt ran.
-            "repaired": int(totals.get("calls") or 0) >= 2,
+            "repaired": repaired,
             "latency_ms": int((time.monotonic() - started) * 1000),
         }
         return result
@@ -743,6 +802,62 @@ class AskOrchestrator:
         except Exception:  # accounting never costs a reader their answer
             log.exception("ask cost log line failed")
 
+    def _explore(self, prepared: PreparedRun) -> Iterator[dict]:
+        """Run the exploring agent on a worker thread, yielding one status
+        line per new kind of lookup while it works. On success the explored
+        results join the bundle and the specialist is rebuilt over it; on any
+        failure or timeout the turn carries on as the normal bundle path."""
+        events: queue.Queue = queue.Queue()
+        outcome: dict = {}
+        started = time.monotonic()
+
+        def work():
+            try:
+                explorer = prepared.explorer_factory(
+                    lambda name, args: events.put(summarize_call(name, args)))
+                outcome["result"] = explorer.explore()
+                outcome["usage"] = list(explorer.usage_log)
+            except Exception:
+                log.exception("ask exploration failed (domain=%s)", prepared.domain)
+            finally:
+                events.put(None)
+
+        thread = threading.Thread(target=work, name="ask-explore", daemon=True)
+        thread.start()
+        deadline = started + EXPLORE_TIMEOUT_S
+        shown: set[str] = set()
+        while True:
+            try:
+                label = events.get(timeout=max(0.1, deadline - time.monotonic()))
+            except queue.Empty:
+                log.warning("ask exploration timed out after %ss (domain=%s)",
+                            EXPLORE_TIMEOUT_S, prepared.domain)
+                return
+            if label is None:
+                break
+            if label not in shown:
+                shown.add(label)
+                yield {"type": "status", "stage": "exploring", "label": label}
+
+        found = outcome.get("result")
+        prepared.explore_usage = outcome.get("usage") or []
+        prepared.usage = {"explore_ms": int((time.monotonic() - started) * 1000)}
+        if not found or not found.get("explored"):
+            return
+        bundle = prepared.bundle
+        bundle["explored"] = found["explored"]
+        if found.get("notes"):
+            bundle["explorer_notes"] = found["notes"]
+        if found.get("passages"):
+            known = {p.get("chunk_id") for p in bundle.get("source_passages") or []}
+            bundle["source_passages"] = [
+                *(bundle.get("source_passages") or []),
+                *(p for p in found["passages"] if p.get("chunk_id") not in known),
+            ]
+        prepared.agent = prepared.agent_factory(bundle)
+        if "explored" not in prepared.context_used:
+            prepared.context_used = [*prepared.context_used, "explored"]
+
     def run(
         self, prepared: PreparedRun, messages: list,
         persist: Callable[[StructuredReading | None, str], str | None],
@@ -753,10 +868,16 @@ class AskOrchestrator:
         pass (or a terminal failure state) — never before."""
         yield {"type": "status", "stage": "gathering_context",
               "label": f"Gathering your {', '.join(prepared.context_used[:3])}…"}
+        if prepared.explorer_factory is not None:
+            yield from self._explore(prepared)
         yield {"type": "status", "stage": "interpreting",
               "label": f"{prepared.bundle.get('domain_name', prepared.domain)} specialist is interpreting…"}
 
         result = self._agent_run_and_verify(prepared, messages)
+        if prepared.usage.get("explore_ms"):
+            # The reader waited for the exploring step too.
+            result.usage["latency_ms"] = (int(result.usage.get("latency_ms") or 0)
+                                          + prepared.usage["explore_ms"])
         prepared.usage = result.usage
 
         if result.reading is None:
