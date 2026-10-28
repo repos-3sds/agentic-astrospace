@@ -65,6 +65,7 @@ export class PushService {
   private listenersInstalled = false;
   private askedThisLaunch = false;
   private booted = false;
+  private syncQueue: Promise<void> = Promise.resolve();
   private signedInAs: string | null = null;
 
   constructor() {
@@ -199,15 +200,23 @@ export class PushService {
     }
   }
 
-  /** Preference toggles go to the server too, so the worker can honour them. */
-  async syncPreference(id: string, on: boolean): Promise<void> {
+  /**
+   * Preference toggles go to the server too, so the worker can honour them.
+   * One at a time, in the order tapped: on then off sent together could land
+   * the other way round and leave the account on.
+   */
+  syncPreference(id: string, on: boolean): Promise<void> {
     const category = PREF_CATEGORY[id];
-    if (!category || !this.auth.isAuthenticated()) return;
-    try {
-      await this.api.put(`/me/notification-preferences/${category}`, { enabled: on });
-    } catch {
-      // Local state is already saved; the next toggle retries.
-    }
+    if (!category || !this.auth.isAuthenticated()) return Promise.resolve();
+    const run = this.syncQueue.then(async () => {
+      try {
+        await this.api.put(`/me/notification-preferences/${category}`, { enabled: on });
+      } catch {
+        // Local state is already saved; the next toggle retries.
+      }
+    });
+    this.syncQueue = run;
+    return run;
   }
 
   /**
