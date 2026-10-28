@@ -579,3 +579,31 @@ class TestPlacementsMatchTheChart:
         with patch.object(AskOrchestrator, "check_validation", return_value=None):
             prepared = orchestrator.prepare("Will I get a promotion at work?").prepared
         assert prepared.bundle["birth_placements"] == placements
+
+
+class TestAnswersStayFull:
+    """2026-10-28: after the band and bindu checks the answers shrank to three reasons."""
+
+    def test_a_thin_answer_and_missing_action_kinds_are_sent_back(self):
+        from astrospace.agents.verifier import depth_violations
+        bundle = {"overall_view": {"band": "moderately good"}}
+        thin = _reading("houses").model_copy(update={
+            "interpretation": "Yes, with care. Your 2nd lord Mars sits in the 12th house."})
+        found = depth_violations(thin, bundle)
+        assert found[0].field == "interpretation" and "running period" in found[0]
+        assert found[1].field == "guidance"
+        full = thin.model_copy(update={
+            "interpretation": (
+                "Yes, with care. Your Jupiter-Venus period runs to November 2028. Your 10th lord "
+                "Moon sits in your 1st house. Venus is combust. In your D10 chart Rahu is in the "
+                "10th. A Raja yoga joins the 1st and 9th lords. Your birth star Chitra gives craft."),
+            "guidance": thin.guidance.model_copy(update={"practical_actions": [
+                "Take care: keep a simple routine.", "Consider: post weekly.",
+                "Avoid: chasing quick views.", "Do: build a library of stories."]})})
+        assert depth_violations(full, bundle) == []
+        assert depth_violations(thin, {}) == []
+
+    def test_the_writer_is_given_the_full_layout(self):
+        from astrospace.agents.orchestrator import EXPLORED_NOTE
+        assert "thin is a failure" in EXPLORED_NOTE and "Personality in this period" in EXPLORED_NOTE
+        assert "at least one" in EXPLORED_NOTE

@@ -271,7 +271,10 @@ Work through every point of view before you finish:
    Atmakaraka) to what the running maha, antar and sub-sub lords and today's transits stir in
    that nature. Say how this person in particular will feel and act in this period.
 10. GUIDANCE. From all of the above, list what to TAKE CARE of, what to CONSIDER, what to AVOID
-   and what to DO (implement), each tied to a planet, period or house with its ref.
+   and what to DO (implement), each tied to a planet, period or house with its ref: 4 to 6
+   lines, at least one of each kind. Put them in `findings`, each starting with its word.
+   Findings are the writer's whole brief: give one finding per angle as well as these lines,
+   so nothing you judged is lost.
 11. REMEDIES. Pick 1-2 from the remedies look-up that fit this reader's situation best (the
    period lord, the stressed area, a flag) and say why in their terms. Never invent one.
 

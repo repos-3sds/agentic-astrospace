@@ -667,6 +667,44 @@ def bindu_lean_violations(reading: StructuredReading, bundle: dict) -> list[Viol
     return []
 
 
+# What a full consultation touches (tool-using Ask, Balanced and Practitioner;
+# Guided carries the chart reasons behind markers instead). 2026-10-28: after
+# the band and bindu checks the answers shrank to three reasons.
+_DEPTH_TOPICS = {
+    "the running period": r"\b(?:dasha|mahadasha|antardasha|sub-period|sub period|period)\b",
+    "the house lords": r"\blord\b",
+    "planet strength": r"\b(?:exalted|debilitated|combust|own sign|strong|weak|retrograde)\b",
+    "the divisional chart": r"\b(?:D\d{1,2}|dashamsha|navamsha|divisional)\b",
+    "yogas or doshas": r"\b(?:yoga|dosha|manglik)\b",
+    "the birth star": r"\b(?:nakshatra|birth star|star)\b",
+    "timing": r"\b(?:19|20)\d{2}\b",
+}
+_ACTION_KINDS = ("take care", "consider", "avoid", "do")
+
+
+def depth_violations(reading: StructuredReading, bundle: dict) -> list[Violation]:
+    """Quality severity, tool-using Ask only: the interpretation must cover
+    the heavy angles and timing, and the actions every kind."""
+    if not bundle.get("overall_view"):
+        return []
+    text = " ".join([reading.interpretation or "", reading.summary_and_assurance or ""])
+    missing = [name for name, pattern in _DEPTH_TOPICS.items()
+               if not re.search(pattern, text, re.IGNORECASE)]
+    found: list[Violation] = []
+    if missing:
+        found.append(Violation(
+            "the answer is too thin: it never covers " + ", ".join(missing)
+            + ". Give each its own short paragraph, as Step 2 lays out", "quality", "interpretation"))
+    starts = {a.strip().lower().split(":")[0] for a in reading.guidance.practical_actions}
+    lacking = [k for k in _ACTION_KINDS
+               if not any(s == k or s.startswith(k + " ") for s in starts)]
+    if lacking:
+        found.append(Violation(
+            "practical_actions need at least one line starting with each of Take care, Consider, "
+            "Avoid, Do; missing: " + ", ".join(lacking), "quality", "guidance"))
+    return found
+
+
 def verify_coverage(reading: StructuredReading, bundle: dict) -> list[Violation]:
     """The domain's own primary evidence must be addressed, or dismissed.
 

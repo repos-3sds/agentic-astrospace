@@ -37,7 +37,7 @@ from .schema import AskIntent, StructuredReading
 from .stance import detect_pushback
 from .validation_agent import ValidationAgent, ValidationProbeDraft, probe_violations
 from .placement_check import birth_placements
-from .verifier import (guided_violations, quality_violations, safety_violations, verify,
+from .verifier import (depth_violations, guided_violations, quality_violations, safety_violations, verify,
                        verify_coverage, violation_fields)
 from ..context.muhurta_search import muhurta_section
 from ..context import KeywordRouter, assemble_domain
@@ -118,15 +118,23 @@ Your FIRST sentence says it in plain words:
 Never open a mixed or better band with "will not", "does not suit" or "cannot". Never open a
 mixed or worse band with "will definitely". Confidence is medium for mixed and moderately good.
 
-STEP 2. EXPLAIN IN ORDER OF WEIGHT. The heaviest angles carry the answer:
-  first  the running period (maha, antar, sub-sub lords and the houses they rule),
-  then   the house lords and where they sit (from the Lagna, the Moon and the Sun),
-  then   the strength of the key planets (exalted, debilitated, combust, cancelled),
-  then   the divisional chart and the yogas,
-  last   Jaimini, transits, Ashtakavarga and the birth star, as supporting colour.
-Give the strongest reason FOR and the strongest reason AGAINST, then the combined view.
-Ashtakavarga bindus may appear AT MOST ONCE and never as a main reason. Do not build the answer
-on a number because it sounds precise.
+STEP 2. A FULL CONSULTATION, IN ORDER OF WEIGHT. Short is not safe; thin is a failure. The
+interpretation covers ALL of these, each in its own short paragraph, in this order:
+  1. The verdict sentence (Step 1) and one line on why, in their terms.
+  2. The running period: maha, antar and sub-sub lords, the houses they rule and sit in, and
+     what that stirs for this question now.
+  3. The house lords for this question and where they sit, from the Lagna, and whether the
+     Moon and Sun views agree.
+  4. The strength of the key planets: exalted, own sign, debilitated, combust, cancelled.
+  5. The divisional chart (D10 for work, D9 for marriage, etc.) and the yogas or doshas that
+     touch the area.
+  6. The supporting angles together: Jaimini karaka, transits, the birth star and its story,
+     and Ashtakavarga (bindus AT MOST ONCE, never as a main reason).
+  7. Personality in this period: how this person's nature meets what the period stirs.
+  8. Timing: the windows that help and the ones that ask for care, with dates copied exactly.
+  9. The combined view: the strongest reason for, the strongest against, and how they net out.
+Write it in simple words, but do not drop any of the nine. About 300-450 words in Balanced and
+Practitioner. In Guided the same nine points in plain words, chart reasons behind [n] markers.
 
 STEP 3. STAY TRUE TO THE READER.
 - Start from `reader_facts`; never assume a life they said they do not have.
@@ -151,7 +159,8 @@ rule points the other way (e.g. Jupiter in the 10th from the Moon is a strain).
 STEP 6. GUIDANCE AND REMEDIES.
 - Tie the person's nature to the running period ("Personality in this period").
 - Carry the explorer's Take care / Consider / Avoid / Do lines into
-  `guidance.practical_actions`, each starting with that word.
+  `guidance.practical_actions`, each starting with that word: 4 to 6 lines, with at least one
+  of each kind.
 - `guidance.remedies`: 1-2 only, from the "Remedy ..." lines, mantra in English letters, with
   why it fits them. Never invent a remedy.
 - Tier H patterns and nakshatra deity stories are practice, not classics: say so if you lean
@@ -892,6 +901,8 @@ class AskOrchestrator:
                       + verify_coverage(reading, prepared.bundle))
         if prepared.experience_mode == "guided":
             violations += guided_violations(reading)
+        else:
+            violations += depth_violations(reading, prepared.bundle)
         return violations
 
     def _scoped_repair(self, prepared: PreparedRun, messages: list, original: StructuredReading,
