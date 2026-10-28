@@ -6,12 +6,15 @@ import { PreferencesService } from '../../../core/preferences.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { ApiService } from '../../../core/api.service';
+import { EntitlementService } from '../../../core/entitlement.service';
 import { shareFile } from '../../../core/native-share';
 
 /**
  * Settings — Account & privacy (Figma node 69:180).
  *
- * "Export my data" comes first, above sign-out and delete. Data you cannot take
+ * Plan and purchases leads, since the Settings tab's Account card opens this
+ * page and shows the plan (Deepak's review, 2026-10-28). "Export my data"
+ * stays above sign-out and delete. Data you cannot take
  * with you is not yours, and putting export at the top is the cheapest way to
  * mean the Welcome screen's "your birth details stay yours".
  *
@@ -48,6 +51,14 @@ export class AccountPrivacyComponent {
   private readonly router = inject(Router);
   protected readonly preferences = inject(PreferencesService);
   private readonly analytics = inject(AnalyticsService);
+  private readonly entitlements = inject(EntitlementService);
+
+  /** The plan by name once the server has said; never a guessed "Free". */
+  protected readonly planLabel = computed(() => {
+    const tier = this.entitlements.current()?.access_tier;
+    const name = tier === 'pro' ? 'Practitioner' : tier === 'plus' ? 'Plus' : tier === 'free' ? 'Free' : null;
+    return name ? `${name} · see plans, buy questions` : 'See plans, buy questions';
+  });
 
   protected readonly busy = signal<string | null>(null);
   protected readonly message = signal<string | null>(null);
@@ -61,8 +72,8 @@ export class AccountPrivacyComponent {
   protected readonly currentEmail = computed(() => this.auth.user()?.email ?? null);
 
   protected readonly actions = [
-    { id: 'export', label: 'Export my data' },
     { id: 'email', label: 'Change email' },
+    { id: 'export', label: 'Export my data' },
     { id: 'signout', label: 'Sign out' },
   ];
 

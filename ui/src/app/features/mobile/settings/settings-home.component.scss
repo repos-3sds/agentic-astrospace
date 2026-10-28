@@ -153,3 +153,37 @@
 .row.is-current {
   background: var(--m-accent-soft);
 }
+
+a.account { text-decoration: none; }
+
+.plan-pill {
+  @include m-caption;
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--m-accent-soft);
+  color: var(--m-accent);
+  font-weight: 600;
+}
+
+// Terms left, Privacy right, the build between: reachable, not a row each.
+.legal-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  .app-version { margin: 0; flex: 1 1 auto; }
+}
+
+.legal-link {
+  @include m-caption;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--m-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}

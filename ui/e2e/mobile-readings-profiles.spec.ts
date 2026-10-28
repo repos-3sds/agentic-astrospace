@@ -770,8 +770,8 @@ test('mobile profile management adds, edits, deletes and switches safely', async
   await page.setViewportSize({ width: 375, height: 812 });
   await mockMobileApi(page);
 
-  await page.goto('/m/settings');
-  await page.getByRole('link', { name: /Manage profiles/ }).click();
+  await page.goto('/m/family');
+  await page.getByRole('link', { name: 'Manage profiles' }).click();
   await expect(page).toHaveURL(/\/m\/settings\/profiles$/);
   await expect(page.getByText('Anika Rao')).toBeVisible();
   await expect(page.getByText('Ravi Rao')).toBeVisible();

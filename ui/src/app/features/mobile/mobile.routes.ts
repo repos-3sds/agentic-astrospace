@@ -235,6 +235,20 @@ export const MOBILE_ROUTES: Routes = [
       ),
   },
   {
+    path: 'settings/astrology',
+    title: 'Astrology preferences',
+    data: { section: 'astrology', hideMobileTabs: true },
+    loadComponent: () =>
+      import('./settings/settings-home.component').then((m) => m.SettingsHomeComponent),
+  },
+  {
+    path: 'settings/look',
+    title: 'Look and language',
+    data: { section: 'look', hideMobileTabs: true },
+    loadComponent: () =>
+      import('./settings/settings-home.component').then((m) => m.SettingsHomeComponent),
+  },
+  {
     path: 'settings/profiles',
     title: 'Profiles',
     data: { hideMobileTabs: true },

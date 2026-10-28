@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { ActivatedRoute, RouterLink, RouterLinkActive } from '@angular/router';
+import { BackBarComponent } from '../shared/back-bar.component';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { AuthService } from '../../../core/auth.service';
@@ -8,7 +9,6 @@ import { LegalDocument, openLegal } from '../../../core/legal';
 import { ThemeService } from '../../../core/theme.service';
 import { TextSizeService } from '../../../core/text-size.service';
 import { EntitlementService } from '../../../core/entitlement.service';
-import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { PreferencesService } from '../../../core/preferences.service';
 import { NATURAL_VOICE_NAME, NaturalVoiceService } from '../../../core/natural-voice.service';
 import { plannedTimingPlace } from '../../../core/timing-place';
@@ -24,6 +24,8 @@ export interface SettingRow {
   /** A legal page served by the API, opened outside the SPA. */
   legal?: LegalDocument;
 }
+
+export type SettingsSection = 'home' | 'astrology' | 'look';
 
 /** A titled group of rows. */
 export interface SettingGroup {
@@ -47,7 +49,7 @@ const ALARM_STORAGE_KEY = 'astrospace.mobile.panchangAlarms';
   selector: 'as-settings-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive, ProfileSwitcherComponent],
+  imports: [RouterLink, RouterLinkActive, BackBarComponent],
   templateUrl: './settings-home.component.html',
   styleUrl: './settings-home.component.scss',
 })
@@ -58,7 +60,28 @@ export class SettingsHomeComponent {
   private readonly textSize = inject(TextSizeService);
   private readonly preferences = inject(PreferencesService);
   private readonly entitlements = inject(EntitlementService);
-  readonly profileSwitcherOpen = signal(false);
+  /**
+   * Which list this is. The tab shows the short list; two pages under it
+   * hold the rows people set once (Deepak's review, 2026-10-28).
+   */
+  readonly section = (inject(ActivatedRoute).snapshot.data['section'] ?? 'home') as SettingsSection;
+
+  /** The plan on the Account card; nothing until the server has said. */
+  readonly planName = computed(() => {
+    const tier = this.entitlements.current()?.access_tier;
+    return tier === 'pro' ? 'Practitioner' : tier === 'plus' ? 'Plus' : tier === 'free' ? 'Free' : null;
+  });
+
+  /** The reader's own profile, which "My birth details" edits. */
+  private readonly selfProfile = computed(() =>
+    this.kundlis.kundlis().find((k) => (k.relation ?? '').toLowerCase() === 'self') ?? null);
+
+  private birthLabel(): string {
+    const me = this.selfProfile();
+    if (!me) return 'Add your own date, time and place';
+    const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][(me.birth_month ?? 1) - 1];
+    return `${me.birth_day} ${m} ${me.birth_year} · ${me.birth_city}`;
+  }
 
   readonly profile = computed(() => {
     const name = this.kundlis.active()?.name
@@ -72,153 +95,87 @@ export class SettingsHomeComponent {
   });
 
   /**
-   * Six plainly named sections, most-used first (Hawk, 2026-10-20). Labels
+   * Four plainly named sections under the Account card (Deepak's review,
+   * 2026-10-28): rows used weekly stay here, rows set once fold into
+   * "Astrology preferences" and "Look and language", one level deep. Labels
    * say what a row changes rather than the engine's word for it: "Chart
    * method", not "Conventions"; "Vibration", not "Interaction".
    */
-  readonly groups = computed<SettingGroup[]>(() => [
-    {
-      eyebrow: 'YOU AND YOUR FAMILY',
-      rows: [
-        {
-          id: 'family',
-          icon: 'nav-family',
-          label: 'Family',
-          value: 'Switch person, add someone',
-          route: ['/m', 'family'],
-        },
-        {
-          id: 'profiles',
-          icon: 'set-profiles',
-          label: 'Manage profiles',
-          value: `${this.kundlis.kundlis().length} saved · edit or remove`,
-          route: ['/m', 'settings', 'profiles'],
-        },
-        {
-          id: 'memory',
-          icon: 'set-inbox',
-          label: 'What Siddha remembers',
-          value: !this.preferences.memoryEnabled()
-            ? 'Off'
-            : this.preferences.memoryMode() === 'automatic' ? 'Saves details on its own' : 'Asks before saving',
-          route: this.kundlis.active()?.id
-            ? ['/m', 'settings', 'profiles', this.kundlis.active()!.id, 'memory']
-            : ['/m', 'settings', 'profiles'],
-        },
-      ],
-    },
-    {
-      eyebrow: 'YOUR PLAN',
-      rows: [
-        {
-          id: 'subscription',
-          icon: 'set-plus',
-          label: 'Plan and purchases',
-          value: this.planLabel(),
-          route: ['/m', 'subscription'],
-        },
-      ],
-    },
-    {
-      eyebrow: 'ALERTS',
-      rows: [
-        {
-          id: 'notifications',
-          icon: 'set-notif',
-          label: 'Notifications and emails',
-          value: this.notificationLabel(),
-          route: ['/m', 'settings', 'notifications'],
-        },
-        {
-          id: 'alarms',
-          icon: 'set-notif',
-          label: 'Panchang alarms',
-          value: this.alarmLabel(),
-          route: ['/m', 'settings', 'alarms'],
-        },
-      ],
-    },
-    {
-      eyebrow: 'LOOK AND FEEL',
-      rows: [
-        {
-          id: 'appearance',
-          icon: 'set-appearance',
-          label: 'Light or dark',
-          value: this.themeLabel(),
-          route: ['/m', 'settings', 'appearance'],
-        },
-        ...(this.textSize.available ? [{
-          id: 'text-size',
-          icon: 'set-text',
-          label: 'Text size',
-          value: this.textSizeLabel(),
-          route: ['/m', 'settings', 'text-size'],
-        }] : []),
-        {
-          id: 'language',
-          icon: 'set-lang',
-          label: 'Language and voice',
-          value: `${this.languageLabel()} · ${this.preferences.readAloud() ? this.voiceLabel() : 'Listen off'}`,
-          route: ['/m', 'settings', 'language'],
-        },
-        {
-          id: 'interaction',
-          icon: 'set-interaction',
-          label: 'Vibration',
-          value: this.preferences.hapticsEnabled() ? 'On for taps' : 'Off',
-          route: ['/m', 'settings', 'interaction'],
-        },
-      ],
-    },
-    {
-      eyebrow: 'READINGS AND ASTROLOGY',
-      rows: [
-        {
-          id: 'mode',
-          icon: 'set-tone',
-          label: 'Detail and tone',
-          value: `${this.modeLabel()} · ${this.toneLabel()}`,
-          route: ['/m', 'settings', 'mode'],
-        },
-        {
-          id: 'location',
-          icon: 'set-loc',
-          label: 'City for timings',
-          value: this.locationLabel(),
-          route: ['/m', 'settings', 'location'],
-        },
-        {
-          id: 'festivals',
-          icon: 'set-festival',
-          label: 'Festivals to show',
-          value: this.festivalLabel(),
-          route: ['/m', 'settings', 'festivals'],
-        },
-        {
-          id: 'conventions',
-          icon: 'set-conv',
-          label: 'Chart method',
-          value: `${this.ayanamshaLabel()} · ${this.chartStyleLabel()} chart`,
-          route: ['/m', 'settings', 'conventions'],
-        },
-      ],
-    },
-    {
-      eyebrow: 'ACCOUNT AND PRIVACY',
-      rows: [
-        {
-          id: 'account',
-          icon: 'set-account',
-          label: 'Account',
-          value: 'Email, your data, sign out, delete',
-          route: ['/m', 'settings', 'account'],
-        },
-        { id: 'terms', icon: 'set-legal', label: 'Terms of Service', value: 'Opens in your browser', legal: 'terms' },
-        { id: 'privacy', icon: 'set-legal', label: 'Privacy Policy', value: 'Opens in your browser', legal: 'privacy' },
-      ],
-    },
-  ]);
+  readonly groups = computed<SettingGroup[]>(() => {
+    if (this.section === 'astrology') return [{ eyebrow: '', rows: this.astrologyRows() }];
+    if (this.section === 'look') return [{ eyebrow: '', rows: this.lookRows() }];
+    const astro = this.astrologyRows();
+    const look = this.lookRows();
+    return [
+      {
+        eyebrow: 'YOU AND YOUR FAMILY',
+        rows: [
+          {
+            id: 'me',
+            icon: 'set-profiles',
+            label: 'My birth details',
+            value: this.birthLabel(),
+            route: this.selfProfile() ? ['/m', 'settings', 'profiles', this.selfProfile()!.id, 'edit'] : ['/m', 'settings', 'profiles', 'new'],
+          },
+          {
+            id: 'family',
+            icon: 'nav-family',
+            label: 'Family',
+            value: `${this.kundlis.kundlis().length} saved · switch, add, edit`,
+            route: ['/m', 'family'],
+          },
+          {
+            id: 'memory',
+            icon: 'set-inbox',
+            label: 'What Siddha remembers',
+            value: !this.preferences.memoryEnabled()
+              ? 'Off'
+              : this.preferences.memoryMode() === 'automatic' ? 'Saves details on its own' : 'Asks before saving',
+            route: this.kundlis.active()?.id
+              ? ['/m', 'settings', 'profiles', this.kundlis.active()!.id, 'memory']
+              : ['/m', 'settings', 'profiles'],
+          },
+        ],
+      },
+      {
+        eyebrow: 'ALERTS',
+        rows: [
+          { id: 'notifications', icon: 'set-notif', label: 'Notifications and emails', value: this.notificationLabel(), route: ['/m', 'settings', 'notifications'] },
+          { id: 'alarms', icon: 'set-notif', label: 'Panchang alarms', value: this.alarmLabel(), route: ['/m', 'settings', 'alarms'] },
+        ],
+      },
+      {
+        eyebrow: 'READINGS',
+        rows: [
+          { id: 'mode', icon: 'set-tone', label: 'Detail and tone', value: `${this.modeLabel()} · ${this.toneLabel()}`, route: ['/m', 'settings', 'mode'] },
+          { id: 'astrology', icon: 'set-conv', label: 'Astrology preferences', value: astro.map((r) => r.value).join(' · '), route: ['/m', 'settings', 'astrology'] },
+        ],
+      },
+      {
+        eyebrow: 'APP',
+        rows: [
+          { id: 'look', icon: 'set-appearance', label: 'Look and language', value: `${this.themeLabel()} · ${this.languageLabel()} · ${look.length > 3 ? 'text size, ' : ''}vibration`, route: ['/m', 'settings', 'look'] },
+        ],
+      },
+    ];
+  });
+
+  private astrologyRows(): SettingRow[] {
+    return [
+      { id: 'location', icon: 'set-loc', label: 'City for timings', value: this.locationLabel(), route: ['/m', 'settings', 'location'] },
+      { id: 'festivals', icon: 'set-festival', label: 'Festivals to show', value: this.festivalLabel(), route: ['/m', 'settings', 'festivals'] },
+      { id: 'conventions', icon: 'set-conv', label: 'Chart method', value: `${this.ayanamshaLabel()} · ${this.chartStyleLabel()} chart`, route: ['/m', 'settings', 'conventions'] },
+    ];
+  }
+
+  private lookRows(): SettingRow[] {
+    return [
+      { id: 'appearance', icon: 'set-appearance', label: 'Light or dark', value: this.themeLabel(), route: ['/m', 'settings', 'appearance'] },
+      ...(this.textSize.available ? [{ id: 'text-size', icon: 'set-text', label: 'Text size', value: this.textSizeLabel(), route: ['/m', 'settings', 'text-size'] }] : []),
+      { id: 'language', icon: 'set-lang', label: 'Language and voice', value: `${this.languageLabel()} · ${this.preferences.readAloud() ? this.voiceLabel() : 'Listen off'}`, route: ['/m', 'settings', 'language'] },
+      { id: 'interaction', icon: 'set-interaction', label: 'Vibration', value: this.preferences.hapticsEnabled() ? 'On for taps' : 'Off', route: ['/m', 'settings', 'interaction'] },
+    ];
+  }
 
   protected openLegal(doc: LegalDocument): void {
     void openLegal(doc);
@@ -239,13 +196,6 @@ export class SettingsHomeComponent {
         .catch(() => undefined);
     }
     void inject(NaturalVoiceService).available().then((ok) => this.naturalAvailable.set(ok)).catch(() => undefined);
-  }
-
-  /** The plan by name once the server has said; never a guessed "Free". */
-  private planLabel(): string {
-    const tier = this.entitlements.current()?.access_tier;
-    const name = tier === 'pro' ? 'Practitioner' : tier === 'plus' ? 'Plus' : tier === 'free' ? 'Free' : null;
-    return name ? `${name} · see plans, buy questions` : 'See plans, buy questions';
   }
 
   private textSizeLabel(): string {
