@@ -29,23 +29,28 @@ input { @include m-body; width: 100%; box-sizing: border-box; padding: 15px 18px
 .message { @include m-body-small; margin: -4px 0; color: var(--m-good); text-align: center; &.error { color: var(--m-bad); } }
 
 // The one notice a reader must not miss: their account does nothing until the
-// email link is opened. Solid fill, not a soft tint, so it reads at a glance
-// against the glass in both themes. Amber rather than the accent or gold:
-// accent is the Continue button, gold means "declining to answer".
+// email link is opened. A frosted glass card like the rest of the app, set
+// apart by a rust outline, a soft rust halo and a rust heading, icon and link,
+// so it is spotted at a glance in both themes without becoming a second
+// Continue button.
 .confirm-callout {
-  --callout-bg: #f6c453;
-  --callout-on: #2b1608;
+  @include m-glass(14px);
   width: 100%; box-sizing: border-box; display: flex; gap: 14px; align-items: flex-start;
-  padding: 16px 18px; border-radius: 20px; background: var(--callout-bg); color: var(--callout-on);
-  box-shadow: 0 10px 28px rgba(160, 100, 10, 0.28);
-  svg { flex: none; width: 28px; height: 28px; margin-top: 1px; }
-  h2 { @include m-body; margin: 0 0 4px; font-weight: 700; color: inherit; }
+  padding: 16px 18px; border: 1.5px solid var(--m-accent); border-radius: 20px;
+  background: var(--m-glass-card), var(--m-accent-soft); color: var(--m-text);
+  box-shadow: 0 0 0 4px var(--m-accent-soft), 0 14px 34px var(--m-glass-drop);
+  svg { flex: none; width: 28px; height: 28px; margin-top: 1px; color: var(--m-accent-strong); }
+  h2 { @include m-body; margin: 0 0 4px; font-weight: 700; color: var(--m-accent-strong); }
   p { @include m-body-small; margin: 0; color: inherit; }
   strong { display: block; margin-bottom: 2px; font-weight: 700; overflow-wrap: anywhere; }
-  button { @include m-body-small; margin-top: 10px; padding: 0; border: 0; background: none; color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; &:disabled { opacity: .7; } }
+  button { @include m-body-small; margin-top: 10px; padding: 0; border: 0; background: none; color: var(--m-accent-strong); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; &:disabled { opacity: .7; } }
   .resent { margin-top: 8px; font-weight: 600; }
 }
-// Done, not waiting: same weight, the theme's own "good" green.
-.confirm-callout.is-done { --callout-bg: #9fd8b0; --callout-on: #0f2a18; box-shadow: 0 10px 28px rgba(40, 120, 70, 0.24); }
-:host-context(.app-dark) .confirm-callout { --callout-bg: #fcd34d; --callout-on: #1c1204; box-shadow: 0 10px 32px rgba(252, 211, 77, 0.22); }
-:host-context(.app-dark) .confirm-callout.is-done { --callout-bg: #86efac; --callout-on: #052e16; box-shadow: 0 10px 32px rgba(134, 239, 172, 0.2); }
+// Done, not waiting (an email link confirmed the address): the same card in
+// the theme's "good" colour instead of rust.
+.confirm-callout.is-done {
+  border-color: var(--m-good);
+  background: var(--m-glass-card), var(--m-good-soft);
+  box-shadow: 0 0 0 4px var(--m-good-soft), 0 14px 34px var(--m-glass-drop);
+  svg, h2 { color: var(--m-good); }
+}
