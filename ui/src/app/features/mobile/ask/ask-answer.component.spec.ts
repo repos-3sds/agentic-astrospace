@@ -205,7 +205,7 @@ describe('AskAnswerComponent persona-mode content parity', () => {
     expect(hint).toBeNull();
   });
 
-  it('Guided [n] markers open the matching technical_basis item and close on a second tap', () => {
+  it('Guided [n] markers open the matching technical_basis item in a sheet', () => {
     const component = createComponent();
     setMode(component, 'guided');
     const reading: StructuredReading = {
@@ -214,13 +214,13 @@ describe('AskAnswerComponent persona-mode content parity', () => {
     };
     const message = messageWithReading(reading);
     const c = component as any;
-    const [para] = c.readingParagraphRuns(reading);
     expect(c.hasMarkers(reading)).toBeTrue();
     expect(c.basisFor(reading, 9)).toBeNull();
-    c.toggleMarker(message, 2);
-    expect(c.openBasisIn(message, reading, para)).toEqual(FULL_READING.technical_basis[1]);
-    c.toggleMarker(message, 2);
-    expect(c.openBasisIn(message, reading, para)).toBeNull();
+    c.openReason(message, 9);
+    expect(c.openMarker()).toBeNull();
+    c.openReason(message, 2);
+    expect(c.openMarker().item).toEqual(FULL_READING.technical_basis[1]);
+    expect(c.isMarkerOpen(message, 2)).toBeTrue();
   });
 
   it('readingActions() and technicalBasis() are unaffected by experience mode changes to the same reading object', () => {

@@ -91,9 +91,9 @@
                           type="button"
                           class="reason-marker"
                           [class.open]="isMarkerOpen(message, run.marker)"
-                          [attr.aria-expanded]="isMarkerOpen(message, run.marker)"
+                          aria-haspopup="dialog"
                           [attr.aria-label]="'Chart reason ' + run.marker"
-                          (click)="toggleMarker(message, run.marker)"
+                          (click)="openReason(message, run.marker)"
                         >{{ run.marker }}</button>
                       } @else if (run.bold) {
                         <strong class="side-heading">{{ run.text }}</strong>
@@ -102,15 +102,6 @@
                       }
                     }
                   </p>
-                  @if (openBasisIn(message, reading, para); as basis) {
-                    <div class="reason-note" role="note">
-                      <span class="reason-number">{{ openMarkerNumber(message) }}</span>
-                      <div>
-                        <p class="reason-factor">{{ basis.factor }}</p>
-                        <p class="reason-reading">{{ basis.reading }}</p>
-                      </div>
-                    </div>
-                  }
                 }
                 @if (reading.summary_and_assurance) {
                   <p class="assurance-line">{{ plainSummary(reading) }}</p>
@@ -439,6 +430,16 @@
     [drillDowns]="drillDowns()"
     (dismissed)="whyOpen.set(false)"
   />
+}
+
+@if (openMarker(); as reason) {
+  <as-sheet label="Chart reason" (dismissed)="openMarker.set(null)">
+    <header class="reason-head">
+      <p class="reason-eyebrow">CHART REASON {{ reason.marker }}</p>
+      <p class="reason-factor">{{ reason.item.factor }}</p>
+    </header>
+    <p class="reason-reading">{{ reason.item.reading }}</p>
+  </as-sheet>
 }
 
 @if (reporting(); as context) {

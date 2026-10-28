@@ -12,6 +12,7 @@ import {
 import { whyDrillDowns } from '../why-reading/drill-downs';
 import { MobileAskStateService } from './mobile-ask-state.service';
 import { AskService } from '../../../core/ask.service';
+import { SheetComponent } from '../sheet/sheet.component';
 import { AskMemoryCandidate, AskStreamEvent, AskTechnicalBasisItem, StructuredReading } from '../../../core/models';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
@@ -104,7 +105,7 @@ export function areaLabel(id: string): string {
   selector: 'as-ask-answer',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, AskComposerComponent, ListenSheetComponent, WhyReadingSheetComponent, LockedStateComponent, BackLinkDirective, ReportAnswerSheetComponent],
+  imports: [RouterLink, AskComposerComponent, ListenSheetComponent, WhyReadingSheetComponent, LockedStateComponent, BackLinkDirective, ReportAnswerSheetComponent, SheetComponent],
   templateUrl: './ask-answer.component.html',
   styleUrl: './ask-answer.component.scss',
 })
@@ -528,40 +529,22 @@ export class AskAnswerComponent {
     return paragraphRuns(reading.interpretation ?? '');
   }
 
-  /** Guided's tappable "[n]" chips: which marker is open, per message. One
-   * at a time, so the reading stays calm; tapping it again closes it. */
-  private readonly openMarkers = signal<Record<string, number>>({});
+  /** Guided's tappable "[n]" chips open the chart reason in a bottom sheet,
+   * so the passage never moves under the reader (Hawk 2026-10-28). */
+  readonly openMarker = signal<{ messageId: string; marker: number; item: AskTechnicalBasisItem } | null>(null);
 
   protected basisFor(reading: StructuredReading, marker: number): AskTechnicalBasisItem | null {
     return reading.technical_basis?.[marker - 1] ?? null;
   }
 
   protected isMarkerOpen(message: ChatMessage, marker: number): boolean {
-    return this.openMarkers()[message.id] === marker;
+    const open = this.openMarker();
+    return open?.messageId === message.id && open.marker === marker;
   }
 
-  protected openMarkerNumber(message: ChatMessage): number | null {
-    return this.openMarkers()[message.id] ?? null;
-  }
-
-  protected toggleMarker(message: ChatMessage, marker: number): void {
-    this.openMarkers.update((open) => {
-      const next = { ...open };
-      if (next[message.id] === marker) delete next[message.id];
-      else next[message.id] = marker;
-      return next;
-    });
-  }
-
-  /** The open marker's chart reason, shown under the paragraph that holds it. */
-  protected openBasisIn(
-    message: ChatMessage,
-    reading: StructuredReading,
-    para: TextRun[],
-  ): AskTechnicalBasisItem | null {
-    const marker = this.openMarkerNumber(message);
-    if (!marker || !para.some((run) => run.marker === marker)) return null;
-    return this.basisFor(reading, marker);
+  protected openReason(message: ChatMessage, marker: number): void {
+    const item = message.reading ? this.basisFor(message.reading, marker) : null;
+    if (item) this.openMarker.set({ messageId: message.id, marker, item });
   }
 
   protected hasMarkers(reading: StructuredReading): boolean {

@@ -3,8 +3,8 @@ import { expect, Route, test } from '@playwright/test';
 /**
  * Guided answers carry no chart terms in the prose. Each statement that rests
  * on a chart factor ends with a small numbered chip; tapping it opens that
- * factor (the matching `technical_basis` item) under the paragraph, and
- * tapping again closes it. Screenshots in light and dark for the review.
+ * factor (the matching `technical_basis` item) in a bottom sheet, so the
+ * passage never moves. Screenshots in light and dark for the review.
  */
 const profile = {
   id: 'a', name: 'Kavya', relation: 'self',
@@ -59,13 +59,14 @@ for (const scheme of ['light', 'dark'] as const) {
     await expect(page.getByText('Tap a number to see the chart reason')).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath(`guided-chips-${scheme}.png`), animations: 'disabled' });
 
-    const chip = page.getByRole('button', { name: 'Chart reason 2' });
-    await chip.click();
-    await expect(chip).toHaveAttribute('aria-expanded', 'true');
-    await expect(page.getByRole('note')).toContainText('Moon sub-period, 16 Oct 2026 to 5 Jan 2027');
+    await page.getByRole('button', { name: 'Chart reason 2' }).click();
+    const sheet = page.getByRole('dialog', { name: 'Chart reason' });
+    await expect(sheet).toContainText('Moon sub-period, 16 Oct 2026 to 5 Jan 2027');
+    await expect(sheet).toContainText('favours home-based or flexible work');
+    await page.waitForTimeout(400);
     await page.screenshot({ path: testInfo.outputPath(`guided-chip-open-${scheme}.png`), animations: 'disabled' });
 
-    await chip.click();
-    await expect(page.getByRole('note')).toHaveCount(0);
+    await sheet.getByRole('button', { name: 'Close' }).click();
+    await expect(sheet).toHaveCount(0);
   });
 }

@@ -870,32 +870,20 @@ as-ask-composer.answer-composer {
   }
 }
 
-.reason-note {
-  display: flex;
-  gap: 10px;
-  margin: -4px 0 12px;
-  padding: 10px 12px;
-  border: 1px solid var(--m-border);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--m-surface) 90%, transparent);
-
-  p { margin: 0; overflow-wrap: anywhere; }
-}
-
-.reason-number {
-  @include m-caption;
-  flex: none;
-  color: var(--m-accent-strong);
-  font-weight: 600;
-}
+// Projected into <as-sheet>, so these styles are this component's.
+.reason-head { display: flex; flex-direction: column; gap: 6px; }
+.reason-eyebrow { @include m-eyebrow; color: var(--m-accent); margin: 0; }
 
 .reason-factor {
-  @include m-caption;
+  @include m-h2;
+  margin: 0;
   color: var(--m-text);
-  font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .reason-reading {
-  @include m-caption;
-  color: var(--m-muted);
+  @include m-body;
+  margin: 0;
+  color: var(--m-text);
+  overflow-wrap: anywhere;
 }
