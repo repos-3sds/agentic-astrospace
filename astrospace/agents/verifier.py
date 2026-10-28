@@ -587,8 +587,66 @@ def verify(reading: StructuredReading, bundle: dict, routed_domain: str,
     # reading, it is a trust violation, exactly like an invented citation.
     violations.extend(_blocked_frame_violations(reading, bundle))
     violations.extend(_discovery_violations(reading, bundle))
+    violations.extend(band_violations(reading, bundle))
+    violations.extend(bindu_lean_violations(reading, bundle))
 
     return violations
+
+
+# The tool-using Ask weighs every angle in code into one band; the answer's
+# opening must not overturn it (2026-10-28: band "mixed", answer "will not
+# suit you and will not help you earn").
+_FLAT_NO = re.compile(
+    r"\b(?:will not|won't|does not|doesn't|do not|cannot|can't|is not|isn't)\b[^.]{0,40}?"
+    r"\b(?:suit|help|work|succeed|earn|fit|advisable|recommended|good)", re.IGNORECASE)
+_FLAT_YES = re.compile(
+    r"\b(?:will (?:definitely|surely|certainly)|is (?:sure|certain|guaranteed) to|guaranteed)\b",
+    re.IGNORECASE)
+_NOT_NEGATIVE_BANDS = {"good", "moderately good", "mixed"}
+_NOT_POSITIVE_BANDS = {"mixed", "weak, go carefully", "unfavourable, avoid for now"}
+
+
+def _opening(text: str) -> str:
+    return re.split(r"(?<=[.!?])\s", text.strip(), maxsplit=1)[0]
+
+
+def band_violations(reading: StructuredReading, bundle: dict) -> list[Violation]:
+    """Quality severity: the first sentence of the interpretation and the
+    summary may not flatly contradict the weighed band."""
+    band = ((bundle.get("overall_view") or {}).get("band") or "").strip()
+    if not band:
+        return []
+    found: list[Violation] = []
+    for field, text in (("interpretation", reading.interpretation),
+                        ("summary_and_assurance", reading.summary_and_assurance)):
+        first = _opening(text or "")
+        if band in _NOT_NEGATIVE_BANDS and _FLAT_NO.search(first):
+            found.append(Violation(
+                f"the weighed view is {band!r}, but the opening says a flat no: {first!r}. "
+                f"Open with the band in plain words and the conditions", "quality", field))
+        elif band in _NOT_POSITIVE_BANDS and _FLAT_YES.search(first):
+            found.append(Violation(
+                f"the weighed view is {band!r}, but the opening promises a sure yes: {first!r}",
+                "quality", field))
+    return found
+
+
+_BINDU_MENTION = re.compile(r"\b(?:ashtakavarga|bindus?|sav)\b|\b\d{2} (?:points|bindus)\b",
+                            re.IGNORECASE)
+
+
+def bindu_lean_violations(reading: StructuredReading, bundle: dict) -> list[Violation]:
+    """Quality severity, tool-using Ask only: Ashtakavarga is one light angle
+    (weight 2 of about 30), so the answer may mention bindus once at most
+    (2026-10-28: three of four reasons were bindu counts)."""
+    if not bundle.get("overall_view"):
+        return []
+    text = " ".join([reading.interpretation or "", reading.summary_and_assurance or ""])
+    if len(_BINDU_MENTION.findall(text)) > 1:
+        return [Violation(
+            "the answer leans on Ashtakavarga bindus; mention them once at most and lead with "
+            "the running period, the house lords and planet strength", "quality", "interpretation")]
+    return []
 
 
 def verify_coverage(reading: StructuredReading, bundle: dict) -> list[Violation]:

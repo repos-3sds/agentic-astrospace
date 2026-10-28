@@ -1109,6 +1109,9 @@ _HEALTH_OUTCOME_MODAL = (
     r"is destined to|are destined to|is certain to|are certain to|"
     r"is bound to|are bound to)\b"
 )
+_MIND_OUTCOME = (r"\b(?:anxiety(?: attacks?)?|panic attacks?|depression|mental exhaustion|"
+                 r"(?:a |nervous )?breakdown|insomnia|mental illness)\b")
+
 _HEALTH_OUTCOME_OVERCLAIM_OUTPUT = (
     # Person-led (first- or third-party via `_LIFE_SUBJECT`) future event.
     # `_ADVERB_GAP` between subject and modal, and between modal and verb,
@@ -1141,6 +1144,13 @@ _HEALTH_OUTCOME_OVERCLAIM_OUTPUT = (
     (r"\b(?:this |the )?(?:chart|placement|configuration|combination) "
      r"(?:confirms?|guarantees?|shows? that)\b" + _ADVERB_GAP +
      r"(?:an? )?(?:accident|injury|surgery|hospitalization)\b"),
+    # Mind and mood stated as an outcome of a choice or a placement (the
+    # 2026-10-28 Lilliput answer: "triggers mental exhaustion and anxiety
+    # attacks", "will cause anxiety").
+    (r"\b(?:triggers?|causes?|cause|leads? to|lead to|brings? on|results? in)\b" + _ADVERB_GAP
+     + _MIND_OUTCOME),
+    (_LIFE_SUBJECT + _ADVERB_GAP + _HEALTH_OUTCOME_MODAL + _ADVERB_GAP
+     + r"\b(?:suffer from|develop|get|have|face|experience)\b" + _ADVERB_GAP + _MIND_OUTCOME),
 )
 
 # Shared by every pattern above (not per-pattern lookbehinds — those don't

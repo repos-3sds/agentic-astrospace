@@ -458,3 +458,52 @@ class TestLilliputRerunFixes:
                 patch.object(ChartExplorer, "run_structured", side_effect=RuntimeError("down")):
             with pytest.raises(RuntimeError):
                 ChartExplorer(ChartTools(chart), "q", {"domain": "career"}).explore()
+
+
+class TestLilliputV2AnswerFixes:
+    """From the second Lilliput re-run (band mixed, answer a flat no)."""
+
+    def test_a_flat_no_under_a_mixed_band_is_sent_back(self):
+        from astrospace.agents.verifier import band_violations
+        reading = _reading("houses")
+        bundle = {"overall_view": {"score": 0.07, "band": "mixed"}}
+        flat = reading.model_copy(update={"interpretation":
+            "Starting an AI Lilliput YouTube channel will not suit you and will not help you earn money. More."})
+        found = band_violations(flat, bundle)
+        assert found and found[0].severity == "quality" and found[0].field == "interpretation"
+        fair = reading.model_copy(update={"interpretation":
+            "The channel can work only as a side project for now. It will not pay steadily this year."})
+        assert band_violations(fair, bundle) == []
+        assert band_violations(flat, {"overall_view": {"band": "unfavourable, avoid for now"}}) == []
+        sure = reading.model_copy(update={"summary_and_assurance": "You will definitely earn from it."})
+        assert band_violations(sure, bundle)[0].field == "summary_and_assurance"
+        assert band_violations(flat, {}) == []
+
+    def test_mind_outcomes_are_health_overclaims(self):
+        from astrospace.agents.safety import dosha_overclaim_kind
+        assert dosha_overclaim_kind(
+            "Working alone triggers mental exhaustion and anxiety attacks.") == "health_outcome_overclaim"
+        assert dosha_overclaim_kind("It will cause anxiety.") == "health_outcome_overclaim"
+        assert dosha_overclaim_kind("Protect your mental health with a fixed routine.") is None
+        assert dosha_overclaim_kind("This does not mean it will cause anxiety.") is None
+
+    def test_prompts_carry_the_yardstick_and_the_band_opening(self):
+        from astrospace.agents.explorer import ChartExplorer as E
+        from astrospace.agents.orchestrator import EXPLORED_NOTE
+        tools_prompt = E(ChartTools.__new__(ChartTools), "q", {}).system_prompt
+        assert "HOW YOU MUST JUDGE" in tools_prompt and "28+ bindus" in tools_prompt
+        assert "a low bindu count alone never makes the answer" in tools_prompt
+        assert "HOW TO BUILD THIS ANSWER" in EXPLORED_NOTE and "Your FIRST sentence" in EXPLORED_NOTE
+        assert "AT MOST ONCE" in EXPLORED_NOTE and "anxiety" in EXPLORED_NOTE
+
+    def test_an_answer_built_on_bindus_is_sent_back(self):
+        from astrospace.agents.verifier import bindu_lean_violations
+        bundle = {"overall_view": {"band": "mixed"}}
+        heavy = _reading("houses").model_copy(update={"interpretation":
+            "Your 5th house has a very low Ashtakavarga score of only 17 points. "
+            "Your 3rd house has a high 42 points and your 10th house has 35 points."})
+        assert bindu_lean_violations(heavy, bundle)[0].severity == "quality"
+        light = _reading("houses").model_copy(update={"interpretation":
+            "Your Jupiter period runs your 10th lord. The 10th house is also well supported (35 bindus)."})
+        assert bindu_lean_violations(light, bundle) == []
+        assert bindu_lean_violations(heavy, {}) == []

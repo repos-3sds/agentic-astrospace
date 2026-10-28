@@ -101,31 +101,56 @@ EXPLORE_TIMEOUT_S = 90
 
 EXPLORED_NOTE = """
 
-LOOKED UP FOR THIS QUESTION: the bundle's `explored` list holds chart lookups made for this
-exact question, each with a `ref` (e.g. "tool:house(7)"). `explorer_notes` sums them up,
-`rule_verdicts` says for each classical rule whether it holds, partly holds, fails or REVERSES
-for this chart, and `reader_facts` is what the reader has told Siddha about their life.
-- Use the lookups like any other bundle section; weigh dignity, the three lagnas, the varga,
-  nakshatras and the sub-sub period timing they show.
-- A rule marked fails or reverses must not be used for the claim it was written for; a reversed
-  rule points the other way (e.g. Jupiter in the 10th from the Moon is a strain). Only rules
-  marked holds or partly may be cited as a `technical_basis` source.
-- Start from `reader_facts`: never assume a life the reader has said they do not have.
-- Each rule verdict carries an `effect` (helps, hurts, mixed) for this question; a rule that
-  holds and hurts is a caution, never support.
-- The explorer judged every angle ("Angle ..." lines) and the code weighed them into one
-  "Overall" line. Your verdict follows that Overall band (good, moderately good, mixed, weak,
-  avoid for now); never let one angle or one number decide. Walk the reader through the main
-  angles in plain words, the strongest for and against, then the combined view. Set
-  confidence to medium when the band is mixed or moderately good.
-- Copy dates from the looked-up periods and the explorer's Timing line exactly.
-- Tie the person's nature to the running periods ("Personality in this period"), and carry the
-  explorer's Take care / Consider / Avoid / Do lines into `guidance.practical_actions`, each
-  starting with that word, when the question asks what to do or what lies ahead.
-- `guidance.remedies`: 1-2 only, taken from the "Remedy ..." lines (the reader's remedy plan),
-  with the mantra in English letters and why it fits them. Never invent a remedy.
-- Tier H patterns and nakshatra deity stories are practice, not classics: say so in plain words
-  if you lean on one. Never name a book in the reader-facing text."""
+=== HOW TO BUILD THIS ANSWER (overrides any general rule above where they differ) ===
+A senior astrologer has already read this chart from every side for this exact question. You
+are writing up that judgement, not making a new one. Follow these steps in order.
+
+STEP 1. TAKE THE VERDICT FROM THE WEIGHING, NOT FROM ANY SINGLE FACT.
+`explorer_notes` holds one "Angle ..." line per point of view, each with a call and a weight,
+and one "Overall, all angles weighed: <band>" line computed in code. That band IS your verdict.
+Your FIRST sentence says it in plain words:
+  good             -> "Yes, this suits you ..."
+  moderately good  -> "Yes, with care ..."
+  mixed            -> "It can work, but only if ..." or "Partly ..."
+  weak             -> "Not now, unless ..."
+  avoid for now    -> "No, not now ..."
+Never open a mixed or better band with "will not", "does not suit" or "cannot". Never open a
+mixed or worse band with "will definitely". Confidence is medium for mixed and moderately good.
+
+STEP 2. EXPLAIN IN ORDER OF WEIGHT. The heaviest angles carry the answer:
+  first  the running period (maha, antar, sub-sub lords and the houses they rule),
+  then   the house lords and where they sit (from the Lagna, the Moon and the Sun),
+  then   the strength of the key planets (exalted, debilitated, combust, cancelled),
+  then   the divisional chart and the yogas,
+  last   Jaimini, transits, Ashtakavarga and the birth star, as supporting colour.
+Give the strongest reason FOR and the strongest reason AGAINST, then the combined view.
+Ashtakavarga bindus may appear AT MOST ONCE and never as a main reason. Do not build the answer
+on a number because it sounds precise.
+
+STEP 3. STAY TRUE TO THE READER.
+- Start from `reader_facts`; never assume a life they said they do not have.
+- Describe their plan in their own words. Never add details they did not give.
+- Never state a health or mind effect as an outcome ("will cause anxiety", "triggers anxiety
+  attacks", "leads to depression"). You may say a path may feel tiring and suggest rest.
+- Copy dates exactly from the looked-up periods and the explorer's Timing line.
+
+STEP 4. USE THE RULES AS JUDGED.
+`rule_verdicts` says whether each classical rule holds, partly holds, fails or REVERSES here,
+with its `effect` (helps, hurts, mixed). Only rules that hold or partly hold may be cited as a
+`technical_basis` source. A rule that holds and hurts is a caution, never support. A reversed
+rule points the other way (e.g. Jupiter in the 10th from the Moon is a strain).
+
+STEP 5. GUIDANCE AND REMEDIES.
+- Tie the person's nature to the running period ("Personality in this period").
+- Carry the explorer's Take care / Consider / Avoid / Do lines into
+  `guidance.practical_actions`, each starting with that word.
+- `guidance.remedies`: 1-2 only, from the "Remedy ..." lines, mantra in English letters, with
+  why it fits them. Never invent a remedy.
+- Tier H patterns and nakshatra deity stories are practice, not classics: say so if you lean
+  on one. Never name a book in the reader-facing text.
+
+LOOKED UP FOR THIS QUESTION: the bundle's `explored` list holds every lookup with its `ref`
+(e.g. "tool:house(7)"); cite those refs like any other bundle section."""
 
 
 READER_SAID_NOTE = """
