@@ -788,9 +788,10 @@ export class AuthService {
   private isNativeAuthCallback(url: string): boolean {
     // The open page itself counts too: on Android, a verified App Link can
     // hand https://asksiddha.app/open?code=… straight to the app.
+    // apiUrl() last: it throws in a build with no native API origin.
     return url.startsWith(NATIVE_AUTH_CALLBACK)
-      || url.startsWith(apiUrl(NATIVE_AUTH_BRIDGE_PATH))
-      || url.startsWith(EMAIL_LINK_PAGE);
+      || url.startsWith(EMAIL_LINK_PAGE)
+      || url.startsWith(apiUrl(NATIVE_AUTH_BRIDGE_PATH));
   }
 
   private async closeNativeAuthBrowser(): Promise<void> {
