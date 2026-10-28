@@ -8,6 +8,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
 import { SpeechService } from '../../../core/speech.service';
 import { VedicService } from '../../../core/vedic.service';
+import { AskService } from '../../../core/ask.service';
 import { AskHomeComponent } from './ask-home.component';
 
 describe('AskHomeComponent ?q handoff', () => {
@@ -24,6 +25,7 @@ describe('AskHomeComponent ?q handoff', () => {
         { provide: KundliStore, useValue: { loaded: signal(true), load: () => Promise.resolve(), active: signal({ name: 'Mine' }), owner: signal(null), activeId: signal(null) } },
         { provide: EntitlementService, useValue: { refresh: () => Promise.resolve(), askAllowance: signal(null), current: signal(null) } },
         { provide: VedicService, useValue: { dailyGuidance: () => Promise.resolve(null) } },
+        { provide: AskService, useValue: { suggestions: () => Promise.resolve(null) } },
         { provide: SpeechService, useValue: { start: () => Promise.resolve(), stop: () => Promise.resolve(), transcript: signal(''), listening: signal(false) } },
         {
           provide: PreferencesService,
@@ -52,5 +54,57 @@ describe('AskHomeComponent ?q handoff', () => {
     // The retained tab gets a second handoff.
     params.next(convertToParamMap({ q: 'Explain my month' }));
     expect(fixture.componentInstance.draft()).toBe('Explain my month');
+  });
+});
+
+describe('AskHomeComponent topic chips', () => {
+  const payload = {
+    as_of: '2026-10-28',
+    topics: [],
+    general: [{ prompt: 'What does my Mercury sub-period bring for money and savings?', because: 'Mercury looks after your savings' }],
+    by_topic: {
+      work: [{ prompt: 'How is my Mars major period shaping my work?', because: 'Mars sits in your house of career' }],
+      marriage: [{ prompt: 'How is my Mars major period shaping marriage and partnership?', because: 'Mars looks after your marriage' }],
+    },
+  };
+
+  async function make(active: string | null) {
+    TestBed.configureTestingModule({
+      imports: [AskHomeComponent],
+      providers: [
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: { queryParamMap: new BehaviorSubject(convertToParamMap({})).asObservable(), snapshot: { queryParamMap: convertToParamMap({}) } } },
+        { provide: KundliStore, useValue: { loaded: signal(true), load: () => Promise.resolve(), active: signal({ id: active, name: 'Mine' }), owner: signal(null), activeId: signal(active), profiles: signal([]) } },
+        { provide: EntitlementService, useValue: { refresh: () => Promise.resolve(), askAllowance: signal(null), current: signal(null) } },
+        { provide: VedicService, useValue: { dailyGuidance: () => Promise.resolve(null) } },
+        { provide: AskService, useValue: { suggestions: () => Promise.resolve(payload) } },
+        { provide: SpeechService, useValue: { start: () => Promise.resolve(), stop: () => Promise.resolve(), transcript: signal(''), listening: signal(false), supported: signal(false) } },
+        { provide: PreferencesService, useValue: { experienceMode: signal('balanced'), language: signal('en') } },
+      ],
+    });
+    const fixture = TestBed.createComponent(AskHomeComponent);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    return fixture.componentInstance;
+  }
+
+  it('swaps the list for the tapped topic, and back when tapped again', async () => {
+    const home = await make('k1');
+    expect(home.suggestions()[0].prompt).toContain('money and savings');
+    home['toggleTopic']('work');
+    expect(home.suggestions().map((s) => s.prompt)).toEqual(['How is my Mars major period shaping my work?']);
+    home['toggleTopic']('marriage');
+    expect(home.suggestions()[0].prompt).toContain('marriage');
+    home['toggleTopic']('marriage');
+    expect(home.suggestions()[0].prompt).toContain('money and savings');
+  });
+
+  it('falls back to a neutral list for a topic the chart list has nothing for', async () => {
+    const home = await make('k1');
+    home['toggleTopic']('child');
+    const prompts = home.suggestions().map((s) => s.prompt);
+    expect(prompts.length).toBe(3);
+    expect(prompts.every((p) => p.includes('children'))).toBeTrue();
+    expect(prompts.some((p) => p.includes('my children'))).toBeFalse();
   });
 });

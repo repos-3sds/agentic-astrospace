@@ -46,8 +46,8 @@
     }
   </div>
 
-  <p class="eyebrow">{{ navigation.web ? 'A few places to begin' : 'SUGGESTED FOR YOU RIGHT NOW' }}</p>
-  <div class="suggestions">
+  <p class="eyebrow">{{ eyebrow() }}</p>
+  <div class="suggestions" aria-live="polite">
     @for (s of suggestions(); track s.prompt) {
       <button class="suggestion" type="button" (click)="useSuggestion(s.prompt)">
         <span class="suggestion-text">{{ s.prompt }} @if (s.because) { <small>{{ s.because }}</small> }</span>
