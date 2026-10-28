@@ -41,7 +41,8 @@ from ..db.crud_profile_context import (
 from ..db.database import release_connection, short_session
 from .ask_routes import (
     MAX_HISTORY, AskRequest, _evidence_from_reading, _history_from_thread,
-    _owned_thread, _persist_ask_turn, _profile_context_store, _settle_credit,
+    _alert_if_ai_out_of_credit, _owned_thread, _persist_ask_turn, _profile_context_store,
+    _settle_credit,
     _thread_established_domain,
 )
 from .. import ratelimit
@@ -362,6 +363,7 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
             # back. A no-op once the answer was committed below. A fresh short
             # session: the request one was released before the stream began.
             _settle_credit(db, release_ask_credit, reservation)
+            _alert_if_ai_out_of_credit(db)
 
     def answer_events():
         for event in orchestrator.run(prepared, messages, persist=persist_prepared):

@@ -212,6 +212,22 @@ def _persist_ask_turn(db: Session, body: "AskRequest", *, user_id: str, kundli_i
         )
 
 
+def _alert_if_ai_out_of_credit(db: Session) -> None:
+    """Queue the team's out-of-credit email when this request's model call
+    was refused for lack of credit (owner_alerts.queue_ai_credit_alert)."""
+    from ..agents.ai_outage import take_credit_outage
+    from ..notifications.owner_alerts import queue_ai_credit_alert
+
+    seen = take_credit_outage()
+    if not seen:
+        return
+    try:
+        with short_session(db) as session:
+            queue_ai_credit_alert(session, seen)
+    except Exception:
+        log.exception("could not queue the AI credit alert")
+
+
 def _settle_credit(db: Session, settle, reservation) -> None:
     """Commit or release an Ask credit after the model call, on a fresh short
     session bound to the request's engine. The reservation carries only row
@@ -612,6 +628,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
     if done is None or done["status"] != "answered":
         # A failed or unverified answer is never charged.
         _settle_credit(db, release_ask_credit, reservation)
+        _alert_if_ai_out_of_credit(db)
         # Explicit, not a generic 500 — the reader gets a clear signal that
         # generation or verification failed, never a reading that shouldn't
         # have shipped. Matches this route's pre-migration contract (a

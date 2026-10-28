@@ -24,7 +24,7 @@ from .daily_subhashita import schedule_daily_subhashita
 from .email import EmailTransport, email_transport_from_env
 from .email_jobs import deliver_email_job, is_email_job, schedule_emails
 from .morning_brief import schedule_morning_briefs
-from .owner_alerts import deliver_owner_job, is_owner_job, schedule_owner_alerts
+from .owner_alerts import check_ai_credit, deliver_owner_job, is_owner_job, schedule_owner_alerts
 from .push import PushMessage, PushTransport, transports_from_env
 from .window_alerts import schedule_window_alerts
 
@@ -160,12 +160,14 @@ def run_once(db: Session, transports: dict[str, PushTransport] | None = None,
     # After the daily briefs, so the daily email has its brief to send.
     emails = _step(db, "emails", lambda: schedule_emails(db), {})
     owner = _step(db, "owner alerts", lambda: schedule_owner_alerts(db), {})
+    # After the daily briefs (which note a credit refusal), before delivery.
+    ai_credit = _step(db, "ai credit", lambda: check_ai_credit(db), "error")
     delivered = _step(db, "delivery", lambda: deliver_due(db, transports, email=email),
                       {"sent": 0, "failed": 0, "delivery_failed": True})
     summary = {"reaped": reaped, "daily_briefs": briefs, "scheduled": len(scheduled),
                "window_alerts": len(windows),
                "subhashita": len(verses), "clock_changes": len(clocks), "emails": emails,
-               "owner_alerts": owner, **delivered}
+               "owner_alerts": owner, "ai_credit": ai_credit, **delivered}
     log.info("notifications: %s", summary)
     return summary
 

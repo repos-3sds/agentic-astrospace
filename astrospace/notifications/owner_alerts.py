@@ -203,3 +203,66 @@ def deliver_owner_job(db: Session, job: NotificationJob, transport: EmailTranspo
     else:
         cm.mark_notification_failed(db, job.id, "; ".join(errors))
     return ok
+
+
+AI_CREDIT_SUBJECT = "Siddha's AI has run out of credit"
+
+
+def queue_ai_credit_alert(db: Session, seen_at: datetime | None = None) -> NotificationJob:
+    """One team email per day when the AI provider refuses for lack of
+    credit (2026-10-28: five hours of failed Asks before anyone knew). Queued
+    by the API or the worker, delivered by the worker to OWNER_ALERT_EMAILS."""
+    from .release_announcements import TEAM_USER
+
+    at = seen_at or datetime.utcnow()
+    line = (f"Gemini refused a request for lack of credit at {_team_time(at)}. Ask answers and "
+            "daily readings fail until the AI Studio prepaid balance is topped up "
+            "(ai.studio/projects, Billing). Turning on auto-reload stops this happening again.")
+    return cm.schedule_notification(
+        db, TEAM_USER, CATEGORY, datetime.utcnow(), AI_CREDIT_SUBJECT,
+        dedupe_key=f"{CATEGORY}:ai_credit:{at.date().isoformat()}",
+        body=line, payload={"channel": CHANNEL, "to": [], "kind": "ai_credit"},
+    )
+
+
+def check_ai_credit(db: Session, probe=None) -> str:
+    """Worker step: one tiny model call per run, so an empty balance is caught
+    even when nobody is asking. Also queues the alert for a refusal any agent
+    in this process noted. Returns "ok", "out_of_credit", "skipped" or "error"."""
+    from ..agents.ai_outage import is_credit_exhausted, take_credit_outage
+
+    seen = take_credit_outage()
+    status = "ok"
+    if probe is None:
+        probe = _gemini_probe
+    try:
+        if not probe():
+            status = "skipped"
+    except Exception as exc:  # noqa: BLE001 - any refusal is reported, not raised
+        if is_credit_exhausted(exc):
+            seen = seen or datetime.utcnow()
+        else:
+            log.warning("AI credit probe failed: %s", exc)
+            status = "error"
+    if seen:
+        queue_ai_credit_alert(db, seen)
+        return "out_of_credit"
+    return status
+
+
+def _gemini_probe() -> bool:
+    """False when Gemini on an AI Studio key is not in use here (Vertex bills
+    the Cloud project, with no prepaid balance to run out)."""
+    from ..agents.base import DEFAULT_GEMINI_MODEL, gemini_backend, gemini_client
+
+    if os.getenv("AI_PROVIDER", "").strip().lower() != "gemini" or gemini_backend() == "vertex":
+        return False
+    if not (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")):
+        return False
+    from google.genai import types
+
+    gemini_client().models.generate_content(
+        model=os.getenv("GEMINI_MODEL", DEFAULT_GEMINI_MODEL), contents="Say ok.",
+        config=types.GenerateContentConfig(max_output_tokens=5),
+    )
+    return True
