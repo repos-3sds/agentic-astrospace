@@ -1,4 +1,4 @@
-<div class="shell">
+<div class="shell" [asEdgeSwipeBack]="edgeSwipe" [swipeTarget]="panes">
   @if (connectivity.state() !== 'online') {
     <section
       class="network-banner"
@@ -17,7 +17,7 @@
     </section>
   }
   <p class="screen-announcer" aria-live="polite">{{ screenAnnouncement() }}</p>
-  <div class="panes" [class.has-list]="settingsPane()">
+  <div class="panes" #panes [class.has-list]="settingsPane()">
     @if (settingsPane()) {
       <aside class="pane-list" aria-label="Settings">
         <as-settings-home />
@@ -48,9 +48,8 @@
       @for (tab of tabs(); track tabTrack($index, tab)) {
         <a
           class="tab"
-          [routerLink]="tabLink(tab)"
-          [replaceUrl]="true"
-          (click)="onTabClick(tab)"
+          [attr.href]="tabHref(tab)"
+          (click)="onTabClick($event, tab)"
           [class.is-active]="tabActive(tab)"
           [attr.aria-current]="tabActive(tab) ? 'page' : null"
         >

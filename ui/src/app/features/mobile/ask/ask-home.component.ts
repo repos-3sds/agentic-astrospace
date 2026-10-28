@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { ASK_NAVIGATION } from './ask-navigation';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
+import { filter } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AskComposerComponent } from './ask-composer.component';
 import { VoiceListeningComponent } from './voice-listening.component';
@@ -158,6 +159,16 @@ export class AskHomeComponent {
    */
   readonly draft = signal('');
 
+  /**
+   * Whether this visit came from a `?q=` handoff on another screen. The
+   * question it sends then replaces this screen in the history, so the
+   * phone's back from the answer returns to the screen that offered the
+   * question, at the same spot: Deepak asked Today's first suggestion and
+   * wanted the second one a single back away (2026-10-28). Reset on leaving
+   * Ask, so a later visit from the tab bar keeps Ask behind its answers.
+   */
+  private handedOff = false;
+
   /** Whether the microphone overlay (25:123) is up. The transcript inside it
    * comes live from {@link SpeechService}. */
   readonly listening = signal(false);
@@ -172,6 +183,7 @@ export class AskHomeComponent {
       const q = params.get('q');
       if (q === null) return;
       this.draft.set(q);
+      this.handedOff = true;
       void this.router.navigate([], {
         relativeTo: route,
         queryParams: { q: null },
@@ -179,6 +191,11 @@ export class AskHomeComponent {
         replaceUrl: true,
       });
     });
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd), takeUntilDestroyed())
+      .subscribe((event) => {
+        if (!event.urlAfterRedirects.split('?')[0].startsWith('/m/ask')) this.handedOff = false;
+      });
     if (!this.kundlis.loaded()) void this.kundlis.load().catch(() => undefined);
     // Re-seed whenever the active profile changes; the service caches per
     // profile and day, so a revisit costs no request.
@@ -247,8 +264,11 @@ export class AskHomeComponent {
     if (!q || this.submitting()) {
       return;
     }
+    const handedOff = this.handedOff;
+    this.handedOff = false;
     const opened = await this.router.navigate(this.navigation.path('answer'), {
       queryParams: { q, topic: this.selectedTopic() ?? undefined, pending: '1' },
+      replaceUrl: handedOff,
     });
     // Ask is a retained tab: the sent question sat in the box when the reader
     // came back for the next one (regression 2026-10-17).

@@ -95,6 +95,15 @@ describe('ScrollMemoryDirective', () => {
     expect(scroller.scrollTop).toBe(0);
   });
 
+  it('restores a detail screen a tab press returns to', async () => {
+    await router.navigateByUrl('/m/readings');
+    scroller.scrollTop = 820;
+    await router.navigateByUrl('/m/today');
+    await router.navigateByUrl('/m/readings', { replaceUrl: true, state: { viaTab: true, restoreScroll: true } });
+    await settle();
+    expect(scroller.scrollTop).toBe(820);
+  });
+
   it('leaves the offset alone when only the query string changes', async () => {
     scroller.scrollTop = 450;
     await router.navigateByUrl('/m/today?date=2026-10-16');

@@ -1,5 +1,4 @@
 import { Component, OnDestroy, OnInit, afterNextRender, effect, inject, signal } from '@angular/core';
-import { Location } from '@angular/common';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
@@ -9,21 +8,10 @@ import { Capacitor } from '@capacitor/core';
 import { AppBootService } from './core/app-boot.service';
 import { NativeKeyboardService } from './core/native-keyboard.service';
 import { NavigationHistoryService } from './core/navigation-history.service';
+import { NATIVE_EXIT_ROUTES, NativeBackService } from './core/native-back.service';
 import { SheetOverlayService } from './core/sheet-overlay.service';
 import { ThemeService } from './core/theme.service';
-import { activeTabRoots } from './core/tab-roots';
 import { SplashComponent } from './shell/splash/splash.component';
-
-/**
- * Screens with nowhere in-app to go back to. Capacitor's hardware back
- * button otherwise falls through to the WebView's own history — which
- * includes every `pushState` the SPA ever made, onboarding and the marketing
- * landing page included, so pressing back enough times on the dashboard
- * walked out through sign-in and into the web app's home page. At these
- * roots back sends the app to the background, as every native Android app
- * does at its own root.
- */
-const NATIVE_EXIT_ROUTES = ['/m/today', '/m/start'];
 
 const ANIMATED_SPLASH_FADE_MS = 360;
 
@@ -59,7 +47,6 @@ export class App implements OnInit, OnDestroy {
   private readonly boot = inject(AppBootService);
   private router = inject(Router);
   private sheetOverlay = inject(SheetOverlayService);
-  private location = inject(Location);
   private readonly keyboard = inject(NativeKeyboardService);
   private removeViewportInsetObserver: (() => void) | null = null;
   private removeBackButtonListener: (() => void) | null = null;
@@ -70,6 +57,7 @@ export class App implements OnInit, OnDestroy {
 
   // Eager so in-app history is counted from the first navigation.
   private readonly navigationHistory = inject(NavigationHistoryService);
+  private readonly nativeBack = inject(NativeBackService);
 
   private readonly path = toSignal(
     this.router.events.pipe(
@@ -243,28 +231,7 @@ export class App implements OnInit, OnDestroy {
   }
 
   private handleBackButton(): void {
-    // A sheet is the thing being looked at; close it rather than navigating
-    // the route underneath.
-    if (this.sheetOverlay.dismissTop()) return;
-    const path = this.router.url.split('?')[0];
-    if (NATIVE_EXIT_ROUTES.includes(path)) {
-      // Background, not exit: Android's own convention at an app's root, and
-      // it keeps the process (and the decrypted cache) warm for the next
-      // open. This replaced a PrimeNG "Close the app?" dialog, which was the
-      // only reason the native root pulled PrimeNG in at all.
-      void CapacitorApp.minimizeApp();
-      return;
-    }
-    // Tab taps replace the URL, so from a tab other than Today the entry
-    // underneath is whatever came before the tabs. Go to Today instead.
-    if (activeTabRoots().includes(path)) {
-      void this.router.navigateByUrl('/m/today', { replaceUrl: true });
-      return;
-    }
-    // Angular's Location, not Capacitor's default — this pops one entry the
-    // same way an in-app back affordance would, rather than falling through
-    // to the WebView's raw history.
-    this.location.back();
+    this.nativeBack.hardwareBack();
   }
 
   /**

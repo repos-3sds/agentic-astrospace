@@ -4,10 +4,9 @@ import { App as CapacitorApp } from '@capacitor/app';
 import {
   NavigationEnd,
   Router,
-  RouterLink,
   RouterOutlet,
 } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { PlanGateService } from '../../../core/plan-gate.service';
 import { filter, map, startWith } from 'rxjs';
 import { KundliStore } from '../../../core/kundli.store';
@@ -17,6 +16,8 @@ import { SheetOverlayService } from '../../../core/sheet-overlay.service';
 import { HapticsService } from '../../../core/haptics.service';
 import { ConnectivityService } from '../../../core/connectivity.service';
 import { ScrollMemoryDirective } from './scroll-memory.directive';
+import { EdgeSwipeBackDirective } from './edge-swipe-back.directive';
+import { NavigationHistoryService, TabNavigationState } from '../../../core/navigation-history.service';
 import { PullRefreshDirective } from './pull-refresh.directive';
 import { Subhashita, SubhashitaService } from '../../../core/subhashita.service';
 import { SubhashitaSheetComponent } from '../subhashita/subhashita-sheet.component';
@@ -52,6 +53,12 @@ function under(path: string, root: string): boolean {
 }
 
 /**
+ * Screens a tab press never returns to: steps of a flow that only make sense
+ * on the way through (a form, a delete confirmation, the answer loader).
+ */
+const NOT_RETURNED_TO = /\/(new|edit|delete|loading)$/;
+
+/**
  * Native app shell: routed content plus the tab bar (Figma node 13:66) — five
  * tabs in every mode, Settings always last on the far right.
  *
@@ -67,7 +74,7 @@ const DEEP_LINK_WINDOW_MS = 15_000;
   selector: 'as-mobile-shell',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, GenericErrorComponent, ScrollMemoryDirective, PullRefreshDirective, SubhashitaSheetComponent, SettingsHomeComponent, TranslatePipe],
+  imports: [RouterOutlet, GenericErrorComponent, ScrollMemoryDirective, EdgeSwipeBackDirective, PullRefreshDirective, SubhashitaSheetComponent, SettingsHomeComponent, TranslatePipe],
   templateUrl: './mobile-shell.component.html',
   styleUrl: './mobile-shell.component.scss',
   host: { class: 'as-mobile' },
@@ -89,6 +96,16 @@ export class MobileShellComponent {
   private readonly haptics = inject(HapticsService);
   protected readonly connectivity = inject(ConnectivityService);
   private readonly scroller = viewChild(ScrollMemoryDirective);
+  private readonly history = inject(NavigationHistoryService);
+  /** The iPhone's edge swipe back; Android has its own back (app.ts). */
+  protected readonly edgeSwipe = Capacitor.getPlatform() === 'ios';
+  /**
+   * The last screen shown in each tab, by tab root. A tab press returns to
+   * it, at the same scroll spot, as tab bars in native apps do: Deepak read
+   * an answer in Ask and tapped Today to pick the next suggested question,
+   * and Today opened at the top (2026-10-28).
+   */
+  private readonly lastInTab = new Map<string, string>();
 
   private readonly subhashita = inject(SubhashitaService);
   private readonly widgets = inject(WidgetBridgeService);
@@ -101,6 +118,11 @@ export class MobileShellComponent {
   private lastPath: string | null = null;
 
   constructor() {
+    this.history.enterShell();
+    inject(DestroyRef).onDestroy(() => this.history.leaveShell());
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd), takeUntilDestroyed())
+      .subscribe((event) => this.rememberInTab(event.urlAfterRedirects));
     // Play's rating card, if this reader is due one (core/rating-prompt.service.ts):
     // a few seconds after the app settles, never over a screen being read.
     const ratingPrompt = inject(RatingPromptService);
@@ -280,12 +302,12 @@ export class MobileShellComponent {
 
   protected readonly tabTrack = (_index: number, tab: MobileTab) => tab.commands.join('/');
 
-  protected tabLink(tab: MobileTab): string[] {
-    return ['/m', ...tab.commands];
+  protected tabActive(tab: MobileTab): boolean {
+    return this.tabOwns(tab, this.currentPath());
   }
 
-  protected tabActive(tab: MobileTab): boolean {
-    const path = this.currentPath();
+  /** Whether a screen belongs to a tab: the tab lit while it shows. */
+  private tabOwns(tab: MobileTab, path: string): boolean {
     const route = `/m/${tab.commands.join('/')}`;
     const mode = this.preferences.experienceMode();
 
@@ -322,16 +344,50 @@ export class MobileShellComponent {
   /**
    * A tab press. On the tab already showing its root, the press scrolls back
    * to the top rather than doing nothing — the router ignores a same-URL
-   * navigation, so this is the only feedback the reader would get.
+   * navigation, so this is the only feedback the reader would get. On a
+   * screen deeper in the same tab it returns to the tab's root. Another tab
+   * opens where the reader left it, at the same scroll spot; when that
+   * screen is still in the history behind this one, the press steps back to
+   * it rather than stacking a copy, so the phone's back afterwards goes
+   * where the reader expects.
    */
-  protected onTabClick(tab: MobileTab): void {
-    const route = `/m/${tab.commands.join('/')}`;
-    if (this.currentPath() === route) {
+  protected onTabClick(event: MouseEvent, tab: MobileTab): void {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    const root = this.tabRoot(tab);
+    if (this.currentPath() === root) {
       this.haptics.select();
       this.scroller()?.scrollToTop();
       return;
     }
     this.haptics.tap();
+    const target = this.tabActive(tab) ? root : this.lastInTab.get(root) ?? root;
+    const steps = this.history.stepsBackTo(target);
+    if (steps !== null) {
+      this.history.go(steps);
+      return;
+    }
+    const state: TabNavigationState = { viaTab: true, restoreScroll: true };
+    void this.router.navigateByUrl(target, { replaceUrl: true, state });
+  }
+
+  protected tabHref(tab: MobileTab): string {
+    return this.tabRoot(tab);
+  }
+
+  private tabRoot(tab: MobileTab): string {
+    return `/m/${tab.commands.join('/')}`;
+  }
+
+  private rememberInTab(url: string): void {
+    const path = url.split('?')[0].split('#')[0];
+    if (NOT_RETURNED_TO.test(path)) return;
+    const tab = this.tabs().find((candidate) => this.tabOwns(candidate, path));
+    if (!tab) return;
+    const root = this.tabRoot(tab);
+    // Ask is always its composer: an answer has its own place in History,
+    // and a returning `?q=` would refill the box.
+    this.lastInTab.set(root, root === '/m/ask' ? root : url);
   }
 
   protected retryConnection(): void {
