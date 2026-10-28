@@ -173,10 +173,12 @@ struct Ring: View {
     var body: some View {
         ZStack {
             Circle().stroke(track, lineWidth: width)
-            Circle()
-                .trim(from: 0, to: max(0.001, min(1, progress)))
-                .stroke(color, style: StrokeStyle(lineWidth: width, lineCap: .round))
-                .rotationEffect(.degrees(-90))
+            if progress > 0 {
+                Circle()
+                    .trim(from: 0, to: min(1, progress))
+                    .stroke(color, style: StrokeStyle(lineWidth: width, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+            }
         }
         .padding(width / 2)
     }
@@ -271,6 +273,27 @@ struct MoonShape: Shape {
         return path
     }
 
+    /// The phase for the day's tithi, so the drawing agrees with the words
+    /// beside it: the middle of the tithi's twelve degrees. Nil when the name
+    /// is not one we know, and the date is used instead.
+    static func phase(tithi: String) -> Double? {
+        let words = tithi.lowercased().split(separator: " ").map(String.init)
+        guard let name = words.last else { return nil }
+        if name.hasPrefix("purn") { return 14.5 / 30 }
+        if name.hasPrefix("amav") { return 29.5 / 30 }
+        let order: [[String]] = [["prati"], ["dwi", "dvi"], ["tri", "trit"], ["chaturth"], ["pancham"],
+                                 ["shash", "sasht", "sast"], ["sapt"], ["asht"], ["nav"], ["dash"],
+                                 ["ekad"], ["dwad", "dvad"], ["trayo"], ["chaturd"]]
+        guard let index = order.firstIndex(where: { $0.contains(where: name.hasPrefix) }) else { return nil }
+        let krishna = words.contains { $0.hasPrefix("krishna") || $0.hasPrefix("krsna") || $0.hasPrefix("bahula") }
+        return (Double(index + 1 + (krishna ? 15 : 0)) - 0.5) / 30
+    }
+
+    /// The tithi's phase when there is one, else the date's.
+    static func phase(tithi: String?, at date: Date) -> Double {
+        tithi.flatMap { phase(tithi: $0) } ?? phase(at: date)
+    }
+
     /// 2000-01-06 18:14 UTC was a new moon; 29.530589 days per lunation.
     static func phase(at date: Date) -> Double {
         let days = (date.timeIntervalSince1970 - 947_182_440) / 86_400
@@ -282,12 +305,13 @@ struct MoonShape: Shape {
 struct MoonDisc: View {
     var palette: Palette
     var date: Date
+    var tithi: String? = nil
     var size: CGFloat
 
     var body: some View {
         ZStack {
             Circle().fill(palette.moonDark)
-            MoonShape(phase: MoonShape.phase(at: date)).fill(palette.moonLit)
+            MoonShape(phase: MoonShape.phase(tithi: tithi, at: date)).fill(palette.moonLit)
         }
         .frame(width: size, height: size)
         .shadow(color: palette.moonLit.opacity(palette.dark ? 0.35 : 0.2), radius: size * 0.12)

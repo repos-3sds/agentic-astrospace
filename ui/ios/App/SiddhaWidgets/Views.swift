@@ -57,9 +57,7 @@ struct TodayFace: View {
 
     private var panchangLine: String {
         guard let today else { return "" }
-        var parts = [today.tithi, today.nakshatra].filter { !$0.isEmpty }
-        if !today.moonSign.isEmpty { parts.append("Moon in \(today.moonSign)") }
-        return parts.joined(separator: " · ")
+        return [today.tithi, today.nakshatra].filter { !$0.isEmpty }.joined(separator: " · ")
     }
 
     private var chips: some View {
@@ -108,6 +106,15 @@ struct TodayFace: View {
                         .foregroundStyle(palette.muted)
                         .lineLimit(1)
                         .minimumScaleFactor(0.85)
+                } else if today == nil {
+                    Text(emptyHint)
+                        .font(Fonts.sans(10.5))
+                        .foregroundStyle(palette.muted)
+                        .lineLimit(2)
+                }
+                if let line = today?.dos.first {
+                    Spacer(minLength: 4).frame(maxHeight: 8)
+                    row("Do", line, palette.good, size: 11.5)
                 }
                 Spacer(minLength: 6)
                 chips
@@ -116,7 +123,30 @@ struct TodayFace: View {
         }
     }
 
-    private var large: some View {
+    private var emptyHint: String { "Your day’s score, tithi and timings show here." }
+
+    @ViewBuilder private var large: some View {
+        if today == nil {
+            VStack(spacing: 10) {
+                Spacer(minLength: 0)
+                score(110)
+                Eyebrow(text: dateLabel, color: palette.accent, size: 10)
+                Text("Open Siddha to see your day")
+                    .font(Fonts.serif(20))
+                    .foregroundStyle(palette.text)
+                Text(emptyHint)
+                    .font(Fonts.sans(12.5))
+                    .foregroundStyle(palette.muted)
+                    .multilineTextAlignment(.center)
+                Spacer(minLength: 0)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            largeFilled
+        }
+    }
+
+    private var largeFilled: some View {
         ViewThatFits(in: .vertical) {
             largeBody(items: 2, summary: true)
             largeBody(items: 1, summary: true)
@@ -171,8 +201,10 @@ struct TodayFace: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(tile.0.uppercased())
                         .font(Fonts.sans(8, .semibold))
-                        .tracking(0.9)
+                        .tracking(0.6)
                         .foregroundStyle(palette.muted)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                     Text(tile.1)
                         .font(Fonts.sans(11.5, .semibold))
                         .foregroundStyle(palette.text)
@@ -202,15 +234,15 @@ struct TodayFace: View {
         }
     }
 
-    private func row(_ label: String, _ text: String, _ color: Color) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
+    private func row(_ label: String, _ text: String, _ color: Color, size: CGFloat = 12.5) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: size < 12 ? 6 : 8) {
             Text(label.uppercased())
                 .font(Fonts.sans(8.5, .bold))
                 .tracking(1)
                 .foregroundStyle(color)
-                .frame(width: 42, alignment: .leading)
+                .frame(width: size < 12 ? 22 : 42, alignment: .leading)
             Text(text)
-                .font(Fonts.sans(12.5))
+                .font(Fonts.sans(size))
                 .foregroundStyle(palette.text)
                 .lineLimit(1)
         }
@@ -354,7 +386,8 @@ struct CalendarFace: View {
                         .font(Fonts.sans(7.5))
                         .foregroundStyle(palette.muted)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.7)
+                        .minimumScaleFactor(0.6)
+                        .padding(.horizontal, 2)
                     Circle()
                         .fill(marked.contains(iso) ? palette.accent : .clear)
                         .frame(width: 4, height: 4)
@@ -509,10 +542,34 @@ struct CalendarFace: View {
                 Spacer(minLength: 10).frame(maxHeight: 14)
                 Eyebrow(text: "Coming up", color: palette.accent, size: 9)
                 Spacer(minLength: 6).frame(maxHeight: 8)
-                eventRows(monthEvents, limit: 7)
-                Spacer(minLength: 0)
+                eventRows(monthEvents, limit: 6)
+                Spacer(minLength: 10)
+                todayTimings
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+    }
+}
+
+extension CalendarFace {
+    /// The iPad card's last block: today's timings, so the week column ends
+    /// on something useful rather than an empty band.
+    @ViewBuilder fileprivate var todayTimings: some View {
+        if let today = snap.freshToday, !today.windows.isEmpty {
+            VStack(alignment: .leading, spacing: 5) {
+                Eyebrow(text: "Today's timings", color: palette.accent, size: 9)
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 10, alignment: .leading), GridItem(.flexible(), alignment: .leading)],
+                          alignment: .leading, spacing: 4) {
+                    ForEach(today.windows.prefix(4), id: \.self) { w in
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Circle().fill(w.caution ? palette.bad : palette.good).frame(width: 6, height: 6)
+                            Text(w.name).font(Fonts.sans(11, .semibold)).foregroundStyle(palette.text)
+                            Text(Say.span(w)).font(Fonts.sans(11)).foregroundStyle(palette.muted)
+                        }
+                        .lineLimit(1)
+                    }
+                }
+            }
         }
     }
 }
@@ -574,7 +631,7 @@ struct MoonFace: View {
     var body: some View {
         let next = snap.calendar?.nextMoon(from: snap.iso)
         VStack(spacing: 0) {
-            MoonDisc(palette: palette, date: snap.now, size: 58)
+            MoonDisc(palette: palette, date: snap.now, tithi: snap.freshToday?.tithi, size: 58)
             Spacer(minLength: 8)
             Text(snap.freshToday?.tithi ?? "The moon today")
                 .font(Fonts.serif(15))
@@ -782,35 +839,46 @@ struct SubhashitaFace: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
+    /// Bigger type when the verse is short enough, so a short verse fills
+    /// the card instead of leaving gaps between its parts.
     private func large(_ verse: Verse) -> some View {
+        ViewThatFits(in: .vertical) {
+            large(verse, scale: 1.3)
+            large(verse, scale: 1.15)
+            large(verse, scale: 1)
+        }
+    }
+
+    private func large(_ verse: Verse, scale: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             top(verse, date: true)
             Spacer(minLength: 8)
             if !verse.sanskrit.isEmpty {
                 Text(verse.sanskrit.trimmingCharacters(in: .whitespacesAndNewlines))
-                    .font(Fonts.sans(13.5))
+                    .font(Fonts.sans(13.5 * scale))
                     .foregroundStyle(palette.muted)
                     .lineSpacing(3)
-                    .lineLimit(4)
-                Spacer(minLength: 8)
+                    .lineLimit(scale > 1 ? nil : 4)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 8 * scale)
             }
             if !verse.english.isEmpty {
                 Text("“\(verse.english)”")
-                    .font(Fonts.serifItalic(18))
+                    .font(Fonts.serifItalic(18 * scale))
                     .foregroundStyle(palette.text)
-                    .lineLimit(4)
-                    .minimumScaleFactor(0.85)
+                    .lineLimit(scale > 1 ? nil : 4)
                     .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 8)
+                Spacer(minLength: 8 * scale)
             }
             if !verse.meaning.isEmpty {
                 Eyebrow(text: "Meaning", color: palette.gold, size: 8.5)
                 Text(verse.meaning)
-                    .font(Fonts.sans(13))
+                    .font(Fonts.sans(13 * scale))
                     .foregroundStyle(palette.text)
-                    .lineLimit(4)
+                    .lineLimit(scale > 1 ? nil : 4)
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 3)
-                Spacer(minLength: 8)
+                Spacer(minLength: 8 * scale)
             }
             source(verse)
         }

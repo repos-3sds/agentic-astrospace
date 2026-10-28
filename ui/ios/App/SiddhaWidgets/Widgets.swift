@@ -266,7 +266,7 @@ struct MoonWidgetView: View {
                     AccessoryWidgetBackground()
                     ZStack {
                         Circle().fill(Color.primary.opacity(0.22))
-                        MoonShape(phase: MoonShape.phase(at: entry.snap.now)).fill(Color.primary)
+                        MoonShape(phase: MoonShape.phase(tithi: entry.snap.freshToday?.tithi, at: entry.snap.now)).fill(Color.primary)
                     }
                     .padding(9)
                 }
