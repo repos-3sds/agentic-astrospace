@@ -38,7 +38,6 @@ export type ExactState = 'granted' | 'denied' | 'unsupported';
 
 export const ALARM_STORAGE_KEY = 'astrospace.mobile.panchangAlarms';
 const SCHEDULED_KEY = 'astrospace.mobile.panchangAlarms.scheduledAt';
-const HANDOFF_KEY = 'astrospace.mobile.panchangAlarms.serverOff';
 
 /** Android channels, created in MainActivity. */
 const CHANNEL: Record<AlarmStyle, string> = {
@@ -123,6 +122,7 @@ export class PanchangAlarmService {
   private started = false;
   private running: Promise<void> | null = null;
   private again = false;
+  private handedOff = false;
 
   constructor() {
     inject(SessionTeardown).register(() => void this.cancelAll());
@@ -202,6 +202,10 @@ export class PanchangAlarmService {
   private async run(force: boolean): Promise<void> {
     if (!force && Date.now() - lastScheduled() < REFRESH_AFTER_MS) return;
     if (!this.auth.isAuthenticated()) return;
+    // Before anything that can fail or return early: with every alarm off,
+    // or a schedule that throws, the server's window alerts kept arriving
+    // and no switch was left to stop them.
+    await this.handOffFromServer();
     const { LocalNotifications } = await import('@capacitor/local-notifications');
     await this.refreshExact();
     const wanted = this.alarms().filter((a) => a.on);
@@ -219,22 +223,22 @@ export class PanchangAlarmService {
       if (notifications.length) await LocalNotifications.schedule({ notifications });
       try { localStorage.setItem(SCHEDULED_KEY, String(Date.now())); } catch { /* storage unavailable */ }
       this.error.set(null);
-      await this.handOffFromServer();
     } catch {
       // Keep what is already scheduled; the next open tries again.
       this.error.set('Could not update your alarms. They will update the next time you open Siddha.');
     }
   }
 
-  /** Window alerts used to come from the server; this phone has them now. */
+  /**
+   * Window alerts used to come from the server; this phone has them now, so
+   * the account's server alerts go off. Once per launch rather than once per
+   * install: a write that failed, or another phone that turned them back on,
+   * is put right the next time Siddha opens.
+   */
   private async handOffFromServer(): Promise<void> {
-    try {
-      if (localStorage.getItem(HANDOFF_KEY)) return;
-    } catch {
-      return;
-    }
+    if (this.handedOff) return;
+    this.handedOff = true;
     await this.push.syncPreference('windows', false);
-    try { localStorage.setItem(HANDOFF_KEY, '1'); } catch { /* storage unavailable */ }
   }
 
   private async cancelAll(): Promise<void> {

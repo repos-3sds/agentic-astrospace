@@ -103,6 +103,24 @@ def test_disabled_preference_is_respected(db):
     assert schedule_window_alerts(db, now=NOW, windows=fake_windows) == []
 
 
+def test_turning_alerts_off_cancels_the_ones_already_queued(db):
+    """Hawk, 2026-10-28: switched off, the timings kept coming. The switch
+    stopped new alerts but left a day or two already queued."""
+    queued = schedule_window_alerts(db, now=NOW, windows=fake_windows)
+    assert queued
+    cm.set_notification_preference(db, ME, "window_alert", enabled=False)
+    statuses = {j.status for j in db.query(NotificationJob).filter_by(category="window_alert")}
+    assert statuses == {"cancelled"}
+
+
+def test_turning_alerts_on_leaves_the_queue_alone(db):
+    schedule_window_alerts(db, now=NOW, windows=fake_windows)
+    cm.set_notification_preference(db, ME, "window_alert", enabled=True)
+    cm.set_notification_preference(db, ME, "morning_brief", enabled=False)
+    statuses = {j.status for j in db.query(NotificationJob).filter_by(category="window_alert")}
+    assert statuses == {"pending"}
+
+
 def test_quiet_hours_drop_alerts_inside_them(db):
     cm.set_notification_preference(db, ME, "window_alert",
                                    quiet_hours_start=time(22, 0), quiet_hours_end=time(6, 0))
