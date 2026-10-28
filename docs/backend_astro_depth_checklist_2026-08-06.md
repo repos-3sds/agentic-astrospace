@@ -1722,19 +1722,16 @@ New Zealand and Europe (124k rows, `data/world_places.json.gz`, 2.7 MB; about
 +105 MB server memory once loaded, ~30-45 ms per search, first search loads
 the file in ~2 s).
 
-- [ ] **Village-level India beyond AP/Telangana.** Outside AP/TS, India has
-  only cities500 (~6.5k places), because GeoNames leaves most Indian villages
-  without a population. *Why not built:* the full `IN.txt` dump is needed and
-  download.geonames.org is blocked from the cloud containers. *Code ready
-  (2026-10-21):* `scripts/build_india_places.py` builds all of India into
-  `data/india_places.tsv.gz`, which `core/cities.py` streams into compact
-  arrays (600k synthetic rows: +67 MB, ~18 ms per search). Places save as
-  "Name, District"; bare AP/TS names saved before resolve as they did.
-  *Unblocks when:* `IN.zip`, `admin1CodesASCII.txt` and `admin2Codes.txt`
-  are downloaded on the Mac. *Then:* run the builder, take `"IN"` out of
-  `COUNTRIES` in `scripts/build_world_places.py` and rebuild that file
-  (`geonamescache` + `reverse_geocoder` from PyPI), and check that every
-  India "Name, Region" the old world file holds still resolves nearby.
+- [x] **Village-level India beyond AP/Telangana** (2026-10-28). Built from
+  the GeoNames `IN.txt` dump of 2026-10-27 (downloaded on the Mac; the site
+  is blocked from the cloud containers): 475,500 places in 795 districts of
+  36 states, in `data/india_places.tsv.gz` (+64 MB loaded, ~16 ms per
+  search). India came out of `world_places.json.gz`, filtered from the
+  existing file rather than rebuilt, so other countries are unchanged. Every
+  "Name, State" the old file saved resolves where it did, except two garbled
+  GeoNames names; ~80 bare names typed without a state now go to the most
+  populous namesake. 37 dump records with no state are left out. To refresh:
+  `python scripts/build_india_places.py IN.txt admin1CodesASCII.txt admin2Codes.txt`.
 - [ ] **The rest of the world** (Nepal, Sri Lanka, Bangladesh, Pakistan,
   Africa, the Caribbean, East Asia, the Americas). *Why not built:* not in
   the diaspora-first list. *Hook:* add codes to `COUNTRIES` in

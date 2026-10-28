@@ -1,4 +1,5 @@
-"""Complete AP/Telangana populated-places coverage in the city lookup."""
+"""Village-level India populated places in the city lookup: all of India from
+the GeoNames dump, with AP/Telangana names saved before still resolving."""
 from astrospace.core.cities import (
     _india_places, _normalize, lookup_city, search_cities,
 )
@@ -15,14 +16,14 @@ AP_TS_PLACES = [
 class TestDataset:
     def test_dataset_loads_and_is_complete_scale(self):
         places = _india_places()
-        assert len(places) > 30000, "AP+TS dataset should carry village-level coverage"
+        assert len(places) > 400000, "all of India should carry village-level coverage"
+        assert len({state for _, state in places.districts}) == 36
 
     def test_all_rows_have_coordinates_in_india(self):
         places = _india_places()
-        for row in range(5000):
+        for row in range(0, len(places), 50):
             name, lat, lng = places.name(row), places.lat[row], places.lng[row]
-            assert 5.0 < lat < 25.0 and 74.0 < lng < 88.0, (name, lat, lng)
-            assert places.where(row)[1] in ("Andhra Pradesh", "Telangana")
+            assert 6.0 < lat < 37.5 and 68.0 < lng < 97.5, (name, lat, lng)
 
 
 class TestLookup:
@@ -127,11 +128,34 @@ class TestIndiaAndDiaspora:
         assert 24 < bihar[0] < 25.5 and 19 < maharashtra[0] < 20.5
 
     def test_ap_ts_villages_keep_answering_their_bare_names(self):
-        # The village layer still wins over the all-India layer.
         assert lookup_city("Pithapuram", "IN") is not None
+        # India lives in the village layer only, so no town is listed twice.
         from astrospace.core.cities import _world_places
-        regions = {row[3] for row in _world_places() if row[4] == "IN"}
-        assert "Andhra Pradesh" not in regions and "Telangana" not in regions
+        assert not [row for row in _world_places() if row[4] == "IN"]
+
+    def test_places_saved_from_the_country_level_layer_stay_put(self):
+        # "Name, State" as the old cities500 layer saved them, with where
+        # they resolved then: a chart saved before must not move.
+        saved = {
+            "Nashik, Maharashtra": (19.9973, 73.791),
+            "Shillong, Meghalaya": (25.5689, 91.8831),
+            "Port Blair, Andaman and Nicobar Islands": (11.6661, 92.7464),
+            "Mahabaleshwar, Maharashtra": (17.56, 73.4),
+            # Same-sized namesakes: the administrative seat, as before.
+            "Nautan, Bihar": (26.7203, 84.4754),
+            "Neemuch, Rajasthan": (24.4764, 74.8624),
+            "Raga, Arunachal Pradesh": (27.7993, 94.0743),
+        }
+        for city, (lat, lng) in saved.items():
+            geo = lookup_city(city, "IN")
+            assert geo is not None, city
+            assert abs(geo[0] - lat) < 0.05 and abs(geo[1] - lng) < 0.05, (city, geo)
+
+    def test_villages_beyond_ap_ts_are_searchable(self):
+        rows = search_cities("mawsynram", 5)
+        assert rows and "Meghalaya" in rows[0]["label"]
+        geo = lookup_city(rows[0]["city"], "IN")
+        assert (geo[0], geo[1]) == (rows[0]["lat"], rows[0]["lng"])
 
     def test_diaspora_cities_carry_their_own_zones(self):
         assert lookup_city("Leicester", "GB")[2] == "Europe/London"
@@ -265,9 +289,30 @@ class TestIndiaBuilder:
         assert places.search("ramp", 10)[1] == exact
         assert [places.name(r) for r in places.search("ampu", 10)[2]] == ["Rampur", "Rampur"]
 
+    @staticmethod
+    def _stray(gid: int, admin1: str, feature: str = "PPL", lat: float = 20, admin2: str = "") -> str:
+        return "\t".join([str(gid), f"Newtown{gid}", f"Newtown{gid}", "", str(lat), "80", "P",
+                          feature, "IN", "", admin1, admin2, "", "", "0", "", "",
+                          "Asia/Kolkata", "x"])
+
     def test_unknown_state_code_stops_the_build(self, tmp_path, monkeypatch):
         import pytest
-        newtown = "\t".join(["9", "Newtown", "Newtown", "", "20", "80", "P", "PPL", "IN", "",
-                             "99", "", "", "", "0", "", "", "Asia/Kolkata", "x"])
+        newstate = "\n".join(self._stray(100 + i, "99") for i in range(100))
         with pytest.raises(SystemExit, match="99"):
-            self._places(tmp_path, monkeypatch, extra=newtown)
+            self._places(tmp_path, monkeypatch, extra=newstate)
+
+    def test_a_few_places_with_no_state_are_left_out(self, tmp_path, monkeypatch):
+        strays = "\n".join([self._stray(9, "00"), self._stray(10, ""), self._stray(11, "04")])
+        assert len(self._places(tmp_path, monkeypatch, extra=strays)) == 6
+
+    def test_an_administrative_seat_leads_same_sized_namesakes(self, tmp_path, monkeypatch):
+        # Two unpopulated "Newtown12" in one district fold to the seat, which
+        # also leads an unpopulated namesake elsewhere in the state.
+        seat = "\n".join([
+            self._stray(12, "34", lat=25.1, admin2="002").replace("Newtown12", "Nautan"),
+            self._stray(13, "34", "PPLA3", lat=25.2, admin2="002").replace("Newtown13", "Nautan"),
+            self._stray(14, "34", lat=25.3, admin2="003").replace("Newtown14", "Nautan"),
+        ])
+        places = self._places(tmp_path, monkeypatch, extra=seat)
+        assert len(places) == 8
+        assert places.lat[places.lookup("nautan, bihar")] == 25.2
