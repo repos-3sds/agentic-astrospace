@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from astrospace.context import daily_guidance
-from astrospace.context.daily import _do_and_avoid, _pick, _score_day, _subject_words
+from astrospace.context.daily import DAY_BANDS, _do_and_avoid, _legacy_score, _pick, _score_day, _subject_words
 from astrospace.core.vedic.chart import VedicChart
 
 DELHI = {"city": "New Delhi", "nation": "IN"}
@@ -356,8 +356,39 @@ class TestScoring:
 
     def test_verdict_carries_its_parts(self, guidance):
         v = guidance["verdict"]
-        assert sum(v["score_parts"].values()) == v["score"] or v["score"] in (0, 100)
-        assert v["score_parts"]["base"] == 50
+        assert sum(v["day_score_parts"].values()) == v["day_score"] or v["day_score"] in (0, 100)
+        assert v["day_score_parts"]["base"] == 50
+        # Builds that drew the ring from score_parts + score must not see a
+        # tally there; they fall back to their band's slice instead.
+        assert "score_parts" not in v
+
+
+def _old_build_dial(tally: float) -> int:
+    """gaugePositionFromScore as shipped before 2026-10-28 (today.component.ts)."""
+    bands = [(3, 76, 100), (1, 51, 75), (-1, 26, 50), (float("-inf"), 1, 25)]
+    lower, floor, ceiling = next(b for b in bands if tally >= b[0])
+    start = lower if lower != float("-inf") else -6
+    within = min(1, max(0, (tally - start) / 4))
+    return round(floor + within * (ceiling - floor))
+
+
+class TestOldBuilds:
+    """Srikavya, 2026-10-28: an iPhone build from before the 0-100 rescale drew
+    a day that scored 58 (Steady, Chandrashtama) as a full ring reading 100,
+    because it read the new score as the old signed tally."""
+
+    OLD_SLICE = {"supportive": (76, 100), "positive": (51, 75), "mixed": (26, 50), "caution": (1, 25)}
+
+    @pytest.mark.parametrize("score", range(0, 101))
+    def test_old_build_ring_stays_in_the_days_band(self, score):
+        tone = next(tone for floor, tone in DAY_BANDS if score >= floor)
+        dial = _old_build_dial(_legacy_score(score, tone))
+        low, high = self.OLD_SLICE[tone]
+        assert low <= dial <= high, (score, tone, dial)
+        assert dial != 100 or tone == "supportive"
+
+    def test_srikavyas_day_reads_near_its_score(self):
+        assert _old_build_dial(_legacy_score(58, "positive")) == 58
 
 
 class TestMasa:

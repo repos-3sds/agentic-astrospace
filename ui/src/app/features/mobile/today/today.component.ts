@@ -16,7 +16,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { BirthDetailsCardComponent } from '../chart/birth-details-card.component';
 import { VedicService } from '../../../core/vedic.service';
 import { ResourceFreshness } from '../../../core/resource-cache';
-import { DailyBriefResponse, DailyGuidancePayload, VedicAll, DailyActionRow, FestivalOccurrence } from '../../../core/models';
+import { DailyBriefResponse, DailyGuidancePayload, DayScoreParts, VedicAll, DailyActionRow, FestivalOccurrence } from '../../../core/models';
 import { FestivalSheetComponent } from '../calendar/festival-sheet.component';
 import { AnalyticsService } from '../../../core/analytics.service';
 import { TODAY_DRILL_DOWNS, whyDrillDowns } from '../why-reading/drill-downs';
@@ -61,13 +61,16 @@ const DASHA_LEVEL_SHORT: Record<string, string> = {
  * Where the day sits on the 0-100 dial.
  *
  * The engine scores the day 0-100 with an ordinary day near 50 (see
- * _score_day in astrospace/context/daily.py). A reading cached before that
- * change carries the old signed tally (-11..+5) and no score_parts; for those
- * the tally's band is placed in that band's slice of the new dial, so the
- * ring and the label still agree until the cache refreshes.
+ * _score_day in astrospace/context/daily.py) and sends it as day_score;
+ * `score` stays the old signed tally for builds that still draw from it. A
+ * reading from 2026-10-28 before that split has the 0-100 in `score` beside
+ * score_parts. Anything older has only the tally; its band is placed in that
+ * band's slice of the dial, so the ring and the label still agree.
  */
 export function dayScorePosition(verdict: DailyGuidancePayload['verdict']): number {
-  if (verdict.score_parts) return Math.round(Math.min(100, Math.max(0, verdict.score)));
+  const clamp = (value: number) => Math.round(Math.min(100, Math.max(0, value)));
+  if (verdict.day_score != null) return clamp(verdict.day_score);
+  if (verdict.score_parts) return clamp(verdict.score);
   const legacy: Record<DailyGuidancePayload['verdict']['tone'], number> = {
     supportive: 75, positive: 58, mixed: 40, caution: 25,
   };
@@ -83,7 +86,7 @@ export const BAND_LABEL: Record<DayBand, string> = {
 };
 
 /** "Why today is a 55", in words: which of the three signals lifted it and which held it back. */
-function scoreReasonFromParts(parts: NonNullable<DailyGuidancePayload['verdict']['score_parts']>): string {
+function scoreReasonFromParts(parts: DayScoreParts): string {
   const up: string[] = [];
   const down: string[] = [];
   (parts.star > 0 ? up : down).push(parts.star > 0 ? 'the day’s star is with you' : 'the day’s star is not with you');
@@ -99,7 +102,8 @@ function scoreReasonFromParts(parts: NonNullable<DailyGuidancePayload['verdict']
 }
 
 function scoreReason(daily: DailyGuidancePayload): string {
-  if (daily.verdict.score_parts) return scoreReasonFromParts(daily.verdict.score_parts);
+  const parts = daily.verdict.day_score_parts ?? daily.verdict.score_parts;
+  if (parts) return scoreReasonFromParts(parts);
   const highTransits = daily.context.active_gochara.filter((row) => row.severity === 'high').length;
   const difficultWindows = daily.muhurta_windows.filter((row) => row.kind === 'inauspicious').length;
   const supportiveWindows = daily.muhurta_windows.filter((row) => row.kind === 'auspicious').length;

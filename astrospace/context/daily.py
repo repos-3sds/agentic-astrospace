@@ -243,6 +243,31 @@ _TRANSIT_CAP = 10
 DAY_BANDS = ((70, "supportive"), (50, "positive"), (30, "mixed"), (0, "caution"))
 
 
+# App builds from before 2026-10-28 read verdict.score as the old signed tally
+# and spread it over four equal quarters of the dial, saturating four points
+# into each band: [tally floor, dial floor, dial ceiling] per tone, as in their
+# gaugePositionFromScore. Fed a 0-100 score, anything from 7 up drew a full
+# ring, so every day on those builds read 100 whatever its band (Srikavya,
+# 2026-10-28: 100 "Steady" on a Chandrashtama day that scored 58). They keep
+# reading `score`; current builds read `day_score`.
+_LEGACY_DIAL = {
+    "supportive": (3, 76, 100),
+    "positive": (1, 51, 75),
+    "mixed": (-1, 26, 50),
+    "caution": (-6, 1, 25),
+}
+# The tally just below the next band's floor: a positive day must not reach 3.
+_LEGACY_CEILING = {"supportive": 7, "positive": 2.99, "mixed": 0.99, "caution": -1.01}
+
+
+def _legacy_score(score: int, tone: str) -> float:
+    """The tally that old builds draw at about `score`, inside `tone`'s quarter."""
+    tally_floor, dial_floor, dial_ceiling = _LEGACY_DIAL[tone]
+    position = max(dial_floor, min(dial_ceiling, score))
+    tally = tally_floor + (position - dial_floor) / (dial_ceiling - dial_floor) * 4
+    return round(min(_LEGACY_CEILING[tone], tally), 2)
+
+
 def _transit_points(personal: dict, ctx: dict) -> int:
     net = len(ctx["supportive_rules"])
     net -= sum(2 if rule.get("severity") == "high" else 1 for rule in ctx["challenging_rules"])
@@ -340,8 +365,12 @@ def _verdict(chart, relation: str, day_payload: dict, personal: dict,
     text = " ".join(sentences)
     return {
         "tone": tone,
-        "score": score,
-        "score_parts": _score_parts(personal, ctx),
+        # 0-100 and its three signals. Named apart from `score` so that builds
+        # made between the rescale and this split (which drew `score` as 0-100
+        # only when `score_parts` was present) fall back to their band's slice.
+        "day_score": score,
+        "day_score_parts": _score_parts(personal, ctx),
+        "score": _legacy_score(score, tone),
         "headline": headline.capitalize(),
         "text": text,
         "word_count": len(text.split()),

@@ -60,10 +60,16 @@ BUDGETS: list[FieldBudget] = [
     FieldBudget(
         "/context/{id}/daily", "verdict.score",
         get=lambda daily: daily["verdict"]["score"],
-        holds=lambda v: isinstance(v, int) and not isinstance(v, bool),
-        why="gaugePositionFromScore maps this through a signed-tally band, "
-            "never a 0-100 percentage. Today clamped it to that range once "
-            "and every real reading rendered as an empty ring (2026-07-27).",
+        holds=lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and -11 <= v <= 7,
+        why="App builds from before 2026-10-28 map this through a signed-tally "
+            "band, never a 0-100 percentage. Sent the 0-100 score, every day "
+            "on those builds drew a full ring reading 100 (2026-10-28).",
+    ),
+    FieldBudget(
+        "/context/{id}/daily", "verdict.day_score",
+        get=lambda daily: daily["verdict"]["day_score"],
+        holds=lambda v: isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= 100,
+        why="Today's ring draws this number as it is (dayScorePosition).",
     ),
     FieldBudget(
         "/vedic/{id}/ashtakavarga", "sav",
