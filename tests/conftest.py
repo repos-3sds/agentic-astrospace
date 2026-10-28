@@ -81,3 +81,12 @@ def _question_sorter_stays_offline(monkeypatch):
     for the same reason as the fixtures above: no test may reach a provider
     by accident. Tests of the sorter itself inject a fake."""
     monkeypatch.setenv("ASK_SORTER", "off")
+
+
+@pytest.fixture(autouse=True)
+def _ask_engine_stays_bundle(monkeypatch):
+    """The tool-using Ask (agents/ask_engine.py) is on for the owner's account
+    by default and makes extra model calls. Tests get today's Ask unless they
+    turn it on themselves."""
+    monkeypatch.setenv("ASK_ENGINE", "bundle")
+    monkeypatch.setenv("ASK_AGENT_EMAILS", "")

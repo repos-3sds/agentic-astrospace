@@ -101,7 +101,38 @@ def _period_boundary_years(bundle: dict) -> set[int]:
             value = row.get(key)
             if isinstance(value, str) and value[:4].isdigit():
                 years.add(int(value[:4]))
+    # Dates the exploring agent looked up this turn (agents/explorer.py) are
+    # real period boundaries too.
+    for value in _explored_values(bundle):
+        if isinstance(value, str) and len(value) >= 10 and value[:4].isdigit() and value[4] == "-":
+            years.add(int(value[:4]))
     return years
+
+
+def _explored_values(bundle: dict):
+    stack = [call.get("result") for call in bundle.get("explored") or []]
+    while stack:
+        item = stack.pop()
+        if isinstance(item, dict):
+            stack.extend(item.values())
+        elif isinstance(item, list):
+            stack.extend(item)
+        else:
+            yield item
+
+
+def explored_refs(bundle: dict) -> set[str]:
+    """Citable refs the exploring agent's tool calls returned this turn: one
+    per call, plus one per classical pattern it was shown. Absent unless the
+    turn explored, so the bundle path's citable set is unchanged."""
+    refs: set[str] = set()
+    for call in bundle.get("explored") or []:
+        if call.get("ref"):
+            refs.add(call["ref"])
+        for row in (call.get("result") or {}).get("patterns") or []:
+            if isinstance(row, dict) and row.get("id"):
+                refs.add(row["id"])
+    return refs
 
 
 def _tense_conflict(text: str, as_of_year: int, safe_years: set[int]) -> bool:
@@ -176,7 +207,7 @@ def valid_sources(bundle: dict) -> set[str]:
     # Sections only some questions carry ("good time to..." gets real Muhurta
     # slots, context/muhurta_search.py) are citable when present.
     optional = {name for name in _OPTIONAL_SECTION_NAMES if bundle.get(name)}
-    return _BUNDLE_SECTION_NAMES | optional | ref_ids | chunk_ids | fact_refs
+    return _BUNDLE_SECTION_NAMES | optional | ref_ids | chunk_ids | fact_refs | explored_refs(bundle)
 
 
 class Violation(str):

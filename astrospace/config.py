@@ -79,6 +79,8 @@ VARS: tuple[Var, ...] = (
     Var("GEMINI_MODEL"),
     Var("ANTHROPIC_API_KEY"),
     Var("ANTHROPIC_MODEL"),
+    Var("ASK_ENGINE", "choice", frozenset({"bundle", "agent", ""})),
+    Var("ASK_AGENT_EMAILS", "email_list"),
     Var("ASK_SORTER", "choice", frozenset({"off", "heuristic", "0", "false", "ai", "on", "1", "true", ""})),
     Var("DAILY_BRIEF_AGENT", "opt_out"),
     Var("COMPAT_INSIGHT_AGENT", "opt_out"),
