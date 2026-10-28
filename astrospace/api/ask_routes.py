@@ -42,7 +42,8 @@ from ..db.crud_profile_context import build_profile_context_projection
 from ..db.database import release_connection, short_session
 from .. import ratelimit
 from ..entitlements.usage import commit_ask_credit, release_ask_credit, reserve_ask_credit
-from ..agents.ask_engine import uses_agent
+from ..agents.ask_engine import choose_engine
+from ..agents.orchestrator import exploration_trace
 from .auth import CurrentUser
 from .context_routes import _chart_from_kundli
 
@@ -410,6 +411,7 @@ def _evidence_from_reading(
     reading: StructuredReading, *,
     profile_context_revision: int | None = None,
     profile_context_as_of: str | None = None,
+    exploration: dict | None = None,
 ) -> dict:
     """Namespaced, versioned bridge shape for `AskMessage.evidence` — this is
     explicitly a temporary storage decision, not the final one. Wrapping it
@@ -438,6 +440,11 @@ def _evidence_from_reading(
     if profile_context_revision is not None:
         evidence["profile_context_revision"] = profile_context_revision
         evidence["profile_context_as_of"] = profile_context_as_of
+    if exploration:
+        # The tool-using Ask's trace (AskOrchestrator.exploration_trace):
+        # what it looked up and the notes it wrote, so a reading can be
+        # explained afterwards. Absent on today's Ask.
+        evidence["exploration"] = exploration
     return evidence
 
 
@@ -461,6 +468,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
     is never honoured on this route — same restriction the field's own
     docstring already states ("Only honoured by the streamed v2
     orchestrator") — so `validation_needed` cannot occur here."""
+    explore, body.question = choose_engine(user.email, body.question)
     k = crud.get_kundli(db, kundli_id, user.id)
     if not k:
         raise HTTPException(status_code=404, detail="Kundli not found")
@@ -527,7 +535,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
             language=body.language,
             tone=body.tone,
             history=messages,
-            explore=uses_agent(user.email),
+            explore=explore,
             # validate_first intentionally not passed through — see docstring.
         )
     except TaxonomyError:
@@ -578,6 +586,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
                                 reading,
                                 profile_context_revision=prepared.profile_context_revision,
                                 profile_context_as_of=prepared.profile_context_as_of,
+                                exploration=exploration_trace(prepared),
                             ),
                             usage=prepared.usage)
 

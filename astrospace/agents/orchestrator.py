@@ -325,6 +325,23 @@ def _needs_clarification(decision) -> bool:
     return (primary_hits - secondary_hits) <= 1
 
 
+def exploration_trace(prepared: "PreparedRun") -> dict | None:
+    """What the tool-using Ask looked up this turn, small enough to store
+    with the answer: each call's tool, arguments and ref, the pattern ids it
+    was shown, and the explorer's notes. None when the turn did not explore."""
+    calls = prepared.bundle.get("explored") or []
+    if not calls:
+        return None
+    return {
+        "calls": [{"tool": c.get("tool"), "args": c.get("args") or {}, "ref": c.get("ref"),
+                   "failed": "error" in (c.get("result") or {}),
+                   **({"patterns": [row.get("id") for row in (c.get("result") or {}).get("patterns") or []]}
+                      if (c.get("result") or {}).get("patterns") else {})}
+                  for c in calls],
+        "notes": prepared.bundle.get("explorer_notes") or "",
+    }
+
+
 class AskOrchestrator:
     def __init__(self, chart_loader: Callable[[], VedicChart],
                 router: KeywordRouter | None = None,
@@ -855,6 +872,8 @@ class AskOrchestrator:
                 *(p for p in found["passages"] if p.get("chunk_id") not in known),
             ]
         prepared.agent = prepared.agent_factory(bundle)
+        log.info("ask explored (domain=%s): %s", prepared.domain,
+                 ", ".join(call.get("ref") or "" for call in found["explored"]))
         if "explored" not in prepared.context_used:
             prepared.context_used = [*prepared.context_used, "explored"]
 

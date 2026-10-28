@@ -12,11 +12,11 @@ from unittest.mock import patch
 
 import pytest
 
-from astrospace.agents.ask_engine import uses_agent
+from astrospace.agents.ask_engine import choose_engine, uses_agent
 from astrospace.agents.ask_tools import TOOL_SPECS, ChartTools, pattern_cards, summarize_call
 from astrospace.agents.domain_agent import DomainReadingAgent
 from astrospace.agents.explorer import ChartExplorer
-from astrospace.agents.orchestrator import AskOrchestrator
+from astrospace.agents.orchestrator import AskOrchestrator, exploration_trace
 from astrospace.agents.schema import Guidance, StructuredReading, TechnicalBasisItem
 from astrospace.agents.scope import QuestionPlan
 from astrospace.agents.verifier import _period_boundary_years, valid_sources
@@ -105,6 +105,14 @@ class TestSwitch:
         assert uses_agent("c@z.com")
 
 
+    def test_old_prefix_gives_todays_ask_for_one_question(self, monkeypatch):
+        monkeypatch.setenv("ASK_AGENT_EMAILS", "a@x.com")
+        assert choose_engine("a@x.com", "/old My career?") == (False, "My career?")
+        assert choose_engine("a@x.com", "My career?") == (True, "My career?")
+        # Readers without the agent keep their question untouched.
+        assert choose_engine("c@z.com", "/old My career?") == (False, "/old My career?")
+
+
 class TestVerifier:
     BUNDLE = {"explored": [
         {"ref": "tool:house(7)", "result": {"ref": "tool:house(7)", "sign": "Pisces"}},
@@ -172,6 +180,12 @@ class TestOrchestrator:
         assert {"tool:house(7)", "pattern:MAR-01"} <= seen_sources[0]
         assert prepared.bundle["explorer_notes"].startswith("- 7th lord")
         assert persisted == ["answered"]
+        trace = exploration_trace(prepared)
+        assert [c["ref"] for c in trace["calls"]] == [
+            "tool:classical_patterns(marriage)", "tool:house(7)",
+            "tool:dasha_timeline(2026-01-01,2032-01-01)"]
+        assert "pattern:MAR-01" in trace["calls"][0]["patterns"]
+        assert trace["notes"].startswith("- 7th lord")
 
     def test_an_invented_tool_ref_is_still_rejected(self, chart):
         orchestrator, prepared = self._prepare(chart, explore=True)
@@ -197,6 +211,7 @@ class TestOrchestrator:
                                            persist=lambda r, s: "t1"))
         assert events[-1]["status"] == "answered"
         assert prepared.agent is before and "explored" not in prepared.bundle
+        assert exploration_trace(prepared) is None
 
     def test_depth_follows_the_question(self, chart):
         tools = ChartTools(chart)
