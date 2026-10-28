@@ -42,6 +42,7 @@ from ..db.crud_profile_context import build_profile_context_projection
 from ..db.database import release_connection, short_session
 from .. import ratelimit
 from ..entitlements.usage import commit_ask_credit, release_ask_credit, reserve_ask_credit
+from ..agents.ask_engine import uses_agent
 from .auth import CurrentUser
 from .context_routes import _chart_from_kundli
 
@@ -526,6 +527,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
             language=body.language,
             tone=body.tone,
             history=messages,
+            explore=uses_agent(user.email),
             # validate_first intentionally not passed through — see docstring.
         )
     except TaxonomyError:
