@@ -127,9 +127,11 @@ def explored_refs(bundle: dict) -> set[str]:
     Absent unless the turn explored, so the bundle path's citable set is
     unchanged."""
     refs: set[str] = set()
+    from .ask_tools import ref_aliases
     for call in bundle.get("explored") or []:
         if call.get("ref"):
             refs.add(call["ref"])
+            refs |= ref_aliases(call["ref"])
         for row in (call.get("result") or {}).get("patterns") or []:
             if isinstance(row, dict) and row.get("id"):
                 refs.add(row["id"])

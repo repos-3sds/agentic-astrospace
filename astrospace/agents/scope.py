@@ -192,7 +192,10 @@ class _SortResult(BaseModel):
         "spirituality", "education", "family_property", "litigation",
     ]] = Field(default=None, description=(
         "The life area the question is about, read from its meaning and the earlier turns: "
-        "a short follow-up keeps the earlier area, a new subject gets its own. Null for "
+        "a short follow-up keeps the earlier area, a new subject gets its own. Work, a job, "
+        "a business, a YouTube or social media channel, a side project or earning from "
+        "anything is career (wealth when it is only about savings, investments or money "
+        "coming in). personality is only for a person's nature and temperament. Null for "
         "today, panchang and general chart questions with no single area."))
 
 

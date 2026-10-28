@@ -13,7 +13,8 @@ import { whyDrillDowns } from '../why-reading/drill-downs';
 import { MobileAskStateService } from './mobile-ask-state.service';
 import { AskService } from '../../../core/ask.service';
 import { SheetComponent } from '../sheet/sheet.component';
-import { AskMemoryCandidate, AskStreamEvent, AskTechnicalBasisItem, StructuredReading } from '../../../core/models';
+import { AskMemoryCandidate, AskStreamEvent, AskTechnicalBasisItem, AskWeighing, StructuredReading } from '../../../core/models';
+import { AskWeighingCardComponent } from './ask-weighing-card.component';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
 import { AnalyticsService } from '../../../core/analytics.service';
@@ -62,6 +63,8 @@ interface ChatMessage {
   profile_context_revision: number;
   profile_context_as_of: string | null;
   reading: StructuredReading | null;
+  /** Tool-using Ask's angle-by-angle scorecard, when it ran. */
+  weighing?: AskWeighing | null;
   options: string[];
   streaming?: boolean;
 }
@@ -105,7 +108,7 @@ export function areaLabel(id: string): string {
   selector: 'as-ask-answer',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, AskComposerComponent, ListenSheetComponent, WhyReadingSheetComponent, LockedStateComponent, BackLinkDirective, ReportAnswerSheetComponent, SheetComponent],
+  imports: [RouterLink, AskComposerComponent, ListenSheetComponent, WhyReadingSheetComponent, LockedStateComponent, BackLinkDirective, ReportAnswerSheetComponent, SheetComponent, AskWeighingCardComponent],
   templateUrl: './ask-answer.component.html',
   styleUrl: './ask-answer.component.scss',
 })
@@ -749,6 +752,7 @@ export class AskAnswerComponent {
       profile_context_revision: this.numberFromEvidence(message.evidence, 'profile_context_revision'),
       profile_context_as_of: this.stringFromEvidence(message.evidence, 'profile_context_as_of'),
       reading: structured,
+      weighing: this.weighingFromEvidence(message.evidence),
       options: this.clarificationOptionsFromEvidence(message.evidence),
     };
   }
@@ -801,6 +805,13 @@ export class AskAnswerComponent {
       day: 'numeric', month: 'short', year: 'numeric',
     }).format(parsed);
     return `Uses your saved profile context · ${date}`;
+  }
+
+  private weighingFromEvidence(evidence: Record<string, unknown> | null | undefined): AskWeighing | null {
+    const value = evidence?.['weighing'] as Partial<AskWeighing> | undefined;
+    if (!value || typeof value !== 'object' || !Array.isArray(value.angles) || !value.angles.length) return null;
+    if (!value.overall || typeof value.overall.band !== 'string') return null;
+    return value as AskWeighing;
   }
 
   private readingFromEvidence(evidence: Record<string, unknown> | null | undefined): StructuredReading | null {
@@ -1044,6 +1055,7 @@ export class AskAnswerComponent {
             profile_context_revision: event.profile_context_revision ?? 0,
             profile_context_as_of: event.profile_context_as_of ?? null,
             reading: event.reading,
+            weighing: event.weighing ?? null,
             streaming: false,
           });
           if (finalThreadId) {

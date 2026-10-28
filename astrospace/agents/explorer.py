@@ -29,6 +29,7 @@ Safety, scope, the dosha rule and the checker stay in code, untouched.
 from __future__ import annotations
 
 import logging
+import re
 from datetime import date
 from typing import Callable
 
@@ -46,6 +47,77 @@ ROUNDS_BY_KIND = {"today": 3, "narrow": 4, "explain": 5, "broad": 6}
 MAX_ROUNDS = 8
 
 VERDICTS = ("holds", "partly", "fails", "reverses")
+EFFECTS = ("helps", "hurts", "mixed")
+
+# Every point of view an astrologer reads before a verdict (owner, 2026-10-28:
+# "analyse all angles first ... weigh combining each POV"), with the weight
+# the explorer starts from; it may move a weight for this chart and says why.
+ANGLES = {
+    "lagna_houses": ("Houses and their lords from the Lagna", 4),
+    "dignity_strength": ("Dignity and strength of the key planets and karakas", 4),
+    "dasha": ("The running maha, antar and sub-sub periods", 4),
+    "varga": ("The area's divisional chart and the D9", 3),
+    "moon_sun_view": ("The same houses from the Moon and the Sun", 3),
+    "yogas_doshas": ("Yogas and doshas touching the area", 3),
+    "jaimini": ("Jaimini karakas and arudhas", 2),
+    "transits": ("Transits now and in the window", 2),
+    "ashtakavarga": ("Ashtakavarga bindus", 2),
+    "nakshatra": ("Birth stars and their lords", 1),
+}
+# What a Guided reader sees for each angle in "How we weighed it".
+ANGLE_PLAIN = {
+    "lagna_houses": "Your birth chart for this area",
+    "dignity_strength": "Strength of the planets that matter here",
+    "dasha": "Your current time period",
+    "varga": "The detailed chart for this area",
+    "moon_sun_view": "Seen from your Moon and Sun",
+    "yogas_doshas": "Special combinations in your chart",
+    "jaimini": "Another classical way of reading",
+    "transits": "Planets moving now",
+    "ashtakavarga": "Planet support score",
+    "nakshatra": "Your birth stars",
+}
+_REF = re.compile(r"\s*\[?tool:[^\],;]*\)?\]?|\s*\[?pattern:[A-Z]+-\d+\]?")
+
+
+def weighing_view(angles: list[dict] | None, overall: dict | None) -> dict | None:
+    """The reader-facing "How we weighed it" card: each angle's call and
+    weight in a fixed order, its reason without internal refs, and the
+    combined band."""
+    by_key = {a.get("angle"): a for a in angles or [] if isinstance(a, dict) and a.get("angle") in ANGLES}
+    if not by_key or not overall:
+        return None
+    rows = []
+    for key, (label, default_weight) in ANGLES.items():
+        row = by_key.get(key)
+        if not row or row.get("call") not in ANGLE_CALLS:
+            continue
+        rows.append({
+            "key": key, "label": label, "plain_label": ANGLE_PLAIN[key],
+            "call": row["call"],
+            "weight": max(1, min(5, int(row.get("weight") or default_weight))),
+            "why": _REF.sub("", str(row.get("why") or "")).strip()[:300],
+        })
+    return {"angles": rows, "overall": overall}
+
+
+ANGLE_CALLS = {"good": 2, "moderate": 1, "neutral": 0, "mixed": 0, "weak": -1, "bad": -2}
+# Weighted average of the calls -> the overall band the answer must follow.
+BANDS = ((1.25, "good"), (0.5, "moderately good"), (-0.5, "mixed"), (-1.25, "weak, go carefully"))
+
+
+def combine_angles(angles: list[dict]) -> dict | None:
+    """The weighted call over every judged angle, computed here rather than
+    left to the model so one strong-sounding number cannot decide alone."""
+    rows = [a for a in angles or [] if isinstance(a, dict) and a.get("angle") in ANGLES
+            and a.get("call") in ANGLE_CALLS]
+    if not rows:
+        return None
+    total = sum(max(1, min(5, int(a.get("weight") or ANGLES[a["angle"]][1]))) for a in rows)
+    score = sum(ANGLE_CALLS[a["call"]] * max(1, min(5, int(a.get("weight") or ANGLES[a["angle"]][1])))
+                for a in rows) / total
+    band = next((name for floor, name in BANDS if score >= floor), "unfavourable, avoid for now")
+    return {"score": round(score, 2), "band": band}
 
 # What every reading in a life area is checked from: its houses (counted from
 # the Lagna, the Moon and the Sun), its divisional chart, and its karakas.
@@ -62,6 +134,9 @@ AREA_PLAN: dict[str, dict] = {
     "spirituality": {"houses": [9, 12, 5], "varga": "D20", "karakas": "Jupiter, Ketu; Atmakaraka, Karakamsha"},
     "personality": {"houses": [1], "varga": "D9", "karakas": "Lagna lord, Moon, Sun; Atmakaraka"},
 }
+# Earning questions are career AND money; the 2026-10-28 "Lilliput" trace
+# shows the agent fetching the other set itself, a round late.
+RELATED_AREAS = {"career": ("wealth",), "wealth": ("career",)}
 _DEFAULT_PLAN = {"houses": [1], "varga": "D9", "karakas": "Lagna lord, Moon"}
 
 SUBMIT_SPEC = {
@@ -73,8 +148,18 @@ SUBMIT_SPEC = {
             "rule_verdicts": {"type": "array", "items": {"type": "object", "properties": {
                 "id": {"type": "string", "description": "pattern:XXX-NN"},
                 "verdict": {"type": "string", "enum": list(VERDICTS)},
-                "why": {"type": "string", "description": "The chart facts, with their tool refs."},
-            }, "required": ["id", "verdict", "why"]}},
+                "effect": {"type": "string", "enum": list(EFFECTS),
+                           "description": "For this question: helps, hurts or mixed."},
+                "why": {"type": "string", "description": "The rule's condition, whether this chart meets it, with tool refs."},
+            }, "required": ["id", "verdict", "effect", "why"]}},
+            "angles": {"type": "array", "items": {"type": "object", "properties": {
+                "angle": {"type": "string", "enum": list(ANGLES)},
+                "call": {"type": "string", "enum": list(ANGLE_CALLS)},
+                "weight": {"type": "integer", "minimum": 1, "maximum": 5,
+                           "description": "How strong and relevant this angle is for THIS chart and question."},
+                "why": {"type": "string", "description": "What this angle shows, with tool refs; why this weight."},
+            }, "required": ["angle", "call", "weight", "why"]},
+                "description": "Every angle, judged on its own before combining. Refused until all are present."},
             "reader_facts": {"type": "array", "items": {"type": "string"},
                              "description": "What the reader has told Siddha about their life that bears on this question (empty if none)."},
             "findings": {"type": "array", "items": {"type": "string"},
@@ -131,8 +216,16 @@ Work through every point of view before you finish:
    making). Note whose star each dasha lord sits in; the star lord's house shades that period.
    Story-based colour is practice: say so. It adds texture; it never overrides houses or dashas.
 7. RULES. For EVERY A and B rule shown, decide: holds, partly, fails (conditions not met), or
-   reverses (the chart shows the opposite). Use C and H rules only as supporting colour and
-   say they are practice.
+   reverses (the chart shows the opposite). In `why`, name the rule's condition and whether
+   this chart meets it; a chart fact alone is not a test. Also give its `effect` for this
+   question: helps, hurts or mixed. A rule about a weakness that holds HURTS. Use C and H
+   rules only as supporting colour and say they are practice.
+7b. EVERY ANGLE, THEN WEIGH. Judge each angle on its own first: good, moderate, neutral,
+   mixed, weak or bad, for this question. The angles and their starting weights (1-5):
+{angles}
+   Raise or lower a weight for this chart when an angle is unusually strong or weak here
+   (e.g. a debilitated key lord, a very strong yoga) and say why. Submit ALL angles. Code
+   combines them into one overall call; never let one angle or one number decide alone.
 8. THE READER'S LIFE. Use what they have told Siddha. If they say they have never worked, the
    answer must start from that, not assume a career already running. Record their facts as
    they said them; never add dates or details they did not give.
@@ -204,6 +297,7 @@ class ChartExplorer(BaseAstroAgent):
             karakas=self.plan["karakas"],
             rounds=self.max_tool_rounds,
             style=PLAIN_INDIAN_ENGLISH,
+            angles="\n".join(f"   - {key}: {label} (weight {w})" for key, (label, w) in ANGLES.items()),
         )
 
     # Core look-ups -----------------------------------------------------------
@@ -231,6 +325,8 @@ class ChartExplorer(BaseAstroAgent):
                   ("remedies", {})]
         if self.domain:
             calls.append(("classical_patterns", {"area": self.domain}))
+            for area in RELATED_AREAS.get(self.domain, ()):
+                calls.append(("classical_patterns", {"area": area}))
         return calls
 
     def run_core(self) -> list[dict]:
@@ -268,12 +364,16 @@ class ChartExplorer(BaseAstroAgent):
             if isinstance(row, dict) and row.get("verdict") in VERDICTS
         }
         missing = sorted(self.required_rules() - judged)
-        if missing and self.refusals < 2:
+        seen_angles = {a.get("angle") for a in findings.get("angles") or [] if isinstance(a, dict)}
+        missing_angles = sorted(set(ANGLES) - seen_angles)
+        if (missing or missing_angles) and self.refusals < 2:
             self.refusals += 1
             return {"accepted": False,
                     "missing_verdicts": missing,
-                    "do": "Give a verdict (holds, partly, fails, reverses) for each missing rule, "
-                          "then call submit_findings again with ALL verdicts."}
+                    "missing_angles": missing_angles,
+                    "do": "Give a verdict (holds, partly, fails, reverses) for each missing rule and a "
+                          "call and weight for each missing angle, then call submit_findings again "
+                          "with ALL verdicts and ALL angles."}
         self.submitted = findings
         return {"accepted": True, "do": "Done. Reply with the single word: done."}
 
@@ -314,11 +414,21 @@ class ChartExplorer(BaseAstroAgent):
             self._force_submit()
         found = self.submitted or {}
         verdicts = {
-            row["id"]: {"verdict": row["verdict"], "why": str(row.get("why") or "")[:400]}
+            row["id"]: {"verdict": row["verdict"],
+                        **({"effect": row["effect"]} if row.get("effect") in EFFECTS else {}),
+                        "why": str(row.get("why") or "")[:400]}
             for row in found.get("rule_verdicts") or []
             if isinstance(row, dict) and row.get("id") and row.get("verdict") in VERDICTS
         }
         lines = [*(found.get("findings") or [])]
+        overall = combine_angles(found.get("angles") or [])
+        for row in found.get("angles") or []:
+            if isinstance(row, dict) and row.get("angle") in ANGLES:
+                lines.append(f"Angle {ANGLES[row['angle']][0]}: {row.get('call')} "
+                             f"(weight {row.get('weight')}) - {row.get('why', '')}")
+        if overall:
+            lines.append(f"Overall, all angles weighed: {overall['band']} (score {overall['score']} "
+                         "on a -2 to +2 scale)")
         if found.get("timing"):
             lines.append(f"Timing: {found['timing']}")
         if found.get("personality_in_period"):
@@ -341,6 +451,8 @@ class ChartExplorer(BaseAstroAgent):
             "verdicts": verdicts,
             "reader_facts": [str(f)[:300] for f in found.get("reader_facts") or []][:10],
             "submitted": self.submitted is not None,
+            "overall": overall,
+            "weighing": weighing_view(found.get("angles"), overall),
         }
 
 
