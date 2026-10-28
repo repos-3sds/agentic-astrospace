@@ -205,6 +205,24 @@ describe('AskAnswerComponent persona-mode content parity', () => {
     expect(hint).toBeNull();
   });
 
+  it('Guided [n] markers open the matching technical_basis item in a sheet', () => {
+    const component = createComponent();
+    setMode(component, 'guided');
+    const reading: StructuredReading = {
+      ...FULL_READING,
+      interpretation: 'You can lead at work [1]. This year is restless [2]. Stray [9].',
+    };
+    const message = messageWithReading(reading);
+    const c = component as any;
+    expect(c.hasMarkers(reading)).toBeTrue();
+    expect(c.basisFor(reading, 9)).toBeNull();
+    c.openReason(message, 9);
+    expect(c.openMarker()).toBeNull();
+    c.openReason(message, 2);
+    expect(c.openMarker().item).toEqual(FULL_READING.technical_basis[1]);
+    expect(c.isMarkerOpen(message, 2)).toBeTrue();
+  });
+
   it('readingActions() and technicalBasis() are unaffected by experience mode changes to the same reading object', () => {
     // Pins the actual product spec in one assertion: switching modes must
     // never change how much of the EXPLANATION (actions) is shown, only how

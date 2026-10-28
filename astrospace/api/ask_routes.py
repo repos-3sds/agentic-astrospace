@@ -536,6 +536,8 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
             tone=body.tone,
             history=messages,
             explore=explore,
+            explore_history=(cm.recent_profile_questions(db, user.id, kundli_id)
+                             if explore else None),
             # validate_first intentionally not passed through — see docstring.
         )
     except TaxonomyError:

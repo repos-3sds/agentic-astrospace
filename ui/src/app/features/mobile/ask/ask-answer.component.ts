@@ -12,6 +12,7 @@ import {
 import { whyDrillDowns } from '../why-reading/drill-downs';
 import { MobileAskStateService } from './mobile-ask-state.service';
 import { AskService } from '../../../core/ask.service';
+import { SheetComponent } from '../sheet/sheet.component';
 import { AskMemoryCandidate, AskStreamEvent, AskTechnicalBasisItem, StructuredReading } from '../../../core/models';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
@@ -104,7 +105,7 @@ export function areaLabel(id: string): string {
   selector: 'as-ask-answer',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, AskComposerComponent, ListenSheetComponent, WhyReadingSheetComponent, LockedStateComponent, BackLinkDirective, ReportAnswerSheetComponent],
+  imports: [RouterLink, AskComposerComponent, ListenSheetComponent, WhyReadingSheetComponent, LockedStateComponent, BackLinkDirective, ReportAnswerSheetComponent, SheetComponent],
   templateUrl: './ask-answer.component.html',
   styleUrl: './ask-answer.component.scss',
 })
@@ -526,6 +527,34 @@ export class AskAnswerComponent {
    * history previews) — this is additive, not a replacement. */
   protected readingParagraphRuns(reading: StructuredReading): TextRun[][] {
     return paragraphRuns(reading.interpretation ?? '');
+  }
+
+  /** Guided's tappable "[n]" chips open the chart reason in a bottom sheet,
+   * so the passage never moves under the reader (Hawk 2026-10-28). */
+  readonly openMarker = signal<{ messageId: string; marker: number; item: AskTechnicalBasisItem } | null>(null);
+
+  protected basisFor(reading: StructuredReading, marker: number): AskTechnicalBasisItem | null {
+    return reading.technical_basis?.[marker - 1] ?? null;
+  }
+
+  protected isMarkerOpen(message: ChatMessage, marker: number): boolean {
+    const open = this.openMarker();
+    return open?.messageId === message.id && open.marker === marker;
+  }
+
+  protected openReason(message: ChatMessage, marker: number): void {
+    const item = message.reading ? this.basisFor(message.reading, marker) : null;
+    if (item) this.openMarker.set({ messageId: message.id, marker, item });
+  }
+
+  protected hasMarkers(reading: StructuredReading): boolean {
+    return this.readingParagraphRuns(reading).some((para) =>
+      para.some((run) => !!run.marker && !!this.basisFor(reading, run.marker)),
+    );
+  }
+
+  protected plainSummary(reading: StructuredReading): string {
+    return cleanPlainText(reading.summary_and_assurance ?? '');
   }
 
   /** Full `practical_actions` (falling back to `follow_up_questions` when

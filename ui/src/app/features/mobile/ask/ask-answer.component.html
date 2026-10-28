@@ -86,7 +86,16 @@
                 @for (para of readingParagraphRuns(reading); track $index) {
                   <p class="reading-paragraph">
                     @for (run of para; track $index) {
-                      @if (run.bold) {
+                      @if (run.marker && basisFor(reading, run.marker)) {
+                        <button
+                          type="button"
+                          class="reason-marker"
+                          [class.open]="isMarkerOpen(message, run.marker)"
+                          aria-haspopup="dialog"
+                          [attr.aria-label]="'Chart reason ' + run.marker"
+                          (click)="openReason(message, run.marker)"
+                        >{{ run.marker }}</button>
+                      } @else if (run.bold) {
                         <strong class="side-heading">{{ run.text }}</strong>
                       } @else {
                         {{ run.text }}
@@ -95,11 +104,13 @@
                   </p>
                 }
                 @if (reading.summary_and_assurance) {
-                  <p class="assurance-line">{{ reading.summary_and_assurance }}</p>
+                  <p class="assurance-line">{{ plainSummary(reading) }}</p>
                 }
               </section>
 
-              @if (guidedTechnicalHint(message); as hint) {
+              @if (hasMarkers(reading)) {
+                <p class="technical-hint">Tap a number to see the chart reason behind that line.</p>
+              } @else if (guidedTechnicalHint(message); as hint) {
                 <p class="technical-hint">{{ hint }}</p>
               }
 
@@ -419,6 +430,16 @@
     [drillDowns]="drillDowns()"
     (dismissed)="whyOpen.set(false)"
   />
+}
+
+@if (openMarker(); as reason) {
+  <as-sheet label="Chart reason" (dismissed)="openMarker.set(null)">
+    <header class="reason-head">
+      <p class="reason-eyebrow">CHART REASON {{ reason.marker }}</p>
+      <p class="reason-factor">{{ reason.item.factor }}</p>
+    </header>
+    <p class="reason-reading">{{ reason.item.reading }}</p>
+  </as-sheet>
 }
 
 @if (reporting(); as context) {

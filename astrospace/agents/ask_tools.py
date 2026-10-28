@@ -30,6 +30,7 @@ from ..core.vedic.positions import sign_index, sign_name
 log = logging.getLogger(__name__)
 
 PATTERNS_PATH = Path(__file__).resolve().parent.parent / "knowledge" / "patterns" / "patterns.json"
+NAKSHATRA_LORE_PATH = PATTERNS_PATH.with_name("nakshatra_lore.json")
 PATTERN_AREAS = (
     "career", "wealth", "education", "marriage", "children", "family_property",
     "health", "foreign", "litigation", "spirituality", "personality", "timing",
@@ -47,8 +48,10 @@ TOOL_SPECS: list[dict] = [
      "description": "Lagna and all nine planets: sign, house, nakshatra, dignity, retrograde, combustion, Baladi avastha, and the houses each planet rules.",
      "input_schema": {"type": "object", "properties": {}, "required": []}},
     {"name": "house",
-     "description": "One house (1-12) from Lagna: its sign, lord and where the lord sits (dignity, house), occupants, argala, and the house's Sarvashtakavarga bindus.",
-     "input_schema": {"type": "object", "properties": {"number": {"type": "integer", "minimum": 1, "maximum": 12}},
+     "description": "One house (1-12) counted from the Lagna (default), the Moon (Chandra lagna) or the Sun (Surya lagna): its sign, lord and where the lord sits (dignity, house), occupants, argala, and the sign's Sarvashtakavarga bindus.",
+     "input_schema": {"type": "object", "properties": {
+         "number": {"type": "integer", "minimum": 1, "maximum": 12},
+         "view": {"type": "string", "enum": ["lagna", "moon", "sun"]}},
                       "required": ["number"]}},
     {"name": "varga",
      "description": "A divisional chart: its lagna and each planet's sign, house, dignity and vargottama. D9 marriage/dharma, D10 career, D7 children, D4 property, D2 wealth, D24 education, D12 parents, D20 spiritual, D30 difficulties.",
@@ -58,7 +61,7 @@ TOOL_SPECS: list[dict] = [
      "description": "Vimshottari maha, antar and pratyantar dasha running on a date (YYYY-MM-DD, default today), with start and end dates.",
      "input_schema": {"type": "object", "properties": {"date": {"type": "string"}}, "required": []}},
     {"name": "dasha_timeline",
-     "description": "Vimshottari antardashas between two dates (YYYY-MM-DD), for 'when' questions. At most 15 years.",
+     "description": "Vimshottari antardashas between two dates (YYYY-MM-DD), for 'when' questions. At most 15 years. Spans of 3 years or less also list each pratyantardasha (sub-sub period), for exact windows.",
      "input_schema": {"type": "object", "properties": {"start": {"type": "string"}, "end": {"type": "string"}},
                       "required": ["start", "end"]}},
     {"name": "dasha_variant",
@@ -87,6 +90,12 @@ TOOL_SPECS: list[dict] = [
     {"name": "panchang",
      "description": "The panchang for a date (YYYY-MM-DD, default today) at the birth place: tithi, nakshatra, yoga, karana, Rahu Kalam and other windows, plus this person's tarabala and chandrabala.",
      "input_schema": {"type": "object", "properties": {"date": {"type": "string"}}, "required": []}},
+    {"name": "nakshatra",
+     "description": "Birth stars of the Lagna and all nine planets: name, pada, star lord, deity, symbol, gana, yoni, nadi; the classical Moon-in-star traits (Brihat Jataka) with the rule that the Moon's strength scales them; and each star's deity story (modern practice, tier H).",
+     "input_schema": {"type": "object", "properties": {}, "required": []}},
+    {"name": "remedies",
+     "description": "This chart's personal remedy plan from Siddha's remedy corpus (at most three: one for the running dasha pair as BPHS names it, one for the life area the period stresses, one for a flag such as a debilitated dasha lord). Each with its mantra (Telugu and English letters), day, count and why. Remedies must come from here, never invented.",
+     "input_schema": {"type": "object", "properties": {}, "required": []}},
     {"name": "classical_patterns",
      "description": "The classical reading rules for a life area, from our pattern book: each with an id, a tier (A = two or more classics agree, B = one classic, C = classic but not computed, H = practice or hypothesis) and the book behind it. Read these before judging an area, then check each rule against this chart with the other tools.",
      "input_schema": {"type": "object", "properties": {"area": {"type": "string", "enum": list(PATTERN_AREAS)}},
@@ -95,6 +104,15 @@ TOOL_SPECS: list[dict] = [
      "description": "Search the OCR'd classics (BPHS, Phaladeepika, Saravali, Brihat Jataka, Uttara Kalamritam) for passages on a topic, e.g. 'lord of the 7th in the 12th'. Returns short passages with ids.",
      "input_schema": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]}},
 ]
+
+
+@lru_cache(maxsize=1)
+def nakshatra_lore() -> dict:
+    try:
+        return json.loads(NAKSHATRA_LORE_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        log.exception("nakshatra lore unreadable at %s", NAKSHATRA_LORE_PATH)
+        return {"rules": [], "nakshatras": []}
 
 
 @lru_cache(maxsize=1)
@@ -195,13 +213,21 @@ class ChartTools:
             }
         return {"lagna": self.chart.lagna_details(), "planets": planets}
 
-    def tool_house(self, number: int) -> dict:
+    def tool_house(self, number: int, view: str = "lagna") -> dict:
         number = int(number)
         if not 1 <= number <= 12:
             return {"error": "house must be 1-12"}
-        analysis = _house_analysis(number, self._lagna_sign, self.chart.positions,
-                                   self.chart.dignities(), "explored", verbose=False)
-        sign = (self._lagna_sign + number - 1) % 12
+        bodies = {"moon": "Moon", "sun": "Sun"}
+        if view in bodies:
+            base = sign_index(self.chart.positions[bodies[view]]["lon"])
+        elif view == "lagna":
+            base = self._lagna_sign
+        else:
+            return {"error": "view must be lagna, moon or sun"}
+        analysis = _house_analysis(number, base, self.chart.positions,
+                                   self.chart.dignities(), "explored", verbose=True)
+        analysis["view"] = view
+        sign = (base + number - 1) % 12
         sav = (self.chart.ashtakavarga() or {}).get("sav") or []
         analysis["sav_bindus"] = sav[sign] if len(sav) == 12 else None
         return analysis
@@ -316,7 +342,14 @@ class ChartTools:
                 a_start = datetime.fromisoformat(str(ad["start"]))
                 a_end = datetime.fromisoformat(str(ad["end"]))
                 if a_end > lo and a_start < hi:
-                    rows.append({"mahadasha": md["lord"], **_period(ad)})
+                    row = {"mahadasha": md["lord"], **_period(ad)}
+                    if (hi - lo).days <= 3 * 366:
+                        row["pratyantardashas"] = [
+                            _period(pd) for pd in ad.get("pratyantardashas") or []
+                            if datetime.fromisoformat(str(pd["end"])) > lo
+                            and datetime.fromisoformat(str(pd["start"])) < hi
+                        ]
+                    rows.append(row)
         return {"from": lo.date().isoformat(), "to": hi.date().isoformat(), "antardashas": rows}
 
     def tool_dasha_variant(self, variant: str) -> dict:
@@ -385,6 +418,46 @@ class ChartTools:
                 "sunrise": day.get("sunrise"), "sunset": day.get("sunset"), "masa": day.get("masa"),
                 "elements": elements, "windows": windows, "personal": personal}
 
+    def tool_nakshatra(self) -> dict:
+        from ..core.vedic.nakshatra import nakshatra_traits
+
+        lore = nakshatra_lore()
+        by_index = {row["index"]: row for row in lore.get("nakshatras") or []}
+        bodies = {"Lagna": self.chart.lagna_lon,
+                  **{p: self.chart.positions[p]["lon"] for p in PLANETS if p in self.chart.positions}}
+        stars = {}
+        for body, lon in bodies.items():
+            nak = nakshatra_of(lon)
+            row = by_index.get(nak["index"]) or {}
+            entry = {**nakshatra_traits(nak["index"]), "pada": nak["pada"],
+                     "story_gloss": row.get("story_gloss")}
+            if body == "Moon":
+                entry["classical_traits"] = row.get("classical_traits")
+                entry["classical_checked_in_print"] = row.get("classical_checked_in_print")
+            stars[body] = entry
+        return {"stars": stars, "rules": lore.get("rules") or [],
+                "note": "Classical traits belong to the Moon's star only. Deity stories are practice: say so."}
+
+    def tool_remedies(self) -> dict:
+        from ..core.vedic.remedy_plan import remedy_plan
+
+        plan = remedy_plan(self.chart.positions, self.chart.lagna_lon, self.chart.dashas())
+        out = []
+        for group in plan.get("groups") or []:
+            practice = (group.get("practices") or [{}])[0]
+            out.append({
+                "slot": group.get("slot"), "for": group.get("reason_short"),
+                "why": group.get("reason_plain"), "trigger": group.get("trigger"),
+                "practice": practice.get("title"), "mantra_id": practice.get("mantra_id"),
+                "mantra": {k: (practice.get("text") or {}).get(k) for k in ("te", "en")},
+                "how": practice.get("instructions"), "day": practice.get("preferred_day"),
+                "convention_dependent": bool(group.get("convention_dependent")),
+                "observance_note": group.get("observance_note"),
+            })
+        return {"plan": out, "rules": "Traditional practice, never 'pay to remove'. Pick 1-2 that fit "
+                "this reader's situation and say why in their terms; never frame a remedy against "
+                "illness or death."}
+
     # Knowledge -------------------------------------------------------------
 
     def tool_classical_patterns(self, area: str) -> dict:
@@ -439,6 +512,10 @@ def summarize_call(name: str, args: dict) -> str:
         return "Finding your good and avoid planets…"
     if name == "panchang":
         return "Reading the panchang…"
+    if name == "remedies":
+        return "Choosing remedies for you…"
+    if name == "nakshatra":
+        return "Reading your birth stars…"
     if name in ("classical_patterns", "classics"):
         return "Checking the classical rules…"
     return "Looking at your chart…"

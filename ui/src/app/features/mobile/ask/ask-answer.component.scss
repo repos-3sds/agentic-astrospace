@@ -839,3 +839,51 @@ as-ask-composer.answer-composer {
 
   &.is-done { cursor: default; margin: 2px 0 -4px; min-height: 0; padding: 12px 2px; }
 }
+
+// Guided's "[n]" chips: the chart reason behind one sentence, kept out of
+// the prose and opened on tap (Hawk 2026-10-28: no technicalities in Guided
+// text, but let the reader see what produced each statement).
+.reason-marker {
+  @include m-caption;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  margin: 0 2px;
+  padding: 0 5px;
+  border: 1px solid color-mix(in srgb, var(--m-accent) 50%, var(--m-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--m-accent) 10%, transparent);
+  color: var(--m-accent-strong);
+  font-weight: 600;
+  line-height: 1;
+  vertical-align: 2px;
+  cursor: pointer;
+
+  &.open {
+    background: var(--m-accent);
+    border-color: var(--m-accent);
+    // --m-bg, not --m-surface: surface is translucent white in dark mode and
+    // vanished on the salmon accent; bg is opaque in both themes.
+    color: var(--m-bg);
+  }
+}
+
+// Projected into <as-sheet>, so these styles are this component's.
+.reason-head { display: flex; flex-direction: column; gap: 6px; }
+.reason-eyebrow { @include m-eyebrow; color: var(--m-accent); margin: 0; }
+
+.reason-factor {
+  @include m-h2;
+  margin: 0;
+  color: var(--m-text);
+  overflow-wrap: anywhere;
+}
+
+.reason-reading {
+  @include m-body;
+  margin: 0;
+  color: var(--m-text);
+  overflow-wrap: anywhere;
+}

@@ -62,3 +62,20 @@ describe('paragraphRuns', () => {
     expect(paragraphRuns('')).toEqual([]);
   });
 });
+
+describe('Guided reason markers', () => {
+  it('splits "[n]" into an empty marker run after the sentence it backs', () => {
+    expect(parseRuns('Work grows slowly [1]. Patience pays [2].')).toEqual([
+      { text: 'Work grows slowly.', bold: false },
+      { text: '', bold: false, marker: 1 },
+      { text: ' Patience pays.', bold: false },
+      { text: '', bold: false, marker: 2 },
+    ]);
+  });
+
+  it('strips markers from plain text used for copy, speech and the headline', () => {
+    expect(cleanPlainText('Work grows slowly [1]. Patience pays.[2]')).toBe(
+      'Work grows slowly. Patience pays.',
+    );
+  });
+});

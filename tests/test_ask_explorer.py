@@ -48,7 +48,7 @@ class TestTools:
         "dasha_at": {"date": "2027-01-01"}, "dasha_timeline": {"start": "2026-01-01", "end": "2030-01-01"},
         "dasha_variant": {"variant": "kshema"}, "transits": {}, "ashtakavarga": {"planet": "Venus"},
         "strengths": {}, "yogas_doshas": {}, "jaimini": {}, "favourable": {}, "panchang": {},
-        "classical_patterns": {"area": "marriage"},
+        "classical_patterns": {"area": "marriage"}, "nakshatra": {}, "remedies": {},
     }
 
     def test_every_tool_is_covered_here(self):
@@ -134,10 +134,20 @@ class TestVerifier:
 
 
 def _fake_explore_loop(self, messages):
-    self._dispatch_tool("classical_patterns", {"area": "marriage"})
-    self._dispatch_tool("house", {"number": 7})
-    self._dispatch_tool("dasha_timeline", {"start": "2026-01-01", "end": "2032-01-01"})
-    return "- 7th lord Jupiter in the 1st [tool:house(7)]", ["classical_patterns", "house", "dasha_timeline"]
+    """Stands in for the model: one extra look-up, then a complete submission
+    (MAR-02 judged reversed, everything else holds)."""
+    self._dispatch_tool("house", {"number": 7, "view": "moon"})
+    plan_id = next(c for c in self.chart_tools.calls if c["tool"] == "remedies")["result"]["plan"][0]["mantra_id"]
+    verdicts = [{"id": rid, "verdict": "reverses" if rid == "pattern:MAR-02" else "holds", "why": "x"}
+                for rid in sorted(self.required_rules())]
+    assert self._dispatch_tool("submit_findings", {
+        "rule_verdicts": verdicts, "reader_facts": ["Has never had a job"],
+        "findings": ["7th lord Jupiter in the 1st [tool:house(7)]"],
+        "timing": "Venus-Venus sub-sub period [tool:dasha_at]",
+        "guidance": {"avoid": ["Big new commitments in the Ketu sub-sub period [tool:dasha_at]"]},
+        "remedies": [{"mantra_id": plan_id, "why_for_this_reader": "For the running period"},
+                     {"mantra_id": "invented-mantra", "why_for_this_reader": "x"}]})["accepted"]
+    return "done", ["house", "submit_findings"]
 
 
 class TestOrchestrator:
@@ -171,21 +181,29 @@ class TestOrchestrator:
                                            persist=lambda r, s: persisted.append(s) or "t1"))
 
         labels = [e["label"] for e in events if e.get("stage") == "exploring"]
-        assert labels == ["Checking the classical rules…", "Looking at your 7th house…",
-                          "Checking your dasha periods…"]
+        assert labels[0] == "Finding your good and avoid planets…" or labels[0] == "Looking at your chart…"
+        assert {"Reading your birth stars…", "Reading your D9 chart…", "Checking your dasha periods…",
+                "Checking the classical rules…", "Looking at your 7th house…"} <= set(labels)
         done = events[-1]
         assert done["status"] == "answered", done
         assert set(done["evidence_refs"]) == {"tool:house(7)", "pattern:MAR-01", "houses"}
         assert "explored" in done["context_used"]
         assert {"tool:house(7)", "pattern:MAR-01"} <= seen_sources[0]
-        assert prepared.bundle["explorer_notes"].startswith("- 7th lord")
+        # A rule judged to point the other way can't back a claim.
+        assert "pattern:MAR-02" not in seen_sources[0]
+        assert prepared.bundle["rule_verdicts"]["pattern:MAR-02"]["verdict"] == "reverses"
+        assert prepared.bundle["reader_facts"] == ["Has never had a job"]
+        notes = prepared.bundle["explorer_notes"]
+        assert "Timing: Venus-Venus" in notes and "Avoid: Big new commitments" in notes
+        # Only remedies from the reader's own plan get through.
+        assert "Remedy " in notes and "invented-mantra" not in notes
         assert persisted == ["answered"]
         trace = exploration_trace(prepared)
-        assert [c["ref"] for c in trace["calls"]] == [
-            "tool:classical_patterns(marriage)", "tool:house(7)",
-            "tool:dasha_timeline(2026-01-01,2032-01-01)"]
-        assert "pattern:MAR-01" in trace["calls"][0]["patterns"]
-        assert trace["notes"].startswith("- 7th lord")
+        refs = [c["ref"] for c in trace["calls"]]
+        assert refs[:2] == ["tool:chart_overview", "tool:strengths"]
+        assert {"tool:house(7,moon)", "tool:house(7,sun)", "tool:varga(D9)", "tool:nakshatra",
+                "tool:jaimini", "tool:classical_patterns(marriage)"} <= set(refs)
+        assert trace["rule_verdicts"]["pattern:MAR-01"]["verdict"] == "holds"
 
     def test_an_invented_tool_ref_is_still_rejected(self, chart):
         orchestrator, prepared = self._prepare(chart, explore=True)
@@ -215,7 +233,35 @@ class TestOrchestrator:
 
     def test_depth_follows_the_question(self, chart):
         tools = ChartTools(chart)
-        assert ChartExplorer(tools, "q", {}, question_kind="today").max_tool_rounds == 2
-        assert ChartExplorer(tools, "q", {}, question_kind="broad").max_tool_rounds == 5
+        assert ChartExplorer(tools, "q", {}, question_kind="today").max_tool_rounds == 3
+        assert ChartExplorer(tools, "q", {}, question_kind="broad").max_tool_rounds == 6
         assert ChartExplorer(tools, "q", {}, question_kind="broad",
-                             experience_mode="practitioner").max_tool_rounds == 6
+                             experience_mode="practitioner").max_tool_rounds == 8
+
+    def test_submission_is_refused_until_every_a_and_b_rule_has_a_verdict(self, chart):
+        explorer = ChartExplorer(ChartTools(chart), "q", {"domain": "career"})
+        explorer._dispatch_tool("classical_patterns", {"area": "career"})
+        required = explorer.required_rules()
+        assert required and all(r.startswith("pattern:CAR-") for r in required)
+        refused = explorer._dispatch_tool("submit_findings", {"rule_verdicts": [], "reader_facts": [],
+                                                                "findings": []})
+        assert refused["accepted"] is False and set(refused["missing_verdicts"]) == required
+        accepted = explorer._dispatch_tool("submit_findings", {
+            "rule_verdicts": [{"id": r, "verdict": "fails", "why": "x"} for r in required],
+            "reader_facts": [], "findings": []})
+        assert accepted["accepted"] is True and explorer.submitted is not None
+
+    def test_core_lookups_cover_every_point_of_view(self, chart):
+        explorer = ChartExplorer(ChartTools(chart), "q", {"domain": "career"})
+        refs = [r["ref"] for r in explorer.run_core()]
+        assert {"tool:chart_overview", "tool:strengths", "tool:house(10)", "tool:house(6)",
+                "tool:house(10,moon)", "tool:house(10,sun)", "tool:varga(D10)", "tool:jaimini",
+                "tool:nakshatra", "tool:ashtakavarga", "tool:dasha_at", "tool:transits",
+                "tool:yogas_doshas", "tool:classical_patterns(career)"} <= set(refs)
+        timeline = next(c for c in explorer.chart_tools.calls if c["tool"] == "dasha_timeline")
+        assert timeline["result"]["antardashas"][0]["pratyantardashas"]
+
+    def test_the_readers_own_words_reach_the_prompt(self, chart):
+        explorer = ChartExplorer(ChartTools(chart), "q", {"domain": "career"},
+                                 history=["I never did a job in my life."])
+        assert "I never did a job in my life." in explorer.system_prompt
