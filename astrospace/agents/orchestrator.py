@@ -472,11 +472,14 @@ class AskOrchestrator:
         decision = self._router.route(question)
         needs_clarification = _needs_clarification(decision)
         domain = decision.primary
-        # No clear keyword: the sorter's reading of the question ("what about
-        # my love life?" is marriage) comes before the thread's old domain,
-        # because the sorter also saw the thread and can tell a topic switch
-        # from a follow-up.
-        if needs_clarification and sorted_domain and sorted_domain in AGENT_REGISTRY:
+        # The sorter read the question's meaning, so it wins over a lone
+        # keyword hit: "AI characters for her YouTube channel, can she earn?"
+        # matched personality on "character" alone. Two or more hits for one
+        # area ("promotion at work") still win. The sorter also comes before
+        # the thread's old domain, because it saw the thread and can tell a
+        # topic switch from a follow-up.
+        if (sorted_domain and sorted_domain in AGENT_REGISTRY
+                and (needs_clarification or decision.confidence != "high")):
             domain = sorted_domain
             needs_clarification = False
         if needs_clarification and thread_domain and thread_domain in AGENT_REGISTRY:

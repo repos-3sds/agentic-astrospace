@@ -77,7 +77,19 @@ ANGLE_PLAIN = {
     "ashtakavarga": "Planet support score",
     "nakshatra": "Your birth stars",
 }
-_REF = re.compile(r"\s*\[?tool:[^\],;]*\)?\]?|\s*\[?pattern:[A-Z]+-\d+\]?")
+_REF = re.compile(r"tool:\w+(?:\([^)]*\))?|pattern:[A-Z]+-\d+")
+_EMPTY_GROUP = re.compile(r"[\[(]\s*(?:[,;]\s*)*[\])]")
+_EXTRA_COMMAS = re.compile(r"\s*([,;])(?:\s*[,;])+")
+
+
+def _plain_why(text: str) -> str:
+    """Drops tool and pattern refs from an angle's reason, then the empty
+    brackets and runs of commas they leave behind."""
+    text = _REF.sub("", text)
+    text = _EMPTY_GROUP.sub("", text)
+    text = _EXTRA_COMMAS.sub(r"\1", text)
+    text = re.sub(r"\s+([,;.])", r"\1", text)
+    return re.sub(r"\s{2,}", " ", text).strip(" ,;")
 
 
 def weighing_view(angles: list[dict] | None, overall: dict | None) -> dict | None:
@@ -96,7 +108,7 @@ def weighing_view(angles: list[dict] | None, overall: dict | None) -> dict | Non
             "key": key, "label": label, "plain_label": ANGLE_PLAIN[key],
             "call": row["call"],
             "weight": max(1, min(5, int(row.get("weight") or default_weight))),
-            "why": _REF.sub("", str(row.get("why") or "")).strip()[:300],
+            "why": _plain_why(str(row.get("why") or ""))[:300],
         })
     return {"angles": rows, "overall": overall}
 
@@ -218,7 +230,8 @@ Work through every point of view before you finish:
 7. RULES. For EVERY A and B rule shown, decide: holds, partly, fails (conditions not met), or
    reverses (the chart shows the opposite). In `why`, name the rule's condition and whether
    this chart meets it; a chart fact alone is not a test. Also give its `effect` for this
-   question: helps, hurts or mixed. A rule about a weakness that holds HURTS. Use C and H
+   question: helps, hurts or mixed. A rule about a weakness that holds HURTS; when it fails, the
+   weakness is absent, which helps a little. A strength rule that fails helps nothing. Use C and H
    rules only as supporting colour and say they are practice.
 7b. EVERY ANGLE, THEN WEIGH. Judge each angle on its own first: good, moderate, neutral,
    mixed, weak or bad, for this question. The angles and their starting weights (1-5):
@@ -389,7 +402,8 @@ class ChartExplorer(BaseAstroAgent):
                 "content": "Everything looked up for this question:\n" + compact_json(looked_up)
                            + "\n\nNow call submit_findings. Give a verdict for each of these rules: "
                            + (", ".join(rules) or "(none)")
-                           + ". Fill reader_facts from what the reader said before.",
+                           + ". Judge every angle (" + ", ".join(ANGLES) + ") with a call and weight. "
+                           + "Fill reader_facts from what the reader said before.",
             }], _Findings, tool_name="submit_findings", input_schema=SUBMIT_SPEC["input_schema"])
         except Exception:
             log.exception("explorer forced submit failed")
@@ -403,15 +417,25 @@ class ChartExplorer(BaseAstroAgent):
         "explored", "passages", "verdicts", "reader_facts"} for the bundle;
         `explored` is every call with the result the model saw."""
         core = self.run_core()
-        notes, _used = self.run_messages([{
-            "role": "user",
-            "content": "Core look-ups for this question (each has a ref you can cite):\n"
-                       + compact_json(core)
-                       + "\n\nWork through every point of view, call more tools for anything still "
-                         "open, then call submit_findings.",
-        }])
+        notes, loop_failed = "", False
+        try:
+            notes, _used = self.run_messages([{
+                "role": "user",
+                "content": "Core look-ups for this question (each has a ref you can cite):\n"
+                           + compact_json(core)
+                           + "\n\nWork through every point of view, call more tools for anything still "
+                             "open, then call submit_findings.",
+            }])
+        except Exception:
+            # A provider error mid-loop (Gemini 504 DEADLINE_EXCEEDED twice in
+            # the Lilliput re-run) used to throw away every look-up and the
+            # weighing with it. Submit over what was gathered instead.
+            log.exception("explorer tool loop failed; submitting over what was looked up")
+            loop_failed = True
         if self.submitted is None:
             self._force_submit()
+        if loop_failed and self.submitted is None:
+            raise RuntimeError("explorer failed and could not submit")
         found = self.submitted or {}
         verdicts = {
             row["id"]: {"verdict": row["verdict"],

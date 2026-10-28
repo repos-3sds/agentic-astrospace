@@ -412,3 +412,49 @@ def test_weighing_view_hides_internal_refs():
     assert row["weight"] == 5 and row["plain_label"] == "Your current time period"
     assert "tool:" not in row["why"] and "pattern:" not in row["why"]
     assert weighing_view([], {"score": 0, "band": "mixed"}) is None
+
+
+class TestLilliputRerunFixes:
+    """From the 2026-10-28 re-run of the "Lilliput" question on main."""
+
+    def test_sorter_domain_beats_a_stray_keyword(self):
+        orchestrator = AskOrchestrator.__new__(AskOrchestrator)
+        from astrospace.context import KeywordRouter
+        orchestrator._router = KeywordRouter()
+        question = "She makes AI characters for her Lilliput YouTube channel. Can she earn from it?"
+        assert orchestrator.route(question).domain == "career"
+        assert orchestrator.route("Her AI character videos, will they pay?",
+                                  sorted_domain="career").domain == "career"
+        # Two keyword hits for one area still beat the sorter.
+        assert orchestrator.route("Tell me about my character and traits",
+                                  sorted_domain="career").domain == "personality"
+
+    def test_angle_reasons_lose_refs_and_leftover_commas(self):
+        from astrospace.agents.explorer import weighing_view
+        view = weighing_view([
+            {"angle": "lagna_houses", "call": "mixed", "weight": 4,
+             "why": "1st strong (Moon) [tool:house(1,lagna), tool:ashtakavarga()],,,"},
+            {"angle": "moon_sun_view", "call": "moderate", "weight": 3,
+             "why": "Moon chart same as Lagna [tool:house(1,moon),tool:house(1,sun)]"},
+        ], {"score": 0.5, "band": "moderately good"})
+        assert [a["why"] for a in view["angles"]] == ["1st strong (Moon)", "Moon chart same as Lagna"]
+
+    def test_a_provider_error_mid_loop_still_submits_the_weighing(self, chart):
+        explorer = ChartExplorer(ChartTools(chart), "q", {"domain": "career"})
+
+        def loop(self, messages):
+            raise RuntimeError("504 DEADLINE_EXCEEDED")
+
+        def forced(self, messages, model, **kwargs):
+            assert "Judge every angle" in messages[0]["content"]
+            return model(rule_verdicts=[], reader_facts=[], findings=[], angles=_all_angles())
+
+        with patch.object(ChartExplorer, "run_messages", loop), \
+                patch.object(ChartExplorer, "run_structured", forced):
+            result = explorer.explore()
+        assert result["overall"]["band"] == "good" and result["explored"]
+
+        with patch.object(ChartExplorer, "run_messages", loop), \
+                patch.object(ChartExplorer, "run_structured", side_effect=RuntimeError("down")):
+            with pytest.raises(RuntimeError):
+                ChartExplorer(ChartTools(chart), "q", {"domain": "career"}).explore()
