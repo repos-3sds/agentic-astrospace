@@ -132,11 +132,19 @@ export class NotificationsComponent {
     void this.loadAccountPrefs();
   }
 
-  /** Switches saved on the account win over this device's copy. */
+  /** Switches tapped on this screen; the account's copy is older for these. */
+  private readonly tapped = new Set<string>();
+
+  /**
+   * Switches saved on the account win over this device's copy, except one
+   * the reader has already tapped while the answer was on its way.
+   */
   private async loadAccountPrefs(): Promise<void> {
     const saved = await this.push.loadPreferences();
     if (!saved) return;
-    this.prefs.update((prefs) => prefs.map((p) => ({ ...p, on: saved[p.id] ?? p.on })));
+    this.prefs.update((prefs) =>
+      prefs.map((p) => (this.tapped.has(p.id) ? p : { ...p, on: saved[p.id] ?? p.on })),
+    );
     this.persist();
   }
 
@@ -147,6 +155,7 @@ export class NotificationsComponent {
   }
 
   protected toggle(id: string): void {
+    this.tapped.add(id);
     this.prefs.update((prefs) =>
       prefs.map((p) => (p.id === id ? { ...p, on: !p.on } : p)),
     );

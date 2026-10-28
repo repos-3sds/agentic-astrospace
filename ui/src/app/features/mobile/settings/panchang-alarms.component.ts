@@ -104,10 +104,17 @@ export class PanchangAlarmsComponent {
     return `${when} · ${how}${alarm.atEnd ? ' · and at end' : ''}`;
   }
 
+  /**
+   * Flips one switch and nothing else. Turning one on used to open its
+   * "when" and "how" and close any other, so every row below jumped by the
+   * editor's height under the reader's thumb: the next tap landed on a
+   * different row, and switches seemed to turn on and off by themselves
+   * (Deepak, 2026-10-28). The editor opens only from tapping the row.
+   */
   protected toggle(id: string): void {
     const wasOn = this.alarms().find((a) => a.id === id)?.on;
     this.service.update(id, { on: !wasOn });
-    this.open.set(wasOn ? (this.open() === id ? null : this.open()) : id);
+    if (wasOn && this.open() === id) this.open.set(null);
     if (!wasOn) void this.askOnce();
   }
 
