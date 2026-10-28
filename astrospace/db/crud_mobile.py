@@ -647,6 +647,15 @@ def set_notification_preference(db: Session, user_id: str, category: str,
     else:
         row = NotificationPreference(user_id=user_id, category=category, **fields)
         db.add(row)
+    if fields.get("enabled") is False:
+        # Off means off now: jobs already queued for this category used to
+        # go out for up to two more days (window alerts after the switch).
+        for job in (db.query(NotificationJob)
+                    .filter(NotificationJob.user_id == user_id,
+                            NotificationJob.category == category,
+                            NotificationJob.status == "pending")):
+            job.status = "cancelled"
+            job.skip_reason = "turned off"
     db.commit()
     db.refresh(row)
     return row
