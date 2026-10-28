@@ -126,3 +126,19 @@ jobs:
           name: ios-launch-check
           path: launch-check/
           retention-days: 14
+
+      - name: Widget sheets in the log
+        # The same sheets as small JPEGs, base64 between markers, for
+        # reviewers whose network can reach the job log but not the artifact
+        # store. Last step, so a log tail picks them up.
+        if: always()
+        run: |
+          set -uo pipefail
+          for name in sheet-light sheet-dark sheet-empty-light sheet-empty-dark; do
+            src="$OUT/widgets/$name.png"
+            [ -f "$src" ] || continue
+            sips -s format jpeg -s formatOptions 72 -Z 2200 "$src" --out "$RUNNER_TEMP/$name.jpg" >/dev/null
+            echo "WIDGET-SHEET-BEGIN $name"
+            base64 -i "$RUNNER_TEMP/$name.jpg" | fold -w 4000
+            echo "WIDGET-SHEET-END $name"
+          done
