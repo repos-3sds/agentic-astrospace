@@ -145,6 +145,10 @@ class BaseAstroAgent:
     system_prompt = ""
     tools = []
     max_tool_rounds = MAX_TOOL_ROUNDS
+    # Per-call output cap for the tool loop. Gemini's thinking tokens come out
+    # of this too, so an agent that ends with a large tool call (the Ask
+    # explorer's submit_findings) needs more than the default.
+    max_output_tokens = 4096
 
     def __init__(self, api_key: str = None):
         from dotenv import load_dotenv
@@ -259,7 +263,7 @@ class BaseAstroAgent:
             # call mid-JSON on a genuinely multi-factor answer, surfacing as
             # `generation_failed` for no real reason. See astrospace/agents/
             # domain_agent.py's _BASE_SYSTEM rule 7.
-            max_tokens=8192,
+            max_tokens=max(8192, self.max_output_tokens),
             system=self.system_prompt,
             tools=[tool],
             tool_choice={"type": "tool", "name": tool_name},
@@ -289,7 +293,7 @@ class BaseAstroAgent:
             # 8192 for the same reason as _run_structured_anthropic's
             # matching bump — this is the structured-reading path, and the
             # word-cap removal on the domain agent's prompt needs the room.
-            max_output_tokens=8192,
+            max_output_tokens=max(8192, self.max_output_tokens),
             temperature=0.35,
             tools=[types.Tool(function_declarations=[declaration])],
             tool_config=types.ToolConfig(
@@ -405,7 +409,7 @@ class BaseAstroAgent:
         types = self._gemini_types()
         kwargs = {
             "system_instruction": self.system_prompt or None,
-            "max_output_tokens": 4096,
+            "max_output_tokens": self.max_output_tokens,
             "temperature": 0.35,
         }
         if include_tools and self.tools:

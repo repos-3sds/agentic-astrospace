@@ -120,6 +120,38 @@ for this chart, and `reader_facts` is what the reader has told Siddha about thei
   if you lean on one. Never name a book in the reader-facing text."""
 
 
+READER_SAID_NOTE = """
+
+WHAT THE READER SAID BEFORE: `reader_said_before` holds the reader's own earlier questions on
+this profile, newest first. Read them before answering: they often state life facts (never
+worked, tried a business, health worries, what they already rejected). Build the answer on
+those facts, name the ones that matter in plain words, and never suggest something they said
+they cannot do or already tried without saying how this time differs.
+- Keep the voice of THIS question: if it asks about "she", "he" or "my daughter", write about
+  that person in the third person, even when the earlier messages were written as "I".
+- Do not add dates or details to what they told you; if the chart suggests when something
+  happened, say it as the chart's view ("the chart points to around ...") and ask.
+- Stay measured: "suits you best", never "your true path", "destiny" or "for sure"."""
+
+
+def reader_said_before(history: list[str] | None, question: str) -> list[str]:
+    """The reader's earlier questions on this profile, cleaned for the
+    prompt: the owner's "/old " prefix dropped, repeats and the current
+    question left out, newest first, at most 12."""
+    seen = {" ".join(question.lower().split())}
+    out: list[str] = []
+    for line in history or []:
+        text = str(line or "").strip()
+        if text.lower().startswith("/old "):
+            text = text[5:].strip()
+        key = " ".join(text.lower().split())
+        if not text or key in seen:
+            continue
+        seen.add(key)
+        out.append(text[:500])
+    return out[:12]
+
+
 def _usage_summary(usage: dict) -> dict:
     """The persisted/streamed shape: totals without the per-call breakdown."""
     return {
@@ -678,6 +710,10 @@ class AskOrchestrator:
             if probe_envelope is not None:
                 return PrepareOutcome(terminal_envelope=probe_envelope)
 
+        said = reader_said_before(explore_history, question) if explore else []
+        if said:
+            context.bundle["reader_said_before"] = said
+
         def build_agent(bundle: dict) -> DomainReadingAgent:
             agent = DomainReadingAgent(
                 bundle, registry_result.agent_config.domain_addendum,
@@ -690,6 +726,8 @@ class AskOrchestrator:
             )
             if bundle.get("explored"):
                 agent.system_prompt += EXPLORED_NOTE
+            if bundle.get("reader_said_before"):
+                agent.system_prompt += READER_SAID_NOTE
             return agent
 
         agent = build_agent(context.bundle)
@@ -707,7 +745,7 @@ class AskOrchestrator:
                 tz = (chart.meta() or {}).get("timezone") or "Asia/Kolkata"
                 return ChartExplorer(ChartTools(chart, tz, retriever), question, bundle,
                                      question_kind=kind, experience_mode=experience_mode,
-                                     history=explore_history, on_tool=on_tool)
+                                     history=said, on_tool=on_tool)
         profile_context = context.bundle.get("profile_context") or {}
         return PrepareOutcome(prepared=PreparedRun(
             domain=routing.domain,
