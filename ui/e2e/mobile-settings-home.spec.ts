@@ -30,6 +30,9 @@ test('Settings leads with Account and keeps legal links in the footer', async ({
   await page.goto('/m/settings');
   const card = page.getByRole('link', { name: 'Account' });
   await expect(card).toContainText('Plus');
+  // The holder's name, not the person being viewed (Ravi is selected).
+  await expect(card).toContainText('Anika');
+  await expect(card).not.toContainText('Ravi');
 
   const eyebrows = page.locator('h2.eyebrow');
   await expect(eyebrows).toHaveText(['YOU AND YOUR FAMILY', 'ALERTS', 'READINGS', 'APP']);
@@ -39,7 +42,9 @@ test('Settings leads with Account and keeps legal links in the footer', async ({
   await expect(page.locator('.legal-foot button')).toHaveText(['Terms', 'Privacy']);
 
   // My birth details edits the reader's own profile, not the one being viewed.
-  await expect(page.getByRole('link', { name: /My birth details/ })).toHaveAttribute('href', '/m/settings/profiles/a/edit');
+  const mine = page.getByRole('link', { name: /My birth details/ });
+  await expect(mine).toHaveAttribute('href', '/m/settings/profiles/a/edit');
+  await expect(mine).toContainText('14 Mar 1990 · Pune');
 
   await card.click();
   await expect(page).toHaveURL(/\/m\/settings\/account$/);
@@ -54,4 +59,16 @@ test('rows set once live one level down', async ({ page }) => {
 
   await page.goto('/m/settings/look');
   await expect(page.locator('.row-label')).toContainText(['Light or dark', 'Language and voice', 'Vibration']);
+});
+
+test('an older account with no "self" row names its first profile', async ({ page }) => {
+  // Hawk's own profile was saved as "relative" by an older build.
+  const older = [
+    { ...profiles[1], relation: 'relative', created_at: '2026-09-01T00:00:00Z' },
+    { ...profiles[0], name: 'Kiran', relation: 'relative', created_at: '2026-08-01T00:00:00Z' },
+  ];
+  await page.route('**/api/v1/kundlis', (route) => route.fulfill({ json: older }));
+  await page.goto('/m/settings');
+  await expect(page.getByRole('link', { name: 'Account' })).toContainText('Kiran');
+  await expect(page.getByRole('link', { name: /My birth details/ })).toHaveAttribute('href', '/m/settings/profiles/a/edit');
 });

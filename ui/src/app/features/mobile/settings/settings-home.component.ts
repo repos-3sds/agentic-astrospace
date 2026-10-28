@@ -72,9 +72,12 @@ export class SettingsHomeComponent {
     return tier === 'pro' ? 'Practitioner' : tier === 'plus' ? 'Plus' : tier === 'free' ? 'Free' : null;
   });
 
-  /** The reader's own profile, which "My birth details" edits. */
-  private readonly selfProfile = computed(() =>
-    this.kundlis.kundlis().find((k) => (k.relation ?? '').toLowerCase() === 'self') ?? null);
+  /**
+   * The account holder's own profile, which the Account card names and "My
+   * birth details" edits, whichever person is being viewed. KundliStore.owner
+   * also covers older accounts with no "self" row.
+   */
+  private readonly selfProfile = this.kundlis.owner;
 
   private birthLabel(): string {
     const me = this.selfProfile();
@@ -84,8 +87,13 @@ export class SettingsHomeComponent {
   }
 
   readonly profile = computed(() => {
-    const name = this.kundlis.active()?.name
-      ?? this.auth.user()?.user_metadata?.['name']
+    // The holder, never the person being viewed: the card sits beside the
+    // account's email, and the viewed name read as someone else's account
+    // (Hawk, 2026-10-28, viewing a relative's chart).
+    const user = this.auth.user();
+    const name = this.selfProfile()?.name
+      ?? user?.user_metadata?.['name']
+      ?? user?.email?.split('@')[0]
       ?? 'Your path';
     return {
       initial: name.slice(0, 1).toUpperCase(),
