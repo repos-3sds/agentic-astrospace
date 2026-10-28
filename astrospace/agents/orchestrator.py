@@ -97,7 +97,7 @@ log = logging.getLogger(__name__)
 
 # The tool-using Ask's exploring step gives up after this long and the turn
 # carries on over the plain bundle.
-EXPLORE_TIMEOUT_S = 90
+EXPLORE_TIMEOUT_S = 120
 
 EXPLORED_NOTE = """
 

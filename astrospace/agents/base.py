@@ -149,6 +149,11 @@ class BaseAstroAgent:
     # of this too, so an agent that ends with a large tool call (the Ask
     # explorer's submit_findings) needs more than the default.
     max_output_tokens = 4096
+    # Gemini only. None keeps the model's default thinking and the shared
+    # client's LLM_TIMEOUT_SECONDS; an agent that makes one large call can
+    # trade thinking depth for staying inside its deadline.
+    gemini_thinking_level: str | None = None
+    gemini_timeout_s: float | None = None
 
     def __init__(self, api_key: str = None):
         from dotenv import load_dotenv
@@ -301,6 +306,7 @@ class BaseAstroAgent:
             # word-cap removal on the domain agent's prompt needs the room.
             max_output_tokens=max(8192, self.max_output_tokens),
             temperature=0.35,
+            **self._gemini_call_options(),
             tools=[types.Tool(function_declarations=[declaration])],
             tool_config=types.ToolConfig(
                 function_calling_config=types.FunctionCallingConfig(
@@ -413,12 +419,24 @@ class BaseAstroAgent:
         from google.genai import types
         return types
 
+    def _gemini_call_options(self) -> dict:
+        types = self._gemini_types()
+        options: dict = {}
+        if self.gemini_thinking_level:
+            options["thinking_config"] = types.ThinkingConfig(
+                thinking_level=self.gemini_thinking_level.upper())
+        if self.gemini_timeout_s:
+            # HttpOptions.timeout is in milliseconds.
+            options["http_options"] = types.HttpOptions(timeout=int(self.gemini_timeout_s * 1000))
+        return options
+
     def _gemini_config(self, include_tools: bool = True, allow_calls: bool = True):
         types = self._gemini_types()
         kwargs = {
             "system_instruction": self.system_prompt or None,
             "max_output_tokens": self.max_output_tokens,
             "temperature": 0.35,
+            **self._gemini_call_options(),
         }
         if include_tools and self.tools:
             declarations = [

@@ -304,6 +304,11 @@ class ChartExplorer(BaseAstroAgent):
     # submit_findings is a large call and Gemini's thinking shares this cap;
     # at 4096 the explorer's last turn came back empty (2026-10-28 A/B).
     max_output_tokens = 16384
+    # Every lookup is already done in code; the model's job is judging, not
+    # searching. At default thinking the final submit ran past the 60 s
+    # per-call limit (504 DEADLINE_EXCEEDED on 4 of 4 Lilliput re-runs).
+    gemini_thinking_level = "low"
+    gemini_timeout_s = 75
 
     def __init__(self, tools: ChartTools, question: str, bundle: dict, question_kind: str = "broad",
                  experience_mode: str = "balanced", history: list[str] | None = None,

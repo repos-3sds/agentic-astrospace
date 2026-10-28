@@ -507,3 +507,11 @@ class TestLilliputV2AnswerFixes:
             "Your Jupiter period runs your 10th lord. The 10th house is also well supported (35 bindus)."})
         assert bindu_lean_violations(light, bundle) == []
         assert bindu_lean_violations(heavy, {}) == []
+
+    def test_explorer_thinks_less_and_waits_longer_per_call(self, chart):
+        from astrospace.agents.domain_agent import DomainReadingAgent as D
+        explorer = ChartExplorer(ChartTools(chart), "q", {"domain": "career"})
+        config = explorer._gemini_config()
+        assert str(config.thinking_config.thinking_level).endswith("LOW")
+        assert config.http_options.timeout == 75_000
+        assert D.gemini_thinking_level is None and D.gemini_timeout_s is None
