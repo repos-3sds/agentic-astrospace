@@ -4,7 +4,7 @@ import { EntitlementLimitError, isEntitlementDenial } from './entitlement-denial
 import { ApiService } from './api.service';
 import { apiUrl } from './api-origin';
 import { AuthService } from './auth.service';
-import { AskMessage, AskResponse, AskStreamEvent } from './models';
+import { AskMessage, AskResponse, AskStreamEvent, AskSuggestionsPayload } from './models';
 import { PreferencesService } from './preferences.service';
 
 export const TOOL_LABELS: Record<string, string> = {
@@ -27,6 +27,22 @@ export class AskService {
   private threads = new Map<string, string>();
 
   readonly pending = signal(false);
+
+  /** Ask home suggestions, per profile, mode and day: they follow the running
+   * dasha and today's transits, so a new day asks again. */
+  private suggestionCache = new Map<string, Promise<AskSuggestionsPayload>>();
+
+  suggestions(kundliId: string, mode: string): Promise<AskSuggestionsPayload> {
+    const key = `${kundliId}:${mode}:${new Date().toDateString()}`;
+    let cached = this.suggestionCache.get(key);
+    if (!cached) {
+      cached = this.api.get<AskSuggestionsPayload>(`/ask/${kundliId}/suggestions?mode=${encodeURIComponent(mode)}`);
+      // A failed request is not remembered; the next visit tries again.
+      cached.catch(() => this.suggestionCache.delete(key));
+      this.suggestionCache.set(key, cached);
+    }
+    return cached;
+  }
 
   history(kundliId: string) {
     let h = this.histories.get(kundliId);

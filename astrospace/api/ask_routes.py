@@ -34,6 +34,7 @@ from pydantic import BaseModel, Field, field_validator
 from ..agents.orchestrator import AskOrchestrator, ProfileContextStore, terminal_turn
 from ..agents.schema import StructuredReading
 from ..context.taxonomy import TaxonomyError, get_domain
+from ..core.vedic.ask_suggestions import ask_suggestions
 from ..db import get_db
 from ..db import crud, crud_mobile as cm
 from ..db.models import AnswerReport, AskMessage
@@ -235,6 +236,42 @@ def list_threads(user: CurrentUser,
         db, user.id, kundli_id=kundli_id, limit=limit, archived=archived,
     )
     return {"count": len(rows), "threads": [_thread(r) for r in rows]}
+
+
+# Reader facts that change how a suggestion is worded (see ask_suggestions.py).
+_SUGGESTION_LIFE_KEYS = {
+    "relationship_status": "code", "employment_status": "code",
+    "has_children": "value", "looking_for_work": "value", "planning_marriage": "value",
+}
+
+
+def _suggestion_life(db: Session, user_id: str, kundli_id: str) -> dict:
+    """The reader's own facts, one value per key. A key with two active
+    values (an unresolved contradiction) is left out, so the wording falls
+    back to the neutral form instead of guessing."""
+    projection = build_profile_context_projection(db, user_id=user_id, profile_id=kundli_id)
+    life: dict = {}
+    for fact in projection.facts:
+        field = _SUGGESTION_LIFE_KEYS.get(fact["key"])
+        if not field or fact["status"] != "active" or fact["key"] in projection.contradictions:
+            continue
+        value = (fact.get("value") or {}).get(field)
+        if value is not None:
+            life[fact["key"]] = value
+    return life
+
+
+@router.get("/{kundli_id}/suggestions")
+def suggestions(kundli_id: str, user: CurrentUser,
+                mode: Literal["guided", "balanced", "practitioner"] = "balanced",
+                db: Session = Depends(get_db)):
+    """Questions to offer on Ask home, built from this profile's chart today:
+    a short general list and one list per topic chip."""
+    k = crud.get_kundli(db, kundli_id, user.id)
+    if not k:
+        raise HTTPException(status_code=404, detail="Kundli not found")
+    chart = _chart_from_kundli(k, *crud.chart_convention(db, user.id))
+    return ask_suggestions(chart, mode=mode, life=_suggestion_life(db, user.id, kundli_id))
 
 
 @router.get("/threads/{thread_id}")
