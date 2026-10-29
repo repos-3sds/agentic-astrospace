@@ -2,6 +2,8 @@
 
 Status: canonical. How main reaches Cloud Run, Firebase Hosting, Play
 internal testing and TestFlight without the Mac (`.github/workflows/ship.yml`).
+Which machine the jobs run on (GitHub's or the Mac mini) is in
+[build_runner.md](build_runner.md).
 
 ## What happens on a merge
 

@@ -10,20 +10,31 @@ name: CI
 # migration and build the Docker image Cloud Run deploys. Coverage thresholds,
 # a response-schema snapshot and a real-model prompt set are still follow-ups.
 
+# Push runs on main only: a branch with a pull request already runs CI as
+# the pull request, and running both doubled every PR's minutes (measured
+# 2026-10-29, docs/build_runner.md). A newer push to a pull request cancels
+# the run it supersedes; runs on main always finish, because Ship waits on
+# them.
 on:
   push:
-    branches: ['**']
+    branches: [main]
   pull_request:
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # Read-only: the jobs only check out and test. Without this the token took
 # the repository default, possibly read/write (audit S20).
 permissions:
   contents: read
 
+# Every job runs where the BUILD_RUNNER repository variable says: unset, on
+# GitHub's machines; set to siddha-mac, on the Mac mini (docs/build_runner.md).
 jobs:
   backend:
     name: Backend tests (pytest)
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.BUILD_RUNNER || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -53,7 +64,7 @@ jobs:
 
   frontend:
     name: Frontend tests (ng test)
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.BUILD_RUNNER || 'ubuntu-latest' }}
     defaults:
       run:
         working-directory: ui
@@ -74,7 +85,7 @@ jobs:
 
   frontend-build:
     name: Frontend production build + version check
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.BUILD_RUNNER || 'ubuntu-latest' }}
     defaults:
       run:
         working-directory: ui
@@ -104,7 +115,7 @@ jobs:
 
   mobile-e2e:
     name: Mobile e2e (Playwright, mobile-chrome-360)
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.BUILD_RUNNER || 'ubuntu-latest' }}
     defaults:
       run:
         working-directory: ui
@@ -152,23 +163,17 @@ jobs:
     # database the way production got one (audit I12) and checks the models
     # against it, and that every public table keeps row-level security on.
     name: Postgres migrations + schema drift
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        # Plain Postgres 16 with pgvector (the knowledge tables need it);
-        # scripts/ci/supabase_shim.sql adds the Supabase roles and schemas.
-        image: pgvector/pgvector:pg16
-        env:
-          POSTGRES_PASSWORD: postgres
-        ports: ['5432:5432']
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s --health-timeout 5s --health-retries 10
+    runs-on: ${{ vars.BUILD_RUNNER || 'ubuntu-latest' }}
+    # A plain container rather than a service container, which only exists
+    # on Linux runners: the same steps run on the Mac mini through Colima.
+    # Port 55432 and a per-run name so it never meets a local Postgres.
     env:
       PGHOST: localhost
+      PGPORT: '55432'
       PGUSER: postgres
       PGPASSWORD: postgres
       PGDATABASE: postgres
+      PG_CONTAINER: ci-pg-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v4
 
@@ -180,39 +185,67 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
 
+      - name: Start Postgres 16 with pgvector
+        # Plain Postgres 16 with pgvector (the knowledge tables need it);
+        # scripts/ci/supabase_shim.sql adds the Supabase roles and schemas.
+        run: |
+          docker run -d --name "$PG_CONTAINER" -e POSTGRES_PASSWORD=postgres \
+            -p "$PGPORT:5432" pgvector/pgvector:pg16
+          for i in $(seq 1 60); do
+            docker exec "$PG_CONTAINER" pg_isready -U postgres -q && exit 0
+            sleep 2
+          done
+          docker logs "$PG_CONTAINER"; exit 1
+
       - name: Apply the shim, the base schema and every migration in order
+        # psql inside the container, so the runner needs no Postgres client.
         run: |
           for f in scripts/ci/supabase_shim.sql docs/supabase_schema.sql supabase/migrations/*.sql; do
             echo "::group::$f"
-            psql -v ON_ERROR_STOP=1 -q -f "$f"
+            docker exec -i "$PG_CONTAINER" psql -U postgres -d postgres -v ON_ERROR_STOP=1 -q -f - < "$f"
             echo "::endgroup::"
           done
 
       - name: Models match the migrated schema; RLS on every table
         env:
-          DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/postgres
+          DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:55432/postgres
         run: python scripts/check_schema_drift.py
+
+      - name: Stop Postgres
+        if: always()
+        run: docker rm -f "$PG_CONTAINER" >/dev/null 2>&1 || true
 
   docker:
     # Cloud Run deploys this image. A file left out of the COPY lines, or a
     # dependency that only builds on a developer's machine, used to surface
     # at deploy time on the Mac; now it fails here first (audit I12).
     name: Docker image builds and serves
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.BUILD_RUNNER || 'ubuntu-latest' }}
+    # linux/amd64 is what Cloud Run runs; on the Mac mini it builds under
+    # Rosetta. A per-run name and port 18080 keep clear of anything local.
+    env:
+      TAG: astrospace-ci:${{ github.run_id }}-${{ github.run_attempt }}
+      NAME: ci-api-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Build
-        run: docker build -t astrospace-ci .
+        run: docker build --platform linux/amd64 -t "$TAG" .
 
       - name: Boots and answers health
         # No DATABASE_URL and no K_SERVICE: the image falls back to SQLite,
         # the same unconfigured path the backend tests use.
         run: |
-          docker run -d --name api -p 8080:8080 astrospace-ci
-          for i in $(seq 1 30); do
-            if curl -fsS http://localhost:8080/api/health; then exit 0; fi
+          docker run -d --platform linux/amd64 --name "$NAME" -p 18080:8080 "$TAG"
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:18080/api/health; then exit 0; fi
             sleep 2
           done
-          docker logs api
+          docker logs "$NAME"
           exit 1
+
+      - name: Clean up
+        if: always()
+        run: |
+          docker rm -f "$NAME" >/dev/null 2>&1 || true
+          docker rmi "$TAG" >/dev/null 2>&1 || true
