@@ -58,6 +58,11 @@ LIMITS: dict[str, Limit] = {
         per_day=20, per_minute=2,
         message="Deep answers are resting for a while.",
     ),
+    # One Listen in Telugu translates one screen; the app caches each.
+    "translate": Limit(
+        per_day=30, per_minute=5,
+        message="Telugu is resting for a while; reading in English.",
+    ),
     "reading": Limit(
         per_day=30, per_minute=6,
         message="You’ve made many new readings today. Please try again tomorrow.",
