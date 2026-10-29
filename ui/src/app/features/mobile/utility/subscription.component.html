@@ -64,7 +64,7 @@
           {{ busy() === selectedPlan() ? 'Opening the store…' : 'Continue with ' + familyName() }}
         </button>
         @if (storeNote(); as note) { <p class="store-note">{{ note }}</p> }
-        <p class="fine">Renews automatically until you cancel in your Google Play or App Store account. Cancel at least a day before renewal to avoid the next charge.</p>
+        <p class="fine">{{ renewalTerms() }}</p>
       </section>
     }
 
@@ -96,7 +96,7 @@
       <p class="lede">A few more answers without a subscription. They don’t expire, and they’re used only after your monthly answers.</p>
       @for (pack of packs(); track pack.id) {
         <div class="pack">
-          <span><b>{{ pack.questions }} questions</b><small>{{ price(pack) }}, once</small></span>
+          <span><b>{{ pack.questions }} {{ pack.questions === 1 ? 'question' : 'questions' }}</b><small>{{ price(pack) }}, once</small></span>
           <button type="button" [disabled]="!store.available() || !!busy()" (click)="buy(pack.id)">
             {{ busy() === pack.id ? 'Opening…' : 'Buy' }}
           </button>
@@ -109,10 +109,12 @@
       <button class="link-button" type="button" [disabled]="!store.available() || !!busy()" (click)="restore()">
         {{ busy() === 'restore' ? 'Restoring…' : 'Restore purchases' }}
       </button>
-      <span aria-hidden="true">·</span>
-      <button class="link-button" type="button" (click)="openLegal('terms')">Terms</button>
-      <span aria-hidden="true">·</span>
-      <button class="link-button" type="button" (click)="openLegal('privacy')">Privacy</button>
+      <!-- Terms of Use (the EULA) and Privacy Policy beside the purchase: App Review 3.1.2. -->
+      <span class="legal">
+        <button class="link-button" type="button" (click)="openLegal('terms')">Terms of Use</button>
+        <span aria-hidden="true">·</span>
+        <button class="link-button" type="button" (click)="openLegal('privacy')">Privacy Policy</button>
+      </span>
     </footer>
   }
 </main>

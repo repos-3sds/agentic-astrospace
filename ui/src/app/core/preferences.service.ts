@@ -33,6 +33,10 @@ export interface PreferencesState {
   /** Whether the reader has answered the usage question. Builds before it
    * was asked stored `shareUsage: true` by default; that is not an answer. */
   usageAsked: boolean;
+  /** The reader has been told, and agreed, that readings and answers are
+   * written by AI providers who receive their chart and question (App
+   * Review 5.1.2(i)). Agreed on the setup screen, or once in Ask. */
+  aiSharingAgreed: boolean;
   festivalRegions: FestivalRegion[];
   /** Device TTS voice name, or null to auto-pick — see mobile-tts.service.ts. */
   voiceName: string | null;
@@ -72,6 +76,7 @@ const DEFAULTS: PreferencesState = {
   readAloud: true,
   shareUsage: false,
   usageAsked: false,
+  aiSharingAgreed: false,
   festivalRegions: ['pan-india'],
   voiceName: null,
   memoryEnabled: true,
@@ -110,6 +115,7 @@ export class PreferencesService {
   readonly readAloud = signal(this.preferences().readAloud);
   readonly shareUsage = signal(this.preferences().shareUsage);
   readonly usageAsked = signal(this.preferences().usageAsked);
+  readonly aiSharingAgreed = signal(this.preferences().aiSharingAgreed);
   readonly festivalRegions = signal<FestivalRegion[]>(this.preferences().festivalRegions);
   readonly voiceName = signal<string | null>(this.preferences().voiceName);
   readonly memoryEnabled = signal(this.preferences().memoryEnabled);
@@ -157,6 +163,7 @@ export class PreferencesService {
         readAloud: this.readAloud(),
         shareUsage: this.shareUsage(),
         usageAsked: this.usageAsked(),
+        aiSharingAgreed: this.aiSharingAgreed(),
         festivalRegions: normalizedFestivalRegions(this.festivalRegions()),
         voiceName: this.voiceName(),
         memoryEnabled: this.memoryEnabled(),
@@ -211,6 +218,7 @@ export class PreferencesService {
     this.readAloud.set(DEFAULTS.readAloud);
     this.shareUsage.set(DEFAULTS.shareUsage);
     this.usageAsked.set(DEFAULTS.usageAsked);
+    this.aiSharingAgreed.set(DEFAULTS.aiSharingAgreed);
     this.festivalRegions.set(DEFAULTS.festivalRegions);
     this.voiceName.set(DEFAULTS.voiceName);
     this.memoryEnabled.set(DEFAULTS.memoryEnabled);

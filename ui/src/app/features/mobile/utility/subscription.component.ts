@@ -78,6 +78,27 @@ export class SubscriptionComponent implements OnInit {
   /** Paid through Google Play or the App Store, so the store's page can manage it. */
   protected readonly storeManaged = computed(() => this.isPaid() && this.current()?.source === 'revenuecat');
 
+  /**
+   * The store this phone buys through. Each store's review rejects a screen
+   * that names the other one (App Review 2.3.10), so the fine print and the
+   * notes say only this phone's store; the web names both.
+   */
+  protected readonly storeName: 'App Store' | 'Google Play' | null =
+    Capacitor.getPlatform() === 'ios' ? 'App Store' : Capacitor.getPlatform() === 'android' ? 'Google Play' : null;
+
+  private storePhrase(): string {
+    return this.storeName === 'App Store' ? 'the App Store' : 'Google Play';
+  }
+
+  /** Auto-renewal terms beside the buy button (App Review 3.1.2, Play's subscription policy). */
+  protected renewalTerms(): string {
+    if (this.storeName === 'App Store') {
+      return 'Payment is charged to your Apple Account when you confirm. The plan renews automatically each month at the same price unless you turn it off at least 24 hours before the period ends. Manage or cancel it in your Apple Account settings.';
+    }
+    const where = this.storeName === 'Google Play' ? 'your Google Play account' : 'your Google Play or App Store account';
+    return `Renews automatically until you cancel in ${where}. Cancel at least a day before renewal to avoid the next charge.`;
+  }
+
   protected chooseFamily(family: PlanFamily): void {
     this.family.set(family);
     this.selectedPlan.set(family === 'pro' ? 'siddha_practitioner_monthly' : 'siddha_plus_monthly');
@@ -181,11 +202,13 @@ export class SubscriptionComponent implements OnInit {
     if (plan.access_tier !== 'free' && plan.expires_at) {
       const date = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
         .format(new Date(plan.expires_at.endsWith('Z') ? plan.expires_at : `${plan.expires_at}Z`));
-      // Google Play's payments policy: no link or pointer to buying outside the app,
-      // only the plain fact that this plan is managed where it was bought.
-      return plan.source === 'razorpay'
-        ? `Renews or ends on ${date}. This plan was not bought in Google Play, so it is managed where you bought it.`
-        : `Renews or ends on ${date}, as set in your store account.`;
+      // Google Play's payments policy and App Review 3.1.1: no link or pointer
+      // to buying outside the app, only the plain fact that this plan is
+      // managed where it was bought.
+      if (plan.source !== 'razorpay') return `Renews or ends on ${date}, as set in your store account.`;
+      return this.storeName
+        ? `Renews or ends on ${date}. This plan was not bought in ${this.storePhrase()}, so it is managed where you bought it.`
+        : `Renews or ends on ${date}. It is managed where you bought it.`;
     }
     if (plan.access_tier === 'plus') return 'Deeper guidance, more answers and more profiles.';
     if (plan.access_tier === 'pro') return 'Everything in Plus, with the practitioner workflow.';
@@ -197,7 +220,7 @@ export class SubscriptionComponent implements OnInit {
       case 'web':
         return 'Plans are bought in the Siddha app on your phone, through Google Play or the App Store.';
       case 'not_configured':
-        return 'Plans can be bought once Siddha is live in Google Play and the App Store.';
+        return `Plans can be bought once Siddha is live in ${this.storeName ? this.storePhrase() : 'Google Play and the App Store'}.`;
       case 'failed':
         return 'The store did not answer. Check your connection and open Plans again.';
       default:
