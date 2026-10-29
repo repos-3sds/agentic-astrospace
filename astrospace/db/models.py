@@ -898,9 +898,28 @@ class PushToken(Base):
     environment: Mapped[str] = mapped_column(String, default="production")
     locale: Mapped[str | None] = mapped_column(String)
     timezone: Mapped[str | None] = mapped_column(String)
+    # The build the phone ran when it last registered; None from builds that
+    # predate update reminders (notifications/app_updates.py).
+    app_build: Mapped[int | None] = mapped_column(Integer)
     last_seen_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class AppRelease(Base):
+    """The build readers can install, and the oldest still allowed to open,
+    per platform (notifications/app_updates.py, docs/app_updates.md)."""
+
+    __tablename__ = "app_releases"
+
+    platform: Mapped[str] = mapped_column(String, primary_key=True)  # android | ios
+    latest_build: Mapped[int | None] = mapped_column(Integer)
+    latest_set_at: Mapped[datetime | None] = mapped_column(DateTime)
+    required_build: Mapped[int | None] = mapped_column(Integer)
+    block_after_days: Mapped[int | None] = mapped_column(Integer)
+    update_url: Mapped[str | None] = mapped_column(String)
+    updated_by: Mapped[str | None] = mapped_column(String)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class NotificationPreference(Base):

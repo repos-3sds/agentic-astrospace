@@ -5,6 +5,10 @@
                             preview email to the team. Nothing to readers.
 /api/v1/releases/announce   announce.yml, on Hawk's word: the notes, as
                             previewed, emailed to readers with tips emails on.
+/api/v1/releases/app-version  announce.yml (Android, the build on closed
+                            testing) and app-version.yml (either platform):
+                            the build readers can install and the oldest
+                            allowed to open (docs/app_updates.md).
 
 The caller proves who it is with a Google-signed ID token for the deployer
 service account, minted through the same Workload Identity Federation the
@@ -22,6 +26,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from ..db import get_db
+from ..notifications import app_updates as au
 from ..notifications import release_announcements as ra
 from ..notifications.email import DEFAULT_BASE_URL
 
@@ -62,6 +67,16 @@ class DraftBody(BaseModel):
     changes: list[Change] = Field(default_factory=list, max_length=200)
 
 
+class AppVersionBody(BaseModel):
+    platform: str = Field(pattern="^(android|ios)$")
+    # Only the fields sent change; null clears one (no block, say).
+    latest_build: int | None = Field(default=None, gt=0)
+    required_build: int | None = Field(default=None, gt=0)
+    block_after_days: int | None = Field(default=None, ge=0, le=365)
+    update_url: str | None = Field(default=None, max_length=300,
+                                   pattern=r"^(https://|itms-beta://|itms-apps://|market://)")
+
+
 class AnnounceBody(BaseModel):
     version_code: int = Field(gt=0)
     notes: list[str] = Field(max_length=ra.MAX_NOTES)
@@ -89,3 +104,12 @@ def announce(body: AnnounceBody, _: str = Depends(release_caller), db: Session =
     ra.queue_team_email(db, body.version_code, ann, stage="sent", readers=readers)
     log.info("release %s announced: %s reader emails queued", body.version_code, readers)
     return {**ann, "reader_emails_queued": readers}
+
+
+@router.post("/app-version")
+def app_version(body: AppVersionBody, caller: str = Depends(release_caller),
+                db: Session = Depends(get_db)):
+    fields = body.model_dump(exclude_unset=True, exclude={"platform"})
+    row = au.set_release(db, body.platform, by=caller, **fields)
+    log.info("app release %s set: %s", body.platform, fields)
+    return au.release_dict(row, body.platform)

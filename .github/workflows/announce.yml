@@ -139,6 +139,20 @@ jobs:
           NOTES=$(jq -r '.notes | map("• " + . + ".") | join("\n")' release-notes.json | cut -c1-500)
           python3 scripts/play_upload.py --version-code "$VC" --track alpha --notes "$NOTES"
 
+      - name: Remind phones on older builds to update
+        # Readers on closed testing can install this build now, so the app
+        # offers it on launch and the worker sends a gentle reminder (no word
+        # on what is new) to phones still behind (docs/app_updates.md).
+        env:
+          TOKEN: ${{ steps.release-auth.outputs.id_token }}
+          VC: ${{ steps.which.outputs.vc }}
+        run: |
+          set -euo pipefail
+          jq -n --argjson vc "$VC" '{platform: "android", latest_build: $vc}' |
+            curl -fsS -X POST "$API_URL/api/v1/releases/app-version" -H "Authorization: Bearer $TOKEN" \
+              -H 'Content-Type: application/json' --data @- > app-version.json
+          echo "Android latest build is now $(jq .latest_build app-version.json)."
+
       - name: Email readers, and the team the WhatsApp texts
         if: inputs.send_emails
         env:

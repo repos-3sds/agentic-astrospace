@@ -77,6 +77,9 @@ class PushTokenRegistration(BaseModel):
     environment: str = Field("production", pattern="^(production|sandbox)$")
     locale: str | None = Field(None, max_length=35)
     timezone: str | None = Field(None, max_length=64)
+    # The build the phone is running, so update reminders reach only the
+    # phones still behind (notifications/app_updates.py).
+    app_build: int | None = Field(None, ge=0, le=10_000_000)
     # The token this device registered before, when the OS has since rotated
     # it. Both stay deliverable for a while, so without this every push went
     # out twice to the same phone (retest of build 487).
