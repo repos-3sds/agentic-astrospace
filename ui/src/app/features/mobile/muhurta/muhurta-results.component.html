@@ -59,7 +59,6 @@
       </div>
 
       <p class="time">{{ w.time }}</p>
-      @if (w.fit) { <p class="fit">{{ w.fit }}</p> }
       @if (w.tags.length || w.badges.length) {
         <div class="tags">
           @for (b of w.badges; track b) { <span class="badge">{{ b }}</span> }

@@ -1711,9 +1711,6 @@ export interface AskStructuredSuccessEnvelope {
   /** Tool-using Ask only: every point of view judged and weighted, then
    * combined into one call. Shown under the answer as "How we weighed it". */
   weighing?: AskWeighing;
-  /** Charts read together for a shared purpose (a couple, a family), the
-   * open profile first. Absent when one chart was read. */
-  people_read?: string[];
   thread_id: string | null;
 }
 

@@ -558,7 +558,6 @@ export class VedicService {
     if (place?.city) params.set('city', place.city);
     if (place?.nation) params.set('nation', place.nation);
     if (options.partnerId) params.set('partner_id', options.partnerId);
-    if (options.withIds?.length) params.set('with_ids', options.withIds.join(','));
     if (options.ceremony) params.set('ceremony', options.ceremony);
     if (options.direction) params.set('direction', options.direction);
     if (options.avoid?.length) params.set('avoid', options.avoid.join(','));
@@ -802,8 +801,6 @@ export class VedicService {
 
 export interface MuhurtaSearchOptions {
   partnerId?: string | null;
-  /** Others taking part; each window then lists everyone's standing. */
-  withIds?: string[];
   ceremony?: 'day' | 'night' | null;
   direction?: 'north' | 'south' | 'east' | 'west' | null;
   avoid?: string[];
@@ -864,8 +861,6 @@ export interface MuhurtaApiWindow {
   why: { supports: string[]; against: string[]; terms?: string[] };
   vara: string | null;
   nakshatra: string | null;
-  /** With a partner or others: each person's standing, "you" first. */
-  people?: { name: string; standing: 'strong' | 'fair' | 'weak'; chandrashtama?: boolean }[];
 }
 
 export interface RemedyRecommendationsPayload {

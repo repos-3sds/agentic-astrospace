@@ -937,7 +937,6 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
          intent: str | None = None,
          ghatak_moon_sign: int | None = None,
          partner: dict | None = None,
-         others: list[dict] | None = None,
          ceremony: str | None = None,
          direction: str | None = None,
          avoid_weekdays: list[str] | None = None,
@@ -960,15 +959,6 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
             "I already have the date" case: the best hours on it.
         janma_nakshatra_index / janma_rashi_index: from the person's kundli.
         partner: {"nak": int, "rashi": int, "name": str} for a couple.
-        others: more people doing this together (a family moving house,
-            brothers with ceremonies on one day), each shaped like
-            ``partner``, at most :data:`MAX_GROUP_OTHERS` with the partner.
-            A person with ``"lead": True`` counts as much as a partner and
-            rules a date out on their Chandrashtama; everyone else counts
-            together as one partner's worth, so a big family does not drown
-            the owner's own star, and their hard days mark a date instead of
-            removing it. Each slot then lists every person's standing
-            (``people``).
         ceremony: "day" or "night" for a wedding.
         direction: north/south/east/west for a journey (disha shool).
         avoid_weekdays: weekday names the family avoids for this.
@@ -1017,9 +1007,8 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
     observe = goal.get("season", frozenset()) if observe_season else frozenset()
     lat, lng, tz_str = resolve_location(city, nation, lat, lng, tz_str)
     me = {"nak": janma_nakshatra_index, "rashi": janma_rashi_index}
-    group = _group(partner, others)
 
-    scan = _scan(goal, rules_slug, date_from, span, me, group, ghatak_moon_sign,
+    scan = _scan(goal, rules_slug, date_from, span, me, partner, ghatak_moon_sign,
                  hours, avoid, direction, observe, lat, lng, tz_str, city, nation)
     results, more = _select(scan["candidates"], limit)
 
@@ -1027,7 +1016,7 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
     good_count = sum(1 for c in scan["candidates"] if c["score"] >= _GOOD_SCORE)
     if look_ahead_days > 0 and good_count < 3:
         ahead = _scan(goal, rules_slug, date_to + timedelta(days=1),
-                      min(look_ahead_days, max_days), me, group, ghatak_moon_sign,
+                      min(look_ahead_days, max_days), me, partner, ghatak_moon_sign,
                       hours, avoid, direction, observe, lat, lng, tz_str, city, nation)
         good = sorted((c for c in ahead["candidates"] if c["score"] >= _GOOD_SCORE),
                       key=lambda c: c["start_iso"])
@@ -1038,7 +1027,7 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
     # Two weeks at a time: the first good date is usually in the first.
     for offset in range(0, locked_days if locked_from else 0, 14):
         ahead = _scan(goal, rules_slug, locked_from + timedelta(days=offset),
-                      min(14, locked_days - offset), me, group, ghatak_moon_sign,
+                      min(14, locked_days - offset), me, partner, ghatak_moon_sign,
                       hours, avoid, direction, observe, lat, lng, tz_str, city, nation)
         good = sorted((c for c in ahead["candidates"] if c["score"] >= _GOOD_SCORE),
                       key=lambda c: c["start_iso"])
@@ -1059,10 +1048,7 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
     if scan["chandrashtama_days"]:
         n = len(scan["chandrashtama_days"])
         notes.append(f"{n} day{'s' if n != 1 else ''} left out when the Moon is in a hard "
-                     "place for " + ("one of you" if group["leads"] else "you") + " (Chandrashtama).")
-    for name in group["member_chandrashtama"](scan):
-        notes.append(f"Some dates are a hard day for {name} (Chandrashtama). They are "
-                     f"kept, and marked, because {name} is not the one leading this.")
+                     "place for " + ("one of you" if partner else "you") + " (Chandrashtama).")
     if scan["avoided_days"]:
         notes.append(f"{len(scan['avoided_days'])} day(s) left out for "
                      f"{', '.join(sorted(avoid))}, as you asked.")
@@ -1103,43 +1089,7 @@ def find(goal_slug: str, date_from: date_cls, date_to: date_cls, *,
     }
 
 
-MAX_GROUP_OTHERS = 4  # five people in all, the most profiles a Plus account holds
-
-
-def _group(partner: dict | None, others: list[dict] | None) -> dict:
-    """Split the people besides the reader into leads (a partner, or anyone
-    marked ``lead``) and members."""
-    people = ([{**partner, "lead": True}] if partner else []) + [dict(o) for o in (others or [])]
-    if len(people) > MAX_GROUP_OTHERS:
-        raise ValueError(f"At most {MAX_GROUP_OTHERS + 1} people can share one muhurta")
-    for i, person in enumerate(people):
-        person.setdefault("name", None)
-        person["label"] = person["name"] or ("your partner" if person.get("lead") else f"person {i + 2}")
-    leads = [p for p in people if p.get("lead")]
-    members = [p for p in people if not p.get("lead")]
-
-    def member_chandrashtama(scan: dict) -> list[str]:
-        names = {m["label"] for m in members}
-        return sorted({row["name"] for c in scan["candidates"] for row in c.get("people") or []
-                       if row["chandrashtama"] and row["name"] in names})
-
-    return {"people": people, "leads": leads, "members": members,
-            "member_chandrashtama": member_chandrashtama}
-
-
-def _person_standing(facts: dict, person: dict, name: str) -> dict:
-    """One person's standing at a moment, for the per-slot list."""
-    tara = _tara(facts["nakshatra_index"], person["nak"])
-    house = (facts["moon_sign"] - person["rashi"]) % 12 + 1
-    tara_good = tara in TARABALA_GOOD and tara != "Janma"
-    chandrashtama = house == 8
-    standing = ("weak" if chandrashtama or not tara_good
-                else "strong" if house in CHANDRABALA_GOOD else "fair")
-    return {"name": name, "standing": standing, "tara": tara,
-            "moon_house": house, "chandrashtama": chandrashtama}
-
-
-def _scan(goal, rules_slug, date_from, span, me, group, ghatak_moon_sign,
+def _scan(goal, rules_slug, date_from, span, me, partner, ghatak_moon_sign,
           hours, avoid, direction, observe, lat, lng, tz_str, city, nation) -> dict:
     candidates: list[dict] = []
     skipped: list[dict] = []
@@ -1202,12 +1152,12 @@ def _scan(goal, rules_slug, date_from, span, me, group, ghatak_moon_sign,
                               if _overlaps(raw["start_iso"], raw["end_iso"],
                                            bad["start_iso"], bad["end_iso"])})
 
-            scored = _score_block(goal, day, vara, block, c_start, c_end, me, group,
+            scored = _score_block(goal, day, vara, block, c_start, c_end, me, partner,
                                   amrit, festival, ghatak, lat, lng)
             if scored is None:
                 day_chandrashtama = True
                 continue
-            points, plus, minus, terms, name, badges, facts, people = scored
+            points, plus, minus, terms, name, badges, facts = scored
             if trimmed:
                 points -= 4
                 cut = ", ".join(clashes)
@@ -1240,7 +1190,6 @@ def _scan(goal, rules_slug, date_from, span, me, group, ghatak_moon_sign,
                 "vara": vara,
                 "nakshatra": facts["nakshatra"],
                 "tithi": facts["tithi"],
-                **({"people": people} if people else {}),
             })
         if day_chandrashtama:
             chandrashtama_days.append(day_date.isoformat())
@@ -1251,7 +1200,7 @@ def _scan(goal, rules_slug, date_from, span, me, group, ghatak_moon_sign,
             "out_of_hours": out_of_hours, "days_scanned": days_scanned}
 
 
-def _score_block(goal, day, vara, block, start, end, me, group, amrit, festival,
+def _score_block(goal, day, vara, block, start, end, me, partner, amrit, festival,
                  ghatak, lat, lng):
     """Points for one block. None when the block is ruled out for the person."""
     mid = start + (end - start) / 2
@@ -1378,25 +1327,19 @@ def _score_block(goal, day, vara, block, start, end, me, group, amrit, festival,
 
     pts, chandrashtama = _person_factors(facts, me, "you", plus, minus, terms)
     points += pts
-    for lead in group["leads"]:
-        p_pts, p_chandrashtama = _person_factors(facts, lead, lead["label"], plus, minus, terms)
+    if partner:
+        p_pts, p_chandrashtama = _person_factors(
+            facts, partner, partner.get("name") or "your partner", plus, minus, terms)
         points += p_pts
         chandrashtama = chandrashtama or p_chandrashtama
     if chandrashtama and goal.get("major"):
         return None
-    if group["members"]:
-        member_points = [_person_factors(facts, m, m["label"], plus, minus, terms)[0]
-                         for m in group["members"]]
-        points += round(sum(member_points) / len(member_points))
-    people = ([_person_standing(facts, me, "you")]
-              + [_person_standing(facts, p, p["label"]) for p in group["people"]]
-              if group["people"] else [])
     if ghatak:
         points -= 6
         minus.append("One of your personal caution days")
         terms.append(f"Ghatak: {', '.join(ghatak)}")
 
-    return points, plus, minus, terms, name, badges, facts, people
+    return points, plus, minus, terms, name, badges, facts
 
 
 def _merge(candidates: list[dict]) -> list[dict]:

@@ -2,9 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, computed, inject, input
 import { RouterLink } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
-import { profileRelationLabel } from '../settings/profile-fields';
 import { AskDepthService } from './ask-depth.service';
-import { AskPeopleService } from './ask-people.service';
 import { ASK_NAVIGATION } from './ask-navigation';
 
 /**
@@ -33,15 +31,6 @@ import { ASK_NAVIGATION } from './ask-navigation';
           <span class="menu-mark"><span class="composer-icon person-icon" aria-hidden="true"></span></span>
           <span class="menu-copy"><strong>Ask about someone</strong><small>Now: {{ personName() }}</small></span>
         </button>
-        @if (people.options().length) {
-          <button class="menu-row" type="button" role="menuitem" (click)="chooseTogether()">
-            <span class="menu-mark" [class.on]="people.ids().length"><span class="composer-icon people-icon" aria-hidden="true"></span></span>
-            <span class="menu-copy" [class.on]="people.ids().length">
-              <strong>Ask about people together</strong>
-              <small>{{ people.ids().length ? 'With ' + joined(people.names()) : 'A couple, family or friends doing one thing' }}</small>
-            </span>
-          </button>
-        }
         <a class="menu-row" role="menuitem" routerLink="/m/settings/profiles/new" (click)="menuOpen.set(false)">
           <span class="menu-mark"><span class="composer-icon person-add-icon" aria-hidden="true"></span></span>
           <span class="menu-copy"><strong>Add a family member</strong><small>Their birth details, saved as a profile</small></span>
@@ -69,7 +58,7 @@ import { ASK_NAVIGATION } from './ask-navigation';
         (keydown.enter)="submit()"
       />
     }
-    <div class="tools" [class.crowded]="people.ids().length">
+    <div class="tools">
       <button class="more" type="button" aria-label="Ask options" aria-haspopup="menu"
         [attr.aria-expanded]="menuOpen()" (click)="menuOpen.set(!menuOpen())">
         <span class="composer-icon plus-icon" aria-hidden="true"></span>
@@ -77,12 +66,6 @@ import { ASK_NAVIGATION } from './ask-navigation';
       <button class="chip person" type="button" [attr.aria-label]="'Asking about ' + personName() + '. Change'" (click)="choosePerson()">
         <span class="composer-icon person-icon" aria-hidden="true"></span><span class="chip-text">{{ personName() }}</span>
       </button>
-      @if (people.ids().length) {
-        <button class="chip on together" type="button" (click)="chooseTogether()"
-          [attr.aria-label]="'Together with ' + joined(people.names()) + '. Change'">
-          <span class="chip-text">+ {{ people.names().length === 1 ? people.names()[0] : people.names().length }}</span>
-        </button>
-      }
       <button
         class="chip depth"
         type="button"
@@ -112,29 +95,13 @@ import { ASK_NAVIGATION } from './ask-navigation';
     @if (switching()) {
       <as-profile-switcher (dismissed)="switching.set(false)" />
     }
-    @if (together()) {
-      <button class="menu-scrim" type="button" aria-label="Close" tabindex="-1" (click)="together.set(false)"></button>
-      <div class="menu together-menu" role="dialog" aria-labelledby="ask-together-title">
-        <p class="together-title" id="ask-together-title">Who else is this about?</p>
-        <p class="together-note">Siddha reads {{ personName() }}'s chart with each person you pick, for the one thing you are doing together.</p>
-        @for (k of people.options(); track k.id) {
-          <button class="menu-row" type="button" role="checkbox" [attr.aria-checked]="people.ids().includes(k.id)"
-            [disabled]="!people.ids().includes(k.id) && people.full()" (click)="people.toggle(k.id)">
-            <span class="menu-copy" [class.on]="people.ids().includes(k.id)"><strong>{{ k.name }}</strong><small>{{ relationLabel(k.relation) }}</small></span>
-            @if (people.ids().includes(k.id)) { <span class="composer-icon tick-icon" aria-hidden="true"></span> }
-          </button>
-        }
-        @if (people.full()) { <p class="together-note">Five people at most, including {{ personName() }}.</p> }
-        <button class="together-done" type="button" (click)="together.set(false)">Done</button>
-      </div>
-    }
   `,
   styleUrl: './ask-composer.component.scss',
   imports: [RouterLink, ProfileSwitcherComponent],
   host: {
     '[class.is-inset]': 'inset()',
     '[class.web-composer]': '!!navigation.web',
-    '(document:keydown.escape)': 'menuOpen.set(false); together.set(false)',
+    '(document:keydown.escape)': 'menuOpen.set(false)',
   },
 })
 export class AskComposerComponent {
@@ -147,19 +114,6 @@ export class AskComposerComponent {
   /** The "+" menu: who to ask about, adding a relative, and Deep answer. */
   protected readonly menuOpen = signal(false);
   protected readonly switching = signal(false);
-  protected readonly people = inject(AskPeopleService);
-  protected readonly together = signal(false);
-
-  protected chooseTogether(): void {
-    this.menuOpen.set(false);
-    this.together.set(true);
-  }
-  protected joined(names: string[]): string {
-    return names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
-  }
-  protected relationLabel(relation: string | null | undefined): string {
-    return profileRelationLabel(relation);
-  }
 
   protected toggleDepth(): void {
     this.depthService.toggle();

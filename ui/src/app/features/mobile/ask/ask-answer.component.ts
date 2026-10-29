@@ -31,7 +31,6 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
 import { HapticsService } from '../../../core/haptics.service';
 import { AnswerReportContext, ReportAnswerSheetComponent } from './report-answer-sheet.component';
 import { AskDepthService } from './ask-depth.service';
-import { AskPeopleService } from './ask-people.service';
 
 /**
  * How confidently the answer lands. Named, not a number: the point of the dot
@@ -69,8 +68,6 @@ interface ChatMessage {
   weighing?: AskWeighing | null;
   /** Asked in Deep mode (the Deep switch, or a saved answer with a weighing). */
   deep?: boolean;
-  /** Charts read together for a shared purpose, the open profile first. */
-  people_read?: string[];
   options: string[];
   streaming?: boolean;
 }
@@ -122,7 +119,6 @@ export class AskAnswerComponent {
   protected readonly navigation = inject(ASK_NAVIGATION);
   protected readonly preferences = inject(PreferencesService);
   private readonly askDepth = inject(AskDepthService);
-  private readonly askPeople = inject(AskPeopleService);
   private readonly analytics = inject(AnalyticsService);
   private readonly ratingPrompt = inject(RatingPromptService);
   private readonly askState = inject(MobileAskStateService);
@@ -423,10 +419,6 @@ export class AskAnswerComponent {
     if (normalized === 'high') return 'good';
     if (normalized === 'low') return 'warn';
     return 'warn';
-  }
-
-  protected joinNames(names: string[]): string {
-    return names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
   }
 
   protected contextPills(message: ChatMessage): string[] {
@@ -766,9 +758,6 @@ export class AskAnswerComponent {
       reading: structured,
       weighing: this.weighingFromEvidence(message.evidence),
       deep: !!this.weighingFromEvidence(message.evidence),
-      people_read: Array.isArray(message.evidence?.['people_read'])
-        ? (message.evidence!['people_read'] as unknown[]).filter((n): n is string => typeof n === 'string')
-        : [],
       options: this.clarificationOptionsFromEvidence(message.evidence),
     };
   }
@@ -976,7 +965,6 @@ export class AskAnswerComponent {
         input_mode: 'text',
         domain_override: forceDomain,
         depth: this.askDepth.depth(),
-        with_profiles: this.askPeople.ids().length ? this.askPeople.ids() : undefined,
       }, controller.signal)) {
         if (controller.signal.aborted || this.kundlis.active()?.id !== profile.id) {
           controller.abort();
@@ -1075,7 +1063,6 @@ export class AskAnswerComponent {
             profile_context_as_of: event.profile_context_as_of ?? null,
             reading: event.reading,
             weighing: event.weighing ?? null,
-            people_read: event.people_read ?? [],
             streaming: false,
           });
           if (finalThreadId) {

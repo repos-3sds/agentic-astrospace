@@ -146,24 +146,6 @@ export class MuhurtaGoalComponent {
   readonly effectivePartnerId = computed(() =>
     this.partnerId() ?? this.partnerOptions().find((k) => /spouse|wife|husband|partner|fianc/i.test(k.relation))?.id ?? null);
 
-  /**
-   * Others doing this together: a family moving house, brothers with
-   * ceremonies on one day, friends opening a shop. Each window is then checked
-   * against every one of them and says who it suits. Five people at most,
-   * the most profiles a Plus account holds.
-   */
-  readonly withIds = signal<string[]>([]);
-  readonly groupOptions = computed(() => {
-    const taken = new Set([this.effectivePersonId(), this.whose() === 'couple' ? this.effectivePartnerId() : null]);
-    return this.profiles().filter((k) => !taken.has(k.id));
-  });
-  private readonly chosenWith = computed(() => {
-    const allowed = new Set(this.groupOptions().map((k) => k.id));
-    return this.withIds().filter((id) => allowed.has(id));
-  });
-  protected readonly withFull = computed(() =>
-    this.chosenWith().length + (this.whose() === 'couple' && this.effectivePartnerId() ? 1 : 0) >= MAX_WITH);
-
   /** Days ahead this plan may search (testers: 14), or null for no cap. */
   protected readonly horizon = computed(() => this.gate.limit('muhurta.days_ahead'));
   /** The last date a search may reach, as YYYY-MM-DD, or null. */
@@ -239,7 +221,6 @@ export class MuhurtaGoalComponent {
         date_to: dates.to,
         person: whose !== 'self' ? this.effectivePersonId() : null,
         partner: whose === 'couple' ? this.effectivePartnerId() : null,
-        with: this.chosenWith().length ? this.chosenWith().join(',') : null,
         ceremony: this.selectedGoal() === 'marriage_related' && this.ceremony() ? this.ceremony() : null,
         direction: this.selectedGoal() === 'start_journey' && this.direction() ? this.direction() : null,
         avoid: this.avoidDays().length ? this.avoidDays().join(',') : null,
@@ -270,18 +251,6 @@ export class MuhurtaGoalComponent {
     this.personId.set(null);
     this.partnerId.set(null);
     if (goal !== 'general') this.customIntent.set('');
-  }
-
-  protected toggleWith(id: string): void {
-    this.withIds.update((ids) => (ids.includes(id) ? ids.filter((i) => i !== id) : [...ids, id]));
-  }
-
-  protected isWith(id: string): boolean {
-    return this.chosenWith().includes(id);
-  }
-
-  protected firstName(name: string): string {
-    return name.split(' ')[0] || name;
   }
 
   protected toggleAvoid(day: string): void {
@@ -317,9 +286,6 @@ export class MuhurtaGoalComponent {
     return { from: localIsoDate(today), to: localIsoDate(addDays(today, days ? days - 1 : 30)) };
   }
 }
-
-/** Others besides the main person; five people in all (server: muhurta.MAX_GROUP_OTHERS). */
-const MAX_WITH = 4;
 
 function addDays(date: Date, days: number): Date {
   const next = new Date(date);
