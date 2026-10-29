@@ -31,6 +31,17 @@ can open a pull request, and the Mac would run its code. If the Mac is away
 for days, delete the variable and builds go back to GitHub's machines, which
 use the free $12 first and then stop at the $0 budget.
 
+## When the Mac is away
+
+A fix can still be written and merged from a cloud thread; only the builds
+need a machine. Delete `BUILD_RUNNER` (from a phone: the repository's
+Settings › Secrets and variables › Actions › Variables) and new runs go to
+GitHub's machines, paid from the free $12 a month: a server fix is about
+$0.20 (CI plus the deploy), an iOS build about $0.60. Runs already queued for
+the Mac keep waiting for it (GitHub drops a queued job after 24 hours), so
+cancel those and re-run them once the variable is gone. Put it back when the
+Mac returns.
+
 ## What the workflows do differently on the Mac
 
 - Postgres for the migration check is a plain `docker run` on port 55432
