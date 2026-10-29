@@ -78,8 +78,8 @@ class TestSuryaYogas:
         assert not one(result, "ubhayachari_yoga")["active"]
 
     def test_ubhayachari_subsumes_vesi_and_vosi(self):
-        # Sun Aries; Mars Taurus (2nd), Saturn Pisces (12th).
-        result = yoga_summary(chart(10, 130, 40, 160, 250, 190, 340, 100, 280), 0.0)
+        # Sun Aries; Jupiter Taurus (2nd), Venus Pisces (12th).
+        result = yoga_summary(chart(10, 130, 220, 160, 40, 340, 250, 100, 280), 0.0)
         ubhaya = one(result, "ubhayachari_yoga")
         assert ubhaya["active"] and ubhaya["strength"] == "strong"
         vesi = one(result, "vesi_yoga")
@@ -87,6 +87,16 @@ class TestSuryaYogas:
         assert vesi["active"] and vosi["active"]
         assert "Subsumed by Ubhayachari" in notes_text(vesi)
         assert "Subsumed by Ubhayachari" in notes_text(vosi)
+
+    def test_mars_and_saturn_form_the_hard_form_not_the_good_one(self):
+        # Phaladeepika VI.8-10: malefics beside the Sun give Asubha Vesi/Vosi/Ubhayachari.
+        # Sun Aries; Mars Taurus (2nd), Saturn Pisces (12th).
+        result = yoga_summary(chart(10, 130, 40, 160, 250, 190, 340, 100, 280), 0.0)
+        assert not one(result, "ubhayachari_yoga")["active"]
+        assert not one(result, "vesi_yoga")["active"]
+        hard = one(result, "asubha_ubhayachari_yoga")
+        assert hard["active"] and "caution" in hard["category"].lower()
+        assert one(result, "asubha_vesi_yoga")["active"] and one(result, "asubha_vosi_yoga")["active"]
 
     def test_surya_yogas_negative(self):
         # Sun Aries; Taurus holds only Moon, Pisces only Rahu — both excluded.

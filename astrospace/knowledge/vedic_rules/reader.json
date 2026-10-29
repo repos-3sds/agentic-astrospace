@@ -1,0 +1,640 @@
+{
+  "_status": "source of truth: reader text for every computed yoga and dosha (What it is, Why, Impact, Do, Avoid). Checked against Phaladeepika VI-VII, BPHS ch.37-41, Brihat Jataka XII-XIII, Saravali; discovery https://claude.ai/artifact/FPu6PHLn8vaHhSkHRUDYbh. Sources stay off screen.",
+  "rules": {
+    "gaja_kesari_yoga": {
+      "what": "Jupiter, the planet of wisdom, stands in a strong place from your Moon, the planet of the mind.",
+      "formed_when": "Jupiter in the 1st, 4th, 7th or 10th place counted from your Moon.",
+      "impact": "Often read as a steady mind, good sense, and respect from people around you. It is one support, not a promise of fame. It shows most in Jupiter's periods.",
+      "do": [
+        "Share what you know: teach, guide, advise.",
+        "Keep your promises. Your word is your strength.",
+        "Thursday prayer to Guru or Dakshinamurthy, if it suits you."
+      ],
+      "avoid": [
+        "Letting praise make you careless.",
+        "Giving advice nobody asked for."
+      ],
+      "how_common": "About 1 in 3 charts."
+    },
+    "chandra_mangal_yoga": {
+      "what": "Your Moon (the mind) and Mars (energy and drive) are joined.",
+      "formed_when": "Moon and Mars in the same sign, or facing each other seven signs apart.",
+      "impact": "Often read as a strong drive to earn and quick, strong feelings. Good for business and hard work. Feelings can run hot.",
+      "do": [
+        "Put your energy into work with clear results, like sales or your own business.",
+        "Take a short walk before you reply when angry.",
+        "Tuesday prayer to Hanuman, if it suits you."
+      ],
+      "avoid": [
+        "Money decisions when you are upset.",
+        "Arguments over small things at home."
+      ],
+      "how_common": "About 1 in 5 charts."
+    },
+    "budhaditya_yoga": {
+      "what": "The Sun (self and authority) and Mercury (thinking and speech) sit together.",
+      "formed_when": "Sun and Mercury in the same sign.",
+      "impact": "Often read as a sharp mind and clear speech, useful in studies, office work and dealing with seniors. It is very common, so it adds colour rather than deciding things.",
+      "do": [
+        "Use writing and speaking in your work.",
+        "Prepare well before exams and interviews.",
+        "Wednesday prayer to Vishnu, if it suits you."
+      ],
+      "avoid": [
+        "Talking over others to prove a point.",
+        "Pride about always being right."
+      ],
+      "how_common": "About 1 in 2 charts."
+    },
+    "kemadruma_yoga": {
+      "what": "Your Moon, the planet of the mind, has no planet beside it or around it. Old texts read this as a mind that has to stand on its own.",
+      "formed_when": "No planet in the sign before or after the Moon, none with it, none in the 4th, 7th or 10th from it, and none in a pillar house (1st, 4th, 7th, 10th) from your rising sign.",
+      "impact": "You may feel you carry worries alone, or that help comes late. It is a flag, not a verdict, and it does not mean poverty or bad luck. Most charts that start with it are cancelled by the rules above.",
+      "do": [
+        "Keep one or two people you talk to every week.",
+        "Fix a daily time for sleep and meals.",
+        "Monday prayer to Shiva or Parvati, if it suits you."
+      ],
+      "avoid": [
+        "Shutting yourself away when things are hard.",
+        "Big decisions after a sleepless night."
+      ],
+      "how_common": "About 1 in 100 charts, after cancellations."
+    },
+    "neecha_bhanga_raja_yoga": {
+      "what": "One of your planets is in its weakest sign, and something else in your chart repairs that weakness.",
+      "formed_when": "A planet in its weakest sign, plus at least one classical repair: the lord of that sign, the planet strong in that sign, or the lord of the planet's best sign in a pillar house (1st, 4th, 7th, 10th) from your rising sign or Moon; those two lords in pillar places from each other; the sign's lord looking at the planet; or the planet itself in a pillar house.",
+      "impact": "The usual reading is a slow or hard start in that planet's area of life, then real strength later. Effort counts more than luck here. Two or more repairs make it stronger.",
+      "do": [
+        "Be patient with early setbacks in this area.",
+        "Keep learning. The repair often comes through skill.",
+        "A weekly prayer on that planet's day, if it suits you."
+      ],
+      "avoid": [
+        "Judging yourself by early results.",
+        "Giving up after the first try."
+      ],
+      "how_common": "About 4 in 10 charts."
+    },
+    "raja_yoga": {
+      "what": "Planets that rule your chart's strongest houses are linked: one rules a pillar house, the other a luck house.",
+      "formed_when": "The lord of a pillar house (1st, 4th, 7th, 10th) and the lord of a luck house (1st, 5th, 9th) sit together, look at each other, or sit in each other's signs.",
+      "impact": "Read as support for position, respect and progress at work. It shows most when these planets run their periods. Most charts have at least one, so it is a support, not a promise of power.",
+      "do": [
+        "Take responsibility when it is offered.",
+        "Grow your career with steady effort.",
+        "Respect elders and teachers."
+      ],
+      "avoid": [
+        "Expecting results without work.",
+        "Pride after success."
+      ],
+      "how_common": "Most charts have at least one (about 9 in 10)."
+    },
+    "dhana_yoga": {
+      "what": "Planets that rule your money houses are linked.",
+      "formed_when": "The lords of the 2nd, 5th, 9th or 11th houses sit together, look at each other, or sit in each other's signs.",
+      "impact": "Read as support for earning and saving. It shows most in the periods of these planets. It is common, so it is a support, not a forecast of riches.",
+      "do": [
+        "Save a fixed part of every income.",
+        "Learn the basics of money: budgets, EMIs, savings.",
+        "Give to charity within your means."
+      ],
+      "avoid": [
+        "Quick-money schemes.",
+        "Lending large amounts without papers."
+      ],
+      "how_common": "About 2 in 3 charts."
+    },
+    "ruchaka_yoga": {
+      "what": "Mars is very strong in your chart: in its own or best sign, in a pillar place.",
+      "formed_when": "Mars in Aries, Scorpio or Capricorn, in the 1st, 4th, 7th or 10th place from your rising sign or your Moon.",
+      "impact": "One of the five great-person yogas. Read as courage, physical energy, and the ability to lead and protect. Good for police, defence, sport, engineering and property.",
+      "do": [
+        "Regular exercise or sport.",
+        "Take on tasks that need courage.",
+        "Tuesday prayer to Hanuman, if it suits you."
+      ],
+      "avoid": [
+        "Harsh words and quick anger.",
+        "Fights you don't need."
+      ],
+      "how_common": "About 1 in 8 charts."
+    },
+    "bhadra_yoga": {
+      "what": "Mercury is very strong in your chart: in its own or best sign, in a pillar place.",
+      "formed_when": "Mercury in Gemini or Virgo, in the 1st, 4th, 7th or 10th place from your rising sign or your Moon.",
+      "impact": "One of the five great-person yogas. Read as a sharp mind, good speech, and skill with numbers, trade and writing.",
+      "do": [
+        "Build skills in writing, accounts, teaching or trade.",
+        "Keep learning new things.",
+        "Wednesday prayer to Vishnu, if it suits you."
+      ],
+      "avoid": [
+        "Clever talk without action.",
+        "Overthinking small decisions."
+      ],
+      "how_common": "About 1 in 10 charts."
+    },
+    "hamsa_yoga": {
+      "what": "Jupiter is very strong in your chart: in its own or best sign, in a pillar place.",
+      "formed_when": "Jupiter in Sagittarius, Pisces or Cancer, in the 1st, 4th, 7th or 10th place from your rising sign or your Moon.",
+      "impact": "One of the five great-person yogas. Read as wisdom, good values, respect from others, and a pull towards learning and dharma.",
+      "do": [
+        "Teach or guide others.",
+        "Keep to your values in money matters.",
+        "Thursday prayer to Guru, if it suits you."
+      ],
+      "avoid": [
+        "Preaching to others.",
+        "Too much rich food and comfort."
+      ],
+      "how_common": "About 1 in 6 charts."
+    },
+    "malavya_yoga": {
+      "what": "Venus is very strong in your chart: in its own or best sign, in a pillar place.",
+      "formed_when": "Venus in Taurus, Libra or Pisces, in the 1st, 4th, 7th or 10th place from your rising sign or your Moon.",
+      "impact": "One of the five great-person yogas. Read as comfort, good taste, art, a happy family life and good vehicles.",
+      "do": [
+        "Make time for music, art or design.",
+        "Keep your home neat and welcoming.",
+        "Friday prayer to Lakshmi, if it suits you."
+      ],
+      "avoid": [
+        "Overspending on luxuries.",
+        "Putting comfort before duty."
+      ],
+      "how_common": "About 1 in 6 charts."
+    },
+    "sasa_yoga": {
+      "what": "Saturn is very strong in your chart: in its own or best sign, in a pillar place.",
+      "formed_when": "Saturn in Capricorn, Aquarius or Libra, in the 1st, 4th, 7th or 10th place from your rising sign or your Moon.",
+      "impact": "One of the five great-person yogas. Read as discipline, patience, and authority that grows with age. Often leads people or works with large groups.",
+      "do": [
+        "Keep steady routines.",
+        "Treat workers and helpers fairly.",
+        "Saturday prayer to Shani or Hanuman, if it suits you."
+      ],
+      "avoid": [
+        "Being too strict with others.",
+        "Cutting corners when rules feel slow."
+      ],
+      "how_common": "About 1 in 7 charts."
+    },
+    "viparita_raja_yoga": {
+      "what": "A planet that rules a hard house sits in another hard house. One difficulty cancels another.",
+      "formed_when": "The lord of the 6th, 8th or 12th house sits in the 6th, 8th or 12th house.",
+      "impact": "Read as gains that come after a problem, often unexpectedly. People with it tend to recover well from setbacks.",
+      "do": [
+        "Stay calm in a crisis. Your best work comes then.",
+        "Keep some money aside for surprises."
+      ],
+      "avoid": [
+        "Panicking when things go wrong.",
+        "Creating problems just to solve them."
+      ],
+      "how_common": "About 1 in 2 charts."
+    },
+    "sunapha_yoga": {
+      "what": "A planet sits in the sign just after your Moon, so your mind has support.",
+      "formed_when": "Mars, Mercury, Jupiter, Venus or Saturn in the 2nd sign from the Moon.",
+      "impact": "Read as self-earned money, good sense and a good name. The planet that forms it gives the flavour: Mars bold, Mercury clever, Jupiter learned, Venus refined, Saturn hard-working.",
+      "do": [
+        "Build your own income step by step.",
+        "Use the strengths of the planet that forms it."
+      ],
+      "avoid": [
+        "Depending only on others for money.",
+        "Showing off."
+      ],
+      "how_common": "About 1 in 3 charts."
+    },
+    "anapha_yoga": {
+      "what": "A planet sits in the sign just before your Moon, so your mind has support.",
+      "formed_when": "Mars, Mercury, Jupiter, Venus or Saturn in the 12th sign from the Moon.",
+      "impact": "Read as good health, good manners, contentment and a good name.",
+      "do": [
+        "Keep a simple, clean daily routine.",
+        "Dress and speak well. It helps you."
+      ],
+      "avoid": [
+        "Pride in looks.",
+        "Living beyond your means."
+      ],
+      "how_common": "About 1 in 3 charts."
+    },
+    "durudhara_yoga": {
+      "what": "Planets sit on both sides of your Moon, so your mind has support from both sides.",
+      "formed_when": "Mars, Mercury, Jupiter, Venus or Saturn in both the sign before and the sign after the Moon.",
+      "impact": "Read as comfort, money, generosity and good people around you.",
+      "do": [
+        "Share with others. Charity suits you.",
+        "Keep good company."
+      ],
+      "avoid": [
+        "Spending only on pleasure.",
+        "Taking helpers for granted."
+      ],
+      "how_common": "About 1 in 10 charts."
+    },
+    "vesi_yoga": {
+      "what": "A good planet (Mercury, Jupiter or Venus) sits in the sign just after your Sun.",
+      "formed_when": "Mercury, Jupiter or Venus in the 2nd sign from the Sun.",
+      "impact": "Read as a balanced nature, truthful speech and steady work, with support in public life.",
+      "do": [
+        "Speak honestly at work.",
+        "Build your good name slowly.",
+        "Sunday prayer to Surya, if it suits you."
+      ],
+      "avoid": [
+        "Laziness once things go well.",
+        "Promising more than you can do."
+      ],
+      "how_common": "About 1 in 2 charts."
+    },
+    "vosi_yoga": {
+      "what": "A good planet (Mercury, Jupiter or Venus) sits in the sign just before your Sun.",
+      "formed_when": "Mercury, Jupiter or Venus in the 12th sign from the Sun.",
+      "impact": "Read as skill, learning and a good memory, with support that works quietly behind the scenes.",
+      "do": [
+        "Keep learning new skills.",
+        "Help others without fuss."
+      ],
+      "avoid": [
+        "Hiding your work so others take the credit.",
+        "Doubting yourself."
+      ],
+      "how_common": "About 1 in 2 charts."
+    },
+    "ubhayachari_yoga": {
+      "what": "Good planets (Mercury, Jupiter or Venus) sit on both sides of your Sun.",
+      "formed_when": "Mercury, Jupiter or Venus in both the sign before and the sign after the Sun.",
+      "impact": "Read as a balanced life, good speech, and respect from people in authority.",
+      "do": [
+        "Take on roles that need trust.",
+        "Keep your promises."
+      ],
+      "avoid": [
+        "Taking support for granted."
+      ],
+      "how_common": "About 1 in 5 charts."
+    },
+    "asubha_vesi_yoga": {
+      "what": "Mars or Saturn sits in the sign just after your Sun. The old books call this the hard form of Vesi.",
+      "formed_when": "Mars or Saturn in the 2nd sign from the Sun.",
+      "impact": "Read as effort before reward and a blunt way of speaking. Respect comes, but slowly. It is not a bad-luck sign.",
+      "do": [
+        "Choose your words carefully at work.",
+        "Finish what you start, even if slowly."
+      ],
+      "avoid": [
+        "Harsh words about others.",
+        "Shortcuts at work."
+      ],
+      "how_common": "About 1 in 5 charts."
+    },
+    "asubha_vosi_yoga": {
+      "what": "Mars or Saturn sits in the sign just before your Sun. The old books call this the hard form of Vosi.",
+      "formed_when": "Mars or Saturn in the 12th sign from the Sun.",
+      "impact": "Read as effort before reward. Respect comes late and is earned. It is not a bad-luck sign.",
+      "do": [
+        "Finish what you start, even if slowly.",
+        "Keep your records and papers clean."
+      ],
+      "avoid": [
+        "Shortcuts at work.",
+        "Comparing your pace with others."
+      ],
+      "how_common": "About 1 in 5 charts."
+    },
+    "asubha_ubhayachari_yoga": {
+      "what": "Mars or Saturn sit on both sides of your Sun. The old books call this the hard form of Ubhayachari.",
+      "formed_when": "Mars or Saturn in both the sign before and the sign after the Sun.",
+      "impact": "Read as a life with more effort and more pressure from outside. Patience and good habits balance it. It is a flag, not a verdict.",
+      "do": [
+        "Keep a calm daily routine.",
+        "Stay with honest work and honest people.",
+        "Saturday prayer to Hanuman, if it suits you."
+      ],
+      "avoid": [
+        "Holding grudges.",
+        "Taking on other people's fights."
+      ],
+      "how_common": "About 1 in 50 charts."
+    },
+    "adhi_yoga": {
+      "what": "Good planets (Mercury, Jupiter or Venus) sit in the 6th, 7th and 8th places from your Moon.",
+      "formed_when": "Mercury, Jupiter or Venus in at least two of the 6th, 7th and 8th signs from the Moon.",
+      "impact": "Read as leadership, a trusted position, good health and good people around you.",
+      "do": [
+        "Take up roles where you lead or manage.",
+        "Keep good, honest friends."
+      ],
+      "avoid": [
+        "Pride in your position."
+      ],
+      "how_common": "About 1 in 7 charts."
+    },
+    "amala_yoga": {
+      "what": "A good planet (Mercury, Jupiter or Venus) sits in your career place, the 10th from your rising sign or your Moon.",
+      "formed_when": "Mercury, Jupiter or Venus in the 10th sign from your rising sign or from your Moon.",
+      "impact": "Read as a clean name, good conduct and respect at work.",
+      "do": [
+        "Keep your work honest and on time.",
+        "Help people at work when you can."
+      ],
+      "avoid": [
+        "Gossip at work.",
+        "Shortcuts that could harm your name."
+      ],
+      "how_common": "About 4 in 10 charts."
+    },
+    "saraswati_yoga": {
+      "what": "Jupiter, Venus and Mercury, the three planets of learning, all sit in good houses, and Jupiter is comfortable.",
+      "formed_when": "Jupiter, Venus and Mercury each in the 1st, 2nd, 4th, 5th, 7th, 9th or 10th house, with Jupiter in its own, best or a friendly sign.",
+      "impact": "Read as a love of learning and skill in speech, writing, music or the arts.",
+      "do": [
+        "Study every day, even a little.",
+        "Write, teach, sing or speak.",
+        "Prayer to Saraswati, if it suits you."
+      ],
+      "avoid": [
+        "Leaving studies half-way.",
+        "Pride in what you know."
+      ],
+      "how_common": "About 1 in 10 charts."
+    },
+    "shubha_kartari_yoga": {
+      "what": "Your rising sign or your Moon has good planets on both sides and no hard ones.",
+      "formed_when": "Mercury, Jupiter or Venus in both the sign before and the sign after your rising sign (or Moon), with no Sun, Mars, Saturn, Rahu or Ketu there.",
+      "impact": "Read as protection: good health, few enemies, and a sense that things work out.",
+      "do": [
+        "Use the calm years to build.",
+        "Be grateful and help others."
+      ],
+      "avoid": [
+        "Carelessness because things feel safe."
+      ],
+      "how_common": "About 1 in 50 charts."
+    },
+    "papa_kartari_yoga": {
+      "what": "Your rising sign or your Moon has hard planets (Sun, Mars, Saturn, Rahu or Ketu) on both sides, with no good planet between.",
+      "formed_when": "Hard planets in both the sign before and the sign after your rising sign (or Moon), and no Mercury, Jupiter or Venus there.",
+      "impact": "Read as feeling pressed from both sides at times. It is a flag, not a verdict: good planets elsewhere and good periods balance it.",
+      "do": [
+        "Keep a daily routine that steadies you.",
+        "Ask for help early when pressure builds.",
+        "Prayer to Durga or Hanuman, if it suits you."
+      ],
+      "avoid": [
+        "Taking on too much at once.",
+        "Keeping stress to yourself."
+      ],
+      "how_common": "About 1 in 12 charts."
+    },
+    "shakata_yoga": {
+      "what": "Your Moon sits 6th, 8th or 12th from Jupiter. The old name means cart wheel: luck goes up and down.",
+      "formed_when": "Moon in the 6th, 8th or 12th sign counted from Jupiter. Cancelled when the Moon sits in a pillar house (1st, 4th, 7th, 10th) from your rising sign.",
+      "impact": "Read as ups and downs in luck and money, and rebuilding after a dip. It is a flag, not a verdict.",
+      "do": [
+        "Save in good months for slow ones.",
+        "Keep steady work even when luck is high.",
+        "Thursday prayer to Guru, if it suits you."
+      ],
+      "avoid": [
+        "Big risks after a lucky run.",
+        "Losing heart after a dip."
+      ],
+      "how_common": "About 1 in 6 charts."
+    },
+    "guru_chandala_yoga": {
+      "what": "Jupiter (wisdom and teachers) sits with Rahu or Ketu (the two shadow points).",
+      "formed_when": "Jupiter in the same sign as Rahu (main form) or Ketu (milder form).",
+      "impact": "Read as an unusual view of tradition and teachers: questioning old rules, or learning from unusual sources. Advice from guides can be mixed.",
+      "do": [
+        "Check advice before acting on it.",
+        "Respect teachers even when you disagree.",
+        "Thursday prayer to Guru, if it suits you."
+      ],
+      "avoid": [
+        "Blindly following any guru.",
+        "Rejecting tradition without reading it."
+      ],
+      "how_common": "About 1 in 6 charts."
+    },
+    "kalasarpa_flag": {
+      "what": "All seven planets sit on one side of Rahu and Ketu.",
+      "formed_when": "Every planet from the Sun to Saturn falls between Rahu and Ketu on one side of the chart. A planet in the same sign as Rahu or Ketu breaks it.",
+      "impact": "This is a modern idea. It is not in the main old books such as BPHS or Phaladeepika. Some read it as effort and delay before results. Treat it lightly.",
+      "do": [
+        "Be steady and patient with long goals.",
+        "Prayer to Shiva or Naga devata, if it suits you."
+      ],
+      "avoid": [
+        "Paying anyone to remove it.",
+        "Fear from what others say about it."
+      ],
+      "how_common": "About 3 in 100 charts."
+    },
+    "rajju_yoga": {
+      "what": "All seven planets sit in moving signs.",
+      "formed_when": "Sun, Moon, Mars, Mercury, Jupiter, Venus and Saturn all in Aries, Cancer, Libra, Capricorn.",
+      "impact": "Read as a love of travel and change, and work that keeps you moving.",
+      "do": [
+        "Choose work with travel or variety."
+      ],
+      "avoid": [
+        "Changing jobs often without a plan."
+      ],
+      "how_common": "Very rare (under 1 in 100 charts)."
+    },
+    "musala_yoga": {
+      "what": "All seven planets sit in fixed signs.",
+      "formed_when": "Sun, Moon, Mars, Mercury, Jupiter, Venus and Saturn all in Taurus, Leo, Scorpio, Aquarius.",
+      "impact": "Read as a firm will, steady work, and pride in what you build.",
+      "do": [
+        "Commit to long projects."
+      ],
+      "avoid": [
+        "Stubbornness."
+      ],
+      "how_common": "Very rare (under 1 in 100 charts)."
+    },
+    "nala_yoga": {
+      "what": "All seven planets sit in dual signs.",
+      "formed_when": "Sun, Moon, Mars, Mercury, Jupiter, Venus and Saturn all in Gemini, Virgo, Sagittarius, Pisces.",
+      "impact": "Read as adaptable and skilful in many things.",
+      "do": [
+        "Use your many skills, but finish one thing at a time."
+      ],
+      "avoid": [
+        "Spreading yourself too thin."
+      ],
+      "how_common": "Very rare (under 1 in 100 charts)."
+    },
+    "mala_yoga": {
+      "what": "Mercury, Venus and Jupiter, the three good planets, each sit in a pillar house of your chart.",
+      "formed_when": "Mercury, Venus and Jupiter each in the 1st, 4th, 7th or 10th house.",
+      "impact": "Read as comfort, good things and a pleasant life.",
+      "do": [
+        "Share your comforts with others."
+      ],
+      "avoid": [
+        "Laziness."
+      ],
+      "how_common": "About 3 in 100 charts."
+    },
+    "sarpa_yoga": {
+      "what": "The Sun, Mars and Saturn each sit in a pillar house of your chart. The old books list this as a caution.",
+      "formed_when": "Sun, Mars and Saturn each in the 1st, 4th, 7th or 10th house.",
+      "impact": "Read as a life that needs more effort and firmness. It is a flag, not a verdict.",
+      "do": [
+        "Keep firm but kind habits.",
+        "Prayer to Hanuman, if it suits you."
+      ],
+      "avoid": [
+        "Harshness with others.",
+        "Heavy risks."
+      ],
+      "how_common": "About 4 in 100 charts."
+    },
+    "gola_yoga": {
+      "what": "Your seven planets are spread across one sign.",
+      "formed_when": "Sun, Moon, Mars, Mercury, Jupiter, Venus and Saturn spread across exactly one sign.",
+      "impact": "All planets in one sign: life tends to focus very strongly on one area. The old books read it as harder for money; good habits balance it.",
+      "do": [
+        "Widen your interests and friendships."
+      ],
+      "avoid": [
+        "Putting all your money in one place."
+      ],
+      "how_common": "Very rare (under 1 in 100 charts)."
+    },
+    "yuga_yoga": {
+      "what": "Your seven planets are spread across two signs.",
+      "formed_when": "Sun, Moon, Mars, Mercury, Jupiter, Venus and Saturn spread across exactly two signs.",
+      "impact": "Read as a narrow focus. Money and beliefs may need care.",
+      "do": [
+        "Build savings slowly."
+      ],
+      "avoid": [
+        "Extreme views."
+      ],
+      "how_common": "Very rare (under 1 in 100 charts)."
+    },
+    "shoola_yoga": {
+      "what": "Your seven planets are spread across three signs.",
+      "formed_when": "Sun, Moon, Mars, Mercury, Jupiter, Venus and Saturn spread across exactly three signs.",
+      "impact": "Read as sharp and quick to anger, with money needing care.",
+      "do": [
+        "Put your energy into work and sport."
+      ],
+      "avoid": [
+        "Quick anger."
+      ],
+      "how_common": "About 1 in 20 charts."
+    },
+    "kedara_yoga": {
+      "what": "Your seven planets are spread across four signs.",
+      "formed_when": "Sun, Moon, Mars, Mercury, Jupiter, Venus and Saturn spread across exactly four signs.",
+      "impact": "Named after a farmer: read as useful, hard-working, and gaining through land or steady work.",
+      "do": [
+        "Steady work, and long-term savings."
+      ],
+      "avoid": [
+        "Restlessness."
+      ],
+      "how_common": "About 1 in 4 charts."
+    },
+    "pasa_yoga": {
+      "what": "Your seven planets are spread across five signs.",
+      "formed_when": "Sun, Moon, Mars, Mercury, Jupiter, Venus and Saturn spread across exactly five signs.",
+      "impact": "Pasa means rope: read as a busy life with many ties, skill in work and many people around you.",
+      "do": [
+        "Keep your commitments manageable."
+      ],
+      "avoid": [
+        "Getting tied up in other people's disputes."
+      ],
+      "how_common": "About 4 in 10 charts."
+    },
+    "dama_yoga": {
+      "what": "Your seven planets are spread across six signs.",
+      "formed_when": "Sun, Moon, Mars, Mercury, Jupiter, Venus and Saturn spread across exactly six signs.",
+      "impact": "Dama means garland: read as generous, helpful and respected.",
+      "do": [
+        "Help others. It suits you."
+      ],
+      "avoid": [
+        "Giving beyond your means."
+      ],
+      "how_common": "About 1 in 5 charts."
+    },
+    "veena_yoga": {
+      "what": "Your seven planets are spread across seven signs.",
+      "formed_when": "Sun, Moon, Mars, Mercury, Jupiter, Venus and Saturn spread across exactly seven signs.",
+      "impact": "Like the seven strings of a veena: read as a love of music and art, many friends and good fortune.",
+      "do": [
+        "Make time for music or art."
+      ],
+      "avoid": [
+        "Too many hobbies at once."
+      ],
+      "how_common": "About 3 in 100 charts."
+    },
+    "sankhya_yoga": {
+      "what": "How many signs your seven planets spread across.",
+      "formed_when": "Counted from the Sun, Moon, Mars, Mercury, Jupiter, Venus and Saturn.",
+      "impact": "A background pattern with a light effect.",
+      "do": [],
+      "avoid": [],
+      "how_common": "Every chart has one of these."
+    },
+    "manglik_dosha": {
+      "what": "A marriage-matching check on where Mars (energy and drive) sits. Families check it before matching horoscopes.",
+      "formed_when": "Mars in the 1st, 2nd, 4th, 7th, 8th or 12th place counted from your rising sign, your Moon or Venus. Regions differ on which points and houses count.",
+      "impact": "Read as strong energy in married life: you and your partner may both need space and patience. It is a flag, not a verdict. Most charts have it from at least one point, and many cancellations apply. It does not stop or spoil a marriage on its own.",
+      "do": [
+        "Match with care, looking at the whole chart, not this one flag.",
+        "Talk openly with your partner about anger and space.",
+        "Tuesday prayer to Hanuman or Subrahmanya, if it suits you."
+      ],
+      "avoid": [
+        "Rejecting a match only because of this.",
+        "Paying anyone to remove it.",
+        "Taking fear from what relatives say."
+      ],
+      "how_common": "About 9 in 10 charts from at least one point; about half from the rising sign alone."
+    },
+    "gandanta_dosha": {
+      "what": "One of your key points (Moon, rising point or Sun) sits right where a water sign ends and a fire sign begins.",
+      "formed_when": "Within about 3 degrees of the Cancer to Leo, Scorpio to Sagittarius, or Pisces to Aries changeover.",
+      "impact": "Old texts read this as a knot where one thing ends and the next begins, so changes may come suddenly. It is a flag, not a verdict. Many people with it live ordinary, happy lives.",
+      "do": [
+        "Give big changes time, and settle in slowly.",
+        "Keep a short daily prayer or quiet time.",
+        "Prayer to Ganesha, if it suits you."
+      ],
+      "avoid": [
+        "Rushing big decisions during changes.",
+        "Worrying about the label itself."
+      ],
+      "how_common": "About 1 in 7 charts."
+    },
+    "grahan_dosha": {
+      "what": "Your Sun or Moon sits with Rahu or Ketu, the two eclipse points.",
+      "formed_when": "Sun or Moon in the same sign as Rahu or Ketu. Closer than 5 degrees counts as strong.",
+      "impact": "Read as times when confidence (Sun) or peace of mind (Moon) feels clouded. It is a flag, not a verdict.",
+      "do": [
+        "Keep a steady daily routine.",
+        "Talk through worries with someone you trust.",
+        "Sunday prayer to Surya, or Monday prayer to Shiva, if it suits you."
+      ],
+      "avoid": [
+        "Paying for costly rituals.",
+        "Letting worry about it decide your plans."
+      ],
+      "how_common": "About 3 in 10 charts."
+    }
+  }
+}

@@ -282,7 +282,8 @@ def chart_facts(chart, as_of=None) -> dict:
         "planets": {name: {"sign": row.get("sign"), "house": row.get("house"),
                            "dignity": (dignities.get(name) or {}).get("dignity")}
                     for name, row in planets.items()},
-        "yogas": [{"name": y["name"], "strength": y.get("strength"), "meaning": y.get("lay_explanation")}
+        "yogas": [{"name": y["name"], "strength": y.get("strength"),
+                   "meaning": (y.get("reader") or {}).get("what") or y.get("lay_explanation")}
                   for y in yogas if y.get("verified") and y.get("lay_explanation")][:8],
         "yoga_names": [y["name"] for y in yogas],
         "running": _running(chart, as_of),

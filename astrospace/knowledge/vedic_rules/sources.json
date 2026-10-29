@@ -18,6 +18,11 @@
       "url": "https://archive.org/details/saravaliofkalyanavarmasanthanamr.astrology_202003_28_Z",
       "notes": "Classical cross-check for yoga definitions and phala language."
     },
+    "brihat_jataka": {
+      "title": "Brihat Jataka",
+      "author": "Varahamihira",
+      "notes": "Classical cross-check (Suryanarain Rao translation) for Nabhasa and lunar yogas."
+    },
     "internal": {
       "title": "AstroSpace deterministic implementation",
       "notes": "Used for implementation status and test coverage; not a textual authority."

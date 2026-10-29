@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from .positions import house_from_lagna, sign_index, sign_name
+from .yoga_reading import attach_dosha_reading
 from ...knowledge.vedic_rules import enrich_rule_result
 
 MANGLIK_HOUSES = {1, 2, 4, 7, 8, 12}
@@ -297,8 +298,10 @@ def manglik_dosha(positions: dict, lagna_lon: float) -> dict:
 
 
 def dosha_summary(positions: dict, lagna_lon: float) -> dict:
-    return {
+    summary = {
         "manglik": manglik_dosha(positions, lagna_lon),
         "gandanta": gandanta_dosha(positions, lagna_lon),
         "grahan": grahan_dosha(positions),
     }
+    attach_dosha_reading(summary, positions, lagna_lon)
+    return summary
