@@ -85,10 +85,14 @@ after the PR that added `environment:` is merged:
 
 It creates the environment with a main-only branch rule, sets the Android
 secrets again from the Mac's own files (the same upload key), makes one new
-GitHub-only Apple Distribution certificate for the iOS ones, and only then
-deletes the repository-level copies. Without the `.p8`, pass `--android-only`
-first; the iOS secrets keep working from repository level until it is run in
-full. Until the script runs, the jobs read the repository secrets as before.
+GitHub-only Apple Distribution certificate for the iOS ones, revokes the old
+GitHub one (serial 71215B85…, made 2026-10-26; `REPLACE_SERIAL` overrides) once
+the new one is in GitHub, so the team's certificate count stays the same, and
+only then deletes the repository-level copies. Revoking it doesn't affect
+builds already on TestFlight. Without the `.p8`, pass `--android-only` first;
+the iOS secrets keep working from repository level until it is run in full.
+Android was moved this way on 2026-10-29. Until the script runs, the jobs read
+the repository secrets as before.
 
 A merge that adds a migration also stops the app jobs, not just the server:
 they need the plan to have succeeded, so a new build never reaches phones

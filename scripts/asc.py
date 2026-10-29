@@ -11,6 +11,7 @@ nothing to install:
     python3 scripts/asc.py profile --serial 1A2B... --out ci.mobileprovision
     python3 scripts/asc.py profile --bundle app.asksiddha.mobile.widgets --serial 1A2B... --out w.mobileprovision
     python3 scripts/asc.py create-cert --out-dir DIR   # one-time setup, Mac only
+    python3 scripts/asc.py revoke-cert --serial OLD --keep NEW   # retire a replaced CI cert
 
 The API key comes from $ASC_KEY_ID, $ASC_ISSUER_ID and either $ASC_KEY_FILE
 (path to the AuthKey_XXXX.p8) or $ASC_KEY_P8 (its contents). None of it is
@@ -232,6 +233,19 @@ def ensure_profile(token: str, serial: str, identifier: str = BUNDLE_ID) -> dict
     return _request("POST", "/profiles", token, body)["data"]
 
 
+def revoke_certificate(token: str, serial: str, keep: str) -> dict:
+    """Revoke the CI certificate a new one replaced, so a re-run of the setup
+    doesn't use up another of the few distribution certificates Apple allows.
+    Refuses to revoke the one being kept. Builds already on TestFlight are not
+    affected by a revoked certificate."""
+    if _norm_serial(serial) == _norm_serial(keep):
+        raise AscError("refusing to revoke the certificate being kept")
+    find_certificate(token, keep)  # the replacement must exist before the old one goes
+    cert = find_certificate(token, serial)
+    _request("DELETE", f"/certificates/{cert['id']}", token)
+    return cert
+
+
 def profile_prefix(identifier: str) -> str:
     """Profile names are unique on the team, so each App ID gets its own prefix."""
     return PROFILE_PREFIX if identifier == BUNDLE_ID else f"{PROFILE_PREFIX} {identifier.rsplit('.', 1)[-1].title()}"
@@ -281,6 +295,9 @@ def main(argv: list[str] | None = None) -> int:
                       help="the App ID the profile is for (default: the app)")
     cert = sub.add_parser("create-cert", help="one-time: new distribution certificate + p12")
     cert.add_argument("--out-dir", required=True, type=Path)
+    revoke = sub.add_parser("revoke-cert", help="revoke a CI certificate that a new one replaced")
+    revoke.add_argument("--serial", required=True, help="serial of the certificate to revoke")
+    revoke.add_argument("--keep", required=True, help="serial of its replacement, which must exist")
     args = parser.parse_args(argv)
 
     try:
@@ -301,6 +318,9 @@ def main(argv: list[str] | None = None) -> int:
             if not password:
                 raise AscError("set ASC_P12_PASSWORD for the new p12")
             print(f"serial={create_certificate(token, args.out_dir, password)}")
+        elif args.cmd == "revoke-cert":
+            revoke_certificate(token, args.serial, args.keep)
+            print(f"revoked {_norm_serial(args.serial)}")
     except AscError as exc:
         print(f"asc: {exc}", file=sys.stderr)
         return 1

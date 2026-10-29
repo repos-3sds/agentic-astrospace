@@ -9,8 +9,10 @@
 # - Android: set again from the Mac's own files (the same upload key; never
 #   a new one), as setup_github_ship.sh does.
 # - iOS: setup_ios_ship.sh makes one new Apple Distribution certificate for
-#   GitHub, which needs the App Store Connect .p8 key. Without the .p8, pass
-#   --android-only and the iOS secrets stay at repository level for now.
+#   GitHub, which needs the App Store Connect .p8 key, and then revokes the
+#   old GitHub one (REPLACE_SERIAL, made 2026-10-26) so the team's certificate
+#   count stays the same. Without the .p8, pass --android-only and the iOS
+#   secrets stay at repository level for now.
 # The repository-level copies are deleted only once the environment holds
 # its own. Prints no secret.
 set -euo pipefail
@@ -18,6 +20,8 @@ set -euo pipefail
 REPO=repos-3sds/agentic-astrospace
 ENV=production
 ANDROID=(ANDROID_UPLOAD_KEYSTORE_B64 ANDROID_KEYSTORE_PROPERTIES ANDROID_GOOGLE_SERVICES_JSON_B64)
+# The GitHub-only certificate setup_ios_ship.sh made on 2026-10-26.
+REPLACE_SERIAL=${REPLACE_SERIAL:-71215B8541AAA30F2B39143D2F7F0B6D}
 IOS=(ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8_B64 IOS_DIST_P12_B64 IOS_DIST_P12_PASSWORD)
 
 cd "$(git rev-parse --show-toplevel)"
@@ -39,7 +43,7 @@ MOVED=("${ANDROID[@]}")
 
 if [ "$ANDROID_ONLY" = false ]; then
   echo "== iOS secrets into '$ENV' (one new GitHub-only certificate)"
-  SECRETS_ENV=$ENV bash scripts/ci/setup_ios_ship.sh "$@"
+  SECRETS_ENV=$ENV REPLACE_SERIAL=$REPLACE_SERIAL bash scripts/ci/setup_ios_ship.sh "$@"
   MOVED+=("${IOS[@]}")
 fi
 
