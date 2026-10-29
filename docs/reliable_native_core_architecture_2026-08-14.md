@@ -336,8 +336,12 @@ considered astrologically complete, the backend must return:
 }
 ```
 
-For a pre-sunrise request, the backend selects the Vedic day that began at the
-previous sunrise. `valid_until` caps `expiresAt`; the fixed 36-hour policy
+"Today" is the reader's calendar date in their timezone, and the backend serves
+the Vedic day that begins at that date's sunrise, so the date turns at local
+midnight. (Until 2026-10-30 a pre-sunrise request got the Vedic day that began
+at the previous sunrise, which showed yesterday's date until dawn.) Before
+sunrise `valid_from` is still ahead, and Today says when the day's panchanga
+begins. `valid_until` caps `expiresAt`; the fixed 36-hour policy
 remains only a defensive upper bound. Engine and dataset versions are persisted
 as cache provenance, and a client release rejects present incompatible
 versions. Payload metadata alone cannot proactively invalidate an offline

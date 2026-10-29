@@ -14,7 +14,7 @@ presentable `daily_guidance` payload is assembled entirely from that bundle.
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime
+from datetime import datetime, time
 from typing import Sequence
 from zoneinfo import ZoneInfo
 
@@ -795,21 +795,27 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
     place_lat = chart.moment.lat if lat is None else lat
     place_lng = chart.moment.lng if lng is None else lng
 
-    # The Vedic day runs sunrise to next sunrise, not civil midnight to
-    # midnight. A request made before today's sunrise still belongs to the
-    # Vedic day that began at yesterday's sunrise — using as_of's own civil
-    # date here would silently serve tomorrow's-early-hours panchanga as if
-    # it were already in force. vedic_day_bounds is None only when sunrise
-    # is undefined at this latitude (circumpolar); daily_panchanga below
-    # raises its own ValueError for that case, so falling back to as_of's
-    # civil date here changes nothing for that already-handled failure mode.
-    vedic_bounds = vedic_day_bounds(_jd_from_dt(as_of), place_lat, place_lng)
+    # "Today" is the reader's calendar date, and its panchanga is the Vedic
+    # day that begins at that date's sunrise (sunrise to next sunrise), the
+    # way a printed panchangam or DrikPanchang lists it. This once followed
+    # the Vedic day *containing* as_of instead, so from midnight until
+    # sunrise Today still showed yesterday's date and reading (Hawk,
+    # Singapore, 05:30 Friday showed Thursday, 2026-10-30), and its Brahma
+    # Muhurta was the one already past. The notification worker writes the
+    # brief for the same day (local noon, notifications/daily_briefs.py).
+    # The local noon of the date in the place's clock always falls inside
+    # the Vedic day that began that morning. vedic_day_bounds is None only
+    # when sunrise is undefined at this latitude (circumpolar);
+    # daily_panchanga below raises its own ValueError for that case.
+    civil_date = as_of.date()
+    noon = datetime.combine(civil_date, time(12, 0), tzinfo=ZoneInfo(tz))
+    vedic_bounds = vedic_day_bounds(_jd_from_dt(noon), place_lat, place_lng)
     if vedic_bounds is not None:
         vedic_rise, vedic_next_rise = vedic_bounds
         vedic_date = jd_to_local(vedic_rise, tz).date()
     else:
         vedic_rise = vedic_next_rise = None
-        vedic_date = as_of.date()
+        vedic_date = civil_date
 
     day_payload = daily_panchanga(
         vedic_date.year, vedic_date.month, vedic_date.day,
@@ -843,8 +849,8 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
     verdict = _verdict(chart, relation or "", day_payload, personal, ctx)
     # jd_ut is a per-birth-instant float — a real per-person fingerprint, not
     # a display name two profiles might share ("My chart" is common). Seeded
-    # on the Vedic date so a pre-sunrise and a post-sunrise check of the same
-    # Vedic day get identical do/avoid phrasing, not a coin-flip on the hour.
+    # on the date so an early-morning and a late-evening check of the same
+    # day get identical do/avoid phrasing, not a coin-flip on the hour.
     seed_base = f"{chart.moment.jd_ut}-{vedic_date.isoformat()}"
     do_today, avoid_today = _do_and_avoid(personal, ctx, words, seed_base)
     if verdict["tone"] == "caution":
@@ -856,10 +862,11 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
         "system": "AstroSpace Daily Guidance",
         "engine_version": DAILY_GUIDANCE_ENGINE_VERSION,
         # Cache-validity contract (docs/reliable_native_core_architecture_
-        # 2026-08-14.md): the authoritative Vedic-day interval this response
-        # is valid for, sunrise to next sunrise. A client should treat this
-        # as the real expiry, falling back to its own defensive TTL only
-        # when sunrise is undefined here (circumpolar place).
+        # 2026-08-14.md): the Vedic day this response describes, sunrise to
+        # next sunrise. Before sunrise valid_from is still ahead: the day's
+        # panchanga has not begun yet, and Today says so. A client should
+        # treat valid_until as the real expiry, falling back to its own
+        # defensive TTL only when sunrise is undefined (circumpolar place).
         "valid_from": jd_to_local(vedic_rise, tz).isoformat() if vedic_rise else None,
         "valid_until": jd_to_local(vedic_next_rise, tz).isoformat() if vedic_next_rise else None,
         "day_definition": "sunrise_to_next_sunrise",

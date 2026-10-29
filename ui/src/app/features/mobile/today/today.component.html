@@ -108,6 +108,9 @@
         <button type="button" class="place-hint-close" aria-label="Dismiss" (click)="dismissPlaceHint()">×</button>
       </div>
     }
+    @if (sunriseNote(); as note) {
+      <p class="sunrise-note">{{ note }}</p>
+    }
 
     @if (preferences.experienceMode() === 'guided') {
       <div class="verdict verdict-guided">

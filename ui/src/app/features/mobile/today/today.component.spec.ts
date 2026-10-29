@@ -1,4 +1,4 @@
-import { BAND_LABEL, BAND_OF_TONE, dayScorePosition, muhurtaCountdown, widgetMasa } from './today.component';
+import { BAND_LABEL, BAND_OF_TONE, dayScorePosition, muhurtaCountdown, sunriseNote, widgetMasa } from './today.component';
 import { DAY_BANDS } from '../day-gauge/day-gauge.component';
 
 /**
@@ -71,5 +71,23 @@ describe('widgetMasa', () => {
     expect(widgetMasa({ amanta: 'Kartika', purnimanta: 'Margashirsha', adhika: false, paksha: 'Krishna', is_convention_dependent: true, observance_note: '' }))
       .toBe('Kartika (Amanta) · Krishna paksha');
     expect(widgetMasa(null)).toBe('');
+  });
+});
+
+describe('sunriseNote', () => {
+  // Friday 30 Oct 2026 in Singapore, timings from the Indian birth city.
+  const daily = {
+    date: '2026-10-30',
+    valid_from: '2026-10-30T06:12:00+05:30',
+    provenance: { place: { timezone: 'Asia/Kolkata' } },
+  } as any;
+
+  it('says when the day\'s panchang begins, on the place\'s clock', () => {
+    expect(sunriseNote(daily, Date.parse('2026-10-30T05:30:00+08:00'))).toBe('Today\'s panchang begins at sunrise, 6:12 am.');
+  });
+
+  it('goes once the sun is up', () => {
+    expect(sunriseNote(daily, Date.parse('2026-10-30T06:12:00+05:30'))).toBe('');
+    expect(sunriseNote({ ...daily, valid_from: null }, Date.parse('2026-10-30T03:00:00+05:30'))).toBe('');
   });
 });

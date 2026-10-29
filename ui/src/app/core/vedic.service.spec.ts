@@ -5,6 +5,10 @@ import { EntitlementService } from './entitlement.service';
 import { PreferencesService } from './preferences.service';
 import { VedicService } from './vedic.service';
 
+// A day ahead of any test clock: saved guidance for a day already past is
+// dropped (isPastDay), and these tests are about the cache identity.
+const DAY = '2099-08-11';
+
 describe('VedicService location-sensitive caches', () => {
   let api: jasmine.SpyObj<ApiService>;
   let prefs: PreferencesService;
@@ -14,7 +18,7 @@ describe('VedicService location-sensitive caches', () => {
     localStorage.clear();
     api = jasmine.createSpyObj<ApiService>('ApiService', ['get', 'put']);
     api.get.and.callFake(async (path: string) => {
-      if (path.includes('/daily?')) return { date: '2026-08-11' } as any;
+      if (path.includes('/daily?')) return { date: DAY } as any;
       return {
         start_date: '2026-08-11',
         end_date: '2026-09-24',
@@ -86,7 +90,7 @@ describe('VedicService location-sensitive caches', () => {
     expect(service.cachedDailyGuidanceEntry('profile-1')).toBeNull();
     const screen = service.dailyGuidance('profile-1');
     expect(api.get).toHaveBeenCalledTimes(1);
-    answer({ date: '2026-08-11' });
+    answer({ date: DAY });
     expect(await screen).toEqual(await warmup);
   });
 
@@ -104,7 +108,7 @@ describe('VedicService location-sensitive caches', () => {
   it('expires Today at the backend-provided next-sunrise boundary', async () => {
     const clock = spyOn(Date, 'now').and.returnValue(1_000);
     api.get.and.resolveTo({
-      date: '2026-08-14',
+      date: DAY,
       engine_version: 'daily-guidance-1.1',
       valid_from: new Date(900).toISOString(),
       valid_until: new Date(1_180).toISOString(),
@@ -117,6 +121,19 @@ describe('VedicService location-sensitive caches', () => {
 
     clock.and.returnValue(1_180);
     expect(service.cachedDailyGuidanceEntry('profile-1')).toBeNull();
+  });
+
+  it('does not serve a saved day the reader\'s calendar has already passed', async () => {
+    // Saved before the server turned the date at midnight: under today's key
+    // it held yesterday's reading until sunrise (Singapore, 2026-10-30).
+    api.get.and.resolveTo({ date: '2000-01-01' } as any);
+    await service.dailyGuidance('profile-1');
+    expect(service.cachedDailyGuidanceEntry('profile-1')).toBeNull();
+
+    api.get.and.resolveTo({ date: service.todayKey() } as any);
+    expect((await service.dailyGuidance('profile-1')).date).toBe(service.todayKey());
+    expect(api.get).toHaveBeenCalledTimes(2);
+    expect(service.cachedDailyGuidanceEntry('profile-1')).not.toBeNull();
   });
 
   it('isolates the same profile id when its owning account changes', async () => {

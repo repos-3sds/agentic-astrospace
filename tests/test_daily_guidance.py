@@ -1,6 +1,6 @@
 """CE-wired daily guidance: computed, rule-based, non-generic."""
 import re
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -56,9 +56,8 @@ class TestVerdict:
 class TestSunriseBoundedValidity:
     """docs/reliable_native_core_architecture_2026-08-14.md's cache-validity
     contract: the response must carry an authoritative Vedic-day interval
-    (sunrise to next sunrise), and a request made before today's sunrise
-    must still resolve to the Vedic day that began at yesterday's sunrise —
-    not silently serve the wrong day's panchanga."""
+    (sunrise to next sunrise), and a request made before sunrise is still
+    the reader's calendar date: the Vedic day that begins at its sunrise."""
 
     def test_carries_engine_version_and_validity_window(self, guidance):
         assert guidance["engine_version"] == "daily-guidance-1.1"
@@ -68,10 +67,11 @@ class TestSunriseBoundedValidity:
         as_of = datetime(2026, 7, 21, 10, 0, tzinfo=ZoneInfo("Asia/Kolkata"))
         assert valid_from <= as_of < valid_until
 
-    def test_pre_sunrise_request_resolves_to_the_previous_vedic_day(self):
+    def test_pre_sunrise_request_is_the_calendar_date(self):
+        # 3am on the 21st is the 21st: Today names the reader's own date and
+        # serves the Vedic day that begins at the 21st's sunrise. It once
+        # served the 20th until dawn (05:30 Friday showed Thursday).
         chart = VedicChart("Daily", 1990, 1, 1, 12, 0, **DELHI)
-        # Delhi sunrise in late July is well after 4am IST — 3am is safely
-        # before it, without depending on the exact minute.
         pre_sunrise = datetime(2026, 7, 21, 3, 0, tzinfo=ZoneInfo("Asia/Kolkata"))
         prev_afternoon = datetime(2026, 7, 20, 15, 0, tzinfo=ZoneInfo("Asia/Kolkata"))
         post_sunrise_same_civil_day = datetime(2026, 7, 21, 10, 0, tzinfo=ZoneInfo("Asia/Kolkata"))
@@ -80,39 +80,46 @@ class TestSunriseBoundedValidity:
         yesterday = daily_guidance(chart, relation="self", as_of=prev_afternoon)
         today = daily_guidance(chart, relation="self", as_of=post_sunrise_same_civil_day)
 
-        # 3am on the 21st is still yesterday's Vedic day — same civil date,
-        # vara, and panchanga elements as the confirmed-yesterday-afternoon
-        # call, not the 21st's civil date.
-        assert before_dawn["date"] == yesterday["date"] == "2026-07-20"
-        assert before_dawn["vara"] == yesterday["vara"]
-        assert before_dawn["star_of_day"] == yesterday["star_of_day"]
-        # ...and genuinely different from what a post-sunrise request on the
-        # 21st itself gets — this is not a fluke of two days looking alike.
-        assert today["date"] == "2026-07-21"
-        assert before_dawn["date"] != today["date"]
+        assert before_dawn["date"] == today["date"] == "2026-07-21"
+        assert before_dawn["vara"] == today["vara"]
+        assert before_dawn["star_of_day"] == today["star_of_day"]
+        assert yesterday["date"] == "2026-07-20"
+        assert before_dawn["vara"] != yesterday["vara"]
 
-        # The validity window for the pre-sunrise call brackets the actual
-        # request instant and ends at (approximately) the sunrise that
-        # promotes the reader into the new Vedic day.
+        # The day it describes begins at the 21st's sunrise, still ahead at
+        # 3am, and runs to the 22nd's.
         valid_from = datetime.fromisoformat(before_dawn["valid_from"])
         valid_until = datetime.fromisoformat(before_dawn["valid_until"])
-        assert valid_from <= pre_sunrise < valid_until
-        assert valid_until.date() == pre_sunrise.date()  # sunrise, same civil day
+        assert pre_sunrise < valid_from < post_sunrise_same_civil_day
+        assert valid_from.date() == pre_sunrise.date()
+        assert valid_until.date() == date(2026, 7, 22)
 
-    def test_do_avoid_phrasing_is_stable_across_the_same_vedic_day(self):
-        # A pre-sunrise and a post-sunrise check of the SAME Vedic day must
-        # not get different do/avoid phrasing just because of the hour —
-        # the phrase-rotation seed is keyed on the Vedic date, not as_of.
+    def test_date_follows_the_viewer_clock_not_the_place(self):
+        # Hawk in Singapore at 05:30 Friday with the Indian birth city as the
+        # timings place: India is at 03:00 Friday, UTC still Thursday. The
+        # date is Friday's, and the windows stay on the place's clock.
+        chart = VedicChart("Daily", 1990, 1, 1, 12, 0, **DELHI)
+        singapore = datetime(2026, 10, 30, 5, 30, tzinfo=ZoneInfo("Asia/Singapore"))
+        g = daily_guidance(chart, relation="self", as_of=singapore,
+                           city="Delhi", nation="IN", lat=28.6139, lng=77.209,
+                           tz_str="Asia/Kolkata")
+        assert g["date"] == "2026-10-30"
+        assert g["vara"] == "Friday"
+
+    def test_do_avoid_phrasing_is_stable_across_the_same_day(self):
+        # An early-morning and a late-evening check of the SAME day must not
+        # get different do/avoid phrasing just because of the hour — the
+        # phrase-rotation seed is keyed on the date, not as_of.
         chart = VedicChart("Daily", 1990, 1, 1, 12, 0, **DELHI)
         pre_sunrise = datetime(2026, 7, 21, 3, 0, tzinfo=ZoneInfo("Asia/Kolkata"))
-        later_same_vedic_day = datetime(2026, 7, 20, 20, 0, tzinfo=ZoneInfo("Asia/Kolkata"))
+        later_same_day = datetime(2026, 7, 21, 22, 0, tzinfo=ZoneInfo("Asia/Kolkata"))
 
         before_dawn = daily_guidance(chart, relation="self", as_of=pre_sunrise)
-        evening_before = daily_guidance(chart, relation="self", as_of=later_same_vedic_day)
+        evening = daily_guidance(chart, relation="self", as_of=later_same_day)
 
-        assert before_dawn["date"] == evening_before["date"]
-        assert before_dawn["do_today"] == evening_before["do_today"]
-        assert before_dawn["avoid_today"] == evening_before["avoid_today"]
+        assert before_dawn["date"] == evening["date"]
+        assert before_dawn["do_today"] == evening["do_today"]
+        assert before_dawn["avoid_today"] == evening["avoid_today"]
 
 
 class TestColorAndNumber:

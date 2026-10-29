@@ -190,6 +190,23 @@ export function muhurtaCountdown(daily: DailyGuidancePayload, now: Date = new Da
   return 'Ended';
 }
 
+/**
+ * Between midnight and sunrise the date is already today but its panchang
+ * day has not begun: the tithi, star and day lord shown are from today's
+ * sunrise. Say when that is rather than imply they are already in force.
+ * The time is on the timings place's clock, like every window on Today.
+ */
+export function sunriseNote(daily: DailyGuidancePayload, now: number = Date.now()): string {
+  const sunrise = daily.valid_from ? Date.parse(daily.valid_from) : Number.NaN;
+  if (!Number.isFinite(sunrise) || now >= sunrise) return '';
+  const time = new Intl.DateTimeFormat('en', {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: daily.provenance.place.timezone || undefined,
+  }).format(new Date(sunrise));
+  return `Today's panchang begins at sunrise, ${time.toLowerCase()}.`;
+}
+
 /** Verdict bands. Named, not numeric, so tone rules can key off them. */
 export type DayBand = 'good' | 'steady' | 'mixed' | 'tough';
 
@@ -356,6 +373,15 @@ export class TodayComponent {
   readonly summary = signal('');
   readonly scoreReason = signal('');
 
+  /** The clock, moved on by the half-minute tick. */
+  private readonly now = signal(Date.now());
+
+  /** Before sunrise, when today's panchang begins. */
+  protected readonly sunriseNote = computed(() => {
+    const daily = this.loadedDaily()?.daily;
+    return daily ? sunriseNote(daily, this.now()) : '';
+  });
+
   /** Which sheet is showing, if any. One signal so two cannot stack. */
   readonly openSheet = signal<'quality' | 'why' | 'listen' | 'festival' | null>(null);
 
@@ -493,12 +519,24 @@ export class TodayComponent {
     // "Starts in / Ends in" is a countdown: recompute it each half minute, so
     // it moves (and turns to "Ended") while Today stays open.
     const tick = setInterval(() => {
+      this.now.set(Date.now());
+      if (this.followDayChange()) return;
       const loaded = this.loadedDaily();
       if (!loaded) return;
       const next = muhurtaCountdown(loaded.daily);
       this.view.update((view) => (view && view.nextWindowIn !== next ? { ...view, nextWindowIn: next } : view));
     }, 30_000);
     inject(DestroyRef).onDestroy(() => clearInterval(tick));
+    // Today is a retained tab and the app is often left open overnight: on
+    // coming back after midnight it showed the day before until something
+    // else reloaded it. Check the date the moment the app is in view again.
+    const visible = () => {
+      if (document.visibilityState !== 'visible') return;
+      this.now.set(Date.now());
+      this.followDayChange();
+    };
+    document.addEventListener('visibilitychange', visible);
+    inject(DestroyRef).onDestroy(() => document.removeEventListener('visibilitychange', visible));
     // The sky is position: fixed, but iOS WebKit clips fixed descendants of an
     // overflow scroller to the scroller's box. Inside the shell's .content it
     // stopped at the status bar, leaving a flat band behind the clock. Lifting
@@ -554,6 +592,14 @@ export class TodayComponent {
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       if (params.get('listen') === '1') this.openSheet.set('listen');
     });
+  }
+
+  /** Load the new day once the reader's date has passed the one on screen. */
+  private followDayChange(): boolean {
+    const loaded = this.loadedDaily();
+    if (!loaded || this.loading() || loaded.daily.date >= this.vedic.todayKey()) return false;
+    void this.loadToday();
+    return true;
   }
 
   protected async loadToday(profileId = this.kundlis.activeId()): Promise<void> {
