@@ -225,6 +225,8 @@ def test_draft_filters_changes_and_queues_only_the_team(client, db):
         "changes": [
             {"title": TITLES[0], "files": ["ui/src/app/x.ts"]},
             {"title": "Ship from GitHub (#237)", "files": [".github/workflows/ship.yml"]},
+            # A revert is never announced: it can name a surprise held back.
+            {"title": "Hold group readings until Diwali (revert #297) (#298)", "files": ["ui/src/app/y.ts"]},
         ],
     })
     assert r.status_code == 200, r.text

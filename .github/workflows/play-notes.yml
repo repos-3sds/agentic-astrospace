@@ -1,0 +1,50 @@
+name: Play notes
+
+# Replace the "What's new" text on the build a Play testing track already
+# serves, without uploading anything or moving a build. Run by hand, or by a
+# Claude thread, when the text Ship wrote is wrong (2026-10-29: a commit
+# title naming a held-back feature reached internal testers).
+
+on:
+  workflow_dispatch:
+    inputs:
+      track:
+        description: 'internal or alpha (closed testing)'
+        type: choice
+        options: [internal, alpha]
+        default: internal
+      notes:
+        description: 'The new text, up to 500 characters'
+        type: string
+        default: 'Small fixes and improvements.'
+
+permissions:
+  contents: read
+  id-token: write   # Workload Identity Federation, as in ship.yml
+
+env:
+  PLAY_SA: play-publisher@gen-lang-client-0058562386.iam.gserviceaccount.com
+
+jobs:
+  renote:
+    runs-on: ubuntu-latest
+    # Only from main: the WIF provider admits main and nothing else.
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - id: play-auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.PLAY_SA }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/androidpublisher
+          create_credentials_file: false
+      - name: Replace the notes
+        env:
+          PLAY_ACCESS_TOKEN: ${{ steps.play-auth.outputs.access_token }}
+          TRACK: ${{ inputs.track }}
+          NOTES: ${{ inputs.notes }}
+        run: |
+          python3 scripts/play_upload.py --renote --track "$TRACK" --notes "$NOTES" | tee out.txt
+          cat out.txt >> "$GITHUB_STEP_SUMMARY"

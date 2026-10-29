@@ -263,3 +263,24 @@ def test_skip_if_not_above_uploads_when_the_build_is_newer(aab, monkeypatch):
     monkeypatch.setenv("PLAY_ACCESS_TOKEN", "wif-token")
     assert play_upload.main([str(aab), "--skip-if-not-above", "601"]) == 0
     assert ("POST", "/e1:commit") in fake.methods()
+
+
+@needs_openssl
+def test_renote_puts_the_same_build_back_with_new_notes(key_file, monkeypatch, capsys):
+    fake = FakePlay(track_codes=("630",))
+    monkeypatch.setattr(play_upload, "_request", fake)
+    assert play_upload.main(["--renote", "--notes", "Small fixes and improvements.",
+                             "--key", str(key_file)]) == 0
+    assert fake.methods() == [
+        ("POST", ""), ("GET", "/e1/tracks/internal"), ("PUT", "/e1/tracks/internal"), ("POST", "/e1:commit"),
+    ]
+    release = json.loads(next(b for m, _, b in fake.calls if m == "PUT"))["releases"][0]
+    assert release["versionCodes"] == ["630"]
+    assert release["releaseNotes"][0]["text"] == "Small fixes and improvements."
+    assert not any("/bundles" in u for _, u, _ in fake.calls)
+
+
+def test_renote_needs_notes(monkeypatch):
+    monkeypatch.setattr(play_upload, "_request", FakePlay())
+    with pytest.raises(SystemExit):
+        play_upload.main(["--renote"])

@@ -413,7 +413,9 @@ jobs:
           VC: ${{ steps.vc.outputs.vc }}
         run: |
           NOTES=$(jq -r '.play_notes // empty' release-notes.json 2>/dev/null || true)
-          [ -n "$NOTES" ] || NOTES=$(git log -1 --format=%s | cut -c1-480)
+          # Never the commit title: it can name a revert, a PR number or a
+          # surprise held for later (Hawk, 2026-10-29).
+          [ -n "$NOTES" ] || NOTES="Small fixes and improvements."
           # --skip-if-not-above: if the Mac already sent this commit, do nothing.
           python3 scripts/play_upload.py ui/android/app/build/outputs/bundle/release/app-release.aab \
             --track internal --notes "$NOTES" --skip-if-not-above "$VC" | tee play.txt

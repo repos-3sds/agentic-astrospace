@@ -71,6 +71,15 @@ _FORBIDDEN = re.compile(
 )
 
 
+# A revert takes something back out; testers are never told about it (it can
+# name a feature held back as a surprise, Hawk 2026-10-29).
+_REVERT = re.compile(r"\brevert", re.I)
+
+
+def is_revert(title: str) -> bool:
+    return bool(_REVERT.search(title or ""))
+
+
 def is_user_facing(files: list[str]) -> bool:
     return any(_USER_FACING.search(f) and not _NOT_USER_FACING.search(f) for f in files)
 
