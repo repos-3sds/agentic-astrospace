@@ -4,6 +4,7 @@ import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 
 import { EntitlementService, EntitlementSnapshot, StoreProduct } from '../../../core/entitlement.service';
+import { fallbackPrice } from '../../../core/fallback-price';
 import { KundliStore } from '../../../core/kundli.store';
 import { openLegal } from '../../../core/legal';
 import { PurchaseService } from '../../../core/purchase.service';
@@ -30,8 +31,9 @@ type PlanFamily = 'plus' | 'pro';
  * or failed answer is stated never to use a question.
  *
  * Prices come from the store once it answers (the reader is charged the
- * store's price, in their currency); the server's launch prices in rupees
- * fill in until then.
+ * store's price, in their currency); until then, and on iPhone until App
+ * Store purchases exist, the launch prices fill in: rupees on an Indian
+ * clock, dollars elsewhere (`core/fallback-price.ts`).
  */
 @Component({
   selector: 'as-subscription',
@@ -152,7 +154,7 @@ export class SubscriptionComponent implements OnInit {
   }
 
   protected price(product: StoreProduct): string {
-    return this.store.prices()[product.id] ?? `₹${product.price_inr.toLocaleString('en-IN')}`;
+    return this.store.prices()[product.id] ?? fallbackPrice(product.price_inr, product.price_usd);
   }
 
   protected planCadence(product: StoreProduct): string {

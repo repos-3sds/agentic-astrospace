@@ -4,9 +4,11 @@ Store product ids are the only place commerce meets capability: a purchase
 resolves to either a plan (tier for a period) or a number of Ask question
 credits, and nothing downstream reads a product id again.
 
-Prices here are the launch prices in rupees, shown before the store has
-answered. The store's own localised price always replaces them on the phone
-(`ui/src/app/core/purchase.service.ts`), because the store is what charges.
+Prices here are the launch prices, in rupees for India and US dollars
+elsewhere, shown before the store has answered or where it cannot answer
+(iPhone, until App Store purchases are set up). The store's own localised
+price always replaces them on the phone (`ui/src/app/core/purchase.service.ts`),
+because the store is what charges.
 """
 from dataclasses import dataclass
 from typing import Literal
@@ -20,6 +22,7 @@ class Product:
     kind: ProductKind
     title: str
     price_inr: int
+    price_usd: float
     tier: str | None = None
     months: int | None = None
     questions: int | None = None
@@ -30,11 +33,12 @@ PRODUCTS: dict[str, Product] = {
     for product in (
         # Hawk, 2026-10-19: monthly only, no yearly plans; one question or three, no larger pack.
         # Hawk set ₹299 / ₹999 / ₹49 / ₹129; Play rounds Indian prices, so these are the prices as
-        # listed in Play (2026-10-20). Only a fallback: the app shows the store's own localized price.
-        Product("siddha_plus_monthly", "plan", "Plus, monthly", 300, tier="plus", months=1),
-        Product("siddha_practitioner_monthly", "plan", "Practitioner, monthly", 1000, tier="pro", months=1),
-        Product("siddha_questions_1", "question_pack", "1 question", 50, questions=1),
-        Product("siddha_questions_3", "question_pack", "3 questions", 130, questions=3),
+        # listed in Play (2026-10-20). Outside India the Play price is in dollars, the same as the
+        # website's. Only a fallback: the app shows the store's own localized price.
+        Product("siddha_plus_monthly", "plan", "Plus, monthly", 300, 9.99, tier="plus", months=1),
+        Product("siddha_practitioner_monthly", "plan", "Practitioner, monthly", 1000, 24.99, tier="pro", months=1),
+        Product("siddha_questions_1", "question_pack", "1 question", 50, 2.99, questions=1),
+        Product("siddha_questions_3", "question_pack", "3 questions", 130, 6.99, questions=3),
     )
 }
 
@@ -46,6 +50,7 @@ def public_products() -> list[dict]:
             "kind": product.kind,
             "title": product.title,
             "price_inr": product.price_inr,
+            "price_usd": product.price_usd,
             "tier": product.tier,
             "months": product.months,
             "questions": product.questions,

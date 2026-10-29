@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import { EntitlementDenial } from '../../../core/entitlement-denial';
+import { fallbackPrice } from '../../../core/fallback-price';
 import { PurchaseService } from '../../../core/purchase.service';
 import { LockedStateComponent } from './locked-state.component';
 
@@ -24,7 +25,8 @@ describe('LockedStateComponent', () => {
       remaining: 0, resets_at: '2026-11-01T00:00:00', upgrade_options: ['plus', 'pro'],
     });
     expect(text).toContain('Your free question is used');
-    expect(text).toContain('₹50');
+    // Rupees on an Indian clock, dollars elsewhere (the test machine's zone decides).
+    expect(text).toContain(fallbackPrice(50, 2.99));
     expect(text).toContain('Buy questions');
     expect(text).toContain('never use a question');
     expect(text.toLowerCase()).not.toMatch(/hurry|warning|danger|last chance/);

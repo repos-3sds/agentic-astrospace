@@ -37,6 +37,8 @@ export interface StoreProduct {
   kind: 'plan' | 'question_pack';
   title: string;
   price_inr: number;
+  /** The price outside India; older servers leave it out. */
+  price_usd?: number;
   tier: AccessTier | null;
   months: number | null;
   questions: number | null;
