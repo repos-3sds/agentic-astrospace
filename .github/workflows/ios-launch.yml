@@ -154,7 +154,11 @@ jobs:
     # code from the branch; it just copies the PNGs the launch job drew.
     name: Widget renders as a git ref
     needs: launch
-    if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    # Not when a newer push cancelled the launch job: it drew nothing, and
+    # the download would fail the run.
+    if: >-
+      always() && needs.launch.result != 'cancelled' && needs.launch.result != 'skipped' &&
+      github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ${{ vars.BUILD_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 10
     permissions:
