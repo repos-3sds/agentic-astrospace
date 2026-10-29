@@ -28,6 +28,14 @@ def list_kundlis(db: Session, user_id: str | None = None) -> list[Kundli]:
     return q.order_by(Kundli.name).all()
 
 
+def owner_kundli(db: Session, user_id: str) -> Kundli | None:
+    """The account holder's own profile: the "self" row, else the first one
+    made (older accounts stored the holder as "relative"). Mirrors
+    KundliStore.owner() in the app."""
+    rows = db.query(Kundli).filter(Kundli.user_id == user_id).order_by(Kundli.created_at).all()
+    return next((k for k in rows if (k.relation or "").strip().lower() == "self"), rows[0] if rows else None)
+
+
 def count_kundlis(db: Session, user_id: str) -> int:
     return db.query(Kundli).filter(Kundli.user_id == user_id).count()
 

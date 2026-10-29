@@ -114,3 +114,32 @@
   color: var(--m-muted);
   img { width: 16px; height: 16px; display: block; flex-shrink: 0; }
 }
+
+/* Crisis reply and the helplines beside it (sweep 2026-10-29 G-1) */
+.refer.care { background: var(--m-surface); }
+
+.lines { display: flex; flex-direction: column; gap: 8px; }
+
+.line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 1.5px solid var(--m-border-strong);
+  text-decoration: none;
+  color: var(--m-text);
+}
+
+.line-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.line-name { @include m-body-strong; }
+.line-detail { @include m-caption; color: var(--m-muted); }
+.line-number { @include m-button; color: var(--m-accent-strong); white-space: nowrap; }
+
+.emergency {
+  @include m-caption;
+  color: var(--m-muted);
+  margin: 0;
+  a { color: var(--m-accent-strong); font-weight: 600; }
+}

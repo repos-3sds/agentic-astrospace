@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
 import {
   MantraVoice,
@@ -15,6 +15,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
 import { keepScreenAwakeWhile } from '../../../core/screen-awake';
 import { MANTRA_SCRIPTS, MantraScriptService } from './mantra-script';
+import { RemedyReminderService } from '../../../core/remedy-reminder.service';
 import { StoredPractice, WidgetBridgeService } from '../../../core/widget-bridge.service';
 import { localIsoDate } from '../../../core/subhashita.service';
 
@@ -52,6 +53,8 @@ export class MantraTrackerComponent {
   private readonly naturalVoice = inject(NaturalVoiceService);
   private readonly nativeTts = inject(MobileTtsService);
   private readonly widgets = inject(WidgetBridgeService);
+  private readonly reminders = inject(RemedyReminderService);
+  private readonly router = inject(Router);
   protected readonly scripts = inject(MantraScriptService);
   protected readonly scriptOptions = MANTRA_SCRIPTS;
   private readonly params = toSignal(this.route.queryParamMap, { requireSync: true });
@@ -479,6 +482,11 @@ export class MantraTrackerComponent {
       updatedAt: new Date().toISOString(),
     }));
     this.publishWidget(count);
+    // What Settings > Notifications > Remedy reminders reminds about.
+    const practice = this.practice();
+    if (practice) {
+      this.reminders.record({ title: practice.title, preferredDay: practice.preferred_day || null, route: this.router.url });
+    }
   }
 
   /** The phone's date; toISOString() gave UTC's, so the day turned over at 5:30 am in India. */

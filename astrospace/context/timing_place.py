@@ -14,7 +14,11 @@ The rule, in order:
    city's own and the offline city table has a city in it, that city —
    "where the phone is", to a first order (a zone names a country, not a
    town, so within the birth city's zone the birth city is the better guess);
-3. otherwise the kundli's birth city.
+3. otherwise the birth city of the account holder (``home``), not of the
+   profile being viewed: switching to a relative must not move the reader's
+   own Rahu Kalam to that relative's birth town, while alarms and widgets,
+   which always follow the holder, kept the old one (sweep 2026-10-29 F-2).
+   The viewed profile still decides the personal layer (tara, chandra bala).
 
 Windows are always rendered in the place's own clock, the way Today already
 did: a sunrise-relative window has no meaning in another city's time. The
@@ -102,12 +106,32 @@ def choose_place(birth_city: str, birth_nation: str, viewer_tz: str | None,
 
 
 def resolve_timing_place(kundli, timezone: str | None = None,
-                         city: str | None = None, nation: str | None = None) -> TimingPlace:
+                         city: str | None = None, nation: str | None = None,
+                         home=None) -> TimingPlace:
+    """``home`` is the account holder's own profile; without it the holder
+    is looked up from the kundli's session, and a chart with none (a
+    stand-in in tests) stands in for the holder itself."""
     viewer_tz = validate_timezone(timezone, "") or None
+    birth = home or _holder(kundli) or kundli
     loc_city, loc_nation, source = choose_place(
-        kundli.birth_city, kundli.birth_nation, viewer_tz, city, nation)
+        birth.birth_city, birth.birth_nation, viewer_tz, city, nation)
     geo = lookup_city(loc_city, loc_nation)
     if not geo:
         raise PlaceNotFound(f"City {loc_city!r} not in offline database.")
     lat, lng, tz_str = geo
     return TimingPlace(loc_city, loc_nation, lat, lng, tz_str, viewer_tz, source)
+
+
+def _holder(kundli):
+    """The account holder's own profile, from the session ``kundli`` came in."""
+    from sqlalchemy.orm import object_session
+    from sqlalchemy.orm.exc import UnmappedInstanceError
+
+    from ..db import crud
+
+    try:
+        session = object_session(kundli)
+    except UnmappedInstanceError:
+        return None
+    user_id = getattr(kundli, "user_id", None)
+    return crud.owner_kundli(session, user_id) if session is not None and user_id else None

@@ -18,6 +18,10 @@ export interface FestivalPlace {
   fallback?: boolean;
 }
 
+/**
+ * Pass the account holder's profile, not the one being viewed: festival days
+ * and the timings beside them follow the holder's city (sweep 2026-10-29 F-2).
+ */
 export function festivalPlace(
   preferences: PreferencesService,
   profile: { birth_city?: string | null; birth_nation?: string | null } | null | undefined,

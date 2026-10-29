@@ -341,6 +341,31 @@ class TestScoring:
         for args in [("Sampat", "good", 0, 4), ("Vipat", "chandrashtama", 8, 0)]:
             assert 0 <= self._day(*args)[0] <= 100
 
+    def test_a_calendar_care_day_never_reads_steady(self):
+        # Sweep 2026-10-29 F-1: Today said "53 Steady" on a Chandrashtama day
+        # that Calendar marked "take care". A care day (chandrashtama, Janma
+        # or Vadha star) now caps at Mixed, and the parts still add up.
+        from astrospace.context.daily import _score_parts
+        for tara, moon in [("Sampat", "chandrashtama"), ("Janma", "good"), ("Vadha", "good")]:
+            score, tone, _ = self._day(tara, moon, challenging=0, supportive=4)
+            assert score <= 49 and tone in ("mixed", "caution"), (tara, moon, score)
+        personal = {"tarabala": {"tara": "Sampat"},
+                    "chandrabala": {"favourable": False, "chandrashtama": True}, "ghatak_alerts": []}
+        ctx = {"supportive_rules": [{"severity": "supportive"}] * 4, "challenging_rules": []}
+        parts = _score_parts(personal, ctx)
+        assert parts["care"] < 0 and sum(parts.values()) == _score_day(personal, ctx)[0]
+        # An already-low care day is not pushed further down.
+        personal["tarabala"] = {"tara": "Vipat"}
+        assert _score_parts(personal, {"supportive_rules": [], "challenging_rules": [{"severity": "high"}] * 4})["care"] == 0
+        # An ordinary day carries no care part.
+        assert "care" not in self._day_parts("Sampat", "good")
+
+    def _day_parts(self, tara, moon):
+        from astrospace.context.daily import _score_parts
+        personal = {"tarabala": {"tara": tara},
+                    "chandrabala": {"favourable": moon == "good", "chandrashtama": False}, "ghatak_alerts": []}
+        return _score_parts(personal, {"supportive_rules": [], "challenging_rules": []})
+
     def test_low_only_when_all_three_signals_are_poor(self):
         # Star and Moon both at their worst, transits at the usual background:
         # still Mixed, not the bottom band.

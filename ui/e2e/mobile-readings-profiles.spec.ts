@@ -823,7 +823,7 @@ test('mobile calendar uses calendar-intelligence data for month and day views', 
   await page.goto('/m/calendar/day?date=2026-07-29');
   await expect(page.getByRole('heading', { name: 'Wednesday, July 29' })).toBeVisible();
   await expect(page.getByText('Ekadashi · Rohini · Wednesday')).toBeVisible();
-  await expect(page.getByText('Use extra care today')).toBeVisible();
+  await expect(page.getByText(/^Take care: (Chandrashtama|\w+ star) day$/)).toBeVisible();
   await expect(page.getByText('Abhijit Muhurta')).toBeVisible();
   await expect(page.getByText('API transit opening')).toBeVisible();
   await expect(page.getByText('Venus')).toBeVisible();

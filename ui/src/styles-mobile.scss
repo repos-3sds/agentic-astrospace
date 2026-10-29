@@ -271,6 +271,13 @@
   filter: var(--m-back-icon-filter);
 }
 
+// No double-tap zoom in the app (iPhone testers, 2026-10-29). touch-action
+// applies to everything under the root, and taps stay instant; pinch is
+// locked by the viewport meta set in app.ts for native builds only.
+:root.as-native-app {
+  touch-action: manipulation;
+}
+
 // Capacitor should behave like an app surface, not a selectable web document.
 // Keep form controls editable; answers expose explicit Copy actions.
 :root.as-native-app .as-mobile,

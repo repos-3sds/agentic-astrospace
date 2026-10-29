@@ -85,6 +85,14 @@ export const BAND_OF_TONE: Record<DailyGuidancePayload['verdict']['tone'], DayBa
   supportive: 'good', positive: 'steady', mixed: 'mixed', caution: 'tough',
 };
 
+/** Today's first Ask chip, worded from the band so it never contradicts the ring (sweep F-9). */
+const ASK_DAY_QUESTION: Record<DailyGuidancePayload['verdict']['tone'], string> = {
+  supportive: 'Why is today supportive for me?',
+  positive: 'Why is today a steady day for me?',
+  mixed: 'Why is today a mixed day for me?',
+  caution: 'Why should I go gently today?',
+};
+
 export const BAND_LABEL: Record<DayBand, string> = {
   good: 'Good', steady: 'Steady', mixed: 'Mixed', tough: 'Go gently',
 };
@@ -102,6 +110,7 @@ function scoreReasonFromParts(parts: DayScoreParts): string {
   const sentences = ['Every day starts at 50.'];
   if (up.length) sentences.push(`It goes up because ${join(up)}.`);
   if (down.length) sentences.push(`${up.length ? 'It comes down because' : 'It comes down today because'} ${join(down)}.`);
+  if ((parts.care ?? 0) < 0) sentences.push('The calendar marks today as a day to take care, so the score stays under 50.');
   return sentences.join(' ');
 }
 
@@ -889,7 +898,7 @@ export class TodayComponent {
         ? `How is my ${currentDashaLord} period shaping today's reading?`
         : `Explain ${daily.star_of_day.nakshatra} nakshatra in simple words`;
     this.askSuggestions.set([
-      `Why is today ${daily.verdict.tone === 'caution' ? 'a caution day' : 'supportive'} for me?`,
+      ASK_DAY_QUESTION[daily.verdict.tone],
       // daily.reading.focus is a full coaching paragraph ("Downshift. This is
       // a day for..."), not a short phrase — grafting it into "with X today?"
       // read as a broken run-on. The question stands on its own instead.
@@ -906,7 +915,7 @@ export class TodayComponent {
   private async prefetchCalendar(profileId: string): Promise<void> {
     try {
       const calendar = await this.vedic.calendarIntelligence(profileId, 45);
-      const place = festivalPlace(this.preferences, this.kundlis.active());
+      const place = festivalPlace(this.preferences, this.kundlis.owner() ?? this.kundlis.active());
       if (!place) return;
       const window = await this.festivals.upcoming(place, calendar.start_date, 60, this.preferences.festivalRegions());
       if (this.kundlis.activeId() !== profileId) return;

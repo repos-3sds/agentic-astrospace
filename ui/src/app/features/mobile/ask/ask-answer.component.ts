@@ -72,7 +72,7 @@ interface ChatMessage {
   streaming?: boolean;
 }
 
-const REFER_OUT_KINDS = new Set(['death', 'health', 'legal', 'money']);
+const REFER_OUT_KINDS = new Set(['crisis', 'death', 'health', 'legal', 'money']);
 
 /** Plain names for the life areas the server offers when it needs to know
  * which one a question is about. The server sends its ids (family_property);

@@ -334,6 +334,23 @@ _SAME_SENTENCE = r"[^.!?;]{0,40}?"
 # Subjects the app must never issue a verdict on. Kept as word-stems so
 # inflections ("survive"/"survival") are covered without listing each form.
 _REFER_OUT_SUBJECTS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    # First, and on subject alone like death: someone telling the app they
+    # are thinking of ending their life gets care and a helpline, never a
+    # chart reading or the cold death boundary. Before 2026-10-29 "I am
+    # thinking of suicide" reached the model, because suicid sat in the
+    # health list and needed a verdict frame (sweep G-1). Leans towards
+    # catching: a false positive costs one kind screen with phone numbers.
+    ("crisis", (
+        r"\bsuicid", r"\bkill(?:ing)? my ?self\b", r"\bend(?:ing)? my (?:own )?life\b",
+        r"\bend it all\b", r"\btake my (?:own )?life\b",
+        r"\bwant to die\b", r"\bwish i (?:was|were) dead\b", r"\bbetter off dead\b",
+        r"\b(?:do not|don't|dont) want to (?:live|be alive|wake up)\b", r"\bno (?:reason|point) (?:to|in) liv",
+        r"\bself[- ]?harm", r"\bhurt(?:ing)? my ?self\b", r"\bcut(?:ting)? my ?self\b",
+        r"\boverdose\b", r"\bnot want to live\b",
+        # Hindi and Telugu: suicide (आत्महत्या, ఆత్మహత్య), "want to die"
+        # (मरना चाहता/चाहती, చనిపోవాలని). Literal words only, as for death.
+        r"आत्महत्या", r"ख़ुदकुशी", r"खुदकुशी", r"मरना चाहत", r"ఆత్మహత్య", r"చనిపోవాలని",
+    )),
     ("death", (
         r"\bdie\b", r"\bdeath\b", r"\bdying\b", r"\bdead\b",
         r"\blifespan\b", r"\blongevity\b", r"\blife expectancy\b",
@@ -466,6 +483,9 @@ _REFER_OUT_SUBJECTS: tuple[tuple[str, tuple[str, ...]], ...] = (
 )
 
 REFER_OUT_ANSWERS = {
+    "crisis": ("I am really glad you said this out loud. You do not have to carry it alone. "
+               "Please talk to someone right now: a free, confidential helpline, or a person you "
+               "trust. If you are in danger this minute, call your local emergency number."),
     "death": "AstroSpace does not predict death or lifespan, for anyone.",
     "health": "AstroSpace cannot diagnose illness, predict medical outcomes, or recommend treatment. Please consult a qualified medical professional.",
     "legal": "AstroSpace cannot predict legal outcomes or provide legal advice. Please consult a qualified legal professional.",
@@ -490,7 +510,7 @@ def refer_out_kind(question: str) -> str | None:
     for kind, subjects in _REFER_OUT_SUBJECTS:
         if not any(re.search(pattern, normalized) for pattern in subjects):
             continue
-        if kind == "death" or seeks_verdict:
+        if kind in ("crisis", "death") or seeks_verdict:
             return kind
     return None
 

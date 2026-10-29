@@ -12,6 +12,23 @@
     <p class="bubble">{{ question() }}</p>
   </div>
 
+  @if (domain() === 'crisis') {
+    <article class="refer care" aria-live="polite">
+      <header class="refer-head">
+        <span class="badge" aria-hidden="true">
+          <img src="mobile/heart.svg" alt="" />
+        </span>
+        <div class="refer-title">
+          <p class="eyebrow gold">WE ARE HERE WITH YOU</p>
+          <p class="headline">{{ c.headline }}</p>
+        </div>
+      </header>
+      <p class="boundary">{{ c.boundary }}</p>
+      <!-- The numbers before the fold: they are the point of this screen. -->
+      <ng-container *ngTemplateOutlet="lines" />
+      <p class="offer-text">{{ c.offer }}</p>
+    </article>
+  } @else {
   <article class="refer">
     <header class="refer-head">
       <span class="badge" aria-hidden="true">
@@ -39,12 +56,16 @@
     @if (c.action && c.actionRoute; as route) {
       <a class="action" [routerLink]="c.actionRoute">{{ c.action }}</a>
     }
+    @if (domain() === 'death') {
+      <ng-container *ngTemplateOutlet="lines" />
+    }
   </article>
 
   <p class="policy">
     <img src="mobile/shield.svg" alt="" aria-hidden="true" />
     <span>We keep this boundary for every health, legal, and money question — always.</span>
   </p>
+  }
 </div>
 
 <as-ask-composer
@@ -54,3 +75,32 @@
   (valueChange)="draft.set($event)"
   (submitted)="askAgain($event)"
 />
+
+<!-- Free lines for where the phone is now (core/crisis-support.ts). -->
+<ng-template #lines>
+  <div class="lines">
+    <p class="eyebrow">{{ support.country ? 'FREE, CONFIDENTIAL HELP IN ' + support.country.toUpperCase() : 'FREE, CONFIDENTIAL HELP' }}</p>
+    @for (line of support.lines; track line.dial) {
+      <a class="line" [href]="'tel:' + line.dial">
+        <span class="line-text">
+          <span class="line-name">{{ line.name }}</span>
+          <span class="line-detail">{{ line.detail }}</span>
+        </span>
+        <span class="line-number">{{ line.display }}</span>
+      </a>
+    }
+    @if (!support.lines.length) {
+      <a class="line" [href]="findHelpline" target="_blank" rel="noopener">
+        <span class="line-text">
+          <span class="line-name">Find a free helpline near you</span>
+          <span class="line-detail">findahelpline.com lists free lines for every country.</span>
+        </span>
+      </a>
+    }
+    @if (support.lines.length) {
+      <p class="emergency">In danger right now? Call <a [href]="'tel:' + support.emergency">{{ support.emergency }}</a>.</p>
+    } @else {
+      <p class="emergency">In danger right now? Call {{ support.emergency }}.</p>
+    }
+  </div>
+</ng-template>

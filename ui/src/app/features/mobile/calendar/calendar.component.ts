@@ -114,7 +114,11 @@ function coveredBy(vrat: VratDay, festivals: FestivalOccurrence[]): boolean {
               <span class="mcal-date-tile"></span><span><i></i><i></i><i></i></span>
             </section>
           } @else if (!festivalError()) {
-            <section class="mcal-state"><b>Nothing in this month</b><p>No festivals or vrat days were returned for {{ monthLabel() }}.</p></section>
+            @if (visibleMonth() === todayDate().slice(0, 7)) {
+              <section class="mcal-state"><b>Nothing more this month</b><p>The rest of {{ monthLabel() }} has no festivals or vrat days. Next month's are one tap ahead.</p></section>
+            } @else {
+              <section class="mcal-state"><b>Nothing in this month</b><p>No festivals or vrat days were returned for {{ monthLabel() }}.</p></section>
+            }
           }
         }
         @if (vratRules().length) {
@@ -205,14 +209,21 @@ export class CalendarComponent {
     return [...seen.values()];
   });
 
-  /** Every festival and vrat day of the month, in date order; no cap (U7). */
+  /**
+   * Every festival and vrat day of the month, in date order; no cap (U7).
+   * In the current month, days already gone drop off the list (Hawk,
+   * 2026-10-29): the list reads as what is coming. The grid still marks
+   * them, and an earlier month browsed on purpose still lists everything.
+   */
   protected readonly monthRows = computed<MonthRow[]>(() => {
     const month = this.visibleMonth();
-    const festivals = this.festivalRows().filter((festival) => festival.occurs_on.startsWith(month));
+    const today = this.todayDate();
+    const from = month === today.slice(0, 7) ? today : '';
+    const festivals = this.festivalRows().filter((festival) => festival.occurs_on.startsWith(month) && festival.occurs_on >= from);
     const rows: MonthRow[] = [
       ...festivals.map((festival) => ({ type: 'festival' as const, date: festival.occurs_on, festival })),
       ...this.vratRows()
-        .filter((vrat) => vrat.date.startsWith(month) && !coveredBy(vrat, festivals))
+        .filter((vrat) => vrat.date.startsWith(month) && vrat.date >= from && !coveredBy(vrat, festivals))
         .map((vrat) => ({ type: 'vrat' as const, date: vrat.date, vrat })),
     ];
     const name = (row: MonthRow) => (row.type === 'festival' ? row.festival.name : row.vrat.name);
@@ -340,7 +351,7 @@ export class CalendarComponent {
     this.vratRows.set([]);
     this.qualityByDate.set(new Map());
     this.qualityNote.set(null);
-    const place = festivalPlace(this.preferences, this.store.active());
+    const place = festivalPlace(this.preferences, this.store.owner() ?? this.store.active());
     const [vrats, month] = await Promise.allSettled([
       place ? this.festivals.vratDays(place, fromDate, days) : Promise.reject(new Error('no place')),
       this.panchanga.month(profileId, fromDate, days),
@@ -386,7 +397,7 @@ export class CalendarComponent {
     forceRefresh = false,
   ): Promise<void> {
     const requestId = ++this.festivalRequestId;
-    const place = festivalPlace(this.preferences, this.store.active());
+    const place = festivalPlace(this.preferences, this.store.owner() ?? this.store.active());
     this.festivalRows.set([]);
     if (!place) {
       this.festivalLoading.set(false);

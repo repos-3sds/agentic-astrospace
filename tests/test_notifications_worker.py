@@ -252,3 +252,40 @@ class TestChartConvention:
         lahiri = VedicChart(*args).positions["Moon"]["lon"]
         kp = VedicChart(*args, ayanamsha="krishnamurti").positions["Moon"]["lon"]
         assert lahiri != kp
+
+
+class TestFestivalReminders:
+    """Sweep 2026-10-29 G-2: the "Festival reminders" switch, on by default,
+    had no sender. It now queues a push the set number of days ahead."""
+
+    def test_three_days_ahead_at_six_pm_opening_that_day(self, db):
+        from astrospace.notifications.festival_reminders import schedule_festival_reminders
+
+        # 10:00 IST on 5 Nov 2026; Diwali falls on 8 Nov in Vijayawada.
+        jobs = schedule_festival_reminders(db, now=datetime(2026, 11, 5, 4, 30))
+        mine = [j for j in jobs if j.user_id == ME]
+        diwali = next(j for j in mine if j.payload["festival"] == "diwali")
+        assert diwali.title == "Diwali / Deepavali in 3 days"
+        assert "Sunday 8 Nov" in diwali.body and "can vary by family tradition" in diwali.body
+        assert diwali.scheduled_for == datetime(2026, 11, 5, 12, 30)  # 18:00 IST
+        assert diwali.deep_link == "/m/calendar/day?date=2026-11-08"
+        # Idempotent across the worker's 15-minute runs.
+        again = schedule_festival_reminders(db, now=datetime(2026, 11, 5, 4, 45))
+        assert {j.id for j in again if j.user_id == ME} == {j.id for j in mine}
+
+    def test_switch_off_and_lead_time_are_honoured(self, db):
+        from astrospace.notifications.festival_reminders import schedule_festival_reminders
+
+        cm.set_notification_preference(db, ME, "festival_reminder", enabled=False)
+        jobs = schedule_festival_reminders(db, now=datetime(2026, 11, 5, 4, 30))
+        assert not [j for j in jobs if j.user_id == ME]
+        cm.set_notification_preference(db, ME, "festival_reminder", enabled=True, lead_time_days=1)
+        jobs = schedule_festival_reminders(db, now=datetime(2026, 11, 7, 4, 30))
+        assert any(j.user_id == ME and j.title == "Diwali / Deepavali is tomorrow" for j in jobs)
+
+    def test_nothing_queued_after_the_send_time(self, db):
+        from astrospace.notifications.festival_reminders import schedule_festival_reminders
+
+        # 19:00 IST: today's 6 pm reminder time has passed.
+        jobs = schedule_festival_reminders(db, now=datetime(2026, 11, 5, 13, 30))
+        assert not [j for j in jobs if j.user_id == ME]
