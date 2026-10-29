@@ -14,7 +14,7 @@ const DISPLAY = `'Playfair Display', Georgia, serif`;
 // centred lines started at the middle and ran off the right edge.
 const SERIF = `'Noto Serif Devanagari', 'Noto Sans Devanagari', 'Kohinoor Devanagari', 'Devanagari Sangam MN', serif`;
 /** The brand wordmark face, the same one as the welcome screen's "Siddha". */
-const BRAND = `'Samarkan', 'Cormorant Garamond', serif`;
+const BRAND = `'Siddha Mark', 'Cormorant Garamond', serif`;
 
 const CREAM = '#fff8ec';
 const SOFT = 'rgba(255, 236, 220, 0.74)';

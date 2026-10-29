@@ -342,8 +342,9 @@ How it fits together:
   `drawable/widget_card.xml`, a ground plus the theme's radial glows and a
   hairline edge), in the app's own Inter and Playfair (`res/font/`, static
   cuts of `ui/public/fonts/`) so launchers don't substitute the phone's
-  font. The Subhashita wordmark is Samarkan cut down to the letters of
-  "Siddha" (`res/font/samarkan_wordmark.ttf`). Font resources need Android
+  font. The Subhashita wordmark is Siddha Mark
+  (`res/font/siddha_wordmark.ttf`), the same face as the app's wordmark; see
+  `ui/src/assets/fonts/README.md`. Font resources need Android
   8+; older phones fall back to the system face.
 - Layouts: only views RemoteViews can inflate (`FrameLayout`, `LinearLayout`,
   `TextView`, `ImageView` and the other @RemoteView classes). A plain

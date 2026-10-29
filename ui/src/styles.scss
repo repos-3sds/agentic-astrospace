@@ -26,15 +26,17 @@
 }
 
 @font-face {
-  font-family: 'Samarkan';
-  src: url('/assets/fonts/samarkan.woff2') format('woff2');
+  font-family: 'Siddha Mark';
+  src: url('/assets/fonts/siddha-mark.woff2') format('woff2');
   font-display: swap;
 }
 
 .siddha-brand {
   display: inline;
-  font-family: 'Samarkan', 'Cormorant Garamond', serif;
-  font-size: 0.82em;
+  font-family: 'Siddha Mark', 'Cormorant Garamond', serif;
+  /* Siddha Mark's small letters sit low under the headline bar; a touch
+     larger keeps the inline mark level with the words around it. */
+  font-size: 0.92em;
   font-weight: 500;
   letter-spacing: 0;
   line-height: inherit;
@@ -49,7 +51,7 @@ small .siddha-brand,
 .lede .siddha-brand,
 .note .siddha-brand,
 .btn .siddha-brand {
-  font-size: 1em;
+  font-size: 1.1em;
   line-height: inherit;
   margin-inline: 0.1em;
   padding-inline: 0.02em;

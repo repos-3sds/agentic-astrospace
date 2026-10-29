@@ -146,7 +146,7 @@ import { drawGalaxy } from './galaxy-draw';
 
       h1 {
         margin: 0;
-        font-family: 'Samarkan', 'Cormorant Garamond', serif;
+        font-family: 'Siddha Mark', 'Cormorant Garamond', serif;
         /* --text-zoom undoes the phone's font-size setting (matchDesignedTextSize). */
         font-size: calc(clamp(42px, 13vw, 72px) / var(--text-zoom, 1));
         font-weight: 500;
