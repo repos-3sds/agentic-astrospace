@@ -41,6 +41,7 @@ from ..db.models import AnswerReport, AskMessage
 from ..db.crud_profile_context import build_profile_context_projection
 from ..db.database import release_connection, short_session
 from .. import ratelimit
+from ..entitlements.resolver import resolve_entitlements
 from ..entitlements.usage import commit_ask_credit, release_ask_credit, reserve_ask_credit
 from ..agents.ask_engine import choose_engine
 from ..agents.orchestrator import exploration_trace
@@ -242,6 +243,31 @@ def _settle_credit(db: Session, settle, reservation) -> None:
     with `ask_stream_routes.py`."""
     with short_session(db) as session:
         settle(session, reservation)
+
+
+def _practitioner_plan(db: Session, user_id: str, explore: bool, experience_mode: str) -> bool:
+    """Whether a practitioner-mode Deep question gets the explorer's two extra
+    rounds: only when the plan has the practitioner workflow (sweep S-1)."""
+    if not explore or experience_mode != "practitioner":
+        return False
+    return resolve_entitlements(db, user_id).decide("practitioner.workflow").allowed
+
+
+def _claim_deep(prepared, user_id: str) -> None:
+    """Hold the account's one Deep slot for this turn, or make the turn
+    today's Ask when the Deep allowance is used up or another Deep answer is
+    still running (sweep 2026-10-29 S-1). Called after the Ask credit is
+    reserved, so a refusal there never holds a slot. Shared with
+    `ask_stream_routes.py`."""
+    if prepared.explorer_factory is None:
+        return
+    release = ratelimit.deep_slot(user_id)
+    if release is None:
+        log.info("deep ask paused for %s; answering with today's Ask", user_id)
+        prepared.explorer_factory = None
+        prepared.deep_paused = True
+        return
+    prepared.explore_release = release
 
 
 def _owned_thread(db: Session, thread_id: str, user_id: str):
@@ -564,6 +590,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
             explore=explore,
             explore_history=(cm.recent_profile_questions(db, user.id, kundli_id)
                              if explore else None),
+            practitioner_plan=_practitioner_plan(db, user.id, explore, body.experience_mode),
             # validate_first intentionally not passed through — see docstring.
         )
     except TaxonomyError:
@@ -600,6 +627,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
     # here is the structured limit denial, raised before any model call.
     ratelimit.require(user.id, "ask")  # always on, unlike the plan quota below
     reservation = reserve_ask_credit(db, user.id)
+    _claim_deep(prepared, user.id)
 
     def persist_prepared(reading: Optional[StructuredReading], status: str) -> Optional[str]:
         if reading is None:

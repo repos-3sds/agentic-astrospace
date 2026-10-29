@@ -282,8 +282,9 @@ def festival_content(day: date, note: dict, city: str,
         intro=intro,
         date_line=city,
         blocks=blocks,
-        button_label="Open your calendar",
-        button_path="/m/calendar",
+        button_label="Open this day",
+        # The festival's own day in Calendar, which the app link allows.
+        button_path=f"/m/calendar/day?date={day.isoformat()}",
         note=" ".join(notes + [convention]),
     )
 

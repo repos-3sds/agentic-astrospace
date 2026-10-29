@@ -10,12 +10,20 @@ const APP_LINK_HOSTS = new Set(['asksiddha.app', 'www.asksiddha.app']);
 /**
  * Screens an email or web link may open. Any page on the web can link to
  * asksiddha.app, so this is an allowlist, as for widgets (D15): screens
- * only, no query string, nothing that acts on arrival.
+ * only, nothing that acts on arrival, and no query string except a date on
+ * Calendar's day view. Every path an email button uses must be here, or the
+ * phone opens Siddha and goes nowhere (sweep 2026-10-29 F-4);
+ * tests/test_email_app_links.py checks that.
  */
 export const APP_LINK_ROUTES = new Set([
-  '/m/today', '/m/ask', '/m/calendar', '/m/explore', '/m/settings',
-  '/m/notifications', '/m/remedies', '/m/subhashita', '/m/readings',
+  '/m/today', '/m/ask', '/m/calendar', '/m/calendar/day', '/m/explore', '/m/settings',
+  '/m/settings/notifications', '/m/notifications', '/m/remedies', '/m/subhashita', '/m/readings',
+  '/m/chart', '/m/chart/periods', '/m/chart/yogas', '/m/compat',
 ]);
+
+/** The one query an app link may carry: which day Calendar opens on. */
+const DATED_ROUTES = new Set(['/m/calendar/day']);
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 /** The in-app route for an https://asksiddha.app/m/… link, or null. */
 export function appLinkRoute(url: string | null | undefined): string | null {
@@ -28,7 +36,9 @@ export function appLinkRoute(url: string | null | undefined): string | null {
   }
   if (parsed.protocol !== 'https:' || !APP_LINK_HOSTS.has(parsed.hostname)) return null;
   const path = parsed.pathname.replace(/\/+$/, '');
-  return APP_LINK_ROUTES.has(path) ? path : null;
+  if (!APP_LINK_ROUTES.has(path)) return null;
+  const date = parsed.searchParams.get('date');
+  return DATED_ROUTES.has(path) && date && ISO_DATE.test(date) ? `${path}?date=${date}` : path;
 }
 
 let launchHandled = false;

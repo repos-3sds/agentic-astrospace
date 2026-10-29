@@ -5,6 +5,14 @@ describe('appLinkRoute', () => {
     expect(appLinkRoute('https://asksiddha.app/m/today')).toBe('/m/today');
     expect(appLinkRoute('https://asksiddha.app/m/calendar/')).toBe('/m/calendar');
     expect(appLinkRoute('https://www.asksiddha.app/m/settings?utm=x')).toBe('/m/settings');
+    expect(appLinkRoute('https://asksiddha.app/m/chart/periods')).toBe('/m/chart/periods');
+    expect(appLinkRoute('https://asksiddha.app/m/compat')).toBe('/m/compat');
+  });
+
+  it('keeps only a plain date on Calendar\'s day view', () => {
+    expect(appLinkRoute('https://asksiddha.app/m/calendar/day?date=2026-11-08')).toBe('/m/calendar/day?date=2026-11-08');
+    expect(appLinkRoute('https://asksiddha.app/m/calendar/day?date=tomorrow')).toBe('/m/calendar/day');
+    expect(appLinkRoute('https://asksiddha.app/m/today?date=2026-11-08')).toBe('/m/today');
   });
 
   it('ignores other hosts, schemes and screens', () => {

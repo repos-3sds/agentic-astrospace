@@ -42,7 +42,7 @@ from ..db.database import release_connection, short_session
 from .ask_routes import (
     MAX_HISTORY, AskRequest, _evidence_from_reading, _history_from_thread,
     _alert_if_ai_out_of_credit, _owned_thread, _persist_ask_turn, _profile_context_store,
-    _settle_credit,
+    _claim_deep, _practitioner_plan, _settle_credit,
     _thread_established_domain,
 )
 from .. import ratelimit
@@ -308,6 +308,7 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
             explore=explore,
             explore_history=(cm.recent_profile_questions(db, user.id, kundli_id)
                              if explore else None),
+            practitioner_plan=_practitioner_plan(db, user.id, explore, body.experience_mode),
         )
     except TaxonomyError:
         log.exception("ask stream prepare failed on taxonomy (kundli=%s)", kundli_id)
@@ -338,6 +339,7 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
     ratelimit.require(user.id, "ask")  # always on, unlike the plan quota below
     reservation = reserve_ask_credit(db, user.id)
     release_connection(db)  # the reservation is ids only; hold nothing into the stream
+    _claim_deep(prepared, user.id)
 
     def persist_prepared(reading: Optional[StructuredReading], status: str) -> Optional[str]:
         if reading is None:

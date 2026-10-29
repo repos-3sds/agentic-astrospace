@@ -21,6 +21,7 @@ from ..core.vedic.vargas import VARGA_FUNCTIONS
 from ..knowledge.vedic_rules import get_rule, rules_catalog
 from .auth import CurrentUser
 from ..entitlements import EntitlementDenied, plan_lock, require_plan
+from ..entitlements.usage import record_compatibility_check
 from ..core.vedic.dasha_variants import VARIANTS as DASHA_VARIANTS
 
 router = APIRouter(prefix="/api/v1/vedic", tags=["vedic"])
@@ -604,9 +605,22 @@ def compatibility(
     node_type: str = "mean",
     db: Session = Depends(get_db),
 ):
-    chart_a = _chart_from_kundli(_get_kundli(db, kundli_id, user.id), ayanamsha, node_type)
-    chart_b = _chart_from_kundli(_get_kundli(db, partner_id, user.id), ayanamsha, node_type)
+    kundli = _get_kundli(db, kundli_id, user.id)
+    partner = _get_kundli(db, partner_id, user.id)
+    record_compatibility_check(db, user.id, _compat_person(db, user.id, kundli.id, partner.id))
+    chart_a = _chart_from_kundli(kundli, ayanamsha, node_type)
+    chart_b = _chart_from_kundli(partner, ayanamsha, node_type)
     return gun_milan(chart_a, chart_b)
+
+
+def _compat_person(db: Session, user_id: str, kundli_id: str, partner_id: str) -> str:
+    """Who was checked, for the monthly count: the person who isn't the
+    account holder (either side, since a groom-first match swaps them), or
+    the pair when neither is."""
+    owner = crud.owner_kundli(db, user_id)
+    if owner is not None and owner.id in (kundli_id, partner_id):
+        return partner_id if owner.id == kundli_id else kundli_id
+    return ":".join(sorted((kundli_id, partner_id)))
 
 
 @router.get("/{kundli_id}/compatibility/{partner_id}/insight")

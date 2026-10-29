@@ -28,7 +28,7 @@ from typing import Callable, Iterator
 
 from .ask_tools import ChartTools, summarize_call
 from .domain_agent import DomainReadingAgent
-from .explorer import ChartExplorer
+from .explorer import ChartExplorer, ExplorationStopped
 from .intent import QuestionTense, detect_intent, detect_tense
 from .registry import AGENT_REGISTRY, AgentConfig
 from .safety import REFER_OUT_ANSWERS, refer_out_kind
@@ -222,6 +222,21 @@ def _usage_summary(usage: dict) -> dict:
     }
 
 
+def _log_orphan_cost(prepared, usage: list[dict], elapsed_ms: int) -> None:
+    """One `ask.cost` line for exploring calls the turn never counted."""
+    try:
+        cost_log.info(json.dumps({
+            "event": "ask.cost", "status": "explore_abandoned", "domain": prepared.domain,
+            "intent": prepared.intent, "question_kind": prepared.question_kind,
+            "calls": len(usage),
+            "input_tokens": sum(int(u.get("input_tokens") or 0) for u in usage),
+            "output_tokens": sum(int(u.get("output_tokens") or 0) for u in usage),
+            "latency_ms": elapsed_ms,
+        }, default=str))
+    except Exception:
+        log.exception("ask orphan cost log line failed")
+
+
 @dataclass
 class AgentRunResult:
     reading: StructuredReading | None
@@ -265,6 +280,12 @@ class PreparedRun:
     # `agent_factory(bundle)` rebuilds the specialist over the bundle with
     # the explored results in it.
     explorer_factory: Callable | None = None
+    # Called once the exploring worker has really finished, even after the
+    # reader stopped waiting: frees the account's Deep slot (ratelimit.deep_slot).
+    explore_release: Callable[[], None] | None = None
+    # Deep was asked for but the account's Deep limit was reached, so this
+    # turn is today's Ask; the reader is told in a status line.
+    deep_paused: bool = False
     agent_factory: Callable | None = None
     explore_usage: list = field(default_factory=list)
     # guided / balanced / practitioner: Guided answers are also checked for
@@ -708,6 +729,7 @@ class AskOrchestrator:
         history: list[dict] | None = None,
         explore: bool = False,
         explore_history: list[str] | None = None,
+        practitioner_plan: bool = False,
     ) -> PrepareOutcome:
         """`experience_mode` (guided/balanced/practitioner) selects the
         agent's VOICE only — never its facts, claims, or guardrails. See
@@ -723,7 +745,11 @@ class AskOrchestrator:
         `validation_needed` envelope — a question no UI displays is a wealth
         question that silently returns nothing. Answered probes flow back into
         the bundle as `life_context` regardless of this flag, so the readings
-        improve as soon as any answers exist."""
+        improve as soon as any answers exist.
+
+        `practitioner_plan` says the account's plan has the practitioner
+        workflow; only then does a practitioner `experience_mode` buy the
+        explorer two more rounds (a client field alone never adds cost)."""
         safety = self.check_safety(question)
         if safety.refer_out_kind:
             return PrepareOutcome(terminal_envelope={
@@ -816,7 +842,7 @@ class AskOrchestrator:
         if explore and self._chart is not None:
             chart, bundle, kind = self._chart, context.bundle, plan.kind
 
-            def explorer_factory(on_tool):
+            def explorer_factory(on_tool, stop=None):
                 from ..context.source_retriever import get_source_retriever
                 try:
                     retriever = get_source_retriever()
@@ -826,7 +852,8 @@ class AskOrchestrator:
                 tz = (chart.meta() or {}).get("timezone") or "Asia/Kolkata"
                 return ChartExplorer(ChartTools(chart, tz, retriever), question, bundle,
                                      question_kind=kind, experience_mode=experience_mode,
-                                     history=said, on_tool=on_tool)
+                                     history=said, on_tool=on_tool,
+                                     practitioner=practitioner_plan, stop=stop)
         profile_context = context.bundle.get("profile_context") or {}
         return PrepareOutcome(prepared=PreparedRun(
             domain=routing.domain,
@@ -977,35 +1004,56 @@ class AskOrchestrator:
         events: queue.Queue = queue.Queue()
         outcome: dict = {}
         started = time.monotonic()
+        # Set when the reader stops waiting (the timeout below, or a stream
+        # closed mid-exploration, which reaches here as GeneratorExit). The
+        # worker then stops after the model call in flight (sweep S-1).
+        stop = threading.Event()
+        # The worker frees the Deep slot itself, when it has really finished.
+        release, prepared.explore_release = prepared.explore_release, None
 
         def work():
+            explorer = None
             try:
                 explorer = prepared.explorer_factory(
-                    lambda name, args: events.put(summarize_call(name, args)))
+                    lambda name, args: events.put(summarize_call(name, args)), stop)
                 outcome["result"] = explorer.explore()
-                outcome["usage"] = list(explorer.usage_log)
+            except ExplorationStopped:
+                log.info("ask exploration stopped (domain=%s)", prepared.domain)
             except Exception as exc:
                 log.exception("ask exploration failed (domain=%s)", prepared.domain)
                 note_failure(exc)
             finally:
+                outcome["usage"] = list(getattr(explorer, "usage_log", None) or [])
+                if stop.is_set() and outcome["usage"]:
+                    # The turn no longer counts these calls; record them here
+                    # so a late or abandoned exploration is still costed.
+                    _log_orphan_cost(prepared, outcome["usage"], int((time.monotonic() - started) * 1000))
                 events.put(None)
+                if release is not None:
+                    release()
 
         thread = threading.Thread(target=work, name="ask-explore", daemon=True)
         thread.start()
         deadline = started + EXPLORE_TIMEOUT_S
         shown: set[str] = set()
-        while True:
-            try:
-                label = events.get(timeout=max(0.1, deadline - time.monotonic()))
-            except queue.Empty:
-                log.warning("ask exploration timed out after %ss (domain=%s)",
-                            EXPLORE_TIMEOUT_S, prepared.domain)
-                return
-            if label is None:
-                break
-            if label not in shown:
-                shown.add(label)
-                yield {"type": "status", "stage": "exploring", "label": label}
+        finished = False
+        try:
+            while True:
+                try:
+                    label = events.get(timeout=max(0.1, deadline - time.monotonic()))
+                except queue.Empty:
+                    log.warning("ask exploration timed out after %ss (domain=%s)",
+                                EXPLORE_TIMEOUT_S, prepared.domain)
+                    return
+                if label is None:
+                    finished = True
+                    break
+                if label not in shown:
+                    shown.add(label)
+                    yield {"type": "status", "stage": "exploring", "label": label}
+        finally:
+            if not finished:
+                stop.set()
 
         found = outcome.get("result")
         prepared.explore_usage = outcome.get("usage") or []
@@ -1044,8 +1092,17 @@ class AskOrchestrator:
         route (a closure over its DB session/thread/user) — nothing here
         touches SQLAlchemy. Called exactly once, and only after a verifier
         pass (or a terminal failure state) — never before."""
-        yield {"type": "status", "stage": "gathering_context",
-              "label": f"Gathering your {', '.join(prepared.context_used[:3])}…"}
+        try:
+            yield {"type": "status", "stage": "gathering_context",
+                   "label": f"Gathering your {', '.join(prepared.context_used[:3])}…"}
+            if prepared.deep_paused:
+                yield {"type": "status", "stage": "gathering_context",
+                       "label": "Deep answers are resting for a while, so this is a quick answer…"}
+        except BaseException:
+            # Closed before exploring began: give the Deep slot back now.
+            if prepared.explore_release is not None:
+                prepared.explore_release()
+            raise
         if prepared.explorer_factory is not None:
             yield from self._explore(prepared)
         yield {"type": "status", "stage": "interpreting",

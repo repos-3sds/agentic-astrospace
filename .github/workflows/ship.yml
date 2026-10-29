@@ -233,7 +233,7 @@ jobs:
     needs: [plan, server]
     # After the server, because Hosting rewrites /api to it; skipped server is fine.
     if: >-
-      !cancelled() && needs.plan.outputs.hosting == 'true' && needs.plan.outputs.dry != 'true' &&
+      !cancelled() && needs.plan.result == 'success' && needs.plan.outputs.hosting == 'true' && needs.plan.outputs.dry != 'true' &&
       needs.server.result != 'failure'
     runs-on: ubuntu-latest
     steps:
@@ -260,9 +260,18 @@ jobs:
     name: AAB to Play internal testing
     needs: [plan, server]
     # After the server, so a new build never reaches phones before the API it
-    # talks to. A skipped server deploy (app-only change) is fine.
+    # talks to. A skipped server deploy (app-only change) is fine, but not one
+    # skipped because the plan stopped: a new migration ends the plan with an
+    # error after its outputs are written, and the server is then "skipped",
+    # not "failed" (run 75, 2026-10-29, uploaded both apps with no server).
     if: >-
-      !cancelled() && needs.plan.outputs.android == 'true' && needs.server.result != 'failure'
+      !cancelled() && needs.plan.result == 'success' && needs.plan.outputs.android == 'true' &&
+      needs.server.result != 'failure'
+    # Signing secrets live in the "production" environment, which only main
+    # can use (sweep 2026-10-29 S-3; scripts/ci/move_signing_secrets.sh). A
+    # pull request's dry run signs nothing and uses "dry-run", which holds no
+    # secrets, so a branch that edits this file cannot read them.
+    environment: ${{ needs.plan.outputs.dry == 'true' && 'dry-run' || 'production' }}
     runs-on: ubuntu-latest
     env:
       DRY: ${{ needs.plan.outputs.dry }}
@@ -429,7 +438,13 @@ jobs:
     # group picks it up by itself; the external group, App Review and any App
     # Store release stay decisions made in App Store Connect by a person.
     if: >-
-      !cancelled() && needs.plan.outputs.ios == 'true' && needs.server.result != 'failure'
+      !cancelled() && needs.plan.result == 'success' && needs.plan.outputs.ios == 'true' &&
+      needs.server.result != 'failure'
+    # Signing secrets live in the "production" environment, which only main
+    # can use (sweep 2026-10-29 S-3; scripts/ci/move_signing_secrets.sh). A
+    # pull request's dry run signs nothing and uses "dry-run", which holds no
+    # secrets, so a branch that edits this file cannot read them.
+    environment: ${{ needs.plan.outputs.dry == 'true' && 'dry-run' || 'production' }}
     # Free for a public repository. Xcode 26 is what Apple requires uploads to
     # be built with.
     runs-on: macos-26

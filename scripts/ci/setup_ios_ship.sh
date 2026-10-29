@@ -15,6 +15,8 @@
 # Running it again makes another certificate; Apple allows only a few, so run
 # it again only if the first one was revoked or the secrets were lost.
 set -euo pipefail
+# SECRETS_ENV=production puts the secrets in that GitHub environment
+# (scripts/ci/move_signing_secrets.sh) instead of at repository level.
 
 REPO=repos-3sds/agentic-astrospace
 P8=${1:?usage: setup_ios_ship.sh /path/to/AuthKey_KEYID.p8 ISSUER_ID}
@@ -43,12 +45,12 @@ python3 scripts/asc.py profile --serial "$(openssl x509 -in "$WORK/cert/distribu
   --out "$WORK/check.mobileprovision" | sed -n 's/^name=/profile: /p'
 
 echo "== GitHub secrets (values are not shown)"
-gh secret set ASC_KEY_ID -R "$REPO" --body "$KEY_ID"
-gh secret set ASC_ISSUER_ID -R "$REPO" --body "$ISSUER"
-base64 < "$P8" | tr -d '\n' | gh secret set ASC_KEY_P8_B64 -R "$REPO"
-base64 < "$WORK/cert/distribution.p12" | tr -d '\n' | gh secret set IOS_DIST_P12_B64 -R "$REPO"
-printf %s "$ASC_P12_PASSWORD" | gh secret set IOS_DIST_P12_PASSWORD -R "$REPO"
-gh secret list -R "$REPO"
+gh secret set ASC_KEY_ID -R "$REPO" ${SECRETS_ENV:+--env "$SECRETS_ENV"} --body "$KEY_ID"
+gh secret set ASC_ISSUER_ID -R "$REPO" ${SECRETS_ENV:+--env "$SECRETS_ENV"} --body "$ISSUER"
+base64 < "$P8" | tr -d '\n' | gh secret set ASC_KEY_P8_B64 -R "$REPO" ${SECRETS_ENV:+--env "$SECRETS_ENV"}
+base64 < "$WORK/cert/distribution.p12" | tr -d '\n' | gh secret set IOS_DIST_P12_B64 -R "$REPO" ${SECRETS_ENV:+--env "$SECRETS_ENV"}
+printf %s "$ASC_P12_PASSWORD" | gh secret set IOS_DIST_P12_PASSWORD -R "$REPO" ${SECRETS_ENV:+--env "$SECRETS_ENV"}
+gh secret list -R "$REPO" ${SECRETS_ENV:+--env "$SECRETS_ENV"}
 
 echo
 echo "Done. Keep $P8 somewhere safe (Apple lets you download it only once), or delete it:"

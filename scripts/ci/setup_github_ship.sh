@@ -8,7 +8,10 @@
 #
 #   bash scripts/ci/setup_github_ship.sh            # Google side + GitHub secrets
 #   bash scripts/ci/setup_github_ship.sh --no-secrets
+#   bash scripts/ci/setup_github_ship.sh --secrets-only   # GitHub secrets alone
 set -euo pipefail
+# SECRETS_ENV=production puts the secrets in that GitHub environment
+# (scripts/ci/move_signing_secrets.sh) instead of at repository level.
 
 PROJECT=gen-lang-client-0058562386
 REGION=asia-south1
@@ -20,6 +23,21 @@ PLAY_SA=play-publisher@$PROJECT.iam.gserviceaccount.com
 ANDROID_DIR=ui/android
 
 cd "$(git rev-parse --show-toplevel)"
+
+android_secrets() {
+  echo "== GitHub secrets from the Mac's existing files (values are not shown)"
+  for f in "$ANDROID_DIR/upload-key.jks" "$ANDROID_DIR/keystore.properties" "$ANDROID_DIR/app/google-services.json"; do
+    [ -f "$f" ] || { echo "Missing $f; nothing set. Never create a new upload key."; exit 1; }
+  done
+  base64 < "$ANDROID_DIR/upload-key.jks" | tr -d '\n' | gh secret set ANDROID_UPLOAD_KEYSTORE_B64 -R "$REPO" ${SECRETS_ENV:+--env "$SECRETS_ENV"}
+  gh secret set ANDROID_KEYSTORE_PROPERTIES -R "$REPO" ${SECRETS_ENV:+--env "$SECRETS_ENV"} < "$ANDROID_DIR/keystore.properties"
+  base64 < "$ANDROID_DIR/app/google-services.json" | tr -d '\n' | gh secret set ANDROID_GOOGLE_SERVICES_JSON_B64 -R "$REPO" ${SECRETS_ENV:+--env "$SECRETS_ENV"}
+  gh secret list -R "$REPO" ${SECRETS_ENV:+--env "$SECRETS_ENV"}
+  echo "Done. Next: merge the Ship PR, then Actions > Ship > Run workflow on main with 'ship everything'."
+}
+
+if [ "${1:-}" = "--secrets-only" ]; then android_secrets; exit 0; fi
+
 PNUM=$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')
 POOL_ID=projects/$PNUM/locations/global/workloadIdentityPools/$POOL
 REPO_MEMBER="principalSet://iam.googleapis.com/$POOL_ID/attribute.repository/$REPO"
@@ -81,12 +99,4 @@ if [ "${1:-}" = "--no-secrets" ]; then
   echo "Skipped the GitHub secrets (--no-secrets)."; exit 0
 fi
 
-echo "== GitHub secrets from the Mac's existing files (values are not shown)"
-for f in "$ANDROID_DIR/upload-key.jks" "$ANDROID_DIR/keystore.properties" "$ANDROID_DIR/app/google-services.json"; do
-  [ -f "$f" ] || { echo "Missing $f; nothing set. Never create a new upload key."; exit 1; }
-done
-base64 < "$ANDROID_DIR/upload-key.jks" | tr -d '\n' | gh secret set ANDROID_UPLOAD_KEYSTORE_B64 -R "$REPO"
-gh secret set ANDROID_KEYSTORE_PROPERTIES -R "$REPO" < "$ANDROID_DIR/keystore.properties"
-base64 < "$ANDROID_DIR/app/google-services.json" | tr -d '\n' | gh secret set ANDROID_GOOGLE_SERVICES_JSON_B64 -R "$REPO"
-gh secret list -R "$REPO"
-echo "Done. Next: merge the Ship PR, then Actions > Ship > Run workflow on main with 'ship everything'."
+android_secrets

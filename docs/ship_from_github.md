@@ -70,6 +70,30 @@ creates an upload key: a missing `upload-key.jks` stops it.
 Then, once the workflow is on main, run *Actions › Ship › Run workflow* with
 **ship everything** ticked to prove every path end to end.
 
+## Where the signing secrets live
+
+The Android upload key and the iOS distribution certificate sit in the
+`production` environment, which only `main` may deploy from (sweep
+2026-10-29 S-3). The Android and iOS jobs ask for `production` on main and for
+`dry-run`, which holds nothing, on a pull request. Before this they were
+repository secrets, which any branch that edited a workflow could read.
+
+GitHub never shows a secret's value, so moving them is a Mac step, run once
+after the PR that added `environment:` is merged:
+
+    bash scripts/ci/move_signing_secrets.sh ~/AuthKey_KEYID.p8 <issuer-id>
+
+It creates the environment with a main-only branch rule, sets the Android
+secrets again from the Mac's own files (the same upload key), makes one new
+GitHub-only Apple Distribution certificate for the iOS ones, and only then
+deletes the repository-level copies. Without the `.p8`, pass `--android-only`
+first; the iOS secrets keep working from repository level until it is run in
+full. Until the script runs, the jobs read the repository secrets as before.
+
+A merge that adds a migration also stops the app jobs, not just the server:
+they need the plan to have succeeded, so a new build never reaches phones
+ahead of the database it needs.
+
 ## Manual runs
 
 *Actions › Ship › Run workflow* on main skips the CI gate. Use it after
