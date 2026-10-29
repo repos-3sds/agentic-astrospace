@@ -165,7 +165,7 @@ jobs:
     name: Postgres migrations + schema drift
     runs-on: ${{ vars.BUILD_RUNNER || 'ubuntu-latest' }}
     # A plain container rather than a service container, which only exists
-    # on Linux runners: the same steps run on the Mac mini through Colima.
+    # on Linux runners: the same steps run on the Mac mini through Docker Desktop.
     # Port 55432 and a per-run name so it never meets a local Postgres.
     env:
       PGHOST: localhost

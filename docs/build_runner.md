@@ -38,7 +38,8 @@ use the free $12 first and then stop at the $0 budget.
 - Docker images are built for `linux/amd64`, what Cloud Run runs, under
   Rosetta. The CI smoke test listens on port 18080.
 - Xcode is the one the Mac has selected; the job only checks it is Xcode 26
-  (GitHub's image needs `sudo xcode-select`, the Mac has no sudo for jobs).
+  or newer (GitHub's image needs `sudo xcode-select`, the Mac has no sudo
+  for jobs). The Mac mini had Xcode 27.1 on 2026-10-29.
 - The App Store Connect key goes in the job's temporary folder, never
   `~/.appstoreconnect`, which holds the Mac's own keys. Provisioning profiles
   the job installs, the throwaway keychain, the Android upload key and
@@ -59,17 +60,18 @@ use the free $12 first and then stop at the $0 budget.
    after a power failure* on. Users & Groups: automatic login for the
    account the runner uses (the runner is a LaunchAgent and runs only while
    that account is logged in).
-2. **Docker without Docker Desktop** (Colima is free and open source):
+2. **Docker.** The Mac mini already has Docker Desktop (free for a studio
+   under 250 people and $10M revenue). Settings › General: *Start Docker
+   Desktop when you sign in* and *Use Rosetta for x86_64/amd64 emulation on
+   Apple Silicon* on; Resources: 4 CPUs, 8 GB. Check:
 
    ```bash
-   brew install colima docker docker-buildx jq
-   mkdir -p ~/.docker/cli-plugins
-   ln -sfn "$(brew --prefix)/opt/docker-buildx/bin/docker-buildx" ~/.docker/cli-plugins/docker-buildx
-   colima start --vm-type vz --vz-rosetta --cpu 4 --memory 8 --disk 80
-   brew services start colima     # starts again after a reboot
-   docker run --rm --platform linux/amd64 alpine uname -m   # prints x86_64
+   docker run --rm --platform linux/amd64 alpine uname -m   # x86_64
+   docker run --rm alpine uname -m                          # aarch64
    ```
 
+   Colima (`brew install colima`, `colima start --vm-type vz --vz-rosetta`)
+   does the same on a Mac without Docker Desktop.
 3. **The runner**, only after the repository is private. From a terminal
    where `brew`, `node` and `gh` (signed in as repos-3sds) are on the PATH,
    because the service keeps that PATH:

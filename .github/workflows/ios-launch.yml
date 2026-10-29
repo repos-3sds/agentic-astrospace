@@ -37,14 +37,13 @@ jobs:
 
       - name: Newest Xcode 26
         # GitHub's image holds several Xcodes; the Mac mini uses the one it
-        # has selected (no sudo there) and only checks that it is 26.
+        # has selected (no sudo there) and only checks that it is 26 or newer.
         run: |
           if [ "$RUNNER_ENVIRONMENT" = self-hosted ]; then
             XV=$(xcodebuild -version | sed -n 1p)
-            case "$XV" in
-              "Xcode 26"*) ;;
-              *) echo "::error::The Mac's selected Xcode is not 26: $XV"; exit 1 ;;
-            esac
+            MAJOR=$(echo "$XV" | sed -E 's/^Xcode ([0-9]+).*/\1/')
+            [ "${MAJOR:-0}" -ge 26 ] 2>/dev/null || {
+              echo "::error::The Mac's selected Xcode is older than 26: $XV"; exit 1; }
           else
             XC=$(ls -d /Applications/Xcode_26*.app | grep -viE 'beta|_rc' | sort -V | tail -1)
             sudo xcode-select -s "$XC/Contents/Developer"
