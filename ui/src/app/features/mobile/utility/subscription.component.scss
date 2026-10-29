@@ -97,9 +97,11 @@ h3 { @include m-body-strong; margin: 8px 0 0; color: var(--m-text); }
 }
 
 .footer {
-  display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 0;
   color: var(--m-muted); padding-top: 4px;
 }
+.footer > .link-button { align-self: center; }
+.legal { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0 8px; }
 .link-button {
   @include m-body-small; border: 0; background: none; padding: 12px 4px; min-height: 44px;
   color: var(--m-accent-strong); cursor: pointer; text-decoration: underline; text-underline-offset: 3px;

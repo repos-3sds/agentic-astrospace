@@ -93,9 +93,31 @@ describe('SubscriptionComponent', () => {
     fixture = TestBed.createComponent(SubscriptionComponent);
     text = await render();
     expect(text).not.toContain('Manage or cancel in the store');
-    expect(text).toContain('not bought in Google Play');
+    expect(text).toContain('managed where you bought it');
     // Play's payments policy: the app never points to buying on the website.
     expect(text).not.toMatch(/asksiddha\.app|website|razorpay/i);
+
+    fixture = TestBed.createComponent(SubscriptionComponent);
+    (fixture.componentInstance as unknown as { storeName: string }).storeName = 'Google Play';
+    text = await render();
+    expect(text).toContain('not bought in Google Play');
+  });
+
+  it('names only the App Store on an iPhone, with Apple\'s renewal terms', async () => {
+    const paid = { ...FREE, access_tier: 'plus' as const, status: 'active', source: 'razorpay', expires_at: '2026-11-20T00:00:00' };
+    snapshot.and.callFake(async () => { current.set(paid); return paid; });
+    fixture = TestBed.createComponent(SubscriptionComponent);
+    (fixture.componentInstance as unknown as { storeName: string }).storeName = 'App Store';
+    const text = await render();
+    expect(text).toContain('not bought in the App Store');
+    expect(text).toContain('Plans can be bought once Siddha is live in the App Store.');
+    expect(text).toContain('Payment is charged to your Apple Account');
+    expect(text).toContain('at least 24 hours before the period ends');
+    // App Review 2.3.10: no other store named on an iPhone.
+    expect(text).not.toMatch(/Google Play|Android/);
+    expect(text).not.toMatch(/asksiddha\.app|website|razorpay/i);
+    expect(text).toContain('Terms of Use');
+    expect(text).toContain('Privacy Policy');
   });
 
   it('renders an honest retry state without implying access changed', async () => {

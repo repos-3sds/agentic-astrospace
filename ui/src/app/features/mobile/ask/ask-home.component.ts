@@ -3,6 +3,7 @@ import { ASK_NAVIGATION } from './ask-navigation';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AiSharingSheetComponent } from './ai-sharing-sheet.component';
 import { AskComposerComponent } from './ask-composer.component';
 import { VoiceListeningComponent } from './voice-listening.component';
 import { KundliStore } from '../../../core/kundli.store';
@@ -62,7 +63,7 @@ export function aboutSomeoneElse(prompt: string, name: string): string {
   selector: 'as-ask-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AskComposerComponent, VoiceListeningComponent, RouterLink, BackLinkDirective, SelectHapticDirective, ReadingForComponent],
+  imports: [AiSharingSheetComponent, AskComposerComponent, VoiceListeningComponent, RouterLink, BackLinkDirective, SelectHapticDirective, ReadingForComponent],
   templateUrl: './ask-home.component.html',
   styleUrl: './ask-home.component.scss',
 })
@@ -204,6 +205,8 @@ export class AskHomeComponent {
   protected readonly speech = inject(SpeechService);
   readonly submitting = signal(false);
   readonly submitError = signal<string | null>(null);
+  /** A question held back until the reader agrees to AI sharing (5.1.2(i)). */
+  protected readonly pendingQuestion = signal<string | null>(null);
 
   constructor() {
     void this.entitlements.refresh();
@@ -304,6 +307,12 @@ export class AskHomeComponent {
     if (!q || this.submitting()) {
       return;
     }
+    // Native readers who skipped the setup screen's "Written with AI" are
+    // asked once here, before anything about them leaves the phone.
+    if (!this.navigation.web && !this.preferences.aiSharingAgreed()) {
+      this.pendingQuestion.set(q);
+      return;
+    }
     const handedOff = this.handedOff;
     this.handedOff = false;
     const opened = await this.router.navigate(this.navigation.path('answer'), {
@@ -313,5 +322,12 @@ export class AskHomeComponent {
     // Ask is a retained tab: the sent question sat in the box when the reader
     // came back for the next one (regression 2026-10-17).
     if (opened && this.draft().trim() === q) this.draft.set('');
+  }
+
+  protected agreeToAiSharing(): void {
+    const q = this.pendingQuestion();
+    this.preferences.aiSharingAgreed.set(true);
+    this.pendingQuestion.set(null);
+    if (q) void this.ask(q);
   }
 }

@@ -65,6 +65,7 @@ VARS: tuple[Var, ...] = (
     Var("ASTROSPACE_TESTERS_GET_PLUS", "opt_in"),
     Var("ASTROSPACE_ENTITLEMENT_PROBES", "opt_in"),
     Var("REVENUECAT_ACCEPT_SANDBOX", "opt_in"),
+    Var("REVENUECAT_SANDBOX_EMAILS", "email_list"),
     Var("REVENUECAT_WEBHOOK_AUTH"),
     Var("REVENUECAT_SECRET_API_KEY"),
     Var("RAZORPAY_KEY_ID"),

@@ -108,3 +108,49 @@ describe('AskHomeComponent topic chips', () => {
     expect(prompts.some((p) => p.includes('my children'))).toBeFalse();
   });
 });
+
+describe('AskHomeComponent AI-sharing notice', () => {
+  let navigate: jasmine.Spy;
+  let agreed: ReturnType<typeof signal<boolean>>;
+
+  beforeEach(() => {
+    agreed = signal(false);
+    TestBed.configureTestingModule({
+      imports: [AskHomeComponent],
+      providers: [
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: { queryParamMap: new BehaviorSubject(convertToParamMap({})).asObservable(), snapshot: { queryParamMap: convertToParamMap({}) } } },
+        { provide: KundliStore, useValue: { loaded: signal(true), load: () => Promise.resolve(), active: signal({ name: 'Mine' }), owner: signal(null), activeId: signal(null) } },
+        { provide: EntitlementService, useValue: { refresh: () => Promise.resolve(), askAllowance: signal(null), current: signal(null) } },
+        { provide: VedicService, useValue: { dailyGuidance: () => Promise.resolve(null) } },
+        { provide: AskService, useValue: { suggestions: () => Promise.resolve(null) } },
+        { provide: SpeechService, useValue: { start: () => Promise.resolve(), stop: () => Promise.resolve(), transcript: signal(''), listening: signal(false) } },
+        { provide: PreferencesService, useValue: { experienceMode: signal('balanced'), language: signal('en'), aiSharingAgreed: agreed } },
+      ],
+    });
+    navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+  });
+
+  it('holds the first question until the reader agrees, then sends it', async () => {
+    const home = TestBed.createComponent(AskHomeComponent).componentInstance;
+    await home['ask']('Will my work settle?');
+    expect(navigate).not.toHaveBeenCalled();
+    expect(home['pendingQuestion']()).toBe('Will my work settle?');
+
+    home['agreeToAiSharing']();
+    await Promise.resolve();
+    expect(agreed()).toBeTrue();
+    expect(home['pendingQuestion']()).toBeNull();
+    expect(navigate).toHaveBeenCalledWith(jasmine.anything(), jasmine.objectContaining({
+      queryParams: jasmine.objectContaining({ q: 'Will my work settle?' }),
+    }));
+  });
+
+  it('asks straight away once agreed', async () => {
+    agreed.set(true);
+    const home = TestBed.createComponent(AskHomeComponent).componentInstance;
+    await home['ask']('Will my work settle?');
+    expect(navigate).toHaveBeenCalled();
+    expect(home['pendingQuestion']()).toBeNull();
+  });
+});

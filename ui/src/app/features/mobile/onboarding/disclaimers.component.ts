@@ -25,6 +25,9 @@ interface Vow {
  *   of being answered; see the refer-out screen (27:83).
  * - "No fear, ever" — no death or lifespan prediction, and no remedy sold as a
  *   fix; see the mantra tracker's caveat.
+ * - "Written with AI" — who writes the readings and what they are sent. Apple
+ *   asks for this before personal data reaches a third-party AI; readers who
+ *   skipped this screen are asked once in Ask instead.
  *
  * The button says "I understand — continue" rather than "Accept", because
  * nothing here is a term being agreed to. It is a description of behaviour.
@@ -89,6 +92,9 @@ export class DisclaimersComponent {
   protected recordConsent(): void {
     this.preferences.shareUsage.set(this.shareUsage());
     this.preferences.usageAsked.set(true);
+    // The fourth vow says who writes the readings and what they receive;
+    // continuing past it is the reader's agreement (App Review 5.1.2(i)).
+    this.preferences.aiSharingAgreed.set(true);
   }
 
   protected readonly vows = signal<Vow[]>([
@@ -109,6 +115,12 @@ export class DisclaimersComponent {
       tone: 'good',
       title: 'No fear, ever',
       detail: 'We never predict death or lifespan, and never sell fear as a fix.',
+    },
+    {
+      icon: 'vow-ai',
+      tone: 'gold',
+      title: 'Written with AI',
+      detail: 'Readings and answers are written by AI from Anthropic and Google. They get your chart and question, never your email address.',
     },
   ]);
 }
