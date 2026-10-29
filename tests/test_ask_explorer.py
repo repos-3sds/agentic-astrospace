@@ -254,7 +254,10 @@ class TestOrchestrator:
         assert ChartExplorer(tools, "q", {}, question_kind="today").max_tool_rounds == 3
         assert ChartExplorer(tools, "q", {}, question_kind="broad").max_tool_rounds == 6
         assert ChartExplorer(tools, "q", {}, question_kind="broad",
-                             experience_mode="practitioner").max_tool_rounds == 8
+                             experience_mode="practitioner", practitioner=True).max_tool_rounds == 8
+        # The client's mode alone buys no extra rounds (sweep S-1).
+        assert ChartExplorer(tools, "q", {}, question_kind="broad",
+                             experience_mode="practitioner").max_tool_rounds == 6
 
     def test_submission_is_refused_until_every_a_and_b_rule_has_a_verdict(self, chart):
         explorer = ChartExplorer(ChartTools(chart), "q", {"domain": "career"})
