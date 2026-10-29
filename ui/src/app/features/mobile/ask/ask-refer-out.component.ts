@@ -1,12 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { ASK_NAVIGATION } from './ask-navigation';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AskComposerComponent } from './ask-composer.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { FIND_A_HELPLINE, crisisSupportFor } from '../../../core/crisis-support';
+import { PreferencesService } from '../../../core/preferences.service';
 
-/** The domains the app declines to give a verdict in. */
-export type ReferDomain = 'health' | 'legal' | 'money' | 'death';
+/** The domains the app declines to give a verdict in, and the crisis reply. */
+export type ReferDomain = 'health' | 'legal' | 'money' | 'death' | 'crisis';
 
 /** What the refer-out says, per domain. */
 interface ReferCopy {
@@ -57,7 +60,16 @@ const COPY: Record<ReferDomain, ReferCopy> = {
     boundary:
       'This guide does not predict death or lifespan, for anyone, ever. Classical texts contain such methods; we do not use them, because no one is served by a date they cannot check and cannot unhear.',
     offer:
-      'If you are worried about someone’s health, a doctor can actually help. If you are carrying something heavier than that, please talk to someone you trust.',
+      'If you are worried about someone’s health, a doctor can actually help. If you are carrying something heavier than that, please talk to someone you trust, or call one of the free lines below.',
+  },
+  // Not a boundary: the reader may be in danger. Warm, short, and the
+  // numbers first (safety.py "crisis", sweep 2026-10-29 G-1).
+  crisis: {
+    headline: 'You don’t have to carry this alone',
+    boundary:
+      'Thank you for telling me. What you are feeling matters, and it can ease. A trained listener is ready to hear you right now, free and in confidence.',
+    offer:
+      'Take one slow breath. Call one of these lines when you are ready, or tell someone you trust what you told me. You are not a burden for reaching out.',
   },
 };
 
@@ -81,7 +93,7 @@ const COPY: Record<ReferDomain, ReferCopy> = {
   selector: 'as-ask-refer-out',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AskComposerComponent, RouterLink, BackLinkDirective],
+  imports: [AskComposerComponent, RouterLink, BackLinkDirective, NgTemplateOutlet],
   templateUrl: './ask-refer-out.component.html',
   styleUrl: './ask-refer-out.component.scss',
 })
@@ -101,6 +113,10 @@ export class AskReferOutComponent {
   });
 
   protected readonly copy = computed(() => COPY[this.domain()]);
+
+  /** Helplines for where the phone is now, shown with the crisis and death replies. */
+  protected readonly support = crisisSupportFor(inject(PreferencesService).browserTimezone());
+  protected readonly findHelpline = FIND_A_HELPLINE;
 
   readonly draft = signal('');
 

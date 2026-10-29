@@ -21,7 +21,7 @@ from zoneinfo import ZoneInfo
 from ..core.vedic.constants import PLANET_COLORS, PLANET_NUMBER
 from ..core.vedic.favourable import digital_root, favourable_points
 from ..core.vedic.nakshatra import nakshatra_of
-from ..core.vedic.panchanga_day import daily_panchanga, personal_panchanga
+from ..core.vedic.panchanga_day import TARABALA_HARD, daily_panchanga, personal_panchanga
 from ..core.vedic.positions import jd_to_local, sign_index, vedic_day_bounds
 from ..core.vedic.gocharam import gochara_rules
 from ..core.vedic.gocharam.strength import (
@@ -291,7 +291,24 @@ def _score_parts(personal: dict, ctx: dict) -> dict:
         moon = _MOON_POINTS["favourable"]
     else:
         moon = _MOON_POINTS["other"]
-    return {"base": _SCORE_BASE, "star": star, "moon": moon, "transits": _transit_points(personal, ctx)}
+    parts = {"base": _SCORE_BASE, "star": star, "moon": moon, "transits": _transit_points(personal, ctx)}
+    # A day the Calendar marks "take care" (panchanga_day.day_quality: Janma
+    # or Vadha tara, or chandrashtama) never reads Steady or Good here: the
+    # two tabs showed "53 Steady" and "Use extra care" for one day (sweep
+    # 2026-10-29 F-1). The cap is a part of its own so the parts still add
+    # up to the score and the tap sheet can say why.
+    if _is_care_day(tara, chandra):
+        parts["care"] = min(0, _CARE_CEILING - sum(parts.values()))
+    return parts
+
+
+# Just under the "positive" band: a care day reads Mixed at most.
+_CARE_CEILING = 49
+
+
+def _is_care_day(tara: dict, chandra: dict) -> bool:
+    return (tara.get("tara") in TARABALA_HARD or bool(chandra.get("chandrashtama"))
+            or chandra.get("house_from_rashi") == 8)
 
 
 def _score_day(personal: dict, ctx: dict) -> tuple[int, str, str]:

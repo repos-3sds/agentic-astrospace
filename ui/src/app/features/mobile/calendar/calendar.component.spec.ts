@@ -37,7 +37,7 @@ describe('CalendarComponent', () => {
       imports: [CalendarComponent],
       providers: [
         provideRouter([]),
-        { provide: KundliStore, useValue: { activeId, active } },
+        { provide: KundliStore, useValue: { activeId, active, owner: active } },
         {
           provide: PreferencesService,
           useValue: { panchangaContextKey, festivalRegions, panchangaPlace },

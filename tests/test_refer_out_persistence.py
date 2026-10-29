@@ -30,7 +30,7 @@ from astrospace.agents.safety import REFER_OUT_ANSWERS, refer_out_kind
 from astrospace.db.models import AskMessage
 
 MIGRATIONS = Path(__file__).resolve().parents[1] / "supabase" / "migrations"
-CANONICAL = {"death", "health", "legal", "money"}
+CANONICAL = {"crisis", "death", "health", "legal", "money"}
 
 
 def _allowed_in_sql() -> set[str]:
@@ -97,6 +97,9 @@ def test_retired_vocabulary_is_gone():
 
 
 @pytest.mark.parametrize("question,expected", [
+    ("I am thinking of suicide", "crisis"),
+    ("I want to end my life, will things get better?", "crisis"),
+    ("I don't want to live anymore", "crisis"),
     ("Will I die this year?", "death"),
     ("How long will I live?", "death"),
     ("Do I have cancer?", "health"),
@@ -111,3 +114,13 @@ def test_each_refer_out_route_produces_a_persistable_kind(question, expected):
     assert kind == expected
     assert kind in _allowed_in_sql()
     assert kind in _allowed_in_model()
+
+
+@pytest.mark.parametrize("question", [
+    "When will I get married?", "Is this month good to end my lease?", "Will my career end soon?",
+    "When will my bad phase end?",
+])
+def test_ordinary_endings_are_not_read_as_a_crisis(question):
+    """Sweep 2026-10-29 G-1: the crisis gate leans towards catching, but not
+    so far that an ordinary question about an ending gets the helpline."""
+    assert refer_out_kind(question) != "crisis"

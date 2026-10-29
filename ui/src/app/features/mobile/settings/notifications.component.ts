@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { PushService } from '../../../core/push.service';
+import { RemedyReminderService } from '../../../core/remedy-reminder.service';
 import { EmailCategory, EmailSettingsService } from '../../../core/email-settings.service';
 import { RouterLink } from '@angular/router';
 import { BackLinkDirective } from '../../../core/back-link.directive';
@@ -53,6 +54,7 @@ export interface NotificationPref {
 })
 export class NotificationsComponent {
   private readonly push = inject(PushService);
+  private readonly remedyReminders = inject(RemedyReminderService);
   protected readonly verse = inject(SubhashitaService);
   private readonly storageKey = 'astrospace.mobile.notificationPrefs';
   private readonly snoozeKey = 'astrospace.mobile.notificationPrompt.snoozedUntil';
@@ -162,6 +164,8 @@ export class NotificationsComponent {
     this.persist();
     const pref = this.prefs().find((p) => p.id === id);
     if (pref) void this.push.syncPreference(id, pref.on);
+    // Remedy reminders are scheduled on the phone, where the practice lives.
+    if (id === 'remedies') void this.remedyReminders.reschedule();
   }
 
   /** Shows the OS prompt, or opens the phone's settings when it will not show. */

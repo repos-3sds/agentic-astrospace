@@ -387,7 +387,11 @@ export interface DailyBriefResponse {
   cached?: boolean;
 }
 
-export interface DayScoreParts { base: number; star: number; moon: number; transits: number }
+export interface DayScoreParts {
+  base: number; star: number; moon: number; transits: number;
+  /** Holds a "take care" day (Janma or Vadha star, chandrashtama) under 50, as on Calendar. */
+  care?: number;
+}
 
 export interface DailyGuidancePayload {
   system: string;
@@ -1629,7 +1633,7 @@ export interface AskResponse {
   tools_used: string[];
   kundli_id?: string;
   thread_id?: string | null;
-  refer_out_kind?: 'health' | 'legal' | 'money' | 'death' | null;
+  refer_out_kind?: 'crisis' | 'health' | 'legal' | 'money' | 'death' | null;
   /**
    * Explicit outcome signal — added when the web Ask endpoint was migrated
    * to the same AskOrchestrator pipeline as native streaming Ask.
@@ -1787,7 +1791,7 @@ export type AskStreamEvent =
       reason?: string;
       message?: string;
     }
-  | { type: 'refer_out'; kind: 'health' | 'legal' | 'money' | 'death'; answer: string }
+  | { type: 'refer_out'; kind: 'crisis' | 'health' | 'legal' | 'money' | 'death'; answer: string }
   | AskContextUnavailableEnvelope
   | AskFatalErrorEnvelope
   | { type: 'memory_candidate'; profile_id: string; revision: number; existing_fact_id?: string | null; candidate: AskMemoryCandidate }
@@ -1801,7 +1805,7 @@ export type AskStreamEvent =
        * question never reached routing (an input-side refer-out). */
       domain: string | null;
       /** Non-null only when the answer was refused — see AnswerView.tone. */
-      refer_out_kind: 'health' | 'legal' | 'money' | 'death' | null;
+      refer_out_kind: 'crisis' | 'health' | 'legal' | 'money' | 'death' | null;
       evidence: AskEvidenceItem[];
     };
 

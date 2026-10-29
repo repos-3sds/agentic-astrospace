@@ -515,7 +515,7 @@ class AskMessage(Base):
     __table_args__ = (
         CheckConstraint(
             "refer_out_kind IS NULL OR refer_out_kind IN "
-            "('death', 'health', 'legal', 'money', 'out_of_scope', 'greeting')",
+            "('crisis', 'death', 'health', 'legal', 'money', 'out_of_scope', 'greeting')",
             name="ask_messages_refer_out_kind_check",
         ),
     )

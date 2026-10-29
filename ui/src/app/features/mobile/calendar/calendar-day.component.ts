@@ -289,7 +289,12 @@ export class CalendarDayComponent {
 
   protected qualityLabel(day: CalendarDaySummary): string {
     const tone = this.dayTone(day);
-    return tone === 'good' ? 'Good day for you' : tone === 'care' ? 'Use extra care today' : 'A mixed day';
+    if (tone === 'good') return 'Good day for you';
+    if (tone === 'mixed') return 'A mixed day';
+    // Named for the flag that set it, and true of any date, not only today.
+    // Today's ring stays under 50 on these days too (daily.py _is_care_day).
+    const isChandrashtama = day.chandrabala.chandrashtama || day.chandrabala.house_from_rashi === 8;
+    return isChandrashtama ? 'Take care: Chandrashtama day' : `Take care: ${day.tarabala.tara} star day`;
   }
 
   protected qualityDetail(day: CalendarDaySummary): string {
@@ -569,7 +574,7 @@ export class CalendarDayComponent {
    */
   private async loadFestivals(fallbackDate: string, regions = this.preferences.festivalRegions()): Promise<void> {
     const date = this.selectedDate() || fallbackDate;
-    const place = festivalPlace(this.preferences, this.store.active());
+    const place = festivalPlace(this.preferences, this.store.owner() ?? this.store.active());
     if (!place || !/^\d{4}-\d{2}/.test(date)) return;
     const fromDate = `${date.slice(0, 7)}-01`;
     const days = new Date(Number(date.slice(0, 4)), Number(date.slice(5, 7)), 0).getDate();

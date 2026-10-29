@@ -230,3 +230,20 @@ def test_alarm_timings_cap_at_a_fortnight(env):
     client, kundli = env["client"], env["kundli"]
     assert client.get(f"/api/v1/panchanga/{kundli.id}/timings", params={"days": 15}).status_code == 422
     assert client.get(f"/api/v1/panchanga/{kundli.id}/timings", params={"from_date": "bad"}).status_code == 400
+
+
+def test_a_relatives_profile_uses_the_holders_city(env):
+    """Sweep 2026-10-29 F-2: switching to a relative moved Today, Calendar
+    and Muhurta to the relative's birth town, while alarms and the widget,
+    which follow the holder, kept the holder's. All now use the holder's."""
+    client = env["client"]
+    made = client.post("/api/v1/kundlis", json={
+        "name": "Priya", "relation": "spouse",
+        "birth_year": 1993, "birth_month": 3, "birth_day": 2,
+        "birth_hour": 9, "birth_minute": 30,
+        "birth_city": "Chennai", "birth_nation": "IN",
+    })
+    assert made.status_code in (200, 201), made.text
+    calendar, today, muhurta, daily = _places(client, made.json()["id"], timezone="Asia/Kolkata")
+    for place in (calendar["place"], today["place"], muhurta["place"], daily["provenance"]["place"]):
+        assert place["city"] == "Hyderabad", place

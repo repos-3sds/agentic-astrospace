@@ -340,7 +340,7 @@ export class CalendarComponent {
     this.vratRows.set([]);
     this.qualityByDate.set(new Map());
     this.qualityNote.set(null);
-    const place = festivalPlace(this.preferences, this.store.active());
+    const place = festivalPlace(this.preferences, this.store.owner() ?? this.store.active());
     const [vrats, month] = await Promise.allSettled([
       place ? this.festivals.vratDays(place, fromDate, days) : Promise.reject(new Error('no place')),
       this.panchanga.month(profileId, fromDate, days),
@@ -386,7 +386,7 @@ export class CalendarComponent {
     forceRefresh = false,
   ): Promise<void> {
     const requestId = ++this.festivalRequestId;
-    const place = festivalPlace(this.preferences, this.store.active());
+    const place = festivalPlace(this.preferences, this.store.owner() ?? this.store.active());
     this.festivalRows.set([]);
     if (!place) {
       this.festivalLoading.set(false);
