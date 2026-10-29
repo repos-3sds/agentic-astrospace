@@ -59,7 +59,6 @@
       var(--bg);
   }
   a { color: inherit; }
-  @font-face { font-family: "Siddha Mark"; src: url("/fonts/siddha-mark.woff2") format("woff2"); font-display: swap; }
   header {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
     padding: max(18px, env(safe-area-inset-top)) 16px 18px;
@@ -67,7 +66,7 @@
   }
   .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
   .brand img { width: 34px; height: 34px; border-radius: 50%; }
-  .brand span { font: 400 28px/1 "Siddha Mark", "Playfair Display", serif; padding-top: 4px; }
+  .brand span { font-size: 28px; display: inline-block; width: 2.8em; height: calc(2.8em * 111 / 354); overflow: hidden; white-space: nowrap; text-indent: 110%; vertical-align: -0.03em; background-color: currentColor; -webkit-mask: url("/brand/siddha-wordmark.svg") center / contain no-repeat; mask: url("/brand/siddha-wordmark.svg") center / contain no-repeat; }
   .pill {
     display: inline-flex; align-items: center; justify-content: center;
     min-height: 44px; padding: 0 18px; border-radius: 999px;

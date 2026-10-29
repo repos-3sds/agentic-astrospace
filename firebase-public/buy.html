@@ -10,12 +10,10 @@
 <meta name="theme-color" content="#fff8ec" media="(prefers-color-scheme: light)">
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/png" sizes="64x64" href="/img/icon-64.png">
-<link rel="preload" href="/fonts/siddha-mark.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-  @font-face { font-family: "Siddha Mark"; src: url("/fonts/siddha-mark.woff2") format("woff2"); font-display: swap; }
 
   /* Same Liquid Glass / Cream Glass tokens as the landing page. */
   :root {
@@ -84,11 +82,12 @@
   }
   .galaxy { border-radius: 50%; background: var(--orb); overflow: hidden; display: inline-block; width: 40px; height: 40px; }
   .galaxy img { width: 100%; height: 100%; display: block; mix-blend-mode: screen; -webkit-mask-image: radial-gradient(closest-side, #000 82%, transparent); mask-image: radial-gradient(closest-side, #000 82%, transparent); }
-  .wordmark { font-family: "Siddha Mark", "Playfair Display", serif; font-weight: 400; letter-spacing: 0.5px; }
+  /* The wordmark is brand/siddha-wordmark.svg used as a mask, filled with the text colour. */
+  .wordmark { display: inline-block; width: 2.8em; height: calc(2.8em * 111 / 354); overflow: hidden; white-space: nowrap; text-indent: 110%; vertical-align: -0.03em; background-color: currentColor; -webkit-mask: url("/brand/siddha-wordmark.svg") center / contain no-repeat; mask: url("/brand/siddha-wordmark.svg") center / contain no-repeat; }
 
   header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 18px; padding-bottom: 18px; }
   .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-  .brand .wordmark { font-size: 30px; line-height: 1; padding-top: 4px; }
+  .brand .wordmark { font-size: 30px; }
   .top a.small { font-size: 15px; color: var(--muted); text-decoration: none; }
 
   main { padding-bottom: 72px; }

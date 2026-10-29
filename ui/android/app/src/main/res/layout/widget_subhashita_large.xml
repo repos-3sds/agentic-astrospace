@@ -31,13 +31,14 @@
             android:paddingEnd="24dp"
             android:paddingBottom="16dp">
 
-            <TextView
+            <ImageView
                 android:id="@+id/wordmark"
-                style="@style/WidgetWordmark"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Siddha"
-                android:importantForAccessibility="no" />
+                android:layout_width="78dp"
+                android:layout_height="24.5dp"
+                android:contentDescription="@null"
+                android:importantForAccessibility="no"
+                android:scaleType="fitCenter"
+                android:src="@drawable/widget_wordmark" />
 
 
             <ImageView

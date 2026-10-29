@@ -20,7 +20,7 @@ import { longDate, shareText, storyCardFile } from './story-card';
   template: `
     @let v = verse();
     <figure class="card">
-      <span class="brand" aria-hidden="true">Siddha</span>
+      <span class="brand siddha-wordmark" aria-hidden="true">Siddha</span>
       <span class="ornament" aria-hidden="true"></span>
       <figcaption>
         <span class="eyebrow">{{ title }}</span>

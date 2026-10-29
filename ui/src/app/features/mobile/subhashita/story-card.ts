@@ -1,4 +1,5 @@
 import { Subhashita, SUBHASHITA_TITLE } from '../../../core/subhashita.service';
+import { drawWordmark } from '../../../core/brand/wordmark';
 import { shareInviteText } from '../../../core/share-invite';
 
 /** WhatsApp and Instagram statuses are 9:16; 1080 wide is what both keep sharp. */
@@ -13,8 +14,6 @@ const DISPLAY = `'Playfair Display', Georgia, serif`;
 // measured the Devanagari as if in the primary face, nearly zero wide, so
 // centred lines started at the middle and ran off the right edge.
 const SERIF = `'Noto Serif Devanagari', 'Noto Sans Devanagari', 'Kohinoor Devanagari', 'Devanagari Sangam MN', serif`;
-/** The brand wordmark face, the same one as the welcome screen's "Siddha". */
-const BRAND = `'Siddha Mark', 'Cormorant Garamond', serif`;
 
 const CREAM = '#fff8ec';
 const SOFT = 'rgba(255, 236, 220, 0.74)';
@@ -65,9 +64,7 @@ export async function renderStoryCard(verse: Subhashita, canvas = document.creat
   ctx.textAlign = 'center';
 
   // Head: the wordmark, then a small ornament under it.
-  ctx.fillStyle = CREAM;
-  ctx.font = `400 92px ${BRAND}`;
-  ctx.fillText('Siddha', MID, 250);
+  drawWordmark(ctx, MID, 250, 258, CREAM);
   ornament(ctx, 300);
 
   // Foot: where the verse comes from, always at the same place.
@@ -284,7 +281,6 @@ async function fontsReady(): Promise<void> {
       fonts.load(`600 38px ${SANS}`),
       fonts.load(`400 30px ${SANS}`),
       fonts.load(`italic 500 48px ${DISPLAY}`),
-      fonts.load(`400 92px ${BRAND}`, 'Siddha'),
       fonts.load(`400 44px ${SERIF}`, 'धर्म'),
     ]);
   } catch { /* the system font draws instead */ }
