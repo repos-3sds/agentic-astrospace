@@ -1988,6 +1988,37 @@ meta. Left open:
   per-house-lord lines to `AREA_PLAIN` if the backup ends up serving often
   (watch `life_story.cost` status `fallback`).
 
+## Deferred backlog — Yogas & Doshas explained (2026-10-29)
+
+Shipped with the What / Why / Impact / Do / Avoid cards
+(`knowledge/vedic_rules/reader.json`, `core/vedic/yoga_reading.py`). Left
+deliberately:
+
+- [ ] **Telugu reader text** — `reader.json` is English only, like the rest
+  of the app. *Why not:* Telugu stays off until a native speaker checks it.
+  *Unblocks on:* that check. *Hook:* add a `te` block per rule in
+  `reader.json`; `reader_catalog()` in `knowledge/vedic_rules/rules.py`.
+- [ ] **Akriti (shape) Nabhasa yogas** (Yupa, Shara, Shakti, Danda, Nauka
+  …) — not computed. *Why not:* the shape conditions vary between BPHS and
+  Phaladeepika editions and we have not checked them verse by verse; adding
+  them would also lengthen an already long list. *Unblocks on:* a verse
+  check of BPHS ch.35 against Phaladeepika VI. *Hook:* next to
+  `_SANKHYA_NAMES` in `core/vedic/yogas.py`.
+- [ ] **Degree-based Budhaditya** — Budhaditya forms on Sun and Mercury in
+  one sign; combustion under 14° only dims it (`_weakened`). Some
+  practitioners require Mercury beyond a set orb. *Why not:* no classical
+  orb found. *Unblocks on:* a source. *Hook:* `_weakened` in
+  `core/vedic/yoga_reading.py`.
+- [ ] **Gajakesari strength from dignity** — Phaladeepika's fuller reading
+  grades it by Jupiter's dignity and aspect; we grade by placement and show
+  debilitation/combustion as "what weakens it". *Unblocks on:* a decision
+  that graded strength reads better than the note. *Hook:* same function.
+- [ ] **Astrologer review of the reader corpus** — Hawk's mother may mark
+  `reader.json` after release (optional, not a gate). *Hook:* the file
+  itself; `tests/test_yoga_reading.py` enforces the copy rules.
+- Raja/Dhana: mutual links still form in about 86% / 65% of charts. The
+  corpus says so on the card ("how common") rather than raising the bar
+  past what the classics state.
 ## Deferred backlog — plan limits on the server (sweep 2026-10-29 G-6)
 
 - [ ] **The Gun Milan breakdown is served to every plan.** Free sees only the

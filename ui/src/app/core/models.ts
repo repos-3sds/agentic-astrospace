@@ -557,7 +557,35 @@ export interface YoginiDashaPayload {
   };
 }
 
-export interface YogaResult {
+/**
+ * What a reader is told about a yoga or dosha (astrospace/knowledge/vedic_rules/reader.json):
+ * what it is, the rule that forms it, what it can mean, what to do and avoid,
+ * and how common it is. Book sources never come through here.
+ */
+export interface ReaderText {
+  what?: string;
+  formed_when?: string;
+  impact?: string;
+  do?: string[];
+  avoid?: string[];
+  how_common?: string;
+}
+
+/** Fields the engine adds to every yoga and dosha so a card can explain itself. */
+export interface ExplainedRule {
+  reader?: ReaderText;
+  /** This chart's placements that form it, in plain sentences. */
+  why?: string[];
+  /** What classically dims a yoga that is present (a fallen or combust planet). */
+  weakened?: string[];
+  /** A caution checked and cancelled by a classical rule: shown as checked, never hidden. */
+  cancelled?: boolean;
+  cancellations?: string[];
+  /** A one-way Raja/Dhana link: shown in Practitioner only. */
+  partial?: boolean;
+}
+
+export interface YogaResult extends ExplainedRule {
   rule_id?: string;
   /** The KB's plain-words line, shown first outside Practitioner. */
   lay_explanation?: string;
@@ -588,13 +616,15 @@ export interface YogasPayload {
 }
 
 export interface ManglikException {
+  /** The same check in plain words, for readers. */
+  plain?: string;
   rule: string;
   applies: boolean;
   detail: string;
   source_status?: string;
 }
 
-export interface ManglikPayload {
+export interface ManglikPayload extends ExplainedRule {
   rule_id?: string;
   /** The KB's plain-words line, shown first outside Practitioner. */
   lay_explanation?: string;
@@ -629,7 +659,7 @@ export interface GandantaHit {
   abhukta_mula: boolean;
 }
 
-export interface GandantaPayload {
+export interface GandantaPayload extends ExplainedRule {
   rule_id?: string;
   /** The KB's plain-words line, shown first outside Practitioner. */
   lay_explanation?: string;
@@ -654,7 +684,7 @@ export interface GrahanHit {
   severity: string;
 }
 
-export interface GrahanPayload {
+export interface GrahanPayload extends ExplainedRule {
   rule_id?: string;
   /** The KB's plain-words line, shown first outside Practitioner. */
   lay_explanation?: string;

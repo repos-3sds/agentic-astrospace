@@ -1,20 +1,44 @@
 @use '../mobile-tokens' as *;
 
 :host { display: contents; }
-.head { display: flex; flex-direction: column; gap: 5px; }
+.head { display: flex; flex-direction: column; gap: 6px; }
 .eyebrow { @include m-eyebrow; margin: 0; color: var(--m-accent); }
 h2 { @include m-h2; margin: 0; color: var(--m-text); }
+h3 { @include m-eyebrow; margin: 0 0 6px; color: var(--m-muted); }
+section { display: flex; flex-direction: column; gap: 4px; }
+.tagline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; }
+.tag {
+  @include m-badge;
+  color: var(--m-muted); background: var(--m-raised);
+  &[data-tone='good'] { color: var(--m-good); background: var(--m-good-soft); }
+  &[data-tone='gold'] { color: var(--m-warn); background: var(--m-warn-soft); }
+}
+.common { @include m-caption; color: var(--m-muted); }
 .body { @include m-body; margin: 0; color: var(--m-text); }
-.source {
-  display: flex; flex-direction: column; gap: 8px; padding: 14px 15px;
-  border: 1px solid var(--m-border); border-radius: 16px; background: var(--m-raised);
+.body.small { @include m-body-small; }
+.muted { color: var(--m-muted); }
+.why {
+  padding: 13px 15px; border-radius: 16px; background: var(--m-accent-soft);
   p { @include m-body-small; margin: 0; color: var(--m-text); }
-  p:last-child { color: var(--m-accent-strong); font-weight: 600; }
 }
-.chart-fact {
-  @include m-body-small; margin: 0; padding: 14px 15px; border-radius: 16px;
-  color: var(--m-text); background: var(--m-accent-soft);
+.softens {
+  padding: 13px 15px; border-radius: 16px; background: var(--m-good-soft);
+  h3 { color: var(--m-good); }
+  p {
+    @include m-body-small; display: flex; align-items: flex-start; gap: 8px; margin: 0; color: var(--m-text);
+    img { width: 18px; height: 18px; flex: 0 0 auto; margin-top: 2px; }
+  }
 }
-.got-it {
-  @include m-cta-primary; align-self: flex-start;
+.do-avoid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.do, .avoid {
+  padding: 13px 15px; border-radius: 16px; border: 1px solid var(--m-border); background: var(--m-surface);
+  ul { @include m-body-small; display: flex; flex-direction: column; gap: 6px; margin: 0; padding-left: 18px; color: var(--m-text); }
 }
+.do h3 { color: var(--m-good); }
+.avoid h3 { color: var(--m-warn); }
+.note { @include m-caption; margin: 0; color: var(--m-muted); }
+.practitioner {
+  padding-top: 10px; border-top: 1px solid var(--m-border);
+  ul { @include m-caption; margin: 0; padding-left: 18px; color: var(--m-muted); }
+}
+.got-it { @include m-cta-primary; align-self: flex-start; }

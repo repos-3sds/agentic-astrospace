@@ -82,3 +82,7 @@
     (confirmed)="acceptSpeech($event)"
   />
 }
+
+@if (pendingQuestion()) {
+  <as-ai-sharing-sheet (agreed)="agreeToAiSharing()" (dismissed)="pendingQuestion.set(null)" />
+}

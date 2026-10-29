@@ -31,6 +31,8 @@ import { TextKey } from '../../../core/i18n/en';
 import { TranslatePipe } from '../../../core/i18n/i18n.service';
 import { tabletLayout, wideLayout } from '../../../core/screen-size';
 import { SettingsHomeComponent } from '../settings/settings-home.component';
+import { AppUpdateService } from '../../../core/app-update.service';
+import { UpdateSheetComponent } from '../update/update-sheet.component';
 
 interface MobileTab {
   commands: string[];
@@ -75,7 +77,7 @@ const DEEP_LINK_WINDOW_MS = 15_000;
   selector: 'as-mobile-shell',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, GenericErrorComponent, ScrollMemoryDirective, EdgeSwipeBackDirective, PullRefreshDirective, SubhashitaSheetComponent, SettingsHomeComponent, TranslatePipe],
+  imports: [RouterOutlet, GenericErrorComponent, ScrollMemoryDirective, EdgeSwipeBackDirective, PullRefreshDirective, SubhashitaSheetComponent, SettingsHomeComponent, TranslatePipe, UpdateSheetComponent],
   templateUrl: './mobile-shell.component.html',
   styleUrl: './mobile-shell.component.scss',
   host: { class: 'as-mobile' },
@@ -112,6 +114,8 @@ export class MobileShellComponent {
   private readonly widgets = inject(WidgetBridgeService);
   /** Today's verse while its first-open sheet is up. */
   protected readonly dailyVerse = signal<Subhashita | null>(null);
+  /** "A new version is ready", after the day's verse when both are due. */
+  protected readonly updates = inject(AppUpdateService);
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   /** Read once per screen change by the live region when a screen has no h1. */

@@ -1,4 +1,4 @@
-<div class="public-scroll">
+<div class="public-scroll" [attr.inert]="updates.blocked() ? '' : null">
   <router-outlet />
 </div>
 
@@ -7,4 +7,8 @@
        (click)="finishAnimatedSplash()" role="button" tabindex="0" aria-label="Skip intro">
     <app-splash [dark]="theme.dark()" [duration]="splashDuration()" (finished)="finishAnimatedSplash()"></app-splash>
   </div>
+}
+
+@if (updates.blocked()) {
+  <as-update-gate />
 }

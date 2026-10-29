@@ -1,0 +1,103 @@
+name: App versions
+
+# Which build readers can install, and the oldest allowed to open, per
+# platform (docs/app_updates.md). Run by hand, or by a Claude thread, on
+# Hawk's word. Announce sets Android's latest build by itself when it runs;
+# this is for iOS (once a build is in TestFlight's tester group) and for
+# marking a build required.
+#
+# latest_build   phones below it see "A new version is ready" on launch and
+#                get a few gentle reminder pushes.
+# required_build phones below it see only "Please update Siddha" until they do.
+#                'clear' removes it.
+# block_after_days  every phone below latest_build is blocked this many days
+#                after latest_build was set. 'clear' removes it.
+#
+# Blank leaves a field as it is.
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform'
+        type: choice
+        options: [ios, android]
+        default: ios
+      latest_build:
+        description: 'Build readers can install now (blank: unchanged)'
+        type: string
+        default: ''
+      required_build:
+        description: 'Oldest build allowed to open (blank: unchanged; clear: no block)'
+        type: string
+        default: ''
+      block_after_days:
+        description: 'Block older builds this many days after latest (blank: unchanged; clear: never)'
+        type: string
+        default: ''
+
+concurrency:
+  group: app-version
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write   # Workload Identity Federation, as in ship.yml
+
+env:
+  API_URL: https://agentic-astrospace-cwuqybpnzq-el.a.run.app
+  DEPLOYER_SA: github-deployer@gen-lang-client-0058562386.iam.gserviceaccount.com
+
+jobs:
+  set:
+    runs-on: ubuntu-latest
+    # Only from main: the WIF provider admits main and nothing else.
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: The change
+        env:
+          PLATFORM: ${{ inputs.platform }}
+          LATEST: ${{ inputs.latest_build }}
+          REQUIRED: ${{ inputs.required_build }}
+          BLOCK_DAYS: ${{ inputs.block_after_days }}
+        run: |
+          set -euo pipefail
+          field() {  # name value -> a jq fragment, or nothing for blank
+            case "$2" in
+              '') echo '{}' ;;
+              clear) echo "{\"$1\": null}" ;;
+              *[!0-9]*) echo "::error::$1 must be a number or 'clear', not '$2'" >&2; exit 1 ;;
+              *) echo "{\"$1\": $2}" ;;
+            esac
+          }
+          jq -n --arg p "$PLATFORM" \
+            --argjson a "$(field latest_build "$LATEST")" \
+            --argjson b "$(field required_build "$REQUIRED")" \
+            --argjson c "$(field block_after_days "$BLOCK_DAYS")" \
+            '{platform: $p} + $a + $b + $c' > body.json
+          cat body.json
+
+      - id: release-auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOYER_SA }}
+          token_format: id_token
+          id_token_audience: ${{ env.API_URL }}
+          id_token_include_email: true
+          create_credentials_file: false
+
+      - name: Set it
+        env:
+          TOKEN: ${{ steps.release-auth.outputs.id_token }}
+        run: |
+          set -euo pipefail
+          curl -fsS -X POST "$API_URL/api/v1/releases/app-version" -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' --data @body.json > release.json
+          {
+            echo "### $(jq -r .platform release.json)"
+            echo "- Latest build: $(jq -r '.latest_build // "not set"' release.json)"
+            echo "- Oldest allowed to open: $(jq -r '.required_build // "any (no block)"' release.json)"
+            echo "- Block older builds after: $(jq -r 'if .block_after_days == null then "never" else "\(.block_after_days) days" end' release.json)"
+            echo "- Update button opens: $(jq -r .update_url release.json)"
+          } >> "$GITHUB_STEP_SUMMARY"

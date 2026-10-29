@@ -56,6 +56,11 @@ for (const scheme of ['light', 'dark'] as const) {
     await page.screenshot({ path: `test-results/ask-depth/deep-${scheme}.png` });
 
     await page.getByRole('button', { name: 'Send' }).first().click();
+    // First question on this phone: the AI-sharing notice holds it until agreed.
+    await expect(page.getByRole('heading', { name: 'Answers are written with AI' })).toBeVisible();
+    expect(sent.length).toBe(0);
+    await page.screenshot({ path: `test-results/ask-depth/ai-sharing-${scheme}.png` });
+    await page.getByRole('button', { name: 'Agree and ask' }).click();
     await expect.poll(() => sent.length).toBeGreaterThan(0);
     expect(sent[0]['depth']).toBe('deep');
     await expect(page.getByText('Deep reading · about a minute')).toBeVisible();

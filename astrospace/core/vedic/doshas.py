@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from .positions import house_from_lagna, sign_index, sign_name
+from .yoga_reading import attach_dosha_reading
 from ...knowledge.vedic_rules import enrich_rule_result
 
 MANGLIK_HOUSES = {1, 2, 4, 7, 8, 12}
@@ -184,6 +185,11 @@ def _manglik_exceptions(positions: dict, mars_sign: int) -> list[dict]:
             f"Mars in {sign_name(mars_sign)} — {dignity}; dosha weakened."
             if dignity else f"Mars in {sign_name(mars_sign)} — neither own sign nor exalted."
         ),
+        "plain": (
+            f"Mars is in {sign_name(mars_sign)}, "
+            + ("its strongest sign." if mars_sign == 9 else "its own sign.")
+            if dignity else "Mars is not in its own or strongest sign."
+        ),
         "source_status": "convention_dependent",
     })
 
@@ -194,6 +200,7 @@ def _manglik_exceptions(positions: dict, mars_sign: int) -> list[dict]:
             "rule": "Jupiter aspects Mars (graha drishti 5/7/9)",
             "applies": False,
             "detail": "Jupiter position unavailable; aspect not evaluated.",
+            "plain": "Jupiter's position was not available, so its look at Mars was not checked.",
             "source_status": "convention_dependent",
         })
     else:
@@ -209,6 +216,10 @@ def _manglik_exceptions(positions: dict, mars_sign: int) -> list[dict]:
                 + ("; Jupiter's drishti falls on Mars, dosha weakened." if applies
                    else "; no Jupiter drishti on Mars.")
             ),
+            "plain": (
+                f"Jupiter in {sign_name(jupiter_sign)} looks at Mars in {sign_name(mars_sign)}."
+                if applies else "Jupiter does not look at Mars."
+            ),
             "source_status": "convention_dependent",
         })
 
@@ -221,6 +232,10 @@ def _manglik_exceptions(positions: dict, mars_sign: int) -> list[dict]:
         "detail": (
             f"Mars and Moon both in {sign_name(mars_sign)}; dosha weakened."
             if conj else "Mars and Moon in different signs."
+        ),
+        "plain": (
+            f"Mars sits with your Moon in {sign_name(mars_sign)}."
+            if conj else "Mars and your Moon are in different signs."
         ),
         "source_status": "convention_dependent",
     })
@@ -297,8 +312,10 @@ def manglik_dosha(positions: dict, lagna_lon: float) -> dict:
 
 
 def dosha_summary(positions: dict, lagna_lon: float) -> dict:
-    return {
+    summary = {
         "manglik": manglik_dosha(positions, lagna_lon),
         "gandanta": gandanta_dosha(positions, lagna_lon),
         "grahan": grahan_dosha(positions),
     }
+    attach_dosha_reading(summary, positions, lagna_lon)
+    return summary

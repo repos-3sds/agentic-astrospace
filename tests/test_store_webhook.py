@@ -120,8 +120,9 @@ def _post(client, body):
     return client.post("/api/v1/store/revenuecat/webhook", json=body, headers=AUTH).json()["status"]
 
 
-def test_sandbox_purchase_is_acknowledged_not_applied(env):
+def test_sandbox_purchase_is_acknowledged_not_applied(env, monkeypatch):
     client, factory = env
+    monkeypatch.setattr("astrospace.api.store_routes._auth_email", lambda user_id: "tester@example.com")
     assert _post(client, _event("INITIAL_PURCHASE", environment="SANDBOX")) == "ignored_sandbox"
     with factory() as db:
         assert resolve_entitlements(db, USER).access_tier == "free"
@@ -133,6 +134,34 @@ def test_sandbox_applies_when_a_test_deployment_opts_in(env, monkeypatch):
     assert _post(client, _event("INITIAL_PURCHASE", environment="SANDBOX")) == "activated"
     with factory() as db:
         assert resolve_entitlements(db, USER).access_tier == "plus"
+
+
+def test_review_account_sandbox_purchase_applies(env, monkeypatch):
+    """Apple's and Google's reviewers buy in the sandbox; their plan must unlock
+    even with REVENUECAT_ACCEPT_SANDBOX off, or the purchase "does nothing"."""
+    client, factory = env
+    looked_up = []
+    monkeypatch.setattr("astrospace.api.store_routes._auth_email",
+                        lambda user_id: looked_up.append(user_id) or "SmartAgenticAIs+Review@gmail.com")
+    assert _post(client, _event("INITIAL_PURCHASE", environment="SANDBOX", store="APP_STORE")) == "activated"
+    assert looked_up == [USER]
+    with factory() as db:
+        assert resolve_entitlements(db, USER).access_tier == "plus"
+
+
+def test_review_account_list_can_be_replaced_or_emptied(env, monkeypatch):
+    client, _ = env
+    monkeypatch.setattr("astrospace.api.store_routes._auth_email", lambda user_id: "smartagenticais+review@gmail.com")
+    monkeypatch.setenv("REVENUECAT_SANDBOX_EMAILS", "")
+    assert _post(client, _event("INITIAL_PURCHASE", environment="SANDBOX")) == "ignored_sandbox"
+    monkeypatch.setenv("REVENUECAT_SANDBOX_EMAILS", "other@example.com, smartagenticais+review@gmail.com")
+    assert _post(client, _event("INITIAL_PURCHASE", environment="SANDBOX")) == "activated"
+
+
+def test_sandbox_buyer_whose_email_cannot_be_read_is_not_applied(env, monkeypatch):
+    client, _ = env
+    monkeypatch.setattr("astrospace.api.store_routes._auth_email", lambda user_id: None)
+    assert _post(client, _event("INITIAL_PURCHASE", environment="SANDBOX")) == "ignored_sandbox"
 
 
 def test_transfer_moves_the_plan_and_packs_to_the_new_account(env):

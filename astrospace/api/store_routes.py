@@ -17,7 +17,10 @@ auto-renew off; the plan runs to its expiry and EXPIRATION ends it.
 
 Sandbox purchases (Play licence testers, TestFlight) are acknowledged and not
 applied, so a test purchase never becomes a real plan, unless
-REVENUECAT_ACCEPT_SANDBOX is set for a test deployment. A TRANSFER (a
+REVENUECAT_ACCEPT_SANDBOX is set for a test deployment. The store review
+accounts in REVENUECAT_SANDBOX_EMAILS are the exception: Apple's and Google's
+reviewers buy in the sandbox, and their purchase must unlock the plan or the
+app is rejected for a purchase that "does nothing", on every release. A TRANSFER (a
 restore signed in as someone else) moves the store purchases from the old
 account to the new one, and the old account drops back to Free.
 """
@@ -25,6 +28,9 @@ import hmac
 import logging
 import os
 from datetime import datetime
+from urllib.parse import quote
+
+import requests
 
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy.orm import Session
@@ -128,10 +134,48 @@ def _apply_plan(db: Session, account: BillingAccount, event: dict, product, now:
     return "ignored_event"
 
 
+# The sign-in Apple's and Google's reviewers are given (App Store Connect ›
+# App Review Information, Play Console › App access). Set the variable to
+# replace the list; set it empty to stop applying their sandbox purchases.
+DEFAULT_SANDBOX_EMAILS = "smartagenticais+review@gmail.com"
+
+
+def _sandbox_emails() -> set[str]:
+    raw = os.getenv("REVENUECAT_SANDBOX_EMAILS", DEFAULT_SANDBOX_EMAILS)
+    return {email.strip().casefold() for email in raw.split(",") if email.strip()}
+
+
+def _auth_email(user_id: str) -> str | None:
+    """The sign-in email of a Supabase user, or None when it can't be read."""
+    base = os.getenv("SUPABASE_URL", "").rstrip("/")
+    key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+    if not base or not key:
+        return None
+    try:
+        response = requests.get(
+            f"{base}/auth/v1/admin/users/{quote(user_id, safe='')}",
+            headers={"apikey": key, "Authorization": f"Bearer {key}"}, timeout=8,
+        )
+    except requests.RequestException:
+        log.exception("could not read the buyer's email for a sandbox event")
+        return None
+    if response.status_code != 200:
+        return None
+    email = (response.json() or {}).get("email")
+    return email if isinstance(email, str) else None
+
+
 def _accepts(event: dict) -> bool:
     if event.get("environment", "PRODUCTION") == "PRODUCTION":
         return True
-    return flag("REVENUECAT_ACCEPT_SANDBOX")
+    if flag("REVENUECAT_ACCEPT_SANDBOX"):
+        return True
+    allowed = _sandbox_emails()
+    user_id = str(event.get("app_user_id") or "")
+    if not allowed or not user_id or user_id.startswith("$RCAnonymousID"):
+        return False
+    email = _auth_email(user_id)
+    return bool(email) and email.strip().casefold() in allowed
 
 
 def _existing_account(db: Session, user_id: str) -> BillingAccount | None:

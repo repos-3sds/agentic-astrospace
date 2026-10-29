@@ -49,6 +49,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(WidgetsPlugin.class);
         registerPlugin(NativeCalendarPlugin.class);
         registerPlugin(InAppReviewPlugin.class);
+        registerPlugin(InAppUpdatePlugin.class);
         registerPlugin(TextSizePlugin.class);
         super.onCreate(savedInstanceState);
         holdPhonesUpright();

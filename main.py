@@ -47,6 +47,7 @@ from astrospace.api.store_routes import router as store_router
 from astrospace.api.web_store_routes import router as web_store_router
 from astrospace.api.email_routes import router as email_router
 from astrospace.api.release_routes import router as release_router
+from astrospace.api.app_version_routes import router as app_version_router
 from astrospace.api.voice_routes import router as voice_router
 from astrospace.api.subhashita_routes import router as subhashita_router
 from astrospace.admin.audit_middleware import AppAuditMiddleware
@@ -163,6 +164,7 @@ app.include_router(store_router)
 app.include_router(web_store_router)
 app.include_router(email_router)
 app.include_router(release_router)
+app.include_router(app_version_router)
 
 # Registered before the "/" SPA mount — Starlette matches in registration
 # order, so anything defined after the mount is unreachable.

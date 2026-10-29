@@ -22,6 +22,16 @@ def rules_catalog() -> dict[str, dict[str, Any]]:
     return catalog
 
 
+@lru_cache(maxsize=1)
+def reader_catalog() -> dict[str, dict[str, Any]]:
+    """Reader text per rule: what, formed_when, impact, do, avoid, how_common.
+
+    The one source the Yogas & Doshas screen, Ask and the Story writer share.
+    Book sources live in yogas.json/doshas.json and never reach the screen.
+    """
+    return json.loads((BASE / "reader.json").read_text())["rules"]
+
+
 def get_rule(rule_id: str) -> dict[str, Any]:
     return rules_catalog().get(rule_id, {
         "id": rule_id,
@@ -62,4 +72,5 @@ def enrich_rule_result(rule_id: str, result: dict[str, Any]) -> dict[str, Any]:
         "caveats": rule.get("caveats", []),
         "verified": status == "verified_common",
         "notes": [*rule.get("notes", []), *result.get("notes", [])],
+        "reader": reader_catalog().get(rule_id, {}),
     }

@@ -121,13 +121,14 @@ class TestSankhyaYoga:
         assert result["rule_id"] == "kedara_yoga"
         assert result["active"] is True
 
-    def test_seven_distinct_signs_matches_no_named_tier(self):
+    def test_seven_distinct_signs_is_veena(self):
+        # Brihat Jataka XII.10 / Phaladeepika VI.40: seven signs = Veena (Vallaki).
         positions = _positions(Sun=1.0, Moon=31.0, Mars=61.0, Mercury=91.0,
                                Jupiter=121.0, Venus=151.0, Saturn=181.0)
         signs = _planet_signs(positions)
         result = _sankhya_yoga(signs)
-        assert result["rule_id"] == "sankhya_yoga"
-        assert result["active"] is False
+        assert result["rule_id"] == "veena_yoga"
+        assert result["active"] is True
 
     def test_nodes_excluded_from_the_count(self):
         # Rahu/Ketu placed in two extra signs must not change the count.
