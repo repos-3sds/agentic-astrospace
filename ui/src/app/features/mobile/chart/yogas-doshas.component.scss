@@ -31,10 +31,9 @@
 }
 .yd-empty {
   @include m-body-small;
-  min-height: 160px;
+  min-height: 0;
   margin: 0;
 }
-.yd-state.error { border-color: var(--m-warn); b { color: var(--m-warn); } }
 .heading {
   h1 { @include m-h1; margin: 0 0 4px; color: var(--m-text); }
   p { @include m-body-small; margin: 0; color: var(--m-muted); }
@@ -46,30 +45,52 @@
   }
   button.is-on { @include m-selected-pill; }
 }
-.cards { display: flex; flex-direction: column; gap: 12px; }
+.group { display: flex; flex-direction: column; gap: 12px; }
+.group-title { @include m-eyebrow; margin: 6px 0 0; color: var(--m-muted); }
+.group-note { @include m-caption; margin: -4px 0 0; color: var(--m-muted); }
 .card {
   display: flex; flex-direction: column; gap: 10px; padding: 16px 17px;
   border: 1px solid var(--m-border); border-radius: 20px;
   background: var(--m-surface); box-shadow: var(--m-shadow-card);
-  > p { @include m-body-small; margin: 0; color: var(--m-muted); }
-  > .locked-note { font-style: italic; }
+  p { margin: 0; }
 }
 .card-head { display: flex; align-items: center; gap: 8px; }
-h2 { @include m-body-strong; flex: 1 1 0; margin: 0; color: var(--m-text); }
+h3 { @include m-body-strong; flex: 1 1 0; margin: 0; color: var(--m-text); }
 .tag {
   @include m-badge;
   flex: 0 0 auto; color: var(--m-muted); background: var(--m-raised);
   &[data-tone='good'] { color: var(--m-good); background: var(--m-good-soft); }
   &[data-tone='gold'] { color: var(--m-warn); background: var(--m-warn-soft); }
-  &[data-tone='bad'] { color: var(--m-bad); background: var(--m-bad-soft); }
 }
-.rule { height: 1px; background: var(--m-border); }
-.cancelled {
-  display: flex; align-items: flex-start; gap: 7px; color: var(--m-good) !important;
-  img { width: 16px; height: 16px; margin-top: 1px; flex: 0 0 auto; }
+.common { @include m-caption; margin-top: -6px !important; color: var(--m-muted); }
+.what { @include m-body-small; color: var(--m-text); }
+.why {
+  display: flex; flex-direction: column; gap: 3px; padding: 11px 13px;
+  border-radius: 14px; background: var(--m-accent-soft);
+  .eyebrow { @include m-eyebrow; color: var(--m-accent); margin-bottom: 2px; }
+  p { @include m-body-small; color: var(--m-text); }
 }
-.convention { font-size: 13px; color: var(--m-muted) !important; }
+.softens {
+  @include m-body-small; display: flex; align-items: flex-start; gap: 7px; color: var(--m-good);
+  img { width: 16px; height: 16px; margin-top: 2px; flex: 0 0 auto; }
+}
+.weakened { @include m-caption; color: var(--m-muted); }
+.classical { @include m-caption; color: var(--m-muted); b { color: var(--m-text); } }
 .learn {
   @include m-cta-tertiary; align-self: flex-start; min-height: 44px; text-decoration: none;
   img { width: 15px; height: 15px; }
+}
+.checked {
+  padding: 13px 15px; border: 1px dashed var(--m-border); border-radius: 18px;
+  .checked-title { @include m-eyebrow; margin: 0 0 8px; color: var(--m-muted); }
+  ul { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+  li, button {
+    @include m-body-small; display: flex; justify-content: space-between; gap: 10px; color: var(--m-text);
+    span:last-child { color: var(--m-muted); }
+  }
+  button {
+    width: 100%; min-height: 36px; padding: 0; border: 0; background: none; text-align: left;
+    text-decoration: underline dotted var(--m-muted); text-underline-offset: 3px; cursor: pointer;
+    span { text-decoration: none; }
+  }
 }

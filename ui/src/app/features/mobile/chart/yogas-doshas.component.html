@@ -13,71 +13,95 @@
   } @else {
   <header class="heading">
     <h1>Yogas &amp; Doshas</h1>
-    <p>Notable combinations found in your chart — strengths and flags</p>
+    <p>The strengths in your chart, and the flags to know about. Each one shows why it is in your chart.</p>
   </header>
 
   <div class="filters" role="tablist" asSelectHaptic aria-label="Combination type">
-    @for (item of [{id: 'all', label: 'All'}, {id: 'yoga', label: 'Yogas'}, {id: 'dosha', label: 'Doshas'}]; track item.id) {
+    @for (item of filters; track item.id) {
       <button type="button" role="tab" [class.is-on]="filter() === item.id"
-        [attr.aria-selected]="filter() === item.id" (click)="filter.set($any(item.id))">{{ item.label }}</button>
+        [attr.aria-selected]="filter() === item.id" (click)="filter.set(item.id)">{{ item.label }}</button>
     }
   </div>
 
-  <section class="cards">
-    @for (item of visibleItems(); track item.id) {
-      <article class="card">
-        <div class="card-head">
-          <h2>{{ item.title }}</h2>
-          <span class="tag" [attr.data-tone]="item.tone">{{ item.tag }}</span>
+  @let v = view();
+  @if (showStrengths()) {
+    <section class="group" aria-labelledby="yd-strengths">
+      <h2 class="group-title" id="yd-strengths">Strengths</h2>
+      @for (item of v.strengths; track item.id) {
+        <ng-container *ngTemplateOutlet="card; context: { $implicit: item }" />
+      } @empty {
+        <p class="yd-empty">No strength yogas were found for this profile.</p>
+      }
+      @if (v.hiddenYogas) {
+        <as-plan-lock
+          [compact]="true"
+          from="yogas.full"
+          [title]="v.hiddenYogas + ' more ' + (v.hiddenYogas === 1 ? 'strength' : 'strengths') + ' in this chart'"
+        />
+      }
+    </section>
+  }
+
+  @if (showFlags()) {
+    <section class="group" aria-labelledby="yd-flags">
+      <h2 class="group-title" id="yd-flags">Flags</h2>
+      <p class="group-note">A flag is something to know about, not a verdict. Most are common, and many are softened by the rest of the chart.</p>
+      @for (item of v.flags; track item.id) {
+        <ng-container *ngTemplateOutlet="card; context: { $implicit: item }" />
+      } @empty {
+        <p class="yd-empty">No flags in this chart.</p>
+      }
+      @if (v.checked.length) {
+        <div class="checked">
+          <p class="checked-title">Checked, not in your chart</p>
+          <ul>
+            @for (row of v.checked; track row.id) {
+              <li>
+                @if (row.item) {
+                  <button type="button" (click)="open(row.item)">{{ row.title }}<span>{{ row.note }}</span></button>
+                } @else {
+                  <span class="checked-name">{{ row.title }}</span><span>{{ row.note }}</span>
+                }
+              </li>
+            }
+          </ul>
         </div>
-        @let detailLocked = item.kind === 'dosha' && item.tone !== 'neutral' && !doshaDetail();
-        @if (detailLocked) {
-          <p class="locked-note">A flag to know about, not a verdict. What it means for you, and the practice that suits it, come with Plus.</p>
-        } @else {
-          <p>{{ item.summary }}</p>
-        }
-        @if (item.cancelled) {
-          <div class="rule"></div>
-          <p class="cancelled"><img src="mobile/yoga-check.svg" alt="" aria-hidden="true" />{{ item.cancelled }}</p>
-        }
-        @if (item.convention) {
-          <p class="convention">{{ item.convention }}</p>
-        }
-        @if (item.id === 'manglik') {
-          <!-- Exceptions are never behind a plan: they are what keeps a flag from reading as a verdict. -->
-          <button class="learn" type="button" (click)="learn(item)">
-            <span>View exceptions</span>
-            <img src="mobile/yoga-chevron.svg" alt="" aria-hidden="true" />
-          </button>
-        } @else if (detailLocked) {
-          <a class="learn" routerLink="/m/subscription" [queryParams]="{ from: 'doshas.detail', plan: 'plus' }">
-            <span>What this means · Plus</span>
-            <img src="mobile/yoga-chevron.svg" alt="" aria-hidden="true" />
-          </a>
-        } @else {
-          <button class="learn" type="button" (click)="learn(item)">
-            <span>{{ item.kind === 'dosha' ? 'Learn about this' : 'Learn this yoga' }}</span>
-            <img src="mobile/yoga-chevron.svg" alt="" aria-hidden="true" />
-          </button>
-        }
-      </article>
-    } @empty {
-      <p class="yd-empty">No {{ filter() === 'all' ? 'yogas or doshas' : filter() + 's' }} were returned for this profile.</p>
-    }
-  </section>
-  @if (hiddenYogas() && filter() !== 'dosha') {
-    <as-plan-lock
-      [compact]="true"
-      from="yogas.full"
-      [title]="hiddenYogas() + ' more ' + (hiddenYogas() === 1 ? 'yoga' : 'yogas') + ' in this chart'"
-    />
+      }
+    </section>
   }
   }
 </main>
 
-@if (learningOpen() && selectedLearning(); as detail) {
-  <as-yoga-learning-sheet [detail]="detail" (dismissed)="learningOpen.set(false)" />
-}
-@if (cancellationOpen() && manglik(); as row) {
-  <as-manglik-cancellation-sheet [manglik]="row" (dismissed)="cancellationOpen.set(false)" />
+<ng-template #card let-item>
+  <article class="card" [attr.data-flag]="item.flag">
+    <div class="card-head">
+      <h3>{{ item.title }}</h3>
+      <span class="tag" [attr.data-tone]="item.tone">{{ item.tag }}</span>
+    </div>
+    @if (item.howCommon) { <p class="common">{{ item.howCommon }}</p> }
+    <p class="what">{{ item.what }}</p>
+    @if (item.why.length) {
+      <div class="why">
+        <p class="eyebrow">Why you have it</p>
+        @for (line of item.why; track $index) { <p>{{ line }}</p> }
+      </div>
+    }
+    @for (line of item.softens; track $index) {
+      <p class="softens"><img src="mobile/yoga-check.svg" alt="" aria-hidden="true" />{{ line }}</p>
+    }
+    @if (mode() !== 'guided') {
+      @for (line of item.weakened; track $index) { <p class="weakened">{{ line }}</p> }
+    }
+    @if (practitioner()) {
+      <p class="classical"><b>Rule:</b> {{ item.classical }}</p>
+    }
+    <button class="learn" type="button" (click)="open(item)">
+      <span>What it means, do and avoid</span>
+      <img src="mobile/yoga-chevron.svg" alt="" aria-hidden="true" />
+    </button>
+  </article>
+</ng-template>
+
+@if (selected(); as detail) {
+  <as-yoga-learning-sheet [detail]="detail" [practitioner]="practitioner()" (dismissed)="selected.set(null)" />
 }
