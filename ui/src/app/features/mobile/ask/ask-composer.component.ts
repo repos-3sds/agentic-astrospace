@@ -69,7 +69,7 @@ import { ASK_NAVIGATION } from './ask-navigation';
         (keydown.enter)="submit()"
       />
     }
-    <div class="tools">
+    <div class="tools" [class.crowded]="people.ids().length">
       <button class="more" type="button" aria-label="Ask options" aria-haspopup="menu"
         [attr.aria-expanded]="menuOpen()" (click)="menuOpen.set(!menuOpen())">
         <span class="composer-icon plus-icon" aria-hidden="true"></span>

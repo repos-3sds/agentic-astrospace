@@ -190,6 +190,11 @@
 .menu-mark .deep-icon, .menu-mark .person-icon { width: 18px; height: 18px; }
 
 .chip.together .chip-text { max-width: 80px; }
+// With people picked the row holds one more chip: the person and Deep chips
+// keep their icons (their aria-labels still say what they are) so the names
+// stay readable and Send never gets pushed off a 360px phone.
+.tools.crowded .chip.depth .chip-text,
+.tools.crowded .chip.person .chip-text { display: none; }
 .together-menu { max-height: min(70vh, 520px); overflow-y: auto; }
 .together-title { @include m-body; font-weight: 600; color: var(--m-text); margin: 6px 10px 0; }
 .together-note { @include m-caption; color: var(--m-muted); margin: 0 10px 6px; }
