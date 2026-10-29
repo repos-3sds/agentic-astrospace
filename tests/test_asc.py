@@ -157,3 +157,46 @@ def test_no_command_can_submit_or_release():
     for forbidden in ("appStoreVersionSubmissions", "reviewSubmissions", "betaAppReviewSubmissions",
                       "appStoreVersionReleaseRequests", "betaGroups"):
         assert forbidden not in text
+
+
+def _two_certs(calls):
+    def fake(method, path, token, body=None):
+        calls.append((method, path.split("?")[0]))
+        if method == "GET" and path.startswith("/certificates"):
+            return {"data": [{"id": "OLD", "attributes": {"serialNumber": "71215B85"}},
+                             {"id": "NEW", "attributes": {"serialNumber": "0A1B2C"}}]}
+        if method == "DELETE":
+            return {}
+        raise AssertionError(path)
+    return fake
+
+
+def test_revoke_replaced_certificate_deletes_only_the_old_one(monkeypatch):
+    calls = []
+    monkeypatch.setattr(asc, "_request", _two_certs(calls))
+    asc.revoke_certificate("t", "71215B85", keep="serial=0A1B2C")
+    assert [c for c in calls if c[0] == "DELETE"] == [("DELETE", "/certificates/OLD")]
+
+
+def test_revoke_refuses_the_kept_certificate(monkeypatch):
+    calls = []
+    monkeypatch.setattr(asc, "_request", _two_certs(calls))
+    with pytest.raises(asc.AscError, match="being kept"):
+        asc.revoke_certificate("t", "0A1B2C", keep="serial=0A1B2C")
+    assert calls == []
+
+
+def test_revoke_needs_the_replacement_to_exist(monkeypatch):
+    calls = []
+    monkeypatch.setattr(asc, "_request", _two_certs(calls))
+    with pytest.raises(asc.AscError, match="no distribution certificate"):
+        asc.revoke_certificate("t", "71215B85", keep="FFFF")
+    assert not any(c[0] == "DELETE" for c in calls)
+
+
+def test_moving_ios_secrets_revokes_the_old_ci_certificate():
+    move = (ROOT / "scripts" / "ci" / "move_signing_secrets.sh").read_text()
+    setup = (ROOT / "scripts" / "ci" / "setup_ios_ship.sh").read_text()
+    assert "REPLACE_SERIAL=${REPLACE_SERIAL:-71215B8541AAA30F2B39143D2F7F0B6D}" in move
+    # Revoked only after the new certificate is in GitHub.
+    assert setup.index("gh secret set IOS_DIST_P12_B64") < setup.index("asc.py revoke-cert")

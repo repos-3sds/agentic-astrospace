@@ -94,7 +94,9 @@ be made for it, and stores five GitHub secrets without printing them:
 
 Run it once. Running it again makes another certificate, and Apple allows only
 a few; if it reports too many, revoke an unused one in Certificates, Identifiers
-& Profiles. Then run *Actions › Ship › Run workflow* on main with **ship
+& Profiles. To replace the GitHub certificate, set `REPLACE_SERIAL` to the old
+one's serial and the script revokes it once the new one is in GitHub
+(`scripts/ci/move_signing_secrets.sh` does this). Then run *Actions › Ship › Run workflow* on main with **ship
 everything** ticked to prove the whole path.
 
 Until the setup is done, the job notes *not set up yet* and skips, so the

@@ -13,7 +13,9 @@
 # It creates one new Apple Distribution certificate, used only by GitHub. The
 # Mac's own Xcode signing is untouched, and so is every existing certificate.
 # Running it again makes another certificate; Apple allows only a few, so run
-# it again only if the first one was revoked or the secrets were lost.
+# it again only if the first one was revoked or the secrets were lost, or set
+# REPLACE_SERIAL to the old GitHub certificate's serial and it is revoked once
+# the new one is in GitHub.
 set -euo pipefail
 # SECRETS_ENV=production puts the secrets in that GitHub environment
 # (scripts/ci/move_signing_secrets.sh) instead of at repository level.
@@ -41,7 +43,8 @@ echo "== New Apple Distribution certificate for GitHub (the Mac's signing is unt
 python3 scripts/asc.py create-cert --out-dir "$WORK/cert"
 
 echo "== The certificate can get an App Store profile"
-python3 scripts/asc.py profile --serial "$(openssl x509 -in "$WORK/cert/distribution.pem" -noout -serial)" \
+NEW_SERIAL=$(openssl x509 -in "$WORK/cert/distribution.pem" -noout -serial)
+python3 scripts/asc.py profile --serial "$NEW_SERIAL" \
   --out "$WORK/check.mobileprovision" | sed -n 's/^name=/profile: /p'
 
 echo "== GitHub secrets (values are not shown)"
@@ -51,6 +54,11 @@ base64 < "$P8" | tr -d '\n' | gh secret set ASC_KEY_P8_B64 -R "$REPO" ${SECRETS_
 base64 < "$WORK/cert/distribution.p12" | tr -d '\n' | gh secret set IOS_DIST_P12_B64 -R "$REPO" ${SECRETS_ENV:+--env "$SECRETS_ENV"}
 printf %s "$ASC_P12_PASSWORD" | gh secret set IOS_DIST_P12_PASSWORD -R "$REPO" ${SECRETS_ENV:+--env "$SECRETS_ENV"}
 gh secret list -R "$REPO" ${SECRETS_ENV:+--env "$SECRETS_ENV"}
+
+if [ -n "${REPLACE_SERIAL:-}" ]; then
+  echo "== Old GitHub certificate revoked (the new one replaces it)"
+  python3 scripts/asc.py revoke-cert --serial "$REPLACE_SERIAL" --keep "$NEW_SERIAL"
+fi
 
 echo
 echo "Done. Keep $P8 somewhere safe (Apple lets you download it only once), or delete it:"
