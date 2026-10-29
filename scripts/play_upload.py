@@ -293,6 +293,29 @@ def run_assign(version_code: int, track: str, notes: str | None, key_path: str |
     return 0
 
 
+def run_renote(track: str, notes: str, key_path: str | None = None) -> int:
+    """Replace the "What's new" text on the build a track already serves.
+
+    Nothing is uploaded and no build moves: the same versionCode is put back
+    on the track with the new notes (Hawk, 2026-10-29: a commit title had
+    leaked into internal testing's "What's new").
+    """
+    check_track(track)
+    edit = Edit(get_token(key_path))
+    edit.open()
+    try:
+        version_code = highest_version(edit.track(track))
+        print(f"Replacing the notes on versionCode {version_code} ({track})…", flush=True)
+        edit.set_release(track, version_code, notes)
+        edit.commit()
+        edit.id = None
+    except BaseException:
+        edit.discard()
+        raise
+    print(f"Done: versionCode {version_code} on the {track} track now says: {notes}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Upload an AAB to a Play testing track.")
     parser.add_argument("aab", nargs="?", type=Path, help="path to the signed .aab")
@@ -306,6 +329,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="print the highest versionCode on --track and change nothing")
     parser.add_argument("--changes-not-sent-for-review", action="store_true",
                         help="commit without sending for review (only if Play asks for it)")
+    parser.add_argument("--renote", action="store_true",
+                        help="replace --notes on the build --track already serves; no upload, no build moves")
     parser.add_argument("--skip-if-not-above", type=int, metavar="VERSION_CODE",
                         help="exit cleanly, uploading nothing, when the track already holds this "
                              "versionCode or a higher one (CI passes the build's commit count)")
@@ -317,6 +342,10 @@ def main(argv: list[str] | None = None) -> int:
             return run_check(args.track, args.key)
         if args.highest:
             return run_highest(args.track, args.key)
+        if args.renote:
+            if not args.notes or args.aab or args.version_code is not None:
+                parser.error("--renote takes --notes only")
+            return run_renote(args.track, args.notes, args.key)
         if args.version_code is not None:
             if args.aab:
                 parser.error("give either the .aab path or --version-code, not both")

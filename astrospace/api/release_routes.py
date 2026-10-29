@@ -71,7 +71,7 @@ class AnnounceBody(BaseModel):
 
 @router.post("/draft")
 async def draft(body: DraftBody, _: str = Depends(release_caller), db: Session = Depends(get_db)):
-    titles = [c.title for c in body.changes if ra.is_user_facing(c.files)]
+    titles = [c.title for c in body.changes if ra.is_user_facing(c.files) and not ra.is_revert(c.title)]
     notes, source = await run_in_threadpool(ra.write_notes, titles)
     ann = ra.announcement(body.version_code, notes)
     ra.queue_team_email(db, body.version_code, ann, stage="draft")

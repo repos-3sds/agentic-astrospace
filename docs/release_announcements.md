@@ -36,6 +36,13 @@ server, and WhatsApp texts for the channel and the testers' broadcast list.
    thread that drives WhatsApp Web in Hawk's Chrome. That thread posts only
    after Hawk types yes there.
 
+## Fixing a wrong "What's new"
+
+*Actions › Play notes* (`play-notes.yml`) replaces the text on the build a
+track already serves, without an upload. Ship never falls back to the commit
+title (it once showed internal testers a revert naming a feature held back
+for a Diwali surprise), and a revert is never turned into a note.
+
 ## Rules the code enforces
 
 - Reader emails ride on `tips_email`, which readers turned on for "a feature
