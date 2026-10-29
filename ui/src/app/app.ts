@@ -191,6 +191,17 @@ export class App implements OnInit, OnDestroy {
       return () => document.removeEventListener('touchstart', enableActiveState);
     }
     document.documentElement.classList.add('as-native-app');
+    // iPhone testers saw the screen zoom in on a double tap, most often on a
+    // disabled button (Plans, payments), where the tap is not a click and so
+    // falls through to WebKit's double-tap zoom; a focused field under 16px
+    // zooms too. A native app does not zoom its screen: text size comes from
+    // the phone's setting (text-zoom.ts). Native only, so the web app keeps
+    // pinch zoom. styles-mobile.scss sets touch-action: manipulation as well.
+    const viewport = document.querySelector('meta[name="viewport"]');
+    viewport?.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');
+    // WebKit's own pinch event, in case a WebView ignores the viewport limits.
+    const preventPinch = (event: Event) => event.preventDefault();
+    document.addEventListener('gesturestart', preventPinch);
     const preventNativeDrag = (event: Event) => event.preventDefault();
     const preventContextMenu = (event: Event) => {
       const target = event.target as HTMLElement | null;
@@ -204,6 +215,7 @@ export class App implements OnInit, OnDestroy {
     return () => {
       document.removeEventListener('touchstart', enableActiveState);
       document.documentElement.classList.remove('as-native-app');
+      document.removeEventListener('gesturestart', preventPinch);
       document.removeEventListener('dragstart', preventNativeDrag, { capture: true });
       document.removeEventListener('contextmenu', preventContextMenu, { capture: true });
     };

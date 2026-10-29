@@ -16,6 +16,7 @@ class CalendarDayStub { readonly embedded = input(false); }
 
 describe('CalendarComponent', () => {
   let fixture: ComponentFixture<CalendarComponent>;
+  let todayDate: jasmine.Spy;
   let resolveFestivals: ((value: { count: number; festivals: never[] }) => void) | undefined;
 
   beforeEach(async () => {
@@ -80,6 +81,12 @@ describe('CalendarComponent', () => {
       })
       .compileComponents();
 
+    // The month list hides days already past this month; pin today to the
+    // 1st so the mock days (the 3rd to the 15th) are all still ahead.
+    const now = new Date();
+    const firstOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+    todayDate = spyOn(CalendarComponent.prototype as unknown as { todayDate(): string }, 'todayDate')
+      .and.returnValue(firstOfMonth);
     fixture = TestBed.createComponent(CalendarComponent);
   });
 
@@ -111,6 +118,19 @@ describe('CalendarComponent', () => {
     expect(el.querySelector('.mcal-about:last-of-type')?.textContent).toContain('Smarta rule.');
     expect(el.querySelector('.mcal-legend')?.textContent).toContain('Take care');
     expect(el.querySelector('.mcal-about')?.textContent).toContain('Tarabala');
+  });
+
+  it('hides this month\'s days already past, keeping today and later', async () => {
+    todayDate.and.returnValue(todayDate().slice(0, 8) + '12');
+    fixture.detectChanges();
+    resolveFestivals?.({ count: 0, festivals: [] });
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const vrats = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('.mcal-observance.vrat'))
+      .map((row) => row.textContent ?? '');
+    expect(vrats.length).toBe(1);
+    expect(vrats[0]).toContain('Purnima');
   });
 
   it('opens a vrat day in the festival sheet with its steps and prayer names', async () => {
