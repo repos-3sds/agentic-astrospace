@@ -65,6 +65,11 @@ def find_muhurta(
     nation: str | None = None,
     timezone: str | None = Query(None, description="Viewer IANA timezone; picks the city when none is given"),
     partner_id: str | None = Query(None, description="Second profile for a couple (wedding, engagement)"),
+    with_ids: str | None = Query(
+        None, max_length=400,
+        description="Comma-separated profiles also taking part (a family moving house, "
+                    "brothers with ceremonies on one day). Up to four with the partner. "
+                    "Each slot then lists every person's standing."),
     ceremony: str | None = Query(None, pattern="^(day|night)$", description="Wedding held by day or by night"),
     direction: str | None = Query(None, pattern="^(north|south|east|west)$", description="Journey direction"),
     avoid: str | None = Query(None, max_length=80, description="Comma-separated weekdays the family avoids"),
@@ -108,6 +113,20 @@ def find_muhurta(
         partner = {"nak": NAKSHATRAS.index(nakshatra_of(other_moon)["name"]),
                    "rashi": sign_index(other_moon), "name": other.name.split()[0] if other.name else None}
 
+    others = []
+    for other_id in dict.fromkeys(i.strip() for i in (with_ids or "").split(",") if i.strip()):
+        if other_id in (kundli_id, partner_id):
+            continue
+        other = crud.get_kundli(db, other_id, user.id)
+        if not other:
+            raise HTTPException(status_code=404, detail="Profile not found")
+        other_moon = _chart_from_kundli(other, *crud.chart_convention(db, user.id)).positions["Moon"]["lon"]
+        others.append({"nak": NAKSHATRAS.index(nakshatra_of(other_moon)["name"]),
+                       "rashi": sign_index(other_moon),
+                       "name": other.name.split()[0] if other.name else None})
+    if len(others) + (1 if partner else 0) > muhurta.MAX_GROUP_OTHERS:
+        raise HTTPException(status_code=400, detail=f"At most {muhurta.MAX_GROUP_OTHERS + 1} people can share one muhurta")
+
     try:
         payload = muhurta.find(
             goal, start, end,
@@ -116,6 +135,7 @@ def find_muhurta(
             ghatak_moon_sign=moon_sign,
             intent=intent,
             partner=partner,
+            others=others or None,
             ceremony=ceremony,
             direction=direction,
             avoid_weekdays=[w.strip() for w in (avoid or "").split(",") if w.strip()],

@@ -113,6 +113,8 @@ export class AskService {
       domain_override?: string;
       /** Fast (today's Ask) or Deep (the chart read from every side); one question either way. */
       depth?: 'fast' | 'deep';
+      /** Other saved profiles read together with this one (the "+" menu). */
+      with_profiles?: string[];
     },
     signal?: AbortSignal,
   ): AsyncGenerator<AskStreamEvent> {
