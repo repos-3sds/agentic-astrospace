@@ -41,7 +41,8 @@ from ..db.crud_profile_context import (
 from ..db.database import release_connection, short_session
 from .ask_routes import (
     MAX_HISTORY, AskRequest, _evidence_from_reading, _history_from_thread,
-    _owned_thread, _persist_ask_turn, _profile_context_store, _settle_credit,
+    _alert_if_ai_out_of_credit, _owned_thread, _persist_ask_turn, _profile_context_store,
+    _settle_credit,
     _thread_established_domain,
 )
 from .. import ratelimit
@@ -248,7 +249,7 @@ def _validation_store(db: Session, user_id: str, kundli_id: str,
 @router.post("/{kundli_id}/stream")
 def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
                db: Session = Depends(get_db)):
-    explore, body.question = choose_engine(user.email, body.question)
+    explore, body.question = choose_engine(user.email, body.question, body.depth)
     k = crud.get_kundli(db, kundli_id, user.id)
     if not k:
         raise HTTPException(status_code=404, detail="Kundli not found")
@@ -362,6 +363,7 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
             # back. A no-op once the answer was committed below. A fresh short
             # session: the request one was released before the stream began.
             _settle_credit(db, release_ask_credit, reservation)
+            _alert_if_ai_out_of_credit(db)
 
     def answer_events():
         for event in orchestrator.run(prepared, messages, persist=persist_prepared):

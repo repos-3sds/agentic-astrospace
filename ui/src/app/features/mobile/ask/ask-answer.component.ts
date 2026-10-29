@@ -30,6 +30,7 @@ import { TextRun, cleanPlainText, paragraphRuns } from '../../../core/answer-tex
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { HapticsService } from '../../../core/haptics.service';
 import { AnswerReportContext, ReportAnswerSheetComponent } from './report-answer-sheet.component';
+import { AskDepthService } from './ask-depth.service';
 
 /**
  * How confidently the answer lands. Named, not a number: the point of the dot
@@ -65,6 +66,8 @@ interface ChatMessage {
   reading: StructuredReading | null;
   /** Tool-using Ask's angle-by-angle scorecard, when it ran. */
   weighing?: AskWeighing | null;
+  /** Asked in Deep mode (the Deep switch, or a saved answer with a weighing). */
+  deep?: boolean;
   options: string[];
   streaming?: boolean;
 }
@@ -115,6 +118,7 @@ export function areaLabel(id: string): string {
 export class AskAnswerComponent {
   protected readonly navigation = inject(ASK_NAVIGATION);
   protected readonly preferences = inject(PreferencesService);
+  private readonly askDepth = inject(AskDepthService);
   private readonly analytics = inject(AnalyticsService);
   private readonly ratingPrompt = inject(RatingPromptService);
   private readonly askState = inject(MobileAskStateService);
@@ -753,6 +757,7 @@ export class AskAnswerComponent {
       profile_context_as_of: this.stringFromEvidence(message.evidence, 'profile_context_as_of'),
       reading: structured,
       weighing: this.weighingFromEvidence(message.evidence),
+      deep: !!this.weighingFromEvidence(message.evidence),
       options: this.clarificationOptionsFromEvidence(message.evidence),
     };
   }
@@ -928,6 +933,7 @@ export class AskAnswerComponent {
       id: assistantId,
       role: 'assistant',
       content: this.streamStatus() ?? 'Understanding your question…',
+      deep: this.askDepth.depth() === 'deep',
       domain: null,
       intent: null,
       status: 'understanding',
@@ -958,6 +964,7 @@ export class AskAnswerComponent {
         tone: this.preferences.tone(),
         input_mode: 'text',
         domain_override: forceDomain,
+        depth: this.askDepth.depth(),
       }, controller.signal)) {
         if (controller.signal.aborted || this.kundlis.active()?.id !== profile.id) {
           controller.abort();

@@ -67,6 +67,9 @@ for (const mode of ['guided', 'balanced'] as const) {
 
       const card = page.getByLabel('How we weighed it');
       await expect(card).toBeVisible();
+      // An answer with a weighing came from Deep, and says so.
+      await expect(page.locator('.deep-tag').first()).toBeVisible();
+      await page.screenshot({ path: `test-results/ask-depth/deep-answer-${mode}-${scheme}.png` });
       await expect(card.locator('.angle-row')).toHaveCount(10);
       await expect(card).toContainText('Moderately good');
       if (mode === 'guided') {

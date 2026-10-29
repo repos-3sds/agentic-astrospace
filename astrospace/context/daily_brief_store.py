@@ -137,8 +137,11 @@ def _write(db: Session, kundli, payload: dict, key: str, *, tone: str, mode: str
     try:
         brief = agent.write(payload, first_name=first_name, date_label=date_label, place=place,
                             tone=tone, mode=mode)
-    except Exception:
+    except Exception as exc:
         log.exception("daily brief generation failed")
+        from ..agents.ai_outage import note_failure
+
+        note_failure(exc)
     elapsed = round(time.monotonic() - started, 2)
     words = spoken_words(brief) if brief else 0
     usage = agent.usage_totals() if hasattr(agent, "usage_totals") else {}

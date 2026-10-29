@@ -104,6 +104,13 @@ class AskRequest(BaseModel):
                     "does not change its score. Only honoured by the "
                     "streamed v2 orchestrator (ask_stream_routes.py).",
     )
+    depth: Optional[Literal["fast", "deep"]] = Field(
+        None,
+        description="Fast: today's Ask. Deep: the chart read from every side "
+                    "(agents/explorer.py), with how it was weighed. Both cost "
+                    "one question. Left out by app builds from before the "
+                    "switch, which keep the ASK_AGENT_EMAILS rule.",
+    )
     experience_mode: Literal["guided", "balanced", "practitioner"] = Field(
         "balanced",
         description="The reader's own preference (PreferencesService's "
@@ -210,6 +217,22 @@ def _persist_ask_turn(db: Session, body: "AskRequest", *, user_id: str, kundli_i
                 **_usage_fields(usage),
             },
         )
+
+
+def _alert_if_ai_out_of_credit(db: Session) -> None:
+    """Queue the team's out-of-credit email when this request's model call
+    was refused for lack of credit (owner_alerts.queue_ai_credit_alert)."""
+    from ..agents.ai_outage import take_credit_outage
+    from ..notifications.owner_alerts import queue_ai_credit_alert
+
+    seen = take_credit_outage()
+    if not seen:
+        return
+    try:
+        with short_session(db) as session:
+            queue_ai_credit_alert(session, seen)
+    except Exception:
+        log.exception("could not queue the AI credit alert")
 
 
 def _settle_credit(db: Session, settle, reservation) -> None:
@@ -471,7 +494,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
     is never honoured on this route — same restriction the field's own
     docstring already states ("Only honoured by the streamed v2
     orchestrator") — so `validation_needed` cannot occur here."""
-    explore, body.question = choose_engine(user.email, body.question)
+    explore, body.question = choose_engine(user.email, body.question, body.depth)
     k = crud.get_kundli(db, kundli_id, user.id)
     if not k:
         raise HTTPException(status_code=404, detail="Kundli not found")
@@ -612,6 +635,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
     if done is None or done["status"] != "answered":
         # A failed or unverified answer is never charged.
         _settle_credit(db, release_ask_credit, reservation)
+        _alert_if_ai_out_of_credit(db)
         # Explicit, not a generic 500 — the reader gets a clear signal that
         # generation or verification failed, never a reading that shouldn't
         # have shipped. Matches this route's pre-migration contract (a

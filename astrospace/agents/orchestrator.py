@@ -37,6 +37,7 @@ from .schema import AskIntent, StructuredReading
 from .stance import detect_pushback
 from .validation_agent import ValidationAgent, ValidationProbeDraft, probe_violations
 from .placement_check import birth_placements
+from .ai_outage import note_failure
 from .verifier import (depth_violations, guided_violations, quality_violations, safety_violations, verify,
                        verify_coverage, violation_fields)
 from ..context.muhurta_search import muhurta_section
@@ -453,6 +454,14 @@ def exploration_trace(prepared: "PreparedRun") -> dict | None:
     }
 
 
+def _log_violations(stage: str, domain: str, violations: list) -> None:
+    """Which checks failed, so a withheld answer can be traced from the log
+    (2026-10-28: a health answer was withheld and nothing said why). The
+    rule names only, never the reader's question or the quoted sentence."""
+    log.info("ask verifier %s (domain=%s): %s", stage, domain, " | ".join(
+        f"{getattr(v, 'severity', '?')}: {str(v).split(' in: ')[0][:160]}" for v in violations))
+
+
 class AskOrchestrator:
     def __init__(self, chart_loader: Callable[[], VedicChart],
                 router: KeywordRouter | None = None,
@@ -859,13 +868,15 @@ class AskOrchestrator:
     def _generate_and_verify(self, prepared: PreparedRun, messages: list) -> AgentRunResult:
         try:
             reading = prepared.agent.run_structured_reading(messages)
-        except Exception:
+        except Exception as exc:
             log.exception("ask generation failed (domain=%s)", prepared.domain)
+            note_failure(exc)
             return AgentRunResult(reading=None, violations=[], generation_failed=True)
 
         violations = self._check(prepared, reading)
         if not violations:
             return AgentRunResult(reading=reading, violations=[])
+        _log_violations("first draft", prepared.domain, violations)
 
         # Exactly one repair attempt — hard cap, no open-ended retry loop.
         # D2: scoped when every surviving violation is attributable to a
@@ -893,6 +904,7 @@ class AskOrchestrator:
         violations = self._check(prepared, reading)
         if not violations:
             return AgentRunResult(reading=reading, violations=[])
+        _log_violations("after repair", prepared.domain, violations)
 
         # The repair did not clear everything. What happens next depends on
         # WHICH violations survived, and the split is the whole point of
@@ -972,8 +984,9 @@ class AskOrchestrator:
                     lambda name, args: events.put(summarize_call(name, args)))
                 outcome["result"] = explorer.explore()
                 outcome["usage"] = list(explorer.usage_log)
-            except Exception:
+            except Exception as exc:
                 log.exception("ask exploration failed (domain=%s)", prepared.domain)
+                note_failure(exc)
             finally:
                 events.put(None)
 

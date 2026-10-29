@@ -110,6 +110,12 @@ class TestSwitch:
         monkeypatch.setenv("ASK_AGENT_EMAILS", "a@x.com")
         assert choose_engine("a@x.com", "/old My career?") == (False, "My career?")
         assert choose_engine("a@x.com", "My career?") == (True, "My career?")
+
+    def test_the_reader_picks_fast_or_deep(self):
+        # Deep for everyone at one question (Hawk, 2026-10-28).
+        assert choose_engine("someone@example.com", "My career?", "deep") == (True, "My career?")
+        assert choose_engine("vikramadityavss@gmail.com", "My career?", "fast") == (False, "My career?")
+        assert choose_engine("someone@example.com", "My career?", None) == (False, "My career?")
         # Readers without the agent keep their question untouched.
         assert choose_engine("c@z.com", "/old My career?") == (False, "/old My career?")
 
