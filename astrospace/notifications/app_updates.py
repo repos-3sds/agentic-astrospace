@@ -42,7 +42,7 @@ PROVIDER = {"android": "fcm", "ios": "apns"}
 # Builds up to this one never send their build number with the push token,
 # so a token without one is on this build or older. Builds are numbered by
 # commit count on main; this was main's count before update reminders.
-LAST_SILENT_BUILD = 633
+LAST_SILENT_BUILD = 634
 
 # Where "Update" goes when app_releases has no update_url. Play's listing
 # shows "Update" to closed testers; TestFlight is where every iPhone tester

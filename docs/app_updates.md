@@ -58,6 +58,6 @@ front, and sends its build with its push token on every launch
   `ui/src/app/features/mobile/update/`, and
   `ui/android/app/src/main/java/app/asksiddha/mobile/InAppUpdatePlugin.java`
 
-Builds up to 633 (`LAST_SILENT_BUILD`) do not send their build number, so a
+Builds up to 634 (`LAST_SILENT_BUILD`) do not send their build number, so a
 push token without one counts as older than any later release. They also
 have no update sheet or block, so for them the push is the only reminder.
