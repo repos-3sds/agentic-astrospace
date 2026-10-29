@@ -60,6 +60,9 @@
           <span class="eyebrow" [attr.data-tone]="answerTone(message)">
             {{ modeEyebrow(message) }}
           </span>
+          @if (message.deep) {
+            <span class="deep-tag"><span class="deep-glyph" aria-hidden="true"></span>Deep</span>
+          }
           @if ((preferences.experienceMode() === 'balanced' || preferences.experienceMode() === 'guided') && message.reading; as reading) {
             <span class="answer-strength">{{ confidenceLabel(reading.confidence) }}</span>
           }
@@ -325,7 +328,12 @@
           @if (message.streaming) {
             <div class="stream-progress" role="status">
               <span class="stream-pulse" aria-hidden="true"></span>
-              <span>{{ streamStatus() || message.content || 'Reading your chart…' }}</span>
+              <span class="stream-text">
+                @if (message.deep) {
+                  <small class="stream-deep">Deep reading · about a minute</small>
+                }
+                <span>{{ streamStatus() || message.content || 'Reading your chart…' }}</span>
+              </span>
               <button class="stop-stream" type="button" (click)="$event.stopPropagation(); stopStreaming()">Stop</button>
             </div>
           } @else {

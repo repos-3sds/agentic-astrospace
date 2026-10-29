@@ -66,6 +66,8 @@ interface ChatMessage {
   reading: StructuredReading | null;
   /** Tool-using Ask's angle-by-angle scorecard, when it ran. */
   weighing?: AskWeighing | null;
+  /** Asked in Deep mode (the Deep switch, or a saved answer with a weighing). */
+  deep?: boolean;
   options: string[];
   streaming?: boolean;
 }
@@ -755,6 +757,7 @@ export class AskAnswerComponent {
       profile_context_as_of: this.stringFromEvidence(message.evidence, 'profile_context_as_of'),
       reading: structured,
       weighing: this.weighingFromEvidence(message.evidence),
+      deep: !!this.weighingFromEvidence(message.evidence),
       options: this.clarificationOptionsFromEvidence(message.evidence),
     };
   }
@@ -930,6 +933,7 @@ export class AskAnswerComponent {
       id: assistantId,
       role: 'assistant',
       content: this.streamStatus() ?? 'Understanding your question…',
+      deep: this.askDepth.depth() === 'deep',
       domain: null,
       intent: null,
       status: 'understanding',

@@ -1,8 +1,17 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 import { AskComposerComponent } from './ask-composer.component';
 import { ASK_NAVIGATION } from './ask-navigation';
 
 describe('Ask composer host isolation', () => {
+  // The person chip reads the open profile (KundliStore) and the menu links to
+  // the add-profile screen.
+  beforeEach(() => TestBed.configureTestingModule({
+    providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+  }));
+
   it('preserves the mobile input and Enter submission by default', () => {
     const fixture = TestBed.createComponent(AskComposerComponent);
     fixture.componentRef.setInput('value', 'A question');

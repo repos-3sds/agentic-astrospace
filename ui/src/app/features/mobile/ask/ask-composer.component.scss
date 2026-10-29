@@ -1,31 +1,151 @@
 @use '../mobile-tokens' as *;
 
+// Two rows: the question gets the whole width, the tools sit under it.
 :host {
   flex-shrink: 0;
-  height: 56px;
   box-sizing: border-box;
   margin-bottom: 16px;
-  padding: 8px;
+  padding: 10px 8px 8px;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
   border: 1.4px solid var(--m-border-strong);
-  border-radius: 999px;
+  border-radius: 26px;
   background: var(--m-raised);
   box-shadow: var(--m-shadow-soft);
+  position: relative;
+}
+
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.spacer { flex: 1 1 auto; }
+
+.more {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid var(--m-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--m-text);
+  cursor: pointer;
+  &[aria-expanded='true'] { background: var(--m-accent-soft); color: var(--m-accent-strong); }
+}
+
+.chip {
+  height: 34px;
+  min-width: 0;
+  padding: 0 10px 0 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  border: 1px solid var(--m-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--m-muted);
+  @include m-caption;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 140ms, color 140ms, border-color 140ms;
+  &.on {
+    border-color: color-mix(in srgb, var(--m-accent) 55%, transparent);
+    background: var(--m-accent-soft);
+    color: var(--m-accent-strong);
+  }
+}
+.chip.person { color: var(--m-text); flex-shrink: 1; }
+.chip-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 92px; }
+
+// The "+" menu opens over the box, like a chat app's attachment menu.
+.menu-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: default;
+}
+.menu {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 21;
+  width: min(100%, 340px);
+  box-sizing: border-box;
+  padding: 8px;
+  border: 1px solid var(--m-border-strong);
+  border-radius: 22px;
+  // Solid, not glass: the menu sits over suggestions and must not show them through.
+  background: var(--m-sheet-raised, var(--m-raised));
+  box-shadow: 0 18px 48px color-mix(in srgb, #000 22%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: menu-in 150ms ease-out;
+}
+@keyframes menu-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+.menu-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 6px 10px 6px 6px;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  color: var(--m-text);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  &:active { background: var(--m-accent-soft); }
+}
+.menu-mark {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--m-glass-control);
+  color: var(--m-text);
+  &.on { background: var(--m-accent-soft); color: var(--m-accent-strong); }
+}
+.menu-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  strong { @include m-body; font-weight: 600; }
+  small { @include m-caption; color: var(--m-muted); }
+  &.on strong { color: var(--m-accent-strong); }
 }
 
 // Ask Home floats the pill over its own scrolling content, so it pulls in from
 // the edges and sits on the page surface rather than the raised one.
 :host(.is-inset) {
-  margin: 0 24px 8px;
+  margin: 0 16px 8px;
   background: var(--m-surface);
 }
 
 .mic,
 .send {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border: 0;
   border-radius: 999px;
   display: flex;
@@ -61,29 +181,12 @@
   mask: var(--composer-icon) center / contain no-repeat;
 }
 
-.depth {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border: 1px solid var(--m-border);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--m-muted);
-  cursor: pointer;
-  transition: background 140ms, color 140ms, border-color 140ms;
-
-  &.on {
-    border-color: color-mix(in srgb, var(--m-accent) 55%, transparent);
-    background: var(--m-accent-soft);
-    color: var(--m-accent-strong);
-  }
-}
-
-.deep-icon { --composer-icon: url('/mobile/deep.svg'); width: 17px; height: 17px; }
+.deep-icon { --composer-icon: url('/mobile/deep.svg'); width: 15px; height: 15px; }
+.plus-icon { --composer-icon: url('/mobile/plus.svg'); width: 18px; height: 18px; }
+.person-icon { --composer-icon: url('/mobile/person.svg'); width: 15px; height: 15px; }
+.person-add-icon { --composer-icon: url('/mobile/person-add.svg'); width: 18px; height: 18px; }
+.tick-icon { --composer-icon: url('/mobile/tick.svg'); width: 18px; height: 18px; color: var(--m-accent-strong); }
+.menu-mark .deep-icon, .menu-mark .person-icon { width: 18px; height: 18px; }
 
 .mic-icon { --composer-icon: url('/mobile/mic.svg'); width: 18px; height: 18px; }
 .send-icon { --composer-icon: url('/mobile/send.svg'); width: 17px; height: 17px; }
@@ -91,9 +194,10 @@
 .field {
   flex: 1 1 0;
   min-width: 0;
+  min-height: 36px;
   border: 0;
   background: none;
-  padding: 0;
+  padding: 0 10px;
   @include m-body;
   color: var(--m-text);
   &::placeholder { color: var(--m-muted); }
@@ -126,8 +230,10 @@
     line-height: 22px;
     font-size: 15px;
   }
-  .depth { order: 1; }
-  .mic { order: 2; width: 44px; height: 44px; background: transparent; border: 0; }
-  .send { order: 3; width: 44px; height: 44px; }
+  flex-direction: row;
+  align-items: center;
+  .spacer { display: none; }
+  .mic { width: 44px; height: 44px; background: transparent; border: 0; }
+  .send { width: 44px; height: 44px; }
   &:focus-within { border-color: color-mix(in srgb, var(--m-accent) 72%, var(--m-border)); box-shadow: 0 20px 54px color-mix(in srgb, #000 16%, transparent); }
 }

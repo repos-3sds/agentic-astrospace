@@ -22,7 +22,8 @@ for (const scheme of ['light', 'dark'] as const) {
       if (path === '/api/v1/kundlis') return route.fulfill({ json: [profile] });
       if (path === '/api/v1/ask/a/stream') {
         sent.push(route.request().postDataJSON());
-        return route.fulfill({ status: 503, json: { detail: 'not in this test' } });
+        await new Promise((resolve) => setTimeout(resolve, 6000));
+        return route.fulfill({ status: 503, json: { detail: 'not in this test' } }).catch(() => undefined);
       }
       return route.fulfill({ status: 503, json: { detail: `Unmocked ${path}` } });
     });
@@ -33,8 +34,23 @@ for (const scheme of ['light', 'dark'] as const) {
     await expect(chip).toHaveAttribute('aria-pressed', 'false');
     await page.screenshot({ path: `test-results/ask-depth/fast-${scheme}.png` });
 
-    await chip.click();
+    // The "+" menu: ask about someone, add a family member, Deep answer.
+    await page.getByRole('button', { name: 'Ask options' }).click();
+    await expect(page.getByRole('menuitem', { name: /Ask about someone/ })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: /Add a family member/ })).toBeVisible();
+    const deepItem = page.getByRole('menuitemcheckbox', { name: /Deep answer/ });
+    await deepItem.click();
+    await expect(deepItem).toHaveAttribute('aria-checked', 'true');
+    await page.screenshot({ path: `test-results/ask-depth/menu-${scheme}.png` });
+    await page.keyboard.press('Escape');
     await expect(chip).toHaveAttribute('aria-pressed', 'true');
+
+    // The person chip opens the profile switcher.
+    await page.getByRole('button', { name: /Asking about Kavya/ }).click();
+    await expect(page.getByRole('heading', { name: 'Switch profile' })).toBeVisible();
+    await page.screenshot({ path: `test-results/ask-depth/person-${scheme}.png` });
+    await page.locator('.profile-row').first().click();
+    await expect(page.getByRole('heading', { name: 'Switch profile' })).toBeHidden();
     await page.screenshot({ path: `test-results/ask-depth/deep-empty-${scheme}.png` });
     await page.locator('as-ask-composer input.field').fill('Will my YouTube channel grow?');
     await page.screenshot({ path: `test-results/ask-depth/deep-${scheme}.png` });
@@ -42,6 +58,9 @@ for (const scheme of ['light', 'dark'] as const) {
     await page.getByRole('button', { name: 'Send' }).first().click();
     await expect.poll(() => sent.length).toBeGreaterThan(0);
     expect(sent[0]['depth']).toBe('deep');
+    await expect(page.getByText('Deep reading · about a minute')).toBeVisible();
+    await expect(page.locator('.deep-tag')).toBeVisible();
+    await page.screenshot({ path: `test-results/ask-depth/deep-waiting-${scheme}.png` });
 
     await page.reload();
     await expect(page.getByRole('button', { name: /Deep answer/ })).toHaveAttribute('aria-pressed', 'true');
