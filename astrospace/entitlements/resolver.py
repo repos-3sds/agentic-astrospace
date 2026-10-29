@@ -221,21 +221,22 @@ def resolve_entitlements(db: Session, user_id: str, *, now: datetime | None = No
         UsageBucket.period_start <= now,
         UsageBucket.period_end > now,
     ).all()
-    usage = {
-        bucket.entitlement_key: {
-            "used": bucket.consumed,
-            "reserved": bucket.reserved,
-            "remaining": (
-                max(0, int(values[bucket.entitlement_key]) - bucket.consumed - bucket.reserved)
-                if isinstance(values.get(bucket.entitlement_key), int)
-                else None
-            ),
-            "resets_at": bucket.period_end.isoformat(),
-            "period_id": bucket.period_id,
-        }
-        for bucket in buckets
-        if bucket.entitlement_key in capability_registry
-    }
+    # Most limits keep one bucket per period; compatibility keeps one per
+    # person checked (usage.record_compatibility_check), so sum by key.
+    usage: dict[str, dict] = {}
+    for bucket in buckets:
+        key = bucket.entitlement_key
+        if key not in capability_registry:
+            continue
+        row = usage.setdefault(key, {
+            "used": 0, "reserved": 0, "remaining": None,
+            "resets_at": bucket.period_end.isoformat(), "period_id": bucket.period_id,
+        })
+        row["used"] += bucket.consumed
+        row["reserved"] += bucket.reserved
+    for key, row in usage.items():
+        if isinstance(values.get(key), int):
+            row["remaining"] = max(0, int(values[key]) - row["used"] - row["reserved"])
     return EntitlementSnapshot(
         account_id=account.id,
         access_tier=tier,

@@ -14,6 +14,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from .. import ratelimit
 from ..db import get_db
 from ..db.database import release_connection
 from ..entitlements.resolver import require_entitlement, resolve_entitlements
@@ -109,6 +110,8 @@ def translate_sections(body: TranslateRequest, user: CurrentUser, db: Session = 
     require_entitlement(resolve_entitlements(db, user.id), "audio.natural_voice")
     if sum(len(section.text) for section in body.sections) > MAX_TOTAL_CHARS:
         raise HTTPException(status_code=413, detail="Too much text to translate at once.")
+    # Each call is a model call; the app reads in English on a 429 (sweep S-2).
+    ratelimit.require(user.id, "translate")
     release_connection(db)  # translation is a model call; see create_speech
     try:
         sections = telugu_sections([Section(s.label, s.text) for s in body.sections])
