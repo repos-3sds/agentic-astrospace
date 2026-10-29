@@ -290,8 +290,6 @@
   background: var(--m-surface);
   color: var(--m-text);
   &.is-on { background: var(--m-accent-soft); border-color: var(--m-accent); color: var(--m-accent-strong); }
-  &.person { padding: 0 14px; }
-  &:disabled { opacity: 0.45; }
 }
 
 .switch-row {

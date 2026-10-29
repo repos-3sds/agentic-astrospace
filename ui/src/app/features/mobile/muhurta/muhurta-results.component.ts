@@ -40,8 +40,6 @@ export interface MuhurtaWindow {
   reason: string;
   startIso: string;
   endIso: string;
-  /** "Good for Ramesh and Lakshmi · Weak for Arjun", when several people take part. */
-  fit: string;
 }
 
 /**
@@ -149,10 +147,7 @@ export class MuhurtaResultsComponent {
 
   /** Whose chart the times were checked against. */
   protected readonly forWhom = computed(() => {
-    const p = this.params();
-    const others = (p.get('with') ?? '').split(',').filter(Boolean);
-    const main = p.get('person') || (others.length ? this.kundlis.activeId() : null);
-    const names = [main, p.get('partner'), ...others]
+    const names = [this.params().get('person'), this.params().get('partner')]
       .filter(Boolean)
       .map((id) => this.kundlis.kundlis().find((k) => k.id === id)?.name)
       .filter(Boolean);
@@ -237,7 +232,6 @@ export class MuhurtaResultsComponent {
       const intent = goal === 'general' ? p.get('intent') : null;
       const options: MuhurtaSearchOptions = {
         partnerId: p.get('partner'),
-        withIds: (p.get('with') ?? '').split(',').filter(Boolean),
         ceremony: (p.get('ceremony') as MuhurtaSearchOptions['ceremony']) ?? null,
         direction: (p.get('direction') as MuhurtaSearchOptions['direction']) ?? null,
         avoid: (p.get('avoid') ?? '').split(',').filter(Boolean),
@@ -290,24 +284,8 @@ export class MuhurtaResultsComponent {
         reason: this.reason(window),
         startIso: window.start_iso,
         endIso: window.end_iso,
-        fit: this.fit(window.people),
       };
     });
-  }
-
-  /** Who a window suits, in words; the main person is "you" from the server. */
-  private fit(people: MuhurtaApiWindow['people']): string {
-    if (!people?.length) return '';
-    const p = this.params();
-    const mainId = p.get('person') || this.kundlis.activeId();
-    const main = this.kundlis.kundlis().find((k) => k.id === mainId)?.name.split(' ')[0] ?? 'You';
-    const named = people.map((row) => ({ ...row, name: row.name === 'you' ? main : row.name }));
-    const group = (standing: string, words: string) => {
-      const names = named.filter((row) => row.standing === standing).map((row) => row.name);
-      return names.length ? `${words} ${joinNames(names)}` : null;
-    };
-    return [group('strong', 'Good for'), group('fair', 'Fair for'), group('weak', 'Weak for')]
-      .filter(Boolean).join(' · ');
   }
 
   private reason(window: MuhurtaApiWindow): string {
@@ -346,8 +324,4 @@ function addDays(date: Date, days: number): Date {
   const next = new Date(date);
   next.setDate(next.getDate() + days);
   return next;
-}
-
-function joinNames(names: string[]): string {
-  return names.length < 2 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 }

@@ -28,7 +28,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
-from ..agents.orchestrator import AskOrchestrator, ValidationStore, exploration_trace, people_read, terminal_turn
+from ..agents.orchestrator import AskOrchestrator, ValidationStore, exploration_trace, terminal_turn
 from ..agents.schema import StructuredReading
 from ..agents.validation_agent import ValidationProbeDraft
 from ..context.taxonomy import TaxonomyError
@@ -40,7 +40,7 @@ from ..db.crud_profile_context import (
 )
 from ..db.database import release_connection, short_session
 from .ask_routes import (
-    MAX_HISTORY, AskRequest, _evidence_from_reading, _group_loader, _history_from_thread,
+    MAX_HISTORY, AskRequest, _evidence_from_reading, _history_from_thread,
     _alert_if_ai_out_of_credit, _owned_thread, _persist_ask_turn, _profile_context_store,
     _settle_credit,
     _thread_established_domain,
@@ -299,7 +299,6 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
         validation_store=_validation_store(db, user.id, kundli_id,
                                            thread.id if thread else None),
         profile_context_store=_profile_context_store(db, user.id, kundli_id),
-        group_loader=_group_loader(db, user.id, k, convention, body.with_profiles),
     )
     try:
         outcome = orchestrator.prepare(
@@ -352,7 +351,6 @@ def ask_stream(kundli_id: str, body: AskRequest, user: CurrentUser,
                 profile_context_revision=prepared.profile_context_revision,
                 profile_context_as_of=prepared.profile_context_as_of,
                 exploration=exploration_trace(prepared),
-                people_read=people_read(prepared.bundle),
             ),
             usage=prepared.usage,
         )

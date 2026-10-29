@@ -89,19 +89,6 @@
     </section>
   }
 
-  @if (groupOptions().length) {
-    <section class="panel" aria-labelledby="muhurta-with-label">
-      <p class="panel-label" id="muhurta-with-label">Who else is taking part?</p>
-      <div class="days" role="group" aria-labelledby="muhurta-with-label">
-        @for (k of groupOptions(); track k.id) {
-          <button type="button" class="day person" [class.is-on]="isWith(k.id)" [attr.aria-pressed]="isWith(k.id)"
-            [disabled]="!isWith(k.id) && withFull()" (click)="toggleWith(k.id)">{{ firstName(k.name) }}</button>
-        }
-      </div>
-      <p class="panel-note">Pick everyone doing this together. Each time is checked against all of you and says who it suits.</p>
-    </section>
-  }
-
   @if (selectedGoal() === 'marriage_related') {
     <p class="eyebrow">CEREMONY</p>
     <div class="ranges" role="radiogroup" asSelectHaptic aria-label="Ceremony time">
