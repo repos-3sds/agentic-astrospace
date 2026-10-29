@@ -176,3 +176,21 @@ def test_bad_or_unsafe_translation_falls_back_to_english(env, reply):
             assert client.post("/api/v1/voice/translate", json={"sections": BRIEF}).status_code == 503
         finally:
             set_translator_for_tests(None)
+
+
+def test_translate_has_a_rate_limit(env, monkeypatch):
+    """Every Telugu translation is a model call (sweep 2026-10-29 S-2)."""
+    from astrospace import ratelimit
+
+    client, Session, _ = env
+    _grant_natural_voice(Session)
+    ratelimit.reset()
+    monkeypatch.setenv("ASTROSPACE_LIMIT_TRANSLATE_PER_MINUTE", "2")
+    set_translator_for_tests(lambda system, prompt: '["నమస్తే.", "సరే."]')
+    try:
+        codes = [client.post("/api/v1/voice/translate", json={"sections": BRIEF}).status_code
+                 for _ in range(3)]
+    finally:
+        set_translator_for_tests(None)
+        ratelimit.reset()
+    assert codes[:2] == [200, 200] and codes[2] == 429

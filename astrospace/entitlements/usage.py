@@ -178,3 +178,41 @@ def question_credits_remaining(db: Session, account_id: str) -> int:
         QuestionCredit.revoked_at.is_(None),
     ).all()
     return sum(remaining for (remaining,) in rows)
+
+
+COMPAT_KEY = "compatibility.checks.period"
+
+
+def record_compatibility_check(db: Session, user_id: str, person_id: str,
+                               *, now: datetime | None = None) -> None:
+    """Count one person checked for compatibility this month, or refuse (402).
+
+    Free has one person a month. The count used to live only on the phone
+    (plan-gate.service.ts, sweep 2026-10-29 G-6). It is one usage_buckets row
+    per person, with the person as `scope_id`, so re-opening someone already
+    checked costs nothing and two requests for the same person can't count
+    twice. Blocks only when quotas are enforced, like every other limit.
+    """
+    from .resolver import require_turn
+
+    now = now or datetime.utcnow()
+    snapshot = resolve_entitlements(db, user_id, now=now)
+    period_id, start, end = month_bounds(now)
+    checked = {
+        row.scope_id for row in db.query(UsageBucket.scope_id).filter(
+            UsageBucket.billing_account_id == snapshot.account_id,
+            UsageBucket.entitlement_key == COMPAT_KEY,
+            UsageBucket.period_id == period_id,
+        )
+    }
+    if person_id in checked:
+        return
+    require_turn(db, user_id, COMPAT_KEY, len(checked), now=now)
+    db.add(UsageBucket(
+        billing_account_id=snapshot.account_id, scope_id=person_id, entitlement_key=COMPAT_KEY,
+        period_id=period_id, period_start=start, period_end=end, consumed=1,
+    ))
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()  # the same person, counted by a request racing this one

@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import logging
 import re
+import threading
 from datetime import date
 from typing import Callable
 
@@ -41,6 +42,10 @@ from .placement_check import birth_placements, drop_false_sentences
 from .style import PLAIN_INDIAN_ENGLISH
 
 log = logging.getLogger(__name__)
+
+
+class ExplorationStopped(Exception):
+    """The orchestrator asked the explorer to stop; its findings are dropped."""
 
 # Tool rounds per question kind (agents/scope.py), after the core look-ups
 # code has already run. Practitioner readers get two more, capped at eight.
@@ -316,17 +321,23 @@ class ChartExplorer(BaseAstroAgent):
 
     def __init__(self, tools: ChartTools, question: str, bundle: dict, question_kind: str = "broad",
                  experience_mode: str = "balanced", history: list[str] | None = None,
-                 on_tool: Callable[[str, dict], None] | None = None, api_key: str | None = None):
+                 on_tool: Callable[[str, dict], None] | None = None, api_key: str | None = None,
+                 practitioner: bool = False, stop: threading.Event | None = None):
         super().__init__(api_key)
         self.chart_tools = tools
         self.on_tool = on_tool
+        # Set by the orchestrator when the reader is no longer waiting (its
+        # 120 s timeout, or a closed stream): the loop stops after the round
+        # in flight and no forced submit follows (sweep 2026-10-29 S-1).
+        self.stop = stop or threading.Event()
         self.domain = bundle.get("domain", "")
         self.plan = AREA_PLAN.get(self.domain, _DEFAULT_PLAN)
         self.today = _today(bundle)
         self.submitted: dict | None = None
         self.refusals = 0
         rounds = ROUNDS_BY_KIND.get(question_kind, 5)
-        if experience_mode == "practitioner":
+        # `experience_mode` is a client field; the extra rounds follow the plan.
+        if experience_mode == "practitioner" and practitioner:
             rounds += 2
         self.max_tool_rounds = min(rounds, MAX_ROUNDS)
         said = [f"- {line}" for line in (history or []) if line.strip()][:12]
@@ -392,7 +403,7 @@ class ChartExplorer(BaseAstroAgent):
     def _loop_done(self) -> bool:
         # An accepted submission is the result; the model's "done" turn
         # after it cost ~15 s and 1k tokens in the 2026-10-28 run.
-        return self.submitted is not None
+        return self.submitted is not None or self.stop.is_set()
 
     def required_rules(self) -> set[str]:
         """Every A and B rule the model has been shown this turn."""
@@ -464,6 +475,8 @@ class ChartExplorer(BaseAstroAgent):
             # weighing with it. Submit over what was gathered instead.
             log.exception("explorer tool loop failed; submitting over what was looked up")
             loop_failed = True
+        if self.stop.is_set():
+            raise ExplorationStopped("the reader stopped waiting")
         if self.submitted is None:
             self._force_submit()
         if loop_failed and self.submitted is None:
@@ -517,4 +530,4 @@ class ChartExplorer(BaseAstroAgent):
         }
 
 
-__all__ = ["AREA_PLAN", "ChartExplorer", "ROUNDS_BY_KIND", "summarize_call"]
+__all__ = ["AREA_PLAN", "ChartExplorer", "ExplorationStopped", "ROUNDS_BY_KIND", "summarize_call"]

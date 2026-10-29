@@ -19,6 +19,7 @@ import threading
 import time
 from collections import deque
 from dataclasses import dataclass
+from typing import Callable
 
 from fastapi import HTTPException
 
@@ -49,6 +50,18 @@ LIMITS: dict[str, Limit] = {
     "report": Limit(
         per_day=30, per_minute=5,
         message="Thank you. You’ve sent many reports in a short time. Please try again a little later.",
+    ),
+    # Deep Ask runs 3 to 8 explorer rounds plus the writer, about five times
+    # Fast's model calls (sweep 2026-10-29 S-1). Past this a question gets
+    # today's Ask instead of a refusal; see deep_slot().
+    "ask_deep": Limit(
+        per_day=20, per_minute=2,
+        message="Deep answers are resting for a while.",
+    ),
+    # One Listen in Telugu translates one screen; the app caches each.
+    "translate": Limit(
+        per_day=30, per_minute=5,
+        message="Telugu is resting for a while; reading in English.",
     ),
     "reading": Limit(
         per_day=30, per_minute=6,
@@ -86,6 +99,49 @@ def take(user_id: str, kind: str, *, now: float | None = None) -> bool:
         return True
 
 
+_deep_in_flight: dict[str, float] = {}
+# A slot whose release never came (a stream that never started) frees itself
+# after this; an exploration stops at 120 s plus one model call.
+DEEP_HOLD_MAX_S = 10 * 60.0
+
+
+def _deep_busy(user_id: str, now: float) -> bool:
+    held = _deep_in_flight.get(user_id)
+    return held is not None and now - held < DEEP_HOLD_MAX_S
+
+
+def deep_slot(user_id: str, *, now: float | None = None) -> Callable[[], None] | None:
+    """Room for one Deep exploration: a release function, or None when the
+    account already has one running or has used its "ask_deep" allowance.
+    The caller answers with today's Ask on None. Release once the
+    exploring thread has really ended, not when the reader stopped waiting,
+    so an abandoned run still holds the slot while it spends."""
+    now = time.monotonic() if now is None else now
+    with _guard:
+        if _deep_busy(user_id, now):
+            return None
+    if not take(user_id, "ask_deep", now=now):
+        return None
+    with _guard:
+        raced = _deep_busy(user_id, now)
+        if not raced:
+            _deep_in_flight[user_id] = now
+    if raced:  # another request took the slot between the two checks
+        refund(user_id, "ask_deep")
+        return None
+    released = threading.Event()
+
+    def release() -> None:
+        if released.is_set():
+            return
+        released.set()
+        with _guard:
+            if _deep_in_flight.get(user_id) == now:
+                del _deep_in_flight[user_id]
+
+    return release
+
+
 def refund(user_id: str, kind: str) -> None:
     """Give back the newest unit, for work that turned out to need no model
     call (a stored brief found after all, a failed write)."""
@@ -105,3 +161,4 @@ def reset() -> None:
     """Tests only."""
     with _guard:
         _events.clear()
+        _deep_in_flight.clear()

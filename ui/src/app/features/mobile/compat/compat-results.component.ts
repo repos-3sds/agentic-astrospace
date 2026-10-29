@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
+import { EntitlementLimitError } from '../../../core/entitlement-denial';
 import { KundliStore } from '../../../core/kundli.store';
 import { CompatibilityPayload } from '../../../core/models';
 import { PreferencesService } from '../../../core/preferences.service';
@@ -136,7 +137,9 @@ export class CompatResultsComponent {
         : await this.vedic.compatibility(activeId, partnerId));
       this.gate.recordCompatibility(partnerId);
     } catch (error) {
-      this.error.set((error as Error).message);
+      // The server keeps the real count (sweep G-6); the phone's is a hint.
+      if (error instanceof EntitlementLimitError) this.overLimit.set(true);
+      else this.error.set((error as Error).message);
     } finally {
       this.loading.set(false);
     }
