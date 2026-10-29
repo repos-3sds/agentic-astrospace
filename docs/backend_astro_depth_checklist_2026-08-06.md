@@ -1987,3 +1987,25 @@ meta. Left open:
   personal path; the backup only has to be true and calm. *Unblock:* add
   per-house-lord lines to `AREA_PLAIN` if the backup ends up serving often
   (watch `life_story.cost` status `fallback`).
+
+## Deferred backlog — plan limits on the server (sweep 2026-10-29 G-6)
+
+- [ ] **The Gun Milan breakdown is served to every plan.** Free sees only the
+  total on screen, but `GET /vedic/{id}/compatibility/{partner}` returns
+  every koota row to any account. *Why not built:* the same payload carries
+  the Manglik, Rajju and Nadi flags, and a dosha is a flag, never
+  suppressed (design principles §4); stripping it by plan needs a split
+  between the flags every plan keeps and the narrative only Plus gets, and
+  an app build that reads the smaller shape. The model-written section
+  (`/insight`) is already locked on the server. *Unblock:* decide which
+  fields are Plus-only, return those as `null` for a plan without
+  `compatibility.full`, and check `compat-results` and `compat-detail` on
+  Free. *Code hook:* `compatibility()` in `astrospace/api/vedic_routes.py`.
+- [ ] **`festivals.full` has no reader.** The flag is in the registry, but no
+  screen or route asks for it, so Free and Plus see the same festival
+  lists. *Why not built:* there is nothing yet to lock; the frozen access
+  matrix (`/mnt/project-files/plans/access_matrix_2026-10-20.md`) gives all
+  readers the festival calendar. *Unblock:* a product call on what "full
+  festival packs and custom filters" means, then gate that feature with
+  `plan_lock(db, user, "festivals.full")`. *Code hook:*
+  `astrospace/entitlements/registry.py`.
