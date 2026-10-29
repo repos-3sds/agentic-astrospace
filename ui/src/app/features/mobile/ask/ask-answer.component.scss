@@ -155,6 +155,12 @@
 .verdict-label .eyebrow[data-tone='warn'] { color: var(--m-warn); }
 .verdict-label .eyebrow[data-tone='bad'] { color: var(--m-bad); }
 
+.read-together {
+  @include m-caption;
+  margin: -4px 0 8px;
+  color: var(--m-muted);
+}
+
 .answer-strength {
   @include m-caption;
   margin-left: auto;

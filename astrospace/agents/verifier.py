@@ -160,7 +160,7 @@ def _tense_conflict(text: str, as_of_year: int, safe_years: set[int]) -> bool:
 # evidence) as long as that section actually exists in the bundle handed to
 # the agent. Citation-shaped sources are checked against the bundle's real
 # references/source_passages instead — see `valid_sources`.
-_OPTIONAL_SECTION_NAMES = {"muhurta_search"}
+_OPTIONAL_SECTION_NAMES = {"muhurta_search", "group_reading"}
 
 _BUNDLE_SECTION_NAMES = {
     "houses", "karakas", "vargas", "yogas", "doshas",

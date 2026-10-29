@@ -41,6 +41,7 @@ from .ai_outage import note_failure
 from .verifier import (depth_violations, guided_violations, quality_violations, safety_violations, verify,
                        verify_coverage, violation_fields)
 from ..context.muhurta_search import muhurta_section
+from ..context.group_reading import group_section
 from ..context import KeywordRouter, assemble_domain
 from ..context.focus import focus_bundle
 from ..context.profile_context import LogicalPreflight, build_logical_preflight
@@ -55,7 +56,7 @@ SCHEMA_VERSION = "ask_structured_v1"
 _BUNDLE_TOP_LEVEL_SECTIONS = (
     "houses", "karakas", "jaimini_karakas", "arudhas", "vargas",
     "yogas", "doshas", "dasha_relevance", "gochara", "references",
-    "muhurta_search",
+    "muhurta_search", "group_reading",
 )
 
 
@@ -454,6 +455,12 @@ def exploration_trace(prepared: "PreparedRun") -> dict | None:
     }
 
 
+def people_read(bundle: dict) -> list[str]:
+    """Names of the charts read together this turn; empty for one chart."""
+    people = (bundle.get("group_reading") or {}).get("people") or []
+    return [p["name"] for p in people] if len(people) > 1 else []
+
+
 def _log_violations(stage: str, domain: str, violations: list) -> None:
     """Which checks failed, so a withheld answer can be traced from the log
     (2026-10-28: a health answer was withheld and nothing said why). The
@@ -467,7 +474,8 @@ class AskOrchestrator:
                 router: KeywordRouter | None = None,
                 validation_store: ValidationStore | None = None,
                 profile_context_store: ProfileContextStore | None = None,
-                planner: Callable[[str, list[dict] | None], QuestionPlan] | None = None):
+                planner: Callable[[str, list[dict] | None], QuestionPlan] | None = None,
+                group_loader: Callable[[str], dict | None] | None = None):
         """`chart_loader` is a zero-arg callable the route supplies —
         deferred so a bad-birth-data error only gets raised if a registered
         domain actually needs the chart (never for refer-out, never for
@@ -491,6 +499,9 @@ class AskOrchestrator:
         self._validation_store = validation_store
         self._profile_context_store = profile_context_store
         self._chart: VedicChart | None = None
+        # The other saved profiles a question names (context/people.py), with
+        # their charts. Optional: without it Ask reads one chart, as before.
+        self._group_loader = group_loader
 
     def check_safety(self, question: str) -> SafetyResult:
         return SafetyResult(refer_out_kind=refer_out_kind(question))
@@ -580,6 +591,12 @@ class AskOrchestrator:
         search = muhurta_section(chart, question)
         if search:
             bundle["muhurta_search"] = search
+        group = self._group_section(question)
+        if group:
+            bundle["group_reading"] = group
+            if group.get("muhurta"):
+                # The group's slots already weigh this profile's own star.
+                bundle.pop("muhurta_search", None)
         profile_context = self.check_profile_context(bundle, domain, question, tense)
         bundle["profile_context"] = profile_context.bundle_section
         context_used = [
@@ -588,6 +605,22 @@ class AskOrchestrator:
         ]
         return ContextResult(bundle=bundle, context_used=context_used,
                              profile_context_unavailable=profile_context.unavailable)
+
+    def _group_section(self, question: str) -> dict | None:
+        """Every named person's chart, read for the shared purpose. A failure
+        here never stops the answer: it falls back to this chart alone."""
+        if self._group_loader is None:
+            return None
+        try:
+            found = self._group_loader(question)
+            if not found:
+                return None
+            return group_section(found["people"], question,
+                                 not_saved=found.get("not_saved"),
+                                 ambiguous=found.get("ambiguous"))
+        except Exception:
+            log.exception("group reading failed; answering from one chart")
+            return None
 
     def check_profile_context(self, bundle: dict, domain: str, question: str,
                               tense: QuestionTense) -> ProfileContextResult:
@@ -1077,6 +1110,9 @@ class AskOrchestrator:
             "domain": prepared.domain, "intent": prepared.intent,
             "tense": prepared.tense,
             "context_used": prepared.context_used,
+            # Whose charts were read together (context/group_reading.py), for
+            # the "Read together" line above the answer.
+            **({"people_read": people} if (people := people_read(prepared.bundle)) else {}),
             "evidence_refs": [item.source for item in result.reading.technical_basis],
             # The exact ledger snapshot this answer was generated and
             # verified against — not re-read at persistence time. A later

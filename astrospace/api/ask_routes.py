@@ -35,6 +35,7 @@ from ..agents.orchestrator import AskOrchestrator, ProfileContextStore, terminal
 from ..agents.schema import StructuredReading
 from ..context.taxonomy import TaxonomyError, get_domain
 from ..core.vedic.ask_suggestions import ask_suggestions
+from ..context.people import resolve_people, stored_relation
 from ..db import get_db
 from ..db import crud, crud_mobile as cm
 from ..db.models import AnswerReport, AskMessage
@@ -43,7 +44,7 @@ from ..db.database import release_connection, short_session
 from .. import ratelimit
 from ..entitlements.usage import commit_ask_credit, release_ask_credit, reserve_ask_credit
 from ..agents.ask_engine import choose_engine
-from ..agents.orchestrator import exploration_trace
+from ..agents.orchestrator import exploration_trace, people_read
 from .auth import CurrentUser
 from .context_routes import _chart_from_kundli
 
@@ -123,6 +124,13 @@ class AskRequest(BaseModel):
                     "only in the frontend and merely hid technical_basis "
                     "rows, so every reader got word-for-word the same "
                     "analyst-voiced answer.",
+    )
+    with_profiles: Optional[list[str]] = Field(
+        None, max_length=4,
+        description="Other saved profiles the reader picked with \"+\" for this "
+                    "question (a couple, two friends, the family). Their charts are "
+                    "read together with this one (context/group_reading.py). Names "
+                    "and relationships in the question are matched too.",
     )
     validate_first: bool = Field(
         False,
@@ -409,6 +417,36 @@ def _thread_established_domain(db: Session, thread_id: str) -> Optional[str]:
     return None
 
 
+def _group_loader(db: Session, user_id: str, k, convention: tuple,
+                  picked: list[str] | None):
+    """For AskOrchestrator: the saved profiles a question names, with charts.
+
+    Rows are read now, while the request still holds its connection; charts
+    are built later, only for the people the question names."""
+    rows = [row for row in crud.list_kundlis(db, user_id) if row.archived_at is None]
+    profiles = [{"id": row.id, "name": row.name, "relation": row.relation, "kind": row.kind}
+                for row in rows]
+    by_id = {row.id: row for row in rows}
+
+    def load(question: str) -> dict | None:
+        found = resolve_people(question, profiles, k.id, picked)
+        if not (found["group"] or found["not_saved"] or found["ambiguous"]):
+            return None
+        people = []
+        for pid in found["ids"]:
+            row = k if pid == k.id else by_id.get(pid)
+            if row is None:
+                continue
+            people.append({"name": (row.name or "").split()[0] or "Profile",
+                           "relation": stored_relation(row.relation),
+                           "chart": _chart_from_kundli(row, *convention),
+                           "time_known": (row.birth_time_accuracy or "exact") == "exact"})
+        return {"people": people, "not_saved": found["not_saved"],
+                "ambiguous": found["ambiguous"]}
+
+    return load
+
+
 def _profile_context_store(db: Session, user_id: str, kundli_id: str) -> ProfileContextStore:
     """One profile-scoped `ProfileContextStore` per Ask call, closing over
     exactly one `(db, user_id, kundli_id)` triple — the same isolation
@@ -435,6 +473,7 @@ def _evidence_from_reading(
     profile_context_revision: int | None = None,
     profile_context_as_of: str | None = None,
     exploration: dict | None = None,
+    people_read: list[str] | None = None,
 ) -> dict:
     """Namespaced, versioned bridge shape for `AskMessage.evidence` — this is
     explicitly a temporary storage decision, not the final one. Wrapping it
@@ -471,6 +510,9 @@ def _evidence_from_reading(
         if exploration.get("weighing"):
             # Read back by the app for "How we weighed it" on reopened threads.
             evidence["weighing"] = exploration["weighing"]
+    if people_read:
+        # Whose charts were read together, for "Read together" on reopened threads.
+        evidence["people_read"] = people_read
     return evidence
 
 
@@ -552,6 +594,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
     orchestrator = AskOrchestrator(
         chart_loader=lambda: _chart_from_kundli(k, *convention),
         profile_context_store=_profile_context_store(db, user.id, kundli_id),
+        group_loader=_group_loader(db, user.id, k, convention, body.with_profiles),
     )
     try:
         outcome = orchestrator.prepare(
@@ -615,6 +658,7 @@ def ask(kundli_id: str, body: AskRequest, user: CurrentUser,
                                 profile_context_revision=prepared.profile_context_revision,
                                 profile_context_as_of=prepared.profile_context_as_of,
                                 exploration=exploration_trace(prepared),
+                                people_read=people_read(prepared.bundle),
                             ),
                             usage=prepared.usage)
 

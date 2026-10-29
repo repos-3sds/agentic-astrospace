@@ -186,7 +186,25 @@
 .person-icon { --composer-icon: url('/mobile/person.svg'); width: 15px; height: 15px; }
 .person-add-icon { --composer-icon: url('/mobile/person-add.svg'); width: 18px; height: 18px; }
 .tick-icon { --composer-icon: url('/mobile/tick.svg'); width: 18px; height: 18px; color: var(--m-accent-strong); }
+.people-icon { --composer-icon: url('/mobile/nav-family.svg'); width: 18px; height: 18px; }
 .menu-mark .deep-icon, .menu-mark .person-icon { width: 18px; height: 18px; }
+
+.chip.together .chip-text { max-width: 80px; }
+.together-menu { max-height: min(70vh, 520px); overflow-y: auto; }
+.together-title { @include m-body; font-weight: 600; color: var(--m-text); margin: 6px 10px 0; }
+.together-note { @include m-caption; color: var(--m-muted); margin: 0 10px 6px; }
+.menu-row:disabled { opacity: 0.45; cursor: default; }
+.together-done {
+  margin: 6px 4px 2px;
+  min-height: 46px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--m-primary-cta);
+  color: var(--m-on-primary);
+  @include m-body;
+  font-weight: 600;
+  cursor: pointer;
+}
 
 .mic-icon { --composer-icon: url('/mobile/mic.svg'); width: 18px; height: 18px; }
 .send-icon { --composer-icon: url('/mobile/send.svg'); width: 17px; height: 17px; }
