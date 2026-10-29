@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { fallbackPrice } from '../../../core/fallback-price';
 import { EntitlementDenial } from '../../../core/entitlement-denial';
 import { PurchaseService } from '../../../core/purchase.service';
 
@@ -59,8 +60,8 @@ import { PurchaseService } from '../../../core/purchase.service';
 export class LockedStateComponent {
   readonly denial = input.required<EntitlementDenial>();
   private readonly store = inject(PurchaseService);
-  /** The store's own price for one question, in the reader's currency; Play's India price until it loads. */
-  private readonly questionPrice = computed(() => this.store.prices()['siddha_questions_1'] ?? '₹50');
+  /** The store's own price for one question, in the reader's currency; Play's launch price until it loads. */
+  private readonly questionPrice = computed(() => this.store.prices()['siddha_questions_1'] ?? fallbackPrice(50, 2.99));
 
   protected readonly isAsk = computed(() => this.denial().entitlement === 'ask.answers.period');
 

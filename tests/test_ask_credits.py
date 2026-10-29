@@ -200,4 +200,8 @@ def test_products_list_d2_prices(env):
     assert products["siddha_questions_3"]["questions"] == 3
     assert products["siddha_questions_3"]["price_inr"] == 130
     assert products["siddha_questions_1"]["price_inr"] == 50
+    # Outside India (and on iPhone until App Store purchases exist) the fallback is dollars.
+    assert [products[i]["price_usd"] for i in (
+        "siddha_plus_monthly", "siddha_practitioner_monthly", "siddha_questions_1", "siddha_questions_3",
+    )] == [9.99, 24.99, 2.99, 6.99]
     assert "siddha_questions_15" not in products
