@@ -21,6 +21,8 @@ it has every Figma node ID, the per-screen recipe, and the traps already hit.
 Every merge to main ships itself once CI is green (API, worker, Hosting, AAB to
 internal testing, iOS build to TestFlight); see [docs/ship_from_github.md](docs/ship_from_github.md)
 and [docs/ship_ios_testflight.md](docs/ship_ios_testflight.md).
+Where those builds run (GitHub's machines or the Mac mini, switched by the
+`BUILD_RUNNER` variable) is in [docs/build_runner.md](docs/build_runner.md).
 The public address is asksiddha.app, served through Firebase Hosting; see
 [docs/custom_domain.md](docs/custom_domain.md).
 Email to readers (daily reading, moon and festival days) runs on the same

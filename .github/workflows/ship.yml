@@ -59,6 +59,11 @@ env:
   DEPLOYER_SA: github-deployer@gen-lang-client-0058562386.iam.gserviceaccount.com
   PLAY_SA: play-publisher@gen-lang-client-0058562386.iam.gserviceaccount.com
 
+# Every job runs where the BUILD_RUNNER repository variable says: unset, on
+# GitHub's machines; set to siddha-mac, on the Mac mini, where a private repo
+# builds for free (docs/build_runner.md). On the Mac each job keeps gcloud's
+# sign-in in its own temporary folder, so the Mac's own gcloud account is
+# never switched, and removes every key it wrote before it ends.
 jobs:
   plan:
     name: What changed
@@ -66,7 +71,7 @@ jobs:
     if: >-
       github.event_name != 'workflow_run' ||
       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.BUILD_RUNNER || 'ubuntu-latest' }}
     outputs:
       sha: ${{ steps.plan.outputs.sha }}
       dry: ${{ steps.plan.outputs.dry }}
@@ -156,7 +161,7 @@ jobs:
     name: API + worker (Cloud Run)
     needs: plan
     if: needs.plan.outputs.server == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.BUILD_RUNNER || 'ubuntu-latest' }}
     outputs:
       image: ${{ steps.image.outputs.image }}
     steps:
@@ -166,6 +171,9 @@ jobs:
 
       - id: image
         run: echo "image=$IMAGE_REPO:${{ needs.plan.outputs.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: gcloud settings in this job's temporary folder
+        run: echo "CLOUDSDK_CONFIG=$RUNNER_TEMP/gcloud" >> "$GITHUB_ENV"
 
       - id: auth
         if: needs.plan.outputs.dry != 'true'
@@ -189,6 +197,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          # What Cloud Run runs, whichever machine builds it.
+          platforms: linux/amd64
           push: ${{ needs.plan.outputs.dry != 'true' }}
           tags: ${{ steps.image.outputs.image }}
           cache-from: type=gha
@@ -235,11 +245,14 @@ jobs:
     if: >-
       !cancelled() && needs.plan.outputs.hosting == 'true' && needs.plan.outputs.dry != 'true' &&
       needs.server.result != 'failure'
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.BUILD_RUNNER || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.plan.outputs.sha }}
+
+      - name: gcloud settings in this job's temporary folder
+        run: echo "CLOUDSDK_CONFIG=$RUNNER_TEMP/gcloud" >> "$GITHUB_ENV"
 
       - uses: google-github-actions/auth@v2
         with:
@@ -263,7 +276,7 @@ jobs:
     # talks to. A skipped server deploy (app-only change) is fine.
     if: >-
       !cancelled() && needs.plan.outputs.android == 'true' && needs.server.result != 'failure'
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.BUILD_RUNNER || 'ubuntu-latest' }}
     env:
       DRY: ${{ needs.plan.outputs.dry }}
     steps:
@@ -285,6 +298,16 @@ jobs:
           java-version: '21'
 
       - uses: gradle/actions/setup-gradle@v4
+
+      - name: Android SDK on the Mac mini
+        # GitHub's machines set ANDROID_HOME; on the Mac it is Android
+        # Studio's SDK unless the runner's .env says otherwise.
+        if: runner.environment == 'self-hosted'
+        run: |
+          if [ -z "${ANDROID_HOME:-}" ]; then
+            [ -d "$HOME/Library/Android/sdk" ] || { echo "::error::No Android SDK; set ANDROID_HOME in the runner's .env (docs/build_runner.md)"; exit 1; }
+            echo "ANDROID_HOME=$HOME/Library/Android/sdk" >> "$GITHUB_ENV"
+          fi
 
       - name: Signing key and Firebase config from secrets
         if: env.DRY != 'true'
@@ -422,6 +445,11 @@ jobs:
           echo "### AAB versionCode $VC" >> "$GITHUB_STEP_SUMMARY"
           cat play.txt >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Remove the signing key and Firebase config
+        # A self-hosted runner keeps its work folder between runs.
+        if: always()
+        run: rm -f ui/android/upload-key.jks ui/android/keystore.properties ui/android/app/google-services.json
+
   ios:
     name: iOS build to TestFlight
     needs: [plan, server]
@@ -430,9 +458,9 @@ jobs:
     # Store release stay decisions made in App Store Connect by a person.
     if: >-
       !cancelled() && needs.plan.outputs.ios == 'true' && needs.server.result != 'failure'
-    # Free for a public repository. Xcode 26 is what Apple requires uploads to
-    # be built with.
-    runs-on: macos-26
+    # Xcode 26 is what Apple requires uploads to be built with; the Mac mini
+    # has it, and so does GitHub's macos-26 image.
+    runs-on: ${{ vars.BUILD_RUNNER || 'macos-26' }}
     timeout-minutes: 60
     env:
       DRY: ${{ needs.plan.outputs.dry }}
@@ -449,9 +477,18 @@ jobs:
           fetch-depth: 0
 
       - name: Newest Xcode 26
+        # GitHub's image holds several Xcodes; the Mac mini uses the one it
+        # has selected (no sudo there) and only checks that it is 26 or newer.
         run: |
-          XC=$(ls -d /Applications/Xcode_26*.app | grep -viE 'beta|_rc' | sort -V | tail -1)
-          sudo xcode-select -s "$XC/Contents/Developer"
+          if [ "$RUNNER_ENVIRONMENT" = self-hosted ]; then
+            XV=$(xcodebuild -version | sed -n 1p)
+            MAJOR=$(echo "$XV" | sed -E 's/^Xcode ([0-9]+).*/\1/')
+            [ "${MAJOR:-0}" -ge 26 ] 2>/dev/null || {
+              echo "::error::The Mac's selected Xcode is older than 26: $XV"; exit 1; }
+          else
+            XC=$(ls -d /Applications/Xcode_26*.app | grep -viE 'beta|_rc' | sort -V | tail -1)
+            sudo xcode-select -s "$XC/Contents/Developer"
+          fi
           xcodebuild -version
 
       - name: App Store Connect key from secrets
@@ -483,12 +520,15 @@ jobs:
             fi
           done
           echo configured=true >> "$GITHUB_OUTPUT"
-          # altool looks for the key here by its ID; asc.py is pointed at it.
+          # In this job's temporary folder, never ~/.appstoreconnect: on the
+          # Mac mini that folder holds the Mac's own keys. altool finds it by
+          # its ID through API_PRIVATE_KEYS_DIR; asc.py is pointed at it.
           umask 077
-          mkdir -p ~/.appstoreconnect/private_keys
-          KEY_FILE=~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8
+          KEY_DIR="$RUNNER_TEMP/private_keys"
+          mkdir -p "$KEY_DIR"
+          KEY_FILE="$KEY_DIR/AuthKey_$ASC_KEY_ID.p8"
           printf %s "$ASC_KEY_P8_B64" | base64 --decode > "$KEY_FILE"
-          { echo "ASC_KEY_ID=$ASC_KEY_ID"; echo "ASC_ISSUER_ID=$ASC_ISSUER_ID"; echo "ASC_KEY_FILE=$KEY_FILE"; } >> "$GITHUB_ENV"
+          { echo "ASC_KEY_ID=$ASC_KEY_ID"; echo "ASC_ISSUER_ID=$ASC_ISSUER_ID"; echo "ASC_KEY_FILE=$KEY_FILE"; echo "API_PRIVATE_KEYS_DIR=$KEY_DIR"; } >> "$GITHUB_ENV"
 
       - name: Build number is the commit count
         id: vc
@@ -570,6 +610,8 @@ jobs:
             for d in "$HOME/Library/MobileDevice/Provisioning Profiles" \
                      "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
               mkdir -p "$d"; cp "$RUNNER_TEMP/$2.mobileprovision" "$d/$UUID.mobileprovision"
+              # Removed again at the end of the job.
+              echo "$d/$UUID.mobileprovision" >> "$RUNNER_TEMP/installed-profiles.txt"
             done
             echo "$3=$NAME" >> "$GITHUB_OUTPUT"
             echo "Profile for $1: $NAME ($UUID)"
@@ -686,6 +728,8 @@ jobs:
         run: |
           set -euo pipefail
           IPA=$(ls "$RUNNER_TEMP"/export/*.ipa | head -1)
+          # Also looks in ./private_keys, so run from the folder that holds it.
+          cd "$RUNNER_TEMP"
           xcrun altool --upload-app --type ios --file "$IPA" \
             --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
           {
@@ -698,4 +742,8 @@ jobs:
         if: always()
         run: |
           security delete-keychain "$KEYCHAIN" 2>/dev/null || true
-          rm -rf ~/.appstoreconnect "$RUNNER_TEMP/ci.mobileprovision" "$RUNNER_TEMP/ci-widgets.mobileprovision"
+          if [ -f "$RUNNER_TEMP/installed-profiles.txt" ]; then
+            while IFS= read -r f; do rm -f "$f"; done < "$RUNNER_TEMP/installed-profiles.txt"
+          fi
+          rm -rf "$RUNNER_TEMP/private_keys" "$RUNNER_TEMP/installed-profiles.txt" \
+            "$RUNNER_TEMP/ci.mobileprovision" "$RUNNER_TEMP/ci-widgets.mobileprovision"

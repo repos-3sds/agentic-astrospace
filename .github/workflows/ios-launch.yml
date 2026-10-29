@@ -25,7 +25,8 @@ concurrency:
 jobs:
   launch:
     name: Open the Release build in the iOS simulator
-    runs-on: macos-26
+    # The Mac mini when BUILD_RUNNER is set (docs/build_runner.md).
+    runs-on: ${{ vars.BUILD_RUNNER || 'macos-26' }}
     timeout-minutes: 45
     env:
       PROJECT: ui/ios/App/App.xcodeproj
@@ -35,9 +36,18 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Newest Xcode 26
+        # GitHub's image holds several Xcodes; the Mac mini uses the one it
+        # has selected (no sudo there) and only checks that it is 26 or newer.
         run: |
-          XC=$(ls -d /Applications/Xcode_26*.app | grep -viE 'beta|_rc' | sort -V | tail -1)
-          sudo xcode-select -s "$XC/Contents/Developer"
+          if [ "$RUNNER_ENVIRONMENT" = self-hosted ]; then
+            XV=$(xcodebuild -version | sed -n 1p)
+            MAJOR=$(echo "$XV" | sed -E 's/^Xcode ([0-9]+).*/\1/')
+            [ "${MAJOR:-0}" -ge 26 ] 2>/dev/null || {
+              echo "::error::The Mac's selected Xcode is older than 26: $XV"; exit 1; }
+          else
+            XC=$(ls -d /Applications/Xcode_26*.app | grep -viE 'beta|_rc' | sort -V | tail -1)
+            sudo xcode-select -s "$XC/Contents/Developer"
+          fi
           xcodebuild -version
 
       - uses: actions/setup-node@v4
@@ -97,6 +107,7 @@ jobs:
           print((phones or devs)[-1]["udid"], rts[-1][0], file=sys.stderr)
           print((phones or devs)[-1]["udid"])')
           echo "Simulator $UDID"
+          echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
           xcrun simctl boot "$UDID"
           xcrun simctl bootstatus "$UDID" -b
           xcrun simctl install "$UDID" "$APP"
@@ -107,7 +118,9 @@ jobs:
           sleep 30
           xcrun simctl io "$UDID" screenshot "$OUT/after-30s.png" || true
           kill $LOGPID 2>/dev/null || true
-          cp ~/Library/Logs/DiagnosticReports/App*.ips "$OUT/" 2>/dev/null || true
+          # Only reports from this run: the Mac mini keeps older ones.
+          find ~/Library/Logs/DiagnosticReports -name 'App*.ips' -newer "$APP/Info.plist" \
+            -exec cp {} "$OUT/" \; 2>/dev/null || true
           # To a file first: grep -q closing the pipe early fails it under pipefail.
           xcrun simctl spawn "$UDID" launchctl list > "$OUT/launchctl.txt" 2>&1 || true
           if grep -q "UIKitApplication:$BUNDLE_ID" "$OUT/launchctl.txt"; then
@@ -118,6 +131,13 @@ jobs:
             tail -100 "$OUT/app-log.txt"
             exit 1
           fi
+
+      - name: Shut the simulator down
+        # On the Mac mini it would otherwise stay booted after the job.
+        if: always() && env.SIM_UDID != ''
+        run: |
+          xcrun simctl shutdown "$SIM_UDID" 2>/dev/null || true
+          xcrun simctl uninstall "$SIM_UDID" "$BUNDLE_ID" 2>/dev/null || true
 
       - name: Keep the evidence
         if: always()
@@ -134,8 +154,12 @@ jobs:
     # code from the branch; it just copies the PNGs the launch job drew.
     name: Widget renders as a git ref
     needs: launch
-    if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
+    # Not when a newer push cancelled the launch job: it drew nothing, and
+    # the download would fail the run.
+    if: >-
+      always() && needs.launch.result != 'cancelled' && needs.launch.result != 'skipped' &&
+      github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ${{ vars.BUILD_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 10
     permissions:
       contents: write
