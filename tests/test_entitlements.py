@@ -315,6 +315,29 @@ def test_free_keeps_the_first_two_yogas_once_locks_are_on(env, monkeypatch):
     db.close()
 
 
+def test_free_never_trims_a_caution_yoga(env, monkeypatch):
+    """A caution yoga is a flag, like a dosha: shown on every plan.
+    One-way Raja/Dhana links never take one of Free's two places."""
+    from astrospace.api.vedic_routes import _without_locked_yogas
+
+    _, Session = env
+    db = Session()
+    yogas = [
+        {"name": "Raja one-way", "category": "Power / Career", "active": True, "partial": True},
+        {"name": "Gajakesari", "category": "Mind / Wisdom", "active": True},
+        {"name": "Budhaditya", "category": "Intellect / Status", "active": True},
+        {"name": "Amala", "category": "Reputation / Career", "active": True},
+        {"name": "Kemadruma", "category": "Caution / Mind", "active": True},
+        {"name": "Vosi (hard form)", "category": "Caution / Effort", "active": True},
+    ]
+    monkeypatch.setenv("ASTROSPACE_QUOTAS_ENFORCED", "true")
+    trimmed = _without_locked_yogas({"active": list(yogas), "all": list(yogas)}, db, USER)
+    assert [y["name"] for y in trimmed["active"]] == [
+        "Gajakesari", "Budhaditya", "Kemadruma", "Vosi (hard form)"]
+    assert trimmed["locked_count"] == 2
+    db.close()
+
+
 def test_free_remedy_plan_keeps_the_first_practice_and_every_dosha():
     from astrospace.api.remedy_routes import _free_plan
 

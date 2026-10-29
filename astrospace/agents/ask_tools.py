@@ -261,9 +261,20 @@ class ChartTools:
         }
 
     def tool_yogas_doshas(self) -> dict:
+        summary = self.chart.yogas() or {}
         yogas = [
-            {"name": y.get("name"), "strength": y.get("strength"), "triggers": y.get("triggers")}
-            for y in (self.chart.yogas() or {}).get("active") or []
+            {"name": y.get("name"), "strength": y.get("strength"), "triggers": y.get("triggers"),
+             "why": y.get("why"), "weakened": y.get("weakened") or None,
+             "meaning": (y.get("reader") or {}).get("what"), "impact": (y.get("reader") or {}).get("impact"),
+             "how_common": (y.get("reader") or {}).get("how_common"),
+             "flag": "caution" in str(y.get("category", "")).lower() or None,
+             "one_way_link": y.get("partial") or None}
+            for y in summary.get("active") or []
+        ]
+        yogas = [{k: v for k, v in y.items() if v not in (None, [], "")} for y in yogas]
+        cancelled = [
+            {"name": y.get("name"), "cancelled_by": y.get("cancellations")}
+            for y in summary.get("all") or [] if y.get("cancelled")
         ]
         doshas = {}
         for name, row in (self.chart.doshas() or {}).items():
@@ -271,10 +282,15 @@ class ChartTools:
                 continue
             doshas[name] = {
                 key: row.get(key) for key in
-                ("active", "severity", "net_severity", "cancellations", "from")
+                ("active", "severity", "net_severity", "cancellations", "from", "why")
                 if row.get(key) not in (None, [], {})
             }
-        return {"yogas": yogas, "doshas": doshas,
+            applied = [e.get("detail") for e in row.get("exceptions") or [] if e.get("applies")]
+            if applied:
+                doshas[name]["exceptions_met"] = applied
+            if row.get("active") and (row.get("reader") or {}).get("how_common"):
+                doshas[name]["how_common"] = row["reader"]["how_common"]
+        return {"yogas": yogas, "cancelled_flags": cancelled, "doshas": doshas,
                 "note": "A dosha is a flag, not a verdict: always mention its cancellations."}
 
     def tool_strengths(self) -> dict:

@@ -245,15 +245,25 @@ def _varga_decision(db: Session, user_id: str):
 FREE_YOGAS = 2
 
 
-def _without_locked_yogas(summary: dict, db: Session, user_id: str) -> dict:
-    """Free keeps the first two active yogas and a count of the rest.
+def _is_flag(yoga: dict) -> bool:
+    """A caution yoga (Kemadruma, Shakata, hard Vesi...) is a flag, like a dosha."""
+    return "caution" in str(yoga.get("category", "")).lower()
 
-    Doshas are never trimmed: a dosha is a flag on every plan.
+
+def _without_locked_yogas(summary: dict, db: Session, user_id: str) -> dict:
+    """Free keeps every flag and the first two good yogas, plus a count of the rest.
+
+    A flag is never trimmed, on any plan: design_principles §4, a dosha is a
+    flag and never hidden. One-way (partial) Raja and Dhana links are only
+    shown in Practitioner, so they never take one of Free's two places.
     """
     active = summary.get("active")
     if not isinstance(active, list) or plan_lock(db, user_id, "yogas.full") is None:
         return summary
-    kept, locked = active[:FREE_YOGAS], active[FREE_YOGAS:]
+    good = [y for y in active if not _is_flag(y)]
+    shown = [y for y in good if not y.get("partial")][:FREE_YOGAS]
+    kept = [y for y in active if _is_flag(y) or any(y is s for s in shown)]
+    locked = [y for y in active if not any(y is k for k in kept)]
     locked_ids = {id(yoga) for yoga in locked}
     summary["active"] = kept
     summary["all"] = [yoga for yoga in summary.get("all", []) if id(yoga) not in locked_ids]

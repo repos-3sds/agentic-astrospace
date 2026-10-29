@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from .constants import EXALTATION, NATURAL_RELATIONS, SIGN_LORDS, SIGNS
 from .positions import house_from_lagna, sign_index, sign_name
+from .yoga_reading import attach_yoga_reading
 from ...knowledge.vedic_rules import enrich_rule_result
 
 CLASSICAL_PLANETS = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"]
@@ -134,28 +135,43 @@ def _result(rule_id: str, name: str, category: str, active: bool, strength: str,
 
 
 def _pancha_mahapurusha(signs: dict[str, int], lagna_sign: int) -> list[dict]:
+    """Ruchaka/Bhadra/Hamsa/Malavya/Sasa: the planet in its own or exalted
+    sign in a kendra. Phaladeepika VI.4 counts these from the Moon as well as
+    from Lagna, so either anchor forms the yoga."""
     out = []
+    moon_sign = signs["Moon"]
     for planet, (rule_id, name) in PANCHA_MAHAPURUSHA.items():
         sign = signs[planet]
         house = house_from_lagna(sign, lagna_sign)
+        house_from_moon = house_from_lagna(sign, moon_sign)
         exalt_sign = EXALTATION[planet][0]
         own_sign = SIGN_LORDS[sign] == planet
         exalted = sign == exalt_sign
-        active = house in KENDRA_HOUSES and (own_sign or exalted)
+        dignified = own_sign or exalted
+        from_lagna = dignified and house in KENDRA_HOUSES
+        from_moon = dignified and house_from_moon in KENDRA_HOUSES
+        active = from_lagna or from_moon
         dignity = "exalted" if exalted else "own sign" if own_sign else "not own/exalted"
         notes = ["Strength should still consider combustion, aspects, house condition, and divisional support."]
         if active:
             # Own/exalted dignity is definitional here, so no dignity upgrade
             # is applied — the dignity is only reported.
             notes.append(f"dignity: {planet} {dignity} (definitional; no strength adjustment applied)")
+            if from_moon and not from_lagna:
+                notes.append("Formed from the Moon only (Phaladeepika VI.4 counts both anchors).")
+        triggers = []
+        if from_lagna:
+            triggers.append(f"{planet} in {sign_name(sign)} ({dignity}), house {house} from Lagna")
+        if from_moon:
+            triggers.append(f"{planet} in {sign_name(sign)} ({dignity}), house {house_from_moon} from Moon")
         out.append(_result(
             rule_id,
             name,
             "Pancha Mahapurusha",
             active,
             "strong" if exalted else "moderate",
-            f"{planet} in own or exaltation sign while placed in a kendra from Lagna.",
-            [f"{planet} in {sign_name(sign)} ({dignity}), house {house} from Lagna"] if active else [],
+            f"{planet} in own or exaltation sign while placed in a kendra from Lagna or from the Moon.",
+            triggers,
             [planet],
             verified=True,
             notes=notes,
@@ -210,7 +226,11 @@ def _budhaditya(signs: dict[str, int]) -> dict:
     )
 
 
-def _kemadruma(signs: dict[str, int]) -> dict:
+def _kemadruma(signs: dict[str, int], lagna_sign: int) -> dict:
+    """Kemadruma: no planet beside the Moon (2nd/12th), with it, or in a
+    kendra from it. Phaladeepika VI.5 and Brihat Jataka XIII.8 also cancel it
+    when any planet occupies a kendra from Lagna. A cancelled Kemadruma is
+    reported inactive with `cancelled` set, so readers see it was checked."""
     moon = signs["Moon"]
     adjacent = {(moon - 1) % 12, (moon + 1) % 12}
     support_planets = [p for p in CLASSICAL_PLANETS if p not in ("Moon", "Sun")]
@@ -219,19 +239,36 @@ def _kemadruma(signs: dict[str, int]) -> dict:
         p for p in support_planets
         if house_from_lagna(signs[p], moon) in KENDRA_HOUSES
     ]
-    active = not adjacent_support and not kendra_support
-    return _result(
+    base_condition = not adjacent_support and not kendra_support
+    lagna_kendra = [
+        p for p in CLASSICAL_PLANETS
+        if p != "Moon" and house_from_lagna(signs[p], lagna_sign) in KENDRA_HOUSES
+    ]
+    cancelled = base_condition and bool(lagna_kendra)
+    active = base_condition and not cancelled
+    notes = ["Kemadruma cancellation rules vary; checked: planets with or beside the Moon, "
+             "in a kendra from the Moon, or in a kendra from Lagna."]
+    cancellations = []
+    if cancelled:
+        cancellations.append(
+            f"{', '.join(lagna_kendra)} in a kendra from Lagna (Phaladeepika VI.5 cancellation)")
+        notes.insert(0, "Cancelled: " + cancellations[0] + ".")
+    result = _result(
         "kemadruma_yoga",
         "Kemadruma Yoga",
         "Caution / Mind",
         active,
         "strong",
-        "No classical support planets adjacent to Moon or in kendras from Moon.",
-        ["Moon lacks adjacent and kendra support"] if active else [],
+        "No classical support planets adjacent to Moon or in kendras from Moon; "
+        "cancelled when any planet is in a kendra from Lagna.",
+        ["Moon lacks adjacent and kendra support"] if base_condition else [],
         ["Moon"],
         verified=False,
-        notes=["Kemadruma cancellation rules vary; this uses a conservative simplified flag."],
+        notes=notes,
     )
+    result["cancelled"] = cancelled
+    result["cancellations"] = cancellations
+    return result
 
 
 def _chandra_yogas(signs: dict[str, int]) -> list[dict]:
@@ -283,52 +320,67 @@ def _chandra_yogas(signs: dict[str, int]) -> list[dict]:
     return out
 
 
+# Phaladeepika VI.8-10 and BPHS ch.40: benefics beside the Sun give the good
+# (Subha) Vesi/Vosi/Ubhayachari; Mars or Saturn there give the hard (Asubha)
+# form, whose classical reading is the opposite.
+SOLAR_BENEFICS = ["Mercury", "Jupiter", "Venus"]
+SOLAR_MALEFICS = ["Mars", "Saturn"]
+
+
 def _surya_yogas(signs: dict[str, int]) -> list[dict]:
-    """Vesi / Vosi / Ubhayachari — support around the Sun."""
+    """Vesi / Vosi / Ubhayachari — planets beside the Sun, good and hard forms."""
     sun = signs["Sun"]
     second = (sun + 1) % 12
     twelfth = (sun - 1) % 12
-    in_second = _occupants(signs, second, LUNISOLAR_SUPPORT_PLANETS)
-    in_twelfth = _occupants(signs, twelfth, LUNISOLAR_SUPPORT_PLANETS)
-    ubhayachari = bool(in_second) and bool(in_twelfth)
-    subsume_note = ["Subsumed by Ubhayachari Yoga (both 2nd and 12th from Sun occupied)."] if ubhayachari else None
-    return [
-        _result(
-            "vesi_yoga",
-            "Vesi Yoga",
-            "Solar Support",
-            bool(in_second),
-            "moderate",
-            "A planet other than Moon, Rahu, Ketu occupies the 2nd sign from Sun.",
-            [f"{', '.join(in_second)} in {sign_name(second)}, 2nd from Sun"] if in_second else [],
-            ["Sun", *in_second],
-            notes=subsume_note if in_second else None,
-        ),
-        _result(
-            "vosi_yoga",
-            "Vosi Yoga",
-            "Solar Support",
-            bool(in_twelfth),
-            "moderate",
-            "A planet other than Moon, Rahu, Ketu occupies the 12th sign from Sun.",
-            [f"{', '.join(in_twelfth)} in {sign_name(twelfth)}, 12th from Sun"] if in_twelfth else [],
-            ["Sun", *in_twelfth],
-            notes=subsume_note if in_twelfth else None,
-        ),
-        _result(
-            "ubhayachari_yoga",
-            "Ubhayachari Yoga",
-            "Solar Support",
-            ubhayachari,
-            "strong",
-            "Planets other than Moon, Rahu, Ketu occupy both the 2nd and 12th signs from Sun.",
-            [
-                f"{', '.join(in_second)} in {sign_name(second)}, 2nd from Sun",
-                f"{', '.join(in_twelfth)} in {sign_name(twelfth)}, 12th from Sun",
-            ] if ubhayachari else [],
-            ["Sun", *in_second, *in_twelfth],
-        ),
-    ]
+    out = []
+    for prefix, label, category, planet_set in (
+        ("", "", "Solar Support", SOLAR_BENEFICS),
+        ("asubha_", " (hard form)", "Caution / Effort", SOLAR_MALEFICS),
+    ):
+        in_second = _occupants(signs, second, planet_set)
+        in_twelfth = _occupants(signs, twelfth, planet_set)
+        ubhayachari = bool(in_second) and bool(in_twelfth)
+        kind = "benefic (Mercury, Jupiter, Venus)" if not prefix else "malefic (Mars, Saturn)"
+        subsume_note = ([f"Subsumed by Ubhayachari Yoga{label} (both 2nd and 12th from Sun occupied)."]
+                        if ubhayachari else None)
+        out += [
+            _result(
+                f"{prefix}vesi_yoga",
+                f"Vesi Yoga{label}",
+                category,
+                bool(in_second),
+                "moderate",
+                f"A {kind} planet occupies the 2nd sign from Sun.",
+                [f"{', '.join(in_second)} in {sign_name(second)}, 2nd from Sun"] if in_second else [],
+                ["Sun", *in_second],
+                notes=subsume_note if in_second else None,
+            ),
+            _result(
+                f"{prefix}vosi_yoga",
+                f"Vosi Yoga{label}",
+                category,
+                bool(in_twelfth),
+                "moderate",
+                f"A {kind} planet occupies the 12th sign from Sun.",
+                [f"{', '.join(in_twelfth)} in {sign_name(twelfth)}, 12th from Sun"] if in_twelfth else [],
+                ["Sun", *in_twelfth],
+                notes=subsume_note if in_twelfth else None,
+            ),
+            _result(
+                f"{prefix}ubhayachari_yoga",
+                f"Ubhayachari Yoga{label}",
+                category,
+                ubhayachari,
+                "strong",
+                f"{kind.capitalize()} planets occupy both the 2nd and 12th signs from Sun.",
+                [
+                    f"{', '.join(in_second)} in {sign_name(second)}, 2nd from Sun",
+                    f"{', '.join(in_twelfth)} in {sign_name(twelfth)}, 12th from Sun",
+                ] if ubhayachari else [],
+                ["Sun", *in_second, *in_twelfth],
+            ),
+        ]
+    return out
 
 
 def _adhi(signs: dict[str, int]) -> dict:
@@ -466,7 +518,7 @@ def _shakata(signs: dict[str, int], lagna_sign: int) -> dict:
     notes = None
     if cancelled:
         notes = ["Cancelled: Moon occupies a kendra from Lagna."]
-    return _result(
+    result = _result(
         "shakata_yoga",
         "Shakata Yoga",
         "Caution / Mind",
@@ -477,6 +529,11 @@ def _shakata(signs: dict[str, int], lagna_sign: int) -> dict:
         ["Moon", "Jupiter"],
         notes=notes,
     )
+    result["cancelled"] = cancelled
+    result["cancellations"] = (
+        [f"Moon is in house {house_from_lagna(signs['Moon'], lagna_sign)} from Lagna, a kendra"]
+        if cancelled else [])
+    return result
 
 
 def _guru_chandala(signs: dict[str, int]) -> dict:
@@ -500,7 +557,24 @@ def _guru_chandala(signs: dict[str, int]) -> dict:
     )
 
 
+def _in_kendra_from_lagna_or_moon(sign: int, lagna_sign: int, moon_sign: int) -> list[str]:
+    return [
+        anchor for anchor, base in (("Lagna", lagna_sign), ("Moon", moon_sign))
+        if house_from_lagna(sign, base) in KENDRA_HOUSES
+    ]
+
+
 def _neecha_bhanga(signs: dict[str, int], lagna_sign: int) -> list[dict]:
+    """Neecha Bhanga: a debilitated planet whose fall is repaired.
+
+    Phaladeepika VII.26-30 (with the translator's summary note) gives the
+    ways, all checked here: (1) the lord of the fall sign, or the planet
+    exalted in it, in a kendra from Lagna or Moon; (2) the fall-sign lord
+    and the planet's exaltation-sign lord in mutual kendras; (3) the fallen
+    planet aspected by its sign lord; (4) the planet's exaltation-sign lord
+    in a kendra from Lagna or Moon; (5) the fallen planet itself in a kendra
+    from Lagna or Moon. Any one forms the yoga; two or more grade it strong.
+    """
     out = []
     moon_sign = signs["Moon"]
     for planet in CLASSICAL_PLANETS:
@@ -509,23 +583,51 @@ def _neecha_bhanga(signs: dict[str, int], lagna_sign: int) -> list[dict]:
         if signs[planet] != deb_sign:
             continue
         deb_lord = SIGN_LORDS[deb_sign]
-        lord_sign = signs.get(deb_lord)
-        triggers = []
-        if lord_sign is not None and house_from_lagna(lord_sign, lagna_sign) in KENDRA_HOUSES:
-            triggers.append(f"{deb_lord}, lord of debilitation sign, is kendra from Lagna")
-        if lord_sign is not None and house_from_lagna(lord_sign, moon_sign) in KENDRA_HOUSES:
-            triggers.append(f"{deb_lord}, lord of debilitation sign, is kendra from Moon")
+        exalt_lord = SIGN_LORDS[exalt_sign]
+        exalted_here = next((p for p, (sign, _deg) in EXALTATION.items() if sign == deb_sign), None)
+        triggers: list[str] = []
+        participants = [planet]
+
+        def kendra_rule(other: str, role: str) -> None:
+            if other == planet or other not in signs:
+                return
+            anchors = _in_kendra_from_lagna_or_moon(signs[other], lagna_sign, moon_sign)
+            if anchors:
+                triggers.append(f"{other}, {role}, is kendra from {' and '.join(anchors)}")
+                if other not in participants:
+                    participants.append(other)
+
+        kendra_rule(deb_lord, "lord of debilitation sign")
+        if exalted_here:
+            kendra_rule(exalted_here, f"exalted in {sign_name(deb_sign)}")
+        kendra_rule(exalt_lord, f"lord of {planet}'s exaltation sign")
+        if (deb_lord != planet and exalt_lord != planet and deb_lord != exalt_lord
+                and house_from_lagna(signs[exalt_lord], signs[deb_lord]) in KENDRA_HOUSES):
+            triggers.append(f"{deb_lord} and {exalt_lord} (debilitation and exaltation lords) are in mutual kendras")
+            for other in (deb_lord, exalt_lord):
+                if other not in participants:
+                    participants.append(other)
+        if deb_lord != planet and _planet_aspects(deb_lord, signs[deb_lord], signs[planet]):
+            triggers.append(f"{deb_lord}, lord of debilitation sign, aspects {planet}")
+            if deb_lord not in participants:
+                participants.append(deb_lord)
+        own_anchors = _in_kendra_from_lagna_or_moon(signs[planet], lagna_sign, moon_sign)
+        if own_anchors:
+            triggers.append(f"{planet} itself is kendra from {' and '.join(own_anchors)}")
         out.append(_result(
             "neecha_bhanga_raja_yoga",
             f"Neecha Bhanga for {planet}",
             "Correction / Strength",
             bool(triggers),
-            "moderate",
-            "Debilitated planet receives cancellation when debilitation sign lord is in kendra from Lagna or Moon.",
+            "strong" if len(triggers) >= 2 else "moderate",
+            "A debilitated planet is repaired when the lord of its fall sign, the planet exalted there, "
+            "or the lord of its exaltation sign is in a kendra from Lagna or Moon; when the fall and "
+            "exaltation lords are in mutual kendras; when the fall-sign lord aspects it; or when it is "
+            "itself in a kendra from Lagna or Moon.",
             triggers,
-            [planet, deb_lord],
+            participants,
             verified=False,
-            notes=["Partial Neecha Bhanga implementation; additional cancellation rules pending validation."],
+            notes=["Phaladeepika VII.26-30: every listed way checked; one way forms it, two or more grade it strong."],
         ))
     return out
 
@@ -561,6 +663,7 @@ def _raja_yoga(signs: dict[str, int], lagna_sign: int) -> list[dict]:
                     notes=["Parivartana and classical graha drishti included; full strength assessment pending.",
                            *dignity_notes],
                 ))
+                out[-1]["partial"] = not mutual
     return out
 
 
@@ -594,6 +697,7 @@ def _dhana_yoga(signs: dict[str, int], lagna_sign: int) -> list[dict]:
                     notes=["Parivartana and classical graha drishti included; full strength assessment pending.",
                            *dignity_notes],
                 ))
+                out[-1]["partial"] = not mutual
     return out
 
 
@@ -661,6 +765,7 @@ _SANKHYA_NAMES = {
     4: ("kedara_yoga", "Kedara Yoga"),
     5: ("pasa_yoga", "Pasa Yoga"),
     6: ("dama_yoga", "Dama Yoga"),
+    7: ("veena_yoga", "Veena Yoga"),
 }
 
 
@@ -726,9 +831,10 @@ def _dala_yogas(signs: dict[str, int], lagna_sign: int) -> list[dict]:
 
 
 def _sankhya_yoga(signs: dict[str, int]) -> dict:
-    """Gola/Yuga/Shoola/Kedara/Pasa/Dama: graded by how many distinct
-    signs the seven classical planets occupy (1 through 6; 7 distinct
-    signs forms no Sankhya yoga in the source used for this pass)."""
+    """Gola/Yuga/Shoola/Kedara/Pasa/Dama/Veena: graded by how many distinct
+    signs the seven classical planets occupy (1 through 7). Brihat Jataka
+    XII.10 names the 7-sign spread Vallaki (Veena) and reads all seven only
+    where no Akriti (shape) yoga applies; Akriti yogas are not computed."""
     occupied = {signs[p] for p in CLASSICAL_PLANETS}
     count = len(occupied)
     rule_id, name = _SANKHYA_NAMES.get(count, (None, None))
@@ -737,7 +843,7 @@ def _sankhya_yoga(signs: dict[str, int]) -> dict:
         rule_id or "sankhya_yoga", name or "Sankhya Yoga (none)", "Nabhasa / Sankhya",
         active, "moderate" if active else "none",
         "Graded by the count of distinct signs occupied by the seven classical "
-        "planets: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama.",
+        "planets: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama, 7=Veena.",
         [f"Seven classical planets occupy {count} distinct signs"] if active else [],
         list(CLASSICAL_PLANETS),
         verified=False,
@@ -756,7 +862,7 @@ def yoga_summary(positions: dict, lagna_lon: float) -> dict:
         _budhaditya(signs),
         *_chandra_yogas(signs),
         _adhi(signs),
-        _kemadruma(signs),
+        _kemadruma(signs, lagna_sign),
         *_surya_yogas(signs),
         _amala(signs, lagna_sign),
         _saraswati(signs, lagna_sign),
@@ -772,6 +878,7 @@ def yoga_summary(positions: dict, lagna_lon: float) -> dict:
         *_dala_yogas(signs, lagna_sign),
         _sankhya_yoga(signs),
     ]
+    attach_yoga_reading(yogas, positions, lagna_lon)
     active = [y for y in yogas if y["active"]]
     categories = {}
     for yoga in active:

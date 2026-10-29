@@ -3,17 +3,17 @@
     "sankhya_yoga": {
       "name": "Sankhya Yoga (umbrella)",
       "category": "Nabhasa / Sankhya",
-      "rule": "Umbrella entry for the six Sankhya (count) yogas — see gola_yoga through dama_yoga for the specific 1-6 distinct-sign tiers.",
+      "rule": "Umbrella entry for the seven Sankhya (count) yogas — see gola_yoga through veena_yoga for the specific 1-7 distinct-sign tiers.",
       "status": "convention_dependent",
       "implementation": "computed",
       "source_refs": [
         { "source": "bphs", "detail": "Nabhasa yogas, Sankhya group; ch. 35/37 depending on edition" }
       ],
-      "practitioner_explanation": "The seven classical planets occupy 7 distinct signs in this chart — outside the 1-6 range the six named Sankhya yogas (Gola/Yuga/Shoola/Kedara/Pasa/Dama) cover, so none of them is active here. This umbrella entry exists so a 'no Sankhya yoga present' result still has a coherent explanation instead of a blank one.",
+      "practitioner_explanation": "Umbrella entry for the seven Sankhya (count) yogas, Gola through Veena.",
       "lay_explanation": "Your planets are spread across enough different signs that none of the classical 'concentration' patterns apply.",
       "strength_rubric": "n/a — this entry only appears when none of the six numbered Sankhya yogas (1-6 distinct signs) matched.",
       "caveats": [
-        "7 distinct signs occupied forms no Sankhya yoga in the source used for this pass; some traditions may name a 7th tier — not implemented pending a source."
+        "Every chart forms one of the seven Sankhya yogas (1-7 signs); this umbrella entry is never active on its own."
       ],
       "notes": ["Nodes (Rahu/Ketu) excluded, matching the classical Sankhya definition."]
     },
@@ -73,12 +73,13 @@
     "kemadruma_yoga": {
       "name": "Kemadruma Yoga",
       "category": "Caution / Mind",
-      "rule": "Moon lacks classical support in adjacent signs and kendras from Moon.",
+      "rule": "No planet (other than Sun) adjacent to, with, or in a kendra from the Moon; cancelled when any planet is in a kendra from Lagna.",
       "status": "convention_dependent",
       "implementation": "partial",
       "source_refs": [
-        { "source": "bphs", "detail": "Kemadruma and cancellation rules vary by edition" },
-        { "source": "phaladeepika", "detail": "Cancellation rules cross-reference pending" }
+        { "source": "phaladeepika", "detail": "Adhyaya VI sl.5 and sl.7" },
+        { "source": "brihat_jataka", "detail": "Ch. XIII st.8 and notes" },
+        { "source": "bphs", "detail": "ch.39 (Lunar yogas)" }
       ],
       "practitioner_explanation": "Active when no classical planet besides the Sun sits adjacent to the Moon (2nd/12th sign) or in a kendra from the Moon. Graded strong whenever active — this is a binary, conservative flag rather than a fully cancellation-aware implementation.",
       "lay_explanation": "Your Moon lacks other planets nearby or in a few key supportive positions — a classical caution flag about needing to build your own support systems, not a fixed outcome.",
@@ -92,16 +93,16 @@
     "neecha_bhanga_raja_yoga": {
       "name": "Neecha Bhanga Raja Yoga",
       "category": "Correction / Strength",
-      "rule": "Debilitated planet receives cancellation through debilitation sign lord or related kendra conditions.",
+      "rule": "A debilitated planet is repaired when the lord of its fall sign, the planet exalted there, or the lord of its exaltation sign is in a kendra from Lagna or Moon; when the fall and exaltation lords are in mutual kendras; when the fall-sign lord aspects it; or when it is itself in a kendra from Lagna or Moon.",
       "status": "convention_dependent",
       "implementation": "partial",
       "source_refs": [
-        { "source": "bphs", "detail": "Neecha Bhanga conditions; complete exception set pending" },
-        { "source": "phaladeepika", "detail": "Cross-check pending" }
+        { "source": "phaladeepika", "detail": "Adhyaya VII sl.26-30 and the translator's five-way summary" },
+        { "source": "bphs", "detail": "Sharma vol. 1 notes p.187 (Neecha Bhanga named)" }
       ],
-      "practitioner_explanation": "For each debilitated classical planet, checks whether the lord of its debilitation sign is placed in a kendra from Lagna or from the Moon; either condition reports a cancellation trigger. Always graded moderate when triggered — the number of conditions met is not graded separately.",
+      "practitioner_explanation": "Every way listed in Phaladeepika VII.26-30 is checked; each met way is a trigger. One way forms the yoga (moderate); two or more grade it strong.",
       "lay_explanation": "A weak (debilitated) placement in your chart may be getting classical backup that offsets the weakness, turning a caution into something more workable.",
-      "strength_rubric": "always moderate when triggered; no further grading by how many cancellation conditions are simultaneously met.",
+      "strength_rubric": "moderate for one repair; strong for two or more.",
       "caveats": [
         "Only checks 'debilitation-sign-lord in kendra from Lagna/Moon'; BPHS documents several additional Neecha Bhanga conditions (e.g. exchange with the debilitated planet, exaltation-sign-lord conditions) not yet implemented.",
         "verified: false — pending fuller validation against a complete exception set."
@@ -148,7 +149,7 @@
     "ruchaka_yoga": {
       "name": "Ruchaka Yoga",
       "category": "Pancha Mahapurusha",
-      "rule": "Mars in own or exaltation sign while in a kendra from Lagna.",
+      "rule": "Mars in own or exaltation sign while in a kendra from Lagna (counted from Lagna or from the Moon, Phaladeepika VI.4).",
       "status": "verified_common",
       "implementation": "computed",
       "source_refs": [
@@ -166,7 +167,7 @@
     "bhadra_yoga": {
       "name": "Bhadra Yoga",
       "category": "Pancha Mahapurusha",
-      "rule": "Mercury in own or exaltation sign while in a kendra from Lagna.",
+      "rule": "Mercury in own or exaltation sign while in a kendra from Lagna (counted from Lagna or from the Moon, Phaladeepika VI.4).",
       "status": "verified_common",
       "implementation": "computed",
       "source_refs": [
@@ -184,7 +185,7 @@
     "hamsa_yoga": {
       "name": "Hamsa Yoga",
       "category": "Pancha Mahapurusha",
-      "rule": "Jupiter in own or exaltation sign while in a kendra from Lagna.",
+      "rule": "Jupiter in own or exaltation sign while in a kendra from Lagna (counted from Lagna or from the Moon, Phaladeepika VI.4).",
       "status": "verified_common",
       "implementation": "computed",
       "source_refs": [
@@ -202,7 +203,7 @@
     "malavya_yoga": {
       "name": "Malavya Yoga",
       "category": "Pancha Mahapurusha",
-      "rule": "Venus in own or exaltation sign while in a kendra from Lagna.",
+      "rule": "Venus in own or exaltation sign while in a kendra from Lagna (counted from Lagna or from the Moon, Phaladeepika VI.4).",
       "status": "verified_common",
       "implementation": "computed",
       "source_refs": [
@@ -220,7 +221,7 @@
     "sasa_yoga": {
       "name": "Sasa Yoga",
       "category": "Pancha Mahapurusha",
-      "rule": "Saturn in own or exaltation sign while in a kendra from Lagna.",
+      "rule": "Saturn in own or exaltation sign while in a kendra from Lagna (counted from Lagna or from the Moon, Phaladeepika VI.4).",
       "status": "verified_common",
       "implementation": "computed",
       "source_refs": [
@@ -313,56 +314,56 @@
     "vesi_yoga": {
       "name": "Vesi Yoga",
       "category": "Solar Support",
-      "rule": "A planet other than Moon, Rahu, Ketu occupies the 2nd sign from Sun.",
+      "rule": "Mercury, Jupiter or Venus occupies the 2nd sign from Sun.",
       "status": "verified_common",
       "implementation": "computed",
       "source_refs": [
-        { "source": "bphs", "detail": "Surya yogas; exact edition reference pending" },
-        { "source": "phaladeepika", "detail": "Surya yoga chapter cross-reference pending" }
+        { "source": "bphs", "detail": "ch.40 (Solar yogas), Sharma vol. 1 p.543" },
+        { "source": "phaladeepika", "detail": "Adhyaya VI sl.8-9 (Subha forms)" }
       ],
-      "practitioner_explanation": "Any of Mars/Mercury/Jupiter/Venus/Saturn occupies the 2nd sign from the Sun; graded moderate. When both the 2nd and 12th from Sun are occupied, Ubhayachari Yoga (strong) subsumes this, and Vesi is still reported alongside it with a 'subsumed' note.",
+      "practitioner_explanation": "A natural benefic (Mercury, Jupiter, Venus) occupies the 2nd sign from the Sun: the Subha form. Mars or Saturn there forms the hard (Asubha) Vesi, reported separately.",
       "lay_explanation": "A planet sits just after your Sun in the zodiac — traditionally linked to close support in visible, public-facing matters.",
-      "strength_rubric": "moderate whenever the single 2nd-from-Sun condition is met, regardless of which planet(s) occupy it.",
+      "strength_rubric": "moderate whenever a benefic occupies the sign.",
       "caveats": [
-        "Moon, Rahu, and Ketu are excluded from the counted planets by definition.",
-        "When Ubhayachari Yoga is also active, Vesi is reported alongside it with a 'subsumed' note, not replaced."
+        "Moon, Rahu and Ketu are excluded by definition.",
+        "Mars or Saturn in the 2nd from the Sun gives the hard form (Phaladeepika VI.8, 10), reported as its own row."
       ],
       "notes": ["Subsumed note added when Ubhayachari is present."]
     },
     "vosi_yoga": {
       "name": "Vosi Yoga",
       "category": "Solar Support",
-      "rule": "A planet other than Moon, Rahu, Ketu occupies the 12th sign from Sun.",
+      "rule": "Mercury, Jupiter or Venus occupies the 12th sign from Sun.",
       "status": "verified_common",
       "implementation": "computed",
       "source_refs": [
-        { "source": "bphs", "detail": "Surya yogas; exact edition reference pending" },
-        { "source": "phaladeepika", "detail": "Surya yoga chapter cross-reference pending" }
+        { "source": "bphs", "detail": "ch.40 (Solar yogas), Sharma vol. 1 p.543" },
+        { "source": "phaladeepika", "detail": "Adhyaya VI sl.8-9 (Subha forms)" }
       ],
-      "practitioner_explanation": "Any of Mars/Mercury/Jupiter/Venus/Saturn occupies the 12th sign from the Sun; graded moderate. When both the 2nd and 12th from Sun are occupied, Ubhayachari Yoga (strong) subsumes this, and Vosi is still reported alongside it with a 'subsumed' note.",
+      "practitioner_explanation": "A natural benefic (Mercury, Jupiter, Venus) occupies the 12th sign from the Sun: the Subha form. Mars or Saturn there forms the hard (Asubha) Vosi, reported separately.",
       "lay_explanation": "A planet sits just before your Sun in the zodiac — traditionally linked to steady support behind the scenes.",
-      "strength_rubric": "moderate whenever the single 12th-from-Sun condition is met, regardless of which planet(s) occupy it.",
+      "strength_rubric": "moderate whenever a benefic occupies the sign.",
       "caveats": [
-        "Moon, Rahu, and Ketu are excluded from the counted planets by definition.",
-        "When Ubhayachari Yoga is also active, Vosi is reported alongside it with a 'subsumed' note, not replaced."
+        "Moon, Rahu and Ketu are excluded by definition.",
+        "Mars or Saturn in the 12th from the Sun gives the hard form (Phaladeepika VI.8, 10), reported as its own row."
       ],
       "notes": ["Subsumed note added when Ubhayachari is present."]
     },
     "ubhayachari_yoga": {
       "name": "Ubhayachari Yoga",
       "category": "Solar Support",
-      "rule": "Planets other than Moon, Rahu, Ketu occupy both the 2nd and 12th signs from Sun.",
+      "rule": "Mercury, Jupiter or Venus occupy both the 2nd and 12th signs from Sun.",
       "status": "verified_common",
       "implementation": "computed",
       "source_refs": [
-        { "source": "bphs", "detail": "Surya yogas; exact edition reference pending" },
-        { "source": "phaladeepika", "detail": "Surya yoga chapter cross-reference pending" }
+        { "source": "bphs", "detail": "ch.40 (Solar yogas), Sharma vol. 1 p.543" },
+        { "source": "phaladeepika", "detail": "Adhyaya VI sl.8-9 (Subha forms)" }
       ],
       "practitioner_explanation": "Both the 2nd and 12th signs from the Sun are occupied by at least one of Mars/Mercury/Jupiter/Venus/Saturn. Graded strong — the combined, stronger form of Vesi and Vosi, which remain reported alongside it with a subsumed note.",
       "lay_explanation": "Both flanks of your Sun are occupied by planets — the combined, stronger version of Vesi and Vosi, traditionally read as strong support around your public standing.",
       "strength_rubric": "binary: active (both 2nd and 12th from Sun occupied) = strong, else this specific yoga is inactive (Vesi/Vosi may still be active independently).",
       "caveats": [
-        "Requires both flanking signs occupied simultaneously; a single flank occupied is Vesi or Vosi alone, not Ubhayachari."
+        "Mars or Saturn on both sides gives the hard form, reported as its own row."
       ],
       "notes": ["When active, Vesi and Vosi are still reported with a subsumed note."]
     },
@@ -601,8 +602,7 @@
         "This is a flag, not a verdict — framed here as a caution pattern, never a fear-based prediction.",
         "'Mutual kendras' read as each planet individually in a kendra from Lagna, not pairwise 90-degree separation between the three planets; sources are not fully explicit on which reading is intended."
       ],
-      "notes": ["Dala group, caution form — a caution flag, not a verdict.",
-                "'Mutual kendras' read as each planet individually in a kendra from Lagna, not pairwise 90 degree separation between the three planets; sources are not fully explicit on which reading is intended."]
+      "notes": ["Dala group, caution form — a caution flag, not a verdict.", "'Mutual kendras' read as each planet individually in a kendra from Lagna, not pairwise 90 degree separation between the three planets; sources are not fully explicit on which reading is intended."]
     },
     "gola_yoga": {
       "name": "Gola Yoga",
@@ -615,10 +615,11 @@
       ],
       "practitioner_explanation": "All seven classical planets fall in a single sign — the tightest of the six Sankhya (count) yogas, graded by how many distinct signs the seven planets occupy.",
       "lay_explanation": "Every one of your planets clusters into a single sign — an intensely concentrated chart pattern.",
-      "strength_rubric": "graded by distinct-sign count across the six Sankhya yogas: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama; each is binary active/inactive at its own count.",
+      "strength_rubric": "graded by distinct-sign count: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama, 7=Veena.",
       "caveats": [
         "Extremely rare (all seven planets in one sign); Rahu/Ketu excluded, matching the classical Sankhya definition.",
-        "7 distinct signs occupied forms no Sankhya yoga in the source used for this pass — some traditions may name a 7th tier; not implemented pending a source."
+        "7 distinct signs occupied forms no Sankhya yoga in the source used for this pass — some traditions may name a 7th tier; not implemented pending a source.",
+        "Brihat Jataka reads the Sankhya yogas only where no Akriti (shape) yoga applies; Akriti yogas are not computed."
       ],
       "notes": ["Nodes (Rahu/Ketu) excluded, matching the classical Sankhya definition."]
     },
@@ -633,9 +634,10 @@
       ],
       "practitioner_explanation": "All seven classical planets fall across exactly two signs — the second-tightest Sankhya (count) yoga.",
       "lay_explanation": "Your planets cluster into just two signs — a strongly concentrated chart pattern.",
-      "strength_rubric": "graded by distinct-sign count across the six Sankhya yogas: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama.",
+      "strength_rubric": "graded by distinct-sign count: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama, 7=Veena.",
       "caveats": [
-        "Rahu/Ketu excluded, matching the classical Sankhya definition."
+        "Rahu/Ketu excluded, matching the classical Sankhya definition.",
+        "Brihat Jataka reads the Sankhya yogas only where no Akriti (shape) yoga applies; Akriti yogas are not computed."
       ],
       "notes": ["Nodes (Rahu/Ketu) excluded, matching the classical Sankhya definition."]
     },
@@ -650,9 +652,10 @@
       ],
       "practitioner_explanation": "All seven classical planets fall across exactly three signs.",
       "lay_explanation": "Your planets cluster into three signs — a concentrated chart pattern.",
-      "strength_rubric": "graded by distinct-sign count across the six Sankhya yogas: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama.",
+      "strength_rubric": "graded by distinct-sign count: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama, 7=Veena.",
       "caveats": [
-        "Rahu/Ketu excluded, matching the classical Sankhya definition."
+        "Rahu/Ketu excluded, matching the classical Sankhya definition.",
+        "Brihat Jataka reads the Sankhya yogas only where no Akriti (shape) yoga applies; Akriti yogas are not computed."
       ],
       "notes": ["Nodes (Rahu/Ketu) excluded, matching the classical Sankhya definition."]
     },
@@ -667,9 +670,10 @@
       ],
       "practitioner_explanation": "All seven classical planets fall across exactly four signs.",
       "lay_explanation": "Your planets spread across four signs — traditionally linked to steady, grounded effort (the 'agriculturist' yoga).",
-      "strength_rubric": "graded by distinct-sign count across the six Sankhya yogas: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama.",
+      "strength_rubric": "graded by distinct-sign count: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama, 7=Veena.",
       "caveats": [
-        "Rahu/Ketu excluded, matching the classical Sankhya definition."
+        "Rahu/Ketu excluded, matching the classical Sankhya definition.",
+        "Brihat Jataka reads the Sankhya yogas only where no Akriti (shape) yoga applies; Akriti yogas are not computed."
       ],
       "notes": ["Nodes (Rahu/Ketu) excluded, matching the classical Sankhya definition."]
     },
@@ -684,9 +688,10 @@
       ],
       "practitioner_explanation": "All seven classical planets fall across exactly five signs.",
       "lay_explanation": "Your planets spread across five signs — traditionally linked to prosperity and resourcefulness.",
-      "strength_rubric": "graded by distinct-sign count across the six Sankhya yogas: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama.",
+      "strength_rubric": "graded by distinct-sign count: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama, 7=Veena.",
       "caveats": [
-        "Rahu/Ketu excluded, matching the classical Sankhya definition."
+        "Rahu/Ketu excluded, matching the classical Sankhya definition.",
+        "Brihat Jataka reads the Sankhya yogas only where no Akriti (shape) yoga applies; Akriti yogas are not computed."
       ],
       "notes": ["Nodes (Rahu/Ketu) excluded, matching the classical Sankhya definition."]
     },
@@ -701,10 +706,82 @@
       ],
       "practitioner_explanation": "All seven classical planets fall across exactly six signs — the most spread-out Sankhya (count) yoga.",
       "lay_explanation": "Your planets spread across six signs — traditionally linked to recognition and standing.",
-      "strength_rubric": "graded by distinct-sign count across the six Sankhya yogas: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama.",
+      "strength_rubric": "graded by distinct-sign count: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama, 7=Veena.",
       "caveats": [
         "Rahu/Ketu excluded, matching the classical Sankhya definition.",
-        "The most common Sankhya yoga in practice, since most charts spread seven planets across 5-7 signs."
+        "Brihat Jataka reads the Sankhya yogas only where no Akriti (shape) yoga applies; Akriti yogas are not computed."
+      ],
+      "notes": ["Nodes (Rahu/Ketu) excluded, matching the classical Sankhya definition."]
+    },
+    "asubha_vesi_yoga": {
+      "name": "Vesi Yoga (hard form)",
+      "category": "Caution / Effort",
+      "rule": "Mars or Saturn occupies the 2nd sign from Sun.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "ch.40 (Solar yogas), Sharma vol. 1 p.543" },
+        { "source": "phaladeepika", "detail": "Adhyaya VI sl.8 and sl.10 (Asubha forms)" }
+      ],
+      "practitioner_explanation": "Natural malefics (Mars, Saturn) flank the Sun on the stated side(s): the Asubha (Papa) form of the yoga. Phaladeepika VI.10 reads it adversely; shown as a caution flag, not a verdict.",
+      "lay_explanation": "Mars or Saturn sits beside your Sun, the hard form of this pattern: effort before reward.",
+      "strength_rubric": "moderate for one side; strong when both sides are held by malefics.",
+      "caveats": [
+        "A flag, not a verdict: weighed with the rest of the chart."
+      ],
+      "notes": []
+    },
+    "asubha_vosi_yoga": {
+      "name": "Vosi Yoga (hard form)",
+      "category": "Caution / Effort",
+      "rule": "Mars or Saturn occupies the 12th sign from Sun.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "ch.40 (Solar yogas), Sharma vol. 1 p.543" },
+        { "source": "phaladeepika", "detail": "Adhyaya VI sl.8 and sl.10 (Asubha forms)" }
+      ],
+      "practitioner_explanation": "Natural malefics (Mars, Saturn) flank the Sun on the stated side(s): the Asubha (Papa) form of the yoga. Phaladeepika VI.10 reads it adversely; shown as a caution flag, not a verdict.",
+      "lay_explanation": "Mars or Saturn sits beside your Sun, the hard form of this pattern: effort before reward.",
+      "strength_rubric": "moderate for one side; strong when both sides are held by malefics.",
+      "caveats": [
+        "A flag, not a verdict: weighed with the rest of the chart."
+      ],
+      "notes": []
+    },
+    "asubha_ubhayachari_yoga": {
+      "name": "Ubhayachari Yoga (hard form)",
+      "category": "Caution / Effort",
+      "rule": "Mars or Saturn occupy both the 2nd and 12th signs from Sun.",
+      "status": "verified_common",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "bphs", "detail": "ch.40 (Solar yogas), Sharma vol. 1 p.543" },
+        { "source": "phaladeepika", "detail": "Adhyaya VI sl.8 and sl.10 (Asubha forms)" }
+      ],
+      "practitioner_explanation": "Natural malefics (Mars, Saturn) flank the Sun on the stated side(s): the Asubha (Papa) form of the yoga. Phaladeepika VI.10 reads it adversely; shown as a caution flag, not a verdict.",
+      "lay_explanation": "Mars or Saturn sits beside your Sun, the hard form of this pattern: effort before reward.",
+      "strength_rubric": "moderate for one side; strong when both sides are held by malefics.",
+      "caveats": [
+        "A flag, not a verdict: weighed with the rest of the chart."
+      ],
+      "notes": []
+    },
+    "veena_yoga": {
+      "name": "Veena Yoga",
+      "category": "Nabhasa / Sankhya",
+      "rule": "The seven classical planets occupy exactly 7 distinct signs.",
+      "status": "convention_dependent",
+      "implementation": "computed",
+      "source_refs": [
+        { "source": "phaladeepika", "detail": "Adhyaya VI sl.40 (Veena)" },
+        { "source": "brihat_jataka", "detail": "Ch. XII st.10 (Vallaki)" }
+      ],
+      "practitioner_explanation": "All seven classical planets fall across seven distinct signs: Veena (Vallaki) in Brihat Jataka XII.10 and Phaladeepika VI.40.",
+      "lay_explanation": "Your planets spread across seven signs, like the strings of a veena.",
+      "strength_rubric": "graded by distinct-sign count: 1=Gola, 2=Yuga, 3=Shoola, 4=Kedara, 5=Pasa, 6=Dama, 7=Veena.",
+      "caveats": [
+        "Brihat Jataka reads the Sankhya yogas only where no Akriti (shape) yoga applies; Akriti yogas are not computed."
       ],
       "notes": ["Nodes (Rahu/Ketu) excluded, matching the classical Sankhya definition."]
     }
