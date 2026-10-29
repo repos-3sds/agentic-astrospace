@@ -4,6 +4,7 @@ import { Capacitor, registerPlugin } from '@capacitor/core';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 import { noteDeepLink } from './deep-link-arrival';
+import { appBuild } from './app-update.service';
 
 /** Mirrors the native permission states; 'unsupported' is the web build. */
 export type PushPermission = 'prompt' | 'granted' | 'denied' | 'unsupported';
@@ -298,9 +299,12 @@ export class PushService {
       const stored = JSON.parse(localStorage.getItem(TOKEN_KEY) ?? 'null') as { provider?: string; token?: string } | null;
       if (stored?.provider === provider && stored.token && stored.token !== value) previous = stored.token;
     } catch { /* storage unavailable or unreadable */ }
+    const build = await appBuild();
     const registration = {
       provider,
       token: value,
+      // So update reminders reach only the phones still on an older build.
+      ...(build ? { app_build: build } : {}),
       // The OS rotated this device's token: retire the old one, or each push
       // reaches the phone twice.
       ...(previous ? { replaces: previous } : {}),

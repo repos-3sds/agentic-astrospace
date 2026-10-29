@@ -6,12 +6,14 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 
 import { AppBootService } from './core/app-boot.service';
+import { AppUpdateService } from './core/app-update.service';
 import { NativeKeyboardService } from './core/native-keyboard.service';
 import { NavigationHistoryService } from './core/navigation-history.service';
 import { NATIVE_EXIT_ROUTES, NativeBackService } from './core/native-back.service';
 import { SheetOverlayService } from './core/sheet-overlay.service';
 import { ThemeService } from './core/theme.service';
 import { SplashComponent } from './shell/splash/splash.component';
+import { UpdateGateComponent } from './features/mobile/update/update-gate.component';
 
 const ANIMATED_SPLASH_FADE_MS = 360;
 
@@ -38,13 +40,15 @@ function firstLaunch(): boolean {
  */
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, SplashComponent],
+  imports: [RouterOutlet, SplashComponent, UpdateGateComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App implements OnInit, OnDestroy {
   protected readonly theme = inject(ThemeService);
   private readonly boot = inject(AppBootService);
+  /** Native only: the launch check, and the full-screen gate when this build is too old. */
+  protected readonly updates = inject(AppUpdateService);
   private router = inject(Router);
   private sheetOverlay = inject(SheetOverlayService);
   private readonly keyboard = inject(NativeKeyboardService);
@@ -115,6 +119,7 @@ export class App implements OnInit, OnDestroy {
     this.removeBackButtonListener = this.installBackButtonHandler();
     this.removeNativeInteractionGuards = this.installNativeInteractionGuards();
     void this.keyboard.install();
+    this.updates.start();
     try {
       await this.boot.run();
     } finally {

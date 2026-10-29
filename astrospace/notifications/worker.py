@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from ..db import crud_mobile as cm
 from ..db.models import NotificationJob
+from .app_updates import schedule_update_reminders, tokens_for_job
 from .clock_change import schedule_clock_change_notices
 from .daily_briefs import schedule_daily_briefs
 from .daily_subhashita import schedule_daily_subhashita
@@ -46,9 +47,11 @@ def deliver_job(db: Session, job: NotificationJob,
         return deliver_email_job(db, job, email or email_transport_from_env())
     if is_owner_job(job):
         return deliver_owner_job(db, job, email or email_transport_from_env())
-    tokens = cm.list_active_push_tokens(db, job.user_id)
+    tokens = tokens_for_job(cm.list_active_push_tokens(db, job.user_id), job.payload)
     if not tokens:
-        cm.cancel_notification(db, job.id, reason="no active push token")
+        reason = ("every phone it was for has updated" if (job.payload or {}).get("below_build")
+                  else "no active push token")
+        cm.cancel_notification(db, job.id, reason=reason)
         return False
 
     message = PushMessage(
@@ -159,6 +162,7 @@ def run_once(db: Session, transports: dict[str, PushTransport] | None = None,
     verses = _step(db, "subhashita", lambda: schedule_daily_subhashita(db), [])
     clocks = _step(db, "clock changes", lambda: schedule_clock_change_notices(db), [])
     festivals = _step(db, "festival reminders", lambda: schedule_festival_reminders(db), [])
+    updates = _step(db, "update reminders", lambda: schedule_update_reminders(db), [])
     # After the daily briefs, so the daily email has its brief to send.
     emails = _step(db, "emails", lambda: schedule_emails(db), {})
     owner = _step(db, "owner alerts", lambda: schedule_owner_alerts(db), {})
@@ -169,7 +173,8 @@ def run_once(db: Session, transports: dict[str, PushTransport] | None = None,
     summary = {"reaped": reaped, "daily_briefs": briefs, "scheduled": len(scheduled),
                "window_alerts": len(windows),
                "subhashita": len(verses), "clock_changes": len(clocks),
-               "festival_reminders": len(festivals), "emails": emails,
+               "festival_reminders": len(festivals), "update_reminders": len(updates),
+               "emails": emails,
                "owner_alerts": owner, "ai_credit": ai_credit, **delivered}
     log.info("notifications: %s", summary)
     return summary
