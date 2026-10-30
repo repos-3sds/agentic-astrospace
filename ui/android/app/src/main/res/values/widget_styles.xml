@@ -77,11 +77,4 @@
         <item name="android:maxLines">1</item>
         <item name="android:ellipsize">end</item>
     </style>
-    <!-- The Subhashita card's Siddha wordmark, as on the app card and status image. -->
-    <style name="WidgetWordmark">
-        <item name="android:fontFamily">@font/samarkan_wordmark</item>
-        <item name="android:textSize">28sp</item>
-        <item name="android:textColor">#FFF4E6</item>
-        <item name="android:includeFontPadding">false</item>
-    </style>
 </resources>

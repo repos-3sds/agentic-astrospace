@@ -30,11 +30,6 @@
               {
                 "glob": "**/*",
                 "input": "public"
-              },
-              {
-                "glob": "fonts/**",
-                "input": "src/assets",
-                "output": "assets"
               }
             ],
             "styles": [
@@ -103,11 +98,6 @@
               {
                 "glob": "**/*",
                 "input": "public"
-              },
-              {
-                "glob": "fonts/**",
-                "input": "src/assets",
-                "output": "assets"
               }
             ],
             "styles": [

@@ -27,7 +27,7 @@ import { drawGalaxy } from './galaxy-draw';
 
       @if (!markOnly) {
         <div class="copy">
-          <h1>{{ appName }}</h1>
+          <h1 class="siddha-wordmark">{{ appName }}</h1>
           <p>{{ tagline }}</p>
         </div>
       }
@@ -146,7 +146,7 @@ import { drawGalaxy } from './galaxy-draw';
 
       h1 {
         margin: 0;
-        font-family: 'Samarkan', 'Cormorant Garamond', serif;
+        justify-self: center;
         /* --text-zoom undoes the phone's font-size setting (matchDesignedTextSize). */
         font-size: calc(clamp(42px, 13vw, 72px) / var(--text-zoom, 1));
         font-weight: 500;
@@ -156,10 +156,8 @@ import { drawGalaxy } from './galaxy-draw';
 
       .splash:not(.dark) h1 {
         color: #a8583c;
+        /* The wordmark is a mask, so the gradient shows through its letters. */
         background: linear-gradient(180deg, #c98a52 0%, #b0623f 55%, #96482f 100%);
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
       }
 
       .splash:not(.dark) p {
