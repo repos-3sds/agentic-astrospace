@@ -4,6 +4,7 @@ import { AnalyticsService } from '../../../core/analytics.service';
 import { AuthService } from '../../../core/auth.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { KundliPayload } from '../../../core/models';
+import { VedicService } from '../../../core/vedic.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { BirthDetailsFormComponent } from '../shared/birth-details-form.component';
 
@@ -20,11 +21,16 @@ export function registeredName(metadata: Record<string, unknown> | undefined | n
 }
 
 /**
- * Birth Details (Figma node 11:2) — the last step of onboarding.
+ * Birth Details (Figma node 11:2) — the first step of setup.
  *
  * The fields, the place search and the validation are the shared
  * `as-birth-details-form`; this screen adds the headline, fixes the
  * relationship to "self" and decides where the new profile leads.
+ *
+ * It comes before the depth and chart style questions on purpose
+ * (onboarding plan 2026-10-30): the chart, its story and the running period
+ * are fetched while the reader answers those two screens, so the reveal at
+ * the end does not wait on a cold server.
  */
 @Component({
   selector: 'as-birth-details',
@@ -33,10 +39,10 @@ export function registeredName(metadata: Record<string, unknown> | undefined | n
   imports: [BackLinkDirective, BirthDetailsFormComponent],
   template: `
     <header class="topbar">
-      <a class="back" [asBack]="['/m', 'customize']" aria-label="Back">
+      <a class="back" [asBack]="['/m', 'start']" aria-label="Back">
         <img src="mobile/back.svg" alt="" aria-hidden="true" />
       </a>
-      <p class="step">SETUP 5 OF 5</p>
+      <p class="step">SETUP 1 OF 3</p>
     </header>
 
     <h1 class="headline">Begin with your birth rhythm</h1>
@@ -65,6 +71,7 @@ export class BirthDetailsComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly analytics = inject(AnalyticsService);
+  private readonly vedic = inject(VedicService);
 
 
   readonly saving = signal(false);
@@ -93,11 +100,19 @@ export class BirthDetailsComponent {
       this.kundlis.setActive(created.id);
       localStorage.removeItem('astrospace.onboardingName');
       this.analytics.track('onboarding_completed', { birth_time: payload.birth_time_accuracy ?? null });
-      await this.router.navigate(['/m', 'insight']);
+      this.warmReveal(created.id);
+      await this.router.navigate(['/m', 'persona']);
     } catch (error) {
       this.error.set((error as Error).message);
     } finally {
       this.saving.set(false);
     }
+  }
+
+  /** Starts the reveal's three reads; their answers are cached for the insight screen. */
+  private warmReveal(kundliId: string): void {
+    void this.vedic.all(kundliId).catch(() => undefined);
+    void this.vedic.story(kundliId).catch(() => undefined);
+    void this.vedic.dashas(kundliId).catch(() => undefined);
   }
 }

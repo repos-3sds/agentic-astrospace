@@ -335,7 +335,7 @@ export class AuthService {
   }
 
   /** Sends the sign-up confirmation email again, for an account not yet confirmed. */
-  async resendConfirmation(email: string, destination = '/m/language'): Promise<void> {
+  async resendConfirmation(email: string, destination = '/m/birth-details'): Promise<void> {
     await this.init();
     if (!this.client) return;
     const { error } = await this.client.auth.resend({

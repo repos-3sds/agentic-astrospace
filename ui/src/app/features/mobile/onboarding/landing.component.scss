@@ -3,80 +3,116 @@
 :host {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
+  height: 100%;
   min-height: 100%;
   box-sizing: border-box;
-  padding: 12px 24px calc(24px + var(--m-safe-bottom));
-  gap: 16px;
-  overflow-y: auto;
+  padding: 18px 0 calc(24px + var(--m-safe-bottom));
+  overflow: hidden;
 }
-
-.landing-hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 9px;
-  width: 100%;
-}
-
-// 240px in the design's 393pt frame. Capped by width so it shrinks with the
-// screen instead of crowding the copy at 375.
-.landing-mark {
-  display: block;
-  width: min(204px, 54vw);
-  height: min(204px, 54vw);
-  pointer-events: none;
-}
-
-.wordmark {
-  font-family: 'Samarkan', 'Cormorant Garamond', serif;
-  font-size: m-display-size(34px);
-  line-height: 0.95;
-  color: var(--m-accent-strong);
-  margin: 0;
-}
-
-.eyebrow { @include m-eyebrow; color: var(--m-accent); margin: 0; }
-
-.headline {
-  @include m-hero;
-  font-size: m-display-size(40px);
-  color: var(--m-text);
-  text-align: center;
-  margin: 0;
-}
-
-.lede { @include m-body; color: var(--m-muted); text-align: center; margin: 0; }
-
-.actions {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.btn {
-  width: 100%;
-
-  &.primary {
-    @include m-cta-primary;
-  }
-
-  &.ghost {
-    @include m-cta-secondary;
-  }
-}
-
-.assurance { @include m-caption; color: var(--m-muted); text-align: center; margin: 0; }
 
 .deleted {
   @include m-body-small;
-  margin: 0 0 8px;
+  margin: 0 24px 8px;
   padding: 12px 16px;
   border-radius: 14px;
   background: var(--m-good-soft);
   color: var(--m-text);
-  text-align: center;
+}
+
+.topbar { @include m-setup-topbar; justify-content: flex-end; padding: 0 24px; flex-shrink: 0; }
+.skip { @include m-cta-tertiary; @include m-hit-44; color: var(--m-muted); }
+
+// One slide per screen width, snapped. Scrolls sideways only; the slide's own
+// content fits by giving the screenshot whatever height is left.
+.track {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 4px 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+// The real screen in a phone-like frame, cut off at the bottom so it reads as
+// a glimpse rather than a screenshot to study.
+.peek {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  -webkit-mask-image: linear-gradient(to bottom, #000 78%, transparent);
+  mask-image: linear-gradient(to bottom, #000 78%, transparent);
+}
+
+.screen {
+  height: 100%;
+  width: auto;
+  aspect-ratio: 480 / 768;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 28px;
+  border: 1px solid var(--m-glass-hairline);
+  box-shadow: 0 18px 44px var(--m-glass-drop);
+  background: var(--m-surface);
+}
+
+// Calendar and the good-time finder overlapping, the second a little lower.
+// Sized by width so the pair always fits the screen; the fade hides the rest.
+.peek.has-second {
+  overflow: hidden;
+  .screen { flex-shrink: 0; height: auto; width: 64%; align-self: flex-start; }
+  .screen:first-child { margin-right: -28%; }
+  .second { position: relative; margin-top: 18%; }
+}
+
+.copy { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+.eyebrow { @include m-eyebrow; color: var(--m-accent); margin: 0; }
+.headline { @include m-h1; color: var(--m-text); margin: 0; text-wrap: balance; }
+.lede { @include m-body; color: var(--m-muted); margin: 0; max-width: 34ch; text-wrap: pretty; }
+
+.actions {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 18px 24px 0;
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  i {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--m-border-strong);
+    transition: width var(--m-dur-fast, 120ms) var(--m-ease-standard, ease);
+  }
+  i.on { width: 22px; background: var(--m-accent); }
+}
+
+.btn.primary { @include m-cta-primary; width: 100%; cursor: pointer; }
+.btn.tertiary { @include m-cta-tertiary; min-height: 44px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dots i { transition: none; }
 }

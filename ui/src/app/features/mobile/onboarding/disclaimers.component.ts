@@ -39,7 +39,7 @@ interface Vow {
   imports: [BackLinkDirective, RouterLink],
   template: `
     <header class="topbar">
-      <a class="back" [asBack]="beforeAccount ? ['/m', 'start'] : ['/m', 'welcome']" aria-label="Back">
+      <a class="back" [asBack]="['/m', 'start']" aria-label="Back">
         <img src="mobile/back.svg" alt="" aria-hidden="true" />
       </a>
     </header>
@@ -101,12 +101,12 @@ interface Vow {
 export class DisclaimersComponent {
   private readonly preferences = inject(PreferencesService);
   /**
-   * From the landing screen (?then=register) this leads to sign-up. A reader
-   * who signed in without seeing it (Google from the Sign in tab, a magic
-   * link) is sent here from Welcome and carries on with setup.
+   * From the intro (?then=register) this leads to sign-up. A reader who
+   * signed in without seeing it (Google from the Sign in tab, a magic link)
+   * is sent here by the birth details guard and carries on with setup.
    */
   protected readonly beforeAccount = inject(ActivatedRoute).snapshot.queryParamMap.get('then') === 'register';
-  protected readonly next = this.beforeAccount ? ['/m', 'auth'] : ['/m', 'persona'];
+  protected readonly next = this.beforeAccount ? ['/m', 'auth'] : ['/m', 'birth-details'];
   protected readonly nextParams = this.beforeAccount ? { mode: 'register' } : null;
   protected readonly shareUsage = signal(this.preferences.usageAsked() && this.preferences.shareUsage());
 

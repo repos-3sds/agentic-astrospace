@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
 import { EmailSettingsService } from '../../../core/email-settings.service';
@@ -12,6 +12,10 @@ import { SplashComponent } from '../../../shell/splash/splash.component';
 import { BirthTimeBadgeComponent } from '../chart/birth-time-badge.component';
 import { KundliChartComponent, KundliChartStyle } from '../../../shared/kundli-chart/kundli-chart.component';
 import { rashiFallback } from '../chart/mobile-chart-data';
+import { queueTodayTips } from '../today/first-visit-tips.component';
+
+/** How long "Reading your chart" stays up, at the least. */
+const CAST_MS = 3000;
 
 /**
  * The reveal at the end of setup: "your chart in three lines" (onboarding
@@ -50,6 +54,21 @@ export class FirstInsightComponent {
   protected readonly error = signal<string | null>(null);
   protected readonly emailToo = signal(false);
   protected readonly finishing = signal(false);
+
+  /**
+   * "Reading your chart": a short moment, at least three seconds, while four
+   * real steps tick off (onboarding plan 2026-10-30). The chart was started
+   * on birth details, so this is usually all the wait there is.
+   */
+  protected readonly castSteps = [
+    'Placing the nine grahas',
+    'Finding your rising sign',
+    'Finding your Moon’s nakshatra',
+    'Opening your current chapter',
+  ];
+  protected readonly castStep = signal(0);
+  private readonly castShown = signal(false);
+  protected readonly casting = computed(() => this.loading() || !this.castShown());
 
   protected readonly name = computed(() => this.kundlis.active()?.name ?? '');
   protected readonly hasActiveProfile = computed(() => !!this.kundlis.activeId());
@@ -120,6 +139,15 @@ export class FirstInsightComponent {
 
   constructor() {
     void this.push.refreshPermission();
+    const tick = setInterval(() => {
+      if (this.castStep() < this.castSteps.length) this.castStep.update((n) => n + 1);
+    }, CAST_MS / (this.castSteps.length + 1));
+    setTimeout(() => {
+      clearInterval(tick);
+      this.castStep.set(this.castSteps.length);
+      this.castShown.set(true);
+    }, CAST_MS);
+    inject(DestroyRef).onDestroy(() => clearInterval(tick));
     effect(() => {
       const id = this.kundlis.activeId();
       const loaded = this.kundlis.loaded();
@@ -149,6 +177,7 @@ export class FirstInsightComponent {
   protected async finish(withNotifications: boolean): Promise<void> {
     if (this.finishing()) return;
     this.finishing.set(true);
+    queueTodayTips();
     try {
       if (withNotifications && this.askNotifications()) await this.push.enable();
       if (this.emailToo()) await this.emailSettings.applySignupDefaults();

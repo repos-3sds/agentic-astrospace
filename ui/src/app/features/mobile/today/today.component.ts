@@ -1,3 +1,4 @@
+import { FirstVisitTipsComponent } from './first-visit-tips.component';
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, computed, effect, inject, signal, untracked } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -394,6 +395,7 @@ function practicalClose(text: string): string[] {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    FirstVisitTipsComponent,
     BirthDetailsCardComponent,
     DayGaugeComponent,
     DayQualitySheetComponent,

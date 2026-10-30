@@ -16,32 +16,14 @@
   min-height: 0;
 }
 
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.back {
-  line-height: 0;
-
-  img {
-    width: 24px;
-    height: 24px;
-    display: block;
-  }
-}
-
-.step {
-  @include m-caption;
-  color: var(--m-muted);
-  margin: 0;
-}
+.topbar { @include m-setup-topbar; }
+.back { @include m-setup-back; }
+.step { @include m-setup-step; }
 
 .headline {
   @include m-h1;
   color: var(--m-text);
-  margin: 28px 0 8px;
+  margin: 18px 0 8px;
 }
 
 .lede {

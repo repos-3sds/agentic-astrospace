@@ -1,0 +1,41 @@
+@use '../mobile-tokens' as *;
+
+.veil {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+}
+
+// The ring cuts the target out of the veil with a wide shadow, so the thing
+// being explained stays bright.
+.ring {
+  position: fixed;
+  border-radius: 22px;
+  border: 2px solid var(--m-accent);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+.veil:has(.ring) { background: transparent; }
+
+.card {
+  position: fixed;
+  left: 24px;
+  right: 24px;
+  box-sizing: border-box;
+  padding: 18px 20px 12px;
+  border-radius: 24px;
+  background: var(--m-sheet-raised);
+  border: 1px solid var(--m-glass-hairline);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.3);
+  color: var(--m-text);
+  cursor: default;
+}
+
+.count { @include m-eyebrow; color: var(--m-accent); margin: 0 0 6px; }
+.title { @include m-title; margin: 0 0 4px; }
+.detail { @include m-body-small; color: var(--m-muted); margin: 0; }
+.row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.skip { @include m-cta-tertiary; min-height: 44px; color: var(--m-muted); }
+.go { @include m-cta-tertiary; min-height: 44px; }

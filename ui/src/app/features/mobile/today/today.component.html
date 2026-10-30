@@ -403,6 +403,10 @@
   </div>
 </ng-template>
 
+@if (view()) {
+  <as-first-visit-tips [guided]="preferences.experienceMode() === 'guided'" />
+}
+
 @if (openSheet() === 'quality' && view(); as v) {
   <as-day-quality-sheet
     [score]="v.score"

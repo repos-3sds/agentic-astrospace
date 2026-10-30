@@ -1,8 +1,18 @@
 <main [class.is-practitioner]="ahaMode() === 'practitioner'">
-  @if (loading()) {
-    <section class="loading-state">
-      <span class="orb"></span>
-      <p>Reading {{ name() ? name() + '’s' : 'your' }} chart…</p>
+  @if (casting()) {
+    <section class="cast" role="status" aria-live="polite">
+      <app-splash class="cast-mark" [dark]="theme.dark()" [markOnly]="true" aria-hidden="true" />
+      <h1>Reading {{ name() ? name() + '’s' : 'your' }} chart</h1>
+      <ul class="cast-steps">
+        @for (step of castSteps; track step; let i = $index) {
+          <li [class.is-done]="i < castStep()" [class.is-now]="i === castStep()">
+            <span class="cast-tick" aria-hidden="true">
+              <svg viewBox="0 0 16 16"><path d="m3.5 8.4 2.9 2.9 6.1-6.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            {{ step }}
+          </li>
+        }
+      </ul>
     </section>
   } @else if (!hasActiveProfile()) {
     <section class="loading-state error">
@@ -64,7 +74,7 @@
   }
 </main>
 
-@if (!loading() && hasActiveProfile()) {
+@if (!casting() && hasActiveProfile()) {
   <footer>
     @if (askNotifications()) {
       <button class="primary" type="button" [disabled]="finishing()" (click)="finish(true)">Turn on and open Today</button>

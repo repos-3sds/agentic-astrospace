@@ -1,5 +1,5 @@
 <header class="topbar">
-  <a [asBack]="['/m', 'start']" aria-label="Back"><img src="mobile/back.svg" alt="" /></a>
+  <a class="back" [asBack]="['/m', 'start']" aria-label="Back"><img src="mobile/back.svg" alt="" aria-hidden="true" /></a>
 </header>
 
 <main>
@@ -71,13 +71,13 @@
 
   <form (ngSubmit)="submit()">
     @if (mode() === 'register') {
-      <label>YOUR NAME<input name="name" [(ngModel)]="name" autocomplete="name" placeholder="Lakshmi" /></label>
+      <label>YOUR NAME<input name="name" [(ngModel)]="name" autocomplete="name" placeholder="Your name" /></label>
     }
-    <label>EMAIL<input name="email" [(ngModel)]="email" type="email" autocomplete="email" placeholder="lakshmi@email.com" /></label>
+    <label>EMAIL<input name="email" [(ngModel)]="email" type="email" autocomplete="email" placeholder="you@example.com" /></label>
     <label>
       PASSWORD
       <span class="password">
-        <input name="password" [(ngModel)]="password" [type]="showPassword() ? 'text' : 'password'" [autocomplete]="mode() === 'signin' ? 'current-password' : 'new-password'" [placeholder]="mode() === 'signin' ? '••••••••' : 'Create a password'" />
+        <input name="password" [(ngModel)]="password" [type]="showPassword() ? 'text' : 'password'" [autocomplete]="mode() === 'signin' ? 'current-password' : 'new-password'" [placeholder]="mode() === 'signin' ? 'Your password' : 'Create a password'" />
         <button type="button" aria-label="Show password" (click)="showPassword.set(!showPassword())"><img src="mobile/eye.svg" alt="" /></button>
       </span>
     </label>

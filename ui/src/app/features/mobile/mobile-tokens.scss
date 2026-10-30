@@ -324,3 +324,35 @@ $m-wide: 900px;
     &, &::after { transition: none; }
   }
 }
+
+// Onboarding header: one back button and the step counter, on every setup
+// screen. The row is always 44 px tall, with or without a back button, so the
+// headline sits at the same height from screen to screen (onboarding audit
+// 2026-10-30: three back buttons, two with 24 px targets).
+@mixin m-setup-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+}
+@mixin m-setup-back {
+  width: 44px;
+  height: 44px;
+  margin-left: -10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  text-decoration: none;
+  img { width: 24px; height: 24px; display: block; }
+}
+@mixin m-setup-step {
+  @include m-eyebrow;
+  color: var(--m-muted);
+  margin: 0 0 0 auto;
+}
+// Any small uppercase label (form fields, counters) uses the eyebrow, the
+// style Today uses; muted when it labels a field.
+@mixin m-field-label {
+  @include m-eyebrow;
+  color: var(--m-muted);
+}

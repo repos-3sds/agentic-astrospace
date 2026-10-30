@@ -8,7 +8,7 @@ import { appBuild } from './app-update.service';
 
 /** Onboarding screens, where the launch question waits for the reveal. */
 const SETUP_ROUTES = [
-  '/m/auth', '/m/forgot-password', '/m/reset-password', '/m/language', '/m/welcome',
+  '/m/auth', '/m/forgot-password', '/m/reset-password', '/m/language',
   '/m/disclaimers', '/m/persona', '/m/customize', '/m/birth-details', '/m/insight', '/m/start',
 ];
 

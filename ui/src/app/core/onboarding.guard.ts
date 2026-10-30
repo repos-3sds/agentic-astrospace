@@ -3,6 +3,7 @@ import { CanActivateFn, Router } from '@angular/router';
 
 import { AuthService } from './auth.service';
 import { KundliStore } from './kundli.store';
+import { PreferencesService } from './preferences.service';
 
 /** The native app's front door: every cold start is routed through it. */
 const ENTRY_PATH = 'm/start';
@@ -46,3 +47,12 @@ export const onboardedRedirectGuard: CanActivateFn = async (route) => {
   const hasSelf = kundlis.kundlis().some((k) => (k.relation ?? '').toLowerCase() === 'self');
   return hasSelf ? router.createUrlTree(['/m', 'today']) : true;
 };
+
+/**
+ * Setup starts with the promise and choices screen. The intro sends new
+ * readers there before the account, but Google from the Sign in tab or a
+ * magic link can create an account without passing it, so birth details
+ * sends them back to it first (onboarding plan 2026-10-30).
+ */
+export const promiseSeenGuard: CanActivateFn = () =>
+  inject(PreferencesService).usageAsked() ? true : inject(Router).createUrlTree(['/m', 'disclaimers']);

@@ -121,20 +121,20 @@ export class MobileAuthComponent {
       await this.auth.init();
       if (!this.auth.enabled()) {
         this.auth.signedOut.set(false);
-        await this.router.navigate(this.mode() === 'signin' ? ['/m', 'today'] : ['/m', 'language']);
+        await this.router.navigate(this.mode() === 'signin' ? ['/m', 'today'] : ['/m', 'birth-details']);
       } else if (this.mode() === 'signin') {
         await this.auth.signIn(this.email.trim(), this.password, []);
         this.kundlis.reset();
         await this.kundlis.load();
         await this.router.navigate(
-          this.kundlis.kundlis().length ? ['/m', 'today'] : ['/m', 'language'],
+          this.kundlis.kundlis().length ? ['/m', 'today'] : ['/m', 'birth-details'],
         );
       } else {
         await this.auth.signUp(
           this.email.trim(),
           this.password,
           this.name.trim(),
-          ['/m', 'language'],
+          ['/m', 'birth-details'],
         );
         if (!this.auth.session()) {
           this.mode.set('signin');
@@ -159,11 +159,11 @@ export class MobileAuthComponent {
     try {
       await this.auth.init();
       if (!this.auth.enabled()) {
-        await this.router.navigate(this.mode() === 'signin' ? ['/m', 'today'] : ['/m', 'language']);
+        await this.router.navigate(this.mode() === 'signin' ? ['/m', 'today'] : ['/m', 'birth-details']);
         return;
       }
       await this.auth.signInWithGoogle(
-        this.mode() === 'signin' ? '/m/today' : '/m/language',
+        this.mode() === 'signin' ? '/m/today' : '/m/birth-details',
       );
     } catch (error) {
       this.error.set((error as Error).message || 'Could not open Google sign-in. Try again.');
@@ -177,7 +177,7 @@ export class MobileAuthComponent {
     this.error.set(null);
     this.notice.set(null);
     try {
-      await this.auth.signInWithApple(this.mode() === 'signin' ? '/m/today' : '/m/language');
+      await this.auth.signInWithApple(this.mode() === 'signin' ? '/m/today' : '/m/birth-details');
     } catch (error) {
       this.error.set((error as Error).message || 'Could not open Apple sign-in. Try again.');
     } finally {
@@ -202,7 +202,7 @@ export class MobileAuthComponent {
     try {
       await this.auth.init();
       if (this.auth.enabled()) {
-        await this.auth.signInWithMagicLink(email, this.mode() === 'signin' ? '/m/today' : '/m/language');
+        await this.auth.signInWithMagicLink(email, this.mode() === 'signin' ? '/m/today' : '/m/birth-details');
       }
       this.notice.set('Secure link sent. Open it from your email on this device.');
     } catch (error) {

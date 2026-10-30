@@ -8,17 +8,11 @@
   padding: 18px 24px calc(28px + var(--m-safe-bottom));
 }
 
-.topbar { display: flex; align-items: center; justify-content: space-between; }
+.topbar { @include m-setup-topbar; }
+.back { @include m-setup-back; }
+.step { @include m-setup-step; }
 
-.back {
-  @include m-icon-button(44px);
-  margin-left: -10px;
-  img { width: 24px; height: 24px; display: block; }
-}
-
-.step { @include m-caption; color: var(--m-muted); margin: 0; }
-
-.headline { @include m-h1; color: var(--m-text); margin: 18px 0 7px; }
+.headline { @include m-h1; color: var(--m-text); margin: 18px 0 8px; }
 .lede { @include m-body; color: var(--m-muted); margin: 0 0 20px; }
 
 // The form owns its fields and CTA; stretching it pins the CTA to the

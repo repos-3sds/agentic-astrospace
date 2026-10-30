@@ -5,10 +5,9 @@ import {
   PersonaPickerComponent,
 } from '../persona-picker/persona-picker.component';
 import { PreferencesService } from '../../../core/preferences.service';
-import { BackLinkDirective } from '../../../core/back-link.directive';
 
 /**
- * Persona (Figma node 8:2) — step four of onboarding.
+ * Persona (Figma node 8:2) — step two of setup, after birth details.
  *
  * This sets how much depth is shown, not what is true. A Guided reader and a
  * Practitioner reader get the same computation and the same flags; one sees the
@@ -24,14 +23,13 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
   selector: 'as-persona',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, PersonaPickerComponent, RouterLink],
+  imports: [PersonaPickerComponent, RouterLink],
   template: `
     <div class="top">
+      <!-- No way back: the profile was saved on the step before, and birth
+           details are changed from Settings from here on. -->
       <header class="topbar">
-        <a class="back" [asBack]="['/m', 'welcome']" aria-label="Back">
-          <img src="mobile/back.svg" alt="" aria-hidden="true" />
-        </a>
-        <p class="step">SETUP 3 OF 5</p>
+        <p class="step">SETUP 2 OF 3</p>
       </header>
 
       <h1 class="headline">How should <span class="siddha-brand">Siddha</span><br />walk with you?</h1>
