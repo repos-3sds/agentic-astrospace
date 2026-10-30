@@ -83,9 +83,14 @@ class TestTools:
         assert all(row["id"].startswith("pattern:") for row in result["patterns"])
 
     def test_progress_lines_are_plain(self):
-        assert summarize_call("house", {"number": 7}) == "Looking at your 7th house…"
-        assert summarize_call("house", {"number": 11}) == "Looking at your 11th house…"
-        assert summarize_call("varga", {"division": "D9"}) == "Reading your D9 chart…"
+        assert summarize_call("house", {"number": 7}) == "Looking at your 7th house, marriage and partners…"
+        assert summarize_call("house", {"number": 11}) == "Looking at your 11th house, gains and friends…"
+        assert summarize_call("varga", {"division": "D9"}) == "Reading your marriage chart…"
+        # No chart jargon or book names in what the reader watches.
+        for name in (spec["name"] for spec in TOOL_SPECS):
+            line = summarize_call(name, {"number": 1, "division": "D10"})
+            assert not any(word in line for word in ("Ashtakavarga", "bindu", "Jaimini", "karaka",
+                                                     "arudha", "D10", "BPHS", "classic"))
 
 
 class TestSwitch:
@@ -194,10 +199,17 @@ class TestOrchestrator:
             events = list(orchestrator.run(prepared, [{"role": "user", "content": QUESTION}],
                                            persist=lambda r, s: persisted.append(s) or "t1"))
 
-        labels = [e["label"] for e in events if e.get("stage") == "exploring"]
-        assert labels[0] == "Finding your good and avoid planets…" or labels[0] == "Looking at your chart…"
-        assert {"Reading your birth stars…", "Reading your D9 chart…", "Checking your dasha periods…",
-                "Checking the classical rules…", "Looking at your 7th house…"} <= set(labels)
+        labels = [e["label"] for e in events if e.get("type") == "status"]
+        gathered = [e["label"] for e in events if e.get("stage") == "gathering_context"]
+        explored = [e["label"] for e in events if e.get("stage") == "exploring"]
+        assert gathered[0] == "Reading your birth chart…"
+        assert {"Reading your birth star…", "Reading your marriage chart…",
+                "Checking your dasha periods for the timing…",
+                "Matching your chart against time-tested rules…",
+                "Looking at your 7th house, marriage and partners…"} <= set(labels)
+        # A lookup the bundle already made is not listed again while exploring.
+        assert len(labels) == len(set(labels)) and not set(gathered) & set(explored)
+        assert labels[-1] == "Our Siddha Agents are writing and checking your answer…"
         done = events[-1]
         assert done["status"] == "answered", done
         assert set(done["evidence_refs"]) == {"tool:house(7)", "pattern:MAR-01", "houses"}

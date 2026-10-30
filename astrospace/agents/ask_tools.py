@@ -25,6 +25,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from ..context.assembler import _house_analysis
+from .ask_steps import house_step, varga_step
 from ..core.vedic.favourable import functional_planets
 from ..core.vedic.nakshatra import nakshatra_of
 from ..core.vedic.positions import sign_index, sign_name
@@ -519,44 +520,37 @@ def _sign_lord(sign: int) -> str:
 
 
 def summarize_call(name: str, args: dict) -> str:
-    """The reader-facing progress line for one tool call."""
+    """The reader-facing progress line for one tool call (agents/ask_steps.py
+    holds the plain names): no chart jargon, no book names."""
     if name == "house":
-        return f"Looking at your {_ordinal(int(args.get('number') or 0))} house…"
+        return house_step(int(args.get("number") or 0))
     if name == "varga":
-        return f"Reading your {args.get('division')} chart…"
+        return varga_step(args.get("division"))
     if name in ("dasha_at", "dasha_timeline"):
-        return "Checking your dasha periods…"
+        return "Checking your dasha periods for the timing…"
     if name == "dasha_variant":
-        return "Cross-checking the timing with another dasha…"
+        return "Cross-checking the timing a second way…"
     if name == "transits":
         return "Checking today's planets against your chart…"
     if name == "ashtakavarga":
-        return "Counting Ashtakavarga bindus…"
+        return "Scoring how strong each house is for you…"
     if name == "strengths":
-        return "Weighing planet strengths…"
+        return "Weighing how strong each planet is…"
     if name == "yogas_doshas":
-        return "Checking yogas and doshas…"
+        return "Checking yogas and doshas that touch this…"
     if name == "jaimini":
-        return "Reading Jaimini karakas and arudhas…"
+        return "Checking the planets that lead your life story…"
     if name == "favourable":
-        return "Finding your good and avoid planets…"
+        return "Finding the planets that help you and the ones to go easy on…"
     if name == "panchang":
-        return "Reading the panchang…"
+        return "Reading the panchang for the day…"
     if name == "remedies":
-        return "Choosing remedies for you…"
+        return "Choosing simple remedies for you…"
     if name == "nakshatra":
-        return "Reading your birth stars…"
+        return "Reading your birth star…"
     if name in ("classical_patterns", "classics"):
-        return "Checking the classical rules…"
+        return "Matching your chart against time-tested rules…"
     return "Looking at your chart…"
-
-
-def _ordinal(n: int) -> str:
-    if 10 <= n % 100 <= 20:
-        suffix = "th"
-    else:
-        suffix = {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
-    return f"{n}{suffix}"
 
 
 def ref_aliases(ref: str) -> set[str]:

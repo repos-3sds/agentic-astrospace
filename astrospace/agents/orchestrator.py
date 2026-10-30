@@ -26,6 +26,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Callable, Iterator
 
+from .ask_steps import WRITING_STEP, bundle_steps
 from .ask_tools import ChartTools, summarize_call
 from .domain_agent import DomainReadingAgent
 from .explorer import ChartExplorer, ExplorationStopped
@@ -996,11 +997,13 @@ class AskOrchestrator:
         except Exception:  # accounting never costs a reader their answer
             log.exception("ask cost log line failed")
 
-    def _explore(self, prepared: PreparedRun) -> Iterator[dict]:
+    def _explore(self, prepared: PreparedRun, shown: set[str] | None = None) -> Iterator[dict]:
         """Run the exploring agent on a worker thread, yielding one status
         line per new kind of lookup while it works. On success the explored
         results join the bundle and the specialist is rebuilt over it; on any
-        failure or timeout the turn carries on as the normal bundle path."""
+        failure or timeout the turn carries on as the normal bundle path.
+        `shown` holds the lines already sent, so a lookup the bundle made is
+        not listed twice."""
         events: queue.Queue = queue.Queue()
         outcome: dict = {}
         started = time.monotonic()
@@ -1035,7 +1038,7 @@ class AskOrchestrator:
         thread = threading.Thread(target=work, name="ask-explore", daemon=True)
         thread.start()
         deadline = started + EXPLORE_TIMEOUT_S
-        shown: set[str] = set()
+        shown = set(shown or ())
         finished = False
         try:
             while True:
@@ -1093,8 +1096,11 @@ class AskOrchestrator:
         touches SQLAlchemy. Called exactly once, and only after a verifier
         pass (or a terminal failure state) — never before."""
         try:
-            yield {"type": "status", "stage": "gathering_context",
-                   "label": f"Gathering your {', '.join(prepared.context_used[:3])}…"}
+            # One line per lookup the bundle really holds (agents/ask_steps.py);
+            # the app lists them, ticking each off as the next arrives.
+            steps = bundle_steps(prepared.bundle)
+            for label in steps:
+                yield {"type": "status", "stage": "gathering_context", "label": label}
             if prepared.deep_paused:
                 yield {"type": "status", "stage": "gathering_context",
                        "label": "Deep answers are resting for a while, so this is a quick answer…"}
@@ -1104,9 +1110,8 @@ class AskOrchestrator:
                 prepared.explore_release()
             raise
         if prepared.explorer_factory is not None:
-            yield from self._explore(prepared)
-        yield {"type": "status", "stage": "interpreting",
-              "label": f"{prepared.bundle.get('domain_name', prepared.domain)} specialist is interpreting…"}
+            yield from self._explore(prepared, shown=set(steps))
+        yield {"type": "status", "stage": "interpreting", "label": WRITING_STEP}
 
         result = self._agent_run_and_verify(prepared, messages)
         if prepared.usage.get("explore_ms"):

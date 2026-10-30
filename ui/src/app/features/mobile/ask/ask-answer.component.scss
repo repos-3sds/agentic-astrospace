@@ -771,9 +771,14 @@
   &.is-error { color: var(--m-bad); }
 }
 
+.bubble-actions {
+  display: flex;
+  gap: 4px;
+}
+
 .stream-progress {
   display: grid;
-  grid-template-columns: 10px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 9px;
   min-height: 40px;
@@ -787,6 +792,96 @@
   border-radius: 999px;
   background: var(--m-accent);
   animation: answer-pulse 1s ease-in-out infinite;
+}
+
+.stream-line {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 34px;
+}
+
+/* Working steps: done ones ticked and quiet, the one in hand pulsing. */
+.stream-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 0 2px;
+  list-style: none;
+
+  li {
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    align-items: start;
+    gap: 9px;
+    color: var(--m-muted);
+    animation: step-in 320ms ease-out both;
+  }
+
+  li.is-current {
+    color: var(--m-text);
+  }
+}
+
+.step-mark {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--m-accent) 18%, transparent);
+
+  // A tick for a finished step.
+  &::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 3px;
+    width: 4px;
+    height: 7px;
+    border: solid var(--m-accent-strong);
+    border-width: 0 1.6px 1.6px 0;
+    transform: rotate(45deg);
+  }
+}
+
+li.is-current .step-mark {
+  background: transparent;
+
+  &::after {
+    left: 4px;
+    top: 4px;
+    width: 8px;
+    height: 8px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--m-accent);
+    transform: none;
+    animation: step-pulse 1.1s ease-in-out infinite;
+  }
+}
+
+@keyframes step-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.7); }
+}
+
+/* With steps listed, Stop sits under them so the lines keep the full width. */
+.stream-progress:has(.stream-steps) {
+  grid-template-columns: minmax(0, 1fr);
+
+  .stop-stream { justify-self: start; }
+}
+
+@keyframes step-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stream-steps li,
+  li.is-current .step-mark::after { animation: none; }
 }
 
 .stop-stream {
