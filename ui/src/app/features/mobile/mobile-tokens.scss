@@ -285,3 +285,42 @@ $m-wide: 900px;
     transform: translate(-50%, -50%);
   }
 }
+
+// An on/off switch drawn on a <button role="switch">, with .is-on when on.
+// Settings and onboarding share it, so a switch looks the same wherever the
+// reader meets one.
+@mixin m-switch {
+  @include m-hit-44;
+  width: 44px;
+  height: 26px;
+  flex-shrink: 0;
+  border: 0;
+  padding: 0;
+  border-radius: 999px;
+  background: var(--m-border-strong);
+  cursor: pointer;
+  transition: background 160ms ease-out;
+
+  &.is-on { background: var(--m-accent); }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    // A solid knob in both themes. --m-raised is 10% white in dark, so on the
+    // coral track the knob vanished and on looked like off (Hawk, 2026-10-25).
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    transition: transform 160ms ease-out;
+  }
+
+  &.is-on::after { transform: translateX(18px); }
+
+  @media (prefers-reduced-motion: reduce) {
+    &, &::after { transition: none; }
+  }
+}

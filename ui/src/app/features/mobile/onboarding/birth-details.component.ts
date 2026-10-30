@@ -6,12 +6,6 @@ import { KundliStore } from '../../../core/kundli.store';
 import { KundliPayload } from '../../../core/models';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { BirthDetailsFormComponent } from '../shared/birth-details-form.component';
-import {
-  EmailSettingsService,
-  clearEmailOptIn,
-  rememberEmailOptIn,
-  storedEmailOptIn,
-} from '../../../core/email-settings.service';
 
 /**
  * The name typed at Register, carried into the first profile. Stored by the
@@ -42,20 +36,11 @@ export function registeredName(metadata: Record<string, unknown> | undefined | n
       <a class="back" [asBack]="['/m', 'customize']" aria-label="Back">
         <img src="mobile/back.svg" alt="" aria-hidden="true" />
       </a>
-      <p class="step">SETUP 6 OF 6</p>
+      <p class="step">SETUP 5 OF 5</p>
     </header>
 
     <h1 class="headline">Begin with your birth rhythm</h1>
     <p class="lede">These details anchor your life map. Daily timings follow your phone’s timezone, or a city you choose in Settings.</p>
-    @if (askConsent) {
-      <!-- Only for readers who never saw the Register box (Google from the
-           Sign in tab, a magic link): the same choice, asked once. -->
-      <label class="consent">
-        <input type="checkbox" [checked]="emailOptIn()" (change)="emailOptIn.set(!emailOptIn())" />
-        <span>Email me my daily reading, weekly outlook and festival days. Turn them off any time.</span>
-      </label>
-    }
-
     <as-birth-details-form
       class="form"
       nameLabel="WHO IS THIS FOR?"
@@ -80,10 +65,7 @@ export class BirthDetailsComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly analytics = inject(AnalyticsService);
-  private readonly emailSettings = inject(EmailSettingsService);
 
-  protected readonly askConsent = storedEmailOptIn() === null;
-  protected readonly emailOptIn = signal(true);
 
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
@@ -104,14 +86,12 @@ export class BirthDetailsComponent {
       if (existingSelf) {
         this.kundlis.setActive(existingSelf.id);
         localStorage.removeItem('astrospace.onboardingName');
-        clearEmailOptIn();
         await this.router.navigate(['/m', 'today']);
         return;
       }
       const created = await this.kundlis.create({ ...payload, relation: 'self' });
       this.kundlis.setActive(created.id);
       localStorage.removeItem('astrospace.onboardingName');
-      this.applyEmailConsent();
       this.analytics.track('onboarding_completed', { birth_time: payload.birth_time_accuracy ?? null });
       await this.router.navigate(['/m', 'insight']);
     } catch (error) {
@@ -119,16 +99,5 @@ export class BirthDetailsComponent {
     } finally {
       this.saving.set(false);
     }
-  }
-
-  /**
-   * After the first profile exists (the welcome email reads it). Not awaited:
-   * email never holds up the first reading.
-   */
-  private applyEmailConsent(): void {
-    if (this.askConsent) rememberEmailOptIn(this.emailOptIn());
-    const optedIn = storedEmailOptIn() === 'yes';
-    clearEmailOptIn();
-    if (optedIn) void this.emailSettings.applySignupDefaults();
   }
 }

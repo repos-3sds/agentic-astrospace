@@ -36,7 +36,7 @@ import { SplashComponent } from '../../../shell/splash/splash.component';
     </div>
 
     <div class="actions">
-      <a class="btn primary" [routerLink]="['/m', 'auth']" [queryParams]="{ mode: 'register' }">Begin your path</a>
+      <a class="btn primary" [routerLink]="['/m', 'disclaimers']" [queryParams]="{ then: 'register' }">Begin your path</a>
       <a class="btn ghost" [routerLink]="['/m', 'auth']">I already walk with <span class="siddha-brand">Siddha</span></a>
       <p class="assurance">Classical wisdom · Daily practice · No fear, no fatalism</p>
     </div>

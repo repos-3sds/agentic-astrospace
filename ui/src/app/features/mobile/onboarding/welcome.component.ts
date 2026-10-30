@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { PreferencesService } from '../../../core/preferences.service';
 import { RouterLink } from '@angular/router';
 import { SplashComponent } from '../../../shell/splash/splash.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
@@ -28,6 +29,8 @@ interface PromiseRow {
   host: { class: 'as-mobile' },
 })
 export class WelcomeComponent {
+  /** The promise screen comes before sign-up; only a reader who signed in without it still needs it. */
+  protected readonly promiseSeen = inject(PreferencesService).usageAsked();
   protected readonly promises = signal<PromiseRow[]>([
     {
       icon: 'promise-computed',

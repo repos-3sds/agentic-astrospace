@@ -23,7 +23,8 @@ h1 { @include m-h1; color: var(--m-text); margin: 0; text-wrap: balance; }
 .facts { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .fact,
 .chart-block,
-.notify {
+.notify,
+.email {
   border-radius: 24px;
   padding: 18px 20px;
   background: var(--m-glass-card);
@@ -40,12 +41,14 @@ h1 { @include m-h1; color: var(--m-text); margin: 0; text-wrap: balance; }
 
 .notify { display: flex; gap: 14px; align-items: flex-start; }
 .notify svg { flex: 0 0 auto; width: 24px; height: 24px; margin-top: 2px; color: var(--m-accent); }
+.email { display: flex; gap: 14px; align-items: flex-start; justify-content: space-between; }
+.switch { @include m-switch; margin-top: 2px; }
 .notify-title { @include m-body-strong; color: var(--m-text); margin: 0; }
 .notify-detail { @include m-body-small; color: var(--m-muted); margin: 2px 0 0; }
 
 footer { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-footer .primary { @include m-cta-primary; width: 100%; }
-footer .tertiary { @include m-cta-tertiary; min-height: 44px; }
+footer .primary { @include m-cta-primary; width: 100%; cursor: pointer; }
+footer .tertiary { @include m-cta-tertiary; min-height: 44px; background: none; cursor: pointer; }
 
 .loading-state {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center;

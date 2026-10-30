@@ -5,9 +5,6 @@ import {
   EmailCategory,
   EmailSettingsService,
   EmailState,
-  clearEmailOptIn,
-  rememberEmailOptIn,
-  storedEmailOptIn,
 } from './email-settings.service';
 
 describe('EmailSettingsService', () => {
@@ -15,7 +12,6 @@ describe('EmailSettingsService', () => {
   let api: jasmine.SpyObj<ApiService>;
 
   beforeEach(() => {
-    clearEmailOptIn();
     api = jasmine.createSpyObj<ApiService>('ApiService', ['get', 'put', 'post']);
     TestBed.configureTestingModule({
       providers: [
@@ -25,18 +21,6 @@ describe('EmailSettingsService', () => {
       ],
     });
     service = TestBed.inject(EmailSettingsService);
-  });
-
-  afterEach(() => clearEmailOptIn());
-
-  it('carries the sign-up box across onboarding', () => {
-    expect(storedEmailOptIn()).toBeNull();
-    rememberEmailOptIn(true);
-    expect(storedEmailOptIn()).toBe('yes');
-    rememberEmailOptIn(false);
-    expect(storedEmailOptIn()).toBe('no');
-    clearEmailOptIn();
-    expect(storedEmailOptIn()).toBeNull();
   });
 
   it('asks the server to apply the sign-up defaults with the timezone', async () => {

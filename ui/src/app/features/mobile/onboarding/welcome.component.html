@@ -2,7 +2,7 @@
   <a [asBack]="['/m', 'language']" aria-label="Back">
     <img src="mobile/back.svg" alt="" aria-hidden="true" />
   </a>
-  <p class="step">SETUP 2 OF 6</p>
+  <p class="step">SETUP 2 OF 5</p>
 </header>
 
 <main>
@@ -32,5 +32,5 @@
 </main>
 
 <div class="actions">
-  <a class="btn" [routerLink]="['/m', 'disclaimers']">Continue</a>
+  <a class="btn" [routerLink]="promiseSeen ? ['/m', 'persona'] : ['/m', 'disclaimers']">Continue</a>
 </div>

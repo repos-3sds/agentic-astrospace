@@ -1,42 +1,29 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
+import { EmailSettingsService } from '../../../core/email-settings.service';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
+import { PushService } from '../../../core/push.service';
 import { VedicService } from '../../../core/vedic.service';
-import { DashaPayload, LifeStory, VargaChart, VedicAll, birthTimeIsApproximate } from '../../../core/models';
+import { DashaPeriod, LifeStory, VargaChart, VedicAll } from '../../../core/models';
 import { ThemeService } from '../../../core/theme.service';
 import { SplashComponent } from '../../../shell/splash/splash.component';
 import { BirthTimeBadgeComponent } from '../chart/birth-time-badge.component';
 import { KundliChartComponent, KundliChartStyle } from '../../../shared/kundli-chart/kundli-chart.component';
-import { buildChartAdapter, rashiFallback } from '../chart/mobile-chart-data';
+import { rashiFallback } from '../chart/mobile-chart-data';
 
 /**
- * Traditional, hedged one-line associations for the day's strongest
- * (highest-Shadbala) planet — deliberately phrased as "a good day to", never
- * as a verdict about what will happen. Keeps the Guided variant's "one
- * action" grounded in the profile's real chart instead of generic filler.
- */
-const STRENGTH_ACTION: Record<string, string> = {
-  Sun: 'lead something small, in your own name',
-  Moon: 'do one thing that genuinely comforts you',
-  Mars: 'finish something you started weeks ago',
-  Mercury: 'have the one conversation you have been putting off',
-  Jupiter: 'teach, mentor, or make one generous decision',
-  Venus: 'spend time on something beautiful, or with someone who matters',
-  Saturn: 'commit to one small, unglamorous discipline',
-  Rahu: 'take one calculated, ambitious step',
-  Ketu: 'sit with one thing without needing to fix it',
-};
-
-/**
- * The first thing a new user sees after casting their chart (Figma nodes
- * 212:416 / 458 / 512 — "Aha, Guided/Balanced/Practitioner"). Previously this
- * screen read the real signed-in name but showed identical hardcoded chart
- * facts to every user; it now computes from the kundli birth-details just
- * created, same call `today.component.ts`'s prefetch makes
- * (`VedicService.all`), so what's shown here is the same chart the rest of
- * the app will use.
+ * The reveal at the end of setup: "your chart in three lines" (onboarding
+ * plan 2026-10-30, approved by Hawk). The story's headline, then the rising
+ * sign, the Moon and the running period, each with one plain line from the
+ * same story Explore › Your story tells. Practitioners also get the D1 in the
+ * style they just picked.
+ *
+ * This is also where the morning reading is offered: notifications are asked
+ * here, with a reason, instead of the system popup firing over the birth
+ * details form (PushService skips its launch question during setup), and the
+ * email copy is a switch that starts off.
  */
 @Component({
   selector: 'as-first-insight',
@@ -51,22 +38,41 @@ export class FirstInsightComponent {
   protected readonly preferences = inject(PreferencesService);
   protected readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
+  private readonly push = inject(PushService);
+  private readonly emailSettings = inject(EmailSettingsService);
+  private readonly router = inject(Router);
   protected readonly theme = inject(ThemeService);
+
+  protected readonly chart = signal<VedicAll | null>(null);
   protected readonly story = signal<LifeStory | null>(null);
+  private readonly mahadasha = signal<DashaPeriod | null>(null);
+  protected readonly loading = signal(true);
+  protected readonly error = signal<string | null>(null);
+  protected readonly emailToo = signal(false);
+  protected readonly finishing = signal(false);
+
+  protected readonly name = computed(() => this.kundlis.active()?.name ?? '');
+  protected readonly hasActiveProfile = computed(() => !!this.kundlis.activeId());
+  protected readonly ahaMode = computed(() => this.preferences.experienceMode());
 
   /** The story's own headline ("Quick to act, fair at heart."), the same words Explore › Your story opens with. */
   protected readonly headline = computed(() => this.story()?.headline ?? 'Your chart is ready');
 
+  /**
+   * Only ask where the answer is still open. On the web there is nothing to
+   * ask, and a reader who already said yes (a second profile, a reinstall)
+   * should not be offered it again.
+   */
+  protected readonly askNotifications = computed(() => this.push.permission() === 'prompt');
+
   /** Rising sign, Moon, and the running period: three facts, each with one plain line. */
   protected readonly facts = computed(() => {
     const chart = this.chart();
-    const story = this.story();
+    const lines = this.story()?.traits ?? [];
     const lagna = chart?.lagna;
     const moon = chart?.planets?.['Moon'];
-    // The running period, as the story names it ("You are in a Saturn period until 2036. …").
-    const period = /^You are in an? (\w+) period until (\d{4})\. /.exec(story?.chapter ?? '');
-    const maha = period ? { lord: period[1], end: period[2] } : null;
-    const lines = story?.traits ?? [];
+    const maha = this.mahadasha();
+    const until = maha?.end ? new Date(maha.end).getFullYear() : null;
     const rows = [
       {
         label: 'HOW YOU MEET THE WORLD',
@@ -82,55 +88,13 @@ export class FirstInsightComponent {
       },
       {
         label: 'THE CHAPTER YOU ARE IN',
-        name: maha ? `${maha.lord} period, until ${maha.end}` : 'Your current period',
-        line: (story?.chapter ?? '').replace(/^You are in an? \w+ period until \d{4}\. /, ''),
+        name: maha ? `${maha.lord} period${until ? `, until ${until}` : ''}` : 'Your current period',
+        // The chapter opens by naming the period, which the row title already says.
+        line: (this.story()?.chapter ?? '').replace(/^You are in an? \w+ period until \d{4}\. /, ''),
         term: maha ? `Vimshottari Mahadasha · ${maha.lord}` : '',
       },
     ];
     return rows.filter((r) => r.line);
-  });
-
-  protected readonly name = computed(() => this.kundlis.active()?.name ?? '');
-  protected readonly hasActiveProfile = computed(() => !!this.kundlis.activeId());
-  protected readonly chart = signal<VedicAll | null>(null);
-  protected readonly loading = signal(true);
-  protected readonly error = signal<string | null>(null);
-
-  protected readonly adapter = computed(() => {
-    const chart = this.chart();
-    return chart ? buildChartAdapter(chart, this.kundlis.active()) : null;
-  });
-
-  protected readonly ahaMode = computed(() => this.preferences.experienceMode());
-
-  protected readonly journeyCopy = computed(() => {
-    const strength = this.strongest();
-    const action = this.strengthAction();
-    return {
-      headline: 'Your cosmic guide is ready',
-      lede: birthTimeIsApproximate(this.kundlis.active())
-        ? 'We have calculated your cosmic footprint from an approximate birth time, so the rising sign and houses are our best estimate. Let us start aligning your days with your natural rhythm.'
-        : 'We have calculated your unique cosmic footprint using your exact birth time. Let us start aligning your days with your natural rhythm.',
-      strength: strength
-        ? `You have ${this.strengthPhrase(strength.planet)}`
-        : 'Your personal strengths are ready to explore',
-      recommendation: action
-        ? `Start with this: ${action}.`
-        : 'Start gently today — choose one clear step and do it with attention.',
-    };
-  });
-
-  /** Highest-Shadbala planet — the Guided variant's "one strength". */
-  protected readonly strongest = computed(() => {
-    const chart = this.chart();
-    const top = chart?.shadbala?.classical?.ranking?.[0];
-    if (!top) return null;
-    return { planet: top.planet, sign: chart?.planets?.[top.planet]?.sign ?? '' };
-  });
-
-  protected readonly strengthAction = computed(() => {
-    const planet = this.strongest()?.planet;
-    return planet ? STRENGTH_ACTION[planet] ?? 'take one deliberate, unhurried step' : null;
   });
 
   // The style chosen one step earlier, which promised it "changes how charts are drawn".
@@ -152,40 +116,10 @@ export class FirstInsightComponent {
     ].join(' · ');
   });
 
-  protected readonly dashaChain = computed(() => {
-    const current = this.dashas()?.current;
-    return [
-      { lord: current?.mahadasha?.lord, short: 'Mahā' },
-      { lord: current?.antardasha?.lord, short: 'Antar' },
-      { lord: current?.pratyantardasha?.lord, short: 'Pratyantar' },
-      { lord: current?.sookshmadasha?.lord, short: 'Sookshma', active: true },
-    ]
-      .filter((row): row is { lord: string; short: string; active?: boolean } => !!row.lord);
-  });
-
-  protected readonly birthMetrics = computed(() => {
-    const chart = this.chart();
-    const moon = chart?.planets?.['Moon'];
-    const sun = chart?.planets?.['Sun'];
-    // Sidereal lagna from the chart payload only. The profile's stored
-    // `ascendant` is tropical and used to win here; the avkahada nakshatra is
-    // the Moon's, so the lagna's own nakshatra comes from `lagna`.
-    const lagnaDetails = chart?.lagna;
-    const lagna = chart?.vargas?.['D1']?.lagna?.sign ?? lagnaDetails?.sign ?? chart?.avkahada?.['lagna'] ?? '—';
-    const lagnaNakshatra = lagnaDetails?.nakshatra
-      ? `${lagnaDetails.nakshatra}${lagnaDetails.nakshatra_pada ? ` ${lagnaDetails.nakshatra_pada}` : ''}`
-      : undefined;
-    return [
-      { label: 'Lagna (Ascendant)', value: this.metricValue(lagna, lagnaNakshatra) },
-      { label: 'Chandra (Moon)', value: this.planetMetric(moon) },
-      { label: 'Surya (Sun)', value: this.planetMetric(sun) },
-    ];
-  });
-
-  private readonly dashas = computed<DashaPayload | null>(() => this.chart()?.dashas ?? null);
   private profileLoadPromise: Promise<void> | null = null;
 
   constructor() {
+    void this.push.refreshPermission();
     effect(() => {
       const id = this.kundlis.activeId();
       const loaded = this.kundlis.loaded();
@@ -203,20 +137,42 @@ export class FirstInsightComponent {
     });
   }
 
+  protected toggleEmail(): void {
+    this.emailToo.update((on) => !on);
+  }
+
+  /**
+   * "Open Today", with the morning reading turned on when the reader asked
+   * for it. The system question is the reader's answer; whatever they say,
+   * Today opens. Email is sent only when the switch was turned on.
+   */
+  protected async finish(withNotifications: boolean): Promise<void> {
+    if (this.finishing()) return;
+    this.finishing.set(true);
+    try {
+      if (withNotifications && this.askNotifications()) await this.push.enable();
+      if (this.emailToo()) await this.emailSettings.applySignupDefaults();
+    } finally {
+      void this.router.navigateByUrl('/m/today');
+    }
+  }
+
   private async loadChart(kundliId: string): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
     try {
       const cached = this.vedic.cachedAll(kundliId);
-      const [chart, story] = await Promise.all([
+      const [chart, story, dashas] = await Promise.all([
         cached ?? this.vedic.all(kundliId),
         this.vedic.story(kundliId).catch(() => null),
+        this.vedic.dashas(kundliId).catch(() => null),
       ]);
       this.chart.set(chart);
       this.story.set(story?.story ?? null);
+      this.mahadasha.set(dashas?.current?.mahadasha ?? null);
     } catch (e) {
-      // The Aha moment is a bonus, not a gate — a failed fetch here must
-      // never block a brand-new signup from reaching the app.
+      // The reveal is a bonus, not a gate: a failed fetch here must never
+      // block a brand-new signup from reaching the app.
       this.error.set((e as Error).message);
     } finally {
       this.loading.set(false);
@@ -234,33 +190,5 @@ export class FirstInsightComponent {
       this.profileLoadPromise = null;
     });
     return this.profileLoadPromise;
-  }
-
-
-  private strengthPhrase(planet: string): string {
-    const phrases: Record<string, string> = {
-      Sun: 'clear leadership and the courage to take responsibility',
-      Moon: 'strong intuition and emotional intelligence',
-      Mars: 'decisive energy and the will to finish what you start',
-      Mercury: 'a sharp mind for learning, language, and practical choices',
-      Jupiter: 'wisdom, generosity, and a natural guiding instinct',
-      Venus: 'taste, harmony, and the ability to build beautiful connections',
-      Saturn: 'discipline, patience, and the strength to stay with long work',
-      Rahu: 'ambition, strategy, and comfort with unfamiliar paths',
-      Ketu: 'inner detachment and the ability to see what is essential',
-    };
-    return phrases[planet] ?? `${planet} as a key support in your chart`;
-  }
-
-  private planetMetric(planet: { dms?: string; sign?: string; nakshatra?: string; nakshatra_pada?: number } | undefined): string {
-    if (!planet) return '—';
-    const nakshatra = planet.nakshatra
-      ? ` (${planet.nakshatra}${planet.nakshatra_pada ? ` ${planet.nakshatra_pada}` : ''})`
-      : '';
-    return `${planet.dms ?? ''}${planet.dms ? ' ' : ''}${planet.sign ?? 'Unknown'}${nakshatra}`;
-  }
-
-  private metricValue(sign: string, nakshatra: string | undefined): string {
-    return `${sign}${nakshatra ? ` (${nakshatra})` : ''}`;
   }
 }

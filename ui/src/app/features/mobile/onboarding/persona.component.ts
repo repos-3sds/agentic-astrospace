@@ -28,10 +28,10 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
   template: `
     <div class="top">
       <header class="topbar">
-        <a class="back" [asBack]="['/m', 'disclaimers']" aria-label="Back">
+        <a class="back" [asBack]="['/m', 'welcome']" aria-label="Back">
           <img src="mobile/back.svg" alt="" aria-hidden="true" />
         </a>
-        <p class="step">SETUP 4 OF 6</p>
+        <p class="step">SETUP 3 OF 5</p>
       </header>
 
       <h1 class="headline">How should <span class="siddha-brand">Siddha</span><br />walk with you?</h1>
