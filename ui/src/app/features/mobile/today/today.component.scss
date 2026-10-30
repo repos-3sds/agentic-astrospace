@@ -461,6 +461,11 @@
     text-underline-offset: 3px;
   }
 }
+.sunrise-note {
+  @include m-caption;
+  margin: -4px 0 4px;
+  color: var(--m-muted);
+}
 .place-hint-close {
   flex: 0 0 auto;
   // Small glyph, full-size target.

@@ -236,7 +236,7 @@ export class VedicService {
             engineVersion: DAILY_GUIDANCE_ENGINE_VERSION,
           })?.data ?? null
         : null;
-      if (stored) {
+      if (stored && !this.isPastDay(stored)) {
         this.dailyValues.set(cacheKey, stored);
         cached = Promise.resolve(stored);
         this.dailyCache.set(cacheKey, cached);
@@ -279,7 +279,7 @@ export class VedicService {
       const stored = this.resourceCache.get<DailyGuidancePayload>(identity, Date.now(), {
         engineVersion: DAILY_GUIDANCE_ENGINE_VERSION,
       });
-      if (stored) {
+      if (stored && !this.isPastDay(stored.data)) {
         this.dailyValues.set(cacheKey, stored.data);
         return stored;
       }
@@ -710,7 +710,17 @@ export class VedicService {
     return params;
   }
 
-  private todayKey(): string {
+  /**
+   * A day already behind the reader's calendar. Before 2026-10-30 the server
+   * answered with the previous day until sunrise, and a copy saved under
+   * today's key would keep showing it until dawn.
+   */
+  private isPastDay(daily: DailyGuidancePayload): boolean {
+    return daily.date < this.todayKey();
+  }
+
+  /** The reader's calendar date (`YYYY-MM-DD`) in the clock that decides "today". */
+  todayKey(): string {
     try {
       return new Intl.DateTimeFormat('en-CA', {
         timeZone: this.prefs.effectiveTimezone(),
