@@ -121,8 +121,13 @@ function startsAwake(iso: string | null, timeZone?: string): boolean {
   return hour < 21;
 }
 
+/** The parts a reader lives through: as the engine's _waking, a first part
+ * gone within 90 minutes of sunrise belongs to no one's day. */
 function wakingParts<T extends { from_iso: string | null }>(periods: T[] | undefined, timeZone?: string): T[] {
-  return (periods ?? []).filter((p, i) => i === 0 || startsAwake(p.from_iso, timeZone));
+  const parts = (periods ?? []).filter((p, i) => i === 0 || startsAwake(p.from_iso, timeZone));
+  if (parts.length > 1 && parts[0].from_iso && parts[1].from_iso
+    && Date.parse(parts[1].from_iso) - Date.parse(parts[0].from_iso) < 90 * 60_000) return parts.slice(1);
+  return parts;
 }
 
 /** One part of the day in the score sheet: "Until 11:34 am · 66 Steady". */
@@ -884,6 +889,19 @@ export class TodayComponent {
       avoidItem: view.avoidItems[0] ?? '',
       doItems: view.doItems.slice(0, 2),
       avoidItems: view.avoidItems.slice(0, 2),
+      scoreSteps: (daily.verdict.day_score_periods ?? []).length > 1
+        ? (daily.verdict.day_score_periods ?? []).flatMap((part) => {
+          const fromMs = part.from_iso ? Date.parse(part.from_iso) : Number.NaN;
+          if (!Number.isFinite(fromMs)) return [];
+          const band = BAND_OF_TONE[part.tone];
+          return [{
+            fromMs,
+            score: Math.round(Math.min(100, Math.max(0, part.day_score))),
+            band: band === 'good' ? 'steady' as const : band,
+            label: BAND_LABEL[band],
+          }];
+        })
+        : [],
       tithi: daily.star_of_day.tithi,
       nakshatra: daily.star_of_day.nakshatra,
       yoga: daily.panchanga_details?.yoga ?? '',

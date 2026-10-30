@@ -39,6 +39,25 @@ function validDate(raw: string | null): string {
   return real && year >= 1900 && year <= 2100 ? raw! : '';
 }
 
+/**
+ * "favourable until 11:34 am, then challenging" when the star (or the Moon's
+ * sign) changes before 9 pm; the sunrise value alone otherwise. Times are
+ * the "HH:MM" the engine gives on the timings place's clock.
+ */
+function changing<T extends { favourable: boolean; from?: string | null }>(
+  periods: T[] | undefined, atSunrise: { favourable: boolean }, word: (p: { favourable: boolean }) => string,
+): string {
+  const waking = (periods ?? []).filter((p, i) => i === 0 || (p.from != null && Number(p.from.slice(0, 2)) < 21));
+  const parts = waking.filter((p, i) => i === 0 || p.favourable !== waking[i - 1].favourable);
+  if (parts.length < 2) return word(atSunrise);
+  return parts.map((p, i) => (i === 0 ? word(p) : `then ${word(p)} from ${twelveHour(p.from!)}`)).join(', ');
+}
+
+function twelveHour(hhmm: string): string {
+  const [h, m] = hhmm.split(':').map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`;
+}
+
 @Component({
   selector: 'as-calendar-day',
   standalone: true,
@@ -298,7 +317,10 @@ export class CalendarDayComponent {
   }
 
   protected qualityDetail(day: CalendarDaySummary): string {
-    return `Tarabala ${day.tarabala.favourable ? 'favourable' : 'challenging'} · Chandrabala ${day.chandrabala.favourable ? 'strong' : 'weak'}`;
+    const tara = (favourable: boolean) => (favourable ? 'favourable' : 'challenging');
+    const moon = (favourable: boolean) => (favourable ? 'strong' : 'weak');
+    return `Tarabala ${changing(day.tarabala_periods, day.tarabala, (p) => tara(p.favourable))}`
+      + ` · Chandrabala ${changing(day.chandrabala_periods, day.chandrabala, (p) => moon(p.favourable))}`;
   }
 
   protected windows(day: CalendarDaySummary): Array<PanchangaWindow & { tone: 'good' | 'bad' }> {

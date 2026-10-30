@@ -1,4 +1,4 @@
-import { BAND_LABEL, BAND_OF_TONE, dayScorePosition, muhurtaCountdown, sunriseNote, widgetMasa } from './today.component';
+import { BAND_LABEL, BAND_OF_TONE, dayBandAt, dayParts, dayScorePosition, muhurtaCountdown, starChangeNote, sunriseNote, widgetMasa } from './today.component';
 import { DAY_BANDS } from '../day-gauge/day-gauge.component';
 
 /**
@@ -89,5 +89,59 @@ describe('sunriseNote', () => {
   it('goes once the sun is up', () => {
     expect(sunriseNote(daily, Date.parse('2026-10-30T06:12:00+05:30'))).toBe('');
     expect(sunriseNote({ ...daily, valid_from: null }, Date.parse('2026-10-30T03:00:00+05:30'))).toBe('');
+  });
+});
+
+/**
+ * A day whose star changes (Hawk, Singapore, 2026-10-30): kind (Sampat) until
+ * 11:34, then not (Vipat). The ring shows the part in force now; the sheet
+ * lists both; the Timing card counts down to the change.
+ */
+describe('a day the star changes', () => {
+  const SWITCH = '2026-10-30T11:34:39+08:00';
+  const verdict = {
+    tone: 'positive', score: 2, day_score: 66,
+    day_score_periods: [
+      { from_iso: '2026-10-30T06:45:56+08:00', until_iso: SWITCH, day_score: 66, tone: 'positive', tara: 'Sampat', tara_favourable: true },
+      { from_iso: SWITCH, until_iso: '2026-10-31T06:45:54+08:00', day_score: 43, tone: 'mixed', tara: 'Vipat', tara_favourable: false },
+    ],
+  };
+  const daily = {
+    verdict,
+    provenance: { place: { timezone: 'Asia/Singapore' } },
+    tarabala: { tara: 'Sampat', favourable: true },
+    tarabala_periods: [
+      { tara: 'Sampat', count: 2, favourable: true, from_iso: '2026-10-30T06:45:56+08:00', until_iso: SWITCH },
+      { tara: 'Vipat', count: 3, favourable: false, from_iso: SWITCH, until_iso: '2026-10-31T06:45:54+08:00' },
+    ],
+  } as never;
+  const at = (iso: string) => Date.parse(iso);
+
+  it('draws the ring for the part in force', () => {
+    expect(dayScorePosition(verdict as never, at('2026-10-30T10:50:00+08:00'))).toBe(66);
+    expect(dayBandAt(verdict as never, at('2026-10-30T10:50:00+08:00'))).toBe('steady');
+    expect(dayScorePosition(verdict as never, at('2026-10-30T15:00:00+08:00'))).toBe(43);
+    expect(dayBandAt(verdict as never, at('2026-10-30T15:00:00+08:00'))).toBe('mixed');
+  });
+
+  it('lists both parts with their times, the current one marked', () => {
+    const parts = dayParts(daily, at('2026-10-30T15:00:00+08:00'));
+    expect(parts.map((p) => [p.when, p.score, p.label, p.current])).toEqual([
+      ['Until 11:34 am', 66, 'Steady', false],
+      ['From 11:34 am', 43, 'Mixed', true],
+    ]);
+  });
+
+  it('counts down to the change, then lets the timing note back', () => {
+    const note = starChangeNote(daily, at('2026-10-30T10:50:00+08:00'))!;
+    expect(note.value).toBe('Your star turns less kind at 11:34 am. Do the important things before then.');
+    expect(note.in).toBe('In 45m');
+    expect(starChangeNote(daily, at('2026-10-30T12:00:00+08:00'))).toBeNull();
+  });
+
+  it('keeps one ring and no parts on a day of one part', () => {
+    const one = { tone: 'positive', score: 2, day_score: 61, day_score_periods: [verdict.day_score_periods[0]] };
+    expect(dayScorePosition(one as never, at('2026-10-30T15:00:00+08:00'))).toBe(61);
+    expect(dayParts({ ...(daily as object), verdict: one } as never)).toEqual([]);
   });
 });

@@ -184,6 +184,9 @@ def calendar_intelligence(
             "moon_rashi": payload["moon_rashi_at_sunrise"],
             "tarabala": personal["tarabala"],
             "chandrabala": personal["chandrabala"],
+            # At sunrise above; through the day, with clock times, here.
+            "tarabala_periods": personal["tarabala_periods"],
+            "chandrabala_periods": personal["chandrabala_periods"],
             "auspicious_count": len(payload["windows"]["auspicious"]),
             "inauspicious_count": len(payload["windows"]["inauspicious"]),
             "windows": {

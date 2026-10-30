@@ -112,7 +112,10 @@ class TestSunriseBoundedValidity:
         # phrase-rotation seed is keyed on the date, not as_of.
         chart = VedicChart("Daily", 1990, 1, 1, 12, 0, **DELHI)
         pre_sunrise = datetime(2026, 7, 21, 3, 0, tzinfo=ZoneInfo("Asia/Kolkata"))
-        later_same_day = datetime(2026, 7, 21, 22, 0, tzinfo=ZoneInfo("Asia/Kolkata"))
+        # Before the Moon leaves chandrashtama at 7:54 am on this day: after
+        # it the reading follows the new sign, on purpose
+        # (tests/test_tara_change_mid_day.py).
+        later_same_day = datetime(2026, 7, 21, 7, 30, tzinfo=ZoneInfo("Asia/Kolkata"))
 
         before_dawn = daily_guidance(chart, relation="self", as_of=pre_sunrise)
         evening = daily_guidance(chart, relation="self", as_of=later_same_day)
@@ -456,6 +459,8 @@ class TestDoAvoidTitlesArePlain:
                 g = daily_guidance(VedicChart(*args), relation="self",
                                    as_of=datetime(2026, 10, day, 12, tzinfo=ZoneInfo("Asia/Kolkata")))
                 for row in g["do_today"] + g["avoid_today"]:
-                    title = row["headline"].lower()
+                    # A day whose star changes adds "until 11:34 am" to the
+                    # tara row's title; the action itself stays short.
+                    title = re.sub(r" (until|from) \d{1,2}:\d{2} [ap]m$", "", row["headline"].lower())
                     assert len(title.split()) <= 6, row["headline"]
                     assert not any(word in title for word in self.JARGON), row["headline"]

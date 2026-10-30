@@ -200,6 +200,15 @@ public final class Widgets {
                 if (end > now && end < next) next = end;
             }
         }
+        // The score switches when the star changes (TodayWidget.scoreAt).
+        JSONArray steps = today == null ? null : today.optJSONArray("scoreSteps");
+        if (steps != null) {
+            for (int i = 0; i < steps.length(); i++) {
+                JSONObject step = steps.optJSONObject(i);
+                long from = step == null ? 0 : step.optLong("fromMs");
+                if (from > now && from < next) next = from;
+            }
+        }
         Intent intent = new Intent(context, WidgetRefreshReceiver.class).setAction(ACTION_REFRESH);
         PendingIntent pending = PendingIntent.getBroadcast(
             context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);

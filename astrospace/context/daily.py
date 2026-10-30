@@ -390,14 +390,48 @@ def _ampm(iso: str | None) -> str:
 
 
 # A star that changes after this hour changes while most readers are winding
-# down, so it does not split the Do/Avoid rows or the brief.
+# down, so it does not split the Do/Avoid rows or the brief. Nor does a star
+# that ends within this long of sunrise: that part is over before most
+# readers start their day, and the day belongs to the next one.
 _AWAKE_UNTIL = time(21, 0)
+_FIRST_PART_MIN_SECONDS = 90 * 60
+
+
+def _waking(periods: list[dict]) -> list[dict]:
+    """The parts of the day a reader lives through, in order."""
+    out = [p for i, p in enumerate(periods)
+           if i == 0 or (_parse(p.get("from_iso")) and _parse(p["from_iso"]).time() < _AWAKE_UNTIL)]
+    if len(out) > 1:
+        start, end = _parse(out[0].get("from_iso")), _parse(out[1].get("from_iso"))
+        if start and end and (end - start).total_seconds() < _FIRST_PART_MIN_SECONDS:
+            out = out[1:]
+    return out
 
 
 def _waking_tara_periods(personal: dict) -> list[dict]:
-    periods = personal.get("tarabala_periods") or []
-    return [p for i, p in enumerate(periods)
-            if i == 0 or (_parse(p.get("from_iso")) and _parse(p["from_iso"]).time() < _AWAKE_UNTIL)]
+    return _waking(personal.get("tarabala_periods") or [])
+
+
+def waking_day_parts(verdict: dict) -> list[dict]:
+    """The parts of the day a reader lives through, for the brief: each with
+    its clock time, star and what to do with it. Empty on a day of one part."""
+    parts = _waking(verdict.get("day_score_periods") or [])
+    if len(parts) < 2:
+        return []
+    out = []
+    for i, part in enumerate(parts):
+        until = parts[i + 1]["from_iso"] if i + 1 < len(parts) else None
+        out.append({
+            "from": "sunrise" if i == 0 else _ampm(part["from_iso"]),
+            "until": _ampm(until) if until else "the end of the day",
+            "score": part["day_score"],
+            "tone": part["tone"],
+            "tara": part.get("tara"),
+            "tara_favourable": part.get("tara_favourable"),
+            "tara_action": TARA_ACTION.get(part.get("tara") or ""),
+            "chandrashtama": part.get("chandrashtama"),
+        })
+    return out
 
 
 _HEADLINES = {
@@ -837,7 +871,8 @@ def _do_and_avoid(personal: dict, ctx: dict, words: dict,
             row = {
                 "headline": headline,
                 "plain_headline": headline,
-                "text": f"{when.capitalize()}, the tara is {tara} — {meaning}.",
+                # The time is in the title; the sentence reads without a clock.
+                "text": (f"{'Earlier' if i == 0 else 'Later'} in the day the tara is {tara} — {meaning}."),
                 "source": "tarabala",
                 "from_iso": period.get("from_iso"),
                 "until_iso": period.get("until_iso"),
