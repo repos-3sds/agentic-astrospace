@@ -4,6 +4,21 @@
     <p class="sub">An ordinary day is about 50. It rises when your star, your Moon and the slow planets help you.</p>
   </header>
 
+  @if (parts().length) {
+    <div class="parts" aria-label="Today in parts">
+      <p class="parts-title">Your day changes as the star moves</p>
+      @for (part of parts(); track part.when) {
+        <div class="part" [attr.data-band]="part.band" [class.on]="part.current">
+          <span class="part-score">{{ part.score }}</span>
+          <div class="part-text">
+            <p class="part-when">{{ part.when }} · {{ part.label }}@if (part.current) { <span class="you">Now</span> }</p>
+            @if (part.why) { <p class="part-why">{{ part.why }}</p> }
+          </div>
+        </div>
+      }
+    </div>
+  }
+
   <div class="bands">
     @for (b of bands; track b.band) {
       <div class="band-row" [attr.data-band]="b.band" [class.on]="b.band === band()">

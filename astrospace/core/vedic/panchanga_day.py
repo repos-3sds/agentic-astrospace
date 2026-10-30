@@ -116,7 +116,12 @@ def daily_panchanga(year: int, month: int, day: int,
         # days ahead and cannot rebuild a date from "HH:MM" across midnight.
         "sunrise_iso": jd_to_local(rise, display_tz_str).isoformat(),
         "sunset_iso": jd_to_local(sets, display_tz_str).isoformat(),
+        "next_sunrise_iso": jd_to_local(next_rise, display_tz_str).isoformat(),
         "moon_rashi_at_sunrise": sign_name(sign_index(moon_at_rise)),
+        # The Moon's sign through the day, like elements.nakshatra: it moves
+        # sign about every two and a half days, often after sunrise, and
+        # Chandrabala (and chandrashtama) changes with it.
+        "moon_signs": elements_for_day(rise, next_rise, display_tz_str, kinds=("rashi",))["rashi"],
         "moonrise": (jd_to_local(moonrise_jd, display_tz_str).strftime("%H:%M")
                      if moonrise_jd is not None else None),
         "moonset": (jd_to_local(moonset_jd, display_tz_str).strftime("%H:%M")
@@ -193,6 +198,52 @@ def day_quality(moon_nakshatra_index: int, moon_sign_index: int,
             "chandrashtama": house == 8}
 
 
+def _spans(entries: list, day_payload: dict) -> list[tuple[dict, str | None, str | None]]:
+    """(entry, from_iso, until_iso) for each element entry across the day:
+    the first from sunrise, each later one from where the one before ended,
+    the last until the next sunrise."""
+    start = day_payload.get("sunrise_iso")
+    day_end = day_payload.get("next_sunrise_iso")
+    out = []
+    for i, entry in enumerate(entries):
+        last = i == len(entries) - 1
+        until = day_end if last and day_end else entry.get("upto_iso")
+        out.append((entry, start, until))
+        start = entry.get("upto_iso")
+    return out
+
+
+def _clock(iso: str | None) -> str | None:
+    return datetime.fromisoformat(iso).strftime("%H:%M") if iso else None
+
+
+def _tarabala(nak_idx: int, janma_nakshatra_index: int) -> dict:
+    # Tarabala: count from janma nakshatra to today's, inclusive, cycle of 9
+    count = (nak_idx - janma_nakshatra_index) % 27 % 9
+    tara = TARABALA_NAMES[count]
+    return {
+        "tara": tara,
+        "count": count + 1,
+        "favourable": tara in TARABALA_GOOD,
+        "note": "Janma tara — avoid major beginnings" if tara == "Janma" else None,
+    }
+
+
+def _chandrabala(moon_sign_idx: int, janma_rashi_index: int) -> dict:
+    house = (moon_sign_idx - janma_rashi_index) % 12 + 1
+    return {
+        "house_from_rashi": house,
+        "favourable": house in CHANDRABALA_GOOD,
+        "chandrashtama": house == 8,
+    }
+
+
+def _periods(spans: list, value) -> list[dict]:
+    return [{**value(entry), "from_iso": start, "until_iso": until,
+             "from": _clock(start), "until": _clock(until)}
+            for entry, start, until in spans]
+
+
 def personal_panchanga(day_payload: dict, janma_nakshatra_index: int,
                        janma_rashi_index: int, ghatak_moon_sign: int = None) -> dict:
     """
@@ -205,24 +256,21 @@ def personal_panchanga(day_payload: dict, janma_nakshatra_index: int,
     today_moon_sign = day_payload["moon_rashi_at_sunrise"]
     vara_name = day_payload["vara"]["name"]
 
-    # Tarabala: count from janma nakshatra to today's, inclusive, cycle of 9
-    count = (today_nak_idx - janma_nakshatra_index) % 27 % 9
-    tara = TARABALA_NAMES[count]
-    tarabala = {
-        "tara": tara,
-        "count": count + 1,
-        "favourable": tara in TARABALA_GOOD,
-        "note": "Janma tara — avoid major beginnings" if tara == "Janma" else None,
-    }
-
-    # Chandrabala: today's Moon sign counted from janma rashi
+    # Both at sunrise, which is how a panchang names the day. The star and
+    # the Moon's sign often change later in the day, so each also comes as
+    # periods with their clock times: a Tara that is kind until 11:34 and
+    # then turns is two answers, not one (Hawk, 2026-10-30).
+    tarabala = _tarabala(today_nak_idx, janma_nakshatra_index)
     today_moon_idx = [i for i in range(12) if sign_name(i) == today_moon_sign][0]
-    house = (today_moon_idx - janma_rashi_index) % 12 + 1
-    chandrabala = {
-        "house_from_rashi": house,
-        "favourable": house in CHANDRABALA_GOOD,
-        "chandrashtama": house == 8,
-    }
+    chandrabala = _chandrabala(today_moon_idx, janma_rashi_index)
+    nak_entries = day_payload["elements"]["nakshatra"]
+    tarabala_periods = _periods(
+        _spans(nak_entries, day_payload),
+        lambda e: _tarabala(e["index"], janma_nakshatra_index))
+    sign_entries = day_payload.get("moon_signs") or [{"index": today_moon_idx}]
+    chandrabala_periods = _periods(
+        _spans(sign_entries, day_payload),
+        lambda e: _chandrabala(e["index"], janma_rashi_index))
 
     # Ghatak alerts: does today match the person's ghatak indicators?
     alerts = []
@@ -246,4 +294,7 @@ def personal_panchanga(day_payload: dict, janma_nakshatra_index: int,
             for t, m, v in checks
         ]
 
-    return {"tarabala": tarabala, "chandrabala": chandrabala, "ghatak_alerts": alerts}
+    return {"tarabala": tarabala, "chandrabala": chandrabala,
+            "tarabala_periods": tarabala_periods,
+            "chandrabala_periods": chandrabala_periods,
+            "ghatak_alerts": alerts}

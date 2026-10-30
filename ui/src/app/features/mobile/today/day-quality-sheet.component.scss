@@ -79,3 +79,24 @@
   &.on[data-band='good'] .band-range, &.on[data-band='good'] .you { color: var(--m-good); }
   &.on[data-band='steady'] .you, &.on[data-band='good'] .you { background: var(--m-good-soft); }
 }
+
+// A day the star or the Moon's sign changes: each part with its own score,
+// the one in force now marked. Same row shape as the bands above.
+.parts { display: flex; flex-direction: column; gap: 4px; }
+.parts-title { @include m-body-small; color: var(--m-muted); margin: 0 0 2px; }
+.part {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 8px 12px; border-radius: 14px; border: 1px solid var(--m-border);
+  .part-score { @include m-body-strong; width: 28px; flex-shrink: 0; color: var(--m-muted); font-variant-numeric: tabular-nums; }
+  .part-text { flex: 1; min-width: 0; }
+  .part-when { @include m-body-strong; margin: 0; color: var(--m-text); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .part-why { @include m-body-small; margin: 0; color: var(--m-muted); }
+  .you { @include m-badge; font-weight: 600; }
+  &.on { background: var(--m-raised); }
+  &[data-band='tough'] .part-score { color: var(--m-bad); }
+  &[data-band='mixed'] .part-score { color: var(--m-warn); }
+  &[data-band='steady'] .part-score, &[data-band='good'] .part-score { color: var(--m-good); }
+  &.on[data-band='tough'] .you { color: var(--m-bad); background: var(--m-bad-soft); }
+  &.on[data-band='mixed'] .you { color: var(--m-warn); background: var(--m-warn-soft); }
+  &.on[data-band='steady'] .you, &.on[data-band='good'] .you { color: var(--m-good); background: var(--m-good-soft); }
+}

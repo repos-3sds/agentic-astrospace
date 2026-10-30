@@ -387,6 +387,25 @@ export interface DailyBriefResponse {
   cached?: boolean;
 }
 
+/** One part of the day, split where the star or the Moon's sign changes. */
+export interface DayScorePeriod {
+  from_iso: string | null;
+  until_iso: string | null;
+  day_score: number;
+  tone: 'supportive' | 'positive' | 'mixed' | 'caution';
+  day_score_parts?: DayScoreParts;
+  tara?: string;
+  tara_favourable?: boolean;
+  chandrabala_house?: number;
+  chandrashtama?: boolean;
+}
+
+/** A tara or chandrabala over one part of the day, on the place's clock. */
+export interface TimedPeriod {
+  from_iso: string | null;
+  until_iso: string | null;
+}
+
 export interface DayScoreParts {
   base: number; star: number; moon: number; transits: number;
   /** Holds a "take care" day (Janma or Vadha star, chandrashtama) under 50, as on Calendar. */
@@ -421,6 +440,8 @@ export interface DailyGuidancePayload {
     day_score_parts?: DayScoreParts;
     /** Sent only on 2026-10-28, before day_score: score was then 0-100. */
     score_parts?: DayScoreParts;
+    /** Each part of the day with its own score (from 2026-10-30); the ring shows the part in force now. */
+    day_score_periods?: DayScorePeriod[];
     headline: string;
     text: string;
     word_count: number;
@@ -453,6 +474,9 @@ export interface DailyGuidancePayload {
   };
   tarabala: { tara: string; count: number; favourable: boolean; note?: string | null };
   chandrabala: { house_from_rashi: number; favourable: boolean; chandrashtama: boolean };
+  /** The whole day's taras and Moon support with clock times (from 2026-10-30). */
+  tarabala_periods?: (TimedPeriod & { tara: string; count: number; favourable: boolean })[];
+  chandrabala_periods?: (TimedPeriod & { house_from_rashi: number; favourable: boolean; chandrashtama: boolean })[];
   star_of_day: { nakshatra: string; moon_rashi: string; tithi: string };
   panchanga_details: { tithi: string; nakshatra: string; yoga: string; karana: string; vara: string };
   /** Both lunar-month reckonings; which one a reader follows is regional. */

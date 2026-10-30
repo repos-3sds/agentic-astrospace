@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { SheetComponent } from '../sheet/sheet.component';
-import type { DayBand } from './today.component';
+import type { DayBand, DayPart } from './today.component';
 
 /** One computed contributor to the day score. */
 export interface DaySignal {
@@ -37,6 +37,8 @@ export class DayQualitySheetComponent {
   readonly signals = input.required<DaySignal[]>();
   readonly summary = input.required<string>();
   readonly reason = input.required<string>();
+  /** The day's parts when the star or the Moon's sign changes; empty otherwise. */
+  readonly parts = input<DayPart[]>([]);
   readonly dismissed = output<void>();
 
   protected readonly bands: { band: DayBand; range: string; label: string; rubric: string }[] = [

@@ -17,7 +17,7 @@ import swisseph as swe
 from .constants import NAKSHATRAS, NAKSHATRA_SPAN
 from .nakshatra import nakshatra_of
 from .panchanga import tithi_of, yoga_of, karana_of
-from .positions import jd_to_local, sidereal_positions, sun_moon_sidereal
+from .positions import jd_to_local, sidereal_positions, sign_name, sun_moon_sidereal
 
 # ── angle functions ─────────────────────────────────────────────────────────
 
@@ -28,10 +28,12 @@ def _angles(jd: float) -> dict:
         "karana": (moon - sun) % 360.0,
         "nakshatra": moon,
         "yoga": (sun + moon) % 360.0,
+        "rashi": moon,
     }
 
-_STEPS = {"tithi": 12.0, "karana": 6.0, "nakshatra": NAKSHATRA_SPAN, "yoga": NAKSHATRA_SPAN}
-_COUNTS = {"tithi": 30, "karana": 60, "nakshatra": 27, "yoga": 27}
+_STEPS = {"tithi": 12.0, "karana": 6.0, "nakshatra": NAKSHATRA_SPAN, "yoga": NAKSHATRA_SPAN,
+          "rashi": 30.0}
+_COUNTS = {"tithi": 30, "karana": 60, "nakshatra": 27, "yoga": 27, "rashi": 12}
 
 
 def _index_at(jd: float, kind: str) -> int:
@@ -75,21 +77,24 @@ def element_start(jd: float, kind: str) -> tuple[int, float]:
     return idx, (lo + hi) / 2.0
 
 
-def elements_for_day(rise: float, next_rise: float, tz_str: str) -> dict:
+def elements_for_day(rise: float, next_rise: float, tz_str: str,
+                     kinds: tuple = ("tithi", "nakshatra", "yoga", "karana")) -> dict:
     """
     Panchang-style element lists for a Vedic day (sunrise→next sunrise):
     the element prevailing at sunrise first, then successors that begin
-    before next sunrise, each with its end time ("upto").
+    before next sunrise, each with its end time ("upto"). "rashi" (the
+    Moon's sign) is not a panchang limb and is asked for on its own.
     """
     naming = {
         "tithi": lambda i, jd: tithi_of(*_sun_moon(jd))["display"],
         "nakshatra": lambda i, jd: NAKSHATRAS[i],
         "yoga": lambda i, jd: yoga_of(*_sun_moon(jd))["name"],
         "karana": lambda i, jd: karana_of(*_sun_moon(jd))["name"],
+        "rashi": lambda i, jd: sign_name(i),
     }
 
     out = {}
-    for kind in ("tithi", "nakshatra", "yoga", "karana"):
+    for kind in kinds:
         entries = []
         jd = rise
         for _ in range(6):  # karana can flip 3x per day; others 1-2x
