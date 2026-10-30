@@ -318,6 +318,122 @@ def _score_day(personal: dict, ctx: dict) -> tuple[int, str, str]:
     return score, tone, _HEADLINES[tone][0]
 
 
+# The star of the day and the Moon's sign each change at their own clock
+# time, often after sunrise. The day splits wherever either changes, and each
+# part gets its own score: Today's ring shows the part the reader is in and
+# its sheet shows every part (Hawk, 2026-10-30: kind Tara until the
+# afternoon, then not).
+def _parse(iso: str | None) -> datetime | None:
+    return datetime.fromisoformat(iso) if iso else None
+
+
+def _period_at(periods: list[dict], moment: datetime) -> dict:
+    for period in periods:
+        until = _parse(period.get("until_iso"))
+        if until is None or moment < until:
+            return period
+    return periods[-1]
+
+
+def _day_segments(personal: dict) -> list[dict]:
+    """Parts of the day with one tara and one chandrabala each, in order."""
+    taras = personal.get("tarabala_periods") or [dict(personal.get("tarabala", {}))]
+    moons = personal.get("chandrabala_periods") or [dict(personal.get("chandrabala", {}))]
+    starts = sorted({_parse(p["from_iso"]) for p in taras + moons if p.get("from_iso")})
+    if not starts:
+        return [{"from_iso": None, "until_iso": None, "tarabala": taras[0], "chandrabala": moons[0]}]
+    ends = [_parse(p.get("until_iso")) for p in taras + moons if p.get("until_iso")]
+    day_end = max(ends) if ends else None
+    segments = []
+    for i, start in enumerate(starts):
+        until = starts[i + 1] if i + 1 < len(starts) else day_end
+        segments.append({
+            "from_iso": start.isoformat(),
+            "until_iso": until.isoformat() if until else None,
+            "tarabala": _period_at(taras, start),
+            "chandrabala": _period_at(moons, start),
+        })
+    return segments
+
+
+def _at(personal: dict, segment: dict) -> dict:
+    """The personal panchanga as it stands during one part of the day."""
+    return {**personal, "tarabala": segment["tarabala"], "chandrabala": segment["chandrabala"]}
+
+
+def _score_periods(personal: dict, ctx: dict) -> list[dict]:
+    periods = []
+    for segment in _day_segments(personal):
+        here = _at(personal, segment)
+        score, tone, _ = _score_day(here, ctx)
+        periods.append({
+            "from_iso": segment["from_iso"],
+            "until_iso": segment["until_iso"],
+            "day_score": score,
+            "tone": tone,
+            "day_score_parts": _score_parts(here, ctx),
+            "tara": segment["tarabala"].get("tara"),
+            "tara_favourable": bool(segment["tarabala"].get("favourable")),
+            "chandrabala_house": segment["chandrabala"].get("house_from_rashi"),
+            "chandrashtama": bool(segment["chandrabala"].get("chandrashtama")),
+        })
+    return periods
+
+
+def _ampm(iso: str | None) -> str:
+    """"11:34 am" from an ISO time on the place's clock."""
+    moment = _parse(iso)
+    if moment is None:
+        return ""
+    hour = moment.hour % 12 or 12
+    return f"{hour}:{moment.minute:02d} {'am' if moment.hour < 12 else 'pm'}"
+
+
+# A star that changes after this hour changes while most readers are winding
+# down, so it does not split the Do/Avoid rows or the brief. Nor does a star
+# that ends within this long of sunrise: that part is over before most
+# readers start their day, and the day belongs to the next one.
+_AWAKE_UNTIL = time(21, 0)
+_FIRST_PART_MIN_SECONDS = 90 * 60
+
+
+def _waking(periods: list[dict]) -> list[dict]:
+    """The parts of the day a reader lives through, in order."""
+    out = [p for i, p in enumerate(periods)
+           if i == 0 or (_parse(p.get("from_iso")) and _parse(p["from_iso"]).time() < _AWAKE_UNTIL)]
+    if len(out) > 1:
+        start, end = _parse(out[0].get("from_iso")), _parse(out[1].get("from_iso"))
+        if start and end and (end - start).total_seconds() < _FIRST_PART_MIN_SECONDS:
+            out = out[1:]
+    return out
+
+
+def _waking_tara_periods(personal: dict) -> list[dict]:
+    return _waking(personal.get("tarabala_periods") or [])
+
+
+def waking_day_parts(verdict: dict) -> list[dict]:
+    """The parts of the day a reader lives through, for the brief: each with
+    its clock time, star and what to do with it. Empty on a day of one part."""
+    parts = _waking(verdict.get("day_score_periods") or [])
+    if len(parts) < 2:
+        return []
+    out = []
+    for i, part in enumerate(parts):
+        until = parts[i + 1]["from_iso"] if i + 1 < len(parts) else None
+        out.append({
+            "from": "sunrise" if i == 0 else _ampm(part["from_iso"]),
+            "until": _ampm(until) if until else "the end of the day",
+            "score": part["day_score"],
+            "tone": part["tone"],
+            "tara": part.get("tara"),
+            "tara_favourable": part.get("tara_favourable"),
+            "tara_action": TARA_ACTION.get(part.get("tara") or ""),
+            "chandrashtama": part.get("chandrashtama"),
+        })
+    return out
+
+
 _HEADLINES = {
     "supportive": ["a rare window of clarity", "a day that moves with you", "a good day to make it count",
                    "an open road today", "momentum on your side"],
@@ -330,8 +446,21 @@ _HEADLINES = {
 }
 
 
+def _star_switch_sentence(personal: dict, as_of: datetime | None) -> str | None:
+    """The next change of star still ahead in the waking day, in one line."""
+    if as_of is None:
+        return None
+    for period in _waking_tara_periods(personal)[1:]:
+        start = _parse(period.get("from_iso"))
+        if start and start > as_of:
+            kind = "kinder" if period.get("favourable") else "less kind"
+            return f"At {_ampm(period['from_iso'])} the day's star turns to {period['tara']}, which is {kind} to you."
+    return None
+
+
 def _verdict(chart, relation: str, day_payload: dict, personal: dict,
-             ctx: dict) -> dict:
+             ctx: dict, as_of: datetime | None = None,
+             score_periods: list[dict] | None = None) -> dict:
     words = _subject_words(relation)
     score, tone, headline = _score_day(personal, ctx)
     # One of several per tone, per person and day: the fixed four read as the
@@ -378,6 +507,9 @@ def _verdict(chart, relation: str, day_payload: dict, personal: dict,
         "caution": "keep the day simple and let the bigger moves wait",
     }[tone]
     sentences.append(f"Practically, {caution_clause}. Overall, {closing}.")
+    switch = _star_switch_sentence(personal, as_of)
+    if switch:
+        sentences.append(switch)
 
     text = " ".join(sentences)
     return {
@@ -387,6 +519,10 @@ def _verdict(chart, relation: str, day_payload: dict, personal: dict,
         # only when `score_parts` was present) fall back to their band's slice.
         "day_score": score,
         "day_score_parts": _score_parts(personal, ctx),
+        # Every part of the day with its own score, split where the star or
+        # the Moon's sign changes. day_score above is the part in force at
+        # as_of; the app picks the part for the phone's clock from here.
+        "day_score_periods": score_periods or [],
         "score": _legacy_score(score, tone),
         "headline": headline.capitalize(),
         "text": text,
@@ -699,7 +835,7 @@ def _domain_candidates(ctx: dict, personal: dict, seed_base: str) -> list[dict]:
 
 
 def _do_and_avoid(personal: dict, ctx: dict, words: dict,
-                  seed_base: str) -> tuple[list[dict], list[dict]]:
+                  seed_base: str, as_of: datetime | None = None) -> tuple[list[dict], list[dict]]:
     """`seed_base` is a per-person, per-day fingerprint (see `_pick`) — every
     rotating line below is keyed off it plus its own condition name, so two
     different people (or the same person on two different days) land on
@@ -714,16 +850,45 @@ def _do_and_avoid(personal: dict, ctx: dict, words: dict,
 
     # Tarabala is the day's general rhythm rather than one life area, so it
     # stays a separate line and doesn't compete for the domain slots.
-    tara = personal.get("tarabala", {}).get("tara")
-    if tara:
-        meaning = TARABALA_MEANING[tara].format(**words)
-        row = {
-            "headline": TARA_ACTION[tara],
-            "plain_headline": TARA_ACTION[tara],
-            "text": f"Today's tara is {tara} — {meaning}.",
-            "source": "tarabala",
-        }
-        (do if tara in _FAVOURABLE_TARAS else avoid).append(row)
+    # When the star changes in the waking day, each part gets its own row
+    # with its clock time ("Finish pending work after 11:34 am").
+    waking = _waking_tara_periods(personal)
+    if len(waking) > 1:
+        for i, period in enumerate(waking):
+            until = _parse(period.get("until_iso"))
+            if as_of and until and until <= as_of:
+                continue  # that part of the day is over
+            tara = period["tara"]
+            meaning = TARABALA_MEANING[tara].format(**words)
+            start = _parse(period.get("from_iso"))
+            if i == 0:
+                when = f"until {_ampm(waking[1]['from_iso'])}"
+            else:
+                when = f"from {_ampm(period['from_iso'])}"
+            # The part already running needs no time on its title.
+            started = i > 0 and as_of is not None and start is not None and start <= as_of
+            headline = TARA_ACTION[tara] if started else f"{TARA_ACTION[tara]} {when}"
+            row = {
+                "headline": headline,
+                "plain_headline": headline,
+                # The time is in the title; the sentence reads without a clock.
+                "text": (f"{'Earlier' if i == 0 else 'Later'} in the day the tara is {tara} — {meaning}."),
+                "source": "tarabala",
+                "from_iso": period.get("from_iso"),
+                "until_iso": period.get("until_iso"),
+            }
+            (do if tara in _FAVOURABLE_TARAS else avoid).append(row)
+    else:
+        tara = personal.get("tarabala", {}).get("tara")
+        if tara:
+            meaning = TARABALA_MEANING[tara].format(**words)
+            row = {
+                "headline": TARA_ACTION[tara],
+                "plain_headline": TARA_ACTION[tara],
+                "text": f"Today's tara is {tara} — {meaning}.",
+                "source": "tarabala",
+            }
+            (do if tara in _FAVOURABLE_TARAS else avoid).append(row)
 
     domain_candidates = _domain_candidates(ctx, personal, seed_base)
     do_domains = sorted((c for c in domain_candidates if c["stance"] == "do"), key=lambda c: c["rank"])[:2]
@@ -830,6 +995,10 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
         janma_rashi_index=janma_rashi, ghatak_moon_sign=janma_rashi,
     )
 
+    # The star and the Moon's sign in force at as_of: the live Today asks
+    # with the phone's time, the notification worker with local noon.
+    personal = _at(personal, _period_at(_day_segments(personal), as_of))
+
     ctx = assemble_daily_context(chart, as_of, day_payload, personal)
     words = _subject_words(relation)
 
@@ -846,13 +1015,14 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
     )
     astro_number = favourable["astrological_number"]
 
-    verdict = _verdict(chart, relation or "", day_payload, personal, ctx)
+    verdict = _verdict(chart, relation or "", day_payload, personal, ctx, as_of,
+                       _score_periods(personal, ctx))
     # jd_ut is a per-birth-instant float — a real per-person fingerprint, not
     # a display name two profiles might share ("My chart" is common). Seeded
     # on the date so an early-morning and a late-evening check of the same
     # day get identical do/avoid phrasing, not a coin-flip on the hour.
     seed_base = f"{chart.moment.jd_ut}-{vedic_date.isoformat()}"
-    do_today, avoid_today = _do_and_avoid(personal, ctx, words, seed_base)
+    do_today, avoid_today = _do_and_avoid(personal, ctx, words, seed_base, as_of)
     if verdict["tone"] == "caution":
         do_today = _gentle_do(do_today)
     reading = _reading(chart, relation or "", day_payload, personal, ctx,
@@ -879,8 +1049,11 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
         "reading": reading,
         "color": _day_color(vara_lord, supportive_planet, challenging_planet),
         "number": _day_number(vedic_date, vara_lord, favourable),
+        # In force at as_of; the periods give the whole day with clock times.
         "tarabala": personal["tarabala"],
         "chandrabala": personal["chandrabala"],
+        "tarabala_periods": personal.get("tarabala_periods", []),
+        "chandrabala_periods": personal.get("chandrabala_periods", []),
         "star_of_day": {
             "nakshatra": day_payload["elements"]["nakshatra"][0]["name"],
             "moon_rashi": day_payload["moon_rashi_at_sunrise"],
