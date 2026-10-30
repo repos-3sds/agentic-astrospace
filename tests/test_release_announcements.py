@@ -291,3 +291,24 @@ def test_release_changes_finds_the_build_by_commit_count(tmp_path, monkeypatch):
     assert [c["title"] for c in found] == ["Calendar (#4)", "Ship (#3)"]
     assert found[0]["files"] == ["ui/src/b.ts"]
     assert release_changes.commit_for_version(99) is None
+
+
+def test_the_token_audience_is_the_url_the_workflows_mint_for(monkeypatch):
+    """ship.yml, announce.yml and app-version.yml mint for API_URL; a
+    different default (asksiddha.app, after #266) refused them all."""
+    import re
+    from pathlib import Path
+
+    seen = {}
+    monkeypatch.delenv("RELEASE_TOKEN_AUDIENCE", raising=False)
+
+    def verify(token, aud):
+        seen["aud"] = aud
+        return {"email": release_routes.DEFAULT_CALLER, "email_verified": True}
+
+    monkeypatch.setattr(release_routes, "_verify_google_id_token", verify)
+    release_routes.release_caller("Bearer t")
+    root = Path(__file__).resolve().parents[1] / ".github" / "workflows"
+    for name in ("ship.yml", "announce.yml", "app-version.yml"):
+        api_url = re.search(r"^  API_URL: (\S+)$", (root / name).read_text(), re.M).group(1)
+        assert api_url == seen["aud"], name
