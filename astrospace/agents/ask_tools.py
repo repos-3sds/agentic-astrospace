@@ -25,7 +25,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from ..context.assembler import _house_analysis
-from .ask_steps import house_step, varga_step
+from .ask_steps import clean_reader_note, house_step, varga_step
 from ..core.vedic.favourable import functional_planets
 from ..core.vedic.nakshatra import nakshatra_of
 from ..core.vedic.positions import sign_index, sign_name
@@ -108,6 +108,15 @@ TOOL_SPECS: list[dict] = [
      "input_schema": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]}},
 ]
 
+# Every look-up also carries one line for the reader, written by the agent
+# (Hawk, 2026-10-30): shown while it works if clean_reader_note accepts it.
+READER_NOTE = "reader_note"
+for _spec in TOOL_SPECS:
+    _spec["input_schema"]["properties"][READER_NOTE] = {
+        "type": "string",
+        "description": "One plain line for the reader, under 12 words: what you are checking and why.",
+    }
+
 
 @lru_cache(maxsize=1)
 def nakshatra_lore() -> dict:
@@ -173,6 +182,8 @@ class ChartTools:
     # Dispatch --------------------------------------------------------------
 
     def call(self, name: str, args: dict) -> dict:
+        # The reader-facing note travels with the call but is no argument.
+        args = {key: value for key, value in (args or {}).items() if key != READER_NOTE}
         method = getattr(self, f"tool_{name}", None)
         if method is None:
             return {"error": f"Unknown tool {name}"}
@@ -520,8 +531,12 @@ def _sign_lord(sign: int) -> str:
 
 
 def summarize_call(name: str, args: dict) -> str:
-    """The reader-facing progress line for one tool call (agents/ask_steps.py
-    holds the plain names): no chart jargon, no book names."""
+    """The reader-facing progress line for one tool call: the agent's own
+    `reader_note` when it passes clean_reader_note, else the fixed line
+    (agents/ask_steps.py holds the plain names). No jargon, no book names."""
+    note = clean_reader_note(args.get(READER_NOTE))
+    if note:
+        return note
     if name == "house":
         return house_step(int(args.get("number") or 0))
     if name == "varga":

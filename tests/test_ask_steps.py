@@ -37,3 +37,42 @@ def test_no_jargon_books_or_providers(chart):
 def test_unknown_house_and_chart_fall_back_plainly():
     assert house_step(13) == "Looking at your 13th house…"
     assert varga_step("D99") == "Reading a closer chart for this…"
+
+
+class TestReaderNotes:
+    """Deep's own lines (Hawk, 2026-10-30): shown only when short, plain and
+    clean; otherwise the fixed line for that look-up."""
+
+    def test_plain_note_is_shown(self):
+        from astrospace.agents.ask_tools import summarize_call
+        line = summarize_call("house", {"number": 7, "reader_note": "Checking if Venus, your marriage planet, is strong."})
+        assert line == "Checking if Venus, your marriage planet, is strong…"
+
+    @pytest.mark.parametrize("note", [
+        "Reading the BPHS rule for the 7th lord",
+        "Counting Ashtakavarga bindus in the 7th",
+        "Checking the D9 for Venus",
+        "Checking the 7th for divorce",
+        "Asking the AI model about Venus",
+        "Checking <b>Venus</b>",
+        "ok",
+        "Checking a very long line that goes on and on about every single planet in the chart",
+        None,
+    ])
+    def test_unsafe_or_odd_notes_fall_back(self, note):
+        from astrospace.agents.ask_tools import summarize_call
+        assert summarize_call("house", {"number": 7, "reader_note": note}) == \
+            "Looking at your 7th house, marriage and partners…"
+
+    def test_the_note_is_not_a_tool_argument(self, chart):
+        from astrospace.agents.ask_tools import ChartTools
+        tools = ChartTools(chart)
+        with_note = tools.call("house", {"number": 7, "reader_note": "Checking your 7th house"})
+        plain = tools.call("house", {"number": 7})
+        assert "error" not in with_note and with_note["ref"] == plain["ref"]
+        assert "reader_note" not in tools.calls[0]["args"]
+
+    def test_every_tool_offers_the_note(self):
+        from astrospace.agents.ask_tools import TOOL_SPECS
+        assert all("reader_note" in spec["input_schema"]["properties"] for spec in TOOL_SPECS)
+        assert all("reader_note" not in spec["input_schema"].get("required", []) for spec in TOOL_SPECS)

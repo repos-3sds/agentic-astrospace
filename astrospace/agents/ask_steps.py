@@ -11,6 +11,8 @@ lines one under another, ticking each off as the next arrives.
 """
 from __future__ import annotations
 
+import re
+
 # A few plain words per house, for "Looking at your 7th house, marriage
 # and partners". Short enough for one line on a phone.
 HOUSE_PLAIN = {
@@ -120,3 +122,33 @@ def bundle_steps(bundle: dict) -> list[str]:
         steps.append("Matching your chart against time-tested rules…")
 
     return steps
+
+
+# Words a reader must never see while the agent works: books and authors,
+# AI providers, chart jargon kept for Practitioner screens, and verdict
+# words the product never shows (design_principles.md §4).
+_NOTE_BLOCKED = re.compile(
+    r"\b(bphs|parashar\w*|phala\w*|saravali|jataka|kalamrit\w*|classic\w*|book\w*|text|"
+    r"sloka|shloka|verse|author|"
+    r"ai|llm|model|claude|gemini|gpt|openai|anthropic|google|prompt|tool\w*|"
+    r"ashtakavarga|bindu\w*|karaka\w*|arudha\w*|upapada|varga\w*|navamsa|dasamsa|"
+    r"shadbala|avastha\w*|vimshopaka|jaimini|d\d{1,2}|"
+    r"death|die|dies|dying|longevity|accident\w*|disease\w*|illness|divorce\w*|"
+    r"curse\w*|danger\w*|doom\w*)\b",
+    re.IGNORECASE,
+)
+_NOTE_SHAPE = re.compile(r"^[A-Za-z][A-Za-z0-9 ,'’\-–]*$")
+NOTE_MAX_CHARS = 72
+
+
+def clean_reader_note(note) -> str | None:
+    """The agent's own line for the reader, or None to fall back to the fixed
+    line. Kept only when short, plain and free of blocked words."""
+    if not isinstance(note, str):
+        return None
+    text = " ".join(note.split()).rstrip(".…!").strip()
+    if not (8 <= len(text) <= NOTE_MAX_CHARS) or not _NOTE_SHAPE.match(text):
+        return None
+    if _NOTE_BLOCKED.search(text):
+        return None
+    return f"{text[0].upper()}{text[1:]}…"
