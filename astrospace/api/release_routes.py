@@ -28,12 +28,16 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..notifications import app_updates as au
 from ..notifications import release_announcements as ra
-from ..notifications.email import DEFAULT_BASE_URL
 
 router = APIRouter(prefix="/api/v1/releases", tags=["releases"])
 log = logging.getLogger(__name__)
 
 DEFAULT_CALLER = "github-deployer@gen-lang-client-0058562386.iam.gserviceaccount.com"
+# The audience the workflows mint their ID token for: the API's Cloud Run
+# URL (API_URL in ship.yml, announce.yml, app-version.yml). It used to be
+# the email base URL, which moved to asksiddha.app in #266 and left every
+# call here refused with 401 (the drafts failed quietly; App versions did not).
+DEFAULT_AUDIENCE = "https://agentic-astrospace-cwuqybpnzq-el.a.run.app"
 
 
 def _verify_google_id_token(token: str, audience: str) -> dict:
@@ -46,7 +50,7 @@ def _verify_google_id_token(token: str, audience: str) -> dict:
 def release_caller(authorization: str | None = Header(default=None)) -> str:
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(401, "missing token")
-    audience = os.getenv("RELEASE_TOKEN_AUDIENCE") or DEFAULT_BASE_URL
+    audience = os.getenv("RELEASE_TOKEN_AUDIENCE") or DEFAULT_AUDIENCE
     allowed = os.getenv("RELEASE_CALLER") or DEFAULT_CALLER
     try:
         claims = _verify_google_id_token(authorization[7:].strip(), audience)
