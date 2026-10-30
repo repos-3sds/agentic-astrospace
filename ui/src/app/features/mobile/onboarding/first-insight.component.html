@@ -2,101 +2,60 @@
   @if (loading()) {
     <section class="loading-state">
       <span class="orb"></span>
-      <p>Casting {{ name() || 'your' }} chart…</p>
+      <p>Reading {{ name() ? name() + '’s' : 'your' }} chart…</p>
     </section>
   } @else if (!hasActiveProfile()) {
     <section class="loading-state error">
-      <p>Add birth details first so Siddha can prepare your first insight.</p>
+      <p>Add birth details first so Siddha can read your chart.</p>
       <a routerLink="/m/birth-details">Add birth details</a>
     </section>
   } @else if (error() && !chart()) {
     <section class="loading-state error">
-      <p>Your chart is still on its way — you can see it any time from the Chart tab.</p>
+      <p>Your chart is still on its way. You can see it any time from the Chart tab.</p>
     </section>
   } @else {
-    @switch (preferences.experienceMode()) {
-      @case ('guided') {
-        <section class="journey-hero">
-          <span class="cosmic-mark" aria-hidden="true"><i></i><b></b></span>
-          <p class="kicker">YOUR JOURNEY BEGINS</p>
-          <h1>{{ journeyCopy().headline }}</h1>
-          <p class="lede">{{ journeyCopy().lede }}</p>
-          <as-birth-time-badge [profile]="kundlis.active()" />
-        </section>
-        <section class="aha-card">
-          <img src="mobile/figma-yantra-award.svg" alt="" aria-hidden="true" />
-          <span>
-            <small>YOUR KEY STRENGTH</small>
-            <strong>{{ journeyCopy().strength }}</strong>
-          </span>
-        </section>
-        <section class="aha-card">
-          <img src="mobile/figma-guided-star.svg" alt="" aria-hidden="true" />
-          <span>
-            <small>RECOMMENDED FOR TODAY</small>
-            <strong>{{ journeyCopy().recommendation }}</strong>
-          </span>
-        </section>
-      }
-      @case ('practitioner') {
-        <p class="kicker">KUNDLI CALCULATION</p>
-        <h1>Your birth chart (D1)</h1>
-        <p class="lede practitioner-lede">{{ birthConstants() }}</p>
-        <app-kundli-chart [chart]="practitionerChart()" [chartStyle]="practitionerStyle()" />
-        <section class="metrics-card">
-          <small>EXACT BIRTH METRICS</small>
-          @for (row of birthMetrics(); track row.label) {
-            <div><span>{{ row.label }}:</span><strong>{{ row.value }}</strong></div>
+    <section class="intro">
+      <app-splash class="mark" [dark]="theme.dark()" [markOnly]="true" aria-hidden="true" />
+      <p class="eyebrow">YOUR CHART IS READY</p>
+      <h1>{{ headline() }}</h1>
+      <p class="lede">{{ name() || 'You' }}, here is your chart in three lines.</p>
+      <as-birth-time-badge [profile]="kundlis.active()" />
+    </section>
+
+    <ol class="facts">
+      @for (fact of facts(); track fact.label) {
+        <li class="fact">
+          <p class="fact-label">{{ fact.label }}</p>
+          <p class="fact-name">{{ fact.name }}</p>
+          <p class="fact-line">{{ fact.line }}</p>
+          @if (ahaMode() !== 'guided' && fact.term) {
+            <p class="fact-term">{{ fact.term }}</p>
           }
-        </section>
-        @if (dashaChain().length) {
-          <section class="metrics-card period-card">
-            <small>CURRENT VIMSHOTTARI PATH</small>
-            @for (row of dashaChain(); track row.lord + row.short; let last = $last) {
-              <span class="period-pill" [class.is-active]="row.active">{{ row.lord }} {{ row.short }}</span>
-              @if (!last) { <span class="period-sep">→</span> }
-            }
-          </section>
-        }
+        </li>
       }
-      @default {
-        <section class="journey-hero">
-          <span class="cosmic-mark" aria-hidden="true"><i></i><b></b></span>
-          <p class="kicker">YOUR JOURNEY BEGINS</p>
-          <h1>{{ journeyCopy().headline }}</h1>
-          <p class="lede">{{ journeyCopy().lede }}</p>
-          <as-birth-time-badge [profile]="kundlis.active()" />
-        </section>
-        <section class="aha-card">
-          <img src="mobile/figma-yantra-award.svg" alt="" aria-hidden="true" />
-          <span>
-            <small>YOUR KEY STRENGTH</small>
-            <strong>{{ journeyCopy().strength }}</strong>
-          </span>
-        </section>
-        <section class="aha-card">
-          <img src="mobile/figma-guided-star.svg" alt="" aria-hidden="true" />
-          <span>
-            <small>RECOMMENDED FOR TODAY</small>
-            <strong>{{ journeyCopy().recommendation }}</strong>
-          </span>
-        </section>
-      }
+    </ol>
+
+    @if (ahaMode() === 'practitioner') {
+      <section class="chart-block">
+        <p class="fact-label">YOUR BIRTH CHART (D1)</p>
+        <p class="fact-term">{{ birthConstants() }}</p>
+        <app-kundli-chart [chart]="practitionerChart()" [chartStyle]="practitionerStyle()" />
+      </section>
     }
+
+    <section class="notify">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15L6 16Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 20.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <div>
+        <p class="notify-title">Your reading each morning</p>
+        <p class="notify-detail">One short note before your day starts. You can change the time or turn it off in Settings.</p>
+      </div>
+    </section>
   }
 </main>
 
 @if (!loading() && hasActiveProfile()) {
-  <footer [class.is-practitioner]="ahaMode() === 'practitioner'">
-    @if (ahaMode() === 'practitioner') {
-      <a class="primary" routerLink="/m/chart">Open your chart</a>
-      <a class="secondary" routerLink="/m/transits">See today’s transits</a>
-    } @else {
-      <a class="listen" routerLink="/m/today" [queryParams]="{ listen: 1 }">
-        <img src="mobile/audio-art.svg" alt="" aria-hidden="true" />
-        <span>Listen to your cosmic signature</span>
-      </a>
-      <a class="primary" routerLink="/m/today">Continue to Today's Path</a>
-    }
+  <footer>
+    <a class="primary" routerLink="/m/today">Turn on and open Today</a>
+    <a class="tertiary" routerLink="/m/today">Not now</a>
   </footer>
 }

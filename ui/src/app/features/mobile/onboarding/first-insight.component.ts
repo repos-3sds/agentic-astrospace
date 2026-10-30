@@ -4,7 +4,9 @@ import { RouterLink } from '@angular/router';
 import { KundliStore } from '../../../core/kundli.store';
 import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
-import { DashaPayload, VargaChart, VedicAll, birthTimeIsApproximate } from '../../../core/models';
+import { DashaPayload, LifeStory, VargaChart, VedicAll, birthTimeIsApproximate } from '../../../core/models';
+import { ThemeService } from '../../../core/theme.service';
+import { SplashComponent } from '../../../shell/splash/splash.component';
 import { BirthTimeBadgeComponent } from '../chart/birth-time-badge.component';
 import { KundliChartComponent, KundliChartStyle } from '../../../shared/kundli-chart/kundli-chart.component';
 import { buildChartAdapter, rashiFallback } from '../chart/mobile-chart-data';
@@ -39,7 +41,7 @@ const STRENGTH_ACTION: Record<string, string> = {
 @Component({
   selector: 'as-first-insight',
   standalone: true,
-  imports: [RouterLink, KundliChartComponent, BirthTimeBadgeComponent],
+  imports: [RouterLink, KundliChartComponent, BirthTimeBadgeComponent, SplashComponent],
   templateUrl: './first-insight.component.html',
   styleUrl: './first-insight.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -49,6 +51,44 @@ export class FirstInsightComponent {
   protected readonly preferences = inject(PreferencesService);
   protected readonly kundlis = inject(KundliStore);
   private readonly vedic = inject(VedicService);
+  protected readonly theme = inject(ThemeService);
+  protected readonly story = signal<LifeStory | null>(null);
+
+  /** The story's own headline ("Quick to act, fair at heart."), the same words Explore › Your story opens with. */
+  protected readonly headline = computed(() => this.story()?.headline ?? 'Your chart is ready');
+
+  /** Rising sign, Moon, and the running period: three facts, each with one plain line. */
+  protected readonly facts = computed(() => {
+    const chart = this.chart();
+    const story = this.story();
+    const lagna = chart?.lagna;
+    const moon = chart?.planets?.['Moon'];
+    // The running period, as the story names it ("You are in a Saturn period until 2036. …").
+    const period = /^You are in an? (\w+) period until (\d{4})\. /.exec(story?.chapter ?? '');
+    const maha = period ? { lord: period[1], end: period[2] } : null;
+    const lines = story?.traits ?? [];
+    const rows = [
+      {
+        label: 'HOW YOU MEET THE WORLD',
+        name: `${lagna?.sign ?? '—'} rising`,
+        line: lines[0]?.detail ?? '',
+        term: lagna ? `Lagna · ${lagna.sign}${lagna.nakshatra ? ` · ${lagna.nakshatra} ${lagna.nakshatra_pada ?? ''}` : ''}` : '',
+      },
+      {
+        label: 'YOUR MIND AND HEART',
+        name: `Moon in ${moon?.sign ?? '—'}`,
+        line: lines[2]?.detail ?? '',
+        term: moon ? `Chandra · ${moon.dms ?? ''} ${moon.sign}${moon.nakshatra ? ` · ${moon.nakshatra} ${moon.nakshatra_pada ?? ''}` : ''}` : '',
+      },
+      {
+        label: 'THE CHAPTER YOU ARE IN',
+        name: maha ? `${maha.lord} period, until ${maha.end}` : 'Your current period',
+        line: (story?.chapter ?? '').replace(/^You are in an? \w+ period until \d{4}\. /, ''),
+        term: maha ? `Vimshottari Mahadasha · ${maha.lord}` : '',
+      },
+    ];
+    return rows.filter((r) => r.line);
+  });
 
   protected readonly name = computed(() => this.kundlis.active()?.name ?? '');
   protected readonly hasActiveProfile = computed(() => !!this.kundlis.activeId());
@@ -168,8 +208,12 @@ export class FirstInsightComponent {
     this.error.set(null);
     try {
       const cached = this.vedic.cachedAll(kundliId);
-      const chart = cached ?? (await this.vedic.all(kundliId));
+      const [chart, story] = await Promise.all([
+        cached ?? this.vedic.all(kundliId),
+        this.vedic.story(kundliId).catch(() => null),
+      ]);
       this.chart.set(chart);
+      this.story.set(story?.story ?? null);
     } catch (e) {
       // The Aha moment is a bonus, not a gate — a failed fetch here must
       // never block a brand-new signup from reaching the app.
