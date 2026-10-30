@@ -12,16 +12,10 @@
 
 .top { display: flex; flex-direction: column; }
 
-.topbar { display: flex; align-items: center; justify-content: space-between; }
+.topbar { @include m-setup-topbar; }
+.step { @include m-setup-step; }
 
-.back {
-  line-height: 0;
-  img { width: 24px; height: 24px; display: block; }
-}
-
-.step { @include m-caption; color: var(--m-muted); margin: 0; }
-
-.headline { @include m-h1; color: var(--m-text); margin: 20px 0 8px; }
+.headline { @include m-h1; color: var(--m-text); margin: 18px 0 8px; }
 .lede { @include m-body; color: var(--m-muted); margin: 0 0 22px; }
 
 .btn {

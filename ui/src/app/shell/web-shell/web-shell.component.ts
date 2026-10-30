@@ -371,7 +371,6 @@ export class WebShellComponent implements OnDestroy {
       '/m/forgot-password',
       '/m/reset-password',
       '/m/language',
-      '/m/welcome',
       '/m/disclaimers',
       '/m/persona',
       '/m/customize',

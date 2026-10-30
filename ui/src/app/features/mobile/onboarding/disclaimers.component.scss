@@ -11,47 +11,12 @@
   gap: 24px;
 }
 
-.topbar {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.back {
-  line-height: 0;
-  img { width: 24px; height: 24px; display: block; }
-}
-
-.step { @include m-caption; color: var(--m-muted); margin: 0; }
+.topbar { @include m-setup-topbar; width: 100%; }
+.back { @include m-setup-back; }
 
 .top { width: 100%; display: flex; flex-direction: column; align-items: center; }
 
-/* Hero panel — node 7:9 */
-.art {
-  width: 100%;
-  height: 190px;
-  margin-top: 18px;
-  border-radius: 28px;
-  background: linear-gradient(to right, var(--m-accent-soft), var(--m-gold-soft));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.art-disc {
-  width: 84px;
-  height: 84px;
-  border-radius: 999px;
-  background: var(--m-surface);
-  box-shadow: var(--m-shadow-card);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  img { width: 40px; height: 40px; display: block; }
-}
-
-.eyebrow { @include m-eyebrow; color: var(--m-accent); margin: 22px 0 8px; }
+.eyebrow { @include m-eyebrow; color: var(--m-accent); margin: 12px 0 8px; }
 
 .headline {
   @include m-h1;
@@ -95,35 +60,29 @@
 
 .actions { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 20px; }
 
-.dots { display: flex; align-items: center; gap: 7px; }
-
-.dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: var(--m-border-strong);
-
-  &.is-on { width: 22px; background: var(--m-accent); }
-}
-
 .btn {
   @include m-cta-primary;
   width: 100%;
 }
 
-.consent {
-  @include m-caption;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
+// The reader's choices, one card: what the button agrees to, then each switch.
+.choices {
   width: 100%;
-  color: var(--m-muted);
-  cursor: pointer;
-  input {
-    flex-shrink: 0;
-    width: 20px;
-    height: 20px;
-    margin: 0;
-    accent-color: var(--m-accent);
-  }
+  box-sizing: border-box;
+  margin-top: 22px;
+  padding: 16px 18px;
+  border-radius: 24px;
+  background: var(--m-glass-card);
+  border: 1px solid var(--m-glass-hairline);
+  box-shadow: inset 0 1px 0 var(--m-glass-sheen), 0 16px 40px var(--m-glass-drop);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  .eyebrow { margin: 0; }
 }
+
+.choice { display: flex; align-items: flex-start; gap: 14px; }
+.switch { @include m-switch; margin-top: 2px; }
+
+.note { @include m-caption; color: var(--m-muted); margin: -8px 0 0; text-align: center; }

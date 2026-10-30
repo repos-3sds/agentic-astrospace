@@ -14,7 +14,8 @@ interface ChartStyleChoice {
 
 /**
  * Customize (new — not a Figma-tracked node; see mobile_screen_build_plan.md)
- * — chart-view preference between Persona and Birth Details.
+ * — chart-view preference and home city, the last step of setup before the
+ * reveal.
  *
  * This stays deliberately light. Regional festival preferences are handled in
  * Settings where the user has more context and more room.

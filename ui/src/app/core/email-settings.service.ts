@@ -11,31 +11,6 @@ export type EmailCategory =
   | 'lessons_email'
   | 'tips_email';
 
-/**
- * The sign-up email box, carried from Register to the end of onboarding in
- * localStorage (the account may not exist yet, and email confirmation or
- * Google sign-in leaves the app and comes back).
- */
-const OPT_IN_KEY = 'astrospace.emailOptIn';
-
-export function rememberEmailOptIn(on: boolean): void {
-  try { localStorage.setItem(OPT_IN_KEY, on ? 'yes' : 'no'); } catch { /* private mode */ }
-}
-
-/** 'yes', 'no', or null when the reader never saw the box. */
-export function storedEmailOptIn(): 'yes' | 'no' | null {
-  try {
-    const value = localStorage.getItem(OPT_IN_KEY);
-    return value === 'yes' || value === 'no' ? value : null;
-  } catch {
-    return null;
-  }
-}
-
-export function clearEmailOptIn(): void {
-  try { localStorage.removeItem(OPT_IN_KEY); } catch { /* private mode */ }
-}
-
 export interface EmailState {
   address: string | null;
   deliverable: boolean;
@@ -47,7 +22,7 @@ export interface EmailState {
  * The reader's email choices, held on the server only: unlike push, an
  * email can be turned off from a link in the email itself, so a copy on the
  * device would go stale. Every category starts off; nothing is emailed until
- * the reader says yes, with the sign-up box (applySignupDefaults) or a switch.
+ * the reader says yes, with the email switch at the end of setup (applySignupDefaults) or a switch.
  *
  * What the screen shows is the server's last answer with every switch still
  * on its way overlaid on top. Each PUT answers with the whole state, so

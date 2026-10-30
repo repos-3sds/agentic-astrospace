@@ -46,11 +46,7 @@
 .option-detail { @include m-body-small; color: var(--m-muted); }
 
 .badge {
-  border-radius: 999px;
-  padding: 3px 8px;
-  font-weight: 500;
-  font-size: 10.5px;
-  line-height: 1.4;
+  @include m-badge;
   background: var(--m-gold-soft);
   color: var(--m-gold);
 
@@ -72,7 +68,7 @@
   img { width: 14px; height: 14px; display: block; }
 }
 
-.section { @include m-caption; color: var(--m-muted); margin: 22px 0 8px; }
+.section { @include m-field-label; margin: 22px 0 8px; }
 
 .tones {
   display: flex;

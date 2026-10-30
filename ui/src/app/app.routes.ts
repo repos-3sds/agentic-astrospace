@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { CanMatchFn, Router, Routes } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { nativeAppGuard } from './core/native-app.guard';
-import { onboardedRedirectGuard } from './core/onboarding.guard';
+import { onboardedRedirectGuard, promiseSeenGuard } from './core/onboarding.guard';
 import { mobileAuthGuard } from './core/mobile-auth.guard';
 import { MOBILE_ROUTES } from './features/mobile/mobile.routes';
 
@@ -62,12 +62,6 @@ export const routes: Routes = [
       import('./features/mobile/onboarding/language.component').then((m) => m.LanguageComponent),
   },
   {
-    path: 'm/welcome',
-    canActivate: [nativeAppGuard, onboardedRedirectGuard],
-    loadComponent: () =>
-      import('./features/mobile/onboarding/welcome.component').then((m) => m.WelcomeComponent),
-  },
-  {
     path: 'm/disclaimers',
     canActivate: [nativeAppGuard, onboardedRedirectGuard],
     loadComponent: () =>
@@ -76,14 +70,16 @@ export const routes: Routes = [
       ),
   },
   {
+    // Persona and chart style come after birth details, so the profile
+    // already exists here; the onboarded redirect would skip them.
     path: 'm/persona',
-    canActivate: [nativeAppGuard, onboardedRedirectGuard],
+    canActivate: [nativeAppGuard, mobileAuthGuard],
     loadComponent: () =>
       import('./features/mobile/onboarding/persona.component').then((m) => m.PersonaComponent),
   },
   {
     path: 'm/customize',
-    canActivate: [nativeAppGuard, onboardedRedirectGuard],
+    canActivate: [nativeAppGuard, mobileAuthGuard],
     loadComponent: () =>
       import('./features/mobile/onboarding/customize.component').then(
         (m) => m.CustomizeComponent,
@@ -91,7 +87,7 @@ export const routes: Routes = [
   },
   {
     path: 'm/birth-details',
-    canActivate: [nativeAppGuard, onboardedRedirectGuard],
+    canActivate: [nativeAppGuard, onboardedRedirectGuard, promiseSeenGuard],
     loadComponent: () =>
       import('./features/mobile/onboarding/birth-details.component').then(
         (m) => m.BirthDetailsComponent,

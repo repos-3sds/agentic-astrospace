@@ -57,7 +57,7 @@ for (const scheme of ['light', 'dark'] as const) {
 
     await page.getByRole('button', { name: 'Send' }).first().click();
     // First question on this phone: the AI-sharing notice holds it until agreed.
-    await expect(page.getByRole('heading', { name: 'Answers are written with AI' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Answers are written by our Siddha Agents' })).toBeVisible();
     expect(sent.length).toBe(0);
     await page.screenshot({ path: `test-results/ask-depth/ai-sharing-${scheme}.png` });
     await page.getByRole('button', { name: 'Agree and ask' }).click();

@@ -20,10 +20,10 @@ import { SheetComponent } from '../sheet/sheet.component';
   template: `
     <as-sheet (dismissed)="dismissed.emit()">
       <header class="head">
-        <h2 class="title">Answers are written with AI</h2>
+        <h2 class="title">Answers are written by our Siddha Agents</h2>
         <p class="sub">
-          To answer, Siddha sends your question and your chart details to its AI providers, Anthropic and Google.
-          They never get your email address.
+          To answer, our Siddha Agents use your question and your chart details.
+          They never see your email address.
         </p>
       </header>
       <button class="link" type="button" (click)="privacy()">Read the Privacy Policy</button>

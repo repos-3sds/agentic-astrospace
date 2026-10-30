@@ -4,20 +4,18 @@ const modes = [
   {
     id: 'guided',
     tabs: ['Today', 'Ask', 'Calendar', 'Explore', 'Settings'],
-    insight: 'YOUR JOURNEY BEGINS',
-    insightCta: 'Continue to Today',
+    insight: 'YOUR CHART IS READY',
   },
   {
     id: 'balanced',
     tabs: ['Today', 'Ask', 'Calendar', 'Explore', 'Settings'],
-    insight: 'YOUR JOURNEY BEGINS',
-    insightCta: 'Continue to Today',
+    insight: 'YOUR CHART IS READY',
   },
   {
     id: 'practitioner',
     tabs: ['Today', 'Yantra', 'Dashas', 'Calendar', 'Settings'],
-    insight: 'KUNDLI CALCULATION',
-    insightCta: 'Open your chart',
+    // Practitioners also get the D1, drawn in the style they picked.
+    insight: 'YOUR BIRTH CHART (D1)',
   },
 ] as const;
 
@@ -85,8 +83,10 @@ test.describe('mobile persona presentation contracts', () => {
       }, mode.id);
 
       await page.goto('/m/insight');
-      await expect(page.getByText(mode.insight)).toBeVisible();
-      await expect(page.getByRole('link', { name: mode.insightCta })).toBeVisible();
+      // "Reading your chart" stays up for at least three seconds first.
+      await expect(page.getByText(mode.insight, { exact: true })).toBeVisible({ timeout: 10_000 });
+      // No notification question on the web, so the reveal just opens Today.
+      await expect(page.getByRole('button', { name: 'Open Today' })).toBeVisible();
       await page.screenshot({ path: `/tmp/astrospace-persona-${mode.id}.png`, fullPage: true });
 
       profiles = [];

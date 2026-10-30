@@ -4,7 +4,8 @@ import { ActivatedRouteSnapshot, Router, UrlTree } from '@angular/router';
 
 import { AuthService } from './auth.service';
 import { KundliStore } from './kundli.store';
-import { onboardedRedirectGuard } from './onboarding.guard';
+import { onboardedRedirectGuard, promiseSeenGuard } from './onboarding.guard';
+import { PreferencesService } from './preferences.service';
 
 describe('onboardedRedirectGuard', () => {
   let auth: {
@@ -76,5 +77,36 @@ describe('onboardedRedirectGuard', () => {
     expect(await run('m/start')).toBe(todayTree);
     auth.session.set(null);
     expect(await run('m/start')).toBeTrue();
+  });
+});
+
+describe('promiseSeenGuard', () => {
+  let usageAsked: ReturnType<typeof signal<boolean>>;
+  let router: jasmine.SpyObj<Router>;
+  const promiseTree = {} as UrlTree;
+
+  beforeEach(() => {
+    usageAsked = signal(false);
+    router = jasmine.createSpyObj<Router>('Router', ['createUrlTree']);
+    router.createUrlTree.and.returnValue(promiseTree);
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: PreferencesService, useValue: { usageAsked } },
+        { provide: Router, useValue: router },
+      ],
+    });
+  });
+
+  const run = () =>
+    TestBed.runInInjectionContext(() => promiseSeenGuard({} as ActivatedRouteSnapshot, {} as never));
+
+  it('sends a reader who skipped the promise screen to it before birth details', () => {
+    expect(run()).toBe(promiseTree);
+    expect(router.createUrlTree).toHaveBeenCalledWith(['/m', 'disclaimers']);
+  });
+
+  it('lets a reader through once they agreed', () => {
+    usageAsked.set(true);
+    expect(run()).toBeTrue();
   });
 });

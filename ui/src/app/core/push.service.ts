@@ -6,6 +6,12 @@ import { AuthService } from './auth.service';
 import { noteDeepLink } from './deep-link-arrival';
 import { appBuild } from './app-update.service';
 
+/** Onboarding screens, where the launch question waits for the reveal. */
+const SETUP_ROUTES = [
+  '/m/auth', '/m/forgot-password', '/m/reset-password', '/m/language',
+  '/m/disclaimers', '/m/persona', '/m/customize', '/m/birth-details', '/m/insight', '/m/start',
+];
+
 /** Mirrors the native permission states; 'unsupported' is the web build. */
 export type PushPermission = 'prompt' | 'granted' | 'denied' | 'unsupported';
 
@@ -105,9 +111,18 @@ export class PushService {
     if (!this.auth.isAuthenticated()) return;
     if (this.permission() === 'granted') {
       await this.register();
-    } else if (this.permission() === 'prompt' && !this.askedThisLaunch) {
+    } else if (this.permission() === 'prompt' && !this.askedThisLaunch && !this.inSetup()) {
       await this.askOnLaunch();
     }
+  }
+
+  /**
+   * Setup asks for notifications on the reveal screen, with a reason. Before
+   * that the system popup fired right after sign-up, over the birth details
+   * form (onboarding audit 2026-10-30).
+   */
+  private inSetup(): boolean {
+    return SETUP_ROUTES.some((path) => this.router.url.startsWith(path));
   }
 
   /**

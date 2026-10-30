@@ -271,6 +271,21 @@
   filter: var(--m-back-icon-filter);
 }
 
+// Buttons and fields take the app's font. The browser gives them the system
+// face otherwise, which is how the day score, the persona badges and the close
+// crosses ended up in Arial or Roboto (onboarding audit 2026-10-30). Zero
+// specificity, so any component rule still wins.
+:where(.as-mobile) :where(button, input, select, textarea) {
+  font-family: inherit;
+}
+
+// Hint text reads as a hint, not an answer already typed (onboarding audit
+// 2026-10-30: "Lakshmi" in the Register field looked filled in).
+.as-mobile :is(input, textarea)::placeholder {
+  color: var(--m-muted);
+  opacity: 0.7;
+}
+
 // No double-tap zoom in the app (iPhone testers, 2026-10-29). touch-action
 // applies to everything under the root, and taps stay instant; pinch is
 // locked by the viewport meta set in app.ts for native builds only.

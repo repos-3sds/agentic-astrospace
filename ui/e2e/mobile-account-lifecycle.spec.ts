@@ -45,22 +45,15 @@ test('registers, creates the first chart, logs out, and restores it on return', 
   });
 
   await page.goto('/m/start');
+  // The four-swipe intro: Skip goes to the last slide, which has both ways in.
+  await page.getByRole('button', { name: 'Skip' }).click();
   await page.getByRole('link', { name: 'Begin your path' }).click();
+  await expect(page).toHaveURL(/\/m\/disclaimers\?then=register$/);
+  await page.getByRole('link', { name: 'Agree and continue' }).click();
   await page.getByRole('textbox', { name: 'YOUR NAME' }).fill('Journey Test');
   await page.getByRole('textbox', { name: 'EMAIL' }).fill('journey@example.com');
   await page.getByRole('textbox', { name: /PASSWORD/ }).fill('Journey123!');
   await page.getByRole('button', { name: 'Create account' }).click();
-
-  await expect(page).toHaveURL(/\/m\/language$/);
-  await page.getByRole('link', { name: 'Continue' }).click();
-  await expect(page).toHaveURL(/\/m\/welcome$/);
-  await page.getByRole('link', { name: 'Continue' }).click();
-  await expect(page).toHaveURL(/\/m\/disclaimers$/);
-  await page.getByRole('link', { name: 'I understand — continue' }).click();
-  await expect(page).toHaveURL(/\/m\/persona$/);
-  await page.getByRole('link', { name: 'Continue' }).click();
-  await expect(page).toHaveURL(/\/m\/customize$/);
-  await page.getByRole('link', { name: 'Continue' }).click();
 
   await expect(page).toHaveURL(/\/m\/birth-details$/);
   await expect(page.getByRole('textbox', { name: 'WHO IS THIS FOR?' })).toHaveValue(
@@ -71,9 +64,17 @@ test('registers, creates the first chart, logs out, and restores it on return', 
   await page.getByRole('textbox', { name: 'PLACE OF BIRTH' }).fill('Vijayawada');
   await page.getByRole('option', { name: /Vijayawada/ }).click();
   await page.getByRole('button', { name: 'Begin my guide' }).click();
+
+  await expect(page).toHaveURL(/\/m\/persona$/);
+  await page.getByRole('link', { name: 'Continue' }).click();
+  await expect(page).toHaveURL(/\/m\/customize$/);
+  await page.getByRole('link', { name: 'See my chart' }).click();
   await expect(page).toHaveURL(/\/m\/insight$/);
-  await page.getByRole('link', { name: /Continue to Today/ }).click();
+  await page.getByRole('button', { name: /Open Today/ }).click();
   await expect(page).toHaveURL(/\/m\/today$/);
+  // First-visit tips, when Today has a reading to point at.
+  const skipTips = page.locator('.veil .skip');
+  if (await skipTips.isVisible().catch(() => false)) await skipTips.click();
 
   await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Settings' }).click();
   await page.getByRole('link', { name: /^Account/ }).click();
@@ -81,7 +82,8 @@ test('registers, creates the first chart, logs out, and restores it on return', 
   await page.getByRole('group', { name: 'Confirm sign out' }).getByRole('button', { name: 'Sign out' }).click();
   await expect(page).toHaveURL(/\/m\/start$/);
 
-  await page.getByRole('link', { name: /I already walk with/ }).click();
+  await page.getByRole('button', { name: 'Skip' }).click();
+  await page.getByRole('link', { name: 'I already have an account' }).click();
   await page.getByRole('textbox', { name: 'EMAIL' }).fill('journey@example.com');
   await page.getByRole('textbox', { name: /PASSWORD/ }).fill('Journey123!');
   await page.getByRole('button', { name: 'Continue', exact: true }).click();

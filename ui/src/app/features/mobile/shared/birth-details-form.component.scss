@@ -14,8 +14,7 @@
 .group { display: flex; flex-direction: column; }
 
 .field-label {
-  @include m-caption;
-  color: var(--m-muted);
+  @include m-field-label;
   display: block;
   margin-bottom: 8px;
 }
@@ -99,7 +98,7 @@
   min-height: 44px;
   background: none;
   cursor: pointer;
-  @include m-body-strong;
+  @include m-button;
   color: var(--m-accent-strong);
 }
 
