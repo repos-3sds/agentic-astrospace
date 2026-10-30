@@ -40,6 +40,7 @@ import {
   nakshatraSymbol,
   tithiSymbol,
 } from '../symbols/mobile-symbols';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 /**
  * The sun-rise intro is a once-per-launch moment. Module state, so it
@@ -394,6 +395,7 @@ function practicalClose(text: string): string[] {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    StickyBarDirective,
     BirthDetailsCardComponent,
     DayGaugeComponent,
     DayQualitySheetComponent,

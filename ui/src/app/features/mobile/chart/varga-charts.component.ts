@@ -22,6 +22,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
 import { FREE_VARGAS, PlanGateService } from '../../../core/plan-gate.service';
 import { PlanLockComponent } from '../shared/plan-lock.component';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 interface VargaOption {
   id: string;
@@ -40,7 +41,7 @@ interface VargaOption {
   selector: 'as-varga-charts',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PlanLockComponent, BackLinkDirective, GenericErrorComponent, KundliChartComponent, PlanetSheetComponent, RouterLink, SelectHapticDirective],
+  imports: [StickyBarDirective, PlanLockComponent, BackLinkDirective, GenericErrorComponent, KundliChartComponent, PlanetSheetComponent, RouterLink, SelectHapticDirective],
   templateUrl: './varga-charts.component.html',
   styleUrl: './varga-charts.component.scss',
 })

@@ -14,6 +14,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
 import { PlanGateService } from '../../../core/plan-gate.service';
 import { PlanLockComponent } from '../shared/plan-lock.component';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 /** What kind of thing in the chart a remedy answers to. */
 export type RemedyTone = 'warn' | 'bad' | 'good';
@@ -49,7 +50,7 @@ export type RemedyTone = 'warn' | 'bad' | 'good';
   selector: 'as-remedies',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PlanLockComponent, BackLinkDirective, GenericErrorComponent, RouterLink, SelectHapticDirective],
+  imports: [StickyBarDirective, PlanLockComponent, BackLinkDirective, GenericErrorComponent, RouterLink, SelectHapticDirective],
   templateUrl: './remedies.component.html',
   styleUrl: './remedies.component.scss',
 })

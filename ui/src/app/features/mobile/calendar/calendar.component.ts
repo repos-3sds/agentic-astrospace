@@ -11,6 +11,7 @@ import { PullRefreshService } from '../../../core/pull-refresh.service';
 import { FestivalSheetComponent } from './festival-sheet.component';
 import { CalendarDayComponent } from './calendar-day.component';
 import { tabletLayout, wideLayout } from '../../../core/screen-size';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 interface CalendarCell {
   date: string;
@@ -40,10 +41,10 @@ function coveredBy(vrat: VratDay, festivals: FestivalOccurrence[]): boolean {
   selector: 'as-mobile-calendar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FestivalSheetComponent, RouterLink, CalendarDayComponent],
+  imports: [StickyBarDirective, FestivalSheetComponent, RouterLink, CalendarDayComponent],
   template: `
     <div class="mcal-month">
-    <header class="mcal-top">
+    <header class="mcal-top" asStickyBar>
       <h1>Calendar</h1>
       <div>
         <button type="button" aria-label="Previous month" [disabled]="!canGoPrevious()" (click)="shiftMonth(-1)"><img src="mobile/back.svg" alt="" /></button>

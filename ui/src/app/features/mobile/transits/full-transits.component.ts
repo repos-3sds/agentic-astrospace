@@ -15,14 +15,15 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
 import { transitVerdictLabel } from './transit-verdict';
 import { PlanGateService } from '../../../core/plan-gate.service';
 import { PlanLockComponent } from '../shared/plan-lock.component';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 @Component({
   selector: 'as-full-transits',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, RouterLink, TransitDetailComponent, PlanLockComponent],
+  imports: [StickyBarDirective, BackLinkDirective, RouterLink, TransitDetailComponent, PlanLockComponent],
   template: `
-    <a class="mtrf-back" [asBack]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
+    <a class="mtrf-back" asStickyBar [asBack]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
     <main class="mtrf-body">
       <header><h1>Full Transits</h1><p>Current sky with practical meaning first, evidence second</p></header>
       <nav class="mtrf-tabs"><a [routerLink]="['/m','transits']">Gochara</a><span>Full Transits</span></nav>

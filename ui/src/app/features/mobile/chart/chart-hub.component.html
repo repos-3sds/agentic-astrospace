@@ -1,6 +1,6 @@
 @if (preferences.experienceMode() === 'practitioner') {
 <!-- Practitioner's home tab opens with the person, as the Figma board (214:155) does. -->
-<header class="yantra-head">
+<header class="yantra-head" asStickyBar>
   <button class="yantra-who" type="button" (click)="profileSwitcherOpen.set(true)" [attr.aria-label]="'Reading ' + profileName() + '. Switch person'">
     <span class="yantra-avatar" aria-hidden="true">{{ profileInitial() }}</span>
     <span class="yantra-who-text">

@@ -7,6 +7,7 @@ import { timezoneShortName } from '../../../core/timing-place';
 import { approximatePosition } from '../../../core/device-location';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 /**
  * Which place the day's timings are computed for. 'current' is not
@@ -33,7 +34,7 @@ export type TimingPlace = 'current' | 'selected';
   selector: 'as-settings-location',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, FormsModule, SelectHapticDirective],
+  imports: [StickyBarDirective, BackLinkDirective, FormsModule, SelectHapticDirective],
   templateUrl: './location.component.html',
   styleUrl: './location.component.scss',
 })

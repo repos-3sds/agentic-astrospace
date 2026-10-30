@@ -18,6 +18,7 @@ import { MANTRA_SCRIPTS, MantraScriptService } from './mantra-script';
 import { RemedyReminderService } from '../../../core/remedy-reminder.service';
 import { StoredPractice, WidgetBridgeService } from '../../../core/widget-bridge.service';
 import { localIsoDate } from '../../../core/subhashita.service';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 /**
  * Remedy detail — mantra tracker (Figma node 29:109).
@@ -41,7 +42,7 @@ import { localIsoDate } from '../../../core/subhashita.service';
   selector: 'as-mantra-tracker',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, RouterLink, SelectHapticDirective],
+  imports: [StickyBarDirective, BackLinkDirective, RouterLink, SelectHapticDirective],
   templateUrl: './mantra-tracker.component.html',
   styleUrl: './mantra-tracker.component.scss',
 })

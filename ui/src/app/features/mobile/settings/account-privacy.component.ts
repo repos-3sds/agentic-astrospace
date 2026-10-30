@@ -8,6 +8,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
 import { ApiService } from '../../../core/api.service';
 import { EntitlementService } from '../../../core/entitlement.service';
 import { shareFile } from '../../../core/native-share';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 /**
  * Settings — Account & privacy (Figma node 69:180).
@@ -40,7 +41,7 @@ function notesOnThisDevice(): Record<string, string> {
   selector: 'as-settings-account',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, RouterLink],
+  imports: [StickyBarDirective, BackLinkDirective, RouterLink],
   templateUrl: './account-privacy.component.html',
   styleUrl: './account-privacy.component.scss',
 })

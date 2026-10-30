@@ -7,6 +7,7 @@ import { AskComposerComponent } from './ask-composer.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { FIND_A_HELPLINE, crisisSupportFor } from '../../../core/crisis-support';
 import { PreferencesService } from '../../../core/preferences.service';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 /** The domains the app declines to give a verdict in, and the crisis reply. */
 export type ReferDomain = 'health' | 'legal' | 'money' | 'death' | 'crisis';
@@ -93,7 +94,7 @@ const COPY: Record<ReferDomain, ReferCopy> = {
   selector: 'as-ask-refer-out',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AskComposerComponent, RouterLink, BackLinkDirective, NgTemplateOutlet],
+  imports: [StickyBarDirective, AskComposerComponent, RouterLink, BackLinkDirective, NgTemplateOutlet],
   templateUrl: './ask-refer-out.component.html',
   styleUrl: './ask-refer-out.component.scss',
 })

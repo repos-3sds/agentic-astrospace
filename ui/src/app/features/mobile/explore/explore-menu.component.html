@@ -2,7 +2,7 @@
 @let s = snapshot();
 
 <!-- Greeting from the Practitioner board; the avatar switches whose chart this is. -->
-<header class="appbar">
+<header class="appbar" asStickyBar>
   <button class="who m-pressable" type="button" (click)="profileSwitcherOpen.set(true)" aria-label="Switch person">
     <span class="avatar" aria-hidden="true">{{ p.initial }}</span>
     <span class="who-text">

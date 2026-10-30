@@ -12,6 +12,7 @@ import { EntitlementService } from '../../../core/entitlement.service';
 import { PreferencesService } from '../../../core/preferences.service';
 import { NATURAL_VOICE_NAME, NaturalVoiceService } from '../../../core/natural-voice.service';
 import { plannedTimingPlace } from '../../../core/timing-place';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 /** One settings row. `value` is the current state, shown without opening it. */
 export interface SettingRow {
@@ -49,7 +50,7 @@ const ALARM_STORAGE_KEY = 'astrospace.mobile.panchangAlarms';
   selector: 'as-settings-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterLinkActive, BackBarComponent],
+  imports: [StickyBarDirective, RouterLink, RouterLinkActive, BackBarComponent],
   templateUrl: './settings-home.component.html',
   styleUrl: './settings-home.component.scss',
 })

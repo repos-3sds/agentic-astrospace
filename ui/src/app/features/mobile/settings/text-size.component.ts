@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { TextSizeChoice, TextSizeService } from '../../../core/text-size.service';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 interface TextSizeOption {
   id: TextSizeChoice;
@@ -19,7 +20,7 @@ interface TextSizeOption {
 @Component({
   selector: 'as-settings-text-size',
   standalone: true,
-  imports: [BackLinkDirective, SelectHapticDirective],
+  imports: [StickyBarDirective, BackLinkDirective, SelectHapticDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './text-size.component.html',
   styleUrl: './text-size.component.scss',

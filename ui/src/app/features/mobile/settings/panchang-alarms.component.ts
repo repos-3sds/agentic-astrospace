@@ -13,6 +13,7 @@ import {
 import { PanchangaService } from '../../../core/panchanga.service';
 import { PreferencesService } from '../../../core/preferences.service';
 import { PushService } from '../../../core/push.service';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 const EXACT_ASKED_KEY = 'astrospace.mobile.panchangAlarms.exactAsked';
 
@@ -34,7 +35,7 @@ const EXACT_ASKED_KEY = 'astrospace.mobile.panchangAlarms.exactAsked';
   selector: 'as-settings-panchang-alarms',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, RouterLink],
+  imports: [StickyBarDirective, BackLinkDirective, RouterLink],
   templateUrl: './panchang-alarms.component.html',
   styleUrl: './panchang-alarms.component.scss',
 })

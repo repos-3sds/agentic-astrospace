@@ -2,12 +2,13 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { PreferencesService } from '../../../core/preferences.service';
 import { HapticsService } from '../../../core/haptics.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 @Component({
   selector: 'as-settings-interaction',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective],
+  imports: [StickyBarDirective, BackLinkDirective],
   templateUrl: './interaction.component.html',
   styleUrl: './interaction.component.scss',
 })

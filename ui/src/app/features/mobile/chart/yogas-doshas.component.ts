@@ -12,6 +12,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
 import { PlanGateService } from '../../../core/plan-gate.service';
 import { PlanLockComponent } from '../shared/plan-lock.component';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 type Filter = 'all' | 'strengths' | 'flags';
 
@@ -25,7 +26,7 @@ type Filter = 'all' | 'strengths' | 'flags';
   selector: 'as-yogas-doshas',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgTemplateOutlet, PlanLockComponent, BackLinkDirective, GenericErrorComponent, RouterLink, YogaLearningSheetComponent, SelectHapticDirective],
+  imports: [StickyBarDirective, NgTemplateOutlet, PlanLockComponent, BackLinkDirective, GenericErrorComponent, RouterLink, YogaLearningSheetComponent, SelectHapticDirective],
   templateUrl: './yogas-doshas.component.html',
   styleUrl: './yogas-doshas.component.scss',
 })

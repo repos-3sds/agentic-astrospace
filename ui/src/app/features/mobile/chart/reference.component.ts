@@ -5,6 +5,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { VedicService } from '../../../core/vedic.service';
 import { AshtakavargaPayload, VedicAll } from '../../../core/models';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 type ReferenceMode = 'home' | 'avkahada' | 'grahas' | 'ashtakavarga' | 'favourable';
 
@@ -142,7 +143,7 @@ function favourableSections(favourable: Payload): ReferenceSection[] {
 @Component({
   selector: 'as-chart-reference',
   standalone: true,
-  imports: [BackLinkDirective, RouterLink],
+  imports: [StickyBarDirective, BackLinkDirective, RouterLink],
   templateUrl: './reference.component.html',
   styleUrl: './reference.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
