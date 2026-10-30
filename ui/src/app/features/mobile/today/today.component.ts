@@ -96,6 +96,10 @@ export const BAND_OF_TONE: Record<DailyGuidancePayload['verdict']['tone'], DayBa
 export function scorePeriodAt(verdict: DailyGuidancePayload['verdict'], now: number = Date.now()): DayScorePeriod | null {
   const periods = verdict.day_score_periods ?? [];
   if (periods.length < 2) return null;
+  // Before the first waking part (before sunrise, or in a sliver of star gone
+  // within 90 minutes of it) the ring shows that part, as Do/Avoid does.
+  const first = wakingParts(periods)[0];
+  if (first?.from_iso && now < Date.parse(first.from_iso)) return first;
   return periods.find((p) => !p.until_iso || now < Date.parse(p.until_iso)) ?? periods[periods.length - 1];
 }
 
@@ -111,20 +115,24 @@ export function clockLabel(iso: string, timeZone?: string): string {
 }
 
 /**
- * A change after 9 pm happens while most readers are winding down, so it
- * does not split the day's lines (the engine's _AWAKE_UNTIL).
+ * A change before 9 pm on the day's own date. A change after 9 pm happens
+ * while most readers are winding down, and one after midnight (the Vedic day
+ * runs to the next sunrise) belongs to tomorrow's morning, not this one: a
+ * 5:39 am change read as "do the important things before 5:39 am" on the
+ * morning before it (Hawk, 2026-10-31). The engine's _starts_awake. Times
+ * are ISO on the timings place's clock, so the date and hour are read as
+ * written.
  */
-function startsAwake(iso: string | null, timeZone?: string): boolean {
-  if (!iso) return false;
-  const hour = Number(new Intl.DateTimeFormat('en', { hour: 'numeric', hourCycle: 'h23', timeZone: timeZone || undefined })
-    .format(new Date(iso)));
-  return hour < 21;
+function startsAwake(iso: string | null, day: string | undefined): boolean {
+  if (!iso || !day) return false;
+  return iso.slice(0, 10) === day && Number(iso.slice(11, 13)) < 21;
 }
 
 /** The parts a reader lives through: as the engine's _waking, a first part
  * gone within 90 minutes of sunrise belongs to no one's day. */
-function wakingParts<T extends { from_iso: string | null }>(periods: T[] | undefined, timeZone?: string): T[] {
-  const parts = (periods ?? []).filter((p, i) => i === 0 || startsAwake(p.from_iso, timeZone));
+function wakingParts<T extends { from_iso: string | null }>(periods: T[] | undefined): T[] {
+  const day = periods?.[0]?.from_iso?.slice(0, 10);
+  const parts = (periods ?? []).filter((p, i) => i === 0 || startsAwake(p.from_iso, day));
   if (parts.length > 1 && parts[0].from_iso && parts[1].from_iso
     && Date.parse(parts[1].from_iso) - Date.parse(parts[0].from_iso) < 90 * 60_000) return parts.slice(1);
   return parts;
@@ -142,7 +150,7 @@ export interface DayPart {
 
 export function dayParts(daily: DailyGuidancePayload, now: number = Date.now()): DayPart[] {
   const tz = daily.provenance.place.timezone;
-  const parts = wakingParts(daily.verdict.day_score_periods, tz);
+  const parts = wakingParts(daily.verdict.day_score_periods);
   if (parts.length < 2) return [];
   const current = scorePeriodAt(daily.verdict, now);
   return parts.map((part, i) => {
@@ -173,7 +181,7 @@ function taraNow(daily: DailyGuidancePayload, now: number): { favourable: boolea
 /** "Kind until 11:34 am, then asks for care." when the star changes in the waking day. */
 function tarabalaChange(daily: DailyGuidancePayload): string {
   const tz = daily.provenance.place.timezone;
-  const taras = wakingParts(daily.tarabala_periods, tz);
+  const taras = wakingParts(daily.tarabala_periods);
   if (taras.length < 2) return '';
   const word = (favourable: boolean) => (favourable ? 'is kind to you' : 'asks for care');
   const lines = taras.map((t, i) => i === 0
@@ -189,7 +197,7 @@ function tarabalaChange(daily: DailyGuidancePayload): string {
  */
 export function starChangeNote(daily: DailyGuidancePayload, now: number = Date.now()): { value: string; in: string } | null {
   const tz = daily.provenance.place.timezone;
-  const next = wakingParts(daily.tarabala_periods, tz).slice(1).find((t) => t.from_iso && Date.parse(t.from_iso) > now);
+  const next = wakingParts(daily.tarabala_periods).slice(1).find((t) => t.from_iso && Date.parse(t.from_iso) > now);
   if (!next) return null;
   const at = clockLabel(next.from_iso!, tz);
   const value = next.favourable

@@ -41,13 +41,17 @@ function validDate(raw: string | null): string {
 
 /**
  * "favourable until 11:34 am, then challenging" when the star (or the Moon's
- * sign) changes before 9 pm; the sunrise value alone otherwise. Times are
- * the "HH:MM" the engine gives on the timings place's clock.
+ * sign) changes before 9 pm on the day's own date; the sunrise value alone
+ * otherwise. A change in the small hours before the next sunrise belongs to
+ * tomorrow's morning. Times are the "HH:MM" the engine gives on the timings
+ * place's clock, and from_iso is on the same clock.
  */
-function changing<T extends { favourable: boolean; from?: string | null }>(
+function changing<T extends { favourable: boolean; from?: string | null; from_iso?: string | null }>(
   periods: T[] | undefined, atSunrise: { favourable: boolean }, word: (p: { favourable: boolean }) => string,
 ): string {
-  const waking = (periods ?? []).filter((p, i) => i === 0 || (p.from != null && Number(p.from.slice(0, 2)) < 21));
+  const day = periods?.[0]?.from_iso?.slice(0, 10);
+  const waking = (periods ?? []).filter((p, i) => i === 0
+    || (p.from != null && Number(p.from.slice(0, 2)) < 21 && (!day || p.from_iso?.slice(0, 10) === day)));
   const parts = waking.filter((p, i) => i === 0 || p.favourable !== waking[i - 1].favourable);
   if (parts.length < 2) return word(atSunrise);
   return parts.map((p, i) => (i === 0 ? word(p) : `then ${word(p)} from ${twelveHour(p.from!)}`)).join(', ');

@@ -12,7 +12,7 @@ import pytest
 
 from astrospace.agents import daily_brief_agent as dba
 from astrospace.context import daily_guidance
-from astrospace.context.daily import waking_day_parts
+from astrospace.context.daily import TARA_ACTION, waking_day_parts
 from astrospace.core.vedic import VedicChart
 from astrospace.core.vedic.constants import NAKSHATRAS
 from astrospace.core.vedic.nakshatra import nakshatra_of
@@ -128,3 +128,53 @@ def test_a_change_late_at_night_does_not_split_the_day():
     early = {"from_iso": "2026-10-30T06:45:56+08:00", "day_score": 66, "tone": "positive", "tara": "Sampat"}
     late = {"from_iso": "2026-10-30T22:10:00+08:00", "day_score": 43, "tone": "mixed", "tara": "Vipat"}
     assert waking_day_parts({"day_score_periods": [early, late]}) == []
+
+
+# Hawk, 2026-10-31, 3:43 am in India: Today said "Complete important tasks
+# before 5:39 am" and "Your star turns less kind at 5:39 am, in 25h 57m".
+# The Vedic day of the 31st runs to sunrise on 1 November, and the star
+# changes three times inside it: at sunrise, at 7:12 am on the 31st, and at
+# 5:39 am on the 1st. The 5:39 am change is tomorrow's small hours, not this
+# morning, and the sunrise sliver until 7:12 is gone before most readers are up.
+IST = ZoneInfo("Asia/Kolkata")
+HYDERABAD = {"lat": 17.385, "lng": 78.4867, "tz_str": "Asia/Kolkata"}
+
+
+@pytest.fixture(scope="module")
+def reader_in_india():
+    return VedicChart("Reader", 1985, 3, 10, 8, 0, city="Hyderabad", nation="IN")
+
+
+def _india(chart, hour, minute=0):
+    return daily_guidance(chart, relation="self",
+                          as_of=datetime(2026, 10, 31, hour, minute, tzinfo=IST), **HYDERABAD)
+
+
+def test_a_change_in_the_small_hours_after_midnight_does_not_split_the_day(reader_in_india):
+    g = _india(reader_in_india, 3, 43)
+    starts = [p["from_iso"][:16] for p in g["tarabala_periods"]]
+    assert starts == ["2026-10-31T06:13", "2026-10-31T07:12", "2026-11-01T05:39"]
+    assert waking_day_parts(g["verdict"]) == []
+    assert "5:39" not in g["verdict"]["text"]
+    lines = " ".join(r["headline"] for r in g["do_today"] + g["avoid_today"])
+    assert "5:39" not in lines
+
+
+@pytest.mark.parametrize("hour,minute", [(3, 43), (6, 30), (9, 0)])
+def test_before_the_waking_day_the_ring_reads_its_first_part(reader_in_india, hour, minute):
+    # Before sunrise and in the sliver until 7:12 the ring shows the star of
+    # 7:12 onward, the same star the Do/Avoid row names.
+    g = _india(reader_in_india, hour, minute)
+    v = g["verdict"]
+    second = v["day_score_periods"][1]
+    assert second["from_iso"].startswith("2026-10-31T07:12")
+    assert v["day_score"] == second["day_score"]
+    assert g["tarabala"]["tara"] == second["tara"]
+    rows = [r["headline"] for r in g["do_today"] + g["avoid_today"] if r["source"] == "tarabala"]
+    assert rows == [TARA_ACTION[second["tara"]]]
+
+
+def test_a_change_just_after_midnight_does_not_split_the_day():
+    day = {"from_iso": "2026-10-30T06:45:56+08:00", "day_score": 66, "tone": "positive", "tara": "Sampat"}
+    night = {"from_iso": "2026-10-31T00:20:00+08:00", "day_score": 43, "tone": "mixed", "tara": "Vipat"}
+    assert waking_day_parts({"day_score_periods": [day, night]}) == []
