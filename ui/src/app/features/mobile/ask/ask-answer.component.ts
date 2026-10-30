@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { ASK_NAVIGATION } from './ask-navigation';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -31,6 +31,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
 import { HapticsService } from '../../../core/haptics.service';
 import { AnswerReportContext, ReportAnswerSheetComponent } from './report-answer-sheet.component';
 import { AskDepthService } from './ask-depth.service';
+import { copyText } from '../shared/copy-text';
 
 /**
  * How confidently the answer lands. Named, not a number: the point of the dot
@@ -68,9 +69,15 @@ interface ChatMessage {
   weighing?: AskWeighing | null;
   /** Asked in Deep mode (the Deep switch, or a saved answer with a weighing). */
   deep?: boolean;
+  /** The working steps shown while this answer is prepared: one line per
+   *  real lookup (agents/ask_steps.py), oldest first. */
+  steps?: string[];
   options: string[];
   streaming?: boolean;
 }
+
+const STEP_REVEAL_MS = 900;
+const VISIBLE_STEPS = 5;
 
 const REFER_OUT_KINDS = new Set(['crisis', 'death', 'health', 'legal', 'money']);
 
@@ -144,6 +151,12 @@ export class AskAnswerComponent {
   readonly messages = signal<ChatMessage[]>([]);
   readonly streamedAnswer = signal('');
   readonly streamStatus = signal<string | null>(null);
+  // Working steps arrive in a burst for today's Ask (the bundle's lookups
+  // are made before the writer starts) and one by one for Deep. Showing one
+  // at least every STEP_REVEAL_MS lets a reader follow them either way.
+  private stepQueue: string[] = [];
+  private stepTimer: ReturnType<typeof setInterval> | null = null;
+  private stepTarget: string | null = null;
   readonly streamDomain = signal<string | null>(null);
   readonly streamEvidence = signal<SourceReference[]>([]);
   readonly memoryCandidate = signal<{ profileId: string; revision: number; existingFactId: string | null; candidate: AskMemoryCandidate } | null>(null);
@@ -596,6 +609,7 @@ export class AskAnswerComponent {
   }
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => this.stopSteps());
     effect(() => {
       const question = this.params().get('q')?.trim() ?? '';
       const urlThreadId = this.params().get('thread');
@@ -972,6 +986,7 @@ export class AskAnswerComponent {
         }
         if (this.isStatusEvent(event)) {
           this.streamStatus.set(event.label);
+          this.queueStep(assistantId, event.label);
           this.updateAssistantMessage(assistantId, {
             content: event.label,
             status: event.stage,
@@ -1193,6 +1208,50 @@ export class AskAnswerComponent {
     }
   }
 
+  private queueStep(messageId: string, label: string): void {
+    if (this.stepTarget !== messageId) {
+      this.stopSteps();
+      this.stepTarget = messageId;
+    }
+    this.stepQueue.push(label);
+    if (this.stepTimer === null) {
+      this.revealStep();
+      this.stepTimer = setInterval(() => this.revealStep(), STEP_REVEAL_MS);
+    }
+  }
+
+  private revealStep(): void {
+    const id = this.stepTarget;
+    const target = this.messages().find((message) => message.id === id);
+    const label = this.stepQueue.shift();
+    if (!target?.streaming || label === undefined) {
+      if (!target?.streaming) this.stepQueue = [];
+      this.clearStepTimer();
+      return;
+    }
+    const steps = [...(target.steps ?? []).filter((step) => step !== label), label];
+    this.messages.update((items) =>
+      items.map((message) => (message.id === id ? { ...message, steps } : message)),
+    );
+    this.scheduleScrollToBottom();
+  }
+
+  private clearStepTimer(): void {
+    if (this.stepTimer !== null) clearInterval(this.stepTimer);
+    this.stepTimer = null;
+  }
+
+  private stopSteps(): void {
+    this.clearStepTimer();
+    this.stepQueue = [];
+    this.stepTarget = null;
+  }
+
+  /** The last few steps, oldest first; the final one is the step in hand. */
+  protected visibleSteps(message: ChatMessage): string[] {
+    return (message.steps ?? []).slice(-VISIBLE_STEPS);
+  }
+
   private updateAssistantMessage(id: string, patch: Partial<ChatMessage>): void {
     this.messages.update((items) =>
       items.map((message) => (message.id === id ? { ...message, ...patch } : message)),
@@ -1325,58 +1384,29 @@ export class AskAnswerComponent {
     }
   }
 
-  private legacyCopy(text: string): boolean {
-    if (typeof document === 'undefined') return false;
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
-    textarea.select();
-    let ok = false;
-    try {
-      ok = document.execCommand('copy');
-    } catch {
-      ok = false;
-    }
-    textarea.remove();
-    return ok;
-  }
-
   protected async copyAnswer(message: ChatMessage): Promise<void> {
     const text = askReportText(this.reportInput(message));
     if (!text || typeof document === 'undefined') return;
-
-    // The modern Clipboard API and the legacy execCommand fallback are two
-    // genuinely independent mechanisms, not a feature-detected either/or:
-    // `navigator.clipboard.writeText` can exist (pass feature detection) and
-    // still reject — a real, common shape in Capacitor/WebView contexts,
-    // where the API surface is present but blocked by the WebView's own
-    // clipboard permission policy or a lost user-activation transfer through
-    // the native bridge. Trying it first and only falling through to the
-    // legacy path on its OWN failure (not on its absence) is what makes the
-    // fallback reachable at all — the previous shape tried the modern API
-    // inside the same try/catch that reported failure, so any rejection from
-    // it skipped the fallback entirely and showed "could not be copied" even
-    // when the legacy path would have worked.
-    let copied = false;
-    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-      try {
-        await navigator.clipboard.writeText(text);
-        copied = true;
-      } catch {
-        copied = false;
-      }
-    }
-    if (!copied) copied = this.legacyCopy(text);
-
-    if (!copied) {
+    if (!(await copyText(text))) {
       this.submitError.set('The answer could not be copied. Please try again.');
       return;
     }
-    this.copiedMessageId.set(message.id);
+    this.flashCopied(message.id);
+  }
+
+  /** The reader's own question, back on the clipboard (Hawk, 2026-10-30). */
+  protected async copyQuestion(message: ChatMessage): Promise<void> {
+    if (!(await copyText(message.content))) {
+      this.submitError.set('The question could not be copied. Please try again.');
+      return;
+    }
+    this.flashCopied(message.id);
+  }
+
+  private flashCopied(id: string): void {
+    this.copiedMessageId.set(id);
     setTimeout(() => {
-      if (this.copiedMessageId() === message.id) this.copiedMessageId.set(null);
+      if (this.copiedMessageId() === id) this.copiedMessageId.set(null);
     }, 1800);
   }
 

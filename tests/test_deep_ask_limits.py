@@ -130,7 +130,7 @@ class TestAbandonedExploration:
 
     def test_a_turn_closed_before_exploring_frees_the_slot(self):
         released = threading.Event()
-        prepared = SimpleNamespace(context_used=["chart"], deep_paused=False,
+        prepared = SimpleNamespace(context_used=["chart"], bundle={}, deep_paused=False,
                                    explorer_factory=object(), explore_release=released.set)
         run = orch.AskOrchestrator.run(None, prepared, [], persist=lambda r, s: None)
         next(run)

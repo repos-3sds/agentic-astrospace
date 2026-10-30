@@ -44,8 +44,11 @@
     @if (message.role === 'user') {
       <div class="asked">
         <div class="bubble-wrap">
-          <p class="bubble">{{ message.content }}</p>
-          <button class="mini-action" type="button" (click)="editQuestion(message)">Edit</button>
+          <p class="bubble m-selectable">{{ message.content }}</p>
+          <div class="bubble-actions">
+            <button class="mini-action" type="button" (click)="copyQuestion(message)">{{ copiedMessageId() === message.id ? 'Copied' : 'Copy' }}</button>
+            <button class="mini-action" type="button" (click)="editQuestion(message)">Edit</button>
+          </div>
         </div>
       </div>
     } @else {
@@ -327,12 +330,27 @@
         } @else {
           @if (message.streaming) {
             <div class="stream-progress" role="status">
-              <span class="stream-pulse" aria-hidden="true"></span>
               <span class="stream-text">
                 @if (message.deep) {
                   <small class="stream-deep">Deep reading · about a minute</small>
                 }
-                <span>{{ streamStatus() || message.content || 'Reading your chart…' }}</span>
+                @if (visibleSteps(message); as steps) {
+                  @if (steps.length) {
+                    <ol class="stream-steps" aria-label="What Siddha is checking">
+                      @for (step of steps; track step; let last = $last) {
+                        <li [class.is-current]="last">
+                          <span class="step-mark" aria-hidden="true"></span>
+                          <span>{{ step }}</span>
+                        </li>
+                      }
+                    </ol>
+                  } @else {
+                    <span class="stream-line">
+                      <span class="stream-pulse" aria-hidden="true"></span>
+                      <span>{{ streamStatus() || message.content || 'Reading your chart…' }}</span>
+                    </span>
+                  }
+                }
               </span>
               <button class="stop-stream" type="button" (click)="$event.stopPropagation(); stopStreaming()">Stop</button>
             </div>

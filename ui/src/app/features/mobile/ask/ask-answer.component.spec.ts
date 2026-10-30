@@ -505,6 +505,38 @@ describe('AskAnswerComponent profile isolation and thread lifecycle', () => {
     expect(harness.router.navigate).toHaveBeenCalledWith(['/m', 'ask'], { replaceUrl: true });
   });
 
+  it('lists each working step, ticking the earlier ones off', async () => {
+    jasmine.clock().install();
+    try {
+      let finish!: () => void;
+      const gate = new Promise<void>((resolve) => { finish = resolve; });
+      const harness = createIsolationHarness({});
+      harness.ask.stream.and.callFake(async function* () {
+        yield { type: 'status', stage: 'gathering_context', label: 'Reading your birth chart…' };
+        yield { type: 'status', stage: 'gathering_context', label: 'Looking at your 7th house, marriage and partners…' };
+        yield { type: 'status', stage: 'interpreting', label: 'Our Siddha Agents are writing and checking your answer…' };
+        await gate;
+      });
+      harness.params.next(convertToParamMap({ q: 'When will I marry?', pending: '1' }));
+      for (let i = 0; i < 6; i++) await settleEffects();
+
+      const assistant = () => (harness.component as any).messages().find((m: any) => m.role === 'assistant');
+      // The first step shows at once; the rest follow one at a time.
+      expect(assistant().steps).toEqual(['Reading your birth chart…']);
+      jasmine.clock().tick(900);
+      jasmine.clock().tick(900);
+      expect(assistant().steps).toEqual([
+        'Reading your birth chart…',
+        'Looking at your 7th house, marriage and partners…',
+        'Our Siddha Agents are writing and checking your answer…',
+      ]);
+      expect((harness.component as any).visibleSteps(assistant()).length).toBe(3);
+      finish();
+    } finally {
+      jasmine.clock().uninstall();
+    }
+  });
+
   it('does not submit when profile switching and a pending route race in the same turn', async () => {
     const harness = createIsolationHarness({});
     await settleEffects();
