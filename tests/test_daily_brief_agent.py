@@ -60,7 +60,9 @@ def _brief(spoken_words_each: int = 30, avoid_detail: str = "Ketu from the Moon 
         do=[dba.BriefItem(headline="Close an open task", detail="Sadhaka tara favours completion."),
             dba.BriefItem(headline="Plan your money", detail="Guru Bala from the Moon is active."),
             dba.BriefItem(headline="Take initiative at work", detail="Your Ketu period favours it.")],
-        avoid=[dba.BriefItem(headline="Overextending yourself", detail=avoid_detail)],
+        avoid=[dba.BriefItem(headline="Overextending yourself", detail=avoid_detail),
+               # From 6:47 am on the test day the star is Vadha, not Sadhaka.
+               dba.BriefItem(headline="Avoid new starts", detail="The day's star asks for care.")],
         timing_note=timing,
         why=["Your tara today is an accomplishment star.", "The Moon is in a good house for you."],
         spoken=[dba.SpokenSection(label=label, text=f"{label}: {words}")
@@ -167,7 +169,8 @@ def test_the_model_sees_the_signals_and_the_place_not_kb_references_or_colours()
     agent = _Scripted([_brief(30)])
     _write(agent, mode="guided", tone="gentle", place="Vijayawada")
     prompt = agent.prompts[0]
-    assert "Sadhaka" in prompt and "Rahu Kalam" in prompt and "Vijayawada" in prompt
+    # Vadha from 6:47 am; the Sadhaka minutes after sunrise are no one's day.
+    assert "Vadha" in prompt and "Rahu Kalam" in prompt and "Vijayawada" in prompt
     assert "narrative" in prompt and "do_candidates" in prompt
     assert "references" not in prompt and "lucky" not in prompt
     assert "new to astrology" in prompt and "gentle" in prompt

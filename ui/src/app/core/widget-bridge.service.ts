@@ -38,6 +38,12 @@ export interface TodayWidgetPart {
   moonSign: string;
   /** "Kartika · Krishna paksha", by the month reckoning the reader follows. */
   masa: string;
+  /**
+   * On a day the star or the Moon's sign changes, the score of each later
+   * part from the moment it begins; the widgets switch to it then, like the
+   * ring on Today. Empty on a day of one part.
+   */
+  scoreSteps?: { fromMs: number; score: number; band: 'steady' | 'mixed' | 'tough'; label: string }[];
   /** Sunrise at the reader's place, where the timeline bar starts. */
   sunriseMs: number | null;
   windows: { name: string; kind: string; startMs: number; endMs: number }[];

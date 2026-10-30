@@ -50,6 +50,7 @@ from .base import BaseAstroAgent
 from .period_agent import reading_boundary
 from .style import PLAIN_INDIAN_ENGLISH
 from ..config import flag
+from ..context.daily import waking_day_parts
 
 # Words a second the Listen sheet assumes at 1x, and its default speed.
 LISTEN_WORDS_PER_SECOND = 2.35
@@ -167,6 +168,13 @@ Ground every line in the signals given:
   Never put an astrology term in a title: no tara or its name (Sampat,
   Sadhaka...), nakshatra, dasha, bala, gochara, Rahu Kalam, muhurta, planet or
   Sanskrit words. The signal goes in the item's detail, in plain words.
+- When `day_parts` is not empty, the day's star (or the Moon) changes while
+  the reader is awake, and the day is not one tone. Say so with the clock
+  time, exactly as given: in summary or focus in plain words ("A strong
+  morning; after 11:34 am, slow down"), in why with each part's tara, and in
+  do and avoid put each part's action with its time ("Finish key work before
+  11:34 am", "Avoid new starts after 11:34 am"). Keep each part's own tone;
+  never describe the whole day by one part. timing_note stays Rahu Kalam.
 - When the tara is unfavourable, chandrashtama is true or the day's tone is
   caution, say what to hold off on in plain words: starting new things,
   long travel, big purchases or signing commitments.
@@ -283,6 +291,13 @@ def coverage_gaps(brief: "DailyBrief", payload: dict, first_name: str = "") -> l
             gaps.append('"you" instead of the reader\'s name outside the spoken greeting')
     elif name and re.search(rf"\b{re.escape(name)}\b", brief.timing_note.lower()):
         gaps.append("no name in timing_note")
+    parts = waking_day_parts(payload.get("verdict") or {})
+    if parts:
+        switch = parts[1]["from"].split(" ")[0]
+        said = " ".join([brief.summary, brief.focus, *brief.why,
+                         *(f"{i.headline} {i.detail}" for i in [*brief.do, *brief.avoid])])
+        if switch not in said:
+            gaps.append(f"the time the day's star changes ({parts[1]['from']}) in summary or focus, why, and do/avoid")
     if (payload.get("chandrabala") or {}).get("chandrashtama"):
         moon_text = " ".join([*brief.why, *(f"{i.headline} {i.detail}" for i in brief.avoid)]).lower()
         if "moon" not in moon_text:
@@ -373,6 +388,9 @@ def brief_input(payload: dict, first_name: str, date_label: str, place: str | No
         "engine_energy": (payload.get("reading") or {}).get("energy"),
         "tarabala": payload.get("tarabala"),
         "chandrabala": payload.get("chandrabala"),
+        # On a day the star or the Moon's sign changes while the reader is
+        # awake, each part with its clock time (tarabala above is one moment).
+        "day_parts": waking_day_parts(payload.get("verdict") or {}),
         "star_of_day": payload.get("star_of_day"),
         # All levels: the engine's Career line reads the finest one (sookshma).
         "dasha_chain": context.get("dasha_chain", []),

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.View;
 import android.widget.RemoteViews;
 import app.asksiddha.mobile.R;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -24,15 +25,17 @@ public class TodayWidget extends BaseWidget {
 
         JSONObject today = WidgetStore.get(context, "today");
         boolean fresh = today != null && WidgetStore.today().equals(today.optString("date"));
-        int score = fresh ? today.optInt("score", 0) : 0;
-        String band = fresh ? today.optString("band") : "";
+        // The part of the day in force now, on a day the star changes.
+        JSONObject now = fresh ? scoreAt(today, System.currentTimeMillis()) : null;
+        int score = fresh ? now.optInt("score", 0) : 0;
+        String band = fresh ? now.optString("band") : "";
         int arc = bandColor(context, band);
         int ringSize = layout == R.layout.widget_today_small ? 96 : layout == R.layout.widget_today_medium ? 100 : 92;
         views.setImageViewBitmap(R.id.ring,
             Widgets.ring(context, score, arc, Widgets.color(context, R.color.widget_track), ringSize, 8));
         views.setTextViewText(R.id.score, fresh ? String.valueOf(score) : "–");
         // The word under the number says what the score means ("Steady").
-        views.setTextViewText(R.id.band, fresh ? today.optString("label") : "");
+        views.setTextViewText(R.id.band, fresh ? now.optString("label") : "");
         views.setTextColor(R.id.band, arc);
         views.setViewVisibility(R.id.band, fresh ? View.VISIBLE : View.GONE);
 
@@ -63,6 +66,21 @@ public class TodayWidget extends BaseWidget {
             views.setViewVisibility(R.id.avoid_row, avoidItem.isEmpty() ? View.GONE : View.VISIBLE);
         }
         return views;
+    }
+
+    /**
+     * The score, band and label of the part of the day in force at `now`:
+     * the last of the day's scoreSteps already begun, else the day's own.
+     */
+    static JSONObject scoreAt(JSONObject today, long now) {
+        JSONArray steps = today.optJSONArray("scoreSteps");
+        JSONObject current = today;
+        if (steps == null) return current;
+        for (int i = 0; i < steps.length(); i++) {
+            JSONObject step = steps.optJSONObject(i);
+            if (step != null && step.optLong("fromMs") <= now) current = step;
+        }
+        return current;
     }
 
     static int bandColor(Context context, String band) {

@@ -22,7 +22,8 @@ struct SiddhaProvider: TimelineProvider {
     /// one, and the illustrative day before that.
     func getSnapshot(in context: Context, completion: @escaping (SiddhaEntry) -> Void) {
         let now = Date()
-        let snap = Snapshot.load(at: now)
+        var snap = Snapshot.load(at: now)
+        snap.today = snap.today?.at(now)
         let show = context.isPreview && snap.freshToday == nil ? Sample.snapshot(at: now) : snap
         completion(SiddhaEntry(date: now, snap: show))
     }
@@ -46,11 +47,15 @@ struct SiddhaProvider: TimelineProvider {
         for w in base.freshToday?.windows ?? [] {
             for edge in [w.start, w.end] where edge > now && edge < midnight { times.insert(edge) }
         }
+        for step in base.freshToday?.scoreSteps ?? [] where step.from > now && step.from < midnight {
+            times.insert(step.from)
+        }
         times.insert(midnight.addingTimeInterval(1))
 
         let entries = times.sorted().map { time -> SiddhaEntry in
             var snap = base
             snap.now = time
+            snap.today = base.today?.at(time)
             return SiddhaEntry(date: time, snap: snap)
         }
         completion(Timeline(entries: entries, policy: .atEnd))

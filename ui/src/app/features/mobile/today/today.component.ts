@@ -17,7 +17,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { BirthDetailsCardComponent } from '../chart/birth-details-card.component';
 import { VedicService } from '../../../core/vedic.service';
 import { ResourceFreshness } from '../../../core/resource-cache';
-import { DailyBriefResponse, DailyGuidancePayload, DayScoreParts, VedicAll, DailyActionRow, FestivalOccurrence } from '../../../core/models';
+import { DailyBriefResponse, DailyGuidancePayload, DayScoreParts, DayScorePeriod, VedicAll, DailyActionRow, FestivalOccurrence } from '../../../core/models';
 import { FestivalSheetComponent } from '../calendar/festival-sheet.component';
 import { AnalyticsService } from '../../../core/analytics.service';
 import { TODAY_DRILL_DOWNS, whyDrillDowns } from '../why-reading/drill-downs';
@@ -71,8 +71,10 @@ const DASHA_LEVEL_SHORT: Record<string, string> = {
  * score_parts. Anything older has only the tally; its band is placed in that
  * band's slice of the dial, so the ring and the label still agree.
  */
-export function dayScorePosition(verdict: DailyGuidancePayload['verdict']): number {
+export function dayScorePosition(verdict: DailyGuidancePayload['verdict'], now: number = Date.now()): number {
   const clamp = (value: number) => Math.round(Math.min(100, Math.max(0, value)));
+  const part = scorePeriodAt(verdict, now);
+  if (part) return clamp(part.day_score);
   if (verdict.day_score != null) return clamp(verdict.day_score);
   if (verdict.score_parts) return clamp(verdict.score);
   const legacy: Record<DailyGuidancePayload['verdict']['tone'], number> = {
@@ -84,6 +86,118 @@ export function dayScorePosition(verdict: DailyGuidancePayload['verdict']): numb
 export const BAND_OF_TONE: Record<DailyGuidancePayload['verdict']['tone'], DayBand> = {
   supportive: 'good', positive: 'steady', mixed: 'mixed', caution: 'tough',
 };
+
+/**
+ * The part of the day in force at `now`, on a day the star or the Moon's sign
+ * changes (verdict.day_score_periods, from 2026-10-30). The ring shows this
+ * part's score and switches at the change; the sheet shows every part (Hawk,
+ * 2026-10-30). Null on a day of one part, or a reading from before.
+ */
+export function scorePeriodAt(verdict: DailyGuidancePayload['verdict'], now: number = Date.now()): DayScorePeriod | null {
+  const periods = verdict.day_score_periods ?? [];
+  if (periods.length < 2) return null;
+  return periods.find((p) => !p.until_iso || now < Date.parse(p.until_iso)) ?? periods[periods.length - 1];
+}
+
+/** The band of the part of the day in force now. */
+export function dayBandAt(verdict: DailyGuidancePayload['verdict'], now: number = Date.now()): DayBand {
+  return BAND_OF_TONE[scorePeriodAt(verdict, now)?.tone ?? verdict.tone];
+}
+
+/** "11:34 am" on the timings place's clock. */
+export function clockLabel(iso: string, timeZone?: string): string {
+  return new Intl.DateTimeFormat('en', { hour: 'numeric', minute: '2-digit', timeZone: timeZone || undefined })
+    .format(new Date(iso)).toLowerCase();
+}
+
+/**
+ * A change after 9 pm happens while most readers are winding down, so it
+ * does not split the day's lines (the engine's _AWAKE_UNTIL).
+ */
+function startsAwake(iso: string | null, timeZone?: string): boolean {
+  if (!iso) return false;
+  const hour = Number(new Intl.DateTimeFormat('en', { hour: 'numeric', hourCycle: 'h23', timeZone: timeZone || undefined })
+    .format(new Date(iso)));
+  return hour < 21;
+}
+
+/** The parts a reader lives through: as the engine's _waking, a first part
+ * gone within 90 minutes of sunrise belongs to no one's day. */
+function wakingParts<T extends { from_iso: string | null }>(periods: T[] | undefined, timeZone?: string): T[] {
+  const parts = (periods ?? []).filter((p, i) => i === 0 || startsAwake(p.from_iso, timeZone));
+  if (parts.length > 1 && parts[0].from_iso && parts[1].from_iso
+    && Date.parse(parts[1].from_iso) - Date.parse(parts[0].from_iso) < 90 * 60_000) return parts.slice(1);
+  return parts;
+}
+
+/** One part of the day in the score sheet: "Until 11:34 am · 66 Steady". */
+export interface DayPart {
+  when: string;
+  score: number;
+  band: DayBand;
+  label: string;
+  why: string;
+  current: boolean;
+}
+
+export function dayParts(daily: DailyGuidancePayload, now: number = Date.now()): DayPart[] {
+  const tz = daily.provenance.place.timezone;
+  const parts = wakingParts(daily.verdict.day_score_periods, tz);
+  if (parts.length < 2) return [];
+  const current = scorePeriodAt(daily.verdict, now);
+  return parts.map((part, i) => {
+    const next = parts[i + 1];
+    const when = i === 0
+      ? `Until ${clockLabel(next.from_iso!, tz)}`
+      : next ? `${clockLabel(part.from_iso!, tz)} to ${clockLabel(next.from_iso!, tz)}` : `From ${clockLabel(part.from_iso!, tz)}`;
+    const band = BAND_OF_TONE[part.tone];
+    const star = part.tara ? `${part.tara} star, ${part.tara_favourable ? 'kind to you' : 'asks for care'}` : '';
+    const moon = part.chandrashtama ? 'the Moon in a sensitive place' : '';
+    return {
+      when,
+      score: Math.round(Math.min(100, Math.max(0, part.day_score))),
+      band,
+      label: BAND_LABEL[band],
+      why: [star, moon].filter(Boolean).join(', and '),
+      current: current?.from_iso === part.from_iso,
+    };
+  });
+}
+
+/** The tara in force at `now` (the reading may have been fetched before it changed). */
+function taraNow(daily: DailyGuidancePayload, now: number): { favourable: boolean } {
+  const periods = daily.tarabala_periods ?? [];
+  return periods.find((p) => !p.until_iso || now < Date.parse(p.until_iso)) ?? daily.tarabala;
+}
+
+/** "Kind until 11:34 am, then asks for care." when the star changes in the waking day. */
+function tarabalaChange(daily: DailyGuidancePayload): string {
+  const tz = daily.provenance.place.timezone;
+  const taras = wakingParts(daily.tarabala_periods, tz);
+  if (taras.length < 2) return '';
+  const word = (favourable: boolean) => (favourable ? 'is kind to you' : 'asks for care');
+  const lines = taras.map((t, i) => i === 0
+    ? `Your star (${t.tara}) ${word(t.favourable)} until ${clockLabel(taras[1].from_iso!, tz)}.`
+    : `From ${clockLabel(t.from_iso!, tz)}, ${t.tara} ${word(t.favourable)}.`);
+  return lines.join(' ');
+}
+
+/**
+ * The next change of star still ahead today, for the Timing card: the
+ * window that matters most when the day turns (Hawk asked that Timings show
+ * it, 2026-10-30). Empty once it has passed.
+ */
+export function starChangeNote(daily: DailyGuidancePayload, now: number = Date.now()): { value: string; in: string } | null {
+  const tz = daily.provenance.place.timezone;
+  const next = wakingParts(daily.tarabala_periods, tz).slice(1).find((t) => t.from_iso && Date.parse(t.from_iso) > now);
+  if (!next) return null;
+  const at = clockLabel(next.from_iso!, tz);
+  const value = next.favourable
+    ? `Your star turns kinder at ${at}. Keep big starts for after then.`
+    : `Your star turns less kind at ${at}. Do the important things before then.`;
+  const minutes = Math.round((Date.parse(next.from_iso!) - now) / 60_000);
+  return { value, in: `In ${formatDuration(Math.max(1, minutes))}` };
+}
 
 /** Today's first Ask chip, worded from the band so it never contradicts the ring (sweep F-9). */
 const ASK_DAY_QUESTION: Record<DailyGuidancePayload['verdict']['tone'], string> = {
@@ -115,7 +229,7 @@ function scoreReasonFromParts(parts: DayScoreParts): string {
 }
 
 function scoreReason(daily: DailyGuidancePayload): string {
-  const parts = daily.verdict.day_score_parts ?? daily.verdict.score_parts;
+  const parts = scorePeriodAt(daily.verdict)?.day_score_parts ?? daily.verdict.day_score_parts ?? daily.verdict.score_parts;
   if (parts) return scoreReasonFromParts(parts);
   const highTransits = daily.context.active_gochara.filter((row) => row.severity === 'high').length;
   const difficultWindows = daily.muhurta_windows.filter((row) => row.kind === 'inauspicious').length;
@@ -375,6 +489,10 @@ export class TodayComponent {
 
   /** The clock, moved on by the half-minute tick. */
   private readonly now = signal(Date.now());
+  /** Where the part of the day the ring shows began; it redraws when this moves. */
+  private scorePart: string | null = null;
+  /** The day's parts, for the score sheet, when the star or Moon changes. */
+  readonly dayParts = signal<DayPart[]>([]);
 
   /** Before sunrise, when today's panchang begins. */
   protected readonly sunriseNote = computed(() => {
@@ -523,7 +641,16 @@ export class TodayComponent {
       if (this.followDayChange()) return;
       const loaded = this.loadedDaily();
       if (!loaded) return;
-      const next = muhurtaCountdown(loaded.daily);
+      // The star or the Moon's sign changed since the ring was drawn, or the
+      // change the Timing card counts down to has come: redraw the day.
+      const starChange = starChangeNote(loaded.daily);
+      if ((scorePeriodAt(loaded.daily.verdict)?.from_iso ?? null) !== this.scorePart
+        || (!starChange && this.view()?.nextWindowLabel === 'YOUR STAR CHANGES')) {
+        this.applyDaily(loaded.name, loaded.city, loaded.daily);
+        this.applyBrief();
+        return;
+      }
+      const next = starChange?.in ?? muhurtaCountdown(loaded.daily);
       this.view.update((view) => (view && view.nextWindowIn !== next ? { ...view, nextWindowIn: next } : view));
     }, 30_000);
     inject(DestroyRef).onDestroy(() => clearInterval(tick));
@@ -726,7 +853,8 @@ export class TodayComponent {
       detail: brief.summary,
       doItems: brief.do.map((item) => item.headline),
       avoidItems: brief.avoid.map((item) => item.headline),
-      nextWindowValue: brief.timing_note,
+      // The star's change, while it is ahead, outranks the brief's note.
+      nextWindowValue: view.nextWindowLabel === 'YOUR STAR CHANGES' ? view.nextWindowValue : brief.timing_note,
     }));
     this.summary.set(brief.summary);
     this.plainWords.set([...brief.why, brief.practical_close]);
@@ -761,6 +889,19 @@ export class TodayComponent {
       avoidItem: view.avoidItems[0] ?? '',
       doItems: view.doItems.slice(0, 2),
       avoidItems: view.avoidItems.slice(0, 2),
+      scoreSteps: (daily.verdict.day_score_periods ?? []).length > 1
+        ? (daily.verdict.day_score_periods ?? []).flatMap((part) => {
+          const fromMs = part.from_iso ? Date.parse(part.from_iso) : Number.NaN;
+          if (!Number.isFinite(fromMs)) return [];
+          const band = BAND_OF_TONE[part.tone];
+          return [{
+            fromMs,
+            score: Math.round(Math.min(100, Math.max(0, part.day_score))),
+            band: band === 'good' ? 'steady' as const : band,
+            label: BAND_LABEL[band],
+          }];
+        })
+        : [],
       tithi: daily.star_of_day.tithi,
       nakshatra: daily.star_of_day.nakshatra,
       yoga: daily.panchanga_details?.yoga ?? '',
@@ -801,7 +942,10 @@ export class TodayComponent {
   }
 
   private applyDaily(name: string, city: string, daily: DailyGuidancePayload): void {
-    const band = BAND_OF_TONE[daily.verdict.tone];
+    const now = Date.now();
+    const band = dayBandAt(daily.verdict, now);
+    this.scorePart = scorePeriodAt(daily.verdict, now)?.from_iso ?? null;
+    const starChange = starChangeNote(daily, now);
     const dateLabel = new Intl.DateTimeFormat('en', {
       weekday: 'long',
       day: 'numeric',
@@ -816,7 +960,7 @@ export class TodayComponent {
       dateLabel,
       place: daily.provenance.place.city || city,
       placeLong: timingPlaceLabel(daily.provenance.place) || city,
-      score: dayScorePosition(daily.verdict),
+      score: dayScorePosition(daily.verdict, now),
       band,
       scoreLabel: BAND_LABEL[band],
       verdict: daily.verdict.headline,
@@ -831,10 +975,11 @@ export class TodayComponent {
       avoidItems: daily.avoid_today.length
         ? daily.avoid_today.map((row) => this.rowHeadline(row))
         : [daily.reading.avoid[0] ?? daily.reading.timing_note],
-      nextWindowLabel: 'TIMING NOTE',
-      nextWindowValue: daily.reading.timing_note,
-      nextWindowIn: muhurtaCountdown(daily),
+      nextWindowLabel: starChange ? 'YOUR STAR CHANGES' : 'TIMING NOTE',
+      nextWindowValue: starChange?.value ?? daily.reading.timing_note,
+      nextWindowIn: starChange?.in ?? muhurtaCountdown(daily),
     });
+    this.dayParts.set(dayParts(daily, now));
     this.loadedDaily.set({
       name,
       dateLabel,
@@ -844,9 +989,9 @@ export class TodayComponent {
     this.signals.set([
       {
         name: 'Tarabala',
-        verdict: daily.tarabala.favourable ? 'GOOD' : 'CAUTION',
-        tone: daily.tarabala.favourable ? 'good' : 'warn',
-        explanation: plainTarabala(daily),
+        verdict: taraNow(daily, now).favourable ? 'GOOD' : 'CAUTION',
+        tone: taraNow(daily, now).favourable ? 'good' : 'warn',
+        explanation: tarabalaChange(daily) || plainTarabala(daily),
       },
       {
         name: 'Chandrabala',

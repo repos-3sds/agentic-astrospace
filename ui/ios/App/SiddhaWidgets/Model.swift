@@ -17,6 +17,16 @@ struct TimingWindow: Decodable, Hashable {
     var caution: Bool { kind == "inauspicious" }
 }
 
+/// One later part of a day whose star or Moon sign changes: its score from `fromMs`.
+struct ScoreStep: Decodable, Hashable {
+    var fromMs: Double
+    var score: Int
+    var band: String
+    var label: String
+
+    var from: Date { Date(timeIntervalSince1970: fromMs / 1000) }
+}
+
 struct TodayPart: Decodable {
     var date: String = ""
     var score: Int = 0
@@ -36,6 +46,7 @@ struct TodayPart: Decodable {
     var sunriseMs: Double = 0
     var windows: [TimingWindow] = []
     var listen: String = ""
+    var scoreSteps: [ScoreStep] = []
 
     init() {}
 
@@ -60,11 +71,23 @@ struct TodayPart: Decodable {
         sunriseMs = (try? c.decode(Double.self, forKey: .sunriseMs)) ?? 0
         windows = (try? c.decode([TimingWindow].self, forKey: .windows)) ?? []
         listen = text(.listen)
+        scoreSteps = (try? c.decode([ScoreStep].self, forKey: .scoreSteps)) ?? []
     }
 
     private enum Keys: String, CodingKey {
         case date, score, band, label, headline, summary, doItem, avoidItem, doItems, avoidItems
-        case tithi, nakshatra, yoga, moonSign, masa, sunriseMs, windows, listen
+        case tithi, nakshatra, yoga, moonSign, masa, sunriseMs, windows, listen, scoreSteps
+    }
+
+    /// The day as it stands at `now`: the score of the part of the day in
+    /// force, so the ring switches when the star changes, as Today's does.
+    func at(_ now: Date) -> TodayPart {
+        guard let step = scoreSteps.last(where: { $0.from <= now }) else { return self }
+        var part = self
+        part.score = step.score
+        part.band = step.band
+        part.label = step.label
+        return part
     }
 
     /// Up to two Do and two Avoid lines, without their own "Do"/"Avoid" label.
