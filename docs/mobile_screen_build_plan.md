@@ -42,6 +42,11 @@ is a bigger change than the problem needs.
   one you have before adding it, and size the leaf in CSS. Different *colour* is
   a different asset (`play.svg` vs `play-muted.svg`); different size is not.
 - **Sheets use `as-sheet`** for scrim, radius, handle and safe-area padding.
+- **Top bars carry `asStickyBar`** (or use `as-back-bar`, which does). The bar
+  stays fixed while the page scrolls under it and shows the screen's h1 small
+  once the big title has gone under it. Never set `overflow: hidden` on a
+  screen's host: it makes the host a scroller and the bar scrolls away; use
+  `overflow: clip`.
 - **Exported assets are used as-is.** The only exception so far is the day
   gauge, whose arc is data-driven and so is redrawn from the export's geometry.
 - **Safe areas** are consumed by the shell; screens should not re-apply them.

@@ -5,6 +5,9 @@
   position: relative;
   min-height: 100%;
   overflow: hidden;
+  // clip, not hidden: hidden makes Today a scroller of its own, and the top
+  // bar would scroll away instead of staying fixed.
+  overflow: clip;
 }
 
 // No day-band wash. A fixed z-index: -1 layer sat under the shell's ground on
@@ -266,8 +269,7 @@
 }
 
 .appbar {
-  position: relative;
-  z-index: 1;
+  // Sticky and above the page: .m-sticky-bar (styles-mobile.scss).
   display: flex;
   align-items: center;
   justify-content: space-between;

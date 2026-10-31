@@ -6,6 +6,7 @@ import { NATURAL_VOICE_NAME, NaturalVoiceService } from '../../../core/natural-v
 import { AskResponseLanguage, PreferencesService } from '../../../core/preferences.service';
 import { HapticsService } from '../../../core/haptics.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 /** The languages the Ask agent can answer in. */
 export type AppLanguage = AskResponseLanguage;
@@ -35,7 +36,7 @@ const PREVIEW_TEXT =
   selector: 'as-settings-language-audio',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective],
+  imports: [StickyBarDirective, BackLinkDirective],
   templateUrl: './language-audio.component.html',
   styleUrl: './language-audio.component.scss',
 })

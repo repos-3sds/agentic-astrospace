@@ -3,6 +3,7 @@ import { ThemePreference, ThemeService } from '../../../core/theme.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { WidgetBridgeService } from '../../../core/widget-bridge.service';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 interface AppearanceOption {
   id: ThemePreference;
@@ -13,7 +14,7 @@ interface AppearanceOption {
 @Component({
   selector: 'as-appearance',
   standalone: true,
-  imports: [BackLinkDirective, SelectHapticDirective],
+  imports: [StickyBarDirective, BackLinkDirective, SelectHapticDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './appearance.component.html',
   styleUrl: './appearance.component.scss',

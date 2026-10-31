@@ -28,6 +28,7 @@ import { ClaimMarker, REVIEW_OPTIONS, claimIsDue, claimWindow } from './claim-re
 import { GenerationJob, ReadingGenerationService, generationKey } from './reading-generation.service';
 import { PlanGateService } from '../../../core/plan-gate.service';
 import { PlanLockComponent } from '../shared/plan-lock.component';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 // Generation runs one model call over the chart, transits and dashas and
 // usually takes 20-40 s. The stages are paced by elapsed time (the API does
@@ -127,9 +128,9 @@ export function splitReadings(readings: Reading[]): { current: Reading[]; past: 
   selector: 'as-mobile-readings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PlanLockComponent, LockedStateComponent, BackLinkDirective, GenericErrorComponent, RouterLink, MarkdownPipe, SheetComponent, SelectHapticDirective],
+  imports: [StickyBarDirective, PlanLockComponent, LockedStateComponent, BackLinkDirective, GenericErrorComponent, RouterLink, MarkdownPipe, SheetComponent, SelectHapticDirective],
   template: `
-    <a class="mrd-back" [asBack]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
+    <a class="mrd-back" asStickyBar [asBack]="['/m','chart']"><img src="mobile/back.svg" alt="" /><span>Your Chart</span></a>
     <main class="mrd-body">
       <header><h1>Readings</h1><p>What your chart points to, and a record of what actually happened.</p></header>
       @if (!gate.allows('readings.full')) {

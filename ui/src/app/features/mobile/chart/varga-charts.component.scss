@@ -3,6 +3,7 @@
 :host {
   display: block;
   overflow-x: hidden;
+  overflow-x: clip; // clip, not hidden: hidden makes this a scroller and the top bar stops sticking
   padding-bottom: 24px;
 }
 

@@ -10,6 +10,7 @@ import { SelectHapticDirective } from '../shared/select-haptic.directive';
 import { PlanGateService } from '../../../core/plan-gate.service';
 import { PlanLockComponent } from '../shared/plan-lock.component';
 import { CityPickerComponent } from '../shared/city-picker.component';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 /** Whose chart a purpose is timed to. Mirrors `whose` in core/vedic/muhurta.py. */
 export type MuhurtaWhose = 'self' | 'child' | 'couple' | 'family' | 'mother';
@@ -93,7 +94,7 @@ const WHOSE_LABEL: Record<MuhurtaWhose, string> = {
   selector: 'as-muhurta-goal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PlanLockComponent, BackLinkDirective, RouterLink, SelectHapticDirective, CityPickerComponent],
+  imports: [StickyBarDirective, PlanLockComponent, BackLinkDirective, RouterLink, SelectHapticDirective, CityPickerComponent],
   templateUrl: './muhurta-goal.component.html',
   styleUrl: './muhurta-goal.component.scss',
 })

@@ -497,3 +497,57 @@ html[data-nav='push'][data-nav-os='ios']::view-transition-new(root) { box-shadow
   ::view-transition-old(*),
   ::view-transition-new(*) { animation: none !important; }
 }
+
+// Fixed top bars (Hawk, 2026-10-30): a screen's back link or a tab's title row
+// stays put while only the content scrolls. StickyBarDirective adds the class
+// and toggles the states; the look lives here because the bars belong to many
+// components. Transparent at rest, so a screen at its top looks as it always
+// has; frosted once anything has passed under it.
+.as-mobile .m-sticky-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  transition: background-color 160ms ease, box-shadow 160ms ease;
+
+  &.is-scrolled {
+    background-color: color-mix(in srgb, var(--m-bg) 96%, transparent);
+    -webkit-backdrop-filter: blur(24px) saturate(1.5);
+    backdrop-filter: blur(24px) saturate(1.5);
+    box-shadow: inset 0 -1px 0 var(--m-border);
+  }
+
+  // The big title, small and centred, once it has slid under the bar.
+  &::after {
+    content: attr(data-title);
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    max-width: 56%;
+    transform: translate(-50%, -50%);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font: 600 16px / 1.25 'Inter', system-ui, sans-serif;
+    color: var(--m-text);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease;
+  }
+  &:not([data-title])::after { content: none; }
+  &.is-collapsed::after { opacity: 1; }
+
+  // The parent's name makes way for it; the chevron stays.
+  :is(.crumb, a > span:not([class])),
+  &:is(a) > span:not([class]) {
+    transition: opacity 160ms ease;
+  }
+  &.is-collapsed :is(.crumb, a > span:not([class])),
+  &.is-collapsed:is(a) > span:not([class]) {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .as-mobile .m-sticky-bar,
+  .as-mobile .m-sticky-bar::after { transition: none; }
+}

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { KundliStore } from '../../../core/kundli.store';
 import { USER_LOCAL_STORAGE_KEYS } from '../../../core/session-teardown';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 // The single draft every profile shared before 2026-10-18. It moves to the
 // first profile opened, then goes. Per-profile keys share its prefix, so
@@ -31,9 +32,9 @@ function write(key: string, value: string | null): void {
   selector: 'as-mobile-notes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective],
+  imports: [StickyBarDirective, BackLinkDirective],
   template: `
-    <header class="mnote-top"><a [asBack]="['/m','explore']"><img src="mobile/back.svg" alt="" /><span>Explore</span></a><em>On this phone</em></header>
+    <header class="mnote-top" asStickyBar><a [asBack]="['/m','explore']"><img src="mobile/back.svg" alt="" /><span>Explore</span></a><em>On this phone</em></header>
     <main class="mnote-body">
       <header><h1>Notes</h1><p>{{ subtitle() }}</p></header>
       <textarea

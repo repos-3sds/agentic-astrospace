@@ -8,6 +8,7 @@ import { PreferencesService } from '../../../core/preferences.service';
 import { VedicService } from '../../../core/vedic.service';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 /**
  * Full Compatibility Detail (Figma 215:805) — the eight-Koota breakdown,
@@ -35,7 +36,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
   selector: 'as-compat-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, RouterLink],
+  imports: [StickyBarDirective, BackLinkDirective, GenericErrorComponent, RouterLink],
   templateUrl: './compat-detail.component.html',
   styleUrl: './compat-detail.component.scss',
 })

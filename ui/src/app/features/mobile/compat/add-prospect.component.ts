@@ -5,6 +5,7 @@ import { KundliStore } from '../../../core/kundli.store';
 import { KundliPayload } from '../../../core/models';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { BirthDetailsFormComponent } from '../shared/birth-details-form.component';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 /**
  * Compatibility › Add a person. The same birth-details form as everywhere
@@ -15,9 +16,9 @@ import { BirthDetailsFormComponent } from '../shared/birth-details-form.componen
   selector: 'as-add-prospect',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, BirthDetailsFormComponent],
+  imports: [StickyBarDirective, BackLinkDirective, BirthDetailsFormComponent],
   template: `
-    <a class="mcof-back" [asBack]="['/m','compat']"><img src="mobile/back.svg" alt="" /><span>Compatibility</span></a>
+    <a class="mcof-back" asStickyBar [asBack]="['/m','compat']"><img src="mobile/back.svg" alt="" /><span>Compatibility</span></a>
     <section class="mcof-form">
       <header><h1>Add the person</h1><p>Create a saved profile, then compute the match from real chart data.</p></header>
       <as-birth-details-form

@@ -5,6 +5,7 @@ import { EmailCategory, EmailSettingsService } from '../../../core/email-setting
 import { RouterLink } from '@angular/router';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SubhashitaService } from '../../../core/subhashita.service';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 /** One thing the app may notify about. */
 export interface NotificationPref {
@@ -48,7 +49,7 @@ export interface NotificationPref {
   selector: 'as-settings-notifications',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, RouterLink],
+  imports: [StickyBarDirective, BackLinkDirective, RouterLink],
   templateUrl: './notifications.component.html',
   styleUrl: './notifications.component.scss',
 })

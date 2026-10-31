@@ -16,13 +16,14 @@ import {
   ProfileFactKey,
 } from '../../../core/profile-context.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 type EditorKind = ProfileFactKey;
 
 @Component({
   selector: 'as-profile-memory',
   standalone: true,
-  imports: [BackLinkDirective, FormsModule],
+  imports: [StickyBarDirective, BackLinkDirective, FormsModule],
   templateUrl: './profile-memory.component.html',
   styleUrl: './profile-memory.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

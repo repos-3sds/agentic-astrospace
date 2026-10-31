@@ -10,6 +10,7 @@ import { VedicService } from '../../../core/vedic.service';
 import { buildChartAdapter } from '../chart/mobile-chart-data';
 import { monthYear } from '../format-date';
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 type Tone = 'accent' | 'good' | 'warn' | 'muted';
 
@@ -39,7 +40,7 @@ interface ExploreTile {
   selector: 'as-explore-menu',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ProfileSwitcherComponent, RouterLink],
+  imports: [StickyBarDirective, ProfileSwitcherComponent, RouterLink],
   templateUrl: './explore-menu.component.html',
   styleUrl: './explore-menu.component.scss',
 })

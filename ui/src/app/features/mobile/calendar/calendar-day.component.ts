@@ -15,6 +15,7 @@ import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { PullRefreshService } from '../../../core/pull-refresh.service';
 import { tabletLayout } from '../../../core/screen-size';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 const HARD_TARAS = new Set(['Janma', 'Vadha']);
 
@@ -66,10 +67,10 @@ function twelveHour(hhmm: string): string {
   selector: 'as-calendar-day',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, FestivalSheetComponent],
+  imports: [StickyBarDirective, BackLinkDirective, GenericErrorComponent, FestivalSheetComponent],
   template: `
     @if (!embedded()) {
-      <a class="mcald-back" [asBack]="['/m','calendar']"><img src="mobile/back.svg" alt="" /><span>Calendar</span></a>
+      <a class="mcald-back" asStickyBar [asBack]="['/m','calendar']"><img src="mobile/back.svg" alt="" /><span>Calendar</span></a>
     }
     <main class="mcald-body">
       @if (loading()) {

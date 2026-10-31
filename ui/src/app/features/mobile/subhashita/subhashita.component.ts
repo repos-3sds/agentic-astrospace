@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SubhashitaService, SUBHASHITA_TITLE } from '../../../core/subhashita.service';
 import { SubhashitaVerseComponent } from './subhashita-verse.component';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 /**
  * Today's Subhashita, from Explore, the morning push and the widget. Only
@@ -12,9 +13,9 @@ import { SubhashitaVerseComponent } from './subhashita-verse.component';
   selector: 'as-subhashita',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, SubhashitaVerseComponent],
+  imports: [StickyBarDirective, BackLinkDirective, SubhashitaVerseComponent],
   template: `
-    <a class="appbar" [asBack]="['/m', 'explore']">
+    <a class="appbar" asStickyBar [asBack]="['/m', 'explore']">
       <img src="mobile/back.svg" alt="" aria-hidden="true" />
       <span class="crumb">Explore</span>
     </a>

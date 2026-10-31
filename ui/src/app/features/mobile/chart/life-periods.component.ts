@@ -19,6 +19,7 @@ import { GenericErrorComponent } from '../states/generic-error.component';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
 import { PlanGateService } from '../../../core/plan-gate.service';
 import { PlanLockComponent } from '../shared/plan-lock.component';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 interface Period {
   name: string;
@@ -75,7 +76,7 @@ type DashaLevel = 'maha' | 'antar' | 'pratyantar' | 'sookshma' | 'prana';
   selector: 'as-life-periods',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackBarComponent, GenericErrorComponent, RouterLink, BirthTimeBadgeComponent, SelectHapticDirective, PlanLockComponent],
+  imports: [StickyBarDirective, BackBarComponent, GenericErrorComponent, RouterLink, BirthTimeBadgeComponent, SelectHapticDirective, PlanLockComponent],
   templateUrl: './life-periods.component.html',
   styleUrl: './life-periods.component.scss',
 })

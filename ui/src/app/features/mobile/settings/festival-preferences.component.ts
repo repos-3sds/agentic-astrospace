@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FestivalRegion, PreferencesService } from '../../../core/preferences.service';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 interface FestivalChoice {
   id: FestivalRegion;
@@ -19,7 +20,7 @@ interface FestivalChoice {
   selector: 'as-settings-festivals',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, SelectHapticDirective],
+  imports: [StickyBarDirective, BackLinkDirective, SelectHapticDirective],
   templateUrl: './festival-preferences.component.html',
   styleUrl: './festival-preferences.component.scss',
 })

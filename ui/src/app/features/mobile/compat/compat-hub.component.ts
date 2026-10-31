@@ -5,14 +5,15 @@ import { KundliStore } from '../../../core/kundli.store';
 import { GenericErrorComponent } from '../states/generic-error.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { profileRelationLabel } from '../settings/profile-fields';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 @Component({
   selector: 'as-compat-hub',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, RouterLink],
+  imports: [StickyBarDirective, BackLinkDirective, GenericErrorComponent, RouterLink],
   template: `
-    <a class="mco-back" [asBack]="['/m','family']"><img src="mobile/back.svg" alt="" /><span>Family</span></a>
+    <a class="mco-back" asStickyBar [asBack]="['/m','family']"><img src="mobile/back.svg" alt="" /><span>Family</span></a>
     <main class="mco-body">
       <header><h1>Compatibility</h1><p>The traditional 36-point match between two charts</p></header>
       <section class="mco-how"><b>HOW THIS WORKS</b><p>Pick someone you have saved. Siddha compares your two birth charts on the eight traditional points of match and shows the score, what helps, and anything worth a closer look.</p></section>

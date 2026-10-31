@@ -13,6 +13,7 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
 import { SelectHapticDirective } from '../shared/select-haptic.directive';
 import { PlanLockComponent } from '../shared/plan-lock.component';
 import { FREE_VARGAS, PlanGateService } from '../../../core/plan-gate.service';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 /** The three drawing conventions the app can render a chart in. */
 export type ChartStyle = 'Eastern' | 'South' | 'North';
@@ -33,7 +34,7 @@ export type ChartStyle = 'Eastern' | 'South' | 'North';
   selector: 'as-chart-full',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, KundliChartComponent, PlanLockComponent, PlanetSheetComponent, RouterLink, SelectHapticDirective],
+  imports: [StickyBarDirective, BackLinkDirective, GenericErrorComponent, KundliChartComponent, PlanLockComponent, PlanetSheetComponent, RouterLink, SelectHapticDirective],
   templateUrl: './chart-full.component.html',
   styleUrl: './chart-full.component.scss',
 })

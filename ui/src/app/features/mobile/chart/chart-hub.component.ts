@@ -14,6 +14,7 @@ import { DashaPayload, DashaPeriod, VargaChart, VedicAll } from '../../../core/m
 import { VedicService } from '../../../core/vedic.service';
 import { buildChartAdapter, rashiFallback } from './mobile-chart-data';
 import { GenericErrorComponent } from '../states/generic-error.component';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 /** One of the three placements the hub leads with. */
 export interface AnglePoint {
@@ -79,7 +80,7 @@ const PLAIN_SUBTITLES: Record<string, string> = {
   selector: 'as-chart-hub',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackBarComponent, GenericErrorComponent, KundliChartComponent, ProfileSwitcherComponent, ProvenanceSheetComponent, RouterLink, BirthTimeBadgeComponent, NgTemplateOutlet],
+  imports: [StickyBarDirective, BackBarComponent, GenericErrorComponent, KundliChartComponent, ProfileSwitcherComponent, ProvenanceSheetComponent, RouterLink, BirthTimeBadgeComponent, NgTemplateOutlet],
   templateUrl: './chart-hub.component.html',
   styleUrl: './chart-hub.component.scss',
 })

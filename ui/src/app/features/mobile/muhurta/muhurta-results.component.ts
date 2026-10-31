@@ -12,6 +12,7 @@ import { GenericErrorComponent } from '../states/generic-error.component';
 import { PlanLockComponent } from '../shared/plan-lock.component';
 import { BackLinkDirective } from '../../../core/back-link.directive';
 import { localIsoDate } from './muhurta-goal.component';
+import { StickyBarDirective } from '../shared/sticky-bar.directive';
 
 /** How strongly a window is endorsed, in words. */
 export type WindowQuality = 'best' | 'good' | 'workable';
@@ -101,7 +102,7 @@ const PAGE = 8;
   selector: 'as-muhurta-results',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective, GenericErrorComponent, PlanLockComponent, RouterLink],
+  imports: [StickyBarDirective, BackLinkDirective, GenericErrorComponent, PlanLockComponent, RouterLink],
   templateUrl: './muhurta-results.component.html',
   styleUrl: './muhurta-results.component.scss',
 })

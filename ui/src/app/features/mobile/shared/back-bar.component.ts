@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 import { BackLinkDirective } from '../../../core/back-link.directive';
+import { StickyBarDirective } from './sticky-bar.directive';
 
 /**
  * The one header for a screen below a tab: a bare chevron and the parent's
@@ -11,14 +12,18 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
  * centred italic title, a circled chevron with an inline title, and a bare
  * chevron with a step counter. Sub-screens now all use this one; tab roots
  * keep their title-left, icon-right bar.
+ *
+ * The host is display: contents so the bar's sticky range is the whole
+ * screen, not this element: it stays at the top while the title and the
+ * page scroll under it.
  */
 @Component({
   selector: 'as-back-bar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BackLinkDirective],
+  imports: [BackLinkDirective, StickyBarDirective],
   template: `
-    <div class="bar">
+    <div class="bar" asStickyBar>
       <a class="back" [asBack]="back()" [attr.aria-label]="'Back to ' + crumb()">
         <img src="mobile/back.svg" alt="" aria-hidden="true" />
         <span class="crumb">{{ crumb() }}</span>
@@ -34,7 +39,8 @@ import { BackLinkDirective } from '../../../core/back-link.directive';
   `,
   styles: `
     @use '../mobile-tokens' as *;
-    :host { display: block; flex-shrink: 0; }
+    :host { display: contents; }
+    .bar, .intro { flex-shrink: 0; }
     .bar {
       display: flex;
       align-items: center;
