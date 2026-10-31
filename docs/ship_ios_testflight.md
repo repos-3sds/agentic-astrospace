@@ -39,9 +39,12 @@ GitHub's macOS runners are free for this repository because it is public.
 - **Submit for App Review or release to the App Store.** `scripts/asc.py` has
   no review, release or tester calls, and a test checks that it stays that way.
   A store release is done in App Store Connect on Hawk's word.
-- **Give a build to the external group** ("Friends and family"). Add the build
-  to that group in App Store Connect › TestFlight. A new build may need Beta
-  App Review again; Apple decides.
+- **Give a build to the external group** ("Friends and family"). That takes
+  Hawk's word for a named build, then Actions › TestFlight external › Run
+  workflow with that build number (`.github/workflows/testflight-external.yml`,
+  `scripts/testflight_external.py`). It waits for Apple to finish processing,
+  sets What to Test if empty, adds the build to the group and submits it for
+  Beta App Review. Apple decides how long review takes.
 - **Touch the Mac's signing.** The Mac keeps Xcode's automatic signing and its
   own certificate. GitHub has a separate Apple Distribution certificate made
   only for it, so revoking one never breaks the other.
