@@ -1,0 +1,101 @@
+@use '../mobile-tokens' as *;
+
+:host { display: block; }
+
+// Native horizontal scroll with snap points: the swipe is the phone's own,
+// with its momentum and edge feel, rather than a JS drag.
+.tc-track {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  // A scroll box clips what overflows it, and the glass cards cast a deep
+  // shadow: room for it inside the track, given back outside it.
+  padding: 4px 16px 28px;
+  margin: -4px -16px -24px;
+  scroll-padding-inline: 16px;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.window {
+  flex: 0 0 100%;
+  box-sizing: border-box;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  background: var(--m-warn-soft);
+  border-radius: 18px;
+  padding: 13px 16px 13px 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  // A link to today in the calendar, styled as the card it was.
+  color: inherit;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  &:active { opacity: 0.85; }
+  .eyebrow { color: var(--m-warn); }
+  .window-in { color: var(--m-warn); }
+  &.good {
+    background: var(--m-good-soft);
+    .eyebrow, .window-in { color: var(--m-good); }
+  }
+}
+
+.window-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--m-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  img { width: 20px; height: 20px; display: block; }
+}
+
+.eyebrow { @include m-eyebrow; margin: 0; }
+.window-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
+.window-value { @include m-body-strong; color: var(--m-text); margin: 0; }
+.window-detail { @include m-body-small; color: var(--m-muted); margin: 0; }
+.window-in { @include m-body-strong; margin: 0; flex-shrink: 0; }
+// Beside the note, the countdown left a 360-wide phone one word per line of
+// advice. Under 400 it drops below the note, lined up with its text.
+@media (max-width: 400px) {
+  .window { flex-wrap: wrap; row-gap: 6px; }
+  .window-in { flex-basis: 100%; padding-left: 48px; }
+}
+
+.tc-dots {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 4px;
+}
+// A 6px dot inside a 24px target.
+.tc-dot {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  &::before {
+    content: '';
+    display: block;
+    width: 6px;
+    height: 6px;
+    margin: auto;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--m-muted) 45%, transparent);
+    transition: width 0.2s ease, background 0.2s ease;
+  }
+  &.on::before { width: 16px; background: var(--m-warn); }
+  &.on.good::before { background: var(--m-good); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tc-dot::before { transition: none; }
+}

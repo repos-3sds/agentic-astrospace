@@ -639,43 +639,6 @@
   svg { width: 13px; height: 13px; display: block; flex-shrink: 0; }
 }
 
-/* Next window — node 13:57 */
-.window {
-  background: var(--m-warn-soft);
-  border-radius: 18px;
-  padding: 13px 16px 13px 15px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  // A link to today in the calendar, styled as the card it was.
-  color: inherit;
-  text-decoration: none;
-  -webkit-tap-highlight-color: transparent;
-  &:active { opacity: 0.85; }
-}
-
-.window-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--m-surface);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  img { width: 20px; height: 20px; display: block; }
-}
-
-.window-text { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 7px; }
-.window-value { @include m-body-strong; color: var(--m-text); margin: 0; }
-.window-in { @include m-body-strong; color: var(--m-warn); margin: 0; flex-shrink: 0; }
-// Beside the note, the countdown left a 360-wide phone one word per line of
-// advice. Under 400 it drops below the note, lined up with its text.
-@media (max-width: 400px) {
-  .window { flex-wrap: wrap; row-gap: 6px; }
-  .window-in { flex-basis: 100%; padding-left: 48px; }
-}
-
 /* The one festival or vrat reminder Today carries (checklist D1). */
 .festival {
   display: flex;

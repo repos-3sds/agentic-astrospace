@@ -178,3 +178,14 @@ def test_a_change_just_after_midnight_does_not_split_the_day():
     day = {"from_iso": "2026-10-30T06:45:56+08:00", "day_score": 66, "tone": "positive", "tara": "Sampat"}
     night = {"from_iso": "2026-10-31T00:20:00+08:00", "day_score": 43, "tone": "mixed", "tara": "Vipat"}
     assert waking_day_parts({"day_score_periods": [day, night]}) == []
+
+
+def test_today_carries_every_window_in_order_for_the_timing_carousel(reader_in_india):
+    windows = _india(reader_in_india, 8)["day_windows"]
+    starts = [w["start_iso"] for w in windows]
+    assert starts == sorted(starts)
+    assert {"auspicious", "inauspicious"} == {w["kind"] for w in windows}
+    # Two Durmuhurtas back to back (6:13 to 6:59, 6:59 to 7:46) are one window.
+    (dur,) = [w for w in windows if w["name"] == "Durmuhurta"]
+    assert (dur["start_iso"][11:16], dur["end_iso"][11:16]) == ("06:13", "07:46")
+    assert "Rahu Kalam" in [w["name"] for w in windows]

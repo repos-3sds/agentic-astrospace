@@ -184,17 +184,7 @@
   </div>
 
   <div class="col col-more">
-  <a class="window" [routerLink]="['/m', 'calendar', 'day']" [queryParams]="{ date: todayDate() }"
-     [attr.aria-label]="v.nextWindowLabel + ': ' + v.nextWindowValue + (v.nextWindowIn ? ', ' + v.nextWindowIn : '') + '. Open today in the calendar'">
-    <div class="window-icon" aria-hidden="true">
-      <img src="mobile/clock.svg" alt="" />
-    </div>
-    <div class="window-text">
-      <p class="eyebrow warn">{{ v.nextWindowLabel }}</p>
-      <p class="window-value">{{ v.nextWindowValue }}</p>
-    </div>
-    <p class="window-in">{{ v.nextWindowIn }}</p>
-  </a>
+  <as-timing-carousel [slides]="timingSlides()" [date]="todayDate()" />
 
   <as-notify-nudge />
 

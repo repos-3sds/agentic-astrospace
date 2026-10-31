@@ -1,4 +1,4 @@
-import { BAND_LABEL, BAND_OF_TONE, dayBandAt, dayParts, dayScorePosition, muhurtaCountdown, starChangeNote, sunriseNote, widgetMasa } from './today.component';
+import { BAND_LABEL, BAND_OF_TONE, dayBandAt, dayParts, dayScorePosition, muhurtaCountdown, starChangeNote, sunriseNote, widgetMasa, windowSlides } from './today.component';
 import { DAY_BANDS } from '../day-gauge/day-gauge.component';
 
 /**
@@ -188,5 +188,57 @@ describe('a star change in the small hours after midnight', () => {
     expect(dayScorePosition(verdict as never, at('2026-10-31T03:43:00+05:30'))).toBe(69);
     expect(dayScorePosition(verdict as never, at('2026-10-31T06:30:00+05:30'))).toBe(69);
     expect(dayScorePosition(verdict as never, at('2026-10-31T12:00:00+05:30'))).toBe(69);
+  });
+});
+
+/** Hawk, 2026-10-31: swipe Today's timing note to see the next timings, good and bad. */
+describe('windowSlides', () => {
+  const daily = {
+    date: '2026-10-31',
+    provenance: { place: { timezone: 'Asia/Kolkata' } },
+    day_windows: [
+      { name: 'Brahma Muhurta', kind: 'auspicious', start_iso: '2026-10-31T04:33:59+05:30', end_iso: '2026-10-31T05:23:55+05:30' },
+      { name: 'Durmuhurta', kind: 'inauspicious', start_iso: '2026-10-31T06:13:51+05:30', end_iso: '2026-10-31T07:46:02+05:30' },
+      { name: 'Rahu Kalam', kind: 'inauspicious', start_iso: '2026-10-31T09:06:43+05:30', end_iso: '2026-10-31T10:33:08+05:30' },
+      { name: 'Abhijit Muhurta', kind: 'auspicious', start_iso: '2026-10-31T11:36:31+05:30', end_iso: '2026-10-31T12:22:37+05:30' },
+      { name: 'Yamaganda', kind: 'inauspicious', start_iso: '2026-10-31T13:26:00+05:30', end_iso: '2026-10-31T14:52:26+05:30' },
+      { name: 'Varjya (Punarvasu)', kind: 'inauspicious', start_iso: '2026-10-31T18:26:05+05:30', end_iso: '2026-10-31T19:55:55+05:30' },
+    ],
+  } as never;
+  const at = (iso: string) => Date.parse(iso);
+
+  it('lists the windows still ahead, good and careful in time order, at most four', () => {
+    const slides = windowSlides(daily, at('2026-10-31T08:00:00+05:30'));
+    expect(slides.map((s) => [s.title, s.tone])).toEqual([
+      ['Rahu Kalam', 'care'], ['Abhijit Muhurta', 'good'], ['Yamaganda', 'care'], ['Varjyam', 'care'],
+    ]);
+    expect(slides[0].eyebrow).toBe('TAKE CARE');
+    expect(slides[0].time).toBe('9:06 am to 10:33 am');
+    expect(slides[0].detail).toBe('Good to hold new beginnings till it ends.');
+    expect(slides[0].in).toBe('Starts in 1h 7m');
+    expect(slides[1].eyebrow).toBe('GOOD TIME');
+  });
+
+  it('says when a window runs past midnight', () => {
+    const late = { ...(daily as object), date: '2026-10-31', day_windows: [
+      { name: 'Bhadra (Vishti Karana)', kind: 'inauspicious', start_iso: '2026-10-31T16:57:50+05:30', end_iso: '2026-11-01T03:52:04+05:30' },
+      { name: 'Amrit Kalam (Punarvasu)', kind: 'auspicious', start_iso: '2026-11-01T03:25:08+05:30', end_iso: '2026-11-01T04:54:59+05:30' },
+    ] } as never;
+    expect(windowSlides(late, at('2026-10-31T12:00:00+05:30')).map((s) => [s.title, s.time])).toEqual([
+      ['Bhadra', '4:57 pm to 3:52 am tomorrow'],
+      ['Amrit Kalam', '3:25 am to 4:54 am tomorrow'],
+    ]);
+  });
+
+  it('marks a window that is running and counts down to its end', () => {
+    const [first] = windowSlides(daily, at('2026-10-31T09:30:00+05:30'));
+    expect(first.title).toBe('Rahu Kalam');
+    expect(first.eyebrow).toBe('TAKE CARE · NOW');
+    expect(first.in).toBe('Ends in 1h 3m');
+  });
+
+  it('shows nothing once the day\'s windows are over, or from a server without them', () => {
+    expect(windowSlides(daily, at('2026-10-31T21:00:00+05:30'))).toEqual([]);
+    expect(windowSlides({ provenance: { place: { timezone: 'Asia/Kolkata' } } } as never)).toEqual([]);
   });
 });
