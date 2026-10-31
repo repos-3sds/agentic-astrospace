@@ -1,0 +1,54 @@
+name: TestFlight external
+
+# Gives one TestFlight build to the external group ("Friends and family") and
+# submits it for Beta App Review. Ship stops at TestFlight on purpose; this
+# runs only by hand, on Hawk's word, with the build number he named.
+# docs/ship_ios_testflight.md, scripts/testflight_external.py.
+
+on:
+  workflow_dispatch:
+    inputs:
+      build:
+        description: 'Build number to send (the commit count on main, e.g. 645)'
+        required: true
+        type: string
+      what_to_test:
+        description: 'What to Test, used only if the build has none yet'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: testflight-external
+  cancel-in-progress: false
+
+jobs:
+  send:
+    name: Add build ${{ inputs.build }} to Friends and family
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # The App Store Connect key lives with the other signing secrets, which
+    # only main can use.
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Send the build
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_B64: ${{ secrets.ASC_KEY_P8_B64 }}
+          BUILD: ${{ inputs.build }}
+          WHAT_TO_TEST: ${{ inputs.what_to_test }}
+        run: |
+          set -euo pipefail
+          case "$BUILD" in ''|*[!0-9]*) echo "::error::build must be a number"; exit 1;; esac
+          umask 077
+          KEY_FILE="$RUNNER_TEMP/AuthKey.p8"
+          printf %s "$ASC_KEY_P8_B64" | base64 --decode > "$KEY_FILE"
+          export ASC_KEY_FILE="$KEY_FILE"
+          python3 scripts/testflight_external.py --build "$BUILD" --what-to-test "$WHAT_TO_TEST" | tee out.txt
+          { echo "### TestFlight external: build $BUILD"; sed 's/^/- /' out.txt; } >> "$GITHUB_STEP_SUMMARY"
