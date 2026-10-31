@@ -164,6 +164,27 @@ def _window_time(window: dict | None) -> str | None:
     return f"{window['start']}–{window['end']}"
 
 
+def _day_windows(day_payload: dict) -> list[dict]:
+    """Every good and careful window of the day with its clock times, in
+    order, for Today's timing carousel. Two Durmuhurtas back to back (6:13
+    to 6:59 and 6:59 to 7:46) read as one window."""
+    rows = sorted(
+        ({"name": w["name"], "kind": kind, "start_iso": w["start_iso"], "end_iso": w["end_iso"]}
+         for kind in ("auspicious", "inauspicious")
+         for w in day_payload["windows"][kind]
+         if w.get("start_iso") and w.get("end_iso")),
+        key=lambda w: datetime.fromisoformat(w["start_iso"]),
+    )
+    out: list[dict] = []
+    for w in rows:
+        last = out[-1] if out else None
+        if last and last["name"] == w["name"] and last["end_iso"] == w["start_iso"]:
+            last["end_iso"] = w["end_iso"]
+        else:
+            out.append(dict(w))
+    return out
+
+
 def _find_window(windows: list[dict], name: str) -> dict | None:
     return next((w for w in windows if w.get("name", "").startswith(name)), None)
 
@@ -1111,6 +1132,8 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
             for w in [_find_window(day_payload["windows"][kind], name)]
             if w
         ],
+        # Every window of the day with ISO times, for the timing carousel.
+        "day_windows": _day_windows(day_payload),
         "do_today": do_today,
         "avoid_today": avoid_today,
         "lucky_signature": {

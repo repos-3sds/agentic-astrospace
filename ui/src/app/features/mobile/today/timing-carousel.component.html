@@ -1,0 +1,33 @@
+<div class="tc" role="region" aria-roledescription="carousel" aria-label="Today's timings">
+  <div class="tc-track" #track (scroll)="onScroll()"
+       (pointerdown)="stop()" (touchstart)="stop()" (wheel)="stop()" (focusin)="stop()">
+    @for (slide of slides(); track slide.key; let i = $index) {
+      <a class="window" [class.good]="slide.tone === 'good'"
+         [routerLink]="['/m', 'calendar', 'day']" [queryParams]="{ date: date() }"
+         aria-roledescription="slide" [attr.aria-label]="label(slide, i)">
+        <div class="window-icon" aria-hidden="true">
+          <img src="mobile/clock.svg" alt="" />
+        </div>
+        <div class="window-text">
+          <p class="eyebrow">{{ slide.eyebrow }}</p>
+          @if (slide.time) {
+            <p class="window-value">{{ slide.title }} · {{ slide.time }}</p>
+            <p class="window-detail">{{ slide.detail }}</p>
+          } @else {
+            <p class="window-value">{{ slide.title }}</p>
+          }
+        </div>
+        <p class="window-in">{{ slide.in }}</p>
+      </a>
+    }
+  </div>
+  @if (slides().length > 1) {
+    <div class="tc-dots">
+      @for (slide of slides(); track slide.key; let i = $index) {
+        <button type="button" class="tc-dot" [class.on]="i === index()" [class.good]="slide.tone === 'good'"
+                [attr.aria-label]="'Show timing ' + (i + 1) + ' of ' + slides().length"
+                [attr.aria-current]="i === index() ? 'true' : null" (click)="go(i)"></button>
+      }
+    </div>
+  }
+</div>

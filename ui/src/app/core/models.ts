@@ -482,6 +482,8 @@ export interface DailyGuidancePayload {
   /** Both lunar-month reckonings; which one a reader follows is regional. */
   masa?: DailyMasa | null;
   muhurta_windows: { name: string; time: string; kind: 'auspicious' | 'inauspicious' }[];
+  /** Every window of the day with ISO times, in order (from 2026-10-31). */
+  day_windows?: { name: string; kind: 'auspicious' | 'inauspicious'; start_iso: string; end_iso: string }[];
   do_today: DailyActionRow[];
   avoid_today: DailyActionRow[];
   lucky_signature: {

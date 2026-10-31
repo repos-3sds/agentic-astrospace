@@ -26,6 +26,8 @@ import { WidgetBridgeService, windowSpan } from '../../../core/widget-bridge.ser
 import { ProfileSwitcherComponent } from '../profile-switcher/profile-switcher.component';
 import { ReadingForComponent } from '../shared/reading-for.component';
 import { NotifyNudgeComponent } from './notify-nudge.component';
+import { TimingCarouselComponent, TimingSlide } from './timing-carousel.component';
+import { DEFAULT_ALARMS } from '../../../core/panchang-alarm.service';
 import { ExperienceMode, PreferencesService, ReadingTone } from '../../../core/preferences.service';
 import { HapticsService } from '../../../core/haptics.service';
 import { PullRefreshService } from '../../../core/pull-refresh.service';
@@ -313,6 +315,41 @@ export function muhurtaCountdown(daily: DailyGuidancePayload, now: Date = new Da
   return 'Ended';
 }
 
+/** Windows the carousel shows after the day's note: enough to see what
+ * comes next without becoming a timetable. */
+const MAX_WINDOW_SLIDES = 4;
+
+/**
+ * The day's windows still ahead or running, in time order, as carousel cards
+ * (Hawk, 2026-10-31: swipe to see the next timings, good and bad). Names and
+ * plain lines are the ones the panchang alarms use.
+ */
+export function windowSlides(daily: DailyGuidancePayload, now: number = Date.now()): TimingSlide[] {
+  const tz = daily.provenance.place.timezone;
+  return (daily.day_windows ?? [])
+    .filter((w) => Date.parse(w.end_iso) > now)
+    .slice(0, MAX_WINDOW_SLIDES)
+    .map((w) => {
+      const alarm = DEFAULT_ALARMS.find((a) => a.window && w.name.startsWith(a.window));
+      const good = w.kind === 'auspicious';
+      const start = Date.parse(w.start_iso);
+      const running = start <= now;
+      const minutes = Math.max(1, Math.round(((running ? Date.parse(w.end_iso) : start) - now) / 60_000));
+      return {
+        key: `${w.name}@${w.start_iso}`,
+        tone: good ? 'good' as const : 'care' as const,
+        eyebrow: `${good ? 'GOOD TIME' : 'TAKE CARE'}${running ? ' · NOW' : ''}`,
+        title: alarm?.title ?? w.name.replace(/\s*\(.*\)$/, ''),
+        // A window past midnight (Bhadra into the small hours, an Amrit Kalam
+        // before the next sunrise) says so. The ISO times are on the place's
+        // clock, so their date is the place's date.
+        time: `${clockLabel(w.start_iso, tz)} to ${clockLabel(w.end_iso, tz)}${w.end_iso.slice(0, 10) > daily.date ? ' tomorrow' : ''}`,
+        detail: alarm?.note ?? '',
+        in: `${running ? 'Ends' : 'Starts'} in ${formatDuration(minutes)}`,
+      };
+    });
+}
+
 /**
  * Between midnight and sunrise the date is already today but its panchang
  * day has not begun: the tithi, star and day lord shown are from today's
@@ -416,6 +453,7 @@ function practicalClose(text: string): string[] {
     ReadingForComponent,
     NotifyNudgeComponent,
     NgTemplateOutlet,
+    TimingCarouselComponent,
   ],
   host: {
     '[attr.data-band]': 'view()?.band || "steady"',
@@ -464,6 +502,26 @@ export class TodayComponent {
   protected readonly headerDate = computed(() => this.view()?.dateLabel ?? 'Today');
   /** The day the guidance is for, which the timing note opens in the calendar. */
   protected readonly todayDate = computed(() => this.loadedDaily()?.daily.date ?? '');
+  /** The day's note (or the star's change), then the windows still ahead. */
+  protected readonly timingSlides = computed<TimingSlide[]>(() => {
+    const view = this.view();
+    if (!view) return [];
+    const loaded = this.loadedDaily();
+    const star = view.nextWindowLabel === 'YOUR STAR CHANGES';
+    const note: TimingSlide = {
+      key: 'note',
+      tone: star && view.nextWindowValue.includes('kinder') ? 'good' : 'note',
+      eyebrow: view.nextWindowLabel,
+      title: view.nextWindowValue,
+      time: '',
+      detail: '',
+      in: view.nextWindowIn,
+    };
+    const windows = loaded ? windowSlides(loaded.daily, this.now()) : [];
+    // A note about a window that has ended has nothing left to say while
+    // later windows do: they lead instead.
+    return note.in === 'Ended' && windows.length ? windows : [note, ...windows];
+  });
   protected readonly greeting = computed(
     () => `Namaste, ${this.kundlis.owner()?.name.split(' ')[0] ?? this.headerName()}`,
   );

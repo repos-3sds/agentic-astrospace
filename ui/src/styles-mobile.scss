@@ -264,6 +264,7 @@
 :is(:root.app-dark, :root:not(.app-dark)) .as-mobile .advice-card.do { --m-glass-tint: linear-gradient(180deg, var(--m-good-soft), transparent 70%); }
 :is(:root.app-dark, :root:not(.app-dark)) .as-mobile .advice-card.avoid { --m-glass-tint: linear-gradient(180deg, var(--m-bad-soft), transparent 70%); }
 :is(:root.app-dark, :root:not(.app-dark)) .as-mobile a.window { --m-glass-tint: linear-gradient(180deg, var(--m-warn-soft), transparent 80%); }
+:is(:root.app-dark, :root:not(.app-dark)) .as-mobile a.window.good { --m-glass-tint: linear-gradient(180deg, var(--m-good-soft), transparent 80%); }
 :is(:root.app-dark, :root:not(.app-dark)) .as-mobile a.featured,
 :is(:root.app-dark, :root:not(.app-dark)) .as-mobile .yantra-tile.is-featured { --m-glass-tint: linear-gradient(135deg, var(--m-accent-soft), transparent 80%); }
 
