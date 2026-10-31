@@ -14,7 +14,7 @@ presentable `daily_guidance` payload is assembled entirely from that bundle.
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime, time
+from datetime import date, datetime, time
 from typing import Sequence
 from zoneinfo import ZoneInfo
 
@@ -397,10 +397,20 @@ _AWAKE_UNTIL = time(21, 0)
 _FIRST_PART_MIN_SECONDS = 90 * 60
 
 
+def _starts_awake(iso: str | None, day: date | None) -> bool:
+    """A change before 9 pm on the day's own date. The Vedic day runs to the
+    next sunrise, so a change at 5:39 am belongs to the small hours after it,
+    not to the morning of this one (Hawk, 2026-10-31: "Complete important
+    tasks before 5:39 am" read at 3:43 am, about a change 26 hours away)."""
+    moment = _parse(iso)
+    return bool(moment and day and moment.date() == day and moment.time() < _AWAKE_UNTIL)
+
+
 def _waking(periods: list[dict]) -> list[dict]:
     """The parts of the day a reader lives through, in order."""
-    out = [p for i, p in enumerate(periods)
-           if i == 0 or (_parse(p.get("from_iso")) and _parse(p["from_iso"]).time() < _AWAKE_UNTIL)]
+    first = _parse(periods[0].get("from_iso")) if periods else None
+    day = first.date() if first else None
+    out = [p for i, p in enumerate(periods) if i == 0 or _starts_awake(p.get("from_iso"), day)]
     if len(out) > 1:
         start, end = _parse(out[0].get("from_iso")), _parse(out[1].get("from_iso"))
         if start and end and (end - start).total_seconds() < _FIRST_PART_MIN_SECONDS:
@@ -412,17 +422,27 @@ def _waking_tara_periods(personal: dict) -> list[dict]:
     return _waking(personal.get("tarabala_periods") or [])
 
 
+def _reading_moment(personal: dict, as_of: datetime) -> datetime:
+    """The moment the day's ring and lines are read at. Before the first
+    waking part begins (before sunrise, or in a sliver of star gone within
+    90 minutes of it) the day is read at that part's start, so the ring and
+    Do/Avoid speak of the same star."""
+    start = _parse(_waking(_day_segments(personal))[0].get("from_iso"))
+    return start if start and as_of < start else as_of
+
+
 def waking_day_parts(verdict: dict) -> list[dict]:
     """The parts of the day a reader lives through, for the brief: each with
     its clock time, star and what to do with it. Empty on a day of one part."""
-    parts = _waking(verdict.get("day_score_periods") or [])
+    periods = verdict.get("day_score_periods") or []
+    parts = _waking(periods)
     if len(parts) < 2:
         return []
     out = []
     for i, part in enumerate(parts):
         until = parts[i + 1]["from_iso"] if i + 1 < len(parts) else None
         out.append({
-            "from": "sunrise" if i == 0 else _ampm(part["from_iso"]),
+            "from": "sunrise" if part is periods[0] else _ampm(part["from_iso"]),
             "until": _ampm(until) if until else "the end of the day",
             "score": part["day_score"],
             "tone": part["tone"],
@@ -879,7 +899,9 @@ def _do_and_avoid(personal: dict, ctx: dict, words: dict,
             }
             (do if tara in _FAVOURABLE_TARAS else avoid).append(row)
     else:
-        tara = personal.get("tarabala", {}).get("tara")
+        # One waking part: its star, not one gone within 90 minutes of
+        # sunrise or one that only arrives after 9 pm.
+        tara = (waking[0] if waking else personal.get("tarabala", {})).get("tara")
         if tara:
             meaning = TARABALA_MEANING[tara].format(**words)
             row = {
@@ -997,7 +1019,7 @@ def daily_guidance(chart, relation: str | None = None, as_of: datetime | None = 
 
     # The star and the Moon's sign in force at as_of: the live Today asks
     # with the phone's time, the notification worker with local noon.
-    personal = _at(personal, _period_at(_day_segments(personal), as_of))
+    personal = _at(personal, _period_at(_day_segments(personal), _reading_moment(personal, as_of)))
 
     ctx = assemble_daily_context(chart, as_of, day_payload, personal)
     words = _subject_words(relation)

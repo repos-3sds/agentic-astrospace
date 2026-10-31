@@ -145,3 +145,48 @@ describe('a day the star changes', () => {
     expect(dayParts({ ...(daily as object), verdict: one } as never)).toEqual([]);
   });
 });
+
+/**
+ * Hawk, 2026-10-31, 3:43 am in India: the day of the 31st runs to sunrise on
+ * 1 November, and its star changes at 7:12 am on the 31st and again at
+ * 5:39 am on the 1st. Today said "Your star turns less kind at 5:39 am" with
+ * "In 25h 57m". The 5:39 am change belongs to tomorrow's small hours, and the
+ * sunrise sliver until 7:12 is over before most readers are up.
+ */
+describe('a star change in the small hours after midnight', () => {
+  const RISE = '2026-10-31T06:13:51+05:30';
+  const MORNING = '2026-10-31T07:12:15+05:30';
+  const SMALL_HOURS = '2026-11-01T05:39:54+05:30';
+  const NEXT_RISE = '2026-11-01T06:14:14+05:30';
+  const verdict = {
+    tone: 'positive', score: 2, day_score: 69,
+    day_score_periods: [
+      { from_iso: RISE, until_iso: MORNING, day_score: 49, tone: 'mixed', tara: 'Janma', tara_favourable: false },
+      { from_iso: MORNING, until_iso: SMALL_HOURS, day_score: 69, tone: 'positive', tara: 'Sampat', tara_favourable: true },
+      { from_iso: SMALL_HOURS, until_iso: NEXT_RISE, day_score: 60, tone: 'positive', tara: 'Vipat', tara_favourable: false },
+    ],
+  };
+  const daily = {
+    verdict,
+    provenance: { place: { timezone: 'Asia/Kolkata' } },
+    tarabala: { tara: 'Sampat', favourable: true },
+    tarabala_periods: [
+      { tara: 'Janma', count: 1, favourable: false, from_iso: RISE, until_iso: MORNING },
+      { tara: 'Sampat', count: 2, favourable: true, from_iso: MORNING, until_iso: SMALL_HOURS },
+      { tara: 'Vipat', count: 3, favourable: false, from_iso: SMALL_HOURS, until_iso: NEXT_RISE },
+    ],
+  } as never;
+  const at = (iso: string) => Date.parse(iso);
+
+  it('does not count down to a change on the next date', () => {
+    expect(starChangeNote(daily, at('2026-10-31T03:43:00+05:30'))).toBeNull();
+    expect(starChangeNote(daily, at('2026-10-31T20:00:00+05:30'))).toBeNull();
+    expect(dayParts(daily, at('2026-10-31T03:43:00+05:30'))).toEqual([]);
+  });
+
+  it('draws the ring for the first waking part before it begins', () => {
+    expect(dayScorePosition(verdict as never, at('2026-10-31T03:43:00+05:30'))).toBe(69);
+    expect(dayScorePosition(verdict as never, at('2026-10-31T06:30:00+05:30'))).toBe(69);
+    expect(dayScorePosition(verdict as never, at('2026-10-31T12:00:00+05:30'))).toBe(69);
+  });
+});

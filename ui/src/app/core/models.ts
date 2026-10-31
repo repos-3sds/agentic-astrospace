@@ -1346,8 +1346,8 @@ export interface CalendarDaySummary {
   tarabala: { tara: string; count: number; favourable: boolean; note?: string | null };
   chandrabala: { house_from_rashi: number; favourable: boolean; chandrashtama: boolean };
   /** Through the day with clock times ("from": "11:34"), from 2026-10-30. */
-  tarabala_periods?: { tara: string; favourable: boolean; from: string | null }[];
-  chandrabala_periods?: { house_from_rashi: number; favourable: boolean; chandrashtama: boolean; from: string | null }[];
+  tarabala_periods?: { tara: string; favourable: boolean; from: string | null; from_iso?: string | null }[];
+  chandrabala_periods?: { house_from_rashi: number; favourable: boolean; chandrashtama: boolean; from: string | null; from_iso?: string | null }[];
   auspicious_count: number;
   inauspicious_count: number;
   gulika?: unknown;

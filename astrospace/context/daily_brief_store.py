@@ -33,7 +33,9 @@ from ..db import crud_mobile as cm
 # stored v1 briefs are written again in the new style rather than kept.
 # v3: an agent-written card header in place of the fixed "What matters today".
 # v4: card header, headline, summary and focus in plain words, no astrology terms.
-BRIEF_FORMAT = "agent-brief-v4"
+# v5: no day parts for a star change after midnight (it read as "before 5:39 am"
+# on the morning before it), so briefs stored with those parts are written again.
+BRIEF_FORMAT = "agent-brief-v5"
 BRIEF_LANGUAGE = "en"
 
 log = logging.getLogger("astrospace.daily_brief")
